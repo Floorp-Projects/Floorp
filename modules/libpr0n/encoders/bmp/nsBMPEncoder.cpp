@@ -384,7 +384,7 @@ NS_IMETHODIMP nsBMPEncoder::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP 
-nsBMPEncoder::IsNonBlocking(PRBool *_retval)
+nsBMPEncoder::IsNonBlocking(bool *_retval)
 {
   *_retval = PR_TRUE;
   return NS_OK;

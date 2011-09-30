@@ -130,7 +130,7 @@ WindowHook::DeleteIfEmpty(MessageData *data) {
   mMessageData.RemoveElementAt(idx);
 }
 
-PRBool
+bool
 WindowHook::Notify(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam,
                    LRESULT *aResult) {
   MessageData *data = Lookup(nMsg);
@@ -145,7 +145,7 @@ WindowHook::Notify(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam,
   return data->hook.Invoke(hWnd, nMsg, wParam, lParam, aResult);
 }
 
-PRBool
+bool
 WindowHook::CallbackData::Invoke(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam,
                                  LRESULT *aResult) {
   if (!cb)

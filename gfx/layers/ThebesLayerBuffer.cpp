@@ -157,13 +157,13 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
   // drawing, because we might sample across the rotation boundary.
-  PRBool canHaveRotation = !(aFlags & PAINT_WILL_RESAMPLE);
+  bool canHaveRotation = !(aFlags & PAINT_WILL_RESAMPLE);
 
   nsIntRegion validRegion = aLayer->GetValidRegion();
 
   ContentType contentType;
   nsIntRegion neededRegion;
-  PRBool canReuseBuffer;
+  bool canReuseBuffer;
   nsIntRect destBufferRect;
 
   while (PR_TRUE) {
@@ -279,7 +279,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
 
   // If we have no buffered data already, then destBuffer will be a fresh buffer
   // and we do not need to clear it below.
-  PRBool isClear = mBuffer == nsnull;
+  bool isClear = mBuffer == nsnull;
 
   if (destBuffer) {
     if (mBuffer) {

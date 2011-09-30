@@ -90,8 +90,8 @@ bool AppendExtraData(nsILocalFile* extraFile, const AnnotationTable& data);
 #ifdef XP_MACOSX
   nsresult AppendObjCExceptionInfoToAppNotes(void *inException);
 #endif
-nsresult GetSubmitReports(PRBool* aSubmitReport);
-nsresult SetSubmitReports(PRBool aSubmitReport);
+nsresult GetSubmitReports(bool* aSubmitReport);
+nsresult SetSubmitReports(bool aSubmitReport);
 
 // Out-of-process crash reporter API.
 

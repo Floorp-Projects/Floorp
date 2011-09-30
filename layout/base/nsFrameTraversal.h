@@ -44,9 +44,9 @@ nsresult NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
                               nsPresContext* aPresContext,
                               nsIFrame *aStart,
                               nsIteratorType aType,
-                              PRBool aVisual,
-                              PRBool aLockInScrollView,
-                              PRBool aFollowOOFs);
+                              bool aVisual,
+                              bool aLockInScrollView,
+                              bool aFollowOOFs);
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
@@ -62,9 +62,9 @@ public:
                                nsPresContext* aPresContext,
                                nsIFrame *aStart,
                                PRInt32 aType,
-                               PRBool aVisual,
-                               PRBool aLockInScrollView,
-                               PRBool aFollowOOFs);
+                               bool aVisual,
+                               bool aLockInScrollView,
+                               bool aFollowOOFs);
 };
 
 #endif //NSFRAMETRAVERSAL_H

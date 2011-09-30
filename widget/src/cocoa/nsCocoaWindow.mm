@@ -89,7 +89,7 @@ PRInt32 gXULModalLevel = 0;
 // also made app-modal.)  See nsCocoaWindow::SetModal().
 nsCocoaWindowList *gGeckoAppModalWindowList = NULL;
 
-PRBool gConsumeRollupEvent;
+bool gConsumeRollupEvent;
 
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
@@ -233,7 +233,7 @@ static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *screen)
 
 // Some applications like Camino use native popup windows
 // (native context menus, native tooltips)
-static PRBool UseNativePopupWindows()
+static bool UseNativePopupWindows()
 {
 #ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
   return PR_TRUE;
@@ -312,7 +312,7 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
 
 static unsigned int WindowMaskForBorderStyle(nsBorderStyle aBorderStyle)
 {
-  PRBool allOrDefault = (aBorderStyle == eBorderStyle_all ||
+  bool allOrDefault = (aBorderStyle == eBorderStyle_all ||
                          aBorderStyle == eBorderStyle_default);
 
   /* Apple's docs on NSWindow styles say that "a window's style mask should
@@ -345,7 +345,7 @@ NS_IMETHODIMP nsCocoaWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 // content rect.
 nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
                                            nsBorderStyle aBorderStyle,
-                                           PRBool aRectIsFrameRect)
+                                           bool aRectIsFrameRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -559,7 +559,7 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
-NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
+NS_IMETHODIMP nsCocoaWindow::IsVisible(bool & aState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -569,7 +569,7 @@ NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
+NS_IMETHODIMP nsCocoaWindow::SetModal(bool aState)
 {
   // This is used during startup (outside the event loop) when creating
   // the add-ons compatibility checking dialog and the profile manager UI;
@@ -645,7 +645,7 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
 }
 
 // Hide or show this window
-NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
+NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -671,7 +671,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       // this sheet can be displayed. Leave the parent mSheetNeedsShow alone,
       // that is only used to handle sibling sheet contention. The parent will
       // return once there are no more child sheets.
-      PRBool parentIsSheet = PR_FALSE;
+      bool parentIsSheet = false;
       if (NS_SUCCEEDED(piParentWidget->GetIsSheet(&parentIsSheet)) &&
           parentIsSheet) {
         piParentWidget->GetSheetWindowParent(&topNonSheetWindow);
@@ -776,7 +776,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         [TopLevelWindowData deactivateInWindow:mWindow];
 
         nsCocoaWindow* siblingSheetToShow = nsnull;
-        PRBool parentIsSheet = PR_FALSE;
+        bool parentIsSheet = false;
 
         if (nativeParentWindow && piParentWidget &&
             NS_SUCCEEDED(piParentWidget->GetChildSheet(PR_FALSE, &siblingSheetToShow)) &&
@@ -793,7 +793,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           nsIWidget* grandparentWidget = nil;
           if (NS_SUCCEEDED(piParentWidget->GetRealParent(&grandparentWidget)) && grandparentWidget) {
             nsCOMPtr<nsPIWidgetCocoa> piGrandparentWidget(do_QueryInterface(grandparentWidget));
-            PRBool grandparentIsSheet = PR_FALSE;
+            bool grandparentIsSheet = false;
             if (piGrandparentWidget && NS_SUCCEEDED(piGrandparentWidget->GetIsSheet(&grandparentIsSheet)) &&
                 grandparentIsSheet) {
                 contextInfo = nil;
@@ -992,19 +992,19 @@ void nsCocoaWindow::SetTransparencyMode(nsTransparencyMode aMode)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Enable(PRBool aState)
+NS_IMETHODIMP nsCocoaWindow::Enable(bool aState)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::IsEnabled(PRBool *aState)
+NS_IMETHODIMP nsCocoaWindow::IsEnabled(bool *aState)
 {
   if (aState)
     *aState = PR_TRUE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(PRBool aAllowSlop,
+NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(bool aAllowSlop,
                                                PRInt32 *aX, PRInt32 *aY)
 {
   return NS_OK;
@@ -1025,7 +1025,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 
 // Position the window behind the given window
 NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                     nsIWidget *aWidget, PRBool aActivate)
+                                     nsIWidget *aWidget, bool aActivate)
 {
   return NS_OK;
 }
@@ -1067,7 +1067,7 @@ NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
 // This has to preserve the window's frame bounds.
 // This method requires (as does the Windows impl.) that you call Resize shortly
 // after calling HideWindowChrome. See bug 498835 for fixing this.
-NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(PRBool aShouldHide)
+NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(bool aShouldHide)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1124,7 +1124,7 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(PRBool aShouldHide)
 }
 
 
-NS_METHOD nsCocoaWindow::MakeFullScreen(PRBool aFullScreen)
+NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1147,7 +1147,7 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(PRBool aFullScreen)
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1172,7 +1172,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
   
@@ -1247,7 +1247,7 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
+NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsIntRect & aRect, bool aIsSynchronous)
 {
   if (mPopupContentView)
     return mPopupContentView->Invalidate(aRect, aIsSynchronous);
@@ -1270,7 +1270,7 @@ NS_IMETHODIMP nsCocoaWindow::Update()
 // a drop, to a drag enter/leave, or a drag over event. The actual event
 // is passed in |aMessage| and is passed along to our event hanlder so Gecko
 // knows about it.
-PRBool nsCocoaWindow::DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers)
+bool nsCocoaWindow::DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers)
 {
   return PR_FALSE;
 }
@@ -1291,7 +1291,7 @@ NS_IMETHODIMP nsCocoaWindow::SendSetZLevelEvent()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::GetChildSheet(PRBool aShown, nsCocoaWindow** _retval)
+NS_IMETHODIMP nsCocoaWindow::GetChildSheet(bool aShown, nsCocoaWindow** _retval)
 {
   nsIWidget* child = GetFirstChild();
 
@@ -1320,7 +1320,7 @@ NS_IMETHODIMP nsCocoaWindow::GetRealParent(nsIWidget** parent)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::GetIsSheet(PRBool* isSheet)
+NS_IMETHODIMP nsCocoaWindow::GetIsSheet(bool* isSheet)
 {
   mWindowType == eWindowType_sheet ? *isSheet = PR_TRUE : *isSheet = PR_FALSE;
   return NS_OK;
@@ -1430,7 +1430,7 @@ void nsCocoaWindow::SetMenuBar(nsMenuBarX *aMenuBar)
     mMenuBar->Paint();
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
+NS_IMETHODIMP nsCocoaWindow::SetFocus(bool aState)
 {
   if (mPopupContentView) {
     mPopupContentView->SetFocus(aState);
@@ -1490,8 +1490,8 @@ nsMenuBarX* nsCocoaWindow::GetMenuBar()
 
 NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener, 
                                                  nsIMenuRollup * aMenuRollup,
-                                                 PRBool aDoCapture, 
-                                                 PRBool aConsumeRollupEvent)
+                                                 bool aDoCapture, 
+                                                 bool aConsumeRollupEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1546,7 +1546,7 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-PRBool
+bool
 nsCocoaWindow::HasPendingInputEvent()
 {
   return nsChildView::DoHasPendingInputEvent();
@@ -1566,7 +1566,7 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void nsCocoaWindow::SetShowsToolbarButton(PRBool aShow)
+void nsCocoaWindow::SetShowsToolbarButton(bool aShow)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1575,7 +1575,7 @@ void nsCocoaWindow::SetShowsToolbarButton(PRBool aShow)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActive)
+NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, bool aActive)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1610,7 +1610,7 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActi
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void nsCocoaWindow::SetDrawsInTitlebar(PRBool aState)
+void nsCocoaWindow::SetDrawsInTitlebar(bool aState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1683,7 +1683,7 @@ void nsCocoaWindow::SetPopupWindowLevel()
   }
 }
 
-PRBool nsCocoaWindow::IsChildInFailingLeftClickThrough(NSView *aChild)
+bool nsCocoaWindow::IsChildInFailingLeftClickThrough(NSView *aChild)
 {
   if ([aChild isKindOfClass:[ChildView class]]) {
     ChildView* childView = (ChildView*) aChild;
@@ -1705,7 +1705,7 @@ PRBool nsCocoaWindow::IsChildInFailingLeftClickThrough(NSView *aChild)
 // Don't focus a plugin if we're in a left click-through that will
 // fail (see [ChildView isInFailingLeftClickThrough]).  Called from
 // [ChildView shouldFocusPlugin].
-PRBool nsCocoaWindow::ShouldFocusPlugin()
+bool nsCocoaWindow::ShouldFocusPlugin()
 {
   if (IsChildInFailingLeftClickThrough([mWindow contentView]))
     return PR_FALSE;
@@ -1946,7 +1946,7 @@ PRBool nsCocoaWindow::ShouldFocusPlugin()
   return mGeckoWindow;
 }
 
-- (PRBool)toplevelActiveState
+- (bool)toplevelActiveState
 {
   return mToplevelActiveState;
 }
@@ -2173,6 +2173,53 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   // We want to control the beeping for missing or disabled
   // commands ourselves.
   [self tryToPerform:aSelector with:nil];
+}
+
+- (id)accessibilityAttributeValue:(NSString *)attribute
+{
+  id retval = [super accessibilityAttributeValue:attribute];
+
+  // The following works around a problem with Text-to-Speech on OS X 10.7.
+  // See bug 674612 for more info.
+  //
+  // When accessibility is off, AXUIElementCopyAttributeValue(), when called
+  // on an AXApplication object to get its AXFocusedUIElement attribute,
+  // always returns an AXWindow object (the actual browser window -- never a
+  // mozAccessible object).  This also happens with accessibility turned on,
+  // if no other object in the browser window has yet been focused.  But if
+  // the browser window has a title bar (as it currently always does), the
+  // AXWindow object will always have four "accessible" children, one of which
+  // is an AXStaticText object (the title bar's "title"; the other three are
+  // the close, minimize and zoom buttons).  This means that (for complicated
+  // reasons, for which see bug 674612) Text-to-Speech on OS X 10.7 will often
+  // "speak" the window title, no matter what text is selected, or even if no
+  // text at all is selected.  (This always happens when accessibility is off.
+  // It doesn't happen in Firefox releases because Apple has (on OS X 10.7)
+  // special-cased the handling of apps whose CFBundleIdentifier is
+  // org.mozilla.firefox.)
+  //
+  // We work around this problem by only returning AXChildren that are
+  // mozAccessible object or are one of the titlebar's buttons (which
+  // instantiate subclasses of NSButtonCell).
+  if (nsToolkit::OnLionOrLater() && [retval isKindOfClass:[NSArray class]] &&
+      [attribute isEqualToString:@"AXChildren"]) {
+    NSMutableArray *holder = [NSMutableArray arrayWithCapacity:10];
+    [holder addObjectsFromArray:(NSArray *)retval];
+    NSUInteger count = [holder count];
+    for (NSInteger i = count - 1; i >= 0; --i) {
+      id item = [holder objectAtIndex:i];
+      // Remove anything from holder that isn't one of the titlebar's buttons
+      // (which instantiate subclasses of NSButtonCell) or a mozAccessible
+      // object (or one of its subclasses).
+      if (![item isKindOfClass:[NSButtonCell class]] &&
+          ![item respondsToSelector:@selector(hasRepresentedView)]) {
+        [holder removeObjectAtIndex:i];
+      }
+    }
+    retval = [NSArray arrayWithArray:holder];
+  }
+
+  return retval;
 }
 
 @end

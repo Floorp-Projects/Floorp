@@ -73,7 +73,7 @@ private:
   PRNetAddr                         mAddr;
   nsCOMPtr<nsIServerSocketListener> mListener;
   nsCOMPtr<nsIEventTarget>          mListenerTarget;
-  PRBool                            mAttached;
+  bool                              mAttached;
 };
 
 //-----------------------------------------------------------------------------

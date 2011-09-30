@@ -41,12 +41,12 @@
 #include "nscore.h"
 
 namespace CommandLineServiceMac {
-  void SetupMacCommandLine(int& argc, char**& argv, PRBool forRestart);
+  void SetupMacCommandLine(int& argc, char**& argv, bool forRestart);
 
   // Add a URL to the command line currently being set up via
   // SetupMacCommandLine. Returns false if no command line is
   // being set up or the addition fails for any other reason.
-  PRBool AddURLToCurrentCommandLine(const char* aURL);
+  bool AddURLToCurrentCommandLine(const char* aURL);
 }
 
 #endif // nsCommandLineServiceMac_h_

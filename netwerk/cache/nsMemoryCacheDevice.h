@@ -64,7 +64,7 @@ public:
     virtual const char *    GetDeviceID(void);
 
     virtual nsresult        BindEntry( nsCacheEntry * entry );
-    virtual nsCacheEntry *  FindEntry( nsCString * key, PRBool *collision );
+    virtual nsCacheEntry *  FindEntry( nsCString * key, bool *collision );
     virtual void            DoomEntry( nsCacheEntry * entry );
     virtual nsresult        DeactivateEntry( nsCacheEntry * entry );
 
@@ -100,7 +100,7 @@ private:
                 DO_NOT_DELETE_ENTRY = PR_FALSE };
 
     void      AdjustMemoryLimits( PRInt32  softLimit, PRInt32  hardLimit);
-    void      EvictEntry( nsCacheEntry * entry , PRBool deleteEntry);
+    void      EvictEntry( nsCacheEntry * entry , bool deleteEntry);
     void      EvictEntriesIfNecessary();
     int       EvictionList(nsCacheEntry * entry, PRInt32  deltaSize);
 
@@ -115,7 +115,7 @@ private:
     };
 
     nsCacheEntryHashTable  mMemCacheEntries;
-    PRBool                 mInitialized;
+    bool                   mInitialized;
 
     PRCList                mEvictionList[kQueueCount];
     PRInt32                mEvictionThreshold;

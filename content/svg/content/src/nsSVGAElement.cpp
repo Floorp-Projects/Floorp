@@ -133,7 +133,7 @@ nsSVGAElement::GetTarget(nsIDOMSVGAnimatedString * *aTarget)
 nsresult
 nsSVGAElement::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                           nsIContent *aBindingParent,
-                          PRBool aCompileEventHandlers)
+                          bool aCompileEventHandlers)
 {
   Link::ResetLinkState(false);
 
@@ -146,7 +146,7 @@ nsSVGAElement::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
 }
 
 void
-nsSVGAElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsSVGAElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
@@ -175,7 +175,7 @@ nsSVGAElement::GetHrefURI() const
 }
 
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGAElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -193,8 +193,8 @@ nsSVGAElement::IsAttributeMapped(const nsIAtom* name) const
     nsSVGAElementBase::IsAttributeMapped(name);
 }
 
-PRBool
-nsSVGAElement::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
+bool
+nsSVGAElement::IsFocusable(PRInt32 *aTabIndex, bool aWithMouse)
 {
   nsCOMPtr<nsIURI> uri;
   if (IsLink(getter_AddRefs(uri))) {
@@ -211,7 +211,7 @@ nsSVGAElement::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsSVGAElement::IsLink(nsIURI** aURI) const
 {
   // To be a clickable XLink for styling and interaction purposes, we require:
@@ -293,7 +293,7 @@ nsSVGAElement::IntrinsicState() const
 nsresult
 nsSVGAElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                        nsIAtom* aPrefix, const nsAString& aValue,
-                       PRBool aNotify)
+                       bool aNotify)
 {
   nsresult rv = nsSVGAElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
                                            aValue, aNotify);
@@ -312,7 +312,7 @@ nsSVGAElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsSVGAElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
-                         PRBool aNotify)
+                         bool aNotify)
 {
   nsresult rv = nsSVGAElementBase::UnsetAttr(aNameSpaceID, aAttr, aNotify);
 

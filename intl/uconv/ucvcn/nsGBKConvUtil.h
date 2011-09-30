@@ -44,7 +44,7 @@ public:
   ~nsGBKConvUtil() { }
   void InitToGBKTable();
   PRUnichar GBKCharToUnicode(char aByte1, char aByte2);
-  PRBool UnicodeToGBKChar(PRUnichar aChar, PRBool aToGL, 
+  bool UnicodeToGBKChar(PRUnichar aChar, bool aToGL, 
                            char* aOutByte1, char* aOutByte2);
 };
 #endif /* nsGBKConvUtil_h__ */

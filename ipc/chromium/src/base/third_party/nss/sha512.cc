@@ -166,7 +166,7 @@ SHA256_NewContext(void)
 }
 
 void
-SHA256_DestroyContext(SHA256Context *ctx, PRBool freeit)
+SHA256_DestroyContext(SHA256Context *ctx, bool freeit)
 {
     if (freeit) {
         PORT_ZFree(ctx, sizeof *ctx);
@@ -692,7 +692,7 @@ SHA512_NewContext(void)
 }
 
 void
-SHA512_DestroyContext(SHA512Context *ctx, PRBool freeit)
+SHA512_DestroyContext(SHA512Context *ctx, bool freeit)
 {
     if (freeit) {
         PORT_ZFree(ctx, sizeof *ctx);
@@ -1213,7 +1213,7 @@ SHA384_NewContext(void)
 }
 
 void
-SHA384_DestroyContext(SHA384Context *ctx, PRBool freeit)
+SHA384_DestroyContext(SHA384Context *ctx, bool freeit)
 {
     SHA512_DestroyContext(ctx, freeit);
 }

@@ -64,10 +64,10 @@ static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 nsIIDNService *nsStandardURL::gIDN = nsnull;
 nsICharsetConverterManager *nsStandardURL::gCharsetMgr = nsnull;
-PRBool nsStandardURL::gInitialized = PR_FALSE;
-PRBool nsStandardURL::gEscapeUTF8 = PR_TRUE;
-PRBool nsStandardURL::gAlwaysEncodeInUTF8 = PR_TRUE;
-PRBool nsStandardURL::gEncodeQueryInUTF8 = PR_TRUE;
+bool nsStandardURL::gInitialized = false;
+bool nsStandardURL::gEscapeUTF8 = true;
+bool nsStandardURL::gAlwaysEncodeInUTF8 = true;
+bool nsStandardURL::gEncodeQueryInUTF8 = true;
 
 #if defined(PR_LOGGING)
 //
@@ -177,7 +177,7 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
                                      const URLSegment &seg,
                                      PRInt16 mask,
                                      nsAFlatCString &result,
-                                     PRBool &appended,
+                                     bool &appended,
                                      PRUint32 extraLen)
 {
     // extraLen is characters outside the segment that will be 
@@ -235,14 +235,14 @@ nsSegmentEncoder::EncodeSegment(const nsASingleFragmentCString &str,
                                 nsAFlatCString &result)
 {
     const char *text;
-    PRBool encoded;
+    bool encoded;
     EncodeSegmentCount(str.BeginReading(text), URLSegment(0, str.Length()), mask, result, encoded);
     if (encoded)
         return result;
     return str;
 }
 
-PRBool nsStandardURL::
+bool nsStandardURL::
 nsSegmentEncoder::InitUnicodeEncoder()
 {
     NS_ASSERTION(!mEncoder, "Don't call this if we have an encoder already!");
@@ -284,7 +284,7 @@ nsSegmentEncoder::InitUnicodeEncoder()
 static PRCList gAllURLs;
 #endif
 
-nsStandardURL::nsStandardURL(PRBool aSupportsFileURL)
+nsStandardURL::nsStandardURL(bool aSupportsFileURL)
     : mDefaultPort(-1)
     , mPort(-1)
     , mHostA(nsnull)
@@ -407,7 +407,7 @@ nsStandardURL::Clear()
 }
 
 void
-nsStandardURL::InvalidateCache(PRBool invalidateCachedFile)
+nsStandardURL::InvalidateCache(bool invalidateCachedFile)
 {
     if (invalidateCachedFile)
         mFile = 0;
@@ -415,7 +415,7 @@ nsStandardURL::InvalidateCache(PRBool invalidateCachedFile)
     mSpecEncoding = eEncoding_Unknown;
 }
 
-PRBool
+bool
 nsStandardURL::EscapeIPv6(const char *host, nsCString &result)
 {
     // Escape IPv6 address literal by surrounding it with []'s
@@ -428,7 +428,7 @@ nsStandardURL::EscapeIPv6(const char *host, nsCString &result)
     return PR_FALSE;
 }
 
-PRBool
+bool
 nsStandardURL::NormalizeIDN(const nsCSubstring &host, nsCString &result)
 {
     // If host is ACE, then convert to UTF-8.  Else, if host is already UTF-8,
@@ -444,7 +444,7 @@ nsStandardURL::NormalizeIDN(const nsCSubstring &host, nsCString &result)
 
     NS_ASSERTION(mHostEncoding == eEncoding_ASCII, "unexpected default encoding");
 
-    PRBool isASCII;
+    bool isASCII;
     if (gIDN &&
         NS_SUCCEEDED(gIDN->ConvertToDisplayIDN(host, &isASCII, result))) {
         if (!isASCII)
@@ -472,7 +472,7 @@ nsStandardURL::CoalescePath(netCoalesceFlags coalesceFlag, char *path)
 }
 
 PRUint32
-nsStandardURL::AppendSegmentToBuf(char *buf, PRUint32 i, const char *str, URLSegment &seg, const nsCString *escapedStr, PRBool useEscaped)
+nsStandardURL::AppendSegmentToBuf(char *buf, PRUint32 i, const char *str, URLSegment &seg, const nsCString *escapedStr, bool useEscaped)
 {
     if (seg.mLen > 0) {
         if (useEscaped) {
@@ -511,7 +511,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     // escaping is required).
     nsCAutoString encUsername, encPassword, encHost, encDirectory,
       encBasename, encExtension, encQuery, encRef;
-    PRBool useEncUsername, useEncPassword, useEncHost, useEncDirectory,
+    bool useEncUsername, useEncPassword, useEncHost, useEncDirectory,
       useEncBasename, useEncExtension, useEncQuery, useEncRef;
     nsCAutoString portbuf;
 
@@ -702,8 +702,8 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     return NS_OK;
 }
 
-PRBool
-nsStandardURL::SegmentIs(const URLSegment &seg, const char *val, PRBool ignoreCase)
+bool
+nsStandardURL::SegmentIs(const URLSegment &seg, const char *val, bool ignoreCase)
 {
     // one or both may be null
     if (!val || mSpec.IsEmpty())
@@ -720,8 +720,8 @@ nsStandardURL::SegmentIs(const URLSegment &seg, const char *val, PRBool ignoreCa
             && (val[seg.mLen] == '\0');
 }
 
-PRBool
-nsStandardURL::SegmentIs(const char* spec, const URLSegment &seg, const char *val, PRBool ignoreCase)
+bool
+nsStandardURL::SegmentIs(const char* spec, const URLSegment &seg, const char *val, bool ignoreCase)
 {
     // one or both may be null
     if (!val || !spec)
@@ -738,8 +738,8 @@ nsStandardURL::SegmentIs(const char* spec, const URLSegment &seg, const char *va
             && (val[seg.mLen] == '\0');
 }
 
-PRBool
-nsStandardURL::SegmentIs(const URLSegment &seg1, const char *val, const URLSegment &seg2, PRBool ignoreCase)
+bool
+nsStandardURL::SegmentIs(const URLSegment &seg1, const char *val, const URLSegment &seg2, bool ignoreCase)
 {
     if (seg1.mLen != seg2.mLen)
         return PR_FALSE;
@@ -927,7 +927,7 @@ nsStandardURL::WriteSegment(IPC::Message *aMsg, const URLSegment &seg)
 /* static */ void
 nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 {
-    PRBool val;
+    bool val;
 
     LOG(("nsStandardURL::PrefsChanged [pref=%s]\n", pref));
 
@@ -1309,7 +1309,7 @@ nsStandardURL::SetUserPass(const nsACString &input)
     nsCAutoString buf;
     if (usernameLen > 0) {
         GET_SEGMENT_ENCODER(encoder);
-        PRBool ignoredOut;
+        bool ignoredOut;
         usernameLen = encoder.EncodeSegmentCount(userpass.get(),
                                                  URLSegment(usernamePos,
                                                             usernameLen),
@@ -1641,13 +1641,13 @@ nsStandardURL::SetPath(const nsACString &input)
 }
 
 NS_IMETHODIMP
-nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
+nsStandardURL::Equals(nsIURI *unknownOther, bool *result)
 {
     return EqualsInternal(unknownOther, eHonorRef, result);
 }
 
 NS_IMETHODIMP
-nsStandardURL::EqualsExceptRef(nsIURI *unknownOther, PRBool *result)
+nsStandardURL::EqualsExceptRef(nsIURI *unknownOther, bool *result)
 {
     return EqualsInternal(unknownOther, eIgnoreRef, result);
 }
@@ -1655,7 +1655,7 @@ nsStandardURL::EqualsExceptRef(nsIURI *unknownOther, PRBool *result)
 nsresult
 nsStandardURL::EqualsInternal(nsIURI *unknownOther,
                               nsStandardURL::RefHandlingEnum refHandlingMode,
-                              PRBool *result)
+                              bool *result)
 {
     NS_ENSURE_ARG_POINTER(unknownOther);
     NS_PRECONDITION(result, "null pointer");
@@ -1744,7 +1744,7 @@ nsStandardURL::EqualsInternal(nsIURI *unknownOther,
 }
 
 NS_IMETHODIMP
-nsStandardURL::SchemeIs(const char *scheme, PRBool *result)
+nsStandardURL::SchemeIs(const char *scheme, bool *result)
 {
     NS_PRECONDITION(result, "null pointer");
 
@@ -1848,7 +1848,7 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     nsresult rv;
     URLSegment scheme;
     char *resultPath = nsnull;
-    PRBool relative = PR_FALSE;
+    bool relative = false;
     PRUint32 offset = 0;
     netCoalesceFlags coalesceFlag = NET_COALESCE_NORMAL;
 
@@ -1983,7 +1983,7 @@ nsStandardURL::GetCommonBaseSpec(nsIURI *uri2, nsACString &aResult)
     NS_ENSURE_ARG_POINTER(uri2);
 
     // if uri's are equal, then return uri as is
-    PRBool isEquals = PR_FALSE;
+    bool isEquals = false;
     if (NS_SUCCEEDED(Equals(uri2, &isEquals)) && isEquals)
         return GetSpec(aResult);
 
@@ -2037,7 +2037,7 @@ nsStandardURL::GetRelativeSpec(nsIURI *uri2, nsACString &aResult)
     aResult.Truncate();
 
     // if uri's are equal, then return empty string
-    PRBool isEquals = PR_FALSE;
+    bool isEquals = false;
     if (NS_SUCCEEDED(Equals(uri2, &isEquals)) && isEquals)
         return NS_OK;
 
@@ -2064,7 +2064,7 @@ nsStandardURL::GetRelativeSpec(nsIURI *uri2, nsACString &aResult)
     thatIndex = stdurl2->mSpec.get() + mDirectory.mPos;
 
 #ifdef XP_WIN
-    PRBool isFileScheme = SegmentIs(mScheme, "file");
+    bool isFileScheme = SegmentIs(mScheme, "file");
     if (isFileScheme)
     {
         // on windows, we need to match the first segment of the path
@@ -2150,7 +2150,7 @@ nsStandardURL::GetRef(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsStandardURL::GetHasRef(PRBool *result)
+nsStandardURL::GetHasRef(bool *result)
 {
     *result = (mRef.mLen >= 0);
     return NS_OK;
@@ -2315,7 +2315,7 @@ nsStandardURL::SetQuery(const nsACString &input)
 
     // encode query if necessary
     nsCAutoString buf;
-    PRBool encoded;
+    bool encoded;
     GET_QUERY_ENCODER(encoder);
     encoder.EncodeSegmentCount(query, URLSegment(0, queryLen), esc_Query,
                                buf, encoded);
@@ -2376,7 +2376,7 @@ nsStandardURL::SetRef(const nsACString &input)
 
     // encode ref if necessary
     nsCAutoString buf;
-    PRBool encoded;
+    bool encoded;
     GET_SEGMENT_ENCODER(encoder);
     encoder.EncodeSegmentCount(ref, URLSegment(0, refLen), esc_Ref,
                                buf, encoded);
@@ -2448,7 +2448,7 @@ nsStandardURL::SetFileName(const nsACString &input)
         }
         else {
             nsCAutoString newFilename;
-            PRBool ignoredOut;
+            bool ignoredOut;
             GET_SEGMENT_ENCODER(encoder);
             basename.mLen = encoder.EncodeSegmentCount(filename, basename,
                                                        esc_FileBaseName |
@@ -2613,7 +2613,7 @@ nsStandardURL::SetFile(nsIFile *file)
 // nsStandardURL::nsIStandardURL
 //----------------------------------------------------------------------------
 
-inline PRBool
+inline bool
 IsUTFCharset(const char *aCharset)
 {
     return ((aCharset[0] == 'U' || aCharset[0] == 'u') &&
@@ -2697,14 +2697,14 @@ nsStandardURL::Init(PRUint32 urlType,
 }
 
 NS_IMETHODIMP
-nsStandardURL::GetMutable(PRBool *value)
+nsStandardURL::GetMutable(bool *value)
 {
     *value = mMutable;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStandardURL::SetMutable(PRBool value)
+nsStandardURL::SetMutable(bool value)
 {
     NS_ENSURE_ARG(mMutable || !value);
 
@@ -2797,7 +2797,7 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
     rv = NS_ReadOptionalCString(stream, mOriginCharset);
     if (NS_FAILED(rv)) return rv;
 
-    PRBool isMutable;
+    bool isMutable;
     rv = stream->ReadBoolean(&isMutable);
     if (NS_FAILED(rv)) return rv;
     if (isMutable != PR_TRUE && isMutable != PR_FALSE) {
@@ -2806,7 +2806,7 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
     }
     mMutable = isMutable;
 
-    PRBool supportsFileURL;
+    bool supportsFileURL;
     rv = stream->ReadBoolean(&supportsFileURL);
     if (NS_FAILED(rv)) return rv;
     if (supportsFileURL != PR_TRUE && supportsFileURL != PR_FALSE) {
@@ -2921,7 +2921,7 @@ nsStandardURL::Write(nsIObjectOutputStream *stream)
 // nsStandardURL::nsIIPCSerializable
 //---------------------------------------------------------------------------
 
-PRBool
+bool
 nsStandardURL::Read(const IPC::Message *aMsg, void **aIter)
 {
     using IPC::ReadParam;

@@ -49,7 +49,7 @@ namespace layers {
 
 // Platform-specific shadow-layers interfaces.  See ShadowLayers.h.
 // D3D10 doesn't need all these yet.
-PRBool
+bool
 ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
                                                 gfxASurface::gfxContentType,
                                                 SurfaceDescriptor*,
@@ -58,7 +58,7 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
   return PR_FALSE;
 }
 
-PRBool
+bool
 ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize&,
                                           gfxASurface::gfxContentType,
                                           SurfaceDescriptor*)
@@ -72,7 +72,7 @@ ShadowLayerForwarder::PlatformOpenDescriptor(const SurfaceDescriptor&)
   return nsnull;
 }
 
-PRBool
+bool
 ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor*)
 {
   return PR_FALSE;
@@ -83,7 +83,7 @@ ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 {
 }
 
-PRBool
+bool
 ShadowLayerManager::PlatformDestroySharedSurface(SurfaceDescriptor*)
 {
   return PR_FALSE;

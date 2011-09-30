@@ -113,8 +113,8 @@ NS_AsyncCopy(nsIInputStream         *aSource,
              PRUint32                aChunkSize = 4096,
              nsAsyncCopyCallbackFun  aCallbackFun = nsnull,
              void                   *aCallbackClosure = nsnull,
-             PRBool                  aCloseSource = PR_TRUE,
-             PRBool                  aCloseSink = PR_TRUE,
+             bool                    aCloseSource = true,
+             bool                    aCloseSink = true,
              nsISupports           **aCopierCtx = nsnull);
 
 /**
@@ -169,7 +169,7 @@ NS_ConsumeStream(nsIInputStream *aSource, PRUint32 aMaxCount,
  * @param aInputStream
  *        The input stream to test.
  */
-extern PRBool
+extern bool
 NS_InputStreamIsBuffered(nsIInputStream *aInputStream);
 
 /**
@@ -185,7 +185,7 @@ NS_InputStreamIsBuffered(nsIInputStream *aInputStream);
  * @param aOutputStream
  *        The output stream to test.
  */
-extern PRBool
+extern bool
 NS_OutputStreamIsBuffered(nsIOutputStream *aOutputStream);
 
 /**

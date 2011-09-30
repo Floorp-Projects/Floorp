@@ -107,7 +107,7 @@ nsGridLayout2::GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequesto
 }
 
 void
-nsGridLayout2::AddWidth(nsSize& aSize, nscoord aSize2, PRBool aIsHorizontal)
+nsGridLayout2::AddWidth(nsSize& aSize, nscoord aSize2, bool aIsHorizontal)
 {
   nscoord& size = GET_WIDTH(aSize, aIsHorizontal);
 
@@ -249,7 +249,7 @@ nsGridLayout2::BuildRows(nsIBox* aBox, nsGridRow* aRows)
 }
 
 nsMargin
-nsGridLayout2::GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)
+nsGridLayout2::GetTotalMargin(nsIBox* aBox, bool aIsHorizontal)
 {
   nsMargin margin(0,0,0,0);
   return margin;

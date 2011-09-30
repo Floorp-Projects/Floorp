@@ -62,7 +62,7 @@ nsXFormsDropmarkerWidgetAccessible::NativeRole()
 PRUint64
 nsXFormsDropmarkerWidgetAccessible::NativeState()
 {
-  PRBool isOpen = PR_FALSE;
+  bool isOpen = false;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
   nsresult rv = sXFormsService->IsDropmarkerOpen(DOMNode, &isOpen);
   NS_ENSURE_SUCCESS(rv, 0);
@@ -83,7 +83,7 @@ nsXFormsDropmarkerWidgetAccessible::GetActionName(PRUint8 aIndex,
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
 
-  PRBool isOpen = PR_FALSE;
+  bool isOpen = false;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
   nsresult rv = sXFormsService->IsDropmarkerOpen(DOMNode, &isOpen);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -146,7 +146,7 @@ nsXFormsComboboxPopupWidgetAccessible::NativeState()
 {
   PRUint64 state = nsXFormsAccessible::NativeState();
 
-  PRBool isOpen = PR_FALSE;
+  bool isOpen = false;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
   nsresult rv = sXFormsService->IsDropmarkerOpen(DOMNode, &isOpen);
   NS_ENSURE_SUCCESS(rv, state);

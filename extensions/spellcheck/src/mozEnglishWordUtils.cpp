@@ -165,7 +165,7 @@ NS_IMETHODIMP mozEnglishWordUtils::GetRootForm(const PRUnichar *aWord, PRUint32 
 }
 
 // This needs vast improvement
-PRBool mozEnglishWordUtils::ucIsAlpha(PRUnichar aChar)
+bool mozEnglishWordUtils::ucIsAlpha(PRUnichar aChar)
 {
   // XXX we have to fix callers to handle the full Unicode range
   return nsIUGenCategory::kLetter == mCategories->Get(PRUint32(aChar));

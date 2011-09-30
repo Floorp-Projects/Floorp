@@ -227,7 +227,7 @@ char nsBasicUTF7Encoder::ValueToChar(PRUint32 aValue) {
     return -1;
 }
 
-PRBool nsBasicUTF7Encoder::DirectEncodable(PRUnichar aChar) {
+bool nsBasicUTF7Encoder::DirectEncodable(PRUnichar aChar) {
   // spec says: printable US-ASCII chars
   if ((aChar >= 0x20) && (aChar <= 0x7e)) return PR_TRUE;
   else return PR_FALSE;
@@ -306,7 +306,7 @@ nsUnicodeToUTF7::nsUnicodeToUTF7()
 }
 
 
-PRBool nsUnicodeToUTF7::DirectEncodable(PRUnichar aChar) {
+bool nsUnicodeToUTF7::DirectEncodable(PRUnichar aChar) {
   if ((aChar >= 'A') && (aChar <= 'Z')) return PR_TRUE;
   else if ((aChar >= 'a') && (aChar <= 'z')) return PR_TRUE;
   else if ((aChar >= '0') && (aChar <= '9')) return PR_TRUE;

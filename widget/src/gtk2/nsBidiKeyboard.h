@@ -52,7 +52,7 @@ public:
 protected:
     virtual ~nsBidiKeyboard();
 
-    PRPackedBool mHaveBidiKeyboards;
+    bool mHaveBidiKeyboards;
     nsresult SetHaveBidiKeyboards();
 };
 

@@ -1,13 +1,13 @@
 HTTP == fixed-1.html fixed-1.html?ref
 HTTP == fixed-opacity-1.html fixed-opacity-1.html?ref
 HTTP == fixed-opacity-2.html fixed-opacity-2.html?ref
-HTTP == fixed-text-1.html fixed-text-1.html?ref
-HTTP == fixed-text-2.html fixed-text-2.html?ref
+fails-if(Android&&layersOpenGL) HTTP == fixed-text-1.html fixed-text-1.html?ref
+fails-if(Android&&layersOpenGL) HTTP == fixed-text-2.html fixed-text-2.html?ref
 HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html?ref
-random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
-HTTP == simple-1.html simple-1.html?ref
+random-if(cocoaWidget) fails-if(Android&&layersOpenGL) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
+fails-if(Android&&layersOpenGL) HTTP == simple-1.html simple-1.html?ref
 HTTP == text-1.html text-1.html?ref
 HTTP == transformed-1.html transformed-1.html?ref
 HTTP == transformed-1.html?up transformed-1.html?ref
-== uncovering-1.html uncovering-1-ref.html
-== uncovering-2.html uncovering-2-ref.html
+fails-if(Android&&layersOpenGL) == uncovering-1.html uncovering-1-ref.html
+fails-if(Android&&layersOpenGL) == uncovering-2.html uncovering-2-ref.html

@@ -119,17 +119,17 @@ public:
     // nsIRDFObserver interface
     NS_DECL_NSIRDFOBSERVER
 
-    PRBool HasAssertionN(int n, nsIRDFResource* source,
+    bool HasAssertionN(int n, nsIRDFResource* source,
                             nsIRDFResource* property,
                             nsIRDFNode* target,
-                            PRBool tv);
+                            bool tv);
 
 protected:
     nsCOMArray<nsIRDFObserver> mObservers;
     nsCOMArray<nsIRDFDataSource> mDataSources;
 
-	PRBool      mAllowNegativeAssertions;
-	PRBool      mCoalesceDuplicateArcs;
+	bool        mAllowNegativeAssertions;
+	bool        mCoalesceDuplicateArcs;
     PRInt32     mUpdateBatchNest;
 
     nsFixedSizeAllocator mAllocator;
@@ -159,14 +159,14 @@ class CompositeEnumeratorImpl : public nsISimpleEnumerator
     GetEnumerator(nsIRDFDataSource* aDataSource, nsISimpleEnumerator** aResult) = 0;
 
     virtual nsresult
-    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, PRBool* aResult) = 0;
+    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, bool* aResult) = 0;
 
     virtual void Destroy() = 0;
 
 protected:
     CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
-                            PRBool aAllowNegativeAssertions,
-                            PRBool aCoalesceDuplicateArcs);
+                            bool aAllowNegativeAssertions,
+                            bool aCoalesceDuplicateArcs);
 
     virtual ~CompositeEnumeratorImpl();
     
@@ -176,14 +176,14 @@ protected:
     nsIRDFNode*  mResult;
     PRInt32      mNext;
     nsAutoTArray<nsCOMPtr<nsIRDFNode>, 8>  mAlreadyReturned;
-    PRPackedBool mAllowNegativeAssertions;
-    PRPackedBool mCoalesceDuplicateArcs;
+    bool mAllowNegativeAssertions;
+    bool mCoalesceDuplicateArcs;
 };
 
 
 CompositeEnumeratorImpl::CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
-                                                 PRBool aAllowNegativeAssertions,
-                                                 PRBool aCoalesceDuplicateArcs)
+                                                 bool aAllowNegativeAssertions,
+                                                 bool aCoalesceDuplicateArcs)
     : mCompositeDataSource(aCompositeDataSource),
       mCurrent(nsnull),
       mResult(nsnull),
@@ -207,7 +207,7 @@ NS_IMPL_RELEASE_WITH_DESTROY(CompositeEnumeratorImpl, Destroy())
 NS_IMPL_QUERY_INTERFACE1(CompositeEnumeratorImpl, nsISimpleEnumerator)
 
 NS_IMETHODIMP
-CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
+CompositeEnumeratorImpl::HasMoreElements(bool* aResult)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
@@ -244,7 +244,7 @@ CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
         do {
             PRInt32 i;
 
-            PRBool hasMore;
+            bool hasMore;
             rv = mCurrent->HasMoreElements(&hasMore);
             if (NS_FAILED(rv)) return rv;
 
@@ -269,7 +269,7 @@ CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
             if (mAllowNegativeAssertions)
             {
                 // See if any previous data source negates this
-                PRBool hasNegation = PR_FALSE;
+                bool hasNegation = false;
                 for (i = mNext - 1; i >= 0; --i)
                 {
                     nsIRDFDataSource* datasource =
@@ -294,7 +294,7 @@ CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
             {
                 // Now see if we've returned it once already.
                 // XXX N.B. performance here...may want to hash if things get large?
-                PRBool alreadyReturned = PR_FALSE;
+                bool alreadyReturned = false;
                 for (i = mAlreadyReturned.Length() - 1; i >= 0; --i)
                 {
                     if (mAlreadyReturned[i] == mResult)
@@ -340,7 +340,7 @@ CompositeEnumeratorImpl::GetNext(nsISupports** aResult)
 {
     nsresult rv;
 
-    PRBool hasMore;
+    bool hasMore;
     rv = HasMoreElements(&hasMore);
     if (NS_FAILED(rv)) return rv;
 
@@ -370,8 +370,8 @@ public:
            CompositeDataSourceImpl* aCompositeDataSource,
            nsIRDFNode* aNode,
            Type aType,
-           PRBool aAllowNegativeAssertions,
-           PRBool aCoalesceDuplicateArcs) {
+           bool aAllowNegativeAssertions,
+           bool aCoalesceDuplicateArcs) {
         void* place = aAllocator.Alloc(sizeof(CompositeArcsInOutEnumeratorImpl));
         return place
             ? ::new (place) CompositeArcsInOutEnumeratorImpl(aCompositeDataSource,
@@ -386,7 +386,7 @@ public:
     GetEnumerator(nsIRDFDataSource* aDataSource, nsISimpleEnumerator** aResult);
 
     virtual nsresult
-    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, PRBool* aResult);
+    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, bool* aResult);
 
     virtual void Destroy();
 
@@ -394,14 +394,14 @@ protected:
     CompositeArcsInOutEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
                                      nsIRDFNode* aNode,
                                      Type aType,
-                                     PRBool aAllowNegativeAssertions,
-                                     PRBool aCoalesceDuplicateArcs);
+                                     bool aAllowNegativeAssertions,
+                                     bool aCoalesceDuplicateArcs);
 
 private:
     nsIRDFNode* mNode;
     Type        mType;
-    PRBool	    mAllowNegativeAssertions;
-    PRBool      mCoalesceDuplicateArcs;
+    bool	    mAllowNegativeAssertions;
+    bool        mCoalesceDuplicateArcs;
 
     // Hide so that only Create() and Destroy() can be used to
     // allocate and deallocate from the heap
@@ -414,8 +414,8 @@ CompositeArcsInOutEnumeratorImpl::CompositeArcsInOutEnumeratorImpl(
                 CompositeDataSourceImpl* aCompositeDataSource,
                 nsIRDFNode* aNode,
                 Type aType,
-                PRBool aAllowNegativeAssertions,
-                PRBool aCoalesceDuplicateArcs)
+                bool aAllowNegativeAssertions,
+                bool aCoalesceDuplicateArcs)
     : CompositeEnumeratorImpl(aCompositeDataSource, aAllowNegativeAssertions, aCoalesceDuplicateArcs),
       mNode(aNode),
       mType(aType),
@@ -449,7 +449,7 @@ nsresult
 CompositeArcsInOutEnumeratorImpl::HasNegation(
                  nsIRDFDataSource* aDataSource,
                  nsIRDFNode* aNode,
-                 PRBool* aResult)
+                 bool* aResult)
 {
     *aResult = PR_FALSE;
     return NS_OK;
@@ -482,9 +482,9 @@ public:
            nsIRDFResource* aSource,
            nsIRDFResource* aProperty,
            nsIRDFNode* aTarget,
-           PRBool aTruthValue,
-           PRBool aAllowNegativeAssertions,
-           PRBool aCoalesceDuplicateArcs) {
+           bool aTruthValue,
+           bool aAllowNegativeAssertions,
+           bool aCoalesceDuplicateArcs) {
         void* place = aAllocator.Alloc(sizeof(CompositeAssertionEnumeratorImpl));
         return place
             ? ::new (place) CompositeAssertionEnumeratorImpl(aCompositeDataSource,
@@ -498,7 +498,7 @@ public:
     GetEnumerator(nsIRDFDataSource* aDataSource, nsISimpleEnumerator** aResult);
 
     virtual nsresult
-    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, PRBool* aResult);
+    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, bool* aResult);
 
     virtual void Destroy();
 
@@ -507,9 +507,9 @@ protected:
                                      nsIRDFResource* aSource,
                                      nsIRDFResource* aProperty,
                                      nsIRDFNode* aTarget,
-                                     PRBool aTruthValue,
-                                     PRBool aAllowNegativeAssertions,
-                                     PRBool aCoalesceDuplicateArcs);
+                                     bool aTruthValue,
+                                     bool aAllowNegativeAssertions,
+                                     bool aCoalesceDuplicateArcs);
 
     virtual ~CompositeAssertionEnumeratorImpl();
 
@@ -517,9 +517,9 @@ private:
     nsIRDFResource* mSource;
     nsIRDFResource* mProperty;
     nsIRDFNode*     mTarget;
-    PRBool          mTruthValue;
-    PRBool          mAllowNegativeAssertions;
-    PRBool          mCoalesceDuplicateArcs;
+    bool            mTruthValue;
+    bool            mAllowNegativeAssertions;
+    bool            mCoalesceDuplicateArcs;
 
     // Hide so that only Create() and Destroy() can be used to
     // allocate and deallocate from the heap
@@ -533,9 +533,9 @@ CompositeAssertionEnumeratorImpl::CompositeAssertionEnumeratorImpl(
                   nsIRDFResource* aSource,
                   nsIRDFResource* aProperty,
                   nsIRDFNode* aTarget,
-                  PRBool aTruthValue,
-                  PRBool aAllowNegativeAssertions,
-                  PRBool aCoalesceDuplicateArcs)
+                  bool aTruthValue,
+                  bool aAllowNegativeAssertions,
+                  bool aCoalesceDuplicateArcs)
     : CompositeEnumeratorImpl(aCompositeDataSource, aAllowNegativeAssertions, aCoalesceDuplicateArcs),
       mSource(aSource),
       mProperty(aProperty),
@@ -574,7 +574,7 @@ nsresult
 CompositeAssertionEnumeratorImpl::HasNegation(
                  nsIRDFDataSource* aDataSource,
                  nsIRDFNode* aNode,
-                 PRBool* aResult)
+                 bool* aResult)
 {
     if (mSource) {
         return aDataSource->HasAssertion(mSource, mProperty, aNode, !mTruthValue, aResult);
@@ -681,7 +681,7 @@ CompositeDataSourceImpl::GetURI(char* *uri)
 NS_IMETHODIMP
 CompositeDataSourceImpl::GetSource(nsIRDFResource* property,
                                    nsIRDFNode* target,
-                                   PRBool tv,
+                                   bool tv,
                                    nsIRDFResource** source)
 {
 	if (!mAllowNegativeAssertions && !tv)
@@ -712,7 +712,7 @@ CompositeDataSourceImpl::GetSource(nsIRDFResource* property,
 NS_IMETHODIMP
 CompositeDataSourceImpl::GetSources(nsIRDFResource* aProperty,
                                     nsIRDFNode* aTarget,
-                                    PRBool aTruthValue,
+                                    bool aTruthValue,
                                     nsISimpleEnumerator** aResult)
 {
     NS_PRECONDITION(aProperty != nsnull, "null ptr");
@@ -746,7 +746,7 @@ CompositeDataSourceImpl::GetSources(nsIRDFResource* aProperty,
 NS_IMETHODIMP
 CompositeDataSourceImpl::GetTarget(nsIRDFResource* aSource,
                                    nsIRDFResource* aProperty,
-                                   PRBool aTruthValue,
+                                   bool aTruthValue,
                                    nsIRDFNode** aResult)
 {
     NS_PRECONDITION(aSource != nsnull, "null ptr");
@@ -791,16 +791,16 @@ CompositeDataSourceImpl::GetTarget(nsIRDFResource* aSource,
     return NS_RDF_NO_VALUE;
 }
 
-PRBool
+bool
 CompositeDataSourceImpl::HasAssertionN(int n,
                                        nsIRDFResource* aSource,
                                        nsIRDFResource* aProperty,
                                        nsIRDFNode* aTarget,
-                                       PRBool aTruthValue)
+                                       bool aTruthValue)
 {
     nsresult rv;
     for (PRInt32 m = 0; m < n; ++m) {
-        PRBool result;
+        bool result;
         rv = mDataSources[m]->HasAssertion(aSource, aProperty, aTarget,
                                            aTruthValue, &result);
         if (NS_FAILED(rv))
@@ -818,7 +818,7 @@ CompositeDataSourceImpl::HasAssertionN(int n,
 NS_IMETHODIMP
 CompositeDataSourceImpl::GetTargets(nsIRDFResource* aSource,
                                     nsIRDFResource* aProperty,
-                                    PRBool aTruthValue,
+                                    bool aTruthValue,
                                     nsISimpleEnumerator** aResult)
 {
     NS_PRECONDITION(aSource != nsnull, "null ptr");
@@ -854,7 +854,7 @@ NS_IMETHODIMP
 CompositeDataSourceImpl::Assert(nsIRDFResource* aSource, 
                                 nsIRDFResource* aProperty, 
                                 nsIRDFNode* aTarget,
-                                PRBool aTruthValue)
+                                bool aTruthValue)
 {
     NS_PRECONDITION(aSource != nsnull, "null ptr");
     if (! aSource)
@@ -913,13 +913,13 @@ CompositeDataSourceImpl::Unassert(nsIRDFResource* aSource,
     // Iterate through each of the datasources, starting with "the
     // most local" and moving to "the most remote". If _any_ of the
     // datasources have the assertion, attempt to unassert it.
-    PRBool unasserted = PR_TRUE;
+    bool unasserted = true;
     PRInt32 i;
     PRInt32 count = mDataSources.Count();
     for (i = 0; i < count; ++i) {
         nsIRDFDataSource* ds = mDataSources[i];
 
-        PRBool hasAssertion;
+        bool hasAssertion;
         rv = ds->HasAssertion(aSource, aProperty, aTarget, PR_TRUE, &hasAssertion);
         if (NS_FAILED(rv)) return rv;
 
@@ -1049,8 +1049,8 @@ NS_IMETHODIMP
 CompositeDataSourceImpl::HasAssertion(nsIRDFResource* aSource,
                                       nsIRDFResource* aProperty,
                                       nsIRDFNode* aTarget,
-                                      PRBool aTruthValue,
-                                      PRBool* aResult)
+                                      bool aTruthValue,
+                                      bool* aResult)
 {
     NS_PRECONDITION(aSource != nsnull, "null ptr");
     if (! aSource)
@@ -1085,7 +1085,7 @@ CompositeDataSourceImpl::HasAssertion(nsIRDFResource* aSource,
 
         if (mAllowNegativeAssertions)
         {
-            PRBool hasNegation;
+            bool hasNegation;
             rv = datasource->HasAssertion(aSource, aProperty, aTarget, !aTruthValue, &hasNegation);
             if (NS_FAILED(rv)) return rv;
 
@@ -1128,7 +1128,7 @@ CompositeDataSourceImpl::RemoveObserver(nsIRDFObserver* aObserver)
 }
 
 NS_IMETHODIMP 
-CompositeDataSourceImpl::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+CompositeDataSourceImpl::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, bool *result)
 {
     nsresult rv;
     *result = PR_FALSE;
@@ -1143,7 +1143,7 @@ CompositeDataSourceImpl::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBoo
 }
 
 NS_IMETHODIMP 
-CompositeDataSourceImpl::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+CompositeDataSourceImpl::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, bool *result)
 {
     nsresult rv;
     *result = PR_FALSE;
@@ -1232,7 +1232,7 @@ CompositeDataSourceImpl::GetAllCmds(nsIRDFResource* source,
         rv = mDataSources[i]->GetAllCmds(source, getter_AddRefs(dsCmds));
         if (NS_SUCCEEDED(rv))
         {
-            PRBool	hasMore = PR_FALSE;
+            bool	hasMore = false;
             while(NS_SUCCEEDED(rv = dsCmds->HasMoreElements(&hasMore)) &&
                   hasMore)
             {
@@ -1255,11 +1255,11 @@ NS_IMETHODIMP
 CompositeDataSourceImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                           nsIRDFResource*   aCommand,
                                           nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-                                          PRBool* aResult)
+                                          bool* aResult)
 {
     nsresult rv;
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
-        PRBool enabled = PR_TRUE;
+        bool enabled = true;
         rv = mDataSources[i]->IsCommandEnabled(aSources, aCommand, aArguments, &enabled);
         if (NS_FAILED(rv) && (rv != NS_ERROR_NOT_IMPLEMENTED))
         {
@@ -1316,28 +1316,28 @@ CompositeDataSourceImpl::EndUpdateBatch()
 // need to add the observers of the CompositeDataSourceImpl to the new data source.
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::GetAllowNegativeAssertions(PRBool *aAllowNegativeAssertions)
+CompositeDataSourceImpl::GetAllowNegativeAssertions(bool *aAllowNegativeAssertions)
 {
 	*aAllowNegativeAssertions = mAllowNegativeAssertions;
 	return(NS_OK);
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::SetAllowNegativeAssertions(PRBool aAllowNegativeAssertions)
+CompositeDataSourceImpl::SetAllowNegativeAssertions(bool aAllowNegativeAssertions)
 {
 	mAllowNegativeAssertions = aAllowNegativeAssertions;
 	return(NS_OK);
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::GetCoalesceDuplicateArcs(PRBool *aCoalesceDuplicateArcs)
+CompositeDataSourceImpl::GetCoalesceDuplicateArcs(bool *aCoalesceDuplicateArcs)
 {
 	*aCoalesceDuplicateArcs = mCoalesceDuplicateArcs;
 	return(NS_OK);
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::SetCoalesceDuplicateArcs(PRBool aCoalesceDuplicateArcs)
+CompositeDataSourceImpl::SetCoalesceDuplicateArcs(bool aCoalesceDuplicateArcs)
 {
 	mCoalesceDuplicateArcs = aCoalesceDuplicateArcs;
 	return(NS_OK);
@@ -1398,7 +1398,7 @@ CompositeDataSourceImpl::OnAssert(nsIRDFDataSource* aDataSource,
 
 	if (mAllowNegativeAssertions)
 	{   
-		PRBool hasAssertion;
+		bool hasAssertion;
 		rv = HasAssertion(aSource, aProperty, aTarget, PR_TRUE, &hasAssertion);
 		if (NS_FAILED(rv)) return rv;
 
@@ -1429,7 +1429,7 @@ CompositeDataSourceImpl::OnUnassert(nsIRDFDataSource* aDataSource,
 
 	if (mAllowNegativeAssertions)
 	{   
-		PRBool hasAssertion;
+		bool hasAssertion;
 		rv = HasAssertion(aSource, aProperty, aTarget, PR_TRUE, &hasAssertion);
 		if (NS_FAILED(rv)) return rv;
 

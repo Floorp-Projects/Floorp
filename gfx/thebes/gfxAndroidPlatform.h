@@ -72,7 +72,7 @@ public:
     void GetFontList(InfallibleTArray<FontListEntry>* retValue);
 
     // platform implementations of font functions
-    virtual PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
+    virtual bool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
     virtual gfxPlatformFontList* CreatePlatformFontList();
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                            const PRUint8 *aFontData, PRUint32 aLength);
@@ -85,7 +85,7 @@ public:
 
     virtual nsresult ResolveFontName(const nsAString& aFontName,
                                      FontResolverCallback aCallback,
-                                     void *aClosure, PRBool& aAborted);
+                                     void *aClosure, bool& aAborted);
 
     virtual nsresult GetStandardFamilyName(const nsAString& aFontName,
                                            nsAString& aFamilyName);

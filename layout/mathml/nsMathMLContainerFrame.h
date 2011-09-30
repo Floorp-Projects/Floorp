@@ -105,12 +105,12 @@ public:
   // to ensure that restyle and reflow happens immediately after the current
   // reflow.
   void
-  SetIncrementScriptLevel(PRInt32 aChildIndex, PRBool aIncrement);
+  SetIncrementScriptLevel(PRInt32 aChildIndex, bool aIncrement);
 
   // --------------------------------------------------------------------------
   // Overloaded nsHTMLContainerFrame methods -- see documentation in nsIFrame.h
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return !(aFlags & nsIFrame::eLineParticipant) &&
       nsHTMLContainerFrame::IsFrameOfType(aFlags &
@@ -228,7 +228,7 @@ protected:
    */
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
+        bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
   // MeasureForWidth:
@@ -453,7 +453,7 @@ public:
     return rv;
   }
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const {
+  virtual bool IsFrameOfType(PRUint32 aFlags) const {
     return nsBlockFrame::IsFrameOfType(aFlags &
               ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
@@ -523,7 +523,7 @@ public:
     return rv;
   }
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const {
+  virtual bool IsFrameOfType(PRUint32 aFlags) const {
       return nsInlineFrame::IsFrameOfType(aFlags &
                 ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }

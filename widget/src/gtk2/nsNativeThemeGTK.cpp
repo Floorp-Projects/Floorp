@@ -119,7 +119,7 @@ nsNativeThemeGTK::RefreshWidgetWindow(nsIFrame* aFrame)
   vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
 }
 
-static PRBool IsFrameContentNodeInNamespace(nsIFrame *aFrame, PRUint32 aNamespace)
+static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, PRUint32 aNamespace)
 {
   nsIContent *content = aFrame ? aFrame->GetContent() : nsnull;
   if (!content)
@@ -127,7 +127,7 @@ static PRBool IsFrameContentNodeInNamespace(nsIFrame *aFrame, PRUint32 aNamespac
   return content->IsInNamespace(aNamespace);
 }
 
-static PRBool IsWidgetTypeDisabled(PRUint8* aDisabledVector, PRUint8 aWidgetType) {
+static bool IsWidgetTypeDisabled(PRUint8* aDisabledVector, PRUint8 aWidgetType) {
   return (aDisabledVector[aWidgetType >> 3] & (1 << (aWidgetType & 7))) != 0;
 }
 
@@ -146,7 +146,7 @@ GetWidgetStateKey(PRUint8 aWidgetType, GtkWidgetState *aWidgetState)
           aWidgetType << 5);
 }
 
-static PRBool IsWidgetStateSafe(PRUint8* aSafeVector,
+static bool IsWidgetStateSafe(PRUint8* aSafeVector,
                                 PRUint8 aWidgetType,
                                 GtkWidgetState *aWidgetState)
 {
@@ -190,7 +190,7 @@ nsNativeThemeGTK::GetTabMarginPixels(nsIFrame* aFrame)
                        aFrame->PresContext()->AppUnitsToDevPixels(-margin)));
 }
 
-PRBool
+bool
 nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
                                        GtkThemeWidgetType& aGtkWidgetType,
                                        GtkWidgetState* aState,
@@ -234,7 +234,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             nsCOMPtr<nsIDOMHTMLInputElement> inputElt(do_QueryInterface(aFrame->GetContent()));
             *aWidgetFlags = 0;
             if (inputElt) {
-              PRBool isHTMLChecked;
+              bool isHTMLChecked;
               inputElt->GetChecked(&isHTMLChecked);
               if (isHTMLChecked)
                 *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
@@ -330,7 +330,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_RADIOMENUITEM ||
             aWidgetType == NS_THEME_MENUSEPARATOR ||
             aWidgetType == NS_THEME_MENUARROW) {
-          PRBool isTopLevel = PR_FALSE;
+          bool isTopLevel = false;
           nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
           if (menuFrame) {
             isTopLevel = menuFrame->IsOnMenuBar();
@@ -365,7 +365,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_TOOLBAR_BUTTON_DROPDOWN ||
             aWidgetType == NS_THEME_DROPDOWN ||
             aWidgetType == NS_THEME_DROPDOWN_BUTTON) {
-          PRBool menuOpen = IsOpenButton(aFrame);
+          bool menuOpen = IsOpenButton(aFrame);
           aState->depressed = IsCheckedButton(aFrame) || menuOpen;
           // we must not highlight buttons with open drop down menus on hover.
           aState->inHover = aState->inHover && !menuOpen;
@@ -692,7 +692,7 @@ ThemeRenderer::DrawWithGDK(GdkDrawable * drawable, gint offsetX,
   return NS_OK;
 }
 
-PRBool
+bool
 nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, PRUint8 aWidgetType,
                                         nsIntMargin* aExtra)
 {
@@ -787,7 +787,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
   // to provide crisper and faster drawing.
   // Don't snap if it's a non-unit scale factor. We're going to have to take
   // slow paths then in any case.
-  PRBool snapXY = ctx->UserToDevicePixelSnapped(rect);
+  bool snapXY = ctx->UserToDevicePixelSnapped(rect);
   if (snapXY) {
     // Leave rect in device coords but make dirtyRect consistent.
     dirtyRect = ctx->UserToDevice(dirtyRect);
@@ -848,7 +848,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
   NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
                "Trying to render an unsafe widget!");
 
-  PRBool safeState = IsWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
+  bool safeState = IsWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
   if (!safeState) {
     gLastGdkError = 0;
     gdk_error_trap_push ();
@@ -952,7 +952,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
   return NS_OK;
 }
 
-PRBool
+bool
 nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame, PRUint8 aWidgetType,
                                    nsIntMargin* aResult)
@@ -1010,7 +1010,7 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
                                     nsIFrame* aFrame, PRUint8 aWidgetType,
                                     nsRect* aOverflowRect)
@@ -1034,7 +1034,7 @@ nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
 NS_IMETHODIMP
 nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
                                        nsIFrame* aFrame, PRUint8 aWidgetType,
-                                       nsIntSize* aResult, PRBool* aIsOverridable)
+                                       nsIntSize* aResult, bool* aIsOverridable)
 {
   aResult->width = aResult->height = 0;
   *aIsOverridable = PR_TRUE;
@@ -1256,7 +1256,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
 
 NS_IMETHODIMP
 nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
-                                     nsIAtom* aAttribute, PRBool* aShouldRepaint)
+                                     nsIAtom* aAttribute, bool* aShouldRepaint)
 {
   // Some widget types just never change state.
   if (aWidgetType == NS_THEME_TOOLBOX ||
@@ -1323,7 +1323,7 @@ nsNativeThemeGTK::ThemeChanged()
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
@@ -1425,7 +1425,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   return PR_FALSE;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsNativeThemeGTK::WidgetIsContainer(PRUint8 aWidgetType)
 {
   // XXXdwh At some point flesh all of this out.
@@ -1442,7 +1442,7 @@ nsNativeThemeGTK::WidgetIsContainer(PRUint8 aWidgetType)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
 {
    if (aWidgetType == NS_THEME_DROPDOWN ||
@@ -1453,7 +1453,7 @@ nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsNativeThemeGTK::ThemeNeedsComboboxDropmarker()
 {
   return PR_FALSE;

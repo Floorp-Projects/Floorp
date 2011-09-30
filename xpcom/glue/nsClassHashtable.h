@@ -63,7 +63,7 @@ public:
    * @copydoc nsBaseHashtable::Get
    * @param pData if the key doesn't exist, pData will be set to nsnull.
    */
-  PRBool Get(KeyType aKey, UserDataType* pData) const;
+  bool Get(KeyType aKey, UserDataType* pData) const;
 
   /**
    * @copydoc nsBaseHashtable::Get
@@ -105,7 +105,7 @@ public:
    * @copydoc nsBaseHashtable::Get
    * @param pData if the key doesn't exist, pData will be set to nsnull.
    */
-  PRBool Get(KeyType aKey, UserDataType* pData) const;
+  bool Get(KeyType aKey, UserDataType* pData) const;
 };
 
 
@@ -114,7 +114,7 @@ public:
 //
 
 template<class KeyClass,class T>
-PRBool
+bool
 nsClassHashtable<KeyClass,T>::Get(KeyType aKey, T** retVal) const
 {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
@@ -168,7 +168,7 @@ nsClassHashtable<KeyClass,T>::RemoveAndForget(KeyType aKey, nsAutoPtr<T> &aOut)
 //
 
 template<class KeyClass,class T>
-PRBool
+bool
 nsClassHashtableMT<KeyClass,T>::Get(KeyType aKey, T** retVal) const
 {
   PR_Lock(this->mLock);

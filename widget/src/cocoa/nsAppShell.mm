@@ -74,7 +74,7 @@ extern nsIWidget         * gRollupWidget;
 // defined in nsCocoaWindow.mm
 extern PRInt32             gXULModalLevel;
 
-static PRBool gAppShellMethodsSwizzled = PR_FALSE;
+static bool gAppShellMethodsSwizzled = false;
 // List of current Cocoa app-modal windows (nested if more than one).
 nsCocoaAppModalWindowList *gCocoaAppModalWindowList = NULL;
 
@@ -163,7 +163,7 @@ NSModalSession nsCocoaAppModalWindowList::CurrentSession()
 }
 
 // Has a Gecko modal dialog popped up over a Cocoa app-modal dialog?
-PRBool nsCocoaAppModalWindowList::GeckoModalAboveCocoaModal()
+bool nsCocoaAppModalWindowList::GeckoModalAboveCocoaModal()
 {
   if (mList.IsEmpty())
     return PR_FALSE;
@@ -559,14 +559,14 @@ nsAppShell::ScheduleNativeEventCallback()
 // times in a row.  This doesn't seem to cause native event starvation.
 //
 // protected virtual
-PRBool
-nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
+bool
+nsAppShell::ProcessNextNativeEvent(bool aMayWait)
 {
-  PRBool moreEvents = PR_FALSE;
+  bool moreEvents = false;
 
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  PRBool eventProcessed = PR_FALSE;
+  bool eventProcessed = false;
   NSString* currentMode = nil;
 
   if (mTerminated)
@@ -585,7 +585,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
       (!gCocoaAppModalWindowList || !gCocoaAppModalWindowList->GeckoModalAboveCocoaModal()))
     return PR_FALSE;
 
-  PRBool wasRunningEventLoop = mRunningEventLoop;
+  bool wasRunningEventLoop = mRunningEventLoop;
   mRunningEventLoop = aMayWait;
   NSDate* waitUntil = nil;
   if (aMayWait)
@@ -738,7 +738,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 // nsAppShell implementation, what counts as the "main" event loop is what
 // nsBaseAppShell::NativeEventCallback() does to process Gecko events.  We
 // don't currently use nsBaseAppShell::Run().)
-PRBool
+bool
 nsAppShell::InGeckoMainEventLoop()
 {
   if ((gXULModalLevel > 0) || (mRecursionDepth > 0))
@@ -842,7 +842,7 @@ nsAppShell::Exit(void)
 //
 // public
 NS_IMETHODIMP
-nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
+nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
                                PRUint32 aRecursionDepth)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;

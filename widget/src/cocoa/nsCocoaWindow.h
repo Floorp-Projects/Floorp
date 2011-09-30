@@ -153,7 +153,7 @@ typedef struct _nsCocoaWindowList {
   // Used to avoid duplication when we send NS_ACTIVATE and
   // NS_DEACTIVATE to Gecko for toplevel widgets.  Starts out
   // PR_FALSE.
-  PRBool mToplevelActiveState;
+  bool mToplevelActiveState;
   BOOL mHasEverBeenZoomed;
 }
 + (void)paintMenubarForWindow:(NSWindow*)aWindow;
@@ -161,7 +161,7 @@ typedef struct _nsCocoaWindowList {
 - (void)windowDidResize:(NSNotification*)aNotification;
 - (void)sendFocusEvent:(PRUint32)eventType;
 - (nsCocoaWindow*)geckoWidget;
-- (PRBool)toplevelActiveState;
+- (bool)toplevelActiveState;
 - (void)sendToplevelActivateEvents;
 - (void)sendToplevelDeactivateEvents;
 @end
@@ -222,29 +222,29 @@ public:
 
     NS_IMETHOD              Destroy();
 
-    NS_IMETHOD              Show(PRBool aState);
+    NS_IMETHOD              Show(bool aState);
     virtual nsIWidget*      GetSheetWindowParent(void);
-    NS_IMETHOD              Enable(PRBool aState);
-    NS_IMETHOD              IsEnabled(PRBool *aState);
-    NS_IMETHOD              SetModal(PRBool aState);
-    NS_IMETHOD              IsVisible(PRBool & aState);
-    NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE);
+    NS_IMETHOD              Enable(bool aState);
+    NS_IMETHOD              IsEnabled(bool *aState);
+    NS_IMETHOD              SetModal(bool aState);
+    NS_IMETHOD              IsVisible(bool & aState);
+    NS_IMETHOD              SetFocus(bool aState=false);
     virtual nsIntPoint WidgetToScreenOffset();
     virtual nsIntPoint GetClientOffset();
     virtual nsIntSize ClientToWindowSize(const nsIntSize& aClientSize);
 
     virtual void* GetNativeData(PRUint32 aDataType) ;
 
-    NS_IMETHOD              ConstrainPosition(PRBool aAllowSlop,
+    NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
                                               PRInt32 *aX, PRInt32 *aY);
     NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
     NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                        nsIWidget *aWidget, PRBool aActivate);
+                                        nsIWidget *aWidget, bool aActivate);
     NS_IMETHOD              SetSizeMode(PRInt32 aMode);
-    NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
-    NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
-    NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
-    NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
+    NS_IMETHOD              HideWindowChrome(bool aShouldHide);
+    NS_IMETHOD              MakeFullScreen(bool aFullScreen);
+    NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, bool aRepaint);
+    NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint);
     NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
     NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
     void                    ReportMoveEvent();
@@ -254,7 +254,7 @@ public:
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
-    NS_IMETHOD Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
+    NS_IMETHOD Invalidate(const nsIntRect &aRect, bool aIsSynchronous);
     NS_IMETHOD Update();
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
     virtual LayerManager* GetLayerManager(PLayersChild* aShadowManager = nsnull,
@@ -263,15 +263,15 @@ public:
                                           bool* aAllowRetaining = nsnull);
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
-                                   PRBool aDoCapture, PRBool aConsumeRollupEvent);
+                                   bool aDoCapture, bool aConsumeRollupEvent);
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);
-    virtual PRBool HasPendingInputEvent();
+    virtual bool HasPendingInputEvent();
     virtual nsTransparencyMode GetTransparencyMode();
     virtual void SetTransparencyMode(nsTransparencyMode aMode);
     NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle);
-    virtual void SetShowsToolbarButton(PRBool aShow);
-    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
-    virtual void SetDrawsInTitlebar(PRBool aState);
+    virtual void SetShowsToolbarButton(bool aShow);
+    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive);
+    virtual void SetDrawsInTitlebar(bool aState);
     virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                                 PRUint32 aNativeMessage,
                                                 PRUint32 aModifierFlags);
@@ -281,9 +281,9 @@ public:
     virtual gfxASurface* GetThebesSurface();
 
     // be notified that a some form of drag event needs to go into Gecko
-    virtual PRBool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
+    virtual bool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
 
-    PRBool HasModalDescendents() { return mNumModalDescendents > 0; }
+    bool HasModalDescendents() { return mNumModalDescendents > 0; }
     NSWindow *GetCocoaWindow() { return mWindow; }
 
     void SetMenuBar(nsMenuBarX* aMenuBar);
@@ -297,15 +297,15 @@ public:
 
     void SetPopupWindowLevel();
 
-    PRBool IsChildInFailingLeftClickThrough(NSView *aChild);
-    PRBool ShouldFocusPlugin();
+    bool IsChildInFailingLeftClickThrough(NSView *aChild);
+    bool ShouldFocusPlugin();
 
     NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent);
 protected:
 
   nsresult             CreateNativeWindow(const NSRect &aRect,
                                           nsBorderStyle aBorderStyle,
-                                          PRBool aRectIsFrameRect);
+                                          bool aRectIsFrameRect);
   nsresult             CreatePopupContentView(const nsIntRect &aRect,
                                               EVENT_CALLBACK aHandleEventFunction,
                                               nsDeviceContext *aContext,
@@ -334,11 +334,11 @@ protected:
   PRInt32              mShadowStyle;
   NSUInteger           mWindowFilter;
 
-  PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
-  PRPackedBool         mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
+  bool                 mWindowMadeHere; // true if we created the window, false for embedding
+  bool                 mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
                                         // this is used for sibling sheet contention only
-  PRPackedBool         mFullScreen;
-  PRPackedBool         mModal;
+  bool                 mFullScreen;
+  bool                 mModal;
 
   PRInt32              mNumModalDescendents;
 };

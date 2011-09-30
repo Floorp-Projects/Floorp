@@ -289,6 +289,88 @@ var gAllTests = [
   },
 
   /**
+   * The next three tests checks that when a certain history item cannot be
+   * cleared then the checkbox should be both disabled and unchecked.
+   * In addition, we ensure that this behavior does not modify the preferences.
+   */
+  function () {
+    // Add history.
+    let uris = [ addHistoryWithMinutesAgo(10) ];
+    let formEntries = [ addFormEntryWithMinutesAgo(10) ];
+
+    let wh = new WindowHelper();
+    wh.onload = function() {
+      // Check that the relevant checkboxes are enabled
+      var cb = this.win.document.querySelectorAll(
+                 "#itemList > [preference='privacy.cpd.formdata']");
+      ok(cb.length == 1 && !cb[0].disabled, "There is formdata, checkbox to " +
+         "clear formdata should be enabled.");
+
+      var cb = this.win.document.querySelectorAll(
+                 "#itemList > [preference='privacy.cpd.history']");
+      ok(cb.length == 1 && !cb[0].disabled, "There is history, checkbox to " +
+         "clear history should be enabled.");
+
+      this.checkAllCheckboxes();
+      this.acceptDialog();
+
+      ensureHistoryClearedState(uris, true);
+      ensureFormEntriesClearedState(formEntries, true);
+    };
+    wh.open();
+  },
+  function () {
+    let wh = new WindowHelper();
+    wh.onload = function() {
+      boolPrefIs("cpd.history", true,
+                 "history pref should be true after accepting dialog with " +
+                 "history checkbox checked");
+      boolPrefIs("cpd.formdata", true,
+                 "formdata pref should be true after accepting dialog with " +
+                 "formdata checkbox checked");
+
+
+      // Even though the formdata pref is true, because there is no history
+      // left to clear, the checkbox will be disabled.
+      var cb = this.win.document.querySelectorAll(
+                 "#itemList > [preference='privacy.cpd.formdata']");
+      ok(cb.length == 1 && cb[0].disabled && !cb[0].checked,
+         "There is no formdata history, checkbox should be disabled and be " +
+         "cleared to reduce user confusion (bug 497664).");
+
+      var cb = this.win.document.querySelectorAll(
+                 "#itemList > [preference='privacy.cpd.history']");
+      ok(cb.length == 1 && !cb[0].disabled && cb[0].checked,
+         "There is no history, but history checkbox should always be enabled " +
+         "and will be checked from previous preference.");
+
+      this.acceptDialog();
+    }
+    wh.open();
+  },
+  function () {
+    let formEntries = [ addFormEntryWithMinutesAgo(10) ];
+
+    let wh = new WindowHelper();
+    wh.onload = function() {
+      boolPrefIs("cpd.formdata", true,
+                 "formdata pref should persist previous value after accepting " +
+                 "dialog where you could not clear formdata.");
+
+      var cb = this.win.document.querySelectorAll(
+                 "#itemList > [preference='privacy.cpd.formdata']");
+      ok(cb.length == 1 && !cb[0].disabled && cb[0].checked,
+         "There exists formEntries so the checkbox should be in sync with " +
+         "the pref.");
+
+      this.acceptDialog();
+      ensureFormEntriesClearedState(formEntries, true);
+    };
+    wh.open();
+  },
+
+
+  /**
    * These next six tests together ensure that toggling details persists
    * across dialog openings.
    */

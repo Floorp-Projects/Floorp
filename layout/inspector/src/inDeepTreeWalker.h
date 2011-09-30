@@ -71,8 +71,8 @@ public:
 protected:
   void PushNode(nsIDOMNode* aNode);
 
-  PRBool mShowAnonymousContent;
-  PRBool mShowSubDocuments;
+  bool mShowAnonymousContent;
+  bool mShowSubDocuments;
   nsCOMPtr<nsIDOMNode> mRoot;
   nsCOMPtr<nsIDOMNode> mCurrentNode;
   PRUint32 mWhatToShow;

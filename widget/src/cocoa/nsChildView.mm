@@ -119,9 +119,9 @@ extern "C" {
 extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
 
 // these are defined in nsCocoaWindow.mm
-extern PRBool gConsumeRollupEvent;
+extern bool gConsumeRollupEvent;
 
-PRBool gChildViewMethodsSwizzled = PR_FALSE;
+bool gChildViewMethodsSwizzled = false;
 
 extern nsISupportsArray *gDraggedTransferables;
 
@@ -139,7 +139,7 @@ nsIRollupListener * gRollupListener = nsnull;
 nsIMenuRollup     * gMenuRollup = nsnull;
 nsIWidget         * gRollupWidget   = nsnull;
 
-PRBool gUserCancelledDrag = PR_FALSE;
+bool gUserCancelledDrag = false;
 
 PRUint32 nsChildView::sLastInputEventCount = 0;
 
@@ -559,7 +559,7 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
+NS_IMETHODIMP nsChildView::IsVisible(bool& outState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -678,7 +678,7 @@ static void HideChildPluginViews(NSView* aView)
 }
 
 // Hide or show this component
-NS_IMETHODIMP nsChildView::Show(PRBool aState)
+NS_IMETHODIMP nsChildView::Show(bool aState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -778,12 +778,12 @@ nsChildView::GetDPI()
   return 96.0;
 }
 
-NS_IMETHODIMP nsChildView::Enable(PRBool aState)
+NS_IMETHODIMP nsChildView::Enable(bool aState)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::IsEnabled(PRBool *aState)
+NS_IMETHODIMP nsChildView::IsEnabled(bool *aState)
 {
   // unimplemented
   if (aState)
@@ -791,7 +791,7 @@ NS_IMETHODIMP nsChildView::IsEnabled(PRBool *aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
+NS_IMETHODIMP nsChildView::SetFocus(bool aRaise)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -843,7 +843,7 @@ NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::ConstrainPosition(PRBool aAllowSlop,
+NS_IMETHODIMP nsChildView::ConstrainPosition(bool aAllowSlop,
                                              PRInt32 *aX, PRInt32 *aY)
 {
   return NS_OK;
@@ -874,7 +874,7 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -898,7 +898,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -938,7 +938,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
 
 static const PRInt32 resizeIndicatorWidth = 15;
 static const PRInt32 resizeIndicatorHeight = 15;
-PRBool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
+bool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
 {
   NSView *topLevelView = mView, *superView = nil;
   while ((superView = [topLevelView superview]))
@@ -972,7 +972,7 @@ PRBool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
 // specific code to work around this bug, which breaks when we fix it (see bmo
 // bug 477077).  So we'll need to coordinate releasing a fix for this bug with
 // Adobe and other major plugin vendors that support the CoreGraphics mode.
-NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, PRBool& outWidgetVisible)
+NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, bool& outWidgetVisible)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1002,7 +1002,7 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
   outOrigin.x = -NSToIntRound(viewOrigin.x);
   outOrigin.y = -NSToIntRound(viewOrigin.y);
 
-  PRBool isVisible;
+  bool isVisible;
   IsVisible(isVisible);
   if (isVisible && [mView window] != nil) {
     outClipRect.width  = NSToIntRound(visibleBounds.origin.x + visibleBounds.size.width) - NSToIntRound(visibleBounds.origin.x);
@@ -1088,7 +1088,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // without regressing bug 409615.  See bug 435041.  (StartDrawPlugin() and
   // EndDrawPlugin() wrap every call to nsIPluginInstance::HandleEvent() --
   // not just calls that "draw" or paint.)
-  PRBool isQDPlugin = [(ChildView*)mView pluginDrawingModel] == NPDrawingModelQuickDraw;
+  bool isQDPlugin = [(ChildView*)mView pluginDrawingModel] == NPDrawingModelQuickDraw;
   if (isQDPlugin || mIsDispatchPaint) {
     if (mPluginDrawing)
       return NS_ERROR_FAILURE;
@@ -1116,7 +1116,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
 
     RgnHandle pluginRegion = ::NewRgn();
     if (pluginRegion) {
-      PRBool portChanged = (port != CGrafPtr(::GetQDGlobalsThePort()));
+      bool portChanged = (port != CGrafPtr(::GetQDGlobalsThePort()));
       CGrafPtr oldPort;
       GDHandle oldDevice;
 
@@ -1129,7 +1129,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
 
       nsIntRect clipRect; // this is in native window coordinates
       nsIntPoint origin;
-      PRBool visible;
+      bool visible;
       GetPluginClipRect(clipRect, origin, visible);
 
       // XXX if we're not visible, set an empty clip region?
@@ -1393,7 +1393,7 @@ static void blinkRgn(RgnHandle rgn)
 #endif
 
 // Invalidate this component's visible area
-NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous)
+NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, bool aIsSynchronous)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1420,7 +1420,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchron
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-PRBool
+bool
 nsChildView::GetShouldAccelerate()
 {
   // Don't use OpenGL for transparent windows or for popup windows.
@@ -1466,7 +1466,7 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
     // it from here.  See bug 592563.
     child->Show(!config.mClipRegion.IsEmpty());
 
-    PRBool repaint = PR_FALSE;
+    bool repaint = false;
 #ifndef NP_NO_QUICKDRAW
     repaint = child->mView &&
       [(ChildView*)child->mView pluginDrawingModel] == NPDrawingModelQuickDraw;
@@ -1509,7 +1509,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
     }
   }
 
-  PRBool restoreIsDispatchPaint = mIsDispatchPaint;
+  bool restoreIsDispatchPaint = mIsDispatchPaint;
   mIsDispatchPaint = mIsDispatchPaint || event->eventStructType == NS_PAINT_EVENT;
 
   if (mEventCallback)
@@ -1520,7 +1520,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
   return NS_OK;
 }
 
-PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
+bool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
 {
   nsEventStatus status;
   DispatchEvent(&event, status);
@@ -1529,14 +1529,14 @@ PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
 
 #pragma mark -
 
-PRBool nsChildView::ReportDestroyEvent()
+bool nsChildView::ReportDestroyEvent()
 {
   nsGUIEvent event(PR_TRUE, NS_DESTROY, this);
   event.time = PR_IntervalNow();
   return DispatchWindowEvent(event);
 }
 
-PRBool nsChildView::ReportMoveEvent()
+bool nsChildView::ReportMoveEvent()
 {
   nsGUIEvent moveEvent(PR_TRUE, NS_MOVE, this);
   moveEvent.refPoint.x = mBounds.x;
@@ -1545,7 +1545,7 @@ PRBool nsChildView::ReportMoveEvent()
   return DispatchWindowEvent(moveEvent);
 }
 
-PRBool nsChildView::ReportSizeEvent()
+bool nsChildView::ReportSizeEvent()
 {
   nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time        = PR_IntervalNow();
@@ -1585,8 +1585,8 @@ nsIntPoint nsChildView::WidgetToScreenOffset()
 
 NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener, 
                                                nsIMenuRollup * aMenuRollup,
-                                               PRBool aDoCapture, 
-                                               PRBool aConsumeRollupEvent)
+                                               bool aDoCapture, 
+                                               bool aConsumeRollupEvent)
 {
   // this never gets called, only top-level windows can be rollup widgets
   return NS_OK;
@@ -1609,7 +1609,7 @@ NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 }
 
 /* static */
-PRBool nsChildView::DoHasPendingInputEvent()
+bool nsChildView::DoHasPendingInputEvent()
 {
   return sLastInputEventCount != GetCurrentInputEventCount(); 
 }
@@ -1652,7 +1652,7 @@ void nsChildView::UpdateCurrentInputEventCount()
   sLastInputEventCount = GetCurrentInputEventCount();
 }
 
-PRBool nsChildView::HasPendingInputEvent()
+bool nsChildView::HasPendingInputEvent()
 {
   return DoHasPendingInputEvent();
 }
@@ -1670,7 +1670,7 @@ NS_IMETHODIMP nsChildView::ResetInputState()
 }
 
 // 'open' means that it can take non-ASCII chars
-NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
+NS_IMETHODIMP nsChildView::SetIMEOpenState(bool aState)
 {
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
   mTextInputHandler->SetIMEOpenState(aState);
@@ -1678,7 +1678,7 @@ NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
 }
 
 // 'open' means that it can take non-ASCII chars
-NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
+NS_IMETHODIMP nsChildView::GetIMEOpenState(bool* aState)
 {
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
   *aState = mTextInputHandler->IsIMEOpened();
@@ -1724,7 +1724,7 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
 }
 
 NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
-                                              PRBool* aLEDState)
+                                              bool* aLEDState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1748,7 +1748,7 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsChildView::OnIMEFocusChange(PRBool aFocus)
+NS_IMETHODIMP nsChildView::OnIMEFocusChange(bool aFocus)
 {
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
   mTextInputHandler->OnFocusChangeInGecko(aFocus);
@@ -2483,7 +2483,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
 {
-  PRBool isVisible;
+  bool isVisible;
   if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) ||
       !isVisible)
     return;
@@ -2587,7 +2587,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   targetContext->Clip();
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  PRBool painted;
+  bool painted;
   {
     nsBaseWidget::AutoLayerManagerSetup
       setupLayerManager(mGeckoChild, targetContext, BasicLayerManager::BUFFER_NONE);
@@ -2752,7 +2752,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     NSWindow* currentPopup = static_cast<NSWindow*>(gRollupWidget->GetNativeData(NS_NATIVE_WINDOW));
     if (!nsCocoaUtils::IsEventOverWindow(theEvent, currentPopup)) {
       // event is not over the rollup window, default is to roll up
-      PRBool shouldRollup = PR_TRUE;
+      bool shouldRollup = true;
 
       // check to see if scroll events should roll up the popup
       if ([theEvent type] == NSScrollWheel) {
@@ -3669,7 +3669,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   float scrollDelta = 0;
   float scrollDeltaPixels = 0;
-  PRBool checkPixels =
+  bool checkPixels =
     Preferences::GetBool("mousewheel.enable_pixel_scrolling", PR_TRUE);
 
   // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
@@ -4102,7 +4102,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  PRBool handled = PR_FALSE;
+  bool handled = false;
   if (mGeckoChild && mTextInputHandler) {
     handled = mTextInputHandler->HandleKeyDownEvent(theEvent);
   }
@@ -4389,7 +4389,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     else if (aMessage == NS_DRAGDROP_DROP) {
       // We make the assumption that the dragOver handlers have correctly set
       // the |canDrop| property of the Drag Session.
-      PRBool canDrop = PR_FALSE;
+      bool canDrop = false;
       if (!NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) || !canDrop) {
         [self doDragAction:NS_DRAGDROP_EXIT sender:aSender];
 

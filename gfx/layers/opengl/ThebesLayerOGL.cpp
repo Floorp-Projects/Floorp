@@ -409,14 +409,14 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
   // drawing, because we might sample across the rotation boundary.
-  PRBool canHaveRotation =  !(aFlags & PAINT_WILL_RESAMPLE);
+  bool canHaveRotation =  !(aFlags & PAINT_WILL_RESAMPLE);
 
   nsIntRegion validRegion = mLayer->GetValidRegion();
 
   Layer::SurfaceMode mode;
   ContentType contentType;
   nsIntRegion neededRegion;
-  PRBool canReuseBuffer;
+  bool canReuseBuffer;
   nsIntRect destBufferRect;
 
   while (PR_TRUE) {
@@ -701,7 +701,7 @@ ThebesLayerOGL::Destroy()
   }
 }
 
-PRBool
+bool
 ThebesLayerOGL::CreateSurface()
 {
   NS_ASSERTION(!mBuffer, "buffer already created?");
@@ -799,7 +799,7 @@ ThebesLayerOGL::GetLayer()
   return this;
 }
 
-PRBool
+bool
 ThebesLayerOGL::IsEmpty()
 {
   return !mBuffer;
@@ -940,7 +940,7 @@ ShadowThebesLayerOGL::GetLayer()
   return this;
 }
 
-PRBool
+bool
 ShadowThebesLayerOGL::IsEmpty()
 {
   return !mBuffer;

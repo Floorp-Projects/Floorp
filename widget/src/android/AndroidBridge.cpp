@@ -97,7 +97,7 @@ AndroidBridge::ConstructBridge(JNIEnv *jEnv,
     return sBridge;
 }
 
-PRBool
+bool
 AndroidBridge::Init(JNIEnv *jEnv,
                     jclass jGeckoAppShellClass)
 {
@@ -106,8 +106,9 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     mJNIEnv = nsnull;
     mThread = nsnull;
-    mOpenedBitmapLibrary = false;
+    mOpenedGraphicsLibraries = false;
     mHasNativeBitmapAccess = false;
+    mHasNativeWindowAccess = false;
 
     mGeckoAppShellClass = (jclass) jEnv->NewGlobalRef(jGeckoAppShellClass);
 
@@ -150,6 +151,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jCreateShortcut = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jGetShowPasswordSetting = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getShowPasswordSetting", "()Z");
     jPostToJavaThread = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "postToJavaThread", "(Z)V");
+    jInitCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "initCamera", "(Ljava/lang/String;III)[I");
+    jCloseCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "closeCamera", "()V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -168,7 +171,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
 }
 
 JNIEnv *
-AndroidBridge::AttachThread(PRBool asDaemon)
+AndroidBridge::AttachThread(bool asDaemon)
 {
     // If we already have a env, return it
     JNIEnv *jEnv = NULL;
@@ -207,7 +210,7 @@ AndroidBridge::AttachThread(PRBool asDaemon)
     return jEnv;
 }
 
-PRBool
+bool
 AndroidBridge::SetMainThread(void *thr)
 {
     ALOG_BRIDGE("AndroidBridge::SetMainThread");
@@ -392,7 +395,7 @@ getHandlersFromStringArray(JNIEnv *aJNIEnv, jobjectArray jArr, jsize aLen,
     }
 }
 
-PRBool
+bool
 AndroidBridge::GetHandlersForMimeType(const char *aMimeType,
                                       nsIMutableArray *aHandlersArray,
                                       nsIHandlerApp **aDefaultApp,
@@ -426,7 +429,7 @@ AndroidBridge::GetHandlersForMimeType(const char *aMimeType,
     return PR_TRUE;
 }
 
-PRBool
+bool
 AndroidBridge::GetHandlersForURL(const char *aURL,
                                       nsIMutableArray* aHandlersArray,
                                       nsIHandlerApp **aDefaultApp,
@@ -457,7 +460,7 @@ AndroidBridge::GetHandlersForURL(const char *aURL,
     return PR_TRUE;
 }
 
-PRBool
+bool
 AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType,
                                const nsAString& aPackageName, const nsAString& aClassName,
                                const nsAString& aAction, const nsAString& aTitle)
@@ -643,7 +646,7 @@ AndroidBridge::ShowFilePicker(nsAString& aFilePath, nsAString& aFilters)
 }
 
 void
-AndroidBridge::SetFullScreen(PRBool aFullScreen)
+AndroidBridge::SetFullScreen(bool aFullScreen)
 {
     ALOG_BRIDGE("AndroidBridge::SetFullScreen");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jSetFullScreen, aFullScreen);
@@ -661,7 +664,7 @@ AndroidBridge::HideProgressDialogOnce()
 }
 
 void
-AndroidBridge::PerformHapticFeedback(PRBool aIsLongPress)
+AndroidBridge::PerformHapticFeedback(bool aIsLongPress)
 {
     ALOG_BRIDGE("AndroidBridge::PerformHapticFeedback");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass,
@@ -879,7 +882,7 @@ AndroidBridge::SetKeepScreenOn(bool on)
 }
 
 // Available for places elsewhere in the code to link to.
-PRBool
+bool
 mozilla_AndroidBridge_SetMainThread(void *thr)
 {
     return AndroidBridge::Bridge()->SetMainThread(thr);
@@ -892,7 +895,7 @@ mozilla_AndroidBridge_GetJavaVM()
 }
 
 JNIEnv *
-mozilla_AndroidBridge_AttachThread(PRBool asDaemon)
+mozilla_AndroidBridge_AttachThread(bool asDaemon)
 {
     return AndroidBridge::Bridge()->AttachThread(asDaemon);
 }
@@ -939,7 +942,7 @@ AndroidBridge::CreateShortcut(const nsAString& aTitle, const nsAString& aURI, co
 }
 
 void
-AndroidBridge::PostToJavaThread(nsIRunnable* aRunnable, PRBool aMainThread)
+AndroidBridge::PostToJavaThread(nsIRunnable* aRunnable, bool aMainThread)
 {
     __android_log_print(ANDROID_LOG_INFO, "GeckoBridge", "%s", __PRETTY_FUNCTION__);
     JNIEnv* env = AndroidBridge::AttachThread(false);
@@ -977,33 +980,49 @@ AndroidBridge::ExecuteNextRunnable()
     }
     __android_log_print(ANDROID_LOG_INFO, "GeckoBridge", "leaving %s", __PRETTY_FUNCTION__);
 }
+
+void
+AndroidBridge::OpenGraphicsLibraries()
+{
+    if (!mOpenedGraphicsLibraries) {
+        // Try to dlopen libjnigraphics.so for direct bitmap access on
+        // Android 2.2+ (API level 8)
+        mOpenedGraphicsLibraries = true;
+        mHasNativeWindowAccess = false;
+        mHasNativeBitmapAccess = false;
+
+        void *handle = dlopen("/system/lib/libjnigraphics.so", RTLD_LAZY | RTLD_LOCAL);
+        if (handle) {
+            AndroidBitmap_getInfo = (int (*)(JNIEnv *, jobject, void *))dlsym(handle, "AndroidBitmap_getInfo");
+            AndroidBitmap_lockPixels = (int (*)(JNIEnv *, jobject, void **))dlsym(handle, "AndroidBitmap_lockPixels");
+            AndroidBitmap_unlockPixels = (int (*)(JNIEnv *, jobject))dlsym(handle, "AndroidBitmap_unlockPixels");
+
+            mHasNativeBitmapAccess = AndroidBitmap_getInfo && AndroidBitmap_lockPixels && AndroidBitmap_unlockPixels;
+
+            ALOG_BRIDGE("Successfully opened libjnigraphics.so, have native bitmap access? %d", mHasNativeBitmapAccess);
+        }
+
+        // Try to dlopen libandroid.so for and native window access on
+        // Android 2.3+ (API level 9)
+        handle = dlopen("/system/lib/libandroid.so", RTLD_LAZY | RTLD_LOCAL);
+        if (handle) {
+            ANativeWindow_fromSurface = (void* (*)(JNIEnv*, jobject))dlsym(handle, "ANativeWindow_fromSurface");
+            ANativeWindow_release = (void (*)(void*))dlsym(handle, "ANativeWindow_release");
+            ANativeWindow_setBuffersGeometry = (int (*)(void*, int, int, int)) dlsym(handle, "ANativeWindow_setBuffersGeometry");
+            ANativeWindow_lock = (int (*)(void*, void*, void*)) dlsym(handle, "ANativeWindow_lock");
+            ANativeWindow_unlockAndPost = (int (*)(void*))dlsym(handle, "ANativeWindow_unlockAndPost");
+
+            mHasNativeWindowAccess = ANativeWindow_fromSurface && ANativeWindow_release && ANativeWindow_lock && ANativeWindow_unlockAndPost;
+
+            ALOG_BRIDGE("Successfully opened libandroid.so, have native window access? %d", mHasNativeWindowAccess);
+        }
+    }
+}
+
 bool
 AndroidBridge::HasNativeBitmapAccess()
 {
-    if (!mOpenedBitmapLibrary) {
-        // Try to dlopen libjnigraphics.so for direct bitmap access on
-        // Android 2.2+ (API level 8)
-        mOpenedBitmapLibrary = true;
-
-        void *handle = dlopen("/system/lib/libjnigraphics.so", RTLD_LAZY | RTLD_LOCAL);
-        if (handle == nsnull)
-            return false;
-
-        AndroidBitmap_getInfo = (int (*)(JNIEnv *, jobject, void *))dlsym(handle, "AndroidBitmap_getInfo");
-        if (AndroidBitmap_getInfo == nsnull)
-            return false;
-
-        AndroidBitmap_lockPixels = (int (*)(JNIEnv *, jobject, void **))dlsym(handle, "AndroidBitmap_lockPixels");
-        if (AndroidBitmap_lockPixels == nsnull)
-            return false;
-
-        AndroidBitmap_unlockPixels = (int (*)(JNIEnv *, jobject))dlsym(handle, "AndroidBitmap_unlockPixels");
-        if (AndroidBitmap_unlockPixels == nsnull)
-            return false;
-
-        ALOG_BRIDGE("Successfully opened libjnigraphics.so");
-        mHasNativeBitmapAccess = true;
-    }
+    OpenGraphicsLibraries();
 
     return mHasNativeBitmapAccess;
 }
@@ -1036,6 +1055,38 @@ AndroidBridge::ValidateBitmap(jobject bitmap, int width, int height)
     return true;
 }
 
+bool
+AndroidBridge::InitCamera(const nsCString& contentType, PRUint32 camera, PRUint32 *width, PRUint32 *height, PRUint32 *fps)
+{
+    AutoLocalJNIFrame jniFrame;
+
+    NS_ConvertASCIItoUTF16 s(contentType);
+    jstring jstrContentType = mJNIEnv->NewString(s.get(), NS_strlen(s.get()));
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jInitCamera, jstrContentType, camera, *width, *height);
+    jintArray arr = static_cast<jintArray>(obj);
+    if (!arr)
+        return false;
+
+    jint *elements = mJNIEnv->GetIntArrayElements(arr, 0);
+
+    *width = elements[1];
+    *height = elements[2];
+    *fps = elements[3];
+
+    bool res = elements[0] == 1;
+
+    mJNIEnv->ReleaseIntArrayElements(arr, elements, 0);
+
+    return res;
+}
+
+void
+AndroidBridge::CloseCamera() {
+    AutoLocalJNIFrame jniFrame;
+
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jCloseCamera);
+}
+
 void *
 AndroidBridge::LockBitmap(jobject bitmap)
 {
@@ -1056,4 +1107,93 @@ AndroidBridge::UnlockBitmap(jobject bitmap)
     int err;
     if ((err = AndroidBitmap_unlockPixels(JNI(), bitmap)) != 0)
         ALOG_BRIDGE("AndroidBitmap_unlockPixels failed! (error %d)", err);
+}
+
+
+bool
+AndroidBridge::HasNativeWindowAccess()
+{
+    OpenGraphicsLibraries();
+
+    return mHasNativeWindowAccess;
+}
+
+void*
+AndroidBridge::AcquireNativeWindow(jobject surface)
+{
+    if (!HasNativeWindowAccess())
+        return nsnull;
+
+    return ANativeWindow_fromSurface(JNI(), surface);
+}
+
+void
+AndroidBridge::ReleaseNativeWindow(void *window)
+{
+    if (!window)
+        return;
+
+    ANativeWindow_release(window);
+}
+
+bool
+AndroidBridge::SetNativeWindowFormat(void *window, int format)
+{
+    return ANativeWindow_setBuffersGeometry(window, 0, 0, format) == 0;
+}
+
+bool
+AndroidBridge::LockWindow(void *window, unsigned char **bits, int *width, int *height, int *format, int *stride)
+{
+    /* Copied from native_window.h in Android NDK (platform-9) */
+    typedef struct ANativeWindow_Buffer {
+        // The number of pixels that are show horizontally.
+        int32_t width;
+
+        // The number of pixels that are shown vertically.
+        int32_t height;
+
+        // The number of *pixels* that a line in the buffer takes in
+        // memory.  This may be >= width.
+        int32_t stride;
+
+        // The format of the buffer.  One of WINDOW_FORMAT_*
+        int32_t format;
+
+        // The actual bits.
+        void* bits;
+
+        // Do not touch.
+        uint32_t reserved[6];
+    } ANativeWindow_Buffer;
+
+    int err;
+    ANativeWindow_Buffer buffer;
+
+    *bits = NULL;
+    *width = *height = *format = 0;
+    if ((err = ANativeWindow_lock(window, (void*)&buffer, NULL)) != 0) {
+        ALOG_BRIDGE("ANativeWindow_lock failed! (error %d)", err);
+        return false;
+    }
+
+    *bits = (unsigned char*)buffer.bits;
+    *width = buffer.width;
+    *height = buffer.height;
+    *format = buffer.format;
+    *stride = buffer.stride;
+
+    return true;
+}
+
+bool
+AndroidBridge::UnlockWindow(void* window)
+{
+    int err;
+    if ((err = ANativeWindow_unlockAndPost(window)) != 0) {
+        ALOG_BRIDGE("ANativeWindow_unlockAndPost failed! (error %d)", err);
+        return false;
+    }
+
+    return true;
 }

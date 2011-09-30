@@ -151,7 +151,7 @@ void GEUS_ElementCreated(nsINodeInfo *aNodeInfo)
   sGEUS_ElementCounts.Put(&key, (void *)count);
 }
 
-PRBool GEUS_enum_func(nsHashKey *aKey, void *aData, void *aClosure)
+bool GEUS_enum_func(nsHashKey *aKey, void *aData, void *aClosure)
 {
   const PRUnichar *name_chars = ((nsStringKey *)aKey)->GetString();
   NS_ConvertUTF16toUTF8 name(name_chars);
@@ -477,19 +477,19 @@ nsGenericHTMLElement::GetAccessKeyLabel(nsAString& aLabel)
   return NS_OK;
 }
 
-static PRBool
+static bool
 IsBody(nsIContent *aContent)
 {
   return aContent->NodeInfo()->Equals(nsGkAtoms::body) &&
          aContent->IsHTML();
 }
 
-static PRBool IS_TABLE_CELL(nsIAtom* frameType) {
+static bool IS_TABLE_CELL(nsIAtom* frameType) {
   return nsGkAtoms::tableCellFrame == frameType ||
     nsGkAtoms::bcTableCellFrame == frameType;
 }
 
-static PRBool
+static bool
 IsOffsetParent(nsIFrame* aFrame)
 {
   nsIAtom* frameType = aFrame->GetType();
@@ -523,8 +523,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
     parent = frame;
   }
   else {
-    const PRBool isPositioned = frame->GetStyleDisplay()->IsPositioned();
-    const PRBool isAbsolutelyPositioned =
+    const bool isPositioned = frame->GetStyleDisplay()->IsPositioned();
+    const bool isAbsolutelyPositioned =
       frame->GetStyleDisplay()->IsAbsolutelyPositioned();
     origin += frame->GetPositionIgnoringScrolling();
 
@@ -540,7 +540,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
 
       // Add the parent's origin to our own to get to the
       // right coordinate system.
-      const PRBool isOffsetParent = !isPositioned && IsOffsetParent(parent);
+      const bool isOffsetParent = !isPositioned && IsOffsetParent(parent);
       if (!isAbsolutelyPositioned && !isOffsetParent) {
         origin += parent->GetPositionIgnoringScrolling();
       }
@@ -902,7 +902,7 @@ nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
 }
 
 nsresult
-nsGenericHTMLElement::ScrollIntoView(PRBool aTop, PRUint8 optional_argc)
+nsGenericHTMLElement::ScrollIntoView(bool aTop, PRUint8 optional_argc)
 {
   nsIDocument *document = GetCurrentDoc();
 
@@ -931,7 +931,7 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop, PRUint8 optional_argc)
 }
 
 NS_IMETHODIMP
-nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
+nsGenericHTMLElement::GetSpellcheck(bool* aSpellcheck)
 {
   NS_ENSURE_ARG_POINTER(aSpellcheck);
   *aSpellcheck = PR_FALSE;              // Default answer is to not spellcheck
@@ -999,7 +999,7 @@ nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
 }
 
 NS_IMETHODIMP
-nsGenericHTMLElement::SetSpellcheck(PRBool aSpellcheck)
+nsGenericHTMLElement::SetSpellcheck(bool aSpellcheck)
 {
   if (aSpellcheck) {
     return SetAttrHelper(nsGkAtoms::spellcheck, NS_LITERAL_STRING("true"));
@@ -1009,7 +1009,7 @@ nsGenericHTMLElement::SetSpellcheck(PRBool aSpellcheck)
 }
 
 NS_IMETHODIMP
-nsGenericHTMLElement::GetDraggable(PRBool* aDraggable)
+nsGenericHTMLElement::GetDraggable(bool* aDraggable)
 {
   *aDraggable = AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
                              nsGkAtoms::_true, eIgnoreCase);
@@ -1017,21 +1017,21 @@ nsGenericHTMLElement::GetDraggable(PRBool* aDraggable)
 }
 
 NS_IMETHODIMP
-nsGenericHTMLElement::SetDraggable(PRBool aDraggable)
+nsGenericHTMLElement::SetDraggable(bool aDraggable)
 {
   return SetAttrHelper(nsGkAtoms::draggable,
                        aDraggable ? NS_LITERAL_STRING("true") :
                                     NS_LITERAL_STRING("false"));
 }
 
-PRBool
+bool
 nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
 {
   return aDoc && aDoc->GetCompatibilityMode() == eCompatibility_NavQuirks;
 }
 
 void
-nsGenericHTMLElement::UpdateEditableState(PRBool aNotify)
+nsGenericHTMLElement::UpdateEditableState(bool aNotify)
 {
   // XXX Should we do this only when in a document?
   ContentEditableTristate value = GetContentEditableValue();
@@ -1046,7 +1046,7 @@ nsGenericHTMLElement::UpdateEditableState(PRBool aNotify)
 nsresult
 nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                  nsIContent* aBindingParent,
-                                 PRBool aCompileEventHandlers)
+                                 bool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLElementBase::BindToTree(aDocument, aParent,
                                                      aBindingParent,
@@ -1071,7 +1071,7 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsGenericHTMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsGenericHTMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   if (IsInDoc()) {
     UnregAccessKey();
@@ -1139,14 +1139,14 @@ nsGenericHTMLElement::FindAncestorForm(nsHTMLFormElement* aCurrentForm)
   return nsnull;
 }
 
-static PRBool
+static bool
 IsArea(nsIContent *aContent)
 {
   return (aContent->Tag() == nsGkAtoms::area &&
           aContent->IsHTML());
 }
 
-PRBool
+bool
 nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(nsEventChainVisitor& aVisitor)
 {
   NS_PRECONDITION(nsCOMPtr<nsILink>(do_QueryInterface(this)),
@@ -1191,7 +1191,7 @@ nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisito
   return PostHandleEventForLinks(aVisitor);
 }
 
-PRBool
+bool
 nsGenericHTMLElement::IsHTMLLink(nsIURI** aURI) const
 {
   NS_PRECONDITION(aURI, "Must provide aURI out param");
@@ -1218,7 +1218,7 @@ nsGenericHTMLElement::GetHrefURIForAnchors() const
 
 nsresult
 nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                   const nsAString* aValue, PRBool aNotify)
+                                   const nsAString* aValue, bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (nsContentUtils::IsEventAttributeName(aName, EventNameType_HTML) && aValue) {
@@ -1235,11 +1235,24 @@ nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 }
 
 nsEventListenerManager*
-nsGenericHTMLElement::GetEventListenerManagerForAttr(PRBool* aDefer)
+nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
+                                                     bool* aDefer)
 {
   // Attributes on the body and frameset tags get set on the global object
-  if (mNodeInfo->Equals(nsGkAtoms::body) ||
-      mNodeInfo->Equals(nsGkAtoms::frameset)) {
+  if ((mNodeInfo->Equals(nsGkAtoms::body) ||
+       mNodeInfo->Equals(nsGkAtoms::frameset)) &&
+      // We only forward some event attributes from body/frameset to window
+      (0
+#define EVENT(name_, id_, type_, struct_) /* nothing */
+#define FORWARDED_EVENT(name_, id_, type_, struct_) \
+       || nsGkAtoms::on##name_ == aAttrName
+#define WINDOW_EVENT FORWARDED_EVENT
+#include "nsEventNameList.h"
+#undef WINDOW_EVENT
+#undef FORWARDED_EVENT
+#undef EVENT
+       )
+      ) {
     nsPIDOMWindow *win;
 
     // If we have a document, and it has a window, add the event
@@ -1265,17 +1278,18 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(PRBool* aDefer)
     return nsnull;
   }
 
-  return nsGenericHTMLElementBase::GetEventListenerManagerForAttr(aDefer);
+  return nsGenericHTMLElementBase::GetEventListenerManagerForAttr(aAttrName,
+                                                                  aDefer);
 }
 
 nsresult
 nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                               nsIAtom* aPrefix, const nsAString& aValue,
-                              PRBool aNotify)
+                              bool aNotify)
 {
-  PRBool contentEditable = aNameSpaceID == kNameSpaceID_None &&
+  bool contentEditable = aNameSpaceID == kNameSpaceID_None &&
                            aName == nsGkAtoms::contenteditable;
-  PRBool accessKey = aName == nsGkAtoms::accesskey && 
+  bool accessKey = aName == nsGkAtoms::accesskey && 
                      aNameSpaceID == kNameSpaceID_None;
 
   PRInt32 change = 0;
@@ -1310,9 +1324,9 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                PRBool aNotify)
+                                bool aNotify)
 {
-  PRBool contentEditable = PR_FALSE;
+  bool contentEditable = false;
   PRInt32 contentEditableChange = 0;
 
   // Check for event handlers
@@ -1370,7 +1384,7 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 
 //----------------------------------------------------------------------
 
-static PRBool
+static bool
 CanHaveName(nsIAtom* aTag)
 {
   return aTag == nsGkAtoms::img ||
@@ -1380,7 +1394,7 @@ CanHaveName(nsIAtom* aTag)
          aTag == nsGkAtoms::object;
 }
 
-PRBool
+bool
 nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
                                      nsIAtom* aAttribute,
                                      const nsAString& aValue,
@@ -1424,7 +1438,7 @@ nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
                                                   aValue, aResult);
 }
 
-PRBool
+bool
 nsGenericHTMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -1441,7 +1455,7 @@ nsGenericHTMLElement::GetAttributeMappingFunction() const
 }
 
 nsIFormControlFrame*
-nsGenericHTMLElement::GetFormControlFrame(PRBool aFlushFrames)
+nsGenericHTMLElement::GetFormControlFrame(bool aFlushFrames)
 {
   if (aFlushFrames && IsInDoc()) {
     // Cause a flush of the frames, so we get up-to-date frame information
@@ -1501,7 +1515,7 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
 
 nsresult
 nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
-                                             PRBool aRead,
+                                             bool aRead,
                                              nsILayoutHistoryState** aHistory,
                                              nsACString& aKey)
 {
@@ -1550,7 +1564,7 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
   return rv;
 }
 
-PRBool
+bool
 nsGenericHTMLElement::RestoreFormControlState(nsGenericHTMLElement* aContent,
                                               nsIFormControl* aControl)
 {
@@ -1566,7 +1580,7 @@ nsGenericHTMLElement::RestoreFormControlState(nsGenericHTMLElement* aContent,
   // Get the pres state for this key
   rv = history->GetState(key, &state);
   if (state) {
-    PRBool result = aControl->RestoreState(state);
+    bool result = aControl->RestoreState(state);
     history->RemoveState(key);
     return result;
   }
@@ -1645,7 +1659,7 @@ static const nsAttrValue::EnumTable kTableVAlignTable[] = {
   { 0 }
 };
 
-PRBool
+bool
 nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
                                       nsAttrValue& aResult)
 {
@@ -1663,7 +1677,7 @@ static const nsAttrValue::EnumTable kTableHAlignTable[] = {
   { 0 }
 };
 
-PRBool
+bool
 nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
                                             nsAttrValue& aResult)
 {
@@ -1684,7 +1698,7 @@ static const nsAttrValue::EnumTable kTableCellHAlignTable[] = {
   { 0 }
 };
 
-PRBool
+bool
 nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
                                                 nsAttrValue& aResult)
 {
@@ -1693,21 +1707,21 @@ nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
 
 //----------------------------------------
 
-PRBool
+bool
 nsGenericHTMLElement::ParseTableVAlignValue(const nsAString& aString,
                                             nsAttrValue& aResult)
 {
   return aResult.ParseEnumValue(aString, kTableVAlignTable, PR_FALSE);
 }
 
-PRBool
+bool
 nsGenericHTMLElement::ParseDivAlignValue(const nsAString& aString,
                                          nsAttrValue& aResult)
 {
   return aResult.ParseEnumValue(aString, kDivAlignTable, PR_FALSE);
 }
 
-PRBool
+bool
 nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
                                           const nsAString& aString,
                                           nsAttrValue& aResult)
@@ -1724,14 +1738,14 @@ nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsGenericHTMLElement::ParseFrameborderValue(const nsAString& aString,
                                             nsAttrValue& aResult)
 {
   return aResult.ParseEnumValue(aString, kFrameborderTable, PR_FALSE);
 }
 
-PRBool
+bool
 nsGenericHTMLElement::ParseScrollingValue(const nsAString& aString,
                                           nsAttrValue& aResult)
 {
@@ -1790,7 +1804,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
 }
 
 void
-nsGenericHTMLFormElement::UpdateEditableFormControlState(PRBool aNotify)
+nsGenericHTMLFormElement::UpdateEditableFormControlState(bool aNotify)
 {
   // nsCSSFrameConstructor::MaybeConstructLazily is based on the logic of this
   // function, so should be kept in sync with that.
@@ -1814,7 +1828,7 @@ nsGenericHTMLFormElement::UpdateEditableFormControlState(PRBool aNotify)
   }
 
   // If not contentEditable we still need to check the readonly attribute.
-  PRBool roState;
+  bool roState;
   GetBoolAttr(nsGkAtoms::readonly, &roState);
 
   DoSetEditableFlag(!roState, aNotify);
@@ -2201,7 +2215,7 @@ nsGenericHTMLElement::SetAttrHelper(nsIAtom* aAttr, const nsAString& aValue)
 }
 
 nsresult
-nsGenericHTMLElement::SetBoolAttr(nsIAtom* aAttr, PRBool aValue)
+nsGenericHTMLElement::SetBoolAttr(nsIAtom* aAttr, bool aValue)
 {
   if (aValue) {
     return SetAttr(kNameSpaceID_None, aAttr, EmptyString(), PR_TRUE);
@@ -2211,7 +2225,7 @@ nsGenericHTMLElement::SetBoolAttr(nsIAtom* aAttr, PRBool aValue)
 }
 
 nsresult
-nsGenericHTMLElement::GetBoolAttr(nsIAtom* aAttr, PRBool* aValue) const
+nsGenericHTMLElement::GetBoolAttr(nsIAtom* aAttr, bool* aValue) const
 {
   *aValue = HasAttr(kNameSpaceID_None, aAttr);
   return NS_OK;
@@ -2288,7 +2302,7 @@ nsresult
 nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult)
 {
   nsCOMPtr<nsIURI> uri;
-  PRBool hadAttr = GetURIAttr(aAttr, aBaseAttr, getter_AddRefs(uri));
+  bool hadAttr = GetURIAttr(aAttr, aBaseAttr, getter_AddRefs(uri));
   if (!hadAttr) {
     aResult.Truncate();
     return NS_OK;
@@ -2306,7 +2320,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& 
   return NS_OK;
 }
 
-PRBool
+bool
 nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsIURI** aURI) const
 {
   *aURI = nsnull;
@@ -2447,7 +2461,7 @@ nsGenericHTMLElement::SetContentEditable(const nsAString& aContentEditable)
 }
 
 nsresult
-nsGenericHTMLElement::GetIsContentEditable(PRBool* aContentEditable)
+nsGenericHTMLElement::GetIsContentEditable(bool* aContentEditable)
 {
   NS_ENSURE_ARG_POINTER(aContentEditable);
 
@@ -2516,7 +2530,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGenericHTMLFormElement,
                                    nsGenericHTMLElement,
                                    nsIFormControl)
 
-PRBool
+bool
 nsGenericHTMLFormElement::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eHTML_FORM_CONTROL));
@@ -2542,7 +2556,7 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm)
 }
 
 void
-nsGenericHTMLFormElement::ClearForm(PRBool aRemoveFromForm)
+nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm)
 {
   NS_ASSERTION((mForm != nsnull) == HasFlag(ADDED_TO_FORM),
                "Form control should have had flag set correctly");
@@ -2602,9 +2616,9 @@ nsGenericHTMLFormElement::GetDesiredIMEState()
   return state;
 }
 
-PRBool
-nsGenericHTMLFrameElement::IsHTMLFocusable(PRBool aWithMouse,
-                                           PRBool *aIsFocusable,
+bool
+nsGenericHTMLFrameElement::IsHTMLFocusable(bool aWithMouse,
+                                           bool *aIsFocusable,
                                            PRInt32 *aTabIndex)
 {
   if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
@@ -2624,7 +2638,7 @@ nsresult
 nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
                                      nsIContent* aParent,
                                      nsIContent* aBindingParent,
-                                     PRBool aCompileEventHandlers)
+                                     bool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
@@ -2636,7 +2650,7 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
   // the document should not be already loaded and the "browser.autofocus"
   // preference should be 'true'.
   if (IsAutofocusable() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
-      Preferences::GetBool("browser.autofocus", PR_TRUE)) {
+      Preferences::GetBool("browser.autofocus", true)) {
     nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
     rv = NS_DispatchToCurrentThread(event);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2660,7 +2674,7 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
 }
 
 void
-nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsGenericHTMLFormElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // Save state before doing anything
   SaveState();
@@ -2701,7 +2715,7 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 
 nsresult
 nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                        const nsAString* aValue, PRBool aNotify)
+                                        const nsAString* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     nsAutoString tmp;
@@ -2757,7 +2771,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                       const nsAString* aValue, PRBool aNotify)
+                                       const nsAString* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     // add the control to the hashtable as needed
@@ -2858,7 +2872,7 @@ nsGenericHTMLFormElement::ForgetFieldSet(nsIContent* aFieldset)
   }
 }
 
-PRBool
+bool
 nsGenericHTMLFormElement::CanBeDisabled() const
 {
   PRInt32 type = GetType();
@@ -2870,9 +2884,9 @@ nsGenericHTMLFormElement::CanBeDisabled() const
     type != NS_FORM_PROGRESS;
 }
 
-PRBool
-nsGenericHTMLFormElement::IsHTMLFocusable(PRBool aWithMouse,
-                                          PRBool* aIsFocusable,
+bool
+nsGenericHTMLFormElement::IsHTMLFocusable(bool aWithMouse,
+                                          bool* aIsFocusable,
                                           PRInt32* aTabIndex)
 {
   if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
@@ -2995,7 +3009,7 @@ nsGenericHTMLFormElement::RemoveFormIdObserver()
 
 
 /* static */
-PRBool
+bool
 nsGenericHTMLFormElement::FormIdUpdated(Element* aOldElement,
                                         Element* aNewElement,
                                         void* aData)
@@ -3010,11 +3024,11 @@ nsGenericHTMLFormElement::FormIdUpdated(Element* aOldElement,
   return PR_TRUE;
 }
 
-PRBool 
+bool 
 nsGenericHTMLFormElement::IsElementDisabledForEvents(PRUint32 aMessage, 
                                                     nsIFrame* aFrame)
 {
-  PRBool disabled = IsDisabled();
+  bool disabled = IsDisabled();
   if (!disabled && aFrame) {
     const nsStyleUserInterface* uiStyle = aFrame->GetStyleUserInterface();
     disabled = uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
@@ -3031,7 +3045,7 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
   NS_PRECONDITION(!aBindToTree || !aFormIdElement,
                   "aFormIdElement shouldn't be set if aBindToTree is true!");
 
-  PRBool needStateUpdate = PR_FALSE;
+  bool needStateUpdate = false;
   if (!aBindToTree) {
     needStateUpdate = mForm && mForm->IsDefaultSubmitElement(this);
     ClearForm(PR_TRUE);
@@ -3101,7 +3115,7 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
 }
 
 void
-nsGenericHTMLFormElement::UpdateFieldSet(PRBool aNotify)
+nsGenericHTMLFormElement::UpdateFieldSet(bool aNotify)
 {
   nsIContent* parent = nsnull;
   nsIContent* prev = nsnull;
@@ -3139,7 +3153,7 @@ nsGenericHTMLFormElement::UpdateFieldSet(PRBool aNotify)
 }
 
 void
-nsGenericHTMLFormElement::FieldSetDisabledChanged(PRBool aNotify)
+nsGenericHTMLFormElement::FieldSetDisabledChanged(bool aNotify)
 {
   UpdateState(aNotify);
 }
@@ -3195,7 +3209,7 @@ nsGenericHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
     return NS_OK;
   }
 
-  PRBool depthTooGreat = PR_FALSE;
+  bool depthTooGreat = false;
   mFrameLoader->GetDepthTooGreat(&depthTooGreat);
   if (depthTooGreat) {
     // Claim to have no contentWindow
@@ -3275,7 +3289,7 @@ nsresult
 nsGenericHTMLFrameElement::BindToTree(nsIDocument* aDocument,
                                       nsIContent* aParent,
                                       nsIContent* aBindingParent,
-                                      PRBool aCompileEventHandlers)
+                                      bool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
@@ -3296,7 +3310,7 @@ nsGenericHTMLFrameElement::BindToTree(nsIDocument* aDocument,
 }
 
 void
-nsGenericHTMLFrameElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsGenericHTMLFrameElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   if (mFrameLoader) {
     // This iframe is being taken out of the document, destroy the
@@ -3315,7 +3329,7 @@ nsGenericHTMLFrameElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 nsresult
 nsGenericHTMLFrameElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                    nsIAtom* aPrefix, const nsAString& aValue,
-                                   PRBool aNotify)
+                                   bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                               aValue, aNotify);
@@ -3431,7 +3445,7 @@ nsresult nsGenericHTMLElement::MozRequestFullScreen()
 #ifdef DEBUG
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(doc->GetWindow());
   NS_ENSURE_STATE(window);
-  PRBool fullscreen;
+  bool fullscreen;
   window->GetFullScreen(&fullscreen);
   NS_ASSERTION(fullscreen, "Windows should report fullscreen");
   nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(doc));
@@ -3474,9 +3488,9 @@ nsresult nsGenericHTMLElement::Click()
   return NS_OK;
 }
 
-PRBool
-nsGenericHTMLElement::IsHTMLFocusable(PRBool aWithMouse,
-                                      PRBool *aIsFocusable,
+bool
+nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse,
+                                      bool *aIsFocusable,
                                       PRInt32 *aTabIndex)
 {
   nsIDocument *doc = GetCurrentDoc();
@@ -3494,7 +3508,7 @@ nsGenericHTMLElement::IsHTMLFocusable(PRBool aWithMouse,
   PRInt32 tabIndex = 0;   // Default value for non HTML elements with -moz-user-focus
   GetTabIndex(&tabIndex);
 
-  PRBool override, disabled = PR_FALSE;
+  bool override, disabled = false;
   if (IsEditableRoot()) {
     // Editable roots should always be focusable.
     override = PR_TRUE;
@@ -3529,7 +3543,7 @@ nsGenericHTMLElement::IsHTMLFocusable(PRBool aWithMouse,
 }
 
 void
-nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
+nsGenericHTMLElement::RegUnRegAccessKey(bool aDoReg)
 {
   // first check to see if we have an access key
   nsAutoString accessKey;
@@ -3554,8 +3568,8 @@ nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
 }
 
 void
-nsGenericHTMLElement::PerformAccesskey(PRBool aKeyCausesActivation,
-                                       PRBool aIsTrustedEvent)
+nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
+                                       bool aIsTrustedEvent)
 {
   nsPresContext *presContext = GetPresContext();
   if (!presContext)
@@ -3628,7 +3642,7 @@ nsGenericHTMLElement::GetAssociatedEditor()
   return editor;
 }
 
-PRBool
+bool
 nsGenericHTMLElement::IsCurrentBodyElement()
 {
   nsCOMPtr<nsIDOMHTMLBodyElement> bodyElement = do_QueryInterface(this);
@@ -3661,14 +3675,10 @@ nsGenericHTMLElement::SyncEditorsOnSubtree(nsIContent* content)
   }
 
   /* Sync all children */
-  PRUint32 childCount = content->GetChildCount();
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    nsIContent* childContent = content->GetChildAt(i);
-    NS_ASSERTION(childContent,
-                 "DOM mutated unexpectedly while syncing editors!");
-    if (childContent) {
-      SyncEditorsOnSubtree(childContent);
-    }
+  for (nsIContent* child = content->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    SyncEditorsOnSubtree(child);
   }
 }
 
@@ -3695,7 +3705,7 @@ nsGenericHTMLElement::RecompileScriptEventListeners()
     }
 }
 
-PRBool
+bool
 nsGenericHTMLElement::IsEditableRoot() const
 {
   nsIDocument *document = GetCurrentDoc();

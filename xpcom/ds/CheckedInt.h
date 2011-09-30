@@ -326,7 +326,7 @@ inline T opposite_if_signed(T x) { return opposite_if_signed_impl<T>::run(x); }
   * that doesn't crash if z==0, and that reports on error (divide by zero or integer overflow).
   * You could code it as follows:
     \code
-    PRBool compute_x_plus_y_over_z(PRInt32 x, PRInt32 y, PRInt32 z, PRInt32 *result)
+    bool compute_x_plus_y_over_z(PRInt32 x, PRInt32 y, PRInt32 z, PRInt32 *result)
     {
         CheckedInt<PRInt32> checked_result = (CheckedInt<PRInt32>(x) + y) / z;
         *result = checked_result.value();
@@ -406,9 +406,9 @@ public:
     /** \returns PR_TRUE if the checked integer is valid, i.e. is not the result
       * of an invalid operation or of an operation involving an invalid checked integer
       */
-    PRBool valid() const
+    bool valid() const
     {
-        return PRBool(mIsValid);
+        return bool(mIsValid);
     }
 
     /** \returns the sum. Checks for overflow. */
@@ -440,9 +440,9 @@ public:
     }
 
     /** \returns true if the left and right hand sides are valid and have the same value. */
-    PRBool operator ==(const CheckedInt& other) const
+    bool operator ==(const CheckedInt& other) const
     {
-        return PRBool(mIsValid & other.mIsValid & (value() == other.mValue));
+        return bool(mIsValid & other.mIsValid & (value() == other.mValue));
     }
 
     /** prefix ++ */
@@ -480,7 +480,7 @@ private:
       * would mean that if a or b is invalid, (a!=b) is always true, which is very tricky.
       */
     template<typename U>
-    PRBool operator !=(U other) const { return !(*this == other); }
+    bool operator !=(U other) const { return !(*this == other); }
 };
 
 #define CHECKEDINT_BASIC_BINARY_OPERATOR(NAME, OP)               \
@@ -565,13 +565,13 @@ CHECKEDINT_CONVENIENCE_BINARY_OPERATORS(-, -=)
 CHECKEDINT_CONVENIENCE_BINARY_OPERATORS(/, /=)
 
 template<typename T, typename U>
-inline PRBool operator ==(const CheckedInt<T> &lhs, U rhs)
+inline bool operator ==(const CheckedInt<T> &lhs, U rhs)
 {
     return lhs == cast_to_CheckedInt<T>(rhs);
 }
 
 template<typename T, typename U>
-inline PRBool operator ==(U  lhs, const CheckedInt<T> &rhs)
+inline bool operator ==(U  lhs, const CheckedInt<T> &rhs)
 {
     return cast_to_CheckedInt<T>(lhs) == rhs;
 }

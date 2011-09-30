@@ -152,7 +152,7 @@ nsXPITriggerItem::SetPrincipal(nsIPrincipal* aPrincipal)
     if (!aPrincipal)
         return;
 
-    PRBool hasCert;
+    bool hasCert;
     aPrincipal->GetHasCertificate(&hasCert);
     if (hasCert) {
         nsCOMPtr<nsISupports> certificate;
@@ -292,7 +292,7 @@ XPITriggerEvent::Run()
          return 0;
     }
 
-    PRBool equals = PR_FALSE;
+    bool equals = false;
     principal->Equals(princ, &equals);
     if (!equals)
     {

@@ -146,6 +146,12 @@ documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] 
   }
 }
 
+@media (@orientation@: landscape) {
+  #toolbar-main[tablet][tablet_sidebar] {
+    -moz-padding-start: @padding_xxnormal@;
+  }
+}
+
 #identity-container[tablet] #identity-popup-container {
   -moz-stack-sizing: ignore;
   max-width: @identity_popup_tablet_width@;
@@ -179,6 +185,7 @@ arrowbox {
 .documenttab-popup-favicon {
   width: 32px;
   height: 32px;
+  image-rendering: -moz-crisp-edges;
 }
 
 .tab-popup-item.selected .documenttab-popup-checkmark {

@@ -80,7 +80,7 @@ nsProperties::Undefine(const char* prop)
 }
 
 NS_IMETHODIMP
-nsProperties::Has(const char* prop, PRBool *result)
+nsProperties::Has(const char* prop, bool *result)
 {
     NS_ENSURE_ARG(prop);
 

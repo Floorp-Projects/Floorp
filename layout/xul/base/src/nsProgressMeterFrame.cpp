@@ -79,9 +79,9 @@ class nsAsyncProgressMeterInit : public nsIReflowCallback
 public:
   nsAsyncProgressMeterInit(nsIFrame* aFrame) : mWeakFrame(aFrame) {}
 
-  virtual PRBool ReflowFinished()
+  virtual bool ReflowFinished()
   {
-    PRBool shouldFlush = PR_FALSE;
+    bool shouldFlush = false;
     nsIFrame* frame = mWeakFrame.GetFrame();
     if (frame) {
       nsAutoScriptBlocker scriptBlocker;

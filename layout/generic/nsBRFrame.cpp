@@ -67,10 +67,10 @@ public:
 
   virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint);
 
-  virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
-  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
-                                     PRBool aRespectClusters = PR_TRUE);
-  virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
+  virtual bool PeekOffsetNoAmount(bool aForward, PRInt32* aOffset);
+  virtual bool PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
+                                     bool aRespectClusters = true);
+  virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                                 PRInt32* aOffset, PeekWordState* aState);
 
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
@@ -86,7 +86,7 @@ public:
   virtual nsIAtom* GetType() const;
   virtual nscoord GetBaseline() const;
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced |
                                              nsIFrame::eLineParticipant));
@@ -258,8 +258,8 @@ nsIFrame::ContentOffsets BRFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoin
   return offsets;
 }
 
-PRBool
-BRFrame::PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset)
+bool
+BRFrame::PeekOffsetNoAmount(bool aForward, PRInt32* aOffset)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   PRInt32 startOffset = *aOffset;
@@ -272,17 +272,17 @@ BRFrame::PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset)
   return (startOffset == 0);
 }
 
-PRBool
-BRFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
-                             PRBool aRespectClusters)
+bool
+BRFrame::PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
+                             bool aRespectClusters)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   // Keep going. The actual line jumping will stop us.
   return PR_FALSE;
 }
 
-PRBool
-BRFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
+bool
+BRFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                         PRInt32* aOffset, PeekWordState* aState)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");

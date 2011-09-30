@@ -122,14 +122,14 @@ nsFeedSniffer::ConvertEncodedData(nsIRequest* request,
 }
 
 template<int N>
-static PRBool
+static bool
 StringBeginsWithLowercaseLiteral(nsAString& aString,
                                  const char (&aSubstring)[N])
 {
   return StringHead(aString, N).LowerCaseEqualsLiteral(aSubstring);
 }
 
-PRBool
+bool
 HasAttachmentDisposition(nsIHttpChannel* httpChannel)
 {
   if (!httpChannel)
@@ -176,7 +176,7 @@ FindChar(char c, const char *begin, const char *end)
  * @returns PR_TRUE if the found substring is the documentElement, PR_FALSE 
  *          otherwise.
  */
-static PRBool
+static bool
 IsDocumentElement(const char *start, const char* end)
 {
   // For every tag in the buffer, check to see if it's a PI, Doctype or 
@@ -214,7 +214,7 @@ IsDocumentElement(const char *start, const char* end)
  * @returns PR_TRUE if the substring exists and is the documentElement, PR_FALSE
  *          otherwise.
  */
-static PRBool
+static bool
 ContainsTopLevelSubstring(nsACString& dataString, const char *substring) 
 {
   PRInt32 offset = dataString.Find(substring);
@@ -268,7 +268,7 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   // doing. 
   nsCAutoString contentType;
   channel->GetContentType(contentType);
-  PRBool noSniff = contentType.EqualsLiteral(TYPE_RSS) ||
+  bool noSniff = contentType.EqualsLiteral(TYPE_RSS) ||
                    contentType.EqualsLiteral(TYPE_ATOM);
 
   // Check to see if this was a feed request from the location bar or from
@@ -330,7 +330,7 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   // Thus begins the actual sniffing.
   nsDependentCSubstring dataString((const char*)testData, length);
 
-  PRBool isFeed = PR_FALSE;
+  bool isFeed = false;
 
   // RSS 0.91/0.92/2.0
   isFeed = ContainsTopLevelSubstring(dataString, "<rss");

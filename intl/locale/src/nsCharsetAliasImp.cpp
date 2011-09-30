@@ -82,7 +82,7 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
 //--------------------------------------------------------------
 NS_IMETHODIMP
 nsCharsetAlias2::Equals(const nsACString& aCharset1,
-                        const nsACString& aCharset2, PRBool* oResult)
+                        const nsACString& aCharset2, bool* oResult)
 {
    nsresult res = NS_OK;
 

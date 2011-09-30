@@ -63,7 +63,7 @@ function end_test() {
 // call the nsIDOMEventListener's handleEvent method for onload.
 function callHandleEvent() {
   var e = { target: gXHR };
-  gXHR.onload.handleEvent(e);
+  gXHR.onload(e);
 }
 
 // Helper function for parsing the result from the contructed url

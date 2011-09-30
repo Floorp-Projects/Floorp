@@ -235,7 +235,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGElementBase)
 nsresult
 nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                          nsIContent* aBindingParent,
-                         PRBool aCompileEventHandlers)
+                         bool aCompileEventHandlers)
 {
   nsresult rv = nsSVGElementBase::BindToTree(aDocument, aParent,
                                              aBindingParent,
@@ -270,7 +270,7 @@ nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
 nsresult
 nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                           const nsAString* aValue, PRBool aNotify)
+                           const nsAString* aValue, bool aNotify)
 {  
   // If this is an svg presentation attribute we need to map it into
   // the content stylerule.
@@ -302,7 +302,7 @@ nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   return nsSVGElementBase::AfterSetAttr(aNamespaceID, aName, aValue, aNotify);
 }
 
-PRBool
+bool
 nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
                              nsIAtom* aAttribute,
                              const nsAString& aValue,
@@ -355,7 +355,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
   }
 
   nsresult rv = NS_OK;
-  PRBool foundMatch = PR_FALSE;
+  bool foundMatch = false;
   if (aNamespaceID == kNameSpaceID_None) {
 
     // Check for nsSVGLength2 attribute
@@ -614,7 +614,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 
 nsresult
 nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                        PRBool aNotify)
+                        bool aNotify)
 {
   // XXXbz there's a bunch of redundancy here with AfterSetAttr.
   // Maybe consolidate?
@@ -838,7 +838,7 @@ nsSVGElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   return retval;
 }
 
-PRBool
+bool
 nsSVGElement::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eSVG));
@@ -1020,7 +1020,7 @@ nsSVGElement::sLightingEffectsMap[] = {
 // nsIDOMNode methods
 
 NS_IMETHODIMP
-nsSVGElement::IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn)
+nsSVGElement::IsSupported(const nsAString& aFeature, const nsAString& aVersion, bool* aReturn)
 {
   return nsGenericElement::IsSupported(aFeature, aVersion, aReturn); 
 }
@@ -1102,7 +1102,7 @@ nsSVGElement::GetModificationDataForObservable(nsISVGValue* aObservable,
   }
   
   const nsAttrName* attrName = mMappedAttributes.AttrNameAt(i);
-  PRBool modification = !!mAttrsAndChildren.GetAttr(attrName->LocalName(),
+  bool modification = !!mAttrsAndChildren.GetAttr(attrName->LocalName(),
                                                     attrName->NamespaceID());
 
   PRUint8 modType = modification ?
@@ -1141,7 +1141,7 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
     return data.modType ? NS_ERROR_UNEXPECTED : NS_OK;
   }
 
-  PRBool hasListeners =
+  bool hasListeners =
     nsContentUtils::HasMutationListeners(this,
                                          NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
                                          this);
@@ -1226,7 +1226,7 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
   // Get the nsCSSProperty ID for our mapped attribute.
   nsCSSProperty propertyID =
     nsCSSProps::LookupProperty(nsDependentAtomString(aMappedAttrName));
-  PRBool changed; // outparam for ParseProperty. (ignored)
+  bool changed; // outparam for ParseProperty. (ignored)
   mParser.ParseProperty(propertyID, aMappedAttrValue, mDocURI, mBaseURI,
                         mNodePrincipal, mDecl, &changed, PR_FALSE);
 }
@@ -1248,7 +1248,7 @@ MappedAttrParser::CreateStyleRule()
 //----------------------------------------------------------------------
 // Implementation Helpers:
 
-PRBool
+bool
 nsSVGElement::IsEventName(nsIAtom* aName)
 {
   return PR_FALSE;
@@ -1489,7 +1489,7 @@ nsSVGElement::SetLength(nsIAtom* aName, const nsSVGLength2 &aLength)
 }
 
 void
-nsSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGElement::DidChangeLength(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -1570,7 +1570,7 @@ nsSVGElement::LengthListAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeLengthList(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGElement::DidChangeLengthList(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -1652,7 +1652,7 @@ nsSVGElement::NumberListAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeNumberList(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGElement::DidChangeNumberList(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -1711,7 +1711,7 @@ nsSVGElement::GetAnimatedNumberList(nsIAtom *aAttrName)
 }
 
 void
-nsSVGElement::DidChangePointList(PRBool aDoSetAttr)
+nsSVGElement::DidChangePointList(bool aDoSetAttr)
 {
   NS_ABORT_IF_FALSE(GetPointListAttrName(), "Changing non-existent point list?");
 
@@ -1742,7 +1742,7 @@ nsSVGElement::DidAnimatePointList()
 }
 
 void
-nsSVGElement::DidChangePathSegList(PRBool aDoSetAttr)
+nsSVGElement::DidChangePathSegList(bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -1783,7 +1783,7 @@ void nsSVGElement::NumberAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGElement::DidChangeNumber(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -1851,7 +1851,7 @@ void nsSVGElement::NumberPairAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeNumberPair(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGElement::DidChangeNumberPair(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -1897,7 +1897,7 @@ void nsSVGElement::IntegerAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGElement::DidChangeInteger(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -1965,7 +1965,7 @@ void nsSVGElement::IntegerPairAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeIntegerPair(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGElement::DidChangeIntegerPair(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -2012,7 +2012,7 @@ void nsSVGElement::AngleAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGElement::DidChangeAngle(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -2058,7 +2058,7 @@ void nsSVGElement::BooleanAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGElement::DidChangeBoolean(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -2104,7 +2104,7 @@ void nsSVGElement::EnumAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -2144,7 +2144,7 @@ nsSVGElement::GetViewBox()
 }
 
 void
-nsSVGElement::DidChangeViewBox(PRBool aDoSetAttr)
+nsSVGElement::DidChangeViewBox(bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -2180,7 +2180,7 @@ nsSVGElement::GetPreserveAspectRatio()
 }
 
 void
-nsSVGElement::DidChangePreserveAspectRatio(PRBool aDoSetAttr)
+nsSVGElement::DidChangePreserveAspectRatio(bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;
@@ -2212,7 +2212,7 @@ nsSVGElement::DidAnimatePreserveAspectRatio()
 }
 
 void
-nsSVGElement::DidChangeTransformList(PRBool aDoSetAttr)
+nsSVGElement::DidChangeTransformList(bool aDoSetAttr)
 {
   if (!aDoSetAttr)
     return;

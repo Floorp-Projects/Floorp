@@ -69,7 +69,7 @@ class nsMIMEInfoOS2 : public nsMIMEInfoBase, public nsIPropertyBag
 
     NS_IMETHOD LaunchWithFile(nsIFile *aFile);
 
-    NS_IMETHOD GetHasDefaultHandler(PRBool *_retval);
+    NS_IMETHOD GetHasDefaultHandler(bool *_retval);
     NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription);
 
     void GetDefaultApplication(nsIFile **aDefaultAppHandler);

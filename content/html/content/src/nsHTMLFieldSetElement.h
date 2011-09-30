@@ -80,11 +80,11 @@ public:
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify);
+                                const nsAString* aValue, bool aNotify);
 
   virtual nsresult InsertChildAt(nsIContent* aChild, PRUint32 aIndex,
-                                     PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+                                     bool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
 
   // nsIFormControl
   NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_FIELDSET; }
@@ -111,10 +111,10 @@ private:
    * Notify all elements (in mElements) that the first legend of the fieldset
    * has now changed.
    */
-  void NotifyElementsForFirstLegendChange(PRBool aNotify);
+  void NotifyElementsForFirstLegendChange(bool aNotify);
 
   // This function is used to generate the nsContentList (listed form elements).
-  static PRBool MatchListedElements(nsIContent* aContent, PRInt32 aNamespaceID,
+  static bool MatchListedElements(nsIContent* aContent, PRInt32 aNamespaceID,
                                     nsIAtom* aAtom, void* aData);
 
   // listed form controls elements.

@@ -49,16 +49,16 @@ public:
   ~nsWaveReader();
 
   virtual nsresult Init(nsBuiltinDecoderReader* aCloneDonor);
-  virtual PRBool DecodeAudioData();
-  virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
+  virtual bool DecodeAudioData();
+  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                   PRInt64 aTimeThreshold);
 
-  virtual PRBool HasAudio()
+  virtual bool HasAudio()
   {
     return PR_TRUE;
   }
 
-  virtual PRBool HasVideo()
+  virtual bool HasVideo()
   {
     return PR_FALSE;
   }
@@ -68,11 +68,11 @@ public:
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime);
 
 private:
-  PRBool ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead = nsnull);
-  PRBool LoadRIFFChunk();
-  PRBool ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize);
-  PRBool LoadFormatChunk();
-  PRBool FindDataOffset();
+  bool ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead = nsnull);
+  bool LoadRIFFChunk();
+  bool ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize);
+  bool LoadFormatChunk();
+  bool FindDataOffset();
 
   // Returns the number of seconds that aBytes represents based on the
   // current audio parameters.  e.g.  176400 bytes is 1 second at 16-bit
@@ -84,9 +84,9 @@ private:
   // 44.1kHz.
   PRInt64 TimeToBytes(double aTime) const;
 
-  // Rounds aBytes down to the nearest complete sample.  Assumes beginning
-  // of byte range is already sample aligned by caller.
-  PRInt64 RoundDownToSample(PRInt64 aBytes) const;
+  // Rounds aBytes down to the nearest complete audio frame.  Assumes
+  // beginning of byte range is already frame aligned by caller.
+  PRInt64 RoundDownToFrame(PRInt64 aBytes) const;
   PRInt64 GetDataLength();
   PRInt64 GetPosition();
 
@@ -101,9 +101,9 @@ private:
   // Number of channels.  Limited to range [1, 2] in LoadFormatChunk.
   PRUint32 mChannels;
 
-  // Size of a single sample segment, which includes a sample for each
-  // channel (interleaved).
-  PRUint32 mSampleSize;
+  // Size of a single audio frame, which includes a sample for each channel
+  // (interleaved).
+  PRUint32 mFrameSize;
 
   // The sample format of the PCM data.
   nsAudioStream::SampleFormat mSampleFormat;

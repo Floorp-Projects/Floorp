@@ -124,7 +124,7 @@ class jsdProperty : public jsdIProperty
     jsdProperty(); /* no implementation */
     jsdProperty(const jsdProperty&); /* no implementation */
 
-    PRBool         mValid;
+    bool           mValid;
     LiveEphemeral  mLiveListEntry;
     JSDContext    *mCx;
     JSDProperty   *mProperty;
@@ -173,7 +173,7 @@ class jsdScript : public jsdIScript
     PRUint32    PPPcToLine(PRUint32 aPC);
     PRUint32    PPLineToPc(PRUint32 aLine);
     
-    PRBool      mValid;
+    bool        mValid;
     PRUint32    mTag;
     JSDContext *mCx;
     JSDScript  *mScript;
@@ -205,7 +205,7 @@ class jsdContext : public jsdIContext
     jsdContext (); /* no implementation */
     jsdContext (const jsdContext&); /* no implementation */
 
-    PRBool                 mValid;
+    bool                   mValid;
     LiveEphemeral          mLiveListEntry;
     PRUint32               mTag;
     JSDContext            *mJSDCx;
@@ -236,7 +236,7 @@ class jsdStackFrame : public jsdIStackFrame
     jsdStackFrame(); /* no implementation */
     jsdStackFrame(const jsdStackFrame&); /* no implementation */
 
-    PRBool             mValid;
+    bool               mValid;
     LiveEphemeral      mLiveListEntry;
     JSDContext        *mCx;
     JSDThreadState    *mThreadState;
@@ -261,7 +261,7 @@ class jsdValue : public jsdIValue
     jsdValue(); /* no implementation */
     jsdValue (const jsdScript&); /* no implementation */
     
-    PRBool         mValid;
+    bool           mValid;
     LiveEphemeral  mLiveListEntry;
     JSDContext    *mCx;
     JSDValue      *mValue;
@@ -289,10 +289,10 @@ class jsdService : public jsdIDebuggerService
     
     static jsdService *GetService ();
 
-    PRBool CheckInterruptHook() { return !!mInterruptHook; }
+    bool CheckInterruptHook() { return !!mInterruptHook; }
     
   private:
-    PRBool      mOn;
+    bool        mOn;
     PRUint32    mPauseLevel;
     PRUint32    mNestedLoopLevel;
     JSDContext *mCx;

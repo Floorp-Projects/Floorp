@@ -86,7 +86,7 @@ NS_IMETHODIMP
 nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
 {
     nsresult rv;
-    PRBool longName;
+    bool longName;
 
 #ifdef XP_WIN
     nsAutoString pathName, leafName, rootName, suffix;

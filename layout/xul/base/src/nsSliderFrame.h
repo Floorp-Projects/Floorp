@@ -146,7 +146,7 @@ public:
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                                  nsGUIEvent *    aEvent,
                                  nsEventStatus*  aEventStatus,
-                                 PRBool aControlHeld)  { return NS_OK; }
+                                 bool aControlHeld)  { return NS_OK; }
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
@@ -158,22 +158,22 @@ public:
 
 private:
 
-  PRBool GetScrollToClick();
+  bool GetScrollToClick();
   nsIBox* GetScrollbar();
 
   void PageUpDown(nscoord change);
-  void SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewPos, PRBool aIsSmooth,
-                               PRBool aImmediateRedraw, PRBool aMaySnap);
-  void SetCurrentPosition(nsIContent* aScrollbar, PRInt32 aNewPos, PRBool aIsSmooth,
-                          PRBool aImmediateRedraw);
+  void SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewPos, bool aIsSmooth,
+                               bool aImmediateRedraw, bool aMaySnap);
+  void SetCurrentPosition(nsIContent* aScrollbar, PRInt32 aNewPos, bool aIsSmooth,
+                          bool aImmediateRedraw);
   void SetCurrentPositionInternal(nsIContent* aScrollbar, PRInt32 pos,
-                                  PRBool aIsSmooth, PRBool aImmediateRedraw);
+                                  bool aIsSmooth, bool aImmediateRedraw);
   nsresult CurrentPositionChanged(nsPresContext* aPresContext,
-                                  PRBool aImmediateRedraw);
-  void DragThumb(PRBool aGrabMouseEvents);
+                                  bool aImmediateRedraw);
+  void DragThumb(bool aGrabMouseEvents);
   void AddListener();
   void RemoveListener();
-  PRBool isDraggingThumb();
+  bool isDraggingThumb();
 
   void StartRepeat() {
     nsRepeatService::GetInstance()->Start(Notify, this);
@@ -201,9 +201,9 @@ private:
   // true if an attribute change has been caused by the user manipulating the
   // slider. This allows notifications to tell how a slider's current position
   // was changed.
-  PRBool mUserChanged;
+  bool mUserChanged;
 
-  static PRBool gMiddlePref;
+  static bool gMiddlePref;
   static PRInt32 gSnapMultiplier;
 }; // class nsSliderFrame
 

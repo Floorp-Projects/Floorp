@@ -182,7 +182,7 @@ nsWifiMonitor::DoScan()
 
     (*iw_enum)(skfd, &scan_wifi, args, 1);
 
-    PRBool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
+    bool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
     ReplaceArray(lastAccessPoints, accessPoints);
 
     nsresult rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);

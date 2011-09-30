@@ -46,7 +46,7 @@
    */
 
 PRInt32
-nsTString_CharT::Find( const nsCString& aString, PRBool aIgnoreCase, PRInt32 aOffset, PRInt32 aCount) const
+nsTString_CharT::Find( const nsCString& aString, bool aIgnoreCase, PRInt32 aOffset, PRInt32 aCount) const
   {
     // this method changes the meaning of aOffset and aCount:
     Find_ComputeSearchRange(mLength, aString.Length(), aOffset, aCount);
@@ -58,7 +58,7 @@ nsTString_CharT::Find( const nsCString& aString, PRBool aIgnoreCase, PRInt32 aOf
   }
 
 PRInt32
-nsTString_CharT::Find( const char* aString, PRBool aIgnoreCase, PRInt32 aOffset, PRInt32 aCount) const
+nsTString_CharT::Find( const char* aString, bool aIgnoreCase, PRInt32 aOffset, PRInt32 aCount) const
   {
     return Find(nsDependentCString(aString), aIgnoreCase, aOffset, aCount);
   }
@@ -72,7 +72,7 @@ nsTString_CharT::Find( const char* aString, PRBool aIgnoreCase, PRInt32 aOffset,
    */
 
 PRInt32
-nsTString_CharT::RFind( const nsCString& aString, PRBool aIgnoreCase, PRInt32 aOffset, PRInt32 aCount) const
+nsTString_CharT::RFind( const nsCString& aString, bool aIgnoreCase, PRInt32 aOffset, PRInt32 aCount) const
   {
     // this method changes the meaning of aOffset and aCount:
     RFind_ComputeSearchRange(mLength, aString.Length(), aOffset, aCount);
@@ -84,7 +84,7 @@ nsTString_CharT::RFind( const nsCString& aString, PRBool aIgnoreCase, PRInt32 aO
   }
 
 PRInt32
-nsTString_CharT::RFind( const char* aString, PRBool aIgnoreCase, PRInt32 aOffset, PRInt32 aCount) const
+nsTString_CharT::RFind( const char* aString, bool aIgnoreCase, PRInt32 aOffset, PRInt32 aCount) const
   {
     return RFind(nsDependentCString(aString), aIgnoreCase, aOffset, aCount);
   }
@@ -146,7 +146,7 @@ nsTString_CharT::ToInteger( PRInt32* aErrorCode, PRUint32 aRadix ) const
   CharT*  cp=mData;
   PRInt32 theRadix=10; // base 10 unless base 16 detected, or overriden (aRadix != kAutoDetect)
   PRInt32 result=0;
-  PRBool  negate=PR_FALSE;
+  bool    negate=false;
   CharT   theChar=0;
 
     //initial value, override if we find an integer
@@ -157,7 +157,7 @@ nsTString_CharT::ToInteger( PRInt32* aErrorCode, PRUint32 aRadix ) const
     //begin by skipping over leading chars that shouldn't be part of the number...
     
     CharT*  endcp=cp+mLength;
-    PRBool  done=PR_FALSE;
+    bool    done=false;
     
     while((cp<endcp) && (!done)){
       switch(*cp++) {
@@ -190,7 +190,7 @@ nsTString_CharT::ToInteger( PRInt32* aErrorCode, PRUint32 aRadix ) const
 
         //now iterate the numeric chars and build our result
       CharT* first=--cp;  //in case we have to back up.
-      PRBool haveValue = PR_FALSE;
+      bool haveValue = false;
 
       while(cp<endcp){
         PRInt32 oldresult = result;
@@ -284,7 +284,7 @@ nsTString_CharT::Mid( self_type& aResult, index_type aStartPos, size_type aLengt
    * nsTString::SetCharAt
    */
 
-PRBool
+bool
 nsTString_CharT::SetCharAt( PRUnichar aChar, PRUint32 aIndex )
   {
     if (aIndex >= mLength)
@@ -382,7 +382,7 @@ nsTString_CharT::ReplaceSubstring( const self_type& aTarget, const self_type& aN
    */
 
 void
-nsTString_CharT::Trim( const char* aSet, PRBool aTrimLeading, PRBool aTrimTrailing, PRBool aIgnoreQuotes )
+nsTString_CharT::Trim( const char* aSet, bool aTrimLeading, bool aTrimTrailing, bool aIgnoreQuotes )
   {
       // the old implementation worried about aSet being null :-/
     if (!aSet)
@@ -449,7 +449,7 @@ nsTString_CharT::Trim( const char* aSet, PRBool aTrimLeading, PRBool aTrimTraili
    */
 
 void
-nsTString_CharT::CompressWhitespace( PRBool aTrimLeading, PRBool aTrimTrailing )
+nsTString_CharT::CompressWhitespace( bool aTrimLeading, bool aTrimTrailing )
   {
     const char* set = kWhitespace;
 

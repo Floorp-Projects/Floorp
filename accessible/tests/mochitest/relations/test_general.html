@@ -18,14 +18,28 @@
     function doTest()
     {
       // html:label@for
-      testRelation("label1", RELATION_LABEL_FOR, "checkbox1");
-      testRelation("checkbox1", RELATION_LABELLED_BY, "label1");
+      testRelation("label1_1", RELATION_LABEL_FOR, "control1_1");
+      testRelation("control1_1", RELATION_LABELLED_BY, "label1_1");
 
       // html:label@for, multiple
-      testRelation("label1_1", RELATION_LABEL_FOR, "checkbox1_1");
-      testRelation("label1_2", RELATION_LABEL_FOR, "checkbox1_1");
-      testRelation("checkbox1_1", RELATION_LABELLED_BY,
-                   [ "label1_1", "label1_2" ]);
+      testRelation("label1_2", RELATION_LABEL_FOR, "control1_2");
+      testRelation("label1_3", RELATION_LABEL_FOR, "control1_2");
+      testRelation("control1_2", RELATION_LABELLED_BY,
+                   [ "label1_2", "label1_3" ]);
+
+      // ancestor html:label (implicit association)
+      todo(false, "no label_for relation on implicitly associated label, bug 687414");
+      //testRelation("label1_4", RELATION_LABEL_FOR, "control1_4");
+      testRelation("control1_4", RELATION_LABELLED_BY, "label1_4");
+      testRelation("control1_4_option1", RELATION_LABELLED_BY, null);
+      testRelation("control1_5", RELATION_LABELLED_BY, "label1_5");
+      testRelation("control1_6", RELATION_LABELLED_BY, "label1_6");
+      testRelation("control1_7", RELATION_LABELLED_BY, "label1_7");
+      testRelation("control1_8", RELATION_LABELLED_BY, "label1_8");
+      testRelation("control1_9", RELATION_LABELLED_BY, "label1_9");
+      testRelation("control1_10", RELATION_LABELLED_BY, "label1_10");
+      testRelation("control1_11", RELATION_LABELLED_BY, "label1_11");
+      testRelation("control1_12", RELATION_LABELLED_BY, "label1_12");
 
       // aria-labelledby
       testRelation("label2", RELATION_LABEL_FOR, "checkbox2");
@@ -143,17 +157,52 @@
      title="make HTML <output> accessible">
     Mozilla Bug 558036
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=687393"
+     title="HTML select options gets relation from containing label">
+    Mozilla Bug 687393
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
-  <label id="label1" for="checkbox1">label</label>
-  <input id="checkbox1" />
+  <label id="label1_1" for="control1_1">label</label>
+  <input id="control1_1">
 
-  <label id="label1_1" for="checkbox1_1">label</label>
-  <label id="label1_2" for="checkbox1_1">label</label>
-  <input id="checkbox1_1" />
+  <label id="label1_2" for="control1_2">label</label>
+  <label id="label1_3" for="control1_2">label</label>
+  <input id="control1_2">
+
+  <label id="label1_4">Label
+    <select id="control1_4">
+      <option id="control1_4_option1">option</option>
+    </select>
+  </label>
+  <label id="label1_5">Label
+    <button id="control1_5">button</button>
+  </label>
+  <label id="label1_6">Label
+    <input id="control1_6">
+  </label>
+  <label id="label1_7">Label
+    <input id="control1_7" type="checkbox">
+  </label>
+  <label id="label1_8">Label
+    <input id="control1_8" type="radio">
+  </label>
+  <label id="label1_9">Label
+    <input id="control1_9" type="button" value="button">
+  </label>
+  <label id="label1_10">Label
+    <input id="control1_10" type="submit">
+  </label>
+  <label id="label1_11">Label
+    <input id="control1_11" type="image">
+  </label>
+  <label id="label1_12">Label
+    <progress id="control1_12"></progress>
+  </label>
 
   <span id="label2">label</span>
   <span role="checkbox" id="checkbox2" aria-labelledby="label2"></span>

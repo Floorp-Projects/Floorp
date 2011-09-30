@@ -76,7 +76,7 @@ nsPopupWindowManager::Init()
   nsCOMPtr<nsIPrefBranch2> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    PRBool permission;
+    bool permission;
     rv = prefBranch->GetBoolPref(kPopupDisablePref, &permission);
     if (NS_FAILED(rv)) {
       permission = PR_TRUE;
@@ -134,7 +134,7 @@ nsPopupWindowManager::Observe(nsISupports *aSubject,
 
   if (prefBranch) {
     // refresh our local copy of the "disable popups" pref
-    PRBool permission = PR_TRUE;
+    bool permission = true;
     prefBranch->GetBoolPref(kPopupDisablePref, &permission);
 
     mPolicy = permission ? (PRUint32) DENY_POPUP : (PRUint32) ALLOW_POPUP;

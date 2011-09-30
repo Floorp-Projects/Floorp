@@ -172,8 +172,8 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetHeight(PRInt32 *aHeight);
   NS_SCRIPTABLE NS_IMETHOD GetType(PRUint16 *aType);
   NS_IMETHOD_(PRUint16) GetType(void);
-  NS_SCRIPTABLE NS_IMETHOD GetAnimated(PRBool *aAnimated);
-  NS_SCRIPTABLE NS_IMETHOD GetCurrentFrameIsOpaque(PRBool *aCurrentFrameIsOpaque);
+  NS_SCRIPTABLE NS_IMETHOD GetAnimated(bool *aAnimated);
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentFrameIsOpaque(bool *aCurrentFrameIsOpaque);
   NS_IMETHOD GetFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxASurface **_retval NS_OUTPARAM);
   NS_IMETHOD CopyFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxImageSurface **_retval NS_OUTPARAM);
   NS_IMETHOD ExtractFrame(PRUint32 aWhichFrame, const nsIntRect & aRect, PRUint32 aFlags, imgIContainer **_retval NS_OUTPARAM);
@@ -432,7 +432,7 @@ private:
   static void ClearFrame(imgFrame* aFrame, nsIntRect &aRect);
   
   //! Copy one frames's image and mask into another
-  static PRBool CopyFrameImage(imgFrame *aSrcFrame,
+  static bool CopyFrameImage(imgFrame *aSrcFrame,
                                imgFrame *aDstFrame);
   
   /** Draws one frames's image to into another,
@@ -513,23 +513,23 @@ private: // data
 #endif
 
   // Boolean flags (clustered together to conserve space):
-  PRPackedBool               mHasSize:1;       // Has SetSize() been called?
-  PRPackedBool               mDecodeOnDraw:1;  // Decoding on draw?
-  PRPackedBool               mMultipart:1;     // Multipart?
-  PRPackedBool               mDiscardable:1;   // Is container discardable?
-  PRPackedBool               mHasSourceData:1; // Do we have source data?
+  bool                       mHasSize:1;       // Has SetSize() been called?
+  bool                       mDecodeOnDraw:1;  // Decoding on draw?
+  bool                       mMultipart:1;     // Multipart?
+  bool                       mDiscardable:1;   // Is container discardable?
+  bool                       mHasSourceData:1; // Do we have source data?
 
   // Do we have the frames in decoded form?
-  PRPackedBool               mDecoded:1;
-  PRPackedBool               mHasBeenDecoded:1;
+  bool                       mDecoded:1;
+  bool                       mHasBeenDecoded:1;
 
   // Helpers for decoder
-  PRPackedBool               mWorkerPending:1;
-  PRPackedBool               mInDecoder:1;
+  bool                       mWorkerPending:1;
+  bool                       mInDecoder:1;
 
   // Whether the animation can stop, due to running out
   // of frames, or no more owning request
-  PRPackedBool               mAnimationFinished:1;
+  bool                       mAnimationFinished:1;
 
   // Decoding
   nsresult WantDecodedFrames();
@@ -537,7 +537,7 @@ private: // data
   nsresult InitDecoder(bool aDoSizeDecode);
   nsresult WriteToDecoder(const char *aBuffer, PRUint32 aCount);
   nsresult DecodeSomeData(PRUint32 aMaxBytes);
-  PRBool   IsDecodeFinished();
+  bool     IsDecodeFinished();
   TimeStamp mDrawStartTime;
 
   // Decoder shutdown

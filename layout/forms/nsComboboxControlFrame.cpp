@@ -362,7 +362,7 @@ nsComboboxControlFrame::CreateAccessible()
 #endif
 
 void 
-nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
+nsComboboxControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
   nsWeakFrame weakFrame(this);
   if (aOn) {
@@ -400,7 +400,7 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 }
 
 void
-nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
+nsComboboxControlFrame::ShowPopup(bool aShowPopup)
 {
   nsIView* view = mDropdownFrame->GetView();
   nsIViewManager* viewManager = view->GetViewManager();
@@ -427,8 +427,8 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
 }
 
-PRBool
-nsComboboxControlFrame::ShowList(PRBool aShowList)
+bool
+nsComboboxControlFrame::ShowList(bool aShowList)
 {
   nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
 
@@ -548,7 +548,7 @@ nsPoint
 nsComboboxControlFrame::GetCSSTransformTranslation()
 {
   nsIFrame* frame = this;
-  PRBool is3DTransform = PR_FALSE;
+  bool is3DTransform = false;
   gfxMatrix transform;
   while (frame) {
     nsIFrame* parent = nsnull;
@@ -837,7 +837,7 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 // nsIComboboxControlFrame
 //----------------------------------------------------------------------
 void
-nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown) 
+nsComboboxControlFrame::ShowDropDown(bool aDoDropDown) 
 {
   nsEventStates eventStates = mContent->AsElement()->State();
   if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
@@ -945,7 +945,7 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
 }
 
 void
-nsComboboxControlFrame::ActuallyDisplayText(PRBool aNotify)
+nsComboboxControlFrame::ActuallyDisplayText(bool aNotify)
 {
   if (mDisplayedOptionText.IsEmpty()) {
     // Have to use a non-breaking space for line-height calculations
@@ -967,7 +967,7 @@ nsComboboxControlFrame::GetIndexOfDisplayArea()
 // nsISelectControlFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::DoneAddingChildren(PRBool aIsDone)
+nsComboboxControlFrame::DoneAddingChildren(bool aIsDone)
 {
   nsISelectControlFrame* listFrame = do_QueryFrame(mDropdownFrame);
   if (!listFrame)
@@ -1170,7 +1170,7 @@ public:
   // depends on the available width.
   virtual nsIAtom* GetType() const;
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplacedContainsBlock));
@@ -1519,7 +1519,7 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
 // being selected or not selected
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::OnOptionSelected(PRInt32 aIndex, PRBool aSelected)
+nsComboboxControlFrame::OnOptionSelected(PRInt32 aIndex, bool aSelected)
 {
   if (mDroppedDown) {
     nsISelectControlFrame *selectFrame = do_QueryFrame(mListControlFrame);
@@ -1594,7 +1594,7 @@ nsComboboxControlFrame::RestoreState(nsPresState* aState)
 // 
 
 /* static */
-PRBool
+bool
 nsComboboxControlFrame::ToolkitHasNativePopup()
 {
 #ifdef MOZ_USE_NATIVE_POPUP_WINDOWS

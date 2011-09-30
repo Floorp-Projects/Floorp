@@ -87,7 +87,7 @@ public:
     NS_DECL_NSICLASSINFO
     NS_DECL_NSIMUTABLE
 
-    nsStandardURL(PRBool aSupportsFileURL = PR_FALSE);
+    nsStandardURL(bool aSupportsFileURL = false);
     virtual ~nsStandardURL();
 
     static void InitGlobalObjects();
@@ -146,7 +146,7 @@ public: /* internal -- HPUX compiler can't handle this being private */
                                    const URLSegment &segment,
                                    PRInt16 mask,
                                    nsAFlatCString &buf,
-                                   PRBool& appended,
+                                   bool& appended,
                                    PRUint32 extraLen = 0);
          
         // Encode the given string if necessary, and return a reference to
@@ -156,7 +156,7 @@ public: /* internal -- HPUX compiler can't handle this being private */
                                         PRInt16 mask,
                                         nsAFlatCString &buf);
     private:
-        PRBool InitUnicodeEncoder();
+        bool InitUnicodeEncoder();
         
         const char* mCharset;  // Caller should keep this alive for
                                // the life of the segment encoder
@@ -175,7 +175,7 @@ protected:
     // NOTE: *not* virtual, because no one needs to override this so far...
     nsresult EqualsInternal(nsIURI* unknownOther,
                             RefHandlingEnum refHandlingMode,
-                            PRBool* result);
+                            bool* result);
 
     virtual nsStandardURL* StartClone();
 
@@ -193,20 +193,20 @@ private:
     PRInt32  Port() { return mPort == -1 ? mDefaultPort : mPort; }
 
     void     Clear();
-    void     InvalidateCache(PRBool invalidateCachedFile = PR_TRUE);
+    void     InvalidateCache(bool invalidateCachedFile = true);
 
-    PRBool   EscapeIPv6(const char *host, nsCString &result);
-    PRBool   NormalizeIDN(const nsCSubstring &host, nsCString &result);
+    bool     EscapeIPv6(const char *host, nsCString &result);
+    bool     NormalizeIDN(const nsCSubstring &host, nsCString &result);
     void     CoalescePath(netCoalesceFlags coalesceFlag, char *path);
 
-    PRUint32 AppendSegmentToBuf(char *, PRUint32, const char *, URLSegment &, const nsCString *esc=nsnull, PRBool useEsc = PR_FALSE);
+    PRUint32 AppendSegmentToBuf(char *, PRUint32, const char *, URLSegment &, const nsCString *esc=nsnull, bool useEsc = false);
     PRUint32 AppendToBuf(char *, PRUint32, const char *, PRUint32);
 
     nsresult BuildNormalizedSpec(const char *spec);
 
-    PRBool   SegmentIs(const URLSegment &s1, const char *val, PRBool ignoreCase = PR_FALSE);
-    PRBool   SegmentIs(const char* spec, const URLSegment &s1, const char *val, PRBool ignoreCase = PR_FALSE);
-    PRBool   SegmentIs(const URLSegment &s1, const char *val, const URLSegment &s2, PRBool ignoreCase = PR_FALSE);
+    bool     SegmentIs(const URLSegment &s1, const char *val, bool ignoreCase = false);
+    bool     SegmentIs(const char* spec, const URLSegment &s1, const char *val, bool ignoreCase = false);
+    bool     SegmentIs(const URLSegment &s1, const char *val, const URLSegment &s2, bool ignoreCase = false);
 
     PRInt32  ReplaceSegment(PRUint32 pos, PRUint32 len, const char *val, PRUint32 valLen);
     PRInt32  ReplaceSegment(PRUint32 pos, PRUint32 len, const nsACString &val);
@@ -223,7 +223,7 @@ private:
     // dependent substring getters
     const nsDependentCSubstring Prepath();  // see below
     const nsDependentCSubstring Scheme()    { return Segment(mScheme); }
-    const nsDependentCSubstring Userpass(PRBool includeDelim = PR_FALSE); // see below
+    const nsDependentCSubstring Userpass(bool includeDelim = false); // see below
     const nsDependentCSubstring Username()  { return Segment(mUsername); }
     const nsDependentCSubstring Password()  { return Segment(mPassword); }
     const nsDependentCSubstring Hostport(); // see below
@@ -305,10 +305,10 @@ private:
     // coredump if we leak it.
     static nsIIDNService               *gIDN;
     static nsICharsetConverterManager  *gCharsetMgr;
-    static PRBool                       gInitialized;
-    static PRBool                       gEscapeUTF8;
-    static PRBool                       gAlwaysEncodeInUTF8;
-    static PRBool                       gEncodeQueryInUTF8;
+    static bool                         gInitialized;
+    static bool                         gEscapeUTF8;
+    static bool                         gAlwaysEncodeInUTF8;
+    static bool                         gEncodeQueryInUTF8;
 
 public:
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
@@ -349,7 +349,7 @@ nsStandardURL::Prepath()
 }
 
 inline const nsDependentCSubstring
-nsStandardURL::Userpass(PRBool includeDelim)
+nsStandardURL::Userpass(bool includeDelim)
 {
     PRUint32 pos=0, len=0;
     // if there is no username, then there can be no password

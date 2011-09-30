@@ -217,7 +217,7 @@ FirstNon8Bit(const PRUnichar *str, const PRUnichar *end)
 }
 
 void
-nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength, PRBool aUpdateBidi)
+nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength, bool aUpdateBidi)
 {
   ReleaseText();
 
@@ -337,7 +337,7 @@ nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
 }
 
 void
-nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength, PRBool aUpdateBidi)
+nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength, bool aUpdateBidi)
 {
   // This is a common case because some callsites create a textnode
   // with a value by creating the node and then calling AppendData.

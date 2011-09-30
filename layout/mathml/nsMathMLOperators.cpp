@@ -70,7 +70,7 @@ static PRInt32         gTableRefCount = 0;
 static PRUint32        gOperatorCount = 0;
 static OperatorData*   gOperatorArray = nsnull;
 static nsHashtable*    gOperatorTable = nsnull;
-static PRBool          gInitialized   = PR_FALSE;
+static bool            gInitialized   = false;
 static nsTArray<nsString>*      gInvariantCharArray    = nsnull;
 
 static const PRUnichar kNullCh  = PRUnichar('\0');
@@ -139,7 +139,7 @@ SetProperty(OperatorData* aOperatorData,
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_DIRECTION_HORIZONTAL;
     else return; // invalid value
   } else {
-    PRBool isLeftSpace;
+    bool isLeftSpace;
     if (aName.EqualsLiteral("lspace"))
       isLeftSpace = PR_TRUE;
     else if (aName.EqualsLiteral("rspace"))
@@ -158,7 +158,7 @@ SetProperty(OperatorData* aOperatorData,
   }
 }
 
-static PRBool
+static bool
 SetOperator(OperatorData*   aOperatorData,
             nsOperatorFlags aForm,
             const nsCString& aOperator,
@@ -241,7 +241,7 @@ SetOperator(OperatorData*   aOperatorData,
       ++end;
     }
     // If ':' is not found, then it's a boolean property
-    PRBool IsBooleanProperty = (kColonCh != *end);
+    bool IsBooleanProperty = (kColonCh != *end);
     *end = kNullCh; // end segment here
     // this segment is the name
     if (start < end) {
@@ -295,7 +295,7 @@ InitOperators(void)
     OperatorData* operatorData = &dummyData;
     nsCOMPtr<nsISimpleEnumerator> iterator;
     if (NS_SUCCEEDED(mathfontProp->Enumerate(getter_AddRefs(iterator)))) {
-      PRBool more;
+      bool more;
       PRUint32 index = 0;
       nsCAutoString name;
       nsAutoString attributes;
@@ -405,7 +405,7 @@ GetOperatorData(const nsString& aOperator, nsOperatorFlags aForm)
   return (OperatorData*)gOperatorTable->Get(&hkey);
 }
 
-PRBool
+bool
 nsMathMLOperators::LookupOperator(const nsString&       aOperator,
                                   const nsOperatorFlags aForm,
                                   nsOperatorFlags*      aFlags,
@@ -496,7 +496,7 @@ nsMathMLOperators::LookupOperators(const nsString&       aOperator,
   }
 }
 
-PRBool
+bool
 nsMathMLOperators::IsMutableOperator(const nsString& aOperator)
 {
   if (!gInitialized) {

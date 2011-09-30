@@ -56,7 +56,7 @@ public:
   NS_DECL_NSILISTBOXOBJECT
 
   // nsPIListBoxObject
-  virtual nsListBoxBodyFrame* GetListBoxBody(PRBool aFlush);
+  virtual nsListBoxBodyFrame* GetListBoxBody(bool aFlush);
 
   nsListBoxObject();
 
@@ -181,7 +181,7 @@ FindBodyContent(nsIContent* aParent, nsIContent** aResult)
 }
 
 nsListBoxBodyFrame*
-nsListBoxObject::GetListBoxBody(PRBool aFlush)
+nsListBoxObject::GetListBoxBody(bool aFlush)
 {
   if (mListBoxBody) {
     return mListBoxBody;

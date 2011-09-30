@@ -9,7 +9,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsCOMPtr.h"
 
-PRBool LoopInDir(nsILocalFile* file)
+bool LoopInDir(nsILocalFile* file)
 {
     nsresult rv;
     nsCOMPtr<nsISimpleEnumerator> entries;
@@ -17,7 +17,7 @@ PRBool LoopInDir(nsILocalFile* file)
     if(NS_FAILED(rv) || !entries)
         return PR_FALSE;
     
-    PRBool hasMore;
+    bool hasMore;
     while(NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore)
     {
         nsCOMPtr<nsISupports> sup;
@@ -33,7 +33,7 @@ PRBool LoopInDir(nsILocalFile* file)
         if(NS_FAILED(file->GetNativeLeafName(name)))
             return PR_FALSE;
         
-        PRBool isDir;
+        bool isDir;
         printf("%s\n", name.get());
         rv = file->IsDirectory(&isDir);
         if (NS_FAILED(rv))

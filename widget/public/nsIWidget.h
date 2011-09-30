@@ -221,12 +221,12 @@ struct nsIMEUpdatePreference {
     : mWantUpdates(PR_FALSE), mWantHints(PR_FALSE)
   {
   }
-  nsIMEUpdatePreference(PRBool aWantUpdates, PRBool aWantHints)
+  nsIMEUpdatePreference(bool aWantUpdates, bool aWantHints)
     : mWantUpdates(aWantUpdates), mWantHints(aWantHints)
   {
   }
-  PRPackedBool mWantUpdates;
-  PRPackedBool mWantHints;
+  bool mWantUpdates;
+  bool mWantHints;
 };
 
 
@@ -250,11 +250,11 @@ struct IMEContext {
     FOCUS_FROM_CONTENT_PROCESS = 0x0100
   };
 
-  PRBool FocusMovedByUser() const {
+  bool FocusMovedByUser() const {
     return (mReason & FOCUS_MOVED_BY_MOUSE) || (mReason & FOCUS_MOVED_BY_KEY);
   };
 
-  PRBool FocusMovedInContentProcess() const {
+  bool FocusMovedInContentProcess() const {
     return (mReason & FOCUS_FROM_CONTENT_PROCESS);
   };
 
@@ -364,7 +364,7 @@ class nsIWidget : public nsISupports {
                 nsIAppShell      *aAppShell = nsnull,
                 nsIToolkit       *aToolkit = nsnull,
                 nsWidgetInitData *aInitData = nsnull,
-                PRBool           aForceUseIWidgetParent = PR_FALSE) = 0;
+                bool             aForceUseIWidgetParent = false) = 0;
 
     /**
      * Attach to a top level widget. 
@@ -507,19 +507,19 @@ class nsIWidget : public nsISupports {
      * @param aState PR_TRUE to show the Widget, PR_FALSE to hide it
      *
      */
-    NS_IMETHOD Show(PRBool aState) = 0;
+    NS_IMETHOD Show(bool aState) = 0;
 
     /**
      * Make the window modal
      *
      */
-    NS_IMETHOD SetModal(PRBool aModal) = 0;
+    NS_IMETHOD SetModal(bool aModal) = 0;
 
     /**
      * Returns whether the window is visible
      *
      */
-    NS_IMETHOD IsVisible(PRBool & aState) = 0;
+    NS_IMETHOD IsVisible(bool & aState) = 0;
 
     /**
      * Perform platform-dependent sanity check on a potential window position.
@@ -536,7 +536,7 @@ class nsIWidget : public nsISupports {
      * @return vapid success indication. but see also the parameters.
      *
      **/
-    NS_IMETHOD ConstrainPosition(PRBool aAllowSlop,
+    NS_IMETHOD ConstrainPosition(bool aAllowSlop,
                                  PRInt32 *aX,
                                  PRInt32 *aY) = 0;
 
@@ -562,7 +562,7 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD Resize(PRInt32 aWidth,
                       PRInt32 aHeight,
-                      PRBool   aRepaint) = 0;
+                      bool     aRepaint) = 0;
 
     /**
      * Move or resize this widget.
@@ -578,7 +578,7 @@ class nsIWidget : public nsISupports {
                       PRInt32 aY,
                       PRInt32 aWidth,
                       PRInt32 aHeight,
-                      PRBool   aRepaint) = 0;
+                      bool     aRepaint) = 0;
 
     /**
      * Resize and reposition the inner client area of the widget.
@@ -594,7 +594,7 @@ class nsIWidget : public nsISupports {
                             PRInt32 aY,
                             PRInt32 aWidth,
                             PRInt32 aHeight,
-                            PRBool  aRepaint) = 0;
+                            bool    aRepaint) = 0;
 
     /**
      * Sets the widget's z-index.
@@ -618,7 +618,7 @@ class nsIWidget : public nsISupports {
      * @param aActivate  true to activate the widget after placing it
      */
     NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                           nsIWidget *aWidget, PRBool aActivate) = 0;
+                           nsIWidget *aWidget, bool aActivate) = 0;
 
     /**
      * Minimize, maximize or normalize the window size.
@@ -638,13 +638,13 @@ class nsIWidget : public nsISupports {
      * @param aState PR_TRUE to enable the Widget, PR_FALSE to disable it.
      *
      */
-    NS_IMETHOD Enable(PRBool aState) = 0;
+    NS_IMETHOD Enable(bool aState) = 0;
 
     /**
      * Ask whether the widget is enabled
      * @param aState returns PR_TRUE if the widget is enabled
      */
-    NS_IMETHOD IsEnabled(PRBool *aState) = 0;
+    NS_IMETHOD IsEnabled(bool *aState) = 0;
 
     /**
      * Request activation of this window or give focus to this widget.
@@ -657,7 +657,7 @@ class nsIWidget : public nsISupports {
      *               that keyboard events should be reported through the
      *               aHandleEventFunction provided to this->Create().
      */
-    NS_IMETHOD SetFocus(PRBool aRaise = PR_FALSE) = 0;
+    NS_IMETHOD SetFocus(bool aRaise = false) = 0;
 
     /**
      * Get this widget's outside dimensions relative to its parent widget. For
@@ -859,19 +859,19 @@ class nsIWidget : public nsISupports {
      *
      * Ignored on child widgets and on non-Mac platforms.
      */
-    virtual void SetShowsToolbarButton(PRBool aShow) = 0;
+    virtual void SetShowsToolbarButton(bool aShow) = 0;
 
     /** 
      * Hide window chrome (borders, buttons) for this widget.
      *
      */
-    NS_IMETHOD HideWindowChrome(PRBool aShouldHide) = 0;
+    NS_IMETHOD HideWindowChrome(bool aShouldHide) = 0;
 
     /**
      * Put the toplevel window into or out of fullscreen mode.
      *
      */
-    NS_IMETHOD MakeFullScreen(PRBool aFullScreen) = 0;
+    NS_IMETHOD MakeFullScreen(bool aFullScreen) = 0;
 
     /**
      * Invalidate a specified rect for a widget and repaints it.
@@ -880,7 +880,7 @@ class nsIWidget : public nsISupports {
      * @see #Update()
      */
 
-    NS_IMETHOD Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous) = 0;
+    NS_IMETHOD Invalidate(const nsIntRect & aRect, bool aIsSynchronous) = 0;
 
     /**
      * Force a synchronous repaint of the window if there are dirty rects.
@@ -1025,14 +1025,14 @@ class nsIWidget : public nsISupports {
      * Enables the dropping of files to a widget (XXX this is temporary)
      *
      */
-    NS_IMETHOD EnableDragDrop(PRBool aEnable) = 0;
+    NS_IMETHOD EnableDragDrop(bool aEnable) = 0;
    
     /**
      * Enables/Disables system mouse capture.
      * @param aCapture PR_TRUE enables mouse capture, PR_FALSE disables mouse capture 
      *
      */
-    NS_IMETHOD CaptureMouse(PRBool aCapture) = 0;
+    NS_IMETHOD CaptureMouse(bool aCapture) = 0;
 
     /**
      * Classify the window for the window manager. Mostly for X11.
@@ -1048,7 +1048,7 @@ class nsIWidget : public nsISupports {
      *
      */
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
-                                   PRBool aDoCapture, PRBool aConsumeRollupEvent) = 0;
+                                   bool aDoCapture, bool aConsumeRollupEvent) = 0;
 
     /**
      * Bring this window to the user's attention.  This is intended to be a more
@@ -1067,7 +1067,7 @@ class nsIWidget : public nsISupports {
      * Ask whether there user input events pending.  All input events are
      * included, including those not targeted at this nsIwidget instance.
      */
-    virtual PRBool HasPendingInputEvent() = 0;
+    virtual bool HasPendingInputEvent() = 0;
 
     /**
      * Called when when we need to begin secure keyboard input, such as when a password field
@@ -1103,7 +1103,7 @@ class nsIWidget : public nsISupports {
      * @param aActive Whether the color should be applied to active or inactive
      *                windows.
      */
-    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive) = 0;
+    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive) = 0;
 
     /**
      * If set to true, the window will draw its contents into the titlebar
@@ -1116,7 +1116,7 @@ class nsIWidget : public nsISupports {
      *
      * @param aState Whether drawing into the titlebar should be activated.
      */
-    virtual void SetDrawsInTitlebar(PRBool aState) = 0;
+    virtual void SetDrawsInTitlebar(bool aState) = 0;
 
     /*
      * Determine whether the widget shows a resize widget. If it does,
@@ -1127,7 +1127,7 @@ class nsIWidget : public nsISupports {
      * @param aResizerRect The resizer's rect in device pixels.
      * @return Whether a resize widget is shown.
      */
-    virtual PRBool ShowsResizeIndicator(nsIntRect* aResizerRect) = 0;
+    virtual bool ShowsResizeIndicator(nsIntRect* aResizerRect) = 0;
 
     /**
      * Get the Thebes surface associated with this widget.
@@ -1263,14 +1263,14 @@ class nsIWidget : public nsISupports {
      * If aState is TRUE, IME open state is set to 'Opened'.
      * If aState is FALSE, set to 'Closed'.
      */
-    NS_IMETHOD SetIMEOpenState(PRBool aState) = 0;
+    NS_IMETHOD SetIMEOpenState(bool aState) = 0;
 
     /*
      * Get IME is 'Opened' or 'Closed'.
      * If IME is 'Opened', aState is set PR_TRUE.
      * If IME is 'Closed', aState is set PR_FALSE.
      */
-    NS_IMETHOD GetIMEOpenState(PRBool* aState) = 0;
+    NS_IMETHOD GetIMEOpenState(bool* aState) = 0;
 
     /*
      * IME enabled states, the aState value of SetIMEEnabled/GetIMEEnabled
@@ -1338,7 +1338,7 @@ class nsIWidget : public nsISupports {
     /**
      * Set accelerated rendering to 'True' or 'False'
      */
-    NS_IMETHOD SetAcceleratedRendering(PRBool aEnabled) = 0;
+    NS_IMETHOD SetAcceleratedRendering(bool aEnabled) = 0;
 
     /*
      * Get toggled key states.
@@ -1349,7 +1349,7 @@ class nsIWidget : public nsISupports {
      * If the platform doesn't support the LED state (or we cannot get the
      * state), this method returns NS_ERROR_NOT_IMPLEMENTED.
      */
-    NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState) = 0;
+    NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, bool* aLEDState) = 0;
 
     /*
      * An editable node (i.e. input/textarea/design mode document)
@@ -1363,7 +1363,7 @@ class nsIWidget : public nsISupports {
      * If this returns NS_SUCCESS_IME_NO_UPDATES, OnIMEFocusChange(PR_FALSE)
      * will be called but OnIMETextChange and OnIMESelectionChange will NOT.
      */
-    NS_IMETHOD OnIMEFocusChange(PRBool aFocus) = 0;
+    NS_IMETHOD OnIMEFocusChange(bool aFocus) = 0;
 
     /*
      * Text content of the focused node has changed
@@ -1411,7 +1411,7 @@ class nsIWidget : public nsISupports {
      *                         may be same as aOriginalDelta.
      */
     NS_IMETHOD OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
-                                              PRBool aIsHorizontal,
+                                              bool aIsHorizontal,
                                               PRInt32 &aOverriddenDelta) = 0;
 
     /**

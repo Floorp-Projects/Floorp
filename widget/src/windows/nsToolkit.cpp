@@ -64,8 +64,8 @@ static PRUintn gToolkitTLSIndex = 0;
 
 
 HINSTANCE nsToolkit::mDllInstance = 0;
-PRBool    nsToolkit::mIsWinXP     = PR_FALSE;
-static PRBool dummy = nsToolkit::InitVersionInfo();
+bool      nsToolkit::mIsWinXP     = false;
+static bool dummy = nsToolkit::InitVersionInfo();
 
 static const unsigned long kD3DUsageDelay = 5000;
 
@@ -78,7 +78,7 @@ StartAllowingD3D9(nsITimer *aTimer, void *aClosure)
 //
 // main for the message pump thread
 //
-PRBool gThreadState = PR_FALSE;
+bool gThreadState = false;
 
 struct ThreadInitInfo {
     PRMonitor *monitor;
@@ -368,9 +368,9 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
 }
 
 
-PRBool nsToolkit::InitVersionInfo()
+bool nsToolkit::InitVersionInfo()
 {
-  static PRBool isInitialized = PR_FALSE;
+  static bool isInitialized = false;
 
   if (!isInitialized)
   {

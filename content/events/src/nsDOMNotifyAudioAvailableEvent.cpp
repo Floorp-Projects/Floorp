@@ -136,12 +136,12 @@ nsDOMNotifyAudioAvailableEvent::GetTime(float *aRetVal)
 
 NS_IMETHODIMP
 nsDOMNotifyAudioAvailableEvent::InitAudioAvailableEvent(const nsAString& aType,
-                                                        PRBool aCanBubble,
-                                                        PRBool aCancelable,
+                                                        bool aCanBubble,
+                                                        bool aCancelable,
                                                         float* aFrameBuffer,
                                                         PRUint32 aFrameBufferLength,
                                                         float aTime,
-                                                        PRBool aAllowAudioData)
+                                                        bool aAllowAudioData)
 {
   // Auto manage the memory which stores the frame buffer. This ensures
   // that if we exit due to some error, the memory will be freed. Otherwise,

@@ -70,7 +70,7 @@ struct nsXPTCMiniVariant
         PRUint64  u64;
         float     f;
         double    d;
-        PRBool    b;
+        bool      b;
         char      c;
         PRUnichar wc;
         void*     p;
@@ -127,11 +127,11 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     void SetIndirect()        {ptr = &val; flags |= PTR_IS_DATA;}
     void SetValNeedsCleanup() {flags |= VAL_NEEDS_CLEANUP;}
 
-    PRBool IsIndirect()         const  {return 0 != (flags & PTR_IS_DATA);}
-    PRBool DoesValNeedCleanup() const  {return 0 != (flags & VAL_NEEDS_CLEANUP);}
+    bool IsIndirect()         const  {return 0 != (flags & PTR_IS_DATA);}
+    bool DoesValNeedCleanup() const  {return 0 != (flags & VAL_NEEDS_CLEANUP);}
 
     // Internal use only. Use IsIndirect() instead.
-    PRBool IsPtrData()       const  {return 0 != (flags & PTR_IS_DATA);}
+    bool IsPtrData()       const  {return 0 != (flags & PTR_IS_DATA);}
 
     void Init(const nsXPTCMiniVariant& mv, const nsXPTType& t, PRUint8 f)
     {

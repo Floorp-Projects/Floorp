@@ -81,7 +81,7 @@ public:
     return mIMC;
   }
 
-  PRBool IsValid() const
+  bool IsValid() const
   {
     return !!mIMC;
   }
@@ -112,47 +112,47 @@ public:
   // when it's FALSE, otherwise, the message should be eaten by us.  When the
   // result is FALSE, aEatMessage doesn't have any meaning.  Then, the caller
   // should continue to process the message.
-  static PRBool ProcessMessage(nsWindow* aWindow, UINT msg,
+  static bool ProcessMessage(nsWindow* aWindow, UINT msg,
                                WPARAM &wParam, LPARAM &lParam,
-                               LRESULT *aRetValue, PRBool &aEatMessage);
-  static PRBool IsComposing()
+                               LRESULT *aRetValue, bool &aEatMessage);
+  static bool IsComposing()
   {
     return IsComposingOnOurEditor() || IsComposingOnPlugin();
   }
-  static PRBool IsComposingOn(nsWindow* aWindow)
+  static bool IsComposingOn(nsWindow* aWindow)
   {
     return IsComposing() && IsComposingWindow(aWindow);
   }
-  static PRBool IsStatusChanged() { return sIsStatusChanged; }
+  static bool IsStatusChanged() { return sIsStatusChanged; }
 
-  static PRBool IsDoingKakuteiUndo(HWND aWnd);
+  static bool IsDoingKakuteiUndo(HWND aWnd);
 
   static void NotifyEndStatusChange() { sIsStatusChanged = PR_FALSE; }
 
-  static PRBool CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage);
+  static bool CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage);
 
 #ifdef DEBUG
   /**
    * IsIMEAvailable() returns TRUE when current keyboard layout has IME.
    * Otherwise, FALSE.
    */
-  static PRBool IsIMEAvailable() { return sIsIME; }
+  static bool IsIMEAvailable() { return sIsIME; }
 #endif
 
   // If aForce is TRUE, these methods doesn't check whether we have composition
   // or not.  If you don't set it to TRUE, these method doesn't commit/cancel
   // the composition on uexpected window.
-  static void CommitComposition(nsWindow* aWindow, PRBool aForce = PR_FALSE);
-  static void CancelComposition(nsWindow* aWindow, PRBool aForce = PR_FALSE);
+  static void CommitComposition(nsWindow* aWindow, bool aForce = false);
+  static void CancelComposition(nsWindow* aWindow, bool aForce = false);
 
 protected:
   static void EnsureHandlerInstance();
 
-  static PRBool IsComposingOnOurEditor();
-  static PRBool IsComposingOnPlugin();
-  static PRBool IsComposingWindow(nsWindow* aWindow);
+  static bool IsComposingOnOurEditor();
+  static bool IsComposingOnPlugin();
+  static bool IsComposingWindow(nsWindow* aWindow);
 
-  static PRBool ShouldDrawCompositionStringOurselves();
+  static bool ShouldDrawCompositionStringOurselves();
   static void InitKeyboardLayout(HKL aKeyboardLayout);
   static UINT GetKeyboardCodePage();
 
@@ -161,67 +161,67 @@ protected:
    * In this method, the top level window means in all windows, not only in all
    * OUR windows.  I.e., if the aWindow is embedded, this always returns FALSE.
    */
-  static PRBool IsTopLevelWindowOfComposition(nsWindow* aWindow);
+  static bool IsTopLevelWindowOfComposition(nsWindow* aWindow);
 
-  static PRBool ProcessInputLangChangeMessage(nsWindow* aWindow,
+  static bool ProcessInputLangChangeMessage(nsWindow* aWindow,
                                               WPARAM wParam,
                                               LPARAM lParam,
                                               LRESULT *aRetValue,
-                                              PRBool &aEatMessage);
-  static PRBool ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
+                                              bool &aEatMessage);
+  static bool ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
                                         WPARAM &wParam, LPARAM &lParam,
                                         LRESULT *aRetValue,
-                                        PRBool &aEatMessage);
+                                        bool &aEatMessage);
 
   nsIMM32Handler();
   ~nsIMM32Handler();
 
   // The result of following On*Event methods means "The message was processed,
   // don't process the message in the caller (nsWindow)".
-  PRBool OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction);
-  static PRBool OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
-                               PRBool &aEatMessage);
+  bool OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction);
+  static bool OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+                               bool &aEatMessage);
 
   // The result of On* methods mean "eat this message" when it's TRUE.
-  PRBool OnIMEStartComposition(nsWindow* aWindow);
-  PRBool OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
+  bool OnIMEStartComposition(nsWindow* aWindow);
+  bool OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
                                        WPARAM wParam, LPARAM lParam);
-  PRBool OnIMEComposition(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  PRBool OnIMECompositionOnPlugin(nsWindow* aWindow,
+  bool OnIMEComposition(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  bool OnIMECompositionOnPlugin(nsWindow* aWindow,
                                   WPARAM wParam, LPARAM lParam);
-  PRBool OnIMEEndComposition(nsWindow* aWindow);
-  PRBool OnIMEEndCompositionOnPlugin(nsWindow* aWindow,
+  bool OnIMEEndComposition(nsWindow* aWindow);
+  bool OnIMEEndCompositionOnPlugin(nsWindow* aWindow,
                                      WPARAM wParam, LPARAM lParam);
-  PRBool OnIMERequest(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
+  bool OnIMERequest(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
                       LRESULT *aResult);
-  PRBool OnIMECharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  PRBool OnChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  PRBool OnCharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  PRBool OnInputLangChange(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  bool OnIMECharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  bool OnChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  bool OnCharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  bool OnInputLangChange(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
 
   // These message handlers don't use instance members, we should not create
   // the instance by the messages.  So, they should be static.
-  static PRBool OnIMEChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  static PRBool OnIMESetContext(nsWindow* aWindow,
+  static bool OnIMEChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  static bool OnIMESetContext(nsWindow* aWindow,
                                 WPARAM wParam, LPARAM lParam,
                                 LRESULT *aResult);
-  static PRBool OnIMESetContextOnPlugin(nsWindow* aWindow,
+  static bool OnIMESetContextOnPlugin(nsWindow* aWindow,
                                         WPARAM wParam, LPARAM lParam,
                                         LRESULT *aResult);
-  static PRBool OnIMECompositionFull(nsWindow* aWindow);
-  static PRBool OnIMENotify(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
-  static PRBool OnIMESelect(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  static bool OnIMECompositionFull(nsWindow* aWindow);
+  static bool OnIMENotify(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
+  static bool OnIMESelect(nsWindow* aWindow, WPARAM wParam, LPARAM lParam);
 
   // The result of Handle* method mean "Processed" when it's TRUE.
   void HandleStartComposition(nsWindow* aWindow,
                               const nsIMEContext &aIMEContext);
-  PRBool HandleComposition(nsWindow* aWindow, const nsIMEContext &aIMEContext,
+  bool HandleComposition(nsWindow* aWindow, const nsIMEContext &aIMEContext,
                            LPARAM lParam);
   void HandleEndComposition(nsWindow* aWindow);
-  PRBool HandleReconvert(nsWindow* aWindow, LPARAM lParam, LRESULT *oResult);
-  PRBool HandleQueryCharPosition(nsWindow* aWindow, LPARAM lParam,
+  bool HandleReconvert(nsWindow* aWindow, LPARAM lParam, LRESULT *oResult);
+  bool HandleQueryCharPosition(nsWindow* aWindow, LPARAM lParam,
                                  LRESULT *oResult);
-  PRBool HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam, LRESULT *oResult);
+  bool HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam, LRESULT *oResult);
 
   /**
    *  When a window's IME context is activating but we have composition on
@@ -232,7 +232,7 @@ protected:
    *  Otherwise, this commits the composition on the previous window.
    *  If this method did commit a composition, this returns TRUE.
    */
-  PRBool CommitCompositionOnPreviousWindow(nsWindow* aWindow);
+  bool CommitCompositionOnPreviousWindow(nsWindow* aWindow);
 
   /**
    *  ResolveIMECaretPos
@@ -254,16 +254,16 @@ protected:
                           nsIWidget* aNewOriginWidget,
                           nsIntRect& aOutRect);
 
-  PRBool ConvertToANSIString(const nsAFlatString& aStr,
+  bool ConvertToANSIString(const nsAFlatString& aStr,
                              UINT aCodePage,
                              nsACString& aANSIStr);
 
-  PRBool SetIMERelatedWindowsPos(nsWindow* aWindow,
+  bool SetIMERelatedWindowsPos(nsWindow* aWindow,
                                  const nsIMEContext &aIMEContext);
-  PRBool GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
+  bool GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
                                           PRUint32 aOffset,
                                           nsIntRect &aCharRect);
-  PRBool GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect);
+  bool GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect);
   void GetCompositionString(const nsIMEContext &aIMEContext, DWORD aIndex);
   /**
    *  Get the current target clause of composition string.
@@ -277,9 +277,9 @@ protected:
    *  The aOffset value is offset in the contents.  So, when you need offset
    *  in the composition string, you need to subtract mCompositionStart from it.
    */
-  PRBool GetTargetClauseRange(PRUint32 *aOffset, PRUint32 *aLength = nsnull);
+  bool GetTargetClauseRange(PRUint32 *aOffset, PRUint32 *aLength = nsnull);
   void DispatchTextEvent(nsWindow* aWindow, const nsIMEContext &aIMEContext,
-                         PRBool aCheckAttr = PR_TRUE);
+                         bool aCheckAttr = true);
   void SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList);
 
   nsresult EnsureClauseArray(PRInt32 aCount);
@@ -297,7 +297,7 @@ protected:
    */
   nsTArray<MSG> mPassedIMEChar;
 
-  PRBool IsIMECharRecordsEmpty()
+  bool IsIMECharRecordsEmpty()
   {
     return mPassedIMEChar.IsEmpty();
   }
@@ -329,13 +329,13 @@ protected:
   PRInt32 mCursorPosition;
   PRUint32 mCompositionStart;
 
-  PRPackedBool mIsComposing;
-  PRPackedBool mIsComposingOnPlugin;
-  PRPackedBool mNativeCaretIsCreated;
+  bool mIsComposing;
+  bool mIsComposingOnPlugin;
+  bool mNativeCaretIsCreated;
 
-  static PRPackedBool sIsStatusChanged;
-  static PRPackedBool sIsIME;
-  static PRPackedBool sIsIMEOpening;
+  static bool sIsStatusChanged;
+  static bool sIsIME;
+  static bool sIsIMEOpening;
 
   static UINT sCodePage;
   static DWORD sIMEProperty;

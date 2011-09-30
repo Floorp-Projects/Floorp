@@ -2334,7 +2334,7 @@ void
 XPCJSRuntime::RemoveGCCallback(JSGCCallback cb)
 {
     NS_ASSERTION(cb, "null callback");
-    PRBool found = extraGCCallbacks.RemoveElement(cb);
+    bool found = extraGCCallbacks.RemoveElement(cb);
     if (!found) {
         NS_ERROR("Removing a callback which was never added.");
     }

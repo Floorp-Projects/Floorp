@@ -49,26 +49,26 @@ void test_assign_helper(const nsACString& in, nsACString &_retval)
     _retval = in;
   }
 
-PRBool test_assign()
+bool test_assign()
   {
     nsCString result;
     test_assign_helper(NS_LITERAL_CSTRING("a") + NS_LITERAL_CSTRING("b"), result);
-    PRBool r = strcmp(result.get(), "ab") == 0;
+    bool r = strcmp(result.get(), "ab") == 0;
     if (!r)
       printf("[result=%s]\n", result.get());
     return r;
   }
 
-PRBool test_assign_c()
+bool test_assign_c()
   {
     nsCString c; c.Assign('c');
-    PRBool r = strcmp(c.get(), "c") == 0;
+    bool r = strcmp(c.get(), "c") == 0;
     if (!r)
       printf("[result=%s]\n", c.get());
     return r;
   }
 
-PRBool test1()
+bool test1()
   {
     NS_NAMED_LITERAL_STRING(empty, "");
     const nsAString& aStr = empty;
@@ -88,7 +88,7 @@ PRBool test1()
     return n == kNotFound;
   }
 
-PRBool test2()
+bool test2()
   {
     nsCString data("hello world");
     const nsACString& aStr = data;
@@ -96,13 +96,13 @@ PRBool test2()
     nsCString temp(aStr);
     temp.Cut(0, 6);
 
-    PRBool r = strcmp(temp.get(), "world") == 0;
+    bool r = strcmp(temp.get(), "world") == 0;
     if (!r)
       printf("[temp=%s]\n", temp.get());
     return r;
   }
 
-PRBool test_find()
+bool test_find()
   {
     nsCString src("<!DOCTYPE blah blah blah>");
 
@@ -114,7 +114,7 @@ PRBool test_find()
     return PR_FALSE;
   }
 
-PRBool test_rfind()
+bool test_rfind()
   {
     const char text[] = "<!DOCTYPE blah blah blah>";
     const char term[] = "bLaH";
@@ -152,7 +152,7 @@ PRBool test_rfind()
     return PR_TRUE;
   }
 
-PRBool test_rfind_2()
+bool test_rfind_2()
   {
     const char text[] = "<!DOCTYPE blah blah blah>";
     nsCString src(text);
@@ -164,7 +164,7 @@ PRBool test_rfind_2()
     return PR_FALSE;
   }
 
-PRBool test_rfind_3()
+bool test_rfind_3()
   {
     const char text[] = "urn:mozilla:locale:en-US:necko";
     nsCAutoString value(text);
@@ -176,7 +176,7 @@ PRBool test_rfind_3()
     return PR_FALSE;
   }
 
-PRBool test_rfind_4()
+bool test_rfind_4()
   {
     nsCString value("a.msf");
     PRInt32 i = value.RFind(".msf");
@@ -189,7 +189,7 @@ PRBool test_rfind_4()
     return PR_TRUE;
   }
 
-PRBool test_findinreadable()
+bool test_findinreadable()
   {
     const char text[] = "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/chrome/classic.jar!/";
     nsCAutoString value(text);
@@ -277,7 +277,7 @@ PRBool test_findinreadable()
     return PR_TRUE;
   }
 
-PRBool test_rfindinreadable()
+bool test_rfindinreadable()
   {
     const char text[] = "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/chrome/classic.jar!/";
     nsCAutoString value(text);
@@ -381,7 +381,7 @@ PRBool test_rfindinreadable()
     return PR_TRUE;
   }
 
-PRBool test_distance()
+bool test_distance()
   {
     const char text[] = "abc-xyz";
     nsCString s(text);
@@ -389,42 +389,42 @@ PRBool test_distance()
     s.BeginReading(begin);
     s.EndReading(end);
     size_t d = Distance(begin, end);
-    PRBool r = (d == sizeof(text)-1);
+    bool r = (d == sizeof(text)-1);
     if (!r)
       printf("d=%u\n", d);
     return r;
   }
 
-PRBool test_length()
+bool test_length()
   {
     const char text[] = "abc-xyz";
     nsCString s(text);
     size_t d = s.Length();
-    PRBool r = (d == sizeof(text)-1);
+    bool r = (d == sizeof(text)-1);
     if (!r)
       printf("d=%u\n", d);
     return r;
   }
 
-PRBool test_trim()
+bool test_trim()
   {
     const char text[] = " a\t    $   ";
     const char set[] = " \t$";
 
     nsCString s(text);
     s.Trim(set);
-    PRBool r = strcmp(s.get(), "a") == 0;
+    bool r = strcmp(s.get(), "a") == 0;
     if (!r)
       printf("[s=%s]\n", s.get());
     return r;
   }
 
-PRBool test_replace_substr()
+bool test_replace_substr()
   {
     const char text[] = "abc-ppp-qqq-ppp-xyz";
     nsCString s(text);
     s.ReplaceSubstring("ppp", "www");
-    PRBool r = strcmp(s.get(), "abc-www-qqq-www-xyz") == 0;
+    bool r = strcmp(s.get(), "abc-www-qqq-www-xyz") == 0;
     if (!r)
       {
         printf("[s=%s]\n", s.get());
@@ -462,7 +462,7 @@ PRBool test_replace_substr()
     return PR_TRUE;
   }
 
-PRBool test_replace_substr_2()
+bool test_replace_substr_2()
   {
     const char *oldName = nsnull;
     const char *newName = "user";
@@ -483,27 +483,27 @@ PRBool test_replace_substr_2()
     return PR_TRUE;
   }
 
-PRBool test_strip_ws()
+bool test_strip_ws()
   {
     const char text[] = " a    $   ";
     nsCString s(text);
     s.StripWhitespace();
-    PRBool r = strcmp(s.get(), "a$") == 0;
+    bool r = strcmp(s.get(), "a$") == 0;
     if (!r)
       printf("[s=%s]\n", s.get());
     return r;
   }
 
-PRBool test_equals_ic()
+bool test_equals_ic()
   {
     nsCString s;
-    PRBool r = s.LowerCaseEqualsLiteral("view-source");
+    bool r = s.LowerCaseEqualsLiteral("view-source");
     if (r)
       printf("[r=%d]\n", r);
     return !r;
   }
 
-PRBool test_fixed_string()
+bool test_fixed_string()
   {
     char buf[256] = "hello world";
 
@@ -522,7 +522,7 @@ PRBool test_fixed_string()
     return PR_TRUE;
   }
 
-PRBool test_concat()
+bool test_concat()
   {
     nsCString bar("bar");
     const nsACString& barRef = bar;
@@ -538,7 +538,7 @@ PRBool test_concat()
     return PR_FALSE;
   }
 
-PRBool test_concat_2()
+bool test_concat_2()
   {
     nsCString fieldTextStr("xyz");
     nsCString text("text");
@@ -553,7 +553,7 @@ PRBool test_concat_2()
     return PR_FALSE;
   }
 
-PRBool test_concat_3()
+bool test_concat_3()
   {
     nsCString result;
     nsCString ab("ab"), c("c");
@@ -566,7 +566,7 @@ PRBool test_concat_3()
     return PR_FALSE;
   }
 
-PRBool test_xpidl_string()
+bool test_xpidl_string()
   {
     nsXPIDLCString a, b;
     a = b;
@@ -618,7 +618,7 @@ PRBool test_xpidl_string()
     return PR_TRUE;
   }
 
-PRBool test_empty_assign()
+bool test_empty_assign()
   {
     nsCString a;
     a.AssignLiteral("");
@@ -630,7 +630,7 @@ PRBool test_empty_assign()
     return PR_TRUE;
   }
 
-PRBool test_set_length()
+bool test_set_length()
   {
     const char kText[] = "Default Plugin";
     nsCString buf;
@@ -642,13 +642,13 @@ PRBool test_set_length()
     return PR_TRUE;
   }
 
-PRBool test_substring()
+bool test_substring()
   {
     nsCString super("hello world"), sub("hello");
 
     // this tests that |super| starts with |sub|,
     
-    PRBool r = sub.Equals(StringHead(super, sub.Length()));
+    bool r = sub.Equals(StringHead(super, sub.Length()));
     if (!r)
       return PR_FALSE;
 
@@ -685,7 +685,7 @@ PRBool test_substring()
   test_appendbase(str, prefix, int, suffix, base) \
   test_appendbase(cstr, prefix, int, suffix, base)
 
-PRBool test_appendint()
+bool test_appendint()
   {
     nsString str;
     nsCString cstr;
@@ -714,7 +714,7 @@ PRBool test_appendint()
     return PR_TRUE;
   }
 
-PRBool test_appendint64()
+bool test_appendint64()
   {
     nsCString str;
 
@@ -765,7 +765,7 @@ PRBool test_appendint64()
     return PR_TRUE;
   }
 
-PRBool test_appendfloat()
+bool test_appendfloat()
   {
     nsCString str;
     double bigdouble = 11223344556.66;
@@ -791,7 +791,7 @@ PRBool test_appendfloat()
     return PR_TRUE;
   }
 
-PRBool test_findcharinset()
+bool test_findcharinset()
   {
     nsCString buf("hello, how are you?");
 
@@ -810,7 +810,7 @@ PRBool test_findcharinset()
     return PR_TRUE;
   }
 
-PRBool test_rfindcharinset()
+bool test_rfindcharinset()
   {
     nsCString buf("hello, how are you?");
 
@@ -859,7 +859,7 @@ PRBool test_rfindcharinset()
     return PR_TRUE;
   }
 
-PRBool test_stringbuffer()
+bool test_stringbuffer()
   {
     const char kData[] = "hello world";
 
@@ -882,13 +882,13 @@ PRBool test_stringbuffer()
     nsStringBuffer *buf2;
     buf2 = nsStringBuffer::FromString(str);
 
-    PRBool rv = (buf == buf2);
+    bool rv = (buf == buf2);
 
     buf->Release();
     return rv;
   }
 
-PRBool test_voided()
+bool test_voided()
   {
     const char kData[] = "hello world";
 
@@ -919,7 +919,7 @@ PRBool test_voided()
     return PR_TRUE;
   }
 
-PRBool test_voided_autostr()
+bool test_voided_autostr()
   {
     const char kData[] = "hello world";
 
@@ -950,7 +950,7 @@ PRBool test_voided_autostr()
     return PR_TRUE;
   }
 
-PRBool test_voided_assignment()
+bool test_voided_assignment()
   {
     nsCString a, b;
     b.SetIsVoid(PR_TRUE);
@@ -958,7 +958,7 @@ PRBool test_voided_assignment()
     return a.IsVoid() && a.get() == b.get();
   }
 
-PRBool test_empty_assignment()
+bool test_empty_assignment()
   {
     nsCString a, b;
     a = b;
@@ -980,7 +980,7 @@ static const ToIntegerTest kToIntegerTests[] = {
   { nsnull, 0, 0, 0 }
 };
 
-PRBool test_string_tointeger()
+bool test_string_tointeger()
 {
   PRInt32 i;
   nsresult rv;
@@ -995,7 +995,7 @@ PRBool test_string_tointeger()
   return PR_TRUE;
 }
 
-static PRBool test_parse_string_helper(const char* str, char separator, int len,
+static bool test_parse_string_helper(const char* str, char separator, int len,
                                        const char* s1, const char* s2)
 {
   nsCString data(str);
@@ -1012,22 +1012,22 @@ static PRBool test_parse_string_helper(const char* str, char separator, int len,
   return PR_TRUE;
 }
 
-static PRBool test_parse_string_helper0(const char* str, char separator)
+static bool test_parse_string_helper0(const char* str, char separator)
 {
   return test_parse_string_helper(str, separator, 0, nsnull, nsnull);
 }
 
-static PRBool test_parse_string_helper1(const char* str, char separator, const char* s1)
+static bool test_parse_string_helper1(const char* str, char separator, const char* s1)
 {
   return test_parse_string_helper(str, separator, 1, s1, nsnull);
 }
 
-static PRBool test_parse_string_helper2(const char* str, char separator, const char* s1, const char* s2)
+static bool test_parse_string_helper2(const char* str, char separator, const char* s1, const char* s2)
 {
   return test_parse_string_helper(str, separator, 2, s1, s2);
 }
 
-static PRBool test_parse_string()
+static bool test_parse_string()
 {
   return test_parse_string_helper1("foo, bar", '_', "foo, bar") &&
          test_parse_string_helper2("foo, bar", ',', "foo", " bar") &&
@@ -1039,7 +1039,7 @@ static PRBool test_parse_string()
          test_parse_string_helper1("  foo", ' ', "foo");
 }
 
-static PRBool test_strip_chars_helper(const PRUnichar* str, const PRUnichar* strip, const nsAString& result, PRUint32 offset=0)
+static bool test_strip_chars_helper(const PRUnichar* str, const PRUnichar* strip, const nsAString& result, PRUint32 offset=0)
 {
   nsAutoString tmp(str);
   nsAString& data = tmp;
@@ -1047,7 +1047,7 @@ static PRBool test_strip_chars_helper(const PRUnichar* str, const PRUnichar* str
   return data.Equals(result);
 }
 
-static PRBool test_strip_chars()
+static bool test_strip_chars()
 {
   return test_strip_chars_helper(NS_LITERAL_STRING("foo \r \nbar").get(),
                                  NS_LITERAL_STRING(" \n\r").get(),
@@ -1069,11 +1069,11 @@ static PRBool test_strip_chars()
                                  NS_LITERAL_STRING(" foo"), 1);
 }
 
-static PRBool test_huge_capacity()
+static bool test_huge_capacity()
 {
   nsString a, b, c, d, e, f, g, h, i, j, k, l, m, n;
   nsCString n1;
-  PRBool fail = PR_FALSE;
+  bool fail = false;
 #undef ok
 #define ok(x) { fail |= !(x); }
 
@@ -1155,14 +1155,14 @@ static PRBool test_huge_capacity()
   return PR_TRUE;
 }
 
-static PRBool test_tofloat_helper(const nsString& aStr, float aExpected, PRBool aSuccess)
+static bool test_tofloat_helper(const nsString& aStr, float aExpected, bool aSuccess)
 {
   PRInt32 result;
   return aStr.ToFloat(&result) == aExpected &&
          aSuccess ? result == NS_OK : result != NS_OK;
 }
 
-static PRBool test_tofloat()
+static bool test_tofloat()
 {
   return \
     test_tofloat_helper(NS_LITERAL_STRING("42"), 42.f, PR_TRUE) &&
@@ -1180,14 +1180,14 @@ static PRBool test_tofloat()
     PR_TRUE;
 }
 
-static PRBool test_todouble_helper(const nsString& aStr, double aExpected, PRBool aSuccess)
+static bool test_todouble_helper(const nsString& aStr, double aExpected, bool aSuccess)
 {
   PRInt32 result;
   return aStr.ToDouble(&result) == aExpected &&
          aSuccess ? result == NS_OK : result != NS_OK;
 }
 
-static PRBool test_todouble()
+static bool test_todouble()
 {
   return \
     test_todouble_helper(NS_LITERAL_STRING("42"), 42, PR_TRUE) &&
@@ -1208,7 +1208,7 @@ static PRBool test_todouble()
 
 //----
 
-typedef PRBool (*TestFunc)();
+typedef bool (*TestFunc)();
 
 static const struct Test
   {

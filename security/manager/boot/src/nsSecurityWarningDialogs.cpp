@@ -87,7 +87,7 @@ nsSecurityWarningDialogs::Init()
 }
 
 NS_IMETHODIMP 
-nsSecurityWarningDialogs::ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *_retval)
+nsSecurityWarningDialogs::ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, bool *_retval)
 {
   nsresult rv;
 
@@ -101,7 +101,7 @@ nsSecurityWarningDialogs::ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBo
 }
 
 NS_IMETHODIMP 
-nsSecurityWarningDialogs::ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *_retval)
+nsSecurityWarningDialogs::ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, bool *_retval)
 {
   nsresult rv;
 
@@ -115,7 +115,7 @@ nsSecurityWarningDialogs::ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool
 }
 
 NS_IMETHODIMP 
-nsSecurityWarningDialogs::ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *_retval)
+nsSecurityWarningDialogs::ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, bool *_retval)
 {
   nsresult rv;
 
@@ -130,7 +130,7 @@ nsSecurityWarningDialogs::ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBoo
 
 
 NS_IMETHODIMP 
-nsSecurityWarningDialogs::ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval)
+nsSecurityWarningDialogs::ConfirmMixedMode(nsIInterfaceRequestor *ctx, bool *_retval)
 {
   nsresult rv;
 
@@ -173,7 +173,7 @@ nsAsyncAlert::Run()
   nsresult rv;
 
   // Get user's preference for this alert
-  PRBool prefValue;
+  bool prefValue;
   rv = mPrefBranch->GetBoolPref(mPrefName.get(), &prefValue);
   if (NS_FAILED(rv)) prefValue = PR_TRUE;
 
@@ -188,7 +188,7 @@ nsAsyncAlert::Run()
   nsCAutoString showOncePref(mPrefName);
   showOncePref += ".show_once";
 
-  PRBool showOnce = PR_FALSE;
+  bool showOnce = false;
   mPrefBranch->GetBoolPref(showOncePref.get(), &showOnce);
 
   if (showOnce)
@@ -223,7 +223,7 @@ nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor* aCtx,
                                       const char* aPrefName,
                                       const PRUnichar* aDialogMessageName,
                                       const PRUnichar* aShowAgainName,
-                                      PRBool aAsync)
+                                      bool aAsync)
 {
   // Get Prompt to use
   nsCOMPtr<nsIPrompt> prompt = do_GetInterface(aCtx);
@@ -242,7 +242,7 @@ nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor* aCtx,
 
 
 NS_IMETHODIMP 
-nsSecurityWarningDialogs::ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool* _result)
+nsSecurityWarningDialogs::ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, bool* _result)
 {
   nsresult rv;
 
@@ -255,7 +255,7 @@ nsSecurityWarningDialogs::ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBo
 }
 
 NS_IMETHODIMP 
-nsSecurityWarningDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool* _result)
+nsSecurityWarningDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, bool* _result)
 {
   nsresult rv;
 
@@ -271,13 +271,13 @@ nsresult
 nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                             const PRUnichar *messageName, 
                             const PRUnichar *showAgainName, 
-                            PRBool* _result)
+                            bool* _result)
 {
   nsresult rv;
 
   // Get user's preference for this alert
   // prefName, showAgainName are null if there is no preference for this dialog
-  PRBool prefValue = PR_TRUE;
+  bool prefValue = true;
   
   if (prefName != nsnull) {
     rv = mPrefBranch->GetBoolPref(prefName, &prefValue);
@@ -294,7 +294,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   nsCAutoString showOncePref(prefName);
   showOncePref += ".show_once";
 
-  PRBool showOnce = PR_FALSE;
+  bool showOnce = false;
   mPrefBranch->GetBoolPref(showOncePref.get(), &showOnce);
 
   if (showOnce)

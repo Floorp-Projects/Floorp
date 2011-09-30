@@ -145,7 +145,7 @@ nsXPathResult::GetStringValue(nsAString &aStringValue)
 }
 
 NS_IMETHODIMP
-nsXPathResult::GetBooleanValue(PRBool *aBooleanValue)
+nsXPathResult::GetBooleanValue(bool *aBooleanValue)
 {
     if (mResultType != BOOLEAN_TYPE) {
         return NS_ERROR_DOM_TYPE_ERR;
@@ -174,7 +174,7 @@ nsXPathResult::GetSingleNodeValue(nsIDOMNode **aSingleNodeValue)
 }
 
 NS_IMETHODIMP
-nsXPathResult::GetInvalidIteratorState(PRBool *aInvalidIteratorState)
+nsXPathResult::GetInvalidIteratorState(bool *aInvalidIteratorState)
 {
     *aInvalidIteratorState = isIterator() && mInvalidIteratorState;
 

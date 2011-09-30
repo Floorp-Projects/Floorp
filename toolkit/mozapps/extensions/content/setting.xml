@@ -312,7 +312,7 @@
         </xul:label>
       </xul:vbox>
       <xul:hbox anonid="input-container" class="setting-input">
-        <children includes="button"/>
+        <children includes="button|menulist"/>
       </xul:hbox>
     </content>
   </binding>

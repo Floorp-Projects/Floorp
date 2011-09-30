@@ -420,7 +420,7 @@ nsSimpleUnicharStreamFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
 }
 
 NS_IMETHODIMP
-nsSimpleUnicharStreamFactory::LockFactory(PRBool aLock)
+nsSimpleUnicharStreamFactory::LockFactory(bool aLock)
 {
   return NS_OK;
 }

@@ -101,8 +101,8 @@ protected:
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace);
-  NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_FALSE; }
-  NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
+  NS_IMETHOD_(bool) IsDisplayContainer() { return false; }
+  NS_IMETHOD_(bool) HasValidCoveredRect() { return true; }
 
 protected:
   void GeneratePath(gfxContext *aContext,
@@ -116,7 +116,7 @@ private:
     nsSVGMarkerProperty* mMarkerMid;
     nsSVGMarkerProperty* mMarkerEnd;
 
-    PRBool MarkersExist() const {
+    bool MarkersExist() const {
       return mMarkerStart || mMarkerMid || mMarkerEnd;
     }
 
