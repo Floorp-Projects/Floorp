@@ -105,10 +105,6 @@ static PRLogModuleInfo* gObjectLog = PR_NewLogModule("objlc");
 #define LOG(args) PR_LOG(gObjectLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gObjectLog, PR_LOG_DEBUG)
 
-#ifdef ANDROID
-#include "nsXULAppAPI.h"
-#endif
-
 class nsAsyncInstantiateEvent : public nsRunnable {
 public:
   // This stores both the content and the frame so that Instantiate calls can be
@@ -1053,12 +1049,6 @@ nsObjectLoadingContent::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 nsEventStates
 nsObjectLoadingContent::ObjectState() const
 {
-#ifdef ANDROID
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    return NS_EVENT_STATE_TYPE_CLICK_TO_PLAY;
-  }
-#endif
-
   switch (mType) {
     case eType_Loading:
       return NS_EVENT_STATE_LOADING;

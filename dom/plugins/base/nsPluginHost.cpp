@@ -94,7 +94,6 @@
 #include "nsXPCOMCID.h"
 #include "nsISupportsPrimitives.h"
 
-#include "nsXULAppAPI.h"
 #include "nsIXULRuntime.h"
 
 // for the dialog
@@ -2252,11 +2251,6 @@ nsresult nsPluginHost::ScanPluginsDirectoryList(nsISimpleEnumerator *dirEnum,
 
 nsresult nsPluginHost::LoadPlugins()
 {
-#ifdef ANDROID
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    return NS_OK;
-  }
-#endif
   // do not do anything if it is already done
   // use ReloadPlugins() to enforce loading
   if (mPluginsLoaded)
