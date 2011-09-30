@@ -255,11 +255,12 @@ nsSVGTextFrame::InitialUpdate()
 }  
 
 gfxRect
-nsSVGTextFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
+nsSVGTextFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+                                    PRUint32 aFlags)
 {
   UpdateGlyphPositioning(PR_TRUE);
 
-  return nsSVGTextFrameBase::GetBBoxContribution(aToBBoxUserspace);
+  return nsSVGTextFrameBase::GetBBoxContribution(aToBBoxUserspace, aFlags);
 }
 
 //----------------------------------------------------------------------
