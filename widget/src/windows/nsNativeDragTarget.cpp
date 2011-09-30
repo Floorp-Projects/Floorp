@@ -62,7 +62,8 @@ static POINTL gDragLastPoint;
  */
 nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
   : m_cRef(0), 
-    mEffectsAllowed(DROPEFFECT_MOVE | DROPEFFECT_COPY | DROPEFFECT_LINK), 
+    mEffectsAllowed(DROPEFFECT_MOVE | DROPEFFECT_COPY | DROPEFFECT_LINK),
+    mEffectsPreferred(DROPEFFECT_NONE),
     mTookOwnRef(PR_FALSE), mWindow(aWnd), mDropTargetHelper(nsnull)
 {
   mHWnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
@@ -127,44 +128,52 @@ void
 nsNativeDragTarget::GetGeckoDragAction(DWORD grfKeyState, LPDWORD pdwEffect,
                                        PRUint32 * aGeckoAction)
 {
-  // If a window is disabled or a modal window is on top of 
-  // it (which implies it is disabled), then we should not allow dropping.
+  // If a window is disabled or a modal window is on top of it
+  // (which implies it is disabled), then we should not allow dropping.
   bool isEnabled;
   if (NS_SUCCEEDED(mWindow->IsEnabled(&isEnabled)) && !isEnabled) {
     *pdwEffect = DROPEFFECT_NONE;
     *aGeckoAction = nsIDragService::DRAGDROP_ACTION_NONE;
+    return;
   }
-  // Only a single effect should be specified outgoing for the parameter pdwEffect.
-  // When Shift and Control are pressed, we should specify a LINK effect.
-  else if (!mMovePreferred && (grfKeyState & MK_CONTROL) && 
-      (grfKeyState & MK_SHIFT) && (mEffectsAllowed & DROPEFFECT_LINK)) {
-    *pdwEffect = DROPEFFECT_LINK;
-    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_LINK;
+
+  // If the user explicitly uses a modifier key, they want the associated action
+  // Shift + Control -> LINK, Shift -> MOVE, Ctrl -> COPY
+  DWORD desiredEffect = DROPEFFECT_NONE;
+  if ((grfKeyState & MK_CONTROL) && (grfKeyState & MK_SHIFT)) {
+    desiredEffect = DROPEFFECT_LINK;
+  } else if (grfKeyState & MK_SHIFT) {
+    desiredEffect = DROPEFFECT_MOVE;
+  } else if (grfKeyState & MK_CONTROL) {
+    desiredEffect = DROPEFFECT_COPY;
   }
-  // When Shift is pressed we should specify a MOVE effect.
-  else if ((mEffectsAllowed & DROPEFFECT_MOVE) && 
-           (mMovePreferred || (grfKeyState & MK_SHIFT))) {
+
+  // Determine the desired effect from what is allowed and preferred.
+  if (!(desiredEffect &= mEffectsAllowed)) {
+    // No modifier key effect is set which is also allowed, check
+    // the preference of the data.
+    desiredEffect = mEffectsPreferred & mEffectsAllowed;
+    if (!desiredEffect) {
+      // No preference is set, so just fall back to the allowed effect itself
+      desiredEffect = mEffectsAllowed;
+    }
+  }
+
+  // Otherwise we should specify the first available effect 
+  // from MOVE, COPY, or LINK.
+  if (desiredEffect & DROPEFFECT_MOVE) {
     *pdwEffect = DROPEFFECT_MOVE;
     *aGeckoAction = nsIDragService::DRAGDROP_ACTION_MOVE;
-  }
-  // When Control is pressed we should specify a COPY effect.
-  else if ((mEffectsAllowed & DROPEFFECT_COPY) && (grfKeyState & MK_CONTROL)) {
+  } else if (desiredEffect & DROPEFFECT_COPY) {
     *pdwEffect = DROPEFFECT_COPY;
     *aGeckoAction = nsIDragService::DRAGDROP_ACTION_COPY;
-  }
-  // Otherwise we should specify the first available effect from MOVE, COPY, or LINK.
-  else if (mEffectsAllowed & DROPEFFECT_MOVE) {
-    *pdwEffect = DROPEFFECT_MOVE;
-    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_MOVE;
-  }
-  else if (mEffectsAllowed & DROPEFFECT_COPY) {
-    *pdwEffect = DROPEFFECT_COPY;
-    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_COPY;
-  }
-  else if (mEffectsAllowed & DROPEFFECT_LINK) {
+  } else if (desiredEffect & DROPEFFECT_LINK) {
     *pdwEffect = DROPEFFECT_LINK;
     *aGeckoAction = nsIDragService::DRAGDROP_ACTION_LINK;
-  }
+  } else {
+    *pdwEffect = DROPEFFECT_NONE;
+    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_NONE;
+  } 
 }
 
 inline
@@ -275,15 +284,11 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
   nsresult loadResult = nsClipboard::GetNativeDataOffClipboard(
       pIDataSource, 0, ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT), nsnull, &tempOutData, &tempDataLen);
   if (NS_SUCCEEDED(loadResult) && tempOutData) {
-    NS_ASSERTION(tempDataLen == 2, "Expected word size");
-    WORD preferredEffect = *((WORD*)tempOutData);
-
-    // Mask effect coming from function call with effect preferred by the source.
-    mMovePreferred = (preferredEffect & DROPEFFECT_MOVE) != 0;
-
+    mEffectsPreferred = *((DWORD*)tempOutData);
     nsMemory::Free(tempOutData);
   } else {
-    mMovePreferred = PR_FALSE;
+    // We have no preference if we can't obtain it
+    mEffectsPreferred = DROPEFFECT_NONE;
   }
 
   // Set the native data object into drag service
