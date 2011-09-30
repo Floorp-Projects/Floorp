@@ -481,6 +481,8 @@ protected:
     bool mKeyPressDispatched;
     // Whether keypress event was consumed by web contents or chrome contents.
     bool mKeyPressHandled;
+    // Whether the key event causes other key events via IME or something.
+    bool mCausedOtherKeyEvents;
 
     KeyEventState(NSEvent* aNativeKeyEvent) : mKeyEvent(nsnull)
     {
@@ -495,6 +497,7 @@ protected:
       mKeyDownHandled = aOther.mKeyDownHandled;
       mKeyPressDispatched = aOther.mKeyPressDispatched;
       mKeyPressHandled = aOther.mKeyPressHandled;
+      mCausedOtherKeyEvents = aOther.mCausedOtherKeyEvents;
     }
 
     ~KeyEventState()
@@ -518,6 +521,7 @@ protected:
       mKeyDownHandled = PR_FALSE;
       mKeyPressDispatched = PR_FALSE;
       mKeyPressHandled = PR_FALSE;
+      mCausedOtherKeyEvents = PR_FALSE;
     }
 
     bool KeyDownOrPressHandled()
@@ -564,6 +568,12 @@ protected:
    */
   KeyEventState* PushKeyEvent(NSEvent* aNativeKeyEvent)
   {
+    PRUint32 nestCount = mCurrentKeyEvents.Length();
+    for (PRUint32 i = 0; i < nestCount; i++) {
+      // When the key event is caused by another key event, all key events
+      // which are being handled should be marked as "consumed".
+      mCurrentKeyEvents[i].mCausedOtherKeyEvents = PR_TRUE;
+    }
     KeyEventState keyEventState(aNativeKeyEvent);
     return mCurrentKeyEvents.InsertElementAt(0, keyEventState);
   }
