@@ -95,6 +95,12 @@ public:
   nsRect RegionMark(nsSVGPathGeometryFrame *aMarkedFrame,
                     const nsSVGMark *aMark, float aStrokeWidth);
 
+  gfxRect GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+                                  PRUint32 aFlags,
+                                  nsSVGPathGeometryFrame *aMarkedFrame,
+                                  const nsSVGMark *aMark,
+                                  float aStrokeWidth);
+
 private:
   // stuff needed for callback
   nsSVGPathGeometryFrame *mMarkedFrame;
