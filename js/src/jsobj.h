@@ -1206,7 +1206,7 @@ struct JSObject : js::gc::Cell {
               JSObject *parent, void *priv, bool denseArray);
 
     inline void finish(JSContext *cx);
-    JS_ALWAYS_INLINE void finalize(JSContext *cx);
+    JS_ALWAYS_INLINE void finalize(JSContext *cx, bool background);
 
     /*
      * Like init, but also initializes map.  proto must have an empty shape

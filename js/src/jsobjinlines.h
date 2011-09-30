@@ -158,7 +158,7 @@ JSObject::syncSpecialEquality()
 }
 
 inline void
-JSObject::finalize(JSContext *cx)
+JSObject::finalize(JSContext *cx, bool background)
 {
     /* Cope with stillborn objects that have no map. */
     if (isNewborn())
@@ -166,10 +166,17 @@ JSObject::finalize(JSContext *cx)
 
     js::Probes::finalizeObject(this);
 
-    /* Finalize obj first, in case it needs map and slots. */
-    js::Class *clasp = getClass();
-    if (clasp->finalize)
-        clasp->finalize(cx, this);
+    if (!background) {
+        /*
+         * Finalize obj first, in case it needs map and slots. Objects with
+         * finalize hooks are not called finalized in the background, as the
+         * class is stored in the object's shape, which may have already been
+         * destroyed.
+         */
+        js::Class *clasp = getClass();
+        if (clasp->finalize)
+            clasp->finalize(cx, this);
+    }
 
     finish(cx);
 }
@@ -802,7 +809,7 @@ JSObject::init(JSContext *cx, js::types::TypeObject *type,
 inline void
 JSObject::finish(JSContext *cx)
 {
-    if (hasSlotsArray())
+    if (slots && slots != fixedSlots())
         cx->free_(slots);
 }
 
@@ -1171,10 +1178,8 @@ CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
      * IsBackgroundAllocKind is called to prevent recursively incrementing
      * the finalize kind; kind may already be a background finalize kind.
      */
-    if (!gc::IsBackgroundAllocKind(kind) &&
-        (!clasp->finalize || clasp->flags & JSCLASS_CONCURRENT_FINALIZER)) {
+    if (!gc::IsBackgroundAllocKind(kind) && !clasp->finalize)
         return true;
-    }
 #endif
     return false;
 }

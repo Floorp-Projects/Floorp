@@ -305,7 +305,7 @@ js::StaticStrings::lookup(const jschar *chars, size_t length)
 }
 
 JS_ALWAYS_INLINE void
-JSString::finalize(JSContext *cx)
+JSString::finalize(JSContext *cx, bool background)
 {
     /* Shorts are in a different arena. */
     JS_ASSERT(!isShort());
@@ -330,7 +330,7 @@ JSFlatString::finalize(JSRuntime *rt)
 }
 
 inline void
-JSShortString::finalize(JSContext *cx)
+JSShortString::finalize(JSContext *cx, bool background)
 {
     JS_ASSERT(isShort());
 }
@@ -346,7 +346,7 @@ JSAtom::finalize(JSRuntime *rt)
 }
 
 inline void
-JSExternalString::finalize(JSContext *cx)
+JSExternalString::finalize(JSContext *cx, bool background)
 {
     if (JSStringFinalizeOp finalizer = str_finalizers[externalType()])
         finalizer(cx, this);

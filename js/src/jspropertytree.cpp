@@ -191,7 +191,7 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
 }
 
 void
-Shape::finalize(JSContext *cx)
+Shape::finalize(JSContext *cx, bool background)
 {
     if (!inDictionary()) {
         if (parent && parent->isMarked())

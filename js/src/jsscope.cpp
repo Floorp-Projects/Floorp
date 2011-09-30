@@ -1247,7 +1247,7 @@ JSCompartment::sweepBaseShapeTable(JSContext *cx)
 }
 
 void
-BaseShape::finalize(JSContext *cx)
+BaseShape::finalize(JSContext *cx, bool background)
 {
     if (table_) {
         cx->delete_(table_);
