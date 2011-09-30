@@ -434,6 +434,8 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
     static CLIPFORMAT fileDescriptorFlavorA = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORA ); 
     static CLIPFORMAT fileDescriptorFlavorW = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORW ); 
     static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
+    static CLIPFORMAT preferredDropEffect = ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT);
+
     switch (stm.tymed) {
      case TYMED_HGLOBAL: 
         {
@@ -537,9 +539,17 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                     // do that in FindPlatformHTML(). For now, return the allocLen. This
                     // case is mostly to ensure we don't try to call strlen on the buffer.
                     *aLen = allocLen;
+                  } else if (fe.cfFormat == preferredDropEffect) {
+                    // As per the MSDN doc entitled: "Shell Clipboard Formats"
+                    // CFSTR_PREFERREDDROPEFFECT should return a DWORD
+                    // Reference: http://msdn.microsoft.com/en-us/library/bb776902(v=vs.85).aspx
+                    NS_ASSERTION(allocLen == sizeof(DWORD),
+                      "CFSTR_PREFERREDDROPEFFECT should return a DWORD");
+                    *aLen = allocLen;
+                  } else {
+                    *aLen = nsCRT::strlen(reinterpret_cast<PRUnichar*>(*aData)) * 
+                            sizeof(PRUnichar);
                   }
-                  else
-                    *aLen = nsCRT::strlen(reinterpret_cast<PRUnichar*>(*aData)) * sizeof(PRUnichar);
                   result = NS_OK;
                 }
               }
