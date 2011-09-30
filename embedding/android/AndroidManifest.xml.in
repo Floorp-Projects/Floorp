@@ -99,7 +99,8 @@
 
         <activity android:name="Restarter"
                   android:process="@ANDROID_PACKAGE_NAME@Restarter"
-                  android:theme="@style/GreyTheme">
+                  android:theme="@style/GreyTheme"
+                  android:excludeFromRecents="true">
           <intent-filter>
             <action android:name="org.mozilla.gecko.restart"/>
           </intent-filter>
