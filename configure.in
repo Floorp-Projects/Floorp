@@ -5930,12 +5930,6 @@ fi
 dnl ========================================================
 dnl Installer
 dnl ========================================================
-case "$target_os" in
-    aix*|solaris*|linux*|mingw*|os2*)
-        MOZ_INSTALLER=1
-        ;;
-esac
-
 MOZ_ARG_DISABLE_BOOL(installer,
 [  --disable-installer     Disable building of installer],
     MOZ_INSTALLER=,
