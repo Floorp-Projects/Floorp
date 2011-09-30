@@ -63,7 +63,7 @@ nsOggCodecState::Create(ogg_page* aPage)
   } else if (aPage->body_len > 8 && memcmp(aPage->body, "fishead\0", 8) == 0) {
     codecState = new nsSkeletonState(aPage);
   } else {
-    codecState = new nsOggCodecState(aPage, PR_FALSE);
+    codecState = new nsOggCodecState(aPage, false);
   }
   return codecState->nsOggCodecState::Init() ? codecState.forget() : nsnull;
 }
@@ -164,7 +164,8 @@ ogg_packet* nsOggCodecState::PacketOut() {
 nsresult nsOggCodecState::PageIn(ogg_page* aPage) {
   if (!mActive)
     return NS_OK;
-  NS_ASSERTION(ogg_page_serialno(aPage) == mSerial, "Page must be for this stream!");
+  NS_ASSERTION(static_cast<PRUint32>(ogg_page_serialno(aPage)) == mSerial,
+               "Page must be for this stream!");
   if (ogg_stream_pagein(&mState, aPage) == -1)
     return NS_ERROR_FAILURE;
   int r;
@@ -184,7 +185,7 @@ nsresult nsOggCodecState::PageIn(ogg_page* aPage) {
 
 nsresult nsOggCodecState::PacketOutUntilGranulepos(bool& aFoundGranulepos) {
   int r;
-  aFoundGranulepos = PR_FALSE;
+  aFoundGranulepos = false;
   // Extract packets from the sync state until either no more packets
   // come out, or we get a data packet with non -1 granulepos.
   do {
@@ -212,7 +213,7 @@ nsresult nsOggCodecState::PacketOutUntilGranulepos(bool& aFoundGranulepos) {
 }
 
 nsTheoraState::nsTheoraState(ogg_page* aBosPage) :
-  nsOggCodecState(aBosPage, PR_TRUE),
+  nsOggCodecState(aBosPage, true),
   mSetup(0),
   mCtx(0),
   mPixelAspectRatio(0)
@@ -232,7 +233,7 @@ nsTheoraState::~nsTheoraState() {
 
 bool nsTheoraState::Init() {
   if (!mActive)
-    return PR_FALSE;
+    return false;
 
   PRInt64 n = mInfo.aspect_numerator;
   PRInt64 d = mInfo.aspect_denominator;
@@ -245,15 +246,15 @@ bool nsTheoraState::Init() {
   nsIntSize frame(mInfo.frame_width, mInfo.frame_height);
   nsIntRect picture(mInfo.pic_x, mInfo.pic_y, mInfo.pic_width, mInfo.pic_height);
   if (!nsVideoInfo::ValidateVideoRegion(frame, picture, frame)) {
-    return mActive = PR_FALSE;
+    return mActive = false;
   }
 
   mCtx = th_decode_alloc(&mInfo, mSetup);
   if (mCtx == NULL) {
-    return mActive = PR_FALSE;
+    return mActive = false;
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 bool
@@ -283,11 +284,11 @@ nsTheoraState::DecodeHeader(ogg_packet* aPacket)
   if (ret < 0 || mPacketCount > 3) {
     // We've received an error, or the first three packets weren't valid
     // header packets, assume bad input, and don't activate the bitstream.
-    mDoneReadingHeaders = PR_TRUE;
+    mDoneReadingHeaders = true;
   } else if (ret > 0 && isSetupHeader && mPacketCount == 3) {
     // Successfully read the three header packets.
-    mDoneReadingHeaders = PR_TRUE;
-    mActive = PR_TRUE;
+    mDoneReadingHeaders = true;
+    mActive = true;
   }
   return mDoneReadingHeaders;
 }
@@ -306,8 +307,8 @@ nsTheoraState::IsHeader(ogg_packet* aPacket) {
 }
 
 # define TH_VERSION_CHECK(_info,_maj,_min,_sub) \
- ((_info)->version_major>(_maj)||(_info)->version_major==(_maj)&& \
- ((_info)->version_minor>(_min)||(_info)->version_minor==(_min)&& \
+ (((_info)->version_major>(_maj)||(_info)->version_major==(_maj))&& \
+ (((_info)->version_minor>(_min)||(_info)->version_minor==(_min))&& \
  (_info)->version_subminor>=(_sub)))
 
 PRInt64 nsTheoraState::Time(th_info* aInfo, PRInt64 aGranulepos)
@@ -507,7 +508,7 @@ nsresult nsVorbisState::Reset()
 }
 
 nsVorbisState::nsVorbisState(ogg_page* aBosPage) :
-  nsOggCodecState(aBosPage, PR_TRUE),
+  nsOggCodecState(aBosPage, true),
   mPrevVorbisBlockSize(0),
   mGranulepos(0)
 {
@@ -553,12 +554,12 @@ bool nsVorbisState::DecodeHeader(ogg_packet* aPacket) {
   if (ret < 0 || mPacketCount > 3) {
     // We've received an error, or the first three packets weren't valid
     // header packets, assume bad input, and deactivate the bitstream.
-    mDoneReadingHeaders = PR_TRUE;
-    mActive = PR_FALSE;
+    mDoneReadingHeaders = true;
+    mActive = false;
   } else if (ret == 0 && isSetupHeader && mPacketCount == 3) {
     // Successfully read the three header packets.
     // The bitstream remains active.
-    mDoneReadingHeaders = PR_TRUE;
+    mDoneReadingHeaders = true;
   }
   return mDoneReadingHeaders;
 }
@@ -566,12 +567,12 @@ bool nsVorbisState::DecodeHeader(ogg_packet* aPacket) {
 bool nsVorbisState::Init()
 {
   if (!mActive)
-    return PR_FALSE;
+    return false;
 
   int ret = vorbis_synthesis_init(&mDsp, &mInfo);
   if (ret != 0) {
     NS_WARNING("vorbis_synthesis_init() failed initializing vorbis bitstream");
-    return mActive = PR_FALSE;
+    return mActive = false;
   }
   ret = vorbis_block_init(&mDsp, &mBlock);
   if (ret != 0) {
@@ -579,9 +580,9 @@ bool nsVorbisState::Init()
     if (mActive) {
       vorbis_dsp_clear(&mDsp);
     }
-    return mActive = PR_FALSE;
+    return mActive = false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 PRInt64 nsVorbisState::Time(PRInt64 granulepos)
@@ -611,7 +612,7 @@ nsVorbisState::IsHeader(ogg_packet* aPacket)
   // Any packet with its first bit set cannot be a data packet, it's a
   // (possibly invalid) header packet.
   // See: http://xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-610004.2.1
-  return aPacket->bytes > 0 ? (aPacket->packet[0] & 0x1) : PR_FALSE;
+  return aPacket->bytes > 0 ? (aPacket->packet[0] & 0x1) : false;
 }
 
 nsresult
@@ -756,7 +757,7 @@ nsresult nsVorbisState::ReconstructVorbisGranulepos()
 
 
 nsSkeletonState::nsSkeletonState(ogg_page* aBosPage)
-  : nsOggCodecState(aBosPage, PR_TRUE),
+  : nsOggCodecState(aBosPage, true),
     mVersion(0),
     mPresentationTime(0),
     mLength(0)
@@ -863,7 +864,7 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
   NS_ASSERTION(aPacket->bytes >= SKELETON_4_0_MIN_INDEX_LEN,
                "Index must be at least minimum size");
   if (!mActive) {
-    return PR_FALSE;
+    return false;
   }
 
   PRUint32 serialno = LEUint32(aPacket->packet + INDEX_SERIALNO_OFFSET);
@@ -877,14 +878,14 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
   if (timeDenom == 0) {
     LOG(PR_LOG_DEBUG, ("Ogg Skeleton Index packet for stream %u has 0 "
                        "timestamp denominator.", serialno));
-    return (mActive = PR_FALSE);
+    return (mActive = false);
   }
 
   // Extract the start time.
   n = LEInt64(p + INDEX_FIRST_NUMER_OFFSET);
   PRInt64 t;
   if (!MulOverflow(n, USECS_PER_S, t)) {
-    return (mActive = PR_FALSE);
+    return (mActive = false);
   } else {
     startTime = t / timeDenom;
   }
@@ -892,7 +893,7 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
   // Extract the end time.
   n = LEInt64(p + INDEX_LAST_NUMER_OFFSET);
   if (!MulOverflow(n, USECS_PER_S, t)) {
-    return (mActive = PR_FALSE);
+    return (mActive = false);
   } else {
     endTime = t / timeDenom;
   }
@@ -903,7 +904,7 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
   if (!MulOverflow(numKeyPoints, MIN_KEY_POINT_SIZE, minPacketSize) ||
       !AddOverflow(INDEX_KEYPOINT_OFFSET, minPacketSize, minPacketSize))
   {
-    return (mActive = PR_FALSE);
+    return (mActive = false);
   }
   
   PRInt64 sizeofIndex = aPacket->bytes - INDEX_KEYPOINT_OFFSET;
@@ -922,7 +923,7 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
                        "(%lld) in index packet for stream %u.",
                        numKeyPoints,
                        serialno));
-    return (mActive = PR_FALSE);
+    return (mActive = false);
   }
 
   nsAutoPtr<nsKeyFrameIndex> keyPoints(new nsKeyFrameIndex(startTime, endTime));
@@ -942,18 +943,18 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
         offset > mLength ||
         offset < 0)
     {
-      return (mActive = PR_FALSE);
+      return (mActive = false);
     }
     p = ReadVariableLengthInt(p, limit, delta);
     if (!AddOverflow(time, delta, time) ||
         time > endTime ||
         time < startTime)
     {
-      return (mActive = PR_FALSE);
+      return (mActive = false);
     }
     PRInt64 timeUsecs = 0;
     if (!MulOverflow(time, USECS_PER_S, timeUsecs))
-      return mActive = PR_FALSE;
+      return mActive = false;
     timeUsecs /= timeDenom;
     keyPoints->Add(offset, timeUsecs);
     numKeyPointsRead++;
@@ -966,7 +967,7 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
 
   LOG(PR_LOG_DEBUG, ("Loaded %d keypoints for Skeleton on stream %u",
                      keyPointsRead, serialno));
-  return PR_TRUE;
+  return true;
 }
 
 nsresult nsSkeletonState::IndexedSeekTargetForTrack(PRUint32 aSerialno,
@@ -1082,8 +1083,8 @@ bool nsSkeletonState::DecodeHeader(ogg_packet* aPacket)
         aPacket->bytes < SKELETON_4_0_MIN_HEADER_LEN)
     {
       // We can only care to parse Skeleton version 4.0+.
-      mActive = PR_FALSE;
-      return mDoneReadingHeaders = PR_TRUE;
+      mActive = false;
+      return mDoneReadingHeaders = true;
     }
 
     // Extract the segment length.
@@ -1095,19 +1096,19 @@ bool nsSkeletonState::DecodeHeader(ogg_packet* aPacket)
     bool init = mIndex.Init();
     if (!init) {
       NS_WARNING("Failed to initialize Ogg skeleton serialno-to-index map");
-      mActive = PR_FALSE;
-      return mDoneReadingHeaders = PR_TRUE;
+      mActive = false;
+      return mDoneReadingHeaders = true;
     }
-    mActive = PR_TRUE;
+    mActive = true;
   } else if (IsSkeletonIndex(aPacket) && mVersion >= SKELETON_VERSION(4,0)) {
     if (!DecodeIndex(aPacket)) {
       // Failed to parse index, or invalid/hostile index. DecodeIndex() will
       // have deactivated the track.
-      return mDoneReadingHeaders = PR_TRUE;
+      return mDoneReadingHeaders = true;
     }
 
   } else if (aPacket->e_o_s) {
-    mDoneReadingHeaders = PR_TRUE;
+    mDoneReadingHeaders = true;
   }
   return mDoneReadingHeaders;
 }

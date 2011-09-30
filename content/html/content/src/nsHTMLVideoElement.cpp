@@ -176,7 +176,7 @@ nsresult nsHTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 
     return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                       value,
-                                      PR_FALSE);
+                                      false);
 }
 
 NS_IMPL_URI_ATTR(nsHTMLVideoElement, Poster, poster)
