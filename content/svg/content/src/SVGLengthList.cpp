@@ -38,7 +38,6 @@
 #include "SVGAnimatedLengthList.h"
 #include "SVGLength.h"
 #include "nsSVGElement.h"
-#include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
 #include "nsString.h"

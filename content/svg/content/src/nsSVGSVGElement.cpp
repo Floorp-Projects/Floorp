@@ -53,7 +53,6 @@
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h" //XXX
 #include "nsSVGRect.h"
-#include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
 #include "nsISVGChildFrame.h"
 #include "nsGUIEvent.h"
