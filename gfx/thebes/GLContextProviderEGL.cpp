@@ -1677,7 +1677,7 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
                                  GLenum aWrapMode,
                                  bool aUseNearestFilter)
 {
-    nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType);
+    nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType, aUseNearestFilter);
     return t.forget();
 };
 
