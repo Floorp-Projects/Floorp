@@ -79,7 +79,7 @@ function run() {
     var sheet = parse_test_style_element.sheet; // XXX yikes, not live!
     if (sheet.cssRules.length == 1 &&
         sheet.cssRules[0].type == CSSRule.MEDIA_RULE)
-      return sheet.cssRules[0].media.mediaText != "screen, not all";
+      return sheet.cssRules[0].media.mediaText != "screen";
     ok(false, "unexpected result testing whether query " + q +
               " is parseable");
     return true; // doesn't matter, we already failed
