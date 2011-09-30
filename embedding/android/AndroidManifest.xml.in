@@ -106,9 +106,10 @@
         </activity>
 
 #if MOZ_CRASHREPORTER
-	<activity android:name="CrashReporter"
-                  android:label="@string/crash_reporter_title"
-		  android:icon="@drawable/crash_reporter" >
+  <activity android:name="CrashReporter"
+            android:label="@string/crash_reporter_title"
+            android:icon="@drawable/crash_reporter"
+            android:excludeFromRecents="true">
           <intent-filter>
             <action android:name="org.mozilla.gecko.reportCrash" />
           </intent-filter>
