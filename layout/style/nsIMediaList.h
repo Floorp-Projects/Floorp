@@ -205,11 +205,7 @@ public:
 
   PRInt32 Count() { return mArray.Length(); }
   nsMediaQuery* MediumAt(PRInt32 aIndex) { return mArray[aIndex]; }
-  void Clear() { mArray.Clear(); mIsEmpty = PR_TRUE; }
-  // a media list with no items may not represent the lack of a media
-  // list; it could represent the empty string or something with parser
-  // errors, which means that the media list should never match
-  void SetNonEmpty() { mIsEmpty = PR_FALSE; }
+  void Clear() { mArray.Clear(); }
 
 protected:
   ~nsMediaList();
@@ -218,7 +214,6 @@ protected:
   nsresult Append(const nsAString & aOldMedium);
 
   nsTArray<nsAutoPtr<nsMediaQuery> > mArray;
-  bool mIsEmpty;
   // not refcounted; sheet will let us know when it goes away
   // mStyleSheet is the sheet that needs to be dirtied when this medialist
   // changes
