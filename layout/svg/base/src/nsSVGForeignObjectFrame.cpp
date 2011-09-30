@@ -123,6 +123,8 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32  aNameSpaceID,
       RequestReflow(nsIPresShell::eStyleChange);
     } else if (aAttribute == nsGkAtoms::x ||
                aAttribute == nsGkAtoms::y ||
+               aAttribute == nsGkAtoms::viewBox ||
+               aAttribute == nsGkAtoms::preserveAspectRatio ||
                aAttribute == nsGkAtoms::transform) {
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nsnull;
