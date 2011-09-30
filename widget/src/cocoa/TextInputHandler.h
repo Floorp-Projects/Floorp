@@ -482,9 +482,19 @@ protected:
     // Whether keypress event was consumed by web contents or chrome contents.
     bool mKeyPressHandled;
 
-    KeyEventState() : mKeyEvent(nsnull)
+    KeyEventState(NSEvent* aNativeKeyEvent) : mKeyEvent(nsnull)
     {
       Clear();
+      Set(aNativeKeyEvent);
+    }
+
+    KeyEventState(const KeyEventState &aOther) : mKeyEvent(nsnull)
+    {
+      Clear();
+      mKeyEvent = [aOther.mKeyEvent retain];
+      mKeyDownHandled = aOther.mKeyDownHandled;
+      mKeyPressDispatched = aOther.mKeyPressDispatched;
+      mKeyPressHandled = aOther.mKeyPressHandled;
     }
 
     ~KeyEventState()
@@ -514,6 +524,11 @@ protected:
     {
       return mKeyDownHandled || mKeyPressHandled;
     }
+
+  protected:
+    KeyEventState()
+    {
+    }    
   };
 
   /**
@@ -529,15 +544,40 @@ protected:
 
     ~AutoKeyEventStateCleaner()
     {
-      mHandler->mCurrentKeyEvent.Clear();
+      NS_ASSERTION(mHandler->mCurrentKeyEvents.Length() > 0,
+                   "The key event was removed by manually?");
+      mHandler->mCurrentKeyEvents.RemoveElementAt(0);
     }
   private:
-    TextInputHandlerBase* mHandler;
+    nsRefPtr<TextInputHandlerBase> mHandler;
   };
 
-  // XXX If keydown event was nested, the key event is overwritten by newer
-  //     event.  This is wrong behavior.  Some IMEs are making such situation.
-  KeyEventState mCurrentKeyEvent;
+  /**
+   * mCurrentKeyEvents stores all key events which are being processed.
+   * When we call interpretKeyEvents, IME may generate other key events.
+   * mCurrentKeyEvents[0] is the latest key event.
+   */
+  nsTArray<KeyEventState> mCurrentKeyEvents;
+
+  /**
+   *
+   */
+  KeyEventState* PushKeyEvent(NSEvent* aNativeKeyEvent)
+  {
+    KeyEventState keyEventState(aNativeKeyEvent);
+    return mCurrentKeyEvents.InsertElementAt(0, keyEventState);
+  }
+
+  /**
+   * GetCurrentKeyEvent() returns current processing key event.
+   */
+  KeyEventState* GetCurrentKeyEvent()
+  {
+    if (mCurrentKeyEvents.Length() == 0) {
+      return nsnull;
+    }
+    return &mCurrentKeyEvents[0];
+  }
 
   /**
    * IsPrintableChar() checks whether the unicode character is
@@ -1119,7 +1159,8 @@ public:
    */
   bool KeyPressWasHandled()
   {
-    return mCurrentKeyEvent.mKeyPressHandled;
+    KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
+    return currentKeyEvent && currentKeyEvent->mKeyPressHandled;
   }
 
 protected:
