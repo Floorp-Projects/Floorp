@@ -368,7 +368,7 @@ protected:
   {
     NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread");
 
-    mDelayedDestroy = PR_FALSE;
+    mDelayedDestroy = false;
 
     PR_INIT_CLIST(this);
     PR_INSERT_BEFORE(this, &sListHead);
