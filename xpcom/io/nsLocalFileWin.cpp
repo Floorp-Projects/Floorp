@@ -3105,12 +3105,14 @@ nsLocalFile::EnsureShortPath()
     if (!mShortWorkingPath.IsEmpty())
         return;
 
-    WCHAR thisshort[MAX_PATH];
-    DWORD thisr = ::GetShortPathNameW(mWorkingPath.get(), thisshort,
-                                      sizeof(thisshort));
-    // If an error occurred (thisr == 0) thisshort is uninitialized memory!
-    if (thisr != 0 && thisr < sizeof(thisshort))
-        mShortWorkingPath.Assign(thisshort);
+    WCHAR shortPath[MAX_PATH + 1];
+    DWORD lengthNeeded = ::GetShortPathNameW(mWorkingPath.get(), shortPath,
+                                             NS_ARRAY_LENGTH(shortPath));
+    // If an error occurred then lengthNeeded is set to 0 or the length of the
+    // needed buffer including NULL termination.  If it succeeds the number of
+    // wide characters not including NULL termination is returned.
+    if (lengthNeeded != 0 && lengthNeeded < NS_ARRAY_LENGTH(shortPath))
+        mShortWorkingPath.Assign(shortPath);
     else
         mShortWorkingPath.Assign(mWorkingPath);
 }

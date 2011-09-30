@@ -80,19 +80,19 @@ public:
     mLastStartTime = TimeStamp();
     mAccumulatedTime = TimeDuration(0);
     mAccumulatedBytes = 0;
-    mIsStarted = PR_FALSE;
+    mIsStarted = false;
   }
   void Start(TimeStamp aNow) {
     if (mIsStarted)
       return;
     mLastStartTime = aNow;
-    mIsStarted = PR_TRUE;
+    mIsStarted = true;
   }
   void Stop(TimeStamp aNow) {
     if (!mIsStarted)
       return;
     mAccumulatedTime += aNow - mLastStartTime;
-    mIsStarted = PR_FALSE;
+    mIsStarted = false;
   }
   void AddBytes(PRInt64 aBytes) {
     if (!mIsStarted) {
@@ -304,7 +304,7 @@ protected:
     mDecoder(aDecoder),
     mChannel(aChannel),
     mURI(aURI),
-    mLoadInBackground(PR_FALSE)
+    mLoadInBackground(false)
   {
     MOZ_COUNT_CTOR(nsMediaStream);
   }
@@ -327,7 +327,7 @@ protected:
   // main thread only.
   nsCOMPtr<nsIURI> mURI;
 
-  // PR_TRUE if MoveLoadsToBackground() has been called, i.e. the load event
+  // True if MoveLoadsToBackground() has been called, i.e. the load event
   // has been fired, and all channel loads will be in the background.
   bool mLoadInBackground;
 };
@@ -378,7 +378,7 @@ public:
   virtual void     Suspend(bool aCloseImmediately);
   virtual void     Resume();
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
-  // Return PR_TRUE if the stream has been closed.
+  // Return true if the stream has been closed.
   bool IsClosed() const { return mCacheStream.IsClosed(); }
   virtual nsMediaStream* CloneData(nsMediaDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, PRInt64 aOffset, PRUint32 aCount);
@@ -480,7 +480,7 @@ protected:
   nsChannelStatistics mChannelStatistics;
   PRUint32            mCacheSuspendCount;
 
-  // PR_TRUE if we couldn't suspend the stream and we therefore don't want
+  // True if we couldn't suspend the stream and we therefore don't want
   // to resume later. This is usually due to the channel not being in the
   // isPending state at the time of the suspend request.
   bool mIgnoreResume;

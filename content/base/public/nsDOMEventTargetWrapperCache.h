@@ -86,9 +86,62 @@ public:
     return static_cast<nsDOMEventTargetWrapperCache*>(target);
   }
 
+  void Init(JSContext* aCx = nsnull);
+
 protected:
   nsDOMEventTargetWrapperCache() : nsDOMEventTargetHelper(), nsWrapperCache() {}
   virtual ~nsDOMEventTargetWrapperCache();
 };
+
+#define NS_DECL_EVENT_HANDLER(_event)                                         \
+  protected:                                                                  \
+    nsRefPtr<nsDOMEventListenerWrapper> mOn##_event##Listener;                \
+  public:
+
+#define NS_DECL_AND_IMPL_EVENT_HANDLER(_event)                                \
+  protected:                                                                  \
+    nsRefPtr<nsDOMEventListenerWrapper> mOn##_event##Listener;                \
+  public:                                                                     \
+    NS_IMETHOD GetOn##_event(nsIDOMEventListener** a##_event)                 \
+    {                                                                         \
+      return GetInnerEventListener(mOn##_event##Listener, a##_event);         \
+    }                                                                         \
+    NS_IMETHOD SetOn##_event(nsIDOMEventListener* a##_event)                  \
+    {                                                                         \
+      return RemoveAddEventListener(NS_LITERAL_STRING(#_event),               \
+                                    mOn##_event##Listener, a##_event);        \
+    }
+
+#define NS_IMPL_EVENT_HANDLER(_class, _event)                                 \
+  NS_IMETHODIMP                                                               \
+  _class::GetOn##_event(nsIDOMEventListener** a##_event)                      \
+  {                                                                           \
+    return GetInnerEventListener(mOn##_event##Listener, a##_event);           \
+  }                                                                           \
+  NS_IMETHODIMP                                                               \
+  _class::SetOn##_event(nsIDOMEventListener* a##_event)                       \
+  {                                                                           \
+    return RemoveAddEventListener(NS_LITERAL_STRING(#_event),                 \
+                                  mOn##_event##Listener, a##_event);          \
+  }
+
+#define NS_IMPL_FORWARD_EVENT_HANDLER(_class, _event, _baseclass)             \
+    NS_IMETHODIMP                                                             \
+    _class::GetOn##_event(nsIDOMEventListener** a##_event)                    \
+    {                                                                         \
+      return _baseclass::GetOn##_event(a##_event);                            \
+    }                                                                         \
+    NS_IMETHODIMP                                                             \
+    _class::SetOn##_event(nsIDOMEventListener* a##_event)                     \
+    {                                                                         \
+      return _baseclass::SetOn##_event(a##_event);                            \
+    }
+
+#define NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(_event)                    \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOn##_event##Listener)
+
+#define NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(_event)                      \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOn##_event##Listener)
+                                    
 
 #endif  // nsDOMEventTargetWrapperCache_h__

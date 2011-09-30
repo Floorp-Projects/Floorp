@@ -1696,17 +1696,10 @@ WebGLContext::FramebufferTexture2D(WebGLenum target,
                                    nsIWebGLTexture *tobj,
                                    WebGLint level)
 {
-    if (!mBoundFramebuffer)
+    if (mBoundFramebuffer)
+        return mBoundFramebuffer->FramebufferTexture2D(target, attachment, textarget, tobj, level);
+    else
         return ErrorInvalidOperation("framebufferTexture2D: cannot modify framebuffer 0");
-
-    if (textarget != LOCAL_GL_TEXTURE_2D && WorkAroundCubeMapBug684882()) {
-        return ErrorInvalidOperation("framebufferTexture2D: Attaching a face of a cube map to a framebuffer is disabled "
-                                     "on Mac OS X on Intel GPUs to protect you from a bug causing random "
-                                     "video memory to be copied into cube maps attached to framebuffers "
-                                     "(Mozilla bug 684882, Apple bug 9129398)");
-    }
-    
-    return mBoundFramebuffer->FramebufferTexture2D(target, attachment, textarget, tobj, level);
 }
 
 GL_SAME_METHOD_0(Flush, Flush)
@@ -1784,18 +1777,7 @@ WebGLContext::GenerateMipmap(WebGLenum target)
     tex->SetGeneratedMipmap();
 
     MakeContextCurrent();
-
-    if (WorkAroundCubeMapBug684882()) {
-        if (target == LOCAL_GL_TEXTURE_2D) {
-            gl->fGenerateMipmap(target);
-        } else {
-            // do nothing! Accordingly we must make sure to never actually set texture parameters to something that requires mipmaps,
-            // or else we'll fail to render.
-        }
-    } else {
-        gl->fGenerateMipmap(target);
-    }
-
+    gl->fGenerateMipmap(target);
     return NS_OK;
 }
 
@@ -2527,33 +2509,12 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
             return ErrorInvalidEnum("texParameterf: pname %x and floating-point param %e are mutually incompatible",
                                     pname, floatParam);
     }
-    
-    WebGLint intParamForGL = intParam;
-    WebGLfloat floatParamForGL = floatParam;
-    
-    if (WorkAroundCubeMapBug684882()) {
-        // bug 684882 - we skip mipmap generation in this case to work around a Mac GL bug, so we have
-        // to tweak the minification filter to avoid requiring a mipmap
-        if (pname == LOCAL_GL_TEXTURE_MIN_FILTER) {
-            if (intParam == LOCAL_GL_NEAREST_MIPMAP_NEAREST ||
-                intParam == LOCAL_GL_NEAREST_MIPMAP_LINEAR)
-            {
-                intParamForGL = LOCAL_GL_NEAREST;
-                floatParamForGL = WebGLfloat(intParamForGL);
-            } else if (intParam == LOCAL_GL_LINEAR_MIPMAP_NEAREST ||
-                       intParam == LOCAL_GL_LINEAR_MIPMAP_LINEAR)
-            {
-                intParamForGL = LOCAL_GL_LINEAR;
-                floatParamForGL = WebGLfloat(intParamForGL);
-            }
-        }
-    }
 
     MakeContextCurrent();
     if (intParamPtr)
-        gl->fTexParameteri(target, pname, intParamForGL);
+        gl->fTexParameteri(target, pname, intParam);
     else
-        gl->fTexParameterf(target, pname, floatParamForGL);
+        gl->fTexParameterf(target, pname, floatParam);
 
     return NS_OK;
 }
@@ -2579,29 +2540,23 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **re
 
     if (!ValidateTextureTargetEnum(target, "getTexParameter: target"))
         return NS_OK;
-    
-    WebGLTexture *tex = activeBoundTextureForTarget(target);
 
-    if (!tex)
+    if (!activeBoundTextureForTarget(target))
         return ErrorInvalidOperation("getTexParameter: no texture bound");
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     switch (pname) {
-        // note that because of bug 684882, the minification filter for OpenGL is sometimes spoofed.
-        // here we want to return our own value, not OpenGL's value
         case LOCAL_GL_TEXTURE_MIN_FILTER:
-            wrval->SetAsInt32(tex->mMinFilter);
-            break;
         case LOCAL_GL_TEXTURE_MAG_FILTER:
-            wrval->SetAsInt32(tex->mMagFilter);
-            break;
         case LOCAL_GL_TEXTURE_WRAP_S:
-            wrval->SetAsInt32(tex->mWrapS);
-            break;
         case LOCAL_GL_TEXTURE_WRAP_T:
-            wrval->SetAsInt32(tex->mWrapT);
+        {
+            GLint i = 0;
+            gl->fGetTexParameteriv(target, pname, &i);
+            wrval->SetAsInt32(i);
+        }
             break;
 
         default:

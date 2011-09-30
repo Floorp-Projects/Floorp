@@ -1758,15 +1758,6 @@ nsListControlFrame::GetType() const
   return nsGkAtoms::listControlFrame; 
 }
 
-bool
-nsListControlFrame::IsContainingBlock() const
-{
-  // We are in fact the containing block for our options.  They should
-  // certainly not use our parent block (or worse yet our parent combobox) for
-  // their sizing.
-  return PR_TRUE;
-}
-
 void
 nsListControlFrame::InvalidateInternal(const nsRect& aDamageRect,
                                        nscoord aX, nscoord aY, nsIFrame* aForChild,

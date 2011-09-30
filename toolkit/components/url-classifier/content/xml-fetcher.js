@@ -103,15 +103,14 @@ PROT_XMLFetcher.prototype = {
 
     // Create a closure
     var self = this;
-    this._request.onreadystatechange = function() {
+    this._request.addEventListener("readystatechange", function() {
       self.readyStateChange(self);
-    }
+    }, false);
 
     this._request.send(null);
   },
 
   cancel: function() {
-    this._request.onreadystatechange = null;
     this._request.abort();
     this._request = null;
   },

@@ -320,8 +320,8 @@ TelemetryPing.prototype = {
       if (isTestPing)
         Services.obs.notifyObservers(null, "telemetry-test-xhr-complete", null);
     }
-    request.onerror = function(aEvent) finishRequest(request.channel);
-    request.onload = function(aEvent) finishRequest(request.channel);
+    request.addEventListener("error", function(aEvent) finishRequest(request.channel), false);
+    request.addEventListener("load", function(aEvent) finishRequest(request.channel), false);
 
     request.send(JSON.stringify(payload));
   },

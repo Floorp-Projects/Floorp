@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <select style="position: relative" size=4>
+    <option>bar</option>
+  </select>
+  <select style="position: relative">
+    <option>bar</option>
+  </select>
+  <script>
+    function injectAbsPosKid(s) {
+      var option = document.createElement("option");
+      option.appendChild(document.createTextNode("foo"));
+      option.style.position = "absolute";
+      option.style.top = "100px";
+      s.insertBefore(option, s.firstChild);
+
+      var div = document.createElement("div");
+      div.appendChild(document.createTextNode("bar"));
+      div.style.position = "absolute";
+      div.style.top = "200px";
+      s.appendChild(div);
+    }
+    onload = function() {
+      var s1 = document.querySelectorAll("select")[0];
+      var s2 = document.querySelectorAll("select")[1];
+      injectAbsPosKid(s1);
+      injectAbsPosKid(s2);
+      s2.selectedIndex = 0;
+    };
+  </script>
+</html>
