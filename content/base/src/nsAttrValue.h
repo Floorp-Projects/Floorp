@@ -55,7 +55,6 @@
 typedef PRUptrdiff PtrBits;
 class nsAString;
 class nsIAtom;
-class nsISVGValue;
 class nsIDocument;
 template<class E, class A> class nsTArray;
 struct nsTArrayDefaultAllocator;
@@ -104,7 +103,6 @@ public:
   nsAttrValue(const nsAttrValue& aOther);
   explicit nsAttrValue(const nsAString& aValue);
   nsAttrValue(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
-  explicit nsAttrValue(nsISVGValue* aValue);
   explicit nsAttrValue(const nsIntMargin& aValue);
   ~nsAttrValue();
 
@@ -122,11 +120,10 @@ public:
     ePercent =      0x0F, // 1111
     // Values below here won't matter, they'll be always stored in the 'misc'
     // struct.
-    eCSSStyleRule = 0x10,
-    eAtomArray =    0x11 
-    ,eSVGValue =    0x12
-    ,eDoubleValue  = 0x13
-    ,eIntMarginValue = 0x14
+    eCSSStyleRule =    0x10
+    ,eAtomArray =      0x11 
+    ,eDoubleValue  =   0x12
+    ,eIntMarginValue = 0x13
   };
 
   ValueType Type() const;
@@ -137,7 +134,6 @@ public:
   void SetTo(const nsAString& aValue);
   void SetTo(PRInt16 aInt);
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
-  void SetTo(nsISVGValue* aValue);
   void SetTo(const nsIntMargin& aValue);
 
   void SwapValueWith(nsAttrValue& aOther);
@@ -155,7 +151,6 @@ public:
   inline float GetPercentValue() const;
   inline AtomArray* GetAtomArrayValue() const;
   inline mozilla::css::StyleRule* GetCSSStyleRuleValue() const;
-  inline nsISVGValue* GetSVGValue() const;
   inline double GetDoubleValue() const;
   bool GetIntMarginValue(nsIntMargin& aMargin) const;
 
@@ -329,7 +324,7 @@ private:
   {
     ValueType mType;
     // mStringBits points to either nsIAtom* or nsStringBuffer* and is used when
-    // mType isn't mCSSStyleRule or eSVGValue.
+    // mType isn't mCSSStyleRule.
     // Note eStringBase and eAtomBase is used also to handle the type of
     // mStringBits.
     PtrBits mStringBits;
@@ -340,7 +335,6 @@ private:
       PRInt32 mPercent;
       mozilla::css::StyleRule* mCSSStyleRule;
       AtomArray* mAtomArray;
-      nsISVGValue* mSVGValue;
       double mDoubleValue;
       nsIntMargin* mIntMargin;
     };
@@ -444,13 +438,6 @@ nsAttrValue::GetCSSStyleRuleValue() const
 {
   NS_PRECONDITION(Type() == eCSSStyleRule, "wrong type");
   return GetMiscContainer()->mCSSStyleRule;
-}
-
-inline nsISVGValue*
-nsAttrValue::GetSVGValue() const
-{
-  NS_PRECONDITION(Type() == eSVGValue, "wrong type");
-  return GetMiscContainer()->mSVGValue;
 }
 
 inline double

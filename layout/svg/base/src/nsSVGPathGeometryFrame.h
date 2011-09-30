@@ -41,7 +41,6 @@
 
 #include "nsFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsWeakReference.h"
 #include "nsGkAtoms.h"
 #include "nsSVGGeometryFrame.h"
 #include "gfxRect.h"
