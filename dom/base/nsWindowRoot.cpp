@@ -103,7 +103,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsWindowRoot)
 NS_IMPL_DOMTARGET_DEFAULTS(nsWindowRoot)
 
 NS_IMETHODIMP
-nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
+nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, bool aUseCapture)
 {
   nsRefPtr<nsEventListenerManager> elm = GetListenerManager(PR_FALSE);
   if (elm) {
@@ -113,7 +113,7 @@ nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* a
 }
 
 NS_IMETHODIMP
-nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, PRBool *aRetVal)
+nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, bool *aRetVal)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =  nsEventDispatcher::DispatchDOMEvent(
@@ -136,7 +136,7 @@ nsWindowRoot::DispatchDOMEvent(nsEvent* aEvent,
 NS_IMETHODIMP
 nsWindowRoot::AddEventListener(const nsAString& aType,
                                nsIDOMEventListener *aListener,
-                               PRBool aUseCapture, PRBool aWantsUntrusted,
+                               bool aUseCapture, bool aWantsUntrusted,
                                PRUint8 aOptionalArgc)
 {
   NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
@@ -151,7 +151,7 @@ nsWindowRoot::AddEventListener(const nsAString& aType,
 }
 
 nsEventListenerManager*
-nsWindowRoot::GetListenerManager(PRBool aCreateIfNotFound)
+nsWindowRoot::GetListenerManager(bool aCreateIfNotFound)
 {
   if (!mListenerManager && aCreateIfNotFound) {
     mListenerManager =

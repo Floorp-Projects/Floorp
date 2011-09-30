@@ -59,13 +59,13 @@ class nsBMPDecoder : public Decoder
 {
 public:
 
-    nsBMPDecoder();
+    nsBMPDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver);
     ~nsBMPDecoder();
 
     // Specifies whether or not the BMP file will contain alpha data
     // If set to true and the BMP is 32BPP, the alpha data will be
     // retrieved from the 4th byte of image data per pixel 
-    void SetUseAlphaData(PRBool useAlphaData);
+    void SetUseAlphaData(bool useAlphaData);
     // Obtains the bits per pixel from the internal BIH header
     PRInt32 GetBitsPerPixel() const;
     // Obtains the width from the internal BIH header
@@ -78,7 +78,7 @@ public:
     PRInt32 GetCompressedImageSize() const;
     // Obtains whether or not a BMP file had alpha data in its 4th byte
     // for 32BPP bitmaps.  Only use after the bitmap has been processed.
-    PRBool HasAlphaData() const;
+    bool HasAlphaData() const;
 
     virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
     virtual void FinishInternal();
@@ -127,9 +127,9 @@ private:
     // Reference: 
     // http://en.wikipedia.org/wiki/ICO_(file_format)#cite_note-9
     // Bitmaps where the alpha bytes are all 0 should be fully visible.
-    PRPackedBool mUseAlphaData;
+    bool mUseAlphaData;
     // Whether the 4th byte alpha data was found to be non zero and hence used.
-    PRPackedBool mHaveAlphaData;
+    bool mHaveAlphaData;
 };
 
 /** Sets the pixel data in aDecoded to the given values.

@@ -166,7 +166,7 @@ public:
    *                             be followed by its clone.
    * @param aResult *aResult will contain the cloned node.
    */
-  static nsresult Clone(nsINode *aNode, PRBool aDeep,
+  static nsresult Clone(nsINode *aNode, bool aDeep,
                         nsNodeInfoManager *aNewNodeInfoManager,
                         nsCOMArray<nsINode> &aNodesWithProperties,
                         nsIDOMNode **aResult)
@@ -224,7 +224,7 @@ public:
    */
   static nsresult CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
                                        nsIDocument *aOwnerDocument,
-                                       PRUint16 aOperation, PRBool aCloned);
+                                       PRUint16 aOperation, bool aCloned);
 
   /**
    * Helper for the cycle collector to traverse the DOM UserData and
@@ -245,8 +245,8 @@ public:
    * @param aCallUserDataHandlers if true, user data handlers will be called
    * @param aResult the clone
    */
-  static nsresult CloneNodeImpl(nsINode *aNode, PRBool aDeep,
-                                PRBool aCallUserDataHandlers,
+  static nsresult CloneNodeImpl(nsINode *aNode, bool aDeep,
+                                bool aCallUserDataHandlers,
                                 nsIDOMNode **aResult);
 
   /**
@@ -285,7 +285,7 @@ private:
    * @param aResult If aClone is PR_FALSE then aResult must be null, else
    *                *aResult will contain the cloned node.
    */
-  static nsresult CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
+  static nsresult CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                                 nsNodeInfoManager *aNewNodeInfoManager,
                                 JSContext *aCx, JSObject *aNewScope,
                                 nsCOMArray<nsINode> &aNodesWithProperties,
@@ -313,7 +313,7 @@ private:
    * @param aResult If aClone is PR_TRUE then *aResult will contain the cloned
    *                node.
    */
-  static nsresult CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
+  static nsresult CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                                 nsNodeInfoManager *aNewNodeInfoManager,
                                 JSContext *aCx, JSObject *aNewScope,
                                 nsCOMArray<nsINode> &aNodesWithProperties,

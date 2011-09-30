@@ -41,7 +41,7 @@
 #include "txIXPathContext.h"
 #include "txXPathTreeWalker.h"
 
-PRBool txNodeTypeTest::matches(const txXPathNode& aNode,
+bool txNodeTypeTest::matches(const txXPathNode& aNode,
                                txIMatchContext* aContext)
 {
     switch (mNodeType) {
@@ -83,7 +83,7 @@ double txNodeTypeTest::getDefaultPriority()
     return mNodeName ? 0 : -0.5;
 }
 
-PRBool
+bool
 txNodeTypeTest::isSensitiveTo(Expr::ContextSensitivity aContext)
 {
     return !!(aContext & Expr::NODE_CONTEXT);

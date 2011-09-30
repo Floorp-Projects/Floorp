@@ -224,14 +224,14 @@ NS_IMETHODIMP nsBaseFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 #endif
 
 NS_IMETHODIMP
-nsBaseFilePicker::GetAddToRecentDocs(PRBool *aFlag)
+nsBaseFilePicker::GetAddToRecentDocs(bool *aFlag)
 {
   *aFlag = mAddToRecentDocs;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::SetAddToRecentDocs(PRBool aFlag)
+nsBaseFilePicker::SetAddToRecentDocs(bool aFlag)
 {
   mAddToRecentDocs = aFlag;
   return NS_OK;

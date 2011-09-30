@@ -44,9 +44,23 @@
 #include "a11yGeneric.h"
 #include "nsAccDocManager.h"
 
+#include "mozilla/a11y/FocusManager.h"
+
 #include "nsIObserver.h"
 
+namespace mozilla {
+namespace a11y {
+
+/**
+ * Return focus manager.
+ */
+FocusManager* FocusMgr();
+
+} // namespace a11y
+} // namespace mozilla
+
 class nsAccessibilityService : public nsAccDocManager,
+                               public mozilla::a11y::FocusManager,
                                public nsIAccessibilityService,
                                public nsIObserver
 {
@@ -61,7 +75,7 @@ public:
   virtual nsAccessible* GetAccessibleInShell(nsINode* aNode,
                                              nsIPresShell* aPresShell);
   virtual nsAccessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
-                                                  PRBool aCanCreate);
+                                                  bool aCanCreate);
 
   virtual already_AddRefed<nsAccessible>
     CreateHTMLBRAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
@@ -146,7 +160,7 @@ public:
   /**
    * Return true if accessibility service has been shutdown.
    */
-  static PRBool IsShutdown() { return gIsShutdown; }
+  static bool IsShutdown() { return gIsShutdown; }
 
   /**
    * Return an accessible for the given DOM node from the cache or create new
@@ -208,7 +222,7 @@ private:
   /**
    * Initialize accessibility service.
    */
-  PRBool Init();
+  bool Init();
 
   /**
    * Shutdowns accessibility service.
@@ -257,14 +271,14 @@ private:
 #endif
 
   /**
-   * Reference for accessibility service.
+   * Reference for accessibility service instance.
    */
-  static nsAccessibilityService *gAccessibilityService;
+  static nsAccessibilityService* gAccessibilityService;
 
   /**
    * Indicates whether accessibility service was shutdown.
    */
-  static PRBool gIsShutdown;
+  static bool gIsShutdown;
 
   /**
    * Does this content node have a universal ARIA property set on it?
@@ -273,9 +287,10 @@ private:
    * @param aContent The content node to test
    * @return PR_TRUE if there is a universal ARIA property set on the node
    */
-  PRBool HasUniversalAriaProperty(nsIContent *aContent);
+  bool HasUniversalAriaProperty(nsIContent *aContent);
 
   friend nsAccessibilityService* GetAccService();
+  friend mozilla::a11y::FocusManager* mozilla::a11y::FocusMgr();
 
   friend nsresult NS_GetAccessibilityService(nsIAccessibilityService** aResult);
 };

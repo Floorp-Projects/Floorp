@@ -71,7 +71,7 @@ nsSMILInterval::~nsSMILInterval()
 }
 
 void
-nsSMILInterval::Unlink(PRBool aFiltered)
+nsSMILInterval::Unlink(bool aFiltered)
 {
   for (PRInt32 i = mDependentTimes.Length() - 1; i >= 0; --i) {
     if (aFiltered) {
@@ -172,7 +172,7 @@ void
 nsSMILInterval::RemoveDependentTime(const nsSMILInstanceTime& aTime)
 {
 #ifdef DEBUG
-  PRBool found =
+  bool found =
 #endif
     mDependentTimes.RemoveElementSorted(&aTime);
   NS_ABORT_IF_FALSE(found, "Couldn't find instance time to delete.");
@@ -184,7 +184,7 @@ nsSMILInterval::GetDependentTimes(InstanceTimeList& aTimes)
   aTimes = mDependentTimes;
 }
 
-PRBool
+bool
 nsSMILInterval::IsDependencyChainLink() const
 {
   if (!mBegin || !mEnd)

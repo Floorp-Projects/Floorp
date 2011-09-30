@@ -110,15 +110,15 @@ protected:
   
   // progress load stuff
   nsresult        StartDocumentLoad(nsIWebProgress *aWebProgress,
-                                    PRBool isToBeMadeEditable);
+                                    bool isToBeMadeEditable);
   nsresult        EndDocumentLoad(nsIWebProgress *aWebProgress, 
                                   nsIChannel* aChannel, nsresult aStatus,
-                                  PRBool isToBeMadeEditable);
+                                  bool isToBeMadeEditable);
   nsresult        StartPageLoad(nsIChannel *aChannel);
   nsresult        EndPageLoad(nsIWebProgress *aWebProgress, 
                               nsIChannel* aChannel, nsresult aStatus);
   
-  PRBool          IsProgressForTargetDocument(nsIWebProgress *aWebProgress);
+  bool            IsProgressForTargetDocument(nsIWebProgress *aWebProgress);
 
   void            RemoveEditorControllers(nsIDOMWindow *aWindow);
   void            RemoveWebProgressListener(nsIDOMWindow *aWindow);
@@ -128,28 +128,28 @@ protected:
 
 protected:
 
-  PRPackedBool    mDoneSetup;    // have we prepared for editing yet?
+  bool            mDoneSetup;    // have we prepared for editing yet?
 
   // Used to prevent double creation of editor because nsIWebProgressListener
   //  receives a STATE_STOP notification before the STATE_START 
   //  for our document, so we wait for the STATE_START, then STATE_STOP 
   //  before creating an editor
-  PRPackedBool    mCanCreateEditor; 
+  bool            mCanCreateEditor; 
 
-  PRPackedBool    mInteractive;
-  PRPackedBool    mMakeWholeDocumentEditable;
+  bool            mInteractive;
+  bool            mMakeWholeDocumentEditable;
 
-  PRPackedBool    mDisabledJSAndPlugins;
+  bool            mDisabledJSAndPlugins;
 
   // True if scripts were enabled before the editor turned scripts
   // off, otherwise false.
-  PRPackedBool    mScriptsEnabled;
+  bool            mScriptsEnabled;
 
   // True if plugins were enabled before the editor turned plugins
   // off, otherwise false.
-  PRPackedBool    mPluginsEnabled;
+  bool            mPluginsEnabled;
 
-  PRPackedBool    mProgressListenerRegistered;
+  bool            mProgressListenerRegistered;
 
   // The image animation mode before it was turned off.
   PRUint16        mImageAnimationMode;

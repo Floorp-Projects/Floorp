@@ -237,10 +237,10 @@ nsHttpConnection::ProxyStartSSL()
     return ssl->ProxyStartSSL();
 }
 
-PRBool
+bool
 nsHttpConnection::CanReuse()
 {
-    PRBool canReuse = IsKeepAlive() &&
+    bool canReuse = IsKeepAlive() &&
         (NowInSeconds() - mLastReadTime < mIdleTimeout) &&
         IsAlive();
     
@@ -270,13 +270,13 @@ PRUint32 nsHttpConnection::TimeToLive()
     return tmp;
 }
 
-PRBool
+bool
 nsHttpConnection::IsAlive()
 {
     if (!mSocketTransport)
         return PR_FALSE;
 
-    PRBool alive;
+    bool alive;
     nsresult rv = mSocketTransport->IsAlive(&alive);
     if (NS_FAILED(rv))
         alive = PR_FALSE;
@@ -292,7 +292,7 @@ nsHttpConnection::IsAlive()
     return alive;
 }
 
-PRBool
+bool
 nsHttpConnection::SupportsPipelining(nsHttpResponseHead *responseHead)
 {
     // XXX there should be a strict mode available that disables this
@@ -352,7 +352,7 @@ nsresult
 nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
                                      nsHttpRequestHead *requestHead,
                                      nsHttpResponseHead *responseHead,
-                                     PRBool *reset)
+                                     bool *reset)
 {
     LOG(("nsHttpConnection::OnHeadersAvailable [this=%p trans=%p response-head=%p]\n",
         this, trans, responseHead));
@@ -479,7 +479,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     return NS_OK;
 }
 
-PRBool
+bool
 nsHttpConnection::IsReused()
 {
     if (mIsReused)
@@ -688,7 +688,7 @@ nsHttpConnection::OnSocketWritable()
 
     nsresult rv;
     PRUint32 n;
-    PRBool again = PR_TRUE;
+    bool again = true;
 
     do {
         // if we're doing an SSL proxy connect, then we need to bypass calling
@@ -794,7 +794,7 @@ nsHttpConnection::OnSocketReadable()
 
     nsresult rv;
     PRUint32 n;
-    PRBool again = PR_TRUE;
+    bool again = true;
 
     do {
         rv = mTransaction->WriteSegments(this, nsIOService::gDefaultSegmentSize, &n);

@@ -74,7 +74,7 @@ nsXMLPrettyPrinter::~nsXMLPrettyPrinter()
 
 nsresult
 nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
-                                PRBool* aDidPrettyPrint)
+                                bool* aDidPrettyPrint)
 {
     *aDidPrettyPrint = PR_FALSE;
     
@@ -116,7 +116,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     }
 
     // check the pref
-    if (!Preferences::GetBool("layout.xml.prettyprint", PR_TRUE)) {
+    if (!Preferences::GetBool("layout.xml.prettyprint", true)) {
         return NS_OK;
     }
 

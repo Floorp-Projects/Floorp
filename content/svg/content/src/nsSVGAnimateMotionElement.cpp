@@ -80,7 +80,7 @@ nsSVGAnimateMotionElement::AnimationFunction()
   return mAnimationFunction;
 }
 
-PRBool
+bool
 nsSVGAnimateMotionElement::GetTargetAttributeName(PRInt32 *aNamespaceID,
                                                   nsIAtom **aLocalName) const
 {

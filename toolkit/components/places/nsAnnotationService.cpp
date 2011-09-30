@@ -228,7 +228,7 @@ nsAnnotationService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
 nsresult // static
 nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
 {
-  PRBool exists;
+  bool exists;
   nsresult rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_annos"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!exists) {
@@ -1272,7 +1272,7 @@ nsAnnotationService::GetPagesWithAnnotationCOMArray(const nsACString& aName,
   nsresult rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasMore = PR_FALSE;
+  bool hasMore = false;
   while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasMore)) &&
          hasMore) {
     nsCAutoString uristring;
@@ -1286,7 +1286,7 @@ nsAnnotationService::GetPagesWithAnnotationCOMArray(const nsACString& aName,
     if (NS_FAILED(rv))
       continue;
 
-    PRBool added = _results->AppendObject(uri);
+    bool added = _results->AppendObject(uri);
     NS_ENSURE_TRUE(added, NS_ERROR_OUT_OF_MEMORY);
   }
 
@@ -1335,7 +1335,7 @@ nsAnnotationService::GetItemsWithAnnotationTArray(const nsACString& aName,
   nsresult rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasMore = PR_FALSE;
+  bool hasMore = false;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) &&
          hasMore) {
     if (!_results->AppendElement(stmt->AsInt64(0)))
@@ -1408,7 +1408,7 @@ nsAnnotationService::GetAnnotationNamesTArray(nsIURI* aURI,
     rv = URIBinder::Bind(statement, NS_LITERAL_CSTRING("page_url"), aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasResult = PR_FALSE;
+  bool hasResult = false;
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasResult)) &&
          hasResult) {
     nsCAutoString name;
@@ -1467,7 +1467,7 @@ nsAnnotationService::GetItemAnnotationNames(PRInt64 aItemId,
 NS_IMETHODIMP
 nsAnnotationService::PageHasAnnotation(nsIURI* aURI,
                                        const nsACString& aName,
-                                       PRBool* _retval)
+                                       bool* _retval)
 {
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -1482,7 +1482,7 @@ nsAnnotationService::PageHasAnnotation(nsIURI* aURI,
 NS_IMETHODIMP
 nsAnnotationService::ItemHasAnnotation(PRInt64 aItemId,
                                        const nsACString& aName,
-                                       PRBool* _retval)
+                                       bool* _retval)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -1613,7 +1613,7 @@ nsAnnotationService::RemoveItemAnnotations(PRInt64 aItemId)
 NS_IMETHODIMP
 nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
                                          nsIURI* aDestURI,
-                                         PRBool aOverwriteDest)
+                                         bool aOverwriteDest)
 {
   NS_ENSURE_ARG(aSourceURI);
   NS_ENSURE_ARG(aDestURI);
@@ -1655,7 +1655,7 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
     getter_AddRefs(copyStmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasResult;
+  bool hasResult;
   while (NS_SUCCEEDED(sourceStmt->ExecuteStep(&hasResult)) && hasResult) {
     PRInt64 sourcePlaceId = sourceStmt->AsInt64(0);
     PRInt64 annoNameID = sourceStmt->AsInt64(1);
@@ -1698,7 +1698,7 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
 NS_IMETHODIMP
 nsAnnotationService::CopyItemAnnotations(PRInt64 aSourceItemId,
                                          PRInt64 aDestItemId,
-                                         PRBool aOverwriteDest)
+                                         bool aOverwriteDest)
 {
   NS_ENSURE_ARG_MIN(aSourceItemId, 1);
   NS_ENSURE_ARG_MIN(aDestItemId, 1);
@@ -1735,7 +1735,7 @@ nsAnnotationService::CopyItemAnnotations(PRInt64 aSourceItemId,
     getter_AddRefs(copyStmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasResult;
+  bool hasResult;
   while (NS_SUCCEEDED(sourceStmt->ExecuteStep(&hasResult)) && hasResult) {
     PRInt64 annoNameID = sourceStmt->AsInt64(0);
     nsCAutoString annoName;
@@ -1828,7 +1828,7 @@ nsresult
 nsAnnotationService::HasAnnotationInternal(nsIURI* aURI,
                                            PRInt64 aItemId,
                                            const nsACString& aName,
-                                           PRBool* _hasAnno)
+                                           bool* _hasAnno)
 {
   bool isItemAnnotation = (aItemId > 0);
   mozIStorageStatement* stmt = isItemAnnotation ?
@@ -1844,7 +1844,7 @@ nsAnnotationService::HasAnnotationInternal(nsIURI* aURI,
     rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!hasResult) {
@@ -1895,7 +1895,7 @@ nsAnnotationService::StartGetAnnotation(nsIURI* aURI,
   rv = (*_statement)->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasResult = PR_FALSE;
+  bool hasResult = false;
   rv = (*_statement)->ExecuteStep(&hasResult);
   if (NS_FAILED(rv) || !hasResult)
     return NS_ERROR_NOT_AVAILABLE;
@@ -1908,7 +1908,7 @@ nsAnnotationService::StartGetAnnotation(nsIURI* aURI,
 }
 
 
-PRBool
+bool
 nsAnnotationService::InPrivateBrowsingMode() const
 {
   nsNavHistory* history = nsNavHistory::GetHistoryService();
@@ -1963,7 +1963,7 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
     rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!hasResult) {

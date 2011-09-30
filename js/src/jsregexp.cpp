@@ -522,11 +522,6 @@ Class js::RegExpClass = {
 JSBool
 js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
 {
-    if (!obj->isRegExp()) {
-        ReportIncompatibleMethod(cx, vp, &RegExpClass);
-        return false;
-    }
-
     RegExp *re = RegExp::extractFrom(obj);
     if (!re) {
         *vp = StringValue(cx->runtime->emptyString);
@@ -564,10 +559,14 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
 static JSBool
 regexp_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &RegExpClass, &ok);
     if (!obj)
-        return false;
-    return js_regexp_toString(cx, obj, vp);
+        return ok;
+
+    return js_regexp_toString(cx, obj, &args.rval());
 }
 
 /*
@@ -637,14 +636,13 @@ enum ExecType { RegExpExec, RegExpTest };
 static JSBool
 ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /* Step 1. */
-    JSObject *obj = ToObject(cx, &vp[1]);
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &RegExpClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isRegExp()) {
-        ReportIncompatibleMethod(cx, vp, &RegExpClass);
-        return false;
-    }
+        return ok;
 
     RegExp *re = RegExp::extractFrom(obj);
     if (!re)
@@ -658,7 +656,7 @@ ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
     RegExpStatics *res = cx->regExpStatics();
 
     /* Step 2. */
-    JSString *input = js_ValueToString(cx, argc > 0 ?  vp[2] : UndefinedValue());    
+    JSString *input = js_ValueToString(cx, args.length() > 0 ?  args[0] : UndefinedValue());    
     if (!input)
         return false;
     
@@ -680,18 +678,18 @@ ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
     /* Step 9a. */
     if (i < 0 || i > length) {
         obj->zeroRegExpLastIndex();
-        *vp = NullValue();
+        args.rval() = NullValue();
         return true;
     }
 
     /* Steps 8-21. */
     size_t lastIndexInt(i);
-    if (!re->execute(cx, res, input, &lastIndexInt, execType == RegExpTest, vp))
+    if (!re->execute(cx, res, input, &lastIndexInt, execType == RegExpTest, &args.rval()))
         return false;
 
     /* Step 11 (with sticky extension). */
-    if (re->global() || (!vp->isNull() && re->sticky())) {
-        if (vp->isNull())
+    if (re->global() || (!args.rval().isNull() && re->sticky())) {
+        if (args.rval().isNull())
             obj->zeroRegExpLastIndex();
         else
             obj->setRegExpLastIndex(lastIndexInt);
@@ -788,15 +786,14 @@ CompileRegExpAndSwap(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Valu
 static JSBool
 regexp_compile(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj)
-        return false;
-    if (!obj->isRegExp()) {
-        ReportIncompatibleMethod(cx, vp, &RegExpClass);
-        return false;
-    }
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    return CompileRegExpAndSwap(cx, obj, argc, JS_ARGV(cx, vp), &JS_RVAL(cx, vp));
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &RegExpClass, &ok);
+    if (!obj)
+        return ok;
+
+    return CompileRegExpAndSwap(cx, obj, args.length(), args.array(), &args.rval());
 }
 
 static JSBool

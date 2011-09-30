@@ -46,7 +46,7 @@
 
 class nsGB18030Prober: public nsCharSetProber {
 public:
-  nsGB18030Prober(PRBool aIsPreferredLanguage)
+  nsGB18030Prober(bool aIsPreferredLanguage)
     :mIsPreferredLanguage(aIsPreferredLanguage)
   {mCodingSM = new nsCodingStateMachine(&GB18030SMModel);
     Reset();}
@@ -67,7 +67,7 @@ protected:
   //GB2312ContextAnalysis mContextAnalyser;
   GB2312DistributionAnalysis mDistributionAnalyser;
   char mLastChar[2];
-  PRBool mIsPreferredLanguage;
+  bool mIsPreferredLanguage;
 
 };
 

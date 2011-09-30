@@ -63,7 +63,7 @@ public:
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
                                      nsIStreamListener **aDocListener,
-                                     PRBool aReset = PR_TRUE,
+                                     bool aReset = true,
                                      nsIContentSink* aSink = nsnull);
 
   virtual void EndLoad();
@@ -83,9 +83,9 @@ protected:
   // false in EndLoad or if ResetToURI() is called.  In the latter case our
   // mChannel is also cancelled.  Note that if this member is true, mChannel
   // cannot be null.
-  PRPackedBool mChannelIsPending;
-  PRPackedBool mAsync;
-  PRPackedBool mLoopingForSyncLoad;
+  bool mChannelIsPending;
+  bool mAsync;
+  bool mLoopingForSyncLoad;
 };
 
 

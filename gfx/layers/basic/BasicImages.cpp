@@ -47,8 +47,7 @@
 
 #include "cairo.h"
 
-#include "yuv_convert.h"
-#include "ycbcr_to_rgb565.h"
+#include "gfxUtils.h"
 
 #include "gfxPlatform.h"
 
@@ -120,7 +119,7 @@ public:
     {}
 
   virtual void SetData(const Data& aData);
-  virtual void SetDelayedConversion(PRBool aDelayed) { mDelayedConversion = aDelayed; }
+  virtual void SetDelayedConversion(bool aDelayed) { mDelayedConversion = aDelayed; }
 
   virtual already_AddRefed<gfxASurface> GetAsSurface();
 
@@ -139,7 +138,7 @@ protected:
   gfxImageFormat                       mOffscreenFormat;
   Data                                 mData;
   PRUint32                             mBufferSize;
-  PRPackedBool                         mDelayedConversion;
+  bool                                 mDelayedConversion;
 };
 
 void
@@ -156,54 +155,10 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     return;
   }
   
-  gfx::YUVType type = 
-    gfx::TypeFromSize(aData.mYSize.width,
-                      aData.mYSize.height,
-                      aData.mCbCrSize.width,
-                      aData.mCbCrSize.height);
-
   gfxASurface::gfxImageFormat format = GetOffscreenFormat();
 
-  // 'prescale' is true if the scaling is to be done as part of the
-  // YCbCr to RGB conversion rather than on the RGB data when rendered.
-  PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0 &&
-                    mScaleHint != aData.mPicSize;
-  if (format == gfxASurface::ImageFormatRGB16_565) {
-#if defined(HAVE_YCBCR_TO_RGB565)
-    if (prescale &&
-        !gfx::IsScaleYCbCrToRGB565Fast(aData.mPicX,
-                                       aData.mPicY,
-                                       aData.mPicSize.width,
-                                       aData.mPicSize.height,
-                                       mScaleHint.width,
-                                       mScaleHint.height,
-                                       type,
-                                       gfx::FILTER_BILINEAR) &&
-        gfx::IsConvertYCbCrToRGB565Fast(aData.mPicX,
-                                        aData.mPicY,
-                                        aData.mPicSize.width,
-                                        aData.mPicSize.height,
-                                        type)) {
-      prescale = PR_FALSE;
-    }
-#else
-    // yuv2rgb16 function not available
-    format = gfxASurface::ImageFormatRGB24;
-#endif
-  }
-  else if (format != gfxASurface::ImageFormatRGB24) {
-    // No other formats are currently supported.
-    format = gfxASurface::ImageFormatRGB24;
-  }
-  if (format == gfxASurface::ImageFormatRGB24) {
-    /* ScaleYCbCrToRGB32 does not support a picture offset, nor 4:4:4 data.
-       See bugs 639415 and 640073. */
-    if (aData.mPicX != 0 || aData.mPicY != 0 || type == gfx::YV24)
-      prescale = PR_FALSE;
-  }
-
-  gfxIntSize size(prescale ? mScaleHint.width : aData.mPicSize.width,
-                  prescale ? mScaleHint.height : aData.mPicSize.height);
+  gfxIntSize size(mScaleHint);
+  gfxUtils::GetYCbCrToRGBDestFormatAndSize(aData, format, size);
 
   mStride = gfxASurface::FormatStrideForWidth(format, size.width);
   mBuffer = AllocateBuffer(size.height * mStride);
@@ -212,71 +167,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     return;
   }
 
-  // Convert from YCbCr to RGB now, scaling the image if needed.
-  if (size != aData.mPicSize) {
-#if defined(HAVE_YCBCR_TO_RGB565)
-    if (format == gfxASurface::ImageFormatRGB16_565) {
-      gfx::ScaleYCbCrToRGB565(aData.mYChannel,
-                              aData.mCbChannel,
-                              aData.mCrChannel,
-                              mBuffer,
-                              aData.mPicX,
-                              aData.mPicY,
-                              aData.mPicSize.width,
-                              aData.mPicSize.height,
-                              size.width,
-                              size.height,
-                              aData.mYStride,
-                              aData.mCbCrStride,
-                              mStride,
-                              type,
-                              gfx::FILTER_BILINEAR);
-    } else
-#endif
-      gfx::ScaleYCbCrToRGB32(aData.mYChannel,
-                             aData.mCbChannel,
-                             aData.mCrChannel,
-                             mBuffer,
-                             aData.mPicSize.width,
-                             aData.mPicSize.height,
-                             size.width,
-                             size.height,
-                             aData.mYStride,
-                             aData.mCbCrStride,
-                             mStride,
-                             type,
-                             gfx::ROTATE_0,
-                             gfx::FILTER_BILINEAR);
-  } else { // no prescale
-#if defined(HAVE_YCBCR_TO_RGB565)
-    if (format == gfxASurface::ImageFormatRGB16_565) {
-      gfx::ConvertYCbCrToRGB565(aData.mYChannel,
-                                aData.mCbChannel,
-                                aData.mCrChannel,
-                                mBuffer,
-                                aData.mPicX,
-                                aData.mPicY,
-                                aData.mPicSize.width,
-                                aData.mPicSize.height,
-                                aData.mYStride,
-                                aData.mCbCrStride,
-                                mStride,
-                                type);
-    } else // format != gfxASurface::ImageFormatRGB16_565
-#endif
-      gfx::ConvertYCbCrToRGB32(aData.mYChannel,
-                               aData.mCbChannel,
-                               aData.mCrChannel,
-                               mBuffer,
-                               aData.mPicX,
-                               aData.mPicY,
-                               aData.mPicSize.width,
-                               aData.mPicSize.height,
-                               aData.mYStride,
-                               aData.mCbCrStride,
-                               mStride,
-                               type);
-  }
+  gfxUtils::ConvertYCbCrToRGB(aData, format, size, mBuffer, mStride);
   SetOffscreenFormat(format);
   mSize = size;
 }
@@ -346,12 +237,12 @@ public:
   {}
   virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
                                               PRUint32 aNumFormats);
-  virtual void SetDelayedConversion(PRBool aDelayed) { mDelayed = aDelayed; }
+  virtual void SetDelayedConversion(bool aDelayed) { mDelayed = aDelayed; }
   virtual void SetCurrentImage(Image* aImage);
   virtual already_AddRefed<Image> GetCurrentImage();
   virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSize);
   virtual gfxIntSize GetCurrentSize();
-  virtual PRBool SetLayerManager(LayerManager *aManager);
+  virtual bool SetLayerManager(LayerManager *aManager);
   virtual void SetScaleHint(const gfxIntSize& aScaleHint);
   void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
   virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_BASIC; }
@@ -360,13 +251,13 @@ protected:
   nsRefPtr<Image> mImage;
   gfxIntSize mScaleHint;
   gfxImageFormat mOffscreenFormat;
-  PRPackedBool mDelayed;
+  bool mDelayed;
 };
 
 /**
  * Returns true if aFormat is in the given format array.
  */
-static PRBool
+static bool
 FormatInList(const Image::Format* aFormats, PRUint32 aNumFormats,
              Image::Format aFormat)
 {
@@ -443,7 +334,7 @@ void BasicImageContainer::SetScaleHint(const gfxIntSize& aScaleHint)
   mScaleHint = aScaleHint;
 }
 
-PRBool
+bool
 BasicImageContainer::SetLayerManager(LayerManager *aManager)
 {
   if (aManager &&

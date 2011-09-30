@@ -125,7 +125,7 @@ public:
   // different form, the method returns true as well. The caller can test the
   // output parameter aFlags to know exactly under which form the operator was
   // found in the Operator Dictionary.
-  static PRBool
+  static bool
   LookupOperator(const nsString&       aOperator,
                  const nsOperatorFlags aForm,
                  nsOperatorFlags*      aFlags,
@@ -146,7 +146,7 @@ public:
 
   // IsMutableOperator:
   // Return true if the operator exists and is stretchy or largeop
-  static PRBool
+  static bool
   IsMutableOperator(const nsString& aOperator);
 
   // Helper function used by the nsMathMLChar class.

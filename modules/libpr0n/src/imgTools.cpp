@@ -144,7 +144,7 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
                                           nsIInputStream **aStream)
 {
   nsresult rv;
-  PRBool doScaling = PR_TRUE;
+  bool doScaling = true;
   PRUint8 *bitmapData;
   PRUint32 bitmapDataLength, strideSize;
 

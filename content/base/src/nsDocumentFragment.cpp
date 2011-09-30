@@ -74,23 +74,23 @@ public:
 
   // nsIContent
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
+                   const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify)
+                           bool aNotify)
   {
     return NS_OK;
   }
-  virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+  virtual bool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                          nsAString& aResult) const
   {
     return PR_FALSE;
   }
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
-                             PRBool aNotify)
+                             bool aNotify)
   {
     return NS_OK;
   }
@@ -99,7 +99,7 @@ public:
     return nsnull;
   }
 
-  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(PRUint32 aFlags) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 
@@ -138,7 +138,7 @@ nsDocumentFragment::nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
   ClearIsElement();
 }
 
-PRBool
+bool
 nsDocumentFragment::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eDOCUMENT_FRAGMENT));

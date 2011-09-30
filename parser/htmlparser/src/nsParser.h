@@ -201,7 +201,7 @@ class nsParser : public nsIParser,
     NS_IMETHOD Parse(const nsAString& aSourceBuffer,
                      void* aKey,
                      const nsACString& aContentType,
-                     PRBool aLastCall,
+                     bool aLastCall,
                      nsDTDMode aMode = eDTDMode_autodetect);
 
     NS_IMETHOD_(void *) GetRootContextKey();
@@ -231,7 +231,7 @@ class nsParser : public nsIParser,
      *  @update  vidur 4/12/99
      *  @return  current state
      */
-    NS_IMETHOD_(PRBool) IsParserEnabled();
+    NS_IMETHOD_(bool) IsParserEnabled();
 
     /**
      * Call this to query whether the parser thinks it's done with parsing.
@@ -239,7 +239,7 @@ class nsParser : public nsIParser,
      *  @update  rickg 5/12/01
      *  @return  complete state
      */
-    NS_IMETHOD_(PRBool) IsComplete();
+    NS_IMETHOD_(bool) IsComplete();
 
     /**
      *  This rather arcane method (hack) is used as a signal between the
@@ -258,9 +258,9 @@ class nsParser : public nsIParser,
      * @update	gess5/11/98
      * @return  TRUE if all went well, otherwise FALSE
      */
-    virtual nsresult ResumeParse(PRBool allowIteration = PR_TRUE, 
-                                 PRBool aIsFinalChunk = PR_FALSE,
-                                 PRBool aCanInterrupt = PR_TRUE);
+    virtual nsresult ResumeParse(bool allowIteration = true, 
+                                 bool aIsFinalChunk = false,
+                                 bool aCanInterrupt = true);
 
      //*********************************************
       // These methods are callback methods used by
@@ -303,7 +303,7 @@ class nsParser : public nsIParser,
      * Detects the existence of a META tag with charset information in 
      * the given buffer.
      */
-    PRBool DetectMetaTag(const char* aBytes, 
+    bool DetectMetaTag(const char* aBytes, 
                          PRInt32 aLen, 
                          nsCString& oCharset, 
                          PRInt32& oCharsetSource);
@@ -323,12 +323,12 @@ class nsParser : public nsIParser,
      *  @return PR_TRUE if parser can be interrupted, PR_FALSE if it can not be interrupted.
      *  @update  kmcclusk 5/18/98
      */
-    virtual PRBool CanInterrupt();
+    virtual bool CanInterrupt();
 
     /**
      * Return true.
      */
-    virtual PRBool IsInsertionPointDefined();
+    virtual bool IsInsertionPointDefined();
 
     /**
      * No-op.
@@ -348,14 +348,14 @@ class nsParser : public nsIParser,
     /**
      * Always false.
      */
-    virtual PRBool IsScriptCreated();
+    virtual bool IsScriptCreated();
 
     /**  
      *  Set to parser state to indicate whether parsing tokens can be interrupted
      *  @param aCanInterrupt PR_TRUE if parser can be interrupted, PR_FALSE if it can not be interrupted.
      *  @update  kmcclusk 5/18/98
      */
-    void SetCanInterrupt(PRBool aCanInterrupt);
+    void SetCanInterrupt(bool aCanInterrupt);
 
     /**
      * This is called when the final chunk has been
@@ -390,17 +390,17 @@ class nsParser : public nsIParser,
       return sSpeculativeThreadPool;
     }
 
-    PRBool IsScriptExecuting() {
+    bool IsScriptExecuting() {
       return mSink && mSink->IsScriptExecuting();
     }
 
-    PRBool IsOkToProcessNetworkData() {
+    bool IsOkToProcessNetworkData() {
       return !IsScriptExecuting() && !mProcessingNetworkData;
     }
 
  protected:
 
-    void Initialize(PRBool aConstructor = PR_FALSE);
+    void Initialize(bool aConstructor = false);
     void Cleanup();
 
     /**
@@ -436,7 +436,7 @@ private:
      *  @param   
      *  @return  TRUE if it's ok to proceed
      */
-    PRBool WillTokenize(PRBool aIsFinalChunk = PR_FALSE);
+    bool WillTokenize(bool aIsFinalChunk = false);
 
    
     /**
@@ -447,7 +447,7 @@ private:
      *  @update  gess 3/25/98
      *  @return  error code 
      */
-    nsresult Tokenize(PRBool aIsFinalChunk = PR_FALSE);
+    nsresult Tokenize(bool aIsFinalChunk = false);
 
     /**
      *  This is the tail-end of the code sandwich for the
@@ -458,7 +458,7 @@ private:
      *  @param   
      *  @return  TRUE if all went well
      */
-    PRBool DidTokenize(PRBool aIsFinalChunk = PR_FALSE);
+    bool DidTokenize(bool aIsFinalChunk = false);
 
 protected:
     //*********************************************
@@ -487,7 +487,7 @@ protected:
     nsCString           mCharset;
     nsCString           mCommandStr;
 
-    PRBool              mProcessingNetworkData;
+    bool                mProcessingNetworkData;
 
     static nsICharsetAlias*            sCharsetAliasService;
     static nsICharsetConverterManager* sCharsetConverterManager;

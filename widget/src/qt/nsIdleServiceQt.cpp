@@ -47,7 +47,7 @@
 #include "prlink.h"
 
 #if !defined(MOZ_PLATFORM_MAEMO) && defined(MOZ_X11)
-typedef PRBool (*_XScreenSaverQueryExtension_fn)(Display* dpy, int* event_base,
+typedef bool (*_XScreenSaverQueryExtension_fn)(Display* dpy, int* event_base,
                                                  int* error_base);
 
 typedef XScreenSaverInfo* (*_XScreenSaverAllocInfo_fn)(void);
@@ -60,7 +60,7 @@ static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nsnull;
 static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nsnull;
 #endif
 
-static PRBool sInitialized = PR_FALSE;
+static bool sInitialized = false;
 
 NS_IMPL_ISUPPORTS2(nsIdleServiceQt, nsIIdleService, nsIdleService)
 

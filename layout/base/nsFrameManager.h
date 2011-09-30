@@ -125,10 +125,7 @@ public:
   // Functions for manipulating the frame model
   NS_HIDDEN_(nsresult) AppendFrames(nsIFrame*       aParentFrame,
                                     ChildListID     aListID,
-                                    nsFrameList&    aFrameList)
-  {
-    return aParentFrame->AppendFrames(aListID, aFrameList);
-  }
+                                    nsFrameList&    aFrameList);
 
   NS_HIDDEN_(nsresult) InsertFrames(nsIFrame*       aParentFrame,
                                     ChildListID     aListID,
@@ -164,7 +161,7 @@ public:
                           nsStyleChangeList* aChangeList,
                           nsChangeHint aMinChange,
                           RestyleTracker& aRestyleTracker,
-                          PRBool aRestyleDescendants);
+                          bool aRestyleDescendants);
 
   /*
    * Capture/restore frame state for the frame subtree rooted at aFrame.

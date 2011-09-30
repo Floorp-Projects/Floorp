@@ -79,7 +79,7 @@ public:
 
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
-                              PRBool aDoSetAttr);
+                              bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue);
   void GetAnimValueString(nsAString& aValue);
 
@@ -92,7 +92,7 @@ public:
 
   PRUint8 GetCtxType() const { return mCtxType; }
   PRUint8 GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
-  PRBool IsPercentage() const
+  bool IsPercentage() const
     { return mSpecifiedUnitType == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE; }
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
@@ -107,7 +107,7 @@ public:
   // explicitly set by markup or a DOM call), PR_FALSE otherwise.
   // If this returns PR_FALSE, the animated value is still valid, that is,
   // useable, and represents the default base value of the attribute.
-  PRBool IsExplicitlySet() const
+  bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
   
   nsresult ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,
@@ -124,8 +124,8 @@ private:
   PRUint8 mSpecifiedUnitType;
   PRUint8 mAttrEnum; // element specified tracking for attribute
   PRUint8 mCtxType; // X, Y or Unspecified
-  PRPackedBool mIsAnimated:1;
-  PRPackedBool mIsBaseSet:1;
+  bool mIsAnimated:1;
+  bool mIsBaseSet:1;
   
   static float GetMMPerPixel() { return MM_PER_INCH_FLOAT / 96; }
   float GetAxisLength(nsIFrame *aNonSVGFrame) const;
@@ -308,7 +308,7 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue &aValue,
-                                     PRBool& aPreventCachingOfSandwich) const;
+                                     bool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

@@ -64,8 +64,8 @@ public:
   nsDocShellEditorData(nsIDocShell* inOwningDocShell);
   ~nsDocShellEditorData();
 
-  nsresult MakeEditable(PRBool inWaitForUriLoad);
-  PRBool GetEditable();
+  nsresult MakeEditable(bool inWaitForUriLoad);
+  bool GetEditable();
   nsresult CreateEditor();
   nsresult GetEditingSession(nsIEditingSession **outEditingSession);
   nsresult GetEditor(nsIEditor **outEditor);
@@ -73,7 +73,7 @@ public:
   void TearDownEditor();
   nsresult DetachFromWindow();
   nsresult ReattachToWindow(nsIDocShell *aDocShell);
-  PRBool WaitingForLoad() const { return mMakeEditable; }
+  bool WaitingForLoad() const { return mMakeEditable; }
 
 protected:
 
@@ -86,17 +86,17 @@ protected:
   nsCOMPtr<nsIEditingSession> mEditingSession;
 
   // Indicates whether to make an editor after a url load.
-  PRBool mMakeEditable;
+  bool mMakeEditable;
   
   // If this frame is editable, store editor here. Editor is owned here.
   nsCOMPtr<nsIEditor> mEditor;
 
   // Denotes if the editor is detached from its window. The editor is detached
   // while it's stored in the session history bfcache.
-  PRBool mIsDetached;
+  bool mIsDetached;
 
   // Backup for mMakeEditable while the editor is detached.
-  PRBool mDetachedMakeEditable;
+  bool mDetachedMakeEditable;
 
   // Backup for the corresponding nsIHTMLDocument's  editing state while
   // the editor is detached.

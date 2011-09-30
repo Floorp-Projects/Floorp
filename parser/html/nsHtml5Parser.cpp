@@ -201,13 +201,13 @@ nsHtml5Parser::UnblockParser()
   mBlocked = PR_FALSE;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHtml5Parser::IsParserEnabled()
 {
   return !mBlocked;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHtml5Parser::IsComplete()
 {
   return mExecutor->IsComplete();
@@ -238,7 +238,7 @@ NS_IMETHODIMP
 nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
                      void* aKey,
                      const nsACString& aContentType, // ignored
-                     PRBool aLastCall,
+                     bool aLastCall,
                      nsDTDMode aMode) // ignored
 {
   NS_PRECONDITION(!mExecutor->IsFragmentMode(),
@@ -358,7 +358,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     mLastWasCR = PR_FALSE;
     if (buffer->hasMore()) {
       PRInt32 lineNumberSave;
-      PRBool inRootContext = (!mStreamParser && (aKey == mRootContextKey));
+      bool inRootContext = (!mStreamParser && (aKey == mRootContextKey));
       if (inRootContext) {
         mTokenizer->setLineNumber(mRootContextLineNumber);
       } else {
@@ -474,8 +474,8 @@ nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
                                   nsIContent* aTargetNode,
                                   nsIAtom* aContextLocalName,
                                   PRInt32 aContextNamespace,
-                                  PRBool aQuirks,
-                                  PRBool aPreventScriptExecution)
+                                  bool aQuirks,
+                                  bool aPreventScriptExecution)
 {
   nsIDocument* doc = aTargetNode->GetOwnerDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_AVAILABLE);
@@ -513,7 +513,7 @@ nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
   mTokenizer->start();
   mExecutor->Start(); // Don't call WillBuildModel in fragment case
   if (!aSourceBuffer.IsEmpty()) {
-    PRBool lastWasCR = PR_FALSE;
+    bool lastWasCR = false;
     nsHtml5UTF16Buffer buffer(aSourceBuffer.Length());
     memcpy(buffer.getBuffer(),
            aSourceBuffer.BeginReading(),
@@ -580,7 +580,7 @@ nsHtml5Parser::Reset()
   mLastBuffer = mFirstBuffer;
 }
 
-PRBool
+bool
 nsHtml5Parser::CanInterrupt()
 {
   // nsContentSink needs this to let nsContentSink::DidProcessATokenImpl
@@ -588,7 +588,7 @@ nsHtml5Parser::CanInterrupt()
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsHtml5Parser::IsInsertionPointDefined()
 {
   return !mExecutor->IsFlushing() &&
@@ -614,7 +614,7 @@ nsHtml5Parser::MarkAsNotScriptCreated()
   mStreamParser = new nsHtml5StreamParser(mExecutor, this);
 }
 
-PRBool
+bool
 nsHtml5Parser::IsScriptCreated()
 {
   return !mStreamParser;
@@ -691,7 +691,7 @@ nsHtml5Parser::ParseUntilBlocked()
     mFirstBuffer->adjust(mLastWasCR);
     mLastWasCR = PR_FALSE;
     if (mFirstBuffer->hasMore()) {
-      PRBool inRootContext = (!mStreamParser &&
+      bool inRootContext = (!mStreamParser &&
                               (mFirstBuffer->key == mRootContextKey));
       if (inRootContext) {
         mTokenizer->setLineNumber(mRootContextLineNumber);
@@ -722,7 +722,7 @@ nsHtml5Parser::Initialize(nsIDocument* aDoc,
 }
 
 void
-nsHtml5Parser::StartTokenizer(PRBool aScriptingEnabled) {
+nsHtml5Parser::StartTokenizer(bool aScriptingEnabled) {
   mTreeBuilder->setScriptingEnabled(aScriptingEnabled);
   mTokenizer->start();
 }

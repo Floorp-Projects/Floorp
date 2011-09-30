@@ -109,7 +109,7 @@ FilterExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
     }
 }
 
-PRBool
+bool
 FilterExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     return expr->isSensitiveTo(aContext) ||

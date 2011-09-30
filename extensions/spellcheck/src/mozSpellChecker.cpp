@@ -83,7 +83,7 @@ mozSpellChecker::Init()
 } 
 
 NS_IMETHODIMP 
-mozSpellChecker::SetDocument(nsITextServicesDocument *aDoc, PRBool aFromStartofDoc)
+mozSpellChecker::SetDocument(nsITextServicesDocument *aDoc, bool aFromStartofDoc)
 {
   mTsDoc = aDoc;
   mFromStart = aFromStartofDoc;
@@ -101,7 +101,7 @@ mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSugge
   PRInt32 begin,end;
   nsresult result;
   result = SetupDoc(&selOffset);
-  PRBool isMisspelled,done;
+  bool isMisspelled,done;
   if (NS_FAILED(result))
     return result;
 
@@ -136,10 +136,10 @@ mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSugge
 }
 
 NS_IMETHODIMP 
-mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsTArray<nsString> *aSuggestions)
+mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray<nsString> *aSuggestions)
 {
   nsresult result;
-  PRBool correct;
+  bool correct;
   if(!mSpellCheckingEngine)
     return NS_ERROR_NULL_POINTER;
 
@@ -166,7 +166,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsTArr
 }
 
 NS_IMETHODIMP 
-mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, PRBool aAllOccurrences)
+mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, bool aAllOccurrences)
 {
   if(!mConverter)
     return NS_ERROR_NULL_POINTER;
@@ -177,7 +177,7 @@ mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, P
     PRInt32 selOffset;
     PRInt32 startBlock,currentBlock,currOffset;
     PRInt32 begin,end;
-    PRBool done;
+    bool done;
     nsresult result;
     nsAutoString str;
 
@@ -296,7 +296,7 @@ mozSpellChecker::GetPersonalDictionary(nsTArray<nsString> *aWordList)
   nsCOMPtr<nsIStringEnumerator> words;
   mPersonalDictionary->GetWordList(getter_AddRefs(words));
   
-  PRBool hasMore;
+  bool hasMore;
   nsAutoString word;
   while (NS_SUCCEEDED(words->HasMore(&hasMore)) && hasMore) {
     words->GetNext(word);
@@ -487,7 +487,7 @@ nsresult
 mozSpellChecker::GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *outBlockIndex)
 {
   PRInt32  blockIndex = 0;
-  PRBool   isDone = PR_FALSE;
+  bool     isDone = false;
   nsresult result = NS_OK;
 
   do
@@ -510,7 +510,7 @@ nsresult
 mozSpellChecker::GetEngineList(nsCOMArray<mozISpellCheckingEngine>* aSpellCheckingEngines)
 {
   nsresult rv;
-  PRBool hasMoreEngines;
+  bool hasMoreEngines;
 
   nsCOMPtr<nsICategoryManager> catMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
   if (!catMgr)

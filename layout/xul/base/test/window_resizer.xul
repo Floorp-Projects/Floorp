@@ -2,7 +2,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     screenX="200" screenY="200" width="300" height="300"
 	onload="setTimeout(doTest, 0)">
-<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 <script><![CDATA[
 var is = window.opener.SimpleTest.is;
 
@@ -46,22 +46,14 @@ function doTest() {
 
         synthesizeMouse(root, offsetX, offsetY, { type:"mousedown" });
         synthesizeMouse(root, offsetX + mouseX*scale, offsetY + mouseY*scale, { type:"mousemove" });
-        if (window instanceof Components.interfaces.nsIDOMChromeWindow) {
-          is(window.screenX*screenScale, newExpectX,
-             "Bad x for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
-          is(window.screenY*screenScale, newExpectY,
-             "Bad y for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
-          is(window.outerWidth, newExpectXMost - newExpectX,
-             "Bad width for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
-          is(window.outerHeight, newExpectYMost - newExpectY,
-             "Bad height for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
-        }
-        else {
-          is(window.screenX, oldScreenX, "window not moved for non-chrome window screenX");
-          is(window.screenY, oldScreenY, "window not moved for non-chrome window screenY");
-          is(window.outerWidth, oldWidth, "window not moved for non-chrome window outerWidth");
-          is(window.outerHeight, oldHeight, "window not moved for non-chrome window outerHeight");
-        }
+        is(window.screenX*screenScale, newExpectX,
+           "Bad x for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
+        is(window.screenY*screenScale, newExpectY,
+           "Bad y for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
+        is(window.outerWidth, newExpectXMost - newExpectX,
+           "Bad width for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
+        is(window.outerHeight, newExpectYMost - newExpectY,
+           "Bad height for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
 
         // move it back before we release! Adjust for any window movement
         synthesizeMouse(root, offsetX - (newExpectX - expectX),
@@ -98,7 +90,7 @@ function doTest() {
   });
 
   window.close();
-  window.opener.nextResizerTest();
+  window.opener.lastResizerTest();
 }
 ]]></script>
 	<hbox id="container" flex="1">

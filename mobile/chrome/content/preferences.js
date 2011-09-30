@@ -37,7 +37,6 @@
 
 var PreferencesView = {
   _currentLocale: null,
-  _languages: null,
   _msg: null,
 
   _messageActions: function pv__messageActions(aData) {
@@ -93,11 +92,10 @@ var PreferencesView = {
   },
 
   delayedInit: function pv__delayedInit() {
-    if (this._languages)
+    if (this._msg)
       return;
 
     this._msg = document.getElementById("prefs-messages");
-    this._languages = document.getElementById("prefs-languages");
     this._loadLocales();
 
     this._loadHomePage();
@@ -120,12 +118,17 @@ var PreferencesView = {
     let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
     chrome.QueryInterface(Ci.nsIToolkitChromeRegistry);
 
-    let selectedLocale = Services.prefs.getCharPref("general.useragent.locale");
+    let selectedLocale = chrome.getSelectedLocale("browser");
+
+    // the chrome locale may not have updated yet if the user is installing a new
+    // locale. if the pref has a user set value, use it instead
+    if (Services.prefs.prefHasUserValue("general.useragent.locale"))
+      selectedLocale = Services.prefs.getCharPref("general.useragent.locale");
+
     let availableLocales = chrome.getLocalesForPackage("browser");
 
     let strings = Services.strings.createBundle("chrome://browser/content/languages.properties");
 
-    // Render locale menulist by iterating through the query result from getLocalesForPackage()
     let selectedItem = null;
     let selectedLabel = selectedLocale;
     while (availableLocales.hasMore()) {

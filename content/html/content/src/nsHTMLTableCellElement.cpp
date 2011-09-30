@@ -71,13 +71,13 @@ public:
   // nsIDOMHTMLTableCellElement
   NS_DECL_NSIDOMHTMLTABLECELLELEMENT
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -182,7 +182,7 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
   PRUint32 numCells;
   cells->GetLength(&numCells);
 
-  PRBool found = PR_FALSE;
+  bool found = false;
   PRUint32 i;
 
   for (i = 0; (i < numCells) && !found; i++) {
@@ -264,7 +264,7 @@ static const nsAttrValue::EnumTable kCellScopeTable[] = {
   { 0 }
 };
 
-PRBool
+bool
 nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
                                        nsIAtom* aAttribute,
                                        const nsAString& aValue,
@@ -279,7 +279,7 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseIntWithBounds(aValue, 0);
     }
     if (aAttribute == nsGkAtoms::colspan) {
-      PRBool res = aResult.ParseIntWithBounds(aValue, -1);
+      bool res = aResult.ParseIntWithBounds(aValue, -1);
       if (res) {
         PRInt32 val = aResult.GetIntegerValue();
         // reset large colspan values as IE and opera do
@@ -292,7 +292,7 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
       return res;
     }
     if (aAttribute == nsGkAtoms::rowspan) {
-      PRBool res = aResult.ParseIntWithBounds(aValue, -1, MAX_ROWSPAN);
+      bool res = aResult.ParseIntWithBounds(aValue, -1, MAX_ROWSPAN);
       if (res) {
         PRInt32 val = aResult.GetIntegerValue();
         // quirks mode does not honor the special html 4 value of 0
@@ -401,7 +401,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHTMLTableCellElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {

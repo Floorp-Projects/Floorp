@@ -52,14 +52,14 @@ class nsIURI;
 class nsIParser;
 class nsIPrincipal;
 
-extern PRBool
+extern bool
 IsValidHTTPToken(const nsCSubstring& aToken);
 
 nsresult
 NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                       nsIStreamListener* aListener,
                       nsIPrincipal* aPrincipal,
-                      PRBool aWithCredentials,
+                      bool aWithCredentials,
                       nsTArray<nsCString>& aACUnsafeHeaders,
                       nsIChannel** aPreflightChannel);
 
@@ -72,12 +72,12 @@ public:
   nsCORSListenerProxy(nsIStreamListener* aOuter,
                       nsIPrincipal* aRequestingPrincipal,
                       nsIChannel* aChannel,
-                      PRBool aWithCredentials,
+                      bool aWithCredentials,
                       nsresult* aResult);
   nsCORSListenerProxy(nsIStreamListener* aOuter,
                       nsIPrincipal* aRequestingPrincipal,
                       nsIChannel* aChannel,
-                      PRBool aWithCredentials,
+                      bool aWithCredentials,
                       const nsCString& aPreflightMethod,
                       const nsTArray<nsCString>& aPreflightHeaders,
                       nsresult* aResult);
@@ -101,10 +101,10 @@ private:
   nsCOMPtr<nsIStreamListener> mOuterListener;
   nsCOMPtr<nsIPrincipal> mRequestingPrincipal;
   nsCOMPtr<nsIInterfaceRequestor> mOuterNotificationCallbacks;
-  PRBool mWithCredentials;
-  PRBool mRequestApproved;
-  PRBool mHasBeenCrossSite;
-  PRBool mIsPreflight;
+  bool mWithCredentials;
+  bool mRequestApproved;
+  bool mHasBeenCrossSite;
+  bool mIsPreflight;
   nsCString mPreflightMethod;
   nsTArray<nsCString> mPreflightHeaders;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;

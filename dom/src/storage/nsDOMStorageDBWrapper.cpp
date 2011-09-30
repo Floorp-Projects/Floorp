@@ -141,7 +141,7 @@ nsresult
 nsDOMStorageDBWrapper::GetKeyValue(DOMStorageImpl* aStorage,
                                    const nsAString& aKey,
                                    nsAString& aValue,
-                                   PRBool* aSecure)
+                                   bool* aSecure)
 {
   IMPL_FORWARDER(GetKeyValue(aStorage, aKey, aValue, aSecure));
 }
@@ -150,9 +150,9 @@ nsresult
 nsDOMStorageDBWrapper::SetKey(DOMStorageImpl* aStorage,
                               const nsAString& aKey,
                               const nsAString& aValue,
-                              PRBool aSecure,
+                              bool aSecure,
                               PRInt32 aQuota,
-                              PRBool aExcludeOfflineFromUsage,
+                              bool aExcludeOfflineFromUsage,
                               PRInt32 *aNewUsage)
 {
   IMPL_FORWARDER(SetKey(aStorage, aKey, aValue, aSecure,
@@ -162,7 +162,7 @@ nsDOMStorageDBWrapper::SetKey(DOMStorageImpl* aStorage,
 nsresult
 nsDOMStorageDBWrapper::SetSecure(DOMStorageImpl* aStorage,
                                  const nsAString& aKey,
-                                 const PRBool aSecure)
+                                 const bool aSecure)
 {
   IMPL_FORWARDER(SetSecure(aStorage, aKey, aSecure));
 }
@@ -170,7 +170,7 @@ nsDOMStorageDBWrapper::SetSecure(DOMStorageImpl* aStorage,
 nsresult
 nsDOMStorageDBWrapper::RemoveKey(DOMStorageImpl* aStorage,
                                  const nsAString& aKey,
-                                 PRBool aExcludeOfflineFromUsage,
+                                 bool aExcludeOfflineFromUsage,
                                  PRInt32 aKeyUsage)
 {
   IMPL_FORWARDER(RemoveKey(aStorage, aKey, aExcludeOfflineFromUsage, aKeyUsage));
@@ -208,7 +208,7 @@ nsDOMStorageDBWrapper::DropPrivateBrowsingStorages()
 
 nsresult
 nsDOMStorageDBWrapper::RemoveOwner(const nsACString& aOwner,
-                                   PRBool aIncludeSubDomains)
+                                   bool aIncludeSubDomains)
 {
   nsresult rv;
 
@@ -230,7 +230,7 @@ nsDOMStorageDBWrapper::RemoveOwner(const nsACString& aOwner,
 
 nsresult
 nsDOMStorageDBWrapper::RemoveOwners(const nsTArray<nsString> &aOwners,
-                                    PRBool aIncludeSubDomains, PRBool aMatch)
+                                    bool aIncludeSubDomains, bool aMatch)
 {
   nsresult rv;
 
@@ -271,14 +271,14 @@ nsDOMStorageDBWrapper::RemoveAll()
 
 nsresult
 nsDOMStorageDBWrapper::GetUsage(DOMStorageImpl* aStorage,
-                                PRBool aExcludeOfflineFromUsage, PRInt32 *aUsage)
+                                bool aExcludeOfflineFromUsage, PRInt32 *aUsage)
 {
   IMPL_FORWARDER(GetUsage(aStorage, aExcludeOfflineFromUsage, aUsage));
 }
 
 nsresult
 nsDOMStorageDBWrapper::GetUsage(const nsACString& aDomain,
-                                PRBool aIncludeSubDomains, PRInt32 *aUsage)
+                                bool aIncludeSubDomains, PRInt32 *aUsage)
 {
   if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
     return mPrivateBrowsingDB.GetUsage(aDomain, aIncludeSubDomains, aUsage);
@@ -333,7 +333,7 @@ nsDOMStorageDBWrapper::CreateDomainScopeDBKey(nsIURI* aUri, nsACString& aKey)
     // About pages have an empty host but a valid path.  Since they are handled
     // internally by our own redirector, we can trust them and use path as key.
     // if file:/// protocol, let's make the exact directory the domain
-    PRBool isScheme = PR_FALSE;
+    bool isScheme = false;
     if ((NS_SUCCEEDED(aUri->SchemeIs("about", &isScheme)) && isScheme) ||
         (NS_SUCCEEDED(aUri->SchemeIs("moz-safe-about", &isScheme)) && isScheme)) {
       rv = aUri->GetPath(domainScope);
@@ -371,8 +371,8 @@ nsDOMStorageDBWrapper::CreateDomainScopeDBKey(const nsACString& aAsciiDomain,
 
 nsresult
 nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(const nsACString& aAsciiDomain,
-                                              PRBool aIncludeSubDomains,
-                                              PRBool aEffectiveTLDplus1Only,
+                                              bool aIncludeSubDomains,
+                                              bool aEffectiveTLDplus1Only,
                                               nsACString& aKey)
 {
   nsresult rv;

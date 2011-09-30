@@ -346,8 +346,8 @@ nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(const PRUint8* aFromSegment,
     return;
   }
   // even-numbered bytes tracked at 0, odd-numbered bytes tracked at 1
-  PRBool byteZero[2] = { PR_FALSE, PR_FALSE };
-  PRBool byteNonZero[2] = { PR_FALSE, PR_FALSE };
+  bool byteZero[2] = { false, false };
+  bool byteNonZero[2] = { false, false };
   PRUint32 i = 0;
   if (mSniffingBuffer) {
     for (; i < mSniffingLength; ++i) {
@@ -408,7 +408,7 @@ nsHtml5StreamParser::FinalizeSniffing(const PRUint8* aFromSegment, // can be nul
   // the charset may have been set now
   // maybe try chardet now; 
   if (mFeedChardet) {
-    PRBool dontFeed;
+    bool dontFeed;
     nsresult rv;
     if (mSniffingBuffer) {
       rv = mChardet->DoIt((const char*)mSniffingBuffer.get(), mSniffingLength, &dontFeed);
@@ -661,7 +661,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 
   mStreamState = STREAM_BEING_READ;
 
-  PRBool scriptingEnabled = mExecutor->IsScriptEnabled();
+  bool scriptingEnabled = mExecutor->IsScriptEnabled();
   mOwner->StartTokenizer(scriptingEnabled);
   mTreeBuilder->setScriptingEnabled(scriptingEnabled);
   mTokenizer->start();
@@ -791,7 +791,7 @@ nsHtml5StreamParser::DoDataAvailable(PRUint8* aBuffer, PRUint32 aLength)
   PRUint32 writeCount;
   if (HasDecoder()) {
     if (mFeedChardet) {
-      PRBool dontFeed;
+      bool dontFeed;
       mChardet->DoIt((const char*)aBuffer, aLength, &dontFeed);
       mFeedChardet = !dontFeed;
     }
@@ -867,7 +867,7 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
   return rv;
 }
 
-PRBool
+bool
 nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
 {
   // This code needs to stay in sync with
@@ -897,7 +897,7 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
     NS_NOTREACHED("Charset alias service not available.");
     return PR_FALSE;
   }
-  PRBool eq;
+  bool eq;
   rv = calias->Equals(newEncoding, mCharset, &eq);
   if (NS_FAILED(rv)) {
     NS_NOTREACHED("Charset name equality check failed.");
@@ -1059,13 +1059,13 @@ public:
 void
 nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer, 
                                           nsHtml5TreeBuilder* aTreeBuilder,
-                                          PRBool aLastWasCR)
+                                          bool aLastWasCR)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   #ifdef DEBUG
     mExecutor->AssertStageEmpty();
   #endif
-  PRBool speculationFailed = PR_FALSE;
+  bool speculationFailed = false;
   {
     mozilla::MutexAutoLock speculationAutoLock(mSpeculationMutex);
     if (mSpeculations.IsEmpty()) {

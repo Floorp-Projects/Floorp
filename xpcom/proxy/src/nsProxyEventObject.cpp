@@ -179,7 +179,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsProxyThreadFilter, nsIThreadEventFilter)
 
 NS_DEFINE_IID(kFilterIID, NS_PROXYEVENT_FILTER_IID);
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsProxyThreadFilter::AcceptEvent(nsIRunnable *event)
 {
     PROXY_LOG(("PROXY(%p): filter event [%p]\n", this, event));
@@ -213,7 +213,7 @@ nsProxyEventObject::CallMethod(PRUint16 methodIndex,
     if (NS_FAILED(rv))
         return rv;
 
-    PRBool callDirectly = PR_FALSE;
+    bool callDirectly = false;
     if (GetProxyType() & NS_PROXY_SYNC &&
         NS_SUCCEEDED(GetTarget()->IsOnCurrentThread(&callDirectly)) &&
         callDirectly) {

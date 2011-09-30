@@ -451,9 +451,8 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
   CARenderer* caRenderer = nsnull;
 
   CGLPixelFormatAttribute attributes[] = {
-    kCGLPFANoRecovery,
     kCGLPFAAccelerated,
-    kCGLPFAPBuffer,
+    kCGLPFAAllowOfflineRenderers,
     kCGLPFADepthSize, (CGLPixelFormatAttribute)24,
     (CGLPixelFormatAttribute)0
   };

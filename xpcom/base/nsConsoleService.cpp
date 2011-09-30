@@ -106,7 +106,7 @@ nsConsoleService::Init()
     return NS_OK;
 }
 
-static PRBool snapshot_enum_func(nsHashKey *key, void *data, void* closure)
+static bool snapshot_enum_func(nsHashKey *key, void *data, void* closure)
 {
     nsCOMArray<nsIConsoleListener> *array =
       reinterpret_cast<nsCOMArray<nsIConsoleListener> *>(closure);

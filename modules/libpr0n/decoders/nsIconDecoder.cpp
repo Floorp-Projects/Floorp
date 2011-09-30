@@ -50,13 +50,14 @@
 namespace mozilla {
 namespace imagelib {
 
-nsIconDecoder::nsIconDecoder() :
-  mWidth(-1),
-  mHeight(-1),
-  mPixBytesRead(0),
-  mPixBytesTotal(0),
-  mImageData(nsnull),
-  mState(iconStateStart)
+nsIconDecoder::nsIconDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+ : Decoder(aImage, aObserver),
+   mWidth(-1),
+   mHeight(-1),
+   mPixBytesRead(0),
+   mPixBytesTotal(0),
+   mImageData(nsnull),
+   mState(iconStateStart)
 {
   // Nothing to do
 }

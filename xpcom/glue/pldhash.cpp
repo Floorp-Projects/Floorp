@@ -138,7 +138,7 @@ PL_DHashVoidPtrKeyStub(PLDHashTable *table, const void *key)
     return (PLDHashNumber)(PRPtrdiff)key >> 2;
 }
 
-PRBool
+bool
 PL_DHashMatchEntryStub(PLDHashTable *table,
                        const PLDHashEntryHdr *entry,
                        const void *key)
@@ -148,7 +148,7 @@ PL_DHashMatchEntryStub(PLDHashTable *table,
     return stub->key == key;
 }
 
-PRBool
+bool
 PL_DHashMatchStringKey(PLDHashTable *table,
                        const PLDHashEntryHdr *entry,
                        const void *key)
@@ -229,7 +229,7 @@ PL_DHashTableDestroy(PLDHashTable *table)
     free(table);
 }
 
-PRBool
+bool
 PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
                   PRUint32 entrySize, PRUint32 capacity)
 {
@@ -537,7 +537,7 @@ FindFreeEntry(PLDHashTable *table, PLDHashNumber keyHash)
     return NULL;
 }
 
-static PRBool
+static bool
 ChangeTable(PLDHashTable *table, int deltaLog2)
 {
     int oldLog2, newLog2;
@@ -736,7 +736,7 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
 {
     char *entryAddr, *entryLimit;
     PRUint32 i, capacity, entrySize, ceiling;
-    PRBool didRemove;
+    bool didRemove;
     PLDHashEntryHdr *entry;
     PLDHashOperator op;
 

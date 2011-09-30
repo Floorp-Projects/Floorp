@@ -71,7 +71,7 @@ public:
 
   NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
 
-  NS_IMETHOD DoIt(const char* aBytesArray, PRUint32 aLen, PRBool* oDontFeedMe);
+  NS_IMETHOD DoIt(const char* aBytesArray, PRUint32 aLen, bool* oDontFeedMe);
 
   NS_IMETHOD Done();
 
@@ -83,7 +83,7 @@ private:
   PRInt32 mBlks;
   nsDebugDetectorSel mSel;
   nsICharsetDetectionObserver* mObserver;
-  PRBool mStop;
+  bool mStop;
 };
 
 class ns1stBlkDbgDetector : public nsDebugDetector

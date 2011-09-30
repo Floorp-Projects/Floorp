@@ -366,7 +366,7 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
     return rv;
 }
 
-PRBool
+bool
 nsDragService::SetAlphaPixmap(gfxASurface *aSurface,
                                  GdkDragContext *aContext,
                                  PRInt32 aXOffset,
@@ -424,7 +424,7 @@ nsDragService::StartDragSession()
 }
  
 NS_IMETHODIMP
-nsDragService::EndDragSession(PRBool aDoneDrag)
+nsDragService::EndDragSession(bool aDoneDrag)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::EndDragSession %d",
                                    aDoneDrag));
@@ -448,7 +448,7 @@ nsDragService::EndDragSession(PRBool aDoneDrag)
 
 // nsIDragSession
 NS_IMETHODIMP
-nsDragService::SetCanDrop(PRBool aCanDrop)
+nsDragService::SetCanDrop(bool aCanDrop)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::SetCanDrop %d",
                                    aCanDrop));
@@ -457,7 +457,7 @@ nsDragService::SetCanDrop(PRBool aCanDrop)
 }
 
 NS_IMETHODIMP
-nsDragService::GetCanDrop(PRBool *aCanDrop)
+nsDragService::GetCanDrop(bool *aCanDrop)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::GetCanDrop"));
     *aCanDrop = mCanDrop;
@@ -535,7 +535,7 @@ NS_IMETHODIMP
 nsDragService::GetNumDropItems(PRUint32 * aNumItems)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::GetNumDropItems"));
-    PRBool isList = IsTargetContextList();
+    bool isList = IsTargetContextList();
     if (isList)
         mSourceDataItems->Count(aNumItems);
     else {
@@ -578,7 +578,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
     unsigned int i;
 
     // check to see if this is an internal list
-    PRBool isList = IsTargetContextList();
+    bool isList = IsTargetContextList();
 
     if (isList) {
         PR_LOG(sDragLm, PR_LOG_DEBUG, ("it's a list..."));
@@ -647,7 +647,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
             PR_LOG(sDragLm, PR_LOG_DEBUG,
                    ("looking for data in type %s, gdk flavor %ld\n",
                    static_cast<const char*>(flavorStr), gdkFlavor));
-            PRBool dataFound = PR_FALSE;
+            bool dataFound = false;
             if (gdkFlavor) {
                 GetTargetDragData(gdkFlavor);
             }
@@ -855,7 +855,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
 
 NS_IMETHODIMP
 nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
-                                     PRBool *_retval)
+                                     bool *_retval)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::IsDataFlavorSupported %s",
                                    aDataFlavor));
@@ -874,7 +874,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
     }
 
     // check to see if the target context is a list.
-    PRBool isList = IsTargetContextList();
+    bool isList = IsTargetContextList();
     // if it is, just look in the internal data since we are the source
     // for it.
     if (isList) {
@@ -1059,10 +1059,10 @@ nsDragService::TargetSetTimeCallback(nsIDragSessionGTKTimeCB aCallback)
 }
 
 
-PRBool
+bool
 nsDragService::IsTargetContextList(void)
 {
-    PRBool retval = PR_FALSE;
+    bool retval = false;
 
     if (!mTargetDragContext)
         return retval;
@@ -1484,7 +1484,7 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
     if (item) {
         // if someone was asking for text/plain, lookup unicode instead so
         // we can convert it.
-        PRBool needToDoConversionToPlainText = PR_FALSE;
+        bool needToDoConversionToPlainText = false;
         const char* actualFlavor = mimeFlavor;
         if (strcmp(mimeFlavor, kTextMime) == 0 ||
             strcmp(mimeFlavor, gTextPlainUTF8Type) == 0) {

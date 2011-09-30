@@ -89,7 +89,7 @@ nsDOMStringList::GetLength(PRUint32 *aLength)
 }
 
 NS_IMETHODIMP
-nsDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
+nsDOMStringList::Contains(const nsAString& aString, bool *aResult)
 {
   *aResult = mNames.Contains(aString);
 
@@ -148,7 +148,7 @@ nsNameList::GetLength(PRUint32 *aLength)
   return NS_OK;
 }
 
-PRBool
+bool
 nsNameList::Add(const nsAString& aNamespaceURI, const nsAString& aName)
 {
   PRUint32 count = mNamespaceURIs.Length();
@@ -163,7 +163,7 @@ nsNameList::Add(const nsAString& aNamespaceURI, const nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsNameList::Contains(const nsAString& aName, PRBool *aResult)
+nsNameList::Contains(const nsAString& aName, bool *aResult)
 {
   *aResult = mNames.Contains(aName);
 
@@ -172,7 +172,7 @@ nsNameList::Contains(const nsAString& aName, PRBool *aResult)
 
 NS_IMETHODIMP
 nsNameList::ContainsNS(const nsAString& aNamespaceURI, const nsAString& aName,
-                       PRBool *aResult)
+                       bool *aResult)
 {
   PRUint32 index = mNames.IndexOf(aName);
   if (index != mNames.NoIndex) {

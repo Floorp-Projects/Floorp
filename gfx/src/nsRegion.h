@@ -70,9 +70,9 @@ class NS_GFX nsRegion
     nsRectFast (const nsRect& aRect) : nsRect (aRect) {}
 
     // Override nsRect methods to make them inline. Do not check for emptiness.
-    inline PRBool Contains (const nsRect& aRect) const;
-    inline PRBool Intersects (const nsRect& aRect) const;
-    inline PRBool IntersectRect (const nsRect& aRect1, const nsRect& aRect2);
+    inline bool Contains (const nsRect& aRect) const;
+    inline bool Intersects (const nsRect& aRect) const;
+    inline bool IntersectRect (const nsRect& aRect1, const nsRect& aRect2);
     inline void UnionRect (const nsRect& aRect1, const nsRect& aRect2);
   };
 
@@ -159,9 +159,9 @@ public:
     return Sub (*this, aRect2);
   }
 
-  PRBool Contains (const nsRect& aRect) const;
-  PRBool Contains (const nsRegion& aRgn) const;
-  PRBool Intersects (const nsRect& aRect) const;
+  bool Contains (const nsRect& aRect) const;
+  bool Contains (const nsRegion& aRgn) const;
+  bool Intersects (const nsRect& aRect) const;
 
   void MoveBy (PRInt32 aXOffset, PRInt32 aYOffset)
   {
@@ -174,9 +174,9 @@ public:
     mBoundRect.SetRect (0, 0, 0, 0);
   }
 
-  PRBool IsEmpty () const { return mRectCount == 0; }
-  PRBool IsComplex () const { return mRectCount > 1; }
-  PRBool IsEqual (const nsRegion& aRegion) const;
+  bool IsEmpty () const { return mRectCount == 0; }
+  bool IsComplex () const { return mRectCount > 1; }
+  bool IsEqual (const nsRegion& aRegion) const;
   PRUint32 GetNumRects () const { return mRectCount; }
   const nsRect& GetBounds () const { return mBoundRect; }
   // Converts this region from aFromAPP, an appunits per pixel ratio, to
@@ -252,7 +252,7 @@ private:
   void InsertAfter (RgnRect* aNewRect, RgnRect* aRelativeRect);
   void SetToElements (PRUint32 aCount);
   RgnRect* Remove (RgnRect* aRect);
-  void InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly = PR_FALSE);
+  void InsertInPlace (RgnRect* aRect, bool aOptimizeOnFly = false);
   inline void SaveLinkChain ();
   inline void RestoreLinkChain ();
   void Optimize ();
@@ -403,15 +403,15 @@ public:
     return Sub (*this, aRect2);
   }
 
-  PRBool Contains (const nsIntRect& aRect) const
+  bool Contains (const nsIntRect& aRect) const
   {
     return mImpl.Contains (ToRect (aRect));
   }
-  PRBool Contains (const nsIntRegion& aRgn) const
+  bool Contains (const nsIntRegion& aRgn) const
   {
     return mImpl.Contains (aRgn.mImpl);
   }
-  PRBool Intersects (const nsIntRect& aRect) const
+  bool Intersects (const nsIntRect& aRect) const
   {
     return mImpl.Intersects (ToRect (aRect));
   }
@@ -429,9 +429,9 @@ public:
     mImpl.SetEmpty  ();
   }
 
-  PRBool IsEmpty () const { return mImpl.IsEmpty (); }
-  PRBool IsComplex () const { return mImpl.IsComplex (); }
-  PRBool IsEqual (const nsIntRegion& aRegion) const
+  bool IsEmpty () const { return mImpl.IsEmpty (); }
+  bool IsComplex () const { return mImpl.IsComplex (); }
+  bool IsEqual (const nsIntRegion& aRegion) const
   {
     return mImpl.IsEqual (aRegion.mImpl);
   }

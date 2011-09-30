@@ -83,7 +83,7 @@ imgStatusTracker::SetImage(Image* aImage)
   mImage = aImage;
 }
 
-PRBool
+bool
 imgStatusTracker::IsLoading() const
 {
   // Checking for whether OnStopRequest has fired allows us to say we're
@@ -272,7 +272,7 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
 
 void
 imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy, nsresult aStatus,
-                                                PRBool aOnlySendStopRequest)
+                                                bool aOnlySendStopRequest)
 {
   nsCOMPtr<imgIRequest> kungFuDeathGrip(aProxy);
 
@@ -365,7 +365,7 @@ imgStatusTracker::SendStartFrame(imgRequestProxy* aProxy, PRUint32 aFrame)
 }
 
 void
-imgStatusTracker::RecordDataAvailable(PRBool aCurrentFrame, const nsIntRect* aRect)
+imgStatusTracker::RecordDataAvailable(bool aCurrentFrame, const nsIntRect* aRect)
 {
   NS_ABORT_IF_FALSE(mImage,
                     "RecordDataAvailable called before we have an Image");
@@ -374,7 +374,7 @@ imgStatusTracker::RecordDataAvailable(PRBool aCurrentFrame, const nsIntRect* aRe
 }
 
 void
-imgStatusTracker::SendDataAvailable(imgRequestProxy* aProxy, PRBool aCurrentFrame,
+imgStatusTracker::SendDataAvailable(imgRequestProxy* aProxy, bool aCurrentFrame,
                                          const nsIntRect* aRect)
 {
   if (!aProxy->NotificationsDeferred())
@@ -502,7 +502,7 @@ imgStatusTracker::SendStartRequest(imgRequestProxy* aProxy)
 }
 
 void
-imgStatusTracker::RecordStopRequest(PRBool aLastPart, nsresult aStatus)
+imgStatusTracker::RecordStopRequest(bool aLastPart, nsresult aStatus)
 {
   mHadLastPart = aLastPart;
   mState |= stateRequestStopped;
@@ -513,7 +513,7 @@ imgStatusTracker::RecordStopRequest(PRBool aLastPart, nsresult aStatus)
 }
 
 void
-imgStatusTracker::SendStopRequest(imgRequestProxy* aProxy, PRBool aLastPart, nsresult aStatus)
+imgStatusTracker::SendStopRequest(imgRequestProxy* aProxy, bool aLastPart, nsresult aStatus)
 {
   // See bug 505385 and imgRequest::OnStopDecode for more information on why
   // OnStopDecode is called with OnStopRequest.

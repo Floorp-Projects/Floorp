@@ -71,7 +71,7 @@ nscolor   nsLookAndFeel::sComboBoxText = 0;
 nscolor   nsLookAndFeel::sComboBoxBackground = 0;
 PRUnichar nsLookAndFeel::sInvisibleCharacter = PRUnichar('*');
 float     nsLookAndFeel::sCaretRatio = 0;
-PRBool    nsLookAndFeel::sMenuSupportsDrag = PR_FALSE;
+bool      nsLookAndFeel::sMenuSupportsDrag = false;
 
 //-------------------------------------------------------------------------
 //
@@ -83,7 +83,7 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
     mStyle = nsnull;
     InitWidget();
 
-    static PRBool sInitialized = PR_FALSE;
+    static bool sInitialized = false;
 
     if (!sInitialized) {
         sInitialized = PR_TRUE;
@@ -808,4 +808,13 @@ nsLookAndFeel::RefreshImpl()
  
     InitWidget();
     InitLookAndFeel();
+}
+
+bool
+nsLookAndFeel::GetEchoPasswordImpl() {
+#ifdef MOZ_PLATFORM_MAEMO
+    return PR_TRUE;
+#else
+    return PR_FALSE;
+#endif
 }

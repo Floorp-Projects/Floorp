@@ -79,7 +79,7 @@ public:
 protected:
   nsXULLabelFrame(nsStyleContext *aContext) : nsBlockFrame(aContext) {}
 
-  nsresult RegUnregAccessKey(PRBool aDoReg);
+  nsresult RegUnregAccessKey(bool aDoReg);
 };
 
 nsIFrame*

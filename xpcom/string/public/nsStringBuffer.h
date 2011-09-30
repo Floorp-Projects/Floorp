@@ -135,7 +135,7 @@ class nsStringBuffer
        * consumers may rely on the data in this buffer being immutable and
        * other threads may access this buffer simultaneously.
        */
-      PRBool IsReadonly() const
+      bool IsReadonly() const
         {
           return mRefCount > 1;
         }
@@ -166,9 +166,9 @@ class nsStringBuffer
        *       (2-byte units for wide strings).
        */
       void ToString(PRUint32 len, nsAString &str,
-                           PRBool aMoveOwnership = PR_FALSE);
+                           bool aMoveOwnership = false);
       void ToString(PRUint32 len, nsACString &str,
-                           PRBool aMoveOwnership = PR_FALSE);
+                           bool aMoveOwnership = false);
   };
 
 #endif /* !defined(nsStringBuffer_h__ */

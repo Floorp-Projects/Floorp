@@ -787,12 +787,12 @@ SessionStore.prototype = {
             // Recreate the thumbnail if we are delay loading the tab
             let canvas = tab.chromeTab.thumbnail;
             canvas.setAttribute("restored", "true");
+            canvas.removeAttribute("empty");
   
             let image = new window.Image();
             image.onload = function() {
               if (canvas) {
                 canvas.getContext("2d").drawImage(image, 0, 0);
-                canvas.removeAttribute("empty");
               }
             };
             image.src = tabData.extData.thumbnail;

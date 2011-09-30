@@ -173,7 +173,7 @@ public:
    * @param aIsDone will contain the result.
    */
 
-  NS_IMETHOD IsDone(PRBool *aIsDone) = 0;
+  NS_IMETHOD IsDone(bool *aIsDone) = 0;
 
   /**
    * SetSelection() allows the caller to set the selection

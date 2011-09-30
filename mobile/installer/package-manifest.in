@@ -613,5 +613,6 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/UpdatePrompt.js
 #endif
 @BINPATH@/components/XPIDialogService.js
+@BINPATH@/components/CapturePicker.js
 @BINPATH@/components/browsercomps.xpt
 @BINPATH@/extensions/feedback@mobile.mozilla.org.xpi

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=591249
+-->
+<window title="Mozilla Bug 591249"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <html:style type="text/css">
+    #drop-target {
+      width: 50px;
+      height: 50px;
+      border: 4px dotted black;
+    }
+    #drop-target {
+      background-color: red;
+    }
+    #drop-target:-moz-drag-over {
+      background-color: yellow;
+    }
+  </html:style>
+
+  <html:body>
+    <html:h1 id="iframetext">Iframe for Bug 591249</html:h1>
+
+    <html:div id="drop-target"
+         ondrop="return false;"
+         ondragenter="return false;"
+         ondragover="return false;">
+    </html:div>
+  </html:body>
+</window>

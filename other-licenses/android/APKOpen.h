@@ -37,6 +37,10 @@
 #ifndef APKOpen_h
 #define APKOpen_h
 
+#ifndef NS_EXPORT
+#define NS_EXPORT __attribute__ ((visibility("default")))
+#endif
+
 struct mapping_info {
   char * name;
   char * file_id;
@@ -57,6 +61,6 @@ struct lib_cache_info {
   void* buffer;
 };
 
-const struct lib_cache_info * getLibraryCache();
+NS_EXPORT const struct lib_cache_info * getLibraryCache();
 
 #endif /* APKOpen_h */

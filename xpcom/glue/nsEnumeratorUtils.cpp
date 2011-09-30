@@ -86,13 +86,13 @@ NS_IMPL_QUERY_INTERFACE3(EmptyEnumeratorImpl, nsISimpleEnumerator,
                          nsIUTF8StringEnumerator, nsIStringEnumerator)
 
 // nsISimpleEnumerator interface
-NS_IMETHODIMP EmptyEnumeratorImpl::HasMoreElements(PRBool* aResult)
+NS_IMETHODIMP EmptyEnumeratorImpl::HasMoreElements(bool* aResult)
 {
     *aResult = PR_FALSE;
     return NS_OK;
 }
 
-NS_IMETHODIMP EmptyEnumeratorImpl::HasMore(PRBool* aResult)
+NS_IMETHODIMP EmptyEnumeratorImpl::HasMore(bool* aResult)
 {
     *aResult = PR_FALSE;
     return NS_OK;
@@ -130,7 +130,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsISimpleEnumerator methods
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
+    NS_IMETHOD HasMoreElements(bool* aResult);
     NS_IMETHOD GetNext(nsISupports** aResult);
 
     nsSingletonEnumerator(nsISupports* aValue);
@@ -140,7 +140,7 @@ private:
 
 protected:
     nsISupports* mValue;
-    PRBool mConsumed;
+    bool mConsumed;
 };
 
 nsSingletonEnumerator::nsSingletonEnumerator(nsISupports* aValue)
@@ -158,7 +158,7 @@ nsSingletonEnumerator::~nsSingletonEnumerator()
 NS_IMPL_ISUPPORTS1(nsSingletonEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsSingletonEnumerator::HasMoreElements(PRBool* aResult)
+nsSingletonEnumerator::HasMoreElements(bool* aResult)
 {
     NS_PRECONDITION(aResult != 0, "null ptr");
     if (! aResult)
@@ -206,7 +206,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsISimpleEnumerator methods
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
+    NS_IMETHOD HasMoreElements(bool* aResult);
     NS_IMETHOD GetNext(nsISupports** aResult);
 
     nsUnionEnumerator(nsISimpleEnumerator* firstEnumerator,
@@ -217,8 +217,8 @@ private:
 
 protected:
     nsCOMPtr<nsISimpleEnumerator> mFirstEnumerator, mSecondEnumerator;
-    PRBool mConsumed;
-    PRBool mAtSecond;
+    bool mConsumed;
+    bool mAtSecond;
 };
 
 nsUnionEnumerator::nsUnionEnumerator(nsISimpleEnumerator* firstEnumerator,
@@ -236,7 +236,7 @@ nsUnionEnumerator::~nsUnionEnumerator()
 NS_IMPL_ISUPPORTS1(nsUnionEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsUnionEnumerator::HasMoreElements(PRBool* aResult)
+nsUnionEnumerator::HasMoreElements(bool* aResult)
 {
     NS_PRECONDITION(aResult != 0, "null ptr");
     if (! aResult)

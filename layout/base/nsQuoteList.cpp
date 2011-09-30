@@ -41,14 +41,14 @@
 #include "nsQuoteList.h"
 #include "nsReadableUtils.h"
 
-PRBool
+bool
 nsQuoteNode::InitTextFrame(nsGenConList* aList, nsIFrame* aPseudoFrame,
                            nsIFrame* aTextFrame)
 {
   nsGenConNode::InitTextFrame(aList, aPseudoFrame, aTextFrame);
 
   nsQuoteList* quoteList = static_cast<nsQuoteList*>(aList);
-  PRBool dirty = PR_FALSE;
+  bool dirty = false;
   quoteList->Insert(this);
   if (quoteList->IsLast(this))
     quoteList->Calc(this);

@@ -85,7 +85,7 @@ nsGridRowLeafFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
   if (!grid) 
     return rv;
 
-  PRBool isHorizontal = IsHorizontal();
+  bool isHorizontal = IsHorizontal();
 
   nsBoxLayoutState state(PresContext());
 

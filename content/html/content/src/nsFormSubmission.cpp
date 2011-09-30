@@ -113,7 +113,7 @@ public:
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream);
 
-  virtual PRBool SupportsIsindexSubmission()
+  virtual bool SupportsIsindexSubmission()
   {
     return PR_TRUE;
   }
@@ -146,7 +146,7 @@ private:
   nsCOMPtr<nsIDocument> mDocument;
 
   /** Whether or not we have warned about a file control not being submitted */
-  PRBool mWarnedFileControl;
+  bool mWarnedFileControl;
 };
 
 nsresult
@@ -215,8 +215,8 @@ static void
 HandleMailtoSubject(nsCString& aPath) {
 
   // Walk through the string and see if we have a subject already.
-  PRBool hasSubject = PR_FALSE;
-  PRBool hasParams = PR_FALSE;
+  bool hasSubject = false;
+  bool hasParams = false;
   PRInt32 paramSep = aPath.FindChar('?');
   while (paramSep != kNotFound && paramSep < (PRInt32)aPath.Length()) {
     hasParams = PR_TRUE;
@@ -288,7 +288,7 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
   if (mMethod == NS_FORM_METHOD_POST) {
 
-    PRBool isMailto = PR_FALSE;
+    bool isMailto = false;
     aURI->SchemeIs("mailto", &isMailto);
     if (isMailto) {
 
@@ -338,7 +338,7 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
   } else {
     // Get the full query string
-    PRBool schemeIsJavaScript;
+    bool schemeIsJavaScript;
     rv = aURI->SchemeIs("javascript", &schemeIsJavaScript);
     NS_ENSURE_SUCCESS(rv, rv);
     if (schemeIsJavaScript) {
@@ -650,7 +650,7 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
   // XXX HACK We are using the standard URL mechanism to give the body to the
   // mailer instead of passing the post data stream to it, since that sounds
   // hard.
-  PRBool isMailto = PR_FALSE;
+  bool isMailto = false;
   aURI->SchemeIs("mailto", &isMailto);
   if (isMailto) {
     nsCAutoString path;

@@ -86,7 +86,7 @@ class nsTSubstringTuple_CharT
          * returns true if this tuple is dependent on (i.e., overlapping with)
          * the given char sequence.
          */
-      PRBool IsDependentOn(const char_type *start, const char_type *end) const;
+      bool IsDependentOn(const char_type *start, const char_type *end) const;
 
     private:
 

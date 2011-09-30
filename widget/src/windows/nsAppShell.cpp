@@ -78,10 +78,10 @@ using mozilla::crashreporter::LSPAnnotate;
 
 //-------------------------------------------------------------------------
 
-static PRBool PeekUIMessage(MSG* aMsg)
+static bool PeekUIMessage(MSG* aMsg)
 {
   MSG keyMsg, imeMsg, mouseMsg, *pMsg = 0;
-  PRBool haveKeyMsg, haveIMEMsg, haveMouseMsg;
+  bool haveKeyMsg, haveIMEMsg, haveMouseMsg;
 
   haveKeyMsg = ::PeekMessageW(&keyMsg, NULL, WM_KEYFIRST, WM_IME_KEYLAST, PM_NOREMOVE);
   haveIMEMsg = ::PeekMessageW(&imeMsg, NULL, NS_WM_IMEFIRST, NS_WM_IMELAST, PM_NOREMOVE);
@@ -212,10 +212,10 @@ CollectNewLoadedModules()
 
   // Now walk the module list of the process,
   // and display information about each module
-  PRBool done = !Module32FirstW(hModuleSnap, &module);
+  bool done = !Module32FirstW(hModuleSnap, &module);
   while (!done) {
     NS_LossyConvertUTF16toASCII moduleName(module.szModule);
-    PRBool found = PR_FALSE;
+    bool found = false;
     PRUint32 i;
     for (i = 0; i < NUM_LOADEDMODULEINFO &&
                 sLoadedModules[i].mStartAddr; ++i) {
@@ -317,8 +317,8 @@ nsAppShell::ScheduleNativeEventCallback()
   ::PostMessage(mEventWnd, sMsgId, 0, reinterpret_cast<LPARAM>(this));
 }
 
-PRBool
-nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
+bool
+nsAppShell::ProcessNextNativeEvent(bool mayWait)
 {
 #if defined(_MSC_VER) && defined(_M_IX86)
   if (sXPCOMHasLoadedNewDLLs && sLoadedModules) {
@@ -330,7 +330,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
   // Notify ipc we are spinning a (possibly nested) gecko event loop.
   mozilla::ipc::RPCChannel::NotifyGeckoEventDispatch();
 
-  PRBool gotMessage = PR_FALSE;
+  bool gotMessage = false;
 
   do {
     MSG msg;

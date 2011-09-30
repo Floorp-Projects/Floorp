@@ -103,7 +103,7 @@ public:
   virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)=0;
   virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)=0;
   virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows)=0;
-  virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)=0;
+  virtual nsMargin GetTotalMargin(nsIBox* aBox, bool aIsHorizontal)=0;
   virtual PRInt32 GetRowCount() { return 1; }
   
   /**
@@ -115,7 +115,7 @@ public:
   /**
    * Return whether this grid part is an appropriate parent for the argument.
    */
-  PRBool CanContain(nsIGridPart* aPossibleChild) {
+  bool CanContain(nsIGridPart* aPossibleChild) {
     Type thisType = GetType(), childType = aPossibleChild->GetType();
     return thisType + 1 == childType || (thisType == eRowGroup && childType == eRowGroup);
   }

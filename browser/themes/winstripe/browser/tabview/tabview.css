@@ -678,6 +678,8 @@ html[dir=rtl] #otherresults {
   -moz-margin-end: 5px;
   position: relative;
   top: 2px;
+  width: 16px;
+  height: 16px;
 }
 
 .inlineMatch > span {
