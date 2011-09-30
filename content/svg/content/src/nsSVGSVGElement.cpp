@@ -1200,14 +1200,6 @@ nsSVGSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
   return GetViewBoxTransform() * aMatrix;
 }
 
-void
-nsSVGSVGElement::DidChangeLength(PRUint8 aAttrEnum, bool aDoSetAttr)
-{
-  nsSVGSVGElementBase::DidChangeLength(aAttrEnum, aDoSetAttr);
-
-  InvalidateTransformNotifyFrame();
-}
-
 nsSVGElement::LengthAttributesInfo
 nsSVGSVGElement::GetLengthInfo()
 {
@@ -1222,42 +1214,10 @@ nsSVGSVGElement::GetEnumInfo()
                             NS_ARRAY_LENGTH(sEnumInfo));
 }
 
-void
-nsSVGSVGElement::DidChangeViewBox(bool aDoSetAttr)
-{
-  nsSVGSVGElementBase::DidChangeViewBox(aDoSetAttr);
-
-  InvalidateTransformNotifyFrame();
-}
-
-void
-nsSVGSVGElement::DidAnimateViewBox()
-{
-  nsSVGSVGElementBase::DidAnimateViewBox();
-  
-  InvalidateTransformNotifyFrame();
-}
-
 nsSVGViewBox *
 nsSVGSVGElement::GetViewBox()
 {
   return &mViewBox;
-}
-
-void
-nsSVGSVGElement::DidChangePreserveAspectRatio(bool aDoSetAttr)
-{
-  nsSVGSVGElementBase::DidChangePreserveAspectRatio(aDoSetAttr);
-
-  InvalidateTransformNotifyFrame();
-}
-
-void
-nsSVGSVGElement::DidAnimatePreserveAspectRatio()
-{
-  nsSVGSVGElementBase::DidAnimatePreserveAspectRatio();
-
-  InvalidateTransformNotifyFrame();
 }
 
 SVGAnimatedPreserveAspectRatio *
