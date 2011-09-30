@@ -437,14 +437,10 @@ pref("browser.ui.touch.weight.visited", 120); // percentage
 // plugins
 #if MOZ_PLATFORM_MAEMO == 6
 pref("plugin.disable", false);
-pref("dom.ipc.plugins.enabled", true);
-#elifdef ANDROID
-pref("plugin.disable", false);
-pref("dom.ipc.plugins.enabled", false);
 #else
 pref("plugin.disable", true);
-pref("dom.ipc.plugins.enabled", true);
 #endif
+pref("dom.ipc.plugins.enabled", true);
 
 // process priority
 // higher values give content process less CPU time
