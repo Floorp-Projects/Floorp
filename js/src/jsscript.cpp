@@ -1351,7 +1351,7 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 }
 
 void
-JSScript::finalize(JSContext *cx)
+JSScript::finalize(JSContext *cx, bool background)
 {
     CheckScript(this, NULL);
 

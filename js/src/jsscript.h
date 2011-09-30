@@ -772,7 +772,7 @@ struct JSScript : public js::gc::Cell {
     uint32 stepModeCount() { return stepMode & stepCountMask; }
 #endif
 
-    void finalize(JSContext *cx);
+    void finalize(JSContext *cx, bool background);
 };
 
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);

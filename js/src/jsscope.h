@@ -370,7 +370,7 @@ struct BaseShape : public js::gc::Cell
                                          * property table. */
 
   public:
-    void finalize(JSContext *cx);
+    void finalize(JSContext *cx, bool background);
 
     BaseShape(Class *clasp) {
         PodZero(this);
@@ -761,7 +761,7 @@ struct Shape : public js::gc::Cell
     void dumpSubtree(JSContext *cx, int level, FILE *fp) const;
 #endif
 
-    void finalize(JSContext *cx);
+    void finalize(JSContext *cx, bool background);
     void removeChild(js::Shape *child);
     void removeChildSlowly(js::Shape *child);
 
