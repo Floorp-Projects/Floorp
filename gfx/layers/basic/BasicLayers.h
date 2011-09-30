@@ -172,7 +172,6 @@ public:
   already_AddRefed<gfxContext> PushGroupWithCachedSurface(gfxContext *aTarget,
                                                           gfxASurface::gfxContentType aContent);
   void PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxContext *aPushed);
-  already_AddRefed<gfxASurface> PopGroupToSurface(gfxContext *aTarget, gfxContext *aPushed);
 
   virtual bool IsCompositingCheap() { return false; }
   virtual bool HasShadowManagerInternal() const { return false; }
