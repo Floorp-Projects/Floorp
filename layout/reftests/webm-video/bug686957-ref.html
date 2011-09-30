@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="background:white;">
+<!-- Test that if we seek to the end of a video we get the last frame displayed -->
+<video src="frames.webm"
+       preload="auto"
+       id="v"
+       onloadedmetadata="document.getElementById('v').currentTime=document.getElementById('v').duration-1.0;document.getElementById('v').play();"
+       onended="setTimeout(function(){document.documentElement.className = '';}, 0);"
+</video>
+</body>
+</html>
