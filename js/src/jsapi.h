@@ -2993,14 +2993,13 @@ struct JSClass {
 #define JSCLASS_NEW_ENUMERATE           (1<<1)  /* has JSNewEnumerateOp hook */
 #define JSCLASS_NEW_RESOLVE             (1<<2)  /* has JSNewResolveOp hook */
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  /* private is (nsISupports *) */
-#define JSCLASS_CONCURRENT_FINALIZER    (1<<4)  /* finalize is called on background thread */
-#define JSCLASS_NEW_RESOLVE_GETS_START  (1<<5)  /* JSNewResolveOp gets starting
+#define JSCLASS_NEW_RESOLVE_GETS_START  (1<<4)  /* JSNewResolveOp gets starting
                                                    object in prototype chain
                                                    passed in via *objp in/out
                                                    parameter */
-#define JSCLASS_CONSTRUCT_PROTOTYPE     (1<<6)  /* call constructor on class
+#define JSCLASS_CONSTRUCT_PROTOTYPE     (1<<5)  /* call constructor on class
                                                    prototype */
-#define JSCLASS_DOCUMENT_OBSERVER       (1<<7)  /* DOM document observer */
+#define JSCLASS_DOCUMENT_OBSERVER       (1<<6)  /* DOM document observer */
 
 /*
  * To reserve slots fetched and stored via JS_Get/SetReservedSlot, bitwise-or

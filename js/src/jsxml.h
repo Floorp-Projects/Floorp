@@ -190,7 +190,7 @@ struct JSXML : js::gc::Cell {
         JSString        *value;
     } u;
     
-    void finalize(JSContext *cx) {
+    void finalize(JSContext *cx, bool background) {
         if (JSXML_HAS_KIDS(this)) {
             xml_kids.finish(cx);
             if (xml_class == JSXML_CLASS_ELEMENT) {

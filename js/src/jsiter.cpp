@@ -93,7 +93,6 @@ static JSObject *iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly
 Class js::IteratorClass = {
     "Iterator",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_CONCURRENT_FINALIZER |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */

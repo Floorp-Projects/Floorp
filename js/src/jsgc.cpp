@@ -251,7 +251,7 @@ Arena::staticAsserts()
 
 template<typename T>
 inline bool
-Arena::finalize(JSContext *cx, AllocKind thingKind, size_t thingSize)
+Arena::finalize(JSContext *cx, AllocKind thingKind, size_t thingSize, bool background)
 {
     /* Enforce requirements on size of T. */
     JS_ASSERT(thingSize % Cell::CellSize == 0);
@@ -300,7 +300,7 @@ Arena::finalize(JSContext *cx, AllocKind thingKind, size_t thingSize)
             } else {
                 if (!newFreeSpanStart)
                     newFreeSpanStart = thing;
-                t->finalize(cx);
+                t->finalize(cx, background);
                 JS_POISON(t, JS_FREE_PATTERN, thingSize);
             }
         }
@@ -335,7 +335,7 @@ Arena::finalize(JSContext *cx, AllocKind thingKind, size_t thingSize)
 
 template<typename T>
 inline void
-FinalizeTypedArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind)
+FinalizeTypedArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind, bool background)
 {
     /*
      * Release empty arenas and move non-full arenas with some free things into
@@ -347,7 +347,7 @@ FinalizeTypedArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKin
     ArenaHeader **ap = &al->head;
     size_t thingSize = Arena::thingSize(thingKind);
     while (ArenaHeader *aheader = *ap) {
-        bool allClear = aheader->getArena()->finalize<T>(cx, thingKind, thingSize);
+        bool allClear = aheader->getArena()->finalize<T>(cx, thingKind, thingSize, background);
         if (allClear) {
             *ap = aheader->next;
             aheader->chunk()->releaseArena(aheader);
@@ -372,7 +372,7 @@ FinalizeTypedArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKin
  * after the al->head.
  */
 static void
-FinalizeArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind)
+FinalizeArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind, bool background)
 {
     switch(thingKind) {
       case FINALIZE_OBJECT0:
@@ -388,33 +388,33 @@ FinalizeArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind)
       case FINALIZE_OBJECT16:
       case FINALIZE_OBJECT16_BACKGROUND:
       case FINALIZE_FUNCTION:
-	FinalizeTypedArenas<JSObject>(cx, al, thingKind);
+        FinalizeTypedArenas<JSObject>(cx, al, thingKind, background);
         break;
       case FINALIZE_SCRIPT:
-	FinalizeTypedArenas<JSScript>(cx, al, thingKind);
+	FinalizeTypedArenas<JSScript>(cx, al, thingKind, background);
         break;
       case FINALIZE_SHAPE:
-	FinalizeTypedArenas<Shape>(cx, al, thingKind);
+	FinalizeTypedArenas<Shape>(cx, al, thingKind, background);
         break;
       case FINALIZE_BASE_SHAPE:
-        FinalizeTypedArenas<BaseShape>(cx, al, thingKind);
+        FinalizeTypedArenas<BaseShape>(cx, al, thingKind, background);
         break;
       case FINALIZE_TYPE_OBJECT:
-	FinalizeTypedArenas<types::TypeObject>(cx, al, thingKind);
+	FinalizeTypedArenas<types::TypeObject>(cx, al, thingKind, background);
         break;
 #if JS_HAS_XML_SUPPORT
       case FINALIZE_XML:
-	FinalizeTypedArenas<JSXML>(cx, al, thingKind);
+	FinalizeTypedArenas<JSXML>(cx, al, thingKind, background);
         break;
 #endif
       case FINALIZE_STRING:
-	FinalizeTypedArenas<JSString>(cx, al, thingKind);
+	FinalizeTypedArenas<JSString>(cx, al, thingKind, background);
         break;
       case FINALIZE_SHORT_STRING:
-	FinalizeTypedArenas<JSShortString>(cx, al, thingKind);
+	FinalizeTypedArenas<JSShortString>(cx, al, thingKind, background);
         break;
       case FINALIZE_EXTERNAL_STRING:
-	FinalizeTypedArenas<JSExternalString>(cx, al, thingKind);
+	FinalizeTypedArenas<JSExternalString>(cx, al, thingKind, background);
         break;
     }
 }
@@ -1286,7 +1286,7 @@ ArenaLists::finalizeNow(JSContext *cx, AllocKind thingKind)
 #ifdef JS_THREADSAFE
     JS_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE);
 #endif
-    FinalizeArenas(cx, &arenaLists[thingKind], thingKind);
+    FinalizeArenas(cx, &arenaLists[thingKind], thingKind, false);
 }
 
 inline void
@@ -1329,7 +1329,7 @@ ArenaLists::finalizeLater(JSContext *cx, AllocKind thingKind)
         al->clear();
         backgroundFinalizeState[thingKind] = BFS_RUN;
     } else {
-        FinalizeArenas(cx, al, thingKind);
+        FinalizeArenas(cx, al, thingKind, false);
         backgroundFinalizeState[thingKind] = BFS_DONE;
     }
 
@@ -1349,7 +1349,7 @@ ArenaLists::backgroundFinalize(JSContext *cx, ArenaHeader *listHead)
     JSCompartment *comp = listHead->compartment;
     ArenaList finalized;
     finalized.head = listHead;
-    FinalizeArenas(cx, &finalized, thingKind);
+    FinalizeArenas(cx, &finalized, thingKind, true);
 
     /*
      * After we finish the finalization al->cursor must point to the end of
