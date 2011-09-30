@@ -997,7 +997,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
 
   nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
 
-  mCurrentKeyEvent.Set(aNativeEvent);
+  KeyEventState* currentKeyEvent = PushKeyEvent(aNativeEvent);
   AutoKeyEventStateCleaner remover(this);
 
   BOOL nonDeadKeyPress = [[aNativeEvent characters] length] > 0;
@@ -1015,12 +1015,12 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     }
 #endif // #ifndef NP_NO_CARBON
 
-    mCurrentKeyEvent.mKeyDownHandled = DispatchEvent(keydownEvent);
+    currentKeyEvent->mKeyDownHandled = DispatchEvent(keydownEvent);
     if (Destroyed()) {
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("%p TextInputHandler::HandleKeyDownEvent, "
          "widget was destroyed by keydown event", this));
-      return mCurrentKeyEvent.KeyDownOrPressHandled();
+      return currentKeyEvent->KeyDownOrPressHandled();
     }
 
     // The key down event may have shifted the focus, in which
@@ -1030,7 +1030,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("%p TextInputHandler::HandleKeyDownEvent, "
          "view lost focus by keydown event", this));
-      return mCurrentKeyEvent.KeyDownOrPressHandled();
+      return currentKeyEvent->KeyDownOrPressHandled();
     }
 
     // If this is the context menu key command, send a context menu key event.
@@ -1052,7 +1052,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
          Destroyed() ? " and widget was destroyed" : ""));
       [mView maybeInitContextMenuTracking];
       // Bail, there is nothing else to do here.
-      return (cmEventHandled || mCurrentKeyEvent.KeyDownOrPressHandled());
+      return (cmEventHandled || currentKeyEvent->KeyDownOrPressHandled());
     }
 
     nsKeyEvent keypressEvent(PR_TRUE, NS_KEY_PRESS, mWidget);
@@ -1066,16 +1066,16 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     //     its owning shortcut key.  See bug 477291.
     if ((!keypressEvent.isChar || keypressEvent.isControl) &&
         !IsIMEComposing()) {
-      if (mCurrentKeyEvent.mKeyDownHandled) {
+      if (currentKeyEvent->mKeyDownHandled) {
         keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
       }
-      mCurrentKeyEvent.mKeyPressHandled = DispatchEvent(keypressEvent);
-      mCurrentKeyEvent.mKeyPressDispatched = PR_TRUE;
+      currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
+      currentKeyEvent->mKeyPressDispatched = PR_TRUE;
       if (Destroyed()) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
           ("%p TextInputHandler::HandleKeyDownEvent, "
            "widget was destroyed by keypress event", this));
-        return mCurrentKeyEvent.KeyDownOrPressHandled();
+        return currentKeyEvent->KeyDownOrPressHandled();
       }
     }
   }
@@ -1098,7 +1098,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     PR_LOG(gLog, PR_LOG_ALWAYS,
       ("%p TextInputHandler::HandleKeyDownEvent, widget was destroyed",
        this));
-    return mCurrentKeyEvent.KeyDownOrPressHandled();
+    return currentKeyEvent->KeyDownOrPressHandled();
   }
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -1106,7 +1106,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
      "IsIMEComposing()=%s",
      this, TrueOrFalse(wasComposing), TrueOrFalse(IsIMEComposing())));
 
-  if (!mCurrentKeyEvent.mKeyPressDispatched && nonDeadKeyPress &&
+  if (!currentKeyEvent->mKeyPressDispatched && nonDeadKeyPress &&
       !wasComposing && !IsIMEComposing()) {
     nsKeyEvent keypressEvent(PR_TRUE, NS_KEY_PRESS, mWidget);
     InitKeyEvent(aNativeEvent, keypressEvent);
@@ -1124,10 +1124,10 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     //    our default action for this key.
     if (!(interpretKeyEventsCalled &&
           IsNormalCharInputtingEvent(keypressEvent))) {
-      if (mCurrentKeyEvent.mKeyDownHandled) {
+      if (currentKeyEvent->mKeyDownHandled) {
         keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
       }
-      mCurrentKeyEvent.mKeyPressHandled = DispatchEvent(keypressEvent);
+      currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("%p TextInputHandler::HandleKeyDownEvent, keypress event dispatched",
          this));
@@ -1139,9 +1139,9 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TextInputHandler::HandleKeyDownEvent, "
      "keydown handled=%s, keypress handled=%s",
-     this, TrueOrFalse(mCurrentKeyEvent.mKeyDownHandled),
-     TrueOrFalse(mCurrentKeyEvent.mKeyPressHandled)));
-  return mCurrentKeyEvent.KeyDownOrPressHandled();
+     this, TrueOrFalse(currentKeyEvent->mKeyDownHandled),
+     TrueOrFalse(currentKeyEvent->mKeyPressHandled)));
+  return currentKeyEvent->KeyDownOrPressHandled();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
 }
@@ -1312,13 +1312,17 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
     return;
   }
 
+  KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
+
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TextInputHandler::InsertText, aAttrString=\"%s\", "
      "IsIMEComposing()=%s, IgnoreIMEComposition()=%s, "
      "keyevent=%p, keypressDispatched=%s",
      this, GetCharacters([aAttrString string]), TrueOrFalse(IsIMEComposing()),
-     TrueOrFalse(IgnoreIMEComposition()), mCurrentKeyEvent.mKeyEvent,
-     TrueOrFalse(mCurrentKeyEvent.mKeyPressDispatched)));
+     TrueOrFalse(IgnoreIMEComposition()),
+     currentKeyEvent ? currentKeyEvent->mKeyEvent : nsnull,
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mKeyPressDispatched) : "N/A"));
 
   if (IgnoreIMEComposition()) {
     return;
@@ -1337,7 +1341,7 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
 
   // Don't let the same event be fired twice when hitting
   // enter/return! (Bug 420502)
-  if (mCurrentKeyEvent.mKeyPressDispatched) {
+  if (currentKeyEvent && currentKeyEvent->mKeyPressDispatched) {
     return;
   }
 
@@ -1359,8 +1363,8 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
   EventRecord carbonEvent;
 #endif // #ifndef NP_NO_CARBON
 
-  if (mCurrentKeyEvent.mKeyEvent) {
-    NSEvent* keyEvent = mCurrentKeyEvent.mKeyEvent;
+  if (currentKeyEvent) {
+    NSEvent* keyEvent = currentKeyEvent->mKeyEvent;
 
     // XXX The ASCII characters inputting mode of egbridge (Japanese IME)
     // might send the keyDown event with wrong keyboard layout if other
@@ -1373,7 +1377,7 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
     }
 #endif // #ifndef NP_NO_CARBON
 
-    if (mCurrentKeyEvent.mKeyDownHandled) {
+    if (currentKeyEvent->mKeyDownHandled) {
       keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     }
 
@@ -1400,9 +1404,9 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
 
   // Note: mWidget might have become null here. Don't count on it from here on.
 
-  if (mCurrentKeyEvent.mKeyEvent) {
-    mCurrentKeyEvent.mKeyPressHandled = keyPressHandled;
-    mCurrentKeyEvent.mKeyPressDispatched = PR_TRUE;
+  if (currentKeyEvent) {
+    currentKeyEvent->mKeyPressHandled = keyPressHandled;
+    currentKeyEvent->mKeyPressDispatched = PR_TRUE;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -1411,13 +1415,16 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
 bool
 TextInputHandler::DoCommandBySelector(const char* aSelector)
 {
+  KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
+
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TextInputHandler::DoCommandBySelector, aSelector=\"%s\", "
      "Destroyed()=%s, keypressHandled=%s",
      this, aSelector ? aSelector : "", TrueOrFalse(Destroyed()),
-     TrueOrFalse(mCurrentKeyEvent.mKeyPressHandled)));
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mKeyPressHandled) : "N/A"));
 
-  return !Destroyed() && mCurrentKeyEvent.mKeyPressHandled;
+  return !Destroyed() && currentKeyEvent && currentKeyEvent->mKeyPressHandled;
 }
 
 
