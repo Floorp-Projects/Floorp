@@ -323,7 +323,7 @@ public:
   already_AddRefed<nsILoadGroup> GetDocumentLoadGroup();
 
   /**
-   * Returns PR_TRUE if the media has played or completed a seek.
+   * Returns true if the media has played or completed a seek.
    * Used by video frame to determine whether to paint the poster.
    */
   bool GetPlayedOrSeeked() const { return mHasPlayedOrSeeked; }
@@ -343,7 +343,7 @@ public:
   void SetRequestHeaders(nsIHttpChannel* aChannel);
 
   /**
-   * Fires a timeupdate event. If aPeriodic is PR_TRUE, the event will only
+   * Fires a timeupdate event. If aPeriodic is true, the event will only
    * be fired if we've not fired a timeupdate event (for any reason) in the
    * last 250ms, as required by the spec when the current time is periodically
    * increasing during playback.
@@ -639,7 +639,7 @@ protected:
   // An audio stream for writing audio directly from JS.
   nsRefPtr<nsAudioStream> mAudioStream;
 
-  // PR_TRUE if MozAudioAvailable events can be safely dispatched, based on
+  // True if MozAudioAvailable events can be safely dispatched, based on
   // a media and element same-origin check.
   bool mAllowAudioData;
 
@@ -679,57 +679,57 @@ protected:
   // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
   bool mPlayingBeforeSeek;
 
-  // PR_TRUE iff this element is paused because the document is inactive
+  // True iff this element is paused because the document is inactive
   bool mPausedForInactiveDocument;
 
-  // PR_TRUE if we've reported a "waiting" event since the last
+  // True if we've reported a "waiting" event since the last
   // readyState change to HAVE_CURRENT_DATA.
   bool mWaitingFired;
 
-  // PR_TRUE if we're running the "load()" method.
+  // True if we're running the "load()" method.
   bool mIsRunningLoadMethod;
 
-  // PR_TRUE if we're loading the resource from the child source elements.
+  // True if we're loading the resource from the child source elements.
   bool mIsLoadingFromSourceChildren;
 
-  // PR_TRUE if we're delaying the "load" event. They are delayed until either
+  // True if we're delaying the "load" event. They are delayed until either
   // an error occurs, or the first frame is loaded.
   bool mDelayingLoadEvent;
 
-  // PR_TRUE when we've got a task queued to call SelectResource(),
+  // True when we've got a task queued to call SelectResource(),
   // or while we're running SelectResource().
   bool mIsRunningSelectResource;
 
-  // PR_TRUE if we suspended the decoder because we were paused,
+  // True if we suspended the decoder because we were paused,
   // preloading metadata is enabled, autoplay was not enabled, and we loaded
   // the first frame.
   bool mSuspendedAfterFirstFrame;
 
-  // PR_TRUE if we are allowed to suspend the decoder because we were paused,
+  // True if we are allowed to suspend the decoder because we were paused,
   // preloading metdata was enabled, autoplay was not enabled, and we loaded
   // the first frame.
   bool mAllowSuspendAfterFirstFrame;
 
-  // PR_TRUE if we've played or completed a seek. We use this to determine
+  // True if we've played or completed a seek. We use this to determine
   // when the poster frame should be shown.
   bool mHasPlayedOrSeeked;
 
-  // PR_TRUE if we've added a reference to ourselves to keep the element
+  // True if we've added a reference to ourselves to keep the element
   // alive while no-one is referencing it but the element may still fire
   // events of its own accord.
   bool mHasSelfReference;
 
-  // PR_TRUE if we've received a notification that the engine is shutting
+  // True if we've received a notification that the engine is shutting
   // down.
   bool mShuttingDown;
 
-  // PR_TRUE if we've suspended a load in the resource selection algorithm
-  // due to loading a preload:none media. When PR_TRUE, the resource we'll
+  // True if we've suspended a load in the resource selection algorithm
+  // due to loading a preload:none media. When true, the resource we'll
   // load when the user initiates either playback or an explicit load is
   // stored in mPreloadURI.
   bool mLoadIsSuspended;
 
-  // PR_TRUE if a same-origin check has been done for the media element and resource.
+  // True if a same-origin check has been done for the media element and resource.
   bool mMediaSecurityVerified;
 };
 
