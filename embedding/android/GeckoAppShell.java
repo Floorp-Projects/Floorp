@@ -1043,6 +1043,22 @@ public class GeckoAppShell
                                   HapticFeedbackConstants.VIRTUAL_KEY);
     }
 
+    private static Vibrator vibrator() {
+        return (Vibrator) GeckoApp.surfaceView.getContext().getSystemService(Context.VIBRATOR_SERVICE);
+    }
+
+    public static void vibrate(long milliseconds) {
+        vibrator().vibrate(milliseconds);
+    }
+
+    public static void vibrate(long[] pattern, int repeat) {
+        vibrator().vibrate(pattern, repeat);
+    }
+
+    public static void cancelVibrate() {
+        vibrator().cancel();
+    }
+
     public static void showInputMethodPicker() {
         InputMethodManager imm = (InputMethodManager) GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showInputMethodPicker();
