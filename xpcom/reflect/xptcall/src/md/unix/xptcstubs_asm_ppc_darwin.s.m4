@@ -47,8 +47,7 @@ define(STUB_MANGLED_ENTRY,
         b       _SharedStub')
 dnl
 define(STUB_ENTRY,
-`#ifdef HAVE_GCC3_ABI
-        .if     '$1` < 10
+`       .if     '$1` < 10
 STUB_MANGLED_ENTRY('$1`, `__ZN14nsXPTCStubBase5Stub'$1`Ev')
         .elseif '$1` < 100
 STUB_MANGLED_ENTRY('$1`, `__ZN14nsXPTCStubBase6Stub'$1`Ev')
@@ -57,9 +56,6 @@ STUB_MANGLED_ENTRY('$1`, `__ZN14nsXPTCStubBase7Stub'$1`Ev')
         .else
         .err    "Stub'$1` >= 1000 not yet supported."
         .endif
-#else /* !defined(HAVE_GCC3_ABI) */
-STUB_MANGLED_ENTRY('$1`, `_Stub'$1`__14nsXPTCStubBase')
-#endif /* !defined(HAVE_GCC3_ABI) */
 ')
 dnl
 define(SENTINEL_ENTRY, `')

@@ -68,6 +68,7 @@ var tests = [
     synthesizeMouse(scroller, x, y, { type: "mouseup" }, window);
   },
   function() {
+    scroller.onscroll = null;
     ok(true, "Clicking the scrollbar should scroll");
     finish();
   }

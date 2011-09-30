@@ -59,8 +59,6 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  virtual bool IsContainingBlock() const;
-
   /**
    * Get the "type" of the frame
    *

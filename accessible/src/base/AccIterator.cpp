@@ -180,13 +180,16 @@ HTMLLabelIterator::Next()
   nsAccessible* walkUp = mAcc->Parent();
   while (walkUp && !walkUp->IsDoc()) {
     nsIContent* walkUpElm = walkUp->GetContent();
-    if (walkUpElm->Tag() == nsGkAtoms::label) {
-      mLabelFilter = eSkipAncestorLabel; // prevent infinite loop
-      return walkUp;
-    }
+    if (walkUpElm->IsHTML()) {
+      if (walkUpElm->Tag() == nsGkAtoms::label &&
+          !walkUpElm->HasAttr(kNameSpaceID_None, nsGkAtoms::_for)) {
+        mLabelFilter = eSkipAncestorLabel; // prevent infinite loop
+        return walkUp;
+      }
 
-    if (walkUpElm->Tag() == nsGkAtoms::form)
-      break;
+      if (walkUpElm->Tag() == nsGkAtoms::form)
+        break;
+    }
 
     walkUp = walkUp->Parent();
   }

@@ -59,6 +59,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "xpcpublic.h"
 
 using namespace mozilla;
 
