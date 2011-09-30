@@ -288,7 +288,7 @@ public:
   // on the appropriate threads.
   virtual bool OnDecodeThread() const = 0;
 
-  // Returns PR_TRUE if the current thread is the state machine thread.
+  // Returns true if the current thread is the state machine thread.
   virtual bool OnStateMachineThread() const = 0;
 
   virtual nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus() = 0;
@@ -316,7 +316,7 @@ public:
   // before calling this.
   virtual void SetSeekable(bool aSeekable) = 0;
 
-  // Returns PR_TRUE if the media resource can seek into unbuffered ranges,
+  // Returns true if the media resource can seek into unbuffered ranges,
   // as set by SetSeekable(). The decoder monitor must be obtained before
   // calling this.
   virtual bool IsSeekable() = 0;
@@ -419,11 +419,11 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Call on the main thread only.
   virtual void NetworkError();
 
-  // Call from any thread safely. Return PR_TRUE if we are currently
+  // Call from any thread safely. Return true if we are currently
   // seeking in the media resource.
   virtual bool IsSeeking() const;
 
-  // Return PR_TRUE if the decoder has reached the end of playback.
+  // Return true if the decoder has reached the end of playback.
   // Call on the main thread only.
   virtual bool IsEnded() const;
 
@@ -435,7 +435,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Set a flag indicating whether seeking is supported
   virtual void SetSeekable(bool aSeekable);
 
-  // Return PR_TRUE if seeking is supported.
+  // Return true if seeking is supported.
   virtual bool IsSeekable();
 
   virtual nsresult GetSeekable(nsTimeRanges* aSeekable);
@@ -704,7 +704,7 @@ public:
   // locked before accessing.
   bool mIgnoreProgressData;
 
-  // PR_TRUE if the stream is infinite (e.g. a webradio).
+  // True if the stream is infinite (e.g. a webradio).
   bool mInfiniteStream;
 };
 

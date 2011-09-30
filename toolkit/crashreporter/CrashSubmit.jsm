@@ -257,7 +257,7 @@ Submitter.prototype = {
     // add the minidump
     formData.append("upload_file_minidump", File(this.dump.path));
     let self = this;
-    xhr.onreadystatechange = function (aEvt) {
+    xhr.addEventListener("readystatechange", function (aEvt) {
       if (xhr.readyState == 4) {
         if (xhr.status != 200) {
           self.notifyStatus(FAILED);
@@ -267,7 +267,7 @@ Submitter.prototype = {
           self.submitSuccess(ret);
         }
       }
-    };
+    }, false);
 
     xhr.send(formData);
     return true;

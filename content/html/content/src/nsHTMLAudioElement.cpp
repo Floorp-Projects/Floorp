@@ -125,7 +125,7 @@ nsHTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
   // 'preload' set to 'auto' (since the script must intend to
   // play the audio)
   nsresult rv = SetAttr(kNameSpaceID_None, nsGkAtoms::preload,
-                        NS_LITERAL_STRING("auto"), PR_TRUE);
+                        NS_LITERAL_STRING("auto"), true);
   if (NS_FAILED(rv))
     return rv;
 
@@ -143,7 +143,7 @@ nsHTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
   if (!str.init(aContext, jsstr))
     return NS_ERROR_FAILURE;
 
-  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::src, str, PR_TRUE);
+  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::src, str, true);
   if (NS_FAILED(rv))
     return rv;
 
@@ -267,5 +267,5 @@ nsresult nsHTMLAudioElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 
     return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                       value,
-                                      PR_FALSE);
+                                      false);
 }

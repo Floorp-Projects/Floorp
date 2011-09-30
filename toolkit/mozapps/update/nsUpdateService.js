@@ -2155,9 +2155,9 @@ Checker.prototype = {
     this._request.setRequestHeader("Cache-Control", "no-cache");
 
     var self = this;
-    this._request.onerror     = function(event) { self.onError(event);    };
-    this._request.onload      = function(event) { self.onLoad(event);     };
-    this._request.onprogress  = function(event) { self.onProgress(event); };
+    this._request.addEventListener("error", function(event) { self.onError(event); } ,false);
+    this._request.addEventListener("load", function(event) { self.onLoad(event); }, false);
+    this._request.addEventListener("progress", function(event) { self.onProgress(event); }, false);
 
     LOG("Checker:checkForUpdates - sending request to: " + url);
     this._request.send(null);
