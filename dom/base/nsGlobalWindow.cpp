@@ -11321,6 +11321,9 @@ NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
 
+  if (!Preferences::GetBool("geo.enabled", PR_TRUE))
+    return NS_OK;
+
   if (mGeolocation) {
     NS_ADDREF(*_retval = mGeolocation);
     return NS_OK;
