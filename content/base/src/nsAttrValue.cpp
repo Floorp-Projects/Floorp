@@ -51,7 +51,6 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
-#include "nsISVGValue.h"
 
 namespace css = mozilla::css;
 
@@ -81,12 +80,6 @@ nsAttrValue::nsAttrValue(css::StyleRule* aValue, const nsAString* aSerialized)
     : mBits(0)
 {
   SetTo(aValue, aSerialized);
-}
-
-nsAttrValue::nsAttrValue(nsISVGValue* aValue)
-    : mBits(0)
-{
-  SetTo(aValue);
 }
 
 nsAttrValue::nsAttrValue(const nsIntMargin& aValue)
@@ -250,11 +243,6 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       }
       break;
     }
-    case eSVGValue:
-    {
-      NS_ADDREF(cont->mSVGValue = otherCont->mSVGValue);
-      break;
-    }
     case eDoubleValue:
     {
       cont->mDoubleValue = otherCont->mDoubleValue;
@@ -313,16 +301,6 @@ nsAttrValue::SetTo(css::StyleRule* aValue, const nsAString* aSerialized)
     NS_ADDREF(cont->mCSSStyleRule = aValue);
     cont->mType = eCSSStyleRule;
     SetMiscAtomOrString(aSerialized);
-  }
-}
-
-void
-nsAttrValue::SetTo(nsISVGValue* aValue)
-{
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    NS_ADDREF(cont->mSVGValue = aValue);
-    cont->mType = eSVGValue;
   }
 }
 
@@ -425,11 +403,6 @@ nsAttrValue::ToString(nsAString& aResult) const
       }
       const_cast<nsAttrValue*>(this)->SetMiscAtomOrString(&aResult);
 
-      break;
-    }
-    case eSVGValue:
-    {
-      GetMiscContainer()->mSVGValue->GetValueString(aResult);
       break;
     }
     case eDoubleValue:
@@ -590,10 +563,6 @@ nsAttrValue::HashValue() const
       }
       return retval;
     }
-    case eSVGValue:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGValue);
-    }
     case eDoubleValue:
     {
       // XXX this is crappy, but oh well
@@ -686,10 +655,6 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
 
       needsStringComparison = PR_TRUE;
       break;
-    }
-    case eSVGValue:
-    {
-      return thisCont->mSVGValue == otherCont->mSVGValue;
     }
     case eDoubleValue:
     {
@@ -1307,11 +1272,6 @@ nsAttrValue::EnsureEmptyMiscContainer()
         delete cont->mAtomArray;
         break;
       }
-      case eSVGValue:
-      {
-        NS_RELEASE(cont->mSVGValue);
-        break;
-      }
       case eIntMarginValue:
       {
         delete cont->mIntMargin;
@@ -1497,14 +1457,11 @@ nsAttrValue::SizeOf() const
         size += str ? str->StorageSize() : 0;
       }
 
-      // TODO: mCSSStyleRule and mSVGValue might be owned by another object
+      // TODO: mCSSStyleRule might be owned by another object
       // which would make us count them twice, bug 677493.
       if (Type() == eCSSStyleRule && container->mCSSStyleRule) {
         // TODO: Add SizeOf() to StyleRule, bug 677503.
         size += sizeof(*container->mCSSStyleRule);
-      } else if (Type() == eSVGValue && container->mSVGValue) {
-        // TODO: Add SizeOf() to nsSVGValue, bug 677504.
-        size += sizeof(*container->mSVGValue);
       } else if (Type() == eAtomArray && container->mAtomArray) {
         size += sizeof(container->mAtomArray) + sizeof(nsTArrayHeader);
         size += container->mAtomArray->Capacity() * sizeof(nsCOMPtr<nsIAtom>);

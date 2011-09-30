@@ -38,7 +38,6 @@
 #include "SVGAnimatedPathSegList.h"
 #include "SVGPathSegUtils.h"
 #include "nsSVGElement.h"
-#include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
 #include "nsString.h"
