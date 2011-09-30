@@ -642,7 +642,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
         bool stableSlot =
             (slot == SHAPE_INVALID_SLOT) ||
             lastProp->hasMissingSlot() ||
-            (slot == lastProp->slot() + 1);
+            (slot == lastProp->maybeSlot() + 1);
         JS_ASSERT_IF(!allowDictionary, stableSlot);
         if (allowDictionary &&
             (!stableSlot || lastProp->entryCount() >= PropertyTree::MAX_HEIGHT)) {
