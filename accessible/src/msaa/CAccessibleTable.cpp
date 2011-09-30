@@ -49,9 +49,12 @@
 #include "nsIWinAccessNode.h"
 #include "nsAccessNodeWrap.h"
 #include "nsWinUtils.h"
+#include "Statistics.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+
+using namespace mozilla::a11y;
 
 #define CANT_QUERY_ASSERTION_MSG \
 "Subclass of CAccessibleTable doesn't implement nsIAccessibleTable"\
@@ -64,6 +67,7 @@ CAccessibleTable::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleTable == iid) {
+    statistics::IAccessibleTableUsed();
     *ppv = static_cast<IAccessibleTable*>(this);
     (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
