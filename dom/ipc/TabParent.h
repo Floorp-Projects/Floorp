@@ -131,6 +131,13 @@ public:
     void UpdateDimensions(const nsRect& rect, const nsIntSize& size);
     void Activate();
     void Deactivate();
+
+    /**
+     * Is this object active?  That is, was Activate() called more recently than
+     * Deactivate()?
+     */
+    bool Active();
+
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         PRInt32 aButton, PRInt32 aClickCount,
                         PRInt32 aModifiers, bool aIgnoreRootScrollFrame);
@@ -221,6 +228,7 @@ protected:
     PRUint32 mIMESeqno;
 
     float mDPI;
+    bool mActive;
 
 private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;
