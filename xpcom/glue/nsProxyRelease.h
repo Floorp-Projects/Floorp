@@ -50,12 +50,12 @@
 /**
  * Ensure that a nsCOMPtr is released on the target thread.
  *
- * @see NS_ProxyRelease(nsIEventTarget*, nsISupports*, PRBool)
+ * @see NS_ProxyRelease(nsIEventTarget*, nsISupports*, bool)
  */
 template <class T>
 inline NS_HIDDEN_(nsresult)
 NS_ProxyRelease
-    (nsIEventTarget *target, nsCOMPtr<T> &doomed, PRBool alwaysProxy=PR_FALSE)
+    (nsIEventTarget *target, nsCOMPtr<T> &doomed, bool alwaysProxy=false)
 {
    T* raw = nsnull;
    doomed.swap(raw);
@@ -65,12 +65,12 @@ NS_ProxyRelease
 /**
  * Ensure that a nsRefPtr is released on the target thread.
  *
- * @see NS_ProxyRelease(nsIEventTarget*, nsISupports*, PRBool)
+ * @see NS_ProxyRelease(nsIEventTarget*, nsISupports*, bool)
  */
 template <class T>
 inline NS_HIDDEN_(nsresult)
 NS_ProxyRelease
-    (nsIEventTarget *target, nsRefPtr<T> &doomed, PRBool alwaysProxy=PR_FALSE)
+    (nsIEventTarget *target, nsRefPtr<T> &doomed, bool alwaysProxy=false)
 {
    T* raw = nsnull;
    doomed.swap(raw);
@@ -92,6 +92,6 @@ NS_ProxyRelease
  */
 NS_COM_GLUE nsresult
 NS_ProxyRelease
-    (nsIEventTarget *target, nsISupports *doomed, PRBool alwaysProxy=PR_FALSE);
+    (nsIEventTarget *target, nsISupports *doomed, bool alwaysProxy=false);
 
 #endif

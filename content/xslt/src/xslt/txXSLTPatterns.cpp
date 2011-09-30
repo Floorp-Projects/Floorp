@@ -122,7 +122,7 @@ txUnionPattern::toString(nsAString& aDest)
  * (dealt with by the parser)
  */
 
-nsresult txLocPathPattern::addStep(txPattern* aPattern, PRBool isChild)
+nsresult txLocPathPattern::addStep(txPattern* aPattern, bool isChild)
 {
     Step* step = mSteps.AppendElement();
     if (!step)
@@ -156,7 +156,7 @@ MBool txLocPathPattern::matches(const txXPathNode& aNode, txIMatchContext* aCont
         return MB_FALSE;
 
     txXPathTreeWalker walker(aNode);
-    PRBool hasParent = walker.moveToParent();
+    bool hasParent = walker.moveToParent();
 
     while (step->isChild) {
         if (!pos)
@@ -444,7 +444,7 @@ MBool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, MB_FALSE);
 
-    PRBool hasNext = mIsAttr ? walker.moveToFirstAttribute() :
+    bool hasNext = mIsAttr ? walker.moveToFirstAttribute() :
                                walker.moveToFirstChild();
     while (hasNext) {
         if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {

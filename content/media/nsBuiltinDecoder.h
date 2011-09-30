@@ -232,7 +232,7 @@ destroying the nsBuiltinDecoder object.
 
 class nsAudioStream;
 
-static inline PRBool IsCurrentThread(nsIThread* aThread) {
+static inline bool IsCurrentThread(nsIThread* aThread) {
   return NS_GetCurrentThread() == aThread;
 }
 
@@ -286,10 +286,10 @@ public:
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
-  virtual PRBool OnDecodeThread() const = 0;
+  virtual bool OnDecodeThread() const = 0;
 
   // Returns PR_TRUE if the current thread is the state machine thread.
-  virtual PRBool OnStateMachineThread() const = 0;
+  virtual bool OnStateMachineThread() const = 0;
 
   virtual nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus() = 0;
 
@@ -314,12 +314,12 @@ public:
   // Called from the main thread to set whether the media resource can
   // seek into unbuffered ranges. The decoder monitor must be obtained
   // before calling this.
-  virtual void SetSeekable(PRBool aSeekable) = 0;
+  virtual void SetSeekable(bool aSeekable) = 0;
 
   // Returns PR_TRUE if the media resource can seek into unbuffered ranges,
   // as set by SetSeekable(). The decoder monitor must be obtained before
   // calling this.
-  virtual PRBool IsSeekable() = 0;
+  virtual bool IsSeekable() = 0;
 
   // Update the playback position. This can result in a timeupdate event
   // and an invalidate of the frame being dispatched asynchronously if
@@ -371,7 +371,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   nsBuiltinDecoder();
   ~nsBuiltinDecoder();
   
-  virtual PRBool Init(nsHTMLMediaElement* aElement);
+  virtual bool Init(nsHTMLMediaElement* aElement);
 
   // This method must be called by the owning object before that
   // object disposes of this decoder object.
@@ -398,8 +398,8 @@ class nsBuiltinDecoder : public nsMediaDecoder
   virtual void SetVolume(double aVolume);
   virtual double GetDuration();
 
-  virtual void SetInfinite(PRBool aInfinite);
-  virtual PRBool IsInfinite();
+  virtual void SetInfinite(bool aInfinite);
+  virtual bool IsInfinite();
 
   virtual nsMediaStream* GetCurrentStream();
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
@@ -421,11 +421,11 @@ class nsBuiltinDecoder : public nsMediaDecoder
 
   // Call from any thread safely. Return PR_TRUE if we are currently
   // seeking in the media resource.
-  virtual PRBool IsSeeking() const;
+  virtual bool IsSeeking() const;
 
   // Return PR_TRUE if the decoder has reached the end of playback.
   // Call on the main thread only.
-  virtual PRBool IsEnded() const;
+  virtual bool IsEnded() const;
 
   // Set the duration of the media resource in units of seconds.
   // This is called via a channel listener if it can pick up the duration
@@ -433,10 +433,10 @@ class nsBuiltinDecoder : public nsMediaDecoder
   virtual void SetDuration(double aDuration);
 
   // Set a flag indicating whether seeking is supported
-  virtual void SetSeekable(PRBool aSeekable);
+  virtual void SetSeekable(bool aSeekable);
 
   // Return PR_TRUE if seeking is supported.
-  virtual PRBool IsSeekable();
+  virtual bool IsSeekable();
 
   virtual nsresult GetSeekable(nsTimeRanges* aSeekable);
 
@@ -454,7 +454,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Resume any media downloads that have been suspended. Called by the
   // media element when it is restored from the bfcache. Call on the
   // main thread only.
-  virtual void Resume(PRBool aForceBuffering);
+  virtual void Resume(bool aForceBuffering);
 
   // Tells our nsMediaStream to put all loads in the background.
   virtual void MoveLoadsToBackground();
@@ -465,9 +465,9 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // has changed.
   void DurationChanged();
 
-  PRBool OnStateMachineThread() const;
+  bool OnStateMachineThread() const;
 
-  PRBool OnDecodeThread() const {
+  bool OnDecodeThread() const {
     return mDecoderStateMachine->OnDecodeThread();
   }
 
@@ -529,7 +529,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   void UpdatePlaybackRate();
 
   // The actual playback rate computation. The monitor must be held.
-  double ComputePlaybackRate(PRPackedBool* aReliable);
+  double ComputePlaybackRate(bool* aReliable);
 
   // Make the decoder state machine update the playback position. Called by
   // the reader on the decoder thread (Assertions for this checked by 
@@ -659,7 +659,7 @@ public:
 
   // True if the media resource is seekable (server supports byte range
   // requests).
-  PRPackedBool mSeekable;
+  bool mSeekable;
 
   /******
    * The following member variables can be accessed from any thread.
@@ -695,17 +695,17 @@ public:
   // True when we have fully loaded the resource and reported that
   // to the element (i.e. reached NETWORK_LOADED state).
   // Accessed on the main thread only.
-  PRPackedBool mResourceLoaded;
+  bool mResourceLoaded;
 
   // True when seeking or otherwise moving the play position around in
   // such a manner that progress event data is inaccurate. This is set
   // during seek and duration operations to prevent the progress indicator
   // from jumping around. Read/Write from any thread. Must have decode monitor
   // locked before accessing.
-  PRPackedBool mIgnoreProgressData;
+  bool mIgnoreProgressData;
 
   // PR_TRUE if the stream is infinite (e.g. a webradio).
-  PRPackedBool mInfiniteStream;
+  bool mInfiniteStream;
 };
 
 #endif

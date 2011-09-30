@@ -91,7 +91,7 @@ protected:
 
   nsString mPreferredLang;
 
-  PRPackedBool mUpdateDictionaryRunning;
+  bool mUpdateDictionaryRunning;
 
 public:
   void BeginUpdateDictionary() { mUpdateDictionaryRunning = PR_TRUE ;}

@@ -101,10 +101,10 @@ public:
   // not the rest?
   virtual PRInt32 GetNumFormsSynchronous() = 0;
   
-  virtual PRBool IsWriting() = 0;
+  virtual bool IsWriting() = 0;
 
-  virtual PRBool GetIsFrameset() = 0;
-  virtual void SetIsFrameset(PRBool aFrameset) = 0;
+  virtual bool GetIsFrameset() = 0;
+  virtual void SetIsFrameset(bool aFrameset) = 0;
 
   /**
    * Get the list of form elements in the document.
@@ -140,7 +140,7 @@ public:
   /**
    * Returns whether the document is editable.
    */
-  PRBool IsEditingOn()
+  bool IsEditingOn()
   {
     return GetEditingState() == eDesignMode ||
            GetEditingState() == eContentEditable;
@@ -169,9 +169,9 @@ public:
    */
   virtual void TearingDownEditor(nsIEditor *aEditor) = 0;
 
-  virtual void SetIsXHTML(PRBool aXHTML) = 0;
+  virtual void SetIsXHTML(bool aXHTML) = 0;
 
-  virtual void SetDocWriteDisabled(PRBool aDisabled) = 0;
+  virtual void SetDocWriteDisabled(bool aDisabled) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)

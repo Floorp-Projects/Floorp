@@ -221,7 +221,7 @@ nsDownloadScanner::Init()
   return rv;
 }
 
-PRBool
+bool
 nsDownloadScanner::IsAESAvailable()
 {
   // Try to instantiate IAE to see if it's available.    
@@ -264,7 +264,7 @@ nsDownloadScanner::CheckPolicy(nsIURI *aSource, nsIURI *aTarget)
   // IAttachementExecute prohibits src data: schemes by default but we
   // support them. If this is a data src, skip off doing a policy check.
   // (The file will still be scanned once it lands on the local system.)
-  PRBool isDataScheme(PR_FALSE);
+  bool isDataScheme(false);
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aSource);
   if (innerURI)
     (void)innerURI->SchemeIs("data", &isDataScheme);
@@ -399,7 +399,7 @@ nsDownloadScanner::Scan::Start()
   CopyUTF8toUTF16(origin, mOrigin);
 
   // We count https/ftp/http as an http download
-  PRBool isHttp(PR_FALSE), isFtp(PR_FALSE), isHttps(PR_FALSE);
+  bool isHttp(false), isFtp(false), isHttps(false);
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(uri);
   if (!innerURI) innerURI = uri;
   (void)innerURI->SchemeIs("http", &isHttp);
@@ -472,7 +472,7 @@ ExceptionFilterFunction(DWORD exceptionCode) {
   }
 }
 
-PRBool
+bool
 nsDownloadScanner::Scan::DoScanAES()
 {
   // This warning is for the destructor of ae which will not be invoked in the
@@ -491,7 +491,7 @@ nsDownloadScanner::Scan::DoScanAES()
   if (CheckAndSetState(AVSCAN_SCANNING, AVSCAN_NOTSTARTED)) {
     AVScanState newState;
     if (SUCCEEDED(hr)) {
-      PRBool gotException = PR_FALSE;
+      bool gotException = false;
       MOZ_SEH_TRY {
         (void)ae->SetClientGuid(GUID_MozillaVirusScannerPromptGeneric);
         (void)ae->SetLocalPath(mPath.BeginWriting());
@@ -574,10 +574,10 @@ nsDownloadScanner::Scan::GetWaitableThreadHandle() const
   return targetHandle;
 }
 
-PRBool
+bool
 nsDownloadScanner::Scan::NotifyTimeout()
 {
-  PRBool didTimeout = CheckAndSetState(AVSCAN_TIMEDOUT, AVSCAN_SCANNING) ||
+  bool didTimeout = CheckAndSetState(AVSCAN_TIMEDOUT, AVSCAN_SCANNING) ||
                       CheckAndSetState(AVSCAN_TIMEDOUT, AVSCAN_NOTSTARTED);
   if (didTimeout) {
     // We need to do a few more things on the main thread
@@ -586,9 +586,9 @@ nsDownloadScanner::Scan::NotifyTimeout()
   return didTimeout;
 }
 
-PRBool
+bool
 nsDownloadScanner::Scan::CheckAndSetState(AVScanState newState, AVScanState expectedState) {
-  PRBool gotExpectedState = PR_FALSE;
+  bool gotExpectedState = false;
   EnterCriticalSection(&mStateSync);
   if(gotExpectedState = (mStatus == expectedState))
     mStatus = newState;
@@ -673,7 +673,7 @@ nsDownloadScannerWatchdog::Shutdown() {
 
 void
 nsDownloadScannerWatchdog::Watch(Scan *scan) {
-  PRBool wasEmpty;
+  bool wasEmpty;
   // Note that there is no release in this method
   // The scan will be released by the watchdog ALWAYS on the main thread
   // when either the watchdog thread processes the scan or the watchdog

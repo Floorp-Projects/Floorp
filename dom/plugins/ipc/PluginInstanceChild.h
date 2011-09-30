@@ -281,7 +281,7 @@ private:
     void SetupFlashMsgThrottle();
     void UnhookWinlessFlashThrottle();
     void HookSetWindowLongPtr();
-    static inline PRBool SetWindowLongHookCheck(HWND hWnd,
+    static inline bool SetWindowLongHookCheck(HWND hWnd,
                                                 int nIndex,
                                                 LONG_PTR newLong);
     void FlashThrottleMessage(HWND, UINT, WPARAM, LPARAM, bool);
@@ -594,7 +594,7 @@ private:
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     // Maemo5 Flash does not remember WindowlessLocal state
     // we should listen for NPP values negotiation and remember it
-    PRPackedBool          mMaemoImageRendering;
+    bool                  mMaemoImageRendering;
 #endif
 };
 

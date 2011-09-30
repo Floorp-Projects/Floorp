@@ -189,9 +189,9 @@ nsresult TextEditorTest::TestTextProperties()
   nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(mTextEditor));
   NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
 
-  PRBool any = PR_FALSE;
-  PRBool all = PR_FALSE;
-  PRBool first=PR_FALSE;
+  bool any = false;
+  bool all = false;
+  bool first=false;
 
   const nsAFlatString& empty = EmptyString();
 

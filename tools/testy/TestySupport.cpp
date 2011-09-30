@@ -31,7 +31,7 @@ void Testy_LogComment(const char* name, const char* comment)
   fflush(gLogFile);
 }
 
-void Testy_LogEnd(const char* name, PRBool passed)
+void Testy_LogEnd(const char* name, bool passed)
 {
   PR_ASSERT(gLogFile);
   fprintf(gLogFile, "Test Case: %s (%s)", name, passed ? "Passed" : "Failed");

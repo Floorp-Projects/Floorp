@@ -70,10 +70,16 @@ public:
   virtual PRInt32 GetSelectedIndex() = 0;
 
   /**
+   * Return current option. The current option is the option displaying
+   * the focus ring when the listbox is focused.
+   */
+  virtual already_AddRefed<nsIContent> GetCurrentOption() = 0;
+
+  /**
    * Initiates mouse capture for the listbox
    *
    */
-  virtual void CaptureMouseEvents(PRBool aGrabMouseEvents) = 0;
+  virtual void CaptureMouseEvents(bool aGrabMouseEvents) = 0;
 
   /**
    * Returns the height of a single row in the list.  This is the

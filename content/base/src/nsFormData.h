@@ -73,7 +73,7 @@ private:
     nsString name;
     nsString stringValue;
     nsCOMPtr<nsIDOMBlob> fileValue;
-    PRBool valueIsFile;
+    bool valueIsFile;
   };
   
   nsTArray<FormDataTuple> mFormData;

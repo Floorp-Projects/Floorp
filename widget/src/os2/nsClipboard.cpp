@@ -100,11 +100,11 @@ nsresult nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable, PRI
 }
 
 // Get some data from the clipboard
-PRBool nsClipboard::GetClipboardData(const char *aFlavor)
+bool nsClipboard::GetClipboardData(const char *aFlavor)
 {
   PRUint32 ulFormatID = GetFormatID(aFlavor);
   
-  PRBool found = GetClipboardDataByID( ulFormatID, aFlavor );
+  bool found = GetClipboardDataByID( ulFormatID, aFlavor );
 
   if (!found) 
   {
@@ -121,11 +121,11 @@ PRBool nsClipboard::GetClipboardData(const char *aFlavor)
   return found;
 }
 
-PRBool nsClipboard::GetClipboardDataByID(PRUint32 aFormatID, const char *aFlavor)
+bool nsClipboard::GetClipboardDataByID(PRUint32 aFormatID, const char *aFlavor)
 {
   PVOID pDataMem;
   PRUint32 NumOfBytes;
-  PRBool TempBufAllocated = PR_FALSE;
+  bool TempBufAllocated = false;
 
   PVOID pClipboardData = reinterpret_cast<PVOID>(WinQueryClipbrdData(0, aFormatID));
 
@@ -409,7 +409,7 @@ PRUint32 nsClipboard::GetFormatID(const char *aMimeStr)
 NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,
                                                   PRUint32 aLength,
                                                   PRInt32 aWhichClipboard,
-                                                  PRBool *_retval)
+                                                  bool *_retval)
 {
   *_retval = PR_FALSE;
   if (aWhichClipboard != kGlobalClipboard || !aFlavorList)

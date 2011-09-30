@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Context nenu focus testing">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTests()
+    {
+      // Test focus events.
+      gQueue = new eventQueue();
+
+      gQueue.push(new synthFocus("button"));
+      gQueue.push(new synthContextMenu("button",
+                                       new invokerChecker(EVENT_MENUPOPUP_START, "contextmenu")));
+      gQueue.push(new synthEscapeKey("contextmenu", new focusChecker("button")));
+
+      gQueue.push(new synthContextMenu("button",
+                                       new invokerChecker(EVENT_MENUPOPUP_START, "contextmenu")));
+      gQueue.push(new synthDownKey("contextmenu", new focusChecker("item1")));
+      gQueue.push(new synthDownKey("item1", new focusChecker("item2")));
+      gQueue.push(new synthRightKey("item2", new focusChecker("item2.1")));
+      gQueue.push(new synthEscapeKey("item2.1", new focusChecker("item2")));
+      gQueue.push(new synthEscapeKey("item2", new focusChecker("button")));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=673958"
+         title="Rework accessible focus handling">
+        Mozilla Bug 673958
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <button id="button" context="contextmenu" label="button"/>
+      <menupopup id="contextmenu">
+        <menuitem id="item1" label="item1"/>
+        <menu id="item2" label="item2">
+          <menupopup>
+            <menuitem id="item2.1" label="item2.1"/>
+          </menupopup>
+        </menu>
+      </menupopup>
+
+      <vbox id="eventdump"/>
+    </vbox>
+  </hbox>
+</window>

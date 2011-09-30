@@ -124,7 +124,7 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
 
   // decide enabled state based on command content if it exists, otherwise do it based
   // on our own content
-  PRBool isEnabled;
+  bool isEnabled;
   if (mCommandContent)
     isEnabled = !mCommandContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled, nsWidgetAtoms::_true, eCaseMatters);
   else
@@ -154,7 +154,7 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult nsMenuItemX::SetChecked(PRBool aIsChecked)
+nsresult nsMenuItemX::SetChecked(bool aIsChecked)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -197,7 +197,7 @@ void nsMenuItemX::DoCommand()
   nsMenuUtilsX::DispatchCommandTo(mContent);
 }
 
-nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, PRBool *preventDefaultCalled)
+nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, bool *preventDefaultCalled)
 {
   if (!mContent)
     return NS_ERROR_FAILURE;

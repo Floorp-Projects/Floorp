@@ -31,8 +31,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441519
         if (outerDocAcc) {
           testRole(outerDocAcc, ROLE_INTERNAL_FRAME);
 
-          // check if it is focusable, not desired.
-          testStates(outerDocAcc, 0, 0, STATE_FOCUSABLE);
+          // check if it is focusable.
+          testStates(outerDocAcc, STATE_FOCUSABLE, 0);
 
           // see bug 428954: No name wanted for internal frame
           is(outerDocAcc.name, null, "Wrong name for internal frame!");

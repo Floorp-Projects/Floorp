@@ -363,7 +363,7 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
   mPrintSelectionOnlyCheckbox = [self checkboxWithLabel:"selectionOnly"
                                                andFrame:NSMakeRect(156, 240, 0, 0)];
 
-  PRBool canPrintSelection;
+  bool canPrintSelection;
   mSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB,
                              &canPrintSelection);
   [mPrintSelectionOnlyCheckbox setEnabled:canPrintSelection];
@@ -380,7 +380,7 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
   mShrinkToFitCheckbox = [self checkboxWithLabel:"shrinkToFit"
                                         andFrame:NSMakeRect(156, 218, 0, 0)];
 
-  PRBool shrinkToFit;
+  bool shrinkToFit;
   mSettings->GetShrinkToFit(&shrinkToFit);
   [mShrinkToFitCheckbox setState:(shrinkToFit ? NSOnState : NSOffState)];
 
@@ -396,7 +396,7 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
   mPrintBGColorsCheckbox = [self checkboxWithLabel:"printBGColors"
                                           andFrame:NSMakeRect(156, 188, 0, 0)];
 
-  PRBool geckoBool;
+  bool geckoBool;
   mSettings->GetPrintBGColors(&geckoBool);
   [mPrintBGColorsCheckbox setState:(geckoBool ? NSOnState : NSOffState)];
 

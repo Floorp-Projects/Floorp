@@ -106,7 +106,7 @@ PreparePatternForUntiledDrawing(gfxPattern* aPattern,
             if (VendorRelease(dpy) >= 60700000 ||
                 VendorRelease(dpy) < 10699000) {
 
-                PRBool isDownscale =
+                bool isDownscale =
                     aDeviceToImage.xx >= 1.0 && aDeviceToImage.yy >= 1.0 &&
                     aDeviceToImage.xy == 0.0 && aDeviceToImage.yx == 0.0;
 
@@ -131,10 +131,10 @@ PreparePatternForUntiledDrawing(gfxPattern* aPattern,
     }
 }
 
-PRBool
+bool
 gfxSurfaceDrawable::Draw(gfxContext* aContext,
                          const gfxRect& aFillRect,
-                         PRBool aRepeat,
+                         bool aRepeat,
                          const gfxPattern::GraphicsFilter& aFilter,
                          const gfxMatrix& aTransform)
 {
@@ -187,10 +187,10 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const gfxPattern::GraphicsFilter aFilte
     return drawable.forget();
 }
 
-PRBool
+bool
 gfxCallbackDrawable::Draw(gfxContext* aContext,
                           const gfxRect& aFillRect,
-                          PRBool aRepeat,
+                          bool aRepeat,
                           const gfxPattern::GraphicsFilter& aFilter,
                           const gfxMatrix& aTransform)
 {
@@ -224,7 +224,7 @@ public:
 
     virtual ~DrawingCallbackFromDrawable() {}
 
-    virtual PRBool operator()(gfxContext* aContext,
+    virtual bool operator()(gfxContext* aContext,
                               const gfxRect& aFillRect,
                               const gfxPattern::GraphicsFilter& aFilter,
                               const gfxMatrix& aTransform = gfxMatrix())
@@ -246,10 +246,10 @@ gfxPatternDrawable::MakeCallbackDrawable()
     return callbackDrawable.forget();
 }
 
-PRBool
+bool
 gfxPatternDrawable::Draw(gfxContext* aContext,
                          const gfxRect& aFillRect,
-                         PRBool aRepeat,
+                         bool aRepeat,
                          const gfxPattern::GraphicsFilter& aFilter,
                          const gfxMatrix& aTransform)
 {

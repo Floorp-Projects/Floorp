@@ -210,7 +210,7 @@ nsNullPrincipalURI::GetSpecIgnoringRef(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetHasRef(PRBool *result)
+nsNullPrincipalURI::GetHasRef(bool *result)
 {
   *result = PR_FALSE;
   return NS_OK;
@@ -264,7 +264,7 @@ nsNullPrincipalURI::CloneIgnoringRef(nsIURI **_newURI)
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::Equals(nsIURI *aOther, PRBool *_equals)
+nsNullPrincipalURI::Equals(nsIURI *aOther, bool *_equals)
 {
   *_equals = PR_FALSE;
   nsNullPrincipalURI *otherURI;
@@ -278,7 +278,7 @@ nsNullPrincipalURI::Equals(nsIURI *aOther, PRBool *_equals)
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::EqualsExceptRef(nsIURI *aOther, PRBool *_equals)
+nsNullPrincipalURI::EqualsExceptRef(nsIURI *aOther, bool *_equals)
 {
   // GetRef/SetRef not supported by nsNullPrincipalURI, so
   // EqualsExceptRef() is the same as Equals().
@@ -294,7 +294,7 @@ nsNullPrincipalURI::Resolve(const nsACString &aRelativePath,
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SchemeIs(const char *aScheme, PRBool *_schemeIs)
+nsNullPrincipalURI::SchemeIs(const char *aScheme, bool *_schemeIs)
 {
   *_schemeIs = (0 == nsCRT::strcasecmp(mScheme.get(), aScheme));
   return NS_OK;

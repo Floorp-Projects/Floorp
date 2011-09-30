@@ -109,12 +109,12 @@ StatementWrapper::Reset()
 }
 
 NS_IMETHODIMP
-StatementWrapper::Step(PRBool *_hasMoreResults)
+StatementWrapper::Step(bool *_hasMoreResults)
 {
   if (!mStatement)
     return NS_ERROR_FAILURE;
 
-  PRBool hasMore = PR_FALSE;
+  bool hasMore = false;
   nsresult rv = mStatement->ExecuteStep(&hasMore);
   if (NS_SUCCEEDED(rv) && !hasMore) {
     *_hasMoreResults = PR_FALSE;
@@ -188,7 +188,7 @@ StatementWrapper::Call(nsIXPConnectWrappedNative *aWrapper,
                        PRUint32 aArgc,
                        jsval *aArgv,
                        jsval *_vp,
-                       PRBool *_retval)
+                       bool *_retval)
 {
   if (!mStatement)
     return NS_ERROR_FAILURE;

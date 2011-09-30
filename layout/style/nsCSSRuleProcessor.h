@@ -84,7 +84,7 @@ public:
   static nsresult Startup();
   static void Shutdown();
   static void FreeSystemMetrics();
-  static PRBool HasSystemMetric(nsIAtom* aMetric);
+  static bool HasSystemMetric(nsIAtom* aMetric);
 
   /*
    * Returns true if the given aElement matches one of the
@@ -93,7 +93,7 @@ public:
    * include any pseudo-element selectors.  aSelectorList is allowed
    * to be null; in this case PR_FALSE will be returned.
    */
-  static PRBool SelectorListMatches(mozilla::dom::Element* aElement,
+  static bool SelectorListMatches(mozilla::dom::Element* aElement,
                                     TreeMatchContext& aTreeMatchContext,
                                     nsCSSSelectorList* aSelectorList);
 
@@ -109,12 +109,12 @@ public:
   static nsEventStates GetContentStateForVisitedHandling(
              mozilla::dom::Element* aElement,
              nsRuleWalker::VisitedHandlingType aVisitedHandling,
-             PRBool aIsRelevantLink);
+             bool aIsRelevantLink);
 
   /*
    * Helper to test whether a node is a link
    */
-  static PRBool IsLink(mozilla::dom::Element* aElement);
+  static bool IsLink(mozilla::dom::Element* aElement);
 
   // nsIStyleRuleProcessor
   virtual void RulesMatching(ElementRuleProcessorData* aData);
@@ -129,21 +129,21 @@ public:
 
   virtual nsRestyleHint HasStateDependentStyle(StateRuleProcessorData* aData);
 
-  virtual PRBool HasDocumentStateDependentStyle(StateRuleProcessorData* aData);
+  virtual bool HasDocumentStateDependentStyle(StateRuleProcessorData* aData);
 
   virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
 
-  virtual PRBool MediumFeaturesChanged(nsPresContext* aPresContext);
+  virtual bool MediumFeaturesChanged(nsPresContext* aPresContext);
 
   virtual PRInt64 SizeOf() const;
 
   // Append all the currently-active font face rules to aArray.  Return
   // true for success and false for failure.
-  PRBool AppendFontFaceRules(nsPresContext* aPresContext,
+  bool AppendFontFaceRules(nsPresContext* aPresContext,
                              nsTArray<nsFontFaceRuleContainer>& aArray);
 
-  PRBool AppendKeyframesRules(nsPresContext* aPresContext,
+  bool AppendKeyframesRules(nsPresContext* aPresContext,
                               nsTArray<nsCSSKeyframesRule*>& aArray);
 
 #ifdef DEBUG
@@ -162,7 +162,7 @@ public:
 #endif
 
 private:
-  static PRBool CascadeSheet(nsCSSStyleSheet* aSheet, CascadeEnumData* aData);
+  static bool CascadeSheet(nsCSSStyleSheet* aSheet, CascadeEnumData* aData);
 
   RuleCascadeData* GetRuleCascade(nsPresContext* aPresContext);
   void RefreshRuleCascade(nsPresContext* aPresContext);

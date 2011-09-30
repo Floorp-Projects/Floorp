@@ -84,7 +84,7 @@ txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
         }
         case ELEMENT_AVAILABLE:
         {
-            PRBool val = qname.mNamespaceID == kNameSpaceID_XSLT &&
+            bool val = qname.mNamespaceID == kNameSpaceID_XSLT &&
                          (qname.mLocalName == nsGkAtoms::applyImports ||
                           qname.mLocalName == nsGkAtoms::applyTemplates ||
                           qname.mLocalName == nsGkAtoms::attribute ||
@@ -126,11 +126,11 @@ txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
         }
         case FUNCTION_AVAILABLE:
         {
-            extern PRBool TX_XSLTFunctionAvailable(nsIAtom* aName,
+            extern bool TX_XSLTFunctionAvailable(nsIAtom* aName,
                                                    PRInt32 aNameSpaceID);
 
             txCoreFunctionCall::eType type;
-            PRBool val = (qname.mNamespaceID == kNameSpaceID_None &&
+            bool val = (qname.mNamespaceID == kNameSpaceID_None &&
                           txCoreFunctionCall::getTypeFromAtom(qname.mLocalName,
                                                               type)) ||
                          TX_XSLTFunctionAvailable(qname.mLocalName,
@@ -151,7 +151,7 @@ txXSLTEnvironmentFunctionCall::getReturnType()
                                       BOOLEAN_RESULT;
 }
 
-PRBool
+bool
 txXSLTEnvironmentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     return argsSensitiveTo(aContext);

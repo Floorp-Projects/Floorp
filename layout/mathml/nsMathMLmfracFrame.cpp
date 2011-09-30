@@ -91,7 +91,7 @@ nsMathMLmfracFrame::TransmitAutomaticData()
   //    false increments scriptlevel by 1, within numerator and denominator.
   // 2. The TeXbook (Ch 17. p.141) says the numerator inherits the compression
   //    while the denominator is compressed
-  PRBool increment = !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags);
+  bool increment = !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags);
   SetIncrementScriptLevel(0, increment);
   SetIncrementScriptLevel(1, increment);
 
@@ -206,7 +206,7 @@ nsMathMLmfracFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
 
 /* virtual */ nsresult
 nsMathMLmfracFrame::Place(nsRenderingContext& aRenderingContext,
-                          PRBool               aPlaceOrigin,
+                          bool                 aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
   return PlaceInternal(aRenderingContext,
@@ -217,9 +217,9 @@ nsMathMLmfracFrame::Place(nsRenderingContext& aRenderingContext,
 
 nsresult
 nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
-                                  PRBool               aPlaceOrigin,
+                                  bool                 aPlaceOrigin,
                                   nsHTMLReflowMetrics& aDesiredSize,
-                                  PRBool               aWidthOnly)
+                                  bool                 aWidthOnly)
 {
   ////////////////////////////////////
   // Get the children's desired sizes

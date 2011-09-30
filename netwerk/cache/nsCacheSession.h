@@ -54,7 +54,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHESESSION
     
-    nsCacheSession(const char * clientID, nsCacheStoragePolicy storagePolicy, PRBool streamBased);
+    nsCacheSession(const char * clientID, nsCacheStoragePolicy storagePolicy, bool streamBased);
     virtual ~nsCacheSession();
     
     nsCString *           ClientID()      { return &mClientID; }
@@ -67,11 +67,11 @@ public:
 
     void   MarkStreamBased()  { mInfo |=  eStreamBasedMask; }
     void   ClearStreamBased() { mInfo &= ~eStreamBasedMask; }
-    PRBool IsStreamBased()    { return (mInfo & eStreamBasedMask) != 0; }
+    bool IsStreamBased()    { return (mInfo & eStreamBasedMask) != 0; }
 
     void   MarkDoomEntriesIfExpired()  { mInfo |=  eDoomEntriesIfExpiredMask; }
     void   ClearDoomEntriesIfExpired() { mInfo &= ~eDoomEntriesIfExpiredMask; }
-    PRBool WillDoomEntriesIfExpired()  { return (0 != (mInfo & eDoomEntriesIfExpiredMask)); }
+    bool WillDoomEntriesIfExpired()  { return (0 != (mInfo & eDoomEntriesIfExpiredMask)); }
 
     nsCacheStoragePolicy  StoragePolicy()
     {

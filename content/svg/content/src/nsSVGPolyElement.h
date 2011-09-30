@@ -58,7 +58,7 @@ public:
   NS_DECL_NSIDOMSVGANIMATEDPOINTS
 
   // nsIContent interface
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
 
   virtual SVGAnimatedPointList* GetAnimatedPointList() {
     return &mPoints;
@@ -68,8 +68,8 @@ public:
   }
 
   // nsSVGPathGeometryElement methods:
-  virtual PRBool AttributeDefinesGeometry(const nsIAtom *aName);
-  virtual PRBool IsMarkable() { return PR_TRUE; }
+  virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
+  virtual bool IsMarkable() { return true; }
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx);
 

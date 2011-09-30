@@ -51,12 +51,12 @@ public:
 
   static nsresult Rewrap(const nsAString & aInString,
                          PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
-                         PRBool aRespectNewlines,
+                         bool aRespectNewlines,
                          nsAString & aOutString);
 
 protected:
   static nsresult StripCitesAndLinebreaks(const nsAString& aInString, nsAString& aOutString,
-                                          PRBool aLinebreaksToo, PRInt32* aCiteLevel);
+                                          bool aLinebreaksToo, PRInt32* aCiteLevel);
 };
 
 #endif //nsInternetCiter_h__

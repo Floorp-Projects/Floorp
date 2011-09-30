@@ -1,0 +1,73 @@
+<html>
+
+<head>
+  <title>Accessible focus testing on HTML controls</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+    function doTests()
+    {
+      gQueue = new eventQueue(EVENT_FOCUS);
+
+      gQueue.push(new synthFocus("textbox"));
+      gQueue.push(new synthFocus("textarea"));
+      gQueue.push(new synthFocus("button1"));
+      gQueue.push(new synthFocus("button2"));
+      gQueue.push(new synthFocus("checkbox"));
+      gQueue.push(new synthFocus("radio1"));
+      gQueue.push(new synthDownKey("radio1", new focusChecker("radio2")));
+
+      // no focus events for checkbox or radio inputs when they are checked
+      // programmatically
+      gQueue.push(new changeCurrentItem("checkbox"));
+      gQueue.push(new changeCurrentItem("radio1"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=673958"
+     title="Rework accessible focus handling">
+    Mozilla Bug 673958
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="textbox">
+  <textarea id="textarea"></textarea>
+
+  <input id="button1" type="button" value="button">
+  <button id="button2">button</button>
+  <input id="checkbox" type="checkbox">
+  <input id="radio1" type="radio" name="radiogroup">
+  <input id="radio2" type="radio" name="radiogroup">
+
+  <div id="eventdump"></div>
+</body>
+</html>

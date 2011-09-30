@@ -114,7 +114,7 @@ nsAtomList::nsAtomList(const nsString& aAtomValue)
 }
 
 nsAtomList*
-nsAtomList::Clone(PRBool aDeep) const
+nsAtomList::Clone(bool aDeep) const
 {
   nsAtomList *result = new nsAtomList(mAtom);
   if (!result)
@@ -181,7 +181,7 @@ nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
 }
 
 nsPseudoClassList*
-nsPseudoClassList::Clone(PRBool aDeep) const
+nsPseudoClassList::Clone(bool aDeep) const
 {
   nsPseudoClassList *result;
   if (!u.mMemory) {
@@ -234,7 +234,7 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
 }
 
 nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunction, 
-                               const nsString& aValue, PRBool aCaseSensitive)
+                               const nsString& aValue, bool aCaseSensitive)
   : mValue(aValue),
     mNext(nsnull),
     mLowercaseAttr(nsnull),
@@ -254,7 +254,7 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint
 
 nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace,  nsIAtom* aLowercaseAttr,
                                nsIAtom* aCasedAttr, PRUint8 aFunction, 
-                               const nsString& aValue, PRBool aCaseSensitive)
+                               const nsString& aValue, bool aCaseSensitive)
   : mValue(aValue),
     mNext(nsnull),
     mLowercaseAttr(aLowercaseAttr),
@@ -267,7 +267,7 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace,  nsIAtom* aLowercaseAttr,
 }
 
 nsAttrSelector*
-nsAttrSelector::Clone(PRBool aDeep) const
+nsAttrSelector::Clone(bool aDeep) const
 {
   nsAttrSelector *result =
     new nsAttrSelector(mNameSpace, mLowercaseAttr, mCasedAttr, 
@@ -307,7 +307,7 @@ nsCSSSelector::nsCSSSelector(void)
 }
 
 nsCSSSelector*
-nsCSSSelector::Clone(PRBool aDeepNext, PRBool aDeepNegations) const
+nsCSSSelector::Clone(bool aDeepNext, bool aDeepNegations) const
 {
   nsCSSSelector *result = new nsCSSSelector();
   if (!result)
@@ -453,7 +453,7 @@ void nsCSSSelector::AddAttribute(PRInt32 aNameSpace, const nsString& aAttr)
 }
 
 void nsCSSSelector::AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
-                                 const nsString& aValue, PRBool aCaseSensitive)
+                                 const nsString& aValue, bool aCaseSensitive)
 {
   if (!aAttr.IsEmpty()) {
     nsAttrSelector** list = &mAttrList;
@@ -520,7 +520,7 @@ PRInt32 nsCSSSelector::CalcWeight() const
 //
 void
 nsCSSSelector::ToString(nsAString& aString, nsCSSStyleSheet* aSheet,
-                        PRBool aAppend) const
+                        bool aAppend) const
 {
   if (!aAppend)
    aString.Truncate();
@@ -578,14 +578,14 @@ nsCSSSelector::AppendToStringWithoutCombinators
 void
 nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
                    (nsAString& aString, nsCSSStyleSheet* aSheet,
-                   PRBool aIsNegated) const
+                   bool aIsNegated) const
 {
   nsAutoString temp;
-  PRBool isPseudoElement = IsPseudoElement();
+  bool isPseudoElement = IsPseudoElement();
 
   // For non-pseudo-element selectors or for lone pseudo-elements, deal with
   // namespace prefixes.
-  PRBool wroteNamespace = PR_FALSE;
+  bool wroteNamespace = false;
   if (!isPseudoElement || !mNext) {
     // append the namespace prefix if needed
     nsXMLNameSpaceMap *sheetNS = aSheet ? aSheet->GetNameSpaceMap() : nsnull;
@@ -803,8 +803,8 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
   }
 }
 
-PRBool
-nsCSSSelector::CanBeNamespaced(PRBool aIsNegated) const
+bool
+nsCSSSelector::CanBeNamespaced(bool aIsNegated) const
 {
   return !aIsNegated ||
          (!mIDList && !mClassList && !mPseudoClassList && !mAttrList);
@@ -859,7 +859,7 @@ nsCSSSelectorList::ToString(nsAString& aResult, nsCSSStyleSheet* aSheet)
 }
 
 nsCSSSelectorList*
-nsCSSSelectorList::Clone(PRBool aDeep) const
+nsCSSSelectorList::Clone(bool aDeep) const
 {
   nsCSSSelectorList *result = new nsCSSSelectorList();
   result->mWeight = mWeight;
@@ -925,7 +925,7 @@ public:
 
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
   void DropReference(void);
-  virtual css::Declaration* GetCSSDeclaration(PRBool aAllocate);
+  virtual css::Declaration* GetCSSDeclaration(bool aAllocate);
   virtual nsresult SetCSSDeclaration(css::Declaration* aDecl);
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv);
   virtual nsIDocument* DocToUpdate();
@@ -1017,7 +1017,7 @@ DOMCSSDeclarationImpl::DropReference(void)
 }
 
 css::Declaration*
-DOMCSSDeclarationImpl::GetCSSDeclaration(PRBool aAllocate)
+DOMCSSDeclarationImpl::GetCSSDeclaration(bool aAllocate)
 {
   if (mRule) {
     return mRule->GetDeclaration();
@@ -1325,7 +1325,7 @@ StyleRule::GetDOMRule()
 
 /* virtual */ already_AddRefed<StyleRule>
 StyleRule::DeclarationChanged(Declaration* aDecl,
-                              PRBool aHandleContainer)
+                              bool aHandleContainer)
 {
   StyleRule* clone = new StyleRule(*this, aDecl);
   if (!clone) {

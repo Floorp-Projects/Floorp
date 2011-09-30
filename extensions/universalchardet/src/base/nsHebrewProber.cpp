@@ -61,12 +61,12 @@
 #define VISUAL_HEBREW_NAME ("ISO-8859-8")
 #define LOGICAL_HEBREW_NAME ("windows-1255")
 
-PRBool nsHebrewProber::isFinal(char c)
+bool nsHebrewProber::isFinal(char c)
 {
   return ((c == FINAL_KAF) || (c == FINAL_MEM) || (c == FINAL_NUN) || (c == FINAL_PE) || (c == FINAL_TSADI));
 }
 
-PRBool nsHebrewProber::isNonFinal(char c)
+bool nsHebrewProber::isNonFinal(char c)
 {
   return ((c == NORMAL_KAF) || (c == NORMAL_MEM) || (c == NORMAL_NUN) || (c == NORMAL_PE));
   // The normal Tsadi is not a good Non-Final letter due to words like 

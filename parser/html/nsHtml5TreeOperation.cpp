@@ -283,7 +283,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                                    aBuilder->GetDocument());
 
       PRUint32 childCount = parent->GetChildCount();
-      PRBool didAppend = PR_FALSE;
+      bool didAppend = false;
       while (node->GetChildCount()) {
         nsCOMPtr<nsIContent> child = node->GetChildAt(0);
         rv = node->RemoveChildAt(0, PR_TRUE);
@@ -354,7 +354,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsCOMPtr<nsIAtom> name = Reget(mTwo.atom);
       nsHtml5HtmlAttributes* attributes = mThree.attributes;
       
-      PRBool isKeygen = (name == nsHtml5Atoms::keygen && ns == kNameSpaceID_XHTML);
+      bool isKeygen = (name == nsHtml5Atoms::keygen && ns == kNameSpaceID_XHTML);
       if (NS_UNLIKELY(isKeygen)) {
         name = nsHtml5Atoms::select;
       }

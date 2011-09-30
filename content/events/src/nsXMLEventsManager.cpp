@@ -51,7 +51,7 @@
 
 using namespace mozilla::dom;
 
-PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
+bool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
                                                   nsXMLEventsManager * aManager,
                                                   nsIContent * aContent)
 {
@@ -69,7 +69,7 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   if (eventType.IsEmpty())
     return PR_FALSE;
   nsAutoString handlerURIStr;
-  PRBool hasHandlerURI = PR_FALSE;
+  bool hasHandlerURI = false;
   nsIContent *handler = nsnull;
   nsAutoString observerID;
   nsAutoString targetIdref;
@@ -78,7 +78,7 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
     hasHandlerURI = PR_TRUE;
     nsCAutoString handlerRef;
     nsCOMPtr<nsIURI> handlerURI;
-    PRBool equals = PR_FALSE;
+    bool equals = false;
     nsIURI *docURI = aDocument->GetDocumentURI();
     nsIURI *baseURI = aDocument->GetDocBaseURI();
     rv = NS_NewURI( getter_AddRefs(handlerURI), handlerURIStr, nsnull, baseURI);
@@ -98,18 +98,18 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
 
   aContent->GetAttr(nameSpaceID, nsGkAtoms::target, targetIdref);
 
-  PRBool hasObserver = 
+  bool hasObserver = 
     aContent->GetAttr(nameSpaceID, nsGkAtoms::observer, observerID);
 
-  PRBool capture =
+  bool capture =
     aContent->AttrValueIs(nameSpaceID, nsGkAtoms::phase,
                           nsGkAtoms::capture, eCaseMatters);
 
-  PRBool stopPropagation = 
+  bool stopPropagation = 
     aContent->AttrValueIs(nameSpaceID, nsGkAtoms::propagate,
                           nsGkAtoms::stop, eCaseMatters);
 
-  PRBool cancelDefault = 
+  bool cancelDefault = 
     aContent->AttrValueIs(nameSpaceID, nsGkAtoms::defaultAction,
                           nsGkAtoms::cancel, eCaseMatters);
 
@@ -154,9 +154,9 @@ nsXMLEventsListener::nsXMLEventsListener(nsXMLEventsManager * aManager,
                                          nsIContent * aObserver,
                                          nsIContent * aHandler,
                                          const nsAString& aEvent,
-                                         PRBool aPhase,
-                                         PRBool aStopPropagation,
-                                         PRBool aCancelDefault,
+                                         bool aPhase,
+                                         bool aStopPropagation,
+                                         bool aCancelDefault,
                                          const nsAString& aTarget)
  : mManager(aManager),
    mElement(aElement),
@@ -192,12 +192,12 @@ void nsXMLEventsListener::SetIncomplete()
   mElement = nsnull;
 }
 
-PRBool nsXMLEventsListener::ObserverEquals(nsIContent * aTarget)
+bool nsXMLEventsListener::ObserverEquals(nsIContent * aTarget)
 {
   return aTarget == mObserver;
 }
 
-PRBool nsXMLEventsListener::HandlerEquals(nsIContent * aTarget)
+bool nsXMLEventsListener::HandlerEquals(nsIContent * aTarget)
 {
   return aTarget == mHandler;
 }
@@ -208,7 +208,7 @@ nsXMLEventsListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   if (!aEvent) 
     return NS_ERROR_INVALID_ARG;
-  PRBool targetMatched = PR_TRUE;
+  bool targetMatched = true;
   nsCOMPtr<nsIDOMEvent> event(aEvent);
   if (mTarget) {
     targetMatched = PR_FALSE;
@@ -289,7 +289,7 @@ void nsXMLEventsManager::AddListener(nsIContent * aContent,
   mListeners.Put(aContent, aListener);
 }
 
-PRBool nsXMLEventsManager::RemoveListener(nsIContent * aContent)
+bool nsXMLEventsManager::RemoveListener(nsIContent * aContent)
 {
   nsCOMPtr<nsXMLEventsListener> listener;
   mListeners.Get(aContent, getter_AddRefs(listener));

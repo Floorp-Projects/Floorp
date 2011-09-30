@@ -104,7 +104,7 @@ GetZeroValueForUnit(nsStyleAnimation::Unit aUnit)
 // with a eUnit_Float value.  (See comment below.)
 //
 // Returns PR_TRUE on success, or PR_FALSE.
-static const PRBool
+static const bool
 FinalizeStyleAnimationValues(const nsStyleAnimation::Value*& aValue1,
                              const nsStyleAnimation::Value*& aValue2)
 {
@@ -212,7 +212,7 @@ nsSMILCSSValueType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
-PRBool
+bool
 nsSMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
                             const nsSMILValue& aRight) const
 {
@@ -366,19 +366,19 @@ GetPresContextForElement(Element* aElem)
 }
 
 // Helper function to parse a string into a nsStyleAnimation::Value
-static PRBool
+static bool
 ValueFromStringHelper(nsCSSProperty aPropID,
                       Element* aTargetElement,
                       nsPresContext* aPresContext,
                       const nsAString& aString,
                       nsStyleAnimation::Value& aStyleAnimValue,
-                      PRBool* aIsContextSensitive)
+                      bool* aIsContextSensitive)
 {
   // If value is negative, we'll strip off the "-" so the CSS parser won't
   // barf, and then manually make the parsed value negative.
   // (This is a partial solution to let us accept some otherwise out-of-bounds
   // CSS values. Bug 501188 will provide a more complete fix.)
-  PRBool isNegative = PR_FALSE;
+  bool isNegative = false;
   PRUint32 subStringBegin = 0;
   PRInt32 absValuePos = nsSMILParserUtils::CheckForNegativeNumber(aString);
   if (absValuePos > 0) {
@@ -412,7 +412,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
                                     Element* aTargetElement,
                                     const nsAString& aString,
                                     nsSMILValue& aValue,
-                                    PRBool* aIsContextSensitive)
+                                    bool* aIsContextSensitive)
 {
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Outparam should be null-typed");
   nsPresContext* presContext = GetPresContextForElement(aTargetElement);
@@ -430,7 +430,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
 }
 
 // static
-PRBool
+bool
 nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
                                   nsAString& aString)
 {

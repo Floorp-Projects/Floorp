@@ -154,8 +154,8 @@ NS_IMPL_ISUPPORTS4(nsPlainTextSerializer,
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
-                            const char* aCharSet, PRBool aIsCopying,
-                            PRBool aIsWholeDocument)
+                            const char* aCharSet, bool aIsCopying,
+                            bool aIsWholeDocument)
 {
 #ifdef DEBUG
   // Check if the major control flags are set correctly.
@@ -235,8 +235,8 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   return NS_OK;
 }
 
-PRBool
-nsPlainTextSerializer::GetLastBool(const nsTArray<PRPackedBool>& aStack)
+bool
+nsPlainTextSerializer::GetLastBool(const nsTArray<bool>& aStack)
 {
   PRUint32 size = aStack.Length();
   if (size == 0) {
@@ -246,7 +246,7 @@ nsPlainTextSerializer::GetLastBool(const nsTArray<PRPackedBool>& aStack)
 }
 
 void
-nsPlainTextSerializer::SetLastBool(nsTArray<PRPackedBool>& aStack, PRBool aValue)
+nsPlainTextSerializer::SetLastBool(nsTArray<bool>& aStack, bool aValue)
 {
   PRUint32 size = aStack.Length();
   if (size > 0) {
@@ -258,15 +258,15 @@ nsPlainTextSerializer::SetLastBool(nsTArray<PRPackedBool>& aStack, PRBool aValue
 }
 
 void
-nsPlainTextSerializer::PushBool(nsTArray<PRPackedBool>& aStack, PRBool aValue)
+nsPlainTextSerializer::PushBool(nsTArray<bool>& aStack, bool aValue)
 {
-    aStack.AppendElement(PRPackedBool(aValue));
+    aStack.AppendElement(bool(aValue));
 }
 
-PRBool
-nsPlainTextSerializer::PopBool(nsTArray<PRPackedBool>& aStack)
+bool
+nsPlainTextSerializer::PopBool(nsTArray<bool>& aStack)
 {
-  PRBool returnValue = PR_FALSE;
+  bool returnValue = false;
   PRUint32 size = aStack.Length();
   if (size > 0) {
     returnValue = aStack.ElementAt(size-1);
@@ -393,7 +393,7 @@ nsPlainTextSerializer::AppendElementStart(Element* aElement,
   nsresult rv;
   PRInt32 id = GetIdForContent(mElement);
 
-  PRBool isContainer = IsContainer(id);
+  bool isContainer = IsContainer(id);
 
   mOutputString = &aStr;
 
@@ -425,7 +425,7 @@ nsPlainTextSerializer::AppendElementEnd(Element* aElement,
   nsresult rv;
   PRInt32 id = GetIdForContent(mElement);
 
-  PRBool isContainer = IsContainer(id);
+  bool isContainer = IsContainer(id);
 
   mOutputString = &aStr;
 
@@ -521,7 +521,7 @@ nsPlainTextSerializer::OpenHead()
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::IsEnabled(PRInt32 aTag, PRBool* aReturn)
+nsPlainTextSerializer::IsEnabled(PRInt32 aTag, bool* aReturn)
 {
   nsHTMLTag theHTMLTag = nsHTMLTag(aTag);
 
@@ -568,7 +568,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
   // above random <pre>s below it.
   mHasWrittenCiteBlockquote = mHasWrittenCiteBlockquote && aTag == eHTMLTag_pre;
 
-  PRBool isInCiteBlockquote = PR_FALSE;
+  bool isInCiteBlockquote = false;
 
   // XXX special-case <blockquote type=cite> so that we don't add additional
   // newlines before the text.
@@ -793,7 +793,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
   //////////////////////////////////////////////////////////////
 
   // Push on stack
-  PRBool currentNodeIsConverted = IsCurrentNodeConverted(aNode);
+  bool currentNodeIsConverted = IsCurrentNodeConverted(aNode);
   PushBool(mCurrentNodeIsConverted, currentNodeIsConverted);
 
   if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
@@ -976,7 +976,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     FlushLine();    // Is this needed?
 
     // Pop
-    PRBool isInCiteBlockquote = PopBool(mIsInCiteBlockquote);
+    bool isInCiteBlockquote = PopBool(mIsInCiteBlockquote);
 
     if (isInCiteBlockquote) {
       NS_ASSERTION(mCiteQuoteLevel, "CiteQuote level will be negative!");
@@ -1020,7 +1020,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   //////////////////////////////////////////////////////////////
 
   // Pop the currentConverted stack
-  PRBool currentNodeIsConverted = PopBool(mCurrentNodeIsConverted);
+  bool currentNodeIsConverted = PopBool(mCurrentNodeIsConverted);
   
   if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
       type == eHTMLTag_h3 || type == eHTMLTag_h4 ||
@@ -1271,7 +1271,7 @@ nsPlainTextSerializer::Output(nsString& aString)
   mOutputString->Append(aString);
 }
 
-static PRBool
+static bool
 IsSpaceStuffable(const PRUnichar *s)
 {
   if (s[0] == '>' || s[0] == ' ' || s[0] == kNBSP ||
@@ -1418,7 +1418,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
           mCurrentLine.Right(restOfLine, linelength-goodSpace);
         }
         // if breaker was U+0020, it has to consider for delsp=yes support
-        PRBool breakBySpace = mCurrentLine.CharAt(goodSpace) == ' ';
+        bool breakBySpace = mCurrentLine.CharAt(goodSpace) == ' ';
         mCurrentLine.Truncate(goodSpace); 
         EndLine(PR_TRUE, breakBySpace);
         mCurrentLine.Truncate();
@@ -1458,7 +1458,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
  * preformatted.
  */
 void
-nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak, PRBool aBreakBySpace)
+nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace)
 {
   PRUint32 currentlinelength = mCurrentLine.Length();
 
@@ -1515,7 +1515,7 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak, PRBool aBreakBySpace)
     // If we don't have anything "real" to output we have to
     // make sure the indent doesn't end in a space since that
     // would trick a format=flowed-aware receiver.
-    PRBool stripTrailingSpaces = mCurrentLine.IsEmpty();
+    bool stripTrailingSpaces = mCurrentLine.IsEmpty();
     OutputQuotesAndIndent(stripTrailingSpaces);
   }
 
@@ -1536,7 +1536,7 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak, PRBool aBreakBySpace)
  * stored text to put in the indentation after using it.
  */
 void
-nsPlainTextSerializer::OutputQuotesAndIndent(PRBool stripTrailingSpaces /* = PR_FALSE */)
+nsPlainTextSerializer::OutputQuotesAndIndent(bool stripTrailingSpaces /* = false */)
 {
   nsAutoString stringToOutput;
   
@@ -1650,10 +1650,10 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
     // Put the mail quote "> " chars in, if appropriate.
     // Have to put it in before every line.
     while(bol<totLen) {
-      PRBool outputQuotes = mAtFirstColumn;
-      PRBool atFirstColumn = mAtFirstColumn;
-      PRBool outputLineBreak = PR_FALSE;
-      PRBool spacesOnly = PR_TRUE;
+      bool outputQuotes = mAtFirstColumn;
+      bool atFirstColumn = mAtFirstColumn;
+      bool outputLineBreak = false;
+      bool spacesOnly = true;
 
       // Find one of '\n' or '\r' using iterators since nsAString
       // doesn't have the old FindCharInSet function.
@@ -1849,7 +1849,7 @@ nsPlainTextSerializer::GetAttributeValue(const nsIParserNode* aNode,
  * Returns true, if the element was inserted by Moz' TXT->HTML converter.
  * In this case, we should ignore it.
  */
-PRBool 
+bool 
 nsPlainTextSerializer::IsCurrentNodeConverted(const nsIParserNode* aNode)
 {
   nsAutoString value;
@@ -1878,10 +1878,10 @@ nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
  * Returns true if the id represents an element of block type.
  * Can be used to determine if a new paragraph should be started.
  */
-PRBool 
+bool 
 nsPlainTextSerializer::IsBlockLevel(PRInt32 aId)
 {
-  PRBool isBlock = PR_FALSE;
+  bool isBlock = false;
 
   nsIParserService* parserService = nsContentUtils::GetParserService();
   if (parserService) {
@@ -1894,10 +1894,10 @@ nsPlainTextSerializer::IsBlockLevel(PRInt32 aId)
 /**
  * Returns true if the id represents a container.
  */
-PRBool 
+bool 
 nsPlainTextSerializer::IsContainer(PRInt32 aId)
 {
-  PRBool isContainer = PR_FALSE;
+  bool isContainer = false;
 
   nsIParserService* parserService = nsContentUtils::GetParserService();
   if (parserService) {
@@ -1914,7 +1914,7 @@ nsPlainTextSerializer::IsContainer(PRInt32 aId)
  * the stack. To do this correctly to a 100% would require access
  * to style which we don't support in this converter.
  */  
-PRBool
+bool
 nsPlainTextSerializer::IsInPre()
 {
   PRInt32 i = mTagStackIndex;
@@ -1936,7 +1936,7 @@ nsPlainTextSerializer::IsInPre()
  * This method is required only to identify LI's inside OL.
  * Returns TRUE if we are inside an OL tag and FALSE otherwise.
  */
-PRBool
+bool
 nsPlainTextSerializer::IsInOL()
 {
   PRInt32 i = mTagStackIndex;

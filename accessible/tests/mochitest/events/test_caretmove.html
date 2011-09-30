@@ -20,9 +20,9 @@
     /**
      * Click checker.
      */
-    function clickChecker(aCaretOffset, aExtraNodeOrID, aExtraCaretOffset)
+    function clickChecker(aCaretOffset, aID, aExtraNodeOrID, aExtraCaretOffset)
     {
-      this.__proto__ = new caretMoveChecker(aCaretOffset);
+      this.__proto__ = new caretMoveChecker(aCaretOffset, aID);
 
       this.extraNode = getNode(aExtraNodeOrID);
 
@@ -62,30 +62,33 @@
       testCaretOffset("p", -1);
 
       // test caret move events and caret offsets
-      gQueue = new eventQueue(EVENT_TEXT_CARET_MOVED);
+      gQueue = new eventQueue();
 
       var id = "textbox";
-      gQueue.push(new synthFocus(id, new caretMoveChecker(5)));
-      gQueue.push(new synthSelectAll(id, new caretMoveChecker(5)));
-      gQueue.push(new synthClick(id, new caretMoveChecker(0)));
-      gQueue.push(new synthRightKey(id, new caretMoveChecker(1)));
+      gQueue.push(new synthFocus(id, new caretMoveChecker(5, id)));
+      gQueue.push(new synthSelectAll(id, new caretMoveChecker(5, id)));
+      gQueue.push(new synthClick(id, new caretMoveChecker(0, id)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
 
       id = "textarea";
-      gQueue.push(new synthClick(id, new caretMoveChecker(0)));
-      gQueue.push(new synthRightKey(id, new caretMoveChecker(1)));
-      gQueue.push(new synthDownKey(id, new caretMoveChecker(12)));
+      gQueue.push(new synthClick(id, new caretMoveChecker(0, id)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
+      gQueue.push(new synthDownKey(id, new caretMoveChecker(12, id)));
 
       id = "p";
-      gQueue.push(new synthClick(id, new caretMoveChecker(0)));
-      gQueue.push(new synthRightKey(id, new caretMoveChecker(1)));
-      gQueue.push(new synthDownKey(id, new caretMoveChecker(6)));
+      gQueue.push(new synthClick(id, new caretMoveChecker(0, id)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
+      gQueue.push(new synthDownKey(id, new caretMoveChecker(6, id)));
 
-      gQueue.push(new synthClick("p1_in_div",
-                                 new clickChecker(0, "p2_in_div", -1)));
+      id = "p1_in_div";
+      gQueue.push(new synthClick(id, new clickChecker(0, id, "p2_in_div", -1)));
 
-      gQueue.push(new synthShiftTab("p", new caretMoveChecker(0)));
-      gQueue.push(new synthShiftTab("textarea", new caretMoveChecker(12)));
-      gQueue.push(new synthTab("p", new caretMoveChecker(0)));
+      id = "p";
+      gQueue.push(new synthShiftTab(id, new caretMoveChecker(0, id)));
+      id = "textarea";
+      gQueue.push(new synthShiftTab(id, new caretMoveChecker(12, id)));
+      id = "p";
+      gQueue.push(new synthTab(id, new caretMoveChecker(0, id)));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

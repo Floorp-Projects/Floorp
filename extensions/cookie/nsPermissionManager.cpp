@@ -65,7 +65,7 @@ using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
 using mozilla::unused; // ha!
 
-static PRBool
+static bool
 IsChildProcess()
 {
   return XRE_GetProcessType() == GeckoProcessType_Content;
@@ -227,7 +227,7 @@ nsPermissionManager::Init()
 }
 
 nsresult
-nsPermissionManager::InitDB(PRBool aRemoveFile)
+nsPermissionManager::InitDB(bool aRemoveFile)
 {
   nsCOMPtr<nsIFile> permissionsFile;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(permissionsFile));
@@ -238,7 +238,7 @@ nsPermissionManager::InitDB(PRBool aRemoveFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRemoveFile) {
-    PRBool exists = PR_FALSE;
+    bool exists = false;
     rv = permissionsFile->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
     if (exists) {
@@ -255,7 +255,7 @@ nsPermissionManager::InitDB(PRBool aRemoveFile)
   rv = storage->OpenDatabase(permissionsFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool ready;
+  bool ready;
   mDBConn->GetConnectionReady(&ready);
   if (!ready) {
     // delete and try again
@@ -270,7 +270,7 @@ nsPermissionManager::InitDB(PRBool aRemoveFile)
       return NS_ERROR_UNEXPECTED;
   }
 
-  PRBool tableExists = PR_FALSE;
+  bool tableExists = false;
   mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"), &tableExists);
   if (!tableExists) {
     rv = CreateTable();
@@ -661,7 +661,7 @@ nsresult
 nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
                                           const char *aType,
                                           PRUint32   *aPermission,
-                                          PRBool      aExactHostMatch)
+                                          bool        aExactHostMatch)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aType);
@@ -674,7 +674,7 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
   // No host doesn't mean an error. Just return the default. Unless this is
   // a file uri. In that case use a magic host.
   if (NS_FAILED(rv)) {
-    PRBool isFile;
+    bool isFile;
     rv = aURI->SchemeIs("file", &isFile);
     NS_ENSURE_SUCCESS(rv, rv);
     if (isFile) {
@@ -705,7 +705,7 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
 nsHostEntry *
 nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
                                   PRUint32              aType,
-                                  PRBool                aExactHostMatch)
+                                  bool                  aExactHostMatch)
 {
   PRUint32 offset = 0;
   nsHostEntry *entry;
@@ -822,7 +822,7 @@ nsPermissionManager::RemoveAllFromMemory()
 // Returns -1 on failure
 PRInt32
 nsPermissionManager::GetTypeIndex(const char *aType,
-                                  PRBool      aAdd)
+                                  bool        aAdd)
 {
   for (PRUint32 i = 0; i < mTypeArray.Length(); ++i)
     if (mTypeArray[i].Equals(aType))
@@ -897,7 +897,7 @@ nsPermissionManager::Read()
     rv = stmtDeleteExpired->BindInt64ByIndex(1, PR_Now() / 1000);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool hasResult;
+    bool hasResult;
     rv = stmtDeleteExpired->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -913,7 +913,7 @@ nsPermissionManager::Read()
   PRUint32 permission;
   PRUint32 expireType;
   PRInt64 expireTime;
-  PRBool hasResult;
+  bool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     // explicitly set our entry id counter for use in AddInternal(),
     // and keep track of the largest id so we know where to pick up.
@@ -977,7 +977,7 @@ nsPermissionManager::Import()
    */
 
   nsCAutoString buffer;
-  PRBool isMore = PR_TRUE;
+  bool isMore = true;
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
     if (buffer.IsEmpty() || buffer.First() == '#') {
       continue;
@@ -1112,7 +1112,7 @@ nsPermissionManager::UpdateDB(OperationType         aOp,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    PRBool hasResult;
+    bool hasResult;
     rv = aStmt->ExecuteStep(&hasResult);
     aStmt->Reset();
   }

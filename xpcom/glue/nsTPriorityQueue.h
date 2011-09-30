@@ -76,7 +76,7 @@ public:
   /**
    * @return True if the queue is empty or false otherwise.
    */
-  PRBool IsEmpty() const
+  bool IsEmpty() const
   {
     return mElements.IsEmpty();
   }
@@ -107,7 +107,7 @@ public:
    * @param aElement The element to add
    * @return PR_TRUE on success, PR_FALSE on out of memory.
    */
-  PRBool Push(const T& aElement)
+  bool Push(const T& aElement)
   {
     T* elem = mElements.AppendElement(aElement);
     if (!elem)

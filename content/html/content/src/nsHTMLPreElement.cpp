@@ -65,11 +65,11 @@ public:
   NS_IMETHOD GetWidth(PRInt32* aWidth);
   NS_IMETHOD SetWidth(PRInt32 aWidth);
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -111,7 +111,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLPreElement)
 NS_IMPL_INT_ATTR(nsHTMLPreElement, Width, width)
 
 
-PRBool
+bool
 nsHTMLPreElement::ParseAttribute(PRInt32 aNamespaceID,
                                  nsIAtom* aAttribute,
                                  const nsAString& aValue,
@@ -173,7 +173,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHTMLPreElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {

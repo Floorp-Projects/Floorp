@@ -169,7 +169,7 @@ public:
   /** used by row group frame code */
   nscoord ReflowCellFrame(nsPresContext*          aPresContext,
                           const nsHTMLReflowState& aReflowState,
-                          PRBool                   aIsTopOfPage,
+                          bool                     aIsTopOfPage,
                           nsTableCellFrame*        aCellFrame,
                           nscoord                  aAvailableHeight,
                           nsReflowStatus&          aStatus);
@@ -185,8 +185,8 @@ public:
     */
   nscoord CollapseRowIfNecessary(nscoord aRowOffset,
                                  nscoord aWidth,
-                                 PRBool  aCollapseGroup,
-                                 PRBool& aDidCollapse);
+                                 bool    aCollapseGroup,
+                                 bool& aDidCollapse);
 
   /**
    * Insert a cell frame after the last cell frame that has a col index
@@ -201,33 +201,33 @@ public:
   nsresult CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
                                      nscoord&          aDesiredHeight);
 
-  PRBool IsFirstInserted() const;
-  void   SetFirstInserted(PRBool aValue);
+  bool IsFirstInserted() const;
+  void   SetFirstInserted(bool aValue);
 
   nscoord GetContentHeight() const;
   void    SetContentHeight(nscoord aTwipValue);
 
-  PRBool HasStyleHeight() const;
+  bool HasStyleHeight() const;
 
-  PRBool HasFixedHeight() const;
-  void   SetHasFixedHeight(PRBool aValue);
+  bool HasFixedHeight() const;
+  void   SetHasFixedHeight(bool aValue);
 
-  PRBool HasPctHeight() const;
-  void   SetHasPctHeight(PRBool aValue);
+  bool HasPctHeight() const;
+  void   SetHasPctHeight(bool aValue);
 
   nscoord GetFixedHeight() const;
   void    SetFixedHeight(nscoord aValue);
 
   float   GetPctHeight() const;
   void    SetPctHeight(float  aPctValue,
-                       PRBool aForce = PR_FALSE);
+                       bool aForce = false);
 
   nscoord GetHeight(nscoord aBasis = 0) const;
 
   nsTableRowFrame* GetNextRow() const;
 
-  PRBool  HasUnpaginatedHeight();
-  void    SetHasUnpaginatedHeight(PRBool aValue);
+  bool    HasUnpaginatedHeight();
+  void    SetHasUnpaginatedHeight(bool aValue);
   nscoord GetUnpaginatedHeight(nsPresContext* aPresContext);
   void    SetUnpaginatedHeight(nsPresContext* aPresContext, nscoord aValue);
 
@@ -264,7 +264,7 @@ protected:
 
   void InitChildReflowState(nsPresContext&         aPresContext,
                             const nsSize&           aAvailSize,
-                            PRBool                  aBorderCollapse,
+                            bool                    aBorderCollapse,
                             nsTableCellReflowState& aReflowState);
   
   /** implement abstract method on nsHTMLContainerFrame */
@@ -333,37 +333,37 @@ inline void nsTableRowFrame::SetRowIndex (int aRowIndex)
   mBits.mRowIndex = aRowIndex;
 }
 
-inline PRBool nsTableRowFrame::IsFirstInserted() const
+inline bool nsTableRowFrame::IsFirstInserted() const
 {
-  return PRBool(mBits.mFirstInserted);
+  return bool(mBits.mFirstInserted);
 }
 
-inline void nsTableRowFrame::SetFirstInserted(PRBool aValue)
+inline void nsTableRowFrame::SetFirstInserted(bool aValue)
 {
   mBits.mFirstInserted = aValue;
 }
 
-inline PRBool nsTableRowFrame::HasStyleHeight() const
+inline bool nsTableRowFrame::HasStyleHeight() const
 {
-  return (PRBool)mBits.mHasFixedHeight || (PRBool)mBits.mHasPctHeight;
+  return (bool)mBits.mHasFixedHeight || (bool)mBits.mHasPctHeight;
 }
 
-inline PRBool nsTableRowFrame::HasFixedHeight() const
+inline bool nsTableRowFrame::HasFixedHeight() const
 {
-  return (PRBool)mBits.mHasFixedHeight;
+  return (bool)mBits.mHasFixedHeight;
 }
 
-inline void nsTableRowFrame::SetHasFixedHeight(PRBool aValue)
+inline void nsTableRowFrame::SetHasFixedHeight(bool aValue)
 {
   mBits.mHasFixedHeight = aValue;
 }
 
-inline PRBool nsTableRowFrame::HasPctHeight() const
+inline bool nsTableRowFrame::HasPctHeight() const
 {
-  return (PRBool)mBits.mHasPctHeight;
+  return (bool)mBits.mHasPctHeight;
 }
 
-inline void nsTableRowFrame::SetHasPctHeight(PRBool aValue)
+inline void nsTableRowFrame::SetHasPctHeight(bool aValue)
 {
   mBits.mHasPctHeight = aValue;
 }
@@ -394,13 +394,13 @@ inline float nsTableRowFrame::GetPctHeight() const
     return 0.0f;
 }
 
-inline PRBool nsTableRowFrame::HasUnpaginatedHeight()
+inline bool nsTableRowFrame::HasUnpaginatedHeight()
 {
   return (mState & NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT) ==
          NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;
 }
 
-inline void nsTableRowFrame::SetHasUnpaginatedHeight(PRBool aValue)
+inline void nsTableRowFrame::SetHasUnpaginatedHeight(bool aValue)
 {
   if (aValue) {
     mState |= NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;

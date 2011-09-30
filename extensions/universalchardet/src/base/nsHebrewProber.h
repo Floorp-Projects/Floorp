@@ -65,8 +65,8 @@ public:
 #endif
 
 protected:
-  static PRBool isFinal(char c);
-  static PRBool isNonFinal(char c);
+  static bool isFinal(char c);
+  static bool isNonFinal(char c);
 
   PRInt32 mFinalCharLogicalScore, mFinalCharVisualScore;
 

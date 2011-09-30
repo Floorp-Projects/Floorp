@@ -63,8 +63,8 @@ protected:
   // and/or exit is requested.
   mozilla::CondVar mCond;
 
-  PRBool exitRequested(::mozilla::MutexAutoLock const & proofOfLock) const;
-  PRBool exitRequestedNoLock() const { return mExitState != ePSMThreadRunning; }
+  bool exitRequested(::mozilla::MutexAutoLock const & proofOfLock) const;
+  bool exitRequestedNoLock() const { return mExitState != ePSMThreadRunning; }
   nsresult postStoppedEventToMainThread(::mozilla::MutexAutoLock const & proofOfLock);
 
 private:

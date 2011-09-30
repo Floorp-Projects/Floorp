@@ -122,10 +122,10 @@ private:
   void SetParentCoordCtxProvider(nsSVGSVGElement *aContext);
 
   // recursion prevention flag
-  PRPackedBool mInUse;
+  bool mInUse;
 
   // second recursion prevention flag, for GetCanvasTM()
-  PRPackedBool mInUse2;
+  bool mInUse2;
 };
 
 #endif

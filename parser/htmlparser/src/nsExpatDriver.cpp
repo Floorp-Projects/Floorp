@@ -618,7 +618,7 @@ nsresult
 nsExpatDriver::HandleStartDoctypeDecl(const PRUnichar* aDoctypeName,
                                       const PRUnichar* aSysid,
                                       const PRUnichar* aPubid,
-                                      PRBool aHasInternalSubset)
+                                      bool aHasInternalSubset)
 {
   mDoctypeName = aDoctypeName;
   mSystemID = aSysid;
@@ -759,7 +759,7 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // check if it is alright to load this uri
-  PRBool isChrome = PR_FALSE;
+  bool isChrome = false;
   uri->SchemeIs("chrome", &isChrome);
   if (!isChrome) {
     // since the url is not a chrome url, check to see if we can map the DTD
@@ -957,7 +957,7 @@ nsExpatDriver::HandleError()
   }
 
   // If it didn't initialize, we can't do any logging.
-  PRBool shouldReportError = NS_SUCCEEDED(rv);
+  bool shouldReportError = NS_SUCCEEDED(rv);
 
   if (mSink && shouldReportError) {
     rv = mSink->ReportError(errorText.get(), 
@@ -983,7 +983,7 @@ nsExpatDriver::HandleError()
 void
 nsExpatDriver::ParseBuffer(const PRUnichar *aBuffer,
                            PRUint32 aLength,
-                           PRBool aIsFinal,
+                           bool aIsFinal,
                            PRUint32 *aConsumed)
 {
   NS_ASSERTION((aBuffer && aLength != 0) || (!aBuffer && aLength == 0), "?");
@@ -1035,7 +1035,7 @@ nsExpatDriver::ParseBuffer(const PRUnichar *aBuffer,
 }
 
 NS_IMETHODIMP
-nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
+nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
 {
   // We keep the scanner pointing to the position where Expat will start
   // parsing.
@@ -1060,8 +1060,8 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
   // currently blocked and there's data in Expat's buffer.
   while (start != end || (mIsFinalChunk && !mMadeFinalCallToExpat) ||
          (BlockedOrInterrupted() && mExpatBuffered > 0)) {
-    PRBool noMoreBuffers = start == end && mIsFinalChunk;
-    PRBool blocked = BlockedOrInterrupted();
+    bool noMoreBuffers = start == end && mIsFinalChunk;
+    bool blocked = BlockedOrInterrupted();
 
     const PRUnichar *buffer;
     PRUint32 length;
@@ -1243,7 +1243,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
   if (doc) {
     nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
     if (!win) {
-      PRBool aHasHadScriptHandlingObject;
+      bool aHasHadScriptHandlingObject;
       nsIScriptGlobalObject *global =
         doc->GetScriptHandlingObject(aHasHadScriptHandlingObject);
       if (global) {
@@ -1303,8 +1303,8 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 
 NS_IMETHODIMP
 nsExpatDriver::BuildModel(nsITokenizer* aTokenizer,
-                          PRBool,// aCanInterrupt,
-                          PRBool,// aCountLines,
+                          bool,// aCanInterrupt,
+                          bool,// aCountLines,
                           const nsCString*)// aCharsetPtr)
 {
   return mInternalState;
@@ -1320,7 +1320,7 @@ nsExpatDriver::DidBuildModel(nsresult anErrorCode)
 }
 
 NS_IMETHODIMP
-nsExpatDriver::WillTokenize(PRBool aIsFinalChunk,
+nsExpatDriver::WillTokenize(bool aIsFinalChunk,
                             nsTokenAllocator* aTokenAllocator)
 {
   mIsFinalChunk = aIsFinalChunk;
@@ -1328,7 +1328,7 @@ nsExpatDriver::WillTokenize(PRBool aIsFinalChunk,
 }
 
 NS_IMETHODIMP
-nsExpatDriver::DidTokenize(PRBool aIsFinalChunk)
+nsExpatDriver::DidTokenize(bool aIsFinalChunk)
 {
   return NS_OK;
 }
@@ -1416,13 +1416,13 @@ nsExpatDriver::HandleToken(CToken* aToken)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsExpatDriver::IsContainer(PRInt32 aTag) const
 {
   return PR_TRUE;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsExpatDriver::CanContain(PRInt32 aParent,PRInt32 aChild) const
 {
   return PR_TRUE;

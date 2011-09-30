@@ -57,13 +57,13 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD SetShowFrameBorders(PRBool aEnable);
+  NS_IMETHOD SetShowFrameBorders(bool aEnable);
 
-  NS_IMETHOD GetShowFrameBorders(PRBool* aResult);
+  NS_IMETHOD GetShowFrameBorders(bool* aResult);
 
-  NS_IMETHOD SetShowEventTargetFrameBorder(PRBool aEnable);
+  NS_IMETHOD SetShowEventTargetFrameBorder(bool aEnable);
 
-  NS_IMETHOD GetShowEventTargetFrameBorder(PRBool* aResult);
+  NS_IMETHOD GetShowEventTargetFrameBorder(bool* aResult);
 
   NS_IMETHOD GetContentSize(nsIDocument* aDocument,
                             PRInt32* aSizeInBytesResult);
@@ -98,28 +98,28 @@ nsLayoutDebugger::~nsLayoutDebugger()
 NS_IMPL_ISUPPORTS1(nsLayoutDebugger, nsILayoutDebugger)
 
 NS_IMETHODIMP
-nsLayoutDebugger::SetShowFrameBorders(PRBool aEnable)
+nsLayoutDebugger::SetShowFrameBorders(bool aEnable)
 {
   nsFrame::ShowFrameBorders(aEnable);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebugger::GetShowFrameBorders(PRBool* aResult)
+nsLayoutDebugger::GetShowFrameBorders(bool* aResult)
 {
   *aResult = nsFrame::GetShowFrameBorders();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebugger::SetShowEventTargetFrameBorder(PRBool aEnable)
+nsLayoutDebugger::SetShowEventTargetFrameBorder(bool aEnable)
 {
   nsFrame::ShowEventTargetFrameBorder(aEnable);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebugger::GetShowEventTargetFrameBorder(PRBool* aResult)
+nsLayoutDebugger::GetShowEventTargetFrameBorder(bool* aResult)
 {
   *aResult = nsFrame::GetShowEventTargetFrameBorder();
   return NS_OK;

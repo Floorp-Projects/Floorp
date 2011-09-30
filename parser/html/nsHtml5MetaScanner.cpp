@@ -97,7 +97,7 @@ void
 nsHtml5MetaScanner::stateLoop(PRInt32 state)
 {
   PRInt32 c = -1;
-  PRBool reconsume = PR_FALSE;
+  bool reconsume = false;
   stateloop: for (; ; ) {
     switch(state) {
       case NS_HTML5META_SCANNER_DATA: {
@@ -770,10 +770,10 @@ nsHtml5MetaScanner::handleAttributeValue()
   }
 }
 
-PRBool 
+bool 
 nsHtml5MetaScanner::handleTag()
 {
-  PRBool stop = handleTagInner();
+  bool stop = handleTagInner();
   nsHtml5Portability::releaseString(content);
   content = nsnull;
   nsHtml5Portability::releaseString(charset);
@@ -782,7 +782,7 @@ nsHtml5MetaScanner::handleTag()
   return stop;
 }
 
-PRBool 
+bool 
 nsHtml5MetaScanner::handleTagInner()
 {
   if (!!charset && tryCharset(charset)) {
@@ -793,7 +793,7 @@ nsHtml5MetaScanner::handleTagInner()
     if (!extract) {
       return PR_FALSE;
     }
-    PRBool success = tryCharset(extract);
+    bool success = tryCharset(extract);
     nsHtml5Portability::releaseString(extract);
     return success;
   }

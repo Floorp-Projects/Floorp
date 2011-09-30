@@ -231,7 +231,7 @@ void NS_NotifyPluginCall(PRIntervalTime startTime)
 
 static void CheckClassInitialized()
 {
-  static PRBool initialized = PR_FALSE;
+  static bool initialized = false;
 
   if (initialized)
     return;
@@ -288,7 +288,7 @@ static PRInt32 OSXVersion()
 // kCGLRendererIDMatchingMask and kCGLRendererIntel900ID are only defined in the 10.6 SDK.
 #define CGLRendererIDMatchingMask 0x00FE7F00
 #define CGLRendererIntel900ID 0x00024000
-static PRBool GMA9XXGraphics()
+static bool GMA9XXGraphics()
 {
   bool hasIntelGMA9XX = PR_FALSE;
   CGLRendererInfoObj renderer = 0;
@@ -309,7 +309,7 @@ static PRBool GMA9XXGraphics()
 }
 #endif
 
-PRBool
+bool
 nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
@@ -389,7 +389,7 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 
   // Java plugins include a number of different file names,
   // so use the mime type (mIsJavaPlugin) and a special pref.
-  PRBool javaIsEnabled;
+  bool javaIsEnabled;
   if (aPluginTag->mIsJavaPlugin &&
       NS_SUCCEEDED(prefs->GetBoolPref("dom.ipc.plugins.java.enabled", &javaIsEnabled)) &&
       !javaIsEnabled) {
@@ -401,15 +401,15 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   nsresult rv = prefs->GetChildList(prefGroupKey.get(),
                                     &prefCount, &prefNames);
 
-  PRBool oopPluginsEnabled = PR_FALSE;
-  PRBool prefSet = PR_FALSE;
+  bool oopPluginsEnabled = false;
+  bool prefSet = false;
 
   if (NS_SUCCEEDED(rv) && prefCount > 0) {
     PRUint32 prefixLength = prefGroupKey.Length();
     for (PRUint32 currentPref = 0; currentPref < prefCount; currentPref++) {
       // Get the mask
       const char* maskStart = prefNames[currentPref] + prefixLength;
-      PRBool match = PR_FALSE;
+      bool match = false;
 
       int valid = NS_WildCardValid(maskStart);
       if (valid == INVALID_SXP) {
@@ -557,8 +557,8 @@ nsNPAPIPlugin::CreatePluginInstance(nsNPAPIPluginInstance **aResult)
   if (!inst)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(inst);
   *aResult = inst;
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -579,7 +579,7 @@ nsNPAPIPlugin::Shutdown()
 NPError
 MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
                           eNPPStreamTypeInternal type,
-                          PRBool bDoNotify = PR_FALSE,
+                          bool bDoNotify = false,
                           void *notifyData = nsnull, uint32_t len = 0,
                           const char *buf = nsnull, NPBool file = PR_FALSE)
 {
@@ -675,7 +675,7 @@ public:
 
   NS_IMETHOD Run();
 
-  PRBool IsForInstance(NPP instance)
+  bool IsForInstance(NPP instance)
   {
     return (mInstance == instance);
   }
@@ -685,7 +685,7 @@ public:
     mFunc = nsnull;
   }
 
-  PRBool IsValid()
+  bool IsValid()
   {
     return (mFunc != nsnull);
   }
@@ -1659,7 +1659,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
     // chrome code anyways.
 
     uri = doc->GetDocumentURI();
-    PRBool isChrome = PR_FALSE;
+    bool isChrome = false;
 
     if (uri && NS_SUCCEEDED(uri->SchemeIs("chrome", &isChrome)) && isChrome) {
       uri->GetSpec(specStr);
@@ -1759,7 +1759,7 @@ _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
   nsXPIDLCString url;
   url.Assign(urlnp.UTF8Characters, urlnp.UTF8Length);
 
-  PRBool javaCompatible = PR_FALSE;
+  bool javaCompatible = false;
   if (NS_FAILED(NS_CheckIsJavaCompatibleURLString(url, &javaCompatible)))
     javaCompatible = PR_FALSE;
   if (javaCompatible)
@@ -2023,7 +2023,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 #if defined(MOZ_X11)
     if (npp) {
       nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
-      PRBool windowless = PR_FALSE;
+      bool windowless = false;
       inst->IsWindowless(&windowless);
       NPBool needXEmbed = PR_FALSE;
       if (!windowless) {
@@ -2082,7 +2082,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     *(NPBool*)result = PR_FALSE;
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (prefs) {
-      PRBool js = PR_FALSE;;
+      bool js = false;;
       res = prefs->GetBoolPref("javascript.enabled", &js);
       if (NS_SUCCEEDED(res))
         *(NPBool*)result = js;
@@ -2095,7 +2095,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
 
   case NPNVisOfflineBool: {
-    PRBool offline = PR_FALSE;
+    bool offline = false;
     nsCOMPtr<nsIIOService> ioservice =
       do_GetService(NS_IOSERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res))
@@ -2161,7 +2161,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   case NPNVprivateModeBool: {
     nsCOMPtr<nsIPrivateBrowsingService> pbs = do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
     if (pbs) {
-      PRBool enabled;
+      bool enabled;
       pbs->GetPrivateBrowsingEnabled(&enabled);
       *(NPBool*)result = (NPBool)enabled;
       return NPERR_NO_ERROR;
@@ -2463,7 +2463,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     }
 
     case NPPVpluginUsesDOMForCursorBool: {
-      PRBool useDOMForCursor = (result != nsnull);
+      bool useDOMForCursor = (result != nsnull);
       return inst->SetUsesDOMForCursor(useDOMForCursor);
     }
 

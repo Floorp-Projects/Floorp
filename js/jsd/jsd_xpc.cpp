@@ -254,7 +254,7 @@ jsds_FreeFilter (FilterRecord *rec)
 /* copies appropriate |filter| attributes into |rec|.
  * False return indicates failure, the contents of |rec| will not be changed.
  */
-PRBool
+bool
 jsds_SyncFilter (FilterRecord *rec, jsdIFilter *filter)
 {
     NS_ASSERTION (rec, "jsds_SyncFilter without rec");
@@ -354,7 +354,7 @@ jsds_FindFilter (jsdIFilter *filter)
 }
 
 /* returns true if the hook should be executed. */
-PRBool
+bool
 jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
 {
     JSContext *cx = JSD_GetJSContext (jsdc, state);
@@ -542,7 +542,7 @@ static uintN
 jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
                     JSErrorReport *report, void *callerdata)
 {
-    static PRBool running = PR_FALSE;
+    static bool running = false;
 
     nsCOMPtr<jsdIErrorHook> hook;
     gJsds->GetErrorHook(getter_AddRefs(hook));
@@ -567,7 +567,7 @@ jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
     PRUint32    pos;
     PRUint32    flags;
     PRUint32    errnum;
-    PRBool      rval;
+    bool        rval;
     if (report) {
         fileName.Assign(report->filename);
         line = report->lineno;
@@ -913,7 +913,7 @@ jsdProperty::GetJSDProperty(JSDProperty **_rval)
 }
 
 NS_IMETHODIMP
-jsdProperty::GetIsValid(PRBool *_rval)
+jsdProperty::GetIsValid(bool *_rval)
 {
     *_rval = mValid;
     return NS_OK;
@@ -1235,7 +1235,7 @@ jsdScript::InvalidateAll ()
 }
 
 NS_IMETHODIMP
-jsdScript::GetIsValid(PRBool *_rval)
+jsdScript::GetIsValid(bool *_rval)
 {
     *_rval = mValid;
     return NS_OK;
@@ -1519,7 +1519,7 @@ jsdScript::LineToPc(PRUint32 aLine, PRUint32 aPcmap, PRUint32 *_rval)
 }
 
 NS_IMETHODIMP
-jsdScript::EnableSingleStepInterrupts(PRBool enable)
+jsdScript::EnableSingleStepInterrupts(bool enable)
 {
     ASSERT_VALID_EPHEMERAL;
 
@@ -1583,7 +1583,7 @@ jsdScript::GetExecutableLines(PRUint32 aPcmap, PRUint32 aStartLine, PRUint32 aMa
 }
 
 NS_IMETHODIMP
-jsdScript::IsLineExecutable(PRUint32 aLine, PRUint32 aPcmap, PRBool *_rval)
+jsdScript::IsLineExecutable(PRUint32 aLine, PRUint32 aPcmap, bool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     if (aPcmap == PCMAP_SOURCETEXT) {    
@@ -1685,7 +1685,7 @@ jsdContext::~jsdContext()
 }
 
 NS_IMETHODIMP
-jsdContext::GetIsValid(PRBool *_rval)
+jsdContext::GetIsValid(bool *_rval)
 {
     *_rval = mValid;
     return NS_OK;
@@ -1807,7 +1807,7 @@ jsdContext::GetGlobalObject (jsdIValue **_rval)
 }
 
 NS_IMETHODIMP
-jsdContext::GetScriptsEnabled (PRBool *_rval)
+jsdContext::GetScriptsEnabled (bool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     if (!mISCx) {
@@ -1825,7 +1825,7 @@ jsdContext::GetScriptsEnabled (PRBool *_rval)
 }
 
 NS_IMETHODIMP
-jsdContext::SetScriptsEnabled (PRBool _rval)
+jsdContext::SetScriptsEnabled (bool _rval)
 {
     ASSERT_VALID_EPHEMERAL;
     if (!mISCx) {
@@ -1938,7 +1938,7 @@ jsdStackFrame::GetJSDStackFrameInfo(JSDStackFrameInfo **_rval)
 }
 
 NS_IMETHODIMP
-jsdStackFrame::GetIsValid(PRBool *_rval)
+jsdStackFrame::GetIsValid(bool *_rval)
 {
     *_rval = mValid;
     return NS_OK;
@@ -1976,7 +1976,7 @@ jsdStackFrame::GetFunctionName(nsACString &_rval)
 }
 
 NS_IMETHODIMP
-jsdStackFrame::GetIsDebugger(PRBool *_rval)
+jsdStackFrame::GetIsDebugger(bool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_IsStackFrameDebugger (mCx, mThreadState, mStackFrameInfo);
@@ -1984,7 +1984,7 @@ jsdStackFrame::GetIsDebugger(PRBool *_rval)
 }
 
 NS_IMETHODIMP
-jsdStackFrame::GetIsConstructing(PRBool *_rval)
+jsdStackFrame::GetIsConstructing(bool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_IsStackFrameConstructing (mCx, mThreadState, mStackFrameInfo);
@@ -2070,7 +2070,7 @@ jsdStackFrame::GetThisValue(jsdIValue **_rval)
 
 NS_IMETHODIMP
 jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
-                     PRUint32 line, jsdIValue **result, PRBool *_rval)
+                     PRUint32 line, jsdIValue **result, bool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
 
@@ -2166,7 +2166,7 @@ jsdValue::~jsdValue()
 }   
 
 NS_IMETHODIMP
-jsdValue::GetIsValid(PRBool *_rval)
+jsdValue::GetIsValid(bool *_rval)
 {
     *_rval = mValid;
     return NS_OK;
@@ -2206,7 +2206,7 @@ jsdValue::GetJSDValue (JSDValue **_rval)
 }
 
 NS_IMETHODIMP
-jsdValue::GetIsNative (PRBool *_rval)
+jsdValue::GetIsNative (bool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_IsValueNative (mCx, mValue);
@@ -2214,7 +2214,7 @@ jsdValue::GetIsNative (PRBool *_rval)
 }
 
 NS_IMETHODIMP
-jsdValue::GetIsNumber (PRBool *_rval)
+jsdValue::GetIsNumber (bool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_IsValueNumber (mCx, mValue);
@@ -2222,7 +2222,7 @@ jsdValue::GetIsNumber (PRBool *_rval)
 }
 
 NS_IMETHODIMP
-jsdValue::GetIsPrimitive (PRBool *_rval)
+jsdValue::GetIsPrimitive (bool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_IsValuePrimitive (mCx, mValue);
@@ -2303,7 +2303,7 @@ jsdValue::GetJsFunctionName(nsACString &_rval)
 }
 
 NS_IMETHODIMP
-jsdValue::GetBooleanValue(PRBool *_rval)
+jsdValue::GetBooleanValue(bool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_GetValueBoolean (mCx, mValue);
@@ -2529,7 +2529,7 @@ jsdService::GetImplementationMinor(PRUint32 *_rval)
 }
 
 NS_IMETHODIMP
-jsdService::GetIsOn (PRBool *_rval)
+jsdService::GetIsOn (bool *_rval)
 {
     *_rval = mOn;
     return NS_OK;
@@ -2564,7 +2564,7 @@ jsdService::AsyncOn (jsdIActivationCallback *activationCallback)
 }
 
 NS_IMETHODIMP
-jsdService::RecompileForDebugMode (JSContext *cx, JSCompartment *comp, PRBool mode) {
+jsdService::RecompileForDebugMode (JSContext *cx, JSCompartment *comp, bool mode) {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   /* XPConnect now does this work itself, so this IDL entry point is no longer used. */
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -3447,7 +3447,7 @@ jsdASObserver::Observe (nsISupports *aSubject, const char *aTopic,
     if (NS_FAILED(rv))
         return rv;
 
-    PRBool on;
+    bool on;
     rv = jsds->GetIsOn(&on);
     if (NS_FAILED(rv) || on)
         return rv;

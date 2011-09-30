@@ -84,7 +84,7 @@ nsSafeOptionListMutation::nsSafeOptionListMutation(nsIContent* aSelect,
                                                    nsIContent* aParent,
                                                    nsIContent* aKid,
                                                    PRUint32 aIndex,
-                                                   PRBool aNotify)
+                                                   bool aNotify)
   : mSelect(nsHTMLSelectElement::FromContent(aSelect))
   , mTopLevelMutation(PR_FALSE)
   , mNeedsRebuild(PR_FALSE)
@@ -222,7 +222,7 @@ nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 nsresult
 nsHTMLSelectElement::InsertChildAt(nsIContent* aKid,
                                    PRUint32 aIndex,
-                                   PRBool aNotify)
+                                   bool aNotify)
 {
   nsSafeOptionListMutation safeMutation(this, this, aKid, aIndex, aNotify);
   nsresult rv = nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify);
@@ -233,7 +233,7 @@ nsHTMLSelectElement::InsertChildAt(nsIContent* aKid,
 }
 
 nsresult
-nsHTMLSelectElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+nsHTMLSelectElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
   nsSafeOptionListMutation safeMutation(this, this, nsnull, aIndex, aNotify);
   nsresult rv = nsGenericHTMLFormElement::RemoveChildAt(aIndex, aNotify);
@@ -250,7 +250,7 @@ nsresult
 nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
                                            PRInt32 aListIndex,
                                            PRInt32 aDepth,
-                                           PRBool aNotify)
+                                           bool aNotify)
 {
   PRInt32 insertIndex = aListIndex;
   nsresult rv = InsertOptionsIntoListRecurse(aOptions, &insertIndex, aDepth);
@@ -269,7 +269,7 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
     // get into the right state once it's created.
     nsISelectControlFrame* selectFrame = nsnull;
     nsWeakFrame weakSelectFrame;
-    PRBool didGetFrame = PR_FALSE;
+    bool didGetFrame = false;
 
     // Actually select the options if the added options warrant it
     nsCOMPtr<nsIDOMNode> optionNode;
@@ -289,7 +289,7 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
       Item(i, getter_AddRefs(optionNode));
       option = do_QueryInterface(optionNode);
       if (option) {
-        PRBool selected;
+        bool selected;
         option->GetSelected(&selected);
         if (selected) {
           // Clear all other options
@@ -315,7 +315,7 @@ nsresult
 nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
                                            PRInt32 aListIndex,
                                            PRInt32 aDepth,
-                                           PRBool aNotify)
+                                           bool aNotify)
 {
   PRInt32 numRemoved = 0;
   nsresult rv = RemoveOptionsFromListRecurse(aOptions, aListIndex, &numRemoved,
@@ -391,9 +391,10 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
   if (aOptions->IsHTML(nsGkAtoms::optgroup)) {
     mOptGroupCount++;
 
-    PRUint32 numChildren = aOptions->GetChildCount();
-    for (PRUint32 i = 0; i < numChildren; ++i) {
-      nsresult rv = InsertOptionsIntoListRecurse(aOptions->GetChildAt(i),
+    for (nsIContent* child = aOptions->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      nsresult rv = InsertOptionsIntoListRecurse(child,
                                                  aInsertIndex, aDepth+1);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -435,9 +436,11 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
   if (mOptGroupCount && aOptions->IsHTML(nsGkAtoms::optgroup)) {
     mOptGroupCount--;
 
-    PRUint32 numChildren = aOptions->GetChildCount();
-    for (PRUint32 i = 0; i < numChildren; ++i) {
-      nsresult rv = RemoveOptionsFromListRecurse(aOptions->GetChildAt(i),
+    for (nsIContent* child = aOptions->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+
+      nsresult rv = RemoveOptionsFromListRecurse(child,
                                                  aRemoveIndex,
                                                  aNumRemoved,
                                                  aDepth + 1);
@@ -457,7 +460,7 @@ NS_IMETHODIMP
 nsHTMLSelectElement::WillAddOptions(nsIContent* aOptions,
                                     nsIContent* aParent,
                                     PRInt32 aContentIndex,
-                                    PRBool aNotify)
+                                    bool aNotify)
 {
   PRInt32 level = GetContentDepth(aParent);
   if (level == -1) {
@@ -498,7 +501,7 @@ nsHTMLSelectElement::WillAddOptions(nsIContent* aOptions,
 NS_IMETHODIMP
 nsHTMLSelectElement::WillRemoveOptions(nsIContent* aParent,
                                        PRInt32 aContentIndex,
-                                       PRBool aNotify)
+                                       bool aNotify)
 {
   PRInt32 level = GetContentDepth(aParent);
   NS_ASSERTION(level >= 0, "getting notified by unexpected content");
@@ -833,7 +836,7 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
 }
 
 nsresult
-nsHTMLSelectElement::SetSelectedIndexInternal(PRInt32 aIndex, PRBool aNotify)
+nsHTMLSelectElement::SetSelectedIndexInternal(PRInt32 aIndex, bool aNotify)
 {
   PRInt32 oldSelectedIndex = mSelectedIndex;
 
@@ -860,18 +863,18 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
 
 NS_IMETHODIMP
 nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
-                                    PRInt32 aStartIndex, PRBool aForward,
+                                    PRInt32 aStartIndex, bool aForward,
                                     PRInt32* aIndex)
 {
   nsCOMPtr<nsINode> option = do_QueryInterface(aOption);
   return mOptions->GetOptionIndex(option->AsElement(), aStartIndex, aForward, aIndex);
 }
 
-PRBool
+bool
 nsHTMLSelectElement::IsOptionSelectedByIndex(PRInt32 aIndex)
 {
   nsIDOMHTMLOptionElement *option = mOptions->ItemAsOption(aIndex);
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   if (option) {
     option->GetSelected(&isSelected);
   }
@@ -881,9 +884,9 @@ nsHTMLSelectElement::IsOptionSelectedByIndex(PRInt32 aIndex)
 void
 nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
                                       PRInt32 aIndex,
-                                      PRBool aSelected,
-                                      PRBool aChangeOptionState,
-                                      PRBool aNotify)
+                                      bool aSelected,
+                                      bool aChangeOptionState,
+                                      bool aNotify)
 {
   // Set the selected index
   if (aSelected && (aIndex < mSelectedIndex || mSelectedIndex < 0)) {
@@ -914,7 +917,7 @@ nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
 }
 
 void
-nsHTMLSelectElement::FindSelectedIndex(PRInt32 aStartIndex, PRBool aNotify)
+nsHTMLSelectElement::FindSelectedIndex(PRInt32 aStartIndex, bool aNotify)
 {
   mSelectedIndex = -1;
   SetSelectionChanged(PR_TRUE, aNotify);
@@ -956,11 +959,11 @@ nsHTMLSelectElement::FindSelectedIndex(PRInt32 aStartIndex, PRBool aNotify)
 NS_IMETHODIMP
 nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
                                                PRInt32 aEndIndex,
-                                               PRBool aIsSelected,
-                                               PRBool aClearAll,
-                                               PRBool aSetDisabled,
-                                               PRBool aNotify,
-                                               PRBool* aChangedSomething)
+                                               bool aIsSelected,
+                                               bool aClearAll,
+                                               bool aSetDisabled,
+                                               bool aNotify,
+                                               bool* aChangedSomething)
 {
 #if 0
   printf("SetOption(%d-%d, %c, ClearAll=%c)\n", aStartIndex, aEndIndex,
@@ -984,15 +987,15 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
   }
 
   // First, find out whether multiple items can be selected
-  PRBool isMultiple = HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
+  bool isMultiple = HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
 
   // These variables tell us whether any options were selected
   // or deselected.
-  PRBool optionsSelected = PR_FALSE;
-  PRBool optionsDeselected = PR_FALSE;
+  bool optionsSelected = false;
+  bool optionsDeselected = false;
 
   nsISelectControlFrame *selectFrame = nsnull;
-  PRBool didGetFrame = PR_FALSE;
+  bool didGetFrame = false;
   nsWeakFrame weakSelectFrame;
 
   if (aIsSelected) {
@@ -1012,7 +1015,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
     // select are disabled.  If ClearAll is passed in as true, and we do not
     // select anything because the options are disabled, we will not clear the
     // other options.  (This is to make the UI work the way one might expect.)
-    PRBool allDisabled = !aSetDisabled;
+    bool allDisabled = !aSetDisabled;
 
     //
     // Save a little time when clearing other options
@@ -1030,7 +1033,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
 
         // Ignore disabled options.
         if (!aSetDisabled) {
-          PRBool isDisabled;
+          bool isDisabled;
           IsOptionDisabled(optIndex, &isDisabled);
 
           if (isDisabled) {
@@ -1043,7 +1046,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
         nsIDOMHTMLOptionElement *option = mOptions->ItemAsOption(optIndex);
         if (option) {
           // If the index is already selected, ignore it.
-          PRBool isSelected = PR_FALSE;
+          bool isSelected = false;
           option->GetSelected(&isSelected);
           if (!isSelected) {
             // To notify the frame if anything gets changed. No need
@@ -1074,7 +1077,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
           nsIDOMHTMLOptionElement *option = mOptions->ItemAsOption(optIndex);
           if (option) {
             // If the index is already selected, ignore it.
-            PRBool isSelected = PR_FALSE;
+            bool isSelected = false;
             option->GetSelected(&isSelected);
             if (isSelected) {
               if (!didGetFrame || (selectFrame && !weakSelectFrame.IsAlive())) {
@@ -1107,7 +1110,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
     // any that are in the specified range.
     for (PRInt32 optIndex = aStartIndex; optIndex <= aEndIndex; optIndex++) {
       if (!aSetDisabled) {
-        PRBool isDisabled;
+        bool isDisabled;
         IsOptionDisabled(optIndex, &isDisabled);
         if (isDisabled) {
           continue;
@@ -1117,7 +1120,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
       nsIDOMHTMLOptionElement *option = mOptions->ItemAsOption(optIndex);
       if (option) {
         // If the index is already selected, ignore it.
-        PRBool isSelected = PR_FALSE;
+        bool isSelected = false;
         option->GetSelected(&isSelected);
         if (isSelected) {
           if (!didGetFrame || (selectFrame && !weakSelectFrame.IsAlive())) {
@@ -1152,7 +1155,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::IsOptionDisabled(PRInt32 aIndex, PRBool* aIsDisabled)
+nsHTMLSelectElement::IsOptionDisabled(PRInt32 aIndex, bool* aIsDisabled)
 {
   *aIsDisabled = PR_FALSE;
   nsCOMPtr<nsIDOMNode> optionNode;
@@ -1161,7 +1164,7 @@ nsHTMLSelectElement::IsOptionDisabled(PRInt32 aIndex, PRBool* aIsDisabled)
 
   nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(optionNode);
   if (option) {
-    PRBool isDisabled;
+    bool isDisabled;
     option->GetDisabled(&isDisabled);
     if (isDisabled) {
       *aIsDisabled = PR_TRUE;
@@ -1192,7 +1195,7 @@ nsHTMLSelectElement::IsOptionDisabled(PRInt32 aIndex, PRBool* aIsDisabled)
         do_QueryInterface(parent);
 
       if (optGroupElement) {
-        PRBool isDisabled;
+        bool isDisabled;
         optGroupElement->GetDisabled(&isDisabled);
 
         if (isDisabled) {
@@ -1278,9 +1281,9 @@ NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Required, required)
 NS_IMPL_NON_NEGATIVE_INT_ATTR_DEFAULT_VALUE(nsHTMLSelectElement, Size, size, 0)
 NS_IMPL_INT_ATTR(nsHTMLSelectElement, TabIndex, tabindex)
 
-PRBool
-nsHTMLSelectElement::IsHTMLFocusable(PRBool aWithMouse,
-                                     PRBool *aIsFocusable, PRInt32 *aTabIndex)
+bool
+nsHTMLSelectElement::IsHTMLFocusable(bool aWithMouse,
+                                     bool *aIsFocusable, PRInt32 *aTabIndex)
 {
   if (nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return PR_TRUE;
@@ -1304,8 +1307,8 @@ nsHTMLSelectElement::NamedItem(const nsAString& aName,
   return mOptions->NamedItem(aName, aReturn);
 }
 
-PRBool
-nsHTMLSelectElement::CheckSelectSomething(PRBool aNotify)
+bool
+nsHTMLSelectElement::CheckSelectSomething(bool aNotify)
 {
   if (mIsDoneAddingChildren) {
     if (mSelectedIndex < 0 && IsCombobox()) {
@@ -1315,8 +1318,8 @@ nsHTMLSelectElement::CheckSelectSomething(PRBool aNotify)
   return PR_FALSE;
 }
 
-PRBool
-nsHTMLSelectElement::SelectSomething(PRBool aNotify)
+bool
+nsHTMLSelectElement::SelectSomething(bool aNotify)
 {
   // If we're not done building the select, don't play with this yet.
   if (!mIsDoneAddingChildren) {
@@ -1326,7 +1329,7 @@ nsHTMLSelectElement::SelectSomething(PRBool aNotify)
   PRUint32 count;
   GetLength(&count);
   for (PRUint32 i=0; i<count; i++) {
-    PRBool disabled;
+    bool disabled;
     nsresult rv = IsOptionDisabled(i, &disabled);
 
     if (NS_FAILED(rv) || !disabled) {
@@ -1346,7 +1349,7 @@ nsHTMLSelectElement::SelectSomething(PRBool aNotify)
 nsresult
 nsHTMLSelectElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
-                                PRBool aCompileEventHandlers)
+                                bool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
                                                      aBindingParent,
@@ -1366,7 +1369,7 @@ nsHTMLSelectElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsHTMLSelectElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsHTMLSelectElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 
@@ -1381,7 +1384,7 @@ nsHTMLSelectElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 
 nsresult
 nsHTMLSelectElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                   const nsAString* aValue, PRBool aNotify)
+                                   const nsAString* aValue, bool aNotify)
 {
   if (aNotify && aName == nsGkAtoms::disabled &&
       aNameSpaceID == kNameSpaceID_None) {
@@ -1394,7 +1397,7 @@ nsHTMLSelectElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsHTMLSelectElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                  const nsAString* aValue, PRBool aNotify)
+                                  const nsAString* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::disabled) {
@@ -1412,7 +1415,7 @@ nsHTMLSelectElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsHTMLSelectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                               PRBool aNotify)
+                               bool aNotify)
 {
   if (aNotify && aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::multiple) {
@@ -1442,7 +1445,7 @@ nsHTMLSelectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 }
 
 nsresult
-nsHTMLSelectElement::DoneAddingChildren(PRBool aHaveNotified)
+nsHTMLSelectElement::DoneAddingChildren(bool aHaveNotified)
 {
   mIsDoneAddingChildren = PR_TRUE;
 
@@ -1482,7 +1485,7 @@ nsHTMLSelectElement::DoneAddingChildren(PRBool aHaveNotified)
   return NS_OK;
 }
 
-PRBool
+bool
 nsHTMLSelectElement::ParseAttribute(PRInt32 aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,
@@ -1516,7 +1519,7 @@ nsHTMLSelectElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   return retval;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHTMLSelectElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -1635,7 +1638,7 @@ nsHTMLSelectElement::SaveState()
   for (PRUint32 optIndex = 0; optIndex < len; optIndex++) {
     nsIDOMHTMLOptionElement *option = mOptions->ItemAsOption(optIndex);
     if (option) {
-      PRBool isSelected;
+      bool isSelected;
       option->GetSelected(&isSelected);
       if (isSelected) {
         nsAutoString value;
@@ -1660,7 +1663,7 @@ nsHTMLSelectElement::SaveState()
   return rv;
 }
 
-PRBool
+bool
 nsHTMLSelectElement::RestoreState(nsPresState* aState)
 {
   // Get the presentation state object to retrieve our stuff out of.
@@ -1735,7 +1738,7 @@ nsHTMLSelectElement::Reset()
       //
       // Reset the option to its default value
       //
-      PRBool selected = PR_FALSE;
+      bool selected = false;
       option->GetDefaultSelected(&selected);
       SetOptionsSelectedByIndex(i, i, selected,
                                 PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
@@ -1801,7 +1804,7 @@ nsHTMLSelectElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 
   for (PRUint32 optIndex = 0; optIndex < len; optIndex++) {
     // Don't send disabled options
-    PRBool disabled;
+    bool disabled;
     rv = IsOptionDisabled(optIndex, &disabled);
     if (NS_FAILED(rv) || disabled) {
       continue;
@@ -1810,7 +1813,7 @@ nsHTMLSelectElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
     nsIDOMHTMLOptionElement *option = mOptions->ItemAsOption(optIndex);
     NS_ENSURE_TRUE(option, NS_ERROR_UNEXPECTED);
 
-    PRBool isSelected;
+    bool isSelected;
     rv = option->GetSelected(&isSelected);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!isSelected) {
@@ -1839,7 +1842,7 @@ nsHTMLSelectElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::GetHasOptGroups(PRBool* aHasGroups)
+nsHTMLSelectElement::GetHasOptGroups(bool* aHasGroups)
 {
   *aHasGroups = (mOptGroupCount > 0);
   return NS_OK;
@@ -1881,7 +1884,7 @@ AddOptionsRecurse(nsIContent* aRoot, nsHTMLOptionCollection* aArray)
 }
 
 void
-nsHTMLSelectElement::RebuildOptionsArray(PRBool aNotify)
+nsHTMLSelectElement::RebuildOptionsArray(bool aNotify)
 {
   mOptions->Clear();
   AddOptionsRecurse(this, mOptions);
@@ -1897,8 +1900,8 @@ nsHTMLSelectElement::IsValueMissing()
 
   PRUint32 length;
   nsIDOMHTMLOptionElement* option = nsnull;
-  PRBool disabled;
-  PRBool selected;
+  bool disabled;
+  bool selected;
 
   mOptions->GetLength(&length);
 
@@ -2012,7 +2015,7 @@ nsHTMLOptionCollection::DropReference()
 nsresult
 nsHTMLOptionCollection::GetOptionIndex(mozilla::dom::Element* aOption,
                                        PRInt32 aStartIndex,
-                                       PRBool aForward,
+                                       bool aForward,
                                        PRInt32* aIndex)
 {
   PRInt32 index;
@@ -2260,7 +2263,7 @@ nsHTMLSelectElement::UpdateBarredFromConstraintValidation()
 }
 
 void
-nsHTMLSelectElement::FieldSetDisabledChanged(PRBool aNotify)
+nsHTMLSelectElement::FieldSetDisabledChanged(bool aNotify)
 {
   UpdateBarredFromConstraintValidation();
 
@@ -2268,13 +2271,13 @@ nsHTMLSelectElement::FieldSetDisabledChanged(PRBool aNotify)
 }
 
 void
-nsHTMLSelectElement::SetSelectionChanged(PRBool aValue, PRBool aNotify)
+nsHTMLSelectElement::SetSelectionChanged(bool aValue, bool aNotify)
 {
   if (!mDefaultSelectionSet) {
     return;
   }
 
-  PRBool previousSelectionChangedValue = mSelectionHasChanged;
+  bool previousSelectionChangedValue = mSelectionHasChanged;
   mSelectionHasChanged = aValue;
 
   if (mSelectionHasChanged != previousSelectionChangedValue) {

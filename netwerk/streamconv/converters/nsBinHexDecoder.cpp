@@ -338,7 +338,7 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
 
 nsresult nsBinHexDecoder::ProcessNextChunk(nsIRequest * aRequest, nsISupports * aContext, PRUint32 numBytesInBuffer)
 {
-  PRBool foundStart;
+  bool foundStart;
   PRInt16 octetpos, c = 0;
   PRUint32 val;
   mPosInDataBuffer = 0; // use member variable.

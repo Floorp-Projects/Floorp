@@ -78,7 +78,7 @@ public:
   nsresult Init(JSContext* aCx,
                 PRUint32 aArgc,
                 jsval* aArgv,
-                PRBool aIsInterval);
+                bool aIsInterval);
 
   nsresult Start();
 
@@ -96,7 +96,7 @@ public:
     return mWorker;
   }
 
-  PRBool IsSuspended() {
+  bool IsSuspended() {
     AutoSpinlock lock(this);
     return IsSuspendedNoLock();
   }
@@ -107,7 +107,7 @@ private:
   void AcquireSpinlock();
   void ReleaseSpinlock();
 
-  PRBool IsSuspendedNoLock() {
+  bool IsSuspendedNoLock() {
     return mIsSuspended;
   }
 
@@ -181,10 +181,10 @@ private:
   PRUint32 mSuspendInterval;
   nsRefPtr<nsDOMWorkerTimeout> mSuspendedRef;
 
-  PRPackedBool mIsInterval;
-  PRPackedBool mIsSuspended;
-  PRPackedBool mSuspendedBeforeStart;
-  PRPackedBool mStarted;
+  bool mIsInterval;
+  bool mIsSuspended;
+  bool mSuspendedBeforeStart;
+  bool mStarted;
 };
 
 #endif /* __NSDOMWORKERTIMEOUT_H__ */

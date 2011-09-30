@@ -69,7 +69,7 @@ public:
                   eParserCommands aCommand = eViewNormal,
                   nsIRequestObserver* aListener = 0,
                   eAutoDetectResult aStatus = eUnknownDetect,
-                  PRBool aCopyUnused = PR_FALSE);
+                  bool aCopyUnused = false);
 
     ~CParserContext();
 
@@ -95,8 +95,8 @@ public:
     eAutoDetectResult    mAutoDetectStatus;
     eParserCommands      mParserCommand;
 
-    PRPackedBool         mMultipart;
-    PRPackedBool         mCopyUnused;
+    bool                 mMultipart;
+    bool                 mCopyUnused;
 
     PRUint32             mNumConsumed;
 };

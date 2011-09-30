@@ -99,8 +99,8 @@ nsDOMScrollAreaEvent::GetHeight(float *aHeight)
 
 NS_IMETHODIMP
 nsDOMScrollAreaEvent::InitScrollAreaEvent(const nsAString &aEventType,
-                                          PRBool aCanBubble,
-                                          PRBool aCancelable,
+                                          bool aCanBubble,
+                                          bool aCancelable,
                                           nsIDOMWindow *aView,
                                           PRInt32 aDetail,
                                           float aX, float aY,
@@ -116,7 +116,7 @@ nsDOMScrollAreaEvent::InitScrollAreaEvent(const nsAString &aEventType,
 
 void
 nsDOMScrollAreaEvent::Serialize(IPC::Message* aMsg,
-                                PRBool aSerializeInterfaceType)
+                                bool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("scrollareaevent"));
@@ -135,7 +135,7 @@ nsDOMScrollAreaEvent::Serialize(IPC::Message* aMsg,
   IPC::WriteParam(aMsg, val);
 }
 
-PRBool
+bool
 nsDOMScrollAreaEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), PR_FALSE);

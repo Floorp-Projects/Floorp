@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      var expectedLoads = 3;
+      function load_done() {
+        --expectedLoads;
+        if (expectedLoads == 0) {
+          document.documentElement.className = "";
+        }
+      }
+      function addLink() {
+        var l = document.createElement("link");
+        l.rel = "stylesheet";
+        l.type = "text/css";
+        l.href = "data:text/css,some { random: data }";
+        l.onload = load_done;
+        document.getElementsByTagName("head")[0].appendChild(l);
+      }
+      function doIt() {
+        document.styleSheets[0].insertRule('a {}', 0)
+        addLink();
+        addLink();
+      }
+      addLink();
+    </script>
+  </head>
+  <body onload="doIt()">
+  <body>
+</body>

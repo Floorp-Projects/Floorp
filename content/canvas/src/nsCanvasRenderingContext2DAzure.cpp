@@ -306,8 +306,8 @@ public:
   nsCanvasPatternAzure(SourceSurface* aSurface,
                        RepeatMode aRepeat,
                        nsIPrincipal* principalForSecurityCheck,
-                       PRBool forceWriteOnly,
-                       PRBool CORSUsed)
+                       bool forceWriteOnly,
+                       bool CORSUsed)
     : mSurface(aSurface)
     , mRepeat(aRepeat)
     , mPrincipal(principalForSecurityCheck)
@@ -321,8 +321,8 @@ public:
   RefPtr<SourceSurface> mSurface;
   const RepeatMode mRepeat;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  const PRPackedBool mForceWriteOnly;
-  const PRPackedBool mCORSUsed;
+  const bool mForceWriteOnly;
+  const bool mCORSUsed;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasPatternAzure, NS_CANVASPATTERNAZURE_PRIVATE_IID)
@@ -413,13 +413,13 @@ public:
   TemporaryRef<SourceSurface> GetSurfaceSnapshot()
   { return mTarget ? mTarget->Snapshot() : nsnull; }
 
-  NS_IMETHOD SetIsOpaque(PRBool isOpaque);
+  NS_IMETHOD SetIsOpaque(bool isOpaque);
   NS_IMETHOD Reset();
   already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                                 CanvasLayer *aOldLayer,
                                                 LayerManager *aManager);
   void MarkContextClean();
-  NS_IMETHOD SetIsIPC(PRBool isIPC);
+  NS_IMETHOD SetIsIPC(bool isIPC);
   // this rect is in canvas device space
   void Redraw(const mgfx::Rect &r);
   NS_IMETHOD Redraw(const gfxRect &r) { Redraw(ToRect(r)); return NS_OK; }
@@ -506,18 +506,18 @@ protected:
   // This is true when the canvas is valid, false otherwise, this occurs when
   // for some reason initialization of the drawtarget fails. If the canvas
   // is invalid certain behavior is expected.
-  PRPackedBool mValid;
+  bool mValid;
   // This is true when the canvas is valid, but of zero size, this requires
   // specific behavior on some operations.
-  PRPackedBool mZero;
+  bool mZero;
 
-  PRPackedBool mOpaque;
+  bool mOpaque;
 
   // This is true when the next time our layer is retrieved we need to
   // recreate it (i.e. our backing surface changed)
-  PRPackedBool mResetLayer;
+  bool mResetLayer;
   // This is needed for drawing in drawAsyncXULElement
-  PRPackedBool mIPC;
+  bool mIPC;
 
   // the canvas element we're a context of
   nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
@@ -532,13 +532,13 @@ protected:
     * Flag to avoid duplicate calls to InvalidateFrame. Set to true whenever
     * Redraw is called, reset to false when Render is called.
     */
-  PRPackedBool mIsEntireFrameInvalid;
+  bool mIsEntireFrameInvalid;
   /**
     * When this is set, the first call to Redraw(gfxRect) should set
     * mIsEntireFrameInvalid since we expect it will be followed by
     * many more Redraw calls.
     */
-  PRPackedBool mPredictManyRedrawCalls;
+  bool mPredictManyRedrawCalls;
 
   // This is stored after GetThebesSurface has been called once to avoid
   // excessive ThebesSurface initialization overhead.
@@ -584,7 +584,7 @@ protected:
     * Returns true if a shadow should be drawn along with a
     * drawing operation.
     */
-  PRBool NeedToDrawShadow()
+  bool NeedToDrawShadow()
   {
     const ContextState& state = CurrentState();
 
@@ -721,7 +721,7 @@ protected:
       /**
         * returns true iff the given style is a solid color.
         */
-      PRBool StyleIsColor(Style whichStyle) const
+      bool StyleIsColor(Style whichStyle) const
       {
           return !(patternStyles[whichStyle] ||
                     gradientStyles[whichStyle]);
@@ -755,7 +755,7 @@ protected:
       CapStyle lineCap;
       JoinStyle lineJoin;
 
-      PRPackedBool imageSmoothingEnabled;
+      bool imageSmoothingEnabled;
   };
 
   class GeneralPattern
@@ -1319,7 +1319,7 @@ nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt3
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::SetIsOpaque(PRBool isOpaque)
+nsCanvasRenderingContext2DAzure::SetIsOpaque(bool isOpaque)
 {
   if (isOpaque == mOpaque)
     return NS_OK;
@@ -1337,7 +1337,7 @@ nsCanvasRenderingContext2DAzure::SetIsOpaque(PRBool isOpaque)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::SetIsIPC(PRBool isIPC)
+nsCanvasRenderingContext2DAzure::SetIsIPC(bool isIPC)
 {
   if (isIPC == mIPC)
       return NS_OK;
@@ -2448,7 +2448,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::Arc(float x, float y,
                                      float r,
                                      float startAngle, float endAngle,
-                                     PRBool ccw)
+                                     bool ccw)
 {
   if (!FloatValidate(x, y, r, startAngle, endAngle)) {
     return NS_OK;
@@ -2672,7 +2672,7 @@ CreateFontStyleRule(const nsAString& aFont,
                     StyleRule** aResult)
 {
   nsRefPtr<StyleRule> rule;
-  PRBool changed;
+  bool changed;
 
   nsIPrincipal* principal = aNode->NodePrincipal();
   nsIDocument* document = aNode->GetOwnerDoc();
@@ -2814,7 +2814,7 @@ nsCanvasRenderingContext2DAzure::SetFont(const nsAString& font)
   // un-zoom the font size to avoid being affected by text-only zoom
   const nscoord fontSize = nsStyleFont::UnZoomText(parentContext->PresContext(), fontStyle->mFont.size);
 
-  PRBool printerFont = (presShell->GetPresContext()->Type() == nsPresContext::eContext_PrintPreview ||
+  bool printerFont = (presShell->GetPresContext()->Type() == nsPresContext::eContext_PrintPreview ||
                         presShell->GetPresContext()->Type() == nsPresContext::eContext_Print);
 
   gfxFontStyle style(fontStyle->mFont.style,
@@ -3191,7 +3191,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
   gfxRect mBoundingBox;
 
   // true iff the bounding box should be measured
-  PRBool mDoMeasureBoundingBox;
+  bool mDoMeasureBoundingBox;
 };
 
 nsresult
@@ -3231,7 +3231,7 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
   TextReplaceWhitespaceCharacters(textToDraw);
 
   // for now, default to ltr if not in doc
-  PRBool isRTL = PR_FALSE;
+  bool isRTL = false;
 
   if (content && content->IsInDoc()) {
     // try to find the closest context
@@ -3252,7 +3252,7 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
   const ContextState &state = CurrentState();
 
   // This is only needed to know if we can know the drawing bounding box easily.
-  PRBool doDrawShadow = aOp == TEXT_DRAW_OPERATION_FILL && NeedToDrawShadow();
+  bool doDrawShadow = aOp == TEXT_DRAW_OPERATION_FILL && NeedToDrawShadow();
 
   nsCanvasBidiProcessorAzure processor;
 
@@ -3600,7 +3600,7 @@ nsCanvasRenderingContext2DAzure::GetMozDashOffset(float* offset)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::IsPointInPath(float x, float y, PRBool *retVal)
+nsCanvasRenderingContext2DAzure::IsPointInPath(float x, float y, bool *retVal)
 {
   if (!FloatValidate(x,y)) {
     *retVal = PR_FALSE;
@@ -3977,7 +3977,7 @@ nsCanvasRenderingContext2DAzure::AsyncDrawXULElement(nsIDOMXULElement* aElem,
     if (!gfxASurface::CheckSurfaceSize(gfxIntSize(aW, aH), 0xffff))
         return NS_ERROR_FAILURE;
 
-    PRBool flush =
+    bool flush =
         (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH) == 0;
 
     PRUint32 renderDocFlags = nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
@@ -4181,7 +4181,7 @@ nsCanvasRenderingContext2DAzure::PutImageData()
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::PutImageData_explicit(PRInt32 x, PRInt32 y, PRUint32 w, PRUint32 h,
                                                        unsigned char *aData, PRUint32 aDataLen,
-                                                       PRBool hasDirtyRect, PRInt32 dirtyX, PRInt32 dirtyY,
+                                                       bool hasDirtyRect, PRInt32 dirtyX, PRInt32 dirtyY,
                                                        PRInt32 dirtyWidth, PRInt32 dirtyHeight)
 {
   if (!mValid) {
@@ -4313,8 +4313,8 @@ nsCanvasRenderingContext2DAzure::GetThebesSurface(gfxASurface **surface)
     mTarget->Flush();
   }
 
-  mThebesSurface->AddRef();
   *surface = mThebesSurface;
+  NS_ADDREF(*surface);
 
   return NS_OK;
 }
@@ -4327,14 +4327,14 @@ nsCanvasRenderingContext2DAzure::CreateImageData()
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::GetMozImageSmoothingEnabled(PRBool *retVal)
+nsCanvasRenderingContext2DAzure::GetMozImageSmoothingEnabled(bool *retVal)
 {
   *retVal = CurrentState().imageSmoothingEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::SetMozImageSmoothingEnabled(PRBool val)
+nsCanvasRenderingContext2DAzure::SetMozImageSmoothingEnabled(bool val)
 {
   if (val != CurrentState().imageSmoothingEnabled) {
       CurrentState().imageSmoothingEnabled = val;

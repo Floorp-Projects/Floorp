@@ -16,7 +16,7 @@ fails == out-of-flow-1d.html out-of-flow-1-ref.html # bug 396645
 load stress-1.html # assertion test
 == stress-2.html stress-2-ref.html # assertion + rendering test
 load stress-3.html # assertion test
-asserts(2) load stress-4.html # assertion/crash test. existing assertions are bug 512749.
+load stress-4.html # assertion/crash test.
 load stress-5.html # assertion/crash test
 load stress-6.html # assertion/crash test
 load stress-7.html # assertion/crash test

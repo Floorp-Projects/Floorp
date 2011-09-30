@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+This test ensures that a resizer in content doesn't resize the window.
+-->
+<window title="XUL resizer in content test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    function testResizer()
+    { 
+      var oldScreenX = window.screenX;
+      var oldScreenY = window.screenY;
+      var oldWidth = window.outerWidth;
+      var oldHeight = window.outerHeight;
+      var resizer = document.getElementById("resizer");
+      synthesizeMouseAtCenter(resizer, { type:"mousedown" });
+      synthesizeMouse(resizer, 32, 32, { type:"mousemove" });
+      synthesizeMouse(resizer, 32, 32, { type:"mouseup" });
+      is(window.screenX, oldScreenX, "window not moved for non-chrome window screenX");
+      is(window.screenY, oldScreenY, "window not moved for non-chrome window screenY");
+      is(window.outerWidth, oldWidth, "window not moved for non-chrome window outerWidth");
+      is(window.outerHeight, oldHeight, "window not moved for non-chrome window outerHeight");
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForFocus(testResizer);
+   ]]></script>
+
+  <resizer id="resizer" dir="bottomend" width="16" height="16"/>
+
+</window>

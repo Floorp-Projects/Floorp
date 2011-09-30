@@ -57,12 +57,12 @@ public:
   NS_DECL_NSIWINDOWSSHELLSERVICE
 
 protected:
-  PRBool    IsDefaultBrowserVista(PRBool* aIsDefaultBrowser);
+  bool      IsDefaultBrowserVista(bool* aIsDefaultBrowser);
 
-  PRBool    GetMailAccountKey(HKEY* aResult);
+  bool      GetMailAccountKey(HKEY* aResult);
 
 private:
-  PRBool    mCheckedThisSession;
+  bool      mCheckedThisSession;
 };
 
 #endif // nswindowsshellservice_h____

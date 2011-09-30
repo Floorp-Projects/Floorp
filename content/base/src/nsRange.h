@@ -66,8 +66,8 @@ public:
                                
   NS_IMETHOD CompareNodeToRange(nsIContent* aNode, 
                                 nsIDOMRange* aRange,
-                                PRBool *outNodeBefore,
-                                PRBool *outNodeAfter);
+                                bool *outNodeBefore,
+                                bool *outNodeAfter);
 };
 
 // -------------------------------------------------------------------------------
@@ -140,11 +140,11 @@ public:
  *
  *****************************************************************************/
   static nsresult CompareNodeToRange(nsINode* aNode, nsIDOMRange* aRange,
-                                     PRBool *outNodeBefore,
-                                     PRBool *outNodeAfter);
+                                     bool *outNodeBefore,
+                                     bool *outNodeAfter);
   static nsresult CompareNodeToRange(nsINode* aNode, nsIRange* aRange,
-                                     PRBool *outNodeBefore,
-                                     PRBool *outNodeAfter);
+                                     bool *outNodeBefore,
+                                     bool *outNodeAfter);
 
 protected:
   void DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,

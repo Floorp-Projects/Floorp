@@ -84,7 +84,7 @@ public:
     return mEntries;
   }
 
-  PRBool IsEqual(const DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries) const
+  bool IsEqual(const DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries) const
   {
     return (mEntries == aEntries &&
             !memcmp(mTable, aDeadKeyArray,
@@ -235,13 +235,13 @@ KeyboardLayout::~KeyboardLayout()
   ReleaseDeadKeyTables();
 }
 
-PRBool
+bool
 KeyboardLayout::IsPrintableCharKey(PRUint8 aVirtualKey)
 {
   return GetKeyIndex(aVirtualKey) >= 0;
 }
 
-PRBool
+bool
 KeyboardLayout::IsNumpadKey(PRUint8 aVirtualKey)
 {
   return VK_NUMPAD0 <= aVirtualKey && aVirtualKey <= VK_DIVIDE;
@@ -455,10 +455,10 @@ KeyboardLayout::LoadLayout(HKL aLayout)
 PRUint8
 KeyboardLayout::GetShiftState(const PBYTE aKbdState)
 {
-  PRBool isShift = (aKbdState[VK_SHIFT] & 0x80) != 0;
-  PRBool isCtrl  = (aKbdState[VK_CONTROL] & 0x80) != 0;
-  PRBool isAlt   = (aKbdState[VK_MENU] & 0x80) != 0;
-  PRBool isCaps  = (aKbdState[VK_CAPITAL] & 0x01) != 0;
+  bool isShift = (aKbdState[VK_SHIFT] & 0x80) != 0;
+  bool isCtrl  = (aKbdState[VK_CONTROL] & 0x80) != 0;
+  bool isAlt   = (aKbdState[VK_MENU] & 0x80) != 0;
+  bool isCaps  = (aKbdState[VK_CAPITAL] & 0x01) != 0;
 
   return ((isCaps << 3) | (isAlt << 2) | (isCtrl << 1) | isShift);
 }
@@ -589,8 +589,8 @@ KeyboardLayout::ReleaseDeadKeyTables()
   }
 }
 
-PRBool
-KeyboardLayout::EnsureDeadKeyActive(PRBool aIsActive,
+bool
+KeyboardLayout::EnsureDeadKeyActive(bool aIsActive,
                                     PRUint8 aDeadKey,
                                     const PBYTE aDeadKeyKbdState)
 {
@@ -628,7 +628,7 @@ KeyboardLayout::DeactivateDeadKeyState()
   mActiveDeadKey = -1;
 }
 
-PRBool
+bool
 KeyboardLayout::AddDeadKeyEntry(PRUnichar aBaseChar,
                                 PRUnichar aCompositeChar,
                                 DeadKeyEntry* aDeadKeyArray,
@@ -653,7 +653,7 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
                                        DeadKeyEntry* aDeadKeyArray,
                                        PRUint32 aMaxEntries)
 {
-  PRBool deadKeyActive = PR_FALSE;
+  bool deadKeyActive = false;
   PRUint32 entries = 0;
   BYTE kbdState[256];
   memset(kbdState, 0, sizeof(kbdState));

@@ -280,7 +280,7 @@ IDBTransaction::GetOrCreateConnection(mozIStorageConnection** aResult)
     NS_ENSURE_TRUE(connection, NS_ERROR_FAILURE);
 
     nsCString beginTransaction;
-    if (mMode == nsIIDBTransaction::READ_WRITE) {
+    if (mMode != nsIIDBTransaction::READ_ONLY) {
       beginTransaction.AssignLiteral("BEGIN IMMEDIATE TRANSACTION;");
     }
     else {
@@ -866,7 +866,7 @@ IDBTransaction::OnDispatchedEvent(nsIThreadInternal* aThread)
 
 NS_IMETHODIMP
 IDBTransaction::OnProcessNextEvent(nsIThreadInternal* aThread,
-                                   PRBool aMayWait,
+                                   bool aMayWait,
                                    PRUint32 aRecursionDepth)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -957,7 +957,7 @@ CommitHelper::Run()
     }
     NS_ENSURE_TRUE(event, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    PRBool dummy;
+    bool dummy;
     if (NS_FAILED(mTransaction->DispatchEvent(event, &dummy))) {
       NS_WARNING("Dispatch failed!");
     }
@@ -978,7 +978,7 @@ CommitHelper::Run()
     IndexedDatabaseManager::SetCurrentDatabase(database);
 
     if (!mAborted) {
-      NS_NAMED_LITERAL_CSTRING(release, "END TRANSACTION");
+      NS_NAMED_LITERAL_CSTRING(release, "COMMIT TRANSACTION");
       if (NS_FAILED(mConnection->ExecuteSimpleSQL(release))) {
         mAborted = true;
       }

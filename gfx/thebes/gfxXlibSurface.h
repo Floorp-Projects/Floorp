@@ -102,7 +102,7 @@ public:
     Drawable ReleasePixmap();
 
     // Find a visual and colormap pair suitable for rendering to this surface.
-    PRBool GetColormapAndVisual(Colormap* colormap, Visual **visual);
+    bool GetColormapAndVisual(Colormap* colormap, Visual **visual);
 
     // This surface is a wrapper around X pixmaps, which are stored in the X
     // server, not the main application.
@@ -114,7 +114,7 @@ public:
 
 protected:
     // if TakePixmap() has been called on this
-    PRBool mPixmapTaken;
+    bool mPixmapTaken;
     
     Display *mDisplay;
     Drawable mDrawable;

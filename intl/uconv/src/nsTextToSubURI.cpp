@@ -164,7 +164,7 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
   return rv;
 }
 
-static PRBool statefulCharset(const char *charset)
+static bool statefulCharset(const char *charset)
 {
   if (!nsCRT::strncasecmp(charset, "ISO-2022-", sizeof("ISO-2022-")-1) ||
       !nsCRT::strcasecmp(charset, "UTF-7") ||
@@ -176,13 +176,13 @@ static PRBool statefulCharset(const char *charset)
 
 nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
                                              const nsAFlatCString &aURI, 
-                                             PRBool aIRI, 
+                                             bool aIRI, 
                                              nsAString &_retval)
 {
   nsresult rv = NS_OK;
 
   // check for 7bit encoding the data may not be ASCII after we decode
-  PRBool isStatefulCharset = statefulCharset(aCharset.get());
+  bool isStatefulCharset = statefulCharset(aCharset.get());
 
   if (!isStatefulCharset && IsASCII(aURI)) {
     CopyASCIItoUTF16(aURI, _retval);

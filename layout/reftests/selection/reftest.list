@@ -1,4 +1,4 @@
-== dynamic-text-1a.html dynamic-text-1-ref.html
+fails-if(Android&&layersOpenGL) == dynamic-text-1a.html dynamic-text-1-ref.html
 == dynamic-text-1b.html dynamic-text-1-ref.html
 != extend-1-sanity.html extend-1-ref.html
 == extend-1a.html extend-1-ref.html
@@ -18,9 +18,9 @@
 == extend-3c.html extend-3-ref.html
 == extend-3d.html extend-3-ref.html
 == extend-3e.html extend-3-ref.html
-== extend-3f.html extend-3-ref.html
+fails-if(Android&&layersOpenGL) == extend-3f.html extend-3-ref.html
 == extend-3g.html extend-3-ref.html
-== extend-3h.html extend-3-ref.html
+fails-if(Android&&layersOpenGL) == extend-3h.html extend-3-ref.html
 == extend-3i.html extend-3-ref.html
 == extend-4a.html extend-4-ref.html
 == extend-4b.html extend-4-ref.html
@@ -30,4 +30,4 @@ fails-if(cocoaWidget) == non-themed-widget.html non-themed-widget-ref.html
 fails-if(cocoaWidget) == themed-widget.html themed-widget-ref.html
 == addrange-1.html addrange-ref.html
 == addrange-2.html addrange-ref.html
-== splitText-normalize.html splitText-normalize-ref.html
+fails-if(Android&&layersOpenGL) == splitText-normalize.html splitText-normalize-ref.html

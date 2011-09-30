@@ -78,7 +78,7 @@ NS_IMETHODIMP nsDocShellEnumerator::GetNext(nsISupports **outCurItem)
 }
 
 /* boolean hasMoreElements (); */
-NS_IMETHODIMP nsDocShellEnumerator::HasMoreElements(PRBool *outHasMore)
+NS_IMETHODIMP nsDocShellEnumerator::HasMoreElements(bool *outHasMore)
 {
   NS_ENSURE_ARG_POINTER(outHasMore);
   *outHasMore = PR_FALSE;

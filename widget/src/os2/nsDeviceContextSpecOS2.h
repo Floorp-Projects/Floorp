@@ -79,7 +79,7 @@ public:
  * @param aIsPrintPreview if PR_TRUE, creating Spec for PrintPreview
  * @return error status
  */
-  NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
+  NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview);
   
   NS_IMETHOD ClosePrintManager();
 
@@ -91,7 +91,7 @@ public:
 
   NS_IMETHOD GetPath ( char **aPath );    
 
-  NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
+  NS_IMETHOD GetUserCancelled( bool &aCancel );      
 
   NS_IMETHOD GetPRTQUEUE(PRTQUEUE *&p);
 
@@ -116,7 +116,7 @@ protected:
   PRTQUEUE *mQueue;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   HDC mPrintDC;
-  PRPackedBool mPrintingStarted;
+  bool mPrintingStarted;
 };
 
 //-------------------------------------------------------------------------

@@ -167,7 +167,7 @@ public:
 NS_IMPL_ISUPPORTS1(GIOUTF8StringEnumerator, nsIUTF8StringEnumerator)
 
 NS_IMETHODIMP
-GIOUTF8StringEnumerator::HasMore(PRBool* aResult)
+GIOUTF8StringEnumerator::HasMore(bool* aResult)
 {
   *aResult = mIndex < mStrings.Length();
   return NS_OK;

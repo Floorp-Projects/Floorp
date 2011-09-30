@@ -85,17 +85,17 @@ public:
   virtual void FreezeUriAsyncDefer();
   
   // nsScriptElement
-  virtual PRBool HasScriptContent();
+  virtual bool HasScriptContent();
 
   // nsSVGElement specializations:
   virtual void DidChangeString(PRUint8 aAttrEnum);
 
   // nsIContent specializations:
-  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
-  virtual PRBool IsDoneAddingChildren();
+  virtual nsresult DoneAddingChildren(bool aHaveNotified);
+  virtual bool IsDoneAddingChildren();
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
+                              bool aCompileEventHandlers);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -241,7 +241,7 @@ nsSVGScriptElement::FreezeUriAsyncDefer()
 //----------------------------------------------------------------------
 // nsScriptElement methods
 
-PRBool
+bool
 nsSVGScriptElement::HasScriptContent()
 {
   nsAutoString src;
@@ -275,7 +275,7 @@ nsSVGScriptElement::GetStringInfo()
 // nsIContent methods
 
 nsresult
-nsSVGScriptElement::DoneAddingChildren(PRBool aHaveNotified)
+nsSVGScriptElement::DoneAddingChildren(bool aHaveNotified)
 {
   mDoneAddingChildren = PR_TRUE;
   nsresult rv = MaybeProcessScript();
@@ -287,7 +287,7 @@ nsSVGScriptElement::DoneAddingChildren(PRBool aHaveNotified)
   return rv;
 }
 
-PRBool
+bool
 nsSVGScriptElement::IsDoneAddingChildren()
 {
   return mDoneAddingChildren;
@@ -296,7 +296,7 @@ nsSVGScriptElement::IsDoneAddingChildren()
 nsresult
 nsSVGScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                nsIContent* aBindingParent,
-                               PRBool aCompileEventHandlers)
+                               bool aCompileEventHandlers)
 {
   nsresult rv = nsSVGScriptElementBase::BindToTree(aDocument, aParent,
                                                    aBindingParent,

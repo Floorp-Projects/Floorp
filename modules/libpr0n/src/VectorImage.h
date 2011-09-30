@@ -65,8 +65,8 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetHeight(PRInt32 *aHeight);
   NS_SCRIPTABLE NS_IMETHOD GetType(PRUint16 *aType);
   NS_IMETHOD_(PRUint16) GetType(void);
-  NS_SCRIPTABLE NS_IMETHOD GetAnimated(PRBool *aAnimated);
-  NS_SCRIPTABLE NS_IMETHOD GetCurrentFrameIsOpaque(PRBool *aCurrentFrameIsOpaque);
+  NS_SCRIPTABLE NS_IMETHOD GetAnimated(bool *aAnimated);
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentFrameIsOpaque(bool *aCurrentFrameIsOpaque);
   NS_IMETHOD GetFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxASurface **_retval NS_OUTPARAM);
   NS_IMETHOD CopyFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxImageSurface **_retval NS_OUTPARAM);
   NS_IMETHOD ExtractFrame(PRUint32 aWhichFrame, const nsIntRect & aRect, PRUint32 aFlags, imgIContainer **_retval NS_OUTPARAM);
@@ -116,12 +116,12 @@ private:
                                           // mSVGDocumentWrapper as its
                                           // viewport-bounds.
 
-  PRPackedBool   mIsInitialized:1;        // Have we been initalized?
-  PRPackedBool   mIsFullyLoaded:1;        // Has OnStopRequest been called?
-  PRPackedBool   mIsDrawing:1;            // Are we currently drawing?
-  PRPackedBool   mHaveAnimations:1;       // Is our SVG content SMIL-animated?
+  bool           mIsInitialized:1;        // Have we been initalized?
+  bool           mIsFullyLoaded:1;        // Has OnStopRequest been called?
+  bool           mIsDrawing:1;            // Are we currently drawing?
+  bool           mHaveAnimations:1;       // Is our SVG content SMIL-animated?
                                           // (Only set after mIsFullyLoaded.)
-  PRPackedBool   mHaveRestrictedRegion:1; // Are we a restricted-region clone
+  bool           mHaveRestrictedRegion:1; // Are we a restricted-region clone
                                           // created via ExtractFrame?
 };
 

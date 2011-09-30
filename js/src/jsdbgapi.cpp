@@ -485,10 +485,9 @@ JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
         return NULL;
 
     /* Munge data into the API this method implements.  Avert your eyes! */
-    *markp = JS_ARENA_MARK(&cx->tempPool);
+    *markp = cx->tempLifoAlloc().mark();
 
-    jsuword *names;
-    JS_ARENA_ALLOCATE_CAST(names, jsuword *, &cx->tempPool, localNames.length() * sizeof *names);
+    jsuword *names = cx->tempLifoAlloc().newArray<jsuword>(localNames.length());
     if (!names) {
         js_ReportOutOfMemory(cx);
         return NULL;
@@ -513,7 +512,7 @@ JS_AtomKey(JSAtom *atom)
 extern JS_PUBLIC_API(void)
 JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mark)
 {
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
+    cx->tempLifoAlloc().release(mark);
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -848,14 +847,14 @@ JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
 
     /* The caller passes null in *iteratorp to get things started. */
     shape = (Shape *) *iteratorp;
-    if (!shape) {
+    if (!shape)
         shape = obj->lastProperty();
-    } else {
+    else
         shape = shape->previous();
-        if (!shape->previous()) {
-            JS_ASSERT(JSID_IS_EMPTY(shape->propid()));
-            shape = NULL;
-        }
+
+    if (!shape->previous()) {
+        JS_ASSERT(shape->isEmptyShape());
+        shape = NULL;
     }
 
     return *iteratorp = reinterpret_cast<JSScopeProperty *>(const_cast<Shape *>(shape));
@@ -2167,9 +2166,9 @@ JS_PUBLIC_API(void)
 JS_DumpBytecode(JSContext *cx, JSScript *script)
 {
 #if defined(DEBUG)
-    AutoArenaAllocator mark(&cx->tempPool);
+    LifoAlloc lifoAlloc(1024);
     Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+    INIT_SPRINTER(cx, &sprinter, &lifoAlloc, 0);
 
     fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename, script->lineno);
     js_Disassemble(cx, script, true, &sprinter);

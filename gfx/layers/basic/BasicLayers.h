@@ -122,7 +122,8 @@ public:
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
   virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData);
+                              void* aCallbackData,
+                              EndTransactionFlags aFlags = END_DEFAULT);
 
   virtual void SetRoot(Layer* aLayer);
 
@@ -148,13 +149,13 @@ public:
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Basic"); }
 
 #ifdef DEBUG
-  PRBool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
-  PRBool InDrawing() { return mPhase == PHASE_DRAWING; }
-  PRBool InForward() { return mPhase == PHASE_FORWARD; }
-  PRBool InTransaction() { return mPhase != PHASE_NONE; }
+  bool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
+  bool InDrawing() { return mPhase == PHASE_DRAWING; }
+  bool InForward() { return mPhase == PHASE_FORWARD; }
+  bool InTransaction() { return mPhase != PHASE_NONE; }
 #endif
   gfxContext* GetTarget() { return mTarget; }
-  PRBool IsRetained() { return mWidget != nsnull; }
+  bool IsRetained() { return mWidget != nsnull; }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "Basic"; }
@@ -167,13 +168,13 @@ public:
 
   already_AddRefed<gfxContext> PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
                                                  const nsIntRegion& aRegion,
-                                                 PRBool* aNeedsClipToVisibleRegion);
+                                                 bool* aNeedsClipToVisibleRegion);
   already_AddRefed<gfxContext> PushGroupWithCachedSurface(gfxContext *aTarget,
                                                           gfxASurface::gfxContentType aContent);
   void PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxContext *aPushed);
   already_AddRefed<gfxASurface> PopGroupToSurface(gfxContext *aTarget, gfxContext *aPushed);
 
-  virtual PRBool IsCompositingCheap() { return PR_FALSE; }
+  virtual bool IsCompositingCheap() { return false; }
   virtual bool HasShadowManagerInternal() const { return false; }
   bool HasShadowManager() const { return HasShadowManagerInternal(); }
 
@@ -196,7 +197,8 @@ protected:
   void ClearLayer(Layer* aLayer);
 
   bool EndTransactionInternal(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData);
+                              void* aCallbackData,
+                              EndTransactionFlags aFlags = END_DEFAULT);
 
   // Widget whose surface should be used as the basis for ThebesLayer
   // buffers.
@@ -210,8 +212,8 @@ protected:
   gfxCachedTempSurface mCachedSurface;
 
   BufferMode   mDoubleBuffering;
-  PRPackedBool mUsingDefaultTarget;
-  PRPackedBool mCachedSurfaceInUse;
+  bool mUsingDefaultTarget;
+  bool mCachedSurfaceInUse;
   bool         mTransactionIncomplete;
 };
  
@@ -237,7 +239,8 @@ public:
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
   virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData);
+                              void* aCallbackData,
+                              EndTransactionFlags aFlags = END_DEFAULT);
 
   virtual void SetRoot(Layer* aLayer);
 
@@ -258,7 +261,7 @@ public:
 
   bool HasShadowManager() const { return ShadowLayerForwarder::HasShadowManager(); }
 
-  virtual PRBool IsCompositingCheap();
+  virtual bool IsCompositingCheap();
   virtual bool HasShadowManagerInternal() const { return HasShadowManager(); }
 
 private:

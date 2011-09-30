@@ -53,7 +53,7 @@ using namespace mozilla::dom;
 NS_IMETHODIMP
 nsScriptElement::ScriptAvailable(nsresult aResult,
                                  nsIScriptElement *aElement,
-                                 PRBool aIsInline,
+                                 bool aIsInline,
                                  nsIURI *aURI,
                                  PRInt32 aLineNo)
 {
@@ -87,7 +87,7 @@ nsScriptElement::ScriptAvailable(nsresult aResult,
 NS_IMETHODIMP
 nsScriptElement::ScriptEvaluated(nsresult aResult,
                                  nsIScriptElement *aElement,
-                                 PRBool aIsInline)
+                                 bool aIsInline)
 {
   nsresult rv = NS_OK;
   if (!aIsInline) {

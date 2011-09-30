@@ -90,7 +90,7 @@ static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
   NS_ASSERTION(stream, "Decoder has no media stream");
 
   nsresult rv = NS_OK;
-  PRBool eof = PR_FALSE;
+  bool eof = false;
 
   char *p = static_cast<char *>(aBuffer);
   while (NS_SUCCEEDED(rv) && aLength > 0) {
@@ -135,7 +135,7 @@ nsWebMReader::nsWebMReader(nsBuiltinDecoder* aDecoder)
   mVideoTrack(0),
   mAudioTrack(0),
   mAudioStartUsec(-1),
-  mAudioSamples(0),
+  mAudioFrames(0),
   mHasVideo(PR_FALSE),
   mHasAudio(PR_FALSE)
 {
@@ -181,7 +181,7 @@ nsresult nsWebMReader::Init(nsBuiltinDecoderReader* aCloneDonor)
 
 nsresult nsWebMReader::ResetDecode()
 {
-  mAudioSamples = 0;
+  mAudioFrames = 0;
   mAudioStartUsec = -1;
   nsresult res = NS_OK;
   if (NS_FAILED(nsBuiltinDecoderReader::ResetDecode())) {
@@ -393,8 +393,8 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
 
 ogg_packet nsWebMReader::InitOggPacket(unsigned char* aData,
                                        size_t aLength,
-                                       PRBool aBOS,
-                                       PRBool aEOS,
+                                       bool aBOS,
+                                       bool aEOS,
                                        PRInt64 aGranulepos)
 {
   ogg_packet packet;
@@ -407,7 +407,7 @@ ogg_packet nsWebMReader::InitOggPacket(unsigned char* aData,
   return packet;
 }
  
-PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
+bool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -435,33 +435,33 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
   // the previous audio chunk, we need to increment the packet count so that
   // the vorbis decode doesn't use data from before the gap to help decode
   // from after the gap.
-  PRInt64 tstamp_samples = 0;
-  if (!UsecsToSamples(tstamp_usecs, rate, tstamp_samples)) {
-    NS_WARNING("Int overflow converting WebM timestamp to samples");
+  PRInt64 tstamp_frames = 0;
+  if (!UsecsToFrames(tstamp_usecs, rate, tstamp_frames)) {
+    NS_WARNING("Int overflow converting WebM timestamp to frames");
     return PR_FALSE;
   }
-  PRInt64 decoded_samples = 0;
-  if (!UsecsToSamples(mAudioStartUsec, rate, decoded_samples)) {
-    NS_WARNING("Int overflow converting WebM start time to samples");
+  PRInt64 decoded_frames = 0;
+  if (!UsecsToFrames(mAudioStartUsec, rate, decoded_frames)) {
+    NS_WARNING("Int overflow converting WebM start time to frames");
     return PR_FALSE;
   }
-  if (!AddOverflow(decoded_samples, mAudioSamples, decoded_samples)) {
-    NS_WARNING("Int overflow adding decoded_samples");
+  if (!AddOverflow(decoded_frames, mAudioFrames, decoded_frames)) {
+    NS_WARNING("Int overflow adding decoded_frames");
     return PR_FALSE;
   }
-  if (tstamp_samples > decoded_samples) {
+  if (tstamp_frames > decoded_frames) {
 #ifdef DEBUG
     PRInt64 usecs = 0;
-    LOG(PR_LOG_DEBUG, ("WebMReader detected gap of %lld, %lld samples, in audio stream\n",
-      SamplesToUsecs(tstamp_samples - decoded_samples, rate, usecs) ? usecs: -1,
-      tstamp_samples - decoded_samples));
+    LOG(PR_LOG_DEBUG, ("WebMReader detected gap of %lld, %lld frames, in audio stream\n",
+      FramesToUsecs(tstamp_frames - decoded_frames, rate, usecs) ? usecs: -1,
+      tstamp_frames - decoded_frames));
 #endif
     mPacketCount++;
     mAudioStartUsec = tstamp_usecs;
-    mAudioSamples = 0;
+    mAudioFrames = 0;
   }
 
-  PRInt32 total_samples = 0;
+  PRInt32 total_frames = 0;
   for (PRUint32 i = 0; i < count; ++i) {
     unsigned char* data;
     size_t length;
@@ -482,37 +482,37 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
     }
 
     VorbisPCMValue** pcm = 0;
-    PRInt32 samples = 0;
-    while ((samples = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm)) > 0) {
-      nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[samples * mChannels]);
+    PRInt32 frames = 0;
+    while ((frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm)) > 0) {
+      nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames * mChannels]);
       for (PRUint32 j = 0; j < mChannels; ++j) {
         VorbisPCMValue* channel = pcm[j];
-        for (PRUint32 i = 0; i < PRUint32(samples); ++i) {
+        for (PRUint32 i = 0; i < PRUint32(frames); ++i) {
           buffer[i*mChannels + j] = MOZ_CONVERT_VORBIS_SAMPLE(channel[i]);
         }
       }
 
       PRInt64 duration = 0;
-      if (!SamplesToUsecs(samples, rate, duration)) {
+      if (!FramesToUsecs(frames, rate, duration)) {
         NS_WARNING("Int overflow converting WebM audio duration");
         return PR_FALSE;
       }
       PRInt64 total_duration = 0;
-      if (!SamplesToUsecs(total_samples, rate, total_duration)) {
+      if (!FramesToUsecs(total_frames, rate, total_duration)) {
         NS_WARNING("Int overflow converting WebM audio total_duration");
         return PR_FALSE;
       }
       
       PRInt64 time = tstamp_usecs + total_duration;
-      total_samples += samples;
+      total_frames += frames;
       mAudioQueue.Push(new AudioData(aOffset,
                                      time,
                                      duration,
-                                     samples,
+                                     frames,
                                      buffer.forget(),
                                      mChannels));
-      mAudioSamples += samples;
-      if (vorbis_synthesis_read(&mVorbisDsp, samples) != 0) {
+      mAudioFrames += frames;
+      if (vorbis_synthesis_read(&mVorbisDsp, frames) != 0) {
         return PR_FALSE;
       }
     }
@@ -534,11 +534,11 @@ nsReturnRef<NesteggPacketHolder> nsWebMReader::NextPacket(TrackType aTrackType)
 
   // Flag to indicate that we do need to playback these types of
   // packets.
-  PRPackedBool hasType = aTrackType == VIDEO ? mHasVideo : mHasAudio;
+  bool hasType = aTrackType == VIDEO ? mHasVideo : mHasAudio;
 
   // Flag to indicate that we do need to playback the other type
   // of track.
-  PRPackedBool hasOtherType = aTrackType == VIDEO ? mHasAudio : mHasVideo;
+  bool hasOtherType = aTrackType == VIDEO ? mHasAudio : mHasVideo;
 
   // Track we are interested in
   PRUint32 ourTrack = aTrackType == VIDEO ? mVideoTrack : mAudioTrack;
@@ -584,7 +584,7 @@ nsReturnRef<NesteggPacketHolder> nsWebMReader::NextPacket(TrackType aTrackType)
   return holder.out();
 }
 
-PRBool nsWebMReader::DecodeAudioData()
+bool nsWebMReader::DecodeAudioData()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -597,7 +597,7 @@ PRBool nsWebMReader::DecodeAudioData()
   return DecodeAudioPacket(holder->mPacket, holder->mOffset);
 }
 
-PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
+bool nsWebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                       PRInt64 aTimeThreshold)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");

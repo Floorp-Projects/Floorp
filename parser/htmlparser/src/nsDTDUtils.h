@@ -121,11 +121,11 @@ public:
                   ~nsEntryStack();
 
   nsTagEntry*     PopEntry();
-  void            PushEntry(nsTagEntry* aEntry, PRBool aRefCntNode = PR_TRUE);
+  void            PushEntry(nsTagEntry* aEntry, bool aRefCntNode = true);
   void            EnsureCapacityFor(PRInt32 aNewMax, PRInt32 aShiftOffset=0);
-  void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
+  void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, bool aRefCntNode = true);
   void            PushTag(eHTMLTags aTag);
-  void            PushFront(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
+  void            PushFront(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, bool aRefCntNode = true);
   void            Append(nsEntryStack *aStack);
   nsCParserNode*  Pop(void);
   nsCParserNode*  Remove(PRInt32 anIndex,eHTMLTags aTag);
@@ -201,36 +201,36 @@ public:
     mPrevious=aPreviousState;
   }
 
-  PRBool  CanOpenCaption() {
-    PRBool result=!(mHasCaption || mHasCols || mHasTHead || mHasTFoot || mHasTBody);
+  bool    CanOpenCaption() {
+    bool result=!(mHasCaption || mHasCols || mHasTHead || mHasTFoot || mHasTBody);
     return result;
   }
 
-  PRBool  CanOpenCols() {
-    PRBool result=!(mHasCols || mHasTHead || mHasTFoot || mHasTBody);
+  bool    CanOpenCols() {
+    bool result=!(mHasCols || mHasTHead || mHasTFoot || mHasTBody);
     return result;
   }
 
-  PRBool  CanOpenTBody() {
-    PRBool result=!(mHasTBody);
+  bool    CanOpenTBody() {
+    bool result=!(mHasTBody);
     return result;
   }
 
-  PRBool  CanOpenTHead() {
-    PRBool result=!(mHasTHead || mHasTFoot || mHasTBody);
+  bool    CanOpenTHead() {
+    bool result=!(mHasTHead || mHasTFoot || mHasTBody);
     return result;
   }
 
-  PRBool  CanOpenTFoot() {
-    PRBool result=!(mHasTFoot || mHasTBody);
+  bool    CanOpenTFoot() {
+    bool result=!(mHasTFoot || mHasTBody);
     return result;
   }
 
-  PRPackedBool  mHasCaption;
-  PRPackedBool  mHasCols;
-  PRPackedBool  mHasTHead;
-  PRPackedBool  mHasTFoot;
-  PRPackedBool  mHasTBody;
+  bool          mHasCaption;
+  bool          mHasCols;
+  bool          mHasTHead;
+  bool          mHasTFoot;
+  bool          mHasTBody;
   CTableState   *mPrevious;
 };
 
@@ -307,9 +307,9 @@ public:
                   ~nsDTDContext();
 
   nsTagEntry*     PopEntry();
-  void            PushEntry(nsTagEntry* aEntry, PRBool aRefCntNode = PR_TRUE);
+  void            PushEntry(nsTagEntry* aEntry, bool aRefCntNode = true);
   void            MoveEntries(nsDTDContext& aDest, PRInt32 aCount);
-  void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
+  void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, bool aRefCntNode = true);
   void            PushTag(eHTMLTags aTag);
   nsCParserNode*  Pop(nsEntryStack*& aChildStack);
   nsCParserNode*  Pop();
@@ -319,7 +319,7 @@ public:
   nsTagEntry*     LastEntry(void) const;
   eHTMLTags       TagAt(PRInt32 anIndex) const;
   eHTMLTags       operator[](PRInt32 anIndex) const {return TagAt(anIndex);}
-  PRBool          HasOpenContainer(eHTMLTags aTag) const;
+  bool            HasOpenContainer(eHTMLTags aTag) const;
   PRInt32         FirstOf(eHTMLTags aTag) const {return mStack.FirstOf(aTag);}
   PRInt32         LastOf(eHTMLTags aTag) const {return mStack.LastOf(aTag);}
 
@@ -378,8 +378,8 @@ public:
   
   virtual void          SetString(const nsString &aTheString)=0;
   virtual nsString*     GetString()=0;
-  virtual PRBool        HandleToken(CToken* aToken,nsIDTD* aDTD)=0;
-  virtual PRBool        HandleCapturedTokens(CToken* aToken,nsIDTD* aDTD)=0;
+  virtual bool          HandleToken(CToken* aToken,nsIDTD* aDTD)=0;
+  virtual bool          HandleCapturedTokens(CToken* aToken,nsIDTD* aDTD)=0;
 };
 
 /************************************************************************
@@ -417,8 +417,8 @@ inline PRInt32 IndexOfTagInSet(PRInt32 aTag,const eHTMLTags* aTagSet,PRInt32 aCo
  * @param   aTagSet -- set of tags to be searched
  * @return
  */
-inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags *aTagSet,PRInt32 aCount)  {
-  return PRBool(-1<IndexOfTagInSet(aTag,aTagSet,aCount));
+inline bool FindTagInSet(PRInt32 aTag,const eHTMLTags *aTagSet,PRInt32 aCount)  {
+  return bool(-1<IndexOfTagInSet(aTag,aTagSet,aCount));
 }
 
 /**************************************************************
@@ -440,7 +440,7 @@ public:
 
   nsresult   AddObserver(nsIElementObserver* aObserver,eHTMLTags aTag);
   void       RemoveObserver(nsIElementObserver* aObserver);
-  PRBool     Matches(const nsAString& aTopic);
+  bool       Matches(const nsAString& aTopic);
 
 protected:
   nsString mTopic;
@@ -467,7 +467,7 @@ inline PRInt32 LastOf(nsDTDContext& aContext, const TagList& aTagList){
   int max = aContext.GetCount();
   int index;
   for(index=max-1;index>=0;index--){
-    PRBool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
+    bool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
     if(result) {
       return index;
     }
@@ -487,7 +487,7 @@ inline PRInt32 FirstOf(nsDTDContext& aContext,PRInt32 aStartOffset,TagList& aTag
   int max = aContext.GetCount();
   int index;
   for(index=aStartOffset;index<max;++index){
-    PRBool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
+    bool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
     if(result) {
       return index;
     }
@@ -502,7 +502,7 @@ inline PRInt32 FirstOf(nsDTDContext& aContext,PRInt32 aStartOffset,TagList& aTag
  * @param   id of tag
  * @return  TRUE of the element's end tag is optional
  */
-inline PRBool HasOptionalEndTag(eHTMLTags aTag) {
+inline bool HasOptionalEndTag(eHTMLTags aTag) {
   static eHTMLTags gHasOptionalEndTags[]={eHTMLTag_body,eHTMLTag_colgroup,eHTMLTag_dd,eHTMLTag_dt,
                                                     eHTMLTag_head,eHTMLTag_li,eHTMLTag_option,
                                                     eHTMLTag_p,eHTMLTag_tbody,eHTMLTag_td,eHTMLTag_tfoot,

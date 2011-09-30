@@ -195,7 +195,7 @@ private:
 
     nsresult  mStatus;
     nsCString mPACString;
-    PRBool    mDispatched;
+    bool      mDispatched;
     PRUint32  mResolveFlags;
 
     nsRefPtr<nsProtocolProxyService>   mPPS;
@@ -278,9 +278,9 @@ proxy_GetIntPref(nsIPrefBranch *aPrefBranch,
 static void
 proxy_GetBoolPref(nsIPrefBranch *aPrefBranch,
                  const char    *aPref,
-                 PRBool        &aResult)
+                 bool          &aResult)
 {
-    PRBool temp;
+    bool temp;
     nsresult rv = aPrefBranch->GetBoolPref(aPref, &temp);
     if (NS_FAILED(rv)) 
         aResult = PR_FALSE;
@@ -388,7 +388,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
                                      const char    *pref)
 {
     nsresult rv = NS_OK;
-    PRBool reloadPAC = PR_FALSE;
+    bool reloadPAC = false;
     nsXPIDLCString tempString;
 
     if (!pref || !strcmp(pref, PROXY_PREF("type"))) {
@@ -505,7 +505,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
     }
 }
 
-PRBool
+bool
 nsProtocolProxyService::CanUseProxy(nsIURI *aURI, PRInt32 defaultPort) 
 {
     if (mHostFiltersArray.Length() == 0)
@@ -525,7 +525,7 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, PRInt32 defaultPort)
         port = defaultPort;
 
     PRNetAddr addr;
-    PRBool is_ipaddr = (PR_StringToNetAddr(host.get(), &addr) == PR_SUCCESS);
+    bool is_ipaddr = (PR_StringToNetAddr(host.get(), &addr) == PR_SUCCESS);
 
     PRIPv6Addr ipv6;
     if (is_ipaddr) {
@@ -748,7 +748,7 @@ nsProtocolProxyService::DisableProxy(nsProxyInfo *pi)
     mFailedProxies.Put(key, dsec);
 }
 
-PRBool
+bool
 nsProtocolProxyService::IsProxyDisabled(nsProxyInfo *pi)
 {
     nsCAutoString key;
@@ -771,7 +771,7 @@ nsProtocolProxyService::IsProxyDisabled(nsProxyInfo *pi)
 
 nsresult
 nsProtocolProxyService::ConfigureFromPAC(const nsCString &spec,
-                                         PRBool forceReload)
+                                         bool forceReload)
 {
     if (!mPACMan) {
         mPACMan = new nsPACMan();
@@ -854,7 +854,7 @@ nsProtocolProxyService::Resolve(nsIURI *uri, PRUint32 flags,
     if (NS_FAILED(rv))
         return rv;
 
-    PRBool usePAC;
+    bool usePAC;
     rv = Resolve_Internal(uri, info, flags, &usePAC, result);
     if (NS_FAILED(rv)) {
         LOG(("Resolve_Internal returned rv(0x%08x)\n", rv));
@@ -904,7 +904,7 @@ nsProtocolProxyService::AsyncResolve(nsIURI *uri, PRUint32 flags,
     if (NS_FAILED(rv))
         return rv;
 
-    PRBool usePAC;
+    bool usePAC;
     nsCOMPtr<nsIProxyInfo> pi;
     rv = Resolve_Internal(uri, info, flags, &usePAC, getter_AddRefs(pi));
     if (NS_FAILED(rv))
@@ -1263,7 +1263,7 @@ nsresult
 nsProtocolProxyService::Resolve_Internal(nsIURI *uri,
                                          const nsProtocolInfo &info,
                                          PRUint32 flags,
-                                         PRBool *usePAC,
+                                         bool *usePAC,
                                          nsIProxyInfo **result)
 {
     NS_ENSURE_ARG_POINTER(uri);
@@ -1458,7 +1458,7 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
     // we'll just bail and return them all.  Otherwise, we'll go and prune the
     // disabled ones.
     
-    PRBool allDisabled = PR_TRUE;
+    bool allDisabled = true;
 
     nsProxyInfo *iter;
     for (iter = head; iter; iter = iter->mNext) {

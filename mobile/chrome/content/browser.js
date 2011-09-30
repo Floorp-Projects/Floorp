@@ -601,8 +601,7 @@ var Browser = {
         this.closeTab(oldTab, { forceClose: true });
         oldTab = null;
       }
-    }
-    else {
+    } else {
       let params = aParams || {};
       let flags = params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
       browser.loadURIWithFlags(aURI, flags, params.referrerURI, params.charset, params.postData);
@@ -2942,7 +2941,7 @@ Tab.prototype = {
 
     try {
       let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      let postData = "postData" in aParams ? aParams.postData.value : null;
+      let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
       let charset = "charset" in aParams ? aParams.charset : null;
       browser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
@@ -3111,15 +3110,16 @@ Tab.prototype = {
     if (md && md.defaultZoom)
       return this.clampZoomLevel(md.defaultZoom);
 
-    let pageZoom = this.getPageZoomLevel();
+    let browserWidth = this._browser.getBoundingClientRect().width;
+    let defaultZoom = browserWidth / this._browser.contentWindowWidth;
 
-    // If pageZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
+    // If defaultZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
     let granularity = Services.prefs.getIntPref("browser.ui.zoom.pageFitGranularity");
     let threshold = 1 - 1 / granularity;
-    if (threshold < pageZoom && pageZoom < 1)
-      pageZoom = 1;
+    if (threshold < defaultZoom && defaultZoom < 1)
+      defaultZoom = 1;
 
-    return this.clampZoomLevel(pageZoom);
+    return this.clampZoomLevel(defaultZoom);
   },
 
   /**

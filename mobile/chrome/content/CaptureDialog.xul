@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE dialog SYSTEM "chrome://browser/locale/prompt.dtd">
+<dialog id="capturepicker-dialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="document.getElementById('capturepicker-dialog').CaptureDialog.init()"
+        script="chrome://browser/content/CaptureDialog.js">
+
+  <keyset>
+    <key keycode="VK_RETURN" command="cmd_ok"/>
+    <key keycode="VK_ESCAPE" command="cmd_cancel"/>
+  </keyset>
+
+  <commandset>
+    <command id="cmd_ok" oncommand="document.getElementById('capturepicker-dialog').CaptureDialog.capture();"/>
+    <command id="cmd_cancel" oncommand="document.getElementById('capturepicker-dialog').CaptureDialog.cancel();"/>
+  </commandset>
+
+  <vbox class="prompt-header" flex="1">
+    <description id="capturepicker-title" class="prompt-title" crop="center" flex="1"/>
+    <separator id="capturepicker-separator" class="prompt-line"/>
+    <hbox flex="1" pack="center">
+      <vbox id="capturepicker-container" pack="center">
+        <video xmlns="http://www.w3.org/1999/xhtml" id="capturepicker-video"
+               width="320" height="240"
+               src="moz-device:?width=320&amp;height=240&amp;type=video/x-raw-yuv"
+               autoplay="true"> </video>
+      </vbox>
+    </hbox>
+  </vbox>
+
+  <hbox id="capturepicker-buttons-box" class="prompt-buttons">
+    <button class="prompt-button" label="&ok.label;" command="cmd_ok"/>
+    <button class="prompt-button" label="&cancel.label;" command="cmd_cancel"/>
+  </hbox>
+</dialog>

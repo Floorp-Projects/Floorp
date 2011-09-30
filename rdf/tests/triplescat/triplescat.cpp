@@ -119,7 +119,7 @@ public:
     }
 
     NS_IMETHOD
-    IsNonBlocking(PRBool *aNonBlocking) {
+    IsNonBlocking(bool *aNonBlocking) {
         NS_NOTREACHED("IsNonBlocking");
         return NS_ERROR_NOT_IMPLEMENTED;
     }
@@ -165,7 +165,7 @@ main(int argc, char** argv)
 
     // Pump events until the load is finished
     nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-    PRBool done = PR_FALSE;
+    bool done = false;
     while (!done) {
         NS_ENSURE_STATE(NS_ProcessNextEvent(thread));
         remote->GetLoaded(&done);

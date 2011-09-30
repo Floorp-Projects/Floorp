@@ -82,18 +82,18 @@ function setupHighlighterTests()
   h1 = doc.querySelectorAll("h1")[0];
   ok(h1, "we have the header node");
   Services.obs.addObserver(runSelectionTests,
-    INSPECTOR_NOTIFICATIONS.OPENED, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.toggleInspectorUI();
 }
 
 function runSelectionTests()
 {
   Services.obs.removeObserver(runSelectionTests,
-    INSPECTOR_NOTIFICATIONS.OPENED, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   executeSoon(function() {
     Services.obs.addObserver(performTestComparisons,
-      INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+      InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
     EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
   });
 }
@@ -101,7 +101,7 @@ function runSelectionTests()
 function performTestComparisons(evt)
 {
   Services.obs.removeObserver(performTestComparisons,
-    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   InspectorUI.stopInspecting();
   ok(InspectorUI.highlighter.isHighlighting, "highlighter is highlighting");

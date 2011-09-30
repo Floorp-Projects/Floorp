@@ -121,7 +121,7 @@ protected:
   nsresult SetRangeFromFlatTextOffset(nsIRange* aRange,
                                       PRUint32 aNativeOffset,
                                       PRUint32 aNativeLength,
-                                      PRBool aExpandToClusterBoundaries);
+                                      bool aExpandToClusterBoundaries);
   // Find the first textframe for the range, and get the start offset in
   // the frame.
   nsresult GetStartFrameAndOffset(nsIRange* aRange,
@@ -132,7 +132,7 @@ protected:
                                            nsRect& aRect);
   // Expand aXPOffset to the nearest offset in cluster boundary. aForward is
   // true, it is expanded to forward.
-  nsresult ExpandToClusterBoundary(nsIContent* aContent, PRBool aForward,
+  nsresult ExpandToClusterBoundary(nsIContent* aContent, bool aForward,
                                    PRUint32* aXPOffset);
 };
 
