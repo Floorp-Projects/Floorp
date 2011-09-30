@@ -51,6 +51,8 @@ _HTTP_FILES	= \
 
 _CHROME_FILES	= \
 		test_423060.xul \
+		test_bug368464.html \
+		test_bug408328.html \
 		$(NULL)
 
 libs:: $(_HTTP_FILES)
