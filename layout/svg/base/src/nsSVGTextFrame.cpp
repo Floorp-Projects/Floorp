@@ -38,7 +38,6 @@
 
 #include "nsIDOMSVGTextElement.h"
 #include "nsSVGTextFrame.h"
-#include "nsWeakReference.h"
 #include "SVGLengthList.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGAnimatedNumber.h"
