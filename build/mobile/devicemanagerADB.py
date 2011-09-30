@@ -449,7 +449,17 @@ class DeviceManagerADB(DeviceManager):
   #  failure: None
   def updateApp(self, appBundlePath, processName=None, destPath=None, ipAddr=None, port=30000):
     return self.runCmd(["install", "-r", appBundlePath]).stdout.read()
-    
+
+  # external function
+  # returns:
+  #  success: time in ms
+  #  failure: None
+  def getCurrentTime(self):
+    timestr = self.runCmd(["shell", "date", "+%s"]).stdout.read().strip()
+    if (not timestr or not timestr.isdigit()):
+        return None
+    return str(int(timestr)*1000)
+
   # Returns information about the device:
   # Directive indicates the information you want to get, your choices are:
   # os - name of the os
