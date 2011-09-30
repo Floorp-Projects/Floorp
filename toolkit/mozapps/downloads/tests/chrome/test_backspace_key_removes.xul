@@ -166,6 +166,7 @@ function test()
     try {
       stmt.executeStep();
       let richlistbox = doc.getElementById("downloadView");
+      richlistbox.selectedIndex = 0;
       is(stmt.getInt32(0), richlistbox.children.length,
          "The database and the number of downloads display matches");
       stmt.reset();
