@@ -1105,6 +1105,10 @@ static PLDHashOperator EnumerateEntries(const nsACString& key,
   return PL_DHASH_NEXT;
 }
 
+// This function is miscompiled with MSVC 2005/2008 when PGO is on.
+#ifdef _MSC_VER
+#pragma optimize("", off)
+#endif
 static nsresult
 EscapeAnnotation(const nsACString& key, const nsACString& data, nsCString& escapedData)
 {
@@ -1125,6 +1129,9 @@ EscapeAnnotation(const nsACString& key, const nsACString& data, nsCString& escap
               NS_LITERAL_CSTRING("\\n"));
   return NS_OK;
 }
+#ifdef _MSC_VER
+#pragma optimize("", on)
+#endif
 
 class DelayedNote
 {
