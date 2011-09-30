@@ -1362,16 +1362,15 @@ Browser.MainDragger.prototype = {
     this._panToolbars = !isTablet;
 
     this._grabSidebar = false;
+    this._canGrabSidebar = false;
     // In landscape portrait mode, swiping from the left margin drags the tab sidebar.
     if (isTablet && !Util.isPortrait()) {
       let grabSidebarMargin = TabsPopup.visible ? 30 : 5;
-      this._grabSidebar = ((Util.localeDir == Util.LOCALE_DIR_LTR)
+      // Don't actually grab until we see whether the swipe is horizontal in dragMove.
+      this._canGrabSidebar = ((Util.localeDir == Util.LOCALE_DIR_LTR)
                            ? (clientX - bcr.left < 30)
                            : (bcr.right - clientX < 30));
     }
-
-    if (this._grabSidebar)
-      Browser.grabSidebar();
 
     if (this._sidebarTimeout) {
       clearTimeout(this._sidebarTimeout);
@@ -1384,6 +1383,7 @@ Browser.MainDragger.prototype = {
       Browser.ungrabSidebar();
       return;
     }
+
     if (this._contentView && this._contentView._updateCacheViewport)
       this._contentView._updateCacheViewport();
     this._contentView = null;
@@ -1392,6 +1392,10 @@ Browser.MainDragger.prototype = {
   },
 
   dragMove: function dragMove(dx, dy, scroller, aIsKinetic) {
+    if (this._canGrabSidebar && !this._grabSidebar && dx) {
+      this._grabSidebar = true;
+      Browser.grabSidebar();
+    }
     if (this._grabSidebar) {
       Browser.slideSidebarBy(dx);
       return;
