@@ -847,14 +847,14 @@ JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
 
     /* The caller passes null in *iteratorp to get things started. */
     shape = (Shape *) *iteratorp;
-    if (!shape) {
+    if (!shape)
         shape = obj->lastProperty();
-    } else {
+    else
         shape = shape->previous();
-        if (!shape->previous()) {
-            JS_ASSERT(JSID_IS_EMPTY(shape->propid));
-            shape = NULL;
-        }
+
+    if (!shape->previous()) {
+        JS_ASSERT(JSID_IS_EMPTY(shape->propid));
+        shape = NULL;
     }
 
     return *iteratorp = reinterpret_cast<JSScopeProperty *>(const_cast<Shape *>(shape));
