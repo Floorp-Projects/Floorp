@@ -265,8 +265,12 @@ ContentChild::Init(MessageLoop* aIOLoop,
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 
-#if defined(ANDROID) && defined(MOZ_CRASHREPORTER)
-    PCrashReporterChild* crashreporter = SendPCrashReporterConstructor();
+#ifdef MOZ_CRASHREPORTER
+    SendPCrashReporterConstructor(CrashReporter::CurrentThreadId(),
+                                  XRE_GetProcessType());
+#if defined(ANDROID)
+    PCrashReporterChild* crashreporter = ManagedPCrashReporterChild()[0];
+
     InfallibleTArray<Mapping> mappings;
     const struct mapping_info *info = getLibraryMapping();
     while (info && info->name) {
@@ -278,6 +282,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
         info++;
     }
     crashreporter->SendAddLibraryMappings(mappings);
+#endif
 #endif
 
     return true;
@@ -418,9 +423,14 @@ ContentChild::DeallocPBrowser(PBrowserChild* iframe)
 }
 
 PCrashReporterChild*
-ContentChild::AllocPCrashReporter()
+ContentChild::AllocPCrashReporter(const mozilla::dom::NativeThreadId& id,
+                                  const PRUint32& processType)
 {
+#ifdef MOZ_CRASHREPORTER
     return new CrashReporterChild();
+#else
+    return nsnull;
+#endif
 }
 
 bool

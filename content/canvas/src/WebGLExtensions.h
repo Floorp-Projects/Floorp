@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,19 +12,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla SVG project.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2001
+ *   Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,33 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef WEBGLEXTENSIONS_H_
+#define WEBGLEXTENSIONS_H_
 
-#ifndef __NS_ISVGVALUEOBSERVER_H__
-#define __NS_ISVGVALUEOBSERVER_H__
+namespace mozilla {
 
-#include "nsWeakReference.h"
-#include "nsISVGValue.h"
+class WebGLExtensionStandardDerivatives;
 
-////////////////////////////////////////////////////////////////////////
-// nsISVGValueObserver
-
-// {485029a4-2449-45c1-9814-08f38132ca4c}
-#define NS_ISVGVALUEOBSERVER_IID \
-  { 0x485029a4, 0x2449, 0x45c1, \
-    { 0x98, 0x14, 0x08, 0xf3, 0x81, 0x32, 0xca, 0x4c } }
-
-class nsISVGValueObserver : public nsSupportsWeakReference
+#define WEBGLEXTENSIONSTANDARDDERIVATIVES_PRIVATE_IID \
+    {0x3de3dfd9, 0x864a, 0x4e4c, {0x98, 0x9b, 0x29, 0x77, 0xea, 0xa8, 0x0b, 0x7b}}
+class WebGLExtensionStandardDerivatives :
+    public nsIWebGLExtensionStandardDerivatives,
+    public WebGLExtension
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGVALUEOBSERVER_IID)
-  
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType)=0;
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType)=0;
+    WebGLExtensionStandardDerivatives(WebGLContext* context);
+    virtual ~WebGLExtensionStandardDerivatives();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLEXTENSION
+
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLEXTENSIONSTANDARDDERIVATIVES_PRIVATE_IID)
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGValueObserver, NS_ISVGVALUEOBSERVER_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLExtensionStandardDerivatives, WEBGLACTIVEINFO_PRIVATE_IID)
 
-#endif // __NS_ISVGVALUEOBSERVER_H__
+}
 
+#endif // WEBGLEXTENSIONS_H_

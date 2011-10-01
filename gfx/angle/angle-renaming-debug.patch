@@ -1,6 +1,5 @@
 # HG changeset patch
-# Parent 96359f46b01fdb37e791f564495e8b2755a05233
-
+# Parent 70640278da97b0ca49e21c4bb52766b8af7db4db
 diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 --- a/gfx/angle/Makefile.in
 +++ b/gfx/angle/Makefile.in
@@ -134,7 +133,7 @@ diff --git a/gfx/angle/src/compiler/compilerdebug.h b/gfx/angle/src/compiler/com
 diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclude.h
 --- a/gfx/angle/src/compiler/osinclude.h
 +++ b/gfx/angle/src/compiler/osinclude.h
-@@ -32,17 +32,17 @@
+@@ -30,17 +30,17 @@
  #include <windows.h>
  #elif defined(ANGLE_OS_POSIX)
  #include <pthread.h>
