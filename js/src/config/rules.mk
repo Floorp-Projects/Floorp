@@ -2030,12 +2030,3 @@ libs export libs::
 
 default all::
 	if test -d $(DIST)/bin ; then touch $(DIST)/bin/.purgecaches ; fi
-
-
-#############################################################################
-# Derived targets and dependencies
-
-ifndef INCLUDED_AUTOTARGETS_MK
-include $(topsrcdir)/config/makefiles/autotargets.mk
-endif
-
