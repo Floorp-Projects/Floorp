@@ -82,7 +82,7 @@ function readBytesFromInputStream(inputStream, count) {
 /*
  * Represent a WBO on the server
  */
-function ServerWBO(id, initialPayload) {
+function ServerWBO(id, initialPayload, modified) {
   if (!id) {
     throw "No ID for ServerWBO!";
   }
@@ -95,7 +95,7 @@ function ServerWBO(id, initialPayload) {
     initialPayload = JSON.stringify(initialPayload);
   }
   this.payload = initialPayload;
-  this.modified = new_timestamp();
+  this.modified = modified || new_timestamp();
 }
 ServerWBO.prototype = {
 
@@ -270,11 +270,13 @@ ServerCollection.prototype = {
    *        The GUID for the WBO.
    * @param payload
    *        The payload, as provided to the ServerWBO constructor.
+   * @param modified
+   *        An optional modified time for the ServerWBO.
    *
    * @return the inserted WBO.
    */
-  insert: function insert(id, payload) {
-    return this.insertWBO(new ServerWBO(id, payload));
+  insert: function insert(id, payload, modified) {
+    return this.insertWBO(new ServerWBO(id, payload, modified));
   },
 
   _inResultSet: function(wbo, options) {
@@ -611,6 +613,14 @@ SyncServer.prototype = {
 
   /**
    * Create a new user, complete with an empty set of collections.
+   *
+   * @param username
+   *        The username to use. An Error will be thrown if a user by that name
+   *        already exists.
+   * @param password
+   *        A password string.
+   *
+   * @return a user object, as would be returned by server.user(username).
    */
   registerUser: function registerUser(username, password) {
     if (username in this.users) {
@@ -620,6 +630,7 @@ SyncServer.prototype = {
       password: password,
       collections: {}
     };
+    return this.user(username);
   },
 
   userExists: function userExists(username) {
