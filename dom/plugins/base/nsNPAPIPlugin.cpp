@@ -239,7 +239,7 @@ static void CheckClassInitialized()
   if (!sPluginThreadAsyncCallLock)
     sPluginThreadAsyncCallLock = new Mutex("nsNPAPIPlugin.sPluginThreadAsyncCallLock");
 
-  initialized = PR_TRUE;
+  initialized = true;
 
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,("NPN callbacks initialized\n"));
 }
@@ -290,7 +290,7 @@ static PRInt32 OSXVersion()
 #define CGLRendererIntel900ID 0x00024000
 static bool GMA9XXGraphics()
 {
-  bool hasIntelGMA9XX = PR_FALSE;
+  bool hasIntelGMA9XX = false;
   CGLRendererInfoObj renderer = 0;
   GLint rendererCount = 0;
   if (::CGLQueryRendererInfo(0xffffffff, &renderer, &rendererCount) == kCGLNoError) {
@@ -298,7 +298,7 @@ static bool GMA9XXGraphics()
       GLint rendProp = 0;
       if (::CGLDescribeRenderer(renderer, c, kCGLRPRendererID, &rendProp) == kCGLNoError) {
         if ((rendProp & CGLRendererIDMatchingMask) == CGLRendererIntel900ID) {
-          hasIntelGMA9XX = PR_TRUE;
+          hasIntelGMA9XX = true;
           break;
         }
       }
@@ -313,17 +313,17 @@ bool
 nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
-    return PR_FALSE;
+    return false;
   }
 
   if (!aPluginTag) {
-    return PR_FALSE;
+    return false;
   }
 
 #if defined(XP_MACOSX) && defined(__i386__)
   // Only allow on Mac OS X 10.6 or higher.
   if (OSXVersion() < 0x00001060) {
-    return PR_FALSE;
+    return false;
   }
   // Blacklist Flash 10.0 or lower since it may try to negotiate Carbon/Quickdraw
   // which are not supported out of process. Also blacklist Flash 10.1 if this
@@ -333,16 +333,16 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
     // If the first '.' is before position 2 or the version 
     // starts with 10.0 then we are dealing with Flash 10 or less.
     if (aPluginTag->mVersion.FindChar('.') < 2) {
-      return PR_FALSE;
+      return false;
     }
     if (aPluginTag->mVersion.Length() >= 4) {
       nsCString versionPrefix;
       aPluginTag->mVersion.Left(versionPrefix, 4);
       if (versionPrefix.EqualsASCII("10.0")) {
-        return PR_FALSE;
+        return false;
       }
       if (versionPrefix.EqualsASCII("10.1") && GMA9XXGraphics()) {
-        return PR_FALSE;
+        return false;
       }
     }
   }
@@ -355,12 +355,12 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   // Always disabled on 2K or less. (bug 536303)
   if (osVerInfo.dwMajorVersion < 5 ||
       (osVerInfo.dwMajorVersion == 5 && osVerInfo.dwMinorVersion == 0))
-    return PR_FALSE;
+    return false;
 #endif
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs) {
-    return PR_FALSE;
+    return false;
   }
 
   // Get per-library whitelist/blacklist pref string
@@ -371,7 +371,7 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   nsCAutoString prefFile(aPluginTag->mFullPath.get());
   PRInt32 slashPos = prefFile.RFindCharInSet("/\\");
   if (kNotFound == slashPos)
-    return PR_FALSE;
+    return false;
   prefFile.Cut(0, slashPos + 1);
   ToLowerCase(prefFile);
 
@@ -393,7 +393,7 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   if (aPluginTag->mIsJavaPlugin &&
       NS_SUCCEEDED(prefs->GetBoolPref("dom.ipc.plugins.java.enabled", &javaIsEnabled)) &&
       !javaIsEnabled) {
-    return PR_FALSE;
+    return false;
   }
 
   PRUint32 prefCount;
@@ -425,7 +425,7 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 
       if (match && NS_SUCCEEDED(prefs->GetBoolPref(prefNames[currentPref],
                                                    &oopPluginsEnabled))) {
-        prefSet = PR_TRUE;
+        prefSet = true;
         break;
       }
     }
@@ -433,7 +433,7 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   }
 
   if (!prefSet) {
-    oopPluginsEnabled = PR_FALSE;
+    oopPluginsEnabled = false;
 #ifdef XP_MACOSX
 #if defined(__i386__)
     prefs->GetBoolPref("dom.ipc.plugins.enabled.i386", &oopPluginsEnabled);
@@ -581,7 +581,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
                           eNPPStreamTypeInternal type,
                           bool bDoNotify = false,
                           void *notifyData = nsnull, uint32_t len = 0,
-                          const char *buf = nsnull, NPBool file = PR_FALSE)
+                          const char *buf = nsnull, NPBool file = false)
 {
   if (!npp)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -608,7 +608,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
     inst->NewStreamListener(relativeURL, notifyData,
                             getter_AddRefs(listener));
     if (listener) {
-      static_cast<nsNPAPIPluginStreamListener*>(listener.get())->SetCallNotify(PR_FALSE);
+      static_cast<nsNPAPIPluginStreamListener*>(listener.get())->SetCallNotify(false);
     }
   }
 
@@ -1000,7 +1000,7 @@ _geturlnotify(NPP npp, const char* relativeURL, const char* target,
   PluginDestructionGuard guard(npp);
 
   return MakeNewNPAPIStreamInternal(npp, relativeURL, target,
-                                    eNPPStreamTypeInternal_Get, PR_TRUE,
+                                    eNPPStreamTypeInternal_Get, true,
                                     notifyData);
 }
 
@@ -1024,7 +1024,7 @@ _posturlnotify(NPP npp, const char *relativeURL, const char *target,
   PluginDestructionGuard guard(npp);
 
   return MakeNewNPAPIStreamInternal(npp, relativeURL, target,
-                                    eNPPStreamTypeInternal_Post, PR_TRUE,
+                                    eNPPStreamTypeInternal_Post, true,
                                     notifyData, len, buf, file);
 }
 
@@ -1044,7 +1044,7 @@ _posturl(NPP npp, const char *relativeURL, const char *target,
   PluginDestructionGuard guard(npp);
 
   return MakeNewNPAPIStreamInternal(npp, relativeURL, target,
-                                    eNPPStreamTypeInternal_Post, PR_FALSE, nsnull,
+                                    eNPPStreamTypeInternal_Post, false, nsnull,
                                     len, buf, file);
 }
 
@@ -1208,7 +1208,7 @@ _memflush(uint32_t size)
   }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemFlush: size=%d\n", size));
 
-  nsMemory::HeapMinimize(PR_TRUE);
+  nsMemory::HeapMinimize(true);
   return 0;
 }
 
@@ -1761,7 +1761,7 @@ _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
 
   bool javaCompatible = false;
   if (NS_FAILED(NS_CheckIsJavaCompatibleURLString(url, &javaCompatible)))
-    javaCompatible = PR_FALSE;
+    javaCompatible = false;
   if (javaCompatible)
     return true;
 
@@ -2025,12 +2025,12 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
       bool windowless = false;
       inst->IsWindowless(&windowless);
-      NPBool needXEmbed = PR_FALSE;
+      NPBool needXEmbed = false;
       if (!windowless) {
         res = inst->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needXEmbed);
         // If the call returned an error code make sure we still use our default value.
         if (NS_FAILED(res)) {
-          needXEmbed = PR_FALSE;
+          needXEmbed = false;
         }
       }
       if (windowless || needXEmbed) {
@@ -2079,7 +2079,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 #endif
 
   case NPNVjavascriptEnabledBool: {
-    *(NPBool*)result = PR_FALSE;
+    *(NPBool*)result = false;
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (prefs) {
       bool js = false;;
@@ -2091,7 +2091,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   }
 
   case NPNVasdEnabledBool:
-    *(NPBool*)result = PR_FALSE;
+    *(NPBool*)result = false;
     return NPERR_NO_ERROR;
 
   case NPNVisOfflineBool: {
@@ -2124,14 +2124,14 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
   case NPNVSupportsXEmbedBool: {
 #ifdef MOZ_WIDGET_GTK2
-    *(NPBool*)result = PR_TRUE;
+    *(NPBool*)result = true;
 #elif defined(MOZ_WIDGET_QT)
     // Desktop Flash fail to initialize if browser does not support NPNVSupportsXEmbedBool
     // even when wmode!=windowed, lets return fake support
     fprintf(stderr, "Fake support for XEmbed plugins in Qt port\n");
-    *(NPBool*)result = PR_TRUE;
+    *(NPBool*)result = true;
 #else
-    *(NPBool*)result = PR_FALSE;
+    *(NPBool*)result = false;
 #endif
     return NPERR_NO_ERROR;
   }
@@ -2151,9 +2151,9 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   case NPNVSupportsWindowless: {
 #if defined(XP_WIN) || defined(XP_MACOSX) || \
     (defined(MOZ_X11) && (defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)))
-    *(NPBool*)result = PR_TRUE;
+    *(NPBool*)result = true;
 #else
-    *(NPBool*)result = PR_FALSE;
+    *(NPBool*)result = false;
 #endif
     return NPERR_NO_ERROR;
   }
@@ -2227,26 +2227,26 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
 #ifndef NP_NO_QUICKDRAW
   case NPNVsupportsQuickDrawBool: {
-    *(NPBool*)result = PR_TRUE;
+    *(NPBool*)result = true;
     
     return NPERR_NO_ERROR;
   }
 #endif
 
   case NPNVsupportsCoreGraphicsBool: {
-    *(NPBool*)result = PR_TRUE;
+    *(NPBool*)result = true;
     
     return NPERR_NO_ERROR;
   }
 
    case NPNVsupportsCoreAnimationBool: {
-     *(NPBool*)result = PR_TRUE;
+     *(NPBool*)result = true;
 
      return NPERR_NO_ERROR;
    }
 
    case NPNVsupportsInvalidatingCoreAnimationBool: {
-     *(NPBool*)result = PR_TRUE;
+     *(NPBool*)result = true;
 
      return NPERR_NO_ERROR;
    }
@@ -2254,13 +2254,13 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
 #ifndef NP_NO_CARBON
   case NPNVsupportsCarbonBool: {
-    *(NPBool*)result = PR_TRUE;
+    *(NPBool*)result = true;
 
     return NPERR_NO_ERROR;
   }
 #endif
   case NPNVsupportsCocoaBool: {
-    *(NPBool*)result = PR_TRUE;
+    *(NPBool*)result = true;
 
     return NPERR_NO_ERROR;
   }
@@ -2830,7 +2830,7 @@ _convertpoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace so
 {
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
   if (!inst)
-    return PR_FALSE;
+    return false;
 
   return inst->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
 }

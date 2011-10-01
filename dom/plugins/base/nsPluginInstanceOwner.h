@@ -267,9 +267,9 @@ public:
     (MatchPluginName("Shockwave Flash") ||
      MatchPluginName("Test Plug-in"));
 #elif defined(MOZ_X11) || defined(XP_MACOSX)
-    return PR_TRUE;
+    return true;
 #else
-    return PR_FALSE;
+    return false;
 #endif
   }
   

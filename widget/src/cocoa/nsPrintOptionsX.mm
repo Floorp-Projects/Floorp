@@ -80,7 +80,7 @@ nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
     return rv;
   }
 
-  InitPrintSettingsFromPrefs(*_retval, PR_FALSE, nsIPrintSettings::kInitSaveAll);
+  InitPrintSettingsFromPrefs(*_retval, false, nsIPrintSettings::kInitSaveAll);
   return rv;
 }
 

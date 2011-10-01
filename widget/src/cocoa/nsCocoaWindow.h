@@ -152,7 +152,7 @@ typedef struct _nsCocoaWindowList {
   nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)
   // Used to avoid duplication when we send NS_ACTIVATE and
   // NS_DEACTIVATE to Gecko for toplevel widgets.  Starts out
-  // PR_FALSE.
+  // false.
   bool mToplevelActiveState;
   BOOL mHasEverBeenZoomed;
 }

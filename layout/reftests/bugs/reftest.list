@@ -1526,6 +1526,7 @@ fails-if(Android) == 560455-1.xul 560455-1-ref.xul
 == 563584-10a.html 563584-10-ref.html
 == 563584-10b.html 563584-10-ref.html
 == 563584-11.html 563584-11-ref.html
+== 564002-1.html 564002-1-ref.html
 == 564054-1.html 564054-1-ref.html
 fails-if(Android) random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 565819-1.html 565819-ref.html
