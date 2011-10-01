@@ -92,7 +92,9 @@
         <span id="feedback" style="width: &aboutHome.footerWidth;" class="section-row" pref="app.feedbackURL" onclick="openLink(this);" role="button">&aboutHome.giveFeedback;</span
         ><span id="support" style="width: &aboutHome.footerWidth;" class="section-row" pref="app.support.baseURL" onclick="openLink(this);" role="button">&aboutHome.getHelp;</span>
       </div>
-
+      <div id="sync-setup">
+        <a id="syncSetupSync" href="#" onclick="openSetupSyncWizard();">&aboutHome.setupSync;</a>
+      </div>
     </div>
   </div>
 
@@ -160,6 +162,7 @@
     function init() {
       initTabs();
       initAddons();
+      initSetupSync();
 
       let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).QueryInterface(Ci.nsIPrefBranch2);
       if (prefs.getBoolPref("browser.firstrun.show.uidiscovery")) {
@@ -175,6 +178,7 @@
 
     function uninit() {
       uninitAddons();
+      uninitSetupSync();
     }
 
     function _readFile(aFile) {
@@ -451,7 +455,35 @@
      doc.removeEventListener("animationend", endDiscovery, false);
      doc.removeEventListener("PanBegin", endDiscovery, false);
    }
-   
+
+   function initSetupSync() {
+     let services = getChromeWin().Services; 
+     if (services.prefs.prefHasUserValue("services.sync.username")) {
+       document.getElementById("syncSetupSync").style.display = "none";
+     }    
+     services.obs.addObserver(syncConnected, "weave:service:setup-complete", false);
+     services.obs.addObserver(syncDisconnected, "weave:service:start-over", false);
+   }
+
+   function uninitSetupSync() {
+     let services = getChromeWin().Services; 
+     services.obs.removeObserver(syncConnected, "weave:service:setup-complete");
+     services.obs.removeObserver(syncDisconnected, "weave:service:start-over");
+   }
+
+   function syncConnected() {
+     document.getElementById("syncSetupSync").style.display = "none";
+   }
+
+   function syncDisconnected() {
+     document.getElementById("syncSetupSync").style.display = "inline";
+   }
+
+   function openSetupSyncWizard() {
+     let chromeWin = getChromeWin();
+     chromeWin.WeaveGlue.open();
+   }
+
    function initLightbox() {
      let prefs = getChromeWin().Services.prefs;
      let channel = prefs.getCharPref("app.update.channel");
