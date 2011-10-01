@@ -26,7 +26,6 @@ IF YOU MODIFY THIS FILE YOU ALSO NEED TO RUN generate_parser.sh.
 #include "compiler/debug.h"
 #include "Context.h"
 #include "pp_tab.h"
-#include "Preprocessor.h"
 
 #define YY_USER_ACTION                        \
     do {                                      \
@@ -36,9 +35,9 @@ IF YOU MODIFY THIS FILE YOU ALSO NEED TO RUN generate_parser.sh.
     } while(0);
 
 #define YY_INPUT(buf, result, maxSize) \
-    result = readInput(yyextra, buf, maxSize);
-
-static int readInput(pp::Context* context, char* buf, int maxSize);
+    result = yyextra->readInput(buf, maxSize);
+    
+static std::string* extractMacroName(const char* str, int len);
 %}
 
 %option noyywrap nounput never-interactive
@@ -64,9 +63,15 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 
 {HASH} { return HASH; }
 
-{HASH}define { return HASH_DEFINE_OBJ; }
-{HASH}define{HSPACE}+/{IDENTIFIER}"(" { return HASH_DEFINE_FUNC; }
-{HASH}undef { return HASH_UNDEF; }
+{HASH}define{HSPACE}+{IDENTIFIER}/[ \t\n] {
+    yylval->sval = extractMacroName(yytext, yyleng);
+    return HASH_DEFINE_OBJ;
+}
+{HASH}define{HSPACE}+{IDENTIFIER}/"(" {
+    yylval->sval = extractMacroName(yytext, yyleng);
+    return HASH_DEFINE_FUNC;
+}
+{HASH}undef{HSPACE}+ { return HASH_UNDEF; }
 
 {HASH}if { return HASH_IF; }
 {HASH}ifdef { return HASH_IFDEF; }
@@ -99,7 +104,7 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 
 {PUNCTUATOR} { return yytext[0]; }
 
-{HSPACE}+ { return SPACE; }
+[ \t\v\f]+ { /* Ignore whitespace */ }
 
 \n {
     ++yylineno; yycolumn = 0;
@@ -110,24 +115,42 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 
 %%
 
-int readInput(pp::Context* context, char* buf, int maxSize)
+std::string* extractMacroName(const char* str, int len)
 {
-    yyscan_t lexer = context->lexer;
-    ASSERT(lexer);
+    // The input string is of the form {HASH}define{HSPACE}+{IDENTIFIER}
+    // We just need to find the last HSPACE.
+    ASSERT(str && (len > 8));  // strlen("#define ") == 8;
 
+    std::string* name = NULL;
+    for (int i = len - 1; i >= 0; --i)
+    {
+        if ((str[i] == ' ') || (str[i] == '\t'))
+        {
+            name = new std::string(str + i + 1, len - i - 1);
+            break;
+        }
+    }
+    ASSERT(name);
+    return name;
+}
+
+namespace pp {
+
+int Context::readInput(char* buf, int maxSize)
+{
     int nread = YY_NULL;
-    while (!context->input.eof() &&
-           (context->input.error() == pp::Input::kErrorNone) &&
+    while (!mInput->eof() &&
+           (mInput->error() == pp::Input::kErrorNone) &&
            (nread == YY_NULL))
     {
         int line = 0, file = 0;
-        pp::Token::decodeLocation(yyget_lineno(lexer), &line, &file);
-        file = context->input.stringIndex();
-        yyset_lineno(pp::Token::encodeLocation(line, file), lexer);
+        pp::Token::decodeLocation(yyget_lineno(mLexer), &line, &file);
+        file = mInput->stringIndex();
+        yyset_lineno(pp::Token::encodeLocation(line, file), mLexer);
 
-        nread = context->input.read(buf, maxSize);
+        nread = mInput->read(buf, maxSize);
 
-        if (context->input.error() == pp::Input::kErrorUnexpectedEOF)
+        if (mInput->error() == pp::Input::kErrorUnexpectedEOF)
         {
             // TODO(alokp): Report error.
         }
@@ -135,27 +158,23 @@ int readInput(pp::Context* context, char* buf, int maxSize)
     return nread;
 }
 
-namespace pp {
-
-bool Preprocessor::initLexer(Context* context)
+bool Context::initLexer()
 {
-    ASSERT(context->lexer == NULL);
+    ASSERT(mLexer == NULL);
 
-    yyscan_t lexer = 0;
-    if (yylex_init_extra(context, &lexer))
+    if (yylex_init_extra(this, &mLexer))
         return false;
 
-    context->lexer = lexer;
-    yyrestart(0, lexer);
+    yyrestart(0, mLexer);
     return true;
 }
 
-void Preprocessor::destroyLexer(Context* context)
+void Context::destroyLexer()
 {
-    ASSERT(context->lexer);
+    ASSERT(mLexer);
 
-    yylex_destroy(context->lexer);
-    context->lexer = 0;
+    yylex_destroy(mLexer);
+    mLexer = NULL;
 }
 
 }  // namespace pp

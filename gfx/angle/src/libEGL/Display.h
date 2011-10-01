@@ -85,6 +85,8 @@ class Display
 
     D3DPRESENT_PARAMETERS getDefaultPresentParameters();
 
+    bool restoreLostDevice();
+
     EGLNativeDisplayType mDisplayId;
     const HDC mDc;
 
