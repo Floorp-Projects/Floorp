@@ -92,19 +92,19 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mDrawingModel(0),
 #endif
     mRunning(NOT_STARTED),
-    mWindowless(PR_FALSE),
-    mWindowlessLocal(PR_FALSE),
-    mTransparent(PR_FALSE),
-    mUsesDOMForCursor(PR_FALSE),
-    mInPluginInitCall(PR_FALSE),
+    mWindowless(false),
+    mWindowlessLocal(false),
+    mTransparent(false),
+    mUsesDOMForCursor(false),
+    mInPluginInitCall(false),
     mPlugin(plugin),
     mMIMEType(nsnull),
     mOwner(nsnull),
     mCurrentPluginEvent(nsnull),
 #if defined(MOZ_X11) || defined(XP_WIN) || defined(XP_MACOSX)
-    mUsePluginLayersPref(PR_TRUE)
+    mUsePluginLayersPref(true)
 #else
-    mUsePluginLayersPref(PR_FALSE)
+    mUsePluginLayersPref(false)
 #endif
 {
   NS_ASSERTION(mPlugin != NULL, "Plugin is required when creating an instance.");
@@ -404,7 +404,7 @@ nsNPAPIPluginInstance::InitializePlugin()
   }
 
   bool oldVal = mInPluginInitCall;
-  mInPluginInitCall = PR_TRUE;
+  mInPluginInitCall = true;
 
   // Need this on the stack before calling NPP_New otherwise some callbacks that
   // the plugin may make could fail (NPN_HasProperty, for example).
@@ -467,7 +467,7 @@ nsresult nsNPAPIPluginInstance::SetWindow(NPWindow* window)
     PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::SetWindow (about to call it) this=%p\n",this));
 
     bool oldVal = mInPluginInitCall;
-    mInPluginInitCall = PR_TRUE;
+    mInPluginInitCall = true;
 
     NPPAutoPusher nppPusher(&mNPP);
 
@@ -666,7 +666,7 @@ NPError nsNPAPIPluginInstance::SetWindowless(bool aWindowless)
     // PluginInstanceChild::InitQuirksMode.
     NS_NAMED_LITERAL_CSTRING(silverlight, "application/x-silverlight");
     if (!PL_strncasecmp(mMIMEType, silverlight.get(), silverlight.Length())) {
-      mTransparent = PR_TRUE;
+      mTransparent = true;
     }
   }
 
@@ -726,7 +726,7 @@ void nsNPAPIPluginInstance::SetDrawingModel(PRUint32 aModel)
 class SurfaceGetter : public nsRunnable {
 public:
   SurfaceGetter(NPPluginFuncs* aPluginFunctions, NPP_t aNPP) : 
-    mHaveSurface(PR_FALSE), mPluginFunctions(aPluginFunctions), mNPP(aNPP) {
+    mHaveSurface(false), mPluginFunctions(aPluginFunctions), mNPP(aNPP) {
     mLock = new Mutex("SurfaceGetter::Lock");
     mCondVar = new CondVar(*mLock, "SurfaceGetter::CondVar");
     
@@ -738,13 +738,13 @@ public:
   nsresult Run() {
     MutexAutoLock lock(*mLock);
     (*mPluginFunctions->getvalue)(&mNPP, kJavaSurface_ANPGetValue, &mSurface);
-    mHaveSurface = PR_TRUE;
+    mHaveSurface = true;
     mCondVar->Notify();
     return NS_OK;
   }
   void* GetSurface() {
     MutexAutoLock lock(*mLock);
-    mHaveSurface = PR_FALSE;
+    mHaveSurface = false;
     AndroidBridge::Bridge()->PostToJavaThread(this);
     while (!mHaveSurface)
       mCondVar->Wait();
@@ -878,7 +878,7 @@ nsNPAPIPluginInstance::IsWindowless(bool* isWindowless)
 {
 #ifdef ANDROID
   // On android, pre-honeycomb, all plugins are treated as windowless.
-  *isWindowless = PR_TRUE;
+  *isWindowless = true;
 #else
   *isWindowless = mWindowless;
 #endif
@@ -1057,7 +1057,7 @@ nsNPAPIPluginInstance::PushPopupsEnabledState(bool aEnabled)
 
   PopupControlState oldState =
     window->PushPopupControlState(aEnabled ? openAllowed : openAbused,
-                                  PR_TRUE);
+                                  true);
 
   if (!mPopupStates.AppendElement(oldState)) {
     // Appending to our state stack failed, pop what we just pushed.
@@ -1172,9 +1172,9 @@ PluginTimerCallback(nsITimer *aTimer, void *aClosure)
 
   // Some plugins (Flash on Android) calls unscheduletimer
   // from this callback.
-  t->inCallback = PR_TRUE;
+  t->inCallback = true;
   (*(t->callback))(npp, id);
-  t->inCallback = PR_FALSE;
+  t->inCallback = false;
 
   // Make sure we still have an instance and the timer is still alive
   // after the callback.
@@ -1208,7 +1208,7 @@ nsNPAPIPluginInstance::ScheduleTimer(uint32_t interval, NPBool repeat, void (*ti
 {
   nsNPAPITimer *newTimer = new nsNPAPITimer();
 
-  newTimer->inCallback = PR_FALSE;
+  newTimer->inCallback = false;
   newTimer->npp = &mNPP;
 
   // generate ID that is unique to this instance
@@ -1280,7 +1280,7 @@ nsNPAPIPluginInstance::ConvertPoint(double sourceX, double sourceY, NPCoordinate
   if (mOwner)
     return mOwner->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
 
-  return PR_FALSE;
+  return false;
 }
 
 nsresult
@@ -1452,7 +1452,7 @@ CarbonEventModelFailureEvent::Run()
 {
   nsString type = NS_LITERAL_STRING("npapi-carbon-event-model-failure");
   nsContentUtils::DispatchTrustedEvent(mContent->GetDocument(), mContent,
-                                       type, PR_TRUE, PR_TRUE);
+                                       type, true, true);
   return NS_OK;
 }
 
