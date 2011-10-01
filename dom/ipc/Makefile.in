@@ -65,6 +65,7 @@ EXPORTS_mozilla/dom = \
   CrashReporterParent.h \
   TabParent.h \
   TabChild.h \
+  TabMessageUtils.h \
   $(NULL)
 
 CPPSRCS = \
@@ -72,6 +73,7 @@ CPPSRCS = \
   ContentParent.cpp \
   ContentChild.cpp \
   CrashReporterParent.cpp \
+  CrashReporterChild.cpp \
   TabParent.cpp \
   TabChild.cpp \
   TabMessageUtils.cpp \
@@ -87,7 +89,6 @@ CPPSRCS += \
   AudioParent.cpp \
   $(NULL)
 endif
-
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

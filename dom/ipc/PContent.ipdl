@@ -47,6 +47,7 @@ include protocol PMemoryReportRequest;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
+include "mozilla/dom/TabMessageUtils.h";
 
 include "nsGeoPositionIPCSerialiser.h";
 include "PPrefTuple.h";
@@ -60,6 +61,7 @@ using OverrideMapping;
 using IPC::URI;
 using IPC::Permission;
 using mozilla::null_t;
+using mozilla::dom::NativeThreadId;
 using gfxIntSize;
 
 namespace mozilla {
@@ -143,11 +145,12 @@ child:
 
 parent:
     PNecko();
-    PCrashReporter();
     
     PStorage(StorageConstructData data);
 
     PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
+
+    sync PCrashReporter(NativeThreadId tid, PRUint32 processType);
 
     // Services remoting
 
