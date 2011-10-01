@@ -93,21 +93,21 @@ function searchTest(contentWindow) {
   
   // part of title
   searchBox.setAttribute("value", "search");
-  contentWindow.performSearch();
+  contentWindow.Search.perform();
   is(new contentWindow.TabMatcher(
       searchBox.getAttribute("value")).matched().length, 2,
      "Match something when a part of title exists");
 
   // unique part of a url 
   searchBox.setAttribute("value", "search1.html");
-  contentWindow.performSearch();
+  contentWindow.Search.perform();
   is(new contentWindow.TabMatcher(
       searchBox.getAttribute("value")).matched().length, 1,
      "Match something when a unique part of a url exists");
    
   // common part of a url
   searchBox.setAttribute("value", "tabview");
-  contentWindow.performSearch();
+  contentWindow.Search.perform();
   is(new contentWindow.TabMatcher(
       searchBox.getAttribute("value")).matched().length, 2,
      "Match something when a common part of a url exists");
@@ -117,7 +117,7 @@ function searchTest(contentWindow) {
 
 // ----------
 function cleanup(contentWindow) {       
-  contentWindow.hideSearch(null);     
+  contentWindow.Search.hide(null);     
   let onTabViewHidden = function() {
     window.removeEventListener("tabviewhidden", onTabViewHidden, false);
     ok(!TabView.isVisible(), "Tab View is hidden");

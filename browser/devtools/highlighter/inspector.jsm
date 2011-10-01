@@ -303,6 +303,7 @@ Highlighter.prototype = {
   {
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("resize", this, true);
+    this._contentRect = null;
     this._highlightRect = null;
     this._highlighting = false;
     this.veilTopBox = null;
@@ -439,28 +440,41 @@ Highlighter.prototype = {
    */
   highlightRectangle: function Highlighter_highlightRectangle(aRect)
   {
-    let oldRect = this._highlightRect;
+    let oldRect = this._contentRect;
 
     if (oldRect && aRect.top == oldRect.top && aRect.left == oldRect.left &&
         aRect.width == oldRect.width && aRect.height == oldRect.height) {
       return this._highlighting; // same rectangle
     }
 
-    if (aRect.left >= 0 && aRect.top >= 0 &&
-        aRect.width > 0 && aRect.height > 0) {
+    // get page zoom factor, if any
+    let zoom =
+      this.win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+      .getInterface(Components.interfaces.nsIDOMWindowUtils)
+      .screenPixelsPerCSSPixel;
+
+    // adjust rect for zoom scaling
+    let aRectScaled = {};
+    for (let prop in aRect) {
+      aRectScaled[prop] = aRect[prop] * zoom;
+    }
+
+    if (aRectScaled.left >= 0 && aRectScaled.top >= 0 &&
+        aRectScaled.width > 0 && aRectScaled.height > 0) {
       // The bottom div and the right div are flexibles (flex=1).
       // We don't need to resize them.
-      this.veilTopBox.style.height = aRect.top + "px";
-      this.veilLeftBox.style.width = aRect.left + "px";
-      this.veilMiddleBox.style.height = aRect.height + "px";
-      this.veilTransparentBox.style.width = aRect.width + "px";
+      this.veilTopBox.style.height = aRectScaled.top + "px";
+      this.veilLeftBox.style.width = aRectScaled.left + "px";
+      this.veilMiddleBox.style.height = aRectScaled.height + "px";
+      this.veilTransparentBox.style.width = aRectScaled.width + "px";
 
       this._highlighting = true;
     } else {
       this.unhighlight();
     }
 
-    this._highlightRect = aRect;
+    this._contentRect = aRect; // save orig (non-scaled) rect
+    this._highlightRect = aRectScaled; // and save the scaled rect.
 
     return this._highlighting;
   },
@@ -588,18 +602,18 @@ Highlighter.prototype = {
   get highlitNode()
   {
     // Not highlighting? Bail.
-    if (!this._highlighting || !this._highlightRect) {
+    if (!this._highlighting || !this._contentRect) {
       return null;
     }
 
     let a = {
-      x: this._highlightRect.left,
-      y: this._highlightRect.top
+      x: this._contentRect.left,
+      y: this._contentRect.top
     };
 
     let b = {
-      x: a.x + this._highlightRect.width,
-      y: a.y + this._highlightRect.height
+      x: a.x + this._contentRect.width,
+      y: a.y + this._contentRect.height
     };
 
     // Get midpoint of diagonal line.
