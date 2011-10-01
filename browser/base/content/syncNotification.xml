@@ -56,19 +56,20 @@
 
     <implementation>
       <constructor><![CDATA[
-        Cu.import("resource://services-sync/ext/Observers.js");
-        Cu.import("resource://services-sync/notifications.js");
+        let temp = {};
+        Cu.import("resource://services-sync/ext/Observers.js", temp);
+        temp.Observers.add("weave:notification:added", this.onNotificationAdded, this);
+        temp.Observers.add("weave:notification:removed", this.onNotificationRemoved, this);
 
-        Observers.add("weave:notification:added", this.onNotificationAdded, this);
-        Observers.add("weave:notification:removed", this.onNotificationRemoved, this);
-
-        for each (var notification in Notifications.notifications)
+        for each (var notification in Weave.Notifications.notifications)
           this._appendNotification(notification);
       ]]></constructor>
 
       <destructor><![CDATA[
-        Observers.remove("weave:notification:added", this.onNotificationAdded, this);
-        Observers.remove("weave:notification:removed", this.onNotificationRemoved, this);
+        let temp = {};
+        Cu.import("resource://services-sync/ext/Observers.js", temp);
+        temp.Observers.remove("weave:notification:added", this.onNotificationAdded, this);
+        temp.Observers.remove("weave:notification:removed", this.onNotificationRemoved, this);
       ]]></destructor>
 
       <method name="onNotificationAdded">
@@ -140,7 +141,7 @@
                 onset="this._notification = val; return val;"/>
       <method name="close">
         <body><![CDATA[
-          Notifications.remove(this.notification);
+          Weave.Notifications.remove(this.notification);
 
           // We should be able to call the base class's close method here
           // to remove the notification element from the notification box,
