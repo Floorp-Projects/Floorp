@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 include protocol PContent;
+include protocol PPluginModule;
 
 namespace mozilla {
 namespace dom {
@@ -51,9 +52,11 @@ struct Mapping {
 };
 
 protocol PCrashReporter {
-  manager PContent;
+  manager PContent or PPluginModule;
 parent:
   AddLibraryMappings(Mapping[] m);
+  AnnotateCrashReport(nsCString key, nsCString data);
+  AppendAppNotes(nsCString data);
   __delete__();
 };
 

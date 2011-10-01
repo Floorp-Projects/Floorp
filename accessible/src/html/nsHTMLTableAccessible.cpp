@@ -1360,7 +1360,7 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
 #define RETURN_LAYOUT_ANSWER(isLayout, heuristic) { *aIsProbablyForLayout = isLayout; return NS_OK; }
 #endif
 
-  *aIsProbablyForLayout = PR_FALSE;
+  *aIsProbablyForLayout = false;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -1369,7 +1369,7 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
   if (docAccessible) {
     PRUint64 docState = docAccessible->State();
     if (docState & states::EDITABLE) {  // Need to see all elements while document is being edited
-      RETURN_LAYOUT_ANSWER(PR_FALSE, "In editable document");
+      RETURN_LAYOUT_ANSWER(false, "In editable document");
     }
   }
 
@@ -1377,45 +1377,77 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
   // but for which we still expose table semantics (treegrid, for example).
   bool hasNonTableRole = (Role() != nsIAccessibleRole::ROLE_TABLE);
   if (hasNonTableRole) {
-    RETURN_LAYOUT_ANSWER(PR_FALSE, "Has role attribute");
+    RETURN_LAYOUT_ANSWER(false, "Has role attribute");
   }
 
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::role)) {
     // Role attribute is present, but overridden roles have already been dealt with.
     // Only landmarks and other roles that don't override the role from native
     // markup are left to deal with here.
-    RETURN_LAYOUT_ANSWER(PR_FALSE, "Has role attribute, weak role, and role is table");
+    RETURN_LAYOUT_ANSWER(false, "Has role attribute, weak role, and role is table");
   }
-  
-  // Check for legitimate data table elements or attributes
+
+  // Check for legitimate data table attributes.
   nsAutoString summary;
-  if ((mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, summary) &&
-       !summary.IsEmpty()) || 
-      HasDescendant(NS_LITERAL_STRING("caption"), PR_FALSE) ||
-      HasDescendant(NS_LITERAL_STRING("th")) ||
-      HasDescendant(NS_LITERAL_STRING("thead")) ||
-      HasDescendant(NS_LITERAL_STRING("tfoot")) ||
-      HasDescendant(NS_LITERAL_STRING("colgroup"))) {
-    RETURN_LAYOUT_ANSWER(PR_FALSE, "Has caption, summary, th, thead, tfoot or colgroup -- legitimate table structures");
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, summary) &&
+      !summary.IsEmpty())
+    RETURN_LAYOUT_ANSWER(false, "Has summary -- legitimate table structures");
+
+  // Check for legitimate data table elements.
+  nsAccessible* caption = FirstChild();
+  if (caption && caption->Role() == nsIAccessibleRole::ROLE_CAPTION &&
+      caption->HasChildren()) {
+    RETURN_LAYOUT_ANSWER(false,
+                               "Not empty caption -- legitimate table structures");
   }
+
+  for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
+       childElm = childElm->GetNextSibling()) {
+    if (!childElm->IsHTML())
+      continue;
+
+    if (childElm->Tag() == nsGkAtoms::col ||
+        childElm->Tag() == nsGkAtoms::colgroup ||
+        childElm->Tag() == nsGkAtoms::tfoot ||
+        childElm->Tag() == nsGkAtoms::thead) {
+      RETURN_LAYOUT_ANSWER(false,
+                           "Has col, colgroup, tfoot or thead -- legitimate table structures");
+    }
+
+    if (childElm->Tag() == nsGkAtoms::tbody) {
+      for (nsIContent* rowElm = childElm->GetFirstChild(); rowElm;
+           rowElm = rowElm->GetNextSibling()) {
+        if (rowElm->IsHTML() && rowElm->Tag() == nsGkAtoms::tr) {
+          for (nsIContent* cellElm = rowElm->GetFirstChild(); cellElm;
+               cellElm = cellElm->GetNextSibling()) {
+            if (cellElm->IsHTML() && cellElm->Tag() == nsGkAtoms::th) {
+              RETURN_LAYOUT_ANSWER(false,
+                                   "Has th -- legitimate table structures");
+            }
+          }
+        }
+      }
+    }
+  }
+
   if (HasDescendant(NS_LITERAL_STRING("table"))) {
-    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has a nested table within it");
+    RETURN_LAYOUT_ANSWER(true, "Has a nested table within it");
   }
   
   // If only 1 column or only 1 row, it's for layout
   PRInt32 columns, rows;
   GetColumnCount(&columns);
   if (columns <=1) {
-    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has only 1 column");
+    RETURN_LAYOUT_ANSWER(true, "Has only 1 column");
   }
   GetRowCount(&rows);
   if (rows <=1) {
-    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has only 1 row");
+    RETURN_LAYOUT_ANSWER(true, "Has only 1 row");
   }
 
   // Check for many columns
   if (columns >= 5) {
-    RETURN_LAYOUT_ANSWER(PR_FALSE, ">=5 columns");
+    RETURN_LAYOUT_ANSWER(false, ">=5 columns");
   }
   
   // Now we know there are 2-4 columns and 2 or more rows
@@ -1434,7 +1466,7 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
   nsMargin border;
   cellFrame->GetBorder(border);
   if (border.top && border.bottom && border.left && border.right) {
-    RETURN_LAYOUT_ANSWER(PR_FALSE, "Has nonzero border-width on table cell");
+    RETURN_LAYOUT_ANSWER(false, "Has nonzero border-width on table cell");
   }
 
   /**
@@ -1462,21 +1494,21 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
     lastRowColor = color;
     styleDecl->GetPropertyValue(NS_LITERAL_STRING("background-color"), color);
     if (rowCount > 0 && PR_FALSE == lastRowColor.Equals(color)) {
-      RETURN_LAYOUT_ANSWER(PR_FALSE, "2 styles of row background color, non-bordered");
+      RETURN_LAYOUT_ANSWER(false, "2 styles of row background color, non-bordered");
     }
   }
 
   // Check for many rows
   const PRInt32 kMaxLayoutRows = 20;
   if (rows > kMaxLayoutRows) { // A ton of rows, this is probably for data
-    RETURN_LAYOUT_ANSWER(PR_FALSE, ">= kMaxLayoutRows (20) and non-bordered");
+    RETURN_LAYOUT_ANSWER(false, ">= kMaxLayoutRows (20) and non-bordered");
   }
 
   // Check for very wide table
   nsAutoString styledWidth;
   GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("width"), styledWidth);
   if (styledWidth.EqualsLiteral("100%")) {
-    RETURN_LAYOUT_ANSWER(PR_TRUE, "<=4 columns and 100% width");
+    RETURN_LAYOUT_ANSWER(true, "<=4 columns and 100% width");
   }
   if (styledWidth.Find(NS_LITERAL_STRING("px"))) { // Hardcoded in pixels
     nsIFrame *tableFrame = GetFrame();
@@ -1494,24 +1526,24 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
       if (percentageOfDocWidth > 95) {
         // 3-4 columns, no borders, not a lot of rows, and 95% of the doc's width
         // Probably for layout
-        RETURN_LAYOUT_ANSWER(PR_TRUE, "<=4 columns, width hardcoded in pixels and 95% of document width");
+        RETURN_LAYOUT_ANSWER(true, "<=4 columns, width hardcoded in pixels and 95% of document width");
       }
     }
   }
 
   // Two column rules
   if (rows * columns <= 10) {
-    RETURN_LAYOUT_ANSWER(PR_TRUE, "2-4 columns, 10 cells or less, non-bordered");
+    RETURN_LAYOUT_ANSWER(true, "2-4 columns, 10 cells or less, non-bordered");
   }
 
   if (HasDescendant(NS_LITERAL_STRING("embed")) ||
       HasDescendant(NS_LITERAL_STRING("object")) ||
       HasDescendant(NS_LITERAL_STRING("applet")) ||
       HasDescendant(NS_LITERAL_STRING("iframe"))) {
-    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has no borders, and has iframe, object, applet or iframe, typical of advertisements");
+    RETURN_LAYOUT_ANSWER(true, "Has no borders, and has iframe, object, applet or iframe, typical of advertisements");
   }
 
-  RETURN_LAYOUT_ANSWER(PR_FALSE, "no layout factor strong enough, so will guess data");
+  RETURN_LAYOUT_ANSWER(false, "no layout factor strong enough, so will guess data");
 }
 
 
