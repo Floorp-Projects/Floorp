@@ -4493,11 +4493,6 @@ nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
 {
   *aReturn = nsnull;
 
-  // There are no PIs for HTML
-  if (IsHTML()) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
   nsresult rv = nsContentUtils::CheckQName(aTarget, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
