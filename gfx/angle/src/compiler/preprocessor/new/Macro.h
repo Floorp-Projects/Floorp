@@ -7,27 +7,44 @@
 #ifndef COMPILER_PREPROCESSOR_MACRO_H_
 #define COMPILER_PREPROCESSOR_MACRO_H_
 
-#include <map>
 #include <string>
+#include <vector>
 
+#include "common/angleutils.h"
 #include "Token.h"
 
 namespace pp
 {
 
-struct Macro
+class Macro
 {
+  public:
     enum Type
     {
         kTypeObj,
         kTypeFunc
     };
-    Type type;
-    std::string identifier;
-    TokenVector parameters;
-    TokenVector replacements;
+
+    // Takes ownership of pointer parameters.
+    Macro(Type type,
+          std::string* name,
+          TokenVector* parameters,
+          TokenVector* replacements);
+    ~Macro();
+
+    Type type() const { return mType; }
+    const std::string* identifier() const { return mName; }
+    const TokenVector* parameters() const { return mParameters; }
+    const TokenVector* replacements() const { return mReplacements; }
+
+  private:
+    DISALLOW_COPY_AND_ASSIGN(Macro);
+
+    Type mType;
+    std::string* mName;
+    TokenVector* mParameters;
+    TokenVector* mReplacements;
 };
-typedef std::map<std::string, Macro> MacroSet;
 
 }  // namespace pp
 #endif COMPILER_PREPROCESSOR_MACRO_H_

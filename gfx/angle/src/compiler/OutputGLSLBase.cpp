@@ -436,6 +436,8 @@ bool TOutputGLSLBase::visitAggregate(Visit visit, TIntermAggregate* node)
 {
     bool visitChildren = true;
     TInfoSinkBase& out = objSink();
+    TString preString;
+    bool delayedWrite = false;
     switch (node->getOp())
     {
         case EOpSequence: {
@@ -582,34 +584,38 @@ bool TOutputGLSLBase::visitAggregate(Visit visit, TIntermAggregate* node)
             }
             break;
 
-        case EOpLessThan: writeTriplet(visit, "lessThan(", ", ", ")"); break;
-        case EOpGreaterThan: writeTriplet(visit, "greaterThan(", ", ", ")"); break;
-        case EOpLessThanEqual: writeTriplet(visit, "lessThanEqual(", ", ", ")"); break;
-        case EOpGreaterThanEqual: writeTriplet(visit, "greaterThanEqual(", ", ", ")"); break;
-        case EOpVectorEqual: writeTriplet(visit, "equal(", ", ", ")"); break;
-        case EOpVectorNotEqual: writeTriplet(visit, "notEqual(", ", ", ")"); break;
+        case EOpLessThan: preString = "lessThan("; delayedWrite = true; break;
+        case EOpGreaterThan: preString = "greaterThan("; delayedWrite = true; break;
+        case EOpLessThanEqual: preString = "lessThanEqual("; delayedWrite = true; break;
+        case EOpGreaterThanEqual: preString = "greaterThanEqual("; delayedWrite = true; break;
+        case EOpVectorEqual: preString = "equal("; delayedWrite = true; break;
+        case EOpVectorNotEqual: preString = "notEqual("; delayedWrite = true; break;
         case EOpComma: writeTriplet(visit, NULL, ", ", NULL); break;
 
-        case EOpMod: writeTriplet(visit, "mod(", ", ", ")"); break;
-        case EOpPow: writeTriplet(visit, "pow(", ", ", ")"); break;
-        case EOpAtan: writeTriplet(visit, "atan(", ", ", ")"); break;
-        case EOpMin: writeTriplet(visit, "min(", ", ", ")"); break;
-        case EOpMax: writeTriplet(visit, "max(", ", ", ")"); break;
-        case EOpClamp: writeTriplet(visit, "clamp(", ", ", ")"); break;
-        case EOpMix: writeTriplet(visit, "mix(", ", ", ")"); break;
-        case EOpStep: writeTriplet(visit, "step(", ", ", ")"); break;
-        case EOpSmoothStep: writeTriplet(visit, "smoothstep(", ", ", ")"); break;
+        case EOpMod: preString = "mod("; delayedWrite = true; break;
+        case EOpPow: preString = "pow("; delayedWrite = true; break;
+        case EOpAtan: preString = "atan("; delayedWrite = true; break;
+        case EOpMin: preString = "min("; delayedWrite = true; break;
+        case EOpMax: preString = "max("; delayedWrite = true; break;
+        case EOpClamp: preString = "clamp("; delayedWrite = true; break;
+        case EOpMix: preString = "mix("; delayedWrite = true; break;
+        case EOpStep: preString = "step("; delayedWrite = true; break;
+        case EOpSmoothStep: preString = "smoothstep("; delayedWrite = true; break;
 
-        case EOpDistance: writeTriplet(visit, "distance(", ", ", ")"); break;
-        case EOpDot: writeTriplet(visit, "dot(", ", ", ")"); break;
-        case EOpCross: writeTriplet(visit, "cross(", ", ", ")"); break;
-        case EOpFaceForward: writeTriplet(visit, "faceforward(", ", ", ")"); break;
-        case EOpReflect: writeTriplet(visit, "reflect(", ", ", ")"); break;
-        case EOpRefract: writeTriplet(visit, "refract(", ", ", ")"); break;
-        case EOpMul: writeTriplet(visit, "matrixCompMult(", ", ", ")"); break;
+        case EOpDistance: preString = "distance("; delayedWrite = true; break;
+        case EOpDot: preString = "dot("; delayedWrite = true; break;
+        case EOpCross: preString = "cross("; delayedWrite = true; break;
+        case EOpFaceForward: preString = "faceforward("; delayedWrite = true; break;
+        case EOpReflect: preString = "reflect("; delayedWrite = true; break;
+        case EOpRefract: preString = "refract("; delayedWrite = true; break;
+        case EOpMul: preString = "matrixCompMult("; delayedWrite = true; break;
 
         default: UNREACHABLE(); break;
     }
+    if (delayedWrite && visit == PreVisit && node->getUseEmulatedFunction())
+        preString = BuiltInFunctionEmulator::GetEmulatedFunctionName(preString);
+    if (delayedWrite)
+        writeTriplet(visit, preString.c_str(), ", ", ")");
     return visitChildren;
 }
 
