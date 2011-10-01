@@ -240,10 +240,10 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mView(nsnull)
 , mParentView(nsnull)
 , mParentWidget(nsnull)
-, mVisible(PR_FALSE)
-, mDrawing(PR_FALSE)
-, mPluginDrawing(PR_FALSE)
-, mIsDispatchPaint(PR_FALSE)
+, mVisible(false)
+, mDrawing(false)
+, mPluginDrawing(false)
+, mIsDispatchPaint(false)
 , mPluginInstanceOwner(nsnull)
 {
   EnsureLogInitialized();
@@ -310,15 +310,15 @@ nsresult nsChildView::Create(nsIWidget *aParent,
     if (nsToolkit::OnLionOrLater()) {
       nsToolkit::SwizzleMethods([NSEvent class], @selector(addLocalMonitorForEventsMatchingMask:handler:),
                                 @selector(nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:handler:),
-                                PR_TRUE);
+                                true);
       nsToolkit::SwizzleMethods([NSEvent class], @selector(removeMonitor:),
-                                @selector(nsChildView_NSEvent_removeMonitor:), PR_TRUE);
+                                @selector(nsChildView_NSEvent_removeMonitor:), true);
     }
 #endif
 #ifndef NP_NO_CARBON
     TextInputHandler::SwizzleMethods();
 #endif
-    gChildViewMethodsSwizzled = PR_TRUE;
+    gChildViewMethodsSwizzled = true;
   }
 
   mBounds = aRect;
@@ -361,7 +361,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
   if (mParentWidget)
     [mView setHidden:YES];
   else
-    mVisible = PR_TRUE;
+    mVisible = true;
 
   // Hook it up in the NSView hierarchy.
   if (mParentView) {
@@ -447,7 +447,7 @@ NS_IMETHODIMP nsChildView::Destroy()
 
   if (mOnDestroyCalled)
     return NS_OK;
-  mOnDestroyCalled = PR_TRUE;
+  mOnDestroyCalled = true;
 
   [mView widgetDestroyed];
 
@@ -572,7 +572,7 @@ NS_IMETHODIMP nsChildView::IsVisible(bool& outState)
     outState = ([mView window] != nil);
     // now check native widget hierarchy visibility
     if (outState && NSIsEmptyRect([mView visibleRect])) {
-      outState = PR_FALSE;
+      outState = false;
     }
   }
 
@@ -787,7 +787,7 @@ NS_IMETHODIMP nsChildView::IsEnabled(bool *aState)
 {
   // unimplemented
   if (aState)
-   *aState = PR_TRUE;
+   *aState = true;
   return NS_OK;
 }
 
@@ -946,7 +946,7 @@ bool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
 
   if (![[topLevelView window] showsResizeIndicator] ||
       !([[topLevelView window] styleMask] & NSResizableWindowMask))
-    return PR_FALSE;
+    return false;
 
   if (aResizerRect) {
     NSSize bounds = [topLevelView bounds].size;
@@ -956,7 +956,7 @@ bool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
                           NSToIntRound(corner.y) - resizeIndicatorHeight,
                           resizeIndicatorWidth, resizeIndicatorHeight);
   }
-  return PR_TRUE;
+  return true;
 }
 
 // In QuickDraw mode the coordinate system used here should be that of the
@@ -1017,12 +1017,12 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
     }
 
     // XXXroc should this be !outClipRect.IsEmpty()?
-    outWidgetVisible = PR_TRUE;
+    outWidgetVisible = true;
   }
   else {
     outClipRect.width = 0;
     outClipRect.height = 0;
-    outWidgetVisible = PR_FALSE;
+    outWidgetVisible = false;
   }
 
   return NS_OK;
@@ -1154,7 +1154,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   }
 #endif
 
-  mPluginDrawing = PR_TRUE;
+  mPluginDrawing = true;
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1166,7 +1166,7 @@ NS_IMETHODIMP nsChildView::EndDrawPlugin()
                "EndDrawPlugin must only be called on a plugin widget");
   if (mWindowType != eWindowType_plugin) return NS_ERROR_FAILURE;
 
-  mPluginDrawing = PR_FALSE;
+  mPluginDrawing = false;
   return NS_OK;
 }
 
@@ -1426,7 +1426,7 @@ nsChildView::GetShouldAccelerate()
   // Don't use OpenGL for transparent windows or for popup windows.
   if (!mView || ![[mView window] isOpaque] ||
       [[mView window] isKindOfClass:[PopupWindow class]])
-    return PR_FALSE;
+    return false;
 
   return nsBaseWidget::GetShouldAccelerate();
 }
@@ -1531,14 +1531,14 @@ bool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
 
 bool nsChildView::ReportDestroyEvent()
 {
-  nsGUIEvent event(PR_TRUE, NS_DESTROY, this);
+  nsGUIEvent event(true, NS_DESTROY, this);
   event.time = PR_IntervalNow();
   return DispatchWindowEvent(event);
 }
 
 bool nsChildView::ReportMoveEvent()
 {
-  nsGUIEvent moveEvent(PR_TRUE, NS_MOVE, this);
+  nsGUIEvent moveEvent(true, NS_MOVE, this);
   moveEvent.refPoint.x = mBounds.x;
   moveEvent.refPoint.y = mBounds.y;
   moveEvent.time       = PR_IntervalNow();
@@ -1547,7 +1547,7 @@ bool nsChildView::ReportMoveEvent()
 
 bool nsChildView::ReportSizeEvent()
 {
-  nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
+  nsSizeEvent sizeEvent(true, NS_SIZE, this);
   sizeEvent.time        = PR_IntervalNow();
   sizeEvent.windowSize  = &mBounds;
   sizeEvent.mWinWidth   = mBounds.width;
@@ -1692,16 +1692,16 @@ NS_IMETHODIMP nsChildView::SetInputMode(const IMEContext& aContext)
   switch (aContext.mStatus) {
     case nsIWidget::IME_STATUS_ENABLED:
     case nsIWidget::IME_STATUS_PLUGIN:
-      mTextInputHandler->SetASCIICapableOnly(PR_FALSE);
-      mTextInputHandler->EnableIME(PR_TRUE);
+      mTextInputHandler->SetASCIICapableOnly(false);
+      mTextInputHandler->EnableIME(true);
       break;
     case nsIWidget::IME_STATUS_DISABLED:
-      mTextInputHandler->SetASCIICapableOnly(PR_FALSE);
-      mTextInputHandler->EnableIME(PR_FALSE);
+      mTextInputHandler->SetASCIICapableOnly(false);
+      mTextInputHandler->EnableIME(false);
       break;
     case nsIWidget::IME_STATUS_PASSWORD:
-      mTextInputHandler->SetASCIICapableOnly(PR_TRUE);
-      mTextInputHandler->EnableIME(PR_FALSE);
+      mTextInputHandler->SetASCIICapableOnly(true);
+      mTextInputHandler->EnableIME(false);
       break;
     default:
       NS_ERROR("not implemented!");
@@ -1762,7 +1762,7 @@ NSView<mozView>* nsChildView::GetEditorView()
   // We need to get editor's view. E.g., when the focus is in the bookmark
   // dialog, the view is <panel> element of the dialog.  At this time, the key
   // events are processed the parent window's view that has native focus.
-  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
+  nsQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, this);
   textContent.InitForQueryTextContent(0, 0);
   DispatchWindowEvent(textContent);
   if (textContent.mSucceeded && textContent.mReply.mFocusedWidget) {
@@ -1835,7 +1835,7 @@ nsChildView::DrawOver(LayerManager* aManager, nsIntRect aRect)
     mResizerImage = manager->gl()->CreateTextureImage(nsIntSize(15, 15),
                                                       gfxASurface::CONTENT_COLOR_ALPHA,
                                                       LOCAL_GL_CLAMP_TO_EDGE,
-                                                      /* aUseNearestFilter = */ PR_TRUE);
+                                                      /* aUseNearestFilter = */ true);
 
     // Creation of texture images can fail.
     if (!mResizerImage)
@@ -1940,7 +1940,7 @@ nsChildView::GetDocumentAccessible()
 
   // need to fetch the accessible anew, because it has gone away.
   nsEventStatus status;
-  nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
+  nsAccessibleEvent event(true, NS_GETACCESSIBLE, this);
   DispatchEvent(&event, status);
 
   // cache the accessible in our weak ptr
@@ -2133,7 +2133,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_FOCUS_EVENT, mGeckoChild);
+  nsPluginEvent pluginEvent(true, NS_PLUGIN_FOCUS_EVENT, mGeckoChild);
   NPCocoaEvent cocoaEvent;
   nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
   cocoaEvent.type = NPCocoaEventWindowFocusChanged;
@@ -2192,7 +2192,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsGUIEvent guiEvent(PR_TRUE, NS_THEMECHANGED, mGeckoChild);
+  nsGUIEvent guiEvent(true, NS_THEMECHANGED, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(guiEvent);
 }
 
@@ -2305,7 +2305,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   BOOL retval =
     !ChildViewMouseTracker::WindowAcceptsEvent([self window],
                                                mClickThroughMouseDownEvent,
-                                               self, PR_TRUE);
+                                               self, true);
 
   // If we return YES here, this will result in us not being focused,
   // which will stop us receiving mClickThroughMouseDownEvent in
@@ -2345,7 +2345,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent focusGuiEvent(PR_TRUE, eventType, mGeckoChild);
+  nsGUIEvent focusGuiEvent(true, eventType, mGeckoChild);
   focusGuiEvent.time = PR_IntervalNow();
   mGeckoChild->DispatchEvent(&focusGuiEvent, status);
 }
@@ -2513,7 +2513,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   fprintf (stderr, "  xform in: [%f %f %f %f %f %f]\n", xform.a, xform.b, xform.c, xform.d, xform.tx, xform.ty);
 #endif
   // Create the event so we can fill in its region
-  nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
+  nsPaintEvent paintEvent(true, NS_PAINT, mGeckoChild);
 
   nsIntRect boundingRect =
     nsIntRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
@@ -2571,7 +2571,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NSSize bufferSize = [self bounds].size;
   nsRefPtr<gfxQuartzSurface> targetSurface =
     new gfxQuartzSurface(aContext, gfxSize(bufferSize.width, bufferSize.height));
-  targetSurface->SetAllowUseAsSource(PR_FALSE);
+  targetSurface->SetAllowUseAsSource(false);
 
   nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
 
@@ -2663,7 +2663,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
                  withObject:widgetArray
                  afterDelay:0];
     }
-    nsPaintEvent paintEvent(PR_TRUE, NS_WILL_PAINT, mGeckoChild);
+    nsPaintEvent paintEvent(true, NS_WILL_PAINT, mGeckoChild);
     mGeckoChild->DispatchWindowEvent(paintEvent);
   }
   [super viewWillDraw];
@@ -2778,7 +2778,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
             // that, roll up, but pass the number of popups to Rollup so
             // that only those of the same type close up.
             if (i < sameTypeCount) {
-              shouldRollup = PR_FALSE;
+              shouldRollup = false;
             }
             else {
               popupsToRollup = sameTypeCount;
@@ -2824,7 +2824,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   float deltaY = [anEvent deltaY];  // up=1.0, down=-1.0
 
   // Setup the "swipe" event.
-  nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_SWIPE, mGeckoChild, 0, 0.0);
+  nsSimpleGestureEvent geckoEvent(true, NS_SIMPLE_GESTURE_SWIPE, mGeckoChild, 0, 0.0);
   [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
 
   // Record the left/right direction.
@@ -2886,7 +2886,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // Setup the event.
-  nsSimpleGestureEvent geckoEvent(PR_TRUE, msg, mGeckoChild, 0, deltaZ);
+  nsSimpleGestureEvent geckoEvent(true, msg, mGeckoChild, 0, deltaZ);
   [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
 
   // Send the event.
@@ -2927,7 +2927,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // Setup the event.
-  nsSimpleGestureEvent geckoEvent(PR_TRUE, msg, mGeckoChild, 0, 0.0);
+  nsSimpleGestureEvent geckoEvent(true, msg, mGeckoChild, 0, 0.0);
   [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
   geckoEvent.delta = -rotation;
   if (rotation > 0.0) {
@@ -2963,7 +2963,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   case eGestureState_MagnifyGesture:
     {
       // Setup the "magnify" event.
-      nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_MAGNIFY,
+      nsSimpleGestureEvent geckoEvent(true, NS_SIMPLE_GESTURE_MAGNIFY,
                                       mGeckoChild, 0, mCumulativeMagnification);
       [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
 
@@ -2975,7 +2975,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   case eGestureState_RotateGesture:
     {
       // Setup the "rotate" event.
-      nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_ROTATE, mGeckoChild, 0, 0.0);
+      nsSimpleGestureEvent geckoEvent(true, NS_SIMPLE_GESTURE_ROTATE, mGeckoChild, 0, 0.0);
       [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
       geckoEvent.delta = -mCumulativeRotation;
       if (mCumulativeRotation > 0.0) {
@@ -3106,7 +3106,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // bug 678891.
       if (phase == NSEventPhaseEnded) {
         if (gestureAmount) {
-          nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_SWIPE, mGeckoChild, 0, 0.0);
+          nsSimpleGestureEvent geckoEvent(true, NS_SIMPLE_GESTURE_SWIPE, mGeckoChild, 0, 0.0);
           [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
           if (gestureAmount > 0) {
             geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
@@ -3193,7 +3193,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   NSUInteger modifierFlags = [theEvent modifierFlags];
 
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
   NSInteger clickCount = [theEvent clickCount];
@@ -3261,7 +3261,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif // ifndef NP_NO_CARBON
   NPCocoaEvent cocoaEvent;
 	
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   if ([theEvent modifierFlags] & NSControlKeyMask)
     geckoEvent.button = nsMouseEvent::eRightButton;
@@ -3310,7 +3310,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
     {
       if (ChildViewMouseTracker::ViewForEvent(theEvent) != self) {
-        nsMouseEvent geckoExitEvent(PR_TRUE, NS_MOUSE_EXIT, nsnull, nsMouseEvent::eReal);
+        nsMouseEvent geckoExitEvent(true, NS_MOUSE_EXIT, nsnull, nsMouseEvent::eReal);
         [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoExitEvent];
 
         NPCocoaEvent cocoaEvent;
@@ -3345,7 +3345,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NSPoint localEventLocation = [self convertPoint:windowEventLocation fromView:nil];
 
   PRUint32 msg = aEnter ? NS_MOUSE_ENTER : NS_MOUSE_EXIT;
-  nsMouseEvent event(PR_TRUE, msg, mGeckoChild, nsMouseEvent::eReal);
+  nsMouseEvent event(true, msg, mGeckoChild, nsMouseEvent::eReal);
   event.refPoint.x = nscoord((PRInt32)localEventLocation.x);
   event.refPoint.y = nscoord((PRInt32)localEventLocation.y);
 
@@ -3394,7 +3394,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
   // Create event for use by plugins.
@@ -3449,7 +3449,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif // ifndef NP_NO_CARBON
   NPCocoaEvent cocoaEvent;
 
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
   // create event for use by plugins
@@ -3502,7 +3502,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
 
   // The right mouse went down, fire off a right mouse down event to gecko
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
   geckoEvent.clickCount = [theEvent clickCount];
@@ -3557,7 +3557,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif // ifndef NP_NO_CARBON
   NPCocoaEvent cocoaEvent;
 
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
   geckoEvent.clickCount = [theEvent clickCount];
@@ -3601,7 +3601,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
 
@@ -3623,7 +3623,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
   geckoEvent.clickCount = [theEvent clickCount];
@@ -3638,7 +3638,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
 
@@ -3650,7 +3650,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
 
@@ -3670,7 +3670,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   float scrollDelta = 0;
   float scrollDeltaPixels = 0;
   bool checkPixels =
-    Preferences::GetBool("mousewheel.enable_pixel_scrolling", PR_TRUE);
+    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
 
   // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
   // assertion and an Objective-C NSInternalInconsistencyException if the
@@ -3681,7 +3681,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     EventRef theCarbonEvent = [theEvent _eventRef];
     UInt32 carbonEventKind = theCarbonEvent ? ::GetEventKind(theCarbonEvent) : 0;
     if (carbonEventKind != kEventMouseScroll)
-      checkPixels = PR_FALSE;
+      checkPixels = false;
   }
 
   // Some scrolling devices supports pixel scrolling, e.g. a Macbook
@@ -3711,7 +3711,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   if (scrollDelta != 0) {
     // Send the line scroll event.
-    nsMouseScrollEvent geckoEvent(PR_TRUE, NS_MOUSE_SCROLL, nsnull);
+    nsMouseScrollEvent geckoEvent(true, NS_MOUSE_SCROLL, nsnull);
     [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
     geckoEvent.scrollFlags |= inAxis;
 
@@ -3803,7 +3803,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   if (hasPixels) {
     // Send the pixel scroll event.
-    nsMouseScrollEvent geckoEvent(PR_TRUE, NS_MOUSE_PIXEL_SCROLL, nsnull);
+    nsMouseScrollEvent geckoEvent(true, NS_MOUSE_PIXEL_SCROLL, nsnull);
     [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
     geckoEvent.scrollFlags |= inAxis;
     if (isMomentumScroll)
@@ -3867,7 +3867,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       return nil;
   }
 
-  nsMouseEvent geckoEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -4172,7 +4172,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return YES;
 
-  nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_ACTIVATE, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent geckoEvent(true, NS_MOUSE_ACTIVATE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:aEvent toGeckoEvent:&geckoEvent];
   return !mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
@@ -4197,7 +4197,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   nsIntPoint widgetLoc(NSToIntRound(eventLoc.x), NSToIntRound(eventLoc.y));
   widgetLoc -= mGeckoChild->WidgetToScreenOffset();
 
-  nsQueryContentEvent hitTest(PR_TRUE, NS_QUERY_DOM_WIDGET_HITTEST, mGeckoChild);
+  nsQueryContentEvent hitTest(true, NS_QUERY_DOM_WIDGET_HITTEST, mGeckoChild);
   hitTest.InitForQueryDOMWidgetHittest(widgetLoc);
   // This might destroy our widget (and null out mGeckoChild).
   mGeckoChild->DispatchWindowEvent(hitTest);
@@ -4236,7 +4236,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return NO;
 
   if (mPluginEventModel == NPEventModelCocoa) {
-    nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_FOCUS_EVENT, mGeckoChild);
+    nsPluginEvent pluginEvent(true, NS_PLUGIN_FOCUS_EVENT, mGeckoChild);
     NPCocoaEvent cocoaEvent;
     nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
     cocoaEvent.type = NPCocoaEventFocusChanged;
@@ -4384,7 +4384,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // fire the drag event at the source. Just ignore whether it was
       // cancelled or not as there isn't actually a means to stop the drag
       mDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
-      dragSession->SetCanDrop(PR_FALSE);
+      dragSession->SetCanDrop(false);
     }
     else if (aMessage == NS_DRAGDROP_DROP) {
       // We make the assumption that the dragOver handlers have correctly set
@@ -4396,7 +4396,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
         nsCOMPtr<nsIDOMNode> sourceNode;
         dragSession->GetSourceNode(getter_AddRefs(sourceNode));
         if (!sourceNode) {
-          mDragService->EndDragSession(PR_FALSE);
+          mDragService->EndDragSession(false);
         }
         return NSDragOperationNone;
       }
@@ -4415,7 +4415,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // set up gecko event
-  nsDragEvent geckoEvent(PR_TRUE, aMessage, nsnull);
+  nsDragEvent geckoEvent(true, aMessage, nsnull);
   [self convertGenericCocoaEvent:[NSApp currentEvent] toGeckoEvent:&geckoEvent];
 
   // Use our own coordinates in the gecko event.
@@ -4443,7 +4443,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
           // initiated in a different app. End the drag session,
           // since we're done with it for now (until the user
           // drags back into mozilla).
-          mDragService->EndDragSession(PR_FALSE);
+          mDragService->EndDragSession(false);
         }
       }
     }
@@ -4556,7 +4556,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
         dataTransferNS->SetDropEffectInt(nsIDragService::DRAGDROP_ACTION_NONE);
     }
 
-    mDragService->EndDragSession(PR_TRUE);
+    mDragService->EndDragSession(true);
     NS_RELEASE(mDragService);
   }
 
@@ -4588,7 +4588,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView namesOfPromisedFilesDroppedAtDestination: entering callback for promised files\n"));
 
   nsCOMPtr<nsILocalFile> targFile;
-  NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(targFile));
+  NS_NewLocalFile(EmptyString(), true, getter_AddRefs(targFile));
   nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(targFile);
   if (!macLocalFile) {
     NS_ERROR("No Mac local file");
@@ -4675,7 +4675,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       
       // Determine if there is a selection (if sending to the service).
       if (sendType) {
-        nsQueryContentEvent event(PR_TRUE, NS_QUERY_CONTENT_STATE, mGeckoChild);
+        nsQueryContentEvent event(true, NS_QUERY_CONTENT_STATE, mGeckoChild);
         // This might destroy our widget (and null out mGeckoChild).
         mGeckoChild->DispatchWindowEvent(event);
         if (!mGeckoChild || !event.mSucceeded || !event.mReply.mHasSelection)
@@ -4684,7 +4684,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
       // Determine if we can paste (if receiving data from the service).
       if (mGeckoChild && returnType) {
-        nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_PASTE_TRANSFERABLE, mGeckoChild, PR_TRUE);
+        nsContentCommandEvent command(true, NS_CONTENT_COMMAND_PASTE_TRANSFERABLE, mGeckoChild, true);
         // This might possibly destroy our widget (and null out mGeckoChild).
         mGeckoChild->DispatchWindowEvent(command);
         if (!mGeckoChild || !command.mSucceeded || !command.mIsEnabled)
@@ -4721,7 +4721,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return NO;
 
   // Obtain the current selection.
-  nsQueryContentEvent event(PR_TRUE,
+  nsQueryContentEvent event(true,
                             NS_QUERY_SELECTION_AS_TRANSFERABLE,
                             mGeckoChild);
   mGeckoChild->DispatchWindowEvent(event);
@@ -4778,9 +4778,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (NS_FAILED(rv))
     return NO;
 
-  NS_ENSURE_TRUE(mGeckoChild, PR_FALSE);
+  NS_ENSURE_TRUE(mGeckoChild, false);
 
-  nsContentCommandEvent command(PR_TRUE,
+  nsContentCommandEvent command(true,
                                 NS_CONTENT_COMMAND_PASTE_TRANSFERABLE,
                                 mGeckoChild);
   command.mTransferable = trans;
