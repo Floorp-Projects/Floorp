@@ -47,7 +47,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(92b0df87-78a1-4e3b-a23c-d0c5bb2b83f9)]
+[scriptable, uuid(8a876308-7891-468c-8f7a-9f2b81160c3c)]
 interface nsIDOMText : nsIDOMCharacterData
 {
   nsIDOMText                      splitText(in unsigned long offset)
@@ -68,12 +68,4 @@ interface nsIDOMText : nsIDOMCharacterData
    * passing an element, comment, or processing-instruction boundary.  
    */
   readonly attribute DOMString wholeText;
-
-  /**
-   * If content is empty, removes all logically adjacent text nodes (including
-   * this node) from the DOM tree, returning null; otherwise, replaces the
-   * contents of this node with aContent and removes all other logically
-   * adjacent text nodes from the DOM tree, returning this node.
-   */
-  nsIDOMText replaceWholeText(in DOMString content) raises(DOMException);
 };
