@@ -1356,70 +1356,70 @@ nsAttrValue::StringToInteger(const nsAString& aValue, bool* aStrict,
                              bool aCanBePercent,
                              bool* aIsPercent) const
 {
-  *aStrict = PR_FALSE;
+  *aStrict = true;
   *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
   if (aCanBePercent) {
-    *aIsPercent = PR_FALSE;
+    *aIsPercent = false;
   }
 
   nsAString::const_iterator iter, end;
   aValue.BeginReading(iter);
   aValue.EndReading(end);
+
+  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
+    *aStrict = false;
+    ++iter;
+  }
+
+  if (iter == end) {
+    return 0;
+  }
+
   bool negate = false;
+  if (*iter == PRUnichar('-')) {
+    negate = true;
+    ++iter;
+  } else if (*iter == PRUnichar('+')) {
+    *aStrict = false;
+    ++iter;
+  }
+
   PRInt32 value = 0;
-  if (iter != end) {
-    if (*iter == PRUnichar('-')) {
-      negate = PR_TRUE;
+  PRInt32 pValue = 0; // Previous value, used to check integer overflow
+  while (iter != end) {
+    if (*iter >= PRUnichar('0') && *iter <= PRUnichar('9')) {
+      value = (value * 10) + (*iter - PRUnichar('0'));
       ++iter;
-    }
-    if (iter != end) {
-      if ((*iter >= PRUnichar('1') || (*iter == PRUnichar('0') && !negate)) &&
-          *iter <= PRUnichar('9')) {
-        value = *iter - PRUnichar('0');
-        ++iter;
-        *aStrict = (value != 0 || iter == end ||
-                    (aCanBePercent && *iter == PRUnichar('%')));
-        while (iter != end && *aStrict) {
-          if (*iter >= PRUnichar('0') && *iter <= PRUnichar('9')) {
-            value = (value * 10) + (*iter - PRUnichar('0'));
-            ++iter;
-            if (iter != end && value > ((PR_INT32_MAX / 10) - 9)) {
-              *aStrict = PR_FALSE;
-            }
-          } else if (aCanBePercent && *iter == PRUnichar('%')) {
-            ++iter;
-            if (iter == end) {
-              *aIsPercent = PR_TRUE;
-            } else {
-              *aStrict = PR_FALSE;
-            }
-          } else {
-            *aStrict = PR_FALSE;
-          }
-        }
-        if (*aStrict) {
-          if (negate) {
-            value = -value;
-          }
-          if (!aCanBePercent || !*aIsPercent) {
-            *aErrorCode = NS_OK;
-#ifdef DEBUG
-            nsAutoString stringValue;
-            stringValue.AppendInt(value);
-            if (aCanBePercent && *aIsPercent) {
-              stringValue.AppendLiteral("%");
-            }
-            NS_ASSERTION(stringValue.Equals(aValue), "Wrong conversion!");
-#endif
-            return value;
-          }
-        }
+      // Checking for integer overflow.
+      if (pValue > value) {
+        *aStrict = false;
+        *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+        break;
+      } else {
+        pValue = value;
+        *aErrorCode = NS_OK;
       }
+    } else if (aCanBePercent && *iter == PRUnichar('%')) {
+      ++iter;
+      *aIsPercent = true;
+      if (iter != end) {
+        *aStrict = false;
+        break;
+      }
+    } else {
+      *aStrict = false;
+      break;
+    }
+  }
+  if (negate) {
+    value = -value;
+    // Checking the special case of -0.
+    if (!value) {
+      *aStrict = false;
     }
   }
 
-  nsAutoString tmp(aValue);
-  return tmp.ToInteger(aErrorCode);
+  return value;
 }
 
 PRInt64
