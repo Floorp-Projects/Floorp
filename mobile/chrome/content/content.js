@@ -500,7 +500,7 @@ let Content = {
           break;
         }
 
-        if (!this.formAssistant.open(element))
+        if (!this.formAssistant.open(element, x, y))
           sendAsyncMessage("FindAssist:Hide", { });
 
         if (this._highlightElement) {
