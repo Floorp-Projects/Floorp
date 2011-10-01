@@ -114,9 +114,9 @@ bool nsPluginsDir::IsPluginFile(nsIFile* file)
    */
   if (!strcmp(fileName.get(), "VerifiedDownloadPlugin.plugin")) {
     NS_WARNING("Preventing load of VerifiedDownloadPlugin.plugin (see bug 436575)");
-    return PR_FALSE;
+    return false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 // Caller is responsible for freeing returned buffer.
@@ -392,7 +392,7 @@ static bool IsCompatibleArch(nsIFile *file)
 {
   CFURLRef pluginURL = NULL;
   if (NS_FAILED(toCFURLRef(file, pluginURL)))
-    return PR_FALSE;
+    return false;
   
   bool isPluginFile = false;
 
@@ -411,7 +411,7 @@ static bool IsCompatibleArch(nsIFile *file)
       uint32 pluginLibArchitectures;
       nsresult rv = mozilla::ipc::GeckoChildProcessHost::GetArchitecturesForBinary(executablePath, &pluginLibArchitectures);
       if (NS_FAILED(rv)) {
-        return PR_FALSE;
+        return false;
       }
 
       uint32 containerArchitectures = mozilla::ipc::GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
