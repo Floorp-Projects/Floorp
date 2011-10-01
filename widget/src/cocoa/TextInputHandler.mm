@@ -1054,6 +1054,30 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
       // Bail, there is nothing else to do here.
       return (cmEventHandled || currentKeyEvent->KeyDownOrPressHandled());
     }
+
+    nsKeyEvent keypressEvent(PR_TRUE, NS_KEY_PRESS, mWidget);
+    InitKeyEvent(aNativeEvent, keypressEvent);
+
+    // if this is a non-letter keypress, or the control key is down,
+    // dispatch the keydown to gecko, so that we trap delete,
+    // control-letter combinations etc before Cocoa tries to use
+    // them for keybindings.
+    // XXX This is wrong. IME may be handle the non-letter keypress event as
+    //     its owning shortcut key.  See bug 477291.
+    if ((!keypressEvent.isChar || keypressEvent.isControl) &&
+        !IsIMEComposing()) {
+      if (currentKeyEvent->mKeyDownHandled) {
+        keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+      }
+      currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
+      currentKeyEvent->mKeyPressDispatched = PR_TRUE;
+      if (Destroyed()) {
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+          ("%p TextInputHandler::HandleKeyDownEvent, "
+           "widget was destroyed by keypress event", this));
+        return currentKeyEvent->KeyDownOrPressHandled();
+      }
+    }
   }
 
   // Let Cocoa interpret the key events, caching IsIMEComposing first.
@@ -1392,8 +1416,6 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
 bool
 TextInputHandler::DoCommandBySelector(const char* aSelector)
 {
-  nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
-
   KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -1404,22 +1426,6 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
        TrueOrFalse(currentKeyEvent->mKeyPressHandled) : "N/A",
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
-
-  if (currentKeyEvent && !currentKeyEvent->mKeyPressDispatched) {
-    nsKeyEvent keypressEvent(PR_TRUE, NS_KEY_PRESS, mWidget);
-    InitKeyEvent(currentKeyEvent->mKeyEvent, keypressEvent);
-    if (currentKeyEvent->mKeyDownHandled ||
-        currentKeyEvent->mCausedOtherKeyEvents) {
-      keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-    }
-    currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
-    currentKeyEvent->mKeyPressDispatched = PR_TRUE;
-    PR_LOG(gLog, PR_LOG_ALWAYS,
-      ("%p TextInputHandler::DoCommandBySelector, keypress event "
-       "dispatched, Destroyed()=%s, keypressHandled=%s",
-       this, TrueOrFalse(Destroyed()),
-       TrueOrFalse(currentKeyEvent->mKeyPressHandled)));
-  }
 
   return !Destroyed() && currentKeyEvent &&
          (currentKeyEvent->mKeyPressHandled ||
