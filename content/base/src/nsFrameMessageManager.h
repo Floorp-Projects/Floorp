@@ -150,7 +150,9 @@ public:
 
   void Disconnect(bool aRemoveFromParent = true);
   void SetCallbackData(void* aData, bool aLoadScripts = true);
-  nsresult GetParamsForMessage(nsAString& aMessageName, nsAString& aJSON);
+  void GetParamsForMessage(const jsval& aObject,
+                           JSContext* aCx,
+                           nsAString& aJSON);
   nsresult SendAsyncMessageInternal(const nsAString& aMessage,
                                     const nsAString& aJSON);
   JSContext* GetJSContext() { return mContext; }
