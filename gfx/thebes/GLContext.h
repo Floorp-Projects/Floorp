@@ -981,6 +981,7 @@ public:
         OES_texture_float,
         ARB_texture_float,
         EXT_unpack_subimage,
+        OES_standard_derivatives,
         Extensions_Max
     };
 
