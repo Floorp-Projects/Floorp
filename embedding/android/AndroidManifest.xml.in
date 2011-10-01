@@ -99,16 +99,18 @@
 
         <activity android:name="Restarter"
                   android:process="@ANDROID_PACKAGE_NAME@Restarter"
-                  android:theme="@style/GreyTheme">
+                  android:theme="@style/GreyTheme"
+                  android:excludeFromRecents="true">
           <intent-filter>
             <action android:name="org.mozilla.gecko.restart"/>
           </intent-filter>
         </activity>
 
 #if MOZ_CRASHREPORTER
-	<activity android:name="CrashReporter"
-                  android:label="@string/crash_reporter_title"
-		  android:icon="@drawable/crash_reporter" >
+  <activity android:name="CrashReporter"
+            android:label="@string/crash_reporter_title"
+            android:icon="@drawable/crash_reporter"
+            android:excludeFromRecents="true">
           <intent-filter>
             <action android:name="org.mozilla.gecko.reportCrash" />
           </intent-filter>

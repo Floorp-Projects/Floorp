@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set sw=4 ts=8 et tw=80 : 
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Crash Reporter.
  *
- * The Initial Developer of the Original Code is 
- * Mozilla Corporation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Initial Developer of the Original Code is
+ *   The Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Olli Pettay <Olli.Pettay@helsinki.fi>
+ *   Josh Matthews <josh@joshmatthews.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,61 +36,40 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include "mozilla/plugins/PluginModuleChild.h"
+#include "ContentChild.h"
+#include "CrashReporterChild.h"
+#include "nsXULAppAPI.h"
 
-#ifndef TABMESSAGE_UTILS_H
-#define TABMESSAGE_UTILS_H
-
-#include "IPC/IPCMessageUtils.h"
-#include "nsIPrivateDOMEvent.h"
-#include "nsCOMPtr.h"
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
+using mozilla::plugins::PluginModuleChild;
 
 namespace mozilla {
 namespace dom {
-struct RemoteDOMEvent
+
+/*static*/
+PCrashReporterChild*
+CrashReporterChild::GetCrashReporter()
 {
-  nsCOMPtr<nsIPrivateDOMEvent> mEvent;
-};
-
-bool ReadRemoteEvent(const IPC::Message* aMsg, void** aIter,
-                     mozilla::dom::RemoteDOMEvent* aResult);
-
-#ifdef MOZ_CRASHREPORTER
-typedef CrashReporter::ThreadId NativeThreadId;
-#else
-// unused in this case
-typedef int32 NativeThreadId;
-#endif
+  const InfallibleTArray<PCrashReporterChild*>* reporters = nsnull;
+  switch (XRE_GetProcessType()) {
+    case GeckoProcessType_Content: {
+      ContentChild* child = ContentChild::GetSingleton();
+      reporters = &child->ManagedPCrashReporterChild();
+      break;
+    }
+    case GeckoProcessType_Plugin: {
+      PluginModuleChild* child = PluginModuleChild::current();
+      reporters = &child->ManagedPCrashReporterChild();
+      break;
+    }
+    default:
+      break;
+  }
+  if (reporters && reporters->Length() > 0) {
+    return reporters->ElementAt(0);
+  }
+  return nsnull;
+}
 
 }
 }
-
-namespace IPC {
-
-template<>
-struct ParamTraits<mozilla::dom::RemoteDOMEvent>
-{
-  typedef mozilla::dom::RemoteDOMEvent paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    aParam.mEvent->Serialize(aMsg, PR_TRUE);
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    return mozilla::dom::ReadRemoteEvent(aMsg, aIter, aResult);
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-  }
-};
-
-}
-
-
-#endif
