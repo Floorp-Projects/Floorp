@@ -428,7 +428,7 @@ var BrowserUI = {
     window.addEventListener("mousedown", this, true);
 
     // listening escape to dismiss dialog on VK_ESCAPE
-    window.addEventListener("keypress", this, true);
+    window.addEventListener("keypress", this, false);
 
     // listening AppCommand to handle special keys
     window.addEventListener("AppCommand", this, true);

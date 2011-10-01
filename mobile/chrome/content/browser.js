@@ -2085,7 +2085,8 @@ KeyFilter.prototype = {
 
     let browser = getBrowser();
     if (browser && browser.active && browser.getAttribute("remote") == "true") {
-        document.getElementById("mainKeyset").setAttribute("disabled", "true");
+      aEvent.stopPropagation();
+      document.getElementById("mainKeyset").setAttribute("disabled", "true");
     }
   },
 
