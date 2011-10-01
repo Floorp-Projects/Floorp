@@ -1192,5 +1192,6 @@ filefield {
 /*********** tabmodalprompt ************/
 tabmodalprompt {
   -moz-binding: url("chrome://global/content/tabprompts.xml#tabmodalprompt");
+  overflow: hidden;
   text-shadow: none;
 }
