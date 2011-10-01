@@ -1,3 +1,5 @@
+# HG changeset patch
+# Parent f9415c10c3ebd27856500cca7a0ee0f28a16f53c
 diff --git a/gfx/angle/src/compiler/preprocessor/scanner.h b/gfx/angle/src/compiler/preprocessor/scanner.h
 --- a/gfx/angle/src/compiler/preprocessor/scanner.h
 +++ b/gfx/angle/src/compiler/preprocessor/scanner.h

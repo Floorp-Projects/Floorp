@@ -515,6 +515,11 @@ EGLSurface Display::createWindowSurface(HWND window, EGLConfig config, const EGL
         return error(EGL_BAD_ALLOC, EGL_NO_SURFACE);
     }
 
+    if (isDeviceLost()) {
+        if (!restoreLostDevice())
+            return EGL_NO_SURFACE;
+    }
+
     Surface *surface = new Surface(this, configuration, window);
 
     if (!surface->initialize())
@@ -622,6 +627,11 @@ EGLSurface Display::createOffscreenSurface(EGLConfig config, HANDLE shareHandle,
         return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
     }
 
+    if (isDeviceLost()) {
+        if (!restoreLostDevice())
+            return EGL_NO_SURFACE;
+    }
+
     Surface *surface = new Surface(this, configuration, shareHandle, width, height, textureFormat, textureTarget);
 
     if (!surface->initialize())
@@ -646,22 +656,8 @@ EGLContext Display::createContext(EGLConfig configHandle, const gl::Context *sha
     }
     else if (isDeviceLost())   // Lost device
     {
-        // Release surface resources to make the Reset() succeed
-        for (SurfaceSet::iterator surface = mSurfaceSet.begin(); surface != mSurfaceSet.end(); surface++)
-        {
-            (*surface)->release();
-        }
-
-        if (!resetDevice())
-        {
+        if (!restoreLostDevice())
             return NULL;
-        }
-
-        // Restore any surfaces that may have been lost
-        for (SurfaceSet::iterator surface = mSurfaceSet.begin(); surface != mSurfaceSet.end(); surface++)
-        {
-            (*surface)->resetSwapChain();
-        }
     }
 
     const egl::Config *config = mConfigSet.get(configHandle);
@@ -671,6 +667,29 @@ EGLContext Display::createContext(EGLConfig configHandle, const gl::Context *sha
 
     return context;
 }
+
+bool Display::restoreLostDevice()
+{
+    // Release surface resources to make the Reset() succeed
+    for (SurfaceSet::iterator surface = mSurfaceSet.begin(); surface != mSurfaceSet.end(); surface++)
+    {
+        (*surface)->release();
+    }
+
+    if (!resetDevice())
+    {
+        return false;
+    }
+
+    // Restore any surfaces that may have been lost
+    for (SurfaceSet::iterator surface = mSurfaceSet.begin(); surface != mSurfaceSet.end(); surface++)
+    {
+        (*surface)->resetSwapChain();
+    }
+
+    return true;
+}
+
 
 void Display::destroySurface(egl::Surface *surface)
 {
@@ -756,10 +775,12 @@ bool Display::isDeviceLost()
     {
         return FAILED(mDeviceEx->CheckDeviceState(NULL));
     }
-    else
+    else if(mDevice)
     {
         return FAILED(mDevice->TestCooperativeLevel());
     }
+
+    return false;   // No device yet, so no reset required
 }
 
 void Display::getMultiSampleSupport(D3DFORMAT format, bool *multiSampleArray)
@@ -922,17 +943,24 @@ D3DPRESENT_PARAMETERS Display::getDefaultPresentParameters()
 
 void Display::initExtensionString()
 {
-    mExtensionString += "EGL_ANGLE_query_surface_pointer ";
     HMODULE swiftShader = GetModuleHandle(TEXT("swiftshader_d3d9.dll"));
+    bool isd3d9ex = isD3d9ExDevice();
+
+    mExtensionString = "";
+
+    if (isd3d9ex) {
+        mExtensionString += "EGL_ANGLE_d3d_share_handle_client_buffer ";
+    }
+
+    mExtensionString += "EGL_ANGLE_query_surface_pointer ";
 
     if (swiftShader)
     {
       mExtensionString += "EGL_ANGLE_software_display ";
     }
 
-    if (isD3d9ExDevice()) {
+    if (isd3d9ex) {
         mExtensionString += "EGL_ANGLE_surface_d3d_texture_2d_share_handle ";
-        mExtensionString += "EGL_ANGLE_d3d_share_handle_client_buffer ";
     }
 
     std::string::size_type end = mExtensionString.find_last_not_of(' ');

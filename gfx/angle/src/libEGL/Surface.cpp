@@ -191,8 +191,26 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
     // the current process, disable use of FlipEx.
     DWORD windowPID;
     GetWindowThreadProcessId(mWindow, &windowPID);
-    if(windowPID != GetCurrentProcessId())
-    useFlipEx = false;
+    if (windowPID != GetCurrentProcessId())
+    {
+        useFlipEx = false;
+    }
+
+    // Various hardware does not support D3DSWAPEFFECT_FLIPEX when either the
+    // device format or back buffer format is not 32-bit.
+    HDC deviceContext = GetDC(0);
+    int deviceFormatBits = GetDeviceCaps(deviceContext, BITSPIXEL);
+    ReleaseDC(0, deviceContext);
+    if (mConfig->mBufferSize != 32 || deviceFormatBits != 32)
+    {
+        useFlipEx = false;
+    }
+
+    // D3DSWAPEFFECT_FLIPEX is always VSYNCed
+    if (mSwapInterval == 0)
+    {
+        useFlipEx = false;
+    }
 
     presentParameters.AutoDepthStencilFormat = mConfig->mDepthStencilFormat;
     // We set BackBufferCount = 1 even when we use D3DSWAPEFFECT_FLIPEX.
