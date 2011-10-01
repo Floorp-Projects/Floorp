@@ -75,6 +75,7 @@ class WebGLShader;
 class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLUniformLocation;
+class WebGLExtension;
 
 class WebGLZeroingObject;
 class WebGLContextBoundObject;
@@ -475,9 +476,10 @@ protected:
     // extensions
     enum WebGLExtensionID {
         WebGL_OES_texture_float,
+        WebGL_OES_standard_derivatives,
         WebGLExtensionID_Max
     };
-    nsCOMPtr<nsIWebGLExtension> mEnabledExtensions[WebGLExtensionID_Max];
+    nsCOMPtr<WebGLExtension> mEnabledExtensions[WebGLExtensionID_Max];
     bool IsExtensionEnabled(WebGLExtensionID ext) const {
         NS_ABORT_IF_FALSE(ext >= 0 && ext < WebGLExtensionID_Max, "bogus index!");
         return mEnabledExtensions[ext] != nsnull;
