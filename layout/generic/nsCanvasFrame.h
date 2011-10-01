@@ -42,7 +42,6 @@
 
 #include "nsHTMLContainerFrame.h"
 #include "nsIScrollPositionListener.h"
-#include "nsAbsoluteContainingBlock.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 
@@ -64,8 +63,7 @@ public:
   nsCanvasFrame(nsStyleContext* aContext)
   : nsHTMLContainerFrame(aContext),
     mDoPaintFocus(PR_FALSE),
-    mAddedScrollPositionListener(PR_FALSE),
-    mAbsoluteContainer(kAbsoluteList) {}
+    mAddedScrollPositionListener(false) {}
 
   NS_DECL_QUERYFRAME_TARGET(nsCanvasFrame)
   NS_DECL_QUERYFRAME
@@ -84,16 +82,12 @@ public:
   NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame);
 
-  virtual nsFrameList GetChildList(ChildListID aListID) const;
-  virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
-
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  virtual bool IsContainingBlock() const { return true; }
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsHTMLContainerFrame::IsFrameOfType(aFlags &
@@ -151,7 +145,6 @@ protected:
   // Data members
   bool                      mDoPaintFocus;
   bool                      mAddedScrollPositionListener;
-  nsAbsoluteContainingBlock mAbsoluteContainer;
 };
 
 /**

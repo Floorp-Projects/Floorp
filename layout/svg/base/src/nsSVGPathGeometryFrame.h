@@ -41,7 +41,6 @@
 
 #include "nsFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsWeakReference.h"
 #include "nsGkAtoms.h"
 #include "nsSVGGeometryFrame.h"
 #include "gfxRect.h"
@@ -100,7 +99,8 @@ protected:
   virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
-  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace);
+  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+                                      PRUint32 aFlags);
   NS_IMETHOD_(bool) IsDisplayContainer() { return false; }
   NS_IMETHOD_(bool) HasValidCoveredRect() { return true; }
 

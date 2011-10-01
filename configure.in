@@ -3644,7 +3644,6 @@ dnl ========================================================
 AC_LANG_CPLUSPLUS
 
 ARM_ABI_PREFIX=
-HAVE_GCC3_ABI=
 if test "$GNU_CC"; then
   if test "$CPU_ARCH" = "arm" ; then
     AC_CACHE_CHECK(for ARM EABI,
@@ -3667,26 +3666,8 @@ if test "$GNU_CC"; then
     fi
   fi
 
-  AC_CACHE_CHECK(for gcc 3.0 ABI,
-      ac_cv_gcc_three_abi,
-      [AC_TRY_COMPILE([],
-                      [
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
-  return 0;
-#else
-#error Not gcc3.
-#endif
-                      ],
-                      ac_cv_gcc_three_abi="yes",
-                      ac_cv_gcc_three_abi="no")])
-  if test "$ac_cv_gcc_three_abi" = "yes"; then
-      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc3}"
-      HAVE_GCC3_ABI=1
-  else
-      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc2}"
-  fi
+  TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc3}"
 fi
-AC_SUBST(HAVE_GCC3_ABI)
 
 dnl Check for support of modern template specialization syntax
 dnl Test code and requirement from scc@netscape.com.
@@ -5949,12 +5930,6 @@ fi
 dnl ========================================================
 dnl Installer
 dnl ========================================================
-case "$target_os" in
-    aix*|solaris*|linux*|mingw*|os2*)
-        MOZ_INSTALLER=1
-        ;;
-esac
-
 MOZ_ARG_DISABLE_BOOL(installer,
 [  --disable-installer     Disable building of installer],
     MOZ_INSTALLER=,
@@ -7403,7 +7378,7 @@ fi
 
 # Demangle only for debug or trace-malloc builds
 MOZ_DEMANGLE_SYMBOLS=
-if test "$HAVE_DEMANGLE" -a "$HAVE_GCC3_ABI" && test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC"; then
+if test "$HAVE_DEMANGLE" && test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC"; then
     MOZ_DEMANGLE_SYMBOLS=1
     AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
 fi
@@ -7412,7 +7387,7 @@ AC_SUBST(MOZ_DEMANGLE_SYMBOLS)
 dnl ========================================================
 dnl = Support for gcc stack unwinding (from gcc 3.3)
 dnl ========================================================
-if test "$HAVE_GCC3_ABI" -a -z "$SKIP_LIBRARY_CHECKS"; then
+if test -z "$SKIP_LIBRARY_CHECKS"; then
     MOZ_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
 fi
 
@@ -7785,7 +7760,7 @@ else
   else
     echo '#include <stdio.h>' > dummy-hello.c
     changequote(,)
-    CL_INCLUDES_PREFIX=`"${CC}" -showIncludes -c -Fonul dummy-hello.c 2>&1 | sed -ne 's/^\([^:]*:[^:]*:\).*stdio.h$/\1/p'`
+    CL_INCLUDES_PREFIX=`${CC} -showIncludes -c -Fonul dummy-hello.c 2>&1 | sed -ne 's/^\([^:]*:[^:]*:\).*stdio.h$/\1/p'`
     changequote([,])
     if test -z "$CL_INCLUDES_PREFIX"; then
         AC_MSG_ERROR([Cannot find cl -showIncludes prefix.])

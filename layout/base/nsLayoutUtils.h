@@ -780,6 +780,13 @@ public:
    */
   static nsBlockFrame* GetAsBlock(nsIFrame* aFrame);
 
+  /*
+   * Whether the frame is an nsBlockFrame which is not a wrapper block.
+   */
+  static bool IsNonWrapperBlock(nsIFrame* aFrame) {
+    return GetAsBlock(aFrame) && !aFrame->IsBlockWrapper();
+  }
+
   /**
    * If aFrame is an out of flow frame, return its placeholder, otherwise
    * return its parent.

@@ -173,7 +173,8 @@ public:
                       const nsIntRect *aDirtyRect);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHOD UpdateCoveredRegion();
-  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace);
+  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+                                      PRUint32 aFlags);
 
   NS_IMETHOD_(nsRect) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();

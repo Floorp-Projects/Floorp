@@ -58,12 +58,12 @@ public:
 
   virtual bool HasAudio()
   {
-    return PR_FALSE;
+    return false;
   }
 
   virtual bool HasVideo()
   {
-    return PR_TRUE;
+    return true;
   }
 
   virtual nsresult ReadMetadata(nsVideoInfo* aInfo);

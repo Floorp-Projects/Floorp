@@ -138,10 +138,10 @@ nsCocoaWindow::nsCocoaWindow()
 , mPopupContentView(nil)
 , mShadowStyle(NS_STYLE_WINDOW_SHADOW_DEFAULT)
 , mWindowFilter(0)
-, mWindowMadeHere(PR_FALSE)
-, mSheetNeedsShow(PR_FALSE)
-, mFullScreen(PR_FALSE)
-, mModal(PR_FALSE)
+, mWindowMadeHere(false)
+, mSheetNeedsShow(false)
+, mFullScreen(false)
+, mModal(false)
 , mNumModalDescendents(0)
 {
 
@@ -236,9 +236,9 @@ static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *screen)
 static bool UseNativePopupWindows()
 {
 #ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
-  return PR_TRUE;
+  return true;
 #else
-  return PR_FALSE;
+  return false;
 #endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 }
 
@@ -295,7 +295,7 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
     return NS_OK;
 
   nsresult rv = CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(newBounds),
-                                   mBorderStyle, PR_FALSE);
+                                   mBorderStyle, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mWindowType == eWindowType_popup) {
@@ -470,7 +470,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   [mWindow setDelegate:mDelegate];
 
   [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:mWindow];
-  mWindowMadeHere = PR_TRUE;
+  mWindowMadeHere = true;
 
   return NS_OK;
 
@@ -513,7 +513,7 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
   nsBaseWidget::OnDestroy();
 
   if (mFullScreen) {
-    nsCocoaUtils::HideOSChromeOnScreen(PR_FALSE, [mWindow screen]);
+    nsCocoaUtils::HideOSChromeOnScreen(false, [mWindow screen]);
   }
 
   return NS_OK;
@@ -613,7 +613,7 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(bool aState)
   }
   else {
     --gXULModalLevel;
-    NS_ASSERTION(gXULModalLevel >= 0, "Mismatched call to nsCocoaWindow::SetModal(PR_FALSE)!");
+    NS_ASSERTION(gXULModalLevel >= 0, "Mismatched call to nsCocoaWindow::SetModal(false)!");
     if (gCocoaAppModalWindowList)
       gCocoaAppModalWindowList->PopGecko(mWindow, this);
     if (mWindowType != eWindowType_sheet) {
@@ -679,13 +679,13 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
       }
 
       nsCocoaWindow* sheetShown = nsnull;
-      if (NS_SUCCEEDED(piParentWidget->GetChildSheet(PR_TRUE, &sheetShown)) &&
+      if (NS_SUCCEEDED(piParentWidget->GetChildSheet(true, &sheetShown)) &&
           (!sheetShown || sheetShown == this)) {
         // If this sheet is already the sheet actually being shown, don't
         // tell it to show again. Otherwise the number of calls to
         // [NSApp beginSheet...] won't match up with [NSApp endSheet...].
         if (![mWindow isVisible]) {
-          mSheetNeedsShow = PR_FALSE;
+          mSheetNeedsShow = false;
           mSheetWindowParent = topNonSheetWindow;
           // Only set contextInfo if our parent isn't a sheet.
           NSWindow* contextInfo = parentIsSheet ? nil : mSheetWindowParent;
@@ -703,7 +703,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
         // A sibling of this sheet is active, don't show this sheet yet.
         // When the active sheet hides, its brothers and sisters that have
         // mSheetNeedsShow set will have their opportunities to display.
-        mSheetNeedsShow = PR_TRUE;
+        mSheetNeedsShow = true;
       }
     }
     else if (mWindowType == eWindowType_popup) {
@@ -764,7 +764,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
         // This is an attempt to hide a sheet that never had a chance to
         // be shown. There's nothing to do other than make sure that it
         // won't show.
-        mSheetNeedsShow = PR_FALSE;
+        mSheetNeedsShow = false;
       }
       else {
         // get sheet's parent *before* hiding the sheet (which breaks the linkage)
@@ -779,10 +779,10 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
         bool parentIsSheet = false;
 
         if (nativeParentWindow && piParentWidget &&
-            NS_SUCCEEDED(piParentWidget->GetChildSheet(PR_FALSE, &siblingSheetToShow)) &&
+            NS_SUCCEEDED(piParentWidget->GetChildSheet(false, &siblingSheetToShow)) &&
             siblingSheetToShow) {
           // First, give sibling sheets an opportunity to show.
-          siblingSheetToShow->Show(PR_TRUE);
+          siblingSheetToShow->Show(true);
         }
         else if (nativeParentWindow && piParentWidget &&
                  NS_SUCCEEDED(piParentWidget->GetIsSheet(&parentIsSheet)) &&
@@ -1000,7 +1000,7 @@ NS_IMETHODIMP nsCocoaWindow::Enable(bool aState)
 NS_IMETHODIMP nsCocoaWindow::IsEnabled(bool *aState)
 {
   if (aState)
-    *aState = PR_TRUE;
+    *aState = true;
   return NS_OK;
 }
 
@@ -1096,7 +1096,7 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   // Recreate the window with the right border style.
   NSRect frameRect = [mWindow frame];
   DestroyNativeWindow();
-  nsresult rv = CreateNativeWindow(frameRect, aShouldHide ? eBorderStyle_none : mBorderStyle, PR_TRUE);
+  nsresult rv = CreateNativeWindow(frameRect, aShouldHide ? eBorderStyle_none : mBorderStyle, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Re-import state.
@@ -1114,7 +1114,7 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(bool aShouldHide)
 
   // Show the new window.
   if (isVisible) {
-    rv = Show(PR_TRUE);
+    rv = Show(true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1272,18 +1272,18 @@ NS_IMETHODIMP nsCocoaWindow::Update()
 // knows about it.
 bool nsCocoaWindow::DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers)
 {
-  return PR_FALSE;
+  return false;
 }
 
 NS_IMETHODIMP nsCocoaWindow::SendSetZLevelEvent()
 {
-  nsZLevelEvent event(PR_TRUE, NS_SETZLEVEL, this);
+  nsZLevelEvent event(true, NS_SETZLEVEL, this);
 
   event.refPoint.x = mBounds.x;
   event.refPoint.y = mBounds.y;
   event.time = PR_IntervalNow();
 
-  event.mImmediate = PR_TRUE;
+  event.mImmediate = true;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   DispatchEvent(&event, status);
@@ -1322,7 +1322,7 @@ NS_IMETHODIMP nsCocoaWindow::GetRealParent(nsIWidget** parent)
 
 NS_IMETHODIMP nsCocoaWindow::GetIsSheet(bool* isSheet)
 {
-  mWindowType == eWindowType_sheet ? *isSheet = PR_TRUE : *isSheet = PR_FALSE;
+  mWindowType == eWindowType_sheet ? *isSheet = true : *isSheet = false;
   return NS_OK;
 }
 
@@ -1371,7 +1371,7 @@ nsCocoaWindow::ReportMoveEvent()
   UpdateBounds();
 
   // Dispatch the move event to Gecko
-  nsGUIEvent guiEvent(PR_TRUE, NS_MOVE, this);
+  nsGUIEvent guiEvent(true, NS_MOVE, this);
   guiEvent.refPoint.x = mBounds.x;
   guiEvent.refPoint.y = mBounds.y;
   guiEvent.time = PR_IntervalNow();
@@ -1384,7 +1384,7 @@ nsCocoaWindow::ReportMoveEvent()
 void
 nsCocoaWindow::DispatchSizeModeEvent()
 {
-  nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
+  nsSizeModeEvent event(true, NS_SIZEMODE, this);
   event.mSizeMode = GetWindowSizeMode(mWindow);
   event.time = PR_IntervalNow();
 
@@ -1399,7 +1399,7 @@ nsCocoaWindow::ReportSizeEvent()
 
   UpdateBounds();
 
-  nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
+  nsSizeEvent sizeEvent(true, NS_SIZE, this);
   sizeEvent.time = PR_IntervalNow();
 
   nsIntRect innerBounds;
@@ -1688,7 +1688,7 @@ bool nsCocoaWindow::IsChildInFailingLeftClickThrough(NSView *aChild)
   if ([aChild isKindOfClass:[ChildView class]]) {
     ChildView* childView = (ChildView*) aChild;
     if ([childView isInFailingLeftClickThrough])
-      return PR_TRUE;
+      return true;
   }
   NSArray* subviews = [aChild subviews];
   if (subviews) {
@@ -1696,10 +1696,10 @@ bool nsCocoaWindow::IsChildInFailingLeftClickThrough(NSView *aChild)
     for (NSUInteger i = 0; i < count; ++i) {
       NSView* aView = (NSView*) [subviews objectAtIndex:i];
       if (IsChildInFailingLeftClickThrough(aView))
-        return PR_TRUE;
+        return true;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 // Don't focus a plugin if we're in a left click-through that will
@@ -1708,9 +1708,9 @@ bool nsCocoaWindow::IsChildInFailingLeftClickThrough(NSView *aChild)
 bool nsCocoaWindow::ShouldFocusPlugin()
 {
   if (IsChildInFailingLeftClickThrough([mWindow contentView]))
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 @implementation WindowDelegate
@@ -1768,8 +1768,8 @@ bool nsCocoaWindow::ShouldFocusPlugin()
 
   [super init];
   mGeckoWindow = geckoWind;
-  mToplevelActiveState = PR_FALSE;
-  mHasEverBeenZoomed = PR_FALSE;
+  mToplevelActiveState = false;
+  mHasEverBeenZoomed = false;
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -1873,7 +1873,7 @@ bool nsCocoaWindow::ShouldFocusPlugin()
 - (BOOL)windowShouldClose:(id)sender
 {
   // We only want to send NS_XUL_CLOSE and let gecko close the window
-  nsGUIEvent guiEvent(PR_TRUE, NS_XUL_CLOSE, mGeckoWindow);
+  nsGUIEvent guiEvent(true, NS_XUL_CLOSE, mGeckoWindow);
   guiEvent.time = PR_IntervalNow();
   nsEventStatus status = nsEventStatus_eIgnore;
   mGeckoWindow->DispatchEvent(&guiEvent, status);
@@ -1917,7 +1917,7 @@ bool nsCocoaWindow::ShouldFocusPlugin()
     return;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent focusGuiEvent(PR_TRUE, eventType, mGeckoWindow);
+  nsGUIEvent focusGuiEvent(true, eventType, mGeckoWindow);
   focusGuiEvent.time = PR_IntervalNow();
   mGeckoWindow->DispatchEvent(&focusGuiEvent, status);
 }
@@ -1955,7 +1955,7 @@ bool nsCocoaWindow::ShouldFocusPlugin()
 {
   if (!mToplevelActiveState) {
     [self sendFocusEvent:NS_ACTIVATE];
-    mToplevelActiveState = PR_TRUE;
+    mToplevelActiveState = true;
   }
 }
 
@@ -1963,7 +1963,7 @@ bool nsCocoaWindow::ShouldFocusPlugin()
 {
   if (mToplevelActiveState) {
     [self sendFocusEvent:NS_DEACTIVATE];
-    mToplevelActiveState = PR_FALSE;
+    mToplevelActiveState = false;
   }
 }
 
@@ -2414,7 +2414,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     if (!geckoWindow)
       return;
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsGUIEvent guiEvent(PR_TRUE, NS_OS_TOOLBAR, geckoWindow);
+    nsGUIEvent guiEvent(true, NS_OS_TOOLBAR, geckoWindow);
     guiEvent.time = PR_IntervalNow();
     geckoWindow->DispatchEvent(&guiEvent, status);
   }

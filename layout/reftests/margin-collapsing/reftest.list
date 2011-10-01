@@ -138,32 +138,32 @@ fails-if(Android&&layersOpenGL) == block-sibling-2-dyn.html block-sibling-2-ref2
 == block-overflow-5c.html block-overflow-5c-ref2.html
 == block-overflow-5d.html block-overflow-5-ref.html
 == block-overflow-5d.html block-overflow-5-ref2.html
-fails == table-sibling-1a.html table-sibling-1-ref.html # Bug 87277
-fails != table-sibling-1a.html table-sibling-1-noref.html # Bug 87277
-fails == table-sibling-1b.html table-sibling-1-ref.html # Bug 87277
-fails != table-sibling-1b.html table-sibling-1-noref.html # Bug 87277
-fails == table-sibling-1c.html table-sibling-1-ref.html # Bug 87277
-fails != table-sibling-1c.html table-sibling-1-noref2.html # Bug 87277
-fails == table-sibling-2a.html table-sibling-2-ref.html # Bug 87277
-fails != table-sibling-2a.html table-sibling-2-noref.html # Bug 87277
-fails == table-sibling-2b.html table-sibling-2-ref.html # Bug 87277
-fails != table-sibling-2b.html table-sibling-2-noref.html # Bug 87277
-fails == table-sibling-2c.html table-sibling-2-ref.html # Bug 87277
-fails != table-sibling-2c.html table-sibling-2-noref2.html # Bug 87277
-fails == table-sibling-1a-dyn.html table-sibling-1-ref.html # Bug 87277
-fails != table-sibling-1a-dyn.html table-sibling-1-noref.html # Bug 87277
-fails == table-sibling-1b-dyn.html table-sibling-1-ref.html # Bug 87277
-fails != table-sibling-1b-dyn.html table-sibling-1-noref.html # Bug 87277
-fails == table-sibling-1c-dyn.html table-sibling-1-ref.html # Bug 87277
-fails != table-sibling-1c-dyn.html table-sibling-1-noref2.html # Bug 87277
-fails == table-sibling-2a-dyn.html table-sibling-2-ref.html # Bug 87277
-fails != table-sibling-2a-dyn.html table-sibling-2-noref.html # Bug 87277
-fails == table-sibling-2b-dyn.html table-sibling-2-ref.html # Bug 87277
-fails != table-sibling-2b-dyn.html table-sibling-2-noref.html # Bug 87277
-fails == table-sibling-2c-dyn.html table-sibling-2-ref.html # Bug 87277
-fails != table-sibling-2c-dyn.html table-sibling-2-noref2.html # Bug 87277
-fails == table-sibling-3-dyn.html table-sibling-3-ref.html # Bug 87277
-fails != table-sibling-3-dyn.html table-sibling-3-noref.html # Bug 87277
+== table-sibling-1a.html table-sibling-1-ref.html
+!= table-sibling-1a.html table-sibling-1-noref.html
+== table-sibling-1b.html table-sibling-1-ref.html
+!= table-sibling-1b.html table-sibling-1-noref.html
+== table-sibling-1c.html table-sibling-1-ref.html
+!= table-sibling-1c.html table-sibling-1-noref2.html
+== table-sibling-2a.html table-sibling-2-ref.html
+!= table-sibling-2a.html table-sibling-2-noref.html
+== table-sibling-2b.html table-sibling-2-ref.html
+!= table-sibling-2b.html table-sibling-2-noref.html
+== table-sibling-2c.html table-sibling-2-ref.html
+!= table-sibling-2c.html table-sibling-2-noref2.html
+== table-sibling-1a-dyn.html table-sibling-1-ref.html
+!= table-sibling-1a-dyn.html table-sibling-1-noref.html
+== table-sibling-1b-dyn.html table-sibling-1-ref.html
+!= table-sibling-1b-dyn.html table-sibling-1-noref.html
+== table-sibling-1c-dyn.html table-sibling-1-ref.html
+!= table-sibling-1c-dyn.html table-sibling-1-noref2.html
+== table-sibling-2a-dyn.html table-sibling-2-ref.html
+!= table-sibling-2a-dyn.html table-sibling-2-noref.html
+== table-sibling-2b-dyn.html table-sibling-2-ref.html
+!= table-sibling-2b-dyn.html table-sibling-2-noref.html
+== table-sibling-2c-dyn.html table-sibling-2-ref.html
+!= table-sibling-2c-dyn.html table-sibling-2-noref2.html
+== table-sibling-3-dyn.html table-sibling-3-ref.html
+!= table-sibling-3-dyn.html table-sibling-3-noref.html
 == table-caption-1a.html table-caption-1-ref.html
 == table-caption-1b.html table-caption-1-ref.html
 == table-caption-2a.html table-caption-2-ref.html
