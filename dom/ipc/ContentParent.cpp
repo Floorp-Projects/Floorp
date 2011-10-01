@@ -355,27 +355,14 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
             props->SetPropertyAsBool(NS_LITERAL_STRING("abnormal"), PR_TRUE);
 
 #ifdef MOZ_CRASHREPORTER
-            nsAutoString dumpID;
+            MOZ_ASSERT(ManagedPCrashReporterParent().Length() > 0);
+            CrashReporterParent* crashReporter =
+                    static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
 
-            nsCOMPtr<nsILocalFile> crashDump;
-            TakeMinidump(getter_AddRefs(crashDump)) &&
-                CrashReporter::GetIDFromMinidump(crashDump, dumpID);
-
+            crashReporter->GenerateCrashReport(this, NULL);
+ 
+            nsAutoString dumpID(crashReporter->ChildDumpID());
             props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
-
-            if (!dumpID.IsEmpty()) {
-                CrashReporter::AnnotationTable notes;
-                notes.Init();
-                notes.Put(NS_LITERAL_CSTRING("ProcessType"), NS_LITERAL_CSTRING("content"));
-
-                char startTime[32];
-                sprintf(startTime, "%lld", static_cast<long long>(mProcessStartTime));
-                notes.Put(NS_LITERAL_CSTRING("StartupTime"),
-                          nsDependentCString(startTime));
-
-                // TODO: Additional per-process annotations.
-                CrashReporter::AppendExtraData(dumpID, notes);
-            }
 #endif
 
             obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nsnull);
@@ -415,12 +402,19 @@ ContentParent::DestroyTestShell(TestShellParent* aTestShell)
     return PTestShellParent::Send__delete__(aTestShell);
 }
 
+TestShellParent*
+ContentParent::GetTestShellSingleton()
+{
+    if (!ManagedPTestShellParent().Length())
+        return nsnull;
+    return static_cast<TestShellParent*>(ManagedPTestShellParent()[0]);
+}
+
 ContentParent::ContentParent()
     : mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
     , mIsAlive(true)
-    , mProcessStartTime(time(NULL))
     , mSendPermissionUpdates(false)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -791,9 +785,23 @@ ContentParent::DeallocPBrowser(PBrowserParent* frame)
 }
 
 PCrashReporterParent*
-ContentParent::AllocPCrashReporter()
+ContentParent::AllocPCrashReporter(const NativeThreadId& tid,
+                                   const PRUint32& processType)
 {
+#ifdef MOZ_CRASHREPORTER
   return new CrashReporterParent();
+#else
+  return nsnull;
+#endif
+}
+
+bool
+ContentParent::RecvPCrashReporterConstructor(PCrashReporterParent* actor,
+                                             const NativeThreadId& tid,
+                                             const PRUint32& processType)
+{
+  static_cast<CrashReporterParent*>(actor)->SetChildData(tid, processType);
+  return true;
 }
 
 bool

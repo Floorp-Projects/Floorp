@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<head>
+<script>
+
+function boom()
+{
+  var b = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  b.style.position = "absolute";
+  document.getElementById("a").appendChild(b);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div id="a" style="display: -moz-inline-stack; position: relative">x</div></body>
+</html>
+

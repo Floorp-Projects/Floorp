@@ -123,23 +123,27 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           }
 
           mMouseDownRect = rect.ToNearestPixels(aPresContext->AppUnitsPerDevPixel());
+          doDefault = PR_FALSE;
         }
         else {
+          // If there is no window, then resizing isn't allowed.
+          if (!window)
+            break;
+
+          doDefault = PR_FALSE;
+            
           // ask the widget implementation to begin a resize drag if it can
           Direction direction = GetDirection();
           nsresult rv = aEvent->widget->BeginResizeDrag(aEvent,
                         direction.mHorizontal, direction.mVertical);
-          if (rv == NS_ERROR_NOT_IMPLEMENTED && window) {
-            // if there's no native resize support, we need to do window
-            // resizing ourselves
-            window->GetPositionAndSize(&mMouseDownRect.x, &mMouseDownRect.y,
-                                       &mMouseDownRect.width, &mMouseDownRect.height);
-          }
-          else {
-            // for native drags, don't set the fields below
-            doDefault = PR_FALSE;
-            break;
-          }
+          // for native drags, don't set the fields below
+          if (rv != NS_ERROR_NOT_IMPLEMENTED)
+             break;
+             
+          // if there's no native resize support, we need to do window
+          // resizing ourselves
+          window->GetPositionAndSize(&mMouseDownRect.x, &mMouseDownRect.y,
+                                     &mMouseDownRect.width, &mMouseDownRect.height);
         }
 
         // we're tracking
@@ -149,8 +153,6 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         mMouseDownPoint = aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
 
         nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
-
-        doDefault = PR_FALSE;
       }
     }
     break;
@@ -358,7 +360,7 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
       // don't allow resizers in content shells, except for the viewport
       // scrollbar which doesn't have a parent
       nsIContent* nonNativeAnon = mContent->FindFirstNonNativeAnonymous();
-      if (nonNativeAnon && !nonNativeAnon->GetParent()) {
+      if (!nonNativeAnon || nonNativeAnon->GetParent()) {
         return nsnull;
       }
     }

@@ -14,18 +14,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
- * June 12, 2009.
+ * The Original Code is Mozilla SpiderMonkey JavaScript code.
  *
  * The Initial Developer of the Original Code is
- *   the Mozilla Corporation.
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Leary <cdleary@mozilla.com>
+ *  Chris Leary <cdleary@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to

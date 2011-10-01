@@ -120,6 +120,7 @@
 
 #include "gfxContext.h"
 #include "CSSCalc.h"
+#include "nsAbsoluteContainingBlock.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -250,6 +251,34 @@ nsFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
   }
 }
 #endif
+
+static void
+DestroyAbsoluteContainingBlock(void* aPropertyValue)
+{
+  delete static_cast<nsAbsoluteContainingBlock*>(aPropertyValue);
+}
+
+NS_DECLARE_FRAME_PROPERTY(AbsoluteContainingBlockProperty, DestroyAbsoluteContainingBlock)
+
+bool
+nsIFrame::HasAbsolutelyPositionedChildren() const {
+  return IsAbsoluteContainer() && GetAbsoluteContainingBlock()->HasAbsoluteFrames();
+}
+
+nsAbsoluteContainingBlock*
+nsIFrame::GetAbsoluteContainingBlock() const {
+  NS_ASSERTION(IsAbsoluteContainer(), "The frame is not marked as an abspos container correctly");
+  nsAbsoluteContainingBlock* absCB = static_cast<nsAbsoluteContainingBlock*>
+    (Properties().Get(AbsoluteContainingBlockProperty()));
+  NS_ASSERTION(absCB, "The frame is marked as an abspos container but doesn't have the property");
+  return absCB;
+}
+
+void
+nsIFrame::MarkAsAbsoluteContainingBlock() {
+  AddStateBits(NS_FRAME_HAS_ABSPOS_CHILDREN);
+  Properties().Set(AbsoluteContainingBlockProperty(), new nsAbsoluteContainingBlock(GetAbsoluteListID()));
+}
 
 static bool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
                                     const nsIFrame* aFrame,
@@ -997,6 +1026,26 @@ nsFrame::GetBaseline() const
   return mRect.height + GetUsedMargin().bottom;
 }
 
+nsFrameList
+nsFrame::GetChildList(ChildListID aListID) const
+{
+  if (IsAbsoluteContainer() &&
+      aListID == GetAbsoluteListID()) {
+    return GetAbsoluteContainingBlock()->GetChildList();
+  } else {
+    return nsFrameList::EmptyList();
+  }
+}
+
+void
+nsFrame::GetChildLists(nsTArray<ChildList>* aLists) const
+{
+  if (IsAbsoluteContainer()) {
+    nsFrameList absoluteList = GetAbsoluteContainingBlock()->GetChildList();
+    absoluteList.AppendIfNonempty(aLists, GetAbsoluteListID());
+  }
+}
+
 static nsIFrame*
 GetActiveSelectionFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
@@ -1479,9 +1528,6 @@ WrapPreserve3DList(nsIFrame *aFrame, nsDisplayListBuilder *aBuilder, nsDisplayLi
     if (childFrame->GetParent()->Preserves3DChildren()) {
       switch (item->GetType()) {
         case nsDisplayItem::TYPE_TRANSFORM: {
-          // The child transform frame should always preserve 3d. In the cases where preserve-3d is disabled
-          // such as clipping, this would be wrapped in a clip display object, and we wouldn't reach this point.
-          NS_ASSERTION(childFrame->Preserves3D(), "Child transform frame must preserve 3d!");
           break;
         }
         case nsDisplayItem::TYPE_WRAP_LIST: {
@@ -1566,6 +1612,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     dirtyRect =
       nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
   }
+
+  // Mark the display list items for absolutely positioned children
+  MarkAbsoluteFramesForDisplayList(aBuilder, aDirtyRect);
 
   nsDisplayListCollection set;
   nsresult rv;
@@ -1727,7 +1776,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   if (aChild->GetStateBits() & NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
     return NS_OK;
-  
+
   const nsStyleDisplay* disp = aChild->GetStyleDisplay();
   // PR_TRUE if this is a real or pseudo stacking context
   bool pseudoStackingContext =
@@ -1735,7 +1784,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // XXX we REALLY need a "are you an inline-block sort of thing?" here!!!
   if ((aFlags & DISPLAY_CHILD_INLINE) &&
       (disp->mDisplay != NS_STYLE_DISPLAY_INLINE ||
-       aChild->IsContainingBlock() ||
        (aChild->IsFrameOfType(eReplaced)))) {
     // child is a non-inline frame in an inline context, i.e.,
     // it acts like inline-block or inline-table. Therefore it is a
@@ -1773,9 +1821,15 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       dirty.SetEmpty();
     }
     pseudoStackingContext = PR_TRUE;
-  } else if (aBuilder->GetSelectedFramesOnly() &&
-             aChild->IsLeaf() &&
-             !(aChild->GetStateBits() & NS_FRAME_SELECTED_CONTENT)) {
+  }
+
+  // Mark the display list items for absolutely positioned children
+  aChild->MarkAbsoluteFramesForDisplayList(aBuilder, dirty);
+
+  if (childType != nsGkAtoms::placeholderFrame &&
+      aBuilder->GetSelectedFramesOnly() &&
+      aChild->IsLeaf() &&
+      !(aChild->GetStateBits() & NS_FRAME_SELECTED_CONTENT)) {
     return NS_OK;
   }
 
@@ -1937,6 +1991,15 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // but it means that sort routine needs to do less work.
   aLists.PositionedDescendants()->AppendToTop(&extraPositionedDescendants);
   return NS_OK;
+}
+
+void
+nsIFrame::MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder,
+                                           const nsRect& aDirtyRect)
+{
+  if (IsAbsoluteContainer()) {
+    aBuilder->MarkFramesForDisplayList(this, GetAbsoluteContainingBlock()->GetChildList(), aDirtyRect);
+  }
 }
 
 void
@@ -3686,6 +3749,7 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
 {
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("nsFrame::DidReflow: aStatus=%d", aStatus));
+
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
                 NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -3704,6 +3768,55 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
   }
 
   return NS_OK;
+}
+
+void
+nsFrame::FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
+                                        nsHTMLReflowMetrics&     aDesiredSize,
+                                        const nsHTMLReflowState& aReflowState,
+                                        nsReflowStatus&          aStatus)
+{
+  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+  FinishAndStoreOverflow(&aDesiredSize);
+}
+
+void
+nsFrame::DestroyAbsoluteFrames(nsIFrame* aDestructRoot)
+{
+  if (IsAbsoluteContainer()) {
+    GetAbsoluteContainingBlock()->DestroyFrames(this, aDestructRoot);
+  }
+}
+
+void
+nsFrame::ReflowAbsoluteFrames(nsPresContext*           aPresContext,
+                              nsHTMLReflowMetrics&     aDesiredSize,
+                              const nsHTMLReflowState& aReflowState,
+                              nsReflowStatus&          aStatus)
+{
+  if (HasAbsolutelyPositionedChildren()) {
+    nsAbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
+
+    // Let the absolutely positioned container reflow any absolutely positioned
+    // child frames that need to be reflowed
+
+    // The containing block for the abs pos kids is formed by our padding edge.
+    nsMargin computedBorder =
+      aReflowState.mComputedBorderPadding - aReflowState.mComputedPadding;
+    nscoord containingBlockWidth =
+      aDesiredSize.width - computedBorder.LeftRight();
+    nscoord containingBlockHeight =
+      aDesiredSize.height - computedBorder.TopBottom();
+
+    nsContainerFrame* container = do_QueryFrame(this);
+    NS_ASSERTION(container, "Abs-pos children only supported on container frames for now");
+
+    absoluteContainer->Reflow(container, aPresContext, aReflowState, aStatus,
+                              containingBlockWidth, containingBlockHeight,
+                              true, true, true, // XXX could be optimized
+                              &aDesiredSize.mOverflowAreas);
+  }
 }
 
 /* virtual */ bool
@@ -4788,16 +4901,43 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
   return PR_FALSE;
 }
 
-/* virtual */ bool nsFrame::IsContainingBlock() const
+bool
+nsIFrame::IsBlockWrapper() const
 {
-  const nsStyleDisplay* display = GetStyleDisplay();
+  nsIAtom *pseudoType = GetStyleContext()->GetPseudo();
+  return (pseudoType == nsCSSAnonBoxes::mozAnonymousBlock ||
+          pseudoType == nsCSSAnonBoxes::mozAnonymousPositionedBlock ||
+          pseudoType == nsCSSAnonBoxes::cellContent);
+}
 
-  // Absolute positioning causes |display->mDisplay| to be set to block,
-  // if needed.
-  return display->mDisplay == NS_STYLE_DISPLAY_BLOCK || 
-         display->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK || 
-         display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM ||
-         display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL;
+static nsIFrame*
+GetNearestBlockContainer(nsIFrame* frame)
+{
+  // The block wrappers we use to wrap blocks inside inlines aren't
+  // described in the CSS spec.  We need to make them not be containing
+  // blocks.
+  // Since the parent of such a block is either a normal block or
+  // another such pseudo, this shouldn't cause anything bad to happen.
+  // Also the anonymous blocks inside table cells are not containing blocks.
+  while (frame->IsFrameOfType(nsIFrame::eLineParticipant) ||
+         frame->IsBlockWrapper()) {
+    frame = frame->GetParent();
+    NS_ASSERTION(frame, "How come we got to the root frame without seeing a containing block?");
+  }
+  return frame;
+}
+
+nsIFrame*
+nsIFrame::GetContainingBlock() const
+{
+  // MathML frames might have absolute positioning style, but they would
+  // still be in-flow.  So we have to check to make sure that the frame
+  // is really out-of-flow too.
+  if (GetStyleDisplay()->IsAbsolutelyPositioned() &&
+      (GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+    return GetParent(); // the parent is always the containing block
+  }
+  return GetNearestBlockContainer(GetParent());
 }
 
 #ifdef NS_DEBUG
@@ -6320,8 +6460,7 @@ inline bool
 IsInlineFrame(nsIFrame *aFrame)
 {
   nsIAtom *type = aFrame->GetType();
-  return type == nsGkAtoms::inlineFrame ||
-         type == nsGkAtoms::positionedInlineFrame;
+  return type == nsGkAtoms::inlineFrame;
 }
 
 void 
@@ -8045,7 +8184,6 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsGkAtoms::objectFrame,           "obj",       "object");
   AddFrameTypeInfo(nsGkAtoms::pageFrame,             "page",      "page");
   AddFrameTypeInfo(nsGkAtoms::placeholderFrame,      "place",     "placeholder");
-  AddFrameTypeInfo(nsGkAtoms::positionedInlineFrame, "posInline", "positionedInline");
   AddFrameTypeInfo(nsGkAtoms::canvasFrame,           "canvas",    "canvas");
   AddFrameTypeInfo(nsGkAtoms::rootFrame,             "root",      "root");
   AddFrameTypeInfo(nsGkAtoms::scrollFrame,           "scroll",    "scroll");

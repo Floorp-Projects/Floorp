@@ -562,8 +562,6 @@ pref("capability.policy.default.Clipboard.cutcopy", "noAccess");
 pref("capability.policy.default.Clipboard.paste", "noAccess");
 
 // Scripts & Windows prefs
-pref("dom.block_multiple_popups",           true);
-
 pref("dom.disable_image_src_set",           false);
 pref("dom.disable_window_flip",             false);
 pref("dom.disable_window_move_resize",      false);
@@ -3364,4 +3362,4 @@ pref("full-screen-api.key-input-restricted", true);
 pref("dom.event.handling-user-input-time-limit", 1000);
  
 //3D Transforms
-pref("layout.3d-transforms.enabled", false);
+pref("layout.3d-transforms.enabled", true);

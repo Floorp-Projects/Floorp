@@ -373,17 +373,18 @@ TaskbarPreview::GetWindowHook() {
 
 void
 TaskbarPreview::EnableCustomDrawing(HWND aHWND, bool aEnable) {
+  BOOL enabled = aEnable;
   nsUXThemeData::dwmSetWindowAttributePtr(
       aHWND,
       DWMWA_FORCE_ICONIC_REPRESENTATION,
-      &aEnable,
-      sizeof(aEnable));
+      &enabled,
+      sizeof(enabled));
 
   nsUXThemeData::dwmSetWindowAttributePtr(
       aHWND,
       DWMWA_HAS_ICONIC_BITMAP,
-      &aEnable,
-      sizeof(aEnable));
+      &enabled,
+      sizeof(enabled));
 }
 
 

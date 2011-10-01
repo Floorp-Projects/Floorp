@@ -2549,8 +2549,7 @@ PrepareBackgroundLayer(nsPresContext* aPresContext,
 
   nsIAtom* frameType = aForFrame->GetType();
   nsIFrame* geometryFrame = aForFrame;
-  if (frameType == nsGkAtoms::inlineFrame ||
-      frameType == nsGkAtoms::positionedInlineFrame) {
+  if (frameType == nsGkAtoms::inlineFrame) {
     // XXXjwalden Strictly speaking this is not quite faithful to how
     // background-break is supposed to interact with background-origin values,
     // but it's a non-trivial amount of work to make it fully conformant, and

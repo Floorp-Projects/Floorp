@@ -39,11 +39,8 @@
 
 #include "nsSVGRect.h"
 #include "prdtoa.h"
-#include "nsSVGValue.h"
-#include "nsISVGValueUtils.h"
 #include "nsTextFormatter.h"
 #include "nsCRT.h"
-#include "nsWeakReference.h"
 #include "nsIDOMSVGLength.h"
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
