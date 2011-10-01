@@ -1401,9 +1401,8 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
                                "Not empty caption -- legitimate table structures");
   }
 
-  PRUint32 childCnt = mContent->GetChildCount();
-  for (PRUint32 childIdx = 0; childIdx < childCnt; childIdx++) {
-    nsIContent* childElm = mContent->GetChildAt(childIdx);
+  for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
+       childElm = childElm->GetNextSibling()) {
     if (!childElm->IsHTML())
       continue;
 
@@ -1416,13 +1415,11 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
     }
 
     if (childElm->Tag() == nsGkAtoms::tbody) {
-      PRUint32 rowCnt = childElm->GetChildCount();
-      for (PRUint32 rowIdx = 0; rowIdx < rowCnt; rowIdx++) {
-        nsIContent* rowElm = childElm->GetChildAt(rowIdx);
+      for (nsIContent* rowElm = childElm->GetFirstChild(); rowElm;
+           rowElm = rowElm->GetNextSibling()) {
         if (rowElm->IsHTML() && rowElm->Tag() == nsGkAtoms::tr) {
-          PRUint32 cellCnt = rowElm->GetChildCount();
-          for (PRUint32 cellIdx = 0; cellIdx < cellCnt; cellIdx++) {
-            nsIContent* cellElm = rowElm->GetChildAt(cellIdx);
+          for (nsIContent* cellElm = rowElm->GetFirstChild(); cellElm;
+               cellElm = cellElm->GetNextSibling()) {
             if (cellElm->IsHTML() && cellElm->Tag() == nsGkAtoms::th) {
               RETURN_LAYOUT_ANSWER(false,
                                    "Has th -- legitimate table structures");
