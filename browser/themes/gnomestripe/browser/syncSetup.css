@@ -109,7 +109,7 @@ description > .text-link:focus {
   width: 0.5em;
 }
 
-#add-device-throbber > image,
+#pairDeviceThrobber > image,
 #login-throbber > image {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
