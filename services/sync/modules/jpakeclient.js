@@ -129,11 +129,12 @@ function JPAKEClient(observer) {
   this._log.level = Log4Moz.Level[Svc.Prefs.get(
     "log.logger.service.jpakeclient", "Debug")];
 
-  this._serverUrl = Svc.Prefs.get("jpake.serverURL");
+  this._serverURL = Svc.Prefs.get("jpake.serverURL");
   this._pollInterval = Svc.Prefs.get("jpake.pollInterval");
   this._maxTries = Svc.Prefs.get("jpake.maxTries");
-  if (this._serverUrl.slice(-1) != "/")
-    this._serverUrl += "/";
+  if (this._serverURL.slice(-1) != "/") {
+    this._serverURL += "/";
+  }
 
   this._jpake = Cc["@mozilla.org/services-crypto/sync-jpake;1"]
                   .createInstance(Ci.nsISyncJPAKE);
@@ -182,7 +183,7 @@ JPAKEClient.prototype = {
     this._their_signerid = JPAKE_SIGNERID_RECEIVER;
 
     this._channel = pin.slice(JPAKE_LENGTH_SECRET);
-    this._channelUrl = this._serverUrl + this._channel;
+    this._channelURL = this._serverURL + this._channel;
     this._secret = pin.slice(0, JPAKE_LENGTH_SECRET);
     this._data = JSON.stringify(obj);
 
@@ -205,12 +206,13 @@ JPAKEClient.prototype = {
     let self = this;
 
     // Default to "user aborted".
-    if (!error)
+    if (!error) {
       error = JPAKE_ERROR_USERABORT;
+    }
 
-    if (error == JPAKE_ERROR_CHANNEL
-        || error == JPAKE_ERROR_NETWORK
-        || error == JPAKE_ERROR_NODATA) {
+    if (error == JPAKE_ERROR_CHANNEL ||
+        error == JPAKE_ERROR_NETWORK ||
+        error == JPAKE_ERROR_NODATA) {
       Utils.namedTimer(function() { this.observer.onAbort(error); }, 0,
                        this, "_timer_onAbort");
     } else {
@@ -253,10 +255,11 @@ JPAKEClient.prototype = {
 
   _getChannel: function _getChannel(callback) {
     this._log.trace("Requesting channel.");
-    let request = this._newRequest(this._serverUrl + "new_channel");
+    let request = this._newRequest(this._serverURL + "new_channel");
     request.get(Utils.bind2(this, function handleChannel(error) {
-      if (this._finished)
+      if (this._finished) {
         return;
+      }
 
       if (error) {
         this._log.error("Error acquiring channel ID. " + error);
@@ -278,7 +281,7 @@ JPAKEClient.prototype = {
         return;
       }
       this._log.debug("Using channel " + this._channel);
-      this._channelUrl = this._serverUrl + this._channel;
+      this._channelURL = this._serverURL + this._channel;
 
       // Don't block on UI code.
       let pin = this._secret + this._channel;
@@ -291,10 +294,11 @@ JPAKEClient.prototype = {
   // Generic handler for uploading data.
   _putStep: function _putStep(callback) {
     this._log.trace("Uploading message " + this._outgoing.type);
-    let request = this._newRequest(this._channelUrl);
+    let request = this._newRequest(this._channelURL);
     request.put(this._outgoing, Utils.bind2(this, function (error) {
-      if (this._finished)
+      if (this._finished) {
         return;
+      }
 
       if (error) {
         this._log.error("Error uploading data. " + error);
@@ -319,14 +323,15 @@ JPAKEClient.prototype = {
   _pollTries: 0,
   _getStep: function _getStep(callback) {
     this._log.trace("Retrieving next message.");
-    let request = this._newRequest(this._channelUrl);
+    let request = this._newRequest(this._channelURL);
     if (this._etag) {
       request.setHeader("If-None-Match", this._etag);
     }
 
     request.get(Utils.bind2(this, function (error) {
-      if (this._finished)
+      if (this._finished) {
         return;
+      }
 
       if (error) {
         this._log.error("Error fetching data. " + error);
@@ -374,7 +379,7 @@ JPAKEClient.prototype = {
 
   _reportFailure: function _reportFailure(reason, callback) {
     this._log.debug("Reporting failure to server.");
-    let request = this._newRequest(this._serverUrl + "report");
+    let request = this._newRequest(this._serverURL + "report");
     request.setHeader("X-KeyExchange-Cid", this._channel);
     request.setHeader("X-KeyExchange-Log", reason);
     request.post("", Utils.bind2(this, function (error) {
@@ -516,8 +521,9 @@ JPAKEClient.prototype = {
     try {
       ciphertext = Svc.Crypto.encrypt(JPAKE_VERIFY_VALUE,
                                       this._crypto_key, step3.IV);
-      if (ciphertext != step3.ciphertext)
+      if (ciphertext != step3.ciphertext) {
         throw "Key mismatch!";
+      }
     } catch (ex) {
       this._log.error("Keys don't match!");
       this.abort(JPAKE_ERROR_KEYMISMATCH);
@@ -553,8 +559,9 @@ JPAKEClient.prototype = {
     try {
       let hmac = Utils.bytesAsHex(
         Utils.digestUTF8(step3.ciphertext, this._hmac_hasher));
-      if (hmac != step3.hmac)
+      if (hmac != step3.hmac) {
         throw "HMAC validation failed!";
+      }
     } catch (ex) {
       this._log.error("HMAC validation failed.");
       this.abort(JPAKE_ERROR_KEYMISMATCH);
