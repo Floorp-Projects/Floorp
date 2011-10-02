@@ -103,8 +103,13 @@ const JPAKE_VERIFY_VALUE      = "0123456789ABCDEF";
  * 
  * The 'controller' object must implement the following methods:
  * 
- *   displayPIN(pin) -- Display the PIN to the user, only called on the client
- *     that didn't provide the PIN.
+ *   displayPIN(pin) -- Called when a PIN has been generated and is ready to
+ *     be displayed to the user. Only called on the client where the pairing
+ *     was initiated with 'receiveNoPIN()'.
+ * 
+ *   onPairingStart() -- Called when the pairing has started and messages are
+ *     being sent back and forth over the channel. Only called on the client
+ *     where the pairing was initiated with 'receiveNoPIN()'.
  * 
  *   onPaired() -- Called when the device pairing has been established and
  *     we're ready to send the credentials over. To do that, the controller
@@ -189,6 +194,11 @@ JPAKEClient.prototype = {
                 this._putStep,
                 this._getStep,
                 function(callback) {
+                  // We fetched the first response from the other client.
+                  // Notify controller of the pairing starting.
+                  Utils.nextTick(this.controller.onPairingStart,
+                                 this.controller);
+
                   // Now we can switch back to the smaller timeout.
                   this._maxTries = Svc.Prefs.get("jpake.maxTries");
                   callback();
