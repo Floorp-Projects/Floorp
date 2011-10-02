@@ -52,7 +52,7 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 nsNativeDragSource::nsNativeDragSource(nsIDOMDataTransfer* aDataTransfer) :
   m_cRef(0),
   m_hCursor(nsnull),
-  mUserCancelled(PR_FALSE)
+  mUserCancelled(false)
 {
   mDataTransfer = do_QueryInterface(aDataTransfer);
 }
@@ -107,7 +107,7 @@ nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
   }
 
   if (fEsc) {
-    mUserCancelled = PR_TRUE;
+    mUserCancelled = true;
     return DRAGDROP_S_CANCEL;
   }
 
