@@ -107,6 +107,9 @@ let gSyncAddDevice = {
 
   startTransfer: function startTransfer() {
     this.errorRow.hidden = true;
+    // When onAbort is called, Weave may already be gone.
+    const JPAKE_ERROR_USERABORT = Weave.JPAKE_ERROR_USERABORT;
+
     let self = this;
     let jpakeclient = this._jpakeclient = new Weave.JPAKEClient({
       onPaired: function onPaired() {
@@ -124,8 +127,9 @@ let gSyncAddDevice = {
         delete self._jpakeclient;
 
         // Aborted by user, ignore.
-        if (!error)
+        if (error == JPAKE_ERROR_USERABORT) {
           return;
+        }
 
         self.errorRow.hidden = false;
         self.throbber.hidden = true;
