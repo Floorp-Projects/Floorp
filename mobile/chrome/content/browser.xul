@@ -584,6 +584,9 @@
             <button class="prompt-button" oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
           </hbox>
         </vbox>
+        <vbox id="syncsetup-waiting" class="syncsetup-page" flex="1" hidden="true">
+          <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.waiting;</description>
+        </vbox>
         <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">
           <scrollbox class="prompt-message" orient="vertical" flex="1">
             <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.manual;</description>
