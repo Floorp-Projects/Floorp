@@ -52,7 +52,8 @@
 %syncBrandDTD;
 %syncSetupDTD;
 ]>
-<wizard id="accountSetup" title="&accountSetupTitle.label;"
+<wizard id="wizard"
+        title="&accountSetupTitle.label;"
         windowtype="Weave:AccountSetup"
         persist="screenX screenY"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -71,6 +72,48 @@
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"
           src="chrome://global/content/printUtils.js"/>
+
+  <wizardpage id="addDevicePage"
+              label="&addDevice.title.label;"
+              onpageshow="gSyncSetup.onPageShow()">
+    <description>
+      &addDevice.dialog.description.label;
+      <label class="text-link"
+             value="&addDevice.showMeHow.label;"
+             href="https://services.mozilla.com/sync/help/add-device"/>
+    </description>
+    <separator class="groove-thin"/>
+    <description>
+      &addDevice.dialog.enterCode.label;
+    </description>
+    <separator class="groove-thin"/>
+    <vbox align="center">
+      <textbox id="pin1"
+               class="pin"
+               oninput="gSyncSetup.onPINInput(this);"
+               onfocus="this.select();"
+               />
+      <textbox id="pin2"
+               class="pin"
+               oninput="gSyncSetup.onPINInput(this);"
+               onfocus="this.select();"
+               />
+      <textbox id="pin3"
+               class="pin"
+               oninput="gSyncSetup.onPINInput(this);"
+               onfocus="this.select();" 
+               />
+    </vbox>
+    <separator class="groove-thin"/>
+    <vbox id="pairDeviceThrobber" align="center" hidden="true">
+      <image/>
+    </vbox>
+    <hbox id="pairDeviceErrorRow" pack="center" hidden="true">
+      <image class="statusIcon" status="error"/>
+      <label class="status"
+             value="&addDevice.dialog.tryAgain.label;"/>
+    </hbox>
+  </wizardpage>
 
   <wizardpage id="pickSetupType"
               label="&syncBrand.fullName.label;"

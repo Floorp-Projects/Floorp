@@ -59,7 +59,7 @@ let gSyncAddDevice = {
                         pin2: this.pin3,
                         pin3: this.wizard.getButton("next")};
 
-    this.throbber = document.getElementById("add-device-throbber");
+    this.throbber = document.getElementById("pairDeviceThrobber");
     this.errorRow = document.getElementById("errorRow");
 
     // Kick off a sync. That way the server will have the most recent data from

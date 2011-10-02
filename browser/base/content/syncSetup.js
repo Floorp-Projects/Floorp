@@ -46,20 +46,23 @@ const Cu = Components.utils;
 
 // page consts
 
-const INTRO_PAGE                    = 0;
-const NEW_ACCOUNT_START_PAGE        = 1;
-const NEW_ACCOUNT_PP_PAGE           = 2;
-const NEW_ACCOUNT_CAPTCHA_PAGE      = 3;
-const EXISTING_ACCOUNT_CONNECT_PAGE = 4;
-const EXISTING_ACCOUNT_LOGIN_PAGE   = 5;
-const OPTIONS_PAGE                  = 6;
-const OPTIONS_CONFIRM_PAGE          = 7;
-const SETUP_SUCCESS_PAGE            = 8;
+const PAIR_PAGE                     = 0;
+const INTRO_PAGE                    = 1;
+const NEW_ACCOUNT_START_PAGE        = 2;
+const NEW_ACCOUNT_PP_PAGE           = 3;
+const NEW_ACCOUNT_CAPTCHA_PAGE      = 4;
+const EXISTING_ACCOUNT_CONNECT_PAGE = 5;
+const EXISTING_ACCOUNT_LOGIN_PAGE   = 6;
+const OPTIONS_PAGE                  = 7;
+const OPTIONS_CONFIRM_PAGE          = 8;
+const SETUP_SUCCESS_PAGE            = 9;
 
 // Broader than we'd like, but after this changed from api-secure.recaptcha.net
 // we had no choice. At least we only do this for the duration of setup.
 // See discussion in Bugs 508112 and 653307.
 const RECAPTCHA_DOMAIN = "https://www.google.com";
+
+const PIN_PART_LENGTH = 4;
 
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -120,17 +123,23 @@ var gSyncSetup = {
     }, 0);
 
     this.captchaBrowser = document.getElementById("captcha");
-    this.wizard = document.getElementById("accountSetup");
 
-    if (window.arguments && window.arguments[0] == "reset") {
-      // we're resetting sync
-      this._resettingSync = true;
-      this.wizard.pageIndex = OPTIONS_PAGE;
+    this.wizardType = null;
+    if (window.arguments && window.arguments[0]) {
+      this.wizardType = window.arguments[0];
     }
-    else {
-      this.wizard.canAdvance = false;
-      this.captchaBrowser.addProgressListener(this);
-      Weave.Svc.Prefs.set("firstSync", "notReady");
+    switch (this.wizardType) {
+      case null:
+        this.wizard.pageIndex = INTRO_PAGE;
+        // Fall through!
+      case "pair":
+        this.captchaBrowser.addProgressListener(this);
+        Weave.Svc.Prefs.set("firstSync", "notReady");
+        break;
+      case "reset":
+        this._resettingSync = true;
+        this.wizard.pageIndex = OPTIONS_PAGE;
+        break;
     }
 
     this.wizard.getButton("extra1").label =
@@ -157,7 +166,13 @@ var gSyncSetup = {
     if (!Weave.Utils.ensureMPUnlocked())
       return false;
     this._settingUpNew = false;
-    this.wizard.pageIndex = EXISTING_ACCOUNT_CONNECT_PAGE;
+    if (this.wizardType == "pair") {
+      // We're already pairing, so there's no point in pairing again.
+      // Go straight to the manual login page.
+      this.wizard.pageIndex = EXISTING_ACCOUNT_LOGIN_PAGE;
+    } else {
+      this.wizard.pageIndex = EXISTING_ACCOUNT_CONNECT_PAGE;
+    }
   },
 
   resetPassphrase: function resetPassphrase() {
@@ -205,6 +220,20 @@ var gSyncSetup = {
 
   onLoginEnd: function () {
     this.toggleLoginFeedback(true);
+  },
+
+  sendCredentialsAfterSync: function () {
+    let send = function() {
+      Services.obs.removeObserver("weave:service:sync:finish", send);
+      Services.obs.removeObserver("weave:service:sync:error", send);
+      let credentials = {account:   Weave.Service.account,
+                         password:  Weave.Service.password,
+                         synckey:   Weave.Service.passphrase,
+                         serverURL: Weave.Service.serverURL};
+      this._jpakeclient.sendAndComplete(credentials);
+    }.bind(this);
+    Services.obs.addObserver("weave:service:sync:finish", send, false);
+    Services.obs.addObserver("weave:service:sync:error", send, false);
   },
 
   toggleLoginFeedback: function (stop) {
@@ -289,6 +318,15 @@ var gSyncSetup = {
     return true;
   },
 
+  onPINInput: function onPINInput(textbox) {
+    if (textbox && textbox.value.length == PIN_PART_LENGTH) {
+      this.nextFocusEl[textbox.id].focus();
+    }
+    this.wizard.canAdvance = (this.pin1.value.length == PIN_PART_LENGTH &&
+                              this.pin2.value.length == PIN_PART_LENGTH &&
+                              this.pin3.value.length == PIN_PART_LENGTH);
+  },
+
   onEmailInput: function () {
     // Check account validity when the user stops typing for 1 second.
     if (this._checkAccountTimer)
@@ -362,10 +400,17 @@ var gSyncSetup = {
 
   onPageShow: function() {
     switch (this.wizard.pageIndex) {
+      case PAIR_PAGE:
+        this.wizard.getButton("back").hidden = true;
+        this.wizard.getButton("extra1").hidden = true;
+        this.onPINInput();
+        this.pin1.focus();
+        break;
       case INTRO_PAGE:
         this.wizard.getButton("next").hidden = true;
         this.wizard.getButton("back").hidden = true;
         this.wizard.getButton("extra1").hidden = true;
+        this.checkFields();
         break;
       case NEW_ACCOUNT_PP_PAGE:
         document.getElementById("saveSyncKeyButton").focus();
@@ -396,6 +441,9 @@ var gSyncSetup = {
         this.startEasySetup();
         break;
       case EXISTING_ACCOUNT_LOGIN_PAGE:
+        this.wizard.getButton("next").hidden = false;
+        this.wizard.getButton("back").hidden = false;
+        this.wizard.getButton("extra1").hidden = false;
         this.wizard.canRewind = true;
         this.checkFields();
         break;
@@ -407,6 +455,9 @@ var gSyncSetup = {
         this.wizard.getButton("cancel").hidden = true;
         this.wizard.getButton("finish").hidden = false;
         this._handleSuccess();
+        if (this.wizardType == "pair") {
+          this.completePairing();
+        }
         break;
       case OPTIONS_PAGE:
         this.wizard.canRewind = false;
@@ -445,10 +496,10 @@ var gSyncSetup = {
       return false;
     }
       
-    if (!this.wizard.pageIndex)
-      return true;
-
     switch (this.wizard.pageIndex) {
+      case PAIR_PAGE:
+        this.startPairing();
+        return false;
       case NEW_ACCOUNT_START_PAGE:
         // If the user selects Next (e.g. by hitting enter) when we haven't
         // executed the delayed checks yet, execute them immediately.
@@ -529,6 +580,15 @@ var gSyncSetup = {
         this.abortEasySetup();
         this.wizard.pageIndex = INTRO_PAGE;
         return false;
+      case EXISTING_ACCOUNT_LOGIN_PAGE:
+        // If we were already pairing on entry, we went straight to the manual
+        // login page. If subsequently we go back, return to the page that lets
+        // us choose whether we already have an account.
+        if (this.wizardType == "pair") {
+          this.wizard.pageIndex = INTRO_PAGE;
+          return false;
+        }
+        return true;
       case OPTIONS_CONFIRM_PAGE:
         // Backing up from the confirmation page = resetting first sync to merge.
         document.getElementById("mergeChoiceRadio").selectedIndex = 0;
@@ -592,6 +652,59 @@ var gSyncSetup = {
     this.wizard.getButton("extra1").hidden = false;
     this.wizard.pageIndex = this._beforeOptionsPage;
     return false;
+  },
+
+  startPairing: function startPairing() {
+    this.pairDeviceErrorRow.hidden = true;
+    // When onAbort is called, Weave may already be gone.
+    const JPAKE_ERROR_USERABORT = Weave.JPAKE_ERROR_USERABORT;
+
+    let self = this;
+    let jpakeclient = this._jpakeclient = new Weave.JPAKEClient({
+      onPaired: function onPaired() {
+        self.wizard.pageIndex = INTRO_PAGE;
+      },
+      onComplete: function onComplete() {
+        // This method will never be called since SendCredentialsController
+        // will take over after the wizard completes.
+      },
+      onAbort: function onAbort(error) {
+        delete self._jpakeclient;
+
+        // Aborted by user, ignore. The window is almost certainly going to close
+        // or is already closed.
+        if (error == JPAKE_ERROR_USERABORT) {
+          return;
+        }
+
+        self.pairDeviceErrorRow.hidden = false;
+        self.pairDeviceThrobber.hidden = true;
+        self.pin1.value = self.pin2.value = self.pin3.value = "";
+        self.pin1.disabled = self.pin2.disabled = self.pin3.disabled = false;
+        if (self.wizard.pageIndex == PAIR_PAGE) {
+          self.pin1.focus();
+        }
+      }
+    });
+    this.pairDeviceThrobber.hidden = false;
+    this.pin1.disabled = this.pin2.disabled = this.pin3.disabled = true;
+    this.wizard.canAdvance = false;
+
+    let pin = this.pin1.value + this.pin2.value + this.pin3.value;
+    let expectDelay = true;
+    jpakeclient.pairWithPIN(pin, expectDelay);
+  },
+
+  completePairing: function completePairing() {
+    if (!this._jpakeclient) {
+      // The channel was aborted while we were setting up the account
+      // locally. XXX TODO should we do anything here, e.g. tell
+      // the user on the last wizard page that it's ok, they just
+      // have to pair again?
+      return;
+    }
+    let controller = new Weave.SendCredentialsController(this._jpakeclient);
+    this._jpakeclient.controller = controller;
   },
 
   startEasySetup: function () {
@@ -996,12 +1109,27 @@ var gSyncSetup = {
   onStatusChange: function() {},
   onSecurityChange: function() {},
   onLocationChange: function () {}
-}
+};
 
-// onWizardAdvance() and onPageShow() are run before init(), so we'll set
-// wizard & _stringBundle up as lazy getters.
-XPCOMUtils.defineLazyGetter(gSyncSetup, "wizard", function() {
-  return document.getElementById("accountSetup");
+// Define lazy getters for various XUL elements.
+//
+// onWizardAdvance() and onPageShow() are run before init(), so we'll even
+// define things that will almost certainly be used (like 'wizard') as a lazy
+// getter here.
+["wizard",
+ "pin1",
+ "pin2",
+ "pin3",
+ "pairDeviceErrorRow",
+ "pairDeviceThrobber"].forEach(function (id) {
+  XPCOMUtils.defineLazyGetter(gSyncSetup, id, function() {
+    return document.getElementById(id);
+  });
+});
+XPCOMUtils.defineLazyGetter(gSyncSetup, "nextFocusEl", function () {
+  return {pin1: this.pin2,
+          pin2: this.pin3,
+          pin3: this.wizard.getButton("next")};
 });
 XPCOMUtils.defineLazyGetter(gSyncSetup, "_stringBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
