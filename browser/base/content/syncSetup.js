@@ -49,13 +49,11 @@ const Cu = Components.utils;
 const PAIR_PAGE                     = 0;
 const INTRO_PAGE                    = 1;
 const NEW_ACCOUNT_START_PAGE        = 2;
-const NEW_ACCOUNT_PP_PAGE           = 3;
-const NEW_ACCOUNT_CAPTCHA_PAGE      = 4;
-const EXISTING_ACCOUNT_CONNECT_PAGE = 5;
-const EXISTING_ACCOUNT_LOGIN_PAGE   = 6;
-const OPTIONS_PAGE                  = 7;
-const OPTIONS_CONFIRM_PAGE          = 8;
-const SETUP_SUCCESS_PAGE            = 9;
+const EXISTING_ACCOUNT_CONNECT_PAGE = 3;
+const EXISTING_ACCOUNT_LOGIN_PAGE   = 4;
+const OPTIONS_PAGE                  = 5;
+const OPTIONS_CONFIRM_PAGE          = 6;
+const SETUP_SUCCESS_PAGE            = 7;
 
 // Broader than we'd like, but after this changed from api-secure.recaptcha.net
 // we had no choice. At least we only do this for the duration of setup.
@@ -70,12 +68,16 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 
+
+function setVisibility(element, visible) {
+  element.style.visibility = visible ? "visible" : "hidden";
+}
+
 var gSyncSetup = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
                                          Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference]),
 
-  haveCaptcha: true,
   captchaBrowser: null,
   wizard: null,
   _disabledSites: [],
@@ -159,7 +161,6 @@ var gSyncSetup = {
       return false;
     this._settingUpNew = true;
     this.wizard.pageIndex = NEW_ACCOUNT_START_PAGE;
-    this.loadCaptcha();
   },
 
   useExistingAccount: function () {
@@ -373,29 +374,14 @@ var gSyncSetup = {
 
   onPasswordChange: function () {
     let password = document.getElementById("weavePassword");
-    let valid, str;
-    if (password.value == document.getElementById("weavePassphrase").value) {
-      // xxxmpc - hack, sigh
-      valid = false;
-      errorString = Weave.Utils.getErrorString("change.password.pwSameAsRecoveryKey");
-    }
-    else {
-      let pwconfirm = document.getElementById("weavePasswordConfirm");
-      [valid, errorString] = gSyncUtils.validatePassword(password, pwconfirm);
-    }
+    let pwconfirm = document.getElementById("weavePasswordConfirm");
+    let [valid, errorString] = gSyncUtils.validatePassword(password, pwconfirm);
 
     let feedback = document.getElementById("passwordFeedbackRow");
     this._setFeedback(feedback, valid, errorString);
 
     this.status.password = valid;
     this.checkFields();
-  },
-
-  onPassphraseGenerate: function () {
-    let passphrase = Weave.Utils.generatePassphrase();
-    Weave.Service.passphrase = passphrase;
-    let el = document.getElementById("weavePassphrase");
-    el.value = Weave.Utils.hyphenatePassphrase(passphrase);
   },
 
   onPageShow: function() {
@@ -407,22 +393,14 @@ var gSyncSetup = {
         this.pin1.focus();
         break;
       case INTRO_PAGE:
+        // We may not need the captcha in the Existing Account branch of the
+        // wizard. However, we want to preload it to avoid any flickering while
+        // the Create Account page is shown.
+        this.loadCaptcha();
         this.wizard.getButton("next").hidden = true;
         this.wizard.getButton("back").hidden = true;
         this.wizard.getButton("extra1").hidden = true;
         this.checkFields();
-        break;
-      case NEW_ACCOUNT_PP_PAGE:
-        document.getElementById("saveSyncKeyButton").focus();
-        let el = document.getElementById("weavePassphrase");
-        if (!el.value)
-          this.onPassphraseGenerate();
-        this.checkFields();
-        break;
-      case NEW_ACCOUNT_CAPTCHA_PAGE:
-        if (!this.haveCaptcha) {
-          gSyncSetup.wizard.advance();
-        }
         break;
       case NEW_ACCOUNT_START_PAGE:
         this.wizard.getButton("extra1").hidden = false;
@@ -503,12 +481,16 @@ var gSyncSetup = {
       case NEW_ACCOUNT_START_PAGE:
         // If the user selects Next (e.g. by hitting enter) when we haven't
         // executed the delayed checks yet, execute them immediately.
-        if (this._checkAccountTimer)
+        if (this._checkAccountTimer) {
           this.checkAccount();
-        if (this._checkServerTimer)
+        }
+        if (this._checkServerTimer) {
           this.checkServer();
-        return this.wizard.canAdvance;
-      case NEW_ACCOUNT_CAPTCHA_PAGE:
+        }
+        if (!this.wizard.canAdvance) {
+          return false;
+        }
+
         let doc = this.captchaBrowser.contentDocument;
         let getField = function getField(field) {
           let node = doc.getElementById("recaptcha_" + field + "_field");
@@ -521,7 +503,7 @@ var gSyncSetup = {
         let label = image.nextSibling;
         image.setAttribute("status", "active");
         label.value = this._stringBundle.GetStringFromName("verifying.label");
-        feedback.hidden = false;
+        setVisibility(feedback, true);
 
         let password = document.getElementById("weavePassword").value;
         let email = Weave.Utils.normalizeAccount(
@@ -535,6 +517,7 @@ var gSyncSetup = {
         if (error == null) {
           Weave.Service.account = email;
           Weave.Service.password = password;
+          Weave.Service.passphrase = Weave.Utils.generatePassphrase();
           this._handleNoScript(false);
           this.wizard.pageIndex = SETUP_SUCCESS_PAGE;
           return false;
@@ -823,7 +806,7 @@ var gSyncSetup = {
   },
 
   onServerCommand: function () {
-    document.getElementById("TOSRow").hidden = !this._usingMainServers;
+    setVisibility(document.getElementById("TOSRow"), this._usingMainServers);
     let control = document.getElementById("server");
     if (!this._usingMainServers) {
       control.setAttribute("editable", "true");
@@ -1077,9 +1060,12 @@ var gSyncSetup = {
   },
 
   loadCaptcha: function loadCaptcha() {
+    let captchaURI = Weave.Service.miscAPI + "captcha_html";
     // First check for NoScript and whitelist the right sites.
     this._handleNoScript(true);
-    this.captchaBrowser.loadURI(Weave.Service.miscAPI + "captcha_html");
+    if (this.captchaBrowser.currentURI.spec != captchaURI) {
+      this.captchaBrowser.loadURI(captchaURI);
+    }
   },
 
   onStateChange: function(webProgress, request, stateFlags, status) {
@@ -1091,19 +1077,10 @@ var gSyncSetup = {
     if ((stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) == 0)
       return;
 
-    // If we didn't find the captcha, assume it's not needed and move on
-    if (request.QueryInterface(Ci.nsIHttpChannel).responseStatus == 404) {
-      this.haveCaptcha = false;
-      // Hide the browser just in case we end up displaying the captcha page
-      // due to a sign up error.
-      this.captchaBrowser.hidden = true;
-      if (this.wizard.pageIndex == NEW_ACCOUNT_CAPTCHA_PAGE) {
-        this.onWizardAdvance();
-      }
-    } else {
-      this.haveCaptcha = true;
-      this.captchaBrowser.hidden = false;
-    }
+    // If we didn't find a captcha, assume it's not needed and don't show it.
+    let responseStatus = request.QueryInterface(Ci.nsIHttpChannel).responseStatus;
+    setVisibility(this.captchaBrowser, responseStatus != 404);
+    //XXX TODO we should really log any responseStatus other than 200
   },
   onProgressChange: function() {},
   onStatusChange: function() {},
