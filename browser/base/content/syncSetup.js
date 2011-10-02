@@ -611,6 +611,8 @@ var gSyncSetup = {
         document.getElementById("easySetupPIN3").value = pin.slice(8);
       },
 
+      onPairingStart: function onPairingStart() {},
+
       onComplete: function onComplete(credentials) {
         Weave.Service.account = credentials.account;
         Weave.Service.password = credentials.password;
