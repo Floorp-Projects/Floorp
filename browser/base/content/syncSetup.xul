@@ -74,10 +74,10 @@
           src="chrome://global/content/printUtils.js"/>
 
   <wizardpage id="addDevicePage"
-              label="&addDevice.title.label;"
+              label="&pairDevice.title.label;"
               onpageshow="gSyncSetup.onPageShow()">
     <description>
-      &addDevice.dialog.description.label;
+      &pairDevice.dialog.description.label;
       <label class="text-link"
              value="&addDevice.showMeHow.label;"
              href="https://services.mozilla.com/sync/help/add-device"/>
@@ -251,11 +251,11 @@
   </wizardpage>
 
   <wizardpage id="addDevice"
-              label="&addDevice.title.label;"
+              label="&pairDevice.title.label;"
               onextra1="gSyncSetup.onSyncOptions()"
               onpageshow="gSyncSetup.onPageShow()">
     <description>
-      &addDevice.setup.description.label;
+      &pairDevice.setup.description.label;
       <label class="text-link"
              value="&addDevice.showMeHow.label;"
              href="https://services.mozilla.com/sync/help/easy-setup"/>
