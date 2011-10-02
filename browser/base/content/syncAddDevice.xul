@@ -101,7 +101,7 @@
               />
     </vbox>
     <separator class="groove-thin"/>
-    <vbox id="add-device-throbber" align="center" hidden="true">
+    <vbox id="pairDeviceThrobber" align="center" hidden="true">
       <image/>
     </vbox>
     <hbox id="errorRow" pack="center" hidden="true">
