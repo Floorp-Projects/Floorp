@@ -120,6 +120,8 @@ let WeaveGlue = {
         document.getElementById("syncsetup-code3").value = aPin.slice(8);
       },
 
+      onPairingStart: function onPairingStart() {},
+
       onComplete: function onComplete(aCredentials) {
         self.jpake = null;
         self.close();
