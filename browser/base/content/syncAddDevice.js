@@ -108,7 +108,14 @@ let gSyncAddDevice = {
   startTransfer: function startTransfer() {
     this.errorRow.hidden = true;
     let self = this;
-    this._jpakeclient = new Weave.JPAKEClient({
+    let jpakeclient = this._jpakeclient = new Weave.JPAKEClient({
+      onPaired: function onPaired() {
+        let credentials = {account:   Weave.Service.account,
+                           password:  Weave.Service.password,
+                           synckey:   Weave.Service.passphrase,
+                           serverURL: Weave.Service.serverURL};
+        jpakeclient.sendAndComplete(credentials);
+      },
       onComplete: function onComplete() {
         delete self._jpakeclient;
         self.wizard.pageIndex = DEVICE_CONNECTED_PAGE;
@@ -132,11 +139,8 @@ let gSyncAddDevice = {
     this.wizard.canAdvance = false;
 
     let pin = this.pin1.value + this.pin2.value + this.pin3.value;
-    let credentials = {account: Weave.Service.account,
-                       password: Weave.Service.password,
-                       synckey: Weave.Service.passphrase,
-                       serverURL: Weave.Service.serverURL};
-    this._jpakeclient.sendWithPIN(pin, credentials);
+    let expectDelay = false;
+    jpakeclient.pairWithPIN(pin, expectDelay);
   },
 
   onWizardBack: function onWizardBack() {
