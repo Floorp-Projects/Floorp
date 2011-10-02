@@ -37,8 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-const EXPORTED_SYMBOLS = ["SyncScheduler", "ErrorHandler"];
+const EXPORTED_SYMBOLS = ["SyncScheduler",
+                          "ErrorHandler",
+                          "SendCredentialsController"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -735,4 +736,92 @@ let ErrorHandler = {
         break;
     }
   },
+};
+
+
+/**
+ * Send credentials over an active J-PAKE channel.
+ * 
+ * This object is designed to take over as the JPAKEClient controller,
+ * presumably replacing one that is UI-based which would either cause
+ * DOM objects to leak or the JPAKEClient to be GC'ed when the DOM
+ * context disappears. This object stays alive for the duration of the
+ * transfer by being strong-ref'ed as an nsIObserver.
+ * 
+ * Credentials are sent after the first sync has been completed
+ * (successfully or not.)
+ * 
+ * Usage:
+ * 
+ *   jpakeclient.controller = new SendCredentialsController(jpakeclient);
+ * 
+ */
+function SendCredentialsController(jpakeclient) {
+  this._log = Log4Moz.repository.getLogger("Sync.SendCredentialsController");
+  this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
+
+  this._log.trace("Loading.");
+  this.jpakeclient = jpakeclient;
+
+  // Register ourselves as observers the first Sync finishing (either
+  // successfully or unsuccessfully, we don't care) or for removing
+  // this device's sync configuration, in case that happens while we
+  // haven't finished the first sync yet.
+  Services.obs.addObserver(this, "weave:service:sync:finish", false);
+  Services.obs.addObserver(this, "weave:service:sync:error",  false);
+  Services.obs.addObserver(this, "weave:service:start-over",  false);
+}
+SendCredentialsController.prototype = {
+
+  unload: function unload() {
+    this._log.trace("Unloading.");
+    try {
+      Services.obs.removeObserver(this, "weave:service:sync:finish");
+      Services.obs.removeObserver(this, "weave:service:sync:error");
+      Services.obs.removeObserver(this, "weave:service:start-over");
+    } catch (ex) {
+      // Ignore.
+    }
+  },
+
+  observe: function observe(subject, topic, data) {
+    switch (topic) {
+      case "weave:service:sync:finish":
+      case "weave:service:sync:error":
+        Utils.nextTick(this.sendCredentials, this);
+        break;
+      case "weave:service:start-over":
+        // This will call onAbort which will call unload().
+        this.jpakeclient.abort();
+        break;
+    }
+  },
+
+  sendCredentials: function sendCredentials() {
+    this._log.trace("Sending credentials.");
+    let credentials = {account:   Weave.Service.account,
+                       password:  Weave.Service.password,
+                       synckey:   Weave.Service.passphrase,
+                       serverURL: Weave.Service.serverURL};
+    this.jpakeclient.sendAndComplete(credentials);
+  },
+
+  // JPAKEClient controller API
+
+  onComplete: function onComplete() {
+    this._log.debug("Exchange was completed successfully!");
+    this.unload();
+  },
+
+  onAbort: function onAbort(error) {
+    // It doesn't really matter why we aborted, but the channel is closed
+    // for sure, so we won't be able to do anything with it.
+    this._log.debug("Exchange was aborted with error: " + error);
+    this.unload();
+  },
+
+  // Irrelevant methods for this controller:
+  displayPIN: function displayPIN() {},
+  onPairingStart: function onPairingStart() {},
+  onPaired: function onPaired() {}
 };
