@@ -811,6 +811,10 @@ SendCredentialsController.prototype = {
   onComplete: function onComplete() {
     this._log.debug("Exchange was completed successfully!");
     this.unload();
+
+    // Schedule a Sync for soonish to fetch the data uploaded by the
+    // device with which we just paired.
+    SyncScheduler.scheduleNextSync(SyncScheduler.activeInterval);
   },
 
   onAbort: function onAbort(error) {
