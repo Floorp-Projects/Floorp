@@ -122,7 +122,7 @@ var gSyncSetup = {
     this.captchaBrowser = document.getElementById("captcha");
     this.wizard = document.getElementById("accountSetup");
 
-    if (window.arguments && window.arguments[0] == true) {
+    if (window.arguments && window.arguments[0] == "reset") {
       // we're resetting sync
       this._resettingSync = true;
       this.wizard.pageIndex = OPTIONS_PAGE;
