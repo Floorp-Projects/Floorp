@@ -122,22 +122,20 @@
       <description style="padding: 0 7em;">
         &setup.pickSetupType.description;
       </description>
-      <spacer flex="1"/>
+      <spacer flex="3"/>
       <button id="newAccount"
               class="accountChoiceButton"
               label="&button.createNewAccount.label;"
               oncommand="gSyncSetup.startNewAccountSetup()"
               align="center"/>
-      <spacer flex="3"/>
+      <spacer flex="1"/>
     </vbox>
     <separator class="groove"/>
     <vbox align="center" flex="1">
-      <spacer flex="3"/>
-      <label value="&setup.haveAccount.label;" />
       <spacer flex="1"/>
       <button id="existingAccount"
               class="accountChoiceButton"
-              label="&button.connect.label;"
+              label="&button.haveAccount.label;"
               oncommand="gSyncSetup.useExistingAccount()"/>
       <spacer flex="3"/>
     </vbox>
@@ -237,55 +235,18 @@
         </row>
       </rows>
     </grid>
-  </wizardpage>
-
-  <wizardpage label="&setup.newRecoveryKeyPage.title.label;"
-              onextra1="gSyncSetup.onSyncOptions()"
-              onpageshow="gSyncSetup.onPageShow();">
-    <description>
-      &setup.newRecoveryKeyPage.description.label;
-    </description>
-    <spacer/>
-
-    <groupbox>
-      <label value="&recoveryKeyEntry.label;"
-             accesskey="&recoveryKeyEntry.accesskey;"
-             control="weavePassphrase"/>
-      <textbox id="weavePassphrase"
-               readonly="true"
-               onfocus="this.select();"/>
-    </groupbox>
-
-    <groupbox align="center">
-      <description>&recoveryKeyBackup.description;</description>
-      <hbox>
-        <button id="printSyncKeyButton"
-                label="&button.syncKeyBackup.print.label;"
-                accesskey="&button.syncKeyBackup.print.accesskey;"
-                oncommand="gSyncUtils.passphrasePrint('weavePassphrase');"/>
-        <button id="saveSyncKeyButton"
-                label="&button.syncKeyBackup.save.label;"
-                accesskey="&button.syncKeyBackup.save.accesskey;"
-                oncommand="gSyncUtils.passphraseSave('weavePassphrase');"/>
-      </hbox>
-    </groupbox>
-  </wizardpage>
-
-  <wizardpage label="&setup.captchaPage2.title.label;"
-              onextra1="gSyncSetup.onSyncOptions()"
-              onpageshow="gSyncSetup.onPageShow();">
+    <spacer flex="1"/>
     <vbox flex="1" align="center">
       <browser height="150"
-               width="450"
+               width="500"
                id="captcha"
                type="content"
                disablehistory="true"/>
       <spacer flex="1"/>
-      <hbox id="captchaFeedback" hidden="true">
+      <hbox id="captchaFeedback">
         <image class="statusIcon"/>
         <label class="status" value=" "/>
       </hbox>
-      <spacer flex="3"/>
     </vbox>
   </wizardpage>
 
