@@ -3299,6 +3299,8 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
       mLayerManager = CreateBasicLayerManager();
   }
 
+  NS_ASSERTION(mLayerManager, "Couldn't provide a valid layer manager.");
+
   return mLayerManager;
 }
 
