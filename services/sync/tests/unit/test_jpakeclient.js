@@ -140,6 +140,9 @@ let BaseController = {
   displayPIN: function displayPIN() {
     do_throw("displayPIN() shouldn't have been called!");
   },
+  onPairingStart: function onPairingStart() {
+    do_throw("onPairingStart shouldn't have been called!");
+  },
   onAbort: function onAbort(error) {
     do_throw("Shouldn't have aborted with " + error + "!");
   },
@@ -192,11 +195,13 @@ add_test(function test_success_receiveNoPIN() {
     __proto__: BaseController,
     onPaired: function onPaired() {
       _("Pairing successful, sending final payload.");
+      do_check_true(pairingStartCalledOnReceiver);
       Utils.nextTick(function() { snd.sendAndComplete(DATA); });
     },
     onComplete: function onComplete() {}
   });
 
+  let pairingStartCalledOnReceiver = false;
   let rec = new JPAKEClient({
     __proto__: BaseController,
     displayPIN: function displayPIN(pin) {
@@ -204,7 +209,11 @@ add_test(function test_success_receiveNoPIN() {
       this.cid = pin.slice(JPAKE_LENGTH_SECRET);
       Utils.nextTick(function() { snd.pairWithPIN(pin, false); });
     },
-    onComplete: function onComplete(a) {
+    onPairingStart: function onPairingStart() {
+      pairingStartCalledOnReceiver = true;
+    },
+    onComplete: function onComplete(data) {
+      do_check_true(Utils.deepEquals(DATA, data));
       // Ensure channel was cleared, no error report.
       do_check_eq(channels[this.cid].data, undefined);
       do_check_eq(error_report, undefined);
@@ -261,7 +270,9 @@ add_test(function test_firstMsgMaxTries() {
       Utils.namedTimer(function() { snd.pairWithPIN(pin, false); },
                        150, this, "_sendTimer");
     },
-    onComplete: function onComplete(a) {
+    onPairingStart: function onPairingStart(pin) {},
+    onComplete: function onComplete(data) {
+      do_check_true(Utils.deepEquals(DATA, data));
       // Ensure channel was cleared, no error report.
       do_check_eq(channels[this.cid].data, undefined);
       do_check_eq(error_report, undefined);
@@ -297,7 +308,9 @@ add_test(function test_lastMsgMaxTries() {
       this.cid = pin.slice(JPAKE_LENGTH_SECRET);
       Utils.nextTick(function() { snd.pairWithPIN(pin, false); });
     },
-    onComplete: function onComplete(a) {
+    onPairingStart: function onPairingStart(pin) {},
+    onComplete: function onComplete(data) {
+      do_check_true(Utils.deepEquals(DATA, data));
       // Ensure channel was cleared, no error report.
       do_check_eq(channels[this.cid].data, undefined);
       do_check_eq(error_report, undefined);
@@ -321,6 +334,7 @@ add_test(function test_wrongPIN() {
     }
   });
 
+  let pairingStartCalledOnReceiver = false;
   let rec = new JPAKEClient({
     __proto__: BaseController,
     displayPIN: function displayPIN(pin) {
@@ -332,7 +346,11 @@ add_test(function test_wrongPIN() {
 
       Utils.nextTick(function() { snd.pairWithPIN(new_pin, false); });
     },
+    onPairingStart: function onPairingStart() {
+      pairingStartCalledOnReceiver = true;
+    },
     onAbort: function onAbort(error) {
+      do_check_true(pairingStartCalledOnReceiver);
       do_check_eq(error, JPAKE_ERROR_NODATA);
       // Ensure channel was cleared.
       do_check_eq(channels[this.cid].data, undefined);
@@ -394,7 +412,8 @@ add_test(function test_abort_sender() {
       Utils.nextTick(function() { snd.pairWithPIN(pin, false); });
       Utils.namedTimer(function() { snd.abort(); },
                        POLLINTERVAL, this, "_abortTimer");
-    }
+    },
+    onPairingStart: function onPairingStart(pin) {}
   });
   rec.receiveNoPIN();
 });
@@ -432,6 +451,7 @@ add_test(function test_error_channel() {
       Svc.Prefs.set("jpake.serverURL", serverURL);
       run_next_test();
     },
+    onPairingStart: function onPairingStart(pin) {},
     displayPIN: function displayPIN(pin) {}
   });
   rec.receiveNoPIN();
