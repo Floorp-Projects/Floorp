@@ -226,7 +226,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   // but view manager will refuse to paint the surface, resulting is black
   // flashes on the plugin rendering surface.
   if (mozilla::ipc::RPCChannel::IsSpinLoopActive() && mPainting)
-    return PR_FALSE;
+    return false;
 
   if (mWindowType == eWindowType_plugin) {
 
@@ -243,7 +243,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
       PAINTSTRUCT ps;
       BeginPaint(mWnd, &ps);
       EndPaint(mWnd, &ps);
-      return PR_TRUE;
+      return true;
     }
 
     PluginInstanceParent* instance = reinterpret_cast<PluginInstanceParent*>(
@@ -251,12 +251,12 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
     if (instance) {
       instance->CallUpdateWindow();
       ValidateRect(mWnd, NULL);
-      return PR_TRUE;
+      return true;
     }
   }
 
-  nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
-  willPaintEvent.willSendDidPaint = PR_TRUE;
+  nsPaintEvent willPaintEvent(true, NS_WILL_PAINT, this);
+  willPaintEvent.willSendDidPaint = true;
   DispatchWindowEvent(&willPaintEvent);
 
   bool result = true;
@@ -279,7 +279,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   }
 #endif
 
-  mPainting = PR_TRUE;
+  mPainting = true;
 
 #ifdef WIDGET_DEBUG_OUTPUT
   HRGN debugPaintFlashRegion = NULL;
@@ -299,7 +299,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   }
 
   // generate the event and call the event callback
-  nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+  nsPaintEvent event(true, NS_PAINT, this);
   InitEvent(event);
 
 #ifdef MOZ_XUL
@@ -308,7 +308,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   bool forceRepaint = NULL != aDC;
 #endif
   event.region = GetRegionToPaint(forceRepaint, ps, hDC);
-  event.willSendDidPaint = PR_TRUE;
+  event.willSendDidPaint = true;
 
   if (!event.region.IsEmpty() && mEventCallback)
   {
@@ -400,7 +400,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
             const nsIntRect* r;
             for (nsIntRegionRectIterator iter(event.region);
                  (r = iter.Next()) != nsnull;) {
-              thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), PR_TRUE);
+              thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), true);
             }
             thebesContext->Clip();
             thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -566,7 +566,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
             // When our device was removed, we should have gfxWindowsPlatform
             // check if its render mode is up to date!
             gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-            Invalidate(PR_FALSE);
+            Invalidate(false);
           }
         }
         break;
@@ -577,7 +577,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
           LayerManagerD3D10 *layerManagerD3D10 = static_cast<mozilla::layers::LayerManagerD3D10*>(GetLayerManager());
           if (layerManagerD3D10->device() != gfxWindowsPlatform::GetPlatform()->GetD3D10Device()) {
-            Invalidate(PR_FALSE);
+            Invalidate(false);
           } else {
             result = DispatchWindowEvent(&event, eventStatus);
           }
@@ -613,12 +613,12 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   }
 #endif // WIDGET_DEBUG_OUTPUT
 
-  mPainting = PR_FALSE;
+  mPainting = false;
 
-  nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, this);
+  nsPaintEvent didPaintEvent(true, NS_DID_PAINT, this);
   DispatchWindowEvent(&didPaintEvent);
 
-  if (aNestingLevel == 0 && ::GetUpdateRect(mWnd, NULL, PR_FALSE)) {
+  if (aNestingLevel == 0 && ::GetUpdateRect(mWnd, NULL, false)) {
     OnPaint(aDC, 1);
   }
 
@@ -751,7 +751,7 @@ bool nsWindowGfx::IsCursorTranslucencySupported()
   static bool didCheck = false;
   static bool isSupported = false;
   if (!didCheck) {
-    didCheck = PR_TRUE;
+    didCheck = true;
     // Cursor translucency is supported on Windows XP and newer
     isSupported = nsWindow::GetWindowsVersion() >= 0x501;
   }

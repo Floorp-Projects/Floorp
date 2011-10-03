@@ -400,23 +400,23 @@ GetBitmapStride(PRInt32 width)
 
 nsWindow::nsWindow()
 {
-    mIsTopLevel       = PR_FALSE;
-    mIsDestroyed      = PR_FALSE;
-    mNeedsResize      = PR_FALSE;
-    mNeedsMove        = PR_FALSE;
-    mListenForResizes = PR_FALSE;
-    mIsShown          = PR_FALSE;
-    mNeedsShow        = PR_FALSE;
-    mEnabled          = PR_TRUE;
-    mCreated          = PR_FALSE;
+    mIsTopLevel       = false;
+    mIsDestroyed      = false;
+    mNeedsResize      = false;
+    mNeedsMove        = false;
+    mListenForResizes = false;
+    mIsShown          = false;
+    mNeedsShow        = false;
+    mEnabled          = true;
+    mCreated          = false;
 
     mContainer           = nsnull;
     mGdkWindow           = nsnull;
     mShell               = nsnull;
     mWindowGroup         = nsnull;
-    mHasMappedToplevel   = PR_FALSE;
-    mIsFullyObscured     = PR_FALSE;
-    mRetryPointerGrab    = PR_FALSE;
+    mHasMappedToplevel   = false;
+    mIsFullyObscured     = false;
+    mRetryPointerGrab    = false;
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
@@ -428,7 +428,7 @@ nsWindow::nsWindow()
     mPluginType          = PluginType_NONE;
 
     if (!gGlobalsInitialized) {
-        gGlobalsInitialized = PR_TRUE;
+        gGlobalsInitialized = true;
 
         // It's OK if either of these fail, but it may not be one day.
         initialize_prefs();
@@ -440,7 +440,7 @@ nsWindow::nsWindow()
     mRootAccessible  = nsnull;
 #endif
 
-    mIsTransparent = PR_FALSE;
+    mIsTransparent = false;
     mTransparencyBitmap = nsnull;
 
     mTransparencyBitmapWidth  = 0;
@@ -497,7 +497,7 @@ nsWindow::CommonCreate(nsIWidget *aParent, bool aListenForResizes)
 {
     mParent = aParent;
     mListenForResizes = aListenForResizes;
-    mCreated = PR_TRUE;
+    mCreated = true;
 }
 
 void
@@ -556,7 +556,7 @@ nsWindow::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
 void
 nsWindow::DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus)
 {
-    nsSizeEvent event(PR_TRUE, NS_SIZE, this);
+    nsSizeEvent event(true, NS_SIZE, this);
 
     event.windowSize = &aRect;
     event.refPoint.x = aRect.x;
@@ -577,7 +577,7 @@ nsWindow::DispatchActivateEvent(void)
 #ifdef ACCESSIBILITY
     DispatchActivateEventAccessible();
 #endif //ACCESSIBILITY
-    nsGUIEvent event(PR_TRUE, NS_ACTIVATE, this);
+    nsGUIEvent event(true, NS_ACTIVATE, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -585,7 +585,7 @@ nsWindow::DispatchActivateEvent(void)
 void
 nsWindow::DispatchDeactivateEvent(void)
 {
-    nsGUIEvent event(PR_TRUE, NS_DEACTIVATE, this);
+    nsGUIEvent event(true, NS_DEACTIVATE, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 
@@ -619,7 +619,7 @@ nsWindow::OnDestroy(void)
     if (mOnDestroyCalled)
         return;
 
-    mOnDestroyCalled = PR_TRUE;
+    mOnDestroyCalled = true;
     
     // Prevent deletion.
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
@@ -631,7 +631,7 @@ nsWindow::OnDestroy(void)
     nsBaseWidget::Destroy();
     mParent = nsnull;
 
-    nsGUIEvent event(PR_TRUE, NS_DESTROY, this);
+    nsGUIEvent event(true, NS_DESTROY, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -640,9 +640,9 @@ bool
 nsWindow::AreBoundsSane(void)
 {
     if (mBounds.width > 0 && mBounds.height > 0)
-        return PR_TRUE;
+        return true;
 
-    return PR_FALSE;
+    return false;
 }
 
 static GtkWidget*
@@ -741,8 +741,8 @@ nsWindow::Destroy(void)
         return NS_OK;
 
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
-    mIsDestroyed = PR_TRUE;
-    mCreated = PR_FALSE;
+    mIsDestroyed = true;
+    mCreated = false;
 
     /** Need to clean our LayerManager up while still alive */
     if (mLayerManager) {
@@ -776,7 +776,7 @@ nsWindow::Destroy(void)
         gRollupListener = nsnull;
     }
 
-    NativeShow(PR_FALSE);
+    NativeShow(false);
 
     if (mIMModule) {
         mIMModule->OnDestroyWindow(this);
@@ -1094,22 +1094,22 @@ nsWindow::Show(bool aState)
     // and return.
     if ((aState && !AreBoundsSane()) || !mCreated) {
         LOG(("\tbounds are insane or window hasn't been created yet\n"));
-        mNeedsShow = PR_TRUE;
+        mNeedsShow = true;
         return NS_OK;
     }
 
     // If someone is hiding this widget, clear any needing show flag.
     if (!aState)
-        mNeedsShow = PR_FALSE;
+        mNeedsShow = false;
 
     // If someone is showing this window and it needs a resize then
     // resize the widget.
     if (aState) {
         if (mNeedsMove) {
             NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
-                         PR_FALSE);
+                         false);
         } else if (mNeedsResize) {
-            NativeResize(mBounds.width, mBounds.height, PR_FALSE);
+            NativeResize(mBounds.width, mBounds.height, false);
         }
     }
 
@@ -1159,18 +1159,18 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 
             // Does it need to be shown because it was previously insane?
             if (mNeedsShow)
-                NativeShow(PR_TRUE);
+                NativeShow(true);
         }
         else {
             // If someone has set this so that the needs show flag is false
             // and it needs to be hidden, update the flag and hide the
             // window.  This flag will be cleared the next time someone
             // hides the window or shows it.  It also prevents us from
-            // calling NativeShow(PR_FALSE) excessively on the window which
+            // calling NativeShow(false) excessively on the window which
             // causes unneeded X traffic.
             if (!mNeedsShow) {
-                mNeedsShow = PR_TRUE;
-                NativeShow(PR_FALSE);
+                mNeedsShow = true;
+                NativeShow(false);
             }
         }
     }
@@ -1184,7 +1184,7 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
             NativeResize(aWidth, aHeight, aRepaint);
         }
         else {
-            mNeedsResize = PR_TRUE;
+            mNeedsResize = true;
         }
     }
 
@@ -1206,7 +1206,7 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     mBounds.y = aY;
     mBounds.SizeTo(GetSafeWindowSize(nsIntSize(aWidth, aHeight)));
 
-    mNeedsMove = PR_TRUE;
+    mNeedsMove = true;
 
     if (!mCreated)
         return NS_OK;
@@ -1223,18 +1223,18 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
             NativeResize(aX, aY, aWidth, aHeight, aRepaint);
             // Does it need to be shown because it was previously insane?
             if (mNeedsShow)
-                NativeShow(PR_TRUE);
+                NativeShow(true);
         }
         else {
             // If someone has set this so that the needs show flag is false
             // and it needs to be hidden, update the flag and hide the
             // window.  This flag will be cleared the next time someone
             // hides the window or shows it.  It also prevents us from
-            // calling NativeShow(PR_FALSE) excessively on the window which
+            // calling NativeShow(false) excessively on the window which
             // causes unneeded X traffic.
             if (!mNeedsShow) {
-                mNeedsShow = PR_TRUE;
-                NativeShow(PR_FALSE);
+                mNeedsShow = true;
+                NativeShow(false);
             }
         }
     }
@@ -1248,7 +1248,7 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
             NativeResize(aX, aY, aWidth, aHeight, aRepaint);
         }
         else {
-            mNeedsResize = PR_TRUE;
+            mNeedsResize = true;
         }
     }
 
@@ -1306,7 +1306,7 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
     if (!mCreated)
         return NS_OK;
 
-    mNeedsMove = PR_FALSE;
+    mNeedsMove = false;
 
     if (mIsTopLevel) {
         gtk_window_move(GTK_WINDOW(mShell), aX, aY);
@@ -1381,7 +1381,7 @@ nsWindow::SetSizeMode(PRInt32 aMode)
         gtk_window_iconify(GTK_WINDOW(mShell));
         break;
     case nsSizeMode_Fullscreen:
-        MakeFullScreen(PR_TRUE);
+        MakeFullScreen(true);
         break;
 
     default:
@@ -1476,7 +1476,7 @@ nsWindow::SetFocus(bool aRaise)
     if (!owningWidget)
         return NS_ERROR_FAILURE;
 
-    // Raise the window if someone passed in PR_TRUE and the prefs are
+    // Raise the window if someone passed in true and the prefs are
     // set properly.
     GtkWidget *toplevelWidget = gtk_widget_get_toplevel(owningWidget);
 
@@ -1489,7 +1489,7 @@ nsWindow::SetFocus(bool aRaise)
         {
             gdk_window_show_unraised(gtk_widget_get_window(top_window));
             // Unset the urgency hint if possible.
-            SetUrgencyHint(top_window, PR_FALSE);
+            SetUrgencyHint(top_window, false);
         }
     }
 
@@ -1498,7 +1498,7 @@ nsWindow::SetFocus(bool aRaise)
         return NS_ERROR_FAILURE;
 
     if (aRaise) {
-        // aRaise == PR_TRUE means request toplevel activation.
+        // aRaise == true means request toplevel activation.
 
         // This is asynchronous.
         // If and when the window manager accepts the request, then the focus
@@ -1516,7 +1516,7 @@ nsWindow::SetFocus(bool aRaise)
         return NS_OK;
     }
 
-    // aRaise == PR_FALSE means that keyboard events should be dispatched
+    // aRaise == false means that keyboard events should be dispatched
     // from this widget.
 
     // Ensure owningWidget is the focused GtkWidget within its toplevel window.
@@ -1528,9 +1528,9 @@ nsWindow::SetFocus(bool aRaise)
         // in an embedder.  The focus manager already knows that this window
         // is active so gBlockActivateEvent avoids another (unnecessary)
         // NS_ACTIVATE event.
-        gBlockActivateEvent = PR_TRUE;
+        gBlockActivateEvent = true;
         gtk_widget_grab_focus(owningWidget);
-        gBlockActivateEvent = PR_FALSE;
+        gBlockActivateEvent = false;
     }
 
     // If this is the widget that already has focus, return.
@@ -1924,7 +1924,7 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     // Don't get attention if the window is focused anyway.
     if (top_window && (gtk_widget_get_visible(top_window)) &&
         top_window != top_focused_window) {
-        SetUrgencyHint(top_window, PR_TRUE);
+        SetUrgencyHint(top_window, true);
     }
 
     return NS_OK;
@@ -1959,7 +1959,7 @@ nsWindow::HasPendingInputEvent()
         XPutBackEvent(display, &ev);
     }
 #else
-    haveEvent = PR_FALSE;
+    haveEvent = false;
 #endif
     return haveEvent;
 }
@@ -2041,7 +2041,7 @@ static void
 DispatchDidPaint(nsIWidget* aWidget)
 {
     nsEventStatus status;
-    nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, aWidget);
+    nsPaintEvent didPaintEvent(true, NS_DID_PAINT, aWidget);
     aWidget->DispatchEvent(&didPaintEvent, status);
 }
 
@@ -2065,8 +2065,8 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     // dispatch PAINT
     {
         nsEventStatus status;
-        nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
-        willPaintEvent.willSendDidPaint = PR_TRUE;
+        nsPaintEvent willPaintEvent(true, NS_WILL_PAINT, this);
+        willPaintEvent.willSendDidPaint = true;
         DispatchEvent(&willPaintEvent, status);
 
         // If the window has been destroyed during WILL_PAINT, there is
@@ -2075,8 +2075,8 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             return TRUE;
     }
 
-    nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-    event.willSendDidPaint = PR_TRUE;
+    nsPaintEvent event(true, NS_PAINT, this);
+    event.willSendDidPaint = true;
 
 #if defined(MOZ_WIDGET_GTK2)
     GdkRectangle *rects;
@@ -2302,13 +2302,13 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 #endif
 
     if (dirtyArea) {
-        gdk_window_invalidate_region(mGdkWindow, dirtyArea, PR_FALSE);
+        gdk_window_invalidate_region(mGdkWindow, dirtyArea, false);
 #if defined(MOZ_WIDGET_GTK2)
         gdk_region_destroy(dirtyArea);
 #else
         cairo_region_destroy(dirtyArea);
 #endif
-        gdk_window_process_updates(mGdkWindow, PR_FALSE);
+        gdk_window_process_updates(mGdkWindow, false);
     }
 
     // check the return value!
@@ -2348,7 +2348,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
         return FALSE;
 
     if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) {
-        check_for_rollup(aEvent->window, 0, 0, PR_FALSE, PR_TRUE);
+        check_for_rollup(aEvent->window, 0, 0, false, true);
     }
 
     // This event indicates that the window position may have changed.
@@ -2382,7 +2382,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     // client window origin.
     mBounds.MoveTo(WidgetToScreenOffset());
 
-    nsGUIEvent event(PR_TRUE, NS_MOVE, this);
+    nsGUIEvent event(true, NS_MOVE, this);
 
     event.refPoint = mBounds.TopLeft();
 
@@ -2441,7 +2441,7 @@ nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
 void
 nsWindow::OnDeleteEvent(GtkWidget *aWidget, GdkEventAny *aEvent)
 {
-    nsGUIEvent event(PR_TRUE, NS_XUL_CLOSE, this);
+    nsGUIEvent event(true, NS_XUL_CLOSE, this);
 
     event.refPoint.x = 0;
     event.refPoint.y = 0;
@@ -2468,7 +2468,7 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     if (is_parent_ungrab_enter(aEvent))
         return;
 
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_ENTER, this, nsMouseEvent::eReal);
+    nsMouseEvent event(true, NS_MOUSE_ENTER, this, nsMouseEvent::eReal);
 
     event.refPoint.x = nscoord(aEvent->x);
     event.refPoint.y = nscoord(aEvent->y);
@@ -2490,7 +2490,7 @@ is_top_level_mouse_exit(GdkWindow* aWindow, GdkEventCrossing *aEvent)
     GdkDisplay* display = gdk_window_get_display(aWindow);
     GdkWindow* winAtPt = gdk_display_get_window_at_pointer(display, &x, &y);
     if (!winAtPt)
-        return PR_TRUE;
+        return true;
     GdkWindow* topLevelAtPt = gdk_window_get_toplevel(winAtPt);
     GdkWindow* topLevelWidget = gdk_window_get_toplevel(aWindow);
     return topLevelAtPt != topLevelWidget;
@@ -2510,7 +2510,7 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     if (aEvent->subwindow != NULL)
         return;
 
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_EXIT, this, nsMouseEvent::eReal);
+    nsMouseEvent event(true, NS_MOUSE_EXIT, this, nsMouseEvent::eReal);
 
     event.refPoint.x = nscoord(aEvent->x);
     event.refPoint.y = nscoord(aEvent->y);
@@ -2560,9 +2560,9 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 
     // when we receive this, it must be that the gtk dragging is over,
     // it is dropped either in or out of mozilla, clear the flag
-    sIsDraggingOutOf = PR_FALSE;
+    sIsDraggingOutOf = false;
 
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
+    nsMouseEvent event(true, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
 
     // should we move this into !synthEvent?
     gdouble pressure = 0;
@@ -2576,11 +2576,11 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
     event.refPoint = nsIntPoint(cursorX, cursorY) - WidgetToScreenOffset();
 
     event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-        ? PR_TRUE : PR_FALSE;
+        ? true : false;
     event.isControl = (aEvent->state & GDK_CONTROL_MASK)
-        ? PR_TRUE : PR_FALSE;
+        ? true : false;
     event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-        ? PR_TRUE : PR_FALSE;
+        ? true : false;
 
     event.time = aEvent->time;
 
@@ -2593,7 +2593,7 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 {
     // when we receive this, it must be that the gtk dragging is over,
     // it is dropped either in or out of mozilla, clear the flag
-    sIsDraggingOutOf = PR_FALSE;
+    sIsDraggingOutOf = false;
 
     // see if we can compress this event
     // XXXldb Why skip every other motion event when we have multiple,
@@ -2609,7 +2609,7 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
             || peeked.type != MotionNotify)
             break;
 
-        synthEvent = PR_TRUE;
+        synthEvent = true;
         XNextEvent (GDK_WINDOW_XDISPLAY(aEvent->window), &xevent);
     }
 #if defined(MOZ_WIDGET_GTK2)
@@ -2621,7 +2621,7 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 #endif /* MOZ_WIDGET_GTK2 */
 #endif /* MOZ_X11 */
 
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
+    nsMouseEvent event(true, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
 
     gdouble pressure = 0;
     gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
@@ -2637,11 +2637,11 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
         event.refPoint.y = nscoord(xevent.xmotion.y);
 
         event.isShift   = (xevent.xmotion.state & GDK_SHIFT_MASK)
-            ? PR_TRUE : PR_FALSE;
+            ? true : false;
         event.isControl = (xevent.xmotion.state & GDK_CONTROL_MASK)
-            ? PR_TRUE : PR_FALSE;
+            ? true : false;
         event.isAlt     = (xevent.xmotion.state & GDK_MOD1_MASK)
-            ? PR_TRUE : PR_FALSE;
+            ? true : false;
 
         event.time = xevent.xmotion.time;
 #else
@@ -2649,11 +2649,11 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
         event.refPoint.y = nscoord(aEvent->y);
 
         event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-            ? PR_TRUE : PR_FALSE;
+            ? true : false;
         event.isControl = (aEvent->state & GDK_CONTROL_MASK)
-            ? PR_TRUE : PR_FALSE;
+            ? true : false;
         event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-            ? PR_TRUE : PR_FALSE;
+            ? true : false;
 
         event.time = aEvent->time;
 #endif /* MOZ_X11 */
@@ -2669,11 +2669,11 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
         }
 
         event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-            ? PR_TRUE : PR_FALSE;
+            ? true : false;
         event.isControl = (aEvent->state & GDK_CONTROL_MASK)
-            ? PR_TRUE : PR_FALSE;
+            ? true : false;
         event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-            ? PR_TRUE : PR_FALSE;
+            ? true : false;
 
         event.time = aEvent->time;
     }
@@ -2727,7 +2727,7 @@ nsWindow::DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent)
             // change in state.  This event is marked as synthesized so that
             // it is not dispatched as a DOM event, because we don't know the
             // position, widget, modifiers, or time/order.
-            nsMouseEvent synthEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, this,
+            nsMouseEvent synthEvent(true, NS_MOUSE_BUTTON_UP, this,
                                     nsMouseEvent::eSynthesized);
             synthEvent.button = buttonType;
             nsEventStatus status;
@@ -2808,7 +2808,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 
     // check to see if we should rollup
     bool rolledUp = check_for_rollup(aEvent->window, aEvent->x_root,
-                                       aEvent->y_root, PR_FALSE, PR_FALSE);
+                                       aEvent->y_root, false, false);
     if (gConsumeRollupEvent && rolledUp)
         return;
 
@@ -2831,7 +2831,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     case 6:
     case 7:
         {
-            nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
+            nsMouseScrollEvent event(true, NS_MOUSE_SCROLL, this);
             event.pressure = mLastMotionPressure;
             event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
             event.refPoint.x = nscoord(aEvent->x);
@@ -2863,7 +2863,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 
     gButtonState |= ButtonMaskFromGDKButton(aEvent->button);
 
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_DOWN, this, nsMouseEvent::eReal);
+    nsMouseEvent event(true, NS_MOUSE_BUTTON_DOWN, this, nsMouseEvent::eReal);
     event.button = domButton;
     InitButtonEvent(event, aEvent);
     event.pressure = mLastMotionPressure;
@@ -2873,7 +2873,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     // right menu click on linux should also pop up a context menu
     if (domButton == nsMouseEvent::eRightButton &&
         NS_LIKELY(!mIsDestroyed)) {
-        nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
+        nsMouseEvent contextMenuEvent(true, NS_CONTEXTMENU, this,
                                       nsMouseEvent::eReal);
         InitButtonEvent(contextMenuEvent, aEvent);
         contextMenuEvent.pressure = mLastMotionPressure;
@@ -2905,7 +2905,7 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 
     gButtonState &= ~ButtonMaskFromGDKButton(aEvent->button);
 
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_UP, this, nsMouseEvent::eReal);
+    nsMouseEvent event(true, NS_MOUSE_BUTTON_UP, this, nsMouseEvent::eReal);
     event.button = domButton;
     InitButtonEvent(event, aEvent);
     gdouble pressure = 0;
@@ -2929,7 +2929,7 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     GtkWidget* top_window = nsnull;
     GetToplevelWidget(&top_window);
     if (top_window && (gtk_widget_get_visible(top_window)))
-        SetUrgencyHint(top_window, PR_FALSE);
+        SetUrgencyHint(top_window, false);
 
     // Return if being called within SetFocus because the focus manager
     // already knows that the window is active.
@@ -2972,7 +2972,7 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
         }
 
         if (shouldRollup) {
-            check_for_rollup(aEvent->window, 0, 0, PR_FALSE, PR_TRUE);
+            check_for_rollup(aEvent->window, 0, 0, false, true);
         }
     }
 
@@ -3001,7 +3001,7 @@ bool
 nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 {
     nsEventStatus status;
-    nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, aCommand, this);
+    nsCommandEvent event(true, nsWidgetAtoms::onAppCommand, aCommand, this);
     DispatchEvent(&event, status);
     return TRUE;
 }
@@ -3010,7 +3010,7 @@ bool
 nsWindow::DispatchContentCommandEvent(PRInt32 aMsg)
 {
   nsEventStatus status;
-  nsContentCommandEvent event(PR_TRUE, aMsg, this);
+  nsContentCommandEvent event(true, aMsg, this);
   DispatchEvent(&event, status);
   return TRUE;
 }
@@ -3070,19 +3070,19 @@ nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, bool *aCancelled)
 {
     NS_PRECONDITION(aCancelled, "aCancelled must not be null");
 
-    *aCancelled = PR_FALSE;
+    *aCancelled = false;
 
     if (IsCtrlAltTab(aEvent)) {
-        return PR_FALSE;
+        return false;
     }
 
     // send the key down event
     nsEventStatus status;
-    nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
+    nsKeyEvent downEvent(true, NS_KEY_DOWN, this);
     InitKeyEvent(downEvent, aEvent);
     DispatchEvent(&downEvent, status);
     *aCancelled = (status == nsEventStatus_eConsumeNoDefault);
-    return PR_TRUE;
+    return true;
 }
 
 gboolean
@@ -3127,7 +3127,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     if (!IMEWasEnabled && mIMModule && mIMModule->IsEnabled()) {
         // Notice our keydown event was already dispatched.  This prevents
         // unnecessary DOM keydown event in the editor.
-        if (mIMModule->OnKeyEvent(this, aEvent, PR_TRUE)) {
+        if (mIMModule->OnKeyEvent(this, aEvent, true)) {
             return TRUE;
         }
     }
@@ -3183,7 +3183,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 #endif /* ! AIX */
 #endif /* MOZ_X11 */
 
-    nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
+    nsKeyEvent event(true, NS_KEY_PRESS, this);
     InitKeyEvent(event, aEvent);
     if (isKeyDownCancelled) {
       // If prevent default set for onkeydown, do the same for onkeypress
@@ -3271,7 +3271,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     // before we dispatch a key, check if it's the context menu key.
     // If so, send a context menu key event instead.
     if (is_context_menu_key(event)) {
-        nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
+        nsMouseEvent contextMenuEvent(true, NS_CONTEXTMENU, this,
                                       nsMouseEvent::eReal,
                                       nsMouseEvent::eContextMenuKey);
         key_event_to_context_menu_event(contextMenuEvent, aEvent);
@@ -3284,7 +3284,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
             DispatchEvent(&event, status);
         }
         else {
-            nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
+            nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
             PRUnichar textString[3];
             textString[0] = H_SURROGATE(event.charCode);
             textString[1] = L_SURROGATE(event.charCode);
@@ -3313,7 +3313,7 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     }
 
     // send the key event as a key up event
-    nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);
+    nsKeyEvent event(true, NS_KEY_UP, this);
     InitKeyEvent(event, aEvent);
 
     nsEventStatus status;
@@ -3332,11 +3332,11 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 {
     // check to see if we should rollup
     bool rolledUp =  check_for_rollup(aEvent->window, aEvent->x_root,
-                                        aEvent->y_root, PR_TRUE, PR_FALSE);
+                                        aEvent->y_root, true, false);
     if (gConsumeRollupEvent && rolledUp)
         return;
 
-    nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
+    nsMouseScrollEvent event(true, NS_MOUSE_SCROLL, this);
     switch (aEvent->direction) {
     case GDK_SCROLL_UP:
         event.scrollFlags = nsMouseScrollEvent::kIsVertical;
@@ -3398,7 +3398,7 @@ nsWindow::OnVisibilityNotifyEvent(GtkWidget *aWidget,
             gdk_window_invalidate_rect(mGdkWindow, NULL, FALSE);
         }
 
-        mIsFullyObscured = PR_FALSE;
+        mIsFullyObscured = false;
 
         // In Hildon/Maemo, a browser window will get into 'patially visible' state wheneven an
         // autocomplete feature is dropped down (from urlbar or from an entry form completion),
@@ -3412,7 +3412,7 @@ nsWindow::OnVisibilityNotifyEvent(GtkWidget *aWidget,
         }
         break;
     default: // includes GDK_VISIBILITY_FULLY_OBSCURED
-        mIsFullyObscured = PR_TRUE;
+        mIsFullyObscured = true;
         break;
     }
 }
@@ -3444,7 +3444,7 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
     }
     // else the widget is a shell widget.
 
-    nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
+    nsSizeModeEvent event(true, NS_SIZEMODE, this);
 
     // We don't care about anything but changes in the maximized/icon
     // states
@@ -3490,7 +3490,7 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
 void
 nsWindow::ThemeChanged()
 {
-    nsGUIEvent event(PR_TRUE, NS_THEMECHANGED, this);
+    nsGUIEvent event(true, NS_THEMECHANGED, this);
     nsEventStatus status = nsEventStatus_eIgnore;
     DispatchEvent(&event, status);
 
@@ -3572,7 +3572,7 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
       }
     }
 
-    sIsDraggingOutOf = PR_FALSE;
+    sIsDraggingOutOf = false;
 
     // get our drag context
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
@@ -3607,7 +3607,7 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
 
     dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
 
-    nsDragEvent event(PR_TRUE, NS_DRAGDROP_OVER, innerMostWidget);
+    nsDragEvent event(true, NS_DRAGDROP_OVER, innerMostWidget);
 
     InitDragEvent(event);
 
@@ -3637,7 +3637,7 @@ nsWindow::OnDragLeaveEvent(GtkWidget *aWidget,
 
     LOGDRAG(("nsWindow::OnDragLeaveSignal(%p)\n", (void*)this));
 
-    sIsDraggingOutOf = PR_TRUE;
+    sIsDraggingOutOf = true;
 
     if (mDragLeaveTimer) {
         return;
@@ -3695,7 +3695,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     // re-validate the drag target and then we do the drop.  The events
     // look the same except for the type.
 
-    nsDragEvent event(PR_TRUE, NS_DRAGDROP_OVER, innerMostWidget);
+    nsDragEvent event(true, NS_DRAGDROP_OVER, innerMostWidget);
 
     InitDragEvent(event);
 
@@ -3710,7 +3710,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     // only protects innerMostWidget from being deleted, it does NOT protect
     // against nsView::~nsView() calling Destroy() on it, bug 378670.
     if (!innerMostWidget->mIsDestroyed) {
-        nsDragEvent event(PR_TRUE, NS_DRAGDROP_DROP, innerMostWidget);
+        nsDragEvent event(true, NS_DRAGDROP_DROP, innerMostWidget);
         event.refPoint.x = retx;
         event.refPoint.y = rety;
 
@@ -3740,7 +3740,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
       gdk_display_get_pointer(display, NULL, &x, &y, NULL);
       ((nsDragService *)dragService.get())->SetDragEndPoint(nsIntPoint(x, y));
     }
-    dragService->EndDragSession(PR_TRUE);
+    dragService->EndDragSession(true);
 
     return TRUE;
 }
@@ -3770,7 +3770,7 @@ nsWindow::OnDragLeave(void)
 {
     LOGDRAG(("nsWindow::OnDragLeave(%p)\n", (void*)this));
 
-    nsDragEvent event(PR_TRUE, NS_DRAGDROP_EXIT, this);
+    nsDragEvent event(true, NS_DRAGDROP_EXIT, this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -3790,7 +3790,7 @@ nsWindow::OnDragLeave(void)
                 // initiated in a different app. End the drag session,
                 // since we're done with it for now (until the user
                 // drags back into mozilla).
-                dragService->EndDragSession(PR_FALSE);
+                dragService->EndDragSession(false);
             }
         }
     }
@@ -3803,7 +3803,7 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
 
     LOGDRAG(("nsWindow::OnDragEnter(%p)\n", (void*)this));
 
-    nsDragEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this);
+    nsDragEvent event(true, NS_DRAGDROP_ENTER, this);
 
     event.refPoint.x = aX;
     event.refPoint.y = aY;
@@ -3899,7 +3899,7 @@ nsWindow::Create(nsIWidget        *aParent,
     // Do we need to listen for resizes?
     bool listenForResizes = false;;
     if (aNativeParent || (aInitData && aInitData->mListenForResizes))
-        listenForResizes = PR_TRUE;
+        listenForResizes = true;
 
     // and do our common creation
     CommonCreate(aParent, listenForResizes);
@@ -3939,7 +3939,7 @@ nsWindow::Create(nsIWidget        *aParent,
     case eWindowType_popup:
     case eWindowType_toplevel:
     case eWindowType_invisible: {
-        mIsTopLevel = PR_TRUE;
+        mIsTopLevel = true;
 
         // We only move a general managed toplevel window if someone has
         // actually placed the window somewhere.  If no placement has taken
@@ -3947,7 +3947,7 @@ nsWindow::Create(nsIWidget        *aParent,
         //
         // Indicate that if we're shown, we at least need to have our size set.
         // If we get explicitly moved, the position will also be set.
-        mNeedsResize = PR_TRUE;
+        mNeedsResize = true;
 
         nsXPIDLString brandName;
         GetBrandName(brandName);
@@ -3988,7 +3988,7 @@ nsWindow::Create(nsIWidget        *aParent,
             // With popup windows, we want to control their position, so don't
             // wait for the window manager to place them (which wouldn't
             // happen with override-redirect windows anyway).
-            mNeedsMove = PR_TRUE;
+            mNeedsMove = true;
 
             // Popups that are not noautohide are only temporary. The are used
             // for menus and the like and disappear when another window is used.
@@ -4281,12 +4281,12 @@ nsWindow::Create(nsIWidget        *aParent,
 
     // resize so that everything is set to the right dimensions
     if (!mIsTopLevel)
-        Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
+        Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, false);
 
 #ifdef ACCESSIBILITY
     nsresult rv;
     if (!sAccessibilityChecked) {
-        sAccessibilityChecked = PR_TRUE;
+        sAccessibilityChecked = true;
 
         //check if accessibility enabled/disabled by environment variable
         const char *envValue = PR_GetEnv(sAccEnv);
@@ -4425,7 +4425,7 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, bool    aRepaint)
     ResizeTransparencyBitmap(aWidth, aHeight);
 
     // clear our resize flag
-    mNeedsResize = PR_FALSE;
+    mNeedsResize = false;
 
     if (mIsTopLevel) {
         gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
@@ -4450,8 +4450,8 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
                        PRInt32 aWidth, PRInt32 aHeight,
                        bool    aRepaint)
 {
-    mNeedsResize = PR_FALSE;
-    mNeedsMove = PR_FALSE;
+    mNeedsResize = false;
+    mNeedsMove = false;
 
     LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
          aX, aY, aWidth, aHeight));
@@ -4494,7 +4494,7 @@ nsWindow::NativeShow (bool    aAction)
         }
 
         // unset our flag now that our window has been shown
-        mNeedsShow = PR_FALSE;
+        mNeedsShow = false;
 
         if (mIsTopLevel) {
             // Set up usertime/startupID metadata for the created window.
@@ -4661,15 +4661,15 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
         nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
         NS_ASSERTION(w->GetParent() == this,
                      "Configured widget is not a child");
-        w->SetWindowClipRegion(configuration.mClipRegion, PR_TRUE);
+        w->SetWindowClipRegion(configuration.mClipRegion, true);
         if (w->mBounds.Size() != configuration.mBounds.Size()) {
             w->Resize(configuration.mBounds.x, configuration.mBounds.y,
                       configuration.mBounds.width, configuration.mBounds.height,
-                      PR_TRUE);
+                      true);
         } else if (w->mBounds.TopLeft() != configuration.mBounds.TopLeft()) {
             w->Move(configuration.mBounds.x, configuration.mBounds.y);
         } 
-        w->SetWindowClipRegion(configuration.mClipRegion, PR_FALSE);
+        w->SetWindowClipRegion(configuration.mClipRegion, false);
     }
     return NS_OK;
 }
@@ -4848,13 +4848,13 @@ ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
             bool maskBit = (maskByte & (1 << (x & 7))) != 0;
 
             if (maskBit != newBit) {
-                return PR_TRUE;
+                return true;
             }
         }
         aAlphas += aStride;
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 static
@@ -4981,14 +4981,14 @@ nsWindow::GrabPointer(void)
 {
     LOG(("GrabPointer %d\n", mRetryPointerGrab));
 
-    mRetryPointerGrab = PR_FALSE;
+    mRetryPointerGrab = false;
 
     // If the window isn't visible, just set the flag to retry the
     // grab.  When this window becomes visible, the grab will be
     // retried.
     if (!mHasMappedToplevel || mIsFullyObscured) {
         LOG(("GrabPointer: window not visible\n"));
-        mRetryPointerGrab = PR_TRUE;
+        mRetryPointerGrab = true;
         return;
     }
 
@@ -5009,7 +5009,7 @@ nsWindow::GrabPointer(void)
 
     if (retval != GDK_GRAB_SUCCESS) {
         LOG(("GrabPointer: pointer grab failed\n"));
-        mRetryPointerGrab = PR_TRUE;
+        mRetryPointerGrab = true;
     }
 }
 
@@ -5018,7 +5018,7 @@ nsWindow::ReleaseGrabs(void)
 {
     LOG(("ReleaseGrabs\n"));
 
-    mRetryPointerGrab = PR_FALSE;
+    mRetryPointerGrab = false;
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
 }
 
@@ -5315,7 +5315,7 @@ nsWindow::HideWindowChrome(bool aShouldHide)
     GdkWindow *shellWindow = gtk_widget_get_window(mShell);
     if (gdk_window_is_visible(shellWindow)) {
         gdk_window_hide(shellWindow);
-        wasVisible = PR_TRUE;
+        wasVisible = true;
     }
 
     gint wmd;
@@ -5358,7 +5358,7 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
             bool rollup = true;
             if (aIsWheel) {
                 gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
-                retVal = PR_TRUE;
+                retVal = true;
             }
             // if we're dealing with menus, we probably have submenus and
             // we don't want to rollup if the click is in a parent menu of
@@ -5378,7 +5378,7 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
                       // number of popups to Rollup so that only those of the
                       // same type close up.
                       if (i < sameTypeCount) {
-                        rollup = PR_FALSE;
+                        rollup = false;
                       }
                       else {
                         popupsToRollup = sameTypeCount;
@@ -5392,7 +5392,7 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
             if (rollup) {
                 gRollupListener->Rollup(popupsToRollup, nsnull);
                 if (popupsToRollup == PR_UINT32_MAX) {
-                    retVal = PR_TRUE;
+                    retVal = true;
                 }
             }
         }
@@ -5456,9 +5456,9 @@ is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
 
     if (aMouseX > x && aMouseX < x + w &&
         aMouseY > y && aMouseY < y + h)
-        return PR_TRUE;
+        return true;
 
-    return PR_FALSE;
+    return false;
 }
 
 static nsWindow *
@@ -6194,10 +6194,10 @@ nsWindow::InitDragEvent(nsDragEvent &aEvent)
     // set the keyboard modifiers
     GdkModifierType state = (GdkModifierType)0;
     gdk_display_get_pointer(gdk_display_get_default(), NULL, NULL, NULL, &state);
-    aEvent.isShift = (state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
-    aEvent.isControl = (state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
-    aEvent.isAlt = (state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-    aEvent.isMeta = PR_FALSE; // GTK+ doesn't support the meta key
+    aEvent.isShift = (state & GDK_SHIFT_MASK) ? true : false;
+    aEvent.isControl = (state & GDK_CONTROL_MASK) ? true : false;
+    aEvent.isAlt = (state & GDK_MOD1_MASK) ? true : false;
+    aEvent.isMeta = false; // GTK+ doesn't support the meta key
 }
 
 // This will update the drag action based on the information in the
@@ -6386,10 +6386,10 @@ key_event_to_context_menu_event(nsMouseEvent &aEvent,
                                 GdkEventKey *aGdkEvent)
 {
     aEvent.refPoint = nsIntPoint(0, 0);
-    aEvent.isShift = PR_FALSE;
-    aEvent.isControl = PR_FALSE;
-    aEvent.isAlt = PR_FALSE;
-    aEvent.isMeta = PR_FALSE;
+    aEvent.isShift = false;
+    aEvent.isControl = false;
+    aEvent.isAlt = false;
+    aEvent.isMeta = false;
     aEvent.time = aGdkEvent->time;
     aEvent.clickCount = 1;
 }
@@ -6423,7 +6423,7 @@ gdk_keyboard_get_modifiers()
 
 #ifdef MOZ_X11
 // Get the modifier masks for GDK_Caps_Lock, GDK_Num_Lock and GDK_Scroll_Lock.
-// Return PR_TRUE on success, PR_FALSE on error.
+// Return true on success, false on error.
 static bool
 gdk_keyboard_get_modmap_masks(Display*  aDisplay,
                               PRUint32* aCapsLockMask,
@@ -6443,13 +6443,13 @@ gdk_keyboard_get_modmap_masks(Display*  aDisplay,
                                           max_keycode - min_keycode + 1,
                                           &keysyms_per_keycode);
     if (!xkeymap) {
-        return PR_FALSE;
+        return false;
     }
 
     XModifierKeymap* xmodmap = XGetModifierMapping(aDisplay);
     if (!xmodmap) {
         XFree(xkeymap);
-        return PR_FALSE;
+        return false;
     }
 
     /*
@@ -6477,7 +6477,7 @@ gdk_keyboard_get_modmap_masks(Display*  aDisplay,
 
     XFreeModifiermap(xmodmap);
     XFree(xkeymap);
-    return PR_TRUE;
+    return true;
 }
 #endif /* MOZ_X11 */
 
@@ -6498,7 +6498,7 @@ nsWindow::CreateRootAccessible()
 nsAccessible*
 nsWindow::DispatchAccessibleEvent()
 {
-    nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
+    nsAccessibleEvent event(true, NS_GETACCESSIBLE, this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -6769,14 +6769,14 @@ nsWindow::GetDragInfo(nsMouseEvent* aMouseEvent,
 {
     if (aMouseEvent->button != nsMouseEvent::eLeftButton) {
         // we can only begin a move drag with the left mouse button
-        return PR_FALSE;
+        return false;
     }
     *aButton = 1;
 
     // get the gdk window for this widget
     GdkWindow* gdk_window = mGdkWindow;
     if (!gdk_window) {
-        return PR_FALSE;
+        return false;
     }
     NS_ABORT_IF_FALSE(GDK_IS_WINDOW(gdk_window), "must really be window");
 
@@ -6787,7 +6787,7 @@ nsWindow::GetDragInfo(nsMouseEvent* aMouseEvent,
     *aWindow = gdk_window;
 
     if (!aMouseEvent->widget) {
-        return PR_FALSE;
+        return false;
     }
 
     // FIXME: It would be nice to have the widget position at the time
@@ -6799,7 +6799,7 @@ nsWindow::GetDragInfo(nsMouseEvent* aMouseEvent,
     *aRootX = aMouseEvent->refPoint.x + offset.x;
     *aRootY = aMouseEvent->refPoint.y + offset.y;
 
-    return PR_TRUE;
+    return true;
 }
 
 NS_IMETHODIMP
