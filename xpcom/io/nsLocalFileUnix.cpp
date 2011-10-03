@@ -88,6 +88,7 @@
 #include "prproces.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsISimpleEnumerator.h"
+#include "private/pprio.h"
 
 #ifdef MOZ_WIDGET_GTK2
 #include "nsIGIOService.h"
@@ -431,6 +432,11 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
         PR_Delete(mPath.get());
     }
 
+#if defined(LINUX) && !defined(ANDROID)
+    if (flags & OS_READAHEAD) {
+        readahead(PR_FileDesc2NativeHandle(*_retval), 0, 0);
+    }
+#endif
     return NS_OK;
 }
 

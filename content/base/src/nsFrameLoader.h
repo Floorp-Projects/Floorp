@@ -53,7 +53,7 @@
 #include "nsAutoPtr.h"
 #include "nsFrameMessageManager.h"
 #include "Layers.h"
-#include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 
 class nsIURI;
 class nsSubDocumentFrame;
@@ -170,7 +170,7 @@ class nsFrameLoader : public nsIFrameLoader,
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
 
 protected:
-  nsFrameLoader(nsIContent *aOwner, bool aNetworkCreated);
+  nsFrameLoader(mozilla::dom::Element* aOwner, bool aNetworkCreated);
 
 public:
   ~nsFrameLoader() {
@@ -186,7 +186,8 @@ public:
     return !!(mRenderMode & RENDER_MODE_ASYNC_SCROLL);
   }
 
-  static nsFrameLoader* Create(nsIContent* aOwner, bool aNetworkCreated);
+  static nsFrameLoader* Create(mozilla::dom::Element* aOwner,
+                               bool aNetworkCreated);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
@@ -279,8 +280,8 @@ public:
   }
   nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
 
-  nsIContent* GetOwnerContent() { return mOwnerContent; }
-  void SetOwnerContent(nsIContent* aContent);
+  mozilla::dom::Element* GetOwnerContent() { return mOwnerContent; }
+  void SetOwnerContent(mozilla::dom::Element* aContent);
 
 private:
 
@@ -313,7 +314,7 @@ private:
 
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
-  nsIContent *mOwnerContent; // WEAK
+  mozilla::dom::Element* mOwnerContent; // WEAK
 public:
   // public because a callback needs these.
   nsRefPtr<nsFrameMessageManager> mMessageManager;
