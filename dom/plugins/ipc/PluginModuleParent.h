@@ -65,6 +65,11 @@
 #include "nsITimer.h"
 
 namespace mozilla {
+namespace dom {
+class PCrashReporterParent;
+class CrashReporterParent;
+}
+
 namespace plugins {
 //-----------------------------------------------------------------------------
 
@@ -85,6 +90,8 @@ class PluginModuleParent : public PPluginModuleParent, PluginLibrary
 {
 private:
     typedef mozilla::PluginLibrary PluginLibrary;
+    typedef mozilla::dom::PCrashReporterParent PCrashReporterParent;
+    typedef mozilla::dom::CrashReporterParent CrashReporterParent;
 
 protected:
 
@@ -184,9 +191,6 @@ protected:
     NS_OVERRIDE virtual bool
     RecvProcessNativeEventsInRPCCall();
 
-    virtual bool
-    RecvAppendNotesToCrashReport(const nsCString& aNotes);
-
     NS_OVERRIDE virtual bool
     RecvPluginShowWindow(const uint32_t& aWindowId, const bool& aModal,
                          const int32_t& aX, const int32_t& aY,
@@ -194,6 +198,12 @@ protected:
 
     NS_OVERRIDE virtual bool
     RecvPluginHideWindow(const uint32_t& aWindowId);
+
+    NS_OVERRIDE virtual PCrashReporterParent*
+    AllocPCrashReporter(mozilla::dom::NativeThreadId* id,
+                        PRUint32* processType);
+    NS_OVERRIDE virtual bool
+    DeallocPCrashReporter(PCrashReporterParent* actor);
 
     NS_OVERRIDE virtual bool
     RecvSetCursor(const NSCursorInfo& aCursorInfo);
@@ -302,13 +312,15 @@ private:
 #endif
 
 private:
-    void WritePluginExtraDataForMinidump(const nsAString& id);
-    void WriteExtraDataForHang();
+    CrashReporterParent* CrashReporter();
+
+#ifdef MOZ_CRASHREPORTER
+    void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
+#endif
     void CleanupFromTimeout();
     static int TimeoutChanged(const char* aPref, void* aModule);
     void NotifyPluginCrashed();
 
-    nsCString mCrashNotes;
     PluginProcessParent* mSubprocess;
     // the plugin thread in mSubprocess
     NativeThreadId mPluginThread;
@@ -318,7 +330,6 @@ private:
     const NPNetscapeFuncs* mNPNIface;
     nsDataHashtable<nsVoidPtrHashKey, PluginIdentifierParent*> mIdentifiers;
     nsNPAPIPlugin* mPlugin;
-    time_t mProcessStartTime;
     ScopedRunnableMethodFactory<PluginModuleParent> mTaskFactory;
     nsString mPluginDumpID;
     nsString mBrowserDumpID;
@@ -334,6 +345,8 @@ private:
     // object instead of the plugin process's lifetime
     ScopedClose mPluginXSocketFdDup;
 #endif
+
+    friend class mozilla::dom::CrashReporterParent;
 };
 
 } // namespace plugins

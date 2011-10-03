@@ -24,6 +24,7 @@
 namespace gl
 {
 unsigned int Program::mCurrentSerial = 1;
+const char *fakepath = "C:\\fakepath";
 
 std::string str(int i)
 {
@@ -32,7 +33,8 @@ std::string str(int i)
     return buffer;
 }
 
-Uniform::Uniform(GLenum type, const std::string &name, unsigned int arraySize) : type(type), name(name), arraySize(arraySize)
+Uniform::Uniform(GLenum type, const std::string &_name, unsigned int arraySize)
+    : type(type), _name(_name), name(Program::undecorateUniform(_name)), arraySize(arraySize)
 {
     int bytes = UniformTypeSize(type) * arraySize;
     data = new unsigned char[bytes];
@@ -46,8 +48,13 @@ Uniform::~Uniform()
     delete[] data;
 }
 
-UniformLocation::UniformLocation(const std::string &name, unsigned int element, unsigned int index) 
-    : name(name), element(element), index(index)
+bool Uniform::isArray()
+{
+    return _name.compare(0, 3, "ar_") == 0;
+}
+
+UniformLocation::UniformLocation(const std::string &_name, unsigned int element, unsigned int index) 
+    : name(Program::undecorateUniform(_name)), element(element), index(index)
 {
 }
 
@@ -248,24 +255,23 @@ TextureType Program::getSamplerTextureType(SamplerType type, unsigned int sample
     return TEXTURE_2D;
 }
 
-GLint Program::getUniformLocation(const char *name, bool decorated)
+GLint Program::getUniformLocation(std::string name)
 {
-    std::string _name = decorated ? name : decorate(name);
     int subscript = 0;
 
     // Strip any trailing array operator and retrieve the subscript
-    size_t open = _name.find_last_of('[');
-    size_t close = _name.find_last_of(']');
-    if (open != std::string::npos && close == _name.length() - 1)
+    size_t open = name.find_last_of('[');
+    size_t close = name.find_last_of(']');
+    if (open != std::string::npos && close == name.length() - 1)
     {
-        subscript = atoi(_name.substr(open + 1).c_str());
-        _name.erase(open);
+        subscript = atoi(name.substr(open + 1).c_str());
+        name.erase(open);
     }
 
     unsigned int numUniforms = mUniformIndex.size();
     for (unsigned int location = 0; location < numUniforms; location++)
     {
-        if (mUniformIndex[location].name == _name &&
+        if (mUniformIndex[location].name == name &&
             mUniformIndex[location].element == subscript)
         {
             return location;
@@ -993,7 +999,7 @@ ID3D10Blob *Program::compileToBinary(const char *hlsl, const char *profile, ID3D
 
     ID3D10Blob *binary = NULL;
     ID3D10Blob *errorMessage = NULL;
-    result = D3DCompile(hlsl, strlen(hlsl), NULL, NULL, NULL, "main", profile, flags, 0, &binary, &errorMessage);
+    result = D3DCompile(hlsl, strlen(hlsl), fakepath, NULL, NULL, "main", profile, flags, 0, &binary, &errorMessage);
 
     if (errorMessage)
     {
@@ -1006,7 +1012,6 @@ ID3D10Blob *Program::compileToBinary(const char *hlsl, const char *profile, ID3D
         errorMessage->Release();
         errorMessage = NULL;
     }
-
 
     if (FAILED(result))
     {
@@ -1277,7 +1282,7 @@ bool Program::linkVaryings()
           default:  UNREACHABLE();
         }
 
-        mVertexHLSL += decorate(attribute->name) + " : TEXCOORD" + str(semanticIndex) + ";\n";
+        mVertexHLSL += decorateAttribute(attribute->name) + " : TEXCOORD" + str(semanticIndex) + ";\n";
 
         semanticIndex += VariableRowCount(attribute->type);
     }
@@ -1312,14 +1317,14 @@ bool Program::linkVaryings()
 
     for (AttributeArray::iterator attribute = mVertexShader->mAttributes.begin(); attribute != mVertexShader->mAttributes.end(); attribute++)
     {
-        mVertexHLSL += "    " + decorate(attribute->name) + " = ";
+        mVertexHLSL += "    " + decorateAttribute(attribute->name) + " = ";
 
         if (VariableRowCount(attribute->type) > 1)   // Matrix
         {
             mVertexHLSL += "transpose";
         }
 
-        mVertexHLSL += "(input." + decorate(attribute->name) + ");\n";
+        mVertexHLSL += "(input." + decorateAttribute(attribute->name) + ");\n";
     }
 
     mVertexHLSL += "\n"
@@ -1588,12 +1593,12 @@ void Program::link()
 
             // these uniforms are searched as already-decorated because gl_ and dx_
             // are reserved prefixes, and do not receive additional decoration
-            mDxDepthRangeLocation = getUniformLocation("dx_DepthRange", true);
-            mDxDepthLocation = getUniformLocation("dx_Depth", true);
-            mDxViewportLocation = getUniformLocation("dx_Viewport", true);
-            mDxHalfPixelSizeLocation = getUniformLocation("dx_HalfPixelSize", true);
-            mDxFrontCCWLocation = getUniformLocation("dx_FrontCCW", true);
-            mDxPointsOrLinesLocation = getUniformLocation("dx_PointsOrLines", true);
+            mDxDepthRangeLocation = getUniformLocation("dx_DepthRange");
+            mDxDepthLocation = getUniformLocation("dx_Depth");
+            mDxViewportLocation = getUniformLocation("dx_Viewport");
+            mDxHalfPixelSizeLocation = getUniformLocation("dx_HalfPixelSize");
+            mDxFrontCCWLocation = getUniformLocation("dx_FrontCCW");
+            mDxPointsOrLinesLocation = getUniformLocation("dx_PointsOrLines");
 
             mLinked = true;   // Success
         }
@@ -1784,9 +1789,9 @@ bool Program::defineUniform(const D3DXHANDLE &constantHandle, const D3DXCONSTANT
     }
 }
 
-bool Program::defineUniform(const D3DXCONSTANT_DESC &constantDescription, std::string &name)
+bool Program::defineUniform(const D3DXCONSTANT_DESC &constantDescription, std::string &_name)
 {
-    Uniform *uniform = createUniform(constantDescription, name);
+    Uniform *uniform = createUniform(constantDescription, _name);
 
     if(!uniform)
     {
@@ -1794,7 +1799,7 @@ bool Program::defineUniform(const D3DXCONSTANT_DESC &constantDescription, std::s
     }
 
     // Check if already defined
-    GLint location = getUniformLocation(name.c_str(), true);
+    GLint location = getUniformLocation(uniform->name);
     GLenum type = uniform->type;
 
     if (location >= 0)
@@ -1816,13 +1821,13 @@ bool Program::defineUniform(const D3DXCONSTANT_DESC &constantDescription, std::s
 
     for (unsigned int i = 0; i < uniform->arraySize; ++i)
     {
-        mUniformIndex.push_back(UniformLocation(name, i, uniformIndex));
+        mUniformIndex.push_back(UniformLocation(_name, i, uniformIndex));
     }
 
     return true;
 }
 
-Uniform *Program::createUniform(const D3DXCONSTANT_DESC &constantDescription, std::string &name)
+Uniform *Program::createUniform(const D3DXCONSTANT_DESC &constantDescription, std::string &_name)
 {
     if (constantDescription.Rows == 1)   // Vectors and scalars
     {
@@ -1831,44 +1836,44 @@ Uniform *Program::createUniform(const D3DXCONSTANT_DESC &constantDescription, st
           case D3DXPT_SAMPLER2D:
             switch (constantDescription.Columns)
             {
-              case 1: return new Uniform(GL_SAMPLER_2D, name, constantDescription.Elements);
+              case 1: return new Uniform(GL_SAMPLER_2D, _name, constantDescription.Elements);
               default: UNREACHABLE();
             }
             break;
           case D3DXPT_SAMPLERCUBE:
             switch (constantDescription.Columns)
             {
-              case 1: return new Uniform(GL_SAMPLER_CUBE, name, constantDescription.Elements);
+              case 1: return new Uniform(GL_SAMPLER_CUBE, _name, constantDescription.Elements);
               default: UNREACHABLE();
             }
             break;
           case D3DXPT_BOOL:
             switch (constantDescription.Columns)
             {
-              case 1: return new Uniform(GL_BOOL, name, constantDescription.Elements);
-              case 2: return new Uniform(GL_BOOL_VEC2, name, constantDescription.Elements);
-              case 3: return new Uniform(GL_BOOL_VEC3, name, constantDescription.Elements);
-              case 4: return new Uniform(GL_BOOL_VEC4, name, constantDescription.Elements);
+              case 1: return new Uniform(GL_BOOL, _name, constantDescription.Elements);
+              case 2: return new Uniform(GL_BOOL_VEC2, _name, constantDescription.Elements);
+              case 3: return new Uniform(GL_BOOL_VEC3, _name, constantDescription.Elements);
+              case 4: return new Uniform(GL_BOOL_VEC4, _name, constantDescription.Elements);
               default: UNREACHABLE();
             }
             break;
           case D3DXPT_INT:
             switch (constantDescription.Columns)
             {
-              case 1: return new Uniform(GL_INT, name, constantDescription.Elements);
-              case 2: return new Uniform(GL_INT_VEC2, name, constantDescription.Elements);
-              case 3: return new Uniform(GL_INT_VEC3, name, constantDescription.Elements);
-              case 4: return new Uniform(GL_INT_VEC4, name, constantDescription.Elements);
+              case 1: return new Uniform(GL_INT, _name, constantDescription.Elements);
+              case 2: return new Uniform(GL_INT_VEC2, _name, constantDescription.Elements);
+              case 3: return new Uniform(GL_INT_VEC3, _name, constantDescription.Elements);
+              case 4: return new Uniform(GL_INT_VEC4, _name, constantDescription.Elements);
               default: UNREACHABLE();
             }
             break;
           case D3DXPT_FLOAT:
             switch (constantDescription.Columns)
             {
-              case 1: return new Uniform(GL_FLOAT, name, constantDescription.Elements);
-              case 2: return new Uniform(GL_FLOAT_VEC2, name, constantDescription.Elements);
-              case 3: return new Uniform(GL_FLOAT_VEC3, name, constantDescription.Elements);
-              case 4: return new Uniform(GL_FLOAT_VEC4, name, constantDescription.Elements);
+              case 1: return new Uniform(GL_FLOAT, _name, constantDescription.Elements);
+              case 2: return new Uniform(GL_FLOAT_VEC2, _name, constantDescription.Elements);
+              case 3: return new Uniform(GL_FLOAT_VEC3, _name, constantDescription.Elements);
+              case 4: return new Uniform(GL_FLOAT_VEC4, _name, constantDescription.Elements);
               default: UNREACHABLE();
             }
             break;
@@ -1883,9 +1888,9 @@ Uniform *Program::createUniform(const D3DXCONSTANT_DESC &constantDescription, st
           case D3DXPT_FLOAT:
             switch (constantDescription.Rows)
             {
-              case 2: return new Uniform(GL_FLOAT_MAT2, name, constantDescription.Elements);
-              case 3: return new Uniform(GL_FLOAT_MAT3, name, constantDescription.Elements);
-              case 4: return new Uniform(GL_FLOAT_MAT4, name, constantDescription.Elements);
+              case 2: return new Uniform(GL_FLOAT_MAT2, _name, constantDescription.Elements);
+              case 3: return new Uniform(GL_FLOAT_MAT3, _name, constantDescription.Elements);
+              case 4: return new Uniform(GL_FLOAT_MAT4, _name, constantDescription.Elements);
               default: UNREACHABLE();
             }
             break;
@@ -1898,28 +1903,28 @@ Uniform *Program::createUniform(const D3DXCONSTANT_DESC &constantDescription, st
 }
 
 // This method needs to match OutputHLSL::decorate
-std::string Program::decorate(const std::string &string)
+std::string Program::decorateAttribute(const std::string &name)
 {
-    if (string.substr(0, 3) != "gl_" && string.substr(0, 3) != "dx_")
+    if (name.compare(0, 3, "gl_") != 0 && name.compare(0, 3, "dx_") != 0)
     {
-        return "_" + string;
+        return "_" + name;
     }
-    else
-    {
-        return string;
-    }
+    
+    return name;
 }
 
-std::string Program::undecorate(const std::string &string)
+std::string Program::undecorateUniform(const std::string &_name)
 {
-    if (string.substr(0, 1) == "_")
+    if (_name[0] == '_')
     {
-        return string.substr(1);
+        return _name.substr(1);
     }
-    else
+    else if (_name.compare(0, 3, "ar_") == 0)
     {
-        return string;
+        return _name.substr(3);
     }
+    
+    return _name;
 }
 
 bool Program::applyUniform1bv(GLint location, GLsizei count, const GLboolean *v)
@@ -2448,29 +2453,22 @@ bool Program::applyUniform4iv(GLint location, GLsizei count, const GLint *v)
 
 
 // append a santized message to the program info log.
-// The D3D compiler includes the current working directory
-// in some of the warning or error messages, so lets remove
-// any occurrances of those that we find in the log.
+// The D3D compiler includes a fake file path in some of the warning or error 
+// messages, so lets remove all occurrences of this fake file path from the log.
 void Program::appendToInfoLogSanitized(const char *message)
 {
     std::string msg(message);
-    CHAR path[MAX_PATH] = "";
-    size_t len;
 
-    len = GetCurrentDirectoryA(MAX_PATH, path);
-    if (len > 0 && len < MAX_PATH)
+    size_t found;
+    do
     {
-        size_t found;
-        do {
-            found = msg.find(path);
-            if (found != std::string::npos)
-            {
-                // the +1 here is intentional so that we remove
-                // the trailing '\' that occurs after the path
-                msg.erase(found, len+1);
-            }
-        } while (found != std::string::npos);
+        found = msg.find(fakepath);
+        if (found != std::string::npos)
+        {
+            msg.erase(found, strlen(fakepath));
+        }
     }
+    while (found != std::string::npos);
 
     appendToInfoLog("%s\n", msg.c_str());
 }
@@ -2780,7 +2778,7 @@ void Program::getActiveUniform(GLuint index, GLsizei bufsize, GLsizei *length, G
     unsigned int uniform;
     for (uniform = 0; uniform < mUniforms.size(); uniform++)
     {
-        if (mUniforms[uniform]->name.substr(0, 3) == "dx_")
+        if (mUniforms[uniform]->name.compare(0, 3, "dx_") == 0)
         {
             continue;
         }
@@ -2797,9 +2795,9 @@ void Program::getActiveUniform(GLuint index, GLsizei bufsize, GLsizei *length, G
 
     if (bufsize > 0)
     {
-        std::string string = undecorate(mUniforms[uniform]->name);
+        std::string string = mUniforms[uniform]->name;
 
-        if (mUniforms[uniform]->arraySize != 1)
+        if (mUniforms[uniform]->isArray())
         {
             string += "[0]";
         }
@@ -2825,7 +2823,7 @@ GLint Program::getActiveUniformCount()
     unsigned int numUniforms = mUniforms.size();
     for (unsigned int uniformIndex = 0; uniformIndex < numUniforms; uniformIndex++)
     {
-        if (mUniforms[uniformIndex]->name.substr(0, 3) != "dx_")
+        if (mUniforms[uniformIndex]->name.compare(0, 3, "dx_") != 0)
         {
             count++;
         }
@@ -2841,10 +2839,10 @@ GLint Program::getActiveUniformMaxLength()
     unsigned int numUniforms = mUniforms.size();
     for (unsigned int uniformIndex = 0; uniformIndex < numUniforms; uniformIndex++)
     {
-        if (!mUniforms[uniformIndex]->name.empty() && mUniforms[uniformIndex]->name.substr(0, 3) != "dx_")
+        if (!mUniforms[uniformIndex]->name.empty() && mUniforms[uniformIndex]->name.compare(0, 3, "dx_") != 0)
         {
-            int length = (int)(undecorate(mUniforms[uniformIndex]->name).length() + 1);
-            if (mUniforms[uniformIndex]->arraySize != 1)
+            int length = (int)(mUniforms[uniformIndex]->name.length() + 1);
+            if (mUniforms[uniformIndex]->isArray())
             {
                 length += 3;  // Counting in "[0]".
             }
@@ -2979,8 +2977,8 @@ void Program::getConstantHandles(Uniform *targetUniform, D3DXHANDLE *constantPS,
 {
     if (!targetUniform->handlesSet)
     {
-        targetUniform->psHandle = mConstantTablePS->GetConstantByName(0, targetUniform->name.c_str());
-        targetUniform->vsHandle = mConstantTableVS->GetConstantByName(0, targetUniform->name.c_str());
+        targetUniform->psHandle = mConstantTablePS->GetConstantByName(0, targetUniform->_name.c_str());
+        targetUniform->vsHandle = mConstantTableVS->GetConstantByName(0, targetUniform->_name.c_str());
         targetUniform->handlesSet = true;
     }
 

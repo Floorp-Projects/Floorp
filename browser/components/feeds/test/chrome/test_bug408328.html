@@ -5,12 +5,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408328
 -->
 <head>
   <title>Test feed preview safe-linkification</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=408328">Mozilla Bug 408328</a>
-<p id="display"><iframe id="testFrame" src="bug408328-data.xml"></iframe></p>
+<p id="display"><iframe id="testFrame" src="http://mochi.test:8888/tests/browser/components/feeds/test/bug408328-data.xml"></iframe></p>
 <div id="content" style="display: none">
   
 </div>
@@ -21,7 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408328
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
   var links = $("testFrame").contentDocument.getElementById("feedContent").getElementsByTagName("a");
   is(links.length, 5, "wrong number of linked items in feed preview");
   for (var i = 0; i < links.length; i++) {

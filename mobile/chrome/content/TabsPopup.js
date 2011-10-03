@@ -41,6 +41,9 @@ var TabsPopup = {
     Elements.tabs.addEventListener("TabRemove", this, true);
 
     this._updateTabsCount();
+
+    // Bind resizeHandler so we can pass it to addEventListener/removeEventListener.
+    this.resizeHandler = this.resizeHandler.bind(this);
   },
 
   get box() {
@@ -117,12 +120,7 @@ var TabsPopup = {
     this.box.anchorTo(this.button, "after_end");
     BrowserUI.pushPopup(this, [this.box, this.button]);
 
-    window.addEventListener("resize", function resizeHandler(aEvent) {
-      if (aEvent.target != window)
-        return;
-      if (!Util.isPortrait())
-        TabsPopup._hidePortraitMenu();
-    }, false);
+    window.addEventListener("resize", this.resizeHandler, false);
   },
 
   toggle: function toggle() {
@@ -140,7 +138,7 @@ var TabsPopup = {
     if (!this.box.hidden) {
       this.box.hidden = true;
       BrowserUI.popPopup(this);
-      window.removeEventListener("resize", resizeHandler, false);
+      window.removeEventListener("resize", this.resizeHandler, false);
     }
   },
 
@@ -170,6 +168,13 @@ var TabsPopup = {
   _updateTabsCount: function() {
     let cmd = document.getElementById("cmd_showTabs");
     cmd.setAttribute("label", Browser.tabs.length);
+  },
+
+  resizeHandler: function resizeHandler(aEvent) {
+    if (aEvent.target != window)
+      return;
+    if (!Util.isPortrait())
+      this._hidePortraitMenu();
   },
 
   handleEvent: function handleEvent(aEvent) {
