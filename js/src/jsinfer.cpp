@@ -4273,6 +4273,49 @@ ScriptAnalysis::followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<
     return false;
 }
 
+bool
+ScriptAnalysis::integerOperation(JSContext *cx, jsbytecode *pc)
+{
+    uint32 offset = pc - script->code;
+    JS_ASSERT(offset < script->length);
+
+    switch (JSOp(*pc)) {
+
+      case JSOP_INCARG:
+      case JSOP_DECARG:
+      case JSOP_ARGINC:
+      case JSOP_ARGDEC:
+      case JSOP_INCLOCAL:
+      case JSOP_DECLOCAL:
+      case JSOP_LOCALINC:
+      case JSOP_LOCALDEC: {
+        if (pushedTypes(pc, 0)->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
+            return false;
+        uint32 slot = GetBytecodeSlot(script, pc);
+        if (trackSlot(slot)) {
+            if (poppedTypes(pc, 0)->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
+                return false;
+        }
+        return true;
+      }
+
+      case JSOP_ADD:
+      case JSOP_SUB:
+      case JSOP_MUL:
+      case JSOP_DIV:
+        if (pushedTypes(pc, 0)->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
+            return false;
+        if (poppedTypes(pc, 0)->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
+            return false;
+        if (poppedTypes(pc, 1)->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
+            return false;
+        return true;
+
+      default:
+        return true;
+    }
+}
+
 /*
  * Persistent constraint clearing out newScript and definite properties from
  * an object should a property on another object get a setter.
