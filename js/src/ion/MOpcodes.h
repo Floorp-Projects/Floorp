@@ -86,7 +86,7 @@ namespace ion {
 class MInstructionVisitor
 {
   public:
-#define VISIT_INS(op) virtual bool visit##op(M##op *) { JS_NOT_REACHED("implement " #op); return false; }
+#define VISIT_INS(op) virtual bool visit##op(M##op *) { JS_NOT_REACHED("NYI: " #op); return false; }
     MIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };

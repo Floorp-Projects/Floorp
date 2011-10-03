@@ -254,7 +254,7 @@ class Assembler : public AssemblerX86Shared
             masm.leal_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void cvttsd2s(const FloatRegister &src, const Register &dest) {

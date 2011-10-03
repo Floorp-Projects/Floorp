@@ -572,7 +572,7 @@ class AssemblerX86Shared
             masm.negl_m(src.disp(), src.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void notl(const Operand &src) {
@@ -584,7 +584,7 @@ class AssemblerX86Shared
             masm.notl_m(src.disp(), src.base());
             break;
           default:
-            JS_NOT_REACHED("unexepcted operand kind");
+            JS_NOT_REACHED("unexpected operand kind");
         }
     }
 
