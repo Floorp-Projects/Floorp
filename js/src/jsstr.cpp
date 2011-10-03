@@ -1007,26 +1007,19 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, jsuint patlen, js
     /* Absolute offset from the beginning of the logical string textstr. */
     jsint pos = 0;
 
-    // TODO: consider branching to a simple loop if patlen == 1
-
     for (JSLinearString **outerp = strs.begin(); outerp != strs.end(); ++outerp) {
-        /* First try to match without spanning two nodes. */
+        /* Try to find a match within 'outer'. */
         JSLinearString *outer = *outerp;
         const jschar *chars = outer->chars();
         size_t len = outer->length();
         jsint matchResult = StringMatch(chars, len, pat, patlen);
         if (matchResult != -1) {
+            /* Matched! */
             *match = pos + matchResult;
             return true;
         }
 
-        /* Test the overlap. */
-        JSLinearString **innerp = outerp;
-
-        /*
-         * Start searching at the first place where StringMatch wouldn't have
-         * found the match.
-         */
+        /* Try to find a match starting in 'outer' and running into other nodes. */
         const jschar *const text = chars + (patlen > len ? 0 : len - patlen + 1);
         const jschar *const textend = chars + len;
         const jschar p0 = *pat;
@@ -1035,6 +1028,7 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, jsuint patlen, js
         for (const jschar *t = text; t != textend; ) {
             if (*t++ != p0)
                 continue;
+            JSLinearString **innerp = outerp;
             const jschar *ttend = textend;
             for (const jschar *pp = p1, *tt = t; pp != patend; ++pp, ++tt) {
                 while (tt == ttend) {
