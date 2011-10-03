@@ -624,7 +624,7 @@ class LInstruction : public TempObject,
 class LInstructionVisitor
 {
   public:
-#define VISIT_INS(op) virtual bool visit##op(L##op *) { JS_NOT_REACHED("implement " #op); return false; }
+#define VISIT_INS(op) virtual bool visit##op(L##op *) { JS_NOT_REACHED("NYI: " #op); return false; }
     LIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };
