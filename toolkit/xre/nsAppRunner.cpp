@@ -60,7 +60,6 @@
 #endif // MOZ_WIDGET_QT
 
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/ContentChild.h"
 
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
@@ -254,7 +253,6 @@ static char **gQtOnlyArgv;
 #include "BinaryPath.h"
 
 using mozilla::dom::ContentParent;
-using mozilla::dom::ContentChild;
 
 // Save literal putenv string to environment variable.
 static void
@@ -609,8 +607,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULAppInfo)
 #ifdef MOZ_CRASHREPORTER
   NS_INTERFACE_MAP_ENTRY(nsICrashReporter)
 #endif
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIXULAppInfo, gAppData || 
-                                     XRE_GetProcessType() == GeckoProcessType_Content)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIXULAppInfo, gAppData)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP_(nsrefcnt)
@@ -628,10 +625,6 @@ nsXULAppInfo::Release()
 NS_IMETHODIMP
 nsXULAppInfo::GetVendor(nsACString& aResult)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    NS_ERROR("Attempt to get unavailable information in content process.");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   aResult.Assign(gAppData->vendor);
 
   return NS_OK;
@@ -640,10 +633,6 @@ nsXULAppInfo::GetVendor(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetName(nsACString& aResult)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    NS_ERROR("Attempt to get unavailable information in content process.");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   aResult.Assign(gAppData->name);
 
   return NS_OK;
@@ -652,10 +641,6 @@ nsXULAppInfo::GetName(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetID(nsACString& aResult)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    NS_ERROR("Attempt to get unavailable information in content process.");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   aResult.Assign(gAppData->ID);
 
   return NS_OK;
@@ -664,11 +649,6 @@ nsXULAppInfo::GetID(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetVersion(nsACString& aResult)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    ContentChild* cc = ContentChild::GetSingleton();
-    aResult = cc->GetAppInfo().version;
-    return NS_OK;
-  }
   aResult.Assign(gAppData->version);
 
   return NS_OK;
@@ -685,11 +665,6 @@ nsXULAppInfo::GetPlatformVersion(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetAppBuildID(nsACString& aResult)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    ContentChild* cc = ContentChild::GetSingleton();
-    aResult = cc->GetAppInfo().buildID;
-    return NS_OK;
-  }
   aResult.Assign(gAppData->buildID);
 
   return NS_OK;
