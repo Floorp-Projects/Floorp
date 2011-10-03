@@ -106,6 +106,7 @@ _CHROME_FILES = imgutils.js \
                 filter.svg \
                 filter-final.svg \
                 test_svg_filter_animation.html \
+                test_xultree_animation.xhtml \
                 $(NULL)
 
 libs:: $(_TEST_FILES)
