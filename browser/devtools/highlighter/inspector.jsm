@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -346,7 +346,7 @@ Highlighter.prototype = {
   highlight: function Highlighter_highlight(aScroll)
   {
     // node is not set or node is not highlightable, bail
-    if (!this.node || !this.isNodeHighlightable()) {
+    if (!this.node || !this.isNodeHighlightable(this.node)) {
       return;
     }
 
@@ -632,17 +632,19 @@ Highlighter.prototype = {
   },
 
   /**
-   * Is this.node highlightable?
+   * Is the specified node highlightable?
    *
+   * @param nsIDOMNode aNode
+   *        the DOM element in question
    * @returns boolean
    *          True if the node is highlightable or false otherwise.
    */
-  isNodeHighlightable: function Highlighter_isNodeHighlightable()
+  isNodeHighlightable: function Highlighter_isNodeHighlightable(aNode)
   {
-    if (!this.node || this.node.nodeType != this.node.ELEMENT_NODE) {
+    if (aNode.nodeType != aNode.ELEMENT_NODE) {
       return false;
     }
-    let nodeName = this.node.nodeName.toLowerCase();
+    let nodeName = aNode.nodeName.toLowerCase();
     return !INSPECTOR_INVISIBLE_ELEMENTS[nodeName];
   },
 
@@ -1169,6 +1171,69 @@ InspectorUI.prototype = {
               event.stopPropagation();
             }
             break;
+          case this.chromeWin.KeyEvent.DOM_VK_LEFT:
+            let node;
+            if (this.selection) {
+              node = this.selection.parentNode;
+            } else {
+              node = this.defaultSelection;
+            }
+            if (node && this.highlighter.isNodeHighlightable(node)) {
+              this.inspectNode(node, true);
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            break;
+          case this.chromeWin.KeyEvent.DOM_VK_RIGHT:
+            if (this.selection) {
+              // Find the first child that is highlightable.
+              for (let i = 0; i < this.selection.childNodes.length; i++) {
+                node = this.selection.childNodes[i];
+                if (node && this.highlighter.isNodeHighlightable(node)) {
+                  break;
+                }
+              }
+            } else {
+              node = this.defaultSelection;
+            }
+            if (node && this.highlighter.isNodeHighlightable(node)) {
+              this.inspectNode(node, true);
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            break;
+          case this.chromeWin.KeyEvent.DOM_VK_UP:
+            if (this.selection) {
+              // Find a previous sibling that is highlightable.
+              node = this.selection.previousSibling;
+              while (node && !this.highlighter.isNodeHighlightable(node)) {
+                node = node.previousSibling;
+              }
+            } else {
+              node = this.defaultSelection;
+            }
+            if (node && this.highlighter.isNodeHighlightable(node)) {
+              this.inspectNode(node, true);
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            break;
+          case this.chromeWin.KeyEvent.DOM_VK_DOWN:
+            if (this.selection) {
+              // Find a next sibling that is highlightable.
+              node = this.selection.nextSibling;
+              while (node && !this.highlighter.isNodeHighlightable(node)) {
+                node = node.nextSibling;
+              }
+            } else {
+              node = this.defaultSelection;
+            }
+            if (node && this.highlighter.isNodeHighlightable(node)) {
+              this.inspectNode(node, true);
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            break;
         }
         break;
     }
@@ -1203,11 +1268,13 @@ InspectorUI.prototype = {
    *
    * @param aNode
    *        the element in the document to inspect
+   * @param aScroll
+   *        force scroll?
    */
-  inspectNode: function IUI_inspectNode(aNode)
+  inspectNode: function IUI_inspectNode(aNode, aScroll)
   {
     this.select(aNode, true, true);
-    this.highlighter.highlightNode(aNode);
+    this.highlighter.highlightNode(aNode, { scroll: aScroll });
   },
 
   /**
