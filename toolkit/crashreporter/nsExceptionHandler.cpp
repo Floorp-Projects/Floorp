@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+  /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,7 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/dom/CrashReporterChild.h"
-
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
 #include "mozilla/Util.h"
 
 #include "nsXULAppAPI.h"
@@ -1551,7 +1552,21 @@ nsresult GetSubmitReports(bool* aSubmitReports)
 
 nsresult SetSubmitReports(bool aSubmitReports)
 {
-    return PrefSubmitReports(&aSubmitReports, true);
+    nsresult rv;
+
+    nsCOMPtr<nsIObserverService> obsServ =
+      mozilla::services::GetObserverService();
+    if (!obsServ) {
+      return NS_ERROR_FAILURE;
+    }
+
+    rv = PrefSubmitReports(&aSubmitReports, true);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    obsServ->NotifyObservers(nsnull, "submit-reports-pref-changed", nsnull);
+    return NS_OK;
 }
 
 // The "pending" dir is Crash Reports/pending, from which minidumps
