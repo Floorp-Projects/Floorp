@@ -107,6 +107,7 @@ LOCAL_INCLUDES += \
 	-I$(srcdir)/../indexedDB \
 	-I$(topsrcdir)/extensions/cookie \
 	-I$(topsrcdir)/dom/base \
+	-I$(topsrcdir)/toolkit/xre \
 	$(NULL)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'
