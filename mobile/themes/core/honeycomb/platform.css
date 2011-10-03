@@ -712,6 +712,7 @@ dialog {
   -moz-border-end: @border_width_tiny@ solid @color_button_border@;
   -moz-border-right-colors: transparent @color_button_border@;
   -moz-margin-end: -moz-calc(-3 * @border_width_tiny@);
+  padding: @padding_xxxnormal@ 0;
 }
 
 .prompt-button:last-of-type {

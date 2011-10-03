@@ -67,7 +67,7 @@ interface nsIDOMCaretPosition;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(C54536AF-C238-4D8B-A339-54E2A0649FF5)]
+[scriptable, uuid(489faaa9-c54e-466c-8164-9a5fcc3a7052)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -106,8 +106,6 @@ interface nsIDOMDocument : nsIDOMNode
   nsIDOMElement                 getElementById(in DOMString elementId);
   // Introduced in DOM Level 3:
   readonly attribute DOMString       inputEncoding;
-  // Introduced in DOM Level 3:
-  readonly attribute DOMString       xmlEncoding;
   // Introduced in DOM Level 3:
            attribute boolean         xmlStandalone;
                                         // raises(DOMException) on setting

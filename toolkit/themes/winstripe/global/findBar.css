@@ -17,9 +17,10 @@
 }
 
 findbar {
-  border-top: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
-  padding-bottom: 1px;
+  padding-top: 1px;
+  background-image: -moz-linear-gradient(rgba(0,0,0,.15) 1px, rgba(255,255,255,.15) 1px);
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
   min-width: 1px;
 }
 

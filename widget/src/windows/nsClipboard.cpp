@@ -91,7 +91,7 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
   }
 #endif
 
-  mIgnoreEmptyNotification = PR_FALSE;
+  mIgnoreEmptyNotification = false;
   mWindow         = nsnull;
 }
 
@@ -259,7 +259,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData ( PRInt32 aWhichClipboard )
   if ( aWhichClipboard != kGlobalClipboard )
     return NS_ERROR_FAILURE;
 
-  mIgnoreEmptyNotification = PR_TRUE;
+  mIgnoreEmptyNotification = true;
 
   // make sure we have a good transferable
   if (nsnull == mTransferable) {
@@ -275,7 +275,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData ( PRInt32 aWhichClipboard )
     ::OleSetClipboard(NULL);
   }
 
-  mIgnoreEmptyNotification = PR_FALSE;
+  mIgnoreEmptyNotification = false;
 
   return NS_OK;
 }
@@ -615,11 +615,11 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       bool dataFound = false;
       if (nsnull != aDataObject) {
         if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aDataObject, anIndex, format, flavorStr, &data, &dataLen)) )
-          dataFound = PR_TRUE;
+          dataFound = true;
       } 
       else if (nsnull != aWindow) {
         if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aWindow, anIndex, format, &data, &dataLen)) )
-          dataFound = PR_TRUE;
+          dataFound = true;
       }
 
       // This is our second chance to try to find some data, having not found it
@@ -644,7 +644,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
             // we have a file path in |data|. Create an nsLocalFile object.
             nsDependentString filepath(reinterpret_cast<PRUnichar*>(data));
             nsCOMPtr<nsILocalFile> file;
-            if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) )
+            if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, false, getter_AddRefs(file))) )
               genericDataWrapper = do_QueryInterface(file);
             nsMemory::Free(data);
           }
@@ -712,7 +712,7 @@ nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void*
   // the header is ASCII.
 
   if (!outData || !*outData) {
-    return PR_FALSE;
+    return false;
   }
 
   float vers = 0.0;
@@ -722,7 +722,7 @@ nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void*
                         &vers, &startOfData, &endOfData);
 
   if (numFound != 3 || startOfData < -1 || endOfData < -1) {
-    return PR_FALSE;
+    return false;
   }
 
   // Fixup the start and end markers if they have no context (set to -1)
@@ -736,14 +736,14 @@ nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void*
   // Make sure we were passed sane values within our buffer size.
   if (!endOfData || startOfData >= endOfData || 
       endOfData > *outDataLen) {
-    return PR_FALSE;
+    return false;
   }
   
   // We want to return the buffer not offset by startOfData because it will be 
   // parsed out later (probably by nsHTMLEditor::ParseCFHTML) when it is still
   // in CF_HTML format.
   *outDataLen = endOfData;
-  return PR_TRUE;
+  return true;
 }
 
 
@@ -772,7 +772,7 @@ nsClipboard :: FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inInde
       nsMemory::Free(*outData);
       *outData = convertedText;
       *outDataLen = convertedTextLen * sizeof(PRUnichar);
-      dataFound = PR_TRUE;
+      dataFound = true;
     }
   } // if plain text data on clipboard
 
@@ -799,7 +799,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
     // we have a file path in |data|. Is it an internet shortcut or a normal file?
     const nsDependentString filepath(static_cast<PRUnichar*>(*outData));
     nsCOMPtr<nsILocalFile> file;
-    nsresult rv = NS_NewLocalFile(filepath, PR_TRUE, getter_AddRefs(file));
+    nsresult rv = NS_NewLocalFile(filepath, true, getter_AddRefs(file));
     if (NS_FAILED(rv)) {
       nsMemory::Free(*outData);
       return dataFound;
@@ -823,7 +823,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
         *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + title);
         *outDataLen = nsCRT::strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
 
-        dataFound = PR_TRUE;
+        dataFound = true;
       }
     }
     else {
@@ -835,7 +835,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
       nsMemory::Free(*outData);
       *outData = UTF8ToNewUnicode(urlSpec);
       *outDataLen = nsCRT::strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
-      dataFound = PR_TRUE;
+      dataFound = true;
     } // else regular file
   }
 
@@ -866,7 +866,7 @@ nsClipboard :: FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, v
     *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + urlString);
     *outDataLen = nsCRT::strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
     nsMemory::Free(tempOutData);
-    dataFound = PR_TRUE;
+    dataFound = true;
   }
   else {
     loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, ::RegisterClipboardFormat(CFSTR_INETURLA), nsnull, &tempOutData, &tempDataLen);
@@ -888,7 +888,7 @@ nsClipboard :: FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, v
       *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + urlString);
       *outDataLen = nsCRT::strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
       nsMemory::Free(tempOutData);
-      dataFound = PR_TRUE;
+      dataFound = true;
     }
   }
 
@@ -959,7 +959,7 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,
                                                   PRInt32 aWhichClipboard,
                                                   bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
   if (aWhichClipboard != kGlobalClipboard || !aFlavorList)
     return NS_OK;
 
@@ -971,7 +971,7 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,
 
     UINT format = GetFormat(aFlavorList[i]);
     if (IsClipboardFormatAvailable(format)) {
-      *_retval = PR_TRUE;
+      *_retval = true;
       break;
     }
     else {
@@ -981,7 +981,7 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,
         // client asked for unicode and it wasn't present, check if we have CF_TEXT.
         // We'll handle the actual data substitution in the data object.
         if (IsClipboardFormatAvailable(GetFormat(kTextMime)))
-          *_retval = PR_TRUE;
+          *_retval = true;
       }
     }
   }

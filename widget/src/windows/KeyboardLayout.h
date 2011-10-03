@@ -181,7 +181,7 @@ public:
   bool IsDeadKey() const
   {
     return (mLastVirtualKeyIndex >= 0) ?
-      mVirtualKeys[mLastVirtualKeyIndex].IsDeadKey(mLastShiftState) : PR_FALSE;
+      mVirtualKeys[mLastVirtualKeyIndex].IsDeadKey(mLastShiftState) : false;
   }
 
   void LoadLayout(HKL aLayout);
