@@ -35,15 +35,6 @@ function doTest() {
   }
   ok(hadException,
      "Should have got an exception when using .wholeText with a text node child of the binding parent");
-
-  hadException = false;
-  try {
-    anonTextNode.replaceWholeText("foobar");
-  } catch(e) {
-    hadException = true;
-  }
-  ok(hadException,
-     "Should have got an exception when using .replaceWholeText with a text node child of the binding parent");
   SimpleTest.finish();
 }
 

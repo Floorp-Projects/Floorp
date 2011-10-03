@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -188,91 +189,60 @@ static JSBool
 JSONCreator(const jschar* aBuf, uint32 aLen, void* aData)
 {
   nsAString* result = static_cast<nsAString*>(aData);
-  result->Append((PRUnichar*)aBuf, (PRUint32)aLen);
-  return JS_TRUE;
+  result->Append(static_cast<const PRUnichar*>(aBuf),
+                 static_cast<PRUint32>(aLen));
+  return true;
 }
 
-nsresult
-nsFrameMessageManager::GetParamsForMessage(nsAString& aMessageName,
+void
+nsFrameMessageManager::GetParamsForMessage(const jsval& aObject,
+                                           JSContext* aCx,
                                            nsAString& aJSON)
 {
-  aMessageName.Truncate();
   aJSON.Truncate();
-  nsAXPCNativeCallContext* ncc = nsnull;
-  nsresult rv = nsContentUtils::XPConnect()->GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_STATE(ncc);
-
-  JSContext* ctx = nsnull;
-  rv = ncc->GetJSContext(&ctx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 argc;
-  jsval* argv = nsnull;
-  ncc->GetArgc(&argc);
-  ncc->GetArgvPtr(&argv);
-
-  JSAutoRequest ar(ctx);
-  JSString* str;
-  if (argc && (str = JS_ValueToString(ctx, argv[0])) && str) {
-    nsDependentJSString depStr;
-    if (!depStr.init(ctx, str)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    aMessageName.Assign(depStr);
-  }
-
-  if (argc >= 2) {
-    jsval v = argv[1];
-    JS_Stringify(ctx, &v, nsnull, JSVAL_NULL, JSONCreator, &aJSON);
-  }
-  return NS_OK;
+  JSAutoRequest ar(aCx);
+  jsval v = aObject;
+  JS_Stringify(aCx, &v, nsnull, JSVAL_NULL, JSONCreator, &aJSON);
 }
 
 NS_IMETHODIMP
-nsFrameMessageManager::SendSyncMessage()
+nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
+                                       const jsval& aObject,
+                                       JSContext* aCx,
+                                       PRUint8 aArgc,
+                                       jsval* aRetval)
 {
   NS_ASSERTION(!IsGlobal(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!IsWindowLevel(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!mParentManager, "Should not have parent manager in content!");
+  *aRetval = JSVAL_VOID;
   if (mSyncCallback) {
     NS_ENSURE_TRUE(mCallbackData, NS_ERROR_NOT_INITIALIZED);
-    nsString messageName;
     nsString json;
-    nsresult rv = GetParamsForMessage(messageName, json);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (aArgc >= 2) {
+      GetParamsForMessage(aObject, aCx, json);
+    }
     InfallibleTArray<nsString> retval;
-    if (mSyncCallback(mCallbackData, messageName, json, &retval)) {
-      nsAXPCNativeCallContext* ncc = nsnull;
-      rv = nsContentUtils::XPConnect()->GetCurrentNativeCallContext(&ncc);
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_STATE(ncc);
-
-      JSContext* ctx = nsnull;
-      rv = ncc->GetJSContext(&ctx);
-      NS_ENSURE_SUCCESS(rv, rv);
-      JSAutoRequest ar(ctx);
-
+    if (mSyncCallback(mCallbackData, aMessageName, json, &retval)) {
+      JSAutoRequest ar(aCx);
       PRUint32 len = retval.Length();
-      JSObject* dataArray = JS_NewArrayObject(ctx, len, NULL);
+      JSObject* dataArray = JS_NewArrayObject(aCx, len, NULL);
       NS_ENSURE_TRUE(dataArray, NS_ERROR_OUT_OF_MEMORY);
 
       for (PRUint32 i = 0; i < len; ++i) {
-        if (retval[i].IsEmpty())
+        if (retval[i].IsEmpty()) {
           continue;
+        }
 
         jsval ret = JSVAL_VOID;
-        if (!JS_ParseJSON(ctx, (jschar*)retval[i].get(),
-                          (uint32)retval[i].Length(), &ret)) {
+        if (!JS_ParseJSON(aCx, static_cast<const jschar*>(retval[i].get()),
+                          retval[i].Length(), &ret)) {
           return NS_ERROR_UNEXPECTED;
         }
-        NS_ENSURE_TRUE(JS_SetElement(ctx, dataArray, i, &ret), NS_ERROR_OUT_OF_MEMORY);
+        NS_ENSURE_TRUE(JS_SetElement(aCx, dataArray, i, &ret), NS_ERROR_OUT_OF_MEMORY);
       }
 
-      jsval* retvalPtr;
-      ncc->GetRetValPtr(&retvalPtr);
-      *retvalPtr = OBJECT_TO_JSVAL(dataArray);
-      ncc->SetReturnValueWasSet(PR_TRUE);
+      *aRetval = OBJECT_TO_JSVAL(dataArray);
     }
   }
   return NS_OK;
@@ -295,13 +265,16 @@ nsFrameMessageManager::SendAsyncMessageInternal(const nsAString& aMessage,
 }
 
 NS_IMETHODIMP
-nsFrameMessageManager::SendAsyncMessage()
+nsFrameMessageManager::SendAsyncMessage(const nsAString& aMessageName,
+                                        const jsval& aObject,
+                                        JSContext* aCx,
+                                        PRUint8 aArgc)
 {
-  nsString messageName;
   nsString json;
-  nsresult rv = GetParamsForMessage(messageName, json);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return SendAsyncMessageInternal(messageName, json);
+  if (aArgc >= 2) {
+    GetParamsForMessage(aObject, aCx, json);
+  }
+  return SendAsyncMessageInternal(aMessageName, json);
 }
 
 NS_IMETHODIMP
@@ -428,14 +401,14 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
         jsval json = JSVAL_NULL;
         if (!aJSON.IsEmpty()) {
-          if (!JS_ParseJSON(ctx, (jschar*)nsString(aJSON).get(),
-                            (uint32)aJSON.Length(), &json)) {
+          if (!JS_ParseJSON(ctx, static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
+                            aJSON.Length(), &json)) {
             json = JSVAL_NULL;
           }
         }
         JSString* jsMessage =
           JS_NewUCStringCopyN(ctx,
-                              reinterpret_cast<const jschar *>(nsString(aMessage).get()),
+                              static_cast<const jschar*>(PromiseFlatString(aMessage).get()),
                               aMessage.Length());
         NS_ENSURE_TRUE(jsMessage, NS_ERROR_OUT_OF_MEMORY);
         JS_DefineProperty(ctx, param, "target", targetv, NULL, NULL, JSPROP_ENUMERATE);
