@@ -104,11 +104,17 @@ var PreferencesView = {
     WeaveGlue.init();
 
     Services.prefs.addObserver("general.useragent.locale", this, false);
+    let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+    chrome.QueryInterface(Ci.nsIToolkitChromeRegistry);
+    this._currentLocale = chrome.getSelectedLocale("browser");
   },
 
   observe: function(aSubject, aTopic, aData) {
     if (aData == "general.useragent.locale") {
-      this.showRestart();
+      if (Services.prefs.getCharPref("general.useragent.locale") != this._currentLocale)
+        this.showRestart();
+      else
+        this.hideRestart();
       this._loadLocales();
     }
   },
@@ -140,7 +146,6 @@ var PreferencesView = {
       }
       if (locale == selectedLocale) {
         selectedLabel = label;
-        this._currentLocale = locale;
         break;
       }
     }
