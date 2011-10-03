@@ -167,6 +167,10 @@
                 label="&saveAudioCmd.label;"
                 accesskey="&saveAudioCmd.accesskey;"
                 oncommand="gContextMenu.saveMedia();"/>
+      <menuitem id="context-video-saveimage"
+                accesskey="&videoSaveImage.accesskey;"
+                label="&videoSaveImage.label;"
+                oncommand="gContextMenu.saveVideoFrameAsImage();"/>
       <menuitem id="context-sendvideo"
                 label="&sendVideoCmd.label;"
                 accesskey="&sendVideoCmd.accesskey;"
