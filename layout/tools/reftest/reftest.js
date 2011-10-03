@@ -941,7 +941,9 @@ function StartCurrentURI(aState)
         // there's already a canvas for this URL
         setTimeout(RecordResult, 0);
     } else {
-        gDumpLog("REFTEST TEST-START | " + gCurrentURL + "\n");
+        var currentTest = gTotalTests - gURLs.length;
+        gDumpLog("REFTEST TEST-START | " + gCurrentURL + " | " + currentTest + " / " + gTotalTests +
+            " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)\n");
         LogInfo("START " + gCurrentURL);
         var type = gURLs[0].type
         if (TYPE_SCRIPT == type) {

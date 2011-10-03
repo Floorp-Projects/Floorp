@@ -40,14 +40,16 @@
 include protocol PPluginIdentifier;
 include protocol PPluginInstance;
 include protocol PPluginScriptableObject;
+include protocol PCrashReporter;
 
 include "npapi.h";
 include "mozilla/plugins/PluginMessageUtils.h";
+include "mozilla/dom/TabMessageUtils.h";
 
 using NPError;
 using NPNVariable;
 using base::FileDescriptor;
-using mozilla::plugins::NativeThreadId;
+using mozilla::dom::NativeThreadId;
 using mac_plugin_interposing::NSCursorInfo;
 using nsID;
 
@@ -58,6 +60,7 @@ rpc protocol PPluginModule
 {
   manages PPluginInstance;
   manages PPluginIdentifier;
+  manages PCrashReporter;
 
 both:
   /**
@@ -84,9 +87,8 @@ child:
   rpc NP_GetEntryPoints()
     returns (NPError rv);
 
-  // Return the plugin's thread ID, if it can be found.
   rpc NP_Initialize()
-    returns (NativeThreadId tid, NPError rv);
+    returns (NPError rv);
 
   rpc PPluginInstance(nsCString aMimeType,
                       uint16_t aMode,
@@ -114,6 +116,9 @@ child:
 
   async SetParentHangTimeout(uint32_t seconds);
 
+  rpc PCrashReporter()
+    returns (NativeThreadId tid, PRUint32 processType);
+
 parent:
   /**
    * This message is only used on X11 platforms.
@@ -140,8 +145,6 @@ parent:
   // entered a nested event loop.  If the browser doesn't process
   // native events, then "livelock" and some other glitches can occur.
   rpc ProcessSomeEvents();
-
-  sync AppendNotesToCrashReport(nsCString aNotes);
 
   // OS X Specific calls to manage the plugin's window
   // when interposing system calls.

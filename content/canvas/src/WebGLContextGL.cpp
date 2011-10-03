@@ -1970,6 +1970,15 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             wrval->SetAsInt32(i);
         }
             break;
+        case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
+            if (mEnabledExtensions[WebGL_OES_standard_derivatives]) {
+                GLint i = 0;
+                gl->fGetIntegerv(pname, &i);
+                wrval->SetAsInt32(i);
+            }
+            else
+                return ErrorInvalidEnum("getParameter: parameter", pname);
+            break;
 
         case LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS:
             wrval->SetAsInt32(mGLMaxVertexUniformVectors);
@@ -2794,8 +2803,22 @@ WebGLContext::GetVertexAttribOffset(WebGLuint index, WebGLenum pname, WebGLuint 
 }
 
 NS_IMETHODIMP
-WebGLContext::Hint(WebGLenum, WebGLenum)
+WebGLContext::Hint(WebGLenum target, WebGLenum mode)
 {
+    bool isValid = false;
+
+    switch (target) {
+        case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
+            if (mEnabledExtensions[WebGL_OES_standard_derivatives]) 
+                isValid = true;
+            break;
+    }
+
+    if (isValid) {
+        gl->fHint(target, mode);
+        return NS_OK;
+    }
+
     return ErrorInvalidEnum("hint: invalid hint");
 }
 
@@ -3989,6 +4012,8 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         resources.MaxTextureImageUnits = mGLMaxTextureImageUnits;
         resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
         resources.MaxDrawBuffers = 1;
+        if (mEnabledExtensions[WebGL_OES_standard_derivatives])
+            resources.OES_standard_derivatives = 1;
 
         compiler = ShConstructCompiler((ShShaderType) shader->ShaderType(),
                                        SH_WEBGL_SPEC,

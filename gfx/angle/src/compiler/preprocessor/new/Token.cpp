@@ -40,9 +40,6 @@ std::ostream& operator<<(std::ostream& out, const Token& token)
 {
     switch (token.type())
     {
-      case SPACE:
-        out << " ";
-        break;
       case INT_CONSTANT:
       case FLOAT_CONSTANT:
       case IDENTIFIER:
