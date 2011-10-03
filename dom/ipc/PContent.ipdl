@@ -143,8 +143,6 @@ child:
      */
     ActivateA11y();
 
-    AppInfo(nsCString version, nsCString buildID);
-
 parent:
     PNecko();
     
