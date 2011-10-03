@@ -136,7 +136,7 @@ TaskbarPreview::TaskbarPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewControl
   : mTaskbar(aTaskbar),
     mController(aController),
     mWnd(aHWND),
-    mVisible(PR_FALSE),
+    mVisible(false),
     mDocShell(do_GetWeakReference(aShell))
 {
   // TaskbarPreview may outlive the WinTaskbar that created it
@@ -252,7 +252,7 @@ TaskbarPreview::UpdateTaskbarProperties() {
   // and should be displayed as so.
   if (sActivePreview == this) {
     if (mWnd == ::GetActiveWindow()) {
-      nsresult rvActive = ShowActive(PR_TRUE);
+      nsresult rvActive = ShowActive(true);
       if (NS_FAILED(rvActive))
         rv = rvActive;
     } else {
@@ -287,10 +287,10 @@ TaskbarPreview::IsWindowAvailable() const {
   if (mWnd) {
     nsWindow* win = nsWindow::GetNSWindowPtr(mWnd);
     if(win && !win->HasDestroyStarted()) {
-      return PR_TRUE;
+      return true;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -324,7 +324,7 @@ TaskbarPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
           thumbnailHeight = PRUint32(thumbnailWidth / preferredAspectRatio);
         }
 
-        DrawBitmap(thumbnailWidth, thumbnailHeight, PR_FALSE);
+        DrawBitmap(thumbnailWidth, thumbnailHeight, false);
       }
       break;
     case WM_DWMSENDICONICLIVEPREVIEWBITMAP:
@@ -338,7 +338,7 @@ TaskbarPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
         if (NS_FAILED(rv))
           break;
 
-        DrawBitmap(width, height, PR_TRUE);
+        DrawBitmap(width, height, true);
       }
       break;
   }
@@ -350,17 +350,17 @@ TaskbarPreview::CanMakeTaskbarCalls() {
   // If the nsWindow has already been destroyed and we know it but our caller
   // clearly doesn't so we can't make any calls.
   if (!mWnd)
-    return PR_FALSE;
+    return false;
   // Certain functions like SetTabOrder seem to require a visible window. During
   // window close, the window seems to be hidden before being destroyed.
   if (!::IsWindowVisible(mWnd))
-    return PR_FALSE;
+    return false;
   if (mVisible) {
     nsWindow *window = nsWindow::GetNSWindowPtr(mWnd);
     NS_ASSERTION(window, "Could not get nsWindow from HWND");
     return window->HasTaskbarIconBeenCreated();
   }
-  return PR_FALSE;
+  return false;
 }
 
 WindowHook&
@@ -457,7 +457,7 @@ TaskbarPreview::MainWindowHook(void *aContext,
     if (preview->mVisible)
       preview->UpdateTaskbarProperties();
   }
-  return PR_FALSE;
+  return false;
 }
 
 TaskbarPreview *

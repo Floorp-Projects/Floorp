@@ -219,15 +219,15 @@ Tester::Tester()
   }
 
   if (ps) {
-    ps->SetPrintOptions(nsIPrintSettings::kPrintOddPages,  PR_TRUE);
-    ps->SetPrintOptions(nsIPrintSettings::kPrintEvenPages,  PR_FALSE);
+    ps->SetPrintOptions(nsIPrintSettings::kPrintOddPages,  true);
+    ps->SetPrintOptions(nsIPrintSettings::kPrintEvenPages,  false);
     ps->SetMarginTop(1.0);
     ps->SetMarginLeft(1.0);
     ps->SetMarginBottom(1.0);
     ps->SetMarginRight(1.0);
     ps->SetScaling(0.5);
-    ps->SetPrintBGColors(PR_TRUE);
-    ps->SetPrintBGImages(PR_TRUE);
+    ps->SetPrintBGColors(true);
+    ps->SetPrintBGImages(true);
     ps->SetPrintRange(15);
     ps->SetHeaderStrLeft(NS_ConvertUTF8toUTF16("Left").get());
     ps->SetHeaderStrCenter(NS_ConvertUTF8toUTF16("Center").get());
@@ -241,13 +241,13 @@ Tester::Tester()
     ps->SetPaperWidth(100.0);
     ps->SetPaperHeight(50.0);
     ps->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
-    ps->SetPrintReversed(PR_TRUE);
-    ps->SetPrintInColor(PR_TRUE);
+    ps->SetPrintReversed(true);
+    ps->SetPrintInColor(true);
     ps->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
     ps->SetPrintCommand(NS_ConvertUTF8toUTF16("Command").get());
     ps->SetNumCopies(2);
     ps->SetPrinterName(NS_ConvertUTF8toUTF16("Printer Name").get());
-    ps->SetPrintToFile(PR_TRUE);
+    ps->SetPrintToFile(true);
     ps->SetToFileName(NS_ConvertUTF8toUTF16("File Name").get());
     ps->SetPrintPageDelay(1000);
 
