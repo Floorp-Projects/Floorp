@@ -222,7 +222,17 @@ SourceEditor.prototype = {
     }, this);
 
     if (aCallback) {
-      aCallback(this);
+      let iframe = this._view._frame;
+      let document = iframe.contentDocument;
+      if (!document || document.readyState != "complete") {
+        let onIframeLoad = function () {
+          iframe.contentWindow.removeEventListener("load", onIframeLoad, false);
+          aCallback(this);
+        }.bind(this);
+        iframe.contentWindow.addEventListener("load", onIframeLoad, false);
+      } else {
+        aCallback(this);
+      }
     }
   },
 
