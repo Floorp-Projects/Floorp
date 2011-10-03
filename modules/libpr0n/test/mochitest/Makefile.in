@@ -101,6 +101,7 @@ _CHROME_FILES = imgutils.js \
                 animated-gif-finalframe.gif \
                 animated-gif.gif \
                 test_svg_animatedGIF.html \
+                test_bullet_animation.html \
                 $(NULL)
 
 libs:: $(_TEST_FILES)
