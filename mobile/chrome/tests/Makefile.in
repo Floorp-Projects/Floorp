@@ -61,9 +61,11 @@ _BROWSER_FILES = \
   browser_awesomescreen.js \
   browser_blank_01.html \
   browser_blank_02.html \
+  browser_blank_03.html \
   browser_bookmarks.js \
   browser_contacts.js \
   browser_dragger.js \
+  browser_escape.js \
   browser_find.js \
   browser_focus.html \
   browser_focus.js \
