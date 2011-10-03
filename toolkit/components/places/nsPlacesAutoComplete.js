@@ -113,9 +113,6 @@ const kBrowserUrlbarBranch = "browser.urlbar.";
  */
 function initTempTable(aDatabase)
 {
-  // Keep our temporary table in memory.
-  aDatabase.executeSimpleSQL("PRAGMA temp_store = MEMORY");
-
   // Note: this should be kept up-to-date with the definition in
   //       nsPlacesTables.h.
   let stmt = aDatabase.createAsyncStatement(
