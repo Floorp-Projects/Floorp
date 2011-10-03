@@ -30,7 +30,7 @@
 
     <deck id="installer-page" class="pane" flex="1">
       <vbox id="installer-page-installing" flex="1" pack="center" align="center">
-        <description id="intalling-message" class="install-message"/>
+        <description id="installing-message" class="install-message"/>
         <button id="cancel-install-button" class="cancel" onclick="LocaleUI.cancelInstall();" crop="center"/>
       </vbox>
       <vbox id="installer-page-error" flex="1" pack="center" align="center">
