@@ -100,6 +100,7 @@ _CHROME_FILES = imgutils.js \
                 test_animation.html \
                 animated-gif-finalframe.gif \
                 animated-gif.gif \
+                animated-gif2.gif \
                 test_svg_animatedGIF.html \
                 test_bullet_animation.html \
                 test_background_image_anim.html \
@@ -107,6 +108,7 @@ _CHROME_FILES = imgutils.js \
                 filter-final.svg \
                 test_svg_filter_animation.html \
                 test_xultree_animation.xhtml \
+                test_changeOfSource.html \
                 $(NULL)
 
 libs:: $(_TEST_FILES)
