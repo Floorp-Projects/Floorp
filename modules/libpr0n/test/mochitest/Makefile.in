@@ -95,10 +95,12 @@ _TEST_FILES =   imgutils.js \
 _CHROME_FILES = imgutils.js \
                 animationPolling.js \
                 lime-anim-100x100.svg \
+                animation.svg \
                 test_animSVGImage.html \
                 test_animation.html \
                 animated-gif-finalframe.gif \
                 animated-gif.gif \
+                test_svg_animatedGIF.html \
                 $(NULL)
 
 libs:: $(_TEST_FILES)
