@@ -882,6 +882,40 @@ Connection::Clone(bool aReadOnly,
   nsresult rv = clone->initialize(mDatabaseFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Copy over pragmas from the original connection.
+  static const char * pragmas[] = {
+    "cache_size",
+    "foreign_keys",
+    "journal_size_limit",
+    "synchronous",
+    "temp_store",
+    "wal_autocheckpoint"
+  };
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(pragmas); ++i) {
+    nsCAutoString pragmaQuery("PRAGMA ");
+    pragmaQuery.Append(pragmas[i]);
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = CreateStatement(pragmaQuery, getter_AddRefs(stmt));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    bool hasResult = PR_FALSE;
+    if (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+      PRInt32 value = stmt->AsInt32(0);
+      // To preserve memory, override the cloned connection's cache_size value
+      // only if it's smaller than the default.
+      if (::strcmp(pragmas[i], "cache_size") == 0) {
+        (void)clone->CreateStatement(pragmaQuery, getter_AddRefs(stmt));
+        if (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult &&
+            value >= stmt->AsInt32(0)) {
+          continue;
+        }
+      }
+      pragmaQuery.AppendLiteral(" = ");
+      pragmaQuery.AppendInt(value);
+      rv = clone->ExecuteSimpleSQL(pragmaQuery);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+  }
+
   // Copy any functions that have been added to this connection.
   (void)mFunctions.EnumerateRead(copyFunctionEnumerator, clone);
 
