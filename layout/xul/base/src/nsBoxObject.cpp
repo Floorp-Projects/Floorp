@@ -46,7 +46,7 @@
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
 #include "nsReadableUtils.h"
-#include "nsIDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsIView.h"
 #ifdef MOZ_XUL
 #include "nsIDOMXULElement.h"

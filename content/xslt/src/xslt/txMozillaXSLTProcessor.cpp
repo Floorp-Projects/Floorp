@@ -44,7 +44,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
-#include "nsIDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNodeList.h"

@@ -167,7 +167,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIContentViewer.h"
-#include "nsDOMClassInfo.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"

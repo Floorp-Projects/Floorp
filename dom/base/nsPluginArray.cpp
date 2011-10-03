@@ -45,7 +45,7 @@
 #include "nsIPluginHost.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsPluginError.h"
 #include "nsContentUtils.h"
 #include "nsPluginHost.h"
