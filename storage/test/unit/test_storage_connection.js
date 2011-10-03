@@ -482,6 +482,88 @@ function test_clone_copies_overridden_functions()
   run_next_test();
 }
 
+function test_clone_copies_pragmas()
+{
+  const PRAGMAS = [
+    { name: "cache_size", value: 500, copied: true },
+    { name: "temp_store", value: 2, copied: true },
+    { name: "foreign_keys", value: 1, copied: true },
+    { name: "journal_size_limit", value: 524288, copied: true },
+    { name: "synchronous", value: 2, copied: true },
+    { name: "wal_autocheckpoint", value: 16, copied: true },
+    { name: "ignore_check_constraints", value: 1, copied: false },
+  ];
+
+  let db1 = getService().openUnsharedDatabase(getTestDB());
+
+  // Sanity check initial values are different from enforced ones.
+  PRAGMAS.forEach(function (pragma) {
+    let stmt = db1.createStatement("PRAGMA " + pragma.name);
+    do_check_true(stmt.executeStep());
+    do_check_neq(pragma.value, stmt.getInt32(0));
+    stmt.finalize();
+  });
+  // Execute pragmas.
+  PRAGMAS.forEach(function (pragma) {
+    db1.executeSimpleSQL("PRAGMA " + pragma.name + " = " + pragma.value);
+  });
+
+  let db2 = db1.clone();
+  do_check_true(db2.connectionReady);
+
+  // Check cloned connection inherited pragma values.
+  PRAGMAS.forEach(function (pragma) {
+    let stmt = db2.createStatement("PRAGMA " + pragma.name);
+    do_check_true(stmt.executeStep());
+    let validate = pragma.copied ? do_check_eq : do_check_neq;
+    validate(pragma.value, stmt.getInt32(0));
+    stmt.finalize();
+  });
+
+  run_next_test();
+}
+
+function test_readonly_clone_copies_pragmas()
+{
+  const PRAGMAS = [
+    { name: "cache_size", value: 500, copied: true },
+    { name: "temp_store", value: 2, copied: true },
+    { name: "foreign_keys", value: 1, copied: false },
+    { name: "journal_size_limit", value: 524288, copied: false },
+    { name: "synchronous", value: 2, copied: false },
+    { name: "wal_autocheckpoint", value: 16, copied: false },
+    { name: "ignore_check_constraints", value: 1, copied: false },
+  ];
+
+  let db1 = getService().openUnsharedDatabase(getTestDB());
+
+  // Sanity check initial values are different from enforced ones.
+  PRAGMAS.forEach(function (pragma) {
+    let stmt = db1.createStatement("PRAGMA " + pragma.name);
+    do_check_true(stmt.executeStep());
+    do_check_neq(pragma.value, stmt.getInt32(0));
+    stmt.finalize();
+  });
+  // Execute pragmas.
+  PRAGMAS.forEach(function (pragma) {
+    db1.executeSimpleSQL("PRAGMA " + pragma.name + " = " + pragma.value);
+  });
+
+  let db2 = db1.clone(true);
+  do_check_true(db2.connectionReady);
+
+  // Check cloned connection inherited pragma values.
+  PRAGMAS.forEach(function (pragma) {
+    let stmt = db2.createStatement("PRAGMA " + pragma.name);
+    do_check_true(stmt.executeStep());
+    let validate = pragma.copied ? do_check_eq : do_check_neq;
+    validate(pragma.value, stmt.getInt32(0));
+    stmt.finalize();
+  });
+
+  run_next_test();
+}
+
 function test_getInterface()
 {
   let db = getOpenedDatabase();
@@ -525,6 +607,8 @@ function test_getInterface()
   test_close_clone_fails,
   test_clone_copies_functions,
   test_clone_copies_overridden_functions,
+  test_clone_copies_pragmas,
+  test_readonly_clone_copies_pragmas,
   test_getInterface,
 ].forEach(add_test);
 

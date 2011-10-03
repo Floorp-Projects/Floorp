@@ -882,6 +882,36 @@ Connection::Clone(bool aReadOnly,
   nsresult rv = clone->initialize(mDatabaseFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Copy over pragmas from the original connection.
+  static const char * pragmas[] = {
+    "cache_size",
+    "temp_store",
+    "foreign_keys",
+    "journal_size_limit",
+    "synchronous",
+    "wal_autocheckpoint",
+  };
+  for (PRUint32 i = 0; i < ArrayLength(pragmas); ++i) {
+    // Read-only connections just need cache_size and temp_store pragmas.
+    if (aReadOnly && ::strcmp(pragmas[i], "cache_size") != 0 &&
+                     ::strcmp(pragmas[i], "temp_store") != 0) {
+      continue;
+    }
+
+    nsCAutoString pragmaQuery("PRAGMA ");
+    pragmaQuery.Append(pragmas[i]);
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = CreateStatement(pragmaQuery, getter_AddRefs(stmt));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    bool hasResult = false;
+    if (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+      pragmaQuery.AppendLiteral(" = ");
+      pragmaQuery.AppendInt(stmt->AsInt32(0));
+      rv = clone->ExecuteSimpleSQL(pragmaQuery);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+  }
+
   // Copy any functions that have been added to this connection.
   (void)mFunctions.EnumerateRead(copyFunctionEnumerator, clone);
 
