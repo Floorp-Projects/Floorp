@@ -224,7 +224,6 @@ nsContextMenu.prototype = {
     this.showItem("context-saveimage", this.onLoadedImage || this.onCanvas);
     this.showItem("context-savevideo", this.onVideo);
     this.showItem("context-saveaudio", this.onAudio);
-    this.showItem("context-video-saveimage", this.onVideo);
     this.setItemAttr("context-savevideo", "disabled", !this.mediaURL);
     this.setItemAttr("context-saveaudio", "disabled", !this.mediaURL);
     // Send media URL (but not for canvas, since it's a big data: URL)
@@ -428,11 +427,8 @@ nsContextMenu.prototype = {
       this.setItemAttr("context-media-unmute", "disabled", hasError);
       this.setItemAttr("context-media-showcontrols", "disabled", hasError);
       this.setItemAttr("context-media-hidecontrols", "disabled", hasError);
-      if (this.onVideo) {
-        let canSaveSnapshot = this.target.readyState >= this.target.HAVE_CURRENT_DATA;
-        this.setItemAttr("context-video-saveimage",  "disabled", !canSaveSnapshot);
-        this.setItemAttr("context-video-fullscreen", "disabled", hasError);
-      }
+      if (this.onVideo)
+        this.setItemAttr("context-video-fullscreen",  "disabled", hasError);
     }
     this.showItem("context-media-sep-commands",  onMedia);
   },
@@ -828,27 +824,6 @@ nsContextMenu.prototype = {
 
     var doc = this.target.ownerDocument;
     openUILink(viewURL, e, null, null, null, null, doc.documentURIObject );
-  },
-
-  saveVideoFrameAsImage: function () {
-    urlSecurityCheck(this.mediaURL, this.browser.contentPrincipal,
-                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-    let name = "";
-    try {
-      let uri = makeURI(this.mediaURL);
-      let url = uri.QueryInterface(Ci.nsIURL);
-      if (url.fileBaseName)
-        name = url.fileBaseName + ".jpg";
-    } catch (e) { }
-    if (!name)
-      name = "snapshot.jpg";
-    var video = this.target;
-    var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    var ctxDraw = canvas.getContext("2d");
-    ctxDraw.drawImage(video, 0, 0);
-    saveImageURL(canvas.toDataURL("image/jpg", ""), name, "SaveImageTitle", true, false, document.documentURIObject);
   },
 
   fullScreenVideo: function () {
