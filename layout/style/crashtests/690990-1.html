@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+
+<link id="e" href="data:text/css,.ref { background-color: green; }" rel="stylesheet">
+
+<script>
+
+function boom()
+{
+  document.documentElement.appendChild(document.getElementById("e"));
+  document.styleSheets[0].cssRules[0];
+  // Remove reftest-wait async so we give the SheetComplete a chance to run
+  setTimeout(function() { document.documentElement.className = ""; }, 0);
+}
+
+</script>
+
+<body onload="boom();"></body>
+
+</html>
