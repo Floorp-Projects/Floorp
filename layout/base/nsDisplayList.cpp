@@ -2451,13 +2451,6 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
       *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
   }
 
-  /* Preserve-3d can cause frames without a transform to get an nsDisplayTransform created, we should
-   * use our parent's transform here.
-   */
-  if (!aFrame->GetStyleDisplay()->HasTransform()) {
-    return GetResultingTransformMatrix(aFrame->GetParent(), aOrigin - aFrame->GetPosition(), aFactor, nsnull, aOutAncestor);
-  }
-
   /* Account for the -moz-transform-origin property by translating the
    * coordinate space to the new origin.
    */
