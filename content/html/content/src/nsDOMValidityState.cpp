@@ -37,7 +37,7 @@
 
 #include "nsDOMValidityState.h"
 
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 
 
 DOMCI_DATA(ValidityState, nsDOMValidityState)

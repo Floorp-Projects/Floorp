@@ -43,7 +43,7 @@
 #include "nscore.h"
 #include "nsIDocShell.h"
 #include "nsITimedChannel.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsDOMNavigationTiming.h"
 
 DOMCI_DATA(PerformanceTiming, nsPerformanceTiming)

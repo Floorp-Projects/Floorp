@@ -42,7 +42,7 @@
 #include "nsIXPConnect.h"
 
 #include "jscntxt.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
