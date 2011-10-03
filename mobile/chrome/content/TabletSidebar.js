@@ -42,7 +42,7 @@ var TabletSidebar = {
   _slideMultiplier: 1, // set greater than 1 to amplify sidebar drags (makes swiping easier)
 
   get visible() {
-    return Elements.urlbarState.hasAttribute("tablet_sidebar");
+    return Elements.urlbarState.getAttribute("tablet_sidebar") == "true";
   },
 
   toggle: function toggle() {
@@ -58,7 +58,7 @@ var TabletSidebar = {
   },
 
   hide: function hide() {
-    Elements.urlbarState.removeAttribute("tablet_sidebar");
+    Elements.urlbarState.setAttribute("tablet_sidebar", "false");
     ViewableAreaObserver.update();
   },
 
