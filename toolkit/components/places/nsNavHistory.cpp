@@ -4075,35 +4075,6 @@ nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
 }
 
 
-/**
- * This was once used when the new window was set to "previous page".
- * Currently it is still referenced by browser.startup.page == 2, but that value
- * is not selectable from the UI.
- * TODO: Should be deprecated? There is no fast alternative to get this info.
- */
-NS_IMETHODIMP
-nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
-{
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT url FROM moz_places "
-      "WHERE hidden = 0 "
-        "AND last_visit_date NOTNULL "
-      "ORDER BY last_visit_date DESC "),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMatch = false;
-  if (NS_SUCCEEDED(statement->ExecuteStep(&hasMatch)) && hasMatch)
-    return statement->GetUTF8String(0, aLastPageVisited);
-
-  aLastPageVisited.Truncate(0);
-  return NS_OK;
-}
-
-
 // nsNavHistory::GetCount
 //
 //    This function is used in legacy code to see if there is any history to
