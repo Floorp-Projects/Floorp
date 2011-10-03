@@ -4276,8 +4276,7 @@ ScriptAnalysis::followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<
 bool
 ScriptAnalysis::integerOperation(JSContext *cx, jsbytecode *pc)
 {
-    uint32 offset = pc - script->code;
-    JS_ASSERT(offset < script->length);
+    JS_ASSERT(uint32(pc - script->code) < script->length);
 
     switch (JSOp(*pc)) {
 
