@@ -91,7 +91,7 @@ nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage)
 GdkPixbuf*
 nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, PRInt32 aWidth, PRInt32 aHeight)
 {
-    GdkPixbuf* pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, PR_TRUE, 8,
+    GdkPixbuf* pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8,
                                        aWidth, aHeight);
     if (!pixbuf)
         return nsnull;

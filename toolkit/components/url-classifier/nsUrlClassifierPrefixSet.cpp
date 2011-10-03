@@ -51,6 +51,7 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/FileUtils.h"
 #include "prlog.h"
 
@@ -378,7 +379,7 @@ nsUrlClassifierPrefixSet::LoadFromFile(nsIFile * aFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   AutoFDClose fileFd;
-  rv = file->OpenNSPRFileDesc(PR_RDONLY, 0, &fileFd);
+  rv = file->OpenNSPRFileDesc(PR_RDONLY | nsILocalFile::OS_READAHEAD, 0, &fileFd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return LoadFromFd(fileFd);
@@ -387,6 +388,15 @@ nsUrlClassifierPrefixSet::LoadFromFile(nsIFile * aFile)
 nsresult
 nsUrlClassifierPrefixSet::StoreToFd(AutoFDClose & fileFd)
 {
+  {
+      Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FALLOCATE_TIME> timer;
+      PRInt64 size = 4 * sizeof(PRUint32);
+      size += 2 * mIndexStarts.Length() * sizeof(PRUint32);
+      size +=     mDeltas.Length() * sizeof(PRUint16);
+
+      mozilla::fallocate(fileFd, size);
+  }
+
   PRInt32 written;
   PRUint32 magic = PREFIXSET_VERSION_MAGIC;
   written = PR_Write(fileFd, &magic, sizeof(PRUint32));
