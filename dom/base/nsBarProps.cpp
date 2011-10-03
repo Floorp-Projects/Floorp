@@ -47,7 +47,7 @@
 #include "nsIScrollable.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMWindow.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 
 //
 //  Basic (virtual) BarProp class implementation

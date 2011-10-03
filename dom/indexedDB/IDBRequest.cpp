@@ -44,8 +44,9 @@
 #include "nsIVariant.h"
 
 #include "nsComponentManagerUtils.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsDOMJSUtils.h"
+#include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsStringGlue.h"
