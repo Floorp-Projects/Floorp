@@ -7061,8 +7061,7 @@ var gPluginHandler = {
       return;
 
     let submittedReport = aEvent.getData("submittedCrashReport");
-    let doPrompt        = true; // XXX followup for .getData("doPrompt");
-    let submitReports   = true; // XXX followup for .getData("submitReports");
+    let doPrompt        = true; // XXX followup to get via gCrashReporter
     let pluginName      = aEvent.getData("pluginName");
     let pluginFilename  = aEvent.getData("pluginFilename");
     let pluginDumpID    = aEvent.getData("pluginDumpID");
@@ -7080,6 +7079,7 @@ var gPluginHandler = {
     let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
     let statusDiv = doc.getAnonymousElementByAttribute(plugin, "class", "submitStatus");
 #ifdef MOZ_CRASHREPORTER
+    let submitReports = gCrashReporter.submitReports;
     let status;
 
     // Determine which message to show regarding crash reports.
@@ -7090,9 +7090,14 @@ var gPluginHandler = {
       status = "noSubmit";
     }
     else { // doPrompt
+      // link submit checkbox to gCrashReporter submitReports preference
       let submitChk = doc.getAnonymousElementByAttribute(
                         plugin, "class", "pleaseSubmitCheckbox");
       submitChk.checked = submitReports;
+      submitChk.addEventListener("click", function() {
+        gCrashReporter.submitReports = this.checked;
+      }, false);
+
       status = "please";
     }
 
@@ -7109,10 +7114,23 @@ var gPluginHandler = {
     let helpIcon = doc.getAnonymousElementByAttribute(plugin, "class", "helpIcon");
     this.addLinkClickCallback(helpIcon, "openHelpPage");
 
-    // If we're showing the link to manually trigger report submission, we'll
-    // want to be able to update all the instances of the UI for this crash to
-    // show an updated message when a report is submitted.
+    // If we're showing the checkbox to trigger report submission, we'll want
+    // to be able to update all the instances of the UI for this crash when
+    // one instance of the checkbox is modified or the status is updated.
     if (doPrompt) {
+      let submitReportsPrefObserver = {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                               Ci.nsISupportsWeakReference]),
+        observe : function(subject, topic, data) {
+          let submitChk = doc.getAnonymousElementByAttribute(
+                            plugin, "class", "pleaseSubmitCheckbox");
+          submitChk.checked = gCrashReporter.submitReports;
+        },
+        handleEvent : function(event) {
+            // Not expected to be called, just here for the closure.
+        }
+      };
+
       let observer = {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                                Ci.nsISupportsWeakReference]),
@@ -7129,16 +7147,21 @@ var gPluginHandler = {
         handleEvent : function(event) {
             // Not expected to be called, just here for the closure.
         }
-      }
+      };
 
       // Use a weak reference, so we don't have to remove it...
       Services.obs.addObserver(observer, "crash-report-status", true);
+      Services.obs.addObserver(
+        submitReportsPrefObserver, "submit-reports-pref-changed", true);
+
       // ...alas, now we need something to hold a strong reference to prevent
       // it from being GC. But I don't want to manually manage the reference's
       // lifetime (which should be no greater than the page).
       // Clever solution? Use a closure with an event listener on the document.
       // When the doc goes away, so do the listener references and the closure.
       doc.addEventListener("mozCleverClosureHack", observer, false);
+      doc.addEventListener(
+        "mozCleverClosureHack", submitReportsPrefObserver, false);
     }
 #endif
 
