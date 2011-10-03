@@ -1246,7 +1246,10 @@ var BrowserUI = {
         AppMenu.toggle();
         break;
       case "cmd_showTabs":
-        TabsPopup.toggle();
+        if (Util.isPortrait())
+          TabsPopup.toggle();
+        else
+          TabletSidebar.toggle();
         break;
       case "cmd_newTab":
         this.newTab();
