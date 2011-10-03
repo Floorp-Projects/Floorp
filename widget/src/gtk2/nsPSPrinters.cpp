@@ -74,7 +74,7 @@ nsPSPrinterList::Enabled()
 {
     const char *val = PR_GetEnv("MOZILLA_POSTSCRIPT_ENABLED");
     if (val && (val[0] == '0' || !PL_strcasecmp(val, "false")))
-        return PR_FALSE;
+        return false;
 
     // is the PS module enabled?
     return Preferences::GetBool("print.postscript.enabled", true);
