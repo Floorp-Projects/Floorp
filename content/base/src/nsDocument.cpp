@@ -4493,11 +4493,6 @@ nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
 {
   *aReturn = nsnull;
 
-  // There are no PIs for HTML
-  if (IsHTML()) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
   nsresult rv = nsContentUtils::CheckQName(aTarget, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5890,23 +5885,6 @@ nsDocument::GetInputEncoding(nsAString& aInputEncoding)
   }
 
   SetDOMStringToNull(aInputEncoding);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetXmlEncoding(nsAString& aXmlEncoding)
-{
-  WarnOnceAbout(eXmlEncoding);
-  if (!IsHTML() &&
-      mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
-      mXMLDeclarationBits & XML_DECLARATION_BITS_ENCODING_EXISTS) {
-    // XXX We don't store the encoding given in the xml declaration.
-    // For now, just output the inputEncoding which we do store.
-    GetInputEncoding(aXmlEncoding);
-  } else {
-    SetDOMStringToNull(aXmlEncoding);
-  }
-
   return NS_OK;
 }
 
