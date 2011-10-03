@@ -290,10 +290,14 @@ Highlighter.prototype = {
     closeButton.id = "highlighter-close-button";
     closeButton.appendChild(this.chromeDoc.createElement("image"));
 
-    closeButton.addEventListener("click",
-      this.IUI.closeInspectorUI.bind(this.IUI), false);
+    let boundCloseEventHandler = this.IUI.closeInspectorUI.bind(this.IUI, false);
+
+    closeButton.addEventListener("click", boundCloseEventHandler, false);
 
     aParent.appendChild(closeButton);
+
+    this.boundCloseEventHandler = boundCloseEventHandler;
+    this.closeButton = closeButton;
   },
 
   /**
@@ -303,6 +307,10 @@ Highlighter.prototype = {
   {
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("resize", this, true);
+    this.closeButton.removeEventListener("click", this.boundCloseEventHandler, false);
+    this.boundCloseEventHandler = null;
+    this.closeButton.parentNode.removeChild(this.closeButton);
+    this.closeButton = null;
     this._contentRect = null;
     this._highlightRect = null;
     this._highlighting = false;
