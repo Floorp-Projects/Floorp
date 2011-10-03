@@ -2030,7 +2030,7 @@ KeyFilter.prototype = {
       return;
 
     let browser = getBrowser();
-    if (browser && browser.active && browser.getAttribute("remote") == "true") {
+    if (browser && browser.active) {
       aEvent.stopPropagation();
       document.getElementById("mainKeyset").setAttribute("disabled", "true");
     }
