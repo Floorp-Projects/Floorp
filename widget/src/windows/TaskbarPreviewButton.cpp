@@ -59,7 +59,7 @@ TaskbarPreviewButton::TaskbarPreviewButton(TaskbarWindowPreview* preview, PRUint
 }
 
 TaskbarPreviewButton::~TaskbarPreviewButton() {
-  SetVisible(PR_FALSE);
+  SetVisible(false);
 }
 
 NS_IMETHODIMP
@@ -140,7 +140,7 @@ TaskbarPreviewButton::SetImage(imgIContainer *img) {
     ::DestroyIcon(Button().hIcon);
   if (img) {
     nsresult rv;
-    rv = nsWindowGfx::CreateIcon(img, PR_FALSE, 0, 0,
+    rv = nsWindowGfx::CreateIcon(img, false, 0, 0,
                                  nsWindowGfx::GetIconMetrics(nsWindowGfx::kRegularIcon),
                                  &Button().hIcon);
     NS_ENSURE_SUCCESS(rv, rv);
