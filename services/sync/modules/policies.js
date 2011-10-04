@@ -185,9 +185,11 @@ let SyncScheduler = {
         this.handleSyncError();
         break;
       case "weave:service:backoff:interval":
-        let interval = (data + Math.random() * data * 0.25) * 1000; // required backoff + up to 25%
+        let requested_interval = subject * 1000;
+        // Leave up to 25% more time for the back off.
+        let interval = requested_interval * (1 + Math.random() * 0.25);
         Status.backoffInterval = interval;
-        Status.minimumNextSync = Date.now() + data;
+        Status.minimumNextSync = Date.now() + requested_interval;
         break;
       case "weave:service:ready":
         // Applications can specify this preference if they want autoconnect
