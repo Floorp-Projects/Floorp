@@ -400,13 +400,6 @@ typedef JSObject *
 extern JSBool js_CStringsAreUTF8;
 #endif
 
-/*
- * Hack to expose obj->getOps()->outer to the C implementation of the debugger
- * interface.
- */
-extern JS_FRIEND_API(JSObject *)
-js_ObjectToOuterObject(JSContext *cx, JSObject *obj);
-
 JS_END_EXTERN_C
 
 #endif /* jsprvtd_h___ */

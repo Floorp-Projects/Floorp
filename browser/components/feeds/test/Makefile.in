@@ -51,9 +51,7 @@ DIRS = \
 
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	test_bug408328.html \
-		bug408328-data.xml \
-		test_bug368464.html \
+_TEST_FILES =	bug408328-data.xml \
 		bug368464-data.xml \
 		test_bug494328.html \
 		bug494328-data.xml \

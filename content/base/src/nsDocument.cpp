@@ -3220,6 +3220,7 @@ nsDocument::DeleteShell()
   if (IsEventHandlingEnabled()) {
     RevokeAnimationFrameNotifications();
   }
+
   mPresShell = nsnull;
 }
 
@@ -4492,11 +4493,6 @@ nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
                                         nsIDOMProcessingInstruction** aReturn)
 {
   *aReturn = nsnull;
-
-  // There are no PIs for HTML
-  if (IsHTML()) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
 
   nsresult rv = nsContentUtils::CheckQName(aTarget, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -5890,23 +5886,6 @@ nsDocument::GetInputEncoding(nsAString& aInputEncoding)
   }
 
   SetDOMStringToNull(aInputEncoding);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetXmlEncoding(nsAString& aXmlEncoding)
-{
-  WarnOnceAbout(eXmlEncoding);
-  if (!IsHTML() &&
-      mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
-      mXMLDeclarationBits & XML_DECLARATION_BITS_ENCODING_EXISTS) {
-    // XXX We don't store the encoding given in the xml declaration.
-    // For now, just output the inputEncoding which we do store.
-    GetInputEncoding(aXmlEncoding);
-  } else {
-    SetDOMStringToNull(aXmlEncoding);
-  }
-
   return NS_OK;
 }
 
@@ -8679,6 +8658,38 @@ nsDocument::GetMozFullScreen(bool *aFullScreen)
 {
   NS_ENSURE_ARG_POINTER(aFullScreen);
   *aFullScreen = nsContentUtils::IsFullScreenApiEnabled() && IsFullScreenDoc();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
+{
+  NS_ENSURE_ARG_POINTER(aFullScreen);
+  *aFullScreen = false;
+
+  if (!nsContentUtils::IsFullScreenApiEnabled()) {
+    return NS_OK;
+  }
+
+  // todo: Bug 684618 - Deny requests for DOM full-screen when windowed
+  // plugins are present.
+
+  // Ensure that all ancestor <iframe> elements have the mozallowfullscreen
+  // boolean attribute set.
+  nsINode* node = static_cast<nsINode*>(this);
+  do {
+    nsIContent* content = static_cast<nsIContent*>(node);
+    if (content->IsHTML(nsGkAtoms::iframe) &&
+        !content->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen)) {
+      // The node requesting fullscreen, or one of its crossdoc ancestors,
+      // is an iframe which doesn't have the "mozalllowfullscreen" attribute.
+      // This request is not authorized by the parent document.
+      return NS_OK;
+    }
+    node = nsContentUtils::GetCrossDocParentNode(node);
+  } while (node);
+
+  *aFullScreen = true;
   return NS_OK;
 }
 

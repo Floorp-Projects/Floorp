@@ -1518,48 +1518,75 @@ DisplayDebugBorders(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
 #endif
 
 static nsresult
-WrapPreserve3DList(nsIFrame *aFrame, nsDisplayListBuilder *aBuilder, nsDisplayList *aList)
+WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder, nsDisplayList *aList, PRUint32& aIndex)
 {
+  if (aIndex > nsDisplayTransform::INDEX_MAX) {
+    return NS_OK;
+  }
+
   nsresult rv = NS_OK;
   nsDisplayList newList;
+  nsDisplayList temp;
   while (nsDisplayItem *item = aList->RemoveBottom()) {
     nsIFrame *childFrame = item->GetUnderlyingFrame();
-    NS_ASSERTION(childFrame, "All display items to be wrapped must have a frame!");
-    if (childFrame->GetParent()->Preserves3DChildren()) {
+
+    // We accumulate sequential items that aren't transforms into the 'temp' list
+    // and then flush this list into newList by wrapping the whole lot with a single
+    // nsDisplayTransform.
+
+    if (childFrame && childFrame->GetParent()->Preserves3DChildren()) {
       switch (item->GetType()) {
         case nsDisplayItem::TYPE_TRANSFORM: {
-          // The child transform frame should always preserve 3d. In the cases where preserve-3d is disabled
-          // such as clipping, this would be wrapped in a clip display object, and we wouldn't reach this point.
-          NS_ASSERTION(childFrame->Preserves3D(), "Child transform frame must preserve 3d!");
+          if (!temp.IsEmpty()) {
+            newList.AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder, aFrame, &temp, aIndex++));
+          }
+          newList.AppendToTop(item);
           break;
         }
         case nsDisplayItem::TYPE_WRAP_LIST: {
+          if (!temp.IsEmpty()) {
+            newList.AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder, aFrame, &temp, aIndex++));
+          }
           nsDisplayWrapList *list = static_cast<nsDisplayWrapList*>(item);
-          rv = WrapPreserve3DList(aFrame, aBuilder, list->GetList());
+          rv = WrapPreserve3DListInternal(aFrame, aBuilder, list->GetList(), aIndex);
+          newList.AppendToTop(item);
           break;
         }
         case nsDisplayItem::TYPE_OPACITY: {
+          if (!temp.IsEmpty()) {
+            newList.AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder, aFrame, &temp, aIndex++));
+          }
           nsDisplayOpacity *opacity = static_cast<nsDisplayOpacity*>(item);
-          rv = WrapPreserve3DList(aFrame, aBuilder, opacity->GetList());
+          rv = WrapPreserve3DListInternal(aFrame, aBuilder, opacity->GetList(), aIndex);
+          newList.AppendToTop(item);
           break;
         }
         default: {
-          item = new (aBuilder) nsDisplayTransform(aBuilder, childFrame, item);
+          temp.AppendToTop(item);
           break;
         }
       } 
     } else {
-      item = new (aBuilder) nsDisplayTransform(aBuilder, childFrame, item);
+      temp.AppendToTop(item);
     }
  
-    if (NS_FAILED(rv) || !item)
+    if (NS_FAILED(rv) || !item || aIndex > nsDisplayTransform::INDEX_MAX)
       return rv;
-
-    newList.AppendToTop(item);
+  }
+    
+  if (!temp.IsEmpty()) {
+    newList.AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder, aFrame, &temp, aIndex++));
   }
 
   aList->AppendToTop(&newList);
   return NS_OK;
+}
+
+static nsresult
+WrapPreserve3DList(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayList *aList)
+{
+  PRUint32 index = 0;
+  return WrapPreserve3DListInternal(aFrame, aBuilder, aList, index);
 }
 
 nsresult
@@ -1617,7 +1644,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   }
 
   // Mark the display list items for absolutely positioned children
-  MarkAbsoluteFramesForDisplayList(aBuilder, aDirtyRect);
+  MarkAbsoluteFramesForDisplayList(aBuilder, dirtyRect);
 
   nsDisplayListCollection set;
   nsresult rv;

@@ -352,12 +352,6 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
       }
     }
   }
-  
-  if (res == eCSSProperty_perspective || res == eCSSProperty_perspective_origin || 
-      res == eCSSProperty_backface_visibility || res == eCSSProperty_transform_style) {
-    return eCSSProperty_UNKNOWN;
-  }
-
   return res;
 }
 
@@ -379,12 +373,6 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
       }
     }
   }
-  
-  if (res == eCSSProperty_perspective || res == eCSSProperty_perspective_origin || 
-      res == eCSSProperty_backface_visibility || res == eCSSProperty_transform_style) {
-    return eCSSProperty_UNKNOWN;
-  }
-
   return res;
 }
 
@@ -596,12 +584,14 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
 
 const PRInt32 nsCSSProps::kBackfaceVisibilityKTable[] = {
   eCSSKeyword_visible, NS_STYLE_BACKFACE_VISIBILITY_VISIBLE,
-  eCSSKeyword_hidden, NS_STYLE_BACKFACE_VISIBILITY_HIDDEN
+  eCSSKeyword_hidden, NS_STYLE_BACKFACE_VISIBILITY_HIDDEN,
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kTransformStyleKTable[] = {
   eCSSKeyword_flat, NS_STYLE_TRANSFORM_STYLE_FLAT,
-  eCSSKeyword_preserve_3d, NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D
+  eCSSKeyword_preserve_3d, NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D,
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBackgroundAttachmentKTable[] = {

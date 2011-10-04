@@ -1,15 +1,7 @@
 // ----------------------------------------------------------------------------
 // Test whether an InstallTrigger.enabled is working
-
-let prefs = Cc["@mozilla.org/preferences-service;1"]
-              .getService(Components.interfaces.nsIPrefBranch);
-let gMultiplePopupsPref;
-
 function test() {
   waitForExplicitFinish();
-
-  gMultiplePopupsPref = prefs.getBoolPref("dom.block_multiple_popups");
-  prefs.setBoolPref("dom.block_multiple_popups", false);
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {
@@ -54,7 +46,6 @@ function page_loaded() {
 
       check_load(function() {
         gBrowser.removeCurrentTab();
-        prefs.setBoolPref("dom.block_multiple_popups", gMultiplePopupsPref);
         finish();
       });
     });

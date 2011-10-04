@@ -1,0 +1,28 @@
+# Just like nightlies, but without tests, not on an update channel, and with
+# shark and dtrace enabled
+. $topsrcdir/build/macosx/universal/mozconfig
+
+ac_add_options --enable-application=browser
+ac_add_options --disable-tests
+ac_add_options --disable-install-strip
+
+export CFLAGS="-gdwarf-2"
+export CXXFLAGS="-gdwarf-2"
+
+# For NSS symbols
+export MOZ_DEBUG_SYMBOLS=1
+ac_add_options --enable-debug-symbols="-gdwarf-2"
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+# Enable parallel compiling
+mk_add_options MOZ_MAKE_FLAGS="-j4"
+
+# shark specific options
+ac_add_options --enable-shark
+ac_add_options --enable-dtrace
+ac_add_options --enable-debugger-info-modules
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL="shark"

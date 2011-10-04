@@ -816,11 +816,6 @@ function kindToString(aKind)
   }
 }
 
-function escapeQuotes(aStr)
-{
-  return aStr.replace(/\&/g, '&amp;').replace(/'/g, '&#39;');
-}
-
 // For user-controlled strings.
 function escapeAll(aStr)
 {
@@ -844,7 +839,7 @@ function prepName(aStr)
 
 function prepDesc(aStr)
 {
-  return escapeQuotes(flipBackslashes(aStr));
+  return escapeAll(flipBackslashes(aStr));
 }
 
 function genMrNameText(aKind, aDesc, aName, aHasProblem, aNMerged)

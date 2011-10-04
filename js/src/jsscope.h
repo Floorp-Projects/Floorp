@@ -325,10 +325,6 @@ class PropertyTree;
 
 struct BaseShape : public js::gc::Cell
 {
-#if JS_BITS_PER_WORD == 32
-    void *padding;
-#endif
-
     enum {
         /* Owned by the referring shape. */
         OWNED_SHAPE       = 0x1,
@@ -345,10 +341,10 @@ struct BaseShape : public js::gc::Cell
         EXTENSIBLE_PARENTS = 0x8
     };
 
+    Class               *clasp;         /* Class of referring shape/object. */
     uint32              flags;          /* Vector of above flags. */
     uint32              slotSpan;       /* Object slot span for BaseShapes at
                                          * dictionary last properties. */
-    Class               *clasp;         /* Class of referring shape/object. */
 
     union {
         js::PropertyOp  rawGetter;      /* getter hook for shape */
@@ -368,6 +364,10 @@ struct BaseShape : public js::gc::Cell
   private:
     PropertyTable       *table_;        /* For owned BaseShapes, the shape's
                                          * property table. */
+
+#if JS_BITS_PER_WORD == 32
+    void *padding;
+#endif
 
   public:
     void finalize(JSContext *cx, bool background);
@@ -404,6 +404,11 @@ struct BaseShape : public js::gc::Cell
     /* Lookup base shapes from the compartment's baseShapes table. */
     static BaseShape *lookup(JSContext *cx, const BaseShape &base);
     static EmptyShape *lookupEmpty(JSContext *cx, Class *clasp);
+
+  private:
+    static void staticAsserts() {
+        JS_STATIC_ASSERT(offsetof(BaseShape, clasp) == offsetof(js::shadow::BaseShape, clasp));
+    }
 };
 
 struct Shape : public js::gc::Cell
@@ -767,6 +772,11 @@ struct Shape : public js::gc::Cell
 
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
+
+  private:
+    static void staticAsserts() {
+        JS_STATIC_ASSERT(offsetof(Shape, base_) == offsetof(js::shadow::Shape, base));
+    }
 };
 
 struct EmptyShape : public js::Shape

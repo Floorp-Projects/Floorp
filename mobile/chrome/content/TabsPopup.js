@@ -41,6 +41,9 @@ var TabsPopup = {
     Elements.tabs.addEventListener("TabRemove", this, true);
 
     this._updateTabsCount();
+
+    // Bind resizeHandler so we can pass it to addEventListener/removeEventListener.
+    this.resizeHandler = this.resizeHandler.bind(this);
   },
 
   get box() {
@@ -58,22 +61,18 @@ var TabsPopup = {
     return this.button = document.getElementById("tool-tabs");
   },
 
-  hide: function hide() {
-    this._hidePortraitMenu();
+  get visible() {
+    return !this.box.hidden;
+  },
 
-    if (!Util.isPortrait()) {
-      Elements.urlbarState.removeAttribute("tablet_sidebar");
-      ViewableAreaObserver.update();
-    }
+  toggle: function toggle() {
+    if (this.visible)
+      this.hide();
+    else
+      this.show();
   },
 
   show: function show() {
-    if (!Util.isPortrait()) {
-      Elements.urlbarState.setAttribute("tablet_sidebar", "true");
-      ViewableAreaObserver.update();
-      return;
-    }
-
     while(this.list.firstChild)
       this.list.removeChild(this.list.firstChild);
 
@@ -117,30 +116,14 @@ var TabsPopup = {
     this.box.anchorTo(this.button, "after_end");
     BrowserUI.pushPopup(this, [this.box, this.button]);
 
-    window.addEventListener("resize", function resizeHandler(aEvent) {
-      if (aEvent.target != window)
-        return;
-      if (!Util.isPortrait())
-        TabsPopup._hidePortraitMenu();
-    }, false);
+    window.addEventListener("resize", this.resizeHandler, false);
   },
 
-  toggle: function toggle() {
-    if (this.visible)
-      this.hide();
-    else
-      this.show();
-  },
-
-  get visible() {
-    return Util.isPortrait() ? !this.box.hidden : Elements.urlbarState.hasAttribute("tablet_sidebar");
-  },
-
-  _hidePortraitMenu: function _hidePortraitMenu() {
+  hide: function hide() {
     if (!this.box.hidden) {
       this.box.hidden = true;
       BrowserUI.popPopup(this);
-      window.removeEventListener("resize", resizeHandler, false);
+      window.removeEventListener("resize", this.resizeHandler, false);
     }
   },
 
@@ -170,6 +153,13 @@ var TabsPopup = {
   _updateTabsCount: function() {
     let cmd = document.getElementById("cmd_showTabs");
     cmd.setAttribute("label", Browser.tabs.length);
+  },
+
+  resizeHandler: function resizeHandler(aEvent) {
+    if (aEvent.target != window)
+      return;
+    if (!Util.isPortrait())
+      this.hide();
   },
 
   handleEvent: function handleEvent(aEvent) {

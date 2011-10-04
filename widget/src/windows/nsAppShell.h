@@ -50,7 +50,7 @@ class nsAppShell : public nsBaseAppShell
 public:
   nsAppShell() :
     mEventWnd(NULL),
-    mNativeCallbackPending(PR_FALSE)
+    mNativeCallbackPending(false)
   {}
   typedef mozilla::TimeStamp TimeStamp;
 

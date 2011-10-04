@@ -229,7 +229,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
   NS_ENSURE_ARG(charProp);
 
   *_retval = nsnull;
-  *persistant = PR_FALSE;
+  *persistant = false;
 
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (!prefs)
@@ -310,7 +310,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
     newestPath += NS_LITERAL_STRING("\\bin\\new_plugin");
 
     rv = NS_NewLocalFile(newestPath,
-                         PR_TRUE, getter_AddRefs(localFile));
+                         true, getter_AddRefs(localFile));
 
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIWindowsRegKey> newKey =
@@ -366,7 +366,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
       rv = regKey->ReadStringValue(NS_LITERAL_STRING("InstallDir"), path);
       if (NS_SUCCEEDED(rv)) {
         path += NS_LITERAL_STRING("\\Plugins");
-        rv = NS_NewLocalFile(path, PR_TRUE,
+        rv = NS_NewLocalFile(path, true,
                              getter_AddRefs(localFile));
       }
     }
@@ -404,7 +404,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
       rv = regKey->ReadStringValue(NS_LITERAL_STRING("Installation Directory"),
                                    path);
       if (NS_SUCCEEDED(rv)) {
-        rv = NS_NewLocalFile(path, PR_TRUE,
+        rv = NS_NewLocalFile(path, true,
                              getter_AddRefs(localFile));
       }
     }
@@ -469,7 +469,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
 
     if (!newestPath.IsEmpty()) {
       newestPath += NS_LITERAL_STRING("\\browser");
-      rv = NS_NewLocalFile(newestPath, PR_TRUE,
+      rv = NS_NewLocalFile(newestPath, true,
                            getter_AddRefs(localFile));
     }
   }
@@ -521,7 +521,7 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMAr
         rv = childKey->ReadStringValue(NS_LITERAL_STRING("Path"), path);
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsILocalFile> localFile;
-          if (NS_SUCCEEDED(NS_NewLocalFile(path, PR_TRUE,
+          if (NS_SUCCEEDED(NS_NewLocalFile(path, true,
                                            getter_AddRefs(localFile))) &&
               localFile) {
             // Some vendors use a path directly to the DLL so chop off

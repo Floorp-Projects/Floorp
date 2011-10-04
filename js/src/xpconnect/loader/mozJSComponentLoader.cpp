@@ -751,7 +751,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     JSCLContextHelper cx(this);
 
     // preserve caller's compartment
-    JS::AutoPreserveCompartment pc(cx);
+    js::AutoPreserveCompartment pc(cx);
 
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
     NS_ENSURE_SUCCESS(rv, rv);

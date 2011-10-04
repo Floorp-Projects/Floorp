@@ -817,22 +817,17 @@ Relation
 nsXULTreeItemAccessibleBase::RelationByType(PRUint32 aType)
 {
   if (aType != nsIAccessibleRelation::RELATION_NODE_CHILD_OF)
-    return nsAccessible::RelationByType(aType);
+    return Relation();
 
-  Relation rel;
     PRInt32 parentIndex;
   if (!NS_SUCCEEDED(mTreeView->GetParentIndex(mRow, &parentIndex)))
-    return rel;
+    return Relation();
 
-  if (parentIndex == -1) {
-    rel.AppendTarget(mParent);
-    return rel;
-  }
+  if (parentIndex == -1)
+    return Relation(mParent);
 
   nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(mParent);
-
-  rel.AppendTarget(treeAcc->GetTreeItemAccessible(parentIndex));
-  return rel;
+  return Relation(treeAcc->GetTreeItemAccessible(parentIndex));
 }
 
 PRUint8
