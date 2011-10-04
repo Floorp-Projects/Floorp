@@ -67,7 +67,7 @@ interface nsIDOMCaretPosition;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(489faaa9-c54e-466c-8164-9a5fcc3a7052)]
+[scriptable, uuid(86bdbe61-760c-4982-a822-c6a0df63b8d2)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -397,6 +397,15 @@ interface nsIDOMDocument : nsIDOMNode
    * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
    */
   readonly attribute boolean mozFullScreen;  
+
+  /**
+   * Denotes whether the full-screen-api.enabled is true, no windowed
+   * plugins are present, and all ancestor documents have the
+   * mozallowfullscreen attribute set.
+   *
+   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
+   */
+  readonly attribute boolean mozFullScreenEnabled;
 
   /**
    * Inline event handler for readystatechange events.
