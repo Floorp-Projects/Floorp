@@ -338,6 +338,15 @@ static WindowsDllInterceptor sUser32Intercept;
 // the size of the default window border Windows paints.
 static const PRInt32 kGlassMarginAdjustment = 2;
 
+
+// We should never really try to accelerate windows bigger than this. In some
+// cases this might lead to no D3D9 acceleration where we could have had it
+// but D3D9 does not reliably report when it supports bigger windows. 8192
+// is as safe as we can get, we know at least D3D10 hardware always supports
+// this, other hardware we expect to report correctly in D3D9.
+#define MAX_ACCELERATED_DIMENSION 8192
+
+
 /**************************************************************
  **************************************************************
  **
@@ -3230,6 +3239,9 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
   }
 #endif
 
+  RECT windowRect;
+  ::GetClientRect(mWnd, &windowRect);
+
   if (!mLayerManager ||
       (!sAllowD3D9 && aPersistence == LAYER_MANAGER_PERSISTENT &&
         mLayerManager->GetBackendType() == 
@@ -3243,7 +3255,9 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
      * transparent windows so don't even try. I'm also not sure if we even
      * want to support this case. See bug #593471 */
     if (eTransparencyTransparent == mTransparencyMode ||
-        prefs.mDisableAcceleration)
+        prefs.mDisableAcceleration ||
+        windowRect.right - windowRect.left > MAX_ACCELERATED_DIMENSION ||
+        windowRect.bottom - windowRect.top > MAX_ACCELERATED_DIMENSION)
       mUseAcceleratedRendering = false;
     else if (prefs.mAccelerateByDefault)
       mUseAcceleratedRendering = true;

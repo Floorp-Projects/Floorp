@@ -339,15 +339,6 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           }
 #endif
 
-          nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
-          if (!targetSurface &&
-              IsRenderMode(gfxWindowsPlatform::RENDER_GDI))
-          {
-            PRUint32 flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
-                gfxWindowsSurface::FLAG_IS_TRANSPARENT;
-            targetSurfaceWin = new gfxWindowsSurface(hDC, flags);
-            targetSurface = targetSurfaceWin;
-          }
 #ifdef CAIRO_HAS_D2D_SURFACE
           if (!targetSurface &&
               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
@@ -361,9 +352,25 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 #endif
               mD2DWindowSurface = new gfxD2DSurface(mWnd, content);
             }
-            targetSurface = mD2DWindowSurface;
+            if (!mD2DWindowSurface->CairoStatus()) {
+              targetSurface = mD2DWindowSurface;
+            } else {
+              mD2DWindowSurface = nsnull;
+            }
           }
 #endif
+
+          nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
+          if (!targetSurface &&
+              (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
+               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)))
+          {
+            PRUint32 flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
+                gfxWindowsSurface::FLAG_IS_TRANSPARENT;
+            targetSurfaceWin = new gfxWindowsSurface(hDC, flags);
+            targetSurface = targetSurfaceWin;
+          }
+
           nsRefPtr<gfxImageSurface> targetSurfaceImage;
           if (!targetSurface &&
               (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
