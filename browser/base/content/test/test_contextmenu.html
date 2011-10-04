@@ -332,7 +332,8 @@ function runTest(testNum) {
         // Context menu for a video (with a VALID media source)
         checkContextMenu(["context-media-play",         true,
                           "context-media-mute",         true,
-                          "context-media-showcontrols", true,
+                          "context-media-hidecontrols", true,
+                          "context-video-showstats",    true,
                           "context-video-fullscreen",   true,
                           "---",                        null,
                           "context-viewvideo",          true,
@@ -351,7 +352,8 @@ function runTest(testNum) {
         // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
-                          "context-media-showcontrols", false,
+                          "context-media-hidecontrols", false,
+                          "context-video-showstats",    false,
                           "context-video-fullscreen",   false,
                           "---",                        null,
                           "context-viewvideo",          true,
@@ -370,7 +372,8 @@ function runTest(testNum) {
         // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
-                          "context-media-showcontrols", false,
+                          "context-media-hidecontrols", false,
+                          "context-video-showstats",    false,
                           "context-video-fullscreen",   false,
                           "---",                        null,
                           "context-viewvideo",          false,
