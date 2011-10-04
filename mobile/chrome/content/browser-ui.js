@@ -438,7 +438,6 @@ var BrowserUI = {
 
     // We can delay some initialization until after startup.  We wait until
     // the first page is shown, then dispatch a UIReadyDelayed event.
-    DelayedStartupHandler.init();
     messageManager.addMessageListener("pageshow", function() {
       if (getBrowser().currentURI.spec == "about:blank")
         return;
@@ -457,87 +456,62 @@ var BrowserUI = {
       return IndexedDB.receiveMessage(aMessage);
     });
 
-    // Keep startup actions chunked into smaller units of work
-    DelayedStartupHandler.registerAction({
-      desc: "Load panel XBL bindings, event listeners, and observers",
-      run: function() {
-        // Load xbl bindings
-        Elements.panelUI.hidden = false;
+    // Delay the panel UI and Sync initialization.
+    window.addEventListener("UIReadyDelayed", function(aEvent) {
+      window.removeEventListener(aEvent.type, arguments.callee, false);
 
-        // Listen tabs event
-        Elements.tabs.addEventListener("TabSelect", BrowserUI, true);
-        Elements.tabs.addEventListener("TabOpen", BrowserUI, true);
-        Elements.tabs.addEventListener("TabRemove", BrowserUI, true);
+      // We unhide the panelUI so the XBL and settings can initialize
+      Elements.panelUI.hidden = false;
 
-        Services.prefs.addObserver("browser.ui.layout.tablet", BrowserUI, false);
-        Services.obs.addObserver(BrowserSearch, "browser-search-engine-modified", false);
-        messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
+      // Login Manager and Form History initialization
+      Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+      Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
-        // If some add-ons were disabled during during an application update, alert user
-        let addonIDs = AddonManager.getStartupChanges("disabled");
-        if (addonIDs.length > 0) {
-          let disabledStrings = Strings.browser.GetStringFromName("alertAddonsDisabled");
-          let label = PluralForm.get(addonIDs.length, disabledStrings).replace("#1", addonIDs.length);
-          let image = "chrome://browser/skin/images/alert-addons-30.png";
-  
-          let alerts = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
-          alerts.showAlertNotification(image, Strings.browser.GetStringFromName("alertAddons"), label, false, "", null);
-        }
-      }
-    });
+      // Listen tabs event
+      Elements.tabs.addEventListener("TabSelect", BrowserUI, true);
+      Elements.tabs.addEventListener("TabOpen", BrowserUI, true);
+      Elements.tabs.addEventListener("TabRemove", BrowserUI, true);
 
-    DelayedStartupHandler.registerAction({
-      desc: "Load LoginManager and FormHistory components",
-      run: function() {
-        Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-        Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
-      }
-    });
-
-  
-    DelayedStartupHandler.registerAction({
-      desc: "Initialize Extension, Downloads, and Console views",
-      run: function() {
-        // Init the tool panel views
-        ExtensionsView.init();
-        DownloadsView.init();
-        ConsoleView.init();
-      }
-    });
+      // Init the tool panel views
+      ExtensionsView.init();
+      DownloadsView.init();
+      ConsoleView.init();
 
 #ifdef MOZ_SERVICES_SYNC
-    DelayedStartupHandler.registerAction({
-      desc: "Initialize Sync",
-      run: function() {
-        // Init the sync system
-        WeaveGlue.init();
-      }
-    });
+      // Init the sync system
+      WeaveGlue.init();
 #endif
 
-    DelayedStartupHandler.registerAction({
-      desc: "Initialize helper objects",
-      run: function() {
-        BadgeHandlers.register(BrowserUI._edit.popup);
-        FormHelperUI.init();
-        FindHelperUI.init();
-        FullScreenVideo.init();
-        NewTabPopup.init();
-        WebappsUI.init();
-        CapturePickerUI.init();
+      Services.prefs.addObserver("browser.ui.layout.tablet", BrowserUI, false);
+      Services.obs.addObserver(BrowserSearch, "browser-search-engine-modified", false);
+      messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
+
+      // Init helpers
+      BadgeHandlers.register(BrowserUI._edit.popup);
+      FormHelperUI.init();
+      FindHelperUI.init();
+      FullScreenVideo.init();
+      NewTabPopup.init();
+      WebappsUI.init();
+      CapturePickerUI.init();
+
+      // If some add-ons were disabled during during an application update, alert user
+      let addonIDs = AddonManager.getStartupChanges("disabled");
+      if (addonIDs.length > 0) {
+        let disabledStrings = Strings.browser.GetStringFromName("alertAddonsDisabled");
+        let label = PluralForm.get(addonIDs.length, disabledStrings).replace("#1", addonIDs.length);
+        let image = "chrome://browser/skin/images/alert-addons-30.png";
+
+        let alerts = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
+        alerts.showAlertNotification(image, Strings.browser.GetStringFromName("alertAddons"), label, false, "", null);
       }
-    });
 
 #ifdef MOZ_UPDATER
-    DelayedStartupHandler.registerAction(
-      desc: "Setup the updater service",
-      run: function() {
-        // Check for updates in progress
-        let updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
-        updatePrompt.checkForUpdates();
-      }
-    });
+      // Check for updates in progress
+      let updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
+      updatePrompt.checkForUpdates();
 #endif
+    }, false);
 
     let panels = document.getElementById("panel-items");
     let panelViews = { // Use strings to avoid lazy-loading objects too soon.
@@ -1339,33 +1313,3 @@ var BrowserUI = {
     }
   }
 };
-
-
-let DelayedStartupHandler = {
-  init: function() {
-    window.addEventListener("UIReadyDelayed", this, false);
-  },
-
-  _actions: [],
-  registerAction: function(aAction) {
-    this._actions.push(aAction);
-  },
-
-  handleEvent: function(aEvent) {
-    window.removeEventListener("UIReadyDelayed", this, false);
-    this._processActions();
-  },
-
-  _processActions: function() {
-    let action = this._actions.shift();
-    if (action) {
-      let start = Date.now();
-      action.run();
-      let totalTime = Date.now() - start;
-#ifndef MOZ_OFFICIAL_BRANDING
-      Services.console.logStringMessage("DelayedAction: " + action.desc + " (" + totalTime + "ms)");
-#endif
-      setTimeout(this._processActions.bind(this), 50);
-    }
-  }
-}
