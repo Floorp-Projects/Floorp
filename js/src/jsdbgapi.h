@@ -142,14 +142,6 @@ JS_SetDebugMode(JSContext *cx, JSBool debug);
 extern JS_PUBLIC_API(JSBool)
 JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep);
 
-/*
- * Unexported library-private helper used to unpatch all traps in a script.
- * Returns script->code if script has no traps, else a JS_malloc'ed copy of
- * script->code which the caller must JS_free, or null on JS_malloc OOM.
- */
-extern jsbytecode *
-js_UntrapScriptCode(JSContext *cx, JSScript *script);
-
 /* The closure argument will be marked. */
 extern JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
