@@ -69,6 +69,7 @@ parent:
   PWebSocket(PBrowser browser);
 
   HTMLDNSPrefetch(nsString hostname, PRUint16 flags);
+  CancelHTMLDNSPrefetch(nsString hostname, PRUint16 flags, nsresult reason);
 
 both:
   PHttpChannel(nullable PBrowser browser);
