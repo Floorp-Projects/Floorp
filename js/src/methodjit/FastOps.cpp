@@ -2232,8 +2232,10 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
     if (frame.haveSameBacking(lhs, rhs)) {
         /* False iff NaN. */
+        frame.pop();
+
         if (lhs->isTypeKnown() && lhs->isNotType(JSVAL_TYPE_DOUBLE)) {
-            frame.popn(2);
+            frame.pop();
             frame.push(BooleanValue(op == JSOP_STRICTEQ));
             return;
         }
@@ -2272,7 +2274,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 #endif
         frame.freeReg(treg);
 
-        frame.popn(2);
+        frame.pop();
         frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
         return;
     }

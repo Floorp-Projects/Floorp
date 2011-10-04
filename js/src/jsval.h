@@ -294,7 +294,7 @@ typedef enum JSWhyMagic
     JS_ARRAY_HOLE,               /* a hole in a dense array */
     JS_ARGS_HOLE,                /* a hole in the args object's array */
     JS_NATIVE_ENUMERATE,         /* indicates that a custom enumerate hook forwarded
-                                  * to js_Enumerate, which really means the object can be
+                                  * to JS_EnumerateState, which really means the object can be
                                   * enumerated like a native object. */
     JS_NO_ITER_VALUE,            /* there is not a pending iterator value */
     JS_GENERATOR_CLOSING,        /* exception value thrown when closing a generator */

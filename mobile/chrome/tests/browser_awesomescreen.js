@@ -60,7 +60,8 @@ gTests.push({
     ok(BrowserUI._title.collapsed, "The urlbar title element is not visible");
 
     waitForNavigationPanel(gCurrentTest.onPopupHidden, true);
-    EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+
+    EventUtils.synthesizeKey("VK_ESCAPE", {type: "keypress"}, window);
   },
 
   onPopupHidden: function() {
@@ -108,7 +109,7 @@ gTests.push({
       runNextTest();
     }, true);
 
-    EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+    EventUtils.synthesizeKey("VK_ESCAPE", {type: "keypress"}, window);
   }
 });
 
@@ -137,7 +138,7 @@ gTests.push({
     is(BrowserUI._edit.readOnly, false, "urlbar should not be readonly after an input");
 
     waitForNavigationPanel(gCurrentTest.onPopupHidden, true);
-    EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+    EventUtils.synthesizeKey("VK_ESCAPE", {type: "keypress"}, window);
   },
 
   onPopupHidden: function() {

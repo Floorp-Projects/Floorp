@@ -461,13 +461,16 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     SetTimeoutTimer();
 }
 
-void
+bool
 nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition)
 {
+  if (!mAllowed)
+    return false;
   nsCOMPtr<nsIRunnable> ev  =
       new RequestSendLocationEvent(aPosition, this,
                                    mIsWatchPositionRequest ? nsnull : mLocator);
   NS_DispatchToMainThread(ev);
+  return true;
 }
 
 void
@@ -901,10 +904,10 @@ nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere)
   if (!WindowOwnerStillExists())
     return Shutdown();
 
-  for (PRUint32 i = 0; i< mPendingCallbacks.Length(); i++) {
-    mPendingCallbacks[i]->Update(aSomewhere);
+  for (PRUint32 i = mPendingCallbacks.Length(); i> 0; i--) {
+    if (mPendingCallbacks[i-1]->Update(aSomewhere))
+      mPendingCallbacks.RemoveElementAt(i-1);
   }
-  mPendingCallbacks.Clear();
 
   // notify everyone that is watching
   for (PRUint32 i = 0; i< mWatchingCallbacks.Length(); i++) {

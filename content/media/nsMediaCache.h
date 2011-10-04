@@ -226,14 +226,14 @@ public:
   // aClient provides the underlying transport that cache will use to read
   // data for this stream.
   nsMediaCacheStream(nsMediaChannelStream* aClient)
-    : mClient(aClient), mResourceID(0), mInitialized(PR_FALSE),
-      mIsSeekable(PR_FALSE), mCacheSuspended(PR_FALSE),
-      mUsingNullPrincipal(PR_FALSE),
+    : mClient(aClient), mResourceID(0), mInitialized(false),
+      mIsSeekable(false), mCacheSuspended(false),
+      mUsingNullPrincipal(false),
       mChannelOffset(0), mStreamLength(-1),  
       mStreamOffset(0), mPlaybackBytesPerSecond(10000),
       mPinCount(0), mCurrentMode(MODE_PLAYBACK),
-      mMetadataInPartialBlockBuffer(PR_FALSE),
-      mClosed(PR_FALSE) {}
+      mMetadataInPartialBlockBuffer(false),
+      mClosed(false) {}
   ~nsMediaCacheStream();
 
   // Set up this stream with the cache. Can fail on OOM. One
@@ -452,11 +452,11 @@ private:
 
   // The last reported seekability state for the underlying channel
   bool mIsSeekable;
-  // true if the cache has suspended our channel because the cache is
+  // True if the cache has suspended our channel because the cache is
   // full and the priority of the data that would be received is lower
   // than the priority of the data already in the cache
   bool mCacheSuspended;
-  // true if mPrincipal is a null principal because we saw data from
+  // True if mPrincipal is a null principal because we saw data from
   // multiple origins
   bool mUsingNullPrincipal;
   // The offset where the next data from the channel will arrive
@@ -488,7 +488,7 @@ private:
   PRUint32          mPinCount;
   // The last reported read mode
   ReadMode          mCurrentMode;
-  // true if some data in mPartialBlockBuffer has been read as metadata
+  // True if some data in mPartialBlockBuffer has been read as metadata
   bool              mMetadataInPartialBlockBuffer;
   // Set to true when the stream has been closed either explicitly or
   // due to an internal cache error

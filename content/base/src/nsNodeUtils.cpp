@@ -63,7 +63,6 @@
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
 #include "nsImageLoadingContent.h"
-#include "jsobj.h"
 #include "jsgc.h"
 #include "xpcpublic.h"
 

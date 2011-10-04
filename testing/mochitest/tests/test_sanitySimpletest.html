@@ -65,22 +65,23 @@ function starttest() {
       is(computedStyle(divObj, 'display'), 'block', 'computedStyle did not get right display value');
       document.body.removeChild(div1);
     
-      //use waitForFocus
+      /* note: expectChildProcessCrash is not being tested here, as it causes wildly variable
+       * run times. It is currently being tested in: 
+       *  dom/plugins/test/test_hanging.html and dom/plugins/test/test_crashing.html
+       */
+
       //note: this also adds a short wait period
       SimpleTest.executeSoon(
         function () {
           //finish() calls a slew of SimpleTest functions
           SimpleTest.finish();
           //call this after finish so we can make sure it works and doesn't hang our process
-          SimpleTest.expectUncaughtException();
-          throw "i am an uncaught exception"
-          /**
-           * Actually testing a crash of a child process ended up with wildly variable runtimes,
-           * on the scale of >1 second, so just make sure we can safely call the method
-           */
-          SimpleTest.expectChildProcessCrash();
           var endTime = new Date();
           SimpleTest.info("Profile::SimpleTestRunTime: " + (endTime-startTime));
+          //expect and throw exception here. Otherwise, any code that follows the throw call will never be executed
+          SimpleTest.expectUncaughtException();
+          //make sure we catch this error
+          throw "i am an uncaught exception"
         }
       );
     }

@@ -211,7 +211,7 @@ BooleanGetPrimitiveValueSlow(JSContext *cx, JSObject &obj, Value *vp)
         return false;
     args.calleev().setUndefined();
     args.thisv().setObject(obj);
-    if (!obj.getProxyHandler()->nativeCall(cx, &obj, &BooleanClass, bool_valueOf, args))
+    if (!GetProxyHandler(&obj)->nativeCall(cx, &obj, &BooleanClass, bool_valueOf, args))
         return false;
     *vp = args.rval();
     return true;

@@ -637,7 +637,8 @@ nsSVGGlyphFrame::FillCharacters(CharacterIterator *aIter,
 }
 
 gfxRect
-nsSVGGlyphFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
+nsSVGGlyphFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+                                     PRUint32 aFlags)
 {
   if (mOverrideCanvasTM) {
     *mOverrideCanvasTM = aToBBoxUserspace;
@@ -654,7 +655,25 @@ nsSVGGlyphFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
 
   mOverrideCanvasTM = nsnull;
 
-  return tmpCtx->GetUserPathExtent();
+  gfxRect bbox;
+
+  gfxRect pathExtents = tmpCtx->GetUserPathExtent();
+
+  // Account for fill:
+  if ((aFlags & nsSVGUtils::eBBoxIncludeFill) != 0 &&
+      ((aFlags & nsSVGUtils::eBBoxIgnoreFillIfNone) == 0 ||
+       GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)) {
+    bbox = pathExtents;
+  }
+
+  // Account for stroke:
+  if ((aFlags & nsSVGUtils::eBBoxIncludeStroke) != 0 &&
+      ((aFlags & nsSVGUtils::eBBoxIgnoreStrokeIfNone) == 0 || HasStroke())) {
+    bbox =
+      bbox.Union(nsSVGUtils::PathExtentsToMaxStrokeExtents(pathExtents, this));
+  }
+
+  return bbox;
 }
 
 //----------------------------------------------------------------------

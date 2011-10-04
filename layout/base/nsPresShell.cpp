@@ -3146,12 +3146,11 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll)
       }
     }
   } else {
-    rv = NS_ERROR_FAILURE; //changed to NS_OK in quirks mode if ScrollTo is called
-
-    // Scroll to the top/left if the anchor can not be
-    // found and it is labelled top (quirks mode only). @see bug 80784
-    if ((NS_LossyConvertUTF16toASCII(aAnchorName).LowerCaseEqualsLiteral("top")) &&
-        (mPresContext->CompatibilityMode() == eCompatibility_NavQuirks)) {
+    rv = NS_ERROR_FAILURE;
+    NS_NAMED_LITERAL_STRING(top, "top");
+    if (nsContentUtils::EqualsIgnoreASCIICase(aAnchorName, top)) {
+      // Scroll to the top/left if aAnchorName is "top" and there is no element
+      // with such a name or id.
       rv = NS_OK;
       nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable();
       // Check |aScroll| after setting |rv| so we set |rv| to the same

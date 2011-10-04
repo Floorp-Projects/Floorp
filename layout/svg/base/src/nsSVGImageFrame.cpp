@@ -100,6 +100,7 @@ public:
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   /**
    * Get the "type" of the frame
@@ -176,6 +177,10 @@ nsSVGImageFrame::Init(nsIContent* aContent,
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
 
+  // We should have a PresContext now, so let's notify our image loader that
+  // we need to register any image animations with the refresh driver.
+  imageLoader->FrameCreated(this);
+
   // Push a null JSContext on the stack so that code that runs within
   // the below code doesn't think it's being called by JS. See bug
   // 604262.
@@ -185,6 +190,19 @@ nsSVGImageFrame::Init(nsIContent* aContent,
   imageLoader->AddObserver(mListener);
 
   return NS_OK; 
+}
+
+/* virtual */ void
+nsSVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  nsCOMPtr<nsIImageLoadingContent> imageLoader =
+    do_QueryInterface(nsFrame::mContent);
+
+  if (imageLoader) {
+    imageLoader->FrameDestroyed(this);
+  }
+
+  nsFrame::DestroyFrom(aDestructRoot);
 }
 
 //----------------------------------------------------------------------

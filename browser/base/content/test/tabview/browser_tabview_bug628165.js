@@ -12,7 +12,7 @@ function test() {
     let keyCodes = [0, 91, 92];
     keyCodes.forEach(function(keyCode) {
       utils.sendKeyEvent("keydown", keyCode, 0, 0);
-      ok(!cw.isSearchEnabled(), "search is not enabled with keyCode: " + keyCode);
+      ok(!cw.Search.isEnabled(), "search is not enabled with keyCode: " + keyCode);
     });
     
     hideTabView(finish);

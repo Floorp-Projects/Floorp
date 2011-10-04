@@ -1,0 +1,24 @@
+# HG changeset patch
+# Parent 693fb23429fdbf40e272e1c48887479cc597e0bc
+diff --git a/gfx/angle/src/libGLESv2/VertexDataManager.h b/gfx/angle/src/libGLESv2/VertexDataManager.h
+--- a/gfx/angle/src/libGLESv2/VertexDataManager.h
++++ b/gfx/angle/src/libGLESv2/VertexDataManager.h
+@@ -127,17 +127,17 @@ class VertexDataManager
+ 
+     Context *const mContext;
+     IDirect3DDevice9 *const mDevice;
+ 
+     StreamingVertexBuffer *mStreamingBuffer;
+ 
+     bool mDirtyCurrentValue[MAX_VERTEX_ATTRIBS];
+     StreamingVertexBuffer *mCurrentValueBuffer[MAX_VERTEX_ATTRIBS];
+-    UINT mCurrentValueOffsets[MAX_VERTEX_ATTRIBS];
++    std::size_t mCurrentValueOffsets[MAX_VERTEX_ATTRIBS];
+ 
+     // Attribute format conversion
+     struct FormatConverter
+     {
+         bool identity;
+         std::size_t outputElementSize;
+         void (*convertArray)(const void *in, std::size_t stride, std::size_t n, void *out);
+         D3DDECLTYPE d3dDeclType;

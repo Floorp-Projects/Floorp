@@ -93,7 +93,7 @@ nsBidiKeyboard::IsLangRTL(bool *aIsRTL)
 nsresult
 nsBidiKeyboard::SetHaveBidiKeyboards()
 {
-    mHaveBidiKeyboards = PR_FALSE;
+    mHaveBidiKeyboards = false;
 
     if (!gtklib || !GdkKeymapHaveBidiLayouts)
         return NS_ERROR_FAILURE;

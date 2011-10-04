@@ -127,7 +127,7 @@ nsPluginStreamToFile::WriteSegments(nsReadSegmentFun reader, void * closure,
 NS_IMETHODIMP
 nsPluginStreamToFile::IsNonBlocking(bool *aNonBlocking)
 {
-  *aNonBlocking = PR_FALSE;
+  *aNonBlocking = false;
   return NS_OK;
 }
 
@@ -154,14 +154,14 @@ mStreamListenerPeer(nsnull),
 mStreamBufferSize(0),
 mStreamBufferByteCount(0),
 mStreamType(NP_NORMAL),
-mStreamStarted(PR_FALSE),
-mStreamCleanedUp(PR_FALSE),
-mCallNotify(notifyData ? PR_TRUE : PR_FALSE),
-mIsSuspended(PR_FALSE),
+mStreamStarted(false),
+mStreamCleanedUp(false),
+mCallNotify(notifyData ? true : false),
+mIsSuspended(false),
 mIsPluginInitJSStream(mInst->mInPluginInitCall &&
                       aURL && strncmp(aURL, "javascript:",
                                       sizeof("javascript:") - 1) == 0),
-mRedirectDenied(PR_FALSE),
+mRedirectDenied(false),
 mResponseHeaderBuf(nsnull)
 {
   memset(&mNPStream, 0, sizeof(mNPStream));
@@ -201,7 +201,7 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
   if (mStreamCleanedUp)
     return NS_OK;
   
-  mStreamCleanedUp = PR_TRUE;
+  mStreamCleanedUp = true;
   
   StopDataPump();
 
@@ -246,7 +246,7 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
       rv = NS_OK;
   }
   
-  mStreamStarted = PR_FALSE;
+  mStreamStarted = false;
   
   // fire notification back to plugin, just like before
   CallURLNotify(reason);
@@ -262,7 +262,7 @@ nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
   
   PluginDestructionGuard guard(mInst);
   
-  mCallNotify = PR_FALSE; // only do this ONCE and prevent recursion
+  mCallNotify = false; // only do this ONCE and prevent recursion
 
   nsNPAPIPlugin* plugin = mInst->GetPlugin();
   if (!plugin || !plugin->GetLibrary())
@@ -357,7 +357,7 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
       return NS_ERROR_FAILURE;
   }
   
-  mStreamStarted = PR_TRUE;
+  mStreamStarted = true;
   return NS_OK;
 }
 
@@ -378,7 +378,7 @@ nsNPAPIPluginStreamListener::SuspendRequest()
   if (NS_FAILED(rv))
     return;
   
-  mIsSuspended = PR_TRUE;
+  mIsSuspended = true;
   
   pluginInfoNPAPI->SuspendRequests();
 }
@@ -391,7 +391,7 @@ nsNPAPIPluginStreamListener::ResumeRequest()
   
   pluginInfoNPAPI->ResumeRequests();
   
-  mIsSuspended = PR_FALSE;
+  mIsSuspended = false;
 }
 
 nsresult
@@ -422,16 +422,16 @@ bool
 nsNPAPIPluginStreamListener::PluginInitJSLoadInProgress()
 {
   if (!mInst)
-    return PR_FALSE;
+    return false;
 
   nsTArray<nsNPAPIPluginStreamListener*> *streamListeners = mInst->StreamListeners();
   for (unsigned int i = 0; i < streamListeners->Length(); i++) {
     if (streamListeners->ElementAt(i)->mIsPluginInitJSStream) {
-      return PR_TRUE;
+      return true;
     }
   }
   
-  return PR_FALSE;
+  return false;
 }
 
 // This method is called when there's more data available off the
@@ -890,7 +890,7 @@ nsNPAPIPluginStreamListener::URLRedirectResponse(NPBool allow)
 {
   if (mHTTPRedirectCallback) {
     mHTTPRedirectCallback->OnRedirectVerifyCallback(allow ? NS_OK : NS_ERROR_FAILURE);
-    mRedirectDenied = allow ? PR_FALSE : PR_TRUE;
+    mRedirectDenied = allow ? false : true;
     mHTTPRedirectCallback = nsnull;
   }
 }

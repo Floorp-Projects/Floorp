@@ -413,5 +413,5 @@ nsCocoaUtils::InitPluginEvent(nsPluginEvent &aPluginEvent,
 {
   aPluginEvent.time = PR_IntervalNow();
   aPluginEvent.pluginEvent = (void*)&aCocoaEvent;
-  aPluginEvent.retargetToFocusedDocument = PR_FALSE;
+  aPluginEvent.retargetToFocusedDocument = false;
 }

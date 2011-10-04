@@ -41,7 +41,6 @@
 #define __NS_SVGRECT_H__
 
 #include "nsIDOMSVGRect.h"
-#include "nsSVGValue.h"
 #include "gfxRect.h"
 
 nsresult

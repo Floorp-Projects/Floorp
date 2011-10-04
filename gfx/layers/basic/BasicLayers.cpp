@@ -1366,18 +1366,6 @@ BasicLayerManager::PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxCon
   }
 }
 
-already_AddRefed<gfxASurface>
-BasicLayerManager::PopGroupToSurface(gfxContext *aTarget, gfxContext *aPushed)
-{
-  if (!aTarget)
-    return nsnull;
-  nsRefPtr<gfxASurface> current = aPushed->CurrentSurface();
-  NS_ASSERTION(!mCachedSurface.IsSurface(current), "Should never be popping cached surface here!");
-  nsRefPtr<gfxPattern> pat = aTarget->PopGroup();
-  current = pat->GetSurface();
-  return current.forget();
-}
-
 void
 BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
@@ -1845,8 +1833,6 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     aTarget->SetMatrix(transform);
   } else {
     aTarget->SetMatrix(gfxMatrix());
-    // Save so we can restore clipping after PushGroupForLayer changes it.
-    aTarget->Save();
   }
 
   const nsIntRegion& visibleRegion = aLayer->GetEffectiveVisibleRegion();
@@ -1863,17 +1849,24 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 
   // Try to annotate currentSurface with a region of pixels that have been
   // (or will be) painted opaque, if no such region is currently set.
+  const nsIntRect& bounds = visibleRegion.GetBounds();
   if (targetOpaqueRect.IsEmpty() && visibleRegion.GetNumRects() == 1 &&
       (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
       !transform.HasNonAxisAlignedTransform()) {
-    const nsIntRect& bounds = visibleRegion.GetBounds();
     currentSurface->SetOpaqueRect(
         aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
     pushedTargetOpaqueRect = PR_TRUE;
   }
 
   nsRefPtr<gfxContext> groupTarget;
-  if (needsGroup) {
+  nsRefPtr<gfxASurface> untransformedSurface;
+  if (!is2D) {
+    untransformedSurface = 
+      gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(bounds.width, bounds.height), 
+                                                         gfxASurface::CONTENT_COLOR_ALPHA);
+    untransformedSurface->SetDeviceOffset(gfxPoint(-bounds.x, -bounds.y));
+    groupTarget = new gfxContext(untransformedSurface);
+  } else if (needsGroup) {
     groupTarget = PushGroupForLayer(aTarget, aLayer, aLayer->GetEffectiveVisibleRegion(),
                                     &needsClipToVisibleRegion);
   } else {
@@ -1911,16 +1904,14 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     if (is2D) {
       PopGroupToSourceWithCachedSurface(aTarget, groupTarget);
     } else {
-      nsRefPtr<gfxASurface> sourceSurface = PopGroupToSurface(aTarget, groupTarget);
-      aTarget->Restore();
-      NS_ABORT_IF_FALSE(sourceSurface, "PopGroup should always return a surface pattern");
-      gfxRect bounds = visibleRegion.GetBounds();
+      NS_ABORT_IF_FALSE(untransformedSurface, 
+                        "We should always allocate an untransformed surface with 3d transforms!");
 
       gfxPoint offset;
       bool dontBlit = needsClipToVisibleRegion || mTransactionIncomplete || 
                         aLayer->GetEffectiveOpacity() != 1.0f;
       nsRefPtr<gfxASurface> result = 
-        Transform3D(sourceSurface, aTarget, bounds,
+        Transform3D(untransformedSurface, aTarget, bounds,
                     effectiveTransform, offset, dontBlit);
 
       blitComplete = !result;
