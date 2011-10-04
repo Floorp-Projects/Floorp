@@ -56,7 +56,6 @@ _BROWSER_FILES = \
   remote_formsZoom.js \
   remote_vkb.js \
   browser_addons.js \
-  browser_addons_locales.js \
   browser_appmenu.js \
   browser_autocompletesearch.js\
   browser_awesomescreen.js \
