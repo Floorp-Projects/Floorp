@@ -2192,3 +2192,9 @@ JS_DumpCompartmentBytecode(JSContext *cx)
 {
     IterateCells(cx, cx->compartment, gc::FINALIZE_SCRIPT, NULL, DumpBytecodeScriptCallback);
 }
+
+JS_PUBLIC_API(JSObject *)
+JS_UnwrapObject(JSObject *obj)
+{
+    return UnwrapObject(obj);
+}
