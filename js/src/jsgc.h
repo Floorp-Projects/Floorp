@@ -45,19 +45,20 @@
  */
 #include <setjmp.h>
 
+#include "jsalloc.h"
 #include "jstypes.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsdhash.h"
-#include "jsbit.h"
 #include "jsgcchunk.h"
-#include "jshashtable.h"
 #include "jslock.h"
 #include "jsutil.h"
-#include "jsvector.h"
 #include "jsversion.h"
 #include "jsgcstats.h"
 #include "jscell.h"
+
+#include "js/HashTable.h"
+#include "js/Vector.h"
 
 struct JSCompartment;
 

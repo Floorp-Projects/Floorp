@@ -47,11 +47,9 @@
 #include "jsobj.h"
 #include "jsreflect.h"
 #include "jscntxt.h"    /* for jsparse.h */
-#include "jsbit.h"      /* for jsparse.h */
 #include "jsscript.h"   /* for jsparse.h */
 #include "jsinterp.h"   /* for jsparse.h */
 #include "jsparse.h"
-#include "jsvector.h"
 #include "jsemit.h"
 #include "jsscan.h"
 #include "jsprf.h"

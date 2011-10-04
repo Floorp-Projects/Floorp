@@ -54,7 +54,6 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsbit.h"
 #include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
@@ -69,7 +68,6 @@
 #include "jsscan.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
-#include "jsvector.h"
 
 #include "vm/RegExpObject.h"
 

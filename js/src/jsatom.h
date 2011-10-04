@@ -42,13 +42,14 @@
 
 #include <stddef.h>
 #include "jsversion.h"
+#include "jsalloc.h"
 #include "jsapi.h"
 #include "jsprvtd.h"
 #include "jshash.h"
-#include "jshashtable.h"
 #include "jspubtd.h"
 #include "jslock.h"
 
+#include "js/HashTable.h"
 #include "vm/String.h"
 
 /* Engine-internal extensions of jsid */

@@ -46,7 +46,6 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsbit.h"
 #include "jsclist.h"
 #include "jsdhash.h"
 #include "jsutil.h"
@@ -141,7 +140,7 @@ PropertyTable::init(JSRuntime *rt, Shape *lastProp)
      * event, let's try to grow, overallocating to hold at least twice the
      * current population.
      */
-    uint32 sizeLog2 = JS_CeilingLog2(2 * entryCount);
+    uint32 sizeLog2 = JS_CEILING_LOG2W(2 * entryCount);
     if (sizeLog2 < MIN_SIZE_LOG2)
         sizeLog2 = MIN_SIZE_LOG2;
 
