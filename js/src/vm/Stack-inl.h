@@ -486,7 +486,7 @@ StackSpace::getStackLimit(JSContext *cx, MaybeReportError report)
 
 JS_ALWAYS_INLINE StackFrame *
 ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
-                           JSFunction *fun, JSScript *script, StackFrame::Flags *flags) const
+                           JSFunction *fun, JSScript *script, /*StackFrame::Flags*/ uint32 *flags) const
 {
     JS_ASSERT(fun->script() == script);
     uintN nformal = fun->nargs;
@@ -535,13 +535,13 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     JS_ASSERT(callee.getFunctionPrivate() == fun);
     JS_ASSERT(fun->script() == script);
 
-    StackFrame::Flags flags = ToFrameFlags(initial);
+    /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, fun, script, &flags);
     if (!fp)
         return false;
 
     /* Initialize frame, locals, regs. */
-    fp->initCallFrame(cx, callee, fun, script, args.length(), flags);
+    fp->initCallFrame(cx, callee, fun, script, args.length(), (StackFrame::Flags) flags);
 
     /*
      * N.B. regs may differ from the active registers, if the parent is about
@@ -571,13 +571,13 @@ ContextStack::getFixupFrame(JSContext *cx, MaybeReportError report,
     JS_ASSERT(args.callee().getFunctionPrivate() == fun);
     JS_ASSERT(fun->script() == script);
 
-    StackFrame::Flags flags = ToFrameFlags(initial);
+    /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, report, args, fun, script, &flags);
     if (!fp)
         return NULL;
 
     /* Do not init late prologue or regs; this is done by jit code. */
-    fp->initJitFrameCallerHalf(cx->fp(), flags, ncode);
+    fp->initJitFrameCallerHalf(cx->fp(), (StackFrame::Flags) flags, ncode);
     fp->initJitFrameEarlyPrologue(fun, args.length());
 
     *stackLimit = space().conservativeEnd_;
