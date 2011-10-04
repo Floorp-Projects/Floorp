@@ -53,7 +53,7 @@ class WrapperFactory {
     // Return true if any of any of the nested wrappers have the flag set.
     static bool HasWrapperFlag(JSObject *wrapper, uintN flag) {
         uintN flags = 0;
-        wrapper->unwrap(&flags);
+        js::UnwrapObject(wrapper, &flags);
         return !!(flags & flag);
     }
 

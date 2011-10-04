@@ -175,51 +175,14 @@ class JS_FRIEND_API(ForceFrame)
     bool enter();
 };
 
-class AutoCompartment
-{
-  public:
-    JSContext * const context;
-    JSCompartment * const origin;
-    JSObject * const target;
-    JSCompartment * const destination;
-  private:
-    Maybe<DummyFrameGuard> frame;
-    bool entered;
-
-  public:
-    AutoCompartment(JSContext *cx, JSObject *target);
-    ~AutoCompartment();
-
-    bool enter();
-    void leave();
-
-  private:
-    // Prohibit copying.
-    AutoCompartment(const AutoCompartment &);
-    AutoCompartment & operator=(const AutoCompartment &);
-};
-
-/*
- * Use this to change the behavior of an AutoCompartment slightly on error. If
- * the exception happens to be an Error object, copy it to the origin compartment
- * instead of wrapping it.
- */
-class ErrorCopier
-{
-    AutoCompartment &ac;
-    JSObject *scope;
-
-  public:
-    ErrorCopier(AutoCompartment &ac, JSObject *scope) : ac(ac), scope(scope) {
-        JS_ASSERT(scope->compartment() == ac.origin);
-    }
-    ~ErrorCopier();
-};
-
 extern JSObject *
 TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
                          uintN flags);
 
-}
+JS_FRIEND_API(bool) IsWrapper(const JSObject *obj);
+JS_FRIEND_API(JSObject *) UnwrapObject(JSObject *obj, uintN *flagsp = NULL);
+bool IsCrossCompartmentWrapper(const JSObject *obj);
+
+} /* namespace js */
 
 #endif

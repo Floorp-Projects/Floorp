@@ -1689,7 +1689,7 @@ fun_finalize(JSContext *cx, JSObject *obj)
  * does not bloat every instance, only those on which reserved slots are set,
  * and those on which ad-hoc properties are defined.
  */
-JS_PUBLIC_DATA(Class) js::FunctionClass = {
+JS_FRIEND_DATA(Class) js::FunctionClass = {
     js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSFunction::CLASS_RESERVED_SLOTS) |
@@ -1716,7 +1716,7 @@ JSString *
 fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
 {
     if (!obj->isFunction()) {
-        if (obj->isFunctionProxy())
+        if (IsFunctionProxy(obj))
             return Proxy::fun_toString(cx, obj, indent);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO,
