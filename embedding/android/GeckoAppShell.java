@@ -58,7 +58,6 @@ import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
-import android.telephony.*;
 import android.webkit.MimeTypeMap;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
@@ -96,10 +95,6 @@ public class GeckoAppShell
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
 
-    static private String sNetworkState = "unknown";
-    static private String sNetworkType = "unknown";
-    static private int sNetworkTypeCode = 0;
-
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -114,7 +109,7 @@ public class GeckoAppShell
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
     public static native void loadLibs(String apkName, boolean shouldExtract);
-    public static native void onChangeNetworkLinkStatus(String status, String type);
+    public static native void onChangeNetworkLinkStatus(String status);
     public static native void reportJavaCrash(String stack);
 
     public static native void processNextNativeEvent();
@@ -681,9 +676,6 @@ public class GeckoAppShell
         // mLaunchState can only be Launched at this point
         GeckoApp.setLaunchState(GeckoApp.LaunchState.GeckoRunning);
         sendPendingEventsToGecko();
-
-        // Refresh the network connectivity state
-        onNetworkStateChange(false);
     }
 
     static void onXreExit() {
@@ -1067,92 +1059,20 @@ public class GeckoAppShell
     }
 
     public static boolean isNetworkLinkUp() {
-        if (sNetworkState == "up")
-            return true;
-        return false;
-    }
-
-    public static boolean isNetworkLinkKnown() {
-        if (sNetworkState == "unknown")
+        ConnectivityManager cm = (ConnectivityManager)
+            GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = cm.getActiveNetworkInfo();
+        if (info == null || !info.isConnected())
             return false;
         return true;
     }
 
-    public static int getNetworkLinkType() {
-        return sNetworkTypeCode;
-    }
-
-    public static void onNetworkStateChange(boolean notifyChanged) {
-        String state;
-        String type;
-        int typeCode;
-
+    public static boolean isNetworkLinkKnown() {
         ConnectivityManager cm = (ConnectivityManager)
             GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo info = cm.getActiveNetworkInfo();
-
-        // Note, these strings and codes correspond to those specified in
-        // nsINetworkLinkService. Make sure to keep them in sync!
-        type = "unknown";
-        typeCode = 0;
-        if (info == null) {
-            state = "unknown";
-        } else if (!info.isConnected()) {
-            state = "down";
-        } else {
-            state = "up";
-
-            int androidType = info.getType();
-
-            if (androidType == ConnectivityManager.TYPE_WIFI) {
-                type = "wifi";
-                typeCode = 3;
-            } else if (androidType == ConnectivityManager.TYPE_WIMAX) {
-                type = "wimax";
-                typeCode = 4;
-            } else if (androidType == ConnectivityManager.TYPE_MOBILE) {
-                TelephonyManager tm = (TelephonyManager)
-                    GeckoApp.mAppContext.getSystemService(Context.TELEPHONY_SERVICE);
-                typeCode = tm.getNetworkType();
-
-                // Note that the value of some of these constants are used due
-                // to not all of these existing in API level 8.
-                //
-                // In particular, EVDO_B appears at level 9, and EHRPD and LTE
-                // appear at level 11.
-                if (androidType == TelephonyManager.NETWORK_TYPE_GPRS ||
-                    androidType == TelephonyManager.NETWORK_TYPE_EDGE ||
-                    androidType == TelephonyManager.NETWORK_TYPE_CDMA ||
-                    androidType == TelephonyManager.NETWORK_TYPE_IDEN ||
-                    androidType == TelephonyManager.NETWORK_TYPE_1xRTT) {
-                    type = "2g";
-                    typeCode = 5;
-                } else if (androidType == TelephonyManager.NETWORK_TYPE_UMTS ||
-                           androidType == TelephonyManager.NETWORK_TYPE_HSDPA ||
-                           androidType == TelephonyManager.NETWORK_TYPE_HSUPA ||
-                           androidType == TelephonyManager.NETWORK_TYPE_HSPA ||
-                           androidType == TelephonyManager.NETWORK_TYPE_EVDO_0 ||
-                           androidType == TelephonyManager.NETWORK_TYPE_EVDO_A ||
-                           androidType == 12 || // TelephonyManager.NETWORK_TYPE_EVDO_B
-                           androidType == 14) { // TelephonyManager.NETWORK_TYPE_EHRPD
-                    type = "3g";
-                    typeCode = 6;
-                } else if (androidType == 13) { // TelephonyManager.NETWORK_TYPE_LTE
-                    type = "4g";
-                    typeCode = 7;
-                }
-            }
-        }
-
-        // If the network state has changed, notify Gecko
-        if (notifyChanged && (state != sNetworkState || typeCode != sNetworkTypeCode)) {
-            Log.i(LOG_FILE_NAME, "Network state changed: (" + state + ", " + type + ") ");
-            sNetworkState = state;
-            sNetworkType = type;
-            sNetworkTypeCode = typeCode;
-            if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning))
-                onChangeNetworkLinkStatus(sNetworkState, sNetworkType);
-        }
+        if (cm.getActiveNetworkInfo() == null)
+            return false;
+        return true;
     }
 
     public static void setSelectedLocale(String localeCode) {
