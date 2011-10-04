@@ -64,6 +64,12 @@ public:
     ContentChild();
     virtual ~ContentChild();
 
+    struct AppInfo
+    {
+        nsCString version;
+        nsCString buildID;
+    };
+
     bool Init(MessageLoop* aIOLoop,
               base::ProcessHandle aParentHandle,
               IPC::Channel* aChannel);
@@ -72,6 +78,10 @@ public:
     static ContentChild* GetSingleton() {
         NS_ASSERTION(sSingleton, "not initialized");
         return sSingleton;
+    }
+
+    const AppInfo& GetAppInfo() {
+        return mAppInfo;
     }
 
     /* if you remove this, please talk to cjones or dougt */
@@ -154,6 +164,8 @@ public:
     virtual bool RecvGarbageCollect();
     virtual bool RecvCycleCollect();
 
+    virtual bool RecvAppInfo(const nsCString& version, const nsCString& buildID);
+
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif
@@ -180,6 +192,8 @@ private:
 #ifdef ANDROID
     gfxIntSize mScreenSize;
 #endif
+
+    AppInfo mAppInfo;
 
     static ContentChild* sSingleton;
 
