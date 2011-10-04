@@ -51,7 +51,6 @@
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
-#include "jsvector.h"
 #include "jscompartment.h"
 #include "Writer.h"
 

@@ -83,7 +83,6 @@
 #include "jstracer.h"
 #include "prmjtime.h"
 #include "jsstaticcheck.h"
-#include "jsvector.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
 #include "jstypedarray.h"
@@ -96,7 +95,6 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "assembler/wtf/Platform.h"
 
 #include "vm/RegExpObject-inl.h"
 #include "vm/Stack-inl.h"

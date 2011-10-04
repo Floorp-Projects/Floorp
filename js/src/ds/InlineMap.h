@@ -41,7 +41,7 @@
 #ifndef InlineMap_h__
 #define InlineMap_h__
 
-#include "jshashtable.h"
+#include "js/HashTable.h"
 
 namespace js {
 

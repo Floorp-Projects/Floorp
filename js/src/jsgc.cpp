@@ -54,7 +54,6 @@
 #include "jsstdint.h"
 #include "jsutil.h"
 #include "jshash.h"
-#include "jsbit.h"
 #include "jsclist.h"
 #include "jsprf.h"
 #include "jsapi.h"
@@ -70,7 +69,6 @@
 #include "jsgc.h"
 #include "jsgcchunk.h"
 #include "jsgcmark.h"
-#include "jshashtable.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -89,13 +87,13 @@
 #endif
 
 #include "methodjit/MethodJIT.h"
-#include "vm/String.h"
 #include "vm/Debugger.h"
+#include "vm/String.h"
 
 #include "jsobjinlines.h"
 
-#include "vm/String-inl.h"
 #include "vm/CallObject-inl.h"
+#include "vm/String-inl.h"
 
 #ifdef MOZ_VALGRIND
 # define JS_VALGRIND

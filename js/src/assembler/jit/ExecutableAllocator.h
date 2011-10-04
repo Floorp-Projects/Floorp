@@ -28,13 +28,14 @@
 
 #include <stddef.h> // for ptrdiff_t
 #include <limits>
-#include "assembler/wtf/Assertions.h"
 
+#include "jsalloc.h"
 #include "jsapi.h"
-#include "jshashtable.h"
 #include "jsprvtd.h"
-#include "jsvector.h"
-#include "jslock.h"
+
+#include "assembler/wtf/Assertions.h"
+#include "js/HashTable.h"
+#include "js/Vector.h"
 
 #if WTF_CPU_SPARC
 #ifdef linux  // bugzilla 502369

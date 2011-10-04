@@ -51,15 +51,15 @@
 #include "jsdhash.h"
 #include "jsgc.h"
 #include "jsgcchunk.h"
-#include "jshashtable.h"
 #include "jspropertycache.h"
 #include "jspropertytree.h"
 #include "jsstaticcheck.h"
 #include "jsutil.h"
-#include "jsvector.h"
 #include "prmjtime.h"
 
 #include "ds/LifoAlloc.h"
+#include "js/HashTable.h"
+#include "js/Vector.h"
 #include "vm/StackSpace.h"
 
 #ifdef _MSC_VER

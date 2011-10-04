@@ -14,18 +14,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
- * July 16, 2009.
+ * The Original Code is Mozilla SpiderMonkey JavaScript code.
  *
  * The Initial Developer of the Original Code is
- *   the Mozilla Corporation.
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Luke Wagner <lw@mozilla.com>
+ *  Luke Wagner <luke@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,20 +38,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jstl_h_
-#define jstl_h_
+#ifndef js_template_lib_h__
+#define js_template_lib_h__
 
-#include "jsprvtd.h"
-#include "jsbit.h"
-#include "jsstaticcheck.h"
+#include "mozilla/Types.h"
 #include "jsstdint.h"
 
-#include <new>
-#include <string.h>
+/*
+ * Library of reusable template meta-functions (that is, functions on types and
+ * compile-time values). Meta-functions are placed inside the 'tl' namespace to
+ * avoid conflict with non-meta functions that logically have the same name
+ * (e.g., js::tl::Min vs. js::Min).
+ */
 
 namespace js {
-
-/* JavaScript Template Library. */
 namespace tl {
 
 /* Compute min/max/clamp. */
@@ -178,270 +179,6 @@ template <bool cond, typename T, T v1, T v2> struct If        { static const T r
 template <typename T, T v1, T v2> struct If<false, T, v1, v2> { static const T result = v2; };
 
 } /* namespace tl */
-
-/* Useful for implementing containers that assert non-reentrancy */
-class ReentrancyGuard
-{
-    /* ReentrancyGuard is not copyable. */
-    ReentrancyGuard(const ReentrancyGuard &);
-    void operator=(const ReentrancyGuard &);
-
-#ifdef DEBUG
-    bool &entered;
-#endif
-  public:
-    template <class T>
-#ifdef DEBUG
-    ReentrancyGuard(T &obj)
-      : entered(obj.entered)
-#else
-    ReentrancyGuard(T &/*obj*/)
-#endif
-    {
-#ifdef DEBUG
-        JS_ASSERT(!entered);
-        entered = true;
-#endif
-    }
-    ~ReentrancyGuard()
-    {
-#ifdef DEBUG
-        entered = false;
-#endif
-    }
-};
-
-/*
- * Round x up to the nearest power of 2.  This function assumes that the most
- * significant bit of x is not set, which would lead to overflow.
- */
-STATIC_POSTCONDITION_ASSUME(return >= x)
-JS_ALWAYS_INLINE size_t
-RoundUpPow2(size_t x)
-{
-    size_t log2 = JS_CEILING_LOG2W(x);
-    JS_ASSERT(log2 < tl::BitSize<size_t>::result);
-    size_t result = size_t(1) << log2;
-    return result;
-}
-
-template <class T>
-class AlignedPtrAndFlag
-{
-    uintptr_t bits;
-
-  public:
-    AlignedPtrAndFlag(T *t, bool flag) {
-        JS_ASSERT((uintptr_t(t) & 1) == 0);
-        bits = uintptr_t(t) | uintptr_t(flag);
-    }
-
-    T *ptr() const {
-        return (T *)(bits & ~uintptr_t(1));
-    }
-
-    bool flag() const {
-        return (bits & 1) != 0;
-    }
-
-    void setPtr(T *t) {
-        JS_ASSERT((uintptr_t(t) & 1) == 0);
-        bits = uintptr_t(t) | uintptr_t(flag());
-    }
-
-    void setFlag() {
-        bits |= 1;
-    }
-
-    void unsetFlag() {
-        bits &= ~uintptr_t(1);
-    }
-
-    void set(T *t, bool flag) {
-        JS_ASSERT((uintptr_t(t) & 1) == 0);
-        bits = uintptr_t(t) | flag;
-    }
-};
-
-template <class T>
-static inline void
-Reverse(T *beg, T *end)
-{
-    while (beg != end) {
-        if (--end == beg)
-            return;
-        T tmp = *beg;
-        *beg = *end;
-        *end = tmp;
-        ++beg;
-    }
-}
-
-template <class T>
-static inline T *
-Find(T *beg, T *end, const T &v)
-{
-    for (T *p = beg; p != end; ++p) {
-        if (*p == v)
-            return p;
-    }
-    return end;
-}
-
-template <class Container>
-static inline typename Container::ElementType *
-Find(Container &c, const typename Container::ElementType &v)
-{
-    return Find(c.begin(), c.end(), v);
-}
-
-template <typename InputIterT, typename CallableT>
-void
-ForEach(InputIterT begin, InputIterT end, CallableT f)
-{
-    for (; begin != end; ++begin)
-        f(*begin);
-}
-
-template <class T>
-static inline T
-Min(T t1, T t2)
-{
-    return t1 < t2 ? t1 : t2;
-}
-
-template <class T>
-static inline T
-Max(T t1, T t2)
-{
-    return t1 > t2 ? t1 : t2;
-}
-
-/* Allows a const variable to be initialized after its declaration. */
-template <class T>
-static T&
-InitConst(const T &t)
-{
-    return const_cast<T &>(t);
-}
-
-template <class T, class U>
-JS_ALWAYS_INLINE T &
-ImplicitCast(U &u)
-{
-    T &t = u;
-    return t;
-}
-
-template<typename T>
-class AutoScopedAssign
-{
-  private:
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-    T *addr;
-    T old;
-
-  public:
-    AutoScopedAssign(T *addr, const T &value JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : addr(addr), old(*addr)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        *addr = value;
-    }
-
-    ~AutoScopedAssign() { *addr = old; }
-};
-
-template <class RefCountable>
-class AlreadyIncRefed
-{
-    typedef RefCountable *****ConvertibleToBool;
-
-    RefCountable *obj;
-
-  public:
-    explicit AlreadyIncRefed(RefCountable *obj) : obj(obj) {}
-
-    bool null() const { return obj == NULL; }
-    operator ConvertibleToBool() const { return (ConvertibleToBool)obj; }
-
-    RefCountable *operator->() const { JS_ASSERT(!null()); return obj; }
-    RefCountable &operator*() const { JS_ASSERT(!null()); return *obj; }
-    RefCountable *get() const { return obj; }
-};
-
-template <class RefCountable>
-class NeedsIncRef
-{
-    typedef RefCountable *****ConvertibleToBool;
-
-    RefCountable *obj;
-
-  public:
-    explicit NeedsIncRef(RefCountable *obj) : obj(obj) {}
-
-    bool null() const { return obj == NULL; }
-    operator ConvertibleToBool() const { return (ConvertibleToBool)obj; }
-
-    RefCountable *operator->() const { JS_ASSERT(!null()); return obj; }
-    RefCountable &operator*() const { JS_ASSERT(!null()); return *obj; }
-    RefCountable *get() const { return obj; }
-};
-
-template <class RefCountable>
-class AutoRefCount
-{
-    typedef RefCountable *****ConvertibleToBool;
-
-    JSContext *const cx;
-    RefCountable *obj;
-
-    AutoRefCount(const AutoRefCount &);
-    void operator=(const AutoRefCount &);
-
-  public:
-    explicit AutoRefCount(JSContext *cx)
-      : cx(cx), obj(NULL)
-    {}
-
-    AutoRefCount(JSContext *cx, NeedsIncRef<RefCountable> aobj)
-      : cx(cx), obj(aobj.get())
-    {
-        if (obj)
-            obj->incref(cx);
-    }
-
-    AutoRefCount(JSContext *cx, AlreadyIncRefed<RefCountable> aobj)
-      : cx(cx), obj(aobj.get())
-    {}
-
-    ~AutoRefCount() {
-        if (obj)
-            obj->decref(cx);
-    }
-
-    void reset(NeedsIncRef<RefCountable> aobj) {
-        if (obj)
-            obj->decref(cx);
-        obj = aobj.get();
-        if (obj)
-            obj->incref(cx);
-    }
-
-    void reset(AlreadyIncRefed<RefCountable> aobj) {
-        if (obj)
-            obj->decref(cx);
-        obj = aobj.get();
-    }
-
-    bool null() const { return obj == NULL; }
-    operator ConvertibleToBool() const { return (ConvertibleToBool)obj; }
-
-    RefCountable *operator->() const { JS_ASSERT(!null()); return obj; }
-    RefCountable &operator*() const { JS_ASSERT(!null()); return *obj; }
-    RefCountable *get() const { return obj; }
-};
-
 } /* namespace js */
 
-#endif /* jstl_h_ */
+#endif  /* js_template_lib_h__ */
