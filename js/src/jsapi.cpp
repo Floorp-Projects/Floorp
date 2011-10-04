@@ -1323,19 +1323,35 @@ JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
 bool
 JSAutoEnterCompartment::enter(JSContext *cx, JSObject *target)
 {
-    JS_ASSERT(!call);
-    if (cx->compartment == target->compartment()) {
-        call = reinterpret_cast<JSCrossCompartmentCall*>(1);
+    JS_ASSERT(state == STATE_UNENTERED);
+    if (cx->compartment == target->getCompartment()) {
+        state = STATE_SAME_COMPARTMENT;
         return true;
     }
-    call = JS_EnterCrossCompartmentCall(cx, target);
-    return call != NULL;
+
+    JS_STATIC_ASSERT(sizeof(bytes) == sizeof(AutoCompartment));
+    CHECK_REQUEST(cx);
+    AutoCompartment *call = new (bytes) AutoCompartment(cx, target);
+    if (call->enter()) {
+        state = STATE_OTHER_COMPARTMENT;
+        return true;
+    }
+    return false;
 }
 
 void
 JSAutoEnterCompartment::enterAndIgnoreErrors(JSContext *cx, JSObject *target)
 {
     (void) enter(cx, target);
+}
+
+JSAutoEnterCompartment::~JSAutoEnterCompartment()
+{
+    if (state == STATE_OTHER_COMPARTMENT) {
+        AutoCompartment* ac = reinterpret_cast<AutoCompartment*>(bytes);
+        CHECK_REQUEST(ac->context);
+        ac->~AutoCompartment();
+    }
 }
 
 namespace JS {
