@@ -742,6 +742,10 @@ case "$target" in
             _CC_SUITE=10
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
+        elif test "$_CC_MAJOR_VERSION" = "17"; then
+            _CC_SUITE=11
+            AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
+            AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         else
             AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
