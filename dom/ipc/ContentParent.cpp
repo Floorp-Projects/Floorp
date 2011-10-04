@@ -71,6 +71,7 @@
 #include "nsIScriptError.h"
 #include "nsConsoleMessage.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsAppRunner.h"
 #include "IDBFactory.h"
 #if defined(MOZ_SYDNEYAUDIO)
 #include "AudioParent.h"
@@ -427,6 +428,14 @@ ContentParent::ContentParent()
         static_cast<nsChromeRegistryChrome*>(registrySvc.get());
     chromeRegistry->SendRegisteredChrome(this);
     mMessageManager = nsFrameMessageManager::NewProcessMessageManager(this);
+
+    if (gAppData) {
+        nsCString version(gAppData->version);
+        nsCString buildID(gAppData->buildID);
+
+        //Sending all information to content process
+        SendAppInfo(version, buildID);
+    }
 }
 
 ContentParent::~ContentParent()
