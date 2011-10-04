@@ -1628,7 +1628,12 @@ public class GeckoAppShell
         }
 
         try {
-            sCamera = android.hardware.Camera.open(aCamera);
+            // no front/back camera before API level 9
+            if (Build.VERSION.SDK_INT >= 9)
+                sCamera = android.hardware.Camera.open(aCamera);
+            else
+                sCamera = android.hardware.Camera.open();
+
             android.hardware.Camera.Parameters params = sCamera.getParameters();
             params.setPreviewFormat(ImageFormat.NV21);
 
@@ -1659,7 +1664,7 @@ public class GeckoAppShell
                     bufferSize = size.width * size.height;
                 }
             }
-            
+
             sCamera.setParameters(params);
             sCameraBuffer = new byte[(bufferSize * 12) / 8];
             sCamera.addCallbackBuffer(sCameraBuffer);
