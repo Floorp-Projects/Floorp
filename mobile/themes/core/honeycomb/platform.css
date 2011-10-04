@@ -532,7 +532,7 @@ menulist {
   color: @color_text_button@ !important;
   background-color: @color_background_button@;
   margin: @margin_normal@;
-  padding: @padding_xnormal@;
+  padding: @padding_xsmall@ @padding_xnormal@;
   border-width: 0;
   border-radius: 0;
 }
