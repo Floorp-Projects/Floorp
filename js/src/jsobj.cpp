@@ -7090,14 +7090,12 @@ js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp)
 }
 
 bool
-js::HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Class *clasp)
+js::HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Native native, Class *clasp)
 {
     if (args.thisv().isObject()) {
         JSObject &thisObj = args.thisv().toObject();
-        if (thisObj.isProxy()) {
-            Native native = args.callee().getFunctionPrivate()->native();
+        if (thisObj.isProxy())
             return Proxy::nativeCall(cx, &thisObj, clasp, native, args);
-        }
     }
 
     ReportIncompatibleMethod(cx, args, clasp);
