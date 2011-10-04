@@ -2377,15 +2377,13 @@ let GroupItems = {
     }
 
     let targetGroupItem;
-    // find first visible non-app tab in the tabbar.
+    // find first non-app visible tab belongs a group, and add the new tabItem
+    // to that group
     gBrowser.visibleTabs.some(function(tab) {
       if (!tab.pinned && tab != tabItem.tab) {
-        if (tab._tabViewTabItem) {
-          if (!tab._tabViewTabItem.parent && !tab._tabViewTabItem.parent.hidden) {
-            // the first visible tab belongs to a group, add the new tabItem to 
-            // that group
-            targetGroupItem = tab._tabViewTabItem.parent;
-          }
+        if (tab._tabViewTabItem && tab._tabViewTabItem.parent &&
+            !tab._tabViewTabItem.parent.hidden) {
+          targetGroupItem = tab._tabViewTabItem.parent;
         }
         return true;
       }
