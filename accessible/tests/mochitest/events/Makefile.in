@@ -76,6 +76,7 @@ _TEST_FILES =\
 		test_focus_menu.xul \
 		test_focus_name.html \
 		test_focus_selects.html \
+		test_focus_tabbox.xul \
 		test_focus_tree.xul \
 		test_menu.xul \
 		test_mutation.html \

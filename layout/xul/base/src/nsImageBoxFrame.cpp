@@ -72,6 +72,7 @@
 #include "nsIDOMDocument.h"
 #include "nsTransform2D.h"
 #include "nsITheme.h"
+#include "nsIImageLoadingContent.h"
 
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
@@ -178,6 +179,7 @@ nsImageBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
 nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
   nsLeafBoxFrame(aShell, aContext),
   mIntrinsicSize(0,0),
+  mRequestRegistered(false),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
   mUseSrcAttr(PR_FALSE),
   mSuppressStyleCheck(PR_FALSE)
@@ -200,9 +202,16 @@ nsImageBoxFrame::MarkIntrinsicWidthsDirty()
 void
 nsImageBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  // Release image loader first so that it's refcnt can go to zero
-  if (mImageRequest)
+  if (mImageRequest) {
+    nsPresContext* presContext = PresContext();
+    NS_ASSERTION(presContext, "No PresContext");
+    nsLayoutUtils::DeregisterImageRequest(presContext,
+                                          mImageRequest,
+                                          &mRequestRegistered);
+
+    // Release image loader first so that it's refcnt can go to zero
     mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
+  }
 
   if (mListener)
     reinterpret_cast<nsImageBoxListener*>(mListener.get())->SetFrame(nsnull); // set the frame to null so we don't send messages to a dead object.
@@ -237,7 +246,12 @@ nsImageBoxFrame::Init(nsIContent*      aContent,
 void
 nsImageBoxFrame::UpdateImage()
 {
+  nsPresContext* presContext = PresContext();
+  NS_ASSERTION(presContext, "No PresContext");
+
   if (mImageRequest) {
+    nsLayoutUtils::DeregisterImageRequest(presContext, mImageRequest,
+                                          &mRequestRegistered);
     mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
     mImageRequest = nsnull;
   }
@@ -264,6 +278,12 @@ nsImageBoxFrame::UpdateImage()
       nsContentUtils::LoadImage(uri, doc, mContent->NodePrincipal(),
                                 doc->GetDocumentURI(), mListener, mLoadFlags,
                                 getter_AddRefs(mImageRequest));
+
+      // Register our imgIRequest with the refresh driver
+      nsLayoutUtils::RegisterImageRequest(presContext,
+                                          mImageRequest,
+                                          &mRequestRegistered);
+
     }
   } else {
     // Only get the list-style-image if we aren't being drawn
@@ -588,10 +608,31 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopContainer(imgIRequest *request,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImageBoxFrame::OnStartDecode(imgIRequest* aRequest)
+{
+  nsPresContext* presContext = PresContext();
+  NS_ASSERTION(presContext, "No PresContext");
+
+  nsLayoutUtils::RegisterImageRequest(presContext,
+                                      mImageRequest,
+                                      &mRequestRegistered);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
                                             nsresult aStatus,
                                             const PRUnichar *statusArg)
 {
+  // If the imgIRequest does not represent an animated image, then we should
+  // deregister it from our refresh driver.
+  nsPresContext* presContext = PresContext();
+  NS_ASSERTION(presContext, "No PresContext");
+
+  nsLayoutUtils::DeregisterImageRequestIfNotAnimated(presContext,
+                                                     mImageRequest,
+                                                     &mRequestRegistered);
+
   if (NS_SUCCEEDED(aStatus))
     // Fire an onload DOM event.
     FireImageDOMEvent(mContent, NS_LOAD);
@@ -629,7 +670,7 @@ NS_IMETHODIMP nsImageBoxListener::OnStartContainer(imgIRequest *request,
                                                    imgIContainer *image)
 {
   if (!mFrame)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   return mFrame->OnStartContainer(request, image);
 }
@@ -638,9 +679,18 @@ NS_IMETHODIMP nsImageBoxListener::OnStopContainer(imgIRequest *request,
                                                   imgIContainer *image)
 {
   if (!mFrame)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   return mFrame->OnStopContainer(request, image);
+}
+
+NS_IMETHODIMP nsImageBoxListener::OnStartDecode(imgIRequest *aRequest)
+{
+  if (!mFrame) {
+    return NS_OK;
+  }
+
+  return mFrame->OnStartDecode(aRequest);
 }
 
 NS_IMETHODIMP nsImageBoxListener::OnStopDecode(imgIRequest *request,
@@ -648,7 +698,7 @@ NS_IMETHODIMP nsImageBoxListener::OnStopDecode(imgIRequest *request,
                                                const PRUnichar *statusArg)
 {
   if (!mFrame)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   return mFrame->OnStopDecode(request, status, statusArg);
 }
