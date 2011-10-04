@@ -56,7 +56,6 @@ _TEST_FILES =	\
 		test_mousecapture_area.html \
 		popup_shared.js \
                 test_videocontrols.html \
-                test_videocontrols_standalone.html \
 		test_videocontrols_video_direction.html \
 		test_videocontrols_audio_direction.html \
 		videocontrols_direction-1-ref.html \
