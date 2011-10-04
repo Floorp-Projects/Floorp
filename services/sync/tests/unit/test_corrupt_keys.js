@@ -141,7 +141,7 @@ add_test(function test_locally_changed_keys() {
                                    IV: w.IV,
                                    hmac: w.hmac});
       wbo.modified = modified;
-      history.wbos[id] = wbo;
+      history.insertWBO(wbo);
       server.registerPathHandler(
         "/1.1/johndoe/storage/history/record-no--" + i,
         upd("history", wbo.handler()));
@@ -201,7 +201,7 @@ add_test(function test_locally_changed_keys() {
                                    IV: w.IV,
                                    hmac: w.hmac});
       wbo.modified = modified;
-      history.wbos[id] = wbo;
+      history.insertWBO(wbo);
       server.registerPathHandler(
         "/1.1/johndoe/storage/history/record-no--" + i,
         upd("history", wbo.handler()));
