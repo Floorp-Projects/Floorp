@@ -1288,6 +1288,10 @@ xpicleanup@BIN_SUFFIX@
     @BINPATH@/msvcp100.dll
     @BINPATH@/msvcr100.dll
   #endif
+  #if _MSC_VER != 1700
+    @BINPATH@/msvcp110.dll
+    @BINPATH@/msvcr110.dll
+  #endif
   mozcrt19.dll
   mozcpp19.dll
 #endif
