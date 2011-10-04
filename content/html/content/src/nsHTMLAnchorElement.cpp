@@ -131,12 +131,18 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 };
 
+// Indicates if a DNS Prefetch has been requested from this Anchor elem
+#define HTML_ANCHOR_DNS_PREFETCH_REQUESTED \
+  (1 << ELEMENT_TYPE_SPECIFIC_BITS_OFFSET)
+
+// Make sure we have enough space for those bits
+PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET < 32);
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
 nsHTMLAnchorElement::nsHTMLAnchorElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
-    Link(this)
+  : nsGenericHTMLElement(aNodeInfo)
+  , Link(this)
 {
 }
 
@@ -206,6 +212,7 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // Prefetch links
   if (aDocument && nsHTMLDNSPrefetch::IsAllowed(OwnerDoc())) {
     nsHTMLDNSPrefetch::PrefetchLow(this);
+    SetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
   }
   return rv;
 }
@@ -217,6 +224,12 @@ nsHTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false);
 
+  // Cancel any DNS prefetches
+  if (HasFlag(HTML_ANCHOR_DNS_PREFETCH_REQUESTED)) {
+    nsHTMLDNSPrefetch::CancelPrefetchLow(this, NS_ERROR_ABORT);
+    UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
+  }
+    
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
