@@ -876,6 +876,12 @@ function ServeFiles(manifestURL, depth, aURL, files)
 // Return true iff this window is focused when this function returns.
 function Focus()
 {
+    // FIXME/bug 583976: focus doesn't yet work with out-of-process
+    // content.
+    if (gBrowserIsRemote) {
+        return false;
+    }
+
     var fm = CC["@mozilla.org/focus-manager;1"].getService(CI.nsIFocusManager);
     fm.activeWindow = window;
     try {
