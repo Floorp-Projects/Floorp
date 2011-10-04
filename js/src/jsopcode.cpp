@@ -4140,6 +4140,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     }
                     LOCAL_ASSERT(*pc == JSOP_PUSH);
                     pc += JSOP_PUSH_LENGTH;
+                    LOCAL_ASSERT(*pc == JSOP_NOTEARG);
+                    pc += JSOP_NOTEARG_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);
                     LOCAL_ASSERT(GET_ARGC(pc) == 0);
                     len = JSOP_CALL_LENGTH;
