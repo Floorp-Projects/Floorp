@@ -460,7 +460,7 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
 
     JSString *str;
     bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, &str, &ok))
+    if (!BoxedPrimitiveMethodGuard(cx, args, str_toSource, &str, &ok))
         return ok;
 
     str = js_QuoteString(cx, str, '"');
@@ -508,7 +508,7 @@ js_str_toString(JSContext *cx, uintN argc, Value *vp)
 
     JSString *str;
     bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, &str, &ok))
+    if (!BoxedPrimitiveMethodGuard(cx, args, js_str_toString, &str, &ok))
         return ok;
 
     args.rval().setString(str);

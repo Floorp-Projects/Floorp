@@ -562,7 +562,7 @@ regexp_toString(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &RegExpClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, regexp_toString, &RegExpClass, &ok);
     if (!obj)
         return ok;
 
@@ -625,8 +625,6 @@ SwapRegExpInternals(JSContext *cx, JSObject *obj, Value *rval, JSString *str, ui
     return true;
 }
 
-enum ExecType { RegExpExec, RegExpTest };
-
 /*
  * ES5 15.10.6.2 (and 15.10.6.3, which calls 15.10.6.2).
  *
@@ -634,13 +632,13 @@ enum ExecType { RegExpExec, RegExpTest };
  * |execType| to perform this optimization.
  */
 static JSBool
-ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
+ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &RegExpClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, native, &RegExpClass, &ok);
     if (!obj)
         return ok;
 
@@ -684,7 +682,7 @@ ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
 
     /* Steps 8-21. */
     size_t lastIndexInt(i);
-    if (!re->execute(cx, res, input, &lastIndexInt, execType == RegExpTest, &args.rval()))
+    if (!re->execute(cx, res, input, &lastIndexInt, native == js_regexp_test, &args.rval()))
         return false;
 
     /* Step 11 (with sticky extension). */
@@ -702,14 +700,14 @@ ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
 JSBool
 js_regexp_exec(JSContext *cx, uintN argc, Value *vp)
 {
-    return ExecuteRegExp(cx, RegExpExec, argc, vp);
+    return ExecuteRegExp(cx, js_regexp_exec, argc, vp);
 }
 
 /* ES5 15.10.6.3. */
 JSBool
 js_regexp_test(JSContext *cx, uintN argc, Value *vp)
 {
-    if (!ExecuteRegExp(cx, RegExpTest, argc, vp))
+    if (!ExecuteRegExp(cx, js_regexp_test, argc, vp))
         return false;
     if (!vp->isTrue())
         vp->setBoolean(false);
@@ -789,7 +787,7 @@ regexp_compile(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &RegExpClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, regexp_compile, &RegExpClass, &ok);
     if (!obj)
         return ok;
 

@@ -1442,7 +1442,7 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return false;
     if (!obj->isArray())
-        return HandleNonGenericMethodClassMismatch(cx, args, &ArrayClass);
+        return HandleNonGenericMethodClassMismatch(cx, args, array_toSource, &ArrayClass);
 
     ArraySharpDetector detector(cx);
     if (!detector.init(obj))
