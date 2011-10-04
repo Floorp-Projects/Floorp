@@ -49,7 +49,8 @@
  */
 
 #include "jsutil.h"
-#include "jstl.h"
+
+#include "js/TemplateLib.h"
 
 namespace js {
 

@@ -57,7 +57,6 @@
 #include "jspubtd.h"
 #include "jsprvtd.h"
 #include "jslock.h"
-#include "jsvector.h"
 #include "jscell.h"
 
 #include "vm/String.h"

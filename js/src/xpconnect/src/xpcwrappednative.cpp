@@ -46,7 +46,6 @@
 #include "XPCWrapper.h"
 #include "nsWrapperCacheInlines.h"
 #include "xpclog.h"
-#include "jstl.h"
 #include "nsINode.h"
 #include "xpcquickstubs.h"
 #include "jsproxy.h"

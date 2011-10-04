@@ -42,7 +42,6 @@
 
 #include "jsanalyze.h"
 #include "jscntxt.h"
-#include "jstl.h"
 #include "MethodJIT.h"
 #include "CodeGenIncludes.h"
 #include "BaseCompiler.h"

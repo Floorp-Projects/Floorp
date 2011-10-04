@@ -47,8 +47,9 @@
 #include <stdio.h>
 #include "js-config.h"
 #include "jspubtd.h"
-#include "jsutil.h"
 #include "jsval.h"
+
+#include "js/Utility.h"
 
 /************************************************************************/
 

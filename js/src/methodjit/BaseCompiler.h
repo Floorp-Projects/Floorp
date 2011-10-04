@@ -41,7 +41,6 @@
 #define jsjaeger_compilerbase_h__
 
 #include "jscntxt.h"
-#include "jstl.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/LinkBuffer.h"
 #include "assembler/assembler/RepatchBuffer.h"
