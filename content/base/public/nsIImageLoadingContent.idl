@@ -133,13 +133,13 @@ interface nsIImageLoadingContent : imgIDecoderObserver
    * Used to notify the image loading content node that a frame has been
    * created.
    */
-  void frameCreated(in nsIFrame aFrame);
+  [notxpcom] void frameCreated(in nsIFrame aFrame);
 
   /**
    * Used to notify the image loading content node that a frame has been
    * destroyed.
    */
-  void frameDestroyed(in nsIFrame aFrame);
+  [notxpcom] void frameDestroyed(in nsIFrame aFrame);
 
   /**
    * Used to find out what type of request one is dealing with (eg
