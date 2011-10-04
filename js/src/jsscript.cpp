@@ -335,7 +335,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
     JSScript *oldscript;
     JSBool ok;
-    jsbytecode *code;
     uint32 length, lineno, nslots;
     uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nconsts, i;
     uint32 prologLength, version, encodedClosedCount;
@@ -576,18 +575,13 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
      * DECODE case to destroy script.
      */
     oldscript = xdr->script;
-    code = script->code;
-    if (xdr->mode == JSXDR_ENCODE) {
-        code = js_UntrapScriptCode(cx, script);
-        if (!code)
-            goto error;
-    }
+
+    AutoScriptUntrapper untrapper;
+    if (xdr->mode == JSXDR_ENCODE && !untrapper.untrap(cx, script))
+        goto error;
 
     xdr->script = script;
-    ok = JS_XDRBytes(xdr, (char *) code, length * sizeof(jsbytecode));
-
-    if (code != script->code)
-        cx->free_(code);
+    ok = JS_XDRBytes(xdr, (char *)script->code, length * sizeof(jsbytecode));
 
     if (!ok)
         goto error;
