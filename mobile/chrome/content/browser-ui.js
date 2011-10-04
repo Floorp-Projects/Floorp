@@ -945,6 +945,10 @@ var BrowserUI = {
         break;
       // Window events
       case "keypress":
+        // Ignore events headed toward the browser; they will be
+        // re-dispatched after content has a chance to handle them.
+        if (aEvent.target.localName == "browser")
+          break;
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
           this.handleEscape(aEvent);
         break;
@@ -1246,7 +1250,10 @@ var BrowserUI = {
         AppMenu.toggle();
         break;
       case "cmd_showTabs":
-        TabsPopup.toggle();
+        if (Util.isPortrait())
+          TabsPopup.toggle();
+        else
+          TabletSidebar.toggle();
         break;
       case "cmd_newTab":
         this.newTab();

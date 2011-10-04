@@ -1667,4 +1667,13 @@ CanLeaveTrace(JSContext *cx)
 #endif
 }
 
+AutoEnumStateRooter::~AutoEnumStateRooter()
+{
+    if (!stateValue.isNull()) {
+        DebugOnly<JSBool> ok =
+            obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
+        JS_ASSERT(ok);
+    }
+}
+
 } /* namespace js */

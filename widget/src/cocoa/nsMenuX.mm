@@ -124,17 +124,17 @@ PRInt32 nsMenuX::sIndexingMenuLevel = 0;
 
 nsMenuX::nsMenuX()
 : mVisibleItemsCount(0), mParent(nsnull), mMenuGroupOwner(nsnull),
-  mNativeMenu(nil), mNativeMenuItem(nil), mIsEnabled(PR_TRUE),
-  mDestroyHandlerCalled(PR_FALSE), mNeedsRebuild(PR_TRUE),
-  mConstructed(PR_FALSE), mVisible(PR_TRUE), mXBLAttached(PR_FALSE)
+  mNativeMenu(nil), mNativeMenuItem(nil), mIsEnabled(true),
+  mDestroyHandlerCalled(false), mNeedsRebuild(true),
+  mConstructed(false), mVisible(true), mXBLAttached(false)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!gMenuMethodsSwizzled) {
     nsToolkit::SwizzleMethods([NSMenu class], @selector(_addItem:toTable:),
-                              @selector(nsMenuX_NSMenu_addItem:toTable:), PR_TRUE);
+                              @selector(nsMenuX_NSMenu_addItem:toTable:), true);
     nsToolkit::SwizzleMethods([NSMenu class], @selector(_removeItem:fromTable:),
-                              @selector(nsMenuX_NSMenu_removeItem:fromTable:), PR_TRUE);
+                              @selector(nsMenuX_NSMenu_removeItem:fromTable:), true);
     // On SnowLeopard the Shortcut framework (which contains the
     // SCTGRLIndex class) is loaded on demand, whenever the user first opens
     // a menu (which normally hasn't happened yet).  So we need to load it
@@ -145,7 +145,7 @@ nsMenuX::nsMenuX()
     nsToolkit::SwizzleMethods(SCTGRLIndexClass, @selector(indexMenuBarDynamically),
                               @selector(nsMenuX_SCTGRLIndex_indexMenuBarDynamically));
 
-    gMenuMethodsSwizzled = PR_TRUE;
+    gMenuMethodsSwizzled = true;
   }
 
   mMenuDelegate = [[MenuDelegate alloc] initWithGeckoMenu:this];
@@ -208,9 +208,9 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOw
                "Menu parent not a menu bar, menu, or native menu!");
 
   if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent))
-    mVisible = PR_FALSE;
+    mVisible = false;
   if (mContent->GetChildCount() == 0)
-    mVisible = PR_FALSE;
+    mVisible = false;
 
   NSString *newCocoaLabelString = nsMenuUtilsX::GetTruncatedCocoaLabel(mLabel);
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
@@ -367,7 +367,7 @@ nsresult nsMenuX::RemoveAll()
 nsEventStatus nsMenuX::MenuOpened()
 {
   // Open the node.
-  mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
+  mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::open, NS_LITERAL_STRING("true"), true);
 
   // Fire a handler. If we're told to stop, don't build the menu at all
   bool keepProcessing = OnOpen();
@@ -384,7 +384,7 @@ nsEventStatus nsMenuX::MenuOpened()
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWN, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent event(true, NS_XUL_POPUP_SHOWN, nsnull, nsMouseEvent::eReal);
 
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
@@ -404,17 +404,17 @@ void nsMenuX::MenuClosed()
     if (mNeedsRebuild)
       mConstructed = false;
 
-    mContent->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::open, PR_TRUE);
+    mContent->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::open, true);
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDDEN, nsnull, nsMouseEvent::eReal);
+    nsMouseEvent event(true, NS_XUL_POPUP_HIDDEN, nsnull, nsMouseEvent::eReal);
 
     nsCOMPtr<nsIContent> popupContent;
     GetMenuPopupContent(getter_AddRefs(popupContent));
     nsIContent* dispatchTo = popupContent ? popupContent : mContent;
     dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
 
-    mDestroyHandlerCalled = PR_TRUE;
+    mDestroyHandlerCalled = true;
     mConstructed = false;
   }
 }
@@ -422,10 +422,10 @@ void nsMenuX::MenuClosed()
 void nsMenuX::MenuConstruct()
 {
   mConstructed = false;
-  gConstructingMenu = PR_TRUE;
+  gConstructingMenu = true;
   
   // reset destroy handler flag so that we'll know to fire it next time this menu goes away.
-  mDestroyHandlerCalled = PR_FALSE;
+  mDestroyHandlerCalled = false;
 
   //printf("nsMenuX::MenuConstruct called for %s = %d \n", NS_LossyConvertUTF16toASCII(mLabel).get(), mNativeMenu);
 
@@ -433,7 +433,7 @@ void nsMenuX::MenuConstruct()
   nsCOMPtr<nsIContent> menuPopup;
   GetMenuPopupContent(getter_AddRefs(menuPopup));
   if (!menuPopup) {
-    gConstructingMenu = PR_FALSE;
+    gConstructingMenu = false;
     return;
   }
 
@@ -455,7 +455,7 @@ void nsMenuX::MenuConstruct()
             xpconnect->WrapNative(cx, global,
                                   menuPopup, NS_GET_IID(nsISupports),
                                   getter_AddRefs(wrapper));
-            mXBLAttached = PR_TRUE;
+            mXBLAttached = true;
           }
         }
       } 
@@ -476,8 +476,8 @@ void nsMenuX::MenuConstruct()
     }
   } // for each menu item
 
-  gConstructingMenu = PR_FALSE;
-  mNeedsRebuild = PR_FALSE;
+  gConstructingMenu = false;
+  mNeedsRebuild = false;
   // printf("Done building, mMenuObjectsArray.Count() = %d \n", mMenuObjectsArray.Count());
 }
 
@@ -592,7 +592,7 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
 bool nsMenuX::OnOpen()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWING, nsnull,
+  nsMouseEvent event(true, NS_XUL_POPUP_SHOWING, nsnull,
                      nsMouseEvent::eReal);
   
   nsCOMPtr<nsIContent> popupContent;
@@ -602,7 +602,7 @@ bool nsMenuX::OnOpen()
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
   if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
-    return PR_FALSE;
+    return false;
 
   // If the open is going to succeed we need to walk our menu items, checking to
   // see if any of them have a command attribute. If so, several apptributes
@@ -612,11 +612,11 @@ bool nsMenuX::OnOpen()
   // NS_XUL_POPUP_SHOWING event above.
   GetMenuPopupContent(getter_AddRefs(popupContent));
   if (!popupContent)
-    return PR_TRUE;
+    return true;
 
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(popupContent->GetDocument()));
   if (!domDoc)
-    return PR_TRUE;
+    return true;
 
   PRUint32 count = popupContent->GetChildCount();
   for (PRUint32 i = 0; i < count; i++) {
@@ -638,9 +638,9 @@ bool nsMenuX::OnOpen()
           if (!commandDisabled.Equals(menuDisabled)) {
             // The menu's disabled state needs to be updated to match the command.
             if (commandDisabled.IsEmpty()) 
-              grandChild->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, PR_TRUE);
+              grandChild->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, true);
             else
-              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
+              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, true);
           }
           
           // The menu's value and checked states need to be updated to match the command.
@@ -651,7 +651,7 @@ bool nsMenuX::OnOpen()
           grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, menuChecked);
           if (!commandChecked.Equals(menuChecked)) {
             if (!commandChecked.IsEmpty()) 
-              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked, PR_TRUE);
+              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked, true);
           }
           
           nsAutoString commandValue, menuValue;
@@ -659,14 +659,14 @@ bool nsMenuX::OnOpen()
           grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuValue);
           if (!commandValue.Equals(menuValue)) {
             if (!commandValue.IsEmpty()) 
-              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::label, commandValue, PR_TRUE);
+              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::label, commandValue, true);
           }
         }
       }
     }
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 // Returns TRUE if we should keep processing the event, FALSE if the handler
@@ -674,10 +674,10 @@ bool nsMenuX::OnOpen()
 bool nsMenuX::OnClose()
 {
   if (mDestroyHandlerCalled)
-    return PR_TRUE;
+    return true;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDING, nsnull,
+  nsMouseEvent event(true, NS_XUL_POPUP_HIDING, nsnull,
                      nsMouseEvent::eReal);
 
   nsCOMPtr<nsIContent> popupContent;
@@ -687,12 +687,12 @@ bool nsMenuX::OnClose()
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
   
-  mDestroyHandlerCalled = PR_TRUE;
+  mDestroyHandlerCalled = true;
   
   if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
-    return PR_FALSE;
+    return false;
   
-  return PR_TRUE;
+  return true;
 }
 
 // Find the |menupopup| child in the |popup| representing this menu. It should be one
@@ -750,7 +750,7 @@ bool nsMenuX::IsXULHelpMenu(nsIContent* aMenuContent)
     nsAutoString id;
     aMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, id);
     if (id.Equals(NS_LITERAL_STRING("helpMenu")))
-      retval = PR_TRUE;
+      retval = true;
   }
   return retval;
 }
@@ -787,14 +787,14 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
       [mNativeMenu setTitle:newCocoaLabelString];
     }
     else if (parentType == eSubmenuObjectType) {
-      static_cast<nsMenuX*>(mParent)->SetRebuild(PR_TRUE);
+      static_cast<nsMenuX*>(mParent)->SetRebuild(true);
     }    
     else if (parentType == eStandaloneNativeMenuObjectType) {
-      static_cast<nsStandaloneNativeMenu*>(mParent)->GetMenuXObject()->SetRebuild(PR_TRUE);
+      static_cast<nsStandaloneNativeMenu*>(mParent)->GetMenuXObject()->SetRebuild(true);
     }
   }
   else if (aAttribute == nsWidgetAtoms::hidden || aAttribute == nsWidgetAtoms::collapsed) {
-    SetRebuild(PR_TRUE);
+    SetRebuild(true);
 
     bool contentIsHiddenOrCollapsed = nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
 
@@ -811,7 +811,7 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
         // in the menu.
         if ([parentMenu indexOfItem:mNativeMenuItem] != -1)
           [parentMenu removeItem:mNativeMenuItem];
-        mVisible = PR_FALSE;
+        mVisible = false;
       }
     }
     else {
@@ -829,7 +829,7 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
         NSMenu* parentMenu = (NSMenu*)mParent->NativeData();
         [parentMenu insertItem:mNativeMenuItem atIndex:insertionIndex];
         [mNativeMenuItem setSubmenu:mNativeMenu];
-        mVisible = PR_TRUE;
+        mVisible = true;
       }
     }
   }
@@ -846,7 +846,7 @@ void nsMenuX::ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild,
   if (gConstructingMenu)
     return;
 
-  SetRebuild(PR_TRUE);
+  SetRebuild(true);
   mMenuGroupOwner->UnregisterForContentChanges(aChild);
 }
 
@@ -856,7 +856,7 @@ void nsMenuX::ObserveContentInserted(nsIDocument *aDocument, nsIContent* aContai
   if (gConstructingMenu)
     return;
 
-  SetRebuild(PR_TRUE);
+  SetRebuild(true);
 }
 
 nsresult nsMenuX::SetupIcon()

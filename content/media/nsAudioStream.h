@@ -114,7 +114,7 @@ public:
   // was opened, of the audio hardware.
   virtual PRInt64 GetPositionInFrames() = 0;
 
-  // Returns PR_TRUE when the audio stream is paused.
+  // Returns true when the audio stream is paused.
   virtual bool IsPaused() = 0;
 
   // Returns the minimum number of audio frames which must be written before

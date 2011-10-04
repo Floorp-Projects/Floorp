@@ -12258,7 +12258,7 @@ TraceRecorder::addDataProperty(JSObject* obj)
 
     // If obj is the global, the global shape is about to change. Note also
     // that since we do not record this case, SETNAME and SETPROP are identical
-    // as far as the tracer is concerned. (js_CheckUndeclaredVarAssignment
+    // as far as the tracer is concerned. (CheckUndeclaredVarAssignment
     // distinguishes the two, in the interpreter.)
     if (obj == globalObj)
         RETURN_STOP("set new property of global object"); // global shape change

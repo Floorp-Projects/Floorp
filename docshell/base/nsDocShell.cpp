@@ -10450,9 +10450,9 @@ nsDocShell::SetHistoryEntry(nsCOMPtr<nsISHEntry> *aPtr, nsISHEntry *aEntry)
         // SetChildHistoryEntry() does SwapHistoryEntries() (bug 304639).
         nsCOMPtr<nsISHEntry> oldRootEntry = GetRootSHEntry(*aPtr);
         if (oldRootEntry) {
-            nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-            GetSameTypeParent(getter_AddRefs(parentAsItem));
-            nsCOMPtr<nsIDocShell> rootShell = do_QueryInterface(parentAsItem);
+            nsCOMPtr<nsIDocShellTreeItem> rootAsItem;
+            GetSameTypeRootTreeItem(getter_AddRefs(rootAsItem));
+            nsCOMPtr<nsIDocShell> rootShell = do_QueryInterface(rootAsItem);
             if (rootShell) { // if we're the root just set it, nothing to swap
                 SwapEntriesData data = { this, newRootEntry };
                 nsIDocShell *rootIDocShell =

@@ -769,7 +769,7 @@ class SwitchToCompartment : public PreserveCompartment {
         : PreserveCompartment(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
-        cx->setCompartment(target->getCompartment());
+        cx->setCompartment(target->compartment());
     }
 
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -791,6 +791,47 @@ class AssertCompartmentUnchanged {
     }
 };
 
-}
+class AutoCompartment
+{
+  public:
+    JSContext * const context;
+    JSCompartment * const origin;
+    JSObject * const target;
+    JSCompartment * const destination;
+  private:
+    Maybe<DummyFrameGuard> frame;
+    bool entered;
+
+  public:
+    AutoCompartment(JSContext *cx, JSObject *target);
+    ~AutoCompartment();
+
+    bool enter();
+    void leave();
+
+  private:
+    // Prohibit copying.
+    AutoCompartment(const AutoCompartment &);
+    AutoCompartment & operator=(const AutoCompartment &);
+};
+
+/*
+ * Use this to change the behavior of an AutoCompartment slightly on error. If
+ * the exception happens to be an Error object, copy it to the origin compartment
+ * instead of wrapping it.
+ */
+class ErrorCopier
+{
+    AutoCompartment &ac;
+    JSObject *scope;
+
+  public:
+    ErrorCopier(AutoCompartment &ac, JSObject *scope) : ac(ac), scope(scope) {
+        JS_ASSERT(scope->compartment() == ac.origin);
+    }
+    ~ErrorCopier();
+};
+
+} /* namespace js */
 
 #endif /* jscompartment_h___ */

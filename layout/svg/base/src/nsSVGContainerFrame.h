@@ -112,7 +112,8 @@ public:
   virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
-  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace);
+  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+                                      PRUint32 aFlags);
   NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
   NS_IMETHOD_(bool) HasValidCoveredRect() { return false; }
 };

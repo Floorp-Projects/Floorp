@@ -166,7 +166,7 @@ private:
   // aEndOffset. If bool aCachedDataOnly is true, then we'll only read
   // from data which is cached in the media cached, otherwise we'll do
   // regular blocking reads from the media stream. If bool aCachedDataOnly
-  // is PR_TRUE, this can safely be called on the main thread, otherwise it
+  // is true, this can safely be called on the main thread, otherwise it
   // must be called on the state machine thread.
   PRInt64 RangeEndTime(PRInt64 aStartOffset,
                        PRInt64 aEndOffset,
@@ -199,9 +199,9 @@ private:
 
   // Returns the range in which you should perform a seek bisection if
   // you wish to seek to aTarget usecs, given the known (buffered) byte ranges
-  // in aRanges. If aExact is PR_TRUE, we only return an exact copy of a
+  // in aRanges. If aExact is true, we only return an exact copy of a
   // range in which aTarget lies, or a null range if aTarget isn't contained
-  // in any of the (buffered) ranges. Otherwise, when aExact is PR_FALSE,
+  // in any of the (buffered) ranges. Otherwise, when aExact is false,
   // we'll construct the smallest possible range we can, based on the times
   // and byte offsets known in aRanges. We can then use this to minimize our
   // bisection's search space when the target isn't in a known buffered range.
@@ -229,7 +229,7 @@ private:
 
   // Reads and decodes header packets for aState, until either header decode
   // fails, or is complete. Initializes the codec state before returning.
-  // Returns PR_TRUE if reading headers and initializtion of the stream
+  // Returns true if reading headers and initializtion of the stream
   // succeeds.
   bool ReadHeaders(nsOggCodecState* aState);
 

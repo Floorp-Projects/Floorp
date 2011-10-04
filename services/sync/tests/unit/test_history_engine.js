@@ -43,7 +43,7 @@ add_test(function test_processIncoming_mobile_history_batched() {
     
     let wbo = new ServerWBO(id, payload);
     wbo.modified = modified;
-    collection.wbos[id] = wbo;
+    collection.insertWBO(wbo);
   }
   
   let server = sync_httpd_setup({

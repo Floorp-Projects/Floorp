@@ -584,7 +584,7 @@ RegExp::extractFrom(JSObject *obj)
     RegExp *re = static_cast<RegExp *>(obj->getPrivate());
 #ifdef DEBUG
     if (re)
-        CompartmentChecker::check(obj->getCompartment(), re->compartment);
+        CompartmentChecker::check(obj->compartment(), re->compartment);
 #endif
     return re;
 }

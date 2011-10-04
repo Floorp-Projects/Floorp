@@ -578,3 +578,119 @@ add_test(function test_sync_failed_partial_400s() {
   Service.startOver();
   server.stop(run_next_test);
 });
+
+add_test(function test_sync_X_Weave_Backoff() {
+  let server = sync_httpd_setup();
+  setUp();
+
+  // Use an odd value on purpose so that it doesn't happen to coincide with one
+  // of the sync intervals.
+  const BACKOFF = 7337;
+
+  // Extend info/collections so that we can put it into server maintenance mode.
+  const INFO_COLLECTIONS = "/1.1/johndoe/info/collections";
+  let infoColl = server._handler._overridePaths[INFO_COLLECTIONS];
+  let serverBackoff = false;
+  function infoCollWithBackoff(request, response) {
+    if (serverBackoff) {
+      response.setHeader("X-Weave-Backoff", "" + BACKOFF);
+    }
+    infoColl(request, response);
+  }
+  server.registerPathHandler(INFO_COLLECTIONS, infoCollWithBackoff);
+
+  // Pretend we have two clients so that the regular sync interval is
+  // sufficiently low.
+  Clients._store.create({id: "foo", cleartext: "bar"});
+  let rec = Clients._store.createRecord("foo", "clients");
+  rec.encrypt();
+  rec.upload(Clients.engineURL + rec.id);
+
+  // Sync once to log in and get everything set up. Let's verify our initial
+  // values.
+  Service.sync();
+  do_check_eq(Status.backoffInterval, 0);
+  do_check_eq(Status.minimumNextSync, 0);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.activeInterval);
+  do_check_true(SyncScheduler.nextSync <=
+                Date.now() + SyncScheduler.syncInterval);
+  // Sanity check that we picked the right value for BACKOFF:
+  do_check_true(SyncScheduler.syncInterval < BACKOFF * 1000);
+
+  // Turn on server maintenance and sync again.
+  serverBackoff = true;
+  Service.sync();
+
+  do_check_true(Status.backoffInterval >= BACKOFF * 1000);
+  // Allowing 1 second worth of of leeway between when Status.minimumNextSync
+  // was set and when this line gets executed.
+  let minimumExpectedDelay = (BACKOFF - 1) * 1000;
+  do_check_true(Status.minimumNextSync >= Date.now() + minimumExpectedDelay);
+
+  // Verify that the next sync is actually going to wait that long.
+  do_check_true(SyncScheduler.nextSync >= Date.now() + minimumExpectedDelay);
+  do_check_true(SyncScheduler.syncTimer.delay >= minimumExpectedDelay);
+
+  Service.startOver();
+  server.stop(run_next_test);
+});
+
+add_test(function test_sync_503_Retry_After() {
+  let server = sync_httpd_setup();
+  setUp();
+
+  // Use an odd value on purpose so that it doesn't happen to coincide with one
+  // of the sync intervals.
+  const BACKOFF = 7337;
+
+  // Extend info/collections so that we can put it into server maintenance mode.
+  const INFO_COLLECTIONS = "/1.1/johndoe/info/collections";
+  let infoColl = server._handler._overridePaths[INFO_COLLECTIONS];
+  let serverMaintenance = false;
+  function infoCollWithMaintenance(request, response) {
+    if (!serverMaintenance) {
+      infoColl(request, response);
+      return;
+    }
+    response.setHeader("Retry-After", "" + BACKOFF);
+    response.setStatusLine(request.httpVersion, 503, "Service Unavailable");
+  }
+  server.registerPathHandler(INFO_COLLECTIONS, infoCollWithMaintenance);
+
+  // Pretend we have two clients so that the regular sync interval is
+  // sufficiently low.
+  Clients._store.create({id: "foo", cleartext: "bar"});
+  let rec = Clients._store.createRecord("foo", "clients");
+  rec.encrypt();
+  rec.upload(Clients.engineURL + rec.id);
+
+  // Sync once to log in and get everything set up. Let's verify our initial
+  // values.
+  Service.sync();
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(Status.backoffInterval, 0);
+  do_check_eq(Status.minimumNextSync, 0);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.activeInterval);
+  do_check_true(SyncScheduler.nextSync <=
+                Date.now() + SyncScheduler.syncInterval);
+  // Sanity check that we picked the right value for BACKOFF:
+  do_check_true(SyncScheduler.syncInterval < BACKOFF * 1000);
+
+  // Turn on server maintenance and sync again.
+  serverMaintenance = true;
+  Service.sync();
+
+  do_check_true(Status.enforceBackoff);
+  do_check_true(Status.backoffInterval >= BACKOFF * 1000);
+  // Allowing 1 second worth of of leeway between when Status.minimumNextSync
+  // was set and when this line gets executed.
+  let minimumExpectedDelay = (BACKOFF - 1) * 1000;
+  do_check_true(Status.minimumNextSync >= Date.now() + minimumExpectedDelay);
+
+  // Verify that the next sync is actually going to wait that long.
+  do_check_true(SyncScheduler.nextSync >= Date.now() + minimumExpectedDelay);
+  do_check_true(SyncScheduler.syncTimer.delay >= minimumExpectedDelay);
+
+  Service.startOver();
+  server.stop(run_next_test);
+});
