@@ -697,11 +697,11 @@ public class GeckoAppShell
 
     // "Installs" an application by creating a shortcut
     static void createShortcut(String aTitle, String aURI, String aIconData, String aType) {
-        Log.w("GeckoAppJava", "createShortcut for " + aURI + " [" + aTitle + "]");
+        Log.w("GeckoAppJava", "createShortcut for " + aURI + " [" + aTitle + "] > " + aType);
 
         // the intent to be launched by the shortcut
         Intent shortcutIntent = new Intent();
-        if (aType == "webapp") {
+        if (aType.equalsIgnoreCase("webapp")) {
             shortcutIntent.setAction("org.mozilla.gecko.WEBAPP");
             shortcutIntent.putExtra("args", "--webapp=" + aURI);
         } else {
