@@ -250,6 +250,13 @@ ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok)
     return ok;
 }
 
+inline void
+InterpreterFrames::enableInterruptsIfRunning(JSScript *script)
+{
+    if (script == regs->fp()->script())
+        enabler.enableInterrupts();
+}
+
 }  /* namespace js */
 
 #endif /* jsinterpinlines_h__ */

@@ -2757,7 +2757,7 @@ nsXPCComponents_Utils::LookupMethod()
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
-    while(obj && !obj->isWrapper() && !IS_WRAPPER_CLASS(obj->getClass()))
+    while(obj && !js::IsWrapper(obj) && !IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
         obj = JS_GetPrototype(cx, obj);
 
     if(!obj)
@@ -2768,7 +2768,7 @@ nsXPCComponents_Utils::LookupMethod()
     if(NS_FAILED(rv))
         return rv;
 
-    OBJ_TO_INNER_OBJECT(cx, obj);
+    obj = JS_ObjectToInnerObject(cx, obj);
     if(!obj)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
@@ -3038,7 +3038,7 @@ SandboxImport(JSContext *cx, uintN argc, jsval *vp)
     } else {
         // NB: funobj must only be used to get the JSFunction out.
         JSObject *funobj = JSVAL_TO_OBJECT(argv[0]);
-        if (funobj->isProxy()) {
+        if (js::IsProxy(funobj)) {
             funobj = XPCWrapper::UnsafeUnwrapSecurityWrapper(funobj);
         }
 
@@ -3607,7 +3607,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 #endif
 
     sandbox = XPCWrapper::UnsafeUnwrapSecurityWrapper(sandbox);
-    if (!sandbox || sandbox->getJSClass() != &SandboxClass) {
+    if (!sandbox || js::GetObjectJSClass(sandbox) != &SandboxClass) {
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -3737,7 +3737,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
             xpc::CompartmentPrivate *sandboxdata =
                 static_cast<xpc::CompartmentPrivate *>
-                           (JS_GetCompartmentPrivate(cx, sandbox->compartment()));
+                           (JS_GetCompartmentPrivate(cx, js::GetObjectCompartment(sandbox)));
             if (!ac.enter(cx, callingScope) ||
                 !WrapForSandbox(cx, sandboxdata->wantXrays, &v)) {
                 rv = NS_ERROR_FAILURE;
@@ -3912,7 +3912,7 @@ nsXPCComponents_Utils::GetGlobalForObject()
   *rval = OBJECT_TO_JSVAL(obj);
 
   // Outerize if necessary.
-  if (JSObjectOp outerize = obj->getClass()->ext.outerObject)
+  if (JSObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
       *rval = OBJECT_TO_JSVAL(outerize(cx, obj));
 
   cc->SetReturnValueWasSet(PR_TRUE);
@@ -3930,7 +3930,7 @@ nsXPCComponents_Utils::CreateObjectIn(const jsval &vobj, JSContext *cx, jsval *r
     if(JSVAL_IS_PRIMITIVE(vobj))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    JSObject *scope = JSVAL_TO_OBJECT(vobj)->unwrap();
+    JSObject *scope = js::UnwrapObject(JSVAL_TO_OBJECT(vobj));
     JSObject *obj;
     {
         JSAutoEnterCompartment ac;
@@ -3986,7 +3986,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const jsval &vobj, JSContext *cx)
     if(JSVAL_IS_PRIMITIVE(vobj))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    JSObject *obj = JSVAL_TO_OBJECT(vobj)->unwrap();
+    JSObject *obj = js::UnwrapObject(JSVAL_TO_OBJECT(vobj));
 
     JSAutoEnterCompartment ac;
     if (!ac.enter(cx, obj))
@@ -4008,7 +4008,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const jsval &vobj, JSContext *cx)
 
         JSObject *propobj = JSVAL_TO_OBJECT(v);
         // TODO Deal with non-functions.
-        if (!propobj->isWrapper() || !JS_ObjectIsCallable(cx, propobj))
+        if (!js::IsWrapper(propobj) || !JS_ObjectIsCallable(cx, propobj))
             continue;
 
         if (!WrapCallable(cx, obj, id, propobj, &v) ||
