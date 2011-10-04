@@ -3,10 +3,10 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 function getLocale(aLocaleParams, aAppParams) {
  let l = {
-  TARGETLOCALE: "test",
-  NAME: "Test Locale",
+  TARGETLOCALE: "test{IDNUMBER}",
+  NAME: "Test Locale {IDNUMBER}",
   VERSION: "1.0",
-  INSTALL: "http://www.example.com/mylocale.xpi",
+  INSTALL: "http://www.example.com/browser/mobile/chrome/tests/addons/browser_locale{IDNUMBER}.xpi",
   TYPENUMBER: 5,
   TYPENAME: "Language Pack (Application)",
   IDNUMBER: "",
@@ -44,20 +44,20 @@ let template = "<addon>"+
  "<target_locale>{TARGETLOCALE}</target_locale>" +
  "<name>{NAME}</name>"+
  "<type id=\"{TYPENUMBER}\">{TYPENAME}</type>"+
- "<guid>langpack-{TARGETLOCALE}-{IDNUMBER}@firefox-mobile.mozilla.org</guid>"+
+ "<guid>langpack-{TARGETLOCALE}@firefox-mobile.mozilla.org</guid>"+
  "<version>{VERSION}</version>"+
  "<status id=\"4\">Public</status>"+
  "<compatible_applications>{APPS}</compatible_applications>"+
  "<all_compatible_os><os>ALL</os></all_compatible_os>"+
  "<install os=\"ALL\">{INSTALL}</install><strings>\n" +
   "title=TITLE\n" +
-  "continueIn=CONTINUEIN\n" +
+  "continueIn=CONTINUEIN%S\n" +
   "name=NAME\n" +
   "choose=CHOOSE\n" +
   "chooseLanguage=CHOOSELANGUAGE\n" +
   "cancel=CANCEL\n" +
   "continue=CONTINUE\n" +
-  "installing=INSTALLING\n" +
+  "installing=INSTALLING%S\n" +
   "installerror=INSTALLERROR\n" +
   "loading=LOADING" +
  "</strings>"+
@@ -105,7 +105,7 @@ function handleRequest(request, response) {
    t = t.replace(/{INSTALL}/, locales[i].INSTALL);
    t = t.replace(/{TYPENUMBER}/, locales[i].TYPENUMBER);
    t = t.replace(/{TYPENAME}/, locales[i].TYPENAME);
-   t = t.replace(/{IDNUMBER}/, locales[i].IDNUMBER)
+   t = t.replace(/{IDNUMBER}/g, locales[i].IDNUMBER)
 
    let a = appTemplate;
    a = a.replace(/{APPNAME}/, locales[i].app.APPNAME);

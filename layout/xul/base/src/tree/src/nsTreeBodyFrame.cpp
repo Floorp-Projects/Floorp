@@ -54,6 +54,7 @@
 
 #include "nsTreeBodyFrame.h"
 #include "nsTreeSelection.h"
+#include "nsTreeImageListener.h"
 
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
@@ -114,6 +115,14 @@ static PLDHashOperator
 CancelImageRequest(const nsAString& aKey,
                    nsTreeImageCacheEntry aEntry, void* aData)
 {
+
+  // If our imgIRequest object was registered with the refresh driver,
+  // then we need to deregister it.
+  nsTreeBodyFrame* frame = static_cast<nsTreeBodyFrame*>(aData);
+
+  nsLayoutUtils::DeregisterImageRequest(frame->PresContext(), aEntry.request,
+                                        nsnull);
+
   aEntry.request->CancelAndForgetObserver(NS_BINDING_ABORTED);
   return PL_DHASH_NEXT;
 }
@@ -164,7 +173,8 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
 // Destructor
 nsTreeBodyFrame::~nsTreeBodyFrame()
 {
-  mImageCache.EnumerateRead(CancelImageRequest, nsnull);
+  mImageCache.EnumerateRead(CancelImageRequest, this);
+  DetachImageListeners();
   delete mSlots;
 }
 
@@ -197,8 +207,11 @@ nsTreeBodyFrame::Init(nsIContent*     aContent,
   mIndentation = GetIndentation();
   mRowHeight = GetRowHeight();
 
+  NS_ENSURE_TRUE(mCreatedListeners.Init(), NS_ERROR_OUT_OF_MEMORY);
+
   NS_ENSURE_TRUE(mImageCache.Init(16), NS_ERROR_OUT_OF_MEMORY);
   EnsureBoxObject();
+
   return rv;
 }
 
@@ -2154,9 +2167,13 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, bool aUseContex
   if (!*aResult) {
     // Create a new nsTreeImageListener object and pass it our row and column
     // information.
-    nsTreeImageListener* listener = new nsTreeImageListener(mTreeBoxObject);
+    nsTreeImageListener* listener = new nsTreeImageListener(this);
     if (!listener)
       return NS_ERROR_OUT_OF_MEMORY;
+
+    if (!mCreatedListeners.PutEntry(listener)) {
+      return NS_ERROR_FAILURE;
+    }
 
     listener->AddCell(aRowIndex, aCol);
     nsCOMPtr<imgIDecoderObserver> imgDecoderObserver = listener;
@@ -4236,7 +4253,7 @@ nsresult
 nsTreeBodyFrame::ClearStyleAndImageCaches()
 {
   mStyleCache.Clear();
-  mImageCache.EnumerateRead(CancelImageRequest, nsnull);
+  mImageCache.EnumerateRead(CancelImageRequest, this);
   mImageCache.Clear();
   return NS_OK;
 }
@@ -4468,6 +4485,20 @@ nsTreeBodyFrame::PostScrollEvent()
   }
 }
 
+void
+nsTreeBodyFrame::DetachImageListeners()
+{
+  mCreatedListeners.Clear();
+}
+
+void
+nsTreeBodyFrame::RemoveTreeImageListener(nsTreeImageListener* aListener)
+{
+  if (aListener) {
+    mCreatedListeners.RemoveEntry(aListener);
+  }
+}
+
 #ifdef ACCESSIBILITY
 void
 nsTreeBodyFrame::FireRowCountChangedEvent(PRInt32 aIndex, PRInt32 aCount)
@@ -4640,4 +4671,20 @@ nsTreeBodyFrame::FullScrollbarsUpdate(bool aNeedsFullInvalidation)
   NS_ENSURE_TRUE(weakFrame.IsAlive(), PR_FALSE);
   nsContentUtils::AddScriptRunner(new nsOverflowChecker(this));
   return weakFrame.IsAlive();
+}
+
+nsresult
+nsTreeBodyFrame::OnStartDecode(imgIRequest* aRequest)
+{
+  nsLayoutUtils::RegisterImageRequest(PresContext(), aRequest, nsnull);
+  return NS_OK;
+}
+
+nsresult
+nsTreeBodyFrame::OnStopDecode(imgIRequest* aRequest, nsresult aStatus,
+                              const PRUnichar* aStatusArg)
+{
+  nsLayoutUtils::DeregisterImageRequestIfNotAnimated(PresContext(), aRequest,
+                                                     nsnull);
+  return NS_OK;
 }
