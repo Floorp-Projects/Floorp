@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+</div>
+
+<pre id="test">
+<script type="text/javascript" src="use_large_cache.js"></script>
+<script class="testbody" type="text/javascript">
+
+/*
+ * Positions of the  UI elements, relative to the upper-left corner of the
+ * <video> box.
+ */
+const videoWidth = 320;
+const videoHeight = 240;
+const videoDuration = 3.8329999446868896;
+
+const playButtonWidth = 28;
+const playButtonHeight = 28;
+const muteButtonWidth = 33;
+const muteButtonHeight = 28;
+const durationWidth = 34;
+const scrubberWidth = videoWidth - playButtonWidth - muteButtonWidth - durationWidth;
+const scrubberHeight = 28;
+
+// Play button is on the bottom-left
+const playButtonCenterX = 0 + Math.round(playButtonWidth / 2);
+const playButtonCenterY = videoHeight - Math.round(playButtonHeight / 2);
+// Mute button is on the bottom-right
+const muteButtonCenterX = videoWidth - Math.round(muteButtonWidth / 2);
+const muteButtonCenterY = videoHeight - Math.round(muteButtonHeight / 2);
+// Scrubber bar is between the play and mute buttons. We don't need it's
+// X center, just the offset of its box.
+const scrubberOffsetX = 0 + playButtonWidth;
+const scrubberCenterY = videoHeight - Math.round(scrubberHeight / 2);
+
+function runTest(event) {
+  if (event.type == "canplaythrough")
+    return;
+
+  ok(true, "----- test #" + testnum + " -----");
+
+  switch (testnum) {
+    /*
+     * Check operation of play/pause via clicking on the video.
+     */
+    case 1:
+      // Check initial state upon load
+      is(event.type, "play", "checking event type");
+      is(video.paused, false, "checking video play state");
+      is(video.muted, false, "checking video mute state");
+
+      // Click the pause button
+      synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { }, standaloneVideoWindow);
+      break;
+
+    case 2:
+      is(event.type, "pause",  "checking event type");
+      is(video.paused, true, "checking video play state");
+      is(video.muted, false,  "checking video mute state");
+
+      // Click the play button
+      synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { }, standaloneVideoWindow);
+      break;
+
+    case 3:
+      is(event.type, "play", "checking event type");
+      is(video.paused, false,  "checking video play state");
+      is(video.muted, false,  "checking video mute state");
+
+      standaloneVideoWindow.close();
+      SimpleTest.finish();
+      break;
+
+    default:
+      throw "unexpected test #" + testnum + " w/ event " + event.type;
+  }
+
+  testnum++;
+}
+
+var video;
+function loadevent(event) {
+  video = standaloneVideoWindow.document.getElementsByTagName("video")[0];
+
+  // Events expected by the test.
+  video.addEventListener("play",  runTest, false);
+  video.addEventListener("pause", runTest, false);
+}
+
+var testnum = 1;
+
+var standaloneVideoWindow = window.open("video.ogg", null, "innerWidth=320,innerHeight=240");
+
+// Kick off test once video has loaded.
+standaloneVideoWindow.addEventListener("load",  loadevent, false);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
