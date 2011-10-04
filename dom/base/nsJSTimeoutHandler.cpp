@@ -128,8 +128,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
       foo.AppendLiteral("]");
     }
     else if (tmp->mFunObj) {
-      JSFunction* fun = (JSFunction*)tmp->mFunObj->getPrivate();
-      if (fun->atom) {
+      JSFunction* fun = JS_GetObjectFunction(tmp->mFunObj);
+      if (JS_GetFunctionId(fun)) {
         JSFlatString *funId = JS_ASSERT_STRING_IS_FLAT(JS_GetFunctionId(fun));
         size_t size = 1 + JS_PutEscapedFlatString(NULL, 0, funId, 0);
         char *name = new char[size];
