@@ -418,6 +418,10 @@ nsContextMenu.prototype = {
     this.showItem("context-media-showcontrols", onMedia && !this.target.controls);
     this.showItem("context-media-hidecontrols", onMedia && this.target.controls);
     this.showItem("context-video-fullscreen", this.onVideo);
+    var statsShowing = this.onVideo && this.target.wrappedJSObject.mozMediaStatisticsShowing;
+    this.showItem("context-video-showstats", this.onVideo && this.target.controls && !statsShowing);
+    this.showItem("context-video-hidestats", this.onVideo && this.target.controls && statsShowing);
+
     // Disable them when there isn't a valid media source loaded.
     if (onMedia) {
       var hasError = this.target.error != null ||
@@ -432,6 +436,8 @@ nsContextMenu.prototype = {
         let canSaveSnapshot = this.target.readyState >= this.target.HAVE_CURRENT_DATA;
         this.setItemAttr("context-video-saveimage",  "disabled", !canSaveSnapshot);
         this.setItemAttr("context-video-fullscreen", "disabled", hasError);
+        this.setItemAttr("context-video-showstats", "disabled", hasError);
+        this.setItemAttr("context-video-hidestats", "disabled", hasError);
       }
     }
     this.showItem("context-media-sep-commands",  onMedia);
@@ -1435,6 +1441,16 @@ nsContextMenu.prototype = {
         break;
       case "showcontrols":
         media.setAttribute("controls", "true");
+        break;
+      case "showstats":
+        var event = document.createEvent("CustomEvent");
+        event.initCustomEvent("media-showStatistics", false, true, true);
+        media.dispatchEvent(event);
+        break;
+      case "hidestats":
+        var event = document.createEvent("CustomEvent");
+        event.initCustomEvent("media-showStatistics", false, true, false);
+        media.dispatchEvent(event);
         break;
     }
   },
