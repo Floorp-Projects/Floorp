@@ -899,11 +899,11 @@ MarkStackRangeConservatively(JSTracer *trc, Value *beginv, Value *endv)
         JSRuntime *runtime;
         JSCompartment *savedCompartment;
 
-        AutoSkip(JSRuntime *rt)
+        AutoSkipChecking(JSRuntime *rt)
           : runtime(rt), savedCompartment(rt->gcCheckCompartment) {
             rt->gcCheckCompartment = NULL;
         }
-        ~AutoSkip() { runtime->gcCheckCompartment = savedCompartment; }
+        ~AutoSkipChecking() { runtime->gcCheckCompartment = savedCompartment; }
     } as(trc->context->runtime);
 
     const jsuword *begin = beginv->payloadWord();
