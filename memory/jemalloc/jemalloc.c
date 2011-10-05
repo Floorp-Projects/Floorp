@@ -82,6 +82,10 @@
  *   |                           |     ... |
  *   |=====================================|
  *
+ * NOTE: Due to Mozilla bug 691003, we cannot reserve less than one word for an
+ * allocation on Linux or Mac.  So on 32-bit *nix, the smallest bucket size is
+ * 4 bytes, and on 64-bit, the smallest bucket size is 8 bytes.
+ *
  * A different mechanism is used for each category:
  *
  *   Small : Each size class is segregated into its own set of runs.  Each run
@@ -426,7 +430,7 @@ static const bool __isthreaded = true;
 /* Size of stack-allocated buffer passed to strerror_r(). */
 #define	STRERROR_BUF		64
 
-/* Minimum alignment of allocations is 2^QUANTUM_2POW_MIN bytes. */
+/* Minimum alignment of non-tiny allocations is 2^QUANTUM_2POW_MIN bytes. */
 #  define QUANTUM_2POW_MIN      4
 #ifdef MOZ_MEMORY_SIZEOF_PTR_2POW
 #  define SIZEOF_PTR_2POW		MOZ_MEMORY_SIZEOF_PTR_2POW
@@ -515,8 +519,15 @@ static const bool __isthreaded = true;
 #define	CACHELINE_2POW		6
 #define	CACHELINE		((size_t)(1U << CACHELINE_2POW))
 
-/* Smallest size class to support. */
+/*
+ * Smallest size class to support.  On Linux and Mac, even malloc(1) must
+ * reserve a word's worth of memory (see Mozilla bug 691003).
+ */
+#ifdef MOZ_MEMORY_WINDOWS
 #define	TINY_MIN_2POW		1
+#else
+#define TINY_MIN_2POW           (sizeof(void*) == 8 ? 3 : 2)
+#endif
 
 /*
  * Maximum size class that is a multiple of the quantum, but not (necessarily)
