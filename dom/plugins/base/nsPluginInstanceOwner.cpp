@@ -1671,6 +1671,27 @@ void nsPluginInstanceOwner::ScrollPositionDidChange(nscoord aX, nscoord aY)
 }
 
 #ifdef ANDROID
+void nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
+{
+  void* javaSurface = mInstance->GetJavaSurface();
+
+  if (!javaSurface)
+    return;
+
+  JNIEnv* env = GetJNIForThread();
+  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+  jmethodID method = env->GetStaticMethodID(cls,
+                                            "addPluginView",
+                                            "(Landroid/view/View;DDDD)V");
+  env->CallStaticVoidMethod(cls,
+                            method,
+                            javaSurface,
+                            aRect.x,
+                            aRect.y,
+                            aRect.width,
+                            aRect.height);
+}
+
 void nsPluginInstanceOwner::RemovePluginView()
 {
   if (mInstance && mObjectFrame) {
@@ -2812,45 +2833,6 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
 
 #ifdef ANDROID
 
-class AndroidPaintEventRunnable : public nsRunnable
-{
-public:
-  AndroidPaintEventRunnable(void* aSurface, nsNPAPIPluginInstance* inst, const gfxRect& aFrameRect)
-    : mSurface(aSurface), mInstance(inst), mFrameRect(aFrameRect) {
-  }
-
-  ~AndroidPaintEventRunnable() {
-  }
-
-  NS_IMETHOD Run()
-  {
-    LOG("%p - AndroidPaintEventRunnable::Run\n", this);
-
-    if (!mInstance || !mSurface)
-      return NS_OK;
-
-    // This needs to happen on the gecko main thread.
-    JNIEnv* env = GetJNIForThread();
-    jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
-    jmethodID method = env->GetStaticMethodID(cls,
-                                              "addPluginView",
-                                              "(Landroid/view/View;DDDD)V");
-    env->CallStaticVoidMethod(cls,
-                              method,
-                              mSurface,
-                              mFrameRect.x,
-                              mFrameRect.y,
-                              mFrameRect.width,
-                              mFrameRect.height);
-    return NS_OK;
-  }
-private:
-  void* mSurface;
-  nsCOMPtr<nsNPAPIPluginInstance> mInstance;
-  gfxRect mFrameRect;
-};
-
-
 void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                                   const gfxRect& aFrameRect,
                                   const gfxRect& aDirtyRect)
@@ -2862,33 +2844,20 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   mInstance->GetDrawingModel(&model);
 
   if (model == kSurface_ANPDrawingModel) {
+    AddPluginView(aFrameRect);
 
-    {
-      ANPEvent event;
-      event.inSize = sizeof(ANPEvent);
-      event.eventType = kLifecycle_ANPEventType;
-      event.data.lifecycle.action = kOnScreen_ANPLifecycleAction;
-      mInstance->HandleEvent(&event, nsnull);
+    gfxImageSurface* pluginSurface = mInstance->LockTargetSurface();
+    if (!pluginSurface) {
+      mInstance->UnlockTargetSurface(false);
+      return;
     }
 
-    /*
-    gfxMatrix currentMatrix = aContext->CurrentMatrix();
-    gfxSize scale = currentMatrix.ScaleFactors(true);
-    printf_stderr("!!!!!!!! scale!!:  %f x %f\n", scale.width, scale.height);
-    */
+    aContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+    aContext->SetSource(pluginSurface, gfxPoint(aFrameRect.x, aFrameRect.y));
+    aContext->Clip(aDirtyRect);
+    aContext->Paint();
 
-    JNIEnv* env = GetJNIForThread();
-    jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
-    jmethodID method = env->GetStaticMethodID(cls,
-                                              "addPluginView",
-                                              "(Landroid/view/View;DDDD)V");
-    env->CallStaticVoidMethod(cls,
-                              method,
-                              mInstance->GetJavaSurface(),
-                              aFrameRect.x,
-                              aFrameRect.y,
-                              aFrameRect.width,
-                              aFrameRect.height);
+    mInstance->UnlockTargetSurface(false);
     return;
   }
 
