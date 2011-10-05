@@ -88,13 +88,14 @@ struct JS_FRIEND_API(ArrayBuffer) {
                       JSProperty **propp);
 
     static JSBool
-    obj_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
+    obj_defineGeneric(JSContext *cx, JSObject *obj, jsid id, const Value *v,
+                      PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+    static JSBool
+    obj_defineProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Value *v,
                        PropertyOp getter, StrictPropertyOp setter, uintN attrs);
-
     static JSBool
     obj_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *v,
                       PropertyOp getter, StrictPropertyOp setter, uintN attrs);
-
     static JSBool
     obj_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *v,
                       PropertyOp getter, StrictPropertyOp setter, uintN attrs);

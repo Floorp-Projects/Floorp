@@ -4787,8 +4787,8 @@ xml_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp, 
 }
 
 static JSBool
-xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
-                   PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+xml_defineGeneric(JSContext *cx, JSObject *obj, jsid id, const Value *v,
+                  PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     if (IsFunctionObject(*v) || getter || setter ||
         (attrs & JSPROP_ENUMERATE) == 0 ||
@@ -4801,20 +4801,27 @@ xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
 }
 
 static JSBool
+xml_defineProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Value *v,
+                   PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    return xml_defineGeneric(cx, obj, ATOM_TO_JSID(name), v, getter, setter, attrs);
+}
+
+static JSBool
 xml_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *v,
                   PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return xml_defineProperty(cx, obj, id, v, getter, setter, attrs);
+    return xml_defineGeneric(cx, obj, id, v, getter, setter, attrs);
 }
 
 static JSBool
 xml_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *v,
                   PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
-    return xml_defineProperty(cx, obj, SPECIALID_TO_JSID(sid), v, getter, setter, attrs);
+    return xml_defineGeneric(cx, obj, SPECIALID_TO_JSID(sid), v, getter, setter, attrs);
 }
 
 static JSBool
@@ -5330,7 +5337,7 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_lookupProperty,
         xml_lookupElement,
         xml_lookupSpecial,
-        xml_defineProperty,
+        xml_defineGeneric,
         xml_defineProperty,
         xml_defineElement,
         xml_defineSpecial,
@@ -7421,7 +7428,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         JS_DefineFunction(cx, global, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR);
     if (!xmllist)
         return NULL;
-    if (!xmllist->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+    if (!xmllist->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
                                  ObjectValue(*xmlProto), JS_PropertyStub, JS_StrictPropertyStub,
                                  JSPROP_PERMANENT | JSPROP_READONLY))
     {
@@ -7523,8 +7530,8 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     if (!ns)
         return JS_FALSE;
     v = OBJECT_TO_JSVAL(ns);
-    if (!obj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, v,
-                             JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT)) {
+    if (!obj->defineSpecial(cx, SpecialId::defaultXMLNamespace(), v,
+                            JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
     *vp = v;
@@ -7542,8 +7549,8 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
         return JS_FALSE;
 
     JSObject &varobj = cx->fp()->varObj();
-    if (!varobj.defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, ObjectValue(*ns),
-                               JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT)) {
+    if (!varobj.defineSpecial(cx, SpecialId::defaultXMLNamespace(), ObjectValue(*ns),
+                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
     return JS_TRUE;

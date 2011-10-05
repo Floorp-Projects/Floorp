@@ -4884,7 +4884,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             Value value;
             if (!pn->getConstantValue(cx, strictChecks, &value))
                 return false;
-            if (!obj->defineProperty(cx, INT_TO_JSID(idx), value, NULL, NULL, JSPROP_ENUMERATE))
+            if (!obj->defineGeneric(cx, INT_TO_JSID(idx), value, NULL, NULL, JSPROP_ENUMERATE))
                 return false;
         }
         JS_ASSERT(idx == pn_count);
@@ -4914,7 +4914,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
                     id = INT_TO_JSID(idvalue.toInt32());
                 else if (!js_InternNonIntElementId(cx, obj, idvalue, &id))
                     return false;
-                if (!obj->defineProperty(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
+                if (!obj->defineGeneric(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
                     return false;
             } else {
                 JS_ASSERT(pnid->isKind(TOK_NAME) ||

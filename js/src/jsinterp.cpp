@@ -2661,7 +2661,7 @@ BEGIN_CASE(JSOP_SETCONST)
     LOAD_ATOM(0, atom);
     JSObject &obj = regs.fp()->varObj();
     const Value &ref = regs.sp[-1];
-    if (!obj.defineProperty(cx, ATOM_TO_JSID(atom), ref,
+    if (!obj.defineProperty(cx, atom->asPropertyName(), ref,
                             JS_PropertyStub, JS_StrictPropertyStub,
                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
@@ -2677,9 +2677,9 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
     FETCH_OBJECT(cx, -2, obj);
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
-    if (!obj->defineProperty(cx, id, ref,
-                             JS_PropertyStub, JS_StrictPropertyStub,
-                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
+    if (!obj->defineGeneric(cx, id, ref,
+                            JS_PropertyStub, JS_StrictPropertyStub,
+                            JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
     }
     regs.sp -= 3;
@@ -4666,10 +4666,15 @@ BEGIN_CASE(JSOP_DEFFUN)
     Value rval = ObjectValue(*obj);
 
     do {
+        PropertyName *name = fun->atom->asPropertyName();
+
         /* Steps 5d, 5f. */
         if (!prop || pobj != parent) {
-            if (!parent->defineProperty(cx, id, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs))
+            if (!parent->defineProperty(cx, name, rval,
+                                        JS_PropertyStub, JS_StrictPropertyStub, attrs))
+            {
                 goto error;
+            }
             break;
         }
 
@@ -4678,8 +4683,11 @@ BEGIN_CASE(JSOP_DEFFUN)
         Shape *shape = reinterpret_cast<Shape *>(prop);
         if (parent->isGlobal()) {
             if (shape->configurable()) {
-                if (!parent->defineProperty(cx, id, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs))
+                if (!parent->defineProperty(cx, name, rval,
+                                            JS_PropertyStub, JS_StrictPropertyStub, attrs))
+                {
                     goto error;
+                }
                 break;
             }
 
@@ -4730,7 +4738,9 @@ BEGIN_CASE(JSOP_DEFFUN_FC)
 
     if ((attrs == JSPROP_ENUMERATE)
         ? !parent.setProperty(cx, id, &rval, script->strictModeCode)
-        : !parent.defineProperty(cx, id, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs)) {
+        : !parent.defineProperty(cx, fun->atom->asPropertyName(), rval,
+                                 JS_PropertyStub, JS_StrictPropertyStub, attrs))
+    {
         goto error;
     }
 }
@@ -5020,7 +5030,7 @@ BEGIN_CASE(JSOP_SETTER)
     if (!CheckRedeclaration(cx, obj, id, attrs))
         goto error;
 
-    if (!obj->defineProperty(cx, id, UndefinedValue(), getter, setter, attrs))
+    if (!obj->defineGeneric(cx, id, UndefinedValue(), getter, setter, attrs))
         goto error;
 
     regs.sp += i;
@@ -5209,7 +5219,7 @@ BEGIN_CASE(JSOP_INITELEM)
             goto error;
         }
     } else {
-        if (!obj->defineProperty(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
+        if (!obj->defineGeneric(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
             goto error;
     }
     regs.sp -= 2;
@@ -5243,7 +5253,7 @@ BEGIN_CASE(JSOP_DEFSHARP)
                              JSMSG_BAD_SHARP_DEF, numBuf);
         goto error;
     }
-    if (!obj->defineProperty(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
+    if (!obj->defineGeneric(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
         goto error;
 }
 END_CASE(JSOP_DEFSHARP)

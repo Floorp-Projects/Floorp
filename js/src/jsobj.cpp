@@ -1639,8 +1639,8 @@ js::obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
     args.rval().setUndefined();
-    return obj->defineProperty(cx, id, UndefinedValue(), getter, JS_StrictPropertyStub,
-                               JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
+    return obj->defineGeneric(cx, id, UndefinedValue(), getter, JS_StrictPropertyStub,
+                              JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
 }
 
 JS_FRIEND_API(JSBool)
@@ -1673,8 +1673,8 @@ js::obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
     args.rval().setUndefined();
-    return obj->defineProperty(cx, id, UndefinedValue(), JS_PropertyStub, setter,
-                               JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
+    return obj->defineGeneric(cx, id, UndefinedValue(), JS_PropertyStub, setter,
+                              JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
 }
 
 static JSBool
@@ -1808,26 +1808,20 @@ PropDesc::makeObject(JSContext *cx)
 
     const JSAtomState &atomState = cx->runtime->atomState;
     if ((hasConfigurable &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.configurableAtom),
-                              BooleanValue((attrs & JSPROP_PERMANENT) == 0),
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)) ||
+         !obj->defineProperty(cx, atomState.configurableAtom,
+                              BooleanValue((attrs & JSPROP_PERMANENT) == 0))) ||
         (hasEnumerable &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.enumerableAtom),
-                              BooleanValue((attrs & JSPROP_ENUMERATE) != 0),
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)) ||
+         !obj->defineProperty(cx, atomState.enumerableAtom,
+                              BooleanValue((attrs & JSPROP_ENUMERATE) != 0))) ||
         (hasGet &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.getAtom), get,
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)) ||
+         !obj->defineProperty(cx, atomState.getAtom, get)) ||
         (hasSet &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.setAtom), set,
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)) ||
+         !obj->defineProperty(cx, atomState.setAtom, set)) ||
         (hasValue &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.valueAtom), value,
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)) ||
+         !obj->defineProperty(cx, atomState.valueAtom, value)) ||
         (hasWritable &&
-         !obj->defineProperty(cx, ATOM_TO_JSID(atomState.writableAtom),
-                              BooleanValue((attrs & JSPROP_READONLY) == 0),
-                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE)))
+         !obj->defineProperty(cx, atomState.writableAtom,
+                              BooleanValue((attrs & JSPROP_READONLY) == 0))))
     {
         return false;
     }
@@ -3721,7 +3715,7 @@ JS_CopyPropertiesFrom(JSContext *cx, JSObject *target, JSObject *obj)
         Value v = shape->hasSlot() ? obj->getSlot(shape->slot) : UndefinedValue();
         if (!cx->compartment->wrap(cx, &v))
             return false;
-        if (!target->defineProperty(cx, shape->propid, v, getter, setter, attrs))
+        if (!target->defineGeneric(cx, shape->propid, v, getter, setter, attrs))
             return false;
     }
     return true;
@@ -4190,7 +4184,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
         }
     }
 
-    named = obj->defineProperty(cx, id, v, JS_PropertyStub, JS_StrictPropertyStub, attrs);
+    named = obj->defineGeneric(cx, id, v, JS_PropertyStub, JS_StrictPropertyStub, attrs);
     return named;
 }
 

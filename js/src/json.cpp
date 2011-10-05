@@ -820,8 +820,8 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
                     JS_ALWAYS_TRUE(array_deleteElement(cx, obj, i, &newElement, false));
                 } else {
                     /* Step 2a(iii)(3). */
-                    JS_ALWAYS_TRUE(array_defineProperty(cx, obj, id, &newElement, JS_PropertyStub,
-                                                        JS_StrictPropertyStub, JSPROP_ENUMERATE));
+                    JS_ALWAYS_TRUE(array_defineElement(cx, obj, i, &newElement, JS_PropertyStub,
+                                                       JS_StrictPropertyStub, JSPROP_ENUMERATE));
                 }
             }
         } else {
@@ -884,11 +884,8 @@ Revive(JSContext *cx, const Value &reviver, Value *vp)
     if (!obj)
         return false;
 
-    AutoObjectRooter tvr(cx, obj);
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
-                             *vp, NULL, NULL, JSPROP_ENUMERATE)) {
+    if (!obj->defineProperty(cx, cx->runtime->atomState.emptyAtom, *vp))
         return false;
-    }
 
     return Walk(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom), reviver, vp);
 }

@@ -1451,10 +1451,10 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
      * the prototype's .constructor property is configurable, non-enumerable,
      * and writable.
      */
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+    if (!obj->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
                              ObjectValue(*proto), JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_PERMANENT) ||
-        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
+        !proto->defineProperty(cx, cx->runtime->atomState.constructorAtom,
                                ObjectValue(*obj), JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
        return NULL;
@@ -2582,7 +2582,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     if (!wasDelegate && obj->isDelegate())
         obj->clearDelegate();
 
-    if (!obj->defineProperty(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
+    if (!obj->defineGeneric(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
 
     return fun;
