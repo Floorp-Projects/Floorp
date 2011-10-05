@@ -4944,8 +4944,8 @@ JSObject::allocSlot(JSContext *cx, uint32 *slotp)
      * property table's slot-number freelist.
      */
     if (inDictionaryMode()) {
-        PropertyTable *table = lastProp->getTable();
-        uint32 last = table->freelist;
+        PropertyTable &table = lastProp->table();
+        uint32 last = table.freelist;
         if (last != SHAPE_INVALID_SLOT) {
 #ifdef DEBUG
             JS_ASSERT(last < slot);
@@ -4956,7 +4956,7 @@ JSObject::allocSlot(JSContext *cx, uint32 *slotp)
             *slotp = last;
 
             const Value &vref = getSlot(last);
-            table->freelist = vref.toPrivateUint32();
+            table.freelist = vref.toPrivateUint32();
             setSlot(last, UndefinedValue());
             return true;
         }
@@ -4970,7 +4970,7 @@ JSObject::allocSlot(JSContext *cx, uint32 *slotp)
     *slotp = slot;
 
     if (inDictionaryMode())
-        lastProp->base()->slotSpan = slot + 1;
+        lastProp->base()->setSlotSpan(slot + 1);
 
     return true;
 }
@@ -4981,7 +4981,7 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
     JS_ASSERT(slot < slotSpan());
 
     if (inDictionaryMode()) {
-        uint32 &last = lastProp->getTable()->freelist;
+        uint32 &last = lastProp->table().freelist;
 
         /* Can't afford to check the whole freelist, but let's check the head. */
         JS_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan() && last != slot);
@@ -7214,7 +7214,7 @@ DumpProperty(JSObject *obj, const Shape &shape)
     else
         fprintf(stderr, "unknown jsid %p", (void *) JSID_BITS(id));
 
-    uint32 slot = (shape.hasSlot() && !shape.hasMissingSlot()) ? shape.slot() : SHAPE_INVALID_SLOT;
+    uint32 slot = shape.hasSlot() ? shape.maybeSlot() : SHAPE_INVALID_SLOT;
     fprintf(stderr, ": slot %d", slot);
     if (obj->containsSlot(slot)) {
         fprintf(stderr, " = ");

@@ -301,7 +301,11 @@ class PropertyTree;
  *
  * Owned BaseShapes are used for shapes which have property tables, including
  * the last properties in all dictionaries. Unowned BaseShapes compactly store
- * information common to many shapes.
+ * information common to many shapes. In a given compartment there is a single
+ * BaseShape for each combination of BaseShape information. This information
+ * is cloned in owned BaseShapes so that information can be quickly looked up
+ * for a given object or shape without regard to whether the base shape is
+ * owned or not.
  *
  * All combinations of owned/unowned Shapes/BaseShapes are possible:
  *
@@ -323,8 +327,13 @@ class PropertyTree;
  *     Property in the property tree which does not have a property table.
  */
 
-struct BaseShape : public js::gc::Cell
+class UnownedBaseShape;
+
+class BaseShape : public js::gc::Cell
 {
+    friend class Shape;
+    friend struct JSCompartment::BaseShapeEntry;
+
     enum {
         /* Owned by the referring shape. */
         OWNED_SHAPE       = 0x1,
@@ -343,7 +352,7 @@ struct BaseShape : public js::gc::Cell
 
     Class               *clasp;         /* Class of referring shape/object. */
     uint32              flags;          /* Vector of above flags. */
-    uint32              slotSpan;       /* Object slot span for BaseShapes at
+    uint32              slotSpan_;      /* Object slot span for BaseShapes at
                                          * dictionary last properties. */
 
     union {
@@ -358,12 +367,11 @@ struct BaseShape : public js::gc::Cell
                                            null if shape->hasSetterValue() */
     };
 
-    BaseShape           *base;          /* For owned BaseShapes, the identical
-                                         * unowned BaseShape. */
+    /* For owned BaseShapes, the canonical unowned BaseShape. */
+    UnownedBaseShape    *unowned_;
 
-  private:
-    PropertyTable       *table_;        /* For owned BaseShapes, the shape's
-                                         * property table. */
+    /* For owned BaseShapes, the shape's property table. */
+    PropertyTable       *table_;
 
 #if JS_BITS_PER_WORD == 32
     void *padding;
@@ -388,28 +396,73 @@ struct BaseShape : public js::gc::Cell
             flags |= HAS_SETTER_OBJECT;
     }
 
-    BaseShape(BaseShape *base, PropertyTable *table, uint32 slotSpan) {
-        *this = *base;
-        setOwned(base);
-        setTable(table);
-        this->slotSpan = slotSpan;
-    }
+    inline BaseShape(UnownedBaseShape *base, PropertyTable *table, uint32 slotSpan);
 
     bool isOwned() const { return !!(flags & OWNED_SHAPE); }
-    void setOwned(BaseShape *base) { flags |= OWNED_SHAPE; this->base = base; }
+    void setOwned(UnownedBaseShape *unowned) { flags |= OWNED_SHAPE; this->unowned_ = unowned; }
 
-    PropertyTable *table() const { JS_ASSERT_IF(table_, isOwned()); return table_; }
+    bool hasGetterObject() const { return !!(flags & HAS_GETTER_OBJECT); }
+    JSObject *getterObject() const { JS_ASSERT(hasGetterObject()); return getterObj; }
+
+    bool hasSetterObject() const { return !!(flags & HAS_SETTER_OBJECT); }
+    JSObject *setterObject() const { JS_ASSERT(hasSetterObject()); return setterObj; }
+
+    bool hasTable() const { JS_ASSERT_IF(table_, isOwned()); return table_ != NULL; }
+    PropertyTable &table() const { JS_ASSERT(table_ && isOwned()); return *table_; }
     void setTable(PropertyTable *table) { JS_ASSERT(isOwned()); table_ = table; }
 
+    uint32 slotSpan() const { JS_ASSERT(isOwned()); return slotSpan_; }
+    void setSlotSpan(uint32 slotSpan) { JS_ASSERT(isOwned()); slotSpan_ = slotSpan; }
+
     /* Lookup base shapes from the compartment's baseShapes table. */
-    static BaseShape *lookup(JSContext *cx, const BaseShape &base);
+    static UnownedBaseShape *lookup(JSContext *cx, const BaseShape &base);
     static EmptyShape *lookupEmpty(JSContext *cx, Class *clasp);
+
+    /* Get the canonical base shape. */
+    inline UnownedBaseShape *unowned();
+
+    /* Get the canonical base shape for an owned one. */
+    inline UnownedBaseShape *baseUnowned();
+
+    /* Get the canonical base shape for an unowned one (i.e. identity). */
+    inline UnownedBaseShape *toUnowned();
+
+    /* For JIT usage */
+    static inline size_t offsetOfClass() { return offsetof(BaseShape, clasp); }
 
   private:
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(BaseShape, clasp) == offsetof(js::shadow::BaseShape, clasp));
     }
 };
+
+class UnownedBaseShape : public BaseShape {};
+
+BaseShape::BaseShape(UnownedBaseShape *base, PropertyTable *table, uint32 slotSpan)
+{
+    *this = *static_cast<BaseShape *>(base);
+    setOwned(base);
+    setTable(table);
+    setSlotSpan(slotSpan);
+}
+
+UnownedBaseShape *
+BaseShape::unowned()
+{
+    return isOwned() ? baseUnowned() : toUnowned();
+}
+
+UnownedBaseShape *
+BaseShape::toUnowned()
+{
+    JS_ASSERT(!isOwned() && !unowned_); return static_cast<UnownedBaseShape *>(this);
+}
+
+UnownedBaseShape *
+BaseShape::baseUnowned()
+{
+    JS_ASSERT(isOwned() && unowned_); return unowned_;
+ }
 
 struct Shape : public js::gc::Cell
 {
@@ -432,7 +485,12 @@ struct Shape : public js::gc::Cell
      */
     uint8               numLinearSearches:3;
 
-    uint32              slot_:29;       /* abstract index in object slots */
+    /*
+     * Index in object slots for shapes which hasSlot(). For !hasSlot() shapes
+     * in the property tree with a parent, stores the parent's slot (which may
+     * be invalid), and invalid for all other shapes.
+     */
+    uint32              slot_:29;
 
     static const size_t SLOT_BITS = 29;
 
@@ -460,11 +518,10 @@ struct Shape : public js::gc::Cell
 
     inline void initDictionaryShape(const js::Shape &child, js::Shape **dictp);
 
-    js::Shape *getChild(JSContext *cx, const js::Shape &child, js::Shape **listp,
-                        bool allowDictionary = true);
+    js::Shape *getChildBinding(JSContext *cx, const js::Shape &child, js::Shape **lastBinding);
 
     bool hashify(JSContext *cx);
-    void handoffTable(Shape *newShape);
+    void handoffTableTo(Shape *newShape);
 
     void setParent(js::Shape *p) {
         JS_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(), p->slot_ <= slot_);
@@ -481,17 +538,11 @@ struct Shape : public js::gc::Cell
     bool makeOwnBaseShape(JSContext *cx);
 
   public:
-    bool hasTable() const {
-        return base()->table() != NULL;
-    }
-
-    js::PropertyTable *getTable() const {
-        JS_ASSERT(hasTable());
-        return base()->table();
-    }
+    bool hasTable() const { return base()->hasTable(); }
+    js::PropertyTable &table() const { return base()->table(); }
 
     size_t sizeOfPropertyTable(JSUsableSizeFun usf) const {
-        return hasTable() ? getTable()->sizeOf(usf) : 0;
+        return hasTable() ? table().sizeOf(usf) : 0;
     }
 
     size_t sizeOfKids(JSUsableSizeFun usf) const {
@@ -564,6 +615,14 @@ struct Shape : public js::gc::Cell
 
     bool inDictionary() const { return (flags & IN_DICTIONARY) != 0; }
 
+    /*
+     * Whether this shape has a valid slot value. This may be true even if
+     * !hasSlot() (see slot_ comment above), and may be false even if hasSlot()
+     * if the shape is being constructed and has not had a slot assigned yet.
+     * After construction, hasSlot() implies !hasMissingSlot().
+     */
+    bool hasMissingSlot() const { return slot_ == (SHAPE_INVALID_SLOT >> (32 - SLOT_BITS)); }
+
   public:
     /* Public bits stored in shape->flags. */
     enum {
@@ -576,7 +635,7 @@ struct Shape : public js::gc::Cell
     bool hasShortID() const { return (flags & HAS_SHORTID) != 0; }
 
     /*
-     * A scope has a method barrier when some compiler-created "null closure"
+     * A shape has a method barrier when some compiler-created "null closure"
      * function objects (functions that do not use lexical bindings above their
      * scope, only free variable names) that have a correct JSSLOT_PARENT value
      * thanks to the COMPILE_N_GO optimization are stored in objects without
@@ -615,8 +674,8 @@ struct Shape : public js::gc::Cell
 
     Value getterOrUndefined() const {
         return (hasGetterValue() && base()->getterObj)
-            ? ObjectValue(*base()->getterObj)
-            : UndefinedValue();
+               ? ObjectValue(*base()->getterObj)
+               : UndefinedValue();
     }
 
     StrictPropertyOp setter() const { return base()->rawSetter; }
@@ -632,8 +691,8 @@ struct Shape : public js::gc::Cell
 
     Value setterOrUndefined() const {
         return (hasSetterValue() && base()->setterObj)
-            ? ObjectValue(*base()->setterObj)
-            : UndefinedValue();
+               ? ObjectValue(*base()->setterObj)
+               : UndefinedValue();
     }
 
     inline JSDHashNumber hash() const;
@@ -647,15 +706,9 @@ struct Shape : public js::gc::Cell
 
     BaseShape *base() const { return base_; }
 
-    /*
-     * For properties which haven't been fully initialized, empty shapes and
-     * slot-less properties under empty shapes.
-     */
-    bool hasMissingSlot() const { return slot_ == (SHAPE_INVALID_SLOT >> (32 - SLOT_BITS)); }
-
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
     uint32 slot() const { JS_ASSERT(hasSlot() && !hasMissingSlot()); return slot_; }
-    uint32 maybeSlot() const { return slot_; }
+    uint32 maybeSlot() const { return hasMissingSlot() ? SHAPE_INVALID_SLOT : slot_; }
 
     bool isEmptyShape() const {
         JS_ASSERT_IF(JSID_IS_EMPTY(propid_), hasMissingSlot());
@@ -752,7 +805,7 @@ struct Shape : public js::gc::Cell
 
     uint32 entryCount() const {
         if (hasTable())
-            return getTable()->entryCount;
+            return table().entryCount;
 
         const js::Shape *shape = this;
         uint32 count = 0;
@@ -841,11 +894,11 @@ Shape::search(JSContext *cx, js::Shape **startp, jsid id, bool adding)
 {
     js::Shape *start = *startp;
     if (start->hasTable())
-        return start->getTable()->search(id, adding);
+        return start->table().search(id, adding);
 
     if (start->numLinearSearches == PropertyTable::MAX_LINEAR_SEARCHES) {
         if (start->hashify(cx))
-            return start->getTable()->search(id, adding);
+            return start->table().search(id, adding);
         /* OOM!  Don't increment numLinearSearches, to keep hasTable() false. */
         JS_ASSERT(!start->hasTable());
     } else {
