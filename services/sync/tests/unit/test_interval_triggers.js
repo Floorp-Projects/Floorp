@@ -369,7 +369,6 @@ add_test(function test_bug671378_scenario() {
     Utils.nextTick(function() {
       Svc.Obs.remove("weave:service:sync:start", onSyncStart);
 
-      do_check_eq(SyncScheduler.nextSync, 0);
       SyncScheduler.scheduleNextSync();
       do_check_neq(SyncScheduler.nextSync, 0);
       do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
