@@ -325,6 +325,16 @@ private:
 
 
 /**
+ * Accessible widget selection change event.
+ */
+class AccSelectionChangeEvent : public AccEvent
+{
+public:
+
+};
+
+
+/**
  * Accessible table change event.
  */
 class AccTableChangeEvent : public AccEvent

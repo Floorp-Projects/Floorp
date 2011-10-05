@@ -40,7 +40,7 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsobj.h"
+#include "jsfriendapi.h"
 
 #include "WorkerPrivate.h"
 #include "XMLHttpRequestPrivate.h"

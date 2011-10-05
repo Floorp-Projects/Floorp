@@ -73,6 +73,7 @@
 #include "vm/Debugger.h"
 
 #include "jsinferinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
@@ -769,7 +770,7 @@ script_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-Class js::ScriptClass = {
+JS_FRIEND_DATA(Class) js::ScriptClass = {
     "Script",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),

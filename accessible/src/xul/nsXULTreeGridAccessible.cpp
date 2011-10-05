@@ -43,6 +43,7 @@
 #include "nsAccUtils.h"
 #include "nsDocAccessible.h"
 #include "nsEventShell.h"
+#include "Relation.h"
 #include "States.h"
 
 #include "nsITreeSelection.h"
@@ -1235,6 +1236,12 @@ PRInt32
 nsXULTreeGridCellAccessible::IndexInParent() const
 {
   return GetColumnIndex();
+}
+
+Relation
+nsXULTreeGridCellAccessible::RelationByType(PRUint32 aType)
+{
+  return Relation();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

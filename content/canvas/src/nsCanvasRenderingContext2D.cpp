@@ -852,7 +852,7 @@ nsCanvasRenderingContext2D::Reset()
 
     // only do this for non-docshell created contexts,
     // since those are the ones that we created a surface for
-    if (mValid && !mDocShell)
+    if (mValid && !mDocShell && mSurface)
         gCanvasMemoryUsed -= mWidth * mHeight * 4;
 
     mSurface = nsnull;
