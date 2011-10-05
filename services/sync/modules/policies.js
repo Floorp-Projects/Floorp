@@ -226,12 +226,21 @@ let SyncScheduler = {
         this.adjustSyncInterval();
         break;
       case "back":
-        this._log.trace("We're no longer idle.");
+        this._log.trace("Received notification that we're back from idle.");
         this.idle = false;
-        // Trigger a sync if we have multiple clients.
-        if (this.numClients > 1) {
-          Utils.nextTick(Weave.Service.sync, Weave.Service);
-        }
+        Utils.namedTimer(function onBack() {
+          if (this.idle) {
+            this._log.trace("... and we're idle again. " +
+                            "Ignoring spurious back notification.");
+            return;
+          }
+
+          this._log.trace("Genuine return from idle. Syncing.");
+          // Trigger a sync if we have multiple clients.
+          if (this.numClients > 1) {
+            Utils.nextTick(Weave.Service.sync, Weave.Service);
+          }
+        }, IDLE_OBSERVER_BACK_DELAY, this, "idleDebouncerTimer");
         break;
     }
   },
