@@ -876,4 +876,28 @@ Shape::search(JSContext *cx, js::Shape **startp, jsid id, bool adding)
 #pragma warning(pop)
 #endif
 
+inline js::Class *
+JSObject::getClass() const
+{
+    return lastProp->getClass();
+}
+
+inline JSClass *
+JSObject::getJSClass() const
+{
+    return Jsvalify(getClass());
+}
+
+inline bool
+JSObject::hasClass(const js::Class *c) const
+{
+    return getClass() == c;
+}
+
+inline const js::ObjectOps *
+JSObject::getOps() const
+{
+    return &getClass()->ops;
+}
+
 #endif /* jsscope_h___ */

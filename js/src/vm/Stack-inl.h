@@ -54,6 +54,22 @@
 
 namespace js {
 
+/*
+ * We cache name lookup results only for the global object or for native
+ * non-global objects without prototype or with prototype that never mutates,
+ * see bug 462734 and bug 487039.
+ */
+static inline bool
+IsCacheableNonGlobalScope(JSObject *obj)
+{
+    JS_ASSERT(obj->getParent());
+
+    bool cacheable = (obj->isCall() || obj->isBlock() || obj->isDeclEnv());
+
+    JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
+    return cacheable;
+}
+
 inline void
 StackFrame::initPrev(JSContext *cx)
 {
@@ -201,6 +217,13 @@ StackFrame::initJitFrameLatePrologue(JSContext *cx, Value **limit)
     scopeChain();
     SetValueRangeToUndefined(slots(), script()->nfixed);
     return true;
+}
+
+inline void
+StackFrame::overwriteCallee(JSObject &newCallee)
+{
+    JS_ASSERT(callee().getFunctionPrivate() == newCallee.getFunctionPrivate());
+    mutableCalleev().setObject(newCallee);
 }
 
 inline Value &

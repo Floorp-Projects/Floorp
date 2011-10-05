@@ -211,7 +211,6 @@ class GlobalObject : public ::JSObject {
         Value &v = getSlotRef(GENERATOR_PROTO);
         if (!v.isObject() && !js_InitIteratorClasses(cx, this))
             return NULL;
-        JS_ASSERT(v.toObject().isGenerator());
         return &v.toObject();
     }
 
