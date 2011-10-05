@@ -3290,7 +3290,7 @@ DebuggerObject_deleteProperty(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     ErrorCopier ec(ac, dbg->toJSObject());
-    return obj->deleteProperty(cx, id, &args.rval(), false);
+    return obj->deleteGeneric(cx, id, &args.rval(), false);
 }
 
 enum SealHelperOp { Seal, Freeze, PreventExtensions };

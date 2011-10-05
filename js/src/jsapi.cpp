@@ -3928,7 +3928,7 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->deleteProperty(cx, id, rval, false);
+    return obj->deleteGeneric(cx, id, rval, false);
 }
 
 JS_PUBLIC_API(JSBool)

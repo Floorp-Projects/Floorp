@@ -4945,7 +4945,7 @@ xml_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *att
 }
 
 static JSBool
-xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+xml_deleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     JSXML *xml;
     jsval idval;
@@ -4990,6 +4990,12 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool st
 }
 
 static JSBool
+xml_deleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
+{
+    return xml_deleteGeneric(cx, obj, ATOM_TO_JSID(name), rval, strict);
+}
+
+static JSBool
 xml_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
 {
     JSXML *xml = reinterpret_cast<JSXML *>(obj->getPrivate());
@@ -5019,7 +5025,7 @@ xml_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBoo
 static JSBool
 xml_deleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
 {
-    return xml_deleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
+    return xml_deleteGeneric(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 static JSString *
@@ -5344,7 +5350,7 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_setPropertyAttributes,
         xml_setElementAttributes,
         xml_setSpecialAttributes,
-        xml_deleteProperty,
+        xml_deleteGeneric,
         xml_deleteProperty,
         xml_deleteElement,
         xml_deleteSpecial,

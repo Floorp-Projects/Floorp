@@ -3137,7 +3137,7 @@ BEGIN_CASE(JSOP_DELNAME)
     /* ECMA says to return true if name is undefined or inherited. */
     PUSH_BOOLEAN(true);
     if (prop) {
-        if (!obj->deleteProperty(cx, id, &regs.sp[-1], false))
+        if (!obj->deleteProperty(cx, atom->asPropertyName(), &regs.sp[-1], false))
             goto error;
     }
 }
@@ -3153,7 +3153,7 @@ BEGIN_CASE(JSOP_DELPROP)
     FETCH_OBJECT(cx, -1, obj);
 
     Value rval;
-    if (!obj->deleteProperty(cx, id, &rval, script->strictModeCode))
+    if (!obj->deleteGeneric(cx, id, &rval, script->strictModeCode))
         goto error;
 
     regs.sp[-1] = rval;
@@ -3171,7 +3171,7 @@ BEGIN_CASE(JSOP_DELELEM)
     FETCH_ELEMENT_ID(obj, -1, id);
 
     /* Get or set the element. */
-    if (!obj->deleteProperty(cx, id, &regs.sp[-2], script->strictModeCode))
+    if (!obj->deleteGeneric(cx, id, &regs.sp[-2], script->strictModeCode))
         goto error;
 
     regs.sp--;

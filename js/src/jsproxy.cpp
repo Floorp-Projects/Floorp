@@ -1107,7 +1107,7 @@ proxy_SetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *a
 }
 
 static JSBool
-proxy_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+proxy_DeleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     id = js_CheckForStringIndex(id);
 
@@ -1120,18 +1120,24 @@ proxy_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
 }
 
 static JSBool
+proxy_DeleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
+{
+    return proxy_DeleteGeneric(cx, obj, ATOM_TO_JSID(name), rval, strict);
+}
+
+static JSBool
 proxy_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return proxy_DeleteProperty(cx, obj, id, rval, strict);
+    return proxy_DeleteGeneric(cx, obj, id, rval, strict);
 }
 
 static JSBool
 proxy_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
 {
-    return proxy_DeleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
+    return proxy_DeleteGeneric(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 static void
@@ -1245,7 +1251,7 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
         proxy_SetPropertyAttributes,
         proxy_SetElementAttributes,
         proxy_SetSpecialAttributes,
-        proxy_DeleteProperty,
+        proxy_DeleteGeneric,
         proxy_DeleteProperty,
         proxy_DeleteElement,
         proxy_DeleteSpecial,
@@ -1306,7 +1312,7 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
         proxy_SetPropertyAttributes,
         proxy_SetElementAttributes,
         proxy_SetSpecialAttributes,
-        proxy_DeleteProperty,
+        proxy_DeleteGeneric,
         proxy_DeleteProperty,
         proxy_DeleteElement,
         proxy_DeleteSpecial,
@@ -1379,7 +1385,7 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
         proxy_SetPropertyAttributes,
         proxy_SetElementAttributes,
         proxy_SetSpecialAttributes,
-        proxy_DeleteProperty,
+        proxy_DeleteGeneric,
         proxy_DeleteProperty,
         proxy_DeleteElement,
         proxy_DeleteSpecial,

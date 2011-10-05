@@ -791,10 +791,10 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
         JS_ASSERT(!obj->isProxy());
         if (obj->isArray()) {
             /* Step 2a(ii). */
-            jsuint length = obj->getArrayLength();
+            uint32 length = obj->getArrayLength();
 
             /* Step 2a(i), 2a(iii-iv). */
-            for (jsuint i = 0; i < length; i++) {
+            for (uint32 i = 0; i < length; i++) {
                 jsid id;
                 if (!IndexToId(cx, i, &id))
                     return false;
@@ -817,7 +817,7 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
                  */
                 if (newElement.isUndefined()) {
                     /* Step 2a(iii)(2). */
-                    JS_ALWAYS_TRUE(array_deleteProperty(cx, obj, id, &newElement, false));
+                    JS_ALWAYS_TRUE(array_deleteElement(cx, obj, i, &newElement, false));
                 } else {
                     /* Step 2a(iii)(3). */
                     JS_ALWAYS_TRUE(array_defineProperty(cx, obj, id, &newElement, JS_PropertyStub,
