@@ -338,7 +338,12 @@ nsNPAPIPluginInstance::InitializePlugin()
       const char* const* pnames = nsnull;
       const char* const* pvalues = nsnull;    
       if (NS_SUCCEEDED(GetParameters(pcount, pnames, pvalues))) {
+        // Android expects an empty string as the separator instead of null
+#ifdef ANDROID
+        NS_ASSERTION(PL_strcmp(values[count], "") == 0, "attribute/parameter array not setup correctly for Android NPAPI plugins");
+#else
         NS_ASSERTION(!values[count], "attribute/parameter array not setup correctly for NPAPI plugins");
+#endif
         if (pcount)
           count += ++pcount; // if it's all setup correctly, then all we need is to
                              // change the count (attrs + PARAM/blank + params)
