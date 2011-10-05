@@ -46,7 +46,15 @@ function clearBookmarks() {
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
   startCount = smartBookmarkCount();
 }
-  
+
+function serverForFoo(engine) {
+  return serverForUsers({"foo": "password"}, {
+    meta: {global: {engines: {bookmarks: {version: engine.version,
+                                          syncID: engine.syncID}}}},
+    bookmarks: {}
+  });
+}
+
 // Verify that Places smart bookmarks have their annotation uploaded and
 // handled locally.
 add_test(function test_annotation_uploaded() {
@@ -102,25 +110,20 @@ add_test(function test_annotation_uploaded() {
   Service.serverURL = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
 
-  let collection = new ServerCollection({}, true);
-  let global = new ServerWBO('global',
-                             {engines: {bookmarks: {version: engine.version,
-                                                    syncID: engine.syncID}}});
-  let server = httpd_setup({
-    "/1.1/foo/storage/meta/global": global.handler(),
-    "/1.1/foo/storage/bookmarks": collection.handler()
-  });
+  let server = serverForFoo(engine);
+  let collection = server.user("foo").collection("bookmarks");
 
   try {
     engine.sync();
-    let wbos = [id for ([id, wbo] in Iterator(collection.wbos))
-                   if (["menu", "toolbar", "mobile"].indexOf(id) == -1)];
+    let wbos = collection.keys(function (id) {
+                 return ["menu", "toolbar", "mobile"].indexOf(id) == -1;
+               });
     do_check_eq(wbos.length, 1);
 
     _("Verify that the server WBO has the annotation.");
     let serverGUID = wbos[0];
     do_check_eq(serverGUID, guid);
-    let serverWBO = collection.wbos[serverGUID];
+    let serverWBO = collection.wbo(serverGUID);
     do_check_true(!!serverWBO);
     let body = JSON.parse(JSON.parse(serverWBO.payload).ciphertext);
     do_check_eq(body.queryId, "MostVisited");
@@ -193,15 +196,9 @@ add_test(function test_smart_bookmarks_duped() {
   Service.serverURL = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
 
-  let collection = new ServerCollection({}, true);
-  let global = new ServerWBO('global',
-                             {engines: {bookmarks: {version: engine.version,
-                                                    syncID: engine.syncID}}});
-  let server = httpd_setup({
-    "/1.1/foo/storage/meta/global": global.handler(),
-    "/1.1/foo/storage/bookmarks": collection.handler()
-  });
-  
+  let server = serverForFoo(engine);
+  let collection = server.user("foo").collection("bookmarks");
+
   try {
     engine._syncStartup();
     
