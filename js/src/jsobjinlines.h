@@ -293,9 +293,8 @@ JSObject::finalize(JSContext *cx, bool background)
     if (!background) {
         /*
          * Finalize obj first, in case it needs map and slots. Objects with
-         * finalize hooks are not called finalized in the background, as the
-         * class is stored in the object's shape, which may have already been
-         * destroyed.
+         * finalize hooks are not finalized in the background, as the class is
+         * stored in the object's shape, which may have already been destroyed.
          */
         js::Class *clasp = getClass();
         if (clasp->finalize)
@@ -1034,12 +1033,10 @@ JSObject::principals(JSContext *cx)
 inline uint32
 JSObject::slotSpan() const
 {
-    if (inDictionaryMode()) {
-        JS_ASSERT(lastProp->base()->isOwned());
-        return lastProp->base()->slotSpan;
-    }
+    if (inDictionaryMode())
+        return lastProp->base()->slotSpan();
     uint32 free = JSSLOT_FREE(getClass());
-    return lastProp->hasMissingSlot() ? free : JS_MAX(free, lastProp->maybeSlot() + 1);
+    return lastProp->hasMissingSlot() ? free : js::Max(free, lastProp->maybeSlot() + 1);
 }
 
 inline bool
@@ -1084,7 +1081,7 @@ JSObject::nativeGetMethod(const js::Shape *shape) const
     JS_ASSERT(obj->isFunction() && obj->getFunctionPrivate() == obj);
 #endif
 
-    return (JSFunction *) &nativeGetSlot(shape->slot()).toObject();
+    return static_cast<JSFunction *>(&nativeGetSlot(shape->slot()).toObject());
 }
 
 inline void
@@ -1413,7 +1410,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
 }
 
 static inline bool
-InitNonNativeObject(JSContext *cx, JSObject *obj, js::Class *clasp)
+InitScopeForNonNativeObject(JSContext *cx, JSObject *obj, js::Class *clasp)
 {
     JS_ASSERT(!clasp->isNative());
 
@@ -1647,7 +1644,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
 
     if (clasp->isNative()
         ? !InitScopeForObject(cx, obj, clasp, type, kind)
-        : !InitNonNativeObject(cx, obj, clasp)) {
+        : !InitScopeForNonNativeObject(cx, obj, clasp)) {
         obj = NULL;
     }
 

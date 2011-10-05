@@ -491,7 +491,7 @@ struct JS_FRIEND_API(JSCompartment) {
      */
 
     struct BaseShapeEntry {
-        js::BaseShape *base;
+        js::UnownedBaseShape *base;
         js::EmptyShape *empty;
 
         typedef const js::BaseShape *Lookup;
