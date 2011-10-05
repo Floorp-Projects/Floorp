@@ -65,7 +65,7 @@ AlignPtr(void *orig)
         tl::FloorLog2<LIFO_ALLOC_ALIGN>::result == tl::CeilingLog2<LIFO_ALLOC_ALIGN>::result
     >::result _;
 
-    char *result = (char *) ((uintptr_t(orig) + (LIFO_ALLOC_ALIGN - 1)) & -LIFO_ALLOC_ALIGN);
+    char *result = (char *) ((uintptr_t(orig) + (LIFO_ALLOC_ALIGN - 1)) & (~LIFO_ALLOC_ALIGN + 1));
     JS_ASSERT(uintptr_t(result) % LIFO_ALLOC_ALIGN == 0);
     return result;
 }
