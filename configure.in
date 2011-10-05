@@ -6859,7 +6859,7 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -n "$MOZ_DEBUG_FLAGS"; then
             fi
         else
              dnl We really don't expect to get here, but just in case
-             AC_ERROR([couldn't compile a simple C file])
+             GC_SECTIONS_BREAKS_DEBUG_RANGES="no, but it's broken in some other way"
         fi
         rm -rf conftest*])
     if test "$GC_SECTIONS_BREAKS_DEBUG_RANGES" = no; then
