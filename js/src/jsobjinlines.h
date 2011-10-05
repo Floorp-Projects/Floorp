@@ -74,6 +74,100 @@
 #include "jsprobes.h"
 #include "jsscopeinlines.h"
 
+inline js::Class *
+JSObject::getClass() const
+{
+    return lastProp->getClass();
+}
+
+inline JSClass *
+JSObject::getJSClass() const
+{
+    return Jsvalify(getClass());
+}
+
+inline bool
+JSObject::hasClass(const js::Class *c) const
+{
+    return getClass() == c;
+}
+
+inline const js::ObjectOps *
+JSObject::getOps() const
+{
+    return &getClass()->ops;
+}
+
+inline void
+JSObject::assertSpecialEqualitySynced() const
+{
+    JS_ASSERT(!!getClass()->ext.equality == hasSpecialEquality());
+}
+
+inline bool
+JSObject::isGlobal() const
+{
+    return !!(getClass()->flags & JSCLASS_IS_GLOBAL);
+}
+
+js::GlobalObject *
+JSObject::asGlobal()
+{
+    JS_ASSERT(isGlobal());
+    return reinterpret_cast<js::GlobalObject *>(this);
+}
+
+inline void *
+JSObject::getPrivate() const
+{
+    JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
+    return privateData;
+}
+
+inline JSFunction *
+JSObject::getFunctionPrivate() const
+{
+    JS_ASSERT(isFunction());
+    return reinterpret_cast<JSFunction *>(getPrivate());
+}
+
+inline void
+JSObject::setPrivate(void *data)
+{
+    JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
+    privateData = data;
+}
+
+inline bool
+JSObject::enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp)
+{
+    JSNewEnumerateOp op = getOps()->enumerate;
+    return (op ? op : JS_EnumerateState)(cx, this, iterop, statep, idp);
+}
+
+inline bool
+JSObject::defaultValue(JSContext *cx, JSType hint, js::Value *vp)
+{
+    JSConvertOp op = getClass()->convert;
+    bool ok = (op == JS_ConvertStub ? js::DefaultValue : op)(cx, this, hint, vp);
+    JS_ASSERT_IF(ok, vp->isPrimitive());
+    return ok;
+}
+
+inline JSType
+JSObject::typeOf(JSContext *cx)
+{
+    js::TypeOfOp op = getOps()->typeOf;
+    return (op ? op : js_TypeOf)(cx, this);
+}
+
+inline JSObject *
+JSObject::thisObject(JSContext *cx)
+{
+    JSObjectOp op = getOps()->thisObject;
+    return op ? op(cx, this) : this;
+}
+
 inline bool
 JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
 {
@@ -100,11 +194,64 @@ JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
 }
 
 inline JSBool
+JSObject::defineProperty(JSContext *cx, jsid id, const js::Value &value,
+                         JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
+{
+    js::DefinePropOp op = getOps()->defineProperty;
+    return (op ? op : js_DefineProperty)(cx, this, id, &value, getter, setter, attrs);
+}
+
+inline JSBool
+JSObject::defineElement(JSContext *cx, uint32 index, const js::Value &value,
+                        JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs)
+{
+    js::DefineElementOp op = getOps()->defineElement;
+    return (op ? op : js_DefineElement)(cx, this, index, &value, getter, setter, attrs);
+}
+
+inline JSBool
+JSObject::setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict)
+{
+    if (getOps()->setProperty)
+        return nonNativeSetProperty(cx, id, vp, strict);
+    return js_SetPropertyHelper(cx, this, id, 0, vp, strict);
+}
+
+inline JSBool
+JSObject::setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict)
+{
+    if (getOps()->setElement)
+        return nonNativeSetElement(cx, index, vp, strict);
+    return js_SetElementHelper(cx, this, index, 0, vp, strict);
+}
+
+inline JSBool
+JSObject::getAttributes(JSContext *cx, jsid id, uintN *attrsp)
+{
+    js::AttributesOp op = getOps()->getAttributes;
+    return (op ? op : js_GetAttributes)(cx, this, id, attrsp);
+}
+
+inline JSBool
 JSObject::setAttributes(JSContext *cx, jsid id, uintN *attrsp)
 {
     js::types::MarkTypePropertyConfigured(cx, this, id);
     js::AttributesOp op = getOps()->setAttributes;
     return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
+}
+
+inline JSBool
+JSObject::getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp)
+{
+    js::ElementAttributesOp op = getOps()->getElementAttributes;
+    return (op ? op : js_GetElementAttributes)(cx, this, index, attrsp);
+}
+
+inline JSBool
+JSObject::setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp)
+{
+    js::ElementAttributesOp op = getOps()->setElementAttributes;
+    return (op ? op : js_SetElementAttributes)(cx, this, index, attrsp);
 }
 
 inline JSBool
@@ -778,6 +925,53 @@ JSObject::setType(js::types::TypeObject *newType)
     type_ = newType;
 }
 
+inline bool JSObject::isArguments() const { return isNormalArguments() || isStrictArguments(); }
+inline bool JSObject::isArrayBuffer() const { return hasClass(&js::ArrayBufferClass); }
+inline bool JSObject::isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
+inline bool JSObject::isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
+inline bool JSObject::isArray() const { return isSlowArray() || isDenseArray(); }
+inline bool JSObject::isDenseArray() const { return hasClass(&js::ArrayClass); }
+inline bool JSObject::isSlowArray() const { return hasClass(&js::SlowArrayClass); }
+inline bool JSObject::isNumber() const { return hasClass(&js::NumberClass); }
+inline bool JSObject::isBoolean() const { return hasClass(&js::BooleanClass); }
+inline bool JSObject::isString() const { return hasClass(&js::StringClass); }
+inline bool JSObject::isPrimitive() const { return isNumber() || isString() || isBoolean(); }
+inline bool JSObject::isDate() const { return hasClass(&js::DateClass); }
+inline bool JSObject::isFunction() const { return hasClass(&js::FunctionClass); }
+inline bool JSObject::isObject() const { return hasClass(&js::ObjectClass); }
+inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
+inline bool JSObject::isBlock() const { return hasClass(&js::BlockClass); }
+inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
+inline bool JSObject::isClonedBlock() const { return isBlock() && !!getProto(); }
+inline bool JSObject::isCall() const { return hasClass(&js::CallClass); }
+inline bool JSObject::isDeclEnv() const { return hasClass(&js::DeclEnvClass); }
+inline bool JSObject::isRegExp() const { return hasClass(&js::RegExpClass); }
+inline bool JSObject::isScript() const { return hasClass(&js::ScriptClass); }
+inline bool JSObject::isGenerator() const { return hasClass(&js::GeneratorClass); }
+inline bool JSObject::isIterator() const { return hasClass(&js::IteratorClass); }
+inline bool JSObject::isStopIteration() const { return hasClass(&js::StopIterationClass); }
+inline bool JSObject::isError() const { return hasClass(&js::ErrorClass); }
+inline bool JSObject::isXML() const { return hasClass(&js::XMLClass); }
+inline bool JSObject::isNamespace() const { return hasClass(&js::NamespaceClass); }
+inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
+inline bool JSObject::isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }
+
+inline bool
+JSObject::isXMLId() const
+{
+    return hasClass(&js::QNameClass)
+        || hasClass(&js::AttributeNameClass)
+        || hasClass(&js::AnyNameClass);
+}
+
+inline bool
+JSObject::isQName() const
+{
+    return hasClass(&js::QNameClass)
+        || hasClass(&js::AttributeNameClass)
+        || hasClass(&js::AnyNameClass);
+}
+
 inline void
 JSObject::init(JSContext *cx, js::types::TypeObject *type,
                JSObject *parent, void *priv, bool denseArray)
@@ -1022,6 +1216,13 @@ JSObject::removeLastProperty()
 }
 
 inline JSBool
+JSObject::lookupProperty(JSContext *cx, jsid id, JSObject **objp, JSProperty **propp)
+{
+    js::LookupPropOp op = getOps()->lookupProperty;
+    return (op ? op : js_LookupProperty)(cx, this, id, objp, propp);
+}
+
+inline JSBool
 JSObject::lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty **propp)
 {
     js::LookupElementOp op = getOps()->lookupElement;
@@ -1093,6 +1294,85 @@ js_UnwrapWithObject(JSContext *cx, JSObject *withobj)
 }
 
 namespace js {
+
+inline void
+OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
+{
+    if (JSObjectOp op = obj->getClass()->ext.innerObject)
+        obj = op(cx, obj);
+}
+
+inline void
+OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
+{
+    if (JSObjectOp op = obj->getClass()->ext.outerObject)
+        obj = op(cx, obj);
+}
+
+/*
+ * Methods to test whether an object or a value is of type "xml" (per typeof).
+ */
+
+#define VALUE_IS_XML(v)      (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isXML())
+
+static inline bool
+IsXML(const js::Value &v)
+{
+    return v.isObject() && v.toObject().isXML();
+}
+
+static inline bool
+IsStopIteration(const js::Value &v)
+{
+    return v.isObject() && v.toObject().isStopIteration();
+}
+
+/*
+ * We cache name lookup results only for the global object or for native
+ * non-global objects without prototype or with prototype that never mutates,
+ * see bug 462734 and bug 487039.
+ */
+static inline bool
+IsCacheableNonGlobalScope(JSObject *obj)
+{
+    JS_ASSERT(obj->getParent());
+
+    bool cacheable = (obj->isCall() || obj->isBlock() || obj->isDeclEnv());
+
+    JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
+    return cacheable;
+}
+
+/* ES5 9.1 ToPrimitive(input). */
+static JS_ALWAYS_INLINE bool
+ToPrimitive(JSContext *cx, Value *vp)
+{
+    if (vp->isPrimitive())
+        return true;
+    return vp->toObject().defaultValue(cx, JSTYPE_VOID, vp);
+}
+
+/* ES5 9.1 ToPrimitive(input, PreferredType). */
+static JS_ALWAYS_INLINE bool
+ToPrimitive(JSContext *cx, JSType preferredType, Value *vp)
+{
+    JS_ASSERT(preferredType != JSTYPE_VOID); /* Use the other ToPrimitive! */
+    if (vp->isPrimitive())
+        return true;
+    return vp->toObject().defaultValue(cx, preferredType, vp);
+}
+
+/*
+ * Return true if this is a compiler-created internal function accessed by
+ * its own object. Such a function object must not be accessible to script
+ * or embedding code.
+ */
+inline bool
+IsInternalFunctionObject(JSObject *funobj)
+{
+    JSFunction *fun = funobj->getFunctionPrivate();
+    return funobj == fun && (fun->flags & JSFUN_LAMBDA) && !funobj->getParent();
+}
 
 class AutoPropDescArrayRooter : private AutoGCRooter
 {
@@ -1714,26 +1994,6 @@ inline JSObject *
 js_GetProtoIfDenseArray(JSObject *obj)
 {
     return obj->isDenseArray() ? obj->getProto() : obj;
-}
-
-inline js::Class *
-JSObject::getClass() const {
-    return lastProp->getClass();
-}
-
-inline JSClass *
-JSObject::getJSClass() const {
-    return Jsvalify(getClass());
-}
-
-inline bool
-JSObject::hasClass(const js::Class *c) const {
-    return getClass() == c;
-}
-
-inline const js::ObjectOps *
-JSObject::getOps() const {
-    return &getClass()->ops;
 }
 
 #endif /* jsobjinlines_h___ */

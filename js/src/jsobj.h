@@ -512,10 +512,10 @@ struct JSObject : js::gc::Cell {
     inline bool isNative() const;
     inline bool isNewborn() const;
 
-    js::Class *getClass() const;
-    JSClass *getJSClass() const;
-    bool hasClass(const js::Class *c) const;
-    const js::ObjectOps *getOps() const;
+    inline js::Class *getClass() const;
+    inline JSClass *getJSClass() const;
+    inline bool hasClass(const js::Class *c) const;
+    inline const js::ObjectOps *getOps() const;
 
     inline void trace(JSTracer *trc);
     inline void scanSlots(js::GCMarker *gcmarker);
@@ -538,9 +538,7 @@ struct JSObject : js::gc::Cell {
     void setGeneric()           { flags |= GENERIC; }
 
     bool hasSpecialEquality() const { return !!(flags & HAS_EQUALITY); }
-    void assertSpecialEqualitySynced() const {
-        JS_ASSERT(!!getClass()->ext.equality == hasSpecialEquality());
-    }
+    inline void assertSpecialEqualitySynced() const;
 
     /* Sets an object's HAS_EQUALITY flag based on its clasp. */
     inline void syncSpecialEquality();
@@ -843,21 +841,11 @@ struct JSObject : js::gc::Cell {
 
     JS_FRIEND_API(js::GlobalObject *) getGlobal() const;
 
-    bool isGlobal() const {
-        return !!(getClass()->flags & JSCLASS_IS_GLOBAL);
-    }
-
+    inline bool isGlobal() const;
     inline js::GlobalObject *asGlobal();
 
-    void *getPrivate() const {
-        JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        return privateData;
-    }
-
-    void setPrivate(void *data) {
-        JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        privateData = data;
-    }
+    inline void *getPrivate() const;
+    inline void setPrivate(void *data);
 
     /* N.B. Infallible: NULL means 'no principal', not an error. */
     inline JSPrincipals *principals(JSContext *cx);
@@ -1267,29 +1255,18 @@ struct JSObject : js::gc::Cell {
     /* Clear the scope, making it empty. */
     void clear(JSContext *cx);
 
-    JSBool lookupProperty(JSContext *cx, jsid id, JSObject **objp, JSProperty **propp) {
-        js::LookupPropOp op = getOps()->lookupProperty;
-        return (op ? op : js_LookupProperty)(cx, this, id, objp, propp);
-    }
-
+    inline JSBool lookupProperty(JSContext *cx, jsid id, JSObject **objp, JSProperty **propp);
     inline JSBool lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty **propp);
 
-    JSBool defineProperty(JSContext *cx, jsid id, const js::Value &value,
-                          JSPropertyOp getter = JS_PropertyStub,
-                          JSStrictPropertyOp setter = JS_StrictPropertyStub,
-                          uintN attrs = JSPROP_ENUMERATE) {
-        js::DefinePropOp op = getOps()->defineProperty;
-        return (op ? op : js_DefineProperty)(cx, this, id, &value, getter, setter, attrs);
-    }
+    inline JSBool defineProperty(JSContext *cx, jsid id, const js::Value &value,
+                                 JSPropertyOp getter = JS_PropertyStub,
+                                 JSStrictPropertyOp setter = JS_StrictPropertyStub,
+                                 uintN attrs = JSPROP_ENUMERATE);
 
-    JSBool defineElement(JSContext *cx, uint32 index, const js::Value &value,
-                         JSPropertyOp getter = JS_PropertyStub,
-                         JSStrictPropertyOp setter = JS_StrictPropertyStub,
-                         uintN attrs = JSPROP_ENUMERATE)
-    {
-        js::DefineElementOp op = getOps()->defineElement;
-        return (op ? op : js_DefineElement)(cx, this, index, &value, getter, setter, attrs);
-    }
+    inline JSBool defineElement(JSContext *cx, uint32 index, const js::Value &value,
+                                JSPropertyOp getter = JS_PropertyStub,
+                                JSStrictPropertyOp setter = JS_StrictPropertyStub,
+                                uintN attrs = JSPROP_ENUMERATE);
 
     inline JSBool getGeneric(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp);
     inline JSBool getProperty(JSContext *cx, JSObject *receiver, js::PropertyName *name,
@@ -1302,65 +1279,25 @@ struct JSObject : js::gc::Cell {
     inline JSBool getElement(JSContext *cx, uint32 index, js::Value *vp);
     inline JSBool getSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp);
 
-    JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
-        if (getOps()->setProperty)
-            return nonNativeSetProperty(cx, id, vp, strict);
-        return js_SetPropertyHelper(cx, this, id, 0, vp, strict);
-    }
-
-    JSBool setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict) {
-        if (getOps()->setElement)
-            return nonNativeSetElement(cx, index, vp, strict);
-        return js_SetElementHelper(cx, this, index, 0, vp, strict);
-    }
+    inline JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict);
+    inline JSBool setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict);
 
     JSBool nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict);
-
     JSBool nonNativeSetElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict);
 
-    JSBool getAttributes(JSContext *cx, jsid id, uintN *attrsp) {
-        js::AttributesOp op = getOps()->getAttributes;
-        return (op ? op : js_GetAttributes)(cx, this, id, attrsp);
-    }
-
-    JSBool getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp) {
-        js::ElementAttributesOp op = getOps()->getElementAttributes;
-        return (op ? op : js_GetElementAttributes)(cx, this, index, attrsp);
-    }
+    inline JSBool getAttributes(JSContext *cx, jsid id, uintN *attrsp);
+    inline JSBool getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
 
     inline JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp);
-
-    JSBool setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp) {
-        js::ElementAttributesOp op = getOps()->setElementAttributes;
-        return (op ? op : js_SetElementAttributes)(cx, this, index, attrsp);
-    }
+    inline JSBool setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
 
     inline JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
-
     inline JSBool deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool strict);
+    inline bool enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp);
+    inline bool defaultValue(JSContext *cx, JSType hint, js::Value *vp);
+    inline JSType typeOf(JSContext *cx);
 
-    JSBool enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp) {
-        JSNewEnumerateOp op = getOps()->enumerate;
-        return (op ? op : JS_EnumerateState)(cx, this, iterop, statep, idp);
-    }
-
-    bool defaultValue(JSContext *cx, JSType hint, js::Value *vp) {
-        JSConvertOp op = getClass()->convert;
-        bool ok = (op == JS_ConvertStub ? js::DefaultValue : op)(cx, this, hint, vp);
-        JS_ASSERT_IF(ok, vp->isPrimitive());
-        return ok;
-    }
-
-    JSType typeOf(JSContext *cx) {
-        js::TypeOfOp op = getOps()->typeOf;
-        return (op ? op : js_TypeOf)(cx, this);
-    }
-
-    /* These four are time-optimized to avoid stub calls. */
-    JSObject *thisObject(JSContext *cx) {
-        JSObjectOp op = getOps()->thisObject;
-        return op ? op(cx, this) : this;
-    }
+    inline JSObject *thisObject(JSContext *cx);
 
     static bool thisObject(JSContext *cx, const js::Value &v, js::Value *vp);
 
@@ -1370,44 +1307,40 @@ struct JSObject : js::gc::Cell {
 
     const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index);
 
-    inline bool isArguments() const { return isNormalArguments() || isStrictArguments(); }
-    inline bool isArrayBuffer() const { return hasClass(&js::ArrayBufferClass); }
-    inline bool isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
-    inline bool isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
-    inline bool isArray() const { return isSlowArray() || isDenseArray(); }
-    inline bool isDenseArray() const { return hasClass(&js::ArrayClass); }
-    inline bool isSlowArray() const { return hasClass(&js::SlowArrayClass); }
-    inline bool isNumber() const { return hasClass(&js::NumberClass); }
-    inline bool isBoolean() const { return hasClass(&js::BooleanClass); }
-    inline bool isString() const { return hasClass(&js::StringClass); }
-    inline bool isPrimitive() const { return isNumber() || isString() || isBoolean(); }
-    inline bool isDate() const { return hasClass(&js::DateClass); }
-    inline bool isFunction() const { return hasClass(&js::FunctionClass); }
-    inline bool isObject() const { return hasClass(&js::ObjectClass); }
-    inline bool isWith() const { return hasClass(&js::WithClass); }
-    inline bool isBlock() const { return hasClass(&js::BlockClass); }
-    inline bool isStaticBlock() const { return isBlock() && !getProto(); }
-    inline bool isClonedBlock() const { return isBlock() && !!getProto(); }
-    inline bool isCall() const { return hasClass(&js::CallClass); }
-    inline bool isDeclEnv() const { return hasClass(&js::DeclEnvClass); }
-    inline bool isRegExp() const { return hasClass(&js::RegExpClass); }
-    inline bool isScript() const { return hasClass(&js::ScriptClass); }
-    inline bool isGenerator() const { return hasClass(&js::GeneratorClass); }
-    inline bool isIterator() const { return hasClass(&js::IteratorClass); }
-    inline bool isStopIteration() const { return hasClass(&js::StopIterationClass); }
-    inline bool isError() const { return hasClass(&js::ErrorClass); }
-    inline bool isXML() const { return hasClass(&js::XMLClass); }
-    inline bool isNamespace() const { return hasClass(&js::NamespaceClass); }
-    inline bool isWeakMap() const { return hasClass(&js::WeakMapClass); }
-    inline bool isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }
+    inline bool isArguments() const;
+    inline bool isArrayBuffer() const;
+    inline bool isNormalArguments() const;
+    inline bool isStrictArguments() const;
+    inline bool isArray() const;
+    inline bool isDenseArray() const;
+    inline bool isSlowArray() const;
+    inline bool isNumber() const;
+    inline bool isBoolean() const;
+    inline bool isString() const;
+    inline bool isPrimitive() const;
+    inline bool isDate() const;
+    inline bool isFunction() const;
+    inline bool isObject() const;
+    inline bool isWith() const;
+    inline bool isBlock() const;
+    inline bool isStaticBlock() const;
+    inline bool isClonedBlock() const;
+    inline bool isCall() const;
+    inline bool isDeclEnv() const;
+    inline bool isRegExp() const;
+    inline bool isScript() const;
+    inline bool isGenerator() const;
+    inline bool isIterator() const;
+    inline bool isStopIteration() const;
+    inline bool isError() const;
+    inline bool isXML() const;
+    inline bool isNamespace() const;
+    inline bool isWeakMap() const;
+    inline bool isFunctionProxy() const;
     inline bool isProxy() const;
 
-    inline bool isXMLId() const {
-        return hasClass(&js::QNameClass) || hasClass(&js::AttributeNameClass) || hasClass(&js::AnyNameClass);
-    }
-    inline bool isQName() const {
-        return hasClass(&js::QNameClass) || hasClass(&js::AttributeNameClass) || hasClass(&js::AnyNameClass);
-    }
+    inline bool isXMLId() const;
+    inline bool isQName() const;
 
     inline bool isWrapper() const;
     inline bool isCrossCompartmentWrapper() const;
@@ -1485,20 +1418,6 @@ struct JSObject_Slots16 : JSObject { js::Value fslots[16]; };
     THREAD_IS_RUNNING_GC((cx)->runtime, (cx)->thread)
 
 #endif /* JS_THREADSAFE */
-
-inline void
-OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
-{
-    if (JSObjectOp op = obj->getClass()->ext.innerObject)
-        obj = op(cx, obj);
-}
-
-inline void
-OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
-{
-    if (JSObjectOp op = obj->getClass()->ext.outerObject)
-        obj = op(cx, obj);
-}
 
 class JSValueArray {
   public:
@@ -1795,22 +1714,6 @@ ReadPropertyDescriptors(JSContext *cx, JSObject *props, bool checkAccessors,
  */
 static const uintN RESOLVE_INFER = 0xffff;
 
-/*
- * We cache name lookup results only for the global object or for native
- * non-global objects without prototype or with prototype that never mutates,
- * see bug 462734 and bug 487039.
- */
-static inline bool
-IsCacheableNonGlobalScope(JSObject *obj)
-{
-    JS_ASSERT(obj->getParent());
-
-    bool cacheable = (obj->isCall() || obj->isBlock() || obj->isDeclEnv());
-
-    JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
-    return cacheable;
-}
-
 }
 
 /*
@@ -1947,25 +1850,6 @@ ToObject(JSContext *cx, Value *vp)
     if (vp->isObject())
         return &vp->toObject();
     return ToObjectSlow(cx, vp);
-}
-
-/* ES5 9.1 ToPrimitive(input). */
-static JS_ALWAYS_INLINE bool
-ToPrimitive(JSContext *cx, Value *vp)
-{
-    if (vp->isPrimitive())
-        return true;
-    return vp->toObject().defaultValue(cx, JSTYPE_VOID, vp);
-}
-
-/* ES5 9.1 ToPrimitive(input, PreferredType). */
-static JS_ALWAYS_INLINE bool
-ToPrimitive(JSContext *cx, JSType preferredType, Value *vp)
-{
-    JS_ASSERT(preferredType != JSTYPE_VOID); /* Use the other ToPrimitive! */
-    if (vp->isPrimitive())
-        return true;
-    return vp->toObject().defaultValue(cx, preferredType, vp);
 }
 
 } /* namespace js */

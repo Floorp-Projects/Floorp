@@ -91,6 +91,7 @@
 #include "jsscriptinlines.h"
 #include "jscntxtinlines.h"
 #include "jsopcodeinlines.h"
+#include "jsregexpinlines.h"
 #include "jstypedarrayinlines.h"
 
 #include "vm/CallObject-inl.h"
