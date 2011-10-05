@@ -1124,7 +1124,8 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     //    our default action for this key.
     if (!(interpretKeyEventsCalled &&
           IsNormalCharInputtingEvent(keypressEvent))) {
-      if (currentKeyEvent->mKeyDownHandled) {
+      if (currentKeyEvent->mKeyDownHandled ||
+          currentKeyEvent->mCausedOtherKeyEvents) {
         keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
       }
       currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
@@ -1419,12 +1420,16 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TextInputHandler::DoCommandBySelector, aSelector=\"%s\", "
-     "Destroyed()=%s, keypressHandled=%s",
+     "Destroyed()=%s, keypressHandled=%s, causedOtherKeyEvents=%s",
      this, aSelector ? aSelector : "", TrueOrFalse(Destroyed()),
      currentKeyEvent ?
-       TrueOrFalse(currentKeyEvent->mKeyPressHandled) : "N/A"));
+       TrueOrFalse(currentKeyEvent->mKeyPressHandled) : "N/A",
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
 
-  return !Destroyed() && currentKeyEvent && currentKeyEvent->mKeyPressHandled;
+  return !Destroyed() && currentKeyEvent &&
+         (currentKeyEvent->mKeyPressHandled ||
+          currentKeyEvent->mCausedOtherKeyEvents);
 }
 
 
