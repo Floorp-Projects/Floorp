@@ -4877,7 +4877,7 @@ xml_setSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool st
 }
 
 static JSBool
-xml_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+xml_getGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JSBool found;
     if (!HasProperty(cx, obj, IdToJsval(id), &found))
@@ -4888,22 +4888,28 @@ xml_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 static JSBool
+xml_getPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+{
+    return xml_getGenericAttributes(cx, obj, ATOM_TO_JSID(name), attrsp);
+}
+
+static JSBool
 xml_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return xml_getAttributes(cx, obj, id, attrsp);
+    return xml_getGenericAttributes(cx, obj, id, attrsp);
 }
 
 static JSBool
 xml_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return xml_getAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    return xml_getGenericAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 static JSBool
-xml_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+xml_setGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JSBool found;
     if (!HasProperty(cx, obj, IdToJsval(id), &found))
@@ -4918,18 +4924,24 @@ xml_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 static JSBool
+xml_setPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+{
+    return xml_setGenericAttributes(cx, obj, ATOM_TO_JSID(name), attrsp);
+}
+
+static JSBool
 xml_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return xml_setAttributes(cx, obj, id, attrsp);
+    return xml_setGenericAttributes(cx, obj, id, attrsp);
 }
 
 static JSBool
 xml_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return xml_setAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    return xml_setGenericAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 static JSBool
@@ -5324,12 +5336,12 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_setProperty,
         xml_setElement,
         xml_setSpecial,
-        xml_getAttributes,
-        xml_getAttributes,
+        xml_getGenericAttributes,
+        xml_getPropertyAttributes,
         xml_getElementAttributes,
         xml_getSpecialAttributes,
-        xml_setAttributes,
-        xml_setAttributes,
+        xml_setGenericAttributes,
+        xml_setPropertyAttributes,
         xml_setElementAttributes,
         xml_setSpecialAttributes,
         xml_deleteProperty,

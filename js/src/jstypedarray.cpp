@@ -462,7 +462,7 @@ ArrayBuffer::obj_setSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *
 }
 
 JSBool
-ArrayBuffer::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+ArrayBuffer::obj_getGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
         *attrsp = JSPROP_PERMANENT | JSPROP_READONLY;
@@ -473,6 +473,12 @@ ArrayBuffer::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *att
     if (!delegate)
         return false;
     return js_GetAttributes(cx, delegate, id, attrsp);
+}
+
+JSBool
+ArrayBuffer::obj_getPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+{
+    return obj_getGenericAttributes(cx, obj, ATOM_TO_JSID(name), attrsp);
 }
 
 JSBool
@@ -487,11 +493,11 @@ ArrayBuffer::obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index
 JSBool
 ArrayBuffer::obj_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return obj_getAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    return obj_getGenericAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 JSBool
-ArrayBuffer::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+ArrayBuffer::obj_setGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -506,6 +512,12 @@ ArrayBuffer::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *att
 }
 
 JSBool
+ArrayBuffer::obj_setPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+{
+    return obj_setGenericAttributes(cx, obj, ATOM_TO_JSID(name), attrsp);
+}
+
+JSBool
 ArrayBuffer::obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
 {
     JSObject *delegate = DelegateObject(cx, obj);
@@ -517,7 +529,7 @@ ArrayBuffer::obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index
 JSBool
 ArrayBuffer::obj_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return obj_setAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    return obj_setGenericAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 JSBool
@@ -722,11 +734,18 @@ TypedArray::obj_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid,
 }
 
 JSBool
-TypedArray::obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+TypedArray::obj_getGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     *attrsp = (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
               ? JSPROP_PERMANENT | JSPROP_READONLY
               : JSPROP_PERMANENT | JSPROP_ENUMERATE;
+    return true;
+}
+
+JSBool
+TypedArray::obj_getPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+{
+    *attrsp = JSPROP_PERMANENT | JSPROP_ENUMERATE;
     return true;
 }
 
@@ -740,11 +759,18 @@ TypedArray::obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index,
 JSBool
 TypedArray::obj_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return obj_getAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    return obj_getGenericAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 JSBool
-TypedArray::obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+TypedArray::obj_setGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
+    return false;
+}
+
+JSBool
+TypedArray::obj_setPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
     return false;
@@ -760,7 +786,8 @@ TypedArray::obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index,
 JSBool
 TypedArray::obj_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return obj_setAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
+    return false;
 }
 
 /* static */ int
@@ -2045,12 +2072,12 @@ Class js::ArrayBufferClass = {
         ArrayBuffer::obj_setProperty,
         ArrayBuffer::obj_setElement,
         ArrayBuffer::obj_setSpecial,
-        ArrayBuffer::obj_getAttributes,
-        ArrayBuffer::obj_getAttributes,
+        ArrayBuffer::obj_getGenericAttributes,
+        ArrayBuffer::obj_getPropertyAttributes,
         ArrayBuffer::obj_getElementAttributes,
         ArrayBuffer::obj_getSpecialAttributes,
-        ArrayBuffer::obj_setAttributes,
-        ArrayBuffer::obj_setAttributes,
+        ArrayBuffer::obj_setGenericAttributes,
+        ArrayBuffer::obj_setPropertyAttributes,
         ArrayBuffer::obj_setElementAttributes,
         ArrayBuffer::obj_setSpecialAttributes,
         ArrayBuffer::obj_deleteProperty,
@@ -2149,7 +2176,7 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
         _typedArray::obj_defineProperty,                                       \
         _typedArray::obj_defineElement,                                        \
         _typedArray::obj_defineSpecial,                                        \
-        _typedArray::obj_getGeneric,                                          \
+        _typedArray::obj_getGeneric,                                           \
         _typedArray::obj_getProperty,                                          \
         _typedArray::obj_getElement,                                           \
         _typedArray::obj_getSpecial,                                           \
@@ -2157,12 +2184,12 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
         _typedArray::obj_setProperty,                                          \
         _typedArray::obj_setElement,                                           \
         _typedArray::obj_setSpecial,                                           \
-        _typedArray::obj_getAttributes,                                        \
-        _typedArray::obj_getAttributes,                                        \
+        _typedArray::obj_getGenericAttributes,                                 \
+        _typedArray::obj_getPropertyAttributes,                                \
         _typedArray::obj_getElementAttributes,                                 \
         _typedArray::obj_getSpecialAttributes,                                 \
-        _typedArray::obj_setAttributes,                                        \
-        _typedArray::obj_setAttributes,                                        \
+        _typedArray::obj_setGenericAttributes,                                 \
+        _typedArray::obj_setPropertyAttributes,                                \
         _typedArray::obj_setElementAttributes,                                 \
         _typedArray::obj_setSpecialAttributes,                                 \
         _typedArray::obj_deleteProperty,                                       \

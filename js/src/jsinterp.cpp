@@ -838,7 +838,7 @@ js::CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs)
     if (obj2->isNative()) {
         oldAttrs = ((Shape *) prop)->attributes();
     } else {
-        if (!obj2->getAttributes(cx, id, &oldAttrs))
+        if (!obj2->getGenericAttributes(cx, id, &oldAttrs))
             return false;
     }
 

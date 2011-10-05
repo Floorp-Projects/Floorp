@@ -122,20 +122,20 @@ struct JS_FRIEND_API(ArrayBuffer) {
     obj_setSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict);
 
     static JSBool
-    obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
-
+    obj_getGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+    static JSBool
+    obj_getPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp);
     static JSBool
     obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
-
     static JSBool
     obj_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp);
 
     static JSBool
-    obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
-
+    obj_setGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+    static JSBool
+    obj_setPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp);
     static JSBool
     obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
-
     static JSBool
     obj_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp);
 
@@ -222,11 +222,13 @@ struct JS_FRIEND_API(TypedArray) {
     static JSBool obj_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid,
                                     JSObject **objp, JSProperty **propp);
 
-    static JSBool obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+    static JSBool obj_getGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+    static JSBool obj_getPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp);
     static JSBool obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
     static JSBool obj_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp);
 
-    static JSBool obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+    static JSBool obj_setGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+    static JSBool obj_setPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp);
     static JSBool obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
     static JSBool obj_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp);
 
