@@ -27,7 +27,6 @@ export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 
 # PGO
-mk_add_options MOZ_PGO=1
 mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'
 
 # Enable parallel compiling
