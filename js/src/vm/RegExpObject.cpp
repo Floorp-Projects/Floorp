@@ -64,8 +64,8 @@ RegExpPrivate::executeInternal(JSContext *cx, RegExpStatics *res, JSString *inpu
                                size_t *lastIndex, bool test, Value *rval)
 {
     const size_t pairCount = parenCount + 1;
-    const size_t bufCount = pairCount * 3; /* Should be x2, but PCRE has... needs. */
     const size_t matchItemCount = pairCount * 2;
+    const size_t bufCount = RegExpPrivateCode::getOutputSize(pairCount);
 
     LifoAllocScope las(&cx->tempLifoAlloc());
     int *buf = cx->tempLifoAlloc().newArray<int>(bufCount);
@@ -100,26 +100,18 @@ RegExpPrivate::executeInternal(JSContext *cx, RegExpStatics *res, JSString *inpu
         inputOffset = *lastIndex;
     }
 
-    int result;
-#if ENABLE_YARR_JIT
-    if (!codeBlock.isFallBack())
-        result = JSC::Yarr::execute(codeBlock, chars, *lastIndex - inputOffset, len, buf);
-    else
-        result = JSC::Yarr::interpret(byteCode, chars, *lastIndex - inputOffset, len, buf);
-#else
-    result = jsRegExpExecute(cx, compiled, chars, len, *lastIndex - inputOffset, buf, bufCount);
-#endif
-    if (result == -1) {
+    size_t start = *lastIndex - inputOffset;
+    RegExpPrivateCode::ExecuteResult result = code.execute(cx, chars, start, len, buf, bufCount);
+
+    switch (result) {
+      case RegExpPrivateCode::Error:
+        return false;
+      case RegExpPrivateCode::Success_NotFound:
         *rval = NullValue();
         return true;
+      default:
+        JS_ASSERT(result == RegExpPrivateCode::Success);
     }
-
-#if !ENABLE_YARR_JIT
-    if (result < 0) {
-        reportPCREError(cx, result);
-        return false;
-    }
-#endif
 
     /* 
      * Adjust buf for the inputOffset. Use of sticky is rare and the matchItemCount is small, so
@@ -260,9 +252,42 @@ Class js::RegExpClass = {
     NULL                     /* trace */
 };
 
-#if !ENABLE_YARR_JIT
+#if ENABLE_YARR_JIT
 void
-RegExpPrivate::reportPCREError(JSContext *cx, int error)
+RegExpPrivateCode::reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode error)
+{
+    switch (error) {
+      case JSC::Yarr::NoError:
+        JS_NOT_REACHED("Called reportYarrError with value for no error");
+        return;
+#define COMPILE_EMSG(__code, __msg)                                                              \
+      case JSC::Yarr::__code:                                                                    \
+        if (ts)                                                                                  \
+            ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, __msg);                       \
+        else                                                                                     \
+            JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL, __msg); \
+        return
+      COMPILE_EMSG(PatternTooLarge, JSMSG_REGEXP_TOO_COMPLEX);
+      COMPILE_EMSG(QuantifierOutOfOrder, JSMSG_BAD_QUANTIFIER);
+      COMPILE_EMSG(QuantifierWithoutAtom, JSMSG_BAD_QUANTIFIER);
+      COMPILE_EMSG(MissingParentheses, JSMSG_MISSING_PAREN);
+      COMPILE_EMSG(ParenthesesUnmatched, JSMSG_UNMATCHED_RIGHT_PAREN);
+      COMPILE_EMSG(ParenthesesTypeInvalid, JSMSG_BAD_QUANTIFIER); /* "(?" with bad next char */
+      COMPILE_EMSG(CharacterClassUnmatched, JSMSG_BAD_CLASS_RANGE);
+      COMPILE_EMSG(CharacterClassInvalidRange, JSMSG_BAD_CLASS_RANGE);
+      COMPILE_EMSG(CharacterClassOutOfOrder, JSMSG_BAD_CLASS_RANGE);
+      COMPILE_EMSG(QuantifierTooLarge, JSMSG_BAD_QUANTIFIER);
+      COMPILE_EMSG(EscapeUnterminated, JSMSG_TRAILING_SLASH);
+#undef COMPILE_EMSG
+      default:
+        JS_NOT_REACHED("Unknown Yarr error code");
+    }
+}
+
+#else /* !ENABLE_YARR_JIT */
+
+void
+RegExpPrivateCode::reportPCREError(JSContext *cx, int error)
 {
 #define REPORT(msg_) \
     JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL, msg_); \
@@ -292,38 +317,7 @@ RegExpPrivate::reportPCREError(JSContext *cx, int error)
     }
 #undef REPORT
 }
-#endif
-
-void
-RegExpPrivate::reportYarrError(JSContext *cx, TokenStream *ts, JSC::Yarr::ErrorCode error)
-{
-    switch (error) {
-      case JSC::Yarr::NoError:
-        JS_NOT_REACHED("Called reportYarrError with value for no error");
-        return;
-#define COMPILE_EMSG(__code, __msg)                                                              \
-      case JSC::Yarr::__code:                                                                    \
-        if (ts)                                                                                  \
-            ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, __msg);                       \
-        else                                                                                     \
-            JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL, __msg); \
-        return
-      COMPILE_EMSG(PatternTooLarge, JSMSG_REGEXP_TOO_COMPLEX);
-      COMPILE_EMSG(QuantifierOutOfOrder, JSMSG_BAD_QUANTIFIER);
-      COMPILE_EMSG(QuantifierWithoutAtom, JSMSG_BAD_QUANTIFIER);
-      COMPILE_EMSG(MissingParentheses, JSMSG_MISSING_PAREN);
-      COMPILE_EMSG(ParenthesesUnmatched, JSMSG_UNMATCHED_RIGHT_PAREN);
-      COMPILE_EMSG(ParenthesesTypeInvalid, JSMSG_BAD_QUANTIFIER); /* "(?" with bad next char */
-      COMPILE_EMSG(CharacterClassUnmatched, JSMSG_BAD_CLASS_RANGE);
-      COMPILE_EMSG(CharacterClassInvalidRange, JSMSG_BAD_CLASS_RANGE);
-      COMPILE_EMSG(CharacterClassOutOfOrder, JSMSG_BAD_CLASS_RANGE);
-      COMPILE_EMSG(QuantifierTooLarge, JSMSG_BAD_QUANTIFIER);
-      COMPILE_EMSG(EscapeUnterminated, JSMSG_TRAILING_SLASH);
-#undef COMPILE_EMSG
-      default:
-        JS_NOT_REACHED("Unknown Yarr error code");
-    }
-}
+#endif /* ENABLE_YARR_JIT */
 
 bool
 js::ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut)
