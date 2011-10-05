@@ -55,6 +55,8 @@ static int gNotOptimized;
 #include "AndroidBridge.h"
 #include "android_npapi.h"
 #include <android/log.h>
+#include "nsXULAppAPI.h"
+#include "nsIXULRuntime.h"
 #define ALOG(args...) __android_log_print(ANDROID_LOG_INFO, "GeckoJavaEnv", ## args)
 #endif
 
@@ -64,6 +66,11 @@ nsresult
 PluginPRLibrary::NP_Initialize(NPNetscapeFuncs* bFuncs,
 			       NPPluginFuncs* pFuncs, NPError* error)
 {
+  // We need the JNI environment, which is only in the
+  // chrome process (since it is started by Android)
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return NS_ERROR_FAILURE;
+  }
   if (mNP_Initialize) {
     *error = mNP_Initialize(bFuncs, pFuncs, GetJNIForThread());
   } else {
