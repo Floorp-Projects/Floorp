@@ -232,6 +232,7 @@
     var gQueue = null;
 
     // gA11yEventDumpID = "debug";
+    gA11yEventDumpToConsole = true;
 
     function doTest()
     {
