@@ -129,8 +129,11 @@ public class LauncherShortcuts extends ListActivity {
                 size = 72;
         }
 
-        Bitmap bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeFile(favicon), size, size, true);
-        intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, bitmap);
+        Bitmap bitmap = BitmapFactory.decodeFile(favicon);
+        if (bitmap != null) {
+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, size, size, true);
+            intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, scaledBitmap);
+        }
 
         // Now, return the result to the launcher
         setResult(RESULT_OK, intent);
