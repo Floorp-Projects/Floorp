@@ -500,6 +500,54 @@ add_test(function test_idle_adjustSyncInterval() {
   run_next_test();
 });
 
+add_test(function test_back_triggersSync() {
+  // Confirm defaults.
+  do_check_eq(SyncScheduler.idle, false);
+
+  // Set up: Define 2 clients and put the system in idle.
+  SyncScheduler.numClients = 2;
+  SyncScheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  do_check_eq(SyncScheduler.idle, true);
+
+  // We don't actually expect the sync (or the login, for that matter) to
+  // succeed. We just want to ensure that it was attempted.
+  Svc.Obs.add("weave:service:login:error", function onLoginError() {
+    Svc.Obs.remove("weave:service:login:error", onLoginError);
+    SyncScheduler.setDefaults();    
+    run_next_test();
+  });
+
+  // Send a 'back' event to trigger sync soonish.
+  SyncScheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
+});
+
+add_test(function test_back_debouncing() {
+  _("Ensure spurious back-then-idle events, as observed on OS X, don't trigger a sync.");
+
+  // Confirm defaults.
+  do_check_eq(SyncScheduler.idle, false);
+
+  // Set up: Define 2 clients and put the system in idle.
+  SyncScheduler.numClients = 2;
+  SyncScheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  do_check_eq(SyncScheduler.idle, true);
+
+  function onLoginStart() {
+    do_throw("Shouldn't have kicked off a sync!");
+  }
+  Svc.Obs.add("weave:service:login:start", onLoginStart);
+
+  // Create spurious back-then-idle events as observed on OS X:
+  SyncScheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
+  SyncScheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+
+  timer = Utils.namedTimer(function () {
+    Svc.Obs.remove("weave:service:login:start", onLoginStart);
+    SyncScheduler.setDefaults();
+    run_next_test();
+  }, IDLE_OBSERVER_BACK_DELAY * 1.5, {}, "timer");
+});
+
 add_test(function test_no_sync_node() {
   // Test when Status.sync == NO_SYNC_NODE_FOUND
   // it is not overwritten on sync:finish
