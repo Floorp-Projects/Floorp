@@ -8,7 +8,7 @@ function test() {
   waitForExplicitFinish();
 
   // set up our tabs
-  let urlBase = "http://mochi.test:8888/browser/browser/base/content/test/tabview/";
+  let urlBase = "http://mochi.test:8888/browser/browser/components/tabview/test/";
   let tabOne = gBrowser.addTab(urlBase + "search1.html");
   let tabTwo = gBrowser.addTab(urlBase + "search2.html");
   newTabs = [ tabOne, tabTwo ];
