@@ -1355,10 +1355,7 @@ public class GeckoAppShell
                                                                                      (int)y);
 
                     if (GeckoApp.mainLayout.indexOfChild(view) == -1) {
-                        view.setWillNotDraw(false);
-                        if(view instanceof SurfaceView)
-                            ((SurfaceView)view).setZOrderOnTop(true);
-
+                        view.setWillNotDraw(true);
                         GeckoApp.mainLayout.addView(view, lp);
                     }
                     else
@@ -1412,16 +1409,9 @@ public class GeckoAppShell
         return null;
     }
 
-    static HashMap<SurfaceView, SurfaceLockInfo> sSufaceMap = new HashMap<SurfaceView, SurfaceLockInfo>();
-
-    public static void lockSurfaceANP()
+    public static SurfaceInfo getSurfaceInfo(SurfaceView sview)
     {
-         Log.i("GeckoAppShell", "other lockSurfaceANP");
-    }
-
-    public static org.mozilla.gecko.SurfaceLockInfo lockSurfaceANP(android.view.SurfaceView sview, int top, int left, int bottom, int right)
-    {
-        Log.i("GeckoAppShell", "real lockSurfaceANP " + sview + ", " + top + ",  " + left + ", " + bottom + ", " + right);
+        Log.i("GeckoAppShell", "getSurfaceInfo " + sview);
         if (sview == null)
             return null;
 
@@ -1435,80 +1425,28 @@ public class GeckoAppShell
         }
 
         int n = 0;
-        if (format == PixelFormat.RGB_565)
+        if (format == PixelFormat.RGB_565) {
             n = 2;
-        else if (format == PixelFormat.RGBA_8888)
+        } else if (format == PixelFormat.RGBA_8888) {
             n = 4;
-
-        if (n == 0)
+        } else {
+            Log.i("GeckoAppShell", "Unknown pixel format: " + format);
             return null;
-
-        SurfaceLockInfo info = sSufaceMap.get(sview);
-        if (info == null) {
-            info = new SurfaceLockInfo();
-            sSufaceMap.put(sview, info);
         }
 
-        Rect r = new Rect(left, top, right, bottom);
+        SurfaceInfo info = new SurfaceInfo();
 
-        info.canvas = sview.getHolder().lockCanvas(r);
-        int bufSizeRequired = info.canvas.getWidth() * info.canvas.getHeight() * n;
-        Log.i("GeckoAppShell", "lockSurfaceANP - bufSizeRequired: " + n + " " + info.canvas.getHeight() + " " + info.canvas.getWidth());
-
-        if (info.width != info.canvas.getWidth() || info.height != info.canvas.getHeight() || info.buffer == null || info.buffer.capacity() < bufSizeRequired) {
-            info.width = info.canvas.getWidth();
-            info.height = info.canvas.getHeight();
-
-            // XXX Bitmaps instead of ByteBuffer
-            info.buffer = ByteBuffer.allocateDirect(bufSizeRequired);  //leak
-            Log.i("GeckoAppShell", "!!!!!!!!!!!  lockSurfaceANP - Allocating buffer! " + bufSizeRequired);
-
-        }
-
-        info.canvas.drawColor(Color.WHITE, PorterDuff.Mode.CLEAR);
-
+        Rect r = sview.getHolder().getSurfaceFrame();
+        info.width = r.right;
+        info.height = r.bottom;
         info.format = format;
-        info.dirtyTop = top;
-        info.dirtyBottom = bottom;
-        info.dirtyLeft = left;
-        info.dirtyRight = right;
 
         return info;
     }
 
-    public static void unlockSurfaceANP(SurfaceView sview) {
-        SurfaceLockInfo info = sSufaceMap.get(sview);
-
-        int n = 0;
-        Bitmap.Config config;
-        if (info.format == PixelFormat.RGB_565) {
-            n = 2;
-            config = Bitmap.Config.RGB_565;
-        } else {
-            n = 4;
-            config = Bitmap.Config.ARGB_8888;
-        }
-
-        Log.i("GeckoAppShell", "unlockSurfaceANP: " + (info.width * info.height * n));
-
-        Bitmap bm = Bitmap.createBitmap(info.width, info.height, config);
-        bm.copyPixelsFromBuffer(info.buffer);
-        info.canvas.drawBitmap(bm, 0, 0, null);
-        sview.getHolder().unlockCanvasAndPost(info.canvas);
-    }
-
-    public static Class getSurfaceLockInfoClass() {
-        Log.i("GeckoAppShell", "class name: " + SurfaceLockInfo.class.getName());
-        return SurfaceLockInfo.class;
-    }
-
-    public static Method getSurfaceLockMethod() {
-        Method[] m = GeckoAppShell.class.getMethods();
-        for (int i = 0; i < m.length; i++) {
-            if (m[i].getName().equals("lockSurfaceANP"))
-                return m[i];
-        }
-        return null;
+    public static Class getSurfaceInfoClass() {
+        Log.i("GeckoAppShell", "class name: " + SurfaceInfo.class.getName());
+        return SurfaceInfo.class;
     }
 
     static native void executeNextRunnable();
