@@ -428,7 +428,7 @@ class NodeBuilder
         if (!atom)
             return false;
 
-        return obj->defineProperty(cx, ATOM_TO_JSID(atom), val);
+        return obj->defineProperty(cx, atom->asPropertyName(), val);
     }
 
     bool newNodeLoc(TokenPos *pos, Value *dst);

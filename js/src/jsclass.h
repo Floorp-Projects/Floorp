@@ -193,7 +193,7 @@ typedef JSBool
 (* DefineGenericOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 typedef JSBool
-(* DefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+(* DefinePropOp)(JSContext *cx, JSObject *obj, PropertyName *name, const Value *value,
                  PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 typedef JSBool
 (* DefineElementOp)(JSContext *cx, JSObject *obj, uint32 index, const Value *value,

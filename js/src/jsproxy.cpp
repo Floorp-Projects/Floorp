@@ -955,8 +955,8 @@ proxy_LookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp
 }
 
 static JSBool
-proxy_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
-                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+proxy_DefineGeneric(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+                    PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     id = js_CheckForStringIndex(id);
 
@@ -971,20 +971,27 @@ proxy_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
 }
 
 static JSBool
+proxy_DefineProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Value *value,
+                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    return proxy_DefineGeneric(cx, obj, ATOM_TO_JSID(name), value, getter, setter, attrs);
+}
+
+static JSBool
 proxy_DefineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return proxy_DefineProperty(cx, obj, id, value, getter, setter, attrs);
+    return proxy_DefineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
 static JSBool
 proxy_DefineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
-    return proxy_DefineProperty(cx, obj, SPECIALID_TO_JSID(sid), value, getter, setter, attrs);
+    return proxy_DefineGeneric(cx, obj, SPECIALID_TO_JSID(sid), value, getter, setter, attrs);
 }
 
 static JSBool
@@ -1231,7 +1238,7 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
         proxy_LookupProperty,
         proxy_LookupElement,
         proxy_LookupSpecial,
-        proxy_DefineProperty,
+        proxy_DefineGeneric,
         proxy_DefineProperty,
         proxy_DefineElement,
         proxy_DefineSpecial,
@@ -1292,7 +1299,7 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
         proxy_LookupProperty,
         proxy_LookupElement,
         proxy_LookupSpecial,
-        proxy_DefineProperty,
+        proxy_DefineGeneric,
         proxy_DefineProperty,
         proxy_DefineElement,
         proxy_DefineSpecial,
@@ -1365,7 +1372,7 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
         proxy_LookupProperty,
         proxy_LookupElement,
         proxy_LookupSpecial,
-        proxy_DefineProperty,
+        proxy_DefineGeneric,
         proxy_DefineProperty,
         proxy_DefineElement,
         proxy_DefineSpecial,
