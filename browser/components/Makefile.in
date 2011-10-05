@@ -69,7 +69,8 @@ PARALLEL_DIRS = \
   search \
   sessionstore \
   shell \
-  sidebar/src \
+  sidebar \
+  tabview \
   migration \
   $(NULL)
 
