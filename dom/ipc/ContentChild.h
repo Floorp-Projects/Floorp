@@ -96,6 +96,9 @@ public:
     virtual bool
     DeallocPCrashReporter(PCrashReporterChild*);
 
+    NS_OVERRIDE virtual PHalChild* AllocPHal();
+    NS_OVERRIDE virtual bool DeallocPHal(PHalChild*);
+
     virtual PMemoryReportRequestChild*
     AllocPMemoryReportRequest();
 
