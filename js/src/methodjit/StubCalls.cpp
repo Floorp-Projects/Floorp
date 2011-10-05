@@ -2210,7 +2210,7 @@ stubs::DelName(VMFrame &f, JSAtom *atom)
     f.regs.sp++;
     f.regs.sp[-1] = BooleanValue(true);
     if (prop) {
-        if (!obj->deleteProperty(f.cx, id, &f.regs.sp[-1], false))
+        if (!obj->deleteProperty(f.cx, atom->asPropertyName(), &f.regs.sp[-1], false))
             THROW();
     }
 }
@@ -2226,7 +2226,7 @@ stubs::DelProp(VMFrame &f, JSAtom *atom)
         THROW();
 
     Value rval;
-    if (!obj->deleteProperty(cx, ATOM_TO_JSID(atom), &rval, strict))
+    if (!obj->deleteGeneric(cx, ATOM_TO_JSID(atom), &rval, strict))
         THROW();
 
     f.regs.sp[-1] = rval;
@@ -2249,7 +2249,7 @@ stubs::DelElem(VMFrame &f)
     if (!FetchElementId(f, obj, f.regs.sp[-1], id, &f.regs.sp[-1]))
         THROW();
 
-    if (!obj->deleteProperty(cx, id, &f.regs.sp[-2], strict))
+    if (!obj->deleteGeneric(cx, id, &f.regs.sp[-2], strict))
         THROW();
 }
 

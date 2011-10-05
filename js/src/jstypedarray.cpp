@@ -533,7 +533,7 @@ ArrayBuffer::obj_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId si
 }
 
 JSBool
-ArrayBuffer::obj_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+ArrayBuffer::obj_deleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
         rval->setBoolean(false);
@@ -544,6 +544,12 @@ ArrayBuffer::obj_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rv
     if (!delegate)
         return false;
     return js_DeleteProperty(cx, delegate, id, rval, strict);
+}
+
+JSBool
+ArrayBuffer::obj_deleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
+{
+    return obj_deleteGeneric(cx, obj, ATOM_TO_JSID(name), rval, strict);
 }
 
 JSBool
@@ -558,7 +564,7 @@ ArrayBuffer::obj_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value
 JSBool
 ArrayBuffer::obj_deleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
 {
-    return obj_deleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
+    return obj_deleteGeneric(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 JSBool
@@ -1192,7 +1198,7 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+    obj_deleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
     {
         if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
             rval->setBoolean(false);
@@ -1209,6 +1215,12 @@ class TypedArrayTemplate
 
         rval->setBoolean(true);
         return true;
+    }
+
+    static JSBool
+    obj_deleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
+    {
+        return obj_deleteGeneric(cx, obj, ATOM_TO_JSID(name), rval, strict);
     }
 
     static JSBool
@@ -1229,7 +1241,7 @@ class TypedArrayTemplate
     static JSBool
     obj_deleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
     {
-        return obj_deleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
+        return obj_deleteGeneric(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
     }
 
     static JSBool
@@ -2080,7 +2092,7 @@ Class js::ArrayBufferClass = {
         ArrayBuffer::obj_setPropertyAttributes,
         ArrayBuffer::obj_setElementAttributes,
         ArrayBuffer::obj_setSpecialAttributes,
-        ArrayBuffer::obj_deleteProperty,
+        ArrayBuffer::obj_deleteGeneric,
         ArrayBuffer::obj_deleteProperty,
         ArrayBuffer::obj_deleteElement,
         ArrayBuffer::obj_deleteSpecial,
@@ -2192,7 +2204,7 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
         _typedArray::obj_setPropertyAttributes,                                \
         _typedArray::obj_setElementAttributes,                                 \
         _typedArray::obj_setSpecialAttributes,                                 \
-        _typedArray::obj_deleteProperty,                                       \
+        _typedArray::obj_deleteGeneric,                                        \
         _typedArray::obj_deleteProperty,                                       \
         _typedArray::obj_deleteElement,                                        \
         _typedArray::obj_deleteSpecial,                                        \

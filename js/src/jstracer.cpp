@@ -11631,7 +11631,7 @@ DeleteIntKey(JSContext* cx, JSObject* obj, int32 i, JSBool strict)
         }
     }
 
-    if (!obj->deleteProperty(cx, id, &v, strict))
+    if (!obj->deleteGeneric(cx, id, &v, strict))
         SetBuiltinError(tm);
     return v.toBoolean();
 }
@@ -11653,7 +11653,7 @@ DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str, JSBool strict)
      * jsatominlines.h) that helper early-returns if the computed property name
      * string is already atomized, and we are *not* on a perf-critical path!
      */
-    if (!js_ValueToStringId(cx, StringValue(str), &id) || !obj->deleteProperty(cx, id, &v, strict))
+    if (!js_ValueToStringId(cx, StringValue(str), &id) || !obj->deleteGeneric(cx, id, &v, strict))
         SetBuiltinError(tm);
     return v.toBoolean();
 }

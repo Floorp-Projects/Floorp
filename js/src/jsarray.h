@@ -177,7 +177,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                      PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 
 extern JSBool
-array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict);
+array_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict);
 
 /*
  * Copy 'length' elements from aobj to vp.
