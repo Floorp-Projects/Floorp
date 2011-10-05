@@ -1598,12 +1598,8 @@ IonBuilder::jsop_bitop(JSOp op)
 }
 
 bool
-IonBuilder::jsop_binary(JSOp op)
+IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
 {
-    // Pop inputs.
-    MDefinition *right = current->pop();
-    MDefinition *left = current->pop();
-
     MBinaryArithInstruction *ins;
     switch (op) {
       case JSOP_ADD:
@@ -1635,12 +1631,25 @@ IonBuilder::jsop_binary(JSOp op)
 }
 
 bool
+IonBuilder::jsop_binary(JSOp op)
+{
+    MDefinition *right = current->pop();
+    MDefinition *left = current->pop();
+
+    return jsop_binary(op, left, right);
+}
+
+bool
 IonBuilder::jsop_neg()
 {
-    if (!pushConstant(Int32Value(-1)))
-        return false;
+    // Since JSOP_NEG does not use a slot, we cannot push the MConstant.
+    // The MConstant is therefore passed to JSOP_MUL without slot traffic.
+    MConstant *negator = MConstant::New(Int32Value(-1));
+    current->add(negator);
 
-    if (!jsop_binary(JSOP_MUL))
+    MDefinition *right = current->pop();
+
+    if (!jsop_binary(JSOP_MUL, negator, right))
         return false;
     return true;
 }
