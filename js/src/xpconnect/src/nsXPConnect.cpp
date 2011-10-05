@@ -747,7 +747,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     if(traceKind == JSTRACE_OBJECT)
     {
         obj = static_cast<JSObject*>(p);
-        clazz = obj->getClass();
+        clazz = js::GetObjectClass(obj);
 
         if(clazz == &XPC_WN_Tearoff_JSClass)
         {
@@ -1994,7 +1994,7 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
     if(NS_FAILED(rv))
         return UnexpectedFailure(rv);
 
-    if(!IS_PROTO_CLASS(protoJSObject->getClass()))
+    if(!IS_PROTO_CLASS(js::GetObjectClass(protoJSObject)))
         return UnexpectedFailure(NS_ERROR_INVALID_ARG);
 
     XPCWrappedNativeScope* scope =
@@ -2657,7 +2657,7 @@ nsXPConnect::GetSafeJSContext(JSContext * *aSafeJSContext)
 nsIPrincipal*
 nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
 {
-    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()),
+    NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(obj)),
                  "What kind of wrapper is this?");
 
     if(IS_WN_WRAPPER_OBJECT(obj))

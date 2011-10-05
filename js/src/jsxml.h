@@ -219,18 +219,6 @@ js_NewXMLObject(JSContext *cx, JSXMLClass xml_class);
 extern JSObject *
 js_GetXMLObject(JSContext *cx, JSXML *xml);
 
-/*
- * Methods to test whether an object or a value is of type "xml" (per typeof).
- */
-
-#define VALUE_IS_XML(v)      (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isXML())
-
-static inline bool
-IsXML(const js::Value &v)
-{
-    return v.isObject() && v.toObject().isXML();
-}
-
 extern JSObject *
 js_InitNamespaceClass(JSContext *cx, JSObject *obj);
 
