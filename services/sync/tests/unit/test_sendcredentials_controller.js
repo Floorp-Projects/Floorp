@@ -12,6 +12,9 @@ function run_test() {
   Service.passphrase = Utils.generatePassphrase();
   Service.serverURL  = "http://weave.server/";
 
+  initTestLogging("Trace");
+  Log4Moz.repository.getLogger("Sync.SendCredentialsController").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.SyncScheduler").level = Log4Moz.Level.Trace;
   run_next_test();
 }
 
@@ -26,8 +29,6 @@ function make_sendCredentials_test(topic) {
         // when the exchange is complete by faking another notification.
         do_check_false(sendAndCompleteCalled);
         sendAndCompleteCalled = true;
-        this.controller.onComplete();
-        Svc.Obs.notify(topic);
 
         // Verify it sends the correct data.
         do_check_eq(data.account,   Service.account);
@@ -35,11 +36,16 @@ function make_sendCredentials_test(topic) {
         do_check_eq(data.synckey,   Service.passphrase);
         do_check_eq(data.serverURL, Service.serverURL);
 
+        this.controller.onComplete();
         // Verify it schedules a sync for the expected interval.
         let expectedInterval = SyncScheduler.activeInterval;
         do_check_true(SyncScheduler.nextSync - Date.now() <= expectedInterval);
-        SyncScheduler.setDefaults();
 
+        // Signal the end of another sync. We shouldn't be registered anymore,
+        // so we shouldn't re-enter this method (cf sendAndCompleteCalled above)
+        Svc.Obs.notify(topic);
+
+        SyncScheduler.setDefaults();
         Utils.nextTick(run_next_test);
       }
     };
