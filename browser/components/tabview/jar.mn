@@ -1,0 +1,5 @@
+browser.jar:
+        content/browser/tabview.css                   (tabview.css)
+*       content/browser/tabview.js                    (tabview.js)
+        content/browser/tabview.html                  (tabview.html)
+        content/browser/tabview-content.js            (content.js)
