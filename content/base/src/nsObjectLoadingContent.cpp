@@ -712,6 +712,20 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
       }
 
       {
+        PluginSupportState pluginState = GetPluginSupportState(thisContent,
+                                                               mContentType);
+        // Do nothing, but fire the plugin not found event if needed
+        if (pluginState != ePluginOtherState) {
+          Fallback(PR_FALSE);
+
+          mFallbackReason = pluginState;
+          FirePluginError(thisContent, pluginState);
+          return NS_BINDING_ABORTED;
+        }
+      }
+
+
+      {
         nsIFrame *nsiframe = do_QueryFrame(frame);
 
         nsWeakFrame weakFrame(nsiframe);
@@ -1929,6 +1943,12 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
 nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
                                               const nsCString& aContentType)
 {
+#ifdef ANDROID
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return ePluginClickToPlay;
+  }
+#endif
+
   if (!aContent->IsHTML()) {
     return ePluginOtherState;
   }
@@ -1963,8 +1983,9 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
 nsObjectLoadingContent::GetPluginDisabledState(const nsCString& aContentType)
 {
 #ifdef ANDROID
-      if (XRE_GetProcessType() == GeckoProcessType_Content)
-        return ePluginClickToPlay;
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return ePluginClickToPlay;
+  }
 #endif
   nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
