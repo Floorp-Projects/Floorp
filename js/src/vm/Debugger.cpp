@@ -2186,7 +2186,7 @@ DebuggerScript_getAllOffsets(JSContext *cx, uintN argc, Value *vp)
                 offsets = NewDenseEmptyArray(cx);
                 if (!offsets ||
                     !ValueToId(cx, NumberValue(lineno), &id) ||
-                    !result->defineProperty(cx, id, ObjectValue(*offsets)))
+                    !result->defineGeneric(cx, id, ObjectValue(*offsets)))
                 {
                     return false;
                 }

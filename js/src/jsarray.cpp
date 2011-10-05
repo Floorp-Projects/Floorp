@@ -596,9 +596,8 @@ static JSBool
 array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     if (!obj->isArray()) {
-        jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-
-        return obj->defineProperty(cx, lengthId, *vp, NULL, NULL, JSPROP_ENUMERATE);
+        return obj->defineProperty(cx, cx->runtime->atomState.lengthAtom, *vp,
+                                   NULL, NULL, JSPROP_ENUMERATE);
     }
 
     uint32 newlen;
@@ -1005,12 +1004,9 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
     return JS_FALSE;
 }
 
-namespace js {
-
-/* non-static for direct definition of array elements within the engine */
-JSBool
-array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
-                     JSPropertyOp getter, StrictPropertyOp setter, uintN attrs)
+static JSBool
+array_defineGeneric(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+                    JSPropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
         return JS_TRUE;
@@ -1042,6 +1038,15 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
         return false;
     return js_DefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
+
+static JSBool
+array_defineProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Value *value,
+                     JSPropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    return array_defineGeneric(cx, obj, ATOM_TO_JSID(name), value, getter, setter, attrs);
+}
+
+namespace js {
 
 /* non-static for direct definition of array elements within the engine */
 JSBool
@@ -1088,7 +1093,7 @@ static JSBool
 array_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
-    return array_defineProperty(cx, obj, SPECIALID_TO_JSID(sid), value, getter, setter, attrs);
+    return array_defineGeneric(cx, obj, SPECIALID_TO_JSID(sid), value, getter, setter, attrs);
 }
 
 static JSBool
@@ -1260,7 +1265,7 @@ Class js::ArrayClass = {
         array_lookupProperty,
         array_lookupElement,
         array_lookupSpecial,
-        array_defineProperty,
+        array_defineGeneric,
         array_defineProperty,
         array_defineElement,
         array_defineSpecial,
