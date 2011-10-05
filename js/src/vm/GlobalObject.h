@@ -273,11 +273,4 @@ typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy
 
 } // namespace js
 
-js::GlobalObject *
-JSObject::asGlobal()
-{
-    JS_ASSERT(isGlobal());
-    return reinterpret_cast<js::GlobalObject *>(this);
-}
-
 #endif /* GlobalObject_h___ */

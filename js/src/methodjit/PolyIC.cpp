@@ -338,8 +338,8 @@ class SetPropCompiler : public PICStubCompiler
                 masm.storeValue(pic.u.vr, address);
             }
 
-            const Shape *newShape = obj->lastProperty();
-            JS_ASSERT(newShape != initialShape);
+            JS_ASSERT(shape == obj->lastProperty());
+            JS_ASSERT(shape != initialShape);
 
             /* Write the object's new shape. */
             masm.storePtr(ImmPtr(shape), Address(pic.objReg, offsetof(JSObject, lastProp)));

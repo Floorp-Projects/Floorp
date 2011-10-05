@@ -5,6 +5,8 @@
 #include "tests.h"
 #include "jsfun.h"  // for js::IsInternalFunctionObject
 
+#include "jsobjinlines.h"
+
 BEGIN_TEST(testLookup_bug522590)
 {
     // Define a function that makes method-bearing objects.

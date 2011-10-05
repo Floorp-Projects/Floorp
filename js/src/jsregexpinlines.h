@@ -780,4 +780,73 @@ JSObject::initRegExp(JSContext *cx, js::RegExp *re)
     return true;
 }
 
+static inline bool
+VALUE_IS_REGEXP(JSContext *cx, js::Value v)
+{
+    return !v.isPrimitive() && v.toObject().isRegExp();
+}
+
+inline const js::Value &
+JSObject::getRegExpLastIndex() const
+{
+    JS_ASSERT(isRegExp());
+    return getSlot(JSSLOT_REGEXP_LAST_INDEX);
+}
+
+inline void
+JSObject::setRegExpLastIndex(const js::Value &v)
+{
+    JS_ASSERT(isRegExp());
+    setSlot(JSSLOT_REGEXP_LAST_INDEX, v);
+}
+
+inline void
+JSObject::setRegExpLastIndex(jsdouble d)
+{
+    JS_ASSERT(isRegExp());
+    setSlot(JSSLOT_REGEXP_LAST_INDEX, js::NumberValue(d));
+}
+
+inline void
+JSObject::zeroRegExpLastIndex()
+{
+    JS_ASSERT(isRegExp());
+    setSlot(JSSLOT_REGEXP_LAST_INDEX, js::Int32Value(0));
+}
+
+inline void
+JSObject::setRegExpSource(JSString *source)
+{
+    JS_ASSERT(isRegExp());
+    setSlot(JSSLOT_REGEXP_SOURCE, js::StringValue(source));
+}
+
+inline void
+JSObject::setRegExpGlobal(bool global)
+{
+    JS_ASSERT(isRegExp());
+    setSlot(JSSLOT_REGEXP_GLOBAL, js::BooleanValue(global));
+}
+
+inline void
+JSObject::setRegExpIgnoreCase(bool ignoreCase)
+{
+    JS_ASSERT(isRegExp());
+    setSlot(JSSLOT_REGEXP_IGNORE_CASE, js::BooleanValue(ignoreCase));
+}
+
+inline void
+JSObject::setRegExpMultiline(bool multiline)
+{
+    JS_ASSERT(isRegExp());
+    setSlot(JSSLOT_REGEXP_MULTILINE, js::BooleanValue(multiline));
+}
+
+inline void
+JSObject::setRegExpSticky(bool sticky)
+{
+    JS_ASSERT(isRegExp());
+    setSlot(JSSLOT_REGEXP_STICKY, js::BooleanValue(sticky));
+}
+
 #endif /* jsregexpinlines_h___ */

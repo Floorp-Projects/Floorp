@@ -600,6 +600,7 @@ PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
     }
 }
 
+#ifdef DEBUG
 static void
 PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
 {
@@ -613,6 +614,7 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
     if (n < bufsize)
         JS_snprintf(buf + n, bufsize - n, " method");
 }
+#endif /* DEBUG */
 
 static inline void
 ScanValue(GCMarker *gcmarker, const Value &v)
