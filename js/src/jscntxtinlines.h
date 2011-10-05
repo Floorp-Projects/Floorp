@@ -47,10 +47,10 @@
 #include "jsinterp.h"
 #include "jsstaticcheck.h"
 #include "jsxml.h"
-#include "jsregexp.h"
 #include "jsgc.h"
 
 #include "frontend/ParseMaps.h"
+#include "vm/RegExpObject.h"
 
 namespace js {
 
@@ -504,7 +504,7 @@ JSContext::ensureGeneratorStackSpace()
 inline js::RegExpStatics *
 JSContext::regExpStatics()
 {
-    return js::RegExpStatics::extractFrom(js::GetGlobalForScopeChain(this));
+    return js::GetGlobalForScopeChain(this)->getRegExpStatics();
 }
 
 inline void
