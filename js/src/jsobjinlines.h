@@ -126,11 +126,30 @@ JSObject::unbrand(JSContext *cx)
 }
 
 inline JSBool
-JSObject::setAttributes(JSContext *cx, jsid id, uintN *attrsp)
+JSObject::setGenericAttributes(JSContext *cx, jsid id, uintN *attrsp)
 {
     js::types::MarkTypePropertyConfigured(cx, this, id);
-    js::AttributesOp op = getOps()->setAttributes;
+    js::GenericAttributesOp op = getOps()->setGenericAttributes;
     return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
+}
+
+inline JSBool
+JSObject::setPropertyAttributes(JSContext *cx, js::PropertyName *name, uintN *attrsp)
+{
+    return setGenericAttributes(cx, ATOM_TO_JSID(name), attrsp);
+}
+
+inline JSBool
+JSObject::setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp)
+{
+    js::ElementAttributesOp op = getOps()->setElementAttributes;
+    return (op ? op : js_SetElementAttributes)(cx, this, index, attrsp);
+}
+
+inline JSBool
+JSObject::setSpecialAttributes(JSContext *cx, js::SpecialId sid, uintN *attrsp)
+{
+    return setGenericAttributes(cx, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 inline JSBool
@@ -1160,6 +1179,34 @@ inline JSBool
 JSObject::getSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp)
 {
     return getGeneric(cx, SPECIALID_TO_JSID(sid), vp);
+}
+
+inline JSBool
+JSObject::getGenericAttributes(JSContext *cx, jsid id, uintN *attrsp)
+{
+    js::GenericAttributesOp op = getOps()->getGenericAttributes;
+    return (op ? op : js_GetAttributes)(cx, this, id, attrsp);    
+}
+
+inline JSBool
+JSObject::getPropertyAttributes(JSContext *cx, js::PropertyName *name, uintN *attrsp)
+{
+    return getGenericAttributes(cx, ATOM_TO_JSID(name), attrsp);
+}
+
+inline JSBool
+JSObject::getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp)
+{
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
+        return false;
+    return getGenericAttributes(cx, id, attrsp);
+}
+
+inline JSBool
+JSObject::getSpecialAttributes(JSContext *cx, js::SpecialId sid, uintN *attrsp)
+{
+    return getGenericAttributes(cx, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 inline bool

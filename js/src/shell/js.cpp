@@ -3166,7 +3166,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         if (*objp != referent)
             return true;
         if (!referent->getGeneric(cx, id, &desc.value) ||
-            !referent->getAttributes(cx, id, &desc.attrs)) {
+            !referent->getGenericAttributes(cx, id, &desc.attrs)) {
             return false;
         }
         desc.attrs &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;

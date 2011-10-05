@@ -1401,22 +1401,15 @@ struct JSObject : js::gc::Cell {
 
     JSBool nonNativeSetElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict);
 
-    JSBool getAttributes(JSContext *cx, jsid id, uintN *attrsp) {
-        js::AttributesOp op = getOps()->getAttributes;
-        return (op ? op : js_GetAttributes)(cx, this, id, attrsp);
-    }
+    inline JSBool getGenericAttributes(JSContext *cx, jsid id, uintN *attrsp);
+    inline JSBool getPropertyAttributes(JSContext *cx, js::PropertyName *name, uintN *attrsp);
+    inline JSBool getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
+    inline JSBool getSpecialAttributes(JSContext *cx, js::SpecialId sid, uintN *attrsp);
 
-    JSBool getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp) {
-        js::ElementAttributesOp op = getOps()->getElementAttributes;
-        return (op ? op : js_GetElementAttributes)(cx, this, index, attrsp);
-    }
-
-    inline JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp);
-
-    JSBool setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp) {
-        js::ElementAttributesOp op = getOps()->setElementAttributes;
-        return (op ? op : js_SetElementAttributes)(cx, this, index, attrsp);
-    }
+    inline JSBool setGenericAttributes(JSContext *cx, jsid id, uintN *attrsp);
+    inline JSBool setPropertyAttributes(JSContext *cx, js::PropertyName *name, uintN *attrsp);
+    inline JSBool setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
+    inline JSBool setSpecialAttributes(JSContext *cx, js::SpecialId sid, uintN *attrsp);
 
     inline JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
 
