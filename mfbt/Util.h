@@ -64,6 +64,12 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
 MOZ_END_EXTERN_C
 
 /*
+ * A static assertion, just like PR_STATIC_ASSERT.
+ */
+#define MOZ_STATIC_ASSERT(condition) \
+  extern void moz_static_assert(int arg[(condition) ? 1 : -1])
+
+/*
  * MOZ_ASSERT() is a "strong" assertion of state, like libc's
  * assert().  If a MOZ_ASSERT() fails in a debug build, the process in
  * which it fails will stop running in a loud and dramatic way.
@@ -196,6 +202,93 @@ struct DebugOnly
     ~DebugOnly() {}
 };
 
+/*
+ * This class, and the corresponding macro MOZ_ALIGNOF, figure out how many 
+ * bytes of alignment a given type needs.
+ */
+template<class T>
+struct AlignmentFinder
+{
+private:
+  struct Aligner
+  {
+    char c;
+    T t;
+  };
+
+public:
+  static const int alignment = sizeof(Aligner) - sizeof(T);
+};
+
+#define MOZ_ALIGNOF(T) mozilla::AlignmentFinder<T>::alignment
+
+/*
+ * Declare the MOZ_ALIGNED_DECL macro for declaring aligned types.
+ *
+ * For instance,
+ *
+ *   MOZ_ALIGNED_DECL(char arr[2], 8);
+ *
+ * will declare a two-character array |arr| aligned to 8 bytes.
+ */
+
+#if defined(__GNUC__)
+#define MOZ_ALIGNED_DECL(_type, _align) \
+  _type __attribute__((aligned(_align)))
+
+#elif defined(_MSC_VER)
+#define MOZ_ALIGNED_DECL(_type, _align) \
+  __declspec(align(_align)) _type
+
+#else
+
+#warning "We don't know how to align variables on this compiler."
+#define MOZ_ALIGNED_DECL(_type, _align) _type
+
+#endif
+
+/*
+ * AlignedElem<N> is a structure whose alignment is guaranteed to be at least N bytes.
+ *
+ * We support 1, 2, 4, 8, and 16-bit alignment.
+ */
+template<size_t align>
+struct AlignedElem;
+
+/*
+ * We have to specialize this template because GCC doesn't like __attribute__((aligned(foo))) where
+ * foo is a template parameter.
+ */
+
+template<>
+struct AlignedElem<1>
+{
+  MOZ_ALIGNED_DECL(uint8 elem, 1);
+};
+
+template<>
+struct AlignedElem<2>
+{
+  MOZ_ALIGNED_DECL(uint8 elem, 2);
+};
+
+template<>
+struct AlignedElem<4>
+{
+  MOZ_ALIGNED_DECL(uint8 elem, 4);
+};
+
+template<>
+struct AlignedElem<8>
+{
+  MOZ_ALIGNED_DECL(uint8 elem, 8);
+};
+
+template<>
+struct AlignedElem<16>
+{
+  MOZ_ALIGNED_DECL(uint8 elem, 16);
+};
 
 /*
  * This utility pales in comparison to Boost's aligned_storage. The utility
