@@ -485,6 +485,23 @@ protected:
     KeyEventState() : mKeyEvent(nsnull)
     {
       Clear();
+    }    
+
+    KeyEventState(NSEvent* aNativeKeyEvent) : mKeyEvent(nsnull)
+    {
+      Clear();
+      Set(aNativeKeyEvent);
+    }
+
+    KeyEventState(const KeyEventState &aOther) : mKeyEvent(nsnull)
+    {
+      Clear();
+      if (aOther.mKeyEvent) {
+        mKeyEvent = [aOther.mKeyEvent retain];
+      }
+      mKeyDownHandled = aOther.mKeyDownHandled;
+      mKeyPressDispatched = aOther.mKeyPressDispatched;
+      mKeyPressHandled = aOther.mKeyPressHandled;
     }
 
     ~KeyEventState()
@@ -529,15 +546,67 @@ protected:
 
     ~AutoKeyEventStateCleaner()
     {
-      mHandler->mCurrentKeyEvent.Clear();
+      mHandler->RemoveCurrentKeyEvent();
     }
   private:
-    TextInputHandlerBase* mHandler;
+    nsRefPtr<TextInputHandlerBase> mHandler;
   };
 
-  // XXX If keydown event was nested, the key event is overwritten by newer
-  //     event.  This is wrong behavior.  Some IMEs are making such situation.
-  KeyEventState mCurrentKeyEvent;
+  /**
+   * mCurrentKeyEvents stores all key events which are being processed.
+   * When we call interpretKeyEvents, IME may generate other key events.
+   * mCurrentKeyEvents[0] is the latest key event.
+   */
+  nsTArray<KeyEventState*> mCurrentKeyEvents;
+
+  /**
+   * mFirstKeyEvent must be used for first key event.  This member prevents
+   * memory fragmentation for most key events.
+   */
+  KeyEventState mFirstKeyEvent;
+
+  /**
+   * PushKeyEvent() adds the current key event to mCurrentKeyEvents.
+   */
+  KeyEventState* PushKeyEvent(NSEvent* aNativeKeyEvent)
+  {
+    KeyEventState* keyEvent = nsnull;
+    if (mCurrentKeyEvents.Length() == 0) {
+      mFirstKeyEvent.Set(aNativeKeyEvent);
+      keyEvent = &mFirstKeyEvent;
+    } else {
+      keyEvent = new KeyEventState(aNativeKeyEvent);
+    }
+    return *mCurrentKeyEvents.AppendElement(keyEvent);
+  }
+
+  /**
+   * RemoveCurrentKeyEvent() removes the current key event from
+   * mCurrentKeyEvents.
+   */
+  void RemoveCurrentKeyEvent()
+  {
+    NS_ASSERTION(mCurrentKeyEvents.Length() > 0,
+                 "RemoveCurrentKeyEvent() is called unexpectedly");
+    KeyEventState* keyEvent = GetCurrentKeyEvent();
+    mCurrentKeyEvents.RemoveElementAt(mCurrentKeyEvents.Length() - 1);
+    if (keyEvent == &mFirstKeyEvent) {
+      keyEvent->Clear();
+    } else {
+      delete keyEvent;
+    }
+  }
+
+  /**
+   * GetCurrentKeyEvent() returns current processing key event.
+   */
+  KeyEventState* GetCurrentKeyEvent()
+  {
+    if (mCurrentKeyEvents.Length() == 0) {
+      return nsnull;
+    }
+    return mCurrentKeyEvents[mCurrentKeyEvents.Length() - 1];
+  }
 
   /**
    * IsPrintableChar() checks whether the unicode character is
@@ -1119,7 +1188,8 @@ public:
    */
   bool KeyPressWasHandled()
   {
-    return mCurrentKeyEvent.mKeyPressHandled;
+    KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
+    return currentKeyEvent && currentKeyEvent->mKeyPressHandled;
   }
 
 protected:
