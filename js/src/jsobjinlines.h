@@ -74,30 +74,6 @@
 #include "jsprobes.h"
 #include "jsscopeinlines.h"
 
-inline js::Class *
-JSObject::getClass() const
-{
-    return lastProp->getClass();
-}
-
-inline JSClass *
-JSObject::getJSClass() const
-{
-    return Jsvalify(getClass());
-}
-
-inline bool
-JSObject::hasClass(const js::Class *c) const
-{
-    return getClass() == c;
-}
-
-inline const js::ObjectOps *
-JSObject::getOps() const
-{
-    return &getClass()->ops;
-}
-
 inline void
 JSObject::assertSpecialEqualitySynced() const
 {
@@ -1325,22 +1301,6 @@ static inline bool
 IsStopIteration(const js::Value &v)
 {
     return v.isObject() && v.toObject().isStopIteration();
-}
-
-/*
- * We cache name lookup results only for the global object or for native
- * non-global objects without prototype or with prototype that never mutates,
- * see bug 462734 and bug 487039.
- */
-static inline bool
-IsCacheableNonGlobalScope(JSObject *obj)
-{
-    JS_ASSERT(obj->getParent());
-
-    bool cacheable = (obj->isCall() || obj->isBlock() || obj->isDeclEnv());
-
-    JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
-    return cacheable;
 }
 
 /* ES5 9.1 ToPrimitive(input). */

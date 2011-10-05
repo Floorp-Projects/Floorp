@@ -767,10 +767,7 @@ class StackFrame
      * only be changed to something that is equivalent to the current callee in
      * terms of numFormalArgs etc. Prefer overwriteCallee since it checks.
      */
-    void overwriteCallee(JSObject &newCallee) {
-        JS_ASSERT(callee().getFunctionPrivate() == newCallee.getFunctionPrivate());
-        mutableCalleev().setObject(newCallee);
-    }
+    inline void overwriteCallee(JSObject &newCallee);
 
     Value &mutableCalleev() const {
         JS_ASSERT(isFunctionFrame());

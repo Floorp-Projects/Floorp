@@ -52,6 +52,8 @@
 #include "jsutil.h"
 #include "jsvector.h"
 
+#include "jsobjinlines.h"
+
 using namespace js;
 
 #ifdef DEBUG
