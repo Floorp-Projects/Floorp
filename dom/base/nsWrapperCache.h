@@ -53,11 +53,38 @@ typedef PRUptrdiff PtrBits;
   { 0x8c, 0xf1, 0xad, 0xc8, 0x7c, 0xde, 0x3e, 0x87 } }
 
 /**
- * Class to store the XPCWrappedNative for an object. This can only be used
- * with objects that only have one XPCWrappedNative at a time (usually ensured
- * by setting an explicit parent in the PreCreate hook for the class). This
- * object can be gotten by calling QueryInterface, note that this breaks XPCOM
+ * Class to store the wrapper for an object. This can only be used with objects
+ * that only have one non-security wrapper at a time (for an XPCWrappedNative
+ * this is usually ensured by setting an explicit parent in the PreCreate hook
+ * for the class).
+ *
+ * An instance of nsWrapperCache can be gotten from an object that implements
+ * a wrapper cache by calling QueryInterface on it. Note that this breaks XPCOM
  * rules a bit (this object doesn't derive from nsISupports).
+ *
+ * The cache can store objects other than wrappers. We allow wrappers to use a
+ * separate JSObject to store their state (mostly expandos). If the wrapper is
+ * collected and we want to preserve this state we actually store the state
+ * object in the cache.
+ *
+ * The cache can store 3 types of objects:
+ *
+ *  If WRAPPER_IS_PROXY is not set (IsProxy() returns false):
+ *    - a slim wrapper or the JSObject of an XPCWrappedNative wrapper
+ *
+ *  If WRAPPER_IS_PROXY is set (IsProxy() returns true):
+ *    - a proxy wrapper
+ *    - an expando object
+ *
+ * If a proxy wrapper is GCed and it has an expando object we'll store the
+ * expando object in the cache. If we create a new proxy wrapper and the cache
+ * contains an expando object we'll store the expando object in the new wrapper
+ * and store the new wrapper in the cache. Unlinking from the cycle collector
+ * clears anything stored in the cache.
+ *
+ * A number of the methods are implemented in nsWrapperCacheInlines.h because we
+ * have to include some JS headers that don't play nicely with the rest of the
+ * codebase. Include nsWrapperCacheInlines.h if you need to call those methods.
  */
 class nsWrapperCache
 {
@@ -77,16 +104,16 @@ public:
   }
 
   /**
+   * Get the cached wrapper.
+   *
    * This getter clears the gray bit before handing out the JSObject which means
    * that the object is guaranteed to be kept alive past the next CC.
-   *
-   * Implemented in xpcpublic.h because we have to include some JS headers that
-   * don't play nicely with the rest of the codebase. Include xpcpublic.h if you
-   * need to call this method.
    */
   JSObject* GetWrapper() const;
 
   /**
+   * Get the cached wrapper.
+   *
    * This getter does not change the color of the JSObject meaning that the
    * object returned is not guaranteed to be kept alive past the next CC.
    *
@@ -96,11 +123,32 @@ public:
    */
   JSObject* GetWrapperPreserveColor() const;
 
+  /**
+   * Get the expando object, used for storing expando properties, if there is
+   * one available. If the cache holds a DOM proxy binding that proxy's expando
+   * object will be returned.
+   *
+   * This getter does not change the color of the JSObject meaning that the
+   * object returned is not guaranteed to be kept alive past the next CC.
+   *
+   * This should only be called if you are certain that the return value won't
+   * be passed into a JS API function and that it won't be stored without being
+   * rooted (or otherwise signaling the stored value to the CC).
+   */
   JSObject* GetExpandoObjectPreserveColor() const;
 
   void SetWrapper(JSObject* aWrapper);
 
+  /**
+   * Clear the wrapper, but keep the expando object alive if the wrapper has
+   * one. This should be called from the finalizer for the wrapper.
+   */
   void ClearWrapper();
+
+  /**
+   * Clear the wrapper if it's a proxy, doesn't keep the expando object alive.
+   * This should be called when unlinking the cache.
+   */
   void ClearWrapperIfProxy();
 
   bool PreservingWrapper()
@@ -158,8 +206,27 @@ private:
 
   static JSObject *GetExpandoFromSlot(JSObject *obj);
 
+  /**
+   * If this bit is set then we're preserving the wrapper, which in effect ties
+   * the lifetime of the JS object stored in the cache to the lifetime of the
+   * native object. We rely on the cycle collector to break the cycle that this
+   * causes between the native object and the JS object, so it is important that
+   * any native object that supports preserving of its wrapper
+   * traces/traverses/unlinks the cached JS object (see
+   * NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER,
+   * NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS and
+   * NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER).
+   */
   enum { WRAPPER_BIT_PRESERVED = 1 << 0 };
+
+  /**
+   * If this bit is set then the wrapper for the native object is a proxy. Note
+   * that that doesn't necessarily mean that the JS object stored in the cache
+   * is a JS proxy, as we sometimes store objects other than the wrapper in the
+   * cache.
+   */
   enum { WRAPPER_IS_PROXY = 1 << 1 };
+
   enum { kWrapperBitMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_PROXY) };
 
   PtrBits mWrapperPtrBits;
