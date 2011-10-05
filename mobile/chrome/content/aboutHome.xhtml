@@ -129,7 +129,9 @@
   <script type="application/javascript;version=1.8"><![CDATA[
     let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
     let gChromeWin = null;
+
     Cu.import("resource://gre/modules/AddonManager.jsm");
+    Cu.import("resource://gre/modules/NetUtil.jsm");
 
     function openLink(aElement) {
       try {
@@ -181,23 +183,21 @@
       uninitSetupSync();
     }
 
-    function _readFile(aFile) {
-      try {
-        let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
-        stream.init(aFile, 0x01, 0, 0);
-        let cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+    function _readFile(aFile, aCallback) {
+      let channel = NetUtil.newChannel(aFile);
+      channel.contentType = "application/json";
+      NetUtil.asyncFetch(channel, function(aStream, aResult) {
+        if (!Components.isSuccessCode(aResult)) {
+          Cu.reportError("AboutHome: Could not read from " + aFile.leafName);
+          aCallback(null);
+          return;
+        }
 
-        let fileSize = stream.available();
-        cvstream.init(stream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-        let data = {};
-        cvstream.readString(fileSize, data);
-        let content = data.value;
-        cvstream.close();
-        return content.replace(/\r\n?/g, "\n");
-      }
-      catch (ex) { Cu.reportError(ex); }
+        let content = NetUtil.readInputStreamToString(aStream, aStream.available()) || "";
+        aStream.close();
 
-      return null;
+        aCallback(content.replace(/\r\n?/g, "\n"));
+      });
     }
 
     function openTabs(aURLs) {
@@ -222,75 +222,77 @@
         return;
       }
 
-      let data = JSON.parse(_readFile(session));
-      if (!data || data.windows.length == 0) {
-        noRecentTabs();
-        return;
-      }
-
-      let chromeWin = getChromeWin();
-      let allPageURLs = [];
-
-      let list = document.getElementById("recentTabs");
-
-      let tabs = data.windows[0].tabs;
-      for (let i=0; i<tabs.length; i++) {
-        let tabData = tabs[i];
-        let tabEntry = tabData.entries[tabData.index - 1];
-
-        let url = tabEntry.url;
-        if (url.indexOf("about:") == 0)
-          continue;
-
-        let title = tabEntry.title;
-        if (!title)
-          continue;
-
-        let uri = chromeWin.Util.makeURI(url);
-        let favicon = chromeWin.gFaviconService.getFaviconImageForPage(uri).spec;
-
-        let outer = document.createElement("a");
-        outer.setAttribute("role", "button");
-        outer.setAttribute("href", url);
-
-        allPageURLs.push(url);
-
-        let img = document.createElement("img");
-        img.className = "favicon";
-        img.setAttribute("src", favicon);
-        outer.appendChild(img);
-
-        let inner = document.createElement("div");
-        inner.className = "inner";
-
-        let titlePart = document.createElement("div");
-        titlePart.textContent = title;
-        titlePart.className = "title";
-        inner.appendChild(titlePart);
-
-        outer.appendChild(inner);
-        list.appendChild(outer);
-      }
-
-      if (allPageURLs.length > 0) {
-        let loading = document.getElementById("loadingTabs");
-        loading.parentNode.removeChild(loading);
-
-        if (allPageURLs.length > 1) {
-          let outer = document.createElement("div");
-          outer.className = "openall";
-          outer.textContent = document.getElementById("text-openalltabs").textContent;
+      _readFile(session, function(aContent) {
+        let data = JSON.parse(aContent);
+        if (!data || data.windows.length == 0) {
+          noRecentTabs();
+          return;
+        }
+  
+        let chromeWin = getChromeWin();
+        let allPageURLs = [];
+  
+        let list = document.getElementById("recentTabs");
+  
+        let tabs = data.windows[0].tabs;
+        for (let i=0; i<tabs.length; i++) {
+          let tabData = tabs[i];
+          let tabEntry = tabData.entries[tabData.index - 1];
+  
+          let url = tabEntry.url;
+          if (url.indexOf("about:") == 0)
+            continue;
+  
+          let title = tabEntry.title;
+          if (!title)
+            continue;
+  
+          let uri = chromeWin.Util.makeURI(url);
+          let favicon = chromeWin.gFaviconService.getFaviconImageForPage(uri).spec;
+  
+          let outer = document.createElement("a");
           outer.setAttribute("role", "button");
-
-          outer.addEventListener("click", function() {
-            openTabs(allPageURLs);
-          }, false);
-
+          outer.setAttribute("href", url);
+  
+          allPageURLs.push(url);
+  
+          let img = document.createElement("img");
+          img.className = "favicon";
+          img.setAttribute("src", favicon);
+          outer.appendChild(img);
+  
+          let inner = document.createElement("div");
+          inner.className = "inner";
+  
+          let titlePart = document.createElement("div");
+          titlePart.textContent = title;
+          titlePart.className = "title";
+          inner.appendChild(titlePart);
+  
+          outer.appendChild(inner);
           list.appendChild(outer);
         }
-      } else {
-        noRecentTabs();
-      }
+  
+        if (allPageURLs.length > 0) {
+          let loading = document.getElementById("loadingTabs");
+          loading.parentNode.removeChild(loading);
+  
+          if (allPageURLs.length > 1) {
+            let outer = document.createElement("div");
+            outer.className = "openall";
+            outer.textContent = document.getElementById("text-openalltabs").textContent;
+            outer.setAttribute("role", "button");
+  
+            outer.addEventListener("click", function() {
+              openTabs(allPageURLs);
+            }, false);
+  
+            list.appendChild(outer);
+          }
+        } else {
+          noRecentTabs();
+        }
+      });
     }
 
     function openRemoteTabs() {
@@ -317,26 +319,6 @@
         let file = dirService.get("ProfD", Ci.nsILocalFile);
         file.append("recommended-addons.json");
         return file;
-      },
-
-      _readFile: function(aFile) {
-        try {
-          let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
-          stream.init(aFile, 0x01, 0, 0);
-          let cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
-          
-          let fileSize = stream.available();
-          cvstream.init(stream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-          let data = {};
-          cvstream.readString(fileSize, data);
-          let content = data.value;
-          cvstream.close();
-          return content.replace(/\r\n?/g, "\n");
-        }
-        catch (ex) {
-          Cu.reportError(ex);
-        }
-        return null;
       },
 
       _loadAddons: function(aAddons, aAddonCount, aTotalResults) {
@@ -388,23 +370,29 @@
       },
 
       loadFromCacheOrScheduleUpdate: function(aDelay) {
+        let self = this;
         let file = this._getFile();
         if (file.exists()) {
-          let json = JSON.parse(this._readFile(file));
-
-          // Ignore addons already installed
-          let self = this;
-          let addonsCache = json.addons;
-          AddonManager.getAllAddons(function(aAddons) {
-            let addons = addonsCache.filter(function(addon) {
-              for (let i =0; i < aAddons.length; i++)
-                if (addon.id == aAddons[i].id)
-                  return false;
-
-              return true;
+          _readFile(file, function(aContent) {
+            let json = JSON.parse(aContent);
+            if (!json || json.addons.length == 0) {
+              self._loadAddons([], 0, 0);
+              return;
+            }
+  
+            // Ignore addons already installed
+            let addonsCache = json.addons;
+            AddonManager.getAllAddons(function(aAddons) {
+              let addons = addonsCache.filter(function(addon) {
+                for (let i =0; i < aAddons.length; i++)
+                  if (addon.id == aAddons[i].id)
+                    return false;
+  
+                return true;
+              });
+  
+              self._loadAddons(addons, addons.length, json.totalResults);
             });
-
-            self._loadAddons(addons, addons.length, json.totalResults);
           });
         } else {
           setTimeout(function() {

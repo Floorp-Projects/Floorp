@@ -61,8 +61,7 @@ gTests.push({
 
     waitForNavigationPanel(gCurrentTest.onPopupHidden, true);
 
-    // Need to use sendKey instead of synthesizeKey here (bug 684558).
-    EventUtils.sendKey("ESCAPE", window);
+    EventUtils.synthesizeKey("VK_ESCAPE", {type: "keypress"}, window);
   },
 
   onPopupHidden: function() {
@@ -110,7 +109,7 @@ gTests.push({
       runNextTest();
     }, true);
 
-    EventUtils.sendKey("ESCAPE", window);
+    EventUtils.synthesizeKey("VK_ESCAPE", {type: "keypress"}, window);
   }
 });
 
@@ -139,7 +138,7 @@ gTests.push({
     is(BrowserUI._edit.readOnly, false, "urlbar should not be readonly after an input");
 
     waitForNavigationPanel(gCurrentTest.onPopupHidden, true);
-    EventUtils.sendKey("ESCAPE", window);
+    EventUtils.synthesizeKey("VK_ESCAPE", {type: "keypress"}, window);
   },
 
   onPopupHidden: function() {

@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html
+xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xml:lang="en" lang="en">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=666446
+-->
+<head>
+  <title>Test for Bug 666446 - Animated Images within SVG Filters</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="imgutils.js"></script>
+  <script type="application/javascript" src="animationPolling.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=666446">
+Mozilla Bug 666446: lots of animated gifs swamp us with paint events
+</a>
+<p id="display"></p>
+<div id="content">
+  <xul:caption label="Bug 666446 - XULTree Test" />
+  <xul:separator />
+    <br />
+    <xul:window id="main" title="Bug 666446: XUL Tree Testing" width="100" height="100">
+      <xul:tree flex="1">
+        <xul:treecols>
+          <xul:treecol id="icon" label="Icon" flex="1" />
+        </xul:treecols>
+
+        <xul:treechildren>
+          <xul:treeitem id="referenceItem" hidden="true">
+            <xul:treerow>
+              <xul:treecell src="animated-gif-finalframe.gif" width="40" height="40" />
+            </xul:treerow>
+          </xul:treeitem>
+          <xul:treeitem id="imageItem" hidden="true">
+            <xul:treerow>
+              <xul:treecell src="animated-gif.gif" width="40" height="40" />
+            </xul:treerow>
+          </xul:treeitem>
+        </xul:treechildren>
+      </xul:tree>
+    </xul:window>
+  </div>
+<div id="debug" style="display:none"></div>
+<pre id="test">
+<script type="text/javascript;version=1.8">
+
+/** Test for Bug 666446 nsSVGFEImageElement/RasterImage**/
+
+const FAILURE_TIMEOUT = 5000; // Fail early after 120 seconds (2 minutes)
+
+function main() {
+  var animTest = new AnimationTest(20, FAILURE_TIMEOUT, 'referenceItem',
+                                   'imageItem', 'debug', '',
+                                   'animated-gif-finalframe.gif', true);
+  animTest.beginTest();
+}
+
+window.onload = main;
+
+</script>
+</pre>
+</body>
+</html>

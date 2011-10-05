@@ -25,14 +25,14 @@ gTests.push({
   listLoaded: function(aLocales) {
     is(aLocales.length, 1, "Correct number of locales were found");
     isnot(aLocales[0].addon, null, "Locale has an addon");
-    is(aLocales[0].xpiURL, "http://www.example.com/mylocale.xpi", "Locale has correct xpi url");
+    is(aLocales[0].xpiURL, "http://www.example.com/browser/mobile/chrome/tests/addons/browser_locale1.xpi", "Locale has correct xpi url");
     is(aLocales[0].xpiHash, null, "Locale has correct hash");
 
-    is(aLocales[0].addon.id, "langpack-test-1@firefox-mobile.mozilla.org", "Locale has correct id");
-    is(aLocales[0].addon.name, "Test Locale", "Locale has correct name");
+    is(aLocales[0].addon.id, "langpack-test1@firefox-mobile.mozilla.org", "Locale has correct id");
+    is(aLocales[0].addon.name, "Test Locale 1", "Locale has correct name");
     is(aLocales[0].addon.type, "language", "Locale has correct type");
 
-    is(aLocales[0].addon.targetLocale, "test", "Locale has correct target locale");
+    is(aLocales[0].addon.targetLocale, "test1", "Locale has correct target locale");
     is(aLocales[0].addon.version, "1.0", "Locale has correct version");
     runNextTest();
   }
