@@ -25,7 +25,7 @@
 %define margin_snormal 0.64mozmm
 %define margin_small 0.42mozmm
 %define margin_tiny 0.21mozmm
-%define margin_xtiny 0.11mozmm
+%define margin_xtiny 0.15mozmm
 
 %define padding_xlarge 3.39mozmm
 %define padding_large 2.54mozmm
