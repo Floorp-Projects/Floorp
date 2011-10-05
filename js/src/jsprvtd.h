@@ -195,8 +195,9 @@ class LifoAlloc;
 class PropertyCache;
 struct PropertyCacheEntry;
 
+class BaseShape;
+class UnownedBaseShape;
 struct Shape;
-struct BaseShape;
 struct EmptyShape;
 class Bindings;
 

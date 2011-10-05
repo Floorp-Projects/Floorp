@@ -650,14 +650,14 @@ restart:
 static void
 ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
 {
-    if (base->flags & BaseShape::HAS_GETTER_OBJECT)
-        PushMarkStack(gcmarker, base->getterObj);
+    if (base->hasGetterObject())
+        PushMarkStack(gcmarker, base->getterObject());
 
-    if (base->flags & BaseShape::HAS_SETTER_OBJECT)
-        PushMarkStack(gcmarker, base->setterObj);
+    if (base->hasSetterObject())
+        PushMarkStack(gcmarker, base->setterObject());
 
-    if (base->base)
-        PushMarkStack(gcmarker, base->base);
+    if (base->isOwned())
+        PushMarkStack(gcmarker, base->baseUnowned());
 }
 
 static inline void
@@ -891,14 +891,14 @@ restart:
 void
 MarkChildren(JSTracer *trc, BaseShape *base)
 {
-    if (base->flags & BaseShape::HAS_GETTER_OBJECT)
-        MarkObjectWithPrinter(trc, *base->getterObj, PrintPropertyGetterOrSetter, base, 0);
+    if (base->hasGetterObject())
+        MarkObjectWithPrinter(trc, *base->getterObject(), PrintPropertyGetterOrSetter, base, 0);
 
-    if (base->flags & BaseShape::HAS_SETTER_OBJECT)
-        MarkObjectWithPrinter(trc, *base->setterObj, PrintPropertyGetterOrSetter, base, 0);
+    if (base->hasSetterObject())
+        MarkObjectWithPrinter(trc, *base->setterObject(), PrintPropertyGetterOrSetter, base, 0);
 
-    if (base->base)
-        MarkBaseShape(trc, base->base, "base");
+    if (base->isOwned())
+        MarkBaseShape(trc, base->baseUnowned(), "base");
 }
 
 static void

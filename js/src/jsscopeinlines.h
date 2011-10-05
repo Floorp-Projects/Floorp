@@ -182,7 +182,7 @@ Shape::Shape(BaseShape *base)
 inline JSDHashNumber
 Shape::hash() const
 {
-    JSDHashNumber hash = jsuword(base_->isOwned() ? base_->base : base_);
+    JSDHashNumber hash = jsuword(base()->unowned());
 
     /* Accumulate from least to most random so the low bits are most random. */
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & PUBLIC_FLAGS);
@@ -205,14 +205,7 @@ inline bool
 Shape::matchesParamsAfterId(BaseShape *base, uint32 aslot,
                             uintN aattrs, uintN aflags, intN ashortid) const
 {
-    if (base->isOwned())
-        base = base->base;
-
-    BaseShape *mbase = base_;
-    if (mbase->isOwned())
-        mbase = mbase->base;
-
-    return base == mbase &&
+    return base->unowned() == this->base()->unowned() &&
            slot_ == aslot &&
            attrs == aattrs &&
            ((flags ^ aflags) & PUBLIC_FLAGS) == 0 &&
@@ -303,9 +296,7 @@ Shape::insertIntoDictionary(js::Shape **dictp)
 void
 Shape::initDictionaryShape(const Shape &child, Shape **dictp)
 {
-    BaseShape *base = child.base();
-    if (base->isOwned())
-        base = base->base;
+    UnownedBaseShape *base = child.base()->unowned();
 
     new (this) Shape(base, child.maybePropid(), child.maybeSlot(), child.attrs,
                      child.flags | IN_DICTIONARY, child.maybeShortid());
