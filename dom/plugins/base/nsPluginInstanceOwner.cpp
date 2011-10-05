@@ -1233,12 +1233,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // Set to the next slot to fill in name and value cache arrays.
   PRUint32 nextAttrParamIndex = 0;
 
-  // Potentially add WMODE attribute.
-  if (!wmodeType.IsEmpty()) {
-    mCachedAttrParamNames [nextAttrParamIndex] = ToNewUTF8String(NS_LITERAL_STRING("wmode"));
-    mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(NS_ConvertUTF8toUTF16(wmodeType));
-    nextAttrParamIndex++;
-  }
+  // Whether or not we force the wmode below while traversing
+  // the name/value pairs.
+  bool wmodeSet = false;
 
   // Add attribute name/value pairs.
   for (PRInt32 index = start; index != end; index += increment) {
@@ -1252,7 +1249,25 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
     FixUpURLS(name, value);
 
     mCachedAttrParamNames [nextAttrParamIndex] = ToNewUTF8String(name);
-    mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(value);
+    if (!wmodeType.IsEmpty() && 
+        0 == PL_strcasecmp(mCachedAttrParamNames[nextAttrParamIndex], "wmode")) {
+      mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(NS_ConvertUTF8toUTF16(wmodeType));
+
+      if (!wmodeSet) {
+        // We allocated space to add a wmode attr, but we don't need it now.
+        mNumCachedAttrs--;
+        wmodeSet = true;
+      }
+    } else {
+      mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(value);
+    }
+    nextAttrParamIndex++;
+  }
+
+  // Potentially add WMODE attribute.
+  if (!wmodeType.IsEmpty() && !wmodeSet) {
+    mCachedAttrParamNames [nextAttrParamIndex] = ToNewUTF8String(NS_LITERAL_STRING("wmode"));
+    mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(NS_ConvertUTF8toUTF16(wmodeType));
     nextAttrParamIndex++;
   }
 
