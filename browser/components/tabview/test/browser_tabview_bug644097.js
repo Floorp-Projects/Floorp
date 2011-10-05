@@ -12,7 +12,7 @@ function test() {
 
     // create some tabs with favIcons
     for (let i = 0; i < 3; i++)
-      win.gBrowser.loadOneTab("http://mochi.test:8888/browser/browser/base/content/test/tabview/test_bug644097.html", {inBackground: true});
+      win.gBrowser.loadOneTab("http://mochi.test:8888/browser/browser/components/tabview/test/test_bug644097.html", {inBackground: true});
 
     win.gBrowser.removeTab(win.gBrowser.tabs[0]);
 
