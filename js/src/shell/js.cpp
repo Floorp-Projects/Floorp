@@ -2736,7 +2736,7 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
     }
     if (funobj->compartment() != cx->compartment) {
         JSFunction *fun = funobj->getFunctionPrivate();
-        if (fun->isInterpreted() && fun->u.i.script->compileAndGo) {
+        if (fun->isInterpreted() && fun->script()->compileAndGo) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                                  "function", "compile-and-go");
             return JS_FALSE;
