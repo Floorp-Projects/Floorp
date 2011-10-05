@@ -1215,7 +1215,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     fun = NULL;
     if (cg->inFunction()) {
         /*
-         * We initialize fun->u.i.script to be the script constructed above
+         * We initialize fun->script() to be the script constructed above
          * so that the debugger has a valid fun->script().
          */
         fun = cg->fun();
@@ -1238,8 +1238,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         if (!script->typeSetFunction(cx, fun, singleton))
             return NULL;
 
-        fun->u.i.script = script;
-        script->setOwnerObject(fun);
+        fun->setScript(script);
     } else {
         /*
          * Initialize script->object, if necessary, so that the debugger has a
