@@ -1092,11 +1092,20 @@ array_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *va
 }
 
 static JSBool
-array_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+array_getGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     *attrsp = JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)
         ? JSPROP_PERMANENT : JSPROP_ENUMERATE;
-    return JS_TRUE;
+    return true;
+}
+
+static JSBool
+array_getPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+{
+    *attrsp = (name == cx->runtime->atomState.lengthAtom)
+              ? JSPROP_PERMANENT
+              : JSPROP_ENUMERATE;
+    return true;
 }
 
 static JSBool
@@ -1109,11 +1118,19 @@ array_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *at
 static JSBool
 array_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return array_getAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    *attrsp = JSPROP_ENUMERATE;
+    return true;
 }
 
 static JSBool
-array_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+array_setGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
+    return false;
+}
+
+static JSBool
+array_setPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
     return false;
@@ -1129,7 +1146,8 @@ array_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *at
 static JSBool
 array_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return array_setAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_SET_ARRAY_ATTRS);
+    return false;
 }
 
 namespace js {
@@ -1249,12 +1267,12 @@ Class js::ArrayClass = {
         array_setProperty,
         array_setElement,
         array_setSpecial,
-        array_getAttributes,
-        array_getAttributes,
+        array_getGenericAttributes,
+        array_getPropertyAttributes,
         array_getElementAttributes,
         array_getSpecialAttributes,
-        array_setAttributes,
-        array_setAttributes,
+        array_setGenericAttributes,
+        array_setPropertyAttributes,
         array_setElementAttributes,
         array_setSpecialAttributes,
         array_deleteProperty,

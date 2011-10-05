@@ -220,7 +220,7 @@ typedef JSBool
 typedef JSBool
 (* GenericAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 typedef JSBool
-(* AttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+(* PropertyAttributesOp)(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp);
 typedef JSBool
 (* ElementAttributesOp)(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
 typedef JSBool
@@ -319,11 +319,11 @@ struct ObjectOps
     StrictElementIdOp   setElement;
     StrictSpecialIdOp   setSpecial;
     GenericAttributesOp getGenericAttributes;
-    AttributesOp        getAttributes;
+    PropertyAttributesOp getPropertyAttributes;
     ElementAttributesOp getElementAttributes;
     SpecialAttributesOp getSpecialAttributes;
     GenericAttributesOp setGenericAttributes;
-    AttributesOp        setAttributes;
+    PropertyAttributesOp setPropertyAttributes;
     ElementAttributesOp setElementAttributes;
     SpecialAttributesOp setSpecialAttributes;
     DeleteGenericOp     deleteGeneric;
