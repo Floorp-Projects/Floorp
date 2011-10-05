@@ -280,18 +280,6 @@ public:
   Layer* GetOldLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
 
   /**
-   * A useful hashtable iteration function that removes the
-   * DisplayItemData property for the frame, clears its
-   * NS_FRAME_HAS_CONTAINER_LAYER bit and returns PL_DHASH_REMOVE.
-   * aClosure is ignored.
-   */
-  static PLDHashOperator RemoveDisplayItemDataForFrame(nsPtrHashKey<nsIFrame>* aEntry,
-                                                       void* aClosure)
-  {
-    return UpdateDisplayItemDataForFrame(aEntry, nsnull);
-  }
-
-  /**
    * Try to determine whether the ThebesLayer aLayer paints an opaque
    * single color everywhere it's visible in aRect.
    * If successful, return that color, otherwise return NS_RGBA(0,0,0,0).
@@ -300,11 +288,12 @@ public:
                                   ThebesLayer* aLayer, const nsRect& aRect);
 
   /**
-   * Destroy any stored DisplayItemDataProperty for aFrame.
+   * Destroy any stored LayerManagerProperty and the associated data for
+   * aFrame.
    */
   static void DestroyDisplayItemDataFor(nsIFrame* aFrame)
   {
-    aFrame->Properties().Delete(DisplayItemDataProperty());
+    aFrame->Properties().Delete(LayerManagerProperty());
   }
 
   LayerManager* GetRetainingLayerManager() { return mRetainingManager; }
@@ -421,18 +410,10 @@ protected:
     LayerState    mLayerState;
   };
 
-  static void InternalDestroyDisplayItemData(nsIFrame* aFrame,
-                                             void* aPropertyValue,
-                                             bool aRemoveFromFramesWithLayers);
-  static void DestroyDisplayItemData(nsIFrame* aFrame, void* aPropertyValue);
+  static void RemoveFrameFromLayerManager(nsIFrame* aFrame, void* aPropertyValue);
 
-  /**
-   * For DisplayItemDataProperty, the property value *is* an
-   * nsTArray<DisplayItemData>, not a pointer to an array. This works
-   * because sizeof(nsTArray<T>) == sizeof(void*).
-   */
-  NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(DisplayItemDataProperty,
-                                               DestroyDisplayItemData)
+  NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(LayerManagerProperty,
+                                               RemoveFrameFromLayerManager)
 
   /**
    * We accumulate DisplayItemData elements in a hashtable during
@@ -442,18 +423,44 @@ protected:
   class DisplayItemDataEntry : public nsPtrHashKey<nsIFrame> {
   public:
     DisplayItemDataEntry(const nsIFrame *key) : nsPtrHashKey<nsIFrame>(key) {}
-    DisplayItemDataEntry(const DisplayItemDataEntry &toCopy) :
-      nsPtrHashKey<nsIFrame>(toCopy.mKey), mData(toCopy.mData)
+    DisplayItemDataEntry(DisplayItemDataEntry &toCopy) :
+      nsPtrHashKey<nsIFrame>(toCopy.mKey)
     {
-      NS_ERROR("Should never be called, since we ALLOW_MEMMOVE");
+      // This isn't actually a copy-constructor; notice that it steals toCopy's
+      // array.  Be careful.
+      mData.SwapElements(toCopy.mData);
     }
 
     bool HasNonEmptyContainerLayer();
 
-    nsTArray<DisplayItemData> mData;
+    nsAutoTArray<DisplayItemData, 1> mData;
 
-    enum { ALLOW_MEMMOVE = PR_TRUE };
+    enum { ALLOW_MEMMOVE = false };
   };
+
+  // LayerManagerData needs to see DisplayItemDataEntry.
+  friend class LayerManagerData;
+
+  /*
+   * Get the DisplayItemData array associated with this frame, or null if one
+   * doesn't exist.
+   *
+   * Note that the pointer returned here is only valid so long as you don't
+   * poke the LayerManagerData's mFramesWithLayers hashtable.
+   */
+  static nsTArray<DisplayItemData>* GetDisplayItemDataArrayForFrame(nsIFrame *aFrame);
+
+  /**
+   * A useful hashtable iteration function that removes the
+   * DisplayItemData property for the frame, clears its
+   * NS_FRAME_HAS_CONTAINER_LAYER bit and returns PL_DHASH_REMOVE.
+   * aClosure is ignored.
+   */
+  static PLDHashOperator RemoveDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
+                                                       void* aClosure)
+  {
+    return UpdateDisplayItemDataForFrame(aEntry, nsnull);
+  }
 
   /**
    * We store one of these for each display item associated with a
@@ -503,7 +510,7 @@ protected:
 
   void RemoveThebesItemsForLayerSubtree(Layer* aLayer);
 
-  static PLDHashOperator UpdateDisplayItemDataForFrame(nsPtrHashKey<nsIFrame>* aEntry,
+  static PLDHashOperator UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
                                                        void* aUserArg);
   static PLDHashOperator StoreNewDisplayItemData(DisplayItemDataEntry* aEntry,
                                                  void* aUserArg);
