@@ -185,13 +185,34 @@ JSObject::getProperty(JSContext *cx, js::PropertyName *name, js::Value *vp)
 }
 
 inline JSBool
-JSObject::deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict)
+JSObject::deleteGeneric(JSContext *cx, jsid id, js::Value *rval, JSBool strict)
 {
     js::types::AddTypePropertyId(cx, this, id,
                                  js::types::Type::UndefinedType());
     js::types::MarkTypePropertyConfigured(cx, this, id);
-    js::DeleteIdOp op = getOps()->deleteProperty;
+    js::DeleteGenericOp op = getOps()->deleteGeneric;
     return (op ? op : js_DeleteProperty)(cx, this, id, rval, strict);
+}
+
+inline JSBool
+JSObject::deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval, JSBool strict)
+{
+    return deleteGeneric(cx, ATOM_TO_JSID(name), rval, strict);
+}
+
+inline JSBool
+JSObject::deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool strict)
+{
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
+        return false;
+    return deleteGeneric(cx, id, rval, strict);
+}
+
+inline JSBool
+JSObject::deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, JSBool strict)
+{
+    return deleteGeneric(cx, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 inline void
@@ -1164,15 +1185,6 @@ JSObject::getElement(JSContext *cx, uint32 index, js::Value *vp)
     if (!js::IndexToId(cx, index, &id))
         return false;
     return getGeneric(cx, id, vp);
-}
-
-inline JSBool
-JSObject::deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool strict)
-{
-    jsid id;
-    if (!js::IndexToId(cx, index, &id))
-        return false;
-    return deleteProperty(cx, id, rval, strict);
 }
 
 inline JSBool

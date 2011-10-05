@@ -1411,9 +1411,10 @@ struct JSObject : js::gc::Cell {
     inline JSBool setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp);
     inline JSBool setSpecialAttributes(JSContext *cx, js::SpecialId sid, uintN *attrsp);
 
-    inline JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
-
+    inline JSBool deleteGeneric(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
+    inline JSBool deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval, JSBool strict);
     inline JSBool deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool strict);
+    inline JSBool deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, JSBool strict);
 
     JSBool enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp) {
         JSNewEnumerateOp op = getOps()->enumerate;

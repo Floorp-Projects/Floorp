@@ -3385,24 +3385,27 @@ with_SetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *at
 }
 
 static JSBool
-with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+with_DeleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
-    return obj->getProto()->deleteProperty(cx, id, rval, strict);
+    return obj->getProto()->deleteGeneric(cx, id, rval, strict);
+}
+
+static JSBool
+with_DeleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
+{
+    return obj->getProto()->deleteProperty(cx, name, rval, strict);
 }
 
 static JSBool
 with_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return with_DeleteProperty(cx, obj, id, rval, strict);
+    return obj->getProto()->deleteElement(cx, index, rval, strict);
 }
 
 static JSBool
 with_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
 {
-    return with_DeleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
+    return obj->getProto()->deleteSpecial(cx, sid, rval, strict);
 }
 
 static JSBool
@@ -3468,7 +3471,7 @@ Class js::WithClass = {
         with_SetPropertyAttributes,
         with_SetElementAttributes,
         with_SetSpecialAttributes,
-        with_DeleteProperty,
+        with_DeleteGeneric,
         with_DeleteProperty,
         with_DeleteElement,
         with_DeleteSpecial,
@@ -4366,7 +4369,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
 bad:
     if (named) {
         Value rval;
-        obj->deleteProperty(cx, ATOM_TO_JSID(atom), &rval, false);
+        obj->deleteGeneric(cx, ATOM_TO_JSID(atom), &rval, false);
     }
     if (cached)
         ClearClassObject(cx, obj, key);

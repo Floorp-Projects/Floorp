@@ -541,7 +541,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index, bool strict)
         return 1;
 
     Value v;
-    if (!obj->deleteProperty(cx, idr.id(), &v, strict))
+    if (!obj->deleteGeneric(cx, idr.id(), &v, strict))
         return -1;
     return v.isTrue() ? 1 : 0;
 }
@@ -677,7 +677,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
             jsuint index;
             Value junk;
             if (js_IdIsIndex(id, &index) && index - newlen < gap &&
-                !obj->deleteProperty(cx, id, &junk, false)) {
+                !obj->deleteElement(cx, index, &junk, false)) {
                 return false;
             }
         }
@@ -1150,11 +1150,8 @@ array_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *a
     return false;
 }
 
-namespace js {
-
-/* non-static for direct deletion of array elements within the engine */
-JSBool
-array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+static JSBool
+array_deleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     uint32 i;
 
@@ -1177,6 +1174,14 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
     rval->setBoolean(true);
     return true;
 }
+
+static JSBool
+array_deleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
+{
+    return array_deleteGeneric(cx, obj, ATOM_TO_JSID(name), rval, strict);
+}
+
+namespace js {
 
 /* non-static for direct deletion of array elements within the engine */
 JSBool
@@ -1202,7 +1207,7 @@ array_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSB
 static JSBool
 array_deleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
 {
-    return array_deleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
+    return array_deleteGeneric(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 static void
@@ -1275,7 +1280,7 @@ Class js::ArrayClass = {
         array_setPropertyAttributes,
         array_setElementAttributes,
         array_setSpecialAttributes,
-        array_deleteProperty,
+        array_deleteGeneric,
         array_deleteProperty,
         array_deleteElement,
         array_deleteSpecial,
