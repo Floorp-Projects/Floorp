@@ -69,6 +69,8 @@
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
 
+class nsLineBox;
+
 nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext,
                                  nsFrameState aTypeBit);
@@ -200,8 +202,17 @@ public:
     return outOfFlow;
   }
 
+  // GetCachedLineBox is only OK to call if you're sure this
+  // placeholder has has Reflow() called since any changes to the
+  // frame tree that could have affected which line box the
+  // placeholder is in.
+  const nsLineBox* GetCachedLineBox() const {
+    return mCachedLineBox;
+  }
+
 protected:
   nsIFrame* mOutOfFlowFrame;
+  nsLineBox* mCachedLineBox;
 };
 
 #endif /* nsPlaceholderFrame_h___ */
