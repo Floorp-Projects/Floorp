@@ -59,16 +59,12 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
     ValueOperand operand = ToValue(lir, LValueToInt32::Input);
     Register output = ToRegister(lir->output());
 
-    Assembler::Condition cond;
     Label done, simple, isInt32, isBool, notDouble;
 
     // Type-check switch.
-    cond = masm.testInt32(Assembler::Equal, operand);
-    masm.j(cond, &isInt32);
-    cond = masm.testBoolean(Assembler::Equal, operand);
-    masm.j(cond, &isBool);
-    cond = masm.testDouble(Assembler::NotEqual, operand);
-    masm.j(cond, &notDouble);
+    masm.branchTestInt32(Assembler::Equal, operand, &isInt32);
+    masm.branchTestBoolean(Assembler::Equal, operand, &isBool);
+    masm.branchTestDouble(Assembler::NotEqual, operand, &notDouble);
 
     // If the value is a double, see if it fits in a 32-bit int. We need to ask
     // the platform-specific codegenerator to do this.
@@ -85,8 +81,6 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
         emitDoubleToInt32(temp, output, &fails);
         break;
     }
-    if (!bailoutFrom(&fails, lir->snapshot()))
-        return false;
     masm.jump(&done);
 
     masm.bind(&notDouble);
@@ -94,19 +88,16 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
     if (lir->mode() == LValueToInt32::NORMAL) {
         // If the value is not null, it's a string, object, or undefined,
         // which we can't handle here.
-        cond = masm.testNull(Assembler::NotEqual, operand);
-        if (!bailoutIf(cond, lir->snapshot()))
-            return false;
+        masm.branchTestNull(Assembler::NotEqual, operand, &fails);
     } else {
         // Test for string or object - then fallthrough to null, which will
         // also handle undefined.
-        cond = masm.testObject(Assembler::Equal, operand);
-        if (!bailoutIf(cond, lir->snapshot()))
-            return false;
-        cond = masm.testString(Assembler::Equal, operand);
-        if (!bailoutIf(cond, lir->snapshot()))
-            return false;
+        masm.branchTestObject(Assembler::Equal, operand, &fails);
+        masm.branchTestString(Assembler::Equal, operand, &fails);
     }
+
+    if (fails.used() && !bailoutFrom(&fails, lir->snapshot()))
+        return false;
     
     // The value is null - just emit 0.
     masm.mov(Imm32(0), output);
@@ -134,20 +125,15 @@ CodeGenerator::visitValueToDouble(LValueToDouble *lir)
     ValueOperand operand = ToValue(lir, LValueToDouble::Input);
     FloatRegister output = ToFloatRegister(lir->output());
 
-    Assembler::Condition cond;
     Label isDouble, isInt32, isBool, isNull, done;
 
     // Type-check switch.
-    cond = masm.testDouble(Assembler::Equal, operand);
-    masm.j(cond, &isDouble);
-    cond = masm.testInt32(Assembler::Equal, operand);
-    masm.j(cond, &isInt32);
-    cond = masm.testBoolean(Assembler::Equal, operand);
-    masm.j(cond, &isBool);
-    cond = masm.testNull(Assembler::Equal, operand);
-    masm.j(cond, &isNull);
+    masm.branchTestDouble(Assembler::Equal, operand, &isDouble);
+    masm.branchTestInt32(Assembler::Equal, operand, &isInt32);
+    masm.branchTestBoolean(Assembler::Equal, operand, &isBool);
+    masm.branchTestNull(Assembler::Equal, operand, &isNull);
 
-    cond = masm.testUndefined(Assembler::NotEqual, operand);
+    Assembler::Condition cond = masm.testUndefined(Assembler::NotEqual, operand);
     if (!bailoutIf(cond, lir->snapshot()))
         return false;
     masm.loadStaticDouble(&js_NaN, output);
@@ -192,26 +178,19 @@ CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
     // emit all easy cases. For speed we use the cached tag for all comparison,
     // except for doubles, which we test last (as the operation can clobber the
     // tag, which may be in ScratchReg).
-    cond = masm.testUndefined(Assembler::Equal, tag);
-    masm.j(cond, lir->ifFalse());
+    masm.branchTestUndefined(Assembler::Equal, tag, lir->ifFalse());
 
-    cond = masm.testNull(Assembler::Equal, tag);
-    masm.j(cond, lir->ifFalse());
-
-    cond = masm.testObject(Assembler::Equal, tag);
-    masm.j(cond, lir->ifTrue());
+    masm.branchTestNull(Assembler::Equal, tag, lir->ifFalse());
+    masm.branchTestObject(Assembler::Equal, tag, lir->ifTrue());
 
     Label notBoolean;
-    cond = masm.testBoolean(Assembler::NotEqual, tag);
-    masm.j(cond, &notBoolean);
-    cond = masm.testBooleanTruthy(false, value);
-    masm.j(cond, lir->ifFalse());
+    masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
+    masm.branchTestBooleanTruthy(false, value, lir->ifFalse());
     masm.jump(lir->ifTrue());
     masm.bind(&notBoolean);
 
     Label notInt32;
-    cond = masm.testInt32(Assembler::NotEqual, tag);
-    masm.j(cond, &notInt32);
+    masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
     cond = masm.testInt32Truthy(false, value);
     masm.j(cond, lir->ifFalse());
     masm.jump(lir->ifTrue());
@@ -219,8 +198,7 @@ CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
 
     // Test if a string is non-empty.
     Label notString;
-    cond = masm.testString(Assembler::NotEqual, tag);
-    masm.j(cond, &notString);
+    masm.branchTestString(Assembler::NotEqual, tag, &notString);
     cond = testStringTruthy(false, value);
     masm.j(cond, lir->ifFalse());
     masm.jump(lir->ifTrue());
