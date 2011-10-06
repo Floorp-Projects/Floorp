@@ -5,4 +5,16 @@
          android:padding="3dip"
          android:orientation="vertical"
          android:windowIsFloating="true">
+
+    <ListView android:id="@android:id/list"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_weight="1"
+              android:drawSelectorOnTop="false"/>
+
+    <TextView android:id="@android:id/empty"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:gravity="center"
+              android:text="@string/launcher_shortcuts_empty"/>
  </LinearLayout>
