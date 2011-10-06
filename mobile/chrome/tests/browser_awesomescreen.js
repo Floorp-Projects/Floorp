@@ -435,3 +435,36 @@ gTests.push({
   }
 });
 
+// Case: Test context popup dismiss on top of awesome panel
+gTests.push({
+  desc: "Case: Test context popup dismiss on top of awesome panel",
+
+  run: function() {
+    waitForNavigationPanel(gCurrentTest.onPopupReady);
+    AllPagesList.doCommand();
+  },
+
+  onPopupReady: function() {
+    EventUtils.synthesizeMouse(AllPagesList.panel, AllPagesList.panel.width / 2,
+                               AllPagesList.panel.height / 2, { type: "mousedown" });
+
+    // Simulate a long tap
+    setTimeout(function(self) {
+      EventUtils.synthesizeMouse(AllPagesList.panel, AllPagesList.panel.width / 2,
+                                 AllPagesList.panel.height / 2, { type: "mouseup" });
+
+      let contextContainer = document.getElementById("context-container");
+
+      ok(!AllPagesList.panel.hidden, "The context popup is still visible after long tap");
+      ok(!contextContainer.hidden, "The context popup is visible after long tap");
+
+      EventUtils.synthesizeMouse(AllPagesList.panel, 0, 0, {});
+
+      ok(contextContainer.hidden, "The context popup is not visible after tap");
+      ok(!AllPagesList.panel.hidden, "The awesome panel is still visible after popup is dismissed");
+
+      AwesomeScreen.activePanel = null;
+      runNextTest();
+    }, 500, this);
+  }
+});
