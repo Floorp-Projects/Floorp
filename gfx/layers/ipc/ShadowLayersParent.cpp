@@ -203,29 +203,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       AsShadowLayer(edit.get_OpCreateCanvasLayer())->Bind(layer);
       break;
     }
-    case Edit::TOpCreateThebesBuffer: {
-      MOZ_LAYERS_LOG(("[ParentSide] CreateThebesBuffer"));
 
-      const OpCreateThebesBuffer& otb = edit.get_OpCreateThebesBuffer();
-      ShadowThebesLayer* thebes = static_cast<ShadowThebesLayer*>(
-        AsShadowLayer(otb)->AsLayer());
-
-      thebes->SetFrontBuffer(otb.initialFront(), otb.frontValidRegion());
-
-      break;
-    }
-    case Edit::TOpDestroyThebesFrontBuffer: {
-      MOZ_LAYERS_LOG(("[ParentSide] DestroyThebesFrontBuffer"));
-
-      const OpDestroyThebesFrontBuffer& odfb =
-        edit.get_OpDestroyThebesFrontBuffer();
-      ShadowThebesLayer* thebes = static_cast<ShadowThebesLayer*>(
-        AsShadowLayer(odfb)->AsLayer());
-
-      thebes->DestroyFrontBuffer();
-
-      break;
-    }
       // Attributes
     case Edit::TOpSetLayerAttributes: {
       MOZ_LAYERS_LOG(("[ParentSide] SetLayerAttributes"));
@@ -339,7 +317,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         static_cast<ShadowThebesLayer*>(shadow->AsLayer());
       const ThebesBuffer& newFront = op.newFrontBuffer();
 
-      ThebesBuffer newBack;
+      OptionalThebesBuffer newBack;
       nsIntRegion newValidRegion;
       OptionalThebesBuffer readonlyFront;
       nsIntRegion frontUpdatedRegion;

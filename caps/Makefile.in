@@ -46,7 +46,7 @@ MODULE		= caps
 DIRS		= idl include src
 
 ifdef ENABLE_TESTS
-DIRS		+= tests
+DIRS += tests/mochitest
 endif
 
 include $(topsrcdir)/config/rules.mk

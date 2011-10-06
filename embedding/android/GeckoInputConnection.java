@@ -279,6 +279,11 @@ public class GeckoInputConnection
         if (req == null)
             return null;
 
+        // Bail out here if gecko isn't running, otherwise we deadlock
+        // below when waiting for the reply to IME_GET_SELECTION.
+        if (!GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning))
+            return null;
+
         //Log.d("GeckoAppJava", "IME: getExtractedText");
 
         ExtractedText extract = new ExtractedText();

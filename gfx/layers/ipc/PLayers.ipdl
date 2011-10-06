@@ -109,17 +109,6 @@ union CanvasSurface {
   null_t;
 };
 
-// For the "buffer creation" operations, we send an initial front
-// buffer that only contains (transparent) black pixels just so that
-// we can swap it back after the first OpPaint without a special case.
-
-struct OpCreateThebesBuffer {
-  PLayer layer;
-  OptionalThebesBuffer initialFront;
-  nsIntRegion frontValidRegion;
-};
-struct OpDestroyThebesFrontBuffer { PLayer layer; };
-
 // Change a layer's attributes
 struct CommonLayerAttributes {
   nsIntRegion visibleRegion;
@@ -194,8 +183,6 @@ union Edit {
   OpCreateImageLayer;
   OpCreateColorLayer;
   OpCreateCanvasLayer;
-  OpCreateThebesBuffer;
-  OpDestroyThebesFrontBuffer;
 
   OpSetLayerAttributes;
 
@@ -217,7 +204,7 @@ struct OpImageSwap { PLayer layer; SharedImage newBackImage; };
 
 struct OpThebesBufferSwap {
   PLayer layer;
-  ThebesBuffer newBackBuffer;
+  OptionalThebesBuffer newBackBuffer;
   nsIntRegion newValidRegion;
   // If the parent took the child's old back buffer and returned its
   // old front buffer, |readOnlyFrontBuffer| may (if non-null) contain
