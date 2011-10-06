@@ -101,6 +101,64 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(op, dest);
     }
 
+    Condition testUndefined(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_UNDEFINED));
+        return cond;
+    }
+    Condition testBoolean(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_BOOLEAN));
+        return cond;
+    }
+    Condition testInt32(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_INT32));
+        return cond;
+    }
+    Condition testDouble(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+        Condition actual = (cond == Equal) ? Below : AboveOrEqual;
+        cmpl(tag, ImmTag(JSVAL_TAG_CLEAR));
+        return actual;
+    }
+    Condition testNull(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_NULL));
+        return cond;
+    }
+    Condition testString(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_STRING));
+        return cond;
+    }
+    Condition testObject(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_OBJECT));
+        return cond;
+    }
+    Condition testUndefined(Condition cond, const ValueOperand &value) {
+        return testUndefined(cond, value.typeReg());
+    }
+    Condition testBoolean(Condition cond, const ValueOperand &value) {
+        return testBoolean(cond, value.typeReg());
+    }
+    Condition testInt32(Condition cond, const ValueOperand &value) {
+        return testInt32(cond, value.typeReg());
+    }
+    Condition testDouble(Condition cond, const ValueOperand &value) {
+        return testDouble(cond, value.typeReg());
+    }
+    Condition testNull(Condition cond, const ValueOperand &value) {
+        return testNull(cond, value.typeReg());
+    }
+    Condition testString(Condition cond, const ValueOperand &value) {
+        return testString(cond, value.typeReg());
+    }
+    Condition testObject(Condition cond, const ValueOperand &value) {
+        return testObject(cond, value.typeReg());
+    }
+
     /////////////////////////////////////////////////////////////////
     // Common interface.
     /////////////////////////////////////////////////////////////////
@@ -150,63 +208,42 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 #endif
     }
 
-    Condition testInt32(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_INT32));
-        return cond;
+    // Type testing instructions can take a tag in a register or a
+    // ValueOperand.
+    template <typename T>
+    void branchTestUndefined(Condition cond, const T &t, Label *label) {
+        cond = testUndefined(cond, t);
+        j(cond, label);
     }
-    Condition testBoolean(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_BOOLEAN));
-        return cond;
+    template <typename T>
+    void branchTestInt32(Condition cond, const T &t, Label *label) {
+        cond = testInt32(cond, t);
+        j(cond, label);
     }
-    Condition testDouble(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        Condition actual = (cond == Equal) ? Below : AboveOrEqual;
-        cmpl(tag, ImmTag(JSVAL_TAG_CLEAR));
-        return actual;
+    template <typename T>
+    void branchTestBoolean(Condition cond, const T &t, Label *label) {
+        cond = testBoolean(cond, t);
+        j(cond, label);
     }
-    Condition testNull(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_NULL));
-        return cond;
+    template <typename T>
+    void branchTestDouble(Condition cond, const T &t, Label *label) {
+        cond = testDouble(cond, t);
+        j(cond, label);
     }
-    Condition testUndefined(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_UNDEFINED));
-        return cond;
+    template <typename T>
+    void branchTestNull(Condition cond, const T &t, Label *label) {
+        cond = testNull(cond, t);
+        j(cond, label);
     }
-    Condition testString(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_STRING));
-        return cond;
+    template <typename T>
+    void branchTestString(Condition cond, const T &t, Label *label) {
+        cond = testString(cond, t);
+        j(cond, label);
     }
-    Condition testObject(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_OBJECT));
-        return cond;
-    }
-
-    Condition testInt32(Condition cond, const ValueOperand &value) {
-        return testInt32(cond, value.typeReg());
-    }
-    Condition testBoolean(Condition cond, const ValueOperand &value) {
-        return testBoolean(cond, value.typeReg());
-    }
-    Condition testDouble(Condition cond, const ValueOperand &value) {
-        return testDouble(cond, value.typeReg());
-    }
-    Condition testNull(Condition cond, const ValueOperand &value) {
-        return testNull(cond, value.typeReg());
-    }
-    Condition testUndefined(Condition cond, const ValueOperand &value) {
-        return testUndefined(cond, value.typeReg());
-    }
-    Condition testString(Condition cond, const ValueOperand &value) {
-        return testString(cond, value.typeReg());
-    }
-    Condition testObject(Condition cond, const ValueOperand &value) {
-        return testObject(cond, value.typeReg());
+    template <typename T>
+    void branchTestObject(Condition cond, const T &t, Label *label) {
+        cond = testObject(cond, t);
+        j(cond, label);
     }
 
     void unboxInt32(const ValueOperand &operand, const Register &dest) {
@@ -242,9 +279,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         testl(operand.payloadReg(), operand.payloadReg());
         return truthy ? NonZero : Zero;
     }
-    Condition testBooleanTruthy(bool truthy, const ValueOperand &operand) {
+    void branchTestBooleanTruthy(bool truthy, const ValueOperand &operand, Label *label) {
         testl(operand.payloadReg(), operand.payloadReg());
-        return truthy ? NonZero : Zero;
+        j(truthy ? NonZero : Zero, label);
     }
 };
 
