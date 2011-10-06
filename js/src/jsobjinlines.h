@@ -1734,7 +1734,7 @@ class PrimitiveBehavior<double> {
 } /* namespace detail */
 
 inline JSObject *
-NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok)
+NonGenericMethodGuard(JSContext *cx, CallArgs args, Native native, Class *clasp, bool *ok)
 {
     const Value &thisv = args.thisv();
     if (thisv.isObject()) {
@@ -1745,13 +1745,13 @@ NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok)
         }
     }
 
-    *ok = HandleNonGenericMethodClassMismatch(cx, args, clasp);
+    *ok = HandleNonGenericMethodClassMismatch(cx, args, native, clasp);
     return NULL;
 }
 
 template <typename T>
 inline bool
-BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, T *v, bool *ok)
+BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, Native native, T *v, bool *ok)
 {
     typedef detail::PrimitiveBehavior<T> Behavior;
 
@@ -1761,7 +1761,7 @@ BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, T *v, bool *ok)
         return true;
     }
 
-    if (!NonGenericMethodGuard(cx, args, Behavior::getClass(), ok))
+    if (!NonGenericMethodGuard(cx, args, native, Behavior::getClass(), ok))
         return false;
 
     *v = Behavior::extract(thisv.toObject().getPrimitiveThis());

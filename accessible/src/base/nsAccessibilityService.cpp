@@ -70,6 +70,7 @@
 #include "nsImageFrame.h"
 #include "nsILink.h"
 #include "nsIObserverService.h"
+#include "nsLayoutUtils.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsISupportsUtils.h"
 #include "nsObjectFrame.h"
@@ -1012,15 +1013,14 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   if (isHTML && content->Tag() == nsGkAtoms::map) {
     // Create hyper text accessible for HTML map if it is used to group links
     // (see http://www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass). If the HTML
-    // map doesn't have 'name' attribute (or has empty name attribute) then we
-    // suppose it is used for links grouping. Otherwise we think it is used in
-    // conjuction with HTML image element and in this case we don't create any
-    // accessible for it and don't walk into it. The accessibles for HTML area
-    // (nsHTMLAreaAccessible) the map contains are attached as children of the
-    // appropriate accessible for HTML image (nsHTMLImageAccessible).
-    nsAutoString name;
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-    if (!name.IsEmpty()) {
+    // map rect is empty then it is used for links grouping. Otherwise it should
+    // be used in conjunction with HTML image element and in this case we don't
+    // create any accessible for it and don't walk into it. The accessibles for
+    // HTML area (nsHTMLAreaAccessible) the map contains are attached as
+    // children of the appropriate accessible for HTML image
+    // (nsHTMLImageAccessible).
+    if (nsLayoutUtils::GetAllInFlowRectsUnion(weakFrame,
+                                              weakFrame->GetParent()).IsEmpty()) {
       if (aIsSubtreeHidden)
         *aIsSubtreeHidden = true;
 

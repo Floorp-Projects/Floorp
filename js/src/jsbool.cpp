@@ -84,7 +84,7 @@ bool_toSource(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool b, ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, &b, &ok))
+    if (!BoxedPrimitiveMethodGuard(cx, args, bool_toSource, &b, &ok))
         return ok;
 
     char buf[32];
@@ -103,7 +103,7 @@ bool_toString(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool b, ok;
-    if (!BoxedPrimitiveMethodGuard<bool>(cx, args, &b, &ok))
+    if (!BoxedPrimitiveMethodGuard<bool>(cx, args, bool_toString, &b, &ok))
         return ok;
 
     args.rval().setString(cx->runtime->atomState.booleanAtoms[b ? 1 : 0]);
@@ -116,7 +116,7 @@ bool_valueOf(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool b, ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, &b, &ok))
+    if (!BoxedPrimitiveMethodGuard(cx, args, bool_valueOf, &b, &ok))
         return ok;
 
     args.rval().setBoolean(b);

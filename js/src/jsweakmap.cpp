@@ -105,7 +105,7 @@ WeakMap_has(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &WeakMapClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, WeakMap_has, &WeakMapClass, &ok);
     if (!obj)
         return ok;
 
@@ -136,7 +136,7 @@ WeakMap_get(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &WeakMapClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, WeakMap_get, &WeakMapClass, &ok);
     if (!obj)
         return ok;
 
@@ -167,7 +167,7 @@ WeakMap_delete(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &WeakMapClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, WeakMap_delete, &WeakMapClass, &ok);
     if (!obj)
         return ok;
 
@@ -199,7 +199,7 @@ WeakMap_set(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &WeakMapClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, WeakMap_set, &WeakMapClass, &ok);
     if (!obj)
         return ok;
 
