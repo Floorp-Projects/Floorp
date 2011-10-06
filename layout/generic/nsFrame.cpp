@@ -2277,12 +2277,12 @@ nsFrame::IsSelectable(bool* aSelectable, PRUint8* aSelectStyle) const
     selectStyle = NS_STYLE_USER_SELECT_NONE;
 
   // return stuff
-  if (aSelectable)
-    *aSelectable = (selectStyle != NS_STYLE_USER_SELECT_NONE);
   if (aSelectStyle)
     *aSelectStyle = selectStyle;
   if (mState & NS_FRAME_GENERATED_CONTENT)
     *aSelectable = PR_FALSE;
+  else
+    *aSelectable = (selectStyle != NS_STYLE_USER_SELECT_NONE);
   return NS_OK;
 }
 
@@ -4074,7 +4074,8 @@ nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther, const PRInt32 aAPD) const
   if (PresContext()->GetRootPresContext() !=
         aOther->PresContext()->GetRootPresContext()) {
     // crash right away, we are almost certainly going to crash anyway.
-    *(static_cast<PRInt32*>(nsnull)) = 3;
+    NS_RUNTIMEABORT("trying to get the offset between frames in different "
+                    "document hierarchies?");
   }
 
   const nsIFrame* root = nsnull;

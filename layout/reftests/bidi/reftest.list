@@ -21,6 +21,7 @@ random-if(layersGPUAccelerated) == logicalmarquee.html marquee-ref.html
 == mirroring-01.html mirroring-01-ref.html
 # quote marks are not supposed to mirror, but Unicode 5.0 said they should, so some systems do it
 random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
+== mirroring-03.html mirroring-03-ref.html
 == mixedChartype-00.html mixedChartype-00-ref.html
 == mixedChartype-00-j.html mixedChartype-00-ref.html
 == mixedChartype-01.html mixedChartype-01-ref.html

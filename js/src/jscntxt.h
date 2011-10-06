@@ -683,7 +683,6 @@ struct JSRuntime {
             firstEnterValid(false)
 #ifdef JSGC_TESTPILOT
             , infoEnabled(false),
-            info(),
             start(0),
             count(0)
 #endif
