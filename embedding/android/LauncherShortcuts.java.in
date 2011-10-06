@@ -60,7 +60,7 @@ import android.net.Uri;
 import android.graphics.*;
 
 
-public class LauncherShortcuts extends Activity {
+public class LauncherShortcuts extends ListActivity {
 
     private ArrayList <HashMap<String, String>> mWebappsList;
     private File mWebappsFolder;
@@ -69,7 +69,6 @@ public class LauncherShortcuts extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.launch_app_list);
 
         final Intent intent = getIntent();
@@ -81,8 +80,9 @@ public class LauncherShortcuts extends Activity {
         }
     }
 
-    public void onListItemClick(int id) {
-        HashMap<String, String> map = mWebappsList.get(id);
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        HashMap<String, String> map = mWebappsList.get((int) id);
         
         String uri = map.get("uri").toString();
         String title = map.get("title").toString();
@@ -129,11 +129,8 @@ public class LauncherShortcuts extends Activity {
                 size = 72;
         }
 
-        Bitmap bitmap = BitmapFactory.decodeFile(favicon);
-        if (bitmap != null) {
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, size, size, true);
-            intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, scaledBitmap);
-        }
+        Bitmap bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeFile(favicon), size, size, true);
+        intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, bitmap);
 
         // Now, return the result to the launcher
         setResult(RESULT_OK, intent);
@@ -219,42 +216,16 @@ public class LauncherShortcuts extends Activity {
         @Override
         protected void onPostExecute(Void unused) {
             if (mWebappsList != null) {
-                AlertDialog.Builder builder;
-                
-                if (android.os.Build.VERSION.SDK_INT >= 11) {
-                    builder = new AlertDialog.Builder(LauncherShortcuts.this, AlertDialog.THEME_HOLO_LIGHT);
-                } else {
-                    builder = new AlertDialog.Builder(LauncherShortcuts.this);
-                }
-                
-                builder.setTitle(R.string.launcher_shortcuts_title);
-                builder.setAdapter(new SimpleAdapter(
+                TextView emptyText = (TextView)findViewById(android.R.id.empty);
+                emptyText.setText("");
+
+                setListAdapter(new SimpleAdapter(
                     LauncherShortcuts.this,
                     mWebappsList,
                     R.layout.launch_app_listitem,
                     new String[] { "favicon", "title" },
                     new int[] { R.id.favicon, R.id.title }
-                ), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.dismiss();
-                        onListItemClick(id);
-                        finish();
-                    }
-                });
-                
-                builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        dialog.dismiss();
-                        finish();
-                    }
-                });
-                
-                builder.create().show();
-            } else {
-                Toast.makeText(LauncherShortcuts.this, R.string.launcher_shortcuts_empty, Toast.LENGTH_LONG).show();
-                finish();
+                ));
             }
         }
     }
