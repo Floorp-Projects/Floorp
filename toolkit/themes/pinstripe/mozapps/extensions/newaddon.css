@@ -85,6 +85,10 @@
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
 }
 
+.addon-info[type="dictionary"] #icon {
+  list-style-image: url("chrome://mozapps/skin/plugins/dictionaryGeneric.png");
+}
+
 #name {
   font-size: 130%;
 }

@@ -158,6 +158,10 @@
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric-16.png");
 }
 
+.addon-icon[type="dictionary"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric-16.png");
+}
+
 .action-list {
   margin-top: 10px;
   -moz-margin-start: 5em;
