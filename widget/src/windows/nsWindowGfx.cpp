@@ -381,7 +381,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 
             if (!EnsureSharedSurfaceSize(surfaceSize)) {
               NS_ERROR("Couldn't allocate a shared image surface!");
-              return NS_ERROR_FAILURE;
+              return false;
             }
 
             // don't use the shared surface directly; instead, create a new one
@@ -399,7 +399,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 
           if (!targetSurface) {
             NS_ERROR("Invalid RenderMode!");
-            return NS_ERROR_FAILURE;
+            return false;
           }
 
           nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
