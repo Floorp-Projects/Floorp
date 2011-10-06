@@ -680,6 +680,43 @@ GetMouseThrough(const nsIFrame* aFrame)
   return PR_FALSE;
 }
 
+// A list of frames, and their z depth. Used for sorting
+// the results of hit testing.
+struct FramesWithDepth
+{
+  FramesWithDepth(float aDepth) :
+    mDepth(aDepth)
+  {}
+
+  bool operator<(const FramesWithDepth& aOther) const {
+    if (mDepth != aOther.mDepth) {
+      // We want to sort so that the shallowest item (highest depth value) is first
+      return mDepth > aOther.mDepth;
+    }
+    return this < &aOther;
+  }
+  bool operator==(const FramesWithDepth& aOther) const {
+    return this == &aOther;
+  }
+
+  float mDepth;
+  nsTArray<nsIFrame*> mFrames;
+};
+
+// Sort the frames by depth and then moves all the contained frames to the destination
+void FlushFramesArray(nsTArray<FramesWithDepth>& aSource, nsTArray<nsIFrame*>* aDest)
+{
+  if (aSource.IsEmpty()) {
+    return;
+  }
+  aSource.Sort();
+  PRUint32 length = aSource.Length();
+  for (PRUint32 i = 0; i < length; i++) {
+    aDest->MoveElementsFrom(aSource[i].mFrames);
+  }
+  aSource.Clear();
+}
+
 void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                             nsDisplayItem::HitTestState* aState,
                             nsTArray<nsIFrame*> *aOutFrames) const {
@@ -688,6 +725,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
   for (item = GetBottom(); item; item = item->GetAbove()) {
     aState->mItemBuffer.AppendElement(item);
   }
+  nsAutoTArray<FramesWithDepth, 16> temp;
   for (PRInt32 i = aState->mItemBuffer.Length() - 1; i >= itemBufferStart; --i) {
     // Pop element off the end of the buffer. We want to shorten the buffer
     // so that recursive calls to HitTest have more buffer space.
@@ -697,18 +735,38 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
     if (aRect.Intersects(item->GetBounds(aBuilder))) {
       nsAutoTArray<nsIFrame*, 16> outFrames;
       item->HitTest(aBuilder, aRect, aState, &outFrames);
+      
+      // For 3d transforms with preserve-3d we add hit frames into the temp list 
+      // so we can sort them later, otherwise we add them directly to the output list.
+      nsTArray<nsIFrame*> *writeFrames = aOutFrames;
+      if (item->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
+          item->GetUnderlyingFrame()->Preserves3D()) {
+        nsDisplayTransform *transform = static_cast<nsDisplayTransform*>(item);
+        nsPoint point = aRect.TopLeft();
+        // A 1x1 rect means a point, otherwise use the center of the rect
+        if (aRect.width != 1 || aRect.height != 1) {
+          point = aRect.Center();
+        }
+        temp.AppendElement(FramesWithDepth(transform->GetHitDepthAtPoint(point)));
+        writeFrames = &temp[temp.Length() - 1].mFrames;
+      } else {
+        // We may have just finished a run of consecutive preserve-3d transforms, 
+        // so flush these into the destination array before processing our frame list.
+        FlushFramesArray(temp, aOutFrames);
+      }
 
       for (PRUint32 j = 0; j < outFrames.Length(); j++) {
         nsIFrame *f = outFrames.ElementAt(j);
         // Handle the XUL 'mousethrough' feature and 'pointer-events'.
         if (!GetMouseThrough(f) &&
             f->GetStyleVisibility()->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
-          aOutFrames->AppendElement(f);
+          writeFrames->AppendElement(f);
         }
       }
-
     }
   }
+  // Clear any remaining preserve-3d transforms.
+  FlushFramesArray(temp, aOutFrames);
   NS_ASSERTION(aState->mItemBuffer.Length() == PRUint32(itemBufferStart),
                "How did we forget to pop some elements?");
 }
@@ -2640,6 +2698,24 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
   printf("=== end of hit test ===\n");
 #endif
 
+}
+
+float
+nsDisplayTransform::GetHitDepthAtPoint(const nsPoint& aPoint)
+{
+  float factor = nsPresContext::AppUnitsPerCSSPixel();
+  gfx3DMatrix matrix = GetTransform(factor);
+
+  NS_ASSERTION(!matrix.IsSingular(), "We can't have hit a singular matrix!");
+  NS_ASSERTION(mFrame->GetStyleDisplay()->mBackfaceVisibility != NS_STYLE_BACKFACE_VISIBILITY_HIDDEN || 
+               matrix.GetNormalVector().z > 0.0, "We can't have hit the hidden backface of a layer!");
+    
+  gfxPoint point = 
+    matrix.Inverse().ProjectPoint(gfxPoint(NSAppUnitsToFloatPixels(aPoint.x, factor),
+                                           NSAppUnitsToFloatPixels(aPoint.y, factor)));
+
+  gfxPoint3D transformed = matrix.Transform3D(gfxPoint3D(point.x, point.y, 0));
+  return transformed.z;
 }
 
 /* The bounding rectangle for the object is the overflow rectangle translated
