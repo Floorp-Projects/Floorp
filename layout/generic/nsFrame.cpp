@@ -1549,7 +1549,8 @@ WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder, nsD
           }
           nsDisplayWrapList *list = static_cast<nsDisplayWrapList*>(item);
           rv = WrapPreserve3DListInternal(aFrame, aBuilder, list->GetList(), aIndex);
-          newList.AppendToTop(item);
+          newList.AppendToTop(list->GetList());
+          list->~nsDisplayWrapList();
           break;
         }
         case nsDisplayItem::TYPE_OPACITY: {
@@ -1774,13 +1775,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       rv = WrapPreserve3DList(this, aBuilder, &resultList);
       if (NS_FAILED(rv))
         return rv;
-
-      if (resultList.Count() > 1) {
-        rv = resultList.AppendNewToTop(
-          new (aBuilder) nsDisplayWrapList(aBuilder, this, &resultList));
-        if (NS_FAILED(rv))
-          return rv;
-      }
     } else {
       rv = resultList.AppendNewToTop(
         new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList));
