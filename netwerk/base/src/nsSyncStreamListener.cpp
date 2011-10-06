@@ -204,7 +204,7 @@ nsSyncStreamListener::ReadSegments(nsWriteSegmentFun  writer,
 }
 
 NS_IMETHODIMP
-nsSyncStreamListener::IsNonBlocking(PRBool *result)
+nsSyncStreamListener::IsNonBlocking(bool *result)
 {
     *result = PR_FALSE;
     return NS_OK;

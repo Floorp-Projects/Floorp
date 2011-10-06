@@ -97,27 +97,27 @@ public:
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true);
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
                            nsIAtom *aPrefix, const nsAString &aValue,
-                           PRBool aNotify);
+                           bool aNotify);
 
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
   virtual PRUint32 GetDesiredIMEState();
 
-  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
-  virtual PRBool IsDoneAddingChildren();
+  virtual nsresult DoneAddingChildren(bool aHaveNotified);
+  virtual bool IsDoneAddingChildren();
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom *aAttribute,
                                 const nsAString &aValue,
                                 nsAttrValue &aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom *aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom *aAttribute) const;
   virtual nsEventStates IntrinsicState() const;
   virtual void DestroyContent();
 
@@ -142,7 +142,7 @@ private:
   /**
    * Calls LoadObject with the correct arguments to start the plugin load.
    */
-  NS_HIDDEN_(void) StartObjectLoad(PRBool aNotify);
+  NS_HIDDEN_(void) StartObjectLoad(bool aNotify);
 
   void GetTypeAttrValue(nsCString &aValue) const
   {
@@ -166,7 +166,7 @@ private:
 
   // mIsDoneAddingChildren is only really used for <applet>.  This boolean is
   // always true for <embed>, per the documentation in nsIContent.h.
-  PRPackedBool mIsDoneAddingChildren;
+  bool mIsDoneAddingChildren;
 };
 
 
@@ -191,14 +191,14 @@ nsHTMLSharedObjectElement::~nsHTMLSharedObjectElement()
   DestroyImageLoadingContent();
 }
 
-PRBool
+bool
 nsHTMLSharedObjectElement::IsDoneAddingChildren()
 {
   return mIsDoneAddingChildren;
 }
 
 nsresult
-nsHTMLSharedObjectElement::DoneAddingChildren(PRBool aHaveNotified)
+nsHTMLSharedObjectElement::DoneAddingChildren(bool aHaveNotified)
 {
   if (!mIsDoneAddingChildren) {
     mIsDoneAddingChildren = PR_TRUE;
@@ -265,7 +265,7 @@ nsresult
 nsHTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
                                       nsIContent *aParent,
                                       nsIContent *aBindingParent,
-                                      PRBool aCompileEventHandlers)
+                                      bool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
@@ -283,8 +283,8 @@ nsHTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
 }
 
 void
-nsHTMLSharedObjectElement::UnbindFromTree(PRBool aDeep,
-                                          PRBool aNullParent)
+nsHTMLSharedObjectElement::UnbindFromTree(bool aDeep,
+                                          bool aNullParent)
 {
   RemovedFromDocument();
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
@@ -295,7 +295,7 @@ nsHTMLSharedObjectElement::UnbindFromTree(PRBool aDeep,
 nsresult
 nsHTMLSharedObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
                                    nsIAtom *aPrefix, const nsAString &aValue,
-                                   PRBool aNotify)
+                                   bool aNotify)
 {
   // If we plan to call LoadObject, we want to do it first so that the
   // object load kicks off _before_ the reflow triggered by the SetAttr.  But if
@@ -317,9 +317,9 @@ nsHTMLSharedObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
                                        aNotify);
 }
 
-PRBool
-nsHTMLSharedObjectElement::IsHTMLFocusable(PRBool aWithMouse,
-                                           PRBool *aIsFocusable,
+bool
+nsHTMLSharedObjectElement::IsHTMLFocusable(bool aWithMouse,
+                                           bool *aIsFocusable,
                                            PRInt32 *aTabIndex)
 {
   if (mNodeInfo->Equals(nsGkAtoms::embed) || Type() == eType_Plugin) {
@@ -383,7 +383,7 @@ nsHTMLSharedObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
   return CallQueryInterface(sub_doc, aResult);
 }
 
-PRBool
+bool
 nsHTMLSharedObjectElement::ParseAttribute(PRInt32 aNamespaceID,
                                           nsIAtom *aAttribute,
                                           const nsAString &aValue,
@@ -428,7 +428,7 @@ EmbedMapAttributesIntoRule(const nsMappedAttributes *aAttributes,
   nsGenericHTMLElement::MapCommonAttributesExceptHiddenInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHTMLSharedObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -453,7 +453,7 @@ nsHTMLSharedObjectElement::GetAttributeMappingFunction() const
 }
 
 void
-nsHTMLSharedObjectElement::StartObjectLoad(PRBool aNotify)
+nsHTMLSharedObjectElement::StartObjectLoad(bool aNotify)
 {
   nsCAutoString type;
   GetTypeAttrValue(type);

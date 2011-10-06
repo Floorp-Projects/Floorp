@@ -129,7 +129,7 @@ nsContentEventHandler::Init(nsQueryContentEvent* aEvent)
 
   aEvent->mReply.mContentsRoot = mRootContent.get();
 
-  PRBool isCollapsed;
+  bool isCollapsed;
   rv = mSelection->GetIsCollapsed(&isCollapsed);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_AVAILABLE);
   aEvent->mReply.mHasSelection = !isCollapsed;
@@ -163,7 +163,7 @@ nsContentEventHandler::Init(nsSelectionEvent* aEvent)
 // have any text. This happens even for single line editors.
 // When we get text content and when we change the selection,
 // we don't want to include the bogus BRs at the end.
-static PRBool IsContentBR(nsIContent* aContent)
+static bool IsContentBR(nsIContent* aContent)
 {
   return aContent->IsHTML() &&
          aContent->Tag() == nsGkAtoms::br &&
@@ -330,7 +330,7 @@ static nsresult GenerateFlatTextContent(nsIRange* aRange,
 
 nsresult
 nsContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
-                                                    PRBool aForward,
+                                                    bool aForward,
                                                     PRUint32* aXPOffset)
 {
   // XXX This method assumes that the frame boundaries must be cluster
@@ -377,7 +377,7 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
                               nsIRange* aRange,
                               PRUint32 aNativeOffset,
                               PRUint32 aNativeLength,
-                              PRBool aExpandToClusterBoundaries)
+                              bool aExpandToClusterBoundaries)
 {
   nsCOMPtr<nsIContentIterator> iter;
   nsresult rv = NS_NewContentIterator(getter_AddRefs(iter));
@@ -560,7 +560,7 @@ static nsINode* AdjustTextRectNode(nsINode* aNode,
 // but this is more flexible for OnQueryTextRect to use
 static nsresult GetFrameForTextRect(nsINode* aNode,
                                     PRInt32 aOffset,
-                                    PRBool aHint,
+                                    bool aHint,
                                     nsIFrame** aReturnFrame)
 {
   NS_ENSURE_TRUE(aNode && aNode->IsNodeOfType(nsINode::eCONTENT),
@@ -705,7 +705,7 @@ nsContentEventHandler::OnQueryCaretRect(nsQueryContentEvent* aEvent)
 
   // When the selection is collapsed and the queried offset is current caret
   // position, we should return the "real" caret rect.
-  PRBool selectionIsCollapsed;
+  bool selectionIsCollapsed;
   rv = mSelection->GetIsCollapsed(&selectionIsCollapsed);
   NS_ENSURE_SUCCESS(rv, rv);
 

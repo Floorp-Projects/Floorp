@@ -280,9 +280,9 @@ public:
   /**
    * Append/insert/remove a child. Return true if operation was successful.
    */
-  virtual PRBool AppendChild(nsAccessible* aChild);
-  virtual PRBool InsertChildAt(PRUint32 aIndex, nsAccessible* aChild);
-  virtual PRBool RemoveChild(nsAccessible* aChild);
+  virtual bool AppendChild(nsAccessible* aChild);
+  virtual bool InsertChildAt(PRUint32 aIndex, nsAccessible* aChild);
+  virtual bool RemoveChild(nsAccessible* aChild);
 
   //////////////////////////////////////////////////////////////////////////////
   // Accessible tree traverse methods
@@ -315,7 +315,7 @@ public:
   /**
    * Return true if accessible has children;
    */
-  PRBool HasChildren() { return !!GetChildAt(0); }
+  bool HasChildren() { return !!GetChildAt(0); }
 
   /**
    * Return first/last/next/previous sibling of the accessible.
@@ -380,7 +380,7 @@ public:
   /**
    * Return true if there are accessible children in anonymous content
    */
-  virtual PRBool GetAllowsAnonChildAccessibles();
+  virtual bool GetAllowsAnonChildAccessibles();
 
   /**
    * Returns text of accessible if accessible has text role otherwise empty
@@ -402,9 +402,15 @@ public:
   void TestChildCache(nsAccessible* aCachedChild) const;
 
   //////////////////////////////////////////////////////////////////////////////
-  // Downcasting
+  // Downcasting and types
 
   inline bool IsApplication() const { return mFlags & eApplicationAccessible; }
+
+  bool IsAutoComplete() const { return mFlags & eAutoCompleteAccessible; }
+
+  inline bool IsAutoCompletePopup() const { return mFlags & eAutoCompletePopupAccessible; }
+
+  inline bool IsCombobox() const { return mFlags & eComboboxAccessible; }
 
   inline bool IsDoc() const { return mFlags & eDocAccessible; }
   nsDocAccessible* AsDoc();
@@ -414,6 +420,12 @@ public:
 
   inline bool IsHTMLListItem() const { return mFlags & eHTMLListItemAccessible; }
   nsHTMLLIAccessible* AsHTMLListItem();
+
+  inline bool IsListControl() const { return mFlags & eListControlAccessible; }
+
+  inline bool IsMenuButton() const { return mFlags & eMenuButtonAccessible; }
+
+  inline bool IsMenuPopup() const { return mFlags & eMenuPopupAccessible; }
 
   inline bool IsRoot() const { return mFlags & eRootAccessible; }
   nsRootAccessible* AsRoot();
@@ -475,12 +487,7 @@ public:
   /**
    * Return true if the link currently has the focus.
    */
-  inline bool IsLinkSelected()
-  {
-    NS_PRECONDITION(IsLink(),
-                    "IsLinkSelected() called on something that is not a hyper link!");
-    return gLastFocusedNode == GetNode();
-  }
+  bool IsLinkSelected();
 
   /**
    * Return the number of anchors within the link.
@@ -546,6 +553,38 @@ public:
    */
   virtual bool UnselectAll();
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Widgets
+
+  /**
+   * Return true if accessible is a widget, i.e. control or accessible that
+   * manages its items. Note, being a widget the accessible may be a part of
+   * composite widget.
+   */
+  virtual bool IsWidget() const;
+
+  /**
+   * Return true if the widget is active, i.e. has a focus within it.
+   */
+  virtual bool IsActiveWidget() const;
+
+  /**
+   * Return true if the widget has items and items are operable by user and
+   * can be activated.
+   */
+  virtual bool AreItemsOperable() const;
+
+  /**
+   * Return the current item of the widget, i.e. an item that has or will have
+   * keyboard focus when widget gets active.
+   */
+  virtual nsAccessible* CurrentItem();
+
+  /**
+   * Return container widget this accessible belongs to.
+   */
+  virtual nsAccessible* ContainerWidget() const;
+
 protected:
 
   //////////////////////////////////////////////////////////////////////////////
@@ -595,11 +634,17 @@ protected:
    */
   enum AccessibleTypes {
     eApplicationAccessible = 1 << 2,
-    eDocAccessible = 1 << 3,
-    eHyperTextAccessible = 1 << 4,
-    eHTMLListItemAccessible = 1 << 5,
-    eRootAccessible = 1 << 6,
-    eTextLeafAccessible = 1 << 7
+    eAutoCompleteAccessible = 1 << 3,
+    eAutoCompletePopupAccessible = 1 << 4,
+    eComboboxAccessible = 1 << 5,
+    eDocAccessible = 1 << 6,
+    eHyperTextAccessible = 1 << 7,
+    eHTMLListItemAccessible = 1 << 8,
+    eListControlAccessible = 1 << 9,
+    eMenuButtonAccessible = 1 << 10,
+    eMenuPopupAccessible = 1 << 11,
+    eRootAccessible = 1 << 12,
+    eTextLeafAccessible = 1 << 13
   };
 
   //////////////////////////////////////////////////////////////////////////////
@@ -612,7 +657,7 @@ protected:
 
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
-  PRBool IsVisible(PRBool *aIsOffscreen); 
+  bool IsVisible(bool *aIsOffscreen); 
 
   //////////////////////////////////////////////////////////////////////////////
   // Name helpers

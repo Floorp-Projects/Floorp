@@ -68,7 +68,7 @@ using namespace mozilla;
 class IdleListenerComparator
 {
 public:
-  PRBool Equals(IdleListener a, IdleListener b) const
+  bool Equals(IdleListener a, IdleListener b) const
   {
     return (a.observer == b.observer) &&
            (a.reqIdleTime == b.reqIdleTime);

@@ -68,7 +68,7 @@ UnwrapNW(JSContext *cx, uintN argc, jsval *vp)
   }
 
   JSObject *obj = JSVAL_TO_OBJECT(v);
-  if (!obj->isWrapper()) {
+  if (!js::IsWrapper(obj)) {
     JS_SET_RVAL(cx, vp, v);
     return JS_TRUE;
   }
@@ -94,28 +94,28 @@ XrayWrapperConstructor(JSContext *cx, uintN argc, jsval *vp)
   }
 
   JSObject *obj = JSVAL_TO_OBJECT(vp[2]);
-  if (!obj->isWrapper()) {
+  if (!js::IsWrapper(obj)) {
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
   }
 
-  obj = obj->unwrap();
+  obj = js::UnwrapObject(obj);
 
   *vp = OBJECT_TO_JSVAL(obj);
   return JS_WrapValue(cx, vp);
 }
 // static
-PRBool
+bool
 AttachNewConstructorObject(XPCCallContext &ccx, JSObject *aGlobalObject)
 {
-  JSObject *xpcnativewrapper =
+  JSFunction *xpcnativewrapper =
     JS_DefineFunction(ccx, aGlobalObject, "XPCNativeWrapper",
                       XrayWrapperConstructor, 1,
                       JSPROP_READONLY | JSPROP_PERMANENT | JSFUN_STUB_GSOPS | JSFUN_CONSTRUCTOR);
   if (!xpcnativewrapper) {
     return PR_FALSE;
   }
-  return JS_DefineFunction(ccx, xpcnativewrapper, "unwrap", UnwrapNW, 1,
+  return JS_DefineFunction(ccx, JS_GetFunctionObject(xpcnativewrapper), "unwrap", UnwrapNW, 1,
                            JSPROP_READONLY | JSPROP_PERMANENT) != nsnull;
 }
 }
@@ -125,10 +125,10 @@ namespace XPCWrapper {
 JSObject *
 Unwrap(JSContext *cx, JSObject *wrapper)
 {
-  if (wrapper->isWrapper()) {
+  if (js::IsWrapper(wrapper)) {
     if (xpc::AccessCheck::isScriptAccessOnly(cx, wrapper))
       return nsnull;
-    return wrapper->unwrap();
+    return js::UnwrapObject(wrapper);
   }
 
   return nsnull;
@@ -137,8 +137,8 @@ Unwrap(JSContext *cx, JSObject *wrapper)
 JSObject *
 UnsafeUnwrapSecurityWrapper(JSObject *obj)
 {
-  if (obj->isProxy()) {
-    return obj->unwrap();
+  if (js::IsProxy(obj)) {
+    return js::UnwrapObject(obj);
   }
 
   return obj;

@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "WebGLContext.h"
+#include "WebGLExtensions.h"
 
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
@@ -456,7 +457,7 @@ static bool
 GetBoolFromPropertyBag(nsIPropertyBag *bag, const char *propName, bool *boolResult)
 {
     nsCOMPtr<nsIVariant> vv;
-    PRBool bv;
+    bool bv;
 
     nsresult rv = bag->GetProperty(NS_ConvertASCIItoUTF16(propName), getter_AddRefs(vv));
     if (NS_FAILED(rv) || !vv)
@@ -549,18 +550,18 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     // Get some prefs for some preferred/overriden things
     NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
 
-    PRBool forceOSMesa =
-        Preferences::GetBool("webgl.force_osmesa", PR_FALSE);
-    PRBool preferEGL =
-        Preferences::GetBool("webgl.prefer-egl", PR_FALSE);
-    PRBool preferOpenGL =
-        Preferences::GetBool("webgl.prefer-native-gl", PR_FALSE);
-    PRBool forceEnabled =
-        Preferences::GetBool("webgl.force-enabled", PR_FALSE);
-    PRBool disabled =
-        Preferences::GetBool("webgl.disabled", PR_FALSE);
-    PRBool verbose =
-        Preferences::GetBool("webgl.verbose", PR_FALSE);
+    bool forceOSMesa =
+        Preferences::GetBool("webgl.force_osmesa", false);
+    bool preferEGL =
+        Preferences::GetBool("webgl.prefer-egl", false);
+    bool preferOpenGL =
+        Preferences::GetBool("webgl.prefer-native-gl", false);
+    bool forceEnabled =
+        Preferences::GetBool("webgl.force-enabled", false);
+    bool disabled =
+        Preferences::GetBool("webgl.disabled", false);
+    bool verbose =
+        Preferences::GetBool("webgl.verbose", false);
 
     if (disabled)
         return NS_ERROR_FAILURE;
@@ -605,8 +606,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     }
 
     // Ask GfxInfo about what we should use
-    PRBool useOpenGL = PR_TRUE;
-    PRBool useANGLE = PR_TRUE;
+    bool useOpenGL = true;
+    bool useANGLE = true;
 
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     if (gfxInfo && !forceEnabled) {
@@ -941,12 +942,23 @@ WebGLContext::MozGetUnderlyingParamString(PRUint32 pname, nsAString& retval)
 
 bool WebGLContext::IsExtensionSupported(WebGLExtensionID ei)
 {
-    if (ei == WebGL_OES_texture_float) {
-        MakeContextCurrent();
-        return gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float
-                                                      : GLContext::ARB_texture_float);
+    bool isSupported;
+
+    switch (ei) {
+        case WebGL_OES_texture_float:
+            MakeContextCurrent();
+            isSupported = gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float 
+                                                                 : GLContext::ARB_texture_float);
+	    break;
+        case WebGL_OES_standard_derivatives:
+            // We always support this extension.
+            isSupported = true;
+            break;
+        default:
+            isSupported = false;
     }
-    return false;
+
+    return isSupported;
 }
 
 NS_IMETHODIMP
@@ -960,12 +972,23 @@ WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
         if (IsExtensionSupported(WebGL_OES_texture_float))
             ei = WebGL_OES_texture_float;
     }
+    else if (aName.EqualsLiteral("OES_standard_derivatives")) {
+        if (IsExtensionSupported(WebGL_OES_standard_derivatives))
+            ei = WebGL_OES_standard_derivatives;
+    }
 
-    // create a WebGLExtension object for extensions that don't
-    // have any additional tokens or methods
     if (ei != WebGLExtensionID_Max) {
         if (!IsExtensionEnabled(ei)) {
-            mEnabledExtensions[ei] = new WebGLExtension(this);
+            switch (ei) {
+                case WebGL_OES_standard_derivatives:
+                    mEnabledExtensions[ei] = new WebGLExtensionStandardDerivatives(this);
+                    break;
+                // create an extension for any types that don't
+                // have any additional tokens or methods
+                default:
+                    mEnabledExtensions[ei] = new WebGLExtension(this);
+                    break;
+            }
         }
         NS_ADDREF(*retval = mEnabledExtensions[ei]);
     }
@@ -978,9 +1001,9 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(PRUint32 mask, const nsIntR
 {
     MakeContextCurrent();
 
-    PRBool initializeColorBuffer = 0 != (mask & LOCAL_GL_COLOR_BUFFER_BIT);
-    PRBool initializeDepthBuffer = 0 != (mask & LOCAL_GL_DEPTH_BUFFER_BIT);
-    PRBool initializeStencilBuffer = 0 != (mask & LOCAL_GL_STENCIL_BUFFER_BIT);
+    bool initializeColorBuffer = 0 != (mask & LOCAL_GL_COLOR_BUFFER_BIT);
+    bool initializeDepthBuffer = 0 != (mask & LOCAL_GL_DEPTH_BUFFER_BIT);
+    bool initializeStencilBuffer = 0 != (mask & LOCAL_GL_STENCIL_BUFFER_BIT);
 
     // prepare GL state for clearing
     gl->fDisable(LOCAL_GL_SCISSOR_TEST);
@@ -1209,6 +1232,19 @@ NS_INTERFACE_MAP_BEGIN(WebGLExtension)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtension)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(WebGLExtensionStandardDerivatives)
+NS_IMPL_RELEASE(WebGLExtensionStandardDerivatives)
+
+DOMCI_DATA(WebGLExtensionStandardDerivatives, WebGLExtensionStandardDerivatives)
+
+NS_INTERFACE_MAP_BEGIN(WebGLExtensionStandardDerivatives)
+  //NS_INTERFACE_MAP_ENTRY(WebGLExtensionStandardDerivatives)
+  //NS_INTERFACE_MAP_ENTRY(WebGLExtension)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLExtensionStandardDerivatives)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, WebGLExtension)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtensionStandardDerivatives)
+NS_INTERFACE_MAP_END_INHERITING(WebGLExtension)
+
 /* readonly attribute WebGLsizei drawingBufferWidth; */
 NS_IMETHODIMP
 WebGLContext::GetDrawingBufferWidth(WebGLsizei *aWidth)
@@ -1272,6 +1308,8 @@ WebGLContext::GetSupportedExtensions(nsIVariant **retval)
 
     if (IsExtensionSupported(WebGL_OES_texture_float))
         extList.InsertElementAt(extList.Length(), "OES_texture_float");
+    if (IsExtensionSupported(WebGL_OES_standard_derivatives))
+        extList.InsertElementAt(extList.Length(), "OES_standard_derivatives");
 
     nsresult rv;
     if (extList.Length() > 0) {

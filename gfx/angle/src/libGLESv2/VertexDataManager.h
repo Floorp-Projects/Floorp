@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -30,6 +30,7 @@ struct TranslatedAttribute
     UINT stride;   // 0 means not to advance the read pointer at all
 
     IDirect3DVertexBuffer9 *vertexBuffer;
+    unsigned int serial;
 };
 
 class VertexBuffer
@@ -41,20 +42,18 @@ class VertexBuffer
     void unmap();
 
     IDirect3DVertexBuffer9 *getBuffer() const;
+    unsigned int getSerial() const;
 
   protected:
     IDirect3DDevice9 *const mDevice;
     IDirect3DVertexBuffer9 *mVertexBuffer;
 
+    unsigned int mSerial;
+    static unsigned int issueSerial();
+    static unsigned int mCurrentSerial;
+
   private:
     DISALLOW_COPY_AND_ASSIGN(VertexBuffer);
-};
-
-class ConstantVertexBuffer : public VertexBuffer
-{
-  public:
-    ConstantVertexBuffer(IDirect3DDevice9 *device, float x, float y, float z, float w);
-    ~ConstantVertexBuffer();
 };
 
 class ArrayVertexBuffer : public VertexBuffer
@@ -100,6 +99,7 @@ class StaticVertexBuffer : public ArrayVertexBuffer
     {
         GLenum type;
         GLint size;
+        GLsizei stride;
         bool normalized;
         int attributeOffset;
 
@@ -131,7 +131,8 @@ class VertexDataManager
     StreamingVertexBuffer *mStreamingBuffer;
 
     bool mDirtyCurrentValue[MAX_VERTEX_ATTRIBS];
-    ConstantVertexBuffer *mCurrentValueBuffer[MAX_VERTEX_ATTRIBS];
+    StreamingVertexBuffer *mCurrentValueBuffer[MAX_VERTEX_ATTRIBS];
+    std::size_t mCurrentValueOffsets[MAX_VERTEX_ATTRIBS];
 
     // Attribute format conversion
     struct FormatConverter

@@ -72,8 +72,8 @@ protected:
     nsCOMPtr<nsIRequestObserver> mObserver;
     nsCOMPtr<nsISupports>        mObserverContext;
     nsresult                     mStatus;
-    PRPackedBool                 mIsPending;
-    PRPackedBool                 mAllowHead;
+    bool                         mIsPending;
+    bool                         mAllowHead;
 
     void     SetStatusAndCallBack(nsresult aStatus);
     nsresult CheckStatus();

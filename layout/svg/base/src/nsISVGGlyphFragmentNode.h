@@ -55,7 +55,7 @@ public:
   virtual PRInt32 GetCharNumAtPosition(nsIDOMSVGPoint *point)=0;
   NS_IMETHOD_(nsSVGGlyphFrame *) GetFirstGlyphFrame()=0;
   NS_IMETHOD_(nsSVGGlyphFrame *) GetNextGlyphFrame()=0;
-  NS_IMETHOD_(void) SetWhitespaceCompression(PRBool aCompressWhitespace)=0;
+  NS_IMETHOD_(void) SetWhitespaceCompression(bool aCompressWhitespace)=0;
 };
 
 #endif // __NS_ISVGGLYPHFRAGMENTNODE_H__

@@ -1,7 +1,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="start">
-<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 <script><![CDATA[
 var is = window.opener.SimpleTest.is;
 
@@ -43,15 +43,16 @@ function testResizer(resizerid, noShrink, hResize, vResize, testid)
          " " + testid + " height moving " + mouseX + "," + mouseY);
       // release
       synthesizeMouse(document.documentElement, originalX + 5 + mouseX * scale,
-                      originalY + 5 + mouseY * scale, { type:"mouseup" });    }
+                      originalY + 5 + mouseY * scale, { type:"mouseup" });
       // return to the original size
       synthesizeMouse(document.documentElement, originalX + 5 + mouseX * scale,
-                      originalY + 5 + mouseY * scale, { type:"dblclick" });    }
+                      originalY + 5 + mouseY * scale, { type:"dblclick" });
       var newrect = document.getElementById(resizerid + "-container").getBoundingClientRect();
       is(Math.round(newrect.width), Math.round(rect.width), "resize element " + resizerid +
          " " + testid + " doubleclicking to restore original size");
       is(Math.round(newrect.height), Math.round(rect.height), "resize element " + resizerid +
          " " + testid + " doubleclicking to restore original size");
+    }
   }
 }
 

@@ -144,7 +144,7 @@ nsBoxObject::ClearCachedValues()
 }
 
 nsIFrame*
-nsBoxObject::GetFrame(PRBool aFlushLayout)
+nsBoxObject::GetFrame(bool aFlushLayout)
 {
   nsIPresShell* shell = GetPresShell(aFlushLayout);
   if (!shell)
@@ -167,7 +167,7 @@ nsBoxObject::GetFrame(PRBool aFlushLayout)
 }
 
 nsIPresShell*
-nsBoxObject::GetPresShell(PRBool aFlushLayout)
+nsBoxObject::GetPresShell(bool aFlushLayout)
 {
   if (!mContent) {
     return nsnull;

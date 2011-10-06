@@ -85,7 +85,7 @@ txLoadedDocumentsHash::~txLoadedDocumentsHash()
 }
 
 txExecutionState::txExecutionState(txStylesheet* aStylesheet,
-                                   PRBool aDisableLoads)
+                                   bool aDisableLoads)
     : mOutputHandler(nsnull),
       mResultHandler(nsnull),
       mStylesheet(aStylesheet),
@@ -317,7 +317,7 @@ txExecutionState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
     return NS_OK;
 }
 
-PRBool
+bool
 txExecutionState::isStripSpaceAllowed(const txXPathNode& aNode)
 {
     return mStylesheet->isStripSpaceAllowed(aNode, this);
@@ -362,19 +362,19 @@ txExecutionState::popEvalContext()
 }
 
 nsresult
-txExecutionState::pushBool(PRBool aBool)
+txExecutionState::pushBool(bool aBool)
 {
     return mBoolStack.AppendElement(aBool) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-PRBool
+bool
 txExecutionState::popBool()
 {
     NS_ASSERTION(mBoolStack.Length(), "popping from empty stack");
     PRUint32 last = mBoolStack.Length() - 1;
     NS_ENSURE_TRUE(last != (PRUint32)-1, PR_FALSE);
 
-    PRBool res = mBoolStack.ElementAt(last);
+    bool res = mBoolStack.ElementAt(last);
     mBoolStack.RemoveElementAt(last);
 
     return res;
@@ -467,7 +467,7 @@ nsresult
 txExecutionState::getKeyNodes(const txExpandedName& aKeyName,
                               const txXPathNode& aRoot,
                               const nsAString& aKeyValue,
-                              PRBool aIndexIfNotFound,
+                              bool aIndexIfNotFound,
                               txNodeSet** aResult)
 {
     return mKeyHash.getKeyNodes(aKeyName, aRoot, aKeyValue,

@@ -90,7 +90,7 @@ public:
         free(mAlternativeString);
     }
 
-    PRBool AllocateBuffers() {
+    bool AllocateBuffers() {
         return (mGlyphs.SetLength(mMaxGlyphs) &&
                 mClusters.SetLength(mItemLength + 1) &&
                 mAttr.SetLength(mMaxGlyphs));
@@ -182,7 +182,7 @@ public:
         }
     }
 
-    PRBool ShapingEnabled() {
+    bool ShapingEnabled() {
         return (mScriptItem->a.eScript != SCRIPT_UNDEFINED);
     }
     void DisableShaping() {
@@ -201,7 +201,7 @@ public:
         }
     }
 
-    PRBool IsGlyphMissing(SCRIPT_FONTPROPERTIES *aSFP, PRUint32 aGlyphIndex) {
+    bool IsGlyphMissing(SCRIPT_FONTPROPERTIES *aSFP, PRUint32 aGlyphIndex) {
         return (mGlyphs[aGlyphIndex] == aSFP->wgDefault);
     }
 
@@ -267,7 +267,7 @@ public:
         const PRUint32 appUnitsPerDevUnit = aRun->GetAppUnitsPerDevUnit();
         while (offset < mItemLength) {
             PRUint32 runOffset = offsetInRun + offset;
-            PRBool atClusterStart = aRun->IsClusterStart(runOffset);
+            bool atClusterStart = aRun->IsClusterStart(runOffset);
             if (offset > 0 && mClusters[offset] == mClusters[offset - 1]) {
                 g.SetComplex(atClusterStart, PR_FALSE, 0);
                 aRun->SetGlyphs(runOffset, g, nsnull);
@@ -276,7 +276,7 @@ public:
                 PRUint32 k = mClusters[offset];
                 PRUint32 glyphCount = mNumGlyphs - k;
                 PRUint32 nextClusterOffset;
-                PRBool missing = IsGlyphMissing(&sfp, k);
+                bool missing = IsGlyphMissing(&sfp, k);
                 for (nextClusterOffset = offset + 1; nextClusterOffset < mItemLength; ++nextClusterOffset) {
                     if (mClusters[nextClusterOffset] > k) {
                         glyphCount = mClusters[nextClusterOffset] - k;
@@ -394,7 +394,7 @@ private:
     int mNumGlyphs;
     PRUint32 mIVS;
 
-    PRPackedBool mFontSelected;
+    bool mFontSelected;
 };
 
 class Uniscribe
@@ -458,7 +458,7 @@ private:
 };
 
 
-PRBool
+bool
 gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
                                 gfxTextRun *aTextRun,
                                 const PRUnichar *aString,
@@ -468,7 +468,7 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
 {
     DCFromContext aDC(aContext);
  
-    PRBool result = PR_TRUE;
+    bool result = true;
     HRESULT rv;
 
     Uniscribe us(aString + aRunStart, aRunLength, aTextRun);

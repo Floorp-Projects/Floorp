@@ -96,9 +96,9 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     /**
      * Whether EOF needs to be suppressed
      */
-    PRBool                               mSuppressEOF;
+    bool                                 mSuppressEOF;
     
-    PRBool                               mReadingFromStage;
+    bool                                 mReadingFromStage;
     nsTArray<nsHtml5TreeOperation>       mOpQueue;
     nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
     nsTArray<nsHtml5PendingNotification> mPendingNotifications;
@@ -115,15 +115,15 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     /**
      * Whether the parser has started
      */
-    PRBool                        mStarted;
+    bool                          mStarted;
 
     nsHtml5TreeOpStage            mStage;
 
     eHtml5FlushState              mFlushState;
 
-    PRBool                        mRunFlushLoopOnStack;
+    bool                          mRunFlushLoopOnStack;
 
-    PRBool                        mCallContinueInterruptedParsingIfEnabled;
+    bool                          mCallContinueInterruptedParsingIfEnabled;
 
   public:
   
@@ -152,7 +152,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     /**
      * Emits EOF.
      */
-    NS_IMETHOD DidBuildModel(PRBool aTerminated);
+    NS_IMETHOD DidBuildModel(bool aTerminated);
 
     /**
      * Forwards to nsContentSink
@@ -209,7 +209,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       return mDocShell;
     }
 
-    PRBool IsScriptExecuting() {
+    bool IsScriptExecuting() {
       return IsScriptExecutingImpl();
     }
     
@@ -227,7 +227,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     
     void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, PRInt32 aLine);
 
-    PRBool IsScriptEnabled();
+    bool IsScriptEnabled();
 
     /**
      * Enables the fragment mode.
@@ -236,12 +236,12 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
      * executing; don't set to false when parsing a fragment directly into
      * a document--only when parsing to an actual DOM fragment
      */
-    void EnableFragmentMode(PRBool aPreventScriptExecution) {
+    void EnableFragmentMode(bool aPreventScriptExecution) {
       mFragmentMode = PR_TRUE;
       mPreventScriptExecution = aPreventScriptExecution;
     }
     
-    PRBool IsFragmentMode() {
+    bool IsFragmentMode() {
       return mFragmentMode;
     }
 
@@ -262,7 +262,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     }
 
     void PostPendingAppendNotification(nsIContent* aParent, nsIContent* aChild) {
-      PRBool newParent = PR_TRUE;
+      bool newParent = true;
       const nsIContentPtr* first = mElementsSeenInThisAppendBatch.Elements();
       const nsIContentPtr* last = first + mElementsSeenInThisAppendBatch.Length() - 1;
       for (const nsIContentPtr* iter = last; iter >= first; --iter) {
@@ -305,7 +305,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       mFlushState = eInDocUpdate;
     }
     
-    inline PRBool HaveNotified(nsIContent* aNode) {
+    inline bool HaveNotified(nsIContent* aNode) {
       NS_PRECONDITION(aNode, "HaveNotified called with null argument.");
       const nsHtml5PendingNotification* start = mPendingNotifications.Elements();
       const nsHtml5PendingNotification* end = start + mPendingNotifications.Length();
@@ -342,20 +342,20 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     void NeedsCharsetSwitchTo(const char* aEncoding, PRInt32 aSource);
     
-    PRBool IsComplete() {
+    bool IsComplete() {
       return !mParser;
     }
     
-    PRBool HasStarted() {
+    bool HasStarted() {
       return mStarted;
     }
     
-    PRBool IsFlushing() {
+    bool IsFlushing() {
       return mFlushState >= eInFlush;
     }
 
 #ifdef DEBUG
-    PRBool IsInFlushLoop() {
+    bool IsInFlushLoop() {
       return mRunFlushLoopOnStack;
     }
 #endif

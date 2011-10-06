@@ -94,25 +94,25 @@ public:
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
+                              bool aCompileEventHandlers);
 
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
-  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
-  virtual PRBool IsDoneAddingChildren();
+  virtual nsresult DoneAddingChildren(bool aHaveNotified);
+  virtual bool IsDoneAddingChildren();
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsGenericElement
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify);
+                                const nsAString* aValue, bool aNotify);
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  PRBool IsOnloadEventForWindow();
+  bool IsOnloadEventForWindow();
 
   // nsScriptElement
-  virtual PRBool HasScriptContent();
+  virtual bool HasScriptContent();
   virtual nsresult MaybeProcessScript();
 };
 
@@ -154,7 +154,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 nsresult
 nsHTMLScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
-                                PRBool aCompileEventHandlers)
+                                bool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
@@ -213,7 +213,7 @@ NS_IMPL_STRING_ATTR(nsHTMLScriptElement, HtmlFor, _for)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Event, event)
 
 nsresult
-nsHTMLScriptElement::GetAsync(PRBool* aValue)
+nsHTMLScriptElement::GetAsync(bool* aValue)
 {
   if (mForceAsync) {
     *aValue = PR_TRUE;
@@ -223,7 +223,7 @@ nsHTMLScriptElement::GetAsync(PRBool* aValue)
 }
 
 nsresult
-nsHTMLScriptElement::SetAsync(PRBool aValue)
+nsHTMLScriptElement::SetAsync(bool aValue)
 {
   mForceAsync = PR_FALSE;
   return SetBoolAttr(nsGkAtoms::async, aValue);
@@ -231,7 +231,7 @@ nsHTMLScriptElement::SetAsync(PRBool aValue)
 
 nsresult
 nsHTMLScriptElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                  const nsAString* aValue, PRBool aNotify)
+                                  const nsAString* aValue, bool aNotify)
 {
   if (nsGkAtoms::async == aName && kNameSpaceID_None == aNamespaceID) {
     mForceAsync = PR_FALSE;
@@ -254,7 +254,7 @@ nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
 }
 
 nsresult
-nsHTMLScriptElement::DoneAddingChildren(PRBool aHaveNotified)
+nsHTMLScriptElement::DoneAddingChildren(bool aHaveNotified)
 {
   mDoneAddingChildren = PR_TRUE;
   nsresult rv = MaybeProcessScript();
@@ -266,7 +266,7 @@ nsHTMLScriptElement::DoneAddingChildren(PRBool aHaveNotified)
   return rv;
 }
 
-PRBool
+bool
 nsHTMLScriptElement::IsDoneAddingChildren()
 {
   return mDoneAddingChildren;
@@ -309,7 +309,7 @@ nsHTMLScriptElement::FreezeUriAsyncDefer()
     // At this point mUri will be null for invalid URLs.
     mExternal = PR_TRUE;
 
-    PRBool defer, async;
+    bool defer, async;
     GetAsync(&async);
     GetDefer(&defer);
 
@@ -320,7 +320,7 @@ nsHTMLScriptElement::FreezeUriAsyncDefer()
   mFrozen = PR_TRUE;
 }
 
-PRBool
+bool
 nsHTMLScriptElement::HasScriptContent()
 {
   return (mFrozen ? mExternal : HasAttr(kNameSpaceID_None, nsGkAtoms::src)) ||

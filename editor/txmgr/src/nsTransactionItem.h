@@ -64,7 +64,7 @@ public:
 
   virtual nsresult AddChild(nsTransactionItem *aTransactionItem);
   virtual nsresult GetTransaction(nsITransaction **aTransaction);
-  virtual nsresult GetIsBatch(PRBool *aIsBatch);
+  virtual nsresult GetIsBatch(bool *aIsBatch);
   virtual nsresult GetNumberOfChildren(PRInt32 *aNumChildren);
   virtual nsresult GetChild(PRInt32 aIndex, nsTransactionItem **aChild);
 

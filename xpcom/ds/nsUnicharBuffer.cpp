@@ -103,7 +103,7 @@ UnicharBufferImpl::GetBuffer() const
   return mBuffer;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 UnicharBufferImpl::Grow(PRInt32 aNewSize)
 {
   if (PRUint32(aNewSize) < MIN_BUFFER_SIZE) {

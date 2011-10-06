@@ -216,7 +216,7 @@ nsresult // static
 nsFaviconService::InitTables(mozIStorageConnection* aDBConn)
 {
   nsresult rv;
-  PRBool exists = PR_FALSE;
+  bool exists = false;
   aDBConn->TableExists(NS_LITERAL_CSTRING("moz_favicons"), &exists);
   if (!exists) {
     rv = aDBConn->ExecuteSimpleSQL(CREATE_MOZ_FAVICONS);
@@ -271,13 +271,13 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
 
   nsresult rv;
   PRInt64 iconId = -1;
-  PRBool hasData = PR_FALSE;
+  bool hasData = false;
   {
     DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetIconInfo);
     rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), aFaviconURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool hasResult = PR_FALSE;
+    bool hasResult = false;
     if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
       // We already have an entry for this icon, just get its stats.
       rv = stmt->GetInt64(0, &iconId);
@@ -313,7 +313,7 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
       DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(getInfoStmt, mDBGetIconInfo);
       rv = URIBinder::Bind(getInfoStmt, NS_LITERAL_CSTRING("icon_url"), aFaviconURI);
       NS_ENSURE_SUCCESS(rv, rv);
-      PRBool hasResult;
+      bool hasResult;
       rv = getInfoStmt->ExecuteStep(&hasResult);
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
@@ -380,7 +380,7 @@ nsFaviconService::SendFaviconNotifications(nsIURI* aPageURI,
 NS_IMETHODIMP
 nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPageURI,
                                            nsIURI* aFaviconURI,
-                                           PRBool aForceReload,
+                                           bool aForceReload,
                                            nsIFaviconDataCallback* aCallback)
 {
   NS_ENSURE_ARG(aPageURI);
@@ -390,7 +390,7 @@ nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPageURI,
     return NS_OK;
 
   // If a favicon is in the failed cache, only load it during a forced reload.
-  PRBool previouslyFailed;
+  bool previouslyFailed;
   nsresult rv = IsFailedFavicon(aFaviconURI, &previouslyFailed);
   NS_ENSURE_SUCCESS(rv, rv);
   if (previouslyFailed) {
@@ -415,7 +415,7 @@ nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPageURI,
 NS_IMETHODIMP
 nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
                                             nsIURI* aFaviconURI,
-                                            PRBool aForceReload,
+                                            bool aForceReload,
                                             nsIFaviconDataCallback* aCallback)
 {
   return SetAndLoadFaviconForPage(aPageURI, aFaviconURI,
@@ -468,7 +468,7 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const PRUint8* aData,
     rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), aFaviconURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool hasResult;
+    bool hasResult;
     rv = stmt->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -586,7 +586,7 @@ nsFaviconService::GetFaviconData(nsIURI* aFaviconURI, nsACString& aMimeType,
   nsresult rv = GetDefaultFavicon(getter_AddRefs(defaultFaviconURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool isDefaultFavicon = PR_FALSE;
+  bool isDefaultFavicon = false;
   rv = defaultFaviconURI->Equals(aFaviconURI, &isDefaultFavicon);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -611,7 +611,7 @@ nsFaviconService::GetFaviconData(nsIURI* aFaviconURI, nsACString& aMimeType,
   rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), aFaviconURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasResult = PR_FALSE;
+  bool hasResult = false;
   if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     rv = stmt->GetUTF8String(1, aMimeType);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -694,7 +694,7 @@ nsFaviconService::GetFaviconForPage(nsIURI* aPageURI, nsIURI** _retval)
   nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aPageURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasResult;
+  bool hasResult;
   if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     nsCAutoString url;
     rv = stmt->GetUTF8String(1, url);
@@ -740,7 +740,7 @@ nsFaviconService::GetFaviconImageForPage(nsIURI* aPageURI, nsIURI** _retval)
   nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aPageURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasResult;
+  bool hasResult;
   nsCOMPtr<nsIURI> faviconURI;
   if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     PRInt32 dataLen;
@@ -829,7 +829,7 @@ nsFaviconService::RemoveFailedFavicon(nsIURI* aFaviconURI)
 
 
 NS_IMETHODIMP
-nsFaviconService::IsFailedFavicon(nsIURI* aFaviconURI, PRBool* _retval)
+nsFaviconService::IsFailedFavicon(nsIURI* aFaviconURI, bool* _retval)
 {
   NS_ENSURE_ARG(aFaviconURI);
   nsCAutoString spec;

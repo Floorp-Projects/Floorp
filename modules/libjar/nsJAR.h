@@ -113,7 +113,7 @@ class nsJAR : public nsIZipReader
         return mReleaseTime;
     }
     
-    PRBool IsReleased() {
+    bool IsReleased() {
         return mReleaseTime != PR_INTERVAL_NO_TIMEOUT;
     }
 
@@ -135,7 +135,7 @@ class nsJAR : public nsIZipReader
     nsCString                mOuterZipEntry;  // The entry in the zip this zip is reading from
     nsAutoPtr<nsZipArchive>  mZip;            // The underlying zip archive
     nsObjectHashtable        mManifestData;   // Stores metadata for each entry
-    PRBool                   mParsedManifest; // True if manifest has been parsed
+    bool                     mParsedManifest; // True if manifest has been parsed
     nsCOMPtr<nsIPrincipal>   mPrincipal;      // The entity which signed this file
     PRInt16                  mGlobalStatus;   // Global signature verification status
     PRIntervalTime           mReleaseTime;    // used by nsZipReaderCache for flushing entries
@@ -143,11 +143,11 @@ class nsJAR : public nsIZipReader
     mozilla::Mutex           mLock;	
     PRInt64                  mMtime;
     PRInt32                  mTotalItemsInManifest;
-    PRBool                   mOpened;
+    bool                     mOpened;
 
     nsresult ParseManifest();
     void     ReportError(const char* aFilename, PRInt16 errorCode);
-    nsresult LoadEntry(const char* aFilename, char** aBuf, 
+    nsresult LoadEntry(const nsACString &aFilename, char** aBuf, 
                        PRUint32* aBufLen = nsnull);
     PRInt32  ReadLine(const char** src); 
     nsresult ParseOneFile(const char* filebuf, PRInt16 aFileType);
@@ -182,8 +182,8 @@ private:
     PRUint32     mCrc32;
     PRTime       mLastModTime;
     PRUint16     mCompression;
-    PRPackedBool mIsDirectory; 
-    PRPackedBool mIsSynthetic;
+    bool mIsDirectory; 
+    bool mIsSynthetic;
 };
 
 /**

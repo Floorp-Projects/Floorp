@@ -72,7 +72,7 @@ struct nsID {
    * @return <b>PR_TRUE</b> if they are the same, <b>PR_FALSE</b> if not.
    */
 
-  inline PRBool Equals(const nsID& other) const {
+  inline bool Equals(const nsID& other) const {
     // First cast to void* in order to silence the alignment warnings.
     return
       ((PRUint64*)(void*) &m0)[0] == ((PRUint64*)(void*) &other.m0)[0] &&
@@ -83,7 +83,7 @@ struct nsID {
    * nsID Parsing method. Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
    * string into an nsID
    */
-  NS_COM_GLUE PRBool Parse(const char *aIDStr);
+  NS_COM_GLUE bool Parse(const char *aIDStr);
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
   /**

@@ -150,7 +150,7 @@ DOMSVGAnimatedLengthList::InternalAnimValListWillChangeTo(const SVGLengthList& a
   }
 }
 
-PRBool
+bool
 DOMSVGAnimatedLengthList::IsAnimating() const
 {
   return InternalAList().IsAnimating();

@@ -48,29 +48,29 @@ namespace dom {
 class AudioWriteEvent : public nsRunnable
 {
  public:
-  AudioWriteEvent(nsAudioStream* owner, nsCString data, PRUint32 count)
+  AudioWriteEvent(nsAudioStream* owner, nsCString data, PRUint32 frames)
   {
     mOwner = owner;
     mData  = data;
-    mCount = count;
+    mFrames = frames;
   }
 
   NS_IMETHOD Run()
   {
-    mOwner->Write(mData.get(), mCount);
+    mOwner->Write(mData.get(), mFrames);
     return NS_OK;
   }
 
  private:
     nsRefPtr<nsAudioStream> mOwner;
     nsCString mData;
-    PRUint32  mCount;
+    PRUint32  mFrames;
 };
 
 class AudioPauseEvent : public nsRunnable
 {
  public:
-  AudioPauseEvent(nsAudioStream* owner, PRBool aPause)
+  AudioPauseEvent(nsAudioStream* owner, bool aPause)
   {
     mOwner = owner;
     mPause = aPause;
@@ -87,7 +87,7 @@ class AudioPauseEvent : public nsRunnable
 
  private:
     nsRefPtr<nsAudioStream> mOwner;
-    PRBool mPause;
+    bool mPause;
 };
 
 class AudioStreamShutdownEvent : public nsRunnable
@@ -109,30 +109,30 @@ class AudioStreamShutdownEvent : public nsRunnable
 };
 
 
-class AudioMinWriteSampleDone : public nsRunnable
+class AudioMinWriteSizeDone : public nsRunnable
 {
  public:
-  AudioMinWriteSampleDone(AudioParent* owner, PRInt32 minSamples)
+  AudioMinWriteSizeDone(AudioParent* owner, PRInt32 minFrames)
   {
     mOwner = owner;
-    mMinSamples = minSamples;
+    mMinFrames = minFrames;
   }
 
   NS_IMETHOD Run()
   {
-    mOwner->SendMinWriteSampleDone(mMinSamples);
+    mOwner->SendMinWriteSizeDone(mMinFrames);
     return NS_OK;
   }
 
  private:
     nsRefPtr<AudioParent> mOwner;
-    PRInt32 mMinSamples;
+    PRInt32 mMinFrames;
 };
 
-class AudioMinWriteSampleEvent : public nsRunnable
+class AudioMinWriteSizeEvent : public nsRunnable
 {
  public:
-  AudioMinWriteSampleEvent(AudioParent* parent, nsAudioStream* owner)
+  AudioMinWriteSizeEvent(AudioParent* parent, nsAudioStream* owner)
   {
     mParent = parent;
     mOwner = owner;
@@ -140,8 +140,8 @@ class AudioMinWriteSampleEvent : public nsRunnable
 
   NS_IMETHOD Run()
   {
-    PRInt32 minSamples = mOwner->GetMinWriteSamples();
-    nsCOMPtr<nsIRunnable> event = new AudioMinWriteSampleDone(mParent, minSamples);
+    PRInt32 minFrames = mOwner->GetMinWriteSize();
+    nsCOMPtr<nsIRunnable> event = new AudioMinWriteSizeDone(mParent, minFrames);
     NS_DispatchToMainThread(event);
     return NS_OK;
   }
@@ -202,19 +202,17 @@ AudioParent::Notify(nsITimer* timer)
   }
 
   NS_ASSERTION(mStream, "AudioStream not initialized.");
-  PRInt64 offset = mStream->GetSampleOffset();
-  unused << SendSampleOffsetUpdate(offset, PR_IntervalNow());
+  PRInt64 position = mStream->GetPositionInFrames();
+  unused << SendPositionInFramesUpdate(position, PR_IntervalNow());
   return NS_OK;
 }
 
 bool
-AudioParent::RecvWrite(
-        const nsCString& data,
-        const PRUint32& count)
+AudioParent::RecvWrite(const nsCString& data, const PRUint32& frames)
 {
   if (!mStream)
     return false;
-  nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(mStream, data, count);
+  nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(mStream, data, frames);
   nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
   return true;
@@ -230,11 +228,11 @@ AudioParent::RecvSetVolume(const float& aVolume)
 }
 
 bool
-AudioParent::RecvMinWriteSample()
+AudioParent::RecvMinWriteSize()
 {
   if (!mStream)
     return false;
-  nsCOMPtr<nsIRunnable> event = new AudioMinWriteSampleEvent(this, mStream);
+  nsCOMPtr<nsIRunnable> event = new AudioMinWriteSizeEvent(this, mStream);
   nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
   return true;
@@ -282,10 +280,10 @@ AudioParent::RecvShutdown()
 }
 
 bool
-AudioParent::SendMinWriteSampleDone(PRInt32 minSamples)
+AudioParent::SendMinWriteSizeDone(PRInt32 minFrames)
 {
   if (mIPCOpen)
-    return PAudioParent::SendMinWriteSampleDone(minSamples);
+    return PAudioParent::SendMinWriteSizeDone(minFrames);
   return true;
 }
 

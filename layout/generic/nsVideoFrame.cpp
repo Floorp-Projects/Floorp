@@ -163,7 +163,7 @@ nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
-PRBool
+bool
 nsVideoFrame::IsLeaf() const
 {
   return PR_TRUE;
@@ -504,7 +504,7 @@ nsSize nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                      nsSize aMargin,
                                      nsSize aBorder,
                                      nsSize aPadding,
-                                     PRBool aShrinkWrap)
+                                     bool aShrinkWrap)
 {
   nsSize size = GetVideoIntrinsicSize(aRenderingContext);
 
@@ -543,7 +543,7 @@ nsSize nsVideoFrame::GetIntrinsicRatio()
   return GetVideoIntrinsicSize(nsnull);
 }
 
-PRBool nsVideoFrame::ShouldDisplayPoster()
+bool nsVideoFrame::ShouldDisplayPoster()
 {
   if (!HasVideoElement())
     return PR_FALSE;
@@ -610,7 +610,7 @@ nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
 }
 
 nsresult
-nsVideoFrame::UpdatePosterSource(PRBool aNotify)
+nsVideoFrame::UpdatePosterSource(bool aNotify)
 {
   NS_ASSERTION(HasVideoElement(), "Only call this on <video> elements.");
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
@@ -639,12 +639,12 @@ nsVideoFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                             aModType);
 }
 
-PRBool nsVideoFrame::HasVideoElement() {
+bool nsVideoFrame::HasVideoElement() {
   nsCOMPtr<nsIDOMHTMLVideoElement> videoDomElement = do_QueryInterface(mContent);
   return videoDomElement != nsnull;
 }
 
-PRBool nsVideoFrame::HasVideoData()
+bool nsVideoFrame::HasVideoData()
 {
   if (!HasVideoElement())
     return PR_FALSE;

@@ -1,0 +1,109 @@
+<html>
+
+<head>
+  <title>Accessible focus testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      // first item is focused until there's selection
+      gQueue.push(new synthFocus("list", new focusChecker("orange")));
+
+      // item is selected and stays focused
+      gQueue.push(new synthDownKey("list", new nofocusChecker()));
+
+      // last selected item is focused
+      gQueue.push(new synthDownKey("list", new focusChecker("apple"), { shiftKey: true }));
+
+      // no focus event if nothing is changed
+      gQueue.push(new synthDownKey("list", new nofocusChecker("apple")));
+
+      // current item is focused
+      gQueue.push(new synthUpKey("list", new focusChecker("orange"), { ctrlKey: true }));
+
+      // focus on empty list (no items to be focused)
+      gQueue.push(new synthTab("list", new focusChecker("emptylist")));
+
+      // current item is focused
+      gQueue.push(new synthShiftTab("emptylist", new focusChecker("orange")));
+
+      // collapsed combobox keeps a focus
+      gQueue.push(new synthFocus("combobox", new focusChecker("combobox")));
+      gQueue.push(new synthDownKey("combobox", new nofocusChecker("combobox")));
+
+      // selected item is focused for expanded combobox
+      gQueue.push(new synthOpenComboboxKey("combobox", new focusChecker("cb_apple")));
+      gQueue.push(new synthUpKey("combobox", new focusChecker("cb_orange")));
+
+      // collapsed combobx keeps a focus
+      gQueue.push(new synthEscapeKey("combobox", new focusChecker("combobox")));
+
+      // no focus events for unfocused list controls when current item is
+      // changed
+      gQueue.push(new synthFocus("emptylist"));
+
+      gQueue.push(new changeCurrentItem("list", "orange"));
+      gQueue.push(new changeCurrentItem("combobox", "cb_apple"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=433418"
+     title="Accessibles for focused HTML Select elements are not getting focused state">
+    Mozilla Bug 433418
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=474893"
+     title="List controls should fire a focus event on the selected child when tabbing or when the selected child changes while the list is focused">
+    Mozilla Bug 474893
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <select id="list" size="5" multiple="">
+    <option id="orange">Orange</option>
+    <option id="apple">Apple</option>
+  </select>
+
+  <select id="emptylist" size="5"></select>
+
+  <select id="combobox">
+    <option id="cb_orange">Orange</option>
+    <option id="cb_apple">Apple</option>
+  </select>
+
+  <div id="eventdump"></div>
+</body>
+</html>

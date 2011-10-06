@@ -232,7 +232,7 @@ Row::GetBlob(PRUint32 aIndex,
 
 NS_IMETHODIMP
 Row::GetIsNull(PRUint32 aIndex,
-               PRBool *_isNull)
+               bool *_isNull)
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
   NS_ENSURE_ARG_POINTER(_isNull);

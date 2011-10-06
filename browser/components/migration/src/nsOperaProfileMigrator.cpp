@@ -109,7 +109,7 @@ NS_IMETHODIMP
 nsOperaProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
-  PRBool aReplace = aStartup ? PR_TRUE : PR_FALSE;
+  bool aReplace = aStartup ? true : false;
 
   if (aStartup) {
     rv = aStartup->DoStartup();
@@ -133,7 +133,7 @@ nsOperaProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup, co
 
 NS_IMETHODIMP
 nsOperaProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
-                                       PRBool aReplace,
+                                       bool aReplace,
                                        PRUint16* aResult)
 {
   *aResult = 0;
@@ -164,7 +164,7 @@ nsOperaProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
 }
 
 NS_IMETHODIMP
-nsOperaProfileMigrator::GetSourceExists(PRBool* aResult)
+nsOperaProfileMigrator::GetSourceExists(bool* aResult)
 {
   nsCOMPtr<nsISupportsArray> profiles;
   GetSourceProfiles(getter_AddRefs(profiles));
@@ -181,7 +181,7 @@ nsOperaProfileMigrator::GetSourceExists(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsOperaProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
+nsOperaProfileMigrator::GetSourceHasMultipleProfiles(bool* aResult)
 {
   nsCOMPtr<nsISupportsArray> profiles;
   GetSourceProfiles(getter_AddRefs(profiles));
@@ -221,13 +221,13 @@ nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
     if (NS_FAILED(rv))
       return rv;
 
-    PRBool hasMore;
+    bool hasMore;
     e->HasMoreElements(&hasMore);
     while (hasMore) {
       nsCOMPtr<nsILocalFile> curr;
       e->GetNext(getter_AddRefs(curr));
 
-      PRBool isDirectory = PR_FALSE;
+      bool isDirectory = false;
       curr->IsDirectory(&isDirectory);
       if (isDirectory) {
         nsCOMPtr<nsISupportsString> string(do_CreateInstance("@mozilla.org/supports-string;1"));
@@ -245,7 +245,7 @@ nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
     file->Append(NS_LITERAL_STRING("Preferences"));
     file->Append(OPERA_PREFERENCES_FOLDER_NAME);
     
-    PRBool exists;
+    bool exists;
     file->Exists(&exists);
     
     if (exists) {
@@ -258,7 +258,7 @@ nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
     
     file->Append(OPERA_PREFERENCES_FOLDER_NAME);
     
-    PRBool exists;
+    bool exists;
     file->Exists(&exists);
     
     if (exists) {
@@ -389,7 +389,7 @@ nsOperaProfileMigrator::SetString(void* aTransform, nsIPrefBranch* aBranch)
 }
 
 nsresult
-nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
+nsOperaProfileMigrator::CopyPreferences(bool aReplace)
 {
   nsresult rv;
 
@@ -585,7 +585,7 @@ nsOperaProfileMigrator::CopyUserContentSheet(nsINIParser &aParser)
   if (NS_FAILED(rv))
     return NS_OK;
 
-  PRBool exists;
+  bool exists;
   rv = userContentCSSFile->Exists(&exists);
   if (NS_FAILED(rv) || !exists)
     return NS_OK;
@@ -603,7 +603,7 @@ nsOperaProfileMigrator::CopyUserContentSheet(nsINIParser &aParser)
 }
 
 nsresult
-nsOperaProfileMigrator::CopyCookies(PRBool aReplace)
+nsOperaProfileMigrator::CopyCookies(bool aReplace)
 {
   nsresult rv = NS_OK;
 
@@ -989,7 +989,7 @@ nsOperaProfileMigrator::RunBatched(nsISupports* aUserData)
 }
 
 nsresult
-nsOperaProfileMigrator::CopyHistory(PRBool aReplace) 
+nsOperaProfileMigrator::CopyHistory(bool aReplace) 
 {
   nsresult rv;
   nsCOMPtr<nsINavHistoryService> history =
@@ -1011,7 +1011,7 @@ nsOperaProfileMigrator::CopyHistory(PRBool aReplace)
 }
  
 nsresult
-nsOperaProfileMigrator::CopyHistoryBatched(PRBool aReplace) 
+nsOperaProfileMigrator::CopyHistoryBatched(bool aReplace) 
 {
   nsCOMPtr<nsIBrowserHistory> hist(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
 
@@ -1029,7 +1029,7 @@ nsOperaProfileMigrator::CopyHistoryBatched(PRBool aReplace)
   nsCAutoString buffer, url;
   nsAutoString title;
   PRTime lastVisitDate;
-  PRBool moreData = PR_FALSE;
+  bool moreData = false;
 
   enum { TITLE, URL, LASTVISIT } state = TITLE;
 
@@ -1073,7 +1073,7 @@ nsOperaProfileMigrator::CopyHistoryBatched(PRBool aReplace)
 }
 
 nsresult
-nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
+nsOperaProfileMigrator::CopyBookmarks(bool aReplace)
 {
   nsresult rv;
   nsCOMPtr<nsINavBookmarksService> bookmarks =
@@ -1095,7 +1095,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
 }
 
 nsresult
-nsOperaProfileMigrator::CopyBookmarksBatched(PRBool aReplace)
+nsOperaProfileMigrator::CopyBookmarksBatched(bool aReplace)
 {
   // Find Opera Bookmarks
   nsCOMPtr<nsIFile> operaBookmarks;
@@ -1335,12 +1335,12 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
                                              nsINavBookmarksService* aBMS)
 {
   nsresult rv;
-  PRBool moreData = PR_FALSE;
+  bool moreData = false;
   nsAutoString buffer;
   EntryType entryType = EntryType_BOOKMARK;
   nsAutoString keyword, description;
   nsCAutoString url, name;
-  PRBool onToolbar = PR_FALSE;
+  bool onToolbar = false;
   do {
     nsCAutoString cBuffer;
     rv = aStream->ReadLine(cBuffer, &moreData);

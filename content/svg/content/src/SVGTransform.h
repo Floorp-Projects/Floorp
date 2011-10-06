@@ -67,7 +67,7 @@ public:
     , mType(nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX)
   { }
 
-  PRBool operator==(const SVGTransform& rhs) const {
+  bool operator==(const SVGTransform& rhs) const {
     return mType == rhs.mType &&
       MatricesEqual(mMatrix, rhs.mMatrix) &&
       mAngle == rhs.mAngle &&
@@ -97,7 +97,7 @@ public:
   nsresult SetSkewY(float aAngle);
 
 protected:
-  static PRBool MatricesEqual(const gfxMatrix& a, const gfxMatrix& b)
+  static bool MatricesEqual(const gfxMatrix& a, const gfxMatrix& b)
   {
     return a.xx == b.xx &&
            a.yx == b.yx &&
@@ -175,7 +175,7 @@ public:
   SVGTransformSMILData(const SVGTransform& aTransform);
   SVGTransform ToSVGTransform() const;
 
-  PRBool operator==(const SVGTransformSMILData& aOther) const
+  bool operator==(const SVGTransformSMILData& aOther) const
   {
     if (mTransformType != aOther.mTransformType)
       return PR_FALSE;
@@ -189,7 +189,7 @@ public:
     return PR_TRUE;
   }
 
-  PRBool operator!=(const SVGTransformSMILData& aOther) const
+  bool operator!=(const SVGTransformSMILData& aOther) const
   {
     return !(*this == aOther);
   }

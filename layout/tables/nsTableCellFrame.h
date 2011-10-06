@@ -115,7 +115,7 @@ public:
 
   virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState);
 
-  virtual PRBool NeedsToObserve(const nsHTMLReflowState& aReflowState);
+  virtual bool NeedsToObserve(const nsHTMLReflowState& aReflowState);
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame
@@ -149,8 +149,6 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual PRBool IsContainingBlock() const;
-
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -164,11 +162,11 @@ public:
    */
   PRUint8 GetVerticalAlign() const;
 
-  PRBool HasVerticalAlignBaseline() const {
+  bool HasVerticalAlignBaseline() const {
     return GetVerticalAlign() == NS_STYLE_VERTICAL_ALIGN_BASELINE;
   }
 
-  PRBool CellHasVisibleContent(nscoord       height,
+  bool CellHasVisibleContent(nscoord       height,
                                nsTableFrame* tableFrame,
                                nsIFrame*     kidFrame);
 
@@ -224,11 +222,11 @@ public:
   /** set the desired size returned by this frame during its last reflow */
   inline void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
 
-  PRBool GetContentEmpty();
-  void SetContentEmpty(PRBool aContentEmpty);
+  bool GetContentEmpty();
+  void SetContentEmpty(bool aContentEmpty);
 
-  PRBool HasPctOverHeight();
-  void SetHasPctOverHeight(PRBool aValue);
+  bool HasPctOverHeight();
+  void SetHasPctOverHeight(bool aValue);
 
   nsTableCellFrame* GetNextCell() const;
 
@@ -278,13 +276,13 @@ inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesire
   mDesiredSize.height = aDesiredSize.height;
 }
 
-inline PRBool nsTableCellFrame::GetContentEmpty()
+inline bool nsTableCellFrame::GetContentEmpty()
 {
   return (mState & NS_TABLE_CELL_CONTENT_EMPTY) ==
          NS_TABLE_CELL_CONTENT_EMPTY;
 }
 
-inline void nsTableCellFrame::SetContentEmpty(PRBool aContentEmpty)
+inline void nsTableCellFrame::SetContentEmpty(bool aContentEmpty)
 {
   if (aContentEmpty) {
     mState |= NS_TABLE_CELL_CONTENT_EMPTY;
@@ -293,13 +291,13 @@ inline void nsTableCellFrame::SetContentEmpty(PRBool aContentEmpty)
   }
 }
 
-inline PRBool nsTableCellFrame::HasPctOverHeight()
+inline bool nsTableCellFrame::HasPctOverHeight()
 {
   return (mState & NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT) ==
          NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
 }
 
-inline void nsTableCellFrame::SetHasPctOverHeight(PRBool aValue)
+inline void nsTableCellFrame::SetHasPctOverHeight(bool aValue)
 {
   if (aValue) {
     mState |= NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
@@ -321,7 +319,7 @@ public:
   virtual nsIAtom* GetType() const;
 
   virtual nsMargin GetUsedBorder() const;
-  virtual PRBool GetBorderRadii(nscoord aRadii[8]) const;
+  virtual bool GetBorderRadii(nscoord aRadii[8]) const;
 
   // Get the *inner half of the border only*, in twips.
   virtual nsMargin* GetBorderWidth(nsMargin& aBorder) const;

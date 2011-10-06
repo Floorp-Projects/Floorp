@@ -73,28 +73,28 @@
 PR_STATIC_ASSERT((((1 << nsStyleStructID_Length) - 1) &
                   ~(NS_STYLE_INHERIT_MASK)) == 0);
 
-inline PRBool IsFixedUnit(const nsStyleCoord& aCoord, PRBool aEnumOK)
+inline bool IsFixedUnit(const nsStyleCoord& aCoord, bool aEnumOK)
 {
   return aCoord.ConvertsToLength() || 
          (aEnumOK && aCoord.GetUnit() == eStyleUnit_Enumerated);
 }
 
-static PRBool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
+static bool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
 {
-  PRBool eq;
+  bool eq;
   return aURI1 == aURI2 ||    // handle null==null, and optimize
          (aURI1 && aURI2 &&
           NS_SUCCEEDED(aURI1->Equals(aURI2, &eq)) && // not equal on fail
           eq);
 }
 
-static PRBool EqualURIs(nsCSSValue::URL *aURI1, nsCSSValue::URL *aURI2)
+static bool EqualURIs(nsCSSValue::URL *aURI1, nsCSSValue::URL *aURI2)
 {
   return aURI1 == aURI2 ||    // handle null==null, and optimize
          (aURI1 && aURI2 && aURI1->URIEquals(*aURI2));
 }
 
-static PRBool EqualImages(imgIRequest *aImage1, imgIRequest* aImage2)
+static bool EqualImages(imgIRequest *aImage1, imgIRequest* aImage2)
 {
   if (aImage1 == aImage2) {
     return PR_TRUE;
@@ -224,7 +224,7 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
   return NS_STYLE_HINT_REFLOW;
 }
 
-static PRBool IsFixedData(const nsStyleSides& aSides, PRBool aEnumOK)
+static bool IsFixedData(const nsStyleSides& aSides, bool aEnumOK)
 {
   NS_FOR_CSS_SIDES(side) {
     if (!IsFixedUnit(aSides.Get(side), aEnumOK))
@@ -413,7 +413,7 @@ nsBorderColors::~nsBorderColors()
 }
 
 nsBorderColors*
-nsBorderColors::Clone(PRBool aDeep) const
+nsBorderColors::Clone(bool aDeep) const
 {
   nsBorderColors* result = new nsBorderColors(mColor);
   if (NS_UNLIKELY(!result))
@@ -547,7 +547,7 @@ nsChangeHint nsStyleBorder::MaxDifference()
 }
 #endif
 
-PRBool
+bool
 nsStyleBorder::ImageBorderDiffers() const
 {
   return mComputedBorder !=
@@ -646,9 +646,9 @@ nsStyleOutline::RecalcData(nsPresContext* aContext)
 
 nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
 {
-  PRBool outlineWasVisible =
+  bool outlineWasVisible =
     mCachedOutlineWidth > 0 && mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
-  PRBool outlineIsVisible = 
+  bool outlineIsVisible = 
     aOther.mCachedOutlineWidth > 0 && aOther.mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
   if (outlineWasVisible != outlineIsVisible ||
       (outlineIsVisible && (mOutlineOffset != aOther.mOutlineOffset ||
@@ -909,7 +909,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mTextRendering = aSource.mTextRendering;
 }
 
-static PRBool PaintURIChanged(const nsStyleSVGPaint& aPaint1,
+static bool PaintURIChanged(const nsStyleSVGPaint& aPaint1,
                               const nsStyleSVGPaint& aPaint2)
 {
   if (aPaint1.mType != aPaint2.mType) {
@@ -1092,7 +1092,7 @@ nsStyleSVGPaint& nsStyleSVGPaint::operator=(const nsStyleSVGPaint& aOther)
   return *this;
 }
 
-PRBool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
+bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
 {
   if (mType != aOther.mType)
     return PR_FALSE;
@@ -1190,7 +1190,7 @@ nsChangeHint nsStylePosition::MaxDifference()
 }
 #endif
 
-/* static */ PRBool
+/* static */ bool
 nsStylePosition::WidthCoordDependsOnContainer(const nsStyleCoord &aCoord)
 {
   return aCoord.GetUnit() == eStyleUnit_Auto ||
@@ -1338,7 +1338,7 @@ nsChangeHint nsStyleColor::MaxDifference()
 // --------------------
 // nsStyleGradient
 //
-PRBool
+bool
 nsStyleGradient::operator==(const nsStyleGradient& aOther) const
 {
   NS_ABORT_IF_FALSE(mSize == NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER ||
@@ -1375,7 +1375,7 @@ nsStyleGradient::nsStyleGradient(void)
 {
 }
 
-PRBool
+bool
 nsStyleGradient::IsOpaque()
 {
   for (PRUint32 i = 0; i < mStops.Length(); i++) {
@@ -1573,9 +1573,9 @@ ConvertToPixelCoord(const nsStyleCoord& aCoord, PRInt32 aPercentScale)
   return NS_lround(pixelValue);
 }
 
-PRBool
+bool
 nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
-                                    PRBool* aIsEntireImage) const
+                                    bool* aIsEntireImage) const
 {
   if (mType != eStyleImageType_Image)
     return PR_FALSE;
@@ -1614,7 +1614,7 @@ nsStyleImage::RequestDecode() const
   return NS_OK;
 }
 
-PRBool
+bool
 nsStyleImage::IsOpaque() const
 {
   if (!IsComplete())
@@ -1633,7 +1633,7 @@ nsStyleImage::IsOpaque() const
   NS_ABORT_IF_FALSE(imageContainer, "IsComplete() said image container is ready");
 
   // Check if the crop region of the current image frame is opaque
-  PRBool isOpaque;
+  bool isOpaque;
   if (NS_SUCCEEDED(imageContainer->GetCurrentFrameIsOpaque(&isOpaque)) &&
       isOpaque) {
     if (!mCropRect)
@@ -1642,7 +1642,7 @@ nsStyleImage::IsOpaque() const
     // Must make sure if mCropRect contains at least a pixel.
     // XXX Is this optimization worth it? Maybe I should just return PR_FALSE.
     nsIntRect actualCropRect;
-    PRBool rv = ComputeActualCropRect(actualCropRect);
+    bool rv = ComputeActualCropRect(actualCropRect);
     NS_ASSERTION(rv, "ComputeActualCropRect() can not fail here");
     return rv && !actualCropRect.IsEmpty();
   }
@@ -1650,7 +1650,7 @@ nsStyleImage::IsOpaque() const
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsStyleImage::IsComplete() const
 {
   switch (mType) {
@@ -1672,14 +1672,14 @@ nsStyleImage::IsComplete() const
   }
 }
 
-static inline PRBool
+static inline bool
 EqualRects(const nsStyleSides* aRect1, const nsStyleSides* aRect2)
 {
   return aRect1 == aRect2 || /* handles null== null, and optimize */
          (aRect1 && aRect2 && *aRect1 == *aRect2);
 }
 
-PRBool
+bool
 nsStyleImage::operator==(const nsStyleImage& aOther) const
 {
   if (mType != aOther.mType)
@@ -1804,7 +1804,7 @@ nsChangeHint nsStyleBackground::MaxDifference()
 }
 #endif
 
-PRBool nsStyleBackground::HasFixedBackground() const
+bool nsStyleBackground::HasFixedBackground() const
 {
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, this) {
     const Layer &layer = mLayers[i];
@@ -1816,7 +1816,7 @@ PRBool nsStyleBackground::HasFixedBackground() const
   return PR_FALSE;
 }
 
-PRBool nsStyleBackground::IsTransparent() const
+bool nsStyleBackground::IsTransparent() const
 {
   return BottomLayer().mImage.IsEmpty() &&
          mImageCount == 1 &&
@@ -1958,7 +1958,7 @@ nsStyleBackground::Layer::SetInitialValues()
   mImage.SetNull();
 }
 
-PRBool
+bool
 nsStyleBackground::Layer::RenderingMightDependOnFrameSize() const
 {
   // Do we even have an image?
@@ -1969,7 +1969,7 @@ nsStyleBackground::Layer::RenderingMightDependOnFrameSize() const
   return mPosition.DependsOnFrameSize() || mSize.DependsOnFrameSize(mImage);
 }
 
-PRBool
+bool
 nsStyleBackground::Layer::operator==(const Layer& aOther) const
 {
   return mAttachment == aOther.mAttachment &&
@@ -2385,14 +2385,14 @@ nsStyleContentData& nsStyleContentData::operator=(const nsStyleContentData& aOth
   return *this;
 }
 
-PRBool nsStyleContentData::operator==(const nsStyleContentData& aOther) const
+bool nsStyleContentData::operator==(const nsStyleContentData& aOther) const
 {
   if (mType != aOther.mType)
     return PR_FALSE;
   if (mType == eStyleContentType_Image) {
     if (!mContent.mImage || !aOther.mContent.mImage)
       return mContent.mImage == aOther.mContent.mImage;
-    PRBool eq;
+    bool eq;
     nsCOMPtr<nsIURI> thisURI, otherURI;
     mContent.mImage->GetURI(getter_AddRefs(thisURI));
     aOther.mContent.mImage->GetURI(getter_AddRefs(otherURI));
@@ -2740,7 +2740,7 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
 
     // Repaint for decoration color changes
     nscolor decColor, otherDecColor;
-    PRBool isFG, otherIsFG;
+    bool isFG, otherIsFG;
     GetDecorationColor(decColor, isFG);
     aOther.GetDecorationColor(otherDecColor, otherIsFG);
     if (isFG != otherIsFG || (!isFG && decColor != otherDecColor)) {

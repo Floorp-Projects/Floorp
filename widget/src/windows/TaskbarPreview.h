@@ -76,8 +76,11 @@ protected:
   // Detaches this preview from the nsWindow instance it's tied to
   virtual void DetachFromNSWindow();
 
+  // Determines if the window is available and a destroy has not yet started
+  bool IsWindowAvailable() const;
+
   // Marks this preview as being active
-  virtual nsresult ShowActive(PRBool active) = 0;
+  virtual nsresult ShowActive(bool active) = 0;
   // Gets a reference to the window used to handle the preview messages
   virtual HWND& PreviewWindow() = 0;
 
@@ -87,13 +90,13 @@ protected:
   // Returns whether or not the taskbar icon has been created for mWnd The
   // ITaskbarList4 API requires that we wait until the icon has been created
   // before we can call its methods.
-  PRBool CanMakeTaskbarCalls();
+  bool CanMakeTaskbarCalls();
 
   // Gets the WindowHook for the nsWindow
   WindowHook &GetWindowHook();
 
   // Enables/disables custom drawing for the given window
-  static void EnableCustomDrawing(HWND aHWND, PRBool aEnable);
+  static void EnableCustomDrawing(HWND aHWND, bool aEnable);
 
   // MSCOM Taskbar interface
   nsRefPtr<ITaskbarList4> mTaskbar;
@@ -102,7 +105,7 @@ protected:
   // The HWND to the nsWindow that this object previews
   HWND                    mWnd;
   // Whether or not this preview is visible
-  PRBool                  mVisible;
+  bool                    mVisible;
 
 private:
   // Called when the tooltip should be updated
@@ -110,10 +113,10 @@ private:
 
   // Requests the controller to draw into a canvas of the given width and
   // height. The resulting bitmap is sent to the DWM to display.
-  void DrawBitmap(PRUint32 width, PRUint32 height, PRBool isPreview);
+  void DrawBitmap(PRUint32 width, PRUint32 height, bool isPreview);
 
   // WindowHook procedure for hooking mWnd
-  static PRBool MainWindowHook(void *aContext,
+  static bool MainWindowHook(void *aContext,
                                HWND hWnd, UINT nMsg,
                                WPARAM wParam, LPARAM lParam,
                                LRESULT *aResult);

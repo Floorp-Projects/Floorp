@@ -133,19 +133,19 @@ nsSelectionState::RestoreSelection(nsISelection *aSel)
   return NS_OK;
 }
 
-PRBool
+bool
 nsSelectionState::IsCollapsed()
 {
   if (1 != mArray.Length()) return PR_FALSE;
   nsCOMPtr<nsIDOMRange> range;
   mArray[0].GetRange(address_of(range));
   NS_ENSURE_TRUE(range, PR_FALSE);
-  PRBool bIsCollapsed = PR_FALSE;
+  bool bIsCollapsed = false;
   range->GetCollapsed(&bIsCollapsed);
   return bIsCollapsed;
 }
 
-PRBool
+bool
 nsSelectionState::IsEqual(nsSelectionState *aSelState)
 {
   NS_ENSURE_TRUE(aSelState, PR_FALSE);
@@ -178,7 +178,7 @@ nsSelectionState::MakeEmpty()
   mArray.Clear();
 }
 
-PRBool   
+bool     
 nsSelectionState::IsEmpty()
 {
   return mArray.IsEmpty();

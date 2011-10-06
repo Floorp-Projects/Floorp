@@ -49,7 +49,7 @@ class NS_STACK_CLASS mozAutoDocUpdate
 {
 public:
   mozAutoDocUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType,
-                   PRBool aNotify) :
+                   bool aNotify) :
     mDocument(aNotify ? aDocument : nsnull),
     mUpdateType(aUpdateType)
   {
@@ -96,7 +96,7 @@ class NS_STACK_CLASS mozAutoDocConditionalContentUpdateBatch
 {
 public:
   mozAutoDocConditionalContentUpdateBatch(nsIDocument* aDocument,
-                                          PRBool aNotify) :
+                                          bool aNotify) :
     mDocument(aNotify ? aDocument : nsnull)
   {
     if (mDocument) {

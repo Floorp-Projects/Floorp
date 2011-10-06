@@ -84,11 +84,11 @@ public:
 
 protected:
      
-    PRBool      CanFindNext()
+    bool        CanFindNext()
                 { return mSearchString.Length() != 0; }
 
-    nsresult    SearchInFrame(nsIDOMWindow* aWindow, PRBool aWrapping,
-                              PRBool* didFind);
+    nsresult    SearchInFrame(nsIDOMWindow* aWindow, bool aWrapping,
+                              bool* didFind);
 
     nsresult    OnStartSearchFrame(nsIDOMWindow *aWindow);
     nsresult    OnEndSearchFrame(nsIDOMWindow *aWindow);
@@ -109,7 +109,7 @@ protected:
                                 nsIDOMRange* aEndPt,
                                 nsIDOMDocument* aDoc,
                                 nsISelection* aSel,
-                                PRBool aWrap);
+                                bool aWrap);
     nsresult    SetRangeAroundDocument(nsIDOMRange* aSearchRange,
                                        nsIDOMRange* aStartPoint,
                                        nsIDOMRange* aEndPoint,
@@ -119,13 +119,13 @@ protected:
 
     nsString        mSearchString;
     
-    PRPackedBool    mFindBackwards;
-    PRPackedBool    mWrapFind;
-    PRPackedBool    mEntireWord;
-    PRPackedBool    mMatchCase;
+    bool            mFindBackwards;
+    bool            mWrapFind;
+    bool            mEntireWord;
+    bool            mMatchCase;
     
-    PRPackedBool    mSearchSubFrames;
-    PRPackedBool    mSearchParentFrames;
+    bool            mSearchSubFrames;
+    bool            mSearchParentFrames;
 
     nsWeakPtr       mCurrentSearchFrame;    // who knows if windows can go away during our lifetime, hence weak
     nsWeakPtr       mRootSearchFrame;       // who knows if windows can go away during our lifetime, hence weak

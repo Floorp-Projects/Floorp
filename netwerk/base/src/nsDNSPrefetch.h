@@ -54,7 +54,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDNSLISTENER
   
-    nsDNSPrefetch(nsIURI *aURI, PRBool storeTiming);
+    nsDNSPrefetch(nsIURI *aURI, bool storeTiming);
     bool TimingsValid() const {
         return !mStartTimestamp.IsNull() && !mEndTimestamp.IsNull();
     }
@@ -72,7 +72,7 @@ public:
   
 private:
     nsCString mHostname;
-    PRBool mStoreTiming;
+    bool mStoreTiming;
     mozilla::TimeStamp mStartTimestamp;
     mozilla::TimeStamp mEndTimestamp;
 

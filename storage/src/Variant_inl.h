@@ -166,7 +166,7 @@ Variant_base::GetAsFloat(float *)
 
 inline
 NS_IMETHODIMP
-Variant_base::GetAsBool(PRBool *)
+Variant_base::GetAsBool(bool *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }

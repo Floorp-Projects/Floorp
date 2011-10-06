@@ -168,7 +168,7 @@ DOMSVGPoint::MatrixTransform(nsIDOMSVGMatrix *matrix,
 void
 DOMSVGPoint::InsertingIntoList(DOMSVGPointList *aList,
                                PRUint32 aListIndex,
-                               PRBool aIsAnimValItem)
+                               bool aIsAnimValItem)
 {
   NS_ABORT_IF_FALSE(!HasOwner(), "Inserting item that already has an owner");
 
@@ -196,7 +196,7 @@ DOMSVGPoint::InternalItem()
 }
 
 #ifdef DEBUG
-PRBool
+bool
 DOMSVGPoint::IndexIsValid()
 {
   return mListIndex < mList->InternalList().Length();

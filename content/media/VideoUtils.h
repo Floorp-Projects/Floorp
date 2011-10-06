@@ -110,35 +110,35 @@ private:
 
 } // namespace mozilla
 
-// Adds two 32bit unsigned numbers, retuns PR_TRUE if addition succeeded,
-// or PR_FALSE the if addition would result in an overflow.
-PRBool AddOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult);
+// Adds two 32bit unsigned numbers, retuns true if addition succeeded,
+// or false the if addition would result in an overflow.
+bool AddOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult);
  
-// 32 bit integer multiplication with overflow checking. Returns PR_TRUE
-// if the multiplication was successful, or PR_FALSE if the operation resulted
+// 32 bit integer multiplication with overflow checking. Returns true
+// if the multiplication was successful, or false if the operation resulted
 // in an integer overflow.
-PRBool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult);
+bool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult);
 
-// Adds two 64bit numbers, retuns PR_TRUE if addition succeeded, or PR_FALSE
+// Adds two 64bit numbers, retuns true if addition succeeded, or false
 // if addition would result in an overflow.
-PRBool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult);
+bool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult);
 
-// 64 bit integer multiplication with overflow checking. Returns PR_TRUE
-// if the multiplication was successful, or PR_FALSE if the operation resulted
+// 64 bit integer multiplication with overflow checking. Returns true
+// if the multiplication was successful, or false if the operation resulted
 // in an integer overflow.
-PRBool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult);
+bool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult);
 
-// Converts from number of audio samples (aSamples) to microseconds, given
-// the specified audio rate (aRate). Stores result in aOutUsecs. Returns PR_TRUE
-// if the operation succeeded, or PR_FALSE if there was an integer overflow
+// Converts from number of audio frames (aFrames) to microseconds, given
+// the specified audio rate (aRate). Stores result in aOutUsecs. Returns true
+// if the operation succeeded, or false if there was an integer overflow
 // while calulating the conversion.
-PRBool SamplesToUsecs(PRInt64 aSamples, PRUint32 aRate, PRInt64& aOutUsecs);
+bool FramesToUsecs(PRInt64 aFrames, PRUint32 aRate, PRInt64& aOutUsecs);
 
-// Converts from microseconds (aUsecs) to number of audio samples, given the
-// specified audio rate (aRate). Stores the result in aOutSamples. Returns
-// PR_TRUE if the operation succeeded, or PR_FALSE if there was an integer
+// Converts from microseconds (aUsecs) to number of audio frames, given the
+// specified audio rate (aRate). Stores the result in aOutFrames. Returns
+// true if the operation succeeded, or false if there was an integer
 // overflow while calulating the conversion.
-PRBool UsecsToSamples(PRInt64 aUsecs, PRUint32 aRate, PRInt64& aOutSamples);
+bool UsecsToFrames(PRInt64 aUsecs, PRUint32 aRate, PRInt64& aOutFrames);
 
 // Number of microseconds per second. 1e6.
 static const PRInt64 USECS_PER_S = 1000000;

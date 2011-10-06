@@ -158,7 +158,7 @@ nsCSSProps::AddRefTable(void)
 
 #undef  DEBUG_SHORTHANDS_CONTAINING
 
-PRBool
+bool
 nsCSSProps::BuildShorthandsContainingTable()
 {
   PRUint32 occurrenceCounts[eCSSProperty_COUNT_no_shorthands];
@@ -352,12 +352,6 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
       }
     }
   }
-  
-  if (res == eCSSProperty_perspective || res == eCSSProperty_perspective_origin || 
-      res == eCSSProperty_backface_visibility || res == eCSSProperty_transform_style) {
-    return eCSSProperty_UNKNOWN;
-  }
-
   return res;
 }
 
@@ -379,12 +373,6 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
       }
     }
   }
-  
-  if (res == eCSSProperty_perspective || res == eCSSProperty_perspective_origin || 
-      res == eCSSProperty_backface_visibility || res == eCSSProperty_transform_style) {
-    return eCSSProperty_UNKNOWN;
-  }
-
   return res;
 }
 
@@ -596,12 +584,14 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
 
 const PRInt32 nsCSSProps::kBackfaceVisibilityKTable[] = {
   eCSSKeyword_visible, NS_STYLE_BACKFACE_VISIBILITY_VISIBLE,
-  eCSSKeyword_hidden, NS_STYLE_BACKFACE_VISIBILITY_HIDDEN
+  eCSSKeyword_hidden, NS_STYLE_BACKFACE_VISIBILITY_HIDDEN,
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kTransformStyleKTable[] = {
   eCSSKeyword_flat, NS_STYLE_TRANSFORM_STYLE_FLAT,
-  eCSSKeyword_preserve_3d, NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D
+  eCSSKeyword_preserve_3d, NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D,
+  eCSSKeyword_UNKNOWN,-1
 };
 
 const PRInt32 nsCSSProps::kBackgroundAttachmentKTable[] = {
@@ -1477,7 +1467,7 @@ const PRInt32 nsCSSProps::kColorInterpolationKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
-PRBool
+bool
 nsCSSProps::FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& aResult)
 {
   PRInt32 index = 0;
@@ -1545,9 +1535,9 @@ nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
   return sNullStr;
 }
 
-PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
+bool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
 {
-  PRBool rv = PR_FALSE;
+  bool rv = false;
 
   // first get the keyword corresponding to the property Value from the color table
   nsCSSKeyword keyword = ValueToKeywordEnum(aPropValue, kColorKTable);

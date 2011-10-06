@@ -173,10 +173,10 @@ namespace mozilla {
 namespace imagelib {
 
 #ifndef DEBUG
-NS_IMPL_ISUPPORTS4(RasterImage, imgIContainer, nsITimerCallback, nsIProperties,
+NS_IMPL_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
                    nsISupportsWeakReference)
 #else
-NS_IMPL_ISUPPORTS5(RasterImage, imgIContainer, nsITimerCallback, nsIProperties,
+NS_IMPL_ISUPPORTS4(RasterImage, imgIContainer, nsIProperties,
                    imgIContainerDebug, nsISupportsWeakReference)
 #endif
 
@@ -311,6 +311,159 @@ RasterImage::Init(imgIDecoderObserver *aObserver,
   mInitialized = PR_TRUE;
 
   return NS_OK;
+}
+
+bool
+RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
+{
+  NS_ASSERTION(aTime <= TimeStamp::Now(),
+               "Given time appears to be in the future");
+
+  imgFrame* nextFrame = nsnull;
+  PRUint32 currentFrameIndex = mAnim->currentAnimationFrameIndex;
+  PRUint32 nextFrameIndex = mAnim->currentAnimationFrameIndex + 1;
+  PRUint32 timeout = 0;
+
+  // Figure out if we have the next full frame. This is more complicated than
+  // just checking for mFrames.Length() because decoders append their frames
+  // before they're filled in.
+  NS_ABORT_IF_FALSE(mDecoder || nextFrameIndex <= mFrames.Length(),
+                    "How did we get 2 indices too far by incrementing?");
+
+  // If we don't have a decoder, we know we've got everything we're going to
+  // get. If we do, we only display fully-downloaded frames; everything else
+  // gets delayed.
+  bool haveFullNextFrame = !mDecoder ||
+                           nextFrameIndex < mDecoder->GetCompleteFrameCount();
+
+  // If we're done decoding the next frame, go ahead and display it now and
+  // reinit with the next frame's delay time.
+  if (haveFullNextFrame) {
+    if (mFrames.Length() == nextFrameIndex) {
+      // End of Animation, unless we are looping forever
+
+      // If animation mode is "loop once", it's time to stop animating
+      if (mAnimationMode == kLoopOnceAnimMode || mLoopCount == 0) {
+        mAnimationFinished = PR_TRUE;
+        EvaluateAnimation();
+      }
+
+      // We may have used compositingFrame to build a frame, and then copied
+      // it back into mFrames[..].  If so, delete composite to save memory
+      if (mAnim->compositingFrame && mAnim->lastCompositedFrameIndex == -1) {
+        mAnim->compositingFrame = nsnull;
+      }
+
+      nextFrameIndex = 0;
+
+      if (mLoopCount > 0) {
+        mLoopCount--;
+      }
+
+      if (!mAnimating) {
+        // break out early if we are actually done animating
+        return false;
+      }
+    }
+
+    if (!(nextFrame = mFrames[nextFrameIndex])) {
+      // something wrong with the next frame, skip it
+      mAnim->currentAnimationFrameIndex = nextFrameIndex;
+      return false;
+    }
+
+    timeout = nextFrame->GetTimeout();
+
+  } else {
+    // Uh oh, the frame we want to show is currently being decoded (partial)
+    // Wait until the next refresh driver tick and try again
+    return false;
+  }
+
+  if (!(timeout > 0)) {
+    mAnimationFinished = PR_TRUE;
+    EvaluateAnimation();
+  }
+
+  imgFrame *frameToUse = nsnull;
+
+  if (nextFrameIndex == 0) {
+    frameToUse = nextFrame;
+    aDirtyRect = &(mAnim->firstFrameRefreshArea);
+  } else {
+    imgFrame *curFrame = mFrames[currentFrameIndex];
+    if (!curFrame) {
+      return false;
+    }
+
+    // Change frame
+    if (NS_FAILED(DoComposite(&frameToUse, aDirtyRect, curFrame,
+                              nextFrame, nextFrameIndex))) {
+      // something went wrong, move on to next
+      NS_WARNING("RasterImage::AdvanceFrame(): Compositing of frame failed");
+      nextFrame->SetCompositingFailed(PR_TRUE);
+      mAnim->currentAnimationFrameIndex = nextFrameIndex;
+      mAnim->currentAnimationFrameTime = aTime;
+      return false;
+    }
+
+    nextFrame->SetCompositingFailed(PR_FALSE);
+  }
+
+  // Set currentAnimationFrameIndex at the last possible moment
+  mAnim->currentAnimationFrameIndex = nextFrameIndex;
+  mAnim->currentAnimationFrameTime = aTime;
+
+  return true;
+}
+
+//******************************************************************************
+// [notxpcom] void requestRefresh ([const] in TimeStamp aTime);
+NS_IMETHODIMP_(void)
+RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
+{
+  if (!mAnimating || !ShouldAnimate()) {
+    return;
+  }
+
+  EnsureAnimExists();
+
+  // only advance the frame if the current time is greater than or
+  // equal to the current frame's end time.
+  TimeStamp currentFrameEndTime = GetCurrentImgFrameEndTime();
+  bool frameAdvanced = false;
+  nsIntRect dirtyRect;
+
+  while (currentFrameEndTime <= aTime) {
+    TimeStamp oldFrameEndTime = currentFrameEndTime;
+    bool didAdvance = AdvanceFrame(aTime, &dirtyRect);
+    frameAdvanced = frameAdvanced || didAdvance;
+    currentFrameEndTime = GetCurrentImgFrameEndTime();
+
+    // if we didn't advance a frame, and our frame end time didn't change,
+    // then we need to break out of this loop & wait for the frame(s)
+    // to finish downloading
+    if (!frameAdvanced && (currentFrameEndTime == oldFrameEndTime)) {
+      break;
+    }
+  }
+
+  if (frameAdvanced) {
+    nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
+
+    if (!observer) {
+      NS_ERROR("Refreshing image after its imgRequest is gone");
+      StopAnimation();
+      return;
+    }
+
+    // Notify listeners that our frame has actually changed
+#ifdef DEBUG
+  mFramesNotified++;
+#endif
+
+    observer->FrameChanged(this, &dirtyRect);
+  }
 }
 
 //******************************************************************************
@@ -495,6 +648,27 @@ RasterImage::GetCurrentImgFrameIndex() const
   return 0;
 }
 
+TimeStamp
+RasterImage::GetCurrentImgFrameEndTime() const
+{
+  imgFrame* currentFrame = mFrames[mAnim->currentAnimationFrameIndex];
+  TimeStamp currentFrameTime = mAnim->currentAnimationFrameTime;
+  PRInt64 timeout = currentFrame->GetTimeout();
+
+  if (timeout < 0) {
+    // We need to return a sentinel value in this case, because our logic
+    // doesn't work correctly if we have a negative timeout value. The reason
+    // this positive infinity was chosen was because it works with the loop in
+    // RequestRefresh() above.
+    return TimeStamp() + TimeDuration::FromMilliseconds(UINT64_MAX_VAL);
+  }
+
+  TimeDuration durationOfTimeout = TimeDuration::FromMilliseconds(timeout);
+  TimeStamp currentFrameEndTime = currentFrameTime + durationOfTimeout;
+
+  return currentFrameEndTime;
+}
+
 imgFrame*
 RasterImage::GetCurrentImgFrame()
 {
@@ -510,7 +684,7 @@ RasterImage::GetCurrentDrawableImgFrame()
 //******************************************************************************
 /* readonly attribute boolean currentFrameIsOpaque; */
 NS_IMETHODIMP
-RasterImage::GetCurrentFrameIsOpaque(PRBool *aIsOpaque)
+RasterImage::GetCurrentFrameIsOpaque(bool *aIsOpaque)
 {
   NS_ENSURE_ARG_POINTER(aIsOpaque);
 
@@ -572,7 +746,7 @@ RasterImage::GetNumFrames()
 //******************************************************************************
 /* readonly attribute boolean animated; */
 NS_IMETHODIMP
-RasterImage::GetAnimated(PRBool *aAnimated)
+RasterImage::GetAnimated(bool *aAnimated)
 {
   if (mError)
     return NS_ERROR_FAILURE;
@@ -1140,24 +1314,18 @@ RasterImage::StartAnimation()
 
   EnsureAnimExists();
 
-  NS_ABORT_IF_FALSE(mAnim && !mAnim->timer, "Anim must exist and not have a timer yet");
-  
-  // Default timeout to 100: the timer notify code will do the right
-  // thing, so just get that started.
-  PRInt32 timeout = 100;
-  imgFrame *currentFrame = GetCurrentImgFrame();
+  imgFrame* currentFrame = GetCurrentImgFrame();
+
   if (currentFrame) {
-    timeout = currentFrame->GetTimeout();
-    if (timeout < 0) { // -1 means display this frame forever
+    if (currentFrame->GetTimeout() < 0) { // -1 means display this frame forever
       mAnimationFinished = PR_TRUE;
       return NS_ERROR_ABORT;
     }
+
+    // We need to set the time that this initial frame was first displayed, as
+    // this is used in AdvanceFrame().
+    mAnim->currentAnimationFrameTime = TimeStamp::Now();
   }
-  
-  mAnim->timer = do_CreateInstance("@mozilla.org/timer;1");
-  NS_ENSURE_TRUE(mAnim->timer, NS_ERROR_OUT_OF_MEMORY);
-  mAnim->timer->InitWithCallback(static_cast<nsITimerCallback*>(this),
-                                 timeout, nsITimer::TYPE_REPEATING_SLACK);
   
   return NS_OK;
 }
@@ -1171,11 +1339,6 @@ RasterImage::StopAnimation()
 
   if (mError)
     return NS_ERROR_FAILURE;
-
-  if (mAnim->timer) {
-    mAnim->timer->Cancel();
-    mAnim->timer = nsnull;
-  }
 
   return NS_OK;
 }
@@ -1429,129 +1592,6 @@ RasterImage::SetSourceSizeHint(PRUint32 sizeHint)
 {
   if (sizeHint && StoringSourceData())
     return mSourceData.SetCapacity(sizeHint) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
-}
-
-//******************************************************************************
-/* void notify(in nsITimer timer); */
-NS_IMETHODIMP
-RasterImage::Notify(nsITimer *timer)
-{
-#ifdef DEBUG
-  mFramesNotified++;
-#endif
-
-  // This should never happen since the timer is only set up in StartAnimation()
-  // after mAnim is checked to exist.
-  NS_ABORT_IF_FALSE(mAnim, "Need anim for Notify()");
-  NS_ABORT_IF_FALSE(timer, "Need timer for Notify()");
-  NS_ABORT_IF_FALSE(mAnim->timer == timer,
-                    "RasterImage::Notify() called with incorrect timer");
-
-  if (!mAnimating || !ShouldAnimate())
-    return NS_OK;
-
-  nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
-  if (!observer) {
-    // the imgRequest that owns us is dead, we should die now too.
-    NS_ABORT_IF_FALSE(mAnimationConsumers == 0,
-                      "If no observer, should have no consumers");
-    if (mAnimating)
-      StopAnimation();
-    return NS_OK;
-  }
-
-  if (mFrames.Length() == 0)
-    return NS_OK;
-  
-  imgFrame *nextFrame = nsnull;
-  PRInt32 previousFrameIndex = mAnim->currentAnimationFrameIndex;
-  PRUint32 nextFrameIndex = mAnim->currentAnimationFrameIndex + 1;
-  PRInt32 timeout = 0;
-
-  // Figure out if we have the next full frame. This is more complicated than
-  // just checking for mFrames.Length() because decoders append their frames
-  // before they're filled in.
-  NS_ABORT_IF_FALSE(mDecoder || nextFrameIndex <= mFrames.Length(),
-                    "How did we get 2 indicies too far by incrementing?");
-
-  // If we don't have a decoder, we know we've got everything we're going to get.
-  // If we do, we only display fully-downloaded frames; everything else gets delayed.
-  bool haveFullNextFrame = !mDecoder || nextFrameIndex < mDecoder->GetCompleteFrameCount();
-
-  // If we're done decoding the next frame, go ahead and display it now and
-  // reinit the timer with the next frame's delay time.
-  if (haveFullNextFrame) {
-    if (mFrames.Length() == nextFrameIndex) {
-      // End of Animation
-
-      // If animation mode is "loop once", it's time to stop animating
-      if (mAnimationMode == kLoopOnceAnimMode || mLoopCount == 0) {
-        mAnimationFinished = PR_TRUE;
-        EvaluateAnimation();
-        return NS_OK;
-      } else {
-        // We may have used compositingFrame to build a frame, and then copied
-        // it back into mFrames[..].  If so, delete composite to save memory
-        if (mAnim->compositingFrame && mAnim->lastCompositedFrameIndex == -1)
-          mAnim->compositingFrame = nsnull;
-      }
-
-      nextFrameIndex = 0;
-      if (mLoopCount > 0)
-        mLoopCount--;
-    }
-
-    if (!(nextFrame = mFrames[nextFrameIndex])) {
-      // something wrong with the next frame, skip it
-      mAnim->currentAnimationFrameIndex = nextFrameIndex;
-      mAnim->timer->SetDelay(100);
-      return NS_OK;
-    }
-    timeout = nextFrame->GetTimeout();
-
-  } else {
-    // Uh oh, the frame we want to show is currently being decoded (partial)
-    // Wait a bit and try again
-    mAnim->timer->SetDelay(100);
-    return NS_OK;
-  }
-
-  if (timeout > 0)
-    mAnim->timer->SetDelay(timeout);
-  else {
-    mAnimationFinished = PR_TRUE;
-    EvaluateAnimation();
-  }
-
-  nsIntRect dirtyRect;
-  imgFrame *frameToUse = nsnull;
-
-  if (nextFrameIndex == 0) {
-    frameToUse = nextFrame;
-    dirtyRect = mAnim->firstFrameRefreshArea;
-  } else {
-    imgFrame *prevFrame = mFrames[previousFrameIndex];
-    if (!prevFrame)
-      return NS_OK;
-
-    // Change frame and announce it
-    if (NS_FAILED(DoComposite(&frameToUse, &dirtyRect, prevFrame,
-                              nextFrame, nextFrameIndex))) {
-      // something went wrong, move on to next
-      NS_WARNING("RasterImage::Notify(): Composing Frame Failed\n");
-      nextFrame->SetCompositingFailed(PR_TRUE);
-      mAnim->currentAnimationFrameIndex = nextFrameIndex;
-      return NS_OK;
-    } else {
-      nextFrame->SetCompositingFailed(PR_FALSE);
-    }
-  }
-  // Set currentAnimationFrameIndex at the last possible moment
-  mAnim->currentAnimationFrameIndex = nextFrameIndex;
-  // Refreshes the screen
-  observer->FrameChanged(this, &dirtyRect);
-  
   return NS_OK;
 }
 
@@ -1878,7 +1918,7 @@ RasterImage::ClearFrame(imgFrame *aFrame, nsIntRect &aRect)
 //******************************************************************************
 // Whether we succeed or fail will not cause a crash, and there's not much
 // we can do about a failure, so there we don't return a nsresult
-PRBool
+bool
 RasterImage::CopyFrameImage(imgFrame *aSrcFrame,
                             imgFrame *aDstFrame)
 {
@@ -2041,7 +2081,7 @@ RasterImage::Set(const char *prop, nsISupports *value)
 }
 
 NS_IMETHODIMP
-RasterImage::Has(const char *prop, PRBool *_retval)
+RasterImage::Has(const char *prop, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   if (!mProperties) {
@@ -2167,35 +2207,35 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   eDecoderType type = GetDecoderType(mSourceDataMimeType.get());
   CONTAINER_ENSURE_TRUE(type != eDecoderType_unknown, NS_IMAGELIB_ERROR_NO_DECODER);
 
+  nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
   // Instantiate the appropriate decoder
   switch (type) {
     case eDecoderType_png:
-      mDecoder = new nsPNGDecoder();
+      mDecoder = new nsPNGDecoder(this, observer);
       break;
     case eDecoderType_gif:
-      mDecoder = new nsGIFDecoder2();
+      mDecoder = new nsGIFDecoder2(this, observer);
       break;
     case eDecoderType_jpeg:
-      mDecoder = new nsJPEGDecoder();
+      mDecoder = new nsJPEGDecoder(this, observer);
       break;
     case eDecoderType_bmp:
-      mDecoder = new nsBMPDecoder();
+      mDecoder = new nsBMPDecoder(this, observer);
       break;
     case eDecoderType_ico:
-      mDecoder = new nsICODecoder();
+      mDecoder = new nsICODecoder(this, observer);
       break;
     case eDecoderType_icon:
-      mDecoder = new nsIconDecoder();
+      mDecoder = new nsIconDecoder(this, observer);
       break;
     default:
       NS_ABORT_IF_FALSE(0, "Shouldn't get here!");
   }
 
   // Initialize the decoder
-  nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
-  mDecoder->Init(this, observer);
+  mDecoder->Init();
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
   // Create a decode worker
@@ -2631,14 +2671,14 @@ RasterImage::DecodeSomeData(PRUint32 aMaxBytes)
 // task at hand and can shut down the decoder.
 //
 // This method may not be called if there is no decoder.
-PRBool
+bool
 RasterImage::IsDecodeFinished()
 {
   // Precondition
   NS_ABORT_IF_FALSE(mDecoder, "Can't call IsDecodeFinished() without decoder!");
 
   // Assume it's not finished
-  PRBool decodeFinished = PR_FALSE;
+  bool decodeFinished = false;
 
   // There shouldn't be any reason to call this if we're not storing
   // source data

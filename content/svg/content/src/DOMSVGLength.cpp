@@ -359,7 +359,7 @@ DOMSVGLength::InternalItem()
 }
 
 #ifdef DEBUG
-PRBool
+bool
 DOMSVGLength::IndexIsValid()
 {
   SVGAnimatedLengthList *alist = Element()->GetAnimatedLengthList(mAttrEnum);

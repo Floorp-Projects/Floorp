@@ -148,7 +148,7 @@ nsSVGImageElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 //----------------------------------------------------------------------
 
 nsresult
-nsSVGImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
+nsSVGImageElement::LoadSVGImage(bool aForce, bool aNotify)
 {
   // resolve href attribute
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
@@ -168,7 +168,7 @@ nsSVGImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
 
 nsresult
 nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify)
+                                const nsAString* aValue, bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
     // If caller is not chrome and dom.disable_image_src_set is true,
@@ -201,7 +201,7 @@ nsSVGImageElement::MaybeLoadSVGImage()
 nsresult
 nsSVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers)
+                              bool aCompileEventHandlers)
 {
   nsresult rv = nsSVGImageElementBase::BindToTree(aDocument, aParent,
                                                   aBindingParent,
@@ -227,7 +227,7 @@ nsSVGImageElement::IntrinsicState() const
     nsImageLoadingContent::ImageState();
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGImageElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {

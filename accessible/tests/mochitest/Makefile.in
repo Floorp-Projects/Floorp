@@ -72,19 +72,18 @@ _TEST_FILES =\
 		longdesc_src.html \
 		actions.js \
 		attributes.js \
+		autocomplete.js \
 		common.js \
 		events.js \
 		grid.js \
 		layout.js \
 		name.js \
-		nsIAccessible_selects.js \
 		relations.js \
 		role.js \
 		selectable.js \
 		states.js \
 		table.js \
 		value.js \
-		test_aria_activedescendant.html \
 		test_aria_role_article.html \
 		test_aria_role_equation.html \
 		test_aria_roles.html \
@@ -98,7 +97,6 @@ _TEST_FILES =\
 		test_elm_listbox.xul \
 		test_elm_nsApplicationAcc.html \
 		test_elm_plugin.html \
- 		test_nsIAccessible_selects.html \
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleImage.html \
 		test_nsIAccessNode_utils.html \

@@ -198,7 +198,7 @@ NS_GetMemoryManager(nsIMemory* *result)
 #undef NS_NewLocalFile
 EXPORT_XPCOM_API(nsresult)
 NS_NewLocalFile(const nsAString &path,
-                PRBool followLinks,
+                bool followLinks,
                 nsILocalFile **result)
 {
   return NS_NewLocalFile_P(path, followLinks, result);
@@ -207,7 +207,7 @@ NS_NewLocalFile(const nsAString &path,
 #undef NS_NewNativeLocalFile
 EXPORT_XPCOM_API(nsresult)
 NS_NewNativeLocalFile(const nsACString &path,
-                      PRBool followLinks,
+                      bool followLinks,
                       nsILocalFile **result)
 {
   return NS_NewNativeLocalFile_P(path, followLinks, result);
@@ -382,7 +382,7 @@ NS_StringContainerFinish(nsStringContainer &aStr)
 
 #undef NS_StringGetData
 EXPORT_XPCOM_API(PRUint32)
-NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, PRBool *aTerm)
+NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, bool *aTerm)
 {
   return NS_StringGetData_P(aStr, aBuf, aTerm);
 }
@@ -425,13 +425,13 @@ NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
 
 #undef NS_StringSetIsVoid
 EXPORT_XPCOM_API(void)
-NS_StringSetIsVoid(nsAString &aStr, const PRBool aIsVoid)
+NS_StringSetIsVoid(nsAString &aStr, const bool aIsVoid)
 {
   NS_StringSetIsVoid_P(aStr, aIsVoid);
 }
 
 #undef NS_StringGetIsVoid
-EXPORT_XPCOM_API(PRBool)
+EXPORT_XPCOM_API(bool)
 NS_StringGetIsVoid(const nsAString &aStr)
 {
   return NS_StringGetIsVoid_P(aStr);
@@ -463,7 +463,7 @@ NS_CStringContainerFinish(nsCStringContainer &aStr)
 
 #undef NS_CStringGetData
 EXPORT_XPCOM_API(PRUint32)
-NS_CStringGetData(const nsACString &aStr, const char **aBuf, PRBool *aTerm)
+NS_CStringGetData(const nsACString &aStr, const char **aBuf, bool *aTerm)
 {
   return NS_CStringGetData_P(aStr, aBuf, aTerm);
 }
@@ -506,13 +506,13 @@ NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
 
 #undef NS_CStringSetIsVoid
 EXPORT_XPCOM_API(void)
-NS_CStringSetIsVoid(nsACString &aStr, const PRBool aIsVoid)
+NS_CStringSetIsVoid(nsACString &aStr, const bool aIsVoid)
 {
   NS_CStringSetIsVoid_P(aStr, aIsVoid);
 }
 
 #undef NS_CStringGetIsVoid
-EXPORT_XPCOM_API(PRBool)
+EXPORT_XPCOM_API(bool)
 NS_CStringGetIsVoid(const nsACString &aStr)
 {
   return NS_CStringGetIsVoid_P(aStr);
@@ -533,14 +533,14 @@ NS_UTF16ToCString(const nsAString &aSrc, nsCStringEncoding aDestEncoding, nsACSt
 }
 
 #undef NS_CycleCollectorSuspect
-EXPORT_XPCOM_API(PRBool)
+EXPORT_XPCOM_API(bool)
 NS_CycleCollectorSuspect(nsISupports* obj)
 {
   return NS_CycleCollectorSuspect_P(obj);
 }
 
 #undef NS_CycleCollectorForget
-EXPORT_XPCOM_API(PRBool)
+EXPORT_XPCOM_API(bool)
 NS_CycleCollectorForget(nsISupports* obj)
 {
   return NS_CycleCollectorForget_P(obj);
@@ -554,7 +554,7 @@ NS_CycleCollectorSuspect2(nsISupports* obj)
 }
 
 #undef NS_CycleCollectorForget2
-EXPORT_XPCOM_API(PRBool)
+EXPORT_XPCOM_API(bool)
 NS_CycleCollectorForget2(nsPurpleBufferEntry* e)
 {
   return NS_CycleCollectorForget2_P(e);

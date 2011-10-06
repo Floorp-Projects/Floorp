@@ -36,7 +36,6 @@
 
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
-#include "nsISVGValueUtils.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsDOMError.h"
 #include "nsSVGUtils.h"
@@ -231,7 +230,7 @@ NS_IMETHODIMP nsSVGMarkerElement::SetOrientToAngle(nsIDOMSVGAngle *angle)
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -252,7 +251,7 @@ nsSVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-PRBool
+bool
 nsSVGMarkerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                             nsAString &aResult) const
 {
@@ -265,7 +264,7 @@ nsSVGMarkerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return nsSVGMarkerElementBase::GetAttr(aNameSpaceID, aName, aResult);
 }
 
-PRBool
+bool
 nsSVGMarkerElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                    const nsAString& aValue,
                                    nsAttrValue& aResult)
@@ -284,7 +283,7 @@ nsSVGMarkerElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsSVGMarkerElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                              PRBool aNotify)
+                              bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::orient) {

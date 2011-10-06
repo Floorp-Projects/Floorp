@@ -114,7 +114,7 @@ Atom nsXRemoteService::sMozCommandLineAtom;
 nsXRemoteService * nsXRemoteService::sRemoteImplementation = 0;
 
 
-static PRBool
+static bool
 FindExtensionParameterInCommand(const char* aParameterName,
                                 const nsACString& aCommand,
                                 char aSeparator,
@@ -205,7 +205,7 @@ nsXRemoteService::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-PRBool
+bool
 nsXRemoteService::HandleNewProperty(XID aWindowId, Display* aDisplay,
                                     Time aEventTime,
                                     Atom aChangedAtom,

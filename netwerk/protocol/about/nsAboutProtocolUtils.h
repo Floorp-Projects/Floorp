@@ -44,7 +44,7 @@ NS_GetAboutModuleName(nsIURI *aAboutURI, nsCString& aModule)
 {
 #ifdef DEBUG
     {
-        PRBool isAbout;
+        bool isAbout;
         NS_ASSERTION(NS_SUCCEEDED(aAboutURI->SchemeIs("about", &isAbout)) &&
                      isAbout,
                      "should be used only on about: URIs");

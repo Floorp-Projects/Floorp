@@ -201,18 +201,20 @@
 
             dragStop: function dragStop(dx, dy) {
               if (this._grabSidebar)
-                Browser.ungrabSidebar();
+                TabletSidebar.ungrab();
               dragger.dragStop(dx, dy, scroller);
             },
 
             dragMove: function dragMove(dx, dy) {
-              if (!this._grabSidebar) {
+              let ltr = (Util.localeDir == Util.LOCALE_DIR_LTR);
+              let hiddingPan = ltr ? (dx > 0) : (dx < 0);
+              if (!this._grabSidebar && hiddingPan) {
                 this._grabSidebar = dx && Util.isTablet() && !Util.isPortrait();
                 if (this._grabSidebar)
-                  Browser.grabSidebar();
+                  TabletSidebar.grab();
               }
               if (this._grabSidebar)
-                Browser.slideSidebarBy(dx);
+                TabletSidebar.slideBy(dx);
               return dragger.dragMove(dx, dy, scroller);
             }
           };

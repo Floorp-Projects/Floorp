@@ -12,11 +12,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is  HUDService code.
+# The Original Code is Scratchpad Build Code.
 #
-# The Initial Developer of the Original Code is Mozilla Corporation.
-# 
-# Portions created by the Initial Developer are Copyright (C) 2010
+# The Initial Developer of the Original Code is The Mozilla Foundation.
+#
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -44,9 +44,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef ENABLE_TESTS
-ifneq (mobile,$(MOZ_BUILD_APP))
 	DIRS += test
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk

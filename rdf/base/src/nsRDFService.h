@@ -106,7 +106,7 @@ public:
     nsresult RegisterBlob(BlobImpl* aBlob);
     nsresult UnregisterBlob(BlobImpl* aBlob);
 
-    nsresult GetDataSource(const char *aURI, PRBool aBlock, nsIRDFDataSource **aDataSource );
+    nsresult GetDataSource(const char *aURI, bool aBlock, nsIRDFDataSource **aDataSource );
 };
 
 #endif // nsRDFService_h__

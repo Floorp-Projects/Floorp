@@ -135,6 +135,10 @@ if (!params.quiet) {
 var gTestList = [];
 var RunSet = {}
 RunSet.runall = function(e) {
+  // Filter tests to include|exclude tests based on data in params.filter.
+  // This allows for including or excluding tests from the gTestList
+  gTestList = filterTests(params.runOnlyTests, params.excludeTests);
+
   // Which tests we're going to run
   var my_tests = gTestList;
 
@@ -212,6 +216,63 @@ RunSet.reloadAndRunAll = function(e) {
     window.location.href += "?autorun=1";
   }  
 };
+
+// Test Filtering Code
+
+// Open the file referenced by runOnly|exclude and use that to compare against
+// gTestList.  Return a modified version of gTestList
+function filterTests(runOnly, exclude) {
+  var filteredTests = [];
+  var filterFile = null;
+
+  if (runOnly) {
+    filterFile = runOnly;
+  } else if (exclude) {
+    filterFile = exclude;
+  }
+
+  if (filterFile == null)
+    return gTestList;
+
+  var datafile = "http://mochi.test:8888/" + filterFile;
+  var objXml = new XMLHttpRequest();
+  objXml.open("GET",datafile,false);
+  objXml.send(null);
+  try {
+    var filter = JSON.parse(objXml.responseText);
+  } catch (ex) {
+    dump("INFO | setup.js | error loading or parsing '" + datafile + "'\n");
+    return gTestList;
+  }
+  
+  for (var i = 0; i < gTestList.length; ++i) {
+    var test_path = gTestList[i];
+    
+    //We use tmp_path to remove leading '/'
+    var tmp_path = test_path.replace(/^\//, '');
+
+    var found = false;
+
+    for (var f in filter) {
+      // Remove leading /tests/ if exists
+      file = f.replace(/^\//, '')
+      file = file.replace(/^tests\//, '')
+      
+      // Match directory or filename, gTestList has tests/<path>
+      if (tmp_path.match("^tests/" + file) != null) {
+        if (runOnly)
+          filteredTests.push(test_path);
+        found = true;
+        break;
+      }
+    }
+
+    if (exclude && !found)
+      filteredTests.push(test_path);
+  }
+
+  return filteredTests;
+}
 
 // UI Stuff
 function toggleVisible(elem) {

@@ -98,10 +98,10 @@ protected:
     SerializeProperty(nsIOutputStream* aStream,
                       nsIRDFResource* aResource,
                       nsIRDFResource* aProperty,
-                      PRBool aInline,
+                      bool aInline,
                       PRInt32* aSkipped);
 
-    PRBool
+    bool
     IsContainerProperty(nsIRDFResource* aProperty);
 
     nsresult
@@ -126,7 +126,7 @@ protected:
     nsresult
     CollectNamespaces();
 
-    PRBool
+    bool
     IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
 
     nsCOMPtr<nsIRDFDataSource> mDataSource;

@@ -66,9 +66,9 @@ class nsITokenizer : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITOKENIZER_IID)
 
-  NS_IMETHOD                     WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator)=0;
-  NS_IMETHOD                     ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)=0;
-  NS_IMETHOD                     DidTokenize(PRBool aIsFinalChunk)=0;
+  NS_IMETHOD                     WillTokenize(bool aIsFinalChunk,nsTokenAllocator* aTokenAllocator)=0;
+  NS_IMETHOD                     ConsumeToken(nsScanner& aScanner,bool& aFlushTokens)=0;
+  NS_IMETHOD                     DidTokenize(bool aIsFinalChunk)=0;
   
   NS_IMETHOD_(CToken*)           PushTokenFront(CToken* aToken)=0;
   NS_IMETHOD_(CToken*)           PushToken(CToken* aToken)=0;
@@ -85,9 +85,9 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITokenizer, NS_ITOKENIZER_IID)
 
 #define NS_DECL_NSITOKENIZER \
-  NS_IMETHOD                     WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator);\
-  NS_IMETHOD                     ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens);\
-  NS_IMETHOD                     DidTokenize(PRBool aIsFinalChunk);\
+  NS_IMETHOD                     WillTokenize(bool aIsFinalChunk,nsTokenAllocator* aTokenAllocator);\
+  NS_IMETHOD                     ConsumeToken(nsScanner& aScanner,bool& aFlushTokens);\
+  NS_IMETHOD                     DidTokenize(bool aIsFinalChunk);\
   NS_IMETHOD_(CToken*)           PushTokenFront(CToken* aToken);\
   NS_IMETHOD_(CToken*)           PushToken(CToken* aToken);\
   NS_IMETHOD_(CToken*)           PopToken(void);\

@@ -79,15 +79,15 @@ public:
      * Are _some_ points in [aBegin, aEnd] contained within the set
      * of intervals?
      */
-    PRBool Intersects(coord_type aBegin, coord_type aEnd) const;
+    bool Intersects(coord_type aBegin, coord_type aEnd) const;
 
     /*
      * Are _all_ points in [aBegin, aEnd] contained within the set
      * of intervals?
      */
-    PRBool Contains(coord_type aBegin, coord_type aEnd) const;
+    bool Contains(coord_type aBegin, coord_type aEnd) const;
 
-    PRBool IsEmpty() const
+    bool IsEmpty() const
     {
         return !mList;
     }

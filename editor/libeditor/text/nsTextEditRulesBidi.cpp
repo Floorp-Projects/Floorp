@@ -51,7 +51,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
                                            nsIDOMNode           *aSelNode, 
                                            PRInt32               aSelOffset, 
                                            nsIEditor::EDirection aAction,
-                                           PRBool               *aCancel)
+                                           bool                 *aCancel)
 {
   NS_ENSURE_ARG_POINTER(aCancel);
   *aCancel = PR_FALSE;

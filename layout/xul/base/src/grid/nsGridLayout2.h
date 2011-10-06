@@ -79,7 +79,7 @@ public:
   virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount) { aRowCount++; }
   virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState) { }
   virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows);
-  virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal);
+  virtual nsMargin GetTotalMargin(nsIBox* aBox, bool aIsHorizontal);
   virtual Type GetType() { return eGrid; }
   virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
                                 nsIBox* aPrevBox,
@@ -101,7 +101,7 @@ protected:
   nsGrid mGrid;
 
 private:
-  void AddWidth(nsSize& aSize, nscoord aSize2, PRBool aIsHorizontal);
+  void AddWidth(nsSize& aSize, nscoord aSize2, bool aIsHorizontal);
 
 
 }; // class nsGridLayout2

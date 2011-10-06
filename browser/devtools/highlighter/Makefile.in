@@ -45,7 +45,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXTRA_JS_MODULES = \
+	inspector.jsm \
 	domplate.jsm \
+	InsideOutBox.jsm \
+	TreePanel.jsm \
 	$(NULL)
 
 ifdef ENABLE_TESTS

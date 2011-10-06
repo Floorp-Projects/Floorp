@@ -300,8 +300,8 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // Overrides of base implementation.
-    NS_IMETHOD Start( PRBool *aResult );
-    NS_IMETHOD Stop( PRBool *aResult );
+    NS_IMETHOD Start( bool *aResult );
+    NS_IMETHOD Stop( bool *aResult );
     NS_IMETHOD Quit();
     NS_IMETHOD Enable();
 
@@ -329,7 +329,7 @@ private:
     static void ActivateLastWindow();
     static HDDEDATA CreateDDEData( DWORD value );
     static HDDEDATA CreateDDEData( LPBYTE value, DWORD len );
-    static PRBool   InitTopicStrings();
+    static bool     InitTopicStrings();
     static int      FindTopic( HSZ topic );
     static nsresult OpenWindow( const char *urlstr, const char *args );
     static nsresult OpenBrowserWindow();
@@ -349,9 +349,9 @@ private:
 
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
-    static PRBool mCanHandleRequests;
+    static bool mCanHandleRequests;
     static char mMutexName[];
-    static PRBool mUseDDE;
+    static bool mUseDDE;
     friend struct MessageWindow;
 }; // nsNativeAppSupportOS2
 
@@ -404,7 +404,7 @@ int   nsNativeAppSupportOS2::mConversations = 0;
 HSZ   nsNativeAppSupportOS2::mApplication   = 0;
 HSZ   nsNativeAppSupportOS2::mTopics[nsNativeAppSupportOS2::topicCount] = { 0 };
 DWORD nsNativeAppSupportOS2::mInstance      = 0;
-PRBool nsNativeAppSupportOS2::mCanHandleRequests   = PR_FALSE;
+bool nsNativeAppSupportOS2::mCanHandleRequests   = false;
 
 // Added this as pmddeml has no api like this
 int DdeCmpStringHandles( HSZ hsz1, HSZ hsz2 )
@@ -755,7 +755,7 @@ private:
     USHORT   mMsgWindowAtom;
 }; // struct MessageWindow
 
-PRBool nsNativeAppSupportOS2::mUseDDE = PR_FALSE;
+bool nsNativeAppSupportOS2::mUseDDE = false;
 
 /* Start: Tries to find the "message window" to determine if it
  *        exists.  If so, then Mozilla is already running.  In that
@@ -770,7 +770,7 @@ PRBool nsNativeAppSupportOS2::mUseDDE = PR_FALSE;
  *        be protected by use of a mutex semaphore.
  */
 NS_IMETHODIMP
-nsNativeAppSupportOS2::Start( PRBool *aResult ) {
+nsNativeAppSupportOS2::Start( bool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
 
@@ -859,7 +859,7 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
     return rv;
 }
 
-PRBool
+bool
 nsNativeAppSupportOS2::InitTopicStrings() {
     for ( int i = 0; i < topicCount; i++ ) {
         if ( !( mTopics[ i ] = WinDdeCreateStringHandle( (PSZ)topicNames[ i ], CP_WINANSI ) ) ) {
@@ -926,7 +926,7 @@ nsNativeAppSupportOS2::StartDDE() {
 
 // If no DDE conversations are pending, terminate DDE.
 NS_IMETHODIMP
-nsNativeAppSupportOS2::Stop( PRBool *aResult ) {
+nsNativeAppSupportOS2::Stop( bool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance, NS_ERROR_NOT_INITIALIZED );
 
@@ -1586,7 +1586,7 @@ nsNativeAppSupportOS2::HandleCommandLine(const char* aCmdLineString,
 
     // if these OS/2-specific flags aren't removed,
     // any URL following them will be ignored
-    PRBool found;
+    bool found;
     cmdLine->HandleFlag(NS_LITERAL_STRING("console"), PR_FALSE, &found);
     cmdLine->HandleFlag(NS_LITERAL_STRING("dde"), PR_FALSE, &found);
 
@@ -1772,9 +1772,9 @@ nsNativeAppSupportOS2::OpenBrowserWindow()
 // It returns TRUE if the current instance should continue running and
 // FALSE if it should terminate upon this function's return.
 
-PRBool     StartOS2App(int aArgc, char **aArgv)
+bool       StartOS2App(int aArgc, char **aArgv)
 {
-  PRBool    rv = PR_TRUE;
+  bool      rv = true;
   PPIB      ppib;
   PTIB      ptib;
 

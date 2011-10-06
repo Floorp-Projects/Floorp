@@ -62,7 +62,7 @@ nsDOMAttributeMap::nsDOMAttributeMap(Element* aContent)
   // we'll be told to drop our reference
 }
 
-PRBool
+bool
 nsDOMAttributeMap::Init()
 {
   return mAttributeCache.Init();
@@ -201,7 +201,7 @@ nsDOMAttributeMap::RemoveAttribute(nsINodeInfo* aNodeInfo, nsIDOMNode** aReturn)
 }
 
 nsDOMAttribute*
-nsDOMAttributeMap::GetAttribute(nsINodeInfo* aNodeInfo, PRBool aNsAware)
+nsDOMAttributeMap::GetAttribute(nsINodeInfo* aNodeInfo, bool aNsAware)
 {
   NS_ASSERTION(aNodeInfo, "GetAttribute() called with aNodeInfo == nsnull!");
 
@@ -263,7 +263,7 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode *aNode, nsIDOMNode **aReturn)
 nsresult
 nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
                                         nsIDOMNode **aReturn,
-                                        PRBool aWithNS)
+                                        bool aWithNS)
 {
   NS_ENSURE_ARG_POINTER(aNode);
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -456,7 +456,7 @@ nsresult
 nsDOMAttributeMap::GetNamedItemNSInternal(const nsAString& aNamespaceURI,
                                           const nsAString& aLocalName,
                                           nsIDOMNode** aReturn,
-                                          PRBool aRemove)
+                                          bool aRemove)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;

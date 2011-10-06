@@ -72,6 +72,7 @@
 #include "nsIDOMNode.h"
 
 #include "nsContentUtils.h"
+#include "nsLayoutUtils.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsEventDispatcher.h"
@@ -116,7 +117,9 @@ nsImageLoadingContent::nsImageLoadingContent()
     mNewRequestsWillNeedAnimationReset(PR_FALSE),
     mPendingRequestNeedsResetAnimation(PR_FALSE),
     mCurrentRequestNeedsResetAnimation(PR_FALSE),
-    mStateChangerDepth(0)
+    mStateChangerDepth(0),
+    mCurrentRequestRegistered(false),
+    mPendingRequestRegistered(false)
 {
   if (!nsContentUtils::GetImgLoader()) {
     mLoadingEnabled = PR_FALSE;
@@ -188,7 +191,7 @@ nsImageLoadingContent::OnStartDecode(imgIRequest* aRequest)
     // with multipart/x-mixed-replace images, for example).
     PRUint32 loadFlags;
     nsresult rv = aRequest->GetLoadFlags(&loadFlags);
-    PRBool background =
+    bool background =
       (NS_SUCCEEDED(rv) && (loadFlags & nsIRequest::LOAD_BACKGROUND));
 
     // Block onload for non-background requests
@@ -228,7 +231,7 @@ nsImageLoadingContent::OnStartFrame(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsImageLoadingContent::OnDataAvailable(imgIRequest* aRequest,
-                                       PRBool aCurrentFrame,
+                                       bool aCurrentFrame,
                                        const nsIntRect* aRect)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
@@ -330,8 +333,15 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
   nsIPresShell* shell = doc ? doc->GetShell() : nsnull;
   if (shell) {
 
+    // Make sure that our image requests are deregistered from the refresh
+    // driver if they aren't animated. Note that this must be mCurrentRequest,
+    // or we would have aborted up above.
+    nsLayoutUtils::DeregisterImageRequestIfNotAnimated(GetFramePresContext(),
+                                                       mCurrentRequest,
+                                                       &mCurrentRequestRegistered);
+
     // We need to figure out whether to kick off decoding
-    PRBool doRequestDecode = PR_FALSE;
+    bool doRequestDecode = false;
 
     // If we haven't got the initial reflow yet, IsPaintingSuppressed actually
     // returns false
@@ -364,7 +374,7 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest, PRBool aLastPart)
+nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest, bool aLastPart)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
@@ -388,7 +398,7 @@ nsImageLoadingContent::OnDiscard(imgIRequest *aRequest)
  */
 
 NS_IMETHODIMP
-nsImageLoadingContent::GetLoadingEnabled(PRBool *aLoadingEnabled)
+nsImageLoadingContent::GetLoadingEnabled(bool *aLoadingEnabled)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
@@ -397,7 +407,7 @@ nsImageLoadingContent::GetLoadingEnabled(PRBool *aLoadingEnabled)
 }
 
 NS_IMETHODIMP
-nsImageLoadingContent::SetLoadingEnabled(PRBool aLoadingEnabled)
+nsImageLoadingContent::SetLoadingEnabled(bool aLoadingEnabled)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
@@ -502,6 +512,44 @@ nsImageLoadingContent::GetRequest(PRInt32 aRequestType,
   return NS_OK;
 }
 
+NS_IMETHODIMP_(void)
+nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
+{
+  NS_ASSERTION(aFrame, "aFrame is null");
+
+  // We need to make sure that our image request is registered.
+  nsPresContext* presContext = aFrame->PresContext();
+
+  if (mCurrentRequest) {
+    nsLayoutUtils::RegisterImageRequest(presContext, mCurrentRequest,
+                                        &mCurrentRequestRegistered);
+    nsLayoutUtils::DeregisterImageRequestIfNotAnimated(presContext,
+                                                       mCurrentRequest,
+                                                       &mCurrentRequestRegistered);
+  } else if (mPendingRequest) {
+    // We don't need to do the same check for animation, because this will be
+    // done when decoding is finished.
+    nsLayoutUtils::RegisterImageRequest(presContext, mPendingRequest,
+                                        &mPendingRequestRegistered);
+  }
+}
+
+NS_IMETHODIMP_(void)
+nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
+{
+  NS_ASSERTION(aFrame, "aFrame is null");
+
+  // We need to make sure that our image request is deregistered.
+  if (mCurrentRequest) {
+    nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(),
+                                          mCurrentRequest,
+                                          &mCurrentRequestRegistered);
+  } else if (mPendingRequest) {
+    nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(),
+                                          mPendingRequest,
+                                          &mPendingRequestRegistered);
+  }
+}
 
 NS_IMETHODIMP
 nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
@@ -617,8 +665,8 @@ nsImageLoadingContent::NotifyOwnerDocumentChanged(nsIDocument *aOldDoc)
 
 nsresult
 nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
-                                 PRBool aForce,
-                                 PRBool aNotify)
+                                 bool aForce,
+                                 bool aNotify)
 {
   // First, get a document (needed for security checks and the like)
   nsIDocument* doc = GetOurDocument();
@@ -632,7 +680,7 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
   NS_ENSURE_SUCCESS(rv, rv);
   // XXXbiesi fire onerror if that failed?
 
-  PRBool equal;
+  bool equal;
 
   if (aNewURI.IsEmpty() &&
       doc->GetDocumentURI() &&
@@ -657,8 +705,8 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
 
 nsresult
 nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
-                                 PRBool aForce,
-                                 PRBool aNotify,
+                                 bool aForce,
+                                 bool aNotify,
                                  nsIDocument* aDocument,
                                  nsLoadFlags aLoadFlags)
 {
@@ -687,7 +735,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   if (!aForce && NS_CP_ACCEPTED(mImageBlockingStatus)) {
     nsCOMPtr<nsIURI> currentURI;
     GetCurrentURI(getter_AddRefs(currentURI));
-    PRBool equal;
+    bool equal;
     if (currentURI &&
         NS_SUCCEEDED(currentURI->Equals(aNewURI, &equal)) &&
         equal) {
@@ -751,7 +799,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
 }
 
 nsresult
-nsImageLoadingContent::ForceImageState(PRBool aForce, nsEventStates::InternalType aState)
+nsImageLoadingContent::ForceImageState(bool aForce, nsEventStates::InternalType aState)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
@@ -786,7 +834,7 @@ nsImageLoadingContent::ImageState() const
 }
 
 void
-nsImageLoadingContent::UpdateImageState(PRBool aNotify)
+nsImageLoadingContent::UpdateImageState(bool aNotify)
 {
   if (mStateChangerDepth > 0) {
     // Ignore this call; we'll update our state when the outermost state
@@ -830,7 +878,7 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
 }
 
 void
-nsImageLoadingContent::CancelImageRequests(PRBool aNotify)
+nsImageLoadingContent::CancelImageRequests(bool aNotify)
 {
   AutoStateChanger changer(this, aNotify);
   ClearPendingRequest(NS_BINDING_ABORTED);
@@ -839,7 +887,7 @@ nsImageLoadingContent::CancelImageRequests(PRBool aNotify)
 
 nsresult
 nsImageLoadingContent::UseAsPrimaryRequest(imgIRequest* aRequest,
-                                           PRBool aNotify)
+                                           bool aNotify)
 {
   // Our state will change. Watch it.
   AutoStateChanger changer(this, aNotify);
@@ -866,6 +914,23 @@ nsImageLoadingContent::GetOurDocument()
   NS_ENSURE_TRUE(thisContent, nsnull);
 
   return thisContent->GetOwnerDoc();
+}
+
+nsIFrame*
+nsImageLoadingContent::GetOurPrimaryFrame()
+{
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
+  return thisContent->GetPrimaryFrame();
+}
+
+nsPresContext* nsImageLoadingContent::GetFramePresContext()
+{
+  nsIFrame* frame = GetOurPrimaryFrame();
+  if (!frame) {
+    return nsnull;
+  }
+
+  return frame->PresContext();
 }
 
 nsresult
@@ -987,6 +1052,11 @@ nsImageLoadingContent::ClearCurrentRequest(nsresult aReason)
   NS_ABORT_IF_FALSE(!mCurrentURI,
                     "Shouldn't have both mCurrentRequest and mCurrentURI!");
 
+  // Deregister this image from the refresh driver so it no longer receives
+  // notifications.
+  nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(), mCurrentRequest,
+                                        &mCurrentRequestRegistered);
+
   // Clean up the request.
   UntrackImage(mCurrentRequest);
   mCurrentRequest->CancelAndForgetObserver(aReason);
@@ -1010,10 +1080,27 @@ nsImageLoadingContent::ClearPendingRequest(nsresult aReason)
   nsCxPusher pusher;
   pusher.PushNull();
 
+  // Deregister this image from the refresh driver so it no longer receives
+  // notifications.
+  nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(), mPendingRequest,
+                                        &mPendingRequestRegistered);
+
   UntrackImage(mPendingRequest);
   mPendingRequest->CancelAndForgetObserver(aReason);
   mPendingRequest = nsnull;
   mPendingRequestNeedsResetAnimation = PR_FALSE;
+}
+
+bool*
+nsImageLoadingContent::GetRegisteredFlagForRequest(imgIRequest* aRequest)
+{
+  if (aRequest == mCurrentRequest) {
+    return &mCurrentRequestRegistered;
+  } else if (aRequest == mPendingRequest) {
+    return &mPendingRequestRegistered;
+  } else {
+    return nsnull;
+  }
 }
 
 bool
@@ -1030,7 +1117,7 @@ nsImageLoadingContent::HaveSize(imgIRequest *aImage)
 }
 
 void
-nsImageLoadingContent::SetBlockingOnload(PRBool aBlocking)
+nsImageLoadingContent::SetBlockingOnload(bool aBlocking)
 {
   // If we're already in the desired state, we have nothing to do
   if (mBlockingOnload == aBlocking)

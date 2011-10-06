@@ -61,7 +61,7 @@ public:
   NS_FORWARD_NSITASKBARPREVIEW(TaskbarPreview::)
 
 private:
-  virtual nsresult ShowActive(PRBool active);
+  virtual nsresult ShowActive(bool active);
   virtual HWND &PreviewWindow();
   virtual LRESULT WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK GlobalWndProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam);
@@ -72,7 +72,7 @@ private:
   virtual void DetachFromNSWindow();
 
   // WindowHook procedure for hooking mWnd
-  static PRBool MainWindowHook(void *aContext,
+  static bool MainWindowHook(void *aContext,
                                HWND hWnd, UINT nMsg,
                                WPARAM wParam, LPARAM lParam,
                                LRESULT *aResult);
@@ -95,7 +95,7 @@ private:
   // Preview that follows this preview in the taskbar (left-to-right order)
   nsCOMPtr<nsITaskbarTabPreview> mNext;
   // True if this preview has been registered with the taskbar
-  PRBool                  mRegistered;
+  bool                    mRegistered;
 };
 
 } // namespace widget

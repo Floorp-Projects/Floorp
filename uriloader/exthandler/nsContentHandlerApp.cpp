@@ -72,7 +72,7 @@ NS_IMETHODIMP nsContentHandlerApp::SetName(const nsAString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsContentHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval)
+NS_IMETHODIMP nsContentHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

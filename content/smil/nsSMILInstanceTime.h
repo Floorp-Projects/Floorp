@@ -89,19 +89,19 @@ public:
   ~nsSMILInstanceTime();
   void Unlink();
   void HandleChangedInterval(const nsSMILTimeContainer* aSrcContainer,
-                             PRBool aBeginObjectChanged,
-                             PRBool aEndObjectChanged);
+                             bool aBeginObjectChanged,
+                             bool aEndObjectChanged);
   void HandleDeletedInterval();
   void HandleFilteredInterval();
 
   const nsSMILTimeValue& Time() const { return mTime; }
   const nsSMILTimeValueSpec* GetCreator() const { return mCreator; }
 
-  PRBool IsDynamic() const { return !!(mFlags & kDynamic); }
-  PRBool IsFixedTime() const { return !(mFlags & kMayUpdate); }
-  PRBool FromDOM() const { return !!(mFlags & kFromDOM); }
+  bool IsDynamic() const { return !!(mFlags & kDynamic); }
+  bool IsFixedTime() const { return !(mFlags & kMayUpdate); }
+  bool FromDOM() const { return !!(mFlags & kFromDOM); }
 
-  PRBool ShouldPreserve() const;
+  bool ShouldPreserve() const;
   void   UnmarkShouldPreserve();
 
   void AddRefFixedEndpoint();
@@ -114,12 +114,12 @@ public:
     mTime = aNewTime;
   }
 
-  PRBool IsDependent() const { return !!mBaseInterval; }
-  PRBool IsDependentOn(const nsSMILInstanceTime& aOther) const;
+  bool IsDependent() const { return !!mBaseInterval; }
+  bool IsDependentOn(const nsSMILInstanceTime& aOther) const;
   const nsSMILInterval* GetBaseInterval() const { return mBaseInterval; }
   const nsSMILInstanceTime* GetBaseTime() const;
 
-  PRBool SameTimeAndBase(const nsSMILInstanceTime& aOther) const
+  bool SameTimeAndBase(const nsSMILInstanceTime& aOther) const
   {
     return mTime == aOther.mTime && GetBaseTime() == aOther.GetBaseTime();
   }
@@ -164,7 +164,7 @@ protected:
     kWasDynamicEndpoint = 8
   };
   PRUint8       mFlags;   // Combination of kDynamic, kMayUpdate, etc.
-  PRPackedBool  mVisited; // (mutable) Cycle tracking
+  bool          mVisited; // (mutable) Cycle tracking
 
   // Additional reference count to determine if this instance time is currently
   // used as a fixed endpoint in any intervals. Instance times that are used in

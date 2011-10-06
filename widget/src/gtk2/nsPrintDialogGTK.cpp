@@ -180,7 +180,7 @@ class nsPrintDialogWidgetGTK {
 
     nsCOMPtr<nsIStringBundle> printBundle;
 
-    PRPackedBool useNativeSelection;
+    bool useNativeSelection;
 
     GtkWidget* ConstructHeaderFooterDropdown(const PRUnichar *currentString);
     const char* OptionWidgetToString(GtkWidget *dropdown);
@@ -266,18 +266,18 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
 
   // GTK+2.18 and above allow us to add a "Selection" option to the main settings screen,
   // rather than adding an option on a custom tab like we must do on older versions.
-  PRBool canSelectText;
+  bool canSelectText;
   aSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &canSelectText);
   if (gtk_major_version > 2 ||
       (gtk_major_version == 2 && gtk_minor_version >= 18)) {
-    useNativeSelection = PR_TRUE;
+    useNativeSelection = true;
     g_object_set(dialog,
                  "support-selection", TRUE,
                  "has-selection", canSelectText,
                  "embed-page-setup", TRUE,
                  NULL);
   } else {
-    useNativeSelection = PR_FALSE;
+    useNativeSelection = false;
     selection_only_toggle = gtk_check_button_new_with_mnemonic(GetUTF8FromBundle("selectionOnly").get());
     gtk_widget_set_sensitive(selection_only_toggle, canSelectText);
     gtk_box_pack_start(GTK_BOX(check_buttons_container), selection_only_toggle, FALSE, FALSE, 0);
@@ -445,7 +445,7 @@ nsPrintDialogWidgetGTK::ImportSettings(nsIPrintSettings *aNSSettings)
   GtkPrintSettings* settings = aNSSettingsGTK->GetGtkPrintSettings();
   GtkPageSetup* setup = aNSSettingsGTK->GetGtkPageSetup();
 
-  PRBool geckoBool;
+  bool geckoBool;
   aNSSettings->GetShrinkToFit(&geckoBool);
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(shrink_to_fit_toggle), geckoBool);
 
@@ -479,7 +479,7 @@ nsPrintDialogWidgetGTK::ExportSettings(nsIPrintSettings *aNSSettings)
     // Print-to-file is true by default. This must be turned off or else printing won't occur!
     // (We manually copy the spool file when this flag is set, because we love our embedders)
     // Even if it is print-to-file in GTK's case, GTK does The Right Thing when we send the job.
-    aNSSettings->SetPrintToFile(PR_FALSE);
+    aNSSettings->SetPrintToFile(false);
 
     aNSSettings->SetShrinkToFit(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(shrink_to_fit_toggle)));
 
@@ -492,7 +492,7 @@ nsPrintDialogWidgetGTK::ExportSettings(nsIPrintSettings *aNSSettings)
       aNSSettingsGTK->SetGtkPrintSettings(settings);
       aNSSettingsGTK->SetGtkPageSetup(setup);
       aNSSettingsGTK->SetGtkPrinter(printer);
-      PRBool printSelectionOnly;
+      bool printSelectionOnly;
       if (useNativeSelection) {
         _GtkPrintPages pageSetting = (_GtkPrintPages)gtk_print_settings_get_print_pages(settings);
         printSelectionOnly = (pageSetting == _GTK_PRINT_PAGES_SELECTION);
@@ -521,14 +521,14 @@ nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const PRUnichar *currentSt
     gtk_combo_box_append_text(GTK_COMBO_BOX(dropdown), GetUTF8FromBundle(hf_options[i]).get());
   }
 
-  PRPackedBool shouldBeCustom = PR_TRUE;
+  bool shouldBeCustom = true;
   NS_ConvertUTF16toUTF8 currentStringUTF8(currentString);
 
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(header_footer_tags); i++) {
     if (!strcmp(currentStringUTF8.get(), header_footer_tags[i])) {
       gtk_combo_box_set_active(GTK_COMBO_BOX(dropdown), i);
       g_object_set_data(G_OBJECT(dropdown), "previous-active", GINT_TO_POINTER(i));
-      shouldBeCustom = PR_FALSE;
+      shouldBeCustom = false;
       break;
     }
   }
@@ -621,7 +621,7 @@ nsPrintDialogServiceGTK::ShowPageSetup(nsIDOMWindow *aParent,
       psService->GetDefaultPrinterName(getter_Copies(printName));
       aNSSettings->SetPrinterName(printName.get());
     }
-    psService->InitPrintSettingsFromPrefs(aNSSettings, PR_TRUE, nsIPrintSettings::kInitSaveAll);
+    psService->InitPrintSettingsFromPrefs(aNSSettings, true, nsIPrintSettings::kInitSaveAll);
   }
 
   GtkPrintSettings* gtkSettings = aNSSettingsGTK->GetGtkPrintSettings();
@@ -636,7 +636,7 @@ nsPrintDialogServiceGTK::ShowPageSetup(nsIDOMWindow *aParent,
   g_object_unref(newPageSetup);
 
   if (psService)
-    psService->SavePrintSettingsToPrefs(aNSSettings, PR_TRUE, nsIPrintSettings::kInitSaveAll);
+    psService->SavePrintSettingsToPrefs(aNSSettings, true, nsIPrintSettings::kInitSaveAll);
 
   return NS_OK;
 }

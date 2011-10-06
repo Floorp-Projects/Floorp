@@ -46,7 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS             = autoconfig
 
 ifdef MOZ_ENABLE_GTK2
-DIRS		+= system-pref
+DIRS		+= system-pref/src
 endif
 
 include $(topsrcdir)/config/rules.mk
