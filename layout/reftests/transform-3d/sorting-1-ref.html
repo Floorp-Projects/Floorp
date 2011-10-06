@@ -1,0 +1,35 @@
+<html>
+    <head>
+        <style type="text/css">
+        #stage {
+          -moz-perspective: 1000px;
+        }
+
+        #parent {
+          -moz-transform-style: preserve-3d;
+        }
+
+        #big {
+          width: 1000px;
+          height: 1000px;
+          background-color: #995C7F;
+          -moz-transform: rotatey(45deg);
+        }
+        
+        #small {
+          width: 100px;
+          height: 100px;
+          background-color: #995C7F;
+          -moz-transform: translate3d(600px, 200px, 0px);
+        }
+        </style>
+    </head>
+    <body>
+        <div id="stage">
+            <div id="parent">
+                <div id="small"></div>
+                <div id="big"></div>
+            </div>
+        </div>
+    </body>
+</html>
