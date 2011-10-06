@@ -8,7 +8,7 @@ function test() {
   waitForExplicitFinish();
 
   tabOne = gBrowser.addTab("http://mochi.test:8888/");
-  tabTwo = gBrowser.addTab("http://mochi.test:8888/browser/browser/components/tabview/test/dummy_page.html");
+  tabTwo = gBrowser.addTab("http://mochi.test:8888/browser/browser/base/content/test/tabview/dummy_page.html");
 
   afterAllTabsLoaded(function () {
     // make sure the tab one is selected because undoCloseTab() would remove
