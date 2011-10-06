@@ -730,6 +730,19 @@ gfx3DMatrix::CanDraw2D(gfxMatrix* aMatrix) const
   return PR_TRUE;
 }
 
+gfx3DMatrix&
+gfx3DMatrix::ProjectTo2D()
+{
+  _31 = 0.0f;
+  _32 = 0.0f;
+  _13 = 0.0f; 
+  _23 = 0.0f; 
+  _33 = 1.0f; 
+  _43 = 0.0f; 
+  _34 = 0.0f;
+  return *this;
+}
+
 gfxPoint gfx3DMatrix::ProjectPoint(const gfxPoint& aPoint) const
 {
   // Define a ray of the form P + Ut where t is a real number

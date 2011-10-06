@@ -122,6 +122,12 @@ public:
   bool CanDraw2D(gfxMatrix* aMatrix = nsnull) const;
 
   /**
+   * Converts the matrix to one that doesn't modify the z coordinate of points,
+   * but leaves the rest of the transformation unchanged.
+   */
+  gfx3DMatrix& ProjectTo2D();
+
+  /**
    * Returns true if the matrix is the identity matrix. The most important
    * property we require is that gfx3DMatrix().IsIdentity() returns true.
    */
