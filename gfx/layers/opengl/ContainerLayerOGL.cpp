@@ -220,12 +220,14 @@ ContainerRender(Container* aContainer,
     NS_ASSERTION(is2d, "Transform must be 2D");
   }
 
+  nsAutoTArray<Layer*, 12> children;
+  aContainer->SortChildrenBy3DZOrder(children);
+
   /**
    * Render this container's contents.
    */
-  for (LayerOGL* layerToRender = aContainer->GetFirstChildOGL();
-       layerToRender != nsnull;
-       layerToRender = GetNextSibling(layerToRender)) {
+  for (PRUint32 i = 0; i < children.Length(); i++) {
+    LayerOGL* layerToRender = static_cast<LayerOGL*>(children.ElementAt(i)->ImplData());
 
     if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
       continue;
