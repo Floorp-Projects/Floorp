@@ -212,7 +212,7 @@ typedef JSBool
 typedef JSBool
 (* StrictGenericIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
-(* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+(* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict);
 typedef JSBool
 (* StrictElementIdOp)(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
 typedef JSBool

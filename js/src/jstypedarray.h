@@ -114,11 +114,11 @@ struct JS_FRIEND_API(ArrayBuffer) {
     obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp);
 
     static JSBool
-    obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
-
+    obj_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+    static JSBool
+    obj_setProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict);
     static JSBool
     obj_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
-
     static JSBool
     obj_setSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict);
 

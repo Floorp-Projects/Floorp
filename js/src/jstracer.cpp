@@ -12853,7 +12853,7 @@ SetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, JSB
     LeaveTraceIfGlobalObject(cx, obj);
 
     jsid id;
-    if (!RootedStringToId(cx, namep, &id) || !obj->setProperty(cx, id, vp, strict)) {
+    if (!RootedStringToId(cx, namep, &id) || !obj->setGeneric(cx, id, vp, strict)) {
         SetBuiltinError(tm);
         return false;
     }
@@ -12913,7 +12913,7 @@ SetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, Value* vp, JSBool 
     LeaveTraceIfGlobalObject(cx, obj);
 
     AutoIdRooter idr(cx);
-    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->setProperty(cx, idr.id(), vp, strict)) {
+    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->setGeneric(cx, idr.id(), vp, strict)) {
         SetBuiltinError(tm);
         return false;
     }

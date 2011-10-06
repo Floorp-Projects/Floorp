@@ -254,6 +254,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
             JS_ASSERT(atom);
         }
 
+        PropertyName *name = atom->asPropertyName();
         jsid id = ATOM_TO_JSID(atom);
         if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
             uintN defineHow;
@@ -267,7 +268,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
             if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval, strict))
                 THROW();
         } else {
-            if (!obj->setProperty(cx, id, &rval, strict))
+            if (!obj->setProperty(cx, name, &rval, strict))
                 THROW();
         }
     } while (0);
@@ -287,7 +288,7 @@ stubs::SetPropNoCache(VMFrame &f, JSAtom *atom)
          THROW();
     Value rval = f.regs.sp[-1];
 
-    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1], strict))
+    if (!obj->setGeneric(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1], strict))
         THROW();
     f.regs.sp[-2] = rval;
 }
@@ -304,11 +305,7 @@ stubs::SetGlobalNameNoCache(VMFrame &f, JSAtom *atom)
     Value rval = f.regs.sp[-1];
     Value &lref = f.regs.sp[-2];
     JSObject *obj = ValueToObject(cx, &lref);
-    if (!obj)
-        THROW();
-    jsid id = ATOM_TO_JSID(atom);
-
-    if (!obj->setProperty(cx, id, &rval, strict))
+    if (!obj || !obj->setProperty(cx, atom->asPropertyName(), &rval, strict))
         THROW();
 
     f.regs.sp[-2] = f.regs.sp[-1];
@@ -582,7 +579,7 @@ stubs::SetElem(VMFrame &f)
             }
         }
     } while (0);
-    if (!obj->setProperty(cx, id, &rval, strict))
+    if (!obj->setGeneric(cx, id, &rval, strict))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
@@ -796,8 +793,6 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
     Value rval = ObjectValue(*obj);
 
     do {
-        PropertyName *name = fun->atom->asPropertyName();
-
         /* Steps 5d, 5f. */
         if (!prop || pobj != parent) {
             if (!parent->defineProperty(cx, name, rval,
@@ -839,7 +834,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, id, &rval, strict))
+        if (!parent->setProperty(cx, name, &rval, strict))
             THROW();
     } while (false);
 }

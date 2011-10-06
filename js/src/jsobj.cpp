@@ -3310,24 +3310,27 @@ with_GetSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid,
 }
 
 static JSBool
-with_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+with_SetGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
-    return obj->getProto()->setProperty(cx, id, vp, strict);
+    return obj->getProto()->setGeneric(cx, id, vp, strict);
+}
+
+static JSBool
+with_SetProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict)
+{
+    return obj->getProto()->setProperty(cx, name, vp, strict);
 }
 
 static JSBool
 with_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return with_SetProperty(cx, obj, id, vp, strict);
+    return obj->getProto()->setElement(cx, index, vp, strict);
 }
 
 static JSBool
 with_SetSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
 {
-    return with_SetProperty(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
+    return obj->getProto()->setSpecial(cx, sid, vp, strict);
 }
 
 static JSBool
@@ -3453,7 +3456,7 @@ Class js::WithClass = {
         with_GetProperty,
         with_GetElement,
         with_GetSpecial,
-        with_SetProperty,
+        with_SetGeneric,
         with_SetProperty,
         with_SetElement,
         with_SetSpecial,
@@ -3670,7 +3673,7 @@ JSObject::nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool str
         if (wpmap && !wpmap->triggerWatchpoint(cx, this, id, vp))
             return false;
     }
-    return getOps()->setProperty(cx, this, id, vp, strict);
+    return getOps()->setGeneric(cx, this, id, vp, strict);
 }
 
 JSBool

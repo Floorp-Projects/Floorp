@@ -1385,17 +1385,10 @@ struct JSObject : js::gc::Cell {
     inline JSBool getElement(JSContext *cx, uint32 index, js::Value *vp);
     inline JSBool getSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp);
 
-    JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
-        if (getOps()->setProperty)
-            return nonNativeSetProperty(cx, id, vp, strict);
-        return js_SetPropertyHelper(cx, this, id, 0, vp, strict);
-    }
-
-    JSBool setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict) {
-        if (getOps()->setElement)
-            return nonNativeSetElement(cx, index, vp, strict);
-        return js_SetElementHelper(cx, this, index, 0, vp, strict);
-    }
+    inline JSBool setGeneric(JSContext *cx, jsid id, js::Value *vp, JSBool strict);
+    inline JSBool setProperty(JSContext *cx, js::PropertyName *name, js::Value *vp, JSBool strict);
+    inline JSBool setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict);
+    inline JSBool setSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp, JSBool strict);
 
     JSBool nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict);
 
