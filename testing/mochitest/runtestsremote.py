@@ -192,6 +192,7 @@ class MochiRemote(Mochitest):
         self._dm = devmgr
         self.runSSLTunnel = False
         self.remoteProfile = options.remoteTestRoot + "/profile"
+        self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
 
     def cleanup(self, manifest, options):
