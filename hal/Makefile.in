@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,7 +12,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Mozilla Corporation code.
+#
+# The Initial Developer of the Original Code is Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
+# the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #   Chris Jones <jones.chris.g@gmail.com>
@@ -30,76 +35,37 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# WARNING: the syntax of the builtin types is not checked, so please
-# don't add something syntactically invalid.  It will not be fun to
-# track down the bug.
+DEPTH       = ..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = \
+  $(srcdir) \
+  $(srcdir)/fallback \
+  $(srcdir)/sandbox \
+  $(NULL)
 
-Types = (
-    # C types
-    'bool',
-    'char',
-    'short',
-    'int',
-    'long',
-    'float',
-    'double',
+include $(DEPTH)/config/autoconf.mk
 
-    # stdint types
-    'int8_t',
-    'uint8_t',
-    'int16_t',
-    'uint16_t',
-    'int32_t',
-    'uint32_t',
-    'int64_t',
-    'uint64_t',
-    'intptr_t',
-    'uintptr_t',
+MODULE         = hal
+LIBRARY_NAME   = hal_s
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
+EXPORT_LIBRARY = 1
 
-    # stddef types
-    'size_t',
-    'ssize_t',
+EXPORTS_NAMESPACES = mozilla
+EXPORTS_mozilla = \
+  Hal.h \
+  HalImpl.h \
+  HalSandbox.h \
+  $(NULL)
 
-    # NSPR types
-    'PRInt8',
-    'PRUint8',
-    'PRInt16',
-    'PRUint16',
-    'PRInt32',
-    'PRUint32',
-    'PRInt64',
-    'PRUint64',
-    'PRSize',
+CPPSRCS = \
+  Hal.cpp \
+  SandboxHal.cpp \
+  $(NULL)
 
-    # Mozilla types: "less" standard things we know how serialize/deserialize
-    'nsresult',
-    'nsString',
-    'nsCString',
-    'mozilla::ipc::Shmem',
+CPPSRCS += FallbackHal.cpp
 
-    # quasi-stdint types used by "public" Gecko headers
-    'int8',
-    'uint8',
-    'int16',
-    'uint16',
-    'int32',
-    'uint32',
-    'int64',
-    'uint64',
-    'intptr',
-    'uintptr',
-)
-
-
-Includes = (
-    'base/basictypes.h',
-    'prtime.h',
-    'nscore.h',
-    'IPCMessageStart.h',
-    'IPC/IPCMessageUtils.h',
-    'nsAutoPtr.h',
-    'nsStringGlue.h',
-    'nsTArray.h',
-    'nsIFile.h',
-    'mozilla/ipc/ProtocolUtils.h',
-)
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk

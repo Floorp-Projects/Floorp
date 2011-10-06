@@ -141,10 +141,9 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         script->noScriptRval = true;
         script->code[0] = JSOP_STOP;
         script->code[1] = SRC_NULL;
-        functionProto->u.i.script = script;
+        functionProto->setScript(script);
         functionProto->getType(cx)->interpretedFunction = functionProto;
         script->hasFunction = true;
-        script->setOwnerObject(functionProto);
     }
 
     /* Create the Object function now that we have a [[Prototype]] for it. */

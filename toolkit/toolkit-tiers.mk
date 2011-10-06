@@ -94,6 +94,7 @@ tier_platform_dirs	+= gfx/qcms
 tier_platform_dirs += ipc js/ipc js/jetpack
 
 tier_platform_dirs += \
+		hal \
 		js/src/xpconnect \
 		intl/chardet \
 		$(NULL)
