@@ -107,6 +107,67 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movq(ImmWord((void *)val.asRawBits()), dest);
     }
 
+    Condition testUndefined(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_UNDEFINED));
+        return cond;
+    }
+    Condition testInt32(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_INT32));
+        return cond;
+    }
+    Condition testBoolean(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_BOOLEAN));
+        return cond;
+    }
+    Condition testNull(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_NULL));
+        return cond;
+    }
+    Condition testString(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_STRING));
+        return cond;
+    }
+    Condition testObject(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_OBJECT));
+        return cond;
+    }
+    Condition testUndefined(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testUndefined(cond, ScratchReg);
+    }
+    Condition testInt32(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testInt32(cond, ScratchReg);
+    }
+    Condition testBoolean(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testBoolean(cond, ScratchReg);
+    }
+    Condition testDouble(Condition cond, const ValueOperand &src) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        movq(ImmShiftedTag(JSVAL_SHIFTED_TAG_MAX_DOUBLE), ScratchReg);
+        cmpq(src.value(), ScratchReg);
+        return (cond == NotEqual) ? Above : BelowOrEqual;
+    }
+    Condition testNull(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testNull(cond, ScratchReg);
+    }
+    Condition testString(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testString(cond, ScratchReg);
+    }
+    Condition testObject(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testObject(cond, ScratchReg);
+    }
+
     /////////////////////////////////////////////////////////////////
     // Common interface.
     /////////////////////////////////////////////////////////////////
@@ -164,68 +225,59 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpl(Operand(ScratchReg), tag);
     }
 
-    Condition testInt32(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_INT32));
-        return cond;
+    void branchTestUndefined(Condition cond, const Register &tag, Label *label) {
+        cond = testUndefined(cond, tag);
+        j(cond, label);
     }
-    Condition testBoolean(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_BOOLEAN));
-        return cond;
+    void branchTestInt32(Condition cond, const Register &tag, Label *label) {
+        cond = testInt32(cond, tag);
+        j(cond, label);
     }
-    Condition testNull(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_NULL));
-        return cond;
+    void branchTestBoolean(Condition cond, const Register &tag, Label *label) {
+        cond = testBoolean(cond, tag);
+        j(cond, label);
     }
-    Condition testUndefined(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_UNDEFINED));
-        return cond;
+    void branchTestNull(Condition cond, const Register &tag, Label *label) {
+        cond = testNull(cond, tag);
+        j(cond, label);
     }
-    Condition testString(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_STRING));
-        return cond;
+    void branchTestString(Condition cond, const Register &tag, Label *label) {
+        cond = testString(cond, tag);
+        j(cond, label);
     }
-    Condition testObject(Condition cond, const Register &tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tag, ImmTag(JSVAL_TAG_OBJECT));
-        return cond;
+    void branchTestObject(Condition cond, const Register &tag, Label *label) {
+        cond = testObject(cond, tag);
+        j(cond, label);
     }
 
     // Type-testing instructions on x64 will clobber ScratchReg.
-    Condition testInt32(Condition cond, const ValueOperand &src) {
+    void branchTestUndefined(Condition cond, const ValueOperand &src, Label *label) {
+        cond = testUndefined(cond, src);
+        j(cond, label);
+    }
+    void branchTestInt32(Condition cond, const ValueOperand &src, Label *label) {
         splitTag(src, ScratchReg);
-        return testInt32(cond, ScratchReg);
+        branchTestInt32(cond, ScratchReg, label);
     }
-    Condition testBoolean(Condition cond, const ValueOperand &src) {
+    void branchTestBoolean(Condition cond, const ValueOperand &src, Label *label) {
         splitTag(src, ScratchReg);
-        return testBoolean(cond, ScratchReg);
+        branchTestBoolean(cond, ScratchReg, label);
     }
-    Condition testDouble(Condition cond, const ValueOperand &src) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        movq(ImmShiftedTag(JSVAL_SHIFTED_TAG_MAX_DOUBLE), ScratchReg);
-        cmpq(src.value(), ScratchReg);
-        return (cond == NotEqual) ? Above : BelowOrEqual;
+    void branchTestDouble(Condition cond, const ValueOperand &src, Label *label) {
+        cond = testDouble(cond, src);
+        j(cond, label);
     }
-    Condition testObject(Condition cond, const ValueOperand &src) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpTag(src, ImmTag(JSVAL_TAG_OBJECT));
-        return cond;
+    void branchTestNull(Condition cond, const ValueOperand &src, Label *label) {
+        cond = testNull(cond, src);
+        j(cond, label);
     }
-    Condition testNull(Condition cond, const ValueOperand &src) {
-        splitTag(src, ScratchReg);
-        return testNull(cond, ScratchReg);
+    void branchTestString(Condition cond, const ValueOperand &src, Label *label) {
+        cond = testString(cond, src);
+        j(cond, label);
     }
-    Condition testUndefined(Condition cond, const ValueOperand &src) {
-        splitTag(src, ScratchReg);
-        return testUndefined(cond, ScratchReg);
-    }
-    Condition testString(Condition cond, const ValueOperand &src) {
-        splitTag(src, ScratchReg);
-        return testString(cond, ScratchReg);
+    void branchTestObject(Condition cond, const ValueOperand &src, Label *label) {
+        cond = testObject(cond, src);
+        j(cond, label);
     }
 
     // Note that the |dest| register here may be ScratchReg, so we shouldn't
@@ -276,9 +328,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         testl(operand.valueReg(), operand.valueReg());
         return truthy ? NonZero : Zero;
     }
-    Condition testBooleanTruthy(bool truthy, const ValueOperand &operand) {
+    void branchTestBooleanTruthy(bool truthy, const ValueOperand &operand, Label *label) {
         testl(operand.valueReg(), operand.valueReg());
-        return truthy ? NonZero : Zero;
+        j(truthy ? NonZero : Zero, label);
     }
 };
 
