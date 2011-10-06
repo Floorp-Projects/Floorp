@@ -51,7 +51,7 @@ XPIDLSRCS = \
 DIRS = src
 
 ifdef ENABLE_TESTS
-DIRS += test
+DIRS += test/browser
 endif
 
 include $(topsrcdir)/config/rules.mk
