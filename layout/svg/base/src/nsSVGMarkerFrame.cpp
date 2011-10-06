@@ -221,14 +221,20 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 
+  nsSVGMarkerElement *content = static_cast<nsSVGMarkerElement*>(mContent);
+
+  const nsSVGViewBoxRect viewBox = content->GetViewBoxRect();
+
+  if (viewBox.width <= 0.0f || viewBox.height <= 0.0f) {
+    return gfxRect();
+  }
+
   mStrokeWidth = aStrokeWidth;
   mX = aMark->x;
   mY = aMark->y;
   mAutoAngle = aMark->angle;
 
   gfxRect bbox;
-
-  nsSVGMarkerElement *content = static_cast<nsSVGMarkerElement*>(mContent);
 
   gfxMatrix markerTM =
     content->GetMarkerTransform(mStrokeWidth, mX, mY, mAutoAngle);
