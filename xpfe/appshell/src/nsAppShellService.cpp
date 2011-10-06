@@ -235,7 +235,7 @@ nsAppShellService::CalculateWindowZLevel(nsIXULWindow *aParent,
 /*
  * Checks to see if any existing window is currently in fullscreen mode.
  */
-static bool
+static PRBool
 CheckForFullscreenWindow()
 {
   nsCOMPtr<nsIWindowMediator> wm(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
@@ -248,7 +248,7 @@ CheckForFullscreenWindow()
     return PR_FALSE;
 
   for (;;) {
-    bool more = false;
+    PRBool more = PR_FALSE;
     windowList->HasMoreElements(&more);
     if (!more)
       return PR_FALSE;
@@ -279,7 +279,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
                                        PRUint32 aChromeMask,
                                        PRInt32 aInitialWidth,
                                        PRInt32 aInitialHeight,
-                                       bool aIsHiddenWindow,
+                                       PRBool aIsHiddenWindow,
                                        nsIAppShell* aAppShell,
                                        nsWebShellWindow **aResult)
 {
@@ -368,14 +368,14 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     window->SetIntrinsicallySized(PR_TRUE);
   }
 
-  bool center = aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN;
+  PRBool center = aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN;
 
   nsCOMPtr<nsIXULChromeRegistry> reg =
     mozilla::services::GetXULChromeRegistryService();
   if (reg) {
     nsCAutoString package;
     package.AssignLiteral("global");
-    bool isRTL = false;
+    PRBool isRTL = PR_FALSE;
     reg->IsLocaleRTL(package, &isRTL);
     widgetInitData.mRTL = isRTL;
   }
@@ -474,7 +474,7 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindow **aWindow,
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetApplicationProvidedHiddenWindow(bool* aAPHW)
+nsAppShellService::GetApplicationProvidedHiddenWindow(PRBool* aAPHW)
 {
     *aAPHW = mApplicationProvidedHiddenWindow;
     return NS_OK;

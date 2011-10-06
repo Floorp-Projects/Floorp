@@ -70,7 +70,7 @@ protected:
   NS_IMETHOD SetNativeClipboardData ( PRInt32 aWhichClipboard ) = 0;
   NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard ) = 0;
 
-  bool                mIgnoreEmptyNotification;
+  PRBool              mIgnoreEmptyNotification;
   nsIClipboardOwner * mClipboardOwner;
   nsITransferable   * mTransferable;
   nsRefPtr<nsClipboardPrivacyHandler> mPrivacyHandler;

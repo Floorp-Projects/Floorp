@@ -77,7 +77,7 @@ nsPrintSettingsGTK::nsPrintSettingsGTK() :
   mPageSetup(NULL),
   mPrintSettings(NULL),
   mGTKPrinter(NULL),
-  mPrintSelectionOnly(false)
+  mPrintSelectionOnly(PR_FALSE)
 {
   // The aim here is to set up the objects enough that silent printing works well.
   // These will be replaced anyway if the print dialog is used.
@@ -118,7 +118,7 @@ nsPrintSettingsGTK::nsPrintSettingsGTK(const nsPrintSettingsGTK& aPS) :
   mPageSetup(NULL),
   mPrintSettings(NULL),
   mGTKPrinter(NULL),
-  mPrintSelectionOnly(false)
+  mPrintSelectionOnly(PR_FALSE)
 {
   *this = aPS;
 }
@@ -258,11 +258,11 @@ NS_IMETHODIMP nsPrintSettingsGTK::GetPrintRange(PRInt16 *aPrintRange)
 NS_IMETHODIMP nsPrintSettingsGTK::SetPrintRange(PRInt16 aPrintRange)
 {
   if (aPrintRange == kRangeSelection) {
-    mPrintSelectionOnly = true;
+    mPrintSelectionOnly = PR_TRUE;
     return NS_OK;
   }
 
-  mPrintSelectionOnly = false;
+  mPrintSelectionOnly = PR_FALSE;
   if (aPrintRange == kRangeSpecifiedPageRange)
     gtk_print_settings_set_print_pages(mPrintSettings, GTK_PRINT_PAGES_RANGES);
   else
@@ -345,13 +345,13 @@ nsPrintSettingsGTK::SetEndPageRange(PRInt32 aEndPageRange)
 
 /* attribute boolean printReversed; */
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPrintReversed(bool *aPrintReversed)
+nsPrintSettingsGTK::GetPrintReversed(PRBool *aPrintReversed)
 {
   *aPrintReversed = gtk_print_settings_get_reverse(mPrintSettings);
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPrintReversed(bool aPrintReversed)
+nsPrintSettingsGTK::SetPrintReversed(PRBool aPrintReversed)
 {
   gtk_print_settings_set_reverse(mPrintSettings, aPrintReversed);
   return NS_OK;
@@ -359,13 +359,13 @@ nsPrintSettingsGTK::SetPrintReversed(bool aPrintReversed)
 
 /* attribute boolean printInColor; */
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPrintInColor(bool *aPrintInColor)
+nsPrintSettingsGTK::GetPrintInColor(PRBool *aPrintInColor)
 {
   *aPrintInColor = gtk_print_settings_get_use_color(mPrintSettings);
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPrintInColor(bool aPrintInColor)
+nsPrintSettingsGTK::SetPrintInColor(PRBool aPrintInColor)
 {
   gtk_print_settings_set_use_color(mPrintSettings, aPrintInColor);
   return NS_OK;
@@ -448,7 +448,7 @@ nsPrintSettingsGTK::SetToFileName(const PRUnichar * aToFileName)
   }
 
   nsCOMPtr<nsILocalFile> file;
-  nsresult rv = NS_NewLocalFile(nsDependentString(aToFileName), true,
+  nsresult rv = NS_NewLocalFile(nsDependentString(aToFileName), PR_TRUE,
                                 getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -497,8 +497,8 @@ nsPrintSettingsGTK::SetPrinterName(const PRUnichar * aPrinter)
   //   the name passed to this function.
   const char* oldPrinterName = gtk_print_settings_get_printer(mPrintSettings);
   if (!oldPrinterName || !gtkPrinter.Equals(oldPrinterName)) {
-    mIsInitedFromPrinter = false;
-    mIsInitedFromPrefs = false;
+    mIsInitedFromPrinter = PR_FALSE;
+    mIsInitedFromPrefs = PR_FALSE;
     gtk_print_settings_set_printer(mPrintSettings, gtkPrinter.get());
   }
 

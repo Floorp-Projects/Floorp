@@ -13,7 +13,7 @@ let stringPrefs = [
   { selector: "#picker-title", pref: "chooseLanguage", data: null },
   { selector: "#continue-button", pref: "continue", data: null },
   { selector: "#cancel-button", pref: "cancel", data: null },
-  { selector: "#installing-message", pref: "installing", data: ["CURRENT_LOCALE"]  },
+  { selector: "#intalling-message", pref: "installing", data: ["CURRENT_LOCALE"]  },
   { selector: "#cancel-install-button", pref: "cancel", data: null },
   { selector: "#installing-error", pref: "installerror", data: null },
   { selector: "#install-continue", pref: "continue", data: null },
@@ -88,7 +88,7 @@ let LocaleUI = {
     return this.list = document.getElementById("language-list");
   },
 
-  _createItem: function lp__createItem(aId, aText, aLocale) {
+  _createItem: function(aId, aText, aLocale) {
     let item = document.createElement("richlistitem");
     item.setAttribute("id", aId);
 
@@ -109,7 +109,7 @@ let LocaleUI = {
     return item;
   },
 
-  addLocales: function lp_addLocales(aLocales) {
+  addLocales: function(aLocales) {
     let fragment = document.createDocumentFragment();
     let selectedItem = null;
     let bestMatch = NO_MATCH;
@@ -158,6 +158,9 @@ let LocaleUI = {
   _locale: "",
 
   set locale(aVal) {
+    if (aVal == this._locale)
+      return;
+
     Services.prefs.setBoolPref("intl.locale.matchOS", false);
     Services.prefs.setCharPref("general.useragent.locale", aVal);
     this._locale = aVal;
@@ -191,7 +194,7 @@ let LocaleUI = {
     }
   },
 
-  installAddon: function lp_installAddon() {
+  installAddon: function() {
     let locale = LocaleUI.list.selectedItem.locale;
 
     if (locale.install) {
@@ -207,9 +210,9 @@ let LocaleUI = {
   cancelPicker: function() {
     if (this.pendingInstall)
       this.pendingInstall = null;
-
     // restore the last known "good" locale
     this.locale = this.defaultLocale;
+    this.updateStrings();
     this.closePicker();
   },
 
@@ -249,6 +252,8 @@ let LocaleUI = {
       try { addonInstall.cancel(); }
       catch(ex) { }
       LocaleUI.pendingInstall = null;
+
+      this.locale = this.defaultLocale;
     }
   },
 

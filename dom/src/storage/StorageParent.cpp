@@ -159,7 +159,7 @@ StorageParent::RecvClear(const bool& aCallerSecure, const bool& aSessionOnly,
 
 bool
 StorageParent::RecvGetDBValue(const nsString& aKey, nsString* aValue,
-                              bool* aSecure, nsresult* rv)
+                              PRBool* aSecure, nsresult* rv)
 {
   *rv = mStorage->GetDBValue(aKey, *aValue, aSecure);
   return true;
@@ -167,14 +167,14 @@ StorageParent::RecvGetDBValue(const nsString& aKey, nsString* aValue,
 
 bool
 StorageParent::RecvSetDBValue(const nsString& aKey, const nsString& aValue,
-                              const bool& aSecure, nsresult* rv)
+                              const PRBool& aSecure, nsresult* rv)
 {
   *rv = mStorage->SetDBValue(aKey, aValue, aSecure);
   return true;
 }
 
 bool
-StorageParent::RecvSetSecure(const nsString& aKey, const bool& aSecure,
+StorageParent::RecvSetSecure(const nsString& aKey, const PRBool& aSecure,
                              nsresult* rv)
 {
   *rv = mStorage->SetSecure(aKey, aSecure);

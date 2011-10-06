@@ -84,8 +84,8 @@ public:
 
   void BeginLineReflow(nscoord aX, nscoord aY,
                        nscoord aWidth, nscoord aHeight,
-                       bool aImpactedByFloats,
-                       bool aIsTopOfPage);
+                       PRBool aImpactedByFloats,
+                       PRBool aIsTopOfPage);
 
   void EndLineReflow();
 
@@ -113,14 +113,14 @@ public:
 
   void SplitLineTo(PRInt32 aNewCount);
 
-  bool IsZeroHeight();
+  PRBool IsZeroHeight();
 
   // Reflows the frame and returns the reflow status. aPushedFrame is PR_TRUE
   // if the frame is pushed to the next line because it doesn't fit
   nsresult ReflowFrame(nsIFrame* aFrame,
                        nsReflowStatus& aReflowStatus,
                        nsHTMLReflowMetrics* aMetrics,
-                       bool& aPushedFrame);
+                       PRBool& aPushedFrame);
 
   nsresult AddBulletFrame(nsIFrame* aFrame,
                           const nsHTMLReflowMetrics& aMetrics);
@@ -131,9 +131,9 @@ public:
 
   void VerticalAlignLine();
 
-  bool TrimTrailingWhiteSpace();
+  PRBool TrimTrailingWhiteSpace();
 
-  void HorizontalAlignFrames(nsRect& aLineBounds, bool aAllowJustify);
+  void HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify);
 
   /**
    * Handle all the relative positioning in the line, compute the
@@ -161,7 +161,7 @@ protected:
 #define LL_LINEATSTART                 0x00010000
 #define LL_LASTFLAG                    LL_LINEATSTART
 
-  void SetFlag(PRUint32 aFlag, bool aValue)
+  void SetFlag(PRUint32 aFlag, PRBool aValue)
   {
     NS_ASSERTION(aFlag<=LL_LASTFLAG, "bad flag");
     NS_ASSERTION(aValue==PR_FALSE || aValue==PR_TRUE, "bad value");
@@ -173,7 +173,7 @@ protected:
     }
   }
 
-  bool GetFlag(PRUint32 aFlag) const
+  PRBool GetFlag(PRUint32 aFlag) const
   {
     NS_ASSERTION(aFlag<=LL_LASTFLAG, "bad flag");
     return !!(mFlags & aFlag);
@@ -192,7 +192,7 @@ public:
    * @return true if so far during reflow no non-empty content has been
    * placed in the line (according to nsIFrame::IsEmpty())
    */
-  bool LineIsEmpty() const
+  PRBool LineIsEmpty() const
   {
     return GetFlag(LL_LINEISEMPTY);
   }
@@ -202,19 +202,19 @@ public:
    * (non-collapsed whitespace, replaced element, inline-block, etc) has been
    * placed in the line
    */
-  bool LineAtStart() const
+  PRBool LineAtStart() const
   {
     return GetFlag(LL_LINEATSTART);
   }
 
-  bool LineIsBreakable() const;
+  PRBool LineIsBreakable() const;
 
-  bool GetLineEndsInBR() const 
+  PRBool GetLineEndsInBR() const 
   { 
     return GetFlag(LL_LINEENDSINBR); 
   }
 
-  void SetLineEndsInBR(bool aOn) 
+  void SetLineEndsInBR(PRBool aOn) 
   { 
     SetFlag(LL_LINEENDSINBR, aOn); 
   }
@@ -222,7 +222,7 @@ public:
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
-  bool AddFloat(nsIFrame* aFloat, nscoord aAvailableWidth)
+  PRBool AddFloat(nsIFrame* aFloat, nscoord aAvailableWidth)
   {
     return mBlockRS->AddFloat(this, aFloat, aAvailableWidth);
   }
@@ -233,27 +233,27 @@ public:
 
   //----------------------------------------
 
-  bool GetFirstLetterStyleOK() const {
+  PRBool GetFirstLetterStyleOK() const {
     return GetFlag(LL_FIRSTLETTERSTYLEOK);
   }
 
-  void SetFirstLetterStyleOK(bool aSetting) {
+  void SetFirstLetterStyleOK(PRBool aSetting) {
     SetFlag(LL_FIRSTLETTERSTYLEOK, aSetting);
   }
 
-  bool GetInFirstLetter() const {
+  PRBool GetInFirstLetter() const {
     return GetFlag(LL_INFIRSTLETTER);
   }
 
-  void SetInFirstLetter(bool aSetting) {
+  void SetInFirstLetter(PRBool aSetting) {
     SetFlag(LL_INFIRSTLETTER, aSetting);
   }
 
-  bool GetInFirstLine() const {
+  PRBool GetInFirstLine() const {
     return GetFlag(LL_INFIRSTLINE);
   }
 
-  void SetInFirstLine(bool aSetting) {
+  void SetInFirstLine(PRBool aSetting) {
     SetFlag(LL_INFIRSTLINE, aSetting);
   }
 
@@ -262,7 +262,7 @@ public:
   void SetDirtyNextLine() {
     SetFlag(LL_DIRTYNEXTLINE, PR_TRUE);
   }
-  bool GetDirtyNextLine() {
+  PRBool GetDirtyNextLine() {
     return GetFlag(LL_DIRTYNEXTLINE);
   }
 
@@ -294,8 +294,8 @@ public:
    * @return PR_TRUE if we are actually reflowing with forced break position and we
    * should break here
    */
-  bool NotifyOptionalBreakPosition(nsIContent* aContent, PRInt32 aOffset,
-                                     bool aFits, gfxBreakPriority aPriority) {
+  PRBool NotifyOptionalBreakPosition(nsIContent* aContent, PRInt32 aOffset,
+                                     PRBool aFits, gfxBreakPriority aPriority) {
     NS_ASSERTION(!aFits || !GetFlag(LL_NEEDBACKUP),
                   "Shouldn't be updating the break position with a break that fits after we've already flagged an overrun");
     // Remember the last break position that fits; if there was no break that fit,
@@ -342,7 +342,7 @@ public:
    * Check whether frames overflowed the available width and CanPlaceFrame
    * requested backing up to a saved break position.
    */  
-  bool NeedsBackup() { return GetFlag(LL_NEEDBACKUP); }
+  PRBool NeedsBackup() { return GetFlag(LL_NEEDBACKUP); }
   
   // Line layout may place too much content on a line, overflowing its available
   // width. When that happens, if SetLastOptionalBreakPosition has been
@@ -357,7 +357,7 @@ public:
     mForceBreakContent = aContent;
     mForceBreakContentOffset = aOffset;
   }
-  bool HaveForcedBreakPosition() { return mForceBreakContent != nsnull; }
+  PRBool HaveForcedBreakPosition() { return mForceBreakContent != nsnull; }
   PRInt32 GetForcedBreakPosition(nsIContent* aContent) {
     return mForceBreakContent == aContent ? mForceBreakContentOffset : -1;
   }
@@ -453,7 +453,7 @@ protected:
 
     PRUint8 mFlags;
 
-    void SetFlag(PRUint32 aFlag, bool aValue)
+    void SetFlag(PRUint32 aFlag, PRBool aValue)
     {
       NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
       NS_ASSERTION(aFlag<=PR_UINT8_MAX, "bad flag");
@@ -466,7 +466,7 @@ protected:
       }
     }
 
-    bool GetFlag(PRUint32 aFlag) const
+    PRBool GetFlag(PRUint32 aFlag) const
     {
       NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
       return !!(mFlags & aFlag);
@@ -493,12 +493,12 @@ protected:
     PerFrameData* mLastFrame;
 
     const nsHTMLReflowState* mReflowState;
-    bool mNoWrap;
+    PRPackedBool mNoWrap;
     PRUint8 mDirection;
-    bool mChangedFrameDirection;
-    bool mZeroEffectiveSpanBox;
-    bool mContainsFloat;
-    bool mHasNonemptyContent;
+    PRPackedBool mChangedFrameDirection;
+    PRPackedBool mZeroEffectiveSpanBox;
+    PRPackedBool mContainsFloat;
+    PRPackedBool mHasNonemptyContent;
 
     nscoord mLeftEdge;
     nscoord mX;
@@ -570,7 +570,7 @@ protected:
 
   void FreeSpan(PerSpanData* psd);
 
-  bool InBlockContext() const {
+  PRBool InBlockContext() const {
     return mSpanDepth == 0;
   }
 
@@ -579,14 +579,14 @@ protected:
   void ApplyStartMargin(PerFrameData* pfd,
                         nsHTMLReflowState& aReflowState);
 
-  bool CanPlaceFrame(PerFrameData* pfd,
+  PRBool CanPlaceFrame(PerFrameData* pfd,
                        PRUint8 aFrameDirection,
-                       bool aNotSafeToBreak,
-                       bool aFrameCanContinueTextRun,
-                       bool aCanRollBackBeforeFrame,
+                       PRBool aNotSafeToBreak,
+                       PRBool aFrameCanContinueTextRun,
+                       PRBool aCanRollBackBeforeFrame,
                        nsHTMLReflowMetrics& aMetrics,
                        nsReflowStatus& aStatus,
-                       bool* aOptionalBreakAfterFits);
+                       PRBool* aOptionalBreakAfterFits);
 
   void PlaceFrame(PerFrameData* pfd,
                   nsHTMLReflowMetrics& aMetrics);
@@ -599,7 +599,7 @@ protected:
 
   void RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflowAreas);
 
-  bool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaWidth);
+  PRBool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaWidth);
 
   void ComputeJustificationWeights(PerSpanData* psd, PRInt32* numSpaces, PRInt32* numLetters);
 

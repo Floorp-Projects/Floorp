@@ -50,41 +50,41 @@ public:
   virtual nsresult SendCommand(const char *aProgram, const char *aUsername,
                                const char *aProfile, const char *aCommand,
                                const char* aDesktopStartupID,
-                               char **aResponse, bool *aSucceeded);
+                               char **aResponse, PRBool *aSucceeded);
   virtual nsresult SendCommandLine(const char *aProgram, const char *aUsername,
                                    const char *aProfile,
                                    PRInt32 argc, char **argv,
                                    const char* aDesktopStartupID,
-                                   char **aResponse, bool *aSucceeded);
+                                   char **aResponse, PRBool *aSucceeded);
   void Shutdown();
 
 private:
 
   Window         CheckWindow      (Window aWindow);
   Window         CheckChildren    (Window aWindow);
-  nsresult       GetLock          (Window aWindow, bool *aDestroyed);
+  nsresult       GetLock          (Window aWindow, PRBool *aDestroyed);
   nsresult       FreeLock         (Window aWindow);
   Window         FindBestWindow   (const char *aProgram,
                                    const char *aUsername,
                                    const char *aProfile,
-                                   bool aSupportsCommandLine);
+                                   PRBool aSupportsCommandLine);
   nsresult     SendCommandInternal(const char *aProgram, const char *aUsername,
                                    const char *aProfile, const char *aCommand,
                                    PRInt32 argc, char **argv,
                                    const char* aDesktopStartupID,
-                                   char **aResponse, bool *aWindowFound);
+                                   char **aResponse, PRBool *aWindowFound);
   nsresult       DoSendCommand    (Window aWindow,
                                    const char *aCommand,
                                    const char* aDesktopStartupID,
                                    char **aResponse,
-                                   bool *aDestroyed);
+                                   PRBool *aDestroyed);
   nsresult       DoSendCommandLine(Window aWindow,
                                    PRInt32 argc, char **argv,
                                    const char* aDesktopStartupID,
                                    char **aResponse,
-                                   bool *aDestroyed);
-  bool           WaitForResponse  (Window aWindow, char **aResponse,
-                                   bool *aDestroyed, Atom aCommandAtom);
+                                   PRBool *aDestroyed);
+  PRBool         WaitForResponse  (Window aWindow, char **aResponse,
+                                   PRBool *aDestroyed, Atom aCommandAtom);
 
   Display       *mDisplay;
 
@@ -101,5 +101,5 @@ private:
 
   char          *mLockData;
 
-  bool           mInitialized;
+  PRBool         mInitialized;
 };

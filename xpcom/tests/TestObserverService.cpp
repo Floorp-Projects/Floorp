@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
         printf("Enumerating observers of topic-A...\n");
         if ( e ) {
           nsCOMPtr<nsIObserver> observer;
-          bool loop = true;
+          PRBool loop = PR_TRUE;
           while( NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) 
           {
               e->GetNext(getter_AddRefs(observer));

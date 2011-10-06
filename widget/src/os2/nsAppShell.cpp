@@ -108,10 +108,10 @@ nsAppShell::ScheduleNativeEventCallback()
   WinPostMsg(mEventWnd, sMsgId, 0, reinterpret_cast<MPARAM>(this));
 }
 
-bool
-nsAppShell::ProcessNextNativeEvent(bool mayWait)
+PRBool
+nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
-  bool gotMessage = false;
+  PRBool gotMessage = PR_FALSE;
 
   do {
     QMSG qmsg;

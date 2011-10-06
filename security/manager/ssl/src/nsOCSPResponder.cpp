@@ -81,7 +81,7 @@ NS_IMETHODIMP nsOCSPResponder::GetServiceURL(PRUnichar** aURL)
   return NS_OK;
 }
 
-bool nsOCSPResponder::IncludeCert(CERTCertificate *aCert)
+PRBool nsOCSPResponder::IncludeCert(CERTCertificate *aCert)
 {
   CERTCertTrust *trust;
   char *nickname;

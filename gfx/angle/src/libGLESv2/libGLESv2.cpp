@@ -3446,7 +3446,7 @@ int __stdcall glGetUniformLocation(GLuint program, const GLchar* name)
                 return error(GL_INVALID_OPERATION, -1);
             }
 
-            return programObject->getUniformLocation(name);
+            return programObject->getUniformLocation(name, false);
         }
     }
     catch(std::bad_alloc&)

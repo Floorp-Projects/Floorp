@@ -179,7 +179,7 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
  * querying the registry when the call to SHGetSpecialFolderPathW is unable to
  * provide these paths (Bug 513958).
  */
-static nsresult GetRegWindowsAppDataFolder(bool aLocal, nsILocalFile** aFile)
+static nsresult GetRegWindowsAppDataFolder(PRBool aLocal, nsILocalFile** aFile)
 {
     HKEY key;
     NS_NAMED_LITERAL_STRING(keyName,
@@ -454,7 +454,7 @@ GetUnixXDGUserDirectory(SystemDirectories aSystemDirectory,
     if (NS_FAILED(rv))
         return rv;
 
-    bool exists;
+    PRBool exists;
     rv = file->Exists(&exists);
     if (NS_FAILED(rv))
         return rv;

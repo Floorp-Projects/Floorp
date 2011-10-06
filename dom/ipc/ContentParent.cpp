@@ -355,14 +355,27 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
             props->SetPropertyAsBool(NS_LITERAL_STRING("abnormal"), PR_TRUE);
 
 #ifdef MOZ_CRASHREPORTER
-            MOZ_ASSERT(ManagedPCrashReporterParent().Length() > 0);
-            CrashReporterParent* crashReporter =
-                    static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
+            nsAutoString dumpID;
 
-            crashReporter->GenerateCrashReport(this, NULL);
- 
-            nsAutoString dumpID(crashReporter->ChildDumpID());
+            nsCOMPtr<nsILocalFile> crashDump;
+            TakeMinidump(getter_AddRefs(crashDump)) &&
+                CrashReporter::GetIDFromMinidump(crashDump, dumpID);
+
             props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
+
+            if (!dumpID.IsEmpty()) {
+                CrashReporter::AnnotationTable notes;
+                notes.Init();
+                notes.Put(NS_LITERAL_CSTRING("ProcessType"), NS_LITERAL_CSTRING("content"));
+
+                char startTime[32];
+                sprintf(startTime, "%lld", static_cast<long long>(mProcessStartTime));
+                notes.Put(NS_LITERAL_CSTRING("StartupTime"),
+                          nsDependentCString(startTime));
+
+                // TODO: Additional per-process annotations.
+                CrashReporter::AppendExtraData(dumpID, notes);
+            }
 #endif
 
             obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nsnull);
@@ -402,19 +415,12 @@ ContentParent::DestroyTestShell(TestShellParent* aTestShell)
     return PTestShellParent::Send__delete__(aTestShell);
 }
 
-TestShellParent*
-ContentParent::GetTestShellSingleton()
-{
-    if (!ManagedPTestShellParent().Length())
-        return nsnull;
-    return static_cast<TestShellParent*>(ManagedPTestShellParent()[0]);
-}
-
 ContentParent::ContentParent()
     : mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
     , mIsAlive(true)
+    , mProcessStartTime(time(NULL))
     , mSendPermissionUpdates(false)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -489,7 +495,7 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
     DebugOnly<nsresult> rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not get enumerator!");
     while(1) {
-        bool hasMore;
+        PRBool hasMore;
         enumerator->HasMoreElements(&hasMore);
         if (!hasMore)
             break;
@@ -607,7 +613,7 @@ ContentParent::RecvEmptyClipboard()
 }
 
 bool
-ContentParent::RecvClipboardHasText(bool* hasText)
+ContentParent::RecvClipboardHasText(PRBool* hasText)
 {
     nsresult rv;
     nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
@@ -655,7 +661,7 @@ ContentParent::RecvGetIconForExtension(const nsCString& aFileExt, const PRUint32
 }
 
 bool
-ContentParent::RecvGetShowPasswordSetting(bool* showPassword)
+ContentParent::RecvGetShowPasswordSetting(PRBool* showPassword)
 {
     // default behavior is to show the last password character
     *showPassword = PR_TRUE;
@@ -698,7 +704,7 @@ ContentParent::Observe(nsISupports* aSubject,
         nsCOMPtr<nsIPrefServiceInternal> prefService =
           do_GetService("@mozilla.org/preferences-service;1");
 
-        bool prefNeedUpdate;
+        PRBool prefNeedUpdate;
         prefService->PrefHasUserValue(strData, &prefNeedUpdate);
 
         // If the pref does not have a user value, check if it exist on the
@@ -785,23 +791,9 @@ ContentParent::DeallocPBrowser(PBrowserParent* frame)
 }
 
 PCrashReporterParent*
-ContentParent::AllocPCrashReporter(const NativeThreadId& tid,
-                                   const PRUint32& processType)
+ContentParent::AllocPCrashReporter()
 {
-#ifdef MOZ_CRASHREPORTER
   return new CrashReporterParent();
-#else
-  return nsnull;
-#endif
-}
-
-bool
-ContentParent::RecvPCrashReporterConstructor(PCrashReporterParent* actor,
-                                             const NativeThreadId& tid,
-                                             const PRUint32& processType)
-{
-  static_cast<CrashReporterParent*>(actor)->SetChildData(tid, processType);
-  return true;
 }
 
 bool
@@ -1010,7 +1002,7 @@ ContentParent::RecvSetURITitle(const IPC::URI& uri,
 bool
 ContentParent::RecvShowFilePicker(const PRInt16& mode,
                                   const PRInt16& selectedType,
-                                  const bool& addToRecentDocs,
+                                  const PRBool& addToRecentDocs,
                                   const nsString& title,
                                   const nsString& defaultFile,
                                   const nsString& defaultExtension,
@@ -1058,7 +1050,7 @@ ContentParent::RecvShowFilePicker(const PRInt16& mode,
         *result = filePicker->GetFiles(getter_AddRefs(fileIter));
 
         nsCOMPtr<nsILocalFile> singleFile;
-        bool loop = true;
+        PRBool loop = PR_TRUE;
         while (NS_SUCCEEDED(fileIter->HasMoreElements(&loop)) && loop) {
             fileIter->GetNext(getter_AddRefs(singleFile));
             if (singleFile) {
@@ -1106,7 +1098,7 @@ ContentParent::OnDispatchedEvent(nsIThreadInternal *thread)
 /* void onProcessNextEvent (in nsIThreadInternal thread, in boolean mayWait, in unsigned long recursionDepth); */
 NS_IMETHODIMP
 ContentParent::OnProcessNextEvent(nsIThreadInternal *thread,
-                                  bool mayWait,
+                                  PRBool mayWait,
                                   PRUint32 recursionDepth)
 {
     if (mRunToCompletionDepth)
@@ -1142,7 +1134,7 @@ ContentParent::AfterProcessNextEvent(nsIThreadInternal *thread,
 
 bool
 ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
-                                         const nsString& aText, const bool& aTextClickable,
+                                         const nsString& aText, const PRBool& aTextClickable,
                                          const nsString& aCookie, const nsString& aName)
 {
     nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_ALERTSERVICE_CONTRACTID));

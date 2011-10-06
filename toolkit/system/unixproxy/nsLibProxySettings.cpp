@@ -116,7 +116,7 @@ nsUnixSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
       aResult.AppendLiteral("; ");
     }
 
-    bool isScheme = false;
+    PRBool isScheme = PR_FALSE;
     nsXPIDLCString schemeString;
     nsXPIDLCString hostPortString;
     nsCOMPtr<nsIURI> proxyURI;

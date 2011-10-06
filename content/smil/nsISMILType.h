@@ -135,7 +135,7 @@ protected:
    *
    * @pre aDest.mType == aSrc.mType == this
    */
-  virtual bool IsEqual(const nsSMILValue& aLeft,
+  virtual PRBool IsEqual(const nsSMILValue& aLeft,
                          const nsSMILValue& aRight) const = 0;
 
   /**

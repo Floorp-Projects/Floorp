@@ -132,7 +132,7 @@ private:
   PRInt32           m_dataForkOffset;
   PRInt32           m_totalDataForkWritten;
   PRInt32           m_totalResourceForkWritten;
-  bool              m_headerOk;
+  PRBool            m_headerOk;
   
   PRInt32           m_currentPartID;
   PRInt32           m_currentPartLength;

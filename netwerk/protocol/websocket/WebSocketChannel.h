@@ -150,7 +150,7 @@ private:
   void EnsureHdrOut(PRUint32 size);
   void ApplyMask(PRUint32 mask, PRUint8 *data, PRUint64 len);
 
-  bool     IsPersistentFramePtr();
+  PRBool   IsPersistentFramePtr();
   nsresult ProcessInput(PRUint8 *buffer, PRUint32 count);
   PRUint32 UpdateReadBuffer(PRUint8 *buffer, PRUint32 count,
                             PRUint32 accumulatedFragments);
@@ -176,7 +176,7 @@ private:
       delete mMsg;
     }
 
-    bool IsControl()  { return mIsControl; }
+    PRBool IsControl()  { return mIsControl; }
     const nsCString *Msg()  { return mMsg; }
     PRInt32 BinaryLen() { return mBinaryLen; }
     PRInt32 Length()
@@ -194,7 +194,7 @@ private:
 
   private:
     nsCString *mMsg;
-    bool       mIsControl;
+    PRBool     mIsControl;
     PRInt32    mBinaryLen;
   };
 

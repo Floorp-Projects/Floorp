@@ -67,8 +67,8 @@ private:
   nsresult TestPermission(nsIURI *aCurrentURI,
                           nsIURI *aFirstURI,
                           PRInt32 aContentType,
-                          bool *aPermission,
-                          bool *aFromPrefs);
+                          PRBool *aPermission,
+                          PRBool *aFromPrefs);
 
   nsCOMPtr<nsIPermissionManager> mPermissionManager;
   nsCOMPtr<nsIPrefBranch2> mPrefBranchInternal;

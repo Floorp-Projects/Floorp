@@ -45,6 +45,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
+var gServiceURL = Services.prefs.getCharPref("extensions.getLocales.get.url");
+
 // A map between XML keys to LocaleSearchResult keys for string values
 // that require no extra parsing from XML
 const STRING_KEY_MAP = {
@@ -81,7 +83,7 @@ var LocaleRepository = {
   },
 
   getLocales: function getLocales(aCallback, aFilters) {
-    let url = Services.prefs.getCharPref("extensions.getLocales.get.url");
+    let url = gServiceURL;
 
     if (!url) {
       aCallback([]);
@@ -91,7 +93,7 @@ var LocaleRepository = {
     let buildID = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).QueryInterface(Ci.nsIXULRuntime).appBuildID;
     if (aFilters) {
       if (aFilters.buildID)
-        buildID = aFilters.buildID;
+        buildid = aFilters.buildID;
     }
     buildID = buildID.substring(0,4) + "-" + buildID.substring(4).replace(/\d{2}(?=\d)/g, "$&-");
     url = url.replace(/%BUILDID_EXPANDED%/g, buildID);
@@ -103,7 +105,7 @@ var LocaleRepository = {
     request.overrideMimeType("text/xml");
   
     let self = this;
-    request.addEventListener("readystatechange", function () {
+    request.onreadystatechange = function () {
       if (request.readyState == 4) {
         if (request.status == 200) {
           self.log("---- got response")
@@ -120,7 +122,7 @@ var LocaleRepository = {
           Cu.reportError("Locale Repository: Error getting locale from AMO [" + request.status + "]");
         }
       }
-    }, false);
+    };
   
     request.send(null);
   },
@@ -164,7 +166,7 @@ var LocaleRepository = {
               addon.type = "language";
               break;
             default:
-              this.log("Unknown type id when parsing addon: " + id);
+              WARN("Unknown type id when parsing addon: " + id);
           }
           break;
         case "authors":
@@ -217,12 +219,7 @@ var LocaleRepository = {
             return null;
   
           result.xpiURL = xpiURL;
-          try {
-            addon.sourceURI = NetUtil.newURI(xpiURL);
-          } catch(ex) {
-            this.log("Addon has invalid uri: " + addon.sourceURI);
-            addon.sourceURI = null;
-          }
+          addon.sourceURI = NetUtil.newURI(xpiURL);
   
           let size = parseInt(node.getAttribute("size"));
           addon.size = (size >= 0) ? size : null;
@@ -273,7 +270,7 @@ var LocaleRepository = {
         continue;
 
       // Ignore add-on missing a required attribute
-      let requiredAttributes = ["id", "name", "version", "type", "targetLocale", "sourceURI"];
+      let requiredAttributes = ["id", "name", "version", "type", "targetLocale"];
       if (requiredAttributes.some(function(aAttribute) !result.addon[aAttribute]))
         continue;
 

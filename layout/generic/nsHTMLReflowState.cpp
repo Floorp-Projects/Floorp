@@ -55,8 +55,6 @@
 #include "nsIServiceManager.h"
 #include "nsIPercentHeightObserver.h"
 #include "nsLayoutUtils.h"
-#include "nsPlaceholderFrame.h"
-#include "nsFrameManager.h"
 #include "mozilla/Preferences.h"
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
@@ -71,8 +69,8 @@
 using namespace mozilla;
 
 // Prefs-driven control for |text-decoration: blink|
-static bool sPrefIsLoaded = false;
-static bool sBlinkIsAllowed = true;
+static PRPackedBool sPrefIsLoaded = PR_FALSE;
+static PRPackedBool sBlinkIsAllowed = PR_TRUE;
 
 enum eNormalLineHeightControl {
   eUninitialized = -1,
@@ -113,7 +111,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   Init(aPresContext);
 }
 
-static bool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent)
+static PRBool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent)
 {
   nsIFrame* frameNext = aFrame->GetNextInFlow();
   nsIFrame* parentNext = aParent->GetNextInFlow();
@@ -129,7 +127,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
                                      const nsSize&            aAvailableSpace,
                                      nscoord                  aContainingBlockWidth,
                                      nscoord                  aContainingBlockHeight,
-                                     bool                     aInit)
+                                     PRBool                   aInit)
   : nsCSSOffsetState(aFrame, aParentReflowState.rendContext)
   , mBlockDelta(0)
   , mReflowDepth(aParentReflowState.mReflowDepth + 1)
@@ -141,7 +139,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
                     (aContainingBlockHeight == -1),
                   "cb width and height should only be non-default together");
   NS_PRECONDITION(aInit == PR_TRUE || aInit == PR_FALSE,
-                  "aInit out of range for bool");
+                  "aInit out of range for PRBool");
   NS_PRECONDITION(!mFlags.mSpecialHeightReflow ||
                   !NS_SUBTREE_DIRTY(aFrame),
                   "frame should be clean when getting special height reflow");
@@ -232,9 +230,8 @@ nsHTMLReflowState::SetComputedWidth(nscoord aComputedWidth)
   NS_PRECONDITION(aComputedWidth >= 0, "Invalid computed width");
   if (mComputedWidth != aComputedWidth) {
     mComputedWidth = aComputedWidth;
-    nsIAtom* frameType = frame->GetType();
-    if (frameType != nsGkAtoms::viewportFrame) { // Or check GetParent()?
-      InitResizeFlags(frame->PresContext(), frameType);
+    if (frame->GetType() != nsGkAtoms::viewportFrame) { // Or check GetParent()?
+      InitResizeFlags(frame->PresContext());
     }
   }
 }
@@ -255,7 +252,7 @@ nsHTMLReflowState::SetComputedHeight(nscoord aComputedHeight)
   NS_PRECONDITION(aComputedHeight >= 0, "Invalid computed height");
   if (mComputedHeight != aComputedHeight) {
     mComputedHeight = aComputedHeight;
-    InitResizeFlags(frame->PresContext(), frame->GetType());
+    InitResizeFlags(frame->PresContext());
   }
 }
 
@@ -279,19 +276,16 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
   mStylePadding = frame->GetStylePadding();
   mStyleText = frame->GetStyleText();
 
-  nsIAtom* type = frame->GetType();
-
-  InitFrameType(type);
+  InitFrameType();
   InitCBReflowState();
 
-  InitConstraints(aPresContext, aContainingBlockWidth, aContainingBlockHeight,
-                  aBorder, aPadding, type);
+  InitConstraints(aPresContext, aContainingBlockWidth, aContainingBlockHeight, aBorder, aPadding);
 
-  InitResizeFlags(aPresContext, type);
+  InitResizeFlags(aPresContext);
 
   NS_WARN_IF_FALSE((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&
                     !frame->IsFrameOfType(nsIFrame::eReplaced)) ||
-                   type == nsGkAtoms::textFrame ||
+                   frame->GetType() == nsGkAtoms::textFrame ||
                    mComputedWidth != NS_UNCONSTRAINEDSIZE,
                    "have unconstrained width; this should only result from "
                    "very large sizes, not attempts at intrinsic width "
@@ -305,17 +299,31 @@ void nsHTMLReflowState::InitCBReflowState()
     return;
   }
 
-  if (parentReflowState->frame == frame->GetContainingBlock()) {
-    // Inner table frames need to use the containing block of the outer
-    // table frame.
-    if (frame->GetType() == nsGkAtoms::tableFrame) {
-      mCBReflowState = parentReflowState->mCBReflowState;
+  // If outer tables ever become containing blocks, we need to make sure to use
+  // their mCBReflowState in the non-absolutely-positioned case for inner
+  // tables.
+  NS_ASSERTION(frame->GetType() != nsGkAtoms::tableFrame ||
+               !frame->GetParent()->IsContainingBlock(),
+               "Outer table should not be containing block");
+
+  if (parentReflowState->frame->IsContainingBlock() ||
+      // Absolutely positioned frames should always be kids of the frames that
+      // determine their containing block....
+      (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE)) {
+    // an absolutely positioned inner table needs to use the parent of
+    // the outer table.  So the above comment about absolutely
+    // positioned frames is sort of a lie.
+    if (parentReflowState->parentReflowState &&
+        frame->GetType() == nsGkAtoms::tableFrame) {
+      mCBReflowState = parentReflowState->parentReflowState;
     } else {
       mCBReflowState = parentReflowState;
     }
-  } else {
-    mCBReflowState = parentReflowState->mCBReflowState;
+      
+    return;
   }
+  
+  mCBReflowState = parentReflowState->mCBReflowState;
 }
 
 /* Check whether CalcQuirkContainingBlockHeight would stop on the
@@ -326,14 +334,15 @@ void nsHTMLReflowState::InitCBReflowState()
  * XXX Maybe refactor CalcQuirkContainingBlockHeight so it uses 
  * this function as well
  */
-static bool
-IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs, nsIAtom* aFrameType)
+static PRBool
+IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs) 
 {
-  if (nsGkAtoms::blockFrame == aFrameType ||
+  nsIAtom* frameType = rs->frame->GetType();
+  if (nsGkAtoms::blockFrame == frameType ||
 #ifdef MOZ_XUL
-      nsGkAtoms::XULLabelFrame == aFrameType ||
+      nsGkAtoms::XULLabelFrame == frameType ||
 #endif
-      nsGkAtoms::scrollFrame == aFrameType) {
+      nsGkAtoms::scrollFrame == frameType) {
     // Note: This next condition could change due to a style change,
     // but that would cause a style reflow anyway, which means we're ok.
     if (NS_AUTOHEIGHT == rs->ComputedHeight()) {
@@ -347,7 +356,7 @@ IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs, nsIAtom* aFrameType)
 
 
 void
-nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType)
+nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
 {
   mFlags.mHResize = !(frame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
                     frame->GetSize().width !=
@@ -355,7 +364,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
 
   // XXX Should we really need to null check mCBReflowState?  (We do for
   // at least nsBoxFrame).
-  if (IS_TABLE_CELL(aFrameType) &&
+  if (IS_TABLE_CELL(frame->GetType()) &&
       (mFlags.mSpecialHeightReflow ||
        (frame->GetFirstInFlow()->GetStateBits() &
          NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) &&
@@ -364,7 +373,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
     // mCBReflowState->mFlags.mVResize is set correctly below when
     // reflowing descendant.
     mFlags.mVResize = PR_TRUE;
-  } else if (mCBReflowState && !nsLayoutUtils::IsNonWrapperBlock(frame)) {
+  } else if (mCBReflowState && !frame->IsContainingBlock()) {
     // XXX Is this problematic for relatively positioned inlines acting
     // as containing block for absolutely positioned elements?
     // Possibly; in that case we should at least be checking
@@ -384,7 +393,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
                         mComputedHeight + mComputedBorderPadding.TopBottom();
   }
 
-  bool dependsOnCBHeight =
+  PRBool dependsOnCBHeight =
     (mStylePosition->HeightDependsOnContainer() &&
      // FIXME: condition this on not-abspos?
      mStylePosition->mHeight.GetUnit() != eStyleUnit_Auto) ||
@@ -406,7 +415,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
     // line-height depends on block height
     frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
     // but only on containing blocks if this frame is not a suitable block
-    dependsOnCBHeight |= !nsLayoutUtils::IsNonWrapperBlock(frame);
+    dependsOnCBHeight |= !frame->IsContainingBlock();
   }
 
   // If we're the descendant of a table cell that performs special height
@@ -435,7 +444,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
   // to become fixed.
   if (dependsOnCBHeight && mCBReflowState) {
     const nsHTMLReflowState *rs = this;
-    bool hitCBReflowState = false;
+    PRBool hitCBReflowState = PR_FALSE;
     do {
       rs = rs->parentReflowState;
       if (!rs) {
@@ -454,7 +463,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
 
     } while (!hitCBReflowState ||
              (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
-              !IsQuirkContainingBlockHeight(rs, rs->frame->GetType())));
+              !IsQuirkContainingBlockHeight(rs)));
     // Note: We actually don't need to set the
     // NS_FRAME_CONTAINS_RELATIVE_HEIGHT bit for the cases
     // where we hit the early break statements in
@@ -479,8 +488,25 @@ nsHTMLReflowState::GetContainingBlockContentWidth(const nsHTMLReflowState* aRefl
   return rs->mComputedWidth;
 }
 
+/* static */
+nsIFrame*
+nsHTMLReflowState::GetContainingBlockFor(const nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "Must have frame to work with");
+  nsIFrame* container = aFrame->GetParent();
+  if (aFrame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+    // Absolutely positioned frames are just kids of their containing
+    // blocks (which may happen to be inlines).
+    return container;
+  }
+  while (container && !container->IsContainingBlock()) {
+    container = container->GetParent();
+  }
+  return container;
+}
+
 void
-nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
+nsHTMLReflowState::InitFrameType()
 {
   const nsStyleDisplay *disp = mStyleDisplay;
   nsCSSFrameType frameType;
@@ -492,25 +518,22 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
 
   // just assume what the style says, because we might not have had a
   // useful float/absolute containing block
+  nsIFrame* frameToTest =
+    frame->GetType() == nsGkAtoms::tableFrame ? frame->GetParent() : frame;
 
-  DISPLAY_INIT_TYPE(frame, this);
+  DISPLAY_INIT_TYPE(frameToTest, this);
 
-  if (aFrameType == nsGkAtoms::tableFrame) {
-    mFrameType = NS_CSS_FRAME_TYPE_BLOCK;
-    return;
-  }
-
-  NS_ASSERTION(frame->GetStyleDisplay()->IsAbsolutelyPositioned() ==
+  NS_ASSERTION(frameToTest->GetStyleDisplay()->IsAbsolutelyPositioned() ==
                  disp->IsAbsolutelyPositioned(),
                "Unexpected position style");
-  NS_ASSERTION(frame->GetStyleDisplay()->IsFloating() ==
+  NS_ASSERTION(frameToTest->GetStyleDisplay()->IsFloating() ==
                  disp->IsFloating(), "Unexpected float style");
-  if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+  if (frameToTest->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     if (disp->IsAbsolutelyPositioned()) {
       frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
       //XXXfr hack for making frames behave properly when in overflow container lists
       //      see bug 154892; need to revisit later
-      if (frame->GetPrevInFlow())
+      if (frameToTest->GetPrevInFlow())
         frameType = NS_CSS_FRAME_TYPE_BLOCK;
     }
     else if (disp->IsFloating()) {
@@ -575,8 +598,8 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   // Compute the 'left' and 'right' values. 'Left' moves the boxes to the right,
   // and 'right' moves the boxes to the left. The computed values are always:
   // left=-right
-  bool    leftIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetLeftUnit();
-  bool    rightIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetRightUnit();
+  PRBool  leftIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetLeftUnit();
+  PRBool  rightIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetRightUnit();
 
   // If neither 'left' not 'right' are auto, then we're over-constrained and
   // we ignore one of them
@@ -618,8 +641,8 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   // Compute the 'top' and 'bottom' values. The 'top' and 'bottom' properties
   // move relatively positioned elements up and down. They also must be each 
   // other's negative
-  bool    topIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetTopUnit();
-  bool    bottomIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetBottomUnit();
+  PRBool  topIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetTopUnit();
+  PRBool  bottomIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetBottomUnit();
 
   // Check for percentage based values and a containing block height that
   // depends on the content height. Treat them like 'auto'
@@ -675,12 +698,22 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   }
 }
 
+static nsIFrame*
+GetNearestContainingBlock(nsIFrame *aFrame)
+{
+  nsIFrame *cb = aFrame;
+  do {
+    cb = cb->GetParent();
+  } while (!cb->IsContainingBlock());
+  return cb;
+}
+
 nsIFrame*
 nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame* aFrame,
                                                nscoord& aCBLeftEdge,
                                                nscoord& aCBWidth)
 {
-  aFrame = aFrame->GetContainingBlock();
+  aFrame = GetNearestContainingBlock(aFrame);
   NS_ASSERTION(aFrame != frame, "How did that happen?");
 
   /* Now aFrame is the containing block we want */
@@ -726,7 +759,7 @@ struct nsHypotheticalBox {
   // offset from top edge of containing block (which is a padding edge)
   nscoord       mTop;
 #ifdef DEBUG
-  bool          mLeftIsExact, mRightIsExact;
+  PRPackedBool  mLeftIsExact, mRightIsExact;
 #endif
 
   nsHypotheticalBox() {
@@ -736,17 +769,17 @@ struct nsHypotheticalBox {
   }
 };
       
-static bool
-GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize, nsIAtom* aFrameType)
+static PRBool
+GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize)
 {
   // See if it is an image frame
-  bool success = false;
+  PRBool success = PR_FALSE;
 
   // Currently the only type of replaced frame that we can get the intrinsic
   // size for is an image frame
   // XXX We should add back the GetReflowMetrics() function and one of the
   // things should be the intrinsic size...
-  if (aFrameType == nsGkAtoms::imageFrame) {
+  if (aFrame->GetType() == nsGkAtoms::imageFrame) {
     nsImageFrame* imageFrame = (nsImageFrame*)aFrame;
 
     if (NS_SUCCEEDED(imageFrame->GetIntrinsicImageSize(aIntrinsicSize))) {
@@ -822,8 +855,8 @@ nsHTMLReflowState::CalculateHorizBorderPaddingMargin(
  * Returns PR_TRUE iff a pre-order traversal of the normal child
  * frames rooted at aFrame finds no non-empty frame before aDescendant.
  */
-static bool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
-  nsIFrame* aDescendant, bool* aFound) {
+static PRBool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
+  nsIFrame* aDescendant, PRBool* aFound) {
   if (aFrame == aDescendant) {
     *aFound = PR_TRUE;
     return PR_TRUE;
@@ -833,7 +866,7 @@ static bool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
     return PR_FALSE;
   }
   for (nsIFrame* f = aFrame->GetFirstPrincipalChild(); f; f = f->GetNextSibling()) {
-    bool allEmpty = AreAllEarlierInFlowFramesEmpty(f, aDescendant, aFound);
+    PRBool allEmpty = AreAllEarlierInFlowFramesEmpty(f, aDescendant, aFound);
     if (*aFound || !allEmpty) {
       return allEmpty;
     }
@@ -849,13 +882,12 @@ static bool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
 // cbrs->frame is the actual containing block
 void
 nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
-                                            nsPlaceholderFrame* aPlaceholderFrame,
+                                            nsIFrame*         aPlaceholderFrame,
                                             nsIFrame*         aContainingBlock,
                                             nscoord           aBlockLeftContentEdge,
                                             nscoord           aBlockContentWidth,
                                             const nsHTMLReflowState* cbrs,
-                                            nsHypotheticalBox& aHypotheticalBox,
-                                            nsIAtom*          aFrameType)
+                                            nsHypotheticalBox& aHypotheticalBox)
 {
   NS_ASSERTION(mStyleDisplay->mOriginalDisplay != NS_STYLE_DISPLAY_NONE,
                "mOriginalDisplay has not been properly initialized");
@@ -863,18 +895,18 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   // If it's a replaced element and it has a 'auto' value for 'width', see if we
   // can get the intrinsic size. This will allow us to exactly determine both the
   // left and right edges
-  bool isAutoWidth = mStylePosition->mWidth.GetUnit() == eStyleUnit_Auto;
+  PRBool isAutoWidth = mStylePosition->mWidth.GetUnit() == eStyleUnit_Auto;
   nsSize      intrinsicSize;
-  bool        knowIntrinsicSize = false;
+  PRBool      knowIntrinsicSize = PR_FALSE;
   if (NS_FRAME_IS_REPLACED(mFrameType) && isAutoWidth) {
     // See if we can get the intrinsic size of the element
-    knowIntrinsicSize = GetIntrinsicSizeFor(frame, intrinsicSize, aFrameType);
+    knowIntrinsicSize = GetIntrinsicSizeFor(frame, intrinsicSize);
   }
 
   // See if we can calculate what the box width would have been if the
   // element had been in the flow
   nscoord boxWidth;
-  bool    knowBoxWidth = false;
+  PRBool  knowBoxWidth = PR_FALSE;
   if ((NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) &&
       !NS_FRAME_IS_REPLACED(mFrameType)) {
     // For non-replaced inline-level elements the 'width' property doesn't apply,
@@ -932,12 +964,17 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     nsLayoutUtils::GetAsBlock(aContainingBlock->GetContentInsertionFrame());
   if (blockFrame) {
     nscoord blockYOffset = blockFrame->GetOffsetTo(aContainingBlock).y;
-    const nsLineBox* lineBox = aPlaceholderFrame->GetCachedLineBox();
-    if (!lineBox) {
+    PRBool isValid;
+    nsBlockInFlowLineIterator iter(blockFrame, aPlaceholderFrame, &isValid);
+    if (!isValid) {
       // Give up.  We're probably dealing with somebody using
       // position:absolute inside native-anonymous content anyway.
       aHypotheticalBox.mTop = placeholderOffset.y;
     } else {
+      NS_ASSERTION(iter.GetContainer() == blockFrame,
+                   "Found placeholder in wrong block!");
+      nsBlockFrame::line_iterator lineBox = iter.GetLine();
+
       // How we determine the hypothetical box depends on whether the element
       // would have been inline-level or block-level
       if (mStyleDisplay->IsOriginalDisplayInlineOutside()) {
@@ -951,10 +988,10 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
         // have been just before this line.
         // XXXbz the line box is not fully reflowed yet if our
         // containing block is relatively positioned...
-        bool allEmpty = true;
-        if (!lineBox->IsValidCachedIsEmpty() || !lineBox->CachedIsEmpty()) {
+        if (lineBox != iter.End()) {
           nsIFrame * firstFrame = lineBox->mFirstChild;
-          bool found = false;
+          PRBool found = PR_FALSE;
+          PRBool allEmpty = PR_TRUE;
           while (firstFrame) { // See bug 223064
             allEmpty = AreAllEarlierInFlowFramesEmpty(firstFrame,
               aPlaceholderFrame, &found);
@@ -963,17 +1000,20 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
             firstFrame = firstFrame->GetNextSibling();
           }
           NS_ASSERTION(firstFrame, "Couldn't find placeholder!");
-        }
 
-        if (allEmpty) {
-          // The top of the hypothetical box is the top of the line
-          // containing the placeholder, since there is nothing in the
-          // line before our placeholder except empty frames.
-          aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
+          if (allEmpty) {
+            // The top of the hypothetical box is the top of the line
+            // containing the placeholder, since there is nothing in the
+            // line before our placeholder except empty frames.
+            aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
+          } else {
+            // The top of the hypothetical box is just below the line
+            // containing the placeholder.
+            aHypotheticalBox.mTop = lineBox->mBounds.YMost() + blockYOffset;
+          }
         } else {
-          // The top of the hypothetical box is just below the line
-          // containing the placeholder.
-          aHypotheticalBox.mTop = lineBox->mBounds.YMost() + blockYOffset;
+          // Just use the placeholder's y-offset wrt the containing block
+          aHypotheticalBox.mTop = placeholderOffset.y;
         }
       }
     }
@@ -1087,22 +1127,20 @@ void
 nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
                                            const nsHTMLReflowState* cbrs,
                                            nscoord containingBlockWidth,
-                                           nscoord containingBlockHeight,
-                                           nsIAtom* aFrameType)
+                                           nscoord containingBlockHeight)
 {
   NS_PRECONDITION(containingBlockHeight != NS_AUTOHEIGHT,
                   "containing block height must be constrained");
 
-  NS_ASSERTION(aFrameType != nsGkAtoms::tableFrame,
-               "InitAbsoluteConstraints should not be called on table frames");
-  NS_ASSERTION(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
+  nsIFrame* outOfFlow = 
+    frame->GetType() == nsGkAtoms::tableFrame ? frame->GetParent() : frame;
+  NS_ASSERTION(outOfFlow->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
                "Why are we here?");
 
   // Get the placeholder frame
-  nsPlaceholderFrame*     placeholderFrame;
+  nsIFrame*     placeholderFrame;
 
-  placeholderFrame =
-    aPresContext->PresShell()->FrameManager()->GetPlaceholderFrameFor(frame);
+  placeholderFrame = aPresContext->PresShell()->GetPlaceholderFrameFor(outOfFlow);
   NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
 
   // If both 'left' and 'right' are 'auto' or both 'top' and 'bottom' are
@@ -1121,12 +1159,12 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
                                                     cbWidth);
 
     CalculateHypotheticalBox(aPresContext, placeholderFrame, cbFrame,
-                             cbLeftEdge, cbWidth, cbrs, hypotheticalBox, aFrameType);
+                             cbLeftEdge, cbWidth, cbrs, hypotheticalBox);
   }
 
   // Initialize the 'left' and 'right' computed offsets
   // XXX Handle new 'static-position' value...
-  bool          leftIsAuto = false, rightIsAuto = false;
+  PRBool        leftIsAuto = PR_FALSE, rightIsAuto = PR_FALSE;
   if (eStyleUnit_Auto == mStylePosition->mOffset.GetLeftUnit()) {
     mComputedOffsets.left = 0;
     leftIsAuto = PR_TRUE;
@@ -1149,7 +1187,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   if (leftIsAuto && rightIsAuto) {
     // Use the direction of the original ("static-position") containing block
     // to dictate whether 'left' or 'right' is treated like 'static-position'.
-    if (NS_STYLE_DIRECTION_LTR == placeholderFrame->GetContainingBlock()
+    if (NS_STYLE_DIRECTION_LTR == GetNearestContainingBlock(placeholderFrame)
                                     ->GetStyleVisibility()->mDirection) {
       NS_ASSERTION(hypotheticalBox.mLeftIsExact, "should always have "
                    "exact value on containing block's start side");
@@ -1164,7 +1202,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   }
 
   // Initialize the 'top' and 'bottom' computed offsets
-  bool        topIsAuto = false, bottomIsAuto = false;
+  PRBool      topIsAuto = PR_FALSE, bottomIsAuto = PR_FALSE;
   if (eStyleUnit_Auto == mStylePosition->mOffset.GetTopUnit()) {
     mComputedOffsets.top = 0;
     topIsAuto = PR_TRUE;
@@ -1188,10 +1226,10 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
     topIsAuto = PR_FALSE;
   }
 
-  bool widthIsAuto = eStyleUnit_Auto == mStylePosition->mWidth.GetUnit();
-  bool heightIsAuto = eStyleUnit_Auto == mStylePosition->mHeight.GetUnit();
+  PRBool widthIsAuto = eStyleUnit_Auto == mStylePosition->mWidth.GetUnit();
+  PRBool heightIsAuto = eStyleUnit_Auto == mStylePosition->mHeight.GetUnit();
 
-  bool shrinkWrap = leftIsAuto || rightIsAuto;
+  PRBool shrinkWrap = leftIsAuto || rightIsAuto;
   nsSize size =
     frame->ComputeSize(rendContext,
                        nsSize(containingBlockWidth,
@@ -1259,9 +1297,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
                                mComputedMargin.LeftRight() -
                                mComputedBorderPadding.LeftRight() -
                                mComputedWidth;
-    bool marginLeftIsAuto =
+    PRBool marginLeftIsAuto =
       eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit();
-    bool marginRightIsAuto =
+    PRBool marginRightIsAuto =
       eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit();
 
     if (marginLeftIsAuto) {
@@ -1356,9 +1394,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
     //  * we're dealing with a replaced element
     //  * height was constrained by min-height or max-height.
     nscoord availMarginSpace = autoHeight - mComputedHeight;
-    bool marginTopIsAuto =
+    PRBool marginTopIsAuto =
       eStyleUnit_Auto == mStyleMargin->mMargin.GetTopUnit();
-    bool marginBottomIsAuto =
+    PRBool marginBottomIsAuto =
       eStyleUnit_Auto == mStyleMargin->mMargin.GetBottomUnit();
 
     if (marginTopIsAuto) {
@@ -1529,18 +1567,13 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPres
   // formed by the content edge of the nearest block-level ancestor
   aContainingBlockWidth = aContainingBlockRS->mComputedWidth;
   aContainingBlockHeight = aContainingBlockRS->mComputedHeight;
-
-  // mFrameType for abs-pos tables is NS_CSS_FRAME_TYPE_BLOCK, so we need to
-  // special case them here.
-  if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE ||
-      (frame->GetType() == nsGkAtoms::tableFrame &&
-       frame->GetStyleDisplay()->IsAbsolutelyPositioned() &&
-       (frame->GetParent()->GetStateBits() & NS_FRAME_OUT_OF_FLOW))) {
+  
+  if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
     // See if the ancestor is block-level or inline-level
     if (NS_FRAME_GET_TYPE(aContainingBlockRS->mFrameType) == NS_CSS_FRAME_TYPE_INLINE) {
       // Base our size on the actual size of the frame.  In cases when this is
       // completely bogus (eg initial reflow), this code shouldn't even be
-      // called, since the code in nsInlineFrame::Reflow will pass in
+      // called, since the code in nsPositionedInlineFrame::Reflow will pass in
       // the containing block dimensions to our constructor.
       // XXXbz we should be taking the in-flows into account too, but
       // that's very hard.
@@ -1586,7 +1619,7 @@ PrefsChanged(const char *aPrefName, void *instance)
 // Check to see if |text-decoration: blink| is allowed.  The first time
 // called, register the callback and then force-load the pref.  After that,
 // just use the cached value.
-static bool BlinkIsAllowed(void)
+static PRBool BlinkIsAllowed(void)
 {
   if (!sPrefIsLoaded) {
     // Set up a listener and check the initial value
@@ -1610,7 +1643,7 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
   return sNormalLineHeightControl;
 }
 
-static inline bool
+static inline PRBool
 IsSideCaption(nsIFrame* aFrame, const nsStyleDisplay* aStyleDisplay)
 {
   if (aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CAPTION)
@@ -1628,8 +1661,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
                                    nscoord         aContainingBlockWidth,
                                    nscoord         aContainingBlockHeight,
                                    const nsMargin* aBorder,
-                                   const nsMargin* aPadding,
-                                   nsIAtom* aFrameType)
+                                   const nsMargin* aPadding)
 {
   DISPLAY_INIT_CONSTRAINTS(frame, this,
                            aContainingBlockWidth, aContainingBlockHeight,
@@ -1639,7 +1671,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
   // height equal to the available space
   if (nsnull == parentReflowState) {
     // XXXldb This doesn't mean what it used to!
-    InitOffsets(aContainingBlockWidth, aFrameType, aBorder, aPadding);
+    InitOffsets(aContainingBlockWidth, aBorder, aPadding);
     // Override mComputedMargin since reflow roots start from the
     // frame's boundary, which is inside the margin.
     mComputedMargin.SizeTo(0, 0, 0, 0);
@@ -1686,7 +1718,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       }
     }
 
-    InitOffsets(aContainingBlockWidth, aFrameType, aBorder, aPadding);
+    InitOffsets(aContainingBlockWidth, aBorder, aPadding);
 
     const nsStyleCoord &height = mStylePosition->mHeight;
     nsStyleUnit heightUnit = height.GetUnit();
@@ -1753,7 +1785,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
     if (NS_CSS_FRAME_TYPE_INTERNAL_TABLE == mFrameType) {
       // Internal table elements. The rules vary depending on the type.
       // Calculate the computed width
-      bool rowOrRowGroup = false;
+      PRBool rowOrRowGroup = PR_FALSE;
       const nsStyleCoord &width = mStylePosition->mWidth;
       nsStyleUnit widthUnit = width.GetUnit();
       if ((NS_STYLE_DISPLAY_TABLE_ROW == mStyleDisplay->mDisplay) ||
@@ -1808,13 +1840,13 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
     } else if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
       // XXX not sure if this belongs here or somewhere else - cwk
       InitAbsoluteConstraints(aPresContext, cbrs, aContainingBlockWidth,
-                              aContainingBlockHeight, aFrameType);
+                              aContainingBlockHeight);
     } else {
-      bool isBlock =
+      PRBool isBlock =
         NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType);
       // make sure legend frames with display:block and width:auto still
       // shrink-wrap
-      bool shrinkWrap = !isBlock || aFrameType == nsGkAtoms::legendFrame;
+      PRBool shrinkWrap = !isBlock || frame->GetType() == nsGkAtoms::legendFrame;
       nsSize size =
         frame->ComputeSize(rendContext,
                            nsSize(aContainingBlockWidth,
@@ -1836,10 +1868,8 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       NS_ASSERTION(mComputedHeight == NS_UNCONSTRAINEDSIZE ||
                    mComputedHeight >= 0, "Bogus height");
 
-      // Exclude inline tables from the block margin calculations
-      if (isBlock && !IsSideCaption(frame, mStyleDisplay) &&
-          frame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE)
-        CalculateBlockSideMargins(availableWidth, mComputedWidth, aFrameType);
+      if (isBlock && !IsSideCaption(frame, mStyleDisplay))
+        CalculateBlockSideMargins(availableWidth, mComputedWidth);
     }
   }
   // Check for blinking text and permission to display it
@@ -1853,7 +1883,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
 static void
 UpdateProp(FrameProperties& aProps,
            const FramePropertyDescriptor* aProperty,
-           bool aNeeded,
+           PRBool aNeeded,
            nsMargin& aNewValue)
 {
   if (aNeeded) {
@@ -1870,7 +1900,6 @@ UpdateProp(FrameProperties& aProps,
 
 void
 nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
-                              nsIAtom* aFrameType,
                               const nsMargin *aBorder,
                               const nsMargin *aPadding)
 {
@@ -1886,7 +1915,7 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
   // become the default computed values, and may be adjusted below
   // XXX fix to provide 0,0 for the top&bottom margins for
   // inline-non-replaced elements
-  bool needMarginProp = ComputeMargin(aContainingBlockWidth);
+  PRBool needMarginProp = ComputeMargin(aContainingBlockWidth);
   // XXX We need to include 'auto' horizontal margins in this too!
   // ... but if we did that, we'd need to fix nsFrame::GetUsedMargin
   // to use it even when the margins are all zero (since sometimes
@@ -1896,8 +1925,8 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
 
 
   const nsStyleDisplay *disp = frame->GetStyleDisplay();
-  bool isThemed = frame->IsThemed(disp);
-  bool needPaddingProp;
+  PRBool isThemed = frame->IsThemed(disp);
+  PRBool needPaddingProp;
   nsIntMargin widget;
   if (isThemed &&
       presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
@@ -1914,7 +1943,7 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
     needPaddingProp = frame->GetStylePadding()->IsWidthDependent();
   }
   else {
-    needPaddingProp = ComputePadding(aContainingBlockWidth, aFrameType);
+    needPaddingProp = ComputePadding(aContainingBlockWidth);
   }
 
   if (isThemed) {
@@ -1939,7 +1968,8 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
   }
   mComputedBorderPadding += mComputedPadding;
 
-  if (aFrameType == nsGkAtoms::tableFrame) {
+  nsIAtom* frameType = frame->GetType();
+  if (frameType == nsGkAtoms::tableFrame) {
     nsTableFrame *tableFrame = static_cast<nsTableFrame*>(frame);
 
     if (tableFrame->IsBorderCollapse()) {
@@ -1950,11 +1980,7 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
       mComputedPadding.SizeTo(0,0,0,0);
       mComputedBorderPadding = tableFrame->GetIncludedOuterBCBorder();
     }
-
-    // The margin is inherited to the outer table frame via
-    // the ::-moz-table-outer rule in ua.css.
-    mComputedMargin.SizeTo(0, 0, 0, 0);
-  } else if (aFrameType == nsGkAtoms::scrollbarFrame) {
+  } else if (frameType == nsGkAtoms::scrollbarFrame) {
     // scrollbars may have had their width or height smashed to zero
     // by the associated scrollframe, in which case we must not report
     // any padding or border.
@@ -1977,8 +2003,7 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
 // Note: the width unit is not auto when this is called
 void
 nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
-                                             nscoord aComputedWidth,
-                                             nsIAtom* aFrameType)
+                                             nscoord aComputedWidth)
 {
   NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aComputedWidth &&
                    NS_UNCONSTRAINEDSIZE != aAvailWidth,
@@ -2012,9 +2037,9 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
 
   // The css2 spec clearly defines how block elements should behave
   // in section 10.3.3.
-  bool isAutoLeftMargin =
+  PRBool isAutoLeftMargin =
     eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit();
-  bool isAutoRightMargin =
+  PRBool isAutoRightMargin =
     eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit();
   if (!isAutoLeftMargin && !isAutoRightMargin) {
     // Neither margin is 'auto' so we're over constrained. Use the
@@ -2022,7 +2047,7 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
     // ignore
     // First check if there is an HTML alignment that we should honor
     const nsHTMLReflowState* prs = parentReflowState;
-    if (aFrameType == nsGkAtoms::tableFrame) {
+    if (frame->GetType() == nsGkAtoms::tableFrame) {
       NS_ASSERTION(prs->frame->GetType() == nsGkAtoms::tableOuterFrame,
                    "table not inside outer table");
       // Center the table within the outer table based on the alignment
@@ -2140,7 +2165,7 @@ nscoord
 nsHTMLReflowState::CalcLineHeight() const
 {
   nscoord blockHeight =
-    nsLayoutUtils::IsNonWrapperBlock(frame) ? mComputedHeight :
+    frame->IsContainingBlock() ? mComputedHeight :
     (mCBReflowState ? mCBReflowState->mComputedHeight : NS_AUTOHEIGHT);
 
   return CalcLineHeight(frame->GetStyleContext(), blockHeight);
@@ -2159,12 +2184,12 @@ nsHTMLReflowState::CalcLineHeight(nsStyleContext* aStyleContext,
   return lineHeight;
 }
 
-bool
+PRBool
 nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
 {
   // If style style can provide us the margin directly, then use it.
   const nsStyleMargin *styleMargin = frame->GetStyleMargin();
-  bool isWidthDependent = !styleMargin->GetMargin(mComputedMargin);
+  PRBool isWidthDependent = !styleMargin->GetMargin(mComputedMargin);
   if (isWidthDependent) {
     // We have to compute the value
     mComputedMargin.left = nsLayoutUtils::
@@ -2188,18 +2213,19 @@ nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
   return isWidthDependent;
 }
 
-bool
-nsCSSOffsetState::ComputePadding(nscoord aContainingBlockWidth, nsIAtom* aFrameType)
+PRBool
+nsCSSOffsetState::ComputePadding(nscoord aContainingBlockWidth)
 {
   // If style can provide us the padding directly, then use it.
   const nsStylePadding *stylePadding = frame->GetStylePadding();
-  bool isWidthDependent = !stylePadding->GetPadding(mComputedPadding);
+  PRBool isWidthDependent = !stylePadding->GetPadding(mComputedPadding);
   // a table row/col group, row/col doesn't have padding
   // XXXldb Neither do border-collapse tables.
-  if (nsGkAtoms::tableRowGroupFrame == aFrameType ||
-      nsGkAtoms::tableColGroupFrame == aFrameType ||
-      nsGkAtoms::tableRowFrame      == aFrameType ||
-      nsGkAtoms::tableColFrame      == aFrameType) {
+  nsIAtom* frameType = frame->GetType();
+  if (nsGkAtoms::tableRowGroupFrame == frameType ||
+      nsGkAtoms::tableColGroupFrame == frameType ||
+      nsGkAtoms::tableRowFrame      == frameType ||
+      nsGkAtoms::tableColFrame      == frameType) {
     mComputedPadding.SizeTo(0,0,0,0);
   }
   else if (isWidthDependent) {

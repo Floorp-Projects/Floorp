@@ -45,7 +45,7 @@
 
 static const char* gFunction = "main";
 
-static bool VerifyResult(nsresult aRV, const char* aMsg)
+static PRBool VerifyResult(nsresult aRV, const char* aMsg)
 {
     if (NS_FAILED(aRV)) {
         fail("%s %s, rv=%x", gFunction, aMsg, aRV);
@@ -87,7 +87,7 @@ static nsCString FixName(const char* aName)
 }
 
 // Test nsIFile::AppendNative, verifying that aName is not a valid file name
-static bool TestInvalidFileName(nsIFile* aBase, const char* aName)
+static PRBool TestInvalidFileName(nsIFile* aBase, const char* aName)
 {
     gFunction = "TestInvalidFileName";
     nsCOMPtr<nsILocalFile> file = NewFile(aBase);
@@ -106,7 +106,7 @@ static bool TestInvalidFileName(nsIFile* aBase, const char* aName)
 
 // Test nsIFile::Create, verifying that the file exists and did not exist before,
 // and leaving it there for future tests
-static bool TestCreate(nsIFile* aBase, const char* aName, PRInt32 aType, PRInt32 aPerm)
+static PRBool TestCreate(nsIFile* aBase, const char* aName, PRInt32 aType, PRInt32 aPerm)
 {
     gFunction = "TestCreate";
     nsCOMPtr<nsILocalFile> file = NewFile(aBase);
@@ -118,7 +118,7 @@ static bool TestCreate(nsIFile* aBase, const char* aName, PRInt32 aType, PRInt32
     if (!VerifyResult(rv, "AppendNative"))
         return PR_FALSE;
 
-    bool exists;
+    PRBool exists;
     rv = file->Exists(&exists);
     if (!VerifyResult(rv, "Exists (before)"))
         return PR_FALSE;
@@ -145,7 +145,7 @@ static bool TestCreate(nsIFile* aBase, const char* aName, PRInt32 aType, PRInt32
 // Test nsIFile::CreateUnique, verifying that the new file exists and if it existed before,
 // the new file has a different name.
 // The new file is left in place.
-static bool TestCreateUnique(nsIFile* aBase, const char* aName, PRInt32 aType, PRInt32 aPerm)
+static PRBool TestCreateUnique(nsIFile* aBase, const char* aName, PRInt32 aType, PRInt32 aPerm)
 {
     gFunction = "TestCreateUnique";
     nsCOMPtr<nsILocalFile> file = NewFile(aBase);
@@ -157,7 +157,7 @@ static bool TestCreateUnique(nsIFile* aBase, const char* aName, PRInt32 aType, P
     if (!VerifyResult(rv, "AppendNative"))
         return PR_FALSE;
 
-    bool existsBefore;
+    PRBool existsBefore;
     rv = file->Exists(&existsBefore);
     if (!VerifyResult(rv, "Exists (before)"))
         return PR_FALSE;
@@ -166,7 +166,7 @@ static bool TestCreateUnique(nsIFile* aBase, const char* aName, PRInt32 aType, P
     if (!VerifyResult(rv, "Create"))
         return PR_FALSE;
 
-    bool existsAfter;
+    PRBool existsAfter;
     rv = file->Exists(&existsAfter);
     if (!VerifyResult(rv, "Exists (after)"))
         return PR_FALSE;
@@ -191,7 +191,7 @@ static bool TestCreateUnique(nsIFile* aBase, const char* aName, PRInt32 aType, P
 
 // Test nsILocalFile::OpenNSPRFileDesc with DELETE_ON_CLOSE, verifying that the file exists
 // and did not exist before, and leaving it there for future tests
-static bool TestDeleteOnClose(nsIFile* aBase, const char* aName, PRInt32 aFlags, PRInt32 aPerm)
+static PRBool TestDeleteOnClose(nsIFile* aBase, const char* aName, PRInt32 aFlags, PRInt32 aPerm)
 {
     gFunction = "TestDeleteOnClose";
     nsCOMPtr<nsILocalFile> file = NewFile(aBase);
@@ -203,7 +203,7 @@ static bool TestDeleteOnClose(nsIFile* aBase, const char* aName, PRInt32 aFlags,
     if (!VerifyResult(rv, "AppendNative"))
         return PR_FALSE;
 
-    bool exists;
+    PRBool exists;
     rv = file->Exists(&exists);
     if (!VerifyResult(rv, "Exists (before)"))
         return PR_FALSE;
@@ -234,7 +234,7 @@ static bool TestDeleteOnClose(nsIFile* aBase, const char* aName, PRInt32 aFlags,
 }
 
 // Test nsIFile::Remove, verifying that the file does not exist and did before
-static bool TestRemove(nsIFile* aBase, const char* aName, bool aRecursive)
+static PRBool TestRemove(nsIFile* aBase, const char* aName, PRBool aRecursive)
 {
     gFunction = "TestDelete";
     nsCOMPtr<nsILocalFile> file = NewFile(aBase);
@@ -246,7 +246,7 @@ static bool TestRemove(nsIFile* aBase, const char* aName, bool aRecursive)
     if (!VerifyResult(rv, "AppendNative"))
         return PR_FALSE;
 
-    bool exists;
+    PRBool exists;
     rv = file->Exists(&exists);
     if (!VerifyResult(rv, "Exists (before)"))
         return PR_FALSE;
@@ -272,7 +272,7 @@ static bool TestRemove(nsIFile* aBase, const char* aName, bool aRecursive)
 
 // Test nsIFile::MoveToNative, verifying that the file did not exist at the new location
 // before and does afterward, and that it does not exist at the old location anymore
-static bool TestMove(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const char* aNewName)
+static PRBool TestMove(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const char* aNewName)
 {
     gFunction = "TestMove";
     nsCOMPtr<nsILocalFile> file = NewFile(aBase);
@@ -284,7 +284,7 @@ static bool TestMove(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
     if (!VerifyResult(rv, "AppendNative"))
         return PR_FALSE;
 
-    bool exists;
+    PRBool exists;
     rv = file->Exists(&exists);
     if (!VerifyResult(rv, "Exists (before)"))
         return PR_FALSE;
@@ -313,7 +313,7 @@ static bool TestMove(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
     rv = file->AppendNative(newName);
     if (!VerifyResult(rv, "AppendNative"))
         return PR_FALSE;
-    bool equal;
+    PRBool equal;
     rv = file->Equals(newFile, &equal);
     if (!VerifyResult(rv, "Equals"))
         return PR_FALSE;
@@ -335,7 +335,7 @@ static bool TestMove(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
 
 // Test nsIFile::CopyToNative, verifying that the file did not exist at the new location
 // before and does afterward, and that it does exist at the old location too
-static bool TestCopy(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const char* aNewName)
+static PRBool TestCopy(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const char* aNewName)
 {
     gFunction = "TestCopy";
     nsCOMPtr<nsILocalFile> file = NewFile(aBase);
@@ -347,7 +347,7 @@ static bool TestCopy(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
     if (!VerifyResult(rv, "AppendNative"))
         return PR_FALSE;
 
-    bool exists;
+    PRBool exists;
     rv = file->Exists(&exists);
     if (!VerifyResult(rv, "Exists (before)"))
         return PR_FALSE;
@@ -361,7 +361,7 @@ static bool TestCopy(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
     rv = newFile->CopyToNative(aDestDir, newName);
     if (!VerifyResult(rv, "MoveToNative"))
         return PR_FALSE;
-    bool equal;
+    PRBool equal;
     rv = file->Equals(newFile, &equal);
     if (!VerifyResult(rv, "Equals"))
         return PR_FALSE;
@@ -397,7 +397,7 @@ static bool TestCopy(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
 }
 
 // Test nsIFile::GetParent
-static bool TestParent(nsIFile* aBase, nsIFile* aStart)
+static PRBool TestParent(nsIFile* aBase, nsIFile* aStart)
 {
     gFunction = "TestParent";
     nsCOMPtr<nsILocalFile> file = NewFile(aStart);
@@ -408,7 +408,7 @@ static bool TestParent(nsIFile* aBase, nsIFile* aStart)
     nsresult rv = file->GetParent(getter_AddRefs(parent));
     VerifyResult(rv, "GetParent");
 
-    bool equal;
+    PRBool equal;
     rv = parent->Equals(aBase, &equal);
     VerifyResult(rv, "Equals");
     if (!equal) {
@@ -420,7 +420,7 @@ static bool TestParent(nsIFile* aBase, nsIFile* aStart)
 }
 
 // Test nsIFile::Normalize and native path setting/getting
-static bool TestNormalizeNativePath(nsIFile* aBase, nsIFile* aStart)
+static PRBool TestNormalizeNativePath(nsIFile* aBase, nsIFile* aStart)
 {
     gFunction = "TestNormalizeNativePath";
     nsCOMPtr<nsILocalFile> file = NewFile(aStart);

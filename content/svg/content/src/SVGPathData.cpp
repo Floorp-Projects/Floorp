@@ -38,6 +38,7 @@
 #include "SVGAnimatedPathSegList.h"
 #include "SVGPathSegUtils.h"
 #include "nsSVGElement.h"
+#include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
 #include "nsString.h"
@@ -50,7 +51,7 @@
 
 using namespace mozilla;
 
-static bool IsMoveto(PRUint16 aSegType)
+static PRBool IsMoveto(PRUint16 aSegType)
 {
   return aSegType == nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS ||
          aSegType == nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL;
@@ -153,7 +154,7 @@ SVGPathData::CountItems() const
 }
 #endif
 
-bool
+PRBool
 SVGPathData::GetSegmentLengths(nsTArray<double> *aLengths) const
 {
   aLengths->Clear();
@@ -175,7 +176,7 @@ SVGPathData::GetSegmentLengths(nsTArray<double> *aLengths) const
   return PR_TRUE;
 }
 
-bool
+PRBool
 SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(nsTArray<double> *aOutput) const
 {
   SVGPathTraversalState state;
@@ -287,9 +288,9 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
     return; // paths without an initial moveto are invalid
   }
 
-  bool capsAreSquare = aCtx->CurrentLineCap() == gfxContext::LINE_CAP_SQUARE;
-  bool subpathHasLength = false;  // visual length
-  bool subpathContainsNonArc = false;
+  PRBool capsAreSquare = aCtx->CurrentLineCap() == gfxContext::LINE_CAP_SQUARE;
+  PRBool subpathHasLength = PR_FALSE;  // visual length
+  PRBool subpathContainsNonArc = PR_FALSE;
 
   PRUint32 segType, prevSegType = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
   gfxPoint pathStart(0.0, 0.0); // start point of [sub]path
@@ -666,8 +667,8 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
       double rx = mData[i];
       double ry = mData[i+1];
       double angle = mData[i+2];
-      bool largeArcFlag = mData[i+3] != 0.0f;
-      bool sweepFlag = mData[i+4] != 0.0f;
+      PRBool largeArcFlag = mData[i+3] != 0.0f;
+      PRBool sweepFlag = mData[i+4] != 0.0f;
       if (segType == nsIDOMSVGPathSeg::PATHSEG_ARC_ABS) {
         segEnd = gfxPoint(mData[i+5], mData[i+6]);
       } else {

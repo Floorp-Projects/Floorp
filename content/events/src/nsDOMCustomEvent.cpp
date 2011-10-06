@@ -67,8 +67,8 @@ nsDOMCustomEvent::GetDetail(nsIVariant** aDetail)
 
 NS_IMETHODIMP
 nsDOMCustomEvent::InitCustomEvent(const nsAString& aType,
-                                  bool aCanBubble,
-                                  bool aCancelable,
+                                  PRBool aCanBubble,
+                                  PRBool aCancelable,
                                   nsIVariant* aDetail)
 {
   nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);

@@ -221,8 +221,8 @@ public:
                                          PRUint32 aLength,
                                          nsRenderingContext *aContext);
 
-    void SetTextRunRTL(bool aIsRTL) { mTextRunRTL = aIsRTL; }
-    bool GetTextRunRTL() { return mTextRunRTL; }
+    void SetTextRunRTL(PRBool aIsRTL) { mTextRunRTL = aIsRTL; }
+    PRBool GetTextRunRTL() { return mTextRunRTL; }
 
     gfxFontGroup* GetThebesFontGroup() { return mFontGroup; }
     gfxUserFontSet* GetUserFontSet() { return mFontGroup->GetUserFontSet(); }
@@ -237,7 +237,7 @@ protected:
     nsCOMPtr<nsIAtom> mLanguage;
     nsDeviceContext *mDeviceContext;
     PRUint32 mP2A;
-    bool mTextRunRTL;
+    PRPackedBool mTextRunRTL;
 };
 
 #endif /* NSFONTMETRICS__H__ */

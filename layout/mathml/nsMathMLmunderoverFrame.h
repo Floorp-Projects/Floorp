@@ -56,7 +56,7 @@ public:
 
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
-        bool                 aPlaceOrigin,
+        PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD

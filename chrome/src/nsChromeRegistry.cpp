@@ -196,7 +196,7 @@ nsChromeRegistry::GetProviderAndPath(nsIURL* aChromeURL,
   nsresult rv;
 
 #ifdef DEBUG
-  bool isChrome;
+  PRBool isChrome;
   aChromeURL->SchemeIs("chrome", &isChrome);
   NS_ASSERTION(isChrome, "Non-chrome URI?");
 #endif
@@ -377,7 +377,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 
   nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
   windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
-  bool more;
+  PRBool more;
   windowEnumerator->HasMoreElements(&more);
   while (more) {
     nsCOMPtr<nsISupports> protoWindow;
@@ -419,9 +419,9 @@ nsChromeRegistry::FlushSkinCaches()
                           NS_CHROME_FLUSH_SKINS_TOPIC, nsnull);
 }
 
-static bool IsChromeURI(nsIURI* aURI)
+static PRBool IsChromeURI(nsIURI* aURI)
 {
-    bool isChrome=false;
+    PRBool isChrome=PR_FALSE;
     if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
         return PR_TRUE;
     return PR_FALSE;
@@ -560,7 +560,7 @@ nsChromeRegistry::ReloadChrome()
     rv = windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
     if (NS_SUCCEEDED(rv)) {
       // Get each dom window
-      bool more;
+      PRBool more;
       rv = windowEnumerator->HasMoreElements(&more);
       if (NS_FAILED(rv)) return rv;
       while (more) {
@@ -586,13 +586,13 @@ nsChromeRegistry::ReloadChrome()
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, bool *aResult)
+nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, PRBool *aResult)
 {
   nsresult rv;
   *aResult = PR_FALSE;
 
 #ifdef DEBUG
-  bool isChrome;
+  PRBool isChrome;
   aChromeURI->SchemeIs("chrome", &isChrome);
   NS_ASSERTION(isChrome, "Non-chrome URI passed to AllowScriptsForPackage!");
 #endif
@@ -611,14 +611,14 @@ nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::AllowContentToAccess(nsIURI *aURI, bool *aResult)
+nsChromeRegistry::AllowContentToAccess(nsIURI *aURI, PRBool *aResult)
 {
   nsresult rv;
 
   *aResult = PR_FALSE;
 
 #ifdef DEBUG
-  bool isChrome;
+  PRBool isChrome;
   aURI->SchemeIs("chrome", &isChrome);
   NS_ASSERTION(isChrome, "Non-chrome URI passed to AllowContentToAccess!");
 #endif
@@ -642,14 +642,14 @@ nsChromeRegistry::AllowContentToAccess(nsIURI *aURI, bool *aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 nsChromeRegistry::WrappersEnabled(nsIURI *aURI)
 {
   nsCOMPtr<nsIURL> chromeURL (do_QueryInterface(aURI));
   if (!chromeURL)
     return PR_FALSE;
 
-  bool isChrome = false;
+  PRBool isChrome = PR_FALSE;
   nsresult rv = chromeURL->SchemeIs("chrome", &isChrome);
   if (NS_FAILED(rv) || !isChrome)
     return PR_FALSE;

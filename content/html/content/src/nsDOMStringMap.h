@@ -72,9 +72,9 @@ private:
 protected:
   nsRefPtr<nsGenericHTMLElement> mElement;
   // Flag to guard against infinite recursion.
-  bool mRemovingProp;
-  bool DataPropToAttr(const nsAString& aProp, nsAString& aResult);
-  bool AttrToDataProp(const nsAString& aAttr, nsAString& aResult);
+  PRBool mRemovingProp;
+  PRBool DataPropToAttr(const nsAString& aProp, nsAString& aResult);
+  PRBool AttrToDataProp(const nsAString& aAttr, nsAString& aResult);
 };
 
 #endif

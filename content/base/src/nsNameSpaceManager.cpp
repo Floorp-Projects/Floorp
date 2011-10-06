@@ -88,7 +88,7 @@ public:
   {
     return mKey;
   }
-  bool KeyEquals(KeyType aKey) const
+  PRBool KeyEquals(KeyType aKey) const
   {
     return mKey->Equals(*aKey);
   }
@@ -124,7 +124,7 @@ public:
   nsresult GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI);
   PRInt32 GetNameSpaceID(const nsAString& aURI);
 
-  bool HasElementCreator(PRInt32 aNameSpaceID);
+  PRBool HasElementCreator(PRInt32 aNameSpaceID);
 
 private:
   nsresult AddNameSpace(const nsAString& aURI, const PRInt32 aNameSpaceID);
@@ -256,7 +256,7 @@ NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
   return NS_NewXMLElement(aResult, aNodeInfo);
 }
 
-bool
+PRBool
 NameSpaceManagerImpl::HasElementCreator(PRInt32 aNameSpaceID)
 {
   return aNameSpaceID == kNameSpaceID_XHTML ||

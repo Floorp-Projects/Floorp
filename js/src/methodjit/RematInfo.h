@@ -43,7 +43,6 @@
 #include "jscntxt.h"
 #include "MachineRegs.h"
 #include "assembler/assembler/MacroAssembler.h"
-#include "vm/Stack.h"
 
 namespace js {
 namespace mjit {

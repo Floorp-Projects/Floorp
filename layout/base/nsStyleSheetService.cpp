@@ -80,7 +80,7 @@ nsStyleSheetService::RegisterFromEnumerator(nsICategoryManager  *aManager,
   if (!aEnumerator)
     return;
 
-  bool hasMore;
+  PRBool hasMore;
   while (NS_SUCCEEDED(aEnumerator->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> element;
     if (NS_FAILED(aEnumerator->GetNext(getter_AddRefs(element))))
@@ -108,7 +108,7 @@ nsStyleSheetService::FindSheetByURI(const nsCOMArray<nsIStyleSheet> &sheets,
                                     nsIURI *sheetURI)
 {
   for (PRInt32 i = sheets.Count() - 1; i >= 0; i-- ) {
-    bool bEqual;
+    PRBool bEqual;
     nsIURI* uri = sheets[i]->GetSheetURI();
     if (uri
         && NS_SUCCEEDED(uri->Equals(sheetURI, &bEqual))
@@ -185,7 +185,7 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
 
 NS_IMETHODIMP
 nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
-                                     PRUint32 aSheetType, bool *_retval)
+                                     PRUint32 aSheetType, PRBool *_retval)
 {
   NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
   NS_ENSURE_ARG_POINTER(sheetURI);

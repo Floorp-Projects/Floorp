@@ -68,7 +68,7 @@ function end_test() {
 function callHandleEvent() {
   gXHR.status = gExpectedStatusCode;
   var e = { target: gXHR };
-  gXHR.onload(e);
+  gXHR.onload.handleEvent(e);
 }
 
 // Helper functions for testing nsIUpdateCheckListener statusText

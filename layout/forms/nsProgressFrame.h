@@ -68,7 +68,7 @@ public:
   }
 #endif
 
-  virtual bool IsLeaf() const { return true; }
+  virtual PRBool IsLeaf() const { return PR_TRUE; }
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
@@ -82,12 +82,12 @@ public:
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, bool aShrinkWrap);
+                                 nsSize aPadding, PRBool aShrinkWrap);
 
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsHTMLContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));

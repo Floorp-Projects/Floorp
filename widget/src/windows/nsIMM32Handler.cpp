@@ -85,9 +85,9 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 #define IMEMOUSE_WUP        0x10    // wheel up
 #define IMEMOUSE_WDOWN      0x20    // wheel down
 
-bool nsIMM32Handler::sIsStatusChanged = false;
-bool nsIMM32Handler::sIsIME = true;
-bool nsIMM32Handler::sIsIMEOpening = false;
+PRPackedBool nsIMM32Handler::sIsStatusChanged = PR_FALSE;
+PRPackedBool nsIMM32Handler::sIsIME = PR_TRUE;
+PRPackedBool nsIMM32Handler::sIsIMEOpening = PR_FALSE;
 
 UINT nsIMM32Handler::sCodePage = 0;
 DWORD nsIMM32Handler::sIMEProperty = 0;
@@ -123,35 +123,35 @@ nsIMM32Handler::Terminate()
   gIMM32Handler = nsnull;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::IsComposingOnOurEditor()
 {
   return gIMM32Handler && gIMM32Handler->mIsComposing;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::IsComposingOnPlugin()
 {
   return gIMM32Handler && gIMM32Handler->mIsComposingOnPlugin;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::IsComposingWindow(nsWindow* aWindow)
 {
   return gIMM32Handler && gIMM32Handler->mComposingWindow == aWindow;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::IsTopLevelWindowOfComposition(nsWindow* aWindow)
 {
   if (!gIMM32Handler || !gIMM32Handler->mComposingWindow) {
-    return false;
+    return PR_FALSE;
   }
   HWND wnd = gIMM32Handler->mComposingWindow->GetWindowHandle();
-  return nsWindow::GetTopLevelHWND(wnd, true) == aWindow->GetWindowHandle();
+  return nsWindow::GetTopLevelHWND(wnd, PR_TRUE) == aWindow->GetWindowHandle();
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::IsDoingKakuteiUndo(HWND aWnd)
 {
   // This message pattern is "Kakutei-Undo" on ATOK and WXG.
@@ -186,7 +186,7 @@ nsIMM32Handler::IsDoingKakuteiUndo(HWND aWnd)
          imeCompositionMsg.time <= charMsg.time;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::ShouldDrawCompositionStringOurselves()
 {
   // If current IME has special UI or its composition window should not
@@ -216,7 +216,7 @@ nsIMM32Handler::GetKeyboardCodePage()
   return sCodePage;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage)
 {
   // If IME is opening right now, we shouldn't optimize the key and IME message
@@ -238,8 +238,8 @@ nsIMM32Handler::CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage)
 
 nsIMM32Handler::nsIMM32Handler() :
   mComposingWindow(nsnull), mCursorPosition(NO_IME_CARET), mCompositionStart(0),
-  mIsComposing(false), mIsComposingOnPlugin(false),
-  mNativeCaretIsCreated(false)
+  mIsComposing(PR_FALSE), mIsComposingOnPlugin(PR_FALSE),
+  mNativeCaretIsCreated(PR_FALSE)
 {
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS, ("IMM32: nsIMM32Handler is created\n"));
 }
@@ -280,7 +280,7 @@ nsIMM32Handler::EnsureAttributeArray(PRInt32 aCount)
 }
 
 /* static */ void
-nsIMM32Handler::CommitComposition(nsWindow* aWindow, bool aForce)
+nsIMM32Handler::CommitComposition(nsWindow* aWindow, PRBool aForce)
 {
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: CommitComposition, aForce=%s, aWindow=%p, hWnd=%08x, mComposingWindow=%p%s\n",
@@ -294,7 +294,7 @@ nsIMM32Handler::CommitComposition(nsWindow* aWindow, bool aForce)
     return;
   }
 
-  bool associated = aWindow->AssociateDefaultIMC(true);
+  PRBool associated = aWindow->AssociateDefaultIMC(PR_TRUE);
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: CommitComposition, associated=%s\n",
      associated ? "YES" : "NO"));
@@ -306,12 +306,12 @@ nsIMM32Handler::CommitComposition(nsWindow* aWindow, bool aForce)
   }
 
   if (associated) {
-    aWindow->AssociateDefaultIMC(false);
+    aWindow->AssociateDefaultIMC(PR_FALSE);
   }
 }
 
 /* static */ void
-nsIMM32Handler::CancelComposition(nsWindow* aWindow, bool aForce)
+nsIMM32Handler::CancelComposition(nsWindow* aWindow, PRBool aForce)
 {
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: CancelComposition, aForce=%s, aWindow=%p, hWnd=%08x, mComposingWindow=%p%s\n",
@@ -325,7 +325,7 @@ nsIMM32Handler::CancelComposition(nsWindow* aWindow, bool aForce)
     return;
   }
 
-  bool associated = aWindow->AssociateDefaultIMC(true);
+  PRBool associated = aWindow->AssociateDefaultIMC(PR_TRUE);
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: CancelComposition, associated=%s\n",
      associated ? "YES" : "NO"));
@@ -336,19 +336,19 @@ nsIMM32Handler::CancelComposition(nsWindow* aWindow, bool aForce)
   }
 
   if (associated) {
-    aWindow->AssociateDefaultIMC(false);
+    aWindow->AssociateDefaultIMC(PR_FALSE);
   }
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::ProcessInputLangChangeMessage(nsWindow* aWindow,
                                               WPARAM wParam,
                                               LPARAM lParam,
                                               LRESULT *aRetValue,
-                                              bool &aEatMessage)
+                                              PRBool &aEatMessage)
 {
   *aRetValue = 0;
-  aEatMessage = false;
+  aEatMessage = PR_FALSE;
   // We don't need to create the instance of the handler here.
   if (gIMM32Handler) {
     aEatMessage = gIMM32Handler->OnInputLangChange(aWindow, wParam, lParam);
@@ -359,13 +359,13 @@ nsIMM32Handler::ProcessInputLangChangeMessage(nsWindow* aWindow,
   Terminate();
   // Don't return as "processed", the messages should be processed on nsWindow
   // too.
-  return false;
+  return PR_FALSE;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
                                WPARAM &wParam, LPARAM &lParam,
-                               LRESULT *aRetValue, bool &aEatMessage)
+                               LRESULT *aRetValue, PRBool &aEatMessage)
 {
   // XXX We store the composing window in mComposingWindow.  If IME messages are
   // sent to different window, we should commit the old transaction.  And also
@@ -383,7 +383,7 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
       case WM_IME_SETCONTEXT:
         // For safety, we should reset sIsIMEOpening when we receive unexpected
         // message.
-        sIsIMEOpening = false;
+        sIsIMEOpening = PR_FALSE;
     }
   }
 
@@ -401,15 +401,15 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
     case WM_RBUTTONDOWN: {
       // We don't need to create the instance of the handler here.
       if (!gIMM32Handler)
-        return false;
+        return PR_FALSE;
       if (!gIMM32Handler->OnMouseEvent(aWindow, lParam,
                             msg == WM_LBUTTONDOWN ? IMEMOUSE_LDOWN :
                             msg == WM_MBUTTONDOWN ? IMEMOUSE_MDOWN :
                                                     IMEMOUSE_RDOWN)) {
-        return false;
+        return PR_FALSE;
       }
-      aEatMessage = false;
-      return true;
+      aEatMessage = PR_FALSE;
+      return PR_TRUE;
     }
     case WM_INPUTLANGCHANGE:
       return ProcessInputLangChangeMessage(aWindow, wParam, lParam,
@@ -417,37 +417,37 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
     case WM_IME_STARTCOMPOSITION:
       EnsureHandlerInstance();
       aEatMessage = gIMM32Handler->OnIMEStartComposition(aWindow);
-      return true;
+      return PR_TRUE;
     case WM_IME_COMPOSITION:
       EnsureHandlerInstance();
       aEatMessage = gIMM32Handler->OnIMEComposition(aWindow, wParam, lParam);
-      return true;
+      return PR_TRUE;
     case WM_IME_ENDCOMPOSITION:
       EnsureHandlerInstance();
       aEatMessage = gIMM32Handler->OnIMEEndComposition(aWindow);
-      return true;
+      return PR_TRUE;
     case WM_IME_CHAR:
       aEatMessage = OnIMEChar(aWindow, wParam, lParam);
-      return true;
+      return PR_TRUE;
     case WM_IME_NOTIFY:
       aEatMessage = OnIMENotify(aWindow, wParam, lParam);
-      return true;
+      return PR_TRUE;
     case WM_IME_REQUEST:
       EnsureHandlerInstance();
       aEatMessage =
         gIMM32Handler->OnIMERequest(aWindow, wParam, lParam, aRetValue);
-      return true;
+      return PR_TRUE;
     case WM_IME_SELECT:
       aEatMessage = OnIMESelect(aWindow, wParam, lParam);
-      return true;
+      return PR_TRUE;
     case WM_IME_SETCONTEXT:
       aEatMessage = OnIMESetContext(aWindow, wParam, lParam, aRetValue);
-      return true;
+      return PR_TRUE;
     case WM_KEYDOWN:
       return OnKeyDownEvent(aWindow, wParam, lParam, aEatMessage);
     case WM_CHAR:
       if (!gIMM32Handler) {
-        return false;
+        return PR_FALSE;
       }
       aEatMessage = gIMM32Handler->OnChar(aWindow, wParam, lParam);
       // If we eat this message, we should return "processed", otherwise,
@@ -455,53 +455,53 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
       // "not processed" at that time.
       return aEatMessage;
     default:
-      return false;
+      return PR_FALSE;
   };
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
                                         WPARAM &wParam, LPARAM &lParam,
                                         LRESULT *aRetValue,
-                                        bool &aEatMessage)
+                                        PRBool &aEatMessage)
 {
   *aRetValue = 0;
-  aEatMessage = false;
+  aEatMessage = PR_FALSE;
   switch (msg) {
     case WM_INPUTLANGCHANGEREQUEST:
     case WM_INPUTLANGCHANGE:
-      aWindow->DispatchPluginEvent(msg, wParam, lParam, false);
+      aWindow->DispatchPluginEvent(msg, wParam, lParam, PR_FALSE);
       return ProcessInputLangChangeMessage(aWindow, wParam, lParam,
                                            aRetValue, aEatMessage);
     case WM_IME_COMPOSITION:
       EnsureHandlerInstance();
       aEatMessage =
         gIMM32Handler->OnIMECompositionOnPlugin(aWindow, wParam, lParam);
-      return true;
+      return PR_TRUE;
     case WM_IME_STARTCOMPOSITION:
       EnsureHandlerInstance();
       aEatMessage =
         gIMM32Handler->OnIMEStartCompositionOnPlugin(aWindow, wParam, lParam);
-      return true;
+      return PR_TRUE;
     case WM_IME_ENDCOMPOSITION:
       EnsureHandlerInstance();
       aEatMessage =
         gIMM32Handler->OnIMEEndCompositionOnPlugin(aWindow, wParam, lParam);
-      return true;
+      return PR_TRUE;
     case WM_IME_CHAR:
       EnsureHandlerInstance();
       aEatMessage =
         gIMM32Handler->OnIMECharOnPlugin(aWindow, wParam, lParam);
-      return true;
+      return PR_TRUE;
     case WM_IME_SETCONTEXT:
       aEatMessage = OnIMESetContextOnPlugin(aWindow, wParam, lParam, aRetValue);
-      return true;
+      return PR_TRUE;
     case WM_IME_NOTIFY:
       if (wParam == IMN_SETOPENSTATUS) {
         // finished being opening
-        sIsIMEOpening = false;
+        sIsIMEOpening = PR_FALSE;
       }
-      return false;
+      return PR_FALSE;
     case WM_KEYDOWN:
       if (wParam == VK_PROCESSKEY) {
         // If we receive when IME isn't open, it means IME is opening right now.
@@ -509,31 +509,31 @@ nsIMM32Handler::ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
         sIsIMEOpening = IMEContext.IsValid() &&
                         ::ImmGetOpenStatus(IMEContext.get());
       }
-      return false;
+      return PR_FALSE;
     case WM_CHAR:
       if (!gIMM32Handler) {
-        return false;
+        return PR_FALSE;
       }
       aEatMessage =
         gIMM32Handler->OnCharOnPlugin(aWindow, wParam, lParam);
-      return false;  // is going to be handled by nsWindow.
+      return PR_FALSE;  // is going to be handled by nsWindow.
     case WM_IME_COMPOSITIONFULL:
     case WM_IME_CONTROL:
     case WM_IME_KEYDOWN:
     case WM_IME_KEYUP:
     case WM_IME_REQUEST:
     case WM_IME_SELECT:
-      aEatMessage = aWindow->DispatchPluginEvent(msg, wParam, lParam, false);
-      return true;
+      aEatMessage = aWindow->DispatchPluginEvent(msg, wParam, lParam, PR_FALSE);
+      return PR_TRUE;
   }
-  return false;
+  return PR_FALSE;
 }
 
 /****************************************************************************
  * message handlers
  ****************************************************************************/
 
-bool
+PRBool
 nsIMM32Handler::OnInputLangChange(nsWindow* aWindow,
                                   WPARAM wParam,
                                   LPARAM lParam)
@@ -549,10 +549,10 @@ nsIMM32Handler::OnInputLangChange(nsWindow* aWindow,
     HandleEndComposition(aWindow);
   }
 
-  return false;
+  return PR_FALSE;
 }
 
-bool
+PRBool
 nsIMM32Handler::OnIMEStartComposition(nsWindow* aWindow)
 {
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -568,7 +568,7 @@ nsIMM32Handler::OnIMEStartComposition(nsWindow* aWindow)
   return ShouldDrawCompositionStringOurselves();
 }
 
-bool
+PRBool
 nsIMM32Handler::OnIMEComposition(nsWindow* aWindow,
                                  WPARAM wParam,
                                  LPARAM lParam)
@@ -591,7 +591,7 @@ nsIMM32Handler::OnIMEComposition(nsWindow* aWindow,
   return HandleComposition(aWindow, IMEContext, lParam);
 }
 
-bool
+PRBool
 nsIMM32Handler::OnIMEEndComposition(nsWindow* aWindow)
 {
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -609,14 +609,14 @@ nsIMM32Handler::OnIMEEndComposition(nsWindow* aWindow)
   mCompositionString.Truncate();
 
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
-  DispatchTextEvent(aWindow, IMEContext, false);
+  DispatchTextEvent(aWindow, IMEContext, PR_FALSE);
 
   HandleEndComposition(aWindow);
 
   return ShouldDrawCompositionStringOurselves();
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::OnIMEChar(nsWindow* aWindow,
                           WPARAM wParam,
                           LPARAM lParam)
@@ -631,10 +631,10 @@ nsIMM32Handler::OnIMEChar(nsWindow* aWindow,
   // processed in nsWindow::OnIMEComposition already.
 
   // We need to return TRUE here so that Windows don't send two WM_CHAR msgs
-  return true;
+  return PR_TRUE;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::OnIMECompositionFull(nsWindow* aWindow)
 {
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -642,10 +642,10 @@ nsIMM32Handler::OnIMECompositionFull(nsWindow* aWindow)
      aWindow->GetWindowHandle()));
 
   // not implement yet
-  return false;
+  return PR_FALSE;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
                             WPARAM wParam,
                             LPARAM lParam)
@@ -703,7 +703,7 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
          aWindow->GetWindowHandle()));
       break;
     case IMN_SETOPENSTATUS:
-      sIsIMEOpening = false;
+      sIsIMEOpening = PR_FALSE;
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: OnIMENotify, hWnd=%08x, IMN_SETOPENSTATUS\n",
          aWindow->GetWindowHandle()));
@@ -727,7 +727,7 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
 #endif // PR_LOGGING
 
   if (::GetKeyState(NS_VK_ALT) >= 0) {
-    return false;
+    return PR_FALSE;
   }
 
   // XXXmnakano Following code was added by bug 28852 (Key combo to trun ON/OFF
@@ -738,7 +738,7 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
   // keypress event.  So, we should find another way for the bug.
 
   // add hacky code here
-  nsModifierKeyState modKeyState(false, false, true);
+  nsModifierKeyState modKeyState(PR_FALSE, PR_FALSE, PR_TRUE);
   aWindow->DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, 192, nsnull, modKeyState);
   sIsStatusChanged = sIsStatusChanged || (wParam == IMN_SETOPENSTATUS);
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -746,10 +746,10 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
      sIsStatusChanged ? "TRUE" : "FALSE"));
 
   // not implement yet
-  return false;
+  return PR_FALSE;
 }
 
-bool
+PRBool
 nsIMM32Handler::OnIMERequest(nsWindow* aWindow,
                              WPARAM wParam,
                              LPARAM lParam,
@@ -775,11 +775,11 @@ nsIMM32Handler::OnIMERequest(nsWindow* aWindow,
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: OnIMERequest, hWnd=%08x, wParam=%08x\n",
          aWindow->GetWindowHandle(), wParam));
-      return false;
+      return PR_FALSE;
   }
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::OnIMESelect(nsWindow* aWindow,
                             WPARAM wParam,
                             LPARAM lParam)
@@ -789,10 +789,10 @@ nsIMM32Handler::OnIMESelect(nsWindow* aWindow,
      aWindow->GetWindowHandle(), wParam, lParam));
 
   // not implement yet
-  return false;
+  return PR_FALSE;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::OnIMESetContext(nsWindow* aWindow,
                                 WPARAM wParam,
                                 LPARAM lParam,
@@ -812,12 +812,12 @@ nsIMM32Handler::OnIMESetContext(nsWindow* aWindow,
   if (IsTopLevelWindowOfComposition(aWindow)) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: OnIMESetContext, hWnd=%08x is top level window\n"));
-    return false;
+    return PR_FALSE;
   }
 
   // When IME context is activating on another window,
   // we should commit the old composition on the old window.
-  bool cancelComposition = false;
+  PRBool cancelComposition = PR_FALSE;
   if (wParam && gIMM32Handler) {
     cancelComposition =
       gIMM32Handler->CommitCompositionOnPreviousWindow(aWindow);
@@ -839,19 +839,19 @@ nsIMM32Handler::OnIMESetContext(nsWindow* aWindow,
   // Cancel composition on the new window if we committed our composition on
   // another window.
   if (cancelComposition) {
-    CancelComposition(aWindow, true);
+    CancelComposition(aWindow, PR_TRUE);
   }
 
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsIMM32Handler::OnChar(nsWindow* aWindow,
                        WPARAM wParam,
                        LPARAM lParam)
 {
   if (IsIMECharRecordsEmpty()) {
-    return false;
+    return PR_FALSE;
   }
   WPARAM recWParam;
   LPARAM recLParam;
@@ -866,19 +866,19 @@ nsIMM32Handler::OnChar(nsWindow* aWindow,
   // of course, this shouldn't happen.
   if (recWParam != wParam || recLParam != lParam) {
     ResetIMECharRecords();
-    return false;
+    return PR_FALSE;
   }
   // Eat the char message which is caused by WM_IME_CHAR because we should
   // have processed the IME messages, so, this message could be come from
   // a windowless plug-in.
-  return true;
+  return PR_TRUE;
 }
 
 /****************************************************************************
  * message handlers for plug-in
  ****************************************************************************/
 
-bool
+PRBool
 nsIMM32Handler::OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
                                               WPARAM wParam,
                                               LPARAM lParam)
@@ -886,15 +886,15 @@ nsIMM32Handler::OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: OnIMEStartCompositionOnPlugin, hWnd=%08x, mIsComposingOnPlugin=%s\n",
      aWindow->GetWindowHandle(), mIsComposingOnPlugin ? "TRUE" : "FALSE"));
-  mIsComposingOnPlugin = true;
+  mIsComposingOnPlugin = PR_TRUE;
   mComposingWindow = aWindow;
-  bool handled =
+  PRBool handled =
     aWindow->DispatchPluginEvent(WM_IME_STARTCOMPOSITION, wParam, lParam,
-                                 false);
+                                 PR_FALSE);
   return handled;
 }
 
-bool
+PRBool
 nsIMM32Handler::OnIMECompositionOnPlugin(nsWindow* aWindow,
                                          WPARAM wParam,
                                          LPARAM lParam)
@@ -912,20 +912,20 @@ nsIMM32Handler::OnIMECompositionOnPlugin(nsWindow* aWindow,
      lParam & GCS_CURSORPOS  ? "YES" : "no"));
   // We should end composition if there is a committed string.
   if (IS_COMMITTING_LPARAM(lParam)) {
-    mIsComposingOnPlugin = false;
+    mIsComposingOnPlugin = PR_FALSE;
     mComposingWindow = nsnull;
   }
   // Continue composition if there is still a string being composed.
   if (IS_COMPOSING_LPARAM(lParam)) {
-    mIsComposingOnPlugin = true;
+    mIsComposingOnPlugin = PR_TRUE;
     mComposingWindow = aWindow;
   }
-  bool handled =
-    aWindow->DispatchPluginEvent(WM_IME_COMPOSITION, wParam, lParam, true);
+  PRBool handled =
+    aWindow->DispatchPluginEvent(WM_IME_COMPOSITION, wParam, lParam, PR_TRUE);
   return handled;
 }
 
-bool
+PRBool
 nsIMM32Handler::OnIMEEndCompositionOnPlugin(nsWindow* aWindow,
                                             WPARAM wParam,
                                             LPARAM lParam)
@@ -934,15 +934,15 @@ nsIMM32Handler::OnIMEEndCompositionOnPlugin(nsWindow* aWindow,
     ("IMM32: OnIMEEndCompositionOnPlugin, hWnd=%08x, mIsComposingOnPlugin=%s\n",
      aWindow->GetWindowHandle(), mIsComposingOnPlugin ? "TRUE" : "FALSE"));
 
-  mIsComposingOnPlugin = false;
+  mIsComposingOnPlugin = PR_FALSE;
   mComposingWindow = nsnull;
-  bool handled =
+  PRBool handled =
     aWindow->DispatchPluginEvent(WM_IME_ENDCOMPOSITION, wParam, lParam,
-                                 false);
+                                 PR_FALSE);
   return handled;
 }
 
-bool
+PRBool
 nsIMM32Handler::OnIMECharOnPlugin(nsWindow* aWindow,
                                   WPARAM wParam,
                                   LPARAM lParam)
@@ -951,8 +951,8 @@ nsIMM32Handler::OnIMECharOnPlugin(nsWindow* aWindow,
     ("IMM32: OnIMECharOnPlugin, hWnd=%08x, char=%08x, scancode=%08x\n",
      aWindow->GetWindowHandle(), wParam, lParam));
 
-  bool handled =
-    aWindow->DispatchPluginEvent(WM_IME_CHAR, wParam, lParam, true);
+  PRBool handled =
+    aWindow->DispatchPluginEvent(WM_IME_CHAR, wParam, lParam, PR_TRUE);
 
   if (!handled) {
     // Record the WM_CHAR messages which are going to be coming.
@@ -962,7 +962,7 @@ nsIMM32Handler::OnIMECharOnPlugin(nsWindow* aWindow,
   return handled;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::OnIMESetContextOnPlugin(nsWindow* aWindow,
                                         WPARAM wParam,
                                         LPARAM lParam,
@@ -986,7 +986,7 @@ nsIMM32Handler::OnIMESetContextOnPlugin(nsWindow* aWindow,
   // Dispatch message to the plug-in.
   // XXX When a windowless plug-in gets focus, we should send
   //     WM_IME_SETCONTEXT
-  aWindow->DispatchPluginEvent(WM_IME_SETCONTEXT, wParam, lParam, false);
+  aWindow->DispatchPluginEvent(WM_IME_SETCONTEXT, wParam, lParam, PR_FALSE);
 
   // We should send WM_IME_SETCONTEXT to the DefWndProc here.  It shouldn't
   // be received on ancestor windows, see OnIMESetContext() for the detail.
@@ -996,16 +996,16 @@ nsIMM32Handler::OnIMESetContextOnPlugin(nsWindow* aWindow,
   // Don't synchronously dispatch the pending events when we receive
   // WM_IME_SETCONTEXT because we get it during plugin destruction.
   // (bug 491848)
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsIMM32Handler::OnCharOnPlugin(nsWindow* aWindow,
                                WPARAM wParam,
                                LPARAM lParam)
 {
   if (IsIMECharRecordsEmpty()) {
-    return false;
+    return PR_FALSE;
   }
 
   WPARAM recWParam;
@@ -1023,7 +1023,7 @@ nsIMM32Handler::OnCharOnPlugin(nsWindow* aWindow,
     ResetIMECharRecords();
   }
   // WM_CHAR on plug-in is always handled by nsWindow.
-  return false;
+  return PR_FALSE;
 }
 
 /****************************************************************************
@@ -1039,7 +1039,7 @@ nsIMM32Handler::HandleStartComposition(nsWindow* aWindow,
   NS_PRECONDITION(!aWindow->PluginHasFocus(),
     "HandleStartComposition should not be called when a plug-in has focus");
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, aWindow);
   nsIntPoint point(0, 0);
   aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
@@ -1052,13 +1052,13 @@ nsIMM32Handler::HandleStartComposition(nsWindow* aWindow,
   mCompositionStart = selection.mReply.mOffset;
   mLastDispatchedCompositionString.Truncate();
 
-  nsCompositionEvent event(true, NS_COMPOSITION_START, aWindow);
+  nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_START, aWindow);
   aWindow->InitEvent(event, &point);
   aWindow->DispatchWindowEvent(&event);
 
   SetIMERelatedWindowsPos(aWindow, aIMEContext);
 
-  mIsComposing = true;
+  mIsComposing = PR_TRUE;
   mComposingWindow = aWindow;
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -1066,7 +1066,7 @@ nsIMM32Handler::HandleStartComposition(nsWindow* aWindow,
      mCompositionStart));
 }
 
-bool
+PRBool
 nsIMM32Handler::HandleComposition(nsWindow* aWindow,
                                   const nsIMEContext &aIMEContext,
                                   LPARAM lParam)
@@ -1113,13 +1113,13 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
     }
 
     mCompositionString.Truncate();
-    DispatchTextEvent(aWindow, aIMEContext, false);
+    DispatchTextEvent(aWindow, aIMEContext, PR_FALSE);
 
     return ShouldDrawCompositionStringOurselves();
   }
 
 
-  bool startCompositionMessageHasBeenSent = mIsComposing;
+  PRBool startCompositionMessageHasBeenSent = mIsComposing;
 
   //
   // This catches a fixed result
@@ -1134,7 +1134,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleComposition, GCS_RESULTSTR\n"));
 
-    DispatchTextEvent(aWindow, aIMEContext, false);
+    DispatchTextEvent(aWindow, aIMEContext, PR_FALSE);
     HandleEndComposition(aWindow);
 
     if (!IS_COMPOSING_LPARAM(lParam)) {
@@ -1183,13 +1183,13 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
 
   if (clauseArrayLength > 0) {
     nsresult rv = EnsureClauseArray(clauseArrayLength);
-    NS_ENSURE_SUCCESS(rv, false);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     // Intelligent ABC IME (Simplified Chinese IME, the code page is 936)
     // will crash in ImmGetCompositionStringW for GCS_COMPCLAUSE (bug 424663).
     // See comment 35 of the bug for the detail. Therefore, we should use A
     // API for it, however, we should not kill Unicode support on all IMEs.
-    bool useA_API = !(sIMEProperty & IME_PROP_UNICODE);
+    PRBool useA_API = !(sIMEProperty & IME_PROP_UNICODE);
 
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleComposition, GCS_COMPCLAUSE, useA_API=%s\n",
@@ -1250,7 +1250,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
 
   if (attrArrayLength > 0) {
     nsresult rv = EnsureAttributeArray(attrArrayLength);
-    NS_ENSURE_SUCCESS(rv, false);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
     attrArrayLength =
       ::ImmGetCompositionStringW(aIMEContext.get(), GCS_COMPATTR,
                                  mAttributeArray.Elements(),
@@ -1305,19 +1305,19 @@ nsIMM32Handler::HandleEndComposition(nsWindow* aWindow)
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: HandleEndComposition\n"));
 
-  nsCompositionEvent event(true, NS_COMPOSITION_END, aWindow);
+  nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, aWindow);
   nsIntPoint point(0, 0);
 
   if (mNativeCaretIsCreated) {
     ::DestroyCaret();
-    mNativeCaretIsCreated = false;
+    mNativeCaretIsCreated = PR_FALSE;
   }
 
   aWindow->InitEvent(event, &point);
   // The last dispatched composition string must be the committed string.
   event.data = mLastDispatchedCompositionString;
   aWindow->DispatchWindowEvent(&event);
-  mIsComposing = false;
+  mIsComposing = PR_FALSE;
   mComposingWindow = nsnull;
   mLastDispatchedCompositionString.Truncate();
 }
@@ -1340,7 +1340,7 @@ DumpReconvertString(RECONVERTSTRING* aReconv)
                     aReconv->dwStrLen)).get()));
 }
 
-bool
+PRBool
 nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
                                 LPARAM lParam,
                                 LRESULT *oResult)
@@ -1348,14 +1348,14 @@ nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
   *oResult = 0;
   RECONVERTSTRING* pReconv = reinterpret_cast<RECONVERTSTRING*>(lParam);
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, aWindow);
   nsIntPoint point(0, 0);
   aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
   if (!selection.mSucceeded) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleReconvert, FAILED (NS_QUERY_SELECTED_TEXT)\n"));
-    return false;
+    return PR_FALSE;
   }
 
   PRUint32 len = selection.mReply.mString.Length();
@@ -1366,20 +1366,20 @@ nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
     if (len == 0) {
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: HandleReconvert, There are not selected text\n"));
-      return false;
+      return PR_FALSE;
     }
     *oResult = needSize;
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleReconvert, SUCCEEDED result=%ld\n",
        *oResult));
-    return true;
+    return PR_TRUE;
   }
 
   if (pReconv->dwSize < needSize) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleReconvert, FAILED pReconv->dwSize=%ld, needSize=%ld\n",
        pReconv->dwSize, needSize));
-    return false;
+    return PR_FALSE;
   }
 
   *oResult = needSize;
@@ -1401,50 +1401,50 @@ nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
      *oResult));
   DumpReconvertString(pReconv);
 
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsIMM32Handler::HandleQueryCharPosition(nsWindow* aWindow,
                                         LPARAM lParam,
                                         LRESULT *oResult)
 {
   PRUint32 len = mIsComposing ? mCompositionString.Length() : 0;
-  *oResult = false;
+  *oResult = PR_FALSE;
   IMECHARPOSITION* pCharPosition = reinterpret_cast<IMECHARPOSITION*>(lParam);
   if (!pCharPosition) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleQueryCharPosition, FAILED (pCharPosition is null)\n"));
-    return false;
+    return PR_FALSE;
   }
   if (pCharPosition->dwSize < sizeof(IMECHARPOSITION)) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleReconvert, FAILED, pCharPosition->dwSize=%ld, sizeof(IMECHARPOSITION)=%ld\n",
        pCharPosition->dwSize, sizeof(IMECHARPOSITION)));
-    return false;
+    return PR_FALSE;
   }
   if (::GetFocus() != aWindow->GetWindowHandle()) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleReconvert, FAILED, ::GetFocus()=%08x, OurWindowHandle=%08x\n",
        ::GetFocus(), aWindow->GetWindowHandle()));
-    return false;
+    return PR_FALSE;
   }
   if (pCharPosition->dwCharPos > len) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleQueryCharPosition, FAILED, pCharPosition->dwCharPos=%ld, len=%ld\n",
       pCharPosition->dwCharPos, len));
-    return false;
+    return PR_FALSE;
   }
 
   nsIntRect r;
-  bool ret =
+  PRBool ret =
     GetCharacterRectOfSelectedTextAt(aWindow, pCharPosition->dwCharPos, r);
-  NS_ENSURE_TRUE(ret, false);
+  NS_ENSURE_TRUE(ret, PR_FALSE);
 
   nsIntRect screenRect;
   // We always need top level window that is owner window of the popup window
   // even if the content of the popup window has focus.
-  ResolveIMECaretPos(aWindow->GetTopLevelWindow(false),
+  ResolveIMECaretPos(aWindow->GetTopLevelWindow(PR_FALSE),
                      r, nsnull, screenRect);
   pCharPosition->pt.x = screenRect.x;
   pCharPosition->pt.y = screenRect.y;
@@ -1458,10 +1458,10 @@ nsIMM32Handler::HandleQueryCharPosition(nsWindow* aWindow,
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: HandleQueryCharPosition, SUCCEEDED\n"));
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsIMM32Handler::HandleDocumentFeed(nsWindow* aWindow,
                                    LPARAM lParam,
                                    LRESULT *oResult)
@@ -1471,18 +1471,18 @@ nsIMM32Handler::HandleDocumentFeed(nsWindow* aWindow,
 
   nsIntPoint point(0, 0);
 
-  bool hasCompositionString =
+  PRBool hasCompositionString =
     mIsComposing && ShouldDrawCompositionStringOurselves();
 
   PRInt32 targetOffset, targetLength;
   if (!hasCompositionString) {
-    nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+    nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, aWindow);
     aWindow->InitEvent(selection, &point);
     aWindow->DispatchWindowEvent(&selection);
     if (!selection.mSucceeded) {
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: HandleDocumentFeed, FAILED (NS_QUERY_SELECTED_TEXT)\n"));
-      return false;
+      return PR_FALSE;
     }
     targetOffset = PRInt32(selection.mReply.mOffset);
     targetLength = PRInt32(selection.mReply.mString.Length());
@@ -1498,32 +1498,32 @@ nsIMM32Handler::HandleDocumentFeed(nsWindow* aWindow,
       targetOffset + targetLength < 0) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleDocumentFeed, FAILED (The selection is out of range)\n"));
-    return false;
+    return PR_FALSE;
   }
 
   // Get all contents of the focused editor.
-  nsQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, aWindow);
+  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, aWindow);
   textContent.InitForQueryTextContent(0, PR_UINT32_MAX);
   aWindow->InitEvent(textContent, &point);
   aWindow->DispatchWindowEvent(&textContent);
   if (!textContent.mSucceeded) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleDocumentFeed, FAILED (NS_QUERY_TEXT_CONTENT)\n"));
-    return false;
+    return PR_FALSE;
   }
 
   nsAutoString str(textContent.mReply.mString);
   if (targetOffset > PRInt32(str.Length())) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleDocumentFeed, FAILED (The caret offset is invalid)\n"));
-    return false;
+    return PR_FALSE;
   }
 
   // Get the focused paragraph, we decide that it starts from the previous CRLF
   // (or start of the editor) to the next one (or the end of the editor).
-  PRInt32 paragraphStart = str.RFind("\n", false, targetOffset, -1) + 1;
+  PRInt32 paragraphStart = str.RFind("\n", PR_FALSE, targetOffset, -1) + 1;
   PRInt32 paragraphEnd =
-    str.Find("\r", false, targetOffset + targetLength, -1);
+    str.Find("\r", PR_FALSE, targetOffset + targetLength, -1);
   if (paragraphEnd < 0) {
     paragraphEnd = str.Length();
   }
@@ -1538,14 +1538,14 @@ nsIMM32Handler::HandleDocumentFeed(nsWindow* aWindow,
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleDocumentFeed, SUCCEEDED result=%ld\n",
        *oResult));
-    return true;
+    return PR_TRUE;
   }
 
   if (pReconv->dwSize < needSize) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleDocumentFeed, FAILED pReconv->dwSize=%ld, needSize=%ld\n",
        pReconv->dwSize, needSize));
-    return false;
+    return PR_FALSE;
   }
 
   // Fill reconvert struct
@@ -1561,7 +1561,7 @@ nsIMM32Handler::HandleDocumentFeed(nsWindow* aWindow,
     if (!GetTargetClauseRange(&offset, &length)) {
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: HandleDocumentFeed, FAILED, by GetTargetClauseRange\n"));
-      return false;
+      return PR_FALSE;
     }
     pReconv->dwTargetStrLen    = length;
     pReconv->dwTargetStrOffset = (offset - paragraphStart) * sizeof(WCHAR);
@@ -1584,14 +1584,14 @@ nsIMM32Handler::HandleDocumentFeed(nsWindow* aWindow,
      *oResult));
   DumpReconvertString(pReconv);
 
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsIMM32Handler::CommitCompositionOnPreviousWindow(nsWindow* aWindow)
 {
   if (!mComposingWindow || mComposingWindow == aWindow) {
-    return false;
+    return PR_FALSE;
   }
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -1603,9 +1603,9 @@ nsIMM32Handler::CommitCompositionOnPreviousWindow(nsWindow* aWindow)
     nsIMEContext IMEContext(mComposingWindow->GetWindowHandle());
     NS_ASSERTION(IMEContext.IsValid(), "IME context must be valid");
 
-    DispatchTextEvent(mComposingWindow, IMEContext, false);
+    DispatchTextEvent(mComposingWindow, IMEContext, PR_FALSE);
     HandleEndComposition(mComposingWindow);
-    return true;
+    return PR_TRUE;
   }
 
   // XXX When plug-in has composition, we should commit composition on the
@@ -1629,7 +1629,7 @@ PlatformToNSAttr(PRUint8 aAttr)
     case ATTR_TARGET_CONVERTED:
       return NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
     default:
-      NS_ASSERTION(false, "unknown attribute");
+      NS_ASSERTION(PR_FALSE, "unknown attribute");
       return NS_TEXTRANGE_CARETPOSITION;
   }
 }
@@ -1658,7 +1658,7 @@ GetRangeTypeName(PRUint32 aRangeType)
 void
 nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
                                   const nsIMEContext &aIMEContext,
-                                  bool aCheckAttr)
+                                  PRBool aCheckAttr)
 {
   NS_ASSERTION(mIsComposing, "conflict state");
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -1679,7 +1679,7 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
   nsIntPoint point(0, 0);
 
   if (mCompositionString != mLastDispatchedCompositionString) {
-    nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
+    nsCompositionEvent compositionUpdate(PR_TRUE, NS_COMPOSITION_UPDATE,
                                          aWindow);
     aWindow->InitEvent(compositionUpdate, &point);
     compositionUpdate.data = mCompositionString;
@@ -1693,7 +1693,7 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
     SetIMERelatedWindowsPos(aWindow, aIMEContext);
   }
 
-  nsTextEvent event(true, NS_TEXT_TEXT, aWindow);
+  nsTextEvent event(PR_TRUE, NS_TEXT_TEXT, aWindow);
 
   aWindow->InitEvent(event, &point);
 
@@ -1710,7 +1710,7 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
   nsModifierKeyState modKeyState;
   event.isShift = modKeyState.mIsShiftDown;
   event.isControl = modKeyState.mIsControlDown;
-  event.isMeta = false;
+  event.isMeta = PR_FALSE;
   event.isAlt = modKeyState.mIsAltDown;
 
   aWindow->DispatchWindowEvent(&event);
@@ -1812,33 +1812,33 @@ nsIMM32Handler::GetCompositionString(const nsIMEContext &aIMEContext,
      NS_ConvertUTF16toUTF8(mCompositionString).get()));
 }
 
-bool
+PRBool
 nsIMM32Handler::GetTargetClauseRange(PRUint32 *aOffset, PRUint32 *aLength)
 {
-  NS_ENSURE_TRUE(aOffset, false);
-  NS_ENSURE_TRUE(mIsComposing, false);
-  NS_ENSURE_TRUE(ShouldDrawCompositionStringOurselves(), false);
+  NS_ENSURE_TRUE(aOffset, PR_FALSE);
+  NS_ENSURE_TRUE(mIsComposing, PR_FALSE);
+  NS_ENSURE_TRUE(ShouldDrawCompositionStringOurselves(), PR_FALSE);
 
-  bool found = false;
+  PRBool found = PR_FALSE;
   *aOffset = mCompositionStart;
   for (PRUint32 i = 0; i < mAttributeArray.Length(); i++) {
     if (mAttributeArray[i] == ATTR_TARGET_NOTCONVERTED ||
         mAttributeArray[i] == ATTR_TARGET_CONVERTED) {
       *aOffset = mCompositionStart + i;
-      found = true;
+      found = PR_TRUE;
       break;
     }
   }
 
   if (!aLength) {
-    return true;
+    return PR_TRUE;
   }
 
   if (!found) {
     // The all composition string is targetted when there is no ATTR_TARGET_*
     // clause. E.g., there is only ATTR_INPUT
     *aLength = mCompositionString.Length();
-    return true;
+    return PR_TRUE;
   }
 
   PRUint32 offsetInComposition = *aOffset - mCompositionStart;
@@ -1850,52 +1850,52 @@ nsIMM32Handler::GetTargetClauseRange(PRUint32 *aOffset, PRUint32 *aLength)
       break;
     }
   }
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsIMM32Handler::ConvertToANSIString(const nsAFlatString& aStr, UINT aCodePage,
                                    nsACString& aANSIStr)
 {
   int len = ::WideCharToMultiByte(aCodePage, 0,
                                   (LPCWSTR)aStr.get(), aStr.Length(),
                                   NULL, 0, NULL, NULL);
-  NS_ENSURE_TRUE(len >= 0, false);
+  NS_ENSURE_TRUE(len >= 0, PR_FALSE);
 
   if (!EnsureStringLength(aANSIStr, len)) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: ConvertToANSIString, FAILED by OOM\n"));
-    return false;
+    return PR_FALSE;
   }
   ::WideCharToMultiByte(aCodePage, 0, (LPCWSTR)aStr.get(), aStr.Length(),
                         (LPSTR)aANSIStr.BeginWriting(), len, NULL, NULL);
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
                                                  PRUint32 aOffset,
                                                  nsIntRect &aCharRect)
 {
   nsIntPoint point(0, 0);
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, aWindow);
   aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
   if (!selection.mSucceeded) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: GetCharacterRectOfSelectedTextAt, aOffset=%lu, FAILED (NS_QUERY_SELECTED_TEXT)\n",
        aOffset));
-    return false;
+    return PR_FALSE;
   }
 
   PRUint32 offset = selection.mReply.mOffset + aOffset;
-  bool useCaretRect = selection.mReply.mString.IsEmpty();
+  PRBool useCaretRect = selection.mReply.mString.IsEmpty();
   if (useCaretRect && ShouldDrawCompositionStringOurselves() &&
       mIsComposing && !mCompositionString.IsEmpty()) {
     // There is not a normal selection, but we have composition string.
     // XXX mnakano - Should we implement NS_QUERY_IME_SELECTED_TEXT?
-    useCaretRect = false;
+    useCaretRect = PR_FALSE;
     if (mCursorPosition != NO_IME_CARET) {
       PRUint32 cursorPosition =
         NS_MIN<PRUint32>(mCursorPosition, mCompositionString.Length());
@@ -1906,7 +1906,7 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
 
   nsIntRect r;
   if (!useCaretRect) {
-    nsQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT, aWindow);
+    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_TEXT_RECT, aWindow);
     charRect.InitForQueryTextRect(offset, 1);
     aWindow->InitEvent(charRect, &point);
     aWindow->DispatchWindowEvent(&charRect);
@@ -1918,55 +1918,55 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: GetCharacterRectOfSelectedTextAt, aCharRect={ x: %ld, y: %ld, width: %ld, height: %ld }\n",
          aCharRect.x, aCharRect.y, aCharRect.width, aCharRect.height));
-      return true;
+      return PR_TRUE;
     }
   }
 
   return GetCaretRect(aWindow, aCharRect);
 }
 
-bool
+PRBool
 nsIMM32Handler::GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect)
 {
   nsIntPoint point(0, 0);
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, aWindow);
   aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
   if (!selection.mSucceeded) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: GetCaretRect,  FAILED (NS_QUERY_SELECTED_TEXT)\n"));
-    return false;
+    return PR_FALSE;
   }
 
   PRUint32 offset = selection.mReply.mOffset;
 
-  nsQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, aWindow);
+  nsQueryContentEvent caretRect(PR_TRUE, NS_QUERY_CARET_RECT, aWindow);
   caretRect.InitForQueryCaretRect(offset);
   aWindow->InitEvent(caretRect, &point);
   aWindow->DispatchWindowEvent(&caretRect);
   if (!caretRect.mSucceeded) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: GetCaretRect,  FAILED (NS_QUERY_CARET_RECT)\n"));
-    return false;
+    return PR_FALSE;
   }
   aCaretRect = caretRect.mReply.mRect;
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: GetCaretRect, SUCCEEDED, aCaretRect={ x: %ld, y: %ld, width: %ld, height: %ld }\n",
      aCaretRect.x, aCaretRect.y, aCaretRect.width, aCaretRect.height));
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
                                         const nsIMEContext &aIMEContext)
 {
   nsIntRect r;
   // Get first character rect of current a normal selected text or a composing
   // string.
-  bool ret = GetCharacterRectOfSelectedTextAt(aWindow, 0, r);
-  NS_ENSURE_TRUE(ret, false);
-  nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
+  PRBool ret = GetCharacterRectOfSelectedTextAt(aWindow, 0, r);
+  NS_ENSURE_TRUE(ret, PR_FALSE);
+  nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(PR_FALSE);
   nsIntRect firstSelectedCharRect;
   ResolveIMECaretPos(toplevelWindow, r, aWindow, firstSelectedCharRect);
 
@@ -2002,16 +2002,16 @@ nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
       if (!GetTargetClauseRange(&offset)) {
         PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
           ("IMM32: SetIMERelatedWindowsPos, FAILED, by GetTargetClauseRange\n"));
-        return false;
+        return PR_FALSE;
       }
       ret = GetCharacterRectOfSelectedTextAt(aWindow,
                                              offset - mCompositionStart, r);
-      NS_ENSURE_TRUE(ret, false);
+      NS_ENSURE_TRUE(ret, PR_FALSE);
     } else {
       // If there are no composition string, we should use a first character
       // rect.
       ret = GetCharacterRectOfSelectedTextAt(aWindow, 0, r);
-      NS_ENSURE_TRUE(ret, false);
+      NS_ENSURE_TRUE(ret, PR_FALSE);
     }
     nsIntRect firstTargetCharRect;
     ResolveIMECaretPos(toplevelWindow, r, aWindow, firstTargetCharRect);
@@ -2042,7 +2042,7 @@ nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
     ::ImmSetCompositionWindow(aIMEContext.get(), &compForm);
   }
 
-  return true;
+  return PR_TRUE;
 }
 
 void
@@ -2063,15 +2063,15 @@ nsIMM32Handler::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
     aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffset());
 }
 
-bool
+PRBool
 nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction)
 {
   if (!sWM_MSIME_MOUSE || !mIsComposing) {
-    return false;
+    return PR_FALSE;
   }
 
   nsIntPoint cursor(LOWORD(lParam), HIWORD(lParam));
-  nsQueryContentEvent charAtPt(true, NS_QUERY_CHARACTER_AT_POINT, aWindow);
+  nsQueryContentEvent charAtPt(PR_TRUE, NS_QUERY_CHARACTER_AT_POINT, aWindow);
   aWindow->InitEvent(charAtPt, &cursor);
   aWindow->DispatchWindowEvent(&charAtPt);
   if (!charAtPt.mSucceeded ||
@@ -2079,7 +2079,7 @@ nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction)
       charAtPt.mReply.mOffset < mCompositionStart ||
       charAtPt.mReply.mOffset >
         mCompositionStart + mCompositionString.Length()) {
-    return false;
+    return PR_FALSE;
   }
 
   // calcurate positioning and offset
@@ -2088,7 +2088,7 @@ nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction)
   // positioning:      2301 2301 2301
   nsIntRect cursorInTopLevel, cursorRect(cursor, nsIntSize(0, 0));
   ResolveIMECaretPos(aWindow, cursorRect,
-                     aWindow->GetTopLevelWindow(false), cursorInTopLevel);
+                     aWindow->GetTopLevelWindow(PR_FALSE), cursorInTopLevel);
   PRInt32 cursorXInChar = cursorInTopLevel.x - charAtPt.mReply.mRect.x;
   int positioning = cursorXInChar * 4 / charAtPt.mReply.mRect.width;
   positioning = (positioning + 2) % 4;
@@ -2110,14 +2110,14 @@ nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction)
                         (LPARAM) IMEContext.get()) == 1;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsIMM32Handler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
-                               bool &aEatMessage)
+                               PRBool &aEatMessage)
 {
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: OnKeyDownEvent, hWnd=%08x, wParam=%08x, lParam=%08x\n",
      aWindow->GetWindowHandle(), wParam, lParam));
-  aEatMessage = false;
+  aEatMessage = PR_FALSE;
   switch (wParam) {
     case VK_PROCESSKEY:
       // If we receive when IME isn't open, it means IME is opening right now.
@@ -2126,7 +2126,7 @@ nsIMM32Handler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
         sIsIMEOpening =
           IMEContext.IsValid() && !::ImmGetOpenStatus(IMEContext.get());
       }
-      return false;
+      return PR_FALSE;
     case VK_TAB:
     case VK_PRIOR:
     case VK_NEXT:
@@ -2145,10 +2145,10 @@ nsIMM32Handler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
       //     it's needed.
       if (IsComposingOnOurEditor()) {
         // NOTE: We don't need to cancel the composition on another window.
-        CancelComposition(aWindow, false);
+        CancelComposition(aWindow, PR_FALSE);
       }
-      return false;
+      return PR_FALSE;
     default:
-      return false;
+      return PR_FALSE;
   }
 }

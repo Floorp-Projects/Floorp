@@ -54,7 +54,7 @@ public:
         mLimit = base + flen;
     }
 
-    bool NextLine()
+    PRBool NextLine()
     {
         if(mNext >= mLimit)
             return PR_FALSE;
@@ -109,7 +109,7 @@ public:
     char*       LinePtr() {return mCur;}    
     PRUint32    LineLength() {return mLength;}    
 
-    bool        IsEOL(char c) {return c == '\n' || c == '\r';}
+    PRBool      IsEOL(char c) {return c == '\n' || c == '\r';}
 private:
     char*       mCur;
     PRUint32    mLength;

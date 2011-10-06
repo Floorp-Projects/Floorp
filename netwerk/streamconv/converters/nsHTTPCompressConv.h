@@ -103,10 +103,10 @@ private:
                                  PRUint32 aSourceOffset, const char *buffer,
                                  PRUint32 aCount);
 
-    bool        mCheckHeaderDone;
-    bool        mStreamEnded;
-    bool        mStreamInitialized;
-    bool        mDummyStreamInitialised;
+    PRBool      mCheckHeaderDone;
+    PRBool      mStreamEnded;
+    PRBool      mStreamInitialized;
+    PRBool      mDummyStreamInitialised;
 
     z_stream d_stream;
     unsigned mLen, hMode, mSkipCount, mFlags;

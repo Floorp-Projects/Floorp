@@ -321,7 +321,7 @@ GetSystemMetric(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
     NS_ABORT_IF_FALSE(aFeature->mValueType == nsMediaFeature::eBoolInteger,
                       "unexpected type");
     nsIAtom *metricAtom = *aFeature->mData.mMetric;
-    bool hasMetric = nsCSSRuleProcessor::HasSystemMetric(metricAtom);
+    PRBool hasMetric = nsCSSRuleProcessor::HasSystemMetric(metricAtom);
     aResult.SetIntValue(hasMetric ? 1 : 0, eCSSUnit_Integer);
     return NS_OK;
 }

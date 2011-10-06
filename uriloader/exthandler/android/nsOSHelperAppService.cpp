@@ -50,7 +50,7 @@ nsOSHelperAppService::~nsOSHelperAppService()
 already_AddRefed<nsIMIMEInfo>
 nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                         const nsACString& aFileExt,
-                                        bool* aFound)
+                                        PRBool* aFound)
 {
     nsRefPtr<nsMIMEInfoAndroid> mimeInfo;
     *aFound = PR_FALSE;
@@ -73,14 +73,14 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 
 nsresult
 nsOSHelperAppService::OSProtocolHandlerExists(const char* aScheme,
-                                              bool* aExists)
+                                              PRBool* aExists)
 {
     *aExists = mozilla::AndroidBridge::Bridge()->GetHandlersForURL(aScheme);    
     return NS_OK;
 }
 
 nsresult nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
-                                      bool *found,
+                                      PRBool *found,
                                       nsIHandlerInfo **info)
 {
     return nsMIMEInfoAndroid::GetMimeInfoForURL(aScheme, found, info);

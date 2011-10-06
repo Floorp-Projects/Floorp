@@ -54,7 +54,7 @@ struct EntityNodeEntry : public PLDHashEntryHdr
   const EntityNode* node;
 }; 
 
-static bool
+static PRBool
   matchNodeString(PLDHashTable*, const PLDHashEntryHdr* aHdr,
                   const void* key)
 {
@@ -63,7 +63,7 @@ static bool
   return (nsCRT::strcmp(entry->node->mStr, str) == 0);
 }
 
-static bool
+static PRBool
   matchNodeUnicode(PLDHashTable*, const PLDHashEntryHdr* aHdr,
                    const void* key)
 {

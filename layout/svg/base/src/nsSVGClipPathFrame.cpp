@@ -76,7 +76,7 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
     mClipParentMatrix = new gfxMatrix(aMatrix);
   }
 
-  bool isTrivial = IsTrivial();
+  PRBool isTrivial = IsTrivial();
 
   nsAutoSVGRenderMode mode(aContext,
                            isTrivial ? nsSVGRenderState::CLIP
@@ -87,7 +87,7 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
 
   nsSVGClipPathFrame *clipPathFrame =
     nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nsnull);
-  bool referencedClipIsTrivial;
+  PRBool referencedClipIsTrivial;
   if (clipPathFrame) {
     referencedClipIsTrivial = clipPathFrame->IsTrivial();
     gfx->Save();
@@ -106,14 +106,14 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
       SVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION | 
                                  nsISVGChildFrame::TRANSFORM_CHANGED);
 
-      bool isOK = true;
+      PRBool isOK = PR_TRUE;
       nsSVGClipPathFrame *clipPathFrame =
         nsSVGEffects::GetEffectProperties(kid).GetClipPathFrame(&isOK);
       if (!isOK) {
         continue;
       }
 
-      bool isTrivial;
+      PRBool isTrivial;
 
       if (clipPathFrame) {
         isTrivial = clipPathFrame->IsTrivial();
@@ -171,7 +171,7 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
   return NS_OK;
 }
 
-bool
+PRBool
 nsSVGClipPathFrame::ClipHitTest(nsIFrame* aParent,
                                 const gfxMatrix &aMatrix,
                                 const nsPoint &aPoint)
@@ -213,14 +213,14 @@ nsSVGClipPathFrame::ClipHitTest(nsIFrame* aParent,
   return PR_FALSE;
 }
 
-bool
+PRBool
 nsSVGClipPathFrame::IsTrivial()
 {
   // If the clip path is clipped then it's non-trivial
   if (nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nsnull))
     return PR_FALSE;
 
-  bool foundChild = false;
+  PRBool foundChild = PR_FALSE;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -241,7 +241,7 @@ nsSVGClipPathFrame::IsTrivial()
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsSVGClipPathFrame::IsValid()
 {
   if (mInUse) {
@@ -250,7 +250,7 @@ nsSVGClipPathFrame::IsValid()
   }
   AutoClipPathReferencer clipRef(this);
 
-  bool isOK = true;
+  PRBool isOK = PR_TRUE;
   nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(&isOK);
   if (!isOK) {
     return PR_FALSE;

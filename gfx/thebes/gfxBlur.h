@@ -152,7 +152,7 @@ protected:
      */
     nsIntRect mSkipRect;
 
-    bool mHasDirtyRect;
+    PRPackedBool mHasDirtyRect;
 };
 
 #endif /* GFX_BLUR_H */

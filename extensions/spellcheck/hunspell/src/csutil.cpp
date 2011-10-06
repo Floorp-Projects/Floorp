@@ -5548,7 +5548,7 @@ struct cs_info * get_current_cs(const char * es) {
   ccs = new cs_info[256];
 
   for (unsigned int i = 0; i <= 0xff; ++i) {
-    bool success = false;
+    PRBool success = PR_FALSE;
     // We want to find the upper/lowercase equivalents of each byte
     // in this 1-byte character encoding.  Call our encoding/decoding
     // APIs separately for each byte since they may reject some of the

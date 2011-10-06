@@ -75,13 +75,13 @@ private:
 
     const char *Host() const      { return mHost.get(); }
     PRInt32     Port() const      { return mPort; }
-    bool        UsingSSL() const  { return mUsingSSL; }
+    PRBool      UsingSSL() const  { return mUsingSSL; }
 
-    bool        UsingHttpProxy() const
+    PRBool      UsingHttpProxy() const
     { return !!(mProxyInfo && !nsCRT::strcmp(mProxyInfo->Type(), "http")); }
 
-    nsresult PrepareForAuthentication(bool proxyAuth);
-    nsresult GenCredsAndSetEntry(nsIHttpAuthenticator *, bool proxyAuth,
+    nsresult PrepareForAuthentication(PRBool proxyAuth);
+    nsresult GenCredsAndSetEntry(nsIHttpAuthenticator *, PRBool proxyAuth,
                                  const char *scheme, const char *host,
                                  PRInt32 port, const char *dir,
                                  const char *realm, const char *challenge,
@@ -97,17 +97,17 @@ private:
      * the user's decision will be gathered in a callback and is not an actual
      * error.
      */
-    nsresult GetCredentials(const char *challenges, bool proxyAuth,
+    nsresult GetCredentials(const char *challenges, PRBool proxyAuth,
                             nsAFlatCString &creds);
     nsresult GetCredentialsForChallenge(const char *challenge,
-                                        const char *scheme,  bool proxyAuth,
+                                        const char *scheme,  PRBool proxyAuth,
                                         nsIHttpAuthenticator *auth,
                                         nsAFlatCString &creds);
-    nsresult PromptForIdentity(PRUint32 level, bool proxyAuth,
+    nsresult PromptForIdentity(PRUint32 level, PRBool proxyAuth,
                                const char *realm, const char *authType,
                                PRUint32 authFlags, nsHttpAuthIdentity &);
 
-    bool     ConfirmAuth(const nsString &bundleKey, bool doYesNoPrompt);
+    PRBool   ConfirmAuth(const nsString &bundleKey, PRBool doYesNoPrompt);
     void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header,
                                     const char *scheme, const char *host,
                                     PRInt32 port, const char *path,
@@ -118,7 +118,7 @@ private:
      * all parameters except proxyAuth are out parameters. proxyAuth specifies
      * with what authorization we work (WWW or proxy).
      */
-    nsresult GetAuthorizationMembers(bool proxyAuth, nsCSubstring& scheme,
+    nsresult GetAuthorizationMembers(PRBool proxyAuth, nsCSubstring& scheme,
                                      const char*& host, PRInt32& port,
                                      nsCSubstring& path,
                                      nsHttpAuthIdentity*& ident,
@@ -147,7 +147,7 @@ private:
     nsCOMPtr<nsProxyInfo>             mProxyInfo;
     nsCString                         mHost;
     PRInt32                           mPort;
-    bool                              mUsingSSL;
+    PRBool                            mUsingSSL;
 
     nsISupports                      *mProxyAuthContinuationState;
     nsCString                         mProxyAuthType;

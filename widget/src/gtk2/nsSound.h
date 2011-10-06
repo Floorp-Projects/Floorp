@@ -60,7 +60,7 @@ public:
     NS_DECL_NSISTREAMLOADEROBSERVER
 
 private:
-    bool mInited;
+    PRBool mInited;
 
 };
 

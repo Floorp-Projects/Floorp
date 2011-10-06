@@ -316,11 +316,11 @@ nsPKCS12Blob::LoadCerts(const PRUnichar **certNames, int numCerts)
 }
 #endif
 
-static bool
+static PRBool
 isExtractable(SECKEYPrivateKey *privKey)
 {
   SECItem value;
-  bool    isExtractable = false;
+  PRBool  isExtractable = PR_FALSE;
   SECStatus rv;
 
   rv=PK11_ReadRawAttribute(PK11_TypePrivKey, privKey, CKA_EXTRACTABLE, &value);
@@ -360,7 +360,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   NS_ASSERTION(mToken, "Need to set the token before exporting");
   // init slot
 
-  bool InformedUserNoSmartcardBackup = false;
+  PRBool InformedUserNoSmartcardBackup = PR_FALSE;
   int numCertsExported = 0;
 
   rv = mToken->Login(PR_TRUE);
@@ -415,7 +415,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
                                                       nssCert, this);
 
       if (privKey) {
-        bool privKeyIsExtractable = isExtractable(privKey);
+        PRBool privKeyIsExtractable = isExtractable(privKey);
 
         SECKEY_DestroyPrivateKey(privKey);
 
@@ -534,7 +534,7 @@ nsPKCS12Blob::newPKCS12FilePassword(SECItem *unicodePw)
                        NS_GET_IID(nsICertificateDialogs),
                        NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
-  bool pressedOK;
+  PRBool pressedOK;
   {
     nsPSMUITracker tracker;
     if (tracker.isUIForbidden()) {
@@ -563,7 +563,7 @@ nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
                        NS_GET_IID(nsICertificateDialogs),
                        NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
-  bool pressedOK;
+  PRBool pressedOK;
   {
     nsPSMUITracker tracker;
     if (tracker.isUIForbidden()) {

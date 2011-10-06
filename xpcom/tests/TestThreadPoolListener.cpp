@@ -61,9 +61,9 @@ static nsIThread** gShutDownThreadList = nsnull;
 
 static ReentrantMonitor* gReentrantMonitor = nsnull;
 
-static bool gAllRunnablesPosted = false;
-static bool gAllThreadsCreated = false;
-static bool gAllThreadsShutDown = false;
+static PRBool gAllRunnablesPosted = PR_FALSE;
+static PRBool gAllThreadsCreated = PR_FALSE;
+static PRBool gAllThreadsShutDown = PR_FALSE;
 
 #ifdef DEBUG
 #define TEST_ASSERTION(_test, _msg) \
@@ -240,7 +240,7 @@ int main(int argc, char** argv)
     nsIThread* created = gCreatedThreadList[i];
     NS_ENSURE_TRUE(created, 1);
 
-    bool match = false;
+    PRBool match = PR_FALSE;
     for (PRUint32 j = 0; j < NUMBER_OF_THREADS; j++) {
       nsIThread* destroyed = gShutDownThreadList[j];
       NS_ENSURE_TRUE(destroyed, 1);

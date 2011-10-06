@@ -110,29 +110,29 @@ public:
 
   // Default copy ctor and operator= are fine
 
-  bool operator==(const FrameMetrics& aOther) const
+  PRBool operator==(const FrameMetrics& aOther) const
   {
     return (mViewport.IsEqualEdges(aOther.mViewport) &&
             mViewportScrollOffset == aOther.mViewportScrollOffset &&
             mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
             mScrollId == aOther.mScrollId);
   }
-  bool operator!=(const FrameMetrics& aOther) const
+  PRBool operator!=(const FrameMetrics& aOther) const
   { 
     return !operator==(aOther);
   }
 
-  bool IsDefault() const
+  PRBool IsDefault() const
   {
     return (FrameMetrics() == *this);
   }
 
-  bool IsRootScrollable() const
+  PRBool IsRootScrollable() const
   {
     return mScrollId == ROOT_SCROLL_ID;
   }
 
-  bool IsScrollable() const
+  PRBool IsScrollable() const
   {
     return mScrollId != NULL_SCROLL_ID;
   }
@@ -212,7 +212,7 @@ public:
   /**
    * This getter can be used anytime.
    */
-  bool Has(void* aKey)
+  PRBool Has(void* aKey)
   {
     return mKey == aKey;
   }
@@ -287,7 +287,7 @@ public:
    * are valid on the layer manager.
    */
   virtual void Destroy() { mDestroyed = PR_TRUE; mUserData.Clear(); }
-  bool IsDestroyed() { return mDestroyed; }
+  PRBool IsDestroyed() { return mDestroyed; }
 
   virtual ShadowLayerForwarder* AsShadowForwarder()
   { return nsnull; }
@@ -351,12 +351,6 @@ public:
                                            const nsIntRegion& aRegionToDraw,
                                            const nsIntRegion& aRegionToInvalidate,
                                            void* aCallbackData);
-
-  enum EndTransactionFlags {
-    END_DEFAULT = 0,
-    END_NO_IMMEDIATE_REDRAW = 1 << 0  // Do not perform the drawing phase
-  };
-
   /**
    * Finish the construction phase of the transaction, perform the
    * drawing phase, and end the transaction.
@@ -365,10 +359,9 @@ public:
    * where it is known that the visible region is empty.
    */
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT) = 0;
+                              void* aCallbackData) = 0;
 
-  bool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; } 
+  PRBool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; } 
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -474,7 +467,7 @@ public:
   /**
    * This getter can be used anytime.
    */
-  bool HasUserData(void* aKey)
+  PRBool HasUserData(void* aKey)
   { return mUserData.Has(aKey); }
   /**
    * This getter can be used anytime. Ownership is retained by the layer
@@ -514,16 +507,16 @@ public:
   static bool IsLogEnabled();
   static PRLogModuleInfo* GetLog() { return sLog; }
 
-  bool IsCompositingCheap(LayerManager::LayersBackend aBackend)
+  PRBool IsCompositingCheap(LayerManager::LayersBackend aBackend)
   { return LAYERS_BASIC != aBackend; }
 
-  virtual bool IsCompositingCheap() { return true; }
+  virtual PRBool IsCompositingCheap() { return PR_TRUE; }
 
 protected:
   nsRefPtr<Layer> mRoot;
   LayerUserDataSet mUserData;
-  bool mDestroyed;
-  bool mSnapEffectiveTransforms;
+  PRPackedBool mDestroyed;
+  PRPackedBool mSnapEffectiveTransforms;
 
   // Print interesting information about this into aTo.  Internally
   // used to implement Dump*() and Log*().
@@ -709,7 +702,7 @@ public:
     Mutated();
   }
 
-  void SetIsFixedPosition(bool aFixedPosition) { mIsFixedPosition = aFixedPosition; }
+  void SetIsFixedPosition(PRBool aFixedPosition) { mIsFixedPosition = aFixedPosition; }
 
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
@@ -738,7 +731,7 @@ public:
   // If we can use a surface without an alpha channel, we should, because
   // it will often make painting of antialiased text faster and higher
   // quality.
-  bool CanUseOpaqueSurface();
+  PRBool CanUseOpaqueSurface();
 
   enum SurfaceMode {
     SURFACE_OPAQUE,
@@ -768,7 +761,7 @@ public:
   /**
    * This getter can be used anytime.
    */
-  bool HasUserData(void* aKey)
+  PRBool HasUserData(void* aKey)
   { return mUserData.Has(aKey); }
   /**
    * This getter can be used anytime. Ownership is retained by the layer
@@ -950,9 +943,9 @@ protected:
   nsIntRect mClipRect;
   nsIntRect mTileSourceRect;
   PRUint32 mContentFlags;
-  bool mUseClipRect;
-  bool mUseTileSourceRect;
-  bool mIsFixedPosition;
+  PRPackedBool mUseClipRect;
+  PRPackedBool mUseTileSourceRect;
+  PRPackedBool mIsFixedPosition;
 };
 
 /**
@@ -1119,7 +1112,7 @@ public:
    * Returns true if this will use an intermediate surface. This is largely
    * backend-dependent, but it affects the operation of GetEffectiveOpacity().
    */
-  bool UseIntermediateSurface() { return mUseIntermediateSurface; }
+  PRBool UseIntermediateSurface() { return mUseIntermediateSurface; }
 
   /**
    * Returns the rectangle covered by the intermediate surface,
@@ -1134,13 +1127,13 @@ public:
   /**
    * Returns true if this container has more than one non-empty child
    */
-  bool HasMultipleChildren();
+  PRBool HasMultipleChildren();
 
   /**
    * Returns true if this container supports children with component alpha.
    * Should only be called while painting a child of this layer.
    */
-  bool SupportsComponentAlphaChildren() { return mSupportsComponentAlphaChildren; }
+  PRBool SupportsComponentAlphaChildren() { return mSupportsComponentAlphaChildren; }
 
 protected:
   friend class ReadbackProcessor;
@@ -1175,9 +1168,9 @@ protected:
   Layer* mFirstChild;
   Layer* mLastChild;
   FrameMetrics mFrameMetrics;
-  bool mUseIntermediateSurface;
-  bool mSupportsComponentAlphaChildren;
-  bool mMayHaveReadbackChild;
+  PRPackedBool mUseIntermediateSurface;
+  PRPackedBool mSupportsComponentAlphaChildren;
+  PRPackedBool mMayHaveReadbackChild;
 };
 
 /**
@@ -1248,7 +1241,7 @@ public:
     /* Whether the GLContext contains premultiplied alpha
      * values in the framebuffer or not.  Defaults to FALSE.
      */
-    bool mGLBufferIsPremultiplied;
+    PRPackedBool mGLBufferIsPremultiplied;
   };
 
   /**
@@ -1323,7 +1316,7 @@ protected:
   /**
    * Set to true in Updated(), cleared during a transaction.
    */
-  bool mDirty;
+  PRPackedBool mDirty;
 };
 
 }

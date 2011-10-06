@@ -67,8 +67,8 @@ public:
   virtual void Clear();
   virtual void ClearCachedValues();
 
-  nsIFrame* GetFrame(bool aFlushLayout);
-  nsIPresShell* GetPresShell(bool aFlushLayout);
+  nsIFrame* GetFrame(PRBool aFlushLayout);
+  nsIPresShell* GetPresShell(PRBool aFlushLayout);
   nsresult GetOffsetRect(nsIntRect& aRect);
   nsresult GetScreenPosition(nsIntPoint& aPoint);
 

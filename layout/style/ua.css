@@ -58,7 +58,7 @@
 
 *|*::-moz-table-outer {
   display: inherit !important; /* table or inline-table */
-  margin: inherit ! important;
+  margin: 0 ! important;
   padding: 0 ! important;
   border: none ! important;
   float: inherit;

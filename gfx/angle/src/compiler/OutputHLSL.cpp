@@ -136,7 +136,7 @@ void OutputHLSL::header()
                 {
                     if (mReferencedUniforms.find(name.c_str()) != mReferencedUniforms.end())
                     {
-                        uniforms += "uniform " + typeString(type) + " " + decorateUniform(name, type.isArray()) + arrayString(type) + ";\n";
+                        uniforms += "uniform " + typeString(type) + " " + decorate(name) + arrayString(type) + ";\n";
                     }
                 }
                 else if (qualifier == EvqVaryingIn || qualifier == EvqInvariantVaryingIn)
@@ -300,7 +300,7 @@ void OutputHLSL::header()
                 {
                     if (mReferencedUniforms.find(name.c_str()) != mReferencedUniforms.end())
                     {
-                        uniforms += "uniform " + typeString(type) + " " + decorateUniform(name, type.isArray()) + arrayString(type) + ";\n";
+                        uniforms += "uniform " + typeString(type) + " " + decorate(name) + arrayString(type) + ";\n";
                     }
                 }
                 else if (qualifier == EvqAttribute)
@@ -729,22 +729,17 @@ void OutputHLSL::visitSymbol(TIntermSymbol *node)
         if (qualifier == EvqUniform)
         {
             mReferencedUniforms.insert(name.c_str());
-            out << decorateUniform(name, node->isArray());
         }
         else if (qualifier == EvqAttribute)
         {
             mReferencedAttributes.insert(name.c_str());
-            out << decorate(name);
         }
         else if (qualifier == EvqVaryingOut || qualifier == EvqInvariantVaryingOut || qualifier == EvqVaryingIn || qualifier == EvqInvariantVaryingIn)
         {
             mReferencedVaryings.insert(name.c_str());
-            out << decorate(name);
         }
-        else
-        {
-            out << decorate(name);
-        }
+
+        out << decorate(name);
     }
 }
 
@@ -1615,7 +1610,7 @@ bool OutputHLSL::visitLoop(Visit visit, TIntermLoop *node)
     }
 
     outputLineDirective(node->getLine());
-    out << ";}\n";
+    out << "}\n";
 
     if (node->getType() == ELoopDoWhile)
     {
@@ -1849,7 +1844,7 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
                 }
 
                 outputLineDirective(node->getLine());
-                out << ";}\n";
+                out << "}\n";
 
                 initial += 255 * increment;
                 iterations -= 255;
@@ -2050,7 +2045,14 @@ void OutputHLSL::addConstructor(const TType &type, const TString &name, const TI
     typedef std::vector<TType> ParameterArray;
     ParameterArray ctorParameters;
 
-    if (type.getStruct())
+    if (parameters)
+    {
+        for (TIntermSequence::const_iterator parameter = parameters->begin(); parameter != parameters->end(); parameter++)
+        {
+            ctorParameters.push_back((*parameter)->getAsTyped()->getType());
+        }
+    }
+    else if (type.getStruct())
     {
         mStructNames.insert(decorate(name));
 
@@ -2077,13 +2079,6 @@ void OutputHLSL::addConstructor(const TType &type, const TString &name, const TI
         for (unsigned int i = 0; i < fields.size(); i++)
         {
             ctorParameters.push_back(*fields[i].type);
-        }
-    }
-    else if (parameters)
-    {
-        for (TIntermSequence::const_iterator parameter = parameters->begin(); parameter != parameters->end(); parameter++)
-        {
-            ctorParameters.push_back((*parameter)->getAsTyped()->getType());
         }
     }
     else UNREACHABLE();
@@ -2342,21 +2337,13 @@ TString OutputHLSL::structLookup(const TString &typeName)
 
 TString OutputHLSL::decorate(const TString &string)
 {
-    if (string.compare(0, 3, "gl_") != 0 && string.compare(0, 3, "dx_") != 0)
+    if (string.substr(0, 3) != "gl_" && string.substr(0, 3) != "dx_")
     {
         return "_" + string;
     }
-    
-    return string;
-}
-
-TString OutputHLSL::decorateUniform(const TString &string, bool array)
-{
-    if (array)
+    else
     {
-        return "ar_" + string;   // Allows identifying arrays of size 1
+        return string;
     }
-    
-    return decorate(string);
 }
 }

@@ -82,7 +82,7 @@ public:
      * Synchronize the bindings after a change in the RDF graph. Bindings that
      * would be affected will be assigned appropriately based on the change.
      */
-    bool
+    PRBool
     SyncAssignments(nsIRDFResource* aSubject,
                     nsIRDFResource* aPredicate,
                     nsIRDFNode* aTarget);
@@ -91,7 +91,7 @@ public:
      * Return true if the result has an instantiation involving a particular
      * memory element.
      */
-    bool
+    PRBool
     HasMemoryElement(const MemoryElement& aMemoryElement);
 
 protected:

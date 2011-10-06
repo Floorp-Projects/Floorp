@@ -75,7 +75,7 @@ public:
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
                                         PRUint32 aFilter);
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     // Override nsBoxFrame.
     if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))

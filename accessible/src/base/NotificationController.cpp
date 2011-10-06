@@ -44,12 +44,9 @@
 #include "nsDocAccessible.h"
 #include "nsEventShell.h"
 #include "nsTextAccessible.h"
-#include "FocusManager.h"
 #include "TextUpdater.h"
-
 #include "mozilla/dom/Element.h"
 
-using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
 // NotificationCollector
@@ -185,8 +182,7 @@ NotificationController::IsUpdatePending()
   return mPresShell->IsLayoutFlushObserver() ||
     mObservingState == eRefreshProcessingForUpdate ||
     mContentInsertions.Length() != 0 || mNotifications.Length() != 0 ||
-    mTextHash.Count() != 0 ||
-    !mDocument->HasLoadState(nsDocAccessible::eTreeConstructed);
+    mTextHash.Count() != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,15 +312,8 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   for (PRUint32 idx = 0; idx < eventCount; idx++) {
     AccEvent* accEvent = events[idx];
     if (accEvent->mEventRule != AccEvent::eDoNotEmit) {
-      // Dispatch the focus event if target is still focused.
-      if (accEvent->mEventType == nsIAccessibleEvent::EVENT_FOCUS) {
-        FocusMgr()->ProcessFocusEvent(accEvent);
-        continue;
-      }
-
       mDocument->ProcessPendingEvent(accEvent);
 
-      // Fire text change event caused by tree mutation.
       AccMutationEvent* showOrHideEvent = downcast_accEvent(accEvent);
       if (showOrHideEvent) {
         if (showOrHideEvent->mTextChangeEvent)
@@ -356,14 +345,14 @@ NotificationController::CoalesceEvents()
   PRInt32 tail = numQueuedEvents - 1;
   AccEvent* tailEvent = mEvents[tail];
 
+  // No node means this is application accessible (which can be a subject
+  // of reorder events), we do not coalesce events for it currently.
+  if (!tailEvent->mNode)
+    return;
+
   switch(tailEvent->mEventRule) {
     case AccEvent::eCoalesceFromSameSubtree:
     {
-      // No node means this is application accessible (which is a subject of
-      // reorder events), we do not coalesce events for it currently.
-      if (!tailEvent->mNode)
-        return;
-
       for (PRInt32 index = tail - 1; index >= 0; index--) {
         AccEvent* thisEvent = mEvents[index];
 
@@ -457,18 +446,21 @@ NotificationController::CoalesceEvents()
 
     } break; // case eCoalesceFromSameSubtree
 
-    case AccEvent::eCoalesceOfSameType:
+    case AccEvent::eCoalesceFromSameDocument:
     {
-      // Coalesce old events by newer event.
+      // Used for focus event, coalesce more older event since focus event
+      // for accessible can be duplicated by event for its document, we are
+      // interested in focus event for accessible.
       for (PRInt32 index = tail - 1; index >= 0; index--) {
-        AccEvent* accEvent = mEvents[index];
-        if (accEvent->mEventType == tailEvent->mEventType &&
-            accEvent->mEventRule == tailEvent->mEventRule) {
-          accEvent->mEventRule = AccEvent::eDoNotEmit;
+        AccEvent* thisEvent = mEvents[index];
+        if (thisEvent->mEventType == tailEvent->mEventType &&
+            thisEvent->mEventRule == tailEvent->mEventRule &&
+            thisEvent->GetDocAccessible() == tailEvent->GetDocAccessible()) {
+          thisEvent->mEventRule = AccEvent::eDoNotEmit;
           return;
         }
       }
-    } break; // case eCoalesceOfSameType
+    } break; // case eCoalesceFromSameDocument
 
     case AccEvent::eRemoveDupes:
     {
@@ -573,7 +565,7 @@ NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
     nsCOMPtr<nsIEditor> editor;
     textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
     if (editor) {
-      bool isEmpty = false;
+      PRBool isEmpty = PR_FALSE;
       editor->GetDocumentIsEmpty(&isEmpty);
       if (isEmpty)
         return;

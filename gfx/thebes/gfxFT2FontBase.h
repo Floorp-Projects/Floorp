@@ -60,18 +60,18 @@ public:
     virtual const gfxFont::Metrics& GetMetrics();
     virtual PRUint32 GetSpaceGlyph();
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
-    virtual bool ProvidesGetGlyph() const { return true; }
+    virtual PRBool ProvidesGetGlyph() const { return PR_TRUE; }
     virtual PRUint32 GetGlyph(PRUint32 unicode, PRUint32 variation_selector);
-    virtual bool ProvidesGlyphWidths() { return true; }
+    virtual PRBool ProvidesGlyphWidths() { return PR_TRUE; }
     virtual PRInt32 GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
 
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; };
-    virtual bool SetupCairoFont(gfxContext *aContext);
+    virtual PRBool SetupCairoFont(gfxContext *aContext);
 
 protected:
     cairo_scaled_font_t *mScaledFont;
     PRUint32 mSpaceGlyph;
-    bool mHasMetrics;
+    PRBool mHasMetrics;
     Metrics mMetrics;
 };
 

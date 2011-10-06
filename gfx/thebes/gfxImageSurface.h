@@ -99,7 +99,7 @@ public:
     PRInt32 GetDataSize() const { return mStride*mSize.height; }
 
     /* Fast copy from another image surface; returns TRUE if successful, FALSE otherwise */
-    bool CopyFrom (gfxImageSurface *other);
+    PRBool CopyFrom (gfxImageSurface *other);
 
     /* return new Subimage with pointing to original image starting from aRect.pos
      * and size of aRect.size. New subimage keeping current image reference
@@ -122,10 +122,8 @@ protected:
 
     static long ComputeStride(const gfxIntSize&, gfxImageFormat);
 
-    void MakeInvalid();
-
     gfxIntSize mSize;
-    bool mOwnsData;
+    PRBool mOwnsData;
     unsigned char *mData;
     gfxImageFormat mFormat;
     long mStride;

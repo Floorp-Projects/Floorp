@@ -152,15 +152,15 @@ public:
                               const char* aURL);
   virtual ~nsNPAPIPluginStreamListener();
 
-  bool IsStarted();
+  PRBool IsStarted();
   nsresult CleanUpStream(NPReason reason);
   void CallURLNotify(NPReason reason);
-  void SetCallNotify(bool aCallNotify) { mCallNotify = aCallNotify; }
+  void SetCallNotify(PRBool aCallNotify) { mCallNotify = aCallNotify; }
   void SuspendRequest();
   void ResumeRequest();
   nsresult StartDataPump();
   void StopDataPump();
-  bool PluginInitJSLoadInProgress();
+  PRBool PluginInitJSLoadInProgress();
 
   void* GetNotifyData() { return mNPStream.notifyData; }
   nsPluginStreamListenerPeer* GetStreamListenerPeer() { return mStreamListenerPeer; }
@@ -180,12 +180,12 @@ protected:
   PRUint32 mStreamBufferSize;
   PRInt32 mStreamBufferByteCount;
   PRInt32 mStreamType;
-  bool mStreamStarted;
-  bool mStreamCleanedUp;
-  bool mCallNotify;
-  bool mIsSuspended;
-  bool mIsPluginInitJSStream;
-  bool mRedirectDenied;
+  PRPackedBool mStreamStarted;
+  PRPackedBool mStreamCleanedUp;
+  PRPackedBool mCallNotify;
+  PRPackedBool mIsSuspended;
+  PRPackedBool mIsPluginInitJSStream;
+  PRPackedBool mRedirectDenied;
   nsCString mResponseHeaders;
   char* mResponseHeaderBuf;
   nsCOMPtr<nsITimer> mDataPumpTimer;

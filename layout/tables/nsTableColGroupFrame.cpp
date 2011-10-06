@@ -99,7 +99,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
 
 nsresult
 nsTableColGroupFrame::AddColsToTable(PRInt32                   aFirstColIndex,
-                                     bool                      aResetSubsequentColIndices,
+                                     PRBool                    aResetSubsequentColIndices,
                                      const nsFrameList::Slice& aCols)
 {
   nsresult rv = NS_OK;
@@ -292,7 +292,7 @@ nsTableColGroupFrame::InsertColsReflow(PRInt32                   aColIndex,
 
 void
 nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
-                                  bool             aResetSubsequentColIndices)
+                                  PRBool           aResetSubsequentColIndices)
 {
   PRInt32 colIndex = 0;
   nsIFrame* nextChild = nsnull;
@@ -325,7 +325,7 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   if (!aOldFrame) return NS_OK;
-  bool contentRemoval = false;
+  PRBool contentRemoval = PR_FALSE;
   
   if (nsGkAtoms::tableColFrame == aOldFrame->GetType()) {
     nsTableColFrame* colFrame = (nsTableColFrame*)aOldFrame;
@@ -400,7 +400,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   nsresult rv=NS_OK;
   
   const nsStyleVisibility* groupVis = GetStyleVisibility();
-  bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+  PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   if (collapseGroup) {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame)  {
@@ -427,6 +427,12 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
+}
+
+/* virtual */ PRBool
+nsTableColGroupFrame::IsContainingBlock() const
+{
+  return PR_TRUE;
 }
 
 nsTableColFrame * nsTableColGroupFrame::GetFirstColumn()

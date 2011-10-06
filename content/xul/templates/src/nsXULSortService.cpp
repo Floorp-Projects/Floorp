@@ -109,9 +109,11 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
 {
   // set sort info on current column. This ensures that the
   // column header sort indicator is updated properly.
-  for (nsIContent* child = content->GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
+  PRUint32 numChildren = content->GetChildCount();
+
+  for (PRUint32 childIndex = 0; childIndex < numChildren; ++childIndex) {
+    nsIContent *child = content->GetChildAt(childIndex);
+
     if (child->IsXUL()) {
       nsIAtom *tag = child->Tag();
 
@@ -175,10 +177,11 @@ XULSortServiceImpl::GetItemsToSort(nsIContent *aContainer,
   
     aContainer = treechildren;
   }
-  
-  for (nsIContent* child = aContainer->GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
+
+  PRUint32 count = aContainer->GetChildCount();
+  for (PRUint32 c = 0; c < count; c++) {
+    nsIContent *child = aContainer->GetChildAt(c);
+
     contentSortInfo* cinfo = aSortItems.AppendElement();
     if (!cinfo)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -196,9 +199,9 @@ XULSortServiceImpl::GetTemplateItemsToSort(nsIContent* aContainer,
                                            nsSortState* aSortState,
                                            nsTArray<contentSortInfo>& aSortItems)
 {
-  for (nsIContent* child = aContainer->GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
+  PRUint32 numChildren = aContainer->GetChildCount();
+  for (PRUint32 childIndex = 0; childIndex < numChildren; childIndex++) {
+    nsIContent *child = aContainer->GetChildAt(childIndex);
   
     nsCOMPtr<nsIDOMElement> childnode = do_QueryInterface(child);
 
@@ -344,9 +347,9 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
                               nsGkAtoms::_true, eCaseMatters))
         continue;
         
-      for (nsIContent* grandchild = child->GetFirstChild();
-           grandchild;
-           grandchild = grandchild->GetNextSibling()) {
+      PRUint32 numChildren = child->GetChildCount();
+      for (PRUint32 gcindex = 0; gcindex < numChildren; gcindex++) {
+        nsIContent *grandchild = child->GetChildAt(gcindex);
         nsINodeInfo *ni = grandchild->NodeInfo();
         nsIAtom *localName = ni->NameAtom();
         if (ni->NamespaceID() == kNameSpaceID_XUL &&
@@ -427,7 +430,7 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
   aSortState->sort.Assign(sort);
   aSortState->direction = nsSortState_natural;
 
-  bool noNaturalState = false;
+  PRBool noNaturalState = PR_FALSE;
   nsWhitespaceTokenizer tokenizer(aSortHints);
   while (tokenizer.hasMoreTokens()) {
     const nsDependentSubstring& token(tokenizer.nextToken());

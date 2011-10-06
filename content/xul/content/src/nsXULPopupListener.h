@@ -62,7 +62,7 @@ public:
     // false, the popup opens on left click on aElement or a descendant. If
     // aIsContext is true, the popup is a context menu which opens on a
     // context menu event.
-    nsXULPopupListener(nsIDOMElement *aElement, bool aIsContext);
+    nsXULPopupListener(nsIDOMElement *aElement, PRBool aIsContext);
     virtual ~nsXULPopupListener(void);
 
     // nsISupports
@@ -91,7 +91,7 @@ private:
     nsCOMPtr<nsIContent> mPopupContent; 
 
     // true if a context popup
-    bool mIsContext;
+    PRBool mIsContext;
 };
 
 #endif // nsXULPopupListener_h___

@@ -87,7 +87,7 @@ public:
 
 protected:
   nsStyleChangeList&  operator=(const nsStyleChangeList& aCopy);
-  bool                operator==(const nsStyleChangeList& aOther) const;
+  PRBool              operator==(const nsStyleChangeList& aOther) const;
 
   nsStyleChangeData*  mArray;
   PRInt32             mArraySize;

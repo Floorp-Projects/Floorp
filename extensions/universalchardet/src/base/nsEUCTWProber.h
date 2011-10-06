@@ -44,7 +44,7 @@
 
 class nsEUCTWProber: public nsCharSetProber {
 public:
-  nsEUCTWProber(bool aIsPreferredLanguage)
+  nsEUCTWProber(PRBool aIsPreferredLanguage)
     :mIsPreferredLanguage(aIsPreferredLanguage)
   {mCodingSM = new nsCodingStateMachine(&EUCTWSMModel);
     Reset();}
@@ -65,7 +65,7 @@ protected:
   //EUCTWContextAnalysis mContextAnalyser;
   EUCTWDistributionAnalysis mDistributionAnalyser;
   char mLastChar[2];
-  bool mIsPreferredLanguage;
+  PRBool mIsPreferredLanguage;
 
 };
 

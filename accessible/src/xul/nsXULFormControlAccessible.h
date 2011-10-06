@@ -77,19 +77,13 @@ public:
   // ActionAccessible
   virtual PRUint8 ActionCount();
 
-  // Widgets
-  virtual bool IsWidget() const;
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
-  virtual nsAccessible* ContainerWidget() const;
-
 protected:
 
   // nsAccessible
   virtual void CacheChildren();
 
   // nsXULButtonAccessible
-  bool ContainsMenu();
+  PRBool ContainsMenu();
 };
 
 
@@ -135,7 +129,7 @@ public:
   virtual PRUint8 ActionCount();
 
 private:
-  bool DropmarkerOpen(bool aToggleOpen);
+  PRBool DropmarkerOpen(PRBool aToggleOpen);
 };
 
 /**
@@ -165,9 +159,6 @@ public:
   virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                           PRInt32 *aSetSize);
   virtual PRUint64 NativeState();
-
-  // Widgets
-  virtual nsAccessible* ContainerWidget() const;
 };
 
 /**
@@ -181,11 +172,6 @@ public:
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
-
-  // Widgets
-  virtual bool IsWidget() const;
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
 };
 
 /**
@@ -213,7 +199,7 @@ public:
                                           PRInt32 *aSetSize);
 
   // nsXULToolbarButtonAccessible
-  static bool IsSeparator(nsAccessible *aAccessible);
+  static PRBool IsSeparator(nsAccessible *aAccessible);
 };
 
 /**
@@ -267,7 +253,7 @@ public:
   virtual void ApplyARIAState(PRUint64* aState);
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
-  virtual bool GetAllowsAnonChildAccessibles();
+  virtual PRBool GetAllowsAnonChildAccessibles();
 
   // ActionAccessible
   virtual PRUint8 ActionCount();

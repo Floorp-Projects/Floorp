@@ -44,15 +44,15 @@
 class nsMIMEInfoAndroid : public nsIMIMEInfo
 {
 public:
-  static bool
+  static PRBool
   GetMimeInfoForMimeType(const nsACString& aMimeType, 
                          nsMIMEInfoAndroid** aMimeInfo);
-  static bool
+  static PRBool
   GetMimeInfoForFileExt(const nsACString& aFileExt, 
                         nsMIMEInfoAndroid** aMimeInfo);
 
   static nsresult 
-  GetMimeInfoForURL(const nsACString &aURL, bool *found,
+  GetMimeInfoForURL(const nsACString &aURL, PRBool *found,
                     nsIHandlerInfo **info);
 
   NS_DECL_ISUPPORTS
@@ -67,7 +67,7 @@ protected:
   nsCOMPtr<nsIMutableArray> mHandlerApps;
   nsCString mType;
   nsTArray<nsCString> mExtensions;
-  bool mAlwaysAsk;
+  PRBool mAlwaysAsk;
   nsHandlerInfoAction mPrefAction;
   nsString mDescription;
   nsCOMPtr<nsIHandlerApp> mPrefApp;

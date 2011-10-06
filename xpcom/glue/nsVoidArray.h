@@ -48,7 +48,7 @@ typedef int (* nsVoidArrayComparatorFunc)
             (const void* aElement1, const void* aElement2, void* aData);
 
 // Enumerator callback function. Return PR_FALSE to stop
-typedef bool (* nsVoidArrayEnumFunc)(void* aElement, void *aData);
+typedef PRBool (* nsVoidArrayEnumFunc)(void* aElement, void *aData);
 
 /// A basic zero-based array of void*'s that manages its own memory
 class NS_COM_GLUE nsVoidArray {
@@ -63,7 +63,7 @@ public:
     return mImpl ? mImpl->mCount : 0;
   }
   // If the array grows, the newly created entries will all be null
-  bool SetCount(PRInt32 aNewCount);
+  PRBool SetCount(PRInt32 aNewCount);
   // returns the max number that can be held without allocating
   inline PRInt32 GetArraySize() const {
     return mImpl ? (PRInt32(mImpl->mBits) & kArraySizeMask) : 0;
@@ -99,40 +99,40 @@ public:
 
   PRInt32 IndexOf(void* aPossibleElement) const;
 
-  bool InsertElementAt(void* aElement, PRInt32 aIndex);
-  bool InsertElementsAt(const nsVoidArray &other, PRInt32 aIndex);
+  PRBool InsertElementAt(void* aElement, PRInt32 aIndex);
+  PRBool InsertElementsAt(const nsVoidArray &other, PRInt32 aIndex);
 
-  bool ReplaceElementAt(void* aElement, PRInt32 aIndex);
+  PRBool ReplaceElementAt(void* aElement, PRInt32 aIndex);
 
   // useful for doing LRU arrays, sorting, etc
-  bool MoveElement(PRInt32 aFrom, PRInt32 aTo);
+  PRBool MoveElement(PRInt32 aFrom, PRInt32 aTo);
 
-  bool AppendElement(void* aElement) {
+  PRBool AppendElement(void* aElement) {
     return InsertElementAt(aElement, Count());
   }
 
-  bool AppendElements(nsVoidArray& aElements) {
+  PRBool AppendElements(nsVoidArray& aElements) {
     return InsertElementsAt(aElements, Count());
   }
 
-  bool RemoveElement(void* aElement);
-  bool RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount);
-  bool RemoveElementAt(PRInt32 aIndex) { return RemoveElementsAt(aIndex,1); }
+  PRBool RemoveElement(void* aElement);
+  PRBool RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount);
+  PRBool RemoveElementAt(PRInt32 aIndex) { return RemoveElementsAt(aIndex,1); }
 
   void   Clear();
 
-  bool SizeTo(PRInt32 aMin);
+  PRBool SizeTo(PRInt32 aMin);
   // Subtly different - Compact() tries to be smart about whether we
   // should reallocate the array; SizeTo() always reallocates.
   void Compact();
 
   void Sort(nsVoidArrayComparatorFunc aFunc, void* aData);
 
-  bool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData);
-  bool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
 
 protected:
-  bool GrowArrayBy(PRInt32 aGrowBy);
+  PRBool GrowArrayBy(PRInt32 aGrowBy);
 
   struct Impl {
     /**
@@ -158,7 +158,7 @@ protected:
 #if DEBUG_VOIDARRAY
   PRInt32 mMaxCount;
   PRInt32 mMaxSize;
-  bool    mIsAuto;
+  PRBool  mIsAuto;
 #endif
 
   enum {
@@ -170,12 +170,12 @@ protected:
 
 
   // bit twiddlers
-  void SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount, bool aOwner,
-                bool aHasAuto);
-  inline bool IsArrayOwner() const {
+  void SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount, PRBool aOwner,
+                PRBool aHasAuto);
+  inline PRBool IsArrayOwner() const {
     return mImpl && (mImpl->mBits & kArrayOwnerMask);
   }
-  inline bool HasAutoBuffer() const {
+  inline PRBool HasAutoBuffer() const {
     return mImpl && (mImpl->mBits & kArrayHasAutoBufferMask);
   }
 
@@ -213,7 +213,7 @@ class nsCString;
 typedef int (* nsCStringArrayComparatorFunc)
             (const nsCString* aElement1, const nsCString* aElement2, void* aData);
 
-typedef bool (*nsCStringArrayEnumFunc)(nsCString& aElement, void *aData);
+typedef PRBool (*nsCStringArrayEnumFunc)(nsCString& aElement, void *aData);
 
 class NS_COM_GLUE nsCStringArray: private nsVoidArray
 {
@@ -238,21 +238,21 @@ public:
   PRInt32 IndexOfIgnoreCase(const nsACString& aPossibleString) const;
 #endif
 
-  bool InsertCStringAt(const nsACString& aCString, PRInt32 aIndex);
+  PRBool InsertCStringAt(const nsACString& aCString, PRInt32 aIndex);
 
-  bool ReplaceCStringAt(const nsACString& aCString, PRInt32 aIndex);
+  PRBool ReplaceCStringAt(const nsACString& aCString, PRInt32 aIndex);
 
-  bool AppendCString(const nsACString& aCString) {
+  PRBool AppendCString(const nsACString& aCString) {
     return InsertCStringAt(aCString, Count());
   }
 
-  bool RemoveCString(const nsACString& aCString);
+  PRBool RemoveCString(const nsACString& aCString);
 
 #ifdef MOZILLA_INTERNAL_API
-  bool RemoveCStringIgnoreCase(const nsACString& aCString);
+  PRBool RemoveCStringIgnoreCase(const nsACString& aCString);
 #endif
 
-  bool RemoveCStringAt(PRInt32 aIndex);
+  PRBool RemoveCStringAt(PRInt32 aIndex);
   void   Clear(void);
 
   void Compact(void) {
@@ -267,8 +267,8 @@ public:
 
   void Sort(nsCStringArrayComparatorFunc aFunc, void* aData);
 
-  bool EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData);
-  bool EnumerateBackwards(nsCStringArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateBackwards(nsCStringArrayEnumFunc aFunc, void* aData);
 
 private:
   /// Copy constructors are not allowed
@@ -329,29 +329,29 @@ public:
     return FastElementAt(aIndex);
   }
   PRInt32 IndexOf(void* aPossibleElement) const;
-  bool InsertElementAt(void* aElement, PRInt32 aIndex);
-  bool InsertElementsAt(const nsVoidArray &other, PRInt32 aIndex);
-  bool ReplaceElementAt(void* aElement, PRInt32 aIndex);
-  bool MoveElement(PRInt32 aFrom, PRInt32 aTo);
-  bool AppendElement(void* aElement);
-  bool AppendElements(nsVoidArray& aElements) {
+  PRBool InsertElementAt(void* aElement, PRInt32 aIndex);
+  PRBool InsertElementsAt(const nsVoidArray &other, PRInt32 aIndex);
+  PRBool ReplaceElementAt(void* aElement, PRInt32 aIndex);
+  PRBool MoveElement(PRInt32 aFrom, PRInt32 aTo);
+  PRBool AppendElement(void* aElement);
+  PRBool AppendElements(nsVoidArray& aElements) {
     return InsertElementsAt(aElements, Count());
   }
-  bool RemoveElement(void* aElement);
-  bool RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount);
-  bool RemoveElementAt(PRInt32 aIndex);
+  PRBool RemoveElement(void* aElement);
+  PRBool RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount);
+  PRBool RemoveElementAt(PRInt32 aIndex);
 
   void Clear();
-  bool SizeTo(PRInt32 aMin);
+  PRBool SizeTo(PRInt32 aMin);
   void Compact();
   void Sort(nsVoidArrayComparatorFunc aFunc, void* aData);
 
-  bool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData);
-  bool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
 
 private:
 
-  bool HasSingle() const
+  PRBool HasSingle() const
   {
     return !!(reinterpret_cast<PRWord>(mImpl) & 0x1);
   }
@@ -367,7 +367,7 @@ private:
     mImpl = reinterpret_cast<Impl*>
                             (reinterpret_cast<PRWord>(aChild) | 0x1);
   }
-  bool IsEmpty() const
+  PRBool IsEmpty() const
   {
     // Note that this isn't the same as Count()==0
     return !mImpl;
@@ -382,7 +382,7 @@ private:
     NS_ASSERTION(!HasSingle(), "This is a single");
     return this;
   }
-  bool EnsureArray();
+  PRBool EnsureArray();
 };
 
 #endif /* nsVoidArray_h___ */

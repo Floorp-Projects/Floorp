@@ -112,7 +112,7 @@ public:
     NS_ADDREF(aAtom);
   }
 
-  bool IsAtom() const
+  PRBool IsAtom() const
   {
     return !(mBits & NS_ATTRNAME_NODEINFO_BIT);
   }
@@ -129,18 +129,18 @@ public:
     return reinterpret_cast<nsIAtom*>(mBits);
   }
 
-  bool Equals(const nsAttrName& aOther) const
+  PRBool Equals(const nsAttrName& aOther) const
   {
     return mBits == aOther.mBits;
   }
 
   // Faster comparison in the case we know the namespace is null
-  bool Equals(nsIAtom* aAtom) const
+  PRBool Equals(nsIAtom* aAtom) const
   {
     return reinterpret_cast<PtrBits>(aAtom) == mBits;
   }
 
-  bool Equals(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
+  PRBool Equals(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
   {
     if (aNamespaceID == kNameSpaceID_None) {
       return Equals(aLocalName);
@@ -148,7 +148,7 @@ public:
     return !IsAtom() && NodeInfo()->Equals(aLocalName, aNamespaceID);
   }
 
-  bool Equals(nsINodeInfo* aNodeInfo) const
+  PRBool Equals(nsINodeInfo* aNodeInfo) const
   {
     return Equals(aNodeInfo->NameAtom(), aNodeInfo->NamespaceID());
   }
@@ -175,7 +175,7 @@ public:
     return IsAtom() ? nsnull : NodeInfo()->GetPrefixAtom();
   }
 
-  bool QualifiedNameEquals(const nsAString& aName) const
+  PRBool QualifiedNameEquals(const nsAString& aName) const
   {
     return IsAtom() ? Atom()->Equals(aName) :
                       NodeInfo()->QualifiedNameEquals(aName);
@@ -209,7 +209,7 @@ public:
     return mBits - 0;
   }
 
-  bool IsSmaller(nsIAtom* aOther) const
+  PRBool IsSmaller(nsIAtom* aOther) const
   {
     return mBits < reinterpret_cast<PtrBits>(aOther);
   }

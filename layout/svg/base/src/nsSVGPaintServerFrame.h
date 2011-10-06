@@ -65,11 +65,11 @@ public:
    * Configure paint server prior to rendering
    * @return PR_FALSE to skip rendering
    */
-  virtual bool SetupPaintServer(gfxContext *aContext,
+  virtual PRBool SetupPaintServer(gfxContext *aContext,
                                   nsSVGGeometryFrame *aSource,
                                   float aOpacity);
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsSVGPaintServerFrameBase::IsFrameOfType(aFlags & ~nsIFrame::eSVGPaintServer);
   }

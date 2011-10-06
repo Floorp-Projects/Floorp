@@ -160,19 +160,19 @@ nsXFormsAccessible::NativeState()
 
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
 
-  bool isRelevant = false;
+  PRBool isRelevant = PR_FALSE;
   nsresult rv = sXFormsService->IsRelevant(DOMNode, &isRelevant);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  bool isReadonly = false;
+  PRBool isReadonly = PR_FALSE;
   rv = sXFormsService->IsReadonly(DOMNode, &isReadonly);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  bool isRequired = false;
+  PRBool isRequired = PR_FALSE;
   rv = sXFormsService->IsRequired(DOMNode, &isRequired);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  bool isValid = false;
+  PRBool isValid = PR_FALSE;
   rv = sXFormsService->IsValid(DOMNode, &isValid);
   NS_ENSURE_SUCCESS(rv, 0);
 
@@ -211,7 +211,7 @@ nsXFormsAccessible::Description(nsString& aDescription)
     GetBoundChildElementValue(NS_LITERAL_STRING("hint"), aDescription);
 }
 
-bool
+PRBool
 nsXFormsAccessible::GetAllowsAnonChildAccessibles()
 {
   return PR_FALSE;
@@ -234,7 +234,7 @@ nsXFormsContainerAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_GROUPING;
 }
 
-bool
+PRBool
 nsXFormsContainerAccessible::GetAllowsAnonChildAccessibles()
 {
   return PR_TRUE;
@@ -258,12 +258,12 @@ nsXFormsEditableAccessible::NativeState()
 
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
 
-  bool isReadonly = false;
+  PRBool isReadonly = PR_FALSE;
   nsresult rv = sXFormsService->IsReadonly(DOMNode, &isReadonly);
   NS_ENSURE_SUCCESS(rv, state);
 
   if (!isReadonly) {
-    bool isRelevant = false;
+    PRBool isRelevant = PR_FALSE;
     rv = sXFormsService->IsRelevant(DOMNode, &isRelevant);
     NS_ENSURE_SUCCESS(rv, state);
     if (isRelevant) {
@@ -473,7 +473,7 @@ nsXFormsSelectableAccessible::IsItemSelected(PRUint32 aIndex)
     return selItemDOMNode == itemDOMNode;
   }
 
-  bool isSelected = false;
+  PRBool isSelected = PR_FALSE;
   sXFormsService->IsSelectItemSelected(DOMNode, itemDOMNode, &isSelected);
   return isSelected;
 }
@@ -583,7 +583,7 @@ nsXFormsSelectableItemAccessible::IsSelected()
 
     nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
     if (nodeinfo->Equals(nsGkAtoms::select)) {
-      bool isSelected = false;
+      PRBool isSelected = PR_FALSE;
       rv = sXFormsService->IsSelectItemSelected(select, DOMNode, &isSelected);
       return NS_SUCCEEDED(rv) && isSelected;
     }

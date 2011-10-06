@@ -75,7 +75,7 @@ class nsAutoConfig : public nsIAutoConfig,
         nsresult PromptForEMailAddress(nsACString &emailAddress);
         nsCString mBuf, mCurrProfile;
         nsCOMPtr<nsIPrefBranch> mPrefBranch;
-        bool mLoaded;
+        PRBool mLoaded;
         nsCOMPtr<nsITimer> mTimer;
         nsCString mConfigURL;
 };

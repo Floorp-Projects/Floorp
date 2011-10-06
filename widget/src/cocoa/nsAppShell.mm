@@ -74,7 +74,7 @@ extern nsIWidget         * gRollupWidget;
 // defined in nsCocoaWindow.mm
 extern PRInt32             gXULModalLevel;
 
-static bool gAppShellMethodsSwizzled = false;
+static PRBool gAppShellMethodsSwizzled = PR_FALSE;
 // List of current Cocoa app-modal windows (nested if more than one).
 nsCocoaAppModalWindowList *gCocoaAppModalWindowList = NULL;
 
@@ -163,10 +163,10 @@ NSModalSession nsCocoaAppModalWindowList::CurrentSession()
 }
 
 // Has a Gecko modal dialog popped up over a Cocoa app-modal dialog?
-bool nsCocoaAppModalWindowList::GeckoModalAboveCocoaModal()
+PRBool nsCocoaAppModalWindowList::GeckoModalAboveCocoaModal()
 {
   if (mList.IsEmpty())
-    return false;
+    return PR_FALSE;
 
   nsCocoaAppModalWindowListItem &topItem = mList.ElementAt(mList.Length() - 1);
 
@@ -219,7 +219,7 @@ nsAppShell::ResumeNative(void)
   if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0) &&
       mSkippedNativeCallback)
   {
-    mSkippedNativeCallback = false;
+    mSkippedNativeCallback = PR_FALSE;
     ScheduleNativeEventCallback();
   }
   return retval;
@@ -230,10 +230,10 @@ nsAppShell::nsAppShell()
 , mDelegate(nsnull)
 , mCFRunLoop(NULL)
 , mCFRunLoopSource(NULL)
-, mRunningEventLoop(false)
-, mStarted(false)
-, mTerminated(false)
-, mSkippedNativeCallback(false)
+, mRunningEventLoop(PR_FALSE)
+, mStarted(PR_FALSE)
+, mTerminated(PR_FALSE)
+, mSkippedNativeCallback(PR_FALSE)
 , mHadMoreEventsCount(0)
 , mRecursionDepth(0)
 , mNativeEventCallbackDepth(0)
@@ -241,7 +241,7 @@ nsAppShell::nsAppShell()
 {
   // A Cocoa event loop is running here if (and only if) we've been embedded
   // by a Cocoa app (like Camino).
-  mRunningCocoaEmbedded = [NSApp isRunning] ? true : false;
+  mRunningCocoaEmbedded = [NSApp isRunning] ? PR_TRUE : PR_FALSE;
 }
 
 nsAppShell::~nsAppShell()
@@ -365,7 +365,7 @@ nsAppShell::Init()
                                   @selector(nsAppShell_PDEPluginCallback_dealloc));
       }
     }
-    gAppShellMethodsSwizzled = true;
+    gAppShellMethodsSwizzled = PR_TRUE;
   }
 
   [localPool release];
@@ -393,7 +393,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
   nsAppShell* self = static_cast<nsAppShell*> (aInfo);
 
   if (self->mRunningEventLoop) {
-    self->mRunningEventLoop = false;
+    self->mRunningEventLoop = PR_FALSE;
 
     // The run loop may be sleeping -- [NSRunLoop runMode:...]
     // won't return until it's given a reason to wake up.  Awaken it by
@@ -424,7 +424,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
     self->NativeEventCallback();
     --self->mNativeEventCallbackDepth;
   } else {
-    self->mSkippedNativeCallback = true;
+    self->mSkippedNativeCallback = PR_TRUE;
   }
 
   // Still needed to fix bug 343033 ("5-10 second delay or hang or crash
@@ -447,7 +447,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
   // corresponding call to ProcessGeckoEvents() will never happen.  We check
   // for this possibility in two different places -- here and in Exit()
   // itself.  If we find here that Exit() has been called (that mTerminated
-  // is true), it's because we've been called recursively, that Exit() was
+  // is PR_TRUE), it's because we've been called recursively, that Exit() was
   // called from self->NativeEventCallback() above, and that we're unwinding
   // the recursion.  In this case we'll never be called again, and we balance
   // here any extra calls to ScheduleNativeEventCallback().
@@ -502,7 +502,7 @@ nsAppShell::WillTerminate()
   // from [MacApplicationDelegate applicationShouldTerminate:]) gets run.
   NS_ProcessPendingEvents(NS_GetCurrentThread());
 
-  mTerminated = true;
+  mTerminated = PR_TRUE;
 }
 
 // ScheduleNativeEventCallback
@@ -559,18 +559,18 @@ nsAppShell::ScheduleNativeEventCallback()
 // times in a row.  This doesn't seem to cause native event starvation.
 //
 // protected virtual
-bool
-nsAppShell::ProcessNextNativeEvent(bool aMayWait)
+PRBool
+nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 {
-  bool moreEvents = false;
+  PRBool moreEvents = PR_FALSE;
 
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  bool eventProcessed = false;
+  PRBool eventProcessed = PR_FALSE;
   NSString* currentMode = nil;
 
   if (mTerminated)
-    return false;
+    return PR_FALSE;
 
   // We don't want any native events to be processed here (via Gecko) while
   // Cocoa is displaying an app-modal dialog (as opposed to a window-modal
@@ -583,9 +583,9 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
   // which see below.
   if ([NSApp _isRunningAppModal] &&
       (!gCocoaAppModalWindowList || !gCocoaAppModalWindowList->GeckoModalAboveCocoaModal()))
-    return false;
+    return PR_FALSE;
 
-  bool wasRunningEventLoop = mRunningEventLoop;
+  PRBool wasRunningEventLoop = mRunningEventLoop;
   mRunningEventLoop = aMayWait;
   NSDate* waitUntil = nil;
   if (aMayWait)
@@ -628,8 +628,8 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
     // that it is called from [NSRunLoop runMode:beforeDate:], and that
     // [NSRunLoop runMode:beforeDate:], though it does process timer events,
     // doesn't return after doing so.  To get around this, when aWait is
-    // false we check for timer events and process them using [NSApp
-    // sendEvent:].  When aWait is true [NSRunLoop runMode:beforeDate:]
+    // PR_FALSE we check for timer events and process them using [NSApp
+    // sendEvent:].  When aWait is PR_TRUE [NSRunLoop runMode:beforeDate:]
     // will only return on a "real" event.  But there's code in
     // ProcessGeckoEvents() that should (when need be) wake us up by sending
     // a "fake" "real" event.  (See Apple's current doc on [NSRunLoop
@@ -671,7 +671,7 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
         } else {
           [NSApp sendEvent:nextEvent];
         }
-        eventProcessed = true;
+        eventProcessed = PR_TRUE;
       }
     } else {
       if (aMayWait ||
@@ -688,7 +688,7 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
         } else {
           [currentRunLoop runMode:currentMode beforeDate:waitUntil];
         }
-        eventProcessed = true;
+        eventProcessed = PR_TRUE;
       }
     }
   } while (mRunningEventLoop);
@@ -719,8 +719,8 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
   return moreEvents;
 }
 
-// Returns true if Gecko events are currently being processed in its "main"
-// event loop (or one of its "main" event loops).  Returns false if Gecko
+// Returns PR_TRUE if Gecko events are currently being processed in its "main"
+// event loop (or one of its "main" event loops).  Returns PR_FALSE if Gecko
 // events are being processed in a "nested" event loop, or if we're not
 // running in any sort of Gecko event loop.  How we process native events in
 // ProcessNextNativeEvent() turns on our decision (and if we make the wrong
@@ -738,14 +738,14 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
 // nsAppShell implementation, what counts as the "main" event loop is what
 // nsBaseAppShell::NativeEventCallback() does to process Gecko events.  We
 // don't currently use nsBaseAppShell::Run().)
-bool
+PRBool
 nsAppShell::InGeckoMainEventLoop()
 {
   if ((gXULModalLevel > 0) || (mRecursionDepth > 0))
-    return false;
+    return PR_FALSE;
   if (mNativeEventCallbackDepth <= 0)
-    return false;
-  return true;
+    return PR_FALSE;
+  return PR_TRUE;
 }
 
 // Run
@@ -767,7 +767,7 @@ nsAppShell::Run(void)
   if (mStarted)
     return NS_OK;
 
-  mStarted = true;
+  mStarted = PR_TRUE;
   NS_OBJC_TRY_ABORT([NSApp run]);
 
   return NS_OK;
@@ -788,7 +788,7 @@ nsAppShell::Exit(void)
     return NS_OK;
   }
 
-  mTerminated = true;
+  mTerminated = PR_TRUE;
 
   delete gCocoaAppModalWindowList;
   gCocoaAppModalWindowList = NULL;
@@ -842,7 +842,7 @@ nsAppShell::Exit(void)
 //
 // public
 NS_IMETHODIMP
-nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
+nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
                                PRUint32 aRecursionDepth)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;

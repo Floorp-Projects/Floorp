@@ -220,6 +220,9 @@ DOMCI_CLASS(XULTreeBuilder)
 // DOMStringList object
 DOMCI_CLASS(DOMStringList)
 
+// NameList object used by the DOM
+DOMCI_CLASS(NameList)
+
 #ifdef MOZ_XUL
 DOMCI_CLASS(TreeColumn)
 DOMCI_CLASS(TreeColumns)
@@ -472,7 +475,6 @@ DOMCI_CLASS(WebGLRenderbuffer)
 DOMCI_CLASS(WebGLUniformLocation)
 DOMCI_CLASS(WebGLActiveInfo)
 DOMCI_CLASS(WebGLExtension)
-DOMCI_CLASS(WebGLExtensionStandardDerivatives)
 
 DOMCI_CLASS(PaintRequest)
 DOMCI_CLASS(PaintRequestList)

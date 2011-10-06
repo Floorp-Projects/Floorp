@@ -45,6 +45,7 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
+#include "jsarena.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -269,14 +270,14 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
                 AutoIdVector proxyProps(cx);
                 if (flags & JSITER_OWNONLY) {
                     if (flags & JSITER_HIDDEN) {
-                        if (!Proxy::getOwnPropertyNames(cx, pobj, proxyProps))
+                        if (!JSProxy::getOwnPropertyNames(cx, pobj, proxyProps))
                             return false;
                     } else {
-                        if (!Proxy::keys(cx, pobj, proxyProps))
+                        if (!JSProxy::keys(cx, pobj, proxyProps))
                             return false;
                     }
                 } else {
-                    if (!Proxy::enumerate(cx, pobj, proxyProps))
+                    if (!JSProxy::enumerate(cx, pobj, proxyProps))
                         return false;
                 }
                 for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
@@ -313,8 +314,10 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
     return true;
 }
 
+namespace js {
+
 bool
-js::VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
+VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 {
     JS_STATIC_ASSERT(sizeof(JSIdArray) > sizeof(jsid));
     size_t len = props.length();
@@ -331,9 +334,11 @@ js::VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 }
 
 JS_FRIEND_API(bool)
-js::GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
 {
     return Snapshot(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props);
+}
+
 }
 
 size_t sCustomIteratorCount = 0;
@@ -641,7 +646,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
       miss:
         if (obj->isProxy()) {
             types::MarkIteratorUnknown(cx);
-            return Proxy::iterate(cx, obj, flags, vp);
+            return JSProxy::iterate(cx, obj, flags, vp);
         }
         if (!GetCustomIterator(cx, obj, flags, vp))
             return false;
@@ -710,22 +715,21 @@ js_ThrowStopIteration(JSContext *cx)
 static JSBool
 iterator_next(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, iterator_next, &IteratorClass, &ok);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
-        return ok;
-
-    if (!js_IteratorMore(cx, obj, &args.rval()))
         return false;
-
-    if (!args.rval().toBoolean()) {
-        js_ThrowStopIteration(cx);
+    if (!obj->isIterator()) {
+        ReportIncompatibleMethod(cx, vp, &IteratorClass);
         return false;
     }
 
-    return js_IteratorNext(cx, obj, &args.rval());
+    if (!js_IteratorMore(cx, obj, vp))
+        return false;
+    if (!vp->toBoolean()) {
+        js_ThrowStopIteration(cx);
+        return false;
+    }
+    return js_IteratorNext(cx, obj, vp);
 }
 
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)
@@ -1335,16 +1339,17 @@ CloseGenerator(JSContext *cx, JSObject *obj)
  * Common subroutine of generator_(next|send|throw|close) methods.
  */
 static JSBool
-generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, uintN argc)
+generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
 {
     LeaveTrace(cx);
 
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, native, &GeneratorClass, &ok);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
-        return ok;
+        return JS_FALSE;
+    if (!obj->isGenerator()) {
+        ReportIncompatibleMethod(cx, vp, &GeneratorClass);
+        return JS_FALSE;
+    }
 
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
     if (!gen) {
@@ -1359,18 +1364,18 @@ generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, uintN ar
             break;
 
           case JSGENOP_SEND:
-            if (args.length() >= 1 && !args[0].isUndefined()) {
+            if (argc >= 1 && !vp[2].isUndefined()) {
                 js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
-                                    JSDVG_SEARCH_STACK, args[0], NULL);
-                return false;
+                                    JSDVG_SEARCH_STACK, vp[2], NULL);
+                return JS_FALSE;
             }
             break;
 
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
             gen->state = JSGEN_CLOSED;
-            args.rval().setUndefined();
-            return true;
+            JS_SET_RVAL(cx, vp, UndefinedValue());
+            return JS_TRUE;
         }
     } else if (gen->state == JSGEN_CLOSED) {
       closed_generator:
@@ -1379,45 +1384,45 @@ generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, uintN ar
           case JSGENOP_SEND:
             return js_ThrowStopIteration(cx);
           case JSGENOP_THROW:
-            cx->setPendingException(args.length() >= 1 ? args[0] : UndefinedValue());
-            return false;
+            cx->setPendingException(argc >= 1 ? vp[2] : UndefinedValue());
+            return JS_FALSE;
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
-            args.rval().setUndefined();
-            return true;
+            JS_SET_RVAL(cx, vp, UndefinedValue());
+            return JS_TRUE;
         }
     }
 
-    bool undef = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && args.length() != 0);
-    if (!SendToGenerator(cx, op, obj, gen, undef ? args[0] : UndefinedValue()))
-        return false;
+    bool undef = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0);
+    if (!SendToGenerator(cx, op, obj, gen, undef ? vp[2] : UndefinedValue()))
+        return JS_FALSE;
 
-    args.rval() = gen->floatingFrame()->returnValue();
-    return true;
+    JS_SET_RVAL(cx, vp, gen->floatingFrame()->returnValue());
+    return JS_TRUE;
 }
 
 static JSBool
 generator_send(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, generator_send, JSGENOP_SEND, vp, argc);
+    return generator_op(cx, JSGENOP_SEND, vp, argc);
 }
 
 static JSBool
 generator_next(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, generator_next, JSGENOP_NEXT, vp, argc);
+    return generator_op(cx, JSGENOP_NEXT, vp, argc);
 }
 
 static JSBool
 generator_throw(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, generator_throw, JSGENOP_THROW, vp, argc);
+    return generator_op(cx, JSGENOP_THROW, vp, argc);
 }
 
 static JSBool
 generator_close(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, generator_close, JSGENOP_CLOSE, vp, argc);
+    return generator_op(cx, JSGENOP_CLOSE, vp, argc);
 }
 
 static JSFunctionSpec generator_methods[] = {

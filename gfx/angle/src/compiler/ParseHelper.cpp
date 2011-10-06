@@ -448,16 +448,16 @@ bool TParseContext::reservedErrorCheck(int line, const TString& identifier)
 {
     static const char* reservedErrMsg = "reserved built-in name";
     if (!symbolTable.atBuiltInLevel()) {
-        if (identifier.compare(0, 3, "gl_") == 0) {
+        if (identifier.substr(0, 3) == TString("gl_")) {
             error(line, reservedErrMsg, "gl_", "");
             return true;
         }
         if (shaderSpec == SH_WEBGL_SPEC) {
-            if (identifier.compare(0, 6, "webgl_") == 0) {
+            if (identifier.substr(0, 6) == TString("webgl_")) {
                 error(line, reservedErrMsg, "webgl_", "");
                 return true;
             }
-            if (identifier.compare(0, 7, "_webgl_") == 0) {
+            if (identifier.substr(0, 7) == TString("_webgl_")) {
                 error(line, reservedErrMsg, "_webgl_", "");
                 return true;
             }
@@ -929,8 +929,7 @@ bool TParseContext::extensionErrorCheck(int line, const TString& extension)
         error(line, "extension", extension.c_str(), "is not supported");
         return true;
     }
-    // In GLSL ES, an extension's default behavior is "disable".
-    if (iter->second == EBhDisable || iter->second == EBhUndefined) {
+    if (iter->second == EBhDisable) {
         error(line, "extension", extension.c_str(), "is disabled");
         return true;
     }

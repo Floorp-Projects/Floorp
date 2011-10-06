@@ -81,13 +81,13 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
 
   virtual nsresult UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
-                             bool aNotify);
+                             PRBool aNotify);
   // nsGenericElement specializations
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -120,7 +120,7 @@ protected:
 
     // We need to override IsPersistent to get persistent tracking (beyond the
     // first time the target changes)
-    virtual bool IsPersistent() { return true; }
+    virtual PRBool IsPersistent() { return PR_TRUE; }
   private:
     nsSVGMpathElement* const mMpathElement;
   };
@@ -128,7 +128,7 @@ protected:
   virtual StringAttributesInfo GetStringInfo();
 
   void UpdateHrefTarget(nsIContent* aParent, const nsAString& aHrefStr);
-  void UnlinkHrefTarget(bool aNotifyParent);
+  void UnlinkHrefTarget(PRBool aNotifyParent);
   void NotifyParentOfMpathChange(nsIContent* aParent);
 
   enum { HREF };

@@ -228,12 +228,12 @@ NS_GetMemoryManager(nsIMemory* *result);
 
 XPCOM_API(nsresult)
 NS_NewLocalFile(const nsAString &path, 
-                bool followLinks, 
+                PRBool followLinks, 
                 nsILocalFile* *result);
 
 XPCOM_API(nsresult)
 NS_NewNativeLocalFile(const nsACString &path, 
-                      bool followLinks, 
+                      PRBool followLinks, 
                       nsILocalFile* *result);
 
 #endif
@@ -389,22 +389,17 @@ NS_LogCOMPtrRelease(void *aCOMPtr, nsISupports *aObject);
  * The first two functions below exist only to support binary components
  * that were compiled for older XPCOM versions.
  */
-
-#ifdef __cplusplus
-
-XPCOM_API(bool)
+XPCOM_API(PRBool)
 NS_CycleCollectorSuspect(nsISupports *n);
 
-XPCOM_API(bool)
+XPCOM_API(PRBool)
 NS_CycleCollectorForget(nsISupports *n);
 
 XPCOM_API(nsPurpleBufferEntry*)
 NS_CycleCollectorSuspect2(nsISupports *n);
 
-XPCOM_API(bool)
+XPCOM_API(PRBool)
 NS_CycleCollectorForget2(nsPurpleBufferEntry *e);
-
-#endif
 
 /**
  * Categories (in the category manager service) used by XPCOM:

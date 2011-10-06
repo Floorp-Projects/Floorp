@@ -81,14 +81,14 @@ public:
 
   nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
-  bool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
+  PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                         const nsAString& aValue, nsAttrValue& aResult);
 
   nsEventStates IntrinsicState() const;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                nsIContent* aBindingParent,
-                               bool aCompileEventHandlers);
+                               PRBool aCompileEventHandlers);
 
   // This function is called when a callback function from nsIMutationObserver
   // has to be used to update the defaultValue attribute.
@@ -185,7 +185,7 @@ nsHTMLOutputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   return NS_OK;
 }
 
-bool
+PRBool
 nsHTMLOutputElement::ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                                     const nsAString& aValue, nsAttrValue& aResult)
 {
@@ -225,7 +225,7 @@ nsHTMLOutputElement::IntrinsicState() const
 nsresult
 nsHTMLOutputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
-                                bool aCompileEventHandlers)
+                                PRBool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
                                                      aBindingParent,

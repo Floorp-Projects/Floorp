@@ -117,7 +117,7 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 nsresult
-nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg)
+nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, PRBool aDoReg)
 {
   NS_ENSURE_ARG_POINTER(aFrame);
   
@@ -142,7 +142,7 @@ nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg)
 }
 
 void 
-nsFormControlFrame::SetFocus(bool aOn, bool aRepaint)
+nsFormControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
 }
 
@@ -161,7 +161,7 @@ nsFormControlFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 void
-nsFormControlFrame::GetCurrentCheckState(bool *aState)
+nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
 {
   nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
   if (inputElement) {

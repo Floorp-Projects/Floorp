@@ -62,7 +62,7 @@ nsMacDockSupport::SetDockMenu(nsIStandaloneNativeMenu * aDockMenu)
 }
 
 NS_IMETHODIMP
-nsMacDockSupport::ActivateApplication(bool aIgnoreOtherApplications)
+nsMacDockSupport::ActivateApplication(PRBool aIgnoreOtherApplications)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

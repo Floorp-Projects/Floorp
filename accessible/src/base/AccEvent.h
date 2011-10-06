@@ -78,9 +78,9 @@ public:
      //    will be emitted.
      eCoalesceFromSameSubtree,
 
-    // eCoalesceOfSameType : For events of the same type, only the newest event
-    // will be processed.
-    eCoalesceOfSameType,
+    // eCoalesceFromSameDocument : For events of the same type from the same
+    //    document, only the newest event will be emitted.
+    eCoalesceFromSameDocument,
 
      // eRemoveDupes : For repeat events, only the newest event in queue
      //    will be emitted.
@@ -103,7 +103,7 @@ public:
   // AccEvent
   PRUint32 GetEventType() const { return mEventType; }
   EEventRule GetEventRule() const { return mEventRule; }
-  bool IsFromUserInput() const { return mIsFromUserInput; }
+  PRBool IsFromUserInput() const { return mIsFromUserInput; }
 
   nsAccessible *GetAccessible();
   nsDocAccessible* GetDocAccessible();
@@ -152,7 +152,7 @@ protected:
    */
   void CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput);
 
-  bool mIsFromUserInput;
+  PRBool mIsFromUserInput;
   PRUint32 mEventType;
   EEventRule mEventRule;
   nsRefPtr<nsAccessible> mAccessible;
@@ -169,10 +169,10 @@ class AccStateChangeEvent: public AccEvent
 {
 public:
   AccStateChangeEvent(nsAccessible* aAccessible, PRUint64 aState,
-                      bool aIsEnabled,
+                      PRBool aIsEnabled,
                       EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
-  AccStateChangeEvent(nsINode* aNode, PRUint64 aState, bool aIsEnabled);
+  AccStateChangeEvent(nsINode* aNode, PRUint64 aState, PRBool aIsEnabled);
 
   AccStateChangeEvent(nsINode* aNode, PRUint64 aState);
 
@@ -187,11 +187,11 @@ public:
 
   // AccStateChangeEvent
   PRUint64 GetState() const { return mState; }
-  bool IsStateEnabled() const { return mIsEnabled; }
+  PRBool IsStateEnabled() const { return mIsEnabled; }
 
 private:
   PRUint64 mState;
-  bool mIsEnabled;
+  PRBool mIsEnabled;
 };
 
 
@@ -202,7 +202,7 @@ class AccTextChangeEvent: public AccEvent
 {
 public:
   AccTextChangeEvent(nsAccessible* aAccessible, PRInt32 aStart,
-                     const nsAString& aModifiedText, bool aIsInserted,
+                     const nsAString& aModifiedText, PRBool aIsInserted,
                      EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
   // AccEvent
@@ -217,13 +217,13 @@ public:
   // AccTextChangeEvent
   PRInt32 GetStartOffset() const { return mStart; }
   PRUint32 GetLength() const { return mModifiedText.Length(); }
-  bool IsTextInserted() const { return mIsInserted; }
+  PRBool IsTextInserted() const { return mIsInserted; }
   void GetModifiedText(nsAString& aModifiedText)
     { aModifiedText = mModifiedText; }
 
 private:
   PRInt32 mStart;
-  bool mIsInserted;
+  PRBool mIsInserted;
   nsString mModifiedText;
 
   friend class NotificationController;
@@ -321,16 +321,6 @@ public:
 
 private:
   PRInt32 mCaretOffset;
-};
-
-
-/**
- * Accessible widget selection change event.
- */
-class AccSelectionChangeEvent : public AccEvent
-{
-public:
-
 };
 
 

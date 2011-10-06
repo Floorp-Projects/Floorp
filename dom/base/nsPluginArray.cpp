@@ -94,10 +94,10 @@ nsPluginArray::GetLength(PRUint32* aLength)
   return NS_OK;
 }
 
-bool
+PRBool
 nsPluginArray::AllowPlugins()
 {
-  bool allowPlugins = false;
+  PRBool allowPlugins = PR_FALSE;
   if (mDocShell)
     if (NS_FAILED(mDocShell->GetAllowPlugins(&allowPlugins)))
       allowPlugins = PR_FALSE;
@@ -204,7 +204,7 @@ nsPluginArray::Invalidate()
 }
 
 NS_IMETHODIMP
-nsPluginArray::Refresh(bool aReloadDocuments)
+nsPluginArray::Refresh(PRBool aReloadDocuments)
 {
   nsresult res = NS_OK;
   if (!AllowPlugins())
@@ -220,7 +220,7 @@ nsPluginArray::Refresh(bool aReloadDocuments)
 
   // NS_ERROR_PLUGINS_PLUGINSNOTCHANGED on reloading plugins indicates
   // that plugins did not change and was not reloaded
-  bool pluginsNotChanged = false;
+  PRBool pluginsNotChanged = PR_FALSE;
   if(mPluginHost)
     pluginsNotChanged = (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == mPluginHost->ReloadPlugins(aReloadDocuments));
 

@@ -68,7 +68,7 @@ public:
   void Stop();
 
 private:
-  nsresult StartTimer(bool aUseDelay);
+  nsresult StartTimer(PRBool aUseDelay);
 
   nsPrintEngine*             mPrintEngine;
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;

@@ -99,7 +99,7 @@ nsXBLInsertionPoint::ChildAt(PRUint32 aIndex)
   return mElements.ObjectAt(aIndex);
 }
 
-bool
+PRBool
 nsXBLInsertionPoint::Matches(nsIContent* aContent, PRUint32 aIndex)
 {
   return (aContent == mParentElement && mIndex != -1 && ((PRInt32)aIndex) == mIndex);

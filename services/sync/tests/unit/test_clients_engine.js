@@ -11,68 +11,55 @@ const LESS_THAN_CLIENTS_TTL_REFRESH = 86400;  // 1 day
 
 add_test(function test_bad_hmac() {
   _("Ensure that Clients engine deletes corrupt records.");
-  let contents = {
-    meta: {global: {engines: {clients: {version: Clients.version,
-                                        syncID: Clients.syncID}}}},
-    clients: {},
-    crypto: {}
+  let global = new ServerWBO('global',
+                             {engines: {clients: {version: Clients.version,
+                                                  syncID: Clients.syncID}}});
+  let clientsColl = new ServerCollection({}, true);
+  let keysWBO = new ServerWBO("keys");
+
+  let collectionsHelper = track_collections_helper();
+  let upd = collectionsHelper.with_updated_collection;
+  let collections = collectionsHelper.collections;
+
+  // Watch for deletions in the given collection.
+  let deleted = false;
+  function trackDeletedHandler(coll, handler) {
+    let u = upd(coll, handler);
+    return function(request, response) {
+      if (request.method == "DELETE")
+        deleted = true;
+
+      return u(request, response);
+    };
+  }
+
+  let handlers = {
+    "/1.1/foo/info/collections": collectionsHelper.handler,
+    "/1.1/foo/storage/meta/global": upd("meta", global.handler()),
+    "/1.1/foo/storage/crypto/keys": upd("crypto", keysWBO.handler()),
+    "/1.1/foo/storage/clients": trackDeletedHandler("clients", clientsColl.handler())
   };
-  let deletedCollections = [];
-  let deletedItems       = [];
-  let callback = {
-    __proto__: SyncServerCallback,
-    onItemDeleted: function (username, coll, wboID) {
-      deletedItems.push(coll + "/" + wboID);
-    },
-    onCollectionDeleted: function (username, coll) {
-      deletedCollections.push(coll);
-    }
-  }
-  let server = serverForUsers({"foo": "password"}, contents, callback);
-  let user   = server.user("foo");
 
-  function check_clients_count(expectedCount) {
-    let stack = Components.stack.caller;
-    let coll  = user.collection("clients");
-
-    // Treat a non-existent collection as empty.
-    do_check_eq(expectedCount, coll ? coll.count() : 0, stack);
-  }
-
-  function check_client_deleted(id) {
-    let coll = user.collection("clients");
-    let wbo  = coll.wbo(id);
-    return !wbo || !wbo.payload;
-  }
-
-  function uploadNewKeys() {
-    generateNewKeys();
-    let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-    serverKeys.encrypt(Weave.Service.syncKeyBundle);
-    do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
-  }
+  let server = httpd_setup(handlers);
 
   try {
-    let passphrase     = "abcdeabcdeabcdeabcdeabcdea";
-    Service.serverURL  = "http://localhost:8080/";
+    let passphrase = "abcdeabcdeabcdeabcdeabcdea";
+    Service.serverURL = "http://localhost:8080/";
     Service.clusterURL = "http://localhost:8080/";
     Service.login("foo", "ilovejane", passphrase);
 
     generateNewKeys();
 
     _("First sync, client record is uploaded");
+    do_check_eq(0, clientsColl.count());
     do_check_eq(Clients.lastRecordUpload, 0);
-    check_clients_count(0);
     Clients.sync();
-    check_clients_count(1);
+    do_check_eq(1, clientsColl.count());
     do_check_true(Clients.lastRecordUpload > 0);
+    deleted = false;    // Initial setup can wipe the server, so clean up.
 
-    // Initial setup can wipe the server, so clean up.
-    deletedCollections = [];
-    deletedItems       = [];
-
+    _("Records now: " + clientsColl.get({}));
     _("Change our keys and our client ID, reupload keys.");
-    let oldLocalID  = Clients.localID;     // Preserve to test for deletion!
     Clients.localID = Utils.makeGUID();
     Clients.resetClient();
     generateNewKeys();
@@ -81,11 +68,13 @@ add_test(function test_bad_hmac() {
     do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
 
     _("Sync.");
+    do_check_true(!deleted);
     Clients.sync();
 
-    _("Old record " + oldLocalID + " was deleted, new one uploaded.");
-    check_clients_count(1);
-    check_client_deleted(oldLocalID);
+    _("Old record was deleted, new one uploaded.");
+    do_check_true(deleted);
+    do_check_eq(1, clientsColl.count());
+    _("Records now: " + clientsColl.get({}));
 
     _("Now change our keys but don't upload them. " +
       "That means we get an HMAC error but redownload keys.");
@@ -93,50 +82,52 @@ add_test(function test_bad_hmac() {
     Clients.localID = Utils.makeGUID();
     Clients.resetClient();
     generateNewKeys();
-    deletedCollections = [];
-    deletedItems       = [];
-    check_clients_count(1);
+    deleted = false;
+    do_check_eq(1, clientsColl.count());
     Clients.sync();
 
     _("Old record was not deleted, new one uploaded.");
-    do_check_eq(deletedCollections.length, 0);
-    do_check_eq(deletedItems.length, 0);
-    check_clients_count(2);
+    do_check_false(deleted);
+    do_check_eq(2, clientsColl.count());
+    _("Records now: " + clientsColl.get({}));
 
     _("Now try the scenario where our keys are wrong *and* there's a bad record.");
     // Clean up and start fresh.
-    user.collection("clients")._wbos = {};
+    clientsColl.wbos = {};
     Service.lastHMACEvent = 0;
     Clients.localID = Utils.makeGUID();
     Clients.resetClient();
-    deletedCollections = [];
-    deletedItems       = [];
-    check_clients_count(0);
+    deleted = false;
+    do_check_eq(0, clientsColl.count());
 
-    uploadNewKeys();
+    // Create and upload keys.
+    generateNewKeys();
+    serverKeys = CollectionKeys.asWBO("crypto", "keys");
+    serverKeys.encrypt(Weave.Service.syncKeyBundle);
+    do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
 
     // Sync once to upload a record.
     Clients.sync();
-    check_clients_count(1);
+    do_check_eq(1, clientsColl.count());
 
     // Generate and upload new keys, so the old client record is wrong.
-    uploadNewKeys();
+    generateNewKeys();
+    serverKeys = CollectionKeys.asWBO("crypto", "keys");
+    serverKeys.encrypt(Weave.Service.syncKeyBundle);
+    do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
 
     // Create a new client record and new keys. Now our keys are wrong, as well
     // as the object on the server. We'll download the new keys and also delete
     // the bad client record.
-    oldLocalID  = Clients.localID;         // Preserve to test for deletion!
     Clients.localID = Utils.makeGUID();
     Clients.resetClient();
     generateNewKeys();
     let oldKey = CollectionKeys.keyForCollection();
 
-    do_check_eq(deletedCollections.length, 0);
-    do_check_eq(deletedItems.length, 0);
+    do_check_false(deleted);
     Clients.sync();
-    do_check_eq(deletedItems.length, 1);
-    check_client_deleted(oldLocalID);
-    check_clients_count(1);
+    do_check_true(deleted);
+    do_check_eq(1, clientsColl.count());
     let newKey = CollectionKeys.keyForCollection();
     do_check_false(oldKey.equals(newKey));
 
@@ -166,47 +157,47 @@ add_test(function test_sync() {
   _("Ensure that Clients engine uploads a new client record once a week.");
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
+
   generateNewKeys();
 
-  let contents = {
-    meta: {global: {engines: {clients: {version: Clients.version,
-                                        syncID: Clients.syncID}}}},
-    clients: {},
-    crypto: {}
-  };
-  let server = serverForUsers({"foo": "password"}, contents);
-  let user   = server.user("foo");
-
-  function clientWBO() {
-    return user.collection("clients").wbo(Clients.localID);
-  }
+  let global = new ServerWBO('global',
+                             {engines: {clients: {version: Clients.version,
+                                                  syncID: Clients.syncID}}});
+  let coll = new ServerCollection();
+  let clientwbo = coll.wbos[Clients.localID] = new ServerWBO(Clients.localID);
+  let server = httpd_setup({
+      "/1.1/foo/storage/meta/global": global.handler(),
+      "/1.1/foo/storage/clients": coll.handler()
+  });
+  server.registerPathHandler(
+    "/1.1/foo/storage/clients/" + Clients.localID, clientwbo.handler());
 
   try {
 
-    _("First sync. Client record is uploaded.");
-    do_check_eq(clientWBO(), undefined);
+    _("First sync, client record is uploaded");
+    do_check_eq(clientwbo.payload, undefined);
     do_check_eq(Clients.lastRecordUpload, 0);
     Clients.sync();
-    do_check_true(!!clientWBO().payload);
+    do_check_true(!!clientwbo.payload);
     do_check_true(Clients.lastRecordUpload > 0);
 
     _("Let's time travel more than a week back, new record should've been uploaded.");
     Clients.lastRecordUpload -= MORE_THAN_CLIENTS_TTL_REFRESH;
     let lastweek = Clients.lastRecordUpload;
-    clientWBO().payload = undefined;
+    clientwbo.payload = undefined;
     Clients.sync();
-    do_check_true(!!clientWBO().payload);
+    do_check_true(!!clientwbo.payload);
     do_check_true(Clients.lastRecordUpload > lastweek);
 
     _("Remove client record.");
     Clients.removeClientData();
-    do_check_eq(clientWBO().payload, undefined);
+    do_check_eq(clientwbo.payload, undefined);
 
     _("Time travel one day back, no record uploaded.");
     Clients.lastRecordUpload -= LESS_THAN_CLIENTS_TTL_REFRESH;
     let yesterday = Clients.lastRecordUpload;
     Clients.sync();
-    do_check_eq(clientWBO().payload, undefined);
+    do_check_eq(clientwbo.payload, undefined);
     do_check_eq(Clients.lastRecordUpload, yesterday);
 
   } finally {
@@ -404,20 +395,24 @@ add_test(function test_command_sync() {
   _("Ensure that commands are synced across clients.");
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  generateNewKeys();
-  let contents = {
-    meta: {global: {engines: {clients: {version: Clients.version,
-                                        syncID: Clients.syncID}}}},
-    clients: {},
-    crypto: {}
-  };
-  let server   = serverForUsers({"foo": "password"}, contents);
-  let user     = server.user("foo");
-  let remoteId = Utils.makeGUID();
 
-  function clientWBO(id) {
-    return user.collection("clients").wbo(id);
-  }
+  generateNewKeys();
+
+  let global = new ServerWBO('global',
+                             {engines: {clients: {version: Clients.version,
+                                                  syncID: Clients.syncID}}});
+  let coll = new ServerCollection();
+  let clientwbo = coll.wbos[Clients.localID] = new ServerWBO(Clients.localID);
+  let server = httpd_setup({
+      "/1.1/foo/storage/meta/global": global.handler(),
+      "/1.1/foo/storage/clients": coll.handler()
+  });
+  let remoteId = Utils.makeGUID();
+  let remotewbo = coll.wbos[remoteId] = new ServerWBO(remoteId);
+  server.registerPathHandler(
+    "/1.1/foo/storage/clients/" + Clients.localID, clientwbo.handler());
+  server.registerPathHandler(
+    "/1.1/foo/storage/clients/" + remoteId, remotewbo.handler());
 
   _("Create remote client record");
   let rec = new ClientsRec("clients", remoteId);
@@ -430,13 +425,11 @@ add_test(function test_command_sync() {
   do_check_eq(clientRecord.commands.length, 1);
 
   try {
-    _("Syncing.");
     Clients.sync();
-    _("Checking record was uploaded.");
-    do_check_neq(clientWBO(Clients.localID).payload, undefined);
+    do_check_neq(clientwbo.payload, undefined);
     do_check_true(Clients.lastRecordUpload > 0);
 
-    do_check_neq(clientWBO(remoteId).payload, undefined);
+    do_check_neq(remotewbo.payload, undefined);
 
     Svc.Prefs.set("client.GUID", remoteId);
     Clients._resetClient();

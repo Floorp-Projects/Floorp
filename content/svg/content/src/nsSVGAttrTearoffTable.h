@@ -77,7 +77,7 @@ nsSVGAttrTearoffTable<SimpleType, TearoffType>::GetTearoff(SimpleType* aSimple)
   TearoffType *tearoff = nsnull;
 
 #ifdef DEBUG
-  bool found =
+  PRBool found =
 #endif
     mTable.Get(aSimple, &tearoff);
   NS_ABORT_IF_FALSE(!found || tearoff,
@@ -103,7 +103,7 @@ nsSVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(SimpleType* aSimple,
   }
 
 #ifdef DEBUG
-  bool result =
+  PRBool result =
 #endif
     mTable.Put(aSimple, aTearoff);
   NS_ABORT_IF_FALSE(result, "Out of memory.");

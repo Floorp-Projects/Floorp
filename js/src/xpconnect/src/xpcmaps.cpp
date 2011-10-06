@@ -547,7 +547,7 @@ XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
 JSBool
 XPCNativeScriptableSharedMap::GetNewOrUsed(JSUint32 flags,
                                            char* name,
-                                           bool isGlobal,
+                                           PRBool isGlobal,
                                            PRUint32 interfacesBitmap,
                                            XPCNativeScriptableInfo* si)
 {
@@ -744,7 +744,7 @@ WrappedNative2WrapperMap::Add(WrappedNative2WrapperMap* head,
     return wrapper;
 }
 
-bool
+PRBool
 WrappedNative2WrapperMap::AddLink(JSObject* wrappedObject, Link* oldLink)
 {
     Entry* entry = (Entry*)

@@ -59,7 +59,6 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
-#include "xpcpublic.h"
 
 using namespace mozilla;
 
@@ -423,7 +422,7 @@ nsEventSource::OnStartRequest(nsIRequest *aRequest,
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool requestSucceeded;
+  PRBool requestSucceeded;
   rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -777,10 +776,10 @@ nsEventSource::GetInterface(const nsIID & aIID,
 }
 
 // static
-bool
+PRBool
 nsEventSource::PrefEnabled()
 {
-  return Preferences::GetBool("dom.server-events.enabled", false);
+  return Preferences::GetBool("dom.server-events.enabled", PR_FALSE);
 }
 
 nsresult
@@ -1164,17 +1163,17 @@ nsEventSource::FailConnection()
   }
 }
 
-bool
+PRBool
 nsEventSource::CheckCanRequestSrc(nsIURI* aSrc)
 {
   if (mReadyState == nsIEventSource::CLOSED) {
     return PR_FALSE;
   }
 
-  bool isSameOrigin = false;
-  bool isValidURI = false;
-  bool isValidContentLoadPolicy = false;
-  bool isValidProtocol = false;
+  PRBool isSameOrigin = PR_FALSE;
+  PRBool isValidURI = PR_FALSE;
+  PRBool isValidContentLoadPolicy = PR_FALSE;
+  PRBool isValidProtocol = PR_FALSE;
 
   nsCOMPtr<nsIURI> srcToTest = aSrc ? aSrc : mSrc.get();
   NS_ENSURE_TRUE(srcToTest, PR_FALSE);
@@ -1458,7 +1457,7 @@ nsEventSource::SetFieldAndClear()
       if (mLastFieldName.EqualsLiteral("retry")) {
         PRUint32 newValue=0;
         PRUint32 i = 0;  // we must ensure that there are only digits
-        bool assign = true;
+        PRBool assign = PR_TRUE;
         for (i = 0; i < mLastFieldValue.Length(); ++i) {
           if (mLastFieldValue.CharAt(i) < (PRUnichar)'0' ||
               mLastFieldValue.CharAt(i) > (PRUnichar)'9') {

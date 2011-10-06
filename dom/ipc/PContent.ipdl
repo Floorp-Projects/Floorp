@@ -47,7 +47,6 @@ include protocol PMemoryReportRequest;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
-include "mozilla/dom/TabMessageUtils.h";
 
 include "nsGeoPositionIPCSerialiser.h";
 include "PPrefTuple.h";
@@ -61,7 +60,6 @@ using OverrideMapping;
 using IPC::URI;
 using IPC::Permission;
 using mozilla::null_t;
-using mozilla::dom::NativeThreadId;
 using gfxIntSize;
 
 namespace mozilla {
@@ -115,7 +113,7 @@ child:
     RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
                    OverrideMapping[] overrides, nsCString locale);
 
-    async SetOffline(bool offline);
+    async SetOffline(PRBool offline);
 
     async NotifyVisited(URI uri);
 
@@ -145,12 +143,11 @@ child:
 
 parent:
     PNecko();
+    PCrashReporter();
     
     PStorage(StorageConstructData data);
 
     PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
-
-    sync PCrashReporter(NativeThreadId tid, PRUint32 processType);
 
     // Services remoting
 
@@ -159,7 +156,7 @@ parent:
     async SetURITitle(URI uri, nsString title);
     
     // filepicker remoting
-    sync ShowFilePicker(PRInt16 mode, PRInt16 selectedType, bool addToRecentDocs,
+    sync ShowFilePicker(PRInt16 mode, PRInt16 selectedType, PRBool addToRecentDocs,
                         nsString title, nsString defaultFile, nsString defaultExtension,
                         nsString[] filters, nsString[] filterNames)
         returns (nsString[] files, PRInt16 retValue, nsresult result);
@@ -177,7 +174,7 @@ parent:
     ShowAlertNotification(nsString imageUrl, 
                           nsString title, 
                           nsString text, 
-                          bool textClickable,
+                          PRBool textClickable,
                           nsString cookie,
                           nsString name);
 
@@ -207,7 +204,7 @@ parent:
         returns (nsString text);
     EmptyClipboard();
     sync ClipboardHasText()
-        returns (bool hasText);
+        returns (PRBool hasText);
 
     sync GetSystemColors(PRUint32 colorsCount)
         returns (PRUint32[] colors);
@@ -216,7 +213,7 @@ parent:
         returns (PRUint8[] bits);
 
     sync GetShowPasswordSetting()
-        returns (bool showPassword);
+        returns (PRBool showPassword);
 
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);

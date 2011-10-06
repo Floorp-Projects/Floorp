@@ -37,11 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/dom/CrashReporterChild.h"
-#include "nsXULAppAPI.h"
-
 #include "nsExceptionHandler.h"
-#include "nsThreadUtils.h"
 
 #if defined(XP_WIN32)
 #ifdef WIN32_LEAN_AND_MEAN
@@ -116,8 +112,6 @@ using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
-using mozilla::dom::CrashReporterChild;
-using mozilla::dom::PCrashReporterChild;
 
 namespace CrashReporter {
 
@@ -237,10 +231,6 @@ static const char* kSubprocessBlacklist[] = {
   "URL"
 };
 
-// If annotations are attempted before the crash reporter is enabled,
-// they queue up here.
-class DelayedNote;
-nsTArray<nsAutoPtr<DelayedNote> >* gDelayedAnnotations;
 
 #ifdef XP_MACOSX
 static cpu_type_t pref_cpu_types[2] = {
@@ -811,7 +801,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
 bool GetEnabled()
 {
-  return gExceptionHandler != nsnull;
+  return gExceptionHandler != nsnull && !gExceptionHandler->IsOutOfProcess();
 }
 
 bool GetMinidumpPath(nsAString& aPath)
@@ -888,7 +878,7 @@ static nsresult
 GetOrInit(nsIFile* aDir, const nsACString& filename,
           nsACString& aContents, InitDataFunc aInitFunc)
 {
-  bool exists;
+  PRBool exists;
 
   nsCOMPtr<nsIFile> dataFile;
   nsresult rv = aDir->Clone(getter_AddRefs(dataFile));
@@ -948,7 +938,7 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
   rv = dataDirectory->AppendNative(NS_LITERAL_CSTRING("Crash Reports"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool exists;
+  PRBool exists;
   rv = dataDirectory->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1087,7 +1077,7 @@ static void ReplaceChar(nsCString& str, const nsACString& character,
   }
 }
 
-static bool DoFindInReadable(const nsACString& str, const nsACString& value)
+static PRBool DoFindInReadable(const nsACString& str, const nsACString& value)
 {
   nsACString::const_iterator start, end;
   str.BeginReading(start);
@@ -1105,13 +1095,11 @@ static PLDHashOperator EnumerateEntries(const nsACString& key,
   return PL_DHASH_NEXT;
 }
 
-// This function is miscompiled with MSVC 2005/2008 when PGO is on.
-#ifdef _MSC_VER
-#pragma optimize("", off)
-#endif
-static nsresult
-EscapeAnnotation(const nsACString& key, const nsACString& data, nsCString& escapedData)
+nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
 {
+  if (!GetEnabled())
+    return NS_ERROR_NOT_INITIALIZED;
+
   if (DoFindInReadable(key, NS_LITERAL_CSTRING("=")) ||
       DoFindInReadable(key, NS_LITERAL_CSTRING("\n")))
     return NS_ERROR_INVALID_ARG;
@@ -1119,7 +1107,7 @@ EscapeAnnotation(const nsACString& key, const nsACString& data, nsCString& escap
   if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
     return NS_ERROR_INVALID_ARG;
 
-  escapedData = data;
+  nsCString escapedData(data);
 
   // escape backslashes
   ReplaceChar(escapedData, NS_LITERAL_CSTRING("\\"),
@@ -1127,67 +1115,8 @@ EscapeAnnotation(const nsACString& key, const nsACString& data, nsCString& escap
   // escape newlines
   ReplaceChar(escapedData, NS_LITERAL_CSTRING("\n"),
               NS_LITERAL_CSTRING("\\n"));
-  return NS_OK;
-}
-#ifdef _MSC_VER
-#pragma optimize("", on)
-#endif
 
-class DelayedNote
-{
- public:
-  DelayedNote(const nsACString& aKey, const nsACString& aData)
-  : mKey(aKey), mData(aData), mType(Annotation) {}
-
-  DelayedNote(const nsACString& aData)
-  : mData(aData), mType(AppNote) {}
-
-  void Run()
-  {
-    if (mType == Annotation) {
-      AnnotateCrashReport(mKey, mData);
-    } else {
-      AppendAppNotesToCrashReport(mData);
-    }
-  }
-  
- private:
-  nsCString mKey;
-  nsCString mData;
-  enum AnnotationType { Annotation, AppNote } mType;
-};
-
-static void
-EnqueueDelayedNote(DelayedNote* aNote)
-{
-  if (!gDelayedAnnotations) {
-    gDelayedAnnotations = new nsTArray<nsAutoPtr<DelayedNote> >();
-  }
-  gDelayedAnnotations->AppendElement(aNote);
-}
-
-nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
-{
-  if (!GetEnabled())
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsCString escapedData;
-  nsresult rv = EscapeAnnotation(key, data, escapedData);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
-    PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
-    if (!reporter) {
-      EnqueueDelayedNote(new DelayedNote(key, data));
-      return NS_OK;
-    }
-    if (!reporter->SendAnnotateCrashReport(nsCString(key), escapedData))
-      return NS_ERROR_FAILURE;
-    return NS_OK;
-  }
-
-  rv = crashReporterAPIData_Hash->Put(key, escapedData);
+  nsresult rv = crashReporterAPIData_Hash->Put(key, escapedData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // now rebuild the file contents
@@ -1205,26 +1134,6 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
 
   if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
     return NS_ERROR_INVALID_ARG;
-
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
-    PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
-    if (!reporter) {
-      EnqueueDelayedNote(new DelayedNote(data));
-      return NS_OK;
-    }
-
-    // Since we don't go through AnnotateCrashReport in the parent process,
-    // we must ensure that the data is escaped and valid before the parent
-    // sees it.
-    nsCString escapedData;
-    nsresult rv = EscapeAnnotation(NS_LITERAL_CSTRING("Notes"), data, escapedData);
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (!reporter->SendAppendAppNotes(escapedData))
-      return NS_ERROR_FAILURE;
-    return NS_OK;
-  }
 
   notesField->Append(data);
   return AnnotateCrashReport(NS_LITERAL_CSTRING("Notes"), *notesField);
@@ -1372,7 +1281,7 @@ nsresult AppendObjCExceptionInfoToAppNotes(void *inException)
  * Combined code to get/set the crash reporter submission pref on
  * different platforms.
  */
-static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
+static nsresult PrefSubmitReports(PRBool* aSubmitReports, bool writePref)
 {
   nsresult rv;
 #if defined(XP_WIN32)
@@ -1484,7 +1393,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
   reporterINI->AppendNative(NS_LITERAL_CSTRING("Crash Reports"));
   reporterINI->AppendNative(NS_LITERAL_CSTRING("crashreporter.ini"));
 
-  bool exists;
+  PRBool exists;
   rv = reporterINI->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!exists) {
@@ -1542,12 +1451,12 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
 #endif
 }
 
-nsresult GetSubmitReports(bool* aSubmitReports)
+nsresult GetSubmitReports(PRBool* aSubmitReports)
 {
     return PrefSubmitReports(aSubmitReports, false);
 }
 
-nsresult SetSubmitReports(bool aSubmitReports)
+nsresult SetSubmitReports(PRBool aSubmitReports)
 {
     return PrefSubmitReports(&aSubmitReports, true);
 }
@@ -1965,7 +1874,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
 
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(L"",
-                     FPEFilter,
+                     NULL,    // no filter callback
                      NULL,    // no minidump callback
                      NULL,    // no callback context
                      google_breakpad::ExceptionHandler::HANDLER_ALL,
@@ -2015,13 +1924,6 @@ SetRemoteExceptionHandler()
                      NULL,    // no callback context
                      true,    // install signal handlers
                      kMagicChildCrashReportFd);
-
-  if (gDelayedAnnotations) {
-    for (PRUint32 i = 0; i < gDelayedAnnotations->Length(); i++) {
-      gDelayedAnnotations->ElementAt(i)->Run();
-    }
-    delete gDelayedAnnotations;
-  }
 
   // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();

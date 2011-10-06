@@ -68,14 +68,14 @@ void nsCSSAnonBoxes::AddRefAtoms()
                          NS_ARRAY_LENGTH(CSSAnonBoxes_info));
 }
 
-bool nsCSSAnonBoxes::IsAnonBox(nsIAtom *aAtom)
+PRBool nsCSSAnonBoxes::IsAnonBox(nsIAtom *aAtom)
 {
   return nsAtomListUtils::IsMember(aAtom, CSSAnonBoxes_info,
                                    NS_ARRAY_LENGTH(CSSAnonBoxes_info));
 }
 
 #ifdef MOZ_XUL
-/* static */ bool
+/* static */ PRBool
 nsCSSAnonBoxes::IsTreePseudoElement(nsIAtom* aPseudo)
 {
   return StringBeginsWith(nsDependentAtomString(aPseudo),

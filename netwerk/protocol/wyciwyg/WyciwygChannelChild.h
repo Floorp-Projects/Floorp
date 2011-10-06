@@ -107,7 +107,7 @@ protected:
 
 private:
   nsresult                          mStatus;
-  bool                              mIsPending;
+  PRBool                            mIsPending;
   bool                              mCanceled;
   PRUint32                          mLoadFlags;
   PRInt32                           mContentLength;

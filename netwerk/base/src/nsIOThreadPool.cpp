@@ -94,7 +94,7 @@ private:
     PRUint32   mNumThreads;     // number of active + idle threads
     PRUint32   mNumIdleThreads; // number of idle threads
     PRCList    mEventQ;         // queue of PLEvent structs
-    bool       mShutdown;       // set to true if shutting down
+    PRBool     mShutdown;       // set to true if shutting down
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsIOThreadPool, nsIEventTarget, nsIObserver)
@@ -209,7 +209,7 @@ nsIOThreadPool::PostEvent(PLEvent *event)
 }
 
 NS_IMETHODIMP
-nsIOThreadPool::IsOnCurrentThread(bool *result)
+nsIOThreadPool::IsOnCurrentThread(PRBool *result)
 {
     // no one should be calling this method.  if this assertion gets hit,
     // then we need to think carefully about what this method should be

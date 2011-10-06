@@ -165,7 +165,7 @@ nsMimeTypeArray::GetNamedItem(const nsAString& aName, nsresult* aResult)
       nsHandlerInfoAction action = nsIHandlerInfo::saveToDisk;
       mimeInfo->GetPreferredAction(&action);
       if (action != nsIMIMEInfo::handleInternally) {
-        bool hasHelper = false;
+        PRBool hasHelper = PR_FALSE;
         mimeInfo->GetHasDefaultHandler(&hasHelper);
         if (!hasHelper) {
           nsCOMPtr<nsIHandlerApp> helper;

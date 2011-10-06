@@ -52,13 +52,13 @@ public:
   virtual void First();
   virtual void Next();
   virtual nsIFrame* CurrentItem();
-  virtual bool IsDone();
+  virtual PRBool IsDone();
 
   virtual void Last();
   virtual void Prev();
 
   nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
-                  nsIteratorType aType, bool aLockScroll, bool aFollowOOFs);
+                  nsIteratorType aType, PRBool aLockScroll, PRBool aFollowOOFs);
 
 protected:
   void      setCurrent(nsIFrame *aFrame){mCurrent = aFrame;}
@@ -69,7 +69,7 @@ protected:
   void      setLast(nsIFrame *aFrame){mLast = aFrame;}
   PRInt8    getOffEdge(){return mOffEdge;}
   void      setOffEdge(PRInt8 aOffEdge){mOffEdge = aOffEdge;}
-  void      SetLockInScrollView(bool aLockScroll){mLockScroll = aLockScroll;}
+  void      SetLockInScrollView(PRBool aLockScroll){mLockScroll = aLockScroll;}
 
   /*
    Our own versions of the standard frame tree navigation
@@ -113,11 +113,11 @@ protected:
   virtual nsIFrame* GetPrevSiblingInner(nsIFrame* aFrame);
 
   nsIFrame* GetPlaceholderFrame(nsIFrame* aFrame);
-  bool      IsPopupFrame(nsIFrame* aFrame);
+  PRBool    IsPopupFrame(nsIFrame* aFrame);
 
   nsPresContext* mPresContext;
-  bool mLockScroll;
-  bool mFollowOOFs;
+  PRPackedBool mLockScroll;
+  PRPackedBool mFollowOOFs;
   nsIteratorType mType;
 
 private:
@@ -134,7 +134,7 @@ class nsVisualIterator: public nsFrameIterator
 {
 public:
   nsVisualIterator(nsPresContext* aPresContext, nsIFrame *aStart,
-                   nsIteratorType aType, bool aLockScroll, bool aFollowOOFs) :
+                   nsIteratorType aType, PRBool aLockScroll, PRBool aFollowOOFs) :
   nsFrameIterator(aPresContext, aStart, aType, aLockScroll, aFollowOOFs) {}
 
 protected:
@@ -165,9 +165,9 @@ NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
                      nsPresContext* aPresContext,
                      nsIFrame *aStart,
                      nsIteratorType aType,
-                     bool aVisual,
-                     bool aLockInScrollView,
-                     bool aFollowOOFs)
+                     PRBool aVisual,
+                     PRBool aLockInScrollView,
+                     PRBool aFollowOOFs)
 {
   if (!aEnumerator || !aStart)
     return NS_ERROR_NULL_POINTER;
@@ -199,9 +199,9 @@ NS_IMETHODIMP
                                      nsPresContext* aPresContext,
                                      nsIFrame *aStart,
                                      PRInt32 aType,
-                                     bool aVisual,
-                                     bool aLockInScrollView,
-                                     bool aFollowOOFs)
+                                     PRBool aVisual,
+                                     PRBool aLockInScrollView,
+                                     PRBool aFollowOOFs)
 {
   return NS_NewFrameTraversal(aEnumerator, aPresContext, aStart,
                               static_cast<nsIteratorType>(aType),
@@ -213,8 +213,8 @@ NS_IMETHODIMP
 NS_IMPL_ISUPPORTS1(nsFrameIterator, nsIFrameEnumerator)
 
 nsFrameIterator::nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
-                                 nsIteratorType aType, bool aLockInScrollView,
-                                 bool aFollowOOFs)
+                                 nsIteratorType aType, PRBool aLockInScrollView,
+                                 PRBool aFollowOOFs)
 {
   mOffEdge = 0;
   mPresContext = aPresContext;
@@ -241,7 +241,7 @@ nsFrameIterator::CurrentItem()
 
 
 
-bool
+PRBool
 nsFrameIterator::IsDone()
 {
   return mOffEdge != 0;
@@ -253,7 +253,7 @@ nsFrameIterator::First()
   mCurrent = mStart;
 }
 
-static bool
+static PRBool
 IsRootFrame(nsIFrame* aFrame)
 {
   nsIAtom* atom = aFrame->GetType();
@@ -522,7 +522,7 @@ nsFrameIterator::GetPlaceholderFrame(nsIFrame* aFrame)
   return result;
 }
 
-bool
+PRBool
 nsFrameIterator::IsPopupFrame(nsIFrame* aFrame)
 {
   return (aFrame &&

@@ -91,7 +91,7 @@ public:
      *
      * @return true if there are no objects in the stack.
      */
-    inline bool isEmpty()
+    inline PRBool isEmpty()
     {
         return IsEmpty();
     }
@@ -129,7 +129,7 @@ public:
      *
      * @return .
      */
-    inline bool hasNext()
+    inline PRBool hasNext()
     {
         return (mPosition < mStack->Length());
     }

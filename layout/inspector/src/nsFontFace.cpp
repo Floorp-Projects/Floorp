@@ -65,7 +65,7 @@ NS_IMPL_ISUPPORTS1(nsFontFace, nsIDOMFontFace)
 
 /* readonly attribute boolean fromFontGroup; */
 NS_IMETHODIMP
-nsFontFace::GetFromFontGroup(bool * aFromFontGroup)
+nsFontFace::GetFromFontGroup(PRBool * aFromFontGroup)
 {
   *aFromFontGroup =
     (mMatchType & gfxTextRange::kFontGroup) != 0;
@@ -74,7 +74,7 @@ nsFontFace::GetFromFontGroup(bool * aFromFontGroup)
 
 /* readonly attribute boolean fromLanguagePrefs; */
 NS_IMETHODIMP
-nsFontFace::GetFromLanguagePrefs(bool * aFromLanguagePrefs)
+nsFontFace::GetFromLanguagePrefs(PRBool * aFromLanguagePrefs)
 {
   *aFromLanguagePrefs =
     (mMatchType & gfxTextRange::kPrefsFallback) != 0;
@@ -83,7 +83,7 @@ nsFontFace::GetFromLanguagePrefs(bool * aFromLanguagePrefs)
 
 /* readonly attribute boolean fromSystemFallback; */
 NS_IMETHODIMP
-nsFontFace::GetFromSystemFallback(bool * aFromSystemFallback)
+nsFontFace::GetFromSystemFallback(PRBool * aFromSystemFallback)
 {
   *aFromSystemFallback =
     (mMatchType & gfxTextRange::kSystemFallback) != 0;

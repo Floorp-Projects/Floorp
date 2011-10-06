@@ -46,8 +46,8 @@
 class THEBES_API gfxAlphaRecovery {
 public:
     struct Analysis {
-        bool uniformColor;
-        bool uniformAlpha;
+        PRBool uniformColor;
+        PRBool uniformAlpha;
         gfxFloat alpha;
         gfxFloat r, g, b;
     };
@@ -68,7 +68,7 @@ public:
      * The surfaces must have format RGB24 or ARGB32.
      * Returns PR_TRUE on success.
      */
-    static bool RecoverAlpha (gfxImageSurface *blackSurface,
+    static PRBool RecoverAlpha (gfxImageSurface *blackSurface,
                                 const gfxImageSurface *whiteSurface,
                                 Analysis *analysis = nsnull);
 
@@ -77,7 +77,7 @@ public:
      * optimizations. Usually this should not be called directly.  Be sure to
      * check mozilla::supports_sse2() before calling this function.
      */
-    static bool RecoverAlphaSSE2 (gfxImageSurface *blackSurface,
+    static PRBool RecoverAlphaSSE2 (gfxImageSurface *blackSurface,
                                     const gfxImageSurface *whiteSurface);
 
     /**

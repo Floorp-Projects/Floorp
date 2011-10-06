@@ -84,7 +84,7 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
 
   nsString stream;
   char buffer[1024] = {0}; // XXX Yikes!
-  bool done = false;
+  PRBool done = PR_FALSE;
   PRInt32 length = 0;
   while(!done) {
     length = PR_Read(in, buffer, sizeof(buffer));

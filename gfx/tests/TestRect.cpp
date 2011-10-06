@@ -43,7 +43,7 @@
 #endif
 
 template <class RectType>
-static bool
+static PRBool
 TestConstructors()
 {
   // Create a rectangle
@@ -71,7 +71,7 @@ TestConstructors()
 }
 
 template <class RectType>
-static bool
+static PRBool
 TestEqualityOperator()
 {
   RectType  rect1(10, 20, 30, 40);
@@ -102,7 +102,7 @@ TestEqualityOperator()
 }
 
 template <class RectType>
-static bool
+static PRBool
 TestContainment()
 {
   RectType  rect1(10, 10, 50, 50);
@@ -177,7 +177,7 @@ TestContainment()
 // Test the method that returns a boolean result but doesn't return a
 // a rectangle
 template <class RectType>
-static bool
+static PRBool
 TestIntersects()
 {
   RectType  rect1(10, 10, 50, 50);
@@ -273,7 +273,7 @@ TestIntersects()
 
 // Test the method that returns a boolean result and an intersection rect
 template <class RectType>
-static bool
+static PRBool
 TestIntersection()
 {
   RectType  rect1(10, 10, 50, 50);
@@ -423,7 +423,7 @@ TestIntersection()
 }
 
 template <class RectType>
-static bool
+static PRBool
 TestUnion()
 {
   RectType  rect1;

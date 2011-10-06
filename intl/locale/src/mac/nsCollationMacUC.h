@@ -69,8 +69,8 @@ protected:
   nsresult EnsureCollator(const PRInt32 newStrength);
 
 private:
-  bool mInit;
-  bool mHasCollator;
+  PRPackedBool mInit;
+  PRPackedBool mHasCollator;
   LocaleRef mLocale;
   PRInt32 mLastStrength;
   CollatorRef mCollator;

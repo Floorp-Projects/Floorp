@@ -49,8 +49,6 @@
 #include "jsgcmark.h"
 #include "jsweakmap.h"
 
-#include "vm/GlobalObject.h"
-
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
@@ -102,81 +100,81 @@ NonNullObject(JSContext *cx, Value *vp)
 static JSBool
 WeakMap_has(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, WeakMap_has, &WeakMapClass, &ok);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
-        return ok;
-
-    if (args.length() < 1) {
+        return false;
+    if (!obj->isWeakMap()) {
+        ReportIncompatibleMethod(cx, vp, &WeakMapClass);
+        return false;
+    }
+    if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "WeakMap.has", "0", "s");
         return false;
     }
-    JSObject *key = NonNullObject(cx, &args[0]);
+    JSObject *key = NonNullObject(cx, &vp[2]);
     if (!key)
         return false;
     ObjectValueMap *map = GetObjectMap(obj);
     if (map) {
         ObjectValueMap::Ptr ptr = map->lookup(key);
         if (ptr) {
-            args.rval() = BooleanValue(true);
+            *vp = BooleanValue(true);
             return true;
         }
     }
 
-    args.rval() = BooleanValue(false);
+    *vp = BooleanValue(false);
     return true;
 }
 
 static JSBool
 WeakMap_get(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, WeakMap_get, &WeakMapClass, &ok);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
-        return ok;
-
-    if (args.length() < 1) {
+        return false;
+    if (!obj->isWeakMap()) {
+        ReportIncompatibleMethod(cx, vp, &WeakMapClass);
+        return false;
+    }
+    if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "WeakMap.get", "0", "s");
         return false;
     }
-    JSObject *key = NonNullObject(cx, &args[0]);
+    JSObject *key = NonNullObject(cx, &vp[2]);
     if (!key)
         return false;
     ObjectValueMap *map = GetObjectMap(obj);
     if (map) {
         ObjectValueMap::Ptr ptr = map->lookup(key);
         if (ptr) {
-            args.rval() = ptr->value;
+            *vp = ptr->value;
             return true;
         }
     }
 
-    args.rval() = (args.length() > 1) ? args[1] : UndefinedValue();
+    *vp = (argc > 1) ? vp[3] : UndefinedValue();
     return true;
 }
 
 static JSBool
 WeakMap_delete(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, WeakMap_delete, &WeakMapClass, &ok);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
-        return ok;
-
-    if (args.length() < 1) {
+        return false;
+    if (!obj->isWeakMap()) {
+        ReportIncompatibleMethod(cx, vp, &WeakMapClass);
+        return false;
+    }
+    if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "WeakMap.delete", "0", "s");
         return false;
     }
-    JSObject *key = NonNullObject(cx, &args[0]);
+    JSObject *key = NonNullObject(cx, &vp[2]);
     if (!key)
         return false;
     ObjectValueMap *map = GetObjectMap(obj);
@@ -184,34 +182,34 @@ WeakMap_delete(JSContext *cx, uintN argc, Value *vp)
         ObjectValueMap::Ptr ptr = map->lookup(key);
         if (ptr) {
             map->remove(ptr);
-            args.rval() = BooleanValue(true);
+            *vp = BooleanValue(true);
             return true;
         }
     }
 
-    args.rval() = BooleanValue(false);
+    *vp = BooleanValue(false);
     return true;
 }
 
 static JSBool
 WeakMap_set(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, WeakMap_set, &WeakMapClass, &ok);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
-        return ok;
-
-    if (args.length() < 1) {
+        return false;
+    if (!obj->isWeakMap()) {
+        ReportIncompatibleMethod(cx, vp, &WeakMapClass);
+        return false;
+    }
+    if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "WeakMap.set", "0", "s");
         return false;
     }
-    JSObject *key = NonNullObject(cx, &args[0]);
+    JSObject *key = NonNullObject(cx, &vp[2]);
     if (!key)
         return false;
-    Value value = (args.length() > 1) ? args[1] : UndefinedValue();
+    Value value = (argc > 1) ? vp[3] : UndefinedValue();
 
     ObjectValueMap *map = GetObjectMap(obj);
     if (!map) {
@@ -223,7 +221,7 @@ WeakMap_set(JSContext *cx, uintN argc, Value *vp)
         obj->setPrivate(map);
     }
 
-    args.thisv() = UndefinedValue();
+    *vp = UndefinedValue();
     if (!map->put(key, value))
         goto out_of_memory;
     return true;
@@ -292,27 +290,12 @@ static JSFunctionSpec weak_map_methods[] = {
 JSObject *
 js_InitWeakMapClass(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->isNative());
-
-    GlobalObject *global = obj->asGlobal();
-
-    JSObject *weakMapProto = global->createBlankPrototype(cx, &WeakMapClass);
-    if (!weakMapProto)
-        return NULL;
-    weakMapProto->setPrivate(NULL);
-
-    JSFunction *ctor = global->createConstructor(cx, WeakMap_construct, &WeakMapClass,
-                                                 CLASS_ATOM(cx, WeakMap), 0);
-    if (!ctor)
+    JSObject *proto = js_InitClass(cx, obj, NULL, &WeakMapClass, WeakMap_construct, 0,
+                                   NULL, weak_map_methods, NULL, NULL);
+    if (!proto)
         return NULL;
 
-    if (!LinkConstructorAndPrototype(cx, ctor, weakMapProto))
-        return NULL;
+    proto->setPrivate(NULL);
 
-    if (!DefinePropertiesAndBrand(cx, weakMapProto, NULL, weak_map_methods))
-        return NULL;
-
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_WeakMap, ctor, weakMapProto))
-        return NULL;
-    return weakMapProto;
+    return proto;
 }

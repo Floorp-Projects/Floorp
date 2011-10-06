@@ -96,31 +96,31 @@ public:
   NS_DECL_NSIDOMHTMLHTMLELEMENT
 
   // nsIContent
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, bool aNotify)
+                   const nsAString& aValue, PRBool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
+                           PRBool aNotify);
 
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                             bool aNotify);
+                             PRBool aNotify);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
+                              PRBool aCompileEventHandlers);
 
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
 
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -254,7 +254,7 @@ nsHTMLSharedElement::SetHref(const nsAString& aValue)
 }
 
 
-bool
+PRBool
 nsHTMLSharedElement::ParseAttribute(PRInt32 aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,
@@ -296,7 +296,7 @@ DirectoryMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 nsHTMLSharedElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   if (mNodeInfo->Equals(nsGkAtoms::dir)) {
@@ -378,7 +378,7 @@ SetBaseTargetUsingFirstBaseWithTarget(nsIDocument* aDocument,
 nsresult
 nsHTMLSharedElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
-                             bool aNotify)
+                             PRBool aNotify)
 {
   nsresult rv =  nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                                aValue, aNotify);
@@ -403,7 +403,7 @@ nsHTMLSharedElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsHTMLSharedElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                               bool aNotify)
+                               PRBool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aName, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -427,7 +427,7 @@ nsHTMLSharedElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 nsresult
 nsHTMLSharedElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
-                                bool aCompileEventHandlers)
+                                PRBool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
@@ -450,7 +450,7 @@ nsHTMLSharedElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsHTMLSharedElement::UnbindFromTree(bool aDeep, bool aNullParent)
+nsHTMLSharedElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   nsIDocument* doc = GetCurrentDoc();
 

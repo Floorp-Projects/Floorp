@@ -123,7 +123,7 @@ static gfxRGBA ComputeCompositeColorForLine(PRUint32 aLineIndex,
 
 // little helper function to check if the array of 4 floats given are
 // equal to the given value
-static bool
+static PRBool
 CheckFourFloatsEqual(const gfxFloat *vals, gfxFloat k)
 {
   return (vals[0] == k &&
@@ -252,7 +252,7 @@ ComputeBorderCornerDimensions(const gfxRect& aOuterRect,
   }
 }
 
-bool
+PRBool
 nsCSSBorderRenderer::AreBorderSideFinalStylesSame(PRUint8 aSides)
 {
   NS_ASSERTION(aSides != 0 && (aSides & ~SIDE_BITS_ALL) == 0,
@@ -292,7 +292,7 @@ nsCSSBorderRenderer::AreBorderSideFinalStylesSame(PRUint8 aSides)
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsCSSBorderRenderer::IsSolidCornerStyle(PRUint8 aStyle, mozilla::css::Corner aCorner)
 {
   switch (aStyle) {
@@ -473,9 +473,9 @@ nsCSSBorderRenderer::DoSideClipSubPath(mozilla::css::Side aSide)
   gfxPoint end[2];
 
 #define IS_DASHED_OR_DOTTED(_s)  ((_s) == NS_STYLE_BORDER_STYLE_DASHED || (_s) == NS_STYLE_BORDER_STYLE_DOTTED)
-  bool isDashed      = IS_DASHED_OR_DOTTED(mBorderStyles[aSide]);
-  bool startIsDashed = IS_DASHED_OR_DOTTED(mBorderStyles[PREV_SIDE(aSide)]);
-  bool endIsDashed   = IS_DASHED_OR_DOTTED(mBorderStyles[NEXT_SIDE(aSide)]);
+  PRBool isDashed      = IS_DASHED_OR_DOTTED(mBorderStyles[aSide]);
+  PRBool startIsDashed = IS_DASHED_OR_DOTTED(mBorderStyles[PREV_SIDE(aSide)]);
+  PRBool endIsDashed   = IS_DASHED_OR_DOTTED(mBorderStyles[NEXT_SIDE(aSide)]);
 #undef IS_DASHED_OR_DOTTED
 
   SideClipType startType = SIDE_CLIP_TRAPEZOID;
@@ -1357,13 +1357,13 @@ nsCSSBorderRenderer::DrawRectangularCompositeColors()
 void
 nsCSSBorderRenderer::DrawBorders()
 {
-  bool forceSeparateCorners = false;
+  PRBool forceSeparateCorners = PR_FALSE;
 
   // Examine the border style to figure out if we can draw it in one
   // go or not.
-  bool tlBordersSame = AreBorderSideFinalStylesSame(SIDE_BIT_TOP | SIDE_BIT_LEFT);
-  bool brBordersSame = AreBorderSideFinalStylesSame(SIDE_BIT_BOTTOM | SIDE_BIT_RIGHT);
-  bool allBordersSame = AreBorderSideFinalStylesSame(SIDE_BITS_ALL);
+  PRBool tlBordersSame = AreBorderSideFinalStylesSame(SIDE_BIT_TOP | SIDE_BIT_LEFT);
+  PRBool brBordersSame = AreBorderSideFinalStylesSame(SIDE_BIT_BOTTOM | SIDE_BIT_RIGHT);
+  PRBool allBordersSame = AreBorderSideFinalStylesSame(SIDE_BITS_ALL);
   if (allBordersSame &&
       ((mCompositeColors[0] == NULL &&
        (mBorderStyles[0] == NS_STYLE_BORDER_STYLE_NONE ||
@@ -1406,7 +1406,7 @@ nsCSSBorderRenderer::DrawBorders()
     mInnerRect.Round();
   }
 
-  bool allBordersSameWidth = AllBordersSameWidth();
+  PRBool allBordersSameWidth = AllBordersSameWidth();
 
   if (allBordersSameWidth && mBorderWidths[0] == 0.0) {
     // Some of the allBordersSameWidth codepaths depend on the border
@@ -1414,7 +1414,7 @@ nsCSSBorderRenderer::DrawBorders()
     return;
   }
 
-  bool allBordersSolid;
+  PRBool allBordersSolid;
   bool noCornerOutsideCenter = true;
 
   // First there's a couple of 'special cases' that have specifically optimized
@@ -1603,7 +1603,7 @@ nsCSSBorderRenderer::DrawBorders()
       const PRIntn sides[2] = { corner, PREV_SIDE(corner) };
       PRIntn sideBits = (1 << sides[0]) | (1 << sides[1]);
 
-      bool simpleCornerStyle = mCompositeColors[sides[0]] == NULL &&
+      PRBool simpleCornerStyle = mCompositeColors[sides[0]] == NULL &&
                                  mCompositeColors[sides[1]] == NULL &&
                                  AreBorderSideFinalStylesSame(sideBits);
 

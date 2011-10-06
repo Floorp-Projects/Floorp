@@ -294,7 +294,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
 // Only place the selected child ...
 /* virtual */ nsresult
 nsMathMLmactionFrame::Place(nsRenderingContext& aRenderingContext,
-                            bool                 aPlaceOrigin,
+                            PRBool               aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)
 {
   aDesiredSize.width = aDesiredSize.height = 0;
@@ -399,7 +399,7 @@ nsMathMLmactionFrame::MouseClick()
       char cbuf[10];
       PR_snprintf(cbuf, sizeof(cbuf), "%d", selection);
       value.AssignASCII(cbuf);
-      bool notify = false; // don't yet notify the document
+      PRBool notify = PR_FALSE; // don't yet notify the document
       mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::selection_, value, notify);
 
       // Now trigger a content-changed reflow...

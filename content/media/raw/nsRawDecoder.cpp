@@ -40,5 +40,5 @@
 
 nsDecoderStateMachine* nsRawDecoder::CreateStateMachine()
 {
-  return new nsBuiltinDecoderStateMachine(this, new nsRawReader(this), true);
+  return new nsBuiltinDecoderStateMachine(this, new nsRawReader(this));
 }

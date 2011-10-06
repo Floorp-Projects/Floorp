@@ -116,7 +116,7 @@ static void PrintImageDecoders()
   
   nsCString str;
   nsCOMPtr<nsISupports> s;
-  bool more = false;
+  PRBool more = PR_FALSE;
   while (NS_SUCCEEDED(enumer->HasMoreElements(&more)) && more) {
     enumer->GetNext(getter_AddRefs(s));
     if (s) {
@@ -397,20 +397,30 @@ nsProgressNotificationProxy::GetInterface(const nsIID& iid,
   return NS_NOINTERFACE;
 }
 
-static void NewRequestAndEntry(bool aForcePrincipalCheckForCacheEntry,
-                               imgRequest **aRequest, imgCacheEntry **aEntry)
+static PRBool NewRequestAndEntry(bool forcePrincipalCheckForCacheEntry,
+                                 imgRequest **request, imgCacheEntry **entry)
 {
-  nsRefPtr<imgRequest> request = new imgRequest();
-  nsRefPtr<imgCacheEntry> entry = new imgCacheEntry(request, aForcePrincipalCheckForCacheEntry);
-  request.forget(aRequest);
-  entry.forget(aEntry);
+  *request = new imgRequest();
+  if (!*request)
+    return PR_FALSE;
+
+  *entry = new imgCacheEntry(*request, forcePrincipalCheckForCacheEntry);
+  if (!*entry) {
+    delete *request;
+    return PR_FALSE;
+  }
+
+  NS_ADDREF(*request);
+  NS_ADDREF(*entry);
+
+  return PR_TRUE;
 }
 
-static bool ShouldRevalidateEntry(imgCacheEntry *aEntry,
+static PRBool ShouldRevalidateEntry(imgCacheEntry *aEntry,
                               nsLoadFlags aFlags,
-                              bool aHasExpired)
+                              PRBool aHasExpired)
 {
-  bool bValidateEntry = false;
+  PRBool bValidateEntry = PR_FALSE;
 
   if (aFlags & nsIRequest::LOAD_BYPASS_CACHE)
     return PR_FALSE;
@@ -470,7 +480,7 @@ ValidateCORSAndPrincipal(imgRequest* request, bool forcePrincipalCheck,
     }
 
     if (otherprincipal && loadingPrincipal) {
-      bool equals = false;
+      PRBool equals = PR_FALSE;
       otherprincipal->Equals(loadingPrincipal, &equals);
       return equals;
     }
@@ -557,7 +567,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
     p->AdjustPriority(priority);
   }
 
-  bool setOwner = nsContentUtils::SetUpChannelOwner(aLoadingPrincipal,
+  PRBool setOwner = nsContentUtils::SetUpChannelOwner(aLoadingPrincipal,
                                                       *aResult, aURI, PR_FALSE);
   *aForcePrincipalCheckForCacheEntry = setOwner;
 
@@ -587,7 +597,7 @@ imgCacheEntry::~imgCacheEntry()
   LOG_FUNC(gImgLog, "imgCacheEntry::~imgCacheEntry()");
 }
 
-void imgCacheEntry::Touch(bool updateTime /* = true */)
+void imgCacheEntry::Touch(PRBool updateTime /* = PR_TRUE */)
 {
   LOG_SCOPE(gImgLog, "imgCacheEntry::Touch");
 
@@ -608,7 +618,7 @@ void imgCacheEntry::UpdateCache(PRInt32 diff /* = 0 */)
   }
 }
 
-void imgCacheEntry::SetHasNoProxies(bool hasNoProxies)
+void imgCacheEntry::SetHasNoProxies(PRBool hasNoProxies)
 {
 #if defined(PR_LOGGING)
   nsCOMPtr<nsIURI> uri;
@@ -690,7 +700,7 @@ void imgCacheQueue::MarkDirty()
   mDirty = PR_TRUE;
 }
 
-bool imgCacheQueue::IsDirty()
+PRBool imgCacheQueue::IsDirty()
 {
   return mDirty;
 }
@@ -865,7 +875,7 @@ void imgLoader::VerifyCacheSizes()
 
 imgLoader::imgCacheTable & imgLoader::GetCache(nsIURI *aURI)
 {
-  bool chrome = false;
+  PRBool chrome = PR_FALSE;
   aURI->SchemeIs("chrome", &chrome);
   if (chrome)
     return sChromeCache;
@@ -875,7 +885,7 @@ imgLoader::imgCacheTable & imgLoader::GetCache(nsIURI *aURI)
 
 imgCacheQueue & imgLoader::GetCacheQueue(nsIURI *aURI)
 {
-  bool chrome = false;
+  PRBool chrome = PR_FALSE;
   aURI->SchemeIs("chrome", &chrome);
   if (chrome)
     return sChromeCacheQueue;
@@ -988,7 +998,7 @@ void imgLoader::ReadAcceptHeaderPref()
 }
 
 /* void clearCache (in boolean chrome); */
-NS_IMETHODIMP imgLoader::ClearCache(bool chrome)
+NS_IMETHODIMP imgLoader::ClearCache(PRBool chrome)
 {
   if (chrome)
     return ClearChromeImageCache();
@@ -1054,7 +1064,7 @@ void imgLoader::MinimizeCaches()
   EvictEntries(sChromeCacheQueue);
 }
 
-bool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
+PRBool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
 {
   imgCacheTable &cache = GetCache(key);
 
@@ -1110,7 +1120,7 @@ bool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
   return PR_TRUE;
 }
 
-bool imgLoader::SetHasNoProxies(nsIURI *key, imgCacheEntry *entry)
+PRBool imgLoader::SetHasNoProxies(nsIURI *key, imgCacheEntry *entry)
 {
 #if defined(PR_LOGGING)
   nsCAutoString spec;
@@ -1140,7 +1150,7 @@ bool imgLoader::SetHasNoProxies(nsIURI *key, imgCacheEntry *entry)
   return PR_TRUE;
 }
 
-bool imgLoader::SetHasProxies(nsIURI *key)
+PRBool imgLoader::SetHasProxies(nsIURI *key)
 {
   VerifyCacheSizes();
 
@@ -1203,7 +1213,7 @@ void imgLoader::CheckCacheLimits(imgCacheTable &cache, imgCacheQueue &queue)
   }
 }
 
-bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
+PRBool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                                                 nsIURI *aURI,
                                                 nsIURI *aInitialDocumentURI,
                                                 nsIURI *aReferrerURI,
@@ -1287,7 +1297,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
     nsCOMPtr<nsIStreamListener> listener = hvc.get();
 
     if (aCORSMode != imgIRequest::CORS_NONE) {
-      bool withCredentials = aCORSMode == imgIRequest::CORS_USE_CREDENTIALS;
+      PRBool withCredentials = aCORSMode == imgIRequest::CORS_USE_CREDENTIALS;
       nsCOMPtr<nsIStreamListener> corsproxy =
         new nsCORSListenerProxy(hvc, aLoadingPrincipal, newChannel, withCredentials, &rv);
       if (NS_FAILED(rv)) {
@@ -1321,7 +1331,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
   }
 }
 
-bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
+PRBool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
                                 nsIURI *aURI,
                                 nsIURI *aInitialDocumentURI,
                                 nsIURI *aReferrerURI,
@@ -1329,7 +1339,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
                                 imgIDecoderObserver *aObserver,
                                 nsISupports *aCX,
                                 nsLoadFlags aLoadFlags,
-                                bool aCanMakeNewChannel,
+                                PRBool aCanMakeNewChannel,
                                 imgIRequest *aExistingRequest,
                                 imgIRequest **aProxyRequest,
                                 nsIChannelPolicy *aPolicy,
@@ -1338,7 +1348,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
 {
   LOG_SCOPE(gImgLog, "imgLoader::ValidateEntry");
 
-  bool hasExpired;
+  PRBool hasExpired;
   PRUint32 expirationTime = aEntry->GetExpiryTime();
   if (expirationTime <= SecondsFromPRTime(PR_Now())) {
     hasExpired = PR_TRUE;
@@ -1375,7 +1385,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
                                 aCORSMode, aLoadingPrincipal))
     return PR_FALSE;
 
-  bool validateRequest = false;
+  PRBool validateRequest = PR_FALSE;
 
   // If the request's loadId is the same as the aCX, then it is ok to use
   // this one because it has already been validated for this context.
@@ -1440,7 +1450,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
 }
 
 
-bool imgLoader::RemoveFromCache(nsIURI *aKey)
+PRBool imgLoader::RemoveFromCache(nsIURI *aKey)
 {
   if (!aKey) return PR_FALSE;
 
@@ -1476,7 +1486,7 @@ bool imgLoader::RemoveFromCache(nsIURI *aKey)
     return PR_FALSE;
 }
 
-bool imgLoader::RemoveFromCache(imgCacheEntry *entry)
+PRBool imgLoader::RemoveFromCache(imgCacheEntry *entry)
 {
   LOG_STATIC_FUNC(gImgLog, "imgLoader::RemoveFromCache entry");
 
@@ -1687,8 +1697,9 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 
-    NewRequestAndEntry(forcePrincipalCheck, getter_AddRefs(request),
-                       getter_AddRefs(entry));
+    if (!NewRequestAndEntry(forcePrincipalCheck, getter_AddRefs(request),
+                            getter_AddRefs(entry)))
+      return NS_ERROR_OUT_OF_MEMORY;
 
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage -- Created new imgRequest [request=%p]\n", this, request.get()));
@@ -1715,7 +1726,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     // request.
     nsCOMPtr<nsIStreamListener> listener = pl;
     if (corsmode != imgIRequest::CORS_NONE) {
-      bool withCredentials = corsmode == imgIRequest::CORS_USE_CREDENTIALS;
+      PRBool withCredentials = corsmode == imgIRequest::CORS_USE_CREDENTIALS;
 
       nsCOMPtr<nsIStreamListener> corsproxy =
         new nsCORSListenerProxy(pl, aLoadingPrincipal, newChannel,
@@ -1842,7 +1853,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
         request = getter_AddRefs(entry->GetRequest());
       } else {
         nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(channel));
-        bool bUseCacheCopy;
+        PRBool bUseCacheCopy;
 
         if (cacheChan)
           cacheChan->IsFromCache(&bUseCacheCopy);
@@ -1891,7 +1902,9 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     // Default to doing a principal check because we don't know who
     // started that load and whether their principal ended up being
     // inherited on the channel.
-    NewRequestAndEntry(PR_TRUE, getter_AddRefs(request), getter_AddRefs(entry));
+    if (!NewRequestAndEntry(PR_TRUE, getter_AddRefs(request),
+                            getter_AddRefs(entry)))
+      return NS_ERROR_OUT_OF_MEMORY;
 
     // We use originalURI here to fulfil the imgIRequest contract on GetURI.
     nsCOMPtr<nsIURI> originalURI;
@@ -1926,7 +1939,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   return rv;
 }
 
-NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, bool *_retval)
+NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, PRBool *_retval)
 {
   *_retval = PR_FALSE;
   nsCAutoString mimeType(aMimeType);
@@ -2143,11 +2156,11 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(aRequest));
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (cacheChan && channel) {
-    bool isFromCache = false;
+    PRBool isFromCache = PR_FALSE;
     cacheChan->IsFromCache(&isFromCache);
 
     nsCOMPtr<nsIURI> channelURI;
-    bool sameURI = false;
+    PRBool sameURI = PR_FALSE;
     channel->GetURI(getter_AddRefs(channelURI));
     if (channelURI)
       channelURI->Equals(mRequest->mCurrentURI, &sameURI);
@@ -2309,7 +2322,7 @@ NS_IMETHODIMP imgCacheValidator::OnRedirectVerifyCallback(nsresult aResult)
   // an external application, e.g. mailto:
   nsCOMPtr<nsIURI> uri;
   mRedirectChannel->GetURI(getter_AddRefs(uri));
-  bool doesNotReturnData = false;
+  PRBool doesNotReturnData = PR_FALSE;
   NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                       &doesNotReturnData);
 

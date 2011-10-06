@@ -98,8 +98,8 @@ private:
   nsRefPtr<nsPresContext> mPresContext;
 
   nsRefPtr<nsMediaList> mMediaList;
-  bool mMatches;
-  bool mMatchesValid;
+  PRPackedBool mMatches;
+  PRPackedBool mMatchesValid;
   ListenerList mListeners;
 };
 

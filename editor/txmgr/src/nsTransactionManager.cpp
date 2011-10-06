@@ -99,7 +99,7 @@ nsTransactionManager::DoTransaction(nsITransaction *aTransaction)
 
   LOCK_TX_MANAGER(this);
 
-  bool doInterrupt = false;
+  PRBool doInterrupt = PR_FALSE;
 
   result = WillDoNotify(aTransaction, &doInterrupt);
 
@@ -181,7 +181,7 @@ nsTransactionManager::UndoTransaction()
     return result;
   }
 
-  bool doInterrupt = false;
+  PRBool doInterrupt = PR_FALSE;
 
   result = WillUndoNotify(t, &doInterrupt);
 
@@ -262,7 +262,7 @@ nsTransactionManager::RedoTransaction()
     return result;
   }
 
-  bool doInterrupt = false;
+  PRBool doInterrupt = PR_FALSE;
 
   result = WillRedoNotify(t, &doInterrupt);
 
@@ -328,7 +328,7 @@ nsTransactionManager::BeginBatch()
 
   LOCK_TX_MANAGER(this);
 
-  bool doInterrupt = false;
+  PRBool doInterrupt = PR_FALSE;
 
   result = WillBeginBatchNotify(&doInterrupt);
 
@@ -389,7 +389,7 @@ nsTransactionManager::EndBatch()
     return NS_ERROR_FAILURE;
   }
 
-  bool doInterrupt = false;
+  PRBool doInterrupt = PR_FALSE;
 
   result = WillEndBatchNotify(&doInterrupt);
 
@@ -677,7 +677,7 @@ nsTransactionManager::ClearRedoStack()
 }
 
 nsresult
-nsTransactionManager::WillDoNotify(nsITransaction *aTransaction, bool *aInterrupt)
+nsTransactionManager::WillDoNotify(nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   nsresult result = NS_OK;
   for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
@@ -715,7 +715,7 @@ nsTransactionManager::DidDoNotify(nsITransaction *aTransaction, nsresult aDoResu
 }
 
 nsresult
-nsTransactionManager::WillUndoNotify(nsITransaction *aTransaction, bool *aInterrupt)
+nsTransactionManager::WillUndoNotify(nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   nsresult result = NS_OK;
   for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
@@ -753,7 +753,7 @@ nsTransactionManager::DidUndoNotify(nsITransaction *aTransaction, nsresult aUndo
 }
 
 nsresult
-nsTransactionManager::WillRedoNotify(nsITransaction *aTransaction, bool *aInterrupt)
+nsTransactionManager::WillRedoNotify(nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   nsresult result = NS_OK;
   for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
@@ -791,7 +791,7 @@ nsTransactionManager::DidRedoNotify(nsITransaction *aTransaction, nsresult aRedo
 }
 
 nsresult
-nsTransactionManager::WillBeginBatchNotify(bool *aInterrupt)
+nsTransactionManager::WillBeginBatchNotify(PRBool *aInterrupt)
 {
   nsresult result = NS_OK;
   for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
@@ -829,7 +829,7 @@ nsTransactionManager::DidBeginBatchNotify(nsresult aResult)
 }
 
 nsresult
-nsTransactionManager::WillEndBatchNotify(bool *aInterrupt)
+nsTransactionManager::WillEndBatchNotify(PRBool *aInterrupt)
 {
   nsresult result = NS_OK;
   for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
@@ -867,7 +867,7 @@ nsTransactionManager::DidEndBatchNotify(nsresult aResult)
 }
 
 nsresult
-nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTransaction, bool *aInterrupt)
+nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   nsresult result = NS_OK;
   for (PRInt32 i = 0, lcount = mListeners.Count(); i < lcount; i++)
@@ -888,7 +888,7 @@ nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTra
 nsresult
 nsTransactionManager::DidMergeNotify(nsITransaction *aTop,
                                      nsITransaction *aTransaction,
-                                     bool aDidMerge,
+                                     PRBool aDidMerge,
                                      nsresult aMergeResult)
 {
   nsresult result = NS_OK;
@@ -977,7 +977,7 @@ nsTransactionManager::EndTransaction()
   // Check if the transaction is transient. If it is, there's nothing
   // more to do, just return.
 
-  bool isTransient = false;
+  PRBool isTransient = PR_FALSE;
 
   if (tint)
     result = tint->GetIsTransient(&isTransient);
@@ -1018,14 +1018,14 @@ nsTransactionManager::EndTransaction()
   result = mUndoStack.Peek(getter_AddRefs(top));
 
   if (tint && top) {
-    bool didMerge = false;
+    PRBool didMerge = PR_FALSE;
     nsCOMPtr<nsITransaction> topTransaction;
 
     result = top->GetTransaction(getter_AddRefs(topTransaction));
 
     if (topTransaction) {
 
-      bool doInterrupt = false;
+      PRBool doInterrupt = PR_FALSE;
 
       result = WillMergeNotify(topTransaction, tint, &doInterrupt);
 

@@ -101,7 +101,7 @@ AppendToFile(nsILocalFile *lf, const char *data, PRUint32 len)
 // maxSize may be -1 if unknown
 static void
 MakeRangeSpec(const PRInt64 &size, const PRInt64 &maxSize, PRInt32 chunkSize,
-              bool fetchRemaining, nsCString &rangeSpec)
+              PRBool fetchRemaining, nsCString &rangeSpec)
 {
   rangeSpec.AssignLiteral("bytes=");
   rangeSpec.AppendInt(PRInt64(size));
@@ -169,8 +169,8 @@ private:
   PRUint32                                 mLoadFlags;
   PRInt32                                  mNonPartialCount;
   nsresult                                 mStatus;
-  bool                                     mIsPending;
-  bool                                     mDidOnStartRequest;
+  PRPackedBool                             mIsPending;
+  PRPackedBool                             mDidOnStartRequest;
   PRTime                                   mLastProgressUpdate;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel>                     mNewRedirectChannel;
@@ -356,7 +356,7 @@ nsIncrementalDownload::GetName(nsACString &name)
 }
 
 NS_IMETHODIMP
-nsIncrementalDownload::IsPending(bool *isPending)
+nsIncrementalDownload::IsPending(PRBool *isPending)
 {
   *isPending = mIsPending;
   return NS_OK;

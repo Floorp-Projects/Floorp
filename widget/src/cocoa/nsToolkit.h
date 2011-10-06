@@ -60,13 +60,13 @@ public:
   NS_DECL_NSITOOLKIT
 
   static PRInt32     OSXVersion();
-  static bool        OnSnowLeopardOrLater();
-  static bool        OnLionOrLater();
+  static PRBool      OnSnowLeopardOrLater();
+  static PRBool      OnLionOrLater();
 
   static void        PostSleepWakeNotification(const char* aNotification);
 
   static nsresult    SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
-                                    bool classMethods = false);
+                                    PRBool classMethods = PR_FALSE);
 
 protected:
 

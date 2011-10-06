@@ -94,8 +94,7 @@ public:
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint & aPoint);
   NS_IMETHOD UpdateCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                      PRUint32 aFlags);
+  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace);
   
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM();
@@ -120,7 +119,7 @@ private:
    * control whether they should use the global transform even when
    * NS_STATE_NONDISPLAY_CHILD
    */
-  void UpdateGlyphPositioning(bool aForceGlobalTransform);
+  void UpdateGlyphPositioning(PRBool aForceGlobalTransform);
 
   void SetWhitespaceHandling(nsSVGGlyphFrame *aFrame);
 
@@ -129,7 +128,7 @@ private:
   enum UpdateState { unsuspended, suspended };
   UpdateState mMetricsState;
 
-  bool mPositioningDirty;
+  PRPackedBool mPositioningDirty;
 };
 
 #endif

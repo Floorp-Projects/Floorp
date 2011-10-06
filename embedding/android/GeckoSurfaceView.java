@@ -121,8 +121,8 @@ class GeckoSurfaceView
 
         Resources res = getResources();
 
-        File watchDir = new File(GeckoApp.sGREDir, "components");
-        if (watchDir.exists() == false) {
+        File filesDir = new File(GeckoApp.sGREDir, "files");
+        if (filesDir.exists() == false) {
             // Just show the simple splash screen for "new profile" startup
             c.drawColor(res.getColor(R.color.splash_background));
             Drawable drawable = res.getDrawable(R.drawable.splash);
@@ -288,8 +288,6 @@ class GeckoSurfaceView
         }
 
         if (doSyncDraw) {
-            GeckoAppShell.scheduleRedraw();
-
             Object syncDrawObject = null;
             try {
                 syncDrawObject = mSyncDraws.take();

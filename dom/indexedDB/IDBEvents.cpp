@@ -65,7 +65,7 @@ public:
   { }
 
   NS_IMETHOD Run() {
-    bool dummy;
+    PRBool dummy;
     return mTarget->DispatchEvent(mEvent, &dummy);
   }
 
@@ -78,7 +78,7 @@ private:
 
 already_AddRefed<nsDOMEvent>
 mozilla::dom::indexedDB::CreateGenericEvent(const nsAString& aType,
-                                            bool aBubblesAndCancelable)
+                                            PRBool aBubblesAndCancelable)
 {
   nsRefPtr<nsDOMEvent> event(new nsDOMEvent(nsnull, nsnull));
   nsresult rv = event->InitEvent(aType, aBubblesAndCancelable,

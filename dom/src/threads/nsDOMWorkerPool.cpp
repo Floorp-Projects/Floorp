@@ -107,7 +107,7 @@ nsDOMWorkerPool::NoteWorker(nsDOMWorker* aWorker)
 {
   NS_ASSERTION(aWorker, "Null pointer!");
 
-  bool suspendWorker;
+  PRBool suspendWorker;
 
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
@@ -134,7 +134,7 @@ nsDOMWorkerPool::NoteDyingWorker(nsDOMWorker* aWorker)
 {
   NS_ASSERTION(aWorker, "Null pointer!");
 
-  bool removeFromThreadService = false;
+  PRBool removeFromThreadService = PR_FALSE;
 
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);

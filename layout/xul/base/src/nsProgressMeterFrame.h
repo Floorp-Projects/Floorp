@@ -73,5 +73,5 @@ protected:
     nsBoxFrame(aPresShell, aContext), mNeedsReflowCallback(PR_TRUE) {}
   virtual ~nsProgressMeterFrame();
 
-  bool mNeedsReflowCallback;
+  PRBool mNeedsReflowCallback;
 }; // class nsProgressMeterFrame

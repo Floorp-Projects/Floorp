@@ -91,16 +91,16 @@ public:
     PFNOSMESAPIXELSTORE fPixelStore;
     PFNOSMESAGETPROCADDRESS fGetProcAddress;
 
-    bool EnsureInitialized();
+    PRBool EnsureInitialized();
 
 private:
-    bool mInitialized;
+    PRBool mInitialized;
     PRLibrary *mOSMesaLibrary;
 };
 
 OSMesaLibrary sOSMesaLibrary;
 
-bool
+PRBool
 OSMesaLibrary::EnsureInitialized()
 {
     if (mInitialized)
@@ -160,11 +160,11 @@ public:
         return ContextTypeOSMesa;
     }
 
-    bool Init(const gfxIntSize &aSize)
+    PRBool Init(const gfxIntSize &aSize)
     {
         int osmesa_format = -1;
         int gfxasurface_imageformat = -1;
-        bool format_accepted = false;
+        PRBool format_accepted = PR_FALSE;
 
         if (mCreationFormat.red > 0 &&
             mCreationFormat.green > 0 &&
@@ -212,9 +212,9 @@ public:
         return InitWithPrefix("gl", PR_TRUE);
     }
 
-    bool MakeCurrentImpl(bool aForce = false)
+    PRBool MakeCurrentImpl(PRBool aForce = PR_FALSE)
     {
-        bool succeeded
+        PRBool succeeded
           = sOSMesaLibrary.fMakeCurrent(mContext, mThebesSurface->Data(),
                                         LOCAL_GL_UNSIGNED_BYTE,
                                         mThebesSurface->Width(),
@@ -224,7 +224,7 @@ public:
         return succeeded;
     }
 
-    bool SetupLookupFunction()
+    PRBool SetupLookupFunction()
     {
         mLookupFunc = (PlatformLookupFunction)sOSMesaLibrary.fGetProcAddress;
         return PR_TRUE;

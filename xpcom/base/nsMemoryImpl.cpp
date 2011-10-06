@@ -76,13 +76,13 @@ nsMemoryImpl::Free(void* ptr)
 }
 
 NS_IMETHODIMP
-nsMemoryImpl::HeapMinimize(bool aImmediate)
+nsMemoryImpl::HeapMinimize(PRBool aImmediate)
 {
     return FlushMemory(NS_LITERAL_STRING("heap-minimize").get(), aImmediate);
 }
 
 NS_IMETHODIMP
-nsMemoryImpl::IsLowMemory(bool *result)
+nsMemoryImpl::IsLowMemory(PRBool *result)
 {
     NS_ERROR("IsLowMemory is deprecated.  See bug 592308.");
     *result = PR_FALSE;
@@ -97,7 +97,7 @@ nsMemoryImpl::Create(nsISupports* outer, const nsIID& aIID, void **aResult)
 }
 
 nsresult
-nsMemoryImpl::FlushMemory(const PRUnichar* aReason, bool aImmediate)
+nsMemoryImpl::FlushMemory(const PRUnichar* aReason, PRBool aImmediate)
 {
     nsresult rv = NS_OK;
 
@@ -150,7 +150,7 @@ nsMemoryImpl::RunFlushers(const PRUnichar* aReason)
 
         if ( e ) {
           nsCOMPtr<nsIObserver> observer;
-          bool loop = true;
+          PRBool loop = PR_TRUE;
 
           while (NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) 
           {

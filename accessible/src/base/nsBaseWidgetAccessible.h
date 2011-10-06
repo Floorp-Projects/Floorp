@@ -113,8 +113,8 @@ protected:
    * Parent accessible that provides an action for this linkable accessible.
    */
   nsAccessible* mActionAcc;
-  bool mIsLink;
-  bool mIsOnclick;
+  PRPackedBool mIsLink;
+  PRPackedBool mIsOnclick;
 };
 
 /**

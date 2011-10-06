@@ -112,7 +112,7 @@ public:
 
     void CancelEvent() { mCanceled = PR_TRUE; }
 private:
-    bool mCanceled;
+    PRBool mCanceled;
     nsCacheEntry *mEntry;
     nsDiskCacheDevice *mDevice;
     nsDiskCacheBinding *mBinding;
@@ -449,7 +449,7 @@ nsDiskCacheDevice::Shutdown()
         nsCOMPtr<nsIFile> trashDir;
         GetTrashDir(mCacheDirectory, &trashDir);
         if (trashDir) {
-            bool exists;
+            PRBool exists;
             if (NS_SUCCEEDED(trashDir->Exists(&exists)) && exists)
                 DeleteDir(trashDir, PR_FALSE, PR_TRUE);
         }
@@ -460,7 +460,7 @@ nsDiskCacheDevice::Shutdown()
 
 
 nsresult
-nsDiskCacheDevice::Shutdown_Private(bool    flush)
+nsDiskCacheDevice::Shutdown_Private(PRBool  flush)
 {
     CACHE_LOG_DEBUG(("CACHE: disk Shutdown_Private [%u]\n", flush));
 
@@ -501,7 +501,7 @@ nsDiskCacheDevice::GetDeviceID()
  *  NOTE: called while holding the cache service lock
  */
 nsCacheEntry *
-nsDiskCacheDevice::FindEntry(nsCString * key, bool *collision)
+nsDiskCacheDevice::FindEntry(nsCString * key, PRBool *collision)
 {
     if (!Initialized())  return nsnull;  // NS_ERROR_NOT_INITIALIZED
     nsDiskCacheRecord       record;
@@ -924,7 +924,7 @@ public:
         }
         nsCOMPtr<nsICacheEntryInfo> ref(entryInfo);
         
-        bool    keepGoing;
+        PRBool  keepGoing;
         (void)mVisitor->VisitEntry(DISK_CACHE_DEVICE_ID, entryInfo, &keepGoing);
         return keepGoing ? kVisitNextRecord : kStopVisitingRecords;
     }
@@ -942,7 +942,7 @@ nsDiskCacheDevice::Visit(nsICacheVisitor * visitor)
     nsDiskCacheDeviceInfo* deviceInfo = new nsDiskCacheDeviceInfo(this);
     nsCOMPtr<nsICacheDeviceInfo> ref(deviceInfo);
     
-    bool keepGoing;
+    PRBool keepGoing;
     nsresult rv = visitor->VisitDevice(DISK_CACHE_DEVICE_ID, deviceInfo, &keepGoing);
     if (NS_FAILED(rv)) return rv;
     
@@ -998,12 +998,12 @@ nsDiskCacheDevice::OpenDiskCache()
 {
     Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_OPEN> timer;
     // if we don't have a cache directory, create one and open it
-    bool exists;
+    PRBool exists;
     nsresult rv = mCacheDirectory->Exists(&exists);
     if (NS_FAILED(rv))
         return rv;
 
-    bool trashing = false;
+    PRBool trashing = PR_FALSE;
     if (exists) {
         // Try opening cache map file.
         rv = mCacheMap.Open(mCacheDirectory);        
@@ -1039,7 +1039,7 @@ nsDiskCacheDevice::OpenDiskCache()
         nsCOMPtr<nsIFile> trashDir;
         GetTrashDir(mCacheDirectory, &trashDir);
         if (trashDir) {
-            bool exists;
+            PRBool exists;
             if (NS_SUCCEEDED(trashDir->Exists(&exists)) && exists) {
                 // be paranoid and delete immediately if leftover
                 DeleteDir(trashDir, PR_FALSE, PR_FALSE);
@@ -1096,7 +1096,7 @@ void
 nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
 {
     nsresult rv;
-    bool    exists;
+    PRBool  exists;
 
     if (Initialized()) {
         NS_ASSERTION(PR_FALSE, "Cannot switch cache directory when initialized");

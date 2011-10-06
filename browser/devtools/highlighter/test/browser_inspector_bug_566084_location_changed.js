@@ -5,19 +5,19 @@ let notificationBox = null;
 
 function startLocationTests() {
   ok(window.InspectorUI, "InspectorUI variable exists");
-  Services.obs.addObserver(runInspectorTests, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, null);
+  Services.obs.addObserver(runInspectorTests, INSPECTOR_NOTIFICATIONS.OPENED, null);
   InspectorUI.toggleInspectorUI();
 }
 
 function runInspectorTests() {
-  Services.obs.removeObserver(runInspectorTests, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, null);
+  Services.obs.removeObserver(runInspectorTests, INSPECTOR_NOTIFICATIONS.OPENED, null);
 
   let para = content.document.querySelector("p");
   ok(para, "found the paragraph element");
   is(para.textContent, "init", "paragraph content is correct");
 
   ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(InspectorUI.isInspectorOpen, "Inspector is open");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Panel is open");
 
   InspectorUI.isDirty = true;
 
@@ -56,7 +56,7 @@ function onPageLoad() {
   is(para.textContent, "test2", "paragraph content is correct");
 
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(!InspectorUI.isInspectorOpen, "Inspector Panel is not open");
+  ok(!InspectorUI.isTreePanelOpen, "Inspector Panel is not open");
 
   testEnd();
 }
@@ -68,7 +68,7 @@ function locationTest2() {
   is(para.textContent, "init", "paragraph content is correct");
 
   ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(InspectorUI.isInspectorOpen, "Inspector Panel is open");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Panel is open");
 
   notificationBox.addEventListener("AlertActive", alertActive2, false);
 
@@ -102,6 +102,7 @@ function alertActive2() {
 
 function testEnd() {
   notificationBox = null;
+  InspectorUI.isDirty = false;
   gBrowser.removeCurrentTab();
   executeSoon(finish);
 }

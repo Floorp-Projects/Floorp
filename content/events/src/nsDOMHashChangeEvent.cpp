@@ -65,8 +65,8 @@ nsDOMHashChangeEvent::GetNewURL(nsAString &aURL)
 
 NS_IMETHODIMP
 nsDOMHashChangeEvent::InitHashChangeEvent(const nsAString &aTypeArg,
-                                          bool aCanBubbleArg,
-                                          bool aCancelableArg,
+                                          PRBool aCanBubbleArg,
+                                          PRBool aCancelableArg,
                                           const nsAString &aOldURL,
                                           const nsAString &aNewURL)
 {

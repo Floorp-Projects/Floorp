@@ -90,15 +90,15 @@ public:
     nsresult Init();
     nsresult AddStandardRequestHeaders(nsHttpHeaderArray *,
                                        PRUint8 capabilities,
-                                       bool useProxy);
-    bool     IsAcceptableEncoding(const char *encoding);
+                                       PRBool useProxy);
+    PRBool   IsAcceptableEncoding(const char *encoding);
 
     const nsAFlatCString &UserAgent();
 
     nsHttpVersion  HttpVersion()             { return mHttpVersion; }
     nsHttpVersion  ProxyHttpVersion()        { return mProxyHttpVersion; }
     PRUint8        ReferrerLevel()           { return mReferrerLevel; }
-    bool           SendSecureXSiteReferrer() { return mSendSecureXSiteReferrer; }
+    PRBool         SendSecureXSiteReferrer() { return mSendSecureXSiteReferrer; }
     PRUint8        RedirectionLimit()        { return mRedirectionLimit; }
     PRUint16       IdleTimeout()             { return mIdleTimeout; }
     PRUint16       MaxRequestAttempts()      { return mMaxRequestAttempts; }
@@ -107,11 +107,11 @@ public:
     PRUint32       PhishyUserPassLength()    { return mPhishyUserPassLength; }
     PRUint8        GetQoSBits()              { return mQoSBits; }
     PRUint16       GetIdleSynTimeout()       { return mIdleSynTimeout; }
-    bool           FastFallbackToIPv4()      { return mFastFallbackToIPv4; }
+    PRBool         FastFallbackToIPv4()      { return mFastFallbackToIPv4; }
 
-    bool           IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
+    PRBool         IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
 
-    bool           PromptTempRedirect()      { return mPromptTempRedirect; }
+    PRBool         PromptTempRedirect()      { return mPromptTempRedirect; }
 
     nsHttpAuthCache     *AuthCache() { return &mAuthCache; }
     nsHttpConnectionMgr *ConnMgr()   { return mConnMgr; }
@@ -171,7 +171,7 @@ public:
     }
 
     // for anything that wants to know if we're in private browsing mode.
-    bool InPrivateBrowsingMode();
+    PRBool InPrivateBrowsingMode();
 
     //
     // The HTTP handler caches pointers to specific XPCOM services, and
@@ -260,7 +260,7 @@ private:
     PRUint8  mProxyCapabilities;
     PRUint8  mReferrerLevel;
 
-    bool mFastFallbackToIPv4;
+    PRPackedBool mFastFallbackToIPv4;
 
     PRUint16 mIdleTimeout;
     PRUint16 mMaxRequestAttempts;
@@ -283,7 +283,7 @@ private:
 
     PRUint8  mQoSBits;
 
-    bool mPipeliningOverSSL;
+    PRPackedBool mPipeliningOverSSL;
 
     // cached value of whether or not the browser is in private browsing mode.
     enum {
@@ -316,20 +316,20 @@ private:
 
     nsCString      mUserAgent;
     nsXPIDLCString mUserAgentOverride;
-    bool           mUserAgentIsDirty; // true if mUserAgent should be rebuilt
+    PRPackedBool   mUserAgentIsDirty; // true if mUserAgent should be rebuilt
 
-    bool           mUseCache;
+    PRPackedBool   mUseCache;
 
-    bool           mPromptTempRedirect;
+    PRPackedBool   mPromptTempRedirect;
     // mSendSecureXSiteReferrer: default is false, 
     // if true allow referrer headers between secure non-matching hosts
-    bool           mSendSecureXSiteReferrer;
+    PRPackedBool   mSendSecureXSiteReferrer;
 
     // Persistent HTTPS caching flag
-    bool           mEnablePersistentHttpsCaching;
+    PRPackedBool   mEnablePersistentHttpsCaching;
 
     // For broadcasting the preference to not be tracked
-    bool           mDoNotTrackEnabled;
+    PRPackedBool   mDoNotTrackEnabled;
 };
 
 //-----------------------------------------------------------------------------

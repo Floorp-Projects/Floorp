@@ -150,7 +150,7 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,
                                       nsIContent*      aContent,
                                       nsStyleContext*  aParentStyleContext,
                                       nsMathMLChar*    aMathMLChar,
-                                      bool             aIsMutableChar)
+                                      PRBool           aIsMutableChar)
 {
   nsCSSPseudoElements::Type pseudoType = (aIsMutableChar) ?
     nsCSSPseudoElements::ePseudo_mozMathStretchy :
@@ -188,7 +188,7 @@ nsMathMLFrame::GetEmbellishDataFrom(nsIFrame*        aFrame,
 /* static */ void
 nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
                                        nsPresentationData& aPresentationData,
-                                       bool                aClimbTree)
+                                       PRBool              aClimbTree)
 {
   // initialize OUT params
   aPresentationData.flags = 0;
@@ -231,7 +231,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
 }
 
 // helper to get an attribute from the content or the surrounding <mstyle> hierarchy
-/* static */ bool
+/* static */ PRBool
 nsMathMLFrame::GetAttribute(nsIContent* aContent,
                             nsIFrame*   aMathMLmstyleFrame,
                             nsIAtom*    aAttributeAtom,
@@ -340,7 +340,7 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   return 0;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsMathMLFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
                                     nsString&   aString,
                                     nsCSSValue& aCSSValue)

@@ -147,7 +147,7 @@ static PRErrorCode RandomizeConnectError(PRErrorCode code)
 
 //-----------------------------------------------------------------------------
 
-static bool
+static PRBool
 IsNSSErrorCode(PRErrorCode code)
 {
   return 
@@ -393,7 +393,7 @@ nsSocketInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
 }
 
 NS_IMETHODIMP
-nsSocketInputStream::IsNonBlocking(bool *nonblocking)
+nsSocketInputStream::IsNonBlocking(PRBool *nonblocking)
 {
     *nonblocking = PR_TRUE;
     return NS_OK;
@@ -635,7 +635,7 @@ nsSocketOutputStream::WriteFrom(nsIInputStream *stream, PRUint32 count, PRUint32
 }
 
 NS_IMETHODIMP
-nsSocketOutputStream::IsNonBlocking(bool *nonblocking)
+nsSocketOutputStream::IsNonBlocking(PRBool *nonblocking)
 {
     *nonblocking = PR_TRUE;
     return NS_OK;
@@ -955,7 +955,7 @@ nsSocketTransport::ResolveHost()
 }
 
 nsresult
-nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &usingSSL)
+nsSocketTransport::BuildSocket(PRFileDesc *&fd, PRBool &proxyTransparent, PRBool &usingSSL)
 {
     SOCKET_LOG(("nsSocketTransport::BuildSocket [this=%x]\n", this));
 
@@ -1025,7 +1025,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 break;
 
             // if the service was ssl or starttls, we want to hold onto the socket info
-            bool isSSL = (strcmp(mTypes[i], "ssl") == 0);
+            PRBool isSSL = (strcmp(mTypes[i], "ssl") == 0);
             if (isSSL || (strcmp(mTypes[i], "starttls") == 0)) {
                 // remember security info and give notification callbacks to PSM...
                 nsCOMPtr<nsIInterfaceRequestor> callbacks;
@@ -1103,8 +1103,8 @@ nsSocketTransport::InitiateSocket()
     // create new socket fd, push io layers, etc.
     //
     PRFileDesc *fd;
-    bool proxyTransparent;
-    bool usingSSL;
+    PRBool proxyTransparent;
+    PRBool usingSSL;
 
     rv = BuildSocket(fd, proxyTransparent, usingSSL);
     if (NS_FAILED(rv)) {
@@ -1245,7 +1245,7 @@ nsSocketTransport::InitiateSocket()
     return rv;
 }
 
-bool
+PRBool
 nsSocketTransport::RecoverFromError()
 {
     NS_ASSERTION(NS_FAILED(mCondition), "there should be something wrong");
@@ -1268,7 +1268,7 @@ nsSocketTransport::RecoverFromError()
         mCondition != NS_ERROR_UNKNOWN_PROXY_HOST)
         return PR_FALSE;
 
-    bool tryAgain = false;
+    PRBool tryAgain = PR_FALSE;
 
     // try next ip address only if past the resolver stage...
     if (mState == STATE_CONNECTING && mDNSRecord) {
@@ -1285,7 +1285,7 @@ nsSocketTransport::RecoverFromError()
     // If not trying next address, try to make a connection using dialup. 
     // Retry if that connection is made.
     if (!tryAgain) {
-        bool autodialEnabled;
+        PRBool autodialEnabled;
         gSocketTransportService->GetAutodialEnabled(&autodialEnabled);
         if (autodialEnabled) {
           tryAgain = nsNativeConnectionHelper::OnConnectionFailed(
@@ -1690,8 +1690,8 @@ nsSocketTransport::OpenInputStream(PRUint32 flags,
 
     if (!(flags & OPEN_UNBUFFERED) || (flags & OPEN_BLOCKING)) {
         // XXX if the caller wants blocking, then the caller also gets buffered!
-        //bool openBuffered = !(flags & OPEN_UNBUFFERED);
-        bool openBlocking =  (flags & OPEN_BLOCKING);
+        //PRBool openBuffered = !(flags & OPEN_UNBUFFERED);
+        PRBool openBlocking =  (flags & OPEN_BLOCKING);
 
         net_ResolveSegmentParams(segsize, segcount);
         nsIMemory *segalloc = net_GetSegmentAlloc(segsize);
@@ -1737,8 +1737,8 @@ nsSocketTransport::OpenOutputStream(PRUint32 flags,
     nsCOMPtr<nsIAsyncOutputStream> pipeOut;
     if (!(flags & OPEN_UNBUFFERED) || (flags & OPEN_BLOCKING)) {
         // XXX if the caller wants blocking, then the caller also gets buffered!
-        //bool openBuffered = !(flags & OPEN_UNBUFFERED);
-        bool openBlocking =  (flags & OPEN_BLOCKING);
+        //PRBool openBuffered = !(flags & OPEN_UNBUFFERED);
+        PRBool openBlocking =  (flags & OPEN_BLOCKING);
 
         net_ResolveSegmentParams(segsize, segcount);
         nsIMemory *segalloc = net_GetSegmentAlloc(segsize);
@@ -1836,7 +1836,7 @@ nsSocketTransport::SetEventSink(nsITransportEventSink *sink,
 }
 
 NS_IMETHODIMP
-nsSocketTransport::IsAlive(bool *result)
+nsSocketTransport::IsAlive(PRBool *result)
 {
     *result = PR_FALSE;
 

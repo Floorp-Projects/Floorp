@@ -356,7 +356,7 @@ nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 
 NS_IMETHODIMP
 nsAnnoProtocolHandler::AllowPort(PRInt32 port, const char *scheme,
-                                 bool *_retval)
+                                 PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;

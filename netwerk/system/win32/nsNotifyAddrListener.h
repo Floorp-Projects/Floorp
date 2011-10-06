@@ -74,9 +74,9 @@ protected:
         const char *mEventID;
     };
 
-    bool mLinkUp;
-    bool mStatusKnown;
-    bool mCheckAttempted;
+    PRPackedBool mLinkUp;
+    PRPackedBool mStatusKnown;
+    PRPackedBool mCheckAttempted;
 
     nsresult Shutdown(void);
     nsresult SendEventToUI(const char *aEventID);

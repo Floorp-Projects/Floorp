@@ -99,7 +99,7 @@ SVGNumberListSMILType::Assign(nsSMILValue& aDest,
   return dest->CopyFrom(*src);
 }
 
-bool
+PRBool
 SVGNumberListSMILType::IsEqual(const nsSMILValue& aLeft,
                                const nsSMILValue& aRight) const
 {

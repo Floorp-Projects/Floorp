@@ -144,7 +144,7 @@ private:
 
   nsresult GetModifiableMapped(nsMappedAttributeElement* aContent,
                                nsHTMLStyleSheet* aSheet,
-                               bool aWillAddAttr,
+                               PRBool aWillAddAttr,
                                nsMappedAttributes** aModifiable);
   nsresult MakeMappedUnique(nsMappedAttributes* aAttributes);
 
@@ -184,8 +184,8 @@ private:
       (aChildCount << ATTRCHILD_ARRAY_ATTR_SLOTS_BITS);
   }
 
-  bool GrowBy(PRUint32 aGrowSize);
-  bool AddAttrSlot();
+  PRBool GrowBy(PRUint32 aGrowSize);
+  PRBool AddAttrSlot();
 
   /**
    * Set *aPos to aChild and update sibling pointers as needed.  aIndex is the

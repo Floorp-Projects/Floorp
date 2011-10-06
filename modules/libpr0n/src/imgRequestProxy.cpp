@@ -185,7 +185,7 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   }
 
   // Were we decoded before?
-  bool wasDecoded = false;
+  PRBool wasDecoded = PR_FALSE;
   if (mImage &&
       (mImage->GetStatusTracker().GetImageStatus() &
        imgIRequest::STATUS_FRAME_COMPLETE)) {
@@ -224,7 +224,7 @@ void imgRequestProxy::AddToLoadGroup()
   }
 }
 
-void imgRequestProxy::RemoveFromLoadGroup(bool releaseLoadGroup)
+void imgRequestProxy::RemoveFromLoadGroup(PRBool releaseLoadGroup)
 {
   if (!mIsInLoadGroup)
     return;
@@ -260,7 +260,7 @@ NS_IMETHODIMP imgRequestProxy::GetName(nsACString &aName)
 }
 
 /* boolean isPending (); */
-NS_IMETHODIMP imgRequestProxy::IsPending(bool *_retval)
+NS_IMETHODIMP imgRequestProxy::IsPending(PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -307,7 +307,7 @@ NS_IMETHODIMP imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
   mCanceled = PR_TRUE;
 
   // Now cheat and make sure our removal from loadgroup happens async
-  bool oldIsInLoadGroup = mIsInLoadGroup;
+  PRBool oldIsInLoadGroup = mIsInLoadGroup;
   mIsInLoadGroup = PR_FALSE;
 
   // Passing false to aNotify means that mListener will still get
@@ -587,7 +587,7 @@ NS_IMETHODIMP imgRequestProxy::GetSecurityInfo(nsISupports** _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(bool* hasData)
+NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(PRBool* hasData)
 {
   if (mOwner) {
     *hasData = mOwner->HasTransferredData();
@@ -648,7 +648,7 @@ void imgRequestProxy::OnStartFrame(PRUint32 frame)
   }
 }
 
-void imgRequestProxy::OnDataAvailable(bool aCurrentFrame, const nsIntRect * rect)
+void imgRequestProxy::OnDataAvailable(PRBool aCurrentFrame, const nsIntRect * rect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnDataAvailable");
 
@@ -720,7 +720,7 @@ void imgRequestProxy::OnStartRequest()
   }
 }
 
-void imgRequestProxy::OnStopRequest(bool lastPart)
+void imgRequestProxy::OnStopRequest(PRBool lastPart)
 {
 #ifdef PR_LOGGING
   nsCAutoString name;
@@ -784,7 +784,7 @@ imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
 {
   *aReturn = nsnull;
 
-  bool animated;
+  PRBool animated;
   if (!mImage || (NS_SUCCEEDED(mImage->GetAnimated(&animated)) && !animated)) {
     // Early exit - we're not animated, so we don't have to do anything.
     NS_ADDREF(*aReturn = this);

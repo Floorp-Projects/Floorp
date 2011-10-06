@@ -66,13 +66,13 @@ protected:
   virtual nsresult Match()=0;
 
   nsresult MatchNonNegativeNumber(float* aX);
-  bool IsTokenNonNegativeNumberStarter();
+  PRBool IsTokenNonNegativeNumberStarter();
   
   nsresult MatchNumber(float* x);
-  bool IsTokenNumberStarter();
+  PRBool IsTokenNumberStarter();
   
   nsresult MatchCommaWsp();
-  bool IsTokenCommaWspStarter();
+  PRBool IsTokenCommaWspStarter();
   
   nsresult MatchIntegerConst();
   
@@ -81,13 +81,13 @@ protected:
   nsresult MatchFractConst();
   
   nsresult MatchExponent();
-  bool IsTokenExponentStarter();
+  PRBool IsTokenExponentStarter();
   
   nsresult MatchDigitSeq();
-  bool IsTokenDigitSeqStarter();
+  PRBool IsTokenDigitSeqStarter();
   
   nsresult MatchWsp();
-  bool IsTokenWspStarter();
+  PRBool IsTokenWspStarter();
 
   nsresult MatchLeftParen();
   nsresult MatchRightParen();

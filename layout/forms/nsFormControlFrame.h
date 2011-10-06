@@ -57,7 +57,7 @@ public:
     */
   nsFormControlFrame(nsStyleContext*);
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsLeafFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
@@ -89,7 +89,7 @@ public:
 
   // new behavior
 
-  virtual void SetFocus(bool aOn = true, bool aRepaint = false);
+  virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
 
   // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
@@ -97,7 +97,7 @@ public:
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
   
   // AccessKey Helper function
-  static nsresult RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg);
+  static nsresult RegUnRegAccessKey(nsIFrame * aFrame, PRBool aDoReg);
 
   /**
    * Returns the usable screen rect in app units, eg the rect where we can
@@ -123,7 +123,7 @@ protected:
     * PR_FALSE if the checked attribute has been removed
     */
 
-  void GetCurrentCheckState(bool* aState);
+  void GetCurrentCheckState(PRBool* aState);
 };
 
 #endif

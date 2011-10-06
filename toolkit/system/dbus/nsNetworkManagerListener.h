@@ -58,7 +58,7 @@ public:
 
   virtual void RegisterWithConnection(DBusConnection* connection);
   virtual void UnregisterWithConnection(DBusConnection* connection);
-  virtual bool HandleMessage(DBusMessage* msg);
+  virtual PRBool HandleMessage(DBusMessage* msg);
 
   /**
    * This gets called when NetworkManager sends us a StateChange signal,
@@ -71,10 +71,10 @@ private:
   void NotifyNetworkStatusObservers();
 
   nsCOMPtr<nsDBusService> mDBUS;
-  bool                    mLinkUp;
-  bool                    mNetworkManagerActive;
-  bool                    mOK;
-  bool                    mManageIOService;
+  PRPackedBool            mLinkUp;
+  PRPackedBool            mNetworkManagerActive;
+  PRPackedBool            mOK;
+  PRPackedBool            mManageIOService;
 };
 
 #endif /*NSNETWORKMANAGERLISTENER_H_*/

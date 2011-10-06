@@ -67,11 +67,11 @@ class nsXBLService : public nsIXBLService,
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.  aOriginPrincipal must not be null here.
   NS_IMETHOD LoadBindings(nsIContent* aContent, nsIURI* aURL,
-                          nsIPrincipal* aOriginPrincipal, bool aAugmentFlag,
-                          nsXBLBinding** aBinding, bool* aResolveStyle);
+                          nsIPrincipal* aOriginPrincipal, PRBool aAugmentFlag,
+                          nsXBLBinding** aBinding, PRBool* aResolveStyle);
 
   // Indicates whether or not a binding is fully loaded.
-  NS_IMETHOD BindingReady(nsIContent* aBoundElement, nsIURI* aURI, bool* aIsReady);
+  NS_IMETHOD BindingReady(nsIContent* aBoundElement, nsIURI* aURI, PRBool* aIsReady);
 
   // Gets the object's base class type.
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
@@ -83,7 +83,7 @@ class nsXBLService : public nsIXBLService,
                                      nsIDocument* aBoundDocument,
                                      nsIURI* aBindingURI,
                                      nsIPrincipal* aOriginPrincipal,
-                                     bool aForceSyncLoad,
+                                     PRBool aForceSyncLoad,
                                      nsXBLDocumentInfo** aResult);
 
   // Used by XUL key bindings and for window XBL.
@@ -106,14 +106,14 @@ protected:
   // This method synchronously loads and parses an XBL file.
   nsresult FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
                                 nsIURI* aDocumentURI, nsIURI* aBindingURI, 
-                                bool aForceSyncLoad, nsIDocument** aResult);
+                                PRBool aForceSyncLoad, nsIDocument** aResult);
 
   /**
    * This method calls the one below with an empty |aDontExtendURIs| array.
    */
   nsresult GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
-                      bool aPeekFlag, nsIPrincipal* aOriginPrincipal,
-                      bool* aIsReady, nsXBLBinding** aResult);
+                      PRBool aPeekFlag, nsIPrincipal* aOriginPrincipal,
+                      PRBool* aIsReady, nsXBLBinding** aResult);
 
   /**
    * This method loads a binding doc and then builds the specific binding
@@ -133,22 +133,22 @@ protected:
    *       enough to funnel all security checks through that function.
    */
   nsresult GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
-                      bool aPeekFlag, nsIPrincipal* aOriginPrincipal,
-                      bool* aIsReady, nsXBLBinding** aResult,
+                      PRBool aPeekFlag, nsIPrincipal* aOriginPrincipal,
+                      PRBool* aIsReady, nsXBLBinding** aResult,
                       nsTArray<nsIURI*>& aDontExtendURIs);
 
 // MEMBER VARIABLES
 public:
   static PRUint32 gRefCnt;                   // A count of XBLservice instances.
 
-  static bool gDisableChromeCache;
+  static PRBool gDisableChromeCache;
 
   static nsHashtable* gClassTable;           // A table of nsXBLJSClass objects.
 
   static JSCList  gClassLRUList;             // LRU list of cached classes.
   static PRUint32 gClassLRUListLength;       // Number of classes on LRU list.
   static PRUint32 gClassLRUListQuota;        // Quota on class LRU list.
-  static bool     gAllowDataURIs;            // Whether we should allow data
+  static PRBool   gAllowDataURIs;            // Whether we should allow data
                                              // urls in -moz-binding. Needed for
                                              // testing.
 

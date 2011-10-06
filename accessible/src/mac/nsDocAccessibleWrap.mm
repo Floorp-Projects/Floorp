@@ -50,7 +50,7 @@ nsDocAccessibleWrap::~nsDocAccessibleWrap()
 {
 }
 
-bool
+PRBool
 nsDocAccessibleWrap::Init () 
 {
   if (!nsDocAccessible::Init())

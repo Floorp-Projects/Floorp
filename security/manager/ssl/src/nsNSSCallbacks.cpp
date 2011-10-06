@@ -96,7 +96,7 @@ public:
   nsNSSHttpRequestSession *mRequestSession;
   
   nsCOMPtr<nsHTTPListener> mListener;
-  bool mResponsibleForDoneSignal;
+  PRBool mResponsibleForDoneSignal;
 };
 
 nsHTTPDownloadEvent::nsHTTPDownloadEvent()
@@ -291,7 +291,7 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
 
   const int max_retries = 2;
   int retry_count = 0;
-  bool retryable_error = false;
+  PRBool retryable_error = PR_FALSE;
   SECStatus result_sec_status = SECFailure;
 
   do
@@ -351,7 +351,7 @@ nsNSSHttpRequestSession::Release()
 }
 
 SECStatus
-nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
+nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
                                                        PRPollDesc **pPollDesc,
                                                        PRUint16 *http_response_code,
                                                        const char **http_response_content_type,
@@ -378,7 +378,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
 
   Mutex& waitLock = mListener->mLock;
   CondVar& waitCondition = mListener->mCondition;
-  volatile bool &waitFlag = mListener->mWaitFlag;
+  volatile PRBool &waitFlag = mListener->mWaitFlag;
   waitFlag = PR_TRUE;
 
   nsRefPtr<nsHTTPDownloadEvent> event = new nsHTTPDownloadEvent;
@@ -396,7 +396,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
     return SECFailure;
   }
 
-  bool request_canceled = false;
+  PRBool request_canceled = PR_FALSE;
 
   {
     MutexAutoLock locker(waitLock);
@@ -404,7 +404,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
     const PRIntervalTime start_time = PR_IntervalNow();
     PRIntervalTime wait_interval;
 
-    bool running_on_main_thread = NS_IsMainThread();
+    PRBool running_on_main_thread = NS_IsMainThread();
     if (running_on_main_thread)
     {
       // let's process events quickly
@@ -438,8 +438,8 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
 
       if (!request_canceled)
       {
-        bool wantExit = nsSSLThread::stoppedOrStopping();
-        bool timeout = 
+        PRBool wantExit = nsSSLThread::stoppedOrStopping();
+        PRBool timeout = 
           (PRIntervalTime)(PR_IntervalNow() - start_time) > mTimeoutInterval;
 
         if (wantExit || timeout)
@@ -580,7 +580,7 @@ nsHTTPListener::~nsHTTPListener()
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTTPListener, nsIStreamLoaderObserver)
 
 void
-nsHTTPListener::FreeLoadGroup(bool aCancelLoad)
+nsHTTPListener::FreeLoadGroup(PRBool aCancelLoad)
 {
   nsILoadGroup *lg = nsnull;
 
@@ -730,7 +730,7 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   PRUnichar *password = nsnull;
-  bool value = false;
+  PRBool value = PR_FALSE;
   nsIInterfaceRequestor *ir = static_cast<nsIInterfaceRequestor*>(arg);
   nsCOMPtr<nsIPrompt> proxyPrompt;
 
@@ -810,8 +810,8 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
     }
     else {
       // Although the exact value is ignored, we must not pass invalid
-      // bool values through XPConnect.
-      bool checkState = false;
+      // PRBool values through XPConnect.
+      PRBool checkState = PR_FALSE;
       rv = proxyPrompt->PromptPassword(nsnull, promptString.get(),
                                        &password, nsnull, &checkState, &value);
     }
@@ -854,7 +854,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   if (SSL_HandshakeNegotiatedExtension(fd, ssl_renegotiation_info_xtn, &siteSupportsSafeRenego) != SECSuccess
       || !siteSupportsSafeRenego) {
 
-    bool wantWarning = (nsSSLIOLayerHelpers::getWarnLevelMissingRFC5746() > 0);
+    PRBool wantWarning = (nsSSLIOLayerHelpers::getWarnLevelMissingRFC5746() > 0);
 
     nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
     nsCOMPtr<nsIConsoleService> console;
@@ -923,7 +923,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       nsCOMPtr<nsIX509Cert> prevcert;
       infoObject->GetPreviousCert(getter_AddRefs(prevcert));
 
-      bool equals_previous = false;
+      PRBool equals_previous = PR_FALSE;
       if (prevcert && nssc) {
         nsresult rv = nssc->Equals(prevcert, &equals_previous);
         if (NS_FAILED(rv)) {
@@ -964,7 +964,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
 }
 
 SECStatus
-PSM_SSL_PKIX_AuthCertificate(PRFileDesc *fd, CERTCertificate *peerCert, bool checksig, bool isServer)
+PSM_SSL_PKIX_AuthCertificate(PRFileDesc *fd, CERTCertificate *peerCert, PRBool checksig, PRBool isServer)
 {
     SECStatus          rv;
     SECCertUsage       certUsage;
@@ -1079,7 +1079,7 @@ PRErrorCode
 PSM_SSL_BlacklistDigiNotar(CERTCertificate * serverCert,
                            CERTCertList * serverCertChain)
 {
-  bool isDigiNotarIssuedCert = false;
+  PRBool isDigiNotarIssuedCert = PR_FALSE;
 
   for (CERTCertListNode *node = CERT_LIST_HEAD(serverCertChain);
        !CERT_LIST_END(node, serverCertChain);
@@ -1190,7 +1190,7 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
 
     if (rv == SECSuccess) {
       if (nsc) {
-        bool dummyIsEV;
+        PRBool dummyIsEV;
         nsc->GetIsExtendedValidation(&dummyIsEV); // the nsc object will cache the status
       }
     

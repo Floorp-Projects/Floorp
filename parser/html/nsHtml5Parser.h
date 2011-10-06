@@ -157,12 +157,12 @@ class nsHtml5Parser : public nsIParser,
     /**
      * Query whether the parser is enabled (i.e. not blocked) or not.
      */
-    NS_IMETHOD_(bool) IsParserEnabled();
+    NS_IMETHOD_(PRBool) IsParserEnabled();
 
     /**
      * Query whether the parser thinks it's done with parsing.
      */
-    NS_IMETHOD_(bool) IsComplete();
+    NS_IMETHOD_(PRBool) IsComplete();
 
     /**
      * Set up request observer.
@@ -189,7 +189,7 @@ class nsHtml5Parser : public nsIParser,
     NS_IMETHOD Parse(const nsAString& aSourceBuffer,
                      void* aKey,
                      const nsACString& aContentType,
-                     bool aLastCall,
+                     PRBool aLastCall,
                      nsDTDMode aMode = eDTDMode_autodetect);
 
     /**
@@ -226,12 +226,12 @@ class nsHtml5Parser : public nsIParser,
     /**
      * True in fragment mode and during synchronous document.write
      */
-    virtual bool CanInterrupt();
+    virtual PRBool CanInterrupt();
 
     /**
      * True if the insertion point (per HTML5) is defined.
      */
-    virtual bool IsInsertionPointDefined();
+    virtual PRBool IsInsertionPointDefined();
 
     /**
      * Call immediately before starting to evaluate a parser-inserted script.
@@ -252,7 +252,7 @@ class nsHtml5Parser : public nsIParser,
     /**
      * True if this is a script-created HTML5 parser.
      */
-    virtual bool IsScriptCreated();
+    virtual PRBool IsScriptCreated();
 
     /* End nsIParser  */
 
@@ -272,8 +272,8 @@ class nsHtml5Parser : public nsIParser,
                                 nsIContent* aTargetNode,
                                 nsIAtom* aContextLocalName,
                                 PRInt32 aContextNamespace,
-                                bool aQuirks,
-                                bool aPreventScriptExecution);
+                                PRBool aQuirks,
+                                PRBool aPreventScriptExecution);
 
     // Not from an external interface
     // Non-inherited methods
@@ -301,7 +301,7 @@ class nsHtml5Parser : public nsIParser,
       }
     }
     
-    void StartTokenizer(bool aScriptingEnabled);
+    void StartTokenizer(PRBool aScriptingEnabled);
     
     void ContinueAfterFailedCharsetSwitch();
 
@@ -321,28 +321,28 @@ class nsHtml5Parser : public nsIParser,
     /**
      * Whether the last character tokenized was a carriage return (for CRLF)
      */
-    bool                          mLastWasCR;
+    PRBool                        mLastWasCR;
 
     /**
      * Whether the last character tokenized was a carriage return (for CRLF)
      * when preparsing document.write.
      */
-    bool                          mDocWriteSpeculativeLastWasCR;
+    PRBool                        mDocWriteSpeculativeLastWasCR;
 
     /**
      * The parser is in the fragment mode
      */
-    bool                          mFragmentMode;
+    PRBool                        mFragmentMode;
 
     /**
      * The parser is blocking on a script
      */
-    bool                          mBlocked;
+    PRBool                        mBlocked;
 
     /**
      * Whether the document.write() speculator is already active.
      */
-    bool                          mDocWriteSpeculatorActive;
+    PRBool                        mDocWriteSpeculatorActive;
     
     /**
      * The number of parser-inserted script currently being evaluated.
@@ -352,7 +352,7 @@ class nsHtml5Parser : public nsIParser,
     /**
      * True if document.close() has been called.
      */
-    bool                          mDocumentClosed;
+    PRBool                        mDocumentClosed;
 
     // Gecko integration
     void*                         mRootContextKey;
@@ -407,7 +407,7 @@ class nsHtml5Parser : public nsIParser,
     /**
      * Whether it's OK to transfer parsing back to the stream parser
      */
-    bool                                mReturnToStreamParserPermitted;
+    PRBool                              mReturnToStreamParserPermitted;
 
     /**
      * The scoped atom table

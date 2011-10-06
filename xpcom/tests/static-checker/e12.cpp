@@ -1,10 +1,10 @@
-typedef int bool;
+typedef int PRBool;
 typedef int PRUint32;
 typedef int PRInt32;
 
 typedef PRUint32 nsresult;
 typedef short PRUnichar;
 
-bool bar(int *p __attribute__((user("NS_outparam")))) {
+PRBool bar(int *p __attribute__((user("NS_outparam")))) {
   return 1;
 }

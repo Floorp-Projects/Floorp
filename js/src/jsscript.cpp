@@ -74,7 +74,6 @@
 #include "vm/Debugger.h"
 
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
@@ -336,6 +335,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
     JSScript *oldscript;
     JSBool ok;
+    jsbytecode *code;
     uint32 length, lineno, nslots;
     uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nconsts, i;
     uint32 prologLength, version, encodedClosedCount;
@@ -385,7 +385,14 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
     Bindings bindings(cx);
     uint32 nameCount = nargs + nvars + nupvars;
     if (nameCount > 0) {
-        LifoAllocScope las(&cx->tempLifoAlloc());
+        struct AutoMark {
+          JSArenaPool * const pool;
+          void * const mark;
+          AutoMark(JSArenaPool *pool) : pool(pool), mark(JS_ARENA_MARK(pool)) { }
+          ~AutoMark() {
+            JS_ARENA_RELEASE(pool, mark);
+          }
+        } automark(&cx->tempPool);
 
         /*
          * To xdr the names we prefix the names with a bitmap descriptor and
@@ -396,7 +403,9 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
          * name is declared as const, not as ordinary var.
          * */
         uintN bitmapLength = JS_HOWMANY(nameCount, JS_BITS_PER_UINT32);
-        uint32 *bitmap = cx->tempLifoAlloc().newArray<uint32>(bitmapLength);
+        uint32 *bitmap;
+        JS_ARENA_ALLOCATE_CAST(bitmap, uint32 *, &cx->tempPool,
+                               bitmapLength * sizeof *bitmap);
         if (!bitmap) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -576,13 +585,18 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
      * DECODE case to destroy script.
      */
     oldscript = xdr->script;
-
-    AutoScriptUntrapper untrapper;
-    if (xdr->mode == JSXDR_ENCODE && !untrapper.untrap(cx, script))
-        goto error;
+    code = script->code;
+    if (xdr->mode == JSXDR_ENCODE) {
+        code = js_UntrapScriptCode(cx, script);
+        if (!code)
+            goto error;
+    }
 
     xdr->script = script;
-    ok = JS_XDRBytes(xdr, (char *)script->code, length * sizeof(jsbytecode));
+    ok = JS_XDRBytes(xdr, (char *) code, length * sizeof(jsbytecode));
+
+    if (code != script->code)
+        cx->free_(code);
 
     if (!ok)
         goto error;
@@ -765,7 +779,7 @@ script_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-JS_FRIEND_DATA(Class) js::ScriptClass = {
+Class js::ScriptClass = {
     "Script",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),

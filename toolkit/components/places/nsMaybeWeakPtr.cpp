@@ -64,7 +64,7 @@ nsMaybeWeakPtr_base::GetValueAs(const nsIID &iid) const
 nsresult
 NS_AppendWeakElementBase(isupports_array_type *aArray,
                          nsISupports *aElement,
-                         bool aOwnsWeak)
+                         PRBool aOwnsWeak)
 {
   nsCOMPtr<nsISupports> ref;
   if (aOwnsWeak) {

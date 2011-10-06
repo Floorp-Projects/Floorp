@@ -86,6 +86,7 @@ public:
   virtual PRUint64 NativeState();
   virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                      EWhichChildAtPoint aWhichChild);
+  virtual nsAccessible* FocusedChild();
 
   virtual nsAccessible* GetChildAt(PRUint32 aIndex);
   virtual PRInt32 GetChildCount();
@@ -100,14 +101,6 @@ public:
   virtual bool RemoveItemFromSelection(PRUint32 aIndex);
   virtual bool SelectAll();
   virtual bool UnselectAll();
-
-  // Widgets
-  virtual bool IsWidget() const;
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
-  virtual nsAccessible* CurrentItem();
-
-  virtual nsAccessible* ContainerWidget() const;
 
   // nsXULTreeAccessible
 
@@ -192,7 +185,7 @@ public:
   NS_IMETHOD GetBounds(PRInt32 *aX, PRInt32 *aY,
                        PRInt32 *aWidth, PRInt32 *aHeight);
 
-  NS_IMETHOD SetSelected(bool aSelect); 
+  NS_IMETHOD SetSelected(PRBool aSelect); 
   NS_IMETHOD TakeFocus();
 
   NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel,
@@ -215,9 +208,6 @@ public:
 
   // ActionAccessible
   virtual PRUint8 ActionCount();
-
-  // Widgets
-  virtual nsAccessible* ContainerWidget() const;
 
   // nsXULTreeItemAccessibleBase
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULTREEITEMBASEACCESSIBLE_IMPL_CID)
@@ -252,7 +242,7 @@ protected:
   /**
    * Return true if the tree item accessible is expandable (contains subrows).
    */
-  bool IsExpandable();
+  PRBool IsExpandable();
 
   /**
    * Return name for cell at the given column.
@@ -287,7 +277,7 @@ public:
 
   // nsAccessNode
   virtual bool IsDefunct() const;
-  virtual bool Init();
+  virtual PRBool Init();
   virtual void Shutdown();
 
   // nsAccessible

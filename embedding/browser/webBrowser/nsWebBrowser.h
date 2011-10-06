@@ -83,7 +83,7 @@ public:
    PRInt32                 y;
    PRInt32                 cx;
    PRInt32                 cy;
-   bool                    visible;
+   PRBool                  visible;
    nsCOMPtr<nsISHistory>   sessionHistory;
    nsString                name;
 };
@@ -91,7 +91,7 @@ public:
 class nsWebBrowserListenerState
 {
 public:
-    bool Equals(nsIWeakReference *aListener, const nsIID& aID) {
+    PRBool Equals(nsIWeakReference *aListener, const nsIID& aID) {
         if (mWeakPtr.get() == aListener && mID.Equals(aID)) return PR_TRUE;
         return PR_FALSE;
     }
@@ -150,7 +150,7 @@ protected:
     NS_IMETHOD GetPrimaryContentWindow(nsIDOMWindow **aDomWindow);
     NS_IMETHOD BindListener(nsISupports *aListener, const nsIID& aIID);
     NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
-    NS_IMETHOD EnableGlobalHistory(bool aEnable);
+    NS_IMETHOD EnableGlobalHistory(PRBool aEnable);
 
     static nsEventStatus HandleEvent(nsGUIEvent *aEvent);
 
@@ -167,9 +167,9 @@ protected:
    nsCOMPtr<nsIWindowWatcher> mWWatch;
    nsWebBrowserInitInfo*      mInitInfo;
    PRUint32                   mContentType;
-   bool                       mActivating;
-   bool                       mShouldEnableHistory;
-   bool                       mIsActive;
+   PRPackedBool               mActivating;
+   PRPackedBool               mShouldEnableHistory;
+   PRPackedBool               mIsActive;
    nativeWindow               mParentNativeWindow;
    nsIWebProgressListener    *mProgressListener;
    nsCOMPtr<nsIWebProgress>      mWebProgress;

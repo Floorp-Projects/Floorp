@@ -145,7 +145,7 @@ public:
   const nsIntSize& GetSize() { return mSize; }
   nsIntRect GetRect() { return nsIntRect(nsIntPoint(0, 0), mSize); }
 
-  bool IsBackgroundKnown()
+  PRBool IsBackgroundKnown()
   {
     return mBackgroundLayer || mBackgroundColor.a == 1.0;
   }

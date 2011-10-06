@@ -152,7 +152,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl,
                                       PRInt32 aInitialWidth,
                                       PRInt32 aInitialHeight,
-                                      bool aIsHiddenWindow,
+                                      PRBool aIsHiddenWindow,
                                       nsWidgetInitData& widgetInitData)
 {
   nsresult rv;
@@ -735,7 +735,7 @@ void nsWebShellWindow::LoadContentAreas() {
  * ExecuteCloseHandler - Run the close handler, if any.
  * @return PR_TRUE iff we found a close handler to run.
  */
-bool nsWebShellWindow::ExecuteCloseHandler()
+PRBool nsWebShellWindow::ExecuteCloseHandler()
 {
   /* If the event handler closes this window -- a likely scenario --
      things get deleted out of order without this death grip.

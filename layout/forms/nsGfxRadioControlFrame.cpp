@@ -113,7 +113,7 @@ nsGfxRadioControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (IsThemed())
     return NS_OK; // The theme will paint the check, if any.
 
-  bool checked = true;
+  PRBool checked = PR_TRUE;
   GetCurrentCheckState(&checked); // Get check state from the content model
   if (!checked)
     return NS_OK;

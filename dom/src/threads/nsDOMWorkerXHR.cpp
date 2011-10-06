@@ -283,7 +283,7 @@ NS_IMPL_THREADSAFE_DOM_CI_GETINTERFACES(nsDOMWorkerXHRUpload)
 NS_IMETHODIMP
 nsDOMWorkerXHRUpload::RemoveEventListener(const nsAString& aType,
                                           nsIDOMEventListener* aListener,
-                                          bool aUseCapture)
+                                          PRBool aUseCapture)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ENSURE_ARG_POINTER(aListener);
@@ -298,7 +298,7 @@ nsDOMWorkerXHRUpload::RemoveEventListener(const nsAString& aType,
 
 NS_IMETHODIMP
 nsDOMWorkerXHRUpload::DispatchEvent(nsIDOMEvent* aEvent,
-                                    bool* _retval)
+                                    PRBool* _retval)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ENSURE_ARG_POINTER(aEvent);
@@ -313,8 +313,8 @@ nsDOMWorkerXHRUpload::DispatchEvent(nsIDOMEvent* aEvent,
 NS_IMETHODIMP
 nsDOMWorkerXHRUpload::AddEventListener(const nsAString& aType,
                                        nsIDOMEventListener* aListener,
-                                       bool aUseCapture,
-                                       bool aWantsUntrusted,
+                                       PRBool aUseCapture,
+                                       PRBool aWantsUntrusted,
                                        PRUint8 optional_argc)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
@@ -630,7 +630,7 @@ nsDOMWorkerXHR::GetResponseHeader(const nsACString& aHeader,
 
 NS_IMETHODIMP
 nsDOMWorkerXHR::Open(const nsACString& aMethod, const nsACString& aUrl,
-                     bool aAsync, const nsAString& aUser,
+                     PRBool aAsync, const nsAString& aUser,
                      const nsAString& aPassword, PRUint8 optional_argc)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
@@ -740,7 +740,7 @@ nsDOMWorkerXHR::OverrideMimeType(const nsACString& aMimetype)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerXHR::GetMultipart(bool* aMultipart)
+nsDOMWorkerXHR::GetMultipart(PRBool* aMultipart)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -757,7 +757,7 @@ nsDOMWorkerXHR::GetMultipart(bool* aMultipart)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerXHR::SetMultipart(bool aMultipart)
+nsDOMWorkerXHR::SetMultipart(PRBool aMultipart)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -772,7 +772,7 @@ nsDOMWorkerXHR::SetMultipart(bool aMultipart)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerXHR::GetMozBackgroundRequest(bool* aMozBackgroundRequest)
+nsDOMWorkerXHR::GetMozBackgroundRequest(PRBool* aMozBackgroundRequest)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -787,7 +787,7 @@ nsDOMWorkerXHR::GetMozBackgroundRequest(bool* aMozBackgroundRequest)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerXHR::SetMozBackgroundRequest(bool aMozBackgroundRequest)
+nsDOMWorkerXHR::SetMozBackgroundRequest(PRBool aMozBackgroundRequest)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -859,7 +859,7 @@ nsDOMWorkerXHR::SetOnreadystatechange(nsIDOMEventListener* aOnreadystatechange)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerXHR::GetWithCredentials(bool* aWithCredentials)
+nsDOMWorkerXHR::GetWithCredentials(PRBool* aWithCredentials)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -876,7 +876,7 @@ nsDOMWorkerXHR::GetWithCredentials(bool* aWithCredentials)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerXHR::SetWithCredentials(bool aWithCredentials)
+nsDOMWorkerXHR::SetWithCredentials(PRBool aWithCredentials)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 

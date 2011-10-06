@@ -458,7 +458,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
   return NS_OK;
 }
 
-bool
+PRBool
 nsXULCommandDispatcher::Matches(const nsString& aList, 
                                 const nsAString& aElement)
 {
@@ -505,14 +505,14 @@ nsXULCommandDispatcher::GetControllerForCommand(const char *aCommand, nsIControl
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::GetSuppressFocusScroll(bool* aSuppressFocusScroll)
+nsXULCommandDispatcher::GetSuppressFocusScroll(PRBool* aSuppressFocusScroll)
 {
   *aSuppressFocusScroll = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::SetSuppressFocusScroll(bool aSuppressFocusScroll)
+nsXULCommandDispatcher::SetSuppressFocusScroll(PRBool aSuppressFocusScroll)
 {
   return NS_OK;
 }

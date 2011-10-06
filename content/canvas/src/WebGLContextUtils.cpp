@@ -106,7 +106,7 @@ WebGLContext::LogMessageIfVerbose(const char *fmt, ...)
 void
 WebGLContext::LogMessageIfVerbose(const char *fmt, va_list ap)
 {
-    static bool firstTime = true;
+    static PRBool firstTime = PR_TRUE;
 
     if (mVerbose)
         LogMessage(fmt, ap);

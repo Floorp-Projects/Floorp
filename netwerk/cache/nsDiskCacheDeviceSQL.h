@@ -110,7 +110,7 @@ public:
   virtual nsresult        Shutdown();
 
   virtual const char *    GetDeviceID(void);
-  virtual nsCacheEntry *  FindEntry(nsCString * key, bool *collision);
+  virtual nsCacheEntry *  FindEntry(nsCString * key, PRBool *collision);
   virtual nsresult        DeactivateEntry(nsCacheEntry * entry);
   virtual nsresult        BindEntry(nsCacheEntry * entry);
   virtual void            DoomEntry( nsCacheEntry * entry );
@@ -164,7 +164,7 @@ public:
                                      const nsACString &       ownerDomain,
                                      const nsACString &       ownerURI,
                                      const nsACString &       key,
-                                     bool *                 isOwned);
+                                     PRBool *                 isOwned);
 
   nsresult                ClearKeysOwnedByDomain(const char *clientID,
                                                  const nsACString &ownerDomain);
@@ -172,7 +172,7 @@ public:
 
   nsresult                ActivateCache(const nsCSubstring &group,
                                         const nsCSubstring &clientID);
-  bool                    IsActiveCache(const nsCSubstring &group,
+  PRBool                  IsActiveCache(const nsCSubstring &group,
                                         const nsCSubstring &clientID);
   nsresult                GetGroupForCache(const nsCSubstring &clientID,
                                            nsCString &out);
@@ -196,19 +196,19 @@ private:
                                                   nsIWeakReference *weakRef,
                                                   void *ctx);
 
-  static bool GetStrictFileOriginPolicy();
+  static PRBool GetStrictFileOriginPolicy();
 
-  bool     Initialized() { return mDB != nsnull; }
+  PRBool   Initialized() { return mDB != nsnull; }
 
   nsresult InitActiveCaches();
   nsresult UpdateEntry(nsCacheEntry *entry);
   nsresult UpdateEntrySize(nsCacheEntry *entry, PRUint32 newSize);
-  nsresult DeleteEntry(nsCacheEntry *entry, bool deleteData);
+  nsresult DeleteEntry(nsCacheEntry *entry, PRBool deleteData);
   nsresult DeleteData(nsCacheEntry *entry);
   nsresult EnableEvictionObserver();
   nsresult DisableEvictionObserver();
 
-  bool CanUseCache(nsIURI *keyURI, const nsCString &clientID);
+  PRBool CanUseCache(nsIURI *keyURI, const nsCString &clientID);
 
   nsresult MarkEntry(const nsCString &clientID,
                      const nsACString &key,

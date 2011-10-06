@@ -455,14 +455,14 @@ void nsImageFromClipboard::CalcBitmask(PRUint32 aMask, PRUint8& aBegin, PRUint8&
 {
   // find the rightmost 1
   PRUint8 pos;
-  bool started = false;
+  PRBool started = PR_FALSE;
   aBegin = aLength = 0;
   for (pos = 0; pos <= 31; pos++) 
   {
     if (!started && (aMask & (1 << pos))) 
     {
       aBegin = pos;
-      started = true;
+      started = PR_TRUE;
     }
     else if (started && !(aMask & (1 << pos))) 
     {

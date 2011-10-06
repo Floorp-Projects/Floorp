@@ -215,7 +215,7 @@ public:
   //
   // This is handled in OpenContainer(), which commits previous text if
   // necessary.
-  bool mInDescription;
+  PRBool mInDescription;
 
   // contains the URL of the previous bookmark created. This is used so that
   // when we encounter a <dd>, we know what bookmark to associate the text with.
@@ -349,9 +349,9 @@ class BookmarkContentSink : public nsIHTMLContentSink
 public:
   BookmarkContentSink();
 
-  nsresult Init(bool aAllowRootChanges,
+  nsresult Init(PRBool aAllowRootChanges,
                 PRInt64 aFolder,
-                bool aIsImportDefaults);
+                PRBool aIsImportDefaults);
 
   NS_DECL_ISUPPORTS
 
@@ -368,7 +368,7 @@ public:
   NS_IMETHOD OpenHead() { return NS_OK; }
   NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
-  NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn)
+  NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn)
     { *aReturn = PR_TRUE; return NS_OK; }
   NS_IMETHOD DidProcessTokens() { return NS_OK; }
   NS_IMETHOD WillProcessAToken() { return NS_OK; }
@@ -380,7 +380,7 @@ public:
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) { return NS_OK; }
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode) { return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
+  NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
 
 protected:
   nsCOMPtr<nsINavBookmarksService> mBookmarksService;
@@ -394,19 +394,19 @@ protected:
   // the default places html file, and should be unset when doing
   // normal imports so that root folders will not get moved when
   // importing bookmarks.html files.
-  bool mAllowRootChanges;
+  PRBool mAllowRootChanges;
 
   // If set, this is an import of initial bookmarks.html content,
   // so we don't want to kick off HTTP traffic
   // and we want the imported personal toolbar folder
   // to be set as the personal toolbar folder. (If not set
   // we will treat it as a normal folder.)
-  bool mIsImportDefaults;
+  PRBool mIsImportDefaults;
 
   // If a folder was specified to import into, then ignore flags to put
   // bookmarks in the bookmarks menu or toolbar and keep them inside
   // the folder.
-  bool mFolderSpecified;
+  PRBool mFolderSpecified;
 
   void HandleContainerBegin(const nsIParserNode& node);
   void HandleContainerEnd();
@@ -457,9 +457,9 @@ BookmarkContentSink::BookmarkContentSink() : mFrames(16)
 
 
 nsresult
-BookmarkContentSink::Init(bool aAllowRootChanges,
+BookmarkContentSink::Init(PRBool aAllowRootChanges,
                           PRInt64 aFolder,
-                          bool aIsImportDefaults)
+                          PRBool aIsImportDefaults)
 {
   mBookmarksService = do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID);
   NS_ENSURE_TRUE(mBookmarksService, NS_ERROR_OUT_OF_MEMORY);
@@ -542,7 +542,7 @@ BookmarkContentSink::CloseContainer(const nsHTMLTag aTag)
       PRInt64 itemId = !frame.mPreviousLink ? frame.mContainerID
                                             : frame.mPreviousId;
                     
-      bool hasDescription = false;
+      PRBool hasDescription = PR_FALSE;
       nsresult rv = mAnnotationService->ItemHasAnnotation(itemId,
                                                           DESCRIPTION_ANNO,
                                                           &hasDescription);
@@ -1104,7 +1104,7 @@ BookmarkContentSink::NewFrame()
   BookmarkImportFrame& frame = CurFrame();
   frame.ConsumeHeading(&containerName, &containerType);
 
-  bool updateFolder = false;
+  PRBool updateFolder = PR_FALSE;
   
   switch (containerType) {
     case BookmarkImportFrame::Container_Normal:
@@ -1645,7 +1645,7 @@ nsresult
 nsPlacesImportExportService::WriteDescription(PRInt64 aItemId, PRInt32 aType,
                                               nsIOutputStream* aOutput)
 {
-  bool hasDescription = false;
+  PRBool hasDescription = PR_FALSE;
   nsresult rv = mAnnotationService->ItemHasAnnotation(aItemId,
                                                       DESCRIPTION_ANNO,
                                                       &hasDescription);
@@ -1764,7 +1764,7 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
   }
 
   // post data
-  bool hasPostData;
+  PRBool hasPostData;
   rv = mAnnotationService->ItemHasAnnotation(itemId, POST_DATA_ANNO,
                                              &hasPostData);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1785,7 +1785,7 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
 
   // Write WEB_PANEL="true" if the load-in-sidebar annotation is set for the
   // item
-  bool loadInSidebar = false;
+  PRBool loadInSidebar = PR_FALSE;
   rv = mAnnotationService->ItemHasAnnotation(itemId, LOAD_IN_SIDEBAR_ANNO,
                                              &loadInSidebar);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2032,7 +2032,7 @@ nsPlacesImportExportService::WriteContainerContents(nsINavHistoryResultNode* aFo
       NS_ENSURE_SUCCESS(rv, rv);
 
       // it could be a regular folder or it could be a livemark
-      bool isLivemark;
+      PRBool isLivemark;
       rv = mLivemarkService->IsLivemark(childFolderId, &isLivemark);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2061,7 +2061,7 @@ nsPlacesImportExportService::WriteContainerContents(nsINavHistoryResultNode* aFo
 static void
 NotifyImportObservers(const char* aTopic,
                       PRInt64 aFolderId,
-                      bool aIsInitialImport)
+                      PRBool aIsInitialImport)
 {
   nsCOMPtr<nsIObserverService> obs =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
@@ -2090,7 +2090,7 @@ NotifyImportObservers(const char* aTopic,
 
 NS_IMETHODIMP
 nsPlacesImportExportService::ImportHTMLFromFile(nsILocalFile* aFile,
-                                                bool aIsInitialImport)
+                                                PRBool aIsInitialImport)
 {
   NotifyImportObservers(RESTORE_BEGIN_NSIOBSERVER_TOPIC, -1, aIsInitialImport);
 
@@ -2117,7 +2117,7 @@ nsPlacesImportExportService::ImportHTMLFromFile(nsILocalFile* aFile,
 
 NS_IMETHODIMP
 nsPlacesImportExportService::ImportHTMLFromURI(nsIURI* aURI,
-                                               bool aIsInitialImport)
+                                               PRBool aIsInitialImport)
 {
   NotifyImportObservers(RESTORE_BEGIN_NSIOBSERVER_TOPIC, -1, aIsInitialImport);
 
@@ -2145,7 +2145,7 @@ nsPlacesImportExportService::ImportHTMLFromURI(nsIURI* aURI,
 NS_IMETHODIMP
 nsPlacesImportExportService::ImportHTMLFromFileToFolder(nsILocalFile* aFile,
                                                         PRInt64 aFolderId,
-                                                        bool aIsInitialImport)
+                                                        PRBool aIsInitialImport)
 {
   NotifyImportObservers(RESTORE_BEGIN_NSIOBSERVER_TOPIC,
                         aFolderId,
@@ -2174,9 +2174,9 @@ nsPlacesImportExportService::ImportHTMLFromFileToFolder(nsILocalFile* aFile,
 
 nsresult
 nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
-                                                        bool aAllowRootChanges,
+                                                        PRBool aAllowRootChanges,
                                                         PRInt64 aFolder,
-                                                        bool aIsImportDefaults)
+                                                        PRBool aIsImportDefaults)
 {
   nsresult rv;
 
@@ -2190,7 +2190,7 @@ nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
 #endif
 
   // Confirm file to be imported exists.
-  bool exists;
+  PRBool exists;
   rv = file->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!exists) {
@@ -2208,9 +2208,9 @@ nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
 
 nsresult
 nsPlacesImportExportService::ImportHTMLFromURIInternal(nsIURI* aURI,
-                                                       bool aAllowRootChanges,
+                                                       PRBool aAllowRootChanges,
                                                        PRInt64 aFolder,
-                                                       bool aIsImportDefaults)
+                                                       PRBool aIsImportDefaults)
 {
   nsresult rv = EnsureServiceState();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2490,7 +2490,7 @@ nsPlacesImportExportService::BackupBookmarksFile()
   NS_ENSURE_STATE(bookmarksFile);
 
   // Create the file if it doesn't exist.
-  bool exists;
+  PRBool exists;
   rv = bookmarksFile->Exists(&exists);
   if (NS_FAILED(rv) || !exists) {
     rv = bookmarksFile->Create(nsIFile::NORMAL_FILE_TYPE, 0600);

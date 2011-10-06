@@ -113,7 +113,7 @@ nsHTMLLegendElement::GetFieldSet()
   return nsnull;
 }
 
-bool
+PRBool
 nsHTMLLegendElement::ParseAttribute(PRInt32 aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,
@@ -142,14 +142,14 @@ nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 nsresult
 nsHTMLLegendElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              nsIAtom* aPrefix, const nsAString& aValue,
-                             bool aNotify)
+                             PRBool aNotify)
 {
   return nsGenericHTMLElement::SetAttr(aNameSpaceID, aAttribute,
                                        aPrefix, aValue, aNotify);
 }
 nsresult
 nsHTMLLegendElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                               bool aNotify)
+                               PRBool aNotify)
 {
   return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
@@ -157,7 +157,7 @@ nsHTMLLegendElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 nsresult
 nsHTMLLegendElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
-                                bool aCompileEventHandlers)
+                                PRBool aCompileEventHandlers)
 {
   return nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                           aBindingParent,
@@ -165,7 +165,7 @@ nsHTMLLegendElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsHTMLLegendElement::UnbindFromTree(bool aDeep, bool aNullParent)
+nsHTMLLegendElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
@@ -193,8 +193,8 @@ nsHTMLLegendElement::Focus()
 }
 
 void
-nsHTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
-                                      bool aIsTrustedEvent)
+nsHTMLLegendElement::PerformAccesskey(PRBool aKeyCausesActivation,
+                                      PRBool aIsTrustedEvent)
 {
   // just use the same behaviour as the focus method
   Focus();

@@ -75,7 +75,7 @@ public:
     set(other);
     return *this;
   }
-  bool operator!() const {
+  PRBool operator!() const {
     return !mObject;
   }
   operator void *() const {

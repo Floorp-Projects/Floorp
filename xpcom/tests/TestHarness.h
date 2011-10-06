@@ -119,7 +119,7 @@ static const char* gCurrentProfile;
  * @return PR_TRUE if profiling was available and successfully started.
  * @see StopProfiling
  */
-inline bool
+inline PRBool
 StartProfiling(const char* profileName)
 {
     NS_ASSERTION(profileName, "need a name for this profile");
@@ -141,7 +141,7 @@ StartProfiling(const char* profileName)
  * @return PR_TRUE if profiling was successfully stopped.
  * @see StartProfiling
  */
-inline bool
+inline PRBool
 StopProfiling()
 {
     NS_PRECONDITION(gCurrentProfile, "tried to stop profile before starting one");
@@ -212,7 +212,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
       printf("Finished running %s tests.\n", mTestName);
     }
 
-    bool failed()
+    PRBool failed()
     {
       return mServMgr == NULL;
     }
@@ -220,8 +220,8 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
     already_AddRefed<nsIFile> GetProfileDirectory()
     {
       if (mProfD) {
-        nsCOMPtr<nsIFile> copy = mProfD;
-        return copy.forget();
+        NS_ADDREF(mProfD);
+        return mProfD.get();
       }
 
       // Create a unique temporary folder to use for this test.
@@ -243,7 +243,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
     ////////////////////////////////////////////////////////////////////////////
     //// nsIDirectoryServiceProvider
 
-    NS_IMETHODIMP GetFile(const char *aProperty, bool *_persistent,
+    NS_IMETHODIMP GetFile(const char *aProperty, PRBool *_persistent,
                           nsIFile **_result)
     {
       // If we were supplied a directory service provider, ask it first.

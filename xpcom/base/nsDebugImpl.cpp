@@ -146,7 +146,7 @@ nsDebugImpl::Abort(const char *aFile, PRInt32 aLine)
 }
 
 NS_IMETHODIMP
-nsDebugImpl::GetIsDebugBuild(bool* aResult)
+nsDebugImpl::GetIsDebugBuild(PRBool* aResult)
 {
 #ifdef DEBUG
   *aResult = PR_TRUE;
@@ -559,7 +559,7 @@ NS_ErrorAccordingToNSPR()
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef XP_WIN
-bool sXPCOMHasLoadedNewDLLs = false;
+PRBool sXPCOMHasLoadedNewDLLs = PR_FALSE;
 
 NS_EXPORT void
 NS_SetHasLoadedNewDLLs()

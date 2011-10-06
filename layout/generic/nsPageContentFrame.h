@@ -56,7 +56,8 @@ public:
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsContainingBlock() const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return ViewportFrame::IsFrameOfType(aFlags &
              ~(nsIFrame::eCanContainOverflowContainers));
@@ -71,7 +72,7 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             bool aShrinkWrap);
+                             PRBool aShrinkWrap);
 
   /**
    * Get the "type" of the frame

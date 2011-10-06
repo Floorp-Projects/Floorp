@@ -85,19 +85,19 @@ public:
               const char* const* aExtensions,
               PRInt32 aVariants,
               PRInt64 aLastModifiedTime = 0,
-              bool aCanUnload = true,
-              bool aArgsAreUTF8 = false);
+              PRBool aCanUnload = PR_TRUE,
+              PRBool aArgsAreUTF8 = PR_FALSE);
   ~nsPluginTag();
   
   void SetHost(nsPluginHost * aHost);
   void TryUnloadPlugin();
   void Mark(PRUint32 mask);
   void UnMark(PRUint32 mask);
-  bool HasFlag(PRUint32 flag);
+  PRBool HasFlag(PRUint32 flag);
   PRUint32 Flags();
-  bool Equals(nsPluginTag* aPluginTag);
-  bool IsEnabled();
-  void RegisterWithCategoryManager(bool aOverrideInternalTypes,
+  PRBool Equals(nsPluginTag* aPluginTag);
+  PRBool IsEnabled();
+  void RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
                                    nsRegisterType aType = ePluginRegister);
   
   nsRefPtr<nsPluginTag> mNext;
@@ -109,10 +109,10 @@ public:
   nsTArray<nsCString> mExtensions; // UTF-8
   PRLibrary     *mLibrary;
   nsRefPtr<nsNPAPIPlugin> mEntryPoint;
-  bool          mCanUnloadLibrary;
-  bool          mIsJavaPlugin;
-  bool          mIsNPRuntimeEnabledJavaPlugin;
-  bool          mIsFlashPlugin;
+  PRPackedBool  mCanUnloadLibrary;
+  PRPackedBool  mIsJavaPlugin;
+  PRPackedBool  mIsNPRuntimeEnabledJavaPlugin;
+  PRPackedBool  mIsFlashPlugin;
   nsCString     mFileName; // UTF-8
   nsCString     mFullPath; // UTF-8
   nsCString     mVersion;  // UTF-8

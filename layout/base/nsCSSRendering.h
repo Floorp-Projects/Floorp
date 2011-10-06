@@ -149,7 +149,7 @@ struct nsCSSRendering {
   /**
    * @return PR_TRUE if |aFrame| is a canvas frame, in the CSS sense.
    */
-  static bool IsCanvasFrame(nsIFrame* aFrame);
+  static PRBool IsCanvasFrame(nsIFrame* aFrame);
 
   /**
    * Fill in an aBackgroundSC to be used to paint the background
@@ -157,7 +157,7 @@ struct nsCSSRendering {
    * backgrounds between BODY, the root element, and the canvas.
    * @return PR_TRUE if there is some meaningful background.
    */
-  static bool FindBackground(nsPresContext* aPresContext,
+  static PRBool FindBackground(nsPresContext* aPresContext,
                                nsIFrame* aForFrame,
                                nsStyleContext** aBackgroundSC);
 
@@ -203,7 +203,7 @@ struct nsCSSRendering {
    */
   static nsIFrame*
   FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
-                                    bool aStartAtParent = false);
+                                    PRBool aStartAtParent = PR_FALSE);
 
   /**
    * Determine the background color to draw taking into account print settings.

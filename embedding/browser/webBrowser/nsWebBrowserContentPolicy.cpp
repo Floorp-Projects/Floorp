@@ -69,7 +69,7 @@ PerformPolicyCheck(PRUint32     contentType,
         return NS_OK;
 
     nsresult rv;
-    bool allowed = true;
+    PRBool allowed = PR_TRUE;
 
     switch (contentType) {
       case nsIContentPolicy::TYPE_OBJECT:

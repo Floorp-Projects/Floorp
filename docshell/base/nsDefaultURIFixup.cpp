@@ -78,7 +78,7 @@ nsDefaultURIFixup::CreateExposableURI(nsIURI *aURI, nsIURI **aReturn)
     NS_ENSURE_ARG_POINTER(aURI);
     NS_ENSURE_ARG_POINTER(aReturn);
 
-    bool isWyciwyg = false;
+    PRBool isWyciwyg = PR_FALSE;
     aURI->SchemeIs("wyciwyg", &isWyciwyg);
 
     nsCAutoString userPass;
@@ -132,7 +132,7 @@ nsDefaultURIFixup::CreateExposableURI(nsIURI *aURI, nsIURI **aReturn)
     }
 
     // hide user:pass unless overridden by pref
-    if (Preferences::GetBool("browser.fixup.hide_user_pass", true))
+    if (Preferences::GetBool("browser.fixup.hide_user_pass", PR_TRUE))
     {
         uri->SetUserPass(EmptyCString());
     }
@@ -233,8 +233,8 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
 
     // For these protocols, use system charset instead of the default UTF-8,
     // if the URI is non ASCII.
-    bool bAsciiURI = IsASCII(uriString);
-    bool bUseNonDefaultCharsetForURI =
+    PRBool bAsciiURI = IsASCII(uriString);
+    PRBool bUseNonDefaultCharsetForURI =
                         !bAsciiURI &&
                         (scheme.IsEmpty() ||
                          scheme.LowerCaseEqualsLiteral("http") ||
@@ -267,7 +267,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
 
     // See if it is a keyword
     // Test whether keywords need to be fixed up
-    bool fixupKeywords = false;
+    PRBool fixupKeywords = PR_FALSE;
     if (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
         nsresult rv = Preferences::GetBool("keyword.enabled", &fixupKeywords);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
@@ -423,19 +423,19 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     return NS_ERROR_NOT_AVAILABLE;
 }
 
-bool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
+PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
 {
     if (!Preferences::GetRootBranch())
     {
         return PR_FALSE;
     }
-    if (!Preferences::GetBool("browser.fixup.alternate.enabled", true))
+    if (!Preferences::GetBool("browser.fixup.alternate.enabled", PR_TRUE))
     {
         return PR_FALSE;
     }
 
     // Code only works for http. Not for any other protocol including https!
-    bool isHttp = false;
+    PRBool isHttp = PR_FALSE;
     aURI->SchemeIs("http", &isHttp);
     if (!isHttp) {
         return PR_FALSE;
@@ -526,9 +526,9 @@ bool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
  * Check if the host name starts with ftp\d*\. and it's not directly followed
  * by the tld.
  */
-bool nsDefaultURIFixup::IsLikelyFTP(const nsCString &aHostSpec)
+PRBool nsDefaultURIFixup::IsLikelyFTP(const nsCString &aHostSpec)
 {
-    bool likelyFTP = false;
+    PRBool likelyFTP = PR_FALSE;
     if (aHostSpec.EqualsIgnoreCase("ftp", 3)) {
         nsACString::const_iterator iter;
         nsACString::const_iterator end;
@@ -578,7 +578,7 @@ nsresult nsDefaultURIFixup::FileURIFixup(const nsACString& aStringURI,
 nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
                                                    nsCString& aOut)
 {
-    bool attemptFixup = false;
+    PRBool attemptFixup = PR_FALSE;
 
 #if defined(XP_WIN) || defined(XP_OS2)
     // Check for \ in the url-string or just a drive (PC)
@@ -654,7 +654,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
     return NS_ERROR_FAILURE;
 }
 
-bool nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString &aUrl)
+PRBool nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString &aUrl)
 {
     // Oh dear, the protocol is invalid. Test if the protocol might
     // actually be a url without a protocol:
@@ -754,7 +754,7 @@ bool nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString &aUrl)
     return PR_TRUE;
 }
 
-bool nsDefaultURIFixup::PossiblyByteExpandedFileName(const nsAString& aIn)
+PRBool nsDefaultURIFixup::PossiblyByteExpandedFileName(const nsAString& aIn)
 {
     // XXXXX HACK XXXXX : please don't copy this code.
     // There are cases where aIn contains the locale byte chars padded to short

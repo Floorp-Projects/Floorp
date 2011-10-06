@@ -129,6 +129,6 @@ var ContextCommands = {
 
   shortcutBookmark: function cc_shortcutBookmark() {
     let target = ContextHelper.popupState.target;
-    Util.createShortcut(target.getAttribute("title"), target.getAttribute("uri"), target.getAttribute("src"), "bookmark");
+    BookmarkHelper.createShortcut(target.getAttribute("title"), target.getAttribute("uri"), target.getAttribute("src"));
   }
 };

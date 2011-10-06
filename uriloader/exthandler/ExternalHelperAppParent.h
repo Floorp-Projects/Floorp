@@ -72,14 +72,14 @@ public:
     void Init(ContentParent *parent,
               const nsCString& aMimeContentType,
               const nsCString& aContentDisposition,
-              const bool& aForceSave,
+              const PRBool& aForceSave,
               const IPC::URI& aReferrer);
     virtual ~ExternalHelperAppParent();
 
 private:
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIURI> mURI;
-  bool mPending;
+  PRBool mPending;
   nsLoadFlags mLoadFlags;
   nsresult mStatus;
   PRInt64 mContentLength;

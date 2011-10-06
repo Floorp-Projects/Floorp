@@ -70,8 +70,8 @@
   } \
   PR_END_MACRO
 
-bool
-TestSuccess(const char* hdr, bool extraTokens,
+PRBool
+TestSuccess(const char* hdr, PRBool extraTokens,
             nsIStrictTransportSecurityService* stss,
             nsIPermissionManager* pm)
 {
@@ -93,7 +93,7 @@ TestSuccess(const char* hdr, bool extraTokens,
   return PR_TRUE;
 }
 
-bool TestFailure(const char* hdr,
+PRBool TestFailure(const char* hdr,
                    nsIStrictTransportSecurityService* stss,
                    nsIPermissionManager* pm)
 {
@@ -127,7 +127,7 @@ main(PRInt32 argc, char *argv[])
 
     int rv0, rv1;
 
-    nsTArray<bool> rvs(24);
+    nsTArray<PRBool> rvs(24);
 
     // *** parsing tests
     printf("*** Attempting to parse valid STS headers ...\n");

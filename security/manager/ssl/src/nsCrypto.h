@@ -92,7 +92,7 @@ public:
 private:
   static already_AddRefed<nsIPrincipal> GetScriptPrincipal(JSContext *cx);
 
-  bool mEnableSmartCardEvents;
+  PRBool mEnableSmartCardEvents;
 };
 
 class nsPkcs11 : public nsIPKCS11

@@ -60,7 +60,7 @@ protected:
 
 
 protected:
-   bool           mPersist;
+   PRBool         mPersist;
 
 	nsISHTransaction * mPrev; // Weak Reference
 	nsCOMPtr<nsISHTransaction> mNext;

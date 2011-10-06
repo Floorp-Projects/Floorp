@@ -57,7 +57,7 @@ public:
 
 protected:
   virtual void ScheduleNativeEventCallback();
-  virtual bool ProcessNextNativeEvent(bool mayWait);
+  virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
   virtual ~nsAppShell();
 
 protected:

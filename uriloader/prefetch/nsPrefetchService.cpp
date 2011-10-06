@@ -113,7 +113,7 @@ private:
 
     nsRefPtr<nsPrefetchService> mService;
     nsRefPtr<nsPrefetchNode> mCurrent;
-    bool mStarted;
+    PRBool mStarted;
 };
 
 //-----------------------------------------------------------------------------
@@ -134,7 +134,7 @@ nsPrefetchQueueEnumerator::~nsPrefetchQueueEnumerator()
 // nsPrefetchQueueEnumerator::nsISimpleEnumerator
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
-nsPrefetchQueueEnumerator::HasMoreElements(bool *aHasMore)
+nsPrefetchQueueEnumerator::HasMoreElements(PRBool *aHasMore)
 {
     *aHasMore = (mCurrent != nsnull);
     return NS_OK;
@@ -274,7 +274,7 @@ nsPrefetchNode::OnStartRequest(nsIRequest *aRequest,
     if (NS_FAILED(rv)) return rv;
 
     // no need to prefetch a document that is already in the cache
-    bool fromCache;
+    PRBool fromCache;
     if (NS_SUCCEEDED(cachingChannel->IsFromCache(&fromCache)) &&
         fromCache) {
         LOG(("document is already in the cache; canceling prefetch\n"));
@@ -375,7 +375,7 @@ nsPrefetchNode::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
     if (NS_FAILED(rv))
         return rv;
 
-    bool match;
+    PRBool match;
     rv = newURI->SchemeIs("http", &match); 
     if (NS_FAILED(rv) || !match) {
         rv = newURI->SchemeIs("https", &match); 
@@ -642,7 +642,7 @@ nsresult
 nsPrefetchService::Prefetch(nsIURI *aURI,
                             nsIURI *aReferrerURI,
                             nsIDOMNode *aSource,
-                            bool aExplicit)
+                            PRBool aExplicit)
 {
     nsresult rv;
 
@@ -673,7 +673,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     // or possibly nsIRequest::loadFlags to determine if this URI should be
     // prefetched.
     //
-    bool match;
+    PRBool match;
     rv = aURI->SchemeIs("http", &match); 
     if (NS_FAILED(rv) || !match) {
         rv = aURI->SchemeIs("https", &match); 
@@ -712,7 +712,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     // cancel if being prefetched
     //
     if (mCurrentNode) {
-        bool equals;
+        PRBool equals;
         if (NS_SUCCEEDED(mCurrentNode->mURI->Equals(aURI, &equals)) && equals) {
             LOG(("rejected: URL is already being prefetched\n"));
             return NS_ERROR_ABORT;
@@ -724,7 +724,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     //
     nsPrefetchNode *node = mQueueHead;
     for (; node; node = node->mNext) {
-        bool equals;
+        PRBool equals;
         if (NS_SUCCEEDED(node->mURI->Equals(aURI, &equals)) && equals) {
             LOG(("rejected: URL is already on prefetch queue\n"));
             return NS_ERROR_ABORT;
@@ -749,7 +749,7 @@ NS_IMETHODIMP
 nsPrefetchService::PrefetchURI(nsIURI *aURI,
                                nsIURI *aReferrerURI,
                                nsIDOMNode *aSource,
-                               bool aExplicit)
+                               PRBool aExplicit)
 {
     return Prefetch(aURI, aReferrerURI, aSource, aExplicit);
 }
@@ -758,14 +758,14 @@ NS_IMETHODIMP
 nsPrefetchService::PrefetchURIForOfflineUse(nsIURI *aURI,
                                             nsIURI *aReferrerURI,
                                             nsIDOMNode *aSource,
-                                            bool aExplicit)
+                                            PRBool aExplicit)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsPrefetchService::EnumerateQueue(bool aIncludeNormalItems,
-                                  bool aIncludeOfflineItems,
+nsPrefetchService::EnumerateQueue(PRBool aIncludeNormalItems,
+                                  PRBool aIncludeOfflineItems,
                                   nsISimpleEnumerator **aEnumerator)
 {
     NS_ENSURE_TRUE(aIncludeNormalItems && !aIncludeOfflineItems,
@@ -940,7 +940,7 @@ nsPrefetchService::Observe(nsISupports     *aSubject,
         mDisabled = PR_TRUE;
     }
     else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-        if (Preferences::GetBool(PREFETCH_PREF, false)) {
+        if (Preferences::GetBool(PREFETCH_PREF, PR_FALSE)) {
             if (mDisabled) {
                 LOG(("enabling prefetching\n"));
                 mDisabled = PR_FALSE;

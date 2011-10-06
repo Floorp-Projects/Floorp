@@ -103,7 +103,7 @@ public:
    *
    * \return True is initialization was succesful, false when it was not.
    */
-  bool Initialize();
+  PRBool Initialize();
 
   /*
    * Sets the clipping region for this layer manager. This is important on
@@ -138,8 +138,7 @@ public:
   };
 
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT);
+                              void* aCallbackData);
 
   const CallbackInfo &GetCallbackInfo() { return mCurrentCallbackInfo; }
 
@@ -180,7 +179,7 @@ public:
   /*
    * Helper methods.
    */
-  void SetClippingEnabled(bool aEnabled);
+  void SetClippingEnabled(PRBool aEnabled);
 
   void SetShaderMode(DeviceManagerD3D9::ShaderMode aMode)
     { mDeviceManager->SetShaderMode(aMode); }

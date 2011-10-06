@@ -68,7 +68,7 @@ public:
   /// This may return an incomplete string on OOM, but that's acceptable.
   void GetValueAsString(nsAString& aValue) const;
 
-  bool IsEmpty() const {
+  PRBool IsEmpty() const {
     return mNumbers.IsEmpty();
   }
 
@@ -80,11 +80,11 @@ public:
     return mNumbers[aIndex];
   }
 
-  bool operator==(const SVGNumberList& rhs) const {
+  PRBool operator==(const SVGNumberList& rhs) const {
     return mNumbers == rhs.mNumbers;
   }
 
-  bool SetCapacity(PRUint32 size) {
+  PRBool SetCapacity(PRUint32 size) {
     return mNumbers.SetCapacity(size);
   }
 
@@ -115,7 +115,7 @@ protected:
    * This may fail (return PR_FALSE) on OOM if the internal capacity is being
    * increased, in which case the list will be left unmodified.
    */
-  bool SetLength(PRUint32 aNumberOfItems) {
+  PRBool SetLength(PRUint32 aNumberOfItems) {
     return mNumbers.SetLength(aNumberOfItems);
   }
 
@@ -131,7 +131,7 @@ private:
     mNumbers.Clear();
   }
 
-  bool InsertItem(PRUint32 aIndex, const float &aNumber) {
+  PRBool InsertItem(PRUint32 aIndex, const float &aNumber) {
     if (aIndex >= mNumbers.Length()) {
       aIndex = mNumbers.Length();
     }
@@ -150,7 +150,7 @@ private:
     mNumbers.RemoveElementAt(aIndex);
   }
 
-  bool AppendItem(float aNumber) {
+  PRBool AppendItem(float aNumber) {
     return !!mNumbers.AppendElement(aNumber);
   }
 
@@ -214,7 +214,7 @@ public:
   float& operator[](PRUint32 aIndex) {
     return SVGNumberList::operator[](aIndex);
   }
-  bool SetLength(PRUint32 aNumberOfItems) {
+  PRBool SetLength(PRUint32 aNumberOfItems) {
     return SVGNumberList::SetLength(aNumberOfItems);
   }
 

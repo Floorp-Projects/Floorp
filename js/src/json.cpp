@@ -41,6 +41,7 @@
 
 #include <string.h>
 #include "jsapi.h"
+#include "jsarena.h"
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
@@ -361,20 +362,20 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
 
     /* Step 4. */
     if (vp->isObject()) {
-        JSObject &obj = vp->toObject();
-        if (ObjectClassIs(obj, ESClass_Number, cx)) {
+        JSObject *obj = &vp->toObject();
+        Class *clasp = obj->getClass();
+        if (clasp == &NumberClass) {
             double d;
             if (!ToNumber(cx, *vp, &d))
                 return false;
             vp->setNumber(d);
-        } else if (ObjectClassIs(obj, ESClass_String, cx)) {
+        } else if (clasp == &StringClass) {
             JSString *str = js_ValueToString(cx, *vp);
             if (!str)
                 return false;
             vp->setString(str);
-        } else if (ObjectClassIs(obj, ESClass_Boolean, cx)) {
-            if (!BooleanGetPrimitiveValue(cx, obj, vp))
-                return false;
+        } else if (clasp == &BooleanClass) {
+            *vp = obj->getPrimitiveThis();
             JS_ASSERT(vp->isBoolean());
         }
     }
@@ -600,14 +601,10 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 
     /* Step 10. */
     JS_ASSERT(v.isObject());
-    JSObject *obj = &v.toObject();
+    JSBool ok;
 
     scx->depth++;
-    JSBool ok;
-    if (ObjectClassIs(v.toObject(), ESClass_Array, cx))
-        ok = JA(cx, obj, scx);
-    else
-        ok = JO(cx, obj, scx);
+    ok = (JS_IsArrayObject(cx, &v.toObject()) ? JA : JO)(cx, &v.toObject(), scx);
     scx->depth--;
 
     return ok;
@@ -622,7 +619,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
     if (replacer) {
         if (replacer->isCallable()) {
             /* Step 4a(i): use replacer to transform values.  */
-        } else if (ObjectClassIs(*replacer, ESClass_Array, cx)) {
+        } else if (JS_IsArrayObject(cx, replacer)) {
             /*
              * Step 4b: The spec algorithm is unhelpfully vague about the exact
              * steps taken when the replacer is an array, regarding the exact
@@ -683,9 +680,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
                         id = js_CheckForStringIndex(id);
                     }
                 } else if (v.isString() ||
-                           (v.isObject() &&
-                            (ObjectClassIs(v.toObject(), ESClass_String, cx) ||
-                             ObjectClassIs(v.toObject(), ESClass_Number, cx))))
+                           (v.isObject() && (v.toObject().isString() || v.toObject().isNumber())))
                 {
                     /* Step 4b(iv)(3), 4b(iv)(5). */
                     if (!js_ValueToStringId(cx, v, &id))
@@ -711,12 +706,12 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
     /* Step 5. */
     if (space.isObject()) {
         JSObject &spaceObj = space.toObject();
-        if (ObjectClassIs(spaceObj, ESClass_Number, cx)) {
+        if (spaceObj.isNumber()) {
             jsdouble d;
             if (!ToNumber(cx, space, &d))
                 return false;
             space = NumberValue(d);
-        } else if (ObjectClassIs(spaceObj, ESClass_String, cx)) {
+        } else if (spaceObj.isString()) {
             JSString *str = js_ValueToString(cx, space);
             if (!str)
                 return false;
@@ -788,8 +783,6 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
     if (val.isObject()) {
         JSObject *obj = &val.toObject();
 
-        /* 'val' must have been produced by the JSON parser, so not a proxy. */
-        JS_ASSERT(!obj->isProxy());
         if (obj->isArray()) {
             /* Step 2a(ii). */
             jsuint length = obj->getArrayLength();

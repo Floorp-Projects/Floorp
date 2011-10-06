@@ -86,7 +86,7 @@ NS_INTERFACE_MAP_END
 
 DOMSVGTransform::DOMSVGTransform(DOMSVGTransformList *aList,
                                  PRUint32 aListIndex,
-                                 bool aIsAnimValItem)
+                                 PRBool aIsAnimValItem)
   : mList(aList)
   , mListIndex(aListIndex)
   , mIsAnimValItem(aIsAnimValItem)
@@ -265,7 +265,7 @@ DOMSVGTransform::SetSkewY(float angle)
 void
 DOMSVGTransform::InsertingIntoList(DOMSVGTransformList *aList,
                                    PRUint32 aListIndex,
-                                   bool aIsAnimValItem)
+                                   PRBool aIsAnimValItem)
 {
   NS_ABORT_IF_FALSE(!HasOwner(), "Inserting item that is already in a list");
 
@@ -304,7 +304,7 @@ DOMSVGTransform::InternalItem() const
 }
 
 #ifdef DEBUG
-bool
+PRBool
 DOMSVGTransform::IndexIsValid()
 {
   SVGAnimatedTransformList *alist = Element()->GetAnimatedTransformList();

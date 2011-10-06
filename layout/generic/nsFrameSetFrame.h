@@ -85,10 +85,10 @@ struct nsFramesetDrag {
   nsHTMLFramesetFrame* mSource;    // frameset whose border was dragged to cause the resize
   PRInt32              mIndex;     // index of left col or top row of effected area
   PRInt32              mChange;    // pos for left to right or top to bottom, neg otherwise
-  bool                 mVertical;  // vertical if true, otherwise horizontal
+  PRPackedBool         mVertical;  // vertical if true, otherwise horizontal
 
   nsFramesetDrag();
-  void Reset(bool                 aVertical, 
+  void Reset(PRBool               aVertical, 
              PRInt32              aIndex, 
              PRInt32              aChange, 
              nsHTMLFramesetFrame* aSource); 
@@ -116,7 +116,7 @@ public:
   NS_IMETHOD SetInitialChildList(ChildListID  aListID,
                                  nsFrameList& aChildList);
 
-  static bool    gDragInProgress;
+  static PRBool  gDragInProgress;
 
   void GetSizeOfChild(nsIFrame* aChild, nsSize& aSize);
 
@@ -147,7 +147,7 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  virtual bool IsLeaf() const;
+  virtual PRBool IsLeaf() const;
   
   void StartMouseDrag(nsPresContext*            aPresContext, 
                       nsHTMLFramesetBorderFrame* aBorder, 
@@ -191,7 +191,7 @@ protected:
                               nsHTMLReflowMetrics&     aDesiredSize);
 
   PRInt32 GetBorderWidth(nsPresContext* aPresContext,
-                         bool aTakeForcingIntoAccount);
+                         PRBool aTakeForcingIntoAccount);
 
   PRInt32 GetParentBorderWidth() { return mParentBorderWidth; }
 
@@ -209,7 +209,7 @@ protected:
 
   nscolor GetBorderColor(nsIContent* aFrameContent);
 
-  bool GetNoResize(nsIFrame* aChildFrame); 
+  PRBool GetNoResize(nsIFrame* aChildFrame); 
   
   virtual PRIntn GetSkipSides() const;
 
@@ -220,18 +220,18 @@ protected:
                         nsSize&                  aSize,
                         nsIntPoint*              aCellIndex = 0);
   
-  bool CanResize(bool aVertical, 
-                   bool aLeft); 
+  PRBool CanResize(PRBool aVertical, 
+                   PRBool aLeft); 
 
-  bool CanChildResize(bool    aVertical, 
-                        bool    aLeft, 
+  PRBool CanChildResize(PRBool  aVertical, 
+                        PRBool  aLeft, 
                         PRInt32 aChildX,
-                        bool    aFrameset);
+                        PRBool  aFrameset);
   
   void SetBorderResize(PRInt32*                   aChildTypes, 
                        nsHTMLFramesetBorderFrame* aBorderFrame);
 
-  bool ChildIsFrameset(nsIFrame* aChild); 
+  PRBool ChildIsFrameset(nsIFrame* aChild); 
 
   static int FrameResizePrefCallback(const char* aPref, void* aClosure);
 
@@ -259,7 +259,7 @@ protected:
   PRInt32          mNextNeighborOrigSize;
   PRInt32          mMinDrag;
   PRInt32          mChildCount;
-  bool             mForceFrameResizability;
+  PRBool           mForceFrameResizability;
 };
 
 #endif

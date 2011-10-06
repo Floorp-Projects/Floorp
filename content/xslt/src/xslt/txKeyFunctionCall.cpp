@@ -132,7 +132,7 @@ txKeyFunctionCall::getReturnType()
     return NODESET_RESULT;
 }
 
-bool
+PRBool
 txKeyFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     return (aContext & NODE_CONTEXT) || argsSensitiveTo(aContext);
@@ -155,7 +155,7 @@ txKeyFunctionCall::getNameAtom(nsIAtom** aAtom)
 DHASH_WRAPPER(txKeyValueHash, txKeyValueHashEntry, txKeyValueHashKey&)
 DHASH_WRAPPER(txIndexedKeyHash, txIndexedKeyHashEntry, txIndexedKeyHashKey&)
 
-bool
+PRBool
 txKeyValueHashEntry::MatchEntry(const void* aKey) const
 {
     const txKeyValueHashKey* key =
@@ -178,7 +178,7 @@ txKeyValueHashEntry::HashKey(const void* aKey)
            HashString(key->mKeyValue);
 }
 
-bool
+PRBool
 txIndexedKeyHashEntry::MatchEntry(const void* aKey) const
 {
     const txIndexedKeyHashKey* key =
@@ -207,7 +207,7 @@ nsresult
 txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
                        const txXPathNode& aRoot,
                        const nsAString& aKeyValue,
-                       bool aIndexIfNotFound,
+                       PRBool aIndexIfNotFound,
                        txExecutionState& aEs,
                        txNodeSet** aResult)
 {
@@ -301,7 +301,7 @@ txKeyHash::init()
  * @param aUse    use-expression
  * @return PR_FALSE if an error occurred, PR_TRUE otherwise
  */
-bool txXSLKey::addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse)
+PRBool txXSLKey::addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse)
 {
     if (!aMatch || !aUse)
         return PR_FALSE;

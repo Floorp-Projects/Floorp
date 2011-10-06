@@ -92,7 +92,7 @@ public:
      * @param
      * @return
      */
-    virtual void SetVerification(bool aEnable);
+    virtual void SetVerification(PRBool aEnable);
 
 private:
     nsresult HandleToken(CToken* aToken);
@@ -100,10 +100,10 @@ private:
     nsresult WriteTag(PRInt32 tagType,
                       const nsSubstring &aText,
                       PRInt32 attrCount,
-                      bool aTagInError);
+                      PRBool aTagInError);
 
     nsresult WriteAttributes(const nsAString& tagName, 
-        nsTokenAllocator* allocator, PRInt32 attrCount, bool aOwnerInError);
+        nsTokenAllocator* allocator, PRInt32 attrCount, PRBool aOwnerInError);
     void StartNewPreBlock(void);
     // Utility method for adding attributes to the nodes we generate
     void AddAttrToNode(nsCParserStartNode& aNode,
@@ -111,7 +111,7 @@ private:
                        const nsAString& aAttrName,
                        const nsAString& aAttrValue);
 
-    bool IsUrlAttribute(const nsAString& tagName,
+    PRBool IsUrlAttribute(const nsAString& tagName,
                           const nsAString& attrName, const nsAString& attrValue);
     void WriteHrefAttribute(nsTokenAllocator* allocator, const nsAString& href);
     nsresult CreateViewSourceURL(const nsAString& linkUrl, nsString& viewSourceUrl);
@@ -125,7 +125,7 @@ private:
     const nsDependentSubstring TrimTokenValue(const nsAString& tokenValue);
     void TrimTokenValue(nsAString::const_iterator& start, 
                         nsAString::const_iterator& end);
-    bool IsTokenValueTrimmableCharacter(PRUnichar ch);
+    PRBool IsTokenValueTrimmableCharacter(PRUnichar ch);
     nsresult GetBaseURI(nsIURI **result);
     nsresult SetBaseURI(const nsAString& baseSpec);
     static void ExpandEntities(const nsAString& textIn, nsString& textOut);
@@ -142,10 +142,10 @@ protected:
     nsITokenizer*       mTokenizer; // weak
 
     PRInt32             mTabSize;
-    bool                mSyntaxHighlight;
-    bool                mWrapLongLines;
-    bool                mHasOpenRoot;
-    bool                mHasOpenBody;
+    PRPackedBool        mSyntaxHighlight;
+    PRPackedBool        mWrapLongLines;
+    PRPackedBool        mHasOpenRoot;
+    PRPackedBool        mHasOpenBody;
 
     nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...

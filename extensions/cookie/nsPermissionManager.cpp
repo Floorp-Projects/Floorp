@@ -65,7 +65,7 @@ using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
 using mozilla::unused; // ha!
 
-static bool
+static PRBool
 IsChildProcess()
 {
   return XRE_GetProcessType() == GeckoProcessType_Content;
@@ -227,7 +227,7 @@ nsPermissionManager::Init()
 }
 
 nsresult
-nsPermissionManager::InitDB(bool aRemoveFile)
+nsPermissionManager::InitDB(PRBool aRemoveFile)
 {
   nsCOMPtr<nsIFile> permissionsFile;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(permissionsFile));
@@ -238,7 +238,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRemoveFile) {
-    bool exists = false;
+    PRBool exists = PR_FALSE;
     rv = permissionsFile->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
     if (exists) {
@@ -255,7 +255,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
   rv = storage->OpenDatabase(permissionsFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool ready;
+  PRBool ready;
   mDBConn->GetConnectionReady(&ready);
   if (!ready) {
     // delete and try again
@@ -270,7 +270,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
       return NS_ERROR_UNEXPECTED;
   }
 
-  bool tableExists = false;
+  PRBool tableExists = PR_FALSE;
   mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"), &tableExists);
   if (!tableExists) {
     rv = CreateTable();
@@ -661,7 +661,7 @@ nsresult
 nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
                                           const char *aType,
                                           PRUint32   *aPermission,
-                                          bool        aExactHostMatch)
+                                          PRBool      aExactHostMatch)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aType);
@@ -674,7 +674,7 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
   // No host doesn't mean an error. Just return the default. Unless this is
   // a file uri. In that case use a magic host.
   if (NS_FAILED(rv)) {
-    bool isFile;
+    PRBool isFile;
     rv = aURI->SchemeIs("file", &isFile);
     NS_ENSURE_SUCCESS(rv, rv);
     if (isFile) {
@@ -705,7 +705,7 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
 nsHostEntry *
 nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
                                   PRUint32              aType,
-                                  bool                  aExactHostMatch)
+                                  PRBool                aExactHostMatch)
 {
   PRUint32 offset = 0;
   nsHostEntry *entry;
@@ -822,7 +822,7 @@ nsPermissionManager::RemoveAllFromMemory()
 // Returns -1 on failure
 PRInt32
 nsPermissionManager::GetTypeIndex(const char *aType,
-                                  bool        aAdd)
+                                  PRBool      aAdd)
 {
   for (PRUint32 i = 0; i < mTypeArray.Length(); ++i)
     if (mTypeArray[i].Equals(aType))
@@ -897,7 +897,7 @@ nsPermissionManager::Read()
     rv = stmtDeleteExpired->BindInt64ByIndex(1, PR_Now() / 1000);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool hasResult;
+    PRBool hasResult;
     rv = stmtDeleteExpired->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -913,7 +913,7 @@ nsPermissionManager::Read()
   PRUint32 permission;
   PRUint32 expireType;
   PRInt64 expireTime;
-  bool hasResult;
+  PRBool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     // explicitly set our entry id counter for use in AddInternal(),
     // and keep track of the largest id so we know where to pick up.
@@ -977,7 +977,7 @@ nsPermissionManager::Import()
    */
 
   nsCAutoString buffer;
-  bool isMore = true;
+  PRBool isMore = PR_TRUE;
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
     if (buffer.IsEmpty() || buffer.First() == '#') {
       continue;
@@ -1112,7 +1112,7 @@ nsPermissionManager::UpdateDB(OperationType         aOp,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    bool hasResult;
+    PRBool hasResult;
     rv = aStmt->ExecuteStep(&hasResult);
     aStmt->Reset();
   }

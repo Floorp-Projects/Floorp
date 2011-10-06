@@ -156,13 +156,13 @@ class txVariableItem : public txInstructionContainer
 {
 public:
     txVariableItem(const txExpandedName& aName, nsAutoPtr<Expr> aValue,
-                   bool aIsParam);
+                   PRBool aIsParam);
     
     TX_DECL_TOPLEVELITEM
 
     txExpandedName mName;
     nsAutoPtr<Expr> mValue;
-    bool mIsParam;
+    PRBool mIsParam;
 };
 
 #endif //TRANSFRMX_TXTOPLEVELITEMS_H

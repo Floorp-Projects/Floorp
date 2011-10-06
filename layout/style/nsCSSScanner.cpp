@@ -65,7 +65,7 @@
 using namespace mozilla;
 
 #ifdef CSS_REPORT_PARSE_ERRORS
-static bool gReportErrors = true;
+static PRBool gReportErrors = PR_TRUE;
 static nsIConsoleService *gConsoleService;
 static nsIFactory *gScriptErrorFactory;
 static nsIStringBundle *gStringBundle;
@@ -133,36 +133,36 @@ PR_STATIC_ASSERT(NS_ARRAY_LENGTH(gLexTable) == 256);
 #undef SI
 #undef XSI
 
-static inline bool
+static inline PRBool
 IsIdentStart(PRInt32 aChar)
 {
   return aChar >= 0 &&
     (aChar >= 256 || (gLexTable[aChar] & START_IDENT) != 0);
 }
 
-static inline bool
+static inline PRBool
 StartsIdent(PRInt32 aFirstChar, PRInt32 aSecondChar)
 {
   return IsIdentStart(aFirstChar) ||
     (aFirstChar == '-' && IsIdentStart(aSecondChar));
 }
 
-static inline bool
+static inline PRBool
 IsWhitespace(PRInt32 ch) {
   return PRUint32(ch) < 256 && (gLexTable[ch] & IS_WHITESPACE) != 0;
 }
 
-static inline bool
+static inline PRBool
 IsDigit(PRInt32 ch) {
   return (ch >= '0') && (ch <= '9');
 }
 
-static inline bool
+static inline PRBool
 IsHexDigit(PRInt32 ch) {
   return PRUint32(ch) < 256 && (gLexTable[ch] & IS_HEX_DIGIT) != 0;
 }
 
-static inline bool
+static inline PRBool
 IsIdent(PRInt32 ch) {
   return ch >= 0 && (ch >= 256 || (gLexTable[ch] & IS_IDENT) != 0);
 }
@@ -328,12 +328,12 @@ nsCSSScanner::SetLowLevelError(nsresult aErrorCode)
 static int
 CSSErrorsPrefChanged(const char *aPref, void *aClosure)
 {
-  gReportErrors = Preferences::GetBool(CSS_ERRORS_PREF, true);
+  gReportErrors = Preferences::GetBool(CSS_ERRORS_PREF, PR_TRUE);
   return NS_OK;
 }
 #endif
 
-/* static */ bool
+/* static */ PRBool
 nsCSSScanner::InitGlobals()
 {
 #ifdef CSS_REPORT_PARSE_ERRORS
@@ -482,7 +482,7 @@ nsCSSScanner::OutputError()
   ClearError();
 }
 
-static bool
+static PRBool
 InitStringBundle()
 {
   if (gStringBundle)
@@ -639,7 +639,7 @@ nsCSSScanner::Close()
 #define TAB_STOP_WIDTH 8
 #endif
 
-bool
+PRBool
 nsCSSScanner::EnsureData()
 {
   if (mOffset < mCount)
@@ -736,7 +736,7 @@ nsCSSScanner::Pushback(PRUnichar aChar)
   mPushback[mPushbackCount++] = aChar;
 }
 
-bool
+PRBool
 nsCSSScanner::LookAhead(PRUnichar aChar)
 {
   PRInt32 ch = Read();
@@ -750,7 +750,7 @@ nsCSSScanner::LookAhead(PRUnichar aChar)
   return PR_FALSE;
 }
 
-bool
+PRBool
 nsCSSScanner::LookAheadOrEOF(PRUnichar aChar)
 {
   PRInt32 ch = Read();
@@ -779,7 +779,7 @@ nsCSSScanner::EatWhiteSpace()
   }
 }
 
-bool
+PRBool
 nsCSSScanner::Next(nsCSSToken& aToken)
 {
   for (;;) { // Infinite loop so we can restart after comments.
@@ -917,7 +917,7 @@ nsCSSScanner::Next(nsCSSToken& aToken)
   }
 }
 
-bool
+PRBool
 nsCSSScanner::NextURL(nsCSSToken& aToken)
 {
   EatWhiteSpace();
@@ -930,7 +930,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   // STRING
   if ((ch == '"') || (ch == '\'')) {
 #ifdef DEBUG
-    bool ok =
+    PRBool ok =
 #endif
       ParseString(ch, aToken);
     NS_ABORT_IF_FALSE(ok, "ParseString should never fail, "
@@ -970,7 +970,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   Pushback(ch);
 
   // start of a non-quoted url (which may be empty)
-  bool ok = true;
+  PRBool ok = PR_TRUE;
   for (;;) {
     ch = Read();
     if (ch < 0) break;
@@ -1014,8 +1014,8 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
  * Returns whether an escape was succesfully parsed; if it was not,
  * the backslash needs to be its own symbol token.
  */
-bool
-nsCSSScanner::ParseAndAppendEscape(nsString& aOutput, bool aInString)
+PRBool
+nsCSSScanner::ParseAndAppendEscape(nsString& aOutput, PRBool aInString)
 {
   PRInt32 ch = Read();
   if (ch < 0) {
@@ -1099,7 +1099,7 @@ nsCSSScanner::ParseAndAppendEscape(nsString& aOutput, bool aInString)
  * all, in which case the caller is responsible for pushing back or
  * otherwise handling aChar.  (This occurs only when aChar is '\'.)
  */
-bool
+PRBool
 nsCSSScanner::GatherIdent(PRInt32 aChar, nsString& aIdent)
 {
   if (aChar == CSS_ESCAPE) {
@@ -1146,7 +1146,7 @@ nsCSSScanner::GatherIdent(PRInt32 aChar, nsString& aIdent)
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsCSSScanner::ParseRef(PRInt32 aChar, nsCSSToken& aToken)
 {
   // Fall back for when we don't have name characters following:
@@ -1174,7 +1174,7 @@ nsCSSScanner::ParseRef(PRInt32 aChar, nsCSSToken& aToken)
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsCSSScanner::ParseIdent(PRInt32 aChar, nsCSSToken& aToken)
 {
   nsString& ident = aToken.mIdent;
@@ -1201,7 +1201,7 @@ nsCSSScanner::ParseIdent(PRInt32 aChar, nsCSSToken& aToken)
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsCSSScanner::ParseAtKeyword(PRInt32 aChar, nsCSSToken& aToken)
 {
   aToken.mIdent.SetLength(0);
@@ -1213,7 +1213,7 @@ nsCSSScanner::ParseAtKeyword(PRInt32 aChar, nsCSSToken& aToken)
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
 {
   NS_PRECONDITION(c == '.' || c == '+' || c == '-' || IsDigit(c),
@@ -1245,7 +1245,7 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
     c = Read();
   }
 
-  bool gotDot = (c == '.');
+  PRBool gotDot = (c == '.');
 
   if (!gotDot) {
     // Parse the integer part of the mantisssa
@@ -1273,7 +1273,7 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
     } while (IsDigit(c));
   }
 
-  bool gotE = false;
+  PRBool gotE = PR_FALSE;
   if (IsSVGMode() && (c == 'e' || c == 'E')) {
     PRInt32 nextChar = Peek();
     PRInt32 expSignChar = 0;
@@ -1347,7 +1347,7 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsCSSScanner::SkipCComment()
 {
   for (;;) {
@@ -1364,7 +1364,7 @@ nsCSSScanner::SkipCComment()
   return PR_FALSE;
 }
 
-bool
+PRBool
 nsCSSScanner::ParseString(PRInt32 aStop, nsCSSToken& aToken)
 {
   aToken.mIdent.SetLength(0);
@@ -1444,7 +1444,7 @@ nsCSSScanner::ParseString(PRInt32 aStop, nsCSSToken& aToken)
 // All unicode-range tokens have their text recorded in mIdent; valid ones
 // are also decoded into mInteger and mInteger2, and mIntegerValid is set.
 
-bool
+PRBool
 nsCSSScanner::ParseURange(PRInt32 aChar, nsCSSToken& aResult)
 {
   PRInt32 intro2 = Read();
@@ -1469,8 +1469,8 @@ nsCSSScanner::ParseURange(PRInt32 aChar, nsCSSToken& aResult)
   aResult.mIdent.Append(aChar);
   aResult.mIdent.Append(intro2);
 
-  bool valid = true;
-  bool haveQues = false;
+  PRBool valid = PR_TRUE;
+  PRBool haveQues = PR_FALSE;
   PRUint32 low = 0;
   PRUint32 high = 0;
   int i = 0;

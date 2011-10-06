@@ -212,7 +212,7 @@ nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext,
                "Must have an nsListControlFrame!  Frame constructor is "
                "broken");
   
-  bool isInDropdownMode = list->IsInDropDownMode();
+  PRBool isInDropdownMode = list->IsInDropDownMode();
   
   // See similar logic in nsListControlFrame::Reflow and
   // nsListControlFrame::ReflowAsDropdown.  We need to match it here.

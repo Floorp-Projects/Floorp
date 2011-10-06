@@ -67,9 +67,9 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
                                        nsPresContext* aPresContext,
                                        nsBlockFrame* aFrame,
                                        const nsHTMLReflowMetrics& aMetrics,
-                                       bool aTopMarginRoot,
-                                       bool aBottomMarginRoot,
-                                       bool aBlockNeedsFloatManager)
+                                       PRBool aTopMarginRoot,
+                                       PRBool aBottomMarginRoot,
+                                       PRBool aBlockNeedsFloatManager)
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
@@ -151,7 +151,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 nsLineBox*
 nsBlockReflowState::NewLineBox(nsIFrame* aFrame,
                                PRInt32 aCount,
-                               bool aIsBlock)
+                               PRBool aIsBlock)
 {
   return NS_NewLineBox(mPresContext->PresShell(), aFrame, aCount, aIsBlock);
 }
@@ -168,7 +168,10 @@ void
 nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
                                                          const nsRect& aFloatAvailableSpace,
                                                          nscoord& aLeftResult,
-                                                         nscoord& aRightResult)
+                                                         nscoord& aRightResult,
+                                                         nsBlockFrame::
+                                                      ReplacedElementWidthToClear
+                                                                 *aReplacedWidth)
 {
   // The frame is clueless about the float manager and therefore we
   // only give it free space. An example is a table frame - the
@@ -185,18 +188,28 @@ nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
     leftOffset = 0;
     rightOffset = 0;
   } else {
-    nsMargin frameMargin;
+    // We pass in aReplacedWidth to make handling outer table frames
+    // work correctly.  For outer table frames, we need to subtract off
+    // the margin that's going to be at the edge of them, since we're
+    // dealing with margin that it's really the child's responsibility
+    // to place.
     nsCSSOffsetState os(aFrame, mReflowState.rendContext, mContentArea.width);
-    frameMargin = os.mComputedMargin;
+    NS_ASSERTION(!aReplacedWidth ||
+                 aFrame->GetType() == nsGkAtoms::tableOuterFrame ||
+                 (aReplacedWidth->marginLeft  == os.mComputedMargin.left &&
+                  aReplacedWidth->marginRight == os.mComputedMargin.right),
+                 "unexpected aReplacedWidth");
 
     nscoord leftFloatXOffset = aFloatAvailableSpace.x - mContentArea.x;
-    leftOffset = NS_MAX(leftFloatXOffset, frameMargin.left) -
-                 frameMargin.left;
+    leftOffset = NS_MAX(leftFloatXOffset, os.mComputedMargin.left) -
+                 (aReplacedWidth ? aReplacedWidth->marginLeft
+                                 : os.mComputedMargin.left);
     leftOffset = NS_MAX(leftOffset, 0); // in case of negative margin
     nscoord rightFloatXOffset =
       mContentArea.XMost() - aFloatAvailableSpace.XMost();
-    rightOffset = NS_MAX(rightFloatXOffset, frameMargin.right) -
-                  frameMargin.right;
+    rightOffset = NS_MAX(rightFloatXOffset, os.mComputedMargin.right) -
+                  (aReplacedWidth ? aReplacedWidth->marginRight
+                                  : os.mComputedMargin.right);
     rightOffset = NS_MAX(rightOffset, 0); // in case of negative margin
   }
   aLeftResult = leftOffset;
@@ -210,7 +223,7 @@ void
 nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
                                            const nsStyleDisplay* aDisplay,
                                            const nsFlowAreaRect& aFloatAvailableSpace,
-                                           bool aBlockAvoidsFloats,
+                                           PRBool aBlockAvoidsFloats,
                                            nsRect& aResult)
 {
 #ifdef REALLY_NOISY_REFLOW
@@ -272,9 +285,19 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
     }
   }
   else {
+    nsBlockFrame::ReplacedElementWidthToClear replacedWidthStruct;
+    nsBlockFrame::ReplacedElementWidthToClear *replacedWidth = nsnull;
+    if (aFrame->GetType() == nsGkAtoms::tableOuterFrame) {
+      replacedWidth = &replacedWidthStruct;
+      replacedWidthStruct =
+        nsBlockFrame::WidthToClearPastFloats(*this, aFloatAvailableSpace.mRect,
+                                             aFrame);
+    }
+
     nscoord leftOffset, rightOffset;
     ComputeReplacedBlockOffsetsForFloats(aFrame, aFloatAvailableSpace.mRect,
-                                         leftOffset, rightOffset);
+                                         leftOffset, rightOffset,
+                                         replacedWidth);
     aResult.x = mContentArea.x + leftOffset;
     aResult.width = mContentArea.width - leftOffset - rightOffset;
   }
@@ -493,7 +516,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
 // technically we're supposed let the current line flow around the
 // float as well unless it won't fit next to what we already have.
 // But nobody else implements it that way...
-bool
+PRBool
 nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
                              nsIFrame*           aFloat,
                              nscoord             aAvailableWidth)
@@ -538,7 +561,7 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
   nscoord dy = oy - mFloatManagerY;
   mFloatManager->Translate(-dx, -dy);
 
-  bool placed;
+  PRBool placed;
 
   // Now place the float immediately if possible. Otherwise stash it
   // away in mPendingFloats and place it later.
@@ -579,7 +602,7 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
   return placed;
 }
 
-bool
+PRBool
 nsBlockReflowState::CanPlaceFloat(nscoord aFloatWidth,
                                   const nsFlowAreaRect& aFloatAvailableSpace)
 {
@@ -615,7 +638,7 @@ FloatMarginWidth(const nsHTMLReflowState& aCBReflowState,
   aFloatOffsetState.mComputedBorderPadding.LeftRight();
 }
 
-bool
+PRBool
 nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 {
   // Save away the Y coordinate before placing the float. We will
@@ -665,7 +688,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // If it's a floating first-letter, we need to reflow it before we
   // know how wide it is (since we don't compute which letters are part
   // of the first letter until reflow!).
-  bool isLetter = aFloat->GetType() == nsGkAtoms::letterFrame;
+  PRBool isLetter = aFloat->GetType() == nsGkAtoms::letterFrame;
   if (isLetter) {
     mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat,
                         floatMargin, PR_FALSE, reflowStatus);
@@ -683,12 +706,12 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 	       "invalid float type");
 
   // Can the float fit here?
-  bool keepFloatOnSameLine = false;
+  PRBool keepFloatOnSameLine = PR_FALSE;
 
   // Are we required to place at least part of the float because we're
   // at the top of the page (to avoid an infinite loop of pushing and
   // breaking).
-  bool mustPlaceFloat =
+  PRBool mustPlaceFloat =
     mReflowState.mFlags.mIsTopOfPage && IsAdjacentWithTop();
 
   for (;;) {
@@ -796,7 +819,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // Reflow the float after computing its vertical position so it knows
   // where to break.
   if (!isLetter) {
-    bool pushedDown = mY != saveY;
+    PRBool pushedDown = mY != saveY;
     mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat,
                         floatMargin, pushedDown, reflowStatus);
   }
@@ -835,7 +858,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // Position the float and make sure and views are properly
   // positioned. We need to explicitly position its child views as
   // well, since we're moving the float after flowing it.
-  bool moved = aFloat->GetPosition() != origin;
+  PRBool moved = aFloat->GetPosition() != origin;
   if (moved) {
     aFloat->SetPosition(origin);
     nsContainerFrame::PositionFrameView(aFloat);
@@ -943,7 +966,7 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList,
     }
 #endif
     // Place the float
-    bool placed = FlowAndPlaceFloat(fc->mFloat);
+    PRBool placed = FlowAndPlaceFloat(fc->mFloat);
     nsFloatCache *next = fc->Next();
     if (!placed) {
       aList.Remove(fc);

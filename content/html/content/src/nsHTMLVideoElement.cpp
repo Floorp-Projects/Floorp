@@ -114,7 +114,7 @@ nsIntSize nsHTMLVideoElement::GetVideoSize(nsIntSize aDefaultSize)
   return mMediaSize.width == -1 && mMediaSize.height == -1 ? aDefaultSize : mMediaSize;
 }
 
-bool
+PRBool
 nsHTMLVideoElement::ParseAttribute(PRInt32 aNamespaceID,
                                    nsIAtom* aAttribute,
                                    const nsAString& aValue,
@@ -136,7 +136,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 nsHTMLVideoElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
@@ -176,7 +176,7 @@ nsresult nsHTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 
     return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                       value,
-                                      false);
+                                      PR_FALSE);
 }
 
 NS_IMPL_URI_ATTR(nsHTMLVideoElement, Poster, poster)

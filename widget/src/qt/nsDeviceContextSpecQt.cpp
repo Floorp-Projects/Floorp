@@ -71,6 +71,9 @@
 #include <sys/stat.h>
 
 #include "gfxPDFSurface.h"
+ 
+/* Ensure that the result is always equal to either PR_TRUE or PR_FALSE */
+#define MAKE_PR_BOOL(val) ((val)?(PR_TRUE):(PR_FALSE))
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* DeviceContextSpecQtLM =
@@ -172,7 +175,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::GetSurfaceForPrinter(
 
 NS_IMETHODIMP nsDeviceContextSpecQt::Init(nsIWidget* aWidget,
         nsIPrintSettings* aPS,
-        bool aIsPrintPreview)
+        PRBool aIsPrintPreview)
 {
     DO_PR_DEBUG_LOG(("nsDeviceContextSpecQt::Init(aPS=%p)\n", aPS));
 
@@ -180,7 +183,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::Init(nsIWidget* aWidget,
     mIsPPreview = aIsPrintPreview;
 
     // This is only set by embedders
-    bool toFile;
+    PRBool toFile;
     aPS->GetPrintToFile(&toFile);
 
     mToPrinter = !toFile && !aIsPrintPreview;

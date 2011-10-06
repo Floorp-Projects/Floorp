@@ -78,5 +78,5 @@ let AllTabs = {
 #include drag.js
 #include trench.js
 #include thumbnailStorage.js
-#include search.js
 #include ui.js
+#include search.js

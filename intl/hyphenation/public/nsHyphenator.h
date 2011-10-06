@@ -51,9 +51,9 @@ public:
 
   NS_INLINE_DECL_REFCOUNTING(nsHyphenator)
 
-  bool IsValid();
+  PRBool IsValid();
 
-  nsresult Hyphenate(const nsAString& aText, nsTArray<bool>& aHyphens);
+  nsresult Hyphenate(const nsAString& aText, nsTArray<PRPackedBool>& aHyphens);
 
 private:
   ~nsHyphenator();

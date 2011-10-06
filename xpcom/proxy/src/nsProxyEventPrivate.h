@@ -234,7 +234,7 @@ public:
     PRUint32            GetParameterCount() const { return mParameterCount; }
     nsresult            GetResult() const { return mResult; }
     
-    bool                GetCompleted();
+    PRBool              GetCompleted();
     void                SetCompleted();
     void                PostCompleted();
 
@@ -242,7 +242,7 @@ public:
     
     nsIEventTarget*     GetCallersTarget();
     void                SetCallersTarget(nsIEventTarget* target);
-    bool                IsSync() const
+    PRBool              IsSync() const
     {
         return !!(mOwner->GetProxyType() & NS_PROXY_SYNC);
     }
@@ -261,8 +261,8 @@ private:
 
     nsRefPtr<nsProxyEventObject>   mOwner;       /* this is the strong referenced nsProxyObject */
    
-    void RefCountInInterfacePointers(bool addRef);
-    void CopyStrings(bool copy);
+    void RefCountInInterfacePointers(PRBool addRef);
+    void CopyStrings(PRBool copy);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsProxyObjectCallInfo, NS_PROXYEVENT_IID)
@@ -284,7 +284,7 @@ public:
     nsProxyObjectManager();
     
     static nsProxyObjectManager *GetInstance();
-    static bool IsManagerShutdown();
+    static PRBool IsManagerShutdown();
 
     static void Shutdown();
 

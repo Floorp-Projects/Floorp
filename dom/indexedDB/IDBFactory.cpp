@@ -371,7 +371,7 @@ CreateDatabaseConnection(const nsAString& aName,
   nsresult rv = aDBFile->GetParent(getter_AddRefs(dbDirectory));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool exists;
+  PRBool exists;
   rv = aDBFile->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -412,16 +412,10 @@ CreateDatabaseConnection(const nsAString& aName,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    mozStorageTransaction transaction(connection, PR_FALSE,
-                                      mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
     rv = CreateTables(connection);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = CreateMetaData(connection, aName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -480,7 +474,7 @@ IDBFactory::GetConnection(const nsAString& aDatabaseFilePath)
   nsresult rv = dbFile->InitWithPath(aDatabaseFilePath);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  bool exists;
+  PRBool exists;
   rv = dbFile->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, nsnull);
   NS_ENSURE_TRUE(exists, nsnull);
@@ -587,7 +581,7 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
   nsAutoTArray<ObjectStoreInfoMap, 20> infoMap;
 
-  bool hasResult;
+  PRBool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
     nsAutoPtr<ObjectStoreInfo>* element =
       aObjectStores.AppendElement(new ObjectStoreInfo());
@@ -806,7 +800,7 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
 #ifdef DEBUG
   {
-    bool correctThread;
+    PRBool correctThread;
     NS_ASSERTION(NS_SUCCEEDED(IndexedDatabaseManager::Get()->IOThread()->
                               IsOnCurrentThread(&correctThread)) &&
                  correctThread,
@@ -830,12 +824,12 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   rv = dbFile->GetParent(getter_AddRefs(dbDirectory));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  bool exists;
+  PRBool exists;
   rv = dbDirectory->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (exists) {
-    bool isDirectory;
+    PRBool isDirectory;
     rv = dbDirectory->IsDirectory(&isDirectory);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     NS_ENSURE_TRUE(isDirectory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -863,7 +857,7 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  bool hasResult;
+  PRBool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 

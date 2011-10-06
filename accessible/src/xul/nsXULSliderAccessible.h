@@ -65,7 +65,7 @@ public:
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
-  virtual bool GetAllowsAnonChildAccessibles();
+  virtual PRBool GetAllowsAnonChildAccessibles();
 
   // ActionAccessible
   virtual PRUint8 ActionCount();

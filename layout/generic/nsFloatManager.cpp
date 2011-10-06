@@ -199,7 +199,7 @@ nsFloatManager::GetFlowArea(nscoord aYOffset, BandInfoType aInfoType,
 
   // Walk backwards through the floats until we either hit the front of
   // the list or we're above |top|.
-  bool haveFloats = false;
+  PRBool haveFloats = PR_FALSE;
   for (PRUint32 i = floatCount; i > 0; --i) {
     const FloatInfo &fi = mFloats[i-1];
     if (fi.mLeftYMost <= top && fi.mRightYMost <= top) {
@@ -513,7 +513,7 @@ nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType,
   return bottom;
 }
 
-bool
+PRBool
 nsFloatManager::ClearContinues(PRUint8 aBreakType) const
 {
   return ((mPushedLeftFloatPastBreak || mSplitLeftFloatAcrossBreak) &&

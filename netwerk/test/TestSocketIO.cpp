@@ -270,7 +270,7 @@ main(int argc, char* argv[])
         usage(argv);
 
     PRIntn i=0;
-    bool sync = false;
+    PRBool sync = PR_FALSE;
     if (nsCRT::strcasecmp(argv[1], "-sync") == 0) {
         if (argc < 4)
             usage(argv);

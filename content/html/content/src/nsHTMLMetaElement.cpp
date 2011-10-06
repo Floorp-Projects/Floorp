@@ -67,9 +67,9 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -116,7 +116,7 @@ NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Scheme, scheme)
 nsresult
 nsHTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers)
+                              PRBool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
@@ -134,7 +134,7 @@ nsHTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsHTMLMetaElement::UnbindFromTree(bool aDeep, bool aNullParent)
+nsHTMLMetaElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMMetaRemoved"));

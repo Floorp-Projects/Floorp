@@ -66,8 +66,8 @@ private:
   nsString mDisplayValue;
   PRUint32 mType;
   PRUint32 mTag;
-  bool     mIsValidContainer;
-  bool     mIsExpanded;
+  PRBool   mIsValidContainer;
+  PRBool   mIsExpanded;
 };
 
 class nsNSSASN1PrintableItem : public nsIASN1PrintableItem

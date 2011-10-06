@@ -79,6 +79,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  virtual PRBool IsContainingBlock() const;
+  
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
@@ -113,10 +115,10 @@ public:
   }
 #endif
 
-  virtual bool HonorPrintBackgroundSettings() { return false; }
+  virtual PRBool HonorPrintBackgroundSettings() { return PR_FALSE; }
 
   // nsIFormControlFrame
-  void SetFocus(bool aOn, bool aRepaint);
+  void SetFocus(PRBool aOn, PRBool aRepaint);
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
 
@@ -125,14 +127,14 @@ public:
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsHTMLContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
 protected:
-  virtual bool IsInput() { return false; }
+  virtual PRBool IsInput() { return PR_FALSE; }
   void ReflowButtonContents(nsPresContext* aPresContext,
                             nsHTMLReflowMetrics& aDesiredSize,
                             const nsHTMLReflowState& aReflowState,

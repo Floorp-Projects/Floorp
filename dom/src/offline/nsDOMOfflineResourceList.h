@@ -102,7 +102,7 @@ private:
   nsresult CacheKeys();
   void ClearCachedKeys();
 
-  bool mInitialized;
+  PRBool mInitialized;
 
   nsCOMPtr<nsIURI> mManifestURI;
   // AsciiSpec of mManifestURI

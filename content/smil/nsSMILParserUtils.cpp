@@ -67,7 +67,7 @@ const PRInt32  DECIMAL_BASE  = 10;
 
 // NS_IS_SPACE relies on isspace which may return true for \xB and \xC but
 // SMILANIM does not consider these characters to be whitespace.
-inline bool
+inline PRBool
 IsSpace(const PRUnichar c)
 {
   return (c == 0x9 || c == 0xA || c == 0xD || c == 0x20);
@@ -129,7 +129,7 @@ GetUnsignedInt(const nsAString& aStr, PRUint32& aResult)
   return rest - str;
 }
 
-bool
+PRBool
 GetUnsignedIntAndEndParen(const nsAString& aStr, PRUint32& aResult)
 {
   size_t intLen = GetUnsignedInt(aStr, aResult);
@@ -144,7 +144,7 @@ GetUnsignedIntAndEndParen(const nsAString& aStr, PRUint32& aResult)
   return PR_TRUE;
 }
 
-inline bool
+inline PRBool
 ConsumeSubstring(const char*& aStart, const char* aEnd, const char* aSubstring)
 {
   size_t substrLen = PL_strlen(aSubstring);
@@ -152,7 +152,7 @@ ConsumeSubstring(const char*& aStart, const char* aEnd, const char* aSubstring)
   if (static_cast<size_t>(aEnd - aStart) < substrLen)
     return PR_FALSE;
 
-  bool result = false;
+  PRBool result = PR_FALSE;
 
   if (PL_strstr(aStart, aSubstring) == aStart) {
     aStart += substrLen;
@@ -162,13 +162,13 @@ ConsumeSubstring(const char*& aStart, const char* aEnd, const char* aSubstring)
   return result;
 }
 
-bool
+PRBool
 ParseClockComponent(const char*& aStart,
                     const char* aEnd,
                     double& aResult,
-                    bool& aIsReal,
-                    bool& aCouldBeMin,
-                    bool& aCouldBeSec)
+                    PRBool& aIsReal,
+                    PRBool& aCouldBeMin,
+                    PRBool& aCouldBeSec)
 {
   nsresult rv;
   const char* begin = aStart;
@@ -180,7 +180,7 @@ ParseClockComponent(const char*& aStart,
 
   // Check that it's not expressed in exponential form
   size_t len = aStart - begin;
-  bool isExp = (PL_strnpbrk(begin, "eE", len) != nsnull);
+  PRBool isExp = (PL_strnpbrk(begin, "eE", len) != nsnull);
   if (isExp)
     return PR_FALSE;
 
@@ -203,12 +203,12 @@ ParseClockComponent(const char*& aStart,
   return PR_TRUE;
 }
 
-bool
+PRBool
 ParseMetricMultiplicand(const char*& aStart,
                         const char* aEnd,
                         PRInt32& multiplicand)
 {
-  bool result = false;
+  PRBool result = PR_FALSE;
 
   size_t len = aEnd - aStart;
   const char* cur = aStart;
@@ -312,11 +312,11 @@ ParseAccessKey(const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult)
 }
 
 const PRUnichar*
-GetTokenEnd(const nsAString& aStr, bool aBreakOnDot)
+GetTokenEnd(const nsAString& aStr, PRBool aBreakOnDot)
 {
   const PRUnichar* tokenEnd = aStr.BeginReading();
   const PRUnichar* const end = aStr.EndReading();
-  bool escape = false;
+  PRBool escape = PR_FALSE;
   while (tokenEnd != end) {
     PRUnichar c = *tokenEnd;
     if (IsSpace(c) ||
@@ -335,7 +335,7 @@ Unescape(nsAString& aStr)
   const PRUnichar* read = aStr.BeginReading();
   const PRUnichar* const end = aStr.EndReading();
   PRUnichar* write = aStr.BeginWriting();
-  bool escape = false;
+  PRBool escape = PR_FALSE;
 
   while (read != end) {
     NS_ABORT_IF_FALSE(write <= read, "Writing past where we've read");
@@ -502,7 +502,7 @@ nsSMILParserUtils::ParseKeySplines(const nsAString& aSpec,
 
 nsresult
 nsSMILParserUtils::ParseSemicolonDelimitedProgressList(const nsAString& aSpec,
-                                                       bool aNonDecreasing,
+                                                       PRBool aNonDecreasing,
                                                        nsTArray<double>& aArray)
 {
   nsresult rv = NS_OK;
@@ -554,7 +554,7 @@ public:
   SMILValueParser(const nsISMILAnimationElement* aSrcElement,
                   const nsISMILAttr* aSMILAttr,
                   nsTArray<nsSMILValue>* aValuesArray,
-                  bool* aPreventCachingOfSandwich) :
+                  PRBool* aPreventCachingOfSandwich) :
     mSrcElement(aSrcElement),
     mSMILAttr(aSMILAttr),
     mValuesArray(aValuesArray),
@@ -563,7 +563,7 @@ public:
 
   virtual nsresult Parse(const nsAString& aValueStr) {
     nsSMILValue newValue;
-    bool tmpPreventCachingOfSandwich;
+    PRBool tmpPreventCachingOfSandwich;
     nsresult rv = mSMILAttr->ValueFromString(aValueStr, mSrcElement, newValue,
                                              tmpPreventCachingOfSandwich);
     if (NS_FAILED(rv))
@@ -581,7 +581,7 @@ protected:
   const nsISMILAnimationElement* mSrcElement;
   const nsISMILAttr* mSMILAttr;
   nsTArray<nsSMILValue>* mValuesArray;
-  bool* mPreventCachingOfSandwich;
+  PRBool* mPreventCachingOfSandwich;
 };
 
 nsresult
@@ -589,7 +589,7 @@ nsSMILParserUtils::ParseValues(const nsAString& aSpec,
                                const nsISMILAnimationElement* aSrcElement,
                                const nsISMILAttr& aAttribute,
                                nsTArray<nsSMILValue>& aValuesArray,
-                               bool& aPreventCachingOfSandwich)
+                               PRBool& aPreventCachingOfSandwich)
 {
   // Assume all results can be cached, until we find one that can't.
   aPreventCachingOfSandwich = PR_FALSE;
@@ -721,7 +721,7 @@ nsresult
 nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
                                    nsSMILTimeValue* aResult,
                                    PRUint32 aFlags,   // = 0
-                                   bool* aIsMedia)  // = nsnull
+                                   PRBool* aIsMedia)  // = nsnull
 {
   nsSMILTime offset = 0L;
   double component = 0.0;
@@ -729,16 +729,16 @@ nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
   PRInt8 sign = 0;
   PRUint8 colonCount = 0;
 
-  bool started = false;
-  bool isValid = true;
+  PRBool started = PR_FALSE;
+  PRBool isValid = PR_TRUE;
 
   PRInt32 metricMultiplicand = MSEC_PER_SEC;
 
-  bool numIsReal = false;
-  bool prevNumCouldBeMin = false;
-  bool numCouldBeMin = false;
-  bool numCouldBeSec = false;
-  bool isIndefinite = false;
+  PRBool numIsReal = PR_FALSE;
+  PRBool prevNumCouldBeMin = PR_FALSE;
+  PRBool numCouldBeMin = PR_FALSE;
+  PRBool numCouldBeSec = PR_FALSE;
+  PRBool isIndefinite = PR_FALSE;
 
   if (aIsMedia) {
     *aIsMedia = PR_FALSE;

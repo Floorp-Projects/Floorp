@@ -57,7 +57,7 @@ public:
     // nsITableLayoutStrategy implementation
     virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext);
     virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext,
-                                 bool aComputingSize);
+                                 PRBool aComputingSize);
     virtual void MarkIntrinsicWidthsDirty();
     virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState);
 
@@ -95,7 +95,7 @@ private:
                                   PRInt32 aFirstCol, 
                                   PRInt32 aColCount,
                                   BtlsWidthType aWidthType,
-                                  bool aSpanHasSpecifiedWidth);
+                                  PRBool aSpanHasSpecifiedWidth);
  
 
     // Compute the min and pref widths of the table from the width

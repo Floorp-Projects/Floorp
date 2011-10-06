@@ -75,8 +75,8 @@
 
 nsIContent*    nsIMEStateManager::sContent      = nsnull;
 nsPresContext* nsIMEStateManager::sPresContext  = nsnull;
-bool           nsIMEStateManager::sInstalledMenuKeyboardListener = false;
-bool           nsIMEStateManager::sInSecureInputMode = false;
+PRBool         nsIMEStateManager::sInstalledMenuKeyboardListener = PR_FALSE;
+PRBool         nsIMEStateManager::sInSecureInputMode = PR_FALSE;
 
 nsTextStateManager* nsIMEStateManager::sTextStateObserver = nsnull;
 
@@ -136,7 +136,7 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
   }
 
   // Handle secure input mode for password field input.
-  bool contentIsPassword = false;
+  PRBool contentIsPassword = PR_FALSE;
   if (aContent && aContent->GetNameSpaceID() == kNameSpaceID_XHTML) {
     if (aContent->Tag() == nsGkAtoms::input) {
       nsAutoString type;
@@ -202,7 +202,7 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
 }
 
 void
-nsIMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
+nsIMEStateManager::OnInstalledMenuKeyboardListener(PRBool aInstalling)
 {
   sInstalledMenuKeyboardListener = aInstalling;
 
@@ -314,7 +314,7 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
 
       // if we don't have an action hint and  return won't submit the form use "next"
       if (context.mActionHint.IsEmpty() && aContent->Tag() == nsGkAtoms::input) {
-        bool willSubmit = false;
+        PRBool willSubmit = PR_FALSE;
         nsCOMPtr<nsIFormControl> control(do_QueryInterface(aContent));
         mozilla::dom::Element* formElement = control->GetFormElement();
         nsCOMPtr<nsIForm> form;
@@ -346,7 +346,7 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
     nsContentUtils::AddScriptRunner(new IMEEnabledStateChangedEvent(state));
   }
   if (aState & nsIContent::IME_STATUS_MASK_OPENED) {
-    bool open = !!(aState & nsIContent::IME_STATUS_OPEN);
+    PRBool open = !!(aState & nsIContent::IME_STATUS_OPEN);
     aWidget->SetIMEOpenState(open);
   }
 }
@@ -388,14 +388,14 @@ public:
   nsresult Init(nsIWidget* aWidget,
                 nsPresContext* aPresContext,
                 nsINode* aNode,
-                bool aWantUpdates);
+                PRBool aWantUpdates);
   void     Destroy(void);
 
   nsCOMPtr<nsIWidget>            mWidget;
   nsCOMPtr<nsISelection>         mSel;
   nsCOMPtr<nsIContent>           mRootContent;
   nsCOMPtr<nsINode>              mEditableNode;
-  bool                           mDestroying;
+  PRBool                         mDestroying;
 
 private:
   void NotifyContentAdded(nsINode* aContainer, PRInt32 aStart, PRInt32 aEnd);
@@ -410,7 +410,7 @@ nsresult
 nsTextStateManager::Init(nsIWidget* aWidget,
                          nsPresContext* aPresContext,
                          nsINode* aNode,
-                         bool aWantUpdates)
+                         PRBool aWantUpdates)
 {
   mWidget = aWidget;
   MOZ_ASSERT(mWidget);
@@ -709,7 +709,7 @@ nsIMEStateManager::OnTextStateFocus(nsPresContext* aPresContext,
     return NS_OK;
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool wantUpdates = rv != NS_SUCCESS_IME_NO_UPDATES;
+  PRBool wantUpdates = rv != NS_SUCCESS_IME_NO_UPDATES;
 
   // OnIMEFocusChange may cause focus and sTextStateObserver to change
   // In that case return and keep the current sTextStateObserver

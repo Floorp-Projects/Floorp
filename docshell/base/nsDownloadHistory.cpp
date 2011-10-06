@@ -68,7 +68,7 @@ nsDownloadHistory::AddDownload(nsIURI *aSource,
   if (!history)
     return NS_ERROR_NOT_AVAILABLE;
 
-  bool visited;
+  PRBool visited;
   nsresult rv = history->IsVisited(aSource, &visited);
   NS_ENSURE_SUCCESS(rv, rv);
 

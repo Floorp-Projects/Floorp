@@ -56,7 +56,7 @@ class nsHttpConnectionInfo
 public:
     nsHttpConnectionInfo(const nsACString &host, PRInt32 port,
                          nsProxyInfo* proxyInfo,
-                         bool usingSSL=false)
+                         PRBool usingSSL=PR_FALSE)
         : mRef(0)
         , mProxyInfo(proxyInfo)
         , mUsingSSL(usingSSL)
@@ -111,7 +111,7 @@ public:
     // Note that we don't care about transparent proxies - 
     // it doesn't matter if we're talking via socks or not, since
     // a request will end up at the same host.
-    bool Equals(const nsHttpConnectionInfo *info)
+    PRBool Equals(const nsHttpConnectionInfo *info)
     {
         return mHashKey.Equals(info->HashKey());
     }
@@ -119,12 +119,12 @@ public:
     const char   *Host() const           { return mHost.get(); }
     PRInt32       Port() const           { return mPort; }
     nsProxyInfo  *ProxyInfo()            { return mProxyInfo; }
-    bool          UsingHttpProxy() const { return mUsingHttpProxy; }
-    bool          UsingSSL() const       { return mUsingSSL; }
+    PRBool        UsingHttpProxy() const { return mUsingHttpProxy; }
+    PRBool        UsingSSL() const       { return mUsingSSL; }
     PRInt32       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
-    void          SetAnonymous(bool anon)         
+    void          SetAnonymous(PRBool anon)         
                                          { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
-    bool          ShouldForceConnectMethod();
+    PRBool        ShouldForceConnectMethod();
 
 private:
     nsrefcnt               mRef;
@@ -132,8 +132,8 @@ private:
     nsCString              mHost;
     PRInt32                mPort;
     nsCOMPtr<nsProxyInfo>  mProxyInfo;
-    bool                   mUsingHttpProxy;
-    bool                   mUsingSSL;
+    PRPackedBool           mUsingHttpProxy;
+    PRPackedBool           mUsingSSL;
 };
 
 #endif // nsHttpConnectionInfo_h__

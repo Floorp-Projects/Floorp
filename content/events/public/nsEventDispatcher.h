@@ -132,7 +132,7 @@ public:
                          nsEvent* aEvent,
                          nsIDOMEvent* aDOMEvent,
                          nsEventStatus aEventStatus,
-                         bool aIsInAnon)
+                         PRBool aIsInAnon)
   : nsEventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus),
     mCanHandle(PR_TRUE), mForceContentDispatch(PR_FALSE),
     mRelatedTargetIsInAnon(PR_FALSE), mOriginalTargetIsInAnon(aIsInAnon),
@@ -156,38 +156,38 @@ public:
    * construction of the event target chain is complete. The target that sets
    * mCanHandle to false is NOT included in the event target chain.
    */
-  bool                  mCanHandle;
+  PRPackedBool          mCanHandle;
 
   /**
    * If mForceContentDispatch is set to PR_TRUE,
    * content dispatching is not disabled for this event target.
    * FIXME! This is here for backward compatibility. Bug 329119
    */
-  bool                  mForceContentDispatch;
+  PRPackedBool          mForceContentDispatch;
 
   /**
    * PR_TRUE if it is known that related target is or is a descendant of an
    * element which is anonymous for events.
    */
-  bool                  mRelatedTargetIsInAnon;
+  PRPackedBool          mRelatedTargetIsInAnon;
 
   /**
    * PR_TRUE if the original target of the event is inside anonymous content.
    * This is set before calling PreHandleEvent on event targets.
    */
-  bool                  mOriginalTargetIsInAnon;
+  PRPackedBool          mOriginalTargetIsInAnon;
 
   /**
    * Whether or not nsIDOMEventTarget::WillHandleEvent will be
    * called. Default is PR_FALSE;
    */
-  bool                  mWantsWillHandleEvent;
+  PRPackedBool          mWantsWillHandleEvent;
 
   /**
    * If it is known that the current target doesn't have a listener manager
    * when PreHandleEvent is called, set this to PR_FALSE.
    */
-  bool                  mMayHaveListenerManager;
+  PRPackedBool          mMayHaveListenerManager;
 
   /**
    * Parent item in the event target chain.

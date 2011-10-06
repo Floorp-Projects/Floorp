@@ -48,8 +48,6 @@
 #include "jsapi.h"
 #include "jsprvtd.h"
 
-#ifdef __cplusplus
-
 namespace js {
 
 class AutoIdVector;
@@ -390,23 +388,5 @@ Valueify(JSClass *c)
     return (Class *)c;
 }
 
-/*
- * Enumeration describing possible values of the [[Class]] internal property
- * value of objects.
- */
-enum ESClassValue { ESClass_Array, ESClass_Number, ESClass_String, ESClass_Boolean };
-
-/*
- * Return whether the given object has the given [[Class]] internal property
- * value. Beware, this query says nothing about the js::Class of the JSObject
- * so the caller must not assume anything about obj's representation (e.g., obj
- * may be a proxy).
- */
-inline bool
-ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx);
-
 }  /* namespace js */
-
-#endif  /* __cplusplus */
-
 #endif  /* jsclass_h__ */

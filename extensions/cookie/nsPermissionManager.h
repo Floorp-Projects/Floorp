@@ -95,7 +95,7 @@ public:
     return mHost;
   }
 
-  bool KeyEquals(KeyTypePointer aKey) const
+  PRBool KeyEquals(KeyTypePointer aKey) const
   {
     return !strcmp(mHost, aKey);
   }
@@ -200,18 +200,18 @@ public:
 private:
 
   PRInt32 GetTypeIndex(const char *aTypeString,
-                       bool        aAdd);
+                       PRBool      aAdd);
 
   nsHostEntry *GetHostEntry(const nsAFlatCString &aHost,
                             PRUint32              aType,
-                            bool                  aExactHostMatch);
+                            PRBool                aExactHostMatch);
 
   nsresult CommonTestPermission(nsIURI     *aURI,
                                 const char *aType,
                                 PRUint32   *aPermission,
-                                bool        aExactHostMatch);
+                                PRBool      aExactHostMatch);
 
-  nsresult InitDB(bool aRemoveFile);
+  nsresult InitDB(PRBool aRemoveFile);
   nsresult CreateTable();
   nsresult Import();
   nsresult Read();

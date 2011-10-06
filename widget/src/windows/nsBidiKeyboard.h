@@ -54,10 +54,10 @@ public:
 protected:
 
   nsresult SetupBidiKeyboards();
-  bool IsRTLLanguage(HKL aLocale);
+  PRBool IsRTLLanguage(HKL aLocale);
 
-  bool mInitialized;
-  bool mHaveBidiKeyboards;
+  PRPackedBool mInitialized;
+  PRPackedBool mHaveBidiKeyboards;
   PRUnichar  mLTRKeyboard[KL_NAMELENGTH];
   PRUnichar  mRTLKeyboard[KL_NAMELENGTH];
   PRUnichar  mCurrentLocaleName[KL_NAMELENGTH];

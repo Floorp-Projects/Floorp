@@ -76,10 +76,10 @@ nsMediaDecoder::nsMediaDecoder() :
   mRGBHeight(-1),
   mVideoUpdateLock("nsMediaDecoder.mVideoUpdateLock"),
   mFrameBufferLength(0),
-  mPinnedForSeek(false),
-  mSizeChanged(false),
-  mImageContainerSizeChanged(false),
-  mShuttingDown(false)
+  mPinnedForSeek(PR_FALSE),
+  mSizeChanged(PR_FALSE),
+  mImageContainerSizeChanged(PR_FALSE),
+  mShuttingDown(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsMediaDecoder);
   MediaMemoryReporter::AddMediaDecoder(this);
@@ -91,10 +91,10 @@ nsMediaDecoder::~nsMediaDecoder()
   MediaMemoryReporter::RemoveMediaDecoder(this);
 }
 
-bool nsMediaDecoder::Init(nsHTMLMediaElement* aElement)
+PRBool nsMediaDecoder::Init(nsHTMLMediaElement* aElement)
 {
   mElement = aElement;
-  return true;
+  return PR_TRUE;
 }
 
 void nsMediaDecoder::Shutdown()
@@ -124,18 +124,18 @@ void nsMediaDecoder::Invalidate()
     return;
 
   nsIFrame* frame = mElement->GetPrimaryFrame();
-  bool invalidateFrame = false;
+  PRBool invalidateFrame = PR_FALSE;
 
   {
     MutexAutoLock lock(mVideoUpdateLock);
 
     // Get mImageContainerSizeChanged while holding the lock.
     invalidateFrame = mImageContainerSizeChanged;
-    mImageContainerSizeChanged = false;
+    mImageContainerSizeChanged = PR_FALSE;
 
     if (mSizeChanged) {
       mElement->UpdateMediaSize(nsIntSize(mRGBWidth, mRGBHeight));
-      mSizeChanged = false;
+      mSizeChanged = PR_FALSE;
 
       if (frame) {
         nsPresContext* presContext = frame->PresContext();
@@ -162,10 +162,10 @@ void nsMediaDecoder::Invalidate()
 static void ProgressCallback(nsITimer* aTimer, void* aClosure)
 {
   nsMediaDecoder* decoder = static_cast<nsMediaDecoder*>(aClosure);
-  decoder->Progress(true);
+  decoder->Progress(PR_TRUE);
 }
 
-void nsMediaDecoder::Progress(bool aTimer)
+void nsMediaDecoder::Progress(PRBool aTimer)
 {
   if (!mElement)
     return;
@@ -221,7 +221,7 @@ void nsMediaDecoder::FireTimeUpdate()
 {
   if (!mElement)
     return;
-  mElement->FireTimeUpdate(true);
+  mElement->FireTimeUpdate(PR_TRUE);
 }
 
 void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
@@ -233,7 +233,7 @@ void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
   if (mRGBWidth != aSize.width || mRGBHeight != aSize.height) {
     mRGBWidth = aSize.width;
     mRGBHeight = aSize.height;
-    mSizeChanged = true;
+    mSizeChanged = PR_TRUE;
   }
   if (mImageContainer && aImage) {
     gfxIntSize oldFrameSize = mImageContainer->GetCurrentSize();
@@ -246,7 +246,7 @@ void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
     mImageContainer->SetCurrentImage(aImage);
     gfxIntSize newFrameSize = mImageContainer->GetCurrentSize();
     if (oldFrameSize != newFrameSize) {
-      mImageContainerSizeChanged = true;
+      mImageContainerSizeChanged = PR_TRUE;
     }
   }
 
@@ -265,7 +265,7 @@ void nsMediaDecoder::PinForSeek()
   if (!stream || mPinnedForSeek) {
     return;
   }
-  mPinnedForSeek = true;
+  mPinnedForSeek = PR_TRUE;
   stream->Pin();
 }
 
@@ -275,15 +275,15 @@ void nsMediaDecoder::UnpinForSeek()
   if (!stream || !mPinnedForSeek) {
     return;
   }
-  mPinnedForSeek = false;
+  mPinnedForSeek = PR_FALSE;
   stream->Unpin();
 }
 
-bool nsMediaDecoder::CanPlayThrough()
+PRBool nsMediaDecoder::CanPlayThrough()
 {
   Statistics stats = GetStatistics();
   if (!stats.mDownloadRateReliable || !stats.mPlaybackRateReliable) {
-    return false;
+    return PR_FALSE;
   }
   PRInt64 bytesToDownload = stats.mTotalBytes - stats.mDownloadPosition;
   PRInt64 bytesToPlayback = stats.mTotalBytes - stats.mPlaybackPosition;
@@ -293,7 +293,7 @@ bool nsMediaDecoder::CanPlayThrough()
   if (timeToDownload > timeToPlay) {
     // Estimated time to download is greater than the estimated time to play.
     // We probably can't play through without having to stop to buffer.
-    return false;
+    return PR_FALSE;
   }
 
   // Estimated time to download is less than the estimated time to play.

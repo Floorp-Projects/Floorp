@@ -290,7 +290,7 @@ public:
       delete mData[i];
   }
 
-  bool ConditionallyConnect(nsCString &aStr, WebSocketChannel *ws)
+  PRBool ConditionallyConnect(nsCString &aStr, WebSocketChannel *ws)
   {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
 
@@ -302,7 +302,7 @@ public:
     // we could hash this, but the dataset is expected to be
     // small
 
-    bool found = (IndexOf(aStr) >= 0);
+    PRBool found = (IndexOf(aStr) >= 0);
     nsOpenConn *newdata = new nsOpenConn(aStr, ws);
     mData.AppendElement(newdata);
 
@@ -319,7 +319,7 @@ public:
     return !found;
   }
 
-  bool Complete(WebSocketChannel *aChannel)
+  PRBool Complete(WebSocketChannel *aChannel)
   {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
     NS_ABORT_IF_FALSE(!aChannel->mOpenBlocked,
@@ -341,7 +341,7 @@ public:
     return ConnectNext(aChannel->mAddress);
   }
 
-  bool Cancel(WebSocketChannel *aChannel)
+  PRBool Cancel(WebSocketChannel *aChannel)
   {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
     PRInt32 index = IndexOf(aChannel);
@@ -363,7 +363,7 @@ public:
     return PR_FALSE;
   }
 
-  bool ConnectNext(nsCString &hostName)
+  PRBool ConnectNext(nsCString &hostName)
   {
     PRInt32 index = IndexOf(hostName);
     if (index >= 0) {
@@ -464,7 +464,7 @@ public:
       deflateEnd(&mZlib);
   }
 
-  bool Active()
+  PRBool Active()
   {
     return mActive;
   }
@@ -533,7 +533,7 @@ private:
     return NS_OK;
   }
 
-  bool                            mActive;
+  PRBool                          mActive;
   z_stream                        mZlib;
   nsCOMPtr<nsIStringInputStream>  mStream;
 
@@ -691,7 +691,7 @@ WebSocketChannel::BeginOpen()
   return rv;
 }
 
-bool
+PRBool
 WebSocketChannel::IsPersistentFramePtr()
 {
   return (mFramePtr >= mBuffer && mFramePtr < mBuffer + mBufferSize);
@@ -1169,8 +1169,8 @@ WebSocketChannel::PrimeNewOutgoingMessage()
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "not socket thread");
   NS_ABORT_IF_FALSE(!mCurrentOut, "Current message in progress");
 
-  bool isPong = false;
-  bool isPing = false;
+  PRBool isPong = PR_FALSE;
+  PRBool isPing = PR_FALSE;
 
   mCurrentOut = (OutboundMessage *)mOutgoingPongMessages.PopFront();
   if (mCurrentOut) {
@@ -1263,7 +1263,7 @@ WebSocketChannel::PrimeNewOutgoingMessage()
     if (mCurrentOut->Length() < 126) {
       mOutHeader[1] = mCurrentOut->Length() | kMaskBit;
       mHdrOutToSend = 6;
-    } else if (mCurrentOut->Length() <= 0xffff) {
+    } else if (mCurrentOut->Length() < 0xffff) {
       mOutHeader[1] = 126 | kMaskBit;
       ((PRUint16 *)mOutHeader)[1] =
         PR_htons(mCurrentOut->Length());
@@ -1810,7 +1810,7 @@ WebSocketChannel::AsyncOnChannelRedirect(
     return NS_OK;
   }
 
-  bool isHttps = false;
+  PRBool isHttps = PR_FALSE;
   rv = newuri->SchemeIs("https", &isHttps);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1987,7 +1987,7 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
 
   if (prefService) {
     PRInt32 intpref;
-    bool boolpref;
+    PRBool boolpref;
     rv = prefService->GetIntPref("network.websocket.max-message-size", 
                                  &intpref);
     if (NS_SUCCEEDED(rv)) {

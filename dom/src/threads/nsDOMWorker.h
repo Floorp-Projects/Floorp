@@ -86,14 +86,14 @@ public:
   NS_FORWARD_INTERNAL_NSIDOMEVENTTARGET(nsDOMWorkerMessageHandler::)
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
-                              bool aUseCapture,
-                              bool aWantsUntrusted,
+                              PRBool aUseCapture,
+                              PRBool aWantsUntrusted,
                               PRUint8 optional_argc);
   NS_IMETHOD RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
-                                 bool aUseCapture);
+                                 PRBool aUseCapture);
   NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent,
-                           bool* _retval);
+                           PRBool* _retval);
   NS_DECL_NSIWORKERGLOBALSCOPE
   NS_DECL_NSIWORKERSCOPE
   NS_DECL_NSIXPCSCRIPTABLE
@@ -113,7 +113,7 @@ private:
 
   nsRefPtr<nsDOMWorkerNavigator> mNavigator;
 
-  bool mHasOnerror;
+  PRPackedBool mHasOnerror;
 };
 
 class nsLazyAutoRequest
@@ -173,14 +173,14 @@ public:
   NS_FORWARD_INTERNAL_NSIDOMEVENTTARGET(nsDOMWorkerMessageHandler::)
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
-                              bool aUseCapture,
-                              bool aWantsUntrusted,
+                              PRBool aUseCapture,
+                              PRBool aWantsUntrusted,
                               PRUint8 optional_argc);
   NS_IMETHOD RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
-                                 bool aUseCapture);
+                                 PRBool aUseCapture);
   NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent,
-                           bool* _retval);
+                           PRBool* _retval);
 
   NS_DECL_NSIABSTRACTWORKER
   NS_DECL_NSIWORKER
@@ -216,12 +216,12 @@ public:
   void Resume();
 
   // This just calls IsCanceledNoLock with an autolock around the call.
-  bool IsCanceled();
+  PRBool IsCanceled();
 
-  bool IsClosing();
-  bool IsSuspended();
+  PRBool IsClosing();
+  PRBool IsSuspended();
 
-  bool SetGlobalForContext(JSContext* aCx, nsLazyAutoRequest *aRequest, JSAutoEnterCompartment *aComp);
+  PRBool SetGlobalForContext(JSContext* aCx, nsLazyAutoRequest *aRequest, JSAutoEnterCompartment *aComp);
 
   void SetPool(nsDOMWorkerPool* aPool);
 
@@ -245,7 +245,7 @@ public:
   PRIntervalTime GetExpirationTime();
 #endif
 
-  bool IsPrivileged() {
+  PRBool IsPrivileged() {
     return mPrivilegeModel == CHROME;
   }
 
@@ -309,9 +309,9 @@ public:
 private:
   ~nsDOMWorker();
 
-  nsresult PostMessageInternal(bool aToInner);
+  nsresult PostMessageInternal(PRBool aToInner);
 
-  bool CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest, JSAutoEnterCompartment *aComp);
+  PRBool CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest, JSAutoEnterCompartment *aComp);
 
   PRUint32 NextTimeoutId() {
     return ++mNextTimeoutId;
@@ -340,21 +340,21 @@ private:
   void ClearBaseURI();
 
   nsresult FireCloseRunnable(PRIntervalTime aTimeoutInterval,
-                             bool aClearQueue,
-                             bool aFromFinalize);
+                             PRBool aClearQueue,
+                             PRBool aFromFinalize);
   nsresult Close();
 
-  nsresult TerminateInternal(bool aFromFinalize);
+  nsresult TerminateInternal(PRBool aFromFinalize);
 
   nsIWorkerLocation* GetLocation() {
     return mLocation;
   }
 
-  bool QueueSuspendedRunnable(nsIRunnable* aRunnable);
+  PRBool QueueSuspendedRunnable(nsIRunnable* aRunnable);
 
   // Determines if the worker should be considered "canceled". See the large
   // comment in the implementation for more details.
-  bool IsCanceledNoLock();
+  PRBool IsCanceledNoLock();
 
 private:
 
@@ -401,8 +401,8 @@ private:
 
   nsTArray<nsCOMPtr<nsIRunnable> > mQueuedRunnables;
 
-  bool mSuspended;
-  bool mCompileAttempted;
+  PRPackedBool mSuspended;
+  PRPackedBool mCompileAttempted;
 };
 
 /**
@@ -439,7 +439,7 @@ public:
     return mId;
   }
 
-  bool HasId() {
+  PRBool HasId() {
     return mHasId;
   }
 
@@ -447,7 +447,7 @@ protected:
   virtual ~nsDOMWorkerFeature() { }
 
 private:
-  void FreeToDie(bool aFreeToDie) {
+  void FreeToDie(PRBool aFreeToDie) {
     mFreeToDie = aFreeToDie;
   }
 
@@ -457,8 +457,8 @@ protected:
   PRUint32 mId;
 
 private:
-  bool mHasId;
-  bool mFreeToDie;
+  PRPackedBool mHasId;
+  PRPackedBool mFreeToDie;
 };
 
 class nsWorkerFactory : public nsIWorkerFactory

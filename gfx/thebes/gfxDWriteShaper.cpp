@@ -46,7 +46,7 @@
 
 #define MAX_RANGE_LENGTH 25000
 
-bool
+PRBool
 gfxDWriteShaper::InitTextRun(gfxContext *aContext,
                              gfxTextRun *aTextRun,
                              const PRUnichar *aString,
@@ -81,7 +81,7 @@ gfxDWriteShaper::InitTextRun(gfxContext *aContext,
      * TODO: Figure out what exactly is going on, and what is a safe number, and 
      * why.
      */
-    bool result = true;
+    PRBool result = PR_TRUE;
     UINT32 rangeOffset = 0;
     while (rangeOffset < aRunLength) {
         PRUint32 rangeLen = NS_MIN<PRUint32>(aRunLength - rangeOffset,

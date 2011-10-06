@@ -87,7 +87,7 @@ PluginProcessChild::Init()
         // ":" path seperator.
         PRInt32 lastSeparatorPos = interpose.RFind(":");
         PRInt32 lastTriggerPos = interpose.RFind("libplugin_child_interpose.dylib");
-        bool needsReset = false;
+        PRBool needsReset = PR_FALSE;
         if (lastTriggerPos != -1) {
             if (lastSeparatorPos == -1) {
                 interpose.Truncate();
@@ -173,6 +173,18 @@ PluginProcessChild::CleanUp()
     ::OleUninitialize();
 #endif
     nsRegion::ShutdownStatic();
+}
+
+/* static */
+void
+PluginProcessChild::AppendNotesToCrashReport(const nsCString& aNotes)
+{
+    AssertPluginThread();
+
+    PluginProcessChild* p = PluginProcessChild::current();
+    if (p) {
+        p->mPlugin.SendAppendNotesToCrashReport(aNotes);
+    }
 }
 
 } // namespace plugins

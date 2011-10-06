@@ -226,7 +226,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     }
   }
 
-  bool deletedGetter = false;
+  PRBool deletedGetter = PR_FALSE;
   if (mGetterText && mGetterText->GetText()) {
     nsDependentString getter(mGetterText->GetText());
     if (!getter.IsEmpty()) {
@@ -276,7 +276,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     return rv;
   }
 
-  bool deletedSetter = false;
+  PRBool deletedSetter = PR_FALSE;
   if (mSetterText && mSetterText->GetText()) {
     nsDependentString setter(mSetterText->GetText());
     if (!setter.IsEmpty()) {

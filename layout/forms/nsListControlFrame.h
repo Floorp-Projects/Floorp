@@ -118,11 +118,13 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsHTMLScrollFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
+
+  virtual PRBool IsContainingBlock() const;
 
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
@@ -135,10 +137,10 @@ public:
     // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
-  virtual void SetFocus(bool aOn = true, bool aRepaint = false);
+  virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
 
   virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
-  virtual bool ShouldPropagateComputedHeightToScrolledContent() const;
+  virtual PRBool ShouldPropagateComputedHeightToScrolledContent() const;
 
     // for accessibility purposes
 #ifdef ACCESSIBILITY
@@ -150,8 +152,7 @@ public:
 
     // nsIListControlFrame
   virtual void SetComboboxFrame(nsIFrame* aComboboxFrame);
-  virtual PRInt32 GetSelectedIndex();
-  virtual already_AddRefed<nsIContent> GetCurrentOption();
+  virtual PRInt32 GetSelectedIndex(); 
 
   /**
    * Gets the text of the currently selected item.
@@ -160,7 +161,7 @@ public:
    */
   virtual void GetOptionText(PRInt32 aIndex, nsAString & aStr);
 
-  virtual void CaptureMouseEvents(bool aGrabMouseEvents);
+  virtual void CaptureMouseEvents(PRBool aGrabMouseEvents);
   virtual nscoord GetHeightOfARow();
   virtual PRInt32 GetNumberOfOptions();  
   virtual void SyncViewWithFrame();
@@ -187,13 +188,13 @@ public:
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);
   NS_IMETHOD RemoveOption(PRInt32 index);
-  NS_IMETHOD DoneAddingChildren(bool aIsDone);
+  NS_IMETHOD DoneAddingChildren(PRBool aIsDone);
 
   /**
    * Gets the content (an option) by index and then set it as
    * being selected or not selected.
    */
-  NS_IMETHOD OnOptionSelected(PRInt32 aIndex, bool aSelected);
+  NS_IMETHOD OnOptionSelected(PRInt32 aIndex, PRBool aSelected);
   NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex);
 
   // mouse event listeners (both )
@@ -226,7 +227,7 @@ public:
   static void ComboboxFocusSet();
 
   // Helper
-  bool IsFocused() { return this == mFocused; }
+  PRBool IsFocused() { return this == mFocused; }
 
   /**
    * Function to paint the focus rect when our nsSelectsAreaFrame is painting.
@@ -252,23 +253,23 @@ public:
    * Function to ask whether we're currently in what might be the
    * first pass of a two-pass reflow.
    */
-  bool MightNeedSecondPass() const {
+  PRBool MightNeedSecondPass() const {
     return mMightNeedSecondPass;
   }
 
-  void SetSuppressScrollbarUpdate(bool aSuppress) {
+  void SetSuppressScrollbarUpdate(PRBool aSuppress) {
     nsHTMLScrollFrame::SetSuppressScrollbarUpdate(aSuppress);
   }
 
   /**
    * Return whether the list is in dropdown mode.
    */
-  bool IsInDropDownMode() const;
+  PRBool IsInDropDownMode() const;
 
   /**
    * Dropdowns need views
    */
-  virtual bool NeedsView() { return IsInDropDownMode(); }
+  virtual PRBool NeedsView() { return IsInDropDownMode(); }
 
   /**
    * Frees statics owned by this class.
@@ -289,12 +290,12 @@ protected:
    * Updates the selected text in a combobox and then calls FireOnChange().
    * Returns PR_FALSE if calling it destroyed |this|.
    */
-  bool       UpdateSelection();
+  PRBool     UpdateSelection();
 
   /**
    * Returns whether mContent supports multiple selection.
    */
-  bool       GetMultiple() const {
+  PRBool     GetMultiple() const {
     return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
   }
 
@@ -305,7 +306,7 @@ protected:
    */
   void       DropDownToggleKey(nsIDOMEvent* aKeyEvent);
 
-  nsresult   IsOptionDisabled(PRInt32 anIndex, bool &aIsDisabled);
+  nsresult   IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled);
   nsresult   ScrollToFrame(nsIContent * aOptElement);
   nsresult   ScrollToIndex(PRInt32 anIndex);
 
@@ -319,7 +320,7 @@ protected:
    *
    * @param aPoint relative to this frame
    */
-  bool       IgnoreMouseEventForSelection(nsIDOMEvent* aEvent);
+  PRBool     IgnoreMouseEventForSelection(nsIDOMEvent* aEvent);
 
   /**
    * If the dropdown is showing and the mouse has moved below our
@@ -333,7 +334,7 @@ protected:
    * Resets the select back to it's original default values;
    * those values as determined by the original HTML
    */
-  virtual void ResetList(bool aAllowScrolling);
+  virtual void ResetList(PRBool aAllowScrolling);
 
   nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument, nsStyleContext* aContext);
   virtual ~nsListControlFrame();
@@ -361,16 +362,16 @@ protected:
    * content (an option) is selected or not.
    * @return PR_TRUE if it is, PR_FALSE if it is NOT.
    */
-  bool     IsContentSelected(nsIContent* aContent) const;
+  PRBool   IsContentSelected(nsIContent* aContent) const;
 
   /**
    * For a given index is return whether the content is selected.
    */
-  bool     IsContentSelectedByIndex(PRInt32 aIndex) const;
+  PRBool   IsContentSelectedByIndex(PRInt32 aIndex) const;
 
-  bool     CheckIfAllFramesHere();
+  PRBool   CheckIfAllFramesHere();
   PRInt32  GetIndexFromContent(nsIContent *aContent);
-  bool     IsLeftButton(nsIDOMEvent* aMouseEvent);
+  PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);
 
   // guess at a row height based on our own style.
   nscoord  CalcFallbackRowHeight();
@@ -393,17 +394,17 @@ protected:
                             nsReflowStatus&          aStatus);
 
   // Selection
-  bool     SetOptionsSelectedFromFrame(PRInt32 aStartIndex,
+  PRBool   SetOptionsSelectedFromFrame(PRInt32 aStartIndex,
                                        PRInt32 aEndIndex,
-                                       bool aValue,
-                                       bool aClearAll);
-  bool     ToggleOptionSelectedFromFrame(PRInt32 aIndex);
-  bool     SingleSelection(PRInt32 aClickedIndex, bool aDoToggle);
-  bool     ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex,
-                             bool aClearAll);
-  bool     PerformSelection(PRInt32 aClickedIndex, bool aIsShift,
-                            bool aIsControl);
-  bool     HandleListSelection(nsIDOMEvent * aDOMEvent, PRInt32 selectedIndex);
+                                       PRBool aValue,
+                                       PRBool aClearAll);
+  PRBool   ToggleOptionSelectedFromFrame(PRInt32 aIndex);
+  PRBool   SingleSelection(PRInt32 aClickedIndex, PRBool aDoToggle);
+  PRBool   ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex,
+                             PRBool aClearAll);
+  PRBool   PerformSelection(PRInt32 aClickedIndex, PRBool aIsShift,
+                            PRBool aIsControl);
+  PRBool   HandleListSelection(nsIDOMEvent * aDOMEvent, PRInt32 selectedIndex);
   void     InitSelectionRange(PRInt32 aClickedIndex);
 
   nsSelectsAreaFrame* GetOptionsContainer() const {
@@ -420,30 +421,30 @@ protected:
 
   nsIComboboxControlFrame *mComboboxFrame;
   PRInt32      mNumDisplayRows;
-  bool mChangesSinceDragStart:1;
-  bool mButtonDown:1;
+  PRPackedBool mChangesSinceDragStart:1;
+  PRPackedBool mButtonDown:1;
   // Has the user selected a visible item since we showed the
   // dropdown?
-  bool mItemSelectionStarted:1;
+  PRPackedBool mItemSelectionStarted:1;
 
-  bool mIsAllContentHere:1;
-  bool mIsAllFramesHere:1;
-  bool mHasBeenInitialized:1;
-  bool mNeedToReset:1;
-  bool mPostChildrenLoadedReset:1;
+  PRPackedBool mIsAllContentHere:1;
+  PRPackedBool mIsAllFramesHere:1;
+  PRPackedBool mHasBeenInitialized:1;
+  PRPackedBool mNeedToReset:1;
+  PRPackedBool mPostChildrenLoadedReset:1;
 
   //bool value for multiple discontiguous selection
-  bool mControlSelectMode:1;
+  PRPackedBool mControlSelectMode:1;
 
   // True if we're in the middle of a reflow and might need a second
   // pass.  This only happens for auto heights.
-  bool mMightNeedSecondPass:1;
+  PRPackedBool mMightNeedSecondPass:1;
 
   /**
    * Set to aPresContext->HasPendingInterrupt() at the start of Reflow.
    * Set to PR_FALSE at the end of DidReflow.
    */
-  bool mHasPendingInterruptAtStartOfReflow:1;
+  PRPackedBool mHasPendingInterruptAtStartOfReflow:1;
 
   // The last computed height we reflowed at if we're a combobox dropdown.
   // XXXbz should we be using a subclass here?  Or just not worry

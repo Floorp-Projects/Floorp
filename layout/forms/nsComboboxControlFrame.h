@@ -125,7 +125,7 @@ public:
   // things move to IsFrameOfType.
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
@@ -157,14 +157,14 @@ public:
    * @param aRepaint if PR_TRUE then force repaint (NOTE: we always force repaint currently)
    * @note This method might destroy |this|.
    */
-  virtual void SetFocus(bool aOn, bool aRepaint);
+  virtual void SetFocus(PRBool aOn, PRBool aRepaint);
 
   //nsIComboboxControlFrame
-  virtual bool IsDroppedDown() { return mDroppedDown; }
+  virtual PRBool IsDroppedDown() { return mDroppedDown; }
   /**
    * @note This method might destroy |this|.
    */
-  virtual void ShowDropDown(bool aDoDropDown);
+  virtual void ShowDropDown(PRBool aDoDropDown);
   virtual nsIFrame* GetDropDown();
   virtual void SetDropDown(nsIFrame* aDropDownFrame);
   /**
@@ -183,8 +183,8 @@ public:
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);
   NS_IMETHOD RemoveOption(PRInt32 index);
-  NS_IMETHOD DoneAddingChildren(bool aIsDone);
-  NS_IMETHOD OnOptionSelected(PRInt32 aIndex, bool aSelected);
+  NS_IMETHOD DoneAddingChildren(PRBool aIsDone);
+  NS_IMETHOD OnOptionSelected(PRInt32 aIndex, PRBool aSelected);
   NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex);
 
   //nsIRollupListener
@@ -197,21 +197,21 @@ public:
    * A combobox should roll up if a mousewheel event happens outside of
    * the popup area.
    */
-  NS_IMETHOD ShouldRollupOnMouseWheelEvent(bool *aShouldRollup)
+  NS_IMETHOD ShouldRollupOnMouseWheelEvent(PRBool *aShouldRollup)
     { *aShouldRollup = PR_TRUE; return NS_OK;}
 
   /**
    * A combobox should not roll up if activated by a mouse activate message
    * (eg. X-mouse).
    */
-  NS_IMETHOD ShouldRollupOnMouseActivate(bool *aShouldRollup)
+  NS_IMETHOD ShouldRollupOnMouseActivate(PRBool *aShouldRollup)
     { *aShouldRollup = PR_FALSE; return NS_OK;}
 
   //nsIStatefulFrame
   NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState);
   NS_IMETHOD RestoreState(nsPresState* aState);
 
-  static bool ToolkitHasNativePopup();
+  static PRBool ToolkitHasNativePopup();
 
 protected:
 
@@ -239,7 +239,7 @@ protected:
    * Show or hide the dropdown list.
    * @note This method might destroy |this|.
    */
-  void ShowPopup(bool aShowPopup);
+  void ShowPopup(PRBool aShowPopup);
 
   /**
    * Show or hide the dropdown list.
@@ -247,12 +247,12 @@ protected:
    * @note This method might destroy |this|.
    * @return PR_FALSE if this frame is destroyed, PR_TRUE if still alive.
    */
-  bool ShowList(bool aShowList);
+  PRBool ShowList(PRBool aShowList);
   void CheckFireOnChange();
   void FireValueChangeEvent();
   nsresult RedisplayText(PRInt32 aIndex);
   void HandleRedisplayTextEvent();
-  void ActuallyDisplayText(bool aNotify);
+  void ActuallyDisplayText(PRBool aNotify);
 
 private:
   // If our total transform to the root frame of the root document is only a 2d
@@ -272,8 +272,8 @@ protected:
   // size to the full width except the drop-marker.
   nscoord mDisplayWidth;
   
-  bool                  mDroppedDown;             // Current state of the dropdown list, true is dropped down
-  bool                  mInRedisplayText;
+  PRPackedBool          mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
+  PRPackedBool          mInRedisplayText;
 
   nsRevocableEventPtr<RedisplayTextEvent> mRedisplayTextEvent;
 

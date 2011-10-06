@@ -249,7 +249,7 @@ gfxDWriteFontEntry::~gfxDWriteFontEntry()
 {
 }
 
-bool
+PRBool
 gfxDWriteFontEntry::IsSymbolFont()
 {
     if (mFont) {
@@ -364,7 +364,7 @@ gfxDWriteFontEntry::ReadCMAP()
             return NS_ERROR_FAILURE;
         PRUint8 *cmap = buffer.Elements();
 
-        bool          unicodeFont = false, symbolFont = false;
+        PRPackedBool  unicodeFont = PR_FALSE, symbolFont = PR_FALSE;
         rv = gfxFontUtils::ReadCMAP(cmap, buffer.Length(),
                                     mCharacterMap, mUVSOffset,
                                     unicodeFont, symbolFont);
@@ -393,8 +393,8 @@ gfxDWriteFontEntry::ReadCMAP()
         return NS_ERROR_FAILURE;
     }
 
-    bool isSymbol = fontFace->IsSymbolFont();
-    bool isUnicode = true;
+    PRPackedBool isSymbol = fontFace->IsSymbolFont();
+    PRPackedBool isUnicode = PR_TRUE;
     if (exists) {
         rv = gfxFontUtils::ReadCMAP(tableData,
                                     len,
@@ -416,7 +416,7 @@ gfxDWriteFontEntry::ReadCMAP()
 
 gfxFont *
 gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
-                                       bool aNeedsBold)
+                                       PRBool aNeedsBold)
 {
     return new gfxDWriteFont(this, aFontStyle, aNeedsBold);
 }
@@ -444,7 +444,7 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
     return NS_OK;
 }
 
-bool
+PRBool
 gfxDWriteFontEntry::InitLogFont(IDWriteFont *aFont, LOGFONTW *aLogFont)
 {
     HRESULT hr;
@@ -456,7 +456,7 @@ gfxDWriteFontEntry::InitLogFont(IDWriteFont *aFont, LOGFONTW *aLogFont)
     return (FAILED(hr) ? PR_FALSE : PR_TRUE);
 }
 
-bool
+PRBool
 gfxDWriteFontEntry::IsCJKFont()
 {
     if (mIsCJK != UNINITIALIZED_VALUE) {
@@ -506,7 +506,7 @@ gfxDWriteFontList::gfxDWriteFontList()
 
 gfxFontEntry *
 gfxDWriteFontList::GetDefaultFont(const gfxFontStyle *aStyle,
-                                  bool &aNeedsBold)
+                                  PRBool &aNeedsBold)
 {
     nsAutoString resolvedName;
 
@@ -534,7 +534,7 @@ gfxFontEntry *
 gfxDWriteFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                    const nsAString& aFullname)
 {
-    bool found;
+    PRBool found;
     gfxFontEntry *lookup;
 
     // initialize name lookup tables if needed
@@ -690,7 +690,7 @@ gfxDWriteFontList::InitFontList()
         fc->AgeAllGenerations();
     }
 
-    mGDIFontTableAccess = Preferences::GetBool("gfx.font_rendering.directwrite.use_gdi_table_loading", false);
+    mGDIFontTableAccess = Preferences::GetBool("gfx.font_rendering.directwrite.use_gdi_table_loading", PR_FALSE);
 
     gfxPlatformFontList::InitFontList();
 
@@ -897,7 +897,7 @@ gfxDWriteFontList::DelayedInitFontList()
         nsTArray<nsRefPtr<gfxFontEntry> >& faces = gillSansFamily->GetFontList();
         PRUint32 i;
 
-        bool allUltraBold = true;
+        PRBool allUltraBold = PR_TRUE;
         for (i = 0; i < faces.Length(); i++) {
             // does the face have 'Ultra Bold' in the name?
             if (faces[i]->Name().Find(NS_LITERAL_STRING("Ultra Bold")) == -1) {
@@ -1083,7 +1083,7 @@ gfxDWriteFontList::GetDirectWriteSubstitutes()
     }
 }
 
-bool
+PRBool
 gfxDWriteFontList::GetStandardFamilyName(const nsAString& aFontName,
                                          nsAString& aFamilyName)
 {
@@ -1117,7 +1117,7 @@ gfxDWriteFontList::GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamily
     return gfxPlatformFontList::GetFontFamilyList(aFamilyArray);
 }
 
-bool 
+PRBool 
 gfxDWriteFontList::ResolveFontName(const nsAString& aFontName,
                                    nsAString& aResolvedFontName)
 {

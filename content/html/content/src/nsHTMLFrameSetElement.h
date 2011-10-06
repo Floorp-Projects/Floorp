@@ -111,13 +111,13 @@ public:
   // These override the SetAttr methods in nsGenericHTMLElement (need
   // both here to silence compiler warnings).
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, bool aNotify)
+                   const nsAString& aValue, PRBool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
+                           PRBool aNotify);
 
    /**
     * GetRowSpec is used to get the "rows" spec.
@@ -137,7 +137,7 @@ public:
   nsresult GetColSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs);
 
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);

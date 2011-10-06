@@ -78,7 +78,7 @@ protected:
     nsCString    mComment;
     nsCString    mBuf;
     PRInt32      mLineStart;
-    bool         mHasDescription;
+    PRBool       mHasDescription;
     int*         mFormat;
 
     nsresult ProcessData(nsIRequest *aRequest, nsISupports *aCtxt);

@@ -98,7 +98,7 @@ protected:
 
     Updater* mUpdaters;
 
-    bool Matches(const nsString& aList, 
+    PRBool Matches(const nsString& aList, 
                    const nsAString& aElement);
 };
 

@@ -60,20 +60,20 @@ public:
 
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              PRBool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue,
                           nsSVGElement *aSVGElement);
 
   nsresult SetBaseValue(PRUint16 aValue,
                         nsSVGElement *aSVGElement,
-                        bool aDoSetAttr);
+                        PRBool aDoSetAttr);
   PRUint16 GetBaseValue() const
     { return mBaseVal; }
 
   void SetAnimValue(PRUint16 aValue, nsSVGElement *aSVGElement);
   PRUint16 GetAnimValue() const
     { return mAnimVal; }
-  bool IsExplicitlySet() const
+  PRBool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
 
   nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
@@ -87,8 +87,8 @@ private:
   nsSVGEnumValue mAnimVal;
   nsSVGEnumValue mBaseVal;
   PRUint8 mAttrEnum; // element specified tracking for attribute
-  bool mIsAnimated;
-  bool mIsBaseSet;
+  PRPackedBool mIsAnimated;
+  PRPackedBool mIsBaseSet;
 
   nsSVGEnumMapping *GetMapping(nsSVGElement *aSVGElement);
 
@@ -138,7 +138,7 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const;
+                                     PRBool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

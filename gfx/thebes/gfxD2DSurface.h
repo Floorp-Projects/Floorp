@@ -72,7 +72,7 @@ public:
 
     ID3D10Texture2D *GetTexture();
 
-    HDC GetDC(bool aRetainContents);
+    HDC GetDC(PRBool aRetainContents);
     void ReleaseDC(const nsIntRect *aUpdatedRect);
 };
 

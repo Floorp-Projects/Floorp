@@ -117,8 +117,8 @@ class ContentCreationNotifier : public nsIObserver
 NS_IMPL_ISUPPORTS1(ContentCreationNotifier,
                    nsIObserver)
 
-static bool gMenu;
-static bool gMenuConsumed;
+static PRBool gMenu;
+static PRBool gMenuConsumed;
 
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gAndroidBounds[0] is the topmost
@@ -174,8 +174,7 @@ nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent)
 nsWindow::nsWindow() :
     mIsVisible(PR_FALSE),
     mParent(nsnull),
-    mFocus(nsnull),
-    mIMEComposing(PR_FALSE)
+    mFocus(nsnull)
 {
 }
 
@@ -188,7 +187,7 @@ nsWindow::~nsWindow()
     ALOG("nsWindow %p destructor", (void*)this);
 }
 
-bool
+PRBool
 nsWindow::IsTopLevel()
 {
     return mWindowType == eWindowType_toplevel ||
@@ -332,7 +331,7 @@ nsWindow::GetDPI()
 }
 
 NS_IMETHODIMP
-nsWindow::Show(bool aState)
+nsWindow::Show(PRBool aState)
 {
     ALOG("nsWindow[%p]::Show %d", (void*)this, aState);
 
@@ -384,7 +383,7 @@ nsWindow::Show(bool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::SetModal(bool aState)
+nsWindow::SetModal(PRBool aState)
 {
     ALOG("nsWindow[%p]::SetModal %d ignored", (void*)this, aState);
 
@@ -392,14 +391,14 @@ nsWindow::SetModal(bool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::IsVisible(bool& aState)
+nsWindow::IsVisible(PRBool& aState)
 {
     aState = mIsVisible;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::ConstrainPosition(bool aAllowSlop,
+nsWindow::ConstrainPosition(PRBool aAllowSlop,
                             PRInt32 *aX,
                             PRInt32 *aY)
 {
@@ -431,7 +430,7 @@ nsWindow::Move(PRInt32 aX,
 NS_IMETHODIMP
 nsWindow::Resize(PRInt32 aWidth,
                  PRInt32 aHeight,
-                 bool aRepaint)
+                 PRBool aRepaint)
 {
     return Resize(mBounds.x,
                   mBounds.y,
@@ -445,11 +444,11 @@ nsWindow::Resize(PRInt32 aX,
                  PRInt32 aY,
                  PRInt32 aWidth,
                  PRInt32 aHeight,
-                 bool aRepaint)
+                 PRBool aRepaint)
 {
     ALOG("nsWindow[%p]::Resize [%d %d %d %d] (repaint %d)", (void*)this, aX, aY, aWidth, aHeight, aRepaint);
 
-    bool needSizeDispatch = aWidth != mBounds.width || aHeight != mBounds.height;
+    PRBool needSizeDispatch = aWidth != mBounds.width || aHeight != mBounds.height;
 
     mBounds.x = aX;
     mBounds.y = aY;
@@ -477,7 +476,7 @@ nsWindow::SetZIndex(PRInt32 aZIndex)
 NS_IMETHODIMP
 nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                       nsIWidget *aWidget,
-                      bool aActivate)
+                      PRBool aActivate)
 {
     return NS_OK;
 }
@@ -497,14 +496,14 @@ nsWindow::SetSizeMode(PRInt32 aMode)
 }
 
 NS_IMETHODIMP
-nsWindow::Enable(bool aState)
+nsWindow::Enable(PRBool aState)
 {
     ALOG("nsWindow[%p]::Enable %d ignored", (void*)this, aState);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::IsEnabled(bool *aState)
+nsWindow::IsEnabled(PRBool *aState)
 {
     *aState = PR_TRUE;
     return NS_OK;
@@ -512,7 +511,7 @@ nsWindow::IsEnabled(bool *aState)
 
 NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
-                     bool aIsSynchronous)
+                     PRBool aIsSynchronous)
 {
     nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
     return NS_OK;
@@ -540,7 +539,7 @@ nsWindow::FindTopLevel()
 }
 
 NS_IMETHODIMP
-nsWindow::SetFocus(bool aRaise)
+nsWindow::SetFocus(PRBool aRaise)
 {
     if (!aRaise)
         ALOG("nsWindow::SetFocus: can't set focus without raising, ignoring aRaise = false!");
@@ -646,7 +645,7 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent)
 }
 
 NS_IMETHODIMP
-nsWindow::MakeFullScreen(bool aFullScreen)
+nsWindow::MakeFullScreen(PRBool aFullScreen)
 {
     AndroidBridge::Bridge()->SetFullScreen(aFullScreen);
     return NS_OK;
@@ -899,7 +898,7 @@ nsWindow::OnAndroidEvent(AndroidGeckoEvent *ae)
     }
 }
 
-bool
+PRBool
 nsWindow::DrawTo(gfxASurface *targetSurface)
 {
     if (!mIsVisible)
@@ -977,7 +976,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
             targetSurface->SetDeviceOffset(offset + gfxPoint(mChildren[i]->mBounds.x,
                                                              mChildren[i]->mBounds.y));
 
-        bool ok = mChildren[i]->DrawTo(targetSurface);
+        PRBool ok = mChildren[i]->DrawTo(targetSurface);
 
         if (!ok) {
             ALOG("nsWindow[%p]::DrawTo child %d[%p] returned FALSE!", (void*) this, i, (void*)mChildren[i]);
@@ -1522,9 +1521,9 @@ void
 nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
 {
     nsCOMPtr<nsIAtom> command;
-    bool isDown = ae->Action() == AndroidKeyEvent::ACTION_DOWN;
-    bool isLongPress = !!(ae->Flags() & AndroidKeyEvent::FLAG_LONG_PRESS);
-    bool doCommand = false;
+    PRBool isDown = ae->Action() == AndroidKeyEvent::ACTION_DOWN;
+    PRBool isLongPress = !!(ae->Flags() & AndroidKeyEvent::FLAG_LONG_PRESS);
+    PRBool doCommand = PR_FALSE;
     PRUint32 keyCode = ae->KeyCode();
 
     if (isDown) {
@@ -1865,7 +1864,7 @@ nsWindow::SetInputMode(const IMEContext& aContext)
     // IMEContext depending on the content.ime.strict.policy pref
     if (aContext.mStatus != nsIWidget::IME_STATUS_DISABLED && 
         aContext.mStatus != nsIWidget::IME_STATUS_PLUGIN) {
-      if (Preferences::GetBool("content.ime.strict_policy", false) &&
+      if (Preferences::GetBool("content.ime.strict_policy", PR_FALSE) &&
           !aContext.FocusMovedByUser() &&
           aContext.FocusMovedInContentProcess()) {
         return NS_OK;
@@ -1905,7 +1904,7 @@ nsWindow::CancelIMEComposition()
 }
 
 NS_IMETHODIMP
-nsWindow::OnIMEFocusChange(bool aFocus)
+nsWindow::OnIMEFocusChange(PRBool aFocus)
 {
     ALOGIME("IME: OnIMEFocusChange: f=%d", aFocus);
 

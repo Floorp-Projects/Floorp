@@ -50,8 +50,8 @@ class nsEventListenerInfo : public nsIEventListenerInfo
 {
 public:
   nsEventListenerInfo(const nsAString& aType, nsIDOMEventListener* aListener,
-                      bool aCapturing, bool aAllowsUntrusted,
-                      bool aInSystemEventGroup)
+                      PRBool aCapturing, PRBool aAllowsUntrusted,
+                      PRBool aInSystemEventGroup)
   : mType(aType), mListener(aListener), mCapturing(aCapturing),
     mAllowsUntrusted(aAllowsUntrusted),
     mInSystemEventGroup(aInSystemEventGroup) {}
@@ -60,14 +60,14 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsEventListenerInfo)
   NS_DECL_NSIEVENTLISTENERINFO
 protected:
-  bool GetJSVal(jsval* aJSVal);
+  PRBool GetJSVal(jsval* aJSVal);
 
   nsString                      mType;
   // nsReftPtr because that is what nsListenerStruct uses too.
   nsRefPtr<nsIDOMEventListener> mListener;
-  bool                          mCapturing;
-  bool                          mAllowsUntrusted;
-  bool                          mInSystemEventGroup;
+  PRPackedBool                  mCapturing;
+  PRPackedBool                  mAllowsUntrusted;
+  PRPackedBool                  mInSystemEventGroup;
 };
 
 class nsEventListenerService : public nsIEventListenerService

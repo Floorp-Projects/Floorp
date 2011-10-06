@@ -233,8 +233,8 @@ StackSegment::contains(const CallArgsList *call) const
         return false;
 
     /* NB: this depends on the continuity of segments in memory. */
-    Value *vp = call->array();
-    bool ret = vp > slotsBegin() && vp <= calls_->array();
+    Value *vp = call->argv();
+    bool ret = vp > slotsBegin() && vp <= calls_->argv();
 
     /*
      * :XXX: Disabled. Including this check changes the asymptotic complexity
@@ -683,12 +683,12 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
     JSFunction *fun = callee.getFunctionPrivate();
     JSScript *script = fun->script();
 
-    /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
+    StackFrame::Flags flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, fun, script, &flags);
     if (!fp)
         return false;
 
-    fp->initCallFrame(cx, callee, fun, script, args.length(), (StackFrame::Flags) flags);
+    fp->initCallFrame(cx, callee, fun, script, args.argc(), flags);
     ifg->regs_.prepareToRun(*fp, script);
 
     ifg->prevRegs_ = seg_->pushRegs(ifg->regs_);
@@ -1035,7 +1035,7 @@ StackIter::settleOnNewState()
          * In case of both a scripted frame and call record, use linear memory
          * ordering to decide which was the most recent.
          */
-        if (containsFrame && (!containsCall || (Value *)fp_ >= calls_->array())) {
+        if (containsFrame && (!containsCall || (Value *)fp_ >= calls_->argv())) {
             /* Nobody wants to see dummy frames. */
             if (fp_->isDummyFrame()) {
                 popFrame();

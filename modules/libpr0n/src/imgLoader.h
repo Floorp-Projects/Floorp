@@ -125,11 +125,11 @@ public:
     Touch();
   }
 
-  bool GetMustValidate() const
+  PRBool GetMustValidate() const
   {
     return mMustValidate;
   }
-  void SetMustValidate(bool aValidate)
+  void SetMustValidate(PRBool aValidate)
   {
     mMustValidate = aValidate;
     Touch();
@@ -142,7 +142,7 @@ public:
     return req;
   }
 
-  bool Evicted() const
+  PRBool Evicted() const
   {
     return mEvicted;
   }
@@ -152,7 +152,7 @@ public:
     return &mExpirationState;
   }
 
-  bool HasNoProxies() const
+  PRBool HasNoProxies() const
   {
     return mHasNoProxies;
   }
@@ -165,13 +165,13 @@ public:
 private: // methods
   friend class imgLoader;
   friend class imgCacheQueue;
-  void Touch(bool updateTime = true);
+  void Touch(PRBool updateTime = PR_TRUE);
   void UpdateCache(PRInt32 diff = 0);
-  void SetEvicted(bool evict)
+  void SetEvicted(PRBool evict)
   {
     mEvicted = evict;
   }
-  void SetHasNoProxies(bool hasNoProxies);
+  void SetHasNoProxies(PRBool hasNoProxies);
 
   // Private, unimplemented copy constructor.
   imgCacheEntry(const imgCacheEntry &);
@@ -185,10 +185,10 @@ private: // data
   PRInt32 mTouchedTime;
   PRInt32 mExpiryTime;
   nsExpirationState mExpirationState;
-  bool mMustValidate : 1;
-  bool mEvicted : 1;
-  bool mHasNoProxies : 1;
-  bool mForcePrincipalCheck : 1;
+  PRPackedBool mMustValidate : 1;
+  PRPackedBool mEvicted : 1;
+  PRPackedBool mHasNoProxies : 1;
+  PRPackedBool mForcePrincipalCheck : 1;
 };
 
 #include <vector>
@@ -208,7 +208,7 @@ public:
   void Remove(imgCacheEntry *);
   void Push(imgCacheEntry *);
   void MarkDirty();
-  bool IsDirty();
+  PRBool IsDirty();
   already_AddRefed<imgCacheEntry> Pop();
   void Refresh();
   PRUint32 GetSize() const;
@@ -225,7 +225,7 @@ public:
 
 private:
   queueContainer mQueue;
-  bool mDirty;
+  PRBool mDirty;
   PRUint32 mSize;
 };
 
@@ -259,10 +259,10 @@ public:
 
   static nsresult InitCache();
 
-  static bool RemoveFromCache(nsIURI *aKey);
-  static bool RemoveFromCache(imgCacheEntry *entry);
+  static PRBool RemoveFromCache(nsIURI *aKey);
+  static PRBool RemoveFromCache(imgCacheEntry *entry);
 
-  static bool PutIntoCache(nsIURI *key, imgCacheEntry *entry);
+  static PRBool PutIntoCache(nsIURI *key, imgCacheEntry *entry);
 
   // Returns true if we should prefer evicting cache entry |two| over cache
   // entry |one|.
@@ -301,23 +301,23 @@ public:
   // HasObservers(). The request's cache entry will be re-set before this
   // happens, by calling imgRequest::SetCacheEntry() when an entry with no
   // observers is re-requested.
-  static bool SetHasNoProxies(nsIURI *key, imgCacheEntry *entry);
-  static bool SetHasProxies(nsIURI *key);
+  static PRBool SetHasNoProxies(nsIURI *key, imgCacheEntry *entry);
+  static PRBool SetHasProxies(nsIURI *key);
 
 private: // methods
 
 
-  bool ValidateEntry(imgCacheEntry *aEntry, nsIURI *aKey,
+  PRBool ValidateEntry(imgCacheEntry *aEntry, nsIURI *aKey,
                        nsIURI *aInitialDocumentURI, nsIURI *aReferrerURI, 
                        nsILoadGroup *aLoadGroup,
                        imgIDecoderObserver *aObserver, nsISupports *aCX,
-                       nsLoadFlags aLoadFlags, bool aCanMakeNewChannel,
+                       nsLoadFlags aLoadFlags, PRBool aCanMakeNewChannel,
                        imgIRequest *aExistingRequest,
                        imgIRequest **aProxyRequest,
                        nsIChannelPolicy *aPolicy,
                        nsIPrincipal* aLoadingPrincipal,
                        PRInt32 aCORSMode);
-  bool ValidateRequestWithNewChannel(imgRequest *request, nsIURI *aURI,
+  PRBool ValidateRequestWithNewChannel(imgRequest *request, nsIURI *aURI,
                                        nsIURI *aInitialDocumentURI,
                                        nsIURI *aReferrerURI,
                                        nsILoadGroup *aLoadGroup,

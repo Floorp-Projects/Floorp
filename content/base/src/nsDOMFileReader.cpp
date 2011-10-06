@@ -72,49 +72,51 @@
 #include "nsIDOMClassInfo.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIStreamConverterService.h"
+#include "nsEventDispatcher.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsLayoutStatics.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsFileDataProtocolHandler.h"
 #include "mozilla/Preferences.h"
-#include "xpcprivate.h"
-#include "xpcpublic.h"
+#include "xpcprivate.h" 	
 #include "xpcquickstubs.h"
 #include "jstypedarray.h"
 
 using namespace mozilla;
 
 #define LOAD_STR "load"
+#define ERROR_STR "error"
+#define ABORT_STR "abort"
 #define LOADSTART_STR "loadstart"
+#define PROGRESS_STR "progress"
+#define UPLOADPROGRESS_STR "uploadprogress"
 #define LOADEND_STR "loadend"
 
-using mozilla::dom::FileIOObject;
+#define NS_PROGRESS_EVENT_INTERVAL 50
+const PRUint64 kUnknownSize = PRUint64(-1);
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMFileReader)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMFileReader,
-                                                  FileIOObject)
+                                                  nsXHREventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFile)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mProgressNotifier)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannel)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(load)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(loadstart)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(loadend)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMFileReader,
-                                                FileIOObject)
+                                                nsXHREventTarget)
   tmp->mResultArrayBuffer = nsnull;
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFile)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mProgressNotifier)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPrincipal)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(load)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(loadstart)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(loadend)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChannel)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsDOMFileReader,
-                                               nsDOMEventTargetWrapperCache)
+                                               nsXHREventTarget)
   if(tmp->mResultArrayBuffer) {
     NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mResultArrayBuffer,
                                                "mResultArrayBuffer")
@@ -125,15 +127,17 @@ DOMCI_DATA(FileReader, nsDOMFileReader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMFileReader)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFileReader)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsICharsetDetectionObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(FileReader)
-NS_INTERFACE_MAP_END_INHERITING(FileIOObject)
+NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 
-NS_IMPL_ADDREF_INHERITED(nsDOMFileReader, FileIOObject)
-NS_IMPL_RELEASE_INHERITED(nsDOMFileReader, FileIOObject)
+NS_IMPL_ADDREF_INHERITED(nsDOMFileReader, nsXHREventTarget)
+NS_IMPL_RELEASE_INHERITED(nsDOMFileReader, nsXHREventTarget)
 
 void
 nsDOMFileReader::RootResultArrayBuffer()
@@ -157,6 +161,10 @@ nsDOMFileReader::Notify(const char *aCharset, nsDetectionConfident aConf)
 nsDOMFileReader::nsDOMFileReader()
   : mFileData(nsnull),
     mDataLen(0), mDataFormat(FILE_AS_BINARY),
+    mReadyState(nsIDOMFileReader::EMPTY),
+    mProgressEventWasDelayed(PR_FALSE),
+    mTimerIsActive(PR_FALSE),
+    mReadTotal(0), mReadTransferred(0),
     mResultArrayBuffer(nsnull)     
 {
   nsLayoutStatics::AddRef();
@@ -165,6 +173,9 @@ nsDOMFileReader::nsDOMFileReader()
 
 nsDOMFileReader::~nsDOMFileReader()
 {
+  if (mListenerManager) 
+    mListenerManager->Disconnect();
+
   FreeFileData();
 
   nsLayoutStatics::Release();
@@ -173,7 +184,20 @@ nsDOMFileReader::~nsDOMFileReader()
 nsresult
 nsDOMFileReader::Init()
 {
-  nsDOMEventTargetWrapperCache::Init();
+  // Set the original mScriptContext and mPrincipal, if available.
+  // Get JSContext from stack.
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+  if (!stack) {
+    return NS_OK;
+  }
+
+  JSContext *cx;
+
+  if (NS_FAILED(stack->Peek(&cx)) || !cx) {
+    return NS_OK;
+  }
 
   nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
@@ -182,17 +206,20 @@ nsDOMFileReader::Init()
     NS_ENSURE_SUCCESS(rv, rv);
   }
   NS_ENSURE_STATE(subjectPrincipal);
-  mPrincipal.swap(subjectPrincipal);
+  mPrincipal = subjectPrincipal;
+
+  nsIScriptContext* context = GetScriptContextFromJSContext(cx);
+  if (context) {
+    mScriptContext = context;
+    nsCOMPtr<nsPIDOMWindow> window =
+      do_QueryInterface(context->GetGlobalObject());
+    if (window) {
+      mOwner = window->GetCurrentInnerWindow();
+    }
+  }
 
   return NS_OK;
 }
-
-NS_IMPL_EVENT_HANDLER(nsDOMFileReader, load)
-NS_IMPL_EVENT_HANDLER(nsDOMFileReader, loadstart)
-NS_IMPL_EVENT_HANDLER(nsDOMFileReader, loadend)
-NS_IMPL_FORWARD_EVENT_HANDLER(nsDOMFileReader, abort, FileIOObject)
-NS_IMPL_FORWARD_EVENT_HANDLER(nsDOMFileReader, progress, FileIOObject)
-NS_IMPL_FORWARD_EVENT_HANDLER(nsDOMFileReader, error, FileIOObject)
 
 NS_IMETHODIMP
 nsDOMFileReader::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
@@ -230,7 +257,8 @@ nsDOMFileReader::GetInterface(const nsIID & aIID, void **aResult)
 NS_IMETHODIMP
 nsDOMFileReader::GetReadyState(PRUint16 *aReadyState)
 {
-  return FileIOObject::GetReadyState(aReadyState);
+  *aReadyState = mReadyState;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -256,7 +284,8 @@ nsDOMFileReader::GetResult(JSContext* aCx, jsval* aResult)
 NS_IMETHODIMP
 nsDOMFileReader::GetError(nsIDOMFileError** aError)
 {
-  return FileIOObject::GetError(aError);
+  NS_IF_ADDREF(*aError = mError);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -287,19 +316,25 @@ nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aFile)
 NS_IMETHODIMP
 nsDOMFileReader::Abort()
 {
-  return FileIOObject::Abort();
-}
+  if (mReadyState != nsIDOMFileReader::LOADING)
+    return NS_ERROR_DOM_FILE_ABORT_ERR;
 
-nsresult
-nsDOMFileReader::DoAbort(nsAString& aEvent)
-{
-  // Revert status and result attributes
+  //Clear progress and file data
+  mProgressEventWasDelayed = PR_FALSE;
+  mTimerIsActive = PR_FALSE;
+  if (mProgressNotifier) {
+    mProgressNotifier->Cancel();
+  }
+
+  //Revert status, result and readystate attributes
   SetDOMStringToNull(mResult);
   mResultArrayBuffer = nsnull;
+  mReadyState = nsIDOMFileReader::DONE;
+  mError = new nsDOMFileError(nsIDOMFileError::ABORT_ERR);
     
-  // Non-null channel indicates a read is currently active
+  //Non-null channel indicates a read is currently active
   if (mChannel) {
-    // Cancel request requires an error status
+    //Cancel request requires an error status
     mChannel->Cancel(NS_ERROR_FAILURE);
     mChannel = nsnull;
   }
@@ -308,8 +343,48 @@ nsDOMFileReader::DoAbort(nsAString& aEvent)
   //Clean up memory buffer
   FreeFileData();
 
-  // Tell the base class which event to dispatch
-  aEvent = NS_LITERAL_STRING(LOADEND_STR);
+  //Dispatch the abort event
+  DispatchProgressEvent(NS_LITERAL_STRING(ABORT_STR));
+  DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
+
+  mReadyState = nsIDOMFileReader::EMPTY;
+
+  return NS_OK;
+}
+
+// nsITimerCallback
+NS_IMETHODIMP
+nsDOMFileReader::Notify(nsITimer* aTimer)
+{
+  mTimerIsActive = PR_FALSE;
+  if (mProgressEventWasDelayed) {
+    DispatchProgressEvent(NS_LITERAL_STRING(PROGRESS_STR));
+    StartProgressEventTimer();
+  }
+
+  return NS_OK;
+}
+
+void
+nsDOMFileReader::StartProgressEventTimer()
+{
+  if (!mProgressNotifier) {
+    mProgressNotifier = do_CreateInstance(NS_TIMER_CONTRACTID);
+  }
+  if (mProgressNotifier) {
+    mProgressEventWasDelayed = PR_FALSE;
+    mTimerIsActive = PR_TRUE;
+    mProgressNotifier->Cancel();
+    mProgressNotifier->InitWithCallback(this, NS_PROGRESS_EVENT_INTERVAL,
+                                              nsITimer::TYPE_ONE_SHOT);
+  }
+}
+
+// nsIStreamListener
+
+NS_IMETHODIMP
+nsDOMFileReader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+{
   return NS_OK;
 }
 
@@ -335,12 +410,12 @@ ReadFuncBinaryString(nsIInputStream* in,
   return NS_OK;
 }
 
-nsresult
-nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
-                                   nsISupports *aContext,
-                                   nsIInputStream *aInputStream,
-                                   PRUint32 aOffset,
-                                   PRUint32 aCount)
+NS_IMETHODIMP
+nsDOMFileReader::OnDataAvailable(nsIRequest *aRequest,
+                                 nsISupports *aContext,
+                                 nsIInputStream *aInputStream,
+                                 PRUint32 aOffset,
+                                 PRUint32 aCount)
 {
   if (mDataFormat == FILE_AS_BINARY) {
     //Continuously update our binary string as data comes in
@@ -376,22 +451,44 @@ nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
     mDataLen += aCount;
   }
 
+  mReadTransferred += aCount;
+
+  //Notify the timer is the appropriate timeframe has passed
+  if (mTimerIsActive) {
+    mProgressEventWasDelayed = PR_TRUE;
+  }
+  else {
+    DispatchProgressEvent(NS_LITERAL_STRING(PROGRESS_STR));
+    StartProgressEventTimer();
+  }
+
   return NS_OK;
 }
 
-nsresult
-nsDOMFileReader::DoOnStopRequest(nsIRequest *aRequest,
-                                 nsISupports *aContext,
-                                 nsresult aStatus,
-                                 nsAString& aSuccessEvent,
-                                 nsAString& aTerminationEvent)
+NS_IMETHODIMP
+nsDOMFileReader::OnStopRequest(nsIRequest *aRequest,
+                               nsISupports *aContext,
+                               nsresult aStatus)
 {
-  aSuccessEvent = NS_LITERAL_STRING(LOAD_STR);
-  aTerminationEvent = NS_LITERAL_STRING(LOADEND_STR);
+  //If we're here as a result of a call from Abort(),
+  //simply ignore the request.
+  if (aRequest != mChannel)
+    return NS_OK;
 
-  // Clear out the data if necessary
+  //Cancel the progress event timer
+  mProgressEventWasDelayed = PR_FALSE;
+  mTimerIsActive = PR_FALSE;
+  if (mProgressNotifier) {
+    mProgressNotifier->Cancel();
+  }
+
+  //FileReader must be in DONE stage after a load
+  mReadyState = nsIDOMFileReader::DONE;
+
+  //Set the status field as appropriate
   if (NS_FAILED(aStatus)) {
     FreeFileData();
+    DispatchError(aStatus);
     return NS_OK;
   }
 
@@ -413,7 +510,16 @@ nsDOMFileReader::DoOnStopRequest(nsIRequest *aRequest,
 
   FreeFileData();
 
-  return rv;
+  if (NS_FAILED(rv)) {
+    DispatchError(rv);
+    return NS_OK;
+  }
+
+  //Dispatch load event to signify end of a successful load
+  DispatchProgressEvent(NS_LITERAL_STRING(LOAD_STR));
+  DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
+
+  return NS_OK;
 }
 
 // Helper methods
@@ -431,8 +537,8 @@ nsDOMFileReader::ReadFileContent(JSContext* aCx,
   Abort();
   mError = nsnull;
   SetDOMStringToNull(mResult);
-  mTransferred = 0;
-  mTotal = 0;
+  mReadTransferred = 0;
+  mReadTotal = 0;
   mReadyState = nsIDOMFileReader::EMPTY;
   FreeFileData();
 
@@ -456,8 +562,8 @@ nsDOMFileReader::ReadFileContent(JSContext* aCx,
   }
 
   //Obtain the total size of the file before reading
-  mTotal = mozilla::dom::kUnknownSize;
-  mFile->GetSize(&mTotal);
+  mReadTotal = kUnknownSize;
+  mFile->GetSize(&mReadTotal);
 
   rv = mChannel->AsyncOpen(this, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -468,7 +574,7 @@ nsDOMFileReader::ReadFileContent(JSContext* aCx,
   
   if (mDataFormat == FILE_AS_ARRAYBUFFER) {
     RootResultArrayBuffer();
-    mResultArrayBuffer = js_CreateArrayBuffer(aCx, mTotal);
+    mResultArrayBuffer = js_CreateArrayBuffer(aCx, mReadTotal);
     if (!mResultArrayBuffer) {
       NS_WARNING("Failed to create JS array buffer");
       return NS_ERROR_FAILURE;
@@ -476,6 +582,64 @@ nsDOMFileReader::ReadFileContent(JSContext* aCx,
   }
  
   return NS_OK;
+}
+
+void
+nsDOMFileReader::DispatchError(nsresult rv)
+{
+  //Set the status attribute, and dispatch the error event
+  switch (rv) {
+    case NS_ERROR_FILE_NOT_FOUND:
+      mError = new nsDOMFileError(nsIDOMFileError::NOT_FOUND_ERR);
+      break;
+    case NS_ERROR_FILE_ACCESS_DENIED:
+      mError = new nsDOMFileError(nsIDOMFileError::SECURITY_ERR);
+      break;
+    default:
+      mError = new nsDOMFileError(nsIDOMFileError::NOT_READABLE_ERR);
+      break;
+  }
+
+  //Dispatch error event to signify load failure
+  DispatchProgressEvent(NS_LITERAL_STRING(ERROR_STR));
+  DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
+}
+
+void
+nsDOMFileReader::DispatchProgressEvent(const nsAString& aType)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = nsEventDispatcher::CreateEvent(nsnull, nsnull,
+                                               NS_LITERAL_STRING("ProgressEvent"),
+                                               getter_AddRefs(event));
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(event));
+
+  if (!privevent)
+    return;
+
+  privevent->SetTrusted(PR_TRUE);
+
+  nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
+
+  if (!progress)
+    return;
+
+  PRBool known;
+  PRUint64 size;
+  if (mReadTotal != kUnknownSize) {
+    known = PR_TRUE;
+    size = mReadTotal;
+  } else {
+    known = PR_FALSE;
+    size = 0;
+  }
+  progress->InitProgressEvent(aType, PR_FALSE, PR_FALSE, known,
+                              mReadTransferred, size);
+
+  this->DispatchDOMEvent(nsnull, event, nsnull, nsnull);
 }
 
 nsresult
@@ -604,7 +768,7 @@ nsDOMFileReader::GuessCharset(const char *aFileData,
     mCharset.Truncate();
     detector->Init(this);
 
-    bool done;
+    PRBool done;
 
     rv = detector->DoIt(aFileData, aDataLen, &done);
     NS_ENSURE_SUCCESS(rv, rv);

@@ -50,7 +50,7 @@ function testThree() {
     let tab = win.gBrowser.tabs[1];
     searchBox.val(tab._tabViewTabItem.$tabTitle[0].innerHTML);
 
-    cw.Search.perform();
+    cw.performSearch();
 
     whenTabViewIsHidden(function () {
       is(tab, win.gBrowser.selectedTab, "The search result tab is shown");

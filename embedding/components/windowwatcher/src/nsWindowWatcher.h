@@ -85,8 +85,8 @@ public:
 
 protected:
   friend class nsPromptService;
-  bool AddEnumerator(nsWatcherWindowEnumerator* inEnumerator);
-  bool RemoveEnumerator(nsWatcherWindowEnumerator* inEnumerator);
+  PRBool AddEnumerator(nsWatcherWindowEnumerator* inEnumerator);
+  PRBool RemoveEnumerator(nsWatcherWindowEnumerator* inEnumerator);
 
   nsWatcherWindowEntry *FindWindowEntry(nsIDOMWindow *aWindow);
   nsresult RemoveWindow(nsWatcherWindowEntry *inInfo);
@@ -108,9 +108,9 @@ protected:
                                 const char *aUrl,
                                 const char *aName,
                                 const char *aFeatures,
-                                bool aDialog,
+                                PRBool aDialog,
                                 nsIArray *argv,
-                                bool aCalledFromJS,
+                                PRBool aCalledFromJS,
                                 nsIDOMWindow **_retval);
 
   static JSContext *GetJSContextFromWindow(nsIDOMWindow *aWindow);
@@ -120,17 +120,17 @@ protected:
                                nsIURI **aURI);
   
   static PRUint32   CalculateChromeFlags(const char *aFeatures,
-                                         bool aFeaturesSpecified,
-                                         bool aDialog,
-                                         bool aChromeURL,
-                                         bool aHasChromeParent);
+                                         PRBool aFeaturesSpecified,
+                                         PRBool aDialog,
+                                         PRBool aChromeURL,
+                                         PRBool aHasChromeParent);
   static PRInt32    WinHasOption(const char *aOptions, const char *aName,
-                                 PRInt32 aDefault, bool *aPresenceFlag);
+                                 PRInt32 aDefault, PRBool *aPresenceFlag);
   /* Compute the right SizeSpec based on aFeatures */
   static void       CalcSizeSpec(const char* aFeatures, SizeSpec& aResult);
   static nsresult   ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
                                             nsIDOMWindow *aParent,
-                                            bool aWindowIsNew,
+                                            PRBool aWindowIsNew,
                                             nsIDOMWindow **aOpenedWindow);
   static void       SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
                                            nsIDOMWindow *aParent,

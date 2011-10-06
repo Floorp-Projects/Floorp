@@ -94,36 +94,36 @@ public:
   // nsIContentSink
   NS_IMETHOD WillParse(void);
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-  NS_IMETHOD DidBuildModel(bool aTerminated);
+  NS_IMETHOD DidBuildModel(PRBool aTerminated);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);  
   virtual void FlushPendingNotifications(mozFlushType aType);
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
-  virtual bool IsScriptExecuting();
+  virtual PRBool IsScriptExecuting();
 
   // nsITransformObserver
   NS_IMETHOD OnDocumentCreated(nsIDocument *aResultDocument);
   NS_IMETHOD OnTransformDone(nsresult aResult, nsIDocument *aResultDocument);
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
                               nsresult aStatus);
-  static bool ParsePIData(const nsString &aData, nsString &aHref,
+  static PRBool ParsePIData(const nsString &aData, nsString &aHref,
                           nsString &aTitle, nsString &aMedia,
-                          bool &aIsAlternate);
+                          PRBool &aIsAlternate);
 
 protected:
   // Start layout.  If aIgnorePendingSheets is true, this will happen even if
   // we still have stylesheet loads pending.  Otherwise, we'll wait until the
   // stylesheets are all done loading.
-  virtual void MaybeStartLayout(bool aIgnorePendingSheets);
+  virtual void MaybeStartLayout(PRBool aIgnorePendingSheets);
 
   virtual nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
   nsresult AddText(const PRUnichar* aString, PRInt32 aLength);
 
-  virtual bool OnOpenContainer(const PRUnichar **aAtts, 
+  virtual PRBool OnOpenContainer(const PRUnichar **aAtts, 
                                  PRUint32 aAttsCount, 
                                  PRInt32 aNameSpaceID, 
                                  nsIAtom* aTagName,
@@ -131,20 +131,20 @@ protected:
   // Set the given content as the root element for the created document
   //  don't set if root element was already set.
   //  return TRUE if this call set the root element
-  virtual bool SetDocElement(PRInt32 aNameSpaceID, 
+  virtual PRBool SetDocElement(PRInt32 aNameSpaceID, 
                                nsIAtom *aTagName,
                                nsIContent *aContent);
-  virtual bool NotifyForDocElement() { return true; }
+  virtual PRBool NotifyForDocElement() { return PR_TRUE; }
   virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                  nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
-                                 nsIContent** aResult, bool* aAppendContent,
+                                 nsIContent** aResult, PRBool* aAppendContent,
                                  mozilla::dom::FromParser aFromParser);
 
   // aParent is allowed to be null here if this is the root content
   // being closed
   virtual nsresult CloseElement(nsIContent* aContent);
 
-  virtual nsresult FlushText(bool aReleaseTextNode = true);
+  virtual nsresult FlushText(PRBool aReleaseTextNode = PR_TRUE);
 
   nsresult AddContentAsLeaf(nsIContent *aContent);
 
@@ -152,7 +152,7 @@ protected:
   StackNode* GetCurrentStackNode();
   nsresult PushContent(nsIContent *aContent);
   void PopContent();
-  bool HaveNotifiedForCurrentContent() const;
+  PRBool HaveNotifiedForCurrentContent() const;
 
   nsresult FlushTags();
 
@@ -168,26 +168,26 @@ protected:
   // nsContentSink override
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
                                     const nsSubstring& aHref,
-                                    bool aAlternate,
+                                    PRBool aAlternate,
                                     const nsSubstring& aTitle,
                                     const nsSubstring& aType,
                                     const nsSubstring& aMedia);
 
   nsresult LoadXSLStyleSheet(nsIURI* aUrl);
 
-  bool CanStillPrettyPrint();
+  PRBool CanStillPrettyPrint();
 
   nsresult MaybePrettyPrint();
   
-  bool IsMonolithicContainer(nsINodeInfo* aNodeInfo);
+  PRBool IsMonolithicContainer(nsINodeInfo* aNodeInfo);
 
   nsresult HandleStartElement(const PRUnichar *aName, const PRUnichar **aAtts, 
                               PRUint32 aAttsCount, PRInt32 aIndex, 
                               PRUint32 aLineNumber,
-                              bool aInterruptable);
-  nsresult HandleEndElement(const PRUnichar *aName, bool aInterruptable);
+                              PRBool aInterruptable);
+  nsresult HandleEndElement(const PRUnichar *aName, PRBool aInterruptable);
   nsresult HandleCharacterData(const PRUnichar *aData, PRUint32 aLength,
-                               bool aInterruptable);
+                               PRBool aInterruptable);
 
   nsIContent*      mDocElement;
   nsCOMPtr<nsIContent> mCurrentHead;  // When set, we're in an XHTML <haed>

@@ -65,7 +65,7 @@ protected:
   PRInt32                   mEncStep;
   char                      mLastChar;
   char                      mEscChar;
-  bool                      mFreshBase64;
+  PRBool                    mFreshBase64;
 
   nsresult DecodeDirect(const char * aSrc, PRInt32 * aSrcLength, 
       PRUnichar * aDest, PRInt32 * aDestLength);

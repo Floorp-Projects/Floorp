@@ -101,7 +101,7 @@ private:
     //
 
     // Determine if the autodial service is running on this PC.
-    bool IsAutodialServiceRunning();
+    PRBool IsAutodialServiceRunning();
 
     // Get the number of RAS connection entries configured from the OS.
     int NumRASEntries();
@@ -113,19 +113,19 @@ private:
     nsresult GetFirstEntryName(PRUnichar* entryName, int bufferSize);
 
     // Check to see if RAS already has a dialup connection going.
-    bool IsRASConnected();
+    PRBool IsRASConnected();
 
     // Get the autodial behavior from the OS.
     int QueryAutodialBehavior();
 
     // Add the specified address to the autodial directory.
-    bool AddAddressToAutodialDirectory(const PRUnichar* hostName);
+    PRBool AddAddressToAutodialDirectory(const PRUnichar* hostName);
 
     // Get the  current TAPI dialing location.
     int GetCurrentLocation();
 
     // See if autodial is enabled for specified location.
-    bool IsAutodialServiceEnabled(int location);
+    PRBool IsAutodialServiceEnabled(int location);
 
     //
     // Autodial behavior. This comes from the Windows registry, set in the ctor. 
@@ -167,8 +167,8 @@ private:
     static tRASGETAUTODIALENABLE mpRasGetAutodialEnable;
     static tRASGETAUTODIALPARAM mpRasGetAutodialParam;
 
-    bool LoadRASapi32DLL();
-    bool LoadRASdlgDLL();
+    PRBool LoadRASapi32DLL();
+    PRBool LoadRASdlgDLL();
 
 
 public:
@@ -187,7 +187,7 @@ public:
     nsresult DialDefault(const PRUnichar* hostName);
 
     // Should we try to dial on network error?
-    bool ShouldDialOnNetworkError();
+    PRBool ShouldDialOnNetworkError();
 };
 
 #endif // !nsAutodialWin_h__

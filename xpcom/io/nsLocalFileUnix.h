@@ -154,7 +154,7 @@ protected:
                                      const nsACString &newName,
                                      nsACString &_retval);
 
-    bool FillStatCache();
+    PRBool FillStatCache();
 
     nsresult CreateAndKeepOpen(PRUint32 type, PRIntn flags,
                                PRUint32 permissions, PRFileDesc **_retval);

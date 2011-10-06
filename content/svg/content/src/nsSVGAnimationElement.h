@@ -69,30 +69,30 @@ public:
   // nsIContent specializations
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
 
   virtual nsresult UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
-                             bool aNotify);
+                             PRBool aNotify);
 
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
   // nsGenericElement specializations
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAString* aValue, bool aNotify);
+                                const nsAString* aValue, PRBool aNotify);
 
   // nsISMILAnimationElement interface
   virtual const Element& AsElement() const;
   virtual Element& AsElement();
   virtual const nsAttrValue* GetAnimAttr(nsIAtom* aName) const;
-  virtual bool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const;
-  virtual bool HasAnimAttr(nsIAtom* aAttName) const;
+  virtual PRBool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const;
+  virtual PRBool HasAnimAttr(nsIAtom* aAttName) const;
   virtual Element* GetTargetElementContent();
-  virtual bool GetTargetAttributeName(PRInt32* aNamespaceID,
+  virtual PRBool GetTargetAttributeName(PRInt32* aNamespaceID,
                                         nsIAtom** aLocalName) const;
   virtual nsSMILTargetAttrType GetTargetAttributeType() const;
   virtual nsSMILTimedElement& TimedElement();
@@ -100,7 +100,7 @@ public:
 
 protected:
   // nsSVGElement overrides
-  bool IsEventName(nsIAtom* aName);
+  PRBool IsEventName(nsIAtom* aName);
 
   void UpdateHrefTarget(nsIContent* aNodeForContext,
                         const nsAString& aHrefStr);
@@ -121,7 +121,7 @@ protected:
 
     // We need to override IsPersistent to get persistent tracking (beyond the
     // first time the target changes)
-    virtual bool IsPersistent() { return true; }
+    virtual PRBool IsPersistent() { return PR_TRUE; }
   private:
     nsSVGAnimationElement* const mAnimationElement;
   };

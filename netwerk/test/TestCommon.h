@@ -47,7 +47,7 @@ inline int test_common_init(int *argc, char ***argv)
 
 //-----------------------------------------------------------------------------
 
-static bool gKeepPumpingEvents = false;
+static PRBool gKeepPumpingEvents = PR_FALSE;
 
 class nsQuitPumpingEvent : public nsIRunnable {
 public:

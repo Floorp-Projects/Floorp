@@ -130,8 +130,6 @@ class nsMenuPopupFrame;
 class nsMenuPopupFrame : public nsBoxFrame, public nsMenuParent
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsMenuPopupFrame)
-  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
   nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContext);
@@ -140,16 +138,16 @@ public:
   virtual nsMenuFrame* GetCurrentMenuItem();
   NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem);
   virtual void CurrentMenuIsBeingDestroyed();
-  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem);
+  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, PRBool aSelectFirstItem);
 
   // as popups are opened asynchronously, the popup pending state is used to
   // prevent multiple requests from attempting to open the same popup twice
   nsPopupState PopupState() { return mPopupState; }
   void SetPopupState(nsPopupState aPopupState) { mPopupState = aPopupState; }
 
-  NS_IMETHOD SetActive(bool aActiveFlag) { return NS_OK; } // We don't care.
-  virtual bool IsActive() { return false; }
-  virtual bool IsMenuBar() { return false; }
+  NS_IMETHOD SetActive(PRBool aActiveFlag) { return NS_OK; } // We don't care.
+  virtual PRBool IsActive() { return PR_FALSE; }
+  virtual PRBool IsMenuBar() { return PR_FALSE; }
 
   /*
    * When this popup is open, should clicks outside of it be consumed?
@@ -167,14 +165,14 @@ public:
    * Unix    Eat           No              Eat
    *
    */
-  bool ConsumeOutsideClicks();
+  PRBool ConsumeOutsideClicks();
 
-  virtual bool IsContextMenu() { return mIsContextMenu; }
+  virtual PRBool IsContextMenu() { return mIsContextMenu; }
 
-  virtual bool MenuClosed() { return true; }
+  virtual PRBool MenuClosed() { return PR_TRUE; }
 
-  virtual void LockMenuUntilClosed(bool aLock);
-  virtual bool IsMenuLocked() { return mIsMenuLocked; }
+  virtual void LockMenuUntilClosed(PRBool aLock);
+  virtual PRBool IsMenuLocked() { return mIsMenuLocked; }
 
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
 
@@ -198,7 +196,7 @@ public:
 
   // returns true if the popup is a panel with the noautohide attribute set to
   // true. These panels do not roll up automatically.
-  bool IsNoAutoHide() const;
+  PRBool IsNoAutoHide() const;
 
   nsPopupLevel PopupLevel() const
   {
@@ -213,10 +211,10 @@ public:
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList);
 
-  virtual bool IsLeaf() const;
+  virtual PRBool IsLeaf() const;
 
   // layout, position and display the popup as needed
-  void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, bool aSizedToPopup);
+  void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, PRBool aSizedToPopup);
 
   nsIView* GetRootViewForPopup(nsIFrame* aStartFrame);
 
@@ -225,9 +223,9 @@ public:
   // point if a screen position (mScreenXPos and mScreenYPos) are set. The popup
   // will be adjusted so that it is on screen. If aIsMove is true, then the popup
   // is being moved, and should not be flipped.
-  nsresult SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove);
+  nsresult SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove);
 
-  bool HasGeneratedChildren() { return mGeneratedChildren; }
+  PRBool HasGeneratedChildren() { return mGeneratedChildren; }
   void SetGeneratedChildren() { mGeneratedChildren = PR_TRUE; }
 
   // called when the Enter key is pressed while the popup is open. This will
@@ -239,10 +237,10 @@ public:
   nsMenuFrame* Enter(nsGUIEvent* aEvent);
 
   nsPopupType PopupType() const { return mPopupType; }
-  bool IsMenu() { return mPopupType == ePopupTypeMenu; }
-  bool IsOpen() { return mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible; }
+  PRBool IsMenu() { return mPopupType == ePopupTypeMenu; }
+  PRBool IsOpen() { return mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible; }
 
-  bool IsDragPopup() { return mIsDragPopup; }
+  PRBool IsDragPopup() { return mIsDragPopup; }
 
   // returns the parent menupopup, if any
   nsMenuFrame* GetParentMenu() {
@@ -258,7 +256,7 @@ public:
 
   // returns true if the popup is in a content shell, or false for a popup in
   // a chrome shell
-  bool IsInContentShell() { return mInContentShell; }
+  PRBool IsInContentShell() { return mInContentShell; }
 
   // the Initialize methods are used to set the anchor position for
   // each way of opening a popup.
@@ -266,7 +264,7 @@ public:
                        nsIContent* aTriggerContent,
                        const nsAString& aPosition,
                        PRInt32 aXPos, PRInt32 aYPos,
-                       bool aAttributesOverride);
+                       PRBool aAttributesOverride);
 
   /**
    * @param aIsContextMenu if true, then the popup is
@@ -275,7 +273,7 @@ public:
    */
   void InitializePopupAtScreen(nsIContent* aTriggerContent,
                                PRInt32 aXPos, PRInt32 aYPos,
-                               bool aIsContextMenu);
+                               PRBool aIsContextMenu);
 
   void InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
                                       nsAString& aAnchor,
@@ -283,10 +281,10 @@ public:
                                       PRInt32 aXPos, PRInt32 aYPos);
 
   // indicate that the popup should be opened
-  void ShowPopup(bool aIsContextMenu, bool aSelectFirstItem);
+  void ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem);
   // indicate that the popup should be hidden. The new state should either be
   // ePopupClosed or ePopupInvisible.
-  void HidePopup(bool aDeselectMenu, nsPopupState aNewState);
+  void HidePopup(PRBool aDeselectMenu, nsPopupState aNewState);
 
   // locate and return the menu frame that should be activated for the
   // supplied key event. If doAction is set to true by this method,
@@ -294,7 +292,7 @@ public:
   // the Enter key. If doAction is false, the menu should just be highlighted.
   // This method also handles incremental searching in menus so the user can
   // type the first few letters of an item/s name to select it.
-  nsMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction);
+  nsMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doAction);
 
   void ClearIncrementalString() { mIncrementalString.Truncate(); }
 
@@ -313,10 +311,10 @@ public:
   // is true, and the popup already has left or top attributes, then those
   // attributes are updated to the new location.
   // The frame may be destroyed by this method.
-  void MoveTo(PRInt32 aLeft, PRInt32 aTop, bool aUpdateAttrs);
+  void MoveTo(PRInt32 aLeft, PRInt32 aTop, PRBool aUpdateAttrs);
 
-  bool GetAutoPosition();
-  void SetAutoPosition(bool aShouldAutoPosition);
+  PRBool GetAutoPosition();
+  void SetAutoPosition(PRBool aShouldAutoPosition);
   void SetConsumeRollupEvent(PRUint32 aConsumeMode);
 
   nsIScrollableFrame* GetScrollFrame(nsIFrame* aStart);
@@ -341,7 +339,7 @@ public:
   void CanAdjustEdges(PRInt8 aHorizontalSide, PRInt8 aVerticalSide, nsIntPoint& aChange);
 
   // Return true if the popup is positioned relative to an anchor.
-  bool IsAnchored() const { return mScreenXPos == -1 && mScreenYPos == -1; }
+  PRBool IsAnchored() const { return mScreenXPos == -1 && mScreenYPos == -1; }
 
   // Return the anchor if there is one.
   nsIContent* GetAnchor() const { return mAnchorContent; }
@@ -355,7 +353,7 @@ public:
 protected:
 
   // returns the popup's level.
-  nsPopupLevel PopupLevel(bool aIsNoAutoHide) const;
+  nsPopupLevel PopupLevel(PRBool aIsNoAutoHide) const;
 
   // redefine to tell the box system not to move the views.
   virtual void GetLayoutFlags(PRUint32& aFlags);
@@ -389,7 +387,7 @@ protected:
                        nscoord aAnchorBegin, nscoord aAnchorEnd,
                        nscoord aMarginBegin, nscoord aMarginEnd,
                        nscoord aOffsetForContextMenu, FlipStyle aFlip,
-                       bool* aFlipSide);
+                       PRPackedBool* aFlipSide);
 
   // Move the popup to the position specified in its |left| and |top| attributes.
   void MoveToAttributePosition();
@@ -444,23 +442,23 @@ protected:
   PRInt8 mPopupAnchor;
   // One of nsIPopupBoxObject::ROLLUP_DEFAULT/ROLLUP_CONSUME/ROLLUP_NO_CONSUME
   PRInt8 mConsumeRollupEvent;
-  bool mFlipBoth; // flip in both directions
+  PRPackedBool mFlipBoth; // flip in both directions
 
-  bool mIsOpenChanged; // true if the open state changed since the last layout
-  bool mIsContextMenu; // true for context menus
+  PRPackedBool mIsOpenChanged; // true if the open state changed since the last layout
+  PRPackedBool mIsContextMenu; // true for context menus
   // true if we need to offset the popup to ensure it's not under the mouse
-  bool mAdjustOffsetForContextMenu;
-  bool mGeneratedChildren; // true if the contents have been created
+  PRPackedBool mAdjustOffsetForContextMenu;
+  PRPackedBool mGeneratedChildren; // true if the contents have been created
 
-  bool mMenuCanOverlapOSBar;    // can we appear over the taskbar/menubar?
-  bool mShouldAutoPosition; // Should SetPopupPosition be allowed to auto position popup?
-  bool mInContentShell; // True if the popup is in a content shell
-  bool mIsMenuLocked; // Should events inside this menu be ignored?
-  bool mIsDragPopup; // True if this is a popup used for drag feedback
+  PRPackedBool mMenuCanOverlapOSBar;    // can we appear over the taskbar/menubar?
+  PRPackedBool mShouldAutoPosition; // Should SetPopupPosition be allowed to auto position popup?
+  PRPackedBool mInContentShell; // True if the popup is in a content shell
+  PRPackedBool mIsMenuLocked; // Should events inside this menu be ignored?
+  PRPackedBool mIsDragPopup; // True if this is a popup used for drag feedback
 
   // the flip modes that were used when the popup was opened
-  bool mHFlip;
-  bool mVFlip;
+  PRPackedBool mHFlip;
+  PRPackedBool mVFlip;
 
   static PRInt8 sDefaultLevelIsTop;
 }; // class nsMenuPopupFrame

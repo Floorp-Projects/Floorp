@@ -206,14 +206,14 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
 }
 
 NS_IMETHODIMP
-FTPChannelChild::IsPending(bool* result)
+FTPChannelChild::IsPending(PRBool* result)
 {
   *result = mIsPending;
   return NS_OK;
 }
 
 nsresult
-FTPChannelChild::OpenContentStream(bool async,
+FTPChannelChild::OpenContentStream(PRBool async,
                                    nsIInputStream** stream,
                                    nsIChannel** channel)
 {

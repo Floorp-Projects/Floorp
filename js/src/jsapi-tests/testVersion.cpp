@@ -2,8 +2,6 @@
 #include "jsscript.h"
 #include "jscntxt.h"
 
-#include "jscntxtinlines.h"
-
 using namespace js;
 
 struct VersionFixture;

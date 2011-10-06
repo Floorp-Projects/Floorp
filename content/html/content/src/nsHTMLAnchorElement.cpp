@@ -92,34 +92,34 @@ public:
   NS_IMETHOD LinkRemoved() { return NS_OK; }
 
   // override from nsGenericHTMLElement
-  NS_IMETHOD GetDraggable(bool* aDraggable);
+  NS_IMETHOD GetDraggable(PRBool* aDraggable);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual bool IsLink(nsIURI** aURI) const;
+  virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
   virtual nsLinkState GetLinkState() const;
   virtual void RequestLinkStateUpdate();
   virtual already_AddRefed<nsIURI> GetHrefURI() const;
 
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, bool aNotify)
+                   const nsAString& aValue, PRBool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
+                           PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+                             PRBool aNotify);
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -177,7 +177,7 @@ NS_IMPL_INT_ATTR(nsHTMLAnchorElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::GetDraggable(bool* aDraggable)
+nsHTMLAnchorElement::GetDraggable(PRBool* aDraggable)
 {
   // links can be dragged as long as there is an href and the
   // draggable attribute isn't false
@@ -194,7 +194,7 @@ nsHTMLAnchorElement::GetDraggable(bool* aDraggable)
 nsresult
 nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
-                                bool aCompileEventHandlers)
+                                PRBool aCompileEventHandlers)
 {
   Link::ResetLinkState(false);
 
@@ -211,7 +211,7 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsHTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
+nsHTMLAnchorElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
@@ -220,9 +220,9 @@ nsHTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-bool
-nsHTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
-                                     bool *aIsFocusable, PRInt32 *aTabIndex)
+PRBool
+nsHTMLAnchorElement::IsHTMLFocusable(PRBool aWithMouse,
+                                     PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
   if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return PR_TRUE;
@@ -288,7 +288,7 @@ nsHTMLAnchorElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   return PostHandleEventForAnchors(aVisitor);
 }
 
-bool
+PRBool
 nsHTMLAnchorElement::IsLink(nsIURI** aURI) const
 {
   return IsHTMLLink(aURI);
@@ -392,7 +392,7 @@ nsHTMLAnchorElement::GetHrefURI() const
 nsresult
 nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
-                             bool aNotify)
+                             PRBool aNotify)
 {
   bool reset = false;
   if (aName == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
@@ -428,7 +428,7 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                               bool aNotify)
+                               PRBool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                 aNotify);
@@ -445,7 +445,7 @@ nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   return rv;
 }
 
-bool
+PRBool
 nsHTMLAnchorElement::ParseAttribute(PRInt32 aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,

@@ -94,15 +94,15 @@ public:
     nsresult Init(nsIChannel* oldChan,
                   nsIChannel* newChan,
                   PRUint32 flags,
-                  bool synchronize = false);
+                  PRBool synchronize = PR_FALSE);
 
 protected:
     nsCOMPtr<nsIChannel> mOldChan;
     nsCOMPtr<nsIChannel> mNewChan;
     PRUint32 mFlags;
-    bool mWaitingForRedirectCallback;
+    PRBool mWaitingForRedirectCallback;
     nsCOMPtr<nsIThread>      mCallbackThread;
-    bool                     mCallbackInitiated;
+    PRBool                   mCallbackInitiated;
     PRInt32                  mExpectedCallbacks;
     nsresult                 mResult; // value passed to callback
 

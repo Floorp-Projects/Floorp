@@ -71,7 +71,7 @@ private:
     void MaybeSendProgress();
     void MaybeSendStatus();
     void ResetMembers();
-    bool DelayInEffect() { return mDelayedStatus || mDelayedProgress; }
+    PRBool DelayInEffect() { return mDelayedStatus || mDelayedProgress; }
 
     static void TimeoutHandler(nsITimer *aTimer, void *aClosure);
 
@@ -85,17 +85,17 @@ private:
     PRInt64                          mMaxProgress;
 
     nsString                         mCurrentStatusMsg;
-    bool                             mStatusIsDirty;
+    PRBool                           mStatusIsDirty;
     PRInt32                          mCurrentPercentage;
 
     // used to convert OnStart/OnStop notifications into progress notifications
     PRInt32                          mTotalRequests;
     PRInt32                          mFinishedRequests;
-    bool                             mUseRealProgressFlag;
+    PRPackedBool                     mUseRealProgressFlag;
 
     // indicates whether a timeout is pending
-    bool                             mDelayedStatus;
-    bool                             mDelayedProgress;
+    PRPackedBool                     mDelayedStatus;
+    PRPackedBool                     mDelayedProgress;
 };
 
 #define NS_BROWSERSTATUSFILTER_CLASSNAME \

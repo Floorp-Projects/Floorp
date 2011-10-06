@@ -58,11 +58,11 @@ public:
     : mCount(kNotSet) { SetCount(aCount); }
 
   operator double() const { return mCount; }
-  bool IsDefinite() const {
+  PRBool IsDefinite() const {
     return mCount != kNotSet && mCount != kIndefinite;
   }
-  bool IsIndefinite() const { return mCount == kIndefinite; }
-  bool IsSet() const { return mCount != kNotSet; }
+  PRBool IsIndefinite() const { return mCount == kIndefinite; }
+  PRBool IsSet() const { return mCount != kNotSet; }
 
   nsSMILRepeatCount& operator=(double aCount)
   {

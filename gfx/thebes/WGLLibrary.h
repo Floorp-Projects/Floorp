@@ -76,10 +76,10 @@ public:
     typedef BOOL (WINAPI * PFNWGLGETPIXELFORMATATTRIBIVPROC) (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, int* piAttributes, int *piValues);
     PFNWGLGETPIXELFORMATATTRIBIVPROC fGetPixelFormatAttribiv;
 
-    bool EnsureInitialized();
+    PRBool EnsureInitialized();
 
 private:
-    bool mInitialized;
+    PRBool mInitialized;
     PRLibrary *mOGLLibrary;
 };
 

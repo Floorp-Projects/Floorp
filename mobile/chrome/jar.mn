@@ -33,7 +33,6 @@ chrome.jar:
   content/SelectHelperUI.js            (content/SelectHelperUI.js)
   content/SelectionHelper.js           (content/SelectionHelper.js)
   content/SharingUI.js                 (content/SharingUI.js)
-  content/TabletSidebar.js             (content/TabletSidebar.js)
   content/TabsPopup.js                 (content/TabsPopup.js)
   content/MasterPasswordUI.js          (content/MasterPasswordUI.js)
 * content/content.js                   (content/content.js)
@@ -81,9 +80,6 @@ chrome.jar:
   content/fullscreen-video.js          (content/fullscreen-video.js)
   content/fullscreen-video.xhtml       (content/fullscreen-video.xhtml)
   content/netError.xhtml               (content/netError.xhtml)
-  content/CapturePickerUI.js           (content/CapturePickerUI.js)
-  content/CaptureDialog.js             (content/CaptureDialog.js)
-  content/CaptureDialog.xul            (content/CaptureDialog.xul)
-  
+
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml

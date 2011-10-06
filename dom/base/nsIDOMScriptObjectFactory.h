@@ -75,8 +75,8 @@ public:
   NS_IMETHOD GetIDForScriptType(const nsAString &aLanguageName,
                                 PRUint32 *aScriptTypeID) = 0;
 
-  NS_IMETHOD NewScriptGlobalObject(bool aIsChrome,
-                                   bool aIsModalContentWindow,
+  NS_IMETHOD NewScriptGlobalObject(PRBool aIsChrome,
+                                   PRBool aIsModalContentWindow,
                                    nsIScriptGlobalObject **aGlobal) = 0;
 
   NS_IMETHOD_(nsISupports *) GetClassInfoInstance(nsDOMClassInfoID aID) = 0;
@@ -92,7 +92,7 @@ public:
                                   const nsIID *aProtoChainInterface,
                                   const nsIID **aInterfaces,
                                   PRUint32 aScriptableFlags,
-                                  bool aHasClassInterface,
+                                  PRBool aHasClassInterface,
                                   const nsCID *aConstructorCID) = 0;
 };
 

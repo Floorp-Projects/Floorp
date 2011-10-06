@@ -168,7 +168,7 @@ nsWyciwygChannel::GetName(nsACString &aName)
 }
  
 NS_IMETHODIMP
-nsWyciwygChannel::IsPending(bool *aIsPending)
+nsWyciwygChannel::IsPending(PRBool *aIsPending)
 {
   *aIsPending = mIsPending;
   return NS_OK;
@@ -765,10 +765,10 @@ nsWyciwygChannel::NotifyListener()
   }
 }
 
-bool
+PRBool
 nsWyciwygChannel::IsOnCacheIOThread()
 {
-  bool correctThread;
+  PRBool correctThread;
   mCacheIOTarget->IsOnCurrentThread(&correctThread);
   return correctThread;
 }

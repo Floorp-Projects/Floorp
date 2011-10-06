@@ -41,7 +41,7 @@
 #include "nsHashKeys.h"
 
 // PLDHashEntryHdr methods
-bool
+PRBool
 nsSMILCompositor::KeyEquals(KeyTypePointer aKey) const
 {
   return aKey && aKey->Equals(mKey);

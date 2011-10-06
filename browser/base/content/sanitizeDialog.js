@@ -79,16 +79,11 @@ var gSanitizePromptDialog = {
 
     var s = new Sanitizer();
     s.prefDomain = "privacy.cpd.";
-
-    let sanitizeItemList = document.querySelectorAll("#itemList > [preference]");
-    for (let i = 0; i < sanitizeItemList.length; i++) {
-      let prefItem = sanitizeItemList[i];
-      let name = s.getNameFromPreference(prefItem.getAttribute("preference"));
-      if (!s.canClearItem(name)) {
-        prefItem.preference = null;
-        prefItem.checked = false;
-        prefItem.disabled = true;
-      }
+    for (let i = 0; i < this.sanitizePreferences.childNodes.length; ++i) {
+      var preference = this.sanitizePreferences.childNodes[i];
+      var name = s.getNameFromPreference(preference.name);
+      if (!s.canClearItem(name)) 
+        preference.disabled = true;
     }
 
     document.documentElement.getButton("accept").label =
@@ -313,16 +308,11 @@ var gSanitizePromptDialog = {
 
     var s = new Sanitizer();
     s.prefDomain = "privacy.cpd.";
-
-    let sanitizeItemList = document.querySelectorAll("#itemList > [preference]");
-    for (let i = 0; i < sanitizeItemList.length; i++) {
-      let prefItem = sanitizeItemList[i];
-      let name = s.getNameFromPreference(prefItem.getAttribute("preference"));
-      if (!s.canClearItem(name)) {
-        prefItem.preference = null;
-        prefItem.checked = false;
-        prefItem.disabled = true;
-      }
+    for (let i = 0; i < this.sanitizePreferences.childNodes.length; ++i) {
+      var preference = this.sanitizePreferences.childNodes[i];
+      var name = s.getNameFromPreference(preference.name);
+      if (!s.canClearItem(name)) 
+        preference.disabled = true;
     }
 
     document.documentElement.getButton("accept").label =

@@ -129,7 +129,7 @@ private:
   }
 
   /// Used to determine if this list is the baseVal or animVal list.
-  bool IsAnimValList() const {
+  PRBool IsAnimValList() const {
     NS_ABORT_IF_FALSE(this == mAList->mBaseVal || this == mAList->mAnimVal,
                       "Calling IsAnimValList() too early?!");
     return this == mAList->mAnimVal;

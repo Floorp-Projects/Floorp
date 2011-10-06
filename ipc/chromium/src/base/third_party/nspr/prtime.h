@@ -230,7 +230,7 @@ PRTimeParameters PR_GMTParameters(const PRExplodedTime *gmt);
 
 PRStatus PR_ParseTimeString (
 	const char *string,
-	bool default_to_gmt,
+	PRBool default_to_gmt,
 	PRTime *result);
 
 } // namespace nspr

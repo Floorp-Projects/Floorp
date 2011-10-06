@@ -77,7 +77,7 @@ public:
     /**
      * Returns true if there are no items in this txList
      */
-    inline bool isEmpty()
+    inline PRBool isEmpty()
     {
         return itemCount == 0;
     }

@@ -89,7 +89,7 @@ txMozillaTextOutput::attribute(nsIAtom* aPrefix, const nsSubstring& aName,
 }
 
 nsresult
-txMozillaTextOutput::characters(const nsSubstring& aData, bool aDOE)
+txMozillaTextOutput::characters(const nsSubstring& aData, PRBool aDOE)
 {
     mText.Append(aData);
 
@@ -169,7 +169,7 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument)
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> source = do_QueryInterface(aSourceDocument);
     NS_ENSURE_STATE(source);
-    bool hasHadScriptObject = false;
+    PRBool hasHadScriptObject = PR_FALSE;
     nsIScriptGlobalObject* sgo =
       source->GetScriptHandlingObject(hasHadScriptObject);
     NS_ENSURE_STATE(sgo || !hasHadScriptObject);

@@ -62,7 +62,7 @@ test_NULLFallback()
   nsCOMPtr<mozIStorageValueArray> valueArray = do_QueryInterface(stmt);
   do_check_true(valueArray);
 
-  bool hasMore;
+  PRBool hasMore;
   do_check_true(NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore);
 
   do_check_eq(stmt->AsInt32(0), 0);
@@ -99,8 +99,8 @@ test_asyncNULLFallback()
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
-  nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  (void)db->CreateAsyncStatement(NS_LITERAL_CSTRING(
+  nsCOMPtr<mozIStorageStatement> stmt;
+  (void)db->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT NULL"
   ), getter_AddRefs(stmt));
 

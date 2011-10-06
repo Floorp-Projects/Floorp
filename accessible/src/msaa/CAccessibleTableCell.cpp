@@ -297,7 +297,7 @@ __try {
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  bool isSel = false;
+  PRBool isSel = PR_FALSE;
   rv = tableCell->IsSelected(&isSel);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
@@ -325,7 +325,7 @@ __try {
   if (!tableCell)
     return E_FAIL;
 
-  bool isSel = false;
+  PRBool isSel = PR_FALSE;
   nsresult rv = tableCell->IsSelected(&isSel);
   if (NS_SUCCEEDED(rv)) {
     *isSelected = isSel;

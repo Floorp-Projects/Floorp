@@ -88,7 +88,7 @@ private:
     nsresult Prefetch(nsIURI *aURI,
                       nsIURI *aReferrerURI,
                       nsIDOMNode *aSource,
-                      bool aExplicit);
+                      PRBool aExplicit);
 
     void     AddProgressListener();
     void     RemoveProgressListener();
@@ -107,7 +107,7 @@ private:
     PRInt32                           mStopCount;
     // true if pending document loads have ever reached zero.
     PRInt32                           mHaveProcessed;
-    bool                              mDisabled;
+    PRBool                            mDisabled;
 };
 
 //-----------------------------------------------------------------------------

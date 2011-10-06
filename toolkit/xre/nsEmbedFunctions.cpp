@@ -257,13 +257,13 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 // FIXME/bug 539522: this out-of-place function is stuck here because
 // IPDL wants access to this crashreporter interface, and
 // crashreporter is built in such a way to make that awkward
-bool
+PRBool
 XRE_TakeMinidumpForChild(PRUint32 aChildPid, nsILocalFile** aDump)
 {
   return CrashReporter::TakeMinidumpForChild(aChildPid, aDump);
 }
 
-bool
+PRBool
 XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 {
 #if defined(XP_WIN) || defined(XP_MACOSX)
@@ -361,9 +361,7 @@ XRE_InitChildProcess(int aArgc,
     return 1;
   }
 #endif
-
-  SetupErrorHandling(aArgv[0]);  
-
+  
 #if defined(MOZ_CRASHREPORTER)
   if (aArgc < 1)
     return 1;
@@ -394,6 +392,8 @@ XRE_InitChildProcess(int aArgc,
   gArgv = aArgv;
   gArgc = aArgc;
 
+  SetupErrorHandling(aArgv[0]);
+  
 #if defined(MOZ_WIDGET_GTK2)
   g_thread_init(NULL);
 #endif
@@ -712,19 +712,16 @@ XRE_ShutdownChildProcess()
 }
 
 namespace {
-ContentParent* gContentParent; //long-lived, manually refcounted
+TestShellParent* gTestShellParent = nsnull;
 TestShellParent* GetOrCreateTestShellParent()
 {
-    if (!gContentParent) {
-        NS_ADDREF(gContentParent = ContentParent::GetNewOrUsed());
-    } else if (!gContentParent->IsAlive()) {
-        return nsnull;
+    if (!gTestShellParent) {
+        ContentParent* parent = ContentParent::GetNewOrUsed();
+        NS_ENSURE_TRUE(parent, nsnull);
+        gTestShellParent = parent->CreateTestShell();
+        NS_ENSURE_TRUE(gTestShellParent, nsnull);
     }
-    TestShellParent* tsp = gContentParent->GetTestShellSingleton();
-    if (!tsp) {
-        tsp = gContentParent->CreateTestShell();
-    }
-    return tsp;
+    return gTestShellParent;
 }
 }
 
@@ -763,16 +760,10 @@ XRE_GetChildGlobalObject(JSContext* aCx, JSObject** aGlobalP)
 bool
 XRE_ShutdownTestShell()
 {
-    if (!gContentParent) {
-        return true;
-    }
-    bool ret = true;
-    if (gContentParent->IsAlive()) {
-        ret = gContentParent->DestroyTestShell(
-            gContentParent->GetTestShellSingleton());
-    }
-    NS_RELEASE(gContentParent);
-    return ret;
+  if (!gTestShellParent)
+    return true;
+  return static_cast<ContentParent*>(gTestShellParent->Manager())->
+    DestroyTestShell(gTestShellParent);
 }
 
 #ifdef MOZ_X11

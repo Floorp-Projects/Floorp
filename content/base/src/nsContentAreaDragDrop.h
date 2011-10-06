@@ -86,10 +86,10 @@ public:
   static nsresult GetDragData(nsIDOMWindow* aWindow,
                               nsIContent* aTarget,
                               nsIContent* aSelectionTargetNode,
-                              bool aIsAltKeyPressed,
+                              PRBool aIsAltKeyPressed,
                               nsDOMDataTransfer* aDataTransfer,
-                              bool* aCanDrag,
-                              bool* aDragSelection,
+                              PRBool* aCanDrag,
+                              PRBool* aDragSelection,
                               nsIContent** aDragNode);
 };
 

@@ -20190,7 +20190,7 @@ function test_size_attributes_parse_badsuffix() {
 var canvas = document.getElementById('c637');
 var ctx = canvas.getContext('2d');
 
-is(canvas.width, 100, "canvas.width == 100");
+todo(canvas.width == 100, "canvas.width == 100");
 
 
 }
@@ -20400,7 +20400,7 @@ var canvas = document.getElementById('c648');
 var ctx = canvas.getContext('2d');
 
 canvas.setAttribute('width', '100foo');
-is(canvas.width, 100, "canvas.width == 100");
+todo(canvas.width == 100, "canvas.width == 100");
 
 
 }

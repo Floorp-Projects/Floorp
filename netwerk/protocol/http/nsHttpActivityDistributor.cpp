@@ -125,7 +125,7 @@ nsHttpActivityDistributor::ObserveActivity(nsISupports *aHttpChannel,
 }
 
 NS_IMETHODIMP
-nsHttpActivityDistributor::GetIsActive(bool *isActive)
+nsHttpActivityDistributor::GetIsActive(PRBool *isActive)
 {
     NS_ENSURE_ARG_POINTER(isActive);
     MutexAutoLock lock(mLock);

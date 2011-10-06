@@ -90,7 +90,7 @@ nsHTMLImageAccessible::NativeState()
     imageRequest->GetImage(getter_AddRefs(imgContainer));
 
   if (imgContainer) {
-    bool animated;
+    PRBool animated;
     imgContainer->GetAnimated(&animated);
     if (animated)
       state |= states::ANIMATED;
@@ -102,7 +102,7 @@ nsHTMLImageAccessible::NativeState()
 nsresult
 nsHTMLImageAccessible::GetNameInternal(nsAString& aName)
 {
-  bool hasAltAttrib =
+  PRBool hasAltAttrib =
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
   if (!aName.IsEmpty())
     return NS_OK;
@@ -221,7 +221,7 @@ nsHTMLImageAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
 ////////////////////////////////////////////////////////////////////////////////
 // Private methods
 
-bool
+PRBool
 nsHTMLImageAccessible::HasLongDesc()
 {
   if (IsDefunct())
@@ -230,7 +230,7 @@ nsHTMLImageAccessible::HasLongDesc()
   return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::longdesc);
 }
 
-bool
+PRBool
 nsHTMLImageAccessible::IsValidLongDescIndex(PRUint8 aIndex)
 {
   if (!HasLongDesc())

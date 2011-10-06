@@ -83,8 +83,8 @@ nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem,
                                  NSMenuItem*    aNativeMenuItem)
 : mContent(aContent)
 , mMenuObject(aMenuItem)
-, mLoadedIcon(false)
-, mSetIcon(false)
+, mLoadedIcon(PR_FALSE)
+, mSetIcon(PR_FALSE)
 , mNativeMenuItem(aNativeMenuItem)
 {
   //  printf("Creating icon for menu item %d, menu %d, native item is %d\n", aMenuItem, aMenu, aNativeMenuItem);
@@ -187,7 +187,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
 
   // First, look at the content node's "image" attribute.
   nsAutoString imageURIString;
-  bool hasImageAttr = mContent->GetAttr(kNameSpaceID_None,
+  PRBool hasImageAttr = mContent->GetAttr(kNameSpaceID_None,
                                           nsWidgetAtoms::image,
                                           imageURIString);
 
@@ -303,7 +303,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
     mIconRequest = nsnull;
   }
 
-  mLoadedIcon = false;
+  mLoadedIcon = PR_FALSE;
 
   if (!mContent) return NS_ERROR_FAILURE;
 
@@ -324,10 +324,10 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
     // position that it will be displayed when the real icon is loaded, and
     // prevents it from jumping around or looking misaligned.
 
-    static bool sInitializedPlaceholder;
+    static PRBool sInitializedPlaceholder;
     static NSImage* sPlaceholderIconImage;
     if (!sInitializedPlaceholder) {
-      sInitializedPlaceholder = true;
+      sInitializedPlaceholder = PR_TRUE;
 
       // Note that we only create the one and reuse it forever, so this is not a leak.
       sPlaceholderIconImage = [[NSImage alloc] initWithSize:NSMakeSize(kIconWidth, kIconHeight)];
@@ -397,7 +397,7 @@ nsMenuItemIconX::OnStartFrame(imgIRequest* aRequest, PRUint32 aFrame)
 
 NS_IMETHODIMP
 nsMenuItemIconX::OnDataAvailable(imgIRequest*     aRequest,
-                                 bool             aCurrentFrame,
+                                 PRBool           aCurrentFrame,
                                  const nsIntRect* aRect)
 {
   return NS_OK;
@@ -458,7 +458,7 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  bool createSubImage = !(mImageRegionRect.x == 0 && mImageRegionRect.y == 0 &&
+  PRBool createSubImage = !(mImageRegionRect.x == 0 && mImageRegionRect.y == 0 &&
                             mImageRegionRect.width == origWidth && mImageRegionRect.height == origHeight);
   
   CGImageRef finalImage = NULL;
@@ -521,8 +521,8 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   [newImage release];
   ::CGImageRelease(iconImage);
 
-  mLoadedIcon = true;
-  mSetIcon = true;
+  mLoadedIcon = PR_TRUE;
+  mSetIcon = PR_TRUE;
 
   return NS_OK;
 
@@ -546,7 +546,7 @@ nsMenuItemIconX::OnStopDecode(imgIRequest*     aRequest,
 
 NS_IMETHODIMP
 nsMenuItemIconX::OnStopRequest(imgIRequest* aRequest,
-                              bool         aIsLastPart)
+                              PRBool       aIsLastPart)
 {
   if (mIconRequest && mIconRequest == aRequest) {
     mIconRequest->Cancel(NS_BINDING_ABORTED);

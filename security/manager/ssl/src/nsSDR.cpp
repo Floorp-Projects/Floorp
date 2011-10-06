@@ -311,7 +311,7 @@ ChangePassword()
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsSDRContext();
-  bool canceled;
+  PRBool canceled;
 
   {
     nsPSMUITracker tracker;

@@ -240,7 +240,7 @@ nsChromeRegistryContent::CheckForNewChrome()
 
 NS_IMETHODIMP
 nsChromeRegistryContent::IsLocaleRTL(const nsACString& package,
-                                     bool *aResult)
+                                     PRBool *aResult)
 {
   CONTENT_NOT_IMPLEMENTED();
 }

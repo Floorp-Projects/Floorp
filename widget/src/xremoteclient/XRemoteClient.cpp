@@ -86,7 +86,7 @@
 static PRLogModuleInfo *sRemoteLm = NULL;
 
 static int (*sOldHandler)(Display *, XErrorEvent *);
-static bool sGotBadWindow;
+static PRBool sGotBadWindow;
 
 XRemoteClient::XRemoteClient()
 {
@@ -179,7 +179,7 @@ nsresult
 XRemoteClient::SendCommand (const char *aProgram, const char *aUsername,
                             const char *aProfile, const char *aCommand,
                             const char* aDesktopStartupID,
-                            char **aResponse, bool *aWindowFound)
+                            char **aResponse, PRBool *aWindowFound)
 {
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommand"));
 
@@ -194,7 +194,7 @@ XRemoteClient::SendCommandLine (const char *aProgram, const char *aUsername,
                                 const char *aProfile,
                                 PRInt32 argc, char **argv,
                                 const char* aDesktopStartupID,
-                                char **aResponse, bool *aWindowFound)
+                                char **aResponse, PRBool *aWindowFound)
 {
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommandLine"));
 
@@ -221,10 +221,10 @@ XRemoteClient::SendCommandInternal(const char *aProgram, const char *aUsername,
                                    const char *aProfile, const char *aCommand,
                                    PRInt32 argc, char **argv,
                                    const char* aDesktopStartupID,
-                                   char **aResponse, bool *aWindowFound)
+                                   char **aResponse, PRBool *aWindowFound)
 {
   *aWindowFound = PR_FALSE;
-  bool isCommandLine = !aCommand;
+  PRBool isCommandLine = !aCommand;
 
   // FindBestWindow() iterates down the window hierarchy, so catch X errors
   // when windows get destroyed before being accessed.
@@ -247,7 +247,7 @@ XRemoteClient::SendCommandInternal(const char *aProgram, const char *aUsername,
     XSelectInput(mDisplay, w,
                  (PropertyChangeMask|StructureNotifyMask));
 
-    bool destroyed = false;
+    PRBool destroyed = PR_FALSE;
 
     // get the lock on the window
     rv = GetLock(w, &destroyed);
@@ -346,10 +346,10 @@ XRemoteClient::CheckChildren(Window aWindow)
 }
 
 nsresult
-XRemoteClient::GetLock(Window aWindow, bool *aDestroyed)
+XRemoteClient::GetLock(Window aWindow, PRBool *aDestroyed)
 {
-  bool locked = false;
-  bool waited = false;
+  PRBool locked = PR_FALSE;
+  PRBool waited = PR_FALSE;
   *aDestroyed = PR_FALSE;
 
   nsresult rv = NS_OK;
@@ -480,7 +480,7 @@ XRemoteClient::GetLock(Window aWindow, bool *aDestroyed)
 Window
 XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
                               const char *aProfile,
-                              bool aSupportsCommandLine)
+                              PRBool aSupportsCommandLine)
 {
   Window root = RootWindowOfScreen(DefaultScreenOfDisplay(mDisplay));
   Window bestWindow = 0;
@@ -672,7 +672,7 @@ XRemoteClient::FreeLock(Window aWindow)
 nsresult
 XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
                              const char* aDesktopStartupID,
-                             char **aResponse, bool *aDestroyed)
+                             char **aResponse, PRBool *aDestroyed)
 {
   *aDestroyed = PR_FALSE;
 
@@ -723,7 +723,7 @@ estrcpy(const char* s, char* d)
 nsresult
 XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
                                  const char* aDesktopStartupID,
-                                 char **aResponse, bool *aDestroyed)
+                                 char **aResponse, PRBool *aDestroyed)
 {
   *aDestroyed = PR_FALSE;
 
@@ -795,12 +795,12 @@ XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
   return NS_OK;
 }
 
-bool
+PRBool
 XRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
-                               bool *aDestroyed, Atom aCommandAtom)
+                               PRBool *aDestroyed, Atom aCommandAtom)
 {
-  bool done = false;
-  bool accepted = false;
+  PRBool done = PR_FALSE;
+  PRBool accepted = PR_FALSE;
 
   while (!done) {
     XEvent event;

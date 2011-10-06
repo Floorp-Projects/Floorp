@@ -83,10 +83,10 @@ public:
 };
 
 
-bool nsTextBoxFrame::gAlwaysAppendAccessKey          = false;
-bool nsTextBoxFrame::gAccessKeyPrefInitialized       = false;
-bool nsTextBoxFrame::gInsertSeparatorBeforeAccessKey = false;
-bool nsTextBoxFrame::gInsertSeparatorPrefInitialized = false;
+PRBool nsTextBoxFrame::gAlwaysAppendAccessKey          = PR_FALSE;
+PRBool nsTextBoxFrame::gAccessKeyPrefInitialized       = PR_FALSE;
+PRBool nsTextBoxFrame::gInsertSeparatorBeforeAccessKey = PR_FALSE;
+PRBool nsTextBoxFrame::gInsertSeparatorPrefInitialized = PR_FALSE;
 
 nsIFrame*
 NS_NewTextBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -102,8 +102,8 @@ nsTextBoxFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
                                  PRInt32         aModType)
 {
-    bool aResize;
-    bool aRedraw;
+    PRBool aResize;
+    PRBool aRedraw;
 
     UpdateAttributes(aAttribute, aResize, aRedraw);
 
@@ -144,8 +144,8 @@ nsTextBoxFrame::Init(nsIContent*      aContent,
 {
     nsTextBoxFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
-    bool aResize;
-    bool aRedraw;
+    PRBool aResize;
+    PRBool aRedraw;
     UpdateAttributes(nsnull, aResize, aRedraw); /* update all */
 
     // register access key
@@ -162,7 +162,7 @@ nsTextBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
     nsTextBoxFrameSuper::DestroyFrom(aDestructRoot);
 }
 
-bool
+PRBool
 nsTextBoxFrame::AlwaysAppendAccessKey()
 {
   if (!gAccessKeyPrefInitialized) 
@@ -176,7 +176,7 @@ nsTextBoxFrame::AlwaysAppendAccessKey()
   return gAlwaysAppendAccessKey;
 }
 
-bool
+PRBool
 nsTextBoxFrame::InsertSeparatorBeforeAccessKey()
 {
   if (!gInsertSeparatorPrefInitialized)
@@ -197,9 +197,9 @@ public:
     {
     }
 
-    virtual bool ReflowFinished()
+    virtual PRBool ReflowFinished()
     {
-        bool shouldFlush = false;
+        PRBool shouldFlush = PR_FALSE;
         nsTextBoxFrame* frame =
             static_cast<nsTextBoxFrame*>(mWeakFrame.GetFrame());
         if (frame) {
@@ -217,7 +217,7 @@ public:
     nsWeakFrame mWeakFrame;
 };
 
-bool
+PRBool
 nsTextBoxFrame::UpdateAccesskey(nsWeakFrame& aWeakThis)
 {
     nsAutoString accesskey;
@@ -254,10 +254,10 @@ nsTextBoxFrame::UpdateAccesskey(nsWeakFrame& aWeakThis)
 
 void
 nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
-                                 bool&          aResize,
-                                 bool&          aRedraw)
+                                 PRBool&          aResize,
+                                 PRBool&          aRedraw)
 {
-    bool doUpdateTitle = false;
+    PRBool doUpdateTitle = PR_FALSE;
     aResize = PR_FALSE;
     aRedraw = PR_FALSE;
 
@@ -336,7 +336,7 @@ public:
                           nsPoint aOffset,
                           const nscolor* aColor);
 
-  bool mDisableSubpixelAA;
+  PRPackedBool mDisableSubpixelAA;
 };
 
 static void
@@ -450,7 +450,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
         if (aOverrideColor) {
           color = *aOverrideColor;
         } else {
-          bool isForeground;
+          PRBool isForeground;
           styleText->GetDecorationColor(color, isForeground);
           if (isForeground) {
             color = nsLayoutUtils::GetColor(f, eCSSProperty_color);
@@ -889,7 +889,7 @@ nsTextBoxFrame::UpdateAccessIndex()
             // remember the beginning of the string
             nsAString::const_iterator originalStart = start;
 
-            bool found;
+            PRBool found;
             if (!AlwaysAppendAccessKey()) {
                 // not appending access key - do case-sensitive search
                 // first
@@ -950,7 +950,7 @@ nsTextBoxFrame::GetComponentAlphaBounds()
                                                 nsLayoutUtils::EXCLUDE_BLUR_SHADOWS);
 }
 
-bool
+PRBool
 nsTextBoxFrame::ComputesOwnOverflowArea()
 {
     return PR_TRUE;
@@ -1045,7 +1045,7 @@ nsTextBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
     DISPLAY_PREF_SIZE(this, size);
 
     AddBorderAndPadding(size);
-    bool widthSet, heightSet;
+    PRBool widthSet, heightSet;
     nsIBox::AddCSSPrefSize(this, size, widthSet, heightSet);
 
     return size;
@@ -1067,7 +1067,7 @@ nsTextBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
         size.width = 0;
 
     AddBorderAndPadding(size);
-    bool widthSet, heightSet;
+    PRBool widthSet, heightSet;
     nsIBox::AddCSSMinSize(aBoxLayoutState, this, size, widthSet, heightSet);
 
     return size;
@@ -1100,7 +1100,7 @@ nsTextBoxFrame::GetFrameName(nsAString& aResult) const
 // If you make changes to this function, check its counterparts 
 // in nsBoxFrame and nsXULLabelFrame
 nsresult
-nsTextBoxFrame::RegUnregAccessKey(bool aDoReg)
+nsTextBoxFrame::RegUnregAccessKey(PRBool aDoReg)
 {
     // if we have no content, we can't do anything
     if (!mContent)

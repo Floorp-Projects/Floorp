@@ -97,7 +97,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  bool doDefault = true;
+  PRBool doDefault = PR_TRUE;
 
   switch (aEvent->message) {
 

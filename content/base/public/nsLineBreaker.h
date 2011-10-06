@@ -67,7 +67,7 @@ public:
    * Indicates which characters should be capitalized. Only called if
    * BREAK_NEED_CAPITALIZATION was requested.
    */
-  virtual void SetCapitalization(PRUint32 aStart, PRUint32 aLength, bool* aCapitalize) = 0;
+  virtual void SetCapitalization(PRUint32 aStart, PRUint32 aLength, PRPackedBool* aCapitalize) = 0;
 };
 
 /**
@@ -97,9 +97,9 @@ public:
   nsLineBreaker();
   ~nsLineBreaker();
   
-  static inline bool IsSpace(PRUnichar u) { return NS_IsSpace(u); }
+  static inline PRBool IsSpace(PRUnichar u) { return NS_IsSpace(u); }
 
-  static inline bool IsComplexASCIIChar(PRUnichar u)
+  static inline PRBool IsComplexASCIIChar(PRUnichar u)
   {
     return !((0x0030 <= u && u <= 0x0039) ||
              (0x0041 <= u && u <= 0x005A) ||
@@ -107,7 +107,7 @@ public:
              (0x000a == u));
   }
 
-  static inline bool IsComplexChar(PRUnichar u)
+  static inline PRBool IsComplexChar(PRUnichar u)
   {
     return IsComplexASCIIChar(u) ||
            NS_NeedsPlatformNativeHandling(u) ||
@@ -199,7 +199,7 @@ public:
    * at the end of the text. This will normally only be declared true when there
    * is breakable whitespace at the end.
    */
-  nsresult Reset(bool* aTrailingBreak);
+  nsresult Reset(PRBool* aTrailingBreak);
 
 private:
   // This is a list of text sources that make up the "current word" (i.e.,
@@ -235,14 +235,14 @@ private:
   // All the items that contribute to mCurrentWord
   nsAutoTArray<TextItem,2>    mTextItems;
   nsIAtom*                    mCurrentWordLangGroup;
-  bool                        mCurrentWordContainsMixedLang;
-  bool                        mCurrentWordContainsComplexChar;
+  PRPackedBool                mCurrentWordContainsMixedLang;
+  PRPackedBool                mCurrentWordContainsComplexChar;
 
   // True if the previous character was breakable whitespace
-  bool                        mAfterBreakableSpace;
+  PRPackedBool                mAfterBreakableSpace;
   // True if a break must be allowed at the current position because
   // a run of breakable whitespace ends here
-  bool                        mBreakHere;
+  PRPackedBool                mBreakHere;
 };
 
 #endif /*NSLINEBREAKER_H_*/

@@ -40,7 +40,7 @@
 #include "txExpr.h"
 
 nsresult
-Expr::evaluateToBool(txIEvalContext* aContext, bool& aResult)
+Expr::evaluateToBool(txIEvalContext* aContext, PRBool& aResult)
 {
     nsRefPtr<txAExprResult> exprRes;
     nsresult rv = evaluate(aContext, getter_AddRefs(exprRes));

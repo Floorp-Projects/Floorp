@@ -52,7 +52,7 @@ public:
     // nsBaseAppShell overrides:
     nsresult Init();
     virtual void ScheduleNativeEventCallback();
-    virtual bool ProcessNextNativeEvent(bool mayWait);
+    virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
 
 private:
     virtual ~nsAppShell();

@@ -67,8 +67,8 @@ public:
 
 protected:
 
-  bool IsChecked();
-  bool IsIndeterminate();
+  PRBool IsChecked();
+  PRBool IsIndeterminate();
 };
 
 #endif

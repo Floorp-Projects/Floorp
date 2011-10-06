@@ -193,7 +193,7 @@ public:
     ReleaseRemoteVariant(mVariant);
   }
 
-  bool IsOk() {
+  PRBool IsOk() {
     return mOk;
   }
 

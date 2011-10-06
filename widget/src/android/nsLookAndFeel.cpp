@@ -45,11 +45,11 @@
 using namespace mozilla;
 using mozilla::dom::ContentChild;
 
-bool nsLookAndFeel::mInitializedSystemColors = false;
+PRBool nsLookAndFeel::mInitializedSystemColors = PR_FALSE;
 AndroidSystemColors nsLookAndFeel::mSystemColors;
 
-bool nsLookAndFeel::mInitializedShowPassword = false;
-bool nsLookAndFeel::mShowPassword = true;
+PRBool nsLookAndFeel::mInitializedShowPassword = PR_FALSE;
+PRBool nsLookAndFeel::mShowPassword = PR_TRUE;
 
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel()
@@ -464,7 +464,7 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
 }
 
 /*virtual*/
-bool
+PRBool
 nsLookAndFeel::GetEchoPasswordImpl()
 {
     if (!mInitializedShowPassword) {

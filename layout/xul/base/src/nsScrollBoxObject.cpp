@@ -156,11 +156,11 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
     // now get the scrolled boxes first child.
     nsIFrame* child = scrolledBox->GetChildBox();
 
-    bool horiz = scrolledBox->IsHorizontal();
+    PRBool horiz = scrolledBox->IsHorizontal();
     nsPoint cp = sf->GetScrollPosition();
     nscoord diff = 0;
     PRInt32 curIndex = 0;
-    bool isLTR = scrolledBox->IsNormalDirection();
+    PRBool isLTR = scrolledBox->IsNormalDirection();
 
     PRInt32 frameWidth = 0;
     if (!isLTR && horiz) {

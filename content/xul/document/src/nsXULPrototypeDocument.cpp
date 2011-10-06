@@ -82,7 +82,7 @@ public:
 
     // nsIScriptGlobalObject methods
     virtual void OnFinalize(JSObject* aObject);
-    virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
+    virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
     virtual void *GetScriptGlobal(PRUint32 lang);
     virtual nsresult EnsureScriptEnvironment(PRUint32 aLangID);
@@ -310,7 +310,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 
     rv |= aStream->Read32(&count);
     nsAutoString namespaceURI, prefixStr, localName;
-    bool prefixIsNull;
+    PRBool prefixIsNull;
     nsCOMPtr<nsIAtom> prefix;
     for (i = 0; i < count; ++i) {
         rv |= aStream->ReadString(namespaceURI);
@@ -454,7 +454,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
 
         nsAutoString prefix;
         nodeInfo->GetPrefix(prefix);
-        bool nullPrefix = DOMStringIsNull(prefix);
+        PRBool nullPrefix = DOMStringIsNull(prefix);
         rv |= aStream->WriteBoolean(nullPrefix);
         if (!nullPrefix) {
             rv |= aStream->WriteWStringZ(prefix.get());
@@ -588,7 +588,7 @@ nsXULPrototypeDocument::GetNodeInfoManager()
 
 
 nsresult
-nsXULPrototypeDocument::AwaitLoadDone(nsXULDocument* aDocument, bool* aResult)
+nsXULPrototypeDocument::AwaitLoadDone(nsXULDocument* aDocument, PRBool* aResult)
 {
     nsresult rv = NS_OK;
 
@@ -802,7 +802,7 @@ nsXULPDGlobalObject::OnFinalize(JSObject* aObject)
 }
 
 void
-nsXULPDGlobalObject::SetScriptsEnabled(bool aEnabled, bool aFireTimeouts)
+nsXULPDGlobalObject::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 {
   // We don't care...
 }

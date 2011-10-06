@@ -68,19 +68,19 @@
 #define UNALIGNEDBPR(cx,bits) (( ((cx)*(bits)) + 7) / 8)
 
 // native icon functions
-static  HPOINTER GetIcon(nsCString& file, bool fExists,
-                         bool fMini, bool *fWpsIcon);
-static  void DestroyIcon(HPOINTER hIcon, bool fWpsIcon);
+static  HPOINTER GetIcon(nsCString& file, PRBool fExists,
+                         PRBool fMini, PRBool *fWpsIcon);
+static  void DestroyIcon(HPOINTER hIcon, PRBool fWpsIcon);
 
 void    ConvertColorBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
-                           PRUint8 *outBuf, bool fShrink);
+                           PRUint8 *outBuf, PRBool fShrink);
 void    ConvertMaskBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
-                          PRUint8 *outBuf, bool fShrink);
+                          PRUint8 *outBuf, PRBool fShrink);
 
 //------------------------------------------------------------------------
 
 // reduces overhead by preventing calls to nsRws when it isn't present
-static bool sUseRws = true;
+static PRBool sUseRws = PR_TRUE;
 
 //------------------------------------------------------------------------
 // nsIconChannel methods
@@ -116,7 +116,7 @@ NS_IMETHODIMP nsIconChannel::GetName(nsACString &result)
   return mUrl->GetSpec(result);
 }
 
-NS_IMETHODIMP nsIconChannel::IsPending(bool *result)
+NS_IMETHODIMP nsIconChannel::IsPending(PRBool *result)
 {
   return mPump->IsPending(result);
 }
@@ -251,7 +251,7 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 *
 // an .exe icon)
 
 nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
-                                        bool nonBlocking)
+                                        PRBool nonBlocking)
 {
 
   // get some details about this icon
@@ -265,14 +265,14 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if the file exists, get its path
-  bool fileExists = false;
+  PRBool fileExists = PR_FALSE;
   if (localFile) {
     localFile->GetNativePath(filePath);
     localFile->Exists(&fileExists);
   }
 
   // get the file's icon from either the WPS or PM
-  bool fWpsIcon = false;
+  PRBool fWpsIcon = PR_FALSE;
   HPOINTER hIcon = GetIcon(filePath, fileExists,
                            desiredImageSize <= 16, &fWpsIcon);
   if (hIcon == NULLHANDLE)
@@ -287,7 +287,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
 
   // if we need a mini-icon, use those bitmaps if present;
   // otherwise, signal that the icon needs to be shrunk
-  bool fShrink = FALSE;
+  PRBool fShrink = FALSE;
   if (desiredImageSize <= 16) {
     if (IconInfo.hbmMiniPointer) {
       IconInfo.hbmColor = IconInfo.hbmMiniColor;
@@ -444,8 +444,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
 
 // get the file's icon from either the WPS or PM
 
-static HPOINTER GetIcon(nsCString& file, bool fExists,
-                        bool fMini, bool *fWpsIcon)
+static HPOINTER GetIcon(nsCString& file, PRBool fExists,
+                        PRBool fMini, PRBool *fWpsIcon)
 {
   HPOINTER hRtn = 0;
   *fWpsIcon = PR_FALSE;
@@ -506,7 +506,7 @@ static HPOINTER GetIcon(nsCString& file, bool fExists,
 
 //------------------------------------------------------------------------
 
-static void DestroyIcon(HPOINTER hIcon, bool fWpsIcon)
+static void DestroyIcon(HPOINTER hIcon, PRBool fWpsIcon)
 {
   if (fWpsIcon)
     WinDestroyPointer(hIcon);
@@ -525,7 +525,7 @@ static void DestroyIcon(HPOINTER hIcon, bool fWpsIcon)
 // icons contain input padding that has to be ignored
 
 void ConvertColorBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
-                        PRUint8 *outBuf, bool fShrink)
+                        PRUint8 *outBuf, PRBool fShrink)
 {
   PRUint32 next  = fShrink ? 2 : 1;
   PRUint32 bprIn = ALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
@@ -575,7 +575,7 @@ void ConvertColorBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
 // must be skipped over
 
 void ConvertMaskBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
-                       PRUint8 *outBuf, bool fShrink)
+                       PRUint8 *outBuf, PRBool fShrink)
 {
   PRUint32 next   = (fShrink ? 2 : 1);
   PRUint32 bprIn  = ALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);

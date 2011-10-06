@@ -59,11 +59,11 @@ class nsQtNetworkManager : public QObject
 
     static nsQtNetworkManager* get() { return gQtNetworkManager; }
 
-    static bool IsConnected();
-    static bool GetLinkStatusKnown();
+    static PRBool IsConnected();
+    static PRBool GetLinkStatusKnown();
     static void enableInstance();
-    bool openConnection(const QString&);
-    bool isOnline();
+    PRBool openConnection(const QString&);
+    PRBool isOnline();
   signals:
     void openConnectionSignal();
 

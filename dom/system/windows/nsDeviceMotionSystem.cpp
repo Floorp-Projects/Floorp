@@ -63,7 +63,7 @@ class ThinkPadSensor : public Sensor
 public:
   ThinkPadSensor();
   ~ThinkPadSensor();
-  bool Startup();
+  PRBool Startup();
   void Shutdown();
   void GetValues(double *x, double *y, double *z);
 private:
@@ -78,7 +78,7 @@ ThinkPadSensor::~ThinkPadSensor()
 {
 }
 
-bool
+PRBool
 ThinkPadSensor::Startup()
 {
   mLibrary = LoadLibraryW(L"sensor.dll");
@@ -141,7 +141,7 @@ void nsDeviceMotionSystem::Startup()
 {
   NS_ASSERTION(!mSensor, "mSensor should be null.  Startup called twice?");
 
-  bool started = false;
+  PRBool started = PR_FALSE;
 
   mSensor = new ThinkPadSensor();
   if (mSensor)

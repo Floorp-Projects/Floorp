@@ -102,7 +102,7 @@ public:
   void SetHotSpot(nsPoint aHotSpot);
   void SetCustomImageData(uint8_t* aData, uint32_t aDataLength);
 
-  static bool GetNativeCursorsSupported();
+  static PRBool GetNativeCursorsSupported();
 
 private:
   NSCursor* GetTransparentCursor() const;

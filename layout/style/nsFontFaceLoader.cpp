@@ -223,7 +223,7 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     // as the resulting data. We don't want to use that as a font.
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
     if (httpChannel) {
-      bool succeeded;
+      PRBool succeeded;
       nsresult rv = httpChannel->GetRequestSucceeded(&succeeded);
       if (NS_SUCCEEDED(rv) && !succeeded) {
         aStatus = NS_ERROR_NOT_AVAILABLE;
@@ -237,7 +237,7 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   // This is called even in the case of a failed download (HTTP 404, etc),
   // as there may still be data to be freed (e.g. an error page),
   // and we need the fontSet to initiate loading the next source.
-  bool fontUpdate = userFontSet->OnLoadComplete(mFontEntry,
+  PRBool fontUpdate = userFontSet->OnLoadComplete(mFontEntry,
                                                   aString, aStringLen,
                                                   aStatus);
 
@@ -416,7 +416,7 @@ nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
   rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  bool inherits = false;
+  PRBool inherits = PR_FALSE;
   rv = NS_URIChainHasFlags(aFontFaceSrc->mURI,
                            nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
                            &inherits);
@@ -444,10 +444,10 @@ nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
   return rv;
 }
 
-bool
+PRBool
 nsUserFontSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
 {
-  bool modified = false;
+  PRBool modified = PR_FALSE;
 
   // destroy any current loaders, as the entries they refer to
   // may be about to get replaced
@@ -487,7 +487,7 @@ nsUserFontSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
 void
 nsUserFontSet::InsertRule(nsCSSFontFaceRule *aRule, PRUint8 aSheetType,
                           nsTArray<FontFaceRuleRecord>& aOldRules,
-                          bool& aFontSetModified)
+                          PRBool& aFontSetModified)
 {
   NS_ABORT_IF_FALSE(aRule->GetType() == mozilla::css::Rule::FONT_FACE_RULE,
                     "InsertRule passed a non-fontface CSS rule");

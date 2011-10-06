@@ -53,14 +53,14 @@ public:
 private:
   ~nsGNOMEShellService() {}
 
-  NS_HIDDEN_(bool) KeyMatchesAppName(const char *aKeyValue) const;
-  NS_HIDDEN_(bool) CheckHandlerMatchesAppName(const nsACString& handler) const;
+  NS_HIDDEN_(PRBool) KeyMatchesAppName(const char *aKeyValue) const;
+  NS_HIDDEN_(PRBool) CheckHandlerMatchesAppName(const nsACString& handler) const;
 
-  NS_HIDDEN_(bool) GetAppPathFromLauncher();
-  bool mCheckedThisSession;
-  bool mUseLocaleFilenames;
+  NS_HIDDEN_(PRBool) GetAppPathFromLauncher();
+  PRPackedBool mCheckedThisSession;
+  PRPackedBool mUseLocaleFilenames;
   nsCString    mAppPath;
-  bool mAppIsInPath;
+  PRPackedBool mAppIsInPath;
 };
 
 #endif // nsgnomeshellservice_h____

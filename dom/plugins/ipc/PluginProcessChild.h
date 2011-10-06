@@ -61,6 +61,9 @@ public:
     NS_OVERRIDE virtual bool Init();
     NS_OVERRIDE virtual void CleanUp();
 
+    // For use on the plugin thread.
+    static void AppendNotesToCrashReport(const nsCString& aNotes);
+
 protected:
     static PluginProcessChild* current() {
         return static_cast<PluginProcessChild*>(ProcessChild::current());

@@ -110,7 +110,7 @@ protected:
   PRUint32                    mCurIndex;
   
   PRInt32                     mDocShellType;  // only want shells of this type
-  bool                        mArrayValid;    // is mItemArray up to date?
+  PRPackedBool                mArrayValid;    // is mItemArray up to date?
 
   const PRInt8                mEnumerationDirection;
 };

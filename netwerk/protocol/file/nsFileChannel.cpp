@@ -192,7 +192,7 @@ class nsFileUploadContentStream : public nsBaseContentStream {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsFileUploadContentStream(bool nonBlocking,
+  nsFileUploadContentStream(PRBool nonBlocking,
                             nsIOutputStream *dest,
                             nsIInputStream *source,
                             PRInt64 len,
@@ -202,7 +202,7 @@ public:
     , mSink(sink) {
   }
 
-  bool IsInitialized() {
+  PRBool IsInitialized() {
     return mCopyEvent != nsnull;
   }
 
@@ -279,7 +279,7 @@ nsFileChannel::MakeFileInputStream(nsIFile *file,
                                    nsCString &contentType)
 {
   // we accept that this might result in a disk hit to stat the file
-  bool isDir;
+  PRBool isDir;
   nsresult rv = file->IsDirectory(&isDir);
   if (NS_FAILED(rv)) {
     // canonicalize error message
@@ -306,7 +306,7 @@ nsFileChannel::MakeFileInputStream(nsIFile *file,
 }
 
 nsresult
-nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
+nsFileChannel::OpenContentStream(PRBool async, nsIInputStream **result,
                                  nsIChannel** channel)
 {
   // NOTE: the resulting file is a clone, so it is safe to pass it to the

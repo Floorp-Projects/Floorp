@@ -45,7 +45,7 @@ class nsSVGBoolean
 {
 
 public:
-  void Init(PRUint8 aAttrEnum = 0xff, bool aValue = false) {
+  void Init(PRUint8 aAttrEnum = 0xff, PRBool aValue = PR_FALSE) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
     mIsAnimated = PR_FALSE;
@@ -53,15 +53,15 @@ public:
 
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              PRBool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(bool aValue, nsSVGElement *aSVGElement);
-  bool GetBaseValue() const
+  void SetBaseValue(PRBool aValue, nsSVGElement *aSVGElement);
+  PRBool GetBaseValue() const
     { return mBaseVal; }
 
-  void SetAnimValue(bool aValue, nsSVGElement *aSVGElement);
-  bool GetAnimValue() const
+  void SetAnimValue(PRBool aValue, nsSVGElement *aSVGElement);
+  PRBool GetAnimValue() const
     { return mAnimVal; }
 
   nsresult ToDOMAnimatedBoolean(nsIDOMSVGAnimatedBoolean **aResult,
@@ -73,9 +73,9 @@ public:
 
 private:
 
-  bool mAnimVal;
-  bool mBaseVal;
-  bool mIsAnimated;
+  PRPackedBool mAnimVal;
+  PRPackedBool mBaseVal;
+  PRPackedBool mIsAnimated;
   PRUint8 mAttrEnum; // element specified tracking for attribute
 
 public:
@@ -90,14 +90,14 @@ public:
     nsSVGBoolean* mVal; // kept alive because it belongs to content
     nsRefPtr<nsSVGElement> mSVGElement;
 
-    NS_IMETHOD GetBaseVal(bool* aResult)
+    NS_IMETHOD GetBaseVal(PRBool* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
-    NS_IMETHOD SetBaseVal(bool aValue)
+    NS_IMETHOD SetBaseVal(PRBool aValue)
       { mVal->SetBaseValue(aValue, mSVGElement); return NS_OK; }
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    NS_IMETHOD GetAnimVal(bool* aResult)
+    NS_IMETHOD GetAnimVal(PRBool* aResult)
     {
 #ifdef MOZ_SMIL
       mSVGElement->FlushAnimations();
@@ -124,7 +124,7 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const;
+                                     PRBool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

@@ -74,7 +74,7 @@ private:
         // proxy the Release over the right thread.  if that thread is dead,
         // then there's nothing we can do... better to leak than crash.
         //
-        bool val;
+        PRBool val;
         nsresult rv = mTarget->IsOnCurrentThread(&val);
         if (NS_FAILED(rv) || !val) {
             nsCOMPtr<nsIInputStreamCallback> event;
@@ -153,7 +153,7 @@ private:
         // proxy the Release over the right thread.  if that thread is dead,
         // then there's nothing we can do... better to leak than crash.
         //
-        bool val;
+        PRBool val;
         nsresult rv = mTarget->IsOnCurrentThread(&val);
         if (NS_FAILED(rv) || !val) {
             nsCOMPtr<nsIOutputStreamCallback> event;
@@ -272,8 +272,8 @@ public:
                    nsAsyncCopyCallbackFun callback,
                    void *closure,
                    PRUint32 chunksize,
-                   bool closeSource,
-                   bool closeSink)
+                   PRBool closeSource,
+                   PRBool closeSink)
     {
         mSource = source;
         mSink = sink;
@@ -301,7 +301,7 @@ public:
 
         nsresult sourceCondition, sinkCondition;
         nsresult cancelStatus;
-        bool canceled;
+        PRBool canceled;
         {
             MutexAutoLock lock(mLock);
             canceled = mCanceled;
@@ -314,7 +314,7 @@ public:
             // Note: copyFailed will be true if the source or the sink have
             //       reported an error, or if we failed to write any bytes
             //       because we have consumed all of our data.
-            bool copyFailed = false;
+            PRBool copyFailed = PR_FALSE;
             if (!canceled) {
                 PRUint32 n = DoCopy(&sourceCondition, &sinkCondition);
                 copyFailed = NS_FAILED(sourceCondition) ||
@@ -483,11 +483,11 @@ protected:
     nsAsyncCopyCallbackFun         mCallback;
     void                          *mClosure;
     PRUint32                       mChunkSize;
-    bool                           mEventInProcess;
-    bool                           mEventIsPending;
-    bool                           mCloseSource;
-    bool                           mCloseSink;
-    bool                           mCanceled;
+    PRPackedBool                   mEventInProcess;
+    PRPackedBool                   mEventIsPending;
+    PRPackedBool                   mCloseSource;
+    PRPackedBool                   mCloseSink;
+    PRPackedBool                   mCanceled;
     nsresult                       mCancelStatus;
 };
 
@@ -592,8 +592,8 @@ NS_AsyncCopy(nsIInputStream         *source,
              PRUint32                chunkSize,
              nsAsyncCopyCallbackFun  callback,
              void                   *closure,
-             bool                    closeSource,
-             bool                    closeSink,
+             PRBool                  closeSource,
+             PRBool                  closeSink,
              nsISupports           **aCopierCtx)
 {
     NS_ASSERTION(target, "non-null target required");
@@ -686,15 +686,15 @@ TestInputStream(nsIInputStream *inStr,
                 PRUint32 count,
                 PRUint32 *countWritten)
 {
-    bool *result = static_cast<bool *>(closure);
+    PRBool *result = static_cast<PRBool *>(closure);
     *result = PR_TRUE;
     return NS_ERROR_ABORT;  // don't call me anymore
 }
 
-bool
+PRBool
 NS_InputStreamIsBuffered(nsIInputStream *stream)
 {
-    bool result = false;
+    PRBool result = PR_FALSE;
     PRUint32 n;
     nsresult rv = stream->ReadSegments(TestInputStream,
                                        &result, 1, &n);
@@ -709,15 +709,15 @@ TestOutputStream(nsIOutputStream *outStr,
                  PRUint32 count,
                  PRUint32 *countRead)
 {
-    bool *result = static_cast<bool *>(closure);
+    PRBool *result = static_cast<PRBool *>(closure);
     *result = PR_TRUE;
     return NS_ERROR_ABORT;  // don't call me anymore
 }
 
-bool
+PRBool
 NS_OutputStreamIsBuffered(nsIOutputStream *stream)
 {
-    bool result = false;
+    PRBool result = PR_FALSE;
     PRUint32 n;
     stream->WriteSegments(TestOutputStream, &result, 1, &n);
     return result;

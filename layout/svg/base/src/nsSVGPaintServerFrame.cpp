@@ -39,7 +39,7 @@
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGPaintServerFrame)
 
-bool
+PRBool
 nsSVGPaintServerFrame::SetupPaintServer(gfxContext *aContext,
                                         nsSVGGeometryFrame *aSource,
                                         float aOpacity)

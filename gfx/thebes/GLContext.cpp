@@ -71,7 +71,7 @@ const ContextFormat ContextFormat::BasicRGBA32Format(ContextFormat::BasicRGBA32)
 #define MAX_SYMBOL_LENGTH 128
 #define MAX_SYMBOL_NAMES 5
 
-bool
+PRBool
 LibrarySymbolLoader::OpenLibrary(const char *library)
 {
     PRLibSpec lspec;
@@ -85,8 +85,8 @@ LibrarySymbolLoader::OpenLibrary(const char *library)
     return PR_TRUE;
 }
 
-bool
-LibrarySymbolLoader::LoadSymbols(SymLoadStruct *firstStruct, bool tryplatform, const char *prefix)
+PRBool
+LibrarySymbolLoader::LoadSymbols(SymLoadStruct *firstStruct, PRBool tryplatform, const char *prefix)
 {
     return LoadSymbols(mLibrary, firstStruct, tryplatform ? mLookupFunc : nsnull, prefix);
 }
@@ -117,7 +117,7 @@ LibrarySymbolLoader::LookupSymbol(PRLibrary *lib,
     return res;
 }
 
-bool
+PRBool
 LibrarySymbolLoader::LoadSymbols(PRLibrary *lib,
                                  SymLoadStruct *firstStruct,
                                  PlatformLookupFunction lookupFunction,
@@ -164,8 +164,8 @@ LibrarySymbolLoader::LoadSymbols(PRLibrary *lib,
  * instead of only handling the symbol if it's exposed directly.
  */
 
-bool
-GLContext::InitWithPrefix(const char *prefix, bool trygl)
+PRBool
+GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
 {
     ScopedGfxFeatureReporter reporter("GL Context");
 
@@ -437,7 +437,6 @@ static const char *sExtensionNames[] = {
     "GL_OES_texture_float",
     "GL_ARB_texture_float",
     "GL_EXT_unpack_subimage",
-    "GL_OES_standard_derivatives",
     NULL
 };
 
@@ -487,14 +486,14 @@ GLContext::InitExtensions()
 #endif
 }
 
-bool
+PRBool
 GLContext::IsExtensionSupported(const char *extension)
 {
     return ListHasExtension(fGetString(LOCAL_GL_EXTENSIONS), extension);
 }
 
 // Common code for checking for both GL extensions and GLX extensions.
-bool
+PRBool
 GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
 {
     // fix bug 612572 - we were crashing as we were calling this function with extensions==null
@@ -535,7 +534,7 @@ already_AddRefed<TextureImage>
 GLContext::CreateTextureImage(const nsIntSize& aSize,
                               TextureImage::ContentType aContentType,
                               GLenum aWrapMode,
-                              bool aUseNearestFilter)
+                              PRBool aUseNearestFilter)
 {
     MakeCurrent();
 
@@ -711,7 +710,7 @@ BasicTextureImage::Resize(const nsIntSize& aSize)
 TiledTextureImage::TiledTextureImage(GLContext* aGL,
                                      nsIntSize aSize,
                                      TextureImage::ContentType aContentType,
-                                     bool aUseNearestFilter)
+                                     PRBool aUseNearestFilter)
     : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aUseNearestFilter)
     , mCurrentImage(0)
     , mInUpdate(PR_FALSE)
@@ -740,7 +739,7 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
         region = aRegion;
     }
 
-    bool result = true;
+    PRBool result = PR_TRUE;
     for (unsigned i = 0; i < mImages.Length(); i++) {
         int xPos = (i % mColumns) * mTileSize;
         int yPos = (i / mColumns) * mTileSize;
@@ -904,7 +903,7 @@ void TiledTextureImage::BeginTileIteration()
     mCurrentImage = 0;
 }
 
-bool TiledTextureImage::NextTile()
+PRBool TiledTextureImage::NextTile()
 {
     if (mCurrentImage + 1 < mImages.Length()) {
         mCurrentImage++;
@@ -961,7 +960,7 @@ PRUint32 TiledTextureImage::GetTileCount()
     return mImages.Length();
 }
 
-bool
+PRBool
 GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 {
     if (!IsOffscreenSizeAllowed(aSize))
@@ -2286,7 +2285,7 @@ RemoveNamesFromArray(GLContext *aOrigin, GLsizei aCount, GLuint *aNames, nsTArra
         if (name == 0)
             continue;
 
-        bool found = false;
+        PRBool found = PR_FALSE;
         for (PRUint32 i = 0; i < aArray.Length(); ++i) {
             if (aArray[i].name == name) {
                 aArray.RemoveElementAt(i);

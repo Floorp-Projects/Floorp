@@ -137,7 +137,7 @@ nsStrictTransportSecurityService::GetHost(nsIURI *aURI, nsACString &aResult)
 nsresult
 nsStrictTransportSecurityService::SetStsState(nsIURI* aSourceURI,
                                               PRInt64 maxage,
-                                              bool includeSubdomains)
+                                              PRBool includeSubdomains)
 {
   // If max-age is zero, that's an indication to immediately remove the
   // permissions, so here's a shortcut.
@@ -233,9 +233,9 @@ nsStrictTransportSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
 
   const char* directive;
 
-  bool foundMaxAge = false;
-  bool foundUnrecognizedTokens = false;
-  bool includeSubdomains = false;
+  PRBool foundMaxAge = PR_FALSE;
+  PRBool foundUnrecognizedTokens = PR_FALSE;
+  PRBool includeSubdomains = PR_FALSE;
   PRInt64 maxAge = 0;
 
   NS_NAMED_LITERAL_CSTRING(max_age_var, "max-age");
@@ -316,7 +316,7 @@ nsStrictTransportSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
 }
 
 NS_IMETHODIMP
-nsStrictTransportSecurityService::IsStsHost(const char* aHost, bool* aResult)
+nsStrictTransportSecurityService::IsStsHost(const char* aHost, PRBool* aResult)
 {
   // Should be called on the main thread (or via proxy) since the permission
   // manager is used and it's not threadsafe.
@@ -331,7 +331,7 @@ nsStrictTransportSecurityService::IsStsHost(const char* aHost, bool* aResult)
 }
 
 NS_IMETHODIMP
-nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, bool* aResult)
+nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, PRBool* aResult)
 {
   // Should be called on the main thread (or via proxy) since the permission
   // manager is used and it's not threadsafe.
@@ -357,10 +357,10 @@ nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, bool* aResult)
 // Verify the trustworthiness of the security info (are there any cert errors?)
 NS_IMETHODIMP
 nsStrictTransportSecurityService::ShouldIgnoreStsHeader(nsISupports* aSecurityInfo,
-                                                        bool* aResult)
+                                                        PRBool* aResult)
 {
   nsresult rv;
-  bool tlsIsBroken = false;
+  PRBool tlsIsBroken = PR_FALSE;
   nsCOMPtr<nsISSLStatusProvider> sslprov = do_QueryInterface(aSecurityInfo);
   NS_ENSURE_TRUE(sslprov, NS_ERROR_FAILURE);
 
@@ -371,7 +371,7 @@ nsStrictTransportSecurityService::ShouldIgnoreStsHeader(nsISupports* aSecurityIn
   nsCOMPtr<nsISSLStatus> sslstat = do_QueryInterface(isupstat);
   NS_ENSURE_TRUE(sslstat, NS_ERROR_FAILURE);
 
-  bool trustcheck;
+  PRBool trustcheck;
   rv = sslstat->GetIsDomainMismatch(&trustcheck);
   NS_ENSURE_SUCCESS(rv, rv);
   tlsIsBroken = tlsIsBroken || trustcheck;
@@ -526,7 +526,7 @@ nsresult
 nsStrictTransportSecurityService::TestPermission(nsIURI     *aURI,
                                                  const char *aType,
                                                  PRUint32   *aPermission,
-                                                 bool       testExact)
+                                                 PRBool     testExact)
 {
     // set default for if we can't find any STS information
     *aPermission = nsIPermissionManager::UNKNOWN_ACTION;

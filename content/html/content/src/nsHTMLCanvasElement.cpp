@@ -137,7 +137,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLCanvasElement, MozOpaque, moz_opaque)
 nsresult
 nsHTMLCanvasElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
-                             bool aNotify)
+                             PRBool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
                                               aNotify);
@@ -186,7 +186,7 @@ nsHTMLCanvasElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   return retval;
 }
 
-bool
+PRBool
 nsHTMLCanvasElement::ParseAttribute(PRInt32 aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,
@@ -320,7 +320,7 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   // If we haven't parsed the params check for proprietary options.
   // The proprietary option -moz-parse-options will take a image lib encoder
   // parse options string as is and pass it to the encoder.
-  bool usingCustomParseOptions = false;
+  PRBool usingCustomParseOptions = PR_FALSE;
   if (params.Length() == 0) {
     NS_NAMED_LITERAL_STRING(mozParseOptions, "-moz-parse-options:");
     nsAutoString paramString;
@@ -411,7 +411,7 @@ nsHTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
 
 nsresult
 nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
-                                      bool aForceThebes,
+                                      PRBool aForceThebes,
                                       nsICanvasRenderingContextInternal **aContext)
 {
   NS_ENSURE_ARG(aContext);
@@ -469,7 +469,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 {
   nsresult rv;
 
-  bool forceThebes = false;
+  PRBool forceThebes = PR_FALSE;
 
   while (mCurrentContextId.IsEmpty()) {
     rv = GetContextHelper(aContextId, forceThebes, getter_AddRefs(mCurrentContext));
@@ -641,7 +641,7 @@ nsHTMLCanvasElement::GetSize()
   return GetWidthHeight();
 }
 
-bool
+PRBool
 nsHTMLCanvasElement::IsWriteOnly()
 {
   return mWriteOnly;
@@ -723,7 +723,7 @@ nsHTMLCanvasElement::GetContextAtIndex (PRInt32 index)
   return NULL;
 }
 
-bool
+PRBool
 nsHTMLCanvasElement::GetIsOpaque()
 {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::moz_opaque);
@@ -740,7 +740,7 @@ nsHTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   return mCurrentContext->GetCanvasLayer(aBuilder, aOldLayer, aManager);
 }
 
-bool
+PRBool
 nsHTMLCanvasElement::ShouldForceInactiveLayer(LayerManager *aManager)
 {
   return !mCurrentContext || mCurrentContext->ShouldForceInactiveLayer(aManager);
@@ -777,7 +777,7 @@ nsresult
 NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 {
   Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
-  if (Preferences::GetBool("gfx.canvas.azure.enabled", false)) {
+  if (Preferences::GetBool("gfx.canvas.azure.enabled", PR_FALSE)) {
     nsresult rv = NS_NewCanvasRenderingContext2DAzure(aResult);
     // If Azure fails, fall back to a classic canvas.
     if (NS_SUCCEEDED(rv)) {

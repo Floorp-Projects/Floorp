@@ -135,7 +135,7 @@ nsAppShell::Init()
 
     Preferences::AddStrongObservers(this, kObservedPrefs);
 
-    bool match;
+    PRBool match;
     rv = Preferences::GetBool(PREFNAME_MATCH_OS, &match);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -174,7 +174,7 @@ nsAppShell::Observe(nsISupports* aSubject,
             return NS_OK;
         }
 
-        bool match;
+        PRBool match;
         nsresult rv = Preferences::GetBool(PREFNAME_MATCH_OS, &match);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -204,8 +204,8 @@ nsAppShell::ScheduleNativeEventCallback()
     PostEvent(new AndroidGeckoEvent(AndroidGeckoEvent::NATIVE_POKE));
 }
 
-bool
-nsAppShell::ProcessNextNativeEvent(bool mayWait)
+PRBool
+nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
     EVLOG("nsAppShell::ProcessNextNativeEvent %d", mayWait);
 

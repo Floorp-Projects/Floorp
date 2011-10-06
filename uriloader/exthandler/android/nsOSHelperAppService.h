@@ -50,14 +50,14 @@ public:
     virtual already_AddRefed<nsIMIMEInfo>
     GetMIMEInfoFromOS(const nsACString& aMIMEType,
                       const nsACString& aFileExt,
-                      bool* aFound);
+                      PRBool* aFound);
 
     virtual NS_HIDDEN_(nsresult)
     OSProtocolHandlerExists(const char* aScheme,
-                            bool* aExists);
+                            PRBool* aExists);
 
     NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
-                                            bool *found,
+                                            PRBool *found,
                                             nsIHandlerInfo **_retval);
 
     static nsIHandlerApp*

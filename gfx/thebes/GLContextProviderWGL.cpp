@@ -58,7 +58,7 @@ static HDC gSharedWindowDC = 0;
 static HGLRC gSharedWindowGLContext = 0;
 static int gSharedWindowPixelFormat = 0;
 
-static bool gUseDoubleBufferedWindows = false;
+static PRBool gUseDoubleBufferedWindows = PR_FALSE;
 
 static HWND
 CreateDummyWindow(HDC *aWindowDC = nsnull)
@@ -120,7 +120,7 @@ CreateDummyWindow(HDC *aWindowDC = nsnull)
     return win;
 }
 
-bool
+PRBool
 WGLLibrary::EnsureInitialized()
 {
     if (mInitialized)
@@ -228,7 +228,7 @@ public:
                  HDC aDC,
                  HGLRC aContext,
                  HWND aWindow = nsnull,
-                 bool aIsOffscreen = false)
+                 PRBool aIsOffscreen = PR_FALSE)
         : GLContext(aFormat, aIsOffscreen, aSharedContext),
           mDC(aDC),
           mContext(aContext),
@@ -271,7 +271,7 @@ public:
         return ContextTypeWGL;
     }
 
-    bool Init()
+    PRBool Init()
     {
         if (!mDC || !mContext)
             return PR_FALSE;
@@ -281,7 +281,7 @@ public:
         return InitWithPrefix("gl", PR_TRUE);
     }
 
-    bool MakeCurrentImpl(bool aForce = false)
+    PRBool MakeCurrentImpl(PRBool aForce = PR_FALSE)
     {
         BOOL succeeded = PR_TRUE;
 
@@ -297,21 +297,21 @@ public:
         return succeeded;
     }
 
-    void SetIsDoubleBuffered(bool aIsDB) {
+    void SetIsDoubleBuffered(PRBool aIsDB) {
         mIsDoubleBuffered = aIsDB;
     }
 
-    virtual bool IsDoubleBuffered() {
+    virtual PRBool IsDoubleBuffered() {
         return mIsDoubleBuffered;
     }
 
-    virtual bool SwapBuffers() {
+    virtual PRBool SwapBuffers() {
         if (!mIsDoubleBuffered)
             return PR_FALSE;
         return ::SwapBuffers(mDC);
     }
 
-    bool SetupLookupFunction()
+    PRBool SetupLookupFunction()
     {
         mLookupFunc = (PlatformLookupFunction)sWGLLibrary.fGetProcAddress;
         return PR_TRUE;
@@ -328,9 +328,9 @@ public:
         }
     }
 
-    bool BindTex2DOffscreen(GLContext *aOffscreen);
+    PRBool BindTex2DOffscreen(GLContext *aOffscreen);
     void UnbindTex2DOffscreen(GLContext *aOffscreen);
-    bool ResizeOffscreen(const gfxIntSize& aNewSize);
+    PRBool ResizeOffscreen(const gfxIntSize& aNewSize);
 
     HGLRC Context() { return mContext; }
 
@@ -343,10 +343,10 @@ protected:
     HANDLE mPBuffer;
     int mPixelFormat;
 
-    bool mIsDoubleBuffered;
+    PRPackedBool mIsDoubleBuffered;
 };
 
-bool
+PRBool
 GLContextWGL::BindTex2DOffscreen(GLContext *aOffscreen)
 {
     if (aOffscreen->GetContextType() != ContextTypeWGL) {
@@ -398,7 +398,7 @@ GLContextWGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
     }
 }
 
-bool
+PRBool
 GLContextWGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
     if (mPBuffer) {

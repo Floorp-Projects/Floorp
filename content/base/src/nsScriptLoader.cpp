@@ -111,14 +111,14 @@ public:
     mElement->ScriptEvaluated(aResult, mElement, mIsInline);
   }
 
-  bool IsPreload()
+  PRBool IsPreload()
   {
     return mElement == nsnull;
   }
 
   nsCOMPtr<nsIScriptElement> mElement;
-  bool mLoading;             // Are we still waiting for a load to complete?
-  bool mIsInline;            // Is the script inline or loaded?
+  PRPackedBool mLoading;             // Are we still waiting for a load to complete?
+  PRPackedBool mIsInline;            // Is the script inline or loaded?
   nsString mScriptText;              // Holds script for loaded scripts
   PRUint32 mJSVersion;
   nsCOMPtr<nsIURI> mURI;
@@ -190,7 +190,7 @@ NS_IMPL_ISUPPORTS1(nsScriptLoader, nsIStreamLoaderObserver)
 // This is how IE seems to filter out a window's onload handler from a
 // <script for=... event=...> element.
 
-static bool
+static PRBool
 IsScriptEventHandler(nsIScriptElement *aScriptElement)
 {
   nsCOMPtr<nsIContent> contElement = do_QueryInterface(aScriptElement);
@@ -342,11 +342,11 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
   return NS_OK;
 }
 
-bool
+PRBool
 nsScriptLoader::PreloadURIComparator::Equals(const PreloadInfo &aPi,
                                              nsIURI * const &aURI) const
 {
-  bool same;
+  PRBool same;
   return NS_SUCCEEDED(aPi.mRequest->mURI->Equals(aURI, &same)) &&
          same;
 }
@@ -441,7 +441,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       nsnull
     };
 
-    bool isJavaScript = false;
+    PRBool isJavaScript = PR_FALSE;
     for (PRInt32 i = 0; jsTypes[i]; i++) {
       if (mimeType.LowerCaseEqualsASCII(jsTypes[i])) {
         isJavaScript = PR_TRUE;
@@ -673,7 +673,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
   if (csp) {
     PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("New ScriptLoader i ****with CSP****"));
-    bool inlineOK;
+    PRBool inlineOK;
     rv = csp->GetAllowsInlineScript(&inlineOK);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -784,7 +784,7 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
 
   FireScriptAvailable(NS_OK, aRequest);
 
-  bool runScript = true;
+  PRBool runScript = PR_TRUE;
   nsContentUtils::DispatchTrustedEvent(scriptElem->GetOwnerDoc(),
                                        scriptElem,
                                        NS_LITERAL_STRING("beforescriptexecute"),
@@ -888,7 +888,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 
   nsIURI* uri = aRequest->mFinalURI ? aRequest->mFinalURI : aRequest->mURI;
 
-  bool oldProcessingScriptTag = context->GetProcessingScriptTag();
+  PRBool oldProcessingScriptTag = context->GetProcessingScriptTag();
   context->SetProcessingScriptTag(PR_TRUE);
 
   // Update our current script.
@@ -898,7 +898,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   nsCAutoString url;
   nsContentUtils::GetWrapperSafeScriptFilename(mDocument, uri, url);
 
-  bool isUndefined;
+  PRBool isUndefined;
   rv = context->EvaluateString(aScript,
                           globalObject->GetScriptGlobal(stid),
                           mDocument->NodePrincipal(), url.get(),
@@ -1005,7 +1005,7 @@ nsScriptLoader::ProcessPendingRequests()
   }
 }
 
-bool
+PRBool
 nsScriptLoader::ReadyToExecuteScripts()
 {
   // Make sure the SelfReadyToExecuteScripts check is first, so that
@@ -1028,7 +1028,7 @@ nsScriptLoader::ReadyToExecuteScripts()
 
 
 // This function was copied from nsParser.cpp. It was simplified a bit.
-static bool
+static PRBool
 DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsCString& oCharset)
 {
   if (aLen < 2)
@@ -1210,7 +1210,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(req);
   if (httpChannel) {
-    bool requestSucceeded;
+    PRBool requestSucceeded;
     rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
     if (NS_SUCCEEDED(rv) && !requestSucceeded) {
       return NS_ERROR_NOT_AVAILABLE;
@@ -1259,7 +1259,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
 }
 
 /* static */
-bool
+PRBool
 nsScriptLoader::ShouldExecuteScript(nsIDocument* aDocument,
                                     nsIChannel* aChannel)
 {
@@ -1267,7 +1267,7 @@ nsScriptLoader::ShouldExecuteScript(nsIDocument* aDocument,
     return PR_FALSE;
   }
 
-  bool hasCert;
+  PRBool hasCert;
   nsIPrincipal* docPrincipal = aDocument->NodePrincipal();
   docPrincipal->GetHasCertificate(&hasCert);
   if (!hasCert) {
@@ -1283,13 +1283,13 @@ nsScriptLoader::ShouldExecuteScript(nsIDocument* aDocument,
 
   // If the channel principal isn't at least as powerful as the
   // document principal, then we don't execute the script.
-  bool subsumes;
+  PRBool subsumes;
   rv = channelPrincipal->Subsumes(docPrincipal, &subsumes);
   return NS_SUCCEEDED(rv) && subsumes;
 }
 
 void
-nsScriptLoader::ParsingComplete(bool aTerminated)
+nsScriptLoader::ParsingComplete(PRBool aTerminated)
 {
   if (mDeferEnabled) {
     // Have to check because we apparently get ParsingComplete

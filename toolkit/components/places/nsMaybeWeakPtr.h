@@ -63,7 +63,7 @@ public:
   nsMaybeWeakPtr(const nsCOMPtr<nsIWeakReference> &ref) { mPtr = ref; }
   nsMaybeWeakPtr(const nsCOMPtr<T> &ref) { mPtr = ref; }
 
-  bool operator==(const nsMaybeWeakPtr<T> &other) const {
+  PRBool operator==(const nsMaybeWeakPtr<T> &other) const {
     return mPtr == other.mPtr;
   }
 
@@ -82,7 +82,7 @@ protected:
 
 typedef nsTArray< nsMaybeWeakPtr<nsISupports> > isupports_array_type;
 nsresult NS_AppendWeakElementBase(isupports_array_type *aArray,
-                                  nsISupports *aElement, bool aWeak);
+                                  nsISupports *aElement, PRBool aWeak);
 nsresult NS_RemoveWeakElementBase(isupports_array_type *aArray,
                                   nsISupports *aElement);
 
@@ -90,7 +90,7 @@ template<class T>
 class nsMaybeWeakPtrArray : public nsTArray< nsMaybeWeakPtr<T> >
 {
 public:
-  nsresult AppendWeakElement(T *aElement, bool aOwnsWeak)
+  nsresult AppendWeakElement(T *aElement, PRBool aOwnsWeak)
   {
     return NS_AppendWeakElementBase(
       reinterpret_cast<isupports_array_type*>(this), aElement, aOwnsWeak);

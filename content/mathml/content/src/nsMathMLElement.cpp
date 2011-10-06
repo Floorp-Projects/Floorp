@@ -75,7 +75,7 @@ NS_IMPL_RELEASE_INHERITED(nsMathMLElement, nsMathMLElementBase)
 nsresult
 nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                             nsIContent* aBindingParent,
-                            bool aCompileEventHandlers)
+                            PRBool aCompileEventHandlers)
 {
   static const char kMathMLStyleSheetURI[] = "resource://gre-resources/mathml.css";
 
@@ -106,7 +106,7 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsMathMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
+nsMathMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
@@ -115,7 +115,7 @@ nsMathMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsMathMLElementBase::UnbindFromTree(aDeep, aNullParent);
 }
 
-bool
+PRBool
 nsMathMLElement::ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -156,7 +156,7 @@ static nsGenericElement::MappedAttributeEntry sCommonPresStyles[] = {
   { nsnull }
 };
 
-bool
+PRBool
 nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry* const tokenMap[] = {
@@ -249,7 +249,7 @@ Implementation here:
   [h/v-unit]
 */
 
-/* static */ bool
+/* static */ PRBool
 nsMathMLElement::ParseNumericValue(const nsString& aString,
                                    nsCSSValue&     aCSSValue,
                                    PRUint32        aFlags)
@@ -276,7 +276,7 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
   }
 
   // Gather up characters that make up the number
-  bool gotDot = false;
+  PRBool gotDot = PR_FALSE;
   for ( ; i < stringLength; i++) {
     c = str[i];
     if (gotDot && c == '.')
@@ -388,7 +388,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       }
     }
 
-    bool parseSizeKeywords = true;
+    PRBool parseSizeKeywords = PR_TRUE;
     value = aAttributes->GetAttr(nsGkAtoms::mathsize_);
     if (!value) {
       parseSizeKeywords = PR_FALSE;
@@ -476,15 +476,15 @@ nsMathMLElement::IntrinsicState() const
     (mIncrementScriptLevel ? NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL : nsEventStates());
 }
 
-bool
+PRBool
 nsMathMLElement::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~eCONTENT);
 }
 
 void
-nsMathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
-                                         bool aNotify)
+nsMathMLElement::SetIncrementScriptLevel(PRBool aIncrementScriptLevel,
+                                         PRBool aNotify)
 {
   if (aIncrementScriptLevel == mIncrementScriptLevel)
     return;
@@ -495,8 +495,8 @@ nsMathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
   UpdateState(true);
 }
 
-bool
-nsMathMLElement::IsFocusable(PRInt32 *aTabIndex, bool aWithMouse)
+PRBool
+nsMathMLElement::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
 {
   nsCOMPtr<nsIURI> uri;
   if (IsLink(getter_AddRefs(uri))) {
@@ -513,7 +513,7 @@ nsMathMLElement::IsFocusable(PRInt32 *aTabIndex, bool aWithMouse)
   return PR_FALSE;
 }
 
-bool
+PRBool
 nsMathMLElement::IsLink(nsIURI** aURI) const
 {
   // http://www.w3.org/TR/2010/REC-MathML3-20101021/chapter6.html#interf.link
@@ -527,7 +527,7 @@ nsMathMLElement::IsLink(nsIURI** aURI) const
     return PR_FALSE;
   }
 
-  bool hasHref = false;
+  PRBool hasHref = PR_FALSE;
   const nsAttrValue* href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
                                                       kNameSpaceID_None);
   if (href) {
@@ -638,7 +638,7 @@ nsMathMLElement::GetHrefURI() const
 nsresult
 nsMathMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                          nsIAtom* aPrefix, const nsAString& aValue,
-                         bool aNotify)
+                         PRBool aNotify)
 {
   nsresult rv = nsMathMLElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
                                            aValue, aNotify);
@@ -659,7 +659,7 @@ nsMathMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsMathMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
-                           bool aNotify)
+                           PRBool aNotify)
 {
   nsresult rv = nsMathMLElementBase::UnsetAttr(aNameSpaceID, aAttr, aNotify);
 

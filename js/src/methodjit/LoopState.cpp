@@ -157,7 +157,7 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
     RegisterAllocation *&alloc = outerAnalysis->getAllocation(head);
     JS_ASSERT(!alloc);
 
-    alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(true);
+    alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, true);
     if (!alloc)
         return false;
 
@@ -989,9 +989,6 @@ LoopState::cannotIntegerOverflow(const CrossSSAValue &pushed)
     jsbytecode *PC = ssa->getFrame(pushed.frame).script->code + pushed.v.pushedOffset();
     ScriptAnalysis *analysis = ssa->getFrame(pushed.frame).script->analysis();
 
-    if (!analysis->integerOperation(cx, PC))
-        return false;
-
     uint32 baseSlot = UNASSIGNED;
     int32 baseConstant = 0;
     JSOp op = JSOp(*PC);
@@ -1534,8 +1531,6 @@ LoopState::getLoopTestAccess(const SSAValue &v, uint32 *pslot, int32 *pconstant)
       case JSOP_DECARG:
       case JSOP_ARGINC:
       case JSOP_ARGDEC: {
-        if (!outerAnalysis->integerOperation(cx, pc))
-            return false;
         uint32 slot = GetBytecodeSlot(outerScript, pc);
         if (outerAnalysis->slotEscapes(slot))
             return false;
@@ -1673,11 +1668,11 @@ LoopState::analyzeLoopIncrements()
         if (offset == uint32(-1) || offset < lifetime->lastBlock)
             continue;
 
-        jsbytecode *pc = outerScript->code + offset;
-        JSOp op = JSOp(*pc);
+        JSOp op = JSOp(outerScript->code[offset]);
         const JSCodeSpec *cs = &js_CodeSpec[op];
         if (cs->format & (JOF_INC | JOF_DEC)) {
-            if (!outerAnalysis->integerOperation(cx, pc))
+            TypeSet *types = outerAnalysis->pushedTypes(offset);
+            if (types->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
                 continue;
 
             Increment inc;
@@ -2142,7 +2137,7 @@ LoopState::getEntryValue(const CrossSSAValue &iv, uint32 *pslot, int32 *pconstan
       case JSOP_GETARG:
       case JSOP_ARGINC:
       case JSOP_INCARG: {
-        if (cv.frame != CrossScriptSSA::OUTER_FRAME || !analysis->integerOperation(cx, pc))
+        if (cv.frame != CrossScriptSSA::OUTER_FRAME)
             return false;
         uint32 slot = GetBytecodeSlot(outerScript, pc);
         if (outerAnalysis->slotEscapes(slot))

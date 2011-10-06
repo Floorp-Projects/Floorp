@@ -76,7 +76,7 @@ AccIterator::Next()
       continue;
     }
 
-    bool isComplying = mFilterFunc(child);
+    PRBool isComplying = mFilterFunc(child);
     if (isComplying)
       return child;
 
@@ -152,10 +152,10 @@ RelatedAccIterator::Next()
 ////////////////////////////////////////////////////////////////////////////////
 
 HTMLLabelIterator::
-  HTMLLabelIterator(nsDocAccessible* aDocument, const nsAccessible* aAccessible,
+  HTMLLabelIterator(nsDocAccessible* aDocument, nsIContent* aElement,
                     LabelFilter aFilter) :
-  mRelIter(aDocument, aAccessible->GetContent(), nsGkAtoms::_for),
-  mAcc(aAccessible), mLabelFilter(aFilter)
+  mRelIter(aDocument, aElement, nsGkAtoms::_for),
+  mElement(aElement), mLabelFilter(aFilter)
 {
 }
 
@@ -170,28 +170,20 @@ HTMLLabelIterator::Next()
       return label;
   }
 
-  // Ignore ancestor label on not widget accessible.
-  if (mLabelFilter == eSkipAncestorLabel || !mAcc->IsWidget())
+  if (mLabelFilter == eSkipAncestorLabel)
     return nsnull;
 
-  // Go up tree to get a name of ancestor label if there is one (an ancestor
-  // <label> implicitly points to us). Don't go up farther than form or
-  // document.
-  nsAccessible* walkUp = mAcc->Parent();
-  while (walkUp && !walkUp->IsDoc()) {
-    nsIContent* walkUpElm = walkUp->GetContent();
-    if (walkUpElm->IsHTML()) {
-      if (walkUpElm->Tag() == nsGkAtoms::label &&
-          !walkUpElm->HasAttr(kNameSpaceID_None, nsGkAtoms::_for)) {
-        mLabelFilter = eSkipAncestorLabel; // prevent infinite loop
-        return walkUp;
-      }
-
-      if (walkUpElm->Tag() == nsGkAtoms::form)
-        break;
+  // Go up tree get name of ancestor label if there is one (an ancestor <label>
+  // implicitly points to us). Don't go up farther than form or body element.
+  nsIContent* walkUpContent = mElement;
+  while ((walkUpContent = walkUpContent->GetParent()) &&
+         walkUpContent->Tag() != nsGkAtoms::form &&
+         walkUpContent->Tag() != nsGkAtoms::body) {
+    if (walkUpContent->Tag() == nsGkAtoms::label) {
+      // Prevent infinite loop.
+      mLabelFilter = eSkipAncestorLabel;
+      return GetAccService()->GetAccessible(walkUpContent);
     }
-
-    walkUp = walkUp->Parent();
   }
 
   return nsnull;

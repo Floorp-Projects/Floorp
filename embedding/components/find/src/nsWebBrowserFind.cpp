@@ -108,7 +108,7 @@ NS_IMPL_ISUPPORTS2(nsWebBrowserFind, nsIWebBrowserFind, nsIWebBrowserFindInFrame
 
 
 /* boolean findNext (); */
-NS_IMETHODIMP nsWebBrowserFind::FindNext(bool *outDidFind)
+NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 {
     NS_ENSURE_ARG_POINTER(outDidFind);
     *outDidFind = PR_FALSE;
@@ -185,7 +185,7 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(bool *outDidFind)
 
     // XXX We should avoid searching in frameset documents here.
     // We also need to honour mSearchSubFrames and mSearchParentFrames.
-    bool hasMore, doFind = false;
+    PRBool hasMore, doFind = PR_FALSE;
     while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMore)) && hasMore)
     {
         nsCOMPtr<nsISupports> curSupports;
@@ -318,59 +318,59 @@ NS_IMETHODIMP nsWebBrowserFind::SetSearchString(const PRUnichar * aSearchString)
 }
 
 /* attribute boolean findBackwards; */
-NS_IMETHODIMP nsWebBrowserFind::GetFindBackwards(bool *aFindBackwards)
+NS_IMETHODIMP nsWebBrowserFind::GetFindBackwards(PRBool *aFindBackwards)
 {
     NS_ENSURE_ARG_POINTER(aFindBackwards);
     *aFindBackwards = mFindBackwards;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserFind::SetFindBackwards(bool aFindBackwards)
+NS_IMETHODIMP nsWebBrowserFind::SetFindBackwards(PRBool aFindBackwards)
 {
     mFindBackwards = aFindBackwards;
     return NS_OK;
 }
 
 /* attribute boolean wrapFind; */
-NS_IMETHODIMP nsWebBrowserFind::GetWrapFind(bool *aWrapFind)
+NS_IMETHODIMP nsWebBrowserFind::GetWrapFind(PRBool *aWrapFind)
 {
     NS_ENSURE_ARG_POINTER(aWrapFind);
     *aWrapFind = mWrapFind;
     return NS_OK;
 }
-NS_IMETHODIMP nsWebBrowserFind::SetWrapFind(bool aWrapFind)
+NS_IMETHODIMP nsWebBrowserFind::SetWrapFind(PRBool aWrapFind)
 {
     mWrapFind = aWrapFind;
     return NS_OK;
 }
 
 /* attribute boolean entireWord; */
-NS_IMETHODIMP nsWebBrowserFind::GetEntireWord(bool *aEntireWord)
+NS_IMETHODIMP nsWebBrowserFind::GetEntireWord(PRBool *aEntireWord)
 {
     NS_ENSURE_ARG_POINTER(aEntireWord);
     *aEntireWord = mEntireWord;
     return NS_OK;
 }
-NS_IMETHODIMP nsWebBrowserFind::SetEntireWord(bool aEntireWord)
+NS_IMETHODIMP nsWebBrowserFind::SetEntireWord(PRBool aEntireWord)
 {
     mEntireWord = aEntireWord;
     return NS_OK;
 }
 
 /* attribute boolean matchCase; */
-NS_IMETHODIMP nsWebBrowserFind::GetMatchCase(bool *aMatchCase)
+NS_IMETHODIMP nsWebBrowserFind::GetMatchCase(PRBool *aMatchCase)
 {
     NS_ENSURE_ARG_POINTER(aMatchCase);
     *aMatchCase = mMatchCase;
     return NS_OK;
 }
-NS_IMETHODIMP nsWebBrowserFind::SetMatchCase(bool aMatchCase)
+NS_IMETHODIMP nsWebBrowserFind::SetMatchCase(PRBool aMatchCase)
 {
     mMatchCase = aMatchCase;
     return NS_OK;
 }
 
-static bool
+static PRBool
 IsInNativeAnonymousSubtree(nsIContent* aContent)
 {
     while (aContent) {
@@ -526,7 +526,7 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
                                   nsIDOMRange* aEndPt,
                                   nsIDOMDocument* aDoc,
                                   nsISelection* aSel,
-                                  bool aWrap)
+                                  PRBool aWrap)
 {
     NS_ENSURE_ARG_POINTER(aSel);
 
@@ -621,7 +621,7 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
 }
 
 /* attribute boolean searchFrames; */
-NS_IMETHODIMP nsWebBrowserFind::GetSearchFrames(bool *aSearchFrames)
+NS_IMETHODIMP nsWebBrowserFind::GetSearchFrames(PRBool *aSearchFrames)
 {
     NS_ENSURE_ARG_POINTER(aSearchFrames);
     // this only returns true if we are searching both sub and parent
@@ -631,7 +631,7 @@ NS_IMETHODIMP nsWebBrowserFind::GetSearchFrames(bool *aSearchFrames)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserFind::SetSearchFrames(bool aSearchFrames)
+NS_IMETHODIMP nsWebBrowserFind::SetSearchFrames(PRBool aSearchFrames)
 {
     mSearchSubFrames = aSearchFrames;
     mSearchParentFrames = aSearchFrames;
@@ -673,28 +673,28 @@ NS_IMETHODIMP nsWebBrowserFind::SetRootSearchFrame(nsIDOMWindow * aRootSearchFra
 }
 
 /* attribute boolean searchSubframes; */
-NS_IMETHODIMP nsWebBrowserFind::GetSearchSubframes(bool *aSearchSubframes)
+NS_IMETHODIMP nsWebBrowserFind::GetSearchSubframes(PRBool *aSearchSubframes)
 {
     NS_ENSURE_ARG_POINTER(aSearchSubframes);
     *aSearchSubframes = mSearchSubFrames;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserFind::SetSearchSubframes(bool aSearchSubframes)
+NS_IMETHODIMP nsWebBrowserFind::SetSearchSubframes(PRBool aSearchSubframes)
 {
     mSearchSubFrames = aSearchSubframes;
     return NS_OK;
 }
 
 /* attribute boolean searchParentFrames; */
-NS_IMETHODIMP nsWebBrowserFind::GetSearchParentFrames(bool *aSearchParentFrames)
+NS_IMETHODIMP nsWebBrowserFind::GetSearchParentFrames(PRBool *aSearchParentFrames)
 {
     NS_ENSURE_ARG_POINTER(aSearchParentFrames);
     *aSearchParentFrames = mSearchParentFrames;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserFind::SetSearchParentFrames(bool aSearchParentFrames)
+NS_IMETHODIMP nsWebBrowserFind::SetSearchParentFrames(PRBool aSearchParentFrames)
 {
     mSearchParentFrames = aSearchParentFrames;
     return NS_OK;
@@ -705,8 +705,8 @@ NS_IMETHODIMP nsWebBrowserFind::SetSearchParentFrames(bool aSearchParentFrames)
 
 */
 nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
-                                         bool aWrapping,
-                                         bool* aDidFind)
+                                         PRBool aWrapping,
+                                         PRBool* aDidFind)
 {
     NS_ENSURE_ARG(aWindow);
     NS_ENSURE_ARG_POINTER(aDidFind);
@@ -734,11 +734,11 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (subject) {
-        bool subsumes;
+        PRBool subsumes;
         rv = subject->Subsumes(theDoc->NodePrincipal(), &subsumes);
         NS_ENSURE_SUCCESS(rv, rv);
         if (!subsumes) {
-            bool hasCap = false;
+            PRBool hasCap = PR_FALSE;
             secMan->IsCapabilityEnabled("UniversalBrowserWrite", &hasCap);
             if (!hasCap) {
                 secMan->IsCapabilityEnabled("UniversalXPConnect", &hasCap);

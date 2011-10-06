@@ -59,8 +59,8 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   virtual ~nsXHTMLContentSerializer();
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
-                  const char* aCharSet, bool aIsCopying,
-                  bool aRewriteEncodingDeclaration);
+                  const char* aCharSet, PRBool aIsCopying,
+                  PRBool aRewriteEncodingDeclaration);
 
   NS_IMETHOD AppendText(nsIContent* aText,
                         PRInt32 aStartOffset,
@@ -73,8 +73,8 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
  protected:
 
 
-  virtual bool CheckElementStart(nsIContent * aContent,
-                          bool & aForceFormat,
+  virtual PRBool CheckElementStart(nsIContent * aContent,
+                          PRBool & aForceFormat,
                           nsAString& aStr);
 
   virtual void AppendEndOfElementStart(nsIContent *aOriginalElement,
@@ -86,19 +86,19 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                          nsIContent *aOriginalElement,
                          nsAString& aStr);
 
-  virtual bool CheckElementEnd(nsIContent * aContent,
-                          bool & aForceFormat,
+  virtual PRBool CheckElementEnd(nsIContent * aContent,
+                          PRBool & aForceFormat,
                           nsAString& aStr);
 
   virtual void AfterElementEnd(nsIContent * aContent,
                                nsAString& aStr);
 
-  virtual bool LineBreakBeforeOpen(PRInt32 aNamespaceID, nsIAtom* aName);
-  virtual bool LineBreakAfterOpen(PRInt32 aNamespaceID, nsIAtom* aName);
-  virtual bool LineBreakBeforeClose(PRInt32 aNamespaceID, nsIAtom* aName);
-  virtual bool LineBreakAfterClose(PRInt32 aNamespaceID, nsIAtom* aName);
+  virtual PRBool LineBreakBeforeOpen(PRInt32 aNamespaceID, nsIAtom* aName);
+  virtual PRBool LineBreakAfterOpen(PRInt32 aNamespaceID, nsIAtom* aName);
+  virtual PRBool LineBreakBeforeClose(PRInt32 aNamespaceID, nsIAtom* aName);
+  virtual PRBool LineBreakAfterClose(PRInt32 aNamespaceID, nsIAtom* aName);
 
-  bool HasLongLines(const nsString& text, PRInt32& aLastNewlineOffset);
+  PRBool HasLongLines(const nsString& text, PRInt32& aLastNewlineOffset);
 
   // functions to check if we enter in or leave from a preformated content
   virtual void MaybeEnterInPreContent(nsIContent* aNode);
@@ -111,13 +111,13 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                            nsIAtom* aTagName,
                            nsAString& aStr,
                            PRUint32 aSkipAttr,
-                           bool aAddNSAttr);
+                           PRBool aAddNSAttr);
 
-  bool IsFirstChildOfOL(nsIContent* aElement);
+  PRBool IsFirstChildOfOL(nsIContent* aElement);
 
   void SerializeLIValueAttribute(nsIContent* aElement,
                                  nsAString& aStr);
-  bool IsShorthandAttr(const nsIAtom* aAttrName,
+  PRBool IsShorthandAttr(const nsIAtom* aAttrName,
                          const nsIAtom* aElementName);
   virtual void AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr);
@@ -131,10 +131,10 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
    * isHTMLParser should be set to true by the HTML parser which inherits from
    * this class. It avoids to redefine methods just for few changes.
    */
-  bool          mIsHTMLSerializer;
+  PRPackedBool  mIsHTMLSerializer;
 
-  bool          mDoHeader;
-  bool          mIsCopying; // Set to true only while copying
+  PRPackedBool  mDoHeader;
+  PRPackedBool  mIsCopying; // Set to PR_TRUE only while copying
 
   /*
    * mDisableEntityEncoding is higher than 0 while the serializer is serializing
@@ -149,14 +149,14 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
   // This is to ensure that we only do meta tag fixups when dealing with
   // whole documents.
-  bool          mRewriteEncodingDeclaration;
+  PRPackedBool  mRewriteEncodingDeclaration;
 
   // To keep track of First LI child of OL in selected range 
-  bool          mIsFirstChildOfOL;
+  PRPackedBool  mIsFirstChildOfOL;
 
   // To keep track of startvalue of OL and first list item for nested lists
   struct olState {
-    olState(PRInt32 aStart, bool aIsFirst)
+    olState(PRInt32 aStart, PRBool aIsFirst)
       : startVal(aStart),
         isFirstListItem(aIsFirst)
     {
@@ -173,13 +173,13 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
     // is true only before the serialization of the first li of an ol
     // should be false for other li in the list
-    bool isFirstListItem;
+    PRBool isFirstListItem;
   };
 
   // Stack to store one olState struct per <OL>.
   nsAutoTArray<olState, 8> mOLStateStack;
 
-  bool HasNoChildren(nsIContent* aContent);
+  PRBool HasNoChildren(nsIContent* aContent);
 };
 
 nsresult

@@ -97,7 +97,7 @@ nsMIMEInfoUnix::LoadUriInternal(nsIURI * aURI)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoUnix::GetHasDefaultHandler(bool *_retval)
+nsMIMEInfoUnix::GetHasDefaultHandler(PRBool *_retval)
 {
   *_retval = PR_FALSE;
   nsRefPtr<nsMIMEInfoBase> mimeInfo = nsGNOMERegistry::GetFromType(mSchemeOrType);
@@ -240,10 +240,10 @@ nsMIMEInfoUnix::LaunchDefaultWithDBus(const char *aFilePath)
   return NS_OK;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsMIMEInfoUnix::HandlerExists(const char *aProtocolScheme)
 {
-  bool isEnabled = false;
+  PRBool isEnabled = PR_FALSE;
   HildonURIAction *action = hildon_uri_get_default_action(aProtocolScheme, nsnull);
   if (action) {
     isEnabled = PR_TRUE;

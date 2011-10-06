@@ -300,7 +300,7 @@ nsRenderingContext::DrawRect(nscoord aX, nscoord aY,
  */
 #define CAIRO_COORD_MAX (double(0x7fffff))
 
-static bool
+static PRBool
 ConditionRect(gfxRect& r) {
     // if either x or y is way out of bounds;
     // note that we don't handle negative w/h here
@@ -449,7 +449,7 @@ nsRenderingContext::FillPolygon(const nsPoint twPoints[], PRInt32 aNumPoints)
 //
 
 void
-nsRenderingContext::SetTextRunRTL(bool aIsRTL)
+nsRenderingContext::SetTextRunRTL(PRBool aIsRTL)
 {
     mFontMetrics->SetTextRunRTL(aIsRTL);
 }
@@ -583,7 +583,7 @@ nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
         return;
     }
 
-    bool isRTL = mFontMetrics->GetTextRunRTL();
+    PRBool isRTL = mFontMetrics->GetTextRunRTL();
 
     // If we're drawing right to left, we must start at the end.
     if (isRTL) {

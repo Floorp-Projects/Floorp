@@ -127,7 +127,7 @@ public:
     void SetDeviceOffset(const gfxPoint& offset);
     gfxPoint GetDeviceOffset() const;
 
-    virtual bool GetRotateForLandscape() { return false; }
+    virtual PRBool GetRotateForLandscape() { return PR_FALSE; }
 
     void Flush() const;
     void MarkDirty();
@@ -171,7 +171,7 @@ public:
      * using 4 bytes per pixel; optionally, make sure that either dimension
      * doesn't exceed the given limit.
      */
-    static bool CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit = 0);
+    static PRBool CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit = 0);
 
     /* Provide a stride value that will respect all alignment requirements of
      * the accelerated image-rendering code.
@@ -187,8 +187,8 @@ public:
     static gfxContentType ContentFromFormat(gfxImageFormat format);
     static gfxImageFormat FormatFromContent(gfxContentType format);
 
-    void SetSubpixelAntialiasingEnabled(bool aEnabled);
-    bool GetSubpixelAntialiasingEnabled();
+    void SetSubpixelAntialiasingEnabled(PRBool aEnabled);
+    PRBool GetSubpixelAntialiasingEnabled();
 
     /**
      * Record number of bytes for given surface type.  Use positive bytes
@@ -263,8 +263,8 @@ public:
     /**
      * Mark the surface as being allowed/not allowed to be used as a source.
      */
-    void SetAllowUseAsSource(bool aAllow) { mAllowUseAsSource = aAllow; }
-    bool GetAllowUseAsSource() { return mAllowUseAsSource; }
+    void SetAllowUseAsSource(PRBool aAllow) { mAllowUseAsSource = aAllow; }
+    PRBool GetAllowUseAsSource() { return mAllowUseAsSource; }
 
 protected:
     gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mBytesRecorded(0),
@@ -287,7 +287,7 @@ protected:
     // NB: Init() *must* be called from within subclass's
     // constructors.  It's unsafe to call it after the ctor finishes;
     // leaks and use-after-frees are possible.
-    void Init(cairo_surface_t *surface, bool existingSurface = false);
+    void Init(cairo_surface_t *surface, PRBool existingSurface = PR_FALSE);
 
     virtual ~gfxASurface()
     {
@@ -306,8 +306,8 @@ private:
     PRInt32 mBytesRecorded;
 
 protected:
-    bool mSurfaceValid;
-    bool mAllowUseAsSource;
+    PRPackedBool mSurfaceValid;
+    PRPackedBool mAllowUseAsSource;
 };
 
 /**

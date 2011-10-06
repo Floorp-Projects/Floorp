@@ -56,12 +56,12 @@ public:
 
 private:
     // returns the value of the given boolean pref
-    bool TestBoolPref(const char *pref);
+    PRBool TestBoolPref(const char *pref);
 
     // returns true if URI is accepted by the list of hosts in the pref
-    bool TestPref(nsIURI *, const char *pref);
+    PRBool TestPref(nsIURI *, const char *pref);
 
-    bool MatchesBaseURI(const nsCSubstring &scheme,
+    PRBool MatchesBaseURI(const nsCSubstring &scheme,
                           const nsCSubstring &host,
                           PRInt32             port,
                           const char         *baseStart,

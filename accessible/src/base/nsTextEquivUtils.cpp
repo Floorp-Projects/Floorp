@@ -129,10 +129,10 @@ nsTextEquivUtils::AppendTextEquivFromContent(nsAccessible *aInitiatorAcc,
   // through the DOM subtree otherwise go down through accessible subtree and
   // calculate the flat string.
   nsIFrame *frame = aContent->GetPrimaryFrame();
-  bool isVisible = frame && frame->GetStyleVisibility()->IsVisible();
+  PRBool isVisible = frame && frame->GetStyleVisibility()->IsVisible();
 
   nsresult rv = NS_ERROR_FAILURE;
-  bool goThroughDOMSubtree = true;
+  PRBool goThroughDOMSubtree = PR_TRUE;
 
   if (isVisible) {
     nsAccessible *accessible =
@@ -155,7 +155,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
                                                  nsAString *aString)
 {
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
-    bool isHTMLBlock = false;
+    PRBool isHTMLBlock = PR_FALSE;
 
     nsIContent *parentContent = aContent->GetParent();
     if (parentContent) {
@@ -238,7 +238,7 @@ nsTextEquivUtils::AppendFromAccessible(nsAccessible *aAccessible,
   nsresult rv = aAccessible->GetName(text);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool isEmptyTextEquiv = true;
+  PRBool isEmptyTextEquiv = PR_TRUE;
 
   // If the name is from tooltip then append it to result string in the end
   // (see h. step of name computation guide).
@@ -376,7 +376,7 @@ nsTextEquivUtils::AppendFromDOMNode(nsIContent *aContent, nsAString *aString)
   return AppendFromDOMChildren(aContent, aString);
 }
 
-bool
+PRBool
 nsTextEquivUtils::AppendString(nsAString *aString,
                                const nsAString& aTextEquivalent)
 {
@@ -391,7 +391,7 @@ nsTextEquivUtils::AppendString(nsAString *aString,
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsTextEquivUtils::IsWhitespaceString(const nsSubstring& aString)
 {
   nsSubstring::const_char_iterator iterBegin, iterEnd;
@@ -405,7 +405,7 @@ nsTextEquivUtils::IsWhitespaceString(const nsSubstring& aString)
   return iterBegin == iterEnd;
 }
 
-bool
+PRBool
 nsTextEquivUtils::IsWhitespace(PRUnichar aChar)
 {
   return aChar == ' ' || aChar == '\n' ||

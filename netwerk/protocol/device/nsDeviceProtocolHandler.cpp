@@ -100,7 +100,7 @@ nsDeviceProtocolHandler::NewChannel(nsIURI* aURI, nsIChannel **aResult)
 NS_IMETHODIMP 
 nsDeviceProtocolHandler::AllowPort(PRInt32 port,
                                    const char *scheme,
-                                   bool *aResult)
+                                   PRBool *aResult)
 {
   // don't override anything.  
   *aResult = PR_FALSE;

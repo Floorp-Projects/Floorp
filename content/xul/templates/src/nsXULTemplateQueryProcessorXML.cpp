@@ -73,7 +73,7 @@ NS_IMPL_ISUPPORTS1(nsXMLQuery, nsXMLQuery)
 NS_IMPL_ISUPPORTS1(nsXULTemplateResultSetXML, nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsXULTemplateResultSetXML::HasMoreElements(bool *aResult)
+nsXULTemplateResultSetXML::HasMoreElements(PRBool *aResult)
 {
     // if GetSnapshotLength failed, then the return type was not a set of
     // nodes, so just return false in this case.
@@ -159,9 +159,9 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
                                               nsIDOMNode* aRootNode,
-                                              bool aIsTrusted,
+                                              PRBool aIsTrusted,
                                               nsIXULTemplateBuilder* aBuilder,
-                                              bool* aShouldDelayBuilding,
+                                              PRBool* aShouldDelayBuilding,
                                               nsISupports** aResult)
 {
     *aResult = nsnull;
@@ -200,7 +200,7 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
 
     nsIPrincipal *docPrincipal = doc->NodePrincipal();
 
-    bool hasHadScriptObject = true;
+    PRBool hasHadScriptObject = PR_TRUE;
     nsIScriptGlobalObject* scriptObject =
       doc->GetScriptHandlingObject(hasHadScriptObject);
     NS_ENSURE_STATE(scriptObject);
@@ -305,10 +305,9 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
         new nsXMLQuery(this, aMemberVariable, compiledexpr);
     NS_ENSURE_TRUE(query, NS_ERROR_OUT_OF_MEMORY);
 
-    for (nsIContent* condition = content->GetFirstChild();
-         condition;
-         condition = condition->GetNextSibling()) {
-
+    PRUint32 count = content->GetChildCount();
+    for (PRUint32 i = 0; i < count; ++i) {
+        nsIContent *condition = content->GetChildAt(i);
         if (condition->NodeInfo()->Equals(nsGkAtoms::assign,
                                           kNameSpaceID_XUL)) {
             nsAutoString var;

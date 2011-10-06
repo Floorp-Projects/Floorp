@@ -63,8 +63,6 @@ public:
                                                 const gfxMatrix &aMatrix,
                                                 float aOpacity = 1.0f);
 
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
-
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
@@ -112,7 +110,7 @@ private:
   nsIFrame *mMaskParent;
   nsAutoPtr<gfxMatrix> mMaskParentMatrix;
   // recursion prevention flag
-  bool mInUse;
+  PRPackedBool mInUse;
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM();

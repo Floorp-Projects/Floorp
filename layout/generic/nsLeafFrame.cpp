@@ -72,7 +72,7 @@ nsLeafFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 nsLeafFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder,
-                             nsSize aPadding, bool aShrinkWrap)
+                             nsSize aPadding, PRBool aShrinkWrap)
 {
   return nsSize(GetIntrinsicWidth(), GetIntrinsicHeight());
 }

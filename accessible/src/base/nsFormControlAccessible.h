@@ -63,9 +63,6 @@ public:
 
   // nsAccessible
   virtual PRUint32 NativeRole();
-
-  // Widgets
-  virtual bool IsWidget() const;
 };
 
 /**
@@ -88,9 +85,6 @@ public:
   virtual PRUint8 ActionCount();
 
   enum { eAction_Click = 0 };
-
-  // Widgets
-  virtual bool IsWidget() const;
 };
 
 

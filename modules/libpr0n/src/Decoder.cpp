@@ -44,7 +44,7 @@
 namespace mozilla {
 namespace imagelib {
 
-Decoder::Decoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+Decoder::Decoder()
   : mDecodeFlags(0)
   , mFrameCount(0)
   , mFailCode(NS_OK)
@@ -54,12 +54,6 @@ Decoder::Decoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
   , mDecodeDone(false)
   , mDataError(false)
 {
-  // We should always have an image
-  NS_ABORT_IF_FALSE(aImage, "Can't initialize decoder without an image!");
-
-  // Save our paremeters
-  mImage = aImage;
-  mObserver = aObserver;
 }
 
 Decoder::~Decoder()
@@ -73,10 +67,17 @@ Decoder::~Decoder()
  */
 
 void
-Decoder::Init()
+Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
 {
+  // We should always have an image
+  NS_ABORT_IF_FALSE(aImage, "Can't initialize decoder without an image!");
+
   // No re-initializing
-  NS_ABORT_IF_FALSE(!mInitialized, "Can't re-initialize a decoder!");
+  NS_ABORT_IF_FALSE(mImage == nsnull, "Can't re-initialize a decoder!");
+
+  // Save our paremeters
+  mImage = aImage;
+  mObserver = aObserver;
 
   // Fire OnStartDecode at init time to support bug 512435
   if (!IsSizeDecode() && mObserver)
@@ -89,11 +90,18 @@ Decoder::Init()
 
 // Initializes a decoder whose aImage and aObserver is already being used by a
 // parent decoder
-void
-Decoder::InitSharedDecoder()
+void 
+Decoder::InitSharedDecoder(RasterImage* aImage, imgIDecoderObserver* aObserver) 
 {
+  // We should always have an image
+  NS_ABORT_IF_FALSE(aImage, "Can't initialize decoder without an image!");
+
   // No re-initializing
-  NS_ABORT_IF_FALSE(!mInitialized, "Can't re-initialize a decoder!");
+  NS_ABORT_IF_FALSE(mImage == nsnull, "Can't re-initialize a decoder!");
+
+  // Save our parameters
+  mImage = aImage;
+  mObserver = aObserver;
 
   // Implementation-specific initialization
   InitInternal();
@@ -190,7 +198,7 @@ Decoder::FlushInvalidations()
 
   // Fire OnDataAvailable
   if (mObserver) {
-    bool isCurrentFrame = mImage->GetCurrentFrameIndex() == (mFrameCount - 1);
+    PRBool isCurrentFrame = mImage->GetCurrentFrameIndex() == (mFrameCount - 1);
     mObserver->OnDataAvailable(nsnull, isCurrentFrame, &mInvalidRect);
   }
 

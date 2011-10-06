@@ -73,21 +73,21 @@ protected:
                                 nsXBLPrototypeHandler* aHandler);
 
   // walk the handlers for aEvent, aCharCode and aIgnoreShiftKey
-  bool WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType,
+  PRBool WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType,
                                 nsXBLPrototypeHandler* aHandler,
-                                PRUint32 aCharCode, bool aIgnoreShiftKey);
+                                PRUint32 aCharCode, PRBool aIgnoreShiftKey);
 
   // lazily load the handlers. Overridden to handle being attached
   // to a particular element rather than the document
-  nsresult EnsureHandlers(bool *aIsEditor);
+  nsresult EnsureHandlers(PRBool *aIsEditor);
 
   // check if the given handler cares about the given key event
-  bool EventMatched(nsXBLPrototypeHandler* inHandler, nsIAtom* inEventType,
+  PRBool EventMatched(nsXBLPrototypeHandler* inHandler, nsIAtom* inEventType,
                       nsIDOMKeyEvent* inEvent, PRUint32 aCharCode,
-                      bool aIgnoreShiftKey);
+                      PRBool aIgnoreShiftKey);
 
   // are we working with editor or browser?
-  bool IsEditor() ;
+  PRBool IsEditor() ;
 
   // Returns the element which was passed as a parameter to the constructor,
   // unless the element has been removed from the document.

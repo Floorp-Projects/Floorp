@@ -73,7 +73,7 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
   if (ret != ULS_SUCCESS)
     UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"C", &locObj);
 
-  bool f24Hour = false;
+  PRBool f24Hour = PR_FALSE;
 
   UniQueryLocaleItem(locObj, LOCI_iTime, &pString);
 

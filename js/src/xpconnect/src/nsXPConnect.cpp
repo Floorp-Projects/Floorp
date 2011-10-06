@@ -274,7 +274,7 @@ nsXPConnect::GetRuntimeInstance()
 JSBool
 nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 {
-    bool found = false;
+    PRBool found = PR_FALSE;
     if(info)
         info->HasAncestor(&NS_GET_IID(nsISupports), &found);
     return found;
@@ -282,17 +282,17 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 
 /***************************************************************************/
 
-typedef bool (*InfoTester)(nsIInterfaceInfoManager* manager, const void* data,
+typedef PRBool (*InfoTester)(nsIInterfaceInfoManager* manager, const void* data,
                              nsIInterfaceInfo** info);
 
-static bool IIDTester(nsIInterfaceInfoManager* manager, const void* data,
+static PRBool IIDTester(nsIInterfaceInfoManager* manager, const void* data,
                         nsIInterfaceInfo** info)
 {
     return NS_SUCCEEDED(manager->GetInfoForIID((const nsIID *) data, info)) &&
            *info;
 }
 
-static bool NameTester(nsIInterfaceInfoManager* manager, const void* data,
+static PRBool NameTester(nsIInterfaceInfoManager* manager, const void* data,
                       nsIInterfaceInfo** info)
 {
     return NS_SUCCEEDED(manager->GetInfoForName((const char *) data, info)) &&
@@ -308,14 +308,14 @@ static nsresult FindInfo(InfoTester tester, const void* data,
     
     // If not found, then let's ask additional managers.
 
-    bool yes;
+    PRBool yes;
     nsCOMPtr<nsISimpleEnumerator> list;
 
     if(NS_SUCCEEDED(iism->HasAdditionalManagers(&yes)) && yes &&
        NS_SUCCEEDED(iism->EnumerateAdditionalManagers(getter_AddRefs(list))) &&
        list)
     {
-        bool more;
+        PRBool more;
         nsCOMPtr<nsIInterfaceInfoManager> current;
 
         while(NS_SUCCEEDED(list->HasMoreElements(&more)) && more &&
@@ -763,7 +763,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         }
     }
 
-    bool isMarked;
+    PRBool isMarked;
 
 #ifdef DEBUG_CC
     // Note that the conditions under which we specify GCMarked vs.
@@ -1066,7 +1066,7 @@ CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     *global = tempGlobal;
     *compartment = tempGlobal->compartment();
 
-    js::AutoSwitchCompartment sc(cx, *compartment);
+    JS::AutoSwitchCompartment sc(cx, *compartment);
     JS_SetCompartmentPrivate(cx, *compartment, priv_holder.forget());
     return true;
 }
@@ -1098,7 +1098,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     }
     else
     {
-        js::AutoSwitchCompartment sc(cx, *compartment);
+        JS::AutoSwitchCompartment sc(cx, *compartment);
 
         JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
@@ -1135,7 +1135,7 @@ xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
     }
     else
     {
-        js::AutoSwitchCompartment sc(cx, *compartment);
+        JS::AutoSwitchCompartment sc(cx, *compartment);
 
         JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
@@ -1184,7 +1184,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
     ccx.SetScopeForNewJSObjects(tempGlobal);
 
-    bool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
+    PRBool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
     if(system && !JS_MakeSystemObject(aJSContext, tempGlobal))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -1293,7 +1293,7 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
                          nsISupports *aCOMObj,
                          nsWrapperCache *aCache,
                          const nsIID * aIID,
-                         bool aAllowWrapping,
+                         PRBool aAllowWrapping,
                          jsval *aVal,
                          nsIXPConnectJSObjectHolder **aHolder)
 {
@@ -1349,7 +1349,7 @@ nsXPConnect::WrapNativeToJSVal(JSContext * aJSContext,
                                nsISupports *aCOMObj,
                                nsWrapperCache *aCache,
                                const nsIID * aIID,
-                               bool aAllowWrapping,
+                               PRBool aAllowWrapping,
                                jsval *aVal,
                                nsIXPConnectJSObjectHolder **aHolder)
 {
@@ -2099,7 +2099,7 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
 NS_IMETHODIMP
 nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
                                  nsIXPConnectJSObjectHolder *sandbox,
-                                 bool returnStringOnly, jsval *rval)
+                                 PRBool returnStringOnly, jsval *rval)
 {
     if (!sandbox)
         return NS_ERROR_INVALID_ARG;
@@ -2153,9 +2153,9 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     return NS_OK;
 }
 
-/* void releaseJSContext (in JSContextPtr aJSContext, in bool noGC); */
+/* void releaseJSContext (in JSContextPtr aJSContext, in PRBool noGC); */
 NS_IMETHODIMP 
-nsXPConnect::ReleaseJSContext(JSContext * aJSContext, bool noGC)
+nsXPConnect::ReleaseJSContext(JSContext * aJSContext, PRBool noGC)
 {
     NS_ASSERTION(aJSContext, "bad param");
     XPCPerThreadData* tls = XPCPerThreadData::GetData(aJSContext);
@@ -2277,11 +2277,11 @@ nsXPConnect::DebugDumpObject(nsISupports *p, PRInt16 depth)
     return NS_OK;
 }
 
-/* void debugDumpJSStack (in bool showArgs, in bool showLocals, in bool showThisProps); */
+/* void debugDumpJSStack (in PRBool showArgs, in PRBool showLocals, in PRBool showThisProps); */
 NS_IMETHODIMP
-nsXPConnect::DebugDumpJSStack(bool showArgs,
-                              bool showLocals,
-                              bool showThisProps)
+nsXPConnect::DebugDumpJSStack(PRBool showArgs,
+                              PRBool showLocals,
+                              PRBool showThisProps)
 {
     JSContext* cx;
     if(NS_FAILED(Peek(&cx)))
@@ -2295,9 +2295,9 @@ nsXPConnect::DebugDumpJSStack(bool showArgs,
 }
 
 char*
-nsXPConnect::DebugPrintJSStack(bool showArgs,
-                               bool showLocals,
-                               bool showThisProps)
+nsXPConnect::DebugPrintJSStack(PRBool showArgs,
+                               PRBool showLocals,
+                               PRBool showThisProps)
 {
     JSContext* cx;
     if(NS_FAILED(Peek(&cx)))
@@ -2373,7 +2373,7 @@ nsXPConnect::JSToVariant(JSContext* ctx, const jsval &value, nsIVariant** _retva
 }
 
 NS_IMETHODIMP
-nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
+nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
                                 PRUint32 aRecursionDepth)
 {
     // Push a null JSContext so that we don't see any script during
@@ -2413,7 +2413,7 @@ nsXPConnect::RemoveJSHolder(void* aHolder)
 }
 
 NS_IMETHODIMP
-nsXPConnect::SetReportAllJSExceptions(bool newval)
+nsXPConnect::SetReportAllJSExceptions(PRBool newval)
 {
     // Ignore if the environment variable was set.
     if (gReportAllJSExceptions != 1)
@@ -2422,8 +2422,8 @@ nsXPConnect::SetReportAllJSExceptions(bool newval)
     return NS_OK;
 }
 
-/* [noscript, notxpcom] bool defineDOMQuickStubs (in JSContextPtr cx, in JSObjectPtr proto, in PRUint32 flags, in PRUint32 interfaceCount, [array, size_is (interfaceCount)] in nsIIDPtr interfaceArray); */
-NS_IMETHODIMP_(bool)
+/* [noscript, notxpcom] PRBool defineDOMQuickStubs (in JSContextPtr cx, in JSObjectPtr proto, in PRUint32 flags, in PRUint32 interfaceCount, [array, size_is (interfaceCount)] in nsIIDPtr interfaceArray); */
+NS_IMETHODIMP_(PRBool)
 nsXPConnect::DefineDOMQuickStubs(JSContext * cx,
                                  JSObject * proto,
                                  PRUint32 flags,
@@ -2655,7 +2655,7 @@ nsXPConnect::GetSafeJSContext(JSContext * *aSafeJSContext)
 }
 
 nsIPrincipal*
-nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
+nsXPConnect::GetPrincipal(JSObject* obj, PRBool allowShortCircuit) const
 {
     NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()),
                  "What kind of wrapper is this?");
@@ -2884,7 +2884,7 @@ nsXPConnect::Base64Decode(JSContext *cx, jsval val, jsval *out)
 }
 
 NS_IMETHODIMP
-nsXPConnect::SetDebugModeWhenPossible(bool mode)
+nsXPConnect::SetDebugModeWhenPossible(PRBool mode)
 {
     gDesiredDebugMode = mode;
     if (!mode)

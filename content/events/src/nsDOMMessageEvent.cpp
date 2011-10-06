@@ -134,8 +134,8 @@ nsDOMMessageEvent::GetSource(nsIDOMWindow** aSource)
 
 NS_IMETHODIMP
 nsDOMMessageEvent::InitMessageEvent(const nsAString& aType,
-                                    bool aCanBubble,
-                                    bool aCancelable,
+                                    PRBool aCanBubble,
+                                    PRBool aCancelable,
                                     const jsval& aData,
                                     const nsAString& aOrigin,
                                     const nsAString& aLastEventId,

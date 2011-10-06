@@ -100,7 +100,7 @@ nsSMILTimeContainer::Begin()
 void
 nsSMILTimeContainer::Pause(PRUint32 aType)
 {
-  bool didStartPause = false;
+  PRBool didStartPause = PR_FALSE;
 
   if (!mPauseState && aType) {
     mPauseStart = GetParentTime();
@@ -235,7 +235,7 @@ nsSMILTimeContainer::SetParent(nsSMILTimeContainer* aParent)
   return rv;
 }
 
-bool
+PRBool
 nsSMILTimeContainer::AddMilestone(const nsSMILMilestone& aMilestone,
                                   nsISMILAnimationElement& aElement)
 {
@@ -252,7 +252,7 @@ nsSMILTimeContainer::ClearMilestones()
   mMilestoneEntries.Clear();
 }
 
-bool
+PRBool
 nsSMILTimeContainer::GetNextMilestoneInParentTime(
     nsSMILMilestone& aNextMilestone) const
 {
@@ -270,7 +270,7 @@ nsSMILTimeContainer::GetNextMilestoneInParentTime(
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsSMILTimeContainer::PopMilestoneElementsAtMilestone(
       const nsSMILMilestone& aMilestone,
       AnimElemArray& aMatchedElements)
@@ -289,7 +289,7 @@ nsSMILTimeContainer::PopMilestoneElementsAtMilestone(
       "Trying to pop off earliest times but we have earlier ones that were "
       "overlooked");
 
-  bool gotOne = false;
+  PRBool gotOne = PR_FALSE;
   while (!mMilestoneEntries.IsEmpty() &&
       mMilestoneEntries.Top().mMilestone == containerMilestone)
   {

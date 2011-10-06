@@ -148,7 +148,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 void 
-nsButtonBoxFrame::DoMouseClick(nsGUIEvent* aEvent, bool aTrustEvent) 
+nsButtonBoxFrame::DoMouseClick(nsGUIEvent* aEvent, PRBool aTrustEvent) 
 {
   // Don't execute if we're disabled.
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
@@ -156,10 +156,10 @@ nsButtonBoxFrame::DoMouseClick(nsGUIEvent* aEvent, bool aTrustEvent)
     return;
 
   // Execute the oncommand event handler.
-  bool isShift = false;
-  bool isControl = false;
-  bool isAlt = false;
-  bool isMeta = false;
+  PRBool isShift = PR_FALSE;
+  PRBool isControl = PR_FALSE;
+  PRBool isAlt = PR_FALSE;
+  PRBool isMeta = PR_FALSE;
   if(aEvent) {
     isShift = ((nsInputEvent*)(aEvent))->isShift;
     isControl = ((nsInputEvent*)(aEvent))->isControl;

@@ -106,7 +106,7 @@ class nsStyleSet
   nsRuleNode* GetRuleTree() { return mRuleTree; }
 
   // enable / disable the Quirk style sheet
-  void EnableQuirkStyleSheet(bool aEnable);
+  void EnableQuirkStyleSheet(PRBool aEnable);
 
   // get a style context for a non-pseudo frame.
   already_AddRefed<nsStyleContext>
@@ -180,12 +180,12 @@ class nsStyleSet
 
   // Append all the currently-active font face rules to aArray.  Return
   // true for success and false for failure.
-  bool AppendFontFaceRules(nsPresContext* aPresContext,
+  PRBool AppendFontFaceRules(nsPresContext* aPresContext,
                              nsTArray<nsFontFaceRuleContainer>& aArray);
 
   // Append all the currently-active keyframes rules to aArray.  Return
   // true for success and false for failure.
-  bool AppendKeyframesRules(nsPresContext* aPresContext,
+  PRBool AppendKeyframesRules(nsPresContext* aPresContext,
                               nsTArray<nsCSSKeyframesRule*>& aArray);
 
   // Begin ignoring style context destruction, to avoid lots of unnecessary
@@ -211,7 +211,7 @@ class nsStyleSet
                        mozilla::dom::Element* aElement);
 
   // Test if style is dependent on a document state.
-  bool HasDocumentStateDependentStyle(nsPresContext* aPresContext,
+  PRBool HasDocumentStateDependentStyle(nsPresContext* aPresContext,
                                         nsIContent*    aContent,
                                         nsEventStates  aStateMask);
 
@@ -225,14 +225,14 @@ class nsStyleSet
                                            mozilla::dom::Element* aElement,
                                            nsIAtom*       aAttribute,
                                            PRInt32        aModType,
-                                           bool           aAttrHasChanged);
+                                           PRBool         aAttrHasChanged);
 
   /*
    * Do any processing that needs to happen as a result of a change in
    * the characteristics of the medium, and return whether style rules
    * may have changed as a result.
    */
-  bool MediumFeaturesChanged(nsPresContext* aPresContext);
+  PRBool MediumFeaturesChanged(nsPresContext* aPresContext);
 
   // APIs for registering objects that can supply additional
   // rules during processing.
@@ -267,8 +267,8 @@ class nsStyleSet
                          const nsCOMArray<nsIStyleSheet> &aNewSheets);
 
   // Enable/Disable entire author style level (Doc & PresHint levels)
-  bool GetAuthorStyleDisabled();
-  nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
+  PRBool GetAuthorStyleDisabled();
+  nsresult SetAuthorStyleDisabled(PRBool aStyleDisabled);
 
   PRInt32 SheetCount(sheetType aType) const {
     return mSheets[aType].Count();
@@ -301,7 +301,7 @@ class nsStyleSet
   // We don't care whether we have cached rule processors or whether
   // they have cached rule cascades; getting the rule cascades again in
   // order to do rule matching will get the correct rule cascade.
-  bool HasCachedStyleData() const {
+  PRBool HasCachedStyleData() const {
     return (mRuleTree && mRuleTree->TreeHasCachedData()) || !mRoots.IsEmpty();
   }
 
@@ -326,7 +326,7 @@ class nsStyleSet
   nsStyleSet& operator=(const nsStyleSet& aCopy);
 
   // Returns false on out-of-memory.
-  bool BuildDefaultStyleData(nsPresContext* aPresContext);
+  PRBool BuildDefaultStyleData(nsPresContext* aPresContext);
 
   // Run mark-and-sweep GC on mRuleTree and mOldRuleTrees, based on mRoots.
   void GCRuleTrees();
@@ -369,17 +369,17 @@ class nsStyleSet
   // of the rules and break out if the enumeration is halted.
   void WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
                           RuleProcessorData* aData,
-                          bool aWalkAllXBLStylesheets);
+                          PRBool aWalkAllXBLStylesheets);
 
   already_AddRefed<nsStyleContext>
   GetContext(nsStyleContext* aParentContext,
              nsRuleNode* aRuleNode,
              nsRuleNode* aVisitedRuleNode,
-             bool aIsLink,
-             bool aIsVisitedLink,
+             PRBool aIsLink,
+             PRBool aIsVisitedLink,
              nsIAtom* aPseudoTag,
              nsCSSPseudoElements::Type aPseudoType,
-             bool aDoAnimation,
+             PRBool aDoAnimation,
              mozilla::dom::Element* aElementForAnimation);
 
   nsPresContext* PresContext() { return mRuleTree->GetPresContext(); }

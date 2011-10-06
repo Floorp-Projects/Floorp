@@ -224,7 +224,7 @@ class nsGIOInputStream : public nsIInputStream
     GList                *mDirListPtr;
     nsCString             mDirBuf;
     PRUint32              mDirBufCursor;
-    bool                  mDirOpen;
+    PRPackedBool          mDirOpen;
     MountOperationResult  mMountRes;
     mozilla::Monitor      mMonitorMountInProgress;
     gint                  mMountErrorCode;
@@ -726,7 +726,7 @@ nsGIOInputStream::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP
-nsGIOInputStream::IsNonBlocking(bool *aResult)
+nsGIOInputStream::IsNonBlocking(PRBool *aResult)
 {
   *aResult = PR_FALSE;
   return NS_OK;
@@ -887,7 +887,7 @@ mount_operation_ask_password (GMountOperation   *mount_op,
   }
   // Prompt the user...
   nsresult rv;
-  bool retval = false;
+  PRBool retval = PR_FALSE;
   PRUnichar *user = nsnull, *pass = nsnull;
   if (default_user) {
     // user will be freed by PromptUsernameAndPassword
@@ -930,7 +930,7 @@ class nsGIOProtocolHandler : public nsIProtocolHandler
 
   private:
     void   InitSupportedProtocolsPref(nsIPrefBranch *prefs);
-    bool IsSupportedProtocol(const nsCString &spec);
+    PRBool IsSupportedProtocol(const nsCString &spec);
 
     nsCString mSupportedProtocols;
 };
@@ -974,7 +974,7 @@ nsGIOProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch *prefs)
   LOG(("gio: supported protocols \"%s\"\n", mSupportedProtocols.get()));
 }
 
-bool
+PRBool
 nsGIOProtocolHandler::IsSupportedProtocol(const nsCString &aSpec)
 {
   const char *specString = aSpec.get();
@@ -1039,7 +1039,7 @@ nsGIOProtocolHandler::NewURI(const nsACString &aSpec,
       return NS_ERROR_UNKNOWN_PROTOCOL;
 
     // Verify that GIO supports this URI scheme.
-    bool uri_scheme_supported = false;
+    PRBool uri_scheme_supported = PR_FALSE;
 
     GVfs *gvfs = g_vfs_get_default();
 
@@ -1112,7 +1112,7 @@ nsGIOProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **aResult)
 NS_IMETHODIMP
 nsGIOProtocolHandler::AllowPort(PRInt32 aPort,
                                 const char *aScheme,
-                                bool *aResult)
+                                PRBool *aResult)
 {
   // Don't override anything.
   *aResult = PR_FALSE;

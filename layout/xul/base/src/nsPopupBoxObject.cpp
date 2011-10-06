@@ -123,8 +123,8 @@ NS_IMETHODIMP
 nsPopupBoxObject::OpenPopup(nsIDOMElement* aAnchorElement,
                             const nsAString& aPosition,
                             PRInt32 aXPos, PRInt32 aYPos,
-                            bool aIsContextMenu,
-                            bool aAttributesOverride,
+                            PRBool aIsContextMenu,
+                            PRBool aAttributesOverride,
                             nsIDOMEvent* aTriggerEvent)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -139,7 +139,7 @@ nsPopupBoxObject::OpenPopup(nsIDOMElement* aAnchorElement,
 
 NS_IMETHODIMP
 nsPopupBoxObject::OpenPopupAtScreen(PRInt32 aXPos, PRInt32 aYPos,
-                                    bool aIsContextMenu,
+                                    PRBool aIsContextMenu,
                                     nsIDOMEvent* aTriggerEvent)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -177,7 +177,7 @@ nsPopupBoxObject::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
 }
 
 NS_IMETHODIMP
-nsPopupBoxObject::GetAutoPosition(bool* aShouldAutoPosition)
+nsPopupBoxObject::GetAutoPosition(PRBool* aShouldAutoPosition)
 {
   nsMenuPopupFrame *menuPopupFrame = GetMenuPopupFrame();
   if (menuPopupFrame) {
@@ -188,7 +188,7 @@ nsPopupBoxObject::GetAutoPosition(bool* aShouldAutoPosition)
 }
 
 NS_IMETHODIMP
-nsPopupBoxObject::SetAutoPosition(bool aShouldAutoPosition)
+nsPopupBoxObject::SetAutoPosition(PRBool aShouldAutoPosition)
 {
   nsMenuPopupFrame *menuPopupFrame = GetMenuPopupFrame();
   if (menuPopupFrame) {
@@ -199,7 +199,7 @@ nsPopupBoxObject::SetAutoPosition(bool aShouldAutoPosition)
 }
 
 NS_IMETHODIMP
-nsPopupBoxObject::EnableRollup(bool aShouldRollup)
+nsPopupBoxObject::EnableRollup(PRBool aShouldRollup)
 {
   // this does nothing now
   return NS_OK;
@@ -217,7 +217,7 @@ nsPopupBoxObject::SetConsumeRollupEvent(PRUint32 aConsume)
 }
 
 NS_IMETHODIMP
-nsPopupBoxObject::EnableKeyboardNavigator(bool aEnableKeyboardNavigator)
+nsPopupBoxObject::EnableKeyboardNavigator(PRBool aEnableKeyboardNavigator)
 {
   if (!mContent)
     return NS_OK;

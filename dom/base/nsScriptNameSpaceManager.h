@@ -86,8 +86,8 @@ struct nsGlobalNameStruct
     eTypeExternalConstructorAlias
   } mType;
 
-  bool mChromeOnly;
-  bool mDisabled;
+  PRBool mChromeOnly;
+  PRBool mDisabled;
 
   union {
     PRInt32 mDOMClassInfoID; // eTypeClassConstructor
@@ -138,15 +138,15 @@ public:
 
   nsresult RegisterClassName(const char *aClassName,
                              PRInt32 aDOMClassInfoID,
-                             bool aPrivileged,
-                             bool aDisabled,
+                             PRBool aPrivileged,
+                             PRBool aDisabled,
                              const PRUnichar **aResult);
 
   nsresult RegisterClassProto(const char *aClassName,
                               const nsIID *aConstructorProtoIID,
-                              bool *aFoundOld);
+                              PRBool *aFoundOld);
 
-  nsresult RegisterExternalInterfaces(bool aAsProto);
+  nsresult RegisterExternalInterfaces(PRBool aAsProto);
 
   nsresult RegisterExternalClassName(const char *aClassName,
                                      nsCID& aCID);
@@ -158,7 +158,7 @@ public:
                              const nsIID *aProtoChainInterface,
                              const nsIID **aInterfaces,
                              PRUint32 aScriptableFlags,
-                             bool aHasClassInterface,
+                             PRBool aHasClassInterface,
                              const nsCID *aConstructorCID);
 
   nsGlobalNameStruct* GetConstructorProto(const nsGlobalNameStruct* aStruct);
@@ -176,7 +176,7 @@ protected:
   nsresult FillHashWithDOMInterfaces();
   nsresult RegisterInterface(const char* aIfName,
                              const nsIID *aIfIID,
-                             bool* aFoundOld);
+                             PRBool* aFoundOld);
 
   /**
    * Add a new category entry into the hash table.
@@ -194,7 +194,7 @@ protected:
   PLDHashTable mGlobalNames;
   PLDHashTable mNavigatorNames;
 
-  bool mIsInitialized;
+  PRPackedBool mIsInitialized;
 };
 
 #endif /* nsScriptNameSpaceManager_h__ */

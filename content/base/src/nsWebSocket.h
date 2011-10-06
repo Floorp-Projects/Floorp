@@ -89,15 +89,15 @@ public:
   // nsIDOMEventTarget
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener *aListener,
-                              bool aUseCapture,
-                              bool aWantsUntrusted,
+                              PRBool aUseCapture,
+                              PRBool aWantsUntrusted,
                               PRUint8 optional_argc);
   NS_IMETHOD RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
-                                 bool aUseCapture);
+                                 PRBool aUseCapture);
 
   // Determine if preferences allow WebSocket
-  static bool PrefEnabled();
+  static PRBool PrefEnabled();
 
   const PRUint64 InnerWindowID() const { return mInnerWindowID; }
   const nsCString& GetScriptFile() const { return mScriptFile; }
@@ -109,7 +109,7 @@ protected:
 
   nsresult CreateAndDispatchSimpleEvent(const nsString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData);
-  nsresult CreateAndDispatchCloseEvent(bool aWasClean, PRUint16 aCode,
+  nsresult CreateAndDispatchCloseEvent(PRBool aWasClean, PRUint16 aCode,
                                        const nsString &aReason);
 
   // called from mConnection accordingly to the situation
@@ -130,12 +130,12 @@ protected:
 
   // related to the WebSocket constructor steps
   nsString mOriginalURL;
-  bool mSecure; // if true it is using SSL and the wss scheme,
+  PRPackedBool mSecure; // if true it is using SSL and the wss scheme,
                         // otherwise it is using the ws scheme with no SSL
 
-  bool mKeepingAlive;
-  bool mCheckMustKeepAlive;
-  bool mTriggeredCloseEvent;
+  PRPackedBool mKeepingAlive;
+  PRPackedBool mCheckMustKeepAlive;
+  PRPackedBool mTriggeredCloseEvent;
 
   nsCString mClientReason;
   PRUint16  mClientReasonCode;

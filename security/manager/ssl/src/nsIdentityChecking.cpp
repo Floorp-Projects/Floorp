@@ -634,10 +634,10 @@ nsMyTrustedEVInfoClass::~nsMyTrustedEVInfoClass()
 
 typedef nsTArray< nsMyTrustedEVInfoClass* > testEVArray; 
 static testEVArray *testEVInfos;
-static bool testEVInfosLoaded = false;
+static PRBool testEVInfosLoaded = PR_FALSE;
 #endif
 
-static bool isEVMatch(SECOidTag policyOIDTag, 
+static PRBool isEVMatch(SECOidTag policyOIDTag, 
                         CERTCertificate *rootCert, 
                         const nsMyTrustedEVInfo &info)
 {
@@ -695,7 +695,7 @@ loadTestEVInfos()
     return;
 
   nsCAutoString buffer;
-  bool isMore = true;
+  PRBool isMore = PR_TRUE;
 
   /* file format
    *
@@ -713,7 +713,7 @@ loadTestEVInfos()
    */
 
   int line_counter = 0;
-  bool found_error = false;
+  PRBool found_error = PR_FALSE;
 
   enum { 
     pos_fingerprint, pos_readable_oid, pos_issuer, pos_serial
@@ -828,7 +828,7 @@ loadTestEVInfos()
   }
 }
 
-static bool 
+static PRBool 
 isEVPolicyInExternalDebugRootsFile(SECOidTag policyOIDTag)
 {
   if (!testEVInfos)
@@ -853,7 +853,7 @@ isEVPolicyInExternalDebugRootsFile(SECOidTag policyOIDTag)
   return PR_FALSE;
 }
 
-static bool 
+static PRBool 
 getRootsForOidFromExternalRootsFile(CERTCertList* certList, 
                                     SECOidTag policyOIDTag)
 {
@@ -879,7 +879,7 @@ getRootsForOidFromExternalRootsFile(CERTCertList* certList,
   return PR_FALSE;
 }
 
-static bool 
+static PRBool 
 isEVMatchInExternalDebugRootsFile(SECOidTag policyOIDTag, 
                                   CERTCertificate *rootCert)
 {
@@ -909,7 +909,7 @@ isEVMatchInExternalDebugRootsFile(SECOidTag policyOIDTag,
 }
 #endif
 
-static bool 
+static PRBool 
 isEVPolicy(SECOidTag policyOIDTag)
 {
   for (size_t iEV=0; iEV < (sizeof(myTrustedEVInfos)/sizeof(nsMyTrustedEVInfo)); ++iEV) {
@@ -951,7 +951,7 @@ getRootsForOid(SECOidTag oid_tag)
   return certList;
 }
 
-static bool 
+static PRBool 
 isApprovedForEV(SECOidTag policyOIDTag, CERTCertificate *rootCert)
 {
   if (!rootCert)
@@ -1065,7 +1065,7 @@ static SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag)
     
       policyInfos = policies->policyInfos;
 
-      bool found = false;
+      PRBool found = PR_FALSE;
       while (*policyInfos != NULL) {
         policyInfo = *policyInfos++;
 
@@ -1086,7 +1086,7 @@ static SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag)
   return SECFailure;
 }
 
-bool
+PRBool
 nsNSSSocketInfo::hasCertErrors()
 {
   if (!mSSLStatus) {
@@ -1098,7 +1098,7 @@ nsNSSSocketInfo::hasCertErrors()
 }
 
 NS_IMETHODIMP
-nsNSSSocketInfo::GetIsExtendedValidation(bool* aIsEV)
+nsNSSSocketInfo::GetIsExtendedValidation(PRBool* aIsEV)
 {
   NS_ENSURE_ARG(aIsEV);
   *aIsEV = PR_FALSE;
@@ -1136,7 +1136,7 @@ nsNSSSocketInfo::GetValidEVPolicyOid(nsACString &outDottedOid)
 }
 
 nsresult
-nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
+nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -1152,7 +1152,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
   validEV = PR_FALSE;
   resultOidTag = SEC_OID_UNKNOWN;
 
-  bool isOCSPEnabled = false;
+  PRBool isOCSPEnabled = PR_FALSE;
   nsCOMPtr<nsIX509CertDB> certdb;
   certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
   if (certdb)
@@ -1254,7 +1254,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
 }
 
 nsresult
-nsNSSCertificate::getValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
+nsNSSCertificate::getValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
 {
   if (mCachedEVStatus != ev_status_unknown) {
     validEV = (mCachedEVStatus == ev_status_valid);
@@ -1274,7 +1274,7 @@ nsNSSCertificate::getValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetIsExtendedValidation(bool* aIsEV)
+nsNSSCertificate::GetIsExtendedValidation(PRBool* aIsEV)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -1300,7 +1300,7 @@ nsNSSCertificate::GetValidEVPolicyOid(nsACString &outDottedOid)
     return NS_ERROR_NOT_AVAILABLE;
 
   SECOidTag oid_tag;
-  bool valid;
+  PRBool valid;
   nsresult rv = getValidEVOidTag(oid_tag, valid);
   if (NS_FAILED(rv))
     return rv;

@@ -500,7 +500,7 @@ public:
 NS_IMETHODIMP
 nsAuthSSPI::Wrap(const void *inToken,
                  PRUint32    inTokenLen,
-                 bool        confidential,
+                 PRBool      confidential,
                  void      **outToken,
                  PRUint32   *outTokenLen)
 {

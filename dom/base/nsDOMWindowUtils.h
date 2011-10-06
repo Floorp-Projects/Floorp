@@ -71,6 +71,6 @@ protected:
                                   PRInt32 aButton,
                                   PRInt32 aClickCount,
                                   PRInt32 aModifiers,
-                                  bool aIgnoreRootScrollFrame,
-                                  bool aToWindow);
+                                  PRBool aIgnoreRootScrollFrame,
+                                  PRBool aToWindow);
 };

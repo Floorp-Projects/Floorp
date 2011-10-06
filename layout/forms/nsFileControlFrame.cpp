@@ -179,10 +179,10 @@ struct CaptureCallbackData {
 
 typedef struct CaptureCallbackData CaptureCallbackData;
 
-bool CapturePickerAcceptCallback(const nsAString& aAccept, void* aClosure)
+PRBool CapturePickerAcceptCallback(const nsAString& aAccept, void* aClosure)
 {
   nsresult rv;
-  bool captureEnabled;
+  PRBool captureEnabled;
   CaptureCallbackData* closure = (CaptureCallbackData*)aClosure;
 
   if (StringBeginsWith(aAccept,
@@ -381,17 +381,17 @@ NS_QUERYFRAME_HEAD(nsFileControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 void 
-nsFileControlFrame::SetFocus(bool aOn, bool aRepaint)
+nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
 }
 
-bool ShouldProcessMouseClick(nsIDOMEvent* aMouseEvent)
+PRBool ShouldProcessMouseClick(nsIDOMEvent* aMouseEvent)
 {
   // only allow the left button
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aMouseEvent);
   NS_ENSURE_TRUE(mouseEvent && domNSEvent, PR_FALSE);
-  bool defaultPrevented = false;
+  PRBool defaultPrevented = PR_FALSE;
   domNSEvent->GetPreventDefault(&defaultPrevented);
   if (defaultPrevented) {
     return PR_FALSE;
@@ -438,7 +438,7 @@ nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   // Get Loc title
   nsXPIDLString title;
   nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                     "MediaUpload", title);
+                                     "FileUpload", title);
 
   nsPIDOMWindow* win = doc->GetWindow();
   if (!win) {
@@ -489,7 +489,7 @@ nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
     // Tell mTextFrame that this update of the value is a user initiated
     // change. Otherwise it'll think that the value is being set by a script
     // and not fire onchange when it should.
-    bool oldState = mFrame->mTextFrame->GetFireChangeEventState();
+    PRBool oldState = mFrame->mTextFrame->GetFireChangeEventState();
     mFrame->mTextFrame->SetFireChangeEventState(PR_TRUE);
     inputElement->SetFiles(newFiles, true);
 
@@ -523,7 +523,7 @@ nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aEvent);
   NS_ENSURE_STATE(domNSEvent);
-  bool defaultPrevented = false;
+  PRBool defaultPrevented = PR_FALSE;
   domNSEvent->GetPreventDefault(&defaultPrevented);
   if (defaultPrevented) {
     return NS_OK;
@@ -556,7 +556,7 @@ nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIDOMFileList> fileList;
     dataTransfer->GetFiles(getter_AddRefs(fileList));
 
-    bool oldState = mFrame->mTextFrame->GetFireChangeEventState();
+    PRBool oldState = mFrame->mTextFrame->GetFireChangeEventState();
     mFrame->mTextFrame->SetFireChangeEventState(PR_TRUE);
     inputElement->SetFiles(fileList, true);
     mFrame->mTextFrame->SetFireChangeEventState(oldState);
@@ -566,7 +566,7 @@ nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsFileControlFrame::BrowseMouseListener::IsValidDropData(nsIDOMDragEvent* aEvent)
 {
   nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
@@ -578,7 +578,7 @@ nsFileControlFrame::BrowseMouseListener::IsValidDropData(nsIDOMDragEvent* aEvent
   NS_ENSURE_TRUE(types, PR_FALSE);
 
   // We only support dropping files onto a file upload control
-  bool typeSupported;
+  PRBool typeSupported;
   types->Contains(NS_LITERAL_STRING("Files"), &typeSupported);
   return typeSupported;
 }
@@ -712,7 +712,7 @@ nsFileControlFrame::ContentStatesChanged(nsEventStates aStates)
   }
 }
 
-bool
+PRBool
 nsFileControlFrame::IsLeaf() const
 {
   return PR_TRUE;

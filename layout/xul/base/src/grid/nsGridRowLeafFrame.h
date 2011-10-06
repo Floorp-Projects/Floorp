@@ -72,7 +72,7 @@ public:
 
   nsGridRowLeafFrame(nsIPresShell* aPresShell,
                      nsStyleContext* aContext,
-                     bool aIsRoot,
+                     PRBool aIsRoot,
                      nsBoxLayout* aLayoutManager):
     nsBoxFrame(aPresShell, aContext, aIsRoot, aLayoutManager) {}
 

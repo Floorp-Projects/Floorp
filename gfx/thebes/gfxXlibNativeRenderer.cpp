@@ -95,17 +95,17 @@ _convert_coord_to_int (double coord, PRInt32 *v)
     return *v == coord;
 }
 
-static bool
+static PRBool
 _get_rectangular_clip (cairo_t *cr,
                        const nsIntRect& bounds,
-                       bool *need_clip,
+                       PRBool *need_clip,
                        nsIntRect *rectangles, int max_rectangles,
                        int *num_rectangles)
 {
     cairo_rectangle_list_t *cliplist;
     cairo_rectangle_t *clips;
     int i;
-    bool retval = true;
+    PRBool retval = PR_TRUE;
 
     cliplist = cairo_copy_clip_rectangle_list (cr);
     if (cliplist->status != CAIRO_STATUS_SUCCESS) {
@@ -163,7 +163,7 @@ FINISH:
  * Try the direct path.
  * @return True if we took the direct path
  */
-bool
+PRBool
 gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
                                   PRUint32 flags,
                                   Screen *screen, Visual *visual)
@@ -207,7 +207,7 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
                                    cairo_xlib_surface_get_width(target),
                                    cairo_xlib_surface_get_height(target)));
 
-    bool needs_clip = true;
+    PRBool needs_clip = PR_TRUE;
     nsIntRect rectangles[MAX_STATIC_CLIP_RECTANGLES];
     int rect_count = 0;
 
@@ -217,7 +217,7 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
        offset-rect is in device coordinates. */
     cairo_identity_matrix (cr);
     cairo_translate (cr, -device_offset_x, -device_offset_y);
-    bool have_rectangular_clip =
+    PRBool have_rectangular_clip =
         _get_rectangular_clip (cr, bounds, &needs_clip,
                                rectangles, max_rectangles, &rect_count);
     cairo_set_matrix (cr, &matrix);
@@ -231,9 +231,9 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
     /* Check that the screen is supported.
        Visuals belong to screens, so, if alternate visuals are not supported,
        then alternate screens cannot be supported. */  
-    bool supports_alternate_visual =
+    PRBool supports_alternate_visual =
         (flags & DRAW_SUPPORTS_ALTERNATE_VISUAL) != 0;
-    bool supports_alternate_screen = supports_alternate_visual &&
+    PRBool supports_alternate_screen = supports_alternate_visual &&
         (flags & DRAW_SUPPORTS_ALTERNATE_SCREEN);
     if (!supports_alternate_screen &&
         cairo_xlib_surface_get_screen (target) != screen) {
@@ -275,7 +275,7 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
     return PR_FALSE;
 }
 
-static bool
+static PRBool
 VisualHasAlpha(Screen *screen, Visual *visual) {
     // There may be some other visuals format with alpha but usually this is
     // the only one we care about.
@@ -289,7 +289,7 @@ VisualHasAlpha(Screen *screen, Visual *visual) {
 
 // Returns whether pixel conversion between visual and format is exact (in
 // both directions).
-static bool
+static PRBool
 FormatConversionIsExact(Screen *screen, Visual *visual, XRenderPictFormat *format) {
     if (!format ||
         visual->c_class != TrueColor ||
@@ -320,14 +320,14 @@ enum DrawingMethod {
 
 static already_AddRefed<gfxXlibSurface>
 CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
-                       bool canDrawOverBackground,
+                       PRBool canDrawOverBackground,
                        PRUint32 flags, Screen *screen, Visual *visual,
                        DrawingMethod *method)
 {
-    bool drawIsOpaque = (flags & gfxXlibNativeRenderer::DRAW_IS_OPAQUE) != 0;
-    bool supportsAlternateVisual =
+    PRBool drawIsOpaque = (flags & gfxXlibNativeRenderer::DRAW_IS_OPAQUE) != 0;
+    PRBool supportsAlternateVisual =
         (flags & gfxXlibNativeRenderer::DRAW_SUPPORTS_ALTERNATE_VISUAL) != 0;
-    bool supportsAlternateScreen = supportsAlternateVisual &&
+    PRBool supportsAlternateScreen = supportsAlternateVisual &&
         (flags & gfxXlibNativeRenderer::DRAW_SUPPORTS_ALTERNATE_SCREEN);
 
     cairo_surface_t *target = destination->CairoSurface();
@@ -341,7 +341,7 @@ CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
     // channel anyway, so there is no need to copy the background.  If
     // doCopyBackground is set here, we'll also need to check below that the
     // background can copied without any loss in format conversions.
-    bool doCopyBackground = !drawIsOpaque && canDrawOverBackground &&
+    PRBool doCopyBackground = !drawIsOpaque && canDrawOverBackground &&
         target_content == CAIRO_CONTENT_COLOR;
 
     if (supportsAlternateScreen && screen != target_screen && drawIsOpaque) {
@@ -446,7 +446,7 @@ CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
     return surface.forget();
 }
 
-bool
+PRBool
 gfxXlibNativeRenderer::DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
                                            nsIntPoint offset)
 {
@@ -484,15 +484,15 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         result->mUniformColor = PR_FALSE;
     }
 
-    bool drawIsOpaque = (flags & DRAW_IS_OPAQUE) != 0;
+    PRBool drawIsOpaque = (flags & DRAW_IS_OPAQUE) != 0;
     gfxMatrix matrix = ctx->CurrentMatrix();
 
     // We can only draw direct or onto a copied background if pixels align and
     // native drawing is compatible with the current operator.  (The matrix is
     // actually also pixel-exact for flips and right-angle rotations, which
     // would permit copying the background but not drawing direct.)
-    bool matrixIsIntegerTranslation = !matrix.HasNonIntegerTranslation();
-    bool canDrawOverBackground = matrixIsIntegerTranslation &&
+    PRBool matrixIsIntegerTranslation = !matrix.HasNonIntegerTranslation();
+    PRBool canDrawOverBackground = matrixIsIntegerTranslation &&
         ctx->CurrentOperator() == gfxContext::OPERATOR_OVER;
 
     // The padding of 0.5 for non-pixel-exact transformations used here is

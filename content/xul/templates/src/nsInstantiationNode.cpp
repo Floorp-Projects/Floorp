@@ -67,7 +67,7 @@ nsInstantiationNode::~nsInstantiationNode()
 
 nsresult
 nsInstantiationNode::Propagate(InstantiationSet& aInstantiations,
-                               bool aIsUpdate, bool& aTakenInstantiations)
+                               PRBool aIsUpdate, PRBool& aTakenInstantiations)
 {
     // In update mode, iterate through the results and call the template
     // builder to update them. In non-update mode, cache them in the processor

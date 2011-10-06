@@ -77,7 +77,7 @@ public:
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                                  nsGUIEvent *    aEvent,
                                  nsEventStatus*  aEventStatus,
-                                 bool aControlHeld);
+                                 PRBool aControlHeld);
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
@@ -96,6 +96,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  virtual PRBool IsContainingBlock() const;
+
   virtual nsIAtom* GetType() const;  
 
   void SetScrollbarMediatorContent(nsIContent* aMediator);
@@ -110,7 +112,7 @@ public:
    * scrollframe by setting its height or width to zero, that will
    * hide the children too.
    */
-  virtual bool DoesClipChildren() { return true; }
+  virtual PRBool DoesClipChildren() { return PR_TRUE; }
 
 private:
   nsCOMPtr<nsIContent> mScrollbarMediator;

@@ -113,8 +113,8 @@ protected:
   ULONG            m_cRef;      // reference count
   HWND             mHWnd;
   DWORD            mEffectsAllowed;
-  DWORD            mEffectsPreferred;
-  bool             mTookOwnRef;
+  PRBool           mMovePreferred;
+  PRBool           mTookOwnRef;
 
   // Gecko Stuff
   nsIWidget      * mWindow;

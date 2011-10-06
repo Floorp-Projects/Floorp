@@ -44,12 +44,6 @@
 #include "jsscript.h"
 
 inline bool
-js::IsConstructing(CallReceiver call)
-{
-    return IsConstructing(call.base());
-}
-
-inline bool
 JSFunction::inStrictMode() const
 {
     return script()->strictModeCode;

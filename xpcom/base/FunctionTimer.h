@@ -274,8 +274,8 @@ public:
     TimeStamp mStart, mLastMark;
     const double mMinMs;
     char mString[BUF_LOG_LENGTH+1];
-    const bool mHasMinMs;
-    const bool mEnabled;
+    const PRBool mHasMinMs;
+    const PRBool mEnabled;
     const unsigned mDepth;
 };
 

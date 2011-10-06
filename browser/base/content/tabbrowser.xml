@@ -4177,11 +4177,6 @@
             aMenuitem.removeAttribute("busy");
           }
 
-          if (aTab.hasAttribute("pending"))
-            aMenuitem.setAttribute("pending", aTab.getAttribute("pending"));
-          else
-            aMenuitem.removeAttribute("pending");
-
           if (aTab.selected)
             aMenuitem.setAttribute("selected", "true");
           else
@@ -4279,17 +4274,11 @@
                                 this.getAttribute("previoustype") == "status"
                                   ? getComputedStyle(this).width : "";
 
-          if (val) {
-            this.setAttribute("label", val);
-            this.removeAttribute("inactive");
-          } else {
-            this.setAttribute("inactive", "true");
-          }
-
+          this.setAttribute("label", val);
           return val;
         ]]></setter>
         <getter>
-          return this.hasAttribute("inactive") ? "" : this.getAttribute("label");
+          return this.getAttribute("label");
         </getter>
       </property>
 

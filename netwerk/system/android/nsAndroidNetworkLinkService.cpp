@@ -54,7 +54,7 @@ nsAndroidNetworkLinkService::~nsAndroidNetworkLinkService()
 }
 
 NS_IMETHODIMP
-nsAndroidNetworkLinkService::GetIsLinkUp(bool *aIsUp)
+nsAndroidNetworkLinkService::GetIsLinkUp(PRBool *aIsUp)
 {
   if (!mozilla::AndroidBridge::Bridge()) {
     // Fail soft here and assume a connection exists
@@ -68,7 +68,7 @@ nsAndroidNetworkLinkService::GetIsLinkUp(bool *aIsUp)
 }
 
 NS_IMETHODIMP
-nsAndroidNetworkLinkService::GetLinkStatusKnown(bool *aIsKnown)
+nsAndroidNetworkLinkService::GetLinkStatusKnown(PRBool *aIsKnown)
 {
   NS_ENSURE_TRUE(mozilla::AndroidBridge::Bridge(), NS_ERROR_NOT_IMPLEMENTED);
 
@@ -80,8 +80,8 @@ NS_IMETHODIMP
 nsAndroidNetworkLinkService::GetLinkType(PRUint32 *aLinkType)
 {
   NS_ENSURE_ARG_POINTER(aLinkType);
+  NS_ENSURE_TRUE(mozilla::AndroidBridge::Bridge(), NS_ERROR_UNEXPECTED);
 
-  // XXX This function has not yet been implemented for this platform
-  *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+  *aLinkType = mozilla::AndroidBridge::Bridge()->GetNetworkLinkType();
   return NS_OK;
 }

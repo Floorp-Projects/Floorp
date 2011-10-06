@@ -164,7 +164,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetTransform(
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -180,7 +180,7 @@ nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
 //----------------------------------------------------------------------
 // nsSVGElement overrides
 
-bool
+PRBool
 nsSVGGraphicElement::IsEventName(nsIAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);

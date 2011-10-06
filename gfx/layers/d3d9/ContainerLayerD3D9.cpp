@@ -132,7 +132,7 @@ GetNextSibling(LayerD3D9* aLayer)
                  : nsnull;
 }
 
-static bool
+static PRBool
 HasOpaqueAncestorLayer(Layer* aLayer)
 {
   for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
@@ -175,7 +175,7 @@ ContainerRender(Container* aContainer,
   readback.BuildUpdates(aContainer);
 
   nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
-  bool useIntermediate = aContainer->UseIntermediateSurface();
+  PRBool useIntermediate = aContainer->UseIntermediateSurface();
 
   aContainer->mSupportsComponentAlphaChildren = PR_FALSE;
   if (useIntermediate) {

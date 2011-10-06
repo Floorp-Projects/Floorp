@@ -156,14 +156,13 @@ public:
 
   // nsAccessNode
   virtual bool IsDefunct() const;
-  virtual bool Init();
+  virtual PRBool Init();
   virtual bool IsPrimaryForNode() const;
 
   // nsAccessible
   virtual nsAccessible* FocusedChild();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   virtual PRInt32 IndexInParent() const;
-  virtual Relation RelationByType(PRUint32 aType);
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
 
@@ -195,7 +194,7 @@ protected:
   /**
    * Return true if value of cell can be modified.
    */
-  bool IsEditable() const;
+  PRBool IsEditable() const;
 
   enum { eAction_Click = 0 };
 

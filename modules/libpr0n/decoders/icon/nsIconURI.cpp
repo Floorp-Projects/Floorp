@@ -152,7 +152,7 @@ nsMozIconURI::GetSpecIgnoringRef(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::GetHasRef(bool *result)
+nsMozIconURI::GetHasRef(PRBool *result)
 {
   *result = PR_FALSE;
   return NS_OK;
@@ -411,7 +411,7 @@ nsMozIconURI::SetRef(const nsACString &aRef)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::Equals(nsIURI *other, bool *result)
+nsMozIconURI::Equals(nsIURI *other, PRBool *result)
 {
   NS_ENSURE_ARG_POINTER(other);
   NS_PRECONDITION(result, "null pointer");
@@ -429,7 +429,7 @@ nsMozIconURI::Equals(nsIURI *other, bool *result)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::EqualsExceptRef(nsIURI *other, bool *result)
+nsMozIconURI::EqualsExceptRef(nsIURI *other, PRBool *result)
 {
   // GetRef/SetRef not supported by nsMozIconURI, so
   // EqualsExceptRef() is the same as Equals().
@@ -437,7 +437,7 @@ nsMozIconURI::EqualsExceptRef(nsIURI *other, bool *result)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::SchemeIs(const char *i_Scheme, bool *o_Equals)
+nsMozIconURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 {
   NS_ENSURE_ARG_POINTER(o_Equals);
   if (!i_Scheme) return NS_ERROR_INVALID_ARG;

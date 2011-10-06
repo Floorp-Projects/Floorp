@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCRT.h"
-#include "EndianMacros.h"
+#include "Endian.h"
 #include "nsBMPEncoder.h"
 #include "nsPNGEncoder.h"
 #include "nsICOEncoder.h"
@@ -256,7 +256,7 @@ NS_IMETHODIMP nsICOEncoder::StartImageEncode(PRUint32 aWidth,
 
   // parse and check any provided output options
   PRUint32 bpp = 24;
-  bool usePNG = true;
+  PRBool usePNG = PR_TRUE;
   nsresult rv = ParseOptions(aOutputOptions, &bpp, &usePNG);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -292,7 +292,7 @@ NS_IMETHODIMP nsICOEncoder::EndImageEncode()
 // See InitFromData for a description of the parse options
 nsresult
 nsICOEncoder::ParseOptions(const nsAString& aOptions, PRUint32* bpp, 
-                           bool *usePNG)
+                           PRBool *usePNG)
 {
   // If no parsing options just use the default of 24BPP and PNG yes
   if (aOptions.Length() == 0) {
@@ -413,7 +413,7 @@ NS_IMETHODIMP nsICOEncoder::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP 
-nsICOEncoder::IsNonBlocking(bool *_retval)
+nsICOEncoder::IsNonBlocking(PRBool *_retval)
 {
   *_retval = PR_TRUE;
   return NS_OK;

@@ -96,8 +96,8 @@ private:
   nsWindowInfo *mOldestWindow;
   nsWindowInfo *mTopmostWindow;
   PRInt32       mTimeStamp;
-  bool          mSortingZOrder;
-  bool          mReady;
+  PRBool        mSortingZOrder;
+  PRBool        mReady;
   mozilla::Mutex mListLock;
 
   nsCOMPtr<nsISupportsArray> mListeners;

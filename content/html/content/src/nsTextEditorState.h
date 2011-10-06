@@ -164,10 +164,10 @@ public:
   nsresult PrepareEditor(const nsAString *aValue = nsnull);
   void InitializeKeyboardEventListeners();
 
-  void SetValue(const nsAString& aValue, bool aUserInput);
-  void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
+  void SetValue(const nsAString& aValue, PRBool aUserInput);
+  void GetValue(nsAString& aValue, PRBool aIgnoreWrap) const;
   void EmptyValue() { if (mValue) mValue->Truncate(); }
-  bool IsEmpty() const { return mValue ? mValue->IsEmpty() : true; }
+  PRBool IsEmpty() const { return mValue ? mValue->IsEmpty() : PR_TRUE; }
 
   nsresult CreatePlaceholderNode();
 
@@ -180,16 +180,16 @@ public:
     return mPlaceholderDiv;
   }
 
-  bool IsSingleLineTextControl() const {
+  PRBool IsSingleLineTextControl() const {
     return mTextCtrlElement->IsSingleLineTextControl();
   }
-  bool IsTextArea() const {
+  PRBool IsTextArea() const {
     return mTextCtrlElement->IsTextArea();
   }
-  bool IsPlainTextControl() const {
+  PRBool IsPlainTextControl() const {
     return mTextCtrlElement->IsPlainTextControl();
   }
-  bool IsPasswordTextControl() const {
+  PRBool IsPasswordTextControl() const {
     return mTextCtrlElement->IsPasswordTextControl();
   }
   PRInt32 GetCols() {
@@ -203,15 +203,15 @@ public:
   }
 
   // placeholder methods
-  void SetPlaceholderClass(bool aVisible, bool aNotify);
-  void UpdatePlaceholderText(bool aNotify); 
+  void SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
+  void UpdatePlaceholderText(PRBool aNotify); 
 
   /**
    * Get the maxlength attribute
    * @param aMaxLength the value of the max length attr
    * @returns PR_FALSE if attr not defined
    */
-  bool GetMaxLength(PRInt32* aMaxLength);
+  PRBool GetMaxLength(PRInt32* aMaxLength);
 
   /* called to free up native keybinding services */
   static NS_HIDDEN_(void) ShutDown();
@@ -231,12 +231,12 @@ public:
     nsITextControlFrame::SelectionDirection mDirection;
   };
 
-  bool IsSelectionCached() const { return mSelectionCached; }
+  PRBool IsSelectionCached() const { return mSelectionCached; }
   SelectionProperties& GetSelectionProperties() {
     return mSelectionProperties;
   }
   void WillInitEagerly() { mSelectionRestoreEagerInit = PR_TRUE; }
-  bool HasNeverInitializedBefore() const { return !mEverInited; }
+  PRBool HasNeverInitializedBefore() const { return !mEverInited; }
 
 private:
   friend class RestoreSelectionState;
@@ -248,7 +248,7 @@ private:
 
   nsresult CreateRootNode();
 
-  void ValueWasChanged(bool aNotify);
+  void ValueWasChanged(PRBool aNotify);
 
   void DestroyEditor();
   void Clear();
@@ -273,12 +273,12 @@ private:
         mState.mInitializing = PR_FALSE;
       }
     }
-    bool IsInitializingRecursively() const {
+    PRBool IsInitializingRecursively() const {
       return !mGuardSet;
     }
   private:
     nsTextEditorState& mState;
-    bool mGuardSet;
+    PRBool mGuardSet;
   };
   friend class InitializationGuard;
   friend class PrepareEditorEvent;
@@ -294,12 +294,12 @@ private:
   nsAutoPtr<nsCString> mValue;
   nsRefPtr<nsAnonDivObserver> mMutationObserver;
   mutable nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.
-  bool mEverInited; // Have we ever been initialized?
-  bool mEditorInitialized;
-  bool mInitializing; // Whether we're in the process of initialization
-  bool mValueTransferInProgress; // Whether a value is being transferred to the frame
-  bool mSelectionCached; // Whether mSelectionProperties is valid
-  mutable bool mSelectionRestoreEagerInit; // Whether we're eager initing because of selection restore
+  PRPackedBool mEverInited; // Have we ever been initialized?
+  PRPackedBool mEditorInitialized;
+  PRPackedBool mInitializing; // Whether we're in the process of initialization
+  PRPackedBool mValueTransferInProgress; // Whether a value is being transferred to the frame
+  PRPackedBool mSelectionCached; // Whether mSelectionProperties is valid
+  mutable PRPackedBool mSelectionRestoreEagerInit; // Whether we're eager initing because of selection restore
   SelectionProperties mSelectionProperties;
 };
 

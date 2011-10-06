@@ -70,7 +70,7 @@ public:
   
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
-        bool                 aPlaceOrigin,
+        PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
 protected:
@@ -102,7 +102,7 @@ private:
   void
   ProcessAttributes();
 
-  static bool
+  static PRBool
   ParseAttribute(nsString&   aString,
                  PRInt32&    aSign,
                  nsCSSValue& aCSSValue,
