@@ -47,6 +47,7 @@
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsZipArchive.h"
 
 using namespace mozilla;
 
@@ -142,15 +143,17 @@ nsHyphenationManager::LoadPatternList()
 {
   mPatternFiles.Clear();
   mHyphenators.Clear();
-  
-  nsresult rv;
-  
+
+  LoadPatternListFromOmnijar(Omnijar::GRE);
+  LoadPatternListFromOmnijar(Omnijar::APP);
+
   nsCOMPtr<nsIProperties> dirSvc =
     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
   if (!dirSvc) {
     return;
   }
-  
+
+  nsresult rv;
   nsCOMPtr<nsIFile> greDir;
   rv = dirSvc->Get(NS_GRE_DIR,
                    NS_GET_IID(nsIFile), getter_AddRefs(greDir));
@@ -158,7 +161,7 @@ nsHyphenationManager::LoadPatternList()
     greDir->AppendNative(NS_LITERAL_CSTRING("hyphenation"));
     LoadPatternListFromDir(greDir);
   }
-  
+
   nsCOMPtr<nsIFile> appDir;
   rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
                    NS_GET_IID(nsIFile), getter_AddRefs(appDir));
@@ -172,16 +175,69 @@ nsHyphenationManager::LoadPatternList()
 }
 
 void
+nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType)
+{
+  nsZipArchive *zip = Omnijar::GetReader(aType);
+  if (!zip) {
+    return;
+  }
+
+  nsZipFind *find;
+  zip->FindInit("hyphenation/hyph_*.dic", &find);
+  if (!find) {
+    return;
+  }
+
+  nsCString base;
+  nsresult rv = Omnijar::GetURIString(aType, base);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  const char *result;
+  PRUint16 len;
+  while (NS_SUCCEEDED(find->FindNext(&result, &len))) {
+    nsCString uriString(base);
+    uriString.Append(result, len);
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), uriString);
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+    nsCString locale;
+    rv = uri->GetPath(locale);
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+    ToLowerCase(locale);
+    locale.SetLength(locale.Length() - 4); // strip ".dic"
+    locale.Cut(0, locale.RFindChar('/') + 1); // strip directory
+    if (StringBeginsWith(locale, NS_LITERAL_CSTRING("hyph_"))) {
+      locale.Cut(0, 5);
+    }
+    for (PRUint32 i = 0; i < locale.Length(); ++i) {
+      if (locale[i] == '_') {
+        locale.Replace(i, 1, '-');
+      }
+    }
+    nsCOMPtr<nsIAtom> localeAtom = do_GetAtom(locale);
+    if (NS_SUCCEEDED(rv)) {
+      mPatternFiles.Put(localeAtom, uri);
+    }
+  }
+}
+
+void
 nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir)
 {
   nsresult rv;
-  
+
   bool check = false;
   rv = aDir->Exists(&check);
   if (NS_FAILED(rv) || !check) {
     return;
   }
-  
+
   rv = aDir->IsDirectory(&check);
   if (NS_FAILED(rv) || !check) {
     return;
@@ -192,12 +248,12 @@ nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir)
   if (NS_FAILED(rv)) {
     return;
   }
-  
+
   nsCOMPtr<nsIDirectoryEnumerator> files(do_QueryInterface(e));
   if (!files) {
     return;
   }
-  
+
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(file))) && file){
     nsAutoString dictName;
