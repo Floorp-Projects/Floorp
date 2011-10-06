@@ -667,6 +667,22 @@ gfx3DMatrix::TransformBounds(const gfxRect& rect) const
   return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
+gfxQuad 
+gfx3DMatrix::TransformRect(const gfxRect& aRect) const
+{
+  gfxPoint points[4];
+
+  points[0] = Transform(aRect.TopLeft());
+  points[1] = Transform(gfxPoint(aRect.X() + aRect.Width(), aRect.Y()));
+  points[2] = Transform(gfxPoint(aRect.X() + aRect.Width(),
+                                 aRect.Y() + aRect.Height()));
+  points[3] = Transform(gfxPoint(aRect.X(), aRect.Y() + aRect.Height()));
+
+
+  // Could this ever result in lines that intersect? I don't think so.
+  return gfxQuad(points[0], points[1], points[2], points[3]);
+}
+
 bool
 gfx3DMatrix::Is2D() const
 {
