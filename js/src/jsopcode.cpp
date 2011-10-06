@@ -4153,7 +4153,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      */
                     pc2 = pc + len;
                     op = JSOp(*pc2);
-                    if (op == JSOP_TRACE || op == JSOP_NOP)
+                    if (op == JSOP_TRACE || op == JSOP_NOP || op == JSOP_NOTEARG)
                         pc2 += JSOP_NOP_LENGTH;
                     LOCAL_ASSERT(pc2 < endpc ||
                                  endpc < outer->code + outer->length);
