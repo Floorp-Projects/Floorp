@@ -1236,7 +1236,7 @@ var Browser = {
       }
 
       case "Browser:KeyPress": {
-        let keyset = document.getElementById("mainKeyset");
+        let keyset = Elements.mainKeyset;
         keyset.setAttribute("disabled", "false");
         if (json.preventDefault)
           break;

@@ -115,7 +115,7 @@ NoWaiverWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bo
     // already pushed the fake stack frame onto cx. Because of this, the frame
     // that we're clamping is the one that we want (the one in our compartment).
     JSStackFrame *fp = NULL;
-    nsIPrincipal *principal = GetCompartmentPrincipal(wrappedObject(wrapper)->compartment());
+    nsIPrincipal *principal = GetCompartmentPrincipal(js::GetObjectCompartment(wrappedObject(wrapper)));
     nsresult rv = ssm->PushContextPrincipal(cx, JS_FrameIterator(cx, &fp), principal);
     if (NS_FAILED(rv)) {
         NS_WARNING("Not allowing call because we're out of memory");

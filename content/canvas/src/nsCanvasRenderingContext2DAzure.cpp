@@ -3682,6 +3682,27 @@ nsCanvasRenderingContext2DAzure::DrawImage(nsIDOMElement *imgElt, float a1,
     imgSize = gfxIntSize(mWidth, mHeight);
   }
 
+  // Special case for Canvas, which could be an Azure canvas!
+  if (canvas) {
+    if (canvas->CountContexts() == 1) {
+      nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
+
+      // This might not be an Azure canvas!
+      if (srcCanvas) {
+        srcSurf = srcCanvas->GetSurfaceSnapshot();
+
+        if (srcSurf && mCanvasElement) {
+          // Do security check here.
+          CanvasUtils::DoDrawImageSecurityCheck(HTMLCanvasElement(),
+                                                content->NodePrincipal(), canvas->IsWriteOnly(),
+                                                false);
+
+          imgSize = gfxIntSize(srcSurf->GetSize().width, srcSurf->GetSize().height);
+        }
+      }
+    }
+  }
+
   if (!srcSurf) {
     // The canvas spec says that drawImage should draw the first frame
     // of animated images
