@@ -1595,15 +1595,14 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
      * Don't directly store into fun->u.i.script because we want this to happen
      * at the same time as we set the script's owner.
      */
-    JSScript *script = fun->u.i.script;
+    JSScript *script = fun->script();
     if (!js_XDRScript(xdr, &script))
         return false;
-    fun->u.i.script = script;
 
     if (xdr->mode == JSXDR_DECODE) {
         *objp = fun;
-        fun->u.i.script->setOwnerObject(fun);
-        if (!fun->u.i.script->typeSetFunction(cx, fun))
+        fun->setScript(script);
+        if (!fun->script()->typeSetFunction(cx, fun))
             return false;
         JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
@@ -2352,7 +2351,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
         fun->u.i.skipmin = 0;
-        fun->u.i.script = NULL;
+        fun->u.i.script_ = NULL;
     } else {
         fun->u.n.clasp = NULL;
         if (flags & JSFUN_TRCINFO) {
@@ -2421,22 +2420,21 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         cfun->atom = fun->atom;
         clone->setPrivate(cfun);
         if (cfun->isInterpreted()) {
-            JSScript *script = cfun->script();
+            JSScript *script = fun->script();
             JS_ASSERT(script);
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT(script->compartment() != cx->compartment);
             JS_OPT_ASSERT(script->ownerObject == fun);
 
-            cfun->u.i.script = NULL;
+            cfun->u.i.script_ = NULL;
             JSScript *cscript = js_CloneScript(cx, script);
             if (!cscript)
                 return NULL;
 
-            cfun->u.i.script = cscript;
-            if (!cfun->u.i.script->typeSetFunction(cx, cfun))
+            cfun->setScript(cscript);
+            if (!cfun->script()->typeSetFunction(cx, cfun))
                 return NULL;
 
-            cfun->script()->setOwnerObject(cfun);
             js_CallNewScriptHook(cx, cfun->script(), cfun);
             Debugger::onNewScript(cx, cfun->script(), cfun, Debugger::NewHeldScript);
         }
