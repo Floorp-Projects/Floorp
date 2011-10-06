@@ -41,7 +41,6 @@
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsHashKeys.h"
-#include "mozilla/Omnijar.h"
 
 class nsHyphenator;
 class nsIAtom;
@@ -63,7 +62,6 @@ private:
 
 protected:
   void LoadPatternList();
-  void LoadPatternListFromOmnijar(mozilla::Omnijar::Type aType);
   void LoadPatternListFromDir(nsIFile *aDir);
   void LoadAliases();
 
