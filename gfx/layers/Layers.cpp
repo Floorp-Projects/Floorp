@@ -48,6 +48,7 @@
 #include "gfxUtils.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Util.h"
+#include "LayerSorter.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -413,6 +414,29 @@ ContainerLayer::HasMultipleChildren()
   }
 
   return PR_FALSE;
+}
+
+void
+ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
+{
+  nsAutoTArray<Layer*, 10> toSort;
+
+  for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
+    ContainerLayer* container = l->AsContainerLayer();
+    if (container && container->GetContentFlags() & CONTENT_PRESERVE_3D) {
+      toSort.AppendElement(l);
+    } else {
+      if (toSort.Length() > 0) {
+        SortLayersBy3DZOrder(toSort);
+        aArray.MoveElementsFrom(toSort);
+      }
+      aArray.AppendElement(l);
+    }
+  }
+  if (toSort.Length() > 0) {
+    SortLayersBy3DZOrder(toSort);
+    aArray.MoveElementsFrom(toSort);
+  }
 }
 
 void

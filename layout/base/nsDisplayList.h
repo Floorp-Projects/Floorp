@@ -1012,8 +1012,6 @@ public:
    */
   void SortByContentOrder(nsDisplayListBuilder* aBuilder, nsIContent* aCommonAncestor);
 
-  void SortByZPosition(nsDisplayListBuilder* aBuilder, nsIContent* aCommonAncestor);
-
   /**
    * Generic stable sort. Take care, because some of the items might be nsDisplayLists
    * themselves.
