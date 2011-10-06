@@ -11,6 +11,9 @@
   <script src="chrome://browser/content/Util.js" type="application/javascript;version=1.8"/>
   <script src="chrome://browser/content/input.js" type="application/javascript;version=1.8"/>
   <script src="chrome://browser/content/localePicker.js" type="application/javascript;version=1.8"/>
+  <keyset id="mainKeyset">
+    <key id="key_esc" keycode="VK_ESCAPE" oncommand="LocaleUI.goBack();"/>
+  </keyset>
   <deck id="language-deck" flex="1">
     <vbox id="main-page" class="pane" flex="1">
       <spacer flex="1"/>
