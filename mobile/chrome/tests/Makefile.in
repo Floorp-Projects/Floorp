@@ -75,6 +75,7 @@ _BROWSER_FILES = \
   $(warning browser_formsZoom.js disabled due to failures) \
   browser_history.js \
   browser_localepicker.js \
+  browser_localepicker_escape.js \
   browser_mainui.js \
   browser_preferences_text.js \
   browser_preferences_fulltoggle.js \
