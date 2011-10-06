@@ -1389,7 +1389,6 @@ class StackSegment
     }
 
     void repointRegs(FrameRegs *regs) {
-        JS_ASSERT_IF(regs, regs->fp());
         regs_ = regs;
     }
 
@@ -1439,7 +1438,7 @@ inline js::FrameRegs*  JSContext::maybeRegs() const  { return stack.maybeRegs();
 namespace js {
 
 inline void
-ContextStack::repointRegs(FrameRegs *regs) { JS_ASSERT(hasfp()); seg_->repointRegs(regs); }
+ContextStack::repointRegs(FrameRegs *regs) { seg_->repointRegs(regs); }
 
 /*****************************************************************************/
 
