@@ -388,30 +388,31 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
     if (!callExisting)
         return;
 
+    /* If any type is possible, there's no need to worry about specifics. */
     if (flags & TYPE_FLAG_UNKNOWN) {
         cx->compartment->types.addPending(cx, constraint, this, Type::UnknownType());
-        cx->compartment->types.resolvePending(cx);
-        return;
-    }
-
-    for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
-        if (flags & flag) {
-            Type type = Type::PrimitiveType(TypeFlagPrimitive(flag));
-            cx->compartment->types.addPending(cx, constraint, this, type);
+    } else {
+        /* Enqueue type set members stored as bits. */ 
+        for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
+            if (flags & flag) {
+                Type type = Type::PrimitiveType(TypeFlagPrimitive(flag));
+                cx->compartment->types.addPending(cx, constraint, this, type);
+            }
         }
-    }
 
-    if (flags & TYPE_FLAG_ANYOBJECT) {
-        cx->compartment->types.addPending(cx, constraint, this, Type::AnyObjectType());
-        cx->compartment->types.resolvePending(cx);
-        return;
-    }
-
-    unsigned count = getObjectCount();
-    for (unsigned i = 0; i < count; i++) {
-        TypeObjectKey *object = getObject(i);
-        if (object)
-            cx->compartment->types.addPending(cx, constraint, this, Type::ObjectType(object));
+        /* If any object is possible, skip specifics. */
+        if (flags & TYPE_FLAG_ANYOBJECT) {
+            cx->compartment->types.addPending(cx, constraint, this, Type::AnyObjectType());
+        } else {
+            /* Enqueue specific object types. */
+            unsigned count = getObjectCount();
+            for (unsigned i = 0; i < count; i++) {
+                TypeObjectKey *object = getObject(i);
+                if (object)
+                    cx->compartment->types.addPending(cx, constraint, this,
+                                                      Type::ObjectType(object));
+            }
+        }
     }
 
     cx->compartment->types.resolvePending(cx);

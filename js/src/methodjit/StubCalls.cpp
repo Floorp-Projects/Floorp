@@ -433,6 +433,7 @@ stubs::GetElem(VMFrame &f)
 
     Value &lref = regs.sp[-2];
     Value &rref = regs.sp[-1];
+    Value &rval = regs.sp[-2];
     if (lref.isString() && rref.isInt32()) {
         JSString *str = lref.toString();
         int32_t i = rref.toInt32();
@@ -440,14 +441,14 @@ stubs::GetElem(VMFrame &f)
             str = f.cx->runtime->staticStrings.getUnitStringForElement(cx, str, (size_t)i);
             if (!str)
                 THROW();
-            f.regs.sp[-2].setString(str);
+            rval.setString(str);
             return;
         }
     }
 
     if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
         if (rref.isInt32() && size_t(rref.toInt32()) < regs.fp()->numActualArgs()) {
-            regs.sp[-2] = regs.fp()->canonicalActualArg(rref.toInt32());
+            rval = regs.fp()->canonicalActualArg(rref.toInt32());
             return;
         }
         MarkArgumentsCreated(cx, f.script());
@@ -458,54 +459,40 @@ stubs::GetElem(VMFrame &f)
     if (!obj)
         THROW();
 
-    const Value *copyFrom;
-    Value rval;
-    jsid id;
-    if (rref.isInt32()) {
-        int32_t i = rref.toInt32();
+    uint32 index;
+    if (IsDefinitelyIndex(rref, &index)) {
         if (obj->isDenseArray()) {
-            jsuint idx = jsuint(i);
-
-            if (idx < obj->getDenseArrayInitializedLength()) {
-                copyFrom = &obj->getDenseArrayElement(idx);
-                if (!copyFrom->isMagic())
-                    goto end_getelem;
+            if (index < obj->getDenseArrayInitializedLength()) {
+                rval = obj->getDenseArrayElement(index);
+                if (!rval.isMagic())
+                    return;
             }
         } else if (obj->isArguments()) {
-            uint32 arg = uint32(i);
-            ArgumentsObject *argsobj = obj->asArguments();
+            if (obj->asArguments()->getElement(index, &rval))
+                return;
+        }
 
-            if (arg < argsobj->initialLength()) {
-                copyFrom = &argsobj->element(arg);
-                if (!copyFrom->isMagic()) {
-                    if (StackFrame *afp = argsobj->maybeStackFrame())
-                        copyFrom = &afp->canonicalActualArg(arg);
-                    goto end_getelem;
-                }
+        if (!obj->getElement(cx, index, &rval))
+            THROW();
+    } else {
+        SpecialId special;
+        if (ValueIsSpecial(obj, &rref, &special, cx)) {
+            if (!obj->getSpecial(cx, special, &rval))
+                THROW();
+        } else {
+            JSAtom *name;
+            if (!js_ValueToAtom(cx, rref, &name))
+                THROW();
+
+            if (name->isIndex(&index)) {
+                if (!obj->getElement(cx, index, &rval))
+                    THROW();
+            } else {
+                if (!obj->getProperty(cx, name->asPropertyName(), &rval))
+                    THROW();
             }
         }
-        if (JS_LIKELY(INT_FITS_IN_JSID(i)))
-            id = INT_TO_JSID(i);
-        else
-            goto intern_big_int;
-
-    } else {
-        int32_t i;
-        if (ValueFitsInInt32(rref, &i) && INT_FITS_IN_JSID(i)) {
-            id = INT_TO_JSID(i);
-        } else {
-          intern_big_int:
-            if (!js_InternNonIntElementId(cx, obj, rref, &id))
-                THROW();
-        }
     }
-
-    if (!obj->getGeneric(cx, id, &rval))
-        THROW();
-    copyFrom = &rval;
-
-  end_getelem:
-    f.regs.sp[-2] = *copyFrom;
 }
 
 static inline bool

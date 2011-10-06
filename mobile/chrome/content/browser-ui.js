@@ -63,6 +63,7 @@ let Elements = {};
 [
   ["contentShowing",     "bcast_contentShowing"],
   ["urlbarState",        "bcast_urlbarState"],
+  ["mainKeyset",         "mainKeyset"],
   ["stack",              "stack"],
   ["tabList",            "tabs"],
   ["tabs",               "tabs-container"],
@@ -945,9 +946,9 @@ var BrowserUI = {
         break;
       // Window events
       case "keypress":
-        // Ignore events headed toward the browser; they will be
-        // re-dispatched after content has a chance to handle them.
-        if (aEvent.target.localName == "browser")
+        // Ignore events re-dispatched from content; we already
+        // handled them when they were originally fired.
+        if (aEvent.target == Elements.mainKeyset)
           break;
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
           this.handleEscape(aEvent);

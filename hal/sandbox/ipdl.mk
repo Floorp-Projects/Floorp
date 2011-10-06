@@ -1,5 +1,3 @@
-#! gmake
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -13,11 +11,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org Code.
+# The Original Code is Mozilla Content App.
 #
 # The Initial Developer of the Original Code is
-# Kipp E.B. Hickman.
-# Portions created by the Initial Developer are Copyright (C) 2001
+#   The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -36,39 +34,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-DIRS		= stub
-
-include $(DEPTH)/config/autoconf.mk
-
-PROGRAM = jprof
-
-CPPSRCS = \
-	bfd.cpp    \
-	coff.cpp   \
-	elf.cpp	   \
-	leaky.cpp  \
-	strset.cpp \
-	intcnt.cpp \
-	$(NULL)
-
-OS_LIBS = \
-	-ldl \
-	-lbfd \
-	-liberty \
-	$(NULL)
-
-HELPER_SCRIPTS	= jprofsig
-HELPER_SCRIPTS	:= $(addprefix $(srcdir)/, $(HELPER_SCRIPTS))
-
-include $(topsrcdir)/config/rules.mk
-
-INCLUDES += \
-	-I$(srcdir)/stub \
-	$(NULL)
-
-install::
-	$(INSTALL) -m 555 $(HELPER_SCRIPTS)  $(DIST)/bin
+IPDLSRCS = \
+  PHal.ipdl \
+  $(NULL)
