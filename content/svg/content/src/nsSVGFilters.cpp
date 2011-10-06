@@ -44,15 +44,11 @@
 #include "nsIDOMSVGFilters.h"
 #include "nsCOMPtr.h"
 #include "nsSVGFilterInstance.h"
-#include "nsSVGValue.h"
-#include "nsISVGValueObserver.h"
-#include "nsWeakReference.h"
 #include "nsIDOMSVGFilterElement.h"
 #include "nsSVGEnum.h"
 #include "SVGNumberList.h"
 #include "SVGAnimatedNumberList.h"
 #include "DOMSVGAnimatedNumberList.h"
-#include "nsISVGValueUtils.h"
 #include "nsSVGFilters.h"
 #include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
@@ -158,7 +154,7 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
   if (kernelX <= 0 || kernelY <= 0)
     return result;
 
-  PRBool overflow = PR_FALSE;
+  bool overflow = false;
   gfxIntSize scaledSize =
     nsSVGUtils::ConvertToSurfaceSize(gfxSize(aTarget->mImage->Width() / kernelX,
                                              aTarget->mImage->Height() / kernelY),
@@ -290,7 +286,7 @@ NS_IMETHODIMP nsSVGFE::GetResult(nsIDOMSVGAnimatedString * *aResult)
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGFE::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -562,7 +558,7 @@ static PRUint32 ComputeScaledDivisor(PRUint32 aDivisor)
 static void
 BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
         PRInt32 aStrideMinor, PRInt32 aStartMinor, PRInt32 aEndMinor,
-        PRInt32 aLeftLobe, PRInt32 aRightLobe, PRBool aAlphaOnly)
+        PRInt32 aLeftLobe, PRInt32 aRightLobe, bool aAlphaOnly)
 {
   PRInt32 boxSize = aLeftLobe + aRightLobe + 1;
   PRInt32 scaledDivisor = ComputeScaledDivisor(boxSize);
@@ -678,7 +674,7 @@ nsSVGFEGaussianBlurElement::GetDXY(PRUint32 *aDX, PRUint32 *aDY,
   return NS_OK;
 }
 
-static PRBool
+static bool
 AreAllColorChannelsZero(const nsSVGFE::Image* aTarget)
 {
   return aTarget->mConstantColorChannels &&
@@ -700,7 +696,7 @@ nsSVGFEGaussianBlurElement::GaussianBlur(const Image *aSource,
     return;
   memset(tmp, 0, aTarget->mImage->GetDataSize());
 
-  PRBool alphaOnly = AreAllColorChannelsZero(aTarget);
+  bool alphaOnly = AreAllColorChannelsZero(aTarget);
   
   const PRUint8* sourceData = aSource->mImage->Data();
   PRUint8* targetData = aTarget->mImage->Data();
@@ -1101,7 +1097,7 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  virtual PRBool OperatesOnPremultipledAlpha(PRInt32) { return PR_FALSE; }
+  virtual bool OperatesOnPremultipledAlpha(PRInt32) { return false; }
 
   virtual EnumAttributesInfo GetEnumInfo();
   virtual StringAttributesInfo GetStringInfo();
@@ -1699,7 +1695,7 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  virtual PRBool OperatesOnPremultipledAlpha(PRInt32) { return PR_FALSE; }
+  virtual bool OperatesOnPremultipledAlpha(PRInt32) { return false; }
 
   virtual StringAttributesInfo GetStringInfo();
 
@@ -1826,10 +1822,12 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
   for (int i=0; i<256; i++)
     tableR[i] = tableG[i] = tableB[i] = tableA[i] = i;
   PRUint8* tables[] = { tableR, tableG, tableB, tableA };
-  PRUint32 count = GetChildCount();
-  for (PRUint32 k = 0; k < count; k++) {
+  for (nsIContent* childContent = nsINode::GetFirstChild();
+       childContent;
+       childContent = childContent->GetNextSibling()) {
+
     nsRefPtr<nsSVGComponentTransferFunctionElement> child;
-    CallQueryInterface(GetChildAt(k),
+    CallQueryInterface(childContent,
             (nsSVGComponentTransferFunctionElement**)getter_AddRefs(child));
     if (child) {
       child->GenerateLookupTable(tables[child->GetChannel()]);
@@ -2377,9 +2375,9 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance,
 void
 nsSVGFEMergeElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  PRUint32 count = GetChildCount();
-  for (PRUint32 i = 0; i < count; i++) {
-    nsIContent* child = GetChildAt(i);
+  for (nsIContent* child = nsINode::GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     nsRefPtr<nsSVGFEMergeNodeElement> node;
     CallQueryInterface(child, (nsSVGFEMergeNodeElement**)getter_AddRefs(node));
     if (node) {
@@ -2655,7 +2653,7 @@ protected:
     : nsSVGFEFloodElementBase(aNodeInfo) {}
 
 public:
-  virtual PRBool SubregionIsUnionOfRegions() { return PR_FALSE; }
+  virtual bool SubregionIsUnionOfRegions() { return false; }
 
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
@@ -2680,13 +2678,13 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEFloodElementBase::)
 
   // nsIContent interface
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
+  virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
                                 PRInt32, Image*) { return PR_TRUE; }
 
   virtual StringAttributesInfo GetStringInfo();
@@ -2761,7 +2759,7 @@ nsSVGFEFloodElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGFEFloodElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -2796,7 +2794,7 @@ protected:
     : nsSVGFETileElementBase(aNodeInfo) {}
 
 public:
-  virtual PRBool SubregionIsUnionOfRegions() { return PR_FALSE; }
+  virtual bool SubregionIsUnionOfRegions() { return false; }
 
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
@@ -2924,7 +2922,7 @@ nsSVGFETileElement::Filter(nsSVGFilterInstance *instance,
   // but nothing clips mFilterPrimitiveSubregion so this should be changed.
 
   nsIntRect tile;
-  PRBool res = gfxUtils::GfxRectToIntRect(aSources[0]->mFilterPrimitiveSubregion, &tile);
+  bool res = gfxUtils::GfxRectToIntRect(aSources[0]->mFilterPrimitiveSubregion, &tile);
 
   NS_ENSURE_TRUE(res, NS_ERROR_FAILURE); // asserts on failure (not 
   if (tile.IsEmpty())
@@ -2987,7 +2985,7 @@ protected:
     : nsSVGFETurbulenceElementBase(aNodeInfo) {}
 
 public:
-  virtual PRBool SubregionIsUnionOfRegions() { return PR_FALSE; }
+  virtual bool SubregionIsUnionOfRegions() { return false; }
 
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
@@ -3100,8 +3098,8 @@ private:
   double Noise2(int aColorChannel, double aVec[2], StitchInfo *aStitchInfo);
   double
   Turbulence(int aColorChannel, double *aPoint, double aBaseFreqX,
-             double aBaseFreqY, int aNumOctaves, PRBool aFractalSum,
-             PRBool aDoStitching, double aTileX, double aTileY,
+             double aBaseFreqY, int aNumOctaves, bool aFractalSum,
+             bool aDoStitching, double aTileX, double aTileY,
              double aTileWidth, double aTileHeight);
 };
 
@@ -3244,7 +3242,7 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance,
   float filterWidth = instance->GetFilterRect().Width();
   float filterHeight = instance->GetFilterRect().Height();
 
-  PRBool doStitch = PR_FALSE;
+  bool doStitch = false;
   if (stitch == nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_STITCH) {
     doStitch = PR_TRUE;
 
@@ -3398,8 +3396,8 @@ nsSVGFETurbulenceElement::Noise2(int aColorChannel, double aVec[2],
 double
 nsSVGFETurbulenceElement::Turbulence(int aColorChannel, double *aPoint,
                                      double aBaseFreqX, double aBaseFreqY,
-                                     int aNumOctaves, PRBool aFractalSum,
-                                     PRBool aDoStitching,
+                                     int aNumOctaves, bool aFractalSum,
+                                     bool aDoStitching,
                                      double aTileX, double aTileY,
                                      double aTileWidth, double aTileHeight)
 {
@@ -3868,7 +3866,7 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  virtual PRBool OperatesOnPremultipledAlpha(PRInt32) {
+  virtual bool OperatesOnPremultipledAlpha(PRInt32) {
     return !mBooleanAttributes[PRESERVEALPHA].GetAnimValue();
   }
 
@@ -4114,7 +4112,7 @@ ConvolvePixel(const PRUint8 *aSourceData,
               PRUint16 aEdgeMode,
               const float *aKernel,
               float aDivisor, float aBias,
-              PRBool aPreserveAlpha,
+              bool aPreserveAlpha,
               PRInt32 aOrderX, PRInt32 aOrderY,
               PRInt32 aTargetX, PRInt32 aTargetY)
 {
@@ -4128,10 +4126,10 @@ ConvolvePixel(const PRUint8 *aSourceData,
 
   for (PRInt32 y = 0; y < aOrderY; y++) {
     PRInt32 sampleY = aY + y - aTargetY;
-    PRBool overscanY = sampleY < 0 || sampleY >= aHeight;
+    bool overscanY = sampleY < 0 || sampleY >= aHeight;
     for (PRInt32 x = 0; x < aOrderX; x++) {
       PRInt32 sampleX = aX + x - aTargetX;
-      PRBool overscanX = sampleX < 0 || sampleX >= aWidth;
+      bool overscanX = sampleX < 0 || sampleX >= aWidth;
       for (PRInt32 i = 0; i < channels; i++) {
         if (overscanY || overscanX) {
           switch (aEdgeMode) {
@@ -4231,7 +4229,7 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance,
     return NS_ERROR_FAILURE;
 
   PRUint16 edgeMode = mEnumAttributes[EDGEMODE].GetAnimValue();
-  PRBool preserveAlpha = mBooleanAttributes[PRESERVEALPHA].GetAnimValue();
+  bool preserveAlpha = mBooleanAttributes[PRESERVEALPHA].GetAnimValue();
 
   float bias = mNumberAttributes[BIAS].GetAnimValue();
 
@@ -4672,7 +4670,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFELightingElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFELightingElementBase::)
 
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
   virtual void
@@ -4727,7 +4725,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGFELightingElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGFELightingElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -4868,10 +4866,10 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
 
   nscolor lightColor = style->GetStyleSVGReset()->mLightingColor;
 
-  // find specified light
-  PRUint32 count = GetChildCount();
-  for (PRUint32 k = 0; k < count; k++) {
-    nsCOMPtr<nsIContent> child = GetChildAt(k);
+  // find specified light  
+  for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     distantLight = do_QueryInterface(child);
     pointLight = do_QueryInterface(child);
     spotLight = do_QueryInterface(child);
@@ -5311,7 +5309,7 @@ protected:
   virtual ~nsSVGFEImageElement();
 
 public:
-  virtual PRBool SubregionIsUnionOfRegions() { return PR_FALSE; }
+  virtual bool SubregionIsUnionOfRegions() { return false; }
 
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
@@ -5336,15 +5334,15 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEImageElementBase::)
 
   // nsIContent
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify);
+                                const nsAString* aValue, bool aNotify);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
+                              bool aCompileEventHandlers);
   virtual nsEventStates IntrinsicState() const;
 
   // imgIDecoderObserver
@@ -5364,10 +5362,10 @@ private:
   // Invalidate users of the filter containing this element.
   void Invalidate();
 
-  nsresult LoadSVGImage(PRBool aForce, PRBool aNotify);
+  nsresult LoadSVGImage(bool aForce, bool aNotify);
 
 protected:
-  virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
+  virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
                                 PRInt32, Image*) { return PR_TRUE; }
 
   virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio();
@@ -5424,7 +5422,7 @@ nsSVGFEImageElement::~nsSVGFEImageElement()
 //----------------------------------------------------------------------
 
 nsresult
-nsSVGFEImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
+nsSVGFEImageElement::LoadSVGImage(bool aForce, bool aNotify)
 {
   // resolve href attribute
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
@@ -5441,7 +5439,7 @@ nsSVGFEImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
   if (doc) {
     nsCOMPtr<nsIURI> hrefAsURI;
     if (NS_SUCCEEDED(StringToURI(href, doc, getter_AddRefs(hrefAsURI)))) {
-      PRBool isEqual;
+      bool isEqual;
       if (NS_SUCCEEDED(hrefAsURI->Equals(baseURI, &isEqual)) && isEqual) {
         // Image URI matches our URI exactly! Bail out.
         return NS_OK;
@@ -5455,7 +5453,7 @@ nsSVGFEImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
 //----------------------------------------------------------------------
 // nsIContent methods:
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGFEImageElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -5468,7 +5466,7 @@ nsSVGFEImageElement::IsAttributeMapped(const nsIAtom* name) const
 
 nsresult
 nsSVGFEImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                  const nsAString* aValue, PRBool aNotify)
+                                  const nsAString* aValue, bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
     if (aValue) {
@@ -5495,7 +5493,7 @@ nsSVGFEImageElement::MaybeLoadSVGImage()
 nsresult
 nsSVGFEImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
-                                PRBool aCompileEventHandlers)
+                                bool aCompileEventHandlers)
 {
   nsresult rv = nsSVGFEImageElementBase::BindToTree(aDocument, aParent,
                                                     aBindingParent,
@@ -5728,7 +5726,7 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  virtual PRBool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
+  virtual bool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
                                 PRInt32 aInput, Image* aImage) {
     switch (aInput) {
     case 0:
@@ -5741,7 +5739,7 @@ protected:
       return PR_FALSE;
     }
   }
-  virtual PRBool OperatesOnPremultipledAlpha(PRInt32 aInput) {
+  virtual bool OperatesOnPremultipledAlpha(PRInt32 aInput) {
     return !(aInput == 1);
   }
 

@@ -64,24 +64,26 @@ interface nsIFrameMessageListener : nsISupports
   void receiveMessage();
 };
 
-[scriptable, uuid(6b736edb-863d-40bd-bca2-62f44da803c0)]
+[scriptable, uuid(a27d8fcd-8de9-4a51-87f4-2b83bba901d5)]
 interface nsIFrameMessageManager : nsISupports
 {
   void addMessageListener(in AString aMessage, in nsIFrameMessageListener aListener);
   void removeMessageListener(in AString aMessage, in nsIFrameMessageListener aListener);
-  void sendAsyncMessage(/*in messageName, in JSON*/);
+  [implicit_jscontext,optional_argc]
+  void sendAsyncMessage([optional] in AString messageName, [optional] in jsval obj);
 };
 
-[scriptable, uuid(cdb1a40b-9862-426c-ae8a-f5ab84e20e32)]
+[scriptable, uuid(21e5d940-d457-4c0f-bb5e-35c159ed19e3)]
 interface nsISyncMessageSender : nsIFrameMessageManager
 {
   /**
    * Returns an array of JSON objects.
    */
-  void sendSyncMessage(/*in messageName, in JSON*/);
+  [implicit_jscontext,optional_argc]
+  jsval sendSyncMessage([optional] in AString messageName, [optional] in jsval obj);
 };
 
-[scriptable, uuid(6f23339f-2b5c-4f22-a03f-bb7ec101f83d)]
+[scriptable, uuid(78a1d024-60e3-4b7b-98cd-4c6b84b4f060)]
 interface nsIContentFrameMessageManager : nsISyncMessageSender
 {
   /**
@@ -112,20 +114,20 @@ interface nsIContentFrameMessageManager : nsISyncMessageSender
    DOMString btoa(in DOMString aBase64Data);
 };
 
-[uuid(9c48d557-92fe-4edb-95fc-bfe97e77bdc3)]
+[uuid(1f7af930-a232-4a84-a049-73eaa45f2db5)]
 interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
 {
   [notxpcom] nsIContent getOwnerContent();
 };
 
-[scriptable, uuid(6331bbca-2c9f-4766-b3c7-ae75554bf1ec)]
+[scriptable, uuid(e91b0939-a74a-4c4f-8cfd-17dd42e8642a)]
 interface nsITreeItemFrameMessageManager : nsIFrameMessageManager
 {
   readonly attribute unsigned long childCount;
   nsITreeItemFrameMessageManager getChildAt(in unsigned long aIndex);
 };
 
-[scriptable, uuid(9e5c0526-aa4c-49f0-afbb-57f489cd9b59)]
+[scriptable, uuid(14e1f147-793d-4788-bbbb-ae806ecdddbb)]
 interface nsIChromeFrameMessageManager : nsITreeItemFrameMessageManager
 {
   /**

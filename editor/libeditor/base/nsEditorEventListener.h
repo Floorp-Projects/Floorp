@@ -90,7 +90,7 @@ protected:
   nsresult InstallToEditor();
   void UninstallFromEditor();
 
-  PRBool CanDrop(nsIDOMDragEvent* aEvent);
+  bool CanDrop(nsIDOMDragEvent* aEvent);
   nsresult DragEnter(nsIDOMDragEvent* aDragEvent);
   nsresult DragOver(nsIDOMDragEvent* aDragEvent);
   nsresult DragExit(nsIDOMDragEvent* aDragEvent);
@@ -102,12 +102,12 @@ protected:
 protected:
   nsEditor* mEditor; // weak
   nsRefPtr<nsCaret> mCaret;
-  PRPackedBool mCommitText;
-  PRPackedBool mInTransaction;
+  bool mCommitText;
+  bool mInTransaction;
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-  PRPackedBool mHaveBidiKeyboards;
-  PRPackedBool mShouldSwitchTextDirection;
-  PRPackedBool mSwitchToRTL;
+  bool mHaveBidiKeyboards;
+  bool mShouldSwitchTextDirection;
+  bool mSwitchToRTL;
 #endif
 };
 

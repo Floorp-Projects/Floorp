@@ -280,7 +280,7 @@ char *
 nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
     char *line = aBuffer;
     char *eol;
-    PRBool cr = PR_FALSE;
+    bool cr = false;
 
     list_state state;
     state.magic = 0;

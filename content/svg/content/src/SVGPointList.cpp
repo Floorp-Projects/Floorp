@@ -37,7 +37,6 @@
 #include "SVGPointList.h"
 #include "SVGAnimatedPointList.h"
 #include "nsSVGElement.h"
-#include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
 #include "nsString.h"
 #include "nsSVGUtils.h"

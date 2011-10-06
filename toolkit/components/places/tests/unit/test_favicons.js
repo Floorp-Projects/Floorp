@@ -1,447 +1,350 @@
-/*
- * Tests for nsIFaviconService
- */
+/* Any copyright is dedicated to the Public Domain. http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/*
- * dumpToFile()
- *
- * For test development, dumps the specified array to a file.
- * Call |dumpToFile(outData);| in a test to file to a file.
- */
-function dumpToFile(aData) {
-  const path = "/tmp";
+// Tests for nsIFaviconService.
 
-  var outputFile = Cc["@mozilla.org/file/local;1"].
-                   createInstance(Ci.nsILocalFile);
-  outputFile.initWithPath(path);
-  outputFile.append("testdump.png");
+// The pixel values we get in Windows are sometimes +/- 1 value compared to
+// other platforms, so we need to compare against a different set of reference
+// images.
+let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 
-  var outputStream = Cc["@mozilla.org/network/file-output-stream;1"].
-                     createInstance(Ci.nsIFileOutputStream);
-  // WR_ONLY|CREAT|TRUNC
-  outputStream.init(outputFile, 0x02 | 0x08 | 0x20, 0644, null);
-
-  var bos = Cc["@mozilla.org/binaryoutputstream;1"].
-            createInstance(Ci.nsIBinaryOutputStream);
-  bos.setOutputStream(outputStream);
-
-  bos.writeByteArray(aData, aData.length);
-
-  outputStream.close();
-}
-
-/*
+/**
  * setAndGetFaviconData()
  *
  * Calls setFaviconData() with the specified image data,
- * and then retrieves it with getFaviconData(). Returns
- * and array of bytes and mimetype.
+ * and then retrieves it with getFaviconData().
+ *
+ * @return an array: [bytes, MIME type].
  */
 function setAndGetFaviconData(aFilename, aData, aMimeType) {
-  var iconURI = uri("http://places.test/" + aFilename);
+  let iconsvc = PlacesUtils.favicons;
+  let iconURI = NetUtil.newURI("http://places.test/" + aFilename);
   try {
-    iconsvc.setFaviconData(iconURI,
-                           aData, aData.length, aMimeType,
+    iconsvc.setFaviconData(iconURI, aData, aData.length, aMimeType,
                            Number.MAX_VALUE);
   } catch (ex) {}
-  var dataURL = iconsvc.getFaviconDataAsDataURL(iconURI);
+  let dataURL = iconsvc.getFaviconDataAsDataURL(iconURI);
   try {
     iconsvc.setFaviconDataFromDataURL(iconURI, dataURL, Number.MAX_VALUE);
   } catch (ex) {}
-  var mimeTypeOutparam = {};
+  let mimeTypeOutparam = {};
 
-  var outData = iconsvc.getFaviconData(iconURI, mimeTypeOutparam);
+  let outData = iconsvc.getFaviconData(iconURI, mimeTypeOutparam);
 
   return [outData, mimeTypeOutparam.value];
 }
 
-
-// Get favicon service
-try {
-  var iconsvc = PlacesUtils.favicons;
-
-  // Ugh, this is an ugly hack. The pixel values we get in Windows are sometimes
-  // +/- 1 value compared to other platforms, so we need to compare against a
-  // different set of reference images. nsIXULRuntime.OS doesn't seem to be
-  // available in xpcshell, so we'll use this as a kludgy way to figure out if
-  // we're running on Windows.
-  var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-} catch(ex) {
-  do_throw("Could not get favicon service\n");
+/**
+ * Retrieve and read a file, verifying the length of the returned data.
+ *
+ * @return the array of bytes read from the file.
+ */
+function readFileOfLength(name, expected) {
+  let file = do_get_file(name);
+  let data = readFileData(file);
+  do_check_eq(data.length, expected);
+  return data;
 }
 
-// Get history services
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
-} catch(ex) {
-  do_throw("Could not get history services\n");
+/**
+ * Load a favicon file, verifying expected length.
+ *
+ * @return the loaded data to allow composing more complex checks.
+ */
+function setAndGetFaviconDataFromName(iconName, inMimeType, expectedLength) {
+  let inData = readFileOfLength(iconName, expectedLength);
+  let [outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
+  return [inData, outData, outMimeType];
 }
 
-function checkArrays(a, b) {
-  do_check_true(compareArrays(a, b));
+/**
+ * Load a non-oversized favicon file, verifying expected contents and length.
+ */
+function check_icon_data(iconName, inMimeType, expectedLength) {
+  let [inData, outData, outMimeType] =
+    setAndGetFaviconDataFromName(iconName, inMimeType, expectedLength);
+
+  // Ensure input and output are identical.
+  do_check_eq(inMimeType, outMimeType);
+  do_check_true(compareArrays(inData, outData));
 }
 
+/**
+ * Load an oversized favicon file, verifying expected contents and lengths
+ * against a translated PNG file.
+ * If skipContent is true, the expected and output data are not compared.
+ */
+function check_oversized_icon_data(iconName, inMimeType, expectedLength, skipContent) {
+  let [inData, outData, outMimeType] =
+    setAndGetFaviconDataFromName(iconName, inMimeType, expectedLength);
+
+  // Read in the expected output.
+  let expectedFile = do_get_file("expected-" + iconName + ".png");
+  let expectedData = readFileData(expectedFile);
+
+  // Compare thet expected data to the actual data.
+  do_check_eq("image/png", outMimeType);
+  if (!skipContent) {
+    do_check_true(compareArrays(expectedData, outData));
+  }
+}
+
+/*
+ * Done with utilities! On to the tests.
+ */
 function run_test() {
-try {
+  run_next_test();
+}
 
-/* ========== 1 ========== */
-var testnum = 1;
-var testdesc = "test storing a normal 16x16 icon";
-
-// 16x16 png, 286 bytes.
-var iconName = "favicon-normal16.png";
-var inMimeType = "image/png";
-var iconFile = do_get_file(iconName);
-
-var inData = readFileData(iconFile);
-do_check_eq(inData.length, 286);
-
-var [outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
-
-// Ensure input and output are identical
-do_check_eq(inMimeType, outMimeType);
-checkArrays(inData, outData);
-                    
-
-/* ========== 2 ========== */
-testnum++;
-testdesc = "test storing a normal 32x32 icon";
-
-// 32x32 png, 344 bytes.
-iconName = "favicon-normal32.png";
-inMimeType = "image/png";
-iconFile = do_get_file(iconName);
-
-inData = readFileData(iconFile);
-do_check_eq(inData.length, 344);
-
-[outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
-
-// Ensure input and output are identical
-do_check_eq(inMimeType, outMimeType);
-checkArrays(inData, outData);
-
-
-/* ========== 3 ========== */
-testnum++;
-testdesc = "test storing an oversize 16x16 icon ";
-
-//  in: 16x16 ico, 1406 bytes.
-// out: 16x16 png 
-iconName = "favicon-big16.ico";
-inMimeType = "image/x-icon";
-iconFile = do_get_file(iconName);
-
-inData = readFileData(iconFile);
-do_check_eq(inData.length, 1406);
-
-[outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
-
-// Read in the expected output.
-var expectedFile = do_get_file("expected-" + iconName + ".png");
-var expectedData = readFileData(expectedFile);
-
-// Compare thet expected data to the actual data.
-do_check_eq("image/png", outMimeType);
-checkArrays(expectedData, outData);
-
-/* ========== 4 ========== */
-testnum++;
-testdesc = "test storing an oversize 4x4 icon ";
-
-//  in: 4x4 jpg, 4751 bytes.
-// out: 16x16 png 
-iconName = "favicon-big4.jpg";
-inMimeType = "image/jpeg";
-iconFile = do_get_file(iconName);
-
-inData = readFileData(iconFile);
-do_check_eq(inData.length, 4751);
-
-[outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
-
-// Read in the expected output.
-var expectedFile = do_get_file("expected-" + iconName + ".png");
-var expectedData = readFileData(expectedFile);
-
-// Compare thet expected data to the actual data.
-do_check_eq("image/png", outMimeType);
-checkArrays(expectedData, outData);
-
-
-/* ========== 5 ========== */
-testnum++;
-testdesc = "test storing an oversize 32x32 icon ";
-
-//  in: 32x32 jpg, 3494 bytes.
-// out: 16x16 png 
-iconName = "favicon-big32.jpg";
-inMimeType = "image/jpeg";
-iconFile = do_get_file(iconName);
-
-inData = readFileData(iconFile);
-do_check_eq(inData.length, 3494);
-
-[outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
-
-// Read in the expected output.
-var expectedFile = do_get_file("expected-" + iconName + ".png");
-var expectedData = readFileData(expectedFile);
-
-// Compare thet expected data to the actual data.
-do_check_eq("image/png", outMimeType);
-// Disabled on Windows due to problems with pixels varying slightly.
-if (!isWindows)
-  checkArrays(expectedData, outData);
-
-
-/* ========== 6 ========== */
-testnum++;
-testdesc = "test storing an oversize 48x48 icon ";
-
-//  in: 48x48 ico, 56646 bytes.
-// (howstuffworks.com icon, contains 13 icons with sizes from 16x16 to
-// 48x48 in varying depths)
-// out: 16x16 png 
-iconName = "favicon-big48.ico";
-inMimeType = "image/x-icon";
-iconFile = do_get_file(iconName);
-
-inData = readFileData(iconFile);
-do_check_eq(inData.length, 56646);
-
-[outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
-
-// Read in the expected output.
-var expectedFile = do_get_file("expected-" + iconName + ".png");
-var expectedData = readFileData(expectedFile);
-
-// Compare thet expected data to the actual data.
-do_check_eq("image/png", outMimeType);
-checkArrays(expectedData, outData);
-
-/* ========== 7 ========== */
-testnum++;
-testdesc = "test storing an oversize 64x64 icon ";
-
-//  in: 64x64 png, 10698 bytes.
-// out: 16x16 png 
-iconName = "favicon-big64.png";
-inMimeType = "image/png";
-iconFile = do_get_file(iconName);
-
-inData = readFileData(iconFile);
-do_check_eq(inData.length, 10698);
-
-[outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
-
-// Read in the expected output.
-var expectedFile = do_get_file("expected-" + iconName + ".png");
-var expectedData = readFileData(expectedFile);
-
-// Compare thet expected data to the actual data.
-do_check_eq("image/png", outMimeType);
-checkArrays(expectedData, outData);
-
-/* ========== 8 ========== */
-testnum++;
-testdesc = "test scaling an oversize 160x3 icon ";
-
-//  in: 160x3 jpg, 5095 bytes.
-// out: 16x16 png 
-iconName = "favicon-scale160x3.jpg";
-inMimeType = "image/jpeg";
-iconFile = do_get_file(iconName);
-
-inData = readFileData(iconFile);
-do_check_eq(inData.length, 5095);
-
-[outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
-
-// Read in the expected output.
-var expectedFile = do_get_file("expected-" + iconName + ".png");
-var expectedData = readFileData(expectedFile);
-
-// Compare thet expected data to the actual data.
-do_check_eq("image/png", outMimeType);
-checkArrays(expectedData, outData);
-
-/* ========== 9 ========== */
-testnum++;
-testdesc = "test scaling an oversize 3x160 icon ";
-
-//  in: 3x160 jpg, 5059 bytes.
-// out: 16x16 png 
-iconName = "favicon-scale3x160.jpg";
-inMimeType = "image/jpeg";
-iconFile = do_get_file(iconName);
-
-inData = readFileData(iconFile);
-do_check_eq(inData.length, 5059);
-
-[outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
-
-// Read in the expected output.
-var expectedFile = do_get_file("expected-" + iconName + ".png");
-var expectedData = readFileData(expectedFile);
-
-// Compare thet expected data to the actual data.
-do_check_eq("image/png", outMimeType);
-checkArrays(expectedData, outData);
-
-
-/* ========== 10 ========== */
-testnum++;
-testdesc = "test set and get favicon ";
-
-// 32x32 png, 344 bytes.
-var icon1Name = "favicon-normal32.png";
-var icon1MimeType = "image/png";
-var icon1File = do_get_file(icon1Name);
-var icon1Data = readFileData(icon1File);
-do_check_eq(icon1Data.length, 344);
-var icon1URI = uri("file:///./" + icon1Name);
-
-// 16x16 png, 286 bytes.
-var icon2Name = "favicon-normal16.png";
-var icon2MimeType = "image/png";
-var icon2File = do_get_file(icon2Name);
-var icon2Data = readFileData(icon2File);
-do_check_eq(icon2Data.length, 286);
-var icon2URI = uri("file:///./" + icon2Name);
-
-var page1URI = uri("http://foo.bar/");
-var page2URI = uri("http://bar.foo/");
-var page3URI = uri("http://foo.bar.moz/");
-
-// add visits to the db
-histsvc.addVisit(page1URI, Date.now() * 1000, null,
-                 histsvc.TRANSITION_TYPED, false, 0);
-histsvc.addVisit(page2URI, Date.now() * 1000, null,
-                 histsvc.TRANSITION_TYPED, false, 0);
-histsvc.addVisit(page3URI, Date.now() * 1000, null,
-                 histsvc.TRANSITION_TYPED, false, 0);
-
-// set first page icon
-try {
-  iconsvc.setFaviconData(icon1URI, icon1Data, icon1Data.length,
-                         icon1MimeType, Number.MAX_VALUE);
-} catch (ex) {}
-iconsvc.setFaviconUrlForPage(page1URI, icon1URI);
-do_check_guid_for_uri(page1URI);
-var savedIcon1URI = iconsvc.getFaviconForPage(page1URI);
-
-// Test getFaviconForPage().
-do_test_pending();
-iconsvc.getFaviconURLForPage(page1URI, {
-    onFaviconDataAvailable: function(aURI, aDataLen, aData, aMimeType) {
-      do_check_true(aURI.equals(savedIcon1URI));
-      do_check_eq(aDataLen, 0);
-      do_check_eq(aData.length, 0);
-      do_check_eq(aMimeType, "");
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFaviconDataCallback])
+add_test(function test_storing_a_normal_16x16_icon() {
+  // 16x16 png, 286 bytes.
+  let iconName   = "favicon-normal16.png";
+  let inMimeType = "image/png";
+  check_icon_data(iconName, inMimeType, 286);
+  run_next_test();
 });
 
-iconsvc.getFaviconDataForPage(page1URI, {
-    onFaviconDataAvailable: function(aURI, aDataLen, aData, aMimeType) {
-      do_check_true(aURI.equals(savedIcon1URI));
-      do_check_eq(icon1MimeType, out1MimeType.value);
-      checkArrays(icon1Data, aData);
-      do_check_eq(aDataLen, aData.length);
-      do_test_finished();
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFaviconDataCallback])
+add_test(function test_storing_a_normal_32x32_icon() {
+  // 32x32 png, 344 bytes.
+  let iconName   = "favicon-normal32.png";
+  let inMimeType = "image/png";
+  check_icon_data(iconName, inMimeType, 344);
+  run_next_test();
 });
 
-// set second page icon
-try {
-  iconsvc.setFaviconData(icon2URI, icon2Data, icon2Data.length,
-                         icon2MimeType, Number.MAX_VALUE);
-} catch (ex) {}
-iconsvc.setFaviconUrlForPage(page2URI, icon2URI);
-do_check_guid_for_uri(page2URI);
-var savedIcon2URI = iconsvc.getFaviconForPage(page2URI);
+add_test(function test_storing_an_oversize_16x16_icon() {
+  //  in: 16x16 ico, 1406 bytes.
+  // out: 16x16 png
+  let iconName   = "favicon-big16.ico";
+  let inMimeType = "image/x-icon";
+  check_oversized_icon_data(iconName, inMimeType, 1406);
+  run_next_test();
+});
 
-// set third page icon as the same as first page one
-try {
-  iconsvc.setFaviconData(icon1URI, icon1Data, icon1Data.length,
-                         icon1MimeType, Number.MAX_VALUE);
-} catch (ex) {}
-iconsvc.setFaviconUrlForPage(page3URI, icon1URI);
-do_check_guid_for_uri(page3URI);
-var savedIcon3URI = iconsvc.getFaviconForPage(page3URI);
+add_test(function test_storing_an_oversize_4x4_icon() {
+  //  in: 4x4 jpg, 4751 bytes.
+  // out: 16x16 png
+  let iconName   = "favicon-big4.jpg";
+  let inMimeType = "image/jpeg";
+  check_oversized_icon_data(iconName, inMimeType, 4751);
+  run_next_test();
+});
 
-// check first page icon
-var out1MimeType = {};
-var out1Data = iconsvc.getFaviconData(savedIcon1URI, out1MimeType);
-do_check_eq(icon1MimeType, out1MimeType.value);
-checkArrays(icon1Data, out1Data);
+add_test(function test_storing_an_oversize_32x32_icon() {
+  //  in: 32x32 jpg, 3494 bytes.
+  // out: 16x16 png
+  let iconName   = "favicon-big32.jpg";
+  let inMimeType = "image/jpeg";
 
-// check second page icon
-var out2MimeType = {};
-var out2Data = iconsvc.getFaviconData(savedIcon2URI, out2MimeType);
-do_check_eq(icon2MimeType, out2MimeType.value);
-checkArrays(icon2Data, out2Data);
+  // Content check disabled on Windows due to problems with pixels varying
+  // slightly.
+  check_oversized_icon_data(iconName, inMimeType, 3494, isWindows);
+  run_next_test();
+});
 
-// check third page icon
-var out3MimeType = {};
-var out3Data = iconsvc.getFaviconData(savedIcon3URI, out3MimeType);
-do_check_eq(icon1MimeType, out3MimeType.value);
-checkArrays(icon1Data, out3Data);
+add_test(function test_storing_an_oversize_48x48_icon() {
+  //  in: 48x48 ico, 56646 bytes.
+  // (howstuffworks.com icon, contains 13 icons with sizes from 16x16 to
+  // 48x48 in varying depths)
+  // out: 16x16 png
+  let iconName   = "favicon-big48.ico";
+  let inMimeType = "image/x-icon";
+  check_oversized_icon_data(iconName, inMimeType, 56646);
+  run_next_test();
+});
 
+add_test(function test_storing_an_oversize_64x64_icon() {
+  //  in: 64x64 png, 10698 bytes.
+  // out: 16x16 png
+  let iconName   = "favicon-big64.png";
+  let inMimeType = "image/png";
+  check_oversized_icon_data(iconName, inMimeType, 10698);
+  run_next_test();
+});
 
-/* ========== 11 ========== */
-testnum++;
-testdesc = "test favicon links ";
+add_test(function test_scaling_an_oversize_160x3_icon() {
+  //  in: 160x3 jpg, 5095 bytes.
+  // out: 16x16 png
+  let iconName   = "favicon-scale160x3.jpg";
+  let inMimeType = "image/jpeg";
+  check_oversized_icon_data(iconName, inMimeType, 5095);
+  run_next_test();
+});
 
-var pageURI = uri("http://foo.bar/");
-var faviconURI = uri("file:///./favicon-normal32.png");
-do_check_eq(iconsvc.getFaviconImageForPage(pageURI).spec,
-            iconsvc.getFaviconLinkForIcon(faviconURI).spec);
+add_test(function test_scaling_an_oversize_3x160_icon() {
+  //  in: 3x160 jpg, 5059 bytes.
+  // out: 16x16 png
+  let iconName = "favicon-scale3x160.jpg";
+  let inMimeType = "image/jpeg";
+  check_oversized_icon_data(iconName, inMimeType, 5059);
+  run_next_test();
+});
 
+/*
+ * The following few tests are asynchronous but share state. We bundle that
+ * state into two arrays: `icons` and `pages`.
+ * The tests are in four parts:
+ *
+ * 1. setup, where we add some history visits, and set an icon for one of them;
+ * 2. getFaviconURLForPage, where we test synchronous retrieval;
+ * 3. second_and_third, where we add icons for the remaining two pages, and test
+ *    them synchronously;
+ * 4. getFaviconDataForPage, which tests asynchronous retrieval.
+ */
+let icons = [
+  {
+    name: "favicon-normal32.png",
+    mime: "image/png",
+    data: null,
+    uri:  NetUtil.newURI("file:///./favicon-normal32.png")
+  },
+  {
+    name: "favicon-normal16.png",
+    mime: "image/png",
+    data: null,
+    uri:  NetUtil.newURI("file:///./favicon-normal16.png")
+  }
+];
 
-/* ========== 12 ========== */
-testnum++;
-testdesc = "test failed favicon cache ";
+let pages = [
+  NetUtil.newURI("http://foo.bar/"),
+  NetUtil.newURI("http://bar.foo/"),
+  NetUtil.newURI("http://foo.bar.moz/")
+];
 
-// 32x32 png, 344 bytes.
-iconName = "favicon-normal32.png";
-faviconURI = uri("file:///./" + iconName);
+add_test(function test_set_and_get_favicon_setup() {
+  do_log_info("Setup code for set/get favicon.");
+  let [icon0, icon1] = icons;
 
-iconsvc.addFailedFavicon(faviconURI);
-do_check_true(iconsvc.isFailedFavicon(faviconURI));
-iconsvc.removeFailedFavicon(faviconURI);
-do_check_false(iconsvc.isFailedFavicon(faviconURI));
+  // 32x32 png, 344 bytes.
+  icon0.data = readFileOfLength(icon0.name, 344);
 
+  // 16x16 png, 286 bytes.
+  icon1.data = readFileOfLength(icon1.name, 286);
 
-/* ========== 13 ========== */
-testnum++;
-testdesc = "test getFaviconData on the default favicon ";
+  // Add visits to the DB.
+  for each (let uri in pages) {
+    PlacesUtils.history.addVisit(uri, Date.now() * 1000, null,
+                                 PlacesUtils.history.TRANSITION_TYPED,
+                                 false, 0);
+  }
 
-outMimeType = {};
-outData = iconsvc.getFaviconData(iconsvc.defaultFavicon, outMimeType);
-do_check_eq(outMimeType.value, "image/png");
+  // Set first page icon.
+  try {
+    PlacesUtils.favicons.setFaviconData(icon0.uri, icon0.data, icon0.data.length,
+                                        icon0.mime, Number.MAX_VALUE);
+  } catch (ex) {
+    do_throw("Failure setting first page icon: " + ex);
+  }
+  PlacesUtils.favicons.setFaviconUrlForPage(pages[0], icon0.uri);
+  do_check_guid_for_uri(pages[0]);
 
-// Read in the icon and compare it to what the API returned above.
-var istream = NetUtil.newChannel(iconsvc.defaultFavicon).open();
-var bistream = Cc["@mozilla.org/binaryinputstream;1"].
-               createInstance(Ci.nsIBinaryInputStream);
-bistream.setInputStream(istream);
-expectedData = [];
-var avail;
-while (avail = bistream.available()) {
-  expectedData = expectedData.concat(bistream.readByteArray(avail));
-}
-bistream.close();
-checkArrays(outData, expectedData);
+  let favicon = PlacesUtils.favicons.getFaviconForPage(pages[0]);
+  do_check_true(icon0.uri.equals(favicon));
 
+  run_next_test();
+});
 
-/* ========== end ========== */
+add_test(function test_set_and_get_favicon_getFaviconURLForPage() {
+  let [icon0] = icons;
+  PlacesUtils.favicons.getFaviconURLForPage(pages[0], {
+      onFaviconDataAvailable: function(aURI, aDataLen, aData, aMimeType) {
+        do_check_true(icon0.uri.equals(aURI));
+        do_check_eq(aDataLen, 0);
+        do_check_eq(aData.length, 0);
+        do_check_eq(aMimeType, "");
+        run_next_test();
+    },
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIFaviconDataCallback])
+  });
+});
 
-} catch (e) {
-    throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;
-}
-};
+add_test(function test_set_and_get_favicon_second_and_third() {
+  let [icon0, icon1] = icons;
+  try {
+    PlacesUtils.favicons.setFaviconData(icon1.uri, icon1.data, icon1.data.length,
+                                        icon1.mime, Number.MAX_VALUE);
+  } catch (ex) {
+    do_throw("Failure setting second page icon: " + ex);
+  }
+  PlacesUtils.favicons.setFaviconUrlForPage(pages[1], icon1.uri);
+  do_check_guid_for_uri(pages[1]);
+  do_check_true(icon1.uri.equals(PlacesUtils.favicons.getFaviconForPage(pages[1])));
+
+  // Set third page icon as the same as first page one.
+  try {
+    PlacesUtils.favicons.setFaviconData(icon0.uri, icon0.data, icon0.data.length,
+                                        icon0.mime, Number.MAX_VALUE);
+  } catch (ex) {
+    do_throw("Failure setting third page icon: " + ex);
+  }
+  PlacesUtils.favicons.setFaviconUrlForPage(pages[2], icon0.uri);
+  do_check_guid_for_uri(pages[2]);
+  let page3favicon = PlacesUtils.favicons.getFaviconForPage(pages[2]);
+  do_check_true(icon0.uri.equals(page3favicon));
+
+  // Check first page icon.
+  let out1MimeType = {};
+  let out1Data = PlacesUtils.favicons.getFaviconData(icon0.uri, out1MimeType);
+  do_check_eq(icon0.mime, out1MimeType.value);
+  do_check_true(compareArrays(icon0.data, out1Data));
+
+  // Check second page icon.
+  let out2MimeType = {};
+  let out2Data = PlacesUtils.favicons.getFaviconData(icon1.uri, out2MimeType);
+  do_check_eq(icon1.mime, out2MimeType.value);
+  do_check_true(compareArrays(icon1.data, out2Data));
+
+  // Check third page icon.
+  let out3MimeType = {};
+  let out3Data = PlacesUtils.favicons.getFaviconData(page3favicon, out3MimeType);
+  do_check_eq(icon0.mime, out3MimeType.value);
+  do_check_true(compareArrays(icon0.data, out3Data));
+  run_next_test();
+});
+
+add_test(function test_set_and_get_favicon_getFaviconDataForPage() {
+  let [icon0] = icons;
+  PlacesUtils.favicons.getFaviconDataForPage(pages[0], {
+      onFaviconDataAvailable: function(aURI, aDataLen, aData, aMimeType) {
+        do_check_true(aURI.equals(icon0.uri));
+        do_check_eq(icon0.mime, icon0.mime);
+        do_check_true(compareArrays(icon0.data, aData));
+        do_check_eq(aDataLen, aData.length);
+        run_next_test();
+      },
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIFaviconDataCallback])
+    });
+});
+
+add_test(function test_favicon_links() {
+  let pageURI = NetUtil.newURI("http://foo.bar/");
+  let faviconURI = NetUtil.newURI("file:///./favicon-normal32.png");
+  do_check_eq(PlacesUtils.favicons.getFaviconImageForPage(pageURI).spec,
+              PlacesUtils.favicons.getFaviconLinkForIcon(faviconURI).spec);
+  run_next_test();
+});
+
+add_test(function test_failed_favicon_cache() {
+  // 32x32 png, 344 bytes.
+  let iconName = "favicon-normal32.png";
+  let faviconURI = NetUtil.newURI("file:///./" + iconName);
+
+  PlacesUtils.favicons.addFailedFavicon(faviconURI);
+  do_check_true(PlacesUtils.favicons.isFailedFavicon(faviconURI));
+  PlacesUtils.favicons.removeFailedFavicon(faviconURI);
+  do_check_false(PlacesUtils.favicons.isFailedFavicon(faviconURI));
+  run_next_test();
+});
+
+add_test(function test_getFaviconData_on_the_default_favicon() {
+  let icon = PlacesUtils.favicons.defaultFavicon;
+  let outMimeType = {};
+  let outData = PlacesUtils.favicons.getFaviconData(icon, outMimeType);
+  do_check_eq(outMimeType.value, "image/png");
+
+  // Read in the icon and compare it to what the API returned above.
+  let istream = NetUtil.newChannel(PlacesUtils.favicons.defaultFavicon).open();
+  let expectedData = readInputStreamData(istream);
+  do_check_true(compareArrays(outData, expectedData));
+  run_next_test();
+});

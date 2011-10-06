@@ -119,7 +119,7 @@ static int ComponentValue(const PRUnichar* aColorSpec, int aLen, int color, int 
   return component;
 }
 
-NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
+NS_GFX_(bool) NS_HexToRGB(const nsString& aColorSpec,
                                        nscolor* aResult)
 {
   const PRUnichar* buffer = aColorSpec.get();
@@ -165,7 +165,7 @@ NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
 
 // This implements part of the algorithm for legacy behavior described in
 // http://www.whatwg.org/specs/web-apps/current-work/complete/common-microsyntaxes.html#rules-for-parsing-a-legacy-color-value
-NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
+NS_GFX_(bool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
 {
   if (aColorSpec.EqualsLiteral("transparent")) {
     return PR_FALSE;
@@ -197,7 +197,7 @@ NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
   // that would leave a nonzero value, but not past 2 characters per
   // component.
   while (newdpc > 2) {
-    PRBool haveNonzero = PR_FALSE;
+    bool haveNonzero = false;
     for (int c = 0; c < 3; ++c) {
       NS_ABORT_IF_FALSE(c * dpc < nameLen,
                         "should not pass end of string while newdpc > 2");
@@ -229,7 +229,7 @@ NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
   return PR_TRUE;
 }
 
-NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
+NS_GFX_(bool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
 {
   if (!gColorTable) return PR_FALSE;
 

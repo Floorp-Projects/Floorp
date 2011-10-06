@@ -41,6 +41,7 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
+#include "jsinterp.h"
 #include "Bailouts.h"
 #include "Snapshots.h"
 #include "Ion.h"

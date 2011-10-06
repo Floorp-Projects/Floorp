@@ -115,8 +115,8 @@ public:
 
 protected:
   nsresult GetFilesInternal(const char* aProperty, nsISimpleEnumerator** aResult);
-  static nsresult GetUserDataDirectory(nsILocalFile* *aFile, PRBool aLocal);
-  static nsresult GetUserDataDirectoryHome(nsILocalFile* *aFile, PRBool aLocal);
+  static nsresult GetUserDataDirectory(nsILocalFile* *aFile, bool aLocal);
+  static nsresult GetUserDataDirectoryHome(nsILocalFile* *aFile, bool aLocal);
   static nsresult GetSysUserExtensionsDirectory(nsILocalFile* *aFile);
 #if defined(XP_UNIX) || defined(XP_MACOSX)
   static nsresult GetSystemExtensionsDirectory(nsILocalFile** aFile);
@@ -147,7 +147,7 @@ protected:
   nsCOMPtr<nsIFile>      mXULAppDir;
   nsCOMPtr<nsIFile>      mProfileDir;
   nsCOMPtr<nsIFile>      mProfileLocalDir;
-  PRPackedBool           mProfileNotified;
+  bool                   mProfileNotified;
   nsCOMArray<nsIFile>    mAppBundleDirectories;
   nsCOMArray<nsIFile>    mExtensionDirectories;
   nsCOMArray<nsIFile>    mThemeDirectories;

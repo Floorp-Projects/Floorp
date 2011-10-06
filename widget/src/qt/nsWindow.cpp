@@ -154,7 +154,7 @@ extern "C" {
 using namespace mozilla;
 
 // imported in nsWidgetFactory.cpp
-PRBool gDisableNativeTheme = PR_FALSE;
+bool gDisableNativeTheme = false;
 
 // Cached offscreen surface
 static nsRefPtr<gfxASurface> gBufferSurface;
@@ -177,15 +177,15 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 // Qt
 static const int WHEEL_DELTA = 120;
-static PRBool gGlobalsInitialized = PR_FALSE;
+static bool gGlobalsInitialized = false;
 
 static nsIRollupListener*          gRollupListener;
 static nsIMenuRollup*              gMenuRollup;
 static nsWeakPtr                   gRollupWindow;
-static PRBool                      gConsumeRollupEvent;
+static bool                        gConsumeRollupEvent;
 
-static PRBool     check_for_rollup(double aMouseX, double aMouseY,
-                                   PRBool aIsWheel);
+static bool       check_for_rollup(double aMouseX, double aMouseY,
+                                   bool aIsWheel);
 static bool
 is_mouse_in_window (MozQWidget* aWindow, double aMouseX, double aMouseY);
 
@@ -196,14 +196,14 @@ static QOrientationSensor *gOrientation = nsnull;
 static MozQOrientationSensorFilter gOrientationFilter;
 #endif
 
-static PRBool
+static bool
 isContextMenuKeyEvent(const QKeyEvent *qe)
 {
     PRUint32 kc = QtKeyCodeToDOMKeyCode(qe->key());
     if (qe->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
         return PR_FALSE;
 
-    PRBool isShift = qe->modifiers() & Qt::ShiftModifier;
+    bool isShift = qe->modifiers() & Qt::ShiftModifier;
     return (kc == NS_VK_F10 && isShift) ||
         (kc == NS_VK_CONTEXT_MENU && !isShift);
 }
@@ -497,7 +497,7 @@ nsWindow::ReparentNativeWidget(nsIWidget *aNewParent)
 }
 
 NS_IMETHODIMP
-nsWindow::SetModal(PRBool aModal)
+nsWindow::SetModal(bool aModal)
 {
     LOG(("nsWindow::SetModal [%p] %d, widget[%p]\n", (void *)this, aModal, mWidget));
     if (mWidget)
@@ -507,14 +507,14 @@ nsWindow::SetModal(PRBool aModal)
 }
 
 NS_IMETHODIMP
-nsWindow::IsVisible(PRBool & aState)
+nsWindow::IsVisible(bool & aState)
 {
     aState = mIsShown;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
+nsWindow::ConstrainPosition(bool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 {
     if (mWidget) {
         PRInt32 screenWidth  = QApplication::desktop()->width();
@@ -584,7 +584,7 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP
 nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
                       nsIWidget                  *aWidget,
-                      PRBool                      aActivate)
+                      bool                        aActivate)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -658,7 +658,7 @@ static void find_first_visible_parent(QGraphicsItem* aItem, QGraphicsItem*& aVis
 }
 
 NS_IMETHODIMP
-nsWindow::SetFocus(PRBool aRaise)
+nsWindow::SetFocus(bool aRaise)
 {
     // Make sure that our owning widget has focus.  If it doesn't try to
     // grab it.  Note that we don't set our focus flag in this case.
@@ -747,7 +747,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
 
 NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
-                     PRBool        aIsSynchronous)
+                     bool          aIsSynchronous)
 {
     LOGDRAW(("Invalidate (rect) [%p,%p]: %d %d %d %d (sync: %d)\n", (void *)this,
              (void*)mWidget,aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous));
@@ -907,14 +907,14 @@ nsWindow::WidgetToScreenOffset()
 }
 
 NS_IMETHODIMP
-nsWindow::EnableDragDrop(PRBool aEnable)
+nsWindow::EnableDragDrop(bool aEnable)
 {
     mWidget->setAcceptDrops(aEnable);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::CaptureMouse(PRBool aCapture)
+nsWindow::CaptureMouse(bool aCapture)
 {
     LOG(("CaptureMouse %p\n", (void *)this));
 
@@ -935,8 +935,8 @@ nsWindow::CaptureMouse(PRBool aCapture)
 NS_IMETHODIMP
 nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
                               nsIMenuRollup     *aMenuRollup,
-                              PRBool             aDoCapture,
-                              PRBool             aConsumeRollupEvent)
+                              bool               aDoCapture,
+                              bool               aConsumeRollupEvent)
 {
     if (!mWidget)
         return NS_OK;
@@ -960,11 +960,11 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
     return NS_OK;
 }
 
-PRBool
+bool
 check_for_rollup(double aMouseX, double aMouseY,
-                 PRBool aIsWheel)
+                 bool aIsWheel)
 {
-    PRBool retVal = PR_FALSE;
+    bool retVal = false;
     nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
 
     if (rollupWidget && gRollupListener) {
@@ -972,7 +972,7 @@ check_for_rollup(double aMouseX, double aMouseY,
             (MozQWidget *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
 
         if (!is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
-            PRBool rollup = PR_TRUE;
+            bool rollup = true;
             if (aIsWheel) {
                 gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
                 retVal = PR_TRUE;
@@ -1363,7 +1363,7 @@ nsWindow::OnButtonPressEvent(QGraphicsSceneMouseEvent *aEvent)
     if (mWidget)
         pos = mWidget->mapToParent(pos);
 
-    PRBool rolledUp = check_for_rollup( pos.x(), pos.y(), PR_FALSE);
+    bool rolledUp = check_for_rollup( pos.x(), pos.y(), false);
     if (gConsumeRollupEvent && rolledUp)
         return nsEventStatus_eIgnore;
 
@@ -1503,7 +1503,7 @@ nsWindow::OnFocusOutEvent(QEvent *aEvent)
     return nsEventStatus_eIgnore;
 }
 
-inline PRBool
+inline bool
 is_latin_shortcut_key(quint32 aKeyval)
 {
     return ((Qt::Key_0 <= aKeyval && aKeyval <= Qt::Key_9) ||
@@ -1540,7 +1540,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
     // The user has done something.
     UserActivity();
 
-    PRBool setNoDefault = PR_FALSE;
+    bool setNoDefault = false;
 
     if (aEvent->key() == Qt::Key_AltGr) {
         sAltGrModifier = true;
@@ -1606,9 +1606,9 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
         }
     }
     // indicate whether is down or not
-    PRBool shift_state = ((shift_mask & aEvent->nativeModifiers()) != 0) ^
+    bool shift_state = ((shift_mask & aEvent->nativeModifiers()) != 0) ^
                           (bool)(shift_lock_mask & aEvent->nativeModifiers());
-    PRBool capslock_state = (bool)(caps_lock_mask & aEvent->nativeModifiers());
+    bool capslock_state = (bool)(caps_lock_mask & aEvent->nativeModifiers());
 
     // try to find a keysym that we can translate to a DOMKeyCode
     // this is needed because some of Qt's keycodes cannot be translated
@@ -2009,7 +2009,7 @@ nsWindow::hideEvent(QHideEvent *)
 
 //Gestures are only supported in 4.6.0 >
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
-nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, PRBool &handled)
+nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, bool &handled)
 {
     handled = PR_FALSE;
     const QList<QTouchEvent::TouchPoint> &touchPoints = event->touchPoints();
@@ -2038,7 +2038,7 @@ nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, PRBool &handled)
 }
 
 nsEventStatus
-nsWindow::OnGestureEvent(QGestureEvent* event, PRBool &handled) {
+nsWindow::OnGestureEvent(QGestureEvent* event, bool &handled) {
 
     handled = PR_FALSE;
     if (mGesturesCancelled) {
@@ -2308,7 +2308,7 @@ nsWindow::CreateChild(const nsIntRect&  aRect,
                       nsIAppShell*      aAppShell,
                       nsIToolkit*       aToolkit,
                       nsWidgetInitData* aInitData,
-                      PRBool            /*aForceUseIWidgetParent*/)
+                      bool              /*aForceUseIWidgetParent*/)
 {
     //We need to force parent widget, otherwise GetTopLevelWindow doesn't work
     return nsBaseWidget::CreateChild(aRect,
@@ -2378,7 +2378,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
 }
 
 void
-nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
+nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, bool    aRepaint)
 {
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
          aWidth, aHeight));
@@ -2401,7 +2401,7 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
 void
 nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
                        PRInt32 aWidth, PRInt32 aHeight,
-                       PRBool  aRepaint)
+                       bool    aRepaint)
 {
     LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
          aX, aY, aWidth, aHeight));
@@ -2423,7 +2423,7 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
 }
 
 void
-nsWindow::NativeShow(PRBool aAction)
+nsWindow::NativeShow(bool aAction)
 {
     if (aAction) {
         QWidget *widget = GetViewWidget();
@@ -2443,13 +2443,13 @@ nsWindow::NativeShow(PRBool aAction)
 }
 
 NS_IMETHODIMP
-nsWindow::SetHasTransparentBackground(PRBool aTransparent)
+nsWindow::SetHasTransparentBackground(bool aTransparent)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsWindow::GetHasTransparentBackground(PRBool& aTransparent)
+nsWindow::GetHasTransparentBackground(bool& aTransparent)
 {
     aTransparent = mIsTransparent;
     return NS_OK;
@@ -2492,7 +2492,7 @@ void nsWindow::QWidgetDestroyed()
 }
 
 NS_IMETHODIMP
-nsWindow::MakeFullScreen(PRBool aFullScreen)
+nsWindow::MakeFullScreen(bool aFullScreen)
 {
     QWidget *widget = GetViewWidget();
     NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
@@ -2528,7 +2528,7 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 }
 
 NS_IMETHODIMP
-nsWindow::HideWindowChrome(PRBool aShouldHide)
+nsWindow::HideWindowChrome(bool aShouldHide)
 {
     if (!mWidget) {
         // Nothing to hide
@@ -2538,7 +2538,7 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // Sawfish, metacity, and presumably other window managers get
     // confused if we change the window decorations while the window
     // is visible.
-    PRBool wasVisible = PR_FALSE;
+    bool wasVisible = false;
     if (mWidget->isVisible()) {
         NativeShow(PR_FALSE);
         wasVisible = PR_TRUE;
@@ -2586,7 +2586,7 @@ initialize_prefs(void)
     return NS_OK;
 }
 
-inline PRBool
+inline bool
 is_context_menu_key(const nsKeyEvent& aKeyEvent)
 {
     return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.isShift &&
@@ -2823,7 +2823,7 @@ nsWindow::contextMenuEvent(QGraphicsSceneContextMenuEvent *)
 }
 
 nsEventStatus
-nsWindow::imComposeEvent(QInputMethodEvent *event, PRBool &handled)
+nsWindow::imComposeEvent(QInputMethodEvent *event, bool &handled)
 {
     // XXX Needs to check whether this widget has been destroyed or not after
     //     each DispatchEvent().
@@ -2935,7 +2935,7 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent,
 }
 
 NS_IMETHODIMP
-nsWindow::Show(PRBool aState)
+nsWindow::Show(bool aState)
 {
     LOG(("nsWindow::Show [%p] state %d\n", (void *)this, aState));
 
@@ -2986,7 +2986,7 @@ nsWindow::Show(PRBool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
     mBounds.width = aWidth;
     mBounds.height = aHeight;
@@ -3041,7 +3041,7 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
 NS_IMETHODIMP
 nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
-                 PRBool aRepaint)
+                 bool aRepaint)
 {
     mBounds.x = aX;
     mBounds.y = aY;
@@ -3103,7 +3103,7 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 }
 
 NS_IMETHODIMP
-nsWindow::Enable(PRBool aState)
+nsWindow::Enable(bool aState)
 {
     mEnabled = aState;
 
@@ -3111,7 +3111,7 @@ nsWindow::Enable(PRBool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::IsEnabled(PRBool *aState)
+nsWindow::IsEnabled(bool *aState)
 {
     *aState = mEnabled;
 
@@ -3139,7 +3139,7 @@ nsWindow::OnDestroy(void)
     DispatchEvent(&event, status);
 }
 
-PRBool
+bool
 nsWindow::AreBoundsSane(void)
 {
     if (mBounds.width > 0 && mBounds.height > 0)
@@ -3275,7 +3275,7 @@ nsWindow::GetInputMode(IMEContext& aContext)
 }
 
 void
-nsWindow::SetSoftwareKeyboardState(PRBool aOpen)
+nsWindow::SetSoftwareKeyboardState(bool aOpen)
 {
     if (aOpen) {
         NS_ENSURE_TRUE(mIMEContext.mStatus != nsIWidget::IME_STATUS_DISABLED,);
@@ -3283,7 +3283,7 @@ nsWindow::SetSoftwareKeyboardState(PRBool aOpen)
         // Ensure that opening the virtual keyboard is allowed for this specific
         // IMEContext depending on the content.ime.strict.policy pref
         if (mIMEContext.mStatus != nsIWidget::IME_STATUS_PLUGIN) {
-            if (Preferences::GetBool("content.ime.strict_policy", PR_FALSE) &&
+            if (Preferences::GetBool("content.ime.strict_policy", false) &&
                 !mIMEContext.FocusMovedByUser() &&
                 mIMEContext.FocusMovedInContentProcess()) {
                 return;

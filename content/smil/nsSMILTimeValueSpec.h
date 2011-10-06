@@ -66,23 +66,23 @@ class nsSMILTimeValueSpec
 public:
   typedef mozilla::dom::Element Element;
 
-  nsSMILTimeValueSpec(nsSMILTimedElement& aOwner, PRBool aIsBegin);
+  nsSMILTimeValueSpec(nsSMILTimedElement& aOwner, bool aIsBegin);
   ~nsSMILTimeValueSpec();
 
   nsresult SetSpec(const nsAString& aStringSpec, Element* aContextNode);
   void     ResolveReferences(nsIContent* aContextNode);
-  PRBool   IsEventBased() const;
+  bool     IsEventBased() const;
 
   void     HandleNewInterval(nsSMILInterval& aInterval,
                              const nsSMILTimeContainer* aSrcContainer);
   void     HandleTargetElementChange(Element* aNewTarget);
 
   // For created nsSMILInstanceTime objects
-  PRBool   DependsOnBegin() const;
+  bool     DependsOnBegin() const;
   void     HandleChangedInstanceTime(const nsSMILInstanceTime& aBaseTime,
                                      const nsSMILTimeContainer* aSrcContainer,
                                      nsSMILInstanceTime& aInstanceTimeToUpdate,
-                                     PRBool aObjectChanged);
+                                     bool aObjectChanged);
   void     HandleDeletedInstanceTime(nsSMILInstanceTime& aInstanceTime);
 
   // Cycle-collection support
@@ -97,14 +97,14 @@ protected:
   void UnregisterEventListener(Element* aElement);
   nsEventListenerManager* GetEventListenerManager(Element* aElement);
   void HandleEvent(nsIDOMEvent* aEvent);
-  PRBool CheckEventDetail(nsIDOMEvent* aEvent);
-  PRBool CheckRepeatEventDetail(nsIDOMEvent* aEvent);
-  PRBool CheckAccessKeyEventDetail(nsIDOMEvent* aEvent);
+  bool CheckEventDetail(nsIDOMEvent* aEvent);
+  bool CheckRepeatEventDetail(nsIDOMEvent* aEvent);
+  bool CheckAccessKeyEventDetail(nsIDOMEvent* aEvent);
   nsSMILTimeValue ConvertBetweenTimeContainers(const nsSMILTimeValue& aSrcTime,
                                       const nsSMILTimeContainer* aSrcContainer);
 
   nsSMILTimedElement*           mOwner;
-  PRPackedBool                  mIsBegin; // Indicates if *we* are a begin spec,
+  bool                          mIsBegin; // Indicates if *we* are a begin spec,
                                           // not to be confused with
                                           // mParams.mSyncBegin which indicates
                                           // if we're synced with the begin of
@@ -127,7 +127,7 @@ protected:
       nsReferencedElement::ElementChanged(aFrom, aTo);
       mSpec->UpdateReferencedElement(aFrom, aTo);
     }
-    virtual PRBool IsPersistent() { return PR_TRUE; }
+    virtual bool IsPersistent() { return true; }
   private:
     nsSMILTimeValueSpec* mSpec;
   };

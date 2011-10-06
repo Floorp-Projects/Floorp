@@ -62,7 +62,7 @@ struct DataStruct
   void SetData( nsISupports* inData, PRUint32 inDataLen );
   void GetData( nsISupports** outData, PRUint32 *outDataLen );
   nsIFile * GetFileSpec(const char * aFileName);
-  PRBool IsDataAvailable() const { return (mData && mDataLen > 0) || (!mData && mCacheFileName); }
+  bool IsDataAvailable() const { return (mData && mDataLen > 0) || (!mData && mCacheFileName); }
   
 protected:
 

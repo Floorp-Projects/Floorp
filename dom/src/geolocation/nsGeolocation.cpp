@@ -137,7 +137,7 @@ public:
   }
 
 private:
-  PRBool mAllow;
+  bool mAllow;
   nsRefPtr<nsGeolocationRequest> mRequest;
 };
 
@@ -240,7 +240,7 @@ nsGeolocationRequest::nsGeolocationRequest(nsGeolocation* aLocator,
                                            nsIDOMGeoPositionCallback* aCallback,
                                            nsIDOMGeoPositionErrorCallback* aErrorCallback,
                                            nsIDOMGeoPositionOptions* aOptions,
-                                           PRBool aWatchPositionRequest)
+                                           bool aWatchPositionRequest)
   : mAllowed(PR_FALSE),
     mCleared(PR_FALSE),
     mIsWatchPositionRequest(aWatchPositionRequest),
@@ -461,13 +461,16 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     SetTimeoutTimer();
 }
 
-void
+bool
 nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition)
 {
+  if (!mAllowed)
+    return false;
   nsCOMPtr<nsIRunnable> ev  =
       new RequestSendLocationEvent(aPosition, this,
                                    mIsWatchPositionRequest ? nsnull : mLocator);
   NS_DispatchToMainThread(ev);
+  return true;
 }
 
 void
@@ -503,13 +506,13 @@ NS_IMPL_THREADSAFE_ADDREF(nsGeolocationService)
 NS_IMPL_THREADSAFE_RELEASE(nsGeolocationService)
 
 
-static PRBool sGeoEnabled = PR_TRUE;
-static PRBool sGeoIgnoreLocationFilter = PR_FALSE;
+static bool sGeoEnabled = true;
+static bool sGeoIgnoreLocationFilter = false;
 
 static int
 GeoEnabledChangedCallback(const char *aPrefName, void *aClosure)
 {
-  sGeoEnabled = Preferences::GetBool("geo.enabled", PR_TRUE);
+  sGeoEnabled = Preferences::GetBool("geo.enabled", true);
   return 0;
 }
 
@@ -517,7 +520,7 @@ static int
 GeoIgnoreLocationFilterChangedCallback(const char *aPrefName, void *aClosure)
 {
   sGeoIgnoreLocationFilter =
-    Preferences::GetBool("geo.ignore.location_filter", PR_TRUE);
+    Preferences::GetBool("geo.ignore.location_filter", true);
   return 0;
 }
 
@@ -559,7 +562,7 @@ nsresult nsGeolocationService::Init()
   catMan->EnumerateCategory("geolocation-provider", getter_AddRefs(geoproviders));
   if (geoproviders) {
 
-    PRBool hasMore;
+    bool hasMore;
     while (NS_SUCCEEDED(geoproviders->HasMoreElements(&hasMore)) && hasMore) {
       nsCOMPtr<nsISupports> elem;
       geoproviders->GetNext(getter_AddRefs(elem));
@@ -871,7 +874,7 @@ nsGeolocation::Shutdown()
   mURI = nsnull;
 }
 
-PRBool
+bool
 nsGeolocation::HasActiveCallbacks()
 {
   for (PRUint32 i = 0; i < mWatchingCallbacks.Length(); i++)
@@ -901,10 +904,10 @@ nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere)
   if (!WindowOwnerStillExists())
     return Shutdown();
 
-  for (PRUint32 i = 0; i< mPendingCallbacks.Length(); i++) {
-    mPendingCallbacks[i]->Update(aSomewhere);
+  for (PRUint32 i = mPendingCallbacks.Length(); i> 0; i--) {
+    if (mPendingCallbacks[i-1]->Update(aSomewhere))
+      mPendingCallbacks.RemoveElementAt(i-1);
   }
-  mPendingCallbacks.Clear();
 
   // notify everyone that is watching
   for (PRUint32 i = 0; i< mWatchingCallbacks.Length(); i++) {
@@ -1015,7 +1018,7 @@ nsGeolocation::ClearWatch(PRInt32 aWatchId)
   return NS_OK;
 }
 
-PRBool
+bool
 nsGeolocation::WindowOwnerStillExists()
 {
   // an owner was never set when nsGeolocation
@@ -1028,7 +1031,7 @@ nsGeolocation::WindowOwnerStillExists()
 
   if (window)
   {
-    PRBool closed = PR_FALSE;
+    bool closed = false;
     window->GetClosed(&closed);
     if (closed)
       return PR_FALSE;
@@ -1044,10 +1047,10 @@ nsGeolocation::WindowOwnerStillExists()
 bool
 nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
 {
-  if (Preferences::GetBool("geo.prompt.testing", PR_FALSE)) {
+  if (Preferences::GetBool("geo.prompt.testing", false)) {
     nsCOMPtr<nsIRunnable> ev =
         new RequestAllowEvent(Preferences::GetBool("geo.prompt.testing.allow",
-                                                   PR_FALSE), request);
+                                                   false), request);
     NS_DispatchToMainThread(ev);
     return true;
   }

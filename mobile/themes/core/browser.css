@@ -1533,6 +1533,10 @@ setting {
   padding-bottom: 2em;
 }
 
+#syncsetup-waiting {
+  padding: 10em 0;
+}
+
 /* content scrollbars */
 .scroller {
   opacity: 0;
@@ -1615,6 +1619,20 @@ setting {
   #search-engines-popup {
     max-width: -moz-calc(@tablet_panel_minwidth@);
   }
+}
+
+/* Capture picker ------------------------------------------------------------- */
+
+#capturepicker-video {
+  border: @border_width_tiny@ solid white;
+}
+
+#capturepicker-container {
+  margin: @margin_normal@;
+}
+
+#capturepicker-container.vertical {
+  height: 330px;
 }
 
 %include tablet.css

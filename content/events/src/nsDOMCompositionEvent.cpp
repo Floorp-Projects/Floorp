@@ -98,8 +98,8 @@ nsDOMCompositionEvent::GetLocale(nsAString& aLocale)
 
 NS_IMETHODIMP
 nsDOMCompositionEvent::InitCompositionEvent(const nsAString& aType,
-                                            PRBool aCanBubble,
-                                            PRBool aCancelable,
+                                            bool aCanBubble,
+                                            bool aCancelable,
                                             nsIDOMWindow* aView,
                                             const nsAString& aData,
                                             const nsAString& aLocale)

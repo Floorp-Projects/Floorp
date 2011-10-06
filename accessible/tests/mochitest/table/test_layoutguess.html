@@ -36,9 +36,6 @@
       // table with empty caption
       testAttrs("table4.2", attr, true);
 
-      // table with two captions
-      testAbsentAttrs("table4.3", attr);
-
       // table with th element
       testAbsentAttrs("table5", attr);
 
@@ -48,8 +45,9 @@
       // table with tfoot element
       testAbsentAttrs("table7", attr);
 
-      // table with colgroup element
+      // table with colgroup or col elements
       testAbsentAttrs("table8", attr);
+      testAbsentAttrs("table8.2", attr);
 
       // layout table with nested table
       testAttrs("table9", attr, true);
@@ -87,6 +85,14 @@
       // tree grid, no layout table
       testAbsentAttrs("table20", attr);
 
+      // layout table containing nested data table (having data structures)
+      testAttrs("table21", attr, true);
+      testAttrs("table21.2", attr, true);
+      testAttrs("table21.3", attr, true);
+      testAttrs("table21.4", attr, true);
+      testAttrs("table21.5", attr, true);
+      testAttrs("table21.6", attr, true);
+
       SimpleTest.finish();
     }
 
@@ -100,6 +106,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=495388"
      title="Don't treat tables that have a landmark role as layout table">
     Mozilla Bug 495388
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=690222"
+     title="Data table elements used to determine layout-guess attribute shouldn't be picked from nested tables">
+    Mozilla Bug 690222
   </a>
 
   <p id="display"></p>
@@ -178,15 +189,6 @@
     </tr>
   </table>
 
-  <!-- table with two captions -->
-  <table id="table4.3">
-    <caption> </caption>
-    <tr>
-      <td>Cell1</td><td>cell2</td>
-    </tr>
-    <caption>a caption</caption>
-  </table>
-
   <!-- table with th element -->
   <table id="table5">
     <tr>
@@ -212,10 +214,17 @@
     </tfoot>
   </table>
 
-  <!-- table with colgroup element -->
+  <!-- table with colgroup and col elements -->
   <table id="table8">
+    <colgroup width="20"></colgroup>
     <tr>
-      <colgroup><td>Cell1</td><td>cell2</td></colgroup>
+      <td>Cell1</td><td>cell2</td>
+    </tr>
+  </table>
+  <table id="table8.2">
+    <col width="20">
+    <tr>
+      <td>Cell1</td><td>cell2</td>
     </tr>
   </table>
 
@@ -338,6 +347,69 @@
   <!-- tree grid, no layout table -->
   <table id="table20" role="treegrid">
     <tr role="treeitem"><td>Cell1</td><td>Cell2</td></tr>
+  </table>
+
+  <!-- layout table with nested data table containing data table elements -->
+  <table id="table21">
+    <tr>
+      <td>
+        <table>
+          <caption>table</caption>
+          <tr><td>Cell</td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <table id="table21.2">
+    <tr>
+      <td>
+        <table>
+          <colgroup width="20"></colgroup>
+          <tr><th>Cell</th></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <table id="table21.3">
+    <tr>
+      <td>
+        <table>
+          <col width="20"></col>
+          <tr><th>Cell</th></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <table id="table21.4">
+    <tr>
+      <td>
+        <table>
+          <tr><th>Cell</th></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <table id="table21.5">
+    <tr>
+      <td>
+        <table>
+          <thead>
+            <tr><td>Cell</td></tr>
+          </thead>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <table id="table21.6">
+    <tr>
+      <td>
+        <table>
+          <tfoot>
+            <tr><td>Cell</td></tr>
+          </tfoot>
+        </table>
+      </td>
+    </tr>
   </table>
 </body>
 </html>

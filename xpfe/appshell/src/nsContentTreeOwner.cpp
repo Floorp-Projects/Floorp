@@ -104,7 +104,7 @@ private:
 //***    nsContentTreeOwner: Object Management
 //*****************************************************************************
 
-nsContentTreeOwner::nsContentTreeOwner(PRBool fPrimary) : mXULWindow(nsnull), 
+nsContentTreeOwner::nsContentTreeOwner(bool fPrimary) : mXULWindow(nsnull), 
    mPrimary(fPrimary), mContentTitleSetting(PR_FALSE)
 {
   // note if this fails, QI on nsIEmbeddingSiteWindow(2) will simply fail
@@ -202,7 +202,7 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
 
    *aFoundItem = nsnull;
 
-   PRBool fIs_Content = PR_FALSE;
+   bool fIs_Content = false;
 
    /* Special Cases */
    if (!aName || !*aName)
@@ -255,7 +255,7 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
    NS_ENSURE_SUCCESS(windowMediator->GetXULWindowEnumerator(nsnull, 
       getter_AddRefs(windowEnumerator)), NS_ERROR_FAILURE);
    
-   PRBool more;
+   bool more;
    
    windowEnumerator->HasMoreElements(&more);
    while(more) {
@@ -313,7 +313,7 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
 
 NS_IMETHODIMP
 nsContentTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-                                      PRBool aPrimary, PRBool aTargetable,
+                                      bool aPrimary, bool aTargetable,
                                       const nsAString& aID)
 {
   NS_ENSURE_STATE(mXULWindow);
@@ -342,9 +342,9 @@ NS_IMETHODIMP nsContentTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
 }
 
 NS_IMETHODIMP
-nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
-                                   PRBool aPersistSize,
-                                   PRBool aPersistSizeMode)
+nsContentTreeOwner::SetPersistence(bool aPersistPosition,
+                                   bool aPersistSize,
+                                   bool aPersistSizeMode)
 {
   NS_ENSURE_STATE(mXULWindow);
   nsCOMPtr<nsIDOMElement> docShellElement;
@@ -355,7 +355,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
   nsAutoString persistString;
   docShellElement->GetAttribute(NS_LITERAL_STRING("persist"), persistString);
 
-  PRBool saveString = PR_FALSE;
+  bool saveString = false;
   PRInt32 index;
 
   // Set X
@@ -411,9 +411,9 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
 }
 
 NS_IMETHODIMP
-nsContentTreeOwner::GetPersistence(PRBool* aPersistPosition,
-                                   PRBool* aPersistSize,
-                                   PRBool* aPersistSizeMode)
+nsContentTreeOwner::GetPersistence(bool* aPersistPosition,
+                                   bool* aPersistSize,
+                                   bool* aPersistSizeMode)
 {
   NS_ENSURE_STATE(mXULWindow);
   nsCOMPtr<nsIDOMElement> docShellElement;
@@ -451,7 +451,7 @@ nsContentTreeOwner::GetTargetableShellCount(PRUint32* aResult)
 NS_IMETHODIMP nsContentTreeOwner::OnBeforeLinkTraversal(const nsAString &originalTarget,
                                                         nsIURI *linkURI,
                                                         nsIDOMNode *linkNode,
-                                                        PRBool isAppTab,
+                                                        bool isAppTab,
                                                         nsAString &_retval)
 {
   NS_ENSURE_STATE(mXULWindow);
@@ -564,7 +564,7 @@ NS_IMETHODIMP nsContentTreeOwner::ShowAsModal()
    return mXULWindow->ShowModal();
 }
 
-NS_IMETHODIMP nsContentTreeOwner::IsWindowModal(PRBool *_retval)
+NS_IMETHODIMP nsContentTreeOwner::IsWindowModal(bool *_retval)
 {
   NS_ENSURE_STATE(mXULWindow);
   *_retval = mXULWindow->mContinueModalLoop;
@@ -614,7 +614,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetPosition(PRInt32* aX, PRInt32* aY)
    return mXULWindow->GetPosition(aX, aY);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
+NS_IMETHODIMP nsContentTreeOwner::SetSize(PRInt32 aCX, PRInt32 aCY, bool aRepaint)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetSize(aCX, aCY, aRepaint);
@@ -627,7 +627,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetSize(PRInt32* aCX, PRInt32* aCY)
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
-   PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
+   PRInt32 aCX, PRInt32 aCY, bool aRepaint)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetPositionAndSize(aX, aY, aCX, aCY, aRepaint);
@@ -640,7 +640,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetPositionAndSize(PRInt32* aX, PRInt32* aY,
    return mXULWindow->GetPositionAndSize(aX, aY, aCX, aCY); 
 }
 
-NS_IMETHODIMP nsContentTreeOwner::Repaint(PRBool aForce)
+NS_IMETHODIMP nsContentTreeOwner::Repaint(bool aForce)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->Repaint(aForce);
@@ -670,37 +670,37 @@ NS_IMETHODIMP nsContentTreeOwner::SetParentNativeWindow(nativeWindow aParentNati
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetVisibility(PRBool* aVisibility)
+NS_IMETHODIMP nsContentTreeOwner::GetVisibility(bool* aVisibility)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetVisibility(aVisibility);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::SetVisibility(PRBool aVisibility)
+NS_IMETHODIMP nsContentTreeOwner::SetVisibility(bool aVisibility)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetVisibility(aVisibility);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetEnabled(PRBool *aEnabled)
+NS_IMETHODIMP nsContentTreeOwner::GetEnabled(bool *aEnabled)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetEnabled(aEnabled);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::SetEnabled(PRBool aEnable)
+NS_IMETHODIMP nsContentTreeOwner::SetEnabled(bool aEnable)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetEnabled(aEnable);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetBlurSuppression(PRBool *aBlurSuppression)
+NS_IMETHODIMP nsContentTreeOwner::GetBlurSuppression(bool *aBlurSuppression)
 {
   NS_ENSURE_STATE(mXULWindow);
   return mXULWindow->GetBlurSuppression(aBlurSuppression);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::SetBlurSuppression(PRBool aBlurSuppression)
+NS_IMETHODIMP nsContentTreeOwner::SetBlurSuppression(bool aBlurSuppression)
 {
   NS_ENSURE_STATE(mXULWindow);
   return mXULWindow->SetBlurSuppression(aBlurSuppression);
@@ -854,13 +854,13 @@ private:
 NS_IMETHODIMP
 nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
                                   PRUint32 aChromeFlags,
-                                  PRBool aCalledFromJS,
-                                  PRBool aPositionSpecified,
-                                  PRBool aSizeSpecified,
+                                  bool aCalledFromJS,
+                                  bool aPositionSpecified,
+                                  bool aSizeSpecified,
                                   nsIURI* aURI,
                                   const nsAString& aName,
                                   const nsACString& aFeatures,
-                                  PRBool* aWindowIsNew,
+                                  bool* aWindowIsNew,
                                   nsIDOMWindow** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aParent);
@@ -1086,7 +1086,7 @@ nsSiteWindow2::Blur(void)
 {
   nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
   nsCOMPtr<nsIXULWindow>        xulWindow;
-  PRBool                        more, foundUs;
+  bool                          more, foundUs;
   nsXULWindow                  *ourWindow = mAggregator->XULWindow();
 
   {
@@ -1139,13 +1139,13 @@ nsSiteWindow2::Blur(void)
 }
 
 NS_IMETHODIMP
-nsSiteWindow2::GetVisibility(PRBool *aVisibility)
+nsSiteWindow2::GetVisibility(bool *aVisibility)
 {
   return mAggregator->GetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP
-nsSiteWindow2::SetVisibility(PRBool aVisibility)
+nsSiteWindow2::SetVisibility(bool aVisibility)
 {
   return mAggregator->SetVisibility(aVisibility);
 }

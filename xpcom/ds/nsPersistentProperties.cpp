@@ -155,7 +155,7 @@ public:
   nsresult ParseBuffer(const PRUnichar* aBuffer, PRUint32 aBufferLength);
 
 private:
-  PRBool ParseValueCharacter(
+  bool ParseValueCharacter(
     PRUnichar c,                  // character that is just being parsed
     const PRUnichar* cur,         // pointer to character c in the buffer
     const PRUnichar* &tokenStart, // string copying is done in blocks as big as
@@ -194,14 +194,14 @@ private:
 
   PRUint32  mUnicodeValuesRead; // should be 4!
   PRUnichar mUnicodeValue;      // currently parsed unicode value
-  PRBool    mHaveMultiLine;     // is TRUE when last processed characters form
+  bool      mHaveMultiLine;     // is TRUE when last processed characters form
                                 // any of following sequences:
                                 //  - "\\\r"
                                 //  - "\\\n"
                                 //  - "\\\r\n"
                                 //  - any sequence above followed by any
                                 //    combination of ' ' and '\t'
-  PRBool    mMultiLineCanSkipN; // TRUE if "\\\r" was detected
+  bool      mMultiLineCanSkipN; // TRUE if "\\\r" was detected
   PRUint32  mMinLength;         // limit right trimming at the end to not trim
                                 // escaped whitespaces
   EParserState mState;
@@ -210,19 +210,19 @@ private:
   nsIPersistentProperties* mProps;
 };
 
-inline PRBool IsWhiteSpace(PRUnichar aChar)
+inline bool IsWhiteSpace(PRUnichar aChar)
 {
   return (aChar == ' ') || (aChar == '\t') ||
          (aChar == '\r') || (aChar == '\n');
 }
 
-inline PRBool IsEOL(PRUnichar aChar)
+inline bool IsEOL(PRUnichar aChar)
 {
   return (aChar == '\r') || (aChar == '\n');
 }
 
 
-PRBool nsPropertiesParser::ParseValueCharacter(
+bool nsPropertiesParser::ParseValueCharacter(
     PRUnichar c, const PRUnichar* cur, const PRUnichar* &tokenStart,
     nsAString& oldValue)
 {
@@ -682,7 +682,7 @@ nsPersistentProperties::Undefine(const char* prop)
 }
 
 NS_IMETHODIMP
-nsPersistentProperties::Has(const char* prop, PRBool *result)
+nsPersistentProperties::Has(const char* prop, bool *result)
 {
   PropertyTableEntry *entry =
     static_cast<PropertyTableEntry*>

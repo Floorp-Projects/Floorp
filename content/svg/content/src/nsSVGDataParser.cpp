@@ -152,7 +152,7 @@ nsresult nsSVGDataParser::MatchNonNegativeNumber(float* aX)
   return NS_ERROR_FAILURE;
 }
 
-PRBool nsSVGDataParser::IsTokenNonNegativeNumberStarter()
+bool nsSVGDataParser::IsTokenNonNegativeNumberStarter()
 {
   return (mTokenType == DIGIT || mTokenType == POINT);
 }
@@ -188,7 +188,7 @@ nsresult nsSVGDataParser::MatchNumber(float* aX)
   return NS_ERROR_FAILURE;
 }
 
-PRBool nsSVGDataParser::IsTokenNumberStarter()
+bool nsSVGDataParser::IsTokenNumberStarter()
 {
   return (mTokenType == DIGIT || mTokenType == POINT || mTokenType == SIGN);
 }
@@ -217,7 +217,7 @@ nsresult nsSVGDataParser::MatchCommaWsp()
   return NS_OK;
 }
   
-PRBool nsSVGDataParser::IsTokenCommaWspStarter()
+bool nsSVGDataParser::IsTokenCommaWspStarter()
 {
   return (IsTokenWspStarter() || mTokenType == COMMA);
 }
@@ -289,7 +289,7 @@ nsresult nsSVGDataParser::MatchExponent()
   return NS_OK;  
 }
 
-PRBool nsSVGDataParser::IsTokenExponentStarter()
+bool nsSVGDataParser::IsTokenExponentStarter()
 {
   return (tolower(mTokenVal) == 'e');
 }
@@ -307,7 +307,7 @@ nsresult nsSVGDataParser::MatchDigitSeq()
   return NS_OK;
 }
 
-PRBool nsSVGDataParser::IsTokenDigitSeqStarter()
+bool nsSVGDataParser::IsTokenDigitSeqStarter()
 {
   return (mTokenType == DIGIT);
 }
@@ -325,7 +325,7 @@ nsresult nsSVGDataParser::MatchWsp()
   return NS_OK;  
 }
 
-PRBool nsSVGDataParser::IsTokenWspStarter()
+bool nsSVGDataParser::IsTokenWspStarter()
 {
   return (mTokenType == WSP);
 }  

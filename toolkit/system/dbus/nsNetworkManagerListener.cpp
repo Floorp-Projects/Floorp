@@ -77,13 +77,13 @@ nsNetworkManagerListener::~nsNetworkManagerListener() {
 NS_IMPL_ISUPPORTS1(nsNetworkManagerListener, nsINetworkLinkService)
 
 nsresult
-nsNetworkManagerListener::GetIsLinkUp(PRBool* aIsUp) {
+nsNetworkManagerListener::GetIsLinkUp(bool* aIsUp) {
   *aIsUp = mLinkUp;
   return NS_OK;
 }
 
 nsresult
-nsNetworkManagerListener::GetLinkStatusKnown(PRBool* aKnown) {
+nsNetworkManagerListener::GetLinkStatusKnown(bool* aKnown) {
   *aKnown = mNetworkManagerActive;
   return NS_OK;
 }
@@ -182,7 +182,7 @@ nsNetworkManagerListener::UnregisterWithConnection(DBusConnection* connection) {
   NotifyNetworkStatusObservers();
 }
 
-PRBool
+bool
 nsNetworkManagerListener::HandleMessage(DBusMessage* message) {
   if (dbus_message_is_signal(message, NM_DBUS_INTERFACE,
                              NM_DBUS_SIGNAL_STATE_CHANGE)) {
@@ -201,7 +201,7 @@ nsNetworkManagerListener::UpdateNetworkStatus(DBusMessage* msg) {
 
   mNetworkManagerActive = PR_TRUE;
   
-  PRBool wasUp = mLinkUp;
+  bool wasUp = mLinkUp;
   mLinkUp = result == NM_STATE_CONNECTED;
   if (wasUp == mLinkUp)
     return;

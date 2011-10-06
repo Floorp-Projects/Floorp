@@ -60,7 +60,7 @@ abspath() {
   for regex in $regexes; do
     if echo $1 | grep -q $regex; then
       echo $1
-      exit 0
+      return
     fi
   done
 
@@ -88,7 +88,7 @@ for _config in "$MOZCONFIG" \
                "$topsrcdir/mozconfig"
 do
   if test -f "$_config"; then
-    echo `abspath $_config`
+    abspath $_config
     exit 0
   fi
 done

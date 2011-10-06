@@ -220,7 +220,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsPluginDirServiceProvider,
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
+nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
                                     nsIFile **_retval)
 {
   nsCOMPtr<nsILocalFile>  localFile;
@@ -229,7 +229,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
   NS_ENSURE_ARG(charProp);
 
   *_retval = nsnull;
-  *persistant = PR_FALSE;
+  *persistant = false;
 
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (!prefs)
@@ -310,7 +310,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
     newestPath += NS_LITERAL_STRING("\\bin\\new_plugin");
 
     rv = NS_NewLocalFile(newestPath,
-                         PR_TRUE, getter_AddRefs(localFile));
+                         true, getter_AddRefs(localFile));
 
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIWindowsRegKey> newKey =
@@ -322,7 +322,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
                           nsIWindowsRegKey::ACCESS_QUERY_VALUE |
                           nsIWindowsRegKey::ACCESS_SET_VALUE);
       if (NS_SUCCEEDED(rv)) {
-        PRBool currentVersionExists = PR_FALSE;
+        bool currentVersionExists = false;
         newKey->HasValue(NS_LITERAL_STRING("CurrentVersion"),
                          &currentVersionExists);
         if (!currentVersionExists) {
@@ -366,7 +366,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
       rv = regKey->ReadStringValue(NS_LITERAL_STRING("InstallDir"), path);
       if (NS_SUCCEEDED(rv)) {
         path += NS_LITERAL_STRING("\\Plugins");
-        rv = NS_NewLocalFile(path, PR_TRUE,
+        rv = NS_NewLocalFile(path, true,
                              getter_AddRefs(localFile));
       }
     }
@@ -404,7 +404,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
       rv = regKey->ReadStringValue(NS_LITERAL_STRING("Installation Directory"),
                                    path);
       if (NS_SUCCEEDED(rv)) {
-        rv = NS_NewLocalFile(path, PR_TRUE,
+        rv = NS_NewLocalFile(path, true,
                              getter_AddRefs(localFile));
       }
     }
@@ -469,7 +469,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
 
     if (!newestPath.IsEmpty()) {
       newestPath += NS_LITERAL_STRING("\\browser");
-      rv = NS_NewLocalFile(newestPath, PR_TRUE,
+      rv = NS_NewLocalFile(newestPath, true,
                            getter_AddRefs(localFile));
     }
   }
@@ -521,12 +521,12 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMAr
         rv = childKey->ReadStringValue(NS_LITERAL_STRING("Path"), path);
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsILocalFile> localFile;
-          if (NS_SUCCEEDED(NS_NewLocalFile(path, PR_TRUE,
+          if (NS_SUCCEEDED(NS_NewLocalFile(path, true,
                                            getter_AddRefs(localFile))) &&
               localFile) {
             // Some vendors use a path directly to the DLL so chop off
             // the filename
-            PRBool isDir = PR_FALSE;
+            bool isDir = false;
             if (NS_SUCCEEDED(localFile->IsDirectory(&isDir)) && !isDir) {
               nsCOMPtr<nsIFile> temp;
               localFile->GetParent(getter_AddRefs(temp));
@@ -536,8 +536,8 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMAr
 
             // Now we check to make sure it's actually on disk and
             // To see if we already have this directory in the array
-            PRBool isFileThere = PR_FALSE;
-            PRBool isDupEntry = PR_FALSE;
+            bool isFileThere = false;
+            bool isDupEntry = false;
             if (NS_SUCCEEDED(localFile->Exists(&isFileThere)) && isFileThere) {
               PRInt32 c = aDirs.Count();
               for (PRInt32 i = 0; i < c; i++) {

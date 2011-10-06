@@ -84,7 +84,7 @@
 
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing" disabled="false"/>
-    <broadcaster id="bcast_urlbarState" mode="view" tablet_sidebar="true"/>
+    <broadcaster id="bcast_urlbarState" mode="view" tablet_sidebar="true" persist="tablet_sidebar"/>
     <broadcaster id="bcast_uidiscovery"/>
   </broadcasterset>
 
@@ -221,7 +221,7 @@
             <box id="toolbar-container" class="panel-dark toolbar-height">
               <box id="toolbar-moveable-container" observes="bcast_uidiscovery">
                 <toolbar id="toolbar-main" class="panel-dark viewable-width" observes="bcast_urlbarState">
-                  <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs"/>
+                  <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs" anchorPosX="0.3"/>
                   <toolbarbutton id="tool-back2" class="tool-back button-actionbar" command="cmd_back"/>
                   <toolbarbutton id="tool-forward2" class="tool-forward button-actionbar" command="cmd_forward"/>
 #ifdef MOZ_PLATFORM_MAEMO
@@ -461,7 +461,7 @@
                             oncommand="BrowserUI.newTab('about:fennec', Browser.selectedTab);"/>
 #endif
                   </setting>
-                  <setting id="prefs-uilanguage" title="&language.title;" type="menulist">
+                  <setting id="prefs-uilanguage" title="&language.title;" type="control">
                     <button id="prefs-uilanguage-button" label="&language.title;" onclick="PreferencesView.showLocalePicker();"/>
                   </setting>
                   <setting id="prefs-homepage" title="&homepage.title;" type="menulist">
@@ -568,7 +568,7 @@
         <separator class="prompt-line"/>
         <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
           <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
-            <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.jpake;</description>
+            <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.pair;</description>
             <description class="syncsetup-center link" flex="1" onclick="WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
             <separator/>
             <vbox align="center" flex="1">
@@ -583,6 +583,9 @@
           <hbox class="prompt-buttons" pack="center">
             <button class="prompt-button" oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
           </hbox>
+        </vbox>
+        <vbox id="syncsetup-waiting" class="syncsetup-page" flex="1" hidden="true">
+          <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.waiting;</description>
         </vbox>
         <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">
           <scrollbox class="prompt-message" orient="vertical" flex="1">
@@ -767,7 +770,7 @@
   <svg:svg height="0">
     <svg:mask id="back-button-mask" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
-      <svg:circle cx="-0.5" cy="0.5" r="0.7"/>
+      <svg:circle cx="-0.85" cy="0.5" r="0.96"/>
     </svg:mask>
   </svg:svg>
 

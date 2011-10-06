@@ -70,7 +70,7 @@ public:
     
     // nsICSSLoaderObserver
     NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet,
-                                PRBool aWasAlternate,
+                                bool aWasAlternate,
                                 nsresult aStatus);
 
     void Init(nsITransformObserver* aObserver);
@@ -87,7 +87,7 @@ private:
     nsCOMPtr<nsITransformObserver> mObserver;
     nsCOMArray<nsIScriptElement> mScriptElements;
     PRUint32 mPendingStylesheetCount;
-    PRPackedBool mInTransform;
+    bool mInTransform;
 };
 
 class txMozillaXMLOutput : public txAOutputXMLEventHandler
@@ -97,20 +97,20 @@ public:
                        nsITransformObserver* aObserver);
     txMozillaXMLOutput(txOutputFormat* aFormat,
                        nsIDOMDocumentFragment* aFragment,
-                       PRBool aNoFixup);
+                       bool aNoFixup);
     ~txMozillaXMLOutput();
 
     TX_DECL_TXAXMLEVENTHANDLER
     TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
-    nsresult closePrevious(PRBool aFlushText);
+    nsresult closePrevious(bool aFlushText);
 
     nsresult createResultDocument(const nsSubstring& aName, PRInt32 aNsID,
                                   nsIDOMDocument* aSourceDocument);
 
 private:
     nsresult createTxWrapper();
-    nsresult startHTMLElement(nsIContent* aElement, PRBool aXHTML);
+    nsresult startHTMLElement(nsIContent* aElement, bool aXHTML);
     nsresult endHTMLElement(nsIContent* aElement);
     void processHTTPEquiv(nsIAtom* aHeader, const nsString& aValue);
     nsresult createHTMLElement(nsIAtom* aName,
@@ -151,14 +151,14 @@ private:
 
     txOutputFormat mOutputFormat;
 
-    PRPackedBool mCreatingNewDocument;
+    bool mCreatingNewDocument;
 
-    PRPackedBool mOpenedElementIsHTML;
+    bool mOpenedElementIsHTML;
 
     // Set to true when we know there's a root content in our document.
-    PRPackedBool mRootContentCreated;
+    bool mRootContentCreated;
 
-    PRPackedBool mNoFixup;
+    bool mNoFixup;
 
     enum txAction { eCloseElement = 1, eFlushText = 2 };
 };

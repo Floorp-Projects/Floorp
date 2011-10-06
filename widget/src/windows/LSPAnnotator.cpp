@@ -71,7 +71,7 @@ LSPAnnotationGatherer::Annotate()
 {
   nsCOMPtr<nsICrashReporter> cr =
     do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-  PRBool enabled;
+  bool enabled;
   if (cr && NS_SUCCEEDED(cr->GetEnabled(&enabled)) && enabled) {
     cr->AnnotateCrashReport(NS_LITERAL_CSTRING("Winsock_LSP"), mString);
   }

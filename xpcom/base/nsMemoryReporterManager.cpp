@@ -615,7 +615,7 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
     nsCOMPtr<nsISimpleEnumerator> e;
     EnumerateReporters(getter_AddRefs(e));
 
-    PRBool more;
+    bool more;
     while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
         nsCOMPtr<nsIMemoryReporter> r;
         e->GetNext(getter_AddRefs(r));

@@ -43,8 +43,8 @@
 /** NS_NewPipe2 reimplemented, because it's not exported by XPCOM */
 nsresult TP_NewPipe2(nsIAsyncInputStream** input,
                      nsIAsyncOutputStream** output,
-                     PRBool nonBlockingInput,
-                     PRBool nonBlockingOutput,
+                     bool nonBlockingInput,
+                     bool nonBlockingOutput,
                      PRUint32 segmentSize,
                      PRUint32 segmentCount,
                      nsIMemory* segmentAlloc)
@@ -168,12 +168,12 @@ NS_IMETHODIMP_(void) BackwardsAllocator::Free(void* ptr)
     mMemory[mCount * mSize + (p - mMemory) / mSize] = 0;
 }
 
-NS_IMETHODIMP BackwardsAllocator::HeapMinimize(PRBool immediate)
+NS_IMETHODIMP BackwardsAllocator::HeapMinimize(bool immediate)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP BackwardsAllocator::IsLowMemory(PRBool* retval)
+NS_IMETHODIMP BackwardsAllocator::IsLowMemory(bool* retval)
 {
   *retval = PR_FALSE;
   return NS_OK;

@@ -90,7 +90,7 @@ public:
    */
   static DOMSVGPathSeg *CreateFor(DOMSVGPathSegList *aList,
                                   PRUint32 aListIndex,
-                                  PRBool aIsAnimValItem);
+                                  bool aIsAnimValItem);
 
   /**
    * Create an unowned copy of this object. The caller is responsible for the
@@ -98,7 +98,7 @@ public:
    */
   virtual DOMSVGPathSeg* Clone() = 0;
 
-  PRBool IsInList() const {
+  bool IsInList() const {
     return !!mList;
   }
 
@@ -106,7 +106,7 @@ public:
    * In future, if this class is used for non-list segments, this will be
    * different to IsInList().
    */
-  PRBool HasOwner() const {
+  bool HasOwner() const {
     return !!mList;
   }
 
@@ -121,7 +121,7 @@ public:
    */
   void InsertingIntoList(DOMSVGPathSegList *aList,
                          PRUint32 aListIndex,
-                         PRBool aIsAnimValItem);
+                         bool aIsAnimValItem);
 
   static PRUint32 MaxListIndex() {
     return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
@@ -160,7 +160,7 @@ protected:
    */
   DOMSVGPathSeg(DOMSVGPathSegList *aList,
                 PRUint32 aListIndex,
-                PRBool aIsAnimValItem);
+                bool aIsAnimValItem);
 
   /**
    * Ctor for creating the objects returned by
@@ -196,7 +196,7 @@ protected:
   virtual float* PtrToMemberArgs() = 0;
 
 #ifdef DEBUG
-  PRBool IndexIsValid();
+  bool IndexIsValid();
 #endif
 
   nsRefPtr<DOMSVGPathSegList> mList;
@@ -248,12 +248,12 @@ NS_NewSVGPathSegCurvetoQuadraticRel(float x, float y,
 nsIDOMSVGPathSeg*
 NS_NewSVGPathSegArcAbs(float x, float y,
                        float r1, float r2, float angle,
-                       PRBool largeArcFlag, PRBool sweepFlag);
+                       bool largeArcFlag, bool sweepFlag);
 
 nsIDOMSVGPathSeg*
 NS_NewSVGPathSegArcRel(float x, float y,
                        float r1, float r2, float angle,
-                       PRBool largeArcFlag, PRBool sweepFlag);
+                       bool largeArcFlag, bool sweepFlag);
 
 nsIDOMSVGPathSeg*
 NS_NewSVGPathSegLinetoHorizontalAbs(float x);

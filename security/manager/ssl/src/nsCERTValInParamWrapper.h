@@ -91,7 +91,7 @@ public:
 private:
   nsAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
-  PRBool mAlreadyConstructed;
+  bool mAlreadyConstructed;
   CERTValInParam *mCVIN;
   CERTRevocationFlags *mRev;
   

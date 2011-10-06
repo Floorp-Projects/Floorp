@@ -18,10 +18,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502959
 <script type="application/javascript">
 
 /** Test for Bug 502959 **/
-var xhr = new XMLHttpRequest();
+// Whatever you do don't use the word "wrapped" in this function.
+function foo() {
+  ok(true, "Able to call the function");
+}
 
-xhr.onreadystatechange = function() { ok(true, "Able to call the double-wrapped function"); };
-var doublewrapped = xhr.onreadystatechange;
+var iter = document.createNodeIterator(document, NodeFilter.SHOW_ELEMENT, foo, false);
+var doublewrapped = iter.filter;
+
 ok(doublewrapped.toString().indexOf("wrapped") > 0, "got a double-wrapped object back");
 
 (function () {
@@ -29,7 +33,7 @@ ok(doublewrapped.toString().indexOf("wrapped") > 0, "got a double-wrapped object
     Components.utils.forceGC();
 })();
 
-doublewrapped.handleEvent({});
+doublewrapped.acceptNode(document);
 
 </script>
 </pre>

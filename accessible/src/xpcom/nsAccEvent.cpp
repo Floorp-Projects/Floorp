@@ -47,7 +47,7 @@
 NS_IMPL_ISUPPORTS1(nsAccEvent, nsIAccessibleEvent)
 
 NS_IMETHODIMP
-nsAccEvent::GetIsFromUserInput(PRBool* aIsFromUserInput)
+nsAccEvent::GetIsFromUserInput(bool* aIsFromUserInput)
 {
   *aIsFromUserInput = mEvent->IsFromUserInput();
   return NS_OK;
@@ -114,7 +114,7 @@ nsAccStateChangeEvent::GetState(PRUint32* aState)
 }
 
 NS_IMETHODIMP
-nsAccStateChangeEvent::IsExtraState(PRBool* aIsExtraState)
+nsAccStateChangeEvent::IsExtraState(bool* aIsExtraState)
 {
   NS_ENSURE_ARG_POINTER(aIsExtraState);
 
@@ -127,7 +127,7 @@ nsAccStateChangeEvent::IsExtraState(PRBool* aIsExtraState)
 }
 
 NS_IMETHODIMP
-nsAccStateChangeEvent::IsEnabled(PRBool* aIsEnabled)
+nsAccStateChangeEvent::IsEnabled(bool* aIsEnabled)
 {
   NS_ENSURE_ARG_POINTER(aIsEnabled);
   *aIsEnabled = static_cast<AccStateChangeEvent*>(mEvent.get())->IsStateEnabled();
@@ -158,7 +158,7 @@ nsAccTextChangeEvent::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-nsAccTextChangeEvent::IsInserted(PRBool* aIsInserted)
+nsAccTextChangeEvent::IsInserted(bool* aIsInserted)
 {
   NS_ENSURE_ARG_POINTER(aIsInserted);
   *aIsInserted = static_cast<AccTextChangeEvent*>(mEvent.get())->IsTextInserted();

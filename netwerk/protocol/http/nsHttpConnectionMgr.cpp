@@ -108,7 +108,7 @@ nsHttpConnectionMgr::EnsureSocketThreadTargetIfOnline()
     nsCOMPtr<nsIEventTarget> sts;
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
     if (NS_SUCCEEDED(rv)) {
-        PRBool offline = PR_TRUE;
+        bool offline = true;
         ioService->GetOffline(&offline);
 
         if (!offline) {
@@ -579,7 +579,7 @@ nsHttpConnectionMgr::ShutdownPassCB(const nsACString &key,
 
 //-----------------------------------------------------------------------------
 
-PRBool
+bool
 nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
 {
     LOG(("nsHttpConnectionMgr::ProcessPendingQForEntry [ci=%s]\n",
@@ -598,7 +598,7 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
             // connections from being established and bound to this
             // transaction. Allow only use of an idle persistent connection
             // (if found) for transactions referred by a half-open connection.
-            PRBool alreadyHalfOpen = PR_FALSE;
+            bool alreadyHalfOpen = false;
             for (PRInt32 j = 0; j < ((PRInt32) ent->mHalfOpens.Length()); j++) {
                 if (ent->mHalfOpens[j]->Transaction() == trans) {
                     alreadyHalfOpen = PR_TRUE;
@@ -638,7 +638,7 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
 //  (1) at max-connections
 //  (2) keep-alive enabled and at max-persistent-connections-per-server/proxy
 //  (3) keep-alive disabled and at max-connections-per-server
-PRBool
+bool
 nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 caps)
 {
     nsHttpConnectionInfo *ci = ent->mConnInfo;
@@ -720,7 +720,7 @@ nsHttpConnectionMgr::ClosePersistentConnectionsCB(const nsACString &key,
 void
 nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent,
                                    nsHttpTransaction *trans,
-                                   PRBool onlyReusedConnection,
+                                   bool onlyReusedConnection,
                                    nsHttpConnection **result)
 {
     LOG(("nsHttpConnectionMgr::GetConnection [ci=%s caps=%x]\n",
@@ -886,7 +886,7 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
     return rv;
 }
 
-PRBool
+bool
 nsHttpConnectionMgr::BuildPipeline(nsConnectionEntry *ent,
                                    nsAHttpTransaction *firstTrans,
                                    nsHttpPipeline **result)
@@ -1231,7 +1231,7 @@ nsresult
 nsHttpConnectionMgr::nsConnectionHandle::OnHeadersAvailable(nsAHttpTransaction *trans,
                                                             nsHttpRequestHead *req,
                                                             nsHttpResponseHead *resp,
-                                                            PRBool *reset)
+                                                            bool *reset)
 {
     return mConn->OnHeadersAvailable(trans, req, resp, reset);
 }
@@ -1275,13 +1275,13 @@ nsHttpConnectionMgr::nsConnectionHandle::GetSecurityInfo(nsISupports **result)
     mConn->GetSecurityInfo(result);
 }
 
-PRBool
+bool
 nsHttpConnectionMgr::nsConnectionHandle::IsPersistent()
 {
     return mConn->IsPersistent();
 }
 
-PRBool
+bool
 nsHttpConnectionMgr::nsConnectionHandle::IsReused()
 {
     return mConn->IsReused();
@@ -1334,7 +1334,7 @@ nsHttpConnectionMgr::
 nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
                                nsIAsyncInputStream **instream,
                                nsIAsyncOutputStream **outstream,
-                               PRBool isBackup)
+                               bool isBackup)
 {
     nsresult rv;
 
@@ -1589,8 +1589,8 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         // minimum granularity we can expect a server to be timing out with.
         conn->SetIsReusedAfter(950);
 
-        NS_ADDREF(conn);  // because onmsg*() expects to drop a reference
-        gHttpHandler->ConnMgr()->OnMsgReclaimConnection(NS_OK, conn);
+        nsRefPtr<nsHttpConnection> copy(conn);  // because onmsg*() expects to drop a reference
+        gHttpHandler->ConnMgr()->OnMsgReclaimConnection(NS_OK, conn.forget().get());
     }
 
     return rv;
@@ -1635,7 +1635,7 @@ nsHttpConnectionMgr::nsConnectionHandle::TakeHttpConnection()
     return conn;
 }
 
-PRBool
+bool
 nsHttpConnectionMgr::nsConnectionHandle::LastTransactionExpectedNoContent()
 {
     return mConn->LastTransactionExpectedNoContent();
@@ -1643,7 +1643,7 @@ nsHttpConnectionMgr::nsConnectionHandle::LastTransactionExpectedNoContent()
 
 void
 nsHttpConnectionMgr::
-nsConnectionHandle::SetLastTransactionExpectedNoContent(PRBool val)
+nsConnectionHandle::SetLastTransactionExpectedNoContent(bool val)
 {
      mConn->SetLastTransactionExpectedNoContent(val);
 }

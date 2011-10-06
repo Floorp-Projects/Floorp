@@ -51,6 +51,7 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/FileUtils.h"
 #include "prlog.h"
 
@@ -196,7 +197,7 @@ PRUint32 nsUrlClassifierPrefixSet::BinSearch(PRUint32 start,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, PRBool * aFound)
+nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, bool * aFound)
 {
   *aFound = PR_FALSE;
 
@@ -246,7 +247,7 @@ NS_IMETHODIMP
 nsUrlClassifierPrefixSet::EstimateSize(PRUint32 * aSize)
 {
   MutexAutoLock lock(mPrefixSetLock);
-  *aSize = sizeof(PRBool);
+  *aSize = sizeof(bool);
   if (mHasPrefixes) {
     *aSize += sizeof(PRUint16) * mDeltas.Length();
     *aSize += sizeof(PRUint32) * mIndexPrefixes.Length();
@@ -256,7 +257,7 @@ nsUrlClassifierPrefixSet::EstimateSize(PRUint32 * aSize)
 }
 
 NS_IMETHODIMP
-nsUrlClassifierPrefixSet::IsEmpty(PRBool * aEmpty)
+nsUrlClassifierPrefixSet::IsEmpty(bool * aEmpty)
 {
   MutexAutoLock lock(mPrefixSetLock);
   *aEmpty = !mHasPrefixes;
@@ -273,7 +274,7 @@ nsUrlClassifierPrefixSet::GetKey(PRUint32 * aKey)
 
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::Probe(PRUint32 aPrefix, PRUint32 aKey,
-                                PRBool* aReady, PRBool* aFound)
+                                bool* aReady, bool* aFound)
 {
   MutexAutoLock lock(mPrefixSetLock);
 
@@ -378,7 +379,7 @@ nsUrlClassifierPrefixSet::LoadFromFile(nsIFile * aFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   AutoFDClose fileFd;
-  rv = file->OpenNSPRFileDesc(PR_RDONLY, 0, &fileFd);
+  rv = file->OpenNSPRFileDesc(PR_RDONLY | nsILocalFile::OS_READAHEAD, 0, &fileFd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return LoadFromFd(fileFd);
@@ -387,6 +388,15 @@ nsUrlClassifierPrefixSet::LoadFromFile(nsIFile * aFile)
 nsresult
 nsUrlClassifierPrefixSet::StoreToFd(AutoFDClose & fileFd)
 {
+  {
+      Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FALLOCATE_TIME> timer;
+      PRInt64 size = 4 * sizeof(PRUint32);
+      size += 2 * mIndexStarts.Length() * sizeof(PRUint32);
+      size +=     mDeltas.Length() * sizeof(PRUint16);
+
+      mozilla::fallocate(fileFd, size);
+  }
+
   PRInt32 written;
   PRUint32 magic = PREFIXSET_VERSION_MAGIC;
   written = PR_Write(fileFd, &magic, sizeof(PRUint32));

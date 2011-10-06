@@ -47,7 +47,7 @@ struct nsPaperSizePS_ {
     const char *name;
     float width_mm;
     float height_mm;
-    PRBool isMetric;        // Present to the user in metric, if possible
+    bool isMetric;        // Present to the user in metric, if possible
 };
 
 class nsPaperSizePS {
@@ -58,9 +58,9 @@ class nsPaperSizePS {
         nsPaperSizePS() { mCurrent = 0; }
 
         /** ---------------------------------------------------
-         * @return PR_TRUE if the cursor points past the last item.
+         * @return true if the cursor points past the last item.
          */
-        PRBool AtEnd() { return mCurrent >= mCount; }
+        bool AtEnd() { return mCurrent >= mCount; }
 
         /** ---------------------------------------------------
          * Position the cursor at the beginning of the paper size list.
@@ -79,9 +79,9 @@ class nsPaperSizePS {
 
         /** ---------------------------------------------------
          * Point the cursor to the entry with the given paper name.
-         * @return PR_TRUE if pointing to a valid entry.
+         * @return true if pointing to a valid entry.
          */
-        PRBool Find(const char *aName);
+        bool Find(const char *aName);
 
         /** ---------------------------------------------------
          * @return a pointer to the name of the current paper size
@@ -108,10 +108,10 @@ class nsPaperSizePS {
         }
 
         /** ---------------------------------------------------
-         * @return PR_TRUE if the paper should be presented to
+         * @return true if the paper should be presented to
          *                 the user in metric units.
          */
-        PRBool IsMetric() {
+        bool IsMetric() {
             NS_PRECONDITION(!AtEnd(), "Invalid current item");
             return mList[mCurrent].isMetric;
         }

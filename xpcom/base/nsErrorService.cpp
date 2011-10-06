@@ -44,7 +44,7 @@ CloneCString(nsHashKey *aKey, void *aData, void* closure)
   return NS_strdup((const char*)aData);
 }
 
-static PRBool
+static bool
 DeleteCString(nsHashKey *aKey, void *aData, void* closure)
 {
   NS_Free(aData);

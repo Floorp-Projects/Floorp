@@ -93,21 +93,21 @@ protected:
     virtual ~MemoryElement() { MOZ_COUNT_DTOR(MemoryElement); }
 public:
 
-    static PRBool Init();
+    static bool Init();
 
-    static PRBool gPoolInited;
+    static bool gPoolInited;
     static nsFixedSizeAllocator gPool;
 
     virtual void Destroy() = 0;
     virtual const char* Type() const = 0;
     virtual PLHashNumber Hash() const = 0;
-    virtual PRBool Equals(const MemoryElement& aElement) const = 0;
+    virtual bool Equals(const MemoryElement& aElement) const = 0;
 
-    PRBool operator==(const MemoryElement& aMemoryElement) const {
+    bool operator==(const MemoryElement& aMemoryElement) const {
         return Equals(aMemoryElement);
     }
 
-    PRBool operator!=(const MemoryElement& aMemoryElement) const {
+    bool operator!=(const MemoryElement& aMemoryElement) const {
         return !Equals(aMemoryElement);
     }
 };
@@ -203,10 +203,10 @@ public:
         const MemoryElement* operator->() const {
             return mCurrent->mElement; }
 
-        PRBool operator==(const ConstIterator& aConstIterator) const {
+        bool operator==(const ConstIterator& aConstIterator) const {
             return mCurrent == aConstIterator.mCurrent; }
 
-        PRBool operator!=(const ConstIterator& aConstIterator) const {
+        bool operator!=(const ConstIterator& aConstIterator) const {
             return mCurrent != aConstIterator.mCurrent; }
 
     protected:
@@ -242,10 +242,10 @@ public:
 
     ~nsAssignment() { MOZ_COUNT_DTOR(nsAssignment); }
 
-    PRBool operator==(const nsAssignment& aAssignment) const {
+    bool operator==(const nsAssignment& aAssignment) const {
         return mVariable == aAssignment.mVariable && mValue == aAssignment.mValue; }
 
-    PRBool operator!=(const nsAssignment& aAssignment) const {
+    bool operator!=(const nsAssignment& aAssignment) const {
         return mVariable != aAssignment.mVariable || mValue != aAssignment.mValue; }
 
     PLHashNumber Hash() const {
@@ -349,10 +349,10 @@ public:
         const nsAssignment* operator->() const {
             return &mCurrent->mAssignment; }
 
-        PRBool operator==(const ConstIterator& aConstIterator) const {
+        bool operator==(const ConstIterator& aConstIterator) const {
             return mCurrent == aConstIterator.mCurrent; }
 
-        PRBool operator!=(const ConstIterator& aConstIterator) const {
+        bool operator!=(const ConstIterator& aConstIterator) const {
             return mCurrent != aConstIterator.mCurrent; }
 
     protected:
@@ -378,14 +378,14 @@ public:
      * @param aValue the value to query
      * @return PR_TRUE if aVariable is bound to aValue; PR_FALSE otherwise.
      */
-    PRBool HasAssignment(nsIAtom* aVariable, nsIRDFNode* aValue) const;
+    bool HasAssignment(nsIAtom* aVariable, nsIRDFNode* aValue) const;
 
     /**
      * Determine if the assignment set contains the specified assignment
      * @param aAssignment the assignment to search for
      * @return PR_TRUE if the set contains the assignment, PR_FALSE otherwise.
      */
-    PRBool HasAssignment(const nsAssignment& aAssignment) const {
+    bool HasAssignment(const nsAssignment& aAssignment) const {
         return HasAssignment(aAssignment.mVariable, aAssignment.mValue); }
 
     /**
@@ -395,7 +395,7 @@ public:
      * @return PR_TRUE if the assignment set has an assignment for the variable,
      *   PR_FALSE otherwise.
      */
-    PRBool HasAssignmentFor(nsIAtom* aVariable) const;
+    bool HasAssignmentFor(nsIAtom* aVariable) const;
 
     /**
      * Retrieve the assignment for the specified variable
@@ -405,7 +405,7 @@ public:
      * @return PR_TRUE if the variable has an assignment, PR_FALSE
      *   if there was no assignment for the variable.
      */
-    PRBool GetAssignmentFor(nsIAtom* aVariable, nsIRDFNode** aValue) const;
+    bool GetAssignmentFor(nsIAtom* aVariable, nsIRDFNode** aValue) const;
 
     /**
      * Count the number of assignments in the set
@@ -417,11 +417,11 @@ public:
      * Determine if the set is empty
      * @return PR_TRUE if the assignment set is empty, PR_FALSE otherwise.
      */
-    PRBool IsEmpty() const { return mAssignments == nsnull; }
+    bool IsEmpty() const { return mAssignments == nsnull; }
 
-    PRBool Equals(const nsAssignmentSet& aSet) const;
-    PRBool operator==(const nsAssignmentSet& aSet) const { return Equals(aSet); }
-    PRBool operator!=(const nsAssignmentSet& aSet) const { return !Equals(aSet); }
+    bool Equals(const nsAssignmentSet& aSet) const;
+    bool operator==(const nsAssignmentSet& aSet) const { return Equals(aSet); }
+    bool operator!=(const nsAssignmentSet& aSet) const { return !Equals(aSet); }
 };
 
 
@@ -492,13 +492,13 @@ public:
         mSupport.Add(aMemoryElement);
         return NS_OK; }
 
-    PRBool Equals(const Instantiation& aInstantiation) const {
+    bool Equals(const Instantiation& aInstantiation) const {
         return mAssignments == aInstantiation.mAssignments; }
 
-    PRBool operator==(const Instantiation& aInstantiation) const {
+    bool operator==(const Instantiation& aInstantiation) const {
         return Equals(aInstantiation); }
 
-    PRBool operator!=(const Instantiation& aInstantiation) const {
+    bool operator!=(const Instantiation& aInstantiation) const {
         return !Equals(aInstantiation); }
 
     static PLHashNumber Hash(const void* aKey);
@@ -583,10 +583,10 @@ public:
         const Instantiation* operator->() const {
             return &mCurrent->mInstantiation; }
 
-        PRBool operator==(const ConstIterator& aConstIterator) const {
+        bool operator==(const ConstIterator& aConstIterator) const {
             return mCurrent == aConstIterator.mCurrent; }
 
-        PRBool operator!=(const ConstIterator& aConstIterator) const {
+        bool operator!=(const ConstIterator& aConstIterator) const {
             return mCurrent != aConstIterator.mCurrent; }
     };
 
@@ -621,10 +621,10 @@ public:
         Instantiation* operator->() const {
             return &mCurrent->mInstantiation; }
 
-        PRBool operator==(const ConstIterator& aConstIterator) const {
+        bool operator==(const ConstIterator& aConstIterator) const {
             return mCurrent == aConstIterator.mCurrent; }
 
-        PRBool operator!=(const ConstIterator& aConstIterator) const {
+        bool operator!=(const ConstIterator& aConstIterator) const {
             return mCurrent != aConstIterator.mCurrent; }
 
         friend class InstantiationSet;
@@ -633,7 +633,7 @@ public:
     Iterator First() { return Iterator(mHead.mNext); }
     Iterator Last() { return Iterator(&mHead); }
 
-    PRBool Empty() const { return First() == Last(); }
+    bool Empty() const { return First() == Last(); }
 
     Iterator Append(const Instantiation& aInstantiation) {
         return Insert(Last(), aInstantiation); }
@@ -644,7 +644,7 @@ public:
 
     void Clear();
 
-    PRBool HasAssignmentFor(nsIAtom* aVariable) const;
+    bool HasAssignmentFor(nsIAtom* aVariable) const;
 };
 
 //----------------------------------------------------------------------
@@ -685,7 +685,7 @@ public:
      * @return NS_OK if no errors occurred.
      */
     virtual nsresult Propagate(InstantiationSet& aInstantiations,
-                               PRBool aIsUpdate, PRBool& aTakenInstantiations) = 0;
+                               bool aIsUpdate, bool& aTakenInstantiations) = 0;
 };
 
 //----------------------------------------------------------------------
@@ -730,10 +730,10 @@ public:
         const ReteNode* operator->() const {
             return *mCurrent; }
 
-        PRBool operator==(const ConstIterator& aConstIterator) const {
+        bool operator==(const ConstIterator& aConstIterator) const {
             return mCurrent == aConstIterator.mCurrent; }
 
-        PRBool operator!=(const ConstIterator& aConstIterator) const {
+        bool operator!=(const ConstIterator& aConstIterator) const {
             return mCurrent != aConstIterator.mCurrent; }
 
     protected:
@@ -763,10 +763,10 @@ public:
         ReteNode* operator->() const {
             return *mCurrent; }
 
-        PRBool operator==(const ConstIterator& aConstIterator) const {
+        bool operator==(const ConstIterator& aConstIterator) const {
             return mCurrent == aConstIterator.mCurrent; }
 
-        PRBool operator!=(const ConstIterator& aConstIterator) const {
+        bool operator!=(const ConstIterator& aConstIterator) const {
             return mCurrent != aConstIterator.mCurrent; }
     };
 
@@ -839,7 +839,7 @@ public:
      * aTakenInstantiations will be set properly even if an error occurs.
      */
     virtual nsresult Propagate(InstantiationSet& aInstantiations,
-                               PRBool aIsUpdate, PRBool& aTakenInstantiations);
+                               bool aIsUpdate, bool& aTakenInstantiations);
 
     /**
      * This is called by a child node on its parent to allow the
@@ -875,7 +875,7 @@ public:
      * @return NS_OK if no errors occurred.
      */
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
-                                          PRBool* aCantHandleYet) const = 0;
+                                          bool* aCantHandleYet) const = 0;
     //XXX probably better named "ApplyConstraints" or "Discrminiate" or something
 
     /**
@@ -884,7 +884,7 @@ public:
      * @return PR_TRUE if aNode is a direct ancestor of this node, PR_FALSE
      *   otherwise.
      */
-    PRBool HasAncestor(const ReteNode* aNode) const;
+    bool HasAncestor(const ReteNode* aNode) const;
 
     /**
      * Add another node as a child of this node.

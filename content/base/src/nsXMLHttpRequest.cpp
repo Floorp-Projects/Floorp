@@ -177,7 +177,7 @@ static void AddLoadFlags(nsIRequest *request, nsLoadFlags newFlags)
   request->SetLoadFlags(flags);
 }
 
-static nsresult IsCapabilityEnabled(const char *capability, PRBool *enabled)
+static nsresult IsCapabilityEnabled(const char *capability, bool *enabled)
 {
   nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
   if (!secMan)
@@ -1244,7 +1244,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
   }
 
   // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
-  PRBool chrome = PR_FALSE; // default to false in case IsCapabilityEnabled fails
+  bool chrome = false; // default to false in case IsCapabilityEnabled fails
   IsCapabilityEnabled("UniversalXPConnect", &chrome);
   if (!chrome &&
        (header.LowerCaseEqualsASCII("set-cookie") ||
@@ -1269,7 +1269,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
       "cache-control", "content-language", "content-type", "expires",
       "last-modified", "pragma"
     };
-    PRBool safeHeader = PR_FALSE;
+    bool safeHeader = false;
     PRUint32 i;
     for (i = 0; i < NS_ARRAY_LENGTH(kCrossOriginSafeHeaders); ++i) {
       if (header.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
@@ -1359,8 +1359,8 @@ nsXMLHttpRequest::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
 void
 nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
                                         const nsAString& aType,
-                                        PRBool aUseLSEventWrapper,
-                                        PRBool aLengthComputable,
+                                        bool aUseLSEventWrapper,
+                                        bool aLengthComputable,
                                         PRUint64 aLoaded, PRUint64 aTotal,
                                         PRUint64 aPosition, PRUint64 aTotalSize)
 {
@@ -1373,7 +1373,7 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
     return;
   }
 
-  PRBool dispatchLoadend = aType.EqualsLiteral(LOAD_STR) ||
+  bool dispatchLoadend = aType.EqualsLiteral(LOAD_STR) ||
                            aType.EqualsLiteral(ERROR_STR) ||
                            aType.EqualsLiteral(ABORT_STR);
   
@@ -1401,10 +1401,7 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
 
   if (aUseLSEventWrapper) {
     nsCOMPtr<nsIDOMProgressEvent> xhrprogressEvent =
-      new nsXMLHttpProgressEvent(progress, aPosition, aTotalSize);
-    if (!xhrprogressEvent) {
-      return;
-    }
+      new nsXMLHttpProgressEvent(progress, aPosition, aTotalSize, mOwner);
     event = xhrprogressEvent;
   }
   aTarget->DispatchDOMEvent(nsnull, event, nsnull, nsnull);
@@ -1474,7 +1471,7 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
 
 NS_IMETHODIMP
 nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
-                       PRBool async, const nsAString& user,
+                       bool async, const nsAString& user,
                        const nsAString& password, PRUint8 optional_argc)
 {
   NS_ENSURE_ARG(!method.IsEmpty());
@@ -1495,7 +1492,7 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
 
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
-  PRBool authp = PR_FALSE;
+  bool authp = false;
 
   if (mState & (XML_HTTP_REQUEST_OPENED |
                 XML_HTTP_REQUEST_HEADERS_RECEIVED |
@@ -1747,7 +1744,7 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
   return NS_OK;
 }
 
-PRBool
+bool
 IsSameOrBaseChannel(nsIRequest* aPossibleBase, nsIChannel* aChannel)
 {
   nsCOMPtr<nsIMultiPartChannel> mpChannel = do_QueryInterface(aPossibleBase);
@@ -1842,7 +1839,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   DetectCharset();
 
   // Set up responseXML
-  PRBool parseBody = mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
+  bool parseBody = mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
                      mResponseType == XML_HTTP_RESPONSE_TYPE_DOCUMENT;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (parseBody && httpChannel) {
@@ -1944,7 +1941,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   // here.
   nsCOMPtr<nsIMultiPartChannel> mpChannel = do_QueryInterface(request);
   if (mpChannel) {
-    PRBool last;
+    bool last;
     rv = mpChannel->GetIsLastPart(&last);
     NS_ENSURE_SUCCESS(rv, rv);
     if (last) {
@@ -2311,7 +2308,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       nsCOMPtr<nsIURI> referrerURI;
 
       if (principalURI && docCurURI && docOrigURI) {
-        PRBool equal = PR_FALSE;
+        bool equal = false;
         principalURI->Equals(docOrigURI, &equal);
         if (equal) {
           referrerURI = docCurURI;
@@ -2377,7 +2374,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       // We don't want to set a charset for streams.
       if (!charset.IsEmpty()) {
         nsCAutoString specifiedCharset;
-        PRBool haveCharset;
+        bool haveCharset;
         PRInt32 charsetStart, charsetEnd;
         rv = NS_ExtractCharsetFromContentType(contentType, specifiedCharset,
                                               &haveCharset, &charsetStart,
@@ -2463,7 +2460,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   rv = CheckChannelForCrossSiteRequest(mChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool withCredentials = !!(mState & XML_HTTP_REQUEST_AC_WITH_CREDENTIALS);
+  bool withCredentials = !!(mState & XML_HTTP_REQUEST_AC_WITH_CREDENTIALS);
 
   // Hook us up to listen to redirects and the like
   mChannel->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
@@ -2615,7 +2612,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   // the channel throwing from mChannel->SetRequestHeader since we might
   // still be waiting for mCORSPreflightChannel to actually open mChannel
   if (mCORSPreflightChannel) {
-    PRBool pending;
+    bool pending;
     rv = mCORSPreflightChannel->IsPending(&pending);
     NS_ENSURE_SUCCESS(rv, rv);
     
@@ -2638,7 +2635,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   // Prevent modification to certain HTTP headers (see bug 302263), unless
   // the executing script has UniversalBrowserWrite permission.
 
-  PRBool privileged;
+  bool privileged;
   rv = IsCapabilityEnabled("UniversalBrowserWrite", &privileged);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
@@ -2736,7 +2733,7 @@ nsXMLHttpRequest::OverrideMimeType(const nsACString& aMimeType)
 
 /* attribute boolean multipart; */
 NS_IMETHODIMP
-nsXMLHttpRequest::GetMultipart(PRBool *_retval)
+nsXMLHttpRequest::GetMultipart(bool *_retval)
 {
   *_retval = !!(mState & XML_HTTP_REQUEST_MULTIPART);
 
@@ -2745,7 +2742,7 @@ nsXMLHttpRequest::GetMultipart(PRBool *_retval)
 
 /* attribute boolean multipart; */
 NS_IMETHODIMP
-nsXMLHttpRequest::SetMultipart(PRBool aMultipart)
+nsXMLHttpRequest::SetMultipart(bool aMultipart)
 {
   if (!(mState & XML_HTTP_REQUEST_UNSENT)) {
     // Can't change this while we're in the middle of something.
@@ -2763,7 +2760,7 @@ nsXMLHttpRequest::SetMultipart(PRBool aMultipart)
 
 /* attribute boolean mozBackgroundRequest; */
 NS_IMETHODIMP
-nsXMLHttpRequest::GetMozBackgroundRequest(PRBool *_retval)
+nsXMLHttpRequest::GetMozBackgroundRequest(bool *_retval)
 {
   *_retval = !!(mState & XML_HTTP_REQUEST_BACKGROUND);
 
@@ -2772,9 +2769,9 @@ nsXMLHttpRequest::GetMozBackgroundRequest(PRBool *_retval)
 
 /* attribute boolean mozBackgroundRequest; */
 NS_IMETHODIMP
-nsXMLHttpRequest::SetMozBackgroundRequest(PRBool aMozBackgroundRequest)
+nsXMLHttpRequest::SetMozBackgroundRequest(bool aMozBackgroundRequest)
 {
-  PRBool privileged;
+  bool privileged;
 
   nsresult rv = IsCapabilityEnabled("UniversalXPConnect", &privileged);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2798,7 +2795,7 @@ nsXMLHttpRequest::SetMozBackgroundRequest(PRBool aMozBackgroundRequest)
 
 /* attribute boolean withCredentials; */
 NS_IMETHODIMP
-nsXMLHttpRequest::GetWithCredentials(PRBool *_retval)
+nsXMLHttpRequest::GetWithCredentials(bool *_retval)
 {
   *_retval = !!(mState & XML_HTTP_REQUEST_AC_WITH_CREDENTIALS);
 
@@ -2807,7 +2804,7 @@ nsXMLHttpRequest::GetWithCredentials(PRBool *_retval)
 
 /* attribute boolean withCredentials; */
 NS_IMETHODIMP
-nsXMLHttpRequest::SetWithCredentials(PRBool aWithCredentials)
+nsXMLHttpRequest::SetWithCredentials(bool aWithCredentials)
 {
   // Return error if we're already processing a request
   if (XML_HTTP_REQUEST_SENT & mState) {
@@ -2824,7 +2821,7 @@ nsXMLHttpRequest::SetWithCredentials(PRBool aWithCredentials)
 }
 
 nsresult
-nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
+nsXMLHttpRequest::ChangeState(PRUint32 aState, bool aBroadcast)
 {
   // If we are setting one of the mutually exclusive states,
   // unset those state bits first.
@@ -2985,7 +2982,7 @@ nsXMLHttpRequest::OnRedirectVerifyCallback(nsresult result)
 //
 
 void
-nsXMLHttpRequest::MaybeDispatchProgressEvents(PRBool aFinalProgress)
+nsXMLHttpRequest::MaybeDispatchProgressEvents(bool aFinalProgress)
 {
   if (aFinalProgress && mTimerIsActive) {
     mTimerIsActive = PR_FALSE;
@@ -3054,10 +3051,10 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint
 
   // We're uploading if our state is XML_HTTP_REQUEST_OPENED or
   // XML_HTTP_REQUEST_SENT
-  PRBool upload = !!((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState);
+  bool upload = !!((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState);
   // When uploading, OnProgress reports also headers in aProgress and aProgressMax.
   // So, try to remove the headers, if possible.
-  PRBool lengthComputable = (aProgressMax != LL_MAXUINT);
+  bool lengthComputable = (aProgressMax != LL_MAXUINT);
   if (upload) {
     PRUint64 loaded = aProgress;
     PRUint64 total = aProgressMax;
@@ -3099,7 +3096,7 @@ nsXMLHttpRequest::OnStatus(nsIRequest *aRequest, nsISupports *aContext, nsresult
   return NS_OK;
 }
 
-PRBool
+bool
 nsXMLHttpRequest::AllowUploadProgress()
 {
   return !(mState & XML_HTTP_REQUEST_USE_XSITE_AC) ||
@@ -3222,7 +3219,7 @@ NS_IMETHODIMP nsXMLHttpRequest::
 nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
     // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
-    PRBool chrome = PR_FALSE; // default to false in case IsCapabilityEnabled fails
+    bool chrome = false; // default to false in case IsCapabilityEnabled fails
     IsCapabilityEnabled("UniversalXPConnect", &chrome);
     if (!chrome &&
          (header.LowerCaseEqualsASCII("set-cookie") ||
@@ -3240,7 +3237,9 @@ nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 // DOM event class to handle progress notifications
 nsXMLHttpProgressEvent::nsXMLHttpProgressEvent(nsIDOMProgressEvent* aInner,
                                                PRUint64 aCurrentProgress,
-                                               PRUint64 aMaxProgress)
+                                               PRUint64 aMaxProgress,
+                                               nsPIDOMWindow* aWindow)
+  : mWindow(aWindow)
 {
   mInner = static_cast<nsDOMProgressEvent*>(aInner);
   mCurProgress = aCurrentProgress;
@@ -3270,11 +3269,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXMLHttpProgressEvent)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXMLHttpProgressEvent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInner);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mWindow);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXMLHttpProgressEvent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mInner,
                                                        nsIDOMProgressEvent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mWindow);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP nsXMLHttpProgressEvent::GetInput(nsIDOMLSInput * *aInput)
@@ -3283,8 +3284,23 @@ NS_IMETHODIMP nsXMLHttpProgressEvent::GetInput(nsIDOMLSInput * *aInput)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void
+nsXMLHttpProgressEvent::WarnAboutLSProgressEvent(nsIDocument::DeprecatedOperations aOperation)
+{
+  if (!mWindow) {
+    return;
+  }
+  nsCOMPtr<nsIDocument> document =
+    do_QueryInterface(mWindow->GetExtantDocument());
+  if (!document) {
+    return;
+  }
+  document->WarnOnceAbout(aOperation);
+}
+
 NS_IMETHODIMP nsXMLHttpProgressEvent::GetPosition(PRUint32 *aPosition)
 {
+  WarnAboutLSProgressEvent(nsIDocument::ePosition);
   // XXX can we change the iface?
   LL_L2UI(*aPosition, mCurProgress);
   return NS_OK;
@@ -3292,8 +3308,8 @@ NS_IMETHODIMP nsXMLHttpProgressEvent::GetPosition(PRUint32 *aPosition)
 
 NS_IMETHODIMP nsXMLHttpProgressEvent::GetTotalSize(PRUint32 *aTotalSize)
 {
+  WarnAboutLSProgressEvent(nsIDocument::eTotalSize);
   // XXX can we change the iface?
   LL_L2UI(*aTotalSize, mMaxProgress);
   return NS_OK;
 }
-

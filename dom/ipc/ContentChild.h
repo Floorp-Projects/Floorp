@@ -80,8 +80,11 @@ public:
     virtual PBrowserChild* AllocPBrowser(const PRUint32& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserChild*);
 
-    virtual PCrashReporterChild* AllocPCrashReporter();
-    virtual bool DeallocPCrashReporter(PCrashReporterChild*);
+    virtual PCrashReporterChild*
+    AllocPCrashReporter(const mozilla::dom::NativeThreadId& id,
+                        const PRUint32& processType);
+    virtual bool
+    DeallocPCrashReporter(PCrashReporterChild*);
 
     virtual PMemoryReportRequestChild*
     AllocPMemoryReportRequest();
@@ -121,7 +124,7 @@ public:
                                     const InfallibleTArray<OverrideMapping>& overrides,
                                     const nsCString& locale);
 
-    virtual bool RecvSetOffline(const PRBool& offline);
+    virtual bool RecvSetOffline(const bool& offline);
 
     virtual bool RecvNotifyVisited(const IPC::URI& aURI);
     // auto remove when alertfinished is received.

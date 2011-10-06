@@ -172,7 +172,7 @@ XPCThrower::ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx)
 // static
 void
 XPCThrower::Verbosify(XPCCallContext& ccx,
-                      char** psz, PRBool own)
+                      char** psz, bool own)
 {
     char* sz = nsnull;
 
@@ -239,7 +239,7 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
         JS_ReportOutOfMemory(cx);
 }
 
-static PRBool
+static bool
 IsCallerChrome(JSContext* cx)
 {
     nsresult rv;
@@ -268,7 +268,7 @@ IsCallerChrome(JSContext* cx)
     if(!secMan)
         return PR_FALSE;
 
-    PRBool isChrome;
+    bool isChrome;
     rv = secMan->SubjectPrincipalIsSystem(&isChrome);
     return NS_SUCCEEDED(rv) && isChrome;
 }

@@ -208,14 +208,14 @@ nsLayoutDebuggingTools::NewURILoaded()
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::GetVisualDebugging(PRBool *aVisualDebugging)
+nsLayoutDebuggingTools::GetVisualDebugging(bool *aVisualDebugging)
 {
     *aVisualDebugging = mVisualDebugging;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::SetVisualDebugging(PRBool aVisualDebugging)
+nsLayoutDebuggingTools::SetVisualDebugging(bool aVisualDebugging)
 {
     nsCOMPtr<nsILayoutDebugger> ld = do_GetService(kLayoutDebuggerCID);
     if (!ld)
@@ -227,14 +227,14 @@ nsLayoutDebuggingTools::SetVisualDebugging(PRBool aVisualDebugging)
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::GetVisualEventDebugging(PRBool *aVisualEventDebugging)
+nsLayoutDebuggingTools::GetVisualEventDebugging(bool *aVisualEventDebugging)
 {
     *aVisualEventDebugging = mVisualEventDebugging;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::SetVisualEventDebugging(PRBool aVisualEventDebugging)
+nsLayoutDebuggingTools::SetVisualEventDebugging(bool aVisualEventDebugging)
 {
     nsCOMPtr<nsILayoutDebugger> ld = do_GetService(kLayoutDebuggerCID);
     if (!ld)
@@ -246,98 +246,98 @@ nsLayoutDebuggingTools::SetVisualEventDebugging(PRBool aVisualEventDebugging)
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::GetPaintFlashing(PRBool *aPaintFlashing)
+nsLayoutDebuggingTools::GetPaintFlashing(bool *aPaintFlashing)
 {
     *aPaintFlashing = mPaintFlashing;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::SetPaintFlashing(PRBool aPaintFlashing)
+nsLayoutDebuggingTools::SetPaintFlashing(bool aPaintFlashing)
 {
     mPaintFlashing = aPaintFlashing;
     return SetBoolPrefAndRefresh("nglayout.debug.paint_flashing", mPaintFlashing);
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::GetPaintDumping(PRBool *aPaintDumping)
+nsLayoutDebuggingTools::GetPaintDumping(bool *aPaintDumping)
 {
     *aPaintDumping = mPaintDumping;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::SetPaintDumping(PRBool aPaintDumping)
+nsLayoutDebuggingTools::SetPaintDumping(bool aPaintDumping)
 {
     mPaintDumping = aPaintDumping;
     return SetBoolPrefAndRefresh("nglayout.debug.paint_dumping", mPaintDumping);
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::GetInvalidateDumping(PRBool *aInvalidateDumping)
+nsLayoutDebuggingTools::GetInvalidateDumping(bool *aInvalidateDumping)
 {
     *aInvalidateDumping = mInvalidateDumping;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::SetInvalidateDumping(PRBool aInvalidateDumping)
+nsLayoutDebuggingTools::SetInvalidateDumping(bool aInvalidateDumping)
 {
     mInvalidateDumping = aInvalidateDumping;
     return SetBoolPrefAndRefresh("nglayout.debug.invalidate_dumping", mInvalidateDumping);
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::GetEventDumping(PRBool *aEventDumping)
+nsLayoutDebuggingTools::GetEventDumping(bool *aEventDumping)
 {
     *aEventDumping = mEventDumping;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::SetEventDumping(PRBool aEventDumping)
+nsLayoutDebuggingTools::SetEventDumping(bool aEventDumping)
 {
     mEventDumping = aEventDumping;
     return SetBoolPrefAndRefresh("nglayout.debug.event_dumping", mEventDumping);
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::GetMotionEventDumping(PRBool *aMotionEventDumping)
+nsLayoutDebuggingTools::GetMotionEventDumping(bool *aMotionEventDumping)
 {
     *aMotionEventDumping = mMotionEventDumping;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::SetMotionEventDumping(PRBool aMotionEventDumping)
+nsLayoutDebuggingTools::SetMotionEventDumping(bool aMotionEventDumping)
 {
     mMotionEventDumping = aMotionEventDumping;
     return SetBoolPrefAndRefresh("nglayout.debug.motion_event_dumping", mMotionEventDumping);
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::GetCrossingEventDumping(PRBool *aCrossingEventDumping)
+nsLayoutDebuggingTools::GetCrossingEventDumping(bool *aCrossingEventDumping)
 {
     *aCrossingEventDumping = mCrossingEventDumping;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::SetCrossingEventDumping(PRBool aCrossingEventDumping)
+nsLayoutDebuggingTools::SetCrossingEventDumping(bool aCrossingEventDumping)
 {
     mCrossingEventDumping = aCrossingEventDumping;
     return SetBoolPrefAndRefresh("nglayout.debug.crossing_event_dumping", mCrossingEventDumping);
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::GetReflowCounts(PRBool* aShow)
+nsLayoutDebuggingTools::GetReflowCounts(bool* aShow)
 {
     *aShow = mReflowCounts;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::SetReflowCounts(PRBool aShow)
+nsLayoutDebuggingTools::SetReflowCounts(bool aShow)
 {
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
     nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
@@ -583,7 +583,7 @@ void nsLayoutDebuggingTools::ForceRefresh()
 
 nsresult
 nsLayoutDebuggingTools::SetBoolPrefAndRefresh(const char * aPrefName,
-                                              PRBool aNewVal)
+                                              bool aNewVal)
 {
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 

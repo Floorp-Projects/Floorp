@@ -39,16 +39,20 @@
 
 let doc;
 let h1;
+let p2;
+let toolsLength = 0;
+let toolEvents = 0;
 let tool1;
 let tool2;
 let tool3;
+let initToolsMethod = InspectorUI.initTools;
 
 function createDocument()
 {
   let div = doc.createElement("div");
-  let h1 = doc.createElement("h1");
+  h1 = doc.createElement("h1");
   let p1 = doc.createElement("p");
-  let p2 = doc.createElement("p");
+  p2 = doc.createElement("p");
   let div2 = doc.createElement("div");
   let p3 = doc.createElement("p");
   doc.title = "Inspector Tree Selection Test";
@@ -79,73 +83,70 @@ function createDocument()
 
 function setupHighlighterTests()
 {
-  h1 = doc.querySelectorAll("h1")[0];
   ok(h1, "we have the header node");
-  Services.obs.addObserver(inspectorOpen, "inspector-opened", false);
+  Services.obs.addObserver(inspectorOpen, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+  registerTools();
   InspectorUI.toggleInspectorUI();
 }
 
 function inspectorOpen()
 {
   info("we received the inspector-opened notification");
-  Services.obs.removeObserver(inspectorOpen, "inspector-opened", false);
-  Services.obs.addObserver(startToolTests, "inspector-highlighting", false);
-  let rect = h1.getBoundingClientRect();
-  executeSoon(function() {
-    EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
-  });
+  Services.obs.removeObserver(inspectorOpen, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
+  toolsLength = InspectorUI.tools.length;
+  toolEvents = InspectorUI.toolEvents.length;
+  info("tools registered");
+  Services.obs.addObserver(startToolTests, InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+  InspectorUI.inspectNode(h1);
 }
 
 function startToolTests(evt)
 {
-  info("we received the inspector-highlighting notification");
-  Services.obs.removeObserver(startToolTests, "inspector-highlighting", false);
+  Services.obs.removeObserver(startToolTests, InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
   InspectorUI.stopInspecting();
-
   info("Getting InspectorUI.tools");
   let tools = InspectorUI.tools;
+
   tool1 = InspectorUI.tools["tool_1"];
   tool2 = InspectorUI.tools["tool_2"];
   tool3 = InspectorUI.tools["tool_3"];
 
   info("Checking panel states 1");
-  ok(tool1.context.panelIsClosed, "Panel 1 is closed");
-  ok(tool2.context.panelIsClosed, "Panel 2 is closed");
-  ok(tool3.context.panelIsClosed, "Panel 3 is closed");
+  ok(!tool1.isOpen, "Panel 1 is closed");
+  ok(!tool2.isOpen, "Panel 2 is closed");
+  ok(!tool3.isOpen, "Panel 3 is closed");
 
   info("Calling show method for all tools");
-  tool1.onShow.apply(tool1.context, [h1]);
-  tool2.onShow.apply(tool2.context, [h1]);
-  tool3.onShow.apply(tool3.context, [h1]);
+  InspectorUI.toolShow(tool1);
+  InspectorUI.toolShow(tool2);
+  InspectorUI.toolShow(tool3);
 
   info("Checking panel states 2");
-  ok(tool1.context.panelIsOpen, "Panel 1 is open");
-  ok(tool2.context.panelIsOpen, "Panel 2 is open");
-  ok(tool3.context.panelIsOpen, "Panel 3 is open");
+  ok(tool1.isOpen, "Panel 1 is open");
+  ok(tool2.isOpen, "Panel 2 is open");
+  ok(tool3.isOpen, "Panel 3 is open");
 
-  info("Calling selectNode method for all tools");
-  tool1.onSelect.apply(tool1.context, [h1]);
-  tool2.onSelect.apply(tool2.context, [h1]);
-  tool3.onSelect.apply(tool3.context, [h1]);
+  info("Calling selectNode method for all tools, should see 3 selects");
+  InspectorUI.inspectNode(p2);
 
   info("Calling hide method for all tools");
-  tool1.onHide.apply(tool1.context, [h1]);
-  tool2.onHide.apply(tool2.context, [h1]);
-  tool3.onHide.apply(tool3.context, [h1]);
-
+  InspectorUI.toolHide(tool1);
+  InspectorUI.toolHide(tool2);
+  InspectorUI.toolHide(tool3);
+  
   info("Checking panel states 3");
-  ok(tool1.context.panelIsClosed, "Panel 1 is closed");
-  ok(tool2.context.panelIsClosed, "Panel 2 is closed");
-  ok(tool3.context.panelIsClosed, "Panel 3 is closed");
+  ok(!tool1.isOpen, "Panel 1 is closed");
+  ok(!tool2.isOpen, "Panel 2 is closed");
+  ok(!tool3.isOpen, "Panel 3 is closed");
 
   info("Showing tools 1 & 3");
-  tool1.onShow.apply(tool1.context, [h1]);
-  tool3.onShow.apply(tool3.context, [h1]);
+  InspectorUI.toolShow(tool1);
+  InspectorUI.toolShow(tool3);
 
   info("Checking panel states 4");
-  ok(tool1.context.panelIsOpen, "Panel 1 is open");
-  ok(tool2.context.panelIsClosed, "Panel 2 is closed");
-  ok(tool3.context.panelIsOpen, "Panel 3 is open");
+  ok(tool1.isOpen, "Panel 1 is open");
+  ok(!tool2.isOpen, "Panel 2 is closed");
+  ok(tool3.isOpen, "Panel 3 is open");
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {
@@ -160,24 +161,52 @@ function testSecondTab()
 {
   info("Opened second tab");
   info("Checking panel states 5");
-  ok(tool1.context.panelIsClosed, "Panel 1 is closed");
-  ok(tool2.context.panelIsClosed, "Panel 2 is closed");
-  ok(tool3.context.panelIsClosed, "Panel 3 is closed");
+
+  let tools = InspectorUI.tools;
+  ok(!(tool1 in tools), "Panel 1 not in tools");
+  ok(!(tool2 in tools), "Panel 2 not in tools");
+  ok(!(tool3 in tools), "Panel 3 not in tools");
 
   info("Closing current tab");
+  Services.obs.addObserver(testOriginalTab, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   gBrowser.removeCurrentTab();
+}
 
+function testOriginalTab()
+{
+  Services.obs.removeObserver(testOriginalTab, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
   info("Checking panel states 6");
-  ok(tool1.context.panelIsOpen, "Panel 1 is open");
-  ok(tool2.context.panelIsClosed, "Panel 2 is closed");
-  ok(tool3.context.panelIsOpen, "Panel 3 is open");
 
-  executeSoon(finishUp);
+  info("Tools: " + InspectorUI.tools);
+  // reacquaint ourselves with our tools
+  tool1 = InspectorUI.tools["tool_1"];
+  tool2 = InspectorUI.tools["tool_2"];
+  tool3 = InspectorUI.tools["tool_3"];
+
+  ok(tool1.isOpen, "Panel 1 is open after reactivation");
+  ok(!tool2.isOpen, "Panel 2 is closed after reactivation");
+  ok(tool3.isOpen, "Panel 3 is open after reactivation");
+
+  Services.obs.addObserver(unregisterTools, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
+  InspectorUI.closeInspectorUI(true);
+}
+
+function unregisterTools()
+{
+  Services.obs.removeObserver(unregisterTools, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED);
+  let tools = InspectorUI.tools;
+
+  ok(!(tool1 in tools), "Tool 1 removed");
+  ok(!(tool2 in tools), "Tool 2 removed");
+  ok(!(tool3 in tools), "Tool 3 removed");
+  is(tools.length, toolsLength, "Number of Registered Tools matches original");
+  is(InspectorUI.toolEvents.length, toolEvents, "Number of tool events matches original");
+  finishUp();
 }
 
 function finishUp() {
-  InspectorUI.closeInspectorUI(true);
   gBrowser.removeCurrentTab();
+  InspectorUI.initTools = initToolsMethod;
   finish();
 }
 
@@ -188,7 +217,7 @@ function test()
   gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
     doc = content.document;
-    waitForFocus(registerTools, content);
+    waitForFocus(createDocument, content);
   }, true);
   
   content.location = "data:text/html,registertool tests for inspector";
@@ -196,10 +225,12 @@ function test()
 
 function registerTools()
 {
-  createDocument();
-  registerTool(new testTool("tool_1", "Tool 1", "Tool 1 tooltip", "I"));
-  registerTool(new testTool("tool_2", "Tool 2", "Tool 2 tooltip", "J"));
-  registerTool(new testTool("tool_3", "Tool 3", "Tool 3 tooltip", "K"));
+  InspectorUI.initTools = function() {
+    info("(re)registering tools");
+    registerTool(new testTool("tool_1", "Tool 1", "Tool 1 tooltip", "I"));
+    registerTool(new testTool("tool_2", "Tool 2", "Tool 2 tooltip", "J"));
+    registerTool(new testTool("tool_3", "Tool 3", "Tool 3 tooltip", "K"));
+  }
 }
 
 function registerTool(aTool)
@@ -210,10 +241,11 @@ function registerTool(aTool)
     tooltiptext: aTool.tooltip,
     accesskey: aTool.accesskey,
     context: aTool,
+    get isOpen() aTool.isOpen(),
     onSelect: aTool.selectNode,
-    onShow: aTool.show,
-    onHide: aTool.hide,
-    panel: aTool.panel
+    show: aTool.show,
+    hide: aTool.hide,
+    unregister: aTool.destroy,
   });
 }
 
@@ -223,19 +255,13 @@ function testTool(aToolId, aLabel, aTooltip, aAccesskey)
   this.id = aToolId;
   this.label = aLabel;
   this.tooltip = aTooltip;
-  this.accesskey = aAccesskey
-  this.panel = this.createPanel();
+  this.accesskey = aAccesskey;
+  this._isOpen = false;
 }
 
 testTool.prototype = {
-  get panelIsOpen()
-  {
-    return this.panel.state == "open" || this.panel.state == "showing";
-  },
-
-  get panelIsClosed()
-  {
-    return this.panel.state == "closed" || this.panel.state == "hiding";
+  isOpen: function BIR_isOpen() {
+    return this._isOpen;
   },
 
   selectNode: function BIR_selectNode(aNode) {
@@ -244,32 +270,23 @@ testTool.prototype = {
   },
 
   show: function BIR_show(aNode) {
-    this.panel.openPopup(gBrowser.selectedBrowser,
-                         "end_before", 0, 20, false, false);
+    this._isOpen = true;
     is(InspectorUI.selection, aNode,
        "show: currently selected node was passed: " + this.id);
   },
 
   hide: function BIR_hide() {
     info(this.id + " hide");
-    this.panel.hidePopup();
+    this._isOpen = false;
   },
 
-  createPanel: function BIR_createPanel() {
-    let popupSet = document.getElementById("mainPopupSet");
-    let ns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    let panel = this.panel = document.createElementNS(ns, "panel");
-    panel.setAttribute("orient", "vertical");
-    panel.setAttribute("noautofocus", "true");
-    panel.setAttribute("noautohide", "true");
-    panel.setAttribute("titlebar", "normal");
-    panel.setAttribute("close", "true");
-    panel.setAttribute("label", "Panel for " + this.id);
-    panel.setAttribute("width", 200);
-    panel.setAttribute("height", 400);
-    popupSet.appendChild(panel);
-
-    ok(panel.parentNode == popupSet, "Panel created and appended successfully");
-    return panel;
+  destroy: function BIR_destroy() {
+    info("tool destroyed " + this.id);
+    if (this.isOpen())
+      this.hide();
+    delete this.id;
+    delete this.label;
+    delete this.tooltip;
+    delete this.accesskey;
   },
 };

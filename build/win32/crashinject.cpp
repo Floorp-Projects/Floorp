@@ -71,7 +71,7 @@ int main(int argc, char** argv)
   wcscpy(slash, L"crashinjectdll.dll");
 
   // now find our target process
-  HANDLE targetProc = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_CREATE_THREAD,
+  HANDLE targetProc = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION,
                                   FALSE,
                                   pid);
   if (targetProc == NULL) {

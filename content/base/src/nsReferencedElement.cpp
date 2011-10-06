@@ -49,7 +49,7 @@
 
 void
 nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
-                           PRBool aWatch, PRBool aReferenceImage)
+                           bool aWatch, bool aReferenceImage)
 {
   NS_ABORT_IF_FALSE(aFromContent, "Reset() expects non-null content pointer");
 
@@ -83,7 +83,7 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
   if (bindingParent) {
     nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
     if (binding) {
-      PRBool isEqualExceptRef;
+      bool isEqualExceptRef;
       rv = aURI->EqualsExceptRef(binding->PrototypeBinding()->DocURI(),
                                  &isEqualExceptRef);
       if (NS_SUCCEEDED(rv) && isEqualExceptRef) {
@@ -114,7 +114,7 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
     }
   }
 
-  PRBool isEqualExceptRef;
+  bool isEqualExceptRef;
   rv = aURI->EqualsExceptRef(doc->GetDocumentURI(), &isEqualExceptRef);
   if (NS_FAILED(rv) || !isEqualExceptRef) {
     nsRefPtr<nsIDocument::ExternalResourceLoad> load;
@@ -150,7 +150,7 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
 
 void
 nsReferencedElement::ResetWithID(nsIContent* aFromContent, const nsString& aID,
-                                 PRBool aWatch)
+                                 bool aWatch)
 {
   nsIDocument *doc = aFromContent->GetCurrentDoc();
   if (!doc)
@@ -171,7 +171,7 @@ nsReferencedElement::ResetWithID(nsIContent* aFromContent, const nsString& aID,
 }
 
 void
-nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, PRBool aWatch,
+nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, bool aWatch,
                                      const nsString& aRef)
 {
   if (aWatch) {
@@ -220,7 +220,7 @@ nsReferencedElement::Unlink()
   mReferencingImage = PR_FALSE;
 }
 
-PRBool
+bool
 nsReferencedElement::Observe(Element* aOldElement,
                              Element* aNewElement, void* aData)
 {
@@ -234,7 +234,7 @@ nsReferencedElement::Observe(Element* aOldElement,
     p->mPendingNotification = watcher;
     nsContentUtils::AddScriptRunner(watcher);
   }
-  PRBool keepTracking = p->IsPersistent();
+  bool keepTracking = p->IsPersistent();
   if (!keepTracking) {
     p->mWatchDocument = nsnull;
     p->mWatchID = nsnull;

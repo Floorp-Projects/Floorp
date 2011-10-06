@@ -60,7 +60,7 @@ RootExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
 TX_IMPL_EXPR_STUBS_0(RootExpr, NODESET_RESULT)
 
-PRBool
+bool
 RootExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     return !!(aContext & NODE_CONTEXT);

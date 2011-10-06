@@ -94,8 +94,8 @@ private:
   nsString    mAppLocale;
   nsCString   mCharset;        // in order to convert API result to unicode
   nsCString   mPlatformLocale; // for setlocale
-  PRBool      mLocalePreferred24hour;                       // true if 24 hour format is preferred by current locale
-  PRBool      mLocaleAMPMfirst;                             // true if AM/PM string is preferred before the time
+  bool        mLocalePreferred24hour;                       // true if 24 hour format is preferred by current locale
+  bool        mLocaleAMPMfirst;                             // true if AM/PM string is preferred before the time
   nsCOMPtr <nsIUnicodeDecoder>   mDecoder;
 };
 

@@ -38,7 +38,6 @@
 #include "SVGAnimatedLengthList.h"
 #include "SVGLength.h"
 #include "nsSVGElement.h"
-#include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
 #include "nsString.h"
@@ -115,7 +114,7 @@ SVGLengthList::SetValueFromString(const nsAString& aValue)
   return CopyFrom(temp);
 }
 
-PRBool
+bool
 SVGLengthList::operator==(const SVGLengthList& rhs) const
 {
   if (Length() != rhs.Length()) {

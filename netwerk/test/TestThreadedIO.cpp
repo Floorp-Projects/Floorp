@@ -108,7 +108,7 @@ public:
     static void IOThread( void *p );
 
 private:
-    PRBool mDone;
+    bool mDone;
     int    mThreadNo;
     FILE  *mFile;
     static int threadCount;

@@ -35,3 +35,52 @@
   pointer-events: auto;
   z-index: 1;
 }
+
+/*
+ * Node Infobar
+ */
+
+#highlighter-nodeinfobar-container {
+  position: absolute;
+  -moz-transition-property: top, left;
+  -moz-transition-duration: 0.1s;
+  -moz-transition-timing-function: linear;
+}
+
+#highlighter-nodeinfobar {
+  display: block;
+  white-space: nowrap;
+  direction: ltr;
+}
+
+.highlighter-nodeinfobar-arrow {
+  display: none;
+}
+
+#highlighter-nodeinfobar-container[position="top"]:not([hide-arrow]) > #highlighter-nodeinfobar-arrow-bottom {
+  display: block;
+}
+
+#highlighter-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > #highlighter-nodeinfobar-arrow-top {
+  display: block;
+}
+
+#highlighter-nodeinfobar-container[disabled] {
+  visibility: hidden;
+}
+
+#highlighter-nodeinfobar-id:empty {
+  display: none;
+}
+
+#highlighter-nodeinfobar-id::before {
+  content: "#";
+}
+
+.highlighter-nodeinfobar-class::before {
+  content: ".";
+}
+
+#highlighter-nodeinfobar-tagname {
+  text-transform: lowercase;
+}

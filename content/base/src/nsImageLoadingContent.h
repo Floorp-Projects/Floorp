@@ -103,8 +103,8 @@ protected:
    * @param aNotify If true, nsIDocumentObserver state change notifications
    *                will be sent as needed.
    */
-  nsresult LoadImage(const nsAString& aNewURI, PRBool aForce,
-                     PRBool aNotify);
+  nsresult LoadImage(const nsAString& aNewURI, bool aForce,
+                     bool aNotify);
 
   /**
    * ImageState is called by subclasses that are computing their content state.
@@ -133,7 +133,7 @@ protected:
    * @param aLoadFlags Optional parameter specifying load flags to use for
    *        the image load
    */
-  nsresult LoadImage(nsIURI* aNewURI, PRBool aForce, PRBool aNotify,
+  nsresult LoadImage(nsIURI* aNewURI, bool aForce, bool aNotify,
                      nsIDocument* aDocument = nsnull,
                      nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL);
 
@@ -147,11 +147,29 @@ protected:
   nsIDocument* GetOurDocument();
 
   /**
+   * Helper function to get the frame associated with this content. Not named
+   * GetPrimaryFrame to prevent ambiguous method names in subclasses.
+   *
+   * @return The frame which we belong to, or nsnull if it doesn't exist.
+   */
+  nsIFrame* GetOurPrimaryFrame();
+
+  /**
+   * Helper function to get the PresContext associated with this content's
+   * frame. Not named GetPresContext to prevent ambiguous method names in
+   * subclasses.
+   *
+   * @return The nsPresContext associated with our frame, or nsnull if either
+   *         the frame doesn't exist, or the frame's prescontext doesn't exist.
+   */
+  nsPresContext* GetFramePresContext();
+
+  /**
    * CancelImageRequests is called by subclasses when they want to
    * cancel all image requests (for example when the subclass is
    * somehow not an image anymore).
    */
-  void CancelImageRequests(PRBool aNotify);
+  void CancelImageRequests(bool aNotify);
 
   /**
    * UseAsPrimaryRequest is called by subclasses when they have an existing
@@ -159,7 +177,7 @@ protected:
    * effectively be called instead of LoadImage or LoadImageWithChannel.
    * If aNotify is true, this method will notify on state changes.
    */
-  nsresult UseAsPrimaryRequest(imgIRequest* aRequest, PRBool aNotify);
+  nsresult UseAsPrimaryRequest(imgIRequest* aRequest, bool aNotify);
 
   /**
    * Derived classes of nsImageLoadingContent MUST call
@@ -173,11 +191,11 @@ protected:
 
   void ClearBrokenState() { mBroken = PR_FALSE; }
 
-  PRBool LoadingEnabled() { return mLoadingEnabled; }
+  bool LoadingEnabled() { return mLoadingEnabled; }
 
   // Sets blocking state only if the desired state is different from the
   // current one. See the comment for mBlockingOnload for more information.
-  void SetBlockingOnload(PRBool aBlocking);
+  void SetBlockingOnload(bool aBlocking);
 
   /**
    * Returns the CORS mode that will be used for all future image loads. The
@@ -211,7 +229,7 @@ private:
    */
   struct AutoStateChanger {
     AutoStateChanger(nsImageLoadingContent* aImageContent,
-                     PRBool aNotify) :
+                     bool aNotify) :
       mImageContent(aImageContent),
       mNotify(aNotify)
     {
@@ -224,7 +242,7 @@ private:
     }
 
     nsImageLoadingContent* mImageContent;
-    PRBool mNotify;
+    bool mNotify;
   };
 
   friend struct AutoStateChanger;
@@ -234,7 +252,7 @@ private:
    * content and updates what ImageState() returns accordingly.  It will also
    * fire a ContentStatesChanged() notification as needed if aNotify is true.
    */
-  void UpdateImageState(PRBool aNotify);
+  void UpdateImageState(bool aNotify);
 
   /**
    * CancelImageRequests can be called when we want to cancel the
@@ -248,7 +266,7 @@ private:
    *                             available
    * @param aNewImageStatus the nsIContentPolicy status of the new image load
    */
-  void CancelImageRequests(nsresult aReason, PRBool aEvenIfSizeAvailable,
+  void CancelImageRequests(nsresult aReason, bool aEvenIfSizeAvailable,
                            PRInt16 aNewImageStatus);
 
   /**
@@ -303,6 +321,16 @@ protected:
   void ClearPendingRequest(nsresult aReason);
 
   /**
+   * Retrieve a pointer to the 'registered with the refresh driver' flag for
+   * which a particular image request corresponds.
+   *
+   * @returns A pointer to the boolean flag for a given image request, or
+   *          |nsnull| if the request is not either |mPendingRequest| or
+   *          |mCurrentRequest|.
+   */
+  bool* GetRegisteredFlagForRequest(imgIRequest* aRequest);
+
+  /**
    * Static helper method to tell us if we have the size of a request. The
    * image may be null.
    */
@@ -344,26 +372,26 @@ private:
   nsEventStates mForcedImageState;
 
   PRInt16 mImageBlockingStatus;
-  PRPackedBool mLoadingEnabled : 1;
+  bool mLoadingEnabled : 1;
 
   /**
    * When true, we return mForcedImageState from ImageState().
    */
-  PRPackedBool mIsImageStateForced : 1;
+  bool mIsImageStateForced : 1;
 
   /**
    * The state we had the last time we checked whether we needed to notify the
    * document of a state change.  These are maintained by UpdateImageState.
    */
-  PRPackedBool mLoading : 1;
-  PRPackedBool mBroken : 1;
-  PRPackedBool mUserDisabled : 1;
-  PRPackedBool mSuppressed : 1;
+  bool mLoading : 1;
+  bool mBroken : 1;
+  bool mUserDisabled : 1;
+  bool mSuppressed : 1;
 
   /**
    * Whether we're currently blocking document load.
    */
-  PRPackedBool mBlockingOnload : 1;
+  bool mBlockingOnload : 1;
 
 protected:
   /**
@@ -374,14 +402,19 @@ protected:
    * interface), and the other two booleans store which of the current
    * and pending requests are of the sort that need their animation restarted.
    */
-  PRPackedBool mNewRequestsWillNeedAnimationReset : 1;
+  bool mNewRequestsWillNeedAnimationReset : 1;
 
 private:
-  PRPackedBool mPendingRequestNeedsResetAnimation : 1;
-  PRPackedBool mCurrentRequestNeedsResetAnimation : 1;
+  bool mPendingRequestNeedsResetAnimation : 1;
+  bool mCurrentRequestNeedsResetAnimation : 1;
 
   /* The number of nested AutoStateChangers currently tracking our state. */
   PRUint8 mStateChangerDepth;
+
+  // Flags to indicate whether each of the current and pending requests are
+  // registered with the refresh driver.
+  bool mCurrentRequestRegistered;
+  bool mPendingRequestRegistered;
 };
 
 #endif // nsImageLoadingContent_h__

@@ -26,14 +26,10 @@
     ////////////////////////////////////////////////////////////////////////////
     // Accessible tree testers
 
-    function focusChecker(aAcc, aStates)
+    function stateFocusChecker(aAcc, aStates)
     {
-      this.type = EVENT_FOCUS;
-      this.target = aAcc;
-      this.getID = function focusChecker_getID()
-      {
-        return "focus handling";
-      }
+      this.__proto__ = new focusChecker(aAcc);
+
       this.check = function focusChecker_check(aEvent)
       {
         var states = aStates ? aStates : 0;
@@ -45,6 +41,7 @@
     // Test
 
     // gA11yEventDumpID = "debug";
+    //gA11yEventDumpToConsole = true; // debug
 
     function doTestActions()
     {
@@ -64,7 +61,7 @@
           events: CLICK_EVENTS,
           targetID: treeBodyNode,
           eventSeq: [
-            new focusChecker(expandedTreeItem, STATE_EXPANDED)
+            new stateFocusChecker(expandedTreeItem, STATE_EXPANDED)
           ]
         },
         {

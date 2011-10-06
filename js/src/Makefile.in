@@ -101,7 +101,6 @@ CPPSRCS		= \
 		jsalloc.cpp \
 		jsanalyze.cpp \
 		jsapi.cpp \
-		jsarena.cpp \
 		jsarray.cpp \
 		jsatom.cpp \
 		jsbool.cpp \
@@ -161,6 +160,7 @@ CPPSRCS		= \
 		Stack.cpp \
 		String.cpp \
 		ParseMaps.cpp \
+		LifoAlloc.cpp \
 		Unicode.cpp \
 		$(NULL)
 
@@ -174,7 +174,6 @@ INSTALLED_HEADERS = \
 		js.msg \
 		jsalloc.h \
 		jsapi.h \
-		jsarena.h \
 		jsatom.h \
 		jsbit.h \
 		jsclass.h \
@@ -187,25 +186,18 @@ INSTALLED_HEADERS = \
 		jsdbgapi.h \
 		jsdhash.h \
 		jsemit.h \
-		jsfun.h \
 		jsfriendapi.h \
 		jsgc.h \
 		jscell.h \
 		jsgcchunk.h \
 		jsgcstats.h \
 		jshash.h \
-		jsinfer.h \
-		jsinferinlines.h \
-		jsinterp.h \
 		jsinttypes.h \
-		jsiter.h \
 		jslock.h \
-		jsobj.h \
 		json.h \
 		jsopcode.tbl \
 		jsopcode.h \
 		jsotypes.h \
-		jsparse.h \
 		jsproxy.h \
 		jsprf.h \
 		jsprobes.h \
@@ -216,8 +208,6 @@ INSTALLED_HEADERS = \
 		jspubtd.h \
 		jsreflect.h \
 		jsscan.h \
-		jsscope.h \
-		jsscript.h \
 		jsstaticcheck.h \
 		jsstdint.h \
 		jsstr.h \
@@ -241,19 +231,19 @@ INSTALLED_HEADERS = \
 VPATH		+= \
 		$(srcdir)/vm \
 		$(srcdir)/frontend \
+		$(srcdir)/ds \
 		$(NULL)
 
-EXPORTS_NAMESPACES = vm
+EXPORTS_NAMESPACES = vm ds
 
 EXPORTS_vm = \
-		ArgumentsObject.h \
-		CallObject.h \
-		GlobalObject.h \
-		Stack.h \
 		String.h \
-		StringObject.h \
+		StackSpace.h \
 		Unicode.h  \
 		$(NULL)
+
+EXPORTS_ds = \
+		LifoAlloc.h
 
 ###############################################
 # BEGIN include sources for low-level code shared with Gecko

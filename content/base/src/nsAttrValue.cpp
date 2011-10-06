@@ -51,7 +51,6 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
-#include "nsISVGValue.h"
 
 namespace css = mozilla::css;
 
@@ -81,12 +80,6 @@ nsAttrValue::nsAttrValue(css::StyleRule* aValue, const nsAString* aSerialized)
     : mBits(0)
 {
   SetTo(aValue, aSerialized);
-}
-
-nsAttrValue::nsAttrValue(nsISVGValue* aValue)
-    : mBits(0)
-{
-  SetTo(aValue);
 }
 
 nsAttrValue::nsAttrValue(const nsIntMargin& aValue)
@@ -250,11 +243,6 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       }
       break;
     }
-    case eSVGValue:
-    {
-      NS_ADDREF(cont->mSVGValue = otherCont->mSVGValue);
-      break;
-    }
     case eDoubleValue:
     {
       cont->mDoubleValue = otherCont->mDoubleValue;
@@ -313,16 +301,6 @@ nsAttrValue::SetTo(css::StyleRule* aValue, const nsAString* aSerialized)
     NS_ADDREF(cont->mCSSStyleRule = aValue);
     cont->mType = eCSSStyleRule;
     SetMiscAtomOrString(aSerialized);
-  }
-}
-
-void
-nsAttrValue::SetTo(nsISVGValue* aValue)
-{
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    NS_ADDREF(cont->mSVGValue = aValue);
-    cont->mType = eSVGValue;
   }
 }
 
@@ -427,11 +405,6 @@ nsAttrValue::ToString(nsAString& aResult) const
 
       break;
     }
-    case eSVGValue:
-    {
-      GetMiscContainer()->mSVGValue->GetValueString(aResult);
-      break;
-    }
     case eDoubleValue:
     {
       aResult.Truncate();
@@ -454,7 +427,7 @@ nsAttrValue::GetStringValue() const
   return nsCheapString(static_cast<nsStringBuffer*>(GetPtr()));
 }
 
-PRBool
+bool
 nsAttrValue::GetColorValue(nscolor& aColor) const
 {
   if (Type() != eColor) {
@@ -468,7 +441,7 @@ nsAttrValue::GetColorValue(nscolor& aColor) const
 }
 
 void
-nsAttrValue::GetEnumString(nsAString& aResult, PRBool aRealTag) const
+nsAttrValue::GetEnumString(nsAString& aResult, bool aRealTag) const
 {
   NS_PRECONDITION(Type() == eEnum, "wrong type");
 
@@ -590,10 +563,6 @@ nsAttrValue::HashValue() const
       }
       return retval;
     }
-    case eSVGValue:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGValue);
-    }
     case eDoubleValue:
     {
       // XXX this is crappy, but oh well
@@ -611,7 +580,7 @@ nsAttrValue::HashValue() const
   }
 }
 
-PRBool
+bool
 nsAttrValue::Equals(const nsAttrValue& aOther) const
 {
   if (BaseType() != aOther.BaseType()) {
@@ -640,7 +609,7 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     return PR_FALSE;
   }
 
-  PRBool needsStringComparison = PR_FALSE;
+  bool needsStringComparison = false;
 
   switch (thisCont->mType) {
     case eInteger:
@@ -687,10 +656,6 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
       needsStringComparison = PR_TRUE;
       break;
     }
-    case eSVGValue:
-    {
-      return thisCont->mSVGValue == otherCont->mSVGValue;
-    }
     case eDoubleValue:
     {
       return thisCont->mDoubleValue == otherCont->mDoubleValue;
@@ -720,7 +685,7 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsAttrValue::Equals(const nsAString& aValue,
                     nsCaseTreatment aCaseSensitive) const
 {
@@ -752,7 +717,7 @@ nsAttrValue::Equals(const nsAString& aValue,
     val.Equals(aValue, nsCaseInsensitiveStringComparator());
 }
 
-PRBool
+bool
 nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
 {
   if (aCaseSensitive != eCaseMatters) {
@@ -786,7 +751,7 @@ nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
   return aValue->Equals(val);
 }
 
-PRBool
+bool
 nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
 {
   switch (BaseType()) {
@@ -849,7 +814,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
   nsAString::const_iterator iter, end;
   aValue.BeginReading(iter);
   aValue.EndReading(end);
-  PRBool hasSpace = PR_FALSE;
+  bool hasSpace = false;
   
   // skip initial whitespace
   while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
@@ -1004,10 +969,10 @@ nsAttrValue::EnumTableEntryToValue(const EnumTable* aEnumTable,
   return value;
 }
 
-PRBool
+bool
 nsAttrValue::ParseEnumValue(const nsAString& aValue,
                             const EnumTable* aTable,
-                            PRBool aCaseSensitive,
+                            bool aCaseSensitive,
                             const EnumTable* aDefaultValue)
 {
   ResetIfSet();
@@ -1018,7 +983,7 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
                          aValue.LowerCaseEqualsASCII(tableEntry->tag)) {
       PRInt32 value = EnumTableEntryToValue(aTable, tableEntry);
 
-      PRBool equals = aCaseSensitive || aValue.EqualsASCII(tableEntry->tag);
+      bool equals = aCaseSensitive || aValue.EqualsASCII(tableEntry->tag);
       if (!equals) {
         nsAutoString tag;
         tag.AssignASCII(tableEntry->tag);
@@ -1047,14 +1012,14 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsAttrValue::ParseSpecialIntValue(const nsAString& aString)
 {
   ResetIfSet();
 
   PRInt32 ec;
-  PRBool strict;
-  PRBool isPercent = PR_FALSE;
+  bool strict;
+  bool isPercent = false;
   nsAutoString tmp(aString);
   PRInt32 originalVal = StringToInteger(aString, &strict, &ec, PR_TRUE, &isPercent);
 
@@ -1077,7 +1042,7 @@ nsAttrValue::ParseSpecialIntValue(const nsAString& aString)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsAttrValue::ParseIntWithBounds(const nsAString& aString,
                                 PRInt32 aMin, PRInt32 aMax)
 {
@@ -1086,7 +1051,7 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
   ResetIfSet();
 
   PRInt32 ec;
-  PRBool strict;
+  bool strict;
   PRInt32 originalVal = StringToInteger(aString, &strict, &ec);
   if (NS_FAILED(ec)) {
     return PR_FALSE;
@@ -1100,13 +1065,13 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
 {
   ResetIfSet();
 
   PRInt32 ec;
-  PRBool strict;
+  bool strict;
   PRInt32 originalVal = StringToInteger(aString, &strict, &ec);
   if (NS_FAILED(ec) || originalVal < 0) {
     return PR_FALSE;
@@ -1117,13 +1082,13 @@ nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsAttrValue::ParsePositiveIntValue(const nsAString& aString)
 {
   ResetIfSet();
 
   PRInt32 ec;
-  PRBool strict;
+  bool strict;
   PRInt32 originalVal = StringToInteger(aString, &strict, &ec);
   if (NS_FAILED(ec) || originalVal <= 0) {
     return PR_FALSE;
@@ -1155,7 +1120,7 @@ nsAttrValue::SetColorValue(nscolor aColor, const nsAString& aString)
   cont->mStringBits = reinterpret_cast<PtrBits>(buf) | eStringBase;
 }
 
-PRBool
+bool
 nsAttrValue::ParseColor(const nsAString& aString)
 {
   ResetIfSet();
@@ -1200,7 +1165,7 @@ nsAttrValue::ParseColor(const nsAString& aString)
   return PR_FALSE;
 }
 
-PRBool nsAttrValue::ParseDoubleValue(const nsAString& aString)
+bool nsAttrValue::ParseDoubleValue(const nsAString& aString)
 {
   ResetIfSet();
 
@@ -1222,7 +1187,7 @@ PRBool nsAttrValue::ParseDoubleValue(const nsAString& aString)
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsAttrValue::ParseIntMarginValue(const nsAString& aString)
 {
   ResetIfSet();
@@ -1289,7 +1254,7 @@ nsAttrValue::ResetMiscAtomOrString()
   }
 }
 
-PRBool
+bool
 nsAttrValue::EnsureEmptyMiscContainer()
 {
   MiscContainer* cont;
@@ -1305,11 +1270,6 @@ nsAttrValue::EnsureEmptyMiscContainer()
       case eAtomArray:
       {
         delete cont->mAtomArray;
-        break;
-      }
-      case eSVGValue:
-      {
-        NS_RELEASE(cont->mSVGValue);
         break;
       }
       case eIntMarginValue:
@@ -1339,7 +1299,7 @@ nsAttrValue::EnsureEmptyMiscContainer()
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsAttrValue::EnsureEmptyAtomArray()
 {
   if (Type() == eAtomArray) {
@@ -1391,75 +1351,75 @@ nsAttrValue::GetStringBuffer(const nsAString& aValue) const
 }
 
 PRInt32
-nsAttrValue::StringToInteger(const nsAString& aValue, PRBool* aStrict,
+nsAttrValue::StringToInteger(const nsAString& aValue, bool* aStrict,
                              PRInt32* aErrorCode,
-                             PRBool aCanBePercent,
-                             PRBool* aIsPercent) const
+                             bool aCanBePercent,
+                             bool* aIsPercent) const
 {
-  *aStrict = PR_FALSE;
+  *aStrict = true;
   *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
   if (aCanBePercent) {
-    *aIsPercent = PR_FALSE;
+    *aIsPercent = false;
   }
 
   nsAString::const_iterator iter, end;
   aValue.BeginReading(iter);
   aValue.EndReading(end);
-  PRBool negate = PR_FALSE;
+
+  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
+    *aStrict = false;
+    ++iter;
+  }
+
+  if (iter == end) {
+    return 0;
+  }
+
+  bool negate = false;
+  if (*iter == PRUnichar('-')) {
+    negate = true;
+    ++iter;
+  } else if (*iter == PRUnichar('+')) {
+    *aStrict = false;
+    ++iter;
+  }
+
   PRInt32 value = 0;
-  if (iter != end) {
-    if (*iter == PRUnichar('-')) {
-      negate = PR_TRUE;
+  PRInt32 pValue = 0; // Previous value, used to check integer overflow
+  while (iter != end) {
+    if (*iter >= PRUnichar('0') && *iter <= PRUnichar('9')) {
+      value = (value * 10) + (*iter - PRUnichar('0'));
       ++iter;
-    }
-    if (iter != end) {
-      if ((*iter >= PRUnichar('1') || (*iter == PRUnichar('0') && !negate)) &&
-          *iter <= PRUnichar('9')) {
-        value = *iter - PRUnichar('0');
-        ++iter;
-        *aStrict = (value != 0 || iter == end ||
-                    (aCanBePercent && *iter == PRUnichar('%')));
-        while (iter != end && *aStrict) {
-          if (*iter >= PRUnichar('0') && *iter <= PRUnichar('9')) {
-            value = (value * 10) + (*iter - PRUnichar('0'));
-            ++iter;
-            if (iter != end && value > ((PR_INT32_MAX / 10) - 9)) {
-              *aStrict = PR_FALSE;
-            }
-          } else if (aCanBePercent && *iter == PRUnichar('%')) {
-            ++iter;
-            if (iter == end) {
-              *aIsPercent = PR_TRUE;
-            } else {
-              *aStrict = PR_FALSE;
-            }
-          } else {
-            *aStrict = PR_FALSE;
-          }
-        }
-        if (*aStrict) {
-          if (negate) {
-            value = -value;
-          }
-          if (!aCanBePercent || !*aIsPercent) {
-            *aErrorCode = NS_OK;
-#ifdef DEBUG
-            nsAutoString stringValue;
-            stringValue.AppendInt(value);
-            if (aCanBePercent && *aIsPercent) {
-              stringValue.AppendLiteral("%");
-            }
-            NS_ASSERTION(stringValue.Equals(aValue), "Wrong conversion!");
-#endif
-            return value;
-          }
-        }
+      // Checking for integer overflow.
+      if (pValue > value) {
+        *aStrict = false;
+        *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+        break;
+      } else {
+        pValue = value;
+        *aErrorCode = NS_OK;
       }
+    } else if (aCanBePercent && *iter == PRUnichar('%')) {
+      ++iter;
+      *aIsPercent = true;
+      if (iter != end) {
+        *aStrict = false;
+        break;
+      }
+    } else {
+      *aStrict = false;
+      break;
+    }
+  }
+  if (negate) {
+    value = -value;
+    // Checking the special case of -0.
+    if (!value) {
+      *aStrict = false;
     }
   }
 
-  nsAutoString tmp(aValue);
-  return tmp.ToInteger(aErrorCode);
+  return value;
 }
 
 PRInt64
@@ -1497,14 +1457,11 @@ nsAttrValue::SizeOf() const
         size += str ? str->StorageSize() : 0;
       }
 
-      // TODO: mCSSStyleRule and mSVGValue might be owned by another object
+      // TODO: mCSSStyleRule might be owned by another object
       // which would make us count them twice, bug 677493.
       if (Type() == eCSSStyleRule && container->mCSSStyleRule) {
         // TODO: Add SizeOf() to StyleRule, bug 677503.
         size += sizeof(*container->mCSSStyleRule);
-      } else if (Type() == eSVGValue && container->mSVGValue) {
-        // TODO: Add SizeOf() to nsSVGValue, bug 677504.
-        size += sizeof(*container->mSVGValue);
       } else if (Type() == eAtomArray && container->mAtomArray) {
         size += sizeof(container->mAtomArray) + sizeof(nsTArrayHeader);
         size += container->mAtomArray->Capacity() * sizeof(nsCOMPtr<nsIAtom>);

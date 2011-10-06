@@ -61,7 +61,7 @@ nsGConfService::Init()
 NS_IMPL_ISUPPORTS1(nsGConfService, nsIGConfService)
 
 NS_IMETHODIMP
-nsGConfService::GetBool(const nsACString &aKey, PRBool *aResult)
+nsGConfService::GetBool(const nsACString &aKey, bool *aResult)
 {
   GError* error = nsnull;
   *aResult = gconf_client_get_bool(mClient, PromiseFlatCString(aKey).get(),
@@ -159,9 +159,9 @@ nsGConfService::GetStringList(const nsACString &aKey, nsIArray** aResult)
 }
 
 NS_IMETHODIMP
-nsGConfService::SetBool(const nsACString &aKey, PRBool aValue)
+nsGConfService::SetBool(const nsACString &aKey, bool aValue)
 {
-  PRBool res = gconf_client_set_bool(mClient, PromiseFlatCString(aKey).get(),
+  bool res = gconf_client_set_bool(mClient, PromiseFlatCString(aKey).get(),
                                      aValue, nsnull);
 
   return res ? NS_OK : NS_ERROR_FAILURE;
@@ -170,7 +170,7 @@ nsGConfService::SetBool(const nsACString &aKey, PRBool aValue)
 NS_IMETHODIMP
 nsGConfService::SetString(const nsACString &aKey, const nsACString &aValue)
 {
-  PRBool res = gconf_client_set_string(mClient, PromiseFlatCString(aKey).get(),
+  bool res = gconf_client_set_string(mClient, PromiseFlatCString(aKey).get(),
                                        PromiseFlatCString(aValue).get(),
                                        nsnull);
 
@@ -180,7 +180,7 @@ nsGConfService::SetString(const nsACString &aKey, const nsACString &aValue)
 NS_IMETHODIMP
 nsGConfService::SetInt(const nsACString &aKey, PRInt32 aValue)
 {
-  PRBool res = gconf_client_set_int(mClient, PromiseFlatCString(aKey).get(),
+  bool res = gconf_client_set_int(mClient, PromiseFlatCString(aKey).get(),
                                     aValue, nsnull);
 
   return res ? NS_OK : NS_ERROR_FAILURE;
@@ -189,14 +189,14 @@ nsGConfService::SetInt(const nsACString &aKey, PRInt32 aValue)
 NS_IMETHODIMP
 nsGConfService::SetFloat(const nsACString &aKey, float aValue)
 {
-  PRBool res = gconf_client_set_float(mClient, PromiseFlatCString(aKey).get(),
+  bool res = gconf_client_set_float(mClient, PromiseFlatCString(aKey).get(),
                                       aValue, nsnull);
 
   return res ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsGConfService::GetAppForProtocol(const nsACString &aScheme, PRBool *aEnabled,
+nsGConfService::GetAppForProtocol(const nsACString &aScheme, bool *aEnabled,
                                   nsACString &aHandler)
 {
   nsCAutoString key("/desktop/gnome/url-handlers/");
@@ -225,7 +225,7 @@ nsGConfService::GetAppForProtocol(const nsACString &aScheme, PRBool *aEnabled,
 
 NS_IMETHODIMP
 nsGConfService::HandlerRequiresTerminal(const nsACString &aScheme,
-                                        PRBool *aResult)
+                                        bool *aResult)
 {
   nsCAutoString key("/desktop/gnome/url-handlers/");
   key.Append(aScheme);
@@ -249,7 +249,7 @@ nsGConfService::SetAppForProtocol(const nsACString &aScheme,
   key.Append(aScheme);
   key.Append("/command");
 
-  PRBool res = gconf_client_set_string(mClient, key.get(),
+  bool res = gconf_client_set_string(mClient, key.get(),
                                        PromiseFlatCString(aCommand).get(),
                                        nsnull);
   if (res) {

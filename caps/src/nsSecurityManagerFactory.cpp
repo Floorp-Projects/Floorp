@@ -52,11 +52,11 @@
 #include "nsString.h"
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
-#include "jsobj.h"
 #include "nsJSUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
+#include "jsfriendapi.h"
 
 ///////////////////////
 // nsSecurityNameSet //
@@ -128,7 +128,7 @@ netscape_security_isPrivilegeEnabled(JSContext *cx, uintN argc, jsval *vp)
     if (!obj)
         return JS_FALSE;
 
-    PRBool result = PR_FALSE;
+    bool result = false;
     if (JSString *str = getStringArgument(cx, obj, 0, argc, JS_ARGV(cx, vp))) {
         JSAutoByteString cap(cx, str);
         if (!cap)
@@ -326,8 +326,7 @@ NS_IMETHODIMP
 nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
 {
     JSContext* cx = aScriptContext->GetNativeContext();
-    JSObject *global = JS_GetGlobalObject(cx);
-    OBJ_TO_INNER_OBJECT(cx, global);
+    JSObject *global = JS_ObjectToInnerObject(cx, JS_GetGlobalObject(cx));
 
     /*
      * Find Object.prototype's class by walking up the global object's

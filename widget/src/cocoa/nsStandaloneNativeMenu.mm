@@ -106,7 +106,7 @@ UpdateMenu(nsMenuX * aMenu)
 }
 
 NS_IMETHODIMP
-nsStandaloneNativeMenu::MenuWillOpen(PRBool * aResult)
+nsStandaloneNativeMenu::MenuWillOpen(bool * aResult)
 {
   NS_ASSERTION(mMenu != nsnull, "nsStandaloneNativeMenu::OnOpen - mMenu is null!");
 
@@ -114,7 +114,7 @@ nsStandaloneNativeMenu::MenuWillOpen(PRBool * aResult)
   // its submenus.
   UpdateMenu(mMenu);
 
-  *aResult = PR_TRUE;
+  *aResult = true;
   return NS_OK;
 }
 

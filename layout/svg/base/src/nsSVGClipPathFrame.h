@@ -59,16 +59,16 @@ public:
                      nsIFrame* aParent,
                      const gfxMatrix &aMatrix);
 
-  PRBool ClipHitTest(nsIFrame* aParent,
+  bool ClipHitTest(nsIFrame* aParent,
                      const gfxMatrix &aMatrix,
                      const nsPoint &aPoint);
 
   // Check if this clipPath is made up of more than one geometry object.
   // If so, the clipping API in cairo isn't enough and we need to use
   // mask based clipping.
-  PRBool IsTrivial();
+  bool IsTrivial();
 
-  PRBool IsValid();
+  bool IsValid();
 
   // nsIFrame interface:
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
@@ -116,7 +116,7 @@ public:
   nsIFrame *mClipParent;
   nsAutoPtr<gfxMatrix> mClipParentMatrix;
   // recursion prevention flag
-  PRPackedBool mInUse;
+  bool mInUse;
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM();

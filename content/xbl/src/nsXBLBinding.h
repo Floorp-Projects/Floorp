@@ -91,15 +91,15 @@ public:
   nsIContent* GetBoundElement() { return mBoundElement; }
   void SetBoundElement(nsIContent *aElement);
 
-  PRBool IsStyleBinding() const { return mIsStyleBinding; }
-  void SetIsStyleBinding(PRBool aIsStyle) { mIsStyleBinding = aIsStyle; }
+  bool IsStyleBinding() const { return mIsStyleBinding; }
+  void SetIsStyleBinding(bool aIsStyle) { mIsStyleBinding = aIsStyle; }
 
   void MarkForDeath();
-  PRBool MarkedForDeath() const { return mMarkedForDeath; }
+  bool MarkedForDeath() const { return mMarkedForDeath; }
 
-  PRBool HasStyleSheets() const;
-  PRBool InheritsStyle() const;
-  PRBool ImplementsInterface(REFNSIID aIID) const;
+  bool HasStyleSheets() const;
+  bool InheritsStyle() const;
+  bool ImplementsInterface(REFNSIID aIID) const;
 
   void GenerateAnonymousContent();
   void InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement);
@@ -118,7 +118,7 @@ public:
 
   // Resolve all the fields for this binding and all ancestor bindings on the
   // object |obj|.  False return means a JS exception was set.
-  PRBool ResolveAllFields(JSContext *cx, JSObject *obj) const;
+  bool ResolveAllFields(JSContext *cx, JSObject *obj) const;
 
   // Get the list of insertion points for aParent. The nsInsertionPointList
   // is owned by the binding, you should not delete it.
@@ -132,10 +132,10 @@ public:
   nsIContent* GetInsertionPoint(const nsIContent* aChild, PRUint32* aIndex);
 
   nsIContent* GetSingleInsertionPoint(PRUint32* aIndex,
-                                      PRBool* aMultipleInsertionPoints);
+                                      bool* aMultipleInsertionPoints);
 
   void AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
-                        PRBool aRemoveFlag, PRBool aNotify);
+                        bool aRemoveFlag, bool aNotify);
 
   void ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
 
@@ -148,10 +148,10 @@ public:
                                 nsXBLPrototypeBinding* aProtoBinding,
                                 void **aClassObject);
 
-  PRBool AllowScripts();  // XXX make const
+  bool AllowScripts();  // XXX make const
 
   void RemoveInsertionParent(nsIContent* aParent);
-  PRBool HasInsertionParent(nsIContent* aParent);
+  bool HasInsertionParent(nsIContent* aParent);
 
 // MEMBER VARIABLES
 protected:
@@ -165,8 +165,8 @@ protected:
   // A hash from nsIContent* -> (a sorted array of nsXBLInsertionPoint)
   nsClassHashtable<nsISupportsHashKey, nsInsertionPointList>* mInsertionPointTable;
 
-  PRPackedBool mIsStyleBinding;
-  PRPackedBool mMarkedForDeath;
+  bool mIsStyleBinding;
+  bool mMarkedForDeath;
 };
 
 #endif // nsXBLBinding_h_

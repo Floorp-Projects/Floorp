@@ -209,7 +209,7 @@ nsLayoutStylesheetCache::InitFromProfile()
 {
   nsCOMPtr<nsIXULRuntime> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
   if (appInfo) {
-    PRBool inSafeMode = PR_FALSE;
+    bool inSafeMode = false;
     appInfo->GetInSafeMode(&inSafeMode);
     if (inSafeMode)
       return;
@@ -237,7 +237,7 @@ nsLayoutStylesheetCache::InitFromProfile()
 void
 nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsRefPtr<nsCSSStyleSheet> &aSheet)
 {
-  PRBool exists = PR_FALSE;
+  bool exists = false;
   aFile->Exists(&exists);
 
   if (!exists) return;
@@ -251,7 +251,7 @@ nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsRefPtr<nsCSSStyleSheet>
 void
 nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
                                    nsRefPtr<nsCSSStyleSheet> &aSheet,
-                                   PRBool aEnableUnsafeRules)
+                                   bool aEnableUnsafeRules)
 {
   if (!aURI) {
     NS_ERROR("Null URI. Out of memory?");

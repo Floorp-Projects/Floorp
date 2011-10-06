@@ -217,12 +217,12 @@ public:
   // nsIPrivateDOMEvent interface
   NS_IMETHOD    DuplicatePrivateData();
   NS_IMETHOD    SetTarget(nsIDOMEventTarget* aTarget);
-  NS_IMETHOD_(PRBool)    IsDispatchStopped();
+  NS_IMETHOD_(bool)    IsDispatchStopped();
   NS_IMETHOD_(nsEvent*)    GetInternalNSEvent();
-  NS_IMETHOD    SetTrusted(PRBool aTrusted);
+  NS_IMETHOD    SetTrusted(bool aTrusted);
 
-  virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
-  virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
+  virtual void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
+  virtual bool Deserialize(const IPC::Message* aMsg, void** aIter);
 
   static PopupControlState GetEventPopupControlState(nsEvent *aEvent);
 
@@ -242,8 +242,8 @@ protected:
   nsCOMPtr<nsIDOMEventTarget> mTmpRealOriginalTarget;
   nsIDOMEventTarget*          mExplicitOriginalTarget;
   nsString                    mCachedType;
-  PRPackedBool                mEventIsInternal;
-  PRPackedBool                mPrivateDataDuplicated;
+  bool                        mEventIsInternal;
+  bool                        mPrivateDataDuplicated;
 };
 
 #define NS_FORWARD_TO_NSDOMEVENT \

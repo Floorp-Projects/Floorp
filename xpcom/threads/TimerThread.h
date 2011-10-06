@@ -87,21 +87,21 @@ private:
   ~TimerThread();
 
   PRInt32 mInitInProgress;
-  PRBool  mInitialized;
+  bool    mInitialized;
 
   // These two internal helper methods must be called while mLock is held.
   // AddTimerInternal returns the position where the timer was added in the
   // list, or -1 if it failed.
   PRInt32 AddTimerInternal(nsTimerImpl *aTimer);
-  PRBool  RemoveTimerInternal(nsTimerImpl *aTimer);
+  bool    RemoveTimerInternal(nsTimerImpl *aTimer);
   void    ReleaseTimerInternal(nsTimerImpl *aTimer);
 
   nsCOMPtr<nsIThread> mThread;
   Monitor mMonitor;
 
-  PRPackedBool mShutdown;
-  PRPackedBool mWaiting;
-  PRPackedBool mSleeping;
+  bool mShutdown;
+  bool mWaiting;
+  bool mSleeping;
   
   nsTArray<nsTimerImpl*> mTimers;
 
