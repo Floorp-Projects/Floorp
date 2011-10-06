@@ -51,6 +51,7 @@ function SpecialPowersAPI() {
   this._prefEnvUndoStack = [];
   this._pendingPrefs = [];
   this._applyingPrefs = false;
+  this._fm = null;
 }
 
 function bindDOMWindowUtils(aWindow) {
@@ -592,6 +593,47 @@ SpecialPowersAPI.prototype = {
     Components.classes["@mozilla.org/widget/clipboardhelper;1"].
       getService(Components.interfaces.nsIClipboardHelper).
       copyString(str);
+  },
+
+  // :jdm gets credit for this.  ex: getPrivilegedProps(window, 'location.href');
+  getPrivilegedProps: function(obj, props) {
+    parts = props.split('.');
+
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      if (obj[p]) {
+        obj = obj[p];
+      } else {
+        return null;
+      }
+    }
+    return obj;
+  },
+
+  get focusManager() {
+    if (this._fm != null)
+      return this._fm;
+
+    this._fm = Components.classes["@mozilla.org/focus-manager;1"].
+                        getService(Components.interfaces.nsIFocusManager);
+
+    return this._fm;
+  },
+
+  getFocusedElementForWindow: function(targetWindow, aDeep, childTargetWindow) {
+    this.focusManager.getFocusedElementForWindow(targetWindow, aDeep, childTargetWindow);
+  },
+
+  activeWindow: function() {
+    return this.focusManager.activeWindow;
+  },
+
+  focusedWindow: function() {
+    return this.focusManager.focusedWindow;
+  },
+
+  focus: function(window) {
+    window.focus();
   },
 };
 
