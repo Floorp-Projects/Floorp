@@ -43,8 +43,8 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIFile.h"
 
+class nsIFile;
 class nsZipArchive;
 class nsIURI;
 
