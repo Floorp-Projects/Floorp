@@ -91,6 +91,10 @@ public:
     mDocAccessibleCache.Remove(aDocument);
   }
 
+#ifdef DEBUG
+  bool IsProcessingRefreshDriverNotification() const;
+#endif
+
 protected:
   nsAccDocManager() { };
 
@@ -156,6 +160,12 @@ private:
     SearchAccessibleInDocCache(const nsIDocument* aKey,
                                nsDocAccessible* aDocAccessible,
                                void* aUserArg);
+
+#ifdef DEBUG
+  static PLDHashOperator
+    SearchIfDocIsRefreshing(const nsIDocument* aKey,
+                            nsDocAccessible* aDocAccessible, void* aUserArg);
+#endif
 
   nsDocAccessibleHashtable mDocAccessibleCache;
 };
