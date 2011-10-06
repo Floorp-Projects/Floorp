@@ -209,7 +209,7 @@ add_test(function test_get() {
     do_check_true(didThrow);
     do_check_eq(debugMessages.length, 1);
     do_check_eq(debugMessages[0],
-                "Parse fail: Response body starts: \"This path exists\".");
+                "Parse fail: Response body starts: \"\"This path exists\"\".");
     logger.debug = dbg;
 
     run_next_test();

@@ -196,7 +196,7 @@ function run_test() {
   do_check_true(didThrow);
   do_check_eq(debugMessages.length, 1);
   do_check_eq(debugMessages[0],
-              "Parse fail: Response body starts: \"This path exists\".");
+              "Parse fail: Response body starts: \"\"This path exists\"\".");
   logger.debug = dbg;
 
   _("Test that the BasicAuthenticator doesn't screw up header case.");
