@@ -71,13 +71,13 @@ using namespace mozilla::widget;
 PRLogModuleInfo* gLog = nsnull;
 
 static const char*
-OnOrOff(PRBool aBool)
+OnOrOff(bool aBool)
 {
   return aBool ? "ON" : "off";
 }
 
 static const char*
-TrueOrFalse(PRBool aBool)
+TrueOrFalse(bool aBool)
 {
   return aBool ? "TRUE" : "FALSE";
 }
@@ -332,7 +332,7 @@ TISInputSourceWrapper::CurrentKeyboardLayout()
   return gCurrentKeyboardLayout;
 }
 
-PRBool
+bool
 TISInputSourceWrapper::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
                                          UInt32 aKbType, nsAString &aStr)
 {
@@ -350,7 +350,7 @@ TISInputSourceWrapper::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
      OnOrOff(aModifiers & alphaLock),
      OnOrOff(aModifiers & kEventKeyModifierNumLockMask)));
 
-  NS_ENSURE_TRUE(UCKey, PR_FALSE);
+  NS_ENSURE_TRUE(UCKey, false);
 
   UInt32 deadKeyState = 0;
   UniCharCount len;
@@ -364,11 +364,11 @@ TISInputSourceWrapper::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
     ("%p TISInputSourceWrapper::TranslateToString, err=0x%X, len=%llu",
      this, err, len));
 
-  NS_ENSURE_TRUE(err == noErr, PR_FALSE);
+  NS_ENSURE_TRUE(err == noErr, false);
   if (len == 0) {
-    return PR_TRUE;
+    return true;
   }
-  NS_ENSURE_TRUE(EnsureStringLength(aStr, len), PR_FALSE);
+  NS_ENSURE_TRUE(EnsureStringLength(aStr, len), false);
   NS_ASSERTION(sizeof(PRUnichar) == sizeof(UniChar),
                "size of PRUnichar and size of UniChar are different");
   memcpy(aStr.BeginWriting(), chars, len * sizeof(PRUnichar));
@@ -377,7 +377,7 @@ TISInputSourceWrapper::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
     ("%p TISInputSourceWrapper::TranslateToString, aStr=\"%s\"",
      this, NS_ConvertUTF16toUTF8(aStr).get()));
 
-  return PR_TRUE;
+  return true;
 }
 
 PRUint32
@@ -438,7 +438,7 @@ TISInputSourceWrapper::InitByInputSourceID(const CFStringRef aID)
 
 void
 TISInputSourceWrapper::InitByLayoutID(SInt32 aLayoutID,
-                                      PRBool aOverrideKeyboard)
+                                      bool aOverrideKeyboard)
 {
   // NOTE: Doument new layout IDs in TextInputHandler.h when you add ones.
   switch (aLayoutID) {
@@ -521,7 +521,7 @@ TISInputSourceWrapper::GetUCKeyboardLayout()
   return mUCKeyboardLayout;
 }
 
-PRBool
+bool
 TISInputSourceWrapper::GetBoolProperty(const CFStringRef aKey)
 {
   CFBooleanRef ret = static_cast<CFBooleanRef>(
@@ -529,7 +529,7 @@ TISInputSourceWrapper::GetBoolProperty(const CFStringRef aKey)
   return ::CFBooleanGetValue(ret);
 }
 
-PRBool
+bool
 TISInputSourceWrapper::GetStringProperty(const CFStringRef aKey,
                                          CFStringRef &aStr)
 {
@@ -538,7 +538,7 @@ TISInputSourceWrapper::GetStringProperty(const CFStringRef aKey,
   return aStr != nsnull;
 }
 
-PRBool
+bool
 TISInputSourceWrapper::GetStringProperty(const CFStringRef aKey,
                                          nsAString &aStr)
 {
@@ -548,67 +548,67 @@ TISInputSourceWrapper::GetStringProperty(const CFStringRef aKey,
   return !aStr.IsEmpty();
 }
 
-PRBool
+bool
 TISInputSourceWrapper::IsOpenedIMEMode()
 {
-  NS_ENSURE_TRUE(mInputSource, PR_FALSE);
+  NS_ENSURE_TRUE(mInputSource, false);
   if (!IsIMEMode())
-    return PR_FALSE;
+    return false;
   return !IsASCIICapable();
 }
 
-PRBool
+bool
 TISInputSourceWrapper::IsIMEMode()
 {
-  NS_ENSURE_TRUE(mInputSource, PR_FALSE);
+  NS_ENSURE_TRUE(mInputSource, false);
   CFStringRef str;
   GetInputSourceType(str);
-  NS_ENSURE_TRUE(str, PR_FALSE);
+  NS_ENSURE_TRUE(str, false);
   return ::CFStringCompare(kTISTypeKeyboardInputMode,
                            str, 0) == kCFCompareEqualTo;
 }
 
-PRBool
+bool
 TISInputSourceWrapper::GetLanguageList(CFArrayRef &aLanguageList)
 {
-  NS_ENSURE_TRUE(mInputSource, PR_FALSE);
+  NS_ENSURE_TRUE(mInputSource, false);
   aLanguageList = static_cast<CFArrayRef>(
     ::TISGetInputSourceProperty(mInputSource,
                                 kTISPropertyInputSourceLanguages));
   return aLanguageList != nsnull;
 }
 
-PRBool
+bool
 TISInputSourceWrapper::GetPrimaryLanguage(CFStringRef &aPrimaryLanguage)
 {
-  NS_ENSURE_TRUE(mInputSource, PR_FALSE);
+  NS_ENSURE_TRUE(mInputSource, false);
   CFArrayRef langList;
-  NS_ENSURE_TRUE(GetLanguageList(langList), PR_FALSE);
+  NS_ENSURE_TRUE(GetLanguageList(langList), false);
   if (::CFArrayGetCount(langList) == 0)
-    return PR_FALSE;
+    return false;
   aPrimaryLanguage =
     static_cast<CFStringRef>(::CFArrayGetValueAtIndex(langList, 0));
   return aPrimaryLanguage != nsnull;
 }
 
-PRBool
+bool
 TISInputSourceWrapper::GetPrimaryLanguage(nsAString &aPrimaryLanguage)
 {
-  NS_ENSURE_TRUE(mInputSource, PR_FALSE);
+  NS_ENSURE_TRUE(mInputSource, false);
   CFStringRef primaryLanguage;
-  NS_ENSURE_TRUE(GetPrimaryLanguage(primaryLanguage), PR_FALSE);
+  NS_ENSURE_TRUE(GetPrimaryLanguage(primaryLanguage), false);
   nsCocoaUtils::GetStringForNSString((const NSString*)primaryLanguage,
                                      aPrimaryLanguage);
   return !aPrimaryLanguage.IsEmpty();
 }
 
-PRBool
+bool
 TISInputSourceWrapper::IsForRTLLanguage()
 {
   if (mIsRTL < 0) {
     // Get the input character of the 'A' key of ANSI keyboard layout.
     nsAutoString str;
-    PRBool ret = TranslateToString(kVK_ANSI_A, 0, eKbdType_ANSI, str);
+    bool ret = TranslateToString(kVK_ANSI_A, 0, eKbdType_ANSI, str);
     NS_ENSURE_TRUE(ret, ret);
     PRUnichar ch = str.IsEmpty() ? PRUnichar(0) : str.CharAt(0);
     mIsRTL = UCS2_CHAR_IS_BIDI(ch) || ch == 0xD802 || ch == 0xD803;
@@ -616,7 +616,7 @@ TISInputSourceWrapper::IsForRTLLanguage()
   return mIsRTL != 0;
 }
 
-PRBool
+bool
 TISInputSourceWrapper::IsInitializedByCurrentKeyboardLayout()
 {
   return mInputSource == ::TISCopyCurrentKeyboardLayoutInputSource();
@@ -643,7 +643,7 @@ TISInputSourceWrapper::Clear()
   mInputSource = nsnull;
   mIsRTL = -1;
   mUCKeyboardLayout = nsnull;
-  mOverrideKeyboard = PR_FALSE;
+  mOverrideKeyboard = false;
 }
 
 void
@@ -668,7 +668,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   aKeyEvent.isMeta    = ((modifiers & NSCommandKeyMask) != 0);
 
   aKeyEvent.refPoint = nsIntPoint(0, 0);
-  aKeyEvent.isChar = PR_FALSE; // XXX not used in XP level
+  aKeyEvent.isChar = false; // XXX not used in XP level
 
   NSString* str = nil;
   if ([aNativeKeyEvent type] != NSFlagsChanged) {
@@ -710,7 +710,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
      "aKeyEvent.message=%s",
      this, aNativeKeyEvent, GetGeckoKeyEventType(aKeyEvent)));
 
-  aKeyEvent.isChar = PR_TRUE; // this is not a special key  XXX not used in XP
+  aKeyEvent.isChar = true; // this is not a special key  XXX not used in XP
 
   aKeyEvent.charCode = 0;
   NSString* chars = [aNativeKeyEvent characters];
@@ -737,7 +737,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   }
 
   TISInputSourceWrapper USLayout("com.apple.keylayout.US");
-  PRBool isRomanKeyboardLayout = IsASCIICapable();
+  bool isRomanKeyboardLayout = IsASCIICapable();
 
   // If a keyboard layout override is set, we also need to force the
   // keyboard type to something ANSI to avoid test failures on machines
@@ -785,10 +785,10 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
 
   // Is the keyboard layout changed by Cmd key?
   // E.g., Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
-  PRBool isCmdSwitchLayout = uncmdedChar != cmdedChar;
+  bool isCmdSwitchLayout = uncmdedChar != cmdedChar;
   // Is the keyboard layout for Latin, but Cmd key switches the layout?
   // I.e., Dvorak-QWERTY
-  PRBool isDvorakQWERTY = isCmdSwitchLayout && isRomanKeyboardLayout;
+  bool isDvorakQWERTY = isCmdSwitchLayout && isRomanKeyboardLayout;
 
   // If the current keyboard is not Dvorak-QWERTY or Cmd is not pressed,
   // we should append unshiftedChar and shiftedChar for handling the
@@ -820,7 +820,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   // when Shift is pressed.  However, in case there is a layout where the
   // character unique to Cmd+Shift is the character that the user expects,
   // we'll send it as an alternative char.
-  PRBool hasCmdShiftOnlyChar =
+  bool hasCmdShiftOnlyChar =
     cmdedChar != cmdedShiftChar && uncmdedShiftChar != cmdedShiftChar;
   PRUint32 originalCmdedShiftChar = cmdedShiftChar;
 
@@ -974,7 +974,7 @@ TextInputHandler::~TextInputHandler()
   [mView uninstallTextInputHandler];
 }
 
-PRBool
+bool
 TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -983,7 +983,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     PR_LOG(gLog, PR_LOG_ALWAYS,
       ("%p TextInputHandler::HandleKeyDownEvent, "
        "widget has been already destroyed", this));
-    return PR_FALSE;
+    return false;
   }
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -997,30 +997,30 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
 
   nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
 
-  mCurrentKeyEvent.Set(aNativeEvent);
+  KeyEventState* currentKeyEvent = PushKeyEvent(aNativeEvent);
   AutoKeyEventStateCleaner remover(this);
 
   BOOL nonDeadKeyPress = [[aNativeEvent characters] length] > 0;
   if (nonDeadKeyPress && !IsIMEComposing()) {
     NSResponder* firstResponder = [[mView window] firstResponder];
 
-    nsKeyEvent keydownEvent(PR_TRUE, NS_KEY_DOWN, mWidget);
+    nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
     InitKeyEvent(aNativeEvent, keydownEvent);
 
 #ifndef NP_NO_CARBON
     EventRecord carbonEvent;
     if ([mView pluginEventModel] == NPEventModelCarbon) {
-      ConvertCocoaKeyEventToCarbonEvent(aNativeEvent, carbonEvent, PR_TRUE);
+      ConvertCocoaKeyEventToCarbonEvent(aNativeEvent, carbonEvent, true);
       keydownEvent.pluginEvent = &carbonEvent;
     }
 #endif // #ifndef NP_NO_CARBON
 
-    mCurrentKeyEvent.mKeyDownHandled = DispatchEvent(keydownEvent);
+    currentKeyEvent->mKeyDownHandled = DispatchEvent(keydownEvent);
     if (Destroyed()) {
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("%p TextInputHandler::HandleKeyDownEvent, "
          "widget was destroyed by keydown event", this));
-      return mCurrentKeyEvent.KeyDownOrPressHandled();
+      return currentKeyEvent->KeyDownOrPressHandled();
     }
 
     // The key down event may have shifted the focus, in which
@@ -1030,7 +1030,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("%p TextInputHandler::HandleKeyDownEvent, "
          "view lost focus by keydown event", this));
-      return mCurrentKeyEvent.KeyDownOrPressHandled();
+      return currentKeyEvent->KeyDownOrPressHandled();
     }
 
     // If this is the context menu key command, send a context menu key event.
@@ -1038,13 +1038,13 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
       [aNativeEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
     if (modifierFlags == NSControlKeyMask &&
         [[aNativeEvent charactersIgnoringModifiers] isEqualToString:@" "]) {
-      nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU,
+      nsMouseEvent contextMenuEvent(true, NS_CONTEXTMENU,
                                     [mView widget], nsMouseEvent::eReal,
                                     nsMouseEvent::eContextMenuKey);
       contextMenuEvent.isShift = contextMenuEvent.isControl =
-        contextMenuEvent.isAlt = contextMenuEvent.isMeta = PR_FALSE;
+        contextMenuEvent.isAlt = contextMenuEvent.isMeta = false;
 
-      PRBool cmEventHandled = DispatchEvent(contextMenuEvent);
+      bool cmEventHandled = DispatchEvent(contextMenuEvent);
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("%p TextInputHandler::HandleKeyDownEvent, "
          "context menu event dispatched, handled=%s%s",
@@ -1052,43 +1052,19 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
          Destroyed() ? " and widget was destroyed" : ""));
       [mView maybeInitContextMenuTracking];
       // Bail, there is nothing else to do here.
-      return (cmEventHandled || mCurrentKeyEvent.KeyDownOrPressHandled());
-    }
-
-    nsKeyEvent keypressEvent(PR_TRUE, NS_KEY_PRESS, mWidget);
-    InitKeyEvent(aNativeEvent, keypressEvent);
-
-    // if this is a non-letter keypress, or the control key is down,
-    // dispatch the keydown to gecko, so that we trap delete,
-    // control-letter combinations etc before Cocoa tries to use
-    // them for keybindings.
-    // XXX This is wrong. IME may be handle the non-letter keypress event as
-    //     its owning shortcut key.  See bug 477291.
-    if ((!keypressEvent.isChar || keypressEvent.isControl) &&
-        !IsIMEComposing()) {
-      if (mCurrentKeyEvent.mKeyDownHandled) {
-        keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-      }
-      mCurrentKeyEvent.mKeyPressHandled = DispatchEvent(keypressEvent);
-      mCurrentKeyEvent.mKeyPressDispatched = PR_TRUE;
-      if (Destroyed()) {
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-          ("%p TextInputHandler::HandleKeyDownEvent, "
-           "widget was destroyed by keypress event", this));
-        return mCurrentKeyEvent.KeyDownOrPressHandled();
-      }
+      return (cmEventHandled || currentKeyEvent->KeyDownOrPressHandled());
     }
   }
 
   // Let Cocoa interpret the key events, caching IsIMEComposing first.
-  PRBool wasComposing = IsIMEComposing();
-  PRBool interpretKeyEventsCalled = PR_FALSE;
+  bool wasComposing = IsIMEComposing();
+  bool interpretKeyEventsCalled = false;
   if (IsIMEEnabled() || IsASCIICapableOnly()) {
     PR_LOG(gLog, PR_LOG_ALWAYS,
       ("%p TextInputHandler::HandleKeyDownEvent, calling interpretKeyEvents",
        this));
     [mView interpretKeyEvents:[NSArray arrayWithObject:aNativeEvent]];
-    interpretKeyEventsCalled = PR_TRUE;
+    interpretKeyEventsCalled = true;
     PR_LOG(gLog, PR_LOG_ALWAYS,
       ("%p TextInputHandler::HandleKeyDownEvent, called interpretKeyEvents",
        this));
@@ -1098,7 +1074,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     PR_LOG(gLog, PR_LOG_ALWAYS,
       ("%p TextInputHandler::HandleKeyDownEvent, widget was destroyed",
        this));
-    return mCurrentKeyEvent.KeyDownOrPressHandled();
+    return currentKeyEvent->KeyDownOrPressHandled();
   }
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -1106,9 +1082,9 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
      "IsIMEComposing()=%s",
      this, TrueOrFalse(wasComposing), TrueOrFalse(IsIMEComposing())));
 
-  if (!mCurrentKeyEvent.mKeyPressDispatched && nonDeadKeyPress &&
+  if (!currentKeyEvent->mKeyPressDispatched && nonDeadKeyPress &&
       !wasComposing && !IsIMEComposing()) {
-    nsKeyEvent keypressEvent(PR_TRUE, NS_KEY_PRESS, mWidget);
+    nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
     InitKeyEvent(aNativeEvent, keypressEvent);
 
     // If we called interpretKeyEvents and this isn't normal character input
@@ -1124,10 +1100,11 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     //    our default action for this key.
     if (!(interpretKeyEventsCalled &&
           IsNormalCharInputtingEvent(keypressEvent))) {
-      if (mCurrentKeyEvent.mKeyDownHandled) {
+      if (currentKeyEvent->mKeyDownHandled ||
+          currentKeyEvent->mCausedOtherKeyEvents) {
         keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
       }
-      mCurrentKeyEvent.mKeyPressHandled = DispatchEvent(keypressEvent);
+      currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("%p TextInputHandler::HandleKeyDownEvent, keypress event dispatched",
          this));
@@ -1139,11 +1116,11 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TextInputHandler::HandleKeyDownEvent, "
      "keydown handled=%s, keypress handled=%s",
-     this, TrueOrFalse(mCurrentKeyEvent.mKeyDownHandled),
-     TrueOrFalse(mCurrentKeyEvent.mKeyPressHandled)));
-  return mCurrentKeyEvent.KeyDownOrPressHandled();
+     this, TrueOrFalse(currentKeyEvent->mKeyDownHandled),
+     TrueOrFalse(currentKeyEvent->mKeyPressHandled)));
+  return currentKeyEvent->KeyDownOrPressHandled();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 void
@@ -1163,7 +1140,7 @@ TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent)
      TrueOrFalse(mIgnoreNextKeyUpEvent), TrueOrFalse(IsIMEComposing())));
 
   if (mIgnoreNextKeyUpEvent) {
-    mIgnoreNextKeyUpEvent = PR_FALSE;
+    mIgnoreNextKeyUpEvent = false;
     return;
   }
 
@@ -1179,7 +1156,7 @@ TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent)
     return;
   }
 
-  nsKeyEvent keyupEvent(PR_TRUE, NS_KEY_UP, mWidget);
+  nsKeyEvent keyupEvent(true, NS_KEY_UP, mWidget);
   InitKeyEvent(aNativeEvent, keyupEvent);
 
   DispatchEvent(keyupEvent);
@@ -1213,7 +1190,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
   // modifier state does for other modifier keys on key up.
   if ([aNativeEvent keyCode] == kCapsLockKeyCode) {
     // Fire key down event for caps lock.
-    DispatchKeyEventForFlagsChanged(aNativeEvent, PR_TRUE);
+    DispatchKeyEventForFlagsChanged(aNativeEvent, true);
     if (Destroyed()) {
       return;
     }
@@ -1231,7 +1208,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
     for (PRUint32 i = 0; i < kModifierCount; i++) {
       NSUInteger modifierBit = kModifierMaskTable[i];
       if ((modifiers & modifierBit) != (sLastModifierState & modifierBit)) {
-        PRBool isKeyDown = ((modifiers & modifierBit) != 0);
+        bool isKeyDown = ((modifiers & modifierBit) != 0);
         DispatchKeyEventForFlagsChanged(aNativeEvent, isKeyDown);
         if (Destroyed()) {
           return;
@@ -1253,7 +1230,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
 
 void
 TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
-                                                  PRBool aDispatchKeyDown)
+                                                  bool aDispatchKeyDown)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1280,7 +1257,7 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
   NPCocoaEvent cocoaEvent;
 
   // Fire a key event.
-  nsKeyEvent keyEvent(PR_TRUE, message, mWidget);
+  nsKeyEvent keyEvent(true, message, mWidget);
   InitKeyEvent(aNativeEvent, keyEvent);
 
   // create event for use by plugins
@@ -1312,13 +1289,17 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
     return;
   }
 
+  KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
+
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TextInputHandler::InsertText, aAttrString=\"%s\", "
      "IsIMEComposing()=%s, IgnoreIMEComposition()=%s, "
      "keyevent=%p, keypressDispatched=%s",
      this, GetCharacters([aAttrString string]), TrueOrFalse(IsIMEComposing()),
-     TrueOrFalse(IgnoreIMEComposition()), mCurrentKeyEvent.mKeyEvent,
-     TrueOrFalse(mCurrentKeyEvent.mKeyPressDispatched)));
+     TrueOrFalse(IgnoreIMEComposition()),
+     currentKeyEvent ? currentKeyEvent->mKeyEvent : nsnull,
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mKeyPressDispatched) : "N/A"));
 
   if (IgnoreIMEComposition()) {
     return;
@@ -1337,18 +1318,18 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
 
   // Don't let the same event be fired twice when hitting
   // enter/return! (Bug 420502)
-  if (mCurrentKeyEvent.mKeyPressDispatched) {
+  if (currentKeyEvent && currentKeyEvent->mKeyPressDispatched) {
     return;
   }
 
   nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
 
   // Dispatch keypress event with char instead of textEvent
-  nsKeyEvent keypressEvent(PR_TRUE, NS_KEY_PRESS, mWidget);
+  nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
   keypressEvent.time      = PR_IntervalNow();
   keypressEvent.charCode  = str.CharAt(0);
   keypressEvent.keyCode   = 0;
-  keypressEvent.isChar    = PR_TRUE;
+  keypressEvent.isChar    = true;
 
   // Don't set other modifiers from the current event, because here in
   // -insertText: they've already been taken into account in creating
@@ -1359,8 +1340,8 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
   EventRecord carbonEvent;
 #endif // #ifndef NP_NO_CARBON
 
-  if (mCurrentKeyEvent.mKeyEvent) {
-    NSEvent* keyEvent = mCurrentKeyEvent.mKeyEvent;
+  if (currentKeyEvent) {
+    NSEvent* keyEvent = currentKeyEvent->mKeyEvent;
 
     // XXX The ASCII characters inputting mode of egbridge (Japanese IME)
     // might send the keyDown event with wrong keyboard layout if other
@@ -1368,12 +1349,12 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
     // doesn't match to this gecko event...
 #ifndef NP_NO_CARBON
     if ([mView pluginEventModel] == NPEventModelCarbon) {
-      ConvertCocoaKeyEventToCarbonEvent(keyEvent, carbonEvent, PR_TRUE);
+      ConvertCocoaKeyEventToCarbonEvent(keyEvent, carbonEvent, true);
       keypressEvent.pluginEvent = &carbonEvent;
     }
 #endif // #ifndef NP_NO_CARBON
 
-    if (mCurrentKeyEvent.mKeyDownHandled) {
+    if (currentKeyEvent->mKeyDownHandled) {
       keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     }
 
@@ -1396,28 +1377,53 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
   // TODO:
   // If mCurrentKeyEvent.mKeyEvent is null and when we implement textInput
   // event of DOM3 Events, we should dispatch it instead of keypress event.
-  PRBool keyPressHandled = DispatchEvent(keypressEvent);
+  bool keyPressHandled = DispatchEvent(keypressEvent);
 
   // Note: mWidget might have become null here. Don't count on it from here on.
 
-  if (mCurrentKeyEvent.mKeyEvent) {
-    mCurrentKeyEvent.mKeyPressHandled = keyPressHandled;
-    mCurrentKeyEvent.mKeyPressDispatched = PR_TRUE;
+  if (currentKeyEvent) {
+    currentKeyEvent->mKeyPressHandled = keyPressHandled;
+    currentKeyEvent->mKeyPressDispatched = true;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-PRBool
+bool
 TextInputHandler::DoCommandBySelector(const char* aSelector)
 {
+  nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
+
+  KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
+
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TextInputHandler::DoCommandBySelector, aSelector=\"%s\", "
-     "Destroyed()=%s, keypressHandled=%s",
+     "Destroyed()=%s, keypressHandled=%s, causedOtherKeyEvents=%s",
      this, aSelector ? aSelector : "", TrueOrFalse(Destroyed()),
-     TrueOrFalse(mCurrentKeyEvent.mKeyPressHandled)));
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mKeyPressHandled) : "N/A",
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
 
-  return !Destroyed() && mCurrentKeyEvent.mKeyPressHandled;
+  if (currentKeyEvent && !currentKeyEvent->mKeyPressDispatched) {
+    nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+    InitKeyEvent(currentKeyEvent->mKeyEvent, keypressEvent);
+    if (currentKeyEvent->mKeyDownHandled ||
+        currentKeyEvent->mCausedOtherKeyEvents) {
+      keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    }
+    currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
+    currentKeyEvent->mKeyPressDispatched = true;
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+      ("%p TextInputHandler::DoCommandBySelector, keypress event "
+       "dispatched, Destroyed()=%s, keypressHandled=%s",
+       this, TrueOrFalse(Destroyed()),
+       TrueOrFalse(currentKeyEvent->mKeyPressHandled)));
+  }
+
+  return !Destroyed() && currentKeyEvent &&
+         (currentKeyEvent->mKeyPressHandled ||
+          currentKeyEvent->mCausedOtherKeyEvents);
 }
 
 
@@ -1430,7 +1436,7 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
  *
  ******************************************************************************/
 
-PRBool IMEInputHandler::sStaticMembersInitialized = PR_FALSE;
+bool IMEInputHandler::sStaticMembersInitialized = false;
 CFStringRef IMEInputHandler::sLatestIMEOpenedModeInputSourceID = nsnull;
 IMEInputHandler* IMEInputHandler::sFocusedIMEHandler = nsnull;
 
@@ -1440,7 +1446,7 @@ IMEInputHandler::InitStaticMembers()
 {
   if (sStaticMembersInitialized)
     return;
-  sStaticMembersInitialized = PR_TRUE;
+  sStaticMembersInitialized = true;
   // We need to check the keyboard layout changes on all applications.
   CFNotificationCenterRef center = ::CFNotificationCenterGetDistributedCenter();
   // XXX Don't we need to remove the observer at shut down?
@@ -1681,9 +1687,9 @@ IMEInputHandler::DiscardIMEComposition()
     return;
   }
 
-  mIgnoreIMECommit = PR_TRUE;
+  mIgnoreIMECommit = true;
   [im markedTextAbandoned: mView];
-  mIgnoreIMECommit = PR_FALSE;
+  mIgnoreIMECommit = false;
 
   NS_OBJC_END_TRY_ABORT_BLOCK
 }
@@ -1760,7 +1766,7 @@ IMEInputHandler::ExecutePendingMethods()
   }
 
   if (![[NSApplication sharedApplication] isActive]) {
-    mIsInFocusProcessing = PR_FALSE;
+    mIsInFocusProcessing = false;
     // If we're not active, we should retry at focus event
     return;
   }
@@ -1777,7 +1783,7 @@ IMEInputHandler::ExecutePendingMethods()
   if (pendingMethods & kResetIMEWindowLevel)
     ResetIMEWindowLevel();
 
-  mIsInFocusProcessing = PR_FALSE;
+  mIsInFocusProcessing = false;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1911,11 +1917,11 @@ IMEInputHandler::SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-PRBool
+bool
 IMEInputHandler::DispatchTextEvent(const nsString& aText,
                                    NSAttributedString* aAttrString,
                                    NSRange& aSelectedRange,
-                                   PRBool aDoCommit)
+                                   bool aDoCommit)
 {
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::DispatchTextEvent, "
@@ -1927,11 +1933,11 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
      aSelectedRange.location, aSelectedRange.length,
      TrueOrFalse(aDoCommit), TrueOrFalse(Destroyed())));
 
-  NS_ENSURE_TRUE(!Destroyed(), PR_FALSE);
+  NS_ENSURE_TRUE(!Destroyed(), false);
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, mWidget);
+  nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
   textEvent.time = PR_IntervalNow();
   textEvent.theText = aText;
   nsAutoTArray<nsTextRange, 4> textRanges;
@@ -1942,7 +1948,7 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
   textEvent.rangeCount = textRanges.Length();
 
   if (textEvent.theText != mLastDispatchedCompositionString) {
-    nsCompositionEvent compositionUpdate(PR_TRUE, NS_COMPOSITION_UPDATE,
+    nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
                                          mWidget);
     compositionUpdate.time = textEvent.time;
     compositionUpdate.data = textEvent.theText;
@@ -1954,7 +1960,7 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
          "aborting the composition, mIsInFocusProcessing=%s, Destryoed()=%s",
          this, TrueOrFalse(mIsInFocusProcessing), TrueOrFalse(Destroyed())));
       if (Destroyed()) {
-        return PR_TRUE;
+        return true;
       }
     }
   }
@@ -1994,7 +2000,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
   if (!IsIMEComposing()) {
     // XXXmnakano Probably, we shouldn't emulate composition in this case.
     // I think that we should just fire DOM3 textInput event if we implement it.
-    nsCompositionEvent compStart(PR_TRUE, NS_COMPOSITION_START, mWidget);
+    nsCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
     InitCompositionEvent(compStart);
 
     DispatchEvent(compStart);
@@ -2016,7 +2022,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
   }
 
   NSRange range = NSMakeRange(0, str.Length());
-  DispatchTextEvent(str, aAttrString, range, PR_TRUE);
+  DispatchTextEvent(str, aAttrString, range, true);
   if (Destroyed()) {
     PR_LOG(gLog, PR_LOG_ALWAYS,
       ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
@@ -2026,7 +2032,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
 
   OnUpdateIMEComposition([aAttrString string]);
 
-  nsCompositionEvent compEnd(PR_TRUE, NS_COMPOSITION_END, mWidget);
+  nsCompositionEvent compEnd(true, NS_COMPOSITION_END, mWidget);
   InitCompositionEvent(compEnd);
   compEnd.data = mLastDispatchedCompositionString;
   DispatchEvent(compEnd);
@@ -2072,12 +2078,12 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
   mMarkedRange.length = str.Length();
 
   if (!IsIMEComposing() && !str.IsEmpty()) {
-    nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT,
+    nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
                                   mWidget);
     DispatchEvent(selection);
     mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
 
-    nsCompositionEvent compStart(PR_TRUE, NS_COMPOSITION_START, mWidget);
+    nsCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
     InitCompositionEvent(compStart);
 
     DispatchEvent(compStart);
@@ -2094,7 +2100,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
   if (IsIMEComposing()) {
     OnUpdateIMEComposition([aAttrString string]);
 
-    PRBool doCommit = str.IsEmpty();
+    bool doCommit = str.IsEmpty();
     DispatchTextEvent(str, aAttrString, aSelectedRange, doCommit);
     if (Destroyed()) {
       PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -2104,7 +2110,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
     }
 
     if (doCommit) {
-      nsCompositionEvent compEnd(PR_TRUE, NS_COMPOSITION_END, mWidget);
+      nsCompositionEvent compEnd(true, NS_COMPOSITION_END, mWidget);
       InitCompositionEvent(compEnd);
       compEnd.data = mLastDispatchedCompositionString;
       DispatchEvent(compEnd);
@@ -2135,7 +2141,7 @@ IMEInputHandler::ConversationIdentifier()
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   // NOTE: The size of NSInteger is same as pointer size.
-  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mWidget);
+  nsQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, mWidget);
   textContent.InitForQueryTextContent(0, 0);
   DispatchEvent(textContent);
   if (!textContent.mSucceeded) {
@@ -2165,7 +2171,7 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange)
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsAutoString str;
-  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mWidget);
+  nsQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, mWidget);
   textContent.InitForQueryTextContent(aRange.location, aRange.length);
   DispatchEvent(textContent);
 
@@ -2188,7 +2194,7 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-PRBool
+bool
 IMEInputHandler::HasMarkedText()
 {
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -2229,7 +2235,7 @@ IMEInputHandler::SelectedRange()
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mWidget);
+  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, mWidget);
   DispatchEvent(selection);
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -2270,20 +2276,20 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsIntRect r;
-  PRBool useCaretRect = (aRange.length == 0);
+  bool useCaretRect = (aRange.length == 0);
   if (!useCaretRect) {
-    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_TEXT_RECT, mWidget);
+    nsQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT, mWidget);
     charRect.InitForQueryTextRect(aRange.location, 1);
     DispatchEvent(charRect);
     if (charRect.mSucceeded) {
       r = charRect.mReply.mRect;
     } else {
-      useCaretRect = PR_TRUE;
+      useCaretRect = true;
     }
   }
 
   if (useCaretRect) {
-    nsQueryContentEvent caretRect(PR_TRUE, NS_QUERY_CARET_RECT, mWidget);
+    nsQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, mWidget);
     caretRect.InitForQueryCaretRect(aRange.location);
     DispatchEvent(caretRect);
     if (!caretRect.mSucceeded) {
@@ -2364,9 +2370,9 @@ IMEInputHandler::IMEInputHandler(nsChildView* aWidget,
                                  NSView<mozView> *aNativeView) :
   PluginTextInputHandler(aWidget, aNativeView),
   mPendingMethods(0), mIMECompositionString(nsnull),
-  mIsIMEComposing(PR_FALSE), mIsIMEEnabled(PR_TRUE),
-  mIsASCIICapableOnly(PR_FALSE), mIgnoreIMECommit(PR_FALSE),
-  mIsInFocusProcessing(PR_FALSE)
+  mIsIMEComposing(false), mIsIMEEnabled(true),
+  mIsASCIICapableOnly(false), mIgnoreIMECommit(false),
+  mIsInFocusProcessing(false)
 {
   InitStaticMembers();
 
@@ -2386,7 +2392,7 @@ IMEInputHandler::~IMEInputHandler()
 }
 
 void
-IMEInputHandler::OnFocusChangeInGecko(PRBool aFocus)
+IMEInputHandler::OnFocusChangeInGecko(bool aFocus)
 {
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p IMEInputHandler::OnFocusChangeInGecko, aFocus=%s, Destroyed()=%s, "
@@ -2395,7 +2401,7 @@ IMEInputHandler::OnFocusChangeInGecko(PRBool aFocus)
 
   // This is called when the native focus is changed and when the native focus
   // isn't changed but the focus is changed in Gecko.
-  // XXX currently, we're not called this method with PR_FALSE, we need to
+  // XXX currently, we're not called this method with false, we need to
   // improve the nsIMEStateManager implementation.
   if (!aFocus) {
     if (sFocusedIMEHandler == this)
@@ -2404,7 +2410,7 @@ IMEInputHandler::OnFocusChangeInGecko(PRBool aFocus)
   }
 
   sFocusedIMEHandler = this;
-  mIsInFocusProcessing = PR_TRUE;
+  mIsInFocusProcessing = true;
 
   // We need to reset the IME's window level by the current focused view of
   // Gecko.  It may be different from mView.  However, we cannot get the
@@ -2414,7 +2420,7 @@ IMEInputHandler::OnFocusChangeInGecko(PRBool aFocus)
   ResetTimer();
 }
 
-PRBool
+bool
 IMEInputHandler::OnDestroyWidget(nsChildView* aDestroyingWidget)
 {
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -2430,7 +2436,7 @@ IMEInputHandler::OnDestroyWidget(nsChildView* aDestroyingWidget)
   }
 
   if (!PluginTextInputHandler::OnDestroyWidget(aDestroyingWidget)) {
-    return PR_FALSE;
+    return false;
   }
 
   if (IsIMEComposing()) {
@@ -2439,7 +2445,7 @@ IMEInputHandler::OnDestroyWidget(nsChildView* aDestroyingWidget)
     OnEndIMEComposition();
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -2454,7 +2460,7 @@ IMEInputHandler::OnStartIMEComposition()
      TrueOrFalse(mIsIMEComposing)));
 
   NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
-  mIsIMEComposing = PR_TRUE;
+  mIsIMEComposing = true;
 
   mLastDispatchedCompositionString.Truncate();
 
@@ -2494,7 +2500,7 @@ IMEInputHandler::OnEndIMEComposition()
 
   NS_ASSERTION(mIsIMEComposing, "We're not in composition");
 
-  mIsIMEComposing = PR_FALSE;
+  mIsIMEComposing = false;
 
   if (mIMECompositionString) {
     [mIMECompositionString release];
@@ -2603,9 +2609,9 @@ IMEInputHandler::CancelIMEComposition()
 
   // For canceling the current composing, we need to ignore the param of
   // insertText.  But this code is ugly...
-  mIgnoreIMECommit = PR_TRUE;
+  mIgnoreIMECommit = true;
   KillIMEComposition();
-  mIgnoreIMECommit = PR_FALSE;
+  mIgnoreIMECommit = false;
 
   if (!IsIMEComposing())
     return;
@@ -2617,22 +2623,22 @@ IMEInputHandler::CancelIMEComposition()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-PRBool
+bool
 IMEInputHandler::IsFocused()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NS_ENSURE_TRUE(!Destroyed(), PR_FALSE);
+  NS_ENSURE_TRUE(!Destroyed(), false);
   NSWindow* window = [mView window];
-  NS_ENSURE_TRUE(window, PR_FALSE);
+  NS_ENSURE_TRUE(window, false);
   return [window firstResponder] == mView &&
          ([window isMainWindow] || [window isSheet]) &&
          [[NSApplication sharedApplication] isActive];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
-PRBool
+bool
 IMEInputHandler::IsIMEOpened()
 {
   TISInputSourceWrapper tis;
@@ -2641,7 +2647,7 @@ IMEInputHandler::IsIMEOpened()
 }
 
 void
-IMEInputHandler::SetASCIICapableOnly(PRBool aASCIICapableOnly)
+IMEInputHandler::SetASCIICapableOnly(bool aASCIICapableOnly)
 {
   if (aASCIICapableOnly == mIsASCIICapableOnly)
     return;
@@ -2652,7 +2658,7 @@ IMEInputHandler::SetASCIICapableOnly(PRBool aASCIICapableOnly)
 }
 
 void
-IMEInputHandler::EnableIME(PRBool aEnableIME)
+IMEInputHandler::EnableIME(bool aEnableIME)
 {
   if (aEnableIME == mIsIMEEnabled)
     return;
@@ -2662,7 +2668,7 @@ IMEInputHandler::EnableIME(PRBool aEnableIME)
 }
 
 void
-IMEInputHandler::SetIMEOpenState(PRBool aOpenIME)
+IMEInputHandler::SetIMEOpenState(bool aOpenIME)
 {
   if (!IsFocused() || IsIMEOpened() == aOpenIME)
     return;
@@ -2688,10 +2694,10 @@ IMEInputHandler::SetIMEOpenState(PRBool aOpenIME)
   // Finally, we should refer the system locale but this is a little expensive,
   // we shouldn't retry this (if it was succeeded, we already set
   // sLatestIMEOpenedModeInputSourceID at that time).
-  static PRBool sIsPrefferredIMESearched = PR_FALSE;
+  static bool sIsPrefferredIMESearched = false;
   if (sIsPrefferredIMESearched)
     return;
-  sIsPrefferredIMESearched = PR_TRUE;
+  sIsPrefferredIMESearched = true;
   OpenSystemPreferredLanguageIME();
 }
 
@@ -2717,7 +2723,7 @@ IMEInputHandler::OpenSystemPreferredLanguageIME()
       continue;
     }
 
-    PRBool changed = PR_FALSE;
+    bool changed = false;
     CFStringRef lang = static_cast<CFStringRef>(
       ::CFLocaleGetValue(locale, kCFLocaleLanguageCode));
     NS_ASSERTION(lang, "lang is null");
@@ -2736,7 +2742,7 @@ IMEInputHandler::OpenSystemPreferredLanguageIME()
         }
 #endif // #ifdef PR_LOGGING
         tis.Select();
-        changed = PR_TRUE;
+        changed = true;
       }
     }
     ::CFRelease(locale);
@@ -2760,11 +2766,11 @@ IMEInputHandler::OpenSystemPreferredLanguageIME()
 PluginTextInputHandler::PluginTextInputHandler(nsChildView* aWidget,
                                                NSView<mozView> *aNativeView) :
   TextInputHandlerBase(aWidget, aNativeView),
-  mIgnoreNextKeyUpEvent(PR_FALSE),
+  mIgnoreNextKeyUpEvent(false),
 #ifndef NP_NO_CARBON
-  mPluginTSMDoc(0), mPluginTSMInComposition(PR_FALSE),
+  mPluginTSMDoc(0), mPluginTSMInComposition(false),
 #endif // #ifndef NP_NO_CARBON
-  mPluginComplexTextInputRequested(PR_FALSE)
+  mPluginComplexTextInputRequested(false)
 {
 }
 
@@ -2811,7 +2817,7 @@ PluginTextInputHandler::ConvertCocoaKeyEventToNPCocoaEvent(
 
 #ifndef NP_NO_CARBON
 
-/* static */ PRBool
+/* static */ bool
 PluginTextInputHandler::ConvertUnicodeToCharCode(PRUnichar aUniChar,
                                                  unsigned char* aOutChar)
 {
@@ -2829,27 +2835,27 @@ PluginTextInputHandler::ConvertUnicodeToCharCode(PRUnichar aUniChar,
                                       kTextRegionDontCare,
                                       NULL,
                                       &systemEncoding);
-  NS_ENSURE_TRUE(err == noErr, PR_FALSE);
+  NS_ENSURE_TRUE(err == noErr, false);
 
   err = ::CreateUnicodeToTextInfoByEncoding(systemEncoding, &converterInfo);
-  NS_ENSURE_TRUE(err == noErr, PR_FALSE);
+  NS_ENSURE_TRUE(err == noErr, false);
 
   err = ::ConvertFromUnicodeToPString(converterInfo, sizeof(PRUnichar),
                                       &aUniChar, convertedString);
-  NS_ENSURE_TRUE(err == noErr, PR_FALSE);
+  NS_ENSURE_TRUE(err == noErr, false);
 
   *aOutChar = convertedString[1];
   ::DisposeUnicodeToTextInfo(&converterInfo);
-  return PR_TRUE;
+  return true;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 /* static */ void
 PluginTextInputHandler::ConvertCocoaKeyEventToCarbonEvent(
                           NSEvent* aCocoaKeyEvent,
                           EventRecord& aCarbonKeyEvent,
-                          PRBool aMakeKeyDownEventIfNSFlagsChanged)
+                          bool aMakeKeyDownEventIfNSFlagsChanged)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -3028,7 +3034,7 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
     cocoaTextEvent.type = NPCocoaEventTextInput;
     cocoaTextEvent.data.text.text = (NPNSString*)text;
 
-    nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mWidget);
+    nsPluginEvent pluginEvent(true, NS_PLUGIN_INPUT_EVENT, mWidget);
     nsCocoaUtils::InitPluginEvent(pluginEvent, cocoaTextEvent);
     DispatchEvent(pluginEvent);
 
@@ -3070,7 +3076,7 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
 
     EventRecord eventRec;
     if (::ConvertEventRefToEventRecord(cloneEvent, &eventRec)) {
-      nsKeyEvent keydownEvent(PR_TRUE, NS_KEY_DOWN, mWidget);
+      nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
 
       PRUint32 keyCode = ComputeGeckoKeyCode(macKeyCode, @"");
       PRUint32 charCode(charCodes.ElementAt(i));
@@ -3081,7 +3087,7 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
         keydownEvent.keyCode = keyCode;
       } else {
         keydownEvent.charCode = charCode;
-        keydownEvent.isChar   = PR_TRUE;
+        keydownEvent.isChar   = true;
       }
       keydownEvent.isShift   = ((modifiers & shiftKey) != 0);
       keydownEvent.isControl = ((modifiers & controlKey) != 0);
@@ -3145,7 +3151,7 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
   // it.
   if (IsInPluginComposition()) {
     // Don't send key up events for key downs associated with compositions.
-    mIgnoreNextKeyUpEvent = PR_TRUE;
+    mIgnoreNextKeyUpEvent = true;
 
     NSString* textString = nil;
     [ctiPanel interpretKeyEvent:aNativeKeyEvent string:&textString];
@@ -3157,10 +3163,10 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
   }
 
   // Reset complex text input request flag.
-  mPluginComplexTextInputRequested = PR_FALSE;
+  mPluginComplexTextInputRequested = false;
 
   // Send key down event to the plugin.
-  nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mWidget);
+  nsPluginEvent pluginEvent(true, NS_PLUGIN_INPUT_EVENT, mWidget);
   NPCocoaEvent cocoaEvent;
   ConvertCocoaKeyEventToNPCocoaEvent(aNativeKeyEvent, cocoaEvent);
   nsCocoaUtils::InitPluginEvent(pluginEvent, cocoaEvent);
@@ -3172,7 +3178,7 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
   // Start complex text composition if requested.
   if (mPluginComplexTextInputRequested) {
     // Don't send key up events for key downs associated with compositions.
-    mIgnoreNextKeyUpEvent = PR_TRUE;
+    mIgnoreNextKeyUpEvent = true;
 
     NSString* textString = nil;
     [ctiPanel interpretKeyEvent:aNativeKeyEvent string:&textString];
@@ -3183,19 +3189,19 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
 
 #else // #ifdef NP_NO_CARBON
 
-  PRBool wasInComposition = PR_FALSE;
+  bool wasInComposition = false;
   if ([mView pluginEventModel] == NPEventModelCocoa) {
     if (IsInPluginComposition()) {
-      wasInComposition = PR_TRUE;
+      wasInComposition = true;
 
       // Don't send key up events for key downs associated with compositions.
-      mIgnoreNextKeyUpEvent = PR_TRUE;
+      mIgnoreNextKeyUpEvent = true;
     } else {
       // Reset complex text input request flag.
-      mPluginComplexTextInputRequested = PR_FALSE;
+      mPluginComplexTextInputRequested = false;
 
       // Send key down event to the plugin.
-      nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mWidget);
+      nsPluginEvent pluginEvent(true, NS_PLUGIN_INPUT_EVENT, mWidget);
       NPCocoaEvent cocoaEvent;
       ConvertCocoaKeyEventToNPCocoaEvent(aNativeKeyEvent, cocoaEvent);
       nsCocoaUtils::InitPluginEvent(pluginEvent, cocoaEvent);
@@ -3210,7 +3216,7 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
       }
 
       // Don't send key up events for key downs associated with compositions.
-      mIgnoreNextKeyUpEvent = PR_TRUE;
+      mIgnoreNextKeyUpEvent = true;
     }
 
     // Don't send complex text input to a plugin in Cocoa event mode if
@@ -3247,7 +3253,7 @@ void
 PluginTextInputHandler::HandleKeyUpEventForPlugin(NSEvent* aNativeKeyEvent)
 {
   if (mIgnoreNextKeyUpEvent) {
-    mIgnoreNextKeyUpEvent = PR_FALSE;
+    mIgnoreNextKeyUpEvent = false;
     return;
   }
 
@@ -3264,7 +3270,7 @@ PluginTextInputHandler::HandleKeyUpEventForPlugin(NSEvent* aNativeKeyEvent)
       return;
     }
 
-    nsKeyEvent keyupEvent(PR_TRUE, NS_KEY_UP, mWidget);
+    nsKeyEvent keyupEvent(true, NS_KEY_UP, mWidget);
     InitKeyEvent(aNativeKeyEvent, keyupEvent);
     NPCocoaEvent pluginEvent;
     ConvertCocoaKeyEventToNPCocoaEvent(aNativeKeyEvent, pluginEvent);
@@ -3299,10 +3305,10 @@ PluginTextInputHandler::HandleKeyUpEventForPlugin(NSEvent* aNativeKeyEvent)
     // be sent when it actually happens (they need to be able to detect how
     // long a key has been held down) -- which wouldn't be possible if we sent
     // them from processPluginKeyEvent.)
-    nsKeyEvent keyupEvent(PR_TRUE, NS_KEY_UP, mWidget);
+    nsKeyEvent keyupEvent(true, NS_KEY_UP, mWidget);
     InitKeyEvent(aNativeKeyEvent, keyupEvent);
     EventRecord pluginEvent;
-    ConvertCocoaKeyEventToCarbonEvent(aNativeKeyEvent, pluginEvent, PR_FALSE);
+    ConvertCocoaKeyEventToCarbonEvent(aNativeKeyEvent, pluginEvent, false);
     keyupEvent.pluginEvent = &pluginEvent;
     DispatchEvent(keyupEvent);
     return;
@@ -3311,7 +3317,7 @@ PluginTextInputHandler::HandleKeyUpEventForPlugin(NSEvent* aNativeKeyEvent)
 
 }
 
-PRBool
+bool
 PluginTextInputHandler::IsInPluginComposition()
 {
   return
@@ -3322,7 +3328,7 @@ PluginTextInputHandler::IsInPluginComposition()
 #endif // #ifdef NP_NO_CARBON else
 }
 
-PRBool
+bool
 PluginTextInputHandler::DispatchCocoaNPAPITextEvent(NSString* aString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -3332,11 +3338,11 @@ PluginTextInputHandler::DispatchCocoaNPAPITextEvent(NSString* aString)
   cocoaTextEvent.type = NPCocoaEventTextInput;
   cocoaTextEvent.data.text.text = (NPNSString*)aString;
 
-  nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_INPUT_EVENT, mWidget);
+  nsPluginEvent pluginEvent(true, NS_PLUGIN_INPUT_EVENT, mWidget);
   nsCocoaUtils::InitPluginEvent(pluginEvent, cocoaTextEvent);
   return DispatchEvent(pluginEvent);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 
@@ -3411,7 +3417,7 @@ PluginTextInputHandler::DispatchCocoaNPAPITextEvent(NSString* aString)
       TextInputHandler* handler =
         static_cast<nsChildView*>(widget)->GetTextInputHandler();
       if (handler) {
-        handler->SetPluginTSMInComposition(PR_FALSE);
+        handler->SetPluginTSMInComposition(false);
       }
     }
   }
@@ -3429,7 +3435,7 @@ PluginTextInputHandler::DispatchCocoaNPAPITextEvent(NSString* aString)
       TextInputHandler* handler =
         static_cast<nsChildView*>(widget)->GetTextInputHandler();
       if (handler) {
-        handler->SetPluginTSMInComposition(PR_FALSE);
+        handler->SetPluginTSMInComposition(false);
       }
     }
   }
@@ -3466,7 +3472,7 @@ TextInputHandlerBase::~TextInputHandlerBase()
   }
 }
 
-PRBool
+bool
 TextInputHandlerBase::OnDestroyWidget(nsChildView* aDestroyingWidget)
 {
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -3475,14 +3481,14 @@ TextInputHandlerBase::OnDestroyWidget(nsChildView* aDestroyingWidget)
      this, aDestroyingWidget, mWidget));
 
   if (aDestroyingWidget != mWidget) {
-    return PR_FALSE;
+    return false;
   }
 
   mWidget = nsnull;
-  return PR_TRUE;
+  return true;
 }
 
-PRBool
+bool
 TextInputHandlerBase::DispatchEvent(nsGUIEvent& aEvent)
 {
   if (aEvent.message == NS_KEY_PRESS) {
@@ -3504,7 +3510,7 @@ TextInputHandlerBase::InitKeyEvent(NSEvent *aNativeKeyEvent,
 
   TISInputSourceWrapper tis;
   if (mKeyboardOverride.mOverrideEnabled) {
-    tis.InitByLayoutID(mKeyboardOverride.mKeyboardLayout, PR_TRUE);
+    tis.InitByLayoutID(mKeyboardOverride.mKeyboardLayout, true);
   } else {
     tis.InitByCurrentKeyboardLayout();
   }
@@ -3544,7 +3550,7 @@ TextInputHandlerBase::SynthesizeNativeKeyEvent(
   }
 
   NSInteger windowNumber = [[mView window] windowNumber];
-  PRBool sendFlagsChangedEvent = IsModifierKey(aNativeKeyCode);
+  bool sendFlagsChangedEvent = IsModifierKey(aNativeKeyCode);
   NSEventType eventType = sendFlagsChangedEvent ? NSFlagsChanged : NSKeyDown;
   NSEvent* downEvent =
     [NSEvent     keyEventWithType:eventType
@@ -3564,7 +3570,7 @@ TextInputHandlerBase::SynthesizeNativeKeyEvent(
   if (downEvent && (sendFlagsChangedEvent || upEvent)) {
     KeyboardLayoutOverride currentLayout = mKeyboardOverride;
     mKeyboardOverride.mKeyboardLayout = aNativeKeyboardLayout;
-    mKeyboardOverride.mOverrideEnabled = PR_TRUE;
+    mKeyboardOverride.mOverrideEnabled = true;
     [NSApp sendEvent:downEvent];
     if (upEvent) {
       [NSApp sendEvent:upEvent];
@@ -3579,7 +3585,7 @@ TextInputHandlerBase::SynthesizeNativeKeyEvent(
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-/* static */ PRBool
+/* static */ bool
 TextInputHandlerBase::IsPrintableChar(PRUnichar aChar)
 {
   return (aChar >= 0x20 && aChar <= 0x7E) || aChar >= 0xA0;
@@ -3736,7 +3742,7 @@ TextInputHandlerBase::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
-/* static */ PRBool
+/* static */ bool
 TextInputHandlerBase::IsSpecialGeckoKey(UInt32 aNativeKeyCode)
 {
   // this table is used to determine which keys are special and should not
@@ -3788,28 +3794,28 @@ TextInputHandlerBase::IsSpecialGeckoKey(UInt32 aNativeKeyCode)
     case kReturnKeyCode:
     case kEnterKeyCode:
     case kPowerbookEnterKeyCode:
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
-/* static */ PRBool
+/* static */ bool
 TextInputHandlerBase::IsNormalCharInputtingEvent(const nsKeyEvent& aKeyEvent)
 {
   // this is not character inputting event, simply.
   if (!aKeyEvent.isChar || !aKeyEvent.charCode || aKeyEvent.isMeta) {
-    return PR_FALSE;
+    return false;
   }
   // if this is unicode char inputting event, we don't need to check
   // ctrl/alt/command keys
   if (aKeyEvent.charCode > 0x7F) {
-    return PR_TRUE;
+    return true;
   }
   // ASCII chars should be inputted without ctrl/alt/command keys
   return !aKeyEvent.isControl && !aKeyEvent.isAlt;
 }
 
-/* static */ PRBool
+/* static */ bool
 TextInputHandlerBase::IsModifierKey(UInt32 aNativeKeyCode)
 {
   switch (aNativeKeyCode) {
@@ -3822,7 +3828,7 @@ TextInputHandlerBase::IsModifierKey(UInt32 aNativeKeyCode)
     case kRShiftKeyCode:
     case kROptionKeyCode:
     case kRControlKeyCode:
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }

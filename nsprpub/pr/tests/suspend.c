@@ -212,6 +212,8 @@ int main(int argc, char **argv)
     CreateThreadsUU();
     CreateThreadsKU();
     PR_Cleanup();
+
+    return 0;
 }
 
 #endif /* XP_BEOS */

@@ -49,9 +49,12 @@
 #include "nsIWinAccessNode.h"
 #include "nsAccessNodeWrap.h"
 #include "nsWinUtils.h"
+#include "Statistics.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+
+using namespace mozilla::a11y;
 
 #define CANT_QUERY_ASSERTION_MSG \
 "Subclass of CAccessibleTable doesn't implement nsIAccessibleTable"\
@@ -64,6 +67,7 @@ CAccessibleTable::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleTable == iid) {
+    statistics::IAccessibleTableUsed();
     *ppv = static_cast<IAccessibleTable*>(this);
     (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
@@ -525,7 +529,7 @@ __try {
   if (!tableAcc)
     return E_FAIL;
 
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   nsresult rv = tableAcc->IsColumnSelected(aColumn, &isSelected);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
@@ -548,7 +552,7 @@ __try {
   if (!tableAcc)
     return E_FAIL;
 
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   nsresult rv = tableAcc->IsRowSelected(aRow, &isSelected);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
@@ -571,7 +575,7 @@ __try {
   if (!tableAcc)
     return E_FAIL;
 
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   nsresult rv = tableAcc->IsCellSelected(aRow, aColumn, &isSelected);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
@@ -681,7 +685,7 @@ __try {
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   rv = tableAcc->IsCellSelected(rowIdx, columnIdx, &isSelected);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);

@@ -111,19 +111,19 @@ public:
 
 protected:
     // nsXMLContentSink overrides
-    virtual void MaybeStartLayout(PRBool aIgnorePendingSheets);
+    virtual void MaybeStartLayout(bool aIgnorePendingSheets);
 
-    PRBool OnOpenContainer(const PRUnichar **aAtts, 
+    bool OnOpenContainer(const PRUnichar **aAtts, 
                            PRUint32 aAttsCount, 
                            PRInt32 aNameSpaceID, 
                            nsIAtom* aTagName,
                            PRUint32 aLineNumber);
 
-    PRBool NotifyForDocElement() { return PR_FALSE; }
+    bool NotifyForDocElement() { return false; }
 
     nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                            nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
-                           nsIContent** aResult, PRBool* aAppendContent,
+                           nsIContent** aResult, bool* aAppendContent,
                            mozilla::dom::FromParser aFromParser);
     
     nsresult AddAttributes(const PRUnichar** aAtts, 
@@ -147,13 +147,13 @@ protected:
   
 
   // nsXMLContentSink overrides
-  nsresult FlushText(PRBool aReleaseTextNode = PR_TRUE);
+  nsresult FlushText(bool aReleaseTextNode = true);
 
   // nsIExpatSink overrides
   NS_IMETHOD ReportError(const PRUnichar* aErrorText,
                          const PRUnichar* aSourceText,
                          nsIScriptError *aError,
-                         PRBool *_retval);
+                         bool *_retval);
 
 protected:
   nsresult ReportUnexpectedElement(nsIAtom* aElementName, PRUint32 aLineNumber);
@@ -164,8 +164,8 @@ protected:
   XBLPrimaryState mState;
   XBLSecondaryState mSecondaryState;
   nsXBLDocumentInfo* mDocInfo;
-  PRPackedBool mIsChromeOrResource; // For bug #45989
-  PRPackedBool mFoundFirstBinding;
+  bool mIsChromeOrResource; // For bug #45989
+  bool mFoundFirstBinding;
 
   nsXBLPrototypeBinding* mBinding;
   nsXBLPrototypeHandler* mHandler; // current handler, owned by its PrototypeBinding

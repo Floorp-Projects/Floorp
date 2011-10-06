@@ -84,7 +84,7 @@ public:
 
 private:
   static nsresult EnsureUAStyleSheet();
-  static PRBool IsImageContentType(const char* aContentType);
+  static bool IsImageContentType(const char* aContentType);
 };
 
 nsresult

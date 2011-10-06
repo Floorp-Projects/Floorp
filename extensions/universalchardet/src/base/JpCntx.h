@@ -75,9 +75,9 @@ public:
   }
 
   float GetConfidence(void);
-  void      Reset(PRBool aIsPreferredLanguage);
+  void      Reset(bool aIsPreferredLanguage);
   void      SetOpion(){}
-  PRBool GotEnoughData() {return mTotalRel > ENOUGH_REL_THRESHOLD;}
+  bool GotEnoughData() {return mTotalRel > ENOUGH_REL_THRESHOLD;}
 
 protected:
   virtual PRInt32 GetOrder(const char* str, PRUint32 *charLen) = 0;
@@ -100,7 +100,7 @@ protected:
   PRUint32 mNeedToSkipCharNum;
 
   //If this flag is set to PR_TRUE, detection is done and conclusion has been made
-  PRBool   mDone;
+  bool     mDone;
 };
 
 

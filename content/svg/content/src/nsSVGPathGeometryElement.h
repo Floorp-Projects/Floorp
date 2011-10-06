@@ -57,8 +57,8 @@ class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase
 public:
   nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
-  virtual PRBool AttributeDefinesGeometry(const nsIAtom *aName);
-  virtual PRBool IsMarkable();
+  virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
+  virtual bool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx) = 0;
   virtual already_AddRefed<gfxFlattenedPath> GetFlattenedPath(const gfxMatrix &aMatrix);

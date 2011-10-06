@@ -117,16 +117,18 @@ var BrowserUI = {
 
   _titleChanged: function(aBrowser) {
     let url = this.getDisplayURI(aBrowser);
-    let caption = aBrowser.contentTitle || url;
+    let contentTitle = aBrowser.contentTitle;
+    let caption = contentTitle || url;
+    let tabCaption = contentTitle || (Util.isURLEmpty(url) ? "" : url);
 
-    if (aBrowser.contentTitle == "" && !Util.isURLEmpty(aBrowser.userTypedValue))
-      caption = aBrowser.userTypedValue;
+    if (contentTitle == "" && !Util.isURLEmpty(aBrowser.userTypedValue))
+      caption = tabCaption = aBrowser.userTypedValue;
     else if (Util.isURLEmpty(url))
       caption = "";
 
     let tab = Browser.getTabForBrowser(aBrowser);
     if (tab)
-      tab.chromeTab.updateTitle(caption);
+      tab.chromeTab.updateTitle(tabCaption);
 
     let browser = Browser.selectedBrowser;
     if (browser && aBrowser != browser)
@@ -491,6 +493,7 @@ var BrowserUI = {
       FullScreenVideo.init();
       NewTabPopup.init();
       WebappsUI.init();
+      CapturePickerUI.init();
 
       // If some add-ons were disabled during during an application update, alert user
       let addonIDs = AddonManager.getStartupChanges("disabled");
@@ -712,9 +715,10 @@ var BrowserUI = {
 
     let engine = Services.search.getEngineByName(aName);
     let submission = engine.getSubmission(searchValue, null);
-    Browser.selectedBrowser.userTypedValue = submission.uri.spec;
     Browser.loadURI(submission.uri.spec, { postData: submission.postData });
 
+    // loadURI may open a new tab, so get the selectedBrowser afterward.
+    Browser.selectedBrowser.userTypedValue = submission.uri.spec;
     this._titleChanged(Browser.selectedBrowser);
   },
 
@@ -941,6 +945,10 @@ var BrowserUI = {
         break;
       // Window events
       case "keypress":
+        // Ignore events headed toward the browser; they will be
+        // re-dispatched after content has a chance to handle them.
+        if (aEvent.target.localName == "browser")
+          break;
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
           this.handleEscape(aEvent);
         break;
@@ -1242,7 +1250,10 @@ var BrowserUI = {
         AppMenu.toggle();
         break;
       case "cmd_showTabs":
-        TabsPopup.toggle();
+        if (Util.isPortrait())
+          TabsPopup.toggle();
+        else
+          TabletSidebar.toggle();
         break;
       case "cmd_newTab":
         this.newTab();

@@ -72,9 +72,9 @@ class nsCookie : public nsICookie2
              PRInt64         aExpiry,
              PRInt64         aLastAccessed,
              PRInt64         aCreationTime,
-             PRBool          aIsSession,
-             PRBool          aIsSecure,
-             PRBool          aIsHttpOnly)
+             bool            aIsSession,
+             bool            aIsSecure,
+             bool            aIsHttpOnly)
      : mName(aName)
      , mValue(aValue)
      , mHost(aHost)
@@ -103,9 +103,9 @@ class nsCookie : public nsICookie2
                              PRInt64           aExpiry,
                              PRInt64           aLastAccessed,
                              PRInt64           aCreationTime,
-                             PRBool            aIsSession,
-                             PRBool            aIsSecure,
-                             PRBool            aIsHttpOnly);
+                             bool              aIsSession,
+                             bool              aIsSecure,
+                             bool              aIsHttpOnly);
 
     virtual ~nsCookie() {}
 
@@ -118,15 +118,15 @@ class nsCookie : public nsICookie2
     inline PRInt64 Expiry()                 const { return mExpiry; }        // in seconds
     inline PRInt64 LastAccessed()           const { return mLastAccessed; }  // in microseconds
     inline PRInt64 CreationTime()           const { return mCreationTime; }  // in microseconds
-    inline PRBool IsSession()               const { return mIsSession; }
-    inline PRBool IsDomain()                const { return *mHost == '.'; }
-    inline PRBool IsSecure()                const { return mIsSecure; }
-    inline PRBool IsHttpOnly()              const { return mIsHttpOnly; }
+    inline bool IsSession()               const { return mIsSession; }
+    inline bool IsDomain()                const { return *mHost == '.'; }
+    inline bool IsSecure()                const { return mIsSecure; }
+    inline bool IsHttpOnly()              const { return mIsHttpOnly; }
 
     // setters
     inline void SetExpiry(PRInt64 aExpiry)        { mExpiry = aExpiry; }
     inline void SetLastAccessed(PRInt64 aTime)    { mLastAccessed = aTime; }
-    inline void SetIsSession(PRBool aIsSession)   { mIsSession = (PRPackedBool) aIsSession; }
+    inline void SetIsSession(bool aIsSession)   { mIsSession = (bool) aIsSession; }
     // Set the creation time manually, overriding the monotonicity checks in
     // Create(). Use with caution!
     inline void SetCreationTime(PRInt64 aTime)    { mCreationTime = aTime; }
@@ -145,9 +145,9 @@ class nsCookie : public nsICookie2
     PRInt64      mExpiry;
     PRInt64      mLastAccessed;
     PRInt64      mCreationTime;
-    PRPackedBool mIsSession;
-    PRPackedBool mIsSecure;
-    PRPackedBool mIsHttpOnly;
+    bool mIsSession;
+    bool mIsSecure;
+    bool mIsHttpOnly;
 };
 
 #endif // nsCookie_h__

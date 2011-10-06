@@ -62,7 +62,7 @@ public:
    * @returns PR_TRUE if aAttribute is a recognized animation-related
    *          attribute; PR_FALSE otherwise.
    */
-  virtual PRBool SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
+  virtual bool SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
                          nsAttrValue& aResult, nsresult* aParseResult = nsnull);
 
   /*
@@ -71,28 +71,28 @@ public:
    * @returns PR_TRUE if aAttribute is a recognized animation-related
    *          attribute; PR_FALSE otherwise.
    */
-  NS_OVERRIDE virtual PRBool UnsetAttr(nsIAtom* aAttribute);
+  NS_OVERRIDE virtual bool UnsetAttr(nsIAtom* aAttribute);
 
 protected:
   // Although <set> animation might look like to-animation, unlike to-animation,
   // it never interpolates values.
   // Returning PR_FALSE here will mean this animation function gets treated as
   // a single-valued function and no interpolation will be attempted.
-  NS_OVERRIDE virtual PRBool IsToAnimation() const {
+  NS_OVERRIDE virtual bool IsToAnimation() const {
     return PR_FALSE;
   }
 
   // <set> applies the exact same value across the simple duration.
-  NS_OVERRIDE virtual PRBool IsValueFixedForSimpleDuration() const {
+  NS_OVERRIDE virtual bool IsValueFixedForSimpleDuration() const {
     return PR_TRUE;
   }
-  NS_OVERRIDE virtual PRBool             HasAttr(nsIAtom* aAttName) const;
+  NS_OVERRIDE virtual bool               HasAttr(nsIAtom* aAttName) const;
   NS_OVERRIDE virtual const nsAttrValue* GetAttr(nsIAtom* aAttName) const;
-  NS_OVERRIDE virtual PRBool             GetAttr(nsIAtom* aAttName,
+  NS_OVERRIDE virtual bool               GetAttr(nsIAtom* aAttName,
                                                  nsAString& aResult) const;
-  NS_OVERRIDE virtual PRBool WillReplace() const;
+  NS_OVERRIDE virtual bool WillReplace() const;
 
-  PRBool IsDisallowedAttribute(const nsIAtom* aAttribute) const;
+  bool IsDisallowedAttribute(const nsIAtom* aAttribute) const;
 };
 
 #endif // NS_SMILSETANIMATIONFUNCTION_H_

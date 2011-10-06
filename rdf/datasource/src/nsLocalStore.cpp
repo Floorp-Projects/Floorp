@@ -103,28 +103,28 @@ public:
 
     NS_IMETHOD GetSource(nsIRDFResource* aProperty,
                          nsIRDFNode* aTarget,
-                         PRBool aTruthValue,
+                         bool aTruthValue,
                          nsIRDFResource** aSource) {
         return mInner->GetSource(aProperty, aTarget, aTruthValue, aSource);
     }
 
     NS_IMETHOD GetSources(nsIRDFResource* aProperty,
                           nsIRDFNode* aTarget,
-                          PRBool aTruthValue,
+                          bool aTruthValue,
                           nsISimpleEnumerator** aSources) {
         return mInner->GetSources(aProperty, aTarget, aTruthValue, aSources);
     }
 
     NS_IMETHOD GetTarget(nsIRDFResource* aSource,
                          nsIRDFResource* aProperty,
-                         PRBool aTruthValue,
+                         bool aTruthValue,
                          nsIRDFNode** aTarget) {
         return mInner->GetTarget(aSource, aProperty, aTruthValue, aTarget);
     }
 
     NS_IMETHOD GetTargets(nsIRDFResource* aSource,
                           nsIRDFResource* aProperty,
-                          PRBool aTruthValue,
+                          bool aTruthValue,
                           nsISimpleEnumerator** aTargets) {
         return mInner->GetTargets(aSource, aProperty, aTruthValue, aTargets);
     }
@@ -132,7 +132,7 @@ public:
     NS_IMETHOD Assert(nsIRDFResource* aSource, 
                       nsIRDFResource* aProperty, 
                       nsIRDFNode* aTarget,
-                      PRBool aTruthValue) {
+                      bool aTruthValue) {
         return mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
     }
 
@@ -159,8 +159,8 @@ public:
     NS_IMETHOD HasAssertion(nsIRDFResource* aSource,
                             nsIRDFResource* aProperty,
                             nsIRDFNode* aTarget,
-                            PRBool aTruthValue,
-                            PRBool* hasAssertion) {
+                            bool aTruthValue,
+                            bool* hasAssertion) {
         return mInner->HasAssertion(aSource, aProperty, aTarget, aTruthValue, hasAssertion);
     }
 
@@ -172,11 +172,11 @@ public:
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    NS_IMETHOD HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval) {
+    NS_IMETHOD HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, bool *_retval) {
         return mInner->HasArcIn(aNode, aArc, _retval);
     }
 
-    NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval) {
+    NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, bool *_retval) {
         return mInner->HasArcOut(aSource, aArc, _retval);
     }
 
@@ -200,7 +200,7 @@ public:
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-                                PRBool* aResult);
+                                bool* aResult);
 
     NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                          nsIRDFResource*   aCommand,
@@ -214,11 +214,11 @@ public:
         return mInner->EndUpdateBatch();
     }
 
-    NS_IMETHOD GetLoaded(PRBool* _result);
+    NS_IMETHOD GetLoaded(bool* _result);
     NS_IMETHOD Init(const char *uri);
     NS_IMETHOD Flush();
     NS_IMETHOD FlushTo(const char *aURI);
-    NS_IMETHOD Refresh(PRBool sync);
+    NS_IMETHOD Refresh(bool sync);
 
     // nsIObserver
     NS_DECL_NSIOBSERVER
@@ -284,7 +284,7 @@ NS_INTERFACE_MAP_END
 // nsIRDFDataSource interface
 
 NS_IMETHODIMP
-LocalStoreImpl::GetLoaded(PRBool* _result)
+LocalStoreImpl::GetLoaded(bool* _result)
 {
 	nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
     NS_ASSERTION(remote != nsnull, "not an nsIRDFRemoteDataSource");
@@ -324,7 +324,7 @@ LocalStoreImpl::FlushTo(const char *aURI)
 }
 
 NS_IMETHODIMP
-LocalStoreImpl::Refresh(PRBool sync)
+LocalStoreImpl::Refresh(bool sync)
 {
 	nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
     NS_ASSERTION(remote != nsnull, "not an nsIRDFRemoteDataSource");
@@ -389,7 +389,7 @@ LocalStoreImpl::CreateLocalStore(nsIFile* aFile)
     // Okay, now see if the file exists _for real_. If it's still
     // not there, it could be that the profile service gave us
     // back a read-only directory. Whatever.
-    PRBool fileExistsFlag = PR_FALSE;
+    bool fileExistsFlag = false;
     aFile->Exists(&fileExistsFlag);
     if (!fileExistsFlag)
         return NS_ERROR_UNEXPECTED;
@@ -409,7 +409,7 @@ LocalStoreImpl::LoadData()
     rv = NS_GetSpecialDirectory(NS_APP_LOCALSTORE_50_FILE, getter_AddRefs(aFile));
     if (NS_FAILED(rv)) return rv;
 
-    PRBool fileExistsFlag = PR_FALSE;
+    bool fileExistsFlag = false;
     (void)aFile->Exists(&fileExistsFlag);
     if (!fileExistsFlag) {
         // if file doesn't exist, create it
@@ -476,7 +476,7 @@ NS_IMETHODIMP
 LocalStoreImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                  nsIRDFResource*   aCommand,
                                  nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-                                 PRBool* aResult)
+                                 bool* aResult)
 {
     *aResult = PR_TRUE;
     return NS_OK;

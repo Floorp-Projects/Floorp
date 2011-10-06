@@ -70,7 +70,7 @@ protected:
 
 protected:
 
-  static PRBool ClearEnumerator(nsHashKey *aKey, void *aData, void* closure);
+  static bool ClearEnumerator(nsHashKey *aKey, void *aData, void* closure);
 
 protected:
 

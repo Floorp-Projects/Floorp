@@ -78,7 +78,7 @@ public:
     /**
      * Should nametests parsed in this context be case-sensitive
      */
-    virtual PRBool caseInsensitiveNameTests() = 0;
+    virtual bool caseInsensitiveNameTests() = 0;
 
     /*
      * Callback to be used by the Parser if errors are detected.

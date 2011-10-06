@@ -93,7 +93,7 @@ public:
 
   void FreeGlobalPrinters();
 
-  PRBool       PrintersAreAllocated() { return mPrinters != nsnull; }
+  bool         PrintersAreAllocated() { return mPrinters != nsnull; }
   LPWSTR       GetItemFromList(PRInt32 aInx) { return mPrinters?mPrinters->ElementAt(aInx):nsnull; }
   nsresult     EnumeratePrinterList();
   void         GetDefaultPrinterName(nsString& aDefaultPrinterName);
@@ -120,52 +120,52 @@ typedef struct {
   short  mPaperSize; // native enum
   double mWidth;
   double mHeight;
-  PRBool mIsInches;
+  bool mIsInches;
 } NativePaperSizes;
 
 // There are around 40 default print sizes defined by Windows
 const NativePaperSizes kPaperSizes[] = {
-  {DMPAPER_LETTER,    8.5,   11.0,  PR_TRUE},
-  {DMPAPER_LEGAL,     8.5,   14.0,  PR_TRUE},
-  {DMPAPER_A4,        210.0, 297.0, PR_FALSE},
-  {DMPAPER_B4,        250.0, 354.0, PR_FALSE}, 
-  {DMPAPER_B5,        182.0, 257.0, PR_FALSE},
-  {DMPAPER_TABLOID,   11.0,  17.0,  PR_TRUE},
-  {DMPAPER_LEDGER,    17.0,  11.0,  PR_TRUE},
-  {DMPAPER_STATEMENT, 5.5,   8.5,   PR_TRUE},
-  {DMPAPER_EXECUTIVE, 7.25,  10.5,  PR_TRUE},
-  {DMPAPER_A3,        297.0, 420.0, PR_FALSE},
-  {DMPAPER_A5,        148.0, 210.0, PR_FALSE},
-  {DMPAPER_CSHEET,    17.0,  22.0,  PR_TRUE},  
-  {DMPAPER_DSHEET,    22.0,  34.0,  PR_TRUE},  
-  {DMPAPER_ESHEET,    34.0,  44.0,  PR_TRUE},  
-  {DMPAPER_LETTERSMALL, 8.5, 11.0,  PR_TRUE},  
-  {DMPAPER_A4SMALL,   210.0, 297.0, PR_FALSE}, 
-  {DMPAPER_FOLIO,     8.5,   13.0,  PR_TRUE},
-  {DMPAPER_QUARTO,    215.0, 275.0, PR_FALSE},
-  {DMPAPER_10X14,     10.0,  14.0,  PR_TRUE},
-  {DMPAPER_11X17,     11.0,  17.0,  PR_TRUE},
-  {DMPAPER_NOTE,      8.5,   11.0,  PR_TRUE},  
-  {DMPAPER_ENV_9,     3.875, 8.875, PR_TRUE},  
-  {DMPAPER_ENV_10,    40.125, 9.5,  PR_TRUE},  
-  {DMPAPER_ENV_11,    4.5,   10.375, PR_TRUE},  
-  {DMPAPER_ENV_12,    4.75,  11.0,  PR_TRUE},  
-  {DMPAPER_ENV_14,    5.0,   11.5,  PR_TRUE},  
-  {DMPAPER_ENV_DL,    110.0, 220.0, PR_FALSE}, 
-  {DMPAPER_ENV_C5,    162.0, 229.0, PR_FALSE}, 
-  {DMPAPER_ENV_C3,    324.0, 458.0, PR_FALSE}, 
-  {DMPAPER_ENV_C4,    229.0, 324.0, PR_FALSE}, 
-  {DMPAPER_ENV_C6,    114.0, 162.0, PR_FALSE}, 
-  {DMPAPER_ENV_C65,   114.0, 229.0, PR_FALSE}, 
-  {DMPAPER_ENV_B4,    250.0, 353.0, PR_FALSE}, 
-  {DMPAPER_ENV_B5,    176.0, 250.0, PR_FALSE}, 
-  {DMPAPER_ENV_B6,    176.0, 125.0, PR_FALSE}, 
-  {DMPAPER_ENV_ITALY, 110.0, 230.0, PR_FALSE}, 
-  {DMPAPER_ENV_MONARCH,  3.875,  7.5, PR_TRUE},  
-  {DMPAPER_ENV_PERSONAL, 3.625,  6.5, PR_TRUE},  
-  {DMPAPER_FANFOLD_US,   14.875, 11.0, PR_TRUE},  
-  {DMPAPER_FANFOLD_STD_GERMAN, 8.5, 12.0, PR_TRUE},  
-  {DMPAPER_FANFOLD_LGL_GERMAN, 8.5, 13.0, PR_TRUE},  
+  {DMPAPER_LETTER,    8.5,   11.0,  true},
+  {DMPAPER_LEGAL,     8.5,   14.0,  true},
+  {DMPAPER_A4,        210.0, 297.0, false},
+  {DMPAPER_B4,        250.0, 354.0, false}, 
+  {DMPAPER_B5,        182.0, 257.0, false},
+  {DMPAPER_TABLOID,   11.0,  17.0,  true},
+  {DMPAPER_LEDGER,    17.0,  11.0,  true},
+  {DMPAPER_STATEMENT, 5.5,   8.5,   true},
+  {DMPAPER_EXECUTIVE, 7.25,  10.5,  true},
+  {DMPAPER_A3,        297.0, 420.0, false},
+  {DMPAPER_A5,        148.0, 210.0, false},
+  {DMPAPER_CSHEET,    17.0,  22.0,  true},  
+  {DMPAPER_DSHEET,    22.0,  34.0,  true},  
+  {DMPAPER_ESHEET,    34.0,  44.0,  true},  
+  {DMPAPER_LETTERSMALL, 8.5, 11.0,  true},  
+  {DMPAPER_A4SMALL,   210.0, 297.0, false}, 
+  {DMPAPER_FOLIO,     8.5,   13.0,  true},
+  {DMPAPER_QUARTO,    215.0, 275.0, false},
+  {DMPAPER_10X14,     10.0,  14.0,  true},
+  {DMPAPER_11X17,     11.0,  17.0,  true},
+  {DMPAPER_NOTE,      8.5,   11.0,  true},  
+  {DMPAPER_ENV_9,     3.875, 8.875, true},  
+  {DMPAPER_ENV_10,    40.125, 9.5,  true},  
+  {DMPAPER_ENV_11,    4.5,   10.375, true},  
+  {DMPAPER_ENV_12,    4.75,  11.0,  true},  
+  {DMPAPER_ENV_14,    5.0,   11.5,  true},  
+  {DMPAPER_ENV_DL,    110.0, 220.0, false}, 
+  {DMPAPER_ENV_C5,    162.0, 229.0, false}, 
+  {DMPAPER_ENV_C3,    324.0, 458.0, false}, 
+  {DMPAPER_ENV_C4,    229.0, 324.0, false}, 
+  {DMPAPER_ENV_C6,    114.0, 162.0, false}, 
+  {DMPAPER_ENV_C65,   114.0, 229.0, false}, 
+  {DMPAPER_ENV_B4,    250.0, 353.0, false}, 
+  {DMPAPER_ENV_B5,    176.0, 250.0, false}, 
+  {DMPAPER_ENV_B6,    176.0, 125.0, false}, 
+  {DMPAPER_ENV_ITALY, 110.0, 230.0, false}, 
+  {DMPAPER_ENV_MONARCH,  3.875,  7.5, true},  
+  {DMPAPER_ENV_PERSONAL, 3.625,  6.5, true},  
+  {DMPAPER_FANFOLD_US,   14.875, 11.0, true},  
+  {DMPAPER_FANFOLD_STD_GERMAN, 8.5, 12.0, true},  
+  {DMPAPER_FANFOLD_LGL_GERMAN, 8.5, 13.0, true},  
 };
 const PRInt32 kNumPaperSizes = 41;
 
@@ -212,7 +212,7 @@ static PRUnichar * GetDefaultPrinterNameFromGlobalPrinters()
 
 //----------------------------------------------------------------
 static nsresult 
-EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, PRBool& aIsFound, PRBool& aIsFile)
+EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, bool& aIsFound, bool& aIsFile)
 {
   DWORD             dwSizeNeeded = 0;
   DWORD             dwNumItems   = 0;
@@ -238,7 +238,7 @@ EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, PRBool& aIsFo
 
   for (DWORD i = 0; i < dwNumItems; i++ ) {
     if (wcscmp(lpInfo[i].pPrinterName, aPrinterName) == 0) {
-      aIsFound = PR_TRUE;
+      aIsFound = true;
       aIsFile  = wcscmp(lpInfo[i].pPortName, L"FILE:") == 0;
       break;
     }
@@ -250,10 +250,10 @@ EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, PRBool& aIsFo
 
 //----------------------------------------------------------------
 static void 
-CheckForPrintToFileWithName(LPWSTR aPrinterName, PRBool& aIsFile)
+CheckForPrintToFileWithName(LPWSTR aPrinterName, bool& aIsFile)
 {
-  PRBool isFound = PR_FALSE;
-  aIsFile = PR_FALSE;
+  bool isFound = false;
+  aIsFile = false;
   nsresult rv = EnumerateNativePrinters(PRINTER_ENUM_LOCAL, aPrinterName, isFound, aIsFile);
   if (isFound) return;
 
@@ -340,10 +340,10 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
   
   if (dialogResult == nsIFilePicker::returnReplace) {
     // be extra safe and only delete when the file is really a file
-    PRBool isFile;
+    bool isFile;
     rv = localFile->IsFile(&isFile);
     if (NS_SUCCEEDED(rv) && isFile) {
-      rv = localFile->Remove(PR_FALSE /* recursive delete */);
+      rv = localFile->Remove(false /* recursive delete */);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -369,7 +369,7 @@ CheckForPrintToFile(nsIPrintSettings* aPS, LPWSTR aPrinterName, PRUnichar* aUPri
 
   if (!aPrinterName && !aUPrinterName) return rv;
 
-  PRBool toFile;
+  bool toFile;
   CheckForPrintToFileWithName(aPrinterName?aPrinterName:aUPrinterName, toFile);
   // Since the driver wasn't a "Print To File" Driver, check to see
   // if the name of the file has been set to the special "FILE:"
@@ -396,7 +396,7 @@ CheckForPrintToFile(nsIPrintSettings* aPS, LPWSTR aPrinterName, PRUnichar* aUPri
 //----------------------------------------------------------------------------------
 NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget, 
                                            nsIPrintSettings* aPrintSettings,
-                                           PRBool aIsPrintPreview)
+                                           bool aIsPrintPreview)
 {
   mPrintSettings = aPrintSettings;
 
@@ -765,7 +765,7 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
   if (aPrintSettings == nsnull) {
     return NS_ERROR_FAILURE;
   }
-  aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
+  aPrintSettings->SetIsInitializedFromPrinter(true);
 
   BOOL doingNumCopies   = aDevMode->dmFields & DM_COPIES;
   BOOL doingOrientation = aDevMode->dmFields & DM_ORIENTATION;
@@ -790,7 +790,7 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
       aPrintSettings->SetScaling(scale);
       aDevMode->dmScale = 100;
       // To turn this on you must change where the mPrt->mShrinkToFit is being set in the DocumentViewer
-      //aPrintSettings->SetShrinkToFit(PR_FALSE);
+      //aPrintSettings->SetShrinkToFit(false);
     }
   }
 
@@ -806,7 +806,7 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
     }
 
   } else if (doingPaperLength && doingPaperWidth) {
-    PRBool found = PR_FALSE;
+    bool found = false;
     for (PRInt32 i=0;i<kNumPaperSizes;i++) {
       if (kPaperSizes[i].mPaperSize == aDevMode->dmPaperSize) {
         aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
@@ -814,7 +814,7 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
         aPrintSettings->SetPaperHeight(kPaperSizes[i].mHeight);
         aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches
           ?PRInt16(nsIPrintSettings::kPaperSizeInches):nsIPrintSettings::kPaperSizeMillimeters);
-        found = PR_TRUE;
+        found = true;
         break;
       }
     }

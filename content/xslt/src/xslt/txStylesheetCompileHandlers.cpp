@@ -92,7 +92,7 @@ getStyleAttr(txStylesheetAttr* aAttributes,
              PRInt32 aAttrCount,
              PRInt32 aNamespace,
              nsIAtom* aName,
-             PRBool aRequired,
+             bool aRequired,
              txStylesheetAttr** aAttr)
 {
     PRInt32 i;
@@ -119,7 +119,7 @@ getStyleAttr(txStylesheetAttr* aAttributes,
 static nsresult
 parseUseAttrSets(txStylesheetAttr* aAttributes,
                  PRInt32 aAttrCount,
-                 PRBool aInXSLTNS,
+                 bool aInXSLTNS,
                  txStylesheetCompilerState& aState)
 {
     txStylesheetAttr* attr = nsnull;
@@ -170,7 +170,7 @@ static nsresult
 getQNameAttr(txStylesheetAttr* aAttributes,
              PRInt32 aAttrCount,
              nsIAtom* aName,
-             PRBool aRequired,
+             bool aRequired,
              txStylesheetCompilerState& aState,
              txExpandedName& aExpName)
 {
@@ -196,7 +196,7 @@ static nsresult
 getExprAttr(txStylesheetAttr* aAttributes,
             PRInt32 aAttrCount,
             nsIAtom* aName,
-            PRBool aRequired,
+            bool aRequired,
             txStylesheetCompilerState& aState,
             nsAutoPtr<Expr>& aExpr)
 {
@@ -233,7 +233,7 @@ static nsresult
 getAVTAttr(txStylesheetAttr* aAttributes,
            PRInt32 aAttrCount,
            nsIAtom* aName,
-           PRBool aRequired,
+           bool aRequired,
            txStylesheetCompilerState& aState,
            nsAutoPtr<Expr>& aAVT)
 {
@@ -270,7 +270,7 @@ static nsresult
 getPatternAttr(txStylesheetAttr* aAttributes,
                PRInt32 aAttrCount,
                nsIAtom* aName,
-               PRBool aRequired,
+               bool aRequired,
                txStylesheetCompilerState& aState,
                nsAutoPtr<txPattern>& aPattern)
 {
@@ -295,7 +295,7 @@ static nsresult
 getNumberAttr(txStylesheetAttr* aAttributes,
               PRInt32 aAttrCount,
               nsIAtom* aName,
-              PRBool aRequired,
+              bool aRequired,
               txStylesheetCompilerState& aState,
               double& aNumber)
 {
@@ -320,7 +320,7 @@ static nsresult
 getAtomAttr(txStylesheetAttr* aAttributes,
             PRInt32 aAttrCount,
             nsIAtom* aName,
-            PRBool aRequired,
+            bool aRequired,
             txStylesheetCompilerState& aState,
             nsIAtom** aAtom)
 {
@@ -342,7 +342,7 @@ static nsresult
 getYesNoAttr(txStylesheetAttr* aAttributes,
              PRInt32 aAttrCount,
              nsIAtom* aName,
-             PRBool aRequired,
+             bool aRequired,
              txStylesheetCompilerState& aState,
              txThreeState& aRes)
 {
@@ -372,7 +372,7 @@ static nsresult
 getCharAttr(txStylesheetAttr* aAttributes,
             PRInt32 aAttrCount,
             nsIAtom* aName,
-            PRBool aRequired,
+            bool aRequired,
             txStylesheetCompilerState& aState,
             PRUnichar& aChar)
 {
@@ -1052,7 +1052,7 @@ txFnStartStripSpace(PRInt32 aNamespaceID,
                                nsGkAtoms::elements, PR_TRUE, &attr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool strip = aLocalName == nsGkAtoms::stripSpace;
+    bool strip = aLocalName == nsGkAtoms::stripSpace;
 
     nsAutoPtr<txStripSpaceItem> stripItem(new txStripSpaceItem);
     NS_ENSURE_TRUE(stripItem, NS_ERROR_OUT_OF_MEMORY);

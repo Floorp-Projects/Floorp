@@ -49,9 +49,7 @@
 #include "nsIDOMSVGElement.h"
 #include "nsGenericElement.h"
 #include "nsStyledElement.h"
-#include "nsISVGValue.h"
-#include "nsISVGValueObserver.h"
-#include "nsWeakReference.h"
+#include "mozilla/css/StyleRule.h"
 
 #ifdef MOZ_SMIL
 #include "nsISMILAttr.h"
@@ -85,13 +83,12 @@ class SVGAnimatedTransformList;
 
 typedef nsStyledElementNotElementCSSInlineStyle nsSVGElementBase;
 
-class nsSVGElement : public nsSVGElementBase,    // nsIContent
-                     public nsISVGValueObserver  // :nsISupportsWeakReference
+class nsSVGElement : public nsSVGElementBase    // nsIContent
 {
 protected:
   nsSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
-  virtual ~nsSVGElement();
+  virtual ~nsSVGElement(){}
 
 public:
   typedef mozilla::SVGNumberList SVGNumberList;
@@ -110,15 +107,15 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
+                              bool aCompileEventHandlers);
 
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify);
+                             bool aNotify);
 
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
 
-  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(PRUint32 aFlags) const;
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
 
@@ -136,22 +133,13 @@ public:
 
   // nsIDOMNode
   NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion,
-                         PRBool* aReturn);
+                         bool* aReturn);
   
   // nsIDOMSVGElement
   NS_IMETHOD GetId(nsAString & aId);
   NS_IMETHOD SetId(const nsAString & aId);
   NS_IMETHOD GetOwnerSVGElement(nsIDOMSVGSVGElement** aOwnerSVGElement);
   NS_IMETHOD GetViewportElement(nsIDOMSVGElement** aViewportElement);
-
-  // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-
-  // nsISupportsWeakReference
-  // implementation inherited from nsSupportsWeakReference
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
@@ -169,28 +157,28 @@ public:
   // subclass has the useful implementation.
   virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix) {/*no-op*/}
 
-  PRBool IsStringAnimatable(PRUint8 aAttrEnum) {
+  bool IsStringAnimatable(PRUint8 aAttrEnum) {
     return GetStringInfo().mStringInfo[aAttrEnum].mIsAnimatable;
   }
-  PRBool NumberAttrAllowsPercentage(PRUint8 aAttrEnum) {
+  bool NumberAttrAllowsPercentage(PRUint8 aAttrEnum) {
     return GetNumberInfo().mNumberInfo[aAttrEnum].mPercentagesAllowed;
   }
   void SetLength(nsIAtom* aName, const nsSVGLength2 &aLength);
-  virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeNumberPair(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeIntegerPair(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeViewBox(PRBool aDoSetAttr);
-  virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
-  virtual void DidChangeNumberList(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeLengthList(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangePointList(PRBool aDoSetAttr);
-  virtual void DidChangePathSegList(PRBool aDoSetAttr);
-  virtual void DidChangeTransformList(PRBool aDoSetAttr);
+  virtual void DidChangeLength(PRUint8 aAttrEnum, bool aDoSetAttr);
+  virtual void DidChangeNumber(PRUint8 aAttrEnum, bool aDoSetAttr);
+  virtual void DidChangeNumberPair(PRUint8 aAttrEnum, bool aDoSetAttr);
+  virtual void DidChangeInteger(PRUint8 aAttrEnum, bool aDoSetAttr);
+  virtual void DidChangeIntegerPair(PRUint8 aAttrEnum, bool aDoSetAttr);
+  virtual void DidChangeAngle(PRUint8 aAttrEnum, bool aDoSetAttr);
+  virtual void DidChangeBoolean(PRUint8 aAttrEnum, bool aDoSetAttr);
+  virtual void DidChangeEnum(PRUint8 aAttrEnum, bool aDoSetAttr);
+  virtual void DidChangeViewBox(bool aDoSetAttr);
+  virtual void DidChangePreserveAspectRatio(bool aDoSetAttr);
+  virtual void DidChangeNumberList(PRUint8 aAttrEnum, bool aDoSetAttr);
+  virtual void DidChangeLengthList(PRUint8 aAttrEnum, bool aDoSetAttr);
+  virtual void DidChangePointList(bool aDoSetAttr);
+  virtual void DidChangePathSegList(bool aDoSetAttr);
+  virtual void DidChangeTransformList(bool aDoSetAttr);
   virtual void DidChangeString(PRUint8 aAttrEnum) {}
 
   virtual void DidAnimateLength(PRUint8 aAttrEnum);
@@ -260,15 +248,15 @@ public:
 
 protected:
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify);
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
+                                const nsAString* aValue, bool aNotify);
+  virtual bool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                                 const nsAString& aValue, nsAttrValue& aResult);
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);
 
   // Hooks for subclasses
-  virtual PRBool IsEventName(nsIAtom* aName);
+  virtual bool IsEventName(nsIAtom* aName);
 
   void UpdateContentStyleRule();
 #ifdef MOZ_SMIL
@@ -276,10 +264,6 @@ protected:
   mozilla::css::StyleRule* GetAnimatedContentStyleRule();
 #endif // MOZ_SMIL
 
-  nsISVGValue* GetMappedAttribute(PRInt32 aNamespaceID, nsIAtom* aName);
-  nsresult AddMappedSVGValue(nsIAtom* aName, nsISupports* aValue,
-                             PRInt32 aNamespaceID = kNameSpaceID_None);
-  
   static nsIAtom* GetEventNameForAttr(nsIAtom* aAttr);
 
   struct LengthInfo {
@@ -306,7 +290,7 @@ protected:
   struct NumberInfo {
     nsIAtom** mName;
     float     mDefaultValue;
-    PRPackedBool mPercentagesAllowed;
+    bool mPercentagesAllowed;
   };
 
   struct NumberAttributesInfo {
@@ -406,7 +390,7 @@ protected:
 
   struct BooleanInfo {
     nsIAtom**    mName;
-    PRPackedBool mDefaultValue;
+    bool mDefaultValue;
   };
 
   struct BooleanAttributesInfo {
@@ -476,7 +460,7 @@ protected:
      * determine if it can sensibly animate from-to lists of different lengths,
      * which is desirable in the case of dx and dy.
      */
-    PRPackedBool mCouldZeroPadList;
+    bool mCouldZeroPadList;
   };
 
   struct LengthListAttributesInfo {
@@ -498,7 +482,7 @@ protected:
   struct StringInfo {
     nsIAtom**    mName;
     PRInt32      mNamespaceID;
-    PRPackedBool mIsAnimatable;
+    bool mIsAnimatable;
   };
 
   struct StringAttributesInfo {
@@ -535,24 +519,7 @@ protected:
   static nsSVGEnumMapping sSVGUnitTypesMap[];
 
 private:
-  struct ObservableModificationData {
-    // Only to be used if |name| is non-null.  Otherwise, modType will
-    // be 0 to indicate NS_OK should be returned and 1 to indicate
-    // NS_ERROR_UNEXPECTED should be returned.
-    ObservableModificationData(const nsAttrName* aName, PRUint32 aModType):
-      name(aName), modType(aModType)
-    {}
-    const nsAttrName* name;
-    PRUint8 modType;
-  };
-  ObservableModificationData
-    GetModificationDataForObservable(nsISVGValue* aObservable,
-                                     nsISVGValue::modificationType aModType);
-
   nsRefPtr<mozilla::css::StyleRule> mContentStyleRule;
-  nsAttrAndChildArray mMappedAttributes;
-
-  PRPackedBool mSuppressNotification;
 };
 
 /**

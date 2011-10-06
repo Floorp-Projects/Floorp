@@ -320,7 +320,7 @@ nsDOMEvent::GetTargetFromFrame()
 
   // get the real content
   nsCOMPtr<nsIContent> realEventContent;
-  targetFrame->GetContentForEvent(mPresContext, mEvent, getter_AddRefs(realEventContent));
+  targetFrame->GetContentForEvent(mEvent, getter_AddRefs(realEventContent));
   return realEventContent.forget();
 }
 
@@ -359,7 +359,7 @@ nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::SetTrusted(PRBool aTrusted)
+nsDOMEvent::SetTrusted(bool aTrusted)
 {
   if (aTrusted) {
     mEvent->flags |= NS_EVENT_FLAG_TRUSTED;
@@ -390,14 +390,14 @@ nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetBubbles(PRBool* aBubbles)
+nsDOMEvent::GetBubbles(bool* aBubbles)
 {
   *aBubbles = !(mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetCancelable(PRBool* aCancelable)
+nsDOMEvent::GetCancelable(bool* aCancelable)
 {
   *aCancelable = !(mEvent->flags & NS_EVENT_FLAG_CANT_CANCEL);
   return NS_OK;
@@ -464,7 +464,7 @@ nsDOMEvent::PreventCapture()
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetIsTrusted(PRBool *aIsTrusted)
+nsDOMEvent::GetIsTrusted(bool *aIsTrusted)
 {
   *aIsTrusted = NS_IS_TRUSTED_EVENT(mEvent);
 
@@ -506,7 +506,7 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg)
+nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, bool aCanBubbleArg, bool aCancelableArg)
 {
   // Make sure this event isn't already being dispatched.
   NS_ENSURE_TRUE(!NS_IS_EVENT_IN_DISPATCH(mEvent), NS_ERROR_INVALID_ARG);
@@ -514,7 +514,7 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, PRBool aCanBubbleArg, PRBo
   if (NS_IS_TRUSTED_EVENT(mEvent)) {
     // Ensure the caller is permitted to dispatch trusted DOM events.
 
-    PRBool enabled = PR_FALSE;
+    bool enabled = false;
     nsContentUtils::GetSecurityManager()->
       IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
 
@@ -557,7 +557,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
 
   nsEvent* newEvent = nsnull;
   PRUint32 msg = mEvent->message;
-  PRBool isInputEvent = PR_FALSE;
+  bool isInputEvent = false;
 
   switch (mEvent->eventStructType) {
     case NS_EVENT:
@@ -889,7 +889,7 @@ NS_METHOD nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsDOMEvent::IsDispatchStopped()
 {
   return !!(mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH);
@@ -903,7 +903,7 @@ nsDOMEvent::GetInternalNSEvent()
 
 // return true if eventName is contained within events, delimited by
 // spaces
-static PRBool
+static bool
 PopupAllowedForEvent(const char *eventName)
 {
   if (!sPopupAllowedEvents) {
@@ -1392,7 +1392,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetPreventDefault(PRBool* aReturn)
+nsDOMEvent::GetPreventDefault(bool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = mEvent && (mEvent->flags & NS_EVENT_FLAG_NO_DEFAULT);
@@ -1400,13 +1400,13 @@ nsDOMEvent::GetPreventDefault(PRBool* aReturn)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetDefaultPrevented(PRBool* aReturn)
+nsDOMEvent::GetDefaultPrevented(bool* aReturn)
 {
   return GetPreventDefault(aReturn);
 }
 
 void
-nsDOMEvent::Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType)
+nsDOMEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("event"));
@@ -1416,34 +1416,34 @@ nsDOMEvent::Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType)
   GetType(type);
   IPC::WriteParam(aMsg, type);
 
-  PRBool bubbles = PR_FALSE;
+  bool bubbles = false;
   GetBubbles(&bubbles);
   IPC::WriteParam(aMsg, bubbles);
 
-  PRBool cancelable = PR_FALSE;
+  bool cancelable = false;
   GetCancelable(&cancelable);
   IPC::WriteParam(aMsg, cancelable);
 
-  PRBool trusted = PR_FALSE;
+  bool trusted = false;
   GetIsTrusted(&trusted);
   IPC::WriteParam(aMsg, trusted);
 
   // No timestamp serialization for now!
 }
 
-PRBool
+bool
 nsDOMEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   nsString type;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &type), PR_FALSE);
 
-  PRBool bubbles = PR_FALSE;
+  bool bubbles = false;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &bubbles), PR_FALSE);
 
-  PRBool cancelable = PR_FALSE;
+  bool cancelable = false;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &cancelable), PR_FALSE);
 
-  PRBool trusted = PR_FALSE;
+  bool trusted = false;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &trusted), PR_FALSE);
 
   nsresult rv = InitEvent(type, bubbles, cancelable);

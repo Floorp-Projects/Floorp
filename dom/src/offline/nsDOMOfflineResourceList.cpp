@@ -283,7 +283,7 @@ nsDOMOfflineResourceList::GetMozItems(nsIDOMDOMStringList **aItems)
 }
 
 NS_IMETHODIMP
-nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, PRBool* aExists)
+nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, bool* aExists)
 {
   if (IS_CHILD_PROCESS()) 
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -384,7 +384,7 @@ nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
   rv = requestedURI->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool match;
+  bool match;
   rv = mManifestURI->SchemeIs(scheme.get(), &match);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -678,7 +678,7 @@ void
 nsDOMOfflineResourceList::FirePendingEvents()
 {
   for (PRInt32 i = 0; i < mPendingEvents.Count(); ++i) {
-    PRBool dummy;
+    bool dummy;
     nsCOMPtr<nsIDOMEvent> event = mPendingEvents[i];
     DispatchEvent(event, &dummy);
   }
@@ -720,7 +720,7 @@ nsDOMOfflineResourceList::SendEvent(const nsAString &aEventName)
     return NS_OK;
   }
 
-  PRBool dummy;
+  bool dummy;
   DispatchEvent(event, &dummy);
 
   return NS_OK;
@@ -815,7 +815,7 @@ nsresult
 nsDOMOfflineResourceList::UpdateAdded(nsIOfflineCacheUpdate *aUpdate)
 {
   // Ignore partial updates.
-  PRBool partial;
+  bool partial;
   nsresult rv = aUpdate->GetPartial(&partial);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -827,7 +827,7 @@ nsDOMOfflineResourceList::UpdateAdded(nsIOfflineCacheUpdate *aUpdate)
   rv = aUpdate->GetManifestURI(getter_AddRefs(updateURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool equals;
+  bool equals;
   rv = updateURI->Equals(mManifestURI, &equals);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -886,12 +886,12 @@ nsDOMOfflineResourceList::UpdateCompleted(nsIOfflineCacheUpdate *aUpdate)
     return NS_OK;
   }
 
-  PRBool partial;
+  bool partial;
   mCacheUpdate->GetPartial(&partial);
-  PRBool isUpgrade;
+  bool isUpgrade;
   mCacheUpdate->GetIsUpgrade(&isUpgrade);
 
-  PRBool succeeded;
+  bool succeeded;
   nsresult rv = mCacheUpdate->GetSucceeded(&succeeded);
 
   mCacheUpdate->RemoveObserver(this);

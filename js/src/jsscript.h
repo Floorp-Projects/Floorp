@@ -146,8 +146,6 @@ typedef struct JSConstArray {
     uint32          length;
 } JSConstArray;
 
-struct JSArenaPool;
-
 namespace js {
 
 struct GlobalSlotArray {
@@ -981,12 +979,5 @@ js_CloneScript(JSContext *cx, JSScript *script);
  */
 extern JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp);
-
-inline JSScript *
-JSObject::getScript() const
-{
-    JS_ASSERT(isScript());
-    return static_cast<JSScript *>(getPrivate());
-}
 
 #endif /* jsscript_h___ */

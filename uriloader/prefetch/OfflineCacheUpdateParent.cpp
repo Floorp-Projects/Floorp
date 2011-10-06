@@ -148,9 +148,9 @@ OfflineCacheUpdateParent::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate, PRU
         // Tell the child the particulars after the update has finished.
         // Sending the Finish event will release the child side of the protocol
         // and notify "offline-cache-update-completed" on the child process.
-        PRBool isUpgrade;
+        bool isUpgrade;
         aUpdate->GetIsUpgrade(&isUpgrade);
-        PRBool succeeded;
+        bool succeeded;
         aUpdate->GetSucceeded(&succeeded);
 
         SendFinish(succeeded, isUpgrade);

@@ -37,11 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "CrashReporterParent.h"
-#if defined(MOZ_CRASHREPORTER)
-#include "nsExceptionHandler.h"
-#endif
 
 #include "base/process_util.h"
+
+#include <time.h>
 
 using namespace base;
 
@@ -73,15 +72,100 @@ CrashReporterParent::RecvAddLibraryMappings(const InfallibleTArray<Mapping>& map
   return true;
 }
 
+bool
+CrashReporterParent::RecvAnnotateCrashReport(const nsCString& key,
+                                             const nsCString& data)
+{
+#ifdef MOZ_CRASHREPORTER
+    mNotes.Put(key, data);
+#endif
+    return true;
+}
+
+bool
+CrashReporterParent::RecvAppendAppNotes(const nsCString& data)
+{
+    mAppNotes.Append(data);
+    return true;
+}
+
 CrashReporterParent::CrashReporterParent()
+: mStartTime(time(NULL))
+, mInitialized(false)
 {
     MOZ_COUNT_CTOR(CrashReporterParent);
+
+#ifdef MOZ_CRASHREPORTER
+    mNotes.Init(4);
+#endif
 }
 
 CrashReporterParent::~CrashReporterParent()
 {
     MOZ_COUNT_DTOR(CrashReporterParent);
 }
+
+void
+CrashReporterParent::SetChildData(const NativeThreadId& tid,
+                                  const PRUint32& processType)
+{
+    mInitialized = true;
+    mMainThread = tid;
+    mProcessType = processType;
+}
+
+#ifdef MOZ_CRASHREPORTER
+bool
+CrashReporterParent::GenerateHangCrashReport(const AnnotationTable* processNotes)
+{
+    if (mChildDumpID.IsEmpty())
+        return false;
+
+    GenerateChildData(processNotes);
+
+    CrashReporter::AnnotationTable notes;
+    if (!notes.Init(4))
+        return false;
+    notes.Put(nsDependentCString("HangID"), NS_ConvertUTF16toUTF8(mHangID));
+    if (!CrashReporter::AppendExtraData(mParentDumpID, notes))
+        NS_WARNING("problem appending parent data to .extra");
+    return true;
+}
+
+bool
+CrashReporterParent::GenerateChildData(const AnnotationTable* processNotes)
+{
+    MOZ_ASSERT(mInitialized);
+
+    nsCAutoString type;
+    switch (mProcessType) {
+        case GeckoProcessType_Content:
+            type = NS_LITERAL_CSTRING("content");
+            break;
+        case GeckoProcessType_Plugin:
+            type = NS_LITERAL_CSTRING("plugin");
+            break;
+        default:
+            NS_ERROR("unknown process type");
+            break;
+    }
+    mNotes.Put(NS_LITERAL_CSTRING("ProcessType"), type);
+
+    char startTime[32];
+    sprintf(startTime, "%lld", static_cast<PRInt64>(mStartTime));
+    mNotes.Put(NS_LITERAL_CSTRING("StartupTime"), nsDependentCString(startTime));
+
+    if (!mAppNotes.IsEmpty())
+        mNotes.Put(NS_LITERAL_CSTRING("Notes"), mAppNotes);
+
+    bool ret = CrashReporter::AppendExtraData(mChildDumpID, mNotes);
+    if (ret && processNotes)
+        ret = CrashReporter::AppendExtraData(mChildDumpID, *processNotes);
+    if (!ret)
+        NS_WARNING("problem appending child data to .extra");
+    return ret;
+}
+#endif
 
 } // namespace dom
 } // namespace mozilla

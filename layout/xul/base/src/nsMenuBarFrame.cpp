@@ -78,6 +78,10 @@ NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuBarFrame)
 
+NS_QUERYFRAME_HEAD(nsMenuBarFrame)
+  NS_QUERYFRAME_ENTRY(nsMenuBarFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
+
 //
 // nsMenuBarFrame cntr
 //
@@ -126,7 +130,7 @@ nsMenuBarFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
-nsMenuBarFrame::SetActive(PRBool aActiveFlag)
+nsMenuBarFrame::SetActive(bool aActiveFlag)
 {
   // If the activity is not changed, there is nothing to do.
   if (mIsActive == aActiveFlag)
@@ -324,7 +328,7 @@ public:
   nsMenuBarSwitchMenu(nsIContent* aMenuBar,
                       nsIContent *aOldMenu,
                       nsIContent *aNewMenu,
-                      PRBool aSelectFirstItem)
+                      bool aSelectFirstItem)
     : mMenuBar(aMenuBar), mOldMenu(aOldMenu), mNewMenu(aNewMenu),
       mSelectFirstItem(aSelectFirstItem)
   {
@@ -364,12 +368,12 @@ private:
   nsCOMPtr<nsIContent> mMenuBar;
   nsCOMPtr<nsIContent> mOldMenu;
   nsCOMPtr<nsIContent> mNewMenu;
-  PRBool mSelectFirstItem;
+  bool mSelectFirstItem;
 };
 
 NS_IMETHODIMP
 nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
-                               PRBool aSelectFirstItem)
+                               bool aSelectFirstItem)
 {
   if (mCurrentMenu == aMenuItem)
     return NS_OK;
@@ -382,7 +386,7 @@ nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
   nsIContent* aOldMenu = nsnull, *aNewMenu = nsnull;
   
   // Unset the current child.
-  PRBool wasOpen = PR_FALSE;
+  bool wasOpen = false;
   if (mCurrentMenu) {
     wasOpen = mCurrentMenu->IsOpen();
     mCurrentMenu->SelectMenu(PR_FALSE);
@@ -424,7 +428,7 @@ nsMenuBarFrame::Enter(nsGUIEvent* aEvent)
   return mCurrentMenu;
 }
 
-PRBool
+bool
 nsMenuBarFrame::MenuClosed()
 {
   SetActive(PR_FALSE);

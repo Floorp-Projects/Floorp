@@ -45,14 +45,14 @@ class nsMaemoNetworkManager
 {
 public:
   // Can be called from any thread, most likely the socket transport thread
-  static PRBool OpenConnectionSync();
+  static bool OpenConnectionSync();
   static void CloseConnection();
 
-  static PRBool IsConnected();
-  static PRBool GetLinkStatusKnown();
+  static bool IsConnected();
+  static bool GetLinkStatusKnown();
 
   // Called from the nsMaemoNetworkLinkService (main thread only)
-  static PRBool Startup();
+  static bool Startup();
   static void Shutdown();
 };
 

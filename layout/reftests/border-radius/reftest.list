@@ -37,7 +37,7 @@ random == corner-2.html corner-2-ref.svg # right corners different radius than l
 fails == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
 != clipping-2.html about:blank # background color clipped to inner/outer border, can't get
 # great tests for this due to antialiasing problems described in bug 466572
-== clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
+fails-if(Android&&layersOpenGL) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
@@ -63,8 +63,8 @@ fails-if(cocoaWidget) == intersecting-clipping-1-refc.html intersecting-clipping
 == table-collapse-1.html table-collapse-1-ref.html # border-radius is ignored on internal table elements
 # when border-collapse: collapse
 
-== invalidate-1a.html invalidate-1-ref.html
-== invalidate-1b.html invalidate-1-ref.html
+fails-if(Android&&layersOpenGL) == invalidate-1a.html invalidate-1-ref.html
+fails-if(Android&&layersOpenGL) == invalidate-1b.html invalidate-1-ref.html
 
 # test that border-radius is reduced for scrollbars
 fails-if(Android) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
@@ -74,7 +74,7 @@ fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 == corner-joins-1.xhtml corner-joins-1-ref.xhtml
 random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 
-== scroll-1.html scroll-1-ref.html # see bug 602892
+fails-if(Android&&layersOpenGL) == scroll-1.html scroll-1-ref.html # see bug 602892
 
 == zero-radius-clip-1.html zero-radius-clip-ref.html
 

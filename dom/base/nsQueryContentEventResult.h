@@ -60,6 +60,6 @@ protected:
   nsString mString;
   nsIntRect mRect;
 
-  PRPackedBool mSucceeded;
-  PRPackedBool mReversed;
+  bool mSucceeded;
+  bool mReversed;
 };

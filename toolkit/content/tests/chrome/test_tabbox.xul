@@ -2,14 +2,16 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <!--
-  XUL Widget Test for radio buttons
+  XUL Widget Test for tabboxes
   -->
-<window title="Radio Buttons" width="500" height="600"
+<window title="Tabbox Test" width="500" height="600"
         onload="setTimeout(test_tabbox, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
   <script type="application/javascript" src="xul_selectcontrol.js"/>
+
+<vbox id="tabboxes">
 
 <tabbox id="tabbox">
   <tabs id="tabs">
@@ -45,6 +47,24 @@
     <button label="Panel 1"/>
     <button label="Panel 2"/>
     <button label="Panel 3"/>
+  </tabpanels>
+</tabbox>
+
+</vbox>
+
+<tabbox id="tabbox-nofocus">
+  <textbox id="textbox-extra" hidden="true"/>
+  <tabs>
+    <tab label="Tab 1" value="one"/>
+    <tab id="tab-nofocus" label="Tab 2" value="two"/>
+  </tabs>
+  <tabpanels>
+    <tabpanel>
+      <button id="tab-nofocus-button" label="Label"/>
+    </tabpanel>
+    <tabpanel id="tabpanel-nofocusinpaneltab">
+      <label id="tablabel" value="Label"/>
+    </tabpanel>
   </tabpanels>
 </tabbox>
 
@@ -99,7 +119,7 @@ function test_tabbox()
 
   test_tabs(tabs);
 
-  SimpleTest.finish();
+  test_tabbox_focus();
 }
 
 function test_tabpanels(tabpanels, tabbox)
@@ -153,6 +173,44 @@ function test_tabpanels_State(tabpanels, testid, index, panel)
 {
   is(tabpanels.selectedIndex, index, testid + " selectedIndex");
   is(tabpanels.selectedPanel, panel, testid + " selectedPanel");
+}
+
+function test_tabbox_focus()
+{
+  $("tabboxes").hidden = true;
+  $(document.activeElement).blur();
+
+  var tabbox = $("tabbox-nofocus");
+  var tab = $("tab-nofocus");
+
+  tab.addEventListener("focus", function () {
+    tab.removeEventListener("focus", arguments.callee, true);
+    ok(document.activeElement, tab, "focus in tab with no focusable elements");
+
+    tabbox.selectedIndex = 0;
+    $("tab-nofocus-button").focus();
+
+    tab.addEventListener("focus", function () {
+      tab.removeEventListener("focus", arguments.callee, true);
+      ok(document.activeElement, tab, "focus in tab with no focusable elements, but with something in another tab focused");
+
+      var textboxExtra = $("textbox-extra");
+      textboxExtra.addEventListener("focus", function () {
+        textboxExtra.removeEventListener("focus", arguments.callee, true);
+        ok(document.activeElement, textboxExtra, "focus in tab with focus currently in textbox that is sibling of tabs");
+
+        SimpleTest.finish();
+      }, true);
+
+      tabbox.selectedIndex = 0;
+      textboxExtra.hidden = false;
+      synthesizeMouseAtCenter(tab, { });
+    }, true);
+
+    synthesizeMouseAtCenter(tab, { });
+  }, true);
+
+  synthesizeMouseAtCenter(tab, { });
 }
 
 ]]>

@@ -57,7 +57,7 @@ class xpcTestObjectReadOnly : public nsIXPCTestObjectReadOnly {
   xpcTestObjectReadOnly();
    
  private:
-    PRBool  boolProperty;
+    bool    boolProperty;
     PRInt16 shortProperty;
     PRInt32 longProperty;
     float   floatProperty;
@@ -73,7 +73,7 @@ class xpcTestObjectReadWrite : public nsIXPCTestObjectReadWrite {
   ~xpcTestObjectReadWrite();
 
  private:
-     PRBool boolProperty;
+     bool boolProperty;
      PRInt16 shortProperty;
      PRInt32 longProperty;
      float floatProperty;

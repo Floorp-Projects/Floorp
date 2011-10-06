@@ -134,7 +134,7 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame)
   }
 }
 
-PRBool
+bool
 nsFrameList::RemoveFrameIfPresent(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "null ptr");
@@ -189,7 +189,7 @@ nsFrameList::DestroyFrame(nsIFrame* aFrame)
   aFrame->Destroy();
 }
 
-PRBool
+bool
 nsFrameList::DestroyFrameIfPresent(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "null ptr");
@@ -347,7 +347,7 @@ nsFrameList::IndexOf(nsIFrame* aFrame) const
   return -1;
 }
 
-PRBool
+bool
 nsFrameList::ContainsFrame(const nsIFrame* aFrame) const
 {
   NS_PRECONDITION(aFrame, "null ptr");
@@ -405,10 +405,10 @@ static int CompareByContentOrder(const nsIFrame* aF1, const nsIFrame* aF2)
 class CompareByContentOrderComparator
 {
   public:
-  PRBool Equals(const nsIFrame* aA, const nsIFrame* aB) const {
+  bool Equals(const nsIFrame* aA, const nsIFrame* aB) const {
     return aA == aB;
   }
-  PRBool LessThan(const nsIFrame* aA, const nsIFrame* aB) const {
+  bool LessThan(const nsIFrame* aA, const nsIFrame* aB) const {
     return CompareByContentOrder(aA, aB) < 0;
   }
 };

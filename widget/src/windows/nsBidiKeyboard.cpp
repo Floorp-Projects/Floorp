@@ -46,8 +46,8 @@ NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard()
 {
-  mInitialized = PR_FALSE;
-  mHaveBidiKeyboards = PR_FALSE;
+  mInitialized = false;
+  mHaveBidiKeyboards = false;
   mLTRKeyboard[0] = '\0';
   mRTLKeyboard[0] = '\0';
   mCurrentLocaleName[0] = '\0';
@@ -84,9 +84,9 @@ NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
+NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(bool *aIsRTL)
 {
-  *aIsRTL = PR_FALSE;
+  *aIsRTL = false;
 
   nsresult result = SetupBidiKeyboards();
   if (NS_FAILED(result))
@@ -121,7 +121,7 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(PRBool* aResult)
+NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(bool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -146,8 +146,8 @@ nsresult nsBidiKeyboard::SetupBidiKeyboards()
   HKL far* buf;
   HKL locale;
   PRUnichar localeName[KL_NAMELENGTH];
-  PRBool isLTRKeyboardSet = PR_FALSE;
-  PRBool isRTLKeyboardSet = PR_FALSE;
+  bool isLTRKeyboardSet = false;
+  bool isRTLKeyboardSet = false;
   
   // GetKeyboardLayoutList with 0 as first parameter returns the number of keyboard layouts available
   keyboards = ::GetKeyboardLayoutList(0, nsnull);
@@ -171,16 +171,16 @@ nsresult nsBidiKeyboard::SetupBidiKeyboards()
     if (IsRTLLanguage(locale)) {
       _snwprintf(mRTLKeyboard, KL_NAMELENGTH, L"%.*x", KL_NAMELENGTH - 1,
                  LANGIDFROMLCID((DWORD_PTR)locale));
-      isRTLKeyboardSet = PR_TRUE;
+      isRTLKeyboardSet = true;
     }
     else {
       _snwprintf(mLTRKeyboard, KL_NAMELENGTH, L"%.*x", KL_NAMELENGTH - 1,
                  LANGIDFROMLCID((DWORD_PTR)locale));
-      isLTRKeyboardSet = PR_TRUE;
+      isLTRKeyboardSet = true;
     }
   }
   PR_Free(buf);
-  mInitialized = PR_TRUE;
+  mInitialized = true;
 
   // If there is not at least one keyboard of each directionality, Bidi
   // keyboard functionality will be disabled.
@@ -222,7 +222,7 @@ nsresult nsBidiKeyboard::SetupBidiKeyboards()
 //  right-to-left language, using bit 123 of the Unicode subset bitfield in
 //  the LOCALESIGNATURE
 // See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/intl/unicode_63ub.asp
-PRBool nsBidiKeyboard::IsRTLLanguage(HKL aLocale)
+bool nsBidiKeyboard::IsRTLLanguage(HKL aLocale)
 {
   LOCALESIGNATURE localesig;
   return (::GetLocaleInfoW(PRIMARYLANGID((DWORD_PTR)aLocale),

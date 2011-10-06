@@ -50,13 +50,13 @@
 class UTF8traits
   {
     public:
-      static PRBool isASCII(char c) { return (c & 0x80) == 0x00; }
-      static PRBool isInSeq(char c) { return (c & 0xC0) == 0x80; }
-      static PRBool is2byte(char c) { return (c & 0xE0) == 0xC0; }
-      static PRBool is3byte(char c) { return (c & 0xF0) == 0xE0; }
-      static PRBool is4byte(char c) { return (c & 0xF8) == 0xF0; }
-      static PRBool is5byte(char c) { return (c & 0xFC) == 0xF8; }
-      static PRBool is6byte(char c) { return (c & 0xFE) == 0xFC; }
+      static bool isASCII(char c) { return (c & 0x80) == 0x00; }
+      static bool isInSeq(char c) { return (c & 0xC0) == 0x80; }
+      static bool is2byte(char c) { return (c & 0xE0) == 0xC0; }
+      static bool is3byte(char c) { return (c & 0xF0) == 0xE0; }
+      static bool is4byte(char c) { return (c & 0xF8) == 0xF0; }
+      static bool is5byte(char c) { return (c & 0xFC) == 0xF8; }
+      static bool is6byte(char c) { return (c & 0xFE) == 0xFC; }
   };
 
 /**
@@ -71,7 +71,7 @@ class UTF8CharEnumerator
 {
 public:
   static PRUint32 NextChar(const char **buffer, const char *end,
-                           PRBool *err)
+                           bool *err)
   {
     NS_ASSERTION(buffer && *buffer, "null buffer!");
 
@@ -140,7 +140,7 @@ public:
   }
 
 private:
-  static PRBool CalcState(char c, PRUint32& ucs4, PRUint32& minUcs4,
+  static bool CalcState(char c, PRUint32& ucs4, PRUint32& minUcs4,
                           PRInt32& state)
   {
     if ( UTF8traits::is2byte(c) )
@@ -181,7 +181,7 @@ private:
     return PR_TRUE;
   }
 
-  static PRBool AddByte(char c, PRInt32 state, PRUint32& ucs4)
+  static bool AddByte(char c, PRInt32 state, PRUint32& ucs4)
   {
     if ( UTF8traits::isInSeq(c) )
       {
@@ -206,7 +206,7 @@ class UTF16CharEnumerator
 {
 public:
   static PRUint32 NextChar(const PRUnichar **buffer, const PRUnichar *end,
-                           PRBool *err = nsnull)
+                           bool *err = nsnull)
   {
     NS_ASSERTION(buffer && *buffer, "null buffer!");
 
@@ -317,7 +317,7 @@ class ConvertUTF8toUTF16
 
     size_t Length() const { return mBuffer - mStart; }
 
-    PRBool ErrorEncountered() const { return mErrorEncountered; }
+    bool ErrorEncountered() const { return mErrorEncountered; }
 
     void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
       {
@@ -331,7 +331,7 @@ class ConvertUTF8toUTF16
         buffer_type* out = mBuffer;
         for ( ; p != end /* && *p */; )
           {
-            PRBool err;
+            bool err;
             PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&p, end, &err);
 
             if ( err )
@@ -362,7 +362,7 @@ class ConvertUTF8toUTF16
     private:
       buffer_type* const mStart;
       buffer_type* mBuffer;
-      PRBool mErrorEncountered;
+      bool mErrorEncountered;
   };
 
 /**
@@ -459,7 +459,7 @@ class CalculateUTF8Length
 
     private:
       size_t mLength;
-      PRBool mErrorEncountered;
+      bool mErrorEncountered;
   };
 
 /**

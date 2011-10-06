@@ -1176,8 +1176,10 @@ var AddonRepository = {
     this._request.overrideMimeType("text/xml");
 
     let self = this;
-    this._request.onerror = function(aEvent) { self._reportFailure(); };
-    this._request.onload = function(aEvent) {
+    this._request.addEventListener("error", function(aEvent) {
+      self._reportFailure();
+    }, false);
+    this._request.addEventListener("load", function(aEvent) {
       let request = aEvent.target;
       let responseXML = request.responseXML;
 
@@ -1196,7 +1198,7 @@ var AddonRepository = {
         totalResults = parsedTotalResults;
 
       aHandleResults(elements, totalResults);
-    };
+    }, false);
     this._request.send(null);
   },
 

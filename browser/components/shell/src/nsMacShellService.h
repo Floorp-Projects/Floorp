@@ -60,7 +60,7 @@ protected:
 private:
   nsCOMPtr<nsILocalFile> mBackgroundFile;
 
-  PRBool    mCheckedThisSession;
+  bool      mCheckedThisSession;
 };
 
 #endif // nsmacshellservice_h____

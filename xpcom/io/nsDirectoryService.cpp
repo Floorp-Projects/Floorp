@@ -208,7 +208,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
         }
     }
 #if defined(DEBUG)
-    static PRBool firstWarning = PR_TRUE;
+    static bool firstWarning = true;
 
     if((!moz5 || !*moz5) && firstWarning) {
         // Warn that MOZILLA_FIVE_HOME not set, once.
@@ -317,7 +317,7 @@ nsDirectoryService::RealInit()
     return NS_OK;
 }
 
-PRBool
+bool
 nsDirectoryService::ReleaseValues(nsHashKey* key, void* data, void* closure)
 {
     nsISupports* value = (nsISupports*)data;
@@ -362,11 +362,11 @@ struct FileData
     
   const char*   property;
   nsISupports*  data;
-  PRBool        persistent;
+  bool          persistent;
   const nsIID&  uuid;
 };
 
-static PRBool FindProviderFile(nsISupports* aElement, void *aData)
+static bool FindProviderFile(nsISupports* aElement, void *aData)
 {
   nsresult rv;
   FileData* fileData = (FileData*)aData;
@@ -486,7 +486,7 @@ nsDirectoryService::Set(const char* prop, nsISupports* value)
 }
 
 NS_IMETHODIMP
-nsDirectoryService::Has(const char *prop, PRBool *_retval)
+nsDirectoryService::Has(const char *prop, bool *_retval)
 {
     NS_ENSURE_ARG(prop);
 
@@ -536,7 +536,7 @@ nsDirectoryService::RegisterCategoryProviders()
     if (!strings)
         return;
 
-    PRBool more;
+    bool more;
     while (NS_SUCCEEDED(strings->HasMore(&more)) && more) {
         nsCAutoString entry;
         strings->GetNext(entry);
@@ -574,7 +574,7 @@ nsDirectoryService::UnregisterProvider(nsIDirectoryServiceProvider *prov)
 // your application.  
 
 NS_IMETHODIMP
-nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
+nsDirectoryService::GetFile(const char *prop, bool *persistent, nsIFile **_retval)
 {
     nsCOMPtr<nsILocalFile> localFile;
     nsresult rv = NS_ERROR_FAILURE;

@@ -118,7 +118,11 @@
                 if (vertPos == 0) {
                   hideArrow = true;
                 } else {
-                  arrowbox.style.marginLeft = ((targetRect.left - popupRect.left) + (targetRect.width / 2) - HALF_ARROW_WIDTH) + "px";
+                  let anchorPosX = 0.5;
+                  // check for hasAttribute because, in some cases, anchorNode is actually a rect
+                  if (this.anchorNode && this.anchorNode.hasAttribute && this.anchorNode.hasAttribute("anchorPosX"))
+                     anchorPosX = parseFloat(this.anchorNode.getAttribute("anchorPosX")) || 0.5;
+                  arrowbox.style.marginLeft = ((targetRect.left - popupRect.left) + (targetRect.width * anchorPosX) - HALF_ARROW_WIDTH) + "px";
                   if (vertPos == 1) {
                     container.dir = "normal"; 
                     anchorClass = "top";
@@ -130,7 +134,11 @@
               } else if (vertPos == 0) {
                 container.orient = "";
                 arrowbox.orient = "vertical";
-                arrowbox.style.marginTop = ((targetRect.top - popupRect.top) + (targetRect.height / 2) - HALF_ARROW_WIDTH) + "px";
+                  let anchorPosY = 0.5;
+                  // check for hasAttribute because, in some cases, anchorNode is actually a rect
+                  if (this.anchorNode && this.anchorNode.hasAttribute && this.anchorNode.hasAttribute("anchorPosY"))
+                     anchorPosY = parseFloat(this.anchorNode.getAttribute("anchorPosY")) || 0.5;
+                arrowbox.style.marginTop = ((targetRect.top - popupRect.top) + (targetRect.height * anchorPosY) - HALF_ARROW_WIDTH) + "px";
                 if (horizPos == 1) {
                   container.dir = "ltr"; 
                   anchorClass = "left";

@@ -165,11 +165,11 @@ nsDeque& nsDeque::Erase() {
  * in the deque are stored sequentially
  *
  * If the deque actually overflows, there's very little we can do.
- * Perhaps this function should return PRBool/nsresult indicating success/failure.
+ * Perhaps this function should return bool/nsresult indicating success/failure.
  *
  * @return  whether growing succeeded
  */
-PRBool nsDeque::GrowCapacity() {
+bool nsDeque::GrowCapacity() {
   PRInt32 theNewSize=mCapacity<<2;
   NS_ASSERTION(theNewSize>mCapacity, "Overflow");
   if (theNewSize<=mCapacity)
@@ -469,8 +469,8 @@ nsDequeIterator& nsDequeIterator::operator=(const nsDequeIterator& aCopy) {
  * @param   aIter is the object to be compared to
  * @return  TRUE if NOT equal.
  */
-PRBool nsDequeIterator::operator!=(nsDequeIterator& aIter) {
-  return PRBool(!this->operator==(aIter));
+bool nsDequeIterator::operator!=(nsDequeIterator& aIter) {
+  return bool(!this->operator==(aIter));
 }
 
 /**
@@ -481,8 +481,8 @@ PRBool nsDequeIterator::operator!=(nsDequeIterator& aIter) {
  *          the element pointed to by aIter.
  *          FALSE if this and aIter are not iterating over the same deque.
  */
-PRBool nsDequeIterator::operator<(nsDequeIterator& aIter) {
-  return PRBool(((mIndex<aIter.mIndex) && (&mDeque==&aIter.mDeque)));
+bool nsDequeIterator::operator<(nsDequeIterator& aIter) {
+  return bool(((mIndex<aIter.mIndex) && (&mDeque==&aIter.mDeque)));
 }
 
 /**
@@ -491,8 +491,8 @@ PRBool nsDequeIterator::operator<(nsDequeIterator& aIter) {
  * @param   aIter is the other iterator to be compared to
  * @return  TRUE if EQUAL
  */
-PRBool nsDequeIterator::operator==(nsDequeIterator& aIter) {
-  return PRBool(((mIndex==aIter.mIndex) && (&mDeque==&aIter.mDeque)));
+bool nsDequeIterator::operator==(nsDequeIterator& aIter) {
+  return bool(((mIndex==aIter.mIndex) && (&mDeque==&aIter.mDeque)));
 }
 
 /**
@@ -503,8 +503,8 @@ PRBool nsDequeIterator::operator==(nsDequeIterator& aIter) {
  *          an element after the element pointed to by aIter.
  *          FALSE if this and aIter are not iterating over the same deque.
  */
-PRBool nsDequeIterator::operator>=(nsDequeIterator& aIter) {
-  return PRBool(((mIndex>=aIter.mIndex) && (&mDeque==&aIter.mDeque)));
+bool nsDequeIterator::operator>=(nsDequeIterator& aIter) {
+  return bool(((mIndex>=aIter.mIndex) && (&mDeque==&aIter.mDeque)));
 }
 
 /**

@@ -64,11 +64,11 @@
 using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
-PRBool nsDOMAttribute::sInitialized;
+bool nsDOMAttribute::sInitialized;
 
 nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
                                already_AddRefed<nsINodeInfo> aNodeInfo,
-                               const nsAString   &aValue, PRBool aNsAware)
+                               const nsAString   &aValue, bool aNsAware)
   : nsIAttribute(aAttrMap, aNodeInfo, aNsAware), mValue(aValue), mChild(nsnull)
 {
   NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");
@@ -271,7 +271,7 @@ nsDOMAttribute::SetValue(const nsAString& aValue)
 
 
 NS_IMETHODIMP
-nsDOMAttribute::GetSpecified(PRBool* aSpecified)
+nsDOMAttribute::GetSpecified(bool* aSpecified)
 {
   NS_ENSURE_ARG_POINTER(aSpecified);
   nsIDocument* document = GetOwnerDoc();
@@ -382,7 +382,7 @@ nsDOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::HasChildNodes(PRBool* aHasChildNodes)
+nsDOMAttribute::HasChildNodes(bool* aHasChildNodes)
 {
   nsIDocument* document = GetOwnerDoc();
   if (document) {
@@ -395,7 +395,7 @@ nsDOMAttribute::HasChildNodes(PRBool* aHasChildNodes)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::HasAttributes(PRBool* aHasAttributes)
+nsDOMAttribute::HasAttributes(bool* aHasAttributes)
 {
   NS_ENSURE_ARG_POINTER(aHasAttributes);
 
@@ -540,7 +540,7 @@ nsDOMAttribute::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aResult)
+nsDOMAttribute::CloneNode(bool aDeep, nsIDOMNode** aResult)
 {
   nsIDocument* document = GetOwnerDoc();
   if (document) {
@@ -596,7 +596,7 @@ nsDOMAttribute::Normalize()
 NS_IMETHODIMP
 nsDOMAttribute::IsSupported(const nsAString& aFeature,
                             const nsAString& aVersion,
-                            PRBool* aReturn)
+                            bool* aReturn)
 {
   nsIDocument* document = GetOwnerDoc();
   if (document) {
@@ -628,7 +628,7 @@ nsDOMAttribute::CompareDocumentPosition(nsIDOMNode *other,
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther, PRBool* aResult)
+nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther, bool* aResult)
 {
   nsIDocument* document = GetOwnerDoc();
   if (document) {
@@ -658,14 +658,19 @@ nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::IsSameNode(nsIDOMNode *other, PRBool *aResult)
+nsDOMAttribute::IsSameNode(nsIDOMNode *other, bool *aResult)
 {
+  nsIDocument* document = GetOwnerDoc();
+  if (document) {
+    document->WarnOnceAbout(nsIDocument::eIsSameNode);
+  }
+
   *aResult = other == this;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::Contains(nsIDOMNode* aOther, PRBool* aReturn)
+nsDOMAttribute::Contains(nsIDOMNode* aOther, bool* aReturn)
 {
   return nsINode::Contains(aOther, aReturn);
 }
@@ -680,7 +685,7 @@ nsDOMAttribute::LookupPrefix(const nsAString & namespaceURI,
 
 NS_IMETHODIMP
 nsDOMAttribute::IsDefaultNamespace(const nsAString & namespaceURI,
-                                   PRBool *aResult)
+                                   bool *aResult)
 {
   *aResult = namespaceURI.IsEmpty();
   return NS_OK;
@@ -709,7 +714,7 @@ nsDOMAttribute::GetUserData(const nsAString & key, nsIVariant **aResult)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::GetIsId(PRBool* aReturn)
+nsDOMAttribute::GetIsId(bool* aReturn)
 {
   nsIContent* content = GetContentInternal();
   if (!content)
@@ -729,7 +734,7 @@ nsDOMAttribute::GetIsId(PRBool* aReturn)
   return NS_OK;
 }
 
-PRBool
+bool
 nsDOMAttribute::IsNodeOfType(PRUint32 aFlags) const
 {
     return !(aFlags & ~eATTRIBUTE);
@@ -766,19 +771,19 @@ nsDOMAttribute::IndexOf(nsINode* aPossibleChild) const
 
 nsresult
 nsDOMAttribute::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                              PRBool aNotify)
+                              bool aNotify)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-nsDOMAttribute::AppendChildTo(nsIContent* aKid, PRBool aNotify)
+nsDOMAttribute::AppendChildTo(nsIContent* aKid, bool aNotify)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
   if (aIndex != 0 || !mChild) {
     return NS_OK;

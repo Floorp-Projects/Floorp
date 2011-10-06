@@ -360,7 +360,7 @@ ImageContainerOGL::GetCurrentSize()
   return gfxIntSize(0,0);
 }
 
-PRBool
+bool
 ImageContainerOGL::SetLayerManager(LayerManager *aManager)
 {
   if (!aManager) {
@@ -822,37 +822,35 @@ ShadowImageLayerOGL::ShadowImageLayerOGL(LayerManagerOGL* aManager)
   , LayerOGL(aManager)
 {
   mImplData = static_cast<LayerOGL*>(this);
-}  
+}
 
 ShadowImageLayerOGL::~ShadowImageLayerOGL()
 {}
 
-PRBool
-ShadowImageLayerOGL::Init(const SharedImage& aFront,
-                          const nsIntSize& aSize)
+bool
+ShadowImageLayerOGL::Init(const SharedImage& aFront)
 {
   if (aFront.type() == SharedImage::TSurfaceDescriptor) {
     SurfaceDescriptor desc = aFront.get_SurfaceDescriptor();
-    nsRefPtr<gfxASurface> surf = 
+    nsRefPtr<gfxASurface> surf =
       ShadowLayerForwarder::OpenDescriptor(desc);
-    gfxSize sz = surf->GetSize();
-    mTexImage = gl()->CreateTextureImage(nsIntSize(sz.width, sz.height),
+    mSize = surf->GetSize();
+    mTexImage = gl()->CreateTextureImage(nsIntSize(mSize.width, mSize.height),
                                          surf->GetContentType(),
                                          LOCAL_GL_CLAMP_TO_EDGE);
-    mOGLManager->DestroySharedSurface(&desc, mAllocator);
     return PR_TRUE;
   } else {
     YUVImage yuv = aFront.get_YUVImage();
-    
+
     nsRefPtr<gfxSharedImageSurface> surfY =
       gfxSharedImageSurface::Open(yuv.Ydata());
     nsRefPtr<gfxSharedImageSurface> surfU =
       gfxSharedImageSurface::Open(yuv.Udata());
     nsRefPtr<gfxSharedImageSurface> surfV =
       gfxSharedImageSurface::Open(yuv.Vdata());
-    
-    mSize = gfxIntSize(surfY->GetSize().width, surfY->GetSize().height);
-    gfxIntSize CbCrSize = gfxIntSize(surfU->GetSize().width, surfU->GetSize().height);
+
+    mSize = surfY->GetSize();
+    mCbCrSize = surfU->GetSize();
 
     if (!mYUVTexture[0].IsAllocated()) {
       mYUVTexture[0].Allocate(mOGLManager->glForResources());
@@ -867,40 +865,45 @@ ShadowImageLayerOGL::Init(const SharedImage& aFront,
 
     gl()->MakeCurrent();
     InitTexture(gl(), mYUVTexture[0].GetTextureID(), LOCAL_GL_LUMINANCE, mSize);
-    InitTexture(gl(), mYUVTexture[1].GetTextureID(), LOCAL_GL_LUMINANCE, CbCrSize);
-    InitTexture(gl(), mYUVTexture[2].GetTextureID(), LOCAL_GL_LUMINANCE, CbCrSize);
-    
-    mOGLManager->DestroySharedSurface(surfY, mAllocator);
-    mOGLManager->DestroySharedSurface(surfU, mAllocator);
-    mOGLManager->DestroySharedSurface(surfV, mAllocator);
+    InitTexture(gl(), mYUVTexture[1].GetTextureID(), LOCAL_GL_LUMINANCE, mCbCrSize);
+    InitTexture(gl(), mYUVTexture[2].GetTextureID(), LOCAL_GL_LUMINANCE, mCbCrSize);
     return PR_TRUE;
   }
+  return PR_FALSE;
 }
 
 void
-ShadowImageLayerOGL::Swap(const SharedImage& aNewFront, SharedImage* aNewBack)
+ShadowImageLayerOGL::Swap(const SharedImage& aNewFront,
+                          SharedImage* aNewBack)
 {
   if (!mDestroyed) {
     if (aNewFront.type() == SharedImage::TSurfaceDescriptor) {
-      nsRefPtr<gfxASurface> surf = 
+      nsRefPtr<gfxASurface> surf =
         ShadowLayerForwarder::OpenDescriptor(aNewFront.get_SurfaceDescriptor());
+      gfxIntSize size = surf->GetSize();
+      if (mSize != size || !mTexImage) {
+        Init(aNewFront);
+      }
       // XXX this is always just ridiculously slow
-      gfxSize sz = surf->GetSize();
-      nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));
+      nsIntRegion updateRegion(nsIntRect(0, 0, size.width, size.height));
       mTexImage->DirectUpdate(surf, updateRegion);
     } else {
       const YUVImage& yuv = aNewFront.get_YUVImage();
-    
+
       nsRefPtr<gfxSharedImageSurface> surfY =
         gfxSharedImageSurface::Open(yuv.Ydata());
       nsRefPtr<gfxSharedImageSurface> surfU =
         gfxSharedImageSurface::Open(yuv.Udata());
       nsRefPtr<gfxSharedImageSurface> surfV =
         gfxSharedImageSurface::Open(yuv.Vdata());
-
       mPictureRect = yuv.picture();
-      mSize = surfY->GetSize();
- 
+
+      gfxIntSize size = surfY->GetSize();
+      gfxIntSize CbCrSize = surfU->GetSize();
+      if (size != mSize || mCbCrSize != CbCrSize || !mYUVTexture[0].IsAllocated()) {
+        Init(aNewFront);
+      }
+
       PlanarYCbCrImage::Data data;
       data.mYChannel = surfY->Data();
       data.mYStride = surfY->Stride();
@@ -915,12 +918,6 @@ ShadowImageLayerOGL::Swap(const SharedImage& aNewFront, SharedImage* aNewBack)
   }
 
   *aNewBack = aNewFront;
-}
-
-void
-ShadowImageLayerOGL::DestroyFrontBuffer()
-{
-  mTexImage = nsnull;
 }
 
 void

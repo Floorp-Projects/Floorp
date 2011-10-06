@@ -89,7 +89,7 @@ nsInputStreamPump::Create(nsInputStreamPump  **result,
                           PRInt64              streamLen,
                           PRUint32             segsize,
                           PRUint32             segcount,
-                          PRBool               closeWhenDone)
+                          bool                 closeWhenDone)
 {
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     nsRefPtr<nsInputStreamPump> pump = new nsInputStreamPump();
@@ -185,7 +185,7 @@ nsInputStreamPump::GetName(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsInputStreamPump::IsPending(PRBool *result)
+nsInputStreamPump::IsPending(bool *result)
 {
     *result = (mState != STATE_IDLE);
     return NS_OK;
@@ -282,7 +282,7 @@ NS_IMETHODIMP
 nsInputStreamPump::Init(nsIInputStream *stream,
                         PRInt64 streamPos, PRInt64 streamLen,
                         PRUint32 segsize, PRUint32 segcount,
-                        PRBool closeWhenDone)
+                        bool closeWhenDone)
 {
     NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);
 
@@ -310,7 +310,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
     // (2) the stream does not support nsIAsyncInputStream
     //
 
-    PRBool nonBlocking;
+    bool nonBlocking;
     nsresult rv = mStream->IsNonBlocking(&nonBlocking);
     if (NS_FAILED(rv)) return rv;
 

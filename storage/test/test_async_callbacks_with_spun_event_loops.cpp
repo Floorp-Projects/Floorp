@@ -19,7 +19,7 @@ spin_events_loop_until_true(const bool* const aCondition)
 {
   nsCOMPtr<nsIThread> thread(::do_GetCurrentThread());
   nsresult rv = NS_OK;
-  PRBool processed = PR_TRUE;
+  bool processed = true;
   while (!(*aCondition) && NS_SUCCEEDED(rv)) {
     rv = thread->ProcessNextEvent(true, &processed);
   }

@@ -82,10 +82,10 @@ static PRLogModuleInfo *gFontLog = PR_NewLogModule("ft2fonts");
  * gfxFT2FontGroup
  */
 
-PRBool
+bool
 gfxFT2FontGroup::FontCallback(const nsAString& fontName,
                               const nsACString& genericName,
-                              PRBool aUseFontSet,
+                              bool aUseFontSet,
                               void *closure)
 {
     nsTArray<nsString> *sa = static_cast<nsTArray<nsString>*>(closure);
@@ -192,10 +192,10 @@ PRUint32 getUTF8CharAndNext(const PRUint8 *aString, PRUint8 *aLength)
 }
 
 
-static PRBool
+static bool
 AddFontNameToArray(const nsAString& aName,
                    const nsACString& aGenericName,
-                   PRBool aUseFontSet,
+                   bool aUseFontSet,
                    void *aClosure)
 {
     if (!aName.IsEmpty()) {
@@ -421,16 +421,16 @@ gfxFT2FontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
  * gfxFT2Font
  */
 
-PRBool
+bool
 gfxFT2Font::InitTextRun(gfxContext *aContext,
                         gfxTextRun *aTextRun,
                         const PRUnichar *aString,
                         PRUint32 aRunStart,
                         PRUint32 aRunLength,
                         PRInt32 aRunScript,
-                        PRBool aPreferPlatformShaping)
+                        bool aPreferPlatformShaping)
 {
-    PRBool ok = PR_FALSE;
+    bool ok = false;
 
     if (gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aRunScript)) {
         if (!mHarfBuzzShaper) {
@@ -553,7 +553,7 @@ gfxFT2Font::AddRange(gfxTextRun *aTextRun, const PRUnichar *str, PRUint32 offset
 gfxFT2Font::gfxFT2Font(cairo_scaled_font_t *aCairoFont,
                        FT2FontEntry *aFontEntry,
                        const gfxFontStyle *aFontStyle,
-                       PRBool aNeedsBold)
+                       bool aNeedsBold)
     : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle)
 {
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
@@ -578,7 +578,7 @@ gfxFT2Font::CairoFontFace()
  */
 already_AddRefed<gfxFT2Font>
 gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle,
-                          PRBool aNeedsBold)
+                          bool aNeedsBold)
 {
 #ifdef ANDROID
     FT2FontEntry *fe = static_cast<FT2FontEntry*>
@@ -599,7 +599,7 @@ gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle,
 
 already_AddRefed<gfxFT2Font>
 gfxFT2Font::GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
-                          PRBool aNeedsBold)
+                          bool aNeedsBold)
 {
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry, aStyle);
     if (!font) {

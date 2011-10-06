@@ -97,11 +97,11 @@ public:
   NS_IMETHOD ReportError(const PRUnichar* aErrorText, 
                          const PRUnichar* aSourceText,
                          nsIScriptError *aError,
-                         PRBool *_retval);
+                         bool *_retval);
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-  NS_IMETHOD DidBuildModel(PRBool aTerminated);
+  NS_IMETHOD DidBuildModel(bool aTerminated);
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
   NS_IMETHOD DidProcessATokenImpl();
@@ -114,24 +114,24 @@ public:
   NS_IMETHOD WillBuildContent();
   NS_IMETHOD DidBuildContent();
   NS_IMETHOD IgnoreFirstContainer();
-  NS_IMETHOD SetPreventScriptExecution(PRBool aPreventScriptExecution);
+  NS_IMETHOD SetPreventScriptExecution(bool aPreventScriptExecution);
 
 protected:
-  virtual PRBool SetDocElement(PRInt32 aNameSpaceID, 
+  virtual bool SetDocElement(PRInt32 aNameSpaceID, 
                                nsIAtom *aTagName,
                                nsIContent *aContent);
   virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                  nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
-                                 nsIContent** aResult, PRBool* aAppendContent,
+                                 nsIContent** aResult, bool* aAppendContent,
                                  mozilla::dom::FromParser aFromParser);
   virtual nsresult CloseElement(nsIContent* aContent);
 
-  virtual void MaybeStartLayout(PRBool aIgnorePendingSheets);
+  virtual void MaybeStartLayout(bool aIgnorePendingSheets);
 
   // nsContentSink overrides
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
                                     const nsSubstring& aHref,
-                                    PRBool aAlternate,
+                                    bool aAlternate,
                                     const nsSubstring& aTitle,
                                     const nsSubstring& aType,
                                     const nsSubstring& aMedia);
@@ -141,7 +141,7 @@ protected:
   nsCOMPtr<nsIDocument> mTargetDocument;
   // the fragment
   nsCOMPtr<nsIContent>  mRoot;
-  PRPackedBool          mParseError;
+  bool                  mParseError;
 };
 
 static nsresult
@@ -209,7 +209,7 @@ nsXMLFragmentContentSink::WillBuildModel(nsDTDMode aDTDMode)
 }
 
 NS_IMETHODIMP 
-nsXMLFragmentContentSink::DidBuildModel(PRBool aTerminated)
+nsXMLFragmentContentSink::DidBuildModel(bool aTerminated)
 {
   nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
 
@@ -235,7 +235,7 @@ nsXMLFragmentContentSink::GetTarget()
 
 ////////////////////////////////////////////////////////////////////////
 
-PRBool
+bool
 nsXMLFragmentContentSink::SetDocElement(PRInt32 aNameSpaceID,
                                         nsIAtom* aTagName,
                                         nsIContent *aContent)
@@ -247,7 +247,7 @@ nsXMLFragmentContentSink::SetDocElement(PRInt32 aNameSpaceID,
 nsresult
 nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                         nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
-                                        nsIContent** aResult, PRBool* aAppendContent,
+                                        nsIContent** aResult, bool* aAppendContent,
                                         FromParser /*aFromParser*/)
 {
   // Claim to not be coming from parser, since we don't do any of the
@@ -282,7 +282,7 @@ nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
 }
 
 void
-nsXMLFragmentContentSink::MaybeStartLayout(PRBool aIgnorePendingSheets)
+nsXMLFragmentContentSink::MaybeStartLayout(bool aIgnorePendingSheets)
 {
   return;
 }
@@ -335,7 +335,7 @@ NS_IMETHODIMP
 nsXMLFragmentContentSink::ReportError(const PRUnichar* aErrorText, 
                                       const PRUnichar* aSourceText,
                                       nsIScriptError *aError,
-                                      PRBool *_retval)
+                                      bool *_retval)
 {
   NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
 
@@ -378,7 +378,7 @@ nsXMLFragmentContentSink::ReportError(const PRUnichar* aErrorText,
 nsresult
 nsXMLFragmentContentSink::ProcessStyleLink(nsIContent* aElement,
                                            const nsSubstring& aHref,
-                                           PRBool aAlternate,
+                                           bool aAlternate,
                                            const nsSubstring& aTitle,
                                            const nsSubstring& aType,
                                            const nsSubstring& aMedia)
@@ -473,7 +473,7 @@ nsXMLFragmentContentSink::IgnoreFirstContainer()
 }
 
 NS_IMETHODIMP
-nsXMLFragmentContentSink::SetPreventScriptExecution(PRBool aPrevent)
+nsXMLFragmentContentSink::SetPreventScriptExecution(bool aPrevent)
 {
   mPreventScriptExecution = aPrevent;
   return NS_OK;

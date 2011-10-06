@@ -16,7 +16,7 @@
 #toolbar-main[tablet] > .button-actionbar {
   visibility: visible;
 }
-#toolbar-main[tablet][tablet_sidebar] > #tool-tabs {
+#toolbar-main[tablet][tablet_sidebar="true"] > #tool-tabs {
   visibility: collapse;
 }
 
@@ -132,17 +132,23 @@ documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] 
   text-align: start;
 }
 
-#controls-scrollbox[tablet]:not([tablet_sidebar]) > #tabs-sidebar {
+#controls-scrollbox[tablet][tablet_sidebar="false"] > #tabs-sidebar {
   visibility: collapse;
 }
 
 @media (@orientation@: portrait) {
-  #toolbar-main[tablet][tablet_sidebar] > #tool-tabs {
+  #toolbar-main[tablet][tablet_sidebar="true"] > #tool-tabs {
     visibility: visible;
   }
 
   #controls-scrollbox[tablet] > #tabs-sidebar {
     visibility: collapse;
+  }
+}
+
+@media (@orientation@: landscape) {
+  #toolbar-main[tablet][tablet_sidebar="true"] {
+    -moz-padding-start: @padding_xxnormal@;
   }
 }
 
@@ -179,6 +185,7 @@ arrowbox {
 .documenttab-popup-favicon {
   width: 32px;
   height: 32px;
+  image-rendering: -moz-crisp-edges;
 }
 
 .tab-popup-item.selected .documenttab-popup-checkmark {

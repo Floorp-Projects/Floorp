@@ -68,6 +68,17 @@ assertEq(bazArguments.get, canonicalTTE);
 assertEq(bazArguments.set, canonicalTTE);
 
 
+// [[ThrowTypeError]] characteristics
+
+assertEq(Object.prototype.toString.call(canonicalTTE), "[object Function]");
+assertEq(Object.getPrototypeOf(canonicalTTE), Function.prototype);
+assertEq(canonicalTTE.length, 0);
+assertEq(Object.isExtensible(canonicalTTE), false);
+canonicalTTE.lumpy = 17;
+assertEq(canonicalTTE.hasOwnProperty("lumpy"), false);
+assertEq("lumpy" in canonicalTTE, false);
+expectTypeError(function setTTEProp() { "use strict"; canonicalTTE.x = 42; });
+
 /******************************************************************************/
 
 if (typeof reportCompare === "function")

@@ -72,7 +72,7 @@ public:
         entry->mMatch   = aMatch;
         return NS_OK; }
 
-    PRBool Get(nsIContent* aElement, nsTemplateMatch** aMatch) {
+    bool Get(nsIContent* aElement, nsTemplateMatch** aMatch) {
         if (!mMap.ops)
             return PR_FALSE;
 

@@ -51,7 +51,7 @@ nsresult nsMacUtilsImpl::GetArchString(nsAString& archString)
 
   archString.Truncate();
 
-  PRBool foundPPC = PR_FALSE,
+  bool foundPPC = false,
          foundX86 = PR_FALSE,
          foundPPC64 = PR_FALSE,
          foundX86_64 = PR_FALSE;
@@ -120,7 +120,7 @@ nsresult nsMacUtilsImpl::GetArchString(nsAString& archString)
   return (archString.IsEmpty() ? NS_ERROR_FAILURE : NS_OK);
 }
 
-NS_IMETHODIMP nsMacUtilsImpl::GetIsUniversalBinary(PRBool *aIsUniversalBinary)
+NS_IMETHODIMP nsMacUtilsImpl::GetIsUniversalBinary(bool *aIsUniversalBinary)
 {
   NS_ENSURE_ARG_POINTER(aIsUniversalBinary);
   *aIsUniversalBinary = PR_FALSE;
@@ -144,10 +144,10 @@ NS_IMETHODIMP nsMacUtilsImpl::GetArchitecturesInBinary(nsAString& archString)
 
 /* readonly attribute boolean isTranslated; */
 // True when running under binary translation (Rosetta).
-NS_IMETHODIMP nsMacUtilsImpl::GetIsTranslated(PRBool *aIsTranslated)
+NS_IMETHODIMP nsMacUtilsImpl::GetIsTranslated(bool *aIsTranslated)
 {
 #ifdef __ppc__
-  static PRBool  sInitialized = PR_FALSE;
+  static bool    sInitialized = false;
 
   // Initialize sIsNative to 1.  If the sysctl fails because it doesn't
   // exist, then translation is not possible, so the process must not be

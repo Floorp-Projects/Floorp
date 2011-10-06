@@ -201,7 +201,7 @@ nsHtml5HtmlAttributes::clearWithoutReleasingContents()
   length = 0;
 }
 
-PRBool 
+bool 
 nsHtml5HtmlAttributes::contains(nsHtml5AttributeName* name)
 {
   for (PRInt32 i = 0; i < length; i++) {
@@ -235,7 +235,7 @@ nsHtml5HtmlAttributes::cloneAttributes(nsHtml5AtomTable* interner)
   return clone;
 }
 
-PRBool 
+bool 
 nsHtml5HtmlAttributes::equalsAnother(nsHtml5HtmlAttributes* other)
 {
 
@@ -244,7 +244,7 @@ nsHtml5HtmlAttributes::equalsAnother(nsHtml5HtmlAttributes* other)
     return PR_FALSE;
   }
   for (PRInt32 i = 0; i < length; i++) {
-    PRBool found = PR_FALSE;
+    bool found = false;
     nsIAtom* ownLocal = names[i]->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
     for (PRInt32 j = 0; j < otherLength; j++) {
       if (ownLocal == other->names[j]->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML)) {

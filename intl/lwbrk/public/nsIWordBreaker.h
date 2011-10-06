@@ -58,7 +58,7 @@ class nsIWordBreaker : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWORDBREAKER_IID)
 
-  virtual PRBool BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
+  virtual bool BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
                                 const PRUnichar* aText2 ,
                                 PRUint32 aTextLen2) = 0;
   virtual nsWordRange FindWord(const PRUnichar* aText1 , PRUint32 aTextLen1,

@@ -55,7 +55,7 @@ struct nsExpirationState {
          MAX_INDEX_IN_GENERATION = (1U << 28) - 1 };
 
   nsExpirationState() : mGeneration(NOT_TRACKED) {}
-  PRBool IsTracked() { return mGeneration != NOT_TRACKED; }
+  bool IsTracked() { return mGeneration != NOT_TRACKED; }
 
   /**
    * The generation that this object belongs to, or NOT_TRACKED.
@@ -259,7 +259,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
     
     friend class Iterator;
 
-    PRBool IsEmpty() {
+    bool IsEmpty() {
       for (PRUint32 i = 0; i < K; ++i) {
         if (!mGenerations[i].IsEmpty())
           return PR_FALSE;
@@ -300,7 +300,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
     nsCOMPtr<nsITimer> mTimer;
     PRUint32           mTimerPeriod;
     PRUint32           mNewestGeneration;
-    PRPackedBool       mInAgeOneGeneration;
+    bool               mInAgeOneGeneration;
 
     static void TimerCallback(nsITimer* aTimer, void* aThis) {
       nsExpirationTracker* tracker = static_cast<nsExpirationTracker*>(aThis);

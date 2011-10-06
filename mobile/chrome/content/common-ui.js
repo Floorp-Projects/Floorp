@@ -201,6 +201,9 @@ var NewTabPopup = {
   },
 
   show: function nt_show(aTab) {
+    if (Util.isTablet() && TabsPopup.visible)
+      return;
+
     BrowserUI.pushPopup(this, this.box);
 
     this._tabs.push(aTab);
@@ -219,7 +222,10 @@ var NewTabPopup = {
       // being anchored to might be overflowing the tabs
       // scrollbox which confuses the dynamic arrow direction
       // calculation (see bug 662520).
-      if (Elements.tabList.getBoundingClientRect().left < 0)
+      if (Util.isTablet()) {
+        let toolbarbutton = document.getElementById("tool-tabs");
+        this.box.anchorTo(toolbarbutton, "after_start");
+      } else if (Elements.tabList.getBoundingClientRect().left < 0)
         this.box.pointLeftAt(aTab);
       else
         this.box.pointRightAt(aTab);
@@ -587,7 +593,7 @@ var FormHelperUI = {
         if (focusedElement && focusedElement.localName == "browser")
           return;
 
-        Browser.keySender.handleEvent(aEvent);
+        Browser.keyFilter.handleEvent(aEvent);
         break;
 
       case "SizeChanged":

@@ -93,9 +93,9 @@ XPCNativeMember::GetCallInfo(XPCCallContext& ccx,
                              XPCNativeInterface** pInterface,
                              XPCNativeMember**    pMember)
 {
-    funobj = funobj->unwrap();
-    jsval ifaceVal = funobj->getSlot(0);
-    jsval memberVal = funobj->getSlot(1);
+    funobj = js::UnwrapObject(funobj);
+    jsval ifaceVal = js::GetReservedSlot(funobj, 0);
+    jsval memberVal = js::GetReservedSlot(funobj, 1);
 
     *pInterface = (XPCNativeInterface*) JSVAL_TO_PRIVATE(ifaceVal);
     *pMember = (XPCNativeMember*) JSVAL_TO_PRIVATE(memberVal);
@@ -327,7 +327,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
     // Find out how often we create these objects w/o really looking at
     // (or using) the members.
 
-    PRBool canScript;
+    bool canScript;
     if(NS_FAILED(aInfo->IsScriptable(&canScript)) || !canScript)
         return nsnull;
 

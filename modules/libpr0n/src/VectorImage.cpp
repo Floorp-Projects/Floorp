@@ -134,7 +134,7 @@ public:
     mViewport(aViewport),
     mImageFlags(aImageFlags)
   {}
-  virtual PRBool operator()(gfxContext* aContext,
+  virtual bool operator()(gfxContext* aContext,
                             const gfxRect& aFillRect,
                             const gfxPattern::GraphicsFilter& aFilter,
                             const gfxMatrix& aTransform);
@@ -145,7 +145,7 @@ private:
 };
 
 // Based loosely on nsSVGIntegrationUtils' PaintFrameCallback::operator()
-PRBool
+bool
 SVGDrawingCallback::operator()(gfxContext* aContext,
                                const gfxRect& aFillRect,
                                const gfxPattern::GraphicsFilter& aFilter,
@@ -170,7 +170,6 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
 
   gfxContextMatrixAutoSaveRestore contextMatrixRestorer(aContext);
   aContext->Multiply(gfxMatrix(aTransform).Invert());
-
 
   nsPresContext* presContext = presShell->GetPresContext();
   NS_ABORT_IF_FALSE(presContext, "pres shell w/out pres context");
@@ -330,6 +329,14 @@ VectorImage::GetWidth(PRInt32* aWidth)
 }
 
 //******************************************************************************
+/* [notxpcom] void requestRefresh ([const] in TimeStamp aTime); */
+NS_IMETHODIMP_(void)
+VectorImage::RequestRefresh(const mozilla::TimeStamp& aTime)
+{
+  // TODO: Implement for b666446.
+}
+
+//******************************************************************************
 /* readonly attribute PRInt32 height; */
 NS_IMETHODIMP
 VectorImage::GetHeight(PRInt32* aHeight)
@@ -370,7 +377,7 @@ VectorImage::GetType()
 //******************************************************************************
 /* readonly attribute boolean animated; */
 NS_IMETHODIMP
-VectorImage::GetAnimated(PRBool* aAnimated)
+VectorImage::GetAnimated(bool* aAnimated)
 {
   if (mError || !mIsFullyLoaded)
     return NS_ERROR_FAILURE;
@@ -382,7 +389,7 @@ VectorImage::GetAnimated(PRBool* aAnimated)
 //******************************************************************************
 /* readonly attribute boolean currentFrameIsOpaque; */
 NS_IMETHODIMP
-VectorImage::GetCurrentFrameIsOpaque(PRBool* aIsOpaque)
+VectorImage::GetCurrentFrameIsOpaque(bool* aIsOpaque)
 {
   NS_ENSURE_ARG_POINTER(aIsOpaque);
   *aIsOpaque = PR_FALSE;   // In general, SVG content is not opaque.

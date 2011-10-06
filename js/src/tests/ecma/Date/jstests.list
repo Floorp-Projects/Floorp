@@ -147,7 +147,7 @@ script 15.9.5.5.js
 script 15.9.5.6.js
 script 15.9.5.7.js
 fails-if(Android) script 15.9.5.8.js
-script 15.9.5.9.js
+skip-if(Android) script 15.9.5.9.js # bug 686143, skip temporarily to see what happens to the frequency and location of Android timeouts
 script 15.9.5.js
 slow script dst-offset-caching-1-of-8.js
 slow script dst-offset-caching-2-of-8.js

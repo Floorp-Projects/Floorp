@@ -91,7 +91,7 @@ public:
 
     // "Enabled" means the users can use all IMEs.
     // I.e., the focus is in the normal editors.
-    PRBool IsEnabled();
+    bool IsEnabled();
 
     // OnFocusWindow is a notification that aWindow is going to be focused.
     void OnFocusWindow(nsWindow* aWindow);
@@ -100,15 +100,15 @@ public:
     // OnDestroyWindow is a notification that aWindow is going to be destroyed.
     void OnDestroyWindow(nsWindow* aWindow);
     // OnFocusChangeInGecko is a notification that an editor gets focus.
-    void OnFocusChangeInGecko(PRBool aFocus);
+    void OnFocusChangeInGecko(bool aFocus);
 
     // OnKeyEvent is called when aWindow gets a native key press event or a
     // native key release event.  If this returns TRUE, the key event was
     // filtered by IME.  Otherwise, this returns FALSE.
     // NOTE: When the keypress event starts composition, this returns TRUE but
     //       this dispatches keydown event before compositionstart event.
-    PRBool OnKeyEvent(nsWindow* aWindow, GdkEventKey* aEvent,
-                      PRBool aKeyDownEventWasSent = PR_FALSE);
+    bool OnKeyEvent(nsWindow* aWindow, GdkEventKey* aEvent,
+                      bool aKeyDownEventWasSent = false);
 
     // IME related nsIWidget methods.
     nsresult ResetInputState(nsWindow* aCaller);
@@ -118,7 +118,7 @@ public:
 
     // If a software keyboard has been opened, this returns TRUE.
     // Otherwise, FALSE.
-    static PRBool IsVirtualKeyboardOpened();
+    static bool IsVirtualKeyboardOpened();
 
 protected:
     // Owner of an instance of this class. This should be top level window.
@@ -171,25 +171,25 @@ protected:
     // event.  And it's set to FALSE when we dispatches the composition end
     // event.  Note that mCompositionString can be empty string even if this is
     // TRUE.
-    PRPackedBool mIsComposing;
+    bool mIsComposing;
     // mIsIMFocused is set to TRUE when we call gtk_im_context_focus_in(). And
     // it's set to FALSE when we call gtk_im_context_focus_out().
-    PRPackedBool mIsIMFocused;
+    bool mIsIMFocused;
     // mFilterKeyEvent is used by OnKeyEvent().  If the commit event should
     // be processed as simple key event, this is set to TRUE by the commit
     // handler.
-    PRPackedBool mFilterKeyEvent;
+    bool mFilterKeyEvent;
     // When mIgnoreNativeCompositionEvent is TRUE, all native composition
     // should be ignored except that the compositon should be restarted in
     // another content (nsIContent).  Don't refer this value directly, use
     // ShouldIgnoreNativeCompositionEvent().
-    PRPackedBool mIgnoreNativeCompositionEvent;
+    bool mIgnoreNativeCompositionEvent;
     // mKeyDownEventWasSent is used by OnKeyEvent() and
     // DispatchCompositionStart().  DispatchCompositionStart() dispatches
     // a keydown event if the composition start is caused by a native
     // keypress event.  If this is true, the keydown event has been dispatched.
     // Then, DispatchCompositionStart() doesn't dispatch keydown event.
-    PRPackedBool mKeyDownEventWasSent;
+    bool mKeyDownEventWasSent;
 
     // sLastFocusedModule is a pointer to the last focused instance of this
     // class.  When a instance is destroyed and sLastFocusedModule refers it,
@@ -234,10 +234,10 @@ protected:
     // use IMEs but they can use dead keys.
     // I.e., the focus is in the normal editors or the password editors or
     // the |ime-mode: disabled;| editors.
-    PRBool IsEditable();
+    bool IsEditable();
 
     // If the owner window and IM context have been destroyed, returns TRUE.
-    PRBool IsDestroyed() { return !mOwnerWindow; }
+    bool IsDestroyed() { return !mOwnerWindow; }
 
     // Sets focus to the instance of this class.
     void Focus();
@@ -276,7 +276,7 @@ protected:
     // Called before destroying the context to work around some platform bugs.
     void PrepareToDestroyContext(GtkIMContext *aContext);
 
-    PRBool ShouldIgnoreNativeCompositionEvent();
+    bool ShouldIgnoreNativeCompositionEvent();
 
     /**
      *  WARNING:
@@ -290,16 +290,16 @@ protected:
      */
 
     // Commits the current composition by the aString.
-    PRBool CommitCompositionBy(const nsAString& aString);
+    bool CommitCompositionBy(const nsAString& aString);
 
     // Dispatches a composition start event or a composition end event.
-    PRBool DispatchCompositionStart();
-    PRBool DispatchCompositionEnd();
+    bool DispatchCompositionStart();
+    bool DispatchCompositionEnd();
 
     // Dispatches a text event.  If aCheckAttr is TRUE, dispatches a committed
     // text event.  Otherwise, dispatches a composing text event.
-    PRBool DispatchTextEvent(const nsAString& aCompositionString,
-                             PRBool aCheckAttr);
+    bool DispatchTextEvent(const nsAString& aCompositionString,
+                             bool aCheckAttr);
 
 };
 

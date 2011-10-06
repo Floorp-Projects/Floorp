@@ -78,21 +78,21 @@ public:
     nsTemplateCondition(nsIAtom* aSourceVariable,
                         const nsAString& aRelation,
                         nsIAtom* aTargetVariable,
-                        PRBool mIgnoreCase,
-                        PRBool mNegate);
+                        bool mIgnoreCase,
+                        bool mNegate);
 
     nsTemplateCondition(nsIAtom* aSourceVariable,
                         const nsAString& aRelation,
                         const nsAString& aTargets,
-                        PRBool mIgnoreCase,
-                        PRBool mNegate,
-                        PRBool aIsMultiple);
+                        bool mIgnoreCase,
+                        bool mNegate,
+                        bool aIsMultiple);
 
     nsTemplateCondition(const nsAString& aSource,
                         const nsAString& aRelation,
                         nsIAtom* aTargetVariable,
-                        PRBool mIgnoreCase,
-                        PRBool mNegate);
+                        bool mIgnoreCase,
+                        bool mNegate);
 
     ~nsTemplateCondition() { MOZ_COUNT_DTOR(nsTemplateCondition); }
 
@@ -101,10 +101,10 @@ public:
 
     void SetRelation(const nsAString& aRelation);
 
-    PRBool
+    bool
     CheckMatch(nsIXULTemplateResult* aResult);
 
-    PRBool
+    bool
     CheckMatchStrings(const nsAString& aLeftString,
                       const nsAString& aRightString);
 protected:
@@ -114,8 +114,8 @@ protected:
     ConditionRelation   mRelation;
     nsCOMPtr<nsIAtom>   mTargetVariable;
     nsTArray<nsString>  mTargetList;
-    PRPackedBool        mIgnoreCase;
-    PRPackedBool        mNegate;
+    bool                mIgnoreCase;
+    bool                mNegate;
 
    nsTemplateCondition* mNext;
 };
@@ -193,13 +193,13 @@ public:
      * was set, is checked. If either check rejects a result, a match cannot
      * occur for this rule and result.
      */
-    PRBool
+    bool
     CheckMatch(nsIXULTemplateResult* aResult) const;
 
     /**
      * Determine if the rule has the specified binding
      */
-    PRBool
+    bool
     HasBinding(nsIAtom* aSourceVariable,
                nsAString& aExpr,
                nsIAtom* aTargetVariable) const;

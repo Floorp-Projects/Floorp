@@ -105,21 +105,21 @@ public:
     return value;
   }
 
-  PRBool IsIndefinite() const { return mState == STATE_INDEFINITE; }
+  bool IsIndefinite() const { return mState == STATE_INDEFINITE; }
   void SetIndefinite()
   {
     mState = STATE_INDEFINITE;
     mMilliseconds = kUnresolvedMillis;
   }
 
-  PRBool IsResolved() const { return mState != STATE_UNRESOLVED; }
+  bool IsResolved() const { return mState != STATE_UNRESOLVED; }
   void SetUnresolved()
   {
     mState = STATE_UNRESOLVED;
     mMilliseconds = kUnresolvedMillis;
   }
 
-  PRBool IsDefinite() const { return mState == STATE_DEFINITE; }
+  bool IsDefinite() const { return mState == STATE_DEFINITE; }
   nsSMILTime GetMillis() const
   {
     NS_ABORT_IF_FALSE(mState == STATE_DEFINITE,
@@ -136,22 +136,22 @@ public:
 
   PRInt8 CompareTo(const nsSMILTimeValue& aOther) const;
 
-  PRBool operator==(const nsSMILTimeValue& aOther) const
+  bool operator==(const nsSMILTimeValue& aOther) const
   { return CompareTo(aOther) == 0; }
 
-  PRBool operator!=(const nsSMILTimeValue& aOther) const
+  bool operator!=(const nsSMILTimeValue& aOther) const
   { return CompareTo(aOther) != 0; }
 
-  PRBool operator<(const nsSMILTimeValue& aOther) const
+  bool operator<(const nsSMILTimeValue& aOther) const
   { return CompareTo(aOther) < 0; }
 
-  PRBool operator>(const nsSMILTimeValue& aOther) const
+  bool operator>(const nsSMILTimeValue& aOther) const
   { return CompareTo(aOther) > 0; }
 
-  PRBool operator<=(const nsSMILTimeValue& aOther) const
+  bool operator<=(const nsSMILTimeValue& aOther) const
   { return CompareTo(aOther) <= 0; }
 
-  PRBool operator>=(const nsSMILTimeValue& aOther) const
+  bool operator>=(const nsSMILTimeValue& aOther) const
   { return CompareTo(aOther) >= 0; }
 
 private:

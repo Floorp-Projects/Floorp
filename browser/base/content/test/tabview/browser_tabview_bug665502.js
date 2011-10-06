@@ -21,7 +21,7 @@ function test() {
     let bounds = tabItem.getBounds();
 
     is(groupItem.getActiveTab(), tabItem, "the first tab is active");
-    tabItem.close();
+    EventUtils.synthesizeMouseAtCenter(tabItem.container, {button: 1}, cw);
 
     is(groupItem.getChildren().indexOf(tabItem), -1, "tabItem got removed");
     ok(bounds.equals(groupItem.getChild(0).getBounds()), "tabItem bounds didn't change");

@@ -37,8 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-const EXPORTED_SYMBOLS = ["SyncScheduler", "ErrorHandler"];
+const EXPORTED_SYMBOLS = ["SyncScheduler",
+                          "ErrorHandler",
+                          "SendCredentialsController"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -121,7 +122,6 @@ let SyncScheduler = {
       case "weave:service:sync:start":
         // Clear out any potentially pending syncs now that we're syncing
         this.clearSyncTriggers();
-        this.nextSync = 0;
 
         // reset backoff info, if the server tells us to continue backing off,
         // we'll handle that later
@@ -130,9 +130,8 @@ let SyncScheduler = {
         this.globalScore = 0;
         break;
       case "weave:service:sync:finish":
+        this.nextSync = 0;
         this.adjustSyncInterval();
-
-        let sync_interval;
 
         if (Status.service == SYNC_FAILED_PARTIAL && this.requiresBackoff) {
           this.requiresBackoff = false;
@@ -140,6 +139,7 @@ let SyncScheduler = {
           return;
         }
 
+        let sync_interval;
         this._syncErrors = 0;
         if (Status.sync == NO_SYNC_NODE_FOUND) {
           this._log.trace("Scheduling a sync at interval NO_SYNC_NODE_FOUND.");
@@ -181,12 +181,15 @@ let SyncScheduler = {
         // should still be updated so that the next sync has a correct interval.
         this.updateClientMode();
         this.adjustSyncInterval();
+        this.nextSync = 0;
         this.handleSyncError();
         break;
       case "weave:service:backoff:interval":
-        let interval = (data + Math.random() * data * 0.25) * 1000; // required backoff + up to 25%
+        let requested_interval = subject * 1000;
+        // Leave up to 25% more time for the back off.
+        let interval = requested_interval * (1 + Math.random() * 0.25);
         Status.backoffInterval = interval;
-        Status.minimumNextSync = Date.now() + data;
+        Status.minimumNextSync = Date.now() + requested_interval;
         break;
       case "weave:service:ready":
         // Applications can specify this preference if they want autoconnect
@@ -206,8 +209,13 @@ let SyncScheduler = {
          Svc.Idle.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
          break;
       case "weave:service:start-over":
-         Svc.Idle.removeIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
          SyncScheduler.setDefaults();
+         try {
+           Svc.Idle.removeIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
+         } catch (ex if (ex.result == Cr.NS_ERROR_FAILURE)) {
+           // In all likelihood we didn't have an idle observer registered yet.
+           // It's all good.
+         }
          break;
       case "idle":
         this._log.trace("We're idle.");
@@ -218,12 +226,21 @@ let SyncScheduler = {
         this.adjustSyncInterval();
         break;
       case "back":
-        this._log.trace("We're no longer idle.");
+        this._log.trace("Received notification that we're back from idle.");
         this.idle = false;
-        // Trigger a sync if we have multiple clients.
-        if (this.numClients > 1) {
-          Utils.nextTick(Weave.Service.sync, Weave.Service);
-        }
+        Utils.namedTimer(function onBack() {
+          if (this.idle) {
+            this._log.trace("... and we're idle again. " +
+                            "Ignoring spurious back notification.");
+            return;
+          }
+
+          this._log.trace("Genuine return from idle. Syncing.");
+          // Trigger a sync if we have multiple clients.
+          if (this.numClients > 1) {
+            this.scheduleNextSync(0);
+          }
+        }, IDLE_OBSERVER_BACK_DELAY, this, "idleDebouncerTimer");
         break;
     }
   },
@@ -333,14 +350,23 @@ let SyncScheduler = {
    * Set a timer for the next sync
    */
   scheduleNextSync: function scheduleNextSync(interval) {
-    // Figure out when to sync next if not given a interval to wait
-    if (interval == null || interval == undefined) {
-      // Check if we had a pending sync from last time
-      if (this.nextSync != 0)
-        interval = Math.min(this.syncInterval, (this.nextSync - Date.now()));
-      // Use the bigger of default sync interval and backoff
-      else
-        interval = Math.max(this.syncInterval, Status.backoffInterval);
+    // If no interval was specified, use the current sync interval.
+    if (interval == null) {
+      interval = this.syncInterval;
+    }
+
+    // Ensure the interval is set to no less than the backoff.
+    if (Status.backoffInterval && interval < Status.backoffInterval) {
+      interval = Status.backoffInterval;
+    }
+
+    if (this.nextSync != 0) {
+      // There's already a sync scheduled. Don't reschedule if that's already
+      // going to happen sooner than requested.
+      let currentInterval = this.nextSync - Date.now();
+      if (currentInterval < interval) {
+        return;
+      }
     }
 
     // Start the sync right away if we're already late
@@ -730,4 +756,96 @@ let ErrorHandler = {
         break;
     }
   },
+};
+
+
+/**
+ * Send credentials over an active J-PAKE channel.
+ * 
+ * This object is designed to take over as the JPAKEClient controller,
+ * presumably replacing one that is UI-based which would either cause
+ * DOM objects to leak or the JPAKEClient to be GC'ed when the DOM
+ * context disappears. This object stays alive for the duration of the
+ * transfer by being strong-ref'ed as an nsIObserver.
+ * 
+ * Credentials are sent after the first sync has been completed
+ * (successfully or not.)
+ * 
+ * Usage:
+ * 
+ *   jpakeclient.controller = new SendCredentialsController(jpakeclient);
+ * 
+ */
+function SendCredentialsController(jpakeclient) {
+  this._log = Log4Moz.repository.getLogger("Sync.SendCredentialsController");
+  this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
+
+  this._log.trace("Loading.");
+  this.jpakeclient = jpakeclient;
+
+  // Register ourselves as observers the first Sync finishing (either
+  // successfully or unsuccessfully, we don't care) or for removing
+  // this device's sync configuration, in case that happens while we
+  // haven't finished the first sync yet.
+  Services.obs.addObserver(this, "weave:service:sync:finish", false);
+  Services.obs.addObserver(this, "weave:service:sync:error",  false);
+  Services.obs.addObserver(this, "weave:service:start-over",  false);
+}
+SendCredentialsController.prototype = {
+
+  unload: function unload() {
+    this._log.trace("Unloading.");
+    try {
+      Services.obs.removeObserver(this, "weave:service:sync:finish");
+      Services.obs.removeObserver(this, "weave:service:sync:error");
+      Services.obs.removeObserver(this, "weave:service:start-over");
+    } catch (ex) {
+      // Ignore.
+    }
+  },
+
+  observe: function observe(subject, topic, data) {
+    switch (topic) {
+      case "weave:service:sync:finish":
+      case "weave:service:sync:error":
+        Utils.nextTick(this.sendCredentials, this);
+        break;
+      case "weave:service:start-over":
+        // This will call onAbort which will call unload().
+        this.jpakeclient.abort();
+        break;
+    }
+  },
+
+  sendCredentials: function sendCredentials() {
+    this._log.trace("Sending credentials.");
+    let credentials = {account:   Weave.Service.account,
+                       password:  Weave.Service.password,
+                       synckey:   Weave.Service.passphrase,
+                       serverURL: Weave.Service.serverURL};
+    this.jpakeclient.sendAndComplete(credentials);
+  },
+
+  // JPAKEClient controller API
+
+  onComplete: function onComplete() {
+    this._log.debug("Exchange was completed successfully!");
+    this.unload();
+
+    // Schedule a Sync for soonish to fetch the data uploaded by the
+    // device with which we just paired.
+    SyncScheduler.scheduleNextSync(SyncScheduler.activeInterval);
+  },
+
+  onAbort: function onAbort(error) {
+    // It doesn't really matter why we aborted, but the channel is closed
+    // for sure, so we won't be able to do anything with it.
+    this._log.debug("Exchange was aborted with error: " + error);
+    this.unload();
+  },
+
+  // Irrelevant methods for this controller:
+  displayPIN: function displayPIN() {},
+  onPairingStart: function onPairingStart() {},
+  onPaired: function onPaired() {}
 };

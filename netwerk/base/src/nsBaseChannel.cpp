@@ -98,7 +98,7 @@ nsBaseChannel::nsBaseChannel()
 
 nsresult
 nsBaseChannel::Redirect(nsIChannel *newChannel, PRUint32 redirectFlags,
-                        PRBool openNewChannel)
+                        bool openNewChannel)
 {
   SUSPEND_PUMP_FOR_SCOPE();
 
@@ -119,7 +119,7 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, PRUint32 redirectFlags,
   nsRefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
       new nsAsyncRedirectVerifyHelper();
 
-  PRBool checkRedirectSynchronously = !openNewChannel;
+  bool checkRedirectSynchronously = !openNewChannel;
 
   mRedirectChannel = newChannel;
   mRedirectFlags = redirectFlags;
@@ -178,7 +178,7 @@ nsBaseChannel::ContinueRedirect()
   return NS_OK;
 }
 
-PRBool
+bool
 nsBaseChannel::HasContentTypeHint() const
 {
   NS_ASSERTION(!IsPending(), "HasContentTypeHint called too late");
@@ -205,7 +205,7 @@ nsBaseChannel::ContentLength64()
 nsresult
 nsBaseChannel::PushStreamConverter(const char *fromType,
                                    const char *toType,
-                                   PRBool invalidatesContentLength,
+                                   bool invalidatesContentLength,
                                    nsIStreamListener **result)
 {
   NS_ASSERTION(mListener, "no listener");
@@ -352,7 +352,7 @@ nsBaseChannel::GetName(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsBaseChannel::IsPending(PRBool *result)
+nsBaseChannel::IsPending(bool *result)
 {
   *result = IsPending();
   return NS_OK;
@@ -500,7 +500,7 @@ NS_IMETHODIMP
 nsBaseChannel::SetContentType(const nsACString &aContentType)
 {
   // mContentCharset is unchanged if not parsed
-  PRBool dummy;
+  bool dummy;
   net_ParseContentType(aContentType, mContentType, mContentCharset, &dummy);
   return NS_OK;
 }

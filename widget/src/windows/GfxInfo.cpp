@@ -80,41 +80,41 @@ GfxInfo::GfxInfo()
     mAdapterVendorID2(0),
     mAdapterDeviceID2(0),
     mWindowsVersion(0),
-    mHasDualGPU(PR_FALSE),
-    mIsGPU2Active(PR_FALSE)
+    mHasDualGPU(false),
+    mIsGPU2Active(false)
 {
 }
 
 /* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
  * has occurred because they depend on it for information. (See bug 591561) */
 nsresult
-GfxInfo::GetD2DEnabled(PRBool *aEnabled)
+GfxInfo::GetD2DEnabled(bool *aEnabled)
 {
   *aEnabled = gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
   return NS_OK;
 }
 
 nsresult
-GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
+GfxInfo::GetDWriteEnabled(bool *aEnabled)
 {
   *aEnabled = gfxWindowsPlatform::GetPlatform()->DWriteEnabled();
   return NS_OK;
 }
 
 nsresult
-GfxInfo::GetAzureEnabled(PRBool *aEnabled)
+GfxInfo::GetAzureEnabled(bool *aEnabled)
 {
-  *aEnabled = PR_FALSE;
+  *aEnabled = false;
 
-  PRBool d2dEnabled = 
+  bool d2dEnabled = 
     gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
 
   if (d2dEnabled) {
-    PRBool azure = PR_FALSE;
+    bool azure = false;
     nsresult rv = mozilla::Preferences::GetBool("gfx.canvas.azure.enabled", &azure);
 
     if (NS_SUCCEEDED(rv) && azure) {
-      *aEnabled = PR_TRUE;
+      *aEnabled = true;
     }
   }
 
@@ -439,7 +439,7 @@ GfxInfo::Init()
               }
               result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, driverKey.BeginReading(), 0, KEY_QUERY_VALUE, &key);
               if (result == ERROR_SUCCESS) {
-                mHasDualGPU = PR_TRUE;
+                mHasDualGPU = true;
                 mDeviceKey2 = driverKey;
                 dwcbData = sizeof(value);
                 result = RegQueryValueExW(key, L"DriverVersion", NULL, NULL, (LPBYTE)value, &dwcbData);
@@ -488,12 +488,12 @@ GfxInfo::Init()
      PR_sscanf(spoofedVendor, "%x", &mAdapterVendorID);
   }
 
-  mHasDriverVersionMismatch = PR_FALSE;
+  mHasDriverVersionMismatch = false;
   if (mAdapterVendorID == vendorIntel) {
     // we've had big crashers (bugs 590373 and 595364) apparently correlated
     // with bad Intel driver installations where the DriverVersion reported
     // by the registry was not the version of the DLL.
-    PRBool is64bitApp = sizeof(void*) == 8;
+    bool is64bitApp = sizeof(void*) == 8;
     const PRUnichar *dllFileName = is64bitApp
                                  ? L"igd10umd64.dll"
                                  : L"igd10umd32.dll";
@@ -508,7 +508,7 @@ GfxInfo::Init()
     // so if GetDLLVersion failed, we get dllNumericVersion = 0
     // so this test implicitly handles the case where GetDLLVersion failed
     if (dllNumericVersion != driverNumericVersion)
-      mHasDriverVersionMismatch = PR_TRUE;
+      mHasDriverVersionMismatch = true;
   }
 
   const char *spoofedDevice = PR_GetEnv("MOZ_GFX_SPOOF_DEVICE_ID");
@@ -646,7 +646,7 @@ GfxInfo::GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID)
 
 /* readonly attribute boolean isGPU2Active; */
 NS_IMETHODIMP
-GfxInfo::GetIsGPU2Active(PRBool* aIsGPU2Active)
+GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
 {
   *aIsGPU2Active = mIsGPU2Active;
   return NS_OK;
@@ -972,7 +972,7 @@ nsresult
 GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion, GfxDriverInfo* aDriverInfo /* = nsnull */)
 {
   *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
-  aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
+  aSuggestedDriverVersion.SetIsVoid(true);
 
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
 
