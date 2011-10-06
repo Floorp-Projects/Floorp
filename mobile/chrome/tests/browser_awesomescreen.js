@@ -25,6 +25,10 @@ function runNextTest() {
   if (gTests.length > 0) {
     gCurrentTest = gTests.shift();
     info(gCurrentTest.desc);
+
+    // Ensure all tests start with hidden awesome screen
+    AwesomeScreen.activePanel = null;
+
     gCurrentTest.run();
   }
   else {
@@ -187,7 +191,6 @@ gTests.push({
     });
 
     setTimeout(function() {
-      AwesomeScreen.activePanel = null;
       runNextTest();
     }, 0);
   }
@@ -282,8 +285,6 @@ gTests.push({
 
     edit.clickSelectsAll = oldClickSelectsAll;
 
-    AwesomeScreen.activePanel = null;
-
     // Ensure the tab is well closed before doing the rest of the code, otherwise
     // this cause some bugs with the composition events
     let tabCount = Browser.tabs.length;
@@ -348,7 +349,6 @@ gTests.push({
         self.onPopupReady();
       }, 500);
     } else {
-      AwesomeScreen.activePanel = null;
       runNextTest();
     }
   }
