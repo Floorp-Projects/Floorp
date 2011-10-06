@@ -444,6 +444,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
 {
   gfxMatrix residual;
   gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
+  idealTransform.ProjectTo2D();
   mEffectiveTransform = SnapTransform(idealTransform, gfxRect(0, 0, 0, 0), &residual);
 
   bool useIntermediateSurface;
@@ -453,9 +454,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
   } else {
     useIntermediateSurface = PR_FALSE;
     gfxMatrix contTransform;
-    if (!mEffectiveTransform.Is2D(&contTransform)) {
-     useIntermediateSurface = PR_TRUE;   
-    } else if (
+    if (!mEffectiveTransform.Is2D(&contTransform) ||
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
         !contTransform.PreservesAxisAlignedRectangles()) {
 #else
