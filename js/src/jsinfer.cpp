@@ -2724,6 +2724,14 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
             if (shape)
                 UpdatePropertyType(cx, &base->types, singleton, shape, false);
         }
+
+        if (singleton->watched()) {
+            /*
+             * Mark the property as configured, to inhibit optimizations on it
+             * and avoid bypassing the watchpoint handler.
+             */
+            base->types.setOwnProperty(cx, true);
+        }
     }
 
     *pprop = base;
