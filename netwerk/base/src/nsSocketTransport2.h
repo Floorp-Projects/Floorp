@@ -75,7 +75,7 @@ public:
     nsSocketInputStream(nsSocketTransport *);
     virtual ~nsSocketInputStream();
 
-    PRBool   IsReferenced() { return mReaderRefCnt > 0; }
+    bool     IsReferenced() { return mReaderRefCnt > 0; }
     nsresult Condition()    { return mCondition; }
     PRUint64 ByteCount()    { return mByteCount; }
 
@@ -105,7 +105,7 @@ public:
     nsSocketOutputStream(nsSocketTransport *);
     virtual ~nsSocketOutputStream();
 
-    PRBool   IsReferenced() { return mWriterRefCnt > 0; }
+    bool     IsReferenced() { return mWriterRefCnt > 0; }
     nsresult Condition()    { return mCondition; }
     PRUint64 ByteCount()    { return mByteCount; }
 
@@ -202,8 +202,8 @@ private:
     nsCString    mProxyHost;
     PRUint16     mPort;
     PRUint16     mProxyPort;
-    PRPackedBool mProxyTransparent;
-    PRPackedBool mProxyTransparentResolvesHost;
+    bool mProxyTransparent;
+    bool mProxyTransparentResolvesHost;
     PRUint32     mConnectionFlags;
     
     PRUint16         SocketPort() { return (!mProxyHost.IsEmpty() && !mProxyTransparent) ? mProxyPort : mPort; }
@@ -216,13 +216,13 @@ private:
 
     // socket state vars:
     PRUint32     mState;     // STATE_??? flags
-    PRPackedBool mAttached;
-    PRPackedBool mInputClosed;
-    PRPackedBool mOutputClosed;
+    bool mAttached;
+    bool mInputClosed;
+    bool mOutputClosed;
 
     // this flag is used to determine if the results of a host lookup arrive
     // recursively or not.  this flag is not protected by any lock.
-    PRPackedBool mResolving;
+    bool mResolving;
 
     nsCOMPtr<nsICancelable> mDNSRequest;
     nsCOMPtr<nsIDNSRecord>  mDNSRecord;
@@ -232,9 +232,9 @@ private:
 
     void     SendStatus(nsresult status);
     nsresult ResolveHost();
-    nsresult BuildSocket(PRFileDesc *&, PRBool &, PRBool &); 
+    nsresult BuildSocket(PRFileDesc *&, bool &, bool &); 
     nsresult InitiateSocket();
-    PRBool   RecoverFromError();
+    bool     RecoverFromError();
 
     void OnMsgInputPending()
     {
@@ -259,7 +259,7 @@ private:
     Mutex       mLock;  // protects members in this section
     PRFileDesc *mFD;
     nsrefcnt    mFDref;       // mFD is closed when mFDref goes to zero.
-    PRBool      mFDconnected; // mFD is available to consumer when TRUE.
+    bool        mFDconnected; // mFD is available to consumer when TRUE.
 
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     nsCOMPtr<nsITransportEventSink> mEventSink;

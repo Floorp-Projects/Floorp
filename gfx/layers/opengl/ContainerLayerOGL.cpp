@@ -142,7 +142,7 @@ GetNextSibling(LayerOGL* aLayer)
                  : nsnull;
 }
 
-static PRBool
+static bool
 HasOpaqueAncestorLayer(Layer* aLayer)
 {
   for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
@@ -214,7 +214,7 @@ ContainerRender(Container* aContainer,
     aContainer->mSupportsComponentAlphaChildren = (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE) ||
       (aContainer->GetParent() && aContainer->GetParent()->SupportsComponentAlphaChildren());
 #ifdef DEBUG
-    PRBool is2d =
+    bool is2d =
 #endif
     transform.Is2D(&contTransform);
     NS_ASSERTION(is2d, "Transform must be 2D");

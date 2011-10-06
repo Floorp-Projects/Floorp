@@ -170,7 +170,7 @@ private:
      *  @param   aChild Tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    PRBool CanPropagate(eHTMLTags aParent,
+    bool CanPropagate(eHTMLTags aParent,
                         eHTMLTags aChild,
                         PRInt32 aParentContains);
 
@@ -181,10 +181,10 @@ private:
      *  @param   aParent Parent tag being asked about omitting given child
      *  @param   aChild Child tag being tested for omittability by parent
      *  @param   aParentContains Can be 0,1,-1 (false,true, unknown)
-     *                           XXX should be PRInt32, not PRBool
+     *                           XXX should be PRInt32, not bool
      *  @return  PR_TRUE if given tag can be omitted
      */
-    PRBool CanOmit(eHTMLTags aParent, 
+    bool CanOmit(eHTMLTags aParent, 
                    eHTMLTags aChild,
                    PRInt32& aParentContains);
 
@@ -197,7 +197,7 @@ private:
      * @param   aChild Tag type of child
      * @return  PR_TRUE if closure was achieved -- otherwise false
      */
-    PRBool ForwardPropagate(nsString& aSequence,
+    bool ForwardPropagate(nsString& aSequence,
                             eHTMLTags aParent,
                             eHTMLTags aChild);
 
@@ -211,7 +211,7 @@ private:
      * @param   aChild Tag type of child
      * @return  PR_TRUE if closure was achieved -- other false
      */
-    PRBool BackwardPropagate(nsString& aSequence,
+    bool BackwardPropagate(nsString& aSequence,
                              eHTMLTags aParent,
                              eHTMLTags aChild) const;
 
@@ -230,7 +230,7 @@ private:
      * @param   id of container you want to test for
      * @return  TRUE if the given container type is open -- otherwise FALSE
      */
-    PRBool HasOpenContainer(eHTMLTags aContainer) const;
+    bool HasOpenContainer(eHTMLTags aContainer) const;
 
     /**
      * This method allows the caller to determine if a any member
@@ -239,7 +239,7 @@ private:
      * @param   aTagSet A set of tags you care about.
      * @return  PR_TRUE if any of the members of aTagSet are currently open.
      */
-    PRBool HasOpenContainer(const eHTMLTags aTagSet[], PRInt32 aCount) const;
+    bool HasOpenContainer(const eHTMLTags aTagSet[], PRInt32 aCount) const;
 
     /**
      * Accessor that retrieves the tag type of the topmost item on the DTD's
@@ -305,12 +305,12 @@ private:
      * one or more open containers.
      * @return  error code - 0 if all went well.
      */
-    nsresult CloseContainer(const eHTMLTags aTag, PRBool aMalformed);
-    nsresult CloseContainersTo(eHTMLTags aTag, PRBool aClosedByStartTag);
+    nsresult CloseContainer(const eHTMLTags aTag, bool aMalformed);
+    nsresult CloseContainersTo(eHTMLTags aTag, bool aClosedByStartTag);
     nsresult CloseContainersTo(PRInt32 anIndex, eHTMLTags aTag,
-                               PRBool aClosedByStartTag);
+                               bool aClosedByStartTag);
     nsresult CloseResidualStyleTags(const eHTMLTags aTag,
-                                    PRBool aClosedByStartTag);
+                                    bool aClosedByStartTag);
 
     /**
      * Causes leaf to be added to sink at current vector pos.
@@ -329,7 +329,7 @@ private:
      * @return  error code -- usually 0
      */
     nsresult  OpenTransientStyles(eHTMLTags aChildTag,
-                                  PRBool aCloseInvalid = PR_TRUE);
+                                  bool aCloseInvalid = true);
     void      PopStyle(eHTMLTags aTag);
 
     nsresult  PushIntoMisplacedStack(CToken* aToken)
@@ -371,9 +371,9 @@ protected:
                                      eHTMLTags aParent, nsIParserNode *aNode);
     nsresult        HandleSavedTokens(PRInt32 anIndex);
     nsresult        HandleKeyGen(nsIParserNode *aNode);
-    PRBool          IsAlternateTag(eHTMLTags aTag);
-    PRBool          IsBlockElement(PRInt32 aTagID, PRInt32 aParentID) const;
-    PRBool          IsInlineElement(PRInt32 aTagID, PRInt32 aParentID) const;
+    bool            IsAlternateTag(eHTMLTags aTag);
+    bool            IsBlockElement(PRInt32 aTagID, PRInt32 aParentID) const;
+    bool            IsInlineElement(PRInt32 aTagID, PRInt32 aParentID) const;
 
     nsDeque             mMisplacedContent;
     
@@ -381,7 +381,7 @@ protected:
     nsTokenAllocator*   mTokenAllocator;
     nsDTDContext*       mBodyContext;
     nsDTDContext*       mTempContext;
-    PRBool              mCountLines;
+    bool                mCountLines;
     nsITokenizer*       mTokenizer; // weak
    
     nsString            mFilename; 

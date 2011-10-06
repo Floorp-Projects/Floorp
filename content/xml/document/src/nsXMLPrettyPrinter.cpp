@@ -74,7 +74,7 @@ nsXMLPrettyPrinter::~nsXMLPrettyPrinter()
 
 nsresult
 nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
-                                PRBool* aDidPrettyPrint)
+                                bool* aDidPrettyPrint)
 {
     *aDidPrettyPrint = PR_FALSE;
     
@@ -116,7 +116,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     }
 
     // check the pref
-    if (!Preferences::GetBool("layout.xml.prettyprint", PR_TRUE)) {
+    if (!Preferences::GetBool("layout.xml.prettyprint", true)) {
         return NS_OK;
     }
 
@@ -198,7 +198,7 @@ nsXMLPrettyPrinter::MaybeUnhook(nsIContent* aContent)
 {
     // If there either aContent is null (the document-node was modified) or
     // there isn't a binding parent we know it's non-anonymous content.
-    if (!aContent || !aContent->GetBindingParent() && !mUnhookPending) {
+    if ((!aContent || !aContent->GetBindingParent()) && !mUnhookPending) {
         // Can't blindly to mUnhookPending after AddScriptRunner,
         // since AddScriptRunner _could_ in theory run us
         // synchronously

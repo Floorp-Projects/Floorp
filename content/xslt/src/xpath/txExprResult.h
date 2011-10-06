@@ -124,7 +124,7 @@ private:
     virtual short getResultType();                                \
     virtual void stringValue(nsString& aString);                  \
     virtual const nsString* stringValuePointer();                 \
-    virtual PRBool booleanValue();                                \
+    virtual bool booleanValue();                                \
     virtual double numberValue();                                 \
 
 

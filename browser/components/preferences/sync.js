@@ -143,13 +143,23 @@ let gSyncPane = {
       gSyncUtils.resetPassphrase();
   },
 
-  openSetup: function (resetSync) {
+  /**
+   * Invoke the Sync setup wizard.
+   * 
+   * @param wizardType
+   *        Indicates type of wizard to launch:
+   *          null    -- regular set up wizard
+   *          "pair"  -- pair a device first
+   *          "reset" -- reset sync
+   */
+  openSetup: function (wizardType) {
     var win = Services.wm.getMostRecentWindow("Weave:AccountSetup");
     if (win)
       win.focus();
     else {
       window.openDialog("chrome://browser/content/syncSetup.xul",
-                        "weaveSetup", "centerscreen,chrome,resizable=no", resetSync);
+                        "weaveSetup", "centerscreen,chrome,resizable=no",
+                        wizardType);
     }
   },
 
@@ -175,7 +185,7 @@ let gSyncPane = {
   },
 
   resetSync: function () {
-    this.openSetup(true);
+    this.openSetup("reset");
   }
 }
 

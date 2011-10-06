@@ -82,7 +82,7 @@ protected:
 
   nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsCString &aContentType, nsCString &aFileExtension);
   nsresult GetHIconFromFile(HICON *hIcon);
-  nsresult MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking);
+  nsresult MakeInputStream(nsIInputStream** _retval, bool nonBlocking);
 
   // Functions specific to Vista and above
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN

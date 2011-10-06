@@ -27,6 +27,12 @@
         console.warn(str);
         console.error(str);
       }
+
+      function testGroups() {
+        console.groupCollapsed("a", "group");
+        console.group("b", "group");
+        console.groupEnd("b", "group");
+      }
     </script>
   </head>
   <body>
@@ -34,5 +40,6 @@
     <button onclick="test();">Log stuff</button>
     <button id="test-trace" onclick="foobar585956a('omg');">Test trace</button>
     <button id="test-location" onclick="foobar646025('omg');">Test location</button>
+    <button id="test-groups" onclick="testGroups();">Test groups</button>
   </body>
 </html>

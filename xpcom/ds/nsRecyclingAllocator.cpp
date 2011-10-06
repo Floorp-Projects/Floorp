@@ -106,7 +106,7 @@ nsRecyclingAllocator::~nsRecyclingAllocator()
 
 // Allocation and free routines
 void*
-nsRecyclingAllocator::Malloc(PRSize bytes, PRBool zeroit)
+nsRecyclingAllocator::Malloc(PRSize bytes, bool zeroit)
 {
     // We don't enter lock for this check. This is intentional.
     // Here is my logic: we are checking if (mFreeList). Doing this check
@@ -315,14 +315,14 @@ nsRecyclingAllocatorImpl::Init(size_t nbuckets, size_t recycleAfter, const char 
 }
 
 NS_IMETHODIMP
-nsRecyclingAllocatorImpl::HeapMinimize(PRBool immediate)
+nsRecyclingAllocatorImpl::HeapMinimize(bool immediate)
 {
     // XXX Not yet implemented
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsRecyclingAllocatorImpl::IsLowMemory(PRBool *lowmemoryb_ptr)
+nsRecyclingAllocatorImpl::IsLowMemory(bool *lowmemoryb_ptr)
 {
     // XXX Not yet implemented
     return NS_ERROR_NOT_IMPLEMENTED;

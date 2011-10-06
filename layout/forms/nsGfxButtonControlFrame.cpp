@@ -87,10 +87,10 @@ nsGfxButtonControlFrame::GetType() const
 //
 // We'll return PR_TRUE if type is NS_FORM_INPUT_BUTTON and our parent
 // is a file input.
-PRBool
+bool
 nsGfxButtonControlFrame::IsFileBrowseButton(PRInt32 type)
 {
-  PRBool rv = PR_FALSE;
+  bool rv = false;
   if (NS_FORM_INPUT_BUTTON == type) {
     // Check to see if parent is a file input
     nsCOMPtr<nsIFormControl> formCtrl =
@@ -289,7 +289,7 @@ nsGfxButtonControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
   return rv;
 }
 
-PRBool
+bool
 nsGfxButtonControlFrame::IsLeaf() const
 {
   return PR_TRUE;

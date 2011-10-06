@@ -72,7 +72,7 @@ SMILStringType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
-PRBool
+bool
 SMILStringType::IsEqual(const nsSMILValue& aLeft,
                         const nsSMILValue& aRight) const
 {

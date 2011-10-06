@@ -64,7 +64,7 @@ class nsAccessibleWrap : public nsAccessible
     virtual ~nsAccessibleWrap();
     
     // creates the native accessible connected to this one.
-    virtual PRBool Init ();
+    virtual bool Init ();
     
     // get the native obj-c object (mozAccessible)
     NS_IMETHOD GetNativeInterface (void **aOutAccessible);
@@ -81,11 +81,11 @@ class nsAccessibleWrap : public nsAccessible
 
     // ignored means that the accessible might still have children, but is not displayed
     // to the user. it also has no native accessible object represented for it.
-    PRBool IsIgnored();
+    bool IsIgnored();
     
-    PRInt32 GetUnignoredChildCount(PRBool aDeepCount);
+    PRInt32 GetUnignoredChildCount(bool aDeepCount);
     
-    PRBool HasPopup () {
+    bool HasPopup () {
       return (NativeState() & mozilla::a11y::states::HASPOPUP);
     }
     
@@ -100,7 +100,7 @@ class nsAccessibleWrap : public nsAccessible
   /**
    * Return true if the parent doesn't have children to expose to AT.
    */
-  PRBool AncestorIsFlat();
+  bool AncestorIsFlat();
 
     // Wrapper around our native object.
     AccessibleWrapper *mNativeWrapper;

@@ -64,7 +64,7 @@ public:
 
   virtual gfxIntSize GetCurrentSize();
 
-  virtual PRBool SetLayerManager(LayerManager *aManager);
+  virtual bool SetLayerManager(LayerManager *aManager);
 
   virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_D3D9; }
 
@@ -122,7 +122,7 @@ public:
    * up its textures
    */
   void FreeTextures();
-  PRBool HasData() { return mHasData; }
+  bool HasData() { return mHasData; }
 
   PRUint32 GetDataSize() { return mBuffer ? mBufferSize : 0; }
 
@@ -136,7 +136,7 @@ public:
   nsRefPtr<IDirect3DTexture9> mYTexture;
   nsRefPtr<IDirect3DTexture9> mCrTexture;
   nsRefPtr<IDirect3DTexture9> mCbTexture;
-  PRPackedBool mHasData;
+  bool mHasData;
 };
 
 
@@ -185,11 +185,8 @@ public:
   virtual ~ShadowImageLayerD3D9();
 
   // ShadowImageLayer impl
-  virtual PRBool Init(const SharedImage& aFront, const nsIntSize& aSize);
-
-  virtual void Swap(const SharedImage& aFront, SharedImage* aNewBack);
-
-  virtual void DestroyFrontBuffer();
+  virtual void Swap(const SharedImage& aFront,
+                    SharedImage* aNewBack);
 
   virtual void Disconnect();
 

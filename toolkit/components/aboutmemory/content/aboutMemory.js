@@ -279,13 +279,24 @@ function getReportersByProcess()
   var e = mgr.enumerateReporters();
   while (e.hasMoreElements()) {
     var rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    addReporter(rOrig.process, rOrig.path, rOrig.kind, rOrig.units,
-                rOrig.amount, rOrig.description);
+    try {
+      addReporter(rOrig.process, rOrig.path, rOrig.kind, rOrig.units,
+                  rOrig.amount, rOrig.description);
+    }
+    catch(e) {
+      debug("An error occurred when collecting results from the memory reporter " +
+            rOrig.path + ": " + e);
+    }
   }
   var e = mgr.enumerateMultiReporters();
   while (e.hasMoreElements()) {
     var mrOrig = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
-    mrOrig.collectReports(addReporter, null);
+    try {
+      mrOrig.collectReports(addReporter, null);
+    }
+    catch(e) {
+      debug("An error occurred when collecting a multi-reporter's results: " + e);
+    }
   }
 
   return reportersByProcess;
@@ -805,11 +816,6 @@ function kindToString(aKind)
   }
 }
 
-function escapeQuotes(aStr)
-{
-  return aStr.replace(/\&/g, '&amp;').replace(/'/g, '&#39;');
-}
-
 // For user-controlled strings.
 function escapeAll(aStr)
 {
@@ -833,7 +839,7 @@ function prepName(aStr)
 
 function prepDesc(aStr)
 {
-  return escapeQuotes(flipBackslashes(aStr));
+  return escapeAll(flipBackslashes(aStr));
 }
 
 function genMrNameText(aKind, aDesc, aName, aHasProblem, aNMerged)
@@ -1073,4 +1079,3 @@ function debug(x)
   div.innerHTML = JSON.stringify(x);
   content.appendChild(div);
 }
-

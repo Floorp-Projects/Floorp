@@ -94,7 +94,7 @@ nsXBLResourceLoader::~nsXBLResourceLoader()
 }
 
 void
-nsXBLResourceLoader::LoadResources(PRBool* aResult)
+nsXBLResourceLoader::LoadResources(bool* aResult)
 {
   mInLoadResourcesFunc = PR_TRUE;
 
@@ -143,7 +143,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
 
       // Always load chrome synchronously
       // XXXbz should that still do a content policy check?
-      PRBool chrome;
+      bool chrome;
       nsresult rv;
       if (NS_SUCCEEDED(url->SchemeIs("chrome", &chrome)) && chrome)
       {
@@ -181,7 +181,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
 // nsICSSLoaderObserver
 NS_IMETHODIMP
 nsXBLResourceLoader::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
-                                      PRBool aWasAlternate,
+                                      bool aWasAlternate,
                                       nsresult aStatus)
 {
   if (!mResources) {
@@ -240,7 +240,7 @@ nsXBLResourceLoader::NotifyBoundElements()
   for (PRUint32 j = 0; j < eltCount; j++) {
     nsCOMPtr<nsIContent> content = mBoundElements.ObjectAt(j);
     
-    PRBool ready = PR_FALSE;
+    bool ready = false;
     xblService->BindingReady(content, bindingURI, &ready);
 
     if (ready) {

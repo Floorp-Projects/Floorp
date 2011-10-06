@@ -73,7 +73,7 @@ interface nsIAtom : nsISupports
 
 %{C++
   // note this is NOT virtual so this won't muck with the vtable!
-  inline PRBool Equals(const nsAString& aString) {
+  inline bool Equals(const nsAString& aString) {
     return aString.Equals(nsDependentString(mString, mLength));
   }
 

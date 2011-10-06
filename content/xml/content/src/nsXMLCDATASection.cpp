@@ -70,15 +70,15 @@ public:
   // Empty interface
 
   // nsINode
-  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(PRUint32 aFlags) const;
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              PRBool aCloneText) const;
+                                              bool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
-  virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+  virtual void DumpContent(FILE* out, PRInt32 aIndent,bool aDumpAll) const;
 #endif
 };
 
@@ -131,14 +131,14 @@ NS_IMPL_ADDREF_INHERITED(nsXMLCDATASection, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(nsXMLCDATASection, nsGenericDOMDataNode)
 
 
-PRBool
+bool
 nsXMLCDATASection::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eTEXT | eDATA_NODE));
 }
 
 nsGenericDOMDataNode*
-nsXMLCDATASection::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
+nsXMLCDATASection::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
 {
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   nsXMLCDATASection *it = new nsXMLCDATASection(ni.forget());
@@ -167,6 +167,6 @@ nsXMLCDATASection::List(FILE* out, PRInt32 aIndent) const
 
 void
 nsXMLCDATASection::DumpContent(FILE* out, PRInt32 aIndent,
-                               PRBool aDumpAll) const {
+                               bool aDumpAll) const {
 }
 #endif

@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCRT.h"
-#include "Endian.h"
+#include "EndianMacros.h"
 #include "nsBMPEncoder.h"
 #include "prmem.h"
 #include "prprf.h"
@@ -384,7 +384,7 @@ NS_IMETHODIMP nsBMPEncoder::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP 
-nsBMPEncoder::IsNonBlocking(PRBool *_retval)
+nsBMPEncoder::IsNonBlocking(bool *_retval)
 {
   *_retval = PR_TRUE;
   return NS_OK;

@@ -119,7 +119,7 @@ main(int argc, char* argv[])
   printf("\nKey\tValue\n");
   printf(  "---\t-----\n");
   
-  PRBool hasMore;
+  bool hasMore;
   while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) &&
          hasMore) {
     nsCOMPtr<nsISupports> sup;

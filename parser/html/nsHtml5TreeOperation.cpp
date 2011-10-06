@@ -228,6 +228,23 @@ nsHtml5TreeOperation::Append(nsIContent* aNode,
   return rv;
 }
 
+class nsDocElementCreatedNotificationRunner : public nsRunnable
+{
+public:
+  nsDocElementCreatedNotificationRunner(nsIDocument* aDoc)
+    : mDoc(aDoc)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsContentSink::NotifyDocElementCreated(mDoc);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> mDoc;
+};
+
 nsresult
 nsHtml5TreeOperation::AppendToDocument(nsIContent* aNode,
                                        nsHtml5TreeOpExecutor* aBuilder)
@@ -283,7 +300,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                                    aBuilder->GetDocument());
 
       PRUint32 childCount = parent->GetChildCount();
-      PRBool didAppend = PR_FALSE;
+      bool didAppend = false;
       while (node->GetChildCount()) {
         nsCOMPtr<nsIContent> child = node->GetChildAt(0);
         rv = node->RemoveChildAt(0, PR_TRUE);
@@ -354,7 +371,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsCOMPtr<nsIAtom> name = Reget(mTwo.atom);
       nsHtml5HtmlAttributes* attributes = mThree.attributes;
       
-      PRBool isKeygen = (name == nsHtml5Atoms::keygen && ns == kNameSpaceID_XHTML);
+      bool isKeygen = (name == nsHtml5Atoms::keygen && ns == kNameSpaceID_XHTML);
       if (NS_UNLIKELY(isKeygen)) {
         name = nsHtml5Atoms::select;
       }

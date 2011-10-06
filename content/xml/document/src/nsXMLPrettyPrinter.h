@@ -66,7 +66,7 @@ public:
      * @param [out] aDidPrettyPrint if true, and error not returned, actually
      *              went ahead with prettyprinting the document.
      */
-    nsresult PrettyPrint(nsIDocument* aDocument, PRBool* aDidPrettyPrint);
+    nsresult PrettyPrint(nsIDocument* aDocument, bool* aDidPrettyPrint);
 
     /**
      * Unhook the prettyprinter
@@ -83,7 +83,7 @@ private:
 
     nsIDocument* mDocument; //weak. Set as long as we're observing the document
     PRUint32 mUpdateDepth;
-    PRPackedBool mUnhookPending;
+    bool mUnhookPending;
 };
 
 nsresult NS_NewXMLPrettyPrinter(nsXMLPrettyPrinter** aPrinter);

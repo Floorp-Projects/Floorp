@@ -110,7 +110,7 @@ protected:
     nsCOMPtr<nsIDirIndexParser>  mParser;
     nsCString mBaseURL;
     nsCString                    mEncoding;
-    PRBool                       mBindToGlobalObject;
+    bool                         mBindToGlobalObject;
     nsIInterfaceRequestor*       mRequestor; // WEAK
     nsCOMPtr<nsIRDFResource>     mDirectory;
 
@@ -118,7 +118,7 @@ protected:
     nsresult CommonInit(void);
     nsresult Init(nsIURI* aBaseURL);
     void        GetDestination(nsIRDFResource* r, nsXPIDLCString& dest);
-    PRBool      isWellknownContainerURI(nsIRDFResource *r);
+    bool        isWellknownContainerURI(nsIRDFResource *r);
     nsresult    AddElement(nsIRDFResource *parent, nsIRDFResource *prop,
                            nsIRDFNode *child);
 

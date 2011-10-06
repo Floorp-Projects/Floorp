@@ -91,8 +91,8 @@ PRInt32 gComponent2Count = 0;
 
 ReentrantMonitor* gReentrantMonitor = nsnull;
 
-PRBool gCreateInstanceCalled = PR_FALSE;
-PRBool gMainThreadWaiting = PR_FALSE;
+bool gCreateInstanceCalled = false;
+bool gMainThreadWaiting = false;
 
 class AutoCreateAndDestroyReentrantMonitor
 {
@@ -126,11 +126,11 @@ public:
                             const nsIID& aIID,
                             void** aResult);
 
-  NS_IMETHOD LockFactory(PRBool aLock) {
+  NS_IMETHOD LockFactory(bool aLock) {
     return NS_OK;
   }
 
-  PRBool mFirstComponentCreated;
+  bool mFirstComponentCreated;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(Factory, nsIFactory)
@@ -219,7 +219,7 @@ public:
 
   Runnable() : mFirstRunnableDone(PR_FALSE) { }
 
-  PRBool mFirstRunnableDone;
+  bool mFirstRunnableDone;
 };
 
 NS_IMETHODIMP

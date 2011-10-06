@@ -62,10 +62,10 @@ struct nsWindowInfo
   nsWindowInfo              *mLower,   // next lower in z-order
                             *mHigher;
   
-  PRBool TypeEquals(const nsAString &aType);
+  bool TypeEquals(const nsAString &aType);
   void   InsertAfter(nsWindowInfo *inOlder, nsWindowInfo *inHigher);
-  void   Unlink(PRBool inAge, PRBool inZ);
-  void   ReferenceSelf(PRBool inAge, PRBool inZ);
+  void   Unlink(bool inAge, bool inZ);
+  void   ReferenceSelf(bool inAge, bool inZ);
 };
 
 //
@@ -81,7 +81,7 @@ public:
                              nsWindowMediator& inMediator);
   virtual ~nsAppShellWindowEnumerator();
   NS_IMETHOD GetNext(nsISupports **retval) = 0;
-  NS_IMETHOD HasMoreElements(PRBool *retval);
+  NS_IMETHOD HasMoreElements(bool *retval);
 
   NS_DECL_ISUPPORTS
 

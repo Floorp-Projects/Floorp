@@ -120,7 +120,7 @@ nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstanc
 
 NS_IMETHODIMP
 nsObserverService::AddObserver(nsIObserver* anObserver, const char* aTopic,
-                               PRBool ownsWeak)
+                               bool ownsWeak)
 {
     LOG(("nsObserverService::AddObserver(%p: %s)",
          (void*) anObserver, aTopic));

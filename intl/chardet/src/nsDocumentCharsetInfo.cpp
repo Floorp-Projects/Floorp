@@ -67,13 +67,13 @@ NS_IMETHODIMP nsDocumentCharsetInfo::GetForcedCharset(nsIAtom ** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocumentCharsetInfo::SetForcedDetector(PRBool aForced)
+NS_IMETHODIMP nsDocumentCharsetInfo::SetForcedDetector(bool aForced)
 {
   // XXX write me
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocumentCharsetInfo::GetForcedDetector(PRBool * aResult)
+NS_IMETHODIMP nsDocumentCharsetInfo::GetForcedDetector(bool * aResult)
 {
   // XXX write me
   return NS_OK;

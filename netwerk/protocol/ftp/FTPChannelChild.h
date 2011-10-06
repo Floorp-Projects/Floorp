@@ -93,9 +93,9 @@ public:
 
   // Note that we handle this ourselves, overriding the nsBaseChannel
   // default behavior, in order to be e10s-friendly.
-  NS_IMETHOD IsPending(PRBool* result);
+  NS_IMETHOD IsPending(bool* result);
 
-  NS_OVERRIDE nsresult OpenContentStream(PRBool async,
+  NS_OVERRIDE nsresult OpenContentStream(bool async,
                                          nsIInputStream** stream,
                                          nsIChannel** channel);
 
@@ -139,8 +139,8 @@ private:
   ChannelEventQueue mEventQ;
   bool mCanceled;
   PRUint32 mSuspendCount;
-  PRPackedBool mIsPending;
-  PRPackedBool mWasOpened;
+  bool mIsPending;
+  bool mWasOpened;
   
   PRTime mLastModifiedTime;
   PRUint64 mStartPos;

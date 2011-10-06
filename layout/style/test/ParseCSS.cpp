@@ -81,7 +81,7 @@ ParseCSSFile(nsIURI *aSheetURI)
      */
     if (!sheet)
         return -1;
-    PRBool complete;
+    bool complete;
     sheet->GetComplete(complete);
     NS_ASSERTION(complete, "synchronous load did not complete");
     if (!complete)

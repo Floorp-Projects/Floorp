@@ -61,7 +61,7 @@ public:
 
   /* LayerD3D9 implementation */
   Layer* GetLayer();
-  virtual PRBool IsEmpty();
+  virtual bool IsEmpty();
   virtual void RenderLayer() { RenderThebesLayer(nsnull); }
   virtual void CleanResources();
   virtual void LayerManagerDestroyed();
@@ -133,7 +133,7 @@ public:
 
   // LayerD3D9 impl
   Layer* GetLayer();
-  virtual PRBool IsEmpty();
+  virtual bool IsEmpty();
   virtual void RenderLayer() { RenderThebesLayer(); }
   virtual void CleanResources();
   virtual void LayerManagerDestroyed();

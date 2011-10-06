@@ -73,7 +73,7 @@ public:
   virtual nsIURI* GetBaseURI() const = 0;
   virtual void GetTitle(nsString& aTitle) const = 0;
   virtual void GetType(nsString& aType) const = 0;
-  virtual PRBool HasRules() const = 0;
+  virtual bool HasRules() const = 0;
 
   /**
    * Whether the sheet is applicable.  A sheet that is not applicable
@@ -82,7 +82,7 @@ public:
    * being incomplete.
    *
    */
-  virtual PRBool IsApplicable() const = 0;
+  virtual bool IsApplicable() const = 0;
 
   /**
    * Set the stylesheet to be enabled.  This may or may not make it
@@ -93,12 +93,12 @@ public:
    * batched updates are desired.  If you want updates handled for
    * you, see nsIDOMStyleSheet::SetDisabled().
    */
-  virtual void SetEnabled(PRBool aEnabled) = 0;
+  virtual void SetEnabled(bool aEnabled) = 0;
 
   /**
    * Whether the sheet is complete.
    */
-  virtual PRBool IsComplete() const = 0;
+  virtual bool IsComplete() const = 0;
   virtual void SetComplete() = 0;
 
   // style sheet owner info

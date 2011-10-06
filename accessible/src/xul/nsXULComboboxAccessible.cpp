@@ -44,6 +44,7 @@
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 
+#include "nsIAutoCompleteInput.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 
@@ -57,13 +58,17 @@ nsXULComboboxAccessible::
   nsXULComboboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
   nsAccessibleWrap(aContent, aShell)
 {
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::autocomplete, eIgnoreCase))
+    mFlags |= eAutoCompleteAccessible;
+  else
+    mFlags |= eComboboxAccessible;
 }
 
 PRUint32
 nsXULComboboxAccessible::NativeRole()
 {
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::autocomplete, eIgnoreCase))
+  if (IsAutoComplete())
     return nsIAccessibleRole::ROLE_AUTOCOMPLETE;
   return nsIAccessibleRole::ROLE_COMBOBOX;
 }
@@ -83,7 +88,7 @@ nsXULComboboxAccessible::NativeState()
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
   if (menuList) {
-    PRBool isOpen;
+    bool isOpen;
     menuList->GetOpen(&isOpen);
     if (isOpen) {
       states |= states::EXPANDED;
@@ -135,7 +140,7 @@ nsXULComboboxAccessible::Description(nsString& aDescription)
   }
 }
 
-PRBool
+bool
 nsXULComboboxAccessible::GetAllowsAnonChildAccessibles()
 {
   if (mContent->NodeInfo()->Equals(nsGkAtoms::textbox, kNameSpaceID_XUL) ||
@@ -173,7 +178,7 @@ nsXULComboboxAccessible::DoAction(PRUint8 aIndex)
   if (!menuList) {
     return NS_ERROR_FAILURE;
   }
-  PRBool isDroppedDown;
+  bool isDroppedDown;
   menuList->GetOpen(&isDroppedDown);
   return menuList->SetOpen(!isDroppedDown);
 }
@@ -197,7 +202,7 @@ nsXULComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
   if (!menuList) {
     return NS_ERROR_FAILURE;
   }
-  PRBool isDroppedDown;
+  bool isDroppedDown;
   menuList->GetOpen(&isDroppedDown);
   if (isDroppedDown)
     aName.AssignLiteral("close"); 
@@ -205,4 +210,49 @@ nsXULComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
     aName.AssignLiteral("open"); 
 
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Widgets
+
+bool
+nsXULComboboxAccessible::IsActiveWidget() const
+{
+  if (IsAutoComplete() ||
+     mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
+                           nsGkAtoms::_true, eIgnoreCase)) {
+    PRInt32 childCount = mChildren.Length();
+    for (PRInt32 idx = 0; idx < childCount; idx++) {
+      nsAccessible* child = mChildren[idx];
+      if (child->Role() == nsIAccessibleRole::ROLE_ENTRY)
+        return FocusMgr()->HasDOMFocus(child->GetContent());
+    }
+    return false;
+  }
+
+  return FocusMgr()->HasDOMFocus(mContent);
+}
+
+bool
+nsXULComboboxAccessible::AreItemsOperable() const
+{
+  if (IsAutoComplete()) {
+    nsCOMPtr<nsIAutoCompleteInput> autoCompleteInputElm =
+      do_QueryInterface(mContent);
+    if (autoCompleteInputElm) {
+      bool isOpen = false;
+      autoCompleteInputElm->GetPopupOpen(&isOpen);
+      return isOpen;
+    }
+    return false;
+  }
+
+  nsCOMPtr<nsIDOMXULMenuListElement> menuListElm = do_QueryInterface(mContent);
+  if (menuListElm) {
+    bool isOpen = false;
+    menuListElm->GetOpen(&isOpen);
+    return isOpen;
+  }
+
+  return false;
 }

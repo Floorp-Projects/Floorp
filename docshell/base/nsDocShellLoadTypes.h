@@ -102,7 +102,7 @@ enum LoadType {
 
     // NOTE: Adding a new value? Remember to update IsValidLoadType!
 };
-static inline PRBool IsValidLoadType(PRUint32 aLoadType)
+static inline bool IsValidLoadType(PRUint32 aLoadType)
 {
     switch (aLoadType)
     {

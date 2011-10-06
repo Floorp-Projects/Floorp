@@ -44,7 +44,7 @@
 
 class nsBig5Prober: public nsCharSetProber {
 public:
-  nsBig5Prober(PRBool aIsPreferredLanguage)
+  nsBig5Prober(bool aIsPreferredLanguage)
     :mIsPreferredLanguage(aIsPreferredLanguage) 
   {mCodingSM = new nsCodingStateMachine(&Big5SMModel); 
     Reset();}
@@ -65,7 +65,7 @@ protected:
   //Big5ContextAnalysis mContextAnalyser;
   Big5DistributionAnalysis mDistributionAnalyser;
   char mLastChar[2];
-  PRBool mIsPreferredLanguage;
+  bool mIsPreferredLanguage;
 
 };
 

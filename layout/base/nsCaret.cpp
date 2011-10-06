@@ -116,7 +116,7 @@ FindContainingLine(nsIFrame* aFrame)
     nsBlockFrame* blockParent = nsLayoutUtils::GetAsBlock(parent);
     if (blockParent)
     {
-      PRBool isValid;
+      bool isValid;
       nsBlockInFlowLineIterator iter(blockParent, aFrame, &isValid);
       return isValid ? iter.GetLine().get() : nsnull;
     }
@@ -225,7 +225,7 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
   return NS_OK;
 }
 
-static PRBool
+static bool
 DrawCJKCaret(nsIFrame* aFrame, PRInt32 aOffset)
 {
   nsIContent* content = aFrame->GetContent();
@@ -306,7 +306,7 @@ nsresult nsCaret::SetCaretDOMSelection(nsISelection *aDOMSel)
 
 
 //-----------------------------------------------------------------------------
-void nsCaret::SetCaretVisible(PRBool inMakeVisible)
+void nsCaret::SetCaretVisible(bool inMakeVisible)
 {
   mVisible = inMakeVisible;
   if (mVisible) {
@@ -320,7 +320,7 @@ void nsCaret::SetCaretVisible(PRBool inMakeVisible)
 
 
 //-----------------------------------------------------------------------------
-nsresult nsCaret::GetCaretVisible(PRBool *outMakeVisible)
+nsresult nsCaret::GetCaretVisible(bool *outMakeVisible)
 {
   NS_ENSURE_ARG_POINTER(outMakeVisible);
   *outMakeVisible = (mVisible && MustDrawCaret(PR_TRUE));
@@ -329,7 +329,7 @@ nsresult nsCaret::GetCaretVisible(PRBool *outMakeVisible)
 
 
 //-----------------------------------------------------------------------------
-void nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
+void nsCaret::SetCaretReadOnly(bool inMakeReadonly)
 {
   mReadOnly = inMakeReadonly;
 }
@@ -445,7 +445,7 @@ void nsCaret::EraseCaret()
   }
 }
 
-void nsCaret::SetVisibilityDuringSelection(PRBool aVisibility) 
+void nsCaret::SetVisibilityDuringSelection(bool aVisibility) 
 {
   mShowDuringSelection = aVisibility;
 }
@@ -680,12 +680,12 @@ void nsCaret::StopBlinking()
   KillTimer();
 }
 
-PRBool
+bool
 nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
                                 PRInt32                 aOffset,
                                 nsFrameSelection::HINT  aFrameHint,
                                 PRUint8                 aBidiLevel,
-                                PRBool                  aInvalidate)
+                                bool                    aInvalidate)
 {
   nsCOMPtr<nsIContent> contentNode = do_QueryInterface(aNode);
   if (!contentNode)
@@ -942,7 +942,7 @@ nsresult nsCaret::CheckCaretDrawingState()
      (see IsMenuPopupHidingCaret()).
   
 ----------------------------------------------------------------------------- */
-PRBool nsCaret::MustDrawCaret(PRBool aIgnoreDrawnState)
+bool nsCaret::MustDrawCaret(bool aIgnoreDrawnState)
 {
   if (!aIgnoreDrawnState && mDrawn)
     return PR_TRUE;
@@ -951,7 +951,7 @@ PRBool nsCaret::MustDrawCaret(PRBool aIgnoreDrawnState)
   if (!domSelection)
     return PR_FALSE;
 
-  PRBool isCollapsed;
+  bool isCollapsed;
   if (NS_FAILED(domSelection->GetIsCollapsed(&isCollapsed)))
     return PR_FALSE;
 
@@ -964,7 +964,7 @@ PRBool nsCaret::MustDrawCaret(PRBool aIgnoreDrawnState)
   return isCollapsed;
 }
 
-PRBool nsCaret::IsMenuPopupHidingCaret()
+bool nsCaret::IsMenuPopupHidingCaret()
 {
 #ifdef MOZ_XUL
   // Check if there are open popups.
@@ -1012,7 +1012,7 @@ PRBool nsCaret::IsMenuPopupHidingCaret()
   return PR_FALSE;
 }
 
-void nsCaret::DrawCaret(PRBool aInvalidate)
+void nsCaret::DrawCaret(bool aInvalidate)
 {
   // Do we need to draw the caret at all?
   if (!MustDrawCaret(PR_FALSE))
@@ -1044,12 +1044,12 @@ void nsCaret::DrawCaret(PRBool aInvalidate)
     nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
     if (!privateSelection) return;
     
-    PRBool isCollapsed = PR_FALSE;
+    bool isCollapsed = false;
     domSelection->GetIsCollapsed(&isCollapsed);
     if (!mShowDuringSelection && !isCollapsed)
       return;
 
-    PRBool hintRight;
+    bool hintRight;
     privateSelection->GetInterlinePosition(&hintRight);//translate hint.
     hint = hintRight ? nsFrameSelection::HINTRIGHT : nsFrameSelection::HINTLEFT;
 
@@ -1092,7 +1092,7 @@ void nsCaret::DrawCaret(PRBool aInvalidate)
   ToggleDrawnStatus();
 }
 
-PRBool
+bool
 nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
 {
   NS_ASSERTION(aFrame, "Should have a frame here");
@@ -1113,7 +1113,7 @@ nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   mHookRect.SetEmpty();
 
   // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
-  PRBool isCaretRTL = PR_FALSE;
+  bool isCaretRTL = false;
   nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
   // if bidiKeyboard->IsLangRTL() fails, there is no way to tell the
   // keyboard direction, or the user has no right-to-left keyboard
@@ -1183,7 +1183,7 @@ nsCaret::GetFrameSelection()
 }
 
 void
-nsCaret::SetIgnoreUserModify(PRBool aIgnoreUserModify)
+nsCaret::SetIgnoreUserModify(bool aIgnoreUserModify)
 {
   if (!aIgnoreUserModify && mIgnoreUserModify && mDrawn) {
     // We're turning off mIgnoreUserModify. If the caret's drawn

@@ -70,7 +70,7 @@ protected:
   NS_OVERRIDE virtual void     Destroy(nsSMILValue&) const;
   NS_OVERRIDE virtual nsresult Assign(nsSMILValue& aDest,
                                       const nsSMILValue& aSrc) const;
-  NS_OVERRIDE virtual PRBool   IsEqual(const nsSMILValue& aLeft,
+  NS_OVERRIDE virtual bool     IsEqual(const nsSMILValue& aLeft,
                                        const nsSMILValue& aRight) const;
   NS_OVERRIDE virtual nsresult Add(nsSMILValue& aDest,
                                    const nsSMILValue& aValueToAdd,
@@ -113,7 +113,7 @@ public:
                               Element* aTargetElement,
                               const nsAString& aString,
                               nsSMILValue& aValue,
-                              PRBool* aIsContextSensitive);
+                              bool* aIsContextSensitive);
 
   /**
    * Creates a string representation of the given nsSMILValue.
@@ -127,7 +127,7 @@ public:
    * @param [out] aString  The string to be populated with the given value.
    * @return               PR_TRUE on success, PR_FALSE on failure.
    */
-  static PRBool ValueToString(const nsSMILValue& aValue, nsAString& aString);
+  static bool ValueToString(const nsSMILValue& aValue, nsAString& aString);
 
 private:
   // Private constructor & destructor: prevent instances beyond my singleton,

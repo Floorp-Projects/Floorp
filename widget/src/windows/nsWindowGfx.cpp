@@ -103,6 +103,18 @@ using namespace mozilla::layers;
 static nsAutoPtr<PRUint8>  sSharedSurfaceData;
 static gfxIntSize          sSharedSurfaceSize;
 
+struct IconMetrics {
+  PRInt32 xMetric;
+  PRInt32 yMetric;
+  PRInt32 defaultSize;
+};
+
+// Corresponds 1:1 to the IconSizeType enum
+static IconMetrics sIconMetrics[] = {
+  {SM_CXSMICON, SM_CYSMICON, 16}, // small icon
+  {SM_CXICON,   SM_CYICON,   32}  // regular icon
+};
+
 /**************************************************************
  **************************************************************
  **
@@ -113,7 +125,7 @@ static gfxIntSize          sSharedSurfaceSize;
  **************************************************************
  **************************************************************/
 
-static PRBool
+static bool
 IsRenderMode(gfxWindowsPlatform::RenderMode rmode)
 {
   return gfxWindowsPlatform::GetPlatform()->GetRenderMode() == rmode;
@@ -160,7 +172,7 @@ nsWindowGfx::ConvertHRGNToRegion(HRGN aRgn)
  **************************************************************/
 
 // GetRegionToPaint returns the invalidated region that needs to be painted
-nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
+nsIntRegion nsWindow::GetRegionToPaint(bool aForceFullRepaint,
                                        PAINTSTRUCT ps, HDC aDC)
 {
   if (aForceFullRepaint) {
@@ -185,7 +197,7 @@ nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
 }
 
 #define WORDSSIZE(x) ((x).width * (x).height)
-static PRBool
+static bool
 EnsureSharedSurfaceSize(gfxIntSize size)
 {
   gfxIntSize screenSize;
@@ -207,14 +219,14 @@ EnsureSharedSurfaceSize(gfxIntSize size)
   return (sSharedSurfaceData != nsnull);
 }
 
-PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
+bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 {
   // We never have reentrant paint events, except when we're running our RPC
   // windows event spin loop. If we don't trap for this, we'll try to paint,
   // but view manager will refuse to paint the surface, resulting is black
   // flashes on the plugin rendering surface.
   if (mozilla::ipc::RPCChannel::IsSpinLoopActive() && mPainting)
-    return PR_FALSE;
+    return false;
 
   if (mWindowType == eWindowType_plugin) {
 
@@ -231,7 +243,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
       PAINTSTRUCT ps;
       BeginPaint(mWnd, &ps);
       EndPaint(mWnd, &ps);
-      return PR_TRUE;
+      return true;
     }
 
     PluginInstanceParent* instance = reinterpret_cast<PluginInstanceParent*>(
@@ -239,15 +251,15 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
     if (instance) {
       instance->CallUpdateWindow();
       ValidateRect(mWnd, NULL);
-      return PR_TRUE;
+      return true;
     }
   }
 
-  nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
-  willPaintEvent.willSendDidPaint = PR_TRUE;
+  nsPaintEvent willPaintEvent(true, NS_WILL_PAINT, this);
+  willPaintEvent.willSendDidPaint = true;
   DispatchWindowEvent(&willPaintEvent);
 
-  PRBool result = PR_TRUE;
+  bool result = true;
   PAINTSTRUCT ps;
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
@@ -267,7 +279,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   }
 #endif
 
-  mPainting = PR_TRUE;
+  mPainting = true;
 
 #ifdef WIDGET_DEBUG_OUTPUT
   HRGN debugPaintFlashRegion = NULL;
@@ -287,16 +299,16 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   }
 
   // generate the event and call the event callback
-  nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+  nsPaintEvent event(true, NS_PAINT, this);
   InitEvent(event);
 
 #ifdef MOZ_XUL
-  PRBool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
+  bool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
 #else
-  PRBool forceRepaint = NULL != aDC;
+  bool forceRepaint = NULL != aDC;
 #endif
   event.region = GetRegionToPaint(forceRepaint, ps, hDC);
-  event.willSendDidPaint = PR_TRUE;
+  event.willSendDidPaint = true;
 
   if (!event.region.IsEmpty() && mEventCallback)
   {
@@ -327,15 +339,6 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           }
 #endif
 
-          nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
-          if (!targetSurface &&
-              IsRenderMode(gfxWindowsPlatform::RENDER_GDI))
-          {
-            PRUint32 flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
-                gfxWindowsSurface::FLAG_IS_TRANSPARENT;
-            targetSurfaceWin = new gfxWindowsSurface(hDC, flags);
-            targetSurface = targetSurfaceWin;
-          }
 #ifdef CAIRO_HAS_D2D_SURFACE
           if (!targetSurface &&
               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
@@ -349,9 +352,25 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 #endif
               mD2DWindowSurface = new gfxD2DSurface(mWnd, content);
             }
-            targetSurface = mD2DWindowSurface;
+            if (!mD2DWindowSurface->CairoStatus()) {
+              targetSurface = mD2DWindowSurface;
+            } else {
+              mD2DWindowSurface = nsnull;
+            }
           }
 #endif
+
+          nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
+          if (!targetSurface &&
+              (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
+               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)))
+          {
+            PRUint32 flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
+                gfxWindowsSurface::FLAG_IS_TRANSPARENT;
+            targetSurfaceWin = new gfxWindowsSurface(hDC, flags);
+            targetSurface = targetSurfaceWin;
+          }
+
           nsRefPtr<gfxImageSurface> targetSurfaceImage;
           if (!targetSurface &&
               (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
@@ -388,7 +407,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
             const nsIntRect* r;
             for (nsIntRegionRectIterator iter(event.region);
                  (r = iter.Next()) != nsnull;) {
-              thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), PR_TRUE);
+              thebesContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), true);
             }
             thebesContext->Clip();
             thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -554,7 +573,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
             // When our device was removed, we should have gfxWindowsPlatform
             // check if its render mode is up to date!
             gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-            Invalidate(PR_FALSE);
+            Invalidate(false);
           }
         }
         break;
@@ -565,7 +584,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
           LayerManagerD3D10 *layerManagerD3D10 = static_cast<mozilla::layers::LayerManagerD3D10*>(GetLayerManager());
           if (layerManagerD3D10->device() != gfxWindowsPlatform::GetPlatform()->GetD3D10Device()) {
-            Invalidate(PR_FALSE);
+            Invalidate(false);
           } else {
             result = DispatchWindowEvent(&event, eventStatus);
           }
@@ -601,22 +620,34 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   }
 #endif // WIDGET_DEBUG_OUTPUT
 
-  mPainting = PR_FALSE;
+  mPainting = false;
 
-  nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, this);
+  nsPaintEvent didPaintEvent(true, NS_DID_PAINT, this);
   DispatchWindowEvent(&didPaintEvent);
 
-  if (aNestingLevel == 0 && ::GetUpdateRect(mWnd, NULL, PR_FALSE)) {
+  if (aNestingLevel == 0 && ::GetUpdateRect(mWnd, NULL, false)) {
     OnPaint(aDC, 1);
   }
 
   return result;
 }
 
+gfxIntSize nsWindowGfx::GetIconMetrics(IconSizeType aSizeType) {
+  PRInt32 width = ::GetSystemMetrics(sIconMetrics[aSizeType].xMetric);
+  PRInt32 height = ::GetSystemMetrics(sIconMetrics[aSizeType].yMetric);
+
+  if (width == 0 || height == 0) {
+    width = height = sIconMetrics[aSizeType].defaultSize;
+  }
+
+  return gfxIntSize(width, height);
+}
+
 nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
-                                  PRBool aIsCursor,
+                                  bool aIsCursor,
                                   PRUint32 aHotspotX,
                                   PRUint32 aHotspotY,
+                                  gfxIntSize aScaledSize,
                                   HICON *aIcon) {
 
   // Get the image data
@@ -627,10 +658,42 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
   if (!frame)
     return NS_ERROR_NOT_AVAILABLE;
 
-  PRUint8 *data = frame->Data();
-
   PRInt32 width = frame->Width();
   PRInt32 height = frame->Height();
+  if (!width || !height)
+    return NS_ERROR_FAILURE;
+
+  PRUint8 *data;
+  if ((aScaledSize.width == 0 && aScaledSize.height == 0) ||
+      (aScaledSize.width == width && aScaledSize.height == height)) {
+    // We're not scaling the image. The data is simply what's in the frame.
+    data = frame->Data();
+  }
+  else {
+    NS_ENSURE_ARG(aScaledSize.width > 0);
+    NS_ENSURE_ARG(aScaledSize.height > 0);
+    // Draw a scaled version of the image to a temporary surface
+    nsRefPtr<gfxImageSurface> dest = new gfxImageSurface(aScaledSize,
+                                                         gfxASurface::ImageFormatARGB32);
+    if (!dest)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    gfxContext ctx(dest);
+
+    // Set scaling
+    gfxFloat sw = (double) aScaledSize.width / width;
+    gfxFloat sh = (double) aScaledSize.height / height;
+    ctx.Scale(sw, sh);
+
+    // Paint a scaled image
+    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx.SetSource(frame);
+    ctx.Paint();
+
+    data = dest->Data();
+    width = aScaledSize.width;
+    height = aScaledSize.height;
+  }
 
   HBITMAP bmp = DataToBitmap(data, width, -height, 32);
   PRUint8* a1data = Data32BitTo1Bit(data, width, height);
@@ -690,12 +753,12 @@ PRUint8* nsWindowGfx::Data32BitTo1Bit(PRUint8* aImageData,
   return outData;
 }
 
-PRBool nsWindowGfx::IsCursorTranslucencySupported()
+bool nsWindowGfx::IsCursorTranslucencySupported()
 {
-  static PRBool didCheck = PR_FALSE;
-  static PRBool isSupported = PR_FALSE;
+  static bool didCheck = false;
+  static bool isSupported = false;
   if (!didCheck) {
-    didCheck = PR_TRUE;
+    didCheck = true;
     // Cursor translucency is supported on Windows XP and newer
     isSupported = nsWindow::GetWindowsVersion() >= 0x501;
   }

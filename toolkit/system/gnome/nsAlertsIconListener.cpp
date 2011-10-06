@@ -51,7 +51,7 @@
 #define NOTIFY_CHECK_VERSION(x,y,z) 0
 #endif
 
-static PRBool gHasActions = PR_FALSE;
+static bool gHasActions = false;
 
 static void notify_action_cb(NotifyNotification *notification,
                              gchar *action, gpointer user_data)
@@ -121,7 +121,7 @@ nsAlertsIconListener::OnStartFrame(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsAlertsIconListener::OnDataAvailable(imgIRequest* aRequest,
-                                      PRBool aCurrentFrame,
+                                      bool aCurrentFrame,
                                       const nsIntRect* aRect)
 {
   return NS_OK;
@@ -152,7 +152,7 @@ nsAlertsIconListener::FrameChanged(imgIContainer* aContainer,
 
 NS_IMETHODIMP
 nsAlertsIconListener::OnStopRequest(imgIRequest* aRequest,
-                                    PRBool aIsLastPart)
+                                    bool aIsLastPart)
 {
   PRUint32 imgStatus = imgIRequest::STATUS_ERROR;
   nsresult rv = aRequest->GetImageStatus(&imgStatus);
@@ -303,7 +303,7 @@ nsresult
 nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
                                      const nsAString & aAlertTitle, 
                                      const nsAString & aAlertText,
-                                     PRBool aAlertTextClickable,
+                                     bool aAlertTextClickable,
                                      const nsAString & aAlertCookie,
                                      nsIObserver * aAlertListener)
 {

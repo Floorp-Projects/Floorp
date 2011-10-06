@@ -66,10 +66,10 @@ class nsPluginManifestLineReader
       return mBase;
     }
     
-    PRBool NextLine()
+    bool NextLine()
     {
       if (mNext >= mLimit)
-        return PR_FALSE;
+        return false;
       
       mCur = mNext;
       mLength = 0;
@@ -79,7 +79,7 @@ class nsPluginManifestLineReader
         if (IsEOL(*mNext)) {
           if (lastDelimiter) {
             if (lastDelimiter && *(mNext - 1) != PLUGIN_REGISTRY_END_OF_LINE_MARKER)
-              return PR_FALSE;
+              return false;
             *lastDelimiter = '\0';
           } else {
             *mNext = '\0';
@@ -89,14 +89,14 @@ class nsPluginManifestLineReader
             if (!IsEOL(*mNext))
               break;
           }
-          return PR_TRUE;
+          return true;
         }
         if (*mNext == PLUGIN_REGISTRY_FIELD_DELIMITER)
           lastDelimiter = mNext;
         ++mNext;
         ++mLength;
       }
-      return PR_FALSE;        
+      return false;        
     }
 
     int ParseLine(char** chunks, int maxChunks)
@@ -121,7 +121,7 @@ class nsPluginManifestLineReader
     char*       LinePtr() { return mCur; }
     PRUint32    LineLength() { return mLength; }    
 
-    PRBool      IsEOL(char c) {return c == '\n' || c == '\r';}
+    bool        IsEOL(char c) {return c == '\n' || c == '\r';}
 
     char*       mBase;
   private:

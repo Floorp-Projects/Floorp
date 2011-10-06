@@ -104,7 +104,7 @@ ParseNumberOptionalNumber(const nsAString& aValue,
 nsresult
 nsSVGNumberPair::SetBaseValueString(const nsAString &aValueAsString,
                                     nsSVGElement *aSVGElement,
-                                    PRBool aDoSetAttr)
+                                    bool aDoSetAttr)
 {
   float val[2];
 
@@ -146,7 +146,7 @@ nsSVGNumberPair::GetBaseValueString(nsAString &aValueAsString)
 void
 nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
                               nsSVGElement *aSVGElement,
-                              PRBool aDoSetAttr)
+                              bool aDoSetAttr)
 {
   PRUint32 index = (aPairIndex == eFirst ? 0 : 1);
   mBaseVal[index] = aValue;
@@ -165,7 +165,7 @@ nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
 void
 nsSVGNumberPair::SetBaseValues(float aValue1, float aValue2,
                                nsSVGElement *aSVGElement,
-                               PRBool aDoSetAttr)
+                               bool aDoSetAttr)
 {
   mBaseVal[0] = aValue1;
   mBaseVal[1] = aValue2;
@@ -212,7 +212,7 @@ nsresult
 nsSVGNumberPair::SMILNumberPair::ValueFromString(const nsAString& aStr,
                                                  const nsISMILAnimationElement* /*aSrcElement*/,
                                                  nsSMILValue& aValue,
-                                                 PRBool& aPreventCachingOfSandwich) const
+                                                 bool& aPreventCachingOfSandwich) const
 {
   float values[2];
 

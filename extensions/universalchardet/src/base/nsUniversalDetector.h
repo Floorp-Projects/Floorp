@@ -72,10 +72,10 @@ protected:
    virtual void Report(const char* aCharset) = 0;
    virtual void Reset();
    nsInputState  mInputState;
-   PRBool  mDone;
-   PRBool  mInTag;
-   PRBool  mStart;
-   PRBool  mGotData;
+   bool    mDone;
+   bool    mInTag;
+   bool    mStart;
+   bool    mGotData;
    char    mLastChar;
    const char *  mDetectedCharset;
    PRInt32 mBestGuess;

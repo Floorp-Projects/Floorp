@@ -174,26 +174,18 @@ function styleInspectorClosedFromConsole1()
 {
   Services.obs.removeObserver(styleInspectorClosedFromConsole1,
                               "StyleInspector-closed", false);
-  info("Style Inspector 1 closed");
-  Services.obs.addObserver(styleInspectorClosedFromConsole2,
-                           "StyleInspector-closed", false);
-}
-
-function styleInspectorClosedFromConsole2()
-{
-  Services.obs.removeObserver(styleInspectorClosedFromConsole2,
-                              "StyleInspector-closed", false);
-  info("Style Inspector 2 closed");
+  info("Style Inspector 1 and 2 closed");
   executeSoon(cleanUp);
 }
 
 function cleanUp()
 {
-  let popupSet = document.getElementById("mainPopupSet");
-  ok(!popupSet.lastChild.hasAttribute("hudToolId"),
+  let panels = document.querySelector("panel[hudToolId]");
+  ok(!panels,
      "all style inspector panels are now detached and ready for garbage collection");
 
   info("cleaning up");
+
   doc = hudBox = stylePanels = jsterm = null;
   finishTest();
 }

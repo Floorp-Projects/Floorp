@@ -103,7 +103,7 @@ public:
   // HttpBaseChannel::nsIHttpChannel
   NS_IMETHOD SetRequestHeader(const nsACString& aHeader, 
                               const nsACString& aValue, 
-                              PRBool aMerge);
+                              bool aMerge);
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
   NS_IMETHOD GetLocalAddress(nsACString& addr);
@@ -125,10 +125,10 @@ public:
 
 protected:
   bool RecvOnStartRequest(const nsHttpResponseHead& responseHead,
-                          const PRBool& useResponseHead,
+                          const bool& useResponseHead,
                           const RequestHeaderTuples& requestHeaders,
-                          const PRBool& isFromCache,
-                          const PRBool& cacheEntryAvailable,
+                          const bool& isFromCache,
+                          const bool& cacheEntryAvailable,
                           const PRUint32& cacheExpirationTime,
                           const nsCString& cachedCharset,
                           const nsCString& securityInfoSerialization,
@@ -161,8 +161,8 @@ private:
   nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
   nsCOMPtr<nsISupports> mSecurityInfo;
 
-  PRPackedBool mIsFromCache;
-  PRPackedBool mCacheEntryAvailable;
+  bool mIsFromCache;
+  bool mCacheEntryAvailable;
   PRUint32     mCacheExpirationTime;
   nsCString    mCachedCharset;
 
@@ -179,10 +179,10 @@ private:
   void AssociateApplicationCache(const nsCString &groupID,
                                  const nsCString &clientID);
   void OnStartRequest(const nsHttpResponseHead& responseHead,
-                      const PRBool& useResponseHead,
+                      const bool& useResponseHead,
                       const RequestHeaderTuples& requestHeaders,
-                      const PRBool& isFromCache,
-                      const PRBool& cacheEntryAvailable,
+                      const bool& isFromCache,
+                      const bool& cacheEntryAvailable,
                       const PRUint32& cacheExpirationTime,
                       const nsCString& cachedCharset,
                       const nsCString& securityInfoSerialization,

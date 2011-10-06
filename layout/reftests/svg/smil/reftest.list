@@ -121,7 +121,7 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 
 # animate some enumeration attributes:
 == anim-feComposite-operator-01.svg lime.svg
-== anim-filter-filterUnits-01.svg lime.svg
+fails-if(Android&&layersOpenGL) == anim-filter-filterUnits-01.svg lime.svg
 
 # animate some boolean attributes:
 == anim-feConvolveMatrix-preserveAlpha-01.svg lime.svg
@@ -164,8 +164,8 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-remove-5.svg anim-standard-ref.svg
 == anim-remove-6.svg anim-standard-ref.svg
 == anim-remove-7.svg anim-standard-ref.svg
-== anim-remove-8css.svg anim-standard-ref.svg
-== anim-remove-8xml.svg anim-standard-ref.svg
+fails-if(Android&&layersOpenGL) == anim-remove-8css.svg anim-standard-ref.svg
+fails-if(Android&&layersOpenGL) == anim-remove-8xml.svg anim-standard-ref.svg
 == anim-retarget-1.svg anim-standard-ref.svg
 == anim-retarget-2.svg anim-standard-ref.svg
 == anim-retarget-3.svg anim-standard-ref.svg

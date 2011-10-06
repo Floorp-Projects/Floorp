@@ -190,7 +190,7 @@ public:
    * setting up a scrollbar mediator if you want to redirect scrollbar
    * input.
    */
-  virtual nsIBox* GetScrollbarBox(PRBool aVertical) = 0;
+  virtual nsIBox* GetScrollbarBox(bool aVertical) = 0;
 
   /**
    * Internal method used by scrollbars to notify their scrolling
@@ -209,7 +209,7 @@ public:
    * This basically means that we should allocate resources in the
    * expectation that scrolling is going to happen.
    */
-  virtual PRBool IsScrollingActive() = 0;
+  virtual bool IsScrollingActive() = 0;
 };
 
 #endif

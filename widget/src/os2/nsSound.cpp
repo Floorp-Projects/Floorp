@@ -84,7 +84,7 @@ typedef struct _ARGBUFFER
 /*****************************************************************************/
 
 // static variables
-static PRBool   sDllError = FALSE;      // set if the MMOS2 dlls fail to load
+static bool     sDllError = FALSE;      // set if the MMOS2 dlls fail to load
 static char *   sSoundFiles[EVENT_CNT] = {0}; // an array of sound file names
 
 // function pointer definitions (underscore works around redef. warning)
@@ -94,7 +94,7 @@ static ULONG  (*APIENTRY _mciSendCommand)(USHORT, USHORT, ULONG, PVOID, USHORT);
 
 // helper functions
 static void   initSounds(void);
-static PRBool initDlls(void);
+static bool initDlls(void);
 static void   playSound(void *aArgs);
 static FOURCC determineFourCC(PRUint32 aDataLen, const char *aData);
 
@@ -335,7 +335,7 @@ nsresult nsSound::PlaySoundFile(const nsACString &aSoundFile)
 
 static void initSounds(void)
 {
-  static PRBool sSoundInit = FALSE;
+  static bool sSoundInit = FALSE;
 
   if (sSoundInit) {
     return;
@@ -415,9 +415,9 @@ static void initSounds(void)
 // Only one attempt is made per session to initialize MMOS2.  Once
 // the dlls are loaded, they remain loaded to avoid stability issues.
 
-static PRBool initDlls(void)
+static bool initDlls(void)
 {
-  static PRBool sDllInit = FALSE;
+  static bool sDllInit = FALSE;
 
   if (sDllInit) {
     return TRUE;

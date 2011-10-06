@@ -63,11 +63,11 @@ public:
   virtual ~nsParentalControlsServiceWin();
 
 private:
-  PRBool mEnabled;
+  bool mEnabled;
   REGHANDLE mProvider;
   IWindowsParentalControls * mPC;
 
-  void LogFileDownload(PRBool blocked, nsIURI *aSource, nsIFile *aTarget);
+  void LogFileDownload(bool blocked, nsIURI *aSource, nsIFile *aTarget);
 };
 
 #endif /* nsParentalControlsServiceWin_h__ */

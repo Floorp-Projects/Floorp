@@ -68,7 +68,7 @@ public:
   uint32_t id;
   nsCOMPtr<nsITimer> timer;
   void (*callback)(NPP npp, uint32_t timerID);
-  PRBool inCallback;
+  bool inCallback;
 };
 
 class nsNPAPIPluginInstance : public nsISupports
@@ -92,21 +92,21 @@ public:
   nsresult HandleEvent(void* event, PRInt16* result);
   nsresult GetValueFromPlugin(NPPVariable variable, void* value);
   nsresult GetDrawingModel(PRInt32* aModel);
-  nsresult IsRemoteDrawingCoreAnimation(PRBool* aDrawing);
+  nsresult IsRemoteDrawingCoreAnimation(bool* aDrawing);
   nsresult GetJSObject(JSContext *cx, JSObject** outObject);
   nsresult DefineJavaProperties();
-  nsresult IsWindowless(PRBool* isWindowless);
+  nsresult IsWindowless(bool* isWindowless);
   nsresult AsyncSetWindow(NPWindow* window);
   nsresult GetImage(ImageContainer* aContainer, Image** aImage);
   nsresult GetImageSize(nsIntSize* aSize);
   nsresult NotifyPainted(void);
-  nsresult UseAsyncPainting(PRBool* aIsAsync);
+  nsresult UseAsyncPainting(bool* aIsAsync);
   nsresult SetBackgroundUnknown();
   nsresult BeginUpdateBackground(nsIntRect* aRect, gfxContext** aContext);
   nsresult EndUpdateBackground(gfxContext* aContext, nsIntRect* aRect);
-  nsresult IsTransparent(PRBool* isTransparent);
+  nsresult IsTransparent(bool* isTransparent);
   nsresult GetFormValue(nsAString& aValue);
-  nsresult PushPopupsEnabledState(PRBool aEnabled);
+  nsresult PushPopupsEnabledState(bool aEnabled);
   nsresult PopPopupsEnabledState();
   nsresult GetPluginAPIVersion(PRUint16* version);
   nsresult InvalidateRect(NPRect *invalidRect);
@@ -129,16 +129,16 @@ public:
   void SetURI(nsIURI* uri);
   nsIURI* GetURI();
 
-  NPError SetWindowless(PRBool aWindowless);
+  NPError SetWindowless(bool aWindowless);
 
-  NPError SetWindowlessLocal(PRBool aWindowlessLocal);
+  NPError SetWindowlessLocal(bool aWindowlessLocal);
 
-  NPError SetTransparent(PRBool aTransparent);
+  NPError SetTransparent(bool aTransparent);
 
-  NPError SetWantsAllNetworkStreams(PRBool aWantsAllNetworkStreams);
+  NPError SetWantsAllNetworkStreams(bool aWantsAllNetworkStreams);
 
-  NPError SetUsesDOMForCursor(PRBool aUsesDOMForCursor);
-  PRBool UsesDOMForCursor();
+  NPError SetUsesDOMForCursor(bool aUsesDOMForCursor);
+  bool UsesDOMForCursor();
 
 #ifdef XP_MACOSX
   void SetDrawingModel(NPDrawingModel aModel);
@@ -229,14 +229,14 @@ protected:
 
   // these are used to store the windowless properties
   // which the browser will later query
-  PRPackedBool mWindowless;
-  PRPackedBool mWindowlessLocal;
-  PRPackedBool mTransparent;
-  PRPackedBool mUsesDOMForCursor;
+  bool mWindowless;
+  bool mWindowlessLocal;
+  bool mTransparent;
+  bool mUsesDOMForCursor;
 
 public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.
-  PRPackedBool mInPluginInitCall;
+  bool mInPluginInitCall;
 
   nsXPIDLCString mFakeURL;
 
@@ -262,7 +262,7 @@ private:
 
   nsCOMPtr<nsIURI> mURI;
 
-  PRPackedBool mUsePluginLayersPref;
+  bool mUsePluginLayersPref;
 #ifdef ANDROID
   void* mSurface;
 #endif

@@ -320,7 +320,7 @@ nsAccessibleWrap::Shutdown()
     nsAccessible::Shutdown();
 }
 
-MaiHyperlink* nsAccessibleWrap::GetMaiHyperlink(PRBool aCreate /* = PR_TRUE */)
+MaiHyperlink* nsAccessibleWrap::GetMaiHyperlink(bool aCreate /* = true */)
 {
     // make sure mAtkObject is created
     GetAtkObject();
@@ -550,7 +550,7 @@ GetUniqueMaiAtkTypeName(PRUint16 interfacesBits)
     return name;
 }
 
-PRBool nsAccessibleWrap::IsValidObject()
+bool nsAccessibleWrap::IsValidObject()
 {
     // to ensure we are not shut down
     return !IsDefunct();
@@ -768,7 +768,7 @@ ConvertToAtkAttributeSet(nsIPersistentProperties* aAttributes)
     nsresult rv = aAttributes->Enumerate(getter_AddRefs(propEnum));
     NS_ENSURE_SUCCESS(rv, nsnull);
 
-    PRBool hasMore;
+    bool hasMore;
     while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
         nsCOMPtr<nsISupports> sup;
         rv = propEnum->GetNext(getter_AddRefs(sup));
@@ -909,7 +909,7 @@ TranslateStates(PRUint64 aState, AtkStateSet* aStateSet)
   PRUint64 bitMask = 1;
   while (gAtkStateMap[stateIndex].stateMapEntryType != kNoSuchState) {
     if (gAtkStateMap[stateIndex].atkState) { // There's potentially an ATK state for this
-      PRBool isStateOn = (aState & bitMask) != 0;
+      bool isStateOn = (aState & bitMask) != 0;
       if (gAtkStateMap[stateIndex].stateMapEntryType == kMapOpposite) {
         isStateOn = !isStateOn;
       }
@@ -1241,7 +1241,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
         g_signal_emit(atkObj, id, 0);
 
         // Always fire a current focus event after activation.
-        rootAcc->FireCurrentFocusEvent();
+        FocusMgr()->ForceFocusEvent();
       } break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE:
@@ -1319,7 +1319,7 @@ nsAccessibleWrap::FireAtkStateChangeEvent(AccEvent* aEvent,
     AccStateChangeEvent* event = downcast_accEvent(aEvent);
     NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
-    PRBool isEnabled = event->IsStateEnabled();
+    bool isEnabled = event->IsStateEnabled();
     PRInt32 stateIndex = AtkStateMap::GetStateIndexFor(event->GetState());
     if (stateIndex >= 0) {
         NS_ASSERTION(gAtkStateMap[stateIndex].stateMapEntryType != kNoSuchState,
@@ -1353,8 +1353,8 @@ nsAccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
 
     PRInt32 start = event->GetStartOffset();
     PRUint32 length = event->GetLength();
-    PRBool isInserted = event->IsTextInserted();
-    PRBool isFromUserInput = aEvent->IsFromUserInput();
+    bool isInserted = event->IsTextInserted();
+    bool isFromUserInput = aEvent->IsFromUserInput();
     char* signal_name = nsnull;
 
   if (gAvailableAtkSignals == eUnknown)
@@ -1384,7 +1384,7 @@ nsAccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
 
 nsresult
 nsAccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
-                                       AtkObject *aObject, PRBool aIsAdded)
+                                       AtkObject *aObject, bool aIsAdded)
 {
     if (aIsAdded)
         MAI_LOG_DEBUG(("\n\nReceived: Show event\n"));
@@ -1395,7 +1395,7 @@ nsAccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
     AtkObject *parentObject = getParentCB(aObject);
     NS_ENSURE_STATE(parentObject);
 
-    PRBool isFromUserInput = aEvent->IsFromUserInput();
+    bool isFromUserInput = aEvent->IsFromUserInput();
     char *signal_name = g_strconcat(aIsAdded ? "children_changed::add" :  "children_changed::remove",
                                     isFromUserInput ? "" : kNonUserInputEvent, NULL);
     g_signal_emit_by_name(parentObject, signal_name, indexInParent, aObject, NULL);

@@ -52,7 +52,7 @@ void NS_NotifyPluginCall(PRIntervalTime);
 
 #ifdef CALL_SAFETY_ON
 
-extern PRBool gSkipPluginSafeCalls;
+extern bool gSkipPluginSafeCalls;
 
 #define NS_INIT_PLUGIN_SAFE_CALLS                               \
 PR_BEGIN_MACRO                                                  \
@@ -73,7 +73,7 @@ PR_BEGIN_MACRO                                     \
     {                                              \
       ret = fun;                                   \
     }                                              \
-    MOZ_SEH_EXCEPT(PR_TRUE)                        \
+    MOZ_SEH_EXCEPT(true)                        \
     {                                              \
       nsresult res;                                \
       nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res));\
@@ -96,7 +96,7 @@ PR_BEGIN_MACRO                              \
     {                                       \
       fun;                                  \
     }                                       \
-    MOZ_SEH_EXCEPT(PR_TRUE)                 \
+    MOZ_SEH_EXCEPT(true)                 \
     {                                       \
       nsresult res;                         \
       nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res));\

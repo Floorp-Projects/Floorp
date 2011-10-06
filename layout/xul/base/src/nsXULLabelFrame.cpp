@@ -58,7 +58,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsXULLabelFrame)
 // If you make changes to this function, check its counterparts 
 // in nsBoxFrame and nsTextBoxFrame
 nsresult
-nsXULLabelFrame::RegUnregAccessKey(PRBool aDoReg)
+nsXULLabelFrame::RegUnregAccessKey(bool aDoReg)
 {
   // if we have no content, we can't do anything
   if (!mContent)

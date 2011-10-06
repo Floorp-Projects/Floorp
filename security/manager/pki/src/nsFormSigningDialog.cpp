@@ -62,7 +62,7 @@ nsFormSigningDialog::ConfirmSignText(nsIInterfaceRequestor *aContext,
                                      const PRUnichar **aCertNickList,
                                      const PRUnichar **aCertDetailsList,
                                      PRUint32 aCount, PRInt32 *aSelectedIndex,
-                                     nsAString &aPassword, PRBool *aCanceled) 
+                                     nsAString &aPassword, bool *aCanceled) 
 {
   *aCanceled = PR_TRUE;
 

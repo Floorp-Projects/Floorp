@@ -142,7 +142,7 @@ nsFtpChannel::GetProxyInfo(nsIProxyInfo** aProxyInfo)
 //-----------------------------------------------------------------------------
 
 nsresult
-nsFtpChannel::OpenContentStream(PRBool async, nsIInputStream **result,
+nsFtpChannel::OpenContentStream(bool async, nsIInputStream **result,
                                 nsIChannel** channel)
 {
     if (!async)
@@ -163,7 +163,7 @@ nsFtpChannel::OpenContentStream(PRBool async, nsIInputStream **result,
     return NS_OK;
 }
 
-PRBool
+bool
 nsFtpChannel::GetStatusArg(nsresult status, nsString &statusArg)
 {
     nsCAutoString host;
@@ -197,7 +197,7 @@ public:
     {
     public:
         OnFTPControlLogRunnable(nsIFTPEventSink* aTarget,
-                                PRBool aServer,
+                                bool aServer,
                                 const char* aMessage)
             : mTarget(aTarget)
             , mServer(aServer)
@@ -208,7 +208,7 @@ public:
 
     private:
         nsCOMPtr<nsIFTPEventSink> mTarget;
-        PRBool mServer;
+        bool mServer;
         nsCString mMessage;
     };
 
@@ -220,7 +220,7 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS1(FTPEventSinkProxy, nsIFTPEventSink)
 
 NS_IMETHODIMP
-FTPEventSinkProxy::OnFTPControlLog(PRBool aServer, const char* aMsg)
+FTPEventSinkProxy::OnFTPControlLog(bool aServer, const char* aMsg)
 {
     nsRefPtr<OnFTPControlLogRunnable> r =
         new OnFTPControlLogRunnable(mTarget, aServer, aMsg);

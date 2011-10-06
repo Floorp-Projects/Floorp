@@ -41,7 +41,7 @@
 #include "nsINIParser.h"
 #include "nsILocalFile.h"
 
-static PRBool
+static bool
 StringCB(const char *aKey, const char *aValue, void* aClosure)
 {
   printf("%s=%s\n", aKey, aValue);
@@ -49,7 +49,7 @@ StringCB(const char *aKey, const char *aValue, void* aClosure)
   return PR_TRUE;
 }
 
-static PRBool
+static bool
 SectionCB(const char *aSection, void* aClosure)
 {
   nsINIParser *ini = reinterpret_cast<nsINIParser*>(aClosure);

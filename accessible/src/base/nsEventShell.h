@@ -76,7 +76,7 @@ public:
 
 private:
   static nsCOMPtr<nsINode> sEventTargetNode;
-  static PRBool sEventFromUserInput;
+  static bool sEventFromUserInput;
 };
 
 #endif

@@ -233,7 +233,7 @@ nsInProcessTabChildGlobal::DelayedDisconnect()
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
     privateEvent->SetTrusted(PR_TRUE);
 
-    PRBool dummy;
+    bool dummy;
     nsDOMEventTargetHelper::DispatchEvent(event, &dummy);
   }
 
@@ -369,7 +369,7 @@ nsInProcessTabChildGlobal::LoadFrameScript(const nsAString& aURL)
     mInitialized = PR_TRUE;
     Init();
   }
-  PRBool tmp = mLoadingScript;
+  bool tmp = mLoadingScript;
   mLoadingScript = PR_TRUE;
   LoadFrameScriptInternal(aURL);
   mLoadingScript = tmp;

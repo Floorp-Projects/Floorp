@@ -104,7 +104,7 @@ public:
   NS_DECL_NSIDOCUMENTOBSERVER
 
   // nsAccessNode
-  virtual PRBool Init();
+  virtual bool Init();
   virtual void Shutdown();
   virtual nsIFrame* GetFrame() const;
   virtual bool IsDefunct() const;
@@ -132,7 +132,7 @@ public:
   /**
    * Return true if associated DOM document was loaded and isn't unloading.
    */
-  PRBool IsContentLoaded() const
+  bool IsContentLoaded() const
   {
     // eDOMLoaded flag check is used for error pages as workaround to make this
     // method return correct result since error pages do not receive 'pageshow'
@@ -305,7 +305,7 @@ public:
    *       XBL bindings. Be careful the result of this method may be  senseless
    *       while it's called for XUL elements (where XBL is used widely).
    */
-  PRBool IsDependentID(const nsAString& aID) const
+  bool IsDependentID(const nsAString& aID) const
     { return mDependentIDsHash.Get(aID, nsnull); }
 
   /**
@@ -455,6 +455,11 @@ protected:
      * @param aAttribute - changed attribute
      */
     void ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute);
+
+  /**
+   * Process ARIA active-descendant attribute change.
+   */
+  void ARIAActiveDescendantChanged(nsIContent* aElm);
 
   /**
    * Process the event when the queue of pending events is untwisted. Fire

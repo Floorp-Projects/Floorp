@@ -101,7 +101,7 @@ public:
    * @param @aType The pause source to test for.
    * @return PR_TRUE if this container is paused by aType.
    */
-  PRBool IsPausedByType(PRUint32 aType) const { return mPauseState & aType; }
+  bool IsPausedByType(PRUint32 aType) const { return mPauseState & aType; }
 
   /**
    * Returns true if this time container is paused.
@@ -110,7 +110,7 @@ public:
    *
    * @return PR_TRUE if this container is paused, PR_FALSE otherwise.
    */
-  PRBool IsPaused() const { return mPauseState != 0; }
+  bool IsPaused() const { return mPauseState != 0; }
 
   /*
    * Return the time elapsed since this time container's begin time (expressed
@@ -169,13 +169,13 @@ public:
    * This is most useful as an optimisation for skipping time containers that
    * don't require a sample.
    */
-  PRBool NeedsSample() const { return !mPauseState || mNeedsPauseSample; }
+  bool NeedsSample() const { return !mPauseState || mNeedsPauseSample; }
 
   /*
    * Indicates if the elements of this time container need to be rewound.
    * This occurs during a backwards seek.
    */
-  PRBool NeedsRewind() const { return mNeedsRewind; }
+  bool NeedsRewind() const { return mNeedsRewind; }
   void ClearNeedsRewind() { mNeedsRewind = PR_FALSE; }
 
   /*
@@ -183,7 +183,7 @@ public:
    * request and appropriate seek behaviour should be applied by child elements
    * (e.g. not firing time events).
    */
-  PRBool IsSeeking() const { return mIsSeeking; }
+  bool IsSeeking() const { return mIsSeeking; }
   void MarkSeekFinished() { mIsSeeking = PR_FALSE; }
 
   /*
@@ -201,7 +201,7 @@ public:
    *                      aMilestone.
    * @return  PR_TRUE if the element was successfully added, PR_FALSE otherwise.
    */
-  PRBool AddMilestone(const nsSMILMilestone& aMilestone,
+  bool AddMilestone(const nsSMILMilestone& aMilestone,
                       nsISMILAnimationElement& aElement);
 
   /*
@@ -218,7 +218,7 @@ public:
    * @return PR_TRUE if there exists another milestone, PR_FALSE otherwise in
    * which case aNextMilestone will be unmodified.
    */
-  PRBool GetNextMilestoneInParentTime(nsSMILMilestone& aNextMilestone) const;
+  bool GetNextMilestoneInParentTime(nsSMILMilestone& aNextMilestone) const;
 
   typedef nsTArray<nsRefPtr<nsISMILAnimationElement> > AnimElemArray;
 
@@ -232,7 +232,7 @@ public:
    *                              appended.
    * @return PR_TRUE if one or more elements match, PR_FALSE otherwise.
    */
-  PRBool PopMilestoneElementsAtMilestone(const nsSMILMilestone& aMilestone,
+  bool PopMilestoneElementsAtMilestone(const nsSMILMilestone& aMilestone,
                                          AnimElemArray& aMatchedElements);
 
   // Cycle-collection support
@@ -293,10 +293,10 @@ protected:
   nsSMILTime mPauseStart;
 
   // Whether or not a pause sample is required
-  PRPackedBool mNeedsPauseSample;
+  bool mNeedsPauseSample;
 
-  PRPackedBool mNeedsRewind; // Backwards seek performed
-  PRPackedBool mIsSeeking; // Currently in the middle of a seek operation
+  bool mNeedsRewind; // Backwards seek performed
+  bool mIsSeeking; // Currently in the middle of a seek operation
 
   // A bitfield of the pause state for all pause requests
   PRUint32 mPauseState;
@@ -308,7 +308,7 @@ protected:
       : mMilestone(aMilestone), mTimebase(&aElement)
     { }
 
-    PRBool operator<(const MilestoneEntry& aOther) const
+    bool operator<(const MilestoneEntry& aOther) const
     {
       return mMilestone < aOther.mMilestone;
     }

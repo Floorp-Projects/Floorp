@@ -47,7 +47,7 @@
 // system across family, weight, style, size, etc. But not here!
 
 // Enumerator callback function. Return PR_FALSE to stop
-typedef PRBool (*nsFontFamilyEnumFunc)(const nsString& aFamily, PRBool aGeneric, void *aData);
+typedef bool (*nsFontFamilyEnumFunc)(const nsString& aFamily, bool aGeneric, void *aData);
 
 // IDs for generic fonts
 // NOTE: 0, 1 are reserved for the special IDs of the default variable
@@ -126,13 +126,13 @@ struct NS_GFX nsFont {
   nsFont();
   ~nsFont();
 
-  PRBool operator==(const nsFont& aOther) const {
+  bool operator==(const nsFont& aOther) const {
     return Equals(aOther);
   }
 
-  PRBool Equals(const nsFont& aOther) const ;
+  bool Equals(const nsFont& aOther) const ;
   // Compare ignoring differences in 'variant' and 'decoration'
-  PRBool BaseEquals(const nsFont& aOther) const;
+  bool BaseEquals(const nsFont& aOther) const;
 
   nsFont& operator=(const nsFont& aOther);
 
@@ -140,7 +140,7 @@ struct NS_GFX nsFont {
   // enumerates all families specified by this font only
   // returns PR_TRUE if completed, PR_FALSE if stopped
   // enclosing quotes will be removed, and whitespace compressed (as needed)
-  PRBool EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const;
+  bool EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const;
   void GetFirstFamily(nsString& aFamily) const;
 
   // Utility method to return the ID of a generic font

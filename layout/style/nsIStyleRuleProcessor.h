@@ -81,7 +81,7 @@ public:
 
   // Shorthand for:
   //  nsCOMArray<nsIStyleRuleProcessor>::nsCOMArrayEnumFunc
-  typedef PRBool (* EnumFunc)(nsIStyleRuleProcessor*, void*);
+  typedef bool (* EnumFunc)(nsIStyleRuleProcessor*, void*);
 
   /**
    * Find the |nsIStyleRule|s matching the given content node and
@@ -115,7 +115,7 @@ public:
    *
    * Document states are defined in nsIDocument.h.
    */
-  virtual PRBool
+  virtual bool
     HasDocumentStateDependentStyle(StateRuleProcessorData* aData) = 0;
 
   /**
@@ -153,7 +153,7 @@ public:
    * the characteristics of the medium, and return whether this rule
    * processor's rules have changed (e.g., because of media queries).
    */
-  virtual PRBool MediumFeaturesChanged(nsPresContext* aPresContext) = 0;
+  virtual bool MediumFeaturesChanged(nsPresContext* aPresContext) = 0;
 
   /**
    * Report the size of this style rule processor to about:memory.  A

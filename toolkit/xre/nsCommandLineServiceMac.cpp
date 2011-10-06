@@ -52,7 +52,7 @@ static char** sArgs = NULL;
 static int sArgsAllocated = 0;
 static int sArgsUsed = 0;
 
-static PRBool sBuildingCommandLine = PR_FALSE;
+static bool sBuildingCommandLine = false;
 
 void AddToCommandLine(const char* inArgText)
 {
@@ -75,7 +75,7 @@ void AddToCommandLine(const char* inArgText)
   return;
 }
 
-void SetupMacCommandLine(int& argc, char**& argv, PRBool forRestart)
+void SetupMacCommandLine(int& argc, char**& argv, bool forRestart)
 {
   sArgs = static_cast<char **>(malloc(kArgsGrowSize * sizeof(char*)));
   if (!sArgs)
@@ -120,7 +120,7 @@ void SetupMacCommandLine(int& argc, char**& argv, PRBool forRestart)
   argv = sArgs;
 }
 
-PRBool AddURLToCurrentCommandLine(const char* aURL)
+bool AddURLToCurrentCommandLine(const char* aURL)
 {
   if (!sBuildingCommandLine) {
     return PR_FALSE;

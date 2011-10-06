@@ -244,7 +244,7 @@ protected:
     nsCOMPtr<nsIFile>         mTargetFile;
     nsCOMPtr<nsIFile>         mTempFile;
 
-    PRBool   mTargetFileExists;
+    bool     mTargetFileExists;
     nsresult mWriteResult; // Internally set in Write()
 };
 

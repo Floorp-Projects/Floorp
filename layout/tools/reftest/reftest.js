@@ -256,11 +256,23 @@ function OnRefTestLoad()
 
 function InitAndStartRefTests()
 {
-    /* set the gLoadTimeout */
+    /* These prefs are optional, so we don't need to spit an error to the log */
     try {
       var prefs = Components.classes["@mozilla.org/preferences-service;1"].
                   getService(Components.interfaces.nsIPrefBranch2);
+    } catch(e) {
+      gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + e + "\n");
+    }
+    
+    /* set the gLoadTimeout */
+    try {
       gLoadTimeout = prefs.getIntPref("reftest.timeout");
+    } catch(e) { 
+      gLoadTimeout = 5 * 60 * 1000; //5 minutes as per bug 479518
+    }
+    
+    /* Get the logfile for android tests */
+    try {
       logFile = prefs.getCharPref("reftest.logFile");
       if (logFile) {
         try {
@@ -273,13 +285,19 @@ function InitAndStartRefTests()
           gDumpLog = dump;
         }
       }
+    } catch(e) {}
+    
+    try {
       gRemote = prefs.getBoolPref("reftest.remote");
-      gIgnoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize");
-    }
-    catch(e) {
-      gLoadTimeout = 5 * 60 * 1000; //5 minutes as per bug 479518
+    } catch(e) { 
+      gRemote = false;
     }
 
+    try {
+      gIgnoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize");
+    } catch(e) {
+      gIgnoreWindowSize = false;
+    }
 
     /* Support for running a chunk (subset) of tests.  In separate try as this is optional */
     try {
@@ -864,14 +882,13 @@ function Focus()
         return false;
     }
 
-    // FIXME/bug 623625: determine if the window is focused and/or try
-    // to acquire focus if it's not.
-    //
-    // NB: we can't add anything here that would return false on
-    // tinderbox, otherwise we could lose testing coverage due to
-    // problems on the test machines.  We might want a require-focus
-    // mode, defaulting to false for developers, but that's true on
-    // tinderbox.
+    var fm = CC["@mozilla.org/focus-manager;1"].getService(CI.nsIFocusManager);
+    fm.activeWindow = window;
+    try {
+        var dock = CC["@mozilla.org/widget/macdocksupport;1"].getService(CI.nsIMacDockSupport);
+        dock.activateApplication(true);
+    } catch(ex) {
+    }
     return true;
 }
 
@@ -923,7 +940,9 @@ function StartCurrentURI(aState)
         // there's already a canvas for this URL
         setTimeout(RecordResult, 0);
     } else {
-        gDumpLog("REFTEST TEST-START | " + gCurrentURL + "\n");
+        var currentTest = gTotalTests - gURLs.length;
+        gDumpLog("REFTEST TEST-START | " + gCurrentURL + " | " + currentTest + " / " + gTotalTests +
+            " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)\n");
         LogInfo("START " + gCurrentURL);
         var type = gURLs[0].type
         if (TYPE_SCRIPT == type) {
