@@ -515,7 +515,7 @@
 
           let uri;
           try {
-            uri = uriFixup.createFixupURI(inputVal, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+            uri = uriFixup.createFixupURI(inputVal, Ci.nsIURIFixup.FIXUP_FLAG_USE_UTF8);
           } catch (e) {}
           if (!uri)
             return selectedVal;
