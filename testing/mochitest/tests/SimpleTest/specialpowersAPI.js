@@ -48,6 +48,9 @@ function SpecialPowersAPI() {
   this._unexpectedCrashDumpFiles = { };
   this._crashDumpDir = null;
   this._mfl = null;
+  this._prefEnvUndoStack = [];
+  this._pendingPrefs = [];
+  this._applyingPrefs = false;
 }
 
 function bindDOMWindowUtils(aWindow) {
@@ -86,6 +89,45 @@ function bindDOMWindowUtils(aWindow) {
   return target;
 }
 
+function Observer(specialPowers, aTopic, aCallback, aIsPref) {
+  this._sp = specialPowers;
+  this._topic = aTopic;
+  this._callback = aCallback;
+  this._isPref = aIsPref;
+}
+
+Observer.prototype = {
+  _sp: null,
+  _topic: null,
+  _callback: null,
+  _isPref: false,
+
+  observe: function(aSubject, aTopic, aData) {
+    if ((!this._isPref && aTopic == this._topic) ||
+        (this._isPref && aTopic == "nsPref:changed")) {
+      if (aData == this._topic) {
+       this.cleanup();
+        /* The callback must execute asynchronously after all the preference observers have run */
+        content.window.setTimeout(this._callback, 0);
+        content.window.setTimeout(this._sp._finishPrefEnv, 0);
+      }
+    }
+  },
+
+  cleanup: function() {
+    if (this._isPref) {
+      var os = Cc["@mozilla.org/preferences-service;1"].getService()
+               .QueryInterface(Ci.nsIPrefBranch2);
+      os.removeObserver(this._topic, this);
+    } else {
+      var os = Cc["@mozilla.org/observer-service;1"]
+              .getService(Ci.nsIObserverService)
+              .QueryInterface(Ci.nsIObserverService);
+      os.removeObserver(this, this._topic);
+    }
+  },
+};
+
 SpecialPowersAPI.prototype = {
 
   getDOMWindowUtils: function(aWindow) {
@@ -121,6 +163,170 @@ SpecialPowersAPI.prototype = {
       self._unexpectedCrashDumpFiles[aFilename] = true;
     });
     return crashDumpFiles;
+  },
+
+  /*
+   * Take in a list of prefs and put the original value on the _prefEnvUndoStack so we can undo
+   * preferences that we set.  Note, that this is a stack of values to revert to, not
+   * what we have set.
+   *
+   * prefs: {set|clear: [[pref, value], [pref, value, Iid], ...], set|clear: [[pref, value], ...], ...}
+   * ex: {'set': [['foo.bar', 2], ['browser.magic', '0xfeedface']], 'remove': [['bad.pref']] }
+   *
+   * In the scenario where our prefs specify the same pref more than once, we do not guarantee
+   * the behavior.  
+   *
+   * If a preference is not changing a value, we will ignore it.
+   *
+   * TODO: complex values for original cleanup?
+   *
+   */
+  pushPrefEnv: function(inPrefs, callback) {
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                           getService(Components.interfaces.nsIPrefBranch);
+
+    var pref_string = [];
+    pref_string[prefs.PREF_INT] = "INT";
+    pref_string[prefs.PREF_BOOL] = "BOOL";
+    pref_string[prefs.PREF_STRING] = "STRING";
+
+    var pendingActions = [];
+    var cleanupActions = [];
+
+    for (var action in inPrefs) { /* set|clear */
+      for (var idx in inPrefs[action]) {
+        var aPref = inPrefs[action][idx];
+        var prefName = aPref[0];
+        var prefValue = null;
+        var prefIid = null;
+        var prefType = prefs.PREF_INVALID;
+        var originalValue = null;
+
+        if (aPref.length == 3) {
+          prefValue = aPref[1];
+          prefIid = aPref[2];
+        } else if (aPref.length == 2) {
+          prefValue = aPref[1];
+        }
+
+        /* If pref is not found or invalid it doesn't exist. */
+        if (prefs.getPrefType(prefName) != prefs.PREF_INVALID) {
+          prefType = pref_string[prefs.getPrefType(prefName)];
+          if ((prefs.prefHasUserValue(prefName) && action == 'clear') ||
+              (action == 'set'))
+            originalValue = this._getPref(prefName, prefType);
+        } else if (action == 'set') {
+          /* prefName doesn't exist, so 'clear' is pointless */
+          if (aPref.length == 3) {
+            prefType = "COMPLEX";
+          } else if (aPref.length == 2) {
+            if (typeof(prefValue) == "boolean") 
+              prefType = "BOOL";
+            else if (typeof(prefValue) == "number")
+              prefType = "INT";
+            else if (typeof(prefValue) == "string")
+              prefType = "CHAR";
+          }
+        }
+
+        /* PREF_INVALID: A non existing pref which we are clearing or invalid values for a set */
+        if (prefType == prefs.PREF_INVALID)
+          continue;
+
+        /* We are not going to set a pref if the value is the same */
+        if (originalValue == prefValue)
+          continue;
+
+        pendingActions.push({'action': action, 'type': prefType, 'name': prefName, 'value': prefValue, 'Iid': prefIid});
+
+        /* Push original preference value or clear into cleanup array */
+        var cleanupTodo = {'action': action, 'type': prefType, 'name': prefName, 'value': originalValue, 'Iid': prefIid};
+        if (originalValue == null) {
+          cleanupTodo.action = 'clear';
+        } else {
+          cleanupTodo.action = 'set';
+        }
+        cleanupActions.push(cleanupTodo);
+      }
+    }
+
+    if (pendingActions.length > 0) {
+      this._prefEnvUndoStack.push(cleanupActions);
+      this._pendingPrefs.push([pendingActions, callback]);
+      this._applyPrefs();
+    } else {
+      content.window.setTimeout(callback, 0);
+    }
+  },
+
+  popPrefEnv: function(callback) {
+    if (this._prefEnvUndoStack.length > 0) {
+      /* Each pop will have a valid block of preferences */
+      this._pendingPrefs.push([this._prefEnvUndoStack.pop(), callback]);
+      this._applyPrefs();
+    } else {
+      content.window.setTimeout(callback, 0);
+    }
+  },
+
+  flushPrefEnv: function(callback) {
+    while (this._prefEnvUndoStack.length > 1)
+      this.popPrefEnv(null);
+
+    this.popPrefEnv(callback);
+  },
+
+  /*
+    Iterate through one atomic set of pref actions and perform sets/clears as appropriate. 
+    All actions performed must modify the relevant pref.
+  */
+  _applyPrefs: function() {
+    if (this._applyingPrefs || this._pendingPrefs.length <= 0) {
+      return;
+    }
+
+    /* Set lock and get prefs from the _pendingPrefs queue */
+    this._applyingPrefs = true;
+    var transaction = this._pendingPrefs.shift();
+    var pendingActions = transaction[0];
+    var callback = transaction[1];
+
+    var lastPref = pendingActions[pendingActions.length-1];
+    this._addObserver(lastPref.name, callback, true);
+
+    for (var idx in pendingActions) {
+      var pref = pendingActions[idx];
+      if (pref.action == 'set') {
+        this._setPref(pref.name, pref.type, pref.value, pref.Iid);
+      } else if (pref.action == 'clear') {
+        this.clearUserPref(pref.name);
+      }
+    }
+  },
+
+  _addObserver: function(aTopic, aCallback, aIsPref) {
+    var observer = new Observer(this, aTopic, aCallback, aIsPref);
+
+    if (aIsPref) {
+      var os = Cc["@mozilla.org/preferences-service;1"].getService()
+               .QueryInterface(Ci.nsIPrefBranch2);	
+      os.addObserver(aTopic, observer, false);
+    } else {
+      var os = Cc["@mozilla.org/observer-service;1"]
+              .getService(Ci.nsIObserverService)
+              .QueryInterface(Ci.nsIObserverService);
+      os.addObserver(observer, aTopic, false);
+    }
+  },
+
+  /* called from the observer when we get a pref:changed.  */
+  _finishPrefEnv: function() {
+    /*
+      Any subsequent pref environment pushes that occurred while waiting 
+      for the preference update are pending, and will now be executed.
+    */
+    this.wrappedJSObject.SpecialPowers._applyingPrefs = false;
+    this.wrappedJSObject.SpecialPowers._applyPrefs();
   },
 
   // Mimic the get*Pref API
