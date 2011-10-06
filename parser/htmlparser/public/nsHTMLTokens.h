@@ -116,8 +116,8 @@ public:
   virtual PRInt32 GetTypeID(void);
   virtual PRInt32 GetTokenType(void);
 
-  virtual bool IsEmpty(void);
-  virtual void SetEmpty(bool aValue);
+  virtual PRBool IsEmpty(void);
+  virtual void SetEmpty(PRBool aValue);
 
   virtual const nsSubstring& GetStringValue();
   virtual void GetSource(nsString& anOutputString);
@@ -130,16 +130,16 @@ public:
       mContainerInfo=aContainerInfo;
     }
   }
-  virtual bool IsWellFormed(void) const {
+  virtual PRBool IsWellFormed(void) const {
     return eWellFormed == mContainerInfo;
   }
 
   nsString mTextValue;
 protected:
   eContainerInfo mContainerInfo;
-  bool mEmpty;
+  PRPackedBool mEmpty;
 #ifdef DEBUG
-  bool mAttributed;
+  PRPackedBool mAttributed;
 #endif
 };
 
@@ -271,18 +271,18 @@ public:
                     nsScannerIterator& aEnd);
   virtual void Bind(const nsAString& aStr);
 
-  nsresult ConsumeCharacterData(bool aIgnoreComments,
+  nsresult ConsumeCharacterData(PRBool aIgnoreComments,
                                 nsScanner& aScanner,
                                 const nsAString& aEndTagName,
                                 PRInt32 aFlag,
-                                bool& aFlushTokens);
+                                PRBool& aFlushTokens);
 
-  nsresult ConsumeParsedCharacterData(bool aDiscardFirstNewline,
-                                      bool aConservativeConsume,
+  nsresult ConsumeParsedCharacterData(PRBool aDiscardFirstNewline,
+                                      PRBool aConservativeConsume,
                                       nsScanner& aScanner,
                                       const nsAString& aEndTagName,
                                       PRInt32 aFlag,
-                                      bool& aFound);
+                                      PRBool& aFound);
 
 protected:
   nsScannerSubstring mTextValue;
@@ -359,7 +359,7 @@ public:
   virtual void GetSource(nsString& anOutputString);
   virtual void AppendSourceTo(nsAString& anOutputString);
 
-  bool mHasEqualWithoutValue;
+  PRPackedBool mHasEqualWithoutValue;
 protected:
   nsScannerSharedSubstring mTextValue;
   nsScannerSubstring mTextKey;

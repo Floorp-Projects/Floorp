@@ -130,7 +130,7 @@ public:
 
     nsresult TransformToDoc(nsIDOMDocument **aResult);
 
-    bool IsLoadDisabled()
+    PRBool IsLoadDisabled()
     {
         return (mFlags & DISABLE_ALL_LOADS) != 0;
     }

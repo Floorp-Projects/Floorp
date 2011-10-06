@@ -82,11 +82,7 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
     return [self selectedTextRange];
   if ([attribute isEqualToString:NSAccessibilitySelectedTextAttribute])
     return [self selectedText];
-  // Apple's SpeechSynthesisServer expects AXValue to return an AXStaticText
-  // object's AXSelectedText attribute.  See bug 674612.
-  if ([attribute isEqualToString:NSAccessibilityValueAttribute])
-    return [self selectedText];
-
+  
   // let mozAccessible handle all other attributes
   return [super accessibilityAttributeValue:attribute];
 

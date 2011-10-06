@@ -223,17 +223,17 @@ gfxWindowsPlatform::UpdateRenderMode()
     ::GetVersionExA(&versionInfo);
     bool isVistaOrHigher = versionInfo.dwMajorVersion >= 6;
 
-    bool safeMode = false;
+    PRBool safeMode = PR_FALSE;
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
     if (xr)
       xr->GetInSafeMode(&safeMode);
 
-    mUseDirectWrite = Preferences::GetBool("gfx.font_rendering.directwrite.enabled", false);
+    mUseDirectWrite = Preferences::GetBool("gfx.font_rendering.directwrite.enabled", PR_FALSE);
 
 #ifdef CAIRO_HAS_D2D_SURFACE
-    bool d2dDisabled = false;
-    bool d2dForceEnabled = false;
-    bool d2dBlocked = false;
+    PRBool d2dDisabled = PR_FALSE;
+    PRBool d2dForceEnabled = PR_FALSE;
+    PRBool d2dBlocked = PR_FALSE;
 
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     if (gfxInfo) {
@@ -250,8 +250,8 @@ gfxWindowsPlatform::UpdateRenderMode()
         }
     }
 
-    d2dDisabled = Preferences::GetBool("gfx.direct2d.disabled", false);
-    d2dForceEnabled = Preferences::GetBool("gfx.direct2d.force-enabled", false);
+    d2dDisabled = Preferences::GetBool("gfx.direct2d.disabled", PR_FALSE);
+    d2dForceEnabled = Preferences::GetBool("gfx.direct2d.force-enabled", PR_FALSE);
 
     bool tryD2D = !d2dBlocked || d2dForceEnabled;
     
@@ -304,7 +304,7 @@ gfxWindowsPlatform::UpdateRenderMode()
 }
 
 void
-gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
+gfxWindowsPlatform::VerifyD2DDevice(PRBool aAttemptForce)
 {
 #ifdef CAIRO_HAS_D2D_SURFACE
     if (mD2DDevice) {
@@ -401,7 +401,7 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
 #ifdef CAIRO_HAS_DWRITE_FONT
 #define WINDOWS7_RTM_BUILD 7600
 
-static bool
+static PRBool
 AllowDirectWrite()
 {
     PRInt32 winVers, buildNum;
@@ -558,7 +558,7 @@ nsresult
 gfxWindowsPlatform::ResolveFontName(const nsAString& aFontName,
                                     FontResolverCallback aCallback,
                                     void *aClosure,
-                                    bool& aAborted)
+                                    PRBool& aAborted)
 {
     nsAutoString resolvedName;
     if (!gfxPlatformFontList::PlatformFontList()->
@@ -602,7 +602,7 @@ gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                                                      aLength);
 }
 
-bool
+PRBool
 gfxWindowsPlatform::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
 {
     // check for strange format flags
@@ -638,7 +638,7 @@ gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle& aF
     if (!ff)
         return nsnull;
 
-    bool aNeedsBold;
+    PRBool aNeedsBold;
     return ff->FindFontForStyle(aFontStyle, aNeedsBold);
 }
 
@@ -677,7 +677,7 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile()
     return profile;
 }
 
-bool
+PRBool
 gfxWindowsPlatform::GetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxFontEntry> > *array)
 {
     return mPrefFonts.Get(aKey, array);
@@ -689,21 +689,21 @@ gfxWindowsPlatform::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<
     mPrefFonts.Put(aKey, array);
 }
 
-bool
+PRBool
 gfxWindowsPlatform::UseClearTypeForDownloadableFonts()
 {
     if (mUseClearTypeForDownloadableFonts == UNINITIALIZED_VALUE) {
-        mUseClearTypeForDownloadableFonts = Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE, true);
+        mUseClearTypeForDownloadableFonts = Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE, PR_TRUE);
     }
 
     return mUseClearTypeForDownloadableFonts;
 }
 
-bool
+PRBool
 gfxWindowsPlatform::UseClearTypeAlways()
 {
     if (mUseClearTypeAlways == UNINITIALIZED_VALUE) {
-        mUseClearTypeAlways = Preferences::GetBool(GFX_USE_CLEARTYPE_ALWAYS, false);
+        mUseClearTypeAlways = Preferences::GetBool(GFX_USE_CLEARTYPE_ALWAYS, PR_FALSE);
     }
 
     return mUseClearTypeAlways;
@@ -873,7 +873,7 @@ gfxWindowsPlatform::GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams
 void
 gfxWindowsPlatform::FontsPrefsChanged(const char *aPref)
 {
-    bool clearTextFontCaches = true;
+    PRBool clearTextFontCaches = PR_TRUE;
 
     gfxPlatform::FontsPrefsChanged(aPref);
 

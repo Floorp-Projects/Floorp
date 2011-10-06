@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "common/angleutils.h"
-
 namespace pp
 {
 
@@ -31,8 +29,6 @@ class Token
     const std::string* value() const { return mValue; }
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(Token);
-
     Location mLocation;
     int mType;
     std::string* mValue;

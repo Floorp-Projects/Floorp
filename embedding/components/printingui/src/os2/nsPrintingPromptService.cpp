@@ -129,10 +129,10 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
                                       nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
                                       nsIPrintSettings*        printSettings,      // ok to be null
                                       nsIObserver*             openDialogObserver, // ok to be null
-                                      bool                     isForPrinting,
+                                      PRBool                   isForPrinting,
                                       nsIWebProgressListener** webProgressListener,
                                       nsIPrintProgressParams** printProgressParams,
-                                      bool*                  notifyOnOpen)
+                                      PRBool*                  notifyOnOpen)
 {
     NS_ENSURE_ARG(webProgressListener);
     NS_ENSURE_ARG(printProgressParams);
@@ -187,7 +187,7 @@ nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const PRUni
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIPrintOptions> printService = do_GetService(sPrintOptionsContractID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    bool displayed;
+    PRBool displayed;
     rv = printService->DisplayJobProperties(printerName, printSettings, &displayed);
   }
   return rv;

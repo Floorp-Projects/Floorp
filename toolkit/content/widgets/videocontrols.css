@@ -1,5 +1,4 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
 
 .scrubber,
 .volumeControl {
@@ -55,31 +54,6 @@
   opacity: 0;
 }
 
-/* Statistics formatting */
-html|td.statLabel {
-  font-weight: bold;
-  max-width: 20%;
-  white-space: nowrap;
-}
-html|td.statValue {
-  max-width: 30%;
-}
-html|td.filename {
-  max-width: 80%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-html|span.statActivity > html|span {
-  display: none;
-}
-html|span.statActivity[activity="paused"] > html|span.statActivityPaused,
-html|span.statActivity[activity="playing"] > html|span.statActivityPlaying,
-html|span.statActivity[activity="ended"] > html|span.statActivityEnded,
-html|span.statActivity[seeking] > html|span.statActivitySeeking {
-  display: inline;
-}
-
 .controlBar[size="hidden"],
 .controlBar[size="small"] .durationBox,
 .controlBar[size="small"] .durationLabel,
@@ -87,10 +61,10 @@ html|span.statActivity[seeking] > html|span.statActivitySeeking {
   visibility: collapse;
 }
 
-.controlBar[size="small"] .scrubberStack,
-.controlBar[size="small"] .backgroundBar,
-.controlBar[size="small"] .bufferBar,
-.controlBar[size="small"] .progressBar,
-.controlBar[size="small"] .scrubber {
+.controlBar[size="small"] .scrubberStack {
+  visibility: hidden;
+}
+
+.controlBar[size="small"] .scrubberStack > * {
   visibility: hidden;
 }

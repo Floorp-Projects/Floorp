@@ -336,10 +336,9 @@ LayerManagerD3D10::EndEmptyTransaction()
 
 void
 LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
-                                  void* aCallbackData,
-                                  EndTransactionFlags aFlags)
+                                  void* aCallbackData)
 {
-  if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
+  if (mRoot) {
     mCurrentCallbackInfo.Callback = aCallback;
     mCurrentCallbackInfo.CallbackData = aCallbackData;
 

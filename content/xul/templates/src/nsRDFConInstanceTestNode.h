@@ -62,9 +62,9 @@ public:
                              Test aEmpty);
 
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
-                                          bool* aCantHandleYet) const;
+                                          PRBool* aCantHandleYet) const;
 
-    virtual bool
+    virtual PRBool
     CanPropagate(nsIRDFResource* aSource,
                  nsIRDFResource* aProperty,
                  nsIRDFNode* aTarget,
@@ -113,7 +113,7 @@ public:
                 PLHashNumber(mContainerTest) ^
                 (PLHashNumber(mEmptyTest) << 4); }
 
-        virtual bool Equals(const MemoryElement& aElement) const {
+        virtual PRBool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {
                 const Element& element = static_cast<const Element&>(aElement);
                 return mContainer == element.mContainer

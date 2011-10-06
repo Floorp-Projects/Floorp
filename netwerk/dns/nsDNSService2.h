@@ -67,7 +67,7 @@ private:
     // IPv4 DNS lookups are performed. This allows the user to disable IPv6 on
     // a per-domain basis and work around broken DNS servers. See bug 68796.
     nsAdoptingCString         mIPv4OnlyDomains;
-    bool                      mDisableIPv6;
-    bool                      mDisablePrefetch;
-    bool                      mFirstTime;
+    PRBool                    mDisableIPv6;
+    PRBool                    mDisablePrefetch;
+    PRBool                    mFirstTime;
 };

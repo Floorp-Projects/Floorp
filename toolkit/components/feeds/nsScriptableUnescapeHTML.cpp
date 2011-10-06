@@ -113,7 +113,7 @@ nsScriptableUnescapeHTML::Unescape(const nsAString & aFromStr,
 // context like innerHTML does, because feed DOMs shouldn't have that.
 NS_IMETHODIMP
 nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
-                                        bool aIsXML,
+                                        PRBool aIsXML,
                                         nsIURI* aBaseURI,
                                         nsIDOMElement* aContextElement,
                                         nsIDOMDocumentFragment** aReturn)
@@ -135,7 +135,7 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
 
   // stop scripts
   nsRefPtr<nsScriptLoader> loader;
-  bool scripts_enabled = false;
+  PRBool scripts_enabled = PR_FALSE;
   if (document) {
     loader = document->ScriptLoader();
     scripts_enabled = loader->GetEnabled();

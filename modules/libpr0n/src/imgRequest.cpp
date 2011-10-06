@@ -95,8 +95,8 @@ using namespace mozilla;
 using namespace mozilla::imagelib;
 
 /* Kept up to date by a pref observer. */
-static bool gDecodeOnDraw = false;
-static bool gDiscardable = false;
+static PRBool gDecodeOnDraw = PR_FALSE;
+static PRBool gDiscardable = PR_FALSE;
 
 static const char* kObservedPrefs[] = {
   DISCARD_PREF,
@@ -110,7 +110,7 @@ static const char* kObservedPrefs[] = {
  */
 
 // Flag
-static bool gRegisteredPrefObserver = false;
+static PRBool gRegisteredPrefObserver = PR_FALSE;
 
 // Reloader
 static void
@@ -270,7 +270,7 @@ void imgRequest::SetCacheEntry(imgCacheEntry *entry)
   mCacheEntry = entry;
 }
 
-bool imgRequest::HasCacheEntry() const
+PRBool imgRequest::HasCacheEntry() const
 {
   return mCacheEntry != nsnull;
 }
@@ -300,7 +300,7 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
     NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool aNotify)
+nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBool aNotify)
 {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy", "proxy", proxy);
 
@@ -427,7 +427,7 @@ void imgRequest::RemoveFromCache()
   mCacheEntry = nsnull;
 }
 
-bool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
+PRBool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
 {
   nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
   imgRequestProxy* proxy;
@@ -471,7 +471,7 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, PRInt32 delta)
     p->AdjustPriority(delta);
 }
 
-void imgRequest::SetIsInCache(bool incache)
+void imgRequest::SetIsInCache(PRBool incache)
 {
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::SetIsCacheable", "incache", incache);
   mIsInCache = incache;
@@ -517,7 +517,7 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
     // Currently, only HTTP specifies this information...
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
     if (httpChannel) {
-      bool bMustRevalidate = false;
+      PRBool bMustRevalidate = PR_FALSE;
 
       httpChannel->IsNoStoreResponse(&bMustRevalidate);
 
@@ -547,7 +547,7 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
     if (channel) {
       nsCOMPtr<nsIURI> uri;
       channel->GetURI(getter_AddRefs(uri));
-      bool isfile = false;
+      PRBool isfile = PR_FALSE;
       uri->SchemeIs("file", &isfile);
       if (isfile)
         aCacheEntry->SetMustValidate(isfile);
@@ -677,7 +677,7 @@ NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request,
 
 /* [noscript] void onDataAvailable (in imgIRequest request, in boolean aCurrentFrame, [const] in nsIntRect rect); */
 NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request,
-                                          bool aCurrentFrame,
+                                          PRBool aCurrentFrame,
                                           const nsIntRect * rect)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable");
@@ -768,7 +768,7 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP imgRequest::OnStopRequest(imgIRequest *aRequest,
-                                        bool aLastPart)
+                                        PRBool aLastPart)
 {
   NS_NOTREACHED("imgRequest(imgIDecoderObserver)::OnStopRequest");
   return NS_OK;
@@ -884,7 +884,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 {
   LOG_FUNC(gImgLog, "imgRequest::OnStopRequest");
 
-  bool lastPart = true;
+  PRBool lastPart = PR_TRUE;
   nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
   if (mpchan)
     mpchan->GetIsLastPart(&lastPart);
@@ -1049,19 +1049,19 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     //
 
     // We default to the static globals
-    bool isDiscardable = gDiscardable;
-    bool doDecodeOnDraw = gDecodeOnDraw;
+    PRBool isDiscardable = gDiscardable;
+    PRBool doDecodeOnDraw = gDecodeOnDraw;
 
     // We want UI to be as snappy as possible and not to flicker. Disable discarding
     // and decode-on-draw for chrome URLS
-    bool isChrome = false;
+    PRBool isChrome = PR_FALSE;
     rv = mURI->SchemeIs("chrome", &isChrome);
     if (NS_SUCCEEDED(rv) && isChrome)
       isDiscardable = doDecodeOnDraw = PR_FALSE;
 
     // We don't want resources like the "loading" icon to be discardable or
     // decode-on-draw either.
-    bool isResource = false;
+    PRBool isResource = PR_FALSE;
     rv = mURI->SchemeIs("resource", &isResource);
     if (NS_SUCCEEDED(rv) && isResource)
       isDiscardable = doDecodeOnDraw = PR_FALSE;
@@ -1279,7 +1279,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   // make sure we have a protocol that returns data rather than opens
   // an external application, e.g. mailto:
   mChannel->GetURI(getter_AddRefs(mCurrentURI));
-  bool doesNotReturnData = false;
+  PRBool doesNotReturnData = PR_FALSE;
   nsresult rv =
     NS_URIChainHasFlags(mCurrentURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                         &doesNotReturnData);

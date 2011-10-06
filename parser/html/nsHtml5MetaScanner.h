@@ -100,10 +100,10 @@ class nsHtml5MetaScanner
 
     void addToBuffer(PRInt32 c);
     void handleAttributeValue();
-    bool handleTag();
-    bool handleTagInner();
+    PRBool handleTag();
+    PRBool handleTagInner();
   protected:
-    bool tryCharset(nsString* encoding);
+    PRBool tryCharset(nsString* encoding);
   public:
     static void initializeStatics();
     static void releaseStatics();

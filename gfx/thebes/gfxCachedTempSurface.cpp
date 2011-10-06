@@ -112,7 +112,7 @@ gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
     }
   }
 
-  bool cleared = false;
+  PRBool cleared = PR_FALSE;
   if (!mSurface) {
     mSize = gfxIntSize(PRInt32(ceil(aRect.width)), PRInt32(ceil(aRect.height)));
     mSurface = aSimilarTo->CreateSimilarSurface(aContentType, mSize);

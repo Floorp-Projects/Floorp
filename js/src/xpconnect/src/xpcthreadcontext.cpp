@@ -155,7 +155,7 @@ XPCJSContextStack::Push(JSContext * cx)
                     if(nsIPrincipal* globalObjectPrincipal = GetPrincipalFromCx(cx))
                     {
                         nsIPrincipal* subjectPrincipal = ssm->GetCxSubjectPrincipal(cx);
-                        bool equals = false;
+                        PRBool equals = PR_FALSE;
                         globalObjectPrincipal->Equals(subjectPrincipal, &equals);
                         if(equals)
                         {
@@ -359,7 +359,7 @@ XPCPerThreadData::~XPCPerThreadData()
     /* Be careful to ensure that both any update to |gThreads| and the
        decision about whether or not to destroy the lock, are done
        atomically.  See bug 557586. */
-    bool doDestroyLock = false;
+    PRBool doDestroyLock = PR_FALSE;
 
     MOZ_COUNT_DTOR(xpcPerThreadData);
 
@@ -557,7 +557,7 @@ nsXPCJSContextStackIterator::Reset(nsIJSContextStack *aStack)
 }
 
 NS_IMETHODIMP
-nsXPCJSContextStackIterator::Done(bool *aDone)
+nsXPCJSContextStackIterator::Done(PRBool *aDone)
 {
     *aDone = !mStack;
     return NS_OK;

@@ -79,19 +79,19 @@ class nsHtml5StackNode
     }
 
     PRInt32 getGroup();
-    bool isScoping();
-    bool isSpecial();
-    bool isFosterParenting();
-    bool isHtmlIntegrationPoint();
+    PRBool isScoping();
+    PRBool isSpecial();
+    PRBool isFosterParenting();
+    PRBool isHtmlIntegrationPoint();
     nsHtml5StackNode(PRInt32 flags, PRInt32 ns, nsIAtom* name, nsIContent** node, nsIAtom* popName, nsHtml5HtmlAttributes* attributes);
     nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node);
     nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsHtml5HtmlAttributes* attributes);
     nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName);
     nsHtml5StackNode(nsHtml5ElementName* elementName, nsIAtom* popName, nsIContent** node);
-    nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName, bool markAsIntegrationPoint);
+    nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName, PRBool markAsIntegrationPoint);
   private:
     static PRInt32 prepareSvgFlags(PRInt32 flags);
-    static PRInt32 prepareMathFlags(PRInt32 flags, bool markAsIntegrationPoint);
+    static PRInt32 prepareMathFlags(PRInt32 flags, PRBool markAsIntegrationPoint);
   public:
     ~nsHtml5StackNode();
     void dropAttributes();

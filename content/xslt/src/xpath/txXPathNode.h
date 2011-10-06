@@ -51,8 +51,8 @@ typedef nsIDOMNode txXPathNodeType;
 class txXPathNode
 {
 public:
-    bool operator==(const txXPathNode& aNode) const;
-    bool operator!=(const txXPathNode& aNode) const
+    PRBool operator==(const txXPathNode& aNode) const;
+    PRBool operator!=(const txXPathNode& aNode) const
     {
         return !(*this == aNode);
     }
@@ -100,15 +100,15 @@ private:
         return mRefCountRoot ? Root() : nsnull;
     }
 
-    bool isDocument() const
+    PRBool isDocument() const
     {
         return mIndex == eDocument;
     }
-    bool isContent() const
+    PRBool isContent() const
     {
         return mIndex == eContent;
     }
-    bool isAttribute() const
+    PRBool isAttribute() const
     {
         return mIndex != eDocument && mIndex != eContent;
     }
@@ -160,7 +160,7 @@ txNamespaceManager::getNamespaceURI(const PRInt32 aID, nsAString& aResult)
         GetNameSpaceURI(aID, aResult);
 }
 
-inline bool
+inline PRBool
 txXPathNode::operator==(const txXPathNode& aNode) const
 {
     return mIndex == aNode.mIndex && mNode == aNode.mNode;

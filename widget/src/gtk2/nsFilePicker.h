@@ -83,7 +83,7 @@ protected:
 
   PRInt16   mMode;
   PRInt16   mSelectedType;
-  bool      mAllowURLs;
+  PRBool    mAllowURLs;
   nsCString mFileURL;
   nsString  mTitle;
   nsString  mDefault;

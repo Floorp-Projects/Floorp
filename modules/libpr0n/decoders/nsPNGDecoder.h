@@ -59,7 +59,7 @@ class RasterImage;
 class nsPNGDecoder : public Decoder
 {
 public:
-  nsPNGDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver);
+  nsPNGDecoder();
   virtual ~nsPNGDecoder();
 
   virtual void InitInternal();
@@ -105,12 +105,12 @@ public:
   PRUint32 mHeaderBytesRead;
 
   PRUint8 mChannels;
-  bool mFrameHasNoAlpha;
-  bool mFrameIsHidden;
+  PRPackedBool mFrameHasNoAlpha;
+  PRPackedBool mFrameIsHidden;
 
   // whether CMS or premultiplied alpha are forced off
   PRUint32 mCMSMode;
-  bool mDisablePremultipliedAlpha;
+  PRPackedBool mDisablePremultipliedAlpha;
   
   /*
    * libpng callbacks

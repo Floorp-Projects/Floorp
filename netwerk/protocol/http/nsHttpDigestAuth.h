@@ -100,7 +100,7 @@ class nsHttpDigestAuth : public nsIHttpAuthenticator
                             nsACString & domain,
                             nsACString & nonce,
                             nsACString & opaque,
-                            bool * stale,
+                            PRBool * stale,
                             PRUint16 * algorithm,
                             PRUint16 * qop);
 
@@ -108,7 +108,7 @@ class nsHttpDigestAuth : public nsIHttpAuthenticator
     nsresult MD5Hash(const char *buf, PRUint32 len);
 
     nsresult GetMethodAndPath(nsIHttpAuthenticableChannel *,
-                              bool, nsCString &, nsCString &);
+                              PRBool, nsCString &, nsCString &);
 
     // append the quoted version of value to aHeaderLine
     nsresult AppendQuotedString(const nsACString & value,

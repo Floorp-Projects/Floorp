@@ -38,7 +38,10 @@
 #include <jni.h>
 #include <stdlib.h>
 
-extern "C"
+extern "C" {
+  void JNICALL Java_org_mozilla_gecko_GeckoAppShell_putenv(JNIEnv *jenv, jclass, jstring map);
+}
+
 __attribute__ ((visibility("default")))
 void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_putenv(JNIEnv *jenv, jclass, jstring map)

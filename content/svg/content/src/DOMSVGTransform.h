@@ -78,7 +78,7 @@ public:
    */
   DOMSVGTransform(DOMSVGTransformList *aList,
                   PRUint32 aListIndex,
-                  bool aIsAnimValItem);
+                  PRBool aIsAnimValItem);
 
   /**
    * Ctors for creating the objects returned by:
@@ -118,7 +118,7 @@ public:
     return new DOMSVGTransform(InternalItem());
   }
 
-  bool IsInList() const {
+  PRBool IsInList() const {
     return !!mList;
   }
 
@@ -126,7 +126,7 @@ public:
    * In future, if this class is used for non-list transforms, this will be
    * different to IsInList().
    */
-  bool HasOwner() const {
+  PRBool HasOwner() const {
     return !!mList;
   }
 
@@ -142,7 +142,7 @@ public:
    */
   void InsertingIntoList(DOMSVGTransformList *aList,
                          PRUint32 aListIndex,
-                         bool aIsAnimValItem);
+                         PRBool aIsAnimValItem);
 
   static PRUint32 MaxListIndex() {
     return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
@@ -168,7 +168,7 @@ public:
 protected:
   // Interface for DOMSVGMatrix's use
   friend class DOMSVGMatrix;
-  const bool IsAnimVal() const {
+  const PRBool IsAnimVal() const {
     return mIsAnimValItem;
   }
   const gfxMatrix& Matrix() const {
@@ -190,7 +190,7 @@ private:
   const SVGTransform& InternalItem() const;
 
 #ifdef DEBUG
-  bool IndexIsValid();
+  PRBool IndexIsValid();
 #endif
 
   const SVGTransform& Transform() const {
@@ -207,7 +207,7 @@ private:
   // that if you change the capacity of any of the following.
 
   PRUint32 mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
-  bool mIsAnimValItem:1;
+  PRPackedBool mIsAnimValItem:1;
 
   // Usually this class acts as a wrapper for an SVGTransform object which is
   // part of a list and is accessed by going via the owning Element.

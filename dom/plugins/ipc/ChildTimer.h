@@ -68,7 +68,7 @@ public:
   class IDComparator
   {
   public:
-    bool Equals(ChildTimer* t, uint32_t id) const {
+    PRBool Equals(ChildTimer* t, uint32_t id) const {
       return t->ID() == id;
     }
   };

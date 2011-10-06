@@ -52,7 +52,7 @@ protected:
   nsCollation   *mCollation;
   nsCString     mLocale;
   nsCString     mSavedLocale;
-  bool          mUseCodePointOrder;
+  PRBool        mUseCodePointOrder;
 
   void DoSetLocale();
   void DoRestoreLocale();

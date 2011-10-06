@@ -181,7 +181,7 @@ nsTreeRows::FindByResource(nsIRDFResource* aResource)
 
     nsresult rv;
     nsAutoString resourceid;
-    bool stringmode = false;
+    PRBool stringmode = PR_FALSE;
 
     for (iter = First(); iter != last; ++iter) {
         if (!stringmode) {
@@ -399,7 +399,7 @@ nsTreeRows::iterator::Push(Subtree *aParent, PRInt32 aChildIndex)
         NS_ERROR("out of memory");
 }
 
-bool
+PRBool
 nsTreeRows::iterator::operator==(const iterator& aIterator) const
 {
     if (GetDepth() != aIterator.GetDepth())

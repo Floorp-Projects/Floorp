@@ -45,7 +45,7 @@
 
 namespace xpc {
 
-class NoWaiverWrapper : public js::CrossCompartmentWrapper {
+class NoWaiverWrapper : public JSCrossCompartmentWrapper {
   public:
     NoWaiverWrapper(uintN flags);
     virtual ~NoWaiverWrapper();

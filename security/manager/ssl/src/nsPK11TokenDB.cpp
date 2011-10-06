@@ -213,7 +213,7 @@ NS_IMETHODIMP nsPK11Token::GetTokenSerialNumber(PRUnichar **aTokSerialNum)
 }
 
 /* boolean isLoggedIn (); */
-NS_IMETHODIMP nsPK11Token::IsLoggedIn(bool *_retval)
+NS_IMETHODIMP nsPK11Token::IsLoggedIn(PRBool *_retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -228,7 +228,7 @@ NS_IMETHODIMP nsPK11Token::IsLoggedIn(bool *_retval)
 
 /* void logout (in boolean force); */
 NS_IMETHODIMP 
-nsPK11Token::Login(bool force)
+nsPK11Token::Login(PRBool force)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -236,7 +236,7 @@ nsPK11Token::Login(bool force)
 
   nsresult rv;
   SECStatus srv;
-  bool test;
+  PRBool test;
   rv = this->NeedsLogin(&test);
   if (NS_FAILED(rv)) return rv;
   if (test && force) {
@@ -299,7 +299,7 @@ NS_IMETHODIMP nsPK11Token::GetMinimumPasswordLength(PRInt32 *aMinimumPasswordLen
 }
 
 /* readonly attribute boolean needsUserInit; */
-NS_IMETHODIMP nsPK11Token::GetNeedsUserInit(bool *aNeedsUserInit)
+NS_IMETHODIMP nsPK11Token::GetNeedsUserInit(PRBool *aNeedsUserInit)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -310,7 +310,7 @@ NS_IMETHODIMP nsPK11Token::GetNeedsUserInit(bool *aNeedsUserInit)
 }
 
 /* boolean checkPassword (in wstring password); */
-NS_IMETHODIMP nsPK11Token::CheckPassword(const PRUnichar *password, bool *_retval)
+NS_IMETHODIMP nsPK11Token::CheckPassword(const PRUnichar *password, PRBool *_retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -413,7 +413,7 @@ NS_IMETHODIMP nsPK11Token::ChangePassword(const PRUnichar *oldPassword, const PR
 }
 
 /* boolean isHardwareToken (); */
-NS_IMETHODIMP nsPK11Token::IsHardwareToken(bool *_retval)
+NS_IMETHODIMP nsPK11Token::IsHardwareToken(PRBool *_retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -427,7 +427,7 @@ NS_IMETHODIMP nsPK11Token::IsHardwareToken(bool *_retval)
 }
 
 /* boolean needsLogin (); */
-NS_IMETHODIMP nsPK11Token::NeedsLogin(bool *_retval)
+NS_IMETHODIMP nsPK11Token::NeedsLogin(PRBool *_retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -441,7 +441,7 @@ NS_IMETHODIMP nsPK11Token::NeedsLogin(bool *_retval)
 }
 
 /* boolean isFriendly (); */
-NS_IMETHODIMP nsPK11Token::IsFriendly(bool *_retval)
+NS_IMETHODIMP nsPK11Token::IsFriendly(PRBool *_retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())

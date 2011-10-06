@@ -79,7 +79,7 @@ NS_IMPL_ISUPPORTS1(inDOMUtils, inIDOMUtils)
 
 NS_IMETHODIMP
 inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
-                                  bool *aReturn)
+                                  PRBool *aReturn)
 {
   NS_PRECONDITION(aReturn, "Must have an out parameter");
 
@@ -119,7 +119,7 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
 
 NS_IMETHODIMP
 inDOMUtils::GetParentForNode(nsIDOMNode* aNode,
-                             bool aShowingAnonymousContent,
+                             PRBool aShowingAnonymousContent,
                              nsIDOMNode** aParent)
 {
   NS_ENSURE_ARG_POINTER(aNode);
@@ -154,7 +154,7 @@ inDOMUtils::GetParentForNode(nsIDOMNode* aNode,
 
 NS_IMETHODIMP
 inDOMUtils::GetChildrenForNode(nsIDOMNode* aNode,
-                               bool aShowingAnonymousContent,
+                               PRBool aShowingAnonymousContent,
                                nsIDOMNodeList** aChildren)
 {
   NS_ENSURE_ARG_POINTER(aNode);
@@ -323,7 +323,7 @@ inDOMUtils::GetRuleNodeForContent(nsIContent* aContent,
   nsPresContext *presContext = presShell->GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
 
-  bool safe = presContext->EnsureSafeToHandOutCSSRules();
+  PRBool safe = presContext->EnsureSafeToHandOutCSSRules();
   NS_ENSURE_TRUE(safe, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<nsStyleContext> sContext =

@@ -78,11 +78,11 @@ public:
   PRInt32 GetHeight() const;
   nsIntRect GetRect() const;
   gfxASurface::gfxImageFormat GetFormat() const;
-  bool GetNeedsBackground() const;
+  PRBool GetNeedsBackground() const;
   PRUint32 GetImageBytesPerRow() const;
   PRUint32 GetImageDataLength() const;
-  bool GetIsPaletted() const;
-  bool GetHasAlpha() const;
+  PRBool GetIsPaletted() const;
+  PRBool GetHasAlpha() const;
   void GetImageData(PRUint8 **aData, PRUint32 *length) const;
   void GetPaletteData(PRUint32 **aPalette, PRUint32 *length) const;
 
@@ -93,12 +93,12 @@ public:
   void SetFrameDisposalMethod(PRInt32 aFrameDisposalMethod);
   PRInt32 GetBlendMethod() const;
   void SetBlendMethod(PRInt32 aBlendMethod);
-  bool ImageComplete() const;
+  PRBool ImageComplete() const;
 
   void SetHasNoAlpha();
 
-  bool GetCompositingFailed() const;
-  void SetCompositingFailed(bool val);
+  PRBool GetCompositingFailed() const;
+  void SetCompositingFailed(PRBool val);
 
   nsresult LockImageData();
   nsresult UnlockImageData();
@@ -149,12 +149,12 @@ private: // methods
     SurfaceWithFormat() {}
     SurfaceWithFormat(gfxDrawable* aDrawable, gfxImageSurface::gfxImageFormat aFormat)
      : mDrawable(aDrawable), mFormat(aFormat) {}
-    bool IsValid() { return !!mDrawable; }
+    PRBool IsValid() { return !!mDrawable; }
   };
 
-  SurfaceWithFormat SurfaceForDrawing(bool               aDoPadding,
-                                      bool               aDoPartialDecode,
-                                      bool               aDoTile,
+  SurfaceWithFormat SurfaceForDrawing(PRBool             aDoPadding,
+                                      PRBool             aDoPartialDecode,
+                                      PRBool             aDoTile,
                                       const nsIntMargin& aPadding,
                                       gfxMatrix&         aUserSpaceToImageSpace,
                                       gfxRect&           aFill,
@@ -190,15 +190,15 @@ private: // data
   gfxASurface::gfxImageFormat mFormat;
   PRUint8      mPaletteDepth;
   PRInt8       mBlendMethod;
-  bool mSinglePixel;
-  bool mNeverUseDeviceSurface;
-  bool mFormatChanged;
-  bool mCompositingFailed;
+  PRPackedBool mSinglePixel;
+  PRPackedBool mNeverUseDeviceSurface;
+  PRPackedBool mFormatChanged;
+  PRPackedBool mCompositingFailed;
   /** Indicates if the image data is currently locked */
-  bool mLocked;
+  PRPackedBool mLocked;
 
 #ifdef XP_WIN
-  bool mIsDDBSurface;
+  PRPackedBool mIsDDBSurface;
 #endif
 
 };

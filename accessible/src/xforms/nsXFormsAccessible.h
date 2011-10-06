@@ -90,7 +90,7 @@ public:
 
   // Denies accessible nodes in anonymous content of xforms element by
   // always returning PR_FALSE value.
-  virtual bool GetAllowsAnonChildAccessibles();
+  virtual PRBool GetAllowsAnonChildAccessibles();
 
 protected:
   // Returns value of first child xforms element by tagname that is bound to
@@ -131,7 +131,7 @@ public:
 
   // Allows accessible nodes in anonymous content of xforms element by
   // always returning PR_TRUE value.
-  virtual bool GetAllowsAnonChildAccessibles();
+  virtual PRBool GetAllowsAnonChildAccessibles();
 };
 
 
@@ -176,7 +176,7 @@ protected:
   nsIContent* GetItemByIndex(PRUint32* aIndex,
                              nsAccessible* aAccessible = nsnull);
 
-  bool mIsSelect1Element;
+  PRBool mIsSelect1Element;
 };
 
 

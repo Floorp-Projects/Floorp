@@ -105,14 +105,6 @@
                 label="&mediaHideControls.label;"
                 accesskey="&mediaHideControls.accesskey;"
                 oncommand="gContextMenu.mediaCommand('hidecontrols');"/>
-      <menuitem id="context-video-showstats"
-                accesskey="&videoShowStats.accesskey;"
-                label="&videoShowStats.label;"
-                oncommand="gContextMenu.mediaCommand('showstats');"/>
-      <menuitem id="context-video-hidestats"
-                accesskey="&videoHideStats.accesskey;"
-                label="&videoHideStats.label;"
-                oncommand="gContextMenu.mediaCommand('hidestats');"/>
       <menuitem id="context-video-fullscreen"
                 accesskey="&videoFullScreen.accesskey;"
                 label="&videoFullScreen.label;"
@@ -175,10 +167,6 @@
                 label="&saveAudioCmd.label;"
                 accesskey="&saveAudioCmd.accesskey;"
                 oncommand="gContextMenu.saveMedia();"/>
-      <menuitem id="context-video-saveimage"
-                accesskey="&videoSaveImage.accesskey;"
-                label="&videoSaveImage.label;"
-                oncommand="gContextMenu.saveVideoFrameAsImage();"/>
       <menuitem id="context-sendvideo"
                 label="&sendVideoCmd.label;"
                 accesskey="&sendVideoCmd.accesskey;"

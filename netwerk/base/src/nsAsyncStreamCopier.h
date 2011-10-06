@@ -61,7 +61,7 @@ public:
     //-------------------------------------------------------------------------
     // these methods may be called on any thread
 
-    bool IsComplete(nsresult *status = nsnull);
+    PRBool IsComplete(nsresult *status = nsnull);
     void   Complete(nsresult status);
 
 private:
@@ -83,9 +83,9 @@ private:
     nsAsyncCopyMode                mMode;
     PRUint32                       mChunkSize;
     nsresult                       mStatus;
-    bool                           mIsPending;
-    bool                           mCloseSource;
-    bool                           mCloseSink;
+    PRPackedBool                   mIsPending;
+    PRPackedBool                   mCloseSource;
+    PRPackedBool                   mCloseSink;
 };
 
 #endif // !nsAsyncStreamCopier_h__

@@ -149,6 +149,7 @@ class RegExp
     void reportPCREError(JSContext *cx, int error);
 #endif
     void reportYarrError(JSContext *cx, TokenStream *ts, JSC::Yarr::ErrorCode error);
+    static inline bool initArena(JSContext *cx);
     static inline void checkMatchPairs(JSString *input, int *buf, size_t matchItemCount);
     static JSObject *createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount);
     inline bool executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
@@ -254,6 +255,27 @@ class RegExpMatchBuilder
 
 /* RegExp inlines. */
 
+inline bool
+RegExp::initArena(JSContext *cx)
+{
+    if (cx->regExpPool.first.next)
+        return true;
+
+    /*
+     * The regular expression arena pool is special... we want to hang on to it
+     * until a GC is performed so rapid subsequent regexp executions don't
+     * thrash malloc/freeing arena chunks.
+     *
+     * Stick a timestamp at the base of that pool.
+     */
+    int64 *timestamp;
+    JS_ARENA_ALLOCATE_CAST(timestamp, int64 *, &cx->regExpPool, sizeof *timestamp);
+    if (!timestamp)
+        return false;
+    *timestamp = JS_Now();
+    return true;
+}
+
 inline void
 RegExp::checkMatchPairs(JSString *input, int *buf, size_t matchItemCount)
 {
@@ -317,8 +339,11 @@ RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *inputstr,
     const size_t bufCount = pairCount * 3; /* Should be x2, but PCRE has... needs. */
     const size_t matchItemCount = pairCount * 2;
 
-    LifoAllocScope las(&cx->tempLifoAlloc());
-    int *buf = cx->tempLifoAlloc().newArray<int>(bufCount);
+    if (!initArena(cx))
+        return false;
+
+    AutoArenaAllocator aaa(&cx->regExpPool);
+    int *buf = aaa.alloc<int>(bufCount);
     if (!buf)
         return false;
 
@@ -584,7 +609,7 @@ RegExp::extractFrom(JSObject *obj)
     RegExp *re = static_cast<RegExp *>(obj->getPrivate());
 #ifdef DEBUG
     if (re)
-        CompartmentChecker::check(obj->compartment(), re->compartment);
+        CompartmentChecker::check(obj->getCompartment(), re->compartment);
 #endif
     return re;
 }

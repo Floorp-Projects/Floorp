@@ -49,7 +49,7 @@ struct nsStaticAtom;
 
 class nsAtomListUtils {
 public:
-    static bool IsMember(nsIAtom *aAtom,
+    static PRBool IsMember(nsIAtom *aAtom,
                            const nsStaticAtom* aInfo,
                            PRUint32 aInfoCount);
 };

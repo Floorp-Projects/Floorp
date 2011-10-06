@@ -131,7 +131,7 @@ FT2FontEntry::CreateScaledFont(const gfxFontStyle *aStyle)
     cairo_matrix_init_identity(&identityMatrix);
 
     // synthetic oblique by skewing via the font matrix
-    bool needsOblique = !IsItalic() &&
+    PRBool needsOblique = !IsItalic() &&
             (aStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE));
 
     if (needsOblique) {
@@ -179,7 +179,7 @@ FT2FontEntry::~FT2FontEntry()
 }
 
 gfxFont*
-FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold)
+FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold)
 {
     cairo_scaled_font_t *scaledFont = CreateScaledFont(aFontStyle);
     gfxFont *font = new gfxFT2Font(scaledFont, this, aFontStyle, aNeedsBold);
@@ -352,8 +352,8 @@ FT2FontEntry::ReadCMAP()
     nsresult rv = GetFontTable(TTAG_cmap, buffer);
     
     if (NS_SUCCEEDED(rv)) {
-        bool unicodeFont;
-        bool symbolFont;
+        PRPackedBool unicodeFont;
+        PRPackedBool symbolFont;
         rv = gfxFontUtils::ReadCMAP(buffer.Elements(), buffer.Length(),
                                     mCharacterMap, mUVSOffset,
                                     unicodeFont, symbolFont);
@@ -569,7 +569,7 @@ public:
 private:
     mozilla::scache::StartupCache* mCache;
     PLDHashTable mMap;
-    bool mWriteNeeded;
+    PRBool mWriteNeeded;
 
     PLDHashTableOps mOps;
 
@@ -601,7 +601,7 @@ private:
         PRUint32  mTimestamp;
         PRUint32  mFilesize;
         nsCString mFaces;
-        bool      mFileExists;
+        PRBool    mFileExists;
     } FNCMapEntry;
 
     static PLDHashNumber StringHash(PLDHashTable *table, const void *key)
@@ -609,7 +609,7 @@ private:
         return HashString(reinterpret_cast<const char*>(key));
     }
 
-    static bool HashMatchEntry(PLDHashTable *table,
+    static PRBool HashMatchEntry(PLDHashTable *table,
                                  const PLDHashEntryHdr *aHdr, const void *key)
     {
         const FNCMapEntry* entry =
@@ -645,7 +645,7 @@ gfxFT2FontList::gfxFT2FontList()
 
 void
 gfxFT2FontList::AppendFacesFromCachedFaceList(nsCString& aFileName,
-                                              bool aStdFile,
+                                              PRBool aStdFile,
                                               nsCString& aFaceList)
 {
     const char *beginning = aFaceList.get();
@@ -669,7 +669,7 @@ gfxFT2FontList::AppendFacesFromCachedFaceList(nsCString& aFileName,
         if (!(end = strchr(beginning, ','))) {
             break;
         }
-        bool italic = (*beginning != '0');
+        PRBool italic = (*beginning != '0');
         beginning = end + 1;
         if (!(end = strchr(beginning, ','))) {
             break;
@@ -710,7 +710,7 @@ AppendToFaceList(nsCString& aFaceList,
 
 void
 gfxFT2FontList::AppendFacesFromFontFile(nsCString& aFileName,
-                                        bool aStdFile,
+                                        PRBool aStdFile,
                                         FontNameCache *aCache)
 {
     nsCString faceList;
@@ -793,7 +793,7 @@ FinalizeFamilyMemberList(nsStringHashKey::KeyType aKey,
                          void* aUserArg)
 {
     gfxFontFamily *family = aFamily.get();
-    bool sortFaces = (aUserArg != nsnull);
+    PRBool sortFaces = (aUserArg != nsnull);
 
     family->SetHasStyles(PR_TRUE);
 
@@ -839,7 +839,7 @@ gfxFT2FontList::FindFonts()
                                              FindExSearchNameMatch,
                                              NULL,
                                              0);
-            bool moreFiles = handle != INVALID_HANDLE_VALUE;
+            PRBool moreFiles = handle != INVALID_HANDLE_VALUE;
             while (moreFiles) {
                 nsAutoString filePath(path);
                 filePath.AppendLiteral("\\");
@@ -955,7 +955,7 @@ gfxFT2FontList::FindFonts()
 
 void
 gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
-                                            bool aStdFile)
+                                            PRBool aStdFile)
 {
     FT2FontEntry* fe = FT2FontEntry::CreateFontEntry(aFLE);
     if (fe) {
@@ -1059,7 +1059,7 @@ gfxFT2FontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 }
 
 gfxFontEntry*
-gfxFT2FontList::GetDefaultFont(const gfxFontStyle* aStyle, bool& aNeedsBold)
+gfxFT2FontList::GetDefaultFont(const gfxFontStyle* aStyle, PRBool& aNeedsBold)
 {
 #ifdef XP_WIN
     HGDIOBJ hGDI = ::GetStockObject(SYSTEM_FONT);

@@ -352,7 +352,7 @@ LayoutShutdownObserver::Observe(nsISupports *aSubject,
 
 //-----------------------------------------------------------------------------
 
-static bool gInitialized = false;
+static PRBool gInitialized = PR_FALSE;
 
 // Perform our one-time intialization for this module
 

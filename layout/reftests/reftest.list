@@ -39,7 +39,7 @@ skip-if(Android) include box-shadow/reftest.list
 skip-if(Android) include bugs/reftest.list
 
 # canvas 2D
-skip-if(Android&&layersOpenGL) include canvas/reftest.list
+include canvas/reftest.list
 
 # css calc() tests
 include css-calc/reftest.list
@@ -60,7 +60,7 @@ skip-if(Android) include css-enabled/reftest.list
 include css-import/reftest.list
 
 # css gradients
-skip-if(Android&&layersOpenGL) include css-gradients/reftest.list
+include css-gradients/reftest.list
 
 # css media queries (tests for print mode)
 include css-mediaqueries/reftest.list
@@ -165,7 +165,7 @@ include ib-split/reftest.list
 include image/reftest.list
 
 # image-element/
-skip-if(Android&&layersOpenGL) include image-element/reftest.list
+include image-element/reftest.list
 
 # image-rect/
 include image-rect/reftest.list
@@ -232,7 +232,7 @@ include scrolling/reftest.list
 include selection/reftest.list
 
 # svg/
-skip-if(Android&&layersOpenGL) include svg/reftest.list
+include svg/reftest.list
 
 # tab-size/
 include tab-size/reftest.list
@@ -273,8 +273,8 @@ include text-transform/reftest.list
 # -moz-transform/
 include transform/reftest.list
 
-# 3d transforms
-include transform-3d/reftest.list
+# 3d transforms - disabled currently
+#include transform-3d/reftest.list
 
 # unicode/ (verify that we don't do expend effort doing unicode-aware case checks)
 include unicode/reftest.list

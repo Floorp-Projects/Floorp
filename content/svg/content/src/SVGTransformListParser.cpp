@@ -102,7 +102,7 @@ SVGTransformListParser::MatchTransforms()
 
 nsresult
 SVGTransformListParser::GetTransformToken(nsIAtom** aKeyAtom,
-                                          bool aAdvancePos)
+                                          PRBool aAdvancePos)
 {
   if (mTokenType != OTHER || *mTokenPos == '\0') {
     return NS_ERROR_FAILURE;
@@ -168,7 +168,7 @@ SVGTransformListParser::MatchTransform()
 }
 
 
-bool
+PRBool
 SVGTransformListParser::IsTokenTransformStarter()
 {
   nsCOMPtr<nsIAtom> keyatom;

@@ -89,7 +89,7 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
   if (doc->IsBeingUsedAsImage()) {
     // Allow local resources for SVG-as-an-image documents, but disallow
     // everything else, to prevent data leakage
-    bool hasFlags;
+    PRBool hasFlags;
     nsresult rv = NS_URIChainHasFlags(aContentLocation,
                                       nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
                                       &hasFlags);
@@ -111,7 +111,7 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
     } else if (aContentType == nsIContentPolicy::TYPE_IMAGE &&
                doc->GetDocumentURI()) {
       // Check for (& disallow) recursive image-loads
-      bool isRecursiveLoad;
+      PRBool isRecursiveLoad;
       rv = aContentLocation->EqualsExceptRef(doc->GetDocumentURI(),
                                              &isRecursiveLoad);
       if (NS_FAILED(rv) || isRecursiveLoad) {

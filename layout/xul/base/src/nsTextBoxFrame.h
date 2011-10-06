@@ -75,8 +75,8 @@ public:
 #endif
 
   void UpdateAttributes(nsIAtom*         aAttribute,
-                        bool&          aResize,
-                        bool&          aRedraw);
+                        PRBool&          aResize,
+                        PRBool&          aRedraw);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
@@ -91,14 +91,14 @@ public:
 
   nsRect GetComponentAlphaBounds();
 
-  virtual bool ComputesOwnOverflowArea();
+  virtual PRBool ComputesOwnOverflowArea();
 
 protected:
   friend class nsAsyncAccesskeyUpdate;
   friend class nsDisplayXULTextBox;
   // Should be called only by nsAsyncAccesskeyUpdate.
   // Returns PR_TRUE if accesskey was updated.
-  bool UpdateAccesskey(nsWeakFrame& aWeakThis);
+  PRBool UpdateAccesskey(nsWeakFrame& aWeakThis);
   void UpdateAccessTitle();
   void UpdateAccessIndex();
 
@@ -125,12 +125,12 @@ protected:
                    nsSize&              aSize,
                    nscoord&             aAscent);
 
-  nsresult RegUnregAccessKey(bool aDoReg);
+  nsresult RegUnregAccessKey(PRBool aDoReg);
 
 private:
 
-  bool AlwaysAppendAccessKey();
-  bool InsertSeparatorBeforeAccessKey();
+  PRBool AlwaysAppendAccessKey();
+  PRBool InsertSeparatorBeforeAccessKey();
 
   void DrawText(nsRenderingContext& aRenderingContext,
                 const nsRect&       aDirtyRect,
@@ -146,13 +146,13 @@ private:
 
   CroppingStyle mCropType;
   nscoord mAscent;
-  bool mNeedsRecalc;
-  bool mNeedsReflowCallback;
+  PRPackedBool mNeedsRecalc;
+  PRPackedBool mNeedsReflowCallback;
 
-  static bool gAlwaysAppendAccessKey;
-  static bool gAccessKeyPrefInitialized;
-  static bool gInsertSeparatorBeforeAccessKey;
-  static bool gInsertSeparatorPrefInitialized;
+  static PRBool gAlwaysAppendAccessKey;
+  static PRBool gAccessKeyPrefInitialized;
+  static PRBool gInsertSeparatorBeforeAccessKey;
+  static PRBool gInsertSeparatorPrefInitialized;
 
 }; // class nsTextBoxFrame
 

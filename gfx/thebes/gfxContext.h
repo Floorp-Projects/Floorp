@@ -102,7 +102,7 @@ public:
     /**
      * Returns true if the cairo context is in an error state.
      */
-    bool HasError();
+    PRBool HasError();
 
     /**
      ** State
@@ -224,7 +224,7 @@ public:
      * Draws the rectangle given by rect.
      * @param snapToPixels ?
      */
-    void Rectangle(const gfxRect& rect, bool snapToPixels = false);
+    void Rectangle(const gfxRect& rect, PRBool snapToPixels = PR_FALSE);
 
     /**
      * Draw an ellipse at the center corner with the given dimensions.
@@ -249,7 +249,7 @@ public:
      */
     void RoundedRectangle(const gfxRect& rect,
                           const gfxCornerSizes& corners,
-                          bool draw_clockwise = true);
+                          PRBool draw_clockwise = PR_TRUE);
 
     /**
      ** Transformation Matrix manipulation
@@ -353,7 +353,7 @@ public:
      * the CTM has a scale applied.  Snapping never takes place if
      * there is a rotation in the CTM.
      */
-    bool UserToDevicePixelSnapped(gfxRect& rect, bool ignoreScale = false) const;
+    PRBool UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale = PR_FALSE) const;
 
     /**
      * Takes the given point and tries to align it to device pixels.  If
@@ -366,7 +366,7 @@ public:
      * the CTM has a scale applied.  Snapping never takes place if
      * there is a rotation in the CTM.
      */
-    bool UserToDevicePixelSnapped(gfxPoint& pt, bool ignoreScale = false) const;
+    PRBool UserToDevicePixelSnapped(gfxPoint& pt, PRBool ignoreScale = PR_FALSE) const;
 
     /**
      * Attempts to pixel snap the rectangle, add it to the current
@@ -392,7 +392,7 @@ public:
      * returns PR_FALSE if there is something other than a color
      *         set as the current source (pattern, surface, etc)
      */
-    bool GetDeviceColor(gfxRGBA& c);
+    PRBool GetDeviceColor(gfxRGBA& c);
 
     /**
      * Set a solid color in the sRGB color space to use for drawing.
@@ -610,7 +610,7 @@ public:
      * This is conservative; it may return false even when the given rectangle is 
      * fully contained by the current clip.
      */
-    bool ClipContainsRect(const gfxRect& aRect);
+    PRBool ClipContainsRect(const gfxRect& aRect);
 
     /**
      * Groups
@@ -634,8 +634,8 @@ public:
     /**
      ** Hit Testing - check if given point is in the current path
      **/
-    bool PointInFill(const gfxPoint& pt);
-    bool PointInStroke(const gfxPoint& pt);
+    PRBool PointInFill(const gfxPoint& pt);
+    PRBool PointInStroke(const gfxPoint& pt);
 
     /**
      ** Extents - returns user space extent of current path
@@ -740,7 +740,7 @@ class THEBES_API gfxContextPathAutoSaveRestore
 public:
     gfxContextPathAutoSaveRestore() : mContext(nsnull) {}
 
-    gfxContextPathAutoSaveRestore(gfxContext *aContext, bool aSave = true) : mContext(aContext)
+    gfxContextPathAutoSaveRestore(gfxContext *aContext, PRBool aSave = PR_TRUE) : mContext(aContext)
     {
         if (aSave)
             Save();       
@@ -751,7 +751,7 @@ public:
         Restore();
     }
 
-    void SetContext(gfxContext *aContext, bool aSave = true)
+    void SetContext(gfxContext *aContext, PRBool aSave = PR_TRUE)
     {
         mContext = aContext;
         if (aSave)
@@ -819,7 +819,7 @@ private:
 
 class THEBES_API gfxContextAutoDisableSubpixelAntialiasing {
 public:
-    gfxContextAutoDisableSubpixelAntialiasing(gfxContext *aContext, bool aDisable)
+    gfxContextAutoDisableSubpixelAntialiasing(gfxContext *aContext, PRBool aDisable)
     {
         if (aDisable) {
             mSurface = aContext->CurrentSurface();
@@ -836,7 +836,7 @@ public:
 
 private:
     nsRefPtr<gfxASurface> mSurface;
-    bool mSubpixelAntialiasingEnabled;
+    PRPackedBool mSubpixelAntialiasingEnabled;
 };
 
 #endif /* GFX_CONTEXT_H */

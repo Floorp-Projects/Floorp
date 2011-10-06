@@ -268,7 +268,7 @@ void GeckoChildProcessHost::InitWindowsGroupID()
   nsCOMPtr<nsIWinTaskbar> taskbarInfo =
     do_GetService(NS_TASKBAR_CONTRACTID);
   if (taskbarInfo) {
-    bool isSupported = false;
+    PRBool isSupported = PR_FALSE;
     taskbarInfo->GetAvailable(&isSupported);
     nsAutoString appId;
     if (isSupported && NS_SUCCEEDED(taskbarInfo->GetDefaultGroupId(appId))) {

@@ -126,7 +126,7 @@ nsTransactionItem::GetTransaction(nsITransaction **aTransaction)
 }
 
 nsresult
-nsTransactionItem::GetIsBatch(bool *aIsBatch)
+nsTransactionItem::GetIsBatch(PRBool *aIsBatch)
 {
   NS_ENSURE_TRUE(aIsBatch, NS_ERROR_NULL_POINTER);
 
@@ -267,7 +267,7 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
         return result;
       }
 
-      bool doInterrupt = false;
+      PRBool doInterrupt = PR_FALSE;
 
       result = aTxMgr->WillUndoNotify(t, &doInterrupt);
 
@@ -357,7 +357,7 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
       return result;
     }
 
-    bool doInterrupt = false;
+    PRBool doInterrupt = PR_FALSE;
 
     result = aTxMgr->WillRedoNotify(t, &doInterrupt);
 

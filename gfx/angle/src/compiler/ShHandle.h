@@ -101,7 +101,7 @@ private:
     TVariableInfoList uniforms;  // Active uniforms in the compiled shader.
 
     // Pair of long varying varibale name <originalName, mappedName>.
-    std::map<std::string, std::string> varyingLongNameMap;
+    TMap<TString, TString> varyingLongNameMap;
 };
 
 //

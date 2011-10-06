@@ -110,7 +110,7 @@ nsHttpDigestAuth::MD5Hash(const char *buf, PRUint32 len)
 
 nsresult
 nsHttpDigestAuth::GetMethodAndPath(nsIHttpAuthenticableChannel *authChannel,
-                                   bool                         isProxyAuth,
+                                   PRBool                       isProxyAuth,
                                    nsCString                   &httpMethod,
                                    nsCString                   &path)
 {
@@ -118,7 +118,7 @@ nsHttpDigestAuth::GetMethodAndPath(nsIHttpAuthenticableChannel *authChannel,
   nsCOMPtr<nsIURI> uri;
   rv = authChannel->GetURI(getter_AddRefs(uri));
   if (NS_SUCCEEDED(rv)) {
-    bool proxyMethodIsConnect;
+    PRBool proxyMethodIsConnect;
     rv = authChannel->GetProxyMethodIsConnect(&proxyMethodIsConnect);
     if (NS_SUCCEEDED(rv)) {
       if (proxyMethodIsConnect && isProxyAuth) {
@@ -169,13 +169,13 @@ nsHttpDigestAuth::GetMethodAndPath(nsIHttpAuthenticableChannel *authChannel,
 NS_IMETHODIMP
 nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
                                     const char *challenge,
-                                    bool isProxyAuth,
+                                    PRBool isProxyAuth,
                                     nsISupports **sessionState,
                                     nsISupports **continuationState,
-                                    bool *result)
+                                    PRBool *result)
 {
   nsCAutoString realm, domain, nonce, opaque;
-  bool stale;
+  PRBool stale;
   PRUint16 algorithm, qop;
 
   nsresult rv = ParseChallenge(challenge, realm, domain, nonce, opaque,
@@ -195,7 +195,7 @@ nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
 NS_IMETHODIMP
 nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
                                       const char *challenge,
-                                      bool isProxyAuth,
+                                      PRBool isProxyAuth,
                                       const PRUnichar *userdomain,
                                       const PRUnichar *username,
                                       const PRUnichar *password,
@@ -211,11 +211,11 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
 
   *aFlags = 0;
 
-  bool isDigestAuth = !PL_strncasecmp(challenge, "digest ", 7);
+  PRBool isDigestAuth = !PL_strncasecmp(challenge, "digest ", 7);
   NS_ENSURE_TRUE(isDigestAuth, NS_ERROR_UNEXPECTED);
 
   // IIS implementation requires extra quotes
-  bool requireExtraQuotes = false;
+  PRBool requireExtraQuotes = PR_FALSE;
   {
     nsCAutoString serverVal;
     authChannel->GetServerResponseHeader(serverVal);
@@ -231,7 +231,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
   if (NS_FAILED(rv)) return rv;
 
   nsCAutoString realm, domain, nonce, opaque;
-  bool stale;
+  PRBool stale;
   PRUint16 algorithm, qop;
 
   rv = ParseChallenge(challenge, realm, domain, nonce, opaque,
@@ -571,7 +571,7 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
                                  nsACString & domain,
                                  nsACString & nonce,
                                  nsACString & opaque,
-                                 bool * stale,
+                                 PRBool * stale,
                                  PRUint16 * algorithm,
                                  PRUint16 * qop)
 {
@@ -600,7 +600,7 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
     if (!*p) 
       return NS_ERROR_INVALID_ARG;
 
-    bool quoted = false;
+    PRBool quoted = PR_FALSE;
     if (*p == '"') {
       ++p;
       quoted = PR_TRUE;

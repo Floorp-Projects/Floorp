@@ -60,7 +60,7 @@ NS_IMETHODIMP xpcTestObjectReadOnly :: GetStrReadOnly(char * *aStrReadOnly){
     return *aStrReadOnly ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP xpcTestObjectReadOnly :: GetBoolReadOnly(bool *aBoolReadOnly) {
+NS_IMETHODIMP xpcTestObjectReadOnly :: GetBoolReadOnly(PRBool *aBoolReadOnly) {
     *aBoolReadOnly = boolProperty;
     return NS_OK;
 }
@@ -113,11 +113,11 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: SetStringProperty(const char * aStringPr
     return NS_OK;
 }
 
-NS_IMETHODIMP xpcTestObjectReadWrite :: GetBooleanProperty(bool *aBooleanProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: GetBooleanProperty(PRBool *aBooleanProperty) {
     *aBooleanProperty = boolProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadWrite :: SetBooleanProperty(bool aBooleanProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: SetBooleanProperty(PRBool aBooleanProperty) {
     NS_ENSURE_TRUE(aBooleanProperty == PR_TRUE || aBooleanProperty == PR_FALSE,
                    NS_ERROR_INVALID_ARG);
     boolProperty = aBooleanProperty;

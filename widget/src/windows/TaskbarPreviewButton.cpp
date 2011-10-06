@@ -59,7 +59,7 @@ TaskbarPreviewButton::TaskbarPreviewButton(TaskbarWindowPreview* preview, PRUint
 }
 
 TaskbarPreviewButton::~TaskbarPreviewButton() {
-  SetVisible(false);
+  SetVisible(PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -81,13 +81,13 @@ TaskbarPreviewButton::SetTooltip(const nsAString &aTooltip) {
 }
 
 NS_IMETHODIMP
-TaskbarPreviewButton::GetDismissOnClick(bool *dismiss) {
+TaskbarPreviewButton::GetDismissOnClick(PRBool *dismiss) {
   *dismiss = (Button().dwFlags & THBF_DISMISSONCLICK) == THBF_DISMISSONCLICK;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TaskbarPreviewButton::SetDismissOnClick(bool dismiss) {
+TaskbarPreviewButton::SetDismissOnClick(PRBool dismiss) {
   if (dismiss)
     Button().dwFlags |= THBF_DISMISSONCLICK;
   else
@@ -96,13 +96,13 @@ TaskbarPreviewButton::SetDismissOnClick(bool dismiss) {
 }
 
 NS_IMETHODIMP
-TaskbarPreviewButton::GetHasBorder(bool *hasBorder) {
+TaskbarPreviewButton::GetHasBorder(PRBool *hasBorder) {
   *hasBorder = (Button().dwFlags & THBF_NOBACKGROUND) != THBF_NOBACKGROUND;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TaskbarPreviewButton::SetHasBorder(bool hasBorder) {
+TaskbarPreviewButton::SetHasBorder(PRBool hasBorder) {
   if (hasBorder)
     Button().dwFlags &= ~THBF_NOBACKGROUND;
   else
@@ -111,13 +111,13 @@ TaskbarPreviewButton::SetHasBorder(bool hasBorder) {
 }
 
 NS_IMETHODIMP
-TaskbarPreviewButton::GetDisabled(bool *disabled) {
+TaskbarPreviewButton::GetDisabled(PRBool *disabled) {
   *disabled = (Button().dwFlags & THBF_DISABLED) == THBF_DISABLED;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TaskbarPreviewButton::SetDisabled(bool disabled) {
+TaskbarPreviewButton::SetDisabled(PRBool disabled) {
   if (disabled)
     Button().dwFlags |= THBF_DISABLED;
   else
@@ -140,9 +140,7 @@ TaskbarPreviewButton::SetImage(imgIContainer *img) {
     ::DestroyIcon(Button().hIcon);
   if (img) {
     nsresult rv;
-    rv = nsWindowGfx::CreateIcon(img, false, 0, 0,
-                                 nsWindowGfx::GetIconMetrics(nsWindowGfx::kRegularIcon),
-                                 &Button().hIcon);
+    rv = nsWindowGfx::CreateIcon(img, PR_FALSE, 0, 0, &Button().hIcon);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     Button().hIcon = NULL;
@@ -151,13 +149,13 @@ TaskbarPreviewButton::SetImage(imgIContainer *img) {
 }
 
 NS_IMETHODIMP
-TaskbarPreviewButton::GetVisible(bool *visible) {
+TaskbarPreviewButton::GetVisible(PRBool *visible) {
   *visible = (Button().dwFlags & THBF_HIDDEN) != THBF_HIDDEN;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TaskbarPreviewButton::SetVisible(bool visible) {
+TaskbarPreviewButton::SetVisible(PRBool visible) {
   if (visible)
     Button().dwFlags &= ~THBF_HIDDEN;
   else

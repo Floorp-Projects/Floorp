@@ -222,7 +222,7 @@ public:
    * be found (e.g. it's detached).
    */
   nsRootPresContext* GetRootPresContext();
-  virtual bool IsRoot() { return false; }
+  virtual PRBool IsRoot() { return PR_FALSE; }
 
   nsIDocument* Document() const
   {
@@ -257,7 +257,7 @@ public:
    */
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint);
 
-  void MediaFeatureValuesChanged(bool aCallerWillRebuildStyleData);
+  void MediaFeatureValuesChanged(PRBool aCallerWillRebuildStyleData);
   void PostMediaFeatureValuesChangedEvent();
   NS_HIDDEN_(void) HandleMediaFeatureValuesChangedEvent();
   void FlushPendingMediaFeatureValuesChanged() {
@@ -337,7 +337,7 @@ public:
 
   /** Get a cached boolean pref, by its type */
   // *  - initially created for bugs 31816, 20760, 22963
-  bool GetCachedBoolPref(nsPresContext_CachedBoolPrefType aPrefType) const
+  PRBool GetCachedBoolPref(nsPresContext_CachedBoolPrefType aPrefType) const
   {
     // If called with a constant parameter, the compiler should optimize
     // this switch statement away.
@@ -392,9 +392,9 @@ public:
   const nscolor BodyTextColor() const { return mBodyTextColor; }
   void SetBodyTextColor(nscolor aColor) { mBodyTextColor = aColor; }
 
-  bool GetUseFocusColors() const { return mUseFocusColors; }
+  PRBool GetUseFocusColors() const { return mUseFocusColors; }
   PRUint8 FocusRingWidth() const { return mFocusRingWidth; }
-  bool GetFocusRingOnAnything() const { return mFocusRingOnAnything; }
+  PRBool GetFocusRingOnAnything() const { return mFocusRingOnAnything; }
   PRUint8 GetFocusRingStyle() const { return mFocusRingStyle; }
 
   /**
@@ -481,19 +481,19 @@ public:
    * Return true if this presentation context is a paginated
    * context.
    */
-  bool IsPaginated() const { return mPaginated; }
+  PRBool IsPaginated() const { return mPaginated; }
   
   /**
    * Sets whether the presentation context can scroll for a paginated
    * context.
    */
-  NS_HIDDEN_(void) SetPaginatedScrolling(bool aResult);
+  NS_HIDDEN_(void) SetPaginatedScrolling(PRBool aResult);
 
   /**
    * Return true if this presentation context can scroll for paginated
    * context.
    */
-  bool HasPaginatedScrolling() const { return mCanPaginatedScroll; }
+  PRBool HasPaginatedScrolling() const { return mCanPaginatedScroll; }
 
   /**
    * Get/set the size of a page
@@ -506,8 +506,8 @@ public:
    * XXX This raises the obvious question of why a document that isn't a page
    *     is paginated; there isn't a good reason except history
    */
-  bool IsRootPaginatedDocument() { return mIsRootPaginatedDocument; }
-  void SetIsRootPaginatedDocument(bool aIsRootPaginatedDocument)
+  PRBool IsRootPaginatedDocument() { return mIsRootPaginatedDocument; }
+  void SetIsRootPaginatedDocument(PRBool aIsRootPaginatedDocument)
     { mIsRootPaginatedDocument = aIsRootPaginatedDocument; }
 
   /**
@@ -652,10 +652,10 @@ public:
     PRUint8 mHorizontal, mVertical;
     ScrollbarStyles(PRUint8 h, PRUint8 v) : mHorizontal(h), mVertical(v) {}
     ScrollbarStyles() {}
-    bool operator==(const ScrollbarStyles& aStyles) const {
+    PRBool operator==(const ScrollbarStyles& aStyles) const {
       return aStyles.mHorizontal == mHorizontal && aStyles.mVertical == mVertical;
     }
-    bool operator!=(const ScrollbarStyles& aStyles) const {
+    PRBool operator!=(const ScrollbarStyles& aStyles) const {
       return aStyles.mHorizontal != mHorizontal || aStyles.mVertical != mVertical;
     }
   };
@@ -672,15 +672,17 @@ public:
   /**
    * Set and get methods for controlling the background drawing
   */
-  bool GetBackgroundImageDraw() const { return mDrawImageBackground; }
-  void   SetBackgroundImageDraw(bool aCanDraw)
+  PRBool GetBackgroundImageDraw() const { return mDrawImageBackground; }
+  void   SetBackgroundImageDraw(PRBool aCanDraw)
   {
+    NS_ASSERTION(!(aCanDraw & ~1), "Value must be true or false");
     mDrawImageBackground = aCanDraw;
   }
 
-  bool GetBackgroundColorDraw() const { return mDrawColorBackground; }
-  void   SetBackgroundColorDraw(bool aCanDraw)
+  PRBool GetBackgroundColorDraw() const { return mDrawColorBackground; }
+  void   SetBackgroundColorDraw(PRBool aCanDraw)
   {
+    NS_ASSERTION(!(aCanDraw & ~1), "Value must be true or false");
     mDrawColorBackground = aCanDraw;
   }
 
@@ -692,12 +694,12 @@ public:
    *
    *  @lina 07/12/2000
    */
-  virtual bool BidiEnabledExternal() const { return BidiEnabledInternal(); }
-  bool BidiEnabledInternal() const { return Document()->GetBidiEnabled(); }
+  virtual PRBool BidiEnabledExternal() const { return BidiEnabledInternal(); }
+  PRBool BidiEnabledInternal() const { return Document()->GetBidiEnabled(); }
 #ifdef _IMPL_NS_LAYOUT
-  bool BidiEnabled() const { return BidiEnabledInternal(); }
+  PRBool BidiEnabled() const { return BidiEnabledInternal(); }
 #else
-  bool BidiEnabled() const { return BidiEnabledExternal(); }
+  PRBool BidiEnabled() const { return BidiEnabledExternal(); }
 #endif
 
   /**
@@ -721,8 +723,9 @@ public:
    *
    *  @lina 05/02/2000
    */
-  void SetVisualMode(bool aIsVisual)
+  void SetVisualMode(PRBool aIsVisual)
   {
+    NS_ASSERTION(!(aIsVisual & ~1), "Value must be true or false");
     mIsVisual = aIsVisual;
   }
 
@@ -731,7 +734,7 @@ public:
    *
    *  @lina 05/02/2000
    */
-  bool IsVisualMode() const { return mIsVisual; }
+  PRBool IsVisualMode() const { return mIsVisual; }
 
 //Mohamed
 
@@ -739,7 +742,7 @@ public:
    * Set the Bidi options for the presentation context
    */  
   NS_HIDDEN_(void) SetBidi(PRUint32 aBidiOptions,
-                           bool aForceRestyle = false);
+                           PRBool aForceRestyle = PR_FALSE);
 
   /**
    * Get the Bidi options for the presentation context
@@ -752,14 +755,15 @@ public:
   /**
    * Render only Selection
    */
-  void SetIsRenderingOnlySelection(bool aResult)
+  void SetIsRenderingOnlySelection(PRBool aResult)
   {
+    NS_ASSERTION(!(aResult & ~1), "Value must be true or false");
     mIsRenderingOnlySelection = aResult;
   }
 
-  bool IsRenderingOnlySelection() const { return mIsRenderingOnlySelection; }
+  PRBool IsRenderingOnlySelection() const { return mIsRenderingOnlySelection; }
 
-  NS_HIDDEN_(bool) IsTopLevelWindowInactive();
+  NS_HIDDEN_(PRBool) IsTopLevelWindowInactive();
 
   /*
    * Obtain a native them for rendering our widgets (both form controls and html)
@@ -791,7 +795,7 @@ public:
      docshell if it's the most recent prescontext for the docshell.  Returns
      whether the prescontext is now being shown.
   */
-  NS_HIDDEN_(bool) EnsureVisible();
+  NS_HIDDEN_(PRBool) EnsureVisible();
   
 #ifdef MOZ_REFLOW_PERF
   NS_HIDDEN_(void) CountReflows(const char * aName,
@@ -804,13 +808,13 @@ public:
    */
   const nscoord* GetBorderWidthTable() { return mBorderWidthTable; }
 
-  bool IsDynamic() { return (mType == eContext_PageLayout || mType == eContext_Galley); }
-  bool IsScreen() { return (mMedium == nsGkAtoms::screen ||
+  PRBool IsDynamic() { return (mType == eContext_PageLayout || mType == eContext_Galley); }
+  PRBool IsScreen() { return (mMedium == nsGkAtoms::screen ||
                               mType == eContext_PageLayout ||
                               mType == eContext_PrintPreview); }
 
   // Is this presentation in a chrome docshell?
-  bool IsChrome() const
+  PRBool IsChrome() const
   {
     return mIsChromeIsCached ? mIsChrome : IsChromeSlow();
   }
@@ -826,14 +830,14 @@ public:
 #endif
 
   // Public API for native theme code to get style internals.
-  virtual bool HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const;
+  virtual PRBool HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const;
 
   // Is it OK to let the page specify colors and backgrounds?
-  bool UseDocumentColors() const {
+  PRBool UseDocumentColors() const {
     return GetCachedBoolPref(kPresContext_UseDocumentColors) || IsChrome();
   }
 
-  bool             SupressingResizeReflow() const { return mSupressResizeReflow; }
+  PRBool           SupressingResizeReflow() const { return mSupressResizeReflow; }
   
   virtual NS_HIDDEN_(gfxUserFontSet*) GetUserFontSetExternal();
   NS_HIDDEN_(gfxUserFontSet*) GetUserFontSetInternal();
@@ -855,35 +859,35 @@ public:
   // engine by ensuring that all CSS style sheets have unique inners
   // and, if necessary, synchronously rebuilding all style data.
   // Returns true on success and false on failure (not safe).
-  bool EnsureSafeToHandOutCSSRules();
+  PRBool EnsureSafeToHandOutCSSRules();
 
   void NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags);
   void NotifyDidPaintForSubtree();
   void FireDOMPaintEvent();
 
-  bool IsDOMPaintEventPending() {
+  PRBool IsDOMPaintEventPending() {
     return !mInvalidateRequests.mRequests.IsEmpty();
   }
   void ClearMozAfterPaintEvents() {
     mInvalidateRequests.mRequests.Clear();
   }
 
-  bool IsProcessingRestyles() const {
+  PRBool IsProcessingRestyles() const {
     return mProcessingRestyles;
   }
 
-  void SetProcessingRestyles(bool aProcessing) {
-    NS_ASSERTION(aProcessing != bool(mProcessingRestyles),
+  void SetProcessingRestyles(PRBool aProcessing) {
+    NS_ASSERTION(aProcessing != PRBool(mProcessingRestyles),
                  "should never nest");
     mProcessingRestyles = aProcessing;
   }
 
-  bool IsProcessingAnimationStyleChange() const {
+  PRBool IsProcessingAnimationStyleChange() const {
     return mProcessingAnimationStyleChange;
   }
 
-  void SetProcessingAnimationStyleChange(bool aProcessing) {
-    NS_ASSERTION(aProcessing != bool(mProcessingAnimationStyleChange),
+  void SetProcessingAnimationStyleChange(PRBool aProcessing) {
+    NS_ASSERTION(aProcessing != PRBool(mProcessingAnimationStyleChange),
                  "should never nest");
     mProcessingAnimationStyleChange = aProcessing;
   }
@@ -897,7 +901,7 @@ public:
    * presshell only.  Reflow code wanting to prevent interrupts should use
    * InterruptPreventer.
    */
-  void ReflowStarted(bool aInterruptible);
+  void ReflowStarted(PRBool aInterruptible);
 
   /**
    * A class that can be used to temporarily disable reflow interruption.
@@ -921,8 +925,8 @@ public:
 
   private:
     nsPresContext* mCtx;
-    bool mInterruptsEnabled;
-    bool mHasPendingInterrupt;
+    PRBool mInterruptsEnabled;
+    PRBool mHasPendingInterrupt;
   };
     
   /**
@@ -933,12 +937,12 @@ public:
    * interrupted if true is returned) will be passed to
    * nsIPresShell::FrameNeedsToContinueReflow.
    */
-  bool CheckForInterrupt(nsIFrame* aFrame);
+  PRBool CheckForInterrupt(nsIFrame* aFrame);
   /**
    * Returns true if CheckForInterrupt has returned true since the last
    * ReflowStarted call. Cannot itself trigger an interrupt check.
    */
-  bool HasPendingInterrupt() { return mHasPendingInterrupt; }
+  PRBool HasPendingInterrupt() { return mHasPendingInterrupt; }
 
   /**
    * If we have a presshell, and if the given content's current
@@ -963,17 +967,17 @@ public:
 
   void DestroyImageLoaders();
 
-  bool GetContainsUpdatePluginGeometryFrame()
+  PRBool GetContainsUpdatePluginGeometryFrame()
   {
     return mContainsUpdatePluginGeometryFrame;
   }
 
-  void SetContainsUpdatePluginGeometryFrame(bool aValue)
+  void SetContainsUpdatePluginGeometryFrame(PRBool aValue)
   {
     mContainsUpdatePluginGeometryFrame = aValue;
   }
 
-  bool MayHaveFixedBackgroundFrames() { return mMayHaveFixedBackgroundFrames; }
+  PRBool MayHaveFixedBackgroundFrames() { return mMayHaveFixedBackgroundFrames; }
   void SetHasFixedBackgroundFrame() { mMayHaveFixedBackgroundFrames = PR_TRUE; }
 
   PRUint32 EstimateMemoryUsed() {
@@ -984,7 +988,7 @@ public:
     return result;
   }
 
-  bool IsRootContentDocument();
+  PRBool IsRootContentDocument();
 
 protected:
   friend class nsRunnableMethod<nsPresContext>;
@@ -1012,19 +1016,19 @@ protected:
   void InvalidateThebesLayers();
   void AppUnitsPerDevPixelChanged();
 
-  bool MayHavePaintEventListener();
+  PRBool MayHavePaintEventListener();
 
   void HandleRebuildUserFontSet() {
     mPostedFlushUserFontSet = PR_FALSE;
     FlushUserFontSet();
   }
 
-  bool HavePendingInputEvent();
+  PRBool HavePendingInputEvent();
 
   // Can't be inline because we can't include nsStyleSet.h.
-  bool HasCachedStyleData();
+  PRBool HasCachedStyleData();
 
-  bool IsChromeSlow() const;
+  PRBool IsChromeSlow() const;
 
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -1172,7 +1176,7 @@ protected:
   mutable unsigned      mIsChrome : 1;
 
 #ifdef DEBUG
-  bool                  mInitialized;
+  PRBool                mInitialized;
 #endif
 
 
@@ -1261,7 +1265,7 @@ public:
    */
   void DidApplyPluginGeometryUpdates();
 
-  virtual bool IsRoot() { return true; }
+  virtual PRBool IsRoot() { return PR_TRUE; }
 
   /**
    * This method is called off an event to force the plugin geometry to
@@ -1312,7 +1316,7 @@ private:
   // null to use the root frame of this prescontext
   nsIFrame* mUpdatePluginGeometryForFrame;
   PRUint32 mDOMGeneration;
-  bool mNeedsToUpdatePluginGeometry;
+  PRPackedBool mNeedsToUpdatePluginGeometry;
 };
 
 inline void

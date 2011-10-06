@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 let doc;
 let salutation;
-let closing;
 
 function createDocument()
 {
@@ -61,34 +60,23 @@ function startInspectorTests()
 {
   ok(InspectorUI, "InspectorUI variable exists");
   Services.obs.addObserver(runInspectorTests,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.toggleInspectorUI();
 }
 
 function runInspectorTests()
 {
   Services.obs.removeObserver(runInspectorTests,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
-  Services.obs.addObserver(treePanelTests,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
-
-  ok(InspectorUI.toolbar, "we have the toolbar.");
-  ok(!InspectorUI.toolbar.hidden, "toolbar is visible");
-  ok(InspectorUI.inspecting, "Inspector is inspecting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  ok(InspectorUI.highlighter, "Highlighter is up");
-
-  InspectorUI.treePanel.open();
-}
-
-function treePanelTests()
-{
-  Services.obs.removeObserver(treePanelTests,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   Services.obs.addObserver(runContextMenuTest,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
+    INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
-  ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
+  ok(!InspectorUI.toolbar.hidden, "toolbar is visible");
+  let iframe = document.getElementById("inspector-tree-iframe");
+  is(InspectorUI.treeIFrame, iframe, "Inspector IFrame matches");
+  ok(InspectorUI.inspecting, "Inspector is inspecting");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
+  ok(InspectorUI.highlighter, "Highlighter is up");
 
   executeSoon(function() {
     InspectorUI.closeInspectorUI();
@@ -97,8 +85,8 @@ function treePanelTests()
 
 function runContextMenuTest()
 {
-  Services.obs.removeObserver(runContextMenuTest, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
-  Services.obs.addObserver(inspectNodesFromContextTest, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+  Services.obs.removeObserver(runContextMenuTest, INSPECTOR_NOTIFICATIONS.CLOSED, false);
+  Services.obs.addObserver(inspectNodesFromContextTest, INSPECTOR_NOTIFICATIONS.OPENED, false);
   salutation = doc.getElementById("salutation");
   ok(salutation, "hello, context menu test!");
   let eventDeets = { type : "contextmenu", button : 2 };
@@ -108,7 +96,7 @@ function runContextMenuTest()
   ok(contextInspectMenuItem, "we have the inspect context menu item");
   EventUtils.synthesizeMouse(salutation, 2, 2, eventDeets);
   is(contextMenu.state, "showing", "context menu is open");
-  is(!contextInspectMenuItem.hidden, gPrefService.getBoolPref("devtools.inspector.enabled"), "is context menu item enabled?");
+  is(contextInspectMenuItem.hidden, !InspectorUI.enabled, "is context menu item enabled?");
   contextMenu.hidePopup();
   executeSoon(function() {
     InspectorUI.openInspectorUI(salutation);
@@ -117,65 +105,26 @@ function runContextMenuTest()
 
 function inspectNodesFromContextTest()
 {
-  Services.obs.removeObserver(inspectNodesFromContextTest, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-  Services.obs.addObserver(openInspectorForContextTest, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
+  Services.obs.removeObserver(inspectNodesFromContextTest, INSPECTOR_NOTIFICATIONS.OPENED, false);
+  Services.obs.addObserver(finishInspectorTests, INSPECTOR_NOTIFICATIONS.CLOSED, false);
   ok(!InspectorUI.inspecting, "Inspector is not actively highlighting");
   is(InspectorUI.selection, salutation, "Inspector is highlighting salutation");
-  ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is closed");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   // TODO: These tests depend on the style inspector patches.
   todo(InspectorUI.isStylePanelOpen, "Inspector Style Panel is open");
-  executeSoon(function() {
-    InspectorUI.closeInspectorUI(true);
-  });
-}
-
-function openInspectorForContextTest()
-{
-  Services.obs.removeObserver(openInspectorForContextTest, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED);
-  Services.obs.addObserver(inspectNodesFromContextTestWhileOpen, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-  executeSoon(function() {
-    InspectorUI.openInspectorUI(salutation);
-  });
-}
-
-function inspectNodesFromContextTestWhileOpen()
-{
-  Services.obs.removeObserver(inspectNodesFromContextTestWhileOpen, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
-  Services.obs.addObserver(inspectNodesFromContextTestTrap, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-  Services.obs.addObserver(inspectNodesFromContextTestHighlight, InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
-  is(InspectorUI.selection, salutation, "Inspector is highlighting salutation");
-  closing = doc.getElementById("closing");
-  ok(closing, "we have the closing statement");
-  executeSoon(function() {
-    InspectorUI.openInspectorUI(closing);
-  });
-}
-
-function inspectNodesFromContextTestHighlight()
-{
-  Services.obs.removeObserver(inspectNodesFromContextTestHighlight, InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
-  Services.obs.addObserver(finishInspectorTests, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
-  is(InspectorUI.selection, closing, "InspectorUI.selection is header");
-  executeSoon(function() {
-    InspectorUI.closeInspectorUI(true);
-  });
-}
-
-function inspectNodesFromContextTestTrap()
-{
-  Services.obs.removeObserver(inspectNodesFromContextTestTrap, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
-  ok(false, "Inspector UI has been opened again. We Should Not Be Here!");
+  todo(InspectorUI.isDOMPanelOpen, "Inspector DOM Panel is open");
+  InspectorUI.closeInspectorUI(true);
 }
 
 function finishInspectorTests()
 {
   Services.obs.removeObserver(finishInspectorTests,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED);
+    INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
   ok(!InspectorUI.highlighter, "Highlighter is gone");
-  ok(!InspectorUI.treePanel, "Inspector Tree Panel is closed");
+  ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is closed");
   ok(!InspectorUI.inspecting, "Inspector is not inspecting");
-  ok(!InspectorUI.toolbar, "toolbar is hidden");
+  ok(InspectorUI.toolbar.hidden, "toolbar is hidden");
 
   gBrowser.removeCurrentTab();
   finish();

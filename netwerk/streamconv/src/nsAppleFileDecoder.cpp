@@ -76,7 +76,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Initialize(nsIOutputStream *outputStream, nsIF
   m_output = outputStream;
   
   nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(outputFile);
-  bool saveFollowLinks;
+  PRBool saveFollowLinks;
   macFile->GetFollowLinks(&saveFollowLinks);
   macFile->SetFollowLinks(PR_TRUE);
   macFile->GetFSSpec(&m_fsFileSpec);
@@ -101,22 +101,22 @@ NS_IMETHODIMP nsAppleFileDecoder::Close(void)
   /* Check if the file is complete and if it's the case, write file attributes */
   if (m_headerOk)
   {
-    bool dataOk = true; /* It's ok if the file doesn't have a datafork, therefore set it to true by default. */
+    PRBool dataOk = PR_TRUE; /* It's ok if the file doesn't have a datafork, therefore set it to true by default. */
     if (m_headers.magic == APPLESINGLE_MAGIC)
     {
       for (i = 0; i < m_headers.entriesCount; i ++)
         if (ENT_DFORK == m_entries[i].id)
         {
-          dataOk = (bool)(m_totalDataForkWritten == m_entries[i].length);
+          dataOk = (PRBool)(m_totalDataForkWritten == m_entries[i].length);
           break;
         }
     }
 
-    bool resourceOk = FALSE;
+    PRBool resourceOk = FALSE;
     for (i = 0; i < m_headers.entriesCount; i ++)
       if (ENT_RFORK == m_entries[i].id)
       {
-        resourceOk = (bool)(m_totalResourceForkWritten == m_entries[i].length);
+        resourceOk = (PRBool)(m_totalResourceForkWritten == m_entries[i].length);
         break;
       }
       
@@ -193,7 +193,7 @@ NS_IMETHODIMP nsAppleFileDecoder::WriteSegments(nsReadSegmentFun reader, void * 
   return m_output->WriteSegments(reader, closure, count, _retval);
 }
 
-NS_IMETHODIMP nsAppleFileDecoder::IsNonBlocking(bool *aNonBlocking)
+NS_IMETHODIMP nsAppleFileDecoder::IsNonBlocking(PRBool *aNonBlocking)
 {
   return m_output->IsNonBlocking(aNonBlocking);
 }

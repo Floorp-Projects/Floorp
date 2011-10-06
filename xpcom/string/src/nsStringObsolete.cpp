@@ -281,7 +281,7 @@ static
 inline
 #endif /* __SUNPRO_CC */
 PRInt32
-Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,bool aIgnoreCase){ 
+Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
   PRInt32 result=0;
   if(aIgnoreCase)
     result=PRInt32(PL_strncasecmp(aStr1, aStr2, aCount));
@@ -351,7 +351,7 @@ static
 inline
 #endif /* __SUNPRO_CC */
 PRInt32
-Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,bool aIgnoreCase){
+Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
   const PRUnichar* s1 = aStr1;
   const char *s2 = aStr2;
   
@@ -401,7 +401,7 @@ Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,bool aIgnor
  * @return  -1,0,1 depending on <,==,>
  */
 inline PRInt32
-Compare1To2(const char* aStr1,const PRUnichar* aStr2,PRUint32 aCount,bool aIgnoreCase){
+Compare1To2(const char* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
   return Compare2To1(aStr2, aStr1, aCount, aIgnoreCase) * -1;
 }
 
@@ -597,13 +597,13 @@ NS_SPECIALIZE_TEMPLATE
 struct nsBufferRoutines<char>
   {
     static
-    PRInt32 compare( const char* a, const char* b, PRUint32 max, bool ic )
+    PRInt32 compare( const char* a, const char* b, PRUint32 max, PRBool ic )
       {
         return Compare1To1(a, b, max, ic);
       }
 
     static
-    PRInt32 compare( const char* a, const PRUnichar* b, PRUint32 max, bool ic )
+    PRInt32 compare( const char* a, const PRUnichar* b, PRUint32 max, PRBool ic )
       {
         return Compare1To2(a, b, max, ic);
       }
@@ -643,14 +643,14 @@ NS_SPECIALIZE_TEMPLATE
 struct nsBufferRoutines<PRUnichar>
   {
     static
-    PRInt32 compare( const PRUnichar* a, const PRUnichar* b, PRUint32 max, bool ic )
+    PRInt32 compare( const PRUnichar* a, const PRUnichar* b, PRUint32 max, PRBool ic )
       {
         NS_ASSERTION(!ic, "no case-insensitive compare here");
         return Compare2To2(a, b, max);
       }
 
     static
-    PRInt32 compare( const PRUnichar* a, const char* b, PRUint32 max, bool ic )
+    PRInt32 compare( const PRUnichar* a, const char* b, PRUint32 max, PRBool ic )
       {
         return Compare2To1(a, b, max, ic);
       }
@@ -701,7 +701,7 @@ static
 PRInt32
 FindSubstring( const L* big, PRUint32 bigLen,
                const R* little, PRUint32 littleLen,
-               bool ignoreCase )
+               PRBool ignoreCase )
   {
     if (littleLen > bigLen)
       return kNotFound;
@@ -723,7 +723,7 @@ static
 PRInt32
 RFindSubstring( const L* big, PRUint32 bigLen,
                 const R* little, PRUint32 littleLen,
-                bool ignoreCase )
+                PRBool ignoreCase )
   {
     if (littleLen > bigLen)
       return kNotFound;
@@ -953,7 +953,7 @@ nsString::FindCharInSet( const PRUnichar* aSet, PRInt32 aOffset ) const
    */
 
 PRInt32
-nsCString::Compare( const char* aString, bool aIgnoreCase, PRInt32 aCount ) const
+nsCString::Compare( const char* aString, PRBool aIgnoreCase, PRInt32 aCount ) const
   {
     PRUint32 strLen = char_traits::length(aString);
 
@@ -981,7 +981,7 @@ nsCString::Compare( const char* aString, bool aIgnoreCase, PRInt32 aCount ) cons
     return result;
   }
 
-bool
+PRBool
 nsString::EqualsIgnoreCase( const char* aString, PRInt32 aCount ) const
   {
     PRUint32 strLen = nsCharTraits<char>::length(aString);

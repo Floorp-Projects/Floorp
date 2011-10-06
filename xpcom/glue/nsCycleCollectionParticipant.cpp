@@ -95,7 +95,7 @@ nsXPCOMCycleCollectionParticipant::Trace(void *p, TraceCallback cb,
 {
 }
 
-bool
+PRBool
 nsXPCOMCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
 {
     nsISupports* foo;

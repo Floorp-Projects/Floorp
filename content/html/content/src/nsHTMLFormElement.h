@@ -72,7 +72,7 @@ public:
   ~nsStringCaseInsensitiveHashKey() { }
 
   KeyType GetKey() const { return mStr; }
-  bool KeyEquals(const KeyTypePointer aKey) const
+  PRBool KeyEquals(const KeyTypePointer aKey) const
   {
     return mStr.Equals(*aKey,nsCaseInsensitiveStringComparator());
   }
@@ -136,11 +136,11 @@ public:
                                 PRInt32 *aPositionIndex,
                                 PRInt32 *aItemsInGroup);
   NS_IMETHOD GetNextRadioButton(const nsAString& aName,
-                                const bool aPrevious,
+                                const PRBool aPrevious,
                                 nsIDOMHTMLInputElement*  aFocusedRadio,
                                 nsIDOMHTMLInputElement** aRadioOut);
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
-                            bool aFlushContent);
+                            PRBool aFlushContent);
   NS_IMETHOD AddToRadioGroup(const nsAString& aName,
                              nsIFormControl* aRadio);
   NS_IMETHOD RemoveFromRadioGroup(const nsAString& aName,
@@ -152,7 +152,7 @@ public:
   virtual void SetValueMissingState(const nsAString& aName, bool aValue);
 
   // nsIContent
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -162,19 +162,19 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, bool aNotify)
+                   const nsAString& aValue, PRBool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
+                           PRBool aNotify);
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString* aValue, bool aNotify);
+                                const nsAString* aValue, PRBool aNotify);
 
   /**
    * Forget all information about the current submission (and the fact that we
@@ -219,7 +219,7 @@ public:
    * @return NS_OK if the element was successfully added
    */
   nsresult AddElement(nsGenericHTMLFormElement* aElement, bool aUpdateValidity,
-                      bool aNotify);
+                      PRBool aNotify);
 
   /**    
    * Add an element to the lookup table maintained by the form.
@@ -236,7 +236,7 @@ public:
     *
     * @return Whether there is exactly one input text control.
     */
-  bool HasSingleTextControl() const;
+  PRBool HasSingleTextControl() const;
 
   /**
    * Check whether a given nsIFormControl is the default submit
@@ -245,7 +245,7 @@ public:
    * when GetDefaultSubmitElement() might not be up to date.  aControl
    * is expected to not be null.
    */
-  bool IsDefaultSubmitElement(const nsIFormControl* aControl) const;
+  PRBool IsDefaultSubmitElement(const nsIFormControl* aControl) const;
 
   /**
    * Flag the form to know that a button or image triggered scripted form
@@ -267,7 +267,7 @@ public:
    *
    * @param aElementValidityState the new validity state of the element
    */
-  void UpdateValidity(bool aElementValidityState);
+  void UpdateValidity(PRBool aElementValidityState);
 
   /**
    * Returns the form validity based on the last UpdateValidity() call.
@@ -276,7 +276,7 @@ public:
    *
    * @note This method may not return the *current* validity state!
    */
-  bool GetValidity() const { return !mInvalidElementsCount; }
+  PRBool GetValidity() const { return !mInvalidElementsCount; }
 
   /**
    * This method check the form validity and make invalid form elements send
@@ -369,13 +369,13 @@ protected:
    * @param aCancelSubmit out param where submit observers can specify that the
    *        submit should be cancelled.
    */
-  nsresult NotifySubmitObservers(nsIURI* aActionURL, bool* aCancelSubmit,
-                                 bool aEarlyNotify);
+  nsresult NotifySubmitObservers(nsIURI* aActionURL, PRBool* aCancelSubmit,
+                                 PRBool aEarlyNotify);
 
   /**
    * Just like ResolveName(), but takes an arg for whether to flush
    */
-  already_AddRefed<nsISupports> DoResolveName(const nsAString& aName, bool aFlushContent);
+  already_AddRefed<nsISupports> DoResolveName(const nsAString& aName, PRBool aFlushContent);
 
   /**
    * Get the full URL to submit to.  Do not submit if the returned URL is null.
@@ -394,7 +394,7 @@ protected:
    *
    * @return Whether the form is currently valid.
    */
-  bool CheckFormValidity(nsIMutableArray* aInvalidElements) const;
+  PRBool CheckFormValidity(nsIMutableArray* aInvalidElements) const;
 
 public:
   /**
@@ -418,21 +418,21 @@ protected:
   /** The value missing state of each group */
   nsDataHashtable<nsStringCaseInsensitiveHashKey,bool> mValueMissingRadioGroups;
   /** Whether we are currently processing a submit event or not */
-  bool mGeneratingSubmit;
+  PRPackedBool mGeneratingSubmit;
   /** Whether we are currently processing a reset event or not */
-  bool mGeneratingReset;
+  PRPackedBool mGeneratingReset;
   /** Whether we are submitting currently */
-  bool mIsSubmitting;
+  PRPackedBool mIsSubmitting;
   /** Whether the submission is to be deferred in case a script triggers it */
-  bool mDeferSubmission;
+  PRPackedBool mDeferSubmission;
   /** Whether we notified NS_FORMSUBMIT_SUBJECT listeners already */
-  bool mNotifiedObservers;
+  PRPackedBool mNotifiedObservers;
   /** If we notified the listeners early, what was the result? */
-  bool mNotifiedObserversResult;
+  PRPackedBool mNotifiedObserversResult;
   /** Keep track of what the popup state was when the submit was initiated */
   PopupControlState mSubmitPopupState;
   /** Keep track of whether a submission was user-initiated or not */
-  bool mSubmitInitiatedFromUserInput;
+  PRBool mSubmitInitiatedFromUserInput;
 
   /** The pending submission object */
   nsAutoPtr<nsFormSubmission> mPendingSubmission;
@@ -465,9 +465,9 @@ protected:
 
 protected:
   /** Detection of first form to notify observers */
-  static bool gFirstFormSubmitted;
+  static PRBool gFirstFormSubmitted;
   /** Detection of first password input to initialize the password manager */
-  static bool gPasswordManagerInitialized;
+  static PRBool gPasswordManagerInitialized;
 };
 
 #endif // nsHTMLFormElement_h__

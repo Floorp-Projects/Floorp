@@ -71,7 +71,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
                                       const gfxMatrix& transform,
                                       const nsString& bgcolor,
                                       PRUint32 renderFlags,
-                                      bool flushLayout, 
+                                      PRBool flushLayout, 
                                       const nsIntSize& renderSize,
                                       nsCString& data)
 {

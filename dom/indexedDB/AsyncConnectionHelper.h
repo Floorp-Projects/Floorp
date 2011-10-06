@@ -185,7 +185,7 @@ private:
   mozilla::TimeDuration mTimeoutDuration;
 
   nsresult mResultCode;
-  bool mDispatched;
+  PRPackedBool mDispatched;
 };
 
 END_INDEXEDDB_NAMESPACE

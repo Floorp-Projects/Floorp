@@ -92,10 +92,10 @@ public:
   // nsIScrollbarMediator
   NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
   NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
-  NS_IMETHOD VisibilityChanged(bool aVisible);
+  NS_IMETHOD VisibilityChanged(PRBool aVisible);
 
   // nsIReflowCallback
-  virtual bool ReflowFinished();
+  virtual PRBool ReflowFinished();
   virtual void ReflowCallbackCanceled();
 
   // nsIBox
@@ -116,12 +116,12 @@ public:
 
   // scrolling
   nsresult InternalPositionChangedCallback();
-  nsresult InternalPositionChanged(bool aUp, PRInt32 aDelta);
+  nsresult InternalPositionChanged(PRBool aUp, PRInt32 aDelta);
   // Process pending position changed events, then do the position change.
   // This can wipe out the frametree.
-  nsresult DoInternalPositionChangedSync(bool aUp, PRInt32 aDelta);
+  nsresult DoInternalPositionChangedSync(PRBool aUp, PRInt32 aDelta);
   // Actually do the internal position change.  This can wipe out the frametree
-  nsresult DoInternalPositionChanged(bool aUp, PRInt32 aDelta);
+  nsresult DoInternalPositionChanged(PRBool aUp, PRInt32 aDelta);
   nsListScrollSmoother* GetSmoother();
   void VerticalScroll(PRInt32 aDelta);
 
@@ -133,9 +133,9 @@ public:
   void CreateRows();
   void DestroyRows(PRInt32& aRowsToLose);
   void ReverseDestroyRows(PRInt32& aRowsToLose);
-  nsIBox* GetFirstItemBox(PRInt32 aOffset, bool* aCreated);
-  nsIBox* GetNextItemBox(nsIBox* aBox, PRInt32 aOffset, bool* aCreated);
-  bool ContinueReflow(nscoord height);
+  nsIBox* GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated);
+  nsIBox* GetNextItemBox(nsIBox* aBox, PRInt32 aOffset, PRBool* aCreated);
+  PRBool ContinueReflow(nscoord height);
   NS_IMETHOD ListBoxAppendFrames(nsFrameList& aFrameList);
   NS_IMETHOD ListBoxInsertFrames(nsIFrame* aPrevFrame, nsFrameList& aFrameList);
   void OnContentInserted(nsPresContext* aPresContext, nsIContent* aContent);
@@ -147,16 +147,16 @@ public:
 
   void PostReflowCallback();
 
-  bool SetBoxObject(nsPIBoxObject* aBoxObject)
+  PRBool SetBoxObject(nsPIBoxObject* aBoxObject)
   {
     NS_ENSURE_TRUE(!mBoxObject, PR_FALSE);
     mBoxObject = aBoxObject;
     return PR_TRUE;
   }
 
-  virtual bool SupportsOrdinalsInChildren();
+  virtual PRBool SupportsOrdinalsInChildren();
 
-  virtual bool ComputesOwnOverflowArea() { return true; }
+  virtual PRBool ComputesOwnOverflowArea() { return PR_TRUE; }
 
 protected:
   class nsPositionChangedEvent;
@@ -166,7 +166,7 @@ protected:
   {
   public:
     nsPositionChangedEvent(nsListBoxBodyFrame* aFrame,
-                           bool aUp, PRInt32 aDelta) :
+                           PRBool aUp, PRInt32 aDelta) :
       mFrame(aFrame), mUp(aUp), mDelta(aDelta)
     {}
   
@@ -186,7 +186,7 @@ protected:
     }
 
     nsListBoxBodyFrame* mFrame;
-    bool mUp;
+    PRBool mUp;
     PRInt32 mDelta;
   };
 
@@ -218,12 +218,12 @@ protected:
   PRInt32 mTimePerRow;
 
   // row height
-  bool mRowHeightWasSet;
+  PRPackedBool mRowHeightWasSet;
   // scrolling
-  bool mScrolling;
-  bool mAdjustScroll;
+  PRPackedBool mScrolling;
+  PRPackedBool mAdjustScroll;
 
-  bool mReflowCallbackPosted;
+  PRPackedBool mReflowCallbackPosted;
 };
 
 #endif // nsListBoxBodyFrame_h

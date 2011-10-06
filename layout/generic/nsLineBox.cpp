@@ -55,7 +55,7 @@ static PRInt32 ctorCount;
 PRInt32 nsLineBox::GetCtorCount() { return ctorCount; }
 #endif
 
-nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock)
+nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
   : mFirstChild(aFrame),
     mBounds(0, 0, 0, 0),
     mAscent(0),
@@ -89,7 +89,7 @@ nsLineBox::~nsLineBox()
 
 nsLineBox*
 NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
-              PRInt32 aCount, bool aIsBlock)
+              PRInt32 aCount, PRBool aIsBlock)
 {
   return new (aPresShell)nsLineBox(aFrame, aCount, aIsBlock);
 }
@@ -246,7 +246,7 @@ nsLineBox::LastChild() const
   return frame;
 }
 
-bool
+PRBool
 nsLineBox::IsLastChild(nsIFrame* aFrame) const
 {
   nsIFrame* lastFrame = LastChild();
@@ -267,7 +267,7 @@ nsLineBox::IndexOf(nsIFrame* aFrame) const
   return -1;
 }
 
-bool
+PRBool
 nsLineBox::IsEmpty() const
 {
   if (IsBlock())
@@ -288,8 +288,8 @@ nsLineBox::IsEmpty() const
   return PR_TRUE;
 }
 
-bool
-nsLineBox::CachedIsEmpty() const
+PRBool
+nsLineBox::CachedIsEmpty()
 {
   if (mFlags.mDirty) {
     return IsEmpty();
@@ -299,7 +299,7 @@ nsLineBox::CachedIsEmpty() const
     return mFlags.mEmptyCacheState;
   }
 
-  bool result;
+  PRBool result;
   if (IsBlock()) {
     result = mFirstChild->CachedIsEmpty();
   } else {
@@ -362,7 +362,7 @@ nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
   }
 }
 
-bool
+PRBool
 nsLineBox::RFindLineContaining(nsIFrame* aFrame,
                                const nsLineList::iterator& aBegin,
                                nsLineList::iterator& aEnd,
@@ -399,10 +399,10 @@ nsLineBox::GetCarriedOutBottomMargin() const
     : nsCollapsingMargin();
 }
 
-bool
+PRBool
 nsLineBox::SetCarriedOutBottomMargin(nsCollapsingMargin aValue)
 {
-  bool changed = false;
+  PRBool changed = PR_FALSE;
   if (IsBlock()) {
     if (!aValue.IsZero()) {
       if (!mBlockData) {
@@ -472,7 +472,7 @@ nsLineBox::AppendFloats(nsFloatCacheFreeList& aFreeList)
   }
 }
 
-bool
+PRBool
 nsLineBox::RemoveFloat(nsIFrame* aFrame)
 {
   NS_ABORT_IF_FALSE(IsInline(), "block line can't have floats");
@@ -546,7 +546,7 @@ nsLineIterator::DisposeLineIterator()
 }
 
 nsresult
-nsLineIterator::Init(nsLineList& aLines, bool aRightToLeft)
+nsLineIterator::Init(nsLineList& aLines, PRBool aRightToLeft)
 {
   mRightToLeft = aRightToLeft;
 
@@ -584,7 +584,7 @@ nsLineIterator::GetNumLines()
   return mNumLines;
 }
 
-bool
+PRBool
 nsLineIterator::GetDirection()
 {
   return mRightToLeft;
@@ -643,7 +643,7 @@ nsLineIterator::FindLineContaining(nsIFrame* aFrame, PRInt32 aStartLine)
 #ifdef IBMBIDI
 NS_IMETHODIMP
 nsLineIterator::CheckLineOrder(PRInt32                  aLine,
-                               bool                     *aIsReordered,
+                               PRBool                   *aIsReordered,
                                nsIFrame                 **aFirstVisual,
                                nsIFrame                 **aLastVisual)
 {
@@ -673,8 +673,8 @@ NS_IMETHODIMP
 nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
                             nscoord aX,
                             nsIFrame** aFrameFound,
-                            bool* aXIsBeforeFirstFrame,
-                            bool* aXIsAfterLastFrame)
+                            PRBool* aXIsBeforeFirstFrame,
+                            PRBool* aXIsAfterLastFrame)
 {
   NS_PRECONDITION(aFrameFound && aXIsBeforeFirstFrame && aXIsAfterLastFrame,
                   "null OUT ptr");

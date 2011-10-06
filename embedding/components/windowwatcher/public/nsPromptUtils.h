@@ -87,7 +87,7 @@ NS_SetAuthInfo(nsIAuthInformation* aAuthInfo, const nsString& user,
  */
 inline void
 NS_GetAuthHostPort(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
-                   bool machineProcessing, nsCString& host, PRInt32* port)
+                   PRBool machineProcessing, nsCString& host, PRInt32* port)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aChannel->GetURI(getter_AddRefs(uri));

@@ -103,7 +103,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
 
 txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
                                        nsIDOMDocumentFragment* aFragment,
-                                       bool aNoFixup)
+                                       PRBool aNoFixup)
     : mTreeDepth(0),
       mBadChildLevel(0),
       mTableState(NORMAL),
@@ -204,7 +204,7 @@ txMozillaXMLOutput::attributeInternal(nsIAtom* aPrefix,
 }
 
 nsresult
-txMozillaXMLOutput::characters(const nsSubstring& aData, bool aDOE)
+txMozillaXMLOutput::characters(const nsSubstring& aData, PRBool aDOE)
 {
     nsresult rv = closePrevious(PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -355,8 +355,8 @@ txMozillaXMLOutput::endElement()
             do_QueryInterface(mCurrentNode);
         if (ssle) {
             ssle->SetEnableUpdates(PR_TRUE);
-            bool willNotify;
-            bool isAlternate;
+            PRBool willNotify;
+            PRBool isAlternate;
             nsresult rv = ssle->UpdateStyleSheet(mNotifier, &willNotify,
                                                  &isAlternate);
             if (mNotifier && NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
@@ -435,8 +435,8 @@ txMozillaXMLOutput::processingInstruction(const nsString& aTarget, const nsStrin
 
     if (ssle) {
         ssle->SetEnableUpdates(PR_TRUE);
-        bool willNotify;
-        bool isAlternate;
+        PRBool willNotify;
+        PRBool isAlternate;
         rv = ssle->UpdateStyleSheet(mNotifier, &willNotify, &isAlternate);
         if (mNotifier && NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
             mNotifier->AddPendingStylesheet();
@@ -594,13 +594,13 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
 }
 
 nsresult
-txMozillaXMLOutput::closePrevious(bool aFlushText)
+txMozillaXMLOutput::closePrevious(PRBool aFlushText)
 {
     TX_ENSURE_CURRENTNODE;
 
     nsresult rv;
     if (mOpenedElement) {
-        bool currentIsDoc = mCurrentNode == mDocument;
+        PRBool currentIsDoc = mCurrentNode == mDocument;
         if (currentIsDoc && mRootContentCreated) {
             // We already have a document element, but the XSLT spec allows this.
             // As a workaround, create a wrapper object and use that as the
@@ -711,7 +711,7 @@ txMozillaXMLOutput::createTxWrapper()
 }
 
 nsresult
-txMozillaXMLOutput::startHTMLElement(nsIContent* aElement, bool aIsHTML)
+txMozillaXMLOutput::startHTMLElement(nsIContent* aElement, PRBool aIsHTML)
 {
     nsresult rv = NS_OK;
     nsIAtom *atom = aElement->Tag();
@@ -841,7 +841,7 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, PRInt32 aNsID
     mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_LOADING);
     nsCOMPtr<nsIDocument> source = do_QueryInterface(aSourceDocument);
     NS_ENSURE_STATE(source);
-    bool hasHadScriptObject = false;
+    PRBool hasHadScriptObject = PR_FALSE;
     nsIScriptGlobalObject* sgo =
       source->GetScriptHandlingObject(hasHadScriptObject);
     NS_ENSURE_STATE(sgo || !hasHadScriptObject);
@@ -992,7 +992,7 @@ NS_IMPL_ISUPPORTS2(txTransformNotifier,
 NS_IMETHODIMP
 txTransformNotifier::ScriptAvailable(nsresult aResult, 
                                      nsIScriptElement *aElement, 
-                                     bool aIsInline,
+                                     PRBool aIsInline,
                                      nsIURI *aURI, 
                                      PRInt32 aLineNo)
 {
@@ -1007,7 +1007,7 @@ txTransformNotifier::ScriptAvailable(nsresult aResult,
 NS_IMETHODIMP 
 txTransformNotifier::ScriptEvaluated(nsresult aResult, 
                                      nsIScriptElement *aElement,
-                                     bool aIsInline)
+                                     PRBool aIsInline)
 {
     if (mScriptElements.RemoveObject(aElement)) {
         SignalTransformEnd();
@@ -1018,7 +1018,7 @@ txTransformNotifier::ScriptEvaluated(nsresult aResult,
 
 NS_IMETHODIMP 
 txTransformNotifier::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
-                                      bool aWasAlternate,
+                                      PRBool aWasAlternate,
                                       nsresult aStatus)
 {
     if (mPendingStylesheetCount == 0) {

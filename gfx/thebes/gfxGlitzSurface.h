@@ -49,7 +49,7 @@ class THEBES_API gfxGlitzSurface : public gfxASurface {
 public:
     gfxGlitzSurface(glitz_drawable_t *drawable,
                     glitz_surface_t *glitzSurface,
-                    bool takeOwnership = false);
+                    PRBool takeOwnership = PR_FALSE);
 
     virtual ~gfxGlitzSurface();
 
@@ -67,7 +67,7 @@ public:
 protected:
     glitz_drawable_t *mGlitzDrawable;
     glitz_surface_t *mGlitzSurface;
-    bool mOwnsSurface;
+    PRBool mOwnsSurface;
 };
 
 #endif /* GFX_GLITZSURFACE_H */

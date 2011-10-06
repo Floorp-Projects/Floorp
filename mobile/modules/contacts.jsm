@@ -38,6 +38,8 @@ let EXPORTED_SYMBOLS = ["Contacts"];
 
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/ctypes.jsm");
+
 let Contacts = {
   _providers: [],
   _contacts: [],
@@ -86,7 +88,6 @@ let Contacts = {
 #ifndef ANDROID
 #ifndef XP_MACOSX
 #ifdef XP_UNIX
-Cu.import("resource://gre/modules/ctypes.jsm");
 Cu.import("resource:///modules/linuxTypes.jsm");
 
 function EBookProvider() {

@@ -114,9 +114,9 @@ public:
         return mKey;
     }
 
-    bool KeyEquals(KeyTypePointer aKey) const
+    PRBool KeyEquals(KeyTypePointer aKey) const
     {
-        bool eq;
+        PRBool eq;
         mKey->Equals(const_cast<nsIPrincipal*>(aKey),
                      &eq);
         return eq;
@@ -179,7 +179,7 @@ struct PropertyPolicy : public PLDHashEntryHdr
     SecurityLevel  mSet;
 };
 
-static bool
+static PRBool
 InitPropertyPolicyEntry(PLDHashTable *table,
                      PLDHashEntryHdr *entry,
                      const void *key)
@@ -230,7 +230,7 @@ MoveClassPolicyEntry(PLDHashTable *table,
                      const PLDHashEntryHdr *from,
                      PLDHashEntryHdr *to);
 
-static bool
+static PRBool
 InitClassPolicyEntry(PLDHashTable *table,
                      PLDHashEntryHdr *entry,
                      const void *key)
@@ -278,7 +278,7 @@ public:
 
     }
 
-    bool Init()
+    PRBool Init()
     {
         static const PLDHashTableOps domainPolicyOps =
         {
@@ -324,7 +324,7 @@ public:
         sGeneration++;
     }
     
-    bool IsInvalid()
+    PRBool IsInvalid()
     {
         return mGeneration != sGeneration; 
     }
@@ -398,7 +398,7 @@ public:
      * method returns true if aSubjectURI and aObjectURI have the same origin,
      * false otherwise.
      */
-    static bool SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI);
+    static PRBool SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI);
     static PRUint32 SecurityHashURI(nsIURI* aURI);
 
     static nsresult 
@@ -411,7 +411,7 @@ public:
     static PRUint32
     HashPrincipalByOrigin(nsIPrincipal* aPrincipal);
 
-    static bool
+    static PRBool
     GetStrictFileOriginPolicy()
     {
         return sStrictFileOriginPolicy;
@@ -437,7 +437,7 @@ private:
     static nsIPrincipal*
     doGetObjectPrincipal(JSObject *obj
 #ifdef DEBUG
-                         , bool aAllowShortCircuit = true
+                         , PRBool aAllowShortCircuit = PR_TRUE
 #endif
                          );
 
@@ -479,7 +479,7 @@ private:
                               const nsACString& aPrettyName,
                               nsISupports* aCertificate,
                               nsIURI* aURI,
-                              bool aModifyTable,
+                              PRBool aModifyTable,
                               nsIPrincipal **result);
 
     // Returns null if a principal cannot be found.  Note that rv can be NS_OK
@@ -518,9 +518,9 @@ private:
                          JSStackFrame** frameResult,
                          nsresult* rv);
 
-    static bool
+    static PRBool
     CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal,
-                       const char* aCapability, bool *checkValue);
+                       const char* aCapability, PRBool *checkValue);
 
     static void
     FormatCapabilityString(nsAString& aCapability);
@@ -617,12 +617,12 @@ private:
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
     ContextPrincipal *mContextPrincipals;
     nsInterfaceHashtable<PrincipalKey, nsIPrincipal> mPrincipals;
-    bool mPrefInitialized;
-    bool mIsJavaScriptEnabled;
-    bool mIsWritingPrefs;
-    bool mPolicyPrefsChanged;
+    PRPackedBool mPrefInitialized;
+    PRPackedBool mIsJavaScriptEnabled;
+    PRPackedBool mIsWritingPrefs;
+    PRPackedBool mPolicyPrefsChanged;
 
-    static bool sStrictFileOriginPolicy;
+    static PRBool sStrictFileOriginPolicy;
 
     static nsIIOService    *sIOService;
     static nsIXPConnect    *sXPConnect;

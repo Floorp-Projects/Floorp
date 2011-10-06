@@ -138,8 +138,8 @@ nsAppShell::ScheduleNativeEventCallback()
     write(mPipeFDs[1], buf, 1);
 }
 
-bool
-nsAppShell::ProcessNextNativeEvent(bool mayWait)
+PRBool
+nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
     return g_main_context_iteration(NULL, mayWait);
 }

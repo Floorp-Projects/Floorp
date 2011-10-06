@@ -104,7 +104,7 @@ public:
   static already_AddRefed<DOMSVGPathSegList>
   GetDOMWrapper(void *aList,
                 nsSVGElement *aElement,
-                bool aIsAnimValList);
+                PRBool aIsAnimValList);
 
   /**
    * This method returns the DOMSVGPathSegList wrapper for an internal
@@ -150,7 +150,7 @@ public:
    * Returns true if our attribute is animating (in which case our animVal is
    * not simply a mirror of our baseVal).
    */
-  bool AttrIsAnimating() const;
+  PRBool AttrIsAnimating() const;
 
 private:
 
@@ -158,7 +158,7 @@ private:
    * Only our static GetDOMWrapper() factory method may create objects of our
    * type.
    */
-  DOMSVGPathSegList(nsSVGElement *aElement, bool aIsAnimValList)
+  DOMSVGPathSegList(nsSVGElement *aElement, PRBool aIsAnimValList)
     : mElement(aElement)
     , mIsAnimValList(aIsAnimValList)
   {
@@ -172,7 +172,7 @@ private:
   }
 
   /// Used to determine if this list is the baseVal or animVal list.
-  bool IsAnimValList() const {
+  PRBool IsAnimValList() const {
     return mIsAnimValList;
   }
 
@@ -236,7 +236,7 @@ private:
   // ourself, but also for our DOMSVGPathSeg items too.
   nsRefPtr<nsSVGElement> mElement;
 
-  bool mIsAnimValList;
+  PRPackedBool mIsAnimValList;
 };
 
 } // namespace mozilla

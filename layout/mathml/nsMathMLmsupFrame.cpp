@@ -83,7 +83,7 @@ nsMathMLmsupFrame::TransmitAutomaticData()
 
 /* virtual */ nsresult
 nsMathMLmsupFrame::Place(nsRenderingContext& aRenderingContext,
-                         bool                 aPlaceOrigin,
+                         PRBool               aPlaceOrigin,
                          nsHTMLReflowMetrics& aDesiredSize)
 {
   // extra spacing after sup/subscript
@@ -115,7 +115,7 @@ nsMathMLmsupFrame::Place(nsRenderingContext& aRenderingContext,
 nsresult
 nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
                                     nsRenderingContext& aRenderingContext,
-                                    bool                 aPlaceOrigin,
+                                    PRBool               aPlaceOrigin,
                                     nsHTMLReflowMetrics& aDesiredSize,
                                     nsMathMLContainerFrame* aFrame,
                                     nscoord              aUserSupScriptShift,

@@ -45,7 +45,7 @@
 #endif
 
 #ifdef NS_DEBUG
-static bool gNoisy = false;
+static PRBool gNoisy = PR_FALSE;
 #endif
 
 

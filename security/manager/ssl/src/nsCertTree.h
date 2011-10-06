@@ -61,7 +61,7 @@ struct CompareCacheHashEntry {
   CompareCacheHashEntry();
 
   void *key; // no ownership
-  bool mCritInit[max_criterions];
+  PRPackedBool mCritInit[max_criterions];
   nsXPIDLString mCrit[max_criterions];
 };
 
@@ -101,7 +101,7 @@ public:
   nsCString mAsciiHost;
   PRInt32 mPort;
   nsCertOverride::OverrideBits mOverrideBits;
-  bool mIsTemporary;
+  PRBool mIsTemporary;
   nsCOMPtr<nsIX509Cert> mCert;
 };
 

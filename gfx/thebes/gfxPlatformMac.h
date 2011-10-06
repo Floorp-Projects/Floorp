@@ -67,7 +67,7 @@ public:
 
     nsresult ResolveFontName(const nsAString& aFontName,
                              FontResolverCallback aCallback,
-                             void *aClosure, bool& aAborted);
+                             void *aClosure, PRBool& aAborted);
 
     nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
@@ -84,7 +84,7 @@ public:
                                            const PRUint8 *aFontData,
                                            PRUint32 aLength);
 
-    bool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
+    PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
 
     nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,

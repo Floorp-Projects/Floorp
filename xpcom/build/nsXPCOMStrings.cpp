@@ -111,7 +111,7 @@ NS_StringContainerFinish(nsStringContainer &aContainer)
 
 XPCOM_API(PRUint32)
 NS_StringGetData(const nsAString &aStr, const PRUnichar **aData,
-                 bool *aTerminated)
+                 PRBool *aTerminated)
 {
   if (aTerminated)
     *aTerminated = aStr.IsTerminated();
@@ -190,12 +190,12 @@ NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
 }
 
 XPCOM_API(void)
-NS_StringSetIsVoid(nsAString &aStr, const bool aIsVoid)
+NS_StringSetIsVoid(nsAString &aStr, const PRBool aIsVoid)
 {
   aStr.SetIsVoid(aIsVoid);
 }
 
-XPCOM_API(bool)
+XPCOM_API(PRBool)
 NS_StringGetIsVoid(const nsAString &aStr)
 {
   return aStr.IsVoid();
@@ -271,7 +271,7 @@ NS_CStringContainerFinish(nsCStringContainer &aContainer)
 
 XPCOM_API(PRUint32)
 NS_CStringGetData(const nsACString &aStr, const char **aData,
-                  bool *aTerminated)
+                  PRBool *aTerminated)
 {
   if (aTerminated)
     *aTerminated = aStr.IsTerminated();
@@ -349,12 +349,12 @@ NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
 }
 
 XPCOM_API(void)
-NS_CStringSetIsVoid(nsACString &aStr, const bool aIsVoid)
+NS_CStringSetIsVoid(nsACString &aStr, const PRBool aIsVoid)
 {
   aStr.SetIsVoid(aIsVoid);
 }
 
-XPCOM_API(bool)
+XPCOM_API(PRBool)
 NS_CStringGetIsVoid(const nsACString &aStr)
 {
   return aStr.IsVoid();

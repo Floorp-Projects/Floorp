@@ -87,7 +87,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   nsCString                       mProtocol;
   nsCString                       mOrigin;
 
-  bool                            mEncrypted;
+  PRBool                          mEncrypted;
   nsCString                       mNegotiatedExtensions;
 };
 

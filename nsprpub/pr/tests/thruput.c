@@ -404,7 +404,6 @@ int main(int argc, char **argv)
     if (NULL == server_name) Server();
     else Client(server_name);
 
-    return 0;
 }  /* main */
 
 /* thruput.c */

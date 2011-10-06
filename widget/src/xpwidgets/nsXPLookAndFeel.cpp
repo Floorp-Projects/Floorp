@@ -242,11 +242,11 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
 PRInt32 nsXPLookAndFeel::sCachedColors[LookAndFeel::eColorID_LAST_COLOR] = {0};
 PRInt32 nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 
-bool nsXPLookAndFeel::sInitialized = false;
-bool nsXPLookAndFeel::sUseNativeColors = true;
+PRBool nsXPLookAndFeel::sInitialized = PR_FALSE;
+PRBool nsXPLookAndFeel::sUseNativeColors = PR_TRUE;
 
 nsLookAndFeel* nsXPLookAndFeel::sInstance = nsnull;
-bool nsXPLookAndFeel::sShutdown = false;
+PRBool nsXPLookAndFeel::sShutdown = PR_FALSE;
 
 // static
 nsLookAndFeel*
@@ -457,7 +457,7 @@ nsXPLookAndFeel::Init()
     InitColorFromPref(i);
   }
 
-  bool val;
+  PRBool val;
   if (NS_SUCCEEDED(Preferences::GetBool("ui.use_native_colors", &val))) {
     sUseNativeColors = val;
   }
@@ -470,7 +470,7 @@ nsXPLookAndFeel::~nsXPLookAndFeel()
   sInstance = nsnull;
 }
 
-bool
+PRBool
 nsXPLookAndFeel::IsSpecialColor(ColorID aID, nscolor &aColor)
 {
   switch (aID) {
@@ -742,7 +742,7 @@ LookAndFeel::GetPasswordCharacter()
 }
 
 // static
-bool
+PRBool
 LookAndFeel::GetEchoPassword()
 {
   return nsLookAndFeel::GetInstance()->GetEchoPasswordImpl();

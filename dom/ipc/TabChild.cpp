@@ -225,7 +225,7 @@ TabChild::ShowAsModal()
 }
 
 NS_IMETHODIMP
-TabChild::IsWindowModal(bool* aRetVal)
+TabChild::IsWindowModal(PRBool* aRetVal)
 {
   *aRetVal = PR_FALSE;
   return NS_OK;
@@ -286,14 +286,14 @@ TabChild::SetFocus()
 }
 
 NS_IMETHODIMP
-TabChild::GetVisibility(bool* aVisibility)
+TabChild::GetVisibility(PRBool* aVisibility)
 {
   *aVisibility = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TabChild::SetVisibility(bool aVisibility)
+TabChild::SetVisibility(PRBool aVisibility)
 {
   // should the platform support this? Bug 666365
   return NS_OK;
@@ -354,10 +354,10 @@ TabChild::GetInterface(const nsIID & aIID, void **aSink)
 
 NS_IMETHODIMP
 TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
-                        bool aCalledFromJS,
-                        bool aPositionSpecified, bool aSizeSpecified,
+                        PRBool aCalledFromJS,
+                        PRBool aPositionSpecified, PRBool aSizeSpecified,
                         nsIURI* aURI, const nsAString& aName,
-                        const nsACString& aFeatures, bool* aWindowIsNew,
+                        const nsACString& aFeatures, PRBool* aWindowIsNew,
                         nsIDOMWindow** aReturn)
 {
     *aReturn = nsnull;
@@ -645,7 +645,7 @@ TabChild::RecvKeyEvent(const nsString& aType,
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
   nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
   NS_ENSURE_TRUE(utils, true);
-  bool ignored = false;
+  PRBool ignored = PR_FALSE;
   utils->SendKeyEvent(aType, aKeyCode, aCharCode,
                       aModifiers, aPreventDefault, &ignored);
   return true;
@@ -844,7 +844,7 @@ public:
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
       privateEvent->SetTrusted(PR_TRUE);
 
-      bool dummy;
+      PRBool dummy;
       mTabChildGlobal->DispatchEvent(event, &dummy);
     }
 

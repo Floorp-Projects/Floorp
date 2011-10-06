@@ -47,9 +47,9 @@
     nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;
     nsHtml5TreeOpStage*                    mSpeculativeLoadStage;
     nsIContent**                           mDeepTreeSurrogateParent;
-    bool                                   mCurrentHtmlScriptIsAsyncOrDefer;
+    PRBool                                 mCurrentHtmlScriptIsAsyncOrDefer;
 #ifdef DEBUG
-    bool                                   mActive;
+    PRBool                                 mActive;
 #endif
 
     // DocumentModeHandler
@@ -72,7 +72,7 @@
 
     ~nsHtml5TreeBuilder();
     
-    bool HasScript();
+    PRBool HasScript();
     
     void SetOpSink(nsAHtml5TreeOpSink* aOpSink) {
       mOpSink = aOpSink;
@@ -82,7 +82,7 @@
       mOpQueue.Clear();
     }
     
-    bool Flush(bool aDiscretionary = false);
+    PRBool Flush(PRBool aDiscretionary = PR_FALSE);
     
     void FlushLoads();
 

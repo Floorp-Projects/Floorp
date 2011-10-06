@@ -78,7 +78,7 @@ private:
     const char *                    mBuffer;
     PRUint32                        mStreamEnd;
     PRUint32                        mPos;       // stream position
-    bool                            mClosed;
+    PRBool                          mClosed;
 };
 
 
@@ -180,7 +180,7 @@ nsDiskCacheInputStream::ReadSegments(nsWriteSegmentFun writer,
 
 
 NS_IMETHODIMP
-nsDiskCacheInputStream::IsNonBlocking(bool * nonBlocking)
+nsDiskCacheInputStream::IsNonBlocking(PRBool * nonBlocking)
 {
     *nonBlocking = PR_FALSE;
     return NS_OK;
@@ -205,7 +205,7 @@ public:
 
 private:
     nsDiskCacheStreamIO *           mStreamIO;  // backpointer to parent
-    bool                            mClosed;
+    PRBool                          mClosed;
 };
 
 
@@ -287,7 +287,7 @@ nsDiskCacheOutputStream::WriteSegments( nsReadSegmentFun reader,
 
 
 NS_IMETHODIMP
-nsDiskCacheOutputStream::IsNonBlocking(bool * nonBlocking)
+nsDiskCacheOutputStream::IsNonBlocking(PRBool * nonBlocking)
 {
     *nonBlocking = PR_FALSE;
     return NS_OK;
@@ -496,7 +496,7 @@ nsDiskCacheStreamIO::Flush()
     nsDiskCacheMap *cacheMap = mDevice->CacheMap();  // get map reference
     nsresult rv;
 
-    bool written = false;
+    PRBool written = PR_FALSE;
 
     if ((mStreamEnd <= kMaxBufferSize) &&
         (mBinding->mCacheEntry->StoragePolicy() != nsICache::STORE_ON_DISK_AS_FILE)) {
@@ -592,7 +592,7 @@ nsDiskCacheStreamIO::Write( const char * buffer,
     NS_ASSERTION(mBufPos <= mBufEnd, "streamIO buffer corrupted");
 
     PRUint32 bytesLeft = count;
-    bool     flushed = false;
+    PRBool   flushed = PR_FALSE;
     
     while (bytesLeft) {
         if (mBufPos == mBufSize) {
@@ -885,7 +885,7 @@ nsresult
 nsDiskCacheStreamIO::SetEOF()
 {
     nsresult    rv;
-    bool        needToCloseFD = false;
+    PRBool      needToCloseFD = PR_FALSE;
 
     NS_ASSERTION(mStreamPos <= mStreamEnd, "bad stream");
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;

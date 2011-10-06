@@ -300,14 +300,14 @@ SerializeCalc(const typename CalcOps::input_type& aValue, CalcOps &aOps)
   aOps.Append(")");
 }
 
-static inline bool
+static inline PRBool
 IsCalcAdditiveUnit(nsCSSUnit aUnit)
 {
   return aUnit == eCSSUnit_Calc_Plus ||
          aUnit == eCSSUnit_Calc_Minus;
 }
 
-static inline bool
+static inline PRBool
 IsCalcMultiplicativeUnit(nsCSSUnit aUnit)
 {
   return aUnit == eCSSUnit_Calc_Times_L ||
@@ -335,7 +335,7 @@ SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
       aOps.Append(" - ");
     }
 
-    bool needParens = IsCalcAdditiveUnit(CalcOps::GetUnit(array->Item(1)));
+    PRBool needParens = IsCalcAdditiveUnit(CalcOps::GetUnit(array->Item(1)));
     if (needParens) {
       aOps.Append("(");
     }
@@ -347,7 +347,7 @@ SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
     const typename CalcOps::input_array_type *array = aValue.GetArrayValue();
     NS_ABORT_IF_FALSE(array->Count() == 2, "unexpected length");
 
-    bool needParens = IsCalcAdditiveUnit(CalcOps::GetUnit(array->Item(0)));
+    PRBool needParens = IsCalcAdditiveUnit(CalcOps::GetUnit(array->Item(0)));
     if (needParens) {
       aOps.Append("(");
     }

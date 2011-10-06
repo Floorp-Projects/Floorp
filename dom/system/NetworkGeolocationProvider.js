@@ -187,10 +187,7 @@ WifiGeoPositionProvider.prototype = {
     LOG("onChange called");
     this.hasSeenWiFi = true;
 
-    let providerUrlBase = "https://maps.googleapis.com/maps/api/browserlocation/json";
-    try {
-        providerUrlBase = Services.prefs.getCharPref("geo.wifi.uri");      
-    } catch (x) {};
+    let providerUrlBase = Services.prefs.getCharPref("geo.wifi.uri");
     let providerUrl;
 
     let query = providerUrlBase.indexOf("?");
@@ -239,10 +236,10 @@ WifiGeoPositionProvider.prototype = {
     xhr.mozBackgroundRequest = true;
     xhr.open("GET", providerUrl, false);
     xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
-    xhr.addEventListener("error", function(req) {
+    xhr.onerror = function(req) {
         LOG("onerror: " + req);
-    }, false);
-    xhr.addEventListener("load", function (req) {  
+    };
+    xhr.onload = function (req) {  
         LOG("service returned: " + req.target.responseText);
         response = JSON.parse(req.target.responseText);
         /*
@@ -288,7 +285,7 @@ WifiGeoPositionProvider.prototype = {
               }
           }
         }
-    }, false);
+    };
 
     LOG("************************************* ------>>>> sending.");
     xhr.send(null);

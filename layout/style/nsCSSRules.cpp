@@ -494,7 +494,7 @@ ImportRule::GetStyleSheet(nsIDOMCSSStyleSheet * *aStyleSheet)
 // must be outside the namespace
 DOMCI_DATA(CSSImportRule, css::ImportRule)
 
-static bool
+static PRBool
 CloneRuleInto(css::Rule* aRule, void* aArray)
 {
   nsRefPtr<css::Rule> clone = aRule->Clone();
@@ -510,7 +510,7 @@ GroupRule::GroupRule()
 {
 }
 
-static bool
+static PRBool
 SetParentRuleReference(Rule* aRule, void* aParentRule)
 {
   GroupRule* parentRule = static_cast<GroupRule*>(aParentRule);
@@ -536,7 +536,7 @@ GroupRule::~GroupRule()
 
 IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(GroupRule, Rule)
 
-static bool
+static PRBool
 SetStyleSheetReference(Rule* aRule, void* aSheet)
 {
   nsCSSStyleSheet* sheet = (nsCSSStyleSheet*)aSheet;
@@ -581,7 +581,7 @@ GroupRule::GetStyleRuleAt(PRInt32 aIndex) const
   return mRules.SafeObjectAt(aIndex);
 }
 
-bool
+PRBool
 GroupRule::EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const
 {
   return
@@ -854,7 +854,7 @@ MediaRule::DeleteRule(PRUint32 aIndex)
 }
 
 // GroupRule interface
-/* virtual */ bool
+/* virtual */ PRBool
 MediaRule::UseForPresentation(nsPresContext* aPresContext,
                                    nsMediaQueryResultCacheKey& aKey)
 {
@@ -1021,7 +1021,7 @@ DocumentRule::DeleteRule(PRUint32 aIndex)
 }
 
 // GroupRule interface
-/* virtual */ bool
+/* virtual */ PRBool
 DocumentRule::UseForPresentation(nsPresContext* aPresContext,
                                  nsMediaQueryResultCacheKey& aKey)
 {
@@ -1682,7 +1682,7 @@ NS_IMPL_ADDREF(nsCSSKeyframeStyleDeclaration)
 NS_IMPL_RELEASE(nsCSSKeyframeStyleDeclaration)
 
 css::Declaration*
-nsCSSKeyframeStyleDeclaration::GetCSSDeclaration(bool aAllocate)
+nsCSSKeyframeStyleDeclaration::GetCSSDeclaration(PRBool aAllocate)
 {
   if (mRule) {
     return mRule->Declaration();
@@ -2078,7 +2078,7 @@ nsCSSKeyframesRule::FindRule(const nsAString& aKey,
 }
 
 // GroupRule interface
-/* virtual */ bool
+/* virtual */ PRBool
 nsCSSKeyframesRule::UseForPresentation(nsPresContext* aPresContext,
                                        nsMediaQueryResultCacheKey& aKey)
 {

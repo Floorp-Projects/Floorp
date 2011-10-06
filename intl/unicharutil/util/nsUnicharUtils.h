@@ -63,11 +63,11 @@ PRUnichar ToTitleCase(PRUnichar);
 void ToLowerCase(const PRUnichar*, PRUnichar*, PRUint32);
 void ToUpperCase(const PRUnichar*, PRUnichar*, PRUint32);
 
-inline bool IsUpperCase(PRUnichar c) {
+inline PRBool IsUpperCase(PRUnichar c) {
   return ToLowerCase(c) != c;
 }
 
-inline bool IsLowerCase(PRUnichar c) {
+inline PRBool IsLowerCase(PRUnichar c) {
   return ToUpperCase(c) != c;
 }
 
@@ -95,7 +95,7 @@ class nsCaseInsensitiveStringArrayComparator
 {
 public:
   template<class A, class B>
-  bool Equals(const A& a, const B& b) const {
+  PRBool Equals(const A& a, const B& b) const {
     return a.Equals(b, nsCaseInsensitiveStringComparator());
   }
 };
@@ -110,7 +110,7 @@ public:
                           PRUint32) const;
 };
 
-inline bool
+inline PRBool
 CaseInsensitiveFindInReadable(const nsAString& aPattern,
                               nsAString::const_iterator& aSearchStart,
                               nsAString::const_iterator& aSearchEnd)
@@ -119,7 +119,7 @@ CaseInsensitiveFindInReadable(const nsAString& aPattern,
                         nsCaseInsensitiveStringComparator());
 }
 
-inline bool
+inline PRBool
 CaseInsensitiveFindInReadable(const nsAString& aPattern,
                               const nsAString& aHay)
 {
@@ -157,10 +157,10 @@ CaseInsensitiveCompare(const char* aLeft, const char* aRight,
  * function returns true, aErr is guaranteed to be false and both aLeftNext and
  * aRightNext are guaranteed to be initialized.
  */
-bool
+PRBool
 CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
                               const char* aLeftEnd, const char* aRightEnd,
                               const char** aLeftNext, const char** aRightNext,
-                              bool* aErr);
+                              PRBool* aErr);
 
 #endif  /* nsUnicharUtils_h__ */

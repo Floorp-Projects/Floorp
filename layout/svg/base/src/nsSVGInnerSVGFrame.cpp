@@ -125,7 +125,7 @@ nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
     if (!(aFlags & TRANSFORM_CHANGED) &&
         (svg->mLengthAttributes[nsSVGSVGElement::X].IsPercentage() ||
          svg->mLengthAttributes[nsSVGSVGElement::Y].IsPercentage() ||
-         (svg->mViewBox.IsValid() &&
+         (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox) &&
           (svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() ||
            svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage())))) {
     
@@ -163,29 +163,17 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width ||
-        aAttribute == nsGkAtoms::height) {
-
-      if (static_cast<nsSVGSVGElement*>(mContent)->mViewBox.IsValid()) {
-
-        // make sure our cached transform matrix gets (lazily) updated
-        mCanvasTM = nsnull;
-
-        nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
-      } else {
-        nsSVGUtils::NotifyChildrenOfSVGChange(this, COORD_CONTEXT_CHANGED);
-      }
-
+        aAttribute == nsGkAtoms::height ||
+        aAttribute == nsGkAtoms::preserveAspectRatio ||
+        aAttribute == nsGkAtoms::viewBox) {
+      nsSVGUtils::UpdateGraphic(this);
     } else if (aAttribute == nsGkAtoms::transform ||
-               aAttribute == nsGkAtoms::preserveAspectRatio ||
-               aAttribute == nsGkAtoms::viewBox ||
                aAttribute == nsGkAtoms::x ||
                aAttribute == nsGkAtoms::y) {
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nsnull;
 
-      nsSVGUtils::NotifyChildrenOfSVGChange(
-          this, aAttribute == nsGkAtoms::viewBox ?
-                  TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED : TRANSFORM_CHANGED);
+      nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
     }
   }
 
@@ -241,8 +229,32 @@ nsSVGInnerSVGFrame::UnsuspendRedraw()
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::NotifyViewportChange()
 {
-  NS_ERROR("Inner SVG frames should not get Viewport changes.");
-  return NS_ERROR_FAILURE;
+  PRUint32 flags = COORD_CONTEXT_CHANGED;
+
+#if 1
+  // XXX nsSVGSVGElement::InvalidateTransformNotifyFrame calls us for changes
+  // to 'x' and 'y'. Until this is fixed, add TRANSFORM_CHANGED to flags
+  // unconditionally.
+
+  flags |= TRANSFORM_CHANGED;
+
+  // make sure canvas transform matrix gets (lazily) recalculated:
+  mCanvasTM = nsnull;
+#else
+  // viewport changes only affect our transform if we have a viewBox attribute
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
+    // make sure canvas transform matrix gets (lazily) recalculated:
+    mCanvasTM = nsnull;
+
+    flags |= TRANSFORM_CHANGED;
+  }
+#endif
+  
+  // inform children
+  SuspendRedraw();
+  nsSVGUtils::NotifyChildrenOfSVGChange(this, flags);
+  UnsuspendRedraw();
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

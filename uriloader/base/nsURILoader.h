@@ -72,7 +72,7 @@ protected:
   NS_HIDDEN_(nsresult) OpenChannel(nsIChannel* channel,
                                    PRUint32 aFlags,
                                    nsIInterfaceRequestor* aWindowContext,
-                                   bool aChannelOpen,
+                                   PRBool aChannelOpen,
                                    nsIStreamListener** aListener);
 
   /**

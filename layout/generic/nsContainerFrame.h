@@ -87,10 +87,10 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
   virtual void ChildIsDirty(nsIFrame* aChild);
 
-  virtual bool IsLeaf() const;
-  virtual bool PeekOffsetNoAmount(bool aForward, PRInt32* aOffset);
-  virtual bool PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
-                                     bool aRespectClusters = true);
+  virtual PRBool IsLeaf() const;
+  virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
+  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
+                                     PRBool aRespectClusters = PR_TRUE);
   
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -106,14 +106,14 @@ public:
    */
   virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
                                      nsIFrame*      aNextInFlow,
-                                     bool           aDeletingEmptyFrames);
+                                     PRBool         aDeletingEmptyFrames);
 
   /**
    * Helper method to wrap views around frames. Used by containers
    * under special circumstances (can be used by leaf frames as well)
    */
   static nsresult CreateViewForFrame(nsIFrame* aFrame,
-                                     bool aForce);
+                                     PRBool aForce);
 
   // Positions the frame's view based on the frame's origin
   static void PositionFrameView(nsIFrame* aKidFrame);
@@ -170,7 +170,7 @@ public:
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, bool aShrinkWrap);
+                                 nsSize aPadding, PRBool aShrinkWrap);
 
   /**
    * Invokes the WillReflow() function, positions the frame and its view (if
@@ -303,7 +303,7 @@ public:
    */
   virtual nsresult StealFrame(nsPresContext* aPresContext,
                               nsIFrame*      aChild,
-                              bool           aForceNormal = false);
+                              PRBool         aForceNormal = PR_FALSE);
 
   /**
    * Removes the next-siblings of aChild without destroying them and without
@@ -415,7 +415,7 @@ protected:
    *
    * @return PR_TRUE if any frames were moved and PR_FALSE otherwise
    */
-  bool MoveOverflowToChildList(nsPresContext* aPresContext);
+  PRBool MoveOverflowToChildList(nsPresContext* aPresContext);
 
   /**
    * Push aFromChild and its next siblings to the next-in-flow. Change
@@ -461,7 +461,7 @@ protected:
    * Return true if the aFrame was successfully removed,
    * Return false otherwise.
    */
-  bool RemovePropTableFrame(nsPresContext*                 aPresContext,
+  PRBool RemovePropTableFrame(nsPresContext*                 aPresContext,
                               nsIFrame*                      aFrame,
                               const FramePropertyDescriptor* aProperty);
 
@@ -533,8 +533,8 @@ public:
    */
   nsOverflowContinuationTracker(nsPresContext*    aPresContext,
                                 nsContainerFrame* aFrame,
-                                bool              aWalkOOFFrames,
-                                bool              aSkipOverflowContainerChildren = true);
+                                PRBool            aWalkOOFFrames,
+                                PRBool            aSkipOverflowContainerChildren = PR_TRUE);
   /**
    * This function adds an overflow continuation to our running list and
    * sets its NS_FRAME_IS_OVERFLOW_CONTAINER flag.
@@ -611,9 +611,9 @@ private:
   nsContainerFrame* mParent;
   /* Tells SetUpListWalker whether or not to walk us past any continuations
      of overflow containers. aWalkOOFFrames is ignored when this is false. */
-  bool mSkipOverflowContainerChildren;
+  PRBool mSkipOverflowContainerChildren;
   /* Tells us whether to pay attention to OOF frames or non-OOF frames */
-  bool mWalkOOFFrames;
+  PRBool mWalkOOFFrames;
 };
 
 inline

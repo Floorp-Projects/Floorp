@@ -48,7 +48,7 @@ struct ObjectHashEntry : PLDHashEntryHdr {
   nsNSSShutDownObject *obj;
 };
 
-PR_STATIC_CALLBACK(bool)
+PR_STATIC_CALLBACK(PRBool)
 ObjectSetMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
@@ -56,7 +56,7 @@ ObjectSetMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entry->obj == static_cast<const nsNSSShutDownObject*>(key);
 }
 
-PR_STATIC_CALLBACK(bool)
+PR_STATIC_CALLBACK(PRBool)
 ObjectSetInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
@@ -162,7 +162,7 @@ void nsNSSShutDownList::trackSSLSocketClose()
   --singleton->mActiveSSLSockets;
 }
   
-bool nsNSSShutDownList::areSSLSocketsActive()
+PRBool nsNSSShutDownList::areSSLSocketsActive()
 {
   if (!singleton) {
     // I'd rather prefer to be pessimistic and return PR_TRUE.
@@ -180,7 +180,7 @@ nsresult nsNSSShutDownList::doPK11Logout()
 {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("canceling all open SSL sockets to disallow future IO\n"));
   // During our iteration we will set a bunch of PRBools to PR_TRUE.
-  // Nobody else ever modifies that bool, only we do.
+  // Nobody else ever modifies that PRBool, only we do.
   // We only must ensure that our objects do not go away.
   // This is guaranteed by holding the list lock.
 
@@ -206,16 +206,16 @@ nsNSSShutDownList::doPK11LogoutHelper(PLDHashTable *table,
   return PL_DHASH_NEXT;
 }
 
-bool nsNSSShutDownList::isUIActive()
+PRBool nsNSSShutDownList::isUIActive()
 {
-  bool canDisallow = mActivityState.ifPossibleDisallowUI(nsNSSActivityState::test_only);
-  bool bIsUIActive = !canDisallow;
+  PRBool canDisallow = mActivityState.ifPossibleDisallowUI(nsNSSActivityState::test_only);
+  PRBool bIsUIActive = !canDisallow;
   return bIsUIActive;
 }
 
-bool nsNSSShutDownList::ifPossibleDisallowUI()
+PRBool nsNSSShutDownList::ifPossibleDisallowUI()
 {
-  bool isNowDisallowed = mActivityState.ifPossibleDisallowUI(nsNSSActivityState::do_it_for_real);
+  PRBool isNowDisallowed = mActivityState.ifPossibleDisallowUI(nsNSSActivityState::do_it_for_real);
   return isNowDisallowed;
 }
 
@@ -317,21 +317,21 @@ void nsNSSActivityState::leaveBlockingUIState()
   --mBlockingUICounter;
 }
 
-bool nsNSSActivityState::isBlockingUIActive()
+PRBool nsNSSActivityState::isBlockingUIActive()
 {
   MutexAutoLock lock(mNSSActivityStateLock);
   return (mBlockingUICounter > 0);
 }
 
-bool nsNSSActivityState::isUIForbidden()
+PRBool nsNSSActivityState::isUIForbidden()
 {
   MutexAutoLock lock(mNSSActivityStateLock);
   return mIsUIForbidden;
 }
 
-bool nsNSSActivityState::ifPossibleDisallowUI(RealOrTesting rot)
+PRBool nsNSSActivityState::ifPossibleDisallowUI(RealOrTesting rot)
 {
-  bool retval = false;
+  PRBool retval = PR_FALSE;
   MutexAutoLock lock(mNSSActivityStateLock);
 
   // Checking and disallowing the UI must be done atomically.
@@ -430,7 +430,7 @@ nsPSMUITracker::~nsPSMUITracker()
   state->leaveBlockingUIState();
 }
 
-bool nsPSMUITracker::isUIForbidden()
+PRBool nsPSMUITracker::isUIForbidden()
 {
   nsNSSActivityState *state = nsNSSShutDownList::getActivityState();
   if (!state)

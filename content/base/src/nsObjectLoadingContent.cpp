@@ -231,14 +231,14 @@ public:
   nsString mBrowserDumpID;
   nsString mPluginName;
   nsString mPluginFilename;
-  bool mSubmittedCrashReport;
+  PRBool mSubmittedCrashReport;
 
   nsPluginCrashedEvent(nsIContent* aContent,
                        const nsAString& aPluginDumpID,
                        const nsAString& aBrowserDumpID,
                        const nsAString& aPluginName,
                        const nsAString& aPluginFilename,
-                       bool submittedCrashReport)
+                       PRBool submittedCrashReport)
     : mContent(aContent),
       mPluginDumpID(aPluginDumpID),
       mBrowserDumpID(aBrowserDumpID),
@@ -332,7 +332,7 @@ nsPluginCrashedEvent::Run()
 
 class AutoNotifier {
   public:
-    AutoNotifier(nsObjectLoadingContent* aContent, bool aNotify) :
+    AutoNotifier(nsObjectLoadingContent* aContent, PRBool aNotify) :
       mContent(aContent), mNotify(aNotify) {
         mOldType = aContent->Type();
         mOldState = aContent->ObjectState();
@@ -356,7 +356,7 @@ class AutoNotifier {
 
   private:
     nsObjectLoadingContent*            mContent;
-    bool                               mNotify;
+    PRBool                             mNotify;
     nsObjectLoadingContent::ObjectType mOldType;
     nsEventStates                      mOldState;
 };
@@ -406,7 +406,7 @@ class AutoSetInstantiatingToFalse {
 };
 
 // helper functions
-static bool
+static PRBool
 IsSupportedImage(const nsCString& aMimeType)
 {
   imgILoader* loader = nsContentUtils::GetImgLoader();
@@ -414,12 +414,12 @@ IsSupportedImage(const nsCString& aMimeType)
     return PR_FALSE;
   }
 
-  bool supported;
+  PRBool supported;
   nsresult rv = loader->SupportImageWithMimeType(aMimeType.get(), &supported);
   return NS_SUCCEEDED(rv) && supported;
 }
 
-static bool
+static PRBool
 IsSupportedPlugin(const nsCString& aMIMEType)
 {
   nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
@@ -452,7 +452,7 @@ GetExtensionFromURI(nsIURI* uri, nsCString& ext)
  * Checks whether a plugin exists and is enabled for the extension
  * in the given URI. The MIME type is returned in the mimeType out parameter.
  */
-static bool
+static PRBool
 IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType)
 {
   nsCAutoString ext;
@@ -638,8 +638,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
       break;
     case eType_Document: {
       if (!mFrameLoader) {
-        mFrameLoader = nsFrameLoader::Create(thisContent->AsElement(),
-                                             mNetworkCreated);
+        mFrameLoader = nsFrameLoader::Create(thisContent, mNetworkCreated);
         if (!mFrameLoader) {
           Fallback(PR_FALSE);
           return NS_ERROR_UNEXPECTED;
@@ -967,7 +966,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
     // instantiate
     nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(GetOurDocument()));
     if (pDoc) {
-      bool willHandleInstantiation;
+      PRBool willHandleInstantiation;
       pDoc->GetWillHandleInstantiation(&willHandleInstantiation);
       if (willHandleInstantiation) {
         return NS_OK;
@@ -1097,9 +1096,9 @@ nsObjectLoadingContent::ObjectState() const
 // <protected>
 nsresult
 nsObjectLoadingContent::LoadObject(const nsAString& aURI,
-                                   bool aNotify,
+                                   PRBool aNotify,
                                    const nsCString& aTypeHint,
-                                   bool aForceLoad)
+                                   PRBool aForceLoad)
 {
   LOG(("OBJLC [%p]: Loading object: URI string=<%s> notify=%i type=<%s> forceload=%i\n",
        this, NS_ConvertUTF16toUTF8(aURI).get(), aNotify, aTypeHint.get(), aForceLoad));
@@ -1146,15 +1145,15 @@ nsObjectLoadingContent::UpdateFallbackState(nsIContent* aContent,
 
 nsresult
 nsObjectLoadingContent::LoadObject(nsIURI* aURI,
-                                   bool aNotify,
+                                   PRBool aNotify,
                                    const nsCString& aTypeHint,
-                                   bool aForceLoad)
+                                   PRBool aForceLoad)
 {
   LOG(("OBJLC [%p]: Loading object: URI=<%p> notify=%i type=<%s> forceload=%i\n",
        this, aURI, aNotify, aTypeHint.get(), aForceLoad));
 
   if (mURI && aURI && !aForceLoad) {
-    bool equal;
+    PRBool equal;
     nsresult rv = mURI->Equals(aURI, &equal);
     if (NS_SUCCEEDED(rv) && equal) {
       // URI didn't change, do nothing
@@ -1278,8 +1277,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
       // Must have a frameloader before creating a frame, or the frame will
       // create its own.
       if (!mFrameLoader && newType == eType_Document) {
-        mFrameLoader = nsFrameLoader::Create(thisContent->AsElement(),
-                                             mNetworkCreated);
+        mFrameLoader = nsFrameLoader::Create(thisContent, mNetworkCreated);
         if (!mFrameLoader) {
           mURI = nsnull;
           return NS_OK;
@@ -1325,9 +1323,9 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
 
   // If the class ID specifies a supported plugin, or if we have no explicit URI
   // but a type, immediately instantiate the plugin.
-  bool isSupportedClassID = false;
+  PRBool isSupportedClassID = PR_FALSE;
   nsCAutoString typeForID; // Will be set iff isSupportedClassID == PR_TRUE
-  bool hasID = false;
+  PRBool hasID = PR_FALSE;
   if (caps & eSupportClassID) {
     nsAutoString classid;
     thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::classid, classid);
@@ -1477,7 +1475,7 @@ nsObjectLoadingContent::GetCapabilities() const
 }
 
 void
-nsObjectLoadingContent::Fallback(bool aNotify)
+nsObjectLoadingContent::Fallback(PRBool aNotify)
 {
   LOG(("OBJLC [%p]: Falling back (Notify=%i)\n", this, aNotify));
 
@@ -1511,7 +1509,7 @@ nsObjectLoadingContent::Traverse(nsObjectLoadingContent *tmp,
 }
 
 // <private>
-/* static */ bool
+/* static */ PRBool
 nsObjectLoadingContent::IsSuccessfulRequest(nsIRequest* aRequest)
 {
   nsresult status;
@@ -1523,7 +1521,7 @@ nsObjectLoadingContent::IsSuccessfulRequest(nsIRequest* aRequest)
   // This may still be an error page or somesuch
   nsCOMPtr<nsIHttpChannel> httpChan(do_QueryInterface(aRequest));
   if (httpChan) {
-    bool success;
+    PRBool success;
     rv = httpChan->GetRequestSucceeded(&success);
     if (NS_FAILED(rv) || !success) {
       return PR_FALSE;
@@ -1534,7 +1532,7 @@ nsObjectLoadingContent::IsSuccessfulRequest(nsIRequest* aRequest)
   return PR_TRUE;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsObjectLoadingContent::CanHandleURI(nsIURI* aURI)
 {
   nsCAutoString scheme;
@@ -1558,7 +1556,7 @@ nsObjectLoadingContent::CanHandleURI(nsIURI* aURI)
   return extHandler == nsnull;
 }
 
-bool
+PRBool
 nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
 {
   nsCOMPtr<nsIContent> thisContent = 
@@ -1586,7 +1584,7 @@ nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
       // return an error, and we'll fallback.
       nsCOMPtr<nsIStreamConverterService> convServ =
         do_GetService("@mozilla.org/streamConverters;1");
-      bool canConvert = false;
+      PRBool canConvert = PR_FALSE;
       if (convServ) {
         rv = convServ->CanConvert(aMimeType.get(), "*/*", &canConvert);
       }
@@ -1618,8 +1616,8 @@ nsObjectLoadingContent::UnloadContent()
 void
 nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
                                            nsEventStates aOldState,
-                                           bool aSync,
-                                           bool aNotify)
+                                           PRBool aSync,
+                                           PRBool aNotify)
 {
   LOG(("OBJLC [%p]: Notifying about state change: (%u, %llx) -> (%u, %llx) (sync=%i)\n",
        this, aOldType, aOldState.GetInternalValue(), mType,
@@ -1694,8 +1692,8 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
     return eType_Image;
   }
 
-  bool isSVG = aMIMEType.LowerCaseEqualsLiteral("image/svg+xml");
-  bool supportedSVG = isSVG && (caps & eSupportSVG);
+  PRBool isSVG = aMIMEType.LowerCaseEqualsLiteral("image/svg+xml");
+  PRBool supportedSVG = isSVG && (caps & eSupportSVG);
   if (((caps & eSupportDocuments) || supportedSVG) &&
       IsSupportedDocument(aMIMEType)) {
     return eType_Document;
@@ -1857,7 +1855,7 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
 
   // Mark that we're instantiating now so that we don't end up
   // re-entering instantiation code.
-  bool oldInstantiatingValue = mInstantiating;
+  PRBool oldInstantiatingValue = mInstantiating;
   mInstantiating = PR_TRUE;
 
   nsCString typeToUse(aMIMEType);
@@ -1925,13 +1923,16 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     return GetPluginDisabledState(aContentType);
   }
 
-  bool hasAlternateContent = false;
+  PRBool hasAlternateContent = PR_FALSE;
 
   // Search for a child <param> with a pluginurl name
-  for (nsIContent* child = aContent->GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
-    if (child->IsHTML(nsGkAtoms::param)) {
+  PRUint32 count = aContent->GetChildCount();
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsIContent* child = aContent->GetChildAt(i);
+    NS_ASSERTION(child, "GetChildCount lied!");
+
+    if (child->IsHTML() &&
+        child->Tag() == nsGkAtoms::param) {
       if (child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                              NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
         return GetPluginDisabledState(aContentType);
@@ -1981,8 +1982,8 @@ nsObjectLoadingContent::CreateStaticClone(nsObjectLoadingContent* aDest) const
 
   if (mFrameLoader) {
     nsCOMPtr<nsIContent> content =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(aDest));
-    nsFrameLoader* fl = nsFrameLoader::Create(content->AsElement(), PR_FALSE);
+      do_QueryInterface(static_cast<nsIImageLoadingContent*>((aDest)));
+    nsFrameLoader* fl = nsFrameLoader::Create(content, PR_FALSE);
     if (fl) {
       aDest->mFrameLoader = fl;
       mFrameLoader->CreateStaticClone(fl);
@@ -2001,7 +2002,7 @@ NS_IMETHODIMP
 nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
                                       const nsAString& pluginDumpID,
                                       const nsAString& browserDumpID,
-                                      bool submittedCrashReport)
+                                      PRBool submittedCrashReport)
 {
   AutoNotifier notifier(this, PR_TRUE);
   UnloadContent();

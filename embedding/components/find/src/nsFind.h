@@ -85,8 +85,8 @@ protected:
 
   // Parameters set from the interface:
   //nsCOMPtr<nsIDOMRange> mRange;   // search only in this range
-  bool mFindBackward;
-  bool mCaseSensitive;
+  PRPackedBool mFindBackward;
+  PRPackedBool mCaseSensitive;
 
   nsCOMPtr<nsIWordBreaker> mWordBreaker;
   nsCOMPtr<nsIParserService> mParserService;
@@ -99,15 +99,15 @@ protected:
   nsresult GetBlockParent(nsIDOMNode* aNode, nsIDOMNode** aParent);
 
   // Utility routines:
-  bool IsTextNode(nsIDOMNode* aNode);
-  bool IsBlockNode(nsIContent* aNode);
-  bool SkipNode(nsIContent* aNode);
-  bool IsVisibleNode(nsIDOMNode *aNode);
+  PRBool IsTextNode(nsIDOMNode* aNode);
+  PRBool IsBlockNode(nsIContent* aNode);
+  PRBool SkipNode(nsIContent* aNode);
+  PRBool IsVisibleNode(nsIDOMNode *aNode);
 
   // Move in the right direction for our search:
   nsresult NextNode(nsIDOMRange* aSearchRange,
                     nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
-                    bool aContinueOk);
+                    PRBool aContinueOk);
 
   // Reset variables before returning -- don't hold any references.
   void ResetAll();

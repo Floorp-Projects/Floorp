@@ -70,8 +70,8 @@ private:
     nsCOMPtr<nsIInputStream>    mPipeIn;
     nsCOMPtr<nsIOutputStream>   mPipeOut;
     nsresult                    mStatus;
-    bool                        mKeepWaiting;
-    bool                        mDone;
+    PRPackedBool                mKeepWaiting;
+    PRPackedBool                mDone;
 };
 
 #endif // nsSyncStreamListener_h__

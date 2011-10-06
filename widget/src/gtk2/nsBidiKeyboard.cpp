@@ -80,7 +80,7 @@ nsBidiKeyboard::~nsBidiKeyboard()
 }
 
 NS_IMETHODIMP
-nsBidiKeyboard::IsLangRTL(bool *aIsRTL)
+nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
 {
     if (!mHaveBidiKeyboards)
         return NS_ERROR_FAILURE;
@@ -93,7 +93,7 @@ nsBidiKeyboard::IsLangRTL(bool *aIsRTL)
 nsresult
 nsBidiKeyboard::SetHaveBidiKeyboards()
 {
-    mHaveBidiKeyboards = false;
+    mHaveBidiKeyboards = PR_FALSE;
 
     if (!gtklib || !GdkKeymapHaveBidiLayouts)
         return NS_ERROR_FAILURE;
@@ -110,7 +110,7 @@ nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(bool* aResult)
+NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(PRBool* aResult)
 {
   // not implemented yet
   return NS_ERROR_NOT_IMPLEMENTED;

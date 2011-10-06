@@ -145,7 +145,7 @@ nsresult gfxOS2Platform::UpdateFontList()
 nsresult
 gfxOS2Platform::ResolveFontName(const nsAString& aFontName,
                                 FontResolverCallback aCallback,
-                                void *aClosure, bool& aAborted)
+                                void *aClosure, PRBool& aAborted)
 {
 #ifdef DEBUG_thebes
     char *fontname = ToNewCString(aFontName);

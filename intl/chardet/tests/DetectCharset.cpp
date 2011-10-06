@@ -56,7 +56,7 @@ class nsStatis {
 public:
     nsStatis() { };
     virtual ~nsStatis() { };
-    virtual bool HandleData(const char* aBuf, PRUint32 aLen) = 0;
+    virtual PRBool HandleData(const char* aBuf, PRUint32 aLen) = 0;
     virtual void   DataEnd() = 0;
     virtual void Report()=0;
 };
@@ -65,7 +65,7 @@ class nsBaseStatis : public nsStatis {
 public:
     nsBaseStatis(unsigned char aL, unsigned char aH, float aR) ;
     virtual ~nsBaseStatis() {};
-    virtual bool HandleData(const char* aBuf, PRUint32 aLen);
+    virtual PRBool HandleData(const char* aBuf, PRUint32 aLen);
     virtual void   DataEnd() ;
     virtual void Report();
 protected:
@@ -78,8 +78,8 @@ private:
     PRUint32 mLWordLength;
     PRUint32 mLWordLen[10]; 
     float    mR;
-    bool mTailByte;
-    bool mLastLChar;
+    PRBool mTailByte;
+    PRBool mLastLChar;
 };
 nsBaseStatis::nsBaseStatis(unsigned char aL, unsigned char aH, float aR)
 {
@@ -91,7 +91,7 @@ nsBaseStatis::nsBaseStatis(unsigned char aL, unsigned char aH, float aR)
     mLWordLo = aL;
     mR = aR;
 }
-bool nsBaseStatis::HandleData(const char* aBuf, PRUint32 aLen)
+PRBool nsBaseStatis::HandleData(const char* aBuf, PRUint32 aLen)
 {
     for(PRUint32 i=0; i < aLen; i++)
     {
@@ -104,7 +104,7 @@ bool nsBaseStatis::HandleData(const char* aBuf, PRUint32 aLen)
           {
              mNumOf2Bytes++;
              unsigned char a = (unsigned char) aBuf[i];
-             bool thisLChar = (( mLWordLo <= a) && (a <= mLWordHi));
+             PRBool thisLChar = (( mLWordLo <= a) && (a <= mLWordHi));
              if(thisLChar)
              {
                 mNumOfLChar++;
@@ -181,7 +181,7 @@ class nsSimpleStatis : public nsStatis {
 public:
     nsSimpleStatis(unsigned char aL, unsigned char aH, float aR,const char* aCharset) ;
     virtual ~nsSimpleStatis() {};
-    virtual bool HandleData(const char* aBuf, PRUint32 aLen);
+    virtual PRBool HandleData(const char* aBuf, PRUint32 aLen);
     virtual void   DataEnd() ;
     virtual void Report();
 protected:
@@ -192,7 +192,7 @@ private:
     PRUint32 mNumOfLChar;
     float    mR;
     const char* mCharset;
-    bool mTailByte;
+    PRBool mTailByte;
 };
 nsSimpleStatis::nsSimpleStatis(unsigned char aL, unsigned char aH, float aR, const char* aCharset)
 {
@@ -203,7 +203,7 @@ nsSimpleStatis::nsSimpleStatis(unsigned char aL, unsigned char aH, float aR, con
     mR = aR;
     mCharset = aCharset;
 }
-bool nsSimpleStatis::HandleData(const char* aBuf, PRUint32 aLen)
+PRBool nsSimpleStatis::HandleData(const char* aBuf, PRUint32 aLen)
 {
     for(PRUint32 i=0; i < aLen; i++)
     {
@@ -216,7 +216,7 @@ bool nsSimpleStatis::HandleData(const char* aBuf, PRUint32 aLen)
           {
              mNumOf2Bytes++;
              unsigned char a = (unsigned char) aBuf[i];
-             bool thisLChar = (( mLWordLo <= a) && (a <= mLWordHi));
+             PRBool thisLChar = (( mLWordLo <= a) && (a <= mLWordHi));
              if(thisLChar)
                 mNumOfLChar++;
           }
@@ -342,7 +342,7 @@ int main(int argc, char** argv) {
   }
 
   size_t sz;
-  bool done = false;
+  PRBool done = PR_FALSE;
   nsSimpleStatis  ks(0xb0,0xc8, (float)0.95952, "EUC-KR");
   nsSimpleStatis  js(0xa4,0xa5, (float)0.45006, "EUC-JP");
   nsStatis* stat[2] = {&ks, &js};

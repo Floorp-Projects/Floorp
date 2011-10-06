@@ -19,7 +19,7 @@
 // longer than MAX_IDENTIFIER_NAME_SIZE to MAX_IDENTIFIER_NAME_SIZE.
 class MapLongVariableNames : public TIntermTraverser {
 public:
-    MapLongVariableNames(std::map<std::string, std::string>& varyingLongNameMap);
+    MapLongVariableNames(TMap<TString, TString>& varyingLongNameMap);
 
     virtual void visitSymbol(TIntermSymbol*);
     virtual bool visitLoop(Visit, TIntermLoop*);
@@ -27,7 +27,7 @@ public:
 private:
     TString mapVaryingLongName(const TString& name);
 
-    std::map<std::string, std::string>& mVaryingLongNameMap;
+    TMap<TString, TString>& mVaryingLongNameMap;
 };
 
 #endif  // COMPILER_MAP_LONG_VARIABLE_NAMES_H_

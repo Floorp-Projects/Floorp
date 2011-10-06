@@ -706,11 +706,7 @@ class DeviceManagerSUT(DeviceManager):
     if localFile == '':
       localFile = os.path.join(self.tempRoot, "temp.txt")
   
-    try:
-      retVal = self.pullFile(remoteFile)
-    except:
-      return None
-      
+    retVal = self.pullFile(remoteFile)
     if (retVal is None):
       return None
 

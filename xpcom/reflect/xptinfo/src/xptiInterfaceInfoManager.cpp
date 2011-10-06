@@ -484,8 +484,8 @@ NS_IMETHODIMP xptiInterfaceInfoManager::RemoveAdditionalManager(nsIInterfaceInfo
     return NS_OK;
 }
 
-/* bool hasAdditionalManagers (); */
-NS_IMETHODIMP xptiInterfaceInfoManager::HasAdditionalManagers(bool *_retval)
+/* PRBool hasAdditionalManagers (); */
+NS_IMETHODIMP xptiInterfaceInfoManager::HasAdditionalManagers(PRBool *_retval)
 {
     *_retval = mAdditionalManagers.Count() > 0;
     return NS_OK;

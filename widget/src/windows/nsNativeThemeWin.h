@@ -63,12 +63,12 @@ public:
                              PRUint8 aWidgetType,
                              nsIntMargin* aResult);
 
-  virtual bool GetWidgetPadding(nsDeviceContext* aContext,
+  virtual PRBool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntMargin* aResult);
 
-  virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
+  virtual PRBool GetWidgetOverflow(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
                                    PRUint8 aWidgetType,
                                    nsRect* aOverflowRect);
@@ -76,24 +76,24 @@ public:
   NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntSize* aResult,
-                                  bool* aIsOverridable);
+                                  PRBool* aIsOverridable);
 
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType);
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
-                                nsIAtom* aAttribute, bool* aShouldRepaint);
+                                nsIAtom* aAttribute, PRBool* aShouldRepaint);
 
   NS_IMETHOD ThemeChanged();
 
-  bool ThemeSupportsWidget(nsPresContext* aPresContext, 
+  PRBool ThemeSupportsWidget(nsPresContext* aPresContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType);
 
-  bool WidgetIsContainer(PRUint8 aWidgetType);
+  PRBool WidgetIsContainer(PRUint8 aWidgetType);
 
-  bool ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
+  PRBool ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
 
-  bool ThemeNeedsComboboxDropmarker();
+  PRBool ThemeNeedsComboboxDropmarker();
 
   nsNativeThemeWin();
   virtual ~nsNativeThemeWin();
@@ -103,7 +103,7 @@ protected:
   nsresult GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
                                 PRInt32& aPart, PRInt32& aState);
   nsresult ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
-                                   PRInt32& aPart, PRInt32& aState, bool& aFocused);
+                                   PRInt32& aPart, PRInt32& aState, PRBool& aFocused);
   nsresult ClassicDrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
@@ -114,7 +114,7 @@ protected:
                              PRUint8 aWidgetType,
                              nsIntMargin* aResult);
 
-  bool ClassicGetWidgetPadding(nsDeviceContext* aContext,
+  PRBool ClassicGetWidgetPadding(nsDeviceContext* aContext,
                             nsIFrame* aFrame,
                             PRUint8 aWidgetType,
                             nsIntMargin* aResult);
@@ -122,9 +122,9 @@ protected:
   nsresult ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntSize* aResult,
-                                  bool* aIsOverridable);
+                                  PRBool* aIsOverridable);
 
-  bool ClassicThemeSupportsWidget(nsPresContext* aPresContext, 
+  PRBool ClassicThemeSupportsWidget(nsPresContext* aPresContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType);
 
@@ -133,9 +133,9 @@ protected:
 
   PRUint32 GetWidgetNativeDrawingFlags(PRUint8 aWidgetType);
 
-  PRInt32 StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType, bool wantFocused);
+  PRInt32 StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType, PRBool wantFocused);
 
-  bool IsMenuActive(nsIFrame* aFrame, PRUint8 aWidgetType);
+  PRBool IsMenuActive(nsIFrame* aFrame, PRUint8 aWidgetType);
 };
 
 // Creator function

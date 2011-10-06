@@ -66,7 +66,7 @@ struct AutoAttachJavaThread {
         attached = PR_FALSE;
     }
 
-    bool attached;
+    PRBool attached;
 };
 
 static void*

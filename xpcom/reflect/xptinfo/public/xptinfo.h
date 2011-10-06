@@ -71,16 +71,16 @@ public:
     operator PRUint8() const
         {return flags;}
 
-    bool IsPointer() const
+    PRBool IsPointer() const
         {return 0 != (XPT_TDP_IS_POINTER(flags));}
 
-    bool IsReference() const
+    PRBool IsReference() const
         {return 0 != (XPT_TDP_IS_REFERENCE(flags));}
 
-    bool IsArithmetic() const     // terminology from Harbison/Steele
+    PRBool IsArithmetic() const     // terminology from Harbison/Steele
         {return flags <= T_WCHAR;}
 
-    bool IsInterfacePointer() const
+    PRBool IsInterfacePointer() const
         {  switch (TagPart()) {
              default:
                return PR_FALSE;
@@ -90,13 +90,13 @@ public:
            }
         }
 
-    bool IsArray() const
+    PRBool IsArray() const
         {return TagPart() == T_ARRAY;}
 
     // 'Dependent' means that params of this type are dependent upon other 
     // params. e.g. an T_INTERFACE_IS is dependent upon some other param at 
     // runtime to say what the interface type of this param really is.
-    bool IsDependent() const
+    PRBool IsDependent() const
         {  switch (TagPart()) {
              default:
                return PR_FALSE;
@@ -152,18 +152,18 @@ public:
         {*(XPTParamDescriptor*)this = desc;}
 
 
-    bool IsIn()  const    {return 0 != (XPT_PD_IS_IN(flags));}
-    bool IsOut() const    {return 0 != (XPT_PD_IS_OUT(flags));}
-    bool IsRetval() const {return 0 != (XPT_PD_IS_RETVAL(flags));}
-    bool IsShared() const {return 0 != (XPT_PD_IS_SHARED(flags));}
-    bool IsDipper() const {return 0 != (XPT_PD_IS_DIPPER(flags));}
-    bool IsOptional() const {return 0 != (XPT_PD_IS_OPTIONAL(flags));}
+    PRBool IsIn()  const    {return 0 != (XPT_PD_IS_IN(flags));}
+    PRBool IsOut() const    {return 0 != (XPT_PD_IS_OUT(flags));}
+    PRBool IsRetval() const {return 0 != (XPT_PD_IS_RETVAL(flags));}
+    PRBool IsShared() const {return 0 != (XPT_PD_IS_SHARED(flags));}
+    PRBool IsDipper() const {return 0 != (XPT_PD_IS_DIPPER(flags));}
+    PRBool IsOptional() const {return 0 != (XPT_PD_IS_OPTIONAL(flags));}
     const nsXPTType GetType() const {return type.prefix;}
 
     // Whether this parameter is passed indirectly on the stack. This mainly
     // applies to out/inout params, but we use it unconditionally for certain
     // types.
-    bool IsIndirect() const {return IsOut() ||
+    PRBool IsIndirect() const {return IsOut() ||
                                GetType().TagPart() == nsXPTType::T_JSVAL;}
 
     // NOTE: other activities on types are done via methods on nsIInterfaceInfo
@@ -180,13 +180,13 @@ public:
     nsXPTMethodInfo(const XPTMethodDescriptor& desc)
         {*(XPTMethodDescriptor*)this = desc;}
 
-    bool IsGetter()      const {return 0 != (XPT_MD_IS_GETTER(flags) );}
-    bool IsSetter()      const {return 0 != (XPT_MD_IS_SETTER(flags) );}
-    bool IsNotXPCOM()    const {return 0 != (XPT_MD_IS_NOTXPCOM(flags));}
-    bool IsConstructor() const {return 0 != (XPT_MD_IS_CTOR(flags)   );}
-    bool IsHidden()      const {return 0 != (XPT_MD_IS_HIDDEN(flags) );}
-    bool WantsOptArgc()  const {return 0 != (XPT_MD_WANTS_OPT_ARGC(flags));}
-    bool WantsContext()  const {return 0 != (XPT_MD_WANTS_CONTEXT(flags));}
+    PRBool IsGetter()      const {return 0 != (XPT_MD_IS_GETTER(flags) );}
+    PRBool IsSetter()      const {return 0 != (XPT_MD_IS_SETTER(flags) );}
+    PRBool IsNotXPCOM()    const {return 0 != (XPT_MD_IS_NOTXPCOM(flags));}
+    PRBool IsConstructor() const {return 0 != (XPT_MD_IS_CTOR(flags)   );}
+    PRBool IsHidden()      const {return 0 != (XPT_MD_IS_HIDDEN(flags) );}
+    PRBool WantsOptArgc()  const {return 0 != (XPT_MD_WANTS_OPT_ARGC(flags));}
+    PRBool WantsContext()  const {return 0 != (XPT_MD_WANTS_CONTEXT(flags));}
     const char* GetName()  const {return name;}
     PRUint8 GetParamCount()  const {return num_args;}
     /* idx was index before I got _sick_ of the warnings on Unix, sorry jband */

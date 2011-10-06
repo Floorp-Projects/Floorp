@@ -20,7 +20,7 @@ function onTabViewWindowLoaded() {
     executeSoon(function() { 
       let searchBox = contentWindow.document.getElementById("searchbox");
       is(searchBox.value, number, "The seach box matches the number: " + number);
-      contentWindow.Search.hide(null);
+      contentWindow.hideSearch(null);
     });
   }
   let onSearchDisabled = function() {

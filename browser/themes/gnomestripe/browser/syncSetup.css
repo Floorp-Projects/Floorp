@@ -1,7 +1,7 @@
 wizard {
   -moz-appearance: none;
   width: 55em;
-  height: 45em;
+  height: 42em;
   padding: 0;
   background-color: Window;
 }
@@ -17,7 +17,7 @@ wizardpage {
   -moz-box-pack: center;
   -moz-box-align: center;
   margin: 0;
-  padding: 0 6em;
+  padding: 0 8em;
   background-color: Window;
 }
 
@@ -109,13 +109,9 @@ description > .text-link:focus {
   width: 0.5em;
 }
 
-#pairDeviceThrobber > image,
+#add-device-throbber > image,
 #login-throbber > image {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
-
-#captchaFeedback {
-  visibility: hidden;
 }
 
 #successPageIcon {

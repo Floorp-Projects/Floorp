@@ -73,7 +73,7 @@
 // download history
 #include "nsDownloadHistory.h"
 
-static bool gInitialized = false;
+static PRBool gInitialized = PR_FALSE;
 
 // The one time initialization for this module
 static nsresult

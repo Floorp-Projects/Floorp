@@ -152,21 +152,21 @@ public:
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   NS_IMETHOD SaveState();
-  virtual bool RestoreState(nsPresState* aState);
-  virtual bool AllowDrop();
+  virtual PRBool RestoreState(nsPresState* aState);
+  virtual PRBool AllowDrop();
 
-  virtual void FieldSetDisabledChanged(bool aNotify);
+  virtual void FieldSetDisabledChanged(PRBool aNotify);
 
   // nsIContent
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -174,27 +174,27 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
 
   virtual void DoneCreatingElement();
 
   virtual nsEventStates IntrinsicState() const;
 
   // nsITextControlElement
-  NS_IMETHOD SetValueChanged(bool aValueChanged);
-  NS_IMETHOD_(bool) IsSingleLineTextControl() const;
-  NS_IMETHOD_(bool) IsTextArea() const;
-  NS_IMETHOD_(bool) IsPlainTextControl() const;
-  NS_IMETHOD_(bool) IsPasswordTextControl() const;
+  NS_IMETHOD SetValueChanged(PRBool aValueChanged);
+  NS_IMETHOD_(PRBool) IsSingleLineTextControl() const;
+  NS_IMETHOD_(PRBool) IsTextArea() const;
+  NS_IMETHOD_(PRBool) IsPlainTextControl() const;
+  NS_IMETHOD_(PRBool) IsPasswordTextControl() const;
   NS_IMETHOD_(PRInt32) GetCols();
   NS_IMETHOD_(PRInt32) GetWrapCols();
   NS_IMETHOD_(PRInt32) GetRows();
   NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue);
-  NS_IMETHOD_(bool) ValueChanged() const;
-  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const;
-  NS_IMETHOD_(void) SetTextEditorValue(const nsAString& aValue, bool aUserInput);
+  NS_IMETHOD_(PRBool) ValueChanged() const;
+  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, PRBool aIgnoreWrap) const;
+  NS_IMETHOD_(void) SetTextEditorValue(const nsAString& aValue, PRBool aUserInput);
   NS_IMETHOD_(nsIEditor*) GetTextEditor();
   NS_IMETHOD_(nsISelectionController*) GetSelectionController();
   NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection();
@@ -204,19 +204,19 @@ public:
   NS_IMETHOD_(nsIContent*) GetRootEditorNode();
   NS_IMETHOD_(nsIContent*) CreatePlaceholderNode();
   NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
-  NS_IMETHOD_(void) UpdatePlaceholderText(bool aNotify);
-  NS_IMETHOD_(void) SetPlaceholderClass(bool aVisible, bool aNotify);
+  NS_IMETHOD_(void) UpdatePlaceholderText(PRBool aNotify);
+  NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
   NS_IMETHOD_(void) InitializeKeyboardEventListeners();
-  NS_IMETHOD_(void) OnValueChanged(bool aNotify);
-  NS_IMETHOD_(bool) HasCachedSelection();
+  NS_IMETHOD_(void) OnValueChanged(PRBool aNotify);
+  NS_IMETHOD_(PRBool) HasCachedSelection();
 
   void GetDisplayFileName(nsAString& aFileName) const;
   const nsCOMArray<nsIDOMFile>& GetFiles() const;
   void SetFiles(const nsCOMArray<nsIDOMFile>& aFiles, bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
 
-  void SetCheckedChangedInternal(bool aCheckedChanged);
-  bool GetCheckedChanged() const {
+  void SetCheckedChangedInternal(PRBool aCheckedChanged);
+  PRBool GetCheckedChanged() const {
     return GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
   }
   void AddedToRadioGroup();
@@ -235,7 +235,7 @@ public:
 
   NS_IMETHOD FireAsyncClickHandler();
 
-  virtual void UpdateEditableState(bool aNotify)
+  virtual void UpdateEditableState(PRBool aNotify)
   {
     return UpdateEditableFormControlState(aNotify);
   }
@@ -261,15 +261,15 @@ public:
   }
 
   // nsIConstraintValidation
-  bool     IsTooLong();
-  bool     IsValueMissing() const;
-  bool     HasTypeMismatch() const;
-  bool     HasPatternMismatch() const;
+  PRBool   IsTooLong();
+  PRBool   IsValueMissing() const;
+  PRBool   HasTypeMismatch() const;
+  PRBool   HasPatternMismatch() const;
   void     UpdateTooLongValidityState();
   void     UpdateValueMissingValidityState();
   void     UpdateTypeMismatchValidityState();
   void     UpdatePatternMismatchValidityState();
-  void     UpdateAllValidityStates(bool aNotify);
+  void     UpdateAllValidityStates(PRBool aNotify);
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType);
@@ -345,7 +345,7 @@ protected:
    * @param aValue  the email address to check.
    * @result        whether the given string is a valid email address.
    */
-  static bool IsValidEmailAddress(const nsAString& aValue);
+  static PRBool IsValidEmailAddress(const nsAString& aValue);
 
   /**
    * This helper method returns true if aValue is a valid email address list.
@@ -357,12 +357,12 @@ protected:
    * @param aValue  the email address list to check.
    * @result        whether the given string is a valid email address list.
    */
-  static bool IsValidEmailAddressList(const nsAString& aValue);
+  static PRBool IsValidEmailAddressList(const nsAString& aValue);
 
   // Helper method
   nsresult SetValueInternal(const nsAString& aValue,
-                            bool aUserInput,
-                            bool aSetValueChanged);
+                            PRBool aUserInput,
+                            PRBool aSetValueChanged);
 
   nsresult GetValueInternal(nsAString& aValue) const;
 
@@ -378,8 +378,8 @@ protected:
     SetFiles(files, aSetValueChanged);
   }
 
-  nsresult SetIndeterminateInternal(bool aValue,
-                                    bool aShouldInvalidate);
+  nsresult SetIndeterminateInternal(PRBool aValue,
+                                    PRBool aShouldInvalidate);
 
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
@@ -387,20 +387,20 @@ protected:
    * Called when an attribute is about to be changed
    */
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                 const nsAString* aValue, bool aNotify);
+                                 const nsAString* aValue, PRBool aNotify);
   /**
    * Called when an attribute has just been changed
    */
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString* aValue, bool aNotify);
+                                const nsAString* aValue, PRBool aNotify);
 
   /**
    * Dispatch a select event. Returns true if the event was not cancelled.
    */
-  bool DispatchSelectEvent(nsPresContext* aPresContext);
+  PRBool DispatchSelectEvent(nsPresContext* aPresContext);
 
   void SelectAll(nsPresContext* aPresContext);
-  bool IsImage() const
+  PRBool IsImage() const
   {
     return AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                        nsGkAtoms::image, eIgnoreCase);
@@ -410,37 +410,37 @@ protected:
    * Visit the group of radio buttons this radio belongs to
    * @param aVisitor the visitor to visit with
    */
-  nsresult VisitGroup(nsIRadioVisitor* aVisitor, bool aFlushContent);
+  nsresult VisitGroup(nsIRadioVisitor* aVisitor, PRBool aFlushContent);
 
   /**
    * Do all the work that |SetChecked| does (radio button handling, etc.), but
    * take an |aNotify| parameter.
    */
-  nsresult DoSetChecked(bool aValue, bool aNotify, bool aSetValueChanged);
+  nsresult DoSetChecked(PRBool aValue, PRBool aNotify, PRBool aSetValueChanged);
 
   /**
    * Do all the work that |SetCheckedChanged| does (radio button handling,
    * etc.), but take an |aNotify| parameter that lets it avoid flushing content
    * when it can.
    */
-  void DoSetCheckedChanged(bool aCheckedChanged, bool aNotify);
+  void DoSetCheckedChanged(PRBool aCheckedChanged, PRBool aNotify);
 
   /**
    * Actually set checked and notify the frame of the change.
    * @param aValue the value of checked to set
    */
-  void SetCheckedInternal(bool aValue, bool aNotify);
+  void SetCheckedInternal(PRBool aValue, PRBool aNotify);
 
   /**
    * Syntax sugar to make it easier to check for checked
    */
-  bool GetChecked() const
+  PRBool GetChecked() const
   {
     return GET_BOOLBIT(mBitField, BF_CHECKED);
   }
 
-  nsresult RadioSetChecked(bool aNotify);
-  void SetCheckedChanged(bool aCheckedChanged);
+  nsresult RadioSetChecked(PRBool aNotify);
+  void SetCheckedChanged(PRBool aCheckedChanged);
 
   /**
    * MaybeSubmitForm looks for a submit input or a single text control
@@ -462,7 +462,7 @@ protected:
    * Determine whether the editor needs to be initialized explicitly for
    * a particular event.
    */
-  bool NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const;
+  PRBool NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const;
 
   /**
    * Get the value mode of the element, depending of the type.
@@ -476,22 +476,22 @@ protected:
    *
    * See: http://dev.w3.org/html5/spec/forms.html#concept-input-mutable
    */
-  bool IsMutable() const;
+  PRBool IsMutable() const;
 
   /**
    * Returns if the readonly attribute applies for the current type.
    */
-  bool DoesReadOnlyApply() const;
+  PRBool DoesReadOnlyApply() const;
 
   /**
    * Returns if the required attribute applies for the current type.
    */
-  bool DoesRequiredApply() const;
+  PRBool DoesRequiredApply() const;
 
   /**
    * Returns if the pattern attribute applies for the current type.
    */
-  bool DoesPatternApply() const;
+  PRBool DoesPatternApply() const;
 
   /**
    * Returns if the maxlength attribute applies for the current type.
@@ -528,7 +528,7 @@ protected:
    * Returns whether the value has been changed since the element has been created.
    * @return Whether the value has been changed since the element has been created.
    */
-  bool GetValueChanged() const {
+  PRBool GetValueChanged() const {
     return GET_BOOLBIT(mBitField, BF_VALUE_CHANGED);
   }
 

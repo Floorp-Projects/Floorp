@@ -75,7 +75,7 @@ struct txKeyValueHashEntry : public PLDHashEntryHdr
     }
 
     // @see nsDoubleHashtable.h
-    bool MatchEntry(const void* aKey) const;
+    PRBool MatchEntry(const void* aKey) const;
     static PLDHashNumber HashKey(const void* aKey);
     
     txKeyValueHashKey mKey;
@@ -107,11 +107,11 @@ struct txIndexedKeyHashEntry : public PLDHashEntryHdr
     }
 
     // @see nsDoubleHashtable.h
-    bool MatchEntry(const void* aKey) const;
+    PRBool MatchEntry(const void* aKey) const;
     static PLDHashNumber HashKey(const void* aKey);
 
     txIndexedKeyHashKey mKey;
-    bool mIndexed;
+    PRBool mIndexed;
 };
 
 DECL_DHASH_WRAPPER(txIndexedKeyHash, txIndexedKeyHashEntry,
@@ -134,7 +134,7 @@ public:
      * @param aUse    use-expression
      * @return PR_FALSE if an error occurred, PR_TRUE otherwise
      */
-    bool addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse);
+    PRBool addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse);
 
     /**
      * Indexes a subtree and adds it to the hash of key values
@@ -202,7 +202,7 @@ public:
     nsresult getKeyNodes(const txExpandedName& aKeyName,
                          const txXPathNode& aRoot,
                          const nsAString& aKeyValue,
-                         bool aIndexIfNotFound,
+                         PRBool aIndexIfNotFound,
                          txExecutionState& aEs,
                          txNodeSet** aResult);
 

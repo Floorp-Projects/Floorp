@@ -358,7 +358,7 @@ ClearContainer(ContainerLayer* aContainer)
 // used for small software rendering tasks, like drawWindow.  That's
 // currently implemented by a BasicLayerManager without a backing
 // widget, and hence in non-retained mode.
-static bool
+static PRBool
 IsTempLayerManager(LayerManager* aManager)
 {
   return (LayerManager::LAYERS_BASIC == aManager->GetBackendType() &&
@@ -563,7 +563,6 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
 
 RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader)
   : mFrameLoader(aFrameLoader)
-  , mFrameLoaderDestroyed(false)
 {
   if (aFrameLoader) {
     mContentViews[FrameMetrics::ROOT_SCROLL_ID] =
@@ -586,8 +585,6 @@ RenderFrameParent::Destroy()
       static_cast<ShadowLayersParent*>(ManagedPLayersParent()[0]);
     layers->Destroy();
   }
-
-  mFrameLoaderDestroyed = true;
 }
 
 nsContentView*
@@ -726,7 +723,7 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
 PLayersParent*
 RenderFrameParent::AllocPLayers(LayerManager::LayersBackend* aBackendType)
 {
-  if (!mFrameLoader || mFrameLoaderDestroyed) {
+  if (!mFrameLoader) {
     *aBackendType = LayerManager::LAYERS_NONE;
     return nsnull;
   }

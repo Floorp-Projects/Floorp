@@ -382,6 +382,9 @@ pref("plugins.force.wmode", "opaque");
 // URL to the Learn More link XXX this is the firefox one.  Bug 495578 fixes this.
 pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");
 
+// base url for the wifi geolocation network provider
+pref("geo.wifi.uri", "https://maps.googleapis.com/maps/api/browserlocation/json");
+
 // enable geo
 pref("geo.enabled", true);
 
@@ -675,7 +678,3 @@ pref("browser.firstrun.show.localepicker", true);
 // $ adb shell setprop log.redirect-stdio true
 // $ adb shell start
 pref("browser.dom.window.dump.enabled", false);
-
-// controls if we want camera support
-pref("device.camera.enabled", true);
-pref("media.realtime_decoder.enabled", true);

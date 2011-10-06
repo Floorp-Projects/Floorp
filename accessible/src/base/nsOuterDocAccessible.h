@@ -67,13 +67,14 @@ public:
 
   // nsAccessible
   virtual PRUint32 NativeRole();
+  virtual PRUint64 NativeState();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                      EWhichChildAtPoint aWhichChild);
 
   virtual void InvalidateChildren();
-  virtual bool AppendChild(nsAccessible *aAccessible);
-  virtual bool RemoveChild(nsAccessible *aAccessible);
+  virtual PRBool AppendChild(nsAccessible *aAccessible);
+  virtual PRBool RemoveChild(nsAccessible *aAccessible);
 
   // ActionAccessible
   virtual PRUint8 ActionCount();

@@ -127,7 +127,7 @@ NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.width=0;
   aDesiredSize.height=0;
   const nsStyleVisibility* colVis = GetStyleVisibility();
-  bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
+  PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
   if (collapseCol) {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame)  {

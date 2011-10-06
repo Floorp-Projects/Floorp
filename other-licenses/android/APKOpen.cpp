@@ -67,6 +67,8 @@
 #define DEFLATE  8
 #define LZMA    14
 
+#define NS_EXPORT __attribute__ ((visibility("default")))
+
 struct local_file_header {
   uint32_t signature;
   uint16_t min_version;
@@ -237,10 +239,9 @@ SHELL_WRAPPER0(onResume)
 SHELL_WRAPPER0(onLowMemory)
 SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
 SHELL_WRAPPER1(removeObserver, jstring)
-SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
+SHELL_WRAPPER2(onChangeNetworkLinkStatus, jstring, jstring)
 SHELL_WRAPPER1(reportJavaCrash, jstring)
 SHELL_WRAPPER0(executeNextRunnable)
-SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
 
 static void * xul_handle = NULL;
 static time_t apk_mtime = 0;
@@ -307,11 +308,6 @@ extractFile(const char * path, const struct cdir_entry *entry, void * data)
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "inflateEnd failed: %s", strm.msg);
 
   close(fd);
-#ifdef ANDROID_ARM_LINKER
-  /* We just extracted data that is going to be executed in the future.
-   * We thus need to ensure Instruction and Data cache coherency. */
-  cacheflush((unsigned) buf, (unsigned) buf + size, 0);
-#endif
   munmap(buf, size);
 }
 
@@ -678,7 +674,6 @@ loadLibs(const char *apkName)
   GETFUNC(onChangeNetworkLinkStatus);
   GETFUNC(reportJavaCrash);
   GETFUNC(executeNextRunnable);
-  GETFUNC(cameraCallbackBridge);
 #undef GETFUNC
   gettimeofday(&t1, 0);
   struct rusage usage2;

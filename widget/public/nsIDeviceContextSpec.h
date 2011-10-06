@@ -62,7 +62,7 @@ public:
     */
    NS_IMETHOD Init(nsIWidget *aWidget,
                    nsIPrintSettings* aPrintSettings,
-                   bool aIsPrintPreview) = 0;
+                   PRBool aIsPrintPreview) = 0;
 
    NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface) = 0;
 

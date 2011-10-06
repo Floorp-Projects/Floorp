@@ -32,7 +32,7 @@ load 234851-2.html
 load 241300-1.html
 load 243159-1.html
 load 243159-2.xhtml
-load 243519-1.html
+asserts(1) load 243519-1.html # bug 536692
 load 244490-1.html
 load 254367-1.html
 load 263359-1.html
@@ -107,7 +107,7 @@ asserts-if(browserIsRemote,1) load 347898-1.html # bug 622188
 load 348126-1.html
 load 348688-1.html
 load 348708-1.xhtml
-asserts(4) load 348729-1.html # bug 548836
+asserts(2) load 348729-1.html # bug 548836
 load 349095-1.xhtml
 load 350128-1.xhtml
 load 350267-1.html
@@ -321,7 +321,6 @@ load 579655.html
 load 580494-1.html
 load 580834-1.xhtml
 load 595039-1.html
-load 597924-1.html
 load 606432-1.html
 load 609821-1.xhtml
 load 615146-1.html

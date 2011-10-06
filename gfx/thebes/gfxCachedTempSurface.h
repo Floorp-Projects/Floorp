@@ -78,7 +78,7 @@ public:
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
   ~gfxCachedTempSurface();
 
-  bool IsSurface(gfxASurface* aSurface) { return mSurface == aSurface; }
+  PRBool IsSurface(gfxASurface* aSurface) { return mSurface == aSurface; }
 
 private:
   nsRefPtr<gfxASurface> mSurface;

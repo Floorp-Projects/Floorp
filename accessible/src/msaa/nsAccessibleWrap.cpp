@@ -1617,7 +1617,7 @@ nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
     nsIFrame* frame = aAccessible->GetFrame();
     if (frame) {
       nsIWidget* widget = frame->GetNearestWidget();
-      bool isVisible = false;
+      PRBool isVisible = PR_FALSE;
       widget->IsVisible(isVisible);
       if (isVisible) {
         nsCOMPtr<nsIPresShell> shell(aAccessible->GetPresShell());
@@ -1662,7 +1662,7 @@ nsAccessibleWrap::ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
 
   const char kCharsToEscape[] = ":;=,\\";
 
-  bool hasMore = false;
+  PRBool hasMore = PR_FALSE;
   while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> propSupports;
     propEnum->GetNext(getter_AddRefs(propSupports));

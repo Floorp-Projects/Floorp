@@ -45,9 +45,8 @@
 #include "mozilla/jetpack/PHandleChild.h"
 
 #include "jsapi.h"
-#include "jsclass.h"
+#include "jsobj.h"
 #include "jscntxt.h"
-#include "jsfriendapi.h"
 
 #include "mozilla/unused.h"
 
@@ -158,7 +157,7 @@ private:
       JSAutoRequest ar(mCx);
 
       if (mObj) {
-        JS_SetPrivate(mCx, mObj, NULL);
+        mObj->setPrivate(NULL);
 
         js::AutoObjectRooter obj(mCx, mObj);
         mObj = NULL;
@@ -202,8 +201,8 @@ private:
 
   static Handle*
   Unwrap(JSContext* cx, JSObject* obj) {
-    while (obj && Jsvalify(js::GetObjectClass(obj)) != &sHandle_JSClass)
-      obj = js::GetObjectProto(obj);
+    while (obj && obj->getJSClass() != &sHandle_JSClass)
+      obj = obj->getProto();
 
     if (!obj)
       return NULL;

@@ -129,7 +129,7 @@ protected:
 NS_IMPL_ISUPPORTS2(BaseStringEnumerator, nsISimpleEnumerator, nsIUTF8StringEnumerator)
 
 NS_IMETHODIMP
-BaseStringEnumerator::HasMoreElements(bool *_retval)
+BaseStringEnumerator::HasMoreElements(PRBool *_retval)
 {
   *_retval = (mSimpleCurItem < mCount);
 
@@ -153,7 +153,7 @@ BaseStringEnumerator::GetNext(nsISupports **_retval)
 }
 
 NS_IMETHODIMP
-BaseStringEnumerator::HasMore(bool *_retval)
+BaseStringEnumerator::HasMore(PRBool *_retval)
 {
   *_retval = (mStringCurItem < mCount);
 
@@ -352,7 +352,7 @@ CategoryNode::Enumerate(nsISimpleEnumerator **_retval)
 struct persistent_userstruct {
   PRFileDesc* fd;
   const char* categoryName;
-  bool        success;
+  PRBool      success;
 };
 
 PLDHashOperator
@@ -565,8 +565,8 @@ NS_IMETHODIMP
 nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
                                      const char *aEntryName,
                                      const char *aValue,
-                                     bool aPersist,
-                                     bool aReplace,
+                                     PRBool aPersist,
+                                     PRBool aReplace,
                                      char **_retval )
 {
   if (aPersist) {
@@ -634,7 +634,7 @@ nsCategoryManager::AddCategoryEntry(const char *aCategoryName,
 NS_IMETHODIMP
 nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
                                         const char *aEntryName,
-                                        bool aDontPersist)
+                                        PRBool aDontPersist)
 {
   NS_ENSURE_ARG_POINTER(aCategoryName);
   NS_ENSURE_ARG_POINTER(aEntryName);
@@ -723,11 +723,11 @@ nsCategoryManager::EnumerateCategories(nsISimpleEnumerator **_retval)
 
 struct writecat_struct {
   PRFileDesc* fd;
-  bool        success;
+  PRBool      success;
 };
 
 NS_METHOD
-nsCategoryManager::SuppressNotifications(bool aSuppress)
+nsCategoryManager::SuppressNotifications(PRBool aSuppress)
 {
   mSuppressNotifications = aSuppress;
   return NS_OK;
@@ -770,7 +770,7 @@ NS_CreateServicesFromCategory(const char *category,
     return;
   }
 
-  bool hasMore;
+  PRBool hasMore;
   while (NS_SUCCEEDED(senumerator->HasMore(&hasMore)) && hasMore) {
     // From here on just skip any error we get.
     nsCAutoString entryString;

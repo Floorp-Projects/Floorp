@@ -92,13 +92,13 @@ public:
 protected:    
     virtual ~nsWebBrowserPersist();
     nsresult CloneNodeWithFixedUpAttributes(
-        nsIDOMNode *aNodeIn, bool *aSerializeCloneKids, nsIDOMNode **aNodeOut);
+        nsIDOMNode *aNodeIn, PRBool *aSerializeCloneKids, nsIDOMNode **aNodeOut);
     nsresult SaveURIInternal(
         nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer,
         nsIInputStream *aPostData, const char *aExtraHeaders, nsIURI *aFile,
-        bool aCalcFileExt);
+        PRBool aCalcFileExt);
     nsresult SaveChannelInternal(
-        nsIChannel *aChannel, nsIURI *aFile, bool aCalcFileExt);
+        nsIChannel *aChannel, nsIURI *aFile, PRBool aCalcFileExt);
     nsresult SaveDocumentInternal(
         nsIDOMDocument *aDocument, nsIURI *aFile, nsIURI *aDataPath);
     nsresult SaveDocuments();
@@ -117,7 +117,7 @@ private:
     nsresult GetLocalFileFromURI(nsIURI *aURI, nsILocalFile **aLocalFile) const;
     nsresult AppendPathToURI(nsIURI *aURI, const nsAString & aPath) const;
     nsresult MakeAndStoreLocalFilenameInURIMap(
-        nsIURI *aURI, bool aNeedsPersisting, URIData **aData);
+        nsIURI *aURI, PRBool aNeedsPersisting, URIData **aData);
     nsresult MakeOutputStream(
         nsIURI *aFile, nsIOutputStream **aOutputStream);
     nsresult MakeOutputStreamFromFile(
@@ -135,26 +135,26 @@ private:
         nsIURI *aURI, nsString &aFilename);
     nsresult StoreURI(
         const char *aURI,
-        bool aNeedsPersisting = true,
+        PRBool aNeedsPersisting = PR_TRUE,
         URIData **aData = nsnull);
     nsresult StoreURI(
         nsIURI *aURI,
-        bool aNeedsPersisting = true,
+        PRBool aNeedsPersisting = PR_TRUE,
         URIData **aData = nsnull);
     nsresult StoreURIAttributeNS(
         nsIDOMNode *aNode, const char *aNamespaceURI, const char *aAttribute,
-        bool aNeedsPersisting = true,
+        PRBool aNeedsPersisting = PR_TRUE,
         URIData **aData = nsnull);
     nsresult StoreURIAttribute(
         nsIDOMNode *aNode, const char *aAttribute,
-        bool aNeedsPersisting = true,
+        PRBool aNeedsPersisting = PR_TRUE,
         URIData **aData = nsnull)
     {
         return StoreURIAttributeNS(aNode, "", aAttribute, aNeedsPersisting, aData);
     }
-    bool GetQuotedAttributeValue(
+    PRBool GetQuotedAttributeValue(
     const nsAString &aSource, const nsAString &aAttribute, nsAString &aValue);
-    bool DocumentEncoderExists(const PRUnichar *aContentType);
+    PRBool DocumentEncoderExists(const PRUnichar *aContentType);
 
     nsresult GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
     nsresult FixupURI(nsAString &aURI);
@@ -170,44 +170,44 @@ private:
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
     nsresult SaveDocumentWithFixup(
         nsIDOMDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
-        nsIURI *aFile, bool aReplaceExisting, const nsACString &aFormatType,
+        nsIURI *aFile, PRBool aReplaceExisting, const nsACString &aFormatType,
         const nsCString &aSaveCharset, PRUint32  aFlags);
     nsresult SaveSubframeContent(
         nsIDOMDocument *aFrameContent, URIData *aData);
     nsresult SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI);
     nsresult SendErrorStatusChange(
-        bool aIsReadError, nsresult aResult, nsIRequest *aRequest, nsIURI *aURI);
+        PRBool aIsReadError, nsresult aResult, nsIRequest *aRequest, nsIURI *aURI);
     nsresult OnWalkDOMNode(nsIDOMNode *aNode);
 
     nsresult FixRedirectedChannelEntry(nsIChannel *aNewChannel);
 
     void EndDownload(nsresult aResult = NS_OK);
     nsresult SaveGatheredURIs(nsIURI *aFileAsURI);
-    bool SerializeNextFile();
+    PRBool SerializeNextFile();
     void CalcTotalProgress();
 
     void SetApplyConversionIfNeeded(nsIChannel *aChannel);
 
     // Hash table enumerators
-    static bool EnumPersistURIs(
+    static PRBool EnumPersistURIs(
         nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumCleanupURIMap(
+    static PRBool EnumCleanupURIMap(
         nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumCleanupOutputMap(
+    static PRBool EnumCleanupOutputMap(
         nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumCleanupUploadList(
+    static PRBool EnumCleanupUploadList(
         nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumCalcProgress(
+    static PRBool EnumCalcProgress(
         nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumCalcUploadProgress(
+    static PRBool EnumCalcUploadProgress(
         nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumFixRedirect(
+    static PRBool EnumFixRedirect(
         nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumCountURIsToPersist(
+    static PRBool EnumCountURIsToPersist(
         nsHashKey *aKey, void *aData, void* closure);
 
     nsCOMPtr<nsIURI>          mCurrentDataPath;
-    bool                      mCurrentDataPathIsRelative;
+    PRBool                    mCurrentDataPathIsRelative;
     nsCString                 mCurrentRelativePathToData;
     nsCOMPtr<nsIURI>          mCurrentBaseURI;
     nsCString                 mCurrentCharset;
@@ -230,13 +230,13 @@ private:
     nsTArray<DocData*>        mDocList;
     nsTArray<CleanupData*>    mCleanupList;
     nsTArray<nsCString>       mFilenameList;
-    bool                      mFirstAndOnlyUse;
-    bool                      mCancel;
-    bool                      mJustStartedLoading;
-    bool                      mCompleted;
-    bool                      mStartSaving;
-    bool                      mReplaceExisting;
-    bool                      mSerializingOutput;
+    PRPackedBool              mFirstAndOnlyUse;
+    PRPackedBool              mCancel;
+    PRPackedBool              mJustStartedLoading;
+    PRPackedBool              mCompleted;
+    PRPackedBool              mStartSaving;
+    PRPackedBool              mReplaceExisting;
+    PRPackedBool              mSerializingOutput;
     PRUint32                  mPersistFlags;
     PRUint32                  mPersistResult;
     PRInt64                   mTotalCurrentProgress;
@@ -253,7 +253,7 @@ public:
     nsEncoderNodeFixup();
     
     NS_DECL_ISUPPORTS
-    NS_IMETHOD FixupNode(nsIDOMNode *aNode, bool *aSerializeCloneKids, nsIDOMNode **aOutNode);
+    NS_IMETHOD FixupNode(nsIDOMNode *aNode, PRBool *aSerializeCloneKids, nsIDOMNode **aOutNode);
     
     nsWebBrowserPersist *mWebBrowserPersist;
 

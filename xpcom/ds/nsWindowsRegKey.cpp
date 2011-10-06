@@ -200,7 +200,7 @@ nsWindowsRegKey::GetChildName(PRUint32 index, nsAString &result)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::HasChild(const nsAString &name, bool *result)
+nsWindowsRegKey::HasChild(const nsAString &name, PRBool *result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -250,7 +250,7 @@ nsWindowsRegKey::GetValueName(PRUint32 index, nsAString &result)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::HasValue(const nsAString &name, bool *result)
+nsWindowsRegKey::HasValue(const nsAString &name, PRBool *result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -459,7 +459,7 @@ nsWindowsRegKey::WriteBinaryValue(const nsAString &name, const nsACString &value
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::StartWatching(bool recurse)
+nsWindowsRegKey::StartWatching(PRBool recurse)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -498,7 +498,7 @@ nsWindowsRegKey::StopWatching()
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::HasChanged(bool *result)
+nsWindowsRegKey::HasChanged(PRBool *result)
 {
   if (mWatchEvent && WaitForSingleObject(mWatchEvent, 0) == WAIT_OBJECT_0) {
     // An event only gets signaled once, then it's done, so we have to set up
@@ -513,7 +513,7 @@ nsWindowsRegKey::HasChanged(bool *result)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::IsWatching(bool *result)
+nsWindowsRegKey::IsWatching(PRBool *result)
 {
   *result = (mWatchEvent != NULL);
   return NS_OK;

@@ -91,14 +91,14 @@ nsHtml5UTF16Buffer::getEnd()
   return end;
 }
 
-bool 
+PRBool 
 nsHtml5UTF16Buffer::hasMore()
 {
   return start < end;
 }
 
 void 
-nsHtml5UTF16Buffer::adjust(bool lastWasCR)
+nsHtml5UTF16Buffer::adjust(PRBool lastWasCR)
 {
   if (lastWasCR && buffer[start] == '\n') {
     start++;

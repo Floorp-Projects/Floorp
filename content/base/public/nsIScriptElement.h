@@ -112,7 +112,7 @@ public:
   /**
    * Is the script deferred. Currently only supported by HTML scripts.
    */
-  bool GetScriptDeferred()
+  PRBool GetScriptDeferred()
   {
     NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
     return mDefer;
@@ -121,7 +121,7 @@ public:
   /**
    * Is the script async. Currently only supported by HTML scripts.
    */
-  bool GetScriptAsync()
+  PRBool GetScriptAsync()
   {
     NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
     return mAsync;  
@@ -130,7 +130,7 @@ public:
   /**
    * Is the script an external script?
    */
-  bool GetScriptExternal()
+  PRBool GetScriptExternal()
   {
     NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
     return mExternal;
@@ -157,7 +157,7 @@ public:
   {
     mMalformed = PR_TRUE;
   }
-  bool IsMalformed()
+  PRBool IsMalformed()
   {
     return mMalformed;
   }
@@ -173,7 +173,7 @@ public:
     mUri = nsnull;
     mCreatorParser = nsnull;
     mParserCreated = mozilla::dom::NOT_FROM_PARSER;
-    bool async = false;
+    PRBool async = PR_FALSE;
     nsCOMPtr<nsIDOMHTMLScriptElement> htmlScript = do_QueryInterface(this);
     if (htmlScript) {
       htmlScript->GetAsync(&async);
@@ -226,44 +226,44 @@ protected:
   /**
    * The "already started" flag per HTML5.
    */
-  bool mAlreadyStarted;
+  PRPackedBool mAlreadyStarted;
   
   /**
    * The script didn't have an end tag.
    */
-  bool mMalformed;
+  PRPackedBool mMalformed;
   
   /**
    * False if parser-inserted but the parser hasn't triggered running yet.
    */
-  bool mDoneAddingChildren;
+  PRPackedBool mDoneAddingChildren;
 
   /**
    * If true, the .async property returns true instead of reflecting the
    * content attribute.
    */
-  bool mForceAsync;
+  PRPackedBool mForceAsync;
 
   /**
    * Whether src, defer and async are frozen.
    */
-  bool mFrozen;
+  PRPackedBool mFrozen;
   
   /**
    * The effective deferredness.
    */
-  bool mDefer;
+  PRPackedBool mDefer;
   
   /**
    * The effective asyncness.
    */
-  bool mAsync;
+  PRPackedBool mAsync;
   
   /**
    * The effective externalness. A script can be external with mUri being null
    * if the src attribute contained an invalid URL string.
    */
-  bool mExternal;
+  PRPackedBool mExternal;
 
   /**
    * Whether this element was parser-created.

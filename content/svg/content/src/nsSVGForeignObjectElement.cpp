@@ -122,7 +122,7 @@ nsSVGForeignObjectElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) con
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 nsSVGForeignObjectElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {

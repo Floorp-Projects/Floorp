@@ -225,7 +225,7 @@ nsSubDocumentFrame::ShowViewer()
       const nsStyleDisplay* disp = GetStyleDisplay();
       nsWeakFrame weakThis(this);
       mCallingShow = PR_TRUE;
-      bool didCreateDoc =
+      PRBool didCreateDoc =
         frameloader->Show(margin.width, margin.height,
                           ConvertOverflow(disp->mOverflowX),
                           ConvertOverflow(disp->mOverflowY),
@@ -543,7 +543,7 @@ nsSubDocumentFrame::GetIntrinsicRatio()
 nsSubDocumentFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                     nsSize aCBSize, nscoord aAvailableWidth,
                                     nsSize aMargin, nsSize aBorder,
-                                    nsSize aPadding, bool aShrinkWrap)
+                                    nsSize aPadding, PRBool aShrinkWrap)
 {
   if (!IsInline()) {
     return nsFrame::ComputeAutoSize(aRenderingContext, aCBSize,
@@ -561,7 +561,7 @@ nsSubDocumentFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 nsSubDocumentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                                bool aShrinkWrap)
+                                PRBool aShrinkWrap)
 {
   nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
   if (subDocRoot) {
@@ -643,7 +643,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
-bool
+PRBool
 nsSubDocumentFrame::ReflowFinished()
 {
   if (mFrameLoader) {
@@ -757,7 +757,7 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
       nsAutoString value;
       mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
 
-      bool is_primary = value.LowerCaseEqualsLiteral("content-primary");
+      PRBool is_primary = value.LowerCaseEqualsLiteral("content-primary");
 
 #ifdef MOZ_XUL
       // when a content panel is no longer primary, hide any open popups it may have
@@ -773,7 +773,7 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
       if (value.LowerCaseEqualsLiteral("content") ||
           StringBeginsWith(value, NS_LITERAL_STRING("content-"),
                            nsCaseInsensitiveStringComparator())) {
-        bool is_targetable = is_primary ||
+        PRBool is_targetable = is_primary ||
           value.LowerCaseEqualsLiteral("content-targetable");
 
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
@@ -872,7 +872,7 @@ DestroyDisplayItemDataForFrames(nsIFrame* aFrame)
   }
 }
 
-static bool
+static PRBool
 BeginSwapDocShellsForDocument(nsIDocument* aDocument, void*)
 {
   NS_PRECONDITION(aDocument, "");
@@ -950,7 +950,7 @@ nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
   return NS_OK;
 }
 
-static bool
+static PRBool
 EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
 {
   NS_PRECONDITION(aDocument, "");

@@ -106,7 +106,7 @@ static const char *gssFuncStr[] = {
 #define gssFuncItems NS_ARRAY_LENGTH(gssFuncStr)
 
 static PRFuncPtr gssFunPtr[gssFuncItems]; 
-static bool      gssNativeImp = true;
+static PRBool    gssNativeImp = PR_TRUE;
 static PRLibrary* gssLibrary = nsnull;
 
 #define gss_display_status_ptr      ((gss_display_status_type)*gssFunPtr[0])
@@ -454,7 +454,7 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
     // We can only use Mac OS X specific kerb functions if we are using 
     // the native lib
     KLBoolean found;    
-    bool doingMailTask = mServiceName.Find("imap@") ||
+    PRBool doingMailTask = mServiceName.Find("imap@") ||
                            mServiceName.Find("pop@") ||
                            mServiceName.Find("smtp@") ||
                            mServiceName.Find("ldap@");
@@ -562,7 +562,7 @@ nsAuthGSSAPI::Unwrap(const void *inToken,
 NS_IMETHODIMP
 nsAuthGSSAPI::Wrap(const void *inToken,
                    PRUint32    inTokenLen,
-                   bool        confidential,
+                   PRBool      confidential,
                    void      **outToken,
                    PRUint32   *outTokenLen)
 {

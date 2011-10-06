@@ -147,7 +147,7 @@ nsSocketTransportService::Dispatch(nsIRunnable *event, PRUint32 flags)
 }
 
 NS_IMETHODIMP
-nsSocketTransportService::IsOnCurrentThread(bool *result)
+nsSocketTransportService::IsOnCurrentThread(PRBool *result)
 {
     nsCOMPtr<nsIThread> thread = GetThreadSafely();
     NS_ENSURE_TRUE(thread, NS_ERROR_NOT_INITIALIZED);
@@ -328,7 +328,7 @@ nsSocketTransportService::MoveToPollList(SocketContext *sock)
         RemoveFromIdleList(sock);
 }
 
-bool
+PRBool
 nsSocketTransportService::GrowActiveList()
 {
     PRInt32 toAdd = gMaxCount - mActiveListSize;
@@ -345,7 +345,7 @@ nsSocketTransportService::GrowActiveList()
     return PR_TRUE;
 }
 
-bool
+PRBool
 nsSocketTransportService::GrowIdleList()
 {
     PRInt32 toAdd = gMaxCount - mIdleListSize;
@@ -383,7 +383,7 @@ nsSocketTransportService::PollTimeout()
 }
 
 PRInt32
-nsSocketTransportService::Poll(bool wait, PRUint32 *interval)
+nsSocketTransportService::Poll(PRBool wait, PRUint32 *interval)
 {
     PRPollDesc *pollList;
     PRUint32 pollCount;
@@ -567,14 +567,14 @@ nsSocketTransportService::CreateTransport(const char **types,
 }
 
 NS_IMETHODIMP
-nsSocketTransportService::GetAutodialEnabled(bool *value)
+nsSocketTransportService::GetAutodialEnabled(PRBool *value)
 {
     *value = mAutodialEnabled;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSocketTransportService::SetAutodialEnabled(bool value)
+nsSocketTransportService::SetAutodialEnabled(PRBool value)
 {
     mAutodialEnabled = value;
     return NS_OK;
@@ -591,7 +591,7 @@ nsSocketTransportService::OnDispatchedEvent(nsIThreadInternal *thread)
 
 NS_IMETHODIMP
 nsSocketTransportService::OnProcessNextEvent(nsIThreadInternal *thread,
-                                             bool mayWait, PRUint32 depth)
+                                             PRBool mayWait, PRUint32 depth)
 {
     return NS_OK;
 }
@@ -622,7 +622,7 @@ nsSocketTransportService::Run()
     threadInt->SetObserver(this);
 
     for (;;) {
-        bool pendingEvents = false;
+        PRBool pendingEvents = PR_FALSE;
         thread->HasPendingEvents(&pendingEvents);
 
         do {
@@ -669,7 +669,7 @@ nsSocketTransportService::Run()
 }
 
 nsresult
-nsSocketTransportService::DoPollIteration(bool wait)
+nsSocketTransportService::DoPollIteration(PRBool wait)
 {
     SOCKET_LOG(("STS poll iter [%d]\n", wait));
 

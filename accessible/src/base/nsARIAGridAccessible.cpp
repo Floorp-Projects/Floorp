@@ -316,7 +316,7 @@ nsARIAGridAccessible::GetRowDescription(PRInt32 aRow, nsAString& aDescription)
 }
 
 NS_IMETHODIMP
-nsARIAGridAccessible::IsColumnSelected(PRInt32 aColumn, bool *aIsSelected)
+nsARIAGridAccessible::IsColumnSelected(PRInt32 aColumn, PRBool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
   *aIsSelected = PR_FALSE;
@@ -347,7 +347,7 @@ nsARIAGridAccessible::IsColumnSelected(PRInt32 aColumn, bool *aIsSelected)
 }
 
 NS_IMETHODIMP
-nsARIAGridAccessible::IsRowSelected(PRInt32 aRow, bool *aIsSelected)
+nsARIAGridAccessible::IsRowSelected(PRInt32 aRow, PRBool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
   *aIsSelected = PR_FALSE;
@@ -373,7 +373,7 @@ nsARIAGridAccessible::IsRowSelected(PRInt32 aRow, bool *aIsSelected)
 
 NS_IMETHODIMP
 nsARIAGridAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
-                                     bool *aIsSelected)
+                                     PRBool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
   *aIsSelected = PR_FALSE;
@@ -458,7 +458,7 @@ nsARIAGridAccessible::GetSelectedRowCount(PRUint32* aCount)
     if (!cell)
       continue;
 
-    bool isRowSelected = true;
+    PRBool isRowSelected = PR_TRUE;
     do {
       if (!nsAccUtils::IsARIASelected(cell)) {
         isRowSelected = PR_FALSE;
@@ -605,7 +605,7 @@ nsARIAGridAccessible::GetSelectedRowIndices(PRUint32 *arowCount,
     if (!cell)
       continue;
 
-    bool isRowSelected = true;
+    PRBool isRowSelected = PR_TRUE;
     do {
       if (!nsAccUtils::IsARIASelected(cell)) {
         isRowSelected = PR_FALSE;
@@ -710,7 +710,7 @@ nsARIAGridAccessible::UnselectColumn(PRInt32 aColumn)
 }
 
 NS_IMETHODIMP
-nsARIAGridAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
+nsARIAGridAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
 {
   NS_ENSURE_ARG_POINTER(aIsProbablyForLayout);
   *aIsProbablyForLayout = PR_FALSE;
@@ -721,7 +721,7 @@ nsARIAGridAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
 ////////////////////////////////////////////////////////////////////////////////
 // Protected
 
-bool
+PRBool
 nsARIAGridAccessible::IsValidRow(PRInt32 aRow)
 {
   if (aRow < 0)
@@ -732,7 +732,7 @@ nsARIAGridAccessible::IsValidRow(PRInt32 aRow)
   return aRow < rowCount;
 }
 
-bool
+PRBool
 nsARIAGridAccessible::IsValidColumn(PRInt32 aColumn)
 {
   if (aColumn < 0)
@@ -743,7 +743,7 @@ nsARIAGridAccessible::IsValidColumn(PRInt32 aColumn)
   return aColumn < colCount;
 }
 
-bool
+PRBool
 nsARIAGridAccessible::IsValidRowNColumn(PRInt32 aRow, PRInt32 aColumn)
 {
   if (aRow < 0 || aColumn < 0)
@@ -788,7 +788,7 @@ nsARIAGridAccessible::GetCellInRowAt(nsAccessible *aRow, PRInt32 aColumn)
 
 nsresult
 nsARIAGridAccessible::SetARIASelected(nsAccessible *aAccessible,
-                                      bool aIsSelected, bool aNotify)
+                                      PRBool aIsSelected, PRBool aNotify)
 {
   nsIContent *content = aAccessible->GetContent();
   NS_ENSURE_STATE(content);
@@ -879,7 +879,7 @@ nsARIAGridAccessible::GetSelectedColumnsArray(PRUint32 *acolumnCount,
 
   PRInt32 selColCount = colCount;
 
-  nsTArray<bool> isColSelArray(selColCount);
+  nsTArray<PRBool> isColSelArray(selColCount);
   isColSelArray.AppendElements(selColCount);
   for (PRInt32 i = 0; i < selColCount; i++)
     isColSelArray[i] = PR_TRUE;
@@ -1092,7 +1092,7 @@ nsARIAGridCellAccessible::GetRowHeaderCells(nsIArray **aHeaderCells)
 }
 
 NS_IMETHODIMP
-nsARIAGridCellAccessible::IsSelected(bool *aIsSelected)
+nsARIAGridCellAccessible::IsSelected(PRBool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
   *aIsSelected = PR_FALSE;

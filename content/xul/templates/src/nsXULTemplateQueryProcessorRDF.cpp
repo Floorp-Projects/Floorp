@@ -221,9 +221,9 @@ nsXULTemplateQueryProcessorRDF::InitGlobals()
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorRDF::GetDatasource(nsIArray* aDataSources,
                                               nsIDOMNode* aRootNode,
-                                              bool aIsTrusted,
+                                              PRBool aIsTrusted,
                                               nsIXULTemplateBuilder* aBuilder,
-                                              bool* aShouldDelayBuilding,
+                                              PRBool* aShouldDelayBuilding,
                                               nsISupports** aResult)
 {
     nsCOMPtr<nsIRDFCompositeDataSource> compDB;
@@ -574,7 +574,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
                 // instantiations and will delete them when results have been
                 // iterated over. If the propagation did not match, the
                 // instantiations need to be deleted.
-                bool owned = false;
+                PRBool owned = PR_FALSE;
                 nsresult rv = root->Propagate(*instantiations, PR_FALSE, owned);
                 if (! owned)
                     delete instantiations;
@@ -991,7 +991,7 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
                 return rv;
             }
 
-            bool owned = false;
+            PRBool owned = PR_FALSE;
             if (!instantiations->Empty())
                 rv = rdftestnode->Propagate(*instantiations, PR_TRUE, owned);
 
@@ -1124,7 +1124,7 @@ nsXULTemplateQueryProcessorRDF::Log(const char* aOperation,
 
 nsresult
 nsXULTemplateQueryProcessorRDF::CheckContainer(nsIRDFResource* aResource,
-                                               bool* aIsContainer)
+                                               PRBool* aIsContainer)
 {
     NS_ENSURE_ARG_POINTER(aIsContainer);
     NS_ENSURE_STATE(mDB);
@@ -1132,12 +1132,12 @@ nsXULTemplateQueryProcessorRDF::CheckContainer(nsIRDFResource* aResource,
     // We have to look at all of the arcs extending out of the
     // resource: if any of them are that "containment" property, then
     // we know we'll have children.
-    bool isContainer = false;
+    PRBool isContainer = PR_FALSE;
 
     for (nsResourceSet::ConstIterator property = mContainmentProperties.First();
          property != mContainmentProperties.Last();
          property++) {
-        bool hasArc = false;
+        PRBool hasArc = PR_FALSE;
         mDB->HasArcOut(aResource, *property, &hasArc);
 
         if (hasArc) {
@@ -1160,7 +1160,7 @@ nsXULTemplateQueryProcessorRDF::CheckContainer(nsIRDFResource* aResource,
 
 nsresult
 nsXULTemplateQueryProcessorRDF::CheckEmpty(nsIRDFResource* aResource,
-                                           bool* aIsEmpty)
+                                           PRBool* aIsEmpty)
 {
     NS_ENSURE_STATE(mDB);
     *aIsEmpty = PR_TRUE;
@@ -1188,7 +1188,7 @@ nsXULTemplateQueryProcessorRDF::CheckEmpty(nsIRDFResource* aResource,
 
 nsresult
 nsXULTemplateQueryProcessorRDF::CheckIsSeparator(nsIRDFResource* aResource,
-                                                 bool* aIsSeparator)
+                                                 PRBool* aIsSeparator)
 {
     NS_ENSURE_STATE(mDB);
     return mDB->HasAssertion(aResource, kRDF_type, kNC_BookmarkSeparator,
@@ -1273,13 +1273,14 @@ nsXULTemplateQueryProcessorRDF::CompileExtendedQuery(nsRDFQuery* aQuery,
 
     TestNode* prevnode = idnode;
 
-    for (nsIContent* condition = aConditions->GetFirstChild();
-         condition;
-         condition = condition->GetNextSibling()) {
+    PRUint32 count = aConditions->GetChildCount();
+
+    for (PRUint32 i = 0; i < count; ++i) {
+        nsIContent *condition = aConditions->GetChildAt(i);
 
         // the <content> condition should always be the first child
         if (condition->Tag() == nsGkAtoms::content) {
-            if (condition != aConditions->GetFirstChild()) {
+            if (i) {
                 nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_CONTENT_NOT_FIRST);
                 continue;
             }
@@ -1614,7 +1615,7 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
             return rv;
     }
 
-    bool hasContainerTest = false;
+    PRBool hasContainerTest = PR_FALSE;
 
     TestNode* prevnode = mSimpleRuleMemberTest;
 
@@ -1914,7 +1915,7 @@ nsXULTemplateQueryProcessorRDF::GetContainerIndexOf(nsIXULTemplateResult* aResul
     if (container) {
         // if the container is an RDF Seq, return the index of the result
         // in the container.
-        bool isSequence = false;
+        PRBool isSequence = PR_FALSE;
         gRDFContainerUtils->IsSeq(mDB, container, &isSequence);
         if (isSequence) {
             nsCOMPtr<nsIRDFResource> resource;

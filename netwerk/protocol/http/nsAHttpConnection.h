@@ -70,7 +70,7 @@ public:
     virtual nsresult OnHeadersAvailable(nsAHttpTransaction *,
                                         nsHttpRequestHead *,
                                         nsHttpResponseHead *,
-                                        bool *reset) = 0;
+                                        PRBool *reset) = 0;
 
     //
     // called by a transaction to resume either sending or receiving data
@@ -107,10 +107,10 @@ public:
 
     // called by a transaction to determine whether or not the connection is
     // persistent... important in determining the end of a response.
-    virtual bool IsPersistent() = 0;
+    virtual PRBool IsPersistent() = 0;
 
     // called to determine if a connection has been reused.
-    virtual bool IsReused() = 0;
+    virtual PRBool IsReused() = 0;
     
     // called by a transaction when the transaction reads more from the socket
     // than it should have (eg. containing part of the next pipelined response).
@@ -118,8 +118,8 @@ public:
 
     // Used by a transaction to manage the state of previous response bodies on
     // the same connection and work around buggy servers.
-    virtual bool LastTransactionExpectedNoContent() = 0;
-    virtual void   SetLastTransactionExpectedNoContent(bool) = 0;
+    virtual PRBool LastTransactionExpectedNoContent() = 0;
+    virtual void   SetLastTransactionExpectedNoContent(PRBool) = 0;
 
     // Transfer the base http connection object along with a
     // reference to it to the caller.
@@ -127,7 +127,7 @@ public:
 };
 
 #define NS_DECL_NSAHTTPCONNECTION \
-    nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, bool *reset); \
+    nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, PRBool *reset); \
     nsresult ResumeSend(); \
     nsresult ResumeRecv(); \
     void CloseTransaction(nsAHttpTransaction *, nsresult); \
@@ -136,11 +136,11 @@ public:
                            nsIAsyncInputStream **,   \
                            nsIAsyncOutputStream **); \
     void GetSecurityInfo(nsISupports **); \
-    bool IsPersistent(); \
-    bool IsReused(); \
+    PRBool IsPersistent(); \
+    PRBool IsReused(); \
     nsresult PushBack(const char *, PRUint32); \
-    bool LastTransactionExpectedNoContent(); \
-    void   SetLastTransactionExpectedNoContent(bool); \
+    PRBool LastTransactionExpectedNoContent(); \
+    void   SetLastTransactionExpectedNoContent(PRBool); \
     nsHttpConnection *TakeHttpConnection();
 
 #endif // nsAHttpConnection_h__

@@ -111,7 +111,7 @@ private:
   // That case will be treated as a redirect to the new channel.  By default
   // *channel will be set to null by the caller, so callees who don't want to
   // return one an just not touch it.
-  virtual nsresult OpenContentStream(bool async, nsIInputStream **stream,
+  virtual nsresult OpenContentStream(PRBool async, nsIInputStream **stream,
                                      nsIChannel** channel) = 0;
 
   // The basechannel calls this method from its OnTransportStatus method to
@@ -122,7 +122,7 @@ private:
   // to pass to the OnStatus method.  By default, OnStatus messages are
   // suppressed.  The status parameter passed to this method is the status value
   // from the OnTransportStatus method.
-  virtual bool GetStatusArg(nsresult status, nsString &statusArg) {
+  virtual PRBool GetStatusArg(nsresult status, nsString &statusArg) {
     return PR_FALSE;
   }
 
@@ -142,13 +142,13 @@ public:
   // wasn't canceled.)  The redirectFlags parameter consists of the flag values
   // defined on nsIChannelEventSink.
   nsresult Redirect(nsIChannel *newChannel, PRUint32 redirectFlags,
-                    bool openNewChannel);
+                    PRBool openNewChannel);
 
   // Tests whether a type hint was set. Subclasses can use this to decide
   // whether to call SetContentType.
   // NOTE: This is only reliable if the subclass didn't itself call
   // SetContentType, and should also not be called after OpenContentStream.
-  bool HasContentTypeHint() const;
+  PRBool HasContentTypeHint() const;
 
   // The URI member should be initialized before the channel is used, and then
   // it should never be changed again until the channel is destroyed.
@@ -176,12 +176,12 @@ public:
   }
 
   // Test the load flags
-  bool HasLoadFlag(PRUint32 flag) {
+  PRBool HasLoadFlag(PRUint32 flag) {
     return (mLoadFlags & flag) != 0;
   }
 
   // This is a short-cut to calling nsIRequest::IsPending()
-  bool IsPending() const {
+  PRBool IsPending() const {
     return mPump || mWaitingOnAsyncRedirect;
   }
 
@@ -208,7 +208,7 @@ public:
   // base channel via nsITransportEventSink, then it may set this flag to cause
   // the base channel to synthesize progress events when it receives data from
   // the content stream.  By default, progress events are not synthesized.
-  void EnableSynthesizedProgressEvents(bool enable) {
+  void EnableSynthesizedProgressEvents(PRBool enable) {
     mSynthProgressEvents = enable;
   }
 
@@ -229,7 +229,7 @@ public:
   // stream, which is almost always the case for a "stream converter" ;-)
   // This function optionally returns a reference to the new converter.
   nsresult PushStreamConverter(const char *fromType, const char *toType,
-                               bool invalidatesContentLength = true,
+                               PRBool invalidatesContentLength = PR_TRUE,
                                nsIStreamListener **converter = nsnull);
 
 private:
@@ -287,11 +287,11 @@ private:
   nsCString                           mContentType;
   nsCString                           mContentCharset;
   PRUint32                            mLoadFlags;
-  bool                                mQueriedProgressSink;
-  bool                                mSynthProgressEvents;
-  bool                                mWasOpened;
-  bool                                mWaitingOnAsyncRedirect;
-  bool                                mOpenRedirectChannel;
+  PRPackedBool                        mQueriedProgressSink;
+  PRPackedBool                        mSynthProgressEvents;
+  PRPackedBool                        mWasOpened;
+  PRPackedBool                        mWaitingOnAsyncRedirect;
+  PRPackedBool                        mOpenRedirectChannel;
   PRUint32                            mRedirectFlags;
 
 protected:

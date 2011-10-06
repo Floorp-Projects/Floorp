@@ -333,13 +333,13 @@ TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, jsval *re
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetCanRecord(bool *ret) {
+TelemetryImpl::GetCanRecord(PRBool *ret) {
   *ret = mCanRecord;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelemetryImpl::SetCanRecord(bool canRecord) {
+TelemetryImpl::SetCanRecord(PRBool canRecord) {
   mCanRecord = !!canRecord;
   return NS_OK;
 }

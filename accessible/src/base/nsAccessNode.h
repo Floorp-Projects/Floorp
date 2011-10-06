@@ -108,6 +108,11 @@ public:
   nsRootAccessible* RootAccessible() const;
 
   /**
+   * Reference to a node of focused accessible.
+   */
+  static nsINode *gLastFocusedNode;
+
+  /**
    * Return focused node within accessible window.
    *
    * XXX: it shouldn't break us if we return focused node not depending on
@@ -118,7 +123,7 @@ public:
   /**
    * Initialize the access node object, add it to the cache.
    */
-  virtual bool Init();
+  virtual PRBool Init();
 
   /**
    * Shutdown the access node object.
@@ -157,7 +162,7 @@ public:
   /**
    * Return node type information of DOM node associated with the accessible.
    */
-  bool IsContent() const
+  PRBool IsContent() const
   {
     return GetNode() && GetNode()->IsNodeOfType(nsINode::eCONTENT);
   }
@@ -206,12 +211,12 @@ protected:
     /**
      * Notify global nsIObserver's that a11y is getting init'd or shutdown
      */
-    static void NotifyA11yInitOrShutdown(bool aIsInit);
+    static void NotifyA11yInitOrShutdown(PRBool aIsInit);
 
     // Static data, we do our own refcounting for our static data
     static nsIStringBundle *gStringBundle;
 
-    static bool gIsFormFillEnabled;
+    static PRBool gIsFormFillEnabled;
 
 private:
   static nsApplicationAccessible *gApplicationAccessible;

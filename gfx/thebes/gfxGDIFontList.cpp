@@ -146,7 +146,7 @@ static TTDeleteEmbeddedFontProc TTDeleteEmbeddedFontPtr = nsnull;
 
 class WinUserFontData : public gfxUserFontData {
 public:
-    WinUserFontData(HANDLE aFontRef, bool aIsEmbedded)
+    WinUserFontData(HANDLE aFontRef, PRBool aIsEmbedded)
         : mFontRef(aFontRef), mIsEmbedded(aIsEmbedded)
     { }
 
@@ -177,7 +177,7 @@ public:
     }
     
     HANDLE mFontRef;
-    bool mIsEmbedded;
+    PRPackedBool mIsEmbedded;
 };
 
 BYTE 
@@ -215,7 +215,7 @@ FontTypeToOutPrecision(PRUint8 fontType)
 
 GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
                            gfxWindowsFontType aFontType,
-                           bool aItalic, PRUint16 aWeight, PRInt16 aStretch,
+                           PRBool aItalic, PRUint16 aWeight, PRInt16 aStretch,
                            gfxUserFontData *aUserFontData)
     : gfxFontEntry(aFaceName),
       mWindowsFamily(0), mWindowsPitch(0),
@@ -256,7 +256,7 @@ GDIFontEntry::ReadCMAP()
         return NS_ERROR_FAILURE;
     PRUint8 *cmap = buffer.Elements();
 
-    bool          unicodeFont = false, symbolFont = false;
+    PRPackedBool  unicodeFont = PR_FALSE, symbolFont = PR_FALSE;
     nsresult rv = gfxFontUtils::ReadCMAP(cmap, buffer.Length(),
                                          mCharacterMap, mUVSOffset,
                                          unicodeFont, symbolFont);
@@ -270,7 +270,7 @@ GDIFontEntry::ReadCMAP()
     return rv;
 }
 
-bool
+PRBool
 GDIFontEntry::IsSymbolFont()
 {
     // initialize cmap first
@@ -279,12 +279,12 @@ GDIFontEntry::IsSymbolFont()
 }
 
 gfxFont *
-GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeedsBold)
+GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool aNeedsBold)
 {
-    bool isXP = (gfxWindowsPlatform::WindowsOSVersion() 
+    PRBool isXP = (gfxWindowsPlatform::WindowsOSVersion() 
                        < gfxWindowsPlatform::kWindowsVista);
 
-    bool useClearType = isXP && !aFontStyle->systemFont &&
+    PRBool useClearType = isXP && !aFontStyle->systemFont &&
         (gfxWindowsPlatform::GetPlatform()->UseClearTypeAlways() ||
          (mIsUserFont && !mIsLocalUserFont &&
           gfxWindowsPlatform::GetPlatform()->UseClearTypeForDownloadableFonts()));
@@ -320,9 +320,9 @@ GDIFontEntry::GetFontTable(PRUint32 aTableTag,
 }
 
 void
-GDIFontEntry::FillLogFont(LOGFONTW *aLogFont, bool aItalic,
+GDIFontEntry::FillLogFont(LOGFONTW *aLogFont, PRBool aItalic,
                           PRUint16 aWeight, gfxFloat aSize,
-                          bool aUseCleartype)
+                          PRBool aUseCleartype)
 {
     memcpy(aLogFont, &mLogFont, sizeof(LOGFONTW));
 
@@ -343,7 +343,7 @@ GDIFontEntry::FillLogFont(LOGFONTW *aLogFont, bool aItalic,
 #define MISSING_GLYPH 0x1F // glyph index returned for missing characters
                            // on WinXP with .fon fonts, but not Type1 (.pfb)
 
-bool 
+PRBool 
 GDIFontEntry::TestCharacterMap(PRUint32 aCh)
 {
     if (ReadCMAP() != NS_OK) {
@@ -375,7 +375,7 @@ GDIFontEntry::TestCharacterMap(PRUint32 aCh)
         PRUnichar str[1] = { (PRUnichar)aCh };
         WORD glyph[1];
 
-        bool hasGlyph = false;
+        PRBool hasGlyph = PR_FALSE;
 
         // Bug 573038 - in some cases GetGlyphIndicesW returns 0xFFFF for a 
         // missing glyph or 0x1F in other cases to indicate the "invalid" 
@@ -448,7 +448,7 @@ GDIFontEntry::InitLogFont(const nsAString& aName,
 
 GDIFontEntry* 
 GDIFontEntry::CreateFontEntry(const nsAString& aName,
-                              gfxWindowsFontType aFontType, bool aItalic,
+                              gfxWindowsFontType aFontType, PRBool aItalic,
                               PRUint16 aWeight, PRInt16 aStretch,
                               gfxUserFontData* aUserFontData)
 {
@@ -727,7 +727,7 @@ gfxFontEntry*
 gfxGDIFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                 const nsAString& aFullname)
 {
-    bool found;
+    PRBool found;
     gfxFontEntry *lookup;
 
     // initialize name lookup tables if needed
@@ -744,7 +744,7 @@ gfxGDIFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 
     // create a new font entry with the proxy entry style characteristics
     PRUint16 w = (aProxyEntry->mWeight == 0 ? 400 : aProxyEntry->mWeight);
-    bool isCFF = false; // jtdfix -- need to determine this
+    PRBool isCFF = PR_FALSE; // jtdfix -- need to determine this
     
     // use the face name from the lookup font entry, which will be the localized
     // face name which GDI mapping tables use (e.g. with the system locale set to
@@ -879,12 +879,12 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     if (!TTLoadEmbeddedFontPtr || !TTDeleteEmbeddedFontPtr)
         return nsnull;
 
-    bool hasVertical;
-    bool isCFF = gfxFontUtils::IsCffFont(aFontData, hasVertical);
+    PRBool hasVertical;
+    PRBool isCFF = gfxFontUtils::IsCffFont(aFontData, hasVertical);
 
     nsresult rv;
     HANDLE fontRef = nsnull;
-    bool isEmbedded = false;
+    PRBool isEmbedded = PR_FALSE;
 
     nsAutoString uniqueName;
     rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
@@ -990,7 +990,7 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 }
 
 gfxFontEntry*
-gfxGDIFontList::GetDefaultFont(const gfxFontStyle* aStyle, bool& aNeedsBold)
+gfxGDIFontList::GetDefaultFont(const gfxFontStyle* aStyle, PRBool& aNeedsBold)
 {
     // this really shouldn't fail to find a font....
     HGDIOBJ hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
@@ -1018,7 +1018,7 @@ gfxGDIFontList::GetDefaultFont(const gfxFontStyle* aStyle, bool& aNeedsBold)
 }
 
 
-bool 
+PRBool 
 gfxGDIFontList::ResolveFontName(const nsAString& aFontName, nsAString& aResolvedFontName)
 {
     nsAutoString keyName(aFontName);

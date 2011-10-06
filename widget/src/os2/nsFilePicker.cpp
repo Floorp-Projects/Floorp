@@ -121,7 +121,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 {
   NS_ENSURE_ARG_POINTER(retval);
 
-  bool result = false;
+  PRBool result = PR_FALSE;
   nsCAutoString fileBuffer;
   char *converted = ConvertToFileSystemCharset(mDefault);
   if (nsnull == converted) {
@@ -215,7 +215,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     pmydata->ulCurExt = mSelectedType;
 
-    bool fileExists = true;
+    PRBool fileExists = PR_TRUE;
     do {
       DosError(FERR_DISABLEHARDERR);
       WinFileDlg(HWND_DESKTOP, mWnd, &filedlg);
@@ -362,7 +362,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     if (mMode == modeSave) {
       // Windows does not return resultReplace,
       //   we must check if file already exists
-      bool exists = false;
+      PRBool exists = PR_FALSE;
       file->Exists(&exists);
       if (exists)
         returnOKorReplace = returnReplace;

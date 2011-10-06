@@ -108,7 +108,7 @@ WrappedJSDyingJSObjectFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
     {
         if(wrapper->IsSubjectToFinalization())
         {
-            js::AutoSwitchCompartment sc(data->cx,
+            JS::AutoSwitchCompartment sc(data->cx,
                                          wrapper->GetJSObjectPreserveColor());
             if(JS_IsAboutToBeFinalized(data->cx,
                                        wrapper->GetJSObjectPreserveColor()))
@@ -2335,7 +2335,7 @@ void
 XPCJSRuntime::RemoveGCCallback(JSGCCallback cb)
 {
     NS_ASSERTION(cb, "null callback");
-    bool found = extraGCCallbacks.RemoveElement(cb);
+    PRBool found = extraGCCallbacks.RemoveElement(cb);
     if (!found) {
         NS_ERROR("Removing a callback which was never added.");
     }

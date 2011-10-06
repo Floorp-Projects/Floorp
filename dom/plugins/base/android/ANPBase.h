@@ -40,7 +40,6 @@
 #include <stdlib.h>
 #include "nsAutoPtr.h"
 #include "gfxFont.h"
-#include "nsISupportsImpl.h"
 
 #define NOT_IMPLEMENTED_FATAL() do {                                    \
     __android_log_print(ANDROID_LOG_ERROR, "GeckoPlugins",              \
@@ -70,8 +69,7 @@ void InitTypeFaceInterface(ANPTypefaceInterfaceV0 *i);
 void InitWindowInterface(ANPWindowInterfaceV0 *i);
 
 struct ANPTypeface {
-  gfxFont* mFont;
-  nsAutoRefCnt mRefCnt;
+  nsRefPtr<gfxFont> mFont;
 };
 
 

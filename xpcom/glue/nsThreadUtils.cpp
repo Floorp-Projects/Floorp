@@ -123,7 +123,7 @@ NS_GetMainThread(nsIThread **result)
 #ifndef MOZILLA_INTERNAL_API
 bool NS_IsMainThread()
 {
-  bool result = false;
+  PRBool result = PR_FALSE;
   nsCOMPtr<nsIThreadManager> mgr =
     do_GetService(NS_THREADMANAGER_CONTRACTID);
   if (mgr)
@@ -140,7 +140,7 @@ NS_IsMainThread()
 #elif !defined(NS_TLS)
 bool NS_IsMainThread()
 {
-  bool result = false;
+  PRBool result = PR_FALSE;
   nsThreadManager::get()->nsThreadManager::GetIsMainThread(&result);
   return bool(result);
 }
@@ -191,7 +191,7 @@ NS_ProcessPendingEvents(nsIThread *thread, PRIntervalTime timeout)
 
   PRIntervalTime start = PR_IntervalNow();
   for (;;) {
-    bool processedEvent;
+    PRBool processedEvent;
     rv = thread->ProcessNextEvent(PR_FALSE, &processedEvent);
     if (NS_FAILED(rv) || !processedEvent)
       break;
@@ -202,14 +202,14 @@ NS_ProcessPendingEvents(nsIThread *thread, PRIntervalTime timeout)
 }
 #endif // XPCOM_GLUE_AVOID_NSPR
 
-inline bool
+inline PRBool
 hasPendingEvents(nsIThread *thread)
 {
-  bool val;
+  PRBool val;
   return NS_SUCCEEDED(thread->HasPendingEvents(&val)) && val;
 }
 
-bool
+PRBool
 NS_HasPendingEvents(nsIThread *thread)
 {
   if (!thread) {
@@ -225,8 +225,8 @@ NS_HasPendingEvents(nsIThread *thread)
   return hasPendingEvents(thread);
 }
 
-bool
-NS_ProcessNextEvent(nsIThread *thread, bool mayWait)
+PRBool
+NS_ProcessNextEvent(nsIThread *thread, PRBool mayWait)
 {
 #ifdef MOZILLA_INTERNAL_API
   if (!thread) {
@@ -241,7 +241,7 @@ NS_ProcessNextEvent(nsIThread *thread, bool mayWait)
     thread = current.get();
   }
 #endif
-  bool val;
+  PRBool val;
   return NS_SUCCEEDED(thread->ProcessNextEvent(mayWait, &val)) && val;
 }
 

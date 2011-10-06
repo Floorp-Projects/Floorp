@@ -243,7 +243,6 @@ WinLaunchChild(const PRUnichar *exePath, int argc, char **argv)
   for (int i = 0; i < argc; ++i) {
     argvConverted[i] = AllocConvertUTF8toUTF16(argv[i]);
     if (!argvConverted[i]) {
-      FreeAllocStrings(i, argvConverted);
       return FALSE;
     }
   }

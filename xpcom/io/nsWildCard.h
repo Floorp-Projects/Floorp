@@ -88,9 +88,9 @@ int NS_WildCardValid(const PRUnichar *expr);
  */
 
 int NS_WildCardMatch(const char *str, const char *expr,
-                            bool case_insensitive);
+                            PRBool case_insensitive);
 
 int NS_WildCardMatch(const PRUnichar *str, const PRUnichar *expr,
-                            bool case_insensitive);
+                            PRBool case_insensitive);
 
 #endif /* nsWildCard_h__ */

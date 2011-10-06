@@ -75,15 +75,13 @@
 #include "jsvector.h"
 #include "jslibmath.h"
 
-#include "vm/GlobalObject.h"
-
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
+#include "jsinterpinlines.h"
 #include "jsnuminlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
-#include "vm/NumberObject-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
@@ -601,12 +599,9 @@ Number(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 num_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, num_toSource, &d, &ok))
-        return ok;
+    if (!GetPrimitiveThis(cx, vp, &d))
+        return false;
 
     ToCStringBuf cbuf;
     char *numStr = NumberToCString(cx, &cbuf, d);
@@ -620,7 +615,7 @@ num_toSource(JSContext *cx, uintN argc, Value *vp)
     JSString *str = js_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
-    args.rval().setString(str);
+    vp->setString(str);
     return true;
 }
 #endif
@@ -712,20 +707,17 @@ IntToCString(ToCStringBuf *cbuf, jsint i, jsint base = 10)
 static JSString * JS_FASTCALL
 js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base);
 
-static JS_ALWAYS_INLINE bool
-num_toStringHelper(JSContext *cx, Native native, uintN argc, Value *vp)
+static JSBool
+num_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, native, &d, &ok))
-        return ok;
+    if (!GetPrimitiveThis(cx, vp, &d))
+        return false;
 
     int32 base = 10;
-    if (args.length() != 0 && !args[0].isUndefined()) {
+    if (argc != 0 && !vp[2].isUndefined()) {
         jsdouble d2;
-        if (!ToInteger(cx, args[0], &d2))
+        if (!ToInteger(cx, vp[2], &d2))
             return false;
 
         if (d2 < 2 || d2 > 36) {
@@ -738,16 +730,10 @@ num_toStringHelper(JSContext *cx, Native native, uintN argc, Value *vp)
     JSString *str = js_NumberToStringWithBase(cx, d, base);
     if (!str) {
         JS_ReportOutOfMemory(cx);
-        return false;
+        return JS_FALSE;
     }
-    args.rval().setString(str);
-    return true;
-}
-
-static JSBool
-num_toString(JSContext *cx, uintN argc, Value *vp)
-{
-    return num_toStringHelper(cx, num_toString, argc, vp);
+    vp->setString(str);
+    return JS_TRUE;
 }
 
 static JSBool
@@ -766,7 +752,7 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
      * Create the string, move back to bytes to make string twiddling
      * a bit easier and so we can insert platform charset seperators.
      */
-    if (!num_toStringHelper(cx, num_toLocaleString, 0, vp))
+    if (!num_toString(cx, 0, vp))
         return JS_FALSE;
     JS_ASSERT(vp->isString());
     JSAutoByteString numBytes(cx, vp->toString());
@@ -872,14 +858,11 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 JSBool
 js_num_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, js_num_valueOf, &d, &ok))
-        return ok;
+    if (!GetPrimitiveThis(cx, vp, &d))
+        return false;
 
-    args.rval().setNumber(d);
+    vp->setNumber(d);
     return true;
 }
 
@@ -887,25 +870,24 @@ js_num_valueOf(JSContext *cx, uintN argc, Value *vp)
 #define MAX_PRECISION 100
 
 static JSBool
-num_to(JSContext *cx, Native native, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
+num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
        jsint precisionMin, jsint precisionMax, jsint precisionOffset,
-       CallArgs args)
+       uintN argc, Value *vp)
 {
     /* Use MAX_PRECISION+1 because precisionOffset can be 1. */
     char buf[DTOSTR_VARIABLE_BUFFER_SIZE(MAX_PRECISION+1)];
     char *numStr;
 
     double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, native, &d, &ok))
-        return ok;
+    if (!GetPrimitiveThis(cx, vp, &d))
+        return false;
 
     double precision;
-    if (args.length() == 0) {
+    if (argc == 0) {
         precision = 0.0;
         oneArgMode = zeroArgMode;
     } else {
-        if (!ToInteger(cx, args[0], &precision))
+        if (!ToInteger(cx, vp[2], &precision))
             return false;
         if (precision < precisionMin || precision > precisionMax) {
             ToCStringBuf cbuf;
@@ -925,7 +907,7 @@ num_to(JSContext *cx, Native native, JSDToStrMode zeroArgMode, JSDToStrMode oneA
     JSString *str = js_NewStringCopyZ(cx, numStr);
     if (!str)
         return JS_FALSE;
-    args.rval().setString(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
@@ -936,24 +918,24 @@ num_to(JSContext *cx, Native native, JSDToStrMode zeroArgMode, JSDToStrMode oneA
 static JSBool
 num_toFixed(JSContext *cx, uintN argc, Value *vp)
 {
-    return num_to(cx, num_toFixed, DTOSTR_FIXED, DTOSTR_FIXED, -20, MAX_PRECISION, 0,
-                  CallArgsFromVp(argc, vp));
+    return num_to(cx, DTOSTR_FIXED, DTOSTR_FIXED, -20, MAX_PRECISION, 0,
+                  argc, vp);
 }
 
 static JSBool
 num_toExponential(JSContext *cx, uintN argc, Value *vp)
 {
-    return num_to(cx, num_toExponential, DTOSTR_STANDARD_EXPONENTIAL, DTOSTR_EXPONENTIAL, 0,
-                  MAX_PRECISION, 1, CallArgsFromVp(argc, vp));
+    return num_to(cx, DTOSTR_STANDARD_EXPONENTIAL, DTOSTR_EXPONENTIAL, 0, MAX_PRECISION, 1,
+                  argc, vp);
 }
 
 static JSBool
 num_toPrecision(JSContext *cx, uintN argc, Value *vp)
 {
     if (argc == 0 || vp[2].isUndefined())
-        return num_toStringHelper(cx, num_toPrecision, 0, vp);
-    return num_to(cx, num_toPrecision, DTOSTR_STANDARD, DTOSTR_PRECISION, 1, MAX_PRECISION, 0,
-                  CallArgsFromVp(argc, vp));
+        return num_toString(cx, 0, vp);
+    return num_to(cx, DTOSTR_STANDARD, DTOSTR_PRECISION, 1, MAX_PRECISION, 0,
+                  argc, vp);
 }
 
 #ifdef JS_TRACER
@@ -1117,52 +1099,39 @@ FinishRuntimeNumberState(JSRuntime *rt)
 JSObject *
 js_InitNumberClass(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->isNative());
+    JSObject *proto, *ctor;
+    JSRuntime *rt;
 
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    GlobalObject *global = obj->asGlobal();
-
-    JSObject *numberProto = global->createBlankPrototype(cx, &NumberClass);
-    if (!numberProto)
+    proto = js_InitClass(cx, obj, NULL, &NumberClass, Number, 1,
+                         NULL, number_methods, NULL, NULL);
+    if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;
-    numberProto->asNumber()->setPrimitiveValue(0);
+    proto->setPrimitiveThis(Int32Value(0));
 
-    JSFunction *ctor = global->createConstructor(cx, Number, &NumberClass,
-                                                 CLASS_ATOM(cx, Number), 1);
-    if (!ctor)
+    if (!JS_DefineFunctions(cx, obj, number_functions))
         return NULL;
 
-    if (!LinkConstructorAndPrototype(cx, ctor, numberProto))
-        return NULL;
-
-    /* Add numeric constants (MAX_VALUE, NaN, &c.) to the Number constructor. */
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
         return NULL;
 
-    if (!DefinePropertiesAndBrand(cx, numberProto, NULL, number_methods))
-        return NULL;
-
-    if (!JS_DefineFunctions(cx, global, number_functions))
-        return NULL;
-
-    /* ES5 15.1.1.1, 15.1.1.2 */
-    if (!DefineNativeProperty(cx, global, ATOM_TO_JSID(cx->runtime->atomState.NaNAtom),
-                              cx->runtime->NaNValue, JS_PropertyStub, JS_StrictPropertyStub,
-                              JSPROP_PERMANENT | JSPROP_READONLY, 0, 0) ||
-        !DefineNativeProperty(cx, global, ATOM_TO_JSID(cx->runtime->atomState.InfinityAtom),
-                              cx->runtime->positiveInfinityValue,
-                              JS_PropertyStub, JS_StrictPropertyStub,
-                              JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))
-    {
+    /* ECMA 15.1.1.1 */
+    rt = cx->runtime;
+    if (!JS_DefineProperty(cx, obj, js_NaN_str, rt->NaNValue,
+                           JS_PropertyStub, JS_StrictPropertyStub,
+                           JSPROP_PERMANENT | JSPROP_READONLY)) {
         return NULL;
     }
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_Number, ctor, numberProto))
+    /* ECMA 15.1.1.2 */
+    if (!JS_DefineProperty(cx, obj, js_Infinity_str, rt->positiveInfinityValue,
+                           JS_PropertyStub, JS_StrictPropertyStub,
+                           JSPROP_PERMANENT | JSPROP_READONLY)) {
         return NULL;
-
-    return numberProto;
+    }
+    return proto;
 }
 
 namespace v8 {

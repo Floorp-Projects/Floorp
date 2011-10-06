@@ -19,8 +19,6 @@
   <script type="application/javascript"
           src="../common.js" />
   <script type="application/javascript"
-          src="../states.js" />
-  <script type="application/javascript"
           src="../events.js" />
 
   <script type="application/javascript">
@@ -48,13 +46,13 @@
 
     function focusTree(aTreeID)
     {
-      var checker = new focusChecker(getFirstTreeItem, aTreeID);
+      var checker = new invokerChecker(EVENT_FOCUS, getFirstTreeItem, aTreeID);
       this.__proto__ = new synthFocus(aTreeID, [ checker ]);
     }
 
     function moveToNextItem(aTreeID)
     {
-      var checker = new focusChecker(getSecondTreeItem, aTreeID);
+      var checker = new invokerChecker(EVENT_FOCUS, getSecondTreeItem, aTreeID);
       this.__proto__ = new synthDownKey(aTreeID, [ checker ]);
     }
 
@@ -85,10 +83,6 @@
       gQueue.push(new setTreeView("tree", new nsTableTreeView(5)));
       gQueue.push(new focusTree("tree"));
       gQueue.push(new moveToNextItem("tree"));
-      gQueue.push(new synthFocus("emptytree"));
-
-      // no focus event for changed current item for unfocused tree
-      gQueue.push(new changeCurrentItem("tree", 0));
 
       gQueue.invoke();
     }
@@ -104,12 +98,7 @@
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=386821"
          title="Need better solution for firing delayed event against xul tree">
         Mozilla Bug 386821
-      </a>
-      <a target="_blank"
-         href="https://bugzilla.mozilla.org/show_bug.cgi?id=406308"
-         title="Don't fire accessible focus events if widget is not actually in focus, confuses screen readers">
-        Mozilla Bug 406308
-      </a>
+      </a><br/>
       <p id="display"></p>
       <div id="content" style="display: none">
       </div>
@@ -124,13 +113,6 @@
         <treecol id="col2" flex="1" label="column 2"/>
       </treecols>
       <treechildren id="treechildren"/>
-    </tree>
-    <tree id="emptytree" flex="1">
-      <treecols>
-        <treecol id="emptytree_col1" flex="1" primary="true" label="column"/>
-        <treecol id="emptytree_col2" flex="1" label="column 2"/>
-      </treecols>
-      <treechildren id="emptytree_treechildren"/>
     </tree>
   </hbox>
 

@@ -92,7 +92,7 @@ using namespace mozilla;
     return;
   }
   if (sDoCancel < 0) {
-    bool cancelComposition = false;
+    PRBool cancelComposition = PR_FALSE;
     static const char* kPrefName =
       "ui.plugin.cancel_composition_at_input_source_changed";
     nsresult rv = Preferences::GetBool(kPrefName, &cancelComposition);

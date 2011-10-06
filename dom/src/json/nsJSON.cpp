@@ -139,7 +139,7 @@ static nsresult CheckCharset(const char* aCharset)
 NS_IMETHODIMP
 nsJSON::EncodeToStream(nsIOutputStream *aStream,
                        const char* aCharset,
-                       const bool aWriteBOM)
+                       const PRBool aWriteBOM)
 {
   // This function should only be called from JS.
   NS_ENSURE_ARG(aStream);
@@ -399,7 +399,7 @@ nsJSONWriter::Write(const PRUnichar *aBuffer, PRUint32 aLength)
   return NS_OK;
 }
 
-bool nsJSONWriter::DidWrite()
+PRBool nsJSONWriter::DidWrite()
 {
   return mDidWrite;
 }
@@ -480,7 +480,7 @@ nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 nsresult
 nsJSON::DecodeInternal(nsIInputStream *aStream,
                        PRInt32 aContentLength,
-                       bool aNeedsConverter,
+                       PRBool aNeedsConverter,
                        DecodingMode mode /* = STRICT */)
 {
   nsresult rv;
@@ -615,7 +615,7 @@ NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 }
 
 nsJSONListener::nsJSONListener(JSContext *cx, jsval *rootVal,
-                               bool needsConverter,
+                               PRBool needsConverter,
                                DecodingMode mode /* = STRICT */)
   : mNeedsConverter(needsConverter), 
     mCx(cx),

@@ -261,9 +261,7 @@ nsSVGDisplayContainerFrame::NotifyRedrawUnsuspended()
 }
 
 gfxRect
-nsSVGDisplayContainerFrame::GetBBoxContribution(
-  const gfxMatrix &aToBBoxUserspace,
-  PRUint32 aFlags)
+nsSVGDisplayContainerFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
 {
   gfxRect bboxUnion(0.0, 0.0, 0.0, 0.0);
 
@@ -277,8 +275,7 @@ nsSVGDisplayContainerFrame::GetBBoxContribution(
         transform = static_cast<nsSVGElement*>(content)->
                       PrependLocalTransformTo(aToBBoxUserspace);
       }
-      bboxUnion =
-        bboxUnion.Union(svgKid->GetBBoxContribution(transform, aFlags));
+      bboxUnion = bboxUnion.Union(svgKid->GetBBoxContribution(transform));
     }
     kid = kid->GetNextSibling();
   }

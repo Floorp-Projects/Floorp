@@ -155,7 +155,7 @@ PuppetWidget::CreateChild(const nsIntRect  &aRect,
                           nsIAppShell      *aAppShell,
                           nsIToolkit       *aToolkit,
                           nsWidgetInitData *aInitData,
-                          bool             aForceUseIWidgetParent)
+                          PRBool           aForceUseIWidgetParent)
 {
   bool isPopup = IsPopup(aInitData);
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(mTabChild);
@@ -183,12 +183,12 @@ PuppetWidget::Destroy()
 }
 
 NS_IMETHODIMP
-PuppetWidget::Show(bool aState)
+PuppetWidget::Show(PRBool aState)
 {
   NS_ASSERTION(mEnabled,
                "does it make sense to Show()/Hide() a disabled widget?");
 
-  bool wasVisible = mVisible;
+  PRBool wasVisible = mVisible;
   mVisible = aState;
 
   if (!wasVisible && mVisible) {
@@ -201,7 +201,7 @@ PuppetWidget::Show(bool aState)
 NS_IMETHODIMP
 PuppetWidget::Resize(PRInt32 aWidth,
                      PRInt32 aHeight,
-                     bool    aRepaint)
+                     PRBool  aRepaint)
 {
   nsIntRect oldBounds = mBounds;
   mBounds.SizeTo(nsIntSize(aWidth, aHeight));
@@ -226,7 +226,7 @@ PuppetWidget::Resize(PRInt32 aWidth,
 }
 
 NS_IMETHODIMP
-PuppetWidget::SetFocus(bool aRaise)
+PuppetWidget::SetFocus(PRBool aRaise)
 {
   // XXX/cjones: someone who knows about event handling needs to
   // decide how this should work.
@@ -234,7 +234,7 @@ PuppetWidget::SetFocus(bool aRaise)
 }
 
 NS_IMETHODIMP
-PuppetWidget::Invalidate(const nsIntRect& aRect, bool aIsSynchronous)
+PuppetWidget::Invalidate(const nsIntRect& aRect, PRBool aIsSynchronous)
 {
 #ifdef DEBUG
   debug_DumpInvalidate(stderr, this, &aRect, aIsSynchronous,
@@ -368,7 +368,7 @@ PuppetWidget::GetThebesSurface()
 }
 
 nsresult
-PuppetWidget::IMEEndComposition(bool aCancel)
+PuppetWidget::IMEEndComposition(PRBool aCancel)
 {
   nsEventStatus status;
   nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
@@ -406,7 +406,7 @@ PuppetWidget::CancelComposition()
 }
 
 NS_IMETHODIMP
-PuppetWidget::SetIMEOpenState(bool aState)
+PuppetWidget::SetIMEOpenState(PRBool aState)
 {
   if (mTabChild &&
       mTabChild->SendSetIMEOpenState(aState))
@@ -425,7 +425,7 @@ PuppetWidget::SetInputMode(const IMEContext& aContext)
 }
 
 NS_IMETHODIMP
-PuppetWidget::GetIMEOpenState(bool *aState)
+PuppetWidget::GetIMEOpenState(PRBool *aState)
 {
   if (mTabChild &&
       mTabChild->SendGetIMEOpenState(aState))
@@ -443,7 +443,7 @@ PuppetWidget::GetInputMode(IMEContext& aContext)
 }
 
 NS_IMETHODIMP
-PuppetWidget::OnIMEFocusChange(bool aFocus)
+PuppetWidget::OnIMEFocusChange(PRBool aFocus)
 {
   if (!mTabChild)
     return NS_ERROR_FAILURE;

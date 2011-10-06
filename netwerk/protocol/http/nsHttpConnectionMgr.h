@@ -216,7 +216,7 @@ private:
         nsresult SetupStreams(nsISocketTransport **,
                               nsIAsyncInputStream **,
                               nsIAsyncOutputStream **,
-                              bool isBackup);
+                              PRBool isBackup);
         nsresult SetupPrimaryStreams();
         nsresult SetupBackupStreams();
         void     SetupBackupTimer();
@@ -256,7 +256,7 @@ private:
     PRUint16 mMaxRequestDelay; // in seconds
     PRUint16 mMaxPipelinedRequests;
 
-    bool mIsShuttingDown;
+    PRPackedBool mIsShuttingDown;
 
     //-------------------------------------------------------------------------
     // NOTE: these members are only accessed on the socket transport thread
@@ -268,13 +268,13 @@ private:
     static PLDHashOperator ShutdownPassCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     static PLDHashOperator PurgeExcessIdleConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     static PLDHashOperator ClosePersistentConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
-    bool     ProcessPendingQForEntry(nsConnectionEntry *);
-    bool     AtActiveConnectionLimit(nsConnectionEntry *, PRUint8 caps);
+    PRBool   ProcessPendingQForEntry(nsConnectionEntry *);
+    PRBool   AtActiveConnectionLimit(nsConnectionEntry *, PRUint8 caps);
     void     GetConnection(nsConnectionEntry *, nsHttpTransaction *,
-                           bool, nsHttpConnection **);
+                           PRBool, nsHttpConnection **);
     nsresult DispatchTransaction(nsConnectionEntry *, nsAHttpTransaction *,
                                  PRUint8 caps, nsHttpConnection *);
-    bool     BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
+    PRBool   BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
     nsresult ProcessNewTransaction(nsHttpTransaction *);
     nsresult EnsureSocketThreadTargetIfOnline();
     void     ClosePersistentConnections(nsConnectionEntry *ent);

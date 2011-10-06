@@ -86,7 +86,7 @@ class GLContext;
 class LibrarySymbolLoader
 {
 public:
-    bool OpenLibrary(const char *library);
+    PRBool OpenLibrary(const char *library);
 
     typedef PRFuncPtr (GLAPIENTRY * PlatformLookupFunction) (const char *);
 
@@ -100,8 +100,8 @@ public:
         const char *symNames[MAX_SYMBOL_NAMES];
     } SymLoadStruct;
 
-    bool LoadSymbols(SymLoadStruct *firstStruct,
-                       bool tryplatform = false,
+    PRBool LoadSymbols(SymLoadStruct *firstStruct,
+                       PRBool tryplatform = PR_FALSE,
                        const char *prefix = nsnull);
 
     /*
@@ -110,7 +110,7 @@ public:
     static PRFuncPtr LookupSymbol(PRLibrary *lib,
                                   const char *symname,
                                   PlatformLookupFunction lookupFunction = nsnull);
-    static bool LoadSymbols(PRLibrary *lib,
+    static PRBool LoadSymbols(PRLibrary *lib,
                               SymLoadStruct *firstStruct,
                               PlatformLookupFunction lookupFunction = nsnull,
                               const char *prefix = nsnull);
@@ -218,7 +218,7 @@ public:
     virtual void BeginTileIteration() {
     };
 
-    virtual bool NextTile() {
+    virtual PRBool NextTile() {
         return PR_FALSE;
     };
 
@@ -301,10 +301,10 @@ public:
 
     const nsIntSize& GetSize() const { return mSize; }
     ContentType GetContentType() const { return mContentType; }
-    virtual bool InUpdate() const = 0;
+    virtual PRBool InUpdate() const = 0;
     GLenum GetWrapMode() const { return mWrapMode; }
 
-    bool IsRGB() const { return mIsRGBFormat; }
+    PRBool IsRGB() const { return mIsRGBFormat; }
 
 protected:
     friend class GLContext;
@@ -317,7 +317,7 @@ protected:
      */
     TextureImage(const nsIntSize& aSize,
                  GLenum aWrapMode, ContentType aContentType,
-                 bool aIsRGB = false)
+                 PRBool aIsRGB = PR_FALSE)
         : mSize(aSize)
         , mWrapMode(aWrapMode)
         , mContentType(aContentType)
@@ -327,7 +327,7 @@ protected:
     nsIntSize mSize;
     GLenum mWrapMode;
     ContentType mContentType;
-    bool mIsRGBFormat;
+    PRPackedBool mIsRGBFormat;
     ShaderProgramType mShaderType;
 };
 
@@ -378,7 +378,7 @@ public:
     // Call after surface data has been uploaded to a texture.
     virtual void FinishedSurfaceUpload();
 
-    virtual bool InUpdate() const { return !!mUpdateSurface; }
+    virtual PRBool InUpdate() const { return !!mUpdateSurface; }
 
     virtual void Resize(const nsIntSize& aSize);
 protected:
@@ -403,7 +403,7 @@ class TiledTextureImage
 {
 public:
     TiledTextureImage(GLContext* aGL, nsIntSize aSize,
-        TextureImage::ContentType, bool aUseNearestFilter = false);
+        TextureImage::ContentType, PRBool aUseNearestFilter = PR_FALSE);
     ~TiledTextureImage();
     void DumpDiv();
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
@@ -412,13 +412,13 @@ public:
     virtual void Resize(const nsIntSize& aSize);
     virtual PRUint32 GetTileCount();
     virtual void BeginTileIteration();
-    virtual bool NextTile();
+    virtual PRBool NextTile();
     virtual nsIntRect GetTileRect();
     virtual GLuint GetTextureID() {
         return mImages[mCurrentImage]->GetTextureID();
     };
     virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
-    virtual bool InUpdate() const { return mInUpdate; };
+    virtual PRBool InUpdate() const { return mInUpdate; };
     virtual void BindTexture(GLenum);
 protected:
     unsigned int mCurrentImage;
@@ -428,7 +428,7 @@ protected:
     unsigned int mTileSize;
     unsigned int mRows, mColumns;
     GLContext* mGL;
-    bool mUseNearestFilter;
+    PRBool mUseNearestFilter;
     // A temporary surface to faciliate cross-tile updates.
     nsRefPtr<gfxASurface> mUpdateSurface;
     // The region of update requested
@@ -504,7 +504,7 @@ class GLContext
     THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
 public:
     GLContext(const ContextFormat& aFormat,
-              bool aIsOffscreen = false,
+              PRBool aIsOffscreen = PR_FALSE,
               GLContext *aSharedContext = nsnull)
       : mInitialized(PR_FALSE),
         mIsOffscreen(aIsOffscreen),
@@ -556,16 +556,16 @@ public:
 
     virtual GLContextType GetContextType() { return ContextTypeUnknown; }
 
-    virtual bool MakeCurrentImpl(bool aForce = false) = 0;
+    virtual PRBool MakeCurrentImpl(PRBool aForce = PR_FALSE) = 0;
 
-    bool MakeCurrent(bool aForce = false) {
+    PRBool MakeCurrent(PRBool aForce = PR_FALSE) {
 #ifdef DEBUG
         sCurrentGLContext = this;
 #endif
         return MakeCurrentImpl(aForce);
     }
 
-    virtual bool SetupLookupFunction() = 0;
+    virtual PRBool SetupLookupFunction() = 0;
 
     virtual void WindowDestroyed() {}
 
@@ -585,7 +585,7 @@ public:
     // the GL function pointers!
     void THEBES_API MarkDestroyed();
 
-    bool IsDestroyed() {
+    PRBool IsDestroyed() {
         // MarkDestroyed will mark all these as null.
         return mSymbols.fUseProgram == nsnull;
     }
@@ -600,8 +600,8 @@ public:
     virtual void *GetNativeData(NativeDataType aType) { return NULL; }
     GLContext *GetSharedContext() { return mSharedContext; }
 
-    bool IsGlobalSharedContext() { return mIsGlobalSharedContext; }
-    void SetIsGlobalSharedContext(bool aIsOne) { mIsGlobalSharedContext = aIsOne; }
+    PRBool IsGlobalSharedContext() { return mIsGlobalSharedContext; }
+    void SetIsGlobalSharedContext(PRBool aIsOne) { mIsGlobalSharedContext = aIsOne; }
 
     const ContextFormat& CreationFormat() { return mCreationFormat; }
     const ContextFormat& ActualFormat() { return mActualFormat; }
@@ -614,21 +614,21 @@ public:
     /**
      * If this context is double-buffered, returns TRUE.
      */
-    virtual bool IsDoubleBuffered() { return false; }
+    virtual PRBool IsDoubleBuffered() { return PR_FALSE; }
 
     /**
      * If this context is the GLES2 API, returns TRUE.
      * This means that various GLES2 restrictions might be in effect (modulo
      * extensions).
      */
-    bool IsGLES2() const {
+    PRBool IsGLES2() const {
         return mIsGLES2;
     }
     
     /**
      * Returns PR_TRUE if either this is the GLES2 API, or had the GL_ARB_ES2_compatibility extension
      */
-    bool HasES2Compatibility() {
+    PRBool HasES2Compatibility() {
         return mIsGLES2 || IsExtensionSupported(ARB_ES2_compatibility);
     }
 
@@ -649,16 +649,16 @@ public:
      * and front buffers.  It should be assumed that after a swap, the
      * contents of the new back buffer are undefined.
      */
-    virtual bool SwapBuffers() { return false; }
+    virtual PRBool SwapBuffers() { return PR_FALSE; }
 
     /**
      * Defines a two-dimensional texture image for context target surface
      */
-    virtual bool BindTexImage() { return false; }
+    virtual PRBool BindTexImage() { return PR_FALSE; }
     /*
      * Releases a color buffer that is being used as a texture
      */
-    virtual bool ReleaseTexImage() { return false; }
+    virtual PRBool ReleaseTexImage() { return PR_FALSE; }
 
     /*
      * Offscreen support API
@@ -679,11 +679,11 @@ public:
      * The same texture unit must be active for Bind/Unbind of a given
      * context.
      */
-    virtual bool BindOffscreenNeedsTexture(GLContext *aOffscreen) {
+    virtual PRBool BindOffscreenNeedsTexture(GLContext *aOffscreen) {
         return aOffscreen->mOffscreenTexture == 0;
     }
 
-    virtual bool BindTex2DOffscreen(GLContext *aOffscreen) {
+    virtual PRBool BindTex2DOffscreen(GLContext *aOffscreen) {
         if (aOffscreen->GetContextType() != GetContextType()) {
           return PR_FALSE;
         }
@@ -705,7 +705,7 @@ public:
 
     virtual void UnbindTex2DOffscreen(GLContext *aOffscreen) { }
 
-    bool IsOffscreen() {
+    PRBool IsOffscreen() {
         return mIsOffscreen;
     }
 
@@ -717,7 +717,7 @@ public:
      *
      * Only valid if IsOffscreen() returns true.
      */
-    virtual bool ResizeOffscreen(const gfxIntSize& aNewSize) {
+    virtual PRBool ResizeOffscreen(const gfxIntSize& aNewSize) {
         if (mOffscreenFBO)
             return ResizeOffscreenFBO(aNewSize);
         return PR_FALSE;
@@ -762,14 +762,14 @@ public:
       return 0;
     };
     
-    virtual bool WaitNative() { return false; }
+    virtual PRBool WaitNative() { return PR_FALSE; }
 #endif
 
-    virtual bool TextureImageSupportsGetBackingSurface() {
+    virtual PRBool TextureImageSupportsGetBackingSurface() {
         return PR_FALSE;
     }
 
-    virtual bool RenewSurface() { return false; }
+    virtual PRBool RenewSurface() { return PR_FALSE; }
 
     /**`
      * Return a valid, allocated TextureImage of |aSize| with
@@ -788,7 +788,7 @@ public:
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
-                       bool aUseNearestFilter=false);
+                       PRBool aUseNearestFilter=PR_FALSE);
 
     /**
      * In EGL we want to use Tiled Texture Images, which we return
@@ -800,7 +800,7 @@ public:
     virtual already_AddRefed<TextureImage>
     TileGenFunc(const nsIntSize& aSize,
                 TextureImage::ContentType aContentType,
-                bool aUseNearestFilter = false)
+                PRBool aUseNearestFilter = PR_FALSE)
     {
         return nsnull;
     };
@@ -981,23 +981,22 @@ public:
         OES_texture_float,
         ARB_texture_float,
         EXT_unpack_subimage,
-        OES_standard_derivatives,
         Extensions_Max
     };
 
-    bool IsExtensionSupported(GLExtensions aKnownExtension) {
+    PRBool IsExtensionSupported(GLExtensions aKnownExtension) {
         return mAvailableExtensions[aKnownExtension];
     }
 
     // for unknown extensions
-    bool IsExtensionSupported(const char *extension);
+    PRBool IsExtensionSupported(const char *extension);
 
     // Shared code for GL extensions and GLX extensions.
-    static bool ListHasExtension(const GLubyte *extensions,
+    static PRBool ListHasExtension(const GLubyte *extensions,
                                    const char *extension);
 
     GLint GetMaxTextureSize() { return mMaxTextureSize; }
-    void SetFlipped(bool aFlipped) { mFlipped = aFlipped; }
+    void SetFlipped(PRBool aFlipped) { mFlipped = aFlipped; }
 
     // this should just be a std::bitset, but that ended up breaking
     // MacOS X builds; see bug 584919.  We can replace this with one
@@ -1019,10 +1018,10 @@ public:
     };
 
 protected:
-    bool mInitialized;
-    bool mIsOffscreen;
-    bool mIsGLES2;
-    bool mIsGlobalSharedContext;
+    PRPackedBool mInitialized;
+    PRPackedBool mIsOffscreen;
+    PRPackedBool mIsGLES2;
+    PRPackedBool mIsGlobalSharedContext;
 
     PRInt32 mVendor;
 
@@ -1052,7 +1051,7 @@ protected:
     gfxIntSize mOffscreenSize;
     gfxIntSize mOffscreenActualSize;
     GLuint mOffscreenTexture;
-    bool mFlipped;
+    PRBool mFlipped;
 
     // lazy-initialized things
     GLuint mBlitProgram, mBlitFramebuffer;
@@ -1061,7 +1060,7 @@ protected:
 
     // helper to create/resize an offscreen FBO,
     // for offscreen implementations that use FBOs.
-    bool ResizeOffscreenFBO(const gfxIntSize& aSize);
+    PRBool ResizeOffscreenFBO(const gfxIntSize& aSize);
     void DeleteOffscreenFBO();
     GLuint mOffscreenFBO;
     GLuint mOffscreenDepthRB;
@@ -1076,12 +1075,12 @@ protected:
 
     nsDataHashtable<nsVoidPtrHashKey, void*> mUserData;
 
-    void SetIsGLES2(bool aIsGLES2) {
+    void SetIsGLES2(PRBool aIsGLES2) {
         NS_ASSERTION(!mInitialized, "SetIsGLES2 can only be called before initialization!");
         mIsGLES2 = aIsGLES2;
     }
 
-    bool InitWithPrefix(const char *prefix, bool trygl);
+    PRBool InitWithPrefix(const char *prefix, PRBool trygl);
 
     void InitExtensions();
 
@@ -2239,7 +2238,7 @@ public:
 
         GLContext *origin;
         GLuint name;
-        bool originDeleted;
+        PRBool originDeleted;
 
         // for sorting
         bool operator<(const NamedResource& aOther) const {
@@ -2266,7 +2265,7 @@ public:
 
 };
 
-inline bool
+inline PRBool
 DoesVendorStringMatch(const char* aVendorString, const char *aWantedVendor)
 {
     if (!aVendorString || !aWantedVendor)

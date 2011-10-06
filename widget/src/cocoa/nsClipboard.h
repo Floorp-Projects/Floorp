@@ -55,11 +55,11 @@ public:
 
   // nsIClipboard  
   NS_IMETHOD HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
-                                    PRInt32 aWhichClipboard, bool *_retval);
+                                    PRInt32 aWhichClipboard, PRBool *_retval);
 
   // Helper methods, used also by nsDragService
   static NSDictionary* PasteboardDictFromTransferable(nsITransferable *aTransferable);
-  static bool IsStringType(const nsCString& aMIMEType, NSString** aPasteboardType);
+  static PRBool IsStringType(const nsCString& aMIMEType, NSString** aPasteboardType);
   static NSString* WrapHtmlForSystemPasteboard(NSString* aString);
   static nsresult TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteboard *pboard);
 

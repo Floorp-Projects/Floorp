@@ -97,13 +97,13 @@ public:
   }
 
   // nsINode
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
   // nsIContent overrides
   virtual const nsTextFragment* GetText();
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              bool aCloneText) const;
+                                              PRBool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:

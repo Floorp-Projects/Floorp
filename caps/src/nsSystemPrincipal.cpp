@@ -92,7 +92,7 @@ NS_IMETHODIMP
 nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID,
                                   char** aSubjectName,
                                   char** aGrantedList, char** aDeniedList,
-                                  bool* aIsTrusted)
+                                  PRBool* aIsTrusted)
 {
     // The system principal should never be streamed out
     *aPrefName = nsnull;
@@ -106,27 +106,27 @@ nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID,
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::Equals(nsIPrincipal *other, bool *result)
+nsSystemPrincipal::Equals(nsIPrincipal *other, PRBool *result)
 {
     *result = (other == this);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::EqualsIgnoringDomain(nsIPrincipal *other, bool *result)
+nsSystemPrincipal::EqualsIgnoringDomain(nsIPrincipal *other, PRBool *result)
 {
     return Equals(other, result);
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::Subsumes(nsIPrincipal *other, bool *result)
+nsSystemPrincipal::Subsumes(nsIPrincipal *other, PRBool *result)
 {
     *result = PR_TRUE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::CheckMayLoad(nsIURI* uri, bool aReport)
+nsSystemPrincipal::CheckMayLoad(nsIURI* uri, PRBool aReport)
 {
     return NS_OK;
 }
@@ -158,7 +158,7 @@ nsSystemPrincipal::SetCanEnableCapability(const char *capability,
 NS_IMETHODIMP 
 nsSystemPrincipal::IsCapabilityEnabled(const char *capability, 
                                        void *annotation, 
-                                       bool *result)
+                                       PRBool *result)
 {
     *result = PR_TRUE;
     return NS_OK;
@@ -227,7 +227,7 @@ nsSystemPrincipal::GetCertificate(nsISupports** aCertificate)
 }
 
 NS_IMETHODIMP 
-nsSystemPrincipal::GetHasCertificate(bool* aResult)
+nsSystemPrincipal::GetHasCertificate(PRBool* aResult)
 {
     *aResult = PR_FALSE;
     return NS_OK;

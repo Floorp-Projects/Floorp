@@ -41,7 +41,7 @@
 //-----------------------------------------------------------------------------
 
 void
-nsBaseContentStream::DispatchCallback(bool async)
+nsBaseContentStream::DispatchCallback(PRBool async)
 {
   if (!mCallback)
     return;
@@ -116,7 +116,7 @@ nsBaseContentStream::ReadSegments(nsWriteSegmentFun fun, void *closure,
 }
 
 NS_IMETHODIMP
-nsBaseContentStream::IsNonBlocking(bool *result)
+nsBaseContentStream::IsNonBlocking(PRBool *result)
 {
   *result = mNonBlocking;
   return NS_OK;
@@ -150,7 +150,7 @@ nsBaseContentStream::AsyncWait(nsIInputStreamCallback *callback,
   NS_ASSERTION(requestedCount == 0, "unexpected parameter");
 
 #ifdef DEBUG
-  bool correctThread;
+  PRBool correctThread;
   target->IsOnCurrentThread(&correctThread);
   NS_ASSERTION(correctThread, "event target must be on the current thread");
 #endif

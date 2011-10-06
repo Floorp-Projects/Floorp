@@ -57,7 +57,7 @@ public:
 
 private:
   HMODULE mHMod; // module handle for screensaver DLL
-  bool mInitialized; // fully initialized (function found in screensaver DLL?)
+  PRBool mInitialized; // fully initialized (function found in screensaver DLL?)
 
 protected:
   bool UsePollMode();

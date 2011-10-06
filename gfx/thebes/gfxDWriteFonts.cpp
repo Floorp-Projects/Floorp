@@ -117,7 +117,7 @@ UsingClearType()
 // gfxDWriteFont
 gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
                              const gfxFontStyle *aFontStyle,
-                             bool aNeedsBold,
+                             PRBool aNeedsBold,
                              AntialiasOption anAAOption)
     : gfxFont(aFontEntry, aFontStyle, anAAOption)
     , mCairoFontFace(nsnull)
@@ -186,12 +186,12 @@ gfxDWriteFont::GetMetrics()
     return *mMetrics;
 }
 
-bool
+PRBool
 gfxDWriteFont::GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics)
 {
     gfxFontStyle style(mStyle);
     style.weight = 700;
-    bool needsBold;
+    PRBool needsBold;
     gfxFontEntry *fe = mFontEntry->Family()->FindFontForStyle(style, needsBold);
     if (!fe || fe == mFontEntry) {
         return PR_FALSE;
@@ -411,7 +411,7 @@ struct BitmapScaleTable {
     PRUint8           substitutePpemY;
 };
 
-bool
+PRBool
 gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
 {
     PRUint8 *tableData;
@@ -426,7 +426,7 @@ gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
         return PR_FALSE;
     }
 
-    bool hasStrike = false;
+    PRBool hasStrike = PR_FALSE;
     // not really a loop, but this lets us use 'break' to skip out of the block
     // as soon as we know the answer, and skips it altogether if the table is
     // not present
@@ -520,7 +520,7 @@ gfxDWriteFont::GetSpaceGlyph()
     return glyph;
 }
 
-bool
+PRBool
 gfxDWriteFont::SetupCairoFont(gfxContext *aContext)
 {
     cairo_scaled_font_t *scaledFont = CairoScaledFont();
@@ -533,7 +533,7 @@ gfxDWriteFont::SetupCairoFont(gfxContext *aContext)
     return PR_TRUE;
 }
 
-bool
+PRBool
 gfxDWriteFont::IsValid()
 {
     return mFontFace != NULL;
@@ -693,7 +693,7 @@ gfxDWriteFont::GetFontTable(PRUint32 aTag)
     return nsnull;
 }
 
-bool
+PRBool
 gfxDWriteFont::ProvidesGlyphWidths()
 {
     return !mUseSubpixelPositions ||

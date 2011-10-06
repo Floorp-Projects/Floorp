@@ -80,12 +80,6 @@ public:
   virtual bool SelectAll();
   virtual bool UnselectAll();
 
-  // Widgets
-  virtual bool IsWidget() const;
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
-  virtual nsAccessible* CurrentItem();
-
 protected:
 
   // nsAccessible
@@ -113,7 +107,7 @@ public:
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD SetSelected(bool aSelect);
+  NS_IMETHOD SetSelected(PRBool aSelect);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -127,8 +121,10 @@ public:
   // ActionAccessible
   virtual PRUint8 ActionCount();
 
-  // Widgets
-  virtual nsAccessible* ContainerWidget() const;
+  /**
+   * Return focused option if any.
+   */
+  static already_AddRefed<nsIContent> GetFocusedOption(nsIContent *aListNode);
 
   static void SelectionChangedIfOption(nsIContent *aPossibleOption);
 
@@ -206,20 +202,16 @@ public:
   // ActionAccessible
   virtual PRUint8 ActionCount();
 
-  // Widgets
-  virtual bool IsWidget() const;
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
-  virtual nsAccessible* CurrentItem();
-
 protected:
   // nsAccessible
   virtual void CacheChildren();
 
+  // nsHTMLComboboxAccessible
+
   /**
-   * Return selected option.
+   * Return focused option accessible.
    */
-  nsAccessible* SelectedOption(bool aIgnoreIfCollapsed = false) const;
+  nsAccessible *GetFocusedOptionAccessible();
 
 private:
   nsRefPtr<nsHTMLComboboxListAccessible> mListAccessible;

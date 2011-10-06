@@ -326,7 +326,7 @@ nsStyleUtil::ConstrainFontWeight(PRInt32 aWeight)
   aWeight = ((aWeight < 100) ? 100 : ((aWeight > 900) ? 900 : aWeight));
   PRInt32 base = ((aWeight / 100) * 100);
   PRInt32 step = (aWeight % 100);
-  bool    negativeStep = bool(50 < step);
+  PRBool  negativeStep = PRBool(50 < step);
   PRInt32 maxStep;
   if (negativeStep) {
     step = 100 - step;
@@ -343,11 +343,11 @@ nsStyleUtil::ConstrainFontWeight(PRInt32 aWeight)
 }
 
 // Compare two language strings
-bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
+PRBool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
                                      const nsAString& aSelectorValue,
                                      const nsStringComparator& aComparator)
 {
-  bool result;
+  PRBool result;
   PRUint32 selectorLen = aSelectorValue.Length();
   PRUint32 attributeLen = aAttributeValue.Length();
   if (selectorLen > attributeLen) {
@@ -429,7 +429,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsString& aIdent, nsAString& aReturn)
     ++in;
   }
 
-  bool first = true;
+  PRBool first = PR_TRUE;
   for (; in != end; ++in, first = PR_FALSE)
   {
     if (*in < 0x20 || (first && '0' <= *in && *in <= '9'))
@@ -499,14 +499,14 @@ nsStyleUtil::ColorComponentToFloat(PRUint8 aAlpha)
   return rounded;
 }
 
-/* static */ bool
-nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
-                                bool aWhitespaceIsSignificant)
+/* static */ PRBool
+nsStyleUtil::IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant,
+                                PRBool aWhitespaceIsSignificant)
 {
   NS_ASSERTION(!aWhitespaceIsSignificant || aTextIsSignificant,
                "Nonsensical arguments");
 
-  bool isText = aChild->IsNodeOfType(nsINode::eTEXT);
+  PRBool isText = aChild->IsNodeOfType(nsINode::eTEXT);
 
   if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
       !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {

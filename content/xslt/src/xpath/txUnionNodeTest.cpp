@@ -40,7 +40,7 @@
 #include "txExprResult.h"
 #include "txSingleNodeContext.h"
 
-bool
+PRBool
 txUnionNodeTest::matches(const txXPathNode& aNode,
                          txIMatchContext* aContext)
 {
@@ -61,7 +61,7 @@ txUnionNodeTest::getDefaultPriority()
     return Double::NaN;
 }
 
-bool
+PRBool
 txUnionNodeTest::isSensitiveTo(Expr::ContextSensitivity aContext)
 {
     PRUint32 i, len = mNodeTests.Length();

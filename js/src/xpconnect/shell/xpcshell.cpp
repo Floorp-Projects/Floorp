@@ -116,7 +116,7 @@ public:
     XPCShellDirProvider() { }
     ~XPCShellDirProvider() { }
 
-    bool SetGREDir(const char *dir);
+    PRBool SetGREDir(const char *dir);
     void ClearGREDir() { mGREDir = nsnull; }
 
 private:
@@ -215,7 +215,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
             JSObject *locationObj = NULL;
 
-            bool symlink;
+            PRBool symlink;
             // don't normalize symlinks, because that's kind of confusing
             if (NS_SUCCEEDED(location->IsSymlink(&symlink)) &&
                 !symlink)
@@ -1426,7 +1426,7 @@ FullTrustSecMan::CheckFunctionAccess(JSContext * cx, void * funObj,
 /* [noscript] boolean canExecuteScripts (in JSContextPtr cx, in nsIPrincipal principal); */
 NS_IMETHODIMP
 FullTrustSecMan::CanExecuteScripts(JSContext * cx, nsIPrincipal *principal,
-                                   bool *_retval)
+                                   PRBool *_retval)
 {
     *_retval = PR_TRUE;
     return NS_OK;
@@ -1493,7 +1493,7 @@ FullTrustSecMan::RequestCapability(nsIPrincipal *principal,
 
 /* boolean isCapabilityEnabled (in string capability); */
 NS_IMETHODIMP
-FullTrustSecMan::IsCapabilityEnabled(const char *capability, bool *_retval)
+FullTrustSecMan::IsCapabilityEnabled(const char *capability, PRBool *_retval)
 {
     *_retval = PR_TRUE;
     return NS_OK;
@@ -1540,7 +1540,7 @@ FullTrustSecMan::GetObjectPrincipal(JSContext * cx, JSObject * obj,
 
 /* [noscript] boolean subjectPrincipalIsSystem (); */
 NS_IMETHODIMP
-FullTrustSecMan::SubjectPrincipalIsSystem(bool *_retval)
+FullTrustSecMan::SubjectPrincipalIsSystem(PRBool *_retval)
 {
     *_retval = PR_TRUE;
     return NS_OK;
@@ -1556,7 +1556,7 @@ FullTrustSecMan::CheckSameOrigin(JSContext * aJSContext, nsIURI *aTargetURI)
 /* void checkSameOriginURI (in nsIURI aSourceURI, in nsIURI aTargetURI); */
 NS_IMETHODIMP
 FullTrustSecMan::CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
-                                    bool reportError)
+                                    PRBool reportError)
 {
     return NS_OK;
 }
@@ -1579,7 +1579,7 @@ FullTrustSecMan::GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retva
 
 /* boolean isSystemPrincipal (in nsIPrincipal aPrincipal); */
 NS_IMETHODIMP
-FullTrustSecMan::IsSystemPrincipal(nsIPrincipal *aPrincipal, bool *_retval)
+FullTrustSecMan::IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval)
 {
     *_retval = aPrincipal == mSystemPrincipal;
     return NS_OK;
@@ -1664,12 +1664,12 @@ nsXPCFunctionThisTranslator::~nsXPCFunctionThisTranslator()
 #endif
 }
 
-/* nsISupports TranslateThis (in nsISupports aInitialThis, in nsIInterfaceInfo aInterfaceInfo, in PRUint16 aMethodIndex, out bool aHideFirstParamFromJS, out nsIIDPtr aIIDOfResult); */
+/* nsISupports TranslateThis (in nsISupports aInitialThis, in nsIInterfaceInfo aInterfaceInfo, in PRUint16 aMethodIndex, out PRBool aHideFirstParamFromJS, out nsIIDPtr aIIDOfResult); */
 NS_IMETHODIMP
 nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
                                            nsIInterfaceInfo *aInterfaceInfo,
                                            PRUint16 aMethodIndex,
-                                           bool *aHideFirstParamFromJS,
+                                           PRBool *aHideFirstParamFromJS,
                                            nsIID * *aIIDOfResult,
                                            nsISupports **_retval)
 {
@@ -2057,7 +2057,7 @@ main(int argc, char **argv, char **envp)
     return result;
 }
 
-bool
+PRBool
 XPCShellDirProvider::SetGREDir(const char *dir)
 {
     nsresult rv = XRE_GetFileFromPath(dir, getter_AddRefs(mGREDir));
@@ -2081,7 +2081,7 @@ NS_IMPL_QUERY_INTERFACE2(XPCShellDirProvider,
                          nsIDirectoryServiceProvider2)
 
 NS_IMETHODIMP
-XPCShellDirProvider::GetFile(const char *prop, bool *persistent,
+XPCShellDirProvider::GetFile(const char *prop, PRBool *persistent,
                              nsIFile* *result)
 {
     if (mGREDir && !strcmp(prop, NS_GRE_DIR)) {

@@ -72,12 +72,13 @@
 #include "nsIPresShell.h"
 #include "nsStyleAnimation.h"
 #include "nsCSSProps.h"
-#include "nsDOMFile.h"
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #endif
+
+#include "jsobj.h"
 
 #include "Layers.h"
 #include "nsIIOService.h"
@@ -87,9 +88,9 @@
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 
-static bool IsUniversalXPConnectCapable()
+static PRBool IsUniversalXPConnectCapable()
 {
-  bool hasCap = false;
+  PRBool hasCap = PR_FALSE;
   nsresult rv = nsContentUtils::GetSecurityManager()->
                   IsCapabilityEnabled("UniversalXPConnect", &hasCap);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
@@ -171,7 +172,7 @@ nsDOMWindowUtils::SetImageAnimationMode(PRUint16 aMode)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetDocCharsetIsForced(bool *aIsForced)
+nsDOMWindowUtils::GetDocCharsetIsForced(PRBool *aIsForced)
 {
   *aIsForced = PR_FALSE;
 
@@ -364,7 +365,7 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
                                  PRInt32 aButton,
                                  PRInt32 aClickCount,
                                  PRInt32 aModifiers,
-                                 bool aIgnoreRootScrollFrame)
+                                 PRBool aIgnoreRootScrollFrame)
 {
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
                               aIgnoreRootScrollFrame, PR_FALSE);
@@ -377,7 +378,7 @@ nsDOMWindowUtils::SendMouseEventToWindow(const nsAString& aType,
                                          PRInt32 aButton,
                                          PRInt32 aClickCount,
                                          PRInt32 aModifiers,
-                                         bool aIgnoreRootScrollFrame)
+                                         PRBool aIgnoreRootScrollFrame)
 {
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
                               aIgnoreRootScrollFrame, PR_TRUE);
@@ -390,8 +391,8 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
                                        PRInt32 aButton,
                                        PRInt32 aClickCount,
                                        PRInt32 aModifiers,
-                                       bool aIgnoreRootScrollFrame,
-                                       bool aToWindow)
+                                       PRBool aIgnoreRootScrollFrame,
+                                       PRBool aToWindow)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -404,7 +405,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
     return NS_ERROR_FAILURE;
 
   PRInt32 msg;
-  bool contextMenuKey = false;
+  PRBool contextMenuKey = PR_FALSE;
   if (aType.EqualsLiteral("mousedown"))
     msg = NS_MOUSE_BUTTON_DOWN;
   else if (aType.EqualsLiteral("mouseup"))
@@ -529,8 +530,8 @@ nsDOMWindowUtils::SendKeyEvent(const nsAString& aType,
                                PRInt32 aKeyCode,
                                PRInt32 aCharCode,
                                PRInt32 aModifiers,
-                               bool aPreventDefault,
-                               bool* aDefaultActionTaken)
+                               PRBool aPreventDefault,
+                               PRBool* aDefaultActionTaken)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -820,8 +821,8 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
 
 NS_IMETHODIMP
 nsDOMWindowUtils::ElementFromPoint(float aX, float aY,
-                                   bool aIgnoreRootScrollFrame,
-                                   bool aFlushLayout,
+                                   PRBool aIgnoreRootScrollFrame,
+                                   PRBool aFlushLayout,
                                    nsIDOMElement** aReturn)
 {
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
@@ -835,8 +836,8 @@ NS_IMETHODIMP
 nsDOMWindowUtils::NodesFromRect(float aX, float aY,
                                 float aTopSize, float aRightSize,
                                 float aBottomSize, float aLeftSize,
-                                bool aIgnoreRootScrollFrame,
-                                bool aFlushLayout,
+                                PRBool aIgnoreRootScrollFrame,
+                                PRBool aFlushLayout,
                                 nsIDOMNodeList** aReturn)
 {
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
@@ -927,7 +928,7 @@ nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetIsMozAfterPaintPending(bool *aResult)
+nsDOMWindowUtils::GetIsMozAfterPaintPending(PRBool *aResult)
 {
   *aResult = PR_FALSE;
   nsPresContext* presContext = GetPresContext();
@@ -948,7 +949,7 @@ nsDOMWindowUtils::ClearMozAfterPaintEvents()
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::DisableNonTestMouseEvents(bool aDisable)
+nsDOMWindowUtils::DisableNonTestMouseEvents(PRBool aDisable)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -965,7 +966,7 @@ nsDOMWindowUtils::DisableNonTestMouseEvents(bool aDisable)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SuppressEventHandling(bool aSuppress)
+nsDOMWindowUtils::SuppressEventHandling(PRBool aSuppress)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -984,7 +985,7 @@ nsDOMWindowUtils::SuppressEventHandling(bool aSuppress)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetScrollXY(bool aFlushLayout, PRInt32* aScrollX, PRInt32* aScrollY)
+nsDOMWindowUtils::GetScrollXY(PRBool aFlushLayout, PRInt32* aScrollX, PRInt32* aScrollY)
 {
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
   NS_ENSURE_STATE(doc);
@@ -1009,7 +1010,7 @@ nsDOMWindowUtils::GetScrollXY(bool aFlushLayout, PRInt32* aScrollX, PRInt32* aSc
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetIMEIsOpen(bool *aState)
+nsDOMWindowUtils::GetIMEIsOpen(PRBool *aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
@@ -1105,8 +1106,8 @@ nsDOMWindowUtils::GetScreenPixelsPerCSSPixel(float* aScreenPixels)
 NS_IMETHODIMP
 nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
                                                nsIDOMEvent* aEvent,
-                                               bool aTrusted,
-                                               bool* aRetVal)
+                                               PRBool aTrusted,
+                                               PRBool* aRetVal)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -1351,8 +1352,8 @@ nsDOMWindowUtils::SendQueryContentEvent(PRUint32 aType,
 NS_IMETHODIMP
 nsDOMWindowUtils::SendSelectionSetEvent(PRUint32 aOffset,
                                         PRUint32 aLength,
-                                        bool aReverse,
-                                        bool *aResult)
+                                        PRBool aReverse,
+                                        PRBool *aResult)
 {
   *aResult = PR_FALSE;
 
@@ -1516,7 +1517,7 @@ nsDOMWindowUtils::LeaveModalStateWithWindow(nsIDOMWindow *aWindow)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::IsInModalState(bool *retval)
+nsDOMWindowUtils::IsInModalState(PRBool *retval)
 {
   *retval = mWindow->IsInModalState();
   return NS_OK;
@@ -1573,7 +1574,7 @@ nsDOMWindowUtils::GetParent()
 
   // Outerize if necessary.
   if (parent) {
-    if (JSObjectOp outerize = js::GetObjectClass(parent)->ext.outerObject)
+    if (JSObjectOp outerize = parent->getClass()->ext.outerObject)
       *rval = OBJECT_TO_JSVAL(outerize(cx, parent));
   }
 
@@ -1641,7 +1642,7 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
   return NS_OK;
 }
 
-static bool
+static PRBool
 ComputeAnimationValue(nsCSSProperty aProperty,
                       Element* aElement,
                       const nsAString& aInput,
@@ -1763,7 +1764,7 @@ nsDOMWindowUtils::GetCursorType(PRInt16 *aCursor)
 {
   NS_ENSURE_ARG_POINTER(aCursor);
 
-  bool isSameDoc = false;
+  PRBool isSameDoc = PR_FALSE;
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
 
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
@@ -1840,15 +1841,8 @@ nsDOMWindowUtils::GetOuterWindowWithId(PRUint64 aWindowID,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::WrapDOMFile(nsIFile *aFile,
-                              nsIDOMFile **aDOMFile) {
-  NS_ADDREF(*aDOMFile = new nsDOMFileFile(aFile));
-  return NS_OK;
-}
-
 #ifdef DEBUG
-static bool
+static PRBool
 CheckLeafLayers(Layer* aLayer, const nsIntPoint& aOffset, nsIntRegion* aCoveredRegion)
 {
   gfxMatrix transform;
@@ -1880,7 +1874,7 @@ CheckLeafLayers(Layer* aLayer, const nsIntPoint& aOffset, nsIntRegion* aCoveredR
 #endif
 
 NS_IMETHODIMP
-nsDOMWindowUtils::LeafLayersPartitionWindow(bool* aResult)
+nsDOMWindowUtils::LeafLayersPartitionWindow(PRBool* aResult)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -1914,7 +1908,7 @@ nsDOMWindowUtils::LeafLayersPartitionWindow(bool* aResult)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetMayHaveTouchEventListeners(bool* aResult)
+nsDOMWindowUtils::GetMayHaveTouchEventListeners(PRBool* aResult)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;

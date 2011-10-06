@@ -77,7 +77,7 @@ public:
                                                       const gfxFontStyle *aStyle);
 
 protected:
-    virtual bool SetupCairoFont(gfxContext *aContext);
+    virtual PRBool SetupCairoFont(gfxContext *aContext);
 
 private:
     cairo_font_face_t *mFontFace;
@@ -86,7 +86,7 @@ private:
     gfxFloat mAdjustedSize;
     PRUint32 mSpaceGlyph;
     int mHinting;
-    bool mAntialias;
+    PRBool mAntialias;
 };
 
 
@@ -124,13 +124,13 @@ protected:
                      PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength);
     void CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUTF8,
                            PRUint32 aUTF8Length);
-    static bool FontCallback(const nsAString& aFontName,
+    static PRBool FontCallback(const nsAString& aFontName,
                                const nsACString& aGenericName,
-                               bool aUseFontSet,
+                               PRBool aUseFontSet,
                                void *aClosure);
 
 private:
-    bool mEnableKerning;
+    PRBool mEnableKerning;
 };
 
 #endif /* GFX_OS2_FONTS_H */

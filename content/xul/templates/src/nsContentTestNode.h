@@ -59,7 +59,7 @@ public:
                       nsIAtom* aContentVariable);
 
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
-                                          bool* aCantHandleYet) const;
+                                          PRBool* aCantHandleYet) const;
 
     nsresult
     Constrain(InstantiationSet& aInstantiations);

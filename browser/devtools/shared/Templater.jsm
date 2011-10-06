@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// WARNING: do not 'use_strict' without reading the notes in envEval;
 
 var EXPORTED_SYMBOLS = ["Templater"];
 
@@ -46,31 +47,20 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-const Node = Ci.nsIDOMNode;
-
-// WARNING: do not 'use_strict' without reading the notes in _envEval();
-
 /**
  * A templater that allows one to quickly template DOM nodes.
  */
 function Templater() {
-  this.stack = [];
+  this.scope = [];
 }
 
 /**
  * Recursive function to walk the tree processing the attributes as it goes.
- * @param node the node to process. If you pass a string in instead of a DOM
- * element, it is assumed to be an id for use with document.getElementById()
+ * @param node the node to process.
  * @param data the data to use for node processing.
  */
 Templater.prototype.processNode = function(node, data) {
-  if (typeof node === 'string') {
-    node = document.getElementById(node);
-  }
-  if (data == null) {
-    data = {};
-  }
-  this.stack.push(node.nodeName + (node.id ? '#' + node.id : ''));
+  this.scope.push(node.nodeName + (node.id ? '#' + node.id : ''));
   try {
     // Process attributes
     if (node.attributes && node.attributes.length) {
@@ -78,11 +68,11 @@ Templater.prototype.processNode = function(node, data) {
       // some types of processing from happening, and foreach must come first
       // because it defines new data on which 'if' might depend.
       if (node.hasAttribute('foreach')) {
-        this._processForEach(node, data);
+        this.processForEach(node, data);
         return;
       }
       if (node.hasAttribute('if')) {
-        if (!this._processIf(node, data)) {
+        if (!this.processIf(node, data)) {
           return;
         }
       }
@@ -91,22 +81,22 @@ Templater.prototype.processNode = function(node, data) {
       // It's good to clean up the attributes when we've processed them,
       // but if we do it straight away, we mess up the array index
       var attrs = Array.prototype.slice.call(node.attributes);
-      for (var i = 0; i < attrs.length; i++) {
+      for (let i = 0, attLen = attrs.length; i < attLen; i++) {
         var value = attrs[i].value;
         var name = attrs[i].name;
-        this.stack.push(name);
+        this.scope.push(name);
         try {
           if (name === 'save') {
             // Save attributes are a setter using the node
-            value = this._stripBraces(value);
-            this._property(value, data, node);
+            value = this.stripBraces(value);
+            this.property(value, data, node);
             node.removeAttribute('save');
           } else if (name.substring(0, 2) === 'on') {
             // Event registration relies on property doing a bind
-            value = this._stripBraces(value);
-            var func = this._property(value, data);
+            value = this.stripBraces(value);
+            var func = this.property(value, data);
             if (typeof func !== 'function') {
-              this._handleError('Expected ' + value +
+              this.handleError('Expected ' + value +
                 ' to resolve to a function, but got ' + typeof func);
             }
             node.removeAttribute(name);
@@ -117,9 +107,10 @@ Templater.prototype.processNode = function(node, data) {
             }
           } else {
             // Replace references in all other attributes
+            var self = this;
             var newValue = value.replace(/\$\{[^}]*\}/g, function(path) {
-              return this._envEval(path.slice(2, -1), data, value);
-            }.bind(this));
+              return self.envEval(path.slice(2, -1), data, value);
+            });
             // Remove '_' prefix of attribute names so the DOM won't try
             // to use them before we've processed the template
             if (name.charAt(0) === '_') {
@@ -130,44 +121,43 @@ Templater.prototype.processNode = function(node, data) {
             }
           }
         } finally {
-          this.stack.pop();
+          this.scope.pop();
         }
       }
     }
 
     // Loop through our children calling processNode. First clone them, so the
     // set of nodes that we visit will be unaffected by additions or removals.
-    var childNodes = Array.prototype.slice.call(node.childNodes);
-    for (var j = 0; j < childNodes.length; j++) {
-      this.processNode(childNodes[j], data);
+    var children = Array.prototype.slice.call(node.childNodes);
+    for (let j = 0, numChildren = children.length; j < numChildren; j++) {
+      this.processNode(children[j], data);
     }
 
-    if (node.nodeType === Node.TEXT_NODE) {
-      this._processTextNode(node, data);
+    if (node.nodeType === Ci.nsIDOMNode.TEXT_NODE) {
+      this.processTextNode(node, data);
     }
   } finally {
-    delete data.__element;
-    this.stack.pop();
+    this.scope.pop();
   }
 };
 
 /**
  * Handle <x if="${...}">
  * @param node An element with an 'if' attribute
- * @param data The data to use with _envEval()
+ * @param data The data to use with envEval
  * @returns true if processing should continue, false otherwise
  */
-Templater.prototype._processIf = function(node, data) {
-  this.stack.push('if');
+Templater.prototype.processIf = function(node, data) {
+  this.scope.push('if');
   try {
     var originalValue = node.getAttribute('if');
-    var value = this._stripBraces(originalValue);
+    var value = this.stripBraces(originalValue);
     var recurse = true;
     try {
-      var reply = this._envEval(value, data, originalValue);
+      var reply = this.envEval(value, data, originalValue);
       recurse = !!reply;
     } catch (ex) {
-      this._handleError('Error with \'' + value + '\'', ex);
+      this.handleError('Error with \'' + value + '\'', ex);
       recurse = false;
     }
     if (!recurse) {
@@ -176,22 +166,18 @@ Templater.prototype._processIf = function(node, data) {
     node.removeAttribute('if');
     return recurse;
   } finally {
-    this.stack.pop();
+    this.scope.pop();
   }
 };
 
 /**
  * Handle <x foreach="param in ${array}"> and the special case of
- * <loop foreach="param in ${array}">.
- * This function is responsible for extracting what it has to do from the
- * attributes, and getting the data to work on (including resolving promises
- * in getting the array). It delegates to _processForEachLoop to actually
- * unroll the data.
+ * <loop foreach="param in ${array}">
  * @param node An element with a 'foreach' attribute
- * @param data The data to use with _envEval()
+ * @param data The data to use with envEval
  */
-Templater.prototype._processForEach = function(node, data) {
-  this.stack.push('foreach');
+Templater.prototype.processForEach = function(node, data) {
+  this.scope.push('foreach');
   try {
     var originalValue = node.getAttribute('foreach');
     var value = originalValue;
@@ -199,86 +185,61 @@ Templater.prototype._processForEach = function(node, data) {
     var paramName = 'param';
     if (value.charAt(0) === '$') {
       // No custom loop variable name. Use the default: 'param'
-      value = this._stripBraces(value);
+      value = this.stripBraces(value);
     } else {
       // Extract the loop variable name from 'NAME in ${ARRAY}'
       var nameArr = value.split(' in ');
       paramName = nameArr[0].trim();
-      value = this._stripBraces(nameArr[1].trim());
+      value = this.stripBraces(nameArr[1].trim());
     }
     node.removeAttribute('foreach');
     try {
-      var evaled = this._envEval(value, data, originalValue);
-      this._handleAsync(evaled, node, function(reply, siblingNode) {
-        this._processForEachLoop(reply, node, siblingNode, data, paramName);
-      }.bind(this));
+      var self = this;
+      // Process a single iteration of a loop
+      var processSingle = function(member, node, ref) {
+        var clone = node.cloneNode(true);
+        clone.removeAttribute('foreach');
+        ref.parentNode.insertBefore(clone, ref);
+        data[paramName] = member;
+        self.processNode(clone, data);
+        delete data[paramName];
+      };
+
+      // processSingle is no good for <loop> nodes where we want to work on
+      // the children rather than the node itself
+      var processAll = function(scope, member) {
+        self.scope.push(scope);
+        try {
+          if (node.nodeName === 'loop') {
+            for (let i = 0, numChildren = node.children.length; i < numChildren; i++) {
+              processSingle(member, node.children[i], node);
+            }
+          } else {
+            processSingle(member, node, node);
+          }
+        } finally {
+          self.scope.pop();
+        }
+      };
+
+      let reply = this.envEval(value, data, originalValue);
+      if (Array.isArray(reply)) {
+        reply.forEach(function(data, i) {
+            processAll('' + i, data)
+        }, this);
+      } else {
+        for (let param in reply) {
+          if (reply.hasOwnProperty(param)) {
+            processAll(param, param);
+          }
+        }
+      }
       node.parentNode.removeChild(node);
     } catch (ex) {
-      this._handleError('Error with \'' + value + '\'', ex);
+      this.handleError('Error with \'' + value + '\'', ex);
     }
   } finally {
-    this.stack.pop();
-  }
-};
-
-/**
- * Called by _processForEach to handle looping over the data in a foreach loop.
- * This works with both arrays and objects.
- * Calls _processForEachMember() for each member of 'set'
- * @param set The object containing the data to loop over
- * @param template The node to copy for each set member
- * @param sibling The sibling node to which we add things
- * @param data the data to use for node processing
- * @param paramName foreach loops have a name for the parameter currently being
- * processed. The default is 'param'. e.g. <loop foreach="param in ${x}">...
- */
-Templater.prototype._processForEachLoop = function(set, template, sibling, data, paramName) {
-  if (Array.isArray(set)) {
-    set.forEach(function(member, i) {
-      this._processForEachMember(member, template, sibling, data, paramName, '' + i);
-    }, this);
-  } else {
-    for (var member in set) {
-      if (set.hasOwnProperty(member)) {
-        this._processForEachMember(member, template, sibling, data, paramName, member);
-      }
-    }
-  }
-};
-
-/**
- * Called by _processForEachLoop() to resolve any promises in the array (the
- * array itself can also be a promise, but that is resolved by
- * _processForEach()). Handle <LOOP> elements (which are taken out of the DOM),
- * clone the template, and pass the processing on to processNode().
- * @param member The data item to use in templating
- * @param template The node to copy for each set member
- * @param siblingNode The parent node to which we add things
- * @param data the data to use for node processing
- * @param paramName The name given to 'member' by the foreach attribute
- * @param frame A name to push on the stack for debugging
- */
-Templater.prototype._processForEachMember = function(member, template, siblingNode, data, paramName, frame) {
-  this.stack.push(frame);
-  try {
-    this._handleAsync(member, siblingNode, function(reply, node) {
-      data[paramName] = reply;
-      if (node.nodeName.toLowerCase() === 'loop') {
-        for (var i = 0; i < node.childNodes.length; i++) {
-          var clone = node.childNodes[i].cloneNode(true);
-          node.parentNode.insertBefore(clone, node);
-          this.processNode(clone, data);
-        }
-      } else {
-        var clone = template.cloneNode(true);
-        clone.removeAttribute('foreach');
-        node.parentNode.insertBefore(clone, node);
-        this.processNode(clone, data);
-      }
-      delete data[paramName];
-    }.bind(this));
-  } finally {
-    this.stack.pop();
+    this.scope.pop();
   }
 };
 
@@ -287,9 +248,9 @@ Templater.prototype._processForEachMember = function(member, template, siblingNo
  * sections parsed out. We replace the node by altering node.parentNode but
  * we could probably use a DOM Text API to achieve the same thing.
  * @param node The Text node to work on
- * @param data The data to use in calls to _envEval()
+ * @param data The data to use in calls to envEval
  */
-Templater.prototype._processTextNode = function(node, data) {
+Templater.prototype.processTextNode = function(node, data) {
   // Replace references in other attributes
   var value = node.data;
   // We can't use the string.replace() with function trick (see generic
@@ -309,57 +270,22 @@ Templater.prototype._processTextNode = function(node, data) {
         return;
       }
       if (part.charAt(0) === '$') {
-        part = this._envEval(part.slice(1), data, node.data);
+        part = this.envEval(part.slice(1), data, node.data);
       }
-      this._handleAsync(part, node, function(reply, siblingNode) {
-        reply = this._toNode(reply, siblingNode.ownerDocument);
-        siblingNode.parentNode.insertBefore(reply, siblingNode);
-      }.bind(this));
+      // It looks like this was done a few lines above but see envEval
+      if (part === null) {
+        part = "null";
+      }
+      if (part === undefined) {
+        part = "undefined";
+      }
+      // if (isDOMElement(part)) { ... }
+      if (typeof part.cloneNode !== 'function') {
+        part = node.ownerDocument.createTextNode(part.toString());
+      }
+      node.parentNode.insertBefore(part, node);
     }, this);
     node.parentNode.removeChild(node);
-  }
-};
-
-/**
- * Helper to convert a 'thing' to a DOM Node.
- * This is (obviously) a no-op for DOM Elements (which are detected using
- * 'typeof thing.cloneNode !== "function"' (is there a better way that will
- * work in all environments, including a .jsm?)
- * Non DOM elements are converted to a string and wrapped in a TextNode.
- */
-Templater.prototype._toNode = function(thing, document) {
-  if (thing == null) {
-    thing = '' + thing;
-  }
-  // if (isDOMElement(reply)) { ... }
-  if (typeof thing.cloneNode !== 'function') {
-    thing = document.createTextNode(thing.toString());
-  }
-  return thing;
-};
-
-/**
- * A function to handle the fact that some nodes can be promises, so we check
- * and resolve if needed using a marker node to keep our place before calling
- * an inserter function.
- * @param thing The object which could be real data or a promise of real data
- * we use it directly if it's not a promise, or resolve it if it is.
- * @param siblingNode The element before which we insert new elements.
- * @param inserter The function to to the insertion. If thing is not a promise
- * then _handleAsync() is just 'inserter(thing, siblingNode)'
- */
-Templater.prototype._handleAsync = function(thing, siblingNode, inserter) {
-  if (typeof thing.then === 'function') {
-    // Placeholder element to be replaced once we have the real data
-    var tempNode = siblingNode.ownerDocument.createElement('span');
-    siblingNode.parentNode.insertBefore(tempNode, siblingNode);
-    thing.then(function(delayed) {
-      inserter(delayed, tempNode);
-      tempNode.parentNode.removeChild(tempNode);
-    }.bind(this));
-  }
-  else {
-    inserter(thing, siblingNode);
   }
 };
 
@@ -368,9 +294,9 @@ Templater.prototype._handleAsync = function(thing, siblingNode, inserter) {
  * @param str the string to check.
  * @return The string stripped of ${ and }, or untouched if it does not match
  */
-Templater.prototype._stripBraces = function(str) {
+Templater.prototype.stripBraces = function(str) {
   if (!str.match(/\$\{.*\}/g)) {
-    this._handleError('Expected ' + str + ' to match ${...}');
+    this.handleError('Expected ' + str + ' to match ${...}');
     return str;
   }
   return str.slice(2, -1);
@@ -380,9 +306,9 @@ Templater.prototype._stripBraces = function(str) {
  * Combined getter and setter that works with a path through some data set.
  * For example:
  * <ul>
- * <li>_property('a.b', { a: { b: 99 }}); // returns 99
- * <li>_property('a', { a: { b: 99 }}); // returns { b: 99 }
- * <li>_property('a', { a: { b: 99 }}, 42); // returns 99 and alters the
+ * <li>property('a.b', { a: { b: 99 }}); // returns 99
+ * <li>property('a', { a: { b: 99 }}); // returns { b: 99 }
+ * <li>property('a', { a: { b: 99 }}, 42); // returns 99 and alters the
  * input data to be { a: { b: 42 }}
  * </ul>
  * @param path An array of strings indicating the path through the data, or
@@ -393,8 +319,8 @@ Templater.prototype._stripBraces = function(str) {
  * @return The value pointed to by <tt>path</tt> before any
  * <tt>newValue</tt> is applied.
  */
-Templater.prototype._property = function(path, data, newValue) {
-  this.stack.push(path);
+Templater.prototype.property = function(path, data, newValue) {
+  this.scope.push(path);
   try {
     if (typeof path === 'string') {
       path = path.split('.');
@@ -410,12 +336,12 @@ Templater.prototype._property = function(path, data, newValue) {
       return value;
     }
     if (!value) {
-      this._handleError('Can\'t find path=' + path);
+      this.handleError('Can\'t find path=' + path);
       return null;
     }
-    return this._property(path.slice(1), value, newValue);
+    return this.property(path.slice(1), value, newValue);
   } finally {
-    this.stack.pop();
+    this.scope.pop();
   }
 };
 
@@ -427,22 +353,21 @@ Templater.prototype._property = function(path, data, newValue) {
  * according to the X keys in the env object, and then call that function using
  * the values in the env object. This is likely to be slow, but workable.
  * @param script The string to be evaluated.
- * @param data The environment in which to eval the script.
- * @param frame Optional debugging string in case of failure.
+ * @param env The environment in which to eval the script.
+ * @param context Optional debugging string in case of failure
  * @return The return value of the script, or the error message if the script
  * execution failed.
  */
-Templater.prototype._envEval = function(script, data, frame) {
-  with (data) {
+Templater.prototype.envEval = function(script, env, context) {
+  with (env) {
     try {
-      this.stack.push(frame);
+      this.scope.push(context);
       return eval(script);
     } catch (ex) {
-      this._handleError('Template error evaluating \'' + script + '\'' +
-          ' environment=' + Object.keys(data).join(', '), ex);
+      this.handleError('Template error evaluating \'' + script + '\'', ex);
       return script;
     } finally {
-      this.stack.pop();
+      this.scope.pop();
     }
   }
 };
@@ -453,11 +378,11 @@ Templater.prototype._envEval = function(script, data, frame) {
  * @param message the error message to report.
  * @param ex optional associated exception.
  */
-Templater.prototype._handleError = function(message, ex) {
-  this._logError(message);
-  this._logError('In: ' + this.stack.join(' > '));
+Templater.prototype.handleError = function(message, ex) {
+  this.logError(message);
+  this.logError('In: ' + this.scope.join(' > '));
   if (ex) {
-    this._logError(ex);
+    this.logError(ex);
   }
 };
 
@@ -467,7 +392,7 @@ Templater.prototype._handleError = function(message, ex) {
  * environments.
  * @param message the error message to report.
  */
-Templater.prototype._logError = function(message) {
+Templater.prototype.logError = function(message) {
   Services.console.logStringMessage(message);
 };
 

@@ -85,7 +85,7 @@ private:
 
   // Called from SSL thread only
   static PRInt32 checkHandshake(PRInt32 bytesTransfered, 
-                                bool wasReading,
+                                PRBool wasReading,
                                 PRFileDesc* fd, 
                                 nsNSSSocketInfo *socketInfo);
 
@@ -152,7 +152,7 @@ public:
 
   static nsresult requestActivateSSL(nsNSSSocketInfo *si);
   
-  static bool stoppedOrStopping();
+  static PRBool stoppedOrStopping();
 };
 
 #endif //_NSSSLTHREAD_H_

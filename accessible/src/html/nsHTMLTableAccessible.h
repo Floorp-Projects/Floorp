@@ -186,7 +186,7 @@ protected:
    */
   nsresult RemoveRowsOrColumnsFromSelection(PRInt32 aIndex,
                                             PRUint32 aTarget,
-                                            bool aIsOuter);
+                                            PRBool aIsOuter);
 
   /**
    * Return true if table has an element with the given tag name.
@@ -195,7 +195,7 @@ protected:
    * @param  aAllowEmpty  [in, optional] points if found element can be empty
    *                       or contain whitespace text only.
    */
-  bool HasDescendant(const nsAString& aTagName, bool aAllowEmpty = true);
+  PRBool HasDescendant(const nsAString& aTagName, PRBool aAllowEmpty = PR_TRUE);
 
 #ifdef SHOW_LAYOUT_HEURISTIC
   nsString mLayoutHeuristic;

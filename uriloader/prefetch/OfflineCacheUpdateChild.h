@@ -96,9 +96,9 @@ private:
         STATE_FINISHED
     } mState;
 
-    bool mIsUpgrade;
-    bool mSucceeded;
-    bool mIPCActivated;
+    PRPackedBool mIsUpgrade;
+    PRPackedBool mSucceeded;
+    PRPackedBool mIPCActivated;
 
     nsCString mUpdateDomain;
     nsCOMPtr<nsIURI> mManifestURI;

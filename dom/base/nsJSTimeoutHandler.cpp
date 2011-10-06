@@ -89,7 +89,7 @@ public:
   // added.
   virtual void SetLateness(PRIntervalTime aHowLate);
 
-  nsresult Init(nsGlobalWindow *aWindow, bool *aIsInterval,
+  nsresult Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
                 PRInt32 *aInterval);
 
   void ReleaseJSObjects();
@@ -128,8 +128,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
       foo.AppendLiteral("]");
     }
     else if (tmp->mFunObj) {
-      JSFunction* fun = JS_GetObjectFunction(tmp->mFunObj);
-      if (JS_GetFunctionId(fun)) {
+      JSFunction* fun = (JSFunction*)tmp->mFunObj->getPrivate();
+      if (fun->atom) {
         JSFlatString *funId = JS_ASSERT_STRING_IS_FLAT(JS_GetFunctionId(fun));
         size_t size = 1 + JS_PutEscapedFlatString(NULL, 0, funId, 0);
         char *name = new char[size];
@@ -198,7 +198,7 @@ nsJSScriptTimeoutHandler::ReleaseJSObjects()
 }
 
 nsresult
-nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
+nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
                                PRInt32 *aInterval)
 {
   mContext = aWindow->GetContextInternal();
@@ -292,7 +292,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (csp) {
-        bool allowsEval;
+        PRBool allowsEval;
         // this call will send violation reports as warranted (and return true if
         // reportOnly is set).
         rv = csp->GetAllowsEval(&allowsEval);
@@ -375,7 +375,7 @@ nsJSScriptTimeoutHandler::GetHandlerText()
 }
 
 nsresult NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
-                                   bool *aIsInterval,
+                                   PRBool *aIsInterval,
                                    PRInt32 *aInterval,
                                    nsIScriptTimeoutHandler **aRet)
 {

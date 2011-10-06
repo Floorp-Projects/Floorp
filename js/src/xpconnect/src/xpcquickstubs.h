@@ -568,7 +568,7 @@ castNativeFromWrapper(JSContext *cx,
     XPCWrappedNativeTearOff *tearoff;
     JSObject *cur;
 
-    if(!callee && IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
+    if(!callee && IS_WRAPPER_CLASS(obj->getClass()))
     {
         cur = obj;
         wrapper = IS_WN_WRAPPER_OBJECT(cur) ?
@@ -601,10 +601,10 @@ castNativeFromWrapper(JSContext *cx,
     if(!native)
         return nsnull;
 
-    NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(cur)), "Not a wrapper?");
+    NS_ASSERTION(IS_WRAPPER_CLASS(cur->getClass()), "Not a wrapper?");
 
     XPCNativeScriptableSharedJSClass *clasp =
-      (XPCNativeScriptableSharedJSClass*)js::GetObjectClass(cur);
+      (XPCNativeScriptableSharedJSClass*)cur->getClass();
     if(!(clasp->interfacesBitmap & (1 << interfaceBit)))
         return nsnull;
 
@@ -782,19 +782,19 @@ xpc_qsValueToUint64(JSContext *cx,
 void
 xpc_qsAssertContextOK(JSContext *cx);
 
-inline bool
+inline PRBool
 xpc_qsSameResult(nsISupports *result1, nsISupports *result2)
 {
     return SameCOMIdentity(result1, result2);
 }
 
-inline bool
+inline PRBool
 xpc_qsSameResult(const nsString &result1, const nsString &result2)
 {
     return result1.Equals(result2);
 }
 
-inline bool
+inline PRBool
 xpc_qsSameResult(PRInt32 result1, PRInt32 result2)
 {
     return result1 == result2;

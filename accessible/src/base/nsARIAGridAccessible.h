@@ -62,17 +62,17 @@ protected:
   /**
    * Return true if the given row index is valid.
    */
-  bool IsValidRow(PRInt32 aRow);
+  PRBool IsValidRow(PRInt32 aRow);
 
   /**
    * Retrn true if the given column index is valid.
    */
-  bool IsValidColumn(PRInt32 aColumn);
+  PRBool IsValidColumn(PRInt32 aColumn);
 
   /**
    * Retrun true if given row and column indexes are valid.
    */
-  bool IsValidRowNColumn(PRInt32 aRow, PRInt32 aColumn);
+  PRBool IsValidRowNColumn(PRInt32 aRow, PRInt32 aColumn);
 
   /**
    * Return row accessible at the given row index.
@@ -92,8 +92,8 @@ protected:
    * @param  aNotify      [in, optional] specifies if DOM should be notified
    *                       about attribute change (used internally).
    */
-  nsresult SetARIASelected(nsAccessible *aAccessible, bool aIsSelected,
-                           bool aNotify = true);
+  nsresult SetARIASelected(nsAccessible *aAccessible, PRBool aIsSelected,
+                           PRBool aNotify = PR_TRUE);
 
   /**
    * Helper method for GetSelectedColumnCount and GetSelectedColumns.

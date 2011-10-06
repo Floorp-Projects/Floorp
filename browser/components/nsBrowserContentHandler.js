@@ -648,13 +648,36 @@ nsBrowserContentHandler.prototype = {
   },
 
   get startPage() {
-    var uri = Services.prefs.getComplexValue("browser.startup.homepage",
-                                             nsIPrefLocalizedString).data;
+    var prefb = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(nsIPrefBranch);
+
+    var uri = prefb.getComplexValue("browser.startup.homepage",
+                                    nsIPrefLocalizedString).data;
+
     if (!uri) {
-      Services.prefs.clearUserPref("browser.startup.homepage");
-      uri = Services.prefs.getComplexValue("browser.startup.homepage",
-                                           nsIPrefLocalizedString).data;
+      prefb.clearUserPref("browser.startup.homepage");
+      uri = prefb.getComplexValue("browser.startup.homepage",
+                                  nsIPrefLocalizedString).data;
     }
+                                
+    var count;
+    try {
+      count = prefb.getIntPref("browser.startup.homepage.count");
+    }
+    catch (e) {
+      return uri;
+    }
+
+    for (var i = 1; i < count; ++i) {
+      try {
+        var page = prefb.getComplexValue("browser.startup.homepage." + i,
+                                         nsIPrefLocalizedString).data;
+        uri += "\n" + page;
+      }
+      catch (e) {
+      }
+    }
+
     return uri;
   },
 

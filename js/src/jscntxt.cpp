@@ -57,6 +57,7 @@
 #include "jsstdint.h"
 
 #include "jstypes.h"
+#include "jsarena.h"
 #include "jsutil.h"
 #include "jsclist.h"
 #include "jsprf.h"
@@ -111,7 +112,6 @@ ThreadData::ThreadData()
     maxCodeCacheBytes(DEFAULT_JIT_CACHE_SIZE),
 #endif
     waiveGCQuota(false),
-    tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     dtoaState(NULL),
     nativeStackBase(GetNativeStackBase()),
     pendingProxyOperation(NULL),
@@ -316,20 +316,39 @@ js_PurgeThreads(JSContext *cx)
 #endif
 }
 
+static const size_t ARENA_HEADER_SIZE_HACK = 40;
+static const size_t TEMP_POOL_CHUNK_SIZE = 4096 - ARENA_HEADER_SIZE_HACK;
+
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
+    JSContext *cx;
+    JSBool first;
+    JSContextCallback cxCallback;
+
     /*
      * We need to initialize the new context fully before adding it to the
      * runtime list. After that it can be accessed from another thread via
      * js_ContextIterator.
      */
-    JSContext *cx = OffTheBooks::new_<JSContext>(rt);
-    if (!cx)
+    void *mem = OffTheBooks::calloc_(sizeof *cx);
+    if (!mem)
         return NULL;
 
+    cx = new (mem) JSContext(rt);
+    cx->debugHooks = &rt->globalDebugHooks;
+#if JS_STACK_GROWTH_DIRECTION > 0
+    cx->stackLimit = (jsuword) -1;
+#endif
+    cx->iterValue.setMagic(JS_NO_ITER_VALUE);
+    JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
+
+    JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble));
+    JS_InitArenaPool(&cx->regExpPool, "regExp", TEMP_POOL_CHUNK_SIZE, sizeof(int));
+
+    JS_ASSERT(cx->resolveFlags == 0);
 
     if (!cx->busyArrays.init()) {
         Foreground::delete_(cx);
@@ -347,16 +366,15 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * Here the GC lock is still held after js_InitContextThreadAndLockGC took it and
      * the GC is not running on another thread.
      */
-    bool first;
     for (;;) {
         if (rt->state == JSRTS_UP) {
             JS_ASSERT(!JS_CLIST_IS_EMPTY(&rt->contextList));
-            first = false;
+            first = JS_FALSE;
             break;
         }
         if (rt->state == JSRTS_DOWN) {
             JS_ASSERT(JS_CLIST_IS_EMPTY(&rt->contextList));
-            first = true;
+            first = JS_TRUE;
             rt->state = JSRTS_LAUNCHING;
             break;
         }
@@ -405,7 +423,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
     }
 
-    JSContextCallback cxCallback = rt->cxCallback;
+    cxCallback = rt->cxCallback;
     if (cxCallback && !cxCallback(cx, JSCONTEXT_NEW)) {
         js_DestroyContext(cx, JSDCM_NEW_FAILED);
         return NULL;
@@ -1334,68 +1352,15 @@ DSTOffsetCache::DSTOffsetCache()
 }
 
 JSContext::JSContext(JSRuntime *rt)
-  : defaultVersion(JSVERSION_DEFAULT),
-    hasVersionOverride(false),
-    throwing(false),
-    exception(UndefinedValue()),
-    runOptions(0),
-    localeCallbacks(NULL),
-    resolvingList(NULL),
-    generatingError(false),
-#if JS_STACK_GROWTH_DIRECTION > 0
-    stackLimit((jsuword)-1),
-#else
-    stackLimit(0),
-#endif
+  : hasVersionOverride(false),
     runtime(rt),
     compartment(NULL),
-#ifdef JS_THREADSAFE
-    thread_(NULL),
-#endif
-    stack(thisDuringConstruction()),  /* depends on cx->thread_ */
-    parseMapPool_(NULL),
-    globalObject(NULL),
-    argumentFormatMap(NULL),
-    lastMessage(NULL),
-    errorReporter(NULL),
-    operationCallback(NULL),
-    data(NULL),
-    data2(NULL),
-#ifdef JS_THREADSAFE
-    outstandingRequests(0),
-#endif
-    autoGCRooters(NULL),
-    debugHooks(&rt->globalDebugHooks),
-    securityCallbacks(NULL),
-    resolveFlags(0),
-    rngSeed(0),
-    iterValue(MagicValue(JS_NO_ITER_VALUE)),
-#ifdef JS_TRACER
-    traceJitEnabled(false),
-#endif
-#ifdef JS_METHODJIT
-    methodJitEnabled(false),
-    profilingEnabled(false),
-#endif
-    inferenceEnabled(false),
-#ifdef MOZ_TRACE_JSCALLS
-    functionCallback(NULL),
-#endif
-    enumerators(NULL),
-#ifdef JS_THREADSAFE
-    gcBackgroundFree(NULL),
-#endif
-    activeCompilations(0)
+    stack(thisDuringConstruction()),
+    busyArrays()
 #ifdef DEBUG
     , stackIterAssertionEnabled(true)
 #endif
-{
-    PodZero(&sharpObjectMap);
-    PodZero(&link);
-#ifdef JS_THREADSAFE
-    PodZero(&threadLinks);
-#endif
-}
+{}
 
 JSContext::~JSContext()
 {
@@ -1407,6 +1372,9 @@ JSContext::~JSContext()
     VOUCH_DOES_NOT_REQUIRE_STACK();
     if (parseMapPool_)
         Foreground::delete_<ParseMapPool>(parseMapPool_);
+
+    JS_FinishArenaPool(&regExpPool);
+    JS_FinishArenaPool(&tempPool);
 
     if (lastMessage)
         Foreground::free_(lastMessage);
@@ -1534,9 +1502,25 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
     return NULL;
 }
 
+/*
+ * Release pool's arenas if the stackPool has existed for longer than the
+ * limit specified by gcEmptyArenaPoolLifespan.
+ */
+static void
+FreeOldArenas(JSRuntime *rt, JSArenaPool *pool)
+{
+    JSArena *a = pool->current;
+    if (a == pool->first.next && a->avail == a->base + sizeof(int64)) {
+        int64 age = JS_Now() - *(int64 *) a->base;
+        if (age > int64(rt->gcEmptyArenaPoolLifespan) * 1000)
+            JS_FreeArenaPool(pool);
+    }
+}
+
 void
 JSContext::purge()
 {
+    FreeOldArenas(runtime, &regExpPool);
     if (!activeCompilations) {
         Foreground::delete_<ParseMapPool>(parseMapPool_);
         parseMapPool_ = NULL;
@@ -1666,15 +1650,6 @@ CanLeaveTrace(JSContext *cx)
 #else
     return false;
 #endif
-}
-
-AutoEnumStateRooter::~AutoEnumStateRooter()
-{
-    if (!stateValue.isNull()) {
-        DebugOnly<JSBool> ok =
-            obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
-        JS_ASSERT(ok);
-    }
 }
 
 } /* namespace js */

@@ -115,7 +115,7 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
     
-    void CommonCreate(nsIWidget *aParent, bool aListenForResizes);
+    void CommonCreate(nsIWidget *aParent, PRBool aListenForResizes);
     
     // event handling code
     void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent);
@@ -130,7 +130,7 @@ public:
     void OnDestroy(void);
 
     // called to check and see if a widget's dimensions are sane
-    bool AreBoundsSane(void);
+    PRBool AreBoundsSane(void);
 
     // nsIWidget
     NS_IMETHOD         Create(nsIWidget        *aParent,
@@ -145,32 +145,32 @@ public:
     virtual nsIWidget *GetParent();
     virtual float      GetDPI();
     virtual nsresult   SetParent(nsIWidget* aNewParent);
-    NS_IMETHOD         SetModal(bool aModal);
-    NS_IMETHOD         IsVisible(bool & aState);
-    NS_IMETHOD         ConstrainPosition(bool aAllowSlop,
+    NS_IMETHOD         SetModal(PRBool aModal);
+    NS_IMETHOD         IsVisible(PRBool & aState);
+    NS_IMETHOD         ConstrainPosition(PRBool aAllowSlop,
                                          PRInt32 *aX,
                                          PRInt32 *aY);
     NS_IMETHOD         Move(PRInt32 aX,
                             PRInt32 aY);
-    NS_IMETHOD         Show             (bool aState);
+    NS_IMETHOD         Show             (PRBool aState);
     NS_IMETHOD         Resize           (PRInt32 aWidth,
                                          PRInt32 aHeight,
-                                         bool    aRepaint);
+                                         PRBool  aRepaint);
     NS_IMETHOD         Resize           (PRInt32 aX,
                                          PRInt32 aY,
                                          PRInt32 aWidth,
                                          PRInt32 aHeight,
-                                         bool     aRepaint);
-    NS_IMETHOD         IsEnabled        (bool *aState);
+                                         PRBool   aRepaint);
+    NS_IMETHOD         IsEnabled        (PRBool *aState);
 
 
     NS_IMETHOD         PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
                                    nsIWidget                  *aWidget,
-                                   bool                        aActivate);
+                                   PRBool                      aActivate);
     NS_IMETHOD         SetZIndex(PRInt32 aZIndex);
     NS_IMETHOD         SetSizeMode(PRInt32 aMode);
-    NS_IMETHOD         Enable(bool aState);
-    NS_IMETHOD         SetFocus(bool aRaise = false);
+    NS_IMETHOD         Enable(PRBool aState);
+    NS_IMETHOD         SetFocus(PRBool aRaise = PR_FALSE);
     NS_IMETHOD         GetScreenBounds(nsIntRect &aRect);
     NS_IMETHOD         SetForegroundColor(const nscolor &aColor);
     NS_IMETHOD         SetBackgroundColor(const nscolor &aColor);
@@ -178,25 +178,25 @@ public:
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  PRUint32 aHotspotX, PRUint32 aHotspotY);
     NS_IMETHOD         Invalidate(const nsIntRect &aRect,
-                                  bool             aIsSynchronous);
+                                  PRBool           aIsSynchronous);
     NS_IMETHOD         Update();
     virtual void*      GetNativeData(PRUint32 aDataType);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
     virtual nsIntPoint WidgetToScreenOffset();
-    NS_IMETHOD         EnableDragDrop(bool aEnable);
-    NS_IMETHOD         CaptureMouse(bool aCapture);
+    NS_IMETHOD         EnableDragDrop(PRBool aEnable);
+    NS_IMETHOD         CaptureMouse(PRBool aCapture);
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
                                            nsIMenuRollup *aMenuRollup,
-                                           bool aDoCapture,
-                                           bool aConsumeRollupEvent);
+                                           PRBool aDoCapture,
+                                           PRBool aConsumeRollupEvent);
     NS_IMETHOD         GetAttention(PRInt32 aCycleCount);
 
-    virtual bool       HasPendingInputEvent();
+    virtual PRBool     HasPendingInputEvent();
 
-    NS_IMETHOD         MakeFullScreen(bool aFullScreen);
-    NS_IMETHOD         HideWindowChrome(bool aShouldHide);
+    NS_IMETHOD         MakeFullScreen(PRBool aFullScreen);
+    NS_IMETHOD         HideWindowChrome(PRBool aShouldHide);
 
     // utility method, -1 if no change should be made, otherwise returns a
     // value that can be passed to gdk_window_set_decorations
@@ -268,16 +268,16 @@ public:
 
     virtual void       NativeResize(PRInt32 aWidth,
                                     PRInt32 aHeight,
-                                    bool    aRepaint);
+                                    PRBool  aRepaint);
 
     virtual void       NativeResize(PRInt32 aX,
                                     PRInt32 aY,
                                     PRInt32 aWidth,
                                     PRInt32 aHeight,
-                                    bool    aRepaint);
+                                    PRBool  aRepaint);
 
-    virtual void       NativeShow  (bool    aAction);
-    void               SetHasMappedToplevel(bool aState);
+    virtual void       NativeShow  (PRBool  aAction);
+    void               SetHasMappedToplevel(PRBool aState);
     nsIntSize          GetSafeWindowSize(nsIntSize aSize);
 
     void               EnsureGrabs  (void);
@@ -315,19 +315,19 @@ public:
 
     MozContainer*      GetMozContainer() { return mContainer; }
     GdkWindow*         GetGdkWindow() { return mGdkWindow; }
-    bool               IsDestroyed() { return mIsDestroyed; }
+    PRBool             IsDestroyed() { return mIsDestroyed; }
 
     // If this dispatched the keydown event actually, this returns TRUE,
     // otherwise, FALSE.
-    bool               DispatchKeyDownEvent(GdkEventKey *aEvent,
-                                            bool *aIsCancelled);
+    PRBool             DispatchKeyDownEvent(GdkEventKey *aEvent,
+                                            PRBool *aIsCancelled);
 
     NS_IMETHOD ResetInputState();
     NS_IMETHOD SetInputMode(const IMEContext& aContext);
     NS_IMETHOD GetInputMode(IMEContext& aContext);
     NS_IMETHOD CancelIMEComposition();
-    NS_IMETHOD OnIMEFocusChange(bool aFocus);
-    NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, bool* aLEDState);
+    NS_IMETHOD OnIMEFocusChange(PRBool aFocus);
+    NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
 
    void                ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
    void                ApplyTransparencyBitmap();
@@ -348,7 +348,7 @@ public:
     NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent);
 
 #ifdef ACCESSIBILITY
-    static bool        sAccessibilityEnabled;
+    static PRBool      sAccessibilityEnabled;
 #endif
 protected:
     // Helper for SetParent and ReparentNativeWidget.
@@ -358,41 +358,41 @@ protected:
                                       GtkWidget* aOldContainer);
     nsCOMPtr<nsIWidget> mParent;
     // Is this a toplevel window?
-    bool                mIsTopLevel;
+    PRPackedBool        mIsTopLevel;
     // Has this widget been destroyed yet?
-    bool                mIsDestroyed;
+    PRPackedBool        mIsDestroyed;
 
     // This is a flag that tracks if we need to resize a widget or
     // window when we show it.
-    bool                mNeedsResize;
+    PRPackedBool        mNeedsResize;
     // This is a flag that tracks if we need to move a widget or
     // window when we show it.
-    bool                mNeedsMove;
+    PRPackedBool        mNeedsMove;
     // Should we send resize events on all resizes?
-    bool                mListenForResizes;
+    PRPackedBool        mListenForResizes;
     // This flag tracks if we're hidden or shown.
-    bool                mIsShown;
-    bool                mNeedsShow;
+    PRPackedBool        mIsShown;
+    PRPackedBool        mNeedsShow;
     // is this widget enabled?
-    bool                mEnabled;
+    PRPackedBool        mEnabled;
     // has the native window for this been created yet?
-    bool                mCreated;
+    PRPackedBool        mCreated;
 
 private:
     void               DestroyChildWindows();
     void               GetToplevelWidget(GtkWidget **aWidget);
     GtkWidget         *GetMozContainerWidget();
     nsWindow          *GetContainerWindow();
-    void               SetUrgencyHint(GtkWidget *top_window, bool state);
+    void               SetUrgencyHint(GtkWidget *top_window, PRBool state);
     void              *SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);
     void               SetDefaultIcon(void);
     void               InitButtonEvent(nsMouseEvent &aEvent, GdkEventButton *aGdkEvent);
-    bool               DispatchCommandEvent(nsIAtom* aCommand);
-    bool               DispatchContentCommandEvent(PRInt32 aMsg);
+    PRBool             DispatchCommandEvent(nsIAtom* aCommand);
+    PRBool             DispatchContentCommandEvent(PRInt32 aMsg);
     void               SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
-                                           bool aIntersectWithExisting);
-    bool               GetDragInfo(nsMouseEvent* aMouseEvent,
+                                           PRBool aIntersectWithExisting);
+    PRBool             GetDragInfo(nsMouseEvent* aMouseEvent,
                                    GdkWindow** aWindow, gint* aButton,
                                    gint* aRootX, gint* aRootY);
     void               ClearCachedResources();
@@ -483,7 +483,7 @@ private:
     static GdkCursor   *gsGtkCursorCache[eCursorCount];
 
     // Transparency
-    bool         mIsTransparent;
+    PRBool       mIsTransparent;
     // This bitmap tracks which pixels are transparent. We don't support
     // full translucency at this time; each pixel is either fully opaque
     // or fully transparent.
@@ -503,9 +503,9 @@ private:
     // leaving fullscreen
     nsSizeMode         mLastSizeMode;
 
-    static bool        sIsDraggingOutOf;
+    static PRBool      sIsDraggingOutOf;
     // drag in progress
-    static bool DragInProgress(void);
+    static PRBool DragInProgress(void);
 
     void         FireDragLeaveTimer       (void);
     static void  DragLeaveTimerCallback  (nsITimer *aTimer, void *aClosure);

@@ -77,7 +77,7 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
              PRUint32 argc,
              jsval* argv,
              jsval* vp,
-             bool* _retval)
+             PRBool* _retval)
 {
   JSObject* global = JS_GetGlobalForScopeChain(cx);
   if (!global)

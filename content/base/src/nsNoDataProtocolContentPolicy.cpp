@@ -84,7 +84,7 @@ nsNoDataProtocolContentPolicy::ShouldLoad(PRUint32 aContentType,
       return NS_OK;
     }
 
-    bool shouldBlock;
+    PRBool shouldBlock;
     nsresult rv = NS_URIChainHasFlags(aContentLocation,
                                       nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                                       &shouldBlock);

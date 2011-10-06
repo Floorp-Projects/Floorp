@@ -63,7 +63,7 @@ public:
     virtual nsresult        Shutdown();
 
     virtual const char *    GetDeviceID(void);
-    virtual nsCacheEntry *  FindEntry(nsCString * key, bool *collision);
+    virtual nsCacheEntry *  FindEntry(nsCString * key, PRBool *collision);
     virtual nsresult        DeactivateEntry(nsCacheEntry * entry);
     virtual nsresult        BindEntry(nsCacheEntry * entry);
     virtual void            DoomEntry( nsCacheEntry * entry );
@@ -119,9 +119,9 @@ private:
         return (binding && !binding->mDeactivateEvent);
     }
 
-    bool                    Initialized() { return mInitialized; }
+    PRBool                  Initialized() { return mInitialized; }
 
-    nsresult                Shutdown_Private(bool flush);
+    nsresult                Shutdown_Private(PRBool flush);
     nsresult                DeactivateEntry_Private(nsCacheEntry * entry,
                                                     nsDiskCacheBinding * binding);
 
@@ -139,7 +139,7 @@ private:
     PRInt32                 mMaxEntrySize;      // Unit is bytes internally
     // XXX need soft/hard limits, currentTotal
     nsDiskCacheMap          mCacheMap;
-    bool                    mInitialized;
+    PRPackedBool            mInitialized;
 };
 
 #endif // _nsDiskCacheDevice_h_

@@ -123,7 +123,7 @@ nsBaseCommandController::GetInterface(const nsIID & aIID, void * *result)
 
 NS_IMETHODIMP
 nsBaseCommandController::IsCommandEnabled(const char *aCommand,
-                                          bool *aResult)
+                                          PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_ARG_POINTER(aResult);
@@ -139,7 +139,7 @@ nsBaseCommandController::IsCommandEnabled(const char *aCommand,
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::SupportsCommand(const char *aCommand, bool *aResult)
+nsBaseCommandController::SupportsCommand(const char *aCommand, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_ARG_POINTER(aResult);

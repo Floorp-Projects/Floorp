@@ -493,7 +493,7 @@ public:
    * result of GetPasswordCharacter(), GetEchoPassword() returns TRUE.
    * Otherwise, FALSE.
    */
-  static bool GetEchoPassword();
+  static PRBool GetEchoPassword();
 
   /**
    * When system look and feel is changed, Refresh() must be called.  Then,

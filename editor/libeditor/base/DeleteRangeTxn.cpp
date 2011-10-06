@@ -48,7 +48,7 @@
 #include "nsComponentManagerUtils.h"
 
 #ifdef NS_DEBUG
-static bool gNoisy = false;
+static PRBool gNoisy = PR_FALSE;
 #endif
 
 // note that aEditor is not refcounted
@@ -198,7 +198,7 @@ NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
   NS_ENSURE_SUCCESS(result, result);
   
   // only set selection to deletion point if editor gives permission
-  bool bAdjustSelection;
+  PRBool bAdjustSelection;
   mEditor->ShouldTxnSetSelection(&bAdjustSelection);
   if (bAdjustSelection)
   {

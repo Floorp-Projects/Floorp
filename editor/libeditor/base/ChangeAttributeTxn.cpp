@@ -62,7 +62,7 @@ NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
                                        nsIDOMElement  *aElement,
                                        const nsAString& aAttribute,
                                        const nsAString& aValue,
-                                       bool aRemoveAttribute)
+                                       PRBool aRemoveAttribute)
 {
   NS_ASSERTION(aEditor && aElement, "bad arg");
   if (!aEditor || !aElement) { return NS_ERROR_NULL_POINTER; }

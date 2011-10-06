@@ -83,7 +83,7 @@ public:
 
 protected:
   nsresult ParseOptions(const nsAString& aOptions, PRUint32* bpp, 
-                        bool *usePNG);
+                        PRBool *usePNG);
   void NotifyListener();
 
   // Initializes the icon file header mICOFileHeader
@@ -119,9 +119,9 @@ protected:
   // Keeps track of the number of bytes in the image buffer which are read
   PRUint32 mImageBufferReadPoint;
   // Stores PR_TRUE if the image is done being encoded  
-  bool mFinished;
+  PRPackedBool mFinished;
   // Stores PR_TRUE if the contained image is a PNG
-  bool mUsePNG;
+  PRPackedBool mUsePNG;
 
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget> mCallbackTarget;

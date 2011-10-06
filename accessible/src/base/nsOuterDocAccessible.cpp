@@ -69,6 +69,12 @@ nsOuterDocAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_INTERNAL_FRAME;
 }
 
+PRUint64
+nsOuterDocAccessible::NativeState()
+{
+  return nsAccessible::NativeState() & ~states::FOCUSABLE;
+}
+
 nsAccessible*
 nsOuterDocAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    EWhichChildAtPoint aWhichChild)
@@ -176,7 +182,7 @@ nsOuterDocAccessible::InvalidateChildren()
   SetChildrenFlag(eChildrenUninitialized);
 }
 
-bool
+PRBool
 nsOuterDocAccessible::AppendChild(nsAccessible *aAccessible)
 {
   // We keep showing the old document for a bit after creating the new one,
@@ -197,7 +203,7 @@ nsOuterDocAccessible::AppendChild(nsAccessible *aAccessible)
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsOuterDocAccessible::RemoveChild(nsAccessible *aAccessible)
 {
   nsAccessible *child = mChildren.SafeElementAt(0, nsnull);
@@ -210,7 +216,7 @@ nsOuterDocAccessible::RemoveChild(nsAccessible *aAccessible)
                            child->GetDocumentNode(), child)
   NS_LOG_ACCDOCDESTROY_ACCADDRESS("outerdoc", this)
 
-  bool wasRemoved = nsAccessible::RemoveChild(child);
+  PRBool wasRemoved = nsAccessible::RemoveChild(child);
 
   NS_ASSERTION(!mChildren.Length(),
                "This child document of outerdoc accessible wasn't removed!");

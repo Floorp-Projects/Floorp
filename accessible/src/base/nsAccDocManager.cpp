@@ -98,7 +98,7 @@ nsAccDocManager::FindAccessibleInCache(nsINode* aNode) const
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccDocManager protected
 
-bool
+PRBool
 nsAccDocManager::Init()
 {
   mDocAccessibleCache.Init(4);
@@ -325,7 +325,7 @@ nsAccDocManager::HandleDOMDocumentLoad(nsIDocument *aDocument,
 
 void
 nsAccDocManager::AddListeners(nsIDocument *aDocument,
-                              bool aAddDOMContentLoadedListener)
+                              PRBool aAddDOMContentLoadedListener)
 {
   nsPIDOMWindow *window = aDocument->GetWindow();
   nsIDOMEventTarget *target = window->GetChromeEventHandler();
@@ -362,7 +362,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   if (!rootElm)
     return nsnull;
 
-  bool isRootDoc = nsCoreUtils::IsRootDocument(aDocument);
+  PRBool isRootDoc = nsCoreUtils::IsRootDocument(aDocument);
 
   nsDocAccessible* parentDocAcc = nsnull;
   if (!isRootDoc) {
@@ -418,7 +418,6 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   }
 
   NS_LOG_ACCDOCCREATE("document creation finished", aDocument)
-  NS_LOG_ACCDOCCREATE_STACK
 
   AddListeners(aDocument, isRootDoc);
   return docAcc;

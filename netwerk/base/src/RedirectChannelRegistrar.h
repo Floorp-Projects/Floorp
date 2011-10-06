@@ -63,7 +63,7 @@ protected:
     typedef T* UserDataType;
     typedef nsBaseHashtable< KeyClass, nsCOMPtr<T>, T* > base_type;
 
-    bool Get(KeyType aKey, UserDataType* pData) const;
+    PRBool Get(KeyType aKey, UserDataType* pData) const;
   };
 
   typedef nsCOMPtrHashtable<nsUint32HashKey, nsIChannel>

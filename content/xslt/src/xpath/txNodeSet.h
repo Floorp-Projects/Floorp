@@ -163,7 +163,7 @@ public:
      * @param  aNode the Node to search for
      * @return true if specified Node is contained in the NodeSet
      */
-    bool contains(const txXPathNode& aNode) const
+    PRBool contains(const txXPathNode& aNode) const
     {
         return indexOf(aNode) >= 0;
     }
@@ -179,7 +179,7 @@ public:
      * Returns true if there are no Nodes in the NodeSet.
      * @return true if there are no Nodes in the NodeSet.
      */
-    bool isEmpty() const
+    PRBool isEmpty() const
     {
         return mStart ? mStart == mEnd : PR_TRUE;
     }
@@ -201,7 +201,7 @@ private:
      *
      * Changes mStart and mEnd as well as mBufferStart and mBufferEnd.
      */
-    bool ensureGrowSize(PRInt32 aSize);
+    PRBool ensureGrowSize(PRInt32 aSize);
 
     /**
      * Finds position in the buffer where a node should be inserted
@@ -219,7 +219,7 @@ private:
      */
     txXPathNode* findPosition(const txXPathNode& aNode, 
                               txXPathNode* aFirst,
-                              txXPathNode* aLast, bool& aDupe) const;
+                              txXPathNode* aLast, PRBool& aDupe) const;
 
     static void copyElements(txXPathNode* aDest, const txXPathNode* aStart,
                              const txXPathNode* aEnd);
@@ -244,7 +244,7 @@ private:
     txXPathNode *mStart, *mEnd, *mStartBuffer, *mEndBuffer;
     PRInt32 mDirection;
     // used for mark() and sweep() in predicates
-    bool* mMarks;
+    PRPackedBool* mMarks;
 };
 
 #endif

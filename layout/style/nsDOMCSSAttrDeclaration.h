@@ -64,7 +64,7 @@ public:
   typedef mozilla::dom::Element Element;
   nsDOMCSSAttributeDeclaration(Element* aContent
 #ifdef MOZ_SMIL
-                               , bool aIsSMILOverride
+                               , PRBool aIsSMILOverride
 #endif // MOZ_SMIL
                                );
   ~nsDOMCSSAttributeDeclaration();
@@ -75,7 +75,7 @@ public:
 
   // If GetCSSDeclaration returns non-null, then the decl it returns
   // is owned by our current style rule.
-  virtual mozilla::css::Declaration* GetCSSDeclaration(bool aAllocate);
+  virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool aAllocate);
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
 
@@ -92,7 +92,7 @@ protected:
    * should interact with mContent's SMIL override style rule (rather
    * than the inline style rule).
    */
-  const bool mIsSMILOverride;
+  const PRBool mIsSMILOverride;
 #endif // MOZ_SMIL
 };
 

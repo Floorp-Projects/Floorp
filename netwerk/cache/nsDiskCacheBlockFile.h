@@ -65,7 +65,7 @@ public:
     
     nsresult  Open( nsILocalFile *  blockFile, PRUint32  blockSize,
                     PRUint32  bitMapSize);
-    nsresult  Close(bool flush);
+    nsresult  Close(PRBool flush);
     
     /*
      * Trim
@@ -93,7 +93,7 @@ private:
     PRUint32                    mBlockSize;
     PRUint32                    mBitMapWords;
     PRInt32                     mFileSize;
-    bool                        mBitMapDirty;
+    PRBool                      mBitMapDirty;
 };
 
 #endif // _nsDiskCacheBlockFile_h_

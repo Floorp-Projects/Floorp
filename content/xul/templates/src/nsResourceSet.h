@@ -59,7 +59,7 @@ public:
     nsresult Add(nsIRDFResource* aProperty);
     void Remove(nsIRDFResource* aProperty);
 
-    bool Contains(nsIRDFResource* aProperty) const;
+    PRBool Contains(nsIRDFResource* aProperty) const;
 
 protected:
     nsIRDFResource** mResources;
@@ -96,10 +96,10 @@ public:
         /*const*/ nsIRDFResource* operator->() const {
             return *mCurrent; }
 
-        bool operator==(const ConstIterator& aConstIterator) const {
+        PRBool operator==(const ConstIterator& aConstIterator) const {
             return mCurrent == aConstIterator.mCurrent; }
 
-        bool operator!=(const ConstIterator& aConstIterator) const {
+        PRBool operator!=(const ConstIterator& aConstIterator) const {
             return mCurrent != aConstIterator.mCurrent; }
 
     protected:

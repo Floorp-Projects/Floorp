@@ -55,7 +55,7 @@ GetAuthKey(const char *scheme, const char *host, PRInt32 port, nsCString &key)
 
 // return true if the two strings are equal or both empty.  an empty string
 // is either null or zero length.
-static bool
+static PRBool
 StrEquivalent(const PRUnichar *a, const PRUnichar *b)
 {
     static const PRUnichar emptyStr[] = {0};
@@ -320,7 +320,7 @@ nsHttpAuthIdentity::Clear()
     }
 }
 
-bool
+PRBool
 nsHttpAuthIdentity::Equals(const nsHttpAuthIdentity &ident) const
 {
     // we could probably optimize this with a single loop, but why bother?

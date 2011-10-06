@@ -297,7 +297,7 @@ nsThreadManager::GetCurrentThread(nsIThread **result)
 }
 
 NS_IMETHODIMP
-nsThreadManager::GetIsMainThread(bool *result)
+nsThreadManager::GetIsMainThread(PRBool *result)
 {
   // This method may be called post-Shutdown
 
@@ -306,8 +306,8 @@ nsThreadManager::GetIsMainThread(bool *result)
 }
 
 NS_IMETHODIMP
-nsThreadManager::GetIsCycleCollectorThread(bool *result)
+nsThreadManager::GetIsCycleCollectorThread(PRBool *result)
 {
-  *result = bool(NS_IsCycleCollectorThread());
+  *result = PRBool(NS_IsCycleCollectorThread());
   return NS_OK;
 }

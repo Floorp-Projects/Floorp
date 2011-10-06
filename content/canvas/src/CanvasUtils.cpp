@@ -65,8 +65,8 @@ namespace CanvasUtils {
 void
 DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
                          nsIPrincipal *aPrincipal,
-                         bool forceWriteOnly,
-                         bool CORSUsed)
+                         PRBool forceWriteOnly,
+                         PRBool CORSUsed)
 {
     NS_PRECONDITION(aPrincipal, "Must have a principal here");
 
@@ -89,7 +89,7 @@ DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
     if (CORSUsed)
         return;
 
-    bool subsumes;
+    PRBool subsumes;
     nsresult rv =
         aCanvasElement->NodePrincipal()->Subsumes(aPrincipal, &subsumes);
 

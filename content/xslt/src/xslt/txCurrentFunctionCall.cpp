@@ -44,7 +44,7 @@ CurrentFunctionCall::getReturnType()
     return NODESET_RESULT;
 }
 
-bool
+PRBool
 CurrentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     return !!(aContext & PRIVATE_CONTEXT);

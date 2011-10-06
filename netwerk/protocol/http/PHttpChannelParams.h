@@ -59,7 +59,7 @@ namespace net {
 struct RequestHeaderTuple {
   nsCString mHeader;
   nsCString mValue;
-  bool      mMerge;
+  PRBool    mMerge;
 };
 
 typedef nsTArray<RequestHeaderTuple> RequestHeaderTuples;

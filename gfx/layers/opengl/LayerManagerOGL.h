@@ -106,11 +106,11 @@ public:
    *
    * \return True is initialization was succesful, false when it was not.
    */
-  bool Initialize() {
+  PRBool Initialize() {
     return Initialize(CreateContext());
   }
 
-  bool Initialize(nsRefPtr<GLContext> aContext);
+  PRBool Initialize(nsRefPtr<GLContext> aContext);
 
   /**
    * Sets the clipping region for this layer manager. This is important on 
@@ -139,8 +139,7 @@ public:
 
   virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT);
+                              void* aCallbackData);
 
   virtual void SetRoot(Layer* aLayer) { mRoot = aLayer; }
 
@@ -186,7 +185,7 @@ public:
   /**
    * Helper methods.
    */
-  void MakeCurrent(bool aForce = false) {
+  void MakeCurrent(PRBool aForce = PR_FALSE) {
     if (mDestroyed) {
       NS_WARNING("Call on destroyed layer manager");
       return;
@@ -210,7 +209,7 @@ public:
   ColorTextureLayerProgram *GetBGRXLayerProgram() {
     return static_cast<ColorTextureLayerProgram*>(mPrograms[gl::BGRXLayerProgramType]);
   }
-  ColorTextureLayerProgram *GetBasicLayerProgram(bool aOpaque, bool aIsRGB)
+  ColorTextureLayerProgram *GetBasicLayerProgram(PRBool aOpaque, PRBool aIsRGB)
   {
     if (aIsRGB) {
       return aOpaque
@@ -449,7 +448,7 @@ private:
   nsIntRegion mClippingRegion;
 
   /** Misc */
-  bool mHasBGRA;
+  PRPackedBool mHasBGRA;
 
   /** Current root layer. */
   LayerOGL *RootLayer() const;
@@ -506,7 +505,7 @@ private:
       void DrawFPS(GLContext*, CopyProgram*);
   } mFPS;
 
-  static bool sDrawFPS;
+  static PRBool sDrawFPS;
 };
 
 /**
@@ -543,7 +542,7 @@ public:
   void ApplyFilter(gfxPattern::GraphicsFilter aFilter);
 protected:
   LayerManagerOGL *mOGLManager;
-  bool mDestroyed;
+  PRPackedBool mDestroyed;
 };
 
 } /* layers */

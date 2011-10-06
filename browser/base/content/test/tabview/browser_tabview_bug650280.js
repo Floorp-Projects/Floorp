@@ -9,14 +9,14 @@ function test() {
 
   registerCleanupFunction(function() {
     if (cw)
-      cw.Search.hide();
+      cw.hideSearch();
 
     TabView.hide();
     pb.privateBrowsingEnabled = false;
   });
 
   let enableSearch = function (callback) {
-    if (cw.Search.isEnabled()) {
+    if (cw.isSearchEnabled()) {
       callback();
       return;
     }
@@ -26,7 +26,7 @@ function test() {
       executeSoon(callback);
     }, false);
 
-    cw.Search.ensureShown();
+    cw.ensureSearchShown();
   };
 
   let getSearchboxValue = function () {
@@ -34,7 +34,7 @@ function test() {
   };
 
   let prepareSearchbox = function (callback) {
-    ok(!cw.Search.isEnabled(), "search is disabled");
+    ok(!cw.isSearchEnabled(), "search is disabled");
 
     enableSearch(function () {
       cw.iQ("#searchbox").val("moz");
@@ -46,7 +46,7 @@ function test() {
     prepareSearchbox(function () {
       togglePrivateBrowsing(function () {
         showTabView(function () {
-          ok(!cw.Search.isEnabled(), "search is disabled");
+          ok(!cw.isSearchEnabled(), "search is disabled");
           is(getSearchboxValue(), "", "search box is empty");
           callback();
         });

@@ -89,7 +89,7 @@ WaitForStartupTimer() {
     = do_GetService("@mozilla.org/startupcache/cache;1");
   PR_Sleep(10 * PR_TicksPerSecond());
   
-  bool complete;
+  PRBool complete;
   while (true) {
     NS_ProcessPendingEvents(nsnull);
     rv = sc->StartupWriteComplete(&complete);
@@ -259,7 +259,7 @@ TestWriteObject() {
     return rv;
   }
   
-  bool match = false;
+  PRBool match = false;
   nsCOMPtr<nsIURI> uri(do_QueryInterface(deserialized));
   if (uri) {
     nsCString outSpec;

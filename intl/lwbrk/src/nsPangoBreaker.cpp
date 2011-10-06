@@ -75,7 +75,7 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
         aBreakBefore[++u16Offset] = PR_FALSE; // Skip high surrogate
       ++u16Offset;
 
-      bool err;
+      PRBool err;
       PRUint32 ch = UTF8CharEnumerator::NextChar(&p, end, &err);
       ++attr;
 

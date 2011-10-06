@@ -57,7 +57,7 @@ SVGMotionSMILAnimationFunction::SVGMotionSMILAnimationFunction()
 void
 SVGMotionSMILAnimationFunction::MarkStaleIfAttributeAffectsPath(nsIAtom* aAttribute)
 {
-  bool isAffected;
+  PRBool isAffected;
   if (aAttribute == nsGkAtoms::path) {
     isAffected = (mPathSourceType <= ePathSourceType_PathAttr);
   } else if (aAttribute == nsGkAtoms::values) {
@@ -78,7 +78,7 @@ SVGMotionSMILAnimationFunction::MarkStaleIfAttributeAffectsPath(nsIAtom* aAttrib
   }
 }
 
-bool
+PRBool
 SVGMotionSMILAnimationFunction::SetAttr(nsIAtom* aAttribute,
                                         const nsAString& aValue,
                                         nsAttrValue& aResult,
@@ -115,7 +115,7 @@ SVGMotionSMILAnimationFunction::SetAttr(nsIAtom* aAttribute,
   return PR_TRUE;
 }
 
-bool
+PRBool
 SVGMotionSMILAnimationFunction::UnsetAttr(nsIAtom* aAttribute)
 {
   if (aAttribute == nsGkAtoms::keyPoints) {
@@ -157,9 +157,9 @@ SVGMotionSMILAnimationFunction::GetCalcMode() const
 static nsSVGMpathElement*
 GetFirstMpathChild(nsIContent* aElem)
 {
-  for (nsIContent* child = aElem->GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
+  PRUint32 childCount = aElem->GetChildCount();
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    nsIContent* child = aElem->GetChildAt(i);
     if (child->Tag() == nsGkAtoms::mpath &&
         child->GetNameSpaceID() == kNameSpaceID_SVG) {
       return static_cast<nsSVGMpathElement*>(child);
@@ -187,7 +187,7 @@ SVGMotionSMILAnimationFunction::
   SVGMotionSMILPathUtils::PathGenerator
     pathGenerator(static_cast<const nsSVGElement*>(aContextElem));
 
-  bool success = false;
+  PRBool success = PR_FALSE;
   if (HasAttr(nsGkAtoms::values)) {
     // Generate path based on our values array
     mPathSourceType = ePathSourceType_ValuesAttr;
@@ -252,7 +252,7 @@ SVGMotionSMILAnimationFunction::
     // Path data must contain of at least one path segment (if the path data
     // doesn't begin with a valid "M", then it's invalid).
     if (path.Length()) {
-      bool ok =
+      PRBool ok =
         path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
       if (ok && mPathVertices.Length()) {
         mPath = pathElem->GetFlattenedPath(gfxMatrix());
@@ -281,7 +281,7 @@ SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromPathAttr()
   }
 
   mPath = path.ToFlattenedPath(gfxMatrix());
-  bool ok = path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
+  PRBool ok = path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
   if (!ok || !mPathVertices.Length()) {
     mPath = nsnull;
   }
@@ -319,10 +319,10 @@ SVGMotionSMILAnimationFunction::
   mIsPathStale = PR_FALSE;
 }
 
-bool
+PRBool
 SVGMotionSMILAnimationFunction::
   GenerateValuesForPathAndPoints(gfxFlattenedPath* aPath,
-                                 bool aIsKeyPoints,
+                                 PRBool aIsKeyPoints,
                                  nsTArray<double>& aPointDistances,
                                  nsTArray<nsSMILValue>& aResult)
 {
@@ -360,8 +360,8 @@ SVGMotionSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
   NS_ABORT_IF_FALSE(!mPathVertices.IsEmpty(), "have a path but no vertices");
 
   // Now: Make the actual list of nsSMILValues (using keyPoints, if set)
-  bool isUsingKeyPoints = !mKeyPoints.IsEmpty();
-  bool success = GenerateValuesForPathAndPoints(mPath, isUsingKeyPoints,
+  PRBool isUsingKeyPoints = !mKeyPoints.IsEmpty();
+  PRBool success = GenerateValuesForPathAndPoints(mPath, isUsingKeyPoints,
                                                   isUsingKeyPoints ?
                                                   mKeyPoints : mPathVertices,
                                                   aResult);
@@ -383,7 +383,7 @@ SVGMotionSMILAnimationFunction::
   CheckKeyPoints();
 }
 
-bool
+PRBool
 SVGMotionSMILAnimationFunction::IsToAnimation() const
 {
   // Rely on inherited method, but not if we have an <mpath> child or a |path|

@@ -262,7 +262,7 @@ txBufferingHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
 }
 
 nsresult
-txBufferingHandler::characters(const nsSubstring& aData, bool aDOE)
+txBufferingHandler::characters(const nsSubstring& aData, PRBool aDOE)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 

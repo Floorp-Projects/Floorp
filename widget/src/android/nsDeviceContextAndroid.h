@@ -47,7 +47,7 @@ public:
 
     NS_IMETHOD Init(nsIWidget* aWidget,
                     nsIPrintSettings* aPS,
-                    bool aIsPrintPreview);
+                    PRBool aIsPrintPreview);
     NS_IMETHOD BeginDocument(PRUnichar* aTitle,
                              PRUnichar* aPrintToFileName,
                              PRInt32 aStartPage,

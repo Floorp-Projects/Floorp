@@ -91,8 +91,8 @@ nsDOMAnimationEvent::GetElapsedTime(float *aElapsedTime)
 
 NS_IMETHODIMP
 nsDOMAnimationEvent::InitAnimationEvent(const nsAString & typeArg,
-                                        bool canBubbleArg,
-                                        bool cancelableArg,
+                                        PRBool canBubbleArg,
+                                        PRBool cancelableArg,
                                         const nsAString & animationNameArg,
                                         float elapsedTimeArg)
 {

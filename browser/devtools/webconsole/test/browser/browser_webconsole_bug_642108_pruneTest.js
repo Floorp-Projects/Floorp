@@ -25,8 +25,7 @@ function populateConsoleRepeats(aHudRef) {
     let node = ConsoleUtils.createMessageNode(hud.ownerDocument,
                                               CATEGORY_CSS,
                                               SEVERITY_WARNING,
-                                              "css log x",
-                                              aHudRef.hudId);
+                                              "css log x");
     ConsoleUtils.outputMessageNode(node, aHudRef.hudId);
   }
 }
@@ -39,8 +38,7 @@ function populateConsole(aHudRef) {
     let node = ConsoleUtils.createMessageNode(hud.ownerDocument,
                                               CATEGORY_CSS,
                                               SEVERITY_WARNING,
-                                              "css log " + i,
-                                              aHudRef.hudId);
+                                              "css log " + i);
     ConsoleUtils.outputMessageNode(node, aHudRef.hudId);
   }
 }

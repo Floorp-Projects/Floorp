@@ -448,7 +448,7 @@ static void PrintObjectBasics(JSObject* obj)
 {
     if (JS_IsNative(obj))
         printf("%p 'native' <%s>",
-               (void *)obj, js::GetObjectClass(obj)->name);
+               (void *)obj, obj->getClass()->name);
     else
         printf("%p 'host'", (void *)obj);
 }
@@ -473,8 +473,8 @@ static void PrintObject(JSObject* obj, int depth, ObjectPile* pile)
     if(!JS_IsNative(obj))
         return;
 
-    JSObject* parent = js::GetObjectParent(obj);
-    JSObject* proto  = js::GetObjectProto(obj);
+    JSObject* parent = obj->getParent();
+    JSObject* proto  = obj->getProto();
 
     printf("%*sparent: ", INDENT(depth+1));
     if(parent)

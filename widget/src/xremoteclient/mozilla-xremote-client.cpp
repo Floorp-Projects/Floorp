@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     return 1;
 
   // send the command - it doesn't get any easier than this
-  bool success = false;
+  PRBool success = PR_FALSE;
   char *error = 0;
   rv = client.SendCommand(browser, username, profile, command, nsnull,
                           &error, &success);

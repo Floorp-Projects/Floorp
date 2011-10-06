@@ -73,7 +73,7 @@ public:
 
     void NotifyNativeEvent();
 
-    virtual bool ProcessNextNativeEvent(bool mayWait);
+    virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
 
     void PostEvent(mozilla::AndroidGeckoEvent *event);
     void RemoveNextEvent();

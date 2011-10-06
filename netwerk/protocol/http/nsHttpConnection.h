@@ -101,9 +101,9 @@ public:
     //-------------------------------------------------------------------------
     // XXX document when these are ok to call
 
-    bool     SupportsPipelining() { return mSupportsPipelining; }
-    bool     IsKeepAlive() { return mKeepAliveMask && mKeepAlive; }
-    bool     CanReuse();   // can this connection be reused?
+    PRBool   SupportsPipelining() { return mSupportsPipelining; }
+    PRBool   IsKeepAlive() { return mKeepAliveMask && mKeepAlive; }
+    PRBool   CanReuse();   // can this connection be reused?
 
     // Returns time in seconds for how long connection can be reused.
     PRUint32 TimeToLive();
@@ -113,12 +113,12 @@ public:
                              mIdleTimeout = 0; }
     void     DropTransport() { DontReuse(); mSocketTransport = 0; }
 
-    bool     LastTransactionExpectedNoContent()
+    PRBool   LastTransactionExpectedNoContent()
     {
         return mLastTransactionExpectedNoContent;
     }
 
-    void     SetLastTransactionExpectedNoContent(bool val)
+    void     SetLastTransactionExpectedNoContent(PRBool val)
     {
         mLastTransactionExpectedNoContent = val;
     }
@@ -127,15 +127,15 @@ public:
     nsHttpConnectionInfo *ConnectionInfo() { return mConnInfo; }
 
     // nsAHttpConnection compatible methods (non-virtual):
-    nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, bool *reset);
+    nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, PRBool *reset);
     void     CloseTransaction(nsAHttpTransaction *, nsresult reason);
     void     GetConnectionInfo(nsHttpConnectionInfo **ci) { NS_IF_ADDREF(*ci = mConnInfo); }
     nsresult TakeTransport(nsISocketTransport **,
                            nsIAsyncInputStream **,
                            nsIAsyncOutputStream **);
     void     GetSecurityInfo(nsISupports **);
-    bool     IsPersistent() { return IsKeepAlive(); }
-    bool     IsReused();
+    PRBool   IsPersistent() { return IsKeepAlive(); }
+    PRBool   IsReused();
     void     SetIsReusedAfter(PRUint32 afterMilliseconds);
     void     SetIdleTimeout(PRUint16 val) {mIdleTimeout = val;}
     nsresult PushBack(const char *data, PRUint32 length);
@@ -163,8 +163,8 @@ private:
 
     nsresult SetupProxyConnect();
 
-    bool     IsAlive();
-    bool     SupportsPipelining(nsHttpResponseHead *);
+    PRBool   IsAlive();
+    PRBool   SupportsPipelining(nsHttpResponseHead *);
     
 private:
     nsCOMPtr<nsISocketTransport>    mSocketTransport;
@@ -196,13 +196,13 @@ private:
 
     nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
 
-    bool                            mKeepAlive;
-    bool                            mKeepAliveMask;
-    bool                            mSupportsPipelining;
-    bool                            mIsReused;
-    bool                            mCompletedProxyConnect;
-    bool                            mLastTransactionExpectedNoContent;
-    bool                            mIdleMonitoring;
+    PRPackedBool                    mKeepAlive;
+    PRPackedBool                    mKeepAliveMask;
+    PRPackedBool                    mSupportsPipelining;
+    PRPackedBool                    mIsReused;
+    PRPackedBool                    mCompletedProxyConnect;
+    PRPackedBool                    mLastTransactionExpectedNoContent;
+    PRPackedBool                    mIdleMonitoring;
 };
 
 #endif // nsHttpConnection_h__

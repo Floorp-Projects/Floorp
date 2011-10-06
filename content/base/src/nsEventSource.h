@@ -100,7 +100,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // Determine if preferences allow EventSource
-  static bool PrefEnabled();
+  static PRBool PrefEnabled();
 
 protected:
   nsresult GetBaseURI(nsIURI **aBaseURI);
@@ -138,7 +138,7 @@ protected:
   nsresult ResetEvent();
   nsresult DispatchCurrentMessageEvent();
   nsresult ParseCharacter(PRUnichar aChr);
-  bool CheckCanRequestSrc(nsIURI* aSrc = nsnull);  // if null, it tests mSrc
+  PRBool CheckCanRequestSrc(nsIURI* aSrc = nsnull);  // if null, it tests mSrc
   nsresult CheckHealthOfRequestCallback(nsIRequest *aRequestCallback);
   nsresult OnRedirectVerifyCallback(nsresult result);
 
@@ -212,9 +212,9 @@ protected:
   };
   ParserStatus mStatus;
 
-  bool mFrozen;
-  bool mErrorLoadOnRedirect;
-  bool mGoingToDispatchAllMessages;
+  PRPackedBool mFrozen;
+  PRPackedBool mErrorLoadOnRedirect;
+  PRPackedBool mGoingToDispatchAllMessages;
 
   // used while reading the input streams
   nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;

@@ -43,7 +43,7 @@
 #define jsion_ion_alloc_policy_h__
 
 #include "jscntxt.h"
-#include "ds/LifoAlloc.h"
+#include "jsarena.h"
 
 #include "Ion.h"
 #include "InlineList.h"
@@ -56,7 +56,9 @@ class IonAllocPolicy
   public:
     void *malloc_(size_t bytes) {
         JSContext *cx = GetIonContext()->cx;
-        return cx->tempLifoAlloc().alloc(bytes);
+        void *p;
+        JS_ARENA_ALLOCATE(p, &cx->tempPool, bytes);
+        return p;
     }
     void *realloc_(void *p, size_t oldBytes, size_t bytes) {
         void *n = malloc_(bytes);
@@ -71,25 +73,24 @@ class IonAllocPolicy
     }
 };
 
-class TempAllocator
+struct TempAllocator
 {
-    LifoAlloc *lifoAlloc_;
-    void *mark_;
+    JSArenaPool *arena;
 
-  public:
-    TempAllocator(LifoAlloc *lifoAlloc)
-      : lifoAlloc_(lifoAlloc),
-        mark_(lifoAlloc->mark())
+    TempAllocator(JSArenaPool *arena)
+      : arena(arena),
+        mark(JS_ARENA_MARK(arena))
     { }
 
     ~TempAllocator()
     {
-        lifoAlloc_->release(mark_);
+        JS_ARENA_RELEASE(arena, mark);
     }
 
     void *allocate(size_t bytes)
     {
-        void *p = lifoAlloc_->alloc(bytes);
+        void *p;
+        JS_ARENA_ALLOCATE(p, arena, bytes);
         if (!ensureBallast())
             return NULL;
         return p;
@@ -98,6 +99,9 @@ class TempAllocator
     bool ensureBallast() {
         return true;
     }
+
+  private:
+    void *mark;
 };
 
 struct TempObject
@@ -105,8 +109,7 @@ struct TempObject
     inline void *operator new(size_t nbytes) {
         return GetIonContext()->temp->allocate(nbytes);
     }
-
-  public:
+public:
     inline void *operator new(size_t nbytes, void *pos) {
         return pos;
     }

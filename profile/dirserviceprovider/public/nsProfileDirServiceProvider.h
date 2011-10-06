@@ -64,7 +64,7 @@ class nsProfileDirServiceProvider: public nsIDirectoryServiceProvider
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
-  friend nsresult NS_NewProfileDirServiceProvider(bool, nsProfileDirServiceProvider**);
+  friend nsresult NS_NewProfileDirServiceProvider(PRBool, nsProfileDirServiceProvider**);
 
 public:
 
@@ -104,7 +104,7 @@ public:
   virtual nsresult         Shutdown();
 
 protected:
-                           nsProfileDirServiceProvider(bool aNotifyObservers = true);
+                           nsProfileDirServiceProvider(PRBool aNotifyObservers = PR_TRUE);
    virtual                 ~nsProfileDirServiceProvider();
 
   nsresult                 Initialize();
@@ -118,9 +118,9 @@ protected:
   nsCOMPtr<nsIFile>        mProfileDir;
   nsCOMPtr<nsIFile>        mLocalProfileDir;
   nsProfileLock*           mProfileDirLock;
-  bool                     mNotifyObservers;
+  PRPackedBool             mNotifyObservers;
 
-  bool                     mSharingEnabled;
+  PRPackedBool             mSharingEnabled;
 #ifndef MOZILLA_INTERNAL_API
   nsEmbedString            mNonSharedDirName;
 #else
@@ -140,6 +140,6 @@ protected:
  *                            See nsIProfileChangeStatus.
  */
  
-nsresult NS_NewProfileDirServiceProvider(bool aNotifyObservers,
+nsresult NS_NewProfileDirServiceProvider(PRBool aNotifyObservers,
                                          nsProfileDirServiceProvider** aProvider);
 

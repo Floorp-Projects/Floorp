@@ -7394,9 +7394,9 @@ TraceRecorder::monitorRecording(JSOp op)
 
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
-            LifoAllocScope las(&cx->tempLifoAlloc());
+            void *mark = JS_ARENA_MARK(&cx->tempPool);
             Sprinter sprinter;
-            INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);
+            INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
 
             debug_only_print0(LC_TMRecorder, "\n");
             js_Disassemble1(cx, cx->fp()->script(), cx->regs().pc,
@@ -7405,6 +7405,7 @@ TraceRecorder::monitorRecording(JSOp op)
                             !cx->fp()->hasImacropc(), &sprinter);
 
             fprintf(stdout, "%s", sprinter.base);
+            JS_ARENA_RELEASE(&cx->tempPool, mark);
         }
     )
 
@@ -10418,13 +10419,14 @@ TraceRecorder::record_EnterFrame()
                       callDepth);
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
-            LifoAllocScope las(&cx->tempLifoAlloc());
+            void *mark = JS_ARENA_MARK(&cx->tempPool);
             Sprinter sprinter;
-            INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);
+            INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
 
             js_Disassemble(cx, cx->fp()->script(), JS_TRUE, &sprinter);
 
             debug_only_printf(LC_TMTracer, "%s", sprinter.base);
+            JS_ARENA_RELEASE(&cx->tempPool, mark);
             debug_only_print0(LC_TMTracer, "----\n");
         }
     )
@@ -12211,7 +12213,7 @@ TraceRecorder::addDataProperty(JSObject* obj)
 
     // If obj is the global, the global shape is about to change. Note also
     // that since we do not record this case, SETNAME and SETPROP are identical
-    // as far as the tracer is concerned. (CheckUndeclaredVarAssignment
+    // as far as the tracer is concerned. (js_CheckUndeclaredVarAssignment
     // distinguishes the two, in the interpreter.)
     if (obj == globalObj)
         RETURN_STOP("set new property of global object"); // global shape change

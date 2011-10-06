@@ -42,7 +42,6 @@
 #define mozilla_layers_ShadowLayersParent_h
 
 #include "mozilla/layers/PLayersParent.h"
-#include "ShadowLayers.h"
 
 namespace mozilla {
 
@@ -55,8 +54,7 @@ namespace layers {
 class Layer;
 class ShadowLayerManager;
 
-class ShadowLayersParent : public PLayersParent,
-                           public ISurfaceDeAllocator
+class ShadowLayersParent : public PLayersParent
 {
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
   typedef InfallibleTArray<Edit> EditArray;
@@ -71,9 +69,6 @@ public:
   ShadowLayerManager* layer_manager() const { return mLayerManager; }
 
   ContainerLayer* GetRoot() const { return mRoot; }
-
-  virtual void DestroySharedSurface(gfxSharedImageSurface* aSurface);
-  virtual void DestroySharedSurface(SurfaceDescriptor* aSurface);
 
 protected:
   NS_OVERRIDE virtual bool RecvUpdate(const EditArray& cset,

@@ -367,7 +367,7 @@ static void		workbuf_removevoid(workbuf_t *wb);
 
 
 static nsresult
-mdn_normalize(bool do_composition, bool compat,
+mdn_normalize(PRBool do_composition, PRBool compat,
 	  const nsAString& aSrcStr, nsAString& aToStr)
 {
 	workbuf_t wb;

@@ -198,9 +198,9 @@ static const char* const kDumpFileAfterText[] = {
 CViewSourceHTML::CViewSourceHTML()
 {
   mSyntaxHighlight =
-    Preferences::GetBool("view_source.syntax_highlight", true);
+    Preferences::GetBool("view_source.syntax_highlight", PR_TRUE);
 
-  mWrapLongLines = Preferences::GetBool("view_source.wrap_long_lines", false);
+  mWrapLongLines = Preferences::GetBool("view_source.wrap_long_lines", PR_FALSE);
 
   mTabSize = Preferences::GetInt("view_source.tab_size", -1);
 
@@ -305,8 +305,8 @@ CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
   * @return error code (almost always 0)
   */
 NS_IMETHODIMP CViewSourceHTML::BuildModel(nsITokenizer* aTokenizer,
-                                          bool aCanInterrupt,
-                                          bool aCountLines,
+                                          PRBool aCanInterrupt,
+                                          PRBool aCountLines,
                                           const nsCString* aCharsetPtr)
 {
   nsresult result=NS_OK;
@@ -599,7 +599,7 @@ CViewSourceHTML::GetMode() const
  * @param
  * @return
  */
-void CViewSourceHTML::SetVerification(bool aEnabled)
+void CViewSourceHTML::SetVerification(PRBool aEnabled)
 {
 }
 
@@ -612,10 +612,10 @@ void CViewSourceHTML::SetVerification(bool aEnabled)
  *  @param   aChild -- int tag of child container
  *  @return  PR_TRUE if parent can contain child
  */
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 CViewSourceHTML::CanContain(PRInt32 aParent, PRInt32 aChild) const
 {
-  bool result=true;
+  PRBool result=PR_TRUE;
   return result;
 }
 
@@ -627,10 +627,10 @@ CViewSourceHTML::CanContain(PRInt32 aParent, PRInt32 aChild) const
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 CViewSourceHTML::IsContainer(PRInt32 aTag) const
 {
-  bool result=true;
+  PRBool result=PR_TRUE;
   return result;
 }
 
@@ -643,7 +643,7 @@ CViewSourceHTML::IsContainer(PRInt32 aTag) const
  */
 nsresult CViewSourceHTML::WriteAttributes(const nsAString& tagName, 
                                           nsTokenAllocator* allocator, 
-                                          PRInt32 attrCount, bool aOwnerInError) {
+                                          PRInt32 attrCount, PRBool aOwnerInError) {
   nsresult result=NS_OK;
 
   if(attrCount){ //go collect the attributes...
@@ -660,7 +660,7 @@ nsresult CViewSourceHTML::WriteAttributes(const nsAString& tagName,
           const nsSubstring& theKey = theAttrToken->GetKey();
 
           // The attribute is only in error if its owner is NOT in error.
-          const bool attributeInError =
+          const PRBool attributeInError =
             !aOwnerInError && theAttrToken->IsInError();
 
           result = WriteTag(kAttributeName,theKey,0,attributeInError);
@@ -689,7 +689,7 @@ nsresult CViewSourceHTML::WriteAttributes(const nsAString& tagName,
  *  @param
  *  @return  result status
  */
-nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PRInt32 attrCount,bool aTagInError) {
+nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PRInt32 attrCount,PRBool aTagInError) {
   nsresult result=NS_OK;
 
   // adjust line number to what it will be after we finish writing this tag
@@ -944,14 +944,14 @@ CViewSourceHTML::HandleToken(CToken* aToken)
   return result;
 }
 
-bool CViewSourceHTML::IsUrlAttribute(const nsAString& tagName,
+PRBool CViewSourceHTML::IsUrlAttribute(const nsAString& tagName,
                                        const nsAString& attrName, 
                                        const nsAString& attrValue) {
   const nsSubstring &trimmedAttrName = TrimTokenValue(attrName);
 
-  bool isHref = trimmedAttrName.LowerCaseEqualsLiteral("href");
-  bool isSrc = !isHref && trimmedAttrName.LowerCaseEqualsLiteral("src");
-  bool isXLink = !isHref && !isSrc &&
+  PRBool isHref = trimmedAttrName.LowerCaseEqualsLiteral("href");
+  PRBool isSrc = !isHref && trimmedAttrName.LowerCaseEqualsLiteral("src");
+  PRBool isXLink = !isHref && !isSrc &&
     mDocType == eXML && trimmedAttrName.EqualsLiteral("xlink:href");
 
   // If this is the HREF attribute of a BASE element, then update the base URI.
@@ -1050,7 +1050,7 @@ nsresult CViewSourceHTML::CreateViewSourceURL(const nsAString& linkUrl,
   // ignored.  There's nothing reasonable we can do with them, and allowing
   // them to execute in the context of the view-source window presents a
   // security risk.  Just return the empty string in this case.
-  bool openingExecutesScript = false;
+  PRBool openingExecutesScript = PR_FALSE;
   rv = NS_URIChainHasFlags(hrefURI, nsIProtocolHandler::URI_OPENING_EXECUTES_SCRIPT,
                            &openingExecutesScript);
   NS_ENSURE_SUCCESS(rv, NS_OK); // if there's an error, return the empty string
@@ -1061,7 +1061,7 @@ nsresult CViewSourceHTML::CreateViewSourceURL(const nsAString& linkUrl,
   // URLs that return data (e.g. "http:" URLs) should be prefixed with
   // "view-source:".  URLs that don't return data should just be returned
   // undecorated.
-  bool doesNotReturnData = false;
+  PRBool doesNotReturnData = PR_FALSE;
   rv = NS_URIChainHasFlags(hrefURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                            &doesNotReturnData);
   NS_ENSURE_SUCCESS(rv, NS_OK);  // if there's an error, return the empty string
@@ -1157,7 +1157,7 @@ void CViewSourceHTML::TrimTokenValue(nsAString::const_iterator& start,
   }
 }
 
-bool CViewSourceHTML::IsTokenValueTrimmableCharacter(PRUnichar ch) {
+PRBool CViewSourceHTML::IsTokenValueTrimmableCharacter(PRUnichar ch) {
   if (ch == ' ') return PR_TRUE;
   if (ch == '\t') return PR_TRUE;
   if (ch == '\r') return PR_TRUE;
@@ -1217,49 +1217,49 @@ void CViewSourceHTML::ExpandEntities(const nsAString& textIn, nsString& textOut)
   }
 }
 
-static bool InRange(PRUnichar ch, unsigned char chLow, unsigned char chHigh)
+static PRBool InRange(PRUnichar ch, unsigned char chLow, unsigned char chHigh)
 {
   return (chLow <= ch) && (ch <= chHigh);
 }
 
-static bool IsDigit(PRUnichar ch)
+static PRBool IsDigit(PRUnichar ch)
 { 
   return InRange(ch, '0', '9');
 }
 
-static bool IsHexDigit(PRUnichar ch)
+static PRBool IsHexDigit(PRUnichar ch)
 {
   return IsDigit(ch) || InRange(ch, 'A', 'F') || InRange(ch, 'a', 'f');
 }
 
-static bool IsAlphaNum(PRUnichar ch)
+static PRBool IsAlphaNum(PRUnichar ch)
 {
   return InRange(ch, 'A', 'Z') || InRange(ch, 'a', 'z') || IsDigit(ch);
 }
 
-static bool IsAmpersand(PRUnichar ch)
+static PRBool IsAmpersand(PRUnichar ch)
 {
   return ch == kAmpersand;
 }
 
-static bool IsHashsign(PRUnichar ch)
+static PRBool IsHashsign(PRUnichar ch)
 {
   return ch == kHashsign;
 }
 
-static bool IsXx(PRUnichar ch)
+static PRBool IsXx(PRUnichar ch)
 {
   return (ch == 'X') || (ch == 'x');
 }
 
-static bool IsSemicolon(PRUnichar ch)
+static PRBool IsSemicolon(PRUnichar ch)
 {
   return ch == kSemicolon;
 }
 
-static bool ConsumeChar(nsAString::const_iterator& start,
+static PRBool ConsumeChar(nsAString::const_iterator& start,
                           const nsAString::const_iterator &end,
-                          bool (*testFun)(PRUnichar ch))
+                          PRBool (*testFun)(PRUnichar ch))
 {
   if (start == end) {
     return PR_FALSE;
@@ -1319,7 +1319,7 @@ void CViewSourceHTML::CopyPossibleEntity(nsAString::const_iterator& iter,
   endBody = iter;
   
   // If the entity body is terminated with a semicolon, consume that too.
-  bool properlyTerminated = ConsumeChar(iter, end, IsSemicolon);
+  PRBool properlyTerminated = ConsumeChar(iter, end, IsSemicolon);
 
   // If the entity body is empty, then it's not really an entity.  Copy what
   // we've parsed verbatim, and return immediately.

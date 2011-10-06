@@ -163,7 +163,7 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
   nscoord yOffset = body->GetYPosition();
   
   if (availableHeight <= 0) {
-    bool fixed = (body->GetFixedRowSize() != -1);
+    PRBool fixed = (body->GetFixedRowSize() != -1);
     if (fixed)
       availableHeight = 10;
     else

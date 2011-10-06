@@ -102,7 +102,7 @@ public:
    * For now, this is true if and only if aChars starts with a ZWJ. (This
    * is what Uniscribe assumes.)
    */
-  static bool
+  static PRBool
   IsSpaceCombiningSequenceTail(const PRUnichar* aChars, PRInt32 aLength) {
     return aLength > 0 && aChars[0] == 0x200D; // ZWJ
   }
@@ -171,8 +171,8 @@ public:
   }
 
   // guaranteed to return only positive-length runs
-  bool NextRun();
-  bool IsSkipped() const { return mSkipped; }
+  PRBool NextRun();
+  PRBool IsSkipped() const { return mSkipped; }
   // Always returns something > 0
   PRInt32 GetRunLength() const { return mRunLength; }
   const gfxSkipCharsIterator& GetPos() const { return mIterator; }
@@ -183,9 +183,9 @@ private:
   gfxSkipCharsIterator mIterator;
   PRInt32              mRemainingLength;
   PRInt32              mRunLength;
-  bool                 mSkipped;
-  bool                 mVisitSkipped;
-  bool                 mLengthIncludesSkipped;
+  PRPackedBool         mSkipped;
+  PRPackedBool         mVisitSkipped;
+  PRPackedBool         mLengthIncludesSkipped;
 };
 
 #endif /*NSTEXTFRAMEUTILS_H_*/

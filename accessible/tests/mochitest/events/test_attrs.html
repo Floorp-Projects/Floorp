@@ -23,11 +23,8 @@
     /**
      * Test "event-from-input" object attribute.
      */
-    function eventFromInputChecker(aEventType, aID, aValue, aNoTargetID)
+    function checker(aValue, aNoTargetID)
     {
-      this.type = aEventType;
-      this.target = getAccessible(aID);
-
       this.noTarget = getNode(aNoTargetID);
 
       this.check = function checker_check(aEvent)
@@ -45,21 +42,16 @@
     var gQueue = null;
 
     // gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true; // debug stuff
 
     function doTests()
     {
       gQueue = new eventQueue();
 
       var id = "textbox", noTargetId = "textarea";
-      var checker =
-        new eventFromInputChecker(EVENT_FOCUS, id, "false", noTargetId);
-      gQueue.push(new synthFocus(id, checker));
-
+      gQueue.push(new synthFocus(id, new checker("false", noTargetId), EVENT_FOCUS));
+      
       if (!MAC) { // Mac failure is bug 541093
-        var checker =
-          new eventFromInputChecker(EVENT_TEXT_CARET_MOVED, id, "false", noTargetId);
-        gQueue.push(new synthHomeKey(id, checker));
+        gQueue.push(new synthHomeKey(id, new checker("false", noTargetId), EVENT_TEXT_CARET_MOVED));
       }
 
       gQueue.invoke(); // Will call SimpleTest.finish();

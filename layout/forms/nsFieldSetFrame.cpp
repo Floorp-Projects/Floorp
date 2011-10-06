@@ -82,9 +82,8 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             bool aShrinkWrap);
+                             PRBool aShrinkWrap);
   virtual nscoord GetBaseline() const;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -107,6 +106,7 @@ public:
                          nsIFrame*      aOldFrame);
 
   virtual nsIAtom* GetType() const;
+  virtual PRBool IsContainingBlock() const;
 
 #ifdef ACCESSIBILITY  
   virtual already_AddRefed<nsAccessible> CreateAccessible();
@@ -145,17 +145,16 @@ nsFieldSetFrame::nsFieldSetFrame(nsStyleContext* aContext)
   mLegendSpace  = 0;
 }
 
-void
-nsFieldSetFrame::DestroyFrom(nsIFrame* aDestructRoot)
-{
-  DestroyAbsoluteFrames(aDestructRoot);
-  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
-}
-
 nsIAtom*
 nsFieldSetFrame::GetType() const
 {
   return nsGkAtoms::fieldSetFrame;
+}
+
+PRBool
+nsFieldSetFrame::IsContainingBlock() const
+{
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -396,7 +395,7 @@ nsFieldSetFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
 nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             bool aShrinkWrap)
+                             PRBool aShrinkWrap)
 {
   nsSize result =
     nsHTMLContainerFrame::ComputeSize(aRenderingContext, aCBSize,
@@ -427,8 +426,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   //------------ Handle Incremental Reflow -----------------
-  bool reflowContent;
-  bool reflowLegend;
+  PRBool reflowContent;
+  PRBool reflowLegend;
 
   if (aReflowState.ShouldReflowAllKids()) {
     reflowContent = mContentFrame != nsnull;
@@ -604,7 +603,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mLegendFrame);
   if (mContentFrame)
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mContentFrame);
-  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus);
+  FinishAndStoreOverflow(&aDesiredSize);
 
   Invalidate(aDesiredSize.VisualOverflow());
 

@@ -86,7 +86,7 @@ nsClipboardPrivacyHandler::PrepareDataForClipboard(nsITransferable * aTransferab
       rv = aTransferable->AddDataFlavor(NS_MOZ_DATA_FROM_PRIVATEBROWSING);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = aTransferable->SetTransferData(NS_MOZ_DATA_FROM_PRIVATEBROWSING, data, sizeof(bool));
+      rv = aTransferable->SetTransferData(NS_MOZ_DATA_FROM_PRIVATEBROWSING, data, sizeof(PRBool));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -104,7 +104,7 @@ nsClipboardPrivacyHandler::Observe(nsISupports *aSubject, char const *aTopic, PR
     NS_ENSURE_SUCCESS(rv, rv);
 
     const char * flavors[] = { NS_MOZ_DATA_FROM_PRIVATEBROWSING };
-    bool haveFlavors;
+    PRBool haveFlavors;
     rv = clipboard->HasDataMatchingFlavors(flavors,
                                            NS_ARRAY_LENGTH(flavors),
                                            nsIClipboard::kGlobalClipboard,
@@ -132,10 +132,10 @@ nsClipboardPrivacyHandler::Observe(nsISupports *aSubject, char const *aTopic, PR
   return NS_OK;
 }
 
-bool
+PRBool
 nsClipboardPrivacyHandler::InPrivateBrowsing()
 {
-  bool inPrivateBrowsingMode = false;
+  PRBool inPrivateBrowsingMode = PR_FALSE;
   if (!mPBService)
     mPBService = do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
   if (mPBService)

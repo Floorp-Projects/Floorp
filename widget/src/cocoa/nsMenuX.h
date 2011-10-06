@@ -94,20 +94,20 @@ public:
   nsMenuObjectX* GetVisibleItemAt(PRUint32 aPos);
   nsEventStatus  MenuOpened();
   void           MenuClosed();
-  void           SetRebuild(bool aMenuEvent);
+  void           SetRebuild(PRBool aMenuEvent);
   NSMenuItem*    NativeMenuItem();
 
-  static bool    IsXULHelpMenu(nsIContent* aMenuContent);
+  static PRBool  IsXULHelpMenu(nsIContent* aMenuContent);
 
 protected:
   void           MenuConstruct();
   nsresult       RemoveAll();
-  nsresult       SetEnabled(bool aIsEnabled);
-  nsresult       GetEnabled(bool* aIsEnabled);
+  nsresult       SetEnabled(PRBool aIsEnabled);
+  nsresult       GetEnabled(PRBool* aIsEnabled);
   nsresult       SetupIcon();
   void           GetMenuPopupContent(nsIContent** aResult);
-  bool           OnOpen();
-  bool           OnClose();
+  PRBool         OnOpen();
+  PRBool         OnClose();
   nsresult       AddMenuItem(nsMenuItemX* aMenuItem);
   nsresult       AddMenu(nsMenuX* aMenu);
   void           LoadMenuItem(nsIContent* inMenuItemContent);  
@@ -125,12 +125,12 @@ protected:
   MenuDelegate*             mMenuDelegate; // [strong]
   // nsMenuX objects should always have a valid native menu item.
   NSMenuItem*               mNativeMenuItem; // [strong]
-  bool                      mIsEnabled;
-  bool                      mDestroyHandlerCalled;
-  bool                      mNeedsRebuild;
-  bool                      mConstructed;
-  bool                      mVisible;
-  bool                      mXBLAttached;
+  PRPackedBool              mIsEnabled;
+  PRPackedBool              mDestroyHandlerCalled;
+  PRPackedBool              mNeedsRebuild;
+  PRPackedBool              mConstructed;
+  PRPackedBool              mVisible;
+  PRPackedBool              mXBLAttached;
 };
 
 #endif // nsMenuX_h_

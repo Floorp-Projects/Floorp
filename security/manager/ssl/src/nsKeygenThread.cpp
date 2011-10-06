@@ -75,8 +75,8 @@ void nsKeygenThread::SetParams(
     PK11SlotInfo *a_slot,
     PRUint32 a_keyGenMechanism,
     void *a_params,
-    bool a_isPerm,
-    bool a_isSensitive,
+    PRBool a_isPerm,
+    PRBool a_isSensitive,
     void *a_wincx )
 {
   nsNSSShutDownPreventionLock locker;
@@ -168,7 +168,7 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIObserver* aObserver)
   return NS_OK;
 }
 
-nsresult nsKeygenThread::UserCanceled(bool *threadAlreadyClosedDialog)
+nsresult nsKeygenThread::UserCanceled(PRBool *threadAlreadyClosedDialog)
 {
   if (!threadAlreadyClosedDialog)
     return NS_OK;
@@ -192,7 +192,7 @@ nsresult nsKeygenThread::UserCanceled(bool *threadAlreadyClosedDialog)
 void nsKeygenThread::Run(void)
 {
   nsNSSShutDownPreventionLock locker;
-  bool canGenerate = false;
+  PRBool canGenerate = PR_FALSE;
 
   {
     MutexAutoLock lock(mutex);

@@ -56,7 +56,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual bool Visit(nsIFormControl* aRadio) = 0;
+  virtual PRBool Visit(nsIFormControl* aRadio) = 0;
 };
 
 /**
@@ -74,7 +74,7 @@ public:
     : mCheckedChanged(aCheckedChanged)
     { }
 
-  virtual bool Visit(nsIFormControl* aRadio);
+  virtual PRBool Visit(nsIFormControl* aRadio);
 
 protected:
   bool mCheckedChanged;
@@ -94,7 +94,7 @@ public:
     , mExcludeElement(aExcludeElement)
     { }
 
-  virtual bool Visit(nsIFormControl* aRadio);
+  virtual PRBool Visit(nsIFormControl* aRadio);
 
 protected:
   bool* mCheckedChanged;
@@ -116,7 +116,7 @@ public:
     , mNotify(aNotify)
     { }
 
-  virtual bool Visit(nsIFormControl* aRadio);
+  virtual PRBool Visit(nsIFormControl* aRadio);
 
 protected:
   nsIFormControl* mExcludeElement;

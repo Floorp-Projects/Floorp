@@ -105,7 +105,7 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetOwner(nsISupports* aOwner)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::GetInheritOwner(bool* aInheritOwner)
+NS_IMETHODIMP nsDocShellLoadInfo::GetInheritOwner(PRBool* aInheritOwner)
 {
    NS_ENSURE_ARG_POINTER(aInheritOwner);
 
@@ -113,19 +113,19 @@ NS_IMETHODIMP nsDocShellLoadInfo::GetInheritOwner(bool* aInheritOwner)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::SetInheritOwner(bool aInheritOwner)
+NS_IMETHODIMP nsDocShellLoadInfo::SetInheritOwner(PRBool aInheritOwner)
 {
    mInheritOwner = aInheritOwner;
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::GetOwnerIsExplicit(bool* aOwnerIsExplicit)
+NS_IMETHODIMP nsDocShellLoadInfo::GetOwnerIsExplicit(PRBool* aOwnerIsExplicit)
 {
    *aOwnerIsExplicit = mOwnerIsExplicit;
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::SetOwnerIsExplicit(bool aOwnerIsExplicit)
+NS_IMETHODIMP nsDocShellLoadInfo::SetOwnerIsExplicit(PRBool aOwnerIsExplicit)
 {
    mOwnerIsExplicit = aOwnerIsExplicit;
    return NS_OK;
@@ -209,7 +209,7 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetHeadersStream(nsIInputStream * aHeadersStre
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::GetSendReferrer(bool* aSendReferrer)
+NS_IMETHODIMP nsDocShellLoadInfo::GetSendReferrer(PRBool* aSendReferrer)
 {
    NS_ENSURE_ARG_POINTER(aSendReferrer);
 
@@ -217,7 +217,7 @@ NS_IMETHODIMP nsDocShellLoadInfo::GetSendReferrer(bool* aSendReferrer)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::SetSendReferrer(bool aSendReferrer)
+NS_IMETHODIMP nsDocShellLoadInfo::SetSendReferrer(PRBool aSendReferrer)
 {
    mSendReferrer = aSendReferrer;
    return NS_OK;

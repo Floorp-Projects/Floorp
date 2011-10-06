@@ -101,7 +101,7 @@ nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   if ((aWhichClipboard != kGlobalClipboard) || !mTransferable)
     return NS_ERROR_FAILURE;
 
-  mIgnoreEmptyNotification = true;
+  mIgnoreEmptyNotification = PR_TRUE;
 
   NSDictionary* pasteboardOutputDict = PasteboardDictFromTransferable(mTransferable);
   if (!pasteboardOutputDict)
@@ -130,7 +130,7 @@ nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 
   mChangeCount = [generalPBoard changeCount];
 
-  mIgnoreEmptyNotification = false;
+  mIgnoreEmptyNotification = PR_FALSE;
 
   return NS_OK;
 
@@ -236,7 +236,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
                                                                     outputType,
                                                                     1, NULL);
       CGImageDestinationAddImageFromSource(dest, source, 0, NULL);
-      bool successfullyConverted = CGImageDestinationFinalize(dest);
+      PRBool successfullyConverted = CGImageDestinationFinalize(dest);
 
       if (successfullyConverted) {
         // Put the converted data in a form Gecko can understand
@@ -324,11 +324,11 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
 // returns true if we have *any* of the passed in flavors available for pasting
 NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
-                                    PRInt32 aWhichClipboard, bool* outResult)
+                                    PRInt32 aWhichClipboard, PRBool* outResult)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  *outResult = false;
+  *outResult = PR_FALSE;
 
   if ((aWhichClipboard != kGlobalClipboard) || !aFlavorList)
     return NS_OK;
@@ -351,7 +351,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
 
         for (PRUint32 k = 0; k < aLength; k++) {
           if (transferableFlavorStr.Equals(aFlavorList[k])) {
-            *outResult = true;
+            *outResult = PR_TRUE;
             return NS_OK;
           }
         }
@@ -368,7 +368,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
     if (nsClipboard::IsStringType(mimeType, &pboardType)) {
       NSString* availableType = [generalPBoard availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
       if (availableType && [availableType isEqualToString:pboardType]) {
-        *outResult = true;
+        *outResult = PR_TRUE;
         break;
       }
     } else if (!strcmp(aFlavorList[i], kJPEGImageMime) ||
@@ -377,7 +377,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
       NSString* availableType = [generalPBoard availableTypeFromArray:
                                   [NSArray arrayWithObjects:IMAGE_PASTEBOARD_TYPES]];
       if (availableType) {
-        *outResult = true;
+        *outResult = PR_TRUE;
         break;
       }
     }
@@ -480,7 +480,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
                                                                        1,
                                                                        NULL);
       CGImageDestinationAddImage(destRef, imageRef, NULL);
-      bool successfullyConverted = CGImageDestinationFinalize(destRef);
+      PRBool successfullyConverted = CGImageDestinationFinalize(destRef);
 
       CGImageRelease(imageRef);
       if (destRef)
@@ -546,7 +546,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-bool nsClipboard::IsStringType(const nsCString& aMIMEType, NSString** aPasteboardType)
+PRBool nsClipboard::IsStringType(const nsCString& aMIMEType, NSString** aPasteboardType)
 {
   if (aMIMEType.EqualsLiteral(kUnicodeMime) ||
       aMIMEType.EqualsLiteral(kHTMLMime)) {
@@ -554,9 +554,9 @@ bool nsClipboard::IsStringType(const nsCString& aMIMEType, NSString** aPasteboar
       *aPasteboardType = NSStringPboardType;
     else
       *aPasteboardType = NSHTMLPboardType;
-    return true;
+    return PR_TRUE;
   } else {
-    return false;
+    return PR_FALSE;
   }
 }
 

@@ -97,7 +97,7 @@ struct ElementPropertyTransition
   // has time units, the output has value units.)
   double ValuePortionFor(TimeStamp aRefreshTime) const;
 
-  bool IsRemovedSentinel() const
+  PRBool IsRemovedSentinel() const
   {
     return mStartTime.IsNull();
   }
@@ -195,7 +195,7 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 
       double valuePortion = pt.ValuePortionFor(aRefreshTime);
 #ifdef DEBUG
-      bool ok =
+      PRBool ok =
 #endif
         nsStyleAnimation::Interpolate(pt.mProperty,
                                       pt.mStartValue, pt.mEndValue,
@@ -276,7 +276,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // I'll consider only the transitions from the number of items in
   // 'transition-property' on down, and later ones will override earlier
   // ones (tracked using |whichStarted|).
-  bool startedAny = false;
+  PRBool startedAny = PR_FALSE;
   nsCSSPropertySet whichStarted;
   for (PRUint32 i = disp->mTransitionPropertyCount; i-- != 0; ) {
     const nsTransition& t = disp->mTransitions[i];
@@ -319,7 +319,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // still in the set of properties to transition), but we didn't just
   // start the transition because delay and duration are both zero.
   if (et) {
-    bool checkProperties =
+    PRBool checkProperties =
       disp->mTransitions[0].GetProperty() != eCSSPropertyExtra_all_properties;
     nsCSSPropertySet allTransitionProperties;
     if (checkProperties) {
@@ -419,7 +419,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
                        ElementTransitions *&aElementTransitions,
                        nsStyleContext *aOldStyleContext,
                        nsStyleContext *aNewStyleContext,
-                       bool *aStartedAny,
+                       PRBool *aStartedAny,
                        nsCSSPropertySet *aWhichStarted)
 {
   // IsShorthand itself will assert if aProperty is not a property.
@@ -440,12 +440,12 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
   ElementPropertyTransition pt;
   nsStyleAnimation::Value dummyValue;
-  bool haveValues =
+  PRBool haveValues =
     ExtractComputedValueForTransition(aProperty, aOldStyleContext,
                                       pt.mStartValue) &&
     ExtractComputedValueForTransition(aProperty, aNewStyleContext,
                                       pt.mEndValue);
-  bool shouldAnimate =
+  PRBool shouldAnimate =
     haveValues &&
     pt.mStartValue != pt.mEndValue &&
     // Check that we can interpolate between these values
@@ -601,7 +601,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 ElementTransitions*
 nsTransitionManager::GetElementTransitions(dom::Element *aElement,
                                            nsCSSPseudoElements::Type aPseudoType,
-                                           bool aCreateIfNeeded)
+                                           PRBool aCreateIfNeeded)
 {
   if (!aCreateIfNeeded && PR_CLIST_IS_EMPTY(&mElementData)) {
     // Early return for the most common case.

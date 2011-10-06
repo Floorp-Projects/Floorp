@@ -100,7 +100,7 @@ function searchTest(contentWindow) {
 
   // part of titled
   searchBox.setAttribute("value", tabNames[0].substr(1));
-  contentWindow.Search.perform();
+  contentWindow.performSearch();
   matchResults = getMatchResults(contentWindow, searchBox.getAttribute("value"));
   is(matchResults.length, 1,
      "Match something when a part of title exists");
@@ -109,7 +109,7 @@ function searchTest(contentWindow) {
 }
 
 function cleanup(contentWindow) {
-  contentWindow.Search.hide(null);
+  contentWindow.hideSearch(null);
 
   let onTabViewHidden = function() {
       window.removeEventListener("tabviewhidden", onTabViewHidden, false);

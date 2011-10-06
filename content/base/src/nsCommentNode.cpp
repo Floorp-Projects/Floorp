@@ -71,16 +71,16 @@ public:
   // Empty interface
 
   // nsINode
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              bool aCloneText) const;
+                                              PRBool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,
-                           bool aDumpAll = true) const
+                           PRBool aDumpAll = PR_TRUE) const
   {
     return;
   }
@@ -133,14 +133,14 @@ NS_IMPL_ADDREF_INHERITED(nsCommentNode, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(nsCommentNode, nsGenericDOMDataNode)
 
 
-bool
+PRBool
 nsCommentNode::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eCOMMENT | eDATA_NODE));
 }
 
 nsGenericDOMDataNode*
-nsCommentNode::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
+nsCommentNode::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   nsCommentNode *it = new nsCommentNode(ni.forget());

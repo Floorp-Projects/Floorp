@@ -439,7 +439,7 @@ public:
     ~MainThreadOnly() {
         NS_ASSERTION(NS_IsMainThread(), "method called on wrong thread");
     }
-    bool IsDone() { return mNumRuns == 0; }
+    PRBool IsDone() { return mNumRuns == 0; }
 private:
     PRUint32 *mNumRuns;
 };

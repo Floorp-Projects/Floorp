@@ -78,7 +78,6 @@
 #include "nsIRequest.h"
 #include "mozilla/Preferences.h"
 #include "nsDOMLists.h"
-#include "xpcpublic.h"
 
 using namespace mozilla;
 
@@ -130,10 +129,10 @@ public:
   nsresult FailConnection();
   nsresult ConsoleError();
 
-  bool HasOutgoingMessages()
+  PRBool HasOutgoingMessages()
   { return mOutgoingBufferedAmount != 0; }
 
-  bool ClosedCleanly() { return mClosedCleanly; }
+  PRBool ClosedCleanly() { return mClosedCleanly; }
 
   nsresult PostMessage(const nsString& aMessage);
   PRUint32 GetOutgoingBufferedAmount() { return mOutgoingBufferedAmount; }
@@ -152,7 +151,7 @@ private:
   nsWebSocket* mOwner; // weak reference
   nsCOMPtr<nsIWebSocketChannel> mWebSocketChannel;
 
-  bool mClosedCleanly;
+  PRPackedBool mClosedCleanly;
 
   enum ConnectionStatus {
     CONN_NOT_CONNECTED,
@@ -835,7 +834,7 @@ nsWebSocket::EstablishConnection()
 class nsWSCloseEvent : public nsRunnable
 {
 public:
-nsWSCloseEvent(nsWebSocket *aWebSocket, bool aWasClean, 
+nsWSCloseEvent(nsWebSocket *aWebSocket, PRBool aWasClean, 
                PRUint16 aCode, const nsString &aReason)
     : mWebSocket(aWebSocket),
       mWasClean(aWasClean),
@@ -853,7 +852,7 @@ nsWSCloseEvent(nsWebSocket *aWebSocket, bool aWasClean,
 
 private:
   nsRefPtr<nsWebSocket> mWebSocket;
-  bool mWasClean;
+  PRBool mWasClean;
   PRUint16 mCode;
   nsString mReason;
 };
@@ -943,7 +942,7 @@ nsWebSocket::CreateAndDispatchMessageEvent(const nsACString& aData)
 }
 
 nsresult
-nsWebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
+nsWebSocket::CreateAndDispatchCloseEvent(PRBool aWasClean,
                                          PRUint16 aCode,
                                          const nsString &aReason)
 {
@@ -977,10 +976,10 @@ nsWebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
   return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
 }
 
-bool
+PRBool
 nsWebSocket::PrefEnabled()
 {
-  return Preferences::GetBool("network.websocket.enabled", true);
+  return Preferences::GetBool("network.websocket.enabled", PR_TRUE);
 }
 
 void
@@ -1138,7 +1137,7 @@ nsWebSocket::UpdateMustKeepAlive()
     return;
   }
 
-  bool shouldKeepAlive = false;
+  PRBool shouldKeepAlive = PR_FALSE;
 
   if (mListenerManager) {
     switch (mReadyState)
@@ -1196,7 +1195,7 @@ nsWebSocket::DontKeepAliveAnyMore()
 NS_IMETHODIMP
 nsWebSocket::RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
-                                 bool aUseCapture)
+                                 PRBool aUseCapture)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   nsresult rv = nsDOMEventTargetHelper::RemoveEventListener(aType,
@@ -1211,8 +1210,8 @@ nsWebSocket::RemoveEventListener(const nsAString& aType,
 NS_IMETHODIMP
 nsWebSocket::AddEventListener(const nsAString& aType,
                               nsIDOMEventListener *aListener,
-                              bool aUseCapture,
-                              bool aWantsUntrusted,
+                              PRBool aUseCapture,
+                              PRBool aWantsUntrusted,
                               PRUint8 optional_argc)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
@@ -1289,7 +1288,7 @@ NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(error, mOnErrorListener)
 NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(message, mOnMessageListener)
 NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(close, mOnCloseListener)
 
-static bool
+static PRBool
 ContainsUnpairedSurrogates(const nsAString& aData)
 {
   // Check for unpaired surrogates.
@@ -1439,7 +1438,7 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
   // Don't allow https:// to open ws://
   if (!mSecure && 
       !Preferences::GetBool("network.websocket.allowInsecureFromHTTPS",
-                            false)) {
+                            PR_FALSE)) {
     // Confirmed we are opening plain ws:// and want to prevent this from a
     // secure context (e.g. https). Check the security context of the document
     // associated with this script, which is the same as associated with mOwner.
@@ -1484,7 +1483,7 @@ nsWebSocketEstablishedConnection::GetName(nsACString &aName)
 }
 
 NS_IMETHODIMP
-nsWebSocketEstablishedConnection::IsPending(bool *aValue)
+nsWebSocketEstablishedConnection::IsPending(PRBool *aValue)
 {
   *aValue = !!(mOwner);
   return NS_OK;

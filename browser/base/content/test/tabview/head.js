@@ -199,7 +199,7 @@ function hideSearch(callback, win) {
   win = win || window;
 
   let contentWindow = win.TabView.getContentWindow();
-  if (!contentWindow.Search.isEnabled()) {
+  if (!contentWindow.isSearchEnabled()) {
     if (callback)
       callback();
     return;
@@ -208,7 +208,7 @@ function hideSearch(callback, win) {
   if (callback)
     whenSearchIsDisabled(callback, win);
 
-  contentWindow.Search.hide();
+  contentWindow.hideSearch();
 }
 
 // ----------
@@ -216,7 +216,7 @@ function whenSearchIsEnabled(callback, win) {
   win = win || window;
 
   let contentWindow = win.TabView.getContentWindow();
-  if (contentWindow.Search.isEnabled()) {
+  if (contentWindow.isSearchEnabled()) {
     callback();
     return;
   }
@@ -232,7 +232,7 @@ function whenSearchIsDisabled(callback, win) {
   win = win || window;
 
   let contentWindow = win.TabView.getContentWindow();
-  if (!contentWindow.Search.isEnabled()) {
+  if (!contentWindow.isSearchEnabled()) {
     callback();
     return;
   }

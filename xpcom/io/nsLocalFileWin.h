@@ -101,8 +101,8 @@ private:
     nsLocalFile(const nsLocalFile& other);
     ~nsLocalFile() {}
 
-    bool mDirty;            // cached information can only be used when this is false
-    bool mFollowSymlinks;   // should we follow symlinks when working on this file
+    PRPackedBool mDirty;            // cached information can only be used when this is PR_FALSE
+    PRPackedBool mFollowSymlinks;   // should we follow symlinks when working on this file
     
     // this string will always be in native format!
     nsString mWorkingPath;
@@ -125,16 +125,16 @@ private:
     void EnsureShortPath();
     
     nsresult CopyMove(nsIFile *newParentDir, const nsAString &newName,
-                      bool followSymlinks, bool move);
+                      PRBool followSymlinks, PRBool move);
     nsresult CopySingleFile(nsIFile *source, nsIFile* dest,
                             const nsAString &newName,
-                            bool followSymlinks, bool move,
-                            bool skipNtfsAclReset = false);
+                            PRBool followSymlinks, PRBool move,
+                            PRBool skipNtfsAclReset = PR_FALSE);
 
     nsresult SetModDate(PRInt64 aLastModifiedTime, const PRUnichar *filePath);
-    nsresult HasFileAttribute(DWORD fileAttrib, bool *_retval);
+    nsresult HasFileAttribute(DWORD fileAttrib, PRBool *_retval);
     nsresult AppendInternal(const nsAFlatString &node,
-                            bool multipleComponents);
+                            PRBool multipleComponents);
     nsresult RevealClassic(); // Reveals the path using explorer.exe cmdline
     nsresult RevealUsingShell(); // Uses newer shell API to reveal the path
 

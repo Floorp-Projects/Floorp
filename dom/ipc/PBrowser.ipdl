@@ -123,7 +123,7 @@ parent:
      *  preference   Native widget preference for IME updates
      *  seqno        Current seqno value on the chrome side
      */
-    sync NotifyIMEFocus(bool focus)
+    sync NotifyIMEFocus(PRBool focus)
       returns (nsIMEUpdatePreference preference, PRUint32 seqno);
 
     /**
@@ -169,15 +169,15 @@ parent:
      *  if cancel is PR_FALSE,
      *    widget should return the current composition text
      */
-    sync EndIMEComposition(bool cancel) returns (nsString composition);
+    sync EndIMEComposition(PRBool cancel) returns (nsString composition);
 
     sync GetIMEEnabled() returns (PRUint32 value);
 
     SetInputMode(PRUint32 value, nsString type, nsString actionHint, PRUint32 reason);
 
-    sync GetIMEOpenState() returns (bool value);
+    sync GetIMEOpenState() returns (PRBool value);
 
-    SetIMEOpenState(bool value);
+    SetIMEOpenState(PRBool value);
 
     /**
      * Gets the DPI of the screen corresponding to this browser.

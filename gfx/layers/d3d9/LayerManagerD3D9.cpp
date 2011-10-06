@@ -69,14 +69,14 @@ LayerManagerD3D9::~LayerManagerD3D9()
   Destroy();
 }
 
-bool
+PRBool
 LayerManagerD3D9::Initialize()
 {
   ScopedGfxFeatureReporter reporter("D3D9 Layers");
 
   /* XXX: this preference and blacklist code should move out of the layer manager */
-  bool forceAccelerate =
-    Preferences::GetBool("layers.acceleration.force-enabled", false);
+  PRBool forceAccelerate =
+    Preferences::GetBool("layers.acceleration.force-enabled", PR_FALSE);
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {
@@ -168,12 +168,11 @@ LayerManagerD3D9::EndEmptyTransaction()
 
 void
 LayerManagerD3D9::EndTransaction(DrawThebesLayerCallback aCallback,
-                                 void* aCallbackData,
-                                 EndTransactionFlags aFlags)
+                                 void* aCallbackData)
 {
   mDeviceResetCount = mDeviceManager->GetDeviceResetCount();
 
-  if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
+  if (mRoot) {
     mCurrentCallbackInfo.Callback = aCallback;
     mCurrentCallbackInfo.CallbackData = aCallbackData;
 

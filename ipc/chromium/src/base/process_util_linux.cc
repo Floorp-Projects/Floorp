@@ -20,7 +20,10 @@
 #include "base/string_util.h"
 
 #ifdef MOZ_MEMORY_ANDROID
-#include "jemalloc.h"
+extern "C" {
+extern void _malloc_prefork(void);
+extern void _malloc_postfork(void);
+}
 #endif
 
 namespace {

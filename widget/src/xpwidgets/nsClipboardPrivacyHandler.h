@@ -70,7 +70,7 @@ public:
 
 private:
 
-  bool InPrivateBrowsing();
+  PRBool InPrivateBrowsing();
 
   nsCOMPtr<nsIPrivateBrowsingService> mPBService;
 

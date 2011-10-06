@@ -278,7 +278,7 @@ protected:
 
   uMappingTable             * mMappingTable;
   PRUnichar                 mFastTable[ONE_BYTE_TABLE_SIZE];
-  bool                      mFastTableCreated;
+  PRBool                    mFastTableCreated;
   mozilla::Mutex            mFastTableMutex;
 
   //--------------------------------------------------------------------

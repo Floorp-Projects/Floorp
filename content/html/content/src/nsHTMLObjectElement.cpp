@@ -86,16 +86,16 @@ public:
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
                            nsIAtom *aPrefix, const nsAString &aValue,
-                           bool aNotify);
+                           PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
+                             PRBool aNotify);
 
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual PRUint32 GetDesiredIMEState();
 
   // Overriden nsIFormControl methods
@@ -109,15 +109,15 @@ public:
 
   virtual bool IsDisabled() const { return PR_FALSE; }
 
-  virtual nsresult DoneAddingChildren(bool aHaveNotified);
-  virtual bool IsDoneAddingChildren();
+  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
+  virtual PRBool IsDoneAddingChildren();
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom *aAttribute,
                                 const nsAString &aValue,
                                 nsAttrValue &aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom *aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom *aAttribute) const;
   virtual nsEventStates IntrinsicState() const;
   virtual void DestroyContent();
 
@@ -138,7 +138,7 @@ private:
   /**
    * Calls LoadObject with the correct arguments to start the plugin load.
    */
-  NS_HIDDEN_(void) StartObjectLoad(bool aNotify);
+  NS_HIDDEN_(void) StartObjectLoad(PRBool aNotify);
 
   /**
    * Returns if the element is currently focusable regardless of it's tabindex
@@ -146,7 +146,7 @@ private:
    */
   bool IsFocusableForTabIndex();
 
-  bool mIsDoneAddingChildren;
+  PRPackedBool mIsDoneAddingChildren;
 };
 
 
@@ -174,14 +174,14 @@ nsHTMLObjectElement::~nsHTMLObjectElement()
   DestroyImageLoadingContent();
 }
 
-bool
+PRBool
 nsHTMLObjectElement::IsDoneAddingChildren()
 {
   return mIsDoneAddingChildren;
 }
 
 nsresult
-nsHTMLObjectElement::DoneAddingChildren(bool aHaveNotified)
+nsHTMLObjectElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   mIsDoneAddingChildren = PR_TRUE;
 
@@ -238,7 +238,7 @@ nsresult
 nsHTMLObjectElement::BindToTree(nsIDocument *aDocument,
                                 nsIContent *aParent,
                                 nsIContent *aBindingParent,
-                                bool aCompileEventHandlers)
+                                PRBool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
                                                      aBindingParent,
@@ -255,8 +255,8 @@ nsHTMLObjectElement::BindToTree(nsIDocument *aDocument,
 }
 
 void
-nsHTMLObjectElement::UnbindFromTree(bool aDeep,
-                                    bool aNullParent)
+nsHTMLObjectElement::UnbindFromTree(PRBool aDeep,
+                                    PRBool aNullParent)
 {
   RemovedFromDocument();
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
@@ -267,7 +267,7 @@ nsHTMLObjectElement::UnbindFromTree(bool aDeep,
 nsresult
 nsHTMLObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
                              nsIAtom *aPrefix, const nsAString &aValue,
-                             bool aNotify)
+                             PRBool aNotify)
 {
   // If we plan to call LoadObject, we want to do it first so that the
   // object load kicks off _before_ the reflow triggered by the SetAttr.  But if
@@ -291,7 +291,7 @@ nsHTMLObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
 
 nsresult
 nsHTMLObjectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                               bool aNotify)
+                               PRBool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::data) {
     Fallback(aNotify);
@@ -312,9 +312,9 @@ nsHTMLObjectElement::IsFocusableForTabIndex()
          (Type() == eType_Document && nsContentUtils::IsSubDocumentTabbable(this));
 }
 
-bool
-nsHTMLObjectElement::IsHTMLFocusable(bool aWithMouse,
-                                     bool *aIsFocusable, PRInt32 *aTabIndex)
+PRBool
+nsHTMLObjectElement::IsHTMLFocusable(PRBool aWithMouse,
+                                     PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
   // TODO: this should probably be managed directly by IsHTMLFocusable.
   // See bug 597242.
@@ -449,7 +449,7 @@ nsHTMLObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
   return GetContentDocument(aResult);
 }
 
-bool
+PRBool
 nsHTMLObjectElement::ParseAttribute(PRInt32 aNamespaceID,
                                     nsIAtom *aAttribute,
                                     const nsAString &aValue,
@@ -479,7 +479,7 @@ MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
   nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 nsHTMLObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -500,7 +500,7 @@ nsHTMLObjectElement::GetAttributeMappingFunction() const
 }
 
 void
-nsHTMLObjectElement::StartObjectLoad(bool aNotify)
+nsHTMLObjectElement::StartObjectLoad(PRBool aNotify)
 {
   nsAutoString type;
   GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);

@@ -148,7 +148,7 @@ public:
    * 
    * Return PR_TRUE if the ARIA property is defined, otherwise PR_FALSE
    */
-  static bool HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom);
+  static PRBool HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom);
 
   /**
    * Return atomic value of ARIA attribute of boolean or NMTOKEN type.
@@ -216,7 +216,7 @@ public:
    * Return true if the DOM node of given accessible has aria-selected="true"
    * attribute.
    */
-  static bool IsARIASelected(nsAccessible *aAccessible);
+  static PRBool IsARIASelected(nsAccessible *aAccessible);
 
   /**
    * Return text accessible containing focus point of the given selection.
@@ -313,20 +313,20 @@ public:
    *
    * @return         true if object attribute should be exposed
    */
-  static bool GetLiveAttrValue(PRUint32 aRule, nsAString& aValue);
+  static PRBool GetLiveAttrValue(PRUint32 aRule, nsAString& aValue);
 
 #ifdef DEBUG_A11Y
   /**
    * Detect whether the given accessible object implements nsIAccessibleText,
    * when it is text or has text child node.
    */
-  static bool IsTextInterfaceSupportCorrect(nsAccessible *aAccessible);
+  static PRBool IsTextInterfaceSupportCorrect(nsAccessible *aAccessible);
 #endif
 
   /**
    * Return true if the given accessible has text role.
    */
-  static bool IsText(nsIAccessible *aAcc)
+  static PRBool IsText(nsIAccessible *aAcc)
   {
     PRUint32 role = Role(aAcc);
     return role == nsIAccessibleRole::ROLE_TEXT_LEAF ||
@@ -341,7 +341,7 @@ public:
   /**
    * Return true if the given accessible is embedded object.
    */
-  static bool IsEmbeddedObject(nsIAccessible *aAcc)
+  static PRBool IsEmbeddedObject(nsIAccessible *aAcc)
   {
     PRUint32 role = Role(aAcc);
     return role != nsIAccessibleRole::ROLE_TEXT_LEAF &&
@@ -373,7 +373,7 @@ public:
    * Return true if the given accessible can't have children. Used when exposing
    * to platform accessibility APIs, should the children be pruned off?
    */
-  static bool MustPrune(nsIAccessible *aAccessible);
+  static PRBool MustPrune(nsIAccessible *aAccessible);
 
   /**
    * Search hint enum constants. Used by GetHeaderCellsFor() method.

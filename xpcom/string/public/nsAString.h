@@ -88,7 +88,7 @@ class nsCaseInsensitiveCStringArrayComparator
   {
     public:
       template<class A, class B>
-      bool Equals(const A& a, const B& b) const {
+      PRBool Equals(const A& a, const B& b) const {
         return a.Equals(b, nsCaseInsensitiveCStringComparator());
       }
   };

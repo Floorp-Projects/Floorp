@@ -121,7 +121,7 @@ public:
 
   NS_FORWARD_TO_NSDOMUIEVENT
 
-  static bool PrefEnabled();
+  static PRBool PrefEnabled();
 protected:
   nsCOMPtr<nsIDOMTouchList> mTouches;
   nsCOMPtr<nsIDOMTouchList> mTargetTouches;

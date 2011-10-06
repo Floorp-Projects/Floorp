@@ -447,8 +447,7 @@ static void EndCrashReporterDialog(HWND hwndDlg, int code)
 {
   // Save the current values to the registry
   wchar_t email[MAX_EMAIL_LENGTH];
-  GetDlgItemTextW(hwndDlg, IDC_EMAILTEXT, email,
-                  sizeof(email) / sizeof(email[0]));
+  GetDlgItemText(hwndDlg, IDC_EMAILTEXT, email, sizeof(email));
   SetStringKey(gCrashReporterKey.c_str(), EMAIL_VALUE, email);
 
   SetBoolKey(gCrashReporterKey.c_str(), INCLUDE_URL_VALUE,
@@ -591,8 +590,7 @@ static void UpdateEmail(HWND hwndDlg)
 {
   if (IsDlgButtonChecked(hwndDlg, IDC_EMAILMECHECK)) {
     wchar_t email[MAX_EMAIL_LENGTH];
-    GetDlgItemTextW(hwndDlg, IDC_EMAILTEXT, email,
-                    sizeof(email) / sizeof(email[0]));
+    GetDlgItemText(hwndDlg, IDC_EMAILTEXT, email, sizeof(email));
     gQueryParameters[L"Email"] = email;
     if (IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK))
       EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), true);
@@ -605,8 +603,7 @@ static void UpdateEmail(HWND hwndDlg)
 static void UpdateComment(HWND hwndDlg)
 {
   wchar_t comment[MAX_COMMENT_LENGTH + 1];
-  GetDlgItemTextW(hwndDlg, IDC_COMMENTTEXT, comment,
-                  sizeof(comment) / sizeof(comment[0]));
+  GetDlgItemText(hwndDlg, IDC_COMMENTTEXT, comment, sizeof(comment));
   if (wcslen(comment) > 0)
     gQueryParameters[L"Comments"] = comment;
   else

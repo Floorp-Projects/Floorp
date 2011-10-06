@@ -61,11 +61,11 @@ public:
 
   // Registers the global app user model id for the instance.
   // See comments in WinTaskbar.cpp for more information.
-  static bool RegisterAppUserModelID();
-  static bool GetAppUserModelID(nsAString & aDefaultGroupId);
+  static PRBool RegisterAppUserModelID();
+  static PRBool GetAppUserModelID(nsAString & aDefaultGroupId);
 
 private:
-  bool Initialize();
+  PRBool Initialize();
 
   typedef HRESULT (WINAPI * SetCurrentProcessExplicitAppUserModelIDPtr)(PCWSTR AppID);
   ITaskbarList4 *mTaskbar;

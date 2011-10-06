@@ -80,7 +80,7 @@ NS_IMPL_ISUPPORTS2(inCSSValueSearch, inISearchProcess, inICSSValueSearch)
 // inISearchProcess
 
 NS_IMETHODIMP 
-inCSSValueSearch::GetIsActive(bool *aIsActive)
+inCSSValueSearch::GetIsActive(PRBool *aIsActive)
 {
   *aIsActive = mIsActive;
   return NS_OK;
@@ -94,14 +94,14 @@ inCSSValueSearch::GetResultCount(PRInt32 *aResultCount)
 }
 
 NS_IMETHODIMP 
-inCSSValueSearch::GetHoldResults(bool *aHoldResults)
+inCSSValueSearch::GetHoldResults(PRBool *aHoldResults)
 {
   *aHoldResults = mHoldResults;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-inCSSValueSearch::SetHoldResults(bool aHoldResults)
+inCSSValueSearch::SetHoldResults(PRBool aHoldResults)
 {
   mHoldResults = aHoldResults;
   return NS_OK;
@@ -159,7 +159,7 @@ inCSSValueSearch::SearchStop()
 }
 
 NS_IMETHODIMP
-inCSSValueSearch::SearchStep(bool* _retval)
+inCSSValueSearch::SearchStep(PRBool* _retval)
 {
 
   return NS_OK;
@@ -226,28 +226,28 @@ inCSSValueSearch::SetBaseURL(const PRUnichar* aBaseURL)
 }
 
 NS_IMETHODIMP 
-inCSSValueSearch::GetReturnRelativeURLs(bool* aReturnRelativeURLs)
+inCSSValueSearch::GetReturnRelativeURLs(PRBool* aReturnRelativeURLs)
 {
   *aReturnRelativeURLs = mReturnRelativeURLs;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-inCSSValueSearch::SetReturnRelativeURLs(bool aReturnRelativeURLs)
+inCSSValueSearch::SetReturnRelativeURLs(PRBool aReturnRelativeURLs)
 {
   mReturnRelativeURLs = aReturnRelativeURLs;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-inCSSValueSearch::GetNormalizeChromeURLs(bool *aNormalizeChromeURLs)
+inCSSValueSearch::GetNormalizeChromeURLs(PRBool *aNormalizeChromeURLs)
 {
   *aNormalizeChromeURLs = mNormalizeChromeURLs;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inCSSValueSearch::SetNormalizeChromeURLs(bool aNormalizeChromeURLs)
+inCSSValueSearch::SetNormalizeChromeURLs(PRBool aNormalizeChromeURLs)
 {
   mNormalizeChromeURLs = aNormalizeChromeURLs;
   return NS_OK;

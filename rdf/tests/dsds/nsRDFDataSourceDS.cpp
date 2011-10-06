@@ -136,7 +136,7 @@ NS_IMPL_ISUPPORTS2(nsRDFDataSourceDataSource,
  */
 
 /* readonly attribute boolean loaded; */
-NS_IMETHODIMP nsRDFDataSourceDataSource::GetLoaded(bool *aLoaded)
+NS_IMETHODIMP nsRDFDataSourceDataSource::GetLoaded(PRBool *aLoaded)
 {
     nsCOMPtr<nsIRDFRemoteDataSource> remote =
         do_QueryInterface(mDataSource);
@@ -188,7 +188,7 @@ nsRDFDataSourceDataSource::Init(const char *uri)
 }
 
 /* void Refresh (in boolean aBlocking); */
-NS_IMETHODIMP nsRDFDataSourceDataSource::Refresh(bool aBlocking)
+NS_IMETHODIMP nsRDFDataSourceDataSource::Refresh(PRBool aBlocking)
 {
     nsCOMPtr<nsIRDFRemoteDataSource> remote =
         do_QueryInterface(mDataSource);
@@ -230,7 +230,7 @@ nsRDFDataSourceDataSource::GetURI(char * *aURI)
 NS_IMETHODIMP
 nsRDFDataSourceDataSource::GetSource(nsIRDFResource *aProperty,
                                      nsIRDFNode *aTarget,
-                                     bool aTruthValue,
+                                     PRBool aTruthValue,
                                      nsIRDFResource **_retval)
 {
   return NS_RDF_NO_VALUE;
@@ -240,7 +240,7 @@ nsRDFDataSourceDataSource::GetSource(nsIRDFResource *aProperty,
 NS_IMETHODIMP
 nsRDFDataSourceDataSource::GetSources(nsIRDFResource *aProperty,
                                       nsIRDFNode *aTarget,
-                                      bool aTruthValue,
+                                      PRBool aTruthValue,
                                       nsISimpleEnumerator **_retval)
 {
   return NS_RDF_NO_VALUE;
@@ -250,7 +250,7 @@ nsRDFDataSourceDataSource::GetSources(nsIRDFResource *aProperty,
 NS_IMETHODIMP
 nsRDFDataSourceDataSource::GetTarget(nsIRDFResource *aSource,
                                      nsIRDFResource *aProperty,
-                                     bool aTruthValue,
+                                     PRBool aTruthValue,
                                      nsIRDFNode **_retval)
 {
 #ifdef DEBUG_alecf
@@ -269,7 +269,7 @@ nsRDFDataSourceDataSource::GetTarget(nsIRDFResource *aSource,
 NS_IMETHODIMP
 nsRDFDataSourceDataSource::GetTargets(nsIRDFResource *aSource,
                                       nsIRDFResource *aProperty,
-                                      bool aTruthValue,
+                                      PRBool aTruthValue,
                                       nsISimpleEnumerator **_retval)
 {
   nsXPIDLCString sourceval;
@@ -282,7 +282,7 @@ nsRDFDataSourceDataSource::GetTargets(nsIRDFResource *aSource,
 #endif
   
   nsresult rv;
-  bool isProp;
+  PRBool isProp;
   nsCOMPtr<nsISupportsArray> arcs;
   nsISimpleEnumerator *enumerator;
   
@@ -299,7 +299,7 @@ nsRDFDataSourceDataSource::GetTargets(nsIRDFResource *aSource,
       rv = mDataSource->ArcLabelsOut(aSource, &enumerator);
     }
     // enumerate all the children and create the composite resources
-    bool hasMoreArcs=false;
+    PRBool hasMoreArcs=PR_FALSE;
 
     rv = enumerator->HasMoreElements(&hasMoreArcs);
     while (NS_SUCCEEDED(rv) && hasMoreArcs) {
@@ -314,7 +314,7 @@ nsRDFDataSourceDataSource::GetTargets(nsIRDFResource *aSource,
       rv = mDataSource->GetTargets(aSource, arc, PR_TRUE,
                                    getter_AddRefs(targetEnumerator));
 
-      bool hasMoreTargets;
+      PRBool hasMoreTargets;
       rv = targetEnumerator->HasMoreElements(&hasMoreTargets);
       while (NS_SUCCEEDED(rv) && hasMoreTargets) {
         // get the next target
@@ -369,7 +369,7 @@ nsRDFDataSourceDataSource::GetTargets(nsIRDFResource *aSource,
 
 /* void Assert (in nsIRDFResource aSource, in nsIRDFResource aProperty, in nsIRDFNode aTarget, in boolean aTruthValue); */
 NS_IMETHODIMP
-nsRDFDataSourceDataSource::Assert(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget, bool aTruthValue)
+nsRDFDataSourceDataSource::Assert(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue)
 {
   return NS_RDF_NO_VALUE;
 }
@@ -383,7 +383,7 @@ nsRDFDataSourceDataSource::Unassert(nsIRDFResource *aSource, nsIRDFResource *aPr
 
 /* boolean HasAssertion (in nsIRDFResource aSource, in nsIRDFResource aProperty, in nsIRDFNode aTarget, in boolean aTruthValue); */
 NS_IMETHODIMP
-nsRDFDataSourceDataSource::HasAssertion(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget, bool aTruthValue, bool *_retval)
+nsRDFDataSourceDataSource::HasAssertion(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue, PRBool *_retval)
 {
   return NS_RDF_NO_VALUE;
 }
@@ -451,7 +451,7 @@ nsRDFDataSourceDataSource::GetAllResources(nsISimpleEnumerator **_retval)
 
 /* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
 NS_IMETHODIMP
-nsRDFDataSourceDataSource::IsCommandEnabled(nsISupportsArray * aSources, nsIRDFResource *aCommand, nsISupportsArray * aArguments, bool *_retval)
+nsRDFDataSourceDataSource::IsCommandEnabled(nsISupportsArray * aSources, nsIRDFResource *aCommand, nsISupportsArray * aArguments, PRBool *_retval)
 {
   return NS_RDF_NO_VALUE;
 }

@@ -94,15 +94,6 @@ ConsoleAPI.prototype = {
       dir: function CA_dir() {
         self.notifyObservers(outerID, innerID, "dir", arguments);
       },
-      group: function CA_group() {
-        self.notifyObservers(outerID, innerID, "group", self.beginGroup(arguments));
-      },
-      groupCollapsed: function CA_groupCollapsed() {
-        self.notifyObservers(outerID, innerID, "groupCollapsed", self.beginGroup(arguments));
-      },
-      groupEnd: function CA_groupEnd() {
-        self.notifyObservers(outerID, innerID, "groupEnd", arguments);
-      },
       __exposedProps__: {
         log: "r",
         info: "r",
@@ -110,10 +101,7 @@ ConsoleAPI.prototype = {
         error: "r",
         debug: "r",
         trace: "r",
-        dir: "r",
-        group: "r",
-        groupCollapsed: "r",
-        groupEnd: "r"
+        dir: "r"
       }
     };
 
@@ -132,9 +120,6 @@ ConsoleAPI.prototype = {
       debug: genPropDesc('debug'),
       trace: genPropDesc('trace'),
       dir: genPropDesc('dir'),
-      group: genPropDesc('group'),
-      groupCollapsed: genPropDesc('groupCollapsed'),
-      groupEnd: genPropDesc('groupEnd'),
       __noSuchMethod__: { enumerable: true, configurable: true, writable: true,
                           value: function() {} },
       __mozillaConsole__: { value: true }
@@ -244,13 +229,6 @@ ConsoleAPI.prototype = {
     }
 
     return stack;
-  },
-
-  /**
-   * Begin a new group for logging output together.
-   **/
-  beginGroup: function CA_beginGroup() {
-    return Array.prototype.join.call(arguments[0], " ");
   }
 };
 

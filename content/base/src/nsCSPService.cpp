@@ -59,7 +59,7 @@
 using namespace mozilla;
 
 /* Keeps track of whether or not CSP is enabled */
-bool CSPService::sCSPEnabled = true;
+PRBool CSPService::sCSPEnabled = PR_TRUE;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gCspPRLog;

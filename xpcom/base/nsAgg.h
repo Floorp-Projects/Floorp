@@ -71,7 +71,7 @@ public:                                                                     \
     /**                                                                     \
      * Returns PR_TRUE if this object is part of an aggregated object.      \
      */                                                                     \
-    bool IsPartOfAggregated(void) { return fOuter != InnerObject(); }     \
+    PRBool IsPartOfAggregated(void) { return fOuter != InnerObject(); }     \
                                                                             \
 private:                                                                    \
                                                                             \

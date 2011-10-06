@@ -254,7 +254,7 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
   catman->EnumerateCategory(PromiseFlatCString(aCategory).get(), 
                             getter_AddRefs(enumerator));
 
-  bool hasMore;
+  PRBool hasMore;
   while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> supports;
     if (NS_FAILED(enumerator->GetNext(getter_AddRefs(supports))))

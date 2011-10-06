@@ -106,8 +106,8 @@ public:
    * (i.e. as obtained by From2D). If it is, optionally returns the 2D
    * matrix in aMatrix.
    */
-  bool Is2D(gfxMatrix* aMatrix) const;
-  bool Is2D() const;
+  PRBool Is2D(gfxMatrix* aMatrix) const;
+  PRBool Is2D() const;
 
   /**
    * Returns true if the matrix can be reduced to a 2D affine transformation
@@ -118,124 +118,33 @@ public:
    * Since drawing is to a 2d plane, any 3d transform without perspective
    * can be reduced by dropping the z row and column.
    */
-  bool CanDraw2D(gfxMatrix* aMatrix = nsnull) const;
+  PRBool CanDraw2D(gfxMatrix* aMatrix = nsnull) const;
 
   /**
    * Returns true if the matrix is the identity matrix. The most important
    * property we require is that gfx3DMatrix().IsIdentity() returns true.
    */
-  bool IsIdentity() const;
-
-  /**
-   * Pre-multiplication transformation functions:
-   *
-   * These functions construct a temporary matrix containing
-   * a single transformation and pre-multiply it onto the current
-   * matrix.
-   */
+  PRBool IsIdentity() const;
 
   /**
    * Add a translation by aPoint to the matrix.
-   *
-   * This creates this temporary matrix:
-   * |  1        0        0         0 |
-   * |  0        1        0         0 |
-   * |  0        0        1         0 |
-   * |  aPoint.x aPoint.y aPoint.z  1 |
+   * This is functionally equivalent to:
+   * gfx3DMatrix::Translation(aPoint) * matrix
    */
   void Translate(const gfxPoint3D& aPoint);
 
-  /** 
-   * Skew the matrix.
-   *
-   * This creates this temporary matrix:
-   * | 1           tan(aYSkew) 0 0 |
-   * | tan(aXSkew) 1           0 0 |
-   * | 0           0           1 0 |
-   * | 0           0           0 1 |
-   */
-  void SkewXY(double aXSkew, double aYSkew);
-  
-  void SkewXY(double aSkew);
-  void SkewXZ(double aSkew);
-  void SkewYZ(double aSkew);
-
-  /**
-   * Scale the matrix
-   *
-   * This creates this temporary matrix:
-   * | aX 0  0  0 |
-   * | 0  aY 0  0 |
-   * | 0  0  aZ 0 |
-   * | 0  0  0  1 |
-   */
-  void Scale(float aX, float aY, float aZ);
-
-  /**
-   * Rotate around the X axis..
-   *
-   * This creates this temporary matrix:
-   * | 1 0            0           0 |
-   * | 0 cos(aTheta)  sin(aTheta) 0 |
-   * | 0 -sin(aTheta) cos(aTheta) 0 |
-   * | 0 0            0           1 |
-   */
-  void RotateX(double aTheta);
-  
-  /**
-   * Rotate around the Y axis..
-   *
-   * This creates this temporary matrix:
-   * | cos(aTheta) 0 -sin(aTheta) 0 |
-   * | 0           1 0            0 |
-   * | sin(aTheta) 0 cos(aTheta)  0 |
-   * | 0           0 0            1 |
-   */
-  void RotateY(double aTheta);
-  
-  /**
-   * Rotate around the Z axis..
-   *
-   * This creates this temporary matrix:
-   * | cos(aTheta)  sin(aTheta)  0 0 |
-   * | -sin(aTheta) cos(aTheta)  0 0 |
-   * | 0            0            1 0 |
-   * | 0            0            0 1 |
-   */
-  void RotateZ(double aTheta);
-
-  /**
-   * Apply perspective to the matrix.
-   *
-   * This creates this temporary matrix:
-   * | 1 0 0 0         |
-   * | 0 1 0 0         |
-   * | 0 0 1 -1/aDepth |
-   * | 0 0 0 1         |
-   */
-  void Perspective(float aDepth);
-
-  /**
-   * Pre multiply an existing matrix onto the current
-   * matrix
-   */
-  void PreMultiply(const gfx3DMatrix& aOther);
-  void PreMultiply(const gfxMatrix& aOther);
-
-  /**
-   * Post-multiplication transformation functions:
-   *
-   * These functions construct a temporary matrix containing
-   * a single transformation and post-multiply it onto the current
-   * matrix.
-   */
-  
   /**
    * Add a translation by aPoint after the matrix.
    * This is functionally equivalent to:
-   * matrix * gfx3DMatrix::Translation(aPoint)
+   * matrix *gfx3DMatrix::Translation(aPoint)
    */
   void TranslatePost(const gfxPoint3D& aPoint);
+
+  void SkewXY(float aSkew);
+  void SkewXZ(float aSkew);
+  void SkewYZ(float aSkew);
+
+  void Scale(float aX, float aY, float aZ);
 
   /**
    * Transforms a point according to this matrix.
@@ -299,7 +208,7 @@ public:
   /**
    * Check if matrix is singular (no inverse exists).
    */
-  bool IsSingular() const;
+  PRBool IsSingular() const;
 
   /**
    * Create a translation matrix.

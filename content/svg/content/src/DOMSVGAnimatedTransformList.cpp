@@ -155,7 +155,7 @@ DOMSVGAnimatedTransformList::InternalAnimValListWillChangeLengthTo(
   }
 }
 
-bool
+PRBool
 DOMSVGAnimatedTransformList::IsAnimating() const
 {
   return InternalAList().IsAnimating();

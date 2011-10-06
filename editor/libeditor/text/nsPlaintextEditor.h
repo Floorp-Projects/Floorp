@@ -91,16 +91,16 @@ public:
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                       const nsAString & aAttribute,
                                       const nsAString & aValue,
-                                      bool aSuppressTransaction);
+                                      PRBool aSuppressTransaction);
   NS_IMETHOD RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
                                          const nsAString & aAttribute,
-                                         bool aSuppressTransaction);
+                                         PRBool aSuppressTransaction);
 
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
   
-  NS_IMETHOD GetDocumentIsEmpty(bool *aDocumentIsEmpty);
-  NS_IMETHOD GetIsDocumentEditable(bool *aIsDocumentEditable);
+  NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty);
+  NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
 
   NS_IMETHOD DeleteSelection(EDirection aAction);
 
@@ -110,15 +110,15 @@ public:
   NS_IMETHOD Redo(PRUint32 aCount);
 
   NS_IMETHOD Cut();
-  NS_IMETHOD CanCut(bool *aCanCut);
+  NS_IMETHOD CanCut(PRBool *aCanCut);
   NS_IMETHOD Copy();
-  NS_IMETHOD CanCopy(bool *aCanCopy);
+  NS_IMETHOD CanCopy(PRBool *aCanCopy);
   NS_IMETHOD Paste(PRInt32 aSelectionType);
-  NS_IMETHOD CanPaste(PRInt32 aSelectionType, bool *aCanPaste);
+  NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste);
   NS_IMETHOD PasteTransferable(nsITransferable *aTransferable);
-  NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste);
+  NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, PRBool *aCanPaste);
 
-  NS_IMETHOD CanDrag(nsIDOMEvent *aDragEvent, bool *aCanDrag);
+  NS_IMETHOD CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDrag);
   NS_IMETHOD DoDrag(nsIDOMEvent *aDragEvent);
   NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
 
@@ -165,7 +165,7 @@ public:
   nsresult InsertTextAt(const nsAString &aStringToInsert,
                         nsIDOMNode *aDestinationNode,
                         PRInt32 aDestOffset,
-                        bool aDoDeleteSelection);
+                        PRBool aDoDeleteSelection);
 
   /**
    * Extends the selection for given deletion operation
@@ -204,28 +204,28 @@ protected:
   NS_IMETHOD InsertTextFromTransferable(nsITransferable *transferable,
                                         nsIDOMNode *aDestinationNode,
                                         PRInt32 aDestOffset,
-                                        bool aDoDeleteSelection);
+                                        PRBool aDoDeleteSelection);
   virtual nsresult SetupDocEncoder(nsIDocumentEncoder **aDocEncoder);
   virtual nsresult PutDragDataInTransferable(nsITransferable **aTransferable);
 
   /** shared outputstring; returns whether selection is collapsed and resulting string */
-  nsresult SharedOutputString(PRUint32 aFlags, bool* aIsCollapsed, nsAString& aResult);
+  nsresult SharedOutputString(PRUint32 aFlags, PRBool* aIsCollapsed, nsAString& aResult);
 
   /* small utility routine to test the eEditorReadonly bit */
-  bool IsModifiable();
+  PRBool IsModifiable();
 
   //XXX Kludge: Used to suppress spurious drag/drop events (bug 50703)
-  bool     mIgnoreSpuriousDragEvent;
-  NS_IMETHOD IgnoreSpuriousDragEvent(bool aIgnoreSpuriousDragEvent) {mIgnoreSpuriousDragEvent = aIgnoreSpuriousDragEvent; return NS_OK;}
+  PRBool   mIgnoreSpuriousDragEvent;
+  NS_IMETHOD IgnoreSpuriousDragEvent(PRBool aIgnoreSpuriousDragEvent) {mIgnoreSpuriousDragEvent = aIgnoreSpuriousDragEvent; return NS_OK;}
 
-  bool CanCutOrCopy();
-  bool FireClipboardEvent(PRInt32 aType);
+  PRBool CanCutOrCopy();
+  PRBool FireClipboardEvent(PRInt32 aType);
 
 // Data members
 protected:
 
   nsCOMPtr<nsIEditRules>        mRules;
-  bool    mWrapToWindow;
+  PRBool  mWrapToWindow;
   PRInt32 mWrapColumn;
   PRInt32 mMaxTextLength;
   PRInt32 mInitTriggerCounter;

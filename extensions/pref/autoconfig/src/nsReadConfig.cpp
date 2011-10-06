@@ -66,9 +66,9 @@ extern PRLogModuleInfo *MCD;
 
 extern nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
                                           const char *filename, 
-                                          bool bGlobalContext, 
-                                          bool bCallbacks, 
-                                          bool skipFirstLine);
+                                          PRBool bGlobalContext, 
+                                          PRBool bCallbacks, 
+                                          PRBool skipFirstLine);
 extern nsresult CentralizedAdminPrefManagerInit();
 extern nsresult CentralizedAdminPrefManagerFinish();
 
@@ -268,8 +268,8 @@ nsresult nsReadConfig::readConfigFile()
 
 
 nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRInt32 obscureValue,
-                                             bool isEncoded,
-                                             bool isBinDir)
+                                             PRBool isEncoded,
+                                             PRBool isBinDir)
 {
     nsresult rv;
 

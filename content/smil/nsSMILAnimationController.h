@@ -123,7 +123,7 @@ public:
   void NotifyRefreshDriverDestroying(nsRefreshDriver* aRefreshDriver);
 
   // Helper to check if we have any animation elements at all
-  bool HasRegisteredAnimations()
+  PRBool HasRegisteredAnimations()
   { return mAnimationElementTable.Count() != 0; }
 
 protected:
@@ -136,7 +136,7 @@ protected:
   struct SampleTimeContainerParams
   {
     TimeContainerHashtable* mActiveContainers;
-    bool                    mSkipUnchangedContainers;
+    PRBool                  mSkipUnchangedContainers;
   };
 
   struct SampleAnimationParams
@@ -167,7 +167,7 @@ protected:
 
   // Sample-related callbacks and implementation helpers
   virtual void DoSample();
-  void DoSample(bool aSkipUnchangedContainers);
+  void DoSample(PRBool aSkipUnchangedContainers);
 
   void RewindElements();
   PR_STATIC_CALLBACK(PLDHashOperator) RewindNeeded(
@@ -191,7 +191,7 @@ protected:
                                  TimeContainerHashtable* aActiveContainers);
   static void AddAnimationToCompositorTable(
     nsISMILAnimationElement* aElement, nsSMILCompositorTable* aCompositorTable);
-  static bool GetTargetIdentifierForAnimation(
+  static PRBool GetTargetIdentifierForAnimation(
       nsISMILAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult);
 
   // Methods for adding/removing time containers
@@ -225,12 +225,12 @@ protected:
   // differently such as not dispatching events).
   nsSMILTime                 mAvgTimeBetweenSamples;
 
-  bool                       mResampleNeeded;
+  PRPackedBool               mResampleNeeded;
   // If we're told to start sampling but there are no animation elements we just
   // record the time, set the following flag, and then wait until we have an
   // animation element. Then we'll reset this flag and actually start sampling.
-  bool                       mDeferredStartSampling;
-  bool                       mRunningSample;
+  PRPackedBool               mDeferredStartSampling;
+  PRPackedBool               mRunningSample;
 
   // Store raw ptr to mDocument.  It owns the controller, so controller
   // shouldn't outlive it

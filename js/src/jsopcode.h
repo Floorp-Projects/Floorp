@@ -46,6 +46,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsutil.h"
+#include "jsarena.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -504,7 +505,7 @@ DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
  */
 struct Sprinter {
     JSContext       *context;       /* context executing the decompiler */
-    LifoAlloc       *pool;          /* string allocation pool */
+    JSArenaPool     *pool;          /* string allocation pool */
     char            *base;          /* base address of buffer in pool */
     size_t          size;           /* size of buffer allocated at base */
     ptrdiff_t       offset;         /* offset of next free char in buffer */
@@ -562,24 +563,6 @@ FlowsIntoNext(JSOp op)
     return op != JSOP_STOP && op != JSOP_RETURN && op != JSOP_RETRVAL && op != JSOP_THROW &&
            op != JSOP_GOTO && op != JSOP_GOTOX && op != JSOP_RETSUB;
 }
-
-/*
- * AutoScriptUntrapper mutates the given script in place to replace JSOP_TRAP
- * opcodes with the original opcode they replaced. The destructor mutates the
- * script back into its original state.
- */
-class AutoScriptUntrapper
-{
-    JSContext *cx;
-    JSScript *origScript;
-    jsbytecode *origCode;
-    size_t nbytes;
-    bool saveOriginal(JSScript *script);
-  public:
-    AutoScriptUntrapper();
-    bool untrap(JSContext *cx, JSScript *script);
-    ~AutoScriptUntrapper();
-};
 
 }
 #endif

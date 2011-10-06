@@ -67,13 +67,13 @@ nsCocoaFeatures::OSXVersion()
     return mOSXVersion;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsCocoaFeatures::OnSnowLeopardOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_6_HEX);
 }
 
-/* static */ bool
+/* static */ PRBool
 nsCocoaFeatures::OnLionOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_7_HEX);

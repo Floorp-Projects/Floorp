@@ -94,7 +94,7 @@ private:
     int                     mIterGenCnt; // the generation count of
                                          // mHostRecord->addr_info when we
                                          // start iterating
-    bool                    mDone;
+    PRBool                  mDone;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSRecord, nsIDNSRecord)
@@ -130,7 +130,7 @@ nsDNSRecord::GetNextAddr(PRUint16 port, PRNetAddr *addr)
         return NS_ERROR_NOT_AVAILABLE;
 
     mHostRecord->addr_info_lock.Lock();
-    bool startedFresh = !mIter;
+    PRBool startedFresh = !mIter;
 
     if (mHostRecord->addr_info) {
         if (!mIter)
@@ -204,7 +204,7 @@ nsDNSRecord::GetNextAddrAsString(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsDNSRecord::HasMore(bool *result)
+nsDNSRecord::HasMore(PRBool *result)
 {
     if (mDone)
         *result = PR_FALSE;
@@ -333,7 +333,7 @@ public:
 
     void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult);
 
-    bool                   mDone;
+    PRBool                 mDone;
     nsresult               mStatus;
     nsRefPtr<nsHostRecord> mHostRecord;
 
@@ -380,9 +380,9 @@ nsDNSService::Init()
     // prefs
     PRUint32 maxCacheEntries  = 400;
     PRUint32 maxCacheLifetime = 3; // minutes
-    bool     enableIDN        = true;
-    bool     disableIPv6      = false;
-    bool     disablePrefetch  = false;
+    PRBool   enableIDN        = PR_TRUE;
+    PRBool   disableIPv6      = PR_FALSE;
+    PRBool   disablePrefetch  = PR_FALSE;
     int      proxyType        = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
     
     nsAdoptingCString ipv4OnlyDomains;

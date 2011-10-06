@@ -377,12 +377,12 @@ PRInt32 nsToolkit::OSXVersion()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
-bool nsToolkit::OnSnowLeopardOrLater()
+PRBool nsToolkit::OnSnowLeopardOrLater()
 {
   return (OSXVersion() >= MAC_OS_X_VERSION_10_6_HEX);
 }
 
-bool nsToolkit::OnLionOrLater()
+PRBool nsToolkit::OnLionOrLater()
 {
   return (OSXVersion() >= MAC_OS_X_VERSION_10_7_HEX);
 }
@@ -406,7 +406,7 @@ bool nsToolkit::OnLionOrLater()
 // needs to be unique in the class where the substitution takes place and all
 // of its subclasses.
 nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
-                                   bool classMethods)
+                                   PRBool classMethods)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

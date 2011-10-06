@@ -65,7 +65,7 @@ public:
 private:
   ~nsObserverService(void);
 
-  bool mShuttingDown;
+  PRBool mShuttingDown;
   nsTHashtable<nsObserverList> mObserverTopicTable;
 };
 

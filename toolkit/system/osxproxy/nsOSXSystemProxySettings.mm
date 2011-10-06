@@ -67,15 +67,15 @@ public:
   void ProxyHasChanged();
 
   // is there a PAC url specified in the system configuration
-  bool IsAutoconfigEnabled() const;
+  PRBool IsAutoconfigEnabled() const;
   // retrieve the pac url
   nsresult GetAutoconfigURL(nsCAutoString& aResult) const;
 
   // Find the SystemConfiguration proxy & port for a given URI
-  nsresult FindSCProxyPort(nsIURI* aURI, nsACString& aResultHost, PRInt32& aResultPort, bool& aResultSocksProxy);
+  nsresult FindSCProxyPort(nsIURI* aURI, nsACString& aResultHost, PRInt32& aResultPort, PRBool& aResultSocksProxy);
 
   // is host:port on the proxy exception list?
-  bool IsInExceptionList(const nsACString& aHost) const;
+  PRBool IsInExceptionList(const nsACString& aHost) const;
 
 private:
   ~nsOSXSystemProxySettings();
@@ -91,7 +91,7 @@ private:
     CFStringRef mEnabled;
     CFStringRef mHost;
     CFStringRef mPort;
-    bool mIsSocksProxy;
+    PRPackedBool mIsSocksProxy;
   };
   static const SchemeMapping gSchemeMappingList[];
 };
@@ -194,7 +194,7 @@ nsOSXSystemProxySettings::ProxyHasChanged()
 }
 
 nsresult
-nsOSXSystemProxySettings::FindSCProxyPort(nsIURI* aURI, nsACString& aResultHost, PRInt32& aResultPort, bool& aResultSocksProxy)
+nsOSXSystemProxySettings::FindSCProxyPort(nsIURI* aURI, nsACString& aResultHost, PRInt32& aResultPort, PRBool& aResultSocksProxy)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -202,7 +202,7 @@ nsOSXSystemProxySettings::FindSCProxyPort(nsIURI* aURI, nsACString& aResultHost,
 
   for (const SchemeMapping* keys = gSchemeMappingList; keys->mScheme != NULL; ++keys) {
     // Check for matching scheme (when appropriate)
-    bool res;
+    PRBool res;
     if ((NS_FAILED(aURI->SchemeIs(keys->mScheme, &res)) || !res) && !keys->mIsSocksProxy)
       continue;
 
@@ -234,7 +234,7 @@ nsOSXSystemProxySettings::FindSCProxyPort(nsIURI* aURI, nsACString& aResultHost,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-bool
+PRBool
 nsOSXSystemProxySettings::IsAutoconfigEnabled() const
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -263,7 +263,7 @@ nsOSXSystemProxySettings::GetAutoconfigURL(nsCAutoString& aResult) const
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-static bool
+static PRBool
 IsHostProxyEntry(const nsACString& aHost, const nsACString& aOverride)
 {
   nsCAutoString host(aHost);
@@ -272,7 +272,7 @@ IsHostProxyEntry(const nsACString& aHost, const nsACString& aOverride)
   PRInt32 overrideLength = override.Length();
   PRInt32 tokenStart = 0;
   PRInt32 offset = 0;
-  bool star = false;
+  PRBool star = PR_FALSE;
 
   while (tokenStart < overrideLength) {
     PRInt32 tokenEnd = override.FindChar('*', tokenStart);
@@ -300,7 +300,7 @@ IsHostProxyEntry(const nsACString& aHost, const nsACString& aOverride)
   return (star || (offset == static_cast<PRInt32>(host.Length())));
 }
 
-bool
+PRBool
 nsOSXSystemProxySettings::IsInExceptionList(const nsACString& aHost) const
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -351,7 +351,7 @@ nsOSXSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
 
   PRInt32 proxyPort;
   nsCAutoString proxyHost;
-  bool proxySocks;
+  PRBool proxySocks;
   rv = FindSCProxyPort(aURI, proxyHost, proxyPort, proxySocks);
 
   if (NS_FAILED(rv) || IsInExceptionList(host)) {

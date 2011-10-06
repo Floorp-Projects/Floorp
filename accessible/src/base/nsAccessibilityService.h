@@ -44,23 +44,9 @@
 #include "a11yGeneric.h"
 #include "nsAccDocManager.h"
 
-#include "mozilla/a11y/FocusManager.h"
-
 #include "nsIObserver.h"
 
-namespace mozilla {
-namespace a11y {
-
-/**
- * Return focus manager.
- */
-FocusManager* FocusMgr();
-
-} // namespace a11y
-} // namespace mozilla
-
 class nsAccessibilityService : public nsAccDocManager,
-                               public mozilla::a11y::FocusManager,
                                public nsIAccessibilityService,
                                public nsIObserver
 {
@@ -75,7 +61,7 @@ public:
   virtual nsAccessible* GetAccessibleInShell(nsINode* aNode,
                                              nsIPresShell* aPresShell);
   virtual nsAccessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
-                                                  bool aCanCreate);
+                                                  PRBool aCanCreate);
 
   virtual already_AddRefed<nsAccessible>
     CreateHTMLBRAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
@@ -160,7 +146,7 @@ public:
   /**
    * Return true if accessibility service has been shutdown.
    */
-  static bool IsShutdown() { return gIsShutdown; }
+  static PRBool IsShutdown() { return gIsShutdown; }
 
   /**
    * Return an accessible for the given DOM node from the cache or create new
@@ -222,12 +208,24 @@ private:
   /**
    * Initialize accessibility service.
    */
-  bool Init();
+  PRBool Init();
 
   /**
    * Shutdowns accessibility service.
    */
   void Shutdown();
+
+  /**
+   * Return accessible for HTML area element associated with an image map.
+   *
+   * @param  aImageFrame       [in] image frame
+   * @param  aAreaNode         [in] area node
+   * @param  aWeakShell        [in] presshell of image frame
+   * @param  aImageAccessible  [out, optional] image accessible, isn't addrefed
+   */
+  nsAccessible* GetAreaAccessible(nsIFrame* aImageFrame, nsINode* aAreaNode,
+                                  nsIWeakReference* aWeakShell,
+                                  nsAccessible** aImageAccessible = nsnull);
 
   /**
    * Create accessible for the element implementing nsIAccessibleProvider
@@ -259,14 +257,14 @@ private:
 #endif
 
   /**
-   * Reference for accessibility service instance.
+   * Reference for accessibility service.
    */
-  static nsAccessibilityService* gAccessibilityService;
+  static nsAccessibilityService *gAccessibilityService;
 
   /**
    * Indicates whether accessibility service was shutdown.
    */
-  static bool gIsShutdown;
+  static PRBool gIsShutdown;
 
   /**
    * Does this content node have a universal ARIA property set on it?
@@ -275,10 +273,9 @@ private:
    * @param aContent The content node to test
    * @return PR_TRUE if there is a universal ARIA property set on the node
    */
-  bool HasUniversalAriaProperty(nsIContent *aContent);
+  PRBool HasUniversalAriaProperty(nsIContent *aContent);
 
   friend nsAccessibilityService* GetAccService();
-  friend mozilla::a11y::FocusManager* mozilla::a11y::FocusMgr();
 
   friend nsresult NS_GetAccessibilityService(nsIAccessibilityService** aResult);
 };

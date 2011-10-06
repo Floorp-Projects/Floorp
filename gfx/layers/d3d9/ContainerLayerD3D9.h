@@ -77,7 +77,7 @@ public:
 
   LayerD3D9* GetFirstChildD3D9();
 
-  bool IsEmpty();
+  PRBool IsEmpty();
 
   void RenderLayer();
 

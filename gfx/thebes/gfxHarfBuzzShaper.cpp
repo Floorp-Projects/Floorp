@@ -303,8 +303,8 @@ GetKernValueFmt0(const void* aSubtable,
                  PRUint16 aFirstGlyph,
                  PRUint16 aSecondGlyph,
                  PRInt32& aValue,
-                 bool     aIsOverride = false,
-                 bool     aIsMinimum = false)
+                 PRBool   aIsOverride = PR_FALSE,
+                 PRBool   aIsMinimum = PR_FALSE)
 {
     const KernHeaderFmt0* hdr =
         reinterpret_cast<const KernHeaderFmt0*>(aSubtable);
@@ -712,7 +712,7 @@ HBGetEastAsianWidth(hb_codepoint_t aCh)
 static hb_font_funcs_t * sHBFontFuncs = nsnull;
 static hb_unicode_funcs_t * sHBUnicodeFuncs = nsnull;
 
-bool
+PRBool
 gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
@@ -762,7 +762,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
                 return PR_FALSE;
             }
             const PRUint8* data = (const PRUint8*)hb_blob_lock(mCmapTable);
-            bool symbol;
+            PRBool symbol;
             mCmapFormat = gfxFontUtils::
                 FindPreferredSubtable(data, hb_blob_get_length(mCmapTable),
                                       &mSubtableOffset, &mUVSTableOffset,
@@ -821,7 +821,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
     // aRunStart and aRunLength define the section of the textRun and of
     // aString that is to be drawn with this particular font
 
-    bool disableLigatures =
+    PRBool disableLigatures =
         (aTextRun->GetFlags() &
          gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) != 0;
 
@@ -913,7 +913,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
  */
 static void
 GetRoundOffsetsToPixels(gfxContext *aContext,
-                        bool *aRoundX, bool *aRoundY)
+                        PRBool *aRoundX, PRBool *aRoundY)
 {
     *aRoundX = PR_FALSE;
     // Could do something fancy here for ScaleFactors of
@@ -1015,8 +1015,8 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
     PRInt32 glyphStart = 0; // looking for a clump that starts at this glyph
     PRInt32 charStart = 0; // and this char index within the range of the run
 
-    bool roundX;
-    bool roundY;
+    PRBool roundX;
+    PRBool roundY;
     GetRoundOffsetsToPixels(aContext, &roundX, &roundY);
     // This is signed to avoid promotion to unsigned.
     PRInt32 dev2appUnits = aTextRun->GetAppUnitsPerDevUnit();
@@ -1031,7 +1031,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
 
     while (glyphStart < numGlyphs) {
 
-        bool inOrder = true;
+        PRBool inOrder = PR_TRUE;
         PRInt32 charEnd = ginfo[glyphStart].cluster;
         PRInt32 glyphEnd = glyphStart;
         PRInt32 charLimit = aRunLength;
@@ -1068,7 +1068,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
             // check whether all glyphs in the range are associated with the characters
             // in our clump; if not, we have a discontinuous range, and should extend it
             // unless we've reached the end of the text
-            bool allGlyphsAreWithinCluster = true;
+            PRBool allGlyphsAreWithinCluster = PR_TRUE;
             PRInt32 prevGlyphCharIndex = charStart - 1;
             for (PRInt32 i = glyphStart; i < glyphEnd; ++i) {
                 PRInt32 glyphCharIndex = ginfo[i].cluster;

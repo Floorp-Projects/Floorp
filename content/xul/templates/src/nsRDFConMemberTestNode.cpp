@@ -99,7 +99,7 @@ nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
 
 nsresult
 nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
-                                             bool* aCantHandleYet) const
+                                             PRBool* aCantHandleYet) const
 {
     // XXX Uh, factor me, please!
     nsresult rv;
@@ -117,7 +117,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
 
     InstantiationSet::Iterator last = aInstantiations.Last();
     for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
-        bool hasContainerBinding;
+        PRBool hasContainerBinding;
         nsCOMPtr<nsIRDFNode> containerValue;
         hasContainerBinding = inst->mAssignments.GetAssignmentFor(mContainerVariable,
                                                                   getter_AddRefs(containerValue));
@@ -130,7 +130,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
             // If we have a container assignment, then see if the
             // container is an RDF container (bag, seq, alt), and if
             // so, wrap it.
-            bool isRDFContainer;
+            PRBool isRDFContainer;
             rv = rdfc->IsContainer(ds, containerRes, &isRDFContainer);
             if (NS_FAILED(rv)) return rv;
 
@@ -143,7 +143,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
             }
         }
 
-        bool hasMemberBinding;
+        PRBool hasMemberBinding;
         nsCOMPtr<nsIRDFNode> memberValue;
         hasMemberBinding = inst->mAssignments.GetAssignmentFor(mMemberVariable,
                                                                getter_AddRefs(memberValue));
@@ -166,7 +166,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
 
         if (hasContainerBinding && hasMemberBinding) {
             // it's a consistency check. see if we have a assignment that is consistent
-            bool isconsistent = false;
+            PRBool isconsistent = PR_FALSE;
 
             if (rdfcontainer) {
                 // RDF containers are easy. Just use the container API.
@@ -190,7 +190,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 for (nsResourceSet::ConstIterator property = containmentProps.First();
                      property != containmentProps.Last();
                      ++property) {
-                    bool hasAssertion;
+                    PRBool hasAssertion;
                     rv = ds->HasAssertion(containerRes,
                                           *property,
                                           memberValue,
@@ -239,7 +239,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
             if (NS_FAILED(rv)) return rv;
 
             while (1) {
-                bool hasmore;
+                PRBool hasmore;
                 rv = elements->HasMoreElements(&hasmore);
                 if (NS_FAILED(rv)) return rv;
 
@@ -292,7 +292,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 nsCOMPtr<nsIRDFResource> property;
 
                 {
-                    bool hasmore;
+                    PRBool hasmore;
                     rv = arcsin->HasMoreElements(&hasmore);
                     if (NS_FAILED(rv)) return rv;
 
@@ -313,7 +313,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 // we're *only* concerned with ordinal properties
                 // here: the next block will worry about the other
                 // membership properties.
-                bool isordinal;
+                PRBool isordinal;
                 rv = rdfc->IsOrdinalProperty(property, &isordinal);
                 if (NS_FAILED(rv)) return rv;
 
@@ -328,7 +328,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                     if (NS_FAILED(rv)) return rv;
 
                     while (1) {
-                        bool hasmore;
+                        PRBool hasmore;
                         rv = sources->HasMoreElements(&hasmore);
                         if (NS_FAILED(rv)) return rv;
 
@@ -393,7 +393,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 if (NS_FAILED(rv)) return rv;
 
                 while (1) {
-                    bool hasmore;
+                    PRBool hasmore;
                     rv = results->HasMoreElements(&hasmore);
                     if (NS_FAILED(rv)) return rv;
 
@@ -489,7 +489,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
     return NS_OK;
 }
 
-bool
+PRBool
 nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
                                      nsIRDFResource* aProperty,
                                      nsIRDFNode* aTarget,
@@ -497,7 +497,7 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
 {
     nsresult rv;
 
-    bool canpropagate = false;
+    PRBool canpropagate = PR_FALSE;
 
     nsCOMPtr<nsIRDFContainerUtils> rdfc =
         do_GetService("@mozilla.org/rdf/container-utils;1");
@@ -545,7 +545,7 @@ nsRDFConMemberTestNode::Retract(nsIRDFResource* aSource,
                                 nsIRDFResource* aProperty,
                                 nsIRDFNode* aTarget) const
 {
-    bool canretract = false;
+    PRBool canretract = PR_FALSE;
 
     nsCOMPtr<nsIRDFContainerUtils> rdfc =
         do_GetService("@mozilla.org/rdf/container-utils;1");

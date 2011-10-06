@@ -46,7 +46,6 @@
 
 #include "nsITaskbarWindowPreview.h"
 #include "nsITaskbarProgress.h"
-#include "nsITaskbarOverlayIconController.h"
 #include "TaskbarPreview.h"
 #include <nsWeakReference.h>
 
@@ -57,7 +56,6 @@ class TaskbarPreviewButton;
 class TaskbarWindowPreview : public TaskbarPreview,
                              public nsITaskbarWindowPreview,
                              public nsITaskbarProgress,
-                             public nsITaskbarOverlayIconController,
                              public nsSupportsWeakReference
 {
 public:
@@ -67,12 +65,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITASKBARWINDOWPREVIEW
   NS_DECL_NSITASKBARPROGRESS
-  NS_DECL_NSITASKBAROVERLAYICONCONTROLLER
   NS_FORWARD_NSITASKBARPREVIEW(TaskbarPreview::)
 
   virtual LRESULT WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
 private:
-  virtual nsresult ShowActive(bool active);
+  virtual nsresult ShowActive(PRBool active);
   virtual HWND &PreviewWindow();
 
   virtual nsresult UpdateTaskbarProperties();
@@ -83,9 +80,9 @@ private:
   nsresult UpdateButtons();
 
   // Is custom drawing enabled?
-  bool                    mCustomDrawing;
+  PRBool                  mCustomDrawing;
   // Have we made any buttons?
-  bool                    mHaveButtons;
+  PRBool                  mHaveButtons;
   // Windows button format
   THUMBBUTTON             mThumbButtons[nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS];
   // Pointers to our button class (cached instances)
@@ -93,22 +90,17 @@ private:
 
   // Called to update ITaskbarList4 dependent properties
   nsresult UpdateTaskbarProgress();
-  nsresult UpdateOverlayIcon();
 
   // The taskbar progress
   TBPFLAG                 mState;
   ULONGLONG               mCurrentValue;
   ULONGLONG               mMaxValue;
 
-  // Taskbar overlay icon
-  HICON                   mOverlayIcon;
-  nsString                mIconDescription;
-
-  // WindowHook procedure for hooking mWnd for taskbar progress and icon stuff
-  static bool TaskbarWindowHook(void *aContext,
-                                  HWND hWnd, UINT nMsg,
-                                  WPARAM wParam, LPARAM lParam,
-                                  LRESULT *aResult);
+  // WindowHook procedure for hooking mWnd for taskbar progress stuff
+  static PRBool TaskbarProgressWindowHook(void *aContext,
+                                          HWND hWnd, UINT nMsg,
+                                          WPARAM wParam, LPARAM lParam,
+                                          LRESULT *aResult);
 
   friend class TaskbarPreviewButton;
 };

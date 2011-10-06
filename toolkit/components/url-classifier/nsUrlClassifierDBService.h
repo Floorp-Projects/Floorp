@@ -86,7 +86,7 @@ public:
   NS_DECL_NSIURICLASSIFIER
   NS_DECL_NSIOBSERVER
 
-  bool GetCompleter(const nsACString& tableName,
+  PRBool GetCompleter(const nsACString& tableName,
                       nsIUrlClassifierHashCompleter** completer);
   nsresult CacheCompletions(nsTArray<nsUrlClassifierLookupResult> *results);
 
@@ -100,14 +100,14 @@ private:
   nsUrlClassifierDBService(nsUrlClassifierDBService&);
 
   nsresult LookupURI(nsIURI* uri, nsIUrlClassifierCallback* c,
-                     bool forceCheck, bool *didCheck);
+                     PRBool forceCheck, PRBool *didCheck);
 
   // Close db connection and join the background thread if it exists.
   nsresult Shutdown();
 
   // Check if the key is on a known-clean host.
   nsresult CheckClean(const nsACString &lookupKey,
-                      bool *clean);
+                      PRBool *clean);
 
   nsCOMPtr<nsUrlClassifierDBServiceWorker> mWorker;
   nsCOMPtr<nsIUrlClassifierDBServiceWorker> mWorkerProxy;
@@ -116,17 +116,17 @@ private:
 
   // TRUE if the nsURIClassifier implementation should check for malware
   // uris on document loads.
-  bool mCheckMalware;
+  PRBool mCheckMalware;
 
   // TRUE if the nsURIClassifier implementation should check for phishing
   // uris on document loads.
-  bool mCheckPhishing;
+  PRBool mCheckPhishing;
 
   // TRUE if a BeginUpdate() has been called without an accompanying
   // CancelUpdate()/FinishUpdate().  This is used to prevent competing
   // updates, not to determine whether an update is still being
   // processed.
-  bool mInUpdate;
+  PRBool mInUpdate;
 
   // The list of tables that can use the default hash completer object.
   nsTArray<nsCString> mGethashWhitelist;

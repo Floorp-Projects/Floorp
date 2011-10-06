@@ -68,7 +68,7 @@ nsNotificationsList::~nsNotificationsList()
 }
 
 NS_IMETHODIMP
-nsNotificationsList::AddNotification(const nsAString &aName, bool aEnabled)
+nsNotificationsList::AddNotification(const nsAString &aName, PRBool aEnabled)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -86,7 +86,7 @@ nsNotificationsList::AddNotification(const nsAString &aName, bool aEnabled)
 }
 
 NS_IMETHODIMP
-nsNotificationsList::IsNotification(const nsAString &aName, bool *retVal)
+nsNotificationsList::IsNotification(const nsAString &aName, PRBool *retVal)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

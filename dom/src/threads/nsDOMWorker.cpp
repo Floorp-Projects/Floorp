@@ -77,7 +77,7 @@ public:
   NS_DECL_ISUPPORTS
 
   TestComponentThreadsafetyRunnable(const nsACString& aContractId,
-                                    bool aService)
+                                    PRBool aService)
   : mContractId(aContractId),
     mService(aService),
     mIsThreadsafe(PR_FALSE)
@@ -108,7 +108,7 @@ public:
     return NS_OK;
   }
 
-  bool IsThreadsafe()
+  PRBool IsThreadsafe()
   {
     NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
     return mIsThreadsafe;
@@ -116,8 +116,8 @@ public:
 
 private:
   nsCString mContractId;
-  bool mService;
-  bool mIsThreadsafe;
+  PRBool mService;
+  PRBool mIsThreadsafe;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(TestComponentThreadsafetyRunnable, nsIRunnable)
@@ -189,14 +189,14 @@ public:
 private:
   // Internal helper for SetTimeout and SetInterval.
   static JSBool
-  MakeTimeout(JSContext* aCx, uintN aArgc, jsval* aVp, bool aIsInterval);
+  MakeTimeout(JSContext* aCx, uintN aArgc, jsval* aVp, PRBool aIsInterval);
 
   static JSBool
   MakeNewWorker(JSContext* aCx, uintN aArgc, jsval* aVp,
                 WorkerPrivilegeModel aPrivilegeModel);
 
   static JSBool
-  GetInstanceCommon(JSContext* aCx, uintN aArgc, jsval* aVp, bool aService);
+  GetInstanceCommon(JSContext* aCx, uintN aArgc, jsval* aVp, PRBool aService);
 };
 
 JSFunctionSpec gDOMWorkerXPCOMFunctions[] = {
@@ -230,7 +230,7 @@ JSBool
 nsDOMWorkerFunctions::MakeTimeout(JSContext* aCx,
                                   uintN aArgc,
                                   jsval* aVp,
-                                  bool aIsInterval)
+                                  PRBool aIsInterval)
 {
   nsDOMWorker* worker = static_cast<nsDOMWorker*>(JS_GetContextPrivate(aCx));
   NS_ASSERTION(worker, "This should be set by the DOM thread service!");
@@ -541,7 +541,7 @@ JSBool
 nsDOMWorkerFunctions::GetInstanceCommon(JSContext* aCx,
                                         uintN aArgc,
                                         jsval* aVp,
-                                        bool aService)
+                                        PRBool aService)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -942,7 +942,7 @@ nsDOMWorkerScope::AddProperty(nsIXPConnectWrappedNative* aWrapper,
                               JSObject* aObj,
                               jsid aId,
                               jsval* aVp,
-                              bool* _retval)
+                              PRBool* _retval)
 {
   // We're not going to be setting any exceptions manually so set _retval to
   // true in the beginning.
@@ -1160,7 +1160,7 @@ nsDOMWorkerScope::SetOnclose(nsIDOMEventListener* aOnclose)
 NS_IMETHODIMP
 nsDOMWorkerScope::RemoveEventListener(const nsAString& aType,
                                       nsIDOMEventListener* aListener,
-                                      bool aUseCapture)
+                                      PRBool aUseCapture)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -1174,7 +1174,7 @@ nsDOMWorkerScope::RemoveEventListener(const nsAString& aType,
 
 NS_IMETHODIMP
 nsDOMWorkerScope::DispatchEvent(nsIDOMEvent* aEvent,
-                                bool* _retval)
+                                PRBool* _retval)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -1188,8 +1188,8 @@ nsDOMWorkerScope::DispatchEvent(nsIDOMEvent* aEvent,
 NS_IMETHODIMP
 nsDOMWorkerScope::AddEventListener(const nsAString& aType,
                                    nsIDOMEventListener* aListener,
-                                   bool aUseCapture,
-                                   bool aWantsUntrusted,
+                                   PRBool aUseCapture,
+                                   PRBool aWantsUntrusted,
                                    PRUint8 optional_argc)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
@@ -1238,7 +1238,7 @@ public:
 
   nsDOMFireEventRunnable(nsDOMWorker* aWorker,
                          nsDOMWorkerEvent* aEvent,
-                         bool aToInner)
+                         PRBool aToInner)
   : nsWorkerHoldingRunnable(aWorker), mEvent(aEvent), mToInner(aToInner)
   {
     NS_ASSERTION(aWorker && aEvent, "Null pointer!");
@@ -1287,7 +1287,7 @@ public:
 
 protected:
   nsRefPtr<nsDOMWorkerEvent> mEvent;
-  bool mToInner;
+  PRBool mToInner;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsDOMFireEventRunnable, nsWorkerHoldingRunnable)
@@ -1343,7 +1343,7 @@ nsDOMWorker::nsDOMWorker(nsDOMWorker* aParent,
   mCompileAttempted(PR_FALSE)
 {
 #ifdef DEBUG
-  bool mainThread = NS_IsMainThread();
+  PRBool mainThread = NS_IsMainThread();
   NS_ASSERTION(aParent ? !mainThread : mainThread, "Wrong thread!");
 #endif
 }
@@ -1397,7 +1397,7 @@ nsDOMWorker::NewChromeDOMWorker(nsDOMWorker** aNewObject)
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   NS_ASSERTION(ssm, "Should never be null!");
 
-  bool enabled;
+  PRBool enabled;
   nsresult rv = ssm->IsCapabilityEnabled("UniversalXPConnect", &enabled);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(enabled, NS_ERROR_DOM_SECURITY_ERR);
@@ -1498,7 +1498,7 @@ nsDOMWorker::Trace(nsIXPConnectWrappedNative* /* aWrapper */,
                    JSTracer* aTracer,
                    JSObject* /*aObj */)
 {
-  bool canceled = false;
+  PRBool canceled = PR_FALSE;
   {
     MutexAutoLock lock(mLock);
     canceled = mStatus == eKilled;
@@ -1603,7 +1603,7 @@ nsDOMWorker::InitializeInternal(nsIScriptGlobalObject* aOwner,
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     NS_ASSERTION(ssm, "Should never be null!");
 
-    bool isChrome;
+    PRBool isChrome;
     rv = ssm->IsCapabilityEnabled("UniversalXPConnect", &isChrome);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1713,7 +1713,7 @@ nsDOMWorker::Cancel()
   // us has gone away and had its scope cleared so XPConnect will assert all
   // over the place if we try to run anything.
 
-  bool enforceTimeout = false;
+  PRBool enforceTimeout = PR_FALSE;
   {
     MutexAutoLock lock(mLock);
 
@@ -1824,7 +1824,7 @@ nsDOMWorker::Suspend()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  bool shouldSuspendFeatures;
+  PRBool shouldSuspendFeatures;
   {
     MutexAutoLock lock(mLock);
     NS_ASSERTION(!mSuspended, "Suspended more than once!");
@@ -1842,7 +1842,7 @@ nsDOMWorker::Resume()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  bool shouldResumeFeatures;
+  PRBool shouldResumeFeatures;
   {
     MutexAutoLock lock(mLock);
 #ifdef DEBUG
@@ -1869,14 +1869,14 @@ nsDOMWorker::Resume()
   mQueuedRunnables.Clear();
 }
 
-bool
+PRBool
 nsDOMWorker::IsCanceled()
 {
   MutexAutoLock lock(mLock);
   return IsCanceledNoLock();
 }
 
-bool
+PRBool
 nsDOMWorker::IsCanceledNoLock()
 {
   // If we haven't started the close process then we're not canceled.
@@ -1903,14 +1903,14 @@ nsDOMWorker::IsCanceledNoLock()
          (mStatus == eCanceled && NS_IsMainThread());
 }
 
-bool
+PRBool
 nsDOMWorker::IsClosing()
 {
   MutexAutoLock lock(mLock);
   return mStatus != eRunning;
 }
 
-bool
+PRBool
 nsDOMWorker::IsSuspended()
 {
   MutexAutoLock lock(mLock);
@@ -1918,7 +1918,7 @@ nsDOMWorker::IsSuspended()
 }
 
 nsresult
-nsDOMWorker::PostMessageInternal(bool aToInner)
+nsDOMWorker::PostMessageInternal(PRBool aToInner)
 {
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
@@ -1997,7 +1997,7 @@ nsDOMWorker::PostMessageInternal(bool aToInner)
   return NS_OK;
 }
 
-bool
+PRBool
 nsDOMWorker::SetGlobalForContext(JSContext* aCx, nsLazyAutoRequest *aRequest,
                                  JSAutoEnterCompartment *aComp)
 {
@@ -2011,7 +2011,7 @@ nsDOMWorker::SetGlobalForContext(JSContext* aCx, nsLazyAutoRequest *aRequest,
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
                                  JSAutoEnterCompartment *aComp)
 {
@@ -2026,7 +2026,7 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
   JSAutoEnterCompartment localAutoCompartment;
   localRequest.enter(aCx);
 
-  bool success;
+  PRBool success;
   if (mGlobal) {
     success = localAutoCompartment.enter(aCx, mGlobal);
     NS_ENSURE_TRUE(success, PR_FALSE);
@@ -2197,7 +2197,7 @@ nsDOMWorker::AddFeature(nsDOMWorkerFeature* aFeature,
 {
   NS_ASSERTION(aFeature, "Null pointer!");
 
-  bool shouldSuspend;
+  PRBool shouldSuspend;
   {
     // aCx may be null.
     JSAutoSuspendRequest asr(aCx);
@@ -2238,7 +2238,7 @@ nsDOMWorker::RemoveFeature(nsDOMWorkerFeature* aFeature,
     MutexAutoLock lock(mLock);
 
 #ifdef DEBUG
-    bool removed =
+    PRBool removed =
 #endif
     mFeatures.RemoveElement(aFeature);
     NS_ASSERTION(removed, "Feature not in the list!");
@@ -2356,14 +2356,14 @@ nsDOMWorker::ClearBaseURI()
 
 nsresult
 nsDOMWorker::FireCloseRunnable(PRIntervalTime aTimeoutInterval,
-                               bool aClearQueue,
-                               bool aFromFinalize)
+                               PRBool aClearQueue,
+                               PRBool aFromFinalize)
 {
   // Resume the worker (but not its features) if we're currently suspended. This
   // should only ever happen if we are being called from Cancel (page falling
   // out of bfcache or quitting) or Finalize, in which case all we really want
   // to do is unblock the waiting thread.
-  bool wakeUp;
+  PRBool wakeUp;
   {
     MutexAutoLock lock(mLock);
     NS_ASSERTION(mExpirationTime == 0,
@@ -2427,7 +2427,7 @@ nsDOMWorker::Close()
 }
 
 nsresult
-nsDOMWorker::TerminateInternal(bool aFromFinalize)
+nsDOMWorker::TerminateInternal(PRBool aFromFinalize)
 {
   {
     MutexAutoLock lock(mLock);
@@ -2543,7 +2543,7 @@ nsDOMWorker::ReadStructuredClone(JSContext* aCx,
   return nsnull;
 }
 
-bool
+PRBool
 nsDOMWorker::QueueSuspendedRunnable(nsIRunnable* aRunnable)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -2553,7 +2553,7 @@ nsDOMWorker::QueueSuspendedRunnable(nsIRunnable* aRunnable)
 NS_IMETHODIMP
 nsDOMWorker::RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
-                                 bool aUseCapture)
+                                 PRBool aUseCapture)
 {
   if (IsCanceled()) {
     return NS_OK;
@@ -2565,7 +2565,7 @@ nsDOMWorker::RemoveEventListener(const nsAString& aType,
 
 NS_IMETHODIMP
 nsDOMWorker::DispatchEvent(nsIDOMEvent* aEvent,
-                           bool* _retval)
+                           PRBool* _retval)
 {
   {
     MutexAutoLock lock(mLock);
@@ -2587,8 +2587,8 @@ nsDOMWorker::DispatchEvent(nsIDOMEvent* aEvent,
 NS_IMETHODIMP
 nsDOMWorker::AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
-                              bool aUseCapture,
-                              bool aWantsUntrusted,
+                              PRBool aUseCapture,
+                              PRBool aWantsUntrusted,
                               PRUint8 aOptionalArgc)
 {
   NS_ASSERTION(mWrappedNative, "Called after Finalize!");

@@ -274,9 +274,9 @@ nsDragService::StartDragSession()
     return nsBaseDragService::StartDragSession();
 }
 
-/* void endDragSession (in bool aDoneDrag); */
+/* void endDragSession (in PRBool aDoneDrag); */
 NS_IMETHODIMP
-nsDragService::EndDragSession(bool aDoneDrag)
+nsDragService::EndDragSession(PRBool aDoneDrag)
 {
     return nsBaseDragService::EndDragSession(aDoneDrag);
 }

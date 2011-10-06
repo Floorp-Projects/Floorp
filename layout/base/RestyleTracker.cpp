@@ -201,7 +201,7 @@ RestyleTracker::ProcessRestyles()
         NS_ASSERTION(element->HasFlag(RestyleBit()), "How did that happen?");
         RestyleData data;
 #ifdef DEBUG
-        bool found =
+        PRBool found =
 #endif
           mPendingRestyles.Get(element, &data);
         NS_ASSERTION(found, "Where did our entry go?");
@@ -282,7 +282,7 @@ RestyleTracker::ProcessRestyles()
 #endif
 }
 
-bool
+PRBool
 RestyleTracker::GetRestyleData(Element* aElement, RestyleData* aData)
 {
   NS_PRECONDITION(aElement->GetCurrentDoc() == Document(),
@@ -294,7 +294,7 @@ RestyleTracker::GetRestyleData(Element* aElement, RestyleData* aData)
   }
 
 #ifdef DEBUG
-  bool gotData =
+  PRBool gotData =
 #endif
   mPendingRestyles.Get(aElement, aData);
   NS_ASSERTION(gotData, "Must have data if restyle bit is set");

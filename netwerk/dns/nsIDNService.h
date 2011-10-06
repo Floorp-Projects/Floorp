@@ -72,25 +72,25 @@ public:
 private:
   void normalizeFullStops(nsAString& s);
   nsresult stringPrepAndACE(const nsAString& in, nsACString& out,
-                            bool allowUnassigned);
+                            PRBool allowUnassigned);
   nsresult encodeToACE(const nsAString& in, nsACString& out);
   nsresult stringPrep(const nsAString& in, nsAString& out,
-                      bool allowUnassigned);
+                      PRBool allowUnassigned);
   nsresult decodeACE(const nsACString& in, nsACString& out,
-                     bool allowUnassigned);
+                     PRBool allowUnassigned);
   nsresult UTF8toACE(const nsACString& in, nsACString& out,
-                     bool allowUnassigned);
+                     PRBool allowUnassigned);
   nsresult ACEtoUTF8(const nsACString& in, nsACString& out,
-                     bool allowUnassigned);
-  bool isInWhitelist(const nsACString &host);
+                     PRBool allowUnassigned);
+  PRBool isInWhitelist(const nsACString &host);
   void prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref);
 
-  bool mMultilingualTestBed;  // if true generates extra node for multilingual testbed 
+  PRBool mMultilingualTestBed;  // if true generates extra node for multilingual testbed 
   idn_nameprep_t mNamePrepHandle;
   nsCOMPtr<nsIUnicodeNormalizer> mNormalizer;
   char mACEPrefix[kACEPrefixLen+1];
   nsXPIDLString mIDNBlacklist;
-  bool mShowPunycode;
+  PRBool mShowPunycode;
   nsCOMPtr<nsIPrefBranch> mIDNWhitelistPrefBranch;
 };
 

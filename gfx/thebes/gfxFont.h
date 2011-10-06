@@ -94,13 +94,13 @@ struct THEBES_API gfxFontFeature {
                      // to features that select among multiple alternatives
 };
 
-inline bool
+inline PRBool
 operator<(const gfxFontFeature& a, const gfxFontFeature& b)
 {
     return (a.mTag < b.mTag) || ((a.mTag == b.mTag) && (a.mValue < b.mValue));
 }
 
-inline bool
+inline PRBool
 operator==(const gfxFontFeature& a, const gfxFontFeature& b)
 {
     return (a.mTag == b.mTag) && (a.mValue == b.mValue);
@@ -111,8 +111,8 @@ struct THEBES_API gfxFontStyle {
     gfxFontStyle();
     gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
                  gfxFloat aSize, nsIAtom *aLanguage,
-                 float aSizeAdjust, bool aSystemFont,
-                 bool aPrinterFont,
+                 float aSizeAdjust, PRPackedBool aSystemFont,
+                 PRPackedBool aPrinterFont,
                  const nsString& aFeatureSettings,
                  const nsString& aLanguageOverride);
     gfxFontStyle(const gfxFontStyle& aStyle);
@@ -123,10 +123,10 @@ struct THEBES_API gfxFontStyle {
     // Say that this font is a system font and therefore does not
     // require certain fixup that we do for fonts from untrusted
     // sources.
-    bool systemFont : 1;
+    PRPackedBool systemFont : 1;
 
     // Say that this font is used for print or print preview.
-    bool printerFont : 1;
+    PRPackedBool printerFont : 1;
 
     // The weight of the font: 100, 200, ... 900.
     PRUint16 weight;
@@ -180,7 +180,7 @@ struct THEBES_API gfxFontStyle {
 
     PRInt8 ComputeWeight() const;
 
-    bool Equals(const gfxFontStyle& other) const {
+    PRBool Equals(const gfxFontStyle& other) const {
         return (size == other.size) &&
             (style == other.style) &&
             (systemFont == other.systemFont) &&
@@ -204,7 +204,7 @@ public:
     NS_INLINE_DECL_REFCOUNTING(gfxFontEntry)
 
     gfxFontEntry(const nsAString& aName, gfxFontFamily *aFamily = nsnull,
-                 bool aIsStandardFace = false) : 
+                 PRBool aIsStandardFace = PR_FALSE) : 
         mName(aName), mItalic(PR_FALSE), mFixedPitch(PR_FALSE),
         mIsProxy(PR_FALSE), mIsValid(PR_TRUE), 
         mIsBadUnderlineFont(PR_FALSE), mIsUserFont(PR_FALSE),
@@ -235,39 +235,39 @@ public:
     PRUint16 Weight() const { return mWeight; }
     PRInt16 Stretch() const { return mStretch; }
 
-    bool IsUserFont() const { return mIsUserFont; }
-    bool IsLocalUserFont() const { return mIsLocalUserFont; }
-    bool IsFixedPitch() const { return mFixedPitch; }
-    bool IsItalic() const { return mItalic; }
-    bool IsBold() const { return mWeight >= 600; } // bold == weights 600 and above
-    bool IgnoreGDEF() const { return mIgnoreGDEF; }
+    PRBool IsUserFont() const { return mIsUserFont; }
+    PRBool IsLocalUserFont() const { return mIsLocalUserFont; }
+    PRBool IsFixedPitch() const { return mFixedPitch; }
+    PRBool IsItalic() const { return mItalic; }
+    PRBool IsBold() const { return mWeight >= 600; } // bold == weights 600 and above
+    PRBool IgnoreGDEF() const { return mIgnoreGDEF; }
 
-    virtual bool IsSymbolFont();
+    virtual PRBool IsSymbolFont();
 
-    inline bool HasCmapTable() {
+    inline PRBool HasCmapTable() {
         if (!mCmapInitialized) {
             ReadCMAP();
         }
         return mHasCmapTable;
     }
 
-    inline bool HasCharacter(PRUint32 ch) {
+    inline PRBool HasCharacter(PRUint32 ch) {
         if (mCharacterMap.test(ch))
             return PR_TRUE;
 
         return TestCharacterMap(ch);
     }
 
-    virtual bool SkipDuringSystemFallback() { return false; }
-    virtual bool TestCharacterMap(PRUint32 aCh);
+    virtual PRBool SkipDuringSystemFallback() { return PR_FALSE; }
+    virtual PRBool TestCharacterMap(PRUint32 aCh);
     nsresult InitializeUVSMap();
     PRUint16 GetUVSGlyph(PRUint32 aCh, PRUint32 aVS);
     virtual nsresult ReadCMAP();
 
-    virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
+    virtual PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
         return PR_TRUE;
     }
-    virtual bool SupportsLangGroup(nsIAtom *aLangGroup) const {
+    virtual PRBool SupportsLangGroup(nsIAtom *aLangGroup) const {
         return PR_TRUE;
     }
 
@@ -282,7 +282,7 @@ public:
     virtual nsString FamilyName() const;
 
     already_AddRefed<gfxFont> FindOrMakeFont(const gfxFontStyle *aStyle,
-                                             bool aNeedsBold);
+                                             PRBool aNeedsBold);
 
     // Get an existing font table cache entry in aBlob if it has been
     // registered, or return PR_FALSE if not.  Callers must call
@@ -290,7 +290,7 @@ public:
     //
     // Note that some gfxFont implementations may not call this at all,
     // if it is more efficient to get the table from the OS at that level.
-    bool GetExistingFontTable(PRUint32 aTag, hb_blob_t** aBlob);
+    PRBool GetExistingFontTable(PRUint32 aTag, hb_blob_t** aBlob);
 
     // Elements of aTable are transferred (not copied) to and returned in a
     // new hb_blob_t which is registered on the gfxFontEntry, but the initial
@@ -304,22 +304,22 @@ public:
 
     nsString         mName;
 
-    bool             mItalic      : 1;
-    bool             mFixedPitch  : 1;
-    bool             mIsProxy     : 1;
-    bool             mIsValid     : 1;
-    bool             mIsBadUnderlineFont : 1;
-    bool             mIsUserFont  : 1;
-    bool             mIsLocalUserFont  : 1;
-    bool             mStandardFace : 1;
-    bool             mSymbolFont  : 1;
-    bool             mIgnoreGDEF  : 1;
+    PRPackedBool     mItalic      : 1;
+    PRPackedBool     mFixedPitch  : 1;
+    PRPackedBool     mIsProxy     : 1;
+    PRPackedBool     mIsValid     : 1;
+    PRPackedBool     mIsBadUnderlineFont : 1;
+    PRPackedBool     mIsUserFont  : 1;
+    PRPackedBool     mIsLocalUserFont  : 1;
+    PRPackedBool     mStandardFace : 1;
+    PRPackedBool     mSymbolFont  : 1;
+    PRPackedBool     mIgnoreGDEF  : 1;
 
     PRUint16         mWeight;
     PRInt16          mStretch;
 
-    bool             mHasCmapTable;
-    bool             mCmapInitialized;
+    PRPackedBool     mHasCmapTable;
+    PRPackedBool     mCmapInitialized;
     gfxSparseBitSet  mCharacterMap;
     PRUint32         mUVSOffset;
     nsAutoArrayPtr<PRUint8> mUVSData;
@@ -353,7 +353,7 @@ protected:
         mFamily(nsnull)
     { }
 
-    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold) {
+    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold) {
         NS_NOTREACHED("oops, somebody didn't override CreateFontInstance");
         return nsnull;
     }
@@ -490,7 +490,7 @@ public:
     const nsString& Name() { return mName; }
 
     virtual void LocalizedName(nsAString& aLocalizedName);
-    virtual bool HasOtherFamilyNames();
+    virtual PRBool HasOtherFamilyNames();
     
     nsTArray<nsRefPtr<gfxFontEntry> >& GetFontList() { return mAvailableFonts; }
     
@@ -507,7 +507,7 @@ public:
     }
 
     // note that the styles for this family have been added
-    void SetHasStyles(bool aHasStyles) { mHasStyles = aHasStyles; }
+    void SetHasStyles(PRBool aHasStyles) { mHasStyles = aHasStyles; }
 
     // choose a specific face to match a style using CSS font matching
     // rules (weight matching occurs here).  may return a face that doesn't
@@ -515,7 +515,7 @@ public:
     // aNeedsSyntheticBold is set to true when synthetic bolding is
     // needed, false otherwise
     gfxFontEntry *FindFontForStyle(const gfxFontStyle& aFontStyle, 
-                                   bool& aNeedsSyntheticBold);
+                                   PRBool& aNeedsSyntheticBold);
 
     // iterates over faces looking for a match with a given characters
     // used as part of the font fallback process
@@ -532,7 +532,7 @@ public:
     // read in other localized family names, fullnames and Postscript names
     // for all faces and append to lookup tables
     virtual void ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
-                               bool aNeedFullnamePostscriptNames);
+                               PRBool aNeedFullnamePostscriptNames);
 
     // find faces belonging to this family (platform implementations override this;
     // should be made pure virtual once all subclasses have been updated)
@@ -558,7 +558,7 @@ public:
         }
     }
 
-    bool IsBadUnderlineFamily() const { return mIsBadUnderlineFamily; }
+    PRBool IsBadUnderlineFamily() const { return mIsBadUnderlineFamily; }
 
     // sort available fonts to put preferred (standard) faces towards the end
     void SortAvailableFonts();
@@ -571,12 +571,12 @@ public:
 protected:
     // fills in an array with weights of faces that match style,
     // returns whether any matching entries found
-    virtual bool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
-                                       bool anItalic, PRInt16 aStretch);
+    virtual PRBool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
+                                       PRBool anItalic, PRInt16 aStretch);
 
-    bool ReadOtherFamilyNamesForFace(gfxPlatformFontList *aPlatformFontList,
+    PRBool ReadOtherFamilyNamesForFace(gfxPlatformFontList *aPlatformFontList,
                                        FallibleTArray<PRUint8>& aNameTable,
-                                       bool useFullName = false);
+                                       PRBool useFullName = PR_FALSE);
 
     // set whether this font family is in "bad" underline offset blacklist.
     void SetBadUnderlineFonts() {
@@ -590,12 +590,12 @@ protected:
 
     nsString mName;
     nsTArray<nsRefPtr<gfxFontEntry> >  mAvailableFonts;
-    bool mOtherFamilyNamesInitialized;
-    bool mHasOtherFamilyNames;
-    bool mFaceNamesInitialized;
-    bool mHasStyles;
-    bool mIsSimpleFamily;
-    bool mIsBadUnderlineFamily;
+    PRPackedBool mOtherFamilyNamesInitialized;
+    PRPackedBool mHasOtherFamilyNames;
+    PRPackedBool mFaceNamesInitialized;
+    PRPackedBool mHasStyles;
+    PRPackedBool mIsSimpleFamily;
+    PRPackedBool mIsBadUnderlineFamily;
 
     enum {
         // for "simple" families, the faces are stored in mAvailableFonts
@@ -723,7 +723,7 @@ protected:
         HashEntry(const HashEntry& toCopy) : mFont(toCopy.mFont) { }
         ~HashEntry() { }
 
-        bool KeyEquals(const KeyTypePointer aKey) const;
+        PRBool KeyEquals(const KeyTypePointer aKey) const;
         static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
         static PLDHashNumber HashKey(const KeyTypePointer aKey) {
             return NS_PTR_TO_INT32(aKey->mFontEntry) ^ aKey->mStyle->Hash();
@@ -768,19 +768,19 @@ public:
         return mContainedGlyphWidths.Get(aGlyphID);
     }
 
-    bool IsGlyphKnown(PRUint32 aGlyphID) const {
+    PRBool IsGlyphKnown(PRUint32 aGlyphID) const {
         return mContainedGlyphWidths.Get(aGlyphID) != INVALID_WIDTH ||
             mTightGlyphExtents.GetEntry(aGlyphID) != nsnull;
     }
 
-    bool IsGlyphKnownWithTightExtents(PRUint32 aGlyphID) const {
+    PRBool IsGlyphKnownWithTightExtents(PRUint32 aGlyphID) const {
         return mTightGlyphExtents.GetEntry(aGlyphID) != nsnull;
     }
 
     // Get glyph extents; a rectangle relative to the left baseline origin
     // Returns true on success. Can fail on OOM or when aContext is null
     // and extents were not (successfully) prefetched.
-    bool GetTightGlyphExtentsAppUnits(gfxFont *aFont, gfxContext *aContext,
+    PRBool GetTightGlyphExtentsAppUnits(gfxFont *aFont, gfxContext *aContext,
             PRUint32 aGlyphID, gfxRect *aExtents);
 
     void SetContainedGlyphWidthAppUnits(PRUint32 aGlyphID, PRUint16 aWidth) {
@@ -881,7 +881,7 @@ public:
 
     virtual ~gfxFontShaper() { }
 
-    virtual bool InitTextRun(gfxContext *aContext,
+    virtual PRBool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
@@ -950,7 +950,7 @@ protected:
 public:
     virtual ~gfxFont();
 
-    bool Valid() const {
+    PRBool Valid() const {
         return mIsValid;
     }
 
@@ -1000,7 +1000,7 @@ public:
     }
 
     // check whether this is an sfnt we can potentially use with harfbuzz
-    bool FontCanSupportHarfBuzz() {
+    PRBool FontCanSupportHarfBuzz() {
         return mFontEntry->HasCmapTable();
     }
 
@@ -1022,7 +1022,7 @@ public:
     // Subclasses may choose to look up glyph ids for characters.
     // If they do not override this, gfxHarfBuzzShaper will fetch the cmap
     // table and use that.
-    virtual bool ProvidesGetGlyph() const {
+    virtual PRBool ProvidesGetGlyph() const {
         return PR_FALSE;
     }
     // Map unicode character to glyph ID.
@@ -1034,7 +1034,7 @@ public:
     // subclasses may provide (possibly hinted) glyph widths (in font units);
     // if they do not override this, harfbuzz will use unhinted widths
     // derived from the font tables
-    virtual bool ProvidesGlyphWidths() {
+    virtual PRBool ProvidesGlyphWidths() {
         return PR_FALSE;
     }
 
@@ -1096,7 +1096,7 @@ public:
             mBoundingBox = gfxRect(0,0,0,0);
         }
 
-        void CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft);
+        void CombineWith(const RunMetrics& aOther, PRBool aOtherIsOnLeft);
 
         // can be negative (partly due to negative spacing).
         // Advance widths should be additive: the advance width of the
@@ -1141,7 +1141,7 @@ public:
      * calls cairo_show_glyphs or cairo_glyph_path.
      */
     virtual void Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
-                      gfxContext *aContext, bool aDrawToPath, gfxPoint *aBaselineOrigin,
+                      gfxContext *aContext, PRBool aDrawToPath, gfxPoint *aBaselineOrigin,
                       Spacing *aSpacing);
     /**
      * Measure a run of characters. See gfxTextRun::Metrics.
@@ -1174,7 +1174,7 @@ public:
      * of the text. Reshaping may be required; glyph updating is permitted.
      * @return true if anything was changed, false otherwise
      */
-    bool NotifyLineBreaksChanged(gfxTextRun *aTextRun,
+    PRBool NotifyLineBreaksChanged(gfxTextRun *aTextRun,
                                    PRUint32 aStart, PRUint32 aLength)
     { return PR_FALSE; }
 
@@ -1188,12 +1188,12 @@ public:
 
     // You need to call SetupCairoFont on the aCR just before calling this
     virtual void SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID,
-                                   bool aNeedTight, gfxGlyphExtents *aExtents);
+                                   PRBool aNeedTight, gfxGlyphExtents *aExtents);
 
     // This is called by the default Draw() implementation above.
-    virtual bool SetupCairoFont(gfxContext *aContext) = 0;
+    virtual PRBool SetupCairoFont(gfxContext *aContext) = 0;
 
-    bool IsSyntheticBold() { return mApplySyntheticBold; }
+    PRBool IsSyntheticBold() { return mApplySyntheticBold; }
 
     // Amount by which synthetic bold "fattens" the glyphs: 1/16 of the em-size
     gfxFloat GetSyntheticBoldOffset() {
@@ -1201,7 +1201,7 @@ public:
     }
 
     gfxFontEntry *GetFontEntry() { return mFontEntry.get(); }
-    bool HasCharacter(PRUint32 ch) {
+    PRBool HasCharacter(PRUint32 ch) {
         if (!mIsValid)
             return PR_FALSE;
         return mFontEntry->HasCharacter(ch); 
@@ -1217,7 +1217,7 @@ public:
     // call the (virtual) InitTextRun method to do glyph generation/shaping,
     // limiting the length of text passed by processing the run in multiple
     // segments if necessary
-    bool SplitAndInitTextRun(gfxContext *aContext,
+    PRBool SplitAndInitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
@@ -1227,11 +1227,11 @@ public:
 protected:
     nsRefPtr<gfxFontEntry> mFontEntry;
 
-    bool                       mIsValid;
+    PRPackedBool               mIsValid;
 
     // use synthetic bolding for environments where this is not supported
     // by the platform
-    bool                       mApplySyntheticBold;
+    PRPackedBool               mApplySyntheticBold;
 
     nsExpirationState          mExpirationState;
     gfxFontStyle               mStyle;
@@ -1266,7 +1266,7 @@ protected:
     // Returns TRUE but leaves mIsValid=FALSE if the font seems to be broken.
     // Returns FALSE if the font does not appear to be an sfnt at all,
     // and should be handled (if possible) using other APIs.
-    bool InitMetricsFromSfntTables(Metrics& aMetrics);
+    PRBool InitMetricsFromSfntTables(Metrics& aMetrics);
 
     // Helper to calculate various derived metrics from the results of
     // InitMetricsFromSfntTables or equivalent platform code
@@ -1274,20 +1274,20 @@ protected:
 
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
-    void SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont);
+    void SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont);
 
     // Default simply calls m[Platform|HarfBuzz]Shaper->InitTextRun().
     // Override if the font class wants to give special handling
     // to shaper failure.
     // Returns PR_FALSE if shaping failed (though currently we
     // don't have any good way to handle that situation).
-    virtual bool InitTextRun(gfxContext *aContext,
+    virtual PRBool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
                                PRUint32 aRunLength,
                                PRInt32 aRunScript,
-                               bool aPreferPlatformShaping = false);
+                               PRBool aPreferPlatformShaping = PR_FALSE);
 };
 
 // proportion of ascent used for x-height, if unable to read value from font
@@ -1423,20 +1423,20 @@ public:
 
     // Public textrun API for general use
 
-    bool IsClusterStart(PRUint32 aPos) {
+    PRBool IsClusterStart(PRUint32 aPos) {
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].IsClusterStart();
     }
-    bool IsLigatureGroupStart(PRUint32 aPos) {
+    PRBool IsLigatureGroupStart(PRUint32 aPos) {
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].IsLigatureGroupStart();
     }
-    bool CanBreakLineBefore(PRUint32 aPos) {
+    PRBool CanBreakLineBefore(PRUint32 aPos) {
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CanBreakBefore() ==
             CompressedGlyph::FLAG_BREAK_TYPE_NORMAL;
     }
-    bool CanHyphenateBefore(PRUint32 aPos) {
+    PRBool CanHyphenateBefore(PRUint32 aPos) {
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CanBreakBefore() ==
             CompressedGlyph::FLAG_BREAK_TYPE_HYPHEN;
@@ -1462,7 +1462,7 @@ public:
      * @return true if this changed the linebreaks, false if the new line
      * breaks are the same as the old
      */
-    virtual bool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
+    virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
                                           PRUint8 *aBreakBefore,
                                           gfxContext *aRefContext);
 
@@ -1481,7 +1481,7 @@ public:
         // Detect hyphenation break opportunities in the given range; breaks
         // not at cluster boundaries will be ignored.
         virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
-                                          bool *aBreakBefore) = 0;
+                                          PRPackedBool *aBreakBefore) = 0;
 
         // Returns the provider's hyphenation setting, so callers can decide
         // whether it is necessary to call GetHyphenationBreaks.
@@ -1510,7 +1510,7 @@ public:
 
         void Reset();
 
-        bool NextCluster();
+        PRBool NextCluster();
 
         PRUint32 Position() const {
             return mCurrentChar;
@@ -1614,8 +1614,8 @@ public:
      * @param aAdvanceWidthDelta if non-null, returns the change in advance
      * width of the given range.
      */
-    virtual bool SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                 bool aLineBreakBefore, bool aLineBreakAfter,
+    virtual PRBool SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
+                                 PRBool aLineBreakBefore, PRBool aLineBreakAfter,
                                  gfxFloat *aAdvanceWidthDelta,
                                  gfxContext *aRefContext);
 
@@ -1678,16 +1678,16 @@ public:
      * spacing is provided.
      */
     PRUint32 BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
-                                 bool aLineBreakBefore, gfxFloat aWidth,
+                                 PRBool aLineBreakBefore, gfxFloat aWidth,
                                  PropertyProvider *aProvider,
-                                 bool aSuppressInitialBreak,
+                                 PRBool aSuppressInitialBreak,
                                  gfxFloat *aTrimWhitespace,
                                  Metrics *aMetrics,
                                  gfxFont::BoundingBoxType aBoundingBoxType,
                                  gfxContext *aRefContextForTightBoundingBox,
-                                 bool *aUsedHyphenation,
+                                 PRBool *aUsedHyphenation,
                                  PRUint32 *aLastBreak,
-                                 bool aCanWordWrap,
+                                 PRBool aCanWordWrap,
                                  gfxBreakPriority *aBreakPriority);
 
     /**
@@ -1699,7 +1699,7 @@ public:
 
     // Utility getters
 
-    bool IsRightToLeft() const { return (mFlags & gfxTextRunFactory::TEXT_IS_RTL) != 0; }
+    PRBool IsRightToLeft() const { return (mFlags & gfxTextRunFactory::TEXT_IS_RTL) != 0; }
     gfxFloat GetDirection() const { return (mFlags & gfxTextRunFactory::TEXT_IS_RTL) ? -1.0 : 1.0; }
     void *GetUserData() const { return mUserData; }
     void SetUserData(void *aUserData) { mUserData = aUserData; }
@@ -1802,27 +1802,27 @@ public:
         // These case is optimized to avoid storing DetailedGlyphs.
 
         // Returns true if the glyph ID aGlyph fits into the compressed representation
-        static bool IsSimpleGlyphID(PRUint32 aGlyph) {
+        static PRBool IsSimpleGlyphID(PRUint32 aGlyph) {
             return (aGlyph & GLYPH_MASK) == aGlyph;
         }
         // Returns true if the advance aAdvance fits into the compressed representation.
         // aAdvance is in appunits.
-        static bool IsSimpleAdvance(PRUint32 aAdvance) {
+        static PRBool IsSimpleAdvance(PRUint32 aAdvance) {
             return (aAdvance & (ADVANCE_MASK >> ADVANCE_SHIFT)) == aAdvance;
         }
 
-        bool IsSimpleGlyph() const { return (mValue & FLAG_IS_SIMPLE_GLYPH) != 0; }
+        PRBool IsSimpleGlyph() const { return (mValue & FLAG_IS_SIMPLE_GLYPH) != 0; }
         PRUint32 GetSimpleAdvance() const { return (mValue & ADVANCE_MASK) >> ADVANCE_SHIFT; }
         PRUint32 GetSimpleGlyph() const { return mValue & GLYPH_MASK; }
 
-        bool IsMissing() const { return (mValue & (FLAG_NOT_MISSING|FLAG_IS_SIMPLE_GLYPH)) == 0; }
-        bool IsClusterStart() const {
+        PRBool IsMissing() const { return (mValue & (FLAG_NOT_MISSING|FLAG_IS_SIMPLE_GLYPH)) == 0; }
+        PRBool IsClusterStart() const {
             return (mValue & FLAG_IS_SIMPLE_GLYPH) || !(mValue & FLAG_NOT_CLUSTER_START);
         }
-        bool IsLigatureGroupStart() const {
+        PRBool IsLigatureGroupStart() const {
             return (mValue & FLAG_IS_SIMPLE_GLYPH) || !(mValue & FLAG_NOT_LIGATURE_GROUP_START);
         }
-        bool IsLigatureContinuation() const {
+        PRBool IsLigatureContinuation() const {
             return (mValue & FLAG_IS_SIMPLE_GLYPH) == 0 &&
                 (mValue & (FLAG_NOT_LIGATURE_GROUP_START | FLAG_NOT_MISSING)) ==
                     (FLAG_NOT_LIGATURE_GROUP_START | FLAG_NOT_MISSING);
@@ -1849,7 +1849,7 @@ public:
                 (aAdvanceAppUnits << ADVANCE_SHIFT) | aGlyph;
             return *this;
         }
-        CompressedGlyph& SetComplex(bool aClusterStart, bool aLigatureStart,
+        CompressedGlyph& SetComplex(PRBool aClusterStart, PRBool aLigatureStart,
                 PRUint32 aGlyphCount) {
             mValue = (mValue & FLAGS_CAN_BREAK_BEFORE) |
                 FLAG_NOT_MISSING |
@@ -1905,7 +1905,7 @@ public:
           : mTextRun(aTextRun), mStartOffset(aStart), mEndOffset(aStart + aLength) {
             mNextIndex = mTextRun->FindFirstGlyphRunContaining(aStart);
         }
-        bool NextRun();
+        PRBool NextRun();
         GlyphRun *GetGlyphRun() { return mGlyphRun; }
         PRUint32 GetStringStart() { return mStringStart; }
         PRUint32 GetStringEnd() { return mStringEnd; }
@@ -1921,13 +1921,13 @@ public:
 
     class GlyphRunOffsetComparator {
     public:
-        bool Equals(const GlyphRun& a,
+        PRBool Equals(const GlyphRun& a,
                       const GlyphRun& b) const
         {
             return a.mCharacterOffset == b.mCharacterOffset;
         }
 
-        bool LessThan(const GlyphRun& a,
+        PRBool LessThan(const GlyphRun& a,
                         const GlyphRun& b) const
         {
             return a.mCharacterOffset < b.mCharacterOffset;
@@ -1953,7 +1953,7 @@ public:
      * TextRun.
      */
     nsresult AddGlyphRun(gfxFont *aFont, PRUint8 aMatchType,
-                         PRUint32 aStartCharIndex, bool aForceNewRun);
+                         PRUint32 aStartCharIndex, PRBool aForceNewRun);
     void ResetGlyphRuns() { mGlyphRuns.Clear(); }
     void SortGlyphRuns();
     void SanitizeGlyphRuns();
@@ -1978,7 +1978,7 @@ public:
 
     // If the character at aIndex is default-ignorable, set the glyph
     // to be invisible-missing and return TRUE, else return FALSE
-    bool FilterIfIgnorable(PRUint32 aIndex);
+    PRBool FilterIfIgnorable(PRUint32 aIndex);
 
     /**
      * Prefetch all the glyph extents needed to ensure that Measure calls
@@ -2003,7 +2003,7 @@ public:
         return mDetailedGlyphs->Get(aCharIndex);
     }
 
-    bool HasDetailedGlyphs() { return mDetailedGlyphs != nsnull; }
+    PRBool HasDetailedGlyphs() { return mDetailedGlyphs != nsnull; }
     PRUint32 CountMissingGlyphs();
     const GlyphRun *GetGlyphRuns(PRUint32 *aNumGlyphRuns) {
         *aNumGlyphRuns = mGlyphRuns.Length();
@@ -2031,8 +2031,8 @@ public:
         // when the part is as the end of the ligature
         gfxFloat mPartWidth;
         
-        bool mClipBeforePart;
-        bool mClipAfterPart;
+        PRPackedBool mClipBeforePart;
+        PRPackedBool mClipAfterPart;
     };
     
     // user font set generation when text run was created
@@ -2086,7 +2086,7 @@ private:
     // is assumed to be zero; such characters are not passed to aProvider.
     // This is useful to protect aProvider from being passed character indices
     // it is not currently able to handle.
-    bool GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
+    PRBool GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
                                    PropertyProvider *aProvider,
                                    PRUint32 aSpacingStart, PRUint32 aSpacingEnd,
                                    nsTArray<PropertyProvider::Spacing> *aSpacing);
@@ -2124,7 +2124,7 @@ private:
                                  Metrics *aMetrics);
 
     // **** drawing helper ****
-    void DrawGlyphs(gfxFont *aFont, gfxContext *aContext, bool aDrawToPath,
+    void DrawGlyphs(gfxFont *aFont, gfxContext *aContext, PRBool aDrawToPath,
                     gfxPoint *aPt, PRUint32 aStart, PRUint32 aEnd,
                     PropertyProvider *aProvider,
                     PRUint32 aSpacingStart, PRUint32 aSpacingEnd);
@@ -2217,19 +2217,19 @@ private:
         };
 
         struct CompareToOffset {
-            bool Equals(const DGRec& a, const PRUint32& b) const {
+            PRBool Equals(const DGRec& a, const PRUint32& b) const {
                 return a.mOffset == b;
             }
-            bool LessThan(const DGRec& a, const PRUint32& b) const {
+            PRBool LessThan(const DGRec& a, const PRUint32& b) const {
                 return a.mOffset < b;
             }
         };
 
         struct CompareRecordOffsets {
-            bool Equals(const DGRec& a, const DGRec& b) const {
+            PRBool Equals(const DGRec& a, const DGRec& b) const {
                 return a.mOffset == b.mOffset;
             }
-            bool LessThan(const DGRec& a, const DGRec& b) const {
+            PRBool LessThan(const DGRec& a, const DGRec& b) const {
                 return a.mOffset < b.mOffset;
             }
         };
@@ -2274,7 +2274,7 @@ private:
     PRUint32          mHashCode;
     PRUint64          mUserFontSetGeneration; // user font set generation when text run created
 
-    bool              mSkipDrawing; // true if the font group we used had a user font
+    PRBool            mSkipDrawing; // true if the font group we used had a user font
                                     // download that's in progress, so we should hide text
                                     // until the download completes (or timeout fires)
 };
@@ -2304,7 +2304,7 @@ public:
         return mFonts.Length();
     }
 
-    bool Equals(const gfxFontGroup& other) const {
+    PRBool Equals(const gfxFontGroup& other) const {
         return mFamilies.Equals(other.mFamilies) &&
             mStyle.Equals(other.mStyle);
     }
@@ -2317,7 +2317,7 @@ public:
      * The listed characters should not be passed in to MakeTextRun and should
      * be treated as invisible and zero-width.
      */
-    static bool IsInvalidChar(PRUnichar ch);
+    static PRBool IsInvalidChar(PRUnichar ch);
     
     /**
      * Make a textrun for an empty string. This is fast; if you call it,
@@ -2350,21 +2350,21 @@ public:
     /* helper function for splitting font families on commas and
      * calling a function for each family to fill the mFonts array
      */
-    typedef bool (*FontCreationCallback) (const nsAString& aName,
+    typedef PRBool (*FontCreationCallback) (const nsAString& aName,
                                             const nsACString& aGenericName,
-                                            bool aUseFontSet,
+                                            PRBool aUseFontSet,
                                             void *closure);
-    bool ForEachFont(const nsAString& aFamilies,
+    PRBool ForEachFont(const nsAString& aFamilies,
                        nsIAtom *aLanguage,
                        FontCreationCallback fc,
                        void *closure);
-    bool ForEachFont(FontCreationCallback fc, void *closure);
+    PRBool ForEachFont(FontCreationCallback fc, void *closure);
 
     /**
      * Check whether a given font (specified by its gfxFontEntry)
      * is already in the fontgroup's list of actual fonts
      */
-    bool HasFont(const gfxFontEntry *aFontEntry);
+    PRBool HasFont(const gfxFontEntry *aFontEntry);
 
     const nsString& GetFamilies() { return mFamilies; }
 
@@ -2406,7 +2406,7 @@ public:
     // caches need updating.
     virtual void UpdateFontList();
 
-    bool ShouldSkipDrawing() const {
+    PRBool ShouldSkipDrawing() const {
         return mSkipDrawing;
     }
 
@@ -2424,9 +2424,9 @@ protected:
     nsRefPtr<gfxFont>       mLastPrefFont;
     eFontPrefLang           mLastPrefLang;       // lang group for last pref font
     eFontPrefLang           mPageLang;
-    bool                    mLastPrefFirstFont;  // is this the first font in the list of pref fonts for this lang group?
+    PRPackedBool            mLastPrefFirstFont;  // is this the first font in the list of pref fonts for this lang group?
 
-    bool                    mSkipDrawing; // hide text while waiting for a font
+    PRPackedBool            mSkipDrawing; // hide text while waiting for a font
                                           // download to complete (or fallback
                                           // timer to fire)
 
@@ -2469,19 +2469,19 @@ protected:
      * If aUseFontSet is true, the fontgroup's user font set is checked;
      * if false then it is skipped.
      */
-    bool ForEachFontInternal(const nsAString& aFamilies,
+    PRBool ForEachFontInternal(const nsAString& aFamilies,
                                nsIAtom *aLanguage,
-                               bool aResolveGeneric,
-                               bool aResolveFontName,
-                               bool aUseFontSet,
+                               PRBool aResolveGeneric,
+                               PRBool aResolveFontName,
+                               PRBool aUseFontSet,
                                FontCreationCallback fc,
                                void *closure);
 
-    static bool FontResolverProc(const nsAString& aName, void *aClosure);
+    static PRBool FontResolverProc(const nsAString& aName, void *aClosure);
 
-    static bool FindPlatformFont(const nsAString& aName,
+    static PRBool FindPlatformFont(const nsAString& aName,
                                    const nsACString& aGenericName,
-                                   bool aUseFontSet,
+                                   PRBool aUseFontSet,
                                    void *closure);
 
     static NS_HIDDEN_(nsILanguageAtomService*) gLangService;

@@ -96,7 +96,7 @@ txXPathTreeWalker::moveToRoot()
     mDescendants.Clear();
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToElementById(const nsAString& aID)
 {
     if (aID.IsEmpty()) {
@@ -132,7 +132,7 @@ txXPathTreeWalker::moveToElementById(const nsAString& aID)
     return PR_TRUE;
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToFirstAttribute()
 {
     if (!mPosition.isContent()) {
@@ -142,7 +142,7 @@ txXPathTreeWalker::moveToFirstAttribute()
     return moveToValidAttribute(0);
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToNextAttribute()
 {
     // XXX an assertion should be enough here with the current code
@@ -153,7 +153,7 @@ txXPathTreeWalker::moveToNextAttribute()
     return moveToValidAttribute(mPosition.mIndex + 1);
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToValidAttribute(PRUint32 aStartIndex)
 {
     NS_ASSERTION(!mPosition.isDocument(), "documents doesn't have attrs");
@@ -177,7 +177,7 @@ txXPathTreeWalker::moveToValidAttribute(PRUint32 aStartIndex)
     return PR_FALSE;
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToNamedAttribute(nsIAtom* aLocalName, PRInt32 aNSID)
 {
     if (!mPosition.isContent()) {
@@ -196,7 +196,7 @@ txXPathTreeWalker::moveToNamedAttribute(nsIAtom* aLocalName, PRInt32 aNSID)
     return PR_FALSE;
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToFirstChild()
 {
     if (mPosition.isAttribute()) {
@@ -209,7 +209,7 @@ txXPathTreeWalker::moveToFirstChild()
     NS_ASSERTION(mCurrentIndex != kUnknownIndex || mDescendants.IsEmpty(),
                  "Index should be known if parents index are");
 
-    nsIContent* child = mPosition.mNode->GetFirstChild();
+    nsIContent* child = mPosition.mNode->GetChildAt(0);
     if (!child) {
         return PR_FALSE;
     }
@@ -225,7 +225,7 @@ txXPathTreeWalker::moveToFirstChild()
     return PR_TRUE;
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToLastChild()
 {
     if (mPosition.isAttribute()) {
@@ -242,7 +242,7 @@ txXPathTreeWalker::moveToLastChild()
     if (!total) {
         return PR_FALSE;
     }
-    mPosition.mNode = mPosition.mNode->GetLastChild();
+    mPosition.mNode = mPosition.mNode->GetChildAt(total - 1);
 
     if (mCurrentIndex != kUnknownIndex &&
         !mDescendants.AppendValue(mCurrentIndex)) {
@@ -253,7 +253,7 @@ txXPathTreeWalker::moveToLastChild()
     return PR_TRUE;
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToNextSibling()
 {
     if (!mPosition.isContent()) {
@@ -263,7 +263,7 @@ txXPathTreeWalker::moveToNextSibling()
     return moveToSibling(1);
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToPreviousSibling()
 {
     if (!mPosition.isContent()) {
@@ -273,7 +273,7 @@ txXPathTreeWalker::moveToPreviousSibling()
     return moveToSibling(-1);
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToParent()
 {
     if (mPosition.isDocument()) {
@@ -307,7 +307,7 @@ txXPathTreeWalker::moveToParent()
     return PR_TRUE;
 }
 
-bool
+PRBool
 txXPathTreeWalker::moveToSibling(PRInt32 aDir)
 {
     NS_ASSERTION(mPosition.isContent(),
@@ -356,7 +356,7 @@ txXPathNode::~txXPathNode()
 }
 
 /* static */
-bool
+PRBool
 txXPathNodeUtils::getAttr(const txXPathNode& aNode, nsIAtom* aLocalName,
                           PRInt32 aNSID, nsAString& aValue)
 {
@@ -554,7 +554,7 @@ txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
 }
 
 /* static */
-bool
+PRBool
 txXPathNodeUtils::isWhitespace(const txXPathNode& aNode)
 {
     NS_ASSERTION(aNode.isContent() && isText(aNode), "Wrong type!");
@@ -723,7 +723,7 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
 
 /* static */
 txXPathNode*
-txXPathNativeNode::createXPathNode(nsIContent* aContent, bool aKeepRootAlive)
+txXPathNativeNode::createXPathNode(nsIContent* aContent, PRBool aKeepRootAlive)
 {
     nsINode* root = aKeepRootAlive ? txXPathNode::RootOf(aContent) : nsnull;
 
@@ -732,7 +732,7 @@ txXPathNativeNode::createXPathNode(nsIContent* aContent, bool aKeepRootAlive)
 
 /* static */
 txXPathNode*
-txXPathNativeNode::createXPathNode(nsIDOMNode* aNode, bool aKeepRootAlive)
+txXPathNativeNode::createXPathNode(nsIDOMNode* aNode, PRBool aKeepRootAlive)
 {
     PRUint16 nodeType;
     aNode->GetNodeType(&nodeType);

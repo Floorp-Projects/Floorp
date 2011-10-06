@@ -61,11 +61,7 @@ anp_typeface_createFromName(const char name[], ANPTypefaceStyle aStyle)
                       NS_LITERAL_STRING(""));
   ANPTypeface* tf = new ANPTypeface;
   gfxAndroidPlatform * p = (gfxAndroidPlatform*)gfxPlatform::GetPlatform();
-  nsRefPtr<gfxFont> font = gfxFT2Font::GetOrMakeFont(NS_ConvertASCIItoUTF16(name), &style);
-  font.forget(&tf->mFont);
-  if (tf->mFont) {
-    ++tf->mRefCnt;
-  }
+  tf->mFont = gfxFT2Font::GetOrMakeFont(NS_ConvertASCIItoUTF16(name), &style);
   return tf;
 }
 
@@ -89,7 +85,7 @@ anp_typeface_ref(ANPTypeface* tf)
 {
   LOG("%s\n", __PRETTY_FUNCTION__);
   if (tf->mFont)
-    ++tf->mRefCnt;
+    tf->mFont->AddRef();
 
 }
 
@@ -98,10 +94,7 @@ anp_typeface_unref(ANPTypeface* tf)
 {
   LOG("%s\n", __PRETTY_FUNCTION__);
   if (tf->mFont)
-    --tf->mRefCnt;
-  if (tf->mRefCnt.get() == 0) {
-    NS_IF_RELEASE(tf->mFont);
-  }
+    tf->mFont->Release();
 }
 
 ANPTypefaceStyle

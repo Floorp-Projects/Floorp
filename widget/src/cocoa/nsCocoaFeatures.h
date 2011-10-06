@@ -45,8 +45,8 @@ class nsCocoaFeatures {
 public:
   static PRInt32 OSXVersion();
 
-  static bool OnSnowLeopardOrLater();  
-  static bool OnLionOrLater();  
+  static PRBool OnSnowLeopardOrLater();  
+  static PRBool OnLionOrLater();  
 private:
   static PRInt32 mOSXVersion;
 };

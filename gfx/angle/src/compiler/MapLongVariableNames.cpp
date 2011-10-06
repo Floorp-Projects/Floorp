@@ -23,7 +23,7 @@ TString mapLongName(int id, const TString& name, bool isVarying)
 }  // anonymous namespace
 
 MapLongVariableNames::MapLongVariableNames(
-    std::map<std::string, std::string>& varyingLongNameMap)
+    TMap<TString, TString>& varyingLongNameMap)
     : mVaryingLongNameMap(varyingLongNameMap)
 {
 }
@@ -57,13 +57,13 @@ bool MapLongVariableNames::visitLoop(Visit, TIntermLoop* node)
 
 TString MapLongVariableNames::mapVaryingLongName(const TString& name)
 {
-    std::map<std::string, std::string>::const_iterator it = mVaryingLongNameMap.find(name.c_str());
+    TMap<TString, TString>::const_iterator it = mVaryingLongNameMap.find(name);
     if (it != mVaryingLongNameMap.end())
-        return (*it).second.c_str();
+        return (*it).second;
 
     int id = mVaryingLongNameMap.size();
     TString mappedName = mapLongName(id, name, true);
     mVaryingLongNameMap.insert(
-        std::map<std::string, std::string>::value_type(name.c_str(), mappedName.c_str()));
+        TMap<TString, TString>::value_type(name, mappedName));
     return mappedName;
 }

@@ -487,7 +487,7 @@ nsSVGTextContainerFrame::GetEffectiveRotate(nsTArray<float> &aRotate)
 void
 nsSVGTextContainerFrame::SetWhitespaceCompression()
 {
-  bool compressWhitespace = true;
+  PRBool compressWhitespace = PR_TRUE;
 
   for (const nsIFrame *frame = this; frame != nsnull; frame = frame->GetParent()) {
     static const nsIContent::AttrValuesArray strings[] =

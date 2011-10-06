@@ -84,7 +84,7 @@ namespace places {
   struct ItemChangeData {
     BookmarkData bookmark;
     nsCString property;
-    bool isAnnotation;
+    PRBool isAnnotation;
     nsCString newValue;
   };
 
@@ -212,7 +212,7 @@ public:
   nsresult CreateContainerWithID(PRInt64 aId, PRInt64 aParent,
                                  const nsACString& aTitle,
                                  const nsAString& aContractId,
-                                 bool aIsBookmarkFolder,
+                                 PRBool aIsBookmarkFolder,
                                  PRInt32* aIndex,
                                  PRInt64* aNewFolder);
 
@@ -223,7 +223,7 @@ public:
    *        The place_id of the location to check against.
    * @return true if it's a real bookmark, false otherwise.
    */
-  bool IsRealBookmark(PRInt64 aPlaceId);
+  PRBool IsRealBookmark(PRInt64 aPlaceId);
 
   /**
    * Fetches information about the specified id from the database.
@@ -362,7 +362,7 @@ private:
   PRInt64 mUnfiledRoot;
   PRInt64 mToolbarRoot;
 
-  nsresult IsBookmarkedInDatabase(PRInt64 aBookmarkID, bool* aIsBookmarked);
+  nsresult IsBookmarkedInDatabase(PRInt64 aBookmarkID, PRBool* aIsBookmarked);
 
   nsresult SetItemDateInternal(mozIStorageStatement* aStatement,
                                PRInt64 aItemId,
@@ -550,12 +550,12 @@ private:
       return DoTransaction();
     }
 
-    NS_IMETHOD GetIsTransient(bool* aResult) {
+    NS_IMETHOD GetIsTransient(PRBool* aResult) {
       *aResult = PR_FALSE;
       return NS_OK;
     }
     
-    NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aResult) {
+    NS_IMETHOD Merge(nsITransaction* aTransaction, PRBool* aResult) {
       *aResult = PR_FALSE;
       return NS_OK;
     }

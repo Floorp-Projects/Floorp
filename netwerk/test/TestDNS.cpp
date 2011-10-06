@@ -74,7 +74,7 @@ public:
             rec->GetCanonicalName(buf);
             printf("%d: canonname=%s\n", mIndex, buf.get());
 
-            bool hasMore;
+            PRBool hasMore;
             while (NS_SUCCEEDED(rec->HasMore(&hasMore)) && hasMore) {
                 rec->GetNextAddrAsString(buf);
                 printf("%d: => %s\n", mIndex, buf.get());
@@ -91,7 +91,7 @@ private:
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(myDNSListener, nsIDNSListener)
 
-static bool IsAscii(const char *s)
+static PRBool IsAscii(const char *s)
 {
   for (; *s; ++s) {
     if (*s & 0x80)

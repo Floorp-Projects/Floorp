@@ -92,8 +92,9 @@
                                        global object */
 
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
-                                    /* 0x2000 is JSFUN_TRCINFO:
-                                       u.n.trcinfo is non-null */
+#define JSFUN_TRCINFO       0x2000  /* when set, u.n.trcinfo is non-null,
+                                       JSFunctionSpec::call points to a
+                                       JSNativeTraceInfo. */
 #define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.n */
 #define JSFUN_FLAT_CLOSURE  0x8000  /* flat (aka "display") closure */
 #define JSFUN_NULL_CLOSURE  0xc000  /* null closure entrains no scope chain */
@@ -370,9 +371,6 @@ IsConstructing(const Value *vp)
 #endif
     return vp[1].isMagic();
 }
-
-inline bool
-IsConstructing(CallReceiver call);
 
 static JS_ALWAYS_INLINE bool
 IsConstructing_PossiblyWithGivenThisObject(const Value *vp, JSObject **ctorThis)

@@ -243,7 +243,7 @@ nsAppStartup::Quit(PRUint32 aMode)
   // Exit() method via nsAppExitEvent to allow one last pass
   // through any events in the queue. This guarantees a tidy cleanup.
   nsresult rv = NS_OK;
-  bool postedExitEvent = false;
+  PRBool postedExitEvent = PR_FALSE;
 
   if (mShuttingDown)
     return NS_OK;
@@ -264,7 +264,7 @@ nsAppStartup::Quit(PRUint32 aMode)
       if (!appShell)
         return NS_OK;
 
-      bool usefulHiddenWindow;
+      PRBool usefulHiddenWindow;
       appShell->GetApplicationProvidedHiddenWindow(&usefulHiddenWindow);
       nsCOMPtr<nsIXULWindow> hiddenWindow;
       appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
@@ -285,7 +285,7 @@ nsAppStartup::Quit(PRUint32 aMode)
     if (mediator) {
       mediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
       if (windowEnumerator) {
-        bool more;
+        PRBool more;
         while (windowEnumerator->HasMoreElements(&more), more) {
           nsCOMPtr<nsISupports> window;
           windowEnumerator->GetNext(getter_AddRefs(window));
@@ -339,7 +339,7 @@ nsAppStartup::Quit(PRUint32 aMode)
            closed. */
         mediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
         if (windowEnumerator) {
-          bool more;
+          PRBool more;
           while (windowEnumerator->HasMoreElements(&more), more) {
             /* we can't quit immediately. we'll try again as the last window
                finally closes. */
@@ -348,7 +348,7 @@ nsAppStartup::Quit(PRUint32 aMode)
             windowEnumerator->GetNext(getter_AddRefs(window));
             nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(window);
             if (domWindow) {
-              bool closed = false;
+              PRBool closed = PR_FALSE;
               domWindow->GetClosed(&closed);
               if (!closed) {
                 rv = NS_ERROR_FAILURE;
@@ -412,7 +412,7 @@ nsAppStartup::CloseAllWindows()
   if (!windowEnumerator)
     return;
 
-  bool more;
+  PRBool more;
   while (NS_SUCCEEDED(windowEnumerator->HasMoreElements(&more)) && more) {
     nsCOMPtr<nsISupports> isupports;
     if (NS_FAILED(windowEnumerator->GetNext(getter_AddRefs(isupports))))
@@ -450,21 +450,21 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
 //
 
 NS_IMETHODIMP
-nsAppStartup::GetShuttingDown(bool *aResult)
+nsAppStartup::GetShuttingDown(PRBool *aResult)
 {
   *aResult = mShuttingDown;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAppStartup::SetInterrupted(bool aInterrupted)
+nsAppStartup::SetInterrupted(PRBool aInterrupted)
 {
   mInterrupted = aInterrupted;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAppStartup::GetInterrupted(bool *aInterrupted)
+nsAppStartup::GetInterrupted(PRBool *aInterrupted)
 {
   *aInterrupted = mInterrupted;
   return NS_OK;
@@ -479,7 +479,7 @@ nsAppStartup::CreateChromeWindow(nsIWebBrowserChrome *aParent,
                                  PRUint32 aChromeFlags,
                                  nsIWebBrowserChrome **_retval)
 {
-  bool cancel;
+  PRBool cancel;
   return CreateChromeWindow2(aParent, aChromeFlags, 0, 0, &cancel, _retval);
 }
 
@@ -493,7 +493,7 @@ nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
                                   PRUint32 aChromeFlags,
                                   PRUint32 aContextFlags,
                                   nsIURI *aURI,
-                                  bool *aCancel,
+                                  PRBool *aCancel,
                                   nsIWebBrowserChrome **_retval)
 {
   NS_ENSURE_ARG_POINTER(aCancel);

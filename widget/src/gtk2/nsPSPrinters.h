@@ -51,10 +51,10 @@ class nsPSPrinterList {
 
         /**
          * Is the PostScript module enabled or disabled?
-         * @return true if enabled,
-         *         false if not.
+         * @return PR_TRUE if enabled,
+         *         PR_FALSE if not.
          */
-        bool Enabled();
+        PRBool Enabled();
 
         /**
          * Obtain a list of printers (print destinations) supported by the

@@ -56,7 +56,7 @@ public:
   /* additional members */
   static PRInt32 CmpCAName(nsIOCSPResponder *a, nsIOCSPResponder *b);
   static PRInt32 CompareEntries(nsIOCSPResponder *a, nsIOCSPResponder *b);
-  static bool IncludeCert(CERTCertificate *aCert);
+  static PRBool IncludeCert(CERTCertificate *aCert);
 private:
   nsString mCA;
   nsString mURL;

@@ -118,9 +118,9 @@ class nsXPInstallManager : public nsIXPIDialogService,
         NS_IMETHOD  GetDestinationFile(nsString& url, nsILocalFile* *file);
         NS_IMETHOD  LoadParams(PRUint32 aCount, const PRUnichar** aPackageList, nsIDialogParamBlock** aParams);
 #ifdef ENABLE_SKIN_SIMPLE_INSTALLATION_UI
-        bool        ConfirmChromeInstall(nsIDOMWindow* aParentWindow, const PRUnichar** aPackage);
+        PRBool      ConfirmChromeInstall(nsIDOMWindow* aParentWindow, const PRUnichar** aPackage);
 #endif
-        bool        VerifyHash(nsXPITriggerItem* aItem);
+        PRBool      VerifyHash(nsXPITriggerItem* aItem);
         PRInt32     GetIndexFromURL(const PRUnichar* aUrl);
         nsresult    CheckCert(nsIChannel* aChannel);
 
@@ -130,10 +130,10 @@ class nsXPInstallManager : public nsIXPIDialogService,
         PRUint32            mChromeType;
         PRInt32             mContentLength;
         PRInt32             mOutstandingCertLoads;
-        bool                mDialogOpen;
-        bool                mCancelled;
-        bool                mNeedsShutdown;
-        bool                mFromChrome;
+        PRBool              mDialogOpen;
+        PRBool              mCancelled;
+        PRBool              mNeedsShutdown;
+        PRBool              mFromChrome;
 
         nsCOMPtr<nsIXPIProgressDialog>  mDlg;
 

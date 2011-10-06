@@ -76,28 +76,28 @@ public:
   NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntSize* aResult,
-                                  bool* aIsOverridable);
+                                  PRBool* aIsOverridable);
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
-                                nsIAtom* aAttribute, bool* aShouldRepaint);
+                                nsIAtom* aAttribute, PRBool* aShouldRepaint);
 
   NS_IMETHOD ThemeChanged();
 
-  bool ThemeSupportsWidget(nsPresContext* aPresContext,
+  PRBool ThemeSupportsWidget(nsPresContext* aPresContext,
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType);
 
-  bool WidgetIsContainer(PRUint8 aWidgetType);
+  PRBool WidgetIsContainer(PRUint8 aWidgetType);
 
-  virtual NS_HIDDEN_(bool) GetWidgetPadding(nsDeviceContext* aContext,
+  virtual NS_HIDDEN_(PRBool) GetWidgetPadding(nsDeviceContext* aContext,
                                               nsIFrame* aFrame,
                                               PRUint8 aWidgetType,
                                               nsIntMargin* aResult);
 
-  NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
+  NS_IMETHOD_(PRBool) ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
                                                nsIFrame* aFrame, PRUint8 aWidgetType);
 
-  bool ThemeNeedsComboboxDropmarker();
+  PRBool ThemeNeedsComboboxDropmarker();
 
   nsNativeThemeQt();
   virtual ~nsNativeThemeQt();

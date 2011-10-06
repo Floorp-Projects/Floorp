@@ -167,7 +167,7 @@ static const PRUint8 gsRGBToLinearRGBMap[256] = {
 };
 
 #ifdef MOZ_SMIL
-static bool gSMILEnabled;
+static PRBool gSMILEnabled;
 static const char SMIL_PREF_STR[] = "svg.smil.enabled";
 #endif // MOZ_SMIL
 
@@ -175,15 +175,15 @@ static const char SMIL_PREF_STR[] = "svg.smil.enabled";
 static int
 SMILPrefChanged(const char *aPref, void *aClosure)
 {
-  bool prefVal = Preferences::GetBool(SMIL_PREF_STR);
+  PRBool prefVal = Preferences::GetBool(SMIL_PREF_STR);
   gSMILEnabled = prefVal;
   return 0;
 }
 
-bool
+PRBool
 NS_SMILEnabled()
 {
-  static bool sInitialized = false;
+  static PRBool sInitialized = PR_FALSE;
   
   if (!sInitialized) {
     /* check and register ourselves with the pref */
@@ -425,7 +425,7 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
   }
 }
 
-bool
+PRBool
 nsSVGUtils::EstablishesViewport(nsIContent *aContent)
 {
   return aContent && aContent->GetNameSpaceID() == kNameSpaceID_SVG &&
@@ -453,7 +453,7 @@ nsSVGUtils::GetNearestViewportElement(nsIContent *aContent)
 }
 
 gfxMatrix
-nsSVGUtils::GetCTM(nsSVGElement *aElement, bool aScreenCTM)
+nsSVGUtils::GetCTM(nsSVGElement *aElement, PRBool aScreenCTM)
 {
   nsIDocument* currentDoc = aElement->GetCurrentDoc();
   if (currentDoc) {
@@ -629,7 +629,7 @@ nsSVGUtils::UpdateGraphic(nsISVGChildFrame *aSVGFrame)
   } else {
     frame->RemoveStateBits(NS_STATE_SVG_DIRTY);
 
-    bool changed = outerSVGFrame->UpdateAndInvalidateCoveredRegion(frame);
+    PRBool changed = outerSVGFrame->UpdateAndInvalidateCoveredRegion(frame);
     if (changed) {
       NotifyAncestorsOfFilterRegionChange(frame);
     }
@@ -941,7 +941,7 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(aFrame);
 
-  bool isOK = true;
+  PRBool isOK = PR_TRUE;
   nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
 
   /* Check if we need to draw anything. HasValidCoveredRect only returns
@@ -979,12 +979,12 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
     opacity = 1.0f;
 
   gfxContext *gfx = aContext->GetGfxContext();
-  bool complexEffects = false;
+  PRBool complexEffects = PR_FALSE;
 
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
   nsSVGMaskFrame *maskFrame = effectProperties.GetMaskFrame(&isOK);
 
-  bool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : true;
+  PRBool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : PR_TRUE;
 
   if (!isOK) {
     // Some resource is invalid. We shouldn't paint anything.
@@ -1061,7 +1061,7 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
   gfx->Restore();
 }
 
-bool
+PRBool
 nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
 {
   nsSVGEffects::EffectProperties props =
@@ -1069,7 +1069,7 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
   if (!props.mClipPath)
     return PR_TRUE;
 
-  bool isOK = true;
+  PRBool isOK = PR_TRUE;
   nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame(&isOK);
   if (!clipPathFrame || !isOK) {
     // clipPath is not a valid resource, so nothing gets painted, so
@@ -1141,7 +1141,7 @@ nsSVGUtils::ToAppPixelRect(nsPresContext *aPresContext, const gfxRect& rect)
 
 gfxIntSize
 nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize,
-                                 bool *aResultOverflows)
+                                 PRBool *aResultOverflows)
 {
   gfxIntSize surfaceSize(ClampToInt(aSize.width), ClampToInt(aSize.height));
 
@@ -1159,7 +1159,7 @@ nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize,
   return surfaceSize;
 }
 
-bool
+PRBool
 nsSVGUtils::HitTestRect(const gfxMatrix &aMatrix,
                         float aRX, float aRY, float aRWidth, float aRHeight,
                         float aX, float aY)
@@ -1273,7 +1273,7 @@ nsSVGUtils::ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect)
 }
 
 gfxRect
-nsSVGUtils::GetBBox(nsIFrame *aFrame, PRUint32 aFlags)
+nsSVGUtils::GetBBox(nsIFrame *aFrame)
 {
   if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
     aFrame = aFrame->GetParent();
@@ -1293,7 +1293,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, PRUint32 aFlags)
       }
       svg = do_QueryFrame(aFrame);
     }
-    bbox = svg->GetBBoxContribution(gfxMatrix(), aFlags);
+    bbox = svg->GetBBoxContribution(gfxMatrix());
   } else {
     bbox = nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
   }
@@ -1320,7 +1320,7 @@ nsSVGUtils::GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH,
   return gfxRect(x, y, width, height);
 }
 
-bool
+PRBool
 nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
 {
   nsIAtom *type = aFrame->GetType();
@@ -1495,7 +1495,7 @@ nsSVGRenderState::GetRenderingContext(nsIFrame *aFrame)
   return mRenderingContext;
 }
 
-/* static */ bool
+/* static */ PRBool
 nsSVGUtils::RootSVGElementHasViewbox(const nsIContent *aRootSVGElem)
 {
   if (aRootSVGElem->GetNameSpaceID() != kNameSpaceID_SVG ||

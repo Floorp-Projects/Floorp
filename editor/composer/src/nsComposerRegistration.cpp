@@ -77,7 +77,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorSpellCheck)
 // Basically, we need to tell the filter whether it is doing mail or not
 static nsresult
 nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                 void **aResult, bool aIsForMail)
+                                 void **aResult, PRBool aIsForMail)
 {
     *aResult = NULL;
     if (NULL != aOuter) 

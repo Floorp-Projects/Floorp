@@ -79,19 +79,19 @@ private:
   ~nsProcess();
   static void PR_CALLBACK Monitor(void *arg);
   void ProcessComplete();
-  nsresult CopyArgsAndRunProcess(bool blocking, const char** args,
+  nsresult CopyArgsAndRunProcess(PRBool blocking, const char** args,
                                  PRUint32 count, nsIObserver* observer,
-                                 bool holdWeak);
-  nsresult CopyArgsAndRunProcessw(bool blocking, const PRUnichar** args,
+                                 PRBool holdWeak);
+  nsresult CopyArgsAndRunProcessw(PRBool blocking, const PRUnichar** args,
                                   PRUint32 count, nsIObserver* observer,
-                                  bool holdWeak);
+                                  PRBool holdWeak);
   // The 'args' array is null-terminated.
-  nsresult RunProcess(bool blocking, char **args, nsIObserver* observer,
-                      bool holdWeak, bool argsUTF8);
+  nsresult RunProcess(PRBool blocking, char **args, nsIObserver* observer,
+                      PRBool holdWeak, PRBool argsUTF8);
 
   PRThread* mThread;
   mozilla::Mutex mLock;
-  bool mShutdown;
+  PRBool mShutdown;
 
   nsCOMPtr<nsIFile> mExecutable;
   nsString mTargetPath;

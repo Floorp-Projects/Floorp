@@ -84,14 +84,14 @@ class nsCppSharedAllocator
 
 
 template <class T>
-bool
+PRBool
 operator==( const nsCppSharedAllocator<T>&, const nsCppSharedAllocator<T>& )
   {
     return PR_TRUE;
   }
 
 template <class T>
-bool
+PRBool
 operator!=( const nsCppSharedAllocator<T>&, const nsCppSharedAllocator<T>& )
   {
     return PR_FALSE;

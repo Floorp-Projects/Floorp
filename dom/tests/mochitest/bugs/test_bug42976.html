@@ -39,6 +39,9 @@ function runTest() {
     // doc.xmlStandalone
     ok(doc.xmlStandalone == clonefalse.xmlStandalone, "xmlStandalone not preserved correctly; " + iframes[i].id);
   
+    // doc.xmlEncoding
+    ok(doc.xmlEncoding == clonefalse.xmlEncoding, "xmlEncoding not preserved correctly; " + iframes[i].id);
+  
     // doc.characterSet
     ok(doc.characterSet == clonefalse.characterSet, "charset not preserved correctly; " + iframes[i].id);
   

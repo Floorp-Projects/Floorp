@@ -46,7 +46,7 @@ struct nsCSSSelector;
 class nsICSSPseudoComparator
 {
 public:
-  virtual bool PseudoMatches(nsCSSSelector* aSelector)=0;
+  virtual PRBool PseudoMatches(nsCSSSelector* aSelector)=0;
 };
 
 #endif /* nsICSSPseudoComparator_h___ */

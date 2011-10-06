@@ -252,7 +252,7 @@ nsXBLProtoImpl::FindField(const nsString& aFieldName) const
   return nsnull;
 }
 
-bool
+PRBool
 nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JSObject *obj) const
 {
   AutoVersionChecker avc(cx);

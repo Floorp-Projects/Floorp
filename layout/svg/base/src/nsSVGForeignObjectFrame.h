@@ -83,7 +83,7 @@ public:
   /**
    * Foreign objects are always transformed.
    */
-  virtual bool IsTransformed() const
+  virtual PRBool IsTransformed() const
   {
     return PR_TRUE;
   }
@@ -100,7 +100,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsSVGForeignObjectFrameBase::IsFrameOfType(aFlags &
       ~(nsIFrame::eSVG | nsIFrame::eSVGForeignObject));
@@ -127,10 +127,9 @@ public:
   virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
-  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                      PRUint32 aFlags);
-  NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
-  NS_IMETHOD_(bool) HasValidCoveredRect() { return true; }
+  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace);
+  NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_TRUE; }
+  NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
 
   gfxMatrix GetCanvasTM();
 
@@ -151,7 +150,7 @@ protected:
   void FlushDirtyRegion(PRUint32 aFlags);
 
   // If width or height is less than or equal to zero we must disable rendering
-  bool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
+  PRBool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
 
   nsAutoPtr<gfxMatrix> mCanvasTM;
 
@@ -161,7 +160,7 @@ protected:
   // Areas dirtied by changes to sub-documents embedded by our decendents
   nsRegion mSubDocDirtyRegion;
 
-  bool mInReflow;
+  PRPackedBool mInReflow;
 };
 
 #endif

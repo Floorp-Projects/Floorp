@@ -57,14 +57,14 @@ nsQtNetworkLinkService::~nsQtNetworkLinkService()
 }
 
 NS_IMETHODIMP
-nsQtNetworkLinkService::GetIsLinkUp(bool* aIsUp)
+nsQtNetworkLinkService::GetIsLinkUp(PRBool* aIsUp)
 {
   *aIsUp = nsQtNetworkManager::get()->isOnline();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsQtNetworkLinkService::GetLinkStatusKnown(bool* aIsKnown)
+nsQtNetworkLinkService::GetLinkStatusKnown(PRBool* aIsKnown)
 {
   *aIsKnown = nsQtNetworkManager::get()->isOnline();
   return NS_OK;

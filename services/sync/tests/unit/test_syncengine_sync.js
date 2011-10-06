@@ -45,12 +45,12 @@ add_test(function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
 
   // Some server side data that's going to be wiped
   let collection = new ServerCollection();
-  collection.insert('flying',
-                    encryptPayload({id: 'flying',
-                                    denomination: "LNER Class A3 4472"}));
-  collection.insert('scotsman',
-                    encryptPayload({id: 'scotsman',
-                                    denomination: "Flying Scotsman"}));
+  collection.wbos.flying = new ServerWBO(
+      'flying', encryptPayload({id: 'flying',
+                                denomination: "LNER Class A3 4472"}));
+  collection.wbos.scotsman = new ServerWBO(
+      'scotsman', encryptPayload({id: 'scotsman',
+                                  denomination: "Flying Scotsman"}));
 
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
@@ -64,8 +64,8 @@ add_test(function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
     do_check_eq(engine._tracker.changedIDs["rekolok"], undefined);
     let metaGlobal = Records.get(engine.metaURL);
     do_check_eq(metaGlobal.payload.engines, undefined);
-    do_check_true(!!collection.payload("flying"));
-    do_check_true(!!collection.payload("scotsman"));
+    do_check_true(!!collection.wbos.flying.payload);
+    do_check_true(!!collection.wbos.scotsman.payload);
 
     engine.lastSync = Date.now() / 1000;
     engine.lastSyncLocal = Date.now();
@@ -81,8 +81,8 @@ add_test(function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
 
     // Sync was reset and server data was wiped
     do_check_eq(engine.lastSync, 0);
-    do_check_eq(collection.payload("flying"), undefined);
-    do_check_eq(collection.payload("scotsman"), undefined);
+    do_check_eq(collection.wbos.flying.payload, undefined);
+    do_check_eq(collection.wbos.scotsman.payload, undefined);
 
   } finally {
     cleanAndGo(server);
@@ -192,22 +192,22 @@ add_test(function test_processIncoming_createFromServer() {
 
   // Some server records that will be downloaded
   let collection = new ServerCollection();
-  collection.insert('flying',
-                    encryptPayload({id: 'flying',
-                                    denomination: "LNER Class A3 4472"}));
-  collection.insert('scotsman',
-                    encryptPayload({id: 'scotsman',
-                                    denomination: "Flying Scotsman"}));
+  collection.wbos.flying = new ServerWBO(
+      'flying', encryptPayload({id: 'flying',
+                                denomination: "LNER Class A3 4472"}));
+  collection.wbos.scotsman = new ServerWBO(
+      'scotsman', encryptPayload({id: 'scotsman',
+                                  denomination: "Flying Scotsman"}));
 
   // Two pathological cases involving relative URIs gone wrong.
-  let pathologicalPayload = encryptPayload({id: '../pathological',
-                                            denomination: "Pathological Case"});
-  collection.insert('../pathological', pathologicalPayload);
+  collection.wbos['../pathological'] = new ServerWBO(
+      '../pathological', encryptPayload({id: '../pathological',
+                                         denomination: "Pathological Case"}));
 
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler(),
-      "/1.1/foo/storage/rotary/flying": collection.wbo("flying").handler(),
-      "/1.1/foo/storage/rotary/scotsman": collection.wbo("scotsman").handler()
+      "/1.1/foo/storage/rotary/flying": collection.wbos.flying.handler(),
+      "/1.1/foo/storage/rotary/scotsman": collection.wbos.scotsman.handler()
   });
 
   let engine = makeRotaryEngine();
@@ -252,48 +252,48 @@ add_test(function test_processIncoming_reconcile() {
 
   // This server record is newer than the corresponding client one,
   // so it'll update its data.
-  collection.insert('newrecord',
-                    encryptPayload({id: 'newrecord',
-                                    denomination: "New stuff..."}));
+  collection.wbos.newrecord = new ServerWBO(
+      'newrecord', encryptPayload({id: 'newrecord',
+                                   denomination: "New stuff..."}));
 
   // This server record is newer than the corresponding client one,
   // so it'll update its data.
-  collection.insert('newerserver',
-                    encryptPayload({id: 'newerserver',
-                                    denomination: "New data!"}));
+  collection.wbos.newerserver = new ServerWBO(
+      'newerserver', encryptPayload({id: 'newerserver',
+                                     denomination: "New data!"}));
 
   // This server record is 2 mins older than the client counterpart
   // but identical to it, so we're expecting the client record's
   // changedID to be reset.
-  collection.insert('olderidentical',
-                    encryptPayload({id: 'olderidentical',
-                                    denomination: "Older but identical"}));
-  collection._wbos.olderidentical.modified -= 120;
+  collection.wbos.olderidentical = new ServerWBO(
+      'olderidentical', encryptPayload({id: 'olderidentical',
+                                        denomination: "Older but identical"}));
+  collection.wbos.olderidentical.modified -= 120;
 
   // This item simply has different data than the corresponding client
   // record (which is unmodified), so it will update the client as well
-  collection.insert('updateclient',
-                    encryptPayload({id: 'updateclient',
-                                    denomination: "Get this!"}));
+  collection.wbos.updateclient = new ServerWBO(
+      'updateclient', encryptPayload({id: 'updateclient',
+                                      denomination: "Get this!"}));
 
   // This is a dupe of 'original' but with a longer GUID, so we're
   // expecting it to be marked for deletion from the server
-  collection.insert('duplication',
-                    encryptPayload({id: 'duplication',
-                                    denomination: "Original Entry"}));
+  collection.wbos.duplication = new ServerWBO(
+      'duplication', encryptPayload({id: 'duplication',
+                                     denomination: "Original Entry"}));
 
   // This is a dupe of 'long_original' but with a shorter GUID, so we're
   // expecting it to replace 'long_original'.
-  collection.insert('dupe',
-                    encryptPayload({id: 'dupe',
-                                    denomination: "Long Original Entry"}));
+  collection.wbos.dupe = new ServerWBO(
+      'dupe', encryptPayload({id: 'dupe',
+                              denomination: "Long Original Entry"}));  
 
   // This record is marked as deleted, so we're expecting the client
   // record to be removed.
-  collection.insert('nukeme',
-                    encryptPayload({id: 'nukeme',
-                                    denomination: "Nuke me!",
-                                    deleted: true}));
+  collection.wbos.nukeme = new ServerWBO(
+      'nukeme', encryptPayload({id: 'nukeme',
+                                denomination: "Nuke me!",
+                                deleted: true}));
 
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
@@ -380,12 +380,12 @@ add_test(function test_processIncoming_mobile_batchSize() {
 
   // Let's create some 234 server side records. They're all at least
   // 10 minutes old.
-  for (let i = 0; i < 234; i++) {
+  for (var i = 0; i < 234; i++) {
     let id = 'record-no-' + i;
     let payload = encryptPayload({id: id, denomination: "Record No. " + i});
     let wbo = new ServerWBO(id, payload);
     wbo.modified = Date.now()/1000 - 60*(i+10);
-    collection.insertWBO(wbo);
+    collection.wbos[id] = wbo;
   }
 
   let server = sync_httpd_setup({
@@ -456,7 +456,7 @@ add_test(function test_processIncoming_store_toFetch() {
     let payload = encryptPayload({id: id, denomination: "Record No. " + id});
     let wbo = new ServerWBO(id, payload);
     wbo.modified = Date.now()/1000 + 60 * (i - MOBILE_BATCH_SIZE * 3);
-    collection.insertWBO(wbo);
+    collection.wbos[id] = wbo;
   }
 
   let engine = makeRotaryEngine();
@@ -490,7 +490,7 @@ add_test(function test_processIncoming_store_toFetch() {
     // The third batch is stuck in toFetch. lastSync has been moved forward to
     // the last successful item's timestamp.
     do_check_eq(engine.toFetch.length, MOBILE_BATCH_SIZE);
-    do_check_eq(engine.lastSync, collection.wbo("record-no-99").modified);
+    do_check_eq(engine.lastSync, collection.wbos["record-no-99"].modified);
 
   } finally {
     cleanAndGo(server);
@@ -508,26 +508,26 @@ add_test(function test_processIncoming_resume_toFetch() {
 
   // Server records that will be downloaded
   let collection = new ServerCollection();
-  collection.insert('flying',
-                    encryptPayload({id: 'flying',
-                                    denomination: "LNER Class A3 4472"}));
-  collection.insert('scotsman',
-                    encryptPayload({id: 'scotsman',
-                                    denomination: "Flying Scotsman"}));
-  collection.insert('rekolok',
-                    encryptPayload({id: 'rekolok',
-                                    denomination: "Rekonstruktionslokomotive"}));
-  for (let i = 0; i < 3; i++) {
+  collection.wbos.flying = new ServerWBO(
+      'flying', encryptPayload({id: 'flying',
+                                denomination: "LNER Class A3 4472"}));
+  collection.wbos.scotsman = new ServerWBO(
+      'scotsman', encryptPayload({id: 'scotsman',
+                                  denomination: "Flying Scotsman"}));
+  collection.wbos.rekolok = new ServerWBO(
+      'rekolok', encryptPayload({id: 'rekolok',
+                                 denomination: "Rekonstruktionslokomotive"}));
+  for (var i = 0; i < 3; i++) {
     let id = 'failed' + i;
     let payload = encryptPayload({id: id, denomination: "Record No. " + i});
     let wbo = new ServerWBO(id, payload);
     wbo.modified = LASTSYNC - 10;
-    collection.insertWBO(wbo);
+    collection.wbos[id] = wbo;
   }
 
-  collection.wbo("flying").modified =
-    collection.wbo("scotsman").modified = LASTSYNC - 10;
-  collection._wbos.rekolok.modified = LASTSYNC + 10;
+  collection.wbos.flying.modified = collection.wbos.scotsman.modified
+    = LASTSYNC - 10;
+  collection.wbos.rekolok.modified = LASTSYNC + 10;
 
   // Time travel 10 seconds into the future but still download the above WBOs.
   let engine = makeRotaryEngine();
@@ -589,7 +589,7 @@ add_test(function test_processIncoming_applyIncomingBatchSize_smaller() {
   for (let i = 0; i < APPLY_BATCH_SIZE - 1; i++) {
     let id = 'record-no-' + i;
     let payload = encryptPayload({id: id, denomination: "Record No. " + id});
-    collection.insert(id, payload);
+    collection.wbos[id] = new ServerWBO(id, payload);
   }
 
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -644,7 +644,7 @@ add_test(function test_processIncoming_applyIncomingBatchSize_multiple() {
   for (let i = 0; i < APPLY_BATCH_SIZE * 3; i++) {
     let id = 'record-no-' + i;
     let payload = encryptPayload({id: id, denomination: "Record No. " + id});
-    collection.insert(id, payload);
+    collection.wbos[id] = new ServerWBO(id, payload);
   }
 
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -695,7 +695,7 @@ add_test(function test_processIncoming_notify_count() {
   for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
     let id = 'record-no-' + i;
     let payload = encryptPayload({id: id, denomination: "Record No. " + id});
-    collection.insert(id, payload);
+    collection.wbos[id] = new ServerWBO(id, payload);
   }
 
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -782,7 +782,7 @@ add_test(function test_processIncoming_previousFailed() {
   for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
     let id = 'record-no-' + i;
     let payload = encryptPayload({id: id, denomination: "Record No. " + i});
-    collection.insert(id, payload);
+    collection.wbos[id] = new ServerWBO(id, payload);
   }
 
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -857,7 +857,7 @@ add_test(function test_processIncoming_failed_records() {
     let payload = encryptPayload({id: id, denomination: "Record No. " + id});
     let wbo = new ServerWBO(id, payload);
     wbo.modified = Date.now()/1000 + 60 * (i - MOBILE_BATCH_SIZE * 3);
-    collection.insertWBO(wbo);
+    collection.wbos[id] = wbo;
   }
 
   // Engine that batches but likes to throw on a couple of records,
@@ -986,16 +986,16 @@ add_test(function test_processIncoming_decrypt_failed() {
   // Some good and some bogus records. One doesn't contain valid JSON,
   // the other will throw during decrypt.
   let collection = new ServerCollection();
-  collection._wbos.flying = new ServerWBO(
+  collection.wbos.flying = new ServerWBO(
       'flying', encryptPayload({id: 'flying',
                                 denomination: "LNER Class A3 4472"}));
-  collection._wbos.nojson = new ServerWBO("nojson", "This is invalid JSON");
-  collection._wbos.nojson2 = new ServerWBO("nojson2", "This is invalid JSON");
-  collection._wbos.scotsman = new ServerWBO(
+  collection.wbos.nojson = new ServerWBO("nojson", "This is invalid JSON");
+  collection.wbos.nojson2 = new ServerWBO("nojson2", "This is invalid JSON");
+  collection.wbos.scotsman = new ServerWBO(
       'scotsman', encryptPayload({id: 'scotsman',
                                   denomination: "Flying Scotsman"}));
-  collection._wbos.nodecrypt = new ServerWBO("nodecrypt", "Decrypt this!");
-  collection._wbos.nodecrypt2 = new ServerWBO("nodecrypt2", "Decrypt this!");
+  collection.wbos.nodecrypt = new ServerWBO("nodecrypt", "Decrypt this!");
+  collection.wbos.nodecrypt2 = new ServerWBO("nodecrypt2", "Decrypt this!");
 
   // Patch the fake crypto service to throw on the record above.
   Svc.Crypto._decrypt = Svc.Crypto.decrypt;
@@ -1033,7 +1033,7 @@ add_test(function test_processIncoming_decrypt_failed() {
       observerData = data;
     });
 
-    engine.lastSync = collection.wbo("nojson").modified - 1;
+    engine.lastSync = collection.wbos.nojson.modified - 1;
     engine.sync();
 
     do_check_eq(engine.previousFailed.length, 4);
@@ -1060,13 +1060,13 @@ add_test(function test_uploadOutgoing_toEmptyServer() {
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
   let collection = new ServerCollection();
-  collection._wbos.flying = new ServerWBO('flying');
-  collection._wbos.scotsman = new ServerWBO('scotsman');
+  collection.wbos.flying = new ServerWBO('flying');
+  collection.wbos.scotsman = new ServerWBO('scotsman');
 
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler(),
-      "/1.1/foo/storage/rotary/flying": collection.wbo("flying").handler(),
-      "/1.1/foo/storage/rotary/scotsman": collection.wbo("scotsman").handler()
+      "/1.1/foo/storage/rotary/flying": collection.wbos.flying.handler(),
+      "/1.1/foo/storage/rotary/scotsman": collection.wbos.scotsman.handler()
   });
   generateNewKeys();
 
@@ -1085,8 +1085,8 @@ add_test(function test_uploadOutgoing_toEmptyServer() {
 
     // Confirm initial environment
     do_check_eq(engine.lastSyncLocal, 0);
-    do_check_eq(collection.payload("flying"), undefined);
-    do_check_eq(collection.payload("scotsman"), undefined);
+    do_check_eq(collection.wbos.flying.payload, undefined);
+    do_check_eq(collection.wbos.scotsman.payload, undefined);
 
     engine._syncStartup();
     engine._uploadOutgoing();
@@ -1096,14 +1096,14 @@ add_test(function test_uploadOutgoing_toEmptyServer() {
 
     // Ensure the marked record ('scotsman') has been uploaded and is
     // no longer marked.
-    do_check_eq(collection.payload("flying"), undefined);
-    do_check_true(!!collection.payload("scotsman"));
-    do_check_eq(JSON.parse(collection.wbo("scotsman").data.ciphertext).id,
-                "scotsman");
-    do_check_eq(engine._tracker.changedIDs["scotsman"], undefined);
+    do_check_eq(collection.wbos.flying.payload, undefined);
+    do_check_true(!!collection.wbos.scotsman.payload);
+    do_check_eq(JSON.parse(collection.wbos.scotsman.data.ciphertext).id,
+                'scotsman');
+    do_check_eq(engine._tracker.changedIDs['scotsman'], undefined);
 
     // The 'flying' record wasn't marked so it wasn't uploaded
-    do_check_eq(collection.payload("flying"), undefined);
+    do_check_eq(collection.wbos.flying.payload, undefined);
 
   } finally {
     cleanAndGo(server);
@@ -1120,7 +1120,7 @@ add_test(function test_uploadOutgoing_failed() {
   let collection = new ServerCollection();
   // We only define the "flying" WBO on the server, not the "scotsman"
   // and "peppercorn" ones.
-  collection._wbos.flying = new ServerWBO('flying');
+  collection.wbos.flying = new ServerWBO('flying');
 
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
@@ -1147,7 +1147,7 @@ add_test(function test_uploadOutgoing_failed() {
 
     // Confirm initial environment
     do_check_eq(engine.lastSyncLocal, 0);
-    do_check_eq(collection.payload("flying"), undefined);
+    do_check_eq(collection.wbos.flying.payload, undefined);
     do_check_eq(engine._tracker.changedIDs['flying'], FLYING_CHANGED);
     do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
     do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
@@ -1159,7 +1159,7 @@ add_test(function test_uploadOutgoing_failed() {
     do_check_true(engine.lastSyncLocal > 0);
 
     // Ensure the 'flying' record has been uploaded and is no longer marked.
-    do_check_true(!!collection.payload("flying"));
+    do_check_true(!!collection.wbos.flying.payload);
     do_check_eq(engine._tracker.changedIDs['flying'], undefined);
 
     // The 'scotsman' and 'peppercorn' records couldn't be uploaded so
@@ -1196,7 +1196,7 @@ add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
     let id = 'record-no-' + i;
     engine._store.items[id] = "Record No. " + i;
     engine._tracker.addChangedID(id, 0);
-    collection.insert(id);
+    collection.wbos[id] = new ServerWBO(id);
   }
 
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -1209,18 +1209,18 @@ add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
 
   try {
 
-    // Confirm initial environment.
+    // Confirm initial environment
     do_check_eq(noOfUploads, 0);
 
     engine._syncStartup();
     engine._uploadOutgoing();
 
-    // Ensure all records have been uploaded.
+    // Ensure all records have been uploaded
     for (i = 0; i < 234; i++) {
-      do_check_true(!!collection.payload('record-no-' + i));
+      do_check_true(!!collection.wbos['record-no-'+i].payload);
     }
 
-    // Ensure that the uploads were performed in batches of MAX_UPLOAD_RECORDS.
+    // Ensure that the uploads were performed in batches of MAX_UPLOAD_RECORDS
     do_check_eq(noOfUploads, Math.ceil(234/MAX_UPLOAD_RECORDS));
 
   } finally {
@@ -1251,13 +1251,13 @@ add_test(function test_syncFinish_deleteByIds() {
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
   let collection = new ServerCollection();
-  collection._wbos.flying = new ServerWBO(
+  collection.wbos.flying = new ServerWBO(
       'flying', encryptPayload({id: 'flying',
                                 denomination: "LNER Class A3 4472"}));
-  collection._wbos.scotsman = new ServerWBO(
+  collection.wbos.scotsman = new ServerWBO(
       'scotsman', encryptPayload({id: 'scotsman',
                                   denomination: "Flying Scotsman"}));
-  collection._wbos.rekolok = new ServerWBO(
+  collection.wbos.rekolok = new ServerWBO(
       'rekolok', encryptPayload({id: 'rekolok',
                                 denomination: "Rekonstruktionslokomotive"}));
 
@@ -1272,9 +1272,9 @@ add_test(function test_syncFinish_deleteByIds() {
 
     // The 'flying' and 'rekolok' records were deleted while the
     // 'scotsman' one wasn't.
-    do_check_eq(collection.payload("flying"), undefined);
-    do_check_true(!!collection.payload("scotsman"));
-    do_check_eq(collection.payload("rekolok"), undefined);
+    do_check_eq(collection.wbos.flying.payload, undefined);
+    do_check_true(!!collection.wbos.scotsman.payload);
+    do_check_eq(collection.wbos.rekolok.payload, undefined);
 
     // The deletion todo list has been reset.
     do_check_eq(engine._delete.ids, undefined);
@@ -1309,7 +1309,7 @@ add_test(function test_syncFinish_deleteLotsInBatches() {
     let payload = encryptPayload({id: id, denomination: "Record No. " + i});
     let wbo = new ServerWBO(id, payload);
     wbo.modified = now / 1000 - 60 * (i + 110);
-    collection.insertWBO(wbo);
+    collection.wbos[id] = wbo;
   }
 
   let server = httpd_setup({
@@ -1338,9 +1338,9 @@ add_test(function test_syncFinish_deleteLotsInBatches() {
     for (i = 0; i < 234; i++) {
       let id = 'record-no-' + i;
       if (i <= 90 || i >= 100) {
-        do_check_eq(collection.payload(id), undefined);
+        do_check_eq(collection.wbos[id].payload, undefined);
       } else {
-        do_check_true(!!collection.payload(id));
+        do_check_true(!!collection.wbos[id].payload);
       }
     }
 
@@ -1390,9 +1390,8 @@ add_test(function test_sync_partialUpload() {
     engine._store.items[id] = "Record No. " + i;
     engine._tracker.addChangedID(id, i);
     // Let two items in the first upload batch fail.
-    if ((i != 23) && (i != 42)) {
-      collection.insert(id);
-    }
+    if ((i != 23) && (i != 42))
+      collection.wbos[id] = new ServerWBO(id);
   }
 
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -1440,7 +1439,7 @@ add_test(function test_canDecrypt_noCryptoKeys() {
   CollectionKeys.clear();
 
   let collection = new ServerCollection();
-  collection._wbos.flying = new ServerWBO(
+  collection.wbos.flying = new ServerWBO(
       'flying', encryptPayload({id: 'flying',
                                 denomination: "LNER Class A3 4472"}));
 
@@ -1468,7 +1467,7 @@ add_test(function test_canDecrypt_true() {
   generateNewKeys();
   
   let collection = new ServerCollection();
-  collection._wbos.flying = new ServerWBO(
+  collection.wbos.flying = new ServerWBO(
       'flying', encryptPayload({id: 'flying',
                                 denomination: "LNER Class A3 4472"}));
 
@@ -1501,7 +1500,7 @@ add_test(function test_syncapplied_observer() {
   for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
     let id = 'record-no-' + i;
     let payload = encryptPayload({id: id, denomination: "Record No. " + id});
-    collection.insert(id, payload);
+    collection.wbos[id] = new ServerWBO(id, payload);
   }
 
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));

@@ -97,7 +97,7 @@ public:
   ULONG  GetMsg()    { return mMsg; };
   MPARAM GetWParam() { return mWParam; };
   MPARAM GetLParam() { return mLParam; };
-  bool InUse()     { return (mWnd!=NULL); };
+  PRBool InUse()     { return (mWnd!=NULL); };
   
   NS_DECL_NSIRUNNABLE
 
@@ -151,7 +151,7 @@ private:
 
 NS_IMETHODIMP nsDelayedPopupsEnabledEvent::Run()
 {
-  mInst->PushPopupsEnabledState(false);
+  mInst->PushPopupsEnabledState(PR_FALSE);
   return NS_OK;	
 }
 
@@ -198,7 +198,7 @@ public:
 
 /*****************************************************************************/
 
-static bool ProcessFlashMessageDelayed(nsPluginNativeWindowOS2 * aWin,
+static PRBool ProcessFlashMessageDelayed(nsPluginNativeWindowOS2 * aWin,
                                          nsNPAPIPluginInstance * aInst,
                                          HWND hWnd, ULONG msg,
                                          MPARAM mp1, MPARAM mp2)
@@ -214,15 +214,15 @@ static bool ProcessFlashMessageDelayed(nsPluginNativeWindowOS2 * aWin,
   }
 
   if (msg != WM_USER_FLASH)
-    return false; // no need to delay
+    return PR_FALSE; // no need to delay
 
   // do stuff
   nsCOMPtr<nsIRunnable> pwe = aWin->GetPluginWindowEvent(hWnd, msg, mp1, mp2);
   if (pwe) {
     NS_DispatchToCurrentThread(pwe);
-    return true;  
+    return PR_TRUE;  
   }
-  return false;
+  return PR_FALSE;
 }
 
 /*****************************************************************************/
@@ -260,7 +260,7 @@ static MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM m
     }
   }
 
-  bool enablePopups = false;
+  PRBool enablePopups = PR_FALSE;
 
   // Activate/deactivate mouse capture on the plugin widget
   // here, before we pass the Windows event to the plugin
@@ -274,7 +274,7 @@ static MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM m
       nsCOMPtr<nsIWidget> widget;
       win->GetPluginWidget(getter_AddRefs(widget));
       if (widget)
-        widget->CaptureMouse(true);
+        widget->CaptureMouse(PR_TRUE);
       break;
     }
 
@@ -282,12 +282,12 @@ static MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM m
     case WM_BUTTON2UP:
     case WM_BUTTON3UP: {
       if (msg == WM_BUTTON1UP)
-        enablePopups = true;
+        enablePopups = PR_TRUE;
 
       nsCOMPtr<nsIWidget> widget;
       win->GetPluginWidget(getter_AddRefs(widget));
       if (widget)
-        widget->CaptureMouse(false);
+        widget->CaptureMouse(PR_FALSE);
       break;
     }
 
@@ -295,7 +295,7 @@ static MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM m
       // Ignore repeating keydown messages...
       if (SHORT1FROMMP(mp1) & KC_PREVDOWN)
         break;
-      enablePopups = true;
+      enablePopups = PR_TRUE;
       break;
 
     // When the child of a plugin gets the focus, nsWindow doesn't get
@@ -340,7 +340,7 @@ static MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM m
     PRUint16 apiVersion;
     if (NS_SUCCEEDED(inst->GetPluginAPIVersion(&apiVersion)) &&
         !versionOK(apiVersion, NP_POPUP_API_VERSION))
-      inst->PushPopupsEnabledState(true);
+      inst->PushPopupsEnabledState(PR_TRUE);
   }
 
   MRESULT res = (MRESULT)TRUE;

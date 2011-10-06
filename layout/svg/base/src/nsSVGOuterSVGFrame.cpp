@@ -307,7 +307,7 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
 nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                                bool aShrinkWrap)
+                                PRBool aShrinkWrap)
 {
   nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
 
@@ -425,7 +425,7 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
                               const nsHTMLReflowState*  aReflowState,
                               nsDidReflowStatus aStatus)
 {
-  bool firstReflow = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  PRBool firstReflow = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
 
   nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
 
@@ -510,7 +510,7 @@ nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 // helper
-static inline bool
+static inline PRBool
 DependsOnIntrinsicSize(const nsIFrame* aEmbeddingFrame)
 {
   const nsStylePosition *pos = aEmbeddingFrame->GetStylePosition();
@@ -530,36 +530,22 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                      PRInt32  aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
-      !(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    if (aAttribute == nsGkAtoms::viewBox ||
-        aAttribute == nsGkAtoms::preserveAspectRatio ||
-        aAttribute == nsGkAtoms::transform) {
-
-      // make sure our cached transform matrix gets (lazily) updated
-      mCanvasTM = nsnull;
-
-      nsSVGUtils::NotifyChildrenOfSVGChange(
-          this, aAttribute == nsGkAtoms::viewBox ?
-                  TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED : TRANSFORM_CHANGED);
-
-    } else if (aAttribute == nsGkAtoms::width ||
-               aAttribute == nsGkAtoms::height) {
-
-        nsIFrame* embeddingFrame;
-        if (IsRootOfReplacedElementSubDoc(&embeddingFrame) && embeddingFrame) {
-          if (DependsOnIntrinsicSize(embeddingFrame)) {
-            // Tell embeddingFrame's presShell it needs to be reflowed (which takes
-            // care of reflowing us too).
-            embeddingFrame->PresContext()->PresShell()->
-              FrameNeedsReflow(embeddingFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-          }
-          // else our width and height is overridden - don't reflow anything
-        } else {
-          // We are not embedded by reference, so our 'width' and 'height'
-          // attributes are not overridden - we need to reflow.
-          PresContext()->PresShell()->
-            FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-        }
+      !(GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+      (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height)) {
+    nsIFrame* embeddingFrame;
+    if (IsRootOfReplacedElementSubDoc(&embeddingFrame) && embeddingFrame) {
+      if (DependsOnIntrinsicSize(embeddingFrame)) {
+        // Tell embeddingFrame's presShell it needs to be reflowed (which takes
+        // care of reflowing us too).
+        embeddingFrame->PresContext()->PresShell()->
+          FrameNeedsReflow(embeddingFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+      }
+      // else our width and height is overridden - don't reflow anything
+    } else {
+      // We are not embedded by reference, so our 'width' and 'height'
+      // attributes are not overridden - we need to reflow.
+      PresContext()->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
     }
   }
 
@@ -690,7 +676,7 @@ nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
   Invalidate(rect);
 }
 
-bool
+PRBool
 nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
 {
   nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
@@ -708,7 +694,7 @@ nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsSVGOuterSVGFrame::IsRedrawSuspended()
 {
   return (mRedrawSuspendCount>0) || !mViewportInitialized;
@@ -844,7 +830,7 @@ nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame)
   return mForeignObjectHash.RemoveEntry(aFrame);
 }
 
-bool
+PRBool
 nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
 {
   if (!mContent->GetParent()) {
@@ -873,7 +859,7 @@ nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
   return PR_FALSE;
 }
 
-bool
+PRBool
 nsSVGOuterSVGFrame::IsRootOfImage()
 {
   if (!mContent->GetParent()) {

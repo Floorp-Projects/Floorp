@@ -56,7 +56,7 @@ public:
   // is AddRef'd if this method succeeds.  This method returns PR_TRUE if the
   // event was stored in the event queue, and it returns PR_FALSE if it could
   // not allocate sufficient memory.
-  bool PutEvent(nsIRunnable *event);
+  PRBool PutEvent(nsIRunnable *event);
 
   // This method gets an event from the event queue.  If mayWait is true, then
   // the method will block the calling thread until an event is available.  If
@@ -64,20 +64,20 @@ public:
   // or not an event is pending.  When the resulting event is non-null, the
   // caller is responsible for releasing the event object.  This method does
   // not alter the reference count of the resulting event.
-  bool GetEvent(bool mayWait, nsIRunnable **event);
+  PRBool GetEvent(PRBool mayWait, nsIRunnable **event);
 
   // This method returns true if there is a pending event.
-  bool HasPendingEvent() {
+  PRBool HasPendingEvent() {
     return GetEvent(PR_FALSE, nsnull);
   }
 
   // This method returns the next pending event or null.
-  bool GetPendingEvent(nsIRunnable **runnable) {
+  PRBool GetPendingEvent(nsIRunnable **runnable) {
     return GetEvent(PR_FALSE, runnable);
   }
 
   // This method waits for and returns the next pending event.
-  bool WaitPendingEvent(nsIRunnable **runnable) {
+  PRBool WaitPendingEvent(nsIRunnable **runnable) {
     return GetEvent(PR_TRUE, runnable);
   }
 
@@ -88,7 +88,7 @@ public:
 
 private:
 
-  bool IsEmpty() {
+  PRBool IsEmpty() {
     return !mHead || (mHead == mTail && mOffsetHead == mOffsetTail);
   }
 

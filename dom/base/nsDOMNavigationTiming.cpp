@@ -178,7 +178,7 @@ nsDOMNavigationTiming::NotifyLoadEventEnd()
   mLoadEventEnd = DurationFromStart();
 }
 
-bool
+PRBool
 nsDOMNavigationTiming::ReportRedirects()
 {
   if (mRedirectCheck == NOT_CHECKED) {

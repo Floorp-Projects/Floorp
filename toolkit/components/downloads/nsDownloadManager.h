@@ -181,7 +181,7 @@ protected:
    * @param aSetResume Indicate if the downloads that get paused should be set
    *                   as auto-resume.
    */
-  nsresult PauseAllDownloads(bool aSetResume);
+  nsresult PauseAllDownloads(PRBool aSetResume);
 
   /**
    * Resume all paused downloads unless we're only supposed to do the automatic
@@ -190,7 +190,7 @@ protected:
    * @param aResumeAll If true, all downloads will be resumed; otherwise, only
    *                   those that are marked as auto-resume will resume.
    */
-  nsresult ResumeAllDownloads(bool aResumeAll);
+  nsresult ResumeAllDownloads(PRBool aResumeAll);
 
   /**
    * Stop tracking the active downloads. Only use this when we're about to quit
@@ -269,7 +269,7 @@ private:
   nsAutoPtr<mozStorageTransaction> mHistoryTransaction;
 
   enum DatabaseType mDBType;
-  bool mInPrivateBrowsing;
+  PRBool mInPrivateBrowsing;
 
   static nsDownloadManager *gDownloadManagerService;
 
@@ -349,32 +349,32 @@ protected:
   /**
    * Download is not transferring?
    */
-  bool IsPaused();
+  PRBool IsPaused();
 
   /**
    * Download can continue from the middle of a transfer?
    */
-  bool IsResumable();
+  PRBool IsResumable();
 
   /**
    * Download was resumed?
    */
-  bool WasResumed();
+  PRBool WasResumed();
 
   /**
    * Indicates if the download should try to automatically resume or not.
    */
-  bool ShouldAutoResume();
+  PRBool ShouldAutoResume();
 
   /**
    * Download is in a state to stop and complete the download?
    */
-  bool IsFinishable();
+  PRBool IsFinishable();
 
   /**
    * Download is totally done transferring and all?
    */
-  bool IsFinished();
+  PRBool IsFinished();
 
   /**
    * Update the DB with the current state of the download including time,
@@ -434,7 +434,7 @@ private:
   PRInt64 mResumedAt;
   double mSpeed;
 
-  bool mHasMultipleFiles;
+  PRBool mHasMultipleFiles;
 
   /**
    * Track various states of the download trying to auto-resume when starting

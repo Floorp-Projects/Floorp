@@ -54,7 +54,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 // the value of this variable is never used - we use its address as a sentinel
 static uint32 zero_methods_descriptor;
 
-bool AutoScriptEvaluate::StartEvaluating(JSObject *scope, JSErrorReporter errorReporter)
+PRBool AutoScriptEvaluate::StartEvaluating(JSObject *scope, JSErrorReporter errorReporter)
 {
     NS_PRECONDITION(!mEvaluated, "AutoScriptEvaluate::Evaluate should only be called once");
 
@@ -166,7 +166,7 @@ nsXPCWrappedJSClass::GetNewOrUsed(XPCCallContext& ccx, REFNSIID aIID,
         ccx.GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if(info)
         {
-            bool canScript, isBuiltin;
+            PRBool canScript, isBuiltin;
             if(NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
                NS_SUCCEEDED(info->IsBuiltinClass(&isBuiltin)) && !isBuiltin &&
                nsXPConnect::IsISupportsDescendant(info))
@@ -263,7 +263,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     // interface (i.e. whether the interface is scriptable) and most content
     // objects don't have QI implementations anyway. Also see bug 503926.
     if(XPCPerThreadData::IsMainThread(ccx) &&
-       !xpc::AccessCheck::isChrome(js::GetObjectCompartment(jsobj)))
+       !xpc::AccessCheck::isChrome(jsobj->compartment()))
     {
         return nsnull;
     }
@@ -296,7 +296,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
         ccx.GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if(!info)
             return nsnull;
-        bool canScript, isBuiltin;
+        PRBool canScript, isBuiltin;
         if(NS_FAILED(info->IsScriptable(&canScript)) || !canScript ||
            NS_FAILED(info->IsBuiltinClass(&isBuiltin)) || isBuiltin)
             return nsnull;
@@ -775,10 +775,10 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         if(NS_FAILED(rv))
             return rv;
 
-        bool isSystem;
+        PRBool isSystem;
         rv = secMan->IsSystemPrincipal(objPrin, &isSystem);
         if((NS_FAILED(rv) || !isSystem) &&
-           !IS_WRAPPER_CLASS(js::GetObjectClass(selfObj)))
+           !IS_WRAPPER_CLASS(selfObj->getClass()))
         {
             // A content object.
             nsRefPtr<SameOriginCheckedComponent> checked =
@@ -1051,7 +1051,7 @@ nsresult
 nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        const char * aPropertyName,
                                        const char * anInterfaceName,
-                                       bool aForceReport)
+                                       PRBool aForceReport)
 {
     XPCContext * xpcc = ccx.GetXPCContext();
     JSContext * cx = ccx.GetJSContext();
@@ -1092,7 +1092,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
         if(NS_SUCCEEDED(xpc_exception->GetResult(&e_result)))
         {
             // Figure out whether or not we should report this exception.
-            bool reportable = xpc_IsReportableErrorCode(e_result);
+            PRBool reportable = xpc_IsReportableErrorCode(e_result);
             if(reportable)
             {
                 // Always want to report forced exceptions and XPConnect's own
@@ -1110,7 +1110,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                 // stack. If so then we always want to report it.
                 if(!reportable)
                 {
-                    bool onlyNativeStackFrames = true;
+                    PRBool onlyNativeStackFrames = PR_TRUE;
                     JSStackFrame * fp = nsnull;
                     while((fp = JS_FrameIterator(cx, &fp)))
                     {
@@ -1331,7 +1331,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         if(ssm)
         {
             nsIPrincipal *objPrincipal =
-                xpc::AccessCheck::getPrincipal(js::GetObjectCompartment(obj));
+                xpc::AccessCheck::getPrincipal(obj->compartment());
             if(objPrincipal)
             {
                 JSStackFrame* fp = nsnull;
@@ -1367,7 +1367,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         // If the interface is marked as a [function] then we will assume that
         // our JSObject is a function and not an object with a named method.
 
-        bool isFunction;
+        PRBool isFunction;
         if(NS_FAILED(mInfo->IsFunction(&isFunction)))
             goto pre_call_clean_up;
 
@@ -1409,7 +1409,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
                         if(translator)
                         {
-                            bool hideFirstParamFromJS = false;
+                            PRBool hideFirstParamFromJS = PR_FALSE;
                             nsIID* newWrapperIID = nsnull;
                             nsCOMPtr<nsISupports> newThis;
 
@@ -1483,10 +1483,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         const nsXPTType& type = param.GetType();
         nsXPTType datum_type;
         JSUint32 array_count;
-        bool isArray = type.IsArray();
+        PRBool isArray = type.IsArray();
         jsval val = JSVAL_NULL;
         AUTO_MARK_JSVAL(ccx, &val);
-        bool isSizedString = isArray ?
+        PRBool isSizedString = isArray ?
                 JS_FALSE :
                 type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
                 type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
@@ -1688,7 +1688,7 @@ pre_call_clean_up:
 
     if(!success)
     {
-        bool forceReport;
+        PRBool forceReport;
         if(NS_FAILED(mInfo->IsFunction(&forceReport)))
             forceReport = PR_FALSE;
 
@@ -1771,8 +1771,8 @@ pre_call_clean_up:
             nsXPTCMiniVariant* pv;
             nsXPTType datum_type;
             JSUint32 array_count;
-            bool isArray = type.IsArray();
-            bool isSizedString = isArray ?
+            PRBool isArray = type.IsArray();
+            PRBool isSizedString = isArray ?
                     JS_FALSE :
                     type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
                     type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;

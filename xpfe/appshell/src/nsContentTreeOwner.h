@@ -76,7 +76,7 @@ public:
    NS_DECL_NSIWINDOWPROVIDER
 
 protected:
-   nsContentTreeOwner(bool fPrimary);
+   nsContentTreeOwner(PRBool fPrimary);
    virtual ~nsContentTreeOwner();
 
    void XULWindow(nsXULWindow* aXULWindow);
@@ -85,8 +85,8 @@ protected:
 protected:
    nsXULWindow      *mXULWindow;
    nsSiteWindow2    *mSiteWindow2;
-   bool              mPrimary;
-   bool              mContentTitleSetting;
+   PRBool            mPrimary;
+   PRBool            mContentTitleSetting;
    nsString          mWindowTitleModifier;
    nsString          mTitleSeparator;
    nsString          mTitlePreface;

@@ -92,11 +92,11 @@ extern nsXREDirProvider* gDirServiceProvider;
 // will be the size of the original structure passed to XRE_main, but the
 // structure will have all of the members available.
 extern const nsXREAppData* gAppData;
-extern bool gSafeMode;
+extern PRBool gSafeMode;
 
 extern int    gArgc;
 extern char **gArgv;
-extern bool gLogConsoleErrors;
+extern PRBool gLogConsoleErrors;
 
 /**
  * Create the nativeappsupport implementation.

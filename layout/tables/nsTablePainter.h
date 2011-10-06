@@ -114,7 +114,7 @@ class TableBackgroundPainter
       * is included, otherwise it isn't
       */
     nsresult PaintTable(nsTableFrame* aTableFrame, const nsMargin& aDeflate,
-                        bool aPaintTableBackground);
+                        PRBool aPaintTableBackground);
 
     /** Paint background for the row group and its children down through cells
       * (Cells themselves will only be painted in border collapse)
@@ -157,9 +157,9 @@ class TableBackgroundPainter
      * See Public versions for function descriptions
      */
     nsresult PaintRowGroup(nsTableRowGroupFrame* aFrame,
-                           bool                  aPassThrough);
+                           PRBool                aPassThrough);
     nsresult PaintRow(nsTableRowFrame* aFrame,
-                      bool             aPassThrough);
+                      PRBool           aPassThrough);
 
     /** Paint table background layers for this cell space
       * Also paints cell's own background in border-collapse mode
@@ -167,7 +167,7 @@ class TableBackgroundPainter
       * @param aPassSelf   - pass this cell; i.e. paint only underlying layers
       */
     nsresult PaintCell(nsTableCellFrame* aFrame,
-                       bool              aPassSelf);
+                       PRBool            aPassSelf);
 
     /** Translate mRenderingContext, mDirtyRect, and mCols' column and
       * colgroup coords
@@ -183,11 +183,11 @@ class TableBackgroundPainter
       nsIFrame*                 mFrame;
       /** mRect is the rect of mFrame in the current coordinate system */
       nsRect                    mRect;
-      bool                      mVisible;
+      PRBool                    mVisible;
       const nsStyleBorder*      mBorder;
 
       /** Data is valid & frame is visible */
-      bool IsVisible() const { return mVisible; }
+      PRBool IsVisible() const { return mVisible; }
 
       /** Constructor */
       TableBackgroundData();
@@ -212,7 +212,7 @@ class TableBackgroundPainter
       void SetData();
 
       /** True if need to set border-collapse border; must call SetFull beforehand */
-      bool ShouldSetBCBorder();
+      PRBool ShouldSetBCBorder();
 
       /** Set border-collapse border with aBorderWidth as widths */
       nsresult SetBCBorder(nsMargin&               aBorderWidth,
@@ -239,7 +239,7 @@ class TableBackgroundPainter
 #ifdef DEBUG
     nsCompatibility      mCompatMode;
 #endif
-    bool                 mIsBorderCollapse;
+    PRBool               mIsBorderCollapse;
     Origin               mOrigin; //user's table frame type
 
     ColData*             mCols;  //array of columns' ColData

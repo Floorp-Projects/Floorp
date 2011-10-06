@@ -276,7 +276,7 @@ nsFilePicker::Show(PRInt16* aReturn)
             nsString targetPath;
             targetFile->GetPath(targetPath);
 
-            bool exists = false;
+            PRBool exists = PR_FALSE;
             targetFile->Exists(&exists);
             if (exists) {
                 // file exists already create temporary filename
@@ -312,7 +312,7 @@ nsFilePicker::Show(PRInt16* aReturn)
         nsCOMPtr<nsILocalFile> file;
         GetFile(getter_AddRefs(file));
         if (file) {
-            bool exists = false;
+            PRBool exists = PR_FALSE;
             file->Exists(&exists);
             if (exists) {
                 *aReturn = nsIFilePicker::returnReplace;

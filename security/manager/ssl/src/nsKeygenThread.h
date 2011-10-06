@@ -55,18 +55,18 @@ private:
   
   nsCOMPtr<nsIObserver> observer;
 
-  bool iAmRunning;
-  bool keygenReady;
-  bool statusDialogClosed;
-  bool alreadyReceivedParams;
+  PRBool iAmRunning;
+  PRBool keygenReady;
+  PRBool statusDialogClosed;
+  PRBool alreadyReceivedParams;
 
   SECKEYPrivateKey *privateKey;
   SECKEYPublicKey *publicKey;
   PK11SlotInfo *slot;
   PRUint32 keyGenMechanism;
   void *params;
-  bool isPerm;
-  bool isSensitive;
+  PRBool isPerm;
+  PRBool isSensitive;
   void *wincx;
 
   PRThread *threadHandle;
@@ -82,8 +82,8 @@ public:
     PK11SlotInfo *a_slot,
     PRUint32 a_keyGenMechanism,
     void *a_params,
-    bool a_isPerm,
-    bool a_isSensitive,
+    PRBool a_isPerm,
+    PRBool a_isSensitive,
     void *a_wincx );
 
   nsresult GetParams(

@@ -85,7 +85,7 @@ public:
     nsresult Disconnect(nsresult status);
     nsresult Write(const nsCSubstring& command);
 
-    bool IsAlive();
+    PRBool IsAlive();
 
     nsITransport *Transport()   { return mSocket; }
 

@@ -39,7 +39,7 @@
 #include "nsNSSCertTrust.h"
 
 void
-nsNSSCertTrust::AddCATrust(bool ssl, bool email, bool objSign)
+nsNSSCertTrust::AddCATrust(PRBool ssl, PRBool email, PRBool objSign)
 {
   if (ssl) {
     addTrust(&mTrust.sslFlags, CERTDB_TRUSTED_CA);
@@ -56,7 +56,7 @@ nsNSSCertTrust::AddCATrust(bool ssl, bool email, bool objSign)
 }
 
 void
-nsNSSCertTrust::AddPeerTrust(bool ssl, bool email, bool objSign)
+nsNSSCertTrust::AddPeerTrust(PRBool ssl, PRBool email, PRBool objSign)
 {
   if (ssl)
     addTrust(&mTrust.sslFlags, CERTDB_TRUSTED);
@@ -94,9 +94,9 @@ nsNSSCertTrust::~nsNSSCertTrust()
 }
 
 void
-nsNSSCertTrust::SetSSLTrust(bool peer, bool tPeer,
-                            bool ca,   bool tCA, bool tClientCA,
-                            bool user, bool warn)
+nsNSSCertTrust::SetSSLTrust(PRBool peer, PRBool tPeer,
+                            PRBool ca,   PRBool tCA, PRBool tClientCA,
+                            PRBool user, PRBool warn)
 {
   mTrust.sslFlags = 0;
   if (peer || tPeer)
@@ -116,9 +116,9 @@ nsNSSCertTrust::SetSSLTrust(bool peer, bool tPeer,
 }
 
 void
-nsNSSCertTrust::SetEmailTrust(bool peer, bool tPeer,
-                              bool ca,   bool tCA, bool tClientCA,
-                              bool user, bool warn)
+nsNSSCertTrust::SetEmailTrust(PRBool peer, PRBool tPeer,
+                              PRBool ca,   PRBool tCA, PRBool tClientCA,
+                              PRBool user, PRBool warn)
 {
   mTrust.emailFlags = 0;
   if (peer || tPeer)
@@ -138,9 +138,9 @@ nsNSSCertTrust::SetEmailTrust(bool peer, bool tPeer,
 }
 
 void
-nsNSSCertTrust::SetObjSignTrust(bool peer, bool tPeer,
-                                bool ca,   bool tCA, bool tClientCA,
-                                bool user, bool warn)
+nsNSSCertTrust::SetObjSignTrust(PRBool peer, PRBool tPeer,
+                                PRBool ca,   PRBool tCA, PRBool tClientCA,
+                                PRBool user, PRBool warn)
 {
   mTrust.objectSigningFlags = 0;
   if (peer || tPeer)
@@ -257,7 +257,7 @@ nsNSSCertTrust::SetUser()
                   PR_TRUE, PR_FALSE);
 }
 
-bool
+PRBool
 nsNSSCertTrust::HasAnyCA()
 {
   if (hasTrust(mTrust.sslFlags, CERTDB_VALID_CA) ||
@@ -267,10 +267,10 @@ nsNSSCertTrust::HasAnyCA()
   return PR_FALSE;
 }
 
-bool
-nsNSSCertTrust::HasCA(bool checkSSL, 
-                      bool checkEmail,  
-                      bool checkObjSign)
+PRBool
+nsNSSCertTrust::HasCA(PRBool checkSSL, 
+                      PRBool checkEmail,  
+                      PRBool checkObjSign)
 {
   if (checkSSL && !hasTrust(mTrust.sslFlags, CERTDB_VALID_CA))
     return PR_FALSE;
@@ -281,10 +281,10 @@ nsNSSCertTrust::HasCA(bool checkSSL,
   return PR_TRUE;
 }
 
-bool
-nsNSSCertTrust::HasPeer(bool checkSSL, 
-                        bool checkEmail,  
-                        bool checkObjSign)
+PRBool
+nsNSSCertTrust::HasPeer(PRBool checkSSL, 
+                        PRBool checkEmail,  
+                        PRBool checkObjSign)
 {
   if (checkSSL && !hasTrust(mTrust.sslFlags, CERTDB_VALID_PEER))
     return PR_FALSE;
@@ -295,7 +295,7 @@ nsNSSCertTrust::HasPeer(bool checkSSL,
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsNSSCertTrust::HasAnyUser()
 {
   if (hasTrust(mTrust.sslFlags, CERTDB_USER) ||
@@ -305,10 +305,10 @@ nsNSSCertTrust::HasAnyUser()
   return PR_FALSE;
 }
 
-bool
-nsNSSCertTrust::HasUser(bool checkSSL, 
-                        bool checkEmail,  
-                        bool checkObjSign)
+PRBool
+nsNSSCertTrust::HasUser(PRBool checkSSL, 
+                        PRBool checkEmail,  
+                        PRBool checkObjSign)
 {
   if (checkSSL && !hasTrust(mTrust.sslFlags, CERTDB_USER))
     return PR_FALSE;
@@ -319,10 +319,10 @@ nsNSSCertTrust::HasUser(bool checkSSL,
   return PR_TRUE;
 }
 
-bool
-nsNSSCertTrust::HasTrustedCA(bool checkSSL, 
-                             bool checkEmail,  
-                             bool checkObjSign)
+PRBool
+nsNSSCertTrust::HasTrustedCA(PRBool checkSSL, 
+                             PRBool checkEmail,  
+                             PRBool checkObjSign)
 {
   if (checkSSL && !(hasTrust(mTrust.sslFlags, CERTDB_TRUSTED_CA) ||
                     hasTrust(mTrust.sslFlags, CERTDB_TRUSTED_CLIENT_CA)))
@@ -337,10 +337,10 @@ nsNSSCertTrust::HasTrustedCA(bool checkSSL,
   return PR_TRUE;
 }
 
-bool
-nsNSSCertTrust::HasTrustedPeer(bool checkSSL, 
-                               bool checkEmail,  
-                               bool checkObjSign)
+PRBool
+nsNSSCertTrust::HasTrustedPeer(PRBool checkSSL, 
+                               PRBool checkEmail,  
+                               PRBool checkObjSign)
 {
   if (checkSSL && !(hasTrust(mTrust.sslFlags, CERTDB_TRUSTED)))
     return PR_FALSE;
@@ -358,7 +358,7 @@ nsNSSCertTrust::addTrust(unsigned int *t, unsigned int v)
   *t |= v;
 }
 
-bool
+PRBool
 nsNSSCertTrust::hasTrust(unsigned int t, unsigned int v)
 {
   return !!(t & v);

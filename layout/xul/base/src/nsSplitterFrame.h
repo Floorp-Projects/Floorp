@@ -84,7 +84,7 @@ public:
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                                  nsGUIEvent *    aEvent,
                                  nsEventStatus*  aEventStatus,
-                                 bool aControlHeld);
+                                 PRBool aControlHeld);
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
@@ -102,7 +102,7 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  virtual void GetInitialOrientation(bool& aIsHorizontal); 
+  virtual void GetInitialOrientation(PRBool& aIsHorizontal); 
 
 private:
 

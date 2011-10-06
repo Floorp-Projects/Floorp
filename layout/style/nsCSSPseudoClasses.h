@@ -59,9 +59,9 @@ public:
   };
 
   static Type GetPseudoType(nsIAtom* aAtom);
-  static bool HasStringArg(Type aType);
-  static bool HasNthPairArg(Type aType);
-  static bool HasSelectorListArg(Type aType) {
+  static PRBool HasStringArg(Type aType);
+  static PRBool HasNthPairArg(Type aType);
+  static PRBool HasSelectorListArg(Type aType) {
     return aType == ePseudoClass_any;
   }
 

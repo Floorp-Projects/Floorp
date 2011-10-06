@@ -50,7 +50,7 @@ class gfxMacFont : public gfxFont
 {
 public:
     gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
-               bool aNeedsBold);
+               PRBool aNeedsBold);
 
     virtual ~gfxMacFont();
 
@@ -65,7 +65,7 @@ public:
         return mSpaceGlyph;
     }
 
-    virtual bool SetupCairoFont(gfxContext *aContext);
+    virtual PRBool SetupCairoFont(gfxContext *aContext);
 
     /* override Measure to add padding for antialiasing */
     virtual RunMetrics Measure(gfxTextRun *aTextRun,
@@ -82,13 +82,13 @@ protected:
     virtual void CreatePlatformShaper();
 
     // override to prefer CoreText shaping with fonts that depend on AAT
-    virtual bool InitTextRun(gfxContext *aContext,
+    virtual PRBool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
                                PRUint32 aRunLength,
                                PRInt32 aRunScript,
-                               bool aPreferPlatformShaping = false);
+                               PRBool aPreferPlatformShaping = PR_FALSE);
 
     void InitMetrics();
     void InitMetricsFromPlatform();

@@ -94,7 +94,7 @@ protected:
   void StopControllingInput();
 
   void RevalidateDataList();
-  bool RowMatch(nsFormHistory *aHistory, PRUint32 aIndex, const nsAString &aInputName, const nsAString &aInputValue);
+  PRBool RowMatch(nsFormHistory *aHistory, PRUint32 aIndex, const nsAString &aInputName, const nsAString &aInputValue);
 
   inline nsIDocShell *GetDocShellForInput(nsIDOMHTMLInputElement *aInput);
   inline nsIDOMWindow *GetWindowForDocShell(nsIDocShell *aDocShell);
@@ -103,8 +103,8 @@ protected:
   static PLDHashOperator RemoveForDOMDocumentEnumerator(nsISupports* aKey,
                                                         PRInt32& aEntry,
                                                         void* aUserData);
-  bool IsEventTrusted(nsIDOMEvent *aEvent);
-  bool IsInputAutoCompleteOff();
+  PRBool IsEventTrusted(nsIDOMEvent *aEvent);
+  PRBool IsInputAutoCompleteOff();
   // members //////////////////////////////////////////
 
   nsCOMPtr<nsIAutoCompleteController> mController;
@@ -125,11 +125,11 @@ protected:
   PRUint32 mTimeout;
   PRUint32 mMinResultsForPopup;
   PRUint32 mMaxRows;
-  bool mDisableAutoComplete;
-  bool mCompleteDefaultIndex;
-  bool mCompleteSelectedIndex;
-  bool mForceComplete;
-  bool mSuppressOnInput;
+  PRPackedBool mDisableAutoComplete;
+  PRPackedBool mCompleteDefaultIndex;
+  PRPackedBool mCompleteSelectedIndex;
+  PRPackedBool mForceComplete;
+  PRPackedBool mSuppressOnInput;
 };
 
 #endif // __nsFormFillController__

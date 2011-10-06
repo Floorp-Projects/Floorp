@@ -70,8 +70,6 @@
       }
     }
 
-    //gA11yEventDumpToConsole = true; // debug stuff
-
     var gQueue = null;
     function doTest()
     {

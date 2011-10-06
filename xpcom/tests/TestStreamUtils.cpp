@@ -45,7 +45,7 @@
 
 //----
 
-static bool test_consume_stream() {
+static PRBool test_consume_stream() {
   const char kData[] =
       "Get your facts first, and then you can distort them as much as you "
       "please.";
@@ -76,7 +76,7 @@ static bool test_consume_stream() {
 
 //----
 
-typedef bool (*TestFunc)();
+typedef PRBool (*TestFunc)();
 #define DECL_TEST(name) { #name, name }
 
 static const struct Test {

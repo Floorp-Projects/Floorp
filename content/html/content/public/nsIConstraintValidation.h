@@ -68,9 +68,9 @@ public:
 
   virtual ~nsIConstraintValidation();
 
-  bool IsValid() const { return mValidityBitField == 0; }
+  PRBool IsValid() const { return mValidityBitField == 0; }
 
-  bool IsCandidateForConstraintValidation() const {
+  PRBool IsCandidateForConstraintValidation() const {
            return !mBarredFromConstraintValidation;
          }
 
@@ -89,7 +89,7 @@ public:
   };
 
   void SetValidityState(ValidityStateType mState,
-                        bool mValue);
+                        PRBool mValue);
 
 protected:
 
@@ -97,14 +97,14 @@ protected:
   nsIConstraintValidation();
 
   nsresult GetValidity(nsIDOMValidityState** aValidity);
-  nsresult CheckValidity(bool* aValidity);
+  nsresult CheckValidity(PRBool* aValidity);
   void     SetCustomValidity(const nsAString& aError);
 
   bool GetValidityState(ValidityStateType mState) const {
          return mValidityBitField & mState;
        }
 
-  void SetBarredFromConstraintValidation(bool aBarred);
+  void SetBarredFromConstraintValidation(PRBool aBarred);
 
   virtual nsresult GetValidationMessage(nsAString& aValidationMessage,
                                         ValidityStateType aType) {
@@ -127,7 +127,7 @@ private:
   /**
    * Keeps track whether the element is barred from constraint validation.
    */
-  bool                          mBarredFromConstraintValidation;
+  PRBool                        mBarredFromConstraintValidation;
 
   /**
    * The string representing the custom error.
@@ -143,14 +143,14 @@ private:
   NS_IMETHOD GetValidity(nsIDOMValidityState** aValidity) {                   \
     return nsIConstraintValidation::GetValidity(aValidity);                   \
   }                                                                           \
-  NS_IMETHOD GetWillValidate(bool* aWillValidate) {                         \
+  NS_IMETHOD GetWillValidate(PRBool* aWillValidate) {                         \
     *aWillValidate = IsCandidateForConstraintValidation();                    \
     return NS_OK;                                                             \
   }                                                                           \
   NS_IMETHOD GetValidationMessage(nsAString& aValidationMessage) {            \
     return nsIConstraintValidation::GetValidationMessage(aValidationMessage); \
   }                                                                           \
-  NS_IMETHOD CheckValidity(bool* aValidity) {                               \
+  NS_IMETHOD CheckValidity(PRBool* aValidity) {                               \
     return nsIConstraintValidation::CheckValidity(aValidity);                 \
   }
 
@@ -167,14 +167,14 @@ private:
   NS_IMETHODIMP _from::GetValidity(nsIDOMValidityState** aValidity) {         \
     return nsIConstraintValidation::GetValidity(aValidity);                   \
   }                                                                           \
-  NS_IMETHODIMP _from::GetWillValidate(bool* aWillValidate) {               \
+  NS_IMETHODIMP _from::GetWillValidate(PRBool* aWillValidate) {               \
     *aWillValidate = IsCandidateForConstraintValidation();                    \
     return NS_OK;                                                             \
   }                                                                           \
   NS_IMETHODIMP _from::GetValidationMessage(nsAString& aValidationMessage) {  \
     return nsIConstraintValidation::GetValidationMessage(aValidationMessage); \
   }                                                                           \
-  NS_IMETHODIMP _from::CheckValidity(bool* aValidity) {                     \
+  NS_IMETHODIMP _from::CheckValidity(PRBool* aValidity) {                     \
     return nsIConstraintValidation::CheckValidity(aValidity);                 \
   }
 

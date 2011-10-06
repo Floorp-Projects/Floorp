@@ -523,7 +523,7 @@ nsOfflineCacheUpdateItem::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
     nsCAutoString oldScheme;
     mURI->GetScheme(oldScheme);
 
-    bool match;
+    PRBool match;
     if (NS_FAILED(newURI->SchemeIs(oldScheme.get(), &match)) || !match) {
         LOG(("rejected: redirected to a different scheme\n"));
         return NS_ERROR_ABORT;
@@ -591,7 +591,7 @@ nsOfflineCacheUpdateItem::GetReadyState(PRUint16 *aReadyState)
 }
 
 nsresult
-nsOfflineCacheUpdateItem::GetRequestSucceeded(bool * succeeded)
+nsOfflineCacheUpdateItem::GetRequestSucceeded(PRBool * succeeded)
 {
     *succeeded = PR_FALSE;
 
@@ -602,7 +602,7 @@ nsOfflineCacheUpdateItem::GetRequestSucceeded(bool * succeeded)
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool reqSucceeded;
+    PRBool reqSucceeded;
     rv = httpChannel->GetRequestSucceeded(&reqSucceeded);
     if (NS_ERROR_NOT_AVAILABLE == rv)
         return NS_OK;
@@ -858,7 +858,7 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
         uri->GetScheme(scheme);
 
         // Manifest URIs must have the same scheme as the manifest.
-        bool match;
+        PRBool match;
         if (NS_FAILED(mURI->SchemeIs(scheme.get(), &match)) || !match)
             break;
 
@@ -937,7 +937,7 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
 
         nsCAutoString scheme;
         bypassURI->GetScheme(scheme);
-        bool equals;
+        PRBool equals;
         if (NS_FAILED(mURI->SchemeIs(scheme.get(), &equals)) || !equals)
             break;
         if (NS_FAILED(DropReferenceFromURL(bypassURI)))
@@ -1031,7 +1031,7 @@ void
 nsOfflineManifestItem::ReadStrictFileOriginPolicyPref()
 {
     mStrictFileOriginPolicy =
-        Preferences::GetBool("security.fileuri.strict_origin_policy", true);
+        Preferences::GetBool("security.fileuri.strict_origin_policy", PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -1043,7 +1043,7 @@ nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest,
     nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool succeeded;
+    PRBool succeeded;
     rv = channel->GetRequestSucceeded(&succeeded);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1182,7 +1182,7 @@ nsOfflineCacheUpdate::Init(nsIURI *aManifestURI,
     mPartialUpdate = PR_FALSE;
 
     // Only http and https applications are supported.
-    bool match;
+    PRBool match;
     rv = aManifestURI->SchemeIs("http", &match);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1277,12 +1277,12 @@ nsOfflineCacheUpdate::InitPartial(nsIURI *aManifestURI,
 }
 
 nsresult
-nsOfflineCacheUpdate::HandleManifest(bool *aDoUpdate)
+nsOfflineCacheUpdate::HandleManifest(PRBool *aDoUpdate)
 {
     // Be pessimistic
     *aDoUpdate = PR_FALSE;
 
-    bool succeeded;
+    PRBool succeeded;
     nsresult rv = mManifestItem->GetRequestSucceeded(&succeeded);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1369,7 +1369,7 @@ nsOfflineCacheUpdate::LoadCompleted()
             return;
         }
 
-        bool doUpdate;
+        PRBool doUpdate;
         if (NS_FAILED(HandleManifest(&doUpdate))) {
             mSucceeded = PR_FALSE;
             NotifyState(nsIOfflineCacheUpdateObserver::STATE_ERROR);
@@ -1416,7 +1416,7 @@ nsOfflineCacheUpdate::LoadCompleted()
     nsRefPtr<nsOfflineCacheUpdateItem> item = mItems[mCurrentItem];
     mCurrentItem++;
 
-    bool succeeded;
+    PRBool succeeded;
     rv = item->GetRequestSucceeded(&succeeded);
 
     // Check for failures.  3XX, 4XX and 5XX errors on items explicitly
@@ -1581,7 +1581,7 @@ nsOfflineCacheUpdate::AddExistingItems(PRUint32 aType,
 
     for (PRUint32 i = 0; i < count; i++) {
         if (namespaceFilter) {
-            bool found = false;
+            PRBool found = PR_FALSE;
             for (PRUint32 j = 0; j < namespaceFilter->Length() && !found; j++) {
                 found = StringBeginsWith(nsDependentCString(keys[i]),
                                          namespaceFilter->ElementAt(j));
@@ -1866,7 +1866,7 @@ nsOfflineCacheUpdate::GetStatus(PRUint16 *aStatus)
 }
 
 NS_IMETHODIMP
-nsOfflineCacheUpdate::GetPartial(bool *aPartial)
+nsOfflineCacheUpdate::GetPartial(PRBool *aPartial)
 {
     *aPartial = mPartialUpdate;
     return NS_OK;
@@ -1882,7 +1882,7 @@ nsOfflineCacheUpdate::GetManifestURI(nsIURI **aManifestURI)
 }
 
 NS_IMETHODIMP
-nsOfflineCacheUpdate::GetSucceeded(bool *aSucceeded)
+nsOfflineCacheUpdate::GetSucceeded(PRBool *aSucceeded)
 {
     NS_ENSURE_TRUE(mState == STATE_FINISHED, NS_ERROR_NOT_AVAILABLE);
 
@@ -1892,7 +1892,7 @@ nsOfflineCacheUpdate::GetSucceeded(bool *aSucceeded)
 }
 
 NS_IMETHODIMP
-nsOfflineCacheUpdate::GetIsUpgrade(bool *aIsUpgrade)
+nsOfflineCacheUpdate::GetIsUpgrade(PRBool *aIsUpgrade)
 {
     NS_ENSURE_TRUE(mState >= STATE_INITIALIZED, NS_ERROR_NOT_INITIALIZED);
 
@@ -1913,13 +1913,13 @@ nsOfflineCacheUpdate::AddURI(nsIURI *aURI, PRUint32 aType)
     nsCAutoString scheme;
     aURI->GetScheme(scheme);
 
-    bool match;
+    PRBool match;
     if (NS_FAILED(mManifestURI->SchemeIs(scheme.get(), &match)) || !match)
         return NS_ERROR_FAILURE;
 
     // Don't fetch the same URI twice.
     for (PRUint32 i = 0; i < mItems.Length(); i++) {
-        bool equals;
+        PRBool equals;
         if (NS_SUCCEEDED(mItems[i]->mURI->Equals(aURI, &equals)) && equals) {
             // retain both types.
             mItems[i]->mItemType |= aType;
@@ -1967,7 +1967,7 @@ nsOfflineCacheUpdate::AddDynamicURI(nsIURI *aURI)
 
 NS_IMETHODIMP
 nsOfflineCacheUpdate::AddObserver(nsIOfflineCacheUpdateObserver *aObserver,
-                                  bool aHoldWeak)
+                                  PRBool aHoldWeak)
 {
     LOG(("nsOfflineCacheUpdate::AddObserver [%p] to update [%p]", aObserver, this));
 
@@ -2033,7 +2033,7 @@ nsOfflineCacheUpdate::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate,
         // Take the mSucceeded flag from the underlying update, we will be
         // queried for it soon. mSucceeded of this update is false (manifest 
         // check failed) but the subsequent re-fetch update might succeed
-        bool succeeded;
+        PRBool succeeded;
         aUpdate->GetSucceeded(&succeeded);
         mSucceeded = succeeded;
     }

@@ -74,7 +74,7 @@ public:
             txXPathNodeUtils::release(mDocument);
         }
     }
-    bool LoadingFailed()
+    PRBool LoadingFailed()
     {
         NS_ASSERTION(NS_SUCCEEDED(mLoadResult) || !mDocument,
                      "Load failed but we still got a document?");
@@ -101,7 +101,7 @@ private:
 class txExecutionState : public txIMatchContext
 {
 public:
-    txExecutionState(txStylesheet* aStylesheet, bool aDisableLoads);
+    txExecutionState(txStylesheet* aStylesheet, PRBool aDisableLoads);
     ~txExecutionState();
     nsresult init(const txXPathNode& aNode,
                   txOwningExpandedNameMap<txIGlobalParameter>* aGlobalParams);
@@ -123,8 +123,8 @@ public:
     // Stack functions
     nsresult pushEvalContext(txIEvalContext* aContext);
     txIEvalContext* popEvalContext();
-    nsresult pushBool(bool aBool);
-    bool popBool();
+    nsresult pushBool(PRBool aBool);
+    PRBool popBool();
     nsresult pushResultHandler(txAXMLEventHandler* aHandler);
     txAXMLEventHandler* popResultHandler();
     void pushTemplateRule(txStylesheet::ImportFrame* aFrame,
@@ -139,7 +139,7 @@ public:
     const txXPathNode* retrieveDocument(const nsAString& aUri);
     nsresult getKeyNodes(const txExpandedName& aKeyName,
                          const txXPathNode& aRoot,
-                         const nsAString& aKeyValue, bool aIndexIfNotFound,
+                         const nsAString& aKeyValue, PRBool aIndexIfNotFound,
                          txNodeSet** aResult);
     TemplateRule* getCurrentTemplateRule();
     const txXPathNode& getSourceDocument()
@@ -174,7 +174,7 @@ private:
     txStack mReturnStack;
     txStack mLocalVarsStack;
     txStack mEvalContextStack;
-    nsTArray<bool> mBoolStack;
+    nsTArray<PRPackedBool> mBoolStack;
     txStack mResultHandlerStack;
     txStack mParamStack;
     txInstruction* mNextInstruction;
@@ -193,7 +193,7 @@ private:
     txLoadedDocumentsHash mLoadedDocuments;
     txKeyHash mKeyHash;
     nsRefPtr<txResultRecycler> mRecycler;
-    bool mDisableLoads;
+    PRPackedBool mDisableLoads;
 
     static const PRInt32 kMaxRecursionDepth;
 };

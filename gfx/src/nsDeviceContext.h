@@ -286,19 +286,19 @@ public:
      *         AppUnitsPerDevPixel() or AppUnitsPerPhysicalInch()
      *         changed)
      */
-    bool CheckDPIChange();
+    PRBool CheckDPIChange();
 
     /**
      * Set the pixel scaling factor: all lengths are multiplied by this factor
      * when we convert them to device pixels. Returns whether the ratio of
      * app units to dev pixels changed because of the scale factor.
      */
-    bool SetPixelScale(float aScale);
+    PRBool SetPixelScale(float aScale);
 
     /**
      * True if this device context was created for printing.
      */
-    bool IsPrinterSurface();
+    PRBool IsPrinterSurface();
 
 protected:
     void SetDPI();

@@ -287,7 +287,7 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
   PRInt32 startOffset = aStartOffset;
   PRInt32 endOffset = aEndOffset;
   // XXX this prevents text interface usage on <input type="password">
-  bool isPassword = (Role() == nsIAccessibleRole::ROLE_PASSWORD_TEXT);
+  PRBool isPassword = (Role() == nsIAccessibleRole::ROLE_PASSWORD_TEXT);
 
   // Clear out parameters and set up loop
   if (aText) {
@@ -552,7 +552,7 @@ nsAccessible*
 nsHyperTextAccessible::DOMPointToHypertextOffset(nsINode *aNode,
                                                  PRInt32 aNodeOffset,
                                                  PRInt32 *aHyperTextOffset,
-                                                 bool aIsEndOffset)
+                                                 PRBool aIsEndOffset)
 {
   if (!aHyperTextOffset)
     return nsnull;
@@ -721,7 +721,7 @@ nsHyperTextAccessible::HypertextOffsetsToDOMRange(PRInt32 aStartHTOffset,
     nsCOMPtr<nsIEditor> editor;
     GetAssociatedEditor(getter_AddRefs(editor));
     if (editor) {
-      bool isEmpty = false;
+      PRBool isEmpty = PR_FALSE;
       editor->GetDocumentIsEmpty(&isEmpty);
       if (isEmpty) {
         nsCOMPtr<nsIDOMElement> editorRootElm;
@@ -779,12 +779,12 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
                                          nsAccessible *aFromAccessible,
                                          nsSelectionAmount aAmount,
                                          nsDirection aDirection,
-                                         bool aNeedsStart)
+                                         PRBool aNeedsStart)
 {
-  const bool kIsJumpLinesOk = true;          // okay to jump lines
-  const bool kIsScrollViewAStop = false;     // do not stop at scroll views
-  const bool kIsKeyboardSelect = true;       // is keyboard selection
-  const bool kIsVisualBidi = false;          // use visual order for bidi text
+  const PRBool kIsJumpLinesOk = PR_TRUE;          // okay to jump lines
+  const PRBool kIsScrollViewAStop = PR_FALSE;     // do not stop at scroll views
+  const PRBool kIsKeyboardSelect = PR_TRUE;       // is keyboard selection
+  const PRBool kIsVisualBidi = PR_FALSE;          // use visual order for bidi text
 
   EWordMovementType wordMovementType = aNeedsStart ? eStartWord : eEndWord;
   if (aAmount == eSelectLine) {
@@ -928,7 +928,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   }
 
   nsSelectionAmount amount;
-  bool needsStart = false;
+  PRBool needsStart = PR_FALSE;
   switch (aBoundaryType) {
     case BOUNDARY_CHAR:
       amount = eSelectCluster;
@@ -1108,7 +1108,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetTextAfterOffset(PRInt32 aOffset, nsAcces
 //                                      out long rangeStartOffset,
 //                                      out long rangeEndOffset);
 NS_IMETHODIMP
-nsHyperTextAccessible::GetTextAttributes(bool aIncludeDefAttrs,
+nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
                                          PRInt32 aOffset,
                                          PRInt32 *aStartOffset,
                                          PRInt32 *aEndOffset,
@@ -1242,7 +1242,7 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
                                    oldValueUnused);
   }
 
-  if (FocusMgr()->IsFocused(this)) {
+  if (gLastFocusedNode == GetNode()) {
     PRInt32 lineNumber = GetCaretLineNumber();
     if (lineNumber >= 1) {
       nsAutoString strLineNumber;
@@ -1628,9 +1628,13 @@ nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
 
   // No caret if the focused node is not inside this DOM node and this DOM node
   // is not inside of focused node.
-  FocusManager::FocusDisposition focusDisp =
-    FocusMgr()->IsInOrContainsFocus(this);
-  if (focusDisp == FocusManager::eNone)
+
+  nsINode* thisNode = GetNode();
+  PRBool isInsideOfFocusedNode =
+    nsCoreUtils::IsAncestorOf(gLastFocusedNode, thisNode);
+
+  if (!isInsideOfFocusedNode && thisNode != gLastFocusedNode &&
+      !nsCoreUtils::IsAncestorOf(thisNode, gLastFocusedNode))
     return NS_OK;
 
   // Turn the focus node and offset of the selection into caret hypretext
@@ -1651,11 +1655,10 @@ nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
   // No caret if this DOM node is inside of focused node but the selection's
   // focus point is not inside of this DOM node.
   nsCOMPtr<nsINode> focusNode(do_QueryInterface(focusDOMNode));
-  if (focusDisp == FocusManager::eContainedByFocus) {
+  if (isInsideOfFocusedNode) {
     nsINode *resultNode =
       nsCoreUtils::GetDOMNodeFromDOMPoint(focusNode, focusOffset);
 
-    nsINode* thisNode = GetNode();
     if (resultNode != thisNode &&
         !nsCoreUtils::IsAncestorOf(thisNode, resultNode))
       return NS_OK;
@@ -1805,7 +1808,7 @@ nsHyperTextAccessible::GetSelections(PRInt16 aType,
     // Remove collapsed ranges
     PRInt32 numRanges = aRanges->Count();
     for (PRInt32 count = 0; count < numRanges; count ++) {
-      bool isCollapsed;
+      PRBool isCollapsed;
       (*aRanges)[count]->GetCollapsed(&isCollapsed);
       if (isCollapsed) {
         aRanges->RemoveObjectAt(count);
@@ -1904,7 +1907,7 @@ nsHyperTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Caret is a collapsed selection
-  bool isOnlyCaret = (aStartOffset == aEndOffset);
+  PRBool isOnlyCaret = (aStartOffset == aEndOffset);
 
   PRInt32 rangeCount;
   domSel->GetRangeCount(&rangeCount);
@@ -2028,7 +2031,7 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
 
   nsPresContext *presContext = frame->PresContext();
 
-  bool initialScrolled = false;
+  PRBool initialScrolled = PR_FALSE;
   nsIFrame *parentFrame = frame;
   while ((parentFrame = parentFrame->GetParent())) {
     nsIScrollableFrame *scrollableFrame = do_QueryFrame(parentFrame);
@@ -2083,7 +2086,7 @@ nsHyperTextAccessible::InvalidateChildren()
   nsAccessibleWrap::InvalidateChildren();
 }
 
-bool
+PRBool
 nsHyperTextAccessible::RemoveChild(nsAccessible* aAccessible)
 {
   PRInt32 childIndex = aAccessible->IndexInParent();
@@ -2179,7 +2182,7 @@ nsHyperTextAccessible::GetCharAt(PRInt32 aOffset, EGetTextType aShift,
 
 PRInt32
 nsHyperTextAccessible::GetChildOffset(PRUint32 aChildIndex,
-                                      bool aInvalidateAfter)
+                                      PRBool aInvalidateAfter)
 {
   if (aChildIndex == 0) {
     if (aInvalidateAfter)
@@ -2307,8 +2310,8 @@ nsHyperTextAccessible::GetDOMPointByFrameOffset(nsIFrame *aFrame,
 // nsHyperTextAccessible
 nsresult
 nsHyperTextAccessible::DOMRangeBoundToHypertextOffset(nsIDOMRange *aRange,
-                                                      bool aIsStartBound,
-                                                      bool aIsStartHTOffset,
+                                                      PRBool aIsStartBound,
+                                                      PRBool aIsStartHTOffset,
                                                       PRInt32 *aHTOffset)
 {
   nsCOMPtr<nsIDOMNode> DOMNode;

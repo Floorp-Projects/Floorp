@@ -117,7 +117,7 @@ private:
   nsCString                 *mDigest;
   nsCString::const_iterator *mDigestIterator;
 
-  bool        mTokenSet;
+  PRBool      mTokenSet;
 
   // C-style callback functions for the NSS PKCS#12 library
   static SECStatus PR_CALLBACK digest_open(void *, PRBool);

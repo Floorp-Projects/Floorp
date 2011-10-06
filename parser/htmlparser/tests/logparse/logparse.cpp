@@ -107,13 +107,13 @@ nsresult GenerateBaselineFile(const char* aSourceFilename,const char* aBaselineF
 
 //----------------------------------------------------------------------
 
-bool CompareFiles(const char* aFilename1, const char* aFilename2) {
-  bool result=true;
+PRBool CompareFiles(const char* aFilename1, const char* aFilename2) {
+  PRBool result=PR_TRUE;
 
   fstream theFirstStream(aFilename1,ios::in | ios::nocreate);
   fstream theSecondStream(aFilename2,ios::in | ios::nocreate);
 
-  bool done=false;
+  PRBool done=PR_FALSE;
   char   ch1,ch2;
 
   while(!done) {
@@ -123,7 +123,7 @@ bool CompareFiles(const char* aFilename1, const char* aFilename2) {
       result=PR_FALSE;
       break;
     }
-    done=bool((theFirstStream.ipfx(1)==0) || (theSecondStream.ipfx(1)==0));
+    done=PRBool((theFirstStream.ipfx(1)==0) || (theSecondStream.ipfx(1)==0));
   }
   return result;
 }
@@ -159,7 +159,7 @@ void ValidateBaselineFiles(const char* anIndexFilename) {
   char    theFilename[500];
   char    theBaselineFilename[500];
   char    theTempFilename[500];
-  bool    done=false;
+  PRBool  done=PR_FALSE;
 
   ComputeTempFilename(anIndexFilename,theTempFilename);
 
@@ -168,13 +168,13 @@ void ValidateBaselineFiles(const char* anIndexFilename) {
     theIndexFile >> theBaselineFilename;
     if(theFilename[0] && theBaselineFilename[0]) {
       if(NS_SUCCEEDED(GenerateBaselineFile(theFilename,theTempFilename))) {
-        bool matches=CompareFiles(theTempFilename,theBaselineFilename);
+        PRBool matches=CompareFiles(theTempFilename,theBaselineFilename);
         cout << theFilename << kResultMsg[matches] << endl;
       }
     }
     theFilename[0]=0;
     theBaselineFilename[0]=0;
-    done=bool(theIndexFile.ipfx(1)==0);
+    done=PRBool(theIndexFile.ipfx(1)==0);
   }
 
 

@@ -80,7 +80,7 @@ mMimeTypes(aPluginTag->mMimeTypes),
 mMimeDescriptions(aPluginTag->mMimeDescriptions),
 mExtensions(aPluginTag->mExtensions),
 mLibrary(nsnull),
-mCanUnloadLibrary(true),
+mCanUnloadLibrary(PR_TRUE),
 mIsJavaPlugin(aPluginTag->mIsJavaPlugin),
 mIsNPRuntimeEnabledJavaPlugin(aPluginTag->mIsNPRuntimeEnabledJavaPlugin),
 mIsFlashPlugin(aPluginTag->mIsFlashPlugin),
@@ -98,13 +98,13 @@ mName(aPluginInfo->fName),
 mDescription(aPluginInfo->fDescription),
 mLibrary(nsnull),
 #ifdef XP_MACOSX
-mCanUnloadLibrary(false),
+mCanUnloadLibrary(PR_FALSE),
 #else
-mCanUnloadLibrary(true),
+mCanUnloadLibrary(PR_TRUE),
 #endif
-mIsJavaPlugin(false),
-mIsNPRuntimeEnabledJavaPlugin(false),
-mIsFlashPlugin(false),
+mIsJavaPlugin(PR_FALSE),
+mIsNPRuntimeEnabledJavaPlugin(PR_FALSE),
+mIsFlashPlugin(PR_FALSE),
 mFileName(aPluginInfo->fFileName),
 mFullPath(aPluginInfo->fFullPath),
 mVersion(aPluginInfo->fVersion),
@@ -124,16 +124,16 @@ mFlags(NS_PLUGIN_FLAG_ENABLED)
           // This "magic MIME type" should not be exposed, but is just a signal
           // to the browser that this is new-style java.
           // Don't add it or its associated information to our arrays.
-          mIsNPRuntimeEnabledJavaPlugin = true;
+          mIsNPRuntimeEnabledJavaPlugin = PR_TRUE;
           continue;
         }
       }
       mMimeTypes.AppendElement(nsCString(currentMIMEType));
       if (nsPluginHost::IsJavaMIMEType(currentMIMEType)) {
-        mIsJavaPlugin = true;
+        mIsJavaPlugin = PR_TRUE;
       }
       else if (strcmp(currentMIMEType, "application/x-shockwave-flash") == 0) {
-        mIsFlashPlugin = true;
+        mIsFlashPlugin = PR_TRUE;
       }
     } else {
       continue;
@@ -190,15 +190,15 @@ nsPluginTag::nsPluginTag(const char* aName,
                          const char* const* aExtensions,
                          PRInt32 aVariants,
                          PRInt64 aLastModifiedTime,
-                         bool aCanUnload,
-                         bool aArgsAreUTF8)
+                         PRBool aCanUnload,
+                         PRBool aArgsAreUTF8)
 : mPluginHost(nsnull),
 mName(aName),
 mDescription(aDescription),
 mLibrary(nsnull),
 mCanUnloadLibrary(aCanUnload),
-mIsJavaPlugin(false),
-mIsNPRuntimeEnabledJavaPlugin(false),
+mIsJavaPlugin(PR_FALSE),
+mIsNPRuntimeEnabledJavaPlugin(PR_FALSE),
 mFileName(aFileName),
 mFullPath(aFullPath),
 mVersion(aVersion),
@@ -208,14 +208,14 @@ mFlags(0) // Caller will read in our flags from cache
   for (PRInt32 i = 0; i < aVariants; i++) {
     if (mIsJavaPlugin && aMimeTypes[i] &&
         strcmp(aMimeTypes[i], "application/x-java-vm-npruntime") == 0) {
-      mIsNPRuntimeEnabledJavaPlugin = true;
+      mIsNPRuntimeEnabledJavaPlugin = PR_TRUE;
       continue;
     }
     mMimeTypes.AppendElement(nsCString(aMimeTypes[i]));
     mMimeDescriptions.AppendElement(nsCString(aMimeDescriptions[i]));
     mExtensions.AppendElement(nsCString(aExtensions[i]));
     if (nsPluginHost::IsJavaMIMEType(mMimeTypes[i].get())) {
-      mIsJavaPlugin = true;
+      mIsJavaPlugin = PR_TRUE;
     }
   }
 
@@ -336,14 +336,14 @@ nsPluginTag::GetName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-nsPluginTag::GetDisabled(bool* aDisabled)
+nsPluginTag::GetDisabled(PRBool* aDisabled)
 {
   *aDisabled = !HasFlag(NS_PLUGIN_FLAG_ENABLED);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPluginTag::SetDisabled(bool aDisabled)
+nsPluginTag::SetDisabled(PRBool aDisabled)
 {
   if (HasFlag(NS_PLUGIN_FLAG_ENABLED) == !aDisabled)
     return NS_OK;
@@ -358,14 +358,14 @@ nsPluginTag::SetDisabled(bool aDisabled)
 }
 
 NS_IMETHODIMP
-nsPluginTag::GetBlocklisted(bool* aBlocklisted)
+nsPluginTag::GetBlocklisted(PRBool* aBlocklisted)
 {
   *aBlocklisted = HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPluginTag::SetBlocklisted(bool aBlocklisted)
+nsPluginTag::SetBlocklisted(PRBool aBlocklisted)
 {
   if (HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED) == aBlocklisted)
     return NS_OK;
@@ -380,7 +380,7 @@ nsPluginTag::SetBlocklisted(bool aBlocklisted)
 }
 
 void
-nsPluginTag::RegisterWithCategoryManager(bool aOverrideInternalTypes,
+nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
                                          nsPluginTag::nsRegisterType aType)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -424,7 +424,7 @@ nsPluginTag::RegisterWithCategoryManager(bool aOverrideInternalTypes,
         if (strcmp(value, contractId) == 0) {
           catMan->DeleteCategoryEntry("Gecko-Content-Viewers",
                                       mMimeTypes[i].get(),
-                                      true);
+                                      PR_TRUE);
         }
       }
     } else {
@@ -439,7 +439,7 @@ nsPluginTag::RegisterWithCategoryManager(bool aOverrideInternalTypes,
         catMan->AddCategoryEntry("Gecko-Content-Viewers",
                                  mMimeTypes[i].get(),
                                  contractId,
-                                 false, /* persist: broken by bug 193031 */
+                                 PR_FALSE, /* persist: broken by bug 193031 */
                                  aOverrideInternalTypes, /* replace if we're told to */
                                  nsnull);
       }
@@ -453,31 +453,31 @@ nsPluginTag::RegisterWithCategoryManager(bool aOverrideInternalTypes,
 
 void nsPluginTag::Mark(PRUint32 mask)
 {
-  bool wasEnabled = IsEnabled();
+  PRBool wasEnabled = IsEnabled();
   mFlags |= mask;
   // Update entries in the category manager if necessary.
   if (mPluginHost && wasEnabled != IsEnabled()) {
     if (wasEnabled)
-      RegisterWithCategoryManager(false, nsPluginTag::ePluginUnregister);
+      RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
     else
-      RegisterWithCategoryManager(false, nsPluginTag::ePluginRegister);
+      RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginRegister);
   }
 }
 
 void nsPluginTag::UnMark(PRUint32 mask)
 {
-  bool wasEnabled = IsEnabled();
+  PRBool wasEnabled = IsEnabled();
   mFlags &= ~mask;
   // Update entries in the category manager if necessary.
   if (mPluginHost && wasEnabled != IsEnabled()) {
     if (wasEnabled)
-      RegisterWithCategoryManager(false, nsPluginTag::ePluginUnregister);
+      RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
     else
-      RegisterWithCategoryManager(false, nsPluginTag::ePluginRegister);
+      RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginRegister);
   }
 }
 
-bool nsPluginTag::HasFlag(PRUint32 flag)
+PRBool nsPluginTag::HasFlag(PRUint32 flag)
 {
   return (mFlags & flag) != 0;
 }
@@ -487,28 +487,28 @@ PRUint32 nsPluginTag::Flags()
   return mFlags;
 }
 
-bool nsPluginTag::IsEnabled()
+PRBool nsPluginTag::IsEnabled()
 {
   return HasFlag(NS_PLUGIN_FLAG_ENABLED) && !HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED);
 }
 
-bool nsPluginTag::Equals(nsPluginTag *aPluginTag)
+PRBool nsPluginTag::Equals(nsPluginTag *aPluginTag)
 {
-  NS_ENSURE_TRUE(aPluginTag, false);
+  NS_ENSURE_TRUE(aPluginTag, PR_FALSE);
   
   if ((!mName.Equals(aPluginTag->mName)) ||
       (!mDescription.Equals(aPluginTag->mDescription)) ||
       (mMimeTypes.Length() != aPluginTag->mMimeTypes.Length())) {
-    return false;
+    return PR_FALSE;
   }
 
   for (PRUint32 i = 0; i < mMimeTypes.Length(); i++) {
     if (!mMimeTypes[i].Equals(aPluginTag->mMimeTypes[i])) {
-      return false;
+      return PR_FALSE;
     }
   }
 
-  return true;
+  return PR_TRUE;
 }
 
 void nsPluginTag::TryUnloadPlugin()
@@ -533,6 +533,6 @@ void nsPluginTag::TryUnloadPlugin()
   // Remove mime types added to the category manager
   // only if we were made 'active' by setting the host
   if (mPluginHost) {
-    RegisterWithCategoryManager(false, nsPluginTag::ePluginUnregister);
+    RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
   }
 }

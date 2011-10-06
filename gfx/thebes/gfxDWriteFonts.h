@@ -55,7 +55,7 @@ class gfxDWriteFont : public gfxFont
 public:
     gfxDWriteFont(gfxFontEntry *aFontEntry,
                   const gfxFontStyle *aFontStyle,
-                  bool aNeedsBold = false,
+                  PRBool aNeedsBold = PR_FALSE,
                   AntialiasOption = kAntialiasDefault);
     ~gfxDWriteFont();
 
@@ -65,9 +65,9 @@ public:
 
     virtual PRUint32 GetSpaceGlyph();
 
-    virtual bool SetupCairoFont(gfxContext *aContext);
+    virtual PRBool SetupCairoFont(gfxContext *aContext);
 
-    virtual bool IsValid();
+    virtual PRBool IsValid();
 
     gfxFloat GetAdjustedSize() {
         return mAdjustedSize;
@@ -86,7 +86,7 @@ public:
     // use DWrite API to get direct access to system font data
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
-    virtual bool ProvidesGlyphWidths();
+    virtual PRBool ProvidesGlyphWidths();
 
     virtual PRInt32 GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
 
@@ -95,11 +95,11 @@ protected:
 
     virtual void CreatePlatformShaper();
 
-    bool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics);
+    PRBool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics);
 
     void ComputeMetrics(AntialiasOption anAAOption);
 
-    bool HasBitmapStrikeForSize(PRUint32 aSize);
+    PRBool HasBitmapStrikeForSize(PRUint32 aSize);
 
     cairo_font_face_t *CairoFontFace();
 
@@ -121,10 +121,10 @@ protected:
     // cache of glyph widths in 16.16 fixed-point pixels
     nsDataHashtable<nsUint32HashKey,PRInt32>    mGlyphWidths;
 
-    bool mNeedsOblique;
-    bool mNeedsBold;
-    bool mUseSubpixelPositions;
-    bool mAllowManualShowGlyphs;
+    PRPackedBool mNeedsOblique;
+    PRPackedBool mNeedsBold;
+    PRPackedBool mUseSubpixelPositions;
+    PRPackedBool mAllowManualShowGlyphs;
 };
 
 #endif

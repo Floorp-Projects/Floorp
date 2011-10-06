@@ -82,11 +82,11 @@ private:
 
   PRUint32 mCanvasFramebuffer;
 
-  bool mDataIsPremultiplied;
-  bool mNeedsYFlip;
-  bool mIsD2DTexture;
-  bool mUsingSharedTexture;
-  bool mHasAlpha;
+  PRPackedBool mDataIsPremultiplied;
+  PRPackedBool mNeedsYFlip;
+  PRPackedBool mIsD2DTexture;
+  PRPackedBool mUsingSharedTexture;
+  PRPackedBool mHasAlpha;
 };
 
 } /* layers */

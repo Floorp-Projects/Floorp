@@ -93,7 +93,7 @@ NS_IMPL_DOMTARGET_DEFAULTS(nsDOMEventTargetHelper);
 NS_IMETHODIMP
 nsDOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
                                             nsIDOMEventListener* aListener,
-                                            bool aUseCapture)
+                                            PRBool aUseCapture)
 {
   nsEventListenerManager* elm = GetListenerManager(PR_FALSE);
   if (elm) {
@@ -106,8 +106,8 @@ nsDOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
 NS_IMETHODIMP
 nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
                                          nsIDOMEventListener *aListener,
-                                         bool aUseCapture,
-                                         bool aWantsUntrusted,
+                                         PRBool aUseCapture,
+                                         PRBool aWantsUntrusted,
                                          PRUint8 aOptionalArgc)
 {
   NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
@@ -131,7 +131,7 @@ nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
 }
 
 NS_IMETHODIMP
-nsDOMEventTargetHelper::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
+nsDOMEventTargetHelper::DispatchEvent(nsIDOMEvent* aEvent, PRBool* aRetVal)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
@@ -198,7 +198,7 @@ nsDOMEventTargetHelper::DispatchDOMEvent(nsEvent* aEvent,
 }
 
 nsEventListenerManager*
-nsDOMEventTargetHelper::GetListenerManager(bool aCreateIfNotFound)
+nsDOMEventTargetHelper::GetListenerManager(PRBool aCreateIfNotFound)
 {
   if (!mListenerManager && aCreateIfNotFound) {
     mListenerManager = new nsEventListenerManager(this);

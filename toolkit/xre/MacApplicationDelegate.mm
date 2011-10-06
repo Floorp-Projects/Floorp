@@ -86,7 +86,7 @@ private:
 
 @end
 
-static bool sProcessedGetURLEvent = false;
+static PRBool sProcessedGetURLEvent = PR_FALSE;
 
 @class GeckoNSApplication;
 
@@ -140,7 +140,7 @@ void
 ProcessPendingGetURLAppleEvents()
 {
   AutoAutoreleasePool pool;
-  bool keepSpinning = true;
+  PRBool keepSpinning = PR_TRUE;
   while (keepSpinning) {
     sProcessedGetURLEvent = PR_FALSE;
     NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
@@ -302,7 +302,7 @@ ProcessPendingGetURLAppleEvents()
 
   // Determine if the dock menu items should be displayed. This also gives
   // the menu the opportunity to update itself before display.
-  bool shouldShowItems;
+  PRBool shouldShowItems;
   rv = dockMenu->MenuWillOpen(&shouldShowItems);
   if (NS_FAILED(rv) || !shouldShowItems)
     return menu;
@@ -349,7 +349,7 @@ ProcessPendingGetURLAppleEvents()
   cancelQuit->SetData(PR_FALSE);
   obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
 
-  bool abortQuit;
+  PRBool abortQuit;
   cancelQuit->GetData(&abortQuit);
   if (abortQuit)
     return NSTerminateCancel;
@@ -369,7 +369,7 @@ ProcessPendingGetURLAppleEvents()
 
   AutoAutoreleasePool pool;
 
-  bool isGetURLEvent =
+  PRBool isGetURLEvent =
     ([event eventClass] == kInternetEventClass && [event eventID] == kAEGetURL);
   if (isGetURLEvent)
     sProcessedGetURLEvent = PR_TRUE;

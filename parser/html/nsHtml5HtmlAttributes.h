@@ -84,11 +84,11 @@ class nsHtml5HtmlAttributes
     void clear(PRInt32 m);
     void releaseValue(PRInt32 i);
     void clearWithoutReleasingContents();
-    bool contains(nsHtml5AttributeName* name);
+    PRBool contains(nsHtml5AttributeName* name);
     void adjustForMath();
     void adjustForSvg();
     nsHtml5HtmlAttributes* cloneAttributes(nsHtml5AtomTable* interner);
-    bool equalsAnother(nsHtml5HtmlAttributes* other);
+    PRBool equalsAnother(nsHtml5HtmlAttributes* other);
     static void initializeStatics();
     static void releaseStatics();
 };

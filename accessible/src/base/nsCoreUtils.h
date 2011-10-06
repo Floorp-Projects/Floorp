@@ -64,7 +64,7 @@ public:
    * Return true if the given node has registered click, mousedown or mouseup
    * event listeners.
    */
-  static bool HasClickListener(nsIContent *aContent);
+  static PRBool HasClickListener(nsIContent *aContent);
 
   /**
    * Dispatch click event to XUL tree cell.
@@ -86,7 +86,7 @@ public:
    * @param  aPresShell  [in] the presshell for the given element
    * @param  aContent    [in] the element
    */
-  static bool DispatchMouseEvent(PRUint32 aEventType,
+  static PRBool DispatchMouseEvent(PRUint32 aEventType,
                                    nsIPresShell *aPresShell,
                                    nsIContent *aContent);
 
@@ -153,7 +153,7 @@ public:
    * @return PR_TRUE                  if aPossibleAncestorNode is an ancestor of
    *                                   aPossibleDescendantNode
    */
-   static bool IsAncestorOf(nsINode *aPossibleAncestorNode,
+   static PRBool IsAncestorOf(nsINode *aPossibleAncestorNode,
                               nsINode *aPossibleDescendantNode,
                               nsINode *aRootNode = nsnull);
 
@@ -224,12 +224,12 @@ public:
   /**
    * Return true if the given document is root document.
    */
-  static bool IsRootDocument(nsIDocument *aDocument);
+  static PRBool IsRootDocument(nsIDocument *aDocument);
 
   /**
    * Return true if the given document is content document (not chrome).
    */
-  static bool IsContentDocument(nsIDocument *aDocument);
+  static PRBool IsContentDocument(nsIDocument *aDocument);
 
   /**
    * Return true if the given document node is for tab document accessible.
@@ -239,7 +239,7 @@ public:
   /**
    * Return true if the given document is an error page.
    */
-  static bool IsErrorPage(nsIDocument *aDocument);
+  static PRBool IsErrorPage(nsIDocument *aDocument);
 
   /**
    * Retrun true if the type of given frame equals to the given frame type.
@@ -247,7 +247,7 @@ public:
    * @param aFrame  the frame
    * @param aAtom   the frame type
    */
-  static bool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
+  static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
 
   /**
    * Return presShell for the document containing the given DOM node.
@@ -276,13 +276,13 @@ public:
    * @param aID       Where to put ID string
    * @return          PR_TRUE if there is an ID set for this node
    */
-  static bool GetID(nsIContent *aContent, nsAString& aID);
+  static PRBool GetID(nsIContent *aContent, nsAString& aID);
 
   /**
    * Convert attribute value of the given node to positive integer. If no
    * attribute or wrong value then false is returned.
    */
-  static bool GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr,
+  static PRBool GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr,
                             PRInt32 *aUInt);
 
   /**
@@ -291,7 +291,7 @@ public:
    * @param aContent  the given element
    * @return          PR_TRUE if the given element is XLink
    */
-  static bool IsXLink(nsIContent *aContent);
+  static PRBool IsXLink(nsIContent *aContent);
 
   /**
    * Returns language for the given node.
@@ -360,12 +360,12 @@ public:
   /**
    * Return true if the given column is hidden (i.e. not sensible).
    */
-  static bool IsColumnHidden(nsITreeColumn *aColumn);
+  static PRBool IsColumnHidden(nsITreeColumn *aColumn);
 
   /**
    * Return true if the given node is table header element.
    */
-  static bool IsHTMLTableHeader(nsIContent *aContent)
+  static PRBool IsHTMLTableHeader(nsIContent *aContent)
   {
     return aContent->NodeInfo()->Equals(nsGkAtoms::th) ||
       aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::scope);
@@ -391,7 +391,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMDOMSTRINGLIST
 
-  bool Add(const nsAString& aName) {
+  PRBool Add(const nsAString& aName) {
     return mNames.AppendElement(aName) != nsnull;
   }
 

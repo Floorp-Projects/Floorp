@@ -62,7 +62,7 @@ public:
 
     // indicates whether a binding is dependant on the result from a
     // previous binding
-    bool                     mHasDependency;
+    PRBool                   mHasDependency;
 
     RDFBinding*              mNext;
 
@@ -139,7 +139,7 @@ public:
      * @param aResult result to synchronize
      * @param aBindingValues the values for the bindings for the result
      */
-    bool
+    PRBool
     SyncAssignments(nsIRDFResource* aSubject,
                     nsIRDFResource* aPredicate,
                     nsIRDFNode* aTarget,

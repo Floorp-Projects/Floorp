@@ -65,7 +65,7 @@ public:
   nsresult InitAlertAsync(const nsAString & aImageUrl,
                           const nsAString & aAlertTitle, 
                           const nsAString & aAlertText,
-                          bool aAlertTextClickable,
+                          PRBool aAlertTextClickable,
                           const nsAString & aAlertCookie,
                           nsIObserver * aAlertListener);
 
@@ -80,8 +80,8 @@ protected:
   nsCOMPtr<nsIObserver> mAlertListener;
   nsString mAlertCookie;
 
-  bool mLoadedFrame;
-  bool mAlertHasAction;
+  PRPackedBool mLoadedFrame;
+  PRPackedBool mAlertHasAction;
 
   NotifyNotification* mNotification;
   gulong mClosureHandler;

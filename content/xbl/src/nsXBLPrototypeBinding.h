@@ -79,17 +79,17 @@ public:
 
   // Checks if aURI refers to this binding by comparing to both possible
   // binding URIs.
-  bool CompareBindingURI(nsIURI* aURI) const;
+  PRBool CompareBindingURI(nsIURI* aURI) const;
 
-  bool GetAllowScripts();
+  PRBool GetAllowScripts();
 
   nsresult BindingAttached(nsIContent* aBoundElement);
   nsresult BindingDetached(nsIContent* aBoundElement);
 
-  bool LoadResources();
+  PRBool LoadResources();
   nsresult AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
 
-  bool InheritsStyle() const { return mInheritStyle; }
+  PRBool InheritsStyle() const { return mInheritStyle; }
 
   nsXBLPrototypeHandler* GetPrototypeHandlers() { return mPrototypeHandler; }
   void SetPrototypeHandlers(nsXBLPrototypeHandler* aHandler) { mPrototypeHandler = aHandler; }
@@ -106,7 +106,7 @@ public:
 
   // Resolve all the fields for this binding on the object |obj|.
   // False return means a JS exception was set.
-  bool ResolveAllFields(JSContext* cx, JSObject* obj) const
+  PRBool ResolveAllFields(JSContext* cx, JSObject* obj) const
   {
     return !mImplementation || mImplementation->ResolveAllFields(cx, obj);
   }
@@ -131,29 +131,29 @@ public:
   
   void SetImplementation(nsXBLProtoImpl* aImpl) { mImplementation = aImpl; }
   nsresult InstallImplementation(nsIContent* aBoundElement);
-  bool HasImplementation() const { return mImplementation != nsnull; }
+  PRBool HasImplementation() const { return mImplementation != nsnull; }
 
   void AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
-                        bool aRemoveFlag, nsIContent* aChangedElement,
-                        nsIContent* aAnonymousContent, bool aNotify);
+                        PRBool aRemoveFlag, nsIContent* aChangedElement,
+                        nsIContent* aAnonymousContent, PRBool aNotify);
 
   void SetBasePrototype(nsXBLPrototypeBinding* aBinding);
   nsXBLPrototypeBinding* GetBasePrototype() { return mBaseBinding; }
 
   nsXBLDocumentInfo* XBLDocumentInfo() const { return mXBLDocInfoWeak; }
-  bool IsChrome() { return mXBLDocInfoWeak->IsChrome(); }
+  PRBool IsChrome() { return mXBLDocInfoWeak->IsChrome(); }
   
-  bool HasBasePrototype() { return mHasBaseProto; }
-  void SetHasBasePrototype(bool aHasBase) { mHasBaseProto = aHasBase; }
+  PRBool HasBasePrototype() { return mHasBaseProto; }
+  void SetHasBasePrototype(PRBool aHasBase) { mHasBaseProto = aHasBase; }
 
   void SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent);
 
   nsIStyleRuleProcessor* GetRuleProcessor();
   nsXBLPrototypeResources::sheet_array_type* GetStyleSheets();
 
-  bool HasInsertionPoints() { return mInsertionPointTable != nsnull; }
+  PRBool HasInsertionPoints() { return mInsertionPointTable != nsnull; }
   
-  bool HasStyleSheets() {
+  PRBool HasStyleSheets() {
     return mResources && mResources->mStyleSheetList.Length() > 0;
   }
 
@@ -170,12 +170,12 @@ public:
 
   nsIContent* GetSingleInsertionPoint(nsIContent* aBoundElement,
                                       nsIContent* aCopyRoot,
-                                      PRUint32* aIndex, bool* aMultiple);
+                                      PRUint32* aIndex, PRBool* aMultiple);
 
   nsIAtom* GetBaseTag(PRInt32* aNamespaceID);
   void SetBaseTag(PRInt32 aNamespaceID, nsIAtom* aTag);
 
-  bool ImplementsInterface(REFNSIID aIID) const;
+  PRBool ImplementsInterface(REFNSIID aIID) const;
 
   nsresult AddResourceListener(nsIContent* aBoundElement);
 
@@ -202,7 +202,7 @@ public:
   nsresult Init(const nsACString& aRef,
                 nsXBLDocumentInfo* aInfo,
                 nsIContent* aElement,
-                bool aFirstBinding = false);
+                PRBool aFirstBinding = PR_FALSE);
 
   void Traverse(nsCycleCollectionTraversalCallback &cb) const;
   void UnlinkJSObjects();
@@ -251,7 +251,7 @@ protected:
         return mKey.m0;
       }
 
-      bool Equals(const nsHashKey *aKey) const {
+      PRBool Equals(const nsHashKey *aKey) const {
         return mKey.Equals( ((nsIIDKey*) aKey)->mKey);
       }
 
@@ -271,9 +271,9 @@ protected:
                                    // the constructor, and the destructor).
 
   nsXBLPrototypeBinding* mBaseBinding; // Weak.  The docinfo will own our base binding.
-  bool mInheritStyle;
-  bool mHasBaseProto;
-  bool mKeyHandlersRegistered;
+  PRPackedBool mInheritStyle;
+  PRPackedBool mHasBaseProto;
+  PRPackedBool mKeyHandlersRegistered;
  
   nsXBLPrototypeResources* mResources; // If we have any resources, this will be non-null.
                                       

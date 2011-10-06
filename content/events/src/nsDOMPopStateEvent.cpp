@@ -72,8 +72,8 @@ nsDOMPopStateEvent::GetState(nsIVariant **aState)
 
 NS_IMETHODIMP
 nsDOMPopStateEvent::InitPopStateEvent(const nsAString &aTypeArg,
-                                      bool aCanBubbleArg,
-                                      bool aCancelableArg,
+                                      PRBool aCanBubbleArg,
+                                      PRBool aCancelableArg,
                                       nsIVariant *aStateArg)
 {
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);

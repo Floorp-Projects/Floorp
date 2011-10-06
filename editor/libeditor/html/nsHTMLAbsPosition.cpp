@@ -69,7 +69,7 @@ using namespace mozilla;
 #define  BLACK_BG_RGB_TRIGGER 0xd0
 
 NS_IMETHODIMP
-nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
+nsHTMLEditor::AbsolutePositionSelection(PRBool aEnabled)
 {
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this,
@@ -87,7 +87,7 @@ nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
   nsTextRulesInfo ruleInfo(aEnabled ?
                            nsTextEditRules::kSetAbsolutePosition :
                            nsTextEditRules::kRemoveAbsolutePosition);
-  bool cancel, handled;
+  PRBool cancel, handled;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(res) || cancel)
     return res;
@@ -127,21 +127,21 @@ nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement **_retval)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetSelectionContainerAbsolutelyPositioned(bool *aIsSelectionContainerAbsolutelyPositioned)
+nsHTMLEditor::GetSelectionContainerAbsolutelyPositioned(PRBool *aIsSelectionContainerAbsolutelyPositioned)
 {
   *aIsSelectionContainerAbsolutelyPositioned = (mAbsolutelyPositionedObject != nsnull);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetAbsolutePositioningEnabled(bool * aIsEnabled)
+nsHTMLEditor::GetAbsolutePositioningEnabled(PRBool * aIsEnabled)
 {
   *aIsEnabled = mIsAbsolutelyPositioningEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetAbsolutePositioningEnabled(bool aIsEnabled)
+nsHTMLEditor::SetAbsolutePositioningEnabled(PRBool aIsEnabled)
 {
   mIsAbsolutelyPositioningEnabled = aIsEnabled;
   return NS_OK;
@@ -201,7 +201,7 @@ nsHTMLEditor::RelativeChangeZIndex(PRInt32 aChange)
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsTextRulesInfo ruleInfo((aChange < 0) ? nsTextEditRules::kDecreaseZIndex:
                                            nsTextEditRules::kIncreaseZIndex);
-  bool cancel, handled;
+  PRBool cancel, handled;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(res))
     return res;
@@ -513,14 +513,14 @@ nsHTMLEditor::AddPositioningOffset(PRInt32 & aX, PRInt32 & aY)
 
 NS_IMETHODIMP
 nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
-                                        bool aEnabled)
+                                        PRBool aEnabled)
 {
   NS_ENSURE_ARG_POINTER(aElement);
 
   nsAutoString positionStr;
   mHTMLCSSUtils->GetComputedProperty(aElement, nsEditProperty::cssPosition,
                                      positionStr);
-  bool isPositioned = (positionStr.EqualsLiteral("absolute"));
+  PRBool isPositioned = (positionStr.EqualsLiteral("absolute"));
 
   // nothing to do if the element is already in the state we want
   if (isPositioned == aEnabled)
@@ -584,7 +584,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
                                        EmptyString(), PR_FALSE);
     }
 
-    bool hasStyleOrIdOrClass;
+    PRBool hasStyleOrIdOrClass;
     res = HasStyleOrIdOrClass(aElement, &hasStyleOrIdOrClass);
     NS_ENSURE_SUCCESS(res, res);
     if (!hasStyleOrIdOrClass && nsHTMLEditUtils::IsDiv(aElement)) {
@@ -599,14 +599,14 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetSnapToGridEnabled(bool aEnabled)
+nsHTMLEditor::SetSnapToGridEnabled(PRBool aEnabled)
 {
   mSnapToGridEnabled = aEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetSnapToGridEnabled(bool * aIsEnabled)
+nsHTMLEditor::GetSnapToGridEnabled(PRBool * aIsEnabled)
 {
   *aIsEnabled = mSnapToGridEnabled;
   return NS_OK;
