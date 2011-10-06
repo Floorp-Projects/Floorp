@@ -188,8 +188,8 @@ add_test(function hmac_error_during_node_reassignment() {
     _("== Invoking first sync.");
     Service.sync();
     _("We should not simultaneously have data but no keys on the server.");
-    let hasData = rotaryColl.wbos["flying"] ||
-                  rotaryColl.wbos["scotsman"];
+    let hasData = rotaryColl.wbo("flying") ||
+                  rotaryColl.wbo("scotsman");
     let hasKeys = keysWBO.modified;
 
     _("We correctly handle 401s by aborting the sync and starting again.");
@@ -204,8 +204,8 @@ add_test(function hmac_error_during_node_reassignment() {
     _("---------------------------");
     onSyncFinished = function() {
       _("== Second (automatic) sync done.");
-      hasData = rotaryColl.wbos["flying"] ||
-                rotaryColl.wbos["scotsman"];
+      hasData = rotaryColl.wbo("flying") ||
+                rotaryColl.wbo("scotsman");
       hasKeys = keysWBO.modified;
       do_check_true(!hasData == !hasKeys);
 

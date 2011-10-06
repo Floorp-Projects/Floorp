@@ -42,10 +42,10 @@
 
 #include <ctype.h>
 #include "jsapi.h"
+#include "jsatom.h"
 #include "jsprvtd.h"
 #include "jshashtable.h"
 #include "jslock.h"
-#include "jsobj.h"
 #include "jscell.h"
 
 #include "vm/Unicode.h"
@@ -181,19 +181,6 @@ js_ValueToSource(JSContext *cx, const js::Value &v);
 namespace js {
 
 /*
- * Compute a hash function from str. The caller can call this function even if
- * str is not a GC-allocated thing.
- */
-inline uint32
-HashChars(const jschar *chars, size_t length)
-{
-    uint32 h = 0;
-    for (; length; chars++, length--)
-        h = JS_ROTATE_LEFT32(h, 4) ^ *chars;
-    return h;
-}
-
-/*
  * Test if strings are equal. The caller can call the function even if str1
  * or str2 are not GC-allocated things.
  */
@@ -231,29 +218,6 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 #define js_strncpy(t, s, n)     memcpy((t), (s), (n) * sizeof(jschar))
 
 namespace js {
-
-/*
- * On encodings:
- *
- * - Some string functions have an optional FlationCoding argument that allow
- *   the caller to force CESU-8 encoding handling. 
- * - Functions that don't take a FlationCoding base their NormalEncoding
- *   behavior on the js_CStringsAreUTF8 value. NormalEncoding is either raw
- *   (simple zero-extension) or UTF-8 depending on js_CStringsAreUTF8.
- * - Functions that explicitly state their encoding do not use the
- *   js_CStringsAreUTF8 value.
- *
- * CESU-8 (Compatibility Encoding Scheme for UTF-16: 8-bit) is a variant of
- * UTF-8 that allows us to store any wide character string as a narrow
- * character string. For strings containing mostly ascii, it saves space.
- * http://www.unicode.org/reports/tr26/
- */
-
-enum FlationCoding
-{
-    NormalEncoding,
-    CESU8Encoding
-};
 
 /*
  * Inflate bytes to jschars. Return null on error, otherwise return the jschar

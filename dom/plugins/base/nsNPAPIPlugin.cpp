@@ -48,6 +48,7 @@
 #include "prclist.h"
 
 #include "jscntxt.h"
+#include "jsfriendapi.h"
 
 #include "nsPluginHost.h"
 #include "nsNPAPIPlugin.h"
@@ -1617,7 +1618,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
     return false;
   }
 
-  OBJ_TO_INNER_OBJECT(cx, obj);
+  obj = JS_ObjectToInnerObject(cx, obj);
 
   // Root obj and the rval (below).
   jsval vec[] = { OBJECT_TO_JSVAL(obj), JSVAL_NULL };

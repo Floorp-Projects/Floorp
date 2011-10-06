@@ -1199,7 +1199,7 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     if (argc == 1) {
         Value arg = vp[2];
         if (arg.isObject())
-            comp = arg.toObject().unwrap()->compartment();
+            comp = UnwrapObject(&arg.toObject())->compartment();
     }
 
     size_t preBytes = cx->runtime->gcBytes;
@@ -2718,9 +2718,9 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
     {
         JSAutoEnterCompartment ac;
         if (!JSVAL_IS_PRIMITIVE(argv[0]) &&
-            JSVAL_TO_OBJECT(argv[0])->isCrossCompartmentWrapper())
+            IsCrossCompartmentWrapper(JSVAL_TO_OBJECT(argv[0])))
         {
-            JSObject *obj = JSVAL_TO_OBJECT(argv[0])->unwrap();
+            JSObject *obj = UnwrapObject(JSVAL_TO_OBJECT(argv[0]));
             if (!ac.enter(cx, obj))
                 return JS_FALSE;
             argv[0] = OBJECT_TO_JSVAL(obj);
@@ -2736,7 +2736,7 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
     }
     if (funobj->compartment() != cx->compartment) {
         JSFunction *fun = funobj->getFunctionPrivate();
-        if (fun->isInterpreted() && fun->u.i.script->compileAndGo) {
+        if (fun->isInterpreted() && fun->script()->compileAndGo) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                                  "function", "compile-and-go");
             return JS_FALSE;
@@ -3007,7 +3007,7 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
     {
         JSAutoEnterCompartment ac;
         uintN flags;
-        JSObject *unwrapped = sobj->unwrap(&flags);
+        JSObject *unwrapped = UnwrapObject(sobj, &flags);
         if (flags & Wrapper::CROSS_COMPARTMENT) {
             sobj = unwrapped;
             if (!ac.enter(cx, sobj))
@@ -3150,7 +3150,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
             desc.setter = JS_StrictPropertyStub;
         desc.shortid = shape->shortid;
         propFlags = shape->getFlags();
-   } else if (referent->isProxy()) {
+   } else if (IsProxy(referent)) {
         PropertyDescriptor desc;
         if (!Proxy::getOwnPropertyDescriptor(cx, referent, id, false, &desc))
             return false;

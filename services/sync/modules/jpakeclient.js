@@ -48,6 +48,8 @@ Cu.import("resource://services-sync/util.js");
 const EXPORTED_SYMBOLS = ["JPAKEClient"];
 
 const REQUEST_TIMEOUT         = 60; // 1 minute
+const KEYEXCHANGE_VERSION     = 3;
+
 const JPAKE_SIGNERID_SENDER   = "sender";
 const JPAKE_SIGNERID_RECEIVER = "receiver";
 const JPAKE_LENGTH_SECRET     = 8;
@@ -55,50 +57,68 @@ const JPAKE_LENGTH_CLIENTID   = 256;
 const JPAKE_VERIFY_VALUE      = "0123456789ABCDEF";
 
 
-/*
+/**
  * Client to exchange encrypted data using the J-PAKE algorithm.
  * The exchange between two clients of this type looks like this:
  * 
  * 
- * Client A                      Server                      Client B
- * ==================================================================
- *                                  |
- * retrieve channel <---------------|
- * generate random secret           |
- * show PIN = secret + channel      |                ask user for PIN
- * upload A's message 1 ----------->|
- *                                  |--------> retrieve A's message 1
- *                                  |<---------- upload B's message 1
- * retrieve B's message 1 <---------|
- * upload A's message 2 ----------->|
- *                                  |--------> retrieve A's message 2
- *                                  |                     compute key
- *                                  |<---------- upload B's message 2
- * retrieve B's message 2 <---------|
- * compute key                      |
- * upload sha256d(key) ------------>|
- *                                  |---------> retrieve sha256d(key)
- *                                  |          verify against own key
- *                                  |                    encrypt data
- *                                  |<------------------- upload data
- * retrieve data <------------------|
- * verify HMAC                      |
- * decrypt data                     |
+ *  Mobile                        Server                        Desktop
+ *  ===================================================================
+ *                                   |
+ *  retrieve channel <---------------|
+ *  generate random secret           |
+ *  show PIN = secret + channel      |                 ask user for PIN
+ *  upload Mobile's message 1 ------>|
+ *                                   |----> retrieve Mobile's message 1
+ *                                   |<----- upload Desktop's message 1
+ *  retrieve Desktop's message 1 <---|
+ *  upload Mobile's message 2 ------>|
+ *                                   |----> retrieve Mobile's message 2
+ *                                   |                      compute key
+ *                                   |<----- upload Desktop's message 2
+ *  retrieve Desktop's message 2 <---|
+ *  compute key                      |
+ *  encrypt known value ------------>|
+ *                                   |-------> retrieve encrypted value
+ *                                   | verify against local known value
+ *
+ *   At this point Desktop knows whether the PIN was entered correctly.
+ *   If it wasn't, Desktop deletes the session. If it was, the account
+ *   setup can proceed. If Desktop doesn't yet have an account set up,
+ *   it will keep the channel open and let the user connect to or
+ *   create an account.
+ *
+ *                                   |              encrypt credentials
+ *                                   |<------------- upload credentials
+ *  retrieve credentials <-----------|
+ *  verify HMAC                      |
+ *  decrypt credentials              |
+ *  delete session ----------------->|
+ *  start syncing                    |
  * 
  * 
  * Create a client object like so:
  * 
- *   let client = new JPAKEClient(observer);
+ *   let client = new JPAKEClient(controller);
  * 
- * The 'observer' object must implement the following methods:
+ * The 'controller' object must implement the following methods:
  * 
- *   displayPIN(pin) -- Display the PIN to the user, only called on the client
- *     that didn't provide the PIN.
+ *   displayPIN(pin) -- Called when a PIN has been generated and is ready to
+ *     be displayed to the user. Only called on the client where the pairing
+ *     was initiated with 'receiveNoPIN()'.
+ * 
+ *   onPairingStart() -- Called when the pairing has started and messages are
+ *     being sent back and forth over the channel. Only called on the client
+ *     where the pairing was initiated with 'receiveNoPIN()'.
+ * 
+ *   onPaired() -- Called when the device pairing has been established and
+ *     we're ready to send the credentials over. To do that, the controller
+ *     must call 'sendAndComplete()' while the channel is active.
  * 
  *   onComplete(data) -- Called after transfer has been completed. On
  *     the sending side this is called with no parameter and as soon as the
- *     data has been uploaded, which this doesn't mean the receiving side
- *     has actually retrieved them yet.
+ *     data has been uploaded. This does not mean the receiving side has
+ *     actually retrieved them yet.
  *
  *   onAbort(error) -- Called whenever an error is encountered. All errors lead
  *     to an abort and the process has to be started again on both sides.
@@ -113,7 +133,12 @@ const JPAKE_VERIFY_VALUE      = "0123456789ABCDEF";
  * 
  * To initiate the transfer from the sending side, call
  * 
- *   client.sendWithPIN(pin, data)
+ *   client.pairWithPIN(pin, true);
+ * 
+ * Once the pairing has been established, the controller's 'onPaired()' method
+ * will be called. To then transmit the data, call
+ * 
+ *   client.sendAndComplete(data);
  * 
  * To abort the process, call
  * 
@@ -122,18 +147,19 @@ const JPAKE_VERIFY_VALUE      = "0123456789ABCDEF";
  * Note that after completion or abort, the 'client' instance may not be reused.
  * You will have to create a new one in case you'd like to restart the process.
  */
-function JPAKEClient(observer) {
-  this.observer = observer;
+function JPAKEClient(controller) {
+  this.controller = controller;
 
   this._log = Log4Moz.repository.getLogger("Sync.JPAKEClient");
   this._log.level = Log4Moz.Level[Svc.Prefs.get(
     "log.logger.service.jpakeclient", "Debug")];
 
-  this._serverUrl = Svc.Prefs.get("jpake.serverURL");
+  this._serverURL = Svc.Prefs.get("jpake.serverURL");
   this._pollInterval = Svc.Prefs.get("jpake.pollInterval");
   this._maxTries = Svc.Prefs.get("jpake.maxTries");
-  if (this._serverUrl.slice(-1) != "/")
-    this._serverUrl += "/";
+  if (this._serverURL.slice(-1) != "/") {
+    this._serverURL += "/";
+  }
 
   this._jpake = Cc["@mozilla.org/services-crypto/sync-jpake;1"]
                   .createInstance(Ci.nsISyncJPAKE);
@@ -148,6 +174,12 @@ JPAKEClient.prototype = {
    * Public API
    */
 
+  /**
+   * Initiate pairing and receive data without providing a PIN. The PIN will
+   * be generated and passed on to the controller to be displayed to the user.
+   * 
+   * This is typically called on mobile devices where typing is tedious.
+   */
   receiveNoPIN: function receiveNoPIN() {
     this._my_signerid = JPAKE_SIGNERID_RECEIVER;
     this._their_signerid = JPAKE_SIGNERID_SENDER;
@@ -162,6 +194,11 @@ JPAKEClient.prototype = {
                 this._putStep,
                 this._getStep,
                 function(callback) {
+                  // We fetched the first response from the other client.
+                  // Notify controller of the pairing starting.
+                  Utils.nextTick(this.controller.onPairingStart,
+                                 this.controller);
+
                   // Now we can switch back to the smaller timeout.
                   this._maxTries = Svc.Prefs.get("jpake.maxTries");
                   callback();
@@ -172,49 +209,103 @@ JPAKEClient.prototype = {
                 this._computeFinal,
                 this._computeKeyVerification,
                 this._putStep,
+                function(callback) {
+                  // Allow longer time-out for the last message.
+                  this._maxTries = Svc.Prefs.get("jpake.lastMsgMaxTries");
+                  callback();
+                },
                 this._getStep,
                 this._decryptData,
                 this._complete)();
   },
 
-  sendWithPIN: function sendWithPIN(pin, obj) {
+  /**
+   * Initiate pairing based on the PIN entered by the user.
+   * 
+   * This is typically called on desktop devices where typing is easier than
+   * on mobile.
+   * 
+   * @param pin
+   *        12 character string (in human-friendly base32) containing the PIN
+   *        entered by the user.
+   * @param expectDelay
+   *        Flag that indicates that a significant delay between the pairing
+   *        and the sending should be expected. v2 and earlier of the protocol
+   *        did not allow for this and the pairing to a v2 or earlier client
+   *        will be aborted if this flag is 'true'.
+   */
+  pairWithPIN: function pairWithPIN(pin, expectDelay) {
     this._my_signerid = JPAKE_SIGNERID_SENDER;
     this._their_signerid = JPAKE_SIGNERID_RECEIVER;
 
     this._channel = pin.slice(JPAKE_LENGTH_SECRET);
-    this._channelUrl = this._serverUrl + this._channel;
+    this._channelURL = this._serverURL + this._channel;
     this._secret = pin.slice(0, JPAKE_LENGTH_SECRET);
-    this._data = JSON.stringify(obj);
 
     this._chain(this._computeStepOne,
                 this._getStep,
+                function (callback) {
+                  // Ensure that the other client can deal with a delay for
+                  // the last message if that's requested by the caller.
+                  if (!expectDelay) {
+                    return callback();
+                  }
+                  if (!this._incoming.version || this._incoming.version < 3) {
+                    return this.abort(JPAKE_ERROR_DELAYUNSUPPORTED);
+                  }
+                  return callback();
+                },
                 this._putStep,
                 this._computeStepTwo,
                 this._getStep,
                 this._putStep,
                 this._computeFinal,
                 this._getStep,
-                this._encryptData,
+                this._verifyPairing)();
+  },
+
+  /**
+   * Send data after a successful pairing.
+   * 
+   * @param obj
+   *        Object containing the data to send. It will be serialized as JSON.
+   */
+  sendAndComplete: function sendAndComplete(obj) {
+    if (!this._paired || this._finished) {
+      this._log.error("Can't send data, no active pairing!");
+      throw "No active pairing!";
+    }
+    this._data = JSON.stringify(obj);
+    this._chain(this._encryptData,
                 this._putStep,
                 this._complete)();
   },
 
+  /**
+   * Abort the current pairing. The channel on the server will be deleted
+   * if the abort wasn't due to a network or server error. The controller's
+   * 'onAbort()' method is notified in all cases.
+   * 
+   * @param error [optional]
+   *        Error constant indicating the reason for the abort. Defaults to
+   *        user abort.
+   */
   abort: function abort(error) {
     this._log.debug("Aborting...");
     this._finished = true;
     let self = this;
 
     // Default to "user aborted".
-    if (!error)
+    if (!error) {
       error = JPAKE_ERROR_USERABORT;
+    }
 
-    if (error == JPAKE_ERROR_CHANNEL
-        || error == JPAKE_ERROR_NETWORK
-        || error == JPAKE_ERROR_NODATA) {
-      Utils.namedTimer(function() { this.observer.onAbort(error); }, 0,
-                       this, "_timer_onAbort");
+    if (error == JPAKE_ERROR_CHANNEL ||
+        error == JPAKE_ERROR_NETWORK ||
+        error == JPAKE_ERROR_NODATA) {
+      Utils.nextTick(function() { this.controller.onAbort(error); }, this);
     } else {
-      this._reportFailure(error, function() { self.observer.onAbort(error); });
+      this._reportFailure(error, function() { self.controller.onAbort(error); });
     }
   },
 
@@ -253,10 +344,11 @@ JPAKEClient.prototype = {
 
   _getChannel: function _getChannel(callback) {
     this._log.trace("Requesting channel.");
-    let request = this._newRequest(this._serverUrl + "new_channel");
+    let request = this._newRequest(this._serverURL + "new_channel");
     request.get(Utils.bind2(this, function handleChannel(error) {
-      if (this._finished)
+      if (this._finished) {
         return;
+      }
 
       if (error) {
         this._log.error("Error acquiring channel ID. " + error);
@@ -278,12 +370,11 @@ JPAKEClient.prototype = {
         return;
       }
       this._log.debug("Using channel " + this._channel);
-      this._channelUrl = this._serverUrl + this._channel;
+      this._channelURL = this._serverURL + this._channel;
 
       // Don't block on UI code.
       let pin = this._secret + this._channel;
-      Utils.namedTimer(function() { this.observer.displayPIN(pin); }, 0,
-                       this, "_timer_displayPIN");
+      Utils.nextTick(function() { this.controller.displayPIN(pin); }, this);
       callback();
     }));
   },
@@ -291,10 +382,16 @@ JPAKEClient.prototype = {
   // Generic handler for uploading data.
   _putStep: function _putStep(callback) {
     this._log.trace("Uploading message " + this._outgoing.type);
-    let request = this._newRequest(this._channelUrl);
+    let request = this._newRequest(this._channelURL);
+    if (this._their_etag) {
+      request.setHeader("If-Match", this._their_etag);
+    } else {
+      request.setHeader("If-None-Match", "*");
+    }
     request.put(this._outgoing, Utils.bind2(this, function (error) {
-      if (this._finished)
+      if (this._finished) {
         return;
+      }
 
       if (error) {
         this._log.error("Error uploading data. " + error);
@@ -309,7 +406,7 @@ JPAKEClient.prototype = {
       }
       // There's no point in returning early here since the next step will
       // always be a GET so let's pause for twice the poll interval.
-      this._etag = request.response.headers["etag"];
+      this._my_etag = request.response.headers["etag"];
       Utils.namedTimer(function () { callback(); }, this._pollInterval * 2,
                        this, "_pollTimer");
     }));
@@ -319,14 +416,15 @@ JPAKEClient.prototype = {
   _pollTries: 0,
   _getStep: function _getStep(callback) {
     this._log.trace("Retrieving next message.");
-    let request = this._newRequest(this._channelUrl);
-    if (this._etag) {
-      request.setHeader("If-None-Match", this._etag);
+    let request = this._newRequest(this._channelURL);
+    if (this._my_etag) {
+      request.setHeader("If-None-Match", this._my_etag);
     }
 
     request.get(Utils.bind2(this, function (error) {
-      if (this._finished)
+      if (this._finished) {
         return;
+      }
 
       if (error) {
         this._log.error("Error fetching data. " + error);
@@ -360,6 +458,14 @@ JPAKEClient.prototype = {
         return;
       }
 
+      this._their_etag = request.response.headers["etag"];
+      if (!this._their_etag) {
+        this._log.error("Server did not supply ETag for message: "
+                        + request.response.body);
+        this.abort(JPAKE_ERROR_SERVER);
+        return;
+      }
+
       try {
         this._incoming = JSON.parse(request.response.body);
       } catch (ex) {
@@ -374,7 +480,7 @@ JPAKEClient.prototype = {
 
   _reportFailure: function _reportFailure(reason, callback) {
     this._log.debug("Reporting failure to server.");
-    let request = this._newRequest(this._serverUrl + "report");
+    let request = this._newRequest(this._serverURL + "report");
     request.setHeader("X-KeyExchange-Cid", this._channel);
     request.setHeader("X-KeyExchange-Log", reason);
     request.post("", Utils.bind2(this, function (error) {
@@ -409,7 +515,9 @@ JPAKEClient.prototype = {
                gx2: gx2.value,
                zkp_x1: {gr: gv1.value, b: r1.value, id: this._my_signerid},
                zkp_x2: {gr: gv2.value, b: r2.value, id: this._my_signerid}};
-    this._outgoing = {type: this._my_signerid + "1", payload: one};
+    this._outgoing = {type: this._my_signerid + "1",
+                      version: KEYEXCHANGE_VERSION,
+                      payload: one};
     this._log.trace("Generated message " + this._outgoing.type);
     callback();
   },
@@ -447,7 +555,9 @@ JPAKEClient.prototype = {
     }
     let two = {A: A.value,
                zkp_A: {gr: gvA.value, b: rA.value, id: this._my_signerid}};
-    this._outgoing = {type: this._my_signerid + "2", payload: two};
+    this._outgoing = {type: this._my_signerid + "2",
+                      version: KEYEXCHANGE_VERSION,
+                      payload: two};
     this._log.trace("Generated message " + this._outgoing.type);
     callback();
   },
@@ -499,12 +609,13 @@ JPAKEClient.prototype = {
       return;
     }
     this._outgoing = {type: this._my_signerid + "3",
+                      version: KEYEXCHANGE_VERSION,
                       payload: {ciphertext: ciphertext, IV: iv}};
     this._log.trace("Generated message " + this._outgoing.type);
     callback();
   },
 
-  _encryptData: function _encryptData(callback) {
+  _verifyPairing: function _verifyPairing(callback) {
     this._log.trace("Verifying their key.");
     if (this._incoming.type != this._their_signerid + "3") {
       this._log.error("Invalid round 3 data: " +
@@ -513,17 +624,26 @@ JPAKEClient.prototype = {
       return;
     }
     let step3 = this._incoming.payload;
+    let ciphertext;
     try {
       ciphertext = Svc.Crypto.encrypt(JPAKE_VERIFY_VALUE,
                                       this._crypto_key, step3.IV);
-      if (ciphertext != step3.ciphertext)
+      if (ciphertext != step3.ciphertext) {
         throw "Key mismatch!";
+      }
     } catch (ex) {
       this._log.error("Keys don't match!");
       this.abort(JPAKE_ERROR_KEYMISMATCH);
       return;
     }
 
+    this._log.debug("Verified pairing!");
+    this._paired = true;
+    Utils.nextTick(function () { this.controller.onPaired(); }, this);
+    callback();
+  },
+
+  _encryptData: function _encryptData(callback) {
     this._log.trace("Encrypting data.");
     let iv, ciphertext, hmac;
     try {
@@ -536,6 +656,7 @@ JPAKEClient.prototype = {
       return;
     }
     this._outgoing = {type: this._my_signerid + "3",
+                      version: KEYEXCHANGE_VERSION,
                       payload: {ciphertext: ciphertext, IV: iv, hmac: hmac}};
     this._log.trace("Generated message " + this._outgoing.type);
     callback();
@@ -553,8 +674,9 @@ JPAKEClient.prototype = {
     try {
       let hmac = Utils.bytesAsHex(
         Utils.digestUTF8(step3.ciphertext, this._hmac_hasher));
-      if (hmac != step3.hmac)
+      if (hmac != step3.hmac) {
         throw "HMAC validation failed!";
+      }
     } catch (ex) {
       this._log.error("HMAC validation failed.");
       this.abort(JPAKE_ERROR_KEYMISMATCH);
@@ -587,8 +709,8 @@ JPAKEClient.prototype = {
   _complete: function _complete() {
     this._log.debug("Exchange completed.");
     this._finished = true;
-    Utils.namedTimer(function () { this.observer.onComplete(this._newData); },
-                     0, this, "_timer_onComplete");
+    Utils.nextTick(function () { this.controller.onComplete(this._newData); },
+                   this);
   }
 
 };

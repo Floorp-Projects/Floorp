@@ -68,39 +68,32 @@ Wrapper::getWrapperFamily()
     return &sWrapperFamily;
 }
 
-bool
-JSObject::isWrapper() const
+JS_FRIEND_API(bool)
+js::IsWrapper(const JSObject *wrapper)
 {
-    return isProxy() && getProxyHandler()->family() == &sWrapperFamily;
+    return wrapper->isProxy() && GetProxyHandler(wrapper)->family() == &sWrapperFamily;
 }
 
-bool
-JSObject::isCrossCompartmentWrapper() const
+JS_FRIEND_API(JSObject *)
+js::UnwrapObject(JSObject *wrapped, uintN *flagsp)
 {
-    return isWrapper() && !!(getWrapperHandler()->flags() & Wrapper::CROSS_COMPARTMENT);
-}
-
-Wrapper *
-JSObject::getWrapperHandler() const
-{
-    JS_ASSERT(isWrapper());
-    return static_cast<Wrapper *>(getProxyHandler());
-}
-
-JSObject *
-JSObject::unwrap(uintN *flagsp)
-{
-    JSObject *wrapped = this;
     uintN flags = 0;
     while (wrapped->isWrapper()) {
-        flags |= static_cast<Wrapper *>(wrapped->getProxyHandler())->flags();
-        wrapped = wrapped->getProxyPrivate().toObjectOrNull();
+        flags |= static_cast<Wrapper *>(GetProxyHandler(wrapped))->flags();
+        wrapped = GetProxyPrivate(wrapped).toObjectOrNull();
         if (wrapped->getClass()->ext.innerObject)
             break;
     }
     if (flagsp)
         *flagsp = flags;
     return wrapped;
+}
+
+bool
+js::IsCrossCompartmentWrapper(const JSObject *wrapper)
+{
+    return wrapper->isWrapper() &&
+           !!(Wrapper::wrapperHandler(wrapper)->flags() & Wrapper::CROSS_COMPARTMENT);
 }
 
 Wrapper::Wrapper(uintN flags) : ProxyHandler(&sWrapperFamily), mFlags(flags)
@@ -351,13 +344,13 @@ Wrapper::trace(JSTracer *trc, JSObject *wrapper)
 JSObject *
 Wrapper::wrappedObject(const JSObject *wrapper)
 {
-    return wrapper->getProxyPrivate().toObjectOrNull();
+    return GetProxyPrivate(wrapper).toObjectOrNull();
 }
 
 Wrapper *
 Wrapper::wrapperHandler(const JSObject *wrapper)
 {
-    return static_cast<Wrapper *>(wrapper->getProxyHandler());
+    return static_cast<Wrapper *>(GetProxyHandler(wrapper));
 }
 
 bool
@@ -434,7 +427,7 @@ AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
     : context(cx),
       origin(cx->compartment),
       target(target),
-      destination(target->getCompartment()),
+      destination(target->compartment()),
       entered(false)
 {
 }
@@ -746,7 +739,7 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *cla
     JS_ASSERT_IF(!srcArgs.calleev().isUndefined(),
                  srcArgs.callee().getFunctionPrivate()->native() == native);
     JS_ASSERT(&srcArgs.thisv().toObject() == wrapper);
-    JS_ASSERT(!wrapper->unwrap(NULL)->isProxy());
+    JS_ASSERT(!UnwrapObject(wrapper)->isCrossCompartmentWrapper());
 
     JSObject *wrapped = wrappedObject(wrapper);
     AutoCompartment call(cx, wrapped);

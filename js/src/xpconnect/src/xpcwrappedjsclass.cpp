@@ -263,7 +263,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     // interface (i.e. whether the interface is scriptable) and most content
     // objects don't have QI implementations anyway. Also see bug 503926.
     if(XPCPerThreadData::IsMainThread(ccx) &&
-       !xpc::AccessCheck::isChrome(jsobj->compartment()))
+       !xpc::AccessCheck::isChrome(js::GetObjectCompartment(jsobj)))
     {
         return nsnull;
     }
@@ -778,7 +778,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         bool isSystem;
         rv = secMan->IsSystemPrincipal(objPrin, &isSystem);
         if((NS_FAILED(rv) || !isSystem) &&
-           !IS_WRAPPER_CLASS(selfObj->getClass()))
+           !IS_WRAPPER_CLASS(js::GetObjectClass(selfObj)))
         {
             // A content object.
             nsRefPtr<SameOriginCheckedComponent> checked =
@@ -1331,7 +1331,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         if(ssm)
         {
             nsIPrincipal *objPrincipal =
-                xpc::AccessCheck::getPrincipal(obj->compartment());
+                xpc::AccessCheck::getPrincipal(js::GetObjectCompartment(obj));
             if(objPrincipal)
             {
                 JSStackFrame* fp = nsnull;

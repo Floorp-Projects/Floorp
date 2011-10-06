@@ -568,7 +568,7 @@
         <separator class="prompt-line"/>
         <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
           <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
-            <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.jpake;</description>
+            <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.pair;</description>
             <description class="syncsetup-center link" flex="1" onclick="WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
             <separator/>
             <vbox align="center" flex="1">
@@ -583,6 +583,9 @@
           <hbox class="prompt-buttons" pack="center">
             <button class="prompt-button" oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
           </hbox>
+        </vbox>
+        <vbox id="syncsetup-waiting" class="syncsetup-page" flex="1" hidden="true">
+          <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.waiting;</description>
         </vbox>
         <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">
           <scrollbox class="prompt-message" orient="vertical" flex="1">

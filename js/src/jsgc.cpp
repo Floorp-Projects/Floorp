@@ -888,8 +888,26 @@ MarkThreadDataConservatively(JSTracer *trc, ThreadData *td)
 void
 MarkStackRangeConservatively(JSTracer *trc, Value *beginv, Value *endv)
 {
+    /*
+     * Normally, the drainMarkStack phase of marking will never trace outside
+     * of the compartment currently being collected. However, conservative
+     * scanning during drainMarkStack (as is done for generators) can break
+     * this invariant. So we disable the compartment assertions in this
+     * situation.
+     */
+    struct AutoSkipChecking {
+        JSRuntime *runtime;
+        JSCompartment *savedCompartment;
+
+        AutoSkipChecking(JSRuntime *rt)
+          : runtime(rt), savedCompartment(rt->gcCheckCompartment) {
+            rt->gcCheckCompartment = NULL;
+        }
+        ~AutoSkipChecking() { runtime->gcCheckCompartment = savedCompartment; }
+    } as(trc->context->runtime);
+
     const jsuword *begin = beginv->payloadWord();
-    const jsuword *end = endv->payloadWord();;
+    const jsuword *end = endv->payloadWord();
 #ifdef JS_NUNBOX32
     /*
      * With 64-bit jsvals on 32-bit systems, we can optimize a bit by
