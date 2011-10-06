@@ -1024,11 +1024,17 @@ proxy_GetSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid
 }
 
 static JSBool
-proxy_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+proxy_SetGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     id = js_CheckForStringIndex(id);
 
     return Proxy::set(cx, obj, obj, id, strict, vp);
+}
+
+static JSBool
+proxy_SetProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict)
+{
+    return proxy_SetGeneric(cx, obj, ATOM_TO_JSID(name), vp, strict);
 }
 
 static JSBool
@@ -1037,13 +1043,13 @@ proxy_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool s
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return proxy_SetProperty(cx, obj, id, vp, strict);
+    return proxy_SetGeneric(cx, obj, id, vp, strict);
 }
 
 static JSBool
 proxy_SetSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
 {
-    return proxy_SetProperty(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
+    return proxy_SetGeneric(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
 }
 
 static JSBool
@@ -1246,7 +1252,7 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
         proxy_GetProperty,
         proxy_GetElement,
         proxy_GetSpecial,
-        proxy_SetProperty,
+        proxy_SetGeneric,
         proxy_SetProperty,
         proxy_SetElement,
         proxy_SetSpecial,
@@ -1307,7 +1313,7 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
         proxy_GetProperty,
         proxy_GetElement,
         proxy_GetSpecial,
-        proxy_SetProperty,
+        proxy_SetGeneric,
         proxy_SetProperty,
         proxy_SetElement,
         proxy_SetSpecial,
@@ -1380,7 +1386,7 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
         proxy_GetProperty,
         proxy_GetElement,
         proxy_GetSpecial,
-        proxy_SetProperty,
+        proxy_SetGeneric,
         proxy_SetProperty,
         proxy_SetElement,
         proxy_SetSpecial,

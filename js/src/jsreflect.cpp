@@ -660,7 +660,7 @@ NodeBuilder::newArray(NodeVector &elts, Value *dst)
         if (val.isMagic(JS_SERIALIZE_NO_NODE))
             continue;
 
-        if (!array->setProperty(cx, INT_TO_JSID(i), &val, false))
+        if (!array->setElement(cx, i, &val, false))
             return false;
     }
 

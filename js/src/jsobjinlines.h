@@ -126,6 +126,34 @@ JSObject::unbrand(JSContext *cx)
 }
 
 inline JSBool
+JSObject::setGeneric(JSContext *cx, jsid id, js::Value *vp, JSBool strict)
+{
+    if (getOps()->setGeneric)
+        return nonNativeSetProperty(cx, id, vp, strict);
+    return js_SetPropertyHelper(cx, this, id, 0, vp, strict);
+}
+
+inline JSBool
+JSObject::setProperty(JSContext *cx, js::PropertyName *name, js::Value *vp, JSBool strict)
+{
+    return setGeneric(cx, ATOM_TO_JSID(name), vp, strict);
+}
+
+inline JSBool
+JSObject::setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict)
+{
+    if (getOps()->setElement)
+        return nonNativeSetElement(cx, index, vp, strict);
+    return js_SetElementHelper(cx, this, index, 0, vp, strict);
+}
+
+inline JSBool
+JSObject::setSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp, JSBool strict)
+{
+    return setGeneric(cx, SPECIALID_TO_JSID(sid), vp, strict);
+}
+
+inline JSBool
 JSObject::setGenericAttributes(JSContext *cx, jsid id, uintN *attrsp)
 {
     js::types::MarkTypePropertyConfigured(cx, this, id);
