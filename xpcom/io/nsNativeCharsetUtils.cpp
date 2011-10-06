@@ -298,7 +298,7 @@ public:
 
     static void GlobalInit();
     static void GlobalShutdown();
-    static PRBool IsNativeUTF8();
+    static bool IsNativeUTF8();
 
 private:
     static iconv_t gNativeToUnicode;
@@ -310,8 +310,8 @@ private:
     static iconv_t gUTF8ToUnicode;
 #endif
     static Mutex  *gLock;
-    static PRBool  gInitialized;
-    static PRBool  gIsNativeUTF8;
+    static bool    gInitialized;
+    static bool    gIsNativeUTF8;
 
     static void LazyInit();
 
@@ -328,8 +328,8 @@ iconv_t nsNativeCharsetConverter::gUnicodeToUTF8   = INVALID_ICONV_T;
 iconv_t nsNativeCharsetConverter::gUTF8ToUnicode   = INVALID_ICONV_T;
 #endif
 Mutex  *nsNativeCharsetConverter::gLock            = nsnull;
-PRBool  nsNativeCharsetConverter::gInitialized     = PR_FALSE;
-PRBool  nsNativeCharsetConverter::gIsNativeUTF8    = PR_FALSE;
+bool    nsNativeCharsetConverter::gInitialized     = false;
+bool    nsNativeCharsetConverter::gIsNativeUTF8    = false;
 
 void
 nsNativeCharsetConverter::LazyInit()
@@ -626,7 +626,7 @@ nsNativeCharsetConverter::UnicodeToNative(const PRUnichar **input,
     return NS_OK;
 }
 
-PRBool
+bool
 nsNativeCharsetConverter::IsNativeUTF8()
 {
     if (!gInitialized) {
@@ -660,17 +660,17 @@ public:
 
     static void GlobalInit();
     static void GlobalShutdown() { }
-    static PRBool IsNativeUTF8();
+    static bool IsNativeUTF8();
 
 private:
-    static PRBool gWCharIsUnicode;
+    static bool gWCharIsUnicode;
 
 #if defined(HAVE_WCRTOMB) || defined(HAVE_MBRTOWC)
     mbstate_t ps;
 #endif
 };
 
-PRBool nsNativeCharsetConverter::gWCharIsUnicode = PR_FALSE;
+bool nsNativeCharsetConverter::gWCharIsUnicode = false;
 
 nsNativeCharsetConverter::nsNativeCharsetConverter()
 {
@@ -790,7 +790,7 @@ nsNativeCharsetConverter::UnicodeToNative(const PRUnichar **input,
 }
 
 // XXX : for now, return false
-PRBool
+bool
 nsNativeCharsetConverter::IsNativeUTF8()
 {
     return PR_FALSE;
@@ -868,7 +868,7 @@ NS_CopyUnicodeToNative(const nsAString &input, nsACString &output)
     return NS_OK;
 }
 
-PRBool
+bool
 NS_IsNativeUTF8()
 {
     return nsNativeCharsetConverter::IsNativeUTF8();

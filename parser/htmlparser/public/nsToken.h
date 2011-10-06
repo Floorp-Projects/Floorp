@@ -242,14 +242,14 @@ class CToken {
      * @update	gess 8/30/00
      * @return  PR_FALSE; subclasses MUST override if they care.
      */
-    virtual PRBool IsWellFormed(void) const {return PR_FALSE;}
+    virtual bool IsWellFormed(void) const {return false;}
 
-    virtual PRBool IsEmpty(void) { return PR_FALSE; }
+    virtual bool IsEmpty(void) { return false; }
     
     /**
      * If aValue is TRUE then the token represents a short-hand tag
      */
-    virtual void SetEmpty(PRBool aValue) { return ; }
+    virtual void SetEmpty(bool aValue) { return ; }
 
     PRInt32 GetNewlineCount() 
     { 
@@ -271,12 +271,12 @@ class CToken {
       mLineNumber = mLineNumber == 0 ? aLineNumber : mLineNumber;
     }
 
-    void SetInError(PRBool aInError)
+    void SetInError(bool aInError)
     {
       mInError = aInError;
     }
 
-    PRBool IsInError()
+    bool IsInError()
     {
       return mInError;
     }

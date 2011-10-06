@@ -51,7 +51,7 @@ public:
 	/**
 	 * Determines whether or not the given file is actually a plugin file.
 	 */
-	static PRBool IsPluginFile(nsIFile* file);
+	static bool IsPluginFile(nsIFile* file);
 };
 
 struct PRLibrary;

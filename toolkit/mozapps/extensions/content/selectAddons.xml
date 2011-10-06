@@ -53,6 +53,7 @@
     <content>
       <xul:hbox class="select-keep select-cell">
         <xul:checkbox class="addon-keep-checkbox" anonid="keep"
+                      xbl:inherits="tooltiptext=name"
                       oncommand="document.getBindingParent(this).keepChanged();"/>
       </xul:hbox>
       <xul:hbox class="select-icon select-cell">

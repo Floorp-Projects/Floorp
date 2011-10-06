@@ -74,14 +74,17 @@
       <deck id="weavePrefsDeck">
         <vbox id="noAccount" align="center">
           <spacer flex="1"/>
-          <button id="setupButton"
-                  label="&setupButton.label;"
-                  accesskey="&setupButton.accesskey;"
-                  oncommand="gSyncPane.openSetup();"/>
-          <separator/>
-          <description id="syncDesc" flex="1">
+          <description id="syncDesc">
             &weaveDesc.label;
           </description>
+          <separator/>
+          <label class="text-link"
+                 onclick="event.stopPropagation(); gSyncPane.openSetup(null);"
+                 value="&setupButton.label;"/>
+          <separator/>
+          <label class="text-link"
+                 onclick="event.stopPropagation(); gSyncPane.openSetup('pair');"
+                 value="&pairDevice.label;"/>
           <spacer flex="3"/>
         </vbox>
 
@@ -116,7 +119,7 @@
               <label id="syncAddDeviceLabel"
                      class="text-link"
                      onclick="gSyncPane.openAddDevice(); return false;"
-                     value="&addDevice.label;"/>
+                     value="&pairDevice.label;"/>
             </hbox>
 
             <vbox>

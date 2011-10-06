@@ -106,7 +106,7 @@ NS_IMETHODIMP nsSmartCardEvent::SetTarget(nsIDOMEventTarget *aTarget)
   return mPrivate->SetTarget(aTarget);
 }
 
-NS_IMETHODIMP_(PRBool ) nsSmartCardEvent::IsDispatchStopped()
+NS_IMETHODIMP_(bool ) nsSmartCardEvent::IsDispatchStopped()
 {
   NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
   return mPrivate->IsDispatchStopped();
@@ -118,7 +118,7 @@ NS_IMETHODIMP_(nsEvent*) nsSmartCardEvent::GetInternalNSEvent()
   return mPrivate->GetInternalNSEvent();
 }
 
-NS_IMETHODIMP nsSmartCardEvent::SetTrusted(PRBool aResult)
+NS_IMETHODIMP nsSmartCardEvent::SetTrusted(bool aResult)
 {
   NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
   return mPrivate->SetTrusted(aResult);
@@ -126,13 +126,13 @@ NS_IMETHODIMP nsSmartCardEvent::SetTrusted(PRBool aResult)
 
 void
 nsSmartCardEvent::Serialize(IPC::Message* aMsg,
-                            PRBool aSerializeInterfaceType)
+                            bool aSerializeInterfaceType)
 {
   NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
   mPrivate->Serialize(aMsg, aSerializeInterfaceType);
 }
 
-PRBool
+bool
 nsSmartCardEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
@@ -170,14 +170,14 @@ NS_IMETHODIMP nsSmartCardEvent::PreventCapture(void)
   return mNSEvent->PreventCapture();
 }
 
-NS_IMETHODIMP nsSmartCardEvent::GetIsTrusted(PRBool *aIsTrusted)
+NS_IMETHODIMP nsSmartCardEvent::GetIsTrusted(bool *aIsTrusted)
 {
   NS_ASSERTION(mNSEvent, "SmartCardEvent called without Init");
   return mNSEvent->GetIsTrusted(aIsTrusted);
 }
 
 NS_IMETHODIMP
-nsSmartCardEvent::GetPreventDefault(PRBool* aReturn)
+nsSmartCardEvent::GetPreventDefault(bool* aReturn)
 {
   NS_ASSERTION(mNSEvent, "SmartCardEvent called without Init");
   return mNSEvent->GetPreventDefault(aReturn);
@@ -208,13 +208,13 @@ NS_IMETHODIMP nsSmartCardEvent::GetEventPhase(PRUint16 *aEventPhase)
   return mInner->GetEventPhase(aEventPhase);
 }
 
-NS_IMETHODIMP nsSmartCardEvent::GetBubbles(PRBool *aBubbles)
+NS_IMETHODIMP nsSmartCardEvent::GetBubbles(bool *aBubbles)
 {
   NS_ASSERTION(mInner, "SmartCardEvent called without Init");
   return mInner->GetBubbles(aBubbles);
 }
 
-NS_IMETHODIMP nsSmartCardEvent::GetCancelable(PRBool *aCancelable)
+NS_IMETHODIMP nsSmartCardEvent::GetCancelable(bool *aCancelable)
 {
   NS_ASSERTION(mInner, "SmartCardEvent called without Init");
   return mInner->GetCancelable(aCancelable);
@@ -238,13 +238,13 @@ NS_IMETHODIMP nsSmartCardEvent::PreventDefault()
   return mInner->PreventDefault();
 }
 
-NS_IMETHODIMP nsSmartCardEvent::GetDefaultPrevented(PRBool* aReturn)
+NS_IMETHODIMP nsSmartCardEvent::GetDefaultPrevented(bool* aReturn)
 {
   NS_ASSERTION(mInner, "SmartCardEvent called without Init");
   return mInner->GetDefaultPrevented(aReturn);
 }
 
-NS_IMETHODIMP nsSmartCardEvent::InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg)
+NS_IMETHODIMP nsSmartCardEvent::InitEvent(const nsAString & eventTypeArg, bool canBubbleArg, bool cancelableArg)
 {
   NS_ASSERTION(mInner, "SmartCardEvent called without Init");
   return mInner->InitEvent(eventTypeArg, canBubbleArg, cancelableArg);

@@ -87,14 +87,14 @@ class nsHtml5Tokenizer
   protected:
     nsHtml5TreeBuilder* tokenHandler;
     nsHtml5StreamParser* encodingDeclarationHandler;
-    PRBool lastCR;
+    bool lastCR;
     PRInt32 stateSave;
   private:
     PRInt32 returnStateSave;
   protected:
     PRInt32 index;
   private:
-    PRBool forceQuirks;
+    bool forceQuirks;
     PRUnichar additional;
     PRInt32 entCol;
     PRInt32 firstCharKey;
@@ -106,7 +106,7 @@ class nsHtml5Tokenizer
   protected:
     PRInt32 value;
   private:
-    PRBool seenDigits;
+    bool seenDigits;
   protected:
     PRInt32 cstart;
   private:
@@ -123,7 +123,7 @@ class nsHtml5Tokenizer
   private:
     jArray<PRUnichar,PRInt32> endTagExpectationAsArray;
   protected:
-    PRBool endTag;
+    bool endTag;
   private:
     nsHtml5ElementName* tagName;
   protected:
@@ -134,9 +134,9 @@ class nsHtml5Tokenizer
     nsString* systemIdentifier;
     nsHtml5HtmlAttributes* attributes;
     PRInt32 mappingLangToXmlLang;
-    PRBool shouldSuspend;
+    bool shouldSuspend;
   protected:
-    PRBool confident;
+    bool confident;
   private:
     PRInt32 line;
     nsHtml5AtomTable* interner;
@@ -210,15 +210,15 @@ class nsHtml5Tokenizer
   private:
     void resetAttributes();
     void strBufToElementNameString();
-    PRInt32 emitCurrentTagToken(PRBool selfClosing, PRInt32 pos);
+    PRInt32 emitCurrentTagToken(bool selfClosing, PRInt32 pos);
     void attributeNameComplete();
     void addAttributeWithoutValue();
     void addAttributeWithValue();
   public:
     void start();
-    PRBool tokenizeBuffer(nsHtml5UTF16Buffer* buffer);
+    bool tokenizeBuffer(nsHtml5UTF16Buffer* buffer);
   private:
-    PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, PRBool reconsume, PRInt32 returnState, PRInt32 endPos);
+    PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, bool reconsume, PRInt32 returnState, PRInt32 endPos);
     void initDoctypeFields();
     inline void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn()
     {
@@ -276,14 +276,14 @@ class nsHtml5Tokenizer
     }
 
   public:
-    PRBool internalEncodingDeclaration(nsString* internalCharset);
+    bool internalEncodingDeclaration(nsString* internalCharset);
   private:
     void emitOrAppendTwo(const PRUnichar* val, PRInt32 returnState);
     void emitOrAppendOne(const PRUnichar* val, PRInt32 returnState);
   public:
     void end();
     void requestSuspension();
-    PRBool isInDataState();
+    bool isInDataState();
     void resetToDataState();
     void loadState(nsHtml5Tokenizer* other);
     void initializeWithoutStarting();

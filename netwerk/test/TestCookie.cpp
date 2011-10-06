@@ -107,7 +107,7 @@ SetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, const char
 
 // returns PR_TRUE if cookie(s) for the given host were found; else PR_FALSE.
 // the cookie string is returned via aCookie.
-PRBool
+bool
 GetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSpec2, char **aCookie)
 {
     nsCOMPtr<nsIURI> uri1, uri2;
@@ -130,7 +130,7 @@ GetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSp
 
 // returns PR_TRUE if cookie(s) for the given host were found; else PR_FALSE.
 // the cookie string is returned via aCookie.
-PRBool
+bool
 GetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, char **aCookie)
 {
     nsCOMPtr<nsIURI> uri;
@@ -159,7 +159,7 @@ GetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, char **aCo
 // a simple helper function to improve readability:
 // takes one of the #defined rules above, and performs the appropriate test.
 // PR_TRUE means the test passed; PR_FALSE means the test failed.
-static inline PRBool
+static inline bool
 CheckResult(const char *aLhs, PRUint32 aRule, const char *aRhs = nsnull)
 {
     switch (aRule) {
@@ -186,10 +186,10 @@ CheckResult(const char *aLhs, PRUint32 aRule, const char *aRhs = nsnull)
 // helper function that ensures the first aSize elements of aResult are
 // PR_TRUE (i.e. all tests succeeded). prints the result of the tests (if any
 // tests failed, it prints the zero-based index of each failed test).
-PRBool
-PrintResult(const PRBool aResult[], PRUint32 aSize)
+bool
+PrintResult(const bool aResult[], PRUint32 aSize)
 {
-    PRBool failed = PR_FALSE;
+    bool failed = false;
     sBuffer = PR_sprintf_append(sBuffer, "*** tests ");
     for (PRUint32 i = 0; i < aSize; ++i) {
         if (!aResult[i]) {
@@ -239,7 +239,7 @@ main(PRInt32 argc, char *argv[])
     if (test_common_init(&argc, &argv) != 0)
         return -1;
 
-    PRBool allTestsPassed = PR_TRUE;
+    bool allTestsPassed = true;
 
     ScopedXPCOM xpcom;
     if (NS_FAILED(xpcom.rv))
@@ -258,7 +258,7 @@ main(PRInt32 argc, char *argv[])
 
       InitPrefs(prefBranch);
 
-      PRBool rv[20];
+      bool rv[20];
       nsCString cookie;
 
       /* The basic idea behind these tests is the following:
@@ -698,7 +698,7 @@ main(PRInt32 argc, char *argv[])
       nsCOMPtr<nsISimpleEnumerator> enumerator;
       rv[4] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator)));
       PRInt32 i = 0;
-      PRBool more;
+      bool more;
       nsCOMPtr<nsICookie2> expiredCookie, newDomainCookie;
       while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
         nsCOMPtr<nsISupports> cookie;
@@ -726,7 +726,7 @@ main(PRInt32 argc, char *argv[])
       rv[8] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
               hostCookies == 2;
       // check CookieExists() using the third cookie
-      PRBool found;
+      bool found;
       rv[9] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && found;
       // remove the cookie, block it, and ensure it can't be added again
       rv[10] = NS_SUCCEEDED(cookieMgr->Remove(NS_LITERAL_CSTRING("new.domain"), // domain

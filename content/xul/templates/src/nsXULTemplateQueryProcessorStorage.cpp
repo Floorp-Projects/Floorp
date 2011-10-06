@@ -86,7 +86,7 @@ nsXULTemplateResultSetStorage::nsXULTemplateResultSetStorage(mozIStorageStatemen
 }
 
 NS_IMETHODIMP
-nsXULTemplateResultSetStorage::HasMoreElements(PRBool *aResult)
+nsXULTemplateResultSetStorage::HasMoreElements(bool *aResult)
 {
     if (!mStatement) {
         *aResult = PR_FALSE;
@@ -184,9 +184,9 @@ nsXULTemplateQueryProcessorStorage::nsXULTemplateQueryProcessorStorage()
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
                                                   nsIDOMNode* aRootNode,
-                                                  PRBool aIsTrusted,
+                                                  bool aIsTrusted,
                                                   nsIXULTemplateBuilder* aBuilder,
-                                                  PRBool* aShouldDelayBuilding,
+                                                  bool* aShouldDelayBuilding,
                                                   nsISupports** aReturn)
 {
     *aReturn = nsnull;
@@ -285,7 +285,7 @@ nsXULTemplateQueryProcessorStorage::InitializeForBuilding(nsISupports* aDatasour
     if (!mStorageConnection)
         return NS_ERROR_INVALID_ARG;
 
-    PRBool ready;
+    bool ready;
     mStorageConnection->GetConnectionReady(&ready);
     if (!ready)
       return NS_ERROR_UNEXPECTED;
@@ -328,10 +328,9 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
     }
 
     PRUint32 parameterCount = 0;
-    PRUint32 count = queryContent->GetChildCount();
-
-    for (PRUint32 i = 0; i < count; ++i) {
-        nsIContent *child = queryContent->GetChildAt(i);
+    for (nsIContent* child = queryContent->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
 
         if (child->NodeInfo()->Equals(nsGkAtoms::param, kNameSpaceID_XUL)) {
             nsAutoString value;

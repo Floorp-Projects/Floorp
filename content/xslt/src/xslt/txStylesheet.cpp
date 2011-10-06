@@ -265,7 +265,7 @@ txStylesheet::getKeyMap()
     return mKeys;
 }
 
-PRBool
+bool
 txStylesheet::isStripSpaceAllowed(const txXPathNode& aNode, txIMatchContext* aContext)
 {
     PRInt32 frameCount = mStripSpaceTests.Length();
@@ -636,7 +636,7 @@ txStylesheet::ImportFrame::~ImportFrame()
 
 txStylesheet::GlobalVariable::GlobalVariable(nsAutoPtr<Expr> aExpr,
                                              nsAutoPtr<txInstruction> aFirstInstruction,
-                                             PRBool aIsParam)
+                                             bool aIsParam)
     : mExpr(aExpr), mFirstInstruction(aFirstInstruction), mIsParam(aIsParam)
 {
 }

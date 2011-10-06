@@ -56,12 +56,12 @@ static const char gSymName[][sizeof("cupsPrintFile")] = {
 static const int gSymNameCt = NS_ARRAY_LENGTH(gSymName);
 
 
-PRBool
+bool
 nsCUPSShim::Init()
 {
     mCupsLib = PR_LoadLibrary("libcups.so.2");
     if (!mCupsLib)
-        return PR_FALSE;
+        return false;
 
     // List of symbol pointers. Must match gSymName[] defined above.
     void **symAddr[] = {
@@ -83,8 +83,8 @@ nsCUPSShim::Init()
 #endif
             PR_UnloadLibrary(mCupsLib);
             mCupsLib = nsnull;
-            return PR_FALSE;
+            return false;
         }
     }
-    return PR_TRUE;
+    return true;
 }

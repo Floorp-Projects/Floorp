@@ -348,7 +348,7 @@ NS_IMETHODIMP nsWebBrowser::UnBindListener(nsISupports *aListener, const nsIID& 
     return rv;
 }
 
-NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(PRBool aEnable)
+NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(bool aEnable)
 {
     nsresult rv;
     
@@ -415,13 +415,13 @@ NS_IMETHODIMP nsWebBrowser::GetContentDOMWindow(nsIDOMWindow **_retval)
     return rv;
 }
 
-NS_IMETHODIMP nsWebBrowser::GetIsActive(PRBool *rv)
+NS_IMETHODIMP nsWebBrowser::GetIsActive(bool *rv)
 {
   *rv = mIsActive;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::SetIsActive(PRBool aIsActive)
+NS_IMETHODIMP nsWebBrowser::SetIsActive(bool aIsActive)
 {
   // Set our copy of the value
   mIsActive = aIsActive;
@@ -463,7 +463,7 @@ NS_IMETHODIMP nsWebBrowser::SetName(const PRUnichar* aName)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::NameEquals(const PRUnichar *aName, PRBool *_retval)
+NS_IMETHODIMP nsWebBrowser::NameEquals(const PRUnichar *aName, bool *_retval)
 {
     NS_ENSURE_ARG_POINTER(aName);
     NS_ENSURE_ARG_POINTER(_retval);
@@ -610,7 +610,7 @@ NS_IMETHODIMP nsWebBrowser::GetChildAt(PRInt32 aIndex,
 
 NS_IMETHODIMP nsWebBrowser::FindChildWithName(
                                        const PRUnichar * aName,
-                                       PRBool aRecurse, PRBool aSameType,
+                                       bool aRecurse, bool aSameType,
                                        nsIDocShellTreeItem * aRequestor,
                                        nsIDocShellTreeItem * aOriginalRequestor,
                                        nsIDocShellTreeItem ** _retval)
@@ -625,14 +625,14 @@ NS_IMETHODIMP nsWebBrowser::FindChildWithName(
 // nsWebBrowser::nsIWebNavigation
 //*****************************************************************************
 
-NS_IMETHODIMP nsWebBrowser::GetCanGoBack(PRBool* aCanGoBack)
+NS_IMETHODIMP nsWebBrowser::GetCanGoBack(bool* aCanGoBack)
 {
    NS_ENSURE_STATE(mDocShell);
 
    return mDocShellAsNav->GetCanGoBack(aCanGoBack);
 }
 
-NS_IMETHODIMP nsWebBrowser::GetCanGoForward(PRBool* aCanGoForward)
+NS_IMETHODIMP nsWebBrowser::GetCanGoForward(bool* aCanGoForward)
 {
    NS_ENSURE_STATE(mDocShell);
 
@@ -1282,7 +1282,7 @@ NS_IMETHODIMP nsWebBrowser::GetPosition(PRInt32* aX, PRInt32* aY)
    return GetPositionAndSize(aX, aY, nsnull, nsnull);
 }
 
-NS_IMETHODIMP nsWebBrowser::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
+NS_IMETHODIMP nsWebBrowser::SetSize(PRInt32 aCX, PRInt32 aCY, bool aRepaint)
 {
    PRInt32 x = 0;
    PRInt32 y = 0;
@@ -1298,7 +1298,7 @@ NS_IMETHODIMP nsWebBrowser::GetSize(PRInt32* aCX, PRInt32* aCY)
 }
 
 NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
-   PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
+   PRInt32 aCX, PRInt32 aCY, bool aRepaint)
 {
    if(!mDocShell)
       {
@@ -1366,7 +1366,7 @@ NS_IMETHODIMP nsWebBrowser::GetPositionAndSize(PRInt32* aX, PRInt32* aY,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::Repaint(PRBool aForce)
+NS_IMETHODIMP nsWebBrowser::Repaint(bool aForce)
 {
    NS_ENSURE_STATE(mDocShell);
    return mDocShellAsWin->Repaint(aForce); // Can directly return this as it is the
@@ -1414,7 +1414,7 @@ NS_IMETHODIMP nsWebBrowser::SetParentNativeWindow(nativeWindow aParentNativeWind
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::GetVisibility(PRBool* visibility)
+NS_IMETHODIMP nsWebBrowser::GetVisibility(bool* visibility)
 {
    NS_ENSURE_ARG_POINTER(visibility);
 
@@ -1426,7 +1426,7 @@ NS_IMETHODIMP nsWebBrowser::GetVisibility(PRBool* visibility)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::SetVisibility(PRBool aVisibility)
+NS_IMETHODIMP nsWebBrowser::SetVisibility(bool aVisibility)
 {
    if(!mDocShell)
       mInitInfo->visible = aVisibility;
@@ -1440,14 +1440,14 @@ NS_IMETHODIMP nsWebBrowser::SetVisibility(PRBool aVisibility)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::GetEnabled(PRBool *aEnabled)
+NS_IMETHODIMP nsWebBrowser::GetEnabled(bool *aEnabled)
 {
   if (mInternalWidget)
     return mInternalWidget->IsEnabled(aEnabled);
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebBrowser::SetEnabled(PRBool aEnabled)
+NS_IMETHODIMP nsWebBrowser::SetEnabled(bool aEnabled)
 {
   if (mInternalWidget)
     return mInternalWidget->Enable(aEnabled);
@@ -1455,7 +1455,7 @@ NS_IMETHODIMP nsWebBrowser::SetEnabled(PRBool aEnabled)
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetBlurSuppression(PRBool *aBlurSuppression)
+nsWebBrowser::GetBlurSuppression(bool *aBlurSuppression)
 {
   NS_ENSURE_ARG_POINTER(aBlurSuppression);
   *aBlurSuppression = PR_FALSE;
@@ -1463,7 +1463,7 @@ nsWebBrowser::GetBlurSuppression(PRBool *aBlurSuppression)
 }
 
 NS_IMETHODIMP
-nsWebBrowser::SetBlurSuppression(PRBool aBlurSuppression)
+nsWebBrowser::SetBlurSuppression(bool aBlurSuppression)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1584,8 +1584,8 @@ NS_IMETHODIMP nsWebBrowser::SetDefaultScrollbarPreferences(PRInt32 aScrollOrient
       aScrollbarPref);
 }
 
-NS_IMETHODIMP nsWebBrowser::GetScrollbarVisibility(PRBool* aVerticalVisible,
-   PRBool* aHorizontalVisible)
+NS_IMETHODIMP nsWebBrowser::GetScrollbarVisibility(bool* aVerticalVisible,
+   bool* aHorizontalVisible)
 {
    NS_ENSURE_STATE(mDocShell);
 

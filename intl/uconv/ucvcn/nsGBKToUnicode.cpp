@@ -274,7 +274,7 @@ void nsGB18030ToUnicode::Create4BytesDecoder()
 {
   m4BytesDecoder = new nsGB18030Unique4BytesToUnicode();
 }
-PRBool nsGB18030ToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
+bool nsGB18030ToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
 {
   NS_ASSERTION(FIRST_BYTE_IS_SURROGATE(aSrc[0]),       "illegal first byte");
   NS_ASSERTION(LEGAL_GBK_4BYTE_SECOND_BYTE(aSrc[1]),   "illegal second byte");
@@ -304,7 +304,7 @@ PRBool nsGB18030ToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
 
   return PR_TRUE;
 }
-PRBool nsGBKToUnicode::TryExtensionDecoder(const char* aSrc, PRUnichar* aOut)
+bool nsGBKToUnicode::TryExtensionDecoder(const char* aSrc, PRUnichar* aOut)
 {
   if(!mExtensionDecoder)
     CreateExtensionDecoder();
@@ -325,11 +325,11 @@ PRBool nsGBKToUnicode::TryExtensionDecoder(const char* aSrc, PRUnichar* aOut)
   }
   return  PR_FALSE;
 }
-PRBool nsGBKToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
+bool nsGBKToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
 {
   return PR_FALSE;
 }
-PRBool nsGBKToUnicode::Try4BytesDecoder(const char* aSrc, PRUnichar* aOut)
+bool nsGBKToUnicode::Try4BytesDecoder(const char* aSrc, PRUnichar* aOut)
 {
   if(!m4BytesDecoder)
     Create4BytesDecoder();

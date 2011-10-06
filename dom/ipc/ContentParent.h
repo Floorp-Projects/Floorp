@@ -91,6 +91,7 @@ public:
 
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
+    TestShellParent* GetTestShellSingleton();
 
     void ReportChildAlreadyBlocked();
     bool RequestRunToCompletion();
@@ -98,6 +99,10 @@ public:
     bool IsAlive();
 
     void SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report);
+
+    GeckoChildProcessHost* Process() {
+        return mSubprocess;
+    }
 
     bool NeedsPermissionsUpdate() {
         return mSendPermissionUpdates;
@@ -123,8 +128,12 @@ private:
     virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
 
-    virtual PCrashReporterParent* AllocPCrashReporter();
+    virtual PCrashReporterParent* AllocPCrashReporter(const NativeThreadId& tid,
+                                                      const PRUint32& processType);
     virtual bool DeallocPCrashReporter(PCrashReporterParent* crashreporter);
+    virtual bool RecvPCrashReporterConstructor(PCrashReporterParent* actor,
+                                               const NativeThreadId& tid,
+                                               const PRUint32& processType);
 
     virtual PMemoryReportRequestParent* AllocPMemoryReportRequest();
     virtual bool DeallocPMemoryReportRequest(PMemoryReportRequestParent* actor);
@@ -164,11 +173,11 @@ private:
     virtual bool RecvSetClipboardText(const nsString& text, const PRInt32& whichClipboard);
     virtual bool RecvGetClipboardText(const PRInt32& whichClipboard, nsString* text);
     virtual bool RecvEmptyClipboard();
-    virtual bool RecvClipboardHasText(PRBool* hasText);
+    virtual bool RecvClipboardHasText(bool* hasText);
 
     virtual bool RecvGetSystemColors(const PRUint32& colorsCount, InfallibleTArray<PRUint32>* colors);
     virtual bool RecvGetIconForExtension(const nsCString& aFileExt, const PRUint32& aIconSize, InfallibleTArray<PRUint8>* bits);
-    virtual bool RecvGetShowPasswordSetting(PRBool* showPassword);
+    virtual bool RecvGetShowPasswordSetting(bool* showPassword);
 
     virtual bool RecvStartVisitedQuery(const IPC::URI& uri);
 
@@ -181,7 +190,7 @@ private:
     
     virtual bool RecvShowFilePicker(const PRInt16& mode,
                                     const PRInt16& selectedType,
-                                    const PRBool& addToRecentDocs,
+                                    const bool& addToRecentDocs,
                                     const nsString& title,
                                     const nsString& defaultFile,
                                     const nsString& defaultExtension,
@@ -192,7 +201,7 @@ private:
                                     nsresult* result);
  
     virtual bool RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
-                                           const nsString& aText, const PRBool& aTextClickable,
+                                           const nsString& aText, const bool& aTextClickable,
                                            const nsString& aCookie, const nsString& aName);
 
     virtual bool RecvLoadURIExternal(const IPC::URI& uri);
@@ -230,11 +239,12 @@ private:
 
     bool mIsAlive;
     nsCOMPtr<nsIPrefServiceInternal> mPrefService;
-    time_t mProcessStartTime;
 
     bool mSendPermissionUpdates;
 
     nsRefPtr<nsFrameMessageManager> mMessageManager;
+
+    friend class CrashReporterParent;
 };
 
 } // namespace dom

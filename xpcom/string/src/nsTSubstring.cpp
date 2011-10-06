@@ -70,7 +70,7 @@ AsFixedString( const nsTSubstring_CharT* s )
    * returns the old data and old flags members if mData is newly allocated.
    * the old data must be released by the caller.
    */
-PRBool
+bool
 nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint32* oldFlags )
   {
     // initialize to no old data
@@ -189,7 +189,7 @@ nsTSubstring_CharT::Finalize()
     // mData, mLength, and mFlags are purposefully left dangling
   }
 
-PRBool
+bool
 nsTSubstring_CharT::ReplacePrepInternal(index_type cutStart, size_type cutLen,
                                         size_type fragLen, size_type newLen)
   {
@@ -279,7 +279,7 @@ nsTSubstring_CharT::Capacity() const
     return capacity;
   }
 
-PRBool
+bool
 nsTSubstring_CharT::EnsureMutable( size_type newLen )
   {
     if (newLen == size_type(-1) || newLen == mLength)
@@ -529,7 +529,7 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const sub
       tuple.WriteTo(mData + cutStart, length);
   }
 
-PRBool
+bool
 nsTSubstring_CharT::SetCapacity( size_type capacity )
   {
     // capacity does not include room for the terminating null char
@@ -581,7 +581,7 @@ nsTSubstring_CharT::SetLength( size_type length )
   }
 
 void
-nsTSubstring_CharT::SetIsVoid( PRBool val )
+nsTSubstring_CharT::SetIsVoid( bool val )
   {
     if (val)
       {
@@ -594,19 +594,19 @@ nsTSubstring_CharT::SetIsVoid( PRBool val )
       }
   }
 
-PRBool
+bool
 nsTSubstring_CharT::Equals( const self_type& str ) const
   {
     return mLength == str.mLength && char_traits::compare(mData, str.mData, mLength) == 0;
   }
 
-PRBool
+bool
 nsTSubstring_CharT::Equals( const self_type& str, const comparator_type& comp ) const
   {
     return mLength == str.mLength && comp(mData, str.mData, mLength, str.mLength) == 0;
   }
 
-PRBool
+bool
 nsTSubstring_CharT::Equals( const char_type* data ) const
   {
     // unfortunately, some callers pass null :-(
@@ -621,7 +621,7 @@ nsTSubstring_CharT::Equals( const char_type* data ) const
     return mLength == length && char_traits::compare(mData, data, mLength) == 0;
   }
 
-PRBool
+bool
 nsTSubstring_CharT::Equals( const char_type* data, const comparator_type& comp ) const
   {
     // unfortunately, some callers pass null :-(
@@ -636,25 +636,25 @@ nsTSubstring_CharT::Equals( const char_type* data, const comparator_type& comp )
     return mLength == length && comp(mData, data, mLength, length) == 0;
   }
 
-PRBool
+bool
 nsTSubstring_CharT::EqualsASCII( const char* data, size_type len ) const
   {
     return mLength == len && char_traits::compareASCII(mData, data, len) == 0;
   }
 
-PRBool
+bool
 nsTSubstring_CharT::EqualsASCII( const char* data ) const
   {
     return char_traits::compareASCIINullTerminated(mData, mLength, data) == 0;
   }
 
-PRBool
+bool
 nsTSubstring_CharT::LowerCaseEqualsASCII( const char* data, size_type len ) const
   {
     return mLength == len && char_traits::compareLowerCaseToASCII(mData, data, len) == 0;
   }
 
-PRBool
+bool
 nsTSubstring_CharT::LowerCaseEqualsASCII( const char* data ) const
   {
     return char_traits::compareLowerCaseToASCIINullTerminated(mData, mLength, data) == 0;

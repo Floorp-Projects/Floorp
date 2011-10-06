@@ -84,7 +84,7 @@ public:
 
     void GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph);
 
-    PRBool GetFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aBuffer);
+    bool GetFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aBuffer);
 
     // A scale factor for use in converting horizontal metrics from font units
     // to pixels.

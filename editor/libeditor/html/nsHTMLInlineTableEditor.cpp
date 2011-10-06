@@ -49,14 +49,14 @@
 // #define DISABLE_TABLE_DELETION 1
 
 NS_IMETHODIMP
-nsHTMLEditor::SetInlineTableEditingEnabled(PRBool aIsEnabled)
+nsHTMLEditor::SetInlineTableEditingEnabled(bool aIsEnabled)
 {
   mIsInlineTableEditingEnabled = aIsEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetInlineTableEditingEnabled(PRBool * aIsEnabled)
+nsHTMLEditor::GetInlineTableEditingEnabled(bool * aIsEnabled)
 {
   *aIsEnabled = mIsInlineTableEditingEnabled;
   return NS_OK;
@@ -156,7 +156,7 @@ NS_IMETHODIMP
 nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
-  PRBool anonElement = PR_FALSE;
+  bool anonElement = false;
   if (aElement &&
       NS_SUCCEEDED(aElement->HasAttribute(NS_LITERAL_STRING("_moz_anonclass"), &anonElement)) &&
       anonElement) {
@@ -173,8 +173,8 @@ nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
     res = GetTableSize(tableElement, &rowCount, &colCount);
     NS_ENSURE_SUCCESS(res, res);
 
-    PRBool hideUI = PR_FALSE;
-    PRBool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
+    bool hideUI = false;
+    bool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
 
     if (anonclass.EqualsLiteral("mozTableAddColumnBefore"))
       InsertTableColumn(1, PR_FALSE);
@@ -261,7 +261,7 @@ nsHTMLEditor::RefreshInlineTableEditingUI()
                                       NS_LITERAL_STRING("hidden"));
   }
   else {
-    PRBool hasClass = PR_FALSE;
+    bool hasClass = false;
     res = mRemoveColumnButton->HasAttribute(classStr, &hasClass);
     if (NS_SUCCEEDED(res) && hasClass)
       mRemoveColumnButton->RemoveAttribute(classStr);
@@ -279,7 +279,7 @@ nsHTMLEditor::RefreshInlineTableEditingUI()
                                    NS_LITERAL_STRING("hidden"));
   }
   else {
-    PRBool hasClass = PR_FALSE;
+    bool hasClass = false;
     res = mRemoveRowButton->HasAttribute(classStr, &hasClass);
     if (NS_SUCCEEDED(res) && hasClass)
       mRemoveRowButton->RemoveAttribute(classStr);

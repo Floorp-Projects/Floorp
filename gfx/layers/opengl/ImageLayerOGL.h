@@ -78,7 +78,7 @@ public:
    */
   void TakeFrom(GLTexture *aOther);
 
-  PRBool IsAllocated() { return mTexture != 0; }
+  bool IsAllocated() { return mTexture != 0; }
   GLuint GetTextureID() { return mTexture; }
   GLContext *GetGLContext() { return mContext; }
 
@@ -152,7 +152,7 @@ public:
 
   virtual gfxIntSize GetCurrentSize();
 
-  virtual PRBool SetLayerManager(LayerManager *aManager);
+  virtual bool SetLayerManager(LayerManager *aManager);
 
   virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_OPENGL; }
 
@@ -200,8 +200,8 @@ public:
   void AllocateTextures(GLContext *gl);
   void UpdateTextures(GLContext *gl);
 
-  PRBool HasData() { return mHasData; }
-  PRBool HasTextures()
+  bool HasData() { return mHasData; }
+  bool HasTextures()
   {
     return mTextures[0].IsAllocated() && mTextures[1].IsAllocated() &&
            mTextures[2].IsAllocated();
@@ -219,7 +219,7 @@ public:
   GLTexture mTextures[3];
   Data mData;
   gfxIntSize mSize;
-  PRPackedBool mHasData;
+  bool mHasData;
 };
 
 
@@ -253,11 +253,8 @@ public:
   virtual ~ShadowImageLayerOGL();
 
   // ShadowImageLayer impl
-  virtual PRBool Init(const SharedImage& aFront, const nsIntSize& aSize);
-
-  virtual void Swap(const SharedImage& aFront, SharedImage* aNewBack);
-
-  virtual void DestroyFrontBuffer();
+  virtual void Swap(const SharedImage& aFront,
+                    SharedImage* aNewBack);
 
   virtual void Disconnect();
 
@@ -270,9 +267,12 @@ public:
                            const nsIntPoint& aOffset);
 
 private:
+  bool Init(const SharedImage& aFront);
+
   nsRefPtr<TextureImage> mTexImage;
   GLTexture mYUVTexture[3];
   gfxIntSize mSize;
+  gfxIntSize mCbCrSize;
   nsIntRect mPictureRect;
 };
 

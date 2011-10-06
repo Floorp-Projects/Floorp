@@ -107,7 +107,7 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
   CompressFrom(&data);
 }
 
-PRBool
+bool
 Declaration::HasProperty(nsCSSProperty aProperty) const
 {
   NS_ABORT_IF_FALSE(0 <= aProperty &&
@@ -120,7 +120,7 @@ Declaration::HasProperty(nsCSSProperty aProperty) const
   return !!val;
 }
 
-PRBool
+bool
 Declaration::AppendValueToString(nsCSSProperty aProperty,
                                  nsAString& aResult) const
 {
@@ -271,7 +271,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
 
       // For compatibility, only write a slash and the y-values
       // if they're not identical to the x-values.
-      PRBool needY = PR_FALSE;
+      bool needY = false;
       for (int i = 0; i < 4; i++) {
         if (vals[i]->GetUnit() == eCSSUnit_Pair) {
           needY = PR_TRUE;
@@ -303,7 +303,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_style),
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_width)
       };
-      PRBool match = PR_TRUE;
+      bool match = true;
       for (const nsCSSProperty** subprops = subproptables,
                **subprops_end = subproptables + NS_ARRAY_LENGTH(subproptables);
            subprops < subprops_end; ++subprops) {
@@ -340,7 +340,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
                                        NS_LITERAL_CSTRING("-color-value")),
                         "third subprop must be the color property");
       const nsCSSValue *colorValue = data->ValueFor(subprops[2]);
-      PRBool isMozUseTextColor =
+      bool isMozUseTextColor =
         colorValue->GetUnit() == eCSSUnit_Enumerated &&
         colorValue->GetIntValue() == NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR;
       if (!AppendValueToString(subprops[0], aValue) ||
@@ -611,8 +611,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
                         nsPrintfCString(32, "bad text-decoration-line unit %d",
                                         decorationLine.GetUnit()).get());
 
-      PRBool blinkNone = (textBlink.GetIntValue() == NS_STYLE_TEXT_BLINK_NONE);
-      PRBool lineNone =
+      bool blinkNone = (textBlink.GetIntValue() == NS_STYLE_TEXT_BLINK_NONE);
+      bool lineNone =
         (decorationLine.GetIntValue() == NS_STYLE_TEXT_DECORATION_LINE_NONE);
 
       if (blinkNone && lineNone) {
@@ -784,7 +784,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   }
 }
 
-PRBool
+bool
 Declaration::GetValueIsImportant(const nsAString& aProperty) const
 {
   nsCSSProperty propID = nsCSSProps::LookupProperty(aProperty);
@@ -794,7 +794,7 @@ Declaration::GetValueIsImportant(const nsAString& aProperty) const
   return GetValueIsImportant(propID);
 }
 
-PRBool
+bool
 Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
 {
   if (!mImportantData)
@@ -851,17 +851,17 @@ Declaration::ToString(nsAString& aString) const
     GetValueIsImportant(eCSSProperty__x_system_font) ? mImportantData : mData;
   const nsCSSValue *systemFont =
     systemFontData->ValueFor(eCSSProperty__x_system_font);
-  const PRBool haveSystemFont = systemFont &&
+  const bool haveSystemFont = systemFont &&
                                 systemFont->GetUnit() != eCSSUnit_None &&
                                 systemFont->GetUnit() != eCSSUnit_Null;
-  PRBool didSystemFont = PR_FALSE;
+  bool didSystemFont = false;
 
   PRInt32 count = mOrder.Length();
   PRInt32 index;
   nsAutoTArray<nsCSSProperty, 16> shorthandsUsed;
   for (index = 0; index < count; index++) {
     nsCSSProperty property = OrderValueAt(index);
-    PRBool doneProperty = PR_FALSE;
+    bool doneProperty = false;
 
     // If we already used this property in a shorthand, skip it.
     if (shorthandsUsed.Length() > 0) {

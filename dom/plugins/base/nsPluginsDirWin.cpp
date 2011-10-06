@@ -171,10 +171,10 @@ static void FreeStringArray(PRUint32 variants, char ** array)
   PR_Free(array);
 }
 
-static PRBool CanLoadPlugin(const PRUnichar* aBinaryPath)
+static bool CanLoadPlugin(const PRUnichar* aBinaryPath)
 {
 #if defined(_M_IX86) || defined(_M_X64) || defined(_M_IA64)
-  PRBool canLoad = PR_FALSE;
+  bool canLoad = false;
 
   HANDLE file = CreateFileW(aBinaryPath, GENERIC_READ,
                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
@@ -208,18 +208,18 @@ static PRBool CanLoadPlugin(const PRUnichar* aBinaryPath)
   return canLoad;
 #else
   // Assume correct binaries for unhandled cases.
-  return PR_TRUE;
+  return true;
 #endif
 }
 
 /* nsPluginsDir implementation */
 
 // The file name must be in the form "np*.dll"
-PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
+bool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
   nsCAutoString path;
   if (NS_FAILED(file->GetNativePath(path)))
-    return PR_FALSE;
+    return false;
 
   const char *cPath = path.get();
 
@@ -241,12 +241,12 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
       // don't load OJI-based Java plugins
       if (!PL_strncasecmp(filename, "npoji", 5) ||
           !PL_strncasecmp(filename, "npjava", 6))
-        return PR_FALSE;
-      return PR_TRUE;
+        return false;
+      return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 /* nsPluginFile implementation */
@@ -273,7 +273,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
   if (!plugin)
     return NS_ERROR_NULL_POINTER;
 
-  PRBool protectCurrentDirectory = PR_TRUE;
+  bool protectCurrentDirectory = true;
 
   nsAutoString pluginFolderPath;
   plugin->GetPath(pluginFolderPath);
@@ -283,7 +283,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
     return NS_ERROR_FILE_INVALID_PATH;
 
   if (Substring(pluginFolderPath, idx).LowerCaseEqualsLiteral("\\np32dsw.dll")) {
-    protectCurrentDirectory = PR_FALSE;
+    protectCurrentDirectory = false;
   }
 
   pluginFolderPath.SetLength(idx);

@@ -85,14 +85,14 @@ nsMathMLmoFrame::GetMathMLFrameType()
 // since a mouse click implies selection, we cannot just rely on the
 // frame's state bit in our child text frame. So we will first check
 // its selected state bit, and use this little helper to double check.
-PRBool
+bool
 nsMathMLmoFrame::IsFrameInSelection(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "null arg");
   if (!aFrame)
     return PR_FALSE;
 
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   aFrame->GetSelected(&isSelected);
   if (!isSelected)
     return PR_FALSE;
@@ -112,7 +112,7 @@ nsMathMLmoFrame::IsFrameInSelection(nsIFrame* aFrame)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsMathMLmoFrame::UseMathMLChar()
 {
   return (NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
@@ -127,7 +127,7 @@ nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsDisplayListSet& aLists)
 {
   nsresult rv = NS_OK;
-  PRBool useMathMLChar = UseMathMLChar();
+  bool useMathMLChar = UseMathMLChar();
 
   if (!useMathMLChar) {
     // let the base class do everything
@@ -138,7 +138,7 @@ nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
     
     // make our char selected if our inner child text frame is selected
-    PRBool isSelected = PR_FALSE;
+    bool isSelected = false;
     nsRect selectedRect;
     nsIFrame* firstChild = mFrames.FirstChild();
     if (IsFrameInSelection(firstChild)) {
@@ -210,7 +210,7 @@ nsMathMLmoFrame::ProcessTextData()
   mFlags |= allFlags & NS_MATHML_OPERATOR_ACCENT;
   mFlags |= allFlags & NS_MATHML_OPERATOR_MOVABLELIMITS;
 
-  PRBool isMutable =
+  bool isMutable =
     NS_MATHML_OPERATOR_IS_STRETCHY(allFlags) ||
     NS_MATHML_OPERATOR_IS_LARGEOP(allFlags);
   if (isMutable)
@@ -386,7 +386,7 @@ nsMathMLmoFrame::ProcessOperatorData()
     float rspace = 0.0f;
     nsAutoString data;
     mMathMLChar.GetData(data);
-    PRBool found = nsMathMLOperators::LookupOperator(data, form, &mFlags, &lspace, &rspace);
+    bool found = nsMathMLOperators::LookupOperator(data, form, &mFlags, &lspace, &rspace);
     if (found && (lspace || rspace)) {
       // cache the default values of lspace & rspace that we get from the dictionary.
       // since these values are relative to the 'em' unit, convert to twips now
@@ -581,7 +581,7 @@ nsMathMLmoFrame::ProcessOperatorData()
 
 static PRUint32
 GetStretchHint(nsOperatorFlags aFlags, nsPresentationData aPresentationData,
-               PRBool aIsVertical)
+               bool aIsVertical)
 {
   PRUint32 stretchHint = NS_STRETCH_NONE;
   // See if it is okay to stretch,
@@ -650,11 +650,11 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
   // Operators that are stretchy, or those that are to be centered
   // to cater for fonts that are not math-aware, are handled by the MathMLChar
   // ('form' is reset if stretch fails -- i.e., we don't bother to stretch next time)
-  PRBool useMathMLChar = UseMathMLChar();
+  bool useMathMLChar = UseMathMLChar();
 
   nsBoundingMetrics charSize;
   nsBoundingMetrics container = aDesiredStretchSize.mBoundingMetrics;
-  PRBool isVertical = PR_FALSE;
+  bool isVertical = false;
 
   if (((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) ||
        (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT))  &&
@@ -794,7 +794,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
     if (mMathMLChar.GetStretchDirection() != NS_STRETCH_DIRECTION_UNSUPPORTED ||
         NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
 
-      PRBool largeopOnly =
+      bool largeopOnly =
         (NS_STRETCH_LARGEOP & stretchHint) != 0 &&
         (NS_STRETCH_VARIABLE_MASK & stretchHint) == 0;
 
@@ -833,7 +833,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
 
   // special case for accents... keep them short to improve mouse operations...
   // an accent can only be the non-first child of <mover>, <munder>, <munderover>
-  PRBool isAccent =
+  bool isAccent =
     NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags);
   if (isAccent) {
     nsEmbellishData parentData;

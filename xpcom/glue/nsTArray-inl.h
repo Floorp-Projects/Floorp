@@ -55,7 +55,7 @@ nsTArray_base<Alloc>::~nsTArray_base() {
 }
 
 template<class Alloc>
-PRBool
+bool
 nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
   // This should be the most common case so test this first
   if (capacity <= mHdr->mCapacity)
@@ -205,7 +205,7 @@ nsTArray_base<Alloc>::ShiftData(index_type start,
 }
 
 template<class Alloc>
-PRBool
+bool
 nsTArray_base<Alloc>::InsertSlotsAt(index_type index, size_type count,
                                     size_type elementSize)  {
   NS_ASSERTION(index <= Length(), "Bogus insertion index");
@@ -256,7 +256,7 @@ nsTArray_base<Alloc>::IsAutoArrayRestorer::~IsAutoArrayRestorer() {
 
 template<class Alloc>
 template<class Allocator>
-PRBool
+bool
 nsTArray_base<Alloc>::SwapArrayElements(nsTArray_base<Allocator>& other,
                                         size_type elemSize) {
 
@@ -345,7 +345,7 @@ nsTArray_base<Alloc>::SwapArrayElements(nsTArray_base<Allocator>& other,
 }
 
 template<class Alloc>
-PRBool
+bool
 nsTArray_base<Alloc>::EnsureNotUsingAutoArrayBuffer(size_type elemSize) {
   if (UsesAutoArrayBuffer()) {
 

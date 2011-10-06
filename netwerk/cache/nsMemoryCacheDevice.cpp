@@ -144,7 +144,7 @@ nsMemoryCacheDevice::GetDeviceID()
 
 
 nsCacheEntry *
-nsMemoryCacheDevice::FindEntry(nsCString * key, PRBool *collision)
+nsMemoryCacheDevice::FindEntry(nsCString * key, bool *collision)
 {
     nsCacheEntry * entry = mMemCacheEntries.GetEntry(key);
     if (!entry)  return nsnull;
@@ -355,7 +355,7 @@ nsMemoryCacheDevice::AdjustMemoryLimits(PRInt32  softLimit, PRInt32  hardLimit)
 
 
 void
-nsMemoryCacheDevice::EvictEntry(nsCacheEntry * entry, PRBool deleteEntry)
+nsMemoryCacheDevice::EvictEntry(nsCacheEntry * entry, bool deleteEntry)
 {
     CACHE_LOG_DEBUG(("Evicting entry 0x%p from memory cache, deleting: %d\n",
                      entry, deleteEntry));
@@ -430,7 +430,7 @@ nsMemoryCacheDevice::Visit(nsICacheVisitor * visitor)
     nsCOMPtr<nsICacheDeviceInfo> deviceRef(deviceInfo);
     if (!deviceInfo) return NS_ERROR_OUT_OF_MEMORY;
 
-    PRBool keepGoing;
+    bool keepGoing;
     nsresult rv = visitor->VisitDevice(gMemoryDeviceID, deviceInfo, &keepGoing);
     if (NS_FAILED(rv)) return rv;
 

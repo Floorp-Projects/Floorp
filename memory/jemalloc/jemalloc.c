@@ -1293,13 +1293,14 @@ static void	_malloc_postfork(void);
  * again, and need to dynamically account for this. By simply leaving
  * malloc_zone_t alone, we don't quite deal with the problem, because there
  * remain calls to jemalloc through the mozalloc interface. We check this
- * dynamically on each allocation, using the CHECK_DARWIN macro.
+ * dynamically on each allocation, using the CHECK_DARWIN macro and
+ * osx_use_jemalloc.
  *
  *
  * [1] Mozilla is built as a universal binary on Mac, supporting i386 and
  *     x86_64. The i386 target is built using the 10.5 SDK, even if it runs on
  *     10.6. The x86_64 target is built using the 10.6 SDK, even if it runs on
- *     10.7 or later.
+ *     10.7 or later, or 10.5.
  *
  * FIXME:
  *   When later versions of OSX come out (10.8 and up), we need to check their
@@ -1312,6 +1313,9 @@ static void	_malloc_postfork(void);
 #define LEOPARD_MALLOC_ZONE_T_VERSION 3
 #define SNOW_LEOPARD_MALLOC_ZONE_T_VERSION 6
 #define LION_MALLOC_ZONE_T_VERSION 8
+
+static bool osx_use_jemalloc = false;
+
 
 /*
  * Avoid lots of casts below by allowing access to l_jemalloc_zone through a
@@ -1331,10 +1335,6 @@ static malloc_zone_t *create_zone(unsigned version);
 static void szone2ozone(malloc_zone_t *zone, size_t size);
 static size_t zone_version_size(int version);
 #endif
-
-/* On unknown future versions of OSX, dynamically decide not to use jemalloc. */
-static bool use_jemalloc = false;
-
 
 /*
  * End function prototypes.
@@ -5832,14 +5832,20 @@ MALLOC_OUT:
      */
     default_zone = malloc_default_zone();
 
-    /* Don't use jemalloc on as-yet-unreleased versions of OSX. */
-    use_jemalloc = (default_zone->version <= LION_MALLOC_ZONE_T_VERSION);
+    /*
+     * We only use jemalloc with the 10.6 SDK:
+     *   - With the 10.5 SDK, madvise doesn't work, leading to a 20% memory
+     *     usage regression (bug 670492).
+     *   - With the 10.7 SDK, jemalloc causes the browser to hang (bug 670175).
+     */
+
+    osx_use_jemalloc = (default_zone->version == SNOW_LEOPARD_MALLOC_ZONE_T_VERSION);
 
     /* Allow us dynamically turn off jemalloc for testing. */
 	if (getenv("NO_MAC_JEMALLOC"))
-        use_jemalloc = false;
+        osx_use_jemalloc = false;
 
-    if (use_jemalloc) {
+    if (osx_use_jemalloc) {
         size_t size;
 
         /* Register the custom zone. */
@@ -5937,23 +5943,17 @@ wrap(strdup)(const char *src) {
 #endif
 
 /*
- * We are not able to assume that we can replace the OSX allocator with
- * jemalloc on future unreleased versions of OSX. Despite this, we call
- * jemalloc functions directly from mozalloc. Since it's pretty dangerous to
- * mix the allocators, we need to call the OSX allocators from the functions
- * below, when use_jemalloc is not (dynamically) set.
+ * Even though we compile with MOZ_MEMORY, we may have to dynamically decide
+ * not to use jemalloc, as discussed above. However, we call jemalloc
+ * functions directly from mozalloc. Since it's pretty dangerous to mix the
+ * allocators, we need to call the OSX allocators from the functions below,
+ * when osx_use_jemalloc is not (dynamically) set.
  *
- * We call memalign from mozalloc, but the 10.5 SDK doesn't have a memalign
- * function to forward the call to. However, use_jemalloc will _always_ be true
- * on 10.5, so we just omit these checks statically. This allows us to build
- * successfully on 10.5, and also makes it undetectably faster.
- *
- * FIXME:
- *   This may lead to problems when using 32-bit plugins with a 64-bit process,
- *   on OSX 10.8 or higher.
+ * memalign is unavailable on Leopard, so we can't dynamically do this there.
+ * However, we don't use jemalloc on Leopard, so we can ignore this.
  */
 #if defined(MOZ_MEMORY_DARWIN) && !defined(__i386__)
-#define DARWIN_ONLY(A) if (!use_jemalloc) { A; }
+#define DARWIN_ONLY(A) if (!osx_use_jemalloc) { A; }
 #else
 #define DARWIN_ONLY(A)
 #endif

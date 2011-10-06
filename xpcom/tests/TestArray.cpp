@@ -47,7 +47,7 @@
 
 namespace TestArray {
 
-static const PRBool kExitOnError = PR_TRUE;
+static const bool kExitOnError = true;
 
 class IFoo : public nsISupports {
 public:

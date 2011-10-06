@@ -52,9 +52,9 @@ public:
 
   static void AddRefAtoms();
 
-  static PRBool IsAnonBox(nsIAtom *aAtom);
+  static bool IsAnonBox(nsIAtom *aAtom);
 #ifdef MOZ_XUL
-  static PRBool IsTreePseudoElement(nsIAtom* aPseudo);
+  static bool IsTreePseudoElement(nsIAtom* aPseudo);
 #endif
 
 #define CSS_ANON_BOX(_name, _value) static nsICSSAnonBoxPseudo* _name;

@@ -59,7 +59,7 @@ public:
 
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
+        bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
 protected:

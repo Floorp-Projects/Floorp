@@ -105,8 +105,15 @@ public:
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
 
+  // Widgets
+  virtual bool IsWidget() const;
+  virtual bool IsActiveWidget() const;
+  virtual bool AreItemsOperable() const;
+
+  virtual nsAccessible* ContainerWidget() const;
+
 protected:
-  PRBool IsMulticolumn();
+  bool IsMulticolumn();
 };
 
 /**
@@ -133,7 +140,10 @@ public:
   virtual PRUint64 NativeState();
   virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                           PRInt32 *aSetSize);
-  virtual PRBool GetAllowsAnonChildAccessibles();
+  virtual bool GetAllowsAnonChildAccessibles();
+
+  // Widgets
+  virtual nsAccessible* ContainerWidget() const;
 
 protected:
   /**
@@ -142,7 +152,7 @@ protected:
   nsAccessible *GetListAccessible();
 
 private:
-  PRBool mIsCheckbox;
+  bool mIsCheckbox;
 };
 
 /**

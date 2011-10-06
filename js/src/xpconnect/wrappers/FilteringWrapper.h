@@ -53,7 +53,7 @@ class FilteringWrapper : public Base {
     virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
     virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, js::Value *vp);
 
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act, bool *bp);
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act, bool *bp);
 
     static FilteringWrapper singleton;
 };

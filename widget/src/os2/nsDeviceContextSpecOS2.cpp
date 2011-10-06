@@ -81,7 +81,7 @@ public:
   void      FreeGlobalPrinters();
   nsresult  InitializeGlobalPrinters();
 
-  PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
+  bool      PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
   PRUint32  GetNumPrinters()             { return mGlobalNumPrinters; }
   nsString* GetStringAt(PRInt32 aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
   void      GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName);
@@ -224,7 +224,7 @@ nsresult nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(nsIPrintSettings* a
 
 NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIWidget *aWidget,
                                            nsIPrintSettings* aPS,
-                                           PRBool aIsPrintPreview)
+                                           bool aIsPrintPreview)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -237,7 +237,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIWidget *aWidget,
   }
  
   if (aPS) {
-    PRBool     tofile         = PR_FALSE;
+    bool       tofile         = false;
     PRInt32    copies         = 1;
     PRUnichar *printer        = nsnull;
     PRUnichar *printfile      = nsnull;
@@ -318,7 +318,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2 :: GetPath ( char **aPath )
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecOS2 :: GetUserCancelled( PRBool &aCancel )     
+NS_IMETHODIMP nsDeviceContextSpecOS2 :: GetUserCancelled( bool &aCancel )     
 {
   aCancel = mPrData.cancel;
   return NS_OK;

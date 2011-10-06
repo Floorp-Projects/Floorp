@@ -79,9 +79,9 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
+                              bool aCompileEventHandlers);
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -97,14 +97,14 @@ public:
   /**
    * Syntax sugar to make it easier to check for checked and checked dirty
    */
-  PRBool IsChecked() const { return mChecked; }
-  PRBool IsCheckedDirty() const { return mCheckedDirty; }
+  bool IsChecked() const { return mChecked; }
+  bool IsCheckedDirty() const { return mCheckedDirty; }
 
   void GetText(nsAString& aText);
 
 protected:
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify);
+                                const nsAString* aValue, bool aNotify);
 
   void WalkRadioGroup(Visitor* aVisitor);
 

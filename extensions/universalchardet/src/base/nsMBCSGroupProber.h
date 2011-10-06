@@ -70,7 +70,7 @@ public:
 protected:
   nsProbingState mState;
   nsCharSetProber* mProbers[NUM_OF_PROBERS];
-  PRBool          mIsActive[NUM_OF_PROBERS];
+  bool            mIsActive[NUM_OF_PROBERS];
   PRInt32 mBestGuess;
   PRUint32 mActiveNum;
   PRUint32 mKeepNext;

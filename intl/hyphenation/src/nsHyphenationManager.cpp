@@ -162,7 +162,7 @@ nsHyphenationManager::LoadPatternList()
                    NS_GET_IID(nsIFile), getter_AddRefs(appDir));
   if (NS_SUCCEEDED(rv)) {
     appDir->AppendNative(NS_LITERAL_CSTRING("hyphenation"));
-    PRBool equals;
+    bool equals;
     if (NS_SUCCEEDED(appDir->Equals(greDir, &equals)) && !equals) {
       LoadPatternListFromDir(appDir);
     }
@@ -174,7 +174,7 @@ nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir)
 {
   nsresult rv;
   
-  PRBool check = PR_FALSE;
+  bool check = false;
   rv = aDir->Exists(&check);
   if (NS_FAILED(rv) || !check) {
     return;

@@ -77,7 +77,7 @@ public:
     return *this;
   }
 
-  PRBool operator==(const SVGPoint &rhs) const {
+  bool operator==(const SVGPoint &rhs) const {
     return mX == rhs.mX && mY == rhs.mY;
   }
 
@@ -92,7 +92,7 @@ public:
   }
 
 #ifdef DEBUG
-  PRBool IsValid() const {
+  bool IsValid() const {
     return NS_finite(mX) && NS_finite(mY);
   }
 #endif

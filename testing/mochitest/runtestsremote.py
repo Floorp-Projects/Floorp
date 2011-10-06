@@ -345,8 +345,16 @@ def main():
     if (dm.processExist(procName)):
       dm.killProcess(procName)
 
-    sys.exit(mochitest.runTests(options))
-    
+    try:
+      retVal = mochitest.runTests(options)
+    except:
+      print "TEST-UNEXPECTED-ERROR | | Exception caught while running tests."
+      mochitest.stopWebServer(options)
+      mochitest.stopWebSocketServer(options)
+      sys.exit(1)
+      
+    sys.exit(retVal)
+        
 if __name__ == "__main__":
     main()
 

@@ -49,7 +49,7 @@ NS_IMETHODIMP nsLocalHandlerAppMac::GetName(nsAString& aName)
   if (mExecutable) {
     nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(mExecutable);
     if (macFile) {
-      PRBool isPackage;
+      bool isPackage;
       (void)macFile->IsPackage(&isPackage);
       if (isPackage)
         return macFile->GetBundleDisplayName(aName);

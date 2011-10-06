@@ -145,7 +145,7 @@ public:
    * is returned, then a different way of handling the load should be
    * tried.
    */
-  PRBool TryContentListener(nsIURIContentListener* aListener,
+  bool TryContentListener(nsIURIContentListener* aListener,
                             nsIChannel* aChannel);
 
   // nsIRequestObserver methods:
@@ -371,7 +371,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     LOG(("  Got type from channel: '%s'", mContentType.get()));
   }
 
-  PRBool isGuessFromExt =
+  bool isGuessFromExt =
     mContentType.LowerCaseEqualsASCII(APPLICATION_GUESS_FROM_EXT);
   if (isGuessFromExt) {
     // Reset to application/octet-stream for now; no one other than the
@@ -384,7 +384,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   // could happen because the Content-Disposition header is set so, or, in the
   // future, because the user has specified external handling for the MIME
   // type.
-  PRBool forceExternalHandling = PR_FALSE;
+  bool forceExternalHandling = false;
   PRUint32 disposition;
   rv = aChannel->GetContentDisposition(&disposition);
   if (NS_SUCCEEDED(rv) && disposition == nsIChannel::DISPOSITION_ATTACHMENT)
@@ -530,7 +530,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   // really.
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   if (httpChannel) {
-    PRBool requestSucceeded;
+    bool requestSucceeded;
     httpChannel->GetRequestSucceeded(&requestSucceeded);
     if (!requestSucceeded) {
       // returning error from OnStartRequest will cancel the channel
@@ -636,7 +636,7 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
                                              getter_AddRefs(m_targetStreamListener));
 }
 
-PRBool
+bool
 nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
                                        nsIChannel* aChannel)
 {
@@ -648,7 +648,7 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
   NS_PRECONDITION(aListener, "Must have a non-null listener");
   NS_PRECONDITION(aChannel, "Must have a channel");
   
-  PRBool listenerWantsContent = PR_FALSE;
+  bool listenerWantsContent = false;
   nsXPIDLCString typeToUse;
   
   if (mFlags & nsIURILoader::IS_CONTENT_PREFERRED) {
@@ -700,8 +700,8 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
   }
   aChannel->SetLoadFlags(loadFlags | newLoadFlags);
   
-  PRBool abort = PR_FALSE;
-  PRBool isPreferred = (mFlags & nsIURILoader::IS_CONTENT_PREFERRED) != 0;
+  bool abort = false;
+  bool isPreferred = (mFlags & nsIURILoader::IS_CONTENT_PREFERRED) != 0;
   nsresult rv = aListener->DoContent(mContentType.get(),
                                      isPreferred,
                                      aChannel,
@@ -781,7 +781,7 @@ NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aCo
 }
 
 NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel, 
-                                   PRBool aIsContentPreferred,
+                                   bool aIsContentPreferred,
                                    nsIInterfaceRequestor *aWindowContext)
 {
   NS_ENSURE_ARG_POINTER(channel);
@@ -829,7 +829,7 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
 nsresult nsURILoader::OpenChannel(nsIChannel* channel,
                                   PRUint32 aFlags,
                                   nsIInterfaceRequestor* aWindowContext,
-                                  PRBool aChannelIsOpen,
+                                  bool aChannelIsOpen,
                                   nsIStreamListener** aListener)
 {
   NS_ASSERTION(channel, "Trying to open a null channel!");
@@ -854,7 +854,7 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
     if (uri) {
-      PRBool doAbort = PR_FALSE;
+      bool doAbort = false;
       winContextListener->OnStartURIOpen(uri, &doAbort);
 
       if (doAbort) {
@@ -928,7 +928,7 @@ NS_IMETHODIMP nsURILoader::OpenChannel(nsIChannel* channel,
                                        nsIInterfaceRequestor* aWindowContext,
                                        nsIStreamListener** aListener)
 {
-  PRBool pending;
+  bool pending;
   if (NS_FAILED(channel->IsPending(&pending))) {
     pending = PR_FALSE;
   }

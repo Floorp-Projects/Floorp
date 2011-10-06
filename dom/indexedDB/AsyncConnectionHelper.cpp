@@ -302,7 +302,7 @@ AsyncConnectionHelper::Run()
 
 NS_IMETHODIMP
 AsyncConnectionHelper::OnProgress(mozIStorageConnection* aConnection,
-                                  PRBool* _retval)
+                                  bool* _retval)
 {
   if (mDatabase && mDatabase->IsInvalidated()) {
     // Someone is trying to delete the database file. Exit lightningfast!
@@ -330,7 +330,7 @@ AsyncConnectionHelper::Dispatch(nsIEventTarget* aDatabaseThread)
 #ifdef DEBUG
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   {
-    PRBool sameThread;
+    bool sameThread;
     nsresult rv = aDatabaseThread->IsOnCurrentThread(&sameThread);
     NS_ASSERTION(NS_SUCCEEDED(rv), "IsOnCurrentThread failed!");
     NS_ASSERTION(!sameThread, "Dispatching to main thread not supported!");
@@ -392,7 +392,7 @@ AsyncConnectionHelper::OnSuccess()
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  PRBool dummy;
+  bool dummy;
   nsresult rv = mRequest->DispatchEvent(event, &dummy);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -428,7 +428,7 @@ AsyncConnectionHelper::OnError()
     return;
   }
 
-  PRBool doDefault;
+  bool doDefault;
   nsresult rv = mRequest->DispatchEvent(event, &doDefault);
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(!mTransaction ||
@@ -541,7 +541,7 @@ TransactionPoolEventTarget::Dispatch(nsIRunnable* aRunnable,
 }
 
 NS_IMETHODIMP
-TransactionPoolEventTarget::IsOnCurrentThread(PRBool* aResult)
+TransactionPoolEventTarget::IsOnCurrentThread(bool* aResult)
 {
   *aResult = PR_FALSE;
   return NS_OK;

@@ -1754,9 +1754,6 @@ var XPIProvider = {
       Services.appinfo.annotateCrashReport("Add-ons", data);
     }
     catch (e) { }
-    
-    const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
-    TelemetryPing.observe(null, "Add-ons", data);
   },
 
   /**
@@ -1974,12 +1971,24 @@ var XPIProvider = {
         aManifests[aLocation.name][id] = null;
         let existingAddonID = id;
 
-        // Check for a cached AddonInternal for this add-on, it may contain
-        // updated compatibility information
         let jsonfile = stagingDir.clone();
         jsonfile.append(id + ".json");
+
+        try {
+          aManifests[aLocation.name][id] = loadManifestFromFile(stageDirEntry);
+        }
+        catch (e) {
+          ERROR("Unable to read add-on manifest from " + stageDirEntry.path, e);
+          // This add-on can't be installed so just remove it now
+          seenFiles.push(stageDirEntry.leafName);
+          seenFiles.push(jsonfile.leafName);
+          continue;
+        }
+
+        // Check for a cached metadata for this add-on, it may contain updated
+        // compatibility information
         if (jsonfile.exists()) {
-          LOG("Found updated manifest for " + id + " in " + aLocation.name);
+          LOG("Found updated metadata for " + id + " in " + aLocation.name);
           let fis = Cc["@mozilla.org/network/file-input-stream;1"].
                        createInstance(Ci.nsIFileInputStream);
           let json = Cc["@mozilla.org/dom/json;1"].
@@ -1987,13 +1996,14 @@ var XPIProvider = {
 
           try {
             fis.init(jsonfile, -1, 0, 0);
-            let addonObj = json.decodeFromStream(fis, jsonfile.fileSize);
-            aManifests[aLocation.name][id] = new AddonInternal();
-            aManifests[aLocation.name][id].fromJSON(addonObj);
-            existingAddonID = aManifests[aLocation.name][id].existingAddonID || id;
+            let metadata = json.decodeFromStream(fis, jsonfile.fileSize);
+            aManifests[aLocation.name][id].importMetadata(metadata);
           }
           catch (e) {
-            ERROR("Unable to read add-on manifest from " + jsonfile.path, e);
+            // If some data can't be recovered from the cached metadata then it
+            // is unlikely to be a problem big enough to justify throwing away
+            // the install, just log and error and continue
+            ERROR("Unable to read metadata from " + jsonfile.path, e);
           }
           finally {
             fis.close();
@@ -2001,19 +2011,7 @@ var XPIProvider = {
         }
         seenFiles.push(jsonfile.leafName);
 
-        // If there was no cached AddonInternal then load it directly
-        if (!aManifests[aLocation.name][id]) {
-          try {
-            aManifests[aLocation.name][id] = loadManifestFromFile(stageDirEntry);
-            existingAddonID = aManifests[aLocation.name][id].existingAddonID || id;
-          }
-          catch (e) {
-            ERROR("Unable to read add-on manifest from " + stageDirEntry.path, e);
-            // This add-on can't be installed so just remove it now
-            seenFiles.push(stageDirEntry.leafName);
-            continue;
-          }
-        }
+        existingAddonID = aManifests[aLocation.name][id].existingAddonID || id;
 
         var oldBootstrap = null;
         LOG("Processing install of " + id + " in " + aLocation.name);
@@ -6916,15 +6914,25 @@ AddonInternal.prototype = {
   },
 
   /**
-   * fromJSON should be called to set the properties of this AddonInternal to
-   * those from the passed in object. It is essentially the inverse of toJSON.
+   * When an add-on install is pending its metadata will be cached in a file.
+   * This method reads particular properties of that metadata that may be newer
+   * than that in the install manifest, like compatibility information.
    *
    * @param  aObj
-   *         A JS object containing properties to be set on this AddonInternal
+   *         A JS object containing the cached metadata
    */
-  fromJSON: function(aObj) {
-    for (let prop in aObj)
-      this[prop] = aObj[prop];
+  importMetadata: function(aObj) {
+    ["targetApplications", "userDisabled", "softDisabled", "existingAddonID",
+     "sourceURI", "releaseNotesURI", "installDate", "updateDate",
+     "applyBackgroundUpdates"].forEach(function(aProp) {
+      if (!(aProp in aObj))
+        return;
+
+      this[aProp] = aObj[aProp];
+    }, this);
+
+    // Compatibility info may have changed so update appDisabled
+    this.appDisabled = !isUsableAddon(this);
   }
 };
 

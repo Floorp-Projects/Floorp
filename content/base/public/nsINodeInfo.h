@@ -223,35 +223,35 @@ public:
    * name, name and prefix, name and prefix and namespace ID, or just
    * namespace ID.
    */
-  PRBool Equals(nsINodeInfo *aNodeInfo) const
+  bool Equals(nsINodeInfo *aNodeInfo) const
   {
     return aNodeInfo == this || aNodeInfo->Equals(mInner.mName, mInner.mPrefix,
                                                   mInner.mNamespaceID);
   }
 
-  PRBool NameAndNamespaceEquals(nsINodeInfo *aNodeInfo) const
+  bool NameAndNamespaceEquals(nsINodeInfo *aNodeInfo) const
   {
     return aNodeInfo == this || aNodeInfo->Equals(mInner.mName,
                                                   mInner.mNamespaceID);
   }
 
-  PRBool Equals(nsIAtom *aNameAtom) const
+  bool Equals(nsIAtom *aNameAtom) const
   {
     return mInner.mName == aNameAtom;
   }
 
-  PRBool Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom) const
+  bool Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom) const
   {
     return (mInner.mName == aNameAtom) && (mInner.mPrefix == aPrefixAtom);
   }
 
-  PRBool Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID) const
+  bool Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID) const
   {
     return ((mInner.mName == aNameAtom) &&
             (mInner.mNamespaceID == aNamespaceID));
   }
 
-  PRBool Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
+  bool Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
                 PRInt32 aNamespaceID) const
   {
     return ((mInner.mName == aNameAtom) &&
@@ -259,38 +259,38 @@ public:
             (mInner.mNamespaceID == aNamespaceID));
   }
 
-  PRBool NamespaceEquals(PRInt32 aNamespaceID) const
+  bool NamespaceEquals(PRInt32 aNamespaceID) const
   {
     return mInner.mNamespaceID == aNamespaceID;
   }
 
-  PRBool Equals(const nsAString& aName) const
+  bool Equals(const nsAString& aName) const
   {
     return mInner.mName->Equals(aName);
   }
 
-  PRBool Equals(const nsAString& aName, const nsAString& aPrefix) const
+  bool Equals(const nsAString& aName, const nsAString& aPrefix) const
   {
     return mInner.mName->Equals(aName) &&
       (mInner.mPrefix ? mInner.mPrefix->Equals(aPrefix) : aPrefix.IsEmpty());
   }
 
-  PRBool Equals(const nsAString& aName, PRInt32 aNamespaceID) const
+  bool Equals(const nsAString& aName, PRInt32 aNamespaceID) const
   {
     return mInner.mNamespaceID == aNamespaceID &&
       mInner.mName->Equals(aName);
   }
 
-  PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
+  bool Equals(const nsAString& aName, const nsAString& aPrefix,
                 PRInt32 aNamespaceID) const
   {
     return mInner.mName->Equals(aName) && mInner.mNamespaceID == aNamespaceID &&
       (mInner.mPrefix ? mInner.mPrefix->Equals(aPrefix) : aPrefix.IsEmpty());
   }
 
-  virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const = 0;
+  virtual bool NamespaceEquals(const nsAString& aNamespaceURI) const = 0;
 
-  PRBool QualifiedNameEquals(nsIAtom* aNameAtom) const
+  bool QualifiedNameEquals(nsIAtom* aNameAtom) const
   {
     NS_PRECONDITION(aNameAtom, "Must have name atom");
     if (!GetPrefixAtom())
@@ -299,7 +299,7 @@ public:
     return aNameAtom->Equals(mQualifiedName);
   }
 
-  PRBool QualifiedNameEquals(const nsAString& aQualifiedName) const
+  bool QualifiedNameEquals(const nsAString& aQualifiedName) const
   {
     return mQualifiedName == aQualifiedName;
   }

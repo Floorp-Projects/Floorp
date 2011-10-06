@@ -272,7 +272,7 @@ class Document : public NodeDefinition
     nsresult getBaseURI(nsAString& aURI);
 
   private:
-    PRBool setElementID(const nsAString& aID, Element* aElement);
+    bool setElementID(const nsAString& aID, Element* aElement);
 
     Element* documentElement;
 
@@ -305,7 +305,7 @@ class Element : public NodeDefinition
     MBool hasAttr(nsIAtom* aLocalName, PRInt32 aNSID);
 
     // ID getter
-    PRBool getIDValue(nsAString& aValue);
+    bool getIDValue(nsAString& aValue);
 
     Attr *getFirstAttribute()
     {
@@ -340,7 +340,7 @@ class Attr : public NodeDefinition
     MBool getLocalName(nsIAtom** aLocalName);
     PRInt32 getNamespaceID();
     Node* getXPathParent();
-    PRBool equals(nsIAtom *aLocalName, PRInt32 aNamespaceID)
+    bool equals(nsIAtom *aLocalName, PRInt32 aNamespaceID)
     {
       return mLocalName == aLocalName && aNamespaceID == mNamespaceID;
     }

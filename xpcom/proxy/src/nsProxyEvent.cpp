@@ -189,7 +189,7 @@ nsProxyObjectCallInfo::Run()
 }
 
 void
-nsProxyObjectCallInfo::RefCountInInterfacePointers(PRBool addRef)
+nsProxyObjectCallInfo::RefCountInInterfacePointers(bool addRef)
 {
     for (PRUint32 i = 0; i < mParameterCount; i++)
     {
@@ -217,7 +217,7 @@ nsProxyObjectCallInfo::RefCountInInterfacePointers(PRBool addRef)
 }
 
 void
-nsProxyObjectCallInfo::CopyStrings(PRBool copy)
+nsProxyObjectCallInfo::CopyStrings(bool copy)
 {
     for (PRUint32 i = 0; i < mParameterCount; i++)
     {
@@ -291,7 +291,7 @@ nsProxyObjectCallInfo::CopyStrings(PRBool copy)
     }
 }
 
-PRBool                
+bool                  
 nsProxyObjectCallInfo::GetCompleted()
 {
     return !!mCompleted;

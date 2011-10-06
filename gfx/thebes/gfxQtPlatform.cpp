@@ -345,7 +345,7 @@ nsresult
 gfxQtPlatform::ResolveFontName(const nsAString& aFontName,
                                 FontResolverCallback aCallback,
                                 void *aClosure,
-                                PRBool& aAborted)
+                                bool& aAborted)
 {
 #ifdef MOZ_PANGO
     return sFontconfigUtils->ResolveFontName(aFontName, aCallback,
@@ -458,7 +458,7 @@ gfxQtPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                            aFontData, aLength);
 }
 
-PRBool
+bool
 gfxQtPlatform::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
 {
     // check for strange format flags
@@ -561,7 +561,7 @@ gfxQtPlatform::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
     return nsnull;
 }
 
-PRBool
+bool
 gfxQtPlatform::GetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxFontEntry> > *array)
 {
     return mPrefFonts.Get(aKey, array);

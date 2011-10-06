@@ -129,7 +129,7 @@ public:
     *                                     after aChild will be reenumerated
     */
   void RemoveChild(nsTableColFrame& aChild,
-                   PRBool           aResetSubsequentColIndices);
+                   bool             aResetSubsequentColIndices);
 
   /** reflow of a column group is a trivial matter of reflowing
     * the col group's children (columns), and setting this frame
@@ -141,10 +141,6 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-
-  /* needed only because we use Reflow in a hacky way, see
-     nsTableFrame::ReflowColGroups */
-  virtual PRBool IsContainingBlock() const;
 
   /**
    * Get the "type" of the frame
@@ -168,7 +164,7 @@ public:
     *                      the first in flow it will return an error
     */
   nsresult AddColsToTable(PRInt32                   aFirstColIndex,
-                          PRBool                    aResetSubsequentColIndices,
+                          bool                      aResetSubsequentColIndices,
                           const nsFrameList::Slice& aCols);
 
 #ifdef DEBUG

@@ -63,12 +63,12 @@
 
 // Main event loop debug output flags
 #if defined(EVENT_DEBUG_OUTPUT)
-#define SHOW_REPEAT_EVENTS      PR_TRUE
-#define SHOW_MOUSEMOVE_EVENTS   PR_FALSE
+#define SHOW_REPEAT_EVENTS      true
+#define SHOW_MOUSEMOVE_EVENTS   false
 #endif // defined(EVENT_DEBUG_OUTPUT)
 
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT) || 1
-void PrintEvent(UINT msg, PRBool aShowAllEvents, PRBool aShowMouseMoves);
+void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves);
 #endif // defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT)
 
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT)
@@ -87,7 +87,7 @@ void DDError(const char *msg, HRESULT hr);
 #endif // defined(DEBUG)
 
 #if defined(DEBUG_VK)
-PRBool is_vk_down(int vk);
+bool is_vk_down(int vk);
 #define IS_VK_DOWN is_vk_down
 #else
 #define IS_VK_DOWN(a) (GetKeyState(a) < 0)

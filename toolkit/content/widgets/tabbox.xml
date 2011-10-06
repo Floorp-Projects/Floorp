@@ -477,16 +477,19 @@
             aNewTab.focus();
           }
           else if (this.getAttribute("setfocus") != "false") {
-            document.commandDispatcher.advanceFocusIntoSubtree(this.tabbox.selectedPanel);
-            
+            let selectedPanel = this.tabbox.selectedPanel;
+            document.commandDispatcher.advanceFocusIntoSubtree(selectedPanel);
+
             // Make sure that the focus doesn't move outside the tabbox
             if (this.tabbox) {
               try {
                 let el = document.commandDispatcher.focusedElement;
-                while (el && el != this.tabbox)
+                while (el && el != this.tabbox.tabpanels) {
+                  if (el == this.tabbox || el == selectedPanel)
+                    return;
                   el = el.parentNode;
-                if (el != this.tabbox)
-                  aNewTab.focus();
+                }
+                aNewTab.focus();
               } catch(e) {
               }
             }

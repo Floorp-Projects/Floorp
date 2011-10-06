@@ -56,7 +56,7 @@ public:
 
     nsTransportEventSinkProxy(nsITransportEventSink *sink,
                               nsIEventTarget *target,
-                              PRBool coalesceAll)
+                              bool coalesceAll)
         : mSink(sink)
         , mTarget(target)
         , mLock("nsTransportEventSinkProxy.mLock")
@@ -77,7 +77,7 @@ public:
     nsCOMPtr<nsIEventTarget>         mTarget;
     Mutex                            mLock;
     nsTransportStatusEvent          *mLastEvent;
-    PRBool                           mCoalesceAll;
+    bool                             mCoalesceAll;
 };
 
 class nsTransportStatusEvent : public nsRunnable
@@ -166,7 +166,7 @@ nsresult
 net_NewTransportEventSinkProxy(nsITransportEventSink **result,
                                nsITransportEventSink *sink,
                                nsIEventTarget *target,
-                               PRBool coalesceAll)
+                               bool coalesceAll)
 {
     *result = new nsTransportEventSinkProxy(sink, target, coalesceAll);
     if (!*result)

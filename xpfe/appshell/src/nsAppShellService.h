@@ -67,15 +67,15 @@ protected:
                                nsIURI *aUrl, 
                                PRUint32 aChromeMask,
                                PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                               PRBool aIsHiddenWindow, nsIAppShell* aAppShell,
+                               bool aIsHiddenWindow, nsIAppShell* aAppShell,
                                nsWebShellWindow **aResult);
   PRUint32 CalculateWindowZLevel(nsIXULWindow *aParent, PRUint32 aChromeMask);
 
   nsRefPtr<nsWebShellWindow>  mHiddenWindow;
-  PRPackedBool                mXPCOMWillShutDown;
-  PRPackedBool                mXPCOMShuttingDown;
+  bool                        mXPCOMWillShutDown;
+  bool                        mXPCOMShuttingDown;
   PRUint16                    mModalWindowCount;
-  PRPackedBool                mApplicationProvidedHiddenWindow;
+  bool                        mApplicationProvidedHiddenWindow;
 };
 
 #endif

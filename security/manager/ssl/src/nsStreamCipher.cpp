@@ -182,7 +182,7 @@ NS_IMETHODIMP nsStreamCipher::UpdateFromString(const nsACString& aInput)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsStreamCipher::Finish(PRBool aASCII, nsACString & _retval)
+NS_IMETHODIMP nsStreamCipher::Finish(bool aASCII, nsACString & _retval)
 {
   if (!mContext)
     return NS_ERROR_NOT_INITIALIZED;

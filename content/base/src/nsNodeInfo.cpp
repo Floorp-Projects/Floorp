@@ -235,7 +235,7 @@ nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
 }
 
 
-PRBool
+bool
 nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
   PRInt32 nsid =

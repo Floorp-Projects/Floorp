@@ -51,7 +51,6 @@
 #include "nsIParser.h" // kCharsetFrom* macro definition
 #include "nsIDocumentCharsetInfo.h" 
 #include "nsNodeInfoManager.h"
-#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -162,7 +161,7 @@ MediaDocument::StartDocumentLoad(const char*         aCommand,
                                  nsILoadGroup*       aLoadGroup,
                                  nsISupports*        aContainer,
                                  nsIStreamListener** aDocListener,
-                                 PRBool              aReset,
+                                 bool                aReset,
                                  nsIContentSink*     aSink)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
@@ -251,9 +250,6 @@ MediaDocument::CreateSyntheticDocument()
   NS_ASSERTION(GetChildCount() == 0, "Shouldn't have any kids");
   rv = AppendChildTo(root, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsContentUtils::AddScriptRunner(
-      new nsDocElementCreatedNotificationRunner(this));
 
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head, nsnull,
                                            kNameSpaceID_XHTML,

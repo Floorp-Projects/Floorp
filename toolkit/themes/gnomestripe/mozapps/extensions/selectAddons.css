@@ -114,6 +114,10 @@
   display: none;
 }
 
+.select-keep .addon-keep-checkbox:-moz-focusring {
+  outline: 1px dotted ThreeDDarkShadow;
+}
+
 .select-icon {
   width: 20px;
 }

@@ -366,7 +366,7 @@ nsNativeThemeQt::GetWidgetBorder(nsDeviceContext* ,
     return NS_OK;
 }
 
-PRBool
+bool
 nsNativeThemeQt::GetWidgetPadding(nsDeviceContext* ,
                                   nsIFrame*, PRUint8 aWidgetType,
                                   nsIntMargin* aResult)
@@ -385,7 +385,7 @@ nsNativeThemeQt::GetWidgetPadding(nsDeviceContext* ,
 NS_IMETHODIMP
 nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType,
-                                      nsIntSize* aResult, PRBool* aIsOverridable)
+                                      nsIntSize* aResult, bool* aIsOverridable)
 {
     (*aResult).width = (*aResult).height = 0;
     *aIsOverridable = PR_TRUE;
@@ -547,7 +547,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aF
 
 NS_IMETHODIMP
 nsNativeThemeQt::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
-                                    nsIAtom* aAttribute, PRBool* aShouldRepaint)
+                                    nsIAtom* aAttribute, bool* aShouldRepaint)
 {
     *aShouldRepaint = TRUE;
     return NS_OK;
@@ -563,7 +563,7 @@ nsNativeThemeQt::ThemeChanged()
     return NS_OK;
 }
 
-PRBool
+bool
 nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
                                      nsIFrame* aFrame,
                                      PRUint8 aWidgetType)
@@ -599,7 +599,7 @@ nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
     return PR_FALSE;
 }
 
-PRBool
+bool
 nsNativeThemeQt::WidgetIsContainer(PRUint8 aWidgetType)
 {
 //     if (aWidgetType == NS_THEME_DROPDOWN_BUTTON ||
@@ -611,7 +611,7 @@ nsNativeThemeQt::WidgetIsContainer(PRUint8 aWidgetType)
    return PR_TRUE;
 }
 
-PRBool
+bool
 nsNativeThemeQt::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
 {
     if (aWidgetType == NS_THEME_DROPDOWN ||
@@ -623,7 +623,7 @@ nsNativeThemeQt::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame*
     return PR_FALSE;
 }
 
-PRBool
+bool
 nsNativeThemeQt::ThemeNeedsComboboxDropmarker()
 {
     return PR_TRUE;
@@ -640,7 +640,7 @@ nsNativeThemeQt::InitButtonStyle(PRUint8 aWidgetType,
     opt.rect = rect;
     opt.palette = mNoBackgroundPalette;
 
-    PRBool isDisabled = IsDisabled(aFrame, eventState);
+    bool isDisabled = IsDisabled(aFrame, eventState);
 
     if (!isDisabled)
         opt.state |= QStyle::State_Enabled;
@@ -696,7 +696,7 @@ nsNativeThemeQt::InitComboStyle(PRUint8 aWidgetType,
                                 QStyleOptionComboBox &opt)
 {
     nsEventStates eventState = GetContentState(aFrame, aWidgetType);
-    PRBool isDisabled = IsDisabled(aFrame, eventState);
+    bool isDisabled = IsDisabled(aFrame, eventState);
 
     if (!isDisabled)
         opt.state |= QStyle::State_Enabled;

@@ -102,7 +102,7 @@ public:
 
     nsresult OpenChannel();
     nsresult Cancel();
-    nsresult GetRequestSucceeded(PRBool * succeeded);
+    nsresult GetRequestSucceeded(bool * succeeded);
 
 private:
     nsOfflineCacheUpdate*          mUpdate;
@@ -135,9 +135,9 @@ public:
     nsIArray *GetNamespaces()
         { return mNamespaces.get(); }
 
-    PRBool ParseSucceeded()
+    bool ParseSucceeded()
         { return (mParserState != PARSE_INIT && mParserState != PARSE_ERROR); }
-    PRBool NeedsUpdate() { return mParserState != PARSE_INIT && mNeedsUpdate; }
+    bool NeedsUpdate() { return mParserState != PARSE_INIT && mNeedsUpdate; }
 
     void GetManifestHash(nsCString &aManifestHash)
         { aManifestHash = mManifestHashValue; }
@@ -194,12 +194,12 @@ private:
     // manifest.
     nsCOMPtr<nsIMutableArray> mNamespaces;
 
-    PRBool mNeedsUpdate;
-    PRBool mStrictFileOriginPolicy;
+    bool mNeedsUpdate;
+    bool mStrictFileOriginPolicy;
 
     // manifest hash data
     nsCOMPtr<nsICryptoHash> mManifestHash;
-    PRBool mManifestHashInitialized;
+    bool mManifestHashInitialized;
     nsCString mManifestHashValue;
     nsCString mOldManifestHashValue;
 };
@@ -239,7 +239,7 @@ public:
     virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);
 
 private:
-    nsresult HandleManifest(PRBool *aDoUpdate);
+    nsresult HandleManifest(bool *aDoUpdate);
     nsresult AddURI(nsIURI *aURI, PRUint32 aItemType);
 
     nsresult ProcessNextURI();
@@ -268,10 +268,10 @@ private:
 
     nsOfflineCacheUpdateOwner *mOwner;
 
-    PRPackedBool mAddedItems;
-    PRPackedBool mPartialUpdate;
-    PRPackedBool mSucceeded;
-    PRPackedBool mObsolete;
+    bool mAddedItems;
+    bool mPartialUpdate;
+    bool mSucceeded;
+    bool mObsolete;
 
     nsCString mUpdateDomain;
     nsCOMPtr<nsIURI> mManifestURI;
@@ -345,8 +345,8 @@ private:
 
     nsTArray<nsRefPtr<nsOfflineCacheUpdate> > mUpdates;
 
-    PRBool mDisabled;
-    PRBool mUpdateRunning;
+    bool mDisabled;
+    bool mUpdateRunning;
 };
 
 #endif

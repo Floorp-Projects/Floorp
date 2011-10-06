@@ -71,7 +71,7 @@ struct SVGPathTraversalState
     , mode(eUpdateAll)
   {}
 
-  PRBool ShouldUpdateLengthAndControlPoints() { return mode == eUpdateAll; }
+  bool ShouldUpdateLengthAndControlPoints() { return mode == eUpdateAll; }
 
   gfxPoint start; // start point of current sub path (reset each moveto)
 
@@ -203,31 +203,31 @@ public:
     return ArgCountForType(DecodeType(aType));
   }
 
-  static PRBool IsValidType(PRUint32 aType) {
+  static bool IsValidType(PRUint32 aType) {
     return aType >= NS_SVG_PATH_SEG_FIRST_VALID_TYPE &&
            aType <= NS_SVG_PATH_SEG_LAST_VALID_TYPE;
   }
 
-  static PRBool IsCubicType(PRUint32 aType) {
+  static bool IsCubicType(PRUint32 aType) {
     return aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS;
   }
 
-  static PRBool IsQuadraticType(PRUint32 aType) {
+  static bool IsQuadraticType(PRUint32 aType) {
     return aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS;
   }
 
-  static PRBool IsArcType(PRUint32 aType) {
+  static bool IsArcType(PRUint32 aType) {
     return aType == nsIDOMSVGPathSeg::PATHSEG_ARC_ABS || 
            aType == nsIDOMSVGPathSeg::PATHSEG_ARC_REL;
   }
 
-  static PRBool IsRelativeOrAbsoluteType(PRUint32 aType) {
+  static bool IsRelativeOrAbsoluteType(PRUint32 aType) {
     NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
 
     // When adding a new path segment type, ensure that the returned condition
@@ -238,7 +238,7 @@ public:
     return aType >= nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS;
   }
 
-  static PRBool IsRelativeType(PRUint32 aType) {
+  static bool IsRelativeType(PRUint32 aType) {
     NS_ABORT_IF_FALSE
       (IsRelativeOrAbsoluteType(aType),
        "IsRelativeType called with segment type that does not come in relative and absolute forms");

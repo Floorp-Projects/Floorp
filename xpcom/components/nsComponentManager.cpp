@@ -360,7 +360,7 @@ nsresult nsComponentManagerImpl::Init()
     cl->location = CloneAndAppend(appDir, NS_LITERAL_CSTRING("chrome.manifest"));
     cl->jar = false;
 
-    PRBool equals = PR_FALSE;
+    bool equals = false;
     appDir->Equals(greDir, &equals);
     if (!equals) {
         cl = sModuleLocations->InsertElementAt(0);
@@ -537,7 +537,7 @@ LoadEntry(nsIZipReader* aReader, const char* aName)
         return NULL;
 
     nsCOMPtr<nsIInputStream> is;
-    nsresult rv = aReader->GetInputStream(aName, getter_AddRefs(is));
+    nsresult rv = aReader->GetInputStream(nsDependentCString(aName), getter_AddRefs(is));
     if (NS_FAILED(rv))
         return NULL;
 
@@ -1531,7 +1531,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
 NS_IMETHODIMP
 nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
                                               const nsIID& aIID,
-                                              PRBool *result)
+                                              bool *result)
 {
     COMPMGR_TIME_FUNCTION_CID(aClass);
 
@@ -1572,7 +1572,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
 
 NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const char *aContractID,
                                                                         const nsIID& aIID,
-                                                                        PRBool *result)
+                                                                        bool *result)
 {
     COMPMGR_TIME_FUNCTION_CONTRACTID(aContractID);
 
@@ -1839,7 +1839,7 @@ nsComponentManagerImpl::UnregisterFactoryLocation(const nsCID& aCID,
 
 NS_IMETHODIMP
 nsComponentManagerImpl::IsCIDRegistered(const nsCID & aClass,
-                                        PRBool *_retval)
+                                        bool *_retval)
 {
     *_retval = (nsnull != GetFactoryEntry(aClass));
     return NS_OK;
@@ -1847,7 +1847,7 @@ nsComponentManagerImpl::IsCIDRegistered(const nsCID & aClass,
 
 NS_IMETHODIMP
 nsComponentManagerImpl::IsContractIDRegistered(const char *aClass,
-                                               PRBool *_retval)
+                                               bool *_retval)
 {
     NS_ENSURE_ARG_POINTER(aClass);
     nsFactoryEntry *entry = GetFactoryEntry(aClass, strlen(aClass));
@@ -1987,8 +1987,9 @@ nsFactoryEntry::GetFactory()
         if (!mFactory)
             return NULL;
     }
-    NS_ADDREF(mFactory);
-    return mFactory.get();
+    nsIFactory* factory = mFactory.get();
+    NS_ADDREF(factory);
+    return factory;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

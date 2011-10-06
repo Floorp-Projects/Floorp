@@ -7,20 +7,10 @@
 #ifndef COMPILIER_BUILT_IN_FUNCTION_EMULATOR_H_
 #define COMPILIER_BUILT_IN_FUNCTION_EMULATOR_H_
 
+#include "GLSLANG/ShaderLang.h"
+
 #include "compiler/InfoSink.h"
 #include "compiler/intermediate.h"
-
-//
-// Built-in function groups.  We only list the ones that might need to be
-// emulated in certain os/drivers, assuming they are no more than 32.
-//
-enum TBuiltInFunctionGroup {
-    TFunctionGroupNormalize      = 1 << 0,
-    TFunctionGroupAbs            = 1 << 1,
-    TFunctionGroupSign           = 1 << 2,
-    TFunctionGroupAll            =
-        TFunctionGroupNormalize | TFunctionGroupAbs | TFunctionGroupSign
-};
 
 //
 // This class decides which built-in functions need to be replaced with the
@@ -29,29 +19,23 @@ enum TBuiltInFunctionGroup {
 //
 class BuiltInFunctionEmulator {
 public:
-    BuiltInFunctionEmulator();
-
-    // functionGroupMask is a bitmap of TBuiltInFunctionGroup.
-    // We only emulate functions that are marked by this mask and are actually
-    // called in a given shader.
-    // By default the value is TFunctionGroupAll.
-    void SetFunctionGroupMask(unsigned int functionGroupMask);
-
+    BuiltInFunctionEmulator(ShShaderType shaderType);
     // Records that a function is called by the shader and might needs to be
     // emulated.  If the function's group is not in mFunctionGroupFilter, this
     // becomes an no-op.
     // Returns true if the function call needs to be replaced with an emulated
     // one.
-    // TODO(zmo): for now, an operator and a return type is enough to identify
-    // the function we want to emulate.  Should make this more flexible to
-    // handle any functions.
-    bool SetFunctionCalled(TOperator op, const TType& returnType);
+    bool SetFunctionCalled(TOperator op, const TType& param);
+    bool SetFunctionCalled(
+        TOperator op, const TType& param1, const TType& param2);
 
     // Output function emulation definition.  This should be before any other
     // shader source.
     void OutputEmulatedFunctionDefinition(TInfoSinkBase& out, bool withPrecision) const;
 
     void MarkBuiltInFunctionsForEmulation(TIntermNode* root);
+
+    void Cleanup();
 
     // "name(" becomes "webgl_name_emu(".
     static TString GetEmulatedFunctionName(const TString& name);
@@ -61,26 +45,59 @@ private:
     // Built-in functions.
     //
     enum TBuiltInFunction {
-        TFunctionNormalize1 = 0,  // float normalize(float);
+        TFunctionAtan1_1 = 0,  // float atan(float, float);
+        TFunctionAtan2_2,  // vec2 atan(vec2, vec2);
+        TFunctionAtan3_3,  // vec3 atan(vec3, vec2);
+        TFunctionAtan4_4,  // vec4 atan(vec4, vec2);
+
+        TFunctionCos1,  // float cos(float);
+        TFunctionCos2,  // vec2 cos(vec2);
+        TFunctionCos3,  // vec3 cos(vec3);
+        TFunctionCos4,  // vec4 cos(vec4);
+
+        TFunctionDistance1_1,  // float distance(float, float);
+        TFunctionDistance2_2,  // vec2 distance(vec2, vec2);
+        TFunctionDistance3_3,  // vec3 distance(vec3, vec3);
+        TFunctionDistance4_4,  // vec4 distance(vec4, vec4);
+
+        TFunctionDot1_1,  // float dot(float, float);
+        TFunctionDot2_2,  // vec2 dot(vec2, vec2);
+        TFunctionDot3_3,  // vec3 dot(vec3, vec3);
+        TFunctionDot4_4,  // vec4 dot(vec4, vec4);
+
+        TFunctionLength1,  // float length(float);
+        TFunctionLength2,  // float length(vec2);
+        TFunctionLength3,  // float length(vec3);
+        TFunctionLength4,  // float length(vec4);
+
+        TFunctionMod1_1,  // float mod(float, float);
+        TFunctionMod2_2,  // vec2 mod(vec2, vec2);
+        TFunctionMod3_3,  // vec3 mod(vec3, vec3);
+        TFunctionMod4_4,  // vec4 mod(vec4, vec4);
+
+        TFunctionNormalize1,  // float normalize(float);
         TFunctionNormalize2,  // vec2 normalize(vec2);
         TFunctionNormalize3,  // vec3 normalize(vec3);
-        TFunctionNormalize4,  // fec4 normalize(vec4);
-        TFunctionAbs1,  // float abs(float);
-        TFunctionAbs2,  // vec2 abs(vec2);
-        TFunctionAbs3,  // vec3 abs(vec3);
-        TFunctionAbs4,  // vec4 abs(vec4);
-        TFunctionSign1,  // float sign(float);
-        TFunctionSign2,  // vec2 sign(vec2);
-        TFunctionSign3,  // vec3 sign(vec3);
-        TFunctionSign4,  // vec4 sign(vec4);
+        TFunctionNormalize4,  // vec4 normalize(vec4);
+
+        TFunctionReflect1_1,  // float reflect(float, float);
+        TFunctionReflect2_2,  // vec2 reflect(vec2, vec2);
+        TFunctionReflect3_3,  // vec3 reflect(vec3, vec3);
+        TFunctionReflect4_4,  // vec4 reflect(vec4, vec4);
+
         TFunctionUnknown
     };
 
-    // Same TODO as SetFunctionCalled.
-    TBuiltInFunction IdentifyFunction(TOperator op, const TType& returnType);
+    TBuiltInFunction IdentifyFunction(TOperator op, const TType& param);
+    TBuiltInFunction IdentifyFunction(
+        TOperator op, const TType& param1, const TType& param2);
 
-    TVector<TBuiltInFunction> mFunctions;
-    unsigned int mFunctionGroupMask;  // a bitmap of TBuiltInFunctionGroup.
+    bool SetFunctionCalled(TBuiltInFunction function);
+
+    std::vector<TBuiltInFunction> mFunctions;
+
+    const bool* mFunctionMask;  // a boolean flag for each function.
+    const char** mFunctionSource;
 };
 
 #endif  // COMPILIER_BUILT_IN_FUNCTION_EMULATOR_H_

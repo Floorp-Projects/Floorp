@@ -42,6 +42,40 @@
 #include <algorithm>
 using namespace std;
 
+/* Force small values to zero.  We do this to avoid having sin(360deg)
+ * evaluate to a tiny but nonzero value.
+ */
+static double FlushToZero(double aVal)
+{
+  if (-FLT_EPSILON < aVal && aVal < FLT_EPSILON)
+    return 0.0f;
+  else
+    return aVal;
+}
+
+/* Computes tan(aTheta).  For values of aTheta such that tan(aTheta) is
+ * undefined or very large, SafeTangent returns a manageably large value
+ * of the correct sign.
+ */
+static double SafeTangent(double aTheta)
+{
+  const double kEpsilon = 0.0001;
+
+  /* tan(theta) = sin(theta)/cos(theta); problems arise when
+   * cos(theta) is too close to zero.  Limit cos(theta) to the
+   * range [-1, -epsilon] U [epsilon, 1].
+   */
+  double sinTheta = sin(aTheta);
+  double cosTheta = cos(aTheta);
+
+  if (cosTheta >= 0 && cosTheta < kEpsilon)
+    cosTheta = kEpsilon;
+  else if (cosTheta < 0 && cosTheta >= -kEpsilon)
+    cosTheta = -kEpsilon;
+
+  return FlushToZero(sinTheta / cosTheta);
+}
+
 gfx3DMatrix::gfx3DMatrix(void)
 {
   _11 = _22 = _33 = _44 = 1.0f;
@@ -146,7 +180,7 @@ gfx3DMatrix::From2D(const gfxMatrix &aMatrix)
   return matrix;
 }
 
-PRBool
+bool
 gfx3DMatrix::IsIdentity() const
 {
   return _11 == 1.0f && _12 == 0.0f && _13 == 0.0f && _14 == 0.0f &&
@@ -182,19 +216,19 @@ gfx3DMatrix::TranslatePost(const gfxPoint3D& aPoint)
 }
 
 void
-gfx3DMatrix::SkewXY(float aSkew)
+gfx3DMatrix::SkewXY(double aSkew)
 {
     (*this)[1] += (*this)[0] * aSkew;
 }
 
 void 
-gfx3DMatrix::SkewXZ(float aSkew)
+gfx3DMatrix::SkewXZ(double aSkew)
 {
     (*this)[2] += (*this)[0] * aSkew;
 }
 
 void
-gfx3DMatrix::SkewYZ(float aSkew)
+gfx3DMatrix::SkewYZ(double aSkew)
 {
     (*this)[2] += (*this)[1] * aSkew;
 }
@@ -205,6 +239,144 @@ gfx3DMatrix::Scale(float aX, float aY, float aZ)
     (*this)[0] *= aX;
     (*this)[1] *= aY;
     (*this)[2] *= aZ;
+}
+
+void
+gfx3DMatrix::Perspective(float aDepth)
+{
+  NS_ASSERTION(aDepth > 0.0f, "Perspective must be positive!");
+  _31 += -1.0/aDepth * _41;
+  _32 += -1.0/aDepth * _42;
+  _33 += -1.0/aDepth * _43;
+  _34 += -1.0/aDepth * _44;
+}
+
+void gfx3DMatrix::SkewXY(double aXSkew, double aYSkew)
+{
+  float tanX = SafeTangent(aXSkew);
+  float tanY = SafeTangent(aYSkew);
+  float temp;
+
+  temp = _11;
+  _11 += tanY * _21;
+  _21 += tanX * temp;
+
+  temp = _12;
+  _12 += tanY * _22;
+  _22 += tanX * temp;
+  
+  temp = _13;
+  _13 += tanY * _23;
+  _23 += tanX * temp;
+  
+  temp = _14;
+  _14 += tanY * _24;
+  _24 += tanX * temp;
+}
+
+void
+gfx3DMatrix::RotateX(double aTheta)
+{
+  double cosTheta = FlushToZero(cos(aTheta));
+  double sinTheta = FlushToZero(sin(aTheta));
+
+  float temp;
+
+  temp = _21;
+  _21 = cosTheta * _21 + sinTheta * _31;
+  _31 = -sinTheta * temp + cosTheta * _31;
+  
+  temp = _22;
+  _22 = cosTheta * _22 + sinTheta * _32;
+  _32 = -sinTheta * temp + cosTheta * _32;
+  
+  temp = _23;
+  _23 = cosTheta * _23 + sinTheta * _33;
+  _33 = -sinTheta * temp + cosTheta * _33;
+  
+  temp = _24;
+  _24 = cosTheta * _24 + sinTheta * _34;
+  _34 = -sinTheta * temp + cosTheta * _34;
+}
+
+void
+gfx3DMatrix::RotateY(double aTheta)
+{
+  double cosTheta = FlushToZero(cos(aTheta));
+  double sinTheta = FlushToZero(sin(aTheta));
+
+  float temp;
+
+  temp = _11;
+  _11 = cosTheta * _11 + -sinTheta * _31;
+  _31 = sinTheta * temp + cosTheta * _31;
+  
+  temp = _12;
+  _12 = cosTheta * _12 + -sinTheta * _32;
+  _32 = sinTheta * temp + cosTheta * _32;
+  
+  temp = _13;
+  _13 = cosTheta * _13 + -sinTheta * _33;
+  _33 = sinTheta * temp + cosTheta * _33;
+  
+  temp = _14;
+  _14 = cosTheta * _14 + -sinTheta * _34;
+  _34 = sinTheta * temp + cosTheta * _34;
+}
+
+void
+gfx3DMatrix::RotateZ(double aTheta)
+{
+  double cosTheta = FlushToZero(cos(aTheta));
+  double sinTheta = FlushToZero(sin(aTheta));
+
+  float temp;
+
+  temp = _11;
+  _11 = cosTheta * _11 + sinTheta * _21;
+  _21 = -sinTheta * temp + cosTheta * _21;
+  
+  temp = _12;
+  _12 = cosTheta * _12 + sinTheta * _22;
+  _22 = -sinTheta * temp + cosTheta * _22;
+  
+  temp = _13;
+  _13 = cosTheta * _13 + sinTheta * _23;
+  _23 = -sinTheta * temp + cosTheta * _23;
+  
+  temp = _14;
+  _14 = cosTheta * _14 + sinTheta * _24;
+  _24 = -sinTheta * temp + cosTheta * _24;
+}
+
+void 
+gfx3DMatrix::PreMultiply(const gfx3DMatrix& aOther)
+{
+  *this = aOther * (*this);
+}
+
+void
+gfx3DMatrix::PreMultiply(const gfxMatrix& aOther)
+{
+  gfx3DMatrix temp;
+  temp._11 = aOther.xx * _11 + aOther.yx * _21;
+  temp._21 = aOther.xy * _11 + aOther.yy * _21;
+  temp._31 = _31;
+  temp._41 = aOther.x0 * _11 + aOther.y0 * _21 + _41;
+  temp._12 = aOther.xx * _12 + aOther.yx * _22;
+  temp._22 = aOther.xy * _12 + aOther.yy * _22;
+  temp._32 = _32;
+  temp._42 = aOther.x0 * _12 + aOther.y0 * _22 + _42;
+  temp._13 = aOther.xx * _13 + aOther.yx * _23;
+  temp._23 = aOther.xy * _13 + aOther.yy * _23;
+  temp._33 = _33;
+  temp._43 = aOther.x0 * _13 + aOther.y0 * _23 + _43;
+  temp._14 = aOther.xx * _14 + aOther.yx * _24;
+  temp._24 = aOther.xy * _14 + aOther.yy * _24;
+  temp._34 = _34;
+  temp._44 = aOther.x0 * _14 + aOther.y0 * _24 + _44;
+
+  *this = temp;
 }
 
 gfx3DMatrix
@@ -310,7 +482,7 @@ gfx3DMatrix::Inverse3x3() const
     return temp;
 }
 
-PRBool
+bool
 gfx3DMatrix::IsSingular() const
 {
   return Determinant() == 0.0;
@@ -495,7 +667,7 @@ gfx3DMatrix::TransformBounds(const gfxRect& rect) const
   return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
-PRBool
+bool
 gfx3DMatrix::Is2D() const
 {
   if (_13 != 0.0f || _14 != 0.0f ||
@@ -507,7 +679,7 @@ gfx3DMatrix::Is2D() const
   return PR_TRUE;
 }
 
-PRBool
+bool
 gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
 {
   if (!Is2D()) {
@@ -524,7 +696,7 @@ gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
   return PR_TRUE;
 }
 
-PRBool
+bool
 gfx3DMatrix::CanDraw2D(gfxMatrix* aMatrix) const
 {
   if (_14 != 0.0f || _24 != 0.0f ||

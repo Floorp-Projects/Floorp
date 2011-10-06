@@ -45,15 +45,13 @@
 
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
-#include "nsAbsoluteContainingBlock.h"
 
 class nsPresContext;
 
 /**
   * ViewportFrame is the parent of a single child - the doc root frame or a scroll frame 
   * containing the doc root frame. ViewportFrame stores this child in its primary child 
-  * list. It stores fixed positioned items in a secondary child list and its mFixedContainer 
-  * delegate handles them. 
+  * list.
   */
 class ViewportFrame : public nsContainerFrame {
 public:
@@ -63,7 +61,6 @@ public:
 
   ViewportFrame(nsStyleContext* aContext)
     : nsContainerFrame(aContext)
-    , mFixedContainer(kFixedList)
   {}
   virtual ~ViewportFrame() { } // useful for debugging
 
@@ -86,9 +83,6 @@ public:
   NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame);
 
-  virtual nsFrameList GetChildList(ChildListID aListID) const;
-  virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
-
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
@@ -106,8 +100,6 @@ public:
    * @see nsGkAtoms::viewportFrame
    */
   virtual nsIAtom* GetType() const;
-  
-  virtual PRBool IsContainingBlock() const;
 
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
@@ -117,12 +109,11 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
+private:
+  virtual mozilla::layout::FrameChildListID GetAbsoluteListID() const { return kFixedList; }
+
 protected:
   nsPoint AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const;
-
-  // position: fixed content is really content which is absolutely positioned with
-  // respect to the viewport.
-  nsAbsoluteContainingBlock mFixedContainer;
 };
 
 

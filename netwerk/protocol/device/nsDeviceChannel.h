@@ -49,7 +49,7 @@ public:
   ~nsDeviceChannel();
 
   nsresult Init(nsIURI* uri);
-  nsresult OpenContentStream(PRBool aAsync,
+  nsresult OpenContentStream(bool aAsync,
                              nsIInputStream **aStream,
                              nsIChannel **aChannel);
 };

@@ -60,6 +60,8 @@ nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 class nsMenuBarFrame : public nsBoxFrame, public nsMenuParent
 {
 public:
+  NS_DECL_QUERYFRAME_TARGET(nsMenuBarFrame)
+  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
   nsMenuBarFrame(nsIPresShell* aShell, nsStyleContext* aContext);
@@ -68,17 +70,17 @@ public:
   virtual nsMenuFrame* GetCurrentMenuItem();
   NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem);
   virtual void CurrentMenuIsBeingDestroyed();
-  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, PRBool aSelectFirstItem);
+  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem);
 
-  NS_IMETHOD SetActive(PRBool aActiveFlag); 
+  NS_IMETHOD SetActive(bool aActiveFlag); 
 
-  virtual PRBool IsMenuBar() { return PR_TRUE; }
-  virtual PRBool IsContextMenu() { return PR_FALSE; }
-  virtual PRBool IsActive() { return mIsActive; }
-  virtual PRBool IsMenu() { return PR_FALSE; }
-  virtual PRBool IsOpen() { return PR_TRUE; } // menubars are considered always open
+  virtual bool IsMenuBar() { return true; }
+  virtual bool IsContextMenu() { return false; }
+  virtual bool IsActive() { return mIsActive; }
+  virtual bool IsMenu() { return false; }
+  virtual bool IsOpen() { return true; } // menubars are considered always open
 
-  PRBool IsMenuOpen() { return mCurrentMenu && mCurrentMenu->IsOpen(); }
+  bool IsMenuOpen() { return mCurrentMenu && mCurrentMenu->IsOpen(); }
 
   void InstallKeyboardNavigator();
   void RemoveKeyboardNavigator();
@@ -91,24 +93,24 @@ public:
 
   virtual nsIAtom* GetType() const { return nsGkAtoms::menuBarFrame; }
 
-  virtual void LockMenuUntilClosed(PRBool aLock) {}
-  virtual PRBool IsMenuLocked() { return PR_FALSE; }
+  virtual void LockMenuUntilClosed(bool aLock) {}
+  virtual bool IsMenuLocked() { return false; }
 
 // Non-interface helpers
 
   void
-  SetStayActive(PRBool aStayActive) { mStayActive = aStayActive; }
+  SetStayActive(bool aStayActive) { mStayActive = aStayActive; }
 
   // Called when a menu on the menu bar is clicked on. Returns a menu if one
   // needs to be closed.
   nsMenuFrame* ToggleMenuActiveState();
 
-  PRBool IsActiveByKeyboard() { return mActiveByKeyboard; }
+  bool IsActiveByKeyboard() { return mActiveByKeyboard; }
   void SetActiveByKeyboard() { mActiveByKeyboard = PR_TRUE; }
 
   // indicate that a menu on the menubar was closed. Returns true if the caller
   // may deselect the menuitem.
-  virtual PRBool MenuClosed();
+  virtual bool MenuClosed();
 
   // Called when Enter is pressed while the menubar is focused. If the current
   // menu is open, let the child handle the key.
@@ -117,7 +119,7 @@ public:
   // Used to handle ALT+key combos
   nsMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent);
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     // Override bogus IsFrameOfType in nsBoxFrame.
     if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))
@@ -137,12 +139,12 @@ protected:
 
   // flag that is temporarily set when switching from one menu on the menubar to another
   // to indicate that the menubar should not be deactivated.
-  PRPackedBool mStayActive;
+  bool mStayActive;
 
-  PRPackedBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
+  bool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
 
   // whether the menubar was made active via the keyboard.
-  PRPackedBool mActiveByKeyboard;
+  bool mActiveByKeyboard;
 
   // The current menu that is active (highlighted), which may not be open. This will
   // be null if no menu is active.

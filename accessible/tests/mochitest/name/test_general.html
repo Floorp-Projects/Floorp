@@ -170,11 +170,13 @@
       testName("combo4", "Subscribe to ATOM feed.");
 
       testName("comboinmiddle2", "Play the Haliluya sound when new mail arrives");
-      testName("combo5", "Play the Haliluya sound when new mail arrives");
+      testName("combo5", null); // label isn't used as a name for control
       testName("checkbox", "Play the Haliluya sound when new mail arrives");
+      testName("comboinmiddle3", "Play the Haliluya sound when new mail arrives");
+      testName("combo6", "Play the Haliluya sound when new mail arrives");
 
       testName("comboinend", "This day was sunny");
-      testName("combo6", "This day was");
+      testName("combo7", "This day was");
 
       testName("textboxinend", "This day was sunny");
       testName("textbox2", "This day was");
@@ -212,6 +214,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=604391"
      title="Use placeholder as name if name is otherwise empty">
     Mozilla Bug 604391
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=669312"
+     title="Accessible name is duplicated when input has a label associated uisng for/id and is wrapped around the input">
+    Mozilla Bug 669312
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -343,7 +350,7 @@
   <!-- no name from subtree because it holds whitespaces only -->
   <a id="from_label_ignore_ws_subtree" href="about:" title="about">&nbsp;&nbsp;  </a>
 
-  <!-- label element, label contains the button -->
+  <!-- label element, label contains control -->
   <label>text<button id="btn_label_inside">10</button>text</label>
   <br/>
 
@@ -437,10 +444,18 @@
     </label>
     <input id="checkbox" type="checkbox" />
 
+    <label id="comboinmiddle3" for="combo6">Play the
+      <select id="combo6">
+        <option>Haliluya</option>
+        <option>Hurra</option>
+      </select>
+      sound when new mail arrives
+    </label>
+
     <!-- at the end (without and with whitespaces) -->
     <label id="comboinend">
       This day was
-      <select id="combo6" name="occupation">
+      <select id="combo7" name="occupation">
         <option>sunny</option>
         <option>rainy</option>
       </select></label>

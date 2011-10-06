@@ -542,7 +542,7 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(
 {
     AssertPluginThread();
 
-    PRBool value = 0;
+    PRUint32 value = 0;
     if (!mPluginIface->getvalue) {
         *rv = NPERR_GENERIC_ERROR;
     }
@@ -564,11 +564,11 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(
     // The documentation on the types for many variables in NP(N|P)_GetValue
     // is vague.  Often boolean values are NPBool (1 byte), but
     // https://developer.mozilla.org/en/XEmbed_Extension_for_Mozilla_Plugins
-    // treats NPPVpluginNeedsXEmbed as PRBool (int), and
+    // treats NPPVpluginNeedsXEmbed as bool (int), and
     // on x86/32-bit, flash stores to this using |movl 0x1,&needsXEmbed|.
     // thus we can't use NPBool for needsXEmbed, or the three bytes above
-    // it on the stack would get clobbered. so protect with the larger PRBool.
-    PRBool needsXEmbed = 0;
+    // it on the stack would get clobbered. so protect with the larger bool.
+    PRUint32 needsXEmbed = 0;
     if (!mPluginIface->getvalue) {
         *rv = NPERR_GENERIC_ERROR;
     }
@@ -1404,7 +1404,7 @@ NeuteredWindowProc(HWND hwnd,
 const wchar_t kOldWndProcProp[] = L"MozillaIPCOldWndProc";
 
 // static
-PRBool
+bool
 PluginInstanceChild::SetWindowLongHookCheck(HWND hWnd,
                                             int nIndex,
                                             LONG_PTR newLong)

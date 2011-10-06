@@ -66,7 +66,7 @@ public:
   nsresult Initialize(nsIXULWindow * aParent, nsIXULWindow * aOpener,
                       nsIAppShell* aShell, nsIURI* aUrl,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                      PRBool aIsHiddenWindow,
+                      bool aIsHiddenWindow,
                       nsWidgetInitData& widgetInitData);
 
   nsresult Toolbar();
@@ -84,7 +84,7 @@ protected:
   nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsAString & aWebShellName);
 
   void                     LoadContentAreas();
-  PRBool                   ExecuteCloseHandler();
+  bool                     ExecuteCloseHandler();
   void                     ConstrainToOpenerScreen(PRInt32* aX, PRInt32* aY);
 
   static nsEventStatus HandleEvent(nsGUIEvent *aEvent);

@@ -78,10 +78,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsXBLResourceLoader)
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus);
 
-  void LoadResources(PRBool* aResult);
+  void LoadResources(bool* aResult);
   void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
   void AddResourceListener(nsIContent* aElement);
 
@@ -101,10 +101,10 @@ public:
   nsXBLResource* mResourceList; // The list of resources we need to load.
   nsXBLResource* mLastResource;
 
-  PRPackedBool mLoadingResources;
+  bool mLoadingResources;
   // We need mInLoadResourcesFunc because we do a mixture of sync and
   // async loads.
-  PRPackedBool mInLoadResourcesFunc;
+  bool mInLoadResourcesFunc;
   PRInt16 mPendingSheets; // The number of stylesheets that have yet to load.
 
   // Bound elements that are waiting on the stylesheets and scripts.

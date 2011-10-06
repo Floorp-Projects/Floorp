@@ -400,7 +400,7 @@ nsSimplePageSequenceFrame::GetNumPages(PRInt32* aNumPages)
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::IsDoingPrintRange(PRBool* aDoing)
+nsSimplePageSequenceFrame::IsDoingPrintRange(bool* aDoing)
 {
   NS_ENSURE_ARG_POINTER(aDoing);
 
@@ -421,7 +421,7 @@ nsSimplePageSequenceFrame::GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage)
 
 // Helper Function
 void 
-nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char* aDefPropVal, PRBool aPageNumOnly)
+nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char* aDefPropVal, bool aPageNumOnly)
 {
   // Doing this here so we only have to go get these formats once
   nsXPIDLString pageNumberFormat;
@@ -535,7 +535,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
     return NS_ERROR_FAILURE;
   }
 
-  PRBool printEvenPages, printOddPages;
+  bool printEvenPages, printOddPages;
   mPageData->mPrintSettings->GetPrintOptions(nsIPrintSettings::kPrintEvenPages, &printEvenPages);
   mPageData->mPrintSettings->GetPrintOptions(nsIPrintSettings::kPrintOddPages, &printOddPages);
 
@@ -581,7 +581,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
     // one page at a time and printing the contents of what is exposed by the rect.
     // currently this does not work for IFrames
     // I will soon improve this to work with IFrames 
-    PRBool  continuePrinting = PR_TRUE;
+    bool    continuePrinting = true;
     nscoord width, height;
     width = PresContext()->GetPageSize().width;
     height = PresContext()->GetPageSize().height;
@@ -720,7 +720,7 @@ nsSimplePageSequenceFrame::GetType() const
 
 //------------------------------------------------------------------------------
 void
-nsSimplePageSequenceFrame::SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly)
+nsSimplePageSequenceFrame::SetPageNumberFormat(PRUnichar * aFormatStr, bool aForPageNumOnly)
 { 
   NS_ASSERTION(aFormatStr != nsnull, "Format string cannot be null!");
   NS_ASSERTION(mPageData != nsnull, "mPageData string cannot be null!");
