@@ -563,6 +563,24 @@ FlowsIntoNext(JSOp op)
            op != JSOP_GOTO && op != JSOP_GOTOX && op != JSOP_RETSUB;
 }
 
+/*
+ * AutoScriptUntrapper mutates the given script in place to replace JSOP_TRAP
+ * opcodes with the original opcode they replaced. The destructor mutates the
+ * script back into its original state.
+ */
+class AutoScriptUntrapper
+{
+    JSContext *cx;
+    JSScript *origScript;
+    jsbytecode *origCode;
+    size_t nbytes;
+    bool saveOriginal(JSScript *script);
+  public:
+    AutoScriptUntrapper();
+    bool untrap(JSContext *cx, JSScript *script);
+    ~AutoScriptUntrapper();
+};
+
 }
 #endif
 

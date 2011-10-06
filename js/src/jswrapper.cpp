@@ -739,7 +739,7 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *cla
     JS_ASSERT_IF(!srcArgs.calleev().isUndefined(),
                  srcArgs.callee().getFunctionPrivate()->native() == native);
     JS_ASSERT(&srcArgs.thisv().toObject() == wrapper);
-    JS_ASSERT(!UnwrapObject(wrapper)->isProxy());
+    JS_ASSERT(!UnwrapObject(wrapper)->isCrossCompartmentWrapper());
 
     JSObject *wrapped = wrappedObject(wrapper);
     AutoCompartment call(cx, wrapped);

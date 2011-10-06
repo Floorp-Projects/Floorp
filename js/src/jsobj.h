@@ -2206,7 +2206,7 @@ ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp);
  * any effectful operations are performed.
  */
 inline JSObject *
-NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok);
+NonGenericMethodGuard(JSContext *cx, CallArgs args, Native native, Class *clasp, bool *ok);
 
 /*
  * NonGenericMethodGuard tests args.thisv's class using 'clasp'. If more than
@@ -2216,7 +2216,7 @@ NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok);
  * for error reporting (clasp->name).
  */
 extern bool
-HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Class *clasp);
+HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Native native, Class *clasp);
 
 /*
  * Implement the extraction of a primitive from a value as needed for the
@@ -2227,7 +2227,7 @@ HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Class *clasp);
  */
 template <typename T>
 inline bool
-BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, T *v, bool *ok);
+BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, Native native, T *v, bool *ok);
 
 }  /* namespace js */
 

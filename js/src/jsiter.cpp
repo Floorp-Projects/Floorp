@@ -713,7 +713,7 @@ iterator_next(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &IteratorClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, iterator_next, &IteratorClass, &ok);
     if (!obj)
         return ok;
 
@@ -1335,14 +1335,14 @@ CloseGenerator(JSContext *cx, JSObject *obj)
  * Common subroutine of generator_(next|send|throw|close) methods.
  */
 static JSBool
-generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
+generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, uintN argc)
 {
     LeaveTrace(cx);
 
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &GeneratorClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, native, &GeneratorClass, &ok);
     if (!obj)
         return ok;
 
@@ -1399,25 +1399,25 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
 static JSBool
 generator_send(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_SEND, vp, argc);
+    return generator_op(cx, generator_send, JSGENOP_SEND, vp, argc);
 }
 
 static JSBool
 generator_next(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_NEXT, vp, argc);
+    return generator_op(cx, generator_next, JSGENOP_NEXT, vp, argc);
 }
 
 static JSBool
 generator_throw(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_THROW, vp, argc);
+    return generator_op(cx, generator_throw, JSGENOP_THROW, vp, argc);
 }
 
 static JSBool
 generator_close(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_CLOSE, vp, argc);
+    return generator_op(cx, generator_close, JSGENOP_CLOSE, vp, argc);
 }
 
 static JSFunctionSpec generator_methods[] = {
