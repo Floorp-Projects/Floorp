@@ -43,6 +43,7 @@
 #include <gfxPoint3D.h>
 #include <gfxPointH3D.h>
 #include <gfxMatrix.h>
+#include <gfxQuad.h>
 
 /**
  * This class represents a 3D transformation. The matrix is laid
@@ -246,6 +247,9 @@ public:
    * Transforms a rectangle according to this matrix
    */
   gfxRect TransformBounds(const gfxRect& rect) const;
+
+
+  gfxQuad TransformRect(const gfxRect& aRect) const;
 
   /** 
    * Transforms a 3D vector according to this matrix.
