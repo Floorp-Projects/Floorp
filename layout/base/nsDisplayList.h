@@ -2134,6 +2134,8 @@ public:
 
   const gfx3DMatrix& GetTransform(float aFactor);
 
+  float GetHitDepthAtPoint(const nsPoint& aPoint);
+
   /**
    * TransformRect takes in as parameters a rectangle (in aFrame's coordinate
    * space) and returns the smallest rectangle (in aFrame's coordinate space)
