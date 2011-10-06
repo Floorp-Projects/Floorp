@@ -762,24 +762,6 @@ static bool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
       static_cast<nsIContent*>(aClosure)) <= 0;
 }
 
-static bool IsZPositionLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
-                             void* aClosure) {
-  if (!aItem1->GetUnderlyingFrame()->Preserves3D() ||
-      !aItem1->GetUnderlyingFrame()->Preserves3D()) {
-    return IsContentLEQ(aItem1, aItem2, aClosure);
-  }
-
-  nsIFrame* ancestor;
-  gfx3DMatrix matrix1 = aItem1->GetUnderlyingFrame()->GetTransformMatrix(&ancestor);
-  gfx3DMatrix matrix2 = aItem2->GetUnderlyingFrame()->GetTransformMatrix(&ancestor);
-
-  if (matrix1._43 == matrix2._43) {
-    return IsContentLEQ(aItem1, aItem2, aClosure);
-  }
-
-  return matrix1._43 < matrix2._43;
-}
-
 static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
                           void* aClosure) {
   // These GetUnderlyingFrame calls return non-null because we're only used
@@ -788,7 +770,7 @@ static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
   PRInt32 index1 = nsLayoutUtils::GetZIndex(aItem1->GetUnderlyingFrame());
   PRInt32 index2 = nsLayoutUtils::GetZIndex(aItem2->GetUnderlyingFrame());
   if (index1 == index2)
-    return IsZPositionLEQ(aItem1, aItem2, aClosure);
+    return IsContentLEQ(aItem1, aItem2, aClosure);
   return index1 < index2;
 }
 
@@ -833,11 +815,6 @@ void nsDisplayList::SortByZOrder(nsDisplayListBuilder* aBuilder,
 void nsDisplayList::SortByContentOrder(nsDisplayListBuilder* aBuilder,
                                        nsIContent* aCommonAncestor) {
   Sort(aBuilder, IsContentLEQ, aCommonAncestor);
-}
-
-void nsDisplayList::SortByZPosition(nsDisplayListBuilder* aBuilder,
-                                    nsIContent* aCommonAncestor) {
-  Sort(aBuilder, IsZPositionLEQ, aCommonAncestor);
 }
 
 void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
@@ -2536,9 +2513,16 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     return nsnull;
   }
 
-  return aBuilder->LayerBuilder()->
+  nsRefPtr<ContainerLayer> container = aBuilder->LayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList(),
                            aContainerParameters, &newTransformMatrix);
+
+  // Add the preserve-3d flag for this layer, BuildContainerLayerFor clears all flags,
+  // so we never need to explicitely unset this flag.
+  if (mFrame->Preserves3D()) {
+    container->SetContentFlags(container->GetContentFlags() | Layer::CONTENT_PRESERVE_3D);
+  }
+  return container.forget();
 }
 
 nsDisplayItem::LayerState
@@ -2546,7 +2530,7 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
                                   LayerManager* aManager) {
   if (mFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer))
     return LAYER_ACTIVE;
-  if (!GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel()).Is2D())
+  if (!GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel()).Is2D() || mFrame->Preserves3D())
     return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
     nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);
