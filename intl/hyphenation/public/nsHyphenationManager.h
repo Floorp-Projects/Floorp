@@ -44,6 +44,7 @@
 
 class nsHyphenator;
 class nsIAtom;
+class nsIURI;
 
 class nsHyphenationManager
 {
@@ -65,7 +66,7 @@ protected:
   void LoadAliases();
 
   nsInterfaceHashtable<nsISupportsHashKey,nsIAtom> mHyphAliases;
-  nsInterfaceHashtable<nsISupportsHashKey,nsIFile> mPatternFiles;
+  nsInterfaceHashtable<nsISupportsHashKey,nsIURI> mPatternFiles;
   nsRefPtrHashtable<nsISupportsHashKey,nsHyphenator> mHyphenators;
 
   static nsHyphenationManager *sInstance;
