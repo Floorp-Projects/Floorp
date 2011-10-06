@@ -1358,8 +1358,9 @@ var TouchEventHandler = {
       return true;
 
     let evt = content.document.createEvent("touchevent");
+    let scrollOffset = ContentScroll.getScrollOffset(aElement.ownerDocument.defaultView);
     let point = content.document.createTouch(content, aElement, 0,
-                                             aData.x, aData.y, aData.x, aData.y, aData.x, aData.y,
+                                             aData.x, aData.y, aData.x, aData.y, aData.x - scrollOffset.x, aData.y - scrollOffset.y,
                                              1, 1, 0, 0);
     let touches = content.document.createTouchList(point);
     if (aName == "touchend") {
