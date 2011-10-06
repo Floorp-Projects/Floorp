@@ -1339,9 +1339,10 @@ class GCHelperThread {
     static const size_t FREE_ARRAY_SIZE = size_t(1) << 16;
     static const size_t FREE_ARRAY_LENGTH = FREE_ARRAY_SIZE / sizeof(void *);
 
-    PRThread*         thread;
-    PRCondVar*        wakeup;
-    PRCondVar*        done;
+    JSRuntime         *const rt;
+    PRThread          *thread;
+    PRCondVar         *wakeup;
+    PRCondVar         *done;
     volatile State    state;
 
     JSContext         *context;
@@ -1374,8 +1375,9 @@ class GCHelperThread {
     void doSweep();
 
   public:
-    GCHelperThread()
-      : thread(NULL),
+    GCHelperThread(JSRuntime *rt)
+      : rt(rt),
+        thread(NULL),
         wakeup(NULL),
         done(NULL),
         state(IDLE),
@@ -1383,8 +1385,6 @@ class GCHelperThread {
         freeCursorEnd(NULL),
         backgroundAllocation(true)
     { }
-
-    inline JSRuntime *runtime();
 
     bool init();
     void finish();
