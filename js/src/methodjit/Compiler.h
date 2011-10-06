@@ -723,6 +723,7 @@ class Compiler : public BaseCompiler
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
     void jsop_stricteq(JSOp op);
     bool jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    CompileStatus jsop_equality_obj_obj(JSOp op, jsbytecode *target, JSOp fused);
     bool jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_pos();
 
@@ -739,8 +740,10 @@ class Compiler : public BaseCompiler
             return ifeq ? Assembler::GreaterThanOrEqual : Assembler::LessThan;
           case JSOP_LE:
             return ifeq ? Assembler::GreaterThan : Assembler::LessThanOrEqual;
+          case JSOP_STRICTEQ:
           case JSOP_EQ:
             return ifeq ? Assembler::NotEqual : Assembler::Equal;
+          case JSOP_STRICTNE:
           case JSOP_NE:
             return ifeq ? Assembler::Equal : Assembler::NotEqual;
           default:
