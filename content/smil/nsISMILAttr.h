@@ -79,7 +79,7 @@ public:
   virtual nsresult ValueFromString(const nsAString& aStr,
                                    const nsISMILAnimationElement* aSrcElement,
                                    nsSMILValue& aValue,
-                                   bool& aPreventCachingOfSandwich) const = 0;
+                                   PRBool& aPreventCachingOfSandwich) const = 0;
 
   /**
    * Gets the underlying value of this attribute.

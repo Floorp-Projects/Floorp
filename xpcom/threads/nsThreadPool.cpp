@@ -90,7 +90,7 @@ nsThreadPool::PutEvent(nsIRunnable *event)
 {
   // Avoid spawning a new thread while holding the event queue lock...
  
-  bool spawnThread = false;
+  PRBool spawnThread = PR_FALSE;
   {
     ReentrantMonitorAutoEnter mon(mEvents.GetReentrantMonitor());
 
@@ -115,7 +115,7 @@ nsThreadPool::PutEvent(nsIRunnable *event)
                                     getter_AddRefs(thread));
   NS_ENSURE_STATE(thread);
 
-  bool killThread = false;
+  PRBool killThread = PR_FALSE;
   {
     ReentrantMonitorAutoEnter mon(mEvents.GetReentrantMonitor());
     if (mThreads.Count() < (PRInt32) mThreadLimit) {
@@ -162,9 +162,9 @@ nsThreadPool::Run()
   nsCOMPtr<nsIThread> current;
   nsThreadManager::get()->GetCurrentThread(getter_AddRefs(current));
 
-  bool shutdownThreadOnExit = false;
-  bool exitThread = false;
-  bool wasIdle = false;
+  PRBool shutdownThreadOnExit = PR_FALSE;
+  PRBool exitThread = PR_FALSE;
+  PRBool wasIdle = PR_FALSE;
   PRIntervalTime idleSince;
 
   nsCOMPtr<nsIThreadPoolListener> listener;
@@ -263,7 +263,7 @@ nsThreadPool::Dispatch(nsIRunnable *event, PRUint32 flags)
 }
 
 NS_IMETHODIMP
-nsThreadPool::IsOnCurrentThread(bool *result)
+nsThreadPool::IsOnCurrentThread(PRBool *result)
 {
   // No one should be calling this method.  If this assertion gets hit, then we
   // need to think carefully about what this method should be returning.

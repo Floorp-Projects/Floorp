@@ -71,7 +71,7 @@ nsresult nsUnicodeEncodeHelper::ConvertByTable(
       }
     }
 
-    bool charFound;
+    PRBool charFound;
     if (aScanClass == uMultibytesCharset) {
       NS_ASSERTION(aShiftOutTable, "shift table missing");
       charFound = uGenerateShift(aShiftOutTable, 0, med,
@@ -127,7 +127,7 @@ nsresult nsUnicodeEncodeHelper::ConvertByMultiTable(
       break;
     }
 
-    bool charFound;
+    PRBool charFound;
     if (aScanClassArray[i] == uMultibytesCharset) {
       NS_ASSERTION(aShiftOutTable[i], "shift table missing");
       charFound = uGenerateShift(aShiftOutTable[i], 0, med,

@@ -124,7 +124,7 @@ private:
   @param after (in): limitation after rep
   @return true, if rep is found and limitation spec is met or rep is empty
 */
-  bool ItMatchesDelimited(const PRUnichar * aInString, PRInt32 aInLength,
+  PRBool ItMatchesDelimited(const PRUnichar * aInString, PRInt32 aInLength,
       const PRUnichar * rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after);
 
 /**
@@ -145,12 +145,12 @@ private:
                             only needed for attribute values)
 */
   void EscapeChar(const PRUnichar ch, nsString& aStringToAppendto,
-                  bool inAttribute);
+                  PRBool inAttribute);
 
 /**
   See EscapeChar. Escapes the string in place.
 */
-  void EscapeStr(nsString& aInString, bool inAttribute);
+  void EscapeStr(nsString& aInString, PRBool inAttribute);
 
 /**
   Currently only reverts "<", ">" and "&". All others stay as they are.<p>
@@ -185,7 +185,7 @@ private:
   @param replaceAfter (out): Number of chars of URL after pos
   @return URL found
 */
-  bool FindURL(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
+  PRBool FindURL(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
           const PRUint32 whathasbeendone,
           nsString& outputHTML, PRInt32& replaceBefore, PRInt32& replaceAfter);
 
@@ -219,7 +219,7 @@ private:
  *             similar) starts
  * @return |check|-conform start has been found
  */
-  bool FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
+  PRBool FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
             	               const modetype check, PRUint32& start);
 
 /**
@@ -229,7 +229,7 @@ private:
  * @param end (out): Similar to |start| param of FindURLStart
  * @return |check|-conform end has been found
  */
-  bool FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLength, const PRUint32 pos,
+  PRBool FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLength, const PRUint32 pos,
            const modetype check, const PRUint32 start, PRUint32& end);
 
 /**
@@ -253,7 +253,7 @@ private:
  * @param outputHTML (out): see FindURL
  * @return A valid URL could be found (and creation of HTML successful)
  */
-  bool CheckURLAndCreateHTML(
+  PRBool CheckURLAndCreateHTML(
        const nsString& txtURL, const nsString& desc, const modetype mode,
        nsString& outputHTML);
 
@@ -275,7 +275,7 @@ private:
   @param open (in/out): Number of currently open tags of type tagHTML
   @return Conversion succeeded
 */
-  bool StructPhraseHit(const PRUnichar * aInString, PRInt32 aInStringLength, bool col0,
+  PRBool StructPhraseHit(const PRUnichar * aInString, PRInt32 aInStringLength, PRBool col0,
      const PRUnichar* tagTXT,
      PRInt32 aTagTxtLen, 
      const char* tagHTML, const char* attributeHTML,
@@ -288,8 +288,8 @@ private:
   @param outputHTML (out): new string containing the html for the smily
   @param glyphTextLen (out): see GlyphHit
 */
-  bool
-         SmilyHit(const PRUnichar * aInString, PRInt32 aLength, bool col0,
+  PRBool
+         SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool col0,
          const char* tagTXT, const char* imageName,
          nsString& outputHTML, PRInt32& glyphTextLen);
 
@@ -308,14 +308,14 @@ private:
   @param glyphTextLen (out): Length of original text to replace
   @return see StructPhraseHit
 */
-  bool GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, bool col0,
+  PRBool GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBool col0,
        nsString& aOutString, PRInt32& glyphTextLen);
 
 /**
   Check if a given url should be linkified.
   @param aURL (in): url to be checked on.
 */
-  bool ShouldLinkify(const nsCString& aURL);
+  PRBool ShouldLinkify(const nsCString& aURL);
 };
 
 // It's said, that Win32 and Mac don't like static const members

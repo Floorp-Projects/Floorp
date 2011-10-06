@@ -194,7 +194,7 @@ class nsHtml5TreeOperation {
                      nsIAtom* aName, 
                      nsHtml5HtmlAttributes* aAttributes,
                      nsIContent** aTarget,
-                     bool aFromNetwork) {
+                     PRBool aFromNetwork) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
       NS_PRECONDITION(aName, "Initialized tree op with null name.");
@@ -291,7 +291,7 @@ class nsHtml5TreeOperation {
       mInt = aInt;
     }
 
-    inline bool IsRunScript() {
+    inline PRBool IsRunScript() {
       return mOpCode == eTreeOpRunScript;
     }
     

@@ -48,7 +48,6 @@
 #include "jspubtd.h"
 #include "jsatom.h"
 #include "jsscan.h"
-#include "jsscript.h"
 #include "jswin.h"
 
 #include "frontend/ParseMaps.h"
@@ -911,11 +910,9 @@ struct LexicalScopeNode : public JSParseNode {
  * because the above one-pass algorithm sees the definition before any uses,
  * and because all uses are contained in the same block as the definition.
  *
- * We also analyze function uses to flag upward/downward funargs.  If a lambda
- * post-dominates each of its upvars' sole, inevitable (i.e. not hidden behind
- * conditions or within loops or the like) initialization or assignment; then
- * we can optimize the lambda as a flat closure (after Chez Scheme's display
- * closures).
+ * We also analyze function uses to flag upward/downward funargs, optimizing
+ * those lambdas that post-dominate their upvars inevitable only assignments or
+ * initializations as flat closures (after Chez Scheme's display closures).
  */
 #define dn_uses         pn_link
 

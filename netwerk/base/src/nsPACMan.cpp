@@ -56,13 +56,13 @@
 
 // Check to see if the underlying request was not an error page in the case of
 // a HTTP request.  For other types of channels, just return true.
-static bool
+static PRBool
 HttpRequestSucceeded(nsIStreamLoader *loader)
 {
   nsCOMPtr<nsIRequest> request;
   loader->GetRequest(getter_AddRefs(request));
 
-  bool result = true;  // default to assuming success
+  PRBool result = PR_TRUE;  // default to assuming success
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
   if (httpChannel)

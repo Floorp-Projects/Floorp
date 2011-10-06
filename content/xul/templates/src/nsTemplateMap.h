@@ -81,10 +81,9 @@ public:
     Remove(nsIContent* aContent) {
         PL_DHashTableOperate(&mTable, aContent, PL_DHASH_REMOVE);
 
-        for (nsIContent* child = aContent->GetFirstChild();
-             child;
-             child = child->GetNextSibling()) {
-            Remove(child);
+        PRUint32 count = aContent->GetChildCount();
+        for (PRUint32 i = 0; i < count; ++i) {
+            Remove(aContent->GetChildAt(i));
         }
     }
 

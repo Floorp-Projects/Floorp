@@ -116,7 +116,7 @@
 #define MISSPELLED_WORD_COUNT_PENALTY 4
 
 
-static bool ContentIsDescendantOf(nsINode* aPossibleDescendant,
+static PRBool ContentIsDescendantOf(nsINode* aPossibleDescendant,
                                     nsINode* aPossibleAncestor);
 
 static const char kMaxSpellCheckSelectionSize[] = "extensions.spellcheck.inline.max-misspellings";
@@ -223,10 +223,10 @@ mozInlineSpellStatus::InitForEditorChange(
 
 nsresult
 mozInlineSpellStatus::InitForNavigation(
-    bool aForceCheck, PRInt32 aNewPositionOffset,
+    PRBool aForceCheck, PRInt32 aNewPositionOffset,
     nsIDOMNode* aOldAnchorNode, PRInt32 aOldAnchorOffset,
     nsIDOMNode* aNewAnchorNode, PRInt32 aNewAnchorOffset,
-    bool* aContinue)
+    PRBool* aContinue)
 {
   nsresult rv;
   mOp = eOpNavigation;
@@ -394,7 +394,7 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // see if the new cursor position is in the word of the old cursor position
-  bool isInRange = false;
+  PRBool isInRange = PR_FALSE;
   if (! mForceNavigationWordCheck) {
     rv = oldWordNS->IsPointInRange(newAnchorNode,
                                    newAnchorOffset + mNewNavigationPositionOffset,
@@ -570,7 +570,7 @@ mozInlineSpellChecker::Init(nsIEditor *aEditor)
 //    flushed, which can cause editors to go away which will bring us here.
 //    We can not do anything that will cause DoSpellCheck to freak out.
 
-nsresult mozInlineSpellChecker::Cleanup(bool aDestroyingFrames)
+nsresult mozInlineSpellChecker::Cleanup(PRBool aDestroyingFrames)
 {
   mNumWordsInSpellSelection = 0;
   nsCOMPtr<nsISelection> spellCheckSelection;
@@ -604,7 +604,7 @@ nsresult mozInlineSpellChecker::Cleanup(bool aDestroyingFrames)
 //    updated before an observer notification is sent out about the change, to
 //    avoid editors getting a wrong cached result.
 
-bool // static
+PRBool // static
 mozInlineSpellChecker::CanEnableInlineSpellChecking()
 {
   nsresult rv;
@@ -615,7 +615,7 @@ mozInlineSpellChecker::CanEnableInlineSpellChecking()
       do_CreateInstance("@mozilla.org/editor/editorspellchecker;1", &rv);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-    bool canSpellCheck = false;
+    PRBool canSpellCheck = PR_FALSE;
     rv = spellchecker->CanSpellCheck(&canSpellCheck);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
@@ -685,7 +685,7 @@ mozInlineSpellChecker::UnregisterEventListeners()
 // mozInlineSpellChecker::GetEnableRealTimeSpell
 
 NS_IMETHODIMP
-mozInlineSpellChecker::GetEnableRealTimeSpell(bool* aEnabled)
+mozInlineSpellChecker::GetEnableRealTimeSpell(PRBool* aEnabled)
 {
   NS_ENSURE_ARG_POINTER(aEnabled);
   *aEnabled = mSpellCheck != nsnull;
@@ -695,7 +695,7 @@ mozInlineSpellChecker::GetEnableRealTimeSpell(bool* aEnabled)
 // mozInlineSpellChecker::SetEnableRealTimeSpell
 
 NS_IMETHODIMP
-mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled)
+mozInlineSpellChecker::SetEnableRealTimeSpell(PRBool aEnabled)
 {
   if (!aEnabled) {
     mSpellCheck = nsnull;
@@ -1091,7 +1091,7 @@ mozInlineSpellChecker::SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
 nsresult
 mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
                                              nsIDOMNode *aNode,
-                                             bool *checkSpelling)
+                                             PRBool *checkSpelling)
 {
   *checkSpelling = PR_TRUE;
   NS_ENSURE_ARG_POINTER(aNode);
@@ -1214,7 +1214,7 @@ mozInlineSpellChecker::DoSpellCheckSelection(mozInlineSpellWordUtil& aWordUtil,
   rv = status.InitForRange(nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool doneChecking;
+  PRBool doneChecking;
   for (idx = 0; idx < count; idx ++) {
     checkRange = ranges[idx];
     if (checkRange) {
@@ -1269,7 +1269,7 @@ mozInlineSpellChecker::DoSpellCheckSelection(mozInlineSpellWordUtil& aWordUtil,
 nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
                                              nsISelection *aSpellCheckSelection,
                                              mozInlineSpellStatus* aStatus,
-                                             bool* aDoneChecking)
+                                             PRBool* aDoneChecking)
 {
   nsCOMPtr<nsIDOMNode> beginNode, endNode;
   PRInt32 beginOffset, endOffset;
@@ -1281,7 +1281,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
   if (! editor)
     return NS_ERROR_FAILURE;
 
-  bool iscollapsed;
+  PRBool iscollapsed;
   nsresult rv = aStatus->mRange->GetCollapsed(&iscollapsed);
   NS_ENSURE_SUCCESS(rv, rv);
   if (iscollapsed)
@@ -1322,7 +1322,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
 
   nsAutoString wordText;
   nsCOMPtr<nsIDOMRange> wordRange;
-  bool dontCheckWord;
+  PRBool dontCheckWord;
   while (NS_SUCCEEDED(aWordUtil.GetNextWord(wordText,
                                             getter_AddRefs(wordRange),
                                             &dontCheckWord)) &&
@@ -1347,7 +1347,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
     // there were no ranges when we started out.
     if (originalRangeCount > 0) {
       // likewise, if this word is inside new text, we won't bother testing
-      bool inCreatedRange = false;
+      PRBool inCreatedRange = PR_FALSE;
       if (createdRange)
         createdRange->IsPointInRange(beginNode, beginOffset, &inCreatedRange);
       if (! inCreatedRange) {
@@ -1366,7 +1366,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
       continue;
 
     // some nodes we don't spellcheck
-    bool checkSpelling;
+    PRBool checkSpelling;
     rv = SkipSpellCheckForNode(editor, beginNode, &checkSpelling);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!checkSpelling)
@@ -1380,14 +1380,14 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
     // exclusion range. Because the exclusion range is a multiple of a word,
     // this is sufficient.
     if (noCheckRange) {
-      bool inExclusion = false;
+      PRBool inExclusion = PR_FALSE;
       noCheckRange->IsPointInRange(beginNode, beginOffset, &inExclusion);
       if (inExclusion)
         continue;
     }
 
     // check spelling and add to selection if misspelled
-    bool isMisspelled;
+    PRBool isMisspelled;
     aWordUtil.NormalizeWord(wordText);
     rv = mSpellCheck->CheckCurrentWordNoSuggest(wordText.get(), &isMisspelled);
     if (NS_FAILED(rv))
@@ -1474,7 +1474,7 @@ mozInlineSpellChecker::ResumeCheck(mozInlineSpellStatus* aStatus)
   if (! aStatus->mRange)
     return NS_OK; // empty range, nothing to do
 
-  bool doneChecking = true;
+  PRBool doneChecking = PR_TRUE;
   if (aStatus->mOp == mozInlineSpellStatus::eOpSelection)
     rv = DoSpellCheckSelection(wordUtil, spellCheckSelection, aStatus);
   else
@@ -1536,7 +1536,7 @@ mozInlineSpellChecker::CleanupRangesInSelection(nsISelection *aSelection)
 
     if (checkRange)
     {
-      bool collapsed;
+      PRBool collapsed;
       checkRange->GetCollapsed(&collapsed);
       if (collapsed)
       {
@@ -1630,7 +1630,7 @@ nsresult mozInlineSpellChecker::SaveCurrentSelectionPosition()
 
 // This is a copy of nsContentUtils::ContentIsDescendantOf. Another crime
 // for XPCOM's rap sheet
-bool // static
+PRBool // static
 ContentIsDescendantOf(nsINode* aPossibleDescendant,
                       nsINode* aPossibleAncestor)
 {
@@ -1660,7 +1660,7 @@ ContentIsDescendantOf(nsINode* aPossibleDescendant,
 //    DOM_VK_RIGHT and DOM_VK_LEFT cases.
 
 nsresult
-mozInlineSpellChecker::HandleNavigationEvent(bool aForceWordSpellCheck,
+mozInlineSpellChecker::HandleNavigationEvent(PRBool aForceWordSpellCheck,
                                              PRInt32 aNewPositionOffset)
 {
   nsresult rv;
@@ -1679,7 +1679,7 @@ mozInlineSpellChecker::HandleNavigationEvent(bool aForceWordSpellCheck,
   rv = SaveCurrentSelectionPosition();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool shouldPost;
+  PRBool shouldPost;
   mozInlineSpellStatus status(this);
   rv = status.InitForNavigation(aForceWordSpellCheck, aNewPositionOffset,
                                 currentAnchorNode, currentAnchorOffset,

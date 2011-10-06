@@ -154,13 +154,13 @@ nsresult nsWaveReader::ReadMetadata(nsVideoInfo* aInfo)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
-  bool loaded = LoadRIFFChunk() && LoadFormatChunk() && FindDataOffset();
+  PRBool loaded = LoadRIFFChunk() && LoadFormatChunk() && FindDataOffset();
   if (!loaded) {
     return NS_ERROR_FAILURE;
   }
 
-  mInfo.mHasAudio = true;
-  mInfo.mHasVideo = false;
+  mInfo.mHasAudio = PR_TRUE;
+  mInfo.mHasVideo = PR_FALSE;
   mInfo.mAudioRate = mSampleRate;
   mInfo.mAudioChannels = mChannels;
 
@@ -174,7 +174,7 @@ nsresult nsWaveReader::ReadMetadata(nsVideoInfo* aInfo)
   return NS_OK;
 }
 
-bool nsWaveReader::DecodeAudioData()
+PRBool nsWaveReader::DecodeAudioData()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -185,10 +185,10 @@ bool nsWaveReader::DecodeAudioData()
 
   static const PRInt64 BLOCK_SIZE = 4096;
   PRInt64 readSize = NS_MIN(BLOCK_SIZE, remaining);
-  PRInt64 frames = readSize / mFrameSize;
+  PRInt64 samples = readSize / mSampleSize;
 
   PR_STATIC_ASSERT(PRUint64(BLOCK_SIZE) < UINT_MAX / sizeof(AudioDataValue) / MAX_CHANNELS);
-  const size_t bufferSize = static_cast<size_t>(frames * mChannels);
+  const size_t bufferSize = static_cast<size_t>(samples * mChannels);
   nsAutoArrayPtr<AudioDataValue> sampleBuffer(new AudioDataValue[bufferSize]);
 
   PR_STATIC_ASSERT(PRUint64(BLOCK_SIZE) < UINT_MAX / sizeof(char));
@@ -196,13 +196,13 @@ bool nsWaveReader::DecodeAudioData()
 
   if (!ReadAll(dataBuffer, readSize)) {
     mAudioQueue.Finish();
-    return false;
+    return PR_FALSE;
   }
 
   // convert data to samples
   const char* d = dataBuffer.get();
   AudioDataValue* s = sampleBuffer.get();
-  for (int i = 0; i < frames; ++i) {
+  for (int i = 0; i < samples; ++i) {
     for (unsigned int j = 0; j < mChannels; ++j) {
       if (mSampleFormat == nsAudioStream::FORMAT_U8) {
         PRUint8 v =  ReadUint8(&d);
@@ -227,24 +227,24 @@ bool nsWaveReader::DecodeAudioData()
   double readSizeTime = BytesToTime(readSize);
   NS_ASSERTION(posTime <= PR_INT64_MAX / USECS_PER_S, "posTime overflow");
   NS_ASSERTION(readSizeTime <= PR_INT64_MAX / USECS_PER_S, "readSizeTime overflow");
-  NS_ASSERTION(frames < PR_INT32_MAX, "frames overflow");
+  NS_ASSERTION(samples < PR_INT32_MAX, "samples overflow");
 
   mAudioQueue.Push(new AudioData(pos,
                                  static_cast<PRInt64>(posTime * USECS_PER_S),
                                  static_cast<PRInt64>(readSizeTime * USECS_PER_S),
-                                 static_cast<PRInt32>(frames),
+                                 static_cast<PRInt32>(samples),
                                  sampleBuffer.forget(),
                                  mChannels));
 
-  return true;
+  return PR_TRUE;
 }
 
-bool nsWaveReader::DecodeVideoFrame(bool &aKeyframeSkip,
+PRBool nsWaveReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                                       PRInt64 aTimeThreshold)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
-  return false;
+  return PR_FALSE;
 }
 
 nsresult nsWaveReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime)
@@ -258,7 +258,7 @@ nsresult nsWaveReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   NS_ASSERTION(d < PR_INT64_MAX / USECS_PER_S, "Duration overflow"); 
   PRInt64 duration = static_cast<PRInt64>(d * USECS_PER_S);
   double seekTime = NS_MIN(aTarget, duration) / static_cast<double>(USECS_PER_S);
-  PRInt64 position = RoundDownToFrame(static_cast<PRInt64>(TimeToBytes(seekTime)));
+  PRInt64 position = RoundDownToSample(static_cast<PRInt64>(TimeToBytes(seekTime)));
   NS_ASSERTION(PR_INT64_MAX - mWavePCMOffset > position, "Integer overflow during wave seek");
   position += mWavePCMOffset;
   return mDecoder->GetCurrentStream()->Seek(nsISeekableStream::NS_SEEK_SET, position);
@@ -287,7 +287,7 @@ nsresult nsWaveReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
   return NS_OK;
 }
 
-bool
+PRBool
 nsWaveReader::ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead)
 {
   PRUint32 got = 0;
@@ -298,10 +298,10 @@ nsWaveReader::ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead)
     PRUint32 read = 0;
     if (NS_FAILED(mDecoder->GetCurrentStream()->Read(aBuf + got, PRUint32(aSize - got), &read))) {
       NS_WARNING("Stream read failed");
-      return false;
+      return PR_FALSE;
     }
     if (read == 0) {
-      return false;
+      return PR_FALSE;
     }
     mDecoder->NotifyBytesConsumed(read);
     got += read;
@@ -309,10 +309,10 @@ nsWaveReader::ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead)
       *aBytesRead = got;
     }
   } while (got != aSize);
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsWaveReader::LoadRIFFChunk()
 {
   char riffHeader[RIFF_INITIAL_SIZE];
@@ -322,13 +322,13 @@ nsWaveReader::LoadRIFFChunk()
                     "LoadRIFFChunk called when stream in invalid state");
 
   if (!ReadAll(riffHeader, sizeof(riffHeader))) {
-    return false;
+    return PR_FALSE;
   }
 
   PR_STATIC_ASSERT(sizeof(PRUint32) * 2 <= RIFF_INITIAL_SIZE);
   if (ReadUint32BE(&p) != RIFF_CHUNK_MAGIC) {
     NS_WARNING("Stream data not in RIFF format");
-    return false;
+    return PR_FALSE;
   }
 
   // Skip over RIFF size field.
@@ -336,13 +336,13 @@ nsWaveReader::LoadRIFFChunk()
 
   if (ReadUint32BE(&p) != WAVE_CHUNK_MAGIC) {
     NS_WARNING("Expected WAVE chunk");
-    return false;
+    return PR_FALSE;
   }
 
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
 {
   NS_ABORT_IF_FALSE(aChunkSize, "Require aChunkSize argument");
@@ -354,7 +354,7 @@ nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
     const char* p = chunkHeader;
 
     if (!ReadAll(chunkHeader, sizeof(chunkHeader))) {
-      return false;
+      return PR_FALSE;
     }
 
     PR_STATIC_ASSERT(sizeof(PRUint32) * 2 <= CHUNK_HEADER_SIZE);
@@ -363,7 +363,7 @@ nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
 
     if (magic == aWantedChunk) {
       *aChunkSize = chunkSize;
-      return true;
+      return PR_TRUE;
     }
 
     // RIFF chunks are two-byte aligned, so round up if necessary.
@@ -375,17 +375,17 @@ nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
     while (chunkSize > 0) {
       PRUint32 size = NS_MIN(chunkSize, MAX_CHUNK_SIZE);
       if (!ReadAll(chunk.get(), size)) {
-        return false;
+        return PR_FALSE;
       }
       chunkSize -= size;
     }
   }
 }
 
-bool
+PRBool
 nsWaveReader::LoadFormatChunk()
 {
-  PRUint32 fmtSize, rate, channels, frameSize, sampleFormat;
+  PRUint32 fmtSize, rate, channels, sampleSize, sampleFormat;
   char waveFormat[WAVE_FORMAT_CHUNK_SIZE];
   const char* p = waveFormat;
 
@@ -396,11 +396,11 @@ nsWaveReader::LoadFormatChunk()
   // The "format" chunk may not directly follow the "riff" chunk, so skip
   // over any intermediate chunks.
   if (!ScanForwardUntil(FRMT_CHUNK_MAGIC, &fmtSize)) {
-    return false;
+    return PR_FALSE;
   }
 
   if (!ReadAll(waveFormat, sizeof(waveFormat))) {
-    return false;
+    return PR_FALSE;
   }
 
   PR_STATIC_ASSERT(sizeof(PRUint16) +
@@ -411,7 +411,7 @@ nsWaveReader::LoadFormatChunk()
                    sizeof(PRUint16) <= sizeof(waveFormat));
   if (ReadUint16LE(&p) != WAVE_FORMAT_ENCODING_PCM) {
     NS_WARNING("WAVE is not uncompressed PCM, compressed encodings are not supported");
-    return false;
+    return PR_FALSE;
   }
 
   channels = ReadUint16LE(&p);
@@ -420,7 +420,7 @@ nsWaveReader::LoadFormatChunk()
   // Skip over average bytes per second field.
   p += 4;
 
-  frameSize = ReadUint16LE(&p);
+  sampleSize = ReadUint16LE(&p);
 
   sampleFormat = ReadUint16LE(&p);
 
@@ -434,14 +434,14 @@ nsWaveReader::LoadFormatChunk()
     const char* p = extLength;
 
     if (!ReadAll(extLength, sizeof(extLength))) {
-      return false;
+      return PR_FALSE;
     }
 
     PR_STATIC_ASSERT(sizeof(PRUint16) <= sizeof(extLength));
     PRUint16 extra = ReadUint16LE(&p);
     if (fmtSize - (WAVE_FORMAT_CHUNK_SIZE + 2) != extra) {
       NS_WARNING("Invalid extended format chunk size");
-      return false;
+      return PR_FALSE;
     }
     extra += extra % 2;
 
@@ -449,7 +449,7 @@ nsWaveReader::LoadFormatChunk()
       PR_STATIC_ASSERT(PR_UINT16_MAX + (PR_UINT16_MAX % 2) < UINT_MAX / sizeof(char));
       nsAutoArrayPtr<char> chunkExtension(new char[extra]);
       if (!ReadAll(chunkExtension.get(), extra)) {
-        return false;
+        return PR_FALSE;
       }
     }
   }
@@ -463,25 +463,25 @@ nsWaveReader::LoadFormatChunk()
   // because that's what the audio backend currently supports.
   if (rate < 100 || rate > 96000 ||
       channels < 1 || channels > MAX_CHANNELS ||
-      (frameSize != 1 && frameSize != 2 && frameSize != 4) ||
+      (sampleSize != 1 && sampleSize != 2 && sampleSize != 4) ||
       (sampleFormat != 8 && sampleFormat != 16)) {
     NS_WARNING("Invalid WAVE metadata");
-    return false;
+    return PR_FALSE;
   }
 
   ReentrantMonitorAutoEnter monitor(mDecoder->GetReentrantMonitor());
   mSampleRate = rate;
   mChannels = channels;
-  mFrameSize = frameSize;
+  mSampleSize = sampleSize;
   if (sampleFormat == 8) {
     mSampleFormat = nsAudioStream::FORMAT_U8;
   } else {
     mSampleFormat = nsAudioStream::FORMAT_S16_LE;
   }
-  return true;
+  return PR_TRUE;
 }
 
-bool
+PRBool
 nsWaveReader::FindDataOffset()
 {
   // RIFF chunks are always word (two byte) aligned.
@@ -492,40 +492,40 @@ nsWaveReader::FindDataOffset()
   // over any intermediate chunks.
   PRUint32 length;
   if (!ScanForwardUntil(DATA_CHUNK_MAGIC, &length)) {
-    return false;
+    return PR_FALSE;
   }
 
   PRInt64 offset = mDecoder->GetCurrentStream()->Tell();
   if (offset <= 0 || offset > PR_UINT32_MAX) {
     NS_WARNING("PCM data offset out of range");
-    return false;
+    return PR_FALSE;
   }
 
   ReentrantMonitorAutoEnter monitor(mDecoder->GetReentrantMonitor());
   mWaveLength = length;
   mWavePCMOffset = PRUint32(offset);
-  return true;
+  return PR_TRUE;
 }
 
 double
 nsWaveReader::BytesToTime(PRInt64 aBytes) const
 {
   NS_ABORT_IF_FALSE(aBytes >= 0, "Must be >= 0");
-  return float(aBytes) / mSampleRate / mFrameSize;
+  return float(aBytes) / mSampleRate / mSampleSize;
 }
 
 PRInt64
 nsWaveReader::TimeToBytes(double aTime) const
 {
   NS_ABORT_IF_FALSE(aTime >= 0.0f, "Must be >= 0");
-  return RoundDownToFrame(PRInt64(aTime * mSampleRate * mFrameSize));
+  return RoundDownToSample(PRInt64(aTime * mSampleRate * mSampleSize));
 }
 
 PRInt64
-nsWaveReader::RoundDownToFrame(PRInt64 aBytes) const
+nsWaveReader::RoundDownToSample(PRInt64 aBytes) const
 {
   NS_ABORT_IF_FALSE(aBytes >= 0, "Must be >= 0");
-  return aBytes - (aBytes % mFrameSize);
+  return aBytes - (aBytes % mSampleSize);
 }
 
 PRInt64

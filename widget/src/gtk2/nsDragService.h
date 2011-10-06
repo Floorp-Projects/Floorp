@@ -69,15 +69,15 @@ public:
                                   nsIScriptableRegion * aRegion,
                                   PRUint32 aActionType);
     NS_IMETHOD StartDragSession();
-    NS_IMETHOD EndDragSession(bool aDoneDrag);
+    NS_IMETHOD EndDragSession(PRBool aDoneDrag);
 
     // nsIDragSession
-    NS_IMETHOD SetCanDrop            (bool             aCanDrop);
-    NS_IMETHOD GetCanDrop            (bool            *aCanDrop);
+    NS_IMETHOD SetCanDrop            (PRBool           aCanDrop);
+    NS_IMETHOD GetCanDrop            (PRBool          *aCanDrop);
     NS_IMETHOD GetNumDropItems       (PRUint32 * aNumItems);
     NS_IMETHOD GetData               (nsITransferable * aTransferable,
                                       PRUint32 aItemIndex);
-    NS_IMETHOD IsDataFlavorSupported (const char *aDataFlavor, bool *_retval);
+    NS_IMETHOD IsDataFlavorSupported (const char *aDataFlavor, PRBool *_retval);
 
     // nsIDragSessionGTK
 
@@ -123,14 +123,14 @@ private:
     GdkDragContext *mTargetDragContext;
     guint           mTargetTime;
     // is it OK to drop on us?
-    bool            mCanDrop;
+    PRBool          mCanDrop;
     // have we received our drag data?
-    bool            mTargetDragDataReceived;
+    PRBool          mTargetDragDataReceived;
     // last data received and its length
     void           *mTargetDragData;
     PRUint32        mTargetDragDataLen;
     // is the current target drag context contain a list?
-    bool           IsTargetContextList(void);
+    PRBool         IsTargetContextList(void);
     // this will get the native data from the last target given a
     // specific flavor
     void           GetTargetDragData(GdkAtom aFlavor);
@@ -153,7 +153,7 @@ private:
 
     // attempts to create a semi-transparent drag image. Returns TRUE if
     // successful, FALSE if not
-    bool SetAlphaPixmap(gfxASurface     *aPixbuf,
+    PRBool SetAlphaPixmap(gfxASurface     *aPixbuf,
                           GdkDragContext  *aContext,
                           PRInt32          aXOffset,
                           PRInt32          aYOffset,

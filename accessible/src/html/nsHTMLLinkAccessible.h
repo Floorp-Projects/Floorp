@@ -72,7 +72,7 @@ protected:
   /**
    * Returns true if the link has href attribute.
    */
-  bool IsLinked();
+  PRBool IsLinked();
 };
 
 #endif  

@@ -66,8 +66,8 @@
 namespace mozilla {
 namespace gl {
 
-static bool gIsATI = false;
-static bool gIsChromium = false;
+static PRBool gIsATI = PR_FALSE;
+static PRBool gIsChromium = PR_FALSE;
 static int gGLXMajorVersion = 0, gGLXMinorVersion = 0;
 
 // Check that we have at least version aMajor.aMinor .
@@ -85,7 +85,7 @@ HasExtension(const char* aExtensions, const char* aRequiredExtension)
         reinterpret_cast<const GLubyte*>(aExtensions), aRequiredExtension);
 }
 
-bool
+PRBool
 GLXLibrary::EnsureInitialized()
 {
     if (mInitialized) {
@@ -257,7 +257,7 @@ GLXLibrary::EnsureInitialized()
     return PR_TRUE;
 }
 
-bool
+PRBool
 GLXLibrary::SupportsTextureFromPixmap(gfxASurface* aSurface)
 {
     if (!EnsureInitialized()) {
@@ -641,7 +641,7 @@ public:
                     GLXFBConfig cfg,
                     XVisualInfo *vinfo,
                     GLContextGLX *shareContext,
-                    bool deleteDrawable,
+                    PRBool deleteDrawable,
                     gfxXlibSurface *pixmap = nsnull)
     {
         int db = 0, err;
@@ -723,7 +723,7 @@ TRY_AGAIN_NO_SHARING:
         return ContextTypeGLX;
     }
 
-    bool Init()
+    PRBool Init()
     {
         MakeCurrent();
         SetupLookupFunction();
@@ -734,9 +734,9 @@ TRY_AGAIN_NO_SHARING:
         return IsExtensionSupported("GL_EXT_framebuffer_object");
     }
 
-    bool MakeCurrentImpl(bool aForce = false)
+    PRBool MakeCurrentImpl(PRBool aForce = PR_FALSE)
     {
-        bool succeeded = true;
+        PRBool succeeded = PR_TRUE;
 
         // With the ATI FGLRX driver, glxMakeCurrent is very slow even when the context doesn't change.
         // (This is not the case with other drivers such as NVIDIA).
@@ -752,7 +752,7 @@ TRY_AGAIN_NO_SHARING:
         return succeeded;
     }
 
-    bool SetupLookupFunction()
+    PRBool SetupLookupFunction()
     {
         mLookupFunc = (PlatformLookupFunction)&GLXLibrary::xGetProcAddress;
         return PR_TRUE;
@@ -772,12 +772,12 @@ TRY_AGAIN_NO_SHARING:
         }
     }
 
-    bool IsDoubleBuffered()
+    PRBool IsDoubleBuffered()
     {
         return mDoubleBuffered;
     }
 
-    bool SwapBuffers()
+    PRBool SwapBuffers()
     {
         if (!mDoubleBuffered)
             return PR_FALSE;
@@ -786,7 +786,7 @@ TRY_AGAIN_NO_SHARING:
         return PR_TRUE;
     }
 
-    bool TextureImageSupportsGetBackingSurface()
+    PRBool TextureImageSupportsGetBackingSurface()
     {
         return sGLXLibrary.HasTextureFromPixmap();
     }
@@ -795,7 +795,7 @@ TRY_AGAIN_NO_SHARING:
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
-                       bool aUseNearestFilter = false);
+                       PRBool aUseNearestFilter = PR_FALSE);
 
 private:
     friend class GLContextProviderGLX;
@@ -805,8 +805,8 @@ private:
                  Display *aDisplay,
                  GLXDrawable aDrawable,
                  GLXContext aContext,
-                 bool aDeleteDrawable,
-                 bool aDoubleBuffered,
+                 PRBool aDeleteDrawable,
+                 PRBool aDoubleBuffered,
                  gfxXlibSurface *aPixmap)
         : GLContext(aFormat, aDeleteDrawable ? PR_TRUE : PR_FALSE, aShareContext),
           mContext(aContext),
@@ -820,8 +820,8 @@ private:
     GLXContext mContext;
     Display *mDisplay;
     GLXDrawable mDrawable;
-    bool mDeleteDrawable;
-    bool mDoubleBuffered;
+    PRPackedBool mDeleteDrawable;
+    PRPackedBool mDoubleBuffered;
 
     nsRefPtr<gfxXlibSurface> mPixmap;
 };
@@ -832,7 +832,7 @@ class TextureImageGLX : public TextureImage
     GLContextGLX::CreateTextureImage(const nsIntSize&,
                                      ContentType,
                                      GLenum,
-                                     bool);
+                                     PRBool);
 
 public:
     virtual ~TextureImageGLX()
@@ -879,11 +879,11 @@ public:
 
     virtual already_AddRefed<gfxASurface> GetBackingSurface()
     {
-        nsRefPtr<gfxASurface> copy = mUpdateSurface;
-        return copy.forget();
+        NS_ADDREF(mUpdateSurface);
+        return mUpdateSurface.get();
     }
 
-    virtual bool InUpdate() const { return mInUpdate; }
+    virtual PRBool InUpdate() const { return mInUpdate; }
 
     virtual GLuint GetTextureID() {
         return mTexture;
@@ -914,7 +914,7 @@ private:
     GLContext* mGLContext;
     nsRefPtr<gfxASurface> mUpdateSurface;
     GLXPixmap mPixmap;
-    bool mInUpdate;
+    PRPackedBool mInUpdate;
     GLuint mTexture;
 };
 
@@ -922,7 +922,7 @@ already_AddRefed<TextureImage>
 GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
                                  TextureImage::ContentType aContentType,
                                  GLenum aWrapMode,
-                                 bool aUseNearestFilter)
+                                 PRBool aUseNearestFilter)
 {
     if (!TextureImageSupportsGetBackingSurface()) {
         return GLContext::CreateTextureImage(aSize, 
@@ -980,7 +980,7 @@ GetGlobalContextGLX()
     return static_cast<GLContextGLX*>(GLContextProviderGLX::GetGlobalContext());
 }
 
-static bool
+static PRBool
 AreCompatibleVisuals(XVisualInfo *one, XVisualInfo *two)
 {
     if (one->c_class != two->c_class) {
@@ -1112,7 +1112,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
 static already_AddRefed<GLContextGLX>
 CreateOffscreenPixmapContext(const gfxIntSize& aSize,
                              const ContextFormat& aFormat,
-                             bool aShare)
+                             PRBool aShare)
 {
     if (!sGLXLibrary.EnsureInitialized()) {
         return nsnull;

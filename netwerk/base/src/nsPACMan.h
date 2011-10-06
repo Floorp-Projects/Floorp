@@ -126,13 +126,13 @@ public:
   /**
    * Returns true if we are currently loading the PAC file.
    */
-  bool IsLoading() { return mLoader != nsnull; }
+  PRBool IsLoading() { return mLoader != nsnull; }
 
   /**
    * Returns true if the given URI matches the URI of our PAC file.
    */
-  bool IsPACURI(nsIURI *uri) {
-    bool result;
+  PRBool IsPACURI(nsIURI *uri) {
+    PRBool result;
     return mPACURI && NS_SUCCEEDED(mPACURI->Equals(uri, &result)) && result;
   }
 
@@ -175,8 +175,8 @@ private:
   nsCOMPtr<nsIURI>             mPACURI;
   PRCList                      mPendingQ;
   nsCOMPtr<nsIStreamLoader>    mLoader;
-  bool                         mLoadPending;
-  bool                         mShutdown;
+  PRPackedBool                 mLoadPending;
+  PRPackedBool                 mShutdown;
   PRTime                       mScheduledReload;
   PRUint32                     mLoadFailureCount;
 };

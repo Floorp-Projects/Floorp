@@ -63,7 +63,7 @@ nsStyleBorder::GetBorderImage() const
   return mBorderImage;
 }
 
-inline bool nsStyleBorder::IsBorderImageLoaded() const
+inline PRBool nsStyleBorder::IsBorderImageLoaded() const
 {
   PRUint32 status;
   return mBorderImage &&

@@ -96,9 +96,9 @@ public:
 
   void ClearAnimValue(nsSVGElement *aElement);
 
-  bool IsExplicitlySet() const;
+  PRBool IsExplicitlySet() const;
 
-  bool IsAnimating() const {
+  PRBool IsAnimating() const {
     return !!mAnimVal;
   }
 
@@ -116,7 +116,7 @@ private:
 
   SVGTransformList mBaseVal;
   nsAutoPtr<SVGTransformList> mAnimVal;
-  bool mIsAttrSet;
+  PRPackedBool mIsAttrSet;
 
 #ifdef MOZ_SMIL
   struct SMILAnimatedTransformList : public nsISMILAttr
@@ -132,7 +132,7 @@ private:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const;
+                                     PRBool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

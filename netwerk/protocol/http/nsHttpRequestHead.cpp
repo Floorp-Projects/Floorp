@@ -43,7 +43,7 @@
 //-----------------------------------------------------------------------------
 
 void
-nsHttpRequestHead::Flatten(nsACString &buf, bool pruneProxyHeaders)
+nsHttpRequestHead::Flatten(nsACString &buf, PRBool pruneProxyHeaders)
 {
     // note: the first append is intentional.
  

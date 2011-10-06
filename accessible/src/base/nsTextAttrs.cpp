@@ -82,7 +82,7 @@ static nsCSSTextAttrMapItem gCSSTextAttrsMap[] =
 // nsTextAttrs
 
 nsTextAttrsMgr::nsTextAttrsMgr(nsHyperTextAccessible *aHyperTextAcc,
-                               bool aIncludeDefAttrs,
+                               PRBool aIncludeDefAttrs,
                                nsAccessible *aOffsetAcc,
                                PRInt32 aOffsetAccIdx) :
   mHyperTextAcc(aHyperTextAcc), mIncludeDefAttrs(aIncludeDefAttrs),
@@ -230,7 +230,7 @@ nsTextAttrsMgr::GetRange(const nsTArray<nsITextAttr*>& aTextAttrArray,
     nsIContent *currElm = nsCoreUtils::GetDOMElementFor(currAcc->GetContent());
     NS_ENSURE_STATE(currElm);
 
-    bool offsetFound = false;
+    PRBool offsetFound = PR_FALSE;
     for (PRUint32 attrIdx = 0; attrIdx < attrLen; attrIdx++) {
       nsITextAttr *textAttr = aTextAttrArray[attrIdx];
       if (!textAttr->Equal(currElm)) {
@@ -255,7 +255,7 @@ nsTextAttrsMgr::GetRange(const nsTArray<nsITextAttr*>& aTextAttrArray,
     nsIContent *currElm = nsCoreUtils::GetDOMElementFor(currAcc->GetContent());
     NS_ENSURE_STATE(currElm);
 
-    bool offsetFound = false;
+    PRBool offsetFound = PR_FALSE;
     for (PRUint32 attrIdx = 0; attrIdx < attrLen; attrIdx++) {
       nsITextAttr *textAttr = aTextAttrArray[attrIdx];
 
@@ -290,7 +290,7 @@ nsLangTextAttr::nsLangTextAttr(nsHyperTextAccessible *aRootAcc,
     mIsDefined = GetLang(aContent, mNativeValue);
 }
 
-bool
+PRBool
 nsLangTextAttr::GetValueFor(nsIContent *aElm, nsAutoString *aValue)
 {
   return GetLang(aElm, *aValue);
@@ -302,7 +302,7 @@ nsLangTextAttr::Format(const nsAutoString& aValue, nsAString& aFormattedValue)
   aFormattedValue = aValue;
 }
 
-bool
+PRBool
 nsLangTextAttr::GetLang(nsIContent *aContent, nsAString& aLang)
 {
   nsCoreUtils::GetLanguageFor(aContent, mRootContent, aLang);
@@ -330,7 +330,7 @@ nsCSSTextAttr::GetName() const
   return *gCSSTextAttrsMap[mIndex].mAttrName;
 }
 
-bool
+PRBool
 nsCSSTextAttr::GetValueFor(nsIContent *aContent, nsAutoString *aValue)
 {
   nsCOMPtr<nsIDOMCSSStyleDeclaration> currStyleDecl =
@@ -374,7 +374,7 @@ nsBGColorTextAttr::nsBGColorTextAttr(nsIFrame *aRootFrame, nsIFrame *aFrame) :
     mIsDefined = GetColor(aFrame, &mNativeValue);
 }
 
-bool
+PRBool
 nsBGColorTextAttr::GetValueFor(nsIContent *aContent, nscolor *aValue)
 {
   nsIFrame *frame = aContent->GetPrimaryFrame();
@@ -400,7 +400,7 @@ nsBGColorTextAttr::Format(const nscolor& aValue, nsAString& aFormattedValue)
   aFormattedValue = value;
 }
 
-bool
+PRBool
 nsBGColorTextAttr::GetColor(nsIFrame *aFrame, nscolor *aColor)
 {
   const nsStyleBackground *styleBackground = aFrame->GetStyleBackground();
@@ -444,7 +444,7 @@ nsFontSizeTextAttr::nsFontSizeTextAttr(nsIFrame *aRootFrame, nsIFrame *aFrame) :
   }
 }
 
-bool
+PRBool
 nsFontSizeTextAttr::GetValueFor(nsIContent *aContent, nscoord *aValue)
 {
   nsIFrame *frame = aContent->GetPrimaryFrame();
@@ -501,7 +501,7 @@ nsFontWeightTextAttr::nsFontWeightTextAttr(nsIFrame *aRootFrame,
   }
 }
 
-bool
+PRBool
 nsFontWeightTextAttr::GetValueFor(nsIContent *aContent, PRInt32 *aValue)
 {
   nsIFrame *frame = aContent->GetPrimaryFrame();

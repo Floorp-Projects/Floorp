@@ -233,9 +233,9 @@ public:
   ~nsCSSValue() { Reset(); }
 
   nsCSSValue&  operator=(const nsCSSValue& aCopy);
-  bool        operator==(const nsCSSValue& aOther) const;
+  PRBool      operator==(const nsCSSValue& aOther) const;
 
-  bool operator!=(const nsCSSValue& aOther) const
+  PRBool operator!=(const nsCSSValue& aOther) const
   {
     return !(*this == aOther);
   }
@@ -247,14 +247,14 @@ public:
   void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
 
   nsCSSUnit GetUnit() const { return mUnit; }
-  bool      IsLengthUnit() const
+  PRBool    IsLengthUnit() const
     { return eCSSUnit_PhysicalMillimeter <= mUnit && mUnit <= eCSSUnit_Pixel; }
   /**
    * A "fixed" length unit is one that means a specific physical length
    * which we try to match based on the physical characteristics of an
    * output device.
    */
-  bool      IsFixedLengthUnit() const  
+  PRBool    IsFixedLengthUnit() const  
     { return mUnit == eCSSUnit_PhysicalMillimeter; }
   /**
    * What the spec calls relative length units is, for us, split
@@ -265,25 +265,25 @@ public:
    * length. Relative length units should not be scaled by zooming, since
    * the underlying CSS length would already have been scaled.
    */
-  bool      IsRelativeLengthUnit() const  
+  PRBool    IsRelativeLengthUnit() const  
     { return eCSSUnit_EM <= mUnit && mUnit <= eCSSUnit_RootEM; }
   /**
    * A "pixel" length unit is a some multiple of CSS pixels.
    */
-  bool      IsPixelLengthUnit() const
+  PRBool    IsPixelLengthUnit() const
     { return eCSSUnit_Point <= mUnit && mUnit <= eCSSUnit_Pixel; }
-  bool      IsAngularUnit() const  
+  PRBool    IsAngularUnit() const  
     { return eCSSUnit_Degree <= mUnit && mUnit <= eCSSUnit_Radian; }
-  bool      IsFrequencyUnit() const  
+  PRBool    IsFrequencyUnit() const  
     { return eCSSUnit_Hertz <= mUnit && mUnit <= eCSSUnit_Kilohertz; }
-  bool      IsTimeUnit() const  
+  PRBool    IsTimeUnit() const  
     { return eCSSUnit_Seconds <= mUnit && mUnit <= eCSSUnit_Milliseconds; }
-  bool      IsCalcUnit() const
+  PRBool    IsCalcUnit() const
     { return eCSSUnit_Calc <= mUnit && mUnit <= eCSSUnit_Calc_Divided; }
 
-  bool      UnitHasStringValue() const
+  PRBool    UnitHasStringValue() const
     { return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Element; }
-  bool      UnitHasArrayValue() const
+  PRBool    UnitHasArrayValue() const
     { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Divided; }
 
   PRInt32 GetIntValue() const
@@ -338,7 +338,7 @@ public:
     return mValue.mColor;
   }
 
-  bool IsNonTransparentColor() const;
+  PRBool IsNonTransparentColor() const;
 
   Array* GetArrayValue() const
   {
@@ -446,7 +446,7 @@ public:
   // Initializes as a function value with the specified function id.
   Array* InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs);
   // Checks if this is a function value with the specified function id.
-  bool EqualsFunction(nsCSSKeyword aFunctionId) const;
+  PRBool EqualsFunction(nsCSSKeyword aFunctionId) const;
 
   // Returns an already addrefed buffer.  Can return null on allocation
   // failure.
@@ -470,13 +470,13 @@ public:
 
     ~URL();
 
-    bool operator==(const URL& aOther) const;
+    PRBool operator==(const URL& aOther) const;
 
     // URIEquals only compares URIs and principals (unlike operator==, which
     // also compares the original strings).  URIEquals also assumes that the
     // mURI member of both URL objects is non-null.  Do NOT call this method
     // unless you're sure this is the case.
-    bool URIEquals(const URL& aOther) const;
+    PRBool URIEquals(const URL& aOther) const;
 
     nsIURI* GetURI() const;
 
@@ -494,7 +494,7 @@ public:
     NS_INLINE_DECL_REFCOUNTING(nsCSSValue::URL)
 
   private:
-    mutable bool mURIResolved;
+    mutable PRBool mURIResolved;
 
     // not to be implemented
     URL(const URL& aOther);
@@ -574,7 +574,7 @@ struct nsCSSValue::Array {
 
   size_t Count() const { return mCount; }
 
-  bool operator==(const Array& aOther) const
+  PRBool operator==(const Array& aOther) const
   {
     if (mCount != aOther.mCount)
       return PR_FALSE;
@@ -724,14 +724,14 @@ struct nsCSSRect {
 
   void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
 
-  bool operator==(const nsCSSRect& aOther) const {
+  PRBool operator==(const nsCSSRect& aOther) const {
     return mTop == aOther.mTop &&
            mRight == aOther.mRight &&
            mBottom == aOther.mBottom &&
            mLeft == aOther.mLeft;
   }
 
-  bool operator!=(const nsCSSRect& aOther) const {
+  PRBool operator!=(const nsCSSRect& aOther) const {
     return mTop != aOther.mTop ||
            mRight != aOther.mRight ||
            mBottom != aOther.mBottom ||
@@ -747,7 +747,7 @@ struct nsCSSRect {
     mLeft.Reset();
   }
 
-  bool HasValue() const {
+  PRBool HasValue() const {
     return
       mTop.GetUnit() != eCSSUnit_Null ||
       mRight.GetUnit() != eCSSUnit_Null ||
@@ -812,12 +812,12 @@ struct nsCSSValuePair {
     MOZ_COUNT_DTOR(nsCSSValuePair);
   }
 
-  bool operator==(const nsCSSValuePair& aOther) const {
+  PRBool operator==(const nsCSSValuePair& aOther) const {
     return mXValue == aOther.mXValue &&
            mYValue == aOther.mYValue;
   }
 
-  bool operator!=(const nsCSSValuePair& aOther) const {
+  PRBool operator!=(const nsCSSValuePair& aOther) const {
     return mXValue != aOther.mXValue ||
            mYValue != aOther.mYValue;
   }
@@ -832,7 +832,7 @@ struct nsCSSValuePair {
     mYValue.Reset();
   }
 
-  bool HasValue() const {
+  PRBool HasValue() const {
     return mXValue.GetUnit() != eCSSUnit_Null ||
            mYValue.GetUnit() != eCSSUnit_Null;
   }
@@ -882,13 +882,13 @@ struct nsCSSValueTriplet {
         MOZ_COUNT_DTOR(nsCSSValueTriplet);
     }
 
-    bool operator==(const nsCSSValueTriplet& aOther) const {
+    PRBool operator==(const nsCSSValueTriplet& aOther) const {
         return mXValue == aOther.mXValue &&
                mYValue == aOther.mYValue &&
                mZValue == aOther.mZValue;
     }
 
-    bool operator!=(const nsCSSValueTriplet& aOther) const {
+    PRBool operator!=(const nsCSSValueTriplet& aOther) const {
         return mXValue != aOther.mXValue ||
                mYValue != aOther.mYValue ||
                mZValue != aOther.mZValue;
@@ -906,7 +906,7 @@ struct nsCSSValueTriplet {
         mZValue.Reset();
     }
 
-    bool HasValue() const {
+    PRBool HasValue() const {
         return mXValue.GetUnit() != eCSSUnit_Null ||
                mYValue.GetUnit() != eCSSUnit_Null ||
                mZValue.GetUnit() != eCSSUnit_Null;
@@ -1026,24 +1026,24 @@ public:
   nsCSSValue mLocation;
   nsCSSValue mColor;
 
-  bool operator==(const nsCSSValueGradientStop& aOther) const
+  PRBool operator==(const nsCSSValueGradientStop& aOther) const
   {
     return (mLocation == aOther.mLocation &&
             mColor == aOther.mColor);
   }
 
-  bool operator!=(const nsCSSValueGradientStop& aOther) const
+  PRBool operator!=(const nsCSSValueGradientStop& aOther) const
   {
     return !(*this == aOther);
   }
 };
 
 struct nsCSSValueGradient {
-  nsCSSValueGradient(bool aIsRadial, bool aIsRepeating);
+  nsCSSValueGradient(PRBool aIsRadial, PRBool aIsRepeating);
 
   // true if gradient is radial, false if it is linear
-  bool mIsRadial;
-  bool mIsRepeating;
+  PRPackedBool mIsRadial;
+  PRPackedBool mIsRepeating;
   // line position and angle
   nsCSSValuePair mBgPos;
   nsCSSValue mAngle;
@@ -1054,7 +1054,7 @@ struct nsCSSValueGradient {
 
   nsTArray<nsCSSValueGradientStop> mStops;
 
-  bool operator==(const nsCSSValueGradient& aOther) const
+  PRBool operator==(const nsCSSValueGradient& aOther) const
   {
     if (mIsRadial != aOther.mIsRadial ||
         mIsRepeating != aOther.mIsRepeating ||
@@ -1075,7 +1075,7 @@ struct nsCSSValueGradient {
     return PR_TRUE;
   }
 
-  bool operator!=(const nsCSSValueGradient& aOther) const
+  PRBool operator!=(const nsCSSValueGradient& aOther) const
   {
     return !(*this == aOther);
   }
@@ -1101,7 +1101,7 @@ struct nsCSSCornerSizes {
     return this->*corners[aCorner];
   }
 
-  bool operator==(const nsCSSCornerSizes& aOther) const {
+  PRBool operator==(const nsCSSCornerSizes& aOther) const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
       if (this->GetCorner(corner) != aOther.GetCorner(corner))
         return PR_FALSE;
@@ -1109,7 +1109,7 @@ struct nsCSSCornerSizes {
     return PR_TRUE;
   }
 
-  bool operator!=(const nsCSSCornerSizes& aOther) const {
+  PRBool operator!=(const nsCSSCornerSizes& aOther) const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
       if (this->GetCorner(corner) != aOther.GetCorner(corner))
         return PR_TRUE;
@@ -1117,7 +1117,7 @@ struct nsCSSCornerSizes {
     return PR_FALSE;
   }
 
-  bool HasValue() const {
+  PRBool HasValue() const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
       if (this->GetCorner(corner).GetUnit() != eCSSUnit_Null)
         return PR_TRUE;

@@ -100,7 +100,7 @@ nsHttpConnectionInfo::Clone() const
     return clone;
 }
 
-bool
+PRBool
 nsHttpConnectionInfo::ShouldForceConnectMethod()
 {
     if (!mProxyInfo)

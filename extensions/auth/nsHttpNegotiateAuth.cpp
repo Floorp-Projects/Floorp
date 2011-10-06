@@ -109,10 +109,10 @@ nsHttpNegotiateAuth::GetAuthFlags(PRUint32 *flags)
 NS_IMETHODIMP
 nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
                                        const char *challenge,
-                                       bool isProxyAuth,
+                                       PRBool isProxyAuth,
                                        nsISupports **sessionState,
                                        nsISupports **continuationState,
-                                       bool *identityInvalid)
+                                       PRBool *identityInvalid)
 {
     nsIAuthModule *module = (nsIAuthModule *) *continuationState;
 
@@ -143,13 +143,13 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
         proxyInfo->GetHost(service);
     }
     else {
-        bool allowed = TestPref(uri, kNegotiateAuthTrustedURIs);
+        PRBool allowed = TestPref(uri, kNegotiateAuthTrustedURIs);
         if (!allowed) {
             LOG(("nsHttpNegotiateAuth::ChallengeReceived URI blocked\n"));
             return NS_ERROR_ABORT;
         }
 
-        bool delegation = TestPref(uri, kNegotiateAuthDelegationURIs);
+        PRBool delegation = TestPref(uri, kNegotiateAuthDelegationURIs);
         if (delegation) {
             LOG(("  using REQ_DELEGATE\n"));
             req_flags |= nsIAuthModule::REQ_DELEGATE;
@@ -211,7 +211,7 @@ NS_IMPL_ISUPPORTS1(nsHttpNegotiateAuth, nsIHttpAuthenticator)
 NS_IMETHODIMP
 nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
                                          const char *challenge,
-                                         bool isProxyAuth,
+                                         PRBool isProxyAuth,
                                          const PRUnichar *domain,
                                          const PRUnichar *username,
                                          const PRUnichar *password,
@@ -231,7 +231,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
     NS_ASSERTION(creds, "null param");
 
 #ifdef DEBUG
-    bool isGssapiAuth =
+    PRBool isGssapiAuth =
         !PL_strncasecmp(challenge, kNegotiate, kNegotiateLen);
     NS_ASSERTION(isGssapiAuth, "Unexpected challenge");
 #endif
@@ -316,14 +316,14 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
     return rv;
 }
 
-bool
+PRBool
 nsHttpNegotiateAuth::TestBoolPref(const char *pref)
 {
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefs)
         return PR_FALSE;
 
-    bool val;
+    PRBool val;
     nsresult rv = prefs->GetBoolPref(pref, &val);
     if (NS_FAILED(rv))
         return PR_FALSE;
@@ -331,7 +331,7 @@ nsHttpNegotiateAuth::TestBoolPref(const char *pref)
     return val;
 }
 
-bool
+PRBool
 nsHttpNegotiateAuth::TestPref(nsIURI *uri, const char *pref)
 {
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -385,7 +385,7 @@ nsHttpNegotiateAuth::TestPref(nsIURI *uri, const char *pref)
     return PR_FALSE;
 }
 
-bool
+PRBool
 nsHttpNegotiateAuth::MatchesBaseURI(const nsCSubstring &matchScheme,
                                     const nsCSubstring &matchHost,
                                     PRInt32             matchPort,

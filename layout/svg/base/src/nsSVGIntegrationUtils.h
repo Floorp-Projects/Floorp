@@ -57,7 +57,7 @@ public:
   /**
    * Returns true if a non-SVG frame has SVG effects.
    */
-  static bool
+  static PRBool
   UsingEffectsForFrame(const nsIFrame* aFrame);
 
   /**
@@ -90,7 +90,7 @@ public:
    * Returns true if the given point is not clipped out by effects.
    * @param aPt in appunits relative to aFrame
    */
-  static bool
+  static PRBool
   HitTestFrameForEffects(nsIFrame* aFrame, const nsPoint& aPt);
 
   /**

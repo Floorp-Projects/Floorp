@@ -85,11 +85,11 @@ enum nsViewVisibility {
 #define NS_VIEW_FLAG_TOPMOST              0x0010
 
 struct nsViewZIndex {
-  bool mIsAuto;
+  PRBool mIsAuto;
   PRInt32 mZIndex;
-  bool mIsTopmost;
+  PRBool mIsTopmost;
   
-  nsViewZIndex(bool aIsAuto, PRInt32 aZIndex, bool aIsTopmost)
+  nsViewZIndex(PRBool aIsAuto, PRInt32 aZIndex, PRBool aIsTopmost)
     : mIsAuto(aIsAuto), mZIndex(aZIndex), mIsTopmost(aIsTopmost) {}
 };
 
@@ -255,7 +255,7 @@ public:
    * views that need to be drawn in front of all other views.
    * @result PR_TRUE if the view floats, PR_FALSE otherwise.
    */
-  bool GetFloating() const { return (mVFlags & NS_VIEW_FLAG_FLOATING) != 0; }
+  PRBool GetFloating() const { return (mVFlags & NS_VIEW_FLAG_FLOATING) != 0; }
 
   /**
    * Called to query the parent of the view.
@@ -314,8 +314,8 @@ public:
    * @return error status
    */
   nsresult CreateWidget(nsWidgetInitData *aWidgetInitData = nsnull,
-                        bool aEnableDragDrop = true,
-                        bool aResetVisibility = true);
+                        PRBool aEnableDragDrop = PR_TRUE,
+                        PRBool aResetVisibility = PR_TRUE);
 
   /**
    * Create a widget for this view with an explicit parent widget.
@@ -324,8 +324,8 @@ public:
    */
   nsresult CreateWidgetForParent(nsIWidget* aParentWidget,
                                  nsWidgetInitData *aWidgetInitData = nsnull,
-                                 bool aEnableDragDrop = true,
-                                 bool aResetVisibility = true);
+                                 PRBool aEnableDragDrop = PR_TRUE,
+                                 PRBool aResetVisibility = PR_TRUE);
 
   /**
    * Create a popup widget for this view.  Pass |aParentWidget| to
@@ -336,8 +336,8 @@ public:
    */
   nsresult CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
                                 nsIWidget* aParentWidget = nsnull,
-                                bool aEnableDragDrop = true,
-                                bool aResetVisibility = true);
+                                PRBool aEnableDragDrop = PR_TRUE,
+                                PRBool aResetVisibility = PR_TRUE);
 
   /**
    * Destroys the associated widget for this view.  If this method is
@@ -364,7 +364,7 @@ public:
    * Returns a flag indicating whether the view owns it's widget
    * or is attached to an existing top level widget.
    */
-  bool IsAttachedToTopLevel() const { return mWidgetIsTopLevel; }
+  PRBool IsAttachedToTopLevel() const { return mWidgetIsTopLevel; }
 
   /**
    * In 4.0, the "cutout" nature of a view is queryable.
@@ -378,7 +378,7 @@ public:
   /**
    * Returns PR_TRUE if the view has a widget associated with it.
    */
-  bool HasWidget() const { return mWindow != nsnull; }
+  PRBool HasWidget() const { return mWindow != nsnull; }
 
   /**
    * Make aWidget direct its events to this view.
@@ -404,15 +404,15 @@ public:
   /**
    * @result true iff this is the root view for its view manager
    */
-  bool IsRoot() const;
+  PRBool IsRoot() const;
 
-  virtual bool ExternalIsRoot() const;
+  virtual PRBool ExternalIsRoot() const;
 
   void SetDeletionObserver(nsWeakView* aDeletionObserver);
 
   nsIntRect CalcWidgetBounds(nsWindowType aType);
 
-  bool IsEffectivelyVisible();
+  PRBool IsEffectivelyVisible();
 
   // This is an app unit offset to add when converting view coordinates to
   // widget coordinates.  It is the offset in view coordinates from widget
@@ -439,7 +439,7 @@ protected:
   float             mOpacity;
   PRUint32          mVFlags;
   nsWeakView*       mDeletionObserver;
-  bool              mWidgetIsTopLevel;
+  PRBool            mWidgetIsTopLevel;
 
   virtual ~nsIView() {}
 
@@ -473,7 +473,7 @@ public:
     }
   }
 
-  bool IsAlive() { return !!mView; }
+  PRBool IsAlive() { return !!mView; }
 
   nsIView* GetView() { return mView; }
 

@@ -85,7 +85,7 @@ clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     memset(entry, 0, table->entrySize);
 }
 
-static bool
+static PRBool
 matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
                const void* key)
 {
@@ -102,13 +102,13 @@ matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
 
 PLDHashTable        gHashTable = { nsnull };
 static PLArenaPool  gPrefNameArena;
-bool                gDirty = false;
+PRBool              gDirty = PR_FALSE;
 
 static struct CallbackNode* gCallbacks = NULL;
-static bool         gIsAnyPrefLocked = false;
+static PRBool       gIsAnyPrefLocked = PR_FALSE;
 // These are only used during the call to pref_DoCallback
-static bool         gCallbacksInProgress = false;
-static bool         gShouldCleanupDeadNodes = false;
+static PRBool       gCallbacksInProgress = PR_FALSE;
+static PRBool       gShouldCleanupDeadNodes = PR_FALSE;
 
 
 static PLDHashTableOps     pref_HashTableOps = {
@@ -156,7 +156,7 @@ static char *ArenaStrDup(const char* str, PLArenaPool* aArena)
 #define PREF_HAS_USER_VALUE(pref)       ((pref)->flags & PREF_USERSET)
 #define PREF_TYPE(pref)                 (PrefType)((pref)->flags & PREF_VALUETYPE_MASK)
 
-static bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type);
+static PRBool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type);
 
 /* -- Privates */
 struct CallbackNode {
@@ -173,7 +173,7 @@ struct CallbackNode {
 static nsresult pref_DoCallback(const char* changed_pref);
 
 
-static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, bool defaultPref);
+static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRBool defaultPref);
 
 #define PREF_HASHTABLE_INITIAL_SIZE	2048
 
@@ -274,7 +274,7 @@ static void str_escape(const char * original, nsAFlatCString& aResult)
 ** External calls
 */
 nsresult
-PREF_SetCharPref(const char *pref_name, const char *value, bool set_default)
+PREF_SetCharPref(const char *pref_name, const char *value, PRBool set_default)
 {
     PrefValue pref;
     pref.stringVal = (char*) value;
@@ -283,7 +283,7 @@ PREF_SetCharPref(const char *pref_name, const char *value, bool set_default)
 }
 
 nsresult
-PREF_SetIntPref(const char *pref_name, PRInt32 value, bool set_default)
+PREF_SetIntPref(const char *pref_name, PRInt32 value, PRBool set_default)
 {
     PrefValue pref;
     pref.intVal = value;
@@ -292,7 +292,7 @@ PREF_SetIntPref(const char *pref_name, PRInt32 value, bool set_default)
 }
 
 nsresult
-PREF_SetBoolPref(const char *pref_name, bool value, bool set_default)
+PREF_SetBoolPref(const char *pref_name, PRBool value, PRBool set_default)
 {
     PrefValue pref;
     pref.boolVal = value;
@@ -301,7 +301,7 @@ PREF_SetBoolPref(const char *pref_name, bool value, bool set_default)
 }
 
 nsresult
-pref_SetPrefTuple(const PrefTuple &aPref, bool set_default)
+pref_SetPrefTuple(const PrefTuple &aPref, PRBool set_default)
 {
     switch (aPref.type) {
         case PrefTuple::PREF_STRING:
@@ -438,7 +438,7 @@ pref_CompareStrings(const void *v1, const void *v2, void *unused)
         return strcmp(s1, s2);
 }
 
-bool PREF_HasUserPref(const char *pref_name)
+PRBool PREF_HasUserPref(const char *pref_name)
 {
     if (!gHashTable.ops)
         return PR_FALSE;
@@ -450,7 +450,7 @@ bool PREF_HasUserPref(const char *pref_name)
     return (PREF_HAS_USER_VALUE(pref) != 0);
 
 }
-nsresult PREF_GetCharPref(const char *pref_name, char * return_buffer, int * length, bool get_default)
+nsresult PREF_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default)
 {
     if (!gHashTable.ops)
         return NS_ERROR_NOT_INITIALIZED;
@@ -484,7 +484,7 @@ nsresult PREF_GetCharPref(const char *pref_name, char * return_buffer, int * len
 }
 
 nsresult
-PREF_CopyCharPref(const char *pref_name, char ** return_buffer, bool get_default)
+PREF_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default)
 {
     if (!gHashTable.ops)
         return NS_ERROR_NOT_INITIALIZED;
@@ -508,7 +508,7 @@ PREF_CopyCharPref(const char *pref_name, char ** return_buffer, bool get_default
     return rv;
 }
 
-nsresult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, bool get_default)
+nsresult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default)
 {
     if (!gHashTable.ops)
         return NS_ERROR_NOT_INITIALIZED;
@@ -532,7 +532,7 @@ nsresult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, bool get_de
     return rv;
 }
 
-nsresult PREF_GetBoolPref(const char *pref_name, bool * return_value, bool get_default)
+nsresult PREF_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool get_default)
 {
     if (!gHashTable.ops)
         return NS_ERROR_NOT_INITIALIZED;
@@ -544,7 +544,7 @@ nsresult PREF_GetBoolPref(const char *pref_name, bool * return_value, bool get_d
     {
         if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
         {
-            bool tempBool = pref->defaultPref.boolVal;
+            PRBool tempBool = pref->defaultPref.boolVal;
             /* check to see if we even had a default */
             if (pref->flags & PREF_HAS_DEFAULT) {
                 *return_value = tempBool;
@@ -655,7 +655,7 @@ PREF_ClearAllUserPrefs()
     return NS_OK;
 }
 
-nsresult PREF_LockPref(const char *key, bool lockit)
+nsresult PREF_LockPref(const char *key, PRBool lockit)
 {
     if (!gHashTable.ops)
         return NS_ERROR_NOT_INITIALIZED;
@@ -686,9 +686,9 @@ nsresult PREF_LockPref(const char *key, bool lockit)
 /*
  * Hash table functions
  */
-static bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type)
+static PRBool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type)
 {
-    bool changed = true;
+    PRBool changed = PR_TRUE;
     if (type & PREF_STRING)
     {
         if (oldValue.stringVal && newValue.stringVal)
@@ -729,7 +729,7 @@ PrefHashEntry* pref_HashTableLookup(const void *key)
     return result;
 }
 
-nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, bool set_default)
+nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRBool set_default)
 {
     if (!gHashTable.ops)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -755,7 +755,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, bool set
         return NS_ERROR_UNEXPECTED;
     }
 
-    bool valueChanged = false;
+    PRBool valueChanged = PR_FALSE;
     if (set_default)
     {
         if (!PREF_IS_LOCKED(pref))
@@ -826,10 +826,10 @@ PREF_GetPrefType(const char *pref_name)
 
 /* -- */
 
-bool
+PRBool
 PREF_PrefIsLocked(const char *pref_name)
 {
-    bool result = false;
+    PRBool result = PR_FALSE;
     if (gIsAnyPrefLocked && gHashTable.ops) {
         PrefHashEntry* pref = pref_HashTableLookup(pref_name);
         if (pref && PREF_IS_LOCKED(pref))
@@ -927,7 +927,7 @@ static nsresult pref_DoCallback(const char* changed_pref)
     nsresult rv = NS_OK;
     struct CallbackNode* node;
 
-    bool reentered = gCallbacksInProgress;
+    PRBool reentered = gCallbacksInProgress;
     gCallbacksInProgress = PR_TRUE;
     // Nodes must not be deleted while gCallbacksInProgress is PR_TRUE.
     // Nodes that need to be deleted are marked for deletion by nulling
@@ -976,7 +976,7 @@ void PREF_ReaderCallback(void       *closure,
                          const char *pref,
                          PrefValue   value,
                          PrefType    type,
-                         bool        isDefault)
+                         PRBool      isDefault)
 {
     pref_HashPref(pref, value, type, isDefault);
 }

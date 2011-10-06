@@ -98,9 +98,9 @@ public:
                                                // owner has already sent notifications out!
 
   void AddToLoadGroup();
-  void RemoveFromLoadGroup(bool releaseLoadGroup);
+  void RemoveFromLoadGroup(PRBool releaseLoadGroup);
 
-  inline bool HasObserver() const {
+  inline PRBool HasObserver() const {
     return mListener != nsnull;
   }
 
@@ -119,11 +119,11 @@ public:
 
   // Whether we want notifications from imgStatusTracker to be deferred until
   // an event it has scheduled has been fired.
-  bool NotificationsDeferred() const
+  PRBool NotificationsDeferred() const
   {
     return mDeferNotifications;
   }
-  void SetNotificationsDeferred(bool aDeferNotifications)
+  void SetNotificationsDeferred(PRBool aDeferNotifications)
   {
     mDeferNotifications = aDeferNotifications;
   }
@@ -171,7 +171,7 @@ protected:
   void OnStartDecode   ();
   void OnStartContainer(imgIContainer *aContainer);
   void OnStartFrame    (PRUint32 aFrame);
-  void OnDataAvailable (bool aCurrentFrame, const nsIntRect * aRect);
+  void OnDataAvailable (PRBool aCurrentFrame, const nsIntRect * aRect);
   void OnStopFrame     (PRUint32 aFrame);
   void OnStopContainer (imgIContainer *aContainer);
   void OnStopDecode    (nsresult status, const PRUnichar *statusArg); 
@@ -183,7 +183,7 @@ protected:
 
   /* non-virtual sort-of-nsIRequestObserver methods */
   void OnStartRequest();
-  void OnStopRequest(bool aLastPart);
+  void OnStopRequest(PRBool aLastPart);
 
   /* Finish up canceling ourselves */
   void DoCancel(nsresult status);
@@ -242,18 +242,18 @@ private:
   nsLoadFlags mLoadFlags;
   PRUint32    mLockCount;
   PRUint32    mAnimationConsumers;
-  bool mCanceled;
-  bool mIsInLoadGroup;
-  bool mListenerIsStrongRef;
-  bool mDecodeRequested;
+  PRPackedBool mCanceled;
+  PRPackedBool mIsInLoadGroup;
+  PRPackedBool mListenerIsStrongRef;
+  PRPackedBool mDecodeRequested;
 
   // Whether we want to defer our notifications by the non-virtual Observer
   // interfaces as image loads proceed.
-  bool mDeferNotifications;
+  PRPackedBool mDeferNotifications;
 
   // We only want to send OnStartContainer once for each proxy, but we might
   // get multiple OnStartContainer calls (e.g. from multipart/x-mixed-replace).
-  bool mSentStartContainer;
+  PRPackedBool mSentStartContainer;
 };
 
 #endif // imgRequestProxy_h__

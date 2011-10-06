@@ -339,7 +339,7 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   nsCOMPtr<nsISelection> caretSelection(do_QueryReferent(mLastUsedSelection));
   NS_ENSURE_TRUE(caretSelection, caretRect);
   
-  bool isVisible;
+  PRBool isVisible;
   caret->GetCaretVisible(&isVisible);
   if (!isVisible) {
     return nsIntRect();  // Return empty rect

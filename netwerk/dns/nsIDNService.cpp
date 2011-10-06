@@ -62,7 +62,7 @@ static const PRUint32 kMaxDNSNodeLen = 63;
 #define NS_NET_PREF_SHOWPUNYCODE    "network.IDN_show_punycode"
 #define NS_NET_PREF_IDNWHITELIST    "network.IDN.whitelist."
 
-inline bool isOnlySafeChars(const nsAFlatString& in,
+inline PRBool isOnlySafeChars(const nsAFlatString& in,
                               const nsAFlatString& blacklist)
 {
   return (blacklist.IsEmpty() ||
@@ -114,7 +114,7 @@ NS_IMETHODIMP nsIDNService::Observe(nsISupports *aSubject,
 void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref)
 {
   if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNTESTBED).Equals(pref)) {
-    bool val;
+    PRBool val;
     if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_IDNTESTBED, &val)))
       mMultilingualTestBed = val;
   }
@@ -135,7 +135,7 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref
       mIDNBlacklist.Truncate();
   }
   if (!pref || NS_LITERAL_STRING(NS_NET_PREF_SHOWPUNYCODE).Equals(pref)) {
-    bool val;
+    PRBool val;
     if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_SHOWPUNYCODE, &val)))
       mShowPunycode = val;
   }
@@ -167,7 +167,7 @@ NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString & input, nsACStrin
   return UTF8toACE(input, ace, PR_TRUE);
 }
 
-nsresult nsIDNService::UTF8toACE(const nsACString & input, nsACString & ace, bool allowUnassigned)
+nsresult nsIDNService::UTF8toACE(const nsACString & input, nsACString & ace, PRBool allowUnassigned)
 {
   nsresult rv;
   NS_ConvertUTF8toUTF16 ustr(input);
@@ -223,7 +223,7 @@ NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString & input, nsACStrin
 }
 
 nsresult nsIDNService::ACEtoUTF8(const nsACString & input, nsACString & _retval,
-                                 bool allowUnassigned)
+                                 PRBool allowUnassigned)
 {
   // RFC 3490 - 4.2 ToUnicode
   // ToUnicode never fails.  If any step fails, then the original input
@@ -271,7 +271,7 @@ nsresult nsIDNService::ACEtoUTF8(const nsACString & input, nsACString & _retval,
 }
 
 /* boolean isACE(in ACString input); */
-NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, bool *_retval)
+NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, PRBool *_retval)
 {
   nsACString::const_iterator begin;
   input.BeginReading(begin);
@@ -333,7 +333,7 @@ NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input, nsACString & out
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString & input, bool * _isASCII, nsACString & _retval)
+NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString & input, PRBool * _isASCII, nsACString & _retval)
 {
   // If host is ACE, then convert to UTF-8 if the host is in the IDN whitelist.
   // Else, if host is already UTF-8, then make sure it is normalized per IDN.
@@ -345,7 +345,7 @@ NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString & input, bool *
     _retval = input;
     ToLowerCase(_retval);
 
-    bool isACE;
+    PRBool isACE;
     IsACE(_retval, &isACE);
 
     if (isACE && !mShowPunycode && isInWhitelist(_retval)) {
@@ -512,7 +512,7 @@ static nsresult encodeToRACE(const char* prefix, const nsAString& in, nsACString
 // This is described in section 7.
 //
 nsresult nsIDNService::stringPrep(const nsAString& in, nsAString& out,
-                                  bool allowUnassigned)
+                                  PRBool allowUnassigned)
 {
   if (!mNamePrepHandle || !mNormalizer)
     return NS_ERROR_FAILURE;
@@ -579,7 +579,7 @@ nsresult nsIDNService::encodeToACE(const nsAString& in, nsACString& out)
 }
 
 nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
-                                        bool allowUnassigned)
+                                        PRBool allowUnassigned)
 {
   nsresult rv = NS_OK;
 
@@ -640,9 +640,9 @@ void nsIDNService::normalizeFullStops(nsAString& s)
 }
 
 nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
-                                 bool allowUnassigned)
+                                 PRBool allowUnassigned)
 {
-  bool isAce;
+  PRBool isAce;
   IsACE(in, &isAce);
   if (!isAce) {
     out.Assign(in);
@@ -685,7 +685,7 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
   return NS_OK;
 }
 
-bool nsIDNService::isInWhitelist(const nsACString &host)
+PRBool nsIDNService::isInWhitelist(const nsACString &host)
 {
   if (mIDNWhitelistPrefBranch) {
     nsCAutoString tld(host);
@@ -703,7 +703,7 @@ bool nsIDNService::isInWhitelist(const nsACString &host)
 
     tld.Cut(0, pos + 1);
 
-    bool safe;
+    PRBool safe;
     if (NS_SUCCEEDED(mIDNWhitelistPrefBranch->GetBoolPref(tld.get(), &safe)))
       return safe;
   }

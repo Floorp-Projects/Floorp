@@ -75,7 +75,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMKeyboardEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetAltKey(bool* aIsDown)
+nsDOMKeyboardEvent::GetAltKey(PRBool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ((nsInputEvent*)mEvent)->isAlt;
@@ -83,7 +83,7 @@ nsDOMKeyboardEvent::GetAltKey(bool* aIsDown)
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetCtrlKey(bool* aIsDown)
+nsDOMKeyboardEvent::GetCtrlKey(PRBool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ((nsInputEvent*)mEvent)->isControl;
@@ -91,7 +91,7 @@ nsDOMKeyboardEvent::GetCtrlKey(bool* aIsDown)
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetShiftKey(bool* aIsDown)
+nsDOMKeyboardEvent::GetShiftKey(PRBool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ((nsInputEvent*)mEvent)->isShift;
@@ -99,7 +99,7 @@ nsDOMKeyboardEvent::GetShiftKey(bool* aIsDown)
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetMetaKey(bool* aIsDown)
+nsDOMKeyboardEvent::GetMetaKey(PRBool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ((nsInputEvent*)mEvent)->isMeta;
@@ -175,9 +175,9 @@ nsDOMKeyboardEvent::Which(PRUint32* aWhich)
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
-                                 nsIDOMWindow* aView, bool aCtrlKey, bool aAltKey,
-                                 bool aShiftKey, bool aMetaKey,
+nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, PRBool aCanBubble, PRBool aCancelable,
+                                 nsIDOMWindow* aView, PRBool aCtrlKey, PRBool aAltKey,
+                                 PRBool aShiftKey, PRBool aMetaKey,
                                  PRUint32 aKeyCode, PRUint32 aCharCode)
 {
   nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);

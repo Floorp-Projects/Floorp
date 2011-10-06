@@ -73,7 +73,7 @@ void
 ExternalHelperAppParent::Init(ContentParent *parent,
                               const nsCString& aMimeContentType,
                               const nsCString& aContentDispositionHeader,
-                              const bool& aForceSave,
+                              const PRBool& aForceSave,
                               const IPC::URI& aReferrer)
 {
   nsHashPropertyBag::Init();
@@ -144,7 +144,7 @@ ExternalHelperAppParent::GetName(nsACString& aResult)
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::IsPending(bool *aResult)
+ExternalHelperAppParent::IsPending(PRBool *aResult)
 {
   *aResult = mPending;
   return NS_OK;
@@ -382,7 +382,7 @@ ExternalHelperAppParent::GetPartID(PRUint32* aPartID)
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::GetIsLastPart(bool* aIsLastPart)
+ExternalHelperAppParent::GetIsLastPart(PRBool* aIsLastPart)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

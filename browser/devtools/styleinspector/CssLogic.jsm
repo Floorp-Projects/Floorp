@@ -565,10 +565,6 @@ CssLogic.prototype = {
     this._unmatchedSelectors = [];
 
     this.forEachSheet(function (aSheet) {
-      if (aSheet.systemSheet) {
-        return;
-      }
-
       aSheet.forEachRule(function (aRule) {
         aRule.selectors.forEach(function (aSelector) {
           if (aSelector._matchId != this._matchId) {
@@ -1445,6 +1441,10 @@ CssPropertyInfo.prototype = {
   _processUnmatchedSelector: function CPI_processUnmatchedSelector(aSelector)
   {
     let cssRule = aSelector._cssRule;
+    if (cssRule.systemRule) {
+      return;
+    }
+
     let value = cssRule.getPropertyValue(this.property);
     if (value) {
       let selectorInfo = new CssSelectorInfo(aSelector, this.property, value,
@@ -1469,24 +1469,30 @@ CssPropertyInfo.prototype = {
     let passId = ++this._cssLogic._passId;
     let ruleCount = 0;
 
-    let iterator = function(aSelectorInfo) {
-      let cssRule = aSelectorInfo.selector._cssRule;
-      if (cssRule._passId != passId) {
-        if (cssRule.sheetAllowed) {
-          ruleCount++;
-        }
-        cssRule._passId = passId;
-      }
-    };
-
     if (this._matchedSelectors) {
-      this._matchedSelectors.forEach(iterator);
+      this._matchedSelectors.forEach(function(aSelectorInfo) {
+        let cssRule = aSelectorInfo.selector._cssRule;
+        if (cssRule._passId != passId) {
+          if (cssRule.sheetAllowed) {
+            ruleCount++;
+          }
+          cssRule._passId = passId;
+        }
+      });
       this._matchedRuleCount = ruleCount;
     }
 
     if (this._unmatchedSelectors) {
       ruleCount = 0;
-      this._unmatchedSelectors.forEach(iterator);
+      this._unmatchedSelectors.forEach(function(aSelectorInfo) {
+        let cssRule = aSelectorInfo.selector._cssRule;
+        if (!cssRule.systemRule && cssRule._passId != passId) {
+          if (cssRule.sheetAllowed) {
+            ruleCount++;
+          }
+          cssRule._passId = passId;
+        }
+      });
       this._unmatchedRuleCount = ruleCount;
     }
 

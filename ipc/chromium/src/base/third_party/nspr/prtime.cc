@@ -554,7 +554,7 @@ typedef enum
 PRStatus
 PR_ParseTimeString(
         const char *string,
-        bool default_to_gmt,
+        PRBool default_to_gmt,
         PRTime *result_imploded)
 {
   PRExplodedTime tm;

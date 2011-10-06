@@ -109,13 +109,13 @@ nsFtpControlConnection::~nsFtpControlConnection()
     LOG_ALWAYS(("FTP:CC destroyed @%p", this));
 }
 
-bool
+PRBool
 nsFtpControlConnection::IsAlive()
 {
     if (!mSocket) 
         return PR_FALSE;
 
-    bool isAlive = false;
+    PRBool isAlive = PR_FALSE;
     mSocket->IsAlive(&isAlive);
     return isAlive;
 }

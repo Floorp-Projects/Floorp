@@ -88,7 +88,7 @@ public:
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
 
-  virtual bool IsLeaf() const;
+  virtual PRBool IsLeaf() const;
 
   virtual nsIFrame* GetContentInsertionFrame();
 
@@ -97,9 +97,9 @@ protected:
 
   nsresult GetLabel(nsXPIDLString& aLabel);
 
-  bool IsFileBrowseButton(PRInt32 type); // Browse button of file input
+  PRBool IsFileBrowseButton(PRInt32 type); // Browse button of file input
 
-  virtual bool IsInput() { return true; }
+  virtual PRBool IsInput() { return PR_TRUE; }
 private:
   nsSize mSuggestedSize;
   nsCOMPtr<nsIContent> mTextContent;

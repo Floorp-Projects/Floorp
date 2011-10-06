@@ -74,7 +74,7 @@ SVGNumberPairSMILType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
-bool
+PRBool
 SVGNumberPairSMILType::IsEqual(const nsSMILValue& aLeft,
                                const nsSMILValue& aRight) const
 {

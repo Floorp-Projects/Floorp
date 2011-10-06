@@ -82,7 +82,7 @@ JSStackGuard::~JSStackGuard()
 }
 
 NS_IMETHODIMP
-nsPrivateBrowsingServiceWrapper::GetPrivateBrowsingEnabled(bool *aPrivateBrowsingEnabled)
+nsPrivateBrowsingServiceWrapper::GetPrivateBrowsingEnabled(PRBool *aPrivateBrowsingEnabled)
 {
   if (!aPrivateBrowsingEnabled)
     return NS_ERROR_NULL_POINTER;
@@ -91,14 +91,14 @@ nsPrivateBrowsingServiceWrapper::GetPrivateBrowsingEnabled(bool *aPrivateBrowsin
 }
 
 NS_IMETHODIMP
-nsPrivateBrowsingServiceWrapper::SetPrivateBrowsingEnabled(bool aPrivateBrowsingEnabled)
+nsPrivateBrowsingServiceWrapper::SetPrivateBrowsingEnabled(PRBool aPrivateBrowsingEnabled)
 {
   JSStackGuard guard;
   return mPBService->SetPrivateBrowsingEnabled(aPrivateBrowsingEnabled);
 }
 
 NS_IMETHODIMP
-nsPrivateBrowsingServiceWrapper::GetAutoStarted(bool *aAutoStarted)
+nsPrivateBrowsingServiceWrapper::GetAutoStarted(PRBool *aAutoStarted)
 {
   if (!aAutoStarted)
     return NS_ERROR_NULL_POINTER;
@@ -107,7 +107,7 @@ nsPrivateBrowsingServiceWrapper::GetAutoStarted(bool *aAutoStarted)
 }
 
 NS_IMETHODIMP
-nsPrivateBrowsingServiceWrapper::GetLastChangedByCommandLine(bool *aReason)
+nsPrivateBrowsingServiceWrapper::GetLastChangedByCommandLine(PRBool *aReason)
 {
   if (!aReason)
     return NS_ERROR_NULL_POINTER;

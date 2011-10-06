@@ -117,7 +117,7 @@ nsHtml5TreeOpExecutor::WillParse()
 
 // This is called when the tree construction has ended
 NS_IMETHODIMP
-nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
+nsHtml5TreeOpExecutor::DidBuildModel(PRBool aTerminated)
 {
   NS_PRECONDITION(mStarted, "Bad life cycle.");
 
@@ -147,7 +147,7 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
     // docshell. If we are destroying it, then starting layout will
     // likely cause us to crash, or at best waste a lot of time as we
     // are just going to tear it down anyway.
-    bool destroying = true;
+    PRBool destroying = PR_TRUE;
     if (mDocShell) {
       mDocShell->IsBeingDestroyed(&destroying);
     }
@@ -309,8 +309,8 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
 
   ssle->SetEnableUpdates(PR_TRUE);
 
-  bool willNotify;
-  bool isAlternate;
+  PRBool willNotify;
+  PRBool isAlternate;
   nsresult rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
                                        &willNotify,
                                        &isAlternate);
@@ -327,7 +327,7 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
       // XXX seems overkill to generate this string array
       nsAutoTArray<nsString, 4> linkTypes;
       nsStyleLinkElement::ParseLinkTypes(relVal, linkTypes);
-      bool hasPrefetch = linkTypes.Contains(NS_LITERAL_STRING("prefetch"));
+      PRBool hasPrefetch = linkTypes.Contains(NS_LITERAL_STRING("prefetch"));
       if (hasPrefetch || linkTypes.Contains(NS_LITERAL_STRING("next"))) {
         nsAutoString hrefVal;
         aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
@@ -614,7 +614,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
 }
 
 // copied from HTML content sink
-bool
+PRBool
 nsHtml5TreeOpExecutor::IsScriptEnabled()
 {
   if (!mDocument || !mDocShell)
@@ -632,7 +632,7 @@ nsHtml5TreeOpExecutor::IsScriptEnabled()
   NS_ENSURE_TRUE(scriptContext, PR_TRUE);
   JSContext* cx = scriptContext->GetNativeContext();
   NS_ENSURE_TRUE(cx, PR_TRUE);
-  bool enabled = true;
+  PRBool enabled = PR_TRUE;
   nsContentUtils::GetSecurityManager()->
     CanExecuteScripts(cx, mDocument->NodePrincipal(), &enabled);
   return enabled;

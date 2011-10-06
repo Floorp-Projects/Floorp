@@ -67,7 +67,7 @@ public:
                               PRInt32 aModType);
 
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
-                         bool aRemoveOverflowArea = false);
+                         PRBool aRemoveOverflowArea = PR_FALSE);
 
   friend nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
                                       nsStyleContext* aContext);
@@ -84,5 +84,5 @@ protected:
    * Helper method that gets the nsITreeColumns object this column belongs to
    * and calls InvalidateColumns() on it.
    */
-  void InvalidateColumns(bool aCanWalkFrameTree = true);
+  void InvalidateColumns(PRBool aCanWalkFrameTree = PR_TRUE);
 };

@@ -74,7 +74,7 @@ public:
   // child source element.
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
-                              bool aCompileEventHandlers);
+                              PRBool aCompileEventHandlers);
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -117,7 +117,7 @@ nsresult
 nsHTMLSourceElement::BindToTree(nsIDocument *aDocument,
                                 nsIContent *aParent,
                                 nsIContent *aBindingParent,
-                                bool aCompileEventHandlers)
+                                PRBool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument,
                                                  aParent,

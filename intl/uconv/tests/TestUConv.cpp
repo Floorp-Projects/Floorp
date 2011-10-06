@@ -218,7 +218,7 @@ nsresult nsTestUConv::TestEncoders()
   res = ccMan->GetEncoderList(getter_AddRefs(encoders));
   if (NS_FAILED(res)) return res;
 
-  bool hasMore;
+  PRBool hasMore;
   encoders->HasMore(&hasMore);
   
   nsCAutoString charset;
@@ -287,7 +287,7 @@ nsresult nsTestUConv::DisplayDetectors()
 
   printf("***** Character Set Detectors *****\n");
 
-  bool hasMore;
+  PRBool hasMore;
   detectors->HasMore(&hasMore);
   while (hasMore) {
     nsCAutoString detectorName;
@@ -349,7 +349,7 @@ nsresult nsTestUConv::DisplayCharsets()
   nsTArray<nsCString> allCharsets;
   
   nsCAutoString charset;
-  bool hasMore;
+  PRBool hasMore;
   encoders->HasMore(&hasMore);
   while (hasMore) {
     res = encoders->GetNext(charset);

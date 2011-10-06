@@ -67,8 +67,8 @@ public:
   // nsIDragSession
   NS_IMETHOD GetData(nsITransferable * aTransferable, PRUint32 anItem);
   NS_IMETHOD GetNumDropItems(PRUint32 * aNumItems);
-  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, bool *_retval);
-  NS_IMETHOD EndDragSession(bool aDoneDrag);
+  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
+  NS_IMETHOD EndDragSession(PRBool aDoneDrag);
 
   // native impl.
   NS_IMETHOD SetIDataObject(IDataObject * aDataObj);
@@ -83,20 +83,20 @@ protected:
 
   // determine if we have a single data object or one of our private
   // collections
-  bool IsCollectionObject(IDataObject* inDataObj);
+  PRBool IsCollectionObject(IDataObject* inDataObj);
 
   // gets shell version
   PRUint64 GetShellVersion();
 
   // Create a bitmap for drag operations
-  bool CreateDragImage(nsIDOMNode *aDOMNode,
+  PRBool CreateDragImage(nsIDOMNode *aDOMNode,
                          nsIScriptableRegion *aRegion,
                          SHDRAGIMAGE *psdi);
 
   IDropSource * mNativeDragSrc;
   nsNativeDragTarget * mNativeDragTarget;
   IDataObject * mDataObject;
-  bool mSentLocalDropEvent;
+  PRPackedBool mSentLocalDropEvent;
 };
 
 #endif // nsDragService_h__

@@ -1,9 +1,9 @@
 <html>
     <head>
         <script>
-            var fcn = function() {};
-            var iter = document.createNodeIterator(document, NodeFilter.SHOW_ELEMENT, fcn, false);
-            var filter = iter.filter;
+            var xhr = new XMLHttpRequest();
+            var readystatechange = function() {};
+            xhr.onreadystatechange = readystatechange;
 
             function testme(obj) {
                 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");

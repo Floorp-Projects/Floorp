@@ -59,7 +59,7 @@ class nsStyleContext;
 struct nsTableReflowState;
 struct nsStylePosition;
 
-static inline bool IS_TABLE_CELL(nsIAtom* frameType) {
+static inline PRBool IS_TABLE_CELL(nsIAtom* frameType) {
   return nsGkAtoms::tableCellFrame == frameType ||
     nsGkAtoms::bcTableCellFrame == frameType;
 }
@@ -71,7 +71,7 @@ public:
       nsDisplayItem(aBuilder, aFrame),
       mPartHasFixedBackground(PR_FALSE) {}
 
-  virtual bool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
+  virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                 nsIFrame* aFrame);
   // With collapsed borders, parts of the collapsed border can extend outside
   // the table part frames, so allow this display element to blow out to our
@@ -82,7 +82,7 @@ public:
   void UpdateForFrameBackground(nsIFrame* aFrame);
 
 private:
-  bool mPartHasFixedBackground;
+  PRPackedBool mPartHasFixedBackground;
 };
 
 class nsAutoPushCurrentTableItem
@@ -154,7 +154,7 @@ public:
 
   // Return true if aParentReflowState.frame or any of its ancestors within
   // the containing table have non-auto height. (e.g. pct or fixed height)
-  static bool AncestorsHaveStyleHeight(const nsHTMLReflowState& aParentReflowState);
+  static PRBool AncestorsHaveStyleHeight(const nsHTMLReflowState& aParentReflowState);
 
   // See if a special height reflow will occur due to having a pct height when
   // the pct height basis may not yet be valid.
@@ -164,9 +164,11 @@ public:
   // height reflow will occur. 
   static void RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState);
 
+  virtual PRBool IsContainingBlock() const;
+
   static void RePositionViews(nsIFrame* aFrame);
 
-  static bool PageBreakAfter(nsIFrame* aSourceFrame,
+  static PRBool PageBreakAfter(nsIFrame* aSourceFrame,
                                nsIFrame* aNextFrame);
 
   nsPoint GetFirstSectionOrigin(const nsHTMLReflowState& aReflowState) const;
@@ -193,7 +195,6 @@ public:
 
   virtual nsMargin GetUsedBorder() const;
   virtual nsMargin GetUsedPadding() const;
-  virtual nsMargin GetUsedMargin() const;
 
   // Get the offset from the border box to the area where the row groups fit
   nsMargin GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const;
@@ -230,12 +231,12 @@ public:
   static nsIFrame* GetFrameAtOrBefore(nsIFrame*       aParentFrame,
                                       nsIFrame*       aPriorChildFrame,
                                       nsIAtom*        aChildType);
-  bool IsAutoHeight();
+  PRBool IsAutoHeight();
   
   /** @return PR_TRUE if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
     */
-  bool IsRowGroup(PRInt32 aDisplayType) const;
+  PRBool IsRowGroup(PRInt32 aDisplayType) const;
 
   /** Initialize the table frame with a set of children.
     * @see nsIFrame::SetInitialChildList 
@@ -292,7 +293,7 @@ public:
   friend class nsDelayedCalcBCBorders;
   
   void SetBCDamageArea(const nsRect& aValue);
-  bool BCRecalcNeeded(nsStyleContext* aOldStyleContext,
+  PRBool BCRecalcNeeded(nsStyleContext* aOldStyleContext,
                         nsStyleContext* aNewStyleContext);
   void PaintBCBorders(nsRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect);
@@ -308,11 +309,11 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             bool aShrinkWrap);
+                             PRBool aShrinkWrap);
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, bool aShrinkWrap);
+                                 nsSize aPadding, PRBool aShrinkWrap);
   /**
    * A copy of nsFrame::ShrinkWidthToFit that calls a different
    * GetPrefWidth, since tables have two different ones.
@@ -402,7 +403,7 @@ public:
   /** indicate whether the row has more than one cell that either originates
     * or is spanned from the rows above
     */
-  bool HasMoreThanOneCell(PRInt32 aRowIndex) const;
+  PRBool HasMoreThanOneCell(PRInt32 aRowIndex) const;
 
   /** return the column frame associated with aColIndex
     * returns nsnull if the col frame has not yet been allocated, or if
@@ -433,7 +434,7 @@ public:
   void AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
                                 PRInt32               aNumColsToAdd,
                                 nsTableColType        aColType,
-                                bool                  aAddToTable);
+                                PRBool                aAddToTable);
 
   void MatchCellMapToColCache(nsTableCellMap* aCellMap);
   /** empty the column frame cache */
@@ -458,11 +459,11 @@ public:
   PRInt32 InsertRows(nsTableRowGroupFrame*       aRowGroupFrame,
                      nsTArray<nsTableRowFrame*>& aFrames,
                      PRInt32                     aRowIndex,
-                     bool                        aConsiderSpans);
+                     PRBool                      aConsiderSpans);
 
   virtual void RemoveRows(nsTableRowFrame& aFirstRowFrame,
                           PRInt32          aNumRowsToRemove,
-                          bool             aConsiderSpans);
+                          PRBool           aConsiderSpans);
 
   /** Insert multiple rowgroups into the table cellmap handling
     * @param aRowGroups - iterator that iterates over the rowgroups to insert
@@ -474,19 +475,19 @@ public:
 
   virtual void RemoveCol(nsTableColGroupFrame* aColGroupFrame,
                          PRInt32               aColIndex,
-                         bool                  aRemoveFromCache,
-                         bool                  aRemoveFromCellMap);
+                         PRBool                aRemoveFromCache,
+                         PRBool                aRemoveFromCellMap);
 
   NS_IMETHOD GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn, PRInt32 *aIndex);
   NS_IMETHOD GetRowAndColumnByIndex(PRInt32 aIndex, PRInt32 *aRow, PRInt32 *aColumn);
 
-  bool ColumnHasCellSpacingBefore(PRInt32 aColIndex) const;
+  PRBool ColumnHasCellSpacingBefore(PRInt32 aColIndex) const;
 
-  bool HasPctCol() const;
-  void SetHasPctCol(bool aValue);
+  PRBool HasPctCol() const;
+  void SetHasPctCol(PRBool aValue);
 
-  bool HasCellSpanningPctCol() const;
-  void SetHasCellSpanningPctCol(bool aValue);
+  PRBool HasCellSpanningPctCol() const;
+  void SetHasCellSpanningPctCol(PRBool aValue);
 
   /**
    * To be called on a frame by its parent after setting its size/position and
@@ -503,7 +504,7 @@ public:
   static void InvalidateFrame(nsIFrame* aFrame,
                               const nsRect& aOrigRect,
                               const nsRect& aOrigVisualOverflow,
-                              bool aIsFirstReflow);
+                              PRBool aIsFirstReflow);
 
 protected:
 
@@ -521,8 +522,8 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
 public:
-  bool IsRowInserted() const;
-  void   SetRowInserted(bool aValue);
+  PRBool IsRowInserted() const;
+  void   SetRowInserted(PRBool aValue);
 
 protected:
     
@@ -628,32 +629,32 @@ public:
   // Returns PR_TRUE if there are any cells above the row at
   // aRowIndex and spanning into the row at aRowIndex, the number of
   // effective columns limits the search up to that column
-  bool RowIsSpannedInto(PRInt32 aRowIndex, PRInt32 aNumEffCols);
+  PRBool RowIsSpannedInto(PRInt32 aRowIndex, PRInt32 aNumEffCols);
 
   // Returns PR_TRUE if there is a cell originating in aRowIndex
   // which spans into the next row,  the number of effective
   // columns limits the search up to that column
-  bool RowHasSpanningCells(PRInt32 aRowIndex, PRInt32 aNumEffCols);
+  PRBool RowHasSpanningCells(PRInt32 aRowIndex, PRInt32 aNumEffCols);
 
 protected:
 
-  bool HaveReflowedColGroups() const;
-  void   SetHaveReflowedColGroups(bool aValue);
+  PRBool HaveReflowedColGroups() const;
+  void   SetHaveReflowedColGroups(PRBool aValue);
 
 public:
-  bool IsBorderCollapse() const;
+  PRBool IsBorderCollapse() const;
 
-  bool NeedToCalcBCBorders() const;
-  void SetNeedToCalcBCBorders(bool aValue);
+  PRBool NeedToCalcBCBorders() const;
+  void SetNeedToCalcBCBorders(PRBool aValue);
 
-  bool NeedToCollapse() const;
-  void SetNeedToCollapse(bool aValue);
+  PRBool NeedToCollapse() const;
+  void SetNeedToCollapse(PRBool aValue);
 
-  bool HasZeroColSpans() const;
-  void SetHasZeroColSpans(bool aValue);
+  PRBool HasZeroColSpans() const;
+  void SetHasZeroColSpans(PRBool aValue);
 
-  bool NeedColSpanExpansion() const;
-  void SetNeedColSpanExpansion(bool aValue);
+  PRBool NeedColSpanExpansion() const;
+  void SetNeedColSpanExpansion(PRBool aValue);
 
   /** The GeometryDirty bit is similar to the NS_FRAME_IS_DIRTY frame
     * state bit, which implies that all descendants are dirty.  The
@@ -663,7 +664,7 @@ public:
     */
   void SetGeometryDirty() { mBits.mGeometryDirty = PR_TRUE; }
   void ClearGeometryDirty() { mBits.mGeometryDirty = PR_FALSE; }
-  bool IsGeometryDirty() const { return mBits.mGeometryDirty; }
+  PRBool IsGeometryDirty() const { return mBits.mGeometryDirty; }
 
   /** Get the cell map for this table frame.  It is not always mCellMap.
     * Only the firstInFlow has a legit cell map
@@ -690,7 +691,7 @@ public:
 
 protected:
 
-  void SetBorderCollapse(bool aValue);
+  void SetBorderCollapse(PRBool aValue);
 
   void CalcBCBorders();
 
@@ -727,7 +728,7 @@ public: /* ----- Cell Map public methods ----- */
   PRInt32 GetIndexOfLastRealCol();
 
   /** returns PR_TRUE if table-layout:auto  */
-  virtual bool IsAutoLayout();
+  virtual PRBool IsAutoLayout();
 
   /*---------------- nsITableLayout methods ------------------------*/
   
@@ -737,7 +738,7 @@ public: /* ----- Cell Map public methods ----- */
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                            PRInt32& aRowSpan, PRInt32& aColSpan,
                            PRInt32& aActualRowSpan, PRInt32& aActualColSpan,
-                           bool& aIsSelected);
+                           PRBool& aIsSelected);
 
   /** Get the number of rows and column for a table from the frame's cellmap 
     *  Some rows may not have enough cells (the number returned is the maximum possible),
@@ -750,9 +751,9 @@ public: /* ----- Cell Map public methods ----- */
 public:
  
 #ifdef DEBUG
-  void Dump(bool            aDumpRows,
-            bool            aDumpCols, 
-            bool            aDumpCellMap);
+  void Dump(PRBool          aDumpRows,
+            PRBool          aDumpCols, 
+            PRBool          aDumpCellMap);
 #endif
 
 protected:
@@ -783,81 +784,81 @@ protected:
 };
 
 
-inline bool nsTableFrame::IsRowGroup(PRInt32 aDisplayType) const
+inline PRBool nsTableFrame::IsRowGroup(PRInt32 aDisplayType) const
 {
-  return bool((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aDisplayType) ||
+  return PRBool((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aDisplayType) ||
                 (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aDisplayType) ||
                 (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aDisplayType));
 }
 
-inline void nsTableFrame::SetHaveReflowedColGroups(bool aValue)
+inline void nsTableFrame::SetHaveReflowedColGroups(PRBool aValue)
 {
   mBits.mHaveReflowedColGroups = aValue;
 }
 
-inline bool nsTableFrame::HaveReflowedColGroups() const
+inline PRBool nsTableFrame::HaveReflowedColGroups() const
 {
-  return (bool)mBits.mHaveReflowedColGroups;
+  return (PRBool)mBits.mHaveReflowedColGroups;
 }
 
-inline bool nsTableFrame::HasPctCol() const
+inline PRBool nsTableFrame::HasPctCol() const
 {
-  return (bool)mBits.mHasPctCol;
+  return (PRBool)mBits.mHasPctCol;
 }
 
-inline void nsTableFrame::SetHasPctCol(bool aValue)
+inline void nsTableFrame::SetHasPctCol(PRBool aValue)
 {
   mBits.mHasPctCol = (unsigned)aValue;
 }
 
-inline bool nsTableFrame::HasCellSpanningPctCol() const
+inline PRBool nsTableFrame::HasCellSpanningPctCol() const
 {
-  return (bool)mBits.mCellSpansPctCol;
+  return (PRBool)mBits.mCellSpansPctCol;
 }
 
-inline void nsTableFrame::SetHasCellSpanningPctCol(bool aValue)
+inline void nsTableFrame::SetHasCellSpanningPctCol(PRBool aValue)
 {
   mBits.mCellSpansPctCol = (unsigned)aValue;
 }
 
-inline bool nsTableFrame::IsRowInserted() const
+inline PRBool nsTableFrame::IsRowInserted() const
 {
-  return (bool)mBits.mRowInserted;
+  return (PRBool)mBits.mRowInserted;
 }
 
-inline void nsTableFrame::SetRowInserted(bool aValue)
+inline void nsTableFrame::SetRowInserted(PRBool aValue)
 {
   mBits.mRowInserted = (unsigned)aValue;
 }
 
-inline void nsTableFrame::SetNeedToCollapse(bool aValue)
+inline void nsTableFrame::SetNeedToCollapse(PRBool aValue)
 {
   static_cast<nsTableFrame*>(GetFirstInFlow())->mBits.mNeedToCollapse = (unsigned)aValue;
 }
 
-inline bool nsTableFrame::NeedToCollapse() const
+inline PRBool nsTableFrame::NeedToCollapse() const
 {
-  return (bool) static_cast<nsTableFrame*>(GetFirstInFlow())->mBits.mNeedToCollapse;
+  return (PRBool) static_cast<nsTableFrame*>(GetFirstInFlow())->mBits.mNeedToCollapse;
 }
 
-inline void nsTableFrame::SetHasZeroColSpans(bool aValue)
+inline void nsTableFrame::SetHasZeroColSpans(PRBool aValue)
 {
   mBits.mHasZeroColSpans = (unsigned)aValue;
 }
 
-inline bool nsTableFrame::HasZeroColSpans() const
+inline PRBool nsTableFrame::HasZeroColSpans() const
 {
-  return (bool)mBits.mHasZeroColSpans;
+  return (PRBool)mBits.mHasZeroColSpans;
 }
 
-inline void nsTableFrame::SetNeedColSpanExpansion(bool aValue)
+inline void nsTableFrame::SetNeedColSpanExpansion(PRBool aValue)
 {
   mBits.mNeedColSpanExpansion = (unsigned)aValue;
 }
 
-inline bool nsTableFrame::NeedColSpanExpansion() const
+inline PRBool nsTableFrame::NeedColSpanExpansion() const
 {
-  return (bool)mBits.mNeedColSpanExpansion;
+  return (PRBool)mBits.mNeedColSpanExpansion;
 }
 
 
@@ -871,22 +872,22 @@ inline nsTArray<nsTableColFrame*>& nsTableFrame::GetColCache()
   return mColFrames;
 }
 
-inline bool nsTableFrame::IsBorderCollapse() const
+inline PRBool nsTableFrame::IsBorderCollapse() const
 {
-  return (bool)mBits.mIsBorderCollapse;
+  return (PRBool)mBits.mIsBorderCollapse;
 }
 
-inline void nsTableFrame::SetBorderCollapse(bool aValue) 
+inline void nsTableFrame::SetBorderCollapse(PRBool aValue) 
 {
   mBits.mIsBorderCollapse = aValue;
 }
 
-inline bool nsTableFrame::NeedToCalcBCBorders() const
+inline PRBool nsTableFrame::NeedToCalcBCBorders() const
 {
-  return (bool)mBits.mNeedToCalcBCBorders;
+  return (PRBool)mBits.mNeedToCalcBCBorders;
 }
 
-inline void nsTableFrame::SetNeedToCalcBCBorders(bool aValue)
+inline void nsTableFrame::SetNeedToCalcBCBorders(PRBool aValue)
 {
   mBits.mNeedToCalcBCBorders = (unsigned)aValue;
 }
@@ -910,12 +911,12 @@ public:
   nsTableIterator(nsFrameList& aSource);
   nsIFrame* First();
   nsIFrame* Next();
-  bool      IsLeftToRight();
+  PRBool    IsLeftToRight();
   PRInt32   Count();
 
 protected:
   void Init(nsIFrame* aFirstChild);
-  bool      mLeftToRight;
+  PRBool    mLeftToRight;
   nsIFrame* mFirstListChild;
   nsIFrame* mFirstChild;
   nsIFrame* mCurrentChild;

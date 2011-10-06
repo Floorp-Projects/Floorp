@@ -106,11 +106,11 @@ public:
 
         const Entry& operator*() const { return *mCurrent; }
 
-        bool
+        PRBool
         operator==(const const_iterator& iter) const {
             return mCurrent == iter.mCurrent; }
 
-        bool
+        PRBool
         operator!=(const const_iterator& iter) const {
             return ! iter.operator==(*this); }
     };

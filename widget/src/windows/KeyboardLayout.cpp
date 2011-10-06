@@ -84,7 +84,7 @@ public:
     return mEntries;
   }
 
-  bool IsEqual(const DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries) const
+  PRBool IsEqual(const DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries) const
   {
     return (mEntries == aEntries &&
             !memcmp(mTable, aDeadKeyArray,
@@ -130,7 +130,7 @@ VirtualKey::SetNormalChars(PRUint8 aShiftState,
 {
   NS_ASSERTION(aShiftState < NS_ARRAY_LENGTH(mShiftStates), "invalid index");
 
-  SetDeadKey(aShiftState, false);
+  SetDeadKey(aShiftState, PR_FALSE);
 
   for (PRUint32 index = 0; index < aNumOfChars; index++) {
     // Ignore legacy non-printable control characters
@@ -149,7 +149,7 @@ VirtualKey::SetDeadChar(PRUint8 aShiftState, PRUnichar aDeadChar)
 {
   NS_ASSERTION(aShiftState < NS_ARRAY_LENGTH(mShiftStates), "invalid index");
 
-  SetDeadKey(aShiftState, true);
+  SetDeadKey(aShiftState, PR_TRUE);
 
   mShiftStates[aShiftState].DeadKey.DeadChar = aDeadChar;
   mShiftStates[aShiftState].DeadKey.Table = nsnull;
@@ -235,13 +235,13 @@ KeyboardLayout::~KeyboardLayout()
   ReleaseDeadKeyTables();
 }
 
-bool
+PRBool
 KeyboardLayout::IsPrintableCharKey(PRUint8 aVirtualKey)
 {
   return GetKeyIndex(aVirtualKey) >= 0;
 }
 
-bool
+PRBool
 KeyboardLayout::IsNumpadKey(PRUint8 aVirtualKey)
 {
   return VK_NUMPAD0 <= aVirtualKey && aVirtualKey <= VK_DIVIDE;
@@ -455,10 +455,10 @@ KeyboardLayout::LoadLayout(HKL aLayout)
 PRUint8
 KeyboardLayout::GetShiftState(const PBYTE aKbdState)
 {
-  bool isShift = (aKbdState[VK_SHIFT] & 0x80) != 0;
-  bool isCtrl  = (aKbdState[VK_CONTROL] & 0x80) != 0;
-  bool isAlt   = (aKbdState[VK_MENU] & 0x80) != 0;
-  bool isCaps  = (aKbdState[VK_CAPITAL] & 0x01) != 0;
+  PRBool isShift = (aKbdState[VK_SHIFT] & 0x80) != 0;
+  PRBool isCtrl  = (aKbdState[VK_CONTROL] & 0x80) != 0;
+  PRBool isAlt   = (aKbdState[VK_MENU] & 0x80) != 0;
+  PRBool isCaps  = (aKbdState[VK_CAPITAL] & 0x01) != 0;
 
   return ((isCaps << 3) | (isAlt << 2) | (isCtrl << 1) | isShift);
 }
@@ -589,8 +589,8 @@ KeyboardLayout::ReleaseDeadKeyTables()
   }
 }
 
-bool
-KeyboardLayout::EnsureDeadKeyActive(bool aIsActive,
+PRBool
+KeyboardLayout::EnsureDeadKeyActive(PRBool aIsActive,
                                     PRUint8 aDeadKey,
                                     const PBYTE aDeadKeyKbdState)
 {
@@ -624,11 +624,11 @@ KeyboardLayout::DeactivateDeadKeyState()
 
   SetShiftState(kbdState, mDeadKeyShiftState);
 
-  EnsureDeadKeyActive(false, mActiveDeadKey, kbdState);
+  EnsureDeadKeyActive(PR_FALSE, mActiveDeadKey, kbdState);
   mActiveDeadKey = -1;
 }
 
-bool
+PRBool
 KeyboardLayout::AddDeadKeyEntry(PRUnichar aBaseChar,
                                 PRUnichar aCompositeChar,
                                 DeadKeyEntry* aDeadKeyArray,
@@ -636,14 +636,14 @@ KeyboardLayout::AddDeadKeyEntry(PRUnichar aBaseChar,
 {
   for (PRUint32 index = 0; index < aEntries; index++) {
     if (aDeadKeyArray[index].BaseChar == aBaseChar) {
-      return false;
+      return PR_FALSE;
     }
   }
 
   aDeadKeyArray[aEntries].BaseChar = aBaseChar;
   aDeadKeyArray[aEntries].CompositeChar = aCompositeChar;
 
-  return true;
+  return PR_TRUE;
 }
 
 PRUint32
@@ -653,7 +653,7 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
                                        DeadKeyEntry* aDeadKeyArray,
                                        PRUint32 aMaxEntries)
 {
-  bool deadKeyActive = false;
+  PRBool deadKeyActive = PR_FALSE;
   PRUint32 entries = 0;
   BYTE kbdState[256];
   memset(kbdState, 0, sizeof(kbdState));
@@ -673,7 +673,7 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
         // Ensure dead-key is in active state, when it swallows entered
         // character and waits for the next pressed key.
         if (!deadKeyActive) {
-          deadKeyActive = EnsureDeadKeyActive(true, aDeadKey,
+          deadKeyActive = EnsureDeadKeyActive(PR_TRUE, aDeadKey,
                                               aDeadKeyKbdState);
         }
 
@@ -702,14 +702,14 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
                                 aDeadKeyArray, entries)) {
               entries++;
             }
-            deadKeyActive = false;
+            deadKeyActive = PR_FALSE;
             break;
           }
           default:
             // 1. Unexpected dead-key. Dead-key chaining is not supported.
             // 2. More than one character generated. This is not a valid
             //    dead-key and base character combination.
-            deadKeyActive = false;
+            deadKeyActive = PR_FALSE;
             break;
         }
       }
@@ -717,7 +717,7 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
   }
 
   if (deadKeyActive) {
-    deadKeyActive = EnsureDeadKeyActive(false, aDeadKey, aDeadKeyKbdState);
+    deadKeyActive = EnsureDeadKeyActive(PR_FALSE, aDeadKey, aDeadKeyKbdState);
   }
 
   NS_QuickSort(aDeadKeyArray, entries, sizeof(DeadKeyEntry),

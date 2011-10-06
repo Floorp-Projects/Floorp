@@ -381,7 +381,7 @@ NS_GetDefaultPort(const char *scheme,
  * This function is a helper function to apply the ToAscii conversion
  * to a string
  */
-inline bool
+inline PRBool
 NS_StringToACE(const nsACString &idn, nsACString &result)
 {
   nsCOMPtr<nsIIDNService> idnSrv = do_GetService(NS_IDNSERVICE_CONTRACTID);
@@ -479,7 +479,7 @@ NS_NewInputStreamPump(nsIInputStreamPump **result,
                       PRInt64              streamLen = PRInt64(-1),
                       PRUint32             segsize = 0,
                       PRUint32             segcount = 0,
-                      bool                 closeWhenDone = false)
+                      PRBool               closeWhenDone = PR_FALSE)
 {
     nsresult rv;
     nsCOMPtr<nsIInputStreamPump> pump =
@@ -503,11 +503,11 @@ NS_NewAsyncStreamCopier(nsIAsyncStreamCopier **result,
                         nsIInputStream        *source,
                         nsIOutputStream       *sink,
                         nsIEventTarget        *target,
-                        bool                   sourceBuffered = true,
-                        bool                   sinkBuffered = true,
+                        PRBool                 sourceBuffered = PR_TRUE,
+                        PRBool                 sinkBuffered = PR_TRUE,
                         PRUint32               chunkSize = 0,
-                        bool                   closeSource = true,
-                        bool                   closeSink = true)
+                        PRBool                 closeSource = PR_TRUE,
+                        PRBool                 closeSink = PR_TRUE)
 {
     nsresult rv;
     nsCOMPtr<nsIAsyncStreamCopier> copier =
@@ -705,7 +705,7 @@ NS_CheckPortSafety(PRInt32       port,
     nsCOMPtr<nsIIOService> grip;
     rv = net_EnsureIOService(&ioService, grip);
     if (ioService) {
-        bool allow;
+        PRBool allow;
         rv = ioService->AllowPort(port, scheme, &allow);
         if (NS_SUCCEEDED(rv) && !allow) {
             NS_WARNING("port blocked");
@@ -908,7 +908,7 @@ NS_ParseContentType(const nsACString &rawContentType,
     nsCOMPtr<nsINetUtil> util = do_GetNetUtil(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCString charset;
-    bool hadCharset;
+    PRBool hadCharset;
     rv = util->ParseContentType(rawContentType, charset, &hadCharset,
                                 contentType);
     if (NS_SUCCEEDED(rv) && hadCharset)
@@ -919,7 +919,7 @@ NS_ParseContentType(const nsACString &rawContentType,
 inline nsresult
 NS_ExtractCharsetFromContentType(const nsACString &rawContentType,
                                  nsCString        &contentCharset,
-                                 bool             *hadCharset,
+                                 PRBool           *hadCharset,
                                  PRInt32          *charsetStart,
                                  PRInt32          *charsetEnd)
 {
@@ -1122,7 +1122,7 @@ NS_BufferOutputStream(nsIOutputStream *aOutputStream,
 // returns an input stream compatible with nsIUploadChannel::SetUploadStream()
 inline nsresult
 NS_NewPostDataStream(nsIInputStream  **result,
-                     bool              isFile,
+                     PRBool            isFile,
                      const nsACString &data,
                      PRUint32          encodeFlags,
                      nsIIOService     *unused = nsnull)
@@ -1422,10 +1422,10 @@ NS_NewNotificationCallbacksAggregation(nsIInterfaceRequestor  *callbacks,
 /**
  * Helper function for testing online/offline state of the browser.
  */
-inline bool
+inline PRBool
 NS_IsOffline()
 {
-    bool offline = true;
+    PRBool offline = PR_TRUE;
     nsCOMPtr<nsIIOService> ios = do_GetIOService();
     if (ios)
         ios->GetOffline(&offline);
@@ -1483,7 +1483,7 @@ NS_EnsureSafeToReturn(nsIURI* uri, nsIURI** result)
     NS_PRECONDITION(uri, "Must have a URI");
     
     // Assume mutable until told otherwise
-    bool isMutable = true;
+    PRBool isMutable = PR_TRUE;
     nsCOMPtr<nsIMutable> mutableObj(do_QueryInterface(uri));
     if (mutableObj) {
         nsresult rv = mutableObj->GetMutable(&isMutable);
@@ -1552,7 +1552,7 @@ NS_TryToMakeImmutable(nsIURI* uri,
 inline nsresult
 NS_URIChainHasFlags(nsIURI   *uri,
                     PRUint32  flags,
-                    bool     *result)
+                    PRBool   *result)
 {
     nsresult rv;
     nsCOMPtr<nsINetUtil> util = do_GetNetUtil(&rv);
@@ -1644,10 +1644,10 @@ NS_SecurityHashURI(nsIURI* aURI)
     return schemeHash ^ hostHash ^ NS_GetRealPort(baseURI);
 }
 
-inline bool
+inline PRBool
 NS_SecurityCompareURIs(nsIURI* aSourceURI,
                        nsIURI* aTargetURI,
-                       bool aStrictFileOriginPolicy)
+                       PRBool aStrictFileOriginPolicy)
 {
     // Note that this is not an Equals() test on purpose -- for URIs that don't
     // support host/port, we want equality to basically be object identity, for
@@ -1684,7 +1684,7 @@ NS_SecurityCompareURIs(nsIURI* aSourceURI,
 
     // Compare schemes
     nsCAutoString targetScheme;
-    bool sameScheme = false;
+    PRBool sameScheme = PR_FALSE;
     if (NS_FAILED( targetBaseURI->GetScheme(targetScheme) ) ||
         NS_FAILED( sourceBaseURI->SchemeIs(targetScheme.get(), &sameScheme) ) ||
         !sameScheme)
@@ -1715,7 +1715,7 @@ NS_SecurityCompareURIs(nsIURI* aSourceURI,
             return PR_FALSE;
 
         // Otherwise they had better match
-        bool filesAreEqual = false;
+        PRBool filesAreEqual = PR_FALSE;
         nsresult rv = sourceFile->Equals(targetFile, &filesAreEqual);
         return NS_SUCCEEDED(rv) && filesAreEqual;
     }
@@ -1762,7 +1762,7 @@ NS_SecurityCompareURIs(nsIURI* aSourceURI,
     return NS_GetRealPort(targetBaseURI) == NS_GetRealPort(sourceBaseURI);
 }
 
-inline bool
+inline PRBool
 NS_IsInternalSameURIRedirect(nsIChannel *aOldChannel,
                              nsIChannel *aNewChannel,
                              PRUint32 aFlags)
@@ -1779,7 +1779,7 @@ NS_IsInternalSameURIRedirect(nsIChannel *aOldChannel,
     return PR_FALSE;
   }
 
-  bool res;
+  PRBool res;
   return NS_SUCCEEDED(oldURI->Equals(newURI, &res)) && res;
 }
 
@@ -1838,7 +1838,7 @@ NS_MakeRandomInvalidURLString(nsCString& result)
  * for Java.
  */  
 inline nsresult
-NS_CheckIsJavaCompatibleURLString(nsCString& urlString, bool *result)
+NS_CheckIsJavaCompatibleURLString(nsCString& urlString, PRBool *result)
 {
   *result = PR_FALSE; // Default to "no"
 
@@ -1848,7 +1848,7 @@ NS_CheckIsJavaCompatibleURLString(nsCString& urlString, bool *result)
   if (NS_FAILED(rv) || !urlParser)
     return NS_ERROR_FAILURE;
 
-  bool compatible = true;
+  PRBool compatible = PR_TRUE;
   PRUint32 schemePos = 0;
   PRInt32 schemeLen = 0;
   urlParser->ParseURL(urlString.get(), -1, &schemePos, &schemeLen,
@@ -2020,7 +2020,7 @@ inline bool
 NS_IsAboutBlank(nsIURI *uri)
 {
     // GetSpec can be expensive for some URIs, so check the scheme first.
-    bool isAbout = false;
+    PRBool isAbout = PR_FALSE;
     if (NS_FAILED(uri->SchemeIs("about", &isAbout)) || !isAbout) {
         return false;
     }

@@ -92,12 +92,9 @@ public:
   void ReleaseCallback();
 
 protected:
-  bool ExecuteCallback(const nsString& aResponse);
-
-  void ActorDestroy(ActorDestroyReason why);
-  
   bool Recv__delete__(const nsString& aResponse) {
-    return ExecuteCallback(aResponse);
+    return static_cast<TestShellParent*>(Manager())->CommandDone(
+      this, aResponse);
   }
 
 private:

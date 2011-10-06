@@ -123,7 +123,7 @@ error_exit:
  *  Close
  *****************************************************************************/
 nsresult
-nsDiskCacheBlockFile::Close(bool flush)
+nsDiskCacheBlockFile::Close(PRBool flush)
 {
     nsresult rv = NS_OK;
 

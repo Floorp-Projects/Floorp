@@ -245,14 +245,14 @@ NS_IMPL_RELEASE_INHERITED(nsDOMTouchEvent, nsDOMUIEvent)
 
 NS_IMETHODIMP
 nsDOMTouchEvent::InitTouchEvent(const nsAString& aType,
-                                bool aCanBubble,
-                                bool aCancelable,
+                                PRBool aCanBubble,
+                                PRBool aCancelable,
                                 nsIDOMWindow* aView,
                                 PRInt32 aDetail,
-                                bool aCtrlKey,
-                                bool aAltKey,
-                                bool aShiftKey,
-                                bool aMetaKey,
+                                PRBool aCtrlKey,
+                                PRBool aAltKey,
+                                PRBool aShiftKey,
+                                PRBool aMetaKey,
                                 nsIDOMTouchList* aTouches,
                                 nsIDOMTouchList* aTargetTouches,
                                 nsIDOMTouchList* aChangedTouches)
@@ -292,41 +292,41 @@ nsDOMTouchEvent::GetChangedTouches(nsIDOMTouchList** aChangedTouches)
 }
 
 NS_IMETHODIMP
-nsDOMTouchEvent::GetAltKey(bool* aAltKey)
+nsDOMTouchEvent::GetAltKey(PRBool* aAltKey)
 {
   *aAltKey = static_cast<nsInputEvent*>(mEvent)->isAlt;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchEvent::GetMetaKey(bool* aMetaKey)
+nsDOMTouchEvent::GetMetaKey(PRBool* aMetaKey)
 {
   *aMetaKey = static_cast<nsInputEvent*>(mEvent)->isMeta;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchEvent::GetCtrlKey(bool* aCtrlKey)
+nsDOMTouchEvent::GetCtrlKey(PRBool* aCtrlKey)
 {
   *aCtrlKey = static_cast<nsInputEvent*>(mEvent)->isControl;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchEvent::GetShiftKey(bool* aShiftKey)
+nsDOMTouchEvent::GetShiftKey(PRBool* aShiftKey)
 {
   *aShiftKey = static_cast<nsInputEvent*>(mEvent)->isShift;
   return NS_OK;
 }
 
-bool
+PRBool
 nsDOMTouchEvent::PrefEnabled()
 {
-  static bool sDidCheckPref = false;
-  static bool sPrefValue = false;
+  static PRBool sDidCheckPref = PR_FALSE;
+  static PRBool sPrefValue = PR_FALSE;
   if (!sDidCheckPref) {
     sDidCheckPref = PR_TRUE;
-    sPrefValue = Preferences::GetBool("dom.w3c_touch_events.enabled", false);
+    sPrefValue = Preferences::GetBool("dom.w3c_touch_events.enabled", PR_FALSE);
     if (sPrefValue) {
       nsContentUtils::InitializeTouchEventTable();
     }

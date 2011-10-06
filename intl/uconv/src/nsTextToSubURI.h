@@ -60,7 +60,7 @@ private:
   //
   nsresult convertURItoUnicode(const nsAFlatCString &aCharset,
                                const nsAFlatCString &aURI, 
-                               bool aIRI, 
+                               PRBool aIRI, 
                                nsAString &_retval);
 };
 

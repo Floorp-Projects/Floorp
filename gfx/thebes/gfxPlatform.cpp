@@ -102,7 +102,7 @@ static qcms_transform *gCMSRGBTransform = nsnull;
 static qcms_transform *gCMSInverseRGBTransform = nsnull;
 static qcms_transform *gCMSRGBATransform = nsnull;
 
-static bool gCMSInitialized = false;
+static PRBool gCMSInitialized = PR_FALSE;
 static eCMSMode gCMSMode = eCMSMode_Off;
 static int gCMSIntent = -2;
 
@@ -518,29 +518,29 @@ gfxPlatform::UpdateFontList()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-bool
+PRBool
 gfxPlatform::DownloadableFontsEnabled()
 {
     if (mAllowDownloadableFonts == UNINITIALIZED_VALUE) {
         mAllowDownloadableFonts =
-            Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_ENABLED, false);
+            Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_ENABLED, PR_FALSE);
     }
 
     return mAllowDownloadableFonts;
 }
 
-bool
+PRBool
 gfxPlatform::SanitizeDownloadedFonts()
 {
     if (mDownloadableFontsSanitize == UNINITIALIZED_VALUE) {
         mDownloadableFontsSanitize =
-            Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_SANITIZE, true);
+            Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_SANITIZE, PR_TRUE);
     }
 
     return mDownloadableFontsSanitize;
 }
 
-bool
+PRBool
 gfxPlatform::UseHarfBuzzForScript(PRInt32 aScriptCode)
 {
     if (mUseHarfBuzzScripts == UNINITIALIZED_VALUE) {
@@ -611,7 +611,7 @@ AppendGenericFontFromPref(nsString& aFonts, nsIAtom *aLangGroup, const char *aGe
 }
 
 void
-gfxPlatform::GetPrefFonts(nsIAtom *aLanguage, nsString& aFonts, bool aAppendUnicode)
+gfxPlatform::GetPrefFonts(nsIAtom *aLanguage, nsString& aFonts, PRBool aAppendUnicode)
 {
     aFonts.Truncate();
 
@@ -620,7 +620,7 @@ gfxPlatform::GetPrefFonts(nsIAtom *aLanguage, nsString& aFonts, bool aAppendUnic
         AppendGenericFontFromPref(aFonts, gfxAtoms::x_unicode, nsnull);
 }
 
-bool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArrayLen, PrefFontCallback aCallback,
+PRBool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArrayLen, PrefFontCallback aCallback,
                                     void *aClosure)
 {
     NS_ENSURE_TRUE(Preferences::GetRootBranch(), PR_FALSE);
@@ -747,7 +747,7 @@ gfxPlatform::GetFontPrefLangFor(PRUint8 aUnicodeRange)
     }
 }
 
-bool 
+PRBool 
 gfxPlatform::IsLangCJK(eFontPrefLang aLang)
 {
     switch (aLang) {
@@ -913,7 +913,7 @@ gfxPlatform::GetCMSMode()
             gCMSMode = static_cast<eCMSMode>(mode);
         }
 
-        bool enableV4;
+        PRBool enableV4;
         rv = Preferences::GetBool("gfx.color_management.enablev4", &enableV4);
         if (NS_SUCCEEDED(rv) && enableV4) {
             qcms_enable_iccv4();
@@ -1003,7 +1003,7 @@ gfxPlatform::GetCMSOutputProfile()
            default value of this preference, which means nsIPrefBranch::GetBoolPref
            will typically throw (and leave its out-param untouched).
          */
-        if (Preferences::GetBool("gfx.color_management.force_srgb", false)) {
+        if (Preferences::GetBool("gfx.color_management.force_srgb", PR_FALSE)) {
             gCMSOutputProfile = GetCMSsRGBProfile();
         }
 
@@ -1147,7 +1147,7 @@ static void MigratePrefs()
     /* Migrate from the boolean color_management.enabled pref - we now use
        color_management.mode. */
     if (Preferences::HasUserValue("gfx.color_management.enabled")) {
-        if (Preferences::GetBool("gfx.color_management.enabled", false)) {
+        if (Preferences::GetBool("gfx.color_management.enabled", PR_FALSE)) {
             Preferences::SetInt("gfx.color_management.mode", static_cast<PRInt32>(eCMSMode_All));
         }
         Preferences::ClearUser("gfx.color_management.enabled");
@@ -1176,7 +1176,7 @@ gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aStri
     gfxUnicodeProperties::HSType hangulState = gfxUnicodeProperties::HST_NONE;
 
     for (i = 0; i < length; ++i) {
-        bool surrogatePair = false;
+        PRBool surrogatePair = PR_FALSE;
         PRUint32 ch = aString[i];
         if (NS_IS_HIGH_SURROGATE(ch) &&
             i < length - 1 && NS_IS_LOW_SURROGATE(aString[i+1]))

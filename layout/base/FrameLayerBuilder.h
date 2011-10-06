@@ -316,7 +316,7 @@ public:
    * Returns false if it doesn't need to be repainted because the layer system
    * is ensuring its fixed-ness for us.
    */
-  static bool NeedToInvalidateFixedDisplayItem(nsDisplayListBuilder* aBuilder,
+  static PRBool NeedToInvalidateFixedDisplayItem(nsDisplayListBuilder* aBuilder,
                                                  nsDisplayItem* aItem);
 
   /**
@@ -325,7 +325,7 @@ public:
    * Returns false if it was rendered into a temporary layer manager and then
    * into a retained layer.
    */
-  static bool HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
+  static PRBool HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
 
   /**
    * Save transform that was in aLayer when we last painted. It must be an integer
@@ -367,7 +367,7 @@ public:
     };
     nsRect mClipRect;
     nsTArray<RoundedRect> mRoundedClipRects;
-    bool mHaveClipRect;
+    PRPackedBool mHaveClipRect;
 
     Clip() : mHaveClipRect(PR_FALSE) {}
 
@@ -423,7 +423,7 @@ protected:
 
   static void InternalDestroyDisplayItemData(nsIFrame* aFrame,
                                              void* aPropertyValue,
-                                             bool aRemoveFromFramesWithLayers);
+                                             PRBool aRemoveFromFramesWithLayers);
   static void DestroyDisplayItemData(nsIFrame* aFrame, void* aPropertyValue);
 
   /**
@@ -448,7 +448,7 @@ protected:
       NS_ERROR("Should never be called, since we ALLOW_MEMMOVE");
     }
 
-    bool HasNonEmptyContainerLayer();
+    PRBool HasNonEmptyContainerLayer();
 
     nsTArray<DisplayItemData> mData;
 
@@ -473,7 +473,7 @@ protected:
 
     nsDisplayItem* mItem;
     Clip mClip;
-    bool mInactiveLayer;
+    PRPackedBool mInactiveLayer;
   };
 
   /**
@@ -496,7 +496,7 @@ protected:
     // The translation set on this ThebesLayer before we started updating the
     // layer tree.
     nsIntPoint mLastPaintOffset;
-    bool mHasExplicitLastPaintOffset;
+    PRPackedBool mHasExplicitLastPaintOffset;
 
     enum { ALLOW_MEMMOVE = PR_TRUE };
   };
@@ -513,7 +513,7 @@ protected:
    * in which case we should bail out and not paint anymore. This should
    * never happen, but plugins can trigger it in some cases.
    */
-  bool CheckDOMModified();
+  PRBool CheckDOMModified();
 
   /**
    * The layer manager belonging to the widget that is being retained
@@ -542,12 +542,12 @@ protected:
    * Set to true if we have detected and reported DOM modification during
    * the current paint.
    */
-  bool                                mDetectedDOMModification;
+  PRPackedBool                        mDetectedDOMModification;
   /**
    * Indicates that the entire layer tree should be rerendered
    * during this paint.
    */
-  bool                                mInvalidateAllLayers;
+  PRPackedBool                        mInvalidateAllLayers;
 };
 
 }

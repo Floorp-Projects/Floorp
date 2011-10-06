@@ -74,7 +74,7 @@ class nsShmImage {
 public:
     typedef gfxASurface::gfxImageFormat Format;
 
-    static bool UseShm();
+    static PRBool UseShm();
     static already_AddRefed<nsShmImage>
         Create(const gfxIntSize& aSize, Visual* aVisual, unsigned int aDepth);
     static already_AddRefed<gfxASurface>
@@ -114,7 +114,7 @@ private:
     XShmSegmentInfo              mInfo;
     gfxIntSize                   mSize;
     Format                       mFormat;
-    bool                         mXAttached;
+    PRPackedBool                 mXAttached;
 };
 
 #endif // MOZ_HAVE_SHMIMAGE

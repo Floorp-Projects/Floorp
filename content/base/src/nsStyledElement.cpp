@@ -93,7 +93,7 @@ nsStyledElementNotElementCSSInlineStyle::DoGetClasses() const
   return mAttrsAndChildren.GetAttr(nsGkAtoms::_class);
 }
 
-bool
+PRBool
 nsStyledElementNotElementCSSInlineStyle::ParseAttribute(PRInt32 aNamespaceID,
                                                         nsIAtom* aAttribute,
                                                         const nsAString& aValue,
@@ -132,7 +132,7 @@ nsStyledElementNotElementCSSInlineStyle::ParseAttribute(PRInt32 aNamespaceID,
 nsresult
 nsStyledElementNotElementCSSInlineStyle::UnsetAttr(PRInt32 aNameSpaceID,
                                                    nsIAtom* aAttribute,
-                                                   bool aNotify)
+                                                   PRBool aNotify)
 {
   nsAutoScriptBlocker scriptBlocker;
   if (aAttribute == nsGkAtoms::id && aNameSpaceID == kNameSpaceID_None) {
@@ -147,7 +147,7 @@ nsresult
 nsStyledElementNotElementCSSInlineStyle::AfterSetAttr(PRInt32 aNamespaceID,
                                                       nsIAtom* aAttribute,
                                                       const nsAString* aValue,
-                                                      bool aNotify)
+                                                      PRBool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None && !aValue &&
       aAttribute == nsGkAtoms::id) {
@@ -163,13 +163,13 @@ nsStyledElementNotElementCSSInlineStyle::AfterSetAttr(PRInt32 aNamespaceID,
 
 NS_IMETHODIMP
 nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aStyleRule,
-                                                            bool aNotify)
+                                                            PRBool aNotify)
 {
   SetMayHaveStyle();
-  bool modification = false;
+  PRBool modification = PR_FALSE;
   nsAutoString oldValueStr;
 
-  bool hasListeners = aNotify &&
+  PRBool hasListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
                                          NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
                                          this);
@@ -220,7 +220,7 @@ nsresult
 nsStyledElementNotElementCSSInlineStyle::BindToTree(nsIDocument* aDocument,
                                                     nsIContent* aParent,
                                                     nsIContent* aBindingParent,
-                                                    bool aCompileEventHandlers)
+                                                    PRBool aCompileEventHandlers)
 {
   nsresult rv = nsStyledElementBase::BindToTree(aDocument, aParent,
                                                 aBindingParent,
@@ -241,8 +241,8 @@ nsStyledElementNotElementCSSInlineStyle::BindToTree(nsIDocument* aDocument,
 }
 
 void
-nsStyledElementNotElementCSSInlineStyle::UnbindFromTree(bool aDeep,
-                                                        bool aNullParent)
+nsStyledElementNotElementCSSInlineStyle::UnbindFromTree(PRBool aDeep,
+                                                        PRBool aNullParent)
 {
   RemoveFromIdTable();
 
@@ -284,7 +284,7 @@ nsStyledElementNotElementCSSInlineStyle::GetStyle(nsresult* retval)
 }
 
 nsresult
-nsStyledElementNotElementCSSInlineStyle::ReparseStyleAttribute(bool aForceInDataDoc)
+nsStyledElementNotElementCSSInlineStyle::ReparseStyleAttribute(PRBool aForceInDataDoc)
 {
   if (!MayHaveStyle()) {
     return NS_OK;
@@ -308,14 +308,14 @@ nsStyledElementNotElementCSSInlineStyle::ReparseStyleAttribute(bool aForceInData
 void
 nsStyledElementNotElementCSSInlineStyle::ParseStyleAttribute(const nsAString& aValue,
                                                              nsAttrValue& aResult,
-                                                             bool aForceInDataDoc)
+                                                             PRBool aForceInDataDoc)
 {
   nsIDocument* doc = GetOwnerDoc();
 
   if (doc && (aForceInDataDoc ||
               !doc->IsLoadedAsData() ||
               doc->IsStaticDocument())) {
-    bool isCSS = true; // assume CSS until proven otherwise
+    PRBool isCSS = PR_TRUE; // assume CSS until proven otherwise
 
     if (!IsInNativeAnonymousSubtree()) {  // native anonymous content
                                           // always assumes CSS

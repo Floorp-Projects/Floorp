@@ -575,7 +575,7 @@ RegisterAllocation *
 FrameState::computeAllocation(jsbytecode *target)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-    RegisterAllocation *alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(false);
+    RegisterAllocation *alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, false);
     if (!alloc)
         return NULL;
 
@@ -853,7 +853,7 @@ FrameState::discardForJoin(RegisterAllocation *&alloc, uint32 stackDepth)
          * This shows up for loop entries which are not reachable from the
          * loop head, and for exception, switch target and trap safe points.
          */
-        alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(false);
+        alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, false);
         if (!alloc)
             return false;
     }

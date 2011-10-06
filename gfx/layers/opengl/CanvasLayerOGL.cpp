@@ -302,27 +302,24 @@ ShadowCanvasLayerOGL::Initialize(const Data& aData)
 }
 
 void
-ShadowCanvasLayerOGL::Init(const CanvasSurface& aNewFront, bool needYFlip)
+ShadowCanvasLayerOGL::Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize, bool needYFlip)
 {
-  nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront);
+  mDeadweight = aNewFront;
+  nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(mDeadweight);
 
-  mTexImage = gl()->CreateTextureImage(surf->GetSize(),
+  mTexImage = gl()->CreateTextureImage(nsIntSize(aSize.width, aSize.height),
                                        surf->GetContentType(),
                                        LOCAL_GL_CLAMP_TO_EDGE);
   mNeedsYFlip = needYFlip;
 }
 
 void
-ShadowCanvasLayerOGL::Swap(const CanvasSurface& aNewFront,
-                           bool needYFlip,
-                           CanvasSurface* aNewBack)
+ShadowCanvasLayerOGL::Swap(const SurfaceDescriptor& aNewFront,
+                           SurfaceDescriptor* aNewBack)
 {
-  if (!mDestroyed) {
+  if (!mDestroyed && mTexImage) {
     nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront);
-    gfxIntSize sz = surf->GetSize();
-    if (!mTexImage || mTexImage->GetSize() != sz) {
-      Init(aNewFront, needYFlip);
-    }
+    gfxSize sz = surf->GetSize();
     nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));
     mTexImage->DirectUpdate(surf, updateRegion);
   }
@@ -334,6 +331,9 @@ void
 ShadowCanvasLayerOGL::DestroyFrontBuffer()
 {
   mTexImage = nsnull;
+  if (IsSurfaceDescriptorValid(mDeadweight)) {
+    mOGLManager->DestroySharedSurface(&mDeadweight, mAllocator);
+  }
 }
 
 void

@@ -82,8 +82,8 @@ public:
                               const char* aGrantedList,
                               const char* aDeniedList,
                               nsISupports* aCert,
-                              bool aIsCert,
-                              bool aTrusted);
+                              PRBool aIsCert,
+                              PRBool aTrusted);
 
   // Call this to ensure that this principal has a subject name, a pretty name,
   // and a cert pointer.  This method will throw if there is already a
@@ -132,7 +132,7 @@ protected:
                           nsISupports* aCert);
 
   // Checks whether this principal's certificate equals aOther's.
-  bool CertificateEquals(nsIPrincipal *aOther);
+  PRBool CertificateEquals(nsIPrincipal *aOther);
 
   // Keep this is a pointer, even though it may slightly increase the
   // cost of keeping a certificate, this is a good tradeoff though since
@@ -144,11 +144,11 @@ protected:
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
   nsCOMPtr<nsIURI> mCodebase;
   nsCOMPtr<nsIURI> mDomain;
-  bool mTrusted;
-  bool mInitialized;
+  PRPackedBool mTrusted;
+  PRPackedBool mInitialized;
   // If mCodebaseImmutable is true, mCodebase is non-null and immutable
-  bool mCodebaseImmutable;
-  bool mDomainImmutable;
+  PRPackedBool mCodebaseImmutable;
+  PRPackedBool mDomainImmutable;
 };
 
 

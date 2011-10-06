@@ -146,7 +146,7 @@ public:
 
   NS_IMETHOD Run() {
 #ifdef DEBUG
-    bool rightThread = false;
+    PRBool rightThread = PR_FALSE;
     mTarget->IsOnCurrentThread(&rightThread);
     NS_ASSERTION(rightThread, "Run called on the wrong thread!");
 #endif
@@ -162,7 +162,7 @@ private:
   nsCOMPtr<nsIRunnable> mRunnable;
   nsRefPtr<nsDOMWorker> mWorker;
   nsresult mResult;
-  volatile bool mDone;
+  volatile PRBool mDone;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsResultReturningRunnable, nsIRunnable)
@@ -489,7 +489,7 @@ nsDOMWorkerXHRProxy::DestroyInternal()
 }
 
 void
-nsDOMWorkerXHRProxy::AddRemoveXHRListeners(bool aAdd)
+nsDOMWorkerXHRProxy::AddRemoveXHRListeners(PRBool aAdd)
 {
   nsCOMPtr<nsIDOMEventTarget> xhrTarget(do_QueryInterface(mXHR));
   NS_ASSERTION(xhrTarget, "This shouldn't fail!");
@@ -580,7 +580,7 @@ nsDOMWorkerXHRProxy::UploadEventListenerAdded()
 
 nsresult
 nsDOMWorkerXHRProxy::HandleWorkerEvent(nsDOMWorkerXHREvent* aEvent,
-                                       bool aUploadEvent)
+                                       PRBool aUploadEvent)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aEvent, "Should not be null!");
@@ -621,7 +621,7 @@ nsDOMWorkerXHRProxy::HandleWorkerEvent(nsDOMWorkerXHREvent* aEvent,
   return target->DispatchEvent(static_cast<nsDOMWorkerEvent*>(aEvent), nsnull);
 }
 
-bool
+PRBool
 nsDOMWorkerXHRProxy::IsUploadEvent(nsIDOMEvent* aEvent)
 {
   NS_ASSERTION(aEvent, "Null pointer!");
@@ -689,7 +689,7 @@ nsDOMWorkerXHRProxy::DispatchPrematureAbortEvents(PRUint32 aType,
 }
 
 nsresult
-nsDOMWorkerXHRProxy::MaybeDispatchPrematureAbortEvents(bool aFromOpen)
+nsDOMWorkerXHRProxy::MaybeDispatchPrematureAbortEvents(PRBool aFromOpen)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -738,7 +738,7 @@ nsDOMWorkerXHRProxy::HandleEvent(nsIDOMEvent* aEvent)
   PRUint32 type =
     nsDOMWorkerXHREventTarget::GetListenerTypeFromString(typeString);
 
-  bool isUpload = IsUploadEvent(aEvent);
+  PRBool isUpload = IsUploadEvent(aEvent);
 
   if ((isUpload && type >= MAX_UPLOAD_LISTENER_TYPE) ||
       (!isUpload && type >= MAX_XHR_LISTENER_TYPE)) {
@@ -750,7 +750,7 @@ nsDOMWorkerXHRProxy::HandleEvent(nsIDOMEvent* aEvent)
   // sync mode.
   nsRefPtr<nsDOMWorkerXHRFinishSyncXHRRunnable> syncFinishedRunnable;
 
-  bool requestDone;
+  PRBool requestDone;
   if (type == LISTENER_TYPE_ABORT || type == LISTENER_TYPE_ERROR ||
       type == LISTENER_TYPE_LOAD) {
     requestDone = PR_TRUE;
@@ -874,7 +874,7 @@ nsDOMWorkerXHRProxy::HandleEventRunnable(nsIRunnable* aRunnable)
 nsresult
 nsDOMWorkerXHRProxy::Open(const nsACString& aMethod,
                           const nsACString& aUrl,
-                          bool aAsync,
+                          PRBool aAsync,
                           const nsAString& aUser,
                           const nsAString& aPassword)
 {
@@ -1020,7 +1020,7 @@ nsDOMWorkerXHRProxy::OverrideMimeType(const nsACString& aMimetype)
 }
 
 nsresult
-nsDOMWorkerXHRProxy::GetMultipart(bool* aMultipart)
+nsDOMWorkerXHRProxy::GetMultipart(PRBool* aMultipart)
 {
   NS_ASSERTION(aMultipart, "Null pointer!");
 
@@ -1033,21 +1033,21 @@ nsDOMWorkerXHRProxy::GetMultipart(bool* aMultipart)
 }
 
 nsresult
-nsDOMWorkerXHRProxy::SetMultipart(bool aMultipart)
+nsDOMWorkerXHRProxy::SetMultipart(PRBool aMultipart)
 {
   RUN_PROXIED_FUNCTION(SetMultipart, (aMultipart));
   return NS_OK;
 }
 
 nsresult
-nsDOMWorkerXHRProxy::GetWithCredentials(bool* aWithCredentials)
+nsDOMWorkerXHRProxy::GetWithCredentials(PRBool* aWithCredentials)
 {
   RUN_PROXIED_FUNCTION(GetWithCredentials, (aWithCredentials));
   return NS_OK;
 }
 
 nsresult
-nsDOMWorkerXHRProxy::SetWithCredentials(bool aWithCredentials)
+nsDOMWorkerXHRProxy::SetWithCredentials(PRBool aWithCredentials)
 {
   RUN_PROXIED_FUNCTION(SetWithCredentials, (aWithCredentials));
   return NS_OK;

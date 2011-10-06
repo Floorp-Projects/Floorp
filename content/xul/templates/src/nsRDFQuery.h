@@ -125,7 +125,7 @@ public:
 
     nsIAtom* GetMemberVariable() { return mMemberVariable; }
 
-    bool IsSimple() { return mSimple; }
+    PRBool IsSimple() { return mSimple; }
 
     void SetSimple() { mSimple = PR_TRUE; }
 
@@ -138,7 +138,7 @@ protected:
     nsXULTemplateQueryProcessorRDF* mProcessor;
 
     // true if the query is a simple rule (one with a default query)
-    bool mSimple;
+    PRBool mSimple;
 
     /**
      * The root node in the network for this query

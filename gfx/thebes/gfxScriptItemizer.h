@@ -92,7 +92,7 @@ public:
 
     void SetText(const PRUnichar *src, PRUint32 length);
 
-    bool Next(PRUint32& aRunStart, PRUint32& aRunLimit,
+    PRBool Next(PRUint32& aRunStart, PRUint32& aRunLimit,
                 PRInt32& aRunScript);
 
 protected:

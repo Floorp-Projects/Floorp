@@ -83,7 +83,7 @@ void NS_NPAPI_CocoaWindowFrame(void* aWindow, nsRect& outRect)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-bool NS_NPAPI_CocoaWindowIsMain(void* aWindow)
+PRBool NS_NPAPI_CocoaWindowIsMain(void* aWindow)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -92,7 +92,7 @@ bool NS_NPAPI_CocoaWindowIsMain(void* aWindow)
 
   NSWindow* window = (NSWindow*)aWindow;
 
-  return (bool)[window isMainWindow];
+  return (PRBool)[window isMainWindow];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_TRUE);
 }

@@ -108,15 +108,15 @@ public:
     void xWaitGL();
     void xWaitX();
 
-    bool EnsureInitialized();
+    PRBool EnsureInitialized();
 
     GLXPixmap CreatePixmap(gfxASurface* aSurface);
     void DestroyPixmap(GLXPixmap aPixmap);
     void BindTexImage(GLXPixmap aPixmap);
     void ReleaseTexImage(GLXPixmap aPixmap);
 
-    bool HasTextureFromPixmap() { return mHasTextureFromPixmap; }
-    bool SupportsTextureFromPixmap(gfxASurface* aSurface);
+    PRBool HasTextureFromPixmap() { return mHasTextureFromPixmap; }
+    PRBool SupportsTextureFromPixmap(gfxASurface* aSurface);
 
 private:
     
@@ -214,10 +214,10 @@ private:
     void AfterGLXCall();
 #endif
 
-    bool mInitialized;
-    bool mTriedInitializing;
-    bool mHasTextureFromPixmap;
-    bool mDebug;
+    PRBool mInitialized;
+    PRBool mTriedInitializing;
+    PRBool mHasTextureFromPixmap;
+    PRBool mDebug;
     PRLibrary *mOGLLibrary;
 };
 

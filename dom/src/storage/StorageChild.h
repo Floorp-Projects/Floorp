@@ -78,11 +78,11 @@ public:
 
   virtual nsresult GetDBValue(const nsAString& aKey,
                               nsAString& aValue,
-                              bool* aSecure);
+                              PRBool* aSecure);
   virtual nsresult SetDBValue(const nsAString& aKey,
                               const nsAString& aValue,
-                              bool aSecure);
-  virtual nsresult SetSecure(const nsAString& aKey, bool aSecure);
+                              PRBool aSecure);
+  virtual nsresult SetSecure(const nsAString& aKey, PRBool aSecure);
 
   virtual nsresult CloneFrom(bool aCallerSecure, DOMStorageBase* aThat);
 

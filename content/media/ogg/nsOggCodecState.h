@@ -82,7 +82,7 @@ class nsPacketQueue : private nsDeque {
 public:
   nsPacketQueue() : nsDeque(new OggPacketDeallocator()) {}
   ~nsPacketQueue() { Erase(); }
-  bool IsEmpty() { return nsDeque::GetSize() == 0; }
+  PRBool IsEmpty() { return nsDeque::GetSize() == 0; }
   void Append(ogg_packet* aPacket);
   ogg_packet* PopFront() { return static_cast<ogg_packet*>(nsDeque::PopFront()); }
   ogg_packet* PeekFront() { return static_cast<ogg_packet*>(nsDeque::PeekFront()); }
@@ -111,9 +111,9 @@ public:
   
   virtual CodecType GetType() { return TYPE_UNKNOWN; }
   
-  // Reads a header packet. Returns true when last header has been read.
-  virtual bool DecodeHeader(ogg_packet* aPacket) {
-    return (mDoneReadingHeaders = true);
+  // Reads a header packet. Returns PR_TRUE when last header has been read.
+  virtual PRBool DecodeHeader(ogg_packet* aPacket) {
+    return (mDoneReadingHeaders = PR_TRUE);
   }
 
   // Returns the end time that a granulepos represents.
@@ -123,30 +123,30 @@ public:
   virtual PRInt64 StartTime(PRInt64 granulepos) { return -1; }
 
   // Initializes the codec state.
-  virtual bool Init();
+  virtual PRBool Init();
 
-  // Returns true when this bitstream has finished reading all its
+  // Returns PR_TRUE when this bitstream has finished reading all its
   // header packets.
-  bool DoneReadingHeaders() { return mDoneReadingHeaders; }
+  PRBool DoneReadingHeaders() { return mDoneReadingHeaders; }
 
   // Deactivates the bitstream. Only the primary video and audio bitstreams
   // should be active.
   void Deactivate() {
-    mActive = false;
-    mDoneReadingHeaders = true;
+    mActive = PR_FALSE;
+    mDoneReadingHeaders = PR_TRUE;
     Reset();
   }
 
   // Resets decoding state.
   virtual nsresult Reset();
 
-  // Returns true if the nsOggCodecState thinks this packet is a header
+  // Returns PR_TRUE if the nsOggCodecState thinks this packet is a header
   // packet. Note this does not verify the validity of the header packet,
   // it just guarantees that the packet is marked as a header packet (i.e.
   // it is definintely not a data packet). Do not use this to identify
   // streams, use it to filter header packets from data packets while
   // decoding.
-  virtual bool IsHeader(ogg_packet* aPacket) { return false; }
+  virtual PRBool IsHeader(ogg_packet* aPacket) { return PR_FALSE; }
 
   // Returns the next packet in the stream, or nsnull if there are no more
   // packets buffered in the packet queue. More packets can be buffered by
@@ -181,16 +181,16 @@ public:
   nsPacketQueue mPackets;
 
   // Is the bitstream active; whether we're decoding and playing this bitstream.
-  bool mActive;
+  PRPackedBool mActive;
   
-  // True when all headers packets have been read.
-  bool mDoneReadingHeaders;
+  // PR_TRUE when all headers packets have been read.
+  PRPackedBool mDoneReadingHeaders;
 
 protected:
   // Constructs a new nsOggCodecState. aActive denotes whether the stream is
   // active. For streams of unsupported or unknown types, aActive should be
-  // false.
-  nsOggCodecState(ogg_page* aBosPage, bool aActive);
+  // PR_FALSE.
+  nsOggCodecState(ogg_page* aBosPage, PRBool aActive);
 
   // Deallocates all packets stored in mUnstamped, and clears the array.
   void ClearUnstamped();
@@ -202,7 +202,7 @@ protected:
   // the granulepos of the packets in mUnstamped can be inferred, and they
   // can be pushed over to mPackets. Used by PageIn() implementations in
   // subclasses.
-  nsresult PacketOutUntilGranulepos(bool& aFoundGranulepos);
+  nsresult PacketOutUntilGranulepos(PRBool& aFoundGranulepos);
 
   // Temporary buffer in which to store packets while we're reading packets
   // in order to capture granulepos.
@@ -215,11 +215,11 @@ public:
   virtual ~nsVorbisState();
 
   CodecType GetType() { return TYPE_VORBIS; }
-  bool DecodeHeader(ogg_packet* aPacket);
+  PRBool DecodeHeader(ogg_packet* aPacket);
   PRInt64 Time(PRInt64 granulepos);
-  bool Init();
+  PRBool Init();
   nsresult Reset();
-  bool IsHeader(ogg_packet* aPacket);
+  PRBool IsHeader(ogg_packet* aPacket);
   nsresult PageIn(ogg_page* aPage); 
 
   // Returns the end time that a granulepos represents.
@@ -285,11 +285,11 @@ public:
   virtual ~nsTheoraState();
 
   CodecType GetType() { return TYPE_THEORA; }
-  bool DecodeHeader(ogg_packet* aPacket);
+  PRBool DecodeHeader(ogg_packet* aPacket);
   PRInt64 Time(PRInt64 granulepos);
   PRInt64 StartTime(PRInt64 granulepos);
-  bool Init();
-  bool IsHeader(ogg_packet* aPacket);
+  PRBool Init();
+  PRBool IsHeader(ogg_packet* aPacket);
   nsresult PageIn(ogg_page* aPage); 
 
   // Returns the maximum number of microseconds which a keyframe can be offset
@@ -326,14 +326,14 @@ public:
   nsSkeletonState(ogg_page* aBosPage);
   ~nsSkeletonState();
   CodecType GetType() { return TYPE_SKELETON; }
-  bool DecodeHeader(ogg_packet* aPacket);
+  PRBool DecodeHeader(ogg_packet* aPacket);
   PRInt64 Time(PRInt64 granulepos) { return -1; }
-  bool Init() { return true; }
-  bool IsHeader(ogg_packet* aPacket) { return true; }
+  PRBool Init() { return PR_TRUE; }
+  PRBool IsHeader(ogg_packet* aPacket) { return PR_TRUE; }
 
-  // Return true if the given time (in milliseconds) is within
+  // Return PR_TRUE if the given time (in milliseconds) is within
   // the presentation time defined in the skeleton track.
-  bool IsPresentable(PRInt64 aTime) { return aTime >= mPresentationTime; }
+  PRBool IsPresentable(PRInt64 aTime) { return aTime >= mPresentationTime; }
 
   // Stores the offset of the page on which a keyframe starts,
   // and its presentation time.
@@ -353,7 +353,7 @@ public:
     // Presentation time in usecs.
     PRInt64 mTime;
 
-    bool IsNull() {
+    PRBool IsNull() {
       return mOffset == PR_INT64_MAX &&
              mTime == PR_INT64_MAX;
     }
@@ -366,7 +366,7 @@ public:
     nsSeekTarget() : mSerial(0) {}
     nsKeyPoint mKeyPoint;
     PRUint32 mSerial;
-    bool IsNull() {
+    PRBool IsNull() {
       return mKeyPoint.IsNull() &&
              mSerial == 0;
     }
@@ -379,7 +379,7 @@ public:
                              nsTArray<PRUint32>& aTracks,
                              nsSeekTarget& aResult);
 
-  bool HasIndex() const {
+  PRBool HasIndex() const {
     return mIndex.IsInitialized() && mIndex.Count() > 0;
   }
 
@@ -391,8 +391,8 @@ public:
 
 private:
 
-  // Decodes an index packet. Returns false on failure.
-  bool DecodeIndex(ogg_packet* aPacket);
+  // Decodes an index packet. Returns PR_FALSE on failure.
+  PRBool DecodeIndex(ogg_packet* aPacket);
 
   // Gets the keypoint you must seek to in order to get the keyframe required
   // to render the stream at time aTarget on stream with serial aSerialno.

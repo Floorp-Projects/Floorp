@@ -58,7 +58,7 @@ namespace nsMenuUtilsX
   unsigned int  MacModifiersForGeckoModifiers(PRUint8 geckoModifiers);
   nsMenuBarX*   GetHiddenWindowMenuBar(); // returned object is not retained
   NSMenuItem*   GetStandardEditMenuItem(); // returned object is not retained
-  bool          NodeIsHiddenOrCollapsed(nsIContent* inContent);
+  PRBool        NodeIsHiddenOrCollapsed(nsIContent* inContent);
   int           CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuObjectX* aChild);
 }
 

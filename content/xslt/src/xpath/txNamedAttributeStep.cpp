@@ -73,7 +73,7 @@ txNamedAttributeStep::evaluate(txIEvalContext* aContext,
 
 TX_IMPL_EXPR_STUBS_0(txNamedAttributeStep, NODESET_RESULT)
 
-bool
+PRBool
 txNamedAttributeStep::isSensitiveTo(ContextSensitivity aContext)
 {
     return !!(aContext & NODE_CONTEXT);

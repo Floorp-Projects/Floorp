@@ -108,7 +108,6 @@ let WeaveGlue = {
     // Show the connect UI
     container.hidden = false;
     document.getElementById("syncsetup-simple").hidden = false;
-    document.getElementById("syncsetup-waiting").hidden = true;
     document.getElementById("syncsetup-fallback").hidden = true;
 
     BrowserUI.pushDialog(this);
@@ -119,11 +118,6 @@ let WeaveGlue = {
         document.getElementById("syncsetup-code1").value = aPin.slice(0, 4);
         document.getElementById("syncsetup-code2").value = aPin.slice(4, 8);
         document.getElementById("syncsetup-code3").value = aPin.slice(8);
-      },
-
-      onPairingStart: function onPairingStart() {
-        document.getElementById("syncsetup-simple").hidden = true;
-        document.getElementById("syncsetup-waiting").hidden = false;
       },
 
       onComplete: function onComplete(aCredentials) {

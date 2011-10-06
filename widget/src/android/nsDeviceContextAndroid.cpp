@@ -78,7 +78,7 @@ nsDeviceContextSpecAndroid::GetSurfaceForPrinter(gfxASurface** aSurface)
 NS_IMETHODIMP
 nsDeviceContextSpecAndroid::Init(nsIWidget* aWidget,
                              nsIPrintSettings* aPS,
-                             bool aIsPrintPreview)
+                             PRBool aIsPrintPreview)
 {
   mPrintSettings = aPS;
   return NS_OK;

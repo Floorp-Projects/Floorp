@@ -51,7 +51,7 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
     virtual ~nsMIMEInfoWin();
 
     NS_IMETHOD LaunchWithFile(nsIFile* aFile);
-    NS_IMETHOD GetHasDefaultHandler(bool * _retval);
+    NS_IMETHOD GetHasDefaultHandler(PRBool * _retval);
     NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval); 
 
     NS_DECL_ISUPPORTS_INHERITED
@@ -71,26 +71,26 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
     
     // Given a path to a local handler, return its 
     // nsILocalHandlerApp instance.
-    bool GetLocalHandlerApp(const nsAString& aCommandHandler,
+    PRBool GetLocalHandlerApp(const nsAString& aCommandHandler,
                               nsCOMPtr<nsILocalHandlerApp>& aApp);
 
     // Return the cleaned up file path associated 
     // with a command verb located in root/Applications.
-    bool GetAppsVerbCommandHandler(const nsAString& appExeName,
+    PRBool GetAppsVerbCommandHandler(const nsAString& appExeName,
                                      nsAString& applicationPath,
-                                     bool bEdit);
+                                     PRBool bEdit);
 
     // Return the cleaned up file path associated 
     // with a progid command verb located in root.
-    bool GetProgIDVerbCommandHandler(const nsAString& appProgIDName,
+    PRBool GetProgIDVerbCommandHandler(const nsAString& appProgIDName,
                                        nsAString& applicationPath,
-                                       bool bEdit);
+                                       PRBool bEdit);
 
     // Lookup a rundll command handler and return
     // a populated command template for use with rundll32.exe.
-    bool GetDllLaunchInfo(nsIFile * aDll,
+    PRBool GetDllLaunchInfo(nsIFile * aDll,
                             nsILocalFile * aFile,
-                            nsAString& args, bool bEdit);
+                            nsAString& args, PRBool bEdit);
 
     // Helper routine used in tracking app lists
     void ProcessPath(nsCOMPtr<nsIMutableArray>& appList,

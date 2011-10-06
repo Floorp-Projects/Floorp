@@ -133,7 +133,7 @@ GetPrincipalURIAndHost(nsIPrincipal* aPrincipal, nsIURI** aURI, nsCString& aHost
 // Helper that tells us whether the caller is secure or not.
 //
 
-static bool
+static PRBool
 IsCallerSecure()
 {
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
@@ -161,7 +161,7 @@ IsCallerSecure()
     return PR_FALSE;
   }
 
-  bool isHttps = false;
+  PRBool isHttps = PR_FALSE;
   rv = innerUri->SchemeIs("https", &isHttps);
 
   return NS_SUCCEEDED(rv) && isHttps;
@@ -187,7 +187,7 @@ GetOfflinePermission(const nsACString &aDomain)
   return nsIPermissionManager::UNKNOWN_ACTION;
 }
 
-bool
+PRBool
 IsOfflineAllowed(const nsACString &aDomain)
 {
   PRInt32 perm = GetOfflinePermission(aDomain);
@@ -342,7 +342,7 @@ GetOfflineDomains(nsTArray<nsString>& aDomains)
     nsresult rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool hasMore;
+    PRBool hasMore;
     while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
       nsCOMPtr<nsISupports> supp;
       rv = enumerator->GetNext(getter_AddRefs(supp));
@@ -826,7 +826,7 @@ DOMStorageImpl::CanUseChromePersist()
 
 nsresult
 DOMStorageImpl::GetCachedValue(const nsAString& aKey, nsAString& aValue,
-                               bool* aSecure)
+                               PRBool* aSecure)
 {
   aValue.Truncate();
   *aSecure = PR_FALSE;
@@ -843,7 +843,7 @@ DOMStorageImpl::GetCachedValue(const nsAString& aKey, nsAString& aValue,
 
 nsresult
 DOMStorageImpl::GetDBValue(const nsAString& aKey, nsAString& aValue,
-                           bool* aSecure)
+                           PRBool* aSecure)
 {
   aValue.Truncate();
 
@@ -872,7 +872,7 @@ DOMStorageImpl::GetDBValue(const nsAString& aKey, nsAString& aValue,
 nsresult
 DOMStorageImpl::SetDBValue(const nsAString& aKey,
                            const nsAString& aValue,
-                           bool aSecure)
+                           PRBool aSecure)
 {
   if (!UseDB())
     return NS_OK;
@@ -915,7 +915,7 @@ DOMStorageImpl::SetDBValue(const nsAString& aKey,
 }
 
 nsresult
-DOMStorageImpl::SetSecure(const nsAString& aKey, bool aSecure)
+DOMStorageImpl::SetSecure(const nsAString& aKey, PRBool aSecure)
 {
   if (UseDB()) {
     nsresult rv = InitDB();
@@ -1012,7 +1012,7 @@ DOMStorageImpl::CacheKeysFromDB()
 
 struct KeysArrayBuilderStruct
 {
-  bool callerIsSecure;
+  PRBool callerIsSecure;
   nsTArray<nsString> *keys;
 };
 
@@ -1045,12 +1045,12 @@ DOMStorageImpl::GetKeys(bool aCallerSecure)
 class ItemCounterState
 {
  public:
-  ItemCounterState(bool aIsCallerSecure)
+  ItemCounterState(PRBool aIsCallerSecure)
   : mIsCallerSecure(aIsCallerSecure), mCount(0)
   {
   }
 
-  bool mIsCallerSecure;
+  PRBool mIsCallerSecure;
   PRUint32 mCount;
  private:
   ItemCounterState(); // Not to be implemented
@@ -1087,13 +1087,13 @@ DOMStorageImpl::GetLength(bool aCallerSecure, PRUint32* aLength)
 class IndexFinderData
 {
  public:
-  IndexFinderData(bool aIsCallerSecure, PRUint32 aWantedIndex)
+  IndexFinderData(PRBool aIsCallerSecure, PRUint32 aWantedIndex)
   : mIsCallerSecure(aIsCallerSecure), mIndex(0), mWantedIndex(aWantedIndex),
     mItem(nsnull)
   {
   }
 
-  bool mIsCallerSecure;
+  PRBool mIsCallerSecure;
   PRUint32 mIndex;
   PRUint32 mWantedIndex;
   nsSessionStorageEntry *mItem;
@@ -1161,7 +1161,7 @@ DOMStorageImpl::GetValue(bool aCallerSecure, const nsAString& aKey,
     }
   }
   else if (UseDB()) {
-    bool secure;
+    PRBool secure;
     nsAutoString value;
     nsresult rv = GetDBValue(aKey, value, &secure);
     // return null if access isn't allowed or the key wasn't found
@@ -1240,7 +1240,7 @@ DOMStorageImpl::RemoveValue(bool aCallerSecure, const nsAString& aKey,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString value;
-    bool secureItem;
+    PRBool secureItem;
     rv = GetDBValue(aKey, value, &secureItem);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!aCallerSecure && secureItem)
@@ -1268,7 +1268,7 @@ DOMStorageImpl::RemoveValue(bool aCallerSecure, const nsAString& aKey,
 PR_STATIC_CALLBACK(PLDHashOperator)
 CheckSecure(nsSessionStorageEntry* aEntry, void* userArg)
 {
-  bool* secure = (bool*)userArg;
+  PRBool* secure = (PRBool*)userArg;
   if (aEntry->mItem->IsSecure()) {
     *secure = PR_TRUE;
     return PL_DHASH_STOP;
@@ -1285,7 +1285,7 @@ DOMStorageImpl::Clear(bool aCallerSecure, PRInt32* aOldCount)
 
   PRInt32 oldCount = mItems.Count();
 
-  bool foundSecureItem = false;
+  PRBool foundSecureItem = PR_FALSE;
   mItems.EnumerateEntries(CheckSecure, &foundSecureItem);
 
   if (foundSecureItem && !aCallerSecure) {
@@ -1338,7 +1338,7 @@ nsDOMStorage::~nsDOMStorage()
 
 static
 nsresult
-GetDomainURI(nsIPrincipal *aPrincipal, bool aIncludeDomain, nsIURI **_domain)
+GetDomainURI(nsIPrincipal *aPrincipal, PRBool aIncludeDomain, nsIURI **_domain)
 {
   nsCOMPtr<nsIURI> uri;
 
@@ -1411,8 +1411,8 @@ nsDOMStorage::InitAsGlobalStorage(const nsACString &aDomainDemanded)
 }
 
 //static
-bool
-nsDOMStorage::CanUseStorage(bool* aSessionOnly)
+PRBool
+nsDOMStorage::CanUseStorage(PRPackedBool* aSessionOnly)
 {
   // check if the calling domain can use storage. Downgrade to session
   // only if only session storage may be used.
@@ -1478,7 +1478,7 @@ nsDOMStorage::CanUseStorage(bool* aSessionOnly)
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsDOMStorage::CacheStoragePermissions()
 {
   // Bug 488446, disallowing storage use when in session only mode.
@@ -1500,9 +1500,9 @@ nsDOMStorage::CacheStoragePermissions()
 }
 
 // static
-bool
+PRBool
 nsDOMStorage::URICanUseChromePersist(nsIURI* aURI) {
-  bool isAbout;
+  PRBool isAbout;
   return
     (NS_SUCCEEDED(aURI->SchemeIs("moz-safe-about", &isAbout)) && isAbout) ||
     (NS_SUCCEEDED(aURI->SchemeIs("about", &isAbout)) && isAbout);
@@ -1653,7 +1653,7 @@ nsDOMStorage::Fork(const nsSubstring &aDocumentURI)
   return nsnull;
 }
 
-bool nsDOMStorage::IsForkOf(nsIDOMStorage* aThat)
+PRBool nsDOMStorage::IsForkOf(nsIDOMStorage* aThat)
 {
   NS_ASSERTION(PR_FALSE, "Old DOMStorage doesn't implement forking");
   return PR_FALSE;
@@ -1677,7 +1677,7 @@ nsDOMStorage::Principal()
   return nsnull;
 }
 
-bool
+PRBool
 nsDOMStorage::CanAccessSystem(nsIPrincipal *aPrincipal)
 {
   if (!aPrincipal)
@@ -1687,13 +1687,13 @@ nsDOMStorage::CanAccessSystem(nsIPrincipal *aPrincipal)
   if (!ssm)
     return PR_FALSE;
 
-  bool isSystem;
+  PRBool isSystem;
   nsresult rv = ssm->IsSystemPrincipal(aPrincipal, &isSystem);
 
   return NS_SUCCEEDED(rv) && isSystem;
 }
 
-bool
+PRBool
 nsDOMStorage::CanAccess(nsIPrincipal *aPrincipal)
 {
   // Allow C++/system callers to access the storage
@@ -1833,7 +1833,7 @@ nsDOMStorage2::Fork(const nsSubstring &aDocumentURI)
   return result;
 }
 
-bool nsDOMStorage2::IsForkOf(nsIDOMStorage* aThat)
+PRBool nsDOMStorage2::IsForkOf(nsIDOMStorage* aThat)
 {
   if (!aThat)
     return PR_FALSE;
@@ -1864,7 +1864,7 @@ nsDOMStorage2::Principal()
   return mPrincipal;
 }
 
-bool
+PRBool
 nsDOMStorage2::CanAccess(nsIPrincipal *aPrincipal)
 {
   if (mStorage->mSecurityChecker != this)
@@ -1875,7 +1875,7 @@ nsDOMStorage2::CanAccess(nsIPrincipal *aPrincipal)
     return PR_TRUE;
 
   // Allow more powerful principals (e.g. system) to access the storage
-  bool subsumes;
+  PRBool subsumes;
   nsresult rv = aPrincipal->Subsumes(mPrincipal, &subsumes);
   if (NS_FAILED(rv))
     return PR_FALSE;
@@ -2033,14 +2033,14 @@ nsDOMStorageList::GetNamedItem(const nsAString& aDomain, nsresult* aResult)
                                       currentDomain);
     NS_ENSURE_SUCCESS(*aResult, nsnull);
 
-    bool sessionOnly;
+    PRPackedBool sessionOnly;
     if (!nsDOMStorage::CanUseStorage(&sessionOnly)) {
       *aResult = NS_ERROR_DOM_SECURITY_ERR;
       return nsnull;
     }
   }
 
-  bool isSystem = nsContentUtils::IsCallerTrustedForRead();
+  PRBool isSystem = nsContentUtils::IsCallerTrustedForRead();
   if (currentDomain.IsEmpty() && !isSystem) {
     *aResult = NS_ERROR_DOM_SECURITY_ERR;
     return nsnull;
@@ -2060,7 +2060,7 @@ nsDOMStorageList::NamedItem(const nsAString& aDomain,
 }
 
 // static
-bool
+PRBool
 nsDOMStorageList::CanAccessDomain(const nsACString& aRequestedDomain,
                                   const nsACString& aCurrentDomain)
 {
@@ -2070,7 +2070,7 @@ nsDOMStorageList::CanAccessDomain(const nsACString& aRequestedDomain,
 nsIDOMStorageObsolete*
 nsDOMStorageList::GetStorageForDomain(const nsACString& aRequestedDomain,
                                       const nsACString& aCurrentDomain,
-                                      bool aNoCurrentDomainCheck,
+                                      PRBool aNoCurrentDomainCheck,
                                       nsresult* aResult)
 {
   nsTArray<nsCString> requestedDomainArray;
@@ -2116,7 +2116,7 @@ nsDOMStorageList::GetStorageForDomain(const nsACString& aRequestedDomain,
 }
 
 // static
-bool
+PRBool
 nsDOMStorageList::ConvertDomainToArray(const nsACString& aDomain,
                                        nsTArray<nsCString> *aArray)
 {
@@ -2188,7 +2188,7 @@ NS_INTERFACE_MAP_END
 nsDOMStorageItem::nsDOMStorageItem(DOMStorageBase* aStorage,
                                    const nsAString& aKey,
                                    const nsAString& aValue,
-                                   bool aSecure)
+                                   PRBool aSecure)
   : mSecure(aSecure),
     mKey(aKey),
     mValue(aValue),
@@ -2201,7 +2201,7 @@ nsDOMStorageItem::~nsDOMStorageItem()
 }
 
 NS_IMETHODIMP
-nsDOMStorageItem::GetSecure(bool* aSecure)
+nsDOMStorageItem::GetSecure(PRBool* aSecure)
 {
   if (!mStorage->CacheStoragePermissions() || !IsCallerSecure()) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
@@ -2217,7 +2217,7 @@ nsDOMStorageItem::GetSecure(bool* aSecure)
 }
 
 NS_IMETHODIMP
-nsDOMStorageItem::SetSecure(bool aSecure)
+nsDOMStorageItem::SetSecure(PRBool aSecure)
 {
   if (!mStorage->CacheStoragePermissions() || !IsCallerSecure()) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
@@ -2239,7 +2239,7 @@ nsDOMStorageItem::GetValue(nsAString& aValue)
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
 
   if (mStorage->UseDB()) {
-    bool secure;
+    PRBool secure;
     nsresult rv = mStorage->GetDBValue(mKey, aValue, &secure);
     if (rv == NS_ERROR_DOM_NOT_FOUND_ERR)
       return NS_OK;
@@ -2262,14 +2262,14 @@ nsDOMStorageItem::SetValue(const nsAString& aValue)
   if (!mStorage->CacheStoragePermissions())
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
 
-  bool secureCaller = IsCallerSecure();
+  PRBool secureCaller = IsCallerSecure();
 
   if (mStorage->UseDB()) {
     // SetDBValue() does the security checks for us.
     return mStorage->SetDBValue(mKey, aValue, secureCaller);
   }
 
-  bool secureItem = IsSecure();
+  PRBool secureItem = IsSecure();
 
   if (!secureCaller && secureItem) {
     // The item is secure, but the caller isn't. Throw.
@@ -2349,8 +2349,8 @@ NS_IMETHODIMP nsDOMStorageEvent::GetStorageArea(nsIDOMStorage * *aStorageArea)
 
 /* void initStorageEvent (in DOMString typeArg, in boolean canBubbleArg, in boolean cancelableArg, in DOMString keyArg, in DOMString oldValueArg, in DOMString newValueArg, in DOMString urlArg, in nsIDOMStorage storageAreaArg); */
 NS_IMETHODIMP nsDOMStorageEvent::InitStorageEvent(const nsAString & typeArg,
-                                                  bool canBubbleArg,
-                                                  bool cancelableArg,
+                                                  PRBool canBubbleArg,
+                                                  PRBool cancelableArg,
                                                   const nsAString & keyArg,
                                                   const nsAString & oldValueArg,
                                                   const nsAString & newValueArg,
@@ -2397,8 +2397,8 @@ nsDOMStorageEventObsolete::GetDomain(nsAString& aDomain)
 
 NS_IMETHODIMP
 nsDOMStorageEventObsolete::InitStorageEvent(const nsAString& aTypeArg,
-                                    bool aCanBubbleArg,
-                                    bool aCancelableArg,
+                                    PRBool aCanBubbleArg,
+                                    PRBool aCancelableArg,
                                     const nsAString& aDomainArg)
 {
   nsresult rv = InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);

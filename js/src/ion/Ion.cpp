@@ -468,7 +468,7 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
 static bool
 IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
 {
-    TempAllocator temp(&cx->tempLifoAlloc());
+    TempAllocator temp(&cx->tempPool);
     IonContext ictx(cx, &temp);
 
     if (!cx->compartment->ensureIonCompartmentExists(cx))

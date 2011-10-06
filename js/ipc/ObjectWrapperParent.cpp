@@ -44,8 +44,9 @@
 #include "mozilla/unused.h"
 #include "nsJSUtils.h"
 
+#include "jsobj.h"
+#include "jsfun.h"
 #include "jsutil.h"
-#include "jsfriendapi.h"
 
 using namespace mozilla::jsipc;
 
@@ -201,7 +202,7 @@ void
 ObjectWrapperParent::ActorDestroy(ActorDestroyReason)
 {
     if (mObj) {
-        JS_SetPrivate(NULL, mObj, NULL);
+        mObj->setPrivate(NULL);
         mObj = NULL;
     }
 }
@@ -227,8 +228,8 @@ ObjectWrapperParent::GetJSObject(JSContext* cx) const
 static ObjectWrapperParent*
 Unwrap(JSContext* cx, JSObject* obj)
 {
-    while (js::GetObjectClass(obj) != &ObjectWrapperParent::sCPOW_JSClass)
-        if (!(obj = js::GetObjectProto(obj)))
+    while (obj->getClass() != &ObjectWrapperParent::sCPOW_JSClass)
+        if (!(obj = obj->getProto()))
             return NULL;
     
     ObjectWrapperParent* self =

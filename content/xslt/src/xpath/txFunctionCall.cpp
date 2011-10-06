@@ -94,7 +94,7 @@ FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
     return NS_OK;
 }
 
-bool FunctionCall::requireParams(PRInt32 aParamCountMin,
+PRBool FunctionCall::requireParams(PRInt32 aParamCountMin,
                                    PRInt32 aParamCountMax,
                                    txIEvalContext* aContext)
 {
@@ -128,7 +128,7 @@ FunctionCall::setSubExprAt(PRUint32 aPos, Expr* aExpr)
     mParams[aPos] = aExpr;
 }
 
-bool
+PRBool
 FunctionCall::argsSensitiveTo(ContextSensitivity aContext)
 {
     PRUint32 i, len = mParams.Length();

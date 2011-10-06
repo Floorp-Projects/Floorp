@@ -90,13 +90,13 @@ public:
 
   void RemoveProperty(nsCSSProperty aProperty);
 
-  bool HasProperty(nsCSSProperty aProperty) const;
+  PRBool HasProperty(nsCSSProperty aProperty) const;
 
   void GetValue(nsCSSProperty aProperty, nsAString& aValue) const;
 
-  bool HasImportantData() const { return mImportantData != nsnull; }
-  bool GetValueIsImportant(nsCSSProperty aProperty) const;
-  bool GetValueIsImportant(const nsAString& aProperty) const;
+  PRBool HasImportantData() const { return mImportantData != nsnull; }
+  PRBool GetValueIsImportant(nsCSSProperty aProperty) const;
+  PRBool GetValueIsImportant(const nsAString& aProperty) const;
 
   PRUint32 Count() const {
     return mOrder.Length();
@@ -164,9 +164,9 @@ public:
    * |aFromBlock|.  |aChanged| is set to PR_TRUE if the declaration
    * changed as a result of the call, and to PR_FALSE otherwise.
    */
-  bool TryReplaceValue(nsCSSProperty aProperty, bool aIsImportant,
+  PRBool TryReplaceValue(nsCSSProperty aProperty, PRBool aIsImportant,
                          nsCSSExpandedDataBlock& aFromBlock,
-                         bool* aChanged)
+                         PRBool* aChanged)
   {
     AssertMutable();
     NS_ABORT_IF_FALSE(mData, "called while expanded");
@@ -193,7 +193,7 @@ public:
     return block->TryReplaceValue(aProperty, aFromBlock, aChanged);
   }
 
-  bool HasNonImportantValueFor(nsCSSProperty aProperty) const {
+  PRBool HasNonImportantValueFor(nsCSSProperty aProperty) const {
     NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty), "must be longhand");
     return !!mData->ValueFor(aProperty);
   }
@@ -241,11 +241,11 @@ public:
 private:
   // Not implemented, and not supported.
   Declaration& operator=(const Declaration& aCopy);
-  bool operator==(const Declaration& aCopy) const;
+  PRBool operator==(const Declaration& aCopy) const;
 
-  static void AppendImportanceToString(bool aIsImportant, nsAString& aString);
+  static void AppendImportanceToString(PRBool aIsImportant, nsAString& aString);
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
-  bool AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  PRBool AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
   // Helper for ToString with strange semantics regarding aValue.
   void AppendPropertyAndValueToString(nsCSSProperty aProperty,
                                       nsAutoString& aValue,
@@ -268,7 +268,7 @@ private:
 
   // set by style rules when |RuleMatched| is called;
   // also by ToString (hence the 'mutable').
-  mutable bool mImmutable;
+  mutable PRPackedBool mImmutable;
 };
 
 } // namespace css

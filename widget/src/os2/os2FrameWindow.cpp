@@ -56,7 +56,7 @@
 
 extern nsIRollupListener*  gRollupListener;
 extern nsIWidget*          gRollupWidget;
-extern bool                gRollupConsumeRollupEvent;
+extern PRBool              gRollupConsumeRollupEvent;
 extern PRUint32            gOS2Flags;
 
 #ifdef DEBUG_FOCUS
@@ -245,7 +245,7 @@ PRUint32 os2FrameWindow::GetFCFlags(nsWindowType aWindowType,
 
 // For frame windows, 'Show' is equivalent to 'Show & Activate'.
 
-nsresult os2FrameWindow::Show(bool aState)
+nsresult os2FrameWindow::Show(PRBool aState)
 {
   PRUint32 ulFlags;
   if (!aState) {
@@ -281,7 +281,7 @@ nsresult os2FrameWindow::Show(bool aState)
 
 //-----------------------------------------------------------------------------
 
-void os2FrameWindow::SetWindowListVisibility(bool aState)
+void os2FrameWindow::SetWindowListVisibility(PRBool aState)
 {
   HSWITCH hswitch = WinQuerySwitchHandle(mFrameWnd, 0);
   if (hswitch) {
@@ -315,7 +315,7 @@ nsresult os2FrameWindow::Move(PRInt32 aX, PRInt32 aY)
 //-----------------------------------------------------------------------------
 
 nsresult os2FrameWindow::Resize(PRInt32 aWidth, PRInt32 aHeight,
-                                bool aRepaint)
+                                PRBool aRepaint)
 {
   // When resizing, the coordinates of the window's bottom-left corner have to
   // be adjusted to ensure the position of the top-left corner doesn't change.
@@ -328,7 +328,7 @@ nsresult os2FrameWindow::Resize(PRInt32 aWidth, PRInt32 aHeight,
 
 nsresult os2FrameWindow::Resize(PRInt32 aX, PRInt32 aY,
                                 PRInt32 aWidth, PRInt32 aHeight,
-                                bool aRepaint)
+                                PRBool aRepaint)
 {
   aY = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - aY - aHeight;
   WinSetWindowPos(mFrameWnd, 0, aX, aY, aWidth, aHeight, SWP_MOVE | SWP_SIZE);
@@ -423,7 +423,7 @@ nsresult os2FrameWindow::SetSizeMode(PRInt32 aMode)
 //-----------------------------------------------------------------------------
 // Hide or show the frame & its controls (titlebar, minmax, etc.).
 
-nsresult os2FrameWindow::HideWindowChrome(bool aShouldHide)
+nsresult os2FrameWindow::HideWindowChrome(PRBool aShouldHide)
 {
   // Putting a maximized window into fullscreen mode causes multiple
   // problems if it's later minimized & then restored.  To avoid them,
@@ -547,11 +547,11 @@ nsresult os2FrameWindow::SetIcon(const nsAString& aIconSpec)
 //-----------------------------------------------------------------------------
 // Constrain a potential move to fit onscreen.
 
-nsresult os2FrameWindow::ConstrainPosition(bool aAllowSlop,
+nsresult os2FrameWindow::ConstrainPosition(PRBool aAllowSlop,
                                       PRInt32* aX, PRInt32* aY)
 {
   // do we have enough info to do anything
-  bool doConstrain = false;
+  PRBool doConstrain = PR_FALSE;
 
   // get our playing field. use the current screen, or failing
   // that for any reason, use device caps for the default screen.
@@ -645,7 +645,7 @@ MRESULT EXPENTRY fnwpFrame(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 MRESULT os2FrameWindow::ProcessFrameMessage(ULONG msg, MPARAM mp1, MPARAM mp2)
 {
   MRESULT mresult = 0;
-  bool    isDone = false;
+  PRBool  isDone = PR_FALSE;
 
   switch (msg) {
     case WM_WINDOWPOSCHANGED: {

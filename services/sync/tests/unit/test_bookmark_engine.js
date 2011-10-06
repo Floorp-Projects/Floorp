@@ -82,25 +82,22 @@ add_test(function test_ID_caching() {
   run_next_test();
 });
 
-function serverForFoo(engine) {
-  return serverForUsers({"foo": "password"}, {
-    meta: {global: {engines: {bookmarks: {version: engine.version,
-                                          syncID: engine.syncID}}}},
-    bookmarks: {}
-  });
-}
-
 add_test(function test_processIncoming_error_orderChildren() {
   _("Ensure that _orderChildren() is called even when _processIncoming() throws an error.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
 
+  let collection = new ServerCollection();
   let engine = new BookmarksEngine();
-  let store  = engine._store;
-  let server = serverForFoo(engine);
-
-  let collection = server.user("foo").collection("bookmarks");
+  let store = engine._store;
+  let global = new ServerWBO('global',
+                             {engines: {bookmarks: {version: engine.version,
+                                                    syncID: engine.syncID}}});
+  let server = httpd_setup({
+    "/1.1/foo/storage/meta/global": global.handler(),
+    "/1.1/foo/storage/bookmarks": collection.handler()
+  });
 
   try {
 
@@ -122,12 +119,14 @@ add_test(function test_processIncoming_error_orderChildren() {
     // the children.
     let folder1_payload = store.createRecord(folder1_guid).cleartext;
     folder1_payload.children.reverse();
-    collection.insert(folder1_guid, encryptPayload(folder1_payload));
+    collection.wbos[folder1_guid] = new ServerWBO(
+      folder1_guid, encryptPayload(folder1_payload));
 
     // Create a bogus record that when synced down will provoke a
     // network error which in turn provokes an exception in _processIncoming.
     const BOGUS_GUID = "zzzzzzzzzzzz";
-    let bogus_record = collection.insert(BOGUS_GUID, "I'm a bogus record!");
+    let bogus_record = collection.wbos[BOGUS_GUID]
+      = new ServerWBO(BOGUS_GUID, "I'm a bogus record!");
     bogus_record.get = function get() {
       throw "Sync this!";
     };
@@ -169,11 +168,17 @@ add_test(function test_restorePromptsReupload() {
   Service.serverURL = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
 
-  let engine = new BookmarksEngine();
-  let store  = engine._store;
-  let server = serverForFoo(engine);
+  let collection = new ServerCollection({}, true);
 
-  let collection = server.user("foo").collection("bookmarks");
+  let engine = new BookmarksEngine();
+  let store = engine._store;
+  let global = new ServerWBO('global',
+                             {engines: {bookmarks: {version: engine.version,
+                                                    syncID: engine.syncID}}});
+  let server = httpd_setup({
+    "/1.1/foo/storage/meta/global": global.handler(),
+    "/1.1/foo/storage/bookmarks": collection.handler()
+  });
 
   Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
 
@@ -225,9 +230,8 @@ add_test(function test_restorePromptsReupload() {
 
     _("Verify that there's only one bookmark on the server, and it's Thunderbird.");
     // Of course, there's also the Bookmarks Toolbar and Bookmarks Menu...
-    let wbos = collection.keys(function (id) {
-      return ["menu", "toolbar", "mobile", folder1_guid].indexOf(id) == -1;
-    });
+    let wbos = [id for ([id, wbo] in Iterator(collection.wbos))
+                   if (["menu", "toolbar", "mobile", folder1_guid].indexOf(id) == -1)];
     do_check_eq(wbos.length, 1);
     do_check_eq(wbos[0], bmk2_guid);
 
@@ -269,24 +273,24 @@ add_test(function test_restorePromptsReupload() {
 
     _("Verify that there's only one bookmark on the server, and it's Firefox.");
     // Of course, there's also the Bookmarks Toolbar and Bookmarks Menu...
-    let payloads     = server.user("foo").collection("bookmarks").payloads();
-    let bookmarkWBOs = payloads.filter(function (wbo) {
-                         return wbo.type == "bookmark";
-                       });
-    let folderWBOs   = payloads.filter(function (wbo) {
-                         return ((wbo.type == "folder") &&
-                                 (wbo.id   != "menu") &&
-                                 (wbo.id   != "toolbar"));
-                       });
+    wbos = [JSON.parse(JSON.parse(wbo.payload).ciphertext)
+            for ([id, wbo] in Iterator(collection.wbos))
+            if (wbo.payload)];
 
-    do_check_eq(bookmarkWBOs.length, 1);
-    do_check_eq(bookmarkWBOs[0].id, newFX);
-    do_check_eq(bookmarkWBOs[0].bmkUri, fxuri.spec);
-    do_check_eq(bookmarkWBOs[0].title, "Get Firefox!");
+    _("WBOs: " + JSON.stringify(wbos));
+    let bookmarks = [wbo for each (wbo in wbos) if (wbo.type == "bookmark")];
+    do_check_eq(bookmarks.length, 1);
+    do_check_eq(bookmarks[0].id, newFX);
+    do_check_eq(bookmarks[0].bmkUri, fxuri.spec);
+    do_check_eq(bookmarks[0].title, "Get Firefox!");
 
     _("Our old friend Folder 1 is still in play.");
-    do_check_eq(folderWBOs.length, 1);
-    do_check_eq(folderWBOs[0].title, "Folder 1");
+    let folders = [wbo for each (wbo in wbos)
+                       if ((wbo.type == "folder") &&
+                           (wbo.id   != "menu") &&
+                           (wbo.id   != "toolbar"))];
+    do_check_eq(folders.length, 1);
+    do_check_eq(folders[0].title, "Folder 1");
 
   } finally {
     store.wipe();
@@ -337,11 +341,18 @@ add_test(function test_mismatched_types() {
   Service.serverURL = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
 
-  let engine = new BookmarksEngine();
-  let store  = engine._store;
-  let server = serverForFoo(engine);
+  let collection = new ServerCollection({}, true);
 
+  let engine = new BookmarksEngine();
+  let store = engine._store;
+  let global = new ServerWBO('global',
+                             {engines: {bookmarks: {version: engine.version,
+                                                    syncID: engine.syncID}}});
   _("GUID: " + store.GUIDForId(6, true));
+  let server = httpd_setup({
+    "/1.1/foo/storage/meta/global": global.handler(),
+    "/1.1/foo/storage/bookmarks": collection.handler()
+  });
 
   try {
     let bms = PlacesUtils.bookmarks;
@@ -379,19 +390,24 @@ add_test(function test_bookmark_guidMap_fail() {
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
+  let collection = new ServerCollection();
   let engine = new BookmarksEngine();
   let store = engine._store;
-
-  let store  = engine._store;
-  let server = serverForFoo(engine);
-  let coll   = server.user("foo").collection("bookmarks");
+  let global = new ServerWBO('global',
+                             {engines: {bookmarks: {version: engine.version,
+                                                    syncID: engine.syncID}}});
+  let server = httpd_setup({
+    "/1.1/foo/storage/meta/global": global.handler(),
+    "/1.1/foo/storage/bookmarks": collection.handler()
+  });
 
   // Add one item to the server.
   let itemID = PlacesUtils.bookmarks.createFolder(
     PlacesUtils.bookmarks.toolbarFolder, "Folder 1", 0);
-  let itemGUID    = store.GUIDForId(itemID);
+  let itemGUID = store.GUIDForId(itemID);
   let itemPayload = store.createRecord(itemGUID).cleartext;
-  coll.insert(itemGUID, encryptPayload(itemPayload));
+  let encPayload = encryptPayload(itemPayload);
+  collection.wbos[itemGUID] = new ServerWBO(itemGUID, encPayload);
 
   engine.lastSync = 1;   // So we don't back up.
 

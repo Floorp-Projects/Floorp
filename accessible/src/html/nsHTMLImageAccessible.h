@@ -78,7 +78,7 @@ private:
    *
    * @returns  true if the longdesc attribute is present.
    */
-  bool HasLongDesc();
+  PRBool HasLongDesc();
   
   /**
    * Used by GetActionName and DoAction to ensure the index for opening the
@@ -89,7 +89,7 @@ private:
    *
    * @returns  true if index is valid for longdesc action.
    */
-  bool IsValidLongDescIndex(PRUint8 aIndex);
+  PRBool IsValidLongDescIndex(PRUint8 aIndex);
 };
 
 #endif

@@ -197,7 +197,7 @@ nsFtpState::OnControlDataAvailable(const char *aData, PRUint32 aDataLen)
         line.Assign(currLine, eolLength + crlfLength);
         
         // Does this start with a response code?
-        bool startNum = (line.Length() >= 3 &&
+        PRBool startNum = (line.Length() >= 3 &&
                            isdigit(line[0]) &&
                            isdigit(line[1]) &&
                            isdigit(line[2]));
@@ -351,7 +351,7 @@ nsresult
 nsFtpState::Process() 
 {
     nsresult    rv = NS_OK;
-    bool        processingRead = true;
+    PRBool      processingRead = PR_TRUE;
     
     while (mKeepRunning && processingRead) {
         switch (mState) {
@@ -706,7 +706,7 @@ nsFtpState::S_user() {
                                             EmptyString(),
                                             EmptyCString());
 
-            bool retval;
+            PRBool retval;
             rv = prompter->PromptAuth(mChannel, nsIAuthPrompt2::LEVEL_NONE,
                                       info, &retval);
 
@@ -759,7 +759,7 @@ nsFtpState::S_pass() {
             AppendUTF16toUTF8(mPassword, passwordStr);
         } else {
             nsXPIDLCString anonPassword;
-            bool useRealEmail = false;
+            PRBool useRealEmail = PR_FALSE;
             nsCOMPtr<nsIPrefBranch> prefs =
                     do_GetService(NS_PREFSERVICE_CONTRACTID);
             if (prefs) {
@@ -798,7 +798,7 @@ nsFtpState::S_pass() {
 
             info->SetUserInternal(mUsername);
 
-            bool retval;
+            PRBool retval;
             rv = prompter->PromptAuth(mChannel, nsIAuthPrompt2::LEVEL_NONE,
                                       info, &retval);
 
@@ -1427,7 +1427,7 @@ nsFtpState::R_pasv() {
         port = ((PRInt32) (p0<<8)) + p1;
     }
 
-    bool newDataConn = true;
+    PRBool newDataConn = PR_TRUE;
     if (mDataTransport) {
         // Reuse this connection only if its still alive, and the port
         // is the same
@@ -1437,7 +1437,7 @@ nsFtpState::R_pasv() {
             nsresult rv = strans->GetPort(&oldPort);
             if (NS_SUCCEEDED(rv)) {
                 if (oldPort == port) {
-                    bool isAlive;
+                    PRBool isAlive;
                     if (NS_SUCCEEDED(strans->IsAlive(&isAlive)) && isAlive)
                         newDataConn = PR_FALSE;
                 }
@@ -1582,7 +1582,7 @@ PRUint32 nsFtpState::mSessionStartTime = NowInSeconds();
  * on directories means that its not worth it, I suspect. Revisit if we start
  * caching files - bbaetz
  */
-bool
+PRBool
 nsFtpState::CanReadCacheEntry()
 {
     NS_ASSERTION(mCacheEntry, "must have a cache entry");
@@ -2183,7 +2183,7 @@ nsFtpState::OnCallbackPending()
     }
 }
 
-bool
+PRBool
 nsFtpState::ReadCacheEntry()
 {
     NS_ASSERTION(mCacheEntry, "should have a cache entry");
@@ -2212,7 +2212,7 @@ nsFtpState::ReadCacheEntry()
     return PR_TRUE;
 }
 
-bool
+PRBool
 nsFtpState::CheckCache()
 {
     // This function is responsible for setting mCacheEntry if there is a cache

@@ -98,8 +98,8 @@ nsAppShell::ScheduleNativeEventCallback()
 }
 
 
-bool
-nsAppShell::ProcessNextNativeEvent(bool mayWait)
+PRBool
+nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
     QEventLoop::ProcessEventsFlags flags = QEventLoop::AllEvents;
 

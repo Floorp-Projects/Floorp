@@ -16,7 +16,7 @@
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static nsIEventQueue* gEventQ = nsnull;
-static bool gKeepRunning = true;
+static PRBool gKeepRunning = PR_TRUE;
 
 //-----------------------------------------------------------------------------
 // nsIStreamListener implementation

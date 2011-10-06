@@ -117,7 +117,7 @@ StartupCache::InitSingleton()
 }
 
 StartupCache* StartupCache::gStartupCache;
-bool StartupCache::gShutdownInitiated;
+PRBool StartupCache::gShutdownInitiated;
 
 StartupCache::StartupCache() 
   : mArchive(NULL), mStartupWriteInitiated(PR_FALSE), mWriteThread(NULL) {}
@@ -215,7 +215,7 @@ StartupCache::Init()
 nsresult
 StartupCache::LoadArchive() 
 {
-  bool exists;
+  PRBool exists;
   mArchive = NULL;
   nsresult rv = mFile->Exists(&exists);
   if (NS_FAILED(rv) || !exists)
@@ -328,7 +328,7 @@ CacheCloseHelper(const nsACString& key, nsAutoPtr<CacheEntry>& data,
   stream->ShareData(data->data, data->size);
 
 #ifdef DEBUG
-  bool hasEntry;
+  PRBool hasEntry;
   rv = writer->HasEntry(key, &hasEntry);
   NS_ASSERTION(NS_SUCCEEDED(rv) && hasEntry == PR_FALSE, 
                "Existing entry in disk StartupCache.");
@@ -497,7 +497,7 @@ StartupCache::ResetStartupWriteTimer()
 NS_IMPL_ISUPPORTS3(StartupCacheDebugOutputStream, nsIObjectOutputStream, 
                    nsIBinaryOutputStream, nsIOutputStream)
 
-bool
+PRBool
 StartupCacheDebugOutputStream::CheckReferences(nsISupports* aObject)
 {
   nsresult rv;
@@ -527,13 +527,13 @@ StartupCacheDebugOutputStream::CheckReferences(nsISupports* aObject)
 
 // nsIObjectOutputStream implementation
 nsresult
-StartupCacheDebugOutputStream::WriteObject(nsISupports* aObject, bool aIsStrongRef)
+StartupCacheDebugOutputStream::WriteObject(nsISupports* aObject, PRBool aIsStrongRef)
 {
   nsCOMPtr<nsISupports> rootObject(do_QueryInterface(aObject));
   
   NS_ASSERTION(rootObject.get() == aObject,
                "bad call to WriteObject -- call WriteCompoundObject!");
-  bool check = CheckReferences(aObject);
+  PRBool check = CheckReferences(aObject);
   NS_ENSURE_TRUE(check, NS_ERROR_FAILURE);
   return mBinaryStream->WriteObject(aObject, aIsStrongRef);
 }
@@ -545,7 +545,7 @@ StartupCacheDebugOutputStream::WriteSingleRefObject(nsISupports* aObject)
   
   NS_ASSERTION(rootObject.get() == aObject,
                "bad call to WriteSingleRefObject -- call WriteCompoundObject!");
-  bool check = CheckReferences(aObject);
+  PRBool check = CheckReferences(aObject);
   NS_ENSURE_TRUE(check, NS_ERROR_FAILURE);
   return mBinaryStream->WriteSingleRefObject(aObject);
 }
@@ -553,7 +553,7 @@ StartupCacheDebugOutputStream::WriteSingleRefObject(nsISupports* aObject)
 nsresult
 StartupCacheDebugOutputStream::WriteCompoundObject(nsISupports* aObject,
                                                 const nsIID& aIID,
-                                                bool aIsStrongRef)
+                                                PRBool aIsStrongRef)
 {
   nsCOMPtr<nsISupports> rootObject(do_QueryInterface(aObject));
   
@@ -563,7 +563,7 @@ StartupCacheDebugOutputStream::WriteCompoundObject(nsISupports* aObject,
                "bad aggregation or multiple inheritance detected by call to "
                "WriteCompoundObject!");
 
-  bool check = CheckReferences(aObject);
+  PRBool check = CheckReferences(aObject);
   NS_ENSURE_TRUE(check, NS_ERROR_FAILURE);
   return mBinaryStream->WriteCompoundObject(aObject, aIID, aIsStrongRef);
 }
@@ -643,7 +643,7 @@ StartupCacheWrapper::GetDebugObjectOutputStream(nsIObjectOutputStream* stream,
 }
 
 nsresult
-StartupCacheWrapper::StartupWriteComplete(bool *complete)
+StartupCacheWrapper::StartupWriteComplete(PRBool *complete)
 {
   StartupCache* sc = StartupCache::GetSingleton();
   if (!sc) {

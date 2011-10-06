@@ -93,17 +93,17 @@ protected:
   PRInt32       mStartPageNum; // only used for ePrintRange_SpecifiedRange
   PRInt32       mEndPageNum;
   double        mScaling;
-  bool          mPrintBGColors;  // print background colors
-  bool          mPrintBGImages;  // print background images
+  PRBool        mPrintBGColors;  // print background colors
+  PRBool        mPrintBGImages;  // print background images
 
   PRInt16       mPrintFrameTypeUsage;
   PRInt16       mPrintFrameType;
   PRInt16       mHowToEnableFrameUI;
-  bool          mIsCancelled;
-  bool          mPrintSilent;
-  bool          mPrintPreview;
-  bool          mShrinkToFit;
-  bool          mShowPrintProgress;
+  PRBool        mIsCancelled;
+  PRBool        mPrintSilent;
+  PRBool        mPrintPreview;
+  PRBool        mShrinkToFit;
+  PRBool        mShowPrintProgress;
   PRInt32       mPrintPageDelay;
 
   nsString      mTitle;
@@ -120,20 +120,20 @@ protected:
   double        mPaperHeight;
   PRInt16       mPaperSizeUnit;
 
-  bool          mPrintReversed;
-  bool          mPrintInColor; // a false means grayscale
+  PRBool        mPrintReversed;
+  PRBool        mPrintInColor; // a false means grayscale
   PRInt32       mOrientation;  // see orientation consts
   nsString      mColorspace;
   nsString      mResolutionName;
-  bool          mDownloadFonts;
+  PRBool        mDownloadFonts;
   nsString      mPrintCommand;
   PRInt32       mNumCopies;
   nsXPIDLString mPrinter;
-  bool          mPrintToFile;
+  PRBool        mPrintToFile;
   nsString      mToFileName;
   PRInt16       mOutputFormat;
-  bool          mIsInitedFromPrinter;
-  bool          mIsInitedFromPrefs;
+  PRPackedBool  mIsInitedFromPrinter;
+  PRPackedBool  mIsInitedFromPrefs;
 
 };
 

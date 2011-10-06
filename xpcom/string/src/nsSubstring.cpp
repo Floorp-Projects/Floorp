@@ -271,7 +271,7 @@ nsStringBuffer::FromString(const nsACString& str)
 
 void
 nsStringBuffer::ToString(PRUint32 len, nsAString &str,
-                         bool aMoveOwnership)
+                         PRBool aMoveOwnership)
   {
     PRUnichar* data = static_cast<PRUnichar*>(Data());
 
@@ -290,7 +290,7 @@ nsStringBuffer::ToString(PRUint32 len, nsAString &str,
 
 void
 nsStringBuffer::ToString(PRUint32 len, nsACString &str,
-                         bool aMoveOwnership)
+                         PRBool aMoveOwnership)
   {
     char* data = static_cast<char*>(Data());
 

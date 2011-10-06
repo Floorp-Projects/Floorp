@@ -70,11 +70,11 @@ public:
   // nsIStyleSheetLinkingElement  
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
-  NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle);
+  NS_IMETHOD InitStyleLinkElement(PRBool aDontLoadStyle);
   NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                              bool* aWillNotify,
-                              bool* aIsAlternate);
-  NS_IMETHOD SetEnableUpdates(bool aEnableUpdates);
+                              PRBool* aWillNotify,
+                              PRBool* aIsAlternate);
+  NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates);
   NS_IMETHOD GetCharset(nsAString& aCharset);
 
   virtual void OverrideBaseURI(nsIURI* aNewBaseURI);
@@ -93,13 +93,13 @@ protected:
    *                     changed but the URI may not have changed.
    */
   nsresult UpdateStyleSheetInternal(nsIDocument *aOldDocument,
-                                    bool aForceUpdate = false);
+                                    PRBool aForceUpdate = PR_FALSE);
 
-  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) = 0;
+  virtual already_AddRefed<nsIURI> GetStyleSheetURL(PRBool* aIsInline) = 0;
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
-                                 bool* aIsAlternate) = 0;
+                                 PRBool* aIsAlternate) = 0;
 
   nsIStyleSheet* GetStyleSheet() { return mStyleSheet; }
 
@@ -114,14 +114,14 @@ private:
    */
   nsresult DoUpdateStyleSheet(nsIDocument *aOldDocument,
                               nsICSSLoaderObserver* aObserver,
-                              bool* aWillNotify,
-                              bool* aIsAlternate,
-                              bool aForceUpdate);
+                              PRBool* aWillNotify,
+                              PRBool* aIsAlternate,
+                              PRBool aForceUpdate);
 
   nsCOMPtr<nsIStyleSheet> mStyleSheet;
 protected:
-  bool mDontLoadStyle;
-  bool mUpdatesEnabled;
+  PRPackedBool mDontLoadStyle;
+  PRPackedBool mUpdatesEnabled;
   PRUint32 mLineNumber;
 };
 

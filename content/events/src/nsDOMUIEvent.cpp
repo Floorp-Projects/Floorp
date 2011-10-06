@@ -191,8 +191,8 @@ nsDOMUIEvent::GetDetail(PRInt32* aDetail)
 
 NS_IMETHODIMP
 nsDOMUIEvent::InitUIEvent(const nsAString& typeArg,
-                          bool canBubbleArg,
-                          bool cancelableArg,
+                          PRBool canBubbleArg,
+                          PRBool cancelableArg,
                           nsIDOMWindow* viewArg,
                           PRInt32 detailArg)
 {
@@ -300,7 +300,7 @@ nsDOMUIEvent::GetRangeOffset(PRInt32* aRangeOffset)
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetCancelBubble(bool* aCancelBubble)
+nsDOMUIEvent::GetCancelBubble(PRBool* aCancelBubble)
 {
   NS_ENSURE_ARG_POINTER(aCancelBubble);
   *aCancelBubble =
@@ -309,7 +309,7 @@ nsDOMUIEvent::GetCancelBubble(bool* aCancelBubble)
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::SetCancelBubble(bool aCancelBubble)
+nsDOMUIEvent::SetCancelBubble(PRBool aCancelBubble)
 {
   if (aCancelBubble) {
     mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
@@ -360,7 +360,7 @@ nsDOMUIEvent::GetLayerY(PRInt32* aLayerY)
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetIsChar(bool* aIsChar)
+nsDOMUIEvent::GetIsChar(PRBool* aIsChar)
 {
   switch(mEvent->eventStructType)
   {
@@ -392,7 +392,7 @@ nsDOMUIEvent::DuplicatePrivateData()
 }
 
 void
-nsDOMUIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
+nsDOMUIEvent::Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("uievent"));
@@ -405,7 +405,7 @@ nsDOMUIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
   IPC::WriteParam(aMsg, detail);
 }
 
-bool
+PRBool
 nsDOMUIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), PR_FALSE);

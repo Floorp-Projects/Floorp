@@ -60,7 +60,7 @@ NS_INTERFACE_MAP_END
 void
 nsSVGString::SetBaseValue(const nsAString& aValue,
                           nsSVGElement *aSVGElement,
-                          bool aDoSetAttr)
+                          PRBool aDoSetAttr)
 {
   NS_ASSERTION(aSVGElement, "Null element passed to SetBaseValue");
 
@@ -123,7 +123,7 @@ nsresult
 nsSVGString::SMILString::ValueFromString(const nsAString& aStr,
                                          const nsISMILAnimationElement* /*aSrcElement*/,
                                          nsSMILValue& aValue,
-                                         bool& aPreventCachingOfSandwich) const
+                                         PRBool& aPreventCachingOfSandwich) const
 {
   nsSMILValue val(&SMILStringType::sSingleton);
 

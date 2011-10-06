@@ -90,10 +90,10 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
                                       nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
                                       nsIPrintSettings*        printSettings,      // ok to be null
                                       nsIObserver*             openDialogObserver, // ok to be null
-                                      bool                     isForPrinting,
+                                      PRBool                   isForPrinting,
                                       nsIWebProgressListener** webProgressListener,
                                       nsIPrintProgressParams** printProgressParams,
-                                      bool*                  notifyOnOpen)
+                                      PRBool*                  notifyOnOpen)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

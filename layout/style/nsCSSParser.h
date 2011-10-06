@@ -84,10 +84,10 @@ public:
   nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
 
   // Set whether or not to emulate Nav quirks
-  nsresult SetQuirkMode(bool aQuirkMode);
+  nsresult SetQuirkMode(PRBool aQuirkMode);
 
   // Set whether or not we are in an SVG element
-  nsresult SetSVGMode(bool aSVGMode);
+  nsresult SetSVGMode(PRBool aSVGMode);
 
   // Set loader to use for child sheets
   nsresult SetChildLoader(mozilla::css::Loader* aChildLoader);
@@ -113,7 +113,7 @@ public:
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
                       PRUint32         aLineNumber,
-                      bool             aAllowUnsafeRules);
+                      PRBool           aAllowUnsafeRules);
 
   // Parse HTML style attribute or its equivalent in other markup
   // languages.  aBaseURL is the base url to use for relative links in
@@ -134,7 +134,7 @@ public:
                              nsIURI*           aBaseURL,
                              nsIPrincipal*     aSheetPrincipal,
                              mozilla::css::Declaration* aDeclaration,
-                             bool*           aChanged);
+                             PRBool*           aChanged);
 
   nsresult ParseRule(const nsAString&        aRule,
                      nsIURI*                 aSheetURL,
@@ -148,8 +148,8 @@ public:
                          nsIURI*             aBaseURL,
                          nsIPrincipal*       aSheetPrincipal,
                          mozilla::css::Declaration* aDeclaration,
-                         bool*             aChanged,
-                         bool                aIsImportant);
+                         PRBool*             aChanged,
+                         PRBool              aIsImportant);
 
   /**
    * Parse aBuffer into a media list |aMediaList|, which must be
@@ -163,7 +163,7 @@ public:
                           nsIURI*            aURL,
                           PRUint32           aLineNumber,
                           nsMediaList*       aMediaList,
-                          bool               aHTMLMode);
+                          PRBool             aHTMLMode);
 
   /**
    * Parse aBuffer into a nscolor |aColor|.  The alpha component of the

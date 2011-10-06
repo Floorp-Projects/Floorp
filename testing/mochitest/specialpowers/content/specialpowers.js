@@ -418,12 +418,6 @@ SpecialPowers.prototype = {
   getDocumentURIObject: function(aDocument) {
       return aDocument.documentURIObject;
   },
-
-  copyString: function(str) {
-    Cc["@mozilla.org/widget/clipboardhelper;1"].
-      getService(Ci.nsIClipboardHelper).
-      copyString(str);
-  },
 };
 
 // Expose everything but internal APIs (starting with underscores) to

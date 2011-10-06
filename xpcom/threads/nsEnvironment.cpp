@@ -78,7 +78,7 @@ nsEnvironment::~nsEnvironment()
 }
 
 NS_IMETHODIMP
-nsEnvironment::Exists(const nsAString& aName, bool *aOutValue)
+nsEnvironment::Exists(const nsAString& aName, PRBool *aOutValue)
 {
     nsCAutoString nativeName;
     nsresult rv = NS_CopyUnicodeToNative(aName, nativeName);
@@ -135,7 +135,7 @@ typedef nsTHashtable<EnvEntryType> EnvHashType;
 
 static EnvHashType *gEnvHash = nsnull;
 
-static bool
+static PRBool
 EnsureEnvHash()
 {
     if (gEnvHash)

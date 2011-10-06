@@ -390,7 +390,7 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
         return JS_FALSE;
 
     // the optional dirty rect
-    bool hasDirtyRect = false;
+    PRBool hasDirtyRect = PR_FALSE;
     int32 dirtyX = 0,
           dirtyY = 0,
           dirtyWidth = w,
@@ -417,8 +417,8 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
     js::AutoValueRooter tsrc_tvr(cx);
 
     JSObject *tsrc = NULL;
-    if (js::GetObjectClass(darray) == &js::TypedArray::fastClasses[js::TypedArray::TYPE_UINT8] ||
-        js::GetObjectClass(darray) == &js::TypedArray::fastClasses[js::TypedArray::TYPE_UINT8_CLAMPED])
+    if (darray->getClass() == &js::TypedArray::fastClasses[js::TypedArray::TYPE_UINT8] ||
+        darray->getClass() == &js::TypedArray::fastClasses[js::TypedArray::TYPE_UINT8_CLAMPED])
     {
         tsrc = js::TypedArray::getTypedArray(darray);
     } else if (JS_IsArrayObject(cx, darray) || js_IsTypedArray(darray)) {

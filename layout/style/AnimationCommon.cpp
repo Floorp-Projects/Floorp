@@ -108,7 +108,7 @@ CommonAnimationManager::HasStateDependentStyle(StateRuleProcessorData* aData)
   return nsRestyleHint(0);
 }
 
-bool
+PRBool
 CommonAnimationManager::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
 {
   return PR_FALSE;
@@ -120,7 +120,7 @@ CommonAnimationManager::HasAttributeDependentStyle(AttributeRuleProcessorData* a
   return nsRestyleHint(0);
 }
 
-/* virtual */ bool
+/* virtual */ PRBool
 CommonAnimationManager::MediumFeaturesChanged(nsPresContext* aPresContext)
 {
   return PR_FALSE;
@@ -132,13 +132,13 @@ CommonAnimationManager::SizeOf() const
   return sizeof(*this);
 }
 
-/* static */ bool
+/* static */ PRBool
 CommonAnimationManager::ExtractComputedValueForTransition(
                           nsCSSProperty aProperty,
                           nsStyleContext* aStyleContext,
                           nsStyleAnimation::Value& aComputedValue)
 {
-  bool result =
+  PRBool result =
     nsStyleAnimation::ExtractComputedValue(aProperty, aStyleContext,
                                            aComputedValue);
   if (aProperty == eCSSProperty_visibility) {
@@ -172,7 +172,7 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
       nsCSSValue *prop = aRuleData->ValueFor(cv.mProperty);
       if (prop->GetUnit() == eCSSUnit_Null) {
 #ifdef DEBUG
-        bool ok =
+        PRBool ok =
 #endif
           nsStyleAnimation::UncomputeValue(cv.mProperty,
                                            aRuleData->mPresContext,

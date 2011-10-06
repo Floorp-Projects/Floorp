@@ -105,10 +105,10 @@ class AutoPtrComparator
   typedef T* B;
 
 public:
-  bool Equals(const A& a, const B& b) const {
+  PRBool Equals(const A& a, const B& b) const {
     return a && b ? *a == *b : !a && !b ? true : false;
   }
-  bool LessThan(const A& a, const B& b) const {
+  PRBool LessThan(const A& a, const B& b) const {
     return a && b ? *a < *b : b ? true : false;
   }
 };
@@ -241,7 +241,7 @@ struct WorkerStructuredCloneCallbacks
         {
           // File should not be mutable.
           nsCOMPtr<nsIMutable> mutableFile = do_QueryInterface(file);
-          bool isMutable;
+          PRBool isMutable;
           NS_ASSERTION(NS_SUCCEEDED(mutableFile->GetMutable(&isMutable)) &&
                        !isMutable,
                        "Only immutable file should be passed to worker");
@@ -266,7 +266,7 @@ struct WorkerStructuredCloneCallbacks
         {
           // Blob should not be mutable.
           nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
-          bool isMutable;
+          PRBool isMutable;
           NS_ASSERTION(NS_SUCCEEDED(mutableBlob->GetMutable(&isMutable)) &&
                        !isMutable,
                        "Only immutable blob should be passed to worker");
@@ -357,7 +357,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
         {
           // File should not be mutable.
           nsCOMPtr<nsIMutable> mutableFile = do_QueryInterface(file);
-          bool isMutable;
+          PRBool isMutable;
           NS_ASSERTION(NS_SUCCEEDED(mutableFile->GetMutable(&isMutable)) &&
                        !isMutable,
                        "Only immutable file should be passed to worker");
@@ -390,7 +390,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
         {
           // Blob should not be mutable.
           nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
-          bool isMutable;
+          PRBool isMutable;
           NS_ASSERTION(NS_SUCCEEDED(mutableBlob->GetMutable(&isMutable)) &&
                        !isMutable,
                        "Only immutable blob should be passed to worker");
@@ -1217,7 +1217,7 @@ public:
   }
 
   NS_IMETHOD
-  IsOnCurrentThread(bool* aIsOnCurrentThread)
+  IsOnCurrentThread(PRBool* aIsOnCurrentThread)
   {
     *aIsOnCurrentThread = false;
     return NS_OK;
@@ -2240,7 +2240,7 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     NS_ASSERTION(ssm, "This should never be null!");
 
-    bool isChrome;
+    PRBool isChrome;
     if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &isChrome))) {
       NS_WARNING("IsCapabilityEnabled failed!");
       isChrome = PR_FALSE;
@@ -2316,7 +2316,7 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
 
         NS_NAMED_LITERAL_CSTRING(file, "file");
 
-        bool isFile;
+        PRBool isFile;
         if (NS_FAILED(codebase->SchemeIs(file.get(), &isFile))) {
           JS_ReportError(aCx, "Could not determine if codebase is file!");
           return nsnull;
@@ -3569,7 +3569,7 @@ void
 WorkerPrivate::AssertIsOnWorkerThread() const
 {
   if (mThread) {
-    bool current;
+    PRBool current;
     if (NS_FAILED(mThread->IsOnCurrentThread(&current)) || !current) {
       NS_ERROR("Wrong thread!");
     }

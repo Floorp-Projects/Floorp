@@ -70,8 +70,8 @@ public:
   void SetLayoutFlags(PRUint32 aFlags) { mLayoutFlags = aFlags; }
 
   // if true no one under us will paint during reflow.
-  void SetPaintingDisabled(bool aDisable) { mPaintingDisabled = aDisable; }
-  bool PaintingDisabled() const { return mPaintingDisabled; }
+  void SetPaintingDisabled(PRBool aDisable) { mPaintingDisabled = aDisable; }
+  PRBool PaintingDisabled() const { return mPaintingDisabled; }
 
   // The rendering context may be null for specialized uses of
   // nsBoxLayoutState and should be null-checked before it is used.
@@ -91,7 +91,7 @@ private:
   nsRenderingContext *mRenderingContext;
   PRUint32 mLayoutFlags;
   PRUint16 mReflowDepth; 
-  bool mPaintingDisabled;
+  PRPackedBool mPaintingDisabled;
 };
 
 #endif

@@ -40,7 +40,7 @@
 #ifndef nsAutoRef_h_
 #define nsAutoRef_h_
 
-#include "nscore.h" // for nsnull, bool
+#include "nscore.h" // for nsnull, PRBool
 
 template <class T> class nsSimpleRef;
 template <class T> class nsAutoRefBase;
@@ -548,7 +548,7 @@ protected:
     // provide this.  The function is permitted to always return true if the
     // default constructor is not accessible, or if Release (and AddRef) can
     // deal with void handles.
-    bool HaveResource() const
+    PRBool HaveResource() const
     {
         return mRawRef != Traits::Void();
     }

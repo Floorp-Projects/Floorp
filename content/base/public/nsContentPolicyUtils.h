@@ -182,7 +182,7 @@ NS_CP_ContentTypeName(PRUint32 contentType)
           secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);        \
       }                                                                       \
       if (secMan) {                                                           \
-          bool isSystem;                                                    \
+          PRBool isSystem;                                                    \
           nsresult rv = secMan->IsSystemPrincipal(originPrincipal,            \
                                                   &isSystem);                 \
           NS_ENSURE_SUCCESS(rv, rv);                                          \

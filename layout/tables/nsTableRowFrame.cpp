@@ -59,7 +59,7 @@ struct nsTableCellReflowState : public nsHTMLReflowState
                          const nsHTMLReflowState& aParentReflowState,
                          nsIFrame*                aFrame,
                          const nsSize&            aAvailableSpace,
-                         bool                     aInit = true)
+                         PRBool                   aInit = PR_TRUE)
     : nsHTMLReflowState(aPresContext, aParentReflowState, aFrame,
                         aAvailableSpace, -1, -1, aInit)
   {
@@ -93,7 +93,7 @@ void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace)
 void
 nsTableRowFrame::InitChildReflowState(nsPresContext&         aPresContext,
                                       const nsSize&           aAvailSize,
-                                      bool                    aBorderCollapse,
+                                      PRBool                  aBorderCollapse,
                                       nsTableCellReflowState& aReflowState)
 {
   nsMargin collapseBorder;
@@ -128,7 +128,7 @@ nsTableRowFrame::SetFixedHeight(nscoord aValue)
 
 void 
 nsTableRowFrame::SetPctHeight(float  aPctValue,
-                              bool aForce)
+                              PRBool aForce)
 {
   nscoord height = NS_MAX(0, NSToCoordRound(aPctValue * 100.0f));
   if (HasPctHeight()) {
@@ -615,7 +615,7 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleInSelection(aBuilder))
     return NS_OK;
 
-  bool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
+  PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
   nsDisplayTableItem* item = nsnull;
   if (isRoot) {
     // This background is created regardless of whether this frame is
@@ -716,24 +716,24 @@ GetSpaceBetween(PRInt32       aPrevColIndex,
                 PRInt32       aColSpan,
                 nsTableFrame& aTableFrame,
                 nscoord       aCellSpacingX,
-                bool          aIsLeftToRight,
-                bool          aCheckVisibility)
+                PRBool        aIsLeftToRight,
+                PRBool        aCheckVisibility)
 {
   nscoord space = 0;
   PRInt32 colX;
   if (aIsLeftToRight) {
     for (colX = aPrevColIndex + 1; aColIndex > colX; colX++) {
-      bool isCollapsed = false;
+      PRBool isCollapsed = PR_FALSE;
       if (!aCheckVisibility) {
         space += aTableFrame.GetColumnWidth(colX);
       }
       else {
         nsTableColFrame* colFrame = aTableFrame.GetColFrame(colX);
         const nsStyleVisibility* colVis = colFrame->GetStyleVisibility();
-        bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
+        PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
         nsIFrame* cgFrame = colFrame->GetParent();
         const nsStyleVisibility* groupVis = cgFrame->GetStyleVisibility();
-        bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE ==
+        PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                 groupVis->mVisible);
         isCollapsed = collapseCol || collapseGroup;
         if (!isCollapsed)
@@ -747,17 +747,17 @@ GetSpaceBetween(PRInt32       aPrevColIndex,
   else {
     PRInt32 lastCol = aColIndex + aColSpan - 1;
     for (colX = aPrevColIndex - 1; colX > lastCol; colX--) {
-      bool isCollapsed = false;
+      PRBool isCollapsed = PR_FALSE;
       if (!aCheckVisibility) {
         space += aTableFrame.GetColumnWidth(colX);
       }
       else {
         nsTableColFrame* colFrame = aTableFrame.GetColFrame(colX);
         const nsStyleVisibility* colVis = colFrame->GetStyleVisibility();
-        bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
+        PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
         nsIFrame* cgFrame = colFrame->GetParent();
         const nsStyleVisibility* groupVis = cgFrame->GetStyleVisibility();
-        bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE ==
+        PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                 groupVis->mVisible);
         isCollapsed = collapseCol || collapseGroup;
         if (!isCollapsed)
@@ -798,10 +798,10 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 {
   aStatus = NS_FRAME_COMPLETE;
 
-  bool borderCollapse = (((nsTableFrame*)aTableFrame.GetFirstInFlow())->IsBorderCollapse());
+  PRBool borderCollapse = (((nsTableFrame*)aTableFrame.GetFirstInFlow())->IsBorderCollapse());
 
   // XXXldb Should we be checking constrained height instead?
-  bool isPaginated = aPresContext->IsPaginated();
+  PRBool isPaginated = aPresContext->IsPaginated();
 
   nsresult rv = NS_OK;
 
@@ -837,7 +837,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     }
 
     // See if we should only reflow the dirty child frames
-    bool doReflowChild = true;
+    PRBool doReflowChild = PR_TRUE;
     if (!aReflowState.ShouldReflowAllKids() &&
         !aTableFrame.IsGeometryDirty() &&
         !NS_SUBTREE_DIRTY(kidFrame)) {
@@ -875,7 +875,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     // Reflow the child frame
     nsRect kidRect = kidFrame->GetRect();
     nsRect kidVisualOverflow = kidFrame->GetVisualOverflowRect();
-    bool firstReflow =
+    PRBool firstReflow =
       (kidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
 
     if (doReflowChild) {
@@ -1048,7 +1048,7 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
     return NS_ERROR_NULL_POINTER;
 
   const nsStyleVisibility* rowVis = GetStyleVisibility();
-  bool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
+  PRBool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
   if (collapseRow) {
     tableFrame->SetNeedToCollapse(PR_TRUE);
   }
@@ -1083,7 +1083,7 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
 nscoord 
 nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState,
-                                 bool                     aIsTopOfPage,
+                                 PRBool                   aIsTopOfPage,
                                  nsTableCellFrame*        aCellFrame,
                                  nscoord                  aAvailableHeight,
                                  nsReflowStatus&          aStatus)
@@ -1097,7 +1097,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   nsRect cellVisualOverflow = aCellFrame->GetVisualOverflowRect();
   
   nsSize  availSize(cellRect.width, aAvailableHeight);
-  bool borderCollapse = ((nsTableFrame*)tableFrame->GetFirstInFlow())->IsBorderCollapse();
+  PRBool borderCollapse = ((nsTableFrame*)tableFrame->GetFirstInFlow())->IsBorderCollapse();
   nsTableCellReflowState cellReflowState(aPresContext, aReflowState,
                                          aCellFrame, availSize, PR_FALSE);
   InitChildReflowState(*aPresContext, availSize, borderCollapse, cellReflowState);
@@ -1107,7 +1107,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
 
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
-  bool fullyComplete = NS_FRAME_IS_COMPLETE(aStatus) && !NS_FRAME_IS_TRUNCATED(aStatus);
+  PRBool fullyComplete = NS_FRAME_IS_COMPLETE(aStatus) && !NS_FRAME_IS_TRUNCATED(aStatus);
   if (fullyComplete) {
     desiredSize.height = aAvailableHeight;
   }
@@ -1133,11 +1133,11 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
 nscoord
 nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
                                         nscoord aWidth,
-                                        bool    aCollapseGroup,
-                                        bool& aDidCollapse)
+                                        PRBool  aCollapseGroup,
+                                        PRBool& aDidCollapse)
 {
   const nsStyleVisibility* rowVis = GetStyleVisibility();
-  bool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
+  PRBool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
   nsTableFrame* tableFrame = static_cast<nsTableFrame*>(nsTableFrame::GetTableFrame(this)->GetFirstInFlow());
   if (!tableFrame)
       return 0;
@@ -1219,19 +1219,19 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
         PRInt32 startIndex = (iter.IsLeftToRight()) ?
                              cellColIndex : cellColIndex + (cellColSpan - 1);
         PRInt32 actualColSpan = cellColSpan;
-        bool isVisible = false;
+        PRBool isVisible = PR_FALSE;
         for (PRInt32 colX = startIndex; actualColSpan > 0;
              colX += colIncrement, actualColSpan--) {
 
           nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
           const nsStyleVisibility* colVis = colFrame->GetStyleVisibility();
-          bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE ==
+          PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                 colVis->mVisible);
           nsIFrame* cgFrame = colFrame->GetParent();
           const nsStyleVisibility* groupVis = cgFrame->GetStyleVisibility();
-          bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE ==
+          PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                   groupVis->mVisible);
-          bool isCollapsed = collapseCol || collapseGroup;
+          PRBool isCollapsed = collapseCol || collapseGroup;
           if (!isCollapsed) {
             cRect.width += tableFrame->GetColumnWidth(colX);
             isVisible = PR_TRUE;
@@ -1254,7 +1254,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
         nsTableRowFrame* rowFrame = GetNextRow();
         for (actualRowSpan--; actualRowSpan > 0 && rowFrame; actualRowSpan--) {
           const nsStyleVisibility* nextRowVis = rowFrame->GetStyleVisibility();
-          bool collapseNextRow = (NS_STYLE_VISIBILITY_COLLAPSE ==
+          PRBool collapseNextRow = (NS_STYLE_VISIBILITY_COLLAPSE ==
                                     nextRowVis->mVisible);
           if (!collapseNextRow) {
             nsRect nextRect = rowFrame->GetRect();

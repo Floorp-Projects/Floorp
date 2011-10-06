@@ -146,7 +146,7 @@ NS_IMPL_ISUPPORTS1(ContainerEnumeratorImpl, nsISimpleEnumerator)
 
 
 NS_IMETHODIMP
-ContainerEnumeratorImpl::HasMoreElements(bool* aResult)
+ContainerEnumeratorImpl::HasMoreElements(PRBool* aResult)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
@@ -177,7 +177,7 @@ ContainerEnumeratorImpl::HasMoreElements(bool* aResult)
     if (NS_FAILED(rv)) return rv;
 
     while (1) {
-        bool hasmore;
+        PRBool hasmore;
         targets->HasMoreElements(&hasmore);
         if (! hasmore)
             break;
@@ -214,7 +214,7 @@ ContainerEnumeratorImpl::HasMoreElements(bool* aResult)
         }
 
         if (mCurrent) {
-            bool hasMore;
+            PRBool hasMore;
             rv = mCurrent->HasMoreElements(&hasMore);
             if (NS_FAILED(rv)) return rv;
 
@@ -249,7 +249,7 @@ ContainerEnumeratorImpl::GetNext(nsISupports** aResult)
 {
     nsresult rv;
 
-    bool hasMore;
+    PRBool hasMore;
     rv = HasMoreElements(&hasMore);
     if (NS_FAILED(rv)) return rv;
 

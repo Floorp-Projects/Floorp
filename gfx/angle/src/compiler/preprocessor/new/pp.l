@@ -26,6 +26,7 @@ IF YOU MODIFY THIS FILE YOU ALSO NEED TO RUN generate_parser.sh.
 #include "compiler/debug.h"
 #include "Context.h"
 #include "pp_tab.h"
+#include "Preprocessor.h"
 
 #define YY_USER_ACTION                        \
     do {                                      \
@@ -35,9 +36,9 @@ IF YOU MODIFY THIS FILE YOU ALSO NEED TO RUN generate_parser.sh.
     } while(0);
 
 #define YY_INPUT(buf, result, maxSize) \
-    result = yyextra->readInput(buf, maxSize);
-    
-static std::string* extractMacroName(const char* str, int len);
+    result = readInput(yyextra, buf, maxSize);
+
+static int readInput(pp::Context* context, char* buf, int maxSize);
 %}
 
 %option noyywrap nounput never-interactive
@@ -63,15 +64,9 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 
 {HASH} { return HASH; }
 
-{HASH}define{HSPACE}+{IDENTIFIER}/[ \t\n] {
-    yylval->sval = extractMacroName(yytext, yyleng);
-    return HASH_DEFINE_OBJ;
-}
-{HASH}define{HSPACE}+{IDENTIFIER}/"(" {
-    yylval->sval = extractMacroName(yytext, yyleng);
-    return HASH_DEFINE_FUNC;
-}
-{HASH}undef{HSPACE}+ { return HASH_UNDEF; }
+{HASH}define { return HASH_DEFINE_OBJ; }
+{HASH}define{HSPACE}+/{IDENTIFIER}"(" { return HASH_DEFINE_FUNC; }
+{HASH}undef { return HASH_UNDEF; }
 
 {HASH}if { return HASH_IF; }
 {HASH}ifdef { return HASH_IFDEF; }
@@ -104,7 +99,7 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 
 {PUNCTUATOR} { return yytext[0]; }
 
-[ \t\v\f]+ { /* Ignore whitespace */ }
+{HSPACE}+ { return SPACE; }
 
 \n {
     ++yylineno; yycolumn = 0;
@@ -115,42 +110,24 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 
 %%
 
-std::string* extractMacroName(const char* str, int len)
+int readInput(pp::Context* context, char* buf, int maxSize)
 {
-    // The input string is of the form {HASH}define{HSPACE}+{IDENTIFIER}
-    // We just need to find the last HSPACE.
-    ASSERT(str && (len > 8));  // strlen("#define ") == 8;
+    yyscan_t lexer = context->lexer;
+    ASSERT(lexer);
 
-    std::string* name = NULL;
-    for (int i = len - 1; i >= 0; --i)
-    {
-        if ((str[i] == ' ') || (str[i] == '\t'))
-        {
-            name = new std::string(str + i + 1, len - i - 1);
-            break;
-        }
-    }
-    ASSERT(name);
-    return name;
-}
-
-namespace pp {
-
-int Context::readInput(char* buf, int maxSize)
-{
     int nread = YY_NULL;
-    while (!mInput->eof() &&
-           (mInput->error() == pp::Input::kErrorNone) &&
+    while (!context->input.eof() &&
+           (context->input.error() == pp::Input::kErrorNone) &&
            (nread == YY_NULL))
     {
         int line = 0, file = 0;
-        pp::Token::decodeLocation(yyget_lineno(mLexer), &line, &file);
-        file = mInput->stringIndex();
-        yyset_lineno(pp::Token::encodeLocation(line, file), mLexer);
+        pp::Token::decodeLocation(yyget_lineno(lexer), &line, &file);
+        file = context->input.stringIndex();
+        yyset_lineno(pp::Token::encodeLocation(line, file), lexer);
 
-        nread = mInput->read(buf, maxSize);
+        nread = context->input.read(buf, maxSize);
 
-        if (mInput->error() == pp::Input::kErrorUnexpectedEOF)
+        if (context->input.error() == pp::Input::kErrorUnexpectedEOF)
         {
             // TODO(alokp): Report error.
         }
@@ -158,23 +135,27 @@ int Context::readInput(char* buf, int maxSize)
     return nread;
 }
 
-bool Context::initLexer()
-{
-    ASSERT(mLexer == NULL);
+namespace pp {
 
-    if (yylex_init_extra(this, &mLexer))
+bool Preprocessor::initLexer(Context* context)
+{
+    ASSERT(context->lexer == NULL);
+
+    yyscan_t lexer = 0;
+    if (yylex_init_extra(context, &lexer))
         return false;
 
-    yyrestart(0, mLexer);
+    context->lexer = lexer;
+    yyrestart(0, lexer);
     return true;
 }
 
-void Context::destroyLexer()
+void Preprocessor::destroyLexer(Context* context)
 {
-    ASSERT(mLexer);
+    ASSERT(context->lexer);
 
-    yylex_destroy(mLexer);
-    mLexer = NULL;
+    yylex_destroy(context->lexer);
+    context->lexer = 0;
 }
 
 }  // namespace pp

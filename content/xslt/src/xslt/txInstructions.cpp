@@ -222,7 +222,7 @@ txConditionalGoto::txConditionalGoto(nsAutoPtr<Expr> aCondition,
 nsresult
 txConditionalGoto::execute(txExecutionState& aEs)
 {
-    bool exprRes;
+    PRBool exprRes;
     nsresult rv = mCondition->evaluateToBool(aEs.getEvalContext(), exprRes);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -279,7 +279,7 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
         {
             // Copy children
             txXPathTreeWalker walker(aNode);
-            bool hasChild = walker.moveToFirstChild();
+            PRBool hasChild = walker.moveToFirstChild();
             while (hasChild) {
                 copyNode(walker.getCurrentPosition(), aEs);
                 hasChild = walker.moveToNextSibling();
@@ -316,7 +316,7 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
             }
 
             // Copy children
-            bool hasChild = walker.moveToFirstChild();
+            PRBool hasChild = walker.moveToFirstChild();
             while (hasChild) {
                 copyNode(walker.getCurrentPosition(), aEs);
                 hasChild = walker.moveToNextSibling();
@@ -552,7 +552,7 @@ txLREAttribute::execute(txExecutionState& aEs)
                                          mNamespaceID, valueStr);
 }
 
-txMessage::txMessage(bool aTerminate)
+txMessage::txMessage(PRBool aTerminate)
     : mTerminate(aTerminate)
 {
 }
@@ -739,7 +739,7 @@ txPushRTFHandler::execute(txExecutionState& aEs)
     return NS_OK;
 }
 
-txPushStringHandler::txPushStringHandler(bool aOnlyText)
+txPushStringHandler::txPushStringHandler(PRBool aOnlyText)
     : mOnlyText(aOnlyText)
 {
 }
@@ -885,7 +885,7 @@ txStartElement::execute(txExecutionState& aEs)
        nsId = kNameSpaceID_Unknown;
     }
 
-    bool success = true;
+    PRBool success = PR_TRUE;
 
     if (nsId != kNameSpaceID_Unknown) {
         rv = aEs.mResultHandler->startElement(prefix,
@@ -937,7 +937,7 @@ txStartLREElement::execute(txExecutionState& aEs)
     return NS_OK;
 }
 
-txText::txText(const nsAString& aStr, bool aDOE)
+txText::txText(const nsAString& aStr, PRBool aDOE)
     : mStr(aStr),
       mDOE(aDOE)
 {
@@ -949,7 +949,7 @@ txText::execute(txExecutionState& aEs)
     return aEs.mResultHandler->characters(mStr, mDOE);
 }
 
-txValueOf::txValueOf(nsAutoPtr<Expr> aExpr, bool aDOE)
+txValueOf::txValueOf(nsAutoPtr<Expr> aExpr, PRBool aDOE)
     : mExpr(aExpr),
       mDOE(aDOE)
 {

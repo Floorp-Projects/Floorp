@@ -86,7 +86,7 @@ PredicateList::evaluatePredicates(txNodeSet* nodes,
     return NS_OK;
 }
 
-bool
+PRBool
 PredicateList::isSensitiveTo(Expr::ContextSensitivity aContext)
 {
     // We're creating a new node/nodeset so we can ignore those bits.

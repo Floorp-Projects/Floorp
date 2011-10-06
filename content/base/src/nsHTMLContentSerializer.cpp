@@ -89,7 +89,7 @@ nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
 }
 
 static
-bool
+PRBool
 IsInvisibleBreak(nsIContent *aNode, nsIAtom *aTag, PRInt32 aNamespace) {
   // xxxehsan: we should probably figure out a way to determine
   // if a BR node is visible without using the editor.
@@ -111,7 +111,7 @@ IsInvisibleBreak(nsIContent *aNode, nsIAtom *aTag, PRInt32 aNamespace) {
           editorDocShell->GetEditor(getter_AddRefs(editor));
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
           if (htmlEditor) {
-            bool isVisible = false;
+            PRBool isVisible = PR_FALSE;
             nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);
             htmlEditor->BreakIsVisible(domNode, &isVisible);
             return !isVisible;
@@ -187,7 +187,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
       // This is handled separately in SerializeLIValueAttribute()
       continue;
     }
-    bool isJS = IsJavaScript(aContent, attrName, namespaceID, valueStr);
+    PRBool isJS = IsJavaScript(aContent, attrName, namespaceID, valueStr);
     
     if (((attrName == nsGkAtoms::href &&
           (namespaceID == kNameSpaceID_None ||
@@ -255,7 +255,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
   nsIContent* content = aElement;
 
-  bool forceFormat = false;
+  PRBool forceFormat = PR_FALSE;
   if (!CheckElementStart(content, forceFormat, aStr)) {
     return NS_OK;
   }
@@ -268,7 +268,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
     return NS_OK;
   }
 
-  bool lineBreakBeforeOpen = LineBreakBeforeOpen(ns, name);
+  PRBool lineBreakBeforeOpen = LineBreakBeforeOpen(ns, name);
 
   if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
     if (mColPos && lineBreakBeforeOpen) {
@@ -387,7 +387,7 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
     --mDisableEntityEncoding;
   }
 
-  bool forceFormat = content->HasAttr(kNameSpaceID_None,
+  PRBool forceFormat = content->HasAttr(kNameSpaceID_None,
                                         nsGkAtoms::mozdirty);
 
   if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
@@ -418,7 +418,7 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
     nsIParserService* parserService = nsContentUtils::GetParserService();
 
     if (parserService) {
-      bool isContainer;
+      PRBool isContainer;
 
       parserService->
         IsContainer(parserService->HTMLCaseSensitiveAtomTagToId(name),
@@ -431,7 +431,7 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
 
   if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
 
-    bool lineBreakBeforeClose = LineBreakBeforeClose(ns, name);
+    PRBool lineBreakBeforeClose = LineBreakBeforeClose(ns, name);
 
     if (mColPos && lineBreakBeforeClose) {
       AppendNewLineToString(aStr);
@@ -542,7 +542,7 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
     return;
   }
 
-  bool nonBasicEntities =
+  PRBool nonBasicEntities =
     !!(mFlags & (nsIDocumentEncoder::OutputEncodeLatin1Entities |
                  nsIDocumentEncoder::OutputEncodeHTMLEntities   |
                  nsIDocumentEncoder::OutputEncodeW3CEntities));

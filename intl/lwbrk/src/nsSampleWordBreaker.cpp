@@ -49,7 +49,7 @@ nsSampleWordBreaker::~nsSampleWordBreaker()
 
 NS_IMPL_ISUPPORTS1(nsSampleWordBreaker, nsIWordBreaker)
 
-bool nsSampleWordBreaker::BreakInBetween(
+PRBool nsSampleWordBreaker::BreakInBetween(
   const PRUnichar* aText1 , PRUint32 aTextLen1,
   const PRUnichar* aText2 , PRUint32 aTextLen2)
 {

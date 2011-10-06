@@ -369,7 +369,7 @@ nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
 }
 
 NS_IMETHODIMP
-nsBufferedInputStream::IsNonBlocking(bool *aNonBlocking)
+nsBufferedInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     if (mStream)
         return Source()->IsNonBlocking(aNonBlocking);
@@ -487,7 +487,7 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports* *aStream)
     return NS_OK;
 }
 
-bool
+PRBool
 nsBufferedInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
     using IPC::ReadParam;
@@ -692,7 +692,7 @@ nsBufferedOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, P
 }
 
 NS_IMETHODIMP
-nsBufferedOutputStream::IsNonBlocking(bool *aNonBlocking)
+nsBufferedOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     if (mStream)
         return Sink()->IsNonBlocking(aNonBlocking);

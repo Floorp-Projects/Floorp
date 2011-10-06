@@ -576,7 +576,7 @@ nsAttrAndChildArray::SetAndTakeMappedAttr(nsIAtom* aLocalName,
 {
   nsRefPtr<nsMappedAttributes> mapped;
 
-  bool willAdd = true;
+  PRBool willAdd = PR_TRUE;
   if (mImpl && mImpl->mMappedAttrs) {
     willAdd = mImpl->mMappedAttrs->GetAttr(aLocalName) == nsnull;
   }
@@ -715,7 +715,7 @@ nsAttrAndChildArray::MappedAttrCount() const
 nsresult
 nsAttrAndChildArray::GetModifiableMapped(nsMappedAttributeElement* aContent,
                                          nsHTMLStyleSheet* aSheet,
-                                         bool aWillAddAttr,
+                                         PRBool aWillAddAttr,
                                          nsMappedAttributes** aModifiable)
 {
   *aModifiable = nsnull;
@@ -777,7 +777,7 @@ nsAttrAndChildArray::MakeMappedUnique(nsMappedAttributes* aAttributes)
 }
 
 
-bool
+PRBool
 nsAttrAndChildArray::GrowBy(PRUint32 aGrowSize)
 {
   PRUint32 size = mImpl ? mImpl->mBufferSize + NS_IMPL_EXTRA_SIZE : 0;
@@ -792,7 +792,7 @@ nsAttrAndChildArray::GrowBy(PRUint32 aGrowSize)
     size = PR_BIT(PR_CeilingLog2(minSize));
   }
 
-  bool needToInitialize = !mImpl;
+  PRBool needToInitialize = !mImpl;
   Impl* newImpl = static_cast<Impl*>(PR_Realloc(mImpl, size * sizeof(void*)));
   NS_ENSURE_TRUE(newImpl, PR_FALSE);
 
@@ -809,7 +809,7 @@ nsAttrAndChildArray::GrowBy(PRUint32 aGrowSize)
   return PR_TRUE;
 }
 
-bool
+PRBool
 nsAttrAndChildArray::AddAttrSlot()
 {
   PRUint32 slotCount = AttrSlotCount();

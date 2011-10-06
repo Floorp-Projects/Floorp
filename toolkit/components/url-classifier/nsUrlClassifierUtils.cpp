@@ -51,7 +51,7 @@ static char int_to_hex_digit(PRInt32 i)
   return static_cast<char>(((i < 10) ? (i + '0') : ((i - 10) + 'A')));
 }
 
-static bool
+static PRBool
 IsDecimal(const nsACString & num)
 {
   for (PRUint32 i = 0; i < num.Length(); i++) {
@@ -63,7 +63,7 @@ IsDecimal(const nsACString & num)
   return PR_TRUE;
 }
 
-static bool
+static PRBool
 IsHex(const nsACString & num)
 {
   if (num.Length() < 3) {
@@ -83,7 +83,7 @@ IsHex(const nsACString & num)
   return PR_TRUE;
 }
 
-static bool
+static PRBool
 IsOctal(const nsACString & num)
 {
   if (num.Length() < 2) {
@@ -274,7 +274,7 @@ nsUrlClassifierUtils::ParseIPAddress(const nsACString & host,
   // non-octal digits, no part of the ip can be in octal
   // XXX: this came from the old javascript implementation, is it really
   // supposed to be like this?
-  bool allowOctal = true;
+  PRBool allowOctal = PR_TRUE;
   PRUint32 i;
 
   for (i = 0; i < parts.Length(); i++) {
@@ -319,7 +319,7 @@ nsUrlClassifierUtils::ParseIPAddress(const nsACString & host,
 void
 nsUrlClassifierUtils::CanonicalNum(const nsACString& num,
                                    PRUint32 bytes,
-                                   bool allowOctal,
+                                   PRBool allowOctal,
                                    nsACString& _retval)
 {
   _retval.Truncate();
@@ -361,12 +361,12 @@ nsUrlClassifierUtils::CanonicalNum(const nsACString& num,
 // This function will encode all "special" characters in typical url
 // encoding, that is %hh where h is a valid hex digit.  It will also fold
 // any duplicated slashes.
-bool
+PRBool
 nsUrlClassifierUtils::SpecialEncode(const nsACString & url,
-                                    bool foldSlashes,
+                                    PRBool foldSlashes,
                                     nsACString & _retval)
 {
-  bool changed = false;
+  PRBool changed = PR_FALSE;
   const char* curChar = url.BeginReading();
   const char* end = url.EndReading();
 
@@ -390,7 +390,7 @@ nsUrlClassifierUtils::SpecialEncode(const nsACString & url,
   return changed;
 }
 
-bool
+PRBool
 nsUrlClassifierUtils::ShouldURLEscape(const unsigned char c) const
 {
   return c <= 32 || c == '%' || c >=127;

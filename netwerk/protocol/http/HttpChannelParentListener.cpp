@@ -200,7 +200,7 @@ HttpChannelParentListener::AsyncOnChannelRedirect(
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParentListener::OnRedirectResult(bool succeeded)
+HttpChannelParentListener::OnRedirectResult(PRBool succeeded)
 {
   nsresult rv;
 

@@ -117,9 +117,9 @@ public:
     // SetMainThread should be called which will create the JNIEnv for
     // us to use.  toolkit/xre/nsAndroidStartup.cpp calls
     // SetMainThread.
-    bool SetMainThread(void *thr);
+    PRBool SetMainThread(void *thr);
 
-    JNIEnv* AttachThread(bool asDaemon = true);
+    JNIEnv* AttachThread(PRBool asDaemon = PR_TRUE);
 
     /* These are all implemented in Java */
     static void NotifyIME(int aType, int aState);
@@ -146,17 +146,17 @@ public:
     void SetSurfaceView(jobject jobj);
     AndroidGeckoSurfaceView& SurfaceView() { return mSurfaceView; }
 
-    bool GetHandlersForURL(const char *aURL, 
+    PRBool GetHandlersForURL(const char *aURL, 
                              nsIMutableArray* handlersArray = nsnull,
                              nsIHandlerApp **aDefaultApp = nsnull,
                              const nsAString& aAction = EmptyString());
 
-    bool GetHandlersForMimeType(const char *aMimeType,
+    PRBool GetHandlersForMimeType(const char *aMimeType,
                                   nsIMutableArray* handlersArray = nsnull,
                                   nsIHandlerApp **aDefaultApp = nsnull,
                                   const nsAString& aAction = EmptyString());
 
-    bool OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType,
+    PRBool OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType,
                            const nsAString& aPackageName = EmptyString(),
                            const nsAString& aClassName = EmptyString(),
                            const nsAString& aAction = EmptyString(),
@@ -193,9 +193,9 @@ public:
 
     void ShowFilePicker(nsAString& aFilePath, nsAString& aFilters);
 
-    void PerformHapticFeedback(bool aIsLongPress);
+    void PerformHapticFeedback(PRBool aIsLongPress);
 
-    void SetFullScreen(bool aFullScreen);
+    void SetFullScreen(PRBool aFullScreen);
 
     void ShowInputMethodPicker();
 
@@ -204,6 +204,8 @@ public:
     bool IsNetworkLinkUp();
 
     bool IsNetworkLinkKnown();
+
+    int GetNetworkLinkType();
 
     void SetSelectedLocale(const nsAString&);
 
@@ -261,7 +263,7 @@ public:
 
     void UnlockBitmap(jobject bitmap);
 
-    void PostToJavaThread(nsIRunnable* aRunnable, bool aMainThread = false);
+    void PostToJavaThread(nsIRunnable* aRunnable, PRBool aMainThread = PR_FALSE);
 
     void ExecuteNextRunnable();
 
@@ -281,10 +283,6 @@ public:
     bool LockWindow(void *window, unsigned char **bits, int *width, int *height, int *format, int *stride);
     bool UnlockWindow(void *window);
 
-    bool InitCamera(const nsCString& contentType, PRUint32 camera, PRUint32 *width, PRUint32 *height, PRUint32 *fps);
-
-    void CloseCamera();
-
 protected:
     static AndroidBridge *sBridge;
 
@@ -302,7 +300,7 @@ protected:
     jclass mGeckoAppShellClass;
 
     AndroidBridge() { }
-    bool Init(JNIEnv *jEnv, jclass jGeckoApp);
+    PRBool Init(JNIEnv *jEnv, jclass jGeckoApp);
 
     void EnsureJNIThread();
 
@@ -346,6 +344,7 @@ protected:
     jmethodID jSetKeepScreenOn;
     jmethodID jIsNetworkLinkUp;
     jmethodID jIsNetworkLinkKnown;
+    jmethodID jGetNetworkLinkType;
     jmethodID jSetSelectedLocale;
     jmethodID jScanMedia;
     jmethodID jGetSystemColors;
@@ -353,8 +352,6 @@ protected:
     jmethodID jCreateShortcut;
     jmethodID jGetShowPasswordSetting;
     jmethodID jPostToJavaThread;
-    jmethodID jInitCamera;
-    jmethodID jCloseCamera;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
@@ -380,7 +377,7 @@ protected:
 }
 
 extern "C" JNIEnv * GetJNIForThread();
-extern bool mozilla_AndroidBridge_SetMainThread(void *);
+extern PRBool mozilla_AndroidBridge_SetMainThread(void *);
 extern jclass GetGeckoAppShellClass();
 
 #endif /* AndroidBridge_h__ */

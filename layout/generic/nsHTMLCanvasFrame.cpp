@@ -78,7 +78,7 @@ public:
   NS_DISPLAY_DECL_NAME("nsDisplayCanvas", TYPE_CANVAS)
 
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aForceTransparentSurface = nsnull) {
+                                   PRBool* aForceTransparentSurface = nsnull) {
     if (aForceTransparentSurface) {
       *aForceTransparentSurface = PR_FALSE;
     }
@@ -191,7 +191,7 @@ nsHTMLCanvasFrame::GetIntrinsicRatio()
 nsHTMLCanvasFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                nsSize aCBSize, nscoord aAvailableWidth,
                                nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                               bool aShrinkWrap)
+                               PRBool aShrinkWrap)
 {
   nsIntSize size = GetCanvasSize();
 

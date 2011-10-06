@@ -120,7 +120,7 @@ public:
 
   static void DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent);
   static void DumpTree(Node* aNode, FILE* aOutputFile, PRInt32 aIndent);
-  static bool CompareTrees(Node* aNode1, Node* aNode2);
+  static PRBool CompareTrees(Node* aNode1, Node* aNode2);
 };
 
 char*
@@ -351,7 +351,7 @@ static inline int IsWhiteSpace(int c) {
   return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r');
 }
 
-static bool EatWS(FILE* aFile)
+static PRBool EatWS(FILE* aFile)
 {
   for (;;) {
     int c = getc(aFile);
@@ -366,7 +366,7 @@ static bool EatWS(FILE* aFile)
   return PR_TRUE;
 }
 
-static bool Expect(FILE* aFile, char aChar)
+static PRBool Expect(FILE* aFile, char aChar)
 {
   int c = getc(aFile);
   if (c < 0) return PR_FALSE;
@@ -558,10 +558,10 @@ nsFrameUtil::DumpTree(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)
   }
 }
 
-bool
+PRBool
 nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
 {
-  bool result = true;
+  PRBool result = PR_TRUE;
   for (;; tree1 = tree1->next, tree2 = tree2->next) {
     // Make sure both nodes are non-null, or at least agree with each other
     if (nsnull == tree1) {
@@ -650,7 +650,7 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
         result = PR_FALSE; // we have a non-critical failure, so remember that but continue
       }
       else {
-        bool equiv = CompareTrees(list1->node, list2->node);
+        PRBool equiv = CompareTrees(list1->node, list2->node);
         if (!equiv) {
           return equiv;
         }

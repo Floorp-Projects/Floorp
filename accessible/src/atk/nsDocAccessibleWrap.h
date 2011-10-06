@@ -54,7 +54,7 @@ public:
                       nsIWeakReference *aShell);
   virtual ~nsDocAccessibleWrap();
 
-  bool mActivated;
+  PRBool mActivated;
 };
 
 #endif

@@ -149,7 +149,7 @@ nsTXTToHTMLConv::SetTitle(const PRUnichar *aTitle)
 }
 
 NS_IMETHODIMP
-nsTXTToHTMLConv::PreFormatHTML(bool value)
+nsTXTToHTMLConv::PreFormatHTML(PRBool value)
 {
     mPreFormatHTML = value;
     return NS_OK;

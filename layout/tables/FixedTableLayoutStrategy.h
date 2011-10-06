@@ -57,7 +57,7 @@ public:
     // nsITableLayoutStrategy implementation
     virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext);
     virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext,
-                                 bool aComputingSize);
+                                 PRBool aComputingSize);
     virtual void MarkIntrinsicWidthsDirty();
     virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState);
 

@@ -228,7 +228,7 @@ nsresult
 SVGAnimatedPreserveAspectRatio::SetBaseValueString(
   const nsAString &aValueAsString,
   nsSVGElement *aSVGElement,
-  bool aDoSetAttr)
+  PRBool aDoSetAttr)
 {
   SVGPreserveAspectRatio val;
   nsresult res = ToPreserveAspectRatio(aValueAsString, &val);
@@ -363,7 +363,7 @@ nsresult
 SMILPreserveAspectRatio::ValueFromString(const nsAString& aStr,
                                          const nsISMILAnimationElement* /*aSrcElement*/,
                                          nsSMILValue& aValue,
-                                         bool& aPreventCachingOfSandwich) const
+                                         PRBool& aPreventCachingOfSandwich) const
 {
   SVGPreserveAspectRatio par;
   nsresult res = ToPreserveAspectRatio(aStr, &par);

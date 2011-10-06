@@ -56,7 +56,7 @@ class nsSound : public nsISound,
   NS_DECL_NSISTREAMLOADEROBSERVER
 
 private:
-  bool mInited;
+  PRBool mInited;
 
 };
 

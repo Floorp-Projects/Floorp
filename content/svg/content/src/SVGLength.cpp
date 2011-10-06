@@ -64,7 +64,7 @@ SVGLength::GetValueAsString(nsAString &aValue) const
   aValue.Append(unitString);
 }
 
-bool
+PRBool
 SVGLength::SetValueFromString(const nsAString &aValue)
 {
   float tmpValue;
@@ -105,7 +105,7 @@ SVGLength::SetValueFromString(const nsAString &aValue)
   return PR_FALSE;
 }
 
-inline static bool
+inline static PRBool
 IsAbsoluteUnit(PRUint8 aUnit)
 {
   return aUnit >= nsIDOMSVGLength::SVG_LENGTHTYPE_CM &&

@@ -48,11 +48,11 @@ protocol PAudio
 
 parent:
 
-  Write(nsCString data, PRUint32 frames);
+  Write(nsCString data, PRUint32 count);
 
   SetVolume(float aVolume);
 
-  MinWriteSize();
+  MinWriteSample();
   Drain();
 
   Pause();
@@ -63,8 +63,8 @@ parent:
 
   __delete__();
 
-  PositionInFramesUpdate(PRInt64 position, PRInt64 time);
-  MinWriteSizeDone(PRInt32 frameCount);
+  SampleOffsetUpdate(PRInt64 offset, PRInt64 time);
+  MinWriteSampleDone(PRInt32 sampleCount);
   DrainDone();
 
 };

@@ -91,7 +91,7 @@ protected:
   uintN mJSAttributes;          // A flag for all our JS properties (getter/setter/readonly/shared/enum)
 
 #ifdef DEBUG
-  bool mIsCompiled;
+  PRBool mIsCompiled;
 #endif
 };
 

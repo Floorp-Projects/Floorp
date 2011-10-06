@@ -98,8 +98,8 @@ struct nsDOMClassInfoData
   PRUint32 mScriptableFlags : 31; // flags must not use more than 31 bits!
   PRUint32 mHasClassInterface : 1;
   PRUint32 mInterfacesBitmap;
-  bool mChromeOnly;
-  bool mDisabled;
+  PRPackedBool mChromeOnly;
+  PRPackedBool mDisabled;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
@@ -164,7 +164,7 @@ public:
    * helper with a wrapper, even though we should be treating the lookup as a
    * transparent one.
    */
-  static bool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj);
+  static PRBool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj);
 
   static nsISupports *GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj);
 
@@ -198,9 +198,9 @@ protected:
   // non-null it's set to true if the id is a number and false if it's
   // not a number. If id is not a number this method returns -1
   static PRInt32 GetArrayIndexFromId(JSContext *cx, jsid id,
-                                     bool *aIsNumber = nsnull);
+                                     PRBool *aIsNumber = nsnull);
 
-  static inline bool IsReadonlyReplaceable(jsid id)
+  static inline PRBool IsReadonlyReplaceable(jsid id)
   {
     return (id == sParent_id       ||
             id == sScrollbars_id   ||
@@ -221,7 +221,7 @@ protected:
             id == sURL_id);
   }
 
-  static inline bool IsWritableReplaceable(jsid id)
+  static inline PRBool IsWritableReplaceable(jsid id)
   {
     return (id == sInnerHeight_id  ||
             id == sInnerWidth_id   ||
@@ -240,9 +240,9 @@ protected:
   // nsIXPCScriptable code
   static nsresult DefineStaticJSVals(JSContext *cx);
 
-  static bool sIsInitialized;
-  static bool sDisableDocumentAllSupport;
-  static bool sDisableGlobalScopePollutionSupport;
+  static PRBool sIsInitialized;
+  static PRBool sDisableDocumentAllSupport;
+  static PRBool sDisableGlobalScopePollutionSupport;
 
 public:
   static jsid sParent_id;
@@ -354,7 +354,7 @@ public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
 
   virtual void PreserveWrapper(nsISupports *aNative);
 
@@ -378,7 +378,7 @@ protected:
   }
 
   static nsresult GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
-                                JSObject *obj, jsid id, bool *did_resolve);
+                                JSObject *obj, jsid id, PRBool *did_resolve);
 
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
@@ -406,12 +406,12 @@ public:
   }
 #endif
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj, bool *_retval);
+                       JSObject *obj, PRBool *_retval);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj);
   NS_IMETHOD OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
@@ -451,7 +451,7 @@ protected:
 public:
   NS_IMETHOD CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, PRUint32 mode,
-                         jsval *vp, bool *_retval);
+                         jsval *vp, PRBool *_retval);
 
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
@@ -481,7 +481,7 @@ public:
                        JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -505,9 +505,9 @@ protected:
   }
 
   // Helper to check whether a capability is enabled
-  bool IsCapabilityEnabled(const char* aCapability);
+  PRBool IsCapabilityEnabled(const char* aCapability);
 
-  inline bool IsPrivilegedScript() {
+  inline PRBool IsPrivilegedScript() {
     return IsCapabilityEnabled("UniversalXPConnect");
   }
 
@@ -516,10 +516,10 @@ public:
                        JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto);
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
 
   virtual void PreserveWrapper(nsISupports *aNative);
@@ -550,7 +550,7 @@ public:
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj);
   NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj, bool *_retval);
+                       JSObject *obj, PRBool *_retval);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -575,9 +575,9 @@ protected:
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj, bool *_retval);
+                       JSObject *obj, PRBool *_retval);
   
   virtual nsresult GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, PRUint32 *length);
@@ -609,7 +609,7 @@ protected:
 
 public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
 
 private:
   // Not implemented, nothing should create an instance of this class.
@@ -657,7 +657,7 @@ protected:
 
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
 
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
@@ -666,7 +666,7 @@ protected:
 
 public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
 
 private:
   // Not implemented, nothing should create an instance of this class.
@@ -781,18 +781,18 @@ public:
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj, bool *_retval);
+                       JSObject *obj, PRBool *_retval);
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper,
                          JSContext *cx, JSObject *obj, jsid id,
-                         jsval *vp, bool *_retval);
+                         jsval *vp, PRBool *_retval);
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
 
   bool JSIDToProp(const jsid& aId, nsAString& aResult);
 
@@ -820,7 +820,7 @@ public:
   NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD GetFlags(PRUint32* aFlags);
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj);
@@ -867,9 +867,9 @@ public:
 
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -897,15 +897,15 @@ protected:
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp,
-                         bool *_retval);
+                         PRBool *_retval);
 
   NS_IMETHOD NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                           JSContext *cx, JSObject *obj,
                           PRUint32 enum_op, jsval *statep,
-                          jsid *idp, bool *_retval);
+                          jsid *idp, PRBool *_retval);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -930,12 +930,12 @@ protected:
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp,
-                         bool *_retval);
+                         PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
 
   static nsresult SetOption(JSContext *cx, jsval *vp, PRUint32 aIndex,
                             nsIDOMNSHTMLOptionCollection *aOptCollection);
@@ -973,18 +973,18 @@ protected:
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj);
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                   JSObject *obj, PRUint32 argc, jsval *argv, jsval *vp,
-                  bool *_retval);
+                  PRBool *_retval);
 
 
   static nsresult SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
@@ -1013,7 +1013,7 @@ protected:
 
 public:
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -1130,7 +1130,7 @@ protected:
 
 public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
 };
 
 
@@ -1154,7 +1154,7 @@ public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -1449,14 +1449,14 @@ protected:
 
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, PRUint32 enum_op, jsval *statep,
-                          jsid *idp, bool *_retval);
+                          jsid *idp, PRBool *_retval);
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
                                  nsWrapperCache **aCache, nsresult *aResult)
@@ -1490,16 +1490,16 @@ protected:
 
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
-                        JSObject **objp, bool *_retval);
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, PRUint32 enum_op, jsval *statep,
-                          jsid *idp, bool *_retval);
+                          jsid *idp, PRBool *_retval);
 
 public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -1579,15 +1579,15 @@ public:
   }
   NS_IMETHOD Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                   JSObject *obj, PRUint32 argc, jsval *argv, jsval *vp,
-                  bool *_retval);
+                  PRBool *_retval);
 
   NS_IMETHOD Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, PRUint32 argc, jsval *argv,
-                       jsval *vp, bool *_retval);
+                       jsval *vp, PRBool *_retval);
 
   NS_IMETHOD HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, const jsval &val, bool *bp,
-                         bool *_retval);
+                         JSObject *obj, const jsval &val, PRBool *bp,
+                         PRBool *_retval);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {

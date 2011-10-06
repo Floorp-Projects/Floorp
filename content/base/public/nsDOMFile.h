@@ -265,9 +265,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMFILELIST
 
-  bool Append(nsIDOMFile *aFile) { return mFiles.AppendObject(aFile); }
+  PRBool Append(nsIDOMFile *aFile) { return mFiles.AppendObject(aFile); }
 
-  bool Remove(PRUint32 aIndex) { return mFiles.RemoveObjectAt(aIndex); }
+  PRBool Remove(PRUint32 aIndex) { return mFiles.RemoveObjectAt(aIndex); }
   void Clear() { return mFiles.Clear(); }
 
   nsIDOMFile* GetItemAt(PRUint32 aIndex)

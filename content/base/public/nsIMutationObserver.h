@@ -66,7 +66,7 @@ struct CharacterDataChangeInfo
   /**
    * True if this character data change is just an append.
    */
-  bool mAppend;
+  PRBool mAppend;
 
   /**
    * The offset in the text where the change occurred.

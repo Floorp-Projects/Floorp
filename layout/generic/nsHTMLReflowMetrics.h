@@ -171,13 +171,13 @@ struct nsCollapsingMargin {
       {
       }
 
-    bool operator==(const nsCollapsingMargin& aOther)
+    PRBool operator==(const nsCollapsingMargin& aOther)
       {
         return mMostPos == aOther.mMostPos &&
           mMostNeg == aOther.mMostNeg;
       }
 
-    bool operator!=(const nsCollapsingMargin& aOther)
+    PRBool operator!=(const nsCollapsingMargin& aOther)
       {
         return !(*this == aOther);
       }
@@ -211,7 +211,7 @@ struct nsCollapsingMargin {
         mMostNeg = 0;
       }
 
-    bool IsZero() const
+    PRBool IsZero() const
       {
         return (mMostPos == 0) && (mMostNeg == 0);
       }

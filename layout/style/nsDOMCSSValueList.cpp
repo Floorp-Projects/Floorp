@@ -43,7 +43,7 @@
 #include "prtypes.h"
 #include "nsContentUtils.h"
 
-nsDOMCSSValueList::nsDOMCSSValueList(bool aCommaDelimited, bool aReadonly)
+nsDOMCSSValueList::nsDOMCSSValueList(PRBool aCommaDelimited, PRBool aReadonly)
   : mCommaDelimited(aCommaDelimited), mReadonly(aReadonly)
 {
 }

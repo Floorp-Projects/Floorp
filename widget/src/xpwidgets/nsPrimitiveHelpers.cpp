@@ -220,7 +220,7 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
   // through the life of the app so we can cache it.
   nsresult rv = NS_OK;
   static nsCOMPtr<nsIUnicodeDecoder> decoder;
-  static bool hasConverter = false;
+  static PRBool hasConverter = PR_FALSE;
   if ( !hasConverter ) {
     // get the charset
     nsCAutoString platformCharset;

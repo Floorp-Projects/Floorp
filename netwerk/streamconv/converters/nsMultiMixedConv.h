@@ -105,13 +105,13 @@ protected:
   nsCString               mContentDispositionHeader;
   PRUint64                mContentLength;
 
-  bool                    mIsByteRangeRequest;
+  PRBool                  mIsByteRangeRequest;
   PRInt64                 mByteRangeStart;
   PRInt64                 mByteRangeEnd;
 
   PRUint32                mPartID; // unique ID that can be used to identify
                                    // this part of the multipart document
-  bool                    mIsLastPart;
+  PRBool                  mIsLastPart;
 };
 
 // The nsMultiMixedConv stream converter converts a stream of type "multipart/x-mixed-replace"
@@ -166,14 +166,14 @@ protected:
     nsresult SendStop(nsresult aStatus);
     nsresult SendData(char *aBuffer, PRUint32 aLen);
     nsresult ParseHeaders(nsIChannel *aChannel, char *&aPtr,
-                          PRUint32 &aLen, bool *_retval);
+                          PRUint32 &aLen, PRBool *_retval);
     PRInt32  PushOverLine(char *&aPtr, PRUint32 &aLen);
     char *FindToken(char *aCursor, PRUint32 aLen);
     nsresult BufferData(char *aData, PRUint32 aLen);
 
     // member data
-    bool                mNewPart;        // Are we processing the beginning of a part?
-    bool                mProcessingHeaders;
+    PRBool              mNewPart;        // Are we processing the beginning of a part?
+    PRBool              mProcessingHeaders;
     nsCOMPtr<nsIStreamListener> mFinalListener; // this guy gets the converted data via his OnDataAvailable()
 
     nsCString           mToken;
@@ -189,14 +189,14 @@ protected:
     char                *mBuffer;
     PRUint32            mBufLen;
     PRUint64            mTotalSent;
-    bool                mFirstOnData;   // used to determine if we're in our first OnData callback.
+    PRBool              mFirstOnData;   // used to determine if we're in our first OnData callback.
 
     // The following members are for tracking the byte ranges in
     // multipart/mixed content which specified the 'Content-Range:'
     // header...
     PRInt64             mByteRangeStart;
     PRInt64             mByteRangeEnd;
-    bool                mIsByteRangeRequest;
+    PRBool              mIsByteRangeRequest;
 
     PRUint32            mCurrentPartID;
 };

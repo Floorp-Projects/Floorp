@@ -269,7 +269,7 @@ ClearObjectEntry(PLDHashTable* table, PLDHashEntryHdr *entry)
   objEntry->~ObjectEntry();
 }
 
-static bool
+static PRBool
 InitObjectEntry(PLDHashTable* table, PLDHashEntryHdr* entry, const void* key)
 {
   new (entry) ObjectEntry;
@@ -572,7 +572,7 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
     }
   }
   
-  bool result = true;
+  PRBool result = PR_TRUE;
 
   if (aBinding) {
     aContent->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
@@ -736,7 +736,7 @@ nsBindingManager::SetContentListFor(nsIContent* aContent,
   return SetOrRemoveObject(mContentListTable, aContent, contentList);
 }
 
-bool
+PRBool
 nsBindingManager::HasContentListFor(nsIContent* aContent)
 {
   return mContentListTable.ops && LookupObject(mContentListTable, aContent);
@@ -744,7 +744,7 @@ nsBindingManager::HasContentListFor(nsIContent* aContent)
 
 nsINodeList*
 nsBindingManager::GetAnonymousNodesInternal(nsIContent* aContent,
-                                            bool* aIsAnonymousContentList)
+                                            PRBool* aIsAnonymousContentList)
 { 
   nsINodeList* result = nsnull;
   if (mAnonymousNodesTable.ops) {
@@ -768,7 +768,7 @@ nsresult
 nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent,
                                        nsIDOMNodeList** aResult)
 {
-  bool dummy;
+  PRBool dummy;
   NS_IF_ADDREF(*aResult = GetAnonymousNodesInternal(aContent, &dummy));
   return NS_OK;
 }
@@ -776,7 +776,7 @@ nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent,
 nsINodeList*
 nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent)
 {
-  bool dummy;
+  PRBool dummy;
   return GetAnonymousNodesInternal(aContent, &dummy);
 }
 
@@ -802,7 +802,7 @@ nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent,
 
 nsINodeList*
 nsBindingManager::GetXBLChildNodesInternal(nsIContent* aContent,
-                                           bool* aIsAnonymousContentList)
+                                           PRBool* aIsAnonymousContentList)
 {
   PRUint32 length;
 
@@ -839,7 +839,7 @@ nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aRe
 nsINodeList*
 nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent)
 {
-  bool dummy;
+  PRBool dummy;
   return GetXBLChildNodesInternal(aContent, &dummy);
 }
 
@@ -855,7 +855,7 @@ nsBindingManager::GetInsertionPoint(nsIContent* aParent,
 nsIContent*
 nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent,
                                           PRUint32* aIndex,
-                                          bool* aMultipleInsertionPoints)
+                                          PRBool* aMultipleInsertionPoints)
 {
   nsXBLBinding *binding = GetBinding(aParent);
   if (binding)
@@ -878,7 +878,7 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, nsIURI* aURL,
 
   // Load the bindings.
   nsRefPtr<nsXBLBinding> binding;
-  bool dummy;
+  PRBool dummy;
   xblService->LoadBindings(aContent, aURL, aOriginPrincipal, PR_TRUE,
                            getter_AddRefs(binding), &dummy);
   if (binding) {
@@ -1290,7 +1290,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
 nsresult
 nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
                             RuleProcessorData* aData,
-                            bool* aCutOffInheritance)
+                            PRBool* aCutOffInheritance)
 {
   *aCutOffInheritance = PR_FALSE;
   
@@ -1386,7 +1386,7 @@ nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
 
 struct MediumFeaturesChangedData {
   nsPresContext *mPresContext;
-  bool *mRulesChanged;
+  PRBool *mRulesChanged;
 };
 
 static PLDHashOperator
@@ -1397,7 +1397,7 @@ EnumMediumFeaturesChanged(nsVoidPtrHashKey *aKey, void* aClosure)
   MediumFeaturesChangedData *data =
     static_cast<MediumFeaturesChangedData*>(aClosure);
 
-  bool thisChanged = ruleProcessor->MediumFeaturesChanged(data->mPresContext);
+  PRBool thisChanged = ruleProcessor->MediumFeaturesChanged(data->mPresContext);
   *data->mRulesChanged = *data->mRulesChanged || thisChanged;
 
   return PL_DHASH_NEXT;
@@ -1405,7 +1405,7 @@ EnumMediumFeaturesChanged(nsVoidPtrHashKey *aKey, void* aClosure)
 
 nsresult
 nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
-                                        bool* aRulesChanged)
+                                        PRBool* aRulesChanged)
 {
   *aRulesChanged = PR_FALSE;
   if (!mBindingTable.IsInitialized())
@@ -1471,7 +1471,7 @@ nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent,
 
 nsIContent*
 nsBindingManager::GetNestedSingleInsertionPoint(nsIContent* aParent,
-                                                bool* aMultipleInsertionPoints)
+                                                PRBool* aMultipleInsertionPoints)
 {
   *aMultipleInsertionPoints = PR_FALSE;
   
@@ -1500,7 +1500,7 @@ nsBindingManager::FindInsertionPointAndIndex(nsIContent* aContainer,
                                              PRInt32 aAppend,
                                              PRInt32* aInsertionIndex)
 {
-  bool isAnonymousContentList;
+  PRBool isAnonymousContentList;
   nsINodeList* nodeList =
     GetXBLChildNodesInternal(aInsertionParent, &isAnonymousContentList);
   if (!nodeList || !isAnonymousContentList) {
@@ -1570,7 +1570,7 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
     // It's not anonymous.
     NS_ASSERTION(aNewIndexInContainer >= 0, "Bogus index");
 
-    bool multiple;
+    PRBool multiple;
     nsIContent* ins = GetNestedSingleInsertionPoint(aContainer, &multiple);
 
     if (multiple) {
@@ -1616,7 +1616,7 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
 static void
 RemoveChildFromInsertionPoint(nsAnonymousContentList* aInsertionPointList,
                               nsIContent* aChild,
-                              bool aRemoveFromPseudoPoints)
+                              PRBool aRemoveFromPseudoPoints)
 {
   // We need to find the insertion point that contains aChild and remove it
   // from that insertion point.  Sadly, we don't know which point it is, or
@@ -1651,7 +1651,7 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
     nsCOMPtr<nsIContent> point = GetNestedInsertionPoint(aContainer, aChild);
 
     if (point) {
-      bool isAnonymousContentList;
+      PRBool isAnonymousContentList;
       nsCOMPtr<nsIDOMNodeList> nodeList =
         GetXBLChildNodesInternal(point, &isAnonymousContentList);
       
@@ -1795,7 +1795,7 @@ void
 nsBindingManager::HandleChildInsertion(nsIContent* aContainer,
                                        nsIContent* aChild,
                                        PRUint32 aIndexInContainer,
-                                       bool aAppend)
+                                       PRBool aAppend)
 {
   NS_PRECONDITION(aChild, "Must have child");
   NS_PRECONDITION(!aContainer ||

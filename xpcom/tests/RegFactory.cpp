@@ -45,7 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-static bool gUnreg = false;
+static PRBool gUnreg = PR_FALSE;
 
 void print_err(nsresult err)
 {

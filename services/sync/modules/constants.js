@@ -123,10 +123,6 @@ SCORE_INCREMENT_XLARGE:                300 + 1, //MULTI_DEVICE_THRESHOLD + 1
 // Delay before incrementing global score
 SCORE_UPDATE_DELAY:                    100,
 
-// Delay for the back observer debouncer. This is chosen to be longer than any
-// observed spurious idle/back events and short enough to pre-empt user activity.
-IDLE_OBSERVER_BACK_DELAY:              100,
-
 // Number of records to upload in a single POST (multiple POSTS if exceeded)
 // FIXME: Record size limit is 256k (new cluster), so this can be quite large!
 // (Bug 569295)
@@ -189,7 +185,6 @@ JPAKE_ERROR_NODATA:                    "jpake.error.nodata",
 JPAKE_ERROR_KEYMISMATCH:               "jpake.error.keymismatch",
 JPAKE_ERROR_WRONGMESSAGE:              "jpake.error.wrongmessage",
 JPAKE_ERROR_USERABORT:                 "jpake.error.userabort",
-JPAKE_ERROR_DELAYUNSUPPORTED:          "jpake.error.delayunsupported",
 
 // info types for Service.getStorageInfo
 INFO_COLLECTIONS:                      "collections",

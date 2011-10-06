@@ -66,7 +66,7 @@ public:
      * @return PR_TRUE if the node can propagate the specified
      * assertion.
      */
-    virtual bool CanPropagate(nsIRDFResource* aSource,
+    virtual PRBool CanPropagate(nsIRDFResource* aSource,
                                 nsIRDFResource* aProperty,
                                 nsIRDFNode* aTarget,
                                 Instantiation& aInitialBindings) const = 0;

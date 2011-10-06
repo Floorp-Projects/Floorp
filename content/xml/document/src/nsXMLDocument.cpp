@@ -103,7 +103,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   nsIURI* aDocumentURI,
                   nsIURI* aBaseURI,
                   nsIPrincipal* aPrincipal,
-                  bool aLoadedAsData,
+                  PRBool aLoadedAsData,
                   nsIScriptGlobalObject* aEventObject)
 {
   // Note: can't require that aDocumentURI/aBaseURI/aPrincipal be non-null,
@@ -115,8 +115,8 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   *aInstancePtrResult = nsnull;
 
   nsCOMPtr<nsIDocument> d;
-  bool isHTML = false;
-  bool isXHTML = false;
+  PRBool isHTML = PR_FALSE;
+  PRBool isXHTML = PR_FALSE;
   if (aDoctype) {
     nsAutoString publicId, name;
     aDoctype->GetPublicId(publicId);
@@ -279,7 +279,7 @@ nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 }
 
 NS_IMETHODIMP
-nsXMLDocument::GetAsync(bool *aAsync)
+nsXMLDocument::GetAsync(PRBool *aAsync)
 {
   NS_ENSURE_ARG_POINTER(aAsync);
   *aAsync = mAsync;
@@ -287,7 +287,7 @@ nsXMLDocument::GetAsync(bool *aAsync)
 }
 
 NS_IMETHODIMP
-nsXMLDocument::SetAsync(bool aAsync)
+nsXMLDocument::SetAsync(PRBool aAsync)
 {
   mAsync = aAsync;
   return NS_OK;
@@ -306,9 +306,9 @@ ReportUseOfDeprecatedMethod(nsIDocument *aDoc, const char* aWarning)
 }
 
 NS_IMETHODIMP
-nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
+nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 {
-  bool hasHadScriptObject = true;
+  PRBool hasHadScriptObject = PR_TRUE;
   nsIScriptGlobalObject* scriptObject =
     GetScriptHandlingObject(hasHadScriptObject);
   NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
@@ -368,7 +368,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
     // We're called from chrome, check to make sure the URI we're
     // about to load is also chrome.
 
-    bool isChrome = false;
+    PRBool isChrome = PR_FALSE;
     if (NS_FAILED(uri->SchemeIs("chrome", &isChrome)) || !isChrome) {
       nsCAutoString spec;
       if (mDocumentURI)
@@ -492,7 +492,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                  nsILoadGroup* aLoadGroup,
                                  nsISupports* aContainer,
                                  nsIStreamListener **aDocListener,
-                                 bool aReset,
+                                 PRBool aReset,
                                  nsIContentSink* aSink)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,

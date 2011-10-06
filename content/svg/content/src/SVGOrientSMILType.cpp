@@ -77,7 +77,7 @@ SVGOrientSMILType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
-bool
+PRBool
 SVGOrientSMILType::IsEqual(const nsSMILValue& aLeft,
                            const nsSMILValue& aRight) const
 {

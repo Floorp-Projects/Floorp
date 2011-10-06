@@ -72,10 +72,10 @@ protected:
   nsString mTextCriteria;
   PRInt32 mResultCount;
   PRUint32 mPropertyCount;
-  bool mIsActive;
-  bool mHoldResults;
-  bool mReturnRelativeURLs;
-  bool mNormalizeChromeURLs;
+  PRBool mIsActive;
+  PRBool mHoldResults;
+  PRBool mReturnRelativeURLs;
+  PRBool mNormalizeChromeURLs;
 
   nsresult InitSearch();
   nsresult KillSearch(PRInt16 aResult);

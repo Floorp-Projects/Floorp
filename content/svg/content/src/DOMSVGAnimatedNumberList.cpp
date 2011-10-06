@@ -149,7 +149,7 @@ DOMSVGAnimatedNumberList::InternalAnimValListWillChangeTo(const SVGNumberList& a
   }
 }
 
-bool
+PRBool
 DOMSVGAnimatedNumberList::IsAnimating() const
 {
   return InternalAList().IsAnimating();

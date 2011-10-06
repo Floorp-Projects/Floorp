@@ -111,7 +111,7 @@ public:
     : width(aWidth)
     , height(aHeight)
   {}
-  bool operator!=(const svgFloatSize& rhs) {
+  PRBool operator!=(const svgFloatSize& rhs) {
     return width != rhs.width || height != rhs.height;
   }
   float width;
@@ -186,20 +186,26 @@ public:
 #endif // MOZ_SMIL
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 #ifdef MOZ_SMIL
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 #endif // MOZ_SMIL
 
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
+  virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeViewBox(PRBool aDoSetAttr);
+  virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
+
+  virtual void DidAnimateViewBox();
+  virtual void DidAnimatePreserveAspectRatio();
   
   // nsSVGSVGElement methods:
   float GetLength(PRUint8 mCtxType);
 
   // public helpers:
   gfxMatrix GetViewBoxTransform() const;
-  bool      HasValidViewbox() const { return mViewBox.IsValid(); }
+  PRBool    HasValidViewbox() const { return mViewBox.IsValid(); }
 
   // This services any pending notifications for the transform on on this root
   // <svg> node needing to be recalculated.  (Only applicable in
@@ -231,22 +237,22 @@ private:
   // if we're the outermost <svg> in an image document, and we're not currently
   // being painted by an <svg:image> element). This method also assumes that we
   // lack a valid viewBox attribute.
-  bool ShouldSynthesizeViewBox() const;
+  PRBool ShouldSynthesizeViewBox() const;
 
 protected:
   // nsSVGElement overrides
-  bool IsEventName(nsIAtom* aName);
+  PRBool IsEventName(nsIAtom* aName);
 
 #ifdef MOZ_SMIL
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
 #endif // MOZ_SMIL
 
   // implementation helpers:
 
-  bool IsRoot() const {
+  PRBool IsRoot() const {
     NS_ASSERTION((IsInDoc() && !GetParent()) ==
                  (GetOwnerDoc() && (GetOwnerDoc()->GetRootElement() == this)),
                  "Can't determine if we're root");
@@ -257,7 +263,7 @@ protected:
    * Returns true if this is an SVG <svg> element that is the child of
    * another non-foreignObject SVG element.
    */
-  bool IsInner() const {
+  PRBool IsInner() const {
     const nsIContent *parent = GetFlattenedTreeParent();
     return parent && parent->GetNameSpaceID() == kNameSpaceID_SVG &&
            parent->Tag() != nsGkAtoms::foreignObject;
@@ -273,7 +279,7 @@ protected:
    * basically a simplified version of GetOwnerSVGElement that uses the parent
    * parameters passed in instead.
    */
-  bool WillBeOutermostSVG(nsIContent* aParent,
+  PRBool WillBeOutermostSVG(nsIContent* aParent,
                             nsIContent* aBindingParent) const;
 #endif // MOZ_SMIL
 
@@ -283,7 +289,7 @@ protected:
   // Returns PR_TRUE if we have at least one of the following:
   // - a (valid or invalid) value for the preserveAspectRatio attribute
   // - a SMIL-animated value for the preserveAspectRatio attribute
-  bool HasPreserveAspectRatio();
+  PRBool HasPreserveAspectRatio();
 
   virtual LengthAttributesInfo GetLengthInfo();
 
@@ -336,10 +342,10 @@ protected:
   // the onload event in accordance with the SVG spec, but for <svg> elements
   // created by script or promoted from inner <svg> to outermost <svg> we need
   // to manually kick off animation when they are bound to the tree.
-  bool                              mStartAnimationOnBindToTree;
+  PRPackedBool                      mStartAnimationOnBindToTree;
 #endif // MOZ_SMIL
-  bool                              mImageNeedsTransformInvalidation;
-  bool                              mIsPaintingSVGImageElement;
+  PRPackedBool                      mImageNeedsTransformInvalidation;
+  PRPackedBool                      mIsPaintingSVGImageElement;
 };
 
 #endif

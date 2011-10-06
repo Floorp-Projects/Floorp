@@ -78,10 +78,10 @@ using mozilla::crashreporter::LSPAnnotate;
 
 //-------------------------------------------------------------------------
 
-static bool PeekUIMessage(MSG* aMsg)
+static PRBool PeekUIMessage(MSG* aMsg)
 {
   MSG keyMsg, imeMsg, mouseMsg, *pMsg = 0;
-  bool haveKeyMsg, haveIMEMsg, haveMouseMsg;
+  PRBool haveKeyMsg, haveIMEMsg, haveMouseMsg;
 
   haveKeyMsg = ::PeekMessageW(&keyMsg, NULL, WM_KEYFIRST, WM_IME_KEYLAST, PM_NOREMOVE);
   haveIMEMsg = ::PeekMessageW(&imeMsg, NULL, NS_WM_IMEFIRST, NS_WM_IMELAST, PM_NOREMOVE);
@@ -95,7 +95,7 @@ static bool PeekUIMessage(MSG* aMsg)
   }
 
   if (pMsg && !nsIMM32Handler::CanOptimizeKeyAndIMEMessages(pMsg)) {
-    return false;
+    return PR_FALSE;
   }
 
   if (haveMouseMsg && (!pMsg || mouseMsg.time < pMsg->time)) {
@@ -103,7 +103,7 @@ static bool PeekUIMessage(MSG* aMsg)
   }
 
   if (!pMsg) {
-    return false;
+    return PR_FALSE;
   }
 
   return ::PeekMessageW(aMsg, NULL, pMsg->message, pMsg->message, PM_REMOVE);
@@ -212,17 +212,17 @@ CollectNewLoadedModules()
 
   // Now walk the module list of the process,
   // and display information about each module
-  bool done = !Module32FirstW(hModuleSnap, &module);
+  PRBool done = !Module32FirstW(hModuleSnap, &module);
   while (!done) {
     NS_LossyConvertUTF16toASCII moduleName(module.szModule);
-    bool found = false;
+    PRBool found = PR_FALSE;
     PRUint32 i;
     for (i = 0; i < NUM_LOADEDMODULEINFO &&
                 sLoadedModules[i].mStartAddr; ++i) {
       if (sLoadedModules[i].mStartAddr == module.modBaseAddr &&
           !strcmp(moduleName.get(),
                   sLoadedModules[i].mName)) {
-        found = true;
+        found = PR_TRUE;
         break;
       }
     }
@@ -300,9 +300,9 @@ nsAppShell::DoProcessMoreGeckoEvents()
   // gecko events get processed.
   if (mEventloopNestingLevel < 2) {
     OnDispatchedEvent(nsnull);
-    mNativeCallbackPending = false;
+    mNativeCallbackPending = PR_FALSE;
   } else {
-    mNativeCallbackPending = true;
+    mNativeCallbackPending = PR_TRUE;
   }
 }
 
@@ -317,12 +317,12 @@ nsAppShell::ScheduleNativeEventCallback()
   ::PostMessage(mEventWnd, sMsgId, 0, reinterpret_cast<LPARAM>(this));
 }
 
-bool
-nsAppShell::ProcessNextNativeEvent(bool mayWait)
+PRBool
+nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
 #if defined(_MSC_VER) && defined(_M_IX86)
   if (sXPCOMHasLoadedNewDLLs && sLoadedModules) {
-    sXPCOMHasLoadedNewDLLs = false;
+    sXPCOMHasLoadedNewDLLs = PR_FALSE;
     CollectNewLoadedModules();
   }
 #endif
@@ -330,14 +330,14 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
   // Notify ipc we are spinning a (possibly nested) gecko event loop.
   mozilla::ipc::RPCChannel::NotifyGeckoEventDispatch();
 
-  bool gotMessage = false;
+  PRBool gotMessage = PR_FALSE;
 
   do {
     MSG msg;
     // Give priority to keyboard and mouse messages.
     if (PeekUIMessage(&msg) ||
         ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
-      gotMessage = true;
+      gotMessage = PR_TRUE;
       if (msg.message == WM_QUIT) {
         ::PostQuitMessage(msg.wParam);
         Exit();

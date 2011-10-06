@@ -83,18 +83,18 @@ public:
     return mMeetOrSlice;
   };
 
-  void SetDefer(bool aDefer) {
+  void SetDefer(PRBool aDefer) {
     mDefer = aDefer;
   };
 
-  bool GetDefer() const {
+  PRBool GetDefer() const {
     return mDefer;
   };
 
 private:
   PRUint8 mAlign;
   PRUint8 mMeetOrSlice;
-  bool mDefer;
+  PRPackedBool mDefer;
 };
 
 class SVGAnimatedPreserveAspectRatio
@@ -111,7 +111,7 @@ public:
 
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              PRBool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue);
 
   nsresult SetBaseAlign(PRUint16 aAlign, nsSVGElement *aSVGElement);
@@ -122,9 +122,9 @@ public:
     { return mBaseVal; }
   const SVGPreserveAspectRatio &GetAnimValue() const
     { return mAnimVal; }
-  bool IsAnimated() const
+  PRBool IsAnimated() const
     { return mIsAnimated; }
-  bool IsExplicitlySet() const
+  PRBool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
 
   nsresult ToDOMAnimatedPreserveAspectRatio(
@@ -139,8 +139,8 @@ private:
 
   SVGPreserveAspectRatio mAnimVal;
   SVGPreserveAspectRatio mBaseVal;
-  bool mIsAnimated;
-  bool mIsBaseSet;
+  PRPackedBool mIsAnimated;
+  PRPackedBool mIsBaseSet;
 
   nsresult ToDOMBaseVal(nsIDOMSVGPreserveAspectRatio **aResult,
                         nsSVGElement* aSVGElement);
@@ -245,7 +245,7 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const;
+                                     PRBool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

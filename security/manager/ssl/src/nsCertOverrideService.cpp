@@ -256,7 +256,7 @@ nsCertOverrideService::Read()
   }
 
   nsCAutoString buffer;
-  bool isMore = true;
+  PRBool isMore = PR_TRUE;
   PRInt32 hostIndex = 0, algoIndex, fingerprintIndex, overrideBitsIndex, dbKeyIndex;
 
   /* file format is:
@@ -494,7 +494,7 @@ NS_IMETHODIMP
 nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, PRInt32 aPort, 
                                                 nsIX509Cert *aCert,
                                                 PRUint32 aOverrideBits, 
-                                                bool aTemporary)
+                                                PRBool aTemporary)
 {
   NS_ENSURE_ARG_POINTER(aCert);
   if (aHostName.IsEmpty())
@@ -573,8 +573,8 @@ NS_IMETHODIMP
 nsCertOverrideService::HasMatchingOverride(const nsACString & aHostName, PRInt32 aPort,
                                            nsIX509Cert *aCert, 
                                            PRUint32 *aOverrideBits,
-                                           bool *aIsTemporary,
-                                           bool *_retval)
+                                           PRBool *aIsTemporary,
+                                           PRBool *_retval)
 {
   if (aHostName.IsEmpty())
     return NS_ERROR_INVALID_ARG;
@@ -626,8 +626,8 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, PRInt32
                                            nsACString & aHashAlg, 
                                            nsACString & aFingerprint, 
                                            PRUint32 *aOverrideBits,
-                                           bool *aIsTemporary,
-                                           bool *_found)
+                                           PRBool *aIsTemporary,
+                                           PRBool *_found)
 {
   NS_ENSURE_ARG_POINTER(_found);
   NS_ENSURE_ARG_POINTER(aIsTemporary);
@@ -662,7 +662,7 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, PRInt32
 nsresult
 nsCertOverrideService::AddEntryToList(const nsACString &aHostName, PRInt32 aPort,
                                       nsIX509Cert *aCert,
-                                      const bool aIsTemporary,
+                                      const PRBool aIsTemporary,
                                       const nsACString &fingerprintAlgOID, 
                                       const nsACString &fingerprint,
                                       nsCertOverride::OverrideBits ob,
@@ -722,7 +722,7 @@ nsCertOverrideService::GetAllOverrideHostsWithPorts(PRUint32 *aCount,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-static bool
+static PRBool
 matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
 {
   char *dbkey = NULL;
@@ -730,7 +730,7 @@ matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
   if (NS_FAILED(rv) || !dbkey)
     return PR_FALSE;
 
-  bool found_mismatch = false;
+  PRBool found_mismatch = PR_FALSE;
   const char *key1 = dbkey;
   const char *key2 = match_dbkey;
 
@@ -773,8 +773,8 @@ matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
 struct nsCertAndBoolsAndInt
 {
   nsIX509Cert *cert;
-  bool aCheckTemporaries;
-  bool aCheckPermanents;
+  PRBool aCheckTemporaries;
+  PRBool aCheckPermanents;
   PRUint32 counter;
 
   SECOidTag mOidTagForStoringNewHashes;
@@ -790,7 +790,7 @@ FindMatchingCertCallback(nsCertOverrideEntry *aEntry,
   if (cai && aEntry)
   {
     const nsCertOverride &settings = aEntry->mSettings;
-    bool still_ok = true;
+    PRBool still_ok = PR_TRUE;
 
     if ((settings.mIsTemporary && !cai->aCheckTemporaries)
         ||
@@ -821,8 +821,8 @@ FindMatchingCertCallback(nsCertOverrideEntry *aEntry,
 
 NS_IMETHODIMP
 nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert *aCert, 
-                                              bool aCheckTemporaries,
-                                              bool aCheckPermanents,
+                                              PRBool aCheckTemporaries,
+                                              PRBool aCheckPermanents,
                                               PRUint32 *_retval)
 {
   NS_ENSURE_ARG(aCert);

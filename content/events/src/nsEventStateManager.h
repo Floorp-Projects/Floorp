@@ -138,9 +138,9 @@ public:
    *                  frame reconstructions that may occur, but this does not
    *                  affect the return value.
    */
-  bool SetContentState(nsIContent *aContent, nsEventStates aState);
+  PRBool SetContentState(nsIContent *aContent, nsEventStates aState);
   void ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
-  bool EventStatusOK(nsGUIEvent* aEvent);
+  PRBool EventStatusOK(nsGUIEvent* aEvent);
 
   /**
    * Register accesskey on the given element. When accesskey is activated then
@@ -167,11 +167,11 @@ public:
    */
   PRUint32 GetRegisteredAccessKey(nsIContent* aContent);
 
-  bool GetAccessKeyLabelPrefix(nsAString& aPrefix);
+  PRBool GetAccessKeyLabelPrefix(nsAString& aPrefix);
 
   nsresult SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
-                     bool aHaveHotspot, float aHotspotX, float aHotspotY,
-                     nsIWidget* aWidget, bool aLockCursor); 
+                     PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
+                     nsIWidget* aWidget, PRBool aLockCursor); 
 
   static void StartHandlingUserInput()
   {
@@ -189,7 +189,7 @@ public:
     }
   }
 
-  static bool IsHandlingUserInput()
+  static PRBool IsHandlingUserInput()
   {
     if (sUserInputEventDepth <= 0) {
       return PR_FALSE;
@@ -209,7 +209,7 @@ public:
    * dom.event.handling-user-input-time-limit pref (default 1 second), this
    * function also returns false.
    */
-  NS_IMETHOD_(bool) IsHandlingUserInputExternal() { return IsHandlingUserInput(); }
+  NS_IMETHOD_(PRBool) IsHandlingUserInputExternal() { return IsHandlingUserInput(); }
   
   nsPresContext* GetPresContext() { return mPresContext; }
 
@@ -226,7 +226,7 @@ public:
                                nsIContent* aContent);
 
   // Sets the full-screen event state on aElement to aIsFullScreen.
-  static void SetFullScreenState(mozilla::dom::Element* aElement, bool aIsFullScreen);
+  static void SetFullScreenState(mozilla::dom::Element* aElement, PRBool aIsFullScreen);
 
 protected:
   friend class MouseEnterLeaveDispatcher;
@@ -321,15 +321,15 @@ protected:
                        ProcessingAccessKeyState aAccessKeyState,
                        PRInt32 aModifierMask);
 
-  bool ExecuteAccessKey(nsTArray<PRUint32>& aAccessCharCodes,
-                          bool aIsTrustedEvent);
+  PRBool ExecuteAccessKey(nsTArray<PRUint32>& aAccessCharCodes,
+                          PRBool aIsTrustedEvent);
 
   //---------------------------------------------
   // DocShell Focus Traversal Methods
   //---------------------------------------------
 
   nsIContent* GetFocusedContent();
-  bool IsShellVisible(nsIDocShell* aShell);
+  PRBool IsShellVisible(nsIDocShell* aShell);
 
   // These functions are for mousewheel and pixel scrolling
   void SendLineScrollEvent(nsIFrame* aTargetFrame,
@@ -352,7 +352,7 @@ protected:
   nsresult DoScrollText(nsIFrame* aTargetFrame,
                         nsMouseScrollEvent* aMouseEvent,
                         nsIScrollableFrame::ScrollUnit aScrollQuantity,
-                        bool aAllowScrollSpeedOverride,
+                        PRBool aAllowScrollSpeedOverride,
                         nsQueryContentEvent* aQueryEvent = nsnull);
   void DoScrollHistory(PRInt32 direction);
   void DoScrollZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
@@ -374,7 +374,7 @@ protected:
    * @param aUseSystemSettings    Set the result of UseSystemScrollSettingFor().
    */
   PRInt32 ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent,
-                                bool aUseSystemSettings);
+                                PRBool aUseSystemSettings);
   /**
    * Gets the wheel action for the aMouseEvent ONLY with the pref.
    * When you actually do something for the event, probably you should use
@@ -391,7 +391,7 @@ protected:
    * Whether use system scroll settings or settings in our prefs for the event.
    * TRUE, if use system scroll settings.  Otherwise, FALSE.
    */
-  bool UseSystemScrollSettingFor(nsMouseScrollEvent* aMouseEvent);
+  PRBool UseSystemScrollSettingFor(nsMouseScrollEvent* aMouseEvent);
   // end mousewheel functions
 
   /*
@@ -424,8 +424,8 @@ protected:
   void DetermineDragTarget(nsPresContext* aPresContext,
                            nsIContent* aSelectionTarget,
                            nsDOMDataTransfer* aDataTransfer,
-                           bool* aIsSelection,
-                           bool* aIsInEditor,
+                           PRBool* aIsSelection,
+                           PRBool* aIsInEditor,
                            nsIContent** aTargetNode);
 
   /*
@@ -438,13 +438,13 @@ protected:
    * aDragTarget - the target of the drag
    * aIsSelection - true if a selection is being dragged
    */
-  bool DoDefaultDragStart(nsPresContext* aPresContext,
+  PRBool DoDefaultDragStart(nsPresContext* aPresContext,
                             nsDragEvent* aDragEvent,
                             nsDOMDataTransfer* aDataTransfer,
                             nsIContent* aDragTarget,
-                            bool aIsSelection);
+                            PRBool aIsSelection);
 
-  bool IsTrackingDragGesture ( ) const { return mGestureDownContent != nsnull; }
+  PRBool IsTrackingDragGesture ( ) const { return mGestureDownContent != nsnull; }
   /**
    * Set the fields of aEvent to reflect the mouse position and modifier keys
    * that were set when the user first pressed the mouse button (stored by
@@ -460,25 +460,25 @@ protected:
                                nsIFrame* aTargetFrame);
   void DoQuerySelectedText(nsQueryContentEvent* aEvent);
 
-  bool RemoteQueryContentEvent(nsEvent *aEvent);
+  PRBool RemoteQueryContentEvent(nsEvent *aEvent);
   mozilla::dom::TabParent *GetCrossProcessTarget();
-  bool IsTargetCrossProcess(nsGUIEvent *aEvent);
+  PRBool IsTargetCrossProcess(nsGUIEvent *aEvent);
 
   void DispatchCrossProcessEvent(nsEvent* aEvent, nsIFrameLoader* remote);
-  bool IsRemoteTarget(nsIContent* target);
-  bool HandleCrossProcessEvent(nsEvent *aEvent,
+  PRBool IsRemoteTarget(nsIContent* target);
+  PRBool HandleCrossProcessEvent(nsEvent *aEvent,
                                  nsIFrame* aTargetFrame,
                                  nsEventStatus *aStatus);
 
 private:
   static inline void DoStateChange(mozilla::dom::Element* aElement,
-                                   nsEventStates aState, bool aAddState);
+                                   nsEventStates aState, PRBool aAddState);
   static inline void DoStateChange(nsIContent* aContent, nsEventStates aState,
-                                   bool aAddState);
+                                   PRBool aAddState);
   static void UpdateAncestorState(nsIContent* aStartNode,
                                   nsIContent* aStopBefore,
                                   nsEventStates aState,
-                                  bool aAddState);
+                                  PRBool aAddState);
 
   PRInt32     mLockCursor;
 
@@ -486,7 +486,7 @@ private:
   nsCOMPtr<nsIContent> mCurrentTargetContent;
   nsWeakFrame mLastMouseOverFrame;
   nsCOMPtr<nsIContent> mLastMouseOverElement;
-  static nsWeakFrame sLastDragOverFrame;
+  nsWeakFrame mLastDragOverFrame;
 
   // member variables for the d&d gesture state machine
   nsIntPoint mGestureDownPoint; // screen coordinates
@@ -497,10 +497,10 @@ private:
   // an <area> of an image map this is the image. (bug 289667)
   nsCOMPtr<nsIContent> mGestureDownFrameOwner;
   // State of keys when the original gesture-down happened
-  bool mGestureDownShift;
-  bool mGestureDownControl;
-  bool mGestureDownAlt;
-  bool mGestureDownMeta;
+  PRPackedBool mGestureDownShift;
+  PRPackedBool mGestureDownControl;
+  PRPackedBool mGestureDownAlt;
+  PRPackedBool mGestureDownMeta;
 
   nsCOMPtr<nsIContent> mLastLeftMouseDownContent;
   nsCOMPtr<nsIContent> mLastLeftMouseDownContentParent;
@@ -511,7 +511,7 @@ private:
 
   nsCOMPtr<nsIContent> mActiveContent;
   nsCOMPtr<nsIContent> mHoverContent;
-  static nsCOMPtr<nsIContent> sDragOverContent;
+  nsCOMPtr<nsIContent> mDragOverContent;
   nsCOMPtr<nsIContent> mURLTargetContent;
 
   // The last element on which we fired a mouseover event, or null if
@@ -529,7 +529,7 @@ private:
   PRUint32 mMClickCount;
   PRUint32 mRClickCount;
 
-  bool m_haveShutdown;
+  PRPackedBool m_haveShutdown;
 
   // Time at which we began handling user input.
   static TimeStamp sHandlingInputStart;
@@ -540,19 +540,19 @@ public:
   nsCOMArray<nsIContent> mAccessKeys;
 
   // Unlocks pixel scrolling
-  bool mLastLineScrollConsumedX;
-  bool mLastLineScrollConsumedY;
+  PRPackedBool mLastLineScrollConsumedX;
+  PRPackedBool mLastLineScrollConsumedY;
 
   static PRInt32 sUserInputEventDepth;
   
-  static bool sNormalLMouseEventInProcess;
+  static PRBool sNormalLMouseEventInProcess;
 
   static nsEventStateManager* sActiveESM;
   
   static void ClearGlobalActiveContent(nsEventStateManager* aClearer);
 
   // Functions used for click hold context menus
-  bool mClickHoldContextMenu;
+  PRBool mClickHoldContextMenu;
   nsCOMPtr<nsITimer> mClickHoldTimer;
   void CreateClickHoldTimer ( nsPresContext* aPresContext, nsIFrame* inDownFrame,
                               nsGUIEvent* inMouseDownEvent ) ;
@@ -568,7 +568,7 @@ public:
 class nsAutoHandlingUserInputStatePusher
 {
 public:
-  nsAutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
+  nsAutoHandlingUserInputStatePusher(PRBool aIsHandlingUserInput,
                                      nsEvent* aEvent,
                                      nsIDocument* aDocument)
     : mIsHandlingUserInput(aIsHandlingUserInput),
@@ -608,9 +608,9 @@ public:
   }
 
 protected:
-  bool mIsHandlingUserInput;
-  bool mIsMouseDown;
-  bool mResetFMMouseDownState;
+  PRBool mIsHandlingUserInput;
+  PRBool mIsMouseDown;
+  PRBool mResetFMMouseDownState;
 
 private:
   // Hide so that this class can only be stack-allocated

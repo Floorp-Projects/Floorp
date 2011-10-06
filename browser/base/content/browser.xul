@@ -232,6 +232,7 @@
            noautohide="true"
            titlebar="normal"
            close="true"
+           onpopuphiding="InspectorUI.closeInspectorUI();"
            label="&inspectPanelTitle.label;">
       <hbox id="tree-panel-resizer-box" align="end">
         <spacer flex="1" />
@@ -956,7 +957,7 @@
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
                   onclick="return contentAreaClick(event, false);"/>
-      <statuspanel id="statusbar-display" inactive="true"/>
+      <statuspanel id="statusbar-display" label=""/>
     </vbox>
     <vbox id="browser-border-end" hidden="true" layer="true"/>
   </hbox>

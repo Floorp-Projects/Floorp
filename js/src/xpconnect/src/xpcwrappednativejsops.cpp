@@ -812,7 +812,7 @@ XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
     XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
     if(si && si->GetFlags().WantEquality())
     {
-        bool res;
+        PRBool res;
         nsresult rv = si->GetCallback()->Equality(wrapper, cx, obj, v, &res);
         if(NS_FAILED(rv))
             return Throw(rv, cx);
@@ -834,7 +834,7 @@ static JSObject *
 XPC_WN_OuterObject(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative *wrapper =
-        static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj));
+        static_cast<XPCWrappedNative *>(obj->getPrivate());
     if(!wrapper)
     {
         Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
@@ -970,7 +970,7 @@ XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, J
     XPCWrappedNative* wrapper =                                              \
         XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, obj);       \
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                            \
-    bool retval = JS_TRUE;                                                 \
+    PRBool retval = JS_TRUE;                                                 \
     nsresult rv = wrapper->GetScriptableCallback()->
 
 #define PRE_HELPER_STUB                                                      \
@@ -987,7 +987,7 @@ XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, J
         THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                        \
         si = wrapper->GetScriptableCallback();                               \
     }                                                                        \
-    bool retval = JS_TRUE;                                                 \
+    PRBool retval = JS_TRUE;                                                 \
     nsresult rv = si->
 
 #define POST_HELPER_STUB                                                     \
@@ -1088,7 +1088,7 @@ static JSBool
 XPC_WN_Helper_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
 {
     SLIM_LOG_WILL_MORPH(cx, obj);
-    bool retval2;
+    PRBool retval2;
     PRE_HELPER_STUB_NO_SLIM
     HasInstance(wrapper, cx, obj, *valp, &retval2, &retval);
     *bp = retval2;
@@ -1129,7 +1129,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                          JSObject **objp)
 {
     nsresult rv = NS_OK;
-    bool retval = JS_TRUE;
+    PRBool retval = JS_TRUE;
     JSObject* obj2FromScriptable = nsnull;
     if(IS_SLIM_WRAPPER(obj))
     {
@@ -1273,14 +1273,14 @@ JSBool
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                       jsval *statep, jsid *idp)
 {
-    js::Class *clazz = js::GetObjectClass(obj);
+    js::Class *clazz = obj->getClass();
     if(!IS_WRAPPER_CLASS(clazz) || clazz == &XPC_WN_NoHelper_JSClass)
     {
         // obj must be a prototype object or a wrapper w/o a
         // helper. Short circuit this call to the default
         // implementation.
 
-        return JS_EnumerateState(cx, obj, enum_op, statep, idp);
+        return js_Enumerate(cx, obj, enum_op, statep, idp);
     }
 
     MORPH_SLIM_WRAPPER(cx, obj);
@@ -1293,7 +1293,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     if(!si)
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
-    bool retval = JS_TRUE;
+    PRBool retval = JS_TRUE;
     nsresult rv;
 
     if(si->GetFlags().WantNewEnumerate())
@@ -1353,7 +1353,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     // else call js_ObjectOps.enumerate...
 
-    return JS_EnumerateState(cx, obj, enum_op, statep, idp);
+    return js_Enumerate(cx, obj, enum_op, statep, idp);
 }
 
 JSType
@@ -1418,7 +1418,8 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     if(!XPCPerThreadData::IsMainThread(cx))
         return obj;
 
-    return JS_ObjectToOuterObject(cx, obj);
+    OBJ_TO_OUTER_OBJECT(cx, obj);
+    return obj;
 }
 
 /***************************************************************************/
@@ -1684,10 +1685,10 @@ static JSBool
 XPC_WN_Shared_Proto_Enumerate(JSContext *cx, JSObject *obj)
 {
     NS_ASSERTION(
-        js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
-        js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass ||
-        js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
-        js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
+        obj->getClass() == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
+        obj->getClass() == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass ||
+        obj->getClass() == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
+        obj->getClass() == &XPC_WN_NoMods_NoCall_Proto_JSClass,
         "bad proto");
     XPCWrappedNativeProto* self =
         (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
@@ -1749,8 +1750,8 @@ static JSBool
 XPC_WN_ModsAllowed_Proto_Resolve(JSContext *cx, JSObject *obj, jsid id)
 {
     NS_ASSERTION(
-        js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
-        js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass,
+        obj->getClass() == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
+        obj->getClass() == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass,
         "bad proto");
 
     XPCWrappedNativeProto* self =
@@ -1833,8 +1834,8 @@ js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
 static JSBool
 XPC_WN_OnlyIWrite_Proto_AddPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
-                 js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
+    NS_ASSERTION(obj->getClass() == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
+                 obj->getClass() == &XPC_WN_NoMods_NoCall_Proto_JSClass,
                  "bad proto");
 
     XPCWrappedNativeProto* self =
@@ -1864,8 +1865,8 @@ XPC_WN_OnlyIWrite_Proto_SetPropertyStub(JSContext *cx, JSObject *obj, jsid id, J
 static JSBool
 XPC_WN_NoMods_Proto_Resolve(JSContext *cx, JSObject *obj, jsid id)
 {
-    NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
-                 js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
+    NS_ASSERTION(obj->getClass() == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
+                 obj->getClass() == &XPC_WN_NoMods_NoCall_Proto_JSClass,
                  "bad proto");
 
     XPCWrappedNativeProto* self =

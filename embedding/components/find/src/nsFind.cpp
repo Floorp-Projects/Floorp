@@ -108,7 +108,7 @@ PR_STATIC_ASSERT(CH_SHY <= 255);
 class nsFindContentIterator : public nsIContentIterator
 {
 public:
-  nsFindContentIterator(bool aFindBackward)
+  nsFindContentIterator(PRBool aFindBackward)
     : mStartOffset(0),
       mEndOffset(0),
       mFindBackward(aFindBackward)
@@ -146,7 +146,7 @@ public:
   virtual void Next();
   virtual void Prev();
   virtual nsINode* GetCurrentNode();
-  virtual bool IsDone();
+  virtual PRBool IsDone();
   virtual nsresult PositionAt(nsINode* aCurNode);
 
 private:
@@ -161,7 +161,7 @@ private:
   
   nsCOMPtr<nsIContent> mStartOuterContent;
   nsCOMPtr<nsIContent> mEndOuterContent;
-  bool mFindBackward;
+  PRBool mFindBackward;
 
   void Reset();
   void MaybeSetupInnerIterator();
@@ -252,7 +252,7 @@ nsFindContentIterator::GetCurrentNode()
   return mOuterIterator->GetCurrentNode();
 }
 
-bool
+PRBool
 nsFindContentIterator::IsDone() {
   if (mInnerIterator && !mInnerIterator->IsDone()) {
     return PR_FALSE;
@@ -447,7 +447,7 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
 }
 
 nsresult
-NS_NewFindContentIterator(bool aFindBackward,
+NS_NewFindContentIterator(PRBool aFindBackward,
                           nsIContentIterator** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -569,7 +569,7 @@ nsFind::InitIterator(nsIDOMNode* aStartNode, PRInt32 aStartOffset,
 
 /* attribute boolean findBackward; */
 NS_IMETHODIMP
-nsFind::GetFindBackwards(bool *aFindBackward)
+nsFind::GetFindBackwards(PRBool *aFindBackward)
 {
   if (!aFindBackward)
     return NS_ERROR_NULL_POINTER;
@@ -578,7 +578,7 @@ nsFind::GetFindBackwards(bool *aFindBackward)
   return NS_OK;
 }
 NS_IMETHODIMP
-nsFind::SetFindBackwards(bool aFindBackward)
+nsFind::SetFindBackwards(PRBool aFindBackward)
 {
   mFindBackward = aFindBackward;
   return NS_OK;
@@ -586,7 +586,7 @@ nsFind::SetFindBackwards(bool aFindBackward)
 
 /* attribute boolean caseSensitive; */
 NS_IMETHODIMP
-nsFind::GetCaseSensitive(bool *aCaseSensitive)
+nsFind::GetCaseSensitive(PRBool *aCaseSensitive)
 {
   if (!aCaseSensitive)
     return NS_ERROR_NULL_POINTER;
@@ -595,7 +595,7 @@ nsFind::GetCaseSensitive(bool *aCaseSensitive)
   return NS_OK;
 }
 NS_IMETHODIMP
-nsFind::SetCaseSensitive(bool aCaseSensitive)
+nsFind::SetCaseSensitive(PRBool aCaseSensitive)
 {
   mCaseSensitive = aCaseSensitive;
   return NS_OK;
@@ -636,7 +636,7 @@ nsFind::SetWordBreaker(nsIWordBreaker* aWordBreaker)
 nsresult
 nsFind::NextNode(nsIDOMRange* aSearchRange,
                  nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
-                 bool aContinueOk)
+                 PRBool aContinueOk)
 {
   nsresult rv;
 
@@ -778,7 +778,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
   return NS_OK;
 }
 
-bool nsFind::IsBlockNode(nsIContent* aContent)
+PRBool nsFind::IsBlockNode(nsIContent* aContent)
 {
   if (!aContent->IsHTML()) {
     return PR_FALSE;
@@ -798,12 +798,12 @@ bool nsFind::IsBlockNode(nsIContent* aContent)
       return PR_FALSE;
   }
 
-  bool isBlock = false;
+  PRBool isBlock = PR_FALSE;
   mParserService->IsBlock(mParserService->HTMLAtomTagToId(atom), isBlock);
   return isBlock;
 }
 
-bool nsFind::IsTextNode(nsIDOMNode* aNode)
+PRBool nsFind::IsTextNode(nsIDOMNode* aNode)
 {
   PRUint16 nodeType;
   aNode->GetNodeType(&nodeType);
@@ -812,7 +812,7 @@ bool nsFind::IsTextNode(nsIDOMNode* aNode)
          nodeType == nsIDOMNode::CDATA_SECTION_NODE;
 }
 
-bool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
+PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
   if (!content)
@@ -827,7 +827,7 @@ bool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
   return frame->GetStyleVisibility()->IsVisible();
 }
 
-bool nsFind::SkipNode(nsIContent* aContent)
+PRBool nsFind::SkipNode(nsIContent* aContent)
 {
   nsIAtom *atom;
 
@@ -970,7 +970,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
 
   // Keep track of when we're in whitespace:
   // (only matters when we're matching)
-  bool inWhitespace = false;
+  PRBool inWhitespace = PR_FALSE;
 
   // Place to save the range start point in case we find a match:
   nsCOMPtr<nsIDOMNode> matchAnchorNode;

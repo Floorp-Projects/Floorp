@@ -510,11 +510,11 @@ PRInt32 CaseInsensitiveCompare(const char *aLeft,
   return 0;
 }
 
-bool
+PRBool
 CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
                               const char* aLeftEnd, const char* aRightEnd,
                               const char** aLeftNext, const char** aRightNext,
-                              bool* aErr)
+                              PRBool* aErr)
 {
   NS_ASSERTION(aLeftNext, "Out pointer shouldn't be null.");
   NS_ASSERTION(aRightNext, "Out pointer shouldn't be null.");

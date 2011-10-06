@@ -55,7 +55,7 @@
 
 static PRDescIdentity	nsSOCKSIOLayerIdentity;
 static PRIOMethods	nsSOCKSIOLayerMethods;
-static bool firstTime = true;
+static PRBool firstTime = PR_TRUE;
 
 #if defined(PR_LOGGING)
 static PRLogModuleInfo *gSOCKSLog;

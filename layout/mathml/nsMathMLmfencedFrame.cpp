@@ -138,7 +138,7 @@ void
 nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
 {
   nsAutoString value;
-  bool isMutable = false;
+  PRBool isMutable = PR_FALSE;
 
   //////////////  
   // see if the opening fence is there ...
@@ -382,7 +382,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   i = 0;
   nscoord dx = 0;
   nsBoundingMetrics bm;
-  bool firstTime = true;
+  PRBool firstTime = PR_TRUE;
   if (mOpenChar) {
     PlaceChar(mOpenChar, ascent, bm, dx);
     aDesiredSize.mBoundingMetrics = bm;
@@ -455,7 +455,7 @@ GetCharSpacing(nsMathMLChar*        aMathMLChar,
   nsOperatorFlags flags = 0;
   float lspace = 0.0f;
   float rspace = 0.0f;
-  bool found = nsMathMLOperators::LookupOperator(data, aForm,
+  PRBool found = nsMathMLOperators::LookupOperator(data, aForm,
                                                    &flags, &lspace, &rspace);
 
   // We don't want extra space when we are a script

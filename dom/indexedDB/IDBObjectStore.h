@@ -193,7 +193,7 @@ private:
   PRInt64 mId;
   nsString mName;
   nsString mKeyPath;
-  bool mAutoIncrement;
+  PRBool mAutoIncrement;
   PRUint32 mDatabaseId;
   PRUint32 mStructuredCloneVersion;
 

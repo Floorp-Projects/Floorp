@@ -92,7 +92,7 @@ public:
 
     Shmem& GetShmem() { return mShmem; }
 
-    static bool IsSharedImage(gfxASurface *aSurface);
+    static PRBool IsSharedImage(gfxASurface *aSurface);
 
 private:
     gfxSharedImageSurface(const gfxIntSize&, gfxImageFormat, const Shmem&);

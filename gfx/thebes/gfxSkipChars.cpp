@@ -42,7 +42,7 @@
 #define SHORTCUT_FREQUENCY 256
 
 // Even numbered list entries are "keep" entries
-static bool
+static PRBool
 IsKeepEntry(PRUint32 aEntry)
 {
     return !(aEntry & 1);
@@ -86,7 +86,7 @@ gfxSkipChars::BuildShortcuts()
 }
 
 void
-gfxSkipCharsIterator::SetOffsets(PRUint32 aOffset, bool aInOriginalString)
+gfxSkipCharsIterator::SetOffsets(PRUint32 aOffset, PRBool aInOriginalString)
 {
     NS_ASSERTION(aOffset <= mSkipChars->mCharCount,
                  "Invalid offset");
@@ -178,7 +178,7 @@ gfxSkipCharsIterator::SetOffsets(PRUint32 aOffset, bool aInOriginalString)
     }
 }
 
-bool
+PRBool
 gfxSkipCharsIterator::IsOriginalCharSkipped(PRInt32* aRunLength) const
 {
     if (mSkipChars->mListLength == 0) {
@@ -216,7 +216,7 @@ gfxSkipCharsIterator::IsOriginalCharSkipped(PRInt32* aRunLength) const
         return PR_TRUE;
     }
   
-    bool isSkipped = !IsKeepEntry(listPrefixLength);
+    PRBool isSkipped = !IsKeepEntry(listPrefixLength);
     if (aRunLength) {
         // Long runs of all-skipped or all-kept characters will be encoded as
         // sequences of 255, 0, 255, 0 etc. Compute the maximum run length by skipping

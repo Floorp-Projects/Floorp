@@ -68,7 +68,7 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsIMathMLFrame)
 
   // helper to check whether the frame is "space-like", as defined by the spec.
-  virtual bool IsSpaceLike() = 0;
+  virtual PRBool IsSpaceLike() = 0;
 
  /* SUPPORT FOR PRECISE POSITIONING */
  /*====================================================================*/

@@ -43,8 +43,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsfriendapi.h"
-#include "jsinterp.h"
 #include "jsstaticcheck.h"
 #include "jsxml.h"
 #include "jsregexp.h"
@@ -89,8 +87,8 @@ GetGlobalForScopeChain(JSContext *cx)
     if (cx->hasfp())
         return cx->fp()->scopeChain().getGlobal();
 
-    JSObject *scope = JS_ObjectToInnerObject(cx, cx->globalObject);
-    if (!scope)
+    JSObject *scope = cx->globalObject;
+    if (!NULLABLE_OBJ_TO_INNER_OBJECT(cx, scope))
         return NULL;
     return scope->asGlobal();
 }
@@ -295,7 +293,7 @@ CallJSNative(JSContext *cx, Native native, const CallArgs &args)
     JSBool alreadyThrowing = cx->isExceptionPending();
 #endif
     assertSameCompartment(cx, args);
-    bool ok = native(cx, args.length(), args.base());
+    JSBool ok = native(cx, args.argc(), args.base());
     if (ok) {
         assertSameCompartment(cx, args.rval());
         JS_ASSERT_IF(!alreadyThrowing, !cx->isExceptionPending());
@@ -400,84 +398,7 @@ LeaveTraceIfArgumentsObject(JSContext *cx, JSObject *obj)
         LeaveTrace(cx);
 }
 
-static inline JSAtom **
-FrameAtomBase(JSContext *cx, js::StackFrame *fp)
-{
-    return fp->hasImacropc()
-           ? cx->runtime->atomState.commonAtomsStart()
-           : fp->script()->atoms;
-}
-
 }  /* namespace js */
-
-inline JSVersion
-JSContext::findVersion() const
-{
-    if (hasVersionOverride)
-        return versionOverride;
-
-    if (stack.hasfp()) {
-        /* There may be a scripted function somewhere on the stack! */
-        js::StackFrame *f = fp();
-        while (f && !f->isScriptFrame())
-            f = f->prev();
-        if (f)
-            return f->script()->getVersion();
-    }
-
-    return defaultVersion;
-}
-
-inline bool
-JSContext::canSetDefaultVersion() const
-{
-    return !stack.hasfp() && !hasVersionOverride;
-}
-
-inline void
-JSContext::overrideVersion(JSVersion newVersion)
-{
-    JS_ASSERT(!canSetDefaultVersion());
-    versionOverride = newVersion;
-    hasVersionOverride = true;
-}
-
-inline bool
-JSContext::maybeOverrideVersion(JSVersion newVersion)
-{
-    if (canSetDefaultVersion()) {
-        setDefaultVersion(newVersion);
-        return false;
-    }
-    overrideVersion(newVersion);
-    return true;
-}
-
-inline uintN
-JSContext::getCompileOptions() const { return js::VersionFlagsToOptions(findVersion()); }
-
-inline uintN
-JSContext::allOptions() const { return getRunOptions() | getCompileOptions(); }
-
-inline void
-JSContext::setCompileOptions(uintN newcopts)
-{
-    JS_ASSERT((newcopts & JSCOMPILEOPTION_MASK) == newcopts);
-    if (JS_LIKELY(getCompileOptions() == newcopts))
-        return;
-    JSVersion version = findVersion();
-    JSVersion newVersion = js::OptionFlagsToVersion(newcopts, version);
-    maybeOverrideVersion(newVersion);
-}
-
-inline void
-JSContext::assertValidStackDepth(uintN depth)
-{
-#ifdef DEBUG
-    JS_ASSERT(0 <= regs().sp - fp()->base());
-    JS_ASSERT(depth <= uintptr_t(regs().sp - fp()->base()));
-#endif
-}
 
 #ifdef JS_METHODJIT
 inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
@@ -485,12 +406,6 @@ inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
     return compartment->jaegerCompartment();
 }
 #endif
-
-inline js::LifoAlloc &
-JSContext::typeLifoAlloc()
-{
-    return compartment->typeLifoAlloc;
-}
 
 inline bool
 JSContext::ensureGeneratorStackSpace()
@@ -521,25 +436,6 @@ JSContext::ensureParseMapPool()
         return true;
     parseMapPool_ = js::OffTheBooks::new_<js::ParseMapPool>(this);
     return parseMapPool_;
-}
-
-/*
- * Get the current frame, first lazily instantiating stack frames if needed.
- * (Do not access cx->fp() directly except in JS_REQUIRES_STACK code.)
- *
- * LeaveTrace is defined in jstracer.cpp if JS_TRACER is defined.
- */
-static JS_FORCES_STACK JS_INLINE js::StackFrame *
-js_GetTopStackFrame(JSContext *cx, FrameExpandKind expand)
-{
-    js::LeaveTrace(cx);
-
-#ifdef JS_METHODJIT
-    if (expand)
-        js::mjit::ExpandInlineFrames(cx->compartment);
-#endif
-
-    return cx->maybefp();
 }
 
 #endif /* jscntxtinlines_h___ */

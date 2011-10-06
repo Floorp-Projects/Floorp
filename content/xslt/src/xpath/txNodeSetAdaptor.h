@@ -66,7 +66,7 @@ private:
         return static_cast<txNodeSet*>(mValue.get());
     }
 
-    bool mWritable;
+    PRBool mWritable;
 };
 
 #endif // txNodeSetAdaptor_h__

@@ -94,7 +94,7 @@ public:
       mData(new ImageCacheEntryData(*toCopy.mData)) {}
   ~ImageCacheEntry() {}
 
-  bool KeyEquals(KeyTypePointer key) const
+  PRBool KeyEquals(KeyTypePointer key) const
   {
     return mData->mImage == key->mImage && mData->mCanvas == key->mCanvas;
   }

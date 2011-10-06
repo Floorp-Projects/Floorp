@@ -201,7 +201,7 @@ nsHTMLAreaAccessible::GetBounds(PRInt32 *aX, PRInt32 *aY,
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
   nsImageFrame *imageFrame = do_QueryFrame(frame);
 
-  nsImageMap* map = imageFrame->GetImageMap();
+  nsImageMap* map = imageFrame->GetImageMap(presContext);
   NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
 
   nsRect rect;

@@ -204,7 +204,7 @@ nsCParserNode::GetTokenType(void) const
  *  @return  int -- representing attribute count
  */
 PRInt32 
-nsCParserNode::GetAttributeCount(bool askToken) const
+nsCParserNode::GetAttributeCount(PRBool askToken) const
 {
   return 0;
 }
@@ -318,7 +318,7 @@ void nsCParserStartNode::AddAttribute(CToken* aToken)
 }
 
 PRInt32 
-nsCParserStartNode::GetAttributeCount(bool askToken) const
+nsCParserStartNode::GetAttributeCount(PRBool askToken) const
 {
   PRInt32 result = 0;
   if (askToken) {

@@ -183,7 +183,7 @@ ImageContainerD3D10::GetCurrentSize()
   return gfxIntSize(0,0);
 }
 
-bool
+PRBool
 ImageContainerD3D10::SetLayerManager(LayerManager *aManager)
 {
   if (aManager->GetBackendType() == LayerManager::LAYERS_D3D10) {

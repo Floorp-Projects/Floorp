@@ -108,7 +108,7 @@ public:
     return (void*)&mAnimVal;
   }
   
-  bool IsAnimating() const {
+  PRBool IsAnimating() const {
     return !!mAnimVal;
   }
 
@@ -147,7 +147,7 @@ private:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const;
+                                     PRBool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

@@ -76,9 +76,8 @@ public:
   NS_DECL_ISUPPORTS
   // imgIDecoderObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
-  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
+  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, PRBool aCurrentFrame,
                              const nsIntRect *aRect);
-  NS_IMETHOD OnStartDecode(imgIRequest *aRequest);
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
                           const PRUnichar *statusArg);
   // imgIContainerObserver (override nsStubImageDecoderObserver)
@@ -102,10 +101,6 @@ nsBulletFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Stop image loading first
   if (mImageRequest) {
-    // Deregister our image request from the refresh driver
-    nsLayoutUtils::DeregisterImageRequest(PresContext(),
-                                          mImageRequest,
-                                          &mRequestRegistered);
     mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
     mImageRequest = nsnull;
   }
@@ -131,13 +126,13 @@ nsBulletFrame::GetType() const
   return nsGkAtoms::bulletFrame;
 }
 
-bool
+PRBool
 nsBulletFrame::IsEmpty()
 {
   return IsSelfEmpty();
 }
 
-bool
+PRBool
 nsBulletFrame::IsSelfEmpty() 
 {
   return GetStyleList()->mListStyleType == NS_STYLE_LIST_STYLE_NONE;
@@ -161,7 +156,7 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       NS_RELEASE(listener);
     }
 
-    bool needNewRequest = true;
+    PRBool needNewRequest = PR_TRUE;
 
     if (mImageRequest) {
       // Reload the image, maybe...
@@ -170,13 +165,11 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       nsCOMPtr<nsIURI> newURI;
       newRequest->GetURI(getter_AddRefs(newURI));
       if (oldURI && newURI) {
-        bool same;
+        PRBool same;
         newURI->Equals(oldURI, &same);
         if (same) {
           needNewRequest = PR_FALSE;
         } else {
-          nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
-                                                &mRequestRegistered);
           mImageRequest->Cancel(NS_ERROR_FAILURE);
           mImageRequest = nsnull;
         }
@@ -185,15 +178,10 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
     if (needNewRequest) {
       newRequest->Clone(mListener, getter_AddRefs(mImageRequest));
-      nsLayoutUtils::RegisterImageRequest(PresContext(), mImageRequest,
-                                          &mRequestRegistered);
     }
   } else {
     // No image request on the new style context
     if (mImageRequest) {
-      nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
-                                            &mRequestRegistered);
-
       mImageRequest->Cancel(NS_ERROR_FAILURE);
       mImageRequest = nsnull;
     }
@@ -405,7 +393,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
 
 PRInt32
 nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
-                                  bool* aChanged)
+                                  PRBool* aChanged)
 {
   // Assume that the ordinal comes from the caller
   PRInt32 oldOrdinal = mOrdinal;
@@ -441,21 +429,21 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
  * could represent mOrder in the desired numbering system.  PR_FALSE
  * means we had to fall back to decimal
  */
-static bool DecimalToText(PRInt32 ordinal, nsString& result)
+static PRBool DecimalToText(PRInt32 ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
    result.AppendASCII(cbuf);
    return PR_TRUE;
 }
-static bool DecimalLeadingZeroToText(PRInt32 ordinal, nsString& result)
+static PRBool DecimalLeadingZeroToText(PRInt32 ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%02ld", ordinal);
    result.AppendASCII(cbuf);
    return PR_TRUE;
 }
-static bool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& result)
+static PRBool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& result)
 {
    PRUnichar diff = zeroChar - PRUnichar('0');
    DecimalToText(ordinal, result);
@@ -468,7 +456,7 @@ static bool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& re
       *p += diff;
    return PR_TRUE;
 }
-static bool TamilToText(PRInt32 ordinal,  nsString& result)
+static PRBool TamilToText(PRInt32 ordinal,  nsString& result)
 {
    PRUnichar diff = 0x0BE6 - PRUnichar('0');
    DecimalToText(ordinal, result); 
@@ -489,7 +477,7 @@ static const char gUpperRomanCharsA[] = "IXCM";
 static const char gLowerRomanCharsB[] = "vld";
 static const char gUpperRomanCharsB[] = "VLD";
 
-static bool RomanToText(PRInt32 ordinal, nsString& result, const char* achars, const char* bchars)
+static PRBool RomanToText(PRInt32 ordinal, nsString& result, const char* achars, const char* bchars)
 {
   if (ordinal < 1 || ordinal > 3999) {
     DecimalToText(ordinal, result);
@@ -716,7 +704,7 @@ static const PRUnichar gEthiopicHalehameTiEtChars[ETHIOPIC_HALEHAME_TI_ET_CHARS_
 
 #define NUM_BUF_SIZE 34 
 
-static bool CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* chars, PRInt32 aBase)
+static PRBool CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* chars, PRInt32 aBase)
 {
   PRUnichar buf[NUM_BUF_SIZE];
   PRInt32 idx = NUM_BUF_SIZE;
@@ -771,7 +759,7 @@ static const PRUnichar gCJKIdeographic10KUnit3[4] =
   0x000, 0x4E07, 0x5104, 0x5146
 };
 
-static const bool CJKIdeographicToText(PRInt32 ordinal, nsString& result, 
+static const PRBool CJKIdeographicToText(PRInt32 ordinal, nsString& result, 
                                    const PRUnichar* digits,
                                    const PRUnichar *unit, 
                                    const PRUnichar* unit10k)
@@ -796,7 +784,7 @@ static const bool CJKIdeographicToText(PRInt32 ordinal, nsString& result,
   PRUint32 ud = 0;
   PRUnichar buf[NUM_BUF_SIZE];
   PRInt32 idx = NUM_BUF_SIZE;
-  bool bOutputZero = ( 0 == ordinal );
+  PRBool bOutputZero = ( 0 == ordinal );
   do {
     if(0 == (ud % 4)) {
       c10kUnit = unit10k[ud/4];
@@ -847,13 +835,13 @@ static const PRUnichar gHebrewDigit[22] =
 0x05E7, 0x05E8, 0x05E9, 0x05EA
 };
 
-static bool HebrewToText(PRInt32 ordinal, nsString& result)
+static PRBool HebrewToText(PRInt32 ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 999999) {
     DecimalToText(ordinal, result);
     return PR_FALSE;
   }
-  bool outputSep = false;
+  PRBool outputSep = PR_FALSE;
   nsAutoString allText, thousandsGroup;
   do {
     thousandsGroup.Truncate();
@@ -906,7 +894,7 @@ static bool HebrewToText(PRInt32 ordinal, nsString& result)
 }
 
 
-static bool ArmenianToText(PRInt32 ordinal, nsString& result)
+static PRBool ArmenianToText(PRInt32 ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 9999) { // zero or reach the limit of Armenian numbering system
     DecimalToText(ordinal, result);
@@ -943,7 +931,7 @@ static const PRUnichar gGeorgianValue [ 37 ] = { // 4 * 9 + 1 = 37
 //  10000
    0x10F5
 };
-static bool GeorgianToText(PRInt32 ordinal, nsString& result)
+static PRBool GeorgianToText(PRInt32 ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 19999) { // zero or reach the limit of Georgian numbering system
     DecimalToText(ordinal, result);
@@ -977,7 +965,7 @@ static bool GeorgianToText(PRInt32 ordinal, nsString& result)
 #define ETHIOPIC_HUNDRED         0x137B
 #define ETHIOPIC_TEN_THOUSAND    0x137C
 
-static bool EthiopicToText(PRInt32 ordinal, nsString& result)
+static PRBool EthiopicToText(PRInt32 ordinal, nsString& result)
 {
   nsAutoString asciiNumberString;      // decimal string representation of ordinal
   DecimalToText(ordinal, asciiNumberString);
@@ -1008,7 +996,7 @@ static bool EthiopicToText(PRInt32 ordinal, nsString& result)
     PRUint8 unitsValue = asciiNumberString.CharAt(indexFromLeft + 1) & 0x0F;
     PRUint8 groupValue = tensValue * 10 + unitsValue;
 
-    bool oddGroup = (groupIndexFromRight & 1);
+    PRBool oddGroup = (groupIndexFromRight & 1);
 
     // we want to clear ETHIOPIC_ONE when it is superfluous
     if (ordinal > 1 &&
@@ -1042,12 +1030,12 @@ static bool EthiopicToText(PRInt32 ordinal, nsString& result)
 }
 
 
-/* static */ bool
+/* static */ PRBool
 nsBulletFrame::AppendCounterText(PRInt32 aListStyleType,
                                  PRInt32 aOrdinal,
                                  nsString& result)
 {
-  bool success = true;
+  PRBool success = PR_TRUE;
   
   switch (aListStyleType) {
     case NS_STYLE_LIST_STYLE_NONE: // used by counters code only
@@ -1276,7 +1264,7 @@ nsBulletFrame::AppendCounterText(PRInt32 aListStyleType,
   return success;
 }
 
-bool
+PRBool
 nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
                                nsString& result)
 {
@@ -1287,7 +1275,7 @@ nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
                aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_CIRCLE &&
                aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_SQUARE,
                "we should be using specialized code for these types");
-  bool success =
+  PRBool success =
     AppendCounterText(aListStyle.mListStyleType, mOrdinal, result);
   if (success && aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_HEBREW)
     mTextIsRTL = PR_TRUE;
@@ -1522,24 +1510,13 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest,
-                                             bool aCurrentFrame,
+                                             PRBool aCurrentFrame,
                                              const nsIntRect *aRect)
 {
   // The image has changed.
   // Invalidate the entire content area. Maybe it's not optimal but it's simple and
   // always correct, and I'll be a stunned mullet if it ever matters for performance
   Invalidate(nsRect(0, 0, mRect.width, mRect.height));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBulletFrame::OnStartDecode(imgIRequest* aRequest)
-{
-  // Register the image request with the refresh driver.
-  if (aRequest == mImageRequest) {
-    nsLayoutUtils::RegisterImageRequest(PresContext(), mImageRequest,
-                                        &mRequestRegistered);
-  }
 
   return NS_OK;
 }
@@ -1559,14 +1536,6 @@ NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest,
     }
   }
 #endif
-
-  // Deregister the imgIRequest with the refresh driver if the
-  // image is not animated.
-  if (aRequest == mImageRequest) {
-    nsLayoutUtils::DeregisterImageRequestIfNotAnimated(PresContext(),
-                                                       mImageRequest,
-                                                       &mRequestRegistered);
-  }
 
   return NS_OK;
 }
@@ -1661,21 +1630,13 @@ NS_IMETHODIMP nsBulletListener::OnStartContainer(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsBulletListener::OnDataAvailable(imgIRequest *aRequest,
-                                                bool aCurrentFrame,
+                                                PRBool aCurrentFrame,
                                                 const nsIntRect *aRect)
 {
   if (!mFrame)
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
   return mFrame->OnDataAvailable(aRequest, aCurrentFrame, aRect);
-}
-
-NS_IMETHODIMP nsBulletListener::OnStartDecode(imgIRequest *aRequest)
-{
-  if (!mFrame)
-      return NS_OK;
-
-  return mFrame->OnStartDecode(aRequest);
 }
 
 NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
@@ -1683,7 +1644,7 @@ NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
                                              const PRUnichar *statusArg)
 {
   if (!mFrame)
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   
   return mFrame->OnStopDecode(aRequest, status, statusArg);
 }
@@ -1692,7 +1653,7 @@ NS_IMETHODIMP nsBulletListener::FrameChanged(imgIContainer *aContainer,
                                              const nsIntRect *aDirtyRect)
 {
   if (!mFrame)
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
   return mFrame->FrameChanged(aContainer, aDirtyRect);
 }

@@ -113,7 +113,7 @@ class nsHtml5AtomTable
      * Must be called after the constructor before use. Returns PR_TRUE
      * when successful and PR_FALSE on OOM failure.
      */
-    inline bool Init() {
+    inline PRBool Init() {
       return mTable.Init();
     }
     

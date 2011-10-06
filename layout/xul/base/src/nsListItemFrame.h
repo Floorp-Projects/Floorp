@@ -63,7 +63,7 @@ public:
 protected:
   nsListItemFrame(nsIPresShell* aPresShell,
                   nsStyleContext *aContext,
-                  bool aIsRoot = nsnull,
+                  PRBool aIsRoot = nsnull,
                   nsBoxLayout* aLayoutManager = nsnull);
   virtual ~nsListItemFrame();
 

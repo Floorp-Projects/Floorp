@@ -72,17 +72,17 @@ public:
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
 
-  nsBaseContentStream(bool nonBlocking)
+  nsBaseContentStream(PRBool nonBlocking)
     : mStatus(NS_OK)
     , mNonBlocking(nonBlocking) {
   }
 
   nsresult Status() { return mStatus; }
-  bool IsNonBlocking() { return mNonBlocking; }
-  bool IsClosed() { return NS_FAILED(mStatus); }
+  PRBool IsNonBlocking() { return mNonBlocking; }
+  PRBool IsClosed() { return NS_FAILED(mStatus); }
 
   // Called to test if the stream has a pending callback.
-  bool HasPendingCallback() { return mCallback != nsnull; }
+  PRBool HasPendingCallback() { return mCallback != nsnull; }
 
   // The current dispatch target (may be null) for the pending callback if any.
   nsIEventTarget *CallbackTarget() { return mCallbackTarget; }
@@ -91,7 +91,7 @@ public:
   // then this function does nothing.  Pass true to this function to cause the
   // callback to occur asynchronously; otherwise, the callback will happen 
   // before this function returns.
-  void DispatchCallback(bool async = true);
+  void DispatchCallback(PRBool async = PR_TRUE);
 
   // Helper function to make code more self-documenting.
   void DispatchCallbackSync() { DispatchCallback(PR_FALSE); }
@@ -108,7 +108,7 @@ private:
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget>         mCallbackTarget;
   nsresult                         mStatus;
-  bool                             mNonBlocking;
+  PRPackedBool                     mNonBlocking;
 };
 
 #endif // nsBaseContentStream_h__

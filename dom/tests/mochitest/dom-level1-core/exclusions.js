@@ -88,8 +88,7 @@ var modTests = ["hc_elementwrongdocumenterr", "hc_namednodemapwrongdocumenterr",
 var createEntityRef = ["documentinvalidcharacterexceptioncreateentref",
                        "documentinvalidcharacterexceptioncreateentref1",
                        "hc_attrgetvalue2", "hc_nodevalue03"];
-var createProcessingInstructionHTML = ["documentinvalidcharacterexceptioncreatepi",
-                                       "documentinvalidcharacterexceptioncreatepi1"];
+
 
 var todoTests = {};
 function concat(lst/*...*/) {
@@ -102,5 +101,5 @@ function concat(lst/*...*/) {
   }
   return f;
 }
-var exclusions = concat(dtdTests, indexErrTests, attributeModTests, modTests, createEntityRef, createProcessingInstructionHTML);
+var exclusions = concat(dtdTests, indexErrTests, attributeModTests, modTests, createEntityRef);
 for (var excludedTestName in exclusions) { todoTests[exclusions[excludedTestName]] = true; }

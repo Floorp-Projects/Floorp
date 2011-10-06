@@ -1,8 +1,3 @@
-// Shared logging for all HTTP server functions.
-Cu.import("resource://services-sync/log4moz.js");
-const SYNC_HTTP_LOGGER = "Sync.Test.Server";
-const SYNC_API_VERSION = "1.1";
-
 // Use the same method that record.js does, which mirrors the server.
 // The server returns timestamps with 1/100 sec granularity. Note that this is
 // subject to change: see Bug 650435.
@@ -82,7 +77,7 @@ function readBytesFromInputStream(inputStream, count) {
 /*
  * Represent a WBO on the server
  */
-function ServerWBO(id, initialPayload, modified) {
+function ServerWBO(id, initialPayload) {
   if (!id) {
     throw "No ID for ServerWBO!";
   }
@@ -95,7 +90,7 @@ function ServerWBO(id, initialPayload, modified) {
     initialPayload = JSON.stringify(initialPayload);
   }
   this.payload = initialPayload;
-  this.modified = modified || new_timestamp();
+  this.modified = new_timestamp();
 }
 ServerWBO.prototype = {
 
@@ -143,7 +138,6 @@ ServerWBO.prototype = {
         case "PUT":
           self.put(readBytesFromInputStream(request.bodyInputStream));
           body = JSON.stringify(self.modified);
-          response.setHeader("Content-Type", "application/json");
           response.newModified = self.modified;
           break;
 
@@ -151,7 +145,6 @@ ServerWBO.prototype = {
           self.delete();
           let ts = new_timestamp();
           body = JSON.stringify(ts);
-          response.setHeader("Content-Type", "application/json");
           response.newModified = ts;
           break;
       }
@@ -164,120 +157,21 @@ ServerWBO.prototype = {
 };
 
 
-/**
- * Represent a collection on the server. The '_wbos' attribute is a
+/*
+ * Represent a collection on the server.  The 'wbo' attribute is a
  * mapping of id -> ServerWBO objects.
- *
+ * 
  * Note that if you want these records to be accessible individually,
- * you need to register their handlers with the server separately, or use a
- * containing HTTP server that will do so on your behalf.
- *
- * @param wbos
- *        An object mapping WBO IDs to ServerWBOs.
- * @param acceptNew
- *        If true, POSTs to this collection URI will result in new WBOs being
- *        created and wired in on the fly.
- * @param timestamp
- *        An optional timestamp value to initialize the modified time of the
- *        collection. This should be in the format returned by new_timestamp().
- *
- * @return the new ServerCollection instance.
- *
+ * you need to register their handlers with the server separately!
+ * 
+ * Passing `true` for acceptNew will allow POSTs of new WBOs to this
+ * collection. New WBOs will be created and wired in on the fly.
  */
-function ServerCollection(wbos, acceptNew, timestamp) {
-  this._wbos = wbos || {};
+function ServerCollection(wbos, acceptNew) {
+  this.wbos = wbos || {};
   this.acceptNew = acceptNew || false;
-
-  /*
-   * Track modified timestamp.
-   * We can't just use the timestamps of contained WBOs: an empty collection
-   * has a modified time.
-   */
-  this.timestamp = timestamp || new_timestamp();
-  this._log = Log4Moz.repository.getLogger(SYNC_HTTP_LOGGER);
 }
 ServerCollection.prototype = {
-
-  /**
-   * Convenience accessor for our WBO keys.
-   * Excludes deleted items, of course.
-   *
-   * @param filter
-   *        A predicate function (applied to the ID and WBO) which dictates
-   *        whether to include the WBO's ID in the output.
-   *
-   * @return an array of IDs.
-   */
-  keys: function keys(filter) {
-    return [id for ([id, wbo] in Iterator(this._wbos))
-               if (wbo.payload &&
-                   (!filter || filter(id, wbo)))];
-  },
-
-  /**
-   * Convenience method to get an array of WBOs.
-   * Optionally provide a filter function.
-   *
-   * @param filter
-   *        A predicate function, applied to the WBO, which dictates whether to
-   *        include the WBO in the output.
-   *
-   * @return an array of ServerWBOs.
-   */
-  wbos: function wbos(filter) {
-    let os = [wbo for ([id, wbo] in Iterator(this._wbos))
-              if (wbo.payload)];
-    if (filter) {
-      return os.filter(filter);
-    }
-    return os;
-  },
-
-  /**
-   * Convenience method to get an array of parsed ciphertexts.
-   *
-   * @return an array of the payloads of each stored WBO.
-   */
-  payloads: function () {
-    return this.wbos().map(function (wbo) {
-      return JSON.parse(JSON.parse(wbo.payload).ciphertext);
-    });
-  },
-
-  // Just for syntactic elegance.
-  wbo: function wbo(id) {
-    return this._wbos[id];
-  },
-
-  payload: function payload(id) {
-    return this.wbo(id).payload;
-  },
-
-  /**
-   * Insert the provided WBO under its ID.
-   *
-   * @return the provided WBO.
-   */
-  insertWBO: function insertWBO(wbo) {
-    return this._wbos[wbo.id] = wbo;
-  },
-
-  /**
-   * Insert the provided payload as part of a new ServerWBO with the provided
-   * ID.
-   *
-   * @param id
-   *        The GUID for the WBO.
-   * @param payload
-   *        The payload, as provided to the ServerWBO constructor.
-   * @param modified
-   *        An optional modified time for the ServerWBO.
-   *
-   * @return the inserted WBO.
-   */
-  insert: function insert(id, payload, modified) {
-    return this.insertWBO(new ServerWBO(id, payload, modified));
-  },
 
   _inResultSet: function(wbo, options) {
     return wbo.payload
@@ -288,7 +182,7 @@ ServerCollection.prototype = {
   count: function(options) {
     options = options || {};
     let c = 0;
-    for (let [id, wbo] in Iterator(this._wbos)) {
+    for (let [id, wbo] in Iterator(this.wbos)) {
       if (wbo.modified && this._inResultSet(wbo, options)) {
         c++;
       }
@@ -299,26 +193,22 @@ ServerCollection.prototype = {
   get: function(options) {
     let result;
     if (options.full) {
-      let data = [wbo.get() for ([id, wbo] in Iterator(this._wbos))
+      let data = [wbo.get() for ([id, wbo] in Iterator(this.wbos))
                             // Drop deleted.
                             if (wbo.modified &&
                                 this._inResultSet(wbo, options))];
       if (options.limit) {
         data = data.slice(0, options.limit);
       }
-      // Our implementation of application/newlines.
+      // Our implementation of application/newlines
       result = data.join("\n") + "\n";
-
-      // Use options as a backchannel to report count.
-      options.recordCount = data.length;
     } else {
-      let data = [id for ([id, wbo] in Iterator(this._wbos))
+      let data = [id for ([id, wbo] in Iterator(this.wbos))
                      if (this._inResultSet(wbo, options))];
       if (options.limit) {
         data = data.slice(0, options.limit);
       }
       result = JSON.stringify(data);
-      options.recordCount = data.length;
     }
     return result;
   },
@@ -331,12 +221,11 @@ ServerCollection.prototype = {
     // This will count records where we have an existing ServerWBO
     // registered with us as successful and all other records as failed.
     for each (let record in input) {
-      let wbo = this.wbo(record.id);
+      let wbo = this.wbos[record.id];
       if (!wbo && this.acceptNew) {
-        this._log.debug("Creating WBO " + JSON.stringify(record.id) +
-                        " on the fly.");
+        _("Creating WBO " + JSON.stringify(record.id) + " on the fly.");
         wbo = new ServerWBO(record.id);
-        this.insertWBO(wbo);
+        this.wbos[record.id] = wbo;
       }
       if (wbo) {
         wbo.payload = record.payload;
@@ -352,15 +241,12 @@ ServerCollection.prototype = {
   },
 
   delete: function(options) {
-    let deleted = [];
-    for (let [id, wbo] in Iterator(this._wbos)) {
+    for (let [id, wbo] in Iterator(this.wbos)) {
       if (this._inResultSet(wbo, options)) {
-        this._log.debug("Deleting " + JSON.stringify(wbo));
-        deleted.push(wbo.id);
+        _("Deleting " + JSON.stringify(wbo));
         wbo.delete();
       }
     }
-    return deleted;
   },
 
   // This handler sets `newModified` on the response body if the collection
@@ -399,14 +285,6 @@ ServerCollection.prototype = {
       switch(request.method) {
         case "GET":
           body = self.get(options);
-          // "If supported by the db, this header will return the number of
-          // records total in the request body of any multiple-record GET
-          // request."
-          let records = options.recordCount;
-          self._log.info("Records: " + records);
-          if (records != null) {
-            response.setHeader("X-Weave-Records", "" + records);
-          }
           break;
 
         case "POST":
@@ -416,12 +294,10 @@ ServerCollection.prototype = {
           break;
 
         case "DELETE":
-          self._log.debug("Invoking ServerCollection.DELETE.");
-          let deleted = self.delete(options);
+          self.delete(options);
           let ts = new_timestamp();
           body = JSON.stringify(ts);
           response.newModified = ts;
-          response.deleted = deleted;
           break;
       }
       response.setHeader("X-Weave-Timestamp",
@@ -429,14 +305,6 @@ ServerCollection.prototype = {
                          false);
       response.setStatusLine(request.httpVersion, statusCode, status);
       response.bodyOutputStream.write(body, body.length);
-
-      // Update the collection timestamp to the appropriate modified time.
-      // This is either a value set by the handler, or the current time.
-      if (request.method != "GET") {
-        this.timestamp = (response.newModified >= 0) ?
-                         response.newModified :
-                         new_timestamp();
-      }
     };
   }
 
@@ -510,436 +378,4 @@ function track_collections_helper() {
           "handler": info_collections,
           "with_updated_collection": with_updated_collection,
           "update_collection": update_collection};
-}
-
-//===========================================================================//
-// httpd.js-based Sync server.                                               //
-//===========================================================================//
-
-/**
- * In general, the preferred way of using SyncServer is to directly introspect
- * it. Callbacks are available for operations which are hard to verify through
- * introspection, such as deletions.
- *
- * One of the goals of this server is to provide enough hooks for test code to
- * find out what it needs without monkeypatching. Use this object as your
- * prototype, and override as appropriate.
- */
-let SyncServerCallback = {
-  onCollectionDeleted: function onCollectionDeleted(user, collection) {},
-  onItemDeleted: function onItemDeleted(user, collection, wboID) {}
-};
-
-/**
- * Construct a new test Sync server. Takes a callback object (e.g.,
- * SyncServerCallback) as input.
- */
-function SyncServer(callback) {
-  this.callback = callback || {__proto__: SyncServerCallback};
-  this.server   = new nsHttpServer();
-  this.started  = false;
-  this.users    = {};
-  this._log     = Log4Moz.repository.getLogger(SYNC_HTTP_LOGGER);
-
-  // Install our own default handler. This allows us to mess around with the
-  // whole URL space.
-  let handler = this.server._handler;
-  handler._handleDefault = this.handleDefault.bind(this, handler);
-}
-SyncServer.prototype = {
-  port:   8080,
-  server: null,    // nsHttpServer.
-  users:  null,    // Map of username => {collections, password}.
-
-  /**
-   * Start the SyncServer's underlying HTTP server.
-   *
-   * @param port
-   *        The numeric port on which to start. A falsy value implies the
-   *        default (8080).
-   * @param cb
-   *        A callback function (of no arguments) which is invoked after
-   *        startup.
-   */
-  start: function start(port, cb) {
-    if (this.started) {
-      this._log.warn("Warning: server already started on " + this.port);
-      return;
-    }
-    if (port) {
-      this.port = port;
-    }
-    try {
-      this.server.start(this.port);
-      this.started = true;
-      if (cb) {
-        cb();
-      }
-    } catch (ex) {
-      _("==========================================");
-      _("Got exception starting Sync HTTP server on port " + this.port);
-      _("Error: " + Utils.exceptionStr(ex));
-      _("Is there a process already listening on port " + this.port + "?");
-      _("==========================================");
-      do_throw(ex);
-    }
-  },
-
-  /**
-   * Stop the SyncServer's HTTP server.
-   *
-   * @param cb
-   *        A callback function. Invoked after the server has been stopped.
-   *
-   */
-  stop: function stop(cb) {
-    if (!this.started) {
-      this._log.warn("SyncServer: Warning: server not running. Can't stop me now!");
-      return;
-    }
-
-    this.server.stop(cb);
-    this.started = false;
-  },
-
-  /**
-   * Return a server timestamp for a record.
-   * The server returns timestamps with 1/100 sec granularity. Note that this is
-   * subject to change: see Bug 650435.
-   */
-  timestamp: function timestamp() {
-    return Math.round(Date.now() / 10) / 100;
-  },
-
-  /**
-   * Create a new user, complete with an empty set of collections.
-   *
-   * @param username
-   *        The username to use. An Error will be thrown if a user by that name
-   *        already exists.
-   * @param password
-   *        A password string.
-   *
-   * @return a user object, as would be returned by server.user(username).
-   */
-  registerUser: function registerUser(username, password) {
-    if (username in this.users) {
-      throw new Error("User already exists.");
-    }
-    this.users[username] = {
-      password: password,
-      collections: {}
-    };
-    return this.user(username);
-  },
-
-  userExists: function userExists(username) {
-    return username in this.users;
-  },
-
-  getCollection: function getCollection(username, collection) {
-    return this.users[username].collections[collection];
-  },
-
-  _insertCollection: function _insertCollection(collections, collection, wbos) {
-    let coll = new ServerCollection(wbos, true);
-    coll.collectionHandler = coll.handler();
-    collections[collection] = coll;
-    return coll;
-  },
-
-  createCollection: function createCollection(username, collection, wbos) {
-    if (!(username in this.users)) {
-      throw new Error("Unknown user.");
-    }
-    let collections = this.users[username].collections;
-    if (collection in collections) {
-      throw new Error("Collection already exists.");
-    }
-    return this._insertCollection(collections, collection, wbos);
-  },
-
-  /**
-   * Accept a map like the following:
-   * {
-   *   meta: {global: {version: 1, ...}},
-   *   crypto: {"keys": {}, foo: {bar: 2}},
-   *   bookmarks: {}
-   * }
-   * to cause collections and WBOs to be created.
-   * If a collection already exists, no error is raised.
-   * If a WBO already exists, it will be updated to the new contents.
-   */
-  createContents: function createContents(username, collections) {
-    if (!(username in this.users)) {
-      throw new Error("Unknown user.");
-    }
-    let userCollections = this.users[username].collections;
-    for (let [id, contents] in Iterator(collections)) {
-      let coll = userCollections[id] ||
-                 this._insertCollection(userCollections, id);
-      for (let [wboID, payload] in Iterator(contents)) {
-        coll.insert(wboID, payload);
-      }
-    }
-  },
-
-  /**
-   * Insert a WBO in an existing collection.
-   */
-  insertWBO: function insertWBO(username, collection, wbo) {
-    if (!(username in this.users)) {
-      throw new Error("Unknown user.");
-    }
-    let userCollections = this.users[username].collections;
-    if (!(collection in userCollections)) {
-      throw new Error("Unknown collection.");
-    }
-    userCollections[collection].insertWBO(wbo);
-    return wbo;
-  },
-
-  /**
-   * Simple accessor to allow collective binding and abbreviation of a bunch of
-   * methods. Yay!
-   * Use like this:
-   *
-   *   let u = server.user("john");
-   *   u.collection("bookmarks").wbo("abcdefg").payload;  // Etc.
-   *
-   * @return a proxy for the user data stored in this server.
-   */
-  user: function user(username) {
-    let collection       = this.getCollection.bind(this, username);
-    let createCollection = this.createCollection.bind(this, username);
-    let createContents   = this.createContents.bind(this, username);
-    let modified         = function (collectionName) {
-      return collection(collectionName).timestamp;
-    }
-    return {
-      collection:       collection,
-      createCollection: createCollection,
-      createContents:   createContents,
-      modified:         modified
-    };
-  },
-
-  /*
-   * Regular expressions for splitting up Sync request paths.
-   * Sync URLs are of the form:
-   *   /$apipath/$version/$user/$further
-   * where $further is usually:
-   *   storage/$collection/$wbo
-   * or
-   *   storage/$collection
-   * or
-   *   info/$op
-   * We assume for the sake of simplicity that $apipath is empty.
-   *
-   * N.B., we don't follow any kind of username spec here, because as far as I
-   * can tell there isn't one. See Bug 689671. Instead we follow the Python
-   * server code.
-   *
-   * Path: [all, version, username, first, rest]
-   * Storage: [all, collection, id?]
-   */
-  pathRE: /^\/([0-9]+(?:\.[0-9]+)?)\/([-._a-zA-Z0-9]+)\/([^\/]+)\/(.*)$/,
-  storageRE: /^([-_a-zA-Z0-9]+)(?:\/([-_a-zA-Z0-9]+)\/?)?$/,
-
-  defaultHeaders: {},
-
-  /**
-   * HTTP response utility.
-   */
-  respond: function respond(req, resp, code, status, body, headers) {
-    resp.setStatusLine(req.httpVersion, code, status);
-    for each (let [header, value] in Iterator(headers || this.defaultHeaders)) {
-      resp.setHeader(header, value);
-    }
-    resp.setHeader("X-Weave-Timestamp", "" + this.timestamp(), false);
-    resp.bodyOutputStream.write(body, body.length);
-  },
-
-  /**
-   * This is invoked by the nsHttpServer. `this` is bound to the SyncServer;
-   * `handler` is the nsHttpServer's handler.
-   *
-   * TODO: need to use the correct Sync API response codes and errors here.
-   * TODO: Basic Auth.
-   * TODO: check username in path against username in BasicAuth. 
-   */
-  handleDefault: function handleDefault(handler, req, resp) {
-    this._log.debug("SyncServer: Handling request: " + req.method + " " + req.path);
-    let parts = this.pathRE.exec(req.path);
-    if (!parts) {
-      this._log.debug("SyncServer: Unexpected request: bad URL " + req.path);
-      throw HTTP_404;
-    }
-
-    let [all, version, username, first, rest] = parts;
-    if (version != SYNC_API_VERSION) {
-      this._log.debug("SyncServer: Unknown version.");
-      throw HTTP_404;
-    }
-
-    if (!this.userExists(username)) {
-      this._log.debug("SyncServer: Unknown user.");
-      throw HTTP_401;
-    }
-
-    // Hand off to the appropriate handler for this path component.
-    if (first in this.toplevelHandlers) {
-      let handler = this.toplevelHandlers[first];
-      return handler.call(this, handler, req, resp, version, username, rest);
-    }
-    this._log.debug("SyncServer: Unknown top-level " + first);
-    throw HTTP_404;
-  },
-
-  /**
-   * Compute the object that is returned for an info/collections request.
-   */
-  infoCollections: function infoCollections(username) {
-    let responseObject = {};
-    let colls = this.users[username].collections;
-    for (let coll in colls) {
-      responseObject[coll] = colls[coll].timestamp;
-    }
-    this._log.trace("SyncServer: info/collections returning " +
-                    JSON.stringify(responseObject));
-    return responseObject;
-  },
-
-  /**
-   * Collection of the handler methods we use for top-level path components.
-   */
-  toplevelHandlers: {
-    "storage": function handleStorage(handler, req, resp, version, username, rest) {
-      let match = this.storageRE.exec(rest);
-      if (!match) {
-        this._log.warn("SyncServer: Unknown storage operation " + rest);
-        throw HTTP_404;
-      }
-      let [all, collection, wboID] = match;
-      let coll = this.getCollection(username, collection);
-      let respond = this.respond.bind(this, req, resp);
-      switch (req.method) {
-        case "GET":
-          if (!coll) {
-            // *cries inside*: Bug 687299.
-            respond(200, "OK", "[]");
-            return;
-          }
-          if (!wboID) {
-            return coll.collectionHandler(req, resp);
-          }
-          let wbo = coll.wbo(wboID);
-          if (!wbo) {
-            respond(404, "Not found", "Not found");
-            return;
-          }
-          return wbo.handler()(req, resp);
-
-        // TODO: implement handling of X-If-Unmodified-Since for write verbs.
-        case "DELETE":
-          if (!coll) {
-            respond(200, "OK", "{}");
-            return;
-          }
-          if (wboID) {
-            let wbo = coll.wbo(wboID);
-            if (wbo) {
-              wbo.delete();
-            }
-            respond(200, "OK", "{}");
-            this.callback.onItemDeleted(username, collectin, wboID);
-            return;
-          }
-          coll.collectionHandler(req, resp);
-
-          // Spot if this is a DELETE for some IDs, and don't blow away the
-          // whole collection!
-          //
-          // We already handled deleting the WBOs by invoking the deleted
-          // collection's handler. However, in the case of 
-          //
-          //   DELETE storage/foobar
-          //
-          // we also need to remove foobar from the collections map. This
-          // clause tries to differentiate the above request from
-          //
-          //  DELETE storage/foobar?ids=foo,baz
-          //
-          // and do the right thing.
-          // TODO: less hacky method.
-          if (-1 == req.queryString.indexOf("ids=")) {
-            // When you delete the entire collection, we drop it.
-            this._log.debug("Deleting entire collection.");
-            delete this.users[username].collections[collection];
-            this.callback.onCollectionDeleted(username, collection);
-          }
-
-          // Notify of item deletion.
-          let deleted = resp.deleted || [];
-          for (let i = 0; i < deleted.length; ++i) {
-            this.callback.onItemDeleted(username, collection, deleted[i]);
-          }
-          return;
-        case "POST":
-        case "PUT":
-          if (!coll) {
-            coll = this.createCollection(username, collection);
-          }
-          if (wboID) {
-            let wbo = coll.wbo(wboID);
-            if (!wbo) {
-              this._log.trace("SyncServer: creating WBO " + collection + "/" + wboID);
-              wbo = coll.insert(wboID);
-            }
-            // Rather than instantiate each WBO's handler function, do it once
-            // per request. They get hit far less often than do collections.
-            wbo.handler()(req, resp);
-            coll.timestamp = resp.newModified;
-            return resp;
-          }
-          return coll.collectionHandler(req, resp);
-        default:
-          throw "Request method " + req.method + " not implemented.";
-      }
-    },
-
-    "info": function handleInfo(handler, req, resp, version, username, rest) {
-      switch (rest) {
-        case "collections":
-          let body = JSON.stringify(this.infoCollections(username));
-          this.respond(req, resp, 200, "OK", body, {
-            "Content-Type": "application/json"
-          });
-          return;
-        case "collection_usage":
-        case "collection_counts":
-        case "quota":
-          // TODO: implement additional info methods.
-          this.respond(req, resp, 200, "OK", "TODO");
-          return;
-        default:
-          // TODO
-          this._log.warn("SyncServer: Unknown info operation " + rest);
-          throw HTTP_404;
-      }
-    }
-  }
-};
-
-/**
- * Test helper.
- */
-function serverForUsers(users, contents, callback) {
-  let server = new SyncServer(callback);
-  for (let [user, pass] in Iterator(users)) {
-    server.registerUser(user, pass);
-    server.createContents(user, contents);
-  }
-  server.start();
-  return server;
 }

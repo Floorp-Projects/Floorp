@@ -116,7 +116,7 @@ nsEditorEventListener::Connect(nsEditor* aEditor)
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
   if (bidiKeyboard) {
-    bool haveBidiKeyboards = false;
+    PRBool haveBidiKeyboards = PR_FALSE;
     bidiKeyboard->GetHaveBidiKeyboards(&haveBidiKeyboards);
     mHaveBidiKeyboards = haveBidiKeyboards;
   }
@@ -492,7 +492,7 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
   // below.
 
   if (NSEvent) {
-    bool defaultPrevented;
+    PRBool defaultPrevented;
     NSEvent->GetPreventDefault(&defaultPrevented);
     if (defaultPrevented) {
       return NS_OK;
@@ -515,14 +515,14 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aMouseEvent);
-  bool isTrusted = false;
+  PRBool isTrusted = PR_FALSE;
   if (!mouseEvent || !nsevent ||
       NS_FAILED(nsevent->GetIsTrusted(&isTrusted)) || !isTrusted) {
     // Non-ui or non-trusted event passed in. Bad things.
     return NS_OK;
   }
 
-  bool preventDefault;
+  PRBool preventDefault;
   nsresult rv = nsevent->GetPreventDefault(&preventDefault);
   if (NS_FAILED(rv) || preventDefault) {
     // We're done if 'preventdefault' is true (see for example bug 70698).
@@ -538,7 +538,7 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   // middle-mouse click (paste);
   if (button == 1)
   {
-    if (Preferences::GetBool("middlemouse.paste", false))
+    if (Preferences::GetBool("middlemouse.paste", PR_FALSE))
     {
       // Set the selection to the point under the mouse cursor:
       nsCOMPtr<nsIDOMNode> parent;
@@ -554,7 +554,7 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
 
       // If the ctrl key is pressed, we'll do paste as quotation.
       // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
-      bool ctrlKey = false;
+      PRBool ctrlKey = PR_FALSE;
       mouseEvent->GetCtrlKey(&ctrlKey);
 
       nsCOMPtr<nsIEditorMailSupport> mailEditor;
@@ -631,7 +631,7 @@ nsresult
 nsEditorEventListener::DragGesture(nsIDOMDragEvent* aDragEvent)
 {
   // ...figure out if a drag should be started...
-  bool canDrag;
+  PRBool canDrag;
   nsresult rv = mEditor->CanDrag(aDragEvent, &canDrag);
   if ( NS_SUCCEEDED(rv) && canDrag )
     rv = mEditor->DoDrag(aDragEvent);
@@ -662,7 +662,7 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
   nsCOMPtr<nsIDOMNode> parent;
   nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aDragEvent);
   if (domNSEvent) {
-    bool defaultPrevented;
+    PRBool defaultPrevented;
     domNSEvent->GetPreventDefault(&defaultPrevented);
     if (defaultPrevented)
       return NS_OK;
@@ -737,7 +737,7 @@ nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
 
   nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aMouseEvent);
   if (domNSEvent) {
-    bool defaultPrevented;
+    PRBool defaultPrevented;
     domNSEvent->GetPreventDefault(&defaultPrevented);
     if (defaultPrevented)
       return NS_OK;
@@ -772,7 +772,7 @@ nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
   return mEditor->InsertFromDrop(aMouseEvent);
 }
 
-bool
+PRBool
 nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
 {
   // if the target doc is read-only, we can't drop
@@ -790,7 +790,7 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
 
   // Plaintext editors only support dropping text. Otherwise, HTML and files
   // can be dropped as well.
-  bool typeSupported;
+  PRBool typeSupported;
   types->Contains(NS_LITERAL_STRING(kTextMime), &typeSupported);
   if (!typeSupported) {
     types->Contains(NS_LITERAL_STRING(kMozTextInternal), &typeSupported);
@@ -832,7 +832,7 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
     if (NS_FAILED(rv) || !selection)
       return PR_FALSE;
     
-    bool isCollapsed;
+    PRBool isCollapsed;
     rv = selection->GetIsCollapsed(&isCollapsed);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
   
@@ -859,7 +859,7 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
         if (NS_FAILED(rv) || !nsrange) 
           continue; //don't bail yet, iterate through them all
 
-        bool inRange = true;
+        PRBool inRange = PR_TRUE;
         (void)nsrange->IsPointInRange(parent, offset, &inRange);
         if (inRange)
           return PR_FALSE;  //okay, now you can bail, we are over the orginal selection

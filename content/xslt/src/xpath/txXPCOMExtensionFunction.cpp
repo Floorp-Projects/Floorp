@@ -218,7 +218,7 @@ LookupFunction(const char *aContractID, nsIAtom* aName, nsIID &aIID,
     const PRUnichar *name = aName->GetUTF16String();
     nsCAutoString methodName;
     PRUnichar letter;
-    bool upperNext = false;
+    PRBool upperNext = PR_FALSE;
     while ((letter = *name)) {
         if (letter == '-') {
             upperNext = PR_TRUE;
@@ -334,7 +334,7 @@ public:
     }
     ~txParamArrayHolder();
 
-    bool Init(PRUint8 aCount);
+    PRBool Init(PRUint8 aCount);
     operator nsXPTCVariant*() const
     {
       return mArray;
@@ -364,7 +364,7 @@ txParamArrayHolder::~txParamArrayHolder()
     }
 }
 
-bool
+PRBool
 txParamArrayHolder::Init(PRUint8 aCount)
 {
     mCount = aCount;
@@ -618,7 +618,7 @@ txXPCOMExtensionFunctionCall::getReturnType()
     return ANY_RESULT;
 }
 
-bool
+PRBool
 txXPCOMExtensionFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     // It doesn't really matter what we return here, but it might

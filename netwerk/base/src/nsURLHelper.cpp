@@ -61,7 +61,7 @@ using namespace mozilla;
 // Init/Shutdown
 //----------------------------------------------------------------------------
 
-static bool gInitialized = false;
+static PRBool gInitialized = PR_FALSE;
 static nsIURLParser *gNoAuthURLParser = nsnull;
 static nsIURLParser *gAuthURLParser = nsnull;
 static nsIURLParser *gStdURLParser = nsnull;
@@ -167,7 +167,7 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
     // if the file does not exist, then we make no assumption about its type,
     // and simply leave the URL unmodified.
     if (escPath.Last() != '/') {
-        bool dir;
+        PRBool dir;
         rv = aFile->IsDirectory(&dir);
         if (NS_SUCCEEDED(rv) && dir)
             escPath += '/';
@@ -431,7 +431,7 @@ net_ResolveRelativePath(const nsACString &relativePath,
 {
     nsCAutoString name;
     nsCAutoString path(basePath);
-    bool needsDelim = false;
+    PRBool needsDelim = PR_FALSE;
 
     if ( !path.IsEmpty() ) {
         PRUnichar last = path.Last();
@@ -442,7 +442,7 @@ net_ResolveRelativePath(const nsACString &relativePath,
     relativePath.BeginReading(beg);
     relativePath.EndReading(end);
 
-    bool stop = false;
+    PRBool stop = PR_FALSE;
     char c;
     for (; !stop; ++beg) {
         c = (beg == end) ? '\0' : *beg;
@@ -552,7 +552,7 @@ net_ExtractURLScheme(const nsACString &inURI,
     return NS_ERROR_MALFORMED_URI;
 }
 
-bool
+PRBool
 net_IsValidScheme(const char *scheme, PRUint32 schemeLen)
 {
     // first char must be alpha
@@ -572,11 +572,11 @@ net_IsValidScheme(const char *scheme, PRUint32 schemeLen)
     return PR_TRUE;
 }
 
-bool
+PRBool
 net_FilterURIString(const char *str, nsACString& result)
 {
     NS_PRECONDITION(str, "Must have a non-null string!");
-    bool writing = false;
+    PRBool writing = PR_FALSE;
     result.Truncate();
     const char *p = str;
 
@@ -590,7 +590,7 @@ net_FilterURIString(const char *str, nsACString& result)
     // Don't strip from the scheme, because other code assumes everything
     // up to the ':' is the scheme, and it's bad not to have it match.
     // If there's no ':', strip.
-    bool found_colon = false;
+    PRBool found_colon = PR_FALSE;
     const char *first = nsnull;
     while (*p) {
         switch (*p) {
@@ -656,10 +656,10 @@ net_FilterURIString(const char *str, nsACString& result)
 }
 
 #if defined(XP_WIN) || defined(XP_OS2)
-bool
+PRBool
 net_NormalizeFileURL(const nsACString &aURL, nsCString &aResultBuf)
 {
-    bool writing = false;
+    PRBool writing = PR_FALSE;
 
     nsACString::const_iterator beginIter, endIter;
     aURL.BeginReading(beginIter);
@@ -842,7 +842,7 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
                    nsACString       &aContentType,
                    nsACString       &aContentCharset,
                    PRInt32          aOffset,
-                   bool             *aHadCharset,
+                   PRBool           *aHadCharset,
                    PRInt32          *aCharsetStart,
                    PRInt32          *aCharsetEnd)
 {
@@ -862,7 +862,7 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
     PRInt32 charsetParamEnd;
 
     // Iterate over parameters
-    bool typeHasCharset = false;
+    PRBool typeHasCharset = PR_FALSE;
     PRUint32 paramStart = flatStr.FindChar(';', typeEnd - start);
     if (paramStart != PRUint32(kNotFound)) {
         // We have parameters.  Iterate over them.
@@ -914,7 +914,7 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
     if (type != typeEnd && strncmp(type, "*/*", typeEnd - type) != 0 &&
         memchr(type, '/', typeEnd - type) != NULL) {
         // Common case here is that aContentType is empty
-        bool eq = !aContentType.IsEmpty() &&
+        PRBool eq = !aContentType.IsEmpty() &&
             aContentType.Equals(Substring(type, typeEnd),
                                 nsCaseInsensitiveCStringComparator());
         if (!eq) {
@@ -950,7 +950,7 @@ void
 net_ParseContentType(const nsACString &aHeaderStr,
                      nsACString       &aContentType,
                      nsACString       &aContentCharset,
-                     bool             *aHadCharset)
+                     PRBool           *aHadCharset)
 {
     PRInt32 dummy1, dummy2;
     net_ParseContentType(aHeaderStr, aContentType, aContentCharset,
@@ -961,7 +961,7 @@ void
 net_ParseContentType(const nsACString &aHeaderStr,
                      nsACString       &aContentType,
                      nsACString       &aContentCharset,
-                     bool             *aHadCharset,
+                     PRBool           *aHadCharset,
                      PRInt32          *aCharsetStart,
                      PRInt32          *aCharsetEnd)
 {
@@ -1012,7 +1012,7 @@ net_ParseContentType(const nsACString &aHeaderStr,
     } while (curTypeStart < flatStr.Length());
 }
 
-bool
+PRBool
 net_IsValidHostName(const nsCSubstring &host)
 {
     const char *end = host.EndReading();
@@ -1038,7 +1038,7 @@ net_IsValidHostName(const nsCSubstring &host)
     return PR_StringToNetAddr(strhost.get(), &addr) == PR_SUCCESS;
 }
 
-bool
+PRBool
 net_IsValidIPv4Addr(const char *addr, PRInt32 addrLen)
 {
     RangedPtr<const char> p(addr, addrLen);
@@ -1075,7 +1075,7 @@ net_IsValidIPv4Addr(const char *addr, PRInt32 addrLen)
     return (dotCount == 3 && octet != -1);
 }
 
-bool
+PRBool
 net_IsValidIPv6Addr(const char *addr, PRInt32 addrLen)
 {
     RangedPtr<const char> p(addr, addrLen);
@@ -1083,7 +1083,7 @@ net_IsValidIPv6Addr(const char *addr, PRInt32 addrLen)
     PRInt32 digits = 0; // number of digits in current block
     PRInt32 colons = 0; // number of colons in a row during parsing
     PRInt32 blocks = 0; // number of hexadecimal blocks
-    bool haveZeros = false; // true if double colon is present in the address
+    PRBool haveZeros = PR_FALSE; // true if double colon is present in the address
 
     for (; addrLen; ++p, --addrLen) {
         if (*p == ':') {

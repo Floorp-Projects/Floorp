@@ -66,7 +66,7 @@ txResultTreeFragment::stringValuePointer()
     return mBuffer ? &mBuffer->mStringValue : nsnull;
 }
 
-bool txResultTreeFragment::booleanValue()
+PRBool txResultTreeFragment::booleanValue()
 {
     return PR_TRUE;
 }

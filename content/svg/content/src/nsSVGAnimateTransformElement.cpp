@@ -70,7 +70,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsGenericElement specializations
-  bool ParseAttribute(PRInt32 aNamespaceID,
+  PRBool ParseAttribute(PRInt32 aNamespaceID,
                         nsIAtom* aAttribute,
                         const nsAString& aValue,
                         nsAttrValue& aResult);
@@ -107,7 +107,7 @@ nsSVGAnimateTransformElement::nsSVGAnimateTransformElement(already_AddRefed<nsIN
 {
 }
 
-bool
+PRBool
 nsSVGAnimateTransformElement::ParseAttribute(PRInt32 aNamespaceID,
                                              nsIAtom* aAttribute,
                                              const nsAString& aValue,

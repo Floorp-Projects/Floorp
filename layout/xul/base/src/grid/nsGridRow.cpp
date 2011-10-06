@@ -62,7 +62,7 @@ nsGridRow::nsGridRow():mIsBogus(PR_FALSE),
 }
 
 void
-nsGridRow::Init(nsIBox* aBox, bool aIsBogus)
+nsGridRow::Init(nsIBox* aBox, PRBool aIsBogus)
 {
   mBox = aBox;
   mIsBogus = aIsBogus;
@@ -81,7 +81,7 @@ nsGridRow::~nsGridRow()
    MOZ_COUNT_DTOR(nsGridRow);
 }
 
-bool 
+PRBool 
 nsGridRow::IsCollapsed(nsBoxLayoutState& aState)
 {
   return mBox && mBox->IsCollapsed(aState);

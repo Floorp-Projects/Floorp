@@ -72,7 +72,7 @@ public:
 
   nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
-  bool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
+  PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                         const nsAString& aValue, nsAttrValue& aResult);
 
   virtual nsXPCClassInfo* GetClassInfo();
@@ -151,7 +151,7 @@ nsHTMLProgressElement::IntrinsicState() const
   return state;
 }
 
-bool
+PRBool
 nsHTMLProgressElement::ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                                       const nsAString& aValue, nsAttrValue& aResult)
 {

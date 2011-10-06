@@ -87,7 +87,7 @@ static void OutputMessage(const std::string &aString, int aLevel) {
   }
 #else
   if (aLevel >= sGfxLogLevel) {
-    printf("%s", aString.c_str());
+    printf(aString.c_str());
   }
 #endif
 }

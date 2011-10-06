@@ -736,7 +736,7 @@ PluginInstanceParent::GetImageSize(nsIntSize* aSize)
 
 #ifdef XP_MACOSX
 nsresult
-PluginInstanceParent::IsRemoteDrawingCoreAnimation(bool *aDrawing)
+PluginInstanceParent::IsRemoteDrawingCoreAnimation(PRBool *aDrawing)
 {
     *aDrawing = (NPDrawingModelCoreAnimation == (NPDrawingModel)mDrawingModel ||
                  NPDrawingModelInvalidatingCoreAnimation == (NPDrawingModel)mDrawingModel);

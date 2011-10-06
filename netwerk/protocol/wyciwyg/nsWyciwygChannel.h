@@ -96,12 +96,12 @@ protected:
                                       const nsCString& aCharset);
 
     void NotifyListener();
-    bool IsOnCacheIOThread();
+    PRBool IsOnCacheIOThread();
 
     nsresult                            mStatus;
-    bool                                mIsPending;
-    bool                                mCharsetAndSourceSet;
-    bool                                mNeedToWriteCharset;
+    PRPackedBool                        mIsPending;
+    PRPackedBool                        mCharsetAndSourceSet;
+    PRPackedBool                        mNeedToWriteCharset;
     PRInt32                             mCharsetSource;
     nsCString                           mCharset;
     PRInt32                             mContentLength;

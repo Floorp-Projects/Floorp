@@ -78,7 +78,7 @@ VariableRefExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
 TX_IMPL_EXPR_STUBS_0(VariableRefExpr, ANY_RESULT)
 
-bool
+PRBool
 VariableRefExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     return !!(aContext & VARIABLES_CONTEXT);

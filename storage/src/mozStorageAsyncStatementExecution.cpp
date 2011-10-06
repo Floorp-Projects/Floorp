@@ -247,7 +247,7 @@ AsyncExecuteStatements::shouldNotify()
 #ifdef DEBUG
   mMutex.AssertNotCurrentThreadOwns();
 
-  bool onCallingThread = false;
+  PRBool onCallingThread = PR_FALSE;
   (void)mCallingThread->IsOnCurrentThread(&onCallingThread);
   NS_ASSERTION(onCallingThread, "runEvent not running on the calling thread!");
 #endif
@@ -556,7 +556,7 @@ NS_IMETHODIMP
 AsyncExecuteStatements::Cancel()
 {
 #ifdef DEBUG
-  bool onCallingThread = false;
+  PRBool onCallingThread = PR_FALSE;
   (void)mCallingThread->IsOnCurrentThread(&onCallingThread);
   NS_ASSERTION(onCallingThread, "Not canceling from the calling thread!");
 #endif

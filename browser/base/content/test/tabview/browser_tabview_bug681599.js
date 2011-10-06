@@ -14,11 +14,11 @@ function test() {
     })
 
     whenSearchIsEnabled(function() {
-      ok(cw.Search.isEnabled(), "The search is enabled before creating a new tab");
+      ok(cw.isSearchEnabled(), "The search is enabled before creating a new tab");
 
       whenTabViewIsHidden(function() {
         showTabView(function() {
-          ok(!cw.Search.isEnabled(), "The search is disabled when entering Tabview");
+          ok(!cw.isSearchEnabled(), "The search is disabled when entering Tabview");
 
           hideTabView(finish);
         })

@@ -366,7 +366,7 @@ nsSVGUseElement::CreateAnonymousContent()
     // move the children over
     PRUint32 num = newcontent->GetChildCount();
     for (i = 0; i < num; i++) {
-      nsCOMPtr<nsIContent> child = newcontent->GetFirstChild();
+      nsCOMPtr<nsIContent> child = newcontent->GetChildAt(0);
       newcontent->RemoveChildAt(0, PR_FALSE);
       svgNode->InsertChildAt(child, i, PR_TRUE);
     }
@@ -406,7 +406,7 @@ nsSVGUseElement::DestroyAnonymousContent()
 //----------------------------------------------------------------------
 // implementation helpers
 
-bool nsSVGUseElement::HasValidDimensions()
+PRBool nsSVGUseElement::HasValidDimensions()
 {
   nsSVGSVGElement *ctx = GetCtx();
 
@@ -498,7 +498,7 @@ nsSVGUseElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
 }
 
 void
-nsSVGUseElement::DidChangeLength(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsSVGUseElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 {
   nsSVGUseElementBase::DidChangeLength(aAttrEnum, aDoSetAttr);
 
@@ -557,7 +557,7 @@ nsSVGUseElement::GetStringInfo()
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 nsSVGUseElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {

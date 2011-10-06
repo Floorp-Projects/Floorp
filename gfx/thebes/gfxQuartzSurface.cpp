@@ -40,23 +40,15 @@
 
 #include "cairo-quartz.h"
 
-void
-gfxQuartzSurface::MakeInvalid()
+gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format,
+                                   PRBool aForPrinting)
+    : mCGContext(NULL), mSize(size), mForPrinting(aForPrinting)
 {
-    mSize = gfxIntSize(-1, -1);    
-}
+    unsigned int width = (unsigned int) floor(size.width);
+    unsigned int height = (unsigned int) floor(size.height);
 
-gfxQuartzSurface::gfxQuartzSurface(const gfxSize& desiredSize, gfxImageFormat format,
-                                   bool aForPrinting)
-    : mCGContext(NULL), mSize(desiredSize), mForPrinting(aForPrinting)
-{
-    gfxIntSize size((unsigned int) floor(desiredSize.width),
-                    (unsigned int) floor(desiredSize.height));
-    if (!CheckSurfaceSize(size))
-        MakeInvalid();
-
-    unsigned int width = static_cast<unsigned int>(mSize.width);
-    unsigned int height = static_cast<unsigned int>(mSize.height);
+    if (!CheckSurfaceSize(gfxIntSize(width, height)))
+        return;
 
     cairo_surface_t *surf = cairo_quartz_surface_create
         ((cairo_format_t) format, width, height);
@@ -69,17 +61,12 @@ gfxQuartzSurface::gfxQuartzSurface(const gfxSize& desiredSize, gfxImageFormat fo
 }
 
 gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
-                                   const gfxSize& desiredSize,
-                                   bool aForPrinting)
-    : mCGContext(context), mSize(desiredSize), mForPrinting(aForPrinting)
+                                   const gfxSize& size,
+                                   PRBool aForPrinting)
+    : mCGContext(context), mSize(size), mForPrinting(aForPrinting)
 {
-    gfxIntSize size((unsigned int) floor(desiredSize.width),
-                    (unsigned int) floor(desiredSize.height));
-    if (!CheckSurfaceSize(size))
-        MakeInvalid();
-
-    unsigned int width = static_cast<unsigned int>(mSize.width);
-    unsigned int height = static_cast<unsigned int>(mSize.height);
+    unsigned int width = (unsigned int) floor(size.width);
+    unsigned int height = (unsigned int) floor(size.height);
 
     cairo_surface_t *surf = 
         cairo_quartz_surface_create_for_cg_context(context,
@@ -91,7 +78,7 @@ gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
 }
 
 gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
-                                   bool aForPrinting) :
+                                   PRBool aForPrinting) :
     mSize(-1.0, -1.0), mForPrinting(aForPrinting)
 {
     mCGContext = cairo_quartz_surface_get_cg_context (csurf);
@@ -101,19 +88,17 @@ gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
 }
 
 gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
-                                   const gfxSize& desiredSize,
+                                   const gfxSize& size,
                                    long stride,
                                    gfxImageFormat format,
-                                   bool aForPrinting)
-    : mCGContext(nsnull), mSize(desiredSize), mForPrinting(aForPrinting)
+                                   PRBool aForPrinting)
+    : mCGContext(nsnull), mSize(size), mForPrinting(aForPrinting)
 {
-    gfxIntSize size((unsigned int) floor(desiredSize.width),
-                    (unsigned int) floor(desiredSize.height));
-    if (!CheckSurfaceSize(size))
-        MakeInvalid();
+    unsigned int width = (unsigned int) floor(size.width);
+    unsigned int height = (unsigned int) floor(size.height);
 
-    unsigned int width = static_cast<unsigned int>(mSize.width);
-    unsigned int height = static_cast<unsigned int>(mSize.height);
+    if (!CheckSurfaceSize(gfxIntSize(width, height)))
+        return;
 
     cairo_surface_t *surf = cairo_quartz_surface_create_for_data
         (data, (cairo_format_t) format, width, height, stride);
@@ -169,10 +154,9 @@ already_AddRefed<gfxImageSurface> gfxQuartzSurface::GetAsImageSurface()
     // shares the refcounts of Cairo surfaces. However, Wrap also adds a
     // reference to the image. We need to remove one of these references
     // explicitly so we don't leak.
-    gfxImageSurface* imgSurface = static_cast<gfxImageSurface*> (img.forget().get());
-    imgSurface->Release();
+    img->Release();
 
-    return imgSurface;
+    return static_cast<gfxImageSurface*>(img.forget().get());
 }
 
 gfxQuartzSurface::~gfxQuartzSurface()

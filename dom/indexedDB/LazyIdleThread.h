@@ -154,7 +154,7 @@ private:
    * Returns true if events should be queued rather than immediately dispatched
    * to mThread. Currently only happens when the thread is shutting down.
    */
-  bool UseRunnableQueue() {
+  PRBool UseRunnableQueue() {
     return !!mQueuedRunnables;
   }
 
@@ -222,18 +222,18 @@ private:
    * Only accessed on the owning thread. Set to true when Shutdown() has been
    * called and prevents EnsureThread() from recreating mThread.
    */
-  bool mShutdown;
+  PRPackedBool mShutdown;
 
   /**
    * Set from CleanupThread and lasting until the thread has shut down. Prevents
    * further idle notifications during the shutdown process.
    */
-  bool mThreadIsShuttingDown;
+  PRPackedBool mThreadIsShuttingDown;
 
   /**
    * Whether or not the idle timeout is enabled.
    */
-  bool mIdleTimeoutEnabled;
+  PRPackedBool mIdleTimeoutEnabled;
 };
 
 END_INDEXEDDB_NAMESPACE

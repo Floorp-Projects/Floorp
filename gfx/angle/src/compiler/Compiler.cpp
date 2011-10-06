@@ -88,8 +88,7 @@ TShHandleBase::~TShHandleBase() {
 
 TCompiler::TCompiler(ShShaderType type, ShShaderSpec spec)
     : shaderType(type),
-      shaderSpec(spec),
-      builtInFunctionEmulator(type)
+      shaderSpec(spec) 
 {
 }
 
@@ -209,8 +208,6 @@ void TCompiler::clearResults()
 
     attribs.clear();
     uniforms.clear();
-
-    builtInFunctionEmulator.Cleanup();
 }
 
 bool TCompiler::detectRecursion(TIntermNode* root)

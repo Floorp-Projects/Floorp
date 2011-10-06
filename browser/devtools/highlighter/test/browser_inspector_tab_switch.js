@@ -47,23 +47,23 @@ function inspectorTabOpen1()
 {
   ok(window.InspectorUI, "InspectorUI variable exists");
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(InspectorUI.store.isEmpty(), "Inspector.store is empty");
+  ok(InspectorStore.isEmpty(), "InspectorStore is empty");
 
   Services.obs.addObserver(inspectorUIOpen1,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.openInspectorUI();
 }
 
 function inspectorUIOpen1()
 {
   Services.obs.removeObserver(inspectorUIOpen1,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   // Make sure the inspector is open.
   ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  ok(!InspectorUI.store.isEmpty(), "InspectorUI.store is not empty");
-  is(InspectorUI.store.length, 1, "Inspector.store.length = 1");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
+  ok(!InspectorStore.isEmpty(), "InspectorStore is not empty");
+  is(InspectorStore.length, 1, "InspectorStore.length = 1");
 
   // Highlight a node.
   div = content.document.getElementsByTagName("div")[0];
@@ -87,13 +87,13 @@ function inspectorTabOpen2()
 {
   // Make sure the inspector is closed.
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(!InspectorUI.treePanel, "Inspector Tree Panel is closed");
-  is(InspectorUI.store.length, 1, "Inspector.store.length = 1");
+  ok(!InspectorUI.isPanelOpen, "Inspector Tree Panel is closed");
+  is(InspectorStore.length, 1, "InspectorStore.length = 1");
 
   // Activate the inspector again.
   executeSoon(function() {
     Services.obs.addObserver(inspectorUIOpen2,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+      INSPECTOR_NOTIFICATIONS.OPENED, false);
     InspectorUI.openInspectorUI();
   });
 }
@@ -101,12 +101,12 @@ function inspectorTabOpen2()
 function inspectorUIOpen2()
 {
   Services.obs.removeObserver(inspectorUIOpen2,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   // Make sure the inspector is open.
   ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  is(InspectorUI.store.length, 2, "Inspector.store.length = 2");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
+  is(InspectorStore.length, 2, "InspectorStore.length = 2");
 
   // Disable highlighting.
   InspectorUI.toggleInspection();
@@ -115,7 +115,7 @@ function inspectorUIOpen2()
   // Switch back to tab 1.
   executeSoon(function() {
     Services.obs.addObserver(inspectorFocusTab1,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+      INSPECTOR_NOTIFICATIONS.OPENED, false);
     gBrowser.selectedTab = tab1;
   });
 }
@@ -123,78 +123,29 @@ function inspectorUIOpen2()
 function inspectorFocusTab1()
 {
   Services.obs.removeObserver(inspectorFocusTab1,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   // Make sure the inspector is still open.
   ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  is(InspectorUI.store.length, 2, "Inspector.store.length = 2");
-  is(InspectorUI.selection, div, "selection matches the div element");
-
-  Services.obs.addObserver(inspectorOpenTreePanelTab1,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
-
-  InspectorUI.treePanel.open();
-}
-
-function inspectorOpenTreePanelTab1()
-{
-  Services.obs.removeObserver(inspectorOpenTreePanelTab1,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
-
-  ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
-  is(InspectorUI.store.length, 2, "Inspector.store.length = 2");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
+  is(InspectorStore.length, 2, "InspectorStore.length = 2");
   is(InspectorUI.selection, div, "selection matches the div element");
 
   // Switch back to tab 2.
   Services.obs.addObserver(inspectorFocusTab2,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   gBrowser.selectedTab = tab2;
 }
 
 function inspectorFocusTab2()
 {
   Services.obs.removeObserver(inspectorFocusTab2,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   // Make sure the inspector is still open.
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  is(InspectorUI.store.length, 2, "Inspector.store.length is 2");
-  isnot(InspectorUI.selection, div, "selection does not match the div element");
-
-  // Switch back to tab 1.
-  Services.obs.addObserver(inspectorSecondFocusTab1,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
-  gBrowser.selectedTab = tab1;
-}
-
-function inspectorSecondFocusTab1()
-{
-  Services.obs.removeObserver(inspectorSecondFocusTab1,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
-
-  ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
-  is(InspectorUI.store.length, 2, "Inspector.store.length = 2");
-  is(InspectorUI.selection, div, "selection matches the div element");
-
-  // Switch back to tab 2.
-  Services.obs.addObserver(inspectorSecondFocusTab2,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-  gBrowser.selectedTab = tab2;
-}
-
-function inspectorSecondFocusTab2()
-{
-  Services.obs.removeObserver(inspectorSecondFocusTab2,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
-
-  // Make sure the inspector is still open.
-  ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  is(InspectorUI.store.length, 2, "Inspector.store.length is 2");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
+  is(InspectorStore.length, 2, "InspectorStore.length = 2");
   isnot(InspectorUI.selection, div, "selection does not match the div element");
 
   // Remove tab 1.
@@ -210,8 +161,8 @@ function inspectorTabUnload1(evt)
 
   // Make sure the Inspector is still open and that the state is correct.
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  is(InspectorUI.store.length, 1, "Inspector.store.length = 1");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
+  is(InspectorStore.length, 1, "InspectorStore.length = 1");
 
   InspectorUI.closeInspectorUI();
   gBrowser.removeCurrentTab();

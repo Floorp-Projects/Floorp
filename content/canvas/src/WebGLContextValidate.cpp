@@ -54,7 +54,7 @@ using namespace mozilla;
 /*
  * Pull all the data out of the program that will be used by validate later on
  */
-bool
+PRBool
 WebGLProgram::UpdateInfo(gl::GLContext *gl)
 {
     gl->fGetProgramiv(mName, LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &mAttribMaxNameLength);
@@ -88,7 +88,7 @@ WebGLProgram::UpdateInfo(gl::GLContext *gl)
  * that will be legal to be read from bound VBOs.
  */
 
-bool
+PRBool
 WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
 {
 #ifdef DEBUG
@@ -154,7 +154,7 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
     return PR_TRUE;
 }
 
-bool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
+PRBool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
 {
     switch (cap) {
         case LOCAL_GL_BLEND:
@@ -173,7 +173,7 @@ bool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
     }
 }
 
-bool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode, const char *info)
+PRBool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode, const char *info)
 {
     switch (mode) {
         case LOCAL_GL_FUNC_ADD:
@@ -186,7 +186,7 @@ bool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode, const char *info)
     }
 }
 
-bool WebGLContext::ValidateBlendFuncDstEnum(WebGLenum factor, const char *info)
+PRBool WebGLContext::ValidateBlendFuncDstEnum(WebGLenum factor, const char *info)
 {
     switch (factor) {
         case LOCAL_GL_ZERO:
@@ -210,7 +210,7 @@ bool WebGLContext::ValidateBlendFuncDstEnum(WebGLenum factor, const char *info)
     }
 }
 
-bool WebGLContext::ValidateBlendFuncSrcEnum(WebGLenum factor, const char *info)
+PRBool WebGLContext::ValidateBlendFuncSrcEnum(WebGLenum factor, const char *info)
 {
     if (factor == LOCAL_GL_SRC_ALPHA_SATURATE)
         return PR_TRUE;
@@ -218,15 +218,15 @@ bool WebGLContext::ValidateBlendFuncSrcEnum(WebGLenum factor, const char *info)
         return ValidateBlendFuncDstEnum(factor, info);
 }
 
-bool WebGLContext::ValidateBlendFuncEnumsCompatibility(WebGLenum sfactor, WebGLenum dfactor, const char *info)
+PRBool WebGLContext::ValidateBlendFuncEnumsCompatibility(WebGLenum sfactor, WebGLenum dfactor, const char *info)
 {
-    bool sfactorIsConstantColor = sfactor == LOCAL_GL_CONSTANT_COLOR ||
+    PRBool sfactorIsConstantColor = sfactor == LOCAL_GL_CONSTANT_COLOR ||
                                     sfactor == LOCAL_GL_ONE_MINUS_CONSTANT_COLOR;
-    bool sfactorIsConstantAlpha = sfactor == LOCAL_GL_CONSTANT_ALPHA ||
+    PRBool sfactorIsConstantAlpha = sfactor == LOCAL_GL_CONSTANT_ALPHA ||
                                     sfactor == LOCAL_GL_ONE_MINUS_CONSTANT_ALPHA;
-    bool dfactorIsConstantColor = dfactor == LOCAL_GL_CONSTANT_COLOR ||
+    PRBool dfactorIsConstantColor = dfactor == LOCAL_GL_CONSTANT_COLOR ||
                                     dfactor == LOCAL_GL_ONE_MINUS_CONSTANT_COLOR;
-    bool dfactorIsConstantAlpha = dfactor == LOCAL_GL_CONSTANT_ALPHA ||
+    PRBool dfactorIsConstantAlpha = dfactor == LOCAL_GL_CONSTANT_ALPHA ||
                                     dfactor == LOCAL_GL_ONE_MINUS_CONSTANT_ALPHA;
     if ( (sfactorIsConstantColor && dfactorIsConstantAlpha) ||
          (dfactorIsConstantColor && sfactorIsConstantAlpha) ) {
@@ -237,7 +237,7 @@ bool WebGLContext::ValidateBlendFuncEnumsCompatibility(WebGLenum sfactor, WebGLe
     }
 }
 
-bool WebGLContext::ValidateTextureTargetEnum(WebGLenum target, const char *info)
+PRBool WebGLContext::ValidateTextureTargetEnum(WebGLenum target, const char *info)
 {
     switch (target) {
         case LOCAL_GL_TEXTURE_2D:
@@ -249,7 +249,7 @@ bool WebGLContext::ValidateTextureTargetEnum(WebGLenum target, const char *info)
     }
 }
 
-bool WebGLContext::ValidateComparisonEnum(WebGLenum target, const char *info)
+PRBool WebGLContext::ValidateComparisonEnum(WebGLenum target, const char *info)
 {
     switch (target) {
         case LOCAL_GL_NEVER:
@@ -267,7 +267,7 @@ bool WebGLContext::ValidateComparisonEnum(WebGLenum target, const char *info)
     }
 }
 
-bool WebGLContext::ValidateStencilOpEnum(WebGLenum action, const char *info)
+PRBool WebGLContext::ValidateStencilOpEnum(WebGLenum action, const char *info)
 {
     switch (action) {
         case LOCAL_GL_KEEP:
@@ -285,7 +285,7 @@ bool WebGLContext::ValidateStencilOpEnum(WebGLenum action, const char *info)
     }
 }
 
-bool WebGLContext::ValidateFaceEnum(WebGLenum face, const char *info)
+PRBool WebGLContext::ValidateFaceEnum(WebGLenum face, const char *info)
 {
     switch (face) {
         case LOCAL_GL_FRONT:
@@ -298,7 +298,7 @@ bool WebGLContext::ValidateFaceEnum(WebGLenum face, const char *info)
     }
 }
 
-bool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
+PRBool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
 {
     switch (target) {
         case LOCAL_GL_STREAM_DRAW:
@@ -311,7 +311,7 @@ bool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
     }
 }
 
-bool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
+PRBool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
 {
     switch (mode) {
         case LOCAL_GL_TRIANGLES:
@@ -384,7 +384,7 @@ PRUint32 WebGLContext::GetTexelSize(WebGLenum format, WebGLenum type)
     return 0;
 }
 
-bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, int jsArrayType,
+PRBool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, int jsArrayType,
                                               PRUint32 *texelSize, const char *info)
 {
     if (type == LOCAL_GL_UNSIGNED_BYTE ||
@@ -458,7 +458,7 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
     return PR_FALSE;
 }
 
-bool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
+PRBool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
 {
     if (index >= mAttribBuffers.Length()) {
         if (index == WebGLuint(-1)) {
@@ -474,7 +474,7 @@ bool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
     }
 }
 
-bool WebGLContext::ValidateStencilParamsForDrawCall()
+PRBool WebGLContext::ValidateStencilParamsForDrawCall()
 {
   const char *msg = "%s set different front and back stencil %s. Drawing in this configuration is not allowed.";
   if (mStencilRefFront != mStencilRefBack) {
@@ -492,7 +492,7 @@ bool WebGLContext::ValidateStencilParamsForDrawCall()
   return PR_TRUE;
 }
 
-bool
+PRBool
 WebGLContext::InitAndValidateGL()
 {
     if (!gl) return PR_FALSE;
@@ -555,14 +555,6 @@ WebGLContext::InitAndValidateGL()
 
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mGLMaxTextureSize);
     gl->fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, &mGLMaxCubeMapTextureSize);
-    
-#ifdef XP_MACOSX
-    if (gl->Vendor() == gl::GLContext::VendorIntel) {
-        // bug 684882, corruption in large cube maps on Intel Mac driver.
-        // Is reported to only affect Mac OS < 10.7.2 but don't want to rely on that yet.
-        mGLMaxCubeMapTextureSize = NS_MIN(mGLMaxCubeMapTextureSize, 512);
-    }
-#endif
 
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, &mGLMaxTextureImageUnits);
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mGLMaxVertexTextureImageUnits);

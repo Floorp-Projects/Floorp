@@ -167,9 +167,9 @@ extern HANDLE hStackWalkMutex;
 
 HANDLE GetCurrentPIDorHandle();
 
-bool EnsureSymInitialized();
+PRBool EnsureSymInitialized();
 
-bool EnsureImageHlpInitialized();
+PRBool EnsureImageHlpInitialized();
 
 /*
  * SymGetModuleInfoEspecial
@@ -299,10 +299,10 @@ void PrintError(char *prefix)
     LocalFree( lpMsgBuf );
 }
 
-bool
+PRBool
 EnsureImageHlpInitialized()
 {
-    static bool gInitialized = false;
+    static PRBool gInitialized = PR_FALSE;
 
     if (gInitialized)
         return gInitialized;
@@ -939,11 +939,11 @@ GetCurrentPIDorHandle()
     return (HANDLE) GetCurrentProcessId(); // winme win98 win95 etc use process identifier
 }
 
-bool
+PRBool
 EnsureSymInitialized()
 {
-    static bool gInitialized = false;
-    bool retStat;
+    static PRBool gInitialized = PR_FALSE;
+    PRBool retStat;
 
     if (gInitialized)
         return gInitialized;
@@ -1455,14 +1455,14 @@ static void InitCriticalRanges()
   FindFunctionAddresses("pthread_cond_wait$UNIX2003", &gCriticalRange);
 }
 
-static bool InCriticalRange(void* aPC)
+static PRBool InCriticalRange(void* aPC)
 {
   return gCriticalRange.mStart &&
     gCriticalRange.mStart <= aPC && aPC < gCriticalRange.mEnd;
 }
 #else
 static void InitCriticalRanges() {}
-static bool InCriticalRange(void* aPC) { return false; }
+static PRBool InCriticalRange(void* aPC) { return PR_FALSE; }
 #endif
 
 EXPORT_XPCOM_API(nsresult)

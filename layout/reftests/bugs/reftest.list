@@ -18,9 +18,6 @@
 == 9458-zorder-4.html 9458-zorder-ref-inline-block.html
 == 9458-zorder-5.html 9458-zorder-ref-inline-block.html
 == 10036-1.html 10036-1-ref.html
-skip-if(!cocoaWidget) HTTP(..) == 10209-1.html 10209-ref.html # Bug 667079
-HTTP(..) == 10209-2.html 10209-ref.html
-asserts(4) skip-if(!cocoaWidget) HTTP(..) == 10209-3.html 10209-3-ref.html # Assertions: bug 666606, skip because of bug 667079
 == 18217-basic-1.html 18217-basic-1-ref.html
 == 18217-basic-2a.html 18217-basic-2-ref.html
 == 18217-basic-2b.html 18217-basic-2-ref.html
@@ -1440,7 +1437,7 @@ random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 528038-1d.html 528038-1-ref.html
 == 528038-1e.html 528038-1-ref.html
 == 528038-1f.html 528038-1-ref.html
-== 528038-2.html 528038-2-ref.html
+asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
 == 531098-1.html 531098-1-ref.html
@@ -1526,7 +1523,6 @@ fails-if(Android) == 560455-1.xul 560455-1-ref.xul
 == 563584-10a.html 563584-10-ref.html
 == 563584-10b.html 563584-10-ref.html
 == 563584-11.html 563584-11-ref.html
-== 564002-1.html 564002-1-ref.html
 == 564054-1.html 564054-1-ref.html
 fails-if(Android) random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 565819-1.html 565819-ref.html
@@ -1639,7 +1635,7 @@ fails-if(Android) == 635302-1.html 635302-1-ref.html
 fails-if(http.platform=="X11"&&!layersGPUAccelerated) == 635373-3.html 635373-3-ref.html
 HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
-random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
+== 637597-1.html 637597-1-ref.html
 == 637852-1.html 637852-1-ref.html
 == 637852-2.html 637852-2-ref.html
 == 637852-3.html 637852-3-ref.html
@@ -1655,7 +1651,6 @@ HTTP(..) == 654057-1.html 654057-1-ref.html
 fails-if(layersGPUAccelerated&&cocoaWidget) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 == 652775-1.html 652775-1-ref.html
 == 655549-1.html 655549-1-ref.html
-!= 656875.html about:blank
 == 658952.html 658952-ref.html
 == 664127-1.xul 664127-1-ref.xul
 == 660682-1.html 660682-1-ref.html
@@ -1665,4 +1660,3 @@ fails-if(layersGPUAccelerated&&cocoaWidget) == 654950-1.html 654950-1-ref.html #
 == 670442-1.html 670442-1-ref.html
 == 670467-1.html 670467-1-ref.html
 == 670467-2.html 670467-2-ref.html
-!= 691087-1.html 691087-1-ref.html

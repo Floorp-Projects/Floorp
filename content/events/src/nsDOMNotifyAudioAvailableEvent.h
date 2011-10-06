@@ -75,7 +75,7 @@ private:
   PRUint32 mFrameBufferLength;
   float mTime;
   JSObject* mCachedArray;
-  bool mAllowAudioData;
+  PRPackedBool mAllowAudioData;
 };
 
 #endif // nsDOMNotifyAudioAvailableEvent_h_

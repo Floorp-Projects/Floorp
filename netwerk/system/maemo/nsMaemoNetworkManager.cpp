@@ -66,7 +66,7 @@ enum InternalState
 
 static InternalState gInternalState = InternalState_Invalid;
 static ConIcConnection* gConnection = nsnull;
-static bool gConnectionCallbackInvoked = false;
+static PRBool gConnectionCallbackInvoked = PR_FALSE;
 
 using namespace mozilla;
 
@@ -101,7 +101,7 @@ connection_event_callback(ConIcConnection *aConnection,
   NotifyNetworkLinkObservers();
 }
 
-bool
+PRBool
 nsMaemoNetworkManager::OpenConnectionSync()
 {
   if (NS_IsMainThread() || !gConnection)
@@ -135,19 +135,19 @@ nsMaemoNetworkManager::CloseConnection()
     con_ic_connection_disconnect(gConnection);
 }
 
-bool
+PRBool
 nsMaemoNetworkManager::IsConnected()
 {
   return gInternalState == InternalState_Connected;
 }
 
-bool
+PRBool
 nsMaemoNetworkManager::GetLinkStatusKnown()
 {
   return gInternalState != InternalState_Invalid;
 }
 
-bool
+PRBool
 nsMaemoNetworkManager::Startup()
 {
   if (gConnection)

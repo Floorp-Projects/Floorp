@@ -13,27 +13,27 @@
 namespace pp
 {
 
-class Context;
+struct Context;
 
 class Preprocessor
 {
   public:
-    Preprocessor();
-    ~Preprocessor();
-
-    bool init();
+    Preprocessor() { }
 
     bool process(int count, const char* const string[], const int length[]);
+
     TokenIterator begin() const { return mTokens.begin(); }
     TokenIterator end() const { return mTokens.end(); }
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Preprocessor);
 
-    // Reset to initialized state.
-    void reset();
+    static bool initLexer(Context* context);
+    static void destroyLexer(Context* context);
+    static bool parse(Context* context);
 
-    Context* mContext;
+    void clearResults();
+
     TokenVector mTokens;  // Output.
 };
 

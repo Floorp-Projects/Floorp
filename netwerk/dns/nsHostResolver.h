@@ -117,17 +117,17 @@ public:
     int          addr_info_gencnt; /* generation count of |addr_info| */
     PRAddrInfo  *addr_info;
     PRNetAddr   *addr;
-    bool         negative;   /* True if this record is a cache of a failed lookup.
+    PRBool       negative;   /* True if this record is a cache of a failed lookup.
                                 Negative cache entries are valid just like any other
                                 (though never for more than 60 seconds), but a use
                                 of that negative entry forces an asynchronous refresh. */
 
     PRUint32     expiration; /* measured in minutes since epoch */
 
-    bool HasResult() const { return addr_info || addr || negative; }
+    PRBool HasResult() const { return addr_info || addr || negative; }
 
     // hold addr_info_lock when calling the blacklist functions
-    bool Blacklisted(PRNetAddr *query);
+    PRBool Blacklisted(PRNetAddr *query);
     void   ResetBlacklist();
     void   ReportUnusable(PRNetAddr *addr);
 
@@ -136,12 +136,12 @@ private:
 
     PRCList callbacks; /* list of callbacks */
 
-    bool    resolving; /* true if this record is being resolved, which means
+    PRBool  resolving; /* true if this record is being resolved, which means
                         * that it is either on the pending queue or owned by
                         * one of the worker threads. */ 
     
-    bool    onQueue;  /* true if pending and on the queue (not yet given to getaddrinfo())*/
-    bool    usingAnyThread; /* true if off queue and contributing to mActiveAnyThreadCount */
+    PRBool  onQueue;  /* true if pending and on the queue (not yet given to getaddrinfo())*/
+    PRBool  usingAnyThread; /* true if off queue and contributing to mActiveAnyThreadCount */
 
     // a list of addresses associated with this record that have been reported
     // as unusable. the list is kept as a set of strings to make it independent
@@ -253,7 +253,7 @@ private:
 
     nsresult Init();
     nsresult IssueLookup(nsHostRecord *);
-    bool     GetHostToLookup(nsHostRecord **m);
+    PRBool   GetHostToLookup(nsHostRecord **m);
     void     OnLookupComplete(nsHostRecord *, nsresult, PRAddrInfo *);
     void     DeQueue(PRCList &aQ, nsHostRecord **aResult);
     void     ClearPendingQueue(PRCList *aPendingQueue);
@@ -278,7 +278,7 @@ private:
     PRUint32      mEvictionQSize;
     PRUint32      mPendingCount;
     PRTime        mCreationTime;
-    bool          mShutdown;
+    PRBool        mShutdown;
     PRIntervalTime mLongIdleTimeout;
     PRIntervalTime mShortIdleTimeout;
 };

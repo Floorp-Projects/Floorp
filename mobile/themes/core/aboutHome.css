@@ -244,17 +244,6 @@ body[dir="rtl"] {
   margin: 0;
 }
 
-#sync-setup {
-  font-size: 18px;
-  margin-top: 24px;
-  text-align: center;
-}
-
-#syncSetupSync { 
-  text-decoration: underline; 
-  color: blue; 
-} 
-
 /* Lightbox for Aurora */
 #lightbox {
   position: fixed;

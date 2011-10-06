@@ -81,17 +81,17 @@ public:
      * Determines whether the given double represents positive or negative
      * inifinity.
      */
-    static bool isInfinite(double aDbl);
+    static PRBool isInfinite(double aDbl);
 
     /**
      * Determines whether the given double is NaN.
      */
-    static bool isNaN(double aDbl);
+    static PRBool isNaN(double aDbl);
 
     /**
      * Determines whether the given double is negative.
      */
-    static bool isNeg(double aDbl);
+    static PRBool isNeg(double aDbl);
 
     /**
      * Converts the value of the given double to a string, and appends
@@ -109,7 +109,7 @@ public:
 // XXX These should go away eventually.
 #define TxObject txObject
 typedef txDouble Double;
-typedef bool MBool;
+typedef PRBool MBool;
 
 #define MB_TRUE  PR_TRUE
 #define MB_FALSE PR_FALSE

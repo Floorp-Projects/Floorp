@@ -71,7 +71,7 @@ public:
   // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const;
-  virtual void SetFocus(bool aOn, bool aRepaint);
+  virtual void SetFocus(PRBool aOn, PRBool aRepaint);
 
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   
@@ -90,7 +90,7 @@ public:
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
   virtual void ContentStatesChanged(nsEventStates aStates);
-  virtual bool IsLeaf() const;
+  virtual PRBool IsLeaf() const;
 
 
 
@@ -103,7 +103,7 @@ public:
   virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
-  typedef bool (*AcceptAttrCallback)(const nsAString&, void*);
+  typedef PRBool (*AcceptAttrCallback)(const nsAString&, void*);
   void ParseAcceptAttribute(AcceptAttrCallback aCallback, void* aClosure) const;
 
   nsIFrame* GetTextFrame() { return mTextFrame; }
@@ -162,10 +162,10 @@ protected:
     BrowseMouseListener(nsFileControlFrame* aFrame) : MouseListener(aFrame) {};
     NS_DECL_NSIDOMEVENTLISTENER
 
-    static bool IsValidDropData(nsIDOMDragEvent* aEvent);
+    static PRBool IsValidDropData(nsIDOMDragEvent* aEvent);
   };
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));

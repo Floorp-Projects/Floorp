@@ -123,7 +123,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
   // Construct connection info object
   nsCAutoString host;
   PRInt32 port = -1;
-  bool usingSSL = false;
+  PRBool usingSSL = PR_FALSE;
 
   rv = mURI->SchemeIs("https", &usingSSL);
   if (NS_FAILED(rv)) return rv;
@@ -196,7 +196,7 @@ HttpBaseChannel::GetName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::IsPending(bool *aIsPending)
+HttpBaseChannel::IsPending(PRBool *aIsPending)
 {
   NS_ENSURE_ARG_POINTER(aIsPending);
   *aIsPending = mIsPending;
@@ -332,7 +332,7 @@ HttpBaseChannel::SetContentType(const nsACString& aContentType)
       return NS_ERROR_NOT_AVAILABLE;
 
     nsCAutoString contentTypeBuf, charsetBuf;
-    bool hadCharset;
+    PRBool hadCharset;
     net_ParseContentType(aContentType, contentTypeBuf, charsetBuf, &hadCharset);
 
     mResponseHead->SetContentType(contentTypeBuf);
@@ -343,7 +343,7 @@ HttpBaseChannel::SetContentType(const nsACString& aContentType)
 
   } else {
     // We are being given a content-type hint.
-    bool dummy;
+    PRBool dummy;
     net_ParseContentType(aContentType, mContentTypeHint, mContentCharsetHint,
                          &dummy);
   }
@@ -514,7 +514,7 @@ HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
                                        const nsACString &aContentType,
                                        PRInt64 aContentLength,
                                        const nsACString &aMethod,
-                                       bool aStreamHasHeaders)
+                                       PRBool aStreamHasHeaders)
 {
   // Ensure stream is set and method is valid 
   NS_ENSURE_TRUE(aStream, NS_ERROR_FAILURE);
@@ -548,7 +548,7 @@ HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetUploadStreamHasHeaders(bool *hasHeaders)
+HttpBaseChannel::GetUploadStreamHasHeaders(PRBool *hasHeaders)
 {
   NS_ENSURE_ARG(hasHeaders);
 
@@ -561,14 +561,14 @@ HttpBaseChannel::GetUploadStreamHasHeaders(bool *hasHeaders)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpBaseChannel::GetApplyConversion(bool *value)
+HttpBaseChannel::GetApplyConversion(PRBool *value)
 {
   *value = mApplyConversion;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetApplyConversion(bool value)
+HttpBaseChannel::SetApplyConversion(PRBool value)
 {
   LOG(("HttpBaseChannel::SetApplyConversion [this=%p value=%d]\n", this, value));
   mApplyConversion = value;
@@ -657,7 +657,7 @@ HttpBaseChannel::nsContentEncodings::~nsContentEncodings()
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpBaseChannel::nsContentEncodings::HasMore(bool* aMoreEncodings)
+HttpBaseChannel::nsContentEncodings::HasMore(PRBool* aMoreEncodings)
 {
   if (mReady) {
     *aMoreEncodings = PR_TRUE;
@@ -686,7 +686,7 @@ HttpBaseChannel::nsContentEncodings::GetNext(nsACString& aNextEncoding)
   encoding.BeginReading(start);
   encoding.EndReading(end);
 
-  bool haveType = false;
+  PRBool haveType = PR_FALSE;
   if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("gzip"), start, end)) {
     aNextEncoding.AssignLiteral(APPLICATION_GZIP);
     haveType = PR_TRUE;
@@ -831,7 +831,7 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
 
   nsCOMPtr<nsIURI> referrerGrip;
   nsresult rv;
-  bool match;
+  PRBool match;
 
   //
   // Strip off "wyciwyg://123/" from wyciwyg referrers.
@@ -959,7 +959,7 @@ HttpBaseChannel::GetRequestHeader(const nsACString& aHeader,
 NS_IMETHODIMP
 HttpBaseChannel::SetRequestHeader(const nsACString& aHeader,
                                   const nsACString& aValue,
-                                  bool aMerge)
+                                  PRBool aMerge)
 {
   const nsCString &flatHeader = PromiseFlatCString(aHeader);
   const nsCString &flatValue  = PromiseFlatCString(aValue);
@@ -1011,7 +1011,7 @@ HttpBaseChannel::GetResponseHeader(const nsACString &header, nsACString &value)
 NS_IMETHODIMP
 HttpBaseChannel::SetResponseHeader(const nsACString& header, 
                                    const nsACString& value, 
-                                   bool merge)
+                                   PRBool merge)
 {
   LOG(("HttpBaseChannel::SetResponseHeader [this=%p header=\"%s\" value=\"%s\" merge=%u]\n",
       this, PromiseFlatCString(header).get(), PromiseFlatCString(value).get(), merge));
@@ -1045,7 +1045,7 @@ HttpBaseChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *visitor)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetAllowPipelining(bool *value)
+HttpBaseChannel::GetAllowPipelining(PRBool *value)
 {
   NS_ENSURE_ARG_POINTER(value);
   *value = mAllowPipelining;
@@ -1053,7 +1053,7 @@ HttpBaseChannel::GetAllowPipelining(bool *value)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetAllowPipelining(bool value)
+HttpBaseChannel::SetAllowPipelining(PRBool value)
 {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
@@ -1079,7 +1079,7 @@ HttpBaseChannel::SetRedirectionLimit(PRUint32 value)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::IsNoStoreResponse(bool *value)
+HttpBaseChannel::IsNoStoreResponse(PRBool *value)
 {
   if (!mResponseHead)
     return NS_ERROR_NOT_AVAILABLE;
@@ -1088,7 +1088,7 @@ HttpBaseChannel::IsNoStoreResponse(bool *value)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::IsNoCacheResponse(bool *value)
+HttpBaseChannel::IsNoCacheResponse(PRBool *value)
 {
   if (!mResponseHead)
     return NS_ERROR_NOT_AVAILABLE;
@@ -1117,7 +1117,7 @@ HttpBaseChannel::GetResponseStatusText(nsACString& aValue)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetRequestSucceeded(bool *aValue)
+HttpBaseChannel::GetRequestSucceeded(PRBool *aValue)
 {
   if (!mResponseHead)
     return NS_ERROR_NOT_AVAILABLE;
@@ -1195,14 +1195,14 @@ HttpBaseChannel::SetCookie(const char *aCookieHeader)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetForceAllowThirdPartyCookie(bool *aForce)
+HttpBaseChannel::GetForceAllowThirdPartyCookie(PRBool *aForce)
 {
   *aForce = mForceAllowThirdPartyCookie;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetForceAllowThirdPartyCookie(bool aForce)
+HttpBaseChannel::SetForceAllowThirdPartyCookie(PRBool aForce)
 {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
@@ -1211,21 +1211,21 @@ HttpBaseChannel::SetForceAllowThirdPartyCookie(bool aForce)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetCanceled(bool *aCanceled)
+HttpBaseChannel::GetCanceled(PRBool *aCanceled)
 {
   *aCanceled = mCanceled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetChannelIsForDownload(bool *aChannelIsForDownload)
+HttpBaseChannel::GetChannelIsForDownload(PRBool *aChannelIsForDownload)
 {
   *aChannelIsForDownload = mChannelIsForDownload;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetChannelIsForDownload(bool aChannelIsForDownload)
+HttpBaseChannel::SetChannelIsForDownload(PRBool aChannelIsForDownload)
 {
   mChannelIsForDownload = aChannelIsForDownload;
   return NS_OK;
@@ -1497,7 +1497,7 @@ CopyProperties(const nsAString& aKey, nsIVariant *aData, void *aClosure)
 nsresult
 HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI, 
                                          nsIChannel   *newChannel,
-                                         bool          preserveMethod)
+                                         PRBool        preserveMethod)
 {
   LOG(("HttpBaseChannel::SetupReplacementChannel "
      "[this=%p newChannel=%p preserveMethod=%d]",

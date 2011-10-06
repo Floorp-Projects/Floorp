@@ -95,7 +95,7 @@ nsDOMWorkerPrivateEvent::GetInterfaces(PRUint32* aCount, nsIID*** aArray)
 NS_IMETHODIMP
 nsDOMWorkerPrivateEvent::PreventDefault()
 {
-  bool cancelable = false;
+  PRBool cancelable = PR_FALSE;
   mEvent->GetCancelable(&cancelable);
 
   if (cancelable) {
@@ -106,7 +106,7 @@ nsDOMWorkerPrivateEvent::PreventDefault()
 }
 
 NS_IMETHODIMP
-nsDOMWorkerPrivateEvent::GetDefaultPrevented(bool* aRetVal)
+nsDOMWorkerPrivateEvent::GetDefaultPrevented(PRBool* aRetVal)
 {
   *aRetVal = mPreventDefaultCalled;
   return NS_OK;
@@ -114,8 +114,8 @@ nsDOMWorkerPrivateEvent::GetDefaultPrevented(bool* aRetVal)
 
 NS_IMETHODIMP
 nsDOMWorkerPrivateEvent::InitEvent(const nsAString& aEventType,
-                                   bool aCanBubble,
-                                   bool aCancelable)
+                                   PRBool aCanBubble,
+                                   PRBool aCancelable)
 {
   mPreventDefaultCalled = PR_FALSE;
   return mEvent->InitEvent(aEventType, aCanBubble, aCancelable);
@@ -123,9 +123,9 @@ nsDOMWorkerPrivateEvent::InitEvent(const nsAString& aEventType,
 
 NS_IMETHODIMP
 nsDOMWorkerPrivateEvent::InitProgressEvent(const nsAString& aTypeArg,
-                                           bool aCanBubbleArg,
-                                           bool aCancelableArg,
-                                           bool aLengthComputableArg,
+                                           PRBool aCanBubbleArg,
+                                           PRBool aCancelableArg,
+                                           PRBool aLengthComputableArg,
                                            PRUint64 aLoadedArg,
                                            PRUint64 aTotalArg)
 {
@@ -139,8 +139,8 @@ nsDOMWorkerPrivateEvent::InitProgressEvent(const nsAString& aTypeArg,
 
 NS_IMETHODIMP
 nsDOMWorkerPrivateEvent::InitMessageEvent(const nsAString& aTypeArg,
-                                          bool aCanBubbleArg,
-                                          bool aCancelableArg,
+                                          PRBool aCanBubbleArg,
+                                          PRBool aCancelableArg,
                                           const nsAString& aDataArg,
                                           const nsAString& aOriginArg,
                                           nsISupports* aSourceArg)
@@ -155,8 +155,8 @@ nsDOMWorkerPrivateEvent::InitMessageEvent(const nsAString& aTypeArg,
 
 NS_IMETHODIMP
 nsDOMWorkerPrivateEvent::InitErrorEvent(const nsAString& aTypeArg,
-                                        bool aCanBubbleArg,
-                                        bool aCancelableArg,
+                                        PRBool aCanBubbleArg,
+                                        PRBool aCancelableArg,
                                         const nsAString& aMessageArg,
                                         const nsAString& aFilenameArg,
                                         PRUint32 aLinenoArg)
@@ -168,7 +168,7 @@ nsDOMWorkerPrivateEvent::InitErrorEvent(const nsAString& aTypeArg,
                                      aMessageArg, aFilenameArg, aLinenoArg);
 }
 
-bool
+PRBool
 nsDOMWorkerPrivateEvent::PreventDefaultCalled()
 {
   return mPreventDefaultCalled;
@@ -213,7 +213,7 @@ nsDOMWorkerEvent::GetEventPhase(PRUint16* aEventPhase)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerEvent::GetBubbles(bool* aBubbles)
+nsDOMWorkerEvent::GetBubbles(PRBool* aBubbles)
 {
   NS_ENSURE_ARG_POINTER(aBubbles);
   *aBubbles = mBubbles;
@@ -221,7 +221,7 @@ nsDOMWorkerEvent::GetBubbles(bool* aBubbles)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerEvent::GetCancelable(bool* aCancelable)
+nsDOMWorkerEvent::GetCancelable(PRBool* aCancelable)
 {
   NS_ENSURE_ARG_POINTER(aCancelable);
   *aCancelable = mCancelable;
@@ -250,7 +250,7 @@ nsDOMWorkerEvent::PreventDefault()
 }
 
 NS_IMETHODIMP
-nsDOMWorkerEvent::GetDefaultPrevented(bool* aRetVal)
+nsDOMWorkerEvent::GetDefaultPrevented(PRBool* aRetVal)
 {
   *aRetVal = mPreventDefaultCalled;
   return NS_OK;
@@ -258,8 +258,8 @@ nsDOMWorkerEvent::GetDefaultPrevented(bool* aRetVal)
 
 NS_IMETHODIMP
 nsDOMWorkerEvent::InitEvent(const nsAString& aEventTypeArg,
-                            bool aCanBubbleArg,
-                            bool aCancelableArg)
+                            PRBool aCanBubbleArg,
+                            PRBool aCancelableArg)
 {
   NS_ENSURE_FALSE(aEventTypeArg.IsEmpty(), NS_ERROR_INVALID_ARG);
 
@@ -377,8 +377,8 @@ nsDOMWorkerMessageEvent::GetSource(nsISupports** aSource)
 
 NS_IMETHODIMP
 nsDOMWorkerMessageEvent::InitMessageEvent(const nsAString& aTypeArg,
-                                          bool aCanBubbleArg,
-                                          bool aCancelableArg,
+                                          PRBool aCanBubbleArg,
+                                          PRBool aCancelableArg,
                                           const nsAString& aDataArg,
                                           const nsAString& aOriginArg,
                                           nsISupports* aSourceArg)
@@ -397,7 +397,7 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsDOMWorkerProgressEvent, nsIDOMEvent,
 NS_IMPL_THREADSAFE_DOM_CI_GETINTERFACES(nsDOMWorkerProgressEvent)
 
 NS_IMETHODIMP
-nsDOMWorkerProgressEvent::GetLengthComputable(bool* aLengthComputable)
+nsDOMWorkerProgressEvent::GetLengthComputable(PRBool* aLengthComputable)
 {
   NS_ENSURE_ARG_POINTER(aLengthComputable);
   *aLengthComputable = mLengthComputable;
@@ -422,9 +422,9 @@ nsDOMWorkerProgressEvent::GetTotal(PRUint64* aTotal)
 
 NS_IMETHODIMP
 nsDOMWorkerProgressEvent::InitProgressEvent(const nsAString_internal& aTypeArg,
-                                            bool aCanBubbleArg,
-                                            bool aCancelableArg,
-                                            bool aLengthComputableArg,
+                                            PRBool aCanBubbleArg,
+                                            PRBool aCancelableArg,
+                                            PRBool aLengthComputableArg,
                                             PRUint64 aLoadedArg,
                                             PRUint64 aTotalArg)
 {
@@ -512,11 +512,11 @@ nsDOMWorkerXHREvent::Init(PRUint32 aXHREventType,
   }
   NS_ASSERTION(mTarget, "Null target!");
 
-  bool bubbles;
+  PRBool bubbles;
   rv = aEvent->GetBubbles(&bubbles);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool cancelable;
+  PRBool cancelable;
   rv = aEvent->GetCancelable(&cancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -531,7 +531,7 @@ nsDOMWorkerXHREvent::Init(PRUint32 aXHREventType,
   if (progressEvent) {
     mProgressEvent = PR_TRUE;
 
-    bool lengthComputable;
+    PRBool lengthComputable;
     rv = progressEvent->GetLengthComputable(&lengthComputable);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -622,8 +622,8 @@ nsDOMWorkerErrorEvent::GetLineno(PRUint32* aLineno)
 
 nsresult
 nsDOMWorkerErrorEvent::InitErrorEvent(const nsAString& aTypeArg,
-                                      bool aCanBubbleArg,
-                                      bool aCancelableArg,
+                                      PRBool aCanBubbleArg,
+                                      PRBool aCancelableArg,
                                       const nsAString& aMessageArg,
                                       const nsAString& aFilenameArg,
                                       PRUint32 aLinenoArg)

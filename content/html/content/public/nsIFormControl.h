@@ -139,7 +139,7 @@ public:
    * @param aRemoveFromForm set false if you do not want this element removed
    *        from the form.  (Used by nsFormControlList::Clear())
    */
-  virtual void ClearForm(bool aRemoveFromForm) = 0;
+  virtual void ClearForm(PRBool aRemoveFromForm) = 0;
 
   /**
    * Get the type of this control as an int (see NS_FORM_* above)
@@ -177,48 +177,48 @@ public:
    * @return PR_TRUE if the form control was a checkbox and its
    *         checked state was restored, PR_FALSE otherwise.
    */
-  virtual bool RestoreState(nsPresState* aState) = 0;
+  virtual PRBool RestoreState(nsPresState* aState) = 0;
 
-  virtual bool AllowDrop() = 0;
+  virtual PRBool AllowDrop() = 0;
 
   /**
    * Returns whether this is a control which submits the form when activated by
    * the user.
    * @return whether this is a submit control.
    */
-  inline bool IsSubmitControl() const;
+  inline PRBool IsSubmitControl() const;
 
   /**
    * Returns whether this is a text control.
    * @param  aExcludePassword  to have NS_FORM_INPUT_PASSWORD returning false.
    * @return whether this is a text control.
    */
-  inline bool IsTextControl(bool aExcludePassword) const ;
+  inline PRBool IsTextControl(PRBool aExcludePassword) const ;
 
   /**
    * Returns whether this is a single line text control.
    * @param  aExcludePassword  to have NS_FORM_INPUT_PASSWORD returning false.
    * @return whether this is a single line text control.
    */
-  inline bool IsSingleLineTextControl(bool aExcludePassword) const;
+  inline PRBool IsSingleLineTextControl(PRBool aExcludePassword) const;
 
   /**
    * Returns whether this is a labelable form control.
    * @return whether this is a labelable form control.
    */
-  inline bool IsLabelableControl() const;
+  inline PRBool IsLabelableControl() const;
 
   /**
    * Returns whether this is a submittable form control.
    * @return whether this is a submittable form control.
    */
-  inline bool IsSubmittableControl() const;
+  inline PRBool IsSubmittableControl() const;
 
   /**
    * Returns whether this form control can have draggable children.
    * @return whether this form control can have draggable children.
    */
-  inline bool AllowDraggableChildren() const;
+  inline PRBool AllowDraggableChildren() const;
 
 protected:
 
@@ -237,7 +237,7 @@ protected:
   inline bool IsAutofocusable() const;
 };
 
-bool
+PRBool
 nsIFormControl::IsSubmitControl() const
 {
   PRUint32 type = GetType();
@@ -246,16 +246,16 @@ nsIFormControl::IsSubmitControl() const
          type == NS_FORM_BUTTON_SUBMIT;
 }
 
-bool
-nsIFormControl::IsTextControl(bool aExcludePassword) const
+PRBool
+nsIFormControl::IsTextControl(PRBool aExcludePassword) const
 {
   PRUint32 type = GetType();
   return type == NS_FORM_TEXTAREA ||
          IsSingleLineTextControl(aExcludePassword, type);
 }
 
-bool
-nsIFormControl::IsSingleLineTextControl(bool aExcludePassword) const
+PRBool
+nsIFormControl::IsSingleLineTextControl(PRBool aExcludePassword) const
 {
   return IsSingleLineTextControl(aExcludePassword, GetType());
 }
@@ -272,7 +272,7 @@ nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, PRUint32 aType)
          (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
 }
 
-bool
+PRBool
 nsIFormControl::IsLabelableControl() const
 {
   // TODO: keygen should be in that list, see bug 101019.
@@ -289,7 +289,7 @@ nsIFormControl::IsLabelableControl() const
          type == NS_FORM_TEXTAREA;
 }
 
-bool
+PRBool
 nsIFormControl::IsSubmittableControl() const
 {
   // TODO: keygen should be in that list, see bug 101019.
@@ -302,7 +302,7 @@ nsIFormControl::IsSubmittableControl() const
          type & NS_FORM_INPUT_ELEMENT;
 }
 
-bool
+PRBool
 nsIFormControl::AllowDraggableChildren() const
 {
   PRUint32 type = GetType();

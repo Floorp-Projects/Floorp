@@ -61,7 +61,7 @@ public:
                   nsIDOMElement  *aNode,
                   const nsAString& aAttribute,
                   const nsAString& aValue,
-                  bool aRemoveAttribute);
+                  PRBool aRemoveAttribute);
 
   ChangeAttributeTxn();
 
@@ -90,10 +90,10 @@ protected:
   nsString mUndoValue;
 
   /** PR_TRUE if the mAttribute was set on mElement at the time of execution */
-  bool     mAttributeWasSet;
+  PRBool   mAttributeWasSet;
 
   /** PR_TRUE if the operation is to remove mAttribute from mElement */
-  bool     mRemoveAttribute;
+  PRBool   mRemoveAttribute;
 };
 
 #endif

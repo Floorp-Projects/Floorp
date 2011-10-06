@@ -42,7 +42,7 @@
 class txMapItemComparator
 {
   public:
-    bool Equals(const txExpandedNameMap_base::MapItem& aItem,
+    PRBool Equals(const txExpandedNameMap_base::MapItem& aItem,
                   const txExpandedName& aKey) const {
       return aItem.mNamespaceID == aKey.mNamespaceID &&
              aItem.mLocalName == aKey.mLocalName;

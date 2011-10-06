@@ -104,7 +104,7 @@ static nsresult toCFURLRef(nsIFile* file, CFURLRef& outURL)
   return rv;
 }
 
-bool nsPluginsDir::IsPluginFile(nsIFile* file)
+PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
   nsCString fileName;
   file->GetNativeLeafName(fileName);
@@ -114,9 +114,9 @@ bool nsPluginsDir::IsPluginFile(nsIFile* file)
    */
   if (!strcmp(fileName.get(), "VerifiedDownloadPlugin.plugin")) {
     NS_WARNING("Preventing load of VerifiedDownloadPlugin.plugin (see bug 436575)");
-    return false;
+    return PR_FALSE;
   }
-  return true;
+  return PR_TRUE;
 }
 
 // Caller is responsible for freeing returned buffer.
@@ -388,13 +388,13 @@ static char* GetNextPluginStringFromHandle(Handle h, short *index)
   return ret;
 }
 
-static bool IsCompatibleArch(nsIFile *file)
+static PRBool IsCompatibleArch(nsIFile *file)
 {
   CFURLRef pluginURL = NULL;
   if (NS_FAILED(toCFURLRef(file, pluginURL)))
-    return false;
+    return PR_FALSE;
   
-  bool isPluginFile = false;
+  PRBool isPluginFile = PR_FALSE;
 
   CFBundleRef pluginBundle = ::CFBundleCreate(kCFAllocatorDefault, pluginURL);
   if (pluginBundle) {
@@ -411,7 +411,7 @@ static bool IsCompatibleArch(nsIFile *file)
       uint32 pluginLibArchitectures;
       nsresult rv = mozilla::ipc::GeckoChildProcessHost::GetArchitecturesForBinary(executablePath, &pluginLibArchitectures);
       if (NS_FAILED(rv)) {
-        return false;
+        return PR_FALSE;
       }
 
       uint32 containerArchitectures = mozilla::ipc::GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);

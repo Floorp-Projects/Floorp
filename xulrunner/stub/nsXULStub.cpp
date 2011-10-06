@@ -81,7 +81,7 @@
 
 #define VERSION_MAXLEN 128
 
-static void Output(bool isError, const char *fmt, ... )
+static void Output(PRBool isError, const char *fmt, ... )
 {
   va_list ap;
   va_start(ap, fmt);
@@ -116,7 +116,7 @@ static void Output(bool isError, const char *fmt, ... )
 /**
  * Return true if |arg| matches the given argument name.
  */
-static bool IsArg(const char* arg, const char* s)
+static PRBool IsArg(const char* arg, const char* s)
 {
   if (*arg == '-')
   {
@@ -136,7 +136,7 @@ static bool IsArg(const char* arg, const char* s)
 /**
  * Return true if |aDir| is a valid file/directory.
  */
-static bool FolderExists(const char* aDir)
+static PRBool FolderExists(const char* aDir)
 {
 #ifdef XP_WIN
   wchar_t wideDir[MAX_PATH];
@@ -200,7 +200,7 @@ main(int argc, char **argv)
   char iniPath[MAXPATHLEN];
   char tmpPath[MAXPATHLEN];
   char greDir[MAXPATHLEN];
-  bool greFound = false;
+  PRBool greFound = PR_FALSE;
 
 #if defined(XP_MACOSX)
   CFBundleRef appBundle = CFBundleGetMainBundle();
@@ -277,7 +277,7 @@ main(int argc, char **argv)
     if (!pathdup)
       return 1;
 
-    bool found = false;
+    PRBool found = PR_FALSE;
     char *token = strtok(pathdup, ":");
     while (token) {
       sprintf(tmpPath, "%s/%s", token, argv[0]);

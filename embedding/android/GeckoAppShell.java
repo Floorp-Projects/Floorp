@@ -58,6 +58,7 @@ import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
+import android.telephony.*;
 import android.webkit.MimeTypeMap;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
@@ -95,6 +96,10 @@ public class GeckoAppShell
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
 
+    static private String sNetworkState = "unknown";
+    static private String sNetworkType = "unknown";
+    static private int sNetworkTypeCode = 0;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -109,7 +114,7 @@ public class GeckoAppShell
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
     public static native void loadLibs(String apkName, boolean shouldExtract);
-    public static native void onChangeNetworkLinkStatus(String status);
+    public static native void onChangeNetworkLinkStatus(String status, String type);
     public static native void reportJavaCrash(String stack);
 
     public static native void processNextNativeEvent();
@@ -676,6 +681,9 @@ public class GeckoAppShell
         // mLaunchState can only be Launched at this point
         GeckoApp.setLaunchState(GeckoApp.LaunchState.GeckoRunning);
         sendPendingEventsToGecko();
+
+        // Refresh the network connectivity state
+        onNetworkStateChange(false);
     }
 
     static void onXreExit() {
@@ -697,11 +705,11 @@ public class GeckoAppShell
 
     // "Installs" an application by creating a shortcut
     static void createShortcut(String aTitle, String aURI, String aIconData, String aType) {
-        Log.w("GeckoAppJava", "createShortcut for " + aURI + " [" + aTitle + "] > " + aType);
+        Log.w("GeckoAppJava", "createShortcut for " + aURI + " [" + aTitle + "]");
 
         // the intent to be launched by the shortcut
         Intent shortcutIntent = new Intent();
-        if (aType.equalsIgnoreCase("webapp")) {
+        if (aType == "webapp") {
             shortcutIntent.setAction("org.mozilla.gecko.WEBAPP");
             shortcutIntent.putExtra("args", "--webapp=" + aURI);
         } else {
@@ -855,25 +863,10 @@ public class GeckoAppShell
         getHandler().post(new Runnable() { 
             public void run() {
                 Context context = GeckoApp.surfaceView.getContext();
-                String text = null;
-                if (android.os.Build.VERSION.SDK_INT >= 11) {
-                    android.content.ClipboardManager cm = (android.content.ClipboardManager)
-                        context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    if (cm.hasPrimaryClip()) {
-                        ClipData clip = cm.getPrimaryClip();
-                        if (clip != null) {
-                            ClipData.Item item = clip.getItemAt(0);
-                            text = item.coerceToText(context).toString();
-                        }
-                    }
-                } else {
-                    android.text.ClipboardManager cm = (android.text.ClipboardManager)
-                        context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    if (cm.hasText())
-                        text = cm.getText().toString();
-                }
+                android.text.ClipboardManager cm = (android.text.ClipboardManager)
+                    context.getSystemService(Context.CLIPBOARD_SERVICE);
                 try {
-                    sClipboardQueue.put(text != null ? text : "");
+                    sClipboardQueue.put(cm.hasText() ? cm.getText().toString() : "");
                 } catch (InterruptedException ie) {}
             }});
         try {
@@ -887,15 +880,9 @@ public class GeckoAppShell
         getHandler().post(new Runnable() { 
             public void run() {
                 Context context = GeckoApp.surfaceView.getContext();
-                if (android.os.Build.VERSION.SDK_INT >= 11) {
-                    android.content.ClipboardManager cm = (android.content.ClipboardManager)
-                        context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    cm.setPrimaryClip(ClipData.newPlainText("Text", text));
-                } else {
-                    android.text.ClipboardManager cm = (android.text.ClipboardManager)
-                        context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    cm.setText(text);
-                }
+                android.text.ClipboardManager cm = (android.text.ClipboardManager)
+                    context.getSystemService(Context.CLIPBOARD_SERVICE);
+                cm.setText(text);
             }});
     }
 
@@ -1059,20 +1046,92 @@ public class GeckoAppShell
     }
 
     public static boolean isNetworkLinkUp() {
-        ConnectivityManager cm = (ConnectivityManager)
-            GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo info = cm.getActiveNetworkInfo();
-        if (info == null || !info.isConnected())
+        if (sNetworkState == "up")
+            return true;
+        return false;
+    }
+
+    public static boolean isNetworkLinkKnown() {
+        if (sNetworkState == "unknown")
             return false;
         return true;
     }
 
-    public static boolean isNetworkLinkKnown() {
+    public static int getNetworkLinkType() {
+        return sNetworkTypeCode;
+    }
+
+    public static void onNetworkStateChange(boolean notifyChanged) {
+        String state;
+        String type;
+        int typeCode;
+
         ConnectivityManager cm = (ConnectivityManager)
             GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm.getActiveNetworkInfo() == null)
-            return false;
-        return true;
+        NetworkInfo info = cm.getActiveNetworkInfo();
+
+        // Note, these strings and codes correspond to those specified in
+        // nsINetworkLinkService. Make sure to keep them in sync!
+        type = "unknown";
+        typeCode = 0;
+        if (info == null) {
+            state = "unknown";
+        } else if (!info.isConnected()) {
+            state = "down";
+        } else {
+            state = "up";
+
+            int androidType = info.getType();
+
+            if (androidType == ConnectivityManager.TYPE_WIFI) {
+                type = "wifi";
+                typeCode = 3;
+            } else if (androidType == ConnectivityManager.TYPE_WIMAX) {
+                type = "wimax";
+                typeCode = 4;
+            } else if (androidType == ConnectivityManager.TYPE_MOBILE) {
+                TelephonyManager tm = (TelephonyManager)
+                    GeckoApp.mAppContext.getSystemService(Context.TELEPHONY_SERVICE);
+                typeCode = tm.getNetworkType();
+
+                // Note that the value of some of these constants are used due
+                // to not all of these existing in API level 8.
+                //
+                // In particular, EVDO_B appears at level 9, and EHRPD and LTE
+                // appear at level 11.
+                if (androidType == TelephonyManager.NETWORK_TYPE_GPRS ||
+                    androidType == TelephonyManager.NETWORK_TYPE_EDGE ||
+                    androidType == TelephonyManager.NETWORK_TYPE_CDMA ||
+                    androidType == TelephonyManager.NETWORK_TYPE_IDEN ||
+                    androidType == TelephonyManager.NETWORK_TYPE_1xRTT) {
+                    type = "2g";
+                    typeCode = 5;
+                } else if (androidType == TelephonyManager.NETWORK_TYPE_UMTS ||
+                           androidType == TelephonyManager.NETWORK_TYPE_HSDPA ||
+                           androidType == TelephonyManager.NETWORK_TYPE_HSUPA ||
+                           androidType == TelephonyManager.NETWORK_TYPE_HSPA ||
+                           androidType == TelephonyManager.NETWORK_TYPE_EVDO_0 ||
+                           androidType == TelephonyManager.NETWORK_TYPE_EVDO_A ||
+                           androidType == 12 || // TelephonyManager.NETWORK_TYPE_EVDO_B
+                           androidType == 14) { // TelephonyManager.NETWORK_TYPE_EHRPD
+                    type = "3g";
+                    typeCode = 6;
+                } else if (androidType == 13) { // TelephonyManager.NETWORK_TYPE_LTE
+                    type = "4g";
+                    typeCode = 7;
+                }
+            }
+        }
+
+        // If the network state has changed, notify Gecko
+        if (notifyChanged && (state != sNetworkState || typeCode != sNetworkTypeCode)) {
+            Log.i(LOG_FILE_NAME, "Network state changed: (" + state + ", " + type + ") ");
+            sNetworkState = state;
+            sNetworkType = type;
+            sNetworkTypeCode = typeCode;
+            if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning))
+                onChangeNetworkLinkStatus(sNetworkState, sNetworkType);
+        }
     }
 
     public static void setSelectedLocale(String localeCode) {
@@ -1523,101 +1582,5 @@ public class GeckoAppShell
     public static void postToJavaThread(boolean mainThread) {
         Log.i("GeckoShell", "post to " + (mainThread ? "main " : "") + "java thread");
         getMainHandler().post(new GeckoRunnableCallback());
-    }
-    
-    public static android.hardware.Camera sCamera = null;
-    
-    static native void cameraCallbackBridge(byte[] data);
-
-    static int kPreferedFps = 25;
-    static byte[] sCameraBuffer = null;
- 
-    static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
-        Log.i("GeckoAppJava", "initCamera(" + aContentType + ", " + aWidth + "x" + aHeight + ") on thread " + Thread.currentThread().getId());
-
-        // [0] = 0|1 (failure/success)
-        // [1] = width
-        // [2] = height
-        // [3] = fps
-        int[] result = new int[4];
-        result[0] = 0;
-
-        if (Build.VERSION.SDK_INT >= 9) {
-            if (android.hardware.Camera.getNumberOfCameras() == 0)
-                return result;
-        }
-
-        try {
-            // no front/back camera before API level 9
-            if (Build.VERSION.SDK_INT >= 9)
-                sCamera = android.hardware.Camera.open(aCamera);
-            else
-                sCamera = android.hardware.Camera.open();
-
-            android.hardware.Camera.Parameters params = sCamera.getParameters();
-            params.setPreviewFormat(ImageFormat.NV21);
-
-            // use the preview fps closest to 25 fps.
-            int fpsDelta = 1000;
-            try {
-                Iterator<Integer> it = params.getSupportedPreviewFrameRates().iterator();
-                while (it.hasNext()) {
-                    int nFps = it.next();
-                    if (Math.abs(nFps - kPreferedFps) < fpsDelta) {
-                        fpsDelta = Math.abs(nFps - kPreferedFps);
-                        params.setPreviewFrameRate(nFps);
-                    }
-                }
-            } catch(Exception e) {
-                params.setPreviewFrameRate(kPreferedFps);
-            }
-
-            // set up the closest preview size available
-            Iterator<android.hardware.Camera.Size> sit = params.getSupportedPreviewSizes().iterator();
-            int sizeDelta = 10000000;
-            int bufferSize = 0;
-            while (sit.hasNext()) {
-                android.hardware.Camera.Size size = sit.next();
-                if (Math.abs(size.width * size.height - aWidth * aHeight) < sizeDelta) {
-                    sizeDelta = Math.abs(size.width * size.height - aWidth * aHeight);
-                    params.setPreviewSize(size.width, size.height);
-                    bufferSize = size.width * size.height;
-                }
-            }
-
-            sCamera.setParameters(params);
-            sCameraBuffer = new byte[(bufferSize * 12) / 8];
-            sCamera.addCallbackBuffer(sCameraBuffer);
-            sCamera.setPreviewCallbackWithBuffer(new android.hardware.Camera.PreviewCallback() {
-                public void onPreviewFrame(byte[] data, android.hardware.Camera camera) {
-                    cameraCallbackBridge(data);
-                    sCamera.addCallbackBuffer(sCameraBuffer);
-                }
-            });
-            sCamera.startPreview();
-            params = sCamera.getParameters();
-            Log.i("GeckoAppJava", "Camera: " + params.getPreviewSize().width + "x" + params.getPreviewSize().height +
-                  " @ " + params.getPreviewFrameRate() + "fps. format is " + params.getPreviewFormat());
-            result[0] = 1;
-            result[1] = params.getPreviewSize().width;
-            result[2] = params.getPreviewSize().height;
-            result[3] = params.getPreviewFrameRate();
-
-            Log.i("GeckoAppJava", "Camera preview started");
-        } catch(RuntimeException e) {
-            Log.e("GeckoAppJava", "initCamera RuntimeException : ", e);
-            result[0] = result[1] = result[2] = result[3] = 0;
-        }
-        return result;
-    }
-
-    static synchronized void closeCamera() {
-        Log.i("GeckoAppJava", "closeCamera() on thread " + Thread.currentThread().getId());
-        if (sCamera != null) {
-            sCamera.stopPreview();
-            sCamera.release();
-            sCamera = null;
-            sCameraBuffer = null;
-        }
     }
 }

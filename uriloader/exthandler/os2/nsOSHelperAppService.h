@@ -69,15 +69,15 @@ public:
                                      nsIMIMEInfo **_retval);
   already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMimeType,
                                                   const nsACString& aFileExt,
-                                                  bool       *aFound);
+                                                  PRBool     *aFound);
   NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
-                                          bool *found,
+                                          PRBool *found,
                                           nsIHandlerInfo **_retval);
 
   // override nsIExternalProtocolService methods
   NS_IMETHODIMP GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
 
-  nsresult OSProtocolHandlerExists(const char * aProtocolScheme, bool * aHandlerExists);
+  nsresult OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
 
 protected:
   already_AddRefed<nsMIMEInfoOS2> GetFromType(const nsCString& aMimeType);
@@ -101,8 +101,8 @@ private:
                                     nsIFileInputStream ** aFileInputStream,
                                     nsILineInputStream ** aLineInputStream,
                                     nsACString& aBuffer,
-                                    bool * aNetscapeFormat,
-                                    bool * aMore);
+                                    PRBool * aNetscapeFormat,
+                                    PRBool * aMore);
 
   static nsresult GetTypeAndDescriptionFromMimetypesFile(const nsAString& aFilename,
                                                          const nsAString& aFileExtension,

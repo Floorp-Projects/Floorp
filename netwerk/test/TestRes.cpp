@@ -133,7 +133,7 @@ TestOpenInputStream(const char* url)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool gDone = false;
+PRBool gDone = PR_FALSE;
 nsIEventQueue* gEventQ = nsnull;
 
 class Listener : public nsIStreamListener 

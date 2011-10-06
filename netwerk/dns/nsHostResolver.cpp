@@ -153,7 +153,7 @@ public:
     {
     }
 
-    bool Reset()
+    PRBool Reset()
     {
         // reset no more than once per second
         if (PR_IntervalToSeconds(PR_IntervalNow() - mLastReset) < 1)
@@ -220,7 +220,7 @@ nsHostRecord::~nsHostRecord()
         free(addr);
 }
 
-bool
+PRBool
 nsHostRecord::Blacklisted(PRNetAddr *aQuery)
 {
     // must call locked
@@ -281,7 +281,7 @@ HostDB_HashKey(PLDHashTable *table, const void *key)
     return PL_DHashStringKey(table, hk->host) ^ RES_KEY_FLAGS(hk->flags) ^ hk->af;
 }
 
-static bool
+static PRBool
 HostDB_MatchEntry(PLDHashTable *table,
                   const PLDHashEntryHdr *entry,
                   const void *key)
@@ -333,7 +333,7 @@ HostDB_ClearEntry(PLDHashTable *table,
     NS_RELEASE(he->rec);
 }
 
-static bool
+static PRBool
 HostDB_InitEntry(PLDHashTable *table,
                  PLDHashEntryHdr *entry,
                  const void *key)
@@ -491,19 +491,19 @@ nsHostResolver::Shutdown()
 #endif
 }
 
-static inline bool
+static inline PRBool
 IsHighPriority(PRUint16 flags)
 {
     return !(flags & (nsHostResolver::RES_PRIORITY_LOW | nsHostResolver::RES_PRIORITY_MEDIUM));
 }
 
-static inline bool
+static inline PRBool
 IsMediumPriority(PRUint16 flags)
 {
     return flags & nsHostResolver::RES_PRIORITY_MEDIUM;
 }
 
-static inline bool
+static inline PRBool
 IsLowPriority(PRUint16 flags)
 {
     return flags & nsHostResolver::RES_PRIORITY_LOW;
@@ -754,10 +754,10 @@ nsHostResolver::DeQueue(PRCList &aQ, nsHostRecord **aResult)
     (*aResult)->onQueue = PR_FALSE;
 }
 
-bool
+PRBool
 nsHostResolver::GetHostToLookup(nsHostRecord **result)
 {
-    bool timedOut = false;
+    PRBool timedOut = PR_FALSE;
     PRIntervalTime epoch, now, timeout;
     
     MutexAutoLock lock(mLock);

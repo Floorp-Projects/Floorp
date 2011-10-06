@@ -98,7 +98,7 @@ nsSAXXMLReader::WillBuildModel(nsDTDMode)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::DidBuildModel(bool aTerminated)
+nsSAXXMLReader::DidBuildModel(PRBool aTerminated)
 {
   if (mContentHandler)
     return mContentHandler->EndDocument();
@@ -335,7 +335,7 @@ NS_IMETHODIMP
 nsSAXXMLReader::ReportError(const PRUnichar* aErrorText,
                             const PRUnichar* aSourceText,
                             nsIScriptError *aError,
-                            bool *_retval)
+                            PRBool *_retval)
 {
   NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
   // Normally, the expat driver should report the error.
@@ -426,13 +426,13 @@ nsSAXXMLReader::SetErrorHandler(nsISAXErrorHandler *aErrorHandler)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::SetFeature(const nsAString &aName, bool aValue)
+nsSAXXMLReader::SetFeature(const nsAString &aName, PRBool aValue)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::GetFeature(const nsAString &aName, bool *aResult)
+nsSAXXMLReader::GetFeature(const nsAString &aName, PRBool *aResult)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -458,7 +458,7 @@ nsSAXXMLReader::SetProperty(const nsAString &aName, nsISupports* aValue)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::GetProperty(const nsAString &aName, bool *aResult)
+nsSAXXMLReader::GetProperty(const nsAString &aName, PRBool *aResult)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -636,7 +636,7 @@ nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver, nsIChannel *aChannel)
 }
 
 // from nsDocument.cpp
-bool
+PRBool
 nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
                                   PRInt32& aCharsetSource,
                                   nsACString& aCharset)

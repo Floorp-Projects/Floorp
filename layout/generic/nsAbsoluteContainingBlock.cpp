@@ -135,19 +135,19 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
                                   nsReflowStatus&          aReflowStatus,
                                   nscoord                  aContainingBlockWidth,
                                   nscoord                  aContainingBlockHeight,
-                                  bool                     aConstrainHeight,
-                                  bool                     aCBWidthChanged,
-                                  bool                     aCBHeightChanged,
+                                  PRBool                   aConstrainHeight,
+                                  PRBool                   aCBWidthChanged,
+                                  PRBool                   aCBHeightChanged,
                                   nsOverflowAreas*         aOverflowAreas)
 {
   nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
 
-  bool reflowAll = aReflowState.ShouldReflowAllKids();
+  PRBool reflowAll = aReflowState.ShouldReflowAllKids();
 
   nsIFrame* kidFrame;
   nsOverflowContinuationTracker tracker(aPresContext, aDelegatingFrame, PR_TRUE);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
-    bool kidNeedsReflow = reflowAll || NS_SUBTREE_DIRTY(kidFrame) ||
+    PRBool kidNeedsReflow = reflowAll || NS_SUBTREE_DIRTY(kidFrame) ||
       FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged);
     if (kidNeedsReflow && !aPresContext->HasPendingInterrupt()) {
       // Reflow the frame
@@ -224,10 +224,10 @@ static inline bool IsFixedMarginSize(const nsStyleCoord& aCoord)
 static inline bool IsFixedOffset(const nsStyleCoord& aCoord)
   { return aCoord.ConvertsToLength(); }
 
-bool
+PRBool
 nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
-                                                   bool aCBWidthChanged,
-                                                   bool aCBHeightChanged)
+                                                   PRBool aCBWidthChanged,
+                                                   PRBool aCBHeightChanged)
 {
   const nsStylePosition* pos = f->GetStylePosition();
   // See if f's position might have changed because it depends on a
@@ -342,7 +342,7 @@ nsAbsoluteContainingBlock::MarkAllFramesDirty()
 }
 
 void
-nsAbsoluteContainingBlock::DoMarkFramesDirty(bool aMarkAllDirty)
+nsAbsoluteContainingBlock::DoMarkFramesDirty(PRBool aMarkAllDirty)
 {
   for (nsIFrame* kidFrame = mAbsoluteFrames.FirstChild();
        kidFrame;
@@ -370,7 +370,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                                const nsHTMLReflowState& aReflowState,
                                                nscoord                  aContainingBlockWidth,
                                                nscoord                  aContainingBlockHeight,
-                                               bool                     aConstrainHeight,
+                                               PRBool                   aConstrainHeight,
                                                nsIFrame*                aKidFrame,
                                                nsReflowStatus&          aStatus,
                                                nsOverflowAreas*         aOverflowAreas)
@@ -424,10 +424,10 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   // Send the WillReflow() notification and position the frame
   aKidFrame->WillReflow(aPresContext);
 
-  bool constrainHeight = (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE)
+  PRBool constrainHeight = (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE)
     && aConstrainHeight
        // Don't split if told not to (e.g. for fixed frames)
-    && (aDelegatingFrame->GetType() != nsGkAtoms::inlineFrame)
+    && (aDelegatingFrame->GetType() != nsGkAtoms::positionedInlineFrame)
        //XXX we don't handle splitting frames for inline absolute containing blocks yet
     && (aKidFrame->GetRect().y <= aReflowState.availableHeight);
        // Don't split things below the fold. (Ideally we shouldn't *have*

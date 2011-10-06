@@ -74,8 +74,8 @@ public:
    * or to the left of its origin position. The term 'dimensions' indicates it
    * is relative to this view.
    */
-  virtual void SetDimensions(const nsRect &aRect, bool aPaint = true,
-                             bool aResizeWidget = true);
+  virtual void SetDimensions(const nsRect &aRect, PRBool aPaint = PR_TRUE,
+                             PRBool aResizeWidget = PR_TRUE);
   void SetInvalidationDimensions(const nsRect* aRect);
 
   /**
@@ -94,7 +94,7 @@ public:
    * relative to the view's siblings.
    * @param zindex new z depth
    */
-  void SetZIndex(bool aAuto, PRInt32 aZIndex, bool aTopMost);
+  void SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost);
 
   /**
    * Set/Get whether the view "floats" above all other views,
@@ -104,7 +104,7 @@ public:
    * views that need to be drawn in front of all other views.
    * @result PR_TRUE if the view floats, PR_FALSE otherwise.
    */
-  NS_IMETHOD  SetFloating(bool aFloatingView);
+  NS_IMETHOD  SetFloating(PRBool aFloatingView);
 
   // Helper function to get the view that's associated with a widget
   static nsView* GetViewFor(nsIWidget* aWidget) {
@@ -118,20 +118,20 @@ public:
 public:
   // See nsIView::CreateWidget.
   nsresult CreateWidget(nsWidgetInitData *aWidgetInitData,
-                        bool aEnableDragDrop,
-                        bool aResetVisibility);
+                        PRBool aEnableDragDrop,
+                        PRBool aResetVisibility);
 
   // See nsIView::CreateWidgetForParent.
   nsresult CreateWidgetForParent(nsIWidget* aParentWidget,
                                  nsWidgetInitData *aWidgetInitData,
-                                 bool aEnableDragDrop,
-                                 bool aResetVisibility);
+                                 PRBool aEnableDragDrop,
+                                 PRBool aResetVisibility);
 
   // See nsIView::CreateWidgetForPopup.
   nsresult CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
                                 nsIWidget* aParentWidget,
-                                bool aEnableDragDrop,
-                                bool aResetVisibility);
+                                PRBool aEnableDragDrop,
+                                PRBool aResetVisibility);
 
   // See nsIView::DestroyWidget
   void DestroyWidget();
@@ -145,7 +145,7 @@ public:
   nsViewManager* GetViewManager() const { return mViewManager; }
   // These are superseded by a better interface in nsIView
   PRInt32 GetZIndex() const { return mZIndex; }
-  bool GetZIndexIsAuto() const { return (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0; }
+  PRBool GetZIndexIsAuto() const { return (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0; }
   // Same as GetBounds but converts to parent appunits if they are different.
   nsRect GetBoundsInParentUnits() const;
 
@@ -156,7 +156,7 @@ public:
   // These are defined exactly the same in nsIView, but for now they have to be redeclared
   // here because of stupid C++ method hiding rules
 
-  bool HasNonEmptyDirtyRegion() {
+  PRBool HasNonEmptyDirtyRegion() {
     return mDirtyRegion && !mDirtyRegion->IsEmpty();
   }
   nsRegion* GetDirtyRegion() {
@@ -178,14 +178,14 @@ public:
   PRUint32 GetViewFlags() const { return mVFlags; }
   void SetViewFlags(PRUint32 aFlags) { mVFlags = aFlags; }
 
-  void SetTopMost(bool aTopMost) { aTopMost ? mVFlags |= NS_VIEW_FLAG_TOPMOST : mVFlags &= ~NS_VIEW_FLAG_TOPMOST; }
-  bool IsTopMost() { return((mVFlags & NS_VIEW_FLAG_TOPMOST) != 0); }
+  void SetTopMost(PRBool aTopMost) { aTopMost ? mVFlags |= NS_VIEW_FLAG_TOPMOST : mVFlags &= ~NS_VIEW_FLAG_TOPMOST; }
+  PRBool IsTopMost() { return((mVFlags & NS_VIEW_FLAG_TOPMOST) != 0); }
 
-  void ResetWidgetBounds(bool aRecurse, bool aMoveOnly, bool aInvalidateChangedSize);
+  void ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly, PRBool aInvalidateChangedSize);
   void SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY);
   void AssertNoWindow();
 
-  void NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible);
+  void NotifyEffectiveVisibilityChanged(PRBool aEffectivelyVisible);
 
   // Update the cached RootViewManager for all view manager descendents,
   // If the hierarchy is being removed, aViewManagerParent points to the view
@@ -203,7 +203,7 @@ public:
 protected:
   // Do the actual work of ResetWidgetBounds, unconditionally.  Don't
   // call this method if we have no widget.
-  void DoResetWidgetBounds(bool aMoveOnly, bool aInvalidateChangedSize);
+  void DoResetWidgetBounds(PRBool aMoveOnly, PRBool aInvalidateChangedSize);
 
   nsRegion*    mDirtyRegion;
   // invalidations are clipped to mInvalidationDimensions, not
@@ -212,10 +212,10 @@ protected:
   // nsPresShell.cpp.  The coordinates of mInvalidationDimensions are
   // relative to |this|.
   nsRect       mInvalidationDimensions;
-  bool mHaveInvalidationDimensions;
+  PRPackedBool mHaveInvalidationDimensions;
 
 private:
-  void InitializeWindow(bool aEnableDragDrop, bool aResetVisibility);
+  void InitializeWindow(PRBool aEnableDragDrop, PRBool aResetVisibility);
 };
 
 #endif

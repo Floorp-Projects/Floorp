@@ -231,7 +231,7 @@ LayerManager::Mutated(Layer* aLayer)
 //--------------------------------------------------
 // Layer
 
-bool
+PRBool
 Layer::CanUseOpaqueSurface()
 {
   // If the visible content in the layer is opaque, there is no need
@@ -397,7 +397,7 @@ ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   aAttrs = ContainerLayerAttributes(GetFrameMetrics());
 }
 
-bool
+PRBool
 ContainerLayer::HasMultipleChildren()
 {
   PRUint32 count = 0;
@@ -422,7 +422,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
   gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
   mEffectiveTransform = SnapTransform(idealTransform, gfxRect(0, 0, 0, 0), &residual);
 
-  bool useIntermediateSurface;
+  PRBool useIntermediateSurface;
   float opacity = GetEffectiveOpacity();
   if (opacity != 1.0f && HasMultipleChildren()) {
     useIntermediateSurface = PR_TRUE;

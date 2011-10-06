@@ -47,7 +47,7 @@
 
 nsListItemFrame::nsListItemFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext,
-                                 bool aIsRoot,
+                                 PRBool aIsRoot,
                                  nsBoxLayout* aLayoutManager)
   : nsGridRowLeafFrame(aPresShell, aContext, aIsRoot, aLayoutManager) 
 {

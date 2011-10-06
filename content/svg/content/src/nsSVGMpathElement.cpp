@@ -121,7 +121,7 @@ nsresult
 nsSVGMpathElement::BindToTree(nsIDocument* aDocument,
                               nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers)
+                              PRBool aCompileEventHandlers)
 {
   NS_ABORT_IF_FALSE(!mHrefTarget.get(),
                     "Shouldn't have href-target yet "
@@ -143,19 +143,19 @@ nsSVGMpathElement::BindToTree(nsIDocument* aDocument,
 }
 
 void
-nsSVGMpathElement::UnbindFromTree(bool aDeep, bool aNullParent)
+nsSVGMpathElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   UnlinkHrefTarget(PR_TRUE);
   nsSVGMpathElementBase::UnbindFromTree(aDeep, aNullParent);
 }
 
-bool
+PRBool
 nsSVGMpathElement::ParseAttribute(PRInt32 aNamespaceID,
                                   nsIAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)
 {
-  bool returnVal =
+  PRBool returnVal =
     nsSVGMpathElementBase::ParseAttribute(aNamespaceID, aAttribute,
                                           aValue, aResult);
   if (aNamespaceID == kNameSpaceID_XLink &&
@@ -170,7 +170,7 @@ nsSVGMpathElement::ParseAttribute(PRInt32 aNamespaceID,
 
 nsresult
 nsSVGMpathElement::UnsetAttr(PRInt32 aNamespaceID,
-                             nsIAtom* aAttribute, bool aNotify)
+                             nsIAtom* aAttribute, PRBool aNotify)
 {
   nsresult rv = nsSVGMpathElementBase::UnsetAttr(aNamespaceID, aAttribute,
                                                  aNotify);
@@ -269,7 +269,7 @@ nsSVGMpathElement::UpdateHrefTarget(nsIContent* aParent,
 }
 
 void
-nsSVGMpathElement::UnlinkHrefTarget(bool aNotifyParent)
+nsSVGMpathElement::UnlinkHrefTarget(PRBool aNotifyParent)
 {
   // Stop observing old target (if any)
   if (mHrefTarget.get()) {

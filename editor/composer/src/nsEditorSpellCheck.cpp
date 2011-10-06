@@ -149,7 +149,7 @@ LastDictionary::FetchLastDictionary(nsIEditor* aEditor, nsAString& aDictionary)
   NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
   uri->SetAsISupports(docUri);
 
-  bool hasPref;
+  PRBool hasPref;
   if (NS_SUCCEEDED(contentPrefService->HasPref(uri, CPS_PREF_NAME, &hasPref)) && hasPref) {
     nsCOMPtr<nsIVariant> pref;
     contentPrefService->GetPref(uri, CPS_PREF_NAME, nsnull, getter_AddRefs(pref));
@@ -246,7 +246,7 @@ nsEditorSpellCheck::~nsEditorSpellCheck()
 // enabling or disabling UI as necessary). This just creates a spellcheck
 // object if needed and asks it for the dictionary list.
 NS_IMETHODIMP
-nsEditorSpellCheck::CanSpellCheck(bool* _retval)
+nsEditorSpellCheck::CanSpellCheck(PRBool* _retval)
 {
   nsresult rv;
   nsCOMPtr<nsISpellChecker> spellChecker;
@@ -265,7 +265,7 @@ nsEditorSpellCheck::CanSpellCheck(bool* _retval)
 }
 
 NS_IMETHODIMP    
-nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionChecking)
+nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelectionChecking)
 {
   NS_ENSURE_TRUE(aEditor, NS_ERROR_NULL_POINTER);
   mEditor = aEditor;
@@ -311,7 +311,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
       rv = selection->GetRangeAt(0, getter_AddRefs(range));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      bool collapsed = false;
+      PRBool collapsed = PR_FALSE;
       rv = range->GetCollapsed(&collapsed);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -386,7 +386,7 @@ nsEditorSpellCheck::GetSuggestedWord(PRUnichar **aSuggestedWord)
 
 NS_IMETHODIMP    
 nsEditorSpellCheck::CheckCurrentWord(const PRUnichar *aSuggestedWord,
-                                     bool *aIsMisspelled)
+                                     PRBool *aIsMisspelled)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
@@ -397,7 +397,7 @@ nsEditorSpellCheck::CheckCurrentWord(const PRUnichar *aSuggestedWord,
 
 NS_IMETHODIMP    
 nsEditorSpellCheck::CheckCurrentWordNoSuggest(const PRUnichar *aSuggestedWord,
-                                              bool *aIsMisspelled)
+                                              PRBool *aIsMisspelled)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
@@ -408,7 +408,7 @@ nsEditorSpellCheck::CheckCurrentWordNoSuggest(const PRUnichar *aSuggestedWord,
 NS_IMETHODIMP    
 nsEditorSpellCheck::ReplaceWord(const PRUnichar *aMisspelledWord,
                                 const PRUnichar *aReplaceWord,
-                                bool             allOccurrences)
+                                PRBool           allOccurrences)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 

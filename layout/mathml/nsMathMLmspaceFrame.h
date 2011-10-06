@@ -60,7 +60,7 @@ public:
     return NS_OK;
   }
 
-  virtual bool IsLeaf() const;
+  virtual PRBool IsLeaf() const;
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,

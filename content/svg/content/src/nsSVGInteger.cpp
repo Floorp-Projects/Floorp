@@ -81,7 +81,7 @@ GetValueFromString(const nsAString &aValueAsString,
 nsresult
 nsSVGInteger::SetBaseValueString(const nsAString &aValueAsString,
                                  nsSVGElement *aSVGElement,
-                                 bool aDoSetAttr)
+                                 PRBool aDoSetAttr)
 {
   PRInt32 value;
 
@@ -113,7 +113,7 @@ nsSVGInteger::GetBaseValueString(nsAString & aValueAsString)
 void
 nsSVGInteger::SetBaseValue(int aValue,
                            nsSVGElement *aSVGElement,
-                           bool aDoSetAttr)
+                           PRBool aDoSetAttr)
 {
   mBaseVal = aValue;
   mIsBaseSet = PR_TRUE;
@@ -159,7 +159,7 @@ nsresult
 nsSVGInteger::SMILInteger::ValueFromString(const nsAString& aStr,
                                            const nsISMILAnimationElement* /*aSrcElement*/,
                                            nsSMILValue& aValue,
-                                           bool& aPreventCachingOfSandwich) const
+                                           PRBool& aPreventCachingOfSandwich) const
 {
   PRInt32 val;
 

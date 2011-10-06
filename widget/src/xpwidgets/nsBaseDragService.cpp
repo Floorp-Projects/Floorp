@@ -93,7 +93,7 @@ NS_IMPL_ISUPPORTS2(nsBaseDragService, nsIDragService, nsIDragSession)
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::SetCanDrop(bool aCanDrop)
+nsBaseDragService::SetCanDrop(PRBool aCanDrop)
 {
   mCanDrop = aCanDrop;
   return NS_OK;
@@ -101,14 +101,14 @@ nsBaseDragService::SetCanDrop(bool aCanDrop)
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::GetCanDrop(bool * aCanDrop)
+nsBaseDragService::GetCanDrop(PRBool * aCanDrop)
 {
   *aCanDrop = mCanDrop;
   return NS_OK;
 }
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::SetOnlyChromeDrop(bool aOnlyChrome)
+nsBaseDragService::SetOnlyChromeDrop(PRBool aOnlyChrome)
 {
   mOnlyChromeDrop = aOnlyChrome;
   return NS_OK;
@@ -116,7 +116,7 @@ nsBaseDragService::SetOnlyChromeDrop(bool aOnlyChrome)
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::GetOnlyChromeDrop(bool* aOnlyChrome)
+nsBaseDragService::GetOnlyChromeDrop(PRBool* aOnlyChrome)
 {
   *aOnlyChrome = mOnlyChromeDrop;
   return NS_OK;
@@ -207,7 +207,7 @@ nsBaseDragService::GetData(nsITransferable * aTransferable,
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsBaseDragService::IsDataFlavorSupported(const char *aDataFlavor,
-                                         bool *_retval)
+                                         PRBool *_retval)
 {
   return NS_ERROR_FAILURE;
 }
@@ -364,7 +364,7 @@ nsBaseDragService::OpenDragPopup()
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::EndDragSession(bool aDoneDrag)
+nsBaseDragService::EndDragSession(PRBool aDoneDrag)
 {
   if (!mDoingDrag) {
     return NS_ERROR_FAILURE;
@@ -491,7 +491,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   *aPresContext = presShell->GetPresContext();
 
   // check if drag images are disabled
-  bool enableDragImages = Preferences::GetBool(DRAGIMAGES_PREF, true);
+  PRBool enableDragImages = Preferences::GetBool(DRAGIMAGES_PREF, PR_TRUE);
 
   // didn't want an image, so just set the screen rectangle to the frame size
   if (!enableDragImages || !mHasImage) {

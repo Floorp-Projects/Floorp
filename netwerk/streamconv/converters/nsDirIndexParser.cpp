@@ -294,7 +294,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
       // don't unescape at this point, so that UnEscapeAndConvert() can
       filename = value;
       
-      bool    success = false;
+      PRBool  success = PR_FALSE;
       
       nsAutoString entryuri;
       

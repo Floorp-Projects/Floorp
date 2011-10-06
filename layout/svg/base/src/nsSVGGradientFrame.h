@@ -40,6 +40,7 @@
 #define __NS_SVGGRADIENTFRAME_H__
 
 #include "nsSVGPaintServerFrame.h"
+#include "nsWeakReference.h"
 #include "nsSVGElement.h"
 #include "gfxPattern.h"
 
@@ -133,10 +134,10 @@ private:
   // Flag to mark this frame as "in use" during recursive calls along our
   // gradient's reference chain so we can detect reference loops. See:
   // http://www.w3.org/TR/SVG11/pservers.html#LinearGradientElementHrefAttribute
-  bool                                   mLoopFlag;
+  PRPackedBool                           mLoopFlag;
   // Gradients often don't reference other gradients, so here we cache
   // the fact that that isn't happening.
-  bool                                   mNoHRefURI;
+  PRPackedBool                           mNoHRefURI;
 };
 
 

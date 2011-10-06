@@ -52,8 +52,7 @@
 %syncBrandDTD;
 %syncSetupDTD;
 ]>
-<wizard id="wizard"
-        title="&accountSetupTitle.label;"
+<wizard id="accountSetup" title="&accountSetupTitle.label;"
         windowtype="Weave:AccountSetup"
         persist="screenX screenY"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -73,48 +72,6 @@
   <script type="application/javascript"
           src="chrome://global/content/printUtils.js"/>
 
-  <wizardpage id="addDevicePage"
-              label="&pairDevice.title.label;"
-              onpageshow="gSyncSetup.onPageShow()">
-    <description>
-      &pairDevice.dialog.description.label;
-      <label class="text-link"
-             value="&addDevice.showMeHow.label;"
-             href="https://services.mozilla.com/sync/help/add-device"/>
-    </description>
-    <separator class="groove-thin"/>
-    <description>
-      &addDevice.dialog.enterCode.label;
-    </description>
-    <separator class="groove-thin"/>
-    <vbox align="center">
-      <textbox id="pin1"
-               class="pin"
-               oninput="gSyncSetup.onPINInput(this);"
-               onfocus="this.select();"
-               />
-      <textbox id="pin2"
-               class="pin"
-               oninput="gSyncSetup.onPINInput(this);"
-               onfocus="this.select();"
-               />
-      <textbox id="pin3"
-               class="pin"
-               oninput="gSyncSetup.onPINInput(this);"
-               onfocus="this.select();" 
-               />
-    </vbox>
-    <separator class="groove-thin"/>
-    <vbox id="pairDeviceThrobber" align="center" hidden="true">
-      <image/>
-    </vbox>
-    <hbox id="pairDeviceErrorRow" pack="center" hidden="true">
-      <image class="statusIcon" status="error"/>
-      <label class="status"
-             value="&addDevice.dialog.tryAgain.label;"/>
-    </hbox>
-  </wizardpage>
-
   <wizardpage id="pickSetupType"
               label="&syncBrand.fullName.label;"
               onpageshow="gSyncSetup.onPageShow()">
@@ -122,20 +79,22 @@
       <description style="padding: 0 7em;">
         &setup.pickSetupType.description;
       </description>
-      <spacer flex="3"/>
+      <spacer flex="1"/>
       <button id="newAccount"
               class="accountChoiceButton"
               label="&button.createNewAccount.label;"
               oncommand="gSyncSetup.startNewAccountSetup()"
               align="center"/>
-      <spacer flex="1"/>
+      <spacer flex="3"/>
     </vbox>
     <separator class="groove"/>
     <vbox align="center" flex="1">
+      <spacer flex="3"/>
+      <label value="&setup.haveAccount.label;" />
       <spacer flex="1"/>
       <button id="existingAccount"
               class="accountChoiceButton"
-              label="&button.haveAccount.label;"
+              label="&button.connect.label;"
               oncommand="gSyncSetup.useExistingAccount()"/>
       <spacer flex="3"/>
     </vbox>
@@ -235,27 +194,64 @@
         </row>
       </rows>
     </grid>
-    <spacer flex="1"/>
+  </wizardpage>
+
+  <wizardpage label="&setup.newRecoveryKeyPage.title.label;"
+              onextra1="gSyncSetup.onSyncOptions()"
+              onpageshow="gSyncSetup.onPageShow();">
+    <description>
+      &setup.newRecoveryKeyPage.description.label;
+    </description>
+    <spacer/>
+
+    <groupbox>
+      <label value="&recoveryKeyEntry.label;"
+             accesskey="&recoveryKeyEntry.accesskey;"
+             control="weavePassphrase"/>
+      <textbox id="weavePassphrase"
+               readonly="true"
+               onfocus="this.select();"/>
+    </groupbox>
+
+    <groupbox align="center">
+      <description>&recoveryKeyBackup.description;</description>
+      <hbox>
+        <button id="printSyncKeyButton"
+                label="&button.syncKeyBackup.print.label;"
+                accesskey="&button.syncKeyBackup.print.accesskey;"
+                oncommand="gSyncUtils.passphrasePrint('weavePassphrase');"/>
+        <button id="saveSyncKeyButton"
+                label="&button.syncKeyBackup.save.label;"
+                accesskey="&button.syncKeyBackup.save.accesskey;"
+                oncommand="gSyncUtils.passphraseSave('weavePassphrase');"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage label="&setup.captchaPage2.title.label;"
+              onextra1="gSyncSetup.onSyncOptions()"
+              onpageshow="gSyncSetup.onPageShow();">
     <vbox flex="1" align="center">
       <browser height="150"
-               width="500"
+               width="450"
                id="captcha"
                type="content"
                disablehistory="true"/>
       <spacer flex="1"/>
-      <hbox id="captchaFeedback">
+      <hbox id="captchaFeedback" hidden="true">
         <image class="statusIcon"/>
         <label class="status" value=" "/>
       </hbox>
+      <spacer flex="3"/>
     </vbox>
   </wizardpage>
 
   <wizardpage id="addDevice"
-              label="&pairDevice.title.label;"
+              label="&addDevice.title.label;"
               onextra1="gSyncSetup.onSyncOptions()"
               onpageshow="gSyncSetup.onPageShow()">
     <description>
-      &pairDevice.setup.description.label;
+      &addDevice.setup.description.label;
       <label class="text-link"
              value="&addDevice.showMeHow.label;"
              href="https://services.mozilla.com/sync/help/easy-setup"/>

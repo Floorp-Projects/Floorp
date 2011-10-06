@@ -94,7 +94,6 @@ struct YUVImage {
 union SharedImage {
   SurfaceDescriptor;
   YUVImage;
-  null_t;
 };
 
 struct ThebesBuffer {
@@ -103,11 +102,6 @@ struct ThebesBuffer {
   nsIntPoint rotation; 
 };
 union OptionalThebesBuffer { ThebesBuffer; null_t; };
-
-union CanvasSurface {
-  SurfaceDescriptor;
-  null_t;
-};
 
 // For the "buffer creation" operations, we send an initial front
 // buffer that only contains (transparent) black pixels just so that
@@ -119,6 +113,22 @@ struct OpCreateThebesBuffer {
   nsIntRegion frontValidRegion;
 };
 struct OpDestroyThebesFrontBuffer { PLayer layer; };
+
+struct OpCreateCanvasBuffer {
+  PLayer layer;
+  nsIntSize size;
+  SurfaceDescriptor initialFront;
+  bool needYFlip;
+};
+struct OpDestroyCanvasFrontBuffer { PLayer layer; };
+
+struct OpCreateImageBuffer {
+  PLayer layer;
+  nsIntSize size;
+  SharedImage initialFront;
+};
+struct OpDestroyImageFrontBuffer { PLayer layer; };
+
 
 // Change a layer's attributes
 struct CommonLayerAttributes {
@@ -177,8 +187,7 @@ struct OpPaintThebesBuffer {
 
 struct OpPaintCanvas  {
   PLayer layer;
-  CanvasSurface newFrontBuffer;
-  bool needYFlip;
+  SurfaceDescriptor newFrontBuffer;
 };
 
 struct OpPaintImage  {
@@ -194,8 +203,12 @@ union Edit {
   OpCreateImageLayer;
   OpCreateColorLayer;
   OpCreateCanvasLayer;
+  OpCreateCanvasBuffer;
   OpCreateThebesBuffer;
+  OpCreateImageBuffer;
   OpDestroyThebesFrontBuffer;
+  OpDestroyCanvasFrontBuffer;
+  OpDestroyImageFrontBuffer;
 
   OpSetLayerAttributes;
 
@@ -211,7 +224,7 @@ union Edit {
 
 
 // Replies to operations
-struct OpBufferSwap   { PLayer layer; CanvasSurface newBackBuffer; };
+struct OpBufferSwap   { PLayer layer; SurfaceDescriptor newBackBuffer; };
 
 struct OpImageSwap { PLayer layer; SharedImage newBackImage; };
 

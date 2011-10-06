@@ -51,9 +51,9 @@ private:
 
     nsCOMPtr<nsIObserver> mStatusObserver;
 
-    bool        mIAmRunning;
-    bool        mStatusObserverNotified;
-    bool        mLoginReady;
+    PRBool      mIAmRunning;
+    PRBool      mStatusObserverNotified;
+    PRBool      mLoginReady;
 
     PRThread    *mThreadHandle;
 

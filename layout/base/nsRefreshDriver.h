@@ -50,13 +50,10 @@
 #include "nsTObserverArray.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
 
 class nsPresContext;
 class nsIPresShell;
 class nsIDocument;
-class imgIRequest;
 
 /**
  * An abstract base class to be implemented by callers wanting to be
@@ -126,60 +123,42 @@ public:
    * The refresh driver does NOT own a reference to these observers;
    * they must remove themselves before they are destroyed.
    */
-  bool AddRefreshObserver(nsARefreshObserver *aObserver,
+  PRBool AddRefreshObserver(nsARefreshObserver *aObserver,
                             mozFlushType aFlushType);
-  bool RemoveRefreshObserver(nsARefreshObserver *aObserver,
+  PRBool RemoveRefreshObserver(nsARefreshObserver *aObserver,
                                mozFlushType aFlushType);
-
-  /**
-   * Add/Remove imgIRequest versions of observers.
-   *
-   * These are used for hooking into the refresh driver for
-   * controlling animated images.
-   *
-   * @note The refresh driver owns a reference to these listeners.
-   *
-   * @note Technically, imgIRequest objects are not nsARefreshObservers, but
-   * for controlling animated image repaint events, we subscribe the
-   * imgIRequests to the nsRefreshDriver for notification of paint events.
-   *
-   * @returns whether the operation succeeded, or void in the case of removal.
-   */
-  bool AddImageRequest(imgIRequest* aRequest);
-  void RemoveImageRequest(imgIRequest* aRequest);
-  void ClearAllImageRequests();
 
   /**
    * Add / remove presshells that we should flush style and layout on
    */
-  bool AddStyleFlushObserver(nsIPresShell* aShell) {
+  PRBool AddStyleFlushObserver(nsIPresShell* aShell) {
     NS_ASSERTION(!mStyleFlushObservers.Contains(aShell),
 		 "Double-adding style flush observer");
-    bool appended = mStyleFlushObservers.AppendElement(aShell) != nsnull;
+    PRBool appended = mStyleFlushObservers.AppendElement(aShell) != nsnull;
     EnsureTimerStarted(false);
     return appended;
   }
   void RemoveStyleFlushObserver(nsIPresShell* aShell) {
     mStyleFlushObservers.RemoveElement(aShell);
   }
-  bool AddLayoutFlushObserver(nsIPresShell* aShell) {
+  PRBool AddLayoutFlushObserver(nsIPresShell* aShell) {
     NS_ASSERTION(!IsLayoutFlushObserver(aShell),
 		 "Double-adding layout flush observer");
-    bool appended = mLayoutFlushObservers.AppendElement(aShell) != nsnull;
+    PRBool appended = mLayoutFlushObservers.AppendElement(aShell) != nsnull;
     EnsureTimerStarted(false);
     return appended;
   }
   void RemoveLayoutFlushObserver(nsIPresShell* aShell) {
     mLayoutFlushObservers.RemoveElement(aShell);
   }
-  bool IsLayoutFlushObserver(nsIPresShell* aShell) {
+  PRBool IsLayoutFlushObserver(nsIPresShell* aShell) {
     return mLayoutFlushObservers.Contains(aShell);
   }
 
   /**
    * Add a document for which we should fire a MozBeforePaint event.
    */
-  bool ScheduleBeforePaintEvent(nsIDocument* aDocument);
+  PRBool ScheduleBeforePaintEvent(nsIDocument* aDocument);
 
   /**
    * Add a document for which we have nsIAnimationFrameListeners
@@ -233,21 +212,16 @@ public:
   /**
    * Check whether the given observer is an observer for the given flush type
    */
-  bool IsRefreshObserver(nsARefreshObserver *aObserver,
+  PRBool IsRefreshObserver(nsARefreshObserver *aObserver,
 			   mozFlushType aFlushType);
 #endif
 
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
-  typedef nsTHashtable<nsISupportsHashKey> RequestTable;
 
   void EnsureTimerStarted(bool aAdjustingTimer);
   void StopTimer();
-
   PRUint32 ObserverCount() const;
-  PRUint32 ImageRequestCount() const;
-  static PLDHashOperator ImageRequestEnumerator(nsISupportsHashKey* aEntry,
-                                          void* aUserArg);
   void UpdateMostRecentRefresh();
   ObserverArray& ArrayFor(mozFlushType aFlushType);
   // Trigger a refresh immediately, if haven't been disconnected or frozen.
@@ -278,8 +252,6 @@ private:
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];
-  RequestTable mRequests;
-
   nsAutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
   nsAutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
   // nsTArray on purpose, because we want to be able to swap.
@@ -290,11 +262,6 @@ private:
   // This is the last interval we used for our timer.  May be 0 if we
   // haven't computed a timer interval yet.
   mutable PRInt32 mLastTimerInterval;
-
-  // Helper struct for processing image requests
-  struct ImageRequestParameters {
-      mozilla::TimeStamp ts;
-  };
 };
 
 #endif /* !defined(nsRefreshDriver_h_) */

@@ -63,7 +63,7 @@ struct NameTableKey
         mKeyStr.m2b = aKeyStr;
     }
 
-    bool mIsUnichar;
+    PRBool mIsUnichar;
     union {
         const nsAFlatCString* m1b;
         const nsAFlatString* m2b;
@@ -77,7 +77,7 @@ struct NameTableEntry : public PLDHashEntryHdr
     PRInt32 mIndex;
 };
 
-static bool
+static PRBool
 matchNameKeysCaseInsensitive(PLDHashTable*, const PLDHashEntryHdr* aHdr,
                              const void* key)
 {
@@ -157,7 +157,7 @@ nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
     MOZ_COUNT_DTOR(nsStaticCaseInsensitiveNameTable);
 }
 
-bool 
+PRBool 
 nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count)
 {
     NS_ASSERTION(!mNameArray, "double Init");

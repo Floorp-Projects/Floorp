@@ -63,7 +63,7 @@ struct nsMediaExpression {
   nsCSSValue mValue;
 
   // aActualValue must be obtained from mFeature->mGetter
-  bool Matches(nsPresContext* aPresContext,
+  PRBool Matches(nsPresContext* aPresContext,
                  const nsCSSValue& aActualValue) const;
 };
 
@@ -98,15 +98,15 @@ public:
    * it matched.
    */
   void AddExpression(const nsMediaExpression* aExpression,
-                     bool aExpressionMatches);
-  bool Matches(nsPresContext* aPresContext) const;
+                     PRBool aExpressionMatches);
+  PRBool Matches(nsPresContext* aPresContext) const;
 private:
   struct ExpressionEntry {
     // FIXME: if we were better at maintaining invariants about clearing
     // rule cascades when media lists change, this could be a |const
     // nsMediaExpression*| instead.
     nsMediaExpression mExpression;
-    bool mExpressionMatches;
+    PRBool mExpressionMatches;
   };
   struct FeatureEntry {
     const nsMediaFeature *mFeature;
@@ -163,14 +163,14 @@ public:
 
   // Does this query apply to the presentation?
   // If |aKey| is non-null, add cache information to it.
-  bool Matches(nsPresContext* aPresContext,
+  PRBool Matches(nsPresContext* aPresContext,
                  nsMediaQueryResultCacheKey* aKey) const;
 
 private:
-  bool mNegated;
-  bool mHasOnly; // only needed for serialization
-  bool mTypeOmitted; // only needed for serialization
-  bool mHadUnknownExpression;
+  PRPackedBool mNegated;
+  PRPackedBool mHasOnly; // only needed for serialization
+  PRPackedBool mTypeOmitted; // only needed for serialization
+  PRPackedBool mHadUnknownExpression;
   nsCOMPtr<nsIAtom> mMediaType;
   nsTArray<nsMediaExpression> mExpressions;
 };
@@ -188,7 +188,7 @@ public:
 
   // Does this query apply to the presentation?
   // If |aKey| is non-null, add cache information to it.
-  bool Matches(nsPresContext* aPresContext,
+  PRBool Matches(nsPresContext* aPresContext,
                  nsMediaQueryResultCacheKey* aKey);
 
   nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
@@ -218,7 +218,7 @@ protected:
   nsresult Append(const nsAString & aOldMedium);
 
   nsTArray<nsAutoPtr<nsMediaQuery> > mArray;
-  bool mIsEmpty;
+  PRBool mIsEmpty;
   // not refcounted; sheet will let us know when it goes away
   // mStyleSheet is the sheet that needs to be dirtied when this medialist
   // changes

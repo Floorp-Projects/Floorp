@@ -105,7 +105,7 @@ private:
          nsCacheEntryDescriptor    * mDescriptor;
          nsCOMPtr<nsIInputStream>    mInput;
          PRUint32                    mStartOffset;
-         bool                        mInitialized;
+         PRBool                      mInitialized;
      public:
          NS_DECL_ISUPPORTS
          NS_DECL_NSIINPUTSTREAM
@@ -140,7 +140,7 @@ private:
          nsCacheEntryDescriptor *    mDescriptor;
          nsCOMPtr<nsIOutputStream>   mOutput;
          PRUint32                    mStartOffset;
-         bool                        mInitialized;
+         PRBool                      mInitialized;
      public:
          NS_DECL_ISUPPORTS
          NS_DECL_NSIOUTPUTSTREAM

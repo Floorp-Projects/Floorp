@@ -86,9 +86,9 @@ public:
   virtual nsMediaDecoder* Clone() = 0;
 
   // Perform any initialization required for the decoder.
-  // Return true on successful initialisation, false
+  // Return PR_TRUE on successful initialisation, PR_FALSE
   // on failure.
-  virtual bool Init(nsHTMLMediaElement* aElement);
+  virtual PRBool Init(nsHTMLMediaElement* aElement);
 
   // Get the current nsMediaStream being used. Its URI will be returned
   // by currentSrc.
@@ -120,10 +120,10 @@ public:
   //
   // When the media stream ends, we can know the duration, thus the stream is
   // no longer considered to be infinite.
-  virtual void SetInfinite(bool aInfinite) = 0;
+  virtual void SetInfinite(PRBool aInfinite) = 0;
 
   // Return true if the stream is infinite (see SetInfinite).
-  virtual bool IsInfinite() = 0;
+  virtual PRBool IsInfinite() = 0;
 
   // Pause video playback.
   virtual void Pause() = 0;
@@ -150,13 +150,13 @@ public:
   // Called if the media file encounters a network error.
   virtual void NetworkError() = 0;
 
-  // Call from any thread safely. Return true if we are currently
+  // Call from any thread safely. Return PR_TRUE if we are currently
   // seeking in the media resource.
-  virtual bool IsSeeking() const = 0;
+  virtual PRBool IsSeeking() const = 0;
 
-  // Return true if the decoder has reached the end of playback.
+  // Return PR_TRUE if the decoder has reached the end of playback.
   // Call in the main thread only.
-  virtual bool IsEnded() const = 0;
+  virtual PRBool IsEnded() const = 0;
 
   struct Statistics {
     // Estimate of the current playback rate (bytes/second).
@@ -177,11 +177,11 @@ public:
     // If false, then mDownloadRate cannot be considered a reliable
     // estimate (probably because the download has only been running
     // a short time).
-    bool mDownloadRateReliable;
+    PRPackedBool mDownloadRateReliable;
     // If false, then mPlaybackRate cannot be considered a reliable
     // estimate (probably because playback has only been running
     // a short time).
-    bool mPlaybackRateReliable;
+    PRPackedBool mPlaybackRateReliable;
   };
 
   // Frame decoding/painting related performance counters.
@@ -288,10 +288,10 @@ public:
   virtual void SetDuration(double aDuration) = 0;
 
   // Set a flag indicating whether seeking is supported
-  virtual void SetSeekable(bool aSeekable) = 0;
+  virtual void SetSeekable(PRBool aSeekable) = 0;
 
-  // Return true if seeking is supported.
-  virtual bool IsSeekable() = 0;
+  // Return PR_TRUE if seeking is supported.
+  virtual PRBool IsSeekable() = 0;
 
   // Return the time ranges that can be seeked into.
   virtual nsresult GetSeekable(nsTimeRanges* aSeekable) = 0;
@@ -304,10 +304,10 @@ public:
   virtual void Invalidate();
 
   // Fire progress events if needed according to the time and byte
-  // constraints outlined in the specification. aTimer is true
+  // constraints outlined in the specification. aTimer is PR_TRUE
   // if the method is called as a result of the progress timer rather
   // than the result of downloaded data.
-  virtual void Progress(bool aTimer);
+  virtual void Progress(PRBool aTimer);
 
   // Fire timeupdate events if needed according to the time constraints
   // outlined in the specification.
@@ -346,10 +346,10 @@ public:
   // media element when it is restored from the bfcache, or when we need
   // to stop throttling the download. Call on the main thread only.
   // The download will only actually resume once as many Resume calls
-  // have been made as Suspend calls. When aForceBuffering is true,
+  // have been made as Suspend calls. When aForceBuffering is PR_TRUE,
   // we force the decoder to go into buffering state before resuming
   // playback.
-  virtual void Resume(bool aForceBuffering) = 0;
+  virtual void Resume(PRBool aForceBuffering) = 0;
 
   // Returns a weak reference to the media element we're decoding for,
   // if it's available.
@@ -386,9 +386,9 @@ public:
   // are buffered and playable.
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered) = 0;
 
-  // Returns true if we can play the entire media through without stopping
+  // Returns PR_TRUE if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
-  bool CanPlayThrough();
+  PRBool CanPlayThrough();
 
   // Returns the size, in bytes, of the heap memory used by the currently
   // queued decoded video and audio data.
@@ -459,29 +459,29 @@ protected:
   // The framebuffer size to use for audioavailable events.
   PRUint32 mFrameBufferLength;
 
-  // True when our media stream has been pinned. We pin the stream
+  // PR_TRUE when our media stream has been pinned. We pin the stream
   // while seeking.
-  bool mPinnedForSeek;
+  PRPackedBool mPinnedForSeek;
 
-  // Set to true when the video width, height or pixel aspect ratio is
+  // Set to PR_TRUE when the video width, height or pixel aspect ratio is
   // changed by SetVideoData().  The next call to Invalidate() will recalculate
   // and update the intrinsic size on the element, request a frame reflow and
   // then reset this flag.
-  bool mSizeChanged;
+  PRPackedBool mSizeChanged;
 
-  // Set to true in SetVideoData() if the new image has a different size
+  // Set to PR_TRUE in SetVideoData() if the new image has a different size
   // than the current image.  The image size is also affected by transforms
   // so this can be true even if mSizeChanged is false, for example when
   // zooming.  The next call to Invalidate() will call nsIFrame::Invalidate
   // when this flag is set, rather than just InvalidateLayer, and then reset
   // this flag.
-  bool mImageContainerSizeChanged;
+  PRPackedBool mImageContainerSizeChanged;
 
   // True if the decoder is being shutdown. At this point all events that
   // are currently queued need to return immediately to prevent javascript
   // being run that operates on the element and decoder during shutdown.
   // Read/Write from the main thread only.
-  bool mShuttingDown;
+  PRPackedBool mShuttingDown;
 };
 
 namespace mozilla {

@@ -49,8 +49,8 @@ class nsIIDNService;
 // struct for static data generated from effective_tld_names.dat
 struct ETLDEntry {
   const char* domain;
-  bool exception;
-  bool wild;
+  PRPackedBool exception;
+  PRPackedBool wild;
 };
 
 
@@ -82,7 +82,7 @@ public:
     return mData->domain;
   }
 
-  bool KeyEquals(KeyTypePointer aKey) const
+  PRBool KeyEquals(KeyTypePointer aKey) const
   {
     return !strcmp(mData->domain, aKey);
   }
@@ -103,9 +103,9 @@ public:
 
   void SetData(const ETLDEntry* entry) { mData = entry; }
 
-  bool IsNormal() { return mData->wild || !mData->exception; }
-  bool IsException() { return mData->exception; }
-  bool IsWild() { return mData->wild; }
+  PRPackedBool IsNormal() { return mData->wild || !mData->exception; }
+  PRPackedBool IsException() { return mData->exception; }
+  PRPackedBool IsWild() { return mData->wild; }
 
 private:
   const ETLDEntry* mData;

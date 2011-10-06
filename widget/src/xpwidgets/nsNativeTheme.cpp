@@ -80,7 +80,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
   if (!aFrame)
     return nsEventStates();
 
-  bool isXULCheckboxRadio = 
+  PRBool isXULCheckboxRadio = 
     (aWidgetType == NS_THEME_CHECKBOX ||
      aWidgetType == NS_THEME_RADIO) &&
     aFrame->GetContent()->IsXUL();
@@ -134,7 +134,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
   return flags;
 }
 
-bool
+PRBool
 nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
 {
   if (!aFrame)
@@ -169,8 +169,8 @@ nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, PRInt32 defaultVal
   return value;
 }
 
-bool
-nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, bool aCheckSelected)
+PRBool
+nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected)
 {
   if (!aFrame)
     return PR_FALSE;
@@ -185,7 +185,7 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, bool aCheckSelected)
     // Check for an HTML input element
     nsCOMPtr<nsIDOMHTMLInputElement> inputElt = do_QueryInterface(content);
     if (inputElt) {
-      bool checked;
+      PRBool checked;
       inputElt->GetChecked(&checked);
       return checked;
     }
@@ -195,7 +195,7 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, bool aCheckSelected)
                                                  : nsWidgetAtoms::checked);
 }
 
-bool
+PRBool
 nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame)
 {
   if (!aFrame)
@@ -206,7 +206,7 @@ nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame)
                               NS_LITERAL_STRING("menu"), eCaseMatters);
 }
 
-bool
+PRBool
 nsNativeTheme::IsPressedButton(nsIFrame* aFrame)
 {
   nsEventStates eventState = GetContentState(aFrame, NS_THEME_TOOLBAR_BUTTON);
@@ -218,7 +218,7 @@ nsNativeTheme::IsPressedButton(nsIFrame* aFrame)
 }
 
 
-bool
+PRBool
 nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
 {
   if (!aFrame)
@@ -235,7 +235,7 @@ nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
   // Check for an HTML input element
   nsCOMPtr<nsIDOMHTMLInputElement> inputElt = do_QueryInterface(content);
   if (inputElt) {
-    bool indeterminate;
+    PRBool indeterminate;
     inputElt->GetIndeterminate(&indeterminate);
     return indeterminate;
   }
@@ -243,7 +243,7 @@ nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
   return PR_FALSE;
 }
 
-bool
+PRBool
 nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                               PRUint8 aWidgetType)
 {
@@ -316,7 +316,7 @@ nsNativeTheme::IsDisabled(nsIFrame* aFrame, nsEventStates aEventStates)
                               NS_LITERAL_STRING("true"), eCaseMatters);
 }
 
-bool
+PRBool
 nsNativeTheme::IsFrameRTL(nsIFrame* aFrame)
 {
   return aFrame && aFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
@@ -365,7 +365,7 @@ nsNativeTheme::GetTreeSortDirection(nsIFrame* aFrame)
   return eTreeSortDirection_Natural;
 }
 
-bool
+PRBool
 nsNativeTheme::IsLastTreeHeaderCell(nsIFrame* aFrame)
 {
   if (!aFrame)
@@ -394,7 +394,7 @@ nsNativeTheme::IsLastTreeHeaderCell(nsIFrame* aFrame)
 }
 
 // tab:
-bool
+PRBool
 nsNativeTheme::IsBottomTab(nsIFrame* aFrame)
 {
   if (!aFrame)
@@ -405,7 +405,7 @@ nsNativeTheme::IsBottomTab(nsIFrame* aFrame)
   return !classStr.IsEmpty() && classStr.Find("tab-bottom") != kNotFound;
 }
 
-bool
+PRBool
 nsNativeTheme::IsFirstTab(nsIFrame* aFrame)
 {
   if (!aFrame)
@@ -420,7 +420,7 @@ nsNativeTheme::IsFirstTab(nsIFrame* aFrame)
   return PR_FALSE;
 }
 
-bool
+PRBool
 nsNativeTheme::IsHorizontal(nsIFrame* aFrame)
 {
   if (!aFrame)
@@ -431,7 +431,7 @@ nsNativeTheme::IsHorizontal(nsIFrame* aFrame)
                                             eCaseMatters);
 }
 
-bool
+PRBool
 nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset)
 {
   if (!aFrame)
@@ -460,7 +460,7 @@ nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset)
 }
 
 // progressbar:
-bool
+PRBool
 nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
                                        nsEventStates aEventStates)
 {
@@ -476,7 +476,7 @@ nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
                                            eCaseMatters);
 }
 
-bool
+PRBool
 nsNativeTheme::IsVerticalProgress(nsIFrame* aFrame)
 {
   return aFrame &&
@@ -484,8 +484,8 @@ nsNativeTheme::IsVerticalProgress(nsIFrame* aFrame)
 }
 
 // menupopup:
-bool
-nsNativeTheme::IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent)
+PRBool
+nsNativeTheme::IsSubmenu(nsIFrame* aFrame, PRBool* aLeftOfParent)
 {
   if (!aFrame)
     return PR_FALSE;
@@ -510,7 +510,7 @@ nsNativeTheme::IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent)
   return PR_FALSE;
 }
 
-bool
+PRBool
 nsNativeTheme::IsRegularMenuItem(nsIFrame *aFrame)
 {
   nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
@@ -518,17 +518,17 @@ nsNativeTheme::IsRegularMenuItem(nsIFrame *aFrame)
                          menuFrame->GetParentMenuListType() != eNotMenuList));
 }
 
-bool
+PRBool
 nsNativeTheme::IsMenuListEditable(nsIFrame *aFrame)
 {
-  bool isEditable = false;
+  PRBool isEditable = PR_FALSE;
   nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aFrame->GetContent());
   if (menulist)
     menulist->GetEditable(&isEditable);
   return isEditable;
 }
 
-bool
+PRBool
 nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
                                               PRUint32 aMinimumFrameRate)
 {
@@ -590,7 +590,7 @@ nsNativeTheme::Notify(nsITimer* aTimer)
 
 nsIFrame*
 nsNativeTheme::GetAdjacentSiblingFrameWithSameAppearance(nsIFrame* aFrame,
-                                                         bool aNextSibling)
+                                                         PRBool aNextSibling)
 {
   if (!aFrame)
     return nsnull;

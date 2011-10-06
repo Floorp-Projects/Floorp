@@ -99,7 +99,7 @@ public:
 
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
-        bool                 aPlaceOrigin,
+        PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -134,9 +134,9 @@ protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 
   nsresult PlaceInternal(nsRenderingContext& aRenderingContext,
-                         bool                 aPlaceOrigin,
+                         PRBool               aPlaceOrigin,
                          nsHTMLReflowMetrics& aDesiredSize,
-                         bool                 aWidthOnly);
+                         PRBool               aWidthOnly);
 
   // Display a slash
   nsresult DisplaySlash(nsDisplayListBuilder* aBuilder,
@@ -147,7 +147,7 @@ protected:
   nsRect        mLineRect;
   nsMathMLChar* mSlashChar;
   nscoord       mLineThickness;
-  bool          mIsBevelled;
+  PRPackedBool  mIsBevelled;
 };
 
 #endif /* nsMathMLmfracFrame_h___ */

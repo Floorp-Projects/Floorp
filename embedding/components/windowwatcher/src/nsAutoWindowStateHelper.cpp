@@ -72,7 +72,7 @@ nsAutoWindowStateHelper::~nsAutoWindowStateHelper()
   }
 }
 
-bool
+PRBool
 nsAutoWindowStateHelper::DispatchCustomEvent(const char *aEventName)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mWindow);

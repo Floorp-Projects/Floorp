@@ -264,7 +264,7 @@ AsyncStatement::~AsyncStatement()
 
   // If we are getting destroyed on the wrong thread, proxy the connection
   // release to the right thread.  I'm not sure why we do this.
-  bool onCallingThread = false;
+  PRBool onCallingThread = PR_FALSE;
   (void)mDBConnection->threadOpenedOn->IsOnCurrentThread(&onCallingThread);
   if (!onCallingThread) {
     // NS_ProxyRelase only magic forgets for us if mDBConnection is an
@@ -326,7 +326,7 @@ AsyncStatement::getAsyncStatement(sqlite3_stmt **_stmt)
 {
 #ifdef DEBUG
   // Make sure we are never called on the connection's owning thread.
-  bool onOpenedThread = false;
+  PRBool onOpenedThread = PR_FALSE;
   (void)mDBConnection->threadOpenedOn->IsOnCurrentThread(&onOpenedThread);
   NS_ASSERTION(!onOpenedThread,
                "We should only be called on the async thread!");

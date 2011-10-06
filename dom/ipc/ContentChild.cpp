@@ -265,12 +265,8 @@ ContentChild::Init(MessageLoop* aIOLoop,
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 
-#ifdef MOZ_CRASHREPORTER
-    SendPCrashReporterConstructor(CrashReporter::CurrentThreadId(),
-                                  XRE_GetProcessType());
-#if defined(ANDROID)
-    PCrashReporterChild* crashreporter = ManagedPCrashReporterChild()[0];
-
+#if defined(ANDROID) && defined(MOZ_CRASHREPORTER)
+    PCrashReporterChild* crashreporter = SendPCrashReporterConstructor();
     InfallibleTArray<Mapping> mappings;
     const struct mapping_info *info = getLibraryMapping();
     while (info && info->name) {
@@ -282,7 +278,6 @@ ContentChild::Init(MessageLoop* aIOLoop,
         info++;
     }
     crashreporter->SendAddLibraryMappings(mappings);
-#endif
 #endif
 
     return true;
@@ -363,7 +358,7 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
     // First do the vanilla memory reporters.
     nsCOMPtr<nsISimpleEnumerator> e;
     mgr->EnumerateReporters(getter_AddRefs(e));
-    bool more;
+    PRBool more;
     while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
       nsCOMPtr<nsIMemoryReporter> r;
       e->GetNext(getter_AddRefs(r));
@@ -423,14 +418,9 @@ ContentChild::DeallocPBrowser(PBrowserChild* iframe)
 }
 
 PCrashReporterChild*
-ContentChild::AllocPCrashReporter(const mozilla::dom::NativeThreadId& id,
-                                  const PRUint32& processType)
+ContentChild::AllocPCrashReporter()
 {
-#ifdef MOZ_CRASHREPORTER
     return new CrashReporterChild();
-#else
-    return nsnull;
-#endif
 }
 
 bool
@@ -547,7 +537,7 @@ ContentChild::RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages
 }
 
 bool
-ContentChild::RecvSetOffline(const bool& offline)
+ContentChild::RecvSetOffline(const PRBool& offline)
 {
   nsCOMPtr<nsIIOService> io (do_GetIOService());
   NS_ASSERTION(io, "IO Service can not be null");

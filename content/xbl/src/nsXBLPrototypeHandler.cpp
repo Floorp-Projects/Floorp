@@ -229,8 +229,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
     return rv;
 
   // See if our event receiver is a content node (and not us).
-  bool isXULKey = !!(mType & NS_HANDLER_TYPE_XUL);
-  bool isXBLCommand = !!(mType & NS_HANDLER_TYPE_XBL_COMMAND);
+  PRBool isXULKey = !!(mType & NS_HANDLER_TYPE_XUL);
+  PRBool isXBLCommand = !!(mType & NS_HANDLER_TYPE_XBL_COMMAND);
   NS_ASSERTION(!(isXULKey && isXBLCommand),
                "can't be both a key and xbl command handler");
 
@@ -238,7 +238,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
   // events.
   if (isXULKey || isXBLCommand) {
     nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aEvent);
-    bool trustedEvent = false;
+    PRBool trustedEvent = PR_FALSE;
     if (domNSEvent) {
       domNSEvent->GetIsTrusted(&trustedEvent);
     }
@@ -385,7 +385,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEven
   // It isn't really a part of XBL, but it helps speed things up.
 
   // See if preventDefault has been set.  If so, don't execute.
-  bool preventDefault = false;
+  PRBool preventDefault = PR_FALSE;
   nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aEvent);
   if (domNSEvent) {
     domNSEvent->GetPreventDefault(&preventDefault);
@@ -396,7 +396,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEven
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aEvent);
   if (privateEvent) {
-    bool dispatchStopped = privateEvent->IsDispatchStopped();
+    PRBool dispatchStopped = privateEvent->IsDispatchStopped();
     if (dispatchStopped)
       return NS_OK;
   }
@@ -461,7 +461,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEven
         nsFocusManager::GetFocusedDescendant(windowToCheck, PR_TRUE, getter_AddRefs(focusedWindow));
     }
 
-    bool isLink = false;
+    PRBool isLink = PR_FALSE;
     nsIContent *content = focusedContent;
 
     // if the focused element is a link then we do want space to 
@@ -524,10 +524,10 @@ nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
     return NS_ERROR_FAILURE;
   }
 
-  bool isAlt = false;
-  bool isControl = false;
-  bool isShift = false;
-  bool isMeta = false;
+  PRBool isAlt = PR_FALSE;
+  PRBool isControl = PR_FALSE;
+  PRBool isShift = PR_FALSE;
+  PRBool isMeta = PR_FALSE;
   keyEvent->GetAltKey(&isAlt);
   keyEvent->GetCtrlKey(&isControl);
   keyEvent->GetShiftKey(&isShift);
@@ -588,10 +588,10 @@ nsXBLPrototypeHandler::GetController(nsIDOMEventTarget* aTarget)
   return controller;
 }
 
-bool
+PRBool
 nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
                                        PRUint32 aCharCode,
-                                       bool aIgnoreShiftKey)
+                                       PRBool aIgnoreShiftKey)
 {
   if (mDetail != -1) {
     // Get the keycode or charcode of the key event.
@@ -615,7 +615,7 @@ nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
   return ModifiersMatchMask(aKeyEvent, aIgnoreShiftKey);
 }
 
-bool
+PRBool
 nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
 {
   if (mDetail == -1 && mMisc == 0 && (mKeyMask & cAllModifiers) == 0)
@@ -996,14 +996,14 @@ nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar*
                                   "XBL Prototype Handler", doc);
 }
 
-bool
+PRBool
 nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent,
-                                          bool aIgnoreShiftKey)
+                                          PRBool aIgnoreShiftKey)
 {
   nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
   nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));
 
-  bool keyPresent;
+  PRBool keyPresent;
   if (mKeyMask & cMetaMask) {
     key ? key->GetMetaKey(&keyPresent) : mouse->GetMetaKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cMeta) != 0))

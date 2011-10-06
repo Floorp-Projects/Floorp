@@ -59,12 +59,13 @@ nsContentSupportMap::Remove(nsIContent* aElement)
 {
     if (!mMap.ops)
         return NS_ERROR_NOT_INITIALIZED;
-    
-    nsIContent* child = aElement;    
-    do {
-        PL_DHashTableOperate(&mMap, child, PL_DHASH_REMOVE);
-        child = child->GetNextNode(aElement);
-    } while(child);
+
+    PL_DHashTableOperate(&mMap, aElement, PL_DHASH_REMOVE);
+
+    PRUint32 count = aElement->GetChildCount();
+    for (PRUint32 i = 0; i < count; ++i) {
+        Remove(aElement->GetChildAt(i));
+    }
 
     return NS_OK;
 }

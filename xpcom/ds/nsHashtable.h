@@ -82,7 +82,7 @@ class nsHashKey {
 
     virtual ~nsHashKey(void);
     virtual PRUint32 HashCode(void) const = 0;
-    virtual bool Equals(const nsHashKey *aKey) const = 0;
+    virtual PRBool Equals(const nsHashKey *aKey) const = 0;
     virtual nsHashKey *Clone() const = 0;
     virtual nsresult Write(nsIObjectOutputStream* aStream) const;
 
@@ -112,7 +112,7 @@ enum {
     kHashEnumerateNext      = PR_TRUE
 };
 
-typedef bool
+typedef PRBool
 (* nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* aClosure);
 
 typedef nsresult
@@ -132,14 +132,14 @@ class nsHashtable {
     // members  
     PRLock*         mLock;
     PLDHashTable    mHashtable;
-    bool            mEnumerating;
+    PRBool          mEnumerating;
 
   public:
-    nsHashtable(PRUint32 aSize = 16, bool threadSafe = false);
+    nsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE);
     virtual ~nsHashtable();
 
     PRInt32 Count(void) { return mHashtable.entryCount; }
-    bool Exists(nsHashKey *aKey);
+    PRBool Exists(nsHashKey *aKey);
     void *Put(nsHashKey *aKey, void *aData);
     void *Get(nsHashKey *aKey);
     void *Remove(nsHashKey *aKey);
@@ -168,12 +168,12 @@ class nsObjectHashtable : public nsHashtable {
                       void* cloneElementClosure,
                       nsHashtableEnumFunc destroyElementFun,
                       void* destroyElementClosure,
-                      PRUint32 aSize = 16, bool threadSafe = false);
+                      PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE);
     ~nsObjectHashtable();
 
     nsHashtable *Clone();
     void Reset();
-    bool RemoveAndDelete(nsHashKey *aKey);
+    PRBool RemoveAndDelete(nsHashKey *aKey);
 
   protected:
     static PLDHashOperator CopyElement(PLDHashTable* table,
@@ -195,21 +195,21 @@ class nsSupportsHashtable
   : private nsHashtable
 {
   public:
-    nsSupportsHashtable(PRUint32 aSize = 16, bool threadSafe = false)
+    nsSupportsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE)
       : nsHashtable(aSize, threadSafe) {}
     ~nsSupportsHashtable();
 
     PRInt32 Count(void) {
         return nsHashtable::Count();
     }
-    bool Exists(nsHashKey *aKey) {
+    PRBool Exists(nsHashKey *aKey) {
         return nsHashtable::Exists (aKey);
     }
-    bool Put(nsHashKey *aKey,
+    PRBool Put(nsHashKey *aKey,
                nsISupports *aData,
                nsISupports **value = nsnull);
     nsISupports* Get(nsHashKey *aKey);
-    bool Remove(nsHashKey *aKey, nsISupports **value = nsnull);
+    PRBool Remove(nsHashKey *aKey, nsISupports **value = nsnull);
     nsHashtable *Clone();
     void Enumerate(nsHashtableEnumFunc aEnumFunc, void* aClosure = NULL) {
         nsHashtable::Enumerate(aEnumFunc, aClosure);
@@ -217,7 +217,7 @@ class nsSupportsHashtable
     void Reset();
 
   private:
-    static bool ReleaseElement(nsHashKey *, void *, void *);
+    static PRBool ReleaseElement(nsHashKey *, void *, void *);
     static PLDHashOperator EnumerateCopy(PLDHashTable*,
                                          PLDHashEntryHdr* hdr,
                                          PRUint32 i, void *arg);
@@ -256,7 +256,7 @@ class nsISupportsKey : public nsHashKey {
         return NS_PTR_TO_INT32(mKey);
     }
 
-    bool Equals(const nsHashKey *aKey) const {
+    PRBool Equals(const nsHashKey *aKey) const {
         NS_ASSERTION(aKey->GetKeyType() == SupportsKey, "mismatched key types");
         return (mKey == ((nsISupportsKey *) aKey)->mKey);
     }
@@ -285,7 +285,7 @@ public:
         return mKey;
     }
 
-    bool Equals(const nsHashKey *aKey) const {
+    PRBool Equals(const nsHashKey *aKey) const {
         return mKey == ((const nsPRUint32Key *) aKey)->mKey;
     }
     nsHashKey *Clone() const {
@@ -319,7 +319,7 @@ class nsVoidKey : public nsHashKey {
         return NS_PTR_TO_INT32(mKey);
     }
 
-    bool Equals(const nsHashKey *aKey) const {
+    PRBool Equals(const nsHashKey *aKey) const {
         NS_ASSERTION(aKey->GetKeyType() == VoidKey, "mismatched key types");
         return (mKey == ((const nsVoidKey *) aKey)->mKey);
     }
@@ -351,7 +351,7 @@ class nsCStringKey : public nsHashKey {
     ~nsCStringKey(void);
 
     PRUint32 HashCode(void) const;
-    bool Equals(const nsHashKey* aKey) const;
+    PRBool Equals(const nsHashKey* aKey) const;
     nsHashKey* Clone() const;
     nsCStringKey(nsIObjectInputStream* aStream, nsresult *aResult);
     nsresult Write(nsIObjectOutputStream* aStream) const;
@@ -385,7 +385,7 @@ class nsStringKey : public nsHashKey {
     ~nsStringKey(void);
 
     PRUint32 HashCode(void) const;
-    bool Equals(const nsHashKey* aKey) const;
+    PRBool Equals(const nsHashKey* aKey) const;
     nsHashKey* Clone() const;
     nsStringKey(nsIObjectInputStream* aStream, nsresult *aResult);
     nsresult Write(nsIObjectOutputStream* aStream) const;

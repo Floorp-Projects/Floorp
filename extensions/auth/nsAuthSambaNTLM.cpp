@@ -77,7 +77,7 @@ nsAuthSambaNTLM::Shutdown()
 
 NS_IMPL_ISUPPORTS1(nsAuthSambaNTLM, nsIAuthModule)
 
-static bool
+static PRBool
 SpawnIOChild(char** aArgs, PRProcess** aPID,
              PRFileDesc** aFromChildFD, PRFileDesc** aToChildFD)
 {
@@ -127,7 +127,7 @@ SpawnIOChild(char** aArgs, PRProcess** aPID,
     return PR_TRUE;
 }
 
-static bool WriteString(PRFileDesc* aFD, const nsACString& aString)
+static PRBool WriteString(PRFileDesc* aFD, const nsACString& aString)
 {
     PRInt32 length = aString.Length();
     const char* s = aString.BeginReading();
@@ -143,7 +143,7 @@ static bool WriteString(PRFileDesc* aFD, const nsACString& aString)
     return PR_TRUE;
 }
 
-static bool ReadLine(PRFileDesc* aFD, nsACString& aString)
+static PRBool ReadLine(PRFileDesc* aFD, nsACString& aString)
 {
     // ntlm_auth is defined to only send one line in response to each of our
     // input lines. So this simple unbuffered strategy works as long as we
@@ -212,7 +212,7 @@ nsAuthSambaNTLM::SpawnNTLMAuthHelper()
         nsnull
     };
 
-    bool isOK = SpawnIOChild(args, &mChildPID, &mFromChildFD, &mToChildFD);
+    PRBool isOK = SpawnIOChild(args, &mChildPID, &mFromChildFD, &mToChildFD);
     if (!isOK)  
         return NS_ERROR_FAILURE;
 
@@ -308,7 +308,7 @@ nsAuthSambaNTLM::Unwrap(const void *inToken,
 NS_IMETHODIMP
 nsAuthSambaNTLM::Wrap(const void *inToken,
                       PRUint32    inTokenLen,
-                      bool        confidential,
+                      PRBool      confidential,
                       void      **outToken,
                       PRUint32   *outTokenLen)
 {

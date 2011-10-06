@@ -234,7 +234,7 @@ PathExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
 }
 
 
-bool
+PRBool
 PathExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     if (mItems[0].expr->isSensitiveTo(aContext)) {

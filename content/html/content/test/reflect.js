@@ -462,6 +462,11 @@ function reflectBoolean(aParameters)
  */
 function reflectInt(aParameters)
 {
+  //TBD: Bug 673820: .setAttribute(exponential) -> incorrect reflection for element[attr]
+  function testExponential(value) {
+    return !!/^[ \t\n\f\r]*[\+\-]?[0-9]+e[0-9]+/.exec(value);
+  }
+
   // Expected value returned by .getAttribute() when |value| has been previously passed to .setAttribute().
   function expectedGetAttributeResult(value) {
     return (value !== null) ? String(value) : "";
@@ -551,9 +556,33 @@ function reflectInt(aParameters)
       //TBD: Bug 586761: .setAttribute(attr, -2147483648) --> element[attr] == defaultValue instead of -2147483648
       todo_is(element[attr], intValue, "Bug 586761: " + element.localName +
         ".setAttribute(value, " + v + "), " + element.localName + "[" + attr + "] ");
-    } else if ((v === "-0" || v == "-0xABCDEF") && nonNegative) {
+    } else if (testExponential(v)) {
+      //TBD: Bug 673820: .setAttribute(exponential) -> incorrect reflection for element[attr]
+      todo_is(element[attr], intValue, "Bug 673820: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (v == "why 567 what") {
+      //TBD: Bug 679672: .setAttribute() is somehow able to parse "why 567 what" into "567"
+      todo_is(element[attr], intValue, "Bug 679672: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (v === "-0" && nonNegative) {
       //TBD: Bug 688093: Non-negative integers should return defaultValue when attempting to reflect "-0"
       todo_is(element[attr], intValue, "Bug 688093: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (v == "+42foo") {
+      //TBD: Bug: Unable to correctly parse "+" character in front of string
+      todo_is(element[attr], intValue, "Bug: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (v == "0x10FFFF" && defaultValue != 0) {
+      //TBD: Bug: Integer attributes should parse "0x10FFFF" as 0, but instead incorrectly return defaultValue
+      todo_is(element[attr], intValue, "Bug: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (v == "-0xABCDEF" && !nonNegative && defaultValue != 0) {
+      //TBD: Bug: Signed integer attributes should parse "-0xABCDEF" as -0, but instead incorrectly return defaultValue
+      todo_is(element[attr], intValue, "Bug: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if ((v == "++2" || v == "+-2" || v == "--2" || v == "-+2") && element[attr] != defaultValue)  {
+      //TBD: Bug: Should not be able to parse strings with multiple sign characters, should return defaultValue
+      todo_is(element[attr], intValue, "Bug: " + element.localName +
         ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
     } else {
       is(element[attr], intValue, element.localName +

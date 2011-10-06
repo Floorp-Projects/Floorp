@@ -81,7 +81,7 @@ class nsXPITriggerItem
     nsString    mArguments;
     nsString    mCertName;
 
-    bool        mHashFound; // this flag indicates that we found _some_ hash info in the trigger
+    PRBool      mHashFound; // this flag indicates that we found _some_ hash info in the trigger
     nsCString   mHash;
     nsCOMPtr<nsICryptoHash> mHasher;
     PRInt32     mFlags;
@@ -92,7 +92,7 @@ class nsXPITriggerItem
 
     void    SetPrincipal(nsIPrincipal* aPrincipal);
 
-    bool    IsFileURL() { return StringBeginsWith(mURL, NS_LITERAL_STRING("file:/")); }
+    PRBool  IsFileURL() { return StringBeginsWith(mURL, NS_LITERAL_STRING("file:/")); }
 
     const PRUnichar* GetSafeURLString();
 

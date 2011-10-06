@@ -38,7 +38,7 @@
 /* Data shared between prefapi.c and nsPref.cpp */
 
 extern PLDHashTable			gHashTable;
-extern bool                 gDirty;
+extern PRBool               gDirty;
 
 struct PrefTuple;
 
@@ -57,7 +57,7 @@ PLDHashOperator
 pref_MirrorPrefs(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg);
 
 nsresult
-pref_SetPrefTuple(const PrefTuple &aPref,bool set_default = false);
+pref_SetPrefTuple(const PrefTuple &aPref,PRBool set_default = PR_FALSE);
 
 int pref_CompareStrings(const void *v1, const void *v2, void* unused);
 PrefHashEntry* pref_HashTableLookup(const void *key);

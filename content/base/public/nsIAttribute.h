@@ -77,14 +77,14 @@ public:
 protected:
 #ifdef MOZILLA_INTERNAL_API
   nsIAttribute(nsDOMAttributeMap *aAttrMap, already_AddRefed<nsINodeInfo> aNodeInfo,
-               bool aNsAware)
+               PRBool aNsAware)
     : nsINode(aNodeInfo), mAttrMap(aAttrMap), mNsAware(aNsAware)
   {
   }
 #endif //MOZILLA_INTERNAL_API
 
   nsDOMAttributeMap *mAttrMap; // WEAK
-  bool mNsAware;
+  PRBool mNsAware;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAttribute, NS_IATTRIBUTE_IID)

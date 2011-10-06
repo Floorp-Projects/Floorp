@@ -189,7 +189,7 @@ SVGAnimatedPointList::
   SMILAnimatedPointList::ValueFromString(const nsAString& aStr,
                                const nsISMILAnimationElement* /*aSrcElement*/,
                                nsSMILValue& aValue,
-                               bool& aPreventCachingOfSandwich) const
+                               PRBool& aPreventCachingOfSandwich) const
 {
   nsSMILValue val(&SVGPointListSMILType::sSingleton);
   SVGPointListAndInfo *list = static_cast<SVGPointListAndInfo*>(val.mU.mPtr);

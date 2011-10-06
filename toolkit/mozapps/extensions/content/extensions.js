@@ -115,12 +115,7 @@ window.addEventListener("unload", shutdown, false);
 var gPendingInitializations = 1;
 __defineGetter__("gIsInitializing", function() gPendingInitializations > 0);
 
-function initialize(event) {
-  // XXXbz this listener gets _all_ load events for all nodes in the
-  // document... but relies on not being called "too early".
-  if (event.target instanceof XMLStylesheetProcessingInstruction) {
-    return;
-  }
+function initialize() {
   document.removeEventListener("load", initialize, true);
   gViewController.initialize();
   gCategories.initialize();

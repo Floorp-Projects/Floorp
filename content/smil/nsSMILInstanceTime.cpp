@@ -100,8 +100,8 @@ nsSMILInstanceTime::Unlink()
 void
 nsSMILInstanceTime::HandleChangedInterval(
     const nsSMILTimeContainer* aSrcContainer,
-    bool aBeginObjectChanged,
-    bool aEndObjectChanged)
+    PRBool aBeginObjectChanged,
+    PRBool aEndObjectChanged)
 {
   // It's possible a sequence of notifications might cause our base interval to
   // be updated and then deleted. Furthermore, the delete might happen whilst
@@ -118,10 +118,10 @@ nsSMILInstanceTime::HandleChangedInterval(
     return;
   }
 
-  bool objectChanged = mCreator->DependsOnBegin() ? aBeginObjectChanged :
+  PRBool objectChanged = mCreator->DependsOnBegin() ? aBeginObjectChanged :
                                                       aEndObjectChanged;
 
-  mozilla::AutoRestore<bool> setVisited(mVisited);
+  mozilla::AutoRestore<PRPackedBool> setVisited(mVisited);
   mVisited = PR_TRUE;
 
   nsRefPtr<nsSMILInstanceTime> deathGrip(this);
@@ -155,7 +155,7 @@ nsSMILInstanceTime::HandleFilteredInterval()
   mCreator = nsnull;
 }
 
-bool
+PRBool
 nsSMILInstanceTime::ShouldPreserve() const
 {
   return mFixedEndpointRefCnt > 0 || (mFlags & kWasDynamicEndpoint);
@@ -186,7 +186,7 @@ nsSMILInstanceTime::ReleaseFixedEndpoint()
   }
 }
 
-bool
+PRBool
 nsSMILInstanceTime::IsDependentOn(const nsSMILInstanceTime& aOther) const
 {
   if (mVisited)
@@ -200,7 +200,7 @@ nsSMILInstanceTime::IsDependentOn(const nsSMILInstanceTime& aOther) const
     return PR_TRUE;
 
   // mVisited is mutable
-  mozilla::AutoRestore<bool> setVisited(const_cast<nsSMILInstanceTime*>(this)->mVisited);
+  mozilla::AutoRestore<PRPackedBool> setVisited(const_cast<nsSMILInstanceTime*>(this)->mVisited);
   const_cast<nsSMILInstanceTime*>(this)->mVisited = PR_TRUE;
   return myBaseTime->IsDependentOn(aOther);
 }

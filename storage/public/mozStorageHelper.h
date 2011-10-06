@@ -65,7 +65,7 @@ class mozStorageTransaction
 {
 public:
   mozStorageTransaction(mozIStorageConnection* aConnection,
-                        bool aCommitOnComplete,
+                        PRBool aCommitOnComplete,
                         PRInt32 aType = mozIStorageConnection::TRANSACTION_DEFERRED)
     : mConnection(aConnection),
       mHasTransaction(PR_FALSE),
@@ -137,7 +137,7 @@ public:
    * this object doesn't do anything because there was already a transaction in
    * progress when it was created.
    */
-  bool HasTransaction()
+  PRBool HasTransaction()
   {
     return mHasTransaction;
   }
@@ -146,16 +146,16 @@ public:
    * This sets the default action (commit or rollback) when this object goes
    * out of scope.
    */
-  void SetDefaultAction(bool aCommitOnComplete)
+  void SetDefaultAction(PRBool aCommitOnComplete)
   {
     mCommitOnComplete = aCommitOnComplete;
   }
 
 protected:
   nsCOMPtr<mozIStorageConnection> mConnection;
-  bool mHasTransaction;
-  bool mCommitOnComplete;
-  bool mCompleted;
+  PRBool mHasTransaction;
+  PRBool mCommitOnComplete;
+  PRBool mCompleted;
 };
 
 

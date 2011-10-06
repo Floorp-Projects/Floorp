@@ -30,12 +30,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
         var wrappedWin = $('ifr').contentWindow;
         var unwrapped = wrappedWin.wrappedJSObject;
 
-        var filter = unwrapped.filter;
-        is(utils.getClassName(filter), 'Proxy', 'properly wrapped');
-        is(typeof filter.QueryInterface, 'function', 'double wrapped');
+        var readystatechange = unwrapped.xhr.onreadystatechange;
+        is(utils.getClassName(readystatechange), 'Proxy', 'properly wrapped');
+        is(typeof readystatechange.QueryInterface, 'function', 'double wrapped');
 
-        ok(unwrapped.testme(filter),
-           "content didn't get a proxy, but another double wrapped object");
+        ok(unwrapped.testme(readystatechange),
+           'content didn\'t get a proxy, but another double wrapped object');
         SimpleTest.finish();
       }
 

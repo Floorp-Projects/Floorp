@@ -57,10 +57,10 @@ public:
   AVCheckPolicyState CheckPolicy(nsIURI *aSource, nsIURI *aTarget);
 
 private:
-  bool mAESExists;
+  PRBool mAESExists;
   nsTArray<CLSID> mScanCLSID;
-  bool IsAESAvailable();
-  bool EnumerateOAVProviders();
+  PRBool IsAESAvailable();
+  PRBool EnumerateOAVProviders();
 
   nsAutoPtr<nsDownloadScannerWatchdog> mWatchdog;
 
@@ -83,7 +83,7 @@ private:
 
     // Called on a secondary thread to notify the scan that it has timed out
     // this is used only by the watchdog thread
-    bool NotifyTimeout();
+    PRBool NotifyTimeout();
 
   private:
     nsDownloadScanner *mDLScanner;
@@ -97,8 +97,8 @@ private:
     nsString mName;
     nsString mOrigin;
     // Also true if it is an ftp download
-    bool mIsHttpDownload;
-    bool mSkipSource;
+    PRBool mIsHttpDownload;
+    PRBool mSkipSource;
 
     /* @summary Sets the Scan's state to newState if the current state is
                 expectedState
@@ -106,13 +106,13 @@ private:
      * @param expectedState The state that the caller expects the scan to be in
      * @return If the old state matched expectedState
      */
-    bool CheckAndSetState(AVScanState newState, AVScanState expectedState);
+    PRBool CheckAndSetState(AVScanState newState, AVScanState expectedState);
 
     NS_IMETHOD Run();
 
     void DoScan();
-    bool DoScanAES();
-    bool DoScanOAV();
+    PRBool DoScanAES();
+    PRBool DoScanOAV();
 
     friend unsigned int __stdcall nsDownloadScanner::ScannerThreadFunction(void *);
   };

@@ -91,7 +91,7 @@ NS_INTERFACE_MAP_END
 //*****************************************************************************   
 
 NS_IMETHODIMP
-nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, bool* aAbortOpen)
+nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 {
     // If mDocShell is null here, that means someone's starting a load
     // in our docshell after it's already been destroyed.  Don't let
@@ -111,10 +111,10 @@ nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, bool* aAbortOpen)
 
 NS_IMETHODIMP 
 nsDSURIContentListener::DoContent(const char* aContentType, 
-                                  bool aIsContentPreferred,
+                                  PRBool aIsContentPreferred,
                                   nsIRequest* request,
                                   nsIStreamListener** aContentHandler,
-                                  bool* aAbortProcess)
+                                  PRBool* aAbortProcess)
 {
     nsresult rv;
     NS_ENSURE_ARG_POINTER(aContentHandler);
@@ -168,7 +168,7 @@ nsDSURIContentListener::DoContent(const char* aContentType,
 NS_IMETHODIMP
 nsDSURIContentListener::IsPreferred(const char* aContentType,
                                     char ** aDesiredContentType,
-                                    bool* aCanHandle)
+                                    PRBool* aCanHandle)
 {
     NS_ENSURE_ARG_POINTER(aCanHandle);
     NS_ENSURE_ARG_POINTER(aDesiredContentType);
@@ -202,9 +202,9 @@ nsDSURIContentListener::IsPreferred(const char* aContentType,
 
 NS_IMETHODIMP
 nsDSURIContentListener::CanHandleContent(const char* aContentType,
-                                         bool aIsContentPreferred,
+                                         PRBool aIsContentPreferred,
                                          char ** aDesiredContentType,
-                                         bool* aCanHandleContent)
+                                         PRBool* aCanHandleContent)
 {
     NS_PRECONDITION(aCanHandleContent, "Null out param?");
     NS_ENSURE_ARG_POINTER(aDesiredContentType);
@@ -338,7 +338,7 @@ bool nsDSURIContentListener::CheckFrameOptions(nsIRequest* request)
         // a system principal
         while (NS_SUCCEEDED(curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem))) &&
                parentDocShellItem) {
-            bool system = false;
+            PRBool system = PR_FALSE;
             topDoc = do_GetInterface(parentDocShellItem);
             if (topDoc) {
                 if (NS_SUCCEEDED(ssm->IsSystemPrincipal(topDoc->NodePrincipal(),

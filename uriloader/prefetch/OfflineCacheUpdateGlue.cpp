@@ -160,7 +160,7 @@ OfflineCacheUpdateGlue::SetDocument(nsIDOMDocument *aDocument)
     if (!appCacheChannel)
         return;
 
-    bool loadedFromAppCache;
+    PRBool loadedFromAppCache;
     appCacheChannel->GetLoadedFromApplicationCache(&loadedFromAppCache);
     if (loadedFromAppCache)
         return;

@@ -62,7 +62,7 @@ public:
 #endif
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     if (!GetStyleDisplay()->IsFloating())
       aFlags = aFlags & ~(nsIFrame::eLineParticipant);
@@ -79,18 +79,18 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             bool aShrinkWrap);
+                             PRBool aShrinkWrap);
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  virtual bool CanContinueTextRun() const;
+  virtual PRBool CanContinueTextRun() const;
   virtual nscoord GetBaseline() const;
 
 //override of nsFrame method
   NS_IMETHOD GetChildFrameContainingOffset(PRInt32 inContentOffset,
-                                           bool inHint,
+                                           PRBool inHint,
                                            PRInt32* outFrameContentOffset,
                                            nsIFrame **outChildFrame);
 
@@ -103,7 +103,7 @@ public:
   nsresult CreateContinuationForFloatingParent(nsPresContext* aPresContext,
                                                nsIFrame* aChild,
                                                nsIFrame** aContinuation,
-                                               bool aIsFluid);
+                                               PRBool aIsFluid);
 
 protected:
   nscoord mBaseline;

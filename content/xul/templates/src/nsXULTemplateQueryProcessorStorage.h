@@ -90,7 +90,7 @@ public:
 private:
 
     nsCOMPtr<mozIStorageConnection> mStorageConnection;
-    bool mGenerationStarted;
+    PRBool mGenerationStarted;
 };
 
 #endif // nsXULTemplateQueryProcessorStorage_h__

@@ -132,7 +132,7 @@ nsHTMLLabelElement::Focus()
 nsresult
 nsHTMLLabelElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                nsIContent* aBindingParent,
-                               bool aCompileEventHandlers)
+                               PRBool aCompileEventHandlers)
 {
   return nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
                                               aBindingParent,
@@ -140,12 +140,12 @@ nsHTMLLabelElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsHTMLLabelElement::UnbindFromTree(bool aDeep, bool aNullParent)
+nsHTMLLabelElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-static bool
+static PRBool
 EventTargetIn(nsEvent *aEvent, nsIContent *aChild, nsIContent *aStop)
 {
   nsCOMPtr<nsIContent> c = do_QueryInterface(aEvent->target);
@@ -214,7 +214,7 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           nsIntPoint *mouseDownPoint = static_cast<nsIntPoint *>
             (GetProperty(nsGkAtoms::labelMouseDownPtProperty));
 
-          bool dragSelect = false;
+          PRBool dragSelect = PR_FALSE;
           if (mouseDownPoint) {
             nsIntPoint dragDistance = *mouseDownPoint;
             DeleteProperty(nsGkAtoms::labelMouseDownPtProperty);
@@ -285,7 +285,7 @@ nsHTMLLabelElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 
 nsresult
 nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
-                            const nsAString& aValue, bool aNotify)
+                            const nsAString& aValue, PRBool aNotify)
 {
   return nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
                                            aNotify);
@@ -293,14 +293,14 @@ nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPref
 
 nsresult
 nsHTMLLabelElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                              bool aNotify)
+                              PRBool aNotify)
 {
   return nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
 void
-nsHTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
-                                     bool aIsTrustedEvent)
+nsHTMLLabelElement::PerformAccesskey(PRBool aKeyCausesActivation,
+                                     PRBool aIsTrustedEvent)
 {
   if (!aKeyCausesActivation) {
     nsRefPtr<Element> element = GetLabeledElement();

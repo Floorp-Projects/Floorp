@@ -111,7 +111,7 @@ nsFont::~nsFont()
 {
 }
 
-bool nsFont::BaseEquals(const nsFont& aOther) const
+PRBool nsFont::BaseEquals(const nsFont& aOther) const
 {
   if ((style == aOther.style) &&
       (systemFont == aOther.systemFont) &&
@@ -127,7 +127,7 @@ bool nsFont::BaseEquals(const nsFont& aOther) const
   return PR_FALSE;
 }
 
-bool nsFont::Equals(const nsFont& aOther) const
+PRBool nsFont::Equals(const nsFont& aOther) const
 {
   if (BaseEquals(aOther) &&
       (variant == aOther.variant) &&
@@ -153,7 +153,7 @@ nsFont& nsFont::operator=(const nsFont& aOther)
   return *this;
 }
 
-static bool IsGenericFontFamily(const nsString& aFamily)
+static PRBool IsGenericFontFamily(const nsString& aFamily)
 {
   PRUint8 generic;
   nsFont::GetGenericID(aFamily, &generic);
@@ -165,7 +165,7 @@ const PRUnichar kSingleQuote  = PRUnichar('\'');
 const PRUnichar kDoubleQuote  = PRUnichar('\"');
 const PRUnichar kComma        = PRUnichar(',');
 
-bool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
+PRBool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
 {
   const PRUnichar *p, *p_end;
   name.BeginReading(p);
@@ -177,7 +177,7 @@ bool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
       if (++p == p_end)
         return PR_TRUE;
 
-    bool generic;
+    PRBool generic;
     if (*p == kSingleQuote || *p == kDoubleQuote) {
       // quoted font family
       PRUnichar quoteMark = *p;
@@ -216,7 +216,7 @@ bool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
   return PR_TRUE;
 }
 
-static bool FontEnumCallback(const nsString& aFamily, bool aGeneric, void *aData)
+static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   *((nsString*)aData) = aFamily;
   return PR_FALSE;

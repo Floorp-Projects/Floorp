@@ -66,7 +66,7 @@ struct WalkState
 
 nsAccTreeWalker::
   nsAccTreeWalker(nsIWeakReference* aShell, nsIContent* aContent,
-                  bool aWalkAnonContent, bool aWalkCache) :
+                  PRBool aWalkAnonContent, bool aWalkCache) :
   mWeakShell(aShell), mWalkCache(aWalkCache), mState(nsnull)
 {
   NS_ASSERTION(aContent, "No node for the accessible tree walker!");
@@ -147,7 +147,7 @@ nsAccTreeWalker::PopState()
   mState = prevToLastState;
 }
 
-bool
+PRBool
 nsAccTreeWalker::PushState(nsIContent* aContent)
 {
   WalkState* nextToLastState = new WalkState(aContent);

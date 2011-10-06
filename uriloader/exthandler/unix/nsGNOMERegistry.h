@@ -43,7 +43,7 @@ class nsMIMEInfoBase;
 class nsGNOMERegistry
 {
  public:
-  static bool HandlerExists(const char *aProtocolScheme);
+  static PRBool HandlerExists(const char *aProtocolScheme);
 
   static nsresult LoadURL(nsIURI *aURL);
 

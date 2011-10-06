@@ -241,7 +241,7 @@ gfxScriptItemizer::SetText(const PRUnichar *src, PRUint32 length)
     reset();
 }
 
-bool
+PRBool
 gfxScriptItemizer::Next(PRUint32& aRunStart, PRUint32& aRunLimit,
                         PRInt32& aRunScript)
 {

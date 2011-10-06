@@ -159,7 +159,7 @@ NS_IMETHODIMP nsCMSMessage::GetSignerCommonName(char ** aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCMSMessage::ContentIsEncrypted(bool *isEncrypted)
+NS_IMETHODIMP nsCMSMessage::ContentIsEncrypted(PRBool *isEncrypted)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -176,7 +176,7 @@ NS_IMETHODIMP nsCMSMessage::ContentIsEncrypted(bool *isEncrypted)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCMSMessage::ContentIsSigned(bool *isSigned)
+NS_IMETHODIMP nsCMSMessage::ContentIsSigned(PRBool *isSigned)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -471,7 +471,7 @@ public:
       PORT_FreeArena(mPoolp, PR_FALSE);
   }
 
-  bool allocate(PRUint32 count)
+  PRBool allocate(PRUint32 count)
   {
     // only allow allocation once
     if (mPoolp)
@@ -747,7 +747,7 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
     }
 
     // If signing and encryption cert are identical, don't add it twice.
-    bool addEncryptionCert =
+    PRBool addEncryptionCert =
       (ecert && (!scert || !CERT_CompareCerts(ecert, scert)));
 
     if (addEncryptionCert &&

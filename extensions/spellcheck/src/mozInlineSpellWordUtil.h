@@ -108,7 +108,7 @@ public:
   // aSkipChecking will be set if the word is "special" and shouldn't be
   // checked (e.g., an email address).
   nsresult GetNextWord(nsAString& aText, nsIDOMRange** aRange,
-                       bool* aSkipChecking);
+                       PRBool* aSkipChecking);
 
   // Call to normalize some punctuation. This function takes an autostring
   // so we can access characters directly.
@@ -151,16 +151,16 @@ private:
   struct RealWord {
     PRInt32      mSoftTextOffset;
     PRInt32      mLength;
-    bool mCheckableWord;
+    PRPackedBool mCheckableWord;
     
-    RealWord(PRInt32 aOffset, PRInt32 aLength, bool aCheckable)
+    RealWord(PRInt32 aOffset, PRInt32 aLength, PRPackedBool aCheckable)
       : mSoftTextOffset(aOffset), mLength(aLength), mCheckableWord(aCheckable) {}
     PRInt32 EndOffset() const { return mSoftTextOffset + mLength; }
   };
   nsTArray<RealWord> mRealWords;
   PRInt32            mNextWordIndex;
 
-  bool mSoftTextValid;
+  PRPackedBool mSoftTextValid;
 
   void InvalidateWords() { mSoftTextValid = PR_FALSE; }
   void EnsureWords();
@@ -182,7 +182,7 @@ private:
   // If aSearchForward is true, then if we don't find a word at the given
   // position, search forward until we do find a word and return that (if found).
   PRInt32 FindRealWordContaining(PRInt32 aSoftTextOffset, DOMMapHint aHint,
-                                 bool aSearchForward);
+                                 PRBool aSearchForward);
     
   // build mSoftText and mSoftTextDOMMapping
   void BuildSoftText();

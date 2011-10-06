@@ -239,7 +239,7 @@ gfxContext::Line(const gfxPoint& start, const gfxPoint& end)
 // For odd-width stroked rectangles, we need to offset x/y by
 // 0.5...
 void
-gfxContext::Rectangle(const gfxRect& rect, bool snapToPixels)
+gfxContext::Rectangle(const gfxRect& rect, PRBool snapToPixels)
 {
     if (snapToPixels) {
         gfxRect snappedRect(rect);
@@ -416,8 +416,8 @@ gfxContext::UserToDevice(const gfxRect& rect) const
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
-bool
-gfxContext::UserToDevicePixelSnapped(gfxRect& rect, bool ignoreScale) const
+PRBool
+gfxContext::UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale) const
 {
     if (GetFlags() & FLAG_DISABLE_SNAPPING)
         return PR_FALSE;
@@ -458,8 +458,8 @@ gfxContext::UserToDevicePixelSnapped(gfxRect& rect, bool ignoreScale) const
     return PR_FALSE;
 }
 
-bool
-gfxContext::UserToDevicePixelSnapped(gfxPoint& pt, bool ignoreScale) const
+PRBool
+gfxContext::UserToDevicePixelSnapped(gfxPoint& pt, PRBool ignoreScale) const
 {
     if (GetFlags() & FLAG_DISABLE_SNAPPING)
         return PR_FALSE;
@@ -696,13 +696,13 @@ gfxContext::GetClipExtents()
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
-bool
+PRBool
 gfxContext::ClipContainsRect(const gfxRect& aRect)
 {
     cairo_rectangle_list_t *clip =
         cairo_copy_clip_rectangle_list(mCairo);
 
-    bool result = false;
+    PRBool result = PR_FALSE;
 
     if (clip->status == CAIRO_STATUS_SUCCESS) {
         for (int i = 0; i < clip->num_rectangles; i++) {
@@ -743,7 +743,7 @@ gfxContext::SetDeviceColor(const gfxRGBA& c)
     cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
 }
 
-bool
+PRBool
 gfxContext::GetDeviceColor(gfxRGBA& c)
 {
     return cairo_pattern_get_rgba(cairo_get_source(mCairo),
@@ -883,13 +883,13 @@ gfxContext::PopGroupToSource()
     cairo_pop_group_to_source(mCairo);
 }
 
-bool
+PRBool
 gfxContext::PointInFill(const gfxPoint& pt)
 {
     return cairo_in_fill(mCairo, pt.x, pt.y);
 }
 
-bool
+PRBool
 gfxContext::PointInStroke(const gfxPoint& pt)
 {
     return cairo_in_stroke(mCairo, pt.x, pt.y);
@@ -928,7 +928,7 @@ gfxContext::GetFlattenedPath()
     return path;
 }
 
-bool
+PRBool
 gfxContext::HasError()
 {
      return cairo_status(mCairo) != CAIRO_STATUS_SUCCESS;
@@ -937,7 +937,7 @@ gfxContext::HasError()
 void
 gfxContext::RoundedRectangle(const gfxRect& rect,
                              const gfxCornerSizes& corners,
-                             bool draw_clockwise)
+                             PRBool draw_clockwise)
 {
     //
     // For CW drawing, this looks like:

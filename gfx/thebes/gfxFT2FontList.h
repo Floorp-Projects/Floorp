@@ -94,7 +94,7 @@ public:
         // after the face is destroyed; null if there is no such buffer
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
-                                        bool aNeedsBold);
+                                        PRBool aNeedsBold);
 
     cairo_font_face_t *CairoFontFace();
     cairo_scaled_font_t *CreateScaledFont(const gfxFontStyle *aStyle);
@@ -125,7 +125,7 @@ public:
     gfxFT2FontList();
 
     virtual gfxFontEntry* GetDefaultFont(const gfxFontStyle* aStyle,
-                                         bool& aNeedsBold);
+                                         PRBool& aNeedsBold);
 
     virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                           const nsAString& aFontName);
@@ -144,14 +144,14 @@ protected:
     virtual nsresult InitFontList();
 
     void AppendFaceFromFontListEntry(const FontListEntry& aFLE,
-                                     bool isStdFile);
+                                     PRBool isStdFile);
 
     void AppendFacesFromFontFile(nsCString& aFileName,
-                                 bool isStdFile = false,
+                                 PRBool isStdFile = PR_FALSE,
                                  FontNameCache *aCache = nsnull);
 
     void AppendFacesFromCachedFaceList(nsCString& aFileName,
-                                       bool isStdFile,
+                                       PRBool isStdFile,
                                        nsCString& aFaceList);
 
     void FindFonts();

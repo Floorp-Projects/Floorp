@@ -270,7 +270,7 @@ XULContentSinkImpl::WillBuildModel(nsDTDMode aDTDMode)
 }
 
 NS_IMETHODIMP 
-XULContentSinkImpl::DidBuildModel(bool aTerminated)
+XULContentSinkImpl::DidBuildModel(PRBool aTerminated)
 {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
     if (doc) {
@@ -372,7 +372,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument,
 // Text buffering
 //
 
-bool
+PRBool
 XULContentSinkImpl::IsDataInBuffer(PRUnichar* buffer, PRInt32 length)
 {
     for (PRInt32 i = 0; i < length; ++i) {
@@ -389,7 +389,7 @@ XULContentSinkImpl::IsDataInBuffer(PRUnichar* buffer, PRInt32 length)
 
 
 nsresult
-XULContentSinkImpl::FlushText(bool aCreateTextNode)
+XULContentSinkImpl::FlushText(PRBool aCreateTextNode)
 {
     nsresult rv;
 
@@ -406,7 +406,7 @@ XULContentSinkImpl::FlushText(bool aCreateTextNode)
         rv = mContextStack.GetTopNode(node);
         if (NS_FAILED(rv)) return rv;
 
-        bool stripWhitespace = false;
+        PRBool stripWhitespace = PR_FALSE;
         if (node->mType == nsXULPrototypeNode::eType_Element) {
             nsINodeInfo *nodeInfo =
                 static_cast<nsXULPrototypeElement*>(node.get())->mNodeInfo;
@@ -727,7 +727,7 @@ NS_IMETHODIMP
 XULContentSinkImpl::ReportError(const PRUnichar* aErrorText, 
                                 const PRUnichar* aSourceText,
                                 nsIScriptError *aError,
-                                bool *_retval)
+                                PRBool *_retval)
 {
   NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
 
@@ -795,7 +795,7 @@ XULContentSinkImpl::SetElementScriptType(nsXULPrototypeElement* element,
     // First check if the attributes specify an explicit script type.
     nsresult rv = NS_OK;
     PRUint32 i;
-    bool found = false;
+    PRBool found = PR_FALSE;
     for (i=0;i<aAttrLen;i++) {
         const nsDependentString key(aAttributes[i*2]);
         if (key.EqualsLiteral("script-type")) {
@@ -1011,7 +1011,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
               nsnull
           };
 
-          bool isJavaScript = false;
+          PRBool isJavaScript = PR_FALSE;
           for (PRInt32 i = 0; jsTypes[i]; i++) {
               if (mimeType.LowerCaseEqualsASCII(jsTypes[i])) {
                   isJavaScript = PR_TRUE;

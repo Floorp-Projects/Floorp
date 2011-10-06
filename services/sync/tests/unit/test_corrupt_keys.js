@@ -12,6 +12,17 @@ Cu.import("resource://services-sync/log4moz.js");
 add_test(function test_locally_changed_keys() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";
 
+  // Tracking info/collections.
+  let collectionsHelper = track_collections_helper();
+  let upd = collectionsHelper.with_updated_collection;
+  let collections = collectionsHelper.collections;
+
+  let keysWBO = new ServerWBO("keys");
+  let clients = new ServerCollection();
+  let meta_global = new ServerWBO("global");
+  
+  let history = new ServerCollection();
+  
   let hmacErrorCount = 0;
   function counting(f) {
     return function() {
@@ -22,16 +33,28 @@ add_test(function test_locally_changed_keys() {
   
   Weave.Service.handleHMACEvent = counting(Weave.Service.handleHMACEvent);
   
-  let server  = new SyncServer();
-  let johndoe = server.registerUser("johndoe", "password");
-  johndoe.createContents({
-    meta: {},
-    crypto: {},
-    clients: {}
+  let server = httpd_setup({
+    // Special.
+    "/1.1/johndoe/storage/meta/global": upd("meta", meta_global.handler()),
+    "/1.1/johndoe/info/collections": collectionsHelper.handler,
+    "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
+      
+    // Track modified times.
+    "/1.1/johndoe/storage/clients": upd("clients", clients.handler()),
+    "/1.1/johndoe/storage/clients/foobar": upd("clients", new ServerWBO("clients").handler()),
+    "/1.1/johndoe/storage/tabs": upd("tabs", new ServerCollection().handler()),
+    
+    // Just so we don't get 404s in the logs.
+    "/1.1/johndoe/storage/bookmarks": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/forms": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/passwords": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/prefs": new ServerCollection().handler(),
+    
+    "/1.1/johndoe/storage/history": upd("history", history.handler()),
   });
-  server.start();
 
   try {
+    
     Svc.Prefs.set("registerEngines", "Tab");
     _("Set up some tabs.");
     let myTabs = 
@@ -74,7 +97,7 @@ add_test(function test_locally_changed_keys() {
                  "storageVersion": STORAGE_VERSION};
     m.upload(Weave.Service.metaURL);
     
-    _("New meta/global: " + JSON.stringify(johndoe.collection("meta").wbo("global")));
+    _("New meta/global: " + JSON.stringify(meta_global));
     
     // Upload keys.
     generateNewKeys();
@@ -90,8 +113,9 @@ add_test(function test_locally_changed_keys() {
     Weave.Service.sync();
     
     // Tabs exist.
-    _("Tabs modified: " + johndoe.modified("tabs"));
-    do_check_true(johndoe.modified("tabs") > 0);
+    _("Tabs modified: " + collections.tabs);
+    do_check_true(!!collections.tabs);
+    do_check_true(collections.tabs > 0);
     
     let coll_modified = CollectionKeys.lastModified;
     
@@ -99,8 +123,7 @@ add_test(function test_locally_changed_keys() {
     let liveKeys = CollectionKeys.keyForCollection("history");
     _("Keys now: " + liveKeys.keyPair);
     let visitType = Ci.nsINavHistoryService.TRANSITION_LINK;
-    let history   = johndoe.createCollection("history");
-    for (let i = 0; i < 5; i++) {
+    for (var i = 0; i < 5; i++) {
       let id = 'record-no--' + i;
       let modified = Date.now()/1000 - 60*(i+10);
       
@@ -114,14 +137,18 @@ add_test(function test_locally_changed_keys() {
         deleted: false};
       w.encrypt();
       
-      let payload = {ciphertext: w.ciphertext,
-                     IV:         w.IV,
-                     hmac:       w.hmac};
-      history.insert(id, payload, modified);
+      let wbo = new ServerWBO(id, {ciphertext: w.ciphertext,
+                                   IV: w.IV,
+                                   hmac: w.hmac});
+      wbo.modified = modified;
+      history.wbos[id] = wbo;
+      server.registerPathHandler(
+        "/1.1/johndoe/storage/history/record-no--" + i,
+        upd("history", wbo.handler()));
     }
     
-    history.timestamp = Date.now() / 1000;
-    let old_key_time = johndoe.modified("crypto");
+    collections.history = Date.now()/1000;
+    let old_key_time = collections.crypto;
     _("Old key time: " + old_key_time);
     
     // Check that we can decrypt one.
@@ -155,9 +182,9 @@ add_test(function test_locally_changed_keys() {
     
     _("Busting some new server values.");
     // Now what happens if we corrupt the HMAC on the server?
-    for (let i = 5; i < 10; i++) {
+    for (var i = 5; i < 10; i++) {
       let id = 'record-no--' + i;
-      let modified = 1 + (Date.now() / 1000);
+      let modified = 1 + (Date.now()/1000);
       
       let w = new CryptoWrapper("history", "id");
       w.cleartext = {
@@ -170,15 +197,19 @@ add_test(function test_locally_changed_keys() {
       w.encrypt();
       w.hmac = w.hmac.toUpperCase();
       
-      let payload = {ciphertext: w.ciphertext,
-                     IV:         w.IV,
-                     hmac:       w.hmac};
-      history.insert(id, payload, modified);
+      let wbo = new ServerWBO(id, {ciphertext: w.ciphertext,
+                                   IV: w.IV,
+                                   hmac: w.hmac});
+      wbo.modified = modified;
+      history.wbos[id] = wbo;
+      server.registerPathHandler(
+        "/1.1/johndoe/storage/history/record-no--" + i,
+        upd("history", wbo.handler()));
     }
-    history.timestamp = Date.now() / 1000;
+    collections.history = Date.now()/1000;
     
     _("Server key time hasn't changed.");
-    do_check_eq(johndoe.modified("crypto"), old_key_time);
+    do_check_eq(collections.crypto, old_key_time);
     
     _("Resetting HMAC error timer.");
     Weave.Service.lastHMACEvent = 0;
@@ -187,7 +218,7 @@ add_test(function test_locally_changed_keys() {
     Weave.Service.sync();
     _("Keys now: " + CollectionKeys.keyForCollection("history").keyPair);
     _("Server keys have been updated, and we skipped over 5 more HMAC errors without adjusting history.");
-    do_check_true(johndoe.modified("crypto") > old_key_time);
+    do_check_true(collections.crypto > old_key_time);
     do_check_eq(hmacErrorCount, 6);
     do_check_false(store.urlExists("http://foo/bar?record-no--5"));
     do_check_false(store.urlExists("http://foo/bar?record-no--6"));

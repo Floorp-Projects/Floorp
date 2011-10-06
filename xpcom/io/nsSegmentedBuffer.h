@@ -62,14 +62,14 @@ public:
     char* AppendNewSegment();   // pushes at end
 
     // returns true if no more segments remain:
-    bool DeleteFirstSegment();  // pops from beginning
+    PRBool DeleteFirstSegment();  // pops from beginning
 
     // returns true if no more segments remain:
-    bool DeleteLastSegment();  // pops from beginning
+    PRBool DeleteLastSegment();  // pops from beginning
 
     // Call Realloc() on last segment.  This is used to reduce memory
     // consumption when data is not an exact multiple of segment size.
-    bool ReallocLastSegment(size_t newSize);
+    PRBool ReallocLastSegment(size_t newSize);
 
     void Empty();               // frees all segments
 
@@ -98,7 +98,7 @@ protected:
         return result;
     }
 
-   inline bool IsFull() {
+   inline PRBool IsFull() {
         return ModSegArraySize(mLastSegmentIndex + 1) == mFirstSegmentIndex;
     }
 

@@ -37,7 +37,7 @@ namespace AppCallbacks {
              nsIWebBrowserChrome *aParent,
              nsIWebBrowserChrome **aNewWindow);
 
-  void     EnableChromeWindow(nsIWebBrowserChrome *aWindow, bool aEnabled);
+  void     EnableChromeWindow(nsIWebBrowserChrome *aWindow, PRBool aEnabled);
 
-  PRUint32 RunEventLoop(bool &aRunCondition);
+  PRUint32 RunEventLoop(PRBool &aRunCondition);
 }

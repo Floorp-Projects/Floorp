@@ -58,7 +58,7 @@ class nsICODecoder : public Decoder
 {
 public:
 
-  nsICODecoder(RasterImage *aImage, imgIDecoderObserver* aObserver);
+  nsICODecoder();
   virtual ~nsICODecoder();
 
   // Obtains the width of the icon directory entry
@@ -82,7 +82,7 @@ private:
   // Sets the hotspot property of if we have a cursor
   void SetHotSpotIfCursor();
   // Creates a bitmap file header buffer, returns PR_TRUE if successful
-  bool FillBitmapFileHeaderBuffer(PRInt8 *bfh);
+  PRBool FillBitmapFileHeaderBuffer(PRInt8 *bfh);
   // Fixes the height of a BMP information header field
   void FillBitmapInformationBufferHeight(PRInt8 *bih);
   // Extract bitmap info header size count from BMP information header
@@ -112,9 +112,9 @@ private:
   // Holds the potential bytes for a bitmap information header
   char mBIHraw[40];
   // Stores whether or not the icon file we are processing has type 1 (icon)
-  bool mIsCursor;
+  PRPackedBool mIsCursor;
   // Stores whether or not the contained resource is a PNG
-  bool mIsPNG;
+  PRPackedBool mIsPNG;
 };
 
 } // namespace imagelib

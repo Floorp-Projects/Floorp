@@ -59,7 +59,7 @@ public:
         NS_NOTREACHED("shouldn't depend on this context");
         return NS_ERROR_FAILURE;
     }
-    bool isStripSpaceAllowed(const txXPathNode& aNode)
+    PRBool isStripSpaceAllowed(const txXPathNode& aNode)
     {
         NS_NOTREACHED("shouldn't depend on this context");
         return PR_FALSE;

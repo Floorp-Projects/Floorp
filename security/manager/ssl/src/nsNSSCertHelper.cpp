@@ -214,8 +214,8 @@ GetDefaultOIDFormat(SECItem *oid,
     
   unsigned int i;
   unsigned long val  = 0;
-  bool invalid = false;
-  bool first = true;
+  PRBool invalid = PR_FALSE;
+  PRBool first = PR_TRUE;
 
   val = 0;
   for (i = 0; i < oid->len; ++i) {
@@ -664,7 +664,7 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
 
 static nsresult
 ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data, 
-                nsAString &text, bool wantHeader = true)
+                nsAString &text, PRBool wantHeader = PR_TRUE)
 {
   // This function is used to display some DER bytes
   // that we have not added support for decoding.
@@ -1417,7 +1417,7 @@ ProcessCertificatePolicies(SECItem  *extData,
       text.Append(local);
     }
 
-    bool needColon = true;
+    PRBool needColon = PR_TRUE;
     if (ev_oid_tag != SEC_OID_UNKNOWN) {
       // This is an EV cert. Let's see if this oid is the EV oid,
       // because we want to display the EV information string
@@ -2159,7 +2159,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   }
   if (mCert->extensions) {
     SECOidTag ev_oid_tag;
-    bool validEV;
+    PRBool validEV;
     rv = hasValidEVOidTag(ev_oid_tag, validEV);
     if (NS_FAILED(rv))
       return rv;

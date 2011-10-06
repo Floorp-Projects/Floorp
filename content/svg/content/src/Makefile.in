@@ -105,6 +105,7 @@ CPPSRCS		= \
 		nsSVGPolylineElement.cpp \
 		nsSVGScriptElement.cpp \
 		nsSVGString.cpp \
+		nsSVGStringProxyValue.cpp \
 		nsSVGStylableElement.cpp \
 		nsSVGRect.cpp \
 		nsSVGRectElement.cpp \
@@ -120,6 +121,7 @@ CPPSRCS		= \
 		nsSVGTextPositioningElement.cpp \
 		nsSVGTitleElement.cpp \
 		nsSVGUseElement.cpp \
+		nsSVGValue.cpp \
 		nsSVGViewBox.cpp \
 		SVGAnimatedLengthList.cpp \
 		SVGAnimatedNumberList.cpp \
@@ -167,6 +169,9 @@ include $(topsrcdir)/config/config.mk
 FORCE_STATIC_LIB = 1
 
 EXPORTS =  			\
+	nsISVGValue.h              \
+	nsISVGValueObserver.h      \
+	nsISVGValueUtils.h         \
 	nsSVGFeatures.h            \
 	nsSVGRect.h                \
 	$(NULL)

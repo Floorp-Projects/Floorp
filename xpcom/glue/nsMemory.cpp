@@ -46,7 +46,7 @@
 // nsMemory static helper routines
 
 NS_COM_GLUE nsresult
-nsMemory::HeapMinimize(bool aImmediate)
+nsMemory::HeapMinimize(PRBool aImmediate)
 {
     nsCOMPtr<nsIMemory> mem;
     nsresult rv = NS_GetMemoryManager(getter_AddRefs(mem));

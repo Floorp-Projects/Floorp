@@ -47,9 +47,9 @@
 
 const PRUnichar nbsp = 160;
 
-static bool IsBlockNode(nsIDOMNode* node)
+static PRBool IsBlockNode(nsIDOMNode* node)
 {
-  bool isBlock (false);
+  PRBool isBlock (PR_FALSE);
   nsHTMLEditor::NodeIsBlockStatic(node, &isBlock);
   return isBlock;
 }
@@ -411,7 +411,7 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
   // before we are called.  Eventually, all that logic will be pushed down into
   // here and made more efficient.
   PRUint32 j;
-  bool prevWS = false;
+  PRBool prevWS = PR_FALSE;
   for (j=0; j<=lastCharIndex; j++)
   {
     if (nsCRT::IsAsciiSpace(theString[j]))
@@ -1600,7 +1600,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
         res = range->SetEnd(aEndNode, aEndOffset);
         NS_ENSURE_SUCCESS(res, res);
       }
-      bool nodeBefore, nodeAfter;
+      PRBool nodeBefore, nodeAfter;
       nsCOMPtr<nsIContent> content (do_QueryInterface(node));
       res = mHTMLEditor->sRangeHelper->CompareNodeToRange(content, range, &nodeBefore, &nodeAfter);
       NS_ENSURE_SUCCESS(res, res);
@@ -1851,7 +1851,7 @@ nsWSRunObject::GetAsciiWSBounds(PRInt16 aDir, nsIDOMNode *aNode, PRInt32 aOffset
 }
 
 nsresult
-nsWSRunObject::FindRun(nsIDOMNode *aNode, PRInt32 aOffset, WSFragment **outRun, bool after)
+nsWSRunObject::FindRun(nsIDOMNode *aNode, PRInt32 aOffset, WSFragment **outRun, PRBool after)
 {
   // given a dompoint, find the ws run that is before or after it, as caller needs
   NS_ENSURE_TRUE(aNode && outRun, NS_ERROR_NULL_POINTER);
@@ -2031,9 +2031,9 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
   // examine what is before and after the trailing nbsp, if any.
   NS_ENSURE_TRUE(aRun, NS_ERROR_NULL_POINTER);
   WSPoint thePoint;
-  bool leftCheck = false;
-  bool spaceNBSP = false;
-  bool rightCheck = false;
+  PRBool leftCheck = PR_FALSE;
+  PRBool spaceNBSP = PR_FALSE;
+  PRBool rightCheck = PR_FALSE;
   
   // confirm run is normalWS
   if (aRun->mType != eNormalWS) return NS_ERROR_FAILURE;
@@ -2146,7 +2146,7 @@ nsWSRunObject::CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aO
   // end up after the inserted object.   
   NS_ENSURE_TRUE(aRun && aNode, NS_ERROR_NULL_POINTER);
   WSPoint thePoint;
-  bool canConvert = false;
+  PRBool canConvert = PR_FALSE;
   nsresult res = GetCharBefore(aNode, aOffset, &thePoint);
   if (NS_SUCCEEDED(res) && thePoint.mTextNode && thePoint.mChar == nbsp)
   {
@@ -2185,7 +2185,7 @@ nsWSRunObject::CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOf
   // text, so we don't have to worry about what is before it.  What is before it now will 
   // end up before the inserted text.   
   WSPoint thePoint;
-  bool canConvert = false;
+  PRBool canConvert = PR_FALSE;
   nsresult res = GetCharAfter(aNode, aOffset, &thePoint);
   if (NS_SUCCEEDED(res) && thePoint.mChar == nbsp)
   {

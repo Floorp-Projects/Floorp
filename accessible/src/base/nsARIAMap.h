@@ -107,12 +107,12 @@ enum ELiveAttrRule
 /**
  * ARIA role overrides role from native markup.
  */
-const bool kUseMapRole = true;
+const PRBool kUseMapRole = PR_TRUE;
 
 /**
  * ARIA role doesn't override the role from native markup.
  */
-const bool kUseNativeRole = false;
+const PRBool kUseNativeRole = PR_FALSE;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +203,7 @@ public:
                   PRUint64 aPermanentState,
                   PRUint64 aTrueState,
                   PRUint64 aFalseState = 0,
-                  bool aDefinedIfAbsent = false);
+                  PRBool aDefinedIfAbsent = PR_FALSE);
 
   /**
    * Used for ARIA attributes having enumerated values.
@@ -230,7 +230,7 @@ public:
    * @param  aStateMapEntryID [in] state map entry ID
    * @return                   true if state map entry ID is valid
    */
-  static bool MapToStates(nsIContent* aContent, PRUint64* aState,
+  static PRBool MapToStates(nsIContent* aContent, PRUint64* aState,
                             eStateMapEntryID aStateMapEntryID);
 
 private:
@@ -238,7 +238,7 @@ private:
   nsIAtom** mAttributeName;
 
   // Indicates if attribute is token (can be undefined)
-  bool mIsToken;
+  PRBool mIsToken;
 
   // State applied always if attribute is defined
   PRUint64 mPermanentState;
@@ -257,7 +257,7 @@ private:
   PRUint64 mDefaultState;
 
   // Permanent and false states are applied if attribute is absent
-  bool mDefinedIfAbsent;
+  PRBool mDefinedIfAbsent;
 };
 
 
@@ -276,7 +276,7 @@ struct nsRoleMapEntry
   PRUint32 role;
   
   // Role rule: whether to use mapped role or native semantics
-  bool roleRule;
+  PRBool roleRule;
   
   // Value mapping rule: how to compute nsIAccessible value
   EValueRule valueRule;

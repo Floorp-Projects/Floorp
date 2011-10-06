@@ -100,21 +100,21 @@ class MaemoLocationProvider : public nsIGeolocationProvider,
   gulong mControlStopped;
 
   nsCOMPtr<nsIGeolocationUpdate> mCallback;
-  bool mHasSeenLocation;
-  bool mHasGPS;
+  PRPackedBool mHasSeenLocation;
+  PRPackedBool mHasGPS;
 
   nsCOMPtr<nsITimer> mUpdateTimer;
   LocationGPSDControl* mGPSControl;
   LocationGPSDevice* mGPSDevice;
 
-  bool mIgnoreMinorChanges;
+  PRBool mIgnoreMinorChanges;
 
   double mPrevLat;
   double mPrevLong;
 
-  bool mIgnoreBigHErr;
+  PRBool mIgnoreBigHErr;
   PRInt32 mMaxHErr;
-  bool mIgnoreBigVErr;
+  PRBool mIgnoreBigVErr;
   PRInt32 mMaxVErr;
 
 };

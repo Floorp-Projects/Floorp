@@ -59,11 +59,11 @@ FilteringWrapper<Base, Policy>::~FilteringWrapper()
 {
 }
 
-typedef Wrapper::Permission Permission;
+typedef JSWrapper::Permission Permission;
 
-static const Permission PermitObjectAccess = Wrapper::PermitObjectAccess;
-static const Permission PermitPropertyAccess = Wrapper::PermitPropertyAccess;
-static const Permission DenyAccess = Wrapper::DenyAccess;
+static const Permission PermitObjectAccess = JSWrapper::PermitObjectAccess;
+static const Permission PermitPropertyAccess = JSWrapper::PermitPropertyAccess;
+static const Permission DenyAccess = JSWrapper::DenyAccess;
 
 template <typename Policy>
 static bool
@@ -73,7 +73,7 @@ Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
     for (size_t n = 0; n < props.length(); ++n) {
         jsid id = props[n];
         Permission perm;
-        if (!Policy::check(cx, wrapper, id, Wrapper::GET, perm))
+        if (!Policy::check(cx, wrapper, id, JSWrapper::GET, perm))
             return false; // Error
         if (perm != DenyAccess)
             props[w++] = id;
@@ -114,13 +114,13 @@ FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, uintN 
     // we don't know how to censor custom iterator objects. Instead we trigger
     // the default proxy iterate trap, which will ask enumerate() for the list
     // of (consored) ids.
-    return js::ProxyHandler::iterate(cx, wrapper, flags, vp);
+    return JSProxyHandler::iterate(cx, wrapper, flags, vp);
 }
 
 template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
-                                      Wrapper::Action act, bool *bp)
+                                      JSWrapper::Action act, bool *bp)
 {
     Permission perm;
     if (!Policy::check(cx, wrapper, id, act, perm)) {
@@ -133,15 +133,15 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
     return Base::enter(cx, wrapper, id, act, bp);
 }
 
-#define SOW FilteringWrapper<CrossCompartmentWrapper, OnlyIfSubjectIsSystem>
-#define SCSOW FilteringWrapper<Wrapper, OnlyIfSubjectIsSystem>
-#define COW FilteringWrapper<CrossCompartmentWrapper, ExposedPropertiesOnly>
-#define XOW FilteringWrapper<XrayWrapper<CrossCompartmentWrapper>, \
+#define SOW FilteringWrapper<JSCrossCompartmentWrapper, OnlyIfSubjectIsSystem>
+#define SCSOW FilteringWrapper<JSWrapper, OnlyIfSubjectIsSystem>
+#define COW FilteringWrapper<JSCrossCompartmentWrapper, ExposedPropertiesOnly>
+#define XOW FilteringWrapper<XrayWrapper<JSCrossCompartmentWrapper>, \
                              CrossOriginAccessiblePropertiesOnly>
-#define NNXOW FilteringWrapper<CrossCompartmentWrapper, CrossOriginAccessiblePropertiesOnly>
-#define LW    FilteringWrapper<XrayWrapper<Wrapper>, \
+#define NNXOW FilteringWrapper<JSCrossCompartmentWrapper, CrossOriginAccessiblePropertiesOnly>
+#define LW    FilteringWrapper<XrayWrapper<JSWrapper>, \
                                SameOriginOrCrossOriginAccessiblePropertiesOnly>
-#define XLW   FilteringWrapper<XrayWrapper<CrossCompartmentWrapper>, \
+#define XLW   FilteringWrapper<XrayWrapper<JSCrossCompartmentWrapper>, \
                                SameOriginOrCrossOriginAccessiblePropertiesOnly>
 
 template<> SOW SOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |

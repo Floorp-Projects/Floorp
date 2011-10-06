@@ -187,7 +187,7 @@ ArgValueArray::GetBlob(PRUint32 aIndex,
 
 NS_IMETHODIMP
 ArgValueArray::GetIsNull(PRUint32 aIndex,
-                         bool *_isNull)
+                         PRBool *_isNull)
 {
   // GetTypeOfIndex will check aIndex for us, so we don't have to.
   PRInt32 type;

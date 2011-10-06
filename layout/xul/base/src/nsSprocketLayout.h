@@ -53,8 +53,8 @@ public:
   nscoord flex;
   nscoord left;
   nscoord right;
-  bool    collapsed;
-  bool    bogus;
+  PRBool  collapsed;
+  PRBool  bogus;
 
   nsBoxSize* next;
 
@@ -68,8 +68,8 @@ public:
   nsComputedBoxSize();
 
   nscoord size;
-  bool    valid;
-  bool    resized;
+  PRBool  valid;
+  PRBool  resized;
   nsComputedBoxSize* next;
 
   void* operator new(size_t sz, nsBoxLayoutState& aState) CPP_THROW_NEW;
@@ -107,13 +107,13 @@ public:
 
   nsSprocketLayout();
 
-  static bool IsHorizontal(nsIBox* aBox);
+  static PRBool IsHorizontal(nsIBox* aBox);
 
-  static void SetLargestSize(nsSize& aSize1, const nsSize& aSize2, bool aIsHorizontal);
-  static void SetSmallestSize(nsSize& aSize1, const nsSize& aSize2, bool aIsHorizontal);
+  static void SetLargestSize(nsSize& aSize1, const nsSize& aSize2, PRBool aIsHorizontal);
+  static void SetSmallestSize(nsSize& aSize1, const nsSize& aSize2, PRBool aIsHorizontal);
 
-  static void AddLargestSize(nsSize& aSize, const nsSize& aSizeToAdd, bool aIsHorizontal);
-  static void AddSmallestSize(nsSize& aSize, const nsSize& aSizeToAdd, bool aIsHorizontal);
+  static void AddLargestSize(nsSize& aSize, const nsSize& aSizeToAdd, PRBool aIsHorizontal);
+  static void AddSmallestSize(nsSize& aSize, const nsSize& aSizeToAdd, PRBool aIsHorizontal);
   static void AddCoord(nscoord& aCoord, nscoord aCoordToAdd);
 
 protected:
@@ -137,11 +137,11 @@ protected:
                     nsRect& aChildActualRect, 
                     nsRect& aContainingRect, 
                     PRInt32 aFlexes, 
-                    bool& aFinished);
+                    PRBool& aFinished);
 
   void AlignChildren(nsIBox* aBox,
                      nsBoxLayoutState& aState,
-                     bool* aNeedsRedraw);
+                     PRBool* aNeedsRedraw);
 
   virtual void ComputeChildSizes(nsIBox* aBox, 
                          nsBoxLayoutState& aState, 
@@ -154,7 +154,7 @@ protected:
 
   virtual void InvalidateComputedSizes(nsComputedBoxSize* aComputedBoxSizes);
 
-  virtual bool GetDefaultFlex(PRInt32& aFlex);
+  virtual PRBool GetDefaultFlex(PRInt32& aFlex);
 
   virtual void GetFrameState(nsIBox* aBox, nsFrameState& aState);
 

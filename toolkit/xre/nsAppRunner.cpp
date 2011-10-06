@@ -265,7 +265,7 @@ SaveToEnv(const char *putenv)
 }
 
 // Tests that an environment variable exists and has a value
-static bool
+static PRBool
 EnvHasValue(const char *name)
 {
   const char *val = PR_GetEnv(name);
@@ -346,7 +346,7 @@ SaveFileToEnvIfUnset(const char *name, nsIFile *file)
     SaveFileToEnv(name, file);
 }
 
-static bool
+static PRBool
 strimatch(const char* lowerstr, const char* mixedstr)
 {
   while(*lowerstr) {
@@ -371,7 +371,7 @@ strimatch(const char* lowerstr, const char* mixedstr)
  * @param fmt
  *        printf-style format string followed by arguments.
  */
-static void Output(bool isError, const char *fmt, ... )
+static void Output(PRBool isError, const char *fmt, ... )
 {
   va_list ap;
   va_start(ap, fmt);
@@ -438,7 +438,7 @@ static void RemoveArg(char **argv)
  *        allocated, but rather a pointer to the argv data.
  */
 static ArgResult
-CheckArg(const char* aArg, bool aCheckOSInt = false, const char **aParam = nsnull, bool aRemArg = true)
+CheckArg(const char* aArg, PRBool aCheckOSInt = PR_FALSE, const char **aParam = nsnull, PRBool aRemArg = PR_TRUE)
 {
   NS_ABORT_IF_FALSE(gArgv, "gArgv must be initialized before CheckArg()");
 
@@ -541,7 +541,7 @@ CheckArgShell(const char* aArg)
  * acknowledged.
  */
 static void
-ProcessDDE(nsINativeAppSupport* aNative, bool aWait)
+ProcessDDE(nsINativeAppSupport* aNative, PRBool aWait)
 {
   // When the app is launched by the windows shell the windows shell
   // expects the app to be available for DDE messages and if it isn't
@@ -569,7 +569,7 @@ ProcessDDE(nsINativeAppSupport* aNative, bool aWait)
 }
 #endif
 
-bool gSafeMode = false;
+PRBool gSafeMode = PR_FALSE;
 
 /**
  * The nsXULAppInfo object implements nsIFactory so that it can be its own
@@ -679,21 +679,21 @@ nsXULAppInfo::GetPlatformBuildID(nsACString& aResult)
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetLogConsoleErrors(bool *aResult)
+nsXULAppInfo::GetLogConsoleErrors(PRBool *aResult)
 {
   *aResult = gLogConsoleErrors;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::SetLogConsoleErrors(bool aValue)
+nsXULAppInfo::SetLogConsoleErrors(PRBool aValue)
 {
   gLogConsoleErrors = aValue;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetInSafeMode(bool *aResult)
+nsXULAppInfo::GetInSafeMode(PRBool *aResult)
 {
   *aResult = gSafeMode;
   return NS_OK;
@@ -815,7 +815,7 @@ typedef enum
 #define VistaTokenElevationType static_cast< TOKEN_INFORMATION_CLASS >( 18 )
 
 NS_IMETHODIMP
-nsXULAppInfo::GetUserCanElevate(bool *aUserCanElevate)
+nsXULAppInfo::GetUserCanElevate(PRBool *aUserCanElevate)
 {
   HANDLE hToken;
 
@@ -849,14 +849,14 @@ nsXULAppInfo::GetUserCanElevate(bool *aUserCanElevate)
 
 #ifdef MOZ_CRASHREPORTER
 NS_IMETHODIMP
-nsXULAppInfo::GetEnabled(bool *aEnabled)
+nsXULAppInfo::GetEnabled(PRBool *aEnabled)
 {
   *aEnabled = CrashReporter::GetEnabled();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::SetEnabled(bool aEnabled)
+nsXULAppInfo::SetEnabled(PRBool aEnabled)
 {
   if (aEnabled) {
     if (CrashReporter::GetEnabled())
@@ -914,7 +914,7 @@ nsXULAppInfo::GetServerURL(nsIURL** aServerURL)
 NS_IMETHODIMP
 nsXULAppInfo::SetServerURL(nsIURL* aServerURL)
 {
-  bool schemeOk;
+  PRBool schemeOk;
   // only allow https or http URLs
   nsresult rv = aServerURL->SchemeIs("https", &schemeOk);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -997,13 +997,13 @@ nsXULAppInfo::AppendObjCExceptionInfoToAppNotes(void* aException)
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetSubmitReports(bool* aEnabled)
+nsXULAppInfo::GetSubmitReports(PRBool* aEnabled)
 {
   return CrashReporter::GetSubmitReports(aEnabled);
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::SetSubmitReports(bool aEnabled)
+nsXULAppInfo::SetSubmitReports(PRBool aEnabled)
 {
   return CrashReporter::SetSubmitReports(aEnabled);
 }
@@ -1020,7 +1020,7 @@ static nsresult AppInfoConstructor(nsISupports* aOuter,
     QueryInterface(aIID, aResult);
 }
 
-bool gLogConsoleErrors
+PRBool gLogConsoleErrors
 #ifdef DEBUG
          = PR_TRUE;
 #else
@@ -1192,7 +1192,7 @@ nsSingletonFactory::CreateInstance(nsISupports* aOuter,
 }
 
 NS_IMETHODIMP
-nsSingletonFactory::LockFactory(bool)
+nsSingletonFactory::LockFactory(PRBool)
 {
   return NS_OK;
 }
@@ -1381,7 +1381,7 @@ HandleRemoteArgument(const char* remote, const char* aDesktopStartupID)
   }
 
   nsXPIDLCString response;
-  bool success = false;
+  PRBool success = PR_FALSE;
   rv = client.SendCommand(program.get(), username, profile, remote,
                           aDesktopStartupID, getter_Copies(response), &success);
   // did the command fail?
@@ -1430,7 +1430,7 @@ RemoteCommandLine(const char* aDesktopStartupID)
     return REMOTE_NOT_FOUND;
  
   nsXPIDLCString response;
-  bool success = false;
+  PRBool success = PR_FALSE;
   rv = client.SendCommandLine(program.get(), username, nsnull,
                               gArgc, gArgv, aDesktopStartupID,
                               getter_Copies(response), &success);
@@ -1553,7 +1553,7 @@ int OS2LaunchChild(const char *aExePath, int aArgc, char **aArgv)
 // blank command line instead of being launched with the same command line that
 // it was initially started with.
 static nsresult LaunchChild(nsINativeAppSupport* aNative,
-                            bool aBlankCommandLine = false)
+                            PRBool aBlankCommandLine = PR_FALSE)
 {
   aNative->Quit(); // release DDE mutex, if we're holding it
 
@@ -1697,7 +1697,7 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
       PRInt32 button;
       // The actual value is irrelevant but we shouldn't be handing out
       // malformed JSBools to XPConnect.
-      bool checkState = false;
+      PRBool checkState = PR_FALSE;
       rv = ps->ConfirmEx(nsnull, killTitle, killMessage, flags,
                          killTitle, nsnull, nsnull, nsnull, 
                          &checkState, &button);
@@ -1852,7 +1852,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
   SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", profLD);
   SaveWordToEnv("XRE_PROFILE_NAME", profileName);
 
-  bool offline = false;
+  PRBool offline = PR_FALSE;
   aProfileSvc->GetStartOffline(&offline);
   if (offline) {
     SaveToEnv("XRE_START_OFFLINE=1");
@@ -1899,11 +1899,11 @@ ImportProfiles(nsIToolkitProfileService* aPService,
 // 5) if there are *no* profiles, set up profile-migration
 // 6) display the profile-manager UI
 
-static bool gDoMigration = false;
+static PRBool gDoMigration = PR_FALSE;
 
 static nsresult
 SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
-              bool* aStartOffline, nsACString* aProfileName)
+              PRBool* aStartOffline, nsACString* aProfileName)
 {
   nsresult rv;
   ArgResult ar;
@@ -1963,7 +1963,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     nsCOMPtr<nsIProfileUnlocker> unlocker;
 
     // Check if the profile path exists and it's a directory.
-    bool exists;
+    PRBool exists;
     lf->Exists(&exists);
     if (!exists) {
         rv = lf->Create(nsIFile::DIRECTORY_TYPE, 0700);
@@ -2028,7 +2028,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     nsCAutoString pathStr;
     prefsJSFile->GetNativePath(pathStr);
     PR_fprintf(PR_STDERR, "Success: created profile '%s' at '%s'\n", arg, pathStr.get());
-    bool exists;
+    PRBool exists;
     prefsJSFile->Exists(&exists);
     if (!exists)
       prefsJSFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
@@ -2117,7 +2117,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     }
   }
 
-  bool useDefault = true;
+  PRBool useDefault = PR_TRUE;
   if (count > 1)
     profileSvc->GetStartWithLastProfile(&useDefault);
 
@@ -2161,11 +2161,11 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
  * of the caches (valid/invalid) into the return param aCachesOK. The aCachesOK
  * is always invalid if the application has been updated. 
  */
-static bool
+static PRBool
 CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
                    const nsCString& aOSABI, nsIFile* aXULRunnerDir,
                    nsIFile* aAppDir, nsILocalFile* aFlagFile, 
-                   bool* aCachesOK)
+                   PRBool* aCachesOK)
 {
   *aCachesOK = PR_FALSE;
   nsCOMPtr<nsIFile> file;
@@ -2199,7 +2199,7 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
   if (NS_FAILED(rv))
     return PR_FALSE;
 
-  bool eq;
+  PRBool eq;
   rv = lf->Equals(aXULRunnerDir, &eq);
   if (NS_FAILED(rv) || !eq)
     return PR_FALSE;
@@ -2223,7 +2223,7 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
   rv = parser.GetString("Compatibility", "InvalidateCaches", buf);
   *aCachesOK = (NS_FAILED(rv) || !buf.EqualsLiteral("1"));
   
-  bool purgeCaches = false;
+  PRBool purgeCaches = PR_FALSE;
   if (aFlagFile) {
     aFlagFile->Exists(&purgeCaches);
   }
@@ -2296,7 +2296,7 @@ WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
 }
 
 static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfileDir,
-                                      bool aRemoveEMFiles)
+                                      PRBool aRemoveEMFiles)
 {
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
@@ -2367,7 +2367,7 @@ static void MakeOrSetMinidumpPath(nsIFile* profD)
   nsresult rv = profD->Clone(getter_AddRefs(dumpD));
   
   if(dumpD) {
-    bool fileExists;
+    PRBool fileExists;
     //XXX: do some more error checking here
     dumpD->Append(NS_LITERAL_STRING("minidumps"));
     rv = dumpD->Exists(&fileExists);
@@ -2449,7 +2449,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
 {
   // XXX wallpaper for bug 417163: don't close the Display if we're using the
   // Qt theme because we crash (in Qt code) when using jemalloc.
-  bool theme_is_qt = false;
+  PRBool theme_is_qt = PR_FALSE;
   GtkSettings* settings =
     gtk_settings_get_for_screen(gdk_display_get_default_screen(display));
   gchar *theme_name;
@@ -2486,7 +2486,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     PangoContext *pangoContext = gdk_pango_context_get();
 #endif
 
-    bool buggyCairoShutdown = cairo_version() < CAIRO_VERSION_ENCODE(1, 4, 0);
+    PRBool buggyCairoShutdown = cairo_version() < CAIRO_VERSION_ENCODE(1, 4, 0);
 
     if (!buggyCairoShutdown) {
       // We should shut down GDK before we shut down libraries it depends on
@@ -2544,7 +2544,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
  * By defining the symbol here, we can avoid the wasted lookup and hopefully
  * improve startup performance.
  */
-NS_VISIBILITY_DEFAULT bool nspr_use_zone_allocator = false;
+NS_VISIBILITY_DEFAULT PRBool nspr_use_zone_allocator = PR_FALSE;
 
 #ifdef CAIRO_HAS_DWRITE_FONT
 
@@ -2826,7 +2826,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
       // see if we have a crashreporter-override.ini in the application directory
       nsCOMPtr<nsIFile> overrideini;
-      bool exists;
+      PRBool exists;
       if (NS_SUCCEEDED(dirProvider.GetAppDir()->Clone(getter_AddRefs(overrideini))) &&
           NS_SUCCEEDED(overrideini->AppendNative(NS_LITERAL_CSTRING("crashreporter-override.ini"))) &&
           NS_SUCCEEDED(overrideini->Exists(&exists)) &&
@@ -2896,7 +2896,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   
 
 #if defined(XP_OS2)
-  bool StartOS2App(int aArgc, char **aArgv);
+  PRBool StartOS2App(int aArgc, char **aArgv);
   if (!StartOS2App(gArgc, gArgv))
     return 1;
   ScopedFPHandler handler;
@@ -3140,7 +3140,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (NS_FAILED(rv))
       return 1;
 
-    bool canRun = false;
+    PRBool canRun = PR_FALSE;
     rv = nativeApp->Start(&canRun);
     if (NS_FAILED(rv) || !canRun) {
       return 1;
@@ -3161,7 +3161,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #if defined(MOZ_UPDATER) && !defined(ANDROID)
     // Check for and process any available updates
     nsCOMPtr<nsIFile> updRoot;
-    bool persistent;
+    PRBool persistent;
     rv = dirProvider.GetFile(XRE_UPDATE_ROOT_DIR, &persistent,
                              getter_AddRefs(updRoot));
     // XRE_UPDATE_ROOT_DIR may fail. Fallback to appDir if failed
@@ -3189,7 +3189,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
     nsCOMPtr<nsIProfileLock> profileLock;
-    bool startOffline = false;
+    PRBool startOffline = PR_FALSE;
     nsCAutoString profileName;
 
     rv = SelectProfile(getter_AddRefs(profileLock), nativeApp, &startOffline,
@@ -3252,8 +3252,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       flagFile->AppendNative(FILE_INVALIDATE_CACHES);
     }
 
-    bool cachesOK;
-    bool versionOK = CheckCompatibility(profD, version, osABI, 
+    PRBool cachesOK;
+    PRBool versionOK = CheckCompatibility(profD, version, osABI, 
                                           dirProvider.GetGREDir(),
                                           gAppData->directory, flagFile,
                                           &cachesOK);
@@ -3304,7 +3304,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       flagFile->Remove(PR_TRUE);
     }
 
-    bool appInitiatedRestart = false;
+    PRBool appInitiatedRestart = PR_FALSE;
 
     NS_TIME_FUNCTION_MARK("Next: ScopedXPCOMStartup");
 
@@ -3430,7 +3430,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
         NS_TIME_FUNCTION_MARK("dirProvider.DoStartup() (profile-after-change)");
 
-        bool shuttingDown = false;
+        PRBool shuttingDown = PR_FALSE;
         appStartup->GetShuttingDown(&shuttingDown);
 
         nsCOMPtr<nsICommandLineRunner> cmdLine;

@@ -44,7 +44,6 @@
  */
 #include <stddef.h>
 #include "jsprvtd.h"
-#include "jsobj.h"
 #include "jsstr.h"
 #include "jscntxt.h"
 #include "jsvector.h"

@@ -72,14 +72,14 @@ public:
     virtual ~nsDiskCacheBinding();
 
     nsresult EnsureStreamIO();
-    bool     IsActive() { return mCacheEntry != nsnull;}
+    PRBool   IsActive() { return mCacheEntry != nsnull;}
 
 // XXX make friends
 public:
     nsCacheEntry*           mCacheEntry;    // back pointer to parent nsCacheEntry
     nsDiskCacheRecord       mRecord;
     nsDiskCacheStreamIO*    mStreamIO;      // strong reference
-    bool                    mDoomed;        // record is not stored in cache map
+    PRBool                  mDoomed;        // record is not stored in cache map
     PRUint8                 mGeneration;    // possibly just reservation
 
     // If set, points to a pending event which will deactivate |mCacheEntry|.
@@ -138,7 +138,7 @@ public:
 
     nsDiskCacheBinding *    FindActiveBinding(PRUint32  hashNumber);
     void                    RemoveBinding(nsDiskCacheBinding * binding);
-    bool                    ActiveBindings();
+    PRBool                  ActiveBindings();
     
 private:
     nsresult                AddBinding(nsDiskCacheBinding * binding);
@@ -146,7 +146,7 @@ private:
     // member variables
     static PLDHashTableOps ops;
     PLDHashTable           table;
-    bool                   initialized;
+    PRBool                 initialized;
 };
 
 #endif /* _nsDiskCacheBinding_h_ */

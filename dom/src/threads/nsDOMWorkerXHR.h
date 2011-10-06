@@ -130,7 +130,7 @@ private:
 
   nsIXPConnectWrappedNative* mWrappedNative;
 
-  volatile bool mCanceled;
+  volatile PRBool mCanceled;
 };
 
 class nsDOMWorkerXHRUpload : public nsDOMWorkerXHREventTarget,
@@ -145,14 +145,14 @@ public:
   NS_FORWARD_INTERNAL_NSIDOMEVENTTARGET(nsDOMWorkerMessageHandler::)
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
-                              bool aUseCapture,
-                              bool aWantsUntrusted,
+                              PRBool aUseCapture,
+                              PRBool aWantsUntrusted,
                               PRUint8 optional_argc);
   NS_IMETHOD RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
-                                 bool aUseCapture);
+                                 PRBool aUseCapture);
   NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent,
-                           bool* _retval);
+                           PRBool* _retval);
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsDOMWorkerXHREventTarget::)
   NS_DECL_NSIXMLHTTPREQUESTUPLOAD
   NS_FORWARD_NSICLASSINFO_NOGETINTERFACES(nsDOMWorkerXHREventTarget::)

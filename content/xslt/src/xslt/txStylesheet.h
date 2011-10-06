@@ -81,7 +81,7 @@ public:
     txOutputFormat* getOutputFormat();
     GlobalVariable* getGlobalVariable(const txExpandedName& aName);
     const txOwningExpandedNameMap<txXSLKey>& getKeyMap();
-    bool isStripSpaceAllowed(const txXPathNode& aNode,
+    PRBool isStripSpaceAllowed(const txXPathNode& aNode,
                                txIMatchContext* aContext);
 
     /**
@@ -132,11 +132,11 @@ public:
     public:
         GlobalVariable(nsAutoPtr<Expr> aExpr,
                        nsAutoPtr<txInstruction> aFirstInstruction,
-                       bool aIsParam);
+                       PRBool aIsParam);
 
         nsAutoPtr<Expr> mExpr;
         nsAutoPtr<txInstruction> mFirstInstruction;
-        bool mIsParam;
+        PRBool mIsParam;
     };
 
 private:

@@ -123,7 +123,7 @@ nsParentalControlsServiceWin::~nsParentalControlsServiceWin()
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsParentalControlsServiceWin::GetParentalControlsEnabled(bool *aResult)
+nsParentalControlsServiceWin::GetParentalControlsEnabled(PRBool *aResult)
 {
   *aResult = PR_FALSE;
 
@@ -134,7 +134,7 @@ nsParentalControlsServiceWin::GetParentalControlsEnabled(bool *aResult)
 }
 
 NS_IMETHODIMP
-nsParentalControlsServiceWin::GetBlockFileDownloadsEnabled(bool *aResult)
+nsParentalControlsServiceWin::GetBlockFileDownloadsEnabled(PRBool *aResult)
 {
   *aResult = PR_FALSE;
 
@@ -153,7 +153,7 @@ nsParentalControlsServiceWin::GetBlockFileDownloadsEnabled(bool *aResult)
 }
 
 NS_IMETHODIMP
-nsParentalControlsServiceWin::GetLoggingEnabled(bool *aResult)
+nsParentalControlsServiceWin::GetLoggingEnabled(PRBool *aResult)
 {
   *aResult = PR_FALSE;
 
@@ -174,7 +174,7 @@ nsParentalControlsServiceWin::GetLoggingEnabled(bool *aResult)
 
 // Post a log event to the system
 NS_IMETHODIMP
-nsParentalControlsServiceWin::Log(PRInt16 aEntryType, bool blocked, nsIURI *aSource, nsIFile *aTarget)
+nsParentalControlsServiceWin::Log(PRInt16 aEntryType, PRBool blocked, nsIURI *aSource, nsIFile *aTarget)
 {
   if (!mEnabled)
     return NS_ERROR_NOT_AVAILABLE;
@@ -182,7 +182,7 @@ nsParentalControlsServiceWin::Log(PRInt16 aEntryType, bool blocked, nsIURI *aSou
   NS_ENSURE_ARG_POINTER(aSource);
 
   // Confirm we should be logging
-  bool enabled;
+  PRBool enabled;
   GetLoggingEnabled(&enabled);
   if (!enabled)
     return NS_ERROR_NOT_AVAILABLE;
@@ -211,7 +211,7 @@ nsParentalControlsServiceWin::Log(PRInt16 aEntryType, bool blocked, nsIURI *aSou
 
 // Override a single URI
 NS_IMETHODIMP
-nsParentalControlsServiceWin::RequestURIOverride(nsIURI *aTarget, nsIInterfaceRequestor *aWindowContext, bool *_retval)
+nsParentalControlsServiceWin::RequestURIOverride(nsIURI *aTarget, nsIInterfaceRequestor *aWindowContext, PRBool *_retval)
 {
   *_retval = PR_FALSE;
 
@@ -247,7 +247,7 @@ nsParentalControlsServiceWin::RequestURIOverride(nsIURI *aTarget, nsIInterfaceRe
 
 // Override a web page
 NS_IMETHODIMP
-nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfaceRequestor *aWindowContext, bool *_retval)
+nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfaceRequestor *aWindowContext, PRBool *_retval)
 {
   *_retval = PR_FALSE;
 
@@ -332,7 +332,7 @@ nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfa
 
 // Sends a file download event to the Vista Event Log 
 void
-nsParentalControlsServiceWin::LogFileDownload(bool blocked, nsIURI *aSource, nsIFile *aTarget)
+nsParentalControlsServiceWin::LogFileDownload(PRBool blocked, nsIURI *aSource, nsIFile *aTarget)
 {
   nsCAutoString curi;
 

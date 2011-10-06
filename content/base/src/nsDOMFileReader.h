@@ -39,15 +39,16 @@
 #define nsDOMFileReader_h__
 
 #include "nsISupportsUtils.h"      
-#include "nsString.h"
-#include "nsWeakReference.h"
+#include "nsString.h"              
 #include "nsIStreamListener.h"     
+#include "nsIScriptContext.h"      
 #include "nsIInterfaceRequestor.h" 
 #include "nsJSUtils.h"             
 #include "nsTArray.h"              
 #include "nsIJSNativeInitializer.h"
 #include "prtime.h"                
 #include "nsITimer.h"              
+#include "nsDOMEventTargetHelper.h"
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionObserver.h"
 
@@ -61,13 +62,15 @@
 #include "nsIChannel.h"
 #include "prmem.h"
 
-#include "FileIOObject.h"
+#include "nsXMLHttpRequest.h"
 
-class nsDOMFileReader : public mozilla::dom::FileIOObject,
+class nsDOMFileReader : public nsXHREventTarget,
                         public nsIDOMFileReader,
+                        public nsIStreamListener,
                         public nsIInterfaceRequestor,
                         public nsSupportsWeakReference,
                         public nsIJSNativeInitializer,
+                        public nsITimerCallback,
                         public nsICharsetDetectionObserver
 {
 public:
@@ -78,35 +81,35 @@ public:
 
   NS_DECL_NSIDOMFILEREADER
 
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
-
+  NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::);
+        
+  // nsIStreamListener
+  NS_DECL_NSISTREAMLISTENER
+                               
+  // nsIRequestObserver
+  NS_DECL_NSIREQUESTOBSERVER
+                               
   // nsIInterfaceRequestor 
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  NS_DECL_EVENT_HANDLER(load)
-  NS_DECL_EVENT_HANDLER(loadend)
-  NS_DECL_EVENT_HANDLER(loadstart)
-
+  // nsITimerCallback
+  NS_DECL_NSITIMERCALLBACK
+                               
   // nsIJSNativeInitializer                                                
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj, 
                         PRUint32 argc, jsval* argv);
 
+  NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
+
   // nsICharsetDetectionObserver
   NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf);
 
-  // FileIOObject overrides
-  NS_IMETHOD DoAbort(nsAString& aEvent);
-  NS_IMETHOD DoOnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
-                             nsresult aStatus, nsAString& aSuccessEvent,
-                             nsAString& aTerminationEvent);
-  NS_IMETHOD DoOnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
-                               nsIInputStream* aInputStream, PRUint32 aOffset,
-                               PRUint32 aCount);
+  void DispatchProgressEvent(const nsAString& aType);
 
   nsresult Init();
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsDOMFileReader,
-                                                         FileIOObject)
+                                           nsXHREventTarget) 
   void RootResultArrayBuffer();
 
 protected:
@@ -123,6 +126,8 @@ protected:
   nsresult GetAsDataURL(nsIDOMBlob *aFile, const char *aFileData, PRUint32 aDataLen, nsAString &aResult); 
   nsresult GuessCharset(const char *aFileData, PRUint32 aDataLen, nsACString &aCharset); 
   nsresult ConvertStream(const char *aFileData, PRUint32 aDataLen, const char *aCharset, nsAString &aResult); 
+  void DispatchError(nsresult rv);
+  void StartProgressEventTimer();
 
   void FreeFileData() {
     PR_Free(mFileData);
@@ -138,7 +143,18 @@ protected:
   eDataFormat mDataFormat;
 
   nsString mResult;
+  PRUint16 mReadyState;
+
+  PRBool mProgressEventWasDelayed;
+  PRBool mTimerIsActive;
+  nsCOMPtr<nsIDOMFileError> mError;
+
+  nsCOMPtr<nsITimer> mProgressNotifier;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIChannel> mChannel;
+
+  PRUint64 mReadTotal;
+  PRUint64 mReadTransferred;
   
   JSObject* mResultArrayBuffer;
 };

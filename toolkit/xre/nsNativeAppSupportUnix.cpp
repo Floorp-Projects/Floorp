@@ -141,7 +141,7 @@ gboolean save_yourself_cb(GnomeClient *client, gint phase,
   didSaveSession->SetData(PR_FALSE);
   obsServ->NotifyObservers(didSaveSession, "session-save", nsnull);
 
-  bool status;
+  PRBool status;
   didSaveSession->GetData(&status);
 
   // If there was no session saved and the save_yourself request is
@@ -153,7 +153,7 @@ gboolean save_yourself_cb(GnomeClient *client, gint phase,
     cancelQuit->SetData(PR_FALSE);
     obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
 
-    bool abortQuit;
+    PRBool abortQuit;
     cancelQuit->GetData(&abortQuit);
   }
 
@@ -172,8 +172,8 @@ void die_cb(GnomeClient *client, gpointer user_data)
 class nsNativeAppSupportUnix : public nsNativeAppSupportBase
 {
 public:
-  NS_IMETHOD Start(bool* aRetVal);
-  NS_IMETHOD Stop(bool *aResult);
+  NS_IMETHOD Start(PRBool* aRetVal);
+  NS_IMETHOD Stop(PRBool *aResult);
   NS_IMETHOD Enable();
 
 private:
@@ -218,10 +218,10 @@ WidgetForDOMWindow(nsISupports *aWindow)
 }
 
 static void
-OssoSetWindowOrientation(bool aPortrait)
+OssoSetWindowOrientation(PRBool aPortrait)
 {
   // If we locked the screen, ignore any orientation changes
-  bool lockScreen = false;
+  PRBool lockScreen = PR_FALSE;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs)
     prefs->GetBoolPref("toolkit.screen.lock", &lockScreen);
@@ -258,11 +258,11 @@ OssoSetWindowOrientation(bool aPortrait)
   }
 }
 
-static bool OssoIsScreenOn(osso_context_t* ctx)
+static PRBool OssoIsScreenOn(osso_context_t* ctx)
 {
   osso_return_t rv;
   osso_rpc_t ret;
-  bool result = false;
+  PRBool result = PR_FALSE;
 
   rv = osso_rpc_run_system(ctx, MCE_SERVICE, MCE_REQUEST_PATH, MCE_REQUEST_IF,
                            "get_display_status", &ret, DBUS_TYPE_INVALID);
@@ -275,7 +275,7 @@ static bool OssoIsScreenOn(osso_context_t* ctx)
   return result;
 }
 
-static void OssoRequestAccelerometer(osso_context_t *ctx, bool aEnabled)
+static void OssoRequestAccelerometer(osso_context_t *ctx, PRBool aEnabled)
 {
   osso_return_t rv;
   osso_rpc_t ret;
@@ -429,7 +429,7 @@ OssoModeControlCallback(DBusConnection *con, DBusMessage *msg, gpointer data)
 #endif
 
 NS_IMETHODIMP
-nsNativeAppSupportUnix::Start(bool *aRetVal)
+nsNativeAppSupportUnix::Start(PRBool *aRetVal)
 {
   NS_ASSERTION(gAppData, "gAppData must not be null.");
 
@@ -568,7 +568,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
     nsCOMPtr<nsIFile> executablePath;
     nsresult rv;
 
-    bool dummy;
+    PRBool dummy;
     rv = gDirServiceProvider->GetFile(XRE_EXECUTABLE_FILE, &dummy, getter_AddRefs(executablePath));
 
     if (NS_SUCCEEDED(rv)) {
@@ -594,7 +594,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportUnix::Stop(bool *aResult)
+nsNativeAppSupportUnix::Stop(PRBool *aResult)
 {
   NS_ENSURE_ARG(aResult);
   *aResult = PR_TRUE;

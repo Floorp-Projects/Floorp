@@ -88,7 +88,7 @@ getInteger256(unsigned char *data, unsigned int nb)
 //  <tag><length<data consisting of lenght bytes>
 static PRInt32
 getDERItemLength(unsigned char *data, unsigned char *end,
-                 unsigned long *bytesUsed, bool *indefinite)
+                 unsigned long *bytesUsed, PRBool *indefinite)
 {
   unsigned char lbyte = *data++;
   PRInt32 length = -1;
@@ -144,7 +144,7 @@ buildASN1ObjectFromDER(unsigned char *data,
   // data is a buffer that is len bytes long and has to be
   //      interpreted according to its type.
   unsigned long bytesUsed;
-  bool indefinite;
+  PRBool indefinite;
   PRInt32 len;
   PRUint32 type;
 
@@ -323,7 +323,7 @@ nsNSSASN1Sequence::SetDisplayValue(const nsAString &aDisplayValue)
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Sequence::GetIsValidContainer(bool *aIsValidContainer)
+nsNSSASN1Sequence::GetIsValidContainer(PRBool *aIsValidContainer)
 {
   NS_ENSURE_ARG_POINTER(aIsValidContainer);
   *aIsValidContainer = mIsValidContainer;
@@ -331,7 +331,7 @@ nsNSSASN1Sequence::GetIsValidContainer(bool *aIsValidContainer)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Sequence::SetIsValidContainer(bool aIsValidContainer)
+nsNSSASN1Sequence::SetIsValidContainer(PRBool aIsValidContainer)
 {
   mIsValidContainer = aIsValidContainer;
   SetIsExpanded(mIsValidContainer);
@@ -339,7 +339,7 @@ nsNSSASN1Sequence::SetIsValidContainer(bool aIsValidContainer)
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Sequence::GetIsExpanded(bool *aIsExpanded)
+nsNSSASN1Sequence::GetIsExpanded(PRBool *aIsExpanded)
 {
   NS_ENSURE_ARG_POINTER(aIsExpanded);
   *aIsExpanded = mIsExpanded;
@@ -347,7 +347,7 @@ nsNSSASN1Sequence::GetIsExpanded(bool *aIsExpanded)
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Sequence::SetIsExpanded(bool aIsExpanded)
+nsNSSASN1Sequence::SetIsExpanded(PRBool aIsExpanded)
 {
   mIsExpanded = aIsExpanded;
   return NS_OK;

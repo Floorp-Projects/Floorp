@@ -69,7 +69,7 @@ protected:
 NS_IMPL_ISUPPORTS1(nsSimpleArrayEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsSimpleArrayEnumerator::HasMoreElements(bool* aResult)
+nsSimpleArrayEnumerator::HasMoreElements(PRBool* aResult)
 {
     NS_PRECONDITION(aResult != 0, "null ptr");
     if (! aResult)
@@ -167,7 +167,7 @@ nsCOMArrayEnumerator::~nsCOMArrayEnumerator()
 }
 
 NS_IMETHODIMP
-nsCOMArrayEnumerator::HasMoreElements(bool* aResult)
+nsCOMArrayEnumerator::HasMoreElements(PRBool* aResult)
 {
     NS_PRECONDITION(aResult != 0, "null ptr");
     if (! aResult)

@@ -51,7 +51,7 @@ CParserContext::CParserContext(CParserContext* aPrevContext,
                                eParserCommands aCommand,
                                nsIRequestObserver* aListener, 
                                eAutoDetectResult aStatus, 
-                               bool aCopyUnused)
+                               PRBool aCopyUnused)
   : mListener(aListener),
     mKey(aKey),
     mPrevContext(aPrevContext),

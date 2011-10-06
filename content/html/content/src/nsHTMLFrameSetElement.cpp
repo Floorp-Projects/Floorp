@@ -78,7 +78,7 @@ nsHTMLFrameSetElement::SetAttr(PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                nsIAtom* aPrefix,
                                const nsAString& aValue,
-                               bool aNotify)
+                               PRBool aNotify)
 {
   nsresult rv;
   /* The main goal here is to see whether the _number_ of rows or
@@ -182,7 +182,7 @@ nsHTMLFrameSetElement::GetColSpec(PRInt32 *aNumValues,
 }
 
 
-bool
+PRBool
 nsHTMLFrameSetElement::ParseAttribute(PRInt32 aNamespaceID,
                                       nsIAtom* aAttribute,
                                       const nsAString& aValue,
@@ -258,7 +258,7 @@ nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
   }
 
   // Pre-grab the compat mode; we may need it later in the loop.
-  bool isInQuirks = InNavQuirksMode(GetOwnerDoc());
+  PRBool isInQuirks = InNavQuirksMode(GetOwnerDoc());
       
   // Parse each comma separated token
 

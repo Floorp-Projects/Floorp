@@ -160,7 +160,7 @@ OfflineCacheUpdateChild::SetDocument(nsIDOMDocument *aDocument)
     if (!appCacheChannel)
         return;
 
-    bool loadedFromAppCache;
+    PRBool loadedFromAppCache;
     appCacheChannel->GetLoadedFromApplicationCache(&loadedFromAppCache);
     if (loadedFromAppCache)
         return;
@@ -223,7 +223,7 @@ OfflineCacheUpdateChild::Init(nsIURI *aManifestURI,
     LOG(("OfflineCacheUpdateChild::Init [%p]", this));
 
     // Only http and https applications are supported.
-    bool match;
+    PRBool match;
     rv = aManifestURI->SchemeIs("http", &match);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -288,7 +288,7 @@ OfflineCacheUpdateChild::GetStatus(PRUint16 *aStatus)
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateChild::GetPartial(bool *aPartial)
+OfflineCacheUpdateChild::GetPartial(PRBool *aPartial)
 {
     *aPartial = PR_FALSE;
     return NS_OK;
@@ -304,7 +304,7 @@ OfflineCacheUpdateChild::GetManifestURI(nsIURI **aManifestURI)
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateChild::GetSucceeded(bool *aSucceeded)
+OfflineCacheUpdateChild::GetSucceeded(PRBool *aSucceeded)
 {
     NS_ENSURE_TRUE(mState == STATE_FINISHED, NS_ERROR_NOT_AVAILABLE);
 
@@ -314,7 +314,7 @@ OfflineCacheUpdateChild::GetSucceeded(bool *aSucceeded)
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateChild::GetIsUpgrade(bool *aIsUpgrade)
+OfflineCacheUpdateChild::GetIsUpgrade(PRBool *aIsUpgrade)
 {
     NS_ENSURE_TRUE(mState >= STATE_INITIALIZED, NS_ERROR_NOT_INITIALIZED);
 
@@ -331,7 +331,7 @@ OfflineCacheUpdateChild::AddDynamicURI(nsIURI *aURI)
 
 NS_IMETHODIMP
 OfflineCacheUpdateChild::AddObserver(nsIOfflineCacheUpdateObserver *aObserver,
-                                  bool aHoldWeak)
+                                  PRBool aHoldWeak)
 {
     LOG(("OfflineCacheUpdateChild::AddObserver [%p]", this));
 

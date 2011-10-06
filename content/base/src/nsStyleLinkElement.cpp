@@ -103,7 +103,7 @@ nsStyleLinkElement::GetStyleSheet(nsIStyleSheet*& aStyleSheet)
 }
 
 NS_IMETHODIMP 
-nsStyleLinkElement::InitStyleLinkElement(bool aDontLoadStyle)
+nsStyleLinkElement::InitStyleLinkElement(PRBool aDontLoadStyle)
 {
   mDontLoadStyle = aDontLoadStyle;
 
@@ -126,7 +126,7 @@ nsStyleLinkElement::GetSheet(nsIDOMStyleSheet** aSheet)
 }
 
 NS_IMETHODIMP
-nsStyleLinkElement::SetEnableUpdates(bool aEnableUpdates)
+nsStyleLinkElement::SetEnableUpdates(PRBool aEnableUpdates)
 {
   mUpdatesEnabled = aEnableUpdates;
 
@@ -163,7 +163,7 @@ void nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes,
     return;
 
   nsAString::const_iterator current(start);
-  bool inString = !nsCRT::IsAsciiSpace(*current);
+  PRBool inString = !nsCRT::IsAsciiSpace(*current);
   nsAutoString subString;
 
   while (current != done) {
@@ -190,8 +190,8 @@ void nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes,
 
 NS_IMETHODIMP
 nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                                     bool* aWillNotify,
-                                     bool* aIsAlternate)
+                                     PRBool* aWillNotify,
+                                     PRBool* aIsAlternate)
 {
   return DoUpdateStyleSheet(nsnull, aObserver, aWillNotify, aIsAlternate,
                             PR_FALSE);
@@ -199,9 +199,9 @@ nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
 
 nsresult
 nsStyleLinkElement::UpdateStyleSheetInternal(nsIDocument *aOldDocument,
-                                             bool aForceUpdate)
+                                             PRBool aForceUpdate)
 {
-  bool notify, alternate;
+  PRBool notify, alternate;
   return DoUpdateStyleSheet(aOldDocument, nsnull, &notify, &alternate,
                             aForceUpdate);
 }
@@ -209,9 +209,9 @@ nsStyleLinkElement::UpdateStyleSheetInternal(nsIDocument *aOldDocument,
 nsresult
 nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
                                        nsICSSLoaderObserver* aObserver,
-                                       bool* aWillNotify,
-                                       bool* aIsAlternate,
-                                       bool aForceUpdate)
+                                       PRBool* aWillNotify,
+                                       PRBool* aIsAlternate,
+                                       PRBool aForceUpdate)
 {
   *aWillNotify = PR_FALSE;
 
@@ -241,13 +241,13 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     return NS_OK;
   }
 
-  bool isInline;
+  PRBool isInline;
   nsCOMPtr<nsIURI> uri = GetStyleSheetURL(&isInline);
 
   if (!aForceUpdate && mStyleSheet && !isInline && uri) {
     nsIURI* oldURI = mStyleSheet->GetSheetURI();
     if (oldURI) {
-      bool equal;
+      PRBool equal;
       nsresult rv = oldURI->Equals(uri, &equal);
       if (NS_SUCCEEDED(rv) && equal) {
         return NS_OK; // We already loaded this stylesheet
@@ -267,7 +267,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
   }
 
   nsAutoString title, type, media;
-  bool isAlternate;
+  PRBool isAlternate;
 
   GetStyleSheetInfo(title, type, media, &isAlternate);
 
@@ -275,7 +275,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     return NS_OK;
   }
 
-  bool doneLoading = false;
+  PRBool doneLoading = PR_FALSE;
   nsresult rv = NS_OK;
   if (isInline) {
     nsAutoString text;
@@ -287,12 +287,8 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
                       aObserver, &doneLoading, &isAlternate);
   }
   else {
-    // XXXbz clone the URI here to work around content policies modifying URIs.
-    nsCOMPtr<nsIURI> clonedURI;
-    uri->Clone(getter_AddRefs(clonedURI));
-    NS_ENSURE_TRUE(clonedURI, NS_ERROR_OUT_OF_MEMORY);
     rv = doc->CSSLoader()->
-      LoadStyleLink(thisContent, clonedURI, title, media, isAlternate, aObserver,
+      LoadStyleLink(thisContent, uri, title, media, isAlternate, aObserver,
                     &isAlternate);
     if (NS_FAILED(rv)) {
       // Don't propagate LoadStyleLink() errors further than this, since some

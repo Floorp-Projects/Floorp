@@ -73,7 +73,7 @@ public:
   // Return the "session" of the top-most visible Cocoa app-modal window.
   NSModalSession CurrentSession();
   // Has a Gecko modal dialog popped up over a Cocoa app-modal dialog?
-  bool GeckoModalAboveCocoaModal();
+  PRBool GeckoModalAboveCocoaModal();
 private:
   nsTArray<nsCocoaAppModalWindowListItem> mList;
 };
@@ -91,7 +91,7 @@ public:
 
   NS_IMETHOD Run(void);
   NS_IMETHOD Exit(void);
-  NS_IMETHOD OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
+  NS_IMETHOD OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
                                 PRUint32 aRecursionDepth);
   NS_IMETHOD AfterProcessNextEvent(nsIThreadInternal *aThread,
                                    PRUint32 aRecursionDepth);
@@ -103,9 +103,9 @@ protected:
   virtual ~nsAppShell();
 
   virtual void ScheduleNativeEventCallback();
-  virtual bool ProcessNextNativeEvent(bool aMayWait);
+  virtual PRBool ProcessNextNativeEvent(PRBool aMayWait);
 
-  bool InGeckoMainEventLoop();
+  PRBool InGeckoMainEventLoop();
 
   static void ProcessGeckoEvents(void* aInfo);
 
@@ -116,11 +116,11 @@ protected:
   CFRunLoopRef       mCFRunLoop;
   CFRunLoopSourceRef mCFRunLoopSource;
 
-  bool               mRunningEventLoop;
-  bool               mStarted;
-  bool               mTerminated;
-  bool               mSkippedNativeCallback;
-  bool               mRunningCocoaEmbedded;
+  PRPackedBool       mRunningEventLoop;
+  PRPackedBool       mStarted;
+  PRPackedBool       mTerminated;
+  PRPackedBool       mSkippedNativeCallback;
+  PRPackedBool       mRunningCocoaEmbedded;
 
   // mHadMoreEventsCount and kHadMoreEventsCountMax are used in
   // ProcessNextNativeEvent().

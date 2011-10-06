@@ -128,7 +128,7 @@ private:
     }
   }
 
-  bool IsAnimVal() const {
+  PRBool IsAnimVal() const {
     return mTransform ? mTransform->IsAnimVal() : PR_FALSE;
   }
 

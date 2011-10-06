@@ -44,9 +44,9 @@
 #include "jsversion.h"
 #include "jsapi.h"
 #include "jsprvtd.h"
-#include "jshash.h"
 #include "jshashtable.h"
 #include "jspubtd.h"
+#include "jsstr.h"
 #include "jslock.h"
 
 #include "vm/String.h"
@@ -163,16 +163,6 @@ js_AtomToPrintableString(JSContext *cx, JSAtom *atom, JSAutoByteString *bytes);
 
 namespace js {
 
-/* Compute a hash function from chars/length. */
-inline uint32
-HashChars(const jschar *chars, size_t length)
-{
-    uint32 h = 0;
-    for (; length; chars++, length--)
-        h = JS_ROTATE_LEFT32(h, 4) ^ *chars;
-    return h;
-}
-
 typedef TaggedPointerEntry<JSAtom> AtomStateEntry;
 
 struct AtomHasher
@@ -203,29 +193,6 @@ struct AtomHasher
 };
 
 typedef HashSet<AtomStateEntry, AtomHasher, SystemAllocPolicy> AtomSet;
-
-/*
- * On encodings:
- *
- * - Some string functions have an optional FlationCoding argument that allow
- *   the caller to force CESU-8 encoding handling. 
- * - Functions that don't take a FlationCoding base their NormalEncoding
- *   behavior on the js_CStringsAreUTF8 value. NormalEncoding is either raw
- *   (simple zero-extension) or UTF-8 depending on js_CStringsAreUTF8.
- * - Functions that explicitly state their encoding do not use the
- *   js_CStringsAreUTF8 value.
- *
- * CESU-8 (Compatibility Encoding Scheme for UTF-16: 8-bit) is a variant of
- * UTF-8 that allows us to store any wide character string as a narrow
- * character string. For strings containing mostly ascii, it saves space.
- * http://www.unicode.org/reports/tr26/
- */
-
-enum FlationCoding
-{
-    NormalEncoding,
-    CESU8Encoding
-};
 
 }  /* namespace js */
 

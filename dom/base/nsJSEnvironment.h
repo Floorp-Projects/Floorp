@@ -48,7 +48,7 @@
 #include "nsScriptNameSpaceManager.h"
 
 class nsIXPConnectJSObjectHolder;
-class nsRootedJSValueArray;
+class nsAutoPoolRelease;
 namespace js {
 class AutoArrayRooter;
 }
@@ -79,7 +79,7 @@ public:
                                   PRUint32 aLineNo,
                                   PRUint32 aVersion,
                                   nsAString *aRetValue,
-                                  bool* aIsUndefined);
+                                  PRBool* aIsUndefined);
   virtual nsresult EvaluateStringWithValue(const nsAString& aScript,
                                      void *aScopeObject,
                                      nsIPrincipal *aPrincipal,
@@ -87,7 +87,7 @@ public:
                                      PRUint32 aLineNo,
                                      PRUint32 aVersion,
                                      void* aRetValue,
-                                     bool* aIsUndefined);
+                                     PRBool* aIsUndefined);
 
   virtual nsresult CompileScript(const PRUnichar* aText,
                                  PRInt32 aTextLength,
@@ -100,7 +100,7 @@ public:
   virtual nsresult ExecuteScript(void* aScriptObject,
                                  void *aScopeObject,
                                  nsAString* aRetValue,
-                                 bool* aIsUndefined);
+                                 PRBool* aIsUndefined);
 
   virtual nsresult CompileEventHandler(nsIAtom *aName,
                                        PRUint32 aArgCount,
@@ -124,7 +124,7 @@ public:
                                    const char* aURL,
                                    PRUint32 aLineNo,
                                    PRUint32 aVersion,
-                                   bool aShared,
+                                   PRBool aShared,
                                    void** aFunctionObject);
 
   virtual void SetDefaultLanguageVersion(PRUint32 aVersion);
@@ -133,7 +133,7 @@ public:
   virtual void *GetNativeGlobal();
   virtual nsresult CreateNativeGlobalForInner(
                                       nsIScriptGlobalObject *aGlobal,
-                                      bool aIsChrome,
+                                      PRBool aIsChrome,
                                       nsIPrincipal *aPrincipal,
                                       void **aNativeGlobal,
                                       nsISupports **aHolder);
@@ -144,26 +144,26 @@ public:
                                      nsIScriptGlobalObject *aCurrentInner);
   virtual nsresult SetOuterObject(void *aOuterObject);
   virtual nsresult InitOuterWindow();
-  virtual bool IsContextInitialized();
+  virtual PRBool IsContextInitialized();
   virtual void FinalizeContext();
 
-  virtual void ScriptEvaluated(bool aTerminated);
+  virtual void ScriptEvaluated(PRBool aTerminated);
   virtual nsresult SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                           nsISupports* aRef);
-  virtual bool GetScriptsEnabled();
-  virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
+  virtual PRBool GetScriptsEnabled();
+  virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
   virtual nsresult SetProperty(void *aTarget, const char *aPropName, nsISupports *aVal);
 
-  virtual bool GetProcessingScriptTag();
-  virtual void SetProcessingScriptTag(bool aResult);
+  virtual PRBool GetProcessingScriptTag();
+  virtual void SetProcessingScriptTag(PRBool aResult);
 
-  virtual bool GetExecutingScript();
+  virtual PRBool GetExecutingScript();
 
-  virtual void SetGCOnDestruction(bool aGCOnDestruction);
+  virtual void SetGCOnDestruction(PRBool aGCOnDestruction);
 
   virtual nsresult InitClasses(void *aGlobalObj);
-  virtual void ClearScope(void* aGlobalObj, bool bClearPolluters);
+  virtual void ClearScope(void* aGlobalObj, PRBool bClearPolluters);
 
   virtual void WillInitializeContext();
   virtual void DidInitializeContext();
@@ -204,7 +204,8 @@ protected:
                                    void *aScope,
                                    PRUint32 *aArgc,
                                    jsval **aArgv,
-                                   mozilla::Maybe<nsRootedJSValueArray> &aPoolRelease);
+                                   mozilla::Maybe<nsAutoPoolRelease> &aPoolRelease,
+                                   mozilla::Maybe<js::AutoArrayRooter> &aRooter);
 
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv);
 
@@ -280,10 +281,10 @@ protected:
   TerminationFuncClosure* mTerminations;
 
 private:
-  bool mIsInitialized;
-  bool mScriptsEnabled;
-  bool mGCOnDestruction;
-  bool mProcessingScriptTag;
+  PRPackedBool mIsInitialized;
+  PRPackedBool mScriptsEnabled;
+  PRPackedBool mGCOnDestruction;
+  PRPackedBool mProcessingScriptTag;
 
   PRUint32 mExecuteDepth;
   PRUint32 mDefaultJSOptions;

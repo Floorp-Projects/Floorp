@@ -6,29 +6,11 @@
 
 #include "Preprocessor.h"
 
-#include <algorithm>
-
 #include "compiler/debug.h"
 #include "Context.h"
-#include "stl_utils.h"
 
 namespace pp
 {
-
-Preprocessor::Preprocessor() : mContext(NULL)
-{
-}
-
-Preprocessor::~Preprocessor()
-{
-    delete mContext;
-}
-
-bool Preprocessor::init()
-{
-    mContext = new Context;
-    return mContext->init();
-}
 
 bool Preprocessor::process(int count,
                            const char* const string[],
@@ -38,14 +20,22 @@ bool Preprocessor::process(int count,
     if ((count < 0) || (string == NULL))
         return false;
 
-    reset();
+    clearResults();
+    Context context(count, string, length, &mTokens);
+    if (!initLexer(&context))
+        return false;
 
-    return mContext->process(count, string, length, &mTokens);
+    bool success = parse(&context);
+
+    destroyLexer(&context);
+    return success;
 }
 
-void Preprocessor::reset()
+void Preprocessor::clearResults()
 {
-    std::for_each(mTokens.begin(), mTokens.end(), Delete());
+    for (TokenVector::iterator i = mTokens.begin(); i != mTokens.end(); ++i)
+        delete (*i);
+
     mTokens.clear();
 }
 

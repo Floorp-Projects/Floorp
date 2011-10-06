@@ -242,7 +242,7 @@ FileReaderSyncPrivate::GuessCharset(nsIInputStream *aStream,
   if (detector) {
     detector->Init(this);
 
-    bool done;
+    PRBool done;
     PRUint32 numRead;
     do {
       char readBuf[4096];

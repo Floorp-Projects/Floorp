@@ -751,7 +751,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     JSCLContextHelper cx(this);
 
     // preserve caller's compartment
-    js::AutoPreserveCompartment pc(cx);
+    JS::AutoPreserveCompartment pc(cx);
 
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -841,7 +841,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     // the startupcache.  Note: as a rule, startupcache errors are not fatal
     // to loading the script, since we can always slow-load.
     
-    bool writeToCache = false;
+    PRBool writeToCache = PR_FALSE;
     StartupCache* cache = StartupCache::GetSingleton();
 
     nsCAutoString cachePath(kJSCachePrefix);

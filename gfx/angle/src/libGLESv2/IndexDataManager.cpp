@@ -22,7 +22,6 @@ namespace
 
 namespace gl
 {
-unsigned int IndexBuffer::mCurrentSerial = 1;
 
 IndexDataManager::IndexDataManager(Context *context, IDirect3DDevice9 *device) : mDevice(device)
 {
@@ -201,7 +200,6 @@ GLenum IndexDataManager::prepareIndexData(GLenum type, GLsizei count, Buffer *bu
     }
 
     translated->indexBuffer = indexBuffer->getBuffer();
-    translated->serial = indexBuffer->getSerial();
     translated->startIndex = streamOffset / indexSize(format);
 
     if (buffer)
@@ -234,7 +232,6 @@ IndexBuffer::IndexBuffer(IDirect3DDevice9 *device, UINT size, D3DFORMAT format) 
     {
         D3DPOOL pool = getDisplay()->getBufferPool(D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
         HRESULT result = device->CreateIndexBuffer(size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, format, pool, &mIndexBuffer, NULL);
-        mSerial = issueSerial();
 
         if (FAILED(result))
         {
@@ -254,16 +251,6 @@ IndexBuffer::~IndexBuffer()
 IDirect3DIndexBuffer9 *IndexBuffer::getBuffer() const
 {
     return mIndexBuffer;
-}
-
-unsigned int IndexBuffer::getSerial() const
-{
-    return mSerial;
-}
-
-unsigned int IndexBuffer::issueSerial()
-{
-    return mCurrentSerial++;
 }
 
 void IndexBuffer::unmap()
@@ -318,7 +305,6 @@ void StreamingIndexBuffer::reserveSpace(UINT requiredSpace, GLenum type)
 
         D3DPOOL pool = getDisplay()->getBufferPool(D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
         HRESULT result = mDevice->CreateIndexBuffer(mBufferSize, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, type == GL_UNSIGNED_INT ? D3DFMT_INDEX32 : D3DFMT_INDEX16, pool, &mIndexBuffer, NULL);
-        mSerial = issueSerial();
     
         if (FAILED(result))
         {
@@ -372,7 +358,6 @@ void StaticIndexBuffer::reserveSpace(UINT requiredSpace, GLenum type)
     {
         D3DPOOL pool = getDisplay()->getBufferPool(D3DUSAGE_WRITEONLY);
         HRESULT result = mDevice->CreateIndexBuffer(requiredSpace, D3DUSAGE_WRITEONLY, type == GL_UNSIGNED_INT ? D3DFMT_INDEX32 : D3DFMT_INDEX16, pool, &mIndexBuffer, NULL);
-        mSerial = issueSerial();
     
         if (FAILED(result))
         {
@@ -396,25 +381,24 @@ bool StaticIndexBuffer::lookupType(GLenum type)
 
 UINT StaticIndexBuffer::lookupRange(intptr_t offset, GLsizei count, UINT *minIndex, UINT *maxIndex)
 {
-    IndexRange range = {offset, count};
-
-    std::map<IndexRange, IndexResult>::iterator res = mCache.find(range);
-    
-    if (res == mCache.end())
+    for (unsigned int range = 0; range < mCache.size(); range++)
     {
-        return -1;
+        if (mCache[range].offset == offset && mCache[range].count == count)
+        {
+            *minIndex = mCache[range].minIndex;
+            *maxIndex = mCache[range].maxIndex;
+
+            return mCache[range].streamOffset;
+        }
     }
 
-    *minIndex = res->second.minIndex;
-    *maxIndex = res->second.maxIndex;
-    return res->second.streamOffset;
+    return -1;
 }
 
 void StaticIndexBuffer::addRange(intptr_t offset, GLsizei count, UINT minIndex, UINT maxIndex, UINT streamOffset)
 {
-    IndexRange indexRange = {offset, count};
-    IndexResult indexResult = {minIndex, maxIndex, streamOffset};
-    mCache[indexRange] = indexResult;
+    IndexRange indexRange = {offset, count, minIndex, maxIndex, streamOffset};
+    mCache.push_back(indexRange);
 }
 
 }

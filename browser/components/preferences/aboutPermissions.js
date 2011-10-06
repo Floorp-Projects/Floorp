@@ -244,8 +244,10 @@ Site.prototype = {
    * @return An array of the logins stored for the site.
    */
   get logins() {
-    let httpLogins = Services.logins.findLogins({}, this.httpURI.prePath, "", "");
-    let httpsLogins = Services.logins.findLogins({}, this.httpsURI.prePath, "", "");
+    // There could be more logins for different schemes/ports, but this covers
+    // the vast majority of cases.
+    let httpLogins = Services.logins.findLogins({}, this.httpURI.prePath, "", null);
+    let httpsLogins = Services.logins.findLogins({}, this.httpsURI.prePath, "", null);
     return httpLogins.concat(httpsLogins);
   },
 

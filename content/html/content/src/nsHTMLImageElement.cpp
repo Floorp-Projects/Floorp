@@ -105,7 +105,7 @@ public:
   NS_DECL_NSIDOMHTMLIMAGEELEMENT
 
   // override from nsGenericHTMLElement
-  NS_IMETHOD GetDraggable(bool* aDraggable);
+  NS_IMETHOD GetDraggable(PRBool* aDraggable);
 
   // override from nsImageLoadingContent
   nsImageLoadingContent::CORSMode GetCORSMode();
@@ -115,35 +115,35 @@ public:
                         JSObject* aObj, PRUint32 argc, jsval* argv);
 
   // nsIContent
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
-  bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
+  PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, bool aNotify)
+                   const nsAString& aValue, PRBool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
+                           PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
+                             PRBool aNotify);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
+                              PRBool aCompileEventHandlers);
 
   virtual nsEventStates IntrinsicState() const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -239,7 +239,7 @@ static const nsAttrValue::EnumTable kCrossOriginTable[] = {
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, CrossOrigin, crossorigin)
 
 NS_IMETHODIMP
-nsHTMLImageElement::GetDraggable(bool* aDraggable)
+nsHTMLImageElement::GetDraggable(PRBool* aDraggable)
 {
   // images may be dragged unless the draggable attribute is false
   *aDraggable = !AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
@@ -248,7 +248,7 @@ nsHTMLImageElement::GetDraggable(bool* aDraggable)
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::GetComplete(bool* aComplete)
+nsHTMLImageElement::GetComplete(PRBool* aComplete)
 {
   NS_PRECONDITION(aComplete, "Null out param!");
   *aComplete = PR_TRUE;
@@ -341,7 +341,7 @@ nsHTMLImageElement::SetWidth(PRUint32 aWidth)
                                        val, PR_TRUE);
 }
 
-bool
+PRBool
 nsHTMLImageElement::ParseAttribute(PRInt32 aNamespaceID,
                                    nsIAtom* aAttribute,
                                    const nsAString& aValue,
@@ -390,7 +390,7 @@ nsHTMLImageElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   return retval;
 }
 
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 nsHTMLImageElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -422,7 +422,7 @@ nsHTMLImageElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
       aVisitor.mEvent->message == NS_MOUSE_CLICK &&
       static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
         nsMouseEvent::eLeftButton) {
-    bool isMap = false;
+    PRBool isMap = PR_FALSE;
     GetIsMap(&isMap);
     if (isMap) {
       aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
@@ -431,9 +431,9 @@ nsHTMLImageElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
 
-bool
-nsHTMLImageElement::IsHTMLFocusable(bool aWithMouse,
-                                    bool *aIsFocusable, PRInt32 *aTabIndex)
+PRBool
+nsHTMLImageElement::IsHTMLFocusable(PRBool aWithMouse,
+                                    PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
   PRInt32 tabIndex;
   GetTabIndex(&tabIndex);
@@ -474,7 +474,7 @@ nsHTMLImageElement::IsHTMLFocusable(bool aWithMouse,
 nsresult
 nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                             nsIAtom* aPrefix, const nsAString& aValue,
-                            bool aNotify)
+                            PRBool aNotify)
 {
   // If we plan to call LoadImage, we want to do it first so that the
   // image load kicks off _before_ the reflow triggered by the SetAttr.  But if
@@ -510,7 +510,7 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsHTMLImageElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                              bool aNotify)
+                              PRBool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::src) {
     CancelImageRequests(aNotify);
@@ -522,7 +522,7 @@ nsHTMLImageElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 nsresult
 nsHTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                nsIContent* aBindingParent,
-                               bool aCompileEventHandlers)
+                               PRBool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,

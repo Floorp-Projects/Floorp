@@ -66,7 +66,7 @@ public:
      * aColSpan is the number of columns spanned, and aRow/aCol are the
      * position of the cell in the table (for GetCellInfoAt).
      */
-    bool AddCell(PRInt32 aColSpan, PRInt32 aRow, PRInt32 aCol);
+    PRBool AddCell(PRInt32 aColSpan, PRInt32 aRow, PRInt32 aCol);
 
     /**
      * Get the next *list* of cells.  Each list contains all the cells
@@ -88,7 +88,7 @@ private:
     Item *mArray[ARRAY_SIZE];
     PRInt32 SpanToIndex(PRInt32 aSpan) { return aSpan - ARRAY_BASE; }
     PRInt32 IndexToSpan(PRInt32 aIndex) { return aIndex + ARRAY_BASE; }
-    bool UseArrayForSpan(PRInt32 aSpan) {
+    PRBool UseArrayForSpan(PRInt32 aSpan) {
         NS_ASSERTION(SpanToIndex(aSpan) >= 0, "cell without colspan");
         return SpanToIndex(aSpan) < ARRAY_SIZE;
     }
@@ -103,7 +103,7 @@ private:
 
     static PLDHashNumber
         HashTableHashKey(PLDHashTable *table, const void *key);
-    static bool
+    static PRBool
         HashTableMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                             const void *key);
 

@@ -68,7 +68,7 @@ txExprParser::createAVT(const nsSubstring& aAttrValue,
     FunctionCall* concat = nsnull;
 
     nsAutoString literalString;
-    bool inExpr = false;
+    PRBool inExpr = PR_FALSE;
     nsSubstring::const_char_iterator iter, start, end, avtStart;
     aAttrValue.BeginReading(iter);
     aAttrValue.EndReading(end);
@@ -799,7 +799,7 @@ txExprParser::createUnionExpr(txExprLexer& lexer, txIParseContext* aContext,
     return NS_OK;
 }
 
-bool
+PRBool
 txExprParser::isLocationStepToken(Token* aToken)
 {
     // We could put these in consecutive order in ExprLexer.h for speed
@@ -929,7 +929,7 @@ nsresult
 txExprParser::resolveQName(const nsAString& aQName,
                            nsIAtom** aPrefix, txIParseContext* aContext,
                            nsIAtom** aLocalName, PRInt32& aNamespace,
-                           bool aIsNameTest)
+                           PRBool aIsNameTest)
 {
     aNamespace = kNameSpaceID_None;
     PRInt32 idx = aQName.FindChar(':');

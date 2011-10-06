@@ -109,10 +109,10 @@ public:
     void EndNativeDrawing();
 
     /* Returns PR_TRUE if the native drawing should be executed again */
-    bool ShouldRenderAgain();
+    PRBool ShouldRenderAgain();
 
     /* Returns PR_TRUE if double pass alpha extraction is taking place. */
-    bool IsDoublePass();
+    PRBool IsDoublePass();
 
     /* Places the result to the context, if necessary */
     void PaintToContext();

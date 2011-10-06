@@ -74,7 +74,7 @@ public:
     NS_DECL_ISUPPORTS
 
     nsresult LoadDocument(nsIChannel* aChannel, nsIPrincipal *aLoaderPrincipal,
-                          bool aChannelIsSync, bool aForceToXML,
+                          PRBool aChannelIsSync, PRBool aForceToXML,
                           nsIDOMDocument** aResult);
 
     NS_FORWARD_NSISTREAMLISTENER(mListener->)
@@ -90,7 +90,7 @@ private:
 
     nsCOMPtr<nsIChannel> mChannel;
     nsCOMPtr<nsIStreamListener> mListener;
-    bool mLoading;
+    PRPackedBool mLoading;
     nsresult mAsyncLoadStatus;
 };
 
@@ -158,8 +158,8 @@ NS_IMPL_ISUPPORTS5(nsSyncLoader,
 nsresult
 nsSyncLoader::LoadDocument(nsIChannel* aChannel,
                            nsIPrincipal *aLoaderPrincipal,
-                           bool aChannelIsSync,
-                           bool aForceToXML,
+                           PRBool aChannelIsSync,
+                           PRBool aForceToXML,
                            nsIDOMDocument **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
@@ -227,7 +227,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
 
     http = do_QueryInterface(mChannel);
     if (NS_SUCCEEDED(rv) && http) {
-        bool succeeded;
+        PRBool succeeded;
         if (NS_FAILED(http->GetRequestSucceeded(&succeeded)) || !succeeded) {
             rv = NS_ERROR_FAILURE;
         }
@@ -257,7 +257,7 @@ nsSyncLoader::PushAsyncStream(nsIStreamListener* aListener)
         mLoading = PR_TRUE;
         nsIThread *thread = NS_GetCurrentThread();
         while (mLoading && NS_SUCCEEDED(rv)) {
-            bool processedEvent; 
+            PRBool processedEvent; 
             rv = thread->ProcessNextEvent(PR_TRUE, &processedEvent);
             if (NS_SUCCEEDED(rv) && !processedEvent)
                 rv = NS_ERROR_UNEXPECTED;
@@ -334,7 +334,7 @@ nsSyncLoader::GetInterface(const nsIID & aIID,
 /* static */
 nsresult
 nsSyncLoadService::LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
-                                nsILoadGroup *aLoadGroup, bool aForceToXML,
+                                nsILoadGroup *aLoadGroup, PRBool aForceToXML,
                                 nsIDOMDocument** aResult)
 {
     nsCOMPtr<nsIChannel> channel;
@@ -346,8 +346,8 @@ nsSyncLoadService::LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
         channel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
     }
 
-    bool isChrome = false, isResource = false;
-    bool isSync = (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) &&
+    PRBool isChrome = PR_FALSE, isResource = PR_FALSE;
+    PRBool isSync = (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) &&
                      isChrome) ||
                     (NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)) &&
                      isResource);

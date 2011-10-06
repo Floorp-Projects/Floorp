@@ -52,7 +52,7 @@ function onTabViewWindowLoaded(win, tab) {
   let testClickOnOtherSearchResult = function () {
     // search for the tab from our main window
     searchbox.setAttribute('value', 'other');
-    contentWindow.Search.perform();
+    contentWindow.performSearch();
 
     // prepare to finish when the main window gets focus back
     window.addEventListener('focus', function onFocus() {

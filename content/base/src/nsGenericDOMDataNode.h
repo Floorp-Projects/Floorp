@@ -108,13 +108,13 @@ public:
     *aAttributes = nsnull;
     return NS_OK;
   }
-  nsresult HasChildNodes(bool* aHasChildNodes)
+  nsresult HasChildNodes(PRBool* aHasChildNodes)
   {
     NS_ENSURE_ARG_POINTER(aHasChildNodes);
     *aHasChildNodes = PR_FALSE;
     return NS_OK;
   }
-  nsresult HasAttributes(bool* aHasAttributes)
+  nsresult HasAttributes(PRBool* aHasAttributes)
   {
     NS_ENSURE_ARG_POINTER(aHasAttributes);
     *aHasAttributes = PR_FALSE;
@@ -147,8 +147,8 @@ public:
   nsresult GetPrefix(nsAString& aPrefix);
   nsresult IsSupported(const nsAString& aFeature,
                        const nsAString& aVersion,
-                       bool* aReturn);
-  nsresult CloneNode(bool aDeep, nsIDOMNode** aReturn)
+                       PRBool* aReturn);
+  nsresult CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   {
     return nsNodeUtils::CloneNodeImpl(this, aDeep, PR_TRUE, aReturn);
   }
@@ -171,8 +171,8 @@ public:
   virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 bool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
+                                 PRBool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   NS_IMETHOD GetTextContent(nsAString &aTextContent)
   {
     nsresult rv = GetNodeValue(aTextContent);
@@ -189,41 +189,41 @@ public:
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
 
   virtual already_AddRefed<nsINodeList> GetChildren(PRUint32 aFilter);
 
   virtual nsIAtom *GetIDAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, bool aNotify)
+                   const nsAString& aValue, PRBool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
+                           PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
-  virtual bool GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                             PRBool aNotify);
+  virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                          nsAString& aResult) const;
-  virtual bool HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const;
+  virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const;
   virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   virtual PRUint32 GetAttrCount() const;
   virtual const nsTextFragment *GetText();
   virtual PRUint32 TextLength();
   virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
-                           bool aNotify);
+                           PRBool aNotify);
   // Need to implement this here too to avoid hiding.
-  nsresult SetText(const nsAString& aStr, bool aNotify)
+  nsresult SetText(const nsAString& aStr, PRBool aNotify)
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
   virtual nsresult AppendText(const PRUnichar* aBuffer, PRUint32 aLength,
-                              bool aNotify);
-  virtual bool TextIsOnlyWhitespace();
+                              PRBool aNotify);
+  virtual PRBool TextIsOnlyWhitespace();
   virtual void AppendTextTo(nsAString& aResult);
   virtual void DestroyContent();
   virtual void SaveSubtreeState();
@@ -236,24 +236,24 @@ public:
   virtual nsIDOMCSSStyleDeclaration* GetSMILOverrideStyle();
   virtual mozilla::css::StyleRule* GetSMILOverrideStyleRule();
   virtual nsresult SetSMILOverrideStyleRule(mozilla::css::StyleRule* aStyleRule,
-                                            bool aNotify);
+                                            PRBool aNotify);
 #endif // MOZ_SMIL
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
-  virtual void DumpContent(FILE* out, PRInt32 aIndent, bool aDumpAll) const;
+  virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
 #endif
 
   virtual nsIContent *GetBindingParent() const;
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
-  virtual bool IsLink(nsIURI** aURI) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual PRBool IsLink(nsIURI** aURI) const;
 
   virtual nsIAtom* DoGetID() const;
   virtual const nsAttrValue* DoGetClasses() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   virtual mozilla::css::StyleRule* GetInlineStyleRule();
-  NS_IMETHOD SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule, bool aNotify);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule, PRBool aNotify);
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
   virtual nsIAtom *GetClassAttributeName() const;
@@ -271,7 +271,7 @@ public:
   }
 
   nsresult SplitData(PRUint32 aOffset, nsIContent** aReturn,
-                     bool aCloneAfterOriginal = true);
+                     PRBool aCloneAfterOriginal = PR_TRUE);
 
   //----------------------------------------
 
@@ -330,9 +330,10 @@ protected:
 
   nsresult GetWholeText(nsAString& aWholeText);
 
-  nsresult GetIsElementContentWhitespace(bool *aReturn)
+  nsresult ReplaceWholeText(const nsAString& aContent, nsIDOMText **aReturn);
+
+  nsresult GetIsElementContentWhitespace(PRBool *aReturn)
   {
-    GetOwnerDoc()->WarnOnceAbout(nsIDocument::eIsElementContentWhitespace);
     *aReturn = TextIsOnlyWhitespace();
     return NS_OK;
   }
@@ -346,7 +347,7 @@ protected:
 
   nsresult SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
                            const PRUnichar* aBuffer, PRUint32 aLength,
-                           bool aNotify,
+                           PRBool aNotify,
                            CharacterDataChangeInfo::Details* aDetails = nsnull);
 
   /**
@@ -358,7 +359,7 @@ protected:
    * @return the clone
    */
   virtual nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              bool aCloneText) const = 0;
+                                              PRBool aCloneText) const = 0;
 
   nsTextFragment mText;
 

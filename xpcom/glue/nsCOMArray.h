@@ -61,11 +61,11 @@ protected:
 
     PRInt32 IndexOfObject(nsISupports* aObject) const;
 
-    bool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData) {
+    PRBool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData) {
         return mArray.EnumerateForwards(aFunc, aData);
     }
     
-    bool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData) {
+    PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData) {
         return mArray.EnumerateBackwards(aFunc, aData);
     }
     
@@ -77,18 +77,18 @@ protected:
     // avoid inline bodies, so that the compiler doesn't inline them
     // all over the place
     void Clear();
-    bool InsertObjectAt(nsISupports* aObject, PRInt32 aIndex);
-    bool InsertObjectsAt(const nsCOMArray_base& aObjects, PRInt32 aIndex);
-    bool ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex);
-    bool AppendObject(nsISupports *aObject) {
+    PRBool InsertObjectAt(nsISupports* aObject, PRInt32 aIndex);
+    PRBool InsertObjectsAt(const nsCOMArray_base& aObjects, PRInt32 aIndex);
+    PRBool ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex);
+    PRBool AppendObject(nsISupports *aObject) {
         return InsertObjectAt(aObject, Count());
     }
-    bool AppendObjects(const nsCOMArray_base& aObjects) {
+    PRBool AppendObjects(const nsCOMArray_base& aObjects) {
         return InsertObjectsAt(aObjects, Count());
     }
-    bool RemoveObject(nsISupports *aObject);
-    bool RemoveObjectAt(PRInt32 aIndex);
-    bool RemoveObjectsAt(PRInt32 aIndex, PRInt32 aCount);
+    PRBool RemoveObject(nsISupports *aObject);
+    PRBool RemoveObjectAt(PRInt32 aIndex);
+    PRBool RemoveObjectsAt(PRInt32 aIndex, PRInt32 aCount);
 
 public:
     // override nsVoidArray stuff so that they can be accessed by
@@ -98,7 +98,7 @@ public:
     }
     // If the array grows, the newly created entries will all be null;
     // if the array shrinks, the excess entries will all be released.
-    bool SetCount(PRInt32 aNewCount);
+    PRBool SetCount(PRInt32 aNewCount);
 
     nsISupports* ObjectAt(PRInt32 aIndex) const {
         return static_cast<nsISupports*>(mArray.FastElementAt(aIndex));
@@ -114,7 +114,7 @@ public:
 
     // Ensures there is enough space to store a total of aCapacity objects.
     // This method never deletes any objects.
-    bool SetCapacity(PRUint32 aCapacity) {
+    PRBool SetCapacity(PRUint32 aCapacity) {
       return aCapacity > 0 ? mArray.SizeTo(static_cast<PRInt32>(aCapacity))
                            : PR_TRUE;
     }
@@ -192,19 +192,19 @@ class nsCOMArray : public nsCOMArray_base
 
     // inserts aObject at aIndex, shifting the objects at aIndex and
     // later to make space
-    bool InsertObjectAt(T* aObject, PRInt32 aIndex) {
+    PRBool InsertObjectAt(T* aObject, PRInt32 aIndex) {
         return nsCOMArray_base::InsertObjectAt(static_cast<nsISupports*>(aObject), aIndex);
     }
 
     // inserts the objects from aObject at aIndex, shifting the
     // objects at aIndex and later to make space
-    bool InsertObjectsAt(const nsCOMArray<T>& aObjects, PRInt32 aIndex) {
+    PRBool InsertObjectsAt(const nsCOMArray<T>& aObjects, PRInt32 aIndex) {
         return nsCOMArray_base::InsertObjectsAt(aObjects, aIndex);
     }
 
     // replaces an existing element. Warning: if the array grows,
     // the newly created entries will all be null
-    bool ReplaceObjectAt(T* aObject, PRInt32 aIndex) {
+    PRBool ReplaceObjectAt(T* aObject, PRInt32 aIndex) {
         return nsCOMArray_base::ReplaceObjectAt(static_cast<nsISupports*>(aObject), aIndex);
     }
 
@@ -223,17 +223,17 @@ class nsCOMArray : public nsCOMArray_base
 
     // Enumerator callback function. Return PR_FALSE to stop
     // Here's a more readable form:
-    // bool enumerate(T* aElement, void* aData)
-    typedef bool (* nsCOMArrayEnumFunc)
+    // PRBool enumerate(T* aElement, void* aData)
+    typedef PRBool (* nsCOMArrayEnumFunc)
         (T* aElement, void *aData);
     
     // enumerate through the array with a callback. 
-    bool EnumerateForwards(nsCOMArrayEnumFunc aFunc, void* aData) {
+    PRBool EnumerateForwards(nsCOMArrayEnumFunc aFunc, void* aData) {
         return nsCOMArray_base::EnumerateForwards(nsVoidArrayEnumFunc(aFunc),
                                                   aData);
     }
 
-    bool EnumerateBackwards(nsCOMArrayEnumFunc aFunc, void* aData) {
+    PRBool EnumerateBackwards(nsCOMArrayEnumFunc aFunc, void* aData) {
         return nsCOMArray_base::EnumerateBackwards(nsVoidArrayEnumFunc(aFunc),
                                                   aData);
     }
@@ -246,31 +246,31 @@ class nsCOMArray : public nsCOMArray_base
     }
 
     // append an object, growing the array as necessary
-    bool AppendObject(T *aObject) {
+    PRBool AppendObject(T *aObject) {
         return nsCOMArray_base::AppendObject(static_cast<nsISupports*>(aObject));
     }
 
     // append objects, growing the array as necessary
-    bool AppendObjects(const nsCOMArray<T>& aObjects) {
+    PRBool AppendObjects(const nsCOMArray<T>& aObjects) {
         return nsCOMArray_base::AppendObjects(aObjects);
     }
     
     // remove the first instance of the given object and shrink the
     // array as necessary
     // Warning: if you pass null here, it will remove the first null element
-    bool RemoveObject(T *aObject) {
+    PRBool RemoveObject(T *aObject) {
         return nsCOMArray_base::RemoveObject(static_cast<nsISupports*>(aObject));
     }
 
     // remove an element at a specific position, shrinking the array
     // as necessary
-    bool RemoveObjectAt(PRInt32 aIndex) {
+    PRBool RemoveObjectAt(PRInt32 aIndex) {
         return nsCOMArray_base::RemoveObjectAt(aIndex);
     }
 
     // remove a range of elements at a specific position, shrinking the array
     // as necessary
-    bool RemoveObjectsAt(PRInt32 aIndex, PRInt32 aCount) {
+    PRBool RemoveObjectsAt(PRInt32 aIndex, PRInt32 aCount) {
         return nsCOMArray_base::RemoveObjectsAt(aIndex, aCount);
     }
 

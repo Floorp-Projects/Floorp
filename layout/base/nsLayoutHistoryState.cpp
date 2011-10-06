@@ -58,13 +58,13 @@ public:
   NS_IMETHOD AddState(const nsCString& aKey, nsPresState* aState);
   NS_IMETHOD GetState(const nsCString& aKey, nsPresState** aState);
   NS_IMETHOD RemoveState(const nsCString& aKey);
-  NS_IMETHOD_(bool) HasStates() const;
-  NS_IMETHOD SetScrollPositionOnly(const bool aFlag);
+  NS_IMETHOD_(PRBool) HasStates() const;
+  NS_IMETHOD SetScrollPositionOnly(const PRBool aFlag);
 
 
 private:
   ~nsLayoutHistoryState() {}
-  bool mScrollPositionOnly;
+  PRBool mScrollPositionOnly;
 
   nsClassHashtable<nsCStringHashKey,nsPresState> mStates;
 };
@@ -108,7 +108,7 @@ nsLayoutHistoryState::AddState(const nsCString& aStateKey, nsPresState* aState)
 NS_IMETHODIMP
 nsLayoutHistoryState::GetState(const nsCString& aKey, nsPresState** aState)
 {
-  bool entryExists = mStates.Get(aKey, aState);
+  PRBool entryExists = mStates.Get(aKey, aState);
 
   if (entryExists && mScrollPositionOnly) {
     // Ensure any state that shouldn't be restored is removed
@@ -125,14 +125,14 @@ nsLayoutHistoryState::RemoveState(const nsCString& aKey)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(bool)
+NS_IMETHODIMP_(PRBool)
 nsLayoutHistoryState::HasStates() const
 {
   return mStates.Count() != 0;
 }
 
 NS_IMETHODIMP
-nsLayoutHistoryState::SetScrollPositionOnly(const bool aFlag)
+nsLayoutHistoryState::SetScrollPositionOnly(const PRBool aFlag)
 {
   mScrollPositionOnly = aFlag;
   return NS_OK;

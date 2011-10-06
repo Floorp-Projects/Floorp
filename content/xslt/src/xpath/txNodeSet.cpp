@@ -129,7 +129,7 @@ nsresult txNodeSet::add(const txXPathNode& aNode)
         return append(aNode);
     }
 
-    bool dupe;
+    PRBool dupe;
     txXPathNode* pos = findPosition(aNode, mStart, mEnd, dupe);
 
     if (dupe) {
@@ -251,7 +251,7 @@ nsresult txNodeSet::add(const txNodeSet& aNodes, transferOp aTransfer,
     // Pointer to the insertion point in this nodeset
     txXPathNode* insertPos = mEndBuffer;
 
-    bool dupe;
+    PRBool dupe;
     txXPathNode* pos;
     PRInt32 count;
     while (thisPos > mStart || otherPos > aNodes.mStart) {
@@ -384,9 +384,9 @@ txNodeSet::mark(PRInt32 aIndex)
                  "index out of bounds");
     if (!mMarks) {
         PRInt32 length = size();
-        mMarks = new bool[length];
+        mMarks = new PRPackedBool[length];
         NS_ENSURE_TRUE(mMarks, NS_ERROR_OUT_OF_MEMORY);
-        memset(mMarks, 0, length * sizeof(bool));
+        memset(mMarks, 0, length * sizeof(PRPackedBool));
     }
     if (mDirection == kForward) {
         mMarks[aIndex] = PR_TRUE;
@@ -490,7 +490,7 @@ txNodeSet::getResultType()
     return txAExprResult::NODESET;
 }
 
-bool
+PRBool
 txNodeSet::booleanValue()
 {
     return !isEmpty();
@@ -521,7 +521,7 @@ txNodeSet::stringValuePointer()
     return nsnull;
 }
 
-bool txNodeSet::ensureGrowSize(PRInt32 aSize)
+PRBool txNodeSet::ensureGrowSize(PRInt32 aSize)
 {
     // check if there is enough place in the buffer as is
     if (mDirection == kForward && aSize <= mEndBuffer - mEnd) {
@@ -593,7 +593,7 @@ bool txNodeSet::ensureGrowSize(PRInt32 aSize)
 
 txXPathNode*
 txNodeSet::findPosition(const txXPathNode& aNode, txXPathNode* aFirst,
-                        txXPathNode* aLast, bool& aDupe) const
+                        txXPathNode* aLast, PRBool& aDupe) const
 {
     aDupe = PR_FALSE;
     if (aLast - aFirst <= 2) {

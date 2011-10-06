@@ -90,7 +90,7 @@ nsDocShellEditorData::TearDownEditor()
 
 ----------------------------------------------------------------------------*/
 nsresult
-nsDocShellEditorData::MakeEditable(bool inWaitForUriLoad)
+nsDocShellEditorData::MakeEditable(PRBool inWaitForUriLoad)
 {
   if (mMakeEditable)
     return NS_OK;
@@ -116,7 +116,7 @@ nsDocShellEditorData::MakeEditable(bool inWaitForUriLoad)
   GetEditable
 
 ----------------------------------------------------------------------------*/
-bool
+PRBool
 nsDocShellEditorData::GetEditable()
 {
   return mMakeEditable || (mEditor != nsnull);

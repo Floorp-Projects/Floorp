@@ -65,7 +65,7 @@ public:
    * @param pData This is an XPCOM getter, so pData is already_addrefed.
    *   If the key doesn't exist, pData will be set to nsnull.
    */
-  bool Get(KeyType aKey, UserDataType* pData NS_OUTPARAM) const;
+  PRBool Get(KeyType aKey, UserDataType* pData NS_OUTPARAM) const;
 
   /**
    * @copydoc nsBaseHashtable::Get
@@ -78,7 +78,7 @@ public:
    *               to PR_FALSE otherwise.
    * @return The entry, or nsnull if not found. Do not release this pointer!
    */
-  Interface* GetWeak(KeyType aKey, bool* aFound = nsnull) const;
+  Interface* GetWeak(KeyType aKey, PRBool* aFound = nsnull) const;
 };
 
 /**
@@ -102,7 +102,7 @@ public:
    * @param pData This is an XPCOM getter, so pData is already_addrefed.
    *   If the key doesn't exist, pData will be set to nsnull.
    */
-  bool Get(KeyType aKey, UserDataType* pData NS_OUTPARAM) const;
+  PRBool Get(KeyType aKey, UserDataType* pData NS_OUTPARAM) const;
 
   // GetWeak does not make sense on a multi-threaded hashtable, where another
   // thread may remove the entry (and hence release it) as soon as GetWeak
@@ -115,7 +115,7 @@ public:
 //
 
 template<class KeyClass,class Interface>
-bool
+PRBool
 nsInterfaceHashtable<KeyClass,Interface>::Get
   (KeyType aKey, UserDataType* pInterface) const
 {
@@ -149,14 +149,14 @@ nsInterfaceHashtable<KeyClass,Interface>::Get(KeyType aKey) const
   if (!ent)
     return NULL;
 
-  nsCOMPtr<Interface> copy = ent->mData;
-  return copy.forget();
+  NS_IF_ADDREF(ent->mData);
+  return already_AddRefed<Interface>(ent->mData);
 }
 
 template<class KeyClass,class Interface>
 Interface*
 nsInterfaceHashtable<KeyClass,Interface>::GetWeak
-  (KeyType aKey, bool* aFound) const
+  (KeyType aKey, PRBool* aFound) const
 {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
 
@@ -179,7 +179,7 @@ nsInterfaceHashtable<KeyClass,Interface>::GetWeak
 //
 
 template<class KeyClass,class Interface>
-bool
+PRBool
 nsInterfaceHashtableMT<KeyClass,Interface>::Get
   (KeyType aKey, UserDataType* pInterface) const
 {

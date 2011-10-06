@@ -40,7 +40,7 @@
 NS_IMPL_ISUPPORTS1(nsXULTemplateResultSetRDF, nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsXULTemplateResultSetRDF::HasMoreElements(bool *aResult)
+nsXULTemplateResultSetRDF::HasMoreElements(PRBool *aResult)
 {
     *aResult = PR_TRUE;
 

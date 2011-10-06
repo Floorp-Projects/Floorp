@@ -136,7 +136,7 @@ NS_IMETHODIMP nsIconChannel::GetName(nsACString &result)
   return mUrl->GetSpec(result);
 }
 
-NS_IMETHODIMP nsIconChannel::IsPending(bool *result)
+NS_IMETHODIMP nsIconChannel::IsPending(PRBool *result)
 {
   return mPump->IsPending(result);
 }
@@ -313,7 +313,7 @@ nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
   SHFILEINFOW      sfi;
   UINT infoFlags = SHGFI_ICON;
   
-  bool fileExists = false;
+  PRBool fileExists = PR_FALSE;
  
   nsAutoString filePath;
   CopyASCIItoUTF16(fileExt, filePath);
@@ -489,7 +489,7 @@ static BITMAPINFO* CreateBitmapInfo(BITMAPINFOHEADER* aHeader,
   return bmi;
 }
 
-nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocking)
+nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
 {
   // Check whether the icon requested's a file icon or a stock icon
   nsresult rv = NS_ERROR_NOT_AVAILABLE;

@@ -54,7 +54,7 @@ nsNSSDialogHelper::openDialog(
     nsIDOMWindow *window,
     const char *url,
     nsISupports *params,
-    bool modal)
+    PRBool modal)
 {
   nsresult rv;
   nsCOMPtr<nsIWindowWatcher> windowWatcher = 

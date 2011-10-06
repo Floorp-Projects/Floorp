@@ -61,7 +61,7 @@ struct nsSMILTargetIdentifier
     : mElement(nsnull), mAttributeName(nsnull),
       mAttributeNamespaceID(kNameSpaceID_Unknown), mIsCSS(PR_FALSE) {}
 
-  inline bool Equals(const nsSMILTargetIdentifier& aOther) const
+  inline PRBool Equals(const nsSMILTargetIdentifier& aOther) const
   {
     return (aOther.mElement              == mElement &&
             aOther.mAttributeName        == mAttributeName &&
@@ -72,7 +72,7 @@ struct nsSMILTargetIdentifier
   nsRefPtr<mozilla::dom::Element> mElement;
   nsRefPtr<nsIAtom>    mAttributeName;
   PRInt32              mAttributeNamespaceID;
-  bool                 mIsCSS;
+  PRPackedBool         mIsCSS;
 };
 
 /**
@@ -103,7 +103,7 @@ public:
   }
 
   // Allow for comparison vs. non-weak identifier
-  inline bool Equals(const nsSMILTargetIdentifier& aOther) const
+  inline PRBool Equals(const nsSMILTargetIdentifier& aOther) const
   {
     return (aOther.mElement       == mElement &&
             aOther.mAttributeName == mAttributeName &&
@@ -113,7 +113,7 @@ public:
 private:
   const nsIContent* mElement;
   const nsIAtom*    mAttributeName;
-  bool              mIsCSS;
+  PRPackedBool      mIsCSS;
 };
 
 #endif // NS_SMILTARGETIDENTIFIER_H_

@@ -146,8 +146,8 @@ public:
     nsRefPtr<nsDocShell>  mDocShell;
     nsCOMPtr<nsIURI>      mURI;
     PRInt32               mDelay;
-    bool                  mRepeat;
-    bool                  mMetaRefresh;
+    PRPackedBool          mRepeat;
+    PRPackedBool          mMetaRefresh;
     
 protected:
     virtual ~nsRefreshTimer();
@@ -236,7 +236,7 @@ public:
         const PRUnichar* aTargetSpec,
         nsIInputStream* aPostDataStream,
         nsIInputStream* aHeadersDataStream,
-        bool aIsTrusted);
+        PRBool aIsTrusted);
     NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
         nsIURI* aURI,
         const PRUnichar* aTargetSpec,
@@ -265,7 +265,7 @@ public:
     // the timer involved out of mRefreshURIList if it's there.
     // aTimer must not be null.
     nsresult ForceRefreshURIFromTimer(nsIURI * aURI, PRInt32 aDelay,
-                                      bool aMetaRefresh, nsITimer* aTimer);
+                                      PRBool aMetaRefresh, nsITimer* aTimer);
 
     friend class OnLinkClickEvent;
 
@@ -287,7 +287,7 @@ protected:
     // passed in, the about:blank principal will end up being used.
     nsresult CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
                                            nsIURI* aBaseURI,
-                                           bool aTryToSaveOldPresentation = true);
+                                           PRBool aTryToSaveOldPresentation = PR_TRUE);
     NS_IMETHOD CreateContentViewer(const char * aContentType, 
         nsIRequest * request, nsIStreamListener ** aContentHandler);
     NS_IMETHOD NewContentViewerObj(const char * aContentType, 
@@ -305,33 +305,33 @@ protected:
     // If that fails too, we force creation of a content viewer and use the
     // resulting principal.  If aConsiderCurrentDocument is false, we just look
     // at the parent.
-    nsIPrincipal* GetInheritedPrincipal(bool aConsiderCurrentDocument);
+    nsIPrincipal* GetInheritedPrincipal(PRBool aConsiderCurrentDocument);
 
     // True if when loading aURI into this docshell, the channel should look
     // for an appropriate application cache.
-    bool ShouldCheckAppCache(nsIURI * aURI);
+    PRBool ShouldCheckAppCache(nsIURI * aURI);
 
     // Actually open a channel and perform a URI load.  Note: whatever owner is
     // passed to this function will be set on the channel.  Callers who wish to
     // not have an owner on the channel should just pass null.
     virtual nsresult DoURILoad(nsIURI * aURI,
                                nsIURI * aReferrer,
-                               bool aSendReferrer,
+                               PRBool aSendReferrer,
                                nsISupports * aOwner,
                                const char * aTypeHint,
                                nsIInputStream * aPostData,
                                nsIInputStream * aHeadersData,
-                               bool firstParty,
+                               PRBool firstParty,
                                nsIDocShell ** aDocShell,
                                nsIRequest ** aRequest,
-                               bool aIsNewWindowTarget,
-                               bool aBypassClassifier,
-                               bool aForceAllowCookies);
+                               PRBool aIsNewWindowTarget,
+                               PRBool aBypassClassifier,
+                               PRBool aForceAllowCookies);
     NS_IMETHOD AddHeadersToChannel(nsIInputStream * aHeadersData, 
                                   nsIChannel * aChannel);
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,
                                    nsIURILoader * aURILoader,
-                                   bool aBypassClassifier);
+                                   PRBool aBypassClassifier);
 
     nsresult ScrollToAnchor(nsACString & curHash, nsACString & newHash,
                             PRUint32 aLoadType);
@@ -346,9 +346,9 @@ protected:
     // In this case it is the caller's responsibility to ensure
     // FireOnLocationChange is called.
     // In all other cases PR_FALSE is returned.
-    bool OnLoadingSite(nsIChannel * aChannel,
-                         bool aFireOnLocationChange,
-                         bool aAddToGlobalHistory = true);
+    PRBool OnLoadingSite(nsIChannel * aChannel,
+                         PRBool aFireOnLocationChange,
+                         PRBool aAddToGlobalHistory = PR_TRUE);
 
     // Returns PR_TRUE if would have called FireOnLocationChange,
     // but did not because aFireOnLocationChange was false on entry.
@@ -359,16 +359,16 @@ protected:
     // present, the owner should be gotten from it.
     // If OnNewURI calls AddToSessionHistory, it will pass its
     // aCloneSHChildren argument as aCloneChildren.
-    bool OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
+    PRBool OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
                     PRUint32 aLoadType,
-                    bool aFireOnLocationChange,
-                    bool aAddToGlobalHistory,
-                    bool aCloneSHChildren);
+                    PRBool aFireOnLocationChange,
+                    PRBool aAddToGlobalHistory,
+                    PRBool aCloneSHChildren);
 
     virtual void SetReferrerURI(nsIURI * aURI);
 
     // Session History
-    virtual bool ShouldAddToSessionHistory(nsIURI * aURI);
+    virtual PRBool ShouldAddToSessionHistory(nsIURI * aURI);
     // Either aChannel or aOwner must be null.  If aChannel is
     // present, the owner should be gotten from it.
     // If aCloneChildren is true, then our current session history's
@@ -377,10 +377,10 @@ protected:
     // the new session history entry.
     virtual nsresult AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
                                          nsISupports* aOwner,
-                                         bool aCloneChildren,
+                                         PRBool aCloneChildren,
                                          nsISHEntry ** aNewEntry);
     nsresult DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset,
-                               bool aCloneChildren);
+                               PRBool aCloneChildren);
 
     NS_IMETHOD LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType);
     NS_IMETHOD PersistLayoutHistoryState();
@@ -397,7 +397,7 @@ protected:
                                     nsDocShell *aSrcShell,
                                     PRUint32 aCloneID,
                                     nsISHEntry *aReplaceEntry,
-                                    bool aCloneChildren,
+                                    PRBool aCloneChildren,
                                     nsISHEntry **aDestEntry);
 
     // Child-walking callback for CloneAndReplace
@@ -407,11 +407,11 @@ protected:
 
     nsresult GetRootSessionHistory(nsISHistory ** aReturn);
     nsresult GetHttpChannel(nsIChannel * aChannel, nsIHttpChannel ** aReturn);
-    bool ShouldDiscardLayoutState(nsIHttpChannel * aChannel);
+    PRBool ShouldDiscardLayoutState(nsIHttpChannel * aChannel);
 
     // Determine whether this docshell corresponds to the given history entry,
     // via having a pointer to it in mOSHE or mLSHE.
-    bool HasHistoryEntry(nsISHEntry *aEntry) const
+    PRBool HasHistoryEntry(nsISHEntry *aEntry) const
     {
         return aEntry && (aEntry == mOSHE || aEntry == mLSHE);
     }
@@ -526,7 +526,7 @@ protected:
                      PRUint32 aChannelRedirectFlags);
 
     // Helper Routines
-    nsresult   ConfirmRepost(bool * aRepost);
+    nsresult   ConfirmRepost(PRBool * aRepost);
     NS_IMETHOD GetPromptAndStringBundle(nsIPrompt ** aPrompt,
         nsIStringBundle ** aStringBundle);
     NS_IMETHOD GetChildOffset(nsIDOMNode * aChild, nsIDOMNode * aParent,
@@ -546,8 +546,8 @@ protected:
                              const PRUnichar *aDescription,
                              const char *aCSSClass,
                              nsIChannel* aFailedChannel);
-    bool IsNavigationAllowed(bool aDisplayPrintErrorDialog = true);
-    bool IsPrintingOrPP(bool aDisplayErrorDialog = true);
+    PRBool IsNavigationAllowed(PRBool aDisplayPrintErrorDialog = PR_TRUE);
+    PRBool IsPrintingOrPP(PRBool aDisplayErrorDialog = PR_TRUE);
 
     nsresult SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer);
 
@@ -562,7 +562,7 @@ protected:
       return t_sec;
     }
 
-    bool IsFrame();
+    PRBool IsFrame();
 
     //
     // Helper method that is called when a new document (including any
@@ -581,10 +581,10 @@ protected:
 
     // Security checks to prevent frameset spoofing.  See comments at
     // implementation sites.
-    static bool CanAccessItem(nsIDocShellTreeItem* aTargetItem,
+    static PRBool CanAccessItem(nsIDocShellTreeItem* aTargetItem,
                                 nsIDocShellTreeItem* aAccessingItem,
-                                bool aConsiderOpener = true);
-    static bool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
+                                PRBool aConsiderOpener = PR_TRUE);
+    static PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
                                  nsIDocShellTreeItem* aTargetTreeItem);
 
     // Returns PR_TRUE if would have called FireOnLocationChange,
@@ -592,8 +592,8 @@ protected:
     // In this case it is the caller's responsibility to ensure
     // FireOnLocationChange is called.
     // In all other cases PR_FALSE is returned.
-    bool SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
-                         bool aFireOnLocationChange);
+    PRBool SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
+                         PRBool aFireOnLocationChange);
 
     // The following methods deal with saving and restoring content viewers
     // in session history.
@@ -629,7 +629,7 @@ protected:
     // be loaded in place of the current document, or null if such a request
     // has not been created yet. |aNewDocument| should be the document that will
     // replace the current document.
-    bool CanSavePresentation(PRUint32 aLoadType,
+    PRBool CanSavePresentation(PRUint32 aLoadType,
                                nsIRequest *aNewRequest,
                                nsIDocument *aNewDocument);
 
@@ -641,7 +641,7 @@ protected:
     // Begin the toplevel restore process for |aSHEntry|.
     // This simulates a channel open, and defers the real work until
     // RestoreFromHistory is called from a PLEvent.
-    nsresult RestorePresentation(nsISHEntry *aSHEntry, bool *aRestoring);
+    nsresult RestorePresentation(nsISHEntry *aSHEntry, PRBool *aRestoring);
 
     // Call BeginRestore(nsnull, PR_FALSE) for each child of this shell.
     nsresult BeginRestoreChildren();
@@ -653,19 +653,19 @@ protected:
     // Call this when a URI load is handed to us (via OnLinkClick or
     // InternalLoad).  This makes sure that we're not inside unload, or that if
     // we are it's still OK to load this URI.
-    bool IsOKToLoadURI(nsIURI* aURI);
+    PRBool IsOKToLoadURI(nsIURI* aURI);
     
     void ReattachEditorToWindow(nsISHEntry *aSHEntry);
 
     nsresult GetSessionStorageForURI(nsIURI* aURI,
                                      const nsSubstring& aDocumentURI,
-                                     bool create,
+                                     PRBool create,
                                      nsIDOMStorage** aStorage);
 
     // helpers for executing commands
     nsresult GetControllerForCommand(const char *inCommand,
                                      nsIController** outController);
-    nsresult IsCommandEnabled(const char * inCommand, bool* outEnabled);
+    nsresult IsCommandEnabled(const char * inCommand, PRBool* outEnabled);
     nsresult DoCommand(const char * inCommand);
     nsresult EnsureCommandHandler();
 
@@ -785,52 +785,52 @@ protected:
     PRInt32                    mPreviousTransIndex;
     PRInt32                    mLoadedTransIndex;
 
-    bool                       mCreated;
-    bool                       mAllowSubframes;
-    bool                       mAllowPlugins;
-    bool                       mAllowJavascript;
-    bool                       mAllowMetaRedirects;
-    bool                       mAllowImages;
-    bool                       mAllowDNSPrefetch;
-    bool                       mAllowWindowControl;
-    bool                       mCreatingDocument; // (should be) debugging only
-    bool                       mUseErrorPages;
-    bool                       mObserveErrorPages;
-    bool                       mAllowAuth;
-    bool                       mAllowKeywordFixup;
-    bool                       mIsOffScreenBrowser;
-    bool                       mIsActive;
-    bool                       mIsAppTab;
-    bool                       mUseGlobalHistory;
+    PRPackedBool               mCreated;
+    PRPackedBool               mAllowSubframes;
+    PRPackedBool               mAllowPlugins;
+    PRPackedBool               mAllowJavascript;
+    PRPackedBool               mAllowMetaRedirects;
+    PRPackedBool               mAllowImages;
+    PRPackedBool               mAllowDNSPrefetch;
+    PRPackedBool               mAllowWindowControl;
+    PRPackedBool               mCreatingDocument; // (should be) debugging only
+    PRPackedBool               mUseErrorPages;
+    PRPackedBool               mObserveErrorPages;
+    PRPackedBool               mAllowAuth;
+    PRPackedBool               mAllowKeywordFixup;
+    PRPackedBool               mIsOffScreenBrowser;
+    PRPackedBool               mIsActive;
+    PRPackedBool               mIsAppTab;
+    PRPackedBool               mUseGlobalHistory;
 
     // This boolean is set to true right before we fire pagehide and generally
     // unset when we embed a new content viewer.  While it's true no navigation
     // is allowed in this docshell.
-    bool                       mFiredUnloadEvent;
+    PRPackedBool               mFiredUnloadEvent;
 
     // this flag is for bug #21358. a docshell may load many urls
     // which don't result in new documents being created (i.e. a new
     // content viewer) we want to make sure we don't call a on load
     // event more than once for a given content viewer.
-    bool                       mEODForCurrentDocument;
-    bool                       mURIResultedInDocument;
+    PRPackedBool               mEODForCurrentDocument;
+    PRPackedBool               mURIResultedInDocument;
 
-    bool                       mIsBeingDestroyed;
+    PRPackedBool               mIsBeingDestroyed;
 
-    bool                       mIsExecutingOnLoadHandler;
+    PRPackedBool               mIsExecutingOnLoadHandler;
 
     // Indicates that a DocShell in this "docshell tree" is printing
-    bool                       mIsPrintingOrPP;
+    PRPackedBool               mIsPrintingOrPP;
 
     // Indicates to CreateContentViewer() that it is safe to cache the old
     // presentation of the page, and to SetupNewViewer() that the old viewer
     // should be passed a SHEntry to save itself into.
-    bool                       mSavingOldViewer;
+    PRPackedBool               mSavingOldViewer;
 
     // @see nsIDocShellHistory::createdDynamically
-    bool                       mDynamicallyCreated;
+    PRPackedBool               mDynamicallyCreated;
 #ifdef DEBUG
-    bool                       mInEnsureScriptEnv;
+    PRPackedBool               mInEnsureScriptEnv;
 #endif
     PRUint64                   mHistoryID;
 

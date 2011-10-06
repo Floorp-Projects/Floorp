@@ -95,14 +95,14 @@ static char ruler2[] =
 "0123456789012345678901234567890123456789012345678901234567890123456789012";
 
 
-bool TestASCIILB(nsILineBreaker *lb,
+PRBool TestASCIILB(nsILineBreaker *lb,
                  const char* in, const PRUint32 len, 
                  const PRUint32* out, PRUint32 outlen)
 {
          NS_ConvertASCIItoUTF16 eng1(in);
          PRUint32 i,j;
          PRUint32 res[256];
-         bool ok = true;
+         PRBool ok = PR_TRUE;
          PRInt32 curr;
          for(i = 0, curr = 0; (curr != NS_LINEBREAKER_NEED_MORE_TEXT) && 
              (i < 256); i++)
@@ -148,7 +148,7 @@ bool TestASCIILB(nsILineBreaker *lb,
          return ok;
 }
 
-bool TestASCIIWB(nsIWordBreaker *lb,
+PRBool TestASCIIWB(nsIWordBreaker *lb,
                  const char* in, const PRUint32 len, 
                  const PRUint32* out, PRUint32 outlen)
 {
@@ -156,7 +156,7 @@ bool TestASCIIWB(nsIWordBreaker *lb,
 
          PRUint32 i,j;
          PRUint32 res[256];
-         bool ok = true;
+         PRBool ok = PR_TRUE;
          PRInt32 curr = 0;
 
          for(i = 0, curr = lb->NextWord(eng1.get(), eng1.Length(), curr);
@@ -203,14 +203,14 @@ bool TestASCIIWB(nsIWordBreaker *lb,
 }
      
      
-bool TestLineBreaker()
+PRBool TestLineBreaker()
 {
    printf("===========================\n");
    printf("Finish nsILineBreaker Test \n");
    printf("===========================\n");
    nsILineBreaker *t = NULL;
    nsresult res;
-   bool ok = true;
+   PRBool ok = PR_TRUE;
    res = CallGetService(kLBrkCID, &t);
            
    printf("Test 1 - GetService():\n");
@@ -269,14 +269,14 @@ bool TestLineBreaker()
  return ok;
 }
 
-bool TestWordBreaker()
+PRBool TestWordBreaker()
 {
    printf("===========================\n");
    printf("Finish nsIWordBreaker Test \n");
    printf("===========================\n");
    nsIWordBreaker *t = NULL;
    nsresult res;
-   bool ok = true;
+   PRBool ok = PR_TRUE;
    res = CallGetService(kWBrkCID, &t);
            
    printf("Test 1 - GetService():\n");
@@ -393,7 +393,7 @@ void SamplePrintWordWithBreak()
       {
         NS_ConvertASCIItoUTF16 nextFragText(wb[i+1]);
  
-        bool canBreak = true;
+        PRBool canBreak = PR_TRUE;
         canBreak = wbk->BreakInBetween( fragText.get(), 
                                         fragText.Length(),
                                         nextFragText.get(), 
@@ -421,7 +421,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
    
    nsWordRange res = wbk->FindWord(fragText.get(), fragText.Length(), offset);
 
-   bool canBreak;
+   PRBool canBreak;
    nsAutoString result(Substring(fragText, res.mBegin, res.mEnd-res.mBegin));
 
    if((PRUint32)fragText.Length() == res.mEnd) // if we hit the end of the fragment
@@ -489,8 +489,8 @@ int main(int argc, char** argv) {
    // --------------------------------------------
    printf("Test Line Break\n");
 
-   bool lbok ; 
-   bool wbok ; 
+   PRBool lbok ; 
+   PRBool wbok ; 
    lbok =TestWordBreaker();
    if(lbok)
       printf("Line Break Test\nOK\n");

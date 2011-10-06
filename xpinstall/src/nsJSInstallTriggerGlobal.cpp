@@ -218,7 +218,7 @@ InstallTriggerGlobalUpdateEnabled(JSContext *cx, JSObject *obj, uintN argc, jsva
   if (scriptContext)
     globalObject = scriptContext->GetGlobalObject();
 
-  bool nativeRet = false;
+  PRBool nativeRet = PR_FALSE;
   if (globalObject)
     nativeThis->UpdateEnabled(globalObject, XPI_GLOBAL, &nativeRet);
 
@@ -278,7 +278,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
   }
 
-  bool abortLoad = false;
+  PRBool abortLoad = PR_FALSE;
 
   // parse associative array of installs
   if ( argc >= 1 && JSVAL_IS_OBJECT(argv[0]) && JSVAL_TO_OBJECT(argv[0]) )
@@ -415,7 +415,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
             if (installInfo)
             {
                 // installInfo now owns triggers
-                bool enabled = false;
+                PRBool enabled = PR_FALSE;
                 nativeThis->UpdateEnabled(checkuri, XPI_WHITELIST, &enabled);
                 if (!enabled)
                 {
@@ -434,7 +434,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
                         trigger->SaveCallback( cx, argv[1] );
                     }
 
-                    bool result;
+                    PRBool result;
                     nativeThis->StartInstall(installInfo, &result);
                     *rval = BOOLEAN_TO_JSVAL(result);
                 }
@@ -538,7 +538,7 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
                 {
                     // installInfo owns trigger now
                     trigger.forget();
-                    bool enabled = false;
+                    PRBool enabled = PR_FALSE;
                     nativeThis->UpdateEnabled(checkuri, XPI_WHITELIST,
                                               &enabled);
                     if (!enabled)
@@ -552,7 +552,7 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
                     }
                     else
                     {
-                        bool nativeRet = false;
+                        PRBool nativeRet = PR_FALSE;
                         nativeThis->StartInstall(installInfo, &nativeRet);
                         *rval = BOOLEAN_TO_JSVAL(nativeRet);
                     }
@@ -575,7 +575,7 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
   if (!nativeThis)
     return JS_FALSE;
 
-  bool         nativeRet;
+  PRBool       nativeRet;
   PRInt32      flags = 0;
 
   *rval = JSVAL_FALSE;
@@ -644,7 +644,7 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
             {
                 // From here trigger is owned by installInfo until passed on to nsXPInstallManager
                 trigger.forget();
-                bool enabled = false;
+                PRBool enabled = PR_FALSE;
                 nativeThis->UpdateEnabled(checkuri, XPI_WHITELIST, &enabled);
                 if (!enabled)
                 {

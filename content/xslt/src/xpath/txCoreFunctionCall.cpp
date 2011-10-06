@@ -329,7 +329,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = mParams[1]->evaluateToString(aContext, arg2);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            bool result = false;
+            PRBool result = PR_FALSE;
             if (arg2.IsEmpty()) {
                 result = PR_TRUE;
             }
@@ -615,7 +615,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         
         case BOOLEAN:
         {
-            bool result;
+            PRBool result;
             nsresult rv = mParams[0]->evaluateToBool(aContext, result);
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -634,7 +634,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             txXPathTreeWalker walker(aContext->getContextNode());
 
             nsAutoString lang;
-            bool found;
+            PRBool found;
             do {
                 found = walker.getAttr(nsGkAtoms::lang, kNameSpaceID_XML,
                                        lang);
@@ -650,7 +650,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = mParams[0]->evaluateToString(aContext, arg);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            bool result =
+            PRBool result =
                 StringBeginsWith(lang, arg,
                                  txCaseInsensitiveStringComparator()) &&
                 (lang.Length() == arg.Length() ||
@@ -662,7 +662,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
         case _NOT:
         {
-            bool result;
+            PRBool result;
             rv = mParams[0]->evaluateToBool(aContext, result);
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -689,7 +689,7 @@ txCoreFunctionCall::getReturnType()
     return descriptTable[mType].mReturnType;
 }
 
-bool
+PRBool
 txCoreFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     switch (mType) {
@@ -750,7 +750,7 @@ txCoreFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 }
 
 // static
-bool
+PRBool
 txCoreFunctionCall::getTypeFromAtom(nsIAtom* aName, eType& aType)
 {
     PRUint32 i;

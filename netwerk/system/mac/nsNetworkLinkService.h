@@ -58,8 +58,8 @@ public:
     nsresult Shutdown();
 
 private:
-    bool mLinkUp;
-    bool mStatusKnown;
+    PRPackedBool mLinkUp;
+    PRPackedBool mStatusKnown;
 
     SCNetworkReachabilityRef mReachability;
     CFRunLoopRef mCFRunLoop;

@@ -79,17 +79,17 @@ public:
   virtual const nsAttrValue* DoGetClasses() const;
 
   virtual mozilla::css::StyleRule* GetInlineStyleRule();
-  NS_IMETHOD SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule, bool aNotify);
+  NS_IMETHOD SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule, PRBool aNotify);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
 
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
+                             PRBool aNotify);
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                const nsAString* aValue, bool aNotify);
+                                const nsAString* aValue, PRBool aNotify);
 
   nsIDOMCSSStyleDeclaration* GetStyle(nsresult* retval);
 
@@ -104,9 +104,9 @@ protected:
    */
   void ParseStyleAttribute(const nsAString& aValue,
                            nsAttrValue& aResult,
-                           bool aForceInDataDoc);
+                           PRBool aForceInDataDoc);
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                                 const nsAString& aValue, nsAttrValue& aResult);
 
   /**
@@ -115,7 +115,7 @@ protected:
    * string.  If aForceInDataDoc is true, will reparse even if we're in a data
    * document.
    */
-  nsresult  ReparseStyleAttribute(bool aForceInDataDoc);
+  nsresult  ReparseStyleAttribute(PRBool aForceInDataDoc);
 };
 
 class nsStyledElement : public nsStyledElementNotElementCSSInlineStyle {

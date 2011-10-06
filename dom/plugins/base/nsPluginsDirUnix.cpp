@@ -112,21 +112,21 @@ static void SearchForSoname(const char* name, char** soname)
     PR_CloseDir(fdDir);
 }
 
-static bool LoadExtraSharedLib(const char *name, char **soname, bool tryToGetSoname)
+static PRBool LoadExtraSharedLib(const char *name, char **soname, PRBool tryToGetSoname)
 {
-    bool ret = true;
+    PRBool ret = PR_TRUE;
     PRLibSpec tempSpec;
     PRLibrary *handle;
     tempSpec.type = PR_LibSpec_Pathname;
     tempSpec.value.pathname = name;
     handle = PR_LoadLibraryWithFlags(tempSpec, PR_LD_NOW|PR_LD_GLOBAL);
     if (!handle) {
-        ret = false;
+        ret = PR_FALSE;
         DisplayPR_LoadLibraryErrorMessage(name);
         if (tryToGetSoname) {
             SearchForSoname(name, soname);
             if (*soname) {
-                ret = LoadExtraSharedLib((const char *) *soname, NULL, false);
+                ret = LoadExtraSharedLib((const char *) *soname, NULL, PR_FALSE);
             }
         }
     }
@@ -154,11 +154,11 @@ static void LoadExtraSharedLibs()
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
     if (NS_SUCCEEDED(res) && (prefs != nsnull)) {
         char *sonameList = NULL;
-        bool prefSonameListIsSet = true;
+        PRBool prefSonameListIsSet = PR_TRUE;
         res = prefs->GetCharPref(PREF_PLUGINS_SONAME, &sonameList);
         if (!sonameList) {
             // pref is not set, lets use hardcoded list
-            prefSonameListIsSet = false;
+            prefSonameListIsSet = PR_FALSE;
             sonameList = PL_strdup(DEFAULT_EXTRA_LIBS_LIST);
         }
         if (sonameList) {
@@ -177,7 +177,7 @@ static void LoadExtraSharedLibs()
             char sonameListToSave[PLUGIN_MAX_LEN_OF_TMP_ARR] = "";
             for (int i=0; i<numOfLibs; i++) {
                 // trim out head/tail white spaces (just in case)
-                bool head = true;
+                PRBool head = PR_TRUE;
                 p = arrayOfLibs[i];
                 while (*p) {
                     if (*p == ' ' || *p == '\t') {
@@ -187,14 +187,14 @@ static void LoadExtraSharedLibs()
                             *p = 0;
                         }
                     } else {
-                        head = false;
+                        head = PR_FALSE;
                         p++;
                     }
                 }
                 if (!arrayOfLibs[i][0]) {
                     continue; // null string
                 }
-                bool tryToGetSoname = true;
+                PRBool tryToGetSoname = PR_TRUE;
                 if (PL_strchr(arrayOfLibs[i], '/')) {
                     //assuming it's real name, try to stat it
                     struct stat st;
@@ -202,7 +202,7 @@ static void LoadExtraSharedLibs()
                         //get just a file name
                         arrayOfLibs[i] = PL_strrchr(arrayOfLibs[i], '/') + 1;
                     } else
-                        tryToGetSoname = false;
+                        tryToGetSoname = PR_FALSE;
                 }
                 char *soname = NULL;
                 if (LoadExtraSharedLib(arrayOfLibs[i], &soname, tryToGetSoname)) {
@@ -241,11 +241,11 @@ static void LoadExtraSharedLibs()
 
 /* nsPluginsDir implementation */
 
-bool nsPluginsDir::IsPluginFile(nsIFile* file)
+PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
     nsCAutoString filename;
     if (NS_FAILED(file->GetNativeLeafName(filename)))
-        return false;
+        return PR_FALSE;
 
 #ifdef ANDROID
     // It appears that if you load
@@ -254,21 +254,21 @@ bool nsPluginsDir::IsPluginFile(nsIFile* file)
     // Since these are just helper libs, we can ignore.
     const char *cFile = filename.get();
     if (strstr(cFile, "libstagefright") != NULL)
-        return false;
+        return PR_FALSE;
 #endif
 
     NS_NAMED_LITERAL_CSTRING(dllSuffix, LOCAL_PLUGIN_DLL_SUFFIX);
     if (filename.Length() > dllSuffix.Length() &&
         StringEndsWith(filename, dllSuffix))
-        return true;
+        return PR_TRUE;
     
 #ifdef LOCAL_PLUGIN_DLL_ALT_SUFFIX
     NS_NAMED_LITERAL_CSTRING(dllAltSuffix, LOCAL_PLUGIN_DLL_ALT_SUFFIX);
     if (filename.Length() > dllAltSuffix.Length() &&
         StringEndsWith(filename, dllAltSuffix))
-        return true;
+        return PR_TRUE;
 #endif
-    return false;
+    return PR_FALSE;
 }
 
 /* nsPluginFile implementation */
@@ -286,7 +286,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
 {
     PRLibSpec libSpec;
     libSpec.type = PR_LibSpec_Pathname;
-    bool exists = false;
+    PRBool exists = PR_FALSE;
     mPlugin->Exists(&exists);
     if (!exists)
         return NS_ERROR_FILE_NOT_FOUND;

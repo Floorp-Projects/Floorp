@@ -72,14 +72,14 @@ public:
   /** LayerOGL implementation */
   void Destroy();
   Layer* GetLayer();
-  virtual bool IsEmpty();
+  virtual PRBool IsEmpty();
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
 
 private:
   friend class BasicBufferOGL;
 
-  bool CreateSurface();
+  PRBool CreateSurface();
 
   nsRefPtr<Buffer> mBuffer;
 };
@@ -105,7 +105,7 @@ public:
   // LayerOGL impl
   void Destroy();
   Layer* GetLayer();
-  virtual bool IsEmpty();
+  virtual PRBool IsEmpty();
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
 

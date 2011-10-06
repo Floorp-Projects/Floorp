@@ -101,10 +101,10 @@ nsMIMEInfoBase::GetFileExtensions(nsIUTF8StringEnumerator** aResult)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::ExtensionExists(const nsACString& aExtension, bool *_retval)
+nsMIMEInfoBase::ExtensionExists(const nsACString& aExtension, PRBool *_retval)
 {
     NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
-    bool found = false;
+    PRBool found = PR_FALSE;
     PRUint32 extCount = mExtensions.Length();
     if (extCount < 1) return NS_OK;
 
@@ -136,7 +136,7 @@ nsMIMEInfoBase::SetPrimaryExtension(const nsACString& aExtension)
   NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
   PRUint32 extCount = mExtensions.Length();
   PRUint8 i;
-  bool found = false;
+  PRBool found = PR_FALSE;
   for (i=0; i < extCount; i++) {
     const nsCString& ext = mExtensions[i];
     if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
@@ -195,7 +195,7 @@ nsMIMEInfoBase::SetDescription(const nsAString& aDescription)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::Equals(nsIMIMEInfo *aMIMEInfo, bool *_retval)
+nsMIMEInfoBase::Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval)
 {
     if (!aMIMEInfo) return NS_ERROR_NULL_POINTER;
 
@@ -276,7 +276,7 @@ nsMIMEInfoBase::SetPreferredAction(nsHandlerInfoAction aPreferredAction)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::GetAlwaysAskBeforeHandling(bool * aAlwaysAsk)
+nsMIMEInfoBase::GetAlwaysAskBeforeHandling(PRBool * aAlwaysAsk)
 {
   *aAlwaysAsk = mAlwaysAskBeforeHandling;
 
@@ -284,7 +284,7 @@ nsMIMEInfoBase::GetAlwaysAskBeforeHandling(bool * aAlwaysAsk)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::SetAlwaysAskBeforeHandling(bool aAlwaysAsk)
+nsMIMEInfoBase::SetAlwaysAskBeforeHandling(PRBool aAlwaysAsk)
 {
   mAlwaysAskBeforeHandling = aAlwaysAsk;
   return NS_OK;
@@ -434,11 +434,11 @@ nsMIMEInfoImpl::GetDefaultDescription(nsAString& aDefaultDescription)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoImpl::GetHasDefaultHandler(bool * _retval)
+nsMIMEInfoImpl::GetHasDefaultHandler(PRBool * _retval)
 {
   *_retval = !mDefaultAppDescription.IsEmpty();
   if (mDefaultApplication) {
-    bool exists;
+    PRBool exists;
     *_retval = NS_SUCCEEDED(mDefaultApplication->Exists(&exists)) && exists;
   }
   return NS_OK;

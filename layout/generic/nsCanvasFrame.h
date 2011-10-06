@@ -42,6 +42,7 @@
 
 #include "nsHTMLContainerFrame.h"
 #include "nsIScrollPositionListener.h"
+#include "nsAbsoluteContainingBlock.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 
@@ -63,7 +64,8 @@ public:
   nsCanvasFrame(nsStyleContext* aContext)
   : nsHTMLContainerFrame(aContext),
     mDoPaintFocus(PR_FALSE),
-    mAddedScrollPositionListener(false) {}
+    mAddedScrollPositionListener(PR_FALSE),
+    mAbsoluteContainer(kAbsoluteList) {}
 
   NS_DECL_QUERYFRAME_TARGET(nsCanvasFrame)
   NS_DECL_QUERYFRAME
@@ -82,13 +84,17 @@ public:
   NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame);
 
+  virtual nsFrameList GetChildList(ChildListID aListID) const;
+  virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
+
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual PRBool IsContainingBlock() const { return PR_TRUE; }
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsHTMLContainerFrame::IsFrameOfType(aFlags &
              ~(nsIFrame::eCanContainOverflowContainers));
@@ -97,7 +103,7 @@ public:
   /** SetHasFocus tells the CanvasFrame to draw with focus ring
    *  @param aHasFocus PR_TRUE to show focus ring, PR_FALSE to hide it
    */
-  NS_IMETHOD SetHasFocus(bool aHasFocus);
+  NS_IMETHOD SetHasFocus(PRBool aHasFocus);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
@@ -118,7 +124,7 @@ public:
 
   virtual nsresult StealFrame(nsPresContext* aPresContext,
                               nsIFrame*      aChild,
-                              bool           aForceNormal)
+                              PRBool         aForceNormal)
   {
     NS_ASSERTION(!aForceNormal, "No-one should be passing this in here");
 
@@ -134,7 +140,8 @@ public:
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
-  NS_IMETHOD GetContentForEvent(nsEvent* aEvent,
+  NS_IMETHOD GetContentForEvent(nsPresContext* aPresContext,
+                                nsEvent* aEvent,
                                 nsIContent** aContent);
 
   nsRect CanvasArea() const;
@@ -143,8 +150,9 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
   // Data members
-  bool                      mDoPaintFocus;
-  bool                      mAddedScrollPositionListener;
+  PRPackedBool              mDoPaintFocus;
+  PRPackedBool              mAddedScrollPositionListener;
+  nsAbsoluteContainingBlock mAbsoluteContainer;
 };
 
 /**
@@ -161,7 +169,7 @@ public:
     mExtraBackgroundColor = NS_RGBA(0,0,0,0);
   }
 
-  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+  virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion)
   {
@@ -170,7 +178,7 @@ public:
                                              aAllowVisibleRegionExpansion);
   }
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aForceTransparentSurface = nsnull)
+                                   PRBool* aForceTransparentSurface = nsnull)
   {
     if (aForceTransparentSurface) {
       *aForceTransparentSurface = PR_FALSE;
@@ -179,7 +187,7 @@ public:
       return nsRegion(GetBounds(aBuilder));
     return nsDisplayBackground::GetOpaqueRegion(aBuilder);
   }
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
+  virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
   {
     nscolor background;
     if (!nsDisplayBackground::IsUniform(aBuilder, &background))

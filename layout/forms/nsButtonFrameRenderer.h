@@ -80,10 +80,10 @@ public:
 
   void SetFrame(nsFrame* aFrame, nsPresContext* aPresContext);
  
-  void SetDisabled(bool aDisabled, bool notify);
+  void SetDisabled(PRBool aDisabled, PRBool notify);
 
-  bool isActive();
-  bool isDisabled();
+  PRBool isActive();
+  PRBool isDisabled();
 
   void GetButtonOuterFocusRect(const nsRect& aRect, nsRect& aResult);
   void GetButtonRect(const nsRect& aRect, nsRect& aResult);

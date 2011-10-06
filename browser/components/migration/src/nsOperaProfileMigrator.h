@@ -80,10 +80,10 @@ public:
     PrefType      type;
     const char*   targetPrefName;
     prefConverter prefSetterFunc;
-    bool          prefHasValue;
+    PRBool        prefHasValue;
     union {
       PRInt32     intValue;
-      bool        boolValue;
+      PRBool      boolValue;
       char*       stringValue;
     };
   };
@@ -98,7 +98,7 @@ public:
   static nsresult SetString(void* aTransform, nsIPrefBranch* aBranch);
 
 protected:
-  nsresult CopyPreferences(bool aReplace);
+  nsresult CopyPreferences(PRBool aReplace);
   nsresult ParseColor(nsINIParser &aParser, const char* aSectionName,
                       char** aResult);
   nsresult CopyUserContentSheet(nsINIParser &aParser);
@@ -106,7 +106,7 @@ protected:
   nsresult GetInteger(nsINIParser &aParser, const char* aSectionName, 
                       const char* aKeyName, PRInt32* aResult);
 
-  nsresult CopyCookies(bool aReplace);
+  nsresult CopyCookies(PRBool aReplace);
   /**
    * Migrate history to Places.
    * This will end up calling CopyHistoryBatched helper, that provides batch
@@ -115,8 +115,8 @@ protected:
    * @param aReplace
    *        Indicates if we should replace current history or append to it.
    */
-  nsresult CopyHistory(bool aReplace);
-  nsresult CopyHistoryBatched(bool aReplace);
+  nsresult CopyHistory(PRBool aReplace);
+  nsresult CopyHistoryBatched(PRBool aReplace);
   /**
    * Migrate bookmarks to Places.
    * This will end up calling CopyBookmarksBatched helper, that provides batch
@@ -126,8 +126,8 @@ protected:
    *        Indicates if we should replace current bookmarks or append to them.
    *        When appending we will usually default to bookmarks menu.
    */
-  nsresult CopyBookmarks(bool aReplace);
-  nsresult CopyBookmarksBatched(bool aReplace);
+  nsresult CopyBookmarks(PRBool aReplace);
+  nsresult CopyBookmarksBatched(PRBool aReplace);
   void     ClearToolbarFolder(nsINavBookmarksService * aBookmarksService,
                               PRInt64 aToolbarFolder);
   nsresult ParseBookmarksFolder(nsILineInputStream* aStream, 
@@ -208,14 +208,14 @@ private:
     nsCString id;
     nsCString data;
     PRInt32 expiryTime;
-    bool isSecure;
+    PRBool isSecure;
   };
 
   PRUint32 mAppVersion;
   PRUint32 mFileVersion;
   PRUint16 mTagTypeLength;
   PRUint16 mPayloadTypeLength;
-  bool     mCookieOpen;
+  PRBool   mCookieOpen;
   Cookie   mCurrCookie;
   PRUint8  mCurrHandlingInfo;
 };

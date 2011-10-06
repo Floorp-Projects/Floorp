@@ -77,6 +77,7 @@
 #include "jsversion.h"
 
 #include "jsinferinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 #include "jsautooplen.h"        // generated headers last
@@ -456,12 +457,9 @@ str_quote(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 str_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     JSString *str;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, str_toSource, &str, &ok))
-        return ok;
+    if (!GetPrimitiveThis(cx, vp, &str))
+        return false;
 
     str = js_QuoteString(cx, str, '"');
     if (!str)
@@ -495,7 +493,7 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
         cx->free_(t);
         return false;
     }
-    args.rval().setString(str);
+    vp->setString(str);
     return true;
 }
 
@@ -504,14 +502,10 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
 JSBool
 js_str_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     JSString *str;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, js_str_toString, &str, &ok))
-        return ok;
-
-    args.rval().setString(str);
+    if (!GetPrimitiveThis(cx, vp, &str))
+        return false;
+    vp->setString(str);
     return true;
 }
 
@@ -1007,19 +1001,26 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, jsuint patlen, js
     /* Absolute offset from the beginning of the logical string textstr. */
     jsint pos = 0;
 
+    // TODO: consider branching to a simple loop if patlen == 1
+
     for (JSLinearString **outerp = strs.begin(); outerp != strs.end(); ++outerp) {
-        /* Try to find a match within 'outer'. */
+        /* First try to match without spanning two nodes. */
         JSLinearString *outer = *outerp;
         const jschar *chars = outer->chars();
         size_t len = outer->length();
         jsint matchResult = StringMatch(chars, len, pat, patlen);
         if (matchResult != -1) {
-            /* Matched! */
             *match = pos + matchResult;
             return true;
         }
 
-        /* Try to find a match starting in 'outer' and running into other nodes. */
+        /* Test the overlap. */
+        JSLinearString **innerp = outerp;
+
+        /*
+         * Start searching at the first place where StringMatch wouldn't have
+         * found the match.
+         */
         const jschar *const text = chars + (patlen > len ? 0 : len - patlen + 1);
         const jschar *const textend = chars + len;
         const jschar p0 = *pat;
@@ -1028,7 +1029,6 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, jsuint patlen, js
         for (const jschar *t = text; t != textend; ) {
             if (*t++ != p0)
                 continue;
-            JSLinearString **innerp = outerp;
             const jschar *ttend = textend;
             for (const jschar *pp = p1, *tt = t; pp != patend; ++pp, ++tt) {
                 while (tt == ttend) {
@@ -2087,7 +2087,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
     args.calleev().setObject(*rdata.lambda);
     args.thisv().setUndefined();
 
-    Value *sp = args.array();
+    Value *sp = args.argv();
     sp[0].setString(matchStr);
     sp[1].setInt32(fm.match());
     sp[2].setString(rdata.str);

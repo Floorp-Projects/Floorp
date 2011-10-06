@@ -74,7 +74,7 @@ static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 // nsCoreUtils
 ////////////////////////////////////////////////////////////////////////////////
 
-bool
+PRBool
 nsCoreUtils::HasClickListener(nsIContent *aContent)
 {
   NS_ENSURE_TRUE(aContent, PR_FALSE);
@@ -150,7 +150,7 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
                      tcContent, tcFrame, presShell, rootWidget);
 }
 
-bool
+PRBool
 nsCoreUtils::DispatchMouseEvent(PRUint32 aEventType,
                                 nsIPresShell *aPresShell,
                                 nsIContent *aContent)
@@ -280,7 +280,7 @@ nsCoreUtils::GetRoleContent(nsINode *aNode)
   return content;
 }
 
-bool
+PRBool
 nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
                           nsINode *aPossibleDescendantNode,
                           nsINode *aRootNode)
@@ -451,7 +451,7 @@ nsCoreUtils::GetDocShellTreeItemFor(nsINode *aNode)
   return docShellTreeItem;
 }
 
-bool
+PRBool
 nsCoreUtils::IsRootDocument(nsIDocument *aDocument)
 {
   nsCOMPtr<nsISupports> container = aDocument->GetContainer();
@@ -465,7 +465,7 @@ nsCoreUtils::IsRootDocument(nsIDocument *aDocument)
   return !parentTreeItem;
 }
 
-bool
+PRBool
 nsCoreUtils::IsContentDocument(nsIDocument *aDocument)
 {
   nsCOMPtr<nsISupports> container = aDocument->GetContainer();
@@ -498,11 +498,11 @@ nsCoreUtils::IsTabDocument(nsIDocument* aDocumentNode)
   return parentTreeItem == rootTreeItem;
 }
 
-bool
+PRBool
 nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
 {
   nsIURI *uri = aDocument->GetDocumentURI();
-  bool isAboutScheme = false;
+  PRBool isAboutScheme = PR_FALSE;
   uri->SchemeIs("about", &isAboutScheme);
   if (!isAboutScheme)
     return PR_FALSE;
@@ -516,7 +516,7 @@ nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
   return StringBeginsWith(path, neterror) || StringBeginsWith(path, certerror);
 }
 
-bool
+PRBool
 nsCoreUtils::IsCorrectFrameType(nsIFrame *aFrame, nsIAtom *aAtom)
 {
   NS_ASSERTION(aFrame != nsnull,
@@ -547,14 +547,14 @@ nsCoreUtils::GetDOMNodeForContainer(nsIDocShellTreeItem *aContainer)
   return node;
 }
 
-bool
+PRBool
 nsCoreUtils::GetID(nsIContent *aContent, nsAString& aID)
 {
   nsIAtom *idAttribute = aContent->GetIDAttributeName();
   return idAttribute ? aContent->GetAttr(kNameSpaceID_None, idAttribute, aID) : PR_FALSE;
 }
 
-bool
+PRBool
 nsCoreUtils::GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr, PRInt32 *aUInt)
 {
   nsAutoString value;
@@ -571,7 +571,7 @@ nsCoreUtils::GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr, PRInt32 *aUInt)
   return PR_FALSE;
 }
 
-bool
+PRBool
 nsCoreUtils::IsXLink(nsIContent *aContent)
 {
   if (!aContent)
@@ -759,7 +759,7 @@ nsCoreUtils::GetPreviousSensibleColumn(nsITreeColumn *aColumn)
   return prevColumn.forget();
 }
 
-bool
+PRBool
 nsCoreUtils::IsColumnHidden(nsITreeColumn *aColumn)
 {
   nsCOMPtr<nsIDOMElement> element;
@@ -820,7 +820,7 @@ nsAccessibleDOMStringList::GetLength(PRUint32 *aLength)
 }
 
 NS_IMETHODIMP
-nsAccessibleDOMStringList::Contains(const nsAString& aString, bool *aResult)
+nsAccessibleDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
 {
   *aResult = mNames.Contains(aString);
 

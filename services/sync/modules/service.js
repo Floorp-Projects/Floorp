@@ -944,8 +944,6 @@ WeaveSvc.prototype = {
     // Reset all engines and clear keys.
     this.resetClient();
     CollectionKeys.clear();
-    Status.resetBackoff();
-    Status.resetSync();
 
     // Reset Weave prefs.
     this._ignorePrefObserver = true;

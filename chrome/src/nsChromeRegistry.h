@@ -90,12 +90,12 @@ public:
   NS_IMETHOD ReloadChrome();
   NS_IMETHOD RefreshSkins();
   NS_IMETHOD AllowScriptsForPackage(nsIURI* url,
-                                    bool* _retval NS_OUTPARAM);
+                                    PRBool* _retval NS_OUTPARAM);
   NS_IMETHOD AllowContentToAccess(nsIURI* url,
-                                  bool* _retval NS_OUTPARAM);
+                                  PRBool* _retval NS_OUTPARAM);
 
   // nsIChromeRegistry methods:
-  NS_IMETHOD_(bool) WrappersEnabled(nsIURI *aURI);
+  NS_IMETHOD_(PRBool) WrappersEnabled(nsIURI *aURI);
   NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult);
 
   // nsChromeRegistry methods:
@@ -203,7 +203,7 @@ public:
     CONTENT_ACCESSIBLE = 1 << 2
   };
 
-  bool mInitialized;
+  PRBool mInitialized;
 
   // "Override" table (chrome URI string -> real URI)
   nsInterfaceHashtable<nsURIHashKey, nsIURI> mOverrideTable;

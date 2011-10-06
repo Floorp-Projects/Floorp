@@ -104,7 +104,7 @@ protected:
     
     nsresult                        mStatus;
     PRInt32                         mPriority;
-    bool                            mIsCanceling;
+    PRBool                          mIsCanceling;
 
     /* Telemetry */
     mozilla::TimeStamp              mDefaultRequestCreationTime;
