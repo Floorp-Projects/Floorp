@@ -39,10 +39,12 @@
 #include "nsHyphenator.h"
 #include "nsIAtom.h"
 #include "nsIFile.h"
+#include "nsIURI.h"
 #include "nsIProperties.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
 
@@ -89,20 +91,20 @@ nsHyphenationManager::GetHyphenator(nsIAtom *aLocale)
   if (hyph) {
     return hyph.forget();
   }
-  nsCOMPtr<nsIFile> file = mPatternFiles.Get(aLocale);
-  if (!file) {
+  nsCOMPtr<nsIURI> uri = mPatternFiles.Get(aLocale);
+  if (!uri) {
     nsCOMPtr<nsIAtom> alias = mHyphAliases.Get(aLocale);
     if (alias) {
       mHyphenators.Get(alias, getter_AddRefs(hyph));
       if (hyph) {
         return hyph.forget();
       }
-      file = mPatternFiles.Get(alias);
-      if (file) {
+      uri = mPatternFiles.Get(alias);
+      if (uri) {
         aLocale = alias;
       }
     }
-    if (!file) {
+    if (!uri) {
       // In the case of a locale such as "de-DE-1996", we try replacing
       // successive trailing subtags with "-*" to find fallback patterns,
       // so "de-DE-1996" -> "de-DE-*" (and then recursively -> "de-*")
@@ -120,14 +122,14 @@ nsHyphenationManager::GetHyphenator(nsIAtom *aLocale)
       }
     }
   }
-  hyph = new nsHyphenator(file);
+  hyph = new nsHyphenator(uri);
   if (hyph->IsValid()) {
     mHyphenators.Put(aLocale, hyph);
     return hyph.forget();
   }
 #ifdef DEBUG
   nsCString msg;
-  file->GetNativePath(msg);
+  uri->GetSpec(msg);
   msg.Insert("failed to load patterns from ", 0);
   NS_WARNING(msg.get());
 #endif
@@ -219,7 +221,11 @@ nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir)
            NS_ConvertUTF16toUTF8(dictName).get());
 #endif
     nsCOMPtr<nsIAtom> localeAtom = do_GetAtom(locale);
-    mPatternFiles.Put(localeAtom, file);
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewFileURI(getter_AddRefs(uri), file);
+    if (NS_SUCCEEDED(rv)) {
+      mPatternFiles.Put(localeAtom, uri);
+    }
   }
 }
 

@@ -198,6 +198,9 @@ js_AtomicClearMask(volatile jsword *w, jsword mask);
 #define JS_ATOMIC_SET_MASK(w, mask) js_AtomicSetMask(w, mask)
 #define JS_ATOMIC_CLEAR_MASK(w, mask) js_AtomicClearMask(w, mask)
 
+extern  unsigned
+js_GetCPUCount();
+
 #else
 
 static inline JSBool
@@ -208,6 +211,12 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #define JS_ATOMIC_SET_MASK(w, mask) (*(w) |= (mask))
 #define JS_ATOMIC_CLEAR_MASK(w, mask) (*(w) &= ~(mask))
+
+static inline unsigned
+js_GetCPUCount()
+{
+    return 1;
+}
 
 #endif
 

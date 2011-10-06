@@ -43,10 +43,10 @@ ifdef MOZ_EXTENSIONS
 tier_app_dirs += extensions
 endif
 
-# winembed, mfcembed
+# winEmbed
 ifeq ($(OS_ARCH),WINNT)
 ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))
-tier_app_dirs += embedding/tests
+tier_app_dirs += embedding/tests/winEmbed
 endif
 endif
 

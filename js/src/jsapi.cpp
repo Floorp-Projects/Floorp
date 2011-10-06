@@ -648,8 +648,6 @@ JSRuntime::JSRuntime()
     protoHazardShape(0),
     gcSystemAvailableChunkListHead(NULL),
     gcUserAvailableChunkListHead(NULL),
-    gcEmptyChunkListHead(NULL),
-    gcEmptyChunkCount(0),
     gcKeepAtoms(0),
     gcBytes(0),
     gcTriggerBytes(0),
@@ -2792,9 +2790,9 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
       case JSGC_MODE:
         return uint32(rt->gcMode);
       case JSGC_UNUSED_CHUNKS:
-        return uint32(rt->gcEmptyChunkCount);
+        return uint32(rt->gcChunkPool.getEmptyCount());
       case JSGC_TOTAL_CHUNKS:
-        return uint32(rt->gcChunkSet.count() + rt->gcEmptyChunkCount);
+        return uint32(rt->gcChunkSet.count() + rt->gcChunkPool.getEmptyCount());
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return rt->gcNumber;
@@ -4850,7 +4848,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
                                        chars, length, filename, lineno, version)) {
         return NULL;
     }
-    
+
     if (obj && funAtom &&
         !obj->defineProperty(cx, ATOM_TO_JSID(funAtom), ObjectValue(*fun),
                              NULL, NULL, JSPROP_ENUMERATE)) {

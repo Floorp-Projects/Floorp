@@ -56,10 +56,7 @@ function fs(idx) {
   return getComputedStyle(elts[idx], "").marginBottom;
 }
 
-SpecialPowers.clearUserPref('font.minimum-size.x-western');
-
-// preference change is async (although one setTimeout might be enough?)
-setTimeout(setTimeout, 0, step1, 0);
+SpecialPowers.pushPrefEnv({'clear': [['font.minimum-size.x-western']]}, function() setTimeout(step1, 0));
 
 function step1() {
     is(fs(0), "0px", "at min font size 0, 0px should compute to 0px");
@@ -67,10 +64,7 @@ function step1() {
     is(fs(2), "12px", "at min font size 0, 12px should compute to 12px");
     is(fs(3), "28px", "at min font size 0, 28px should compute to 28px");
 
-    SpecialPowers.setIntPref('font.minimum-size.x-western', 7);
-
-    // preference change is async (although one setTimeout might be enough?)
-    setTimeout(setTimeout, 0, step2, 0);
+    SpecialPowers.pushPrefEnv({'set': [['font.minimum-size.x-western', 7]]}, function() setTimeout(step2, 0));
 }
 
 function step2() {
@@ -79,10 +73,7 @@ function step2() {
     is(fs(2), "12px", "at min font size 7, 12px should compute to 12px");
     is(fs(3), "28px", "at min font size 7, 28px should compute to 28px");
 
-    SpecialPowers.setIntPref('font.minimum-size.x-western', 18);
-
-    // preference change is async (although one setTimeout might be enough?)
-    setTimeout(setTimeout, 0, step3, 0);
+    SpecialPowers.pushPrefEnv({'set': [['font.minimum-size.x-western', 18]]}, function() setTimeout(step3, 0));
 }
 
 function step3() {
@@ -91,9 +82,7 @@ function step3() {
     is(fs(2), "18px", "at min font size 18, 12px should compute to 18px");
     is(fs(3), "28px", "at min font size 18, 28px should compute to 28px");
 
-    SpecialPowers.clearUserPref('font.minimum-size.x-western');
-
-    SimpleTest.finish();
+    SpecialPowers.pushPrefEnv({'clear': [['font.minimum-size.x-western']]}, SimpleTest.finish);
 }
 
 </script>
