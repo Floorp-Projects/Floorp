@@ -137,6 +137,7 @@ template <class Key, class Value> class DefaultMarkPolicy;
 class WeakMapBase {
   public:
     WeakMapBase() : next(NULL) { }
+    virtual ~WeakMapBase() { }
 
     void trace(JSTracer *tracer) {
         if (IS_GC_MARKING_TRACER(tracer)) {
