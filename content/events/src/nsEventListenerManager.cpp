@@ -333,6 +333,11 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
       mListeners.RemoveElementAt(i);
       mNoListenerForEvent = NS_EVENT_TYPE_NULL;
       mNoListenerForEventAtom = nsnull;
+      if (aType == NS_DEVICE_ORIENTATION) {
+        nsPIDOMWindow* window = GetInnerWindowForTarget();
+        if (window)
+          window->RemoveOrientationEventListener();
+      }
       break;
     }
   }

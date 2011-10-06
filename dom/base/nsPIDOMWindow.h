@@ -577,6 +577,11 @@ public:
   virtual void SetHasOrientationEventListener() = 0;
 
   /**
+   * Tell this window that we remove an orientation listener
+   */
+  virtual void RemoveOrientationEventListener() = 0;
+
+  /**
    * Set a arguments for this window. This will be set on the window
    * right away (if there's an existing document) and it will also be
    * installed on the window when the next document is loaded. Each
