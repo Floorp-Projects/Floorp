@@ -47,6 +47,7 @@
 #elif JS_CPU_X64
 # include "ion/x64/Assembler-x64.h"
 #endif
+#include "jsopcode.h"
 
 namespace js {
 namespace ion {

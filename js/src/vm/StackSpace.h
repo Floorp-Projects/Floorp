@@ -49,6 +49,7 @@ namespace js {
 class FrameGuard;
 class DummyFrameGuard;
 class ExecuteFrameGuard;
+class BailoutFrameGuard;
 class GeneratorFrameGuard;
 
 /* Flags specified for a frame as it is constructed. */
@@ -298,6 +299,9 @@ class ContextStack
     bool pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thisv,
                           JSObject &scopeChain, ExecuteType type,
                           StackFrame *evalInFrame, ExecuteFrameGuard *efg);
+
+    StackFrame *pushBailoutFrame(JSContext *cx, JSObject *callee, JSFunction *fun,
+                                 JSScript *script, BailoutFrameGuard *bfg);
 
     /*
      * Called by SendToGenerator to resume a yielded generator. In addition to
