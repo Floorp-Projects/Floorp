@@ -88,7 +88,7 @@ using namespace mozilla;
 #define NS_CONTEXT_MENU_IS_MOUSEUP 1
 #endif
 
-nsXULPopupListener::nsXULPopupListener(nsIDOMElement *aElement, PRBool aIsContext)
+nsXULPopupListener::nsXULPopupListener(nsIDOMElement *aElement, bool aIsContext)
   : mElement(aElement), mPopupContent(nsnull), mIsContext(aIsContext)
 {
 }
@@ -157,13 +157,13 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
     }
   }
 
-  PRBool preventDefault;
+  bool preventDefault;
   domNSEvent->GetPreventDefault(&preventDefault);
   if (preventDefault && targetNode && mIsContext) {
     // Someone called preventDefault on a context menu.
     // Let's make sure they are allowed to do so.
-    PRBool eventEnabled =
-      Preferences::GetBool("dom.event.contextmenu.enabled", PR_TRUE);
+    bool eventEnabled =
+      Preferences::GetBool("dom.event.contextmenu.enabled", true);
     if (!eventEnabled) {
       // If the target node is for plug-in, we should not open XUL context
       // menu on windowless plug-ins.
@@ -257,7 +257,7 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     if (!targetFrame) return NS_ERROR_FAILURE;
 
     const nsStyleUserInterface* ui = targetFrame->GetStyleUserInterface();
-    PRBool suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
+    bool suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
 
     nsCOMPtr<nsIDOMElement> element;
     nsCOMPtr<nsIContent> newFocus = do_QueryInterface(content);
@@ -316,21 +316,19 @@ nsXULPopupListener::ClosePopup()
   }
 } // ClosePopup
 
-static void
-GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult) 
+static already_AddRefed<nsIContent>
+GetImmediateChild(nsIContent* aContent, nsIAtom *aTag) 
 {
-  *aResult = nsnull;
-  PRInt32 childCount = aContent->GetChildCount();
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsIContent *child = aContent->GetChildAt(i);
+  for (nsIContent* child = aContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     if (child->Tag() == aTag) {
-      *aResult = child;
-      NS_ADDREF(*aResult);
-      return;
+      NS_ADDREF(child);
+      return child;
     }
   }
 
-  return;
+  return nsnull;
 }
 
 //
@@ -384,9 +382,7 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
   nsCOMPtr<nsIDOMElement> popupElement;
 
   if (identifier.EqualsLiteral("_child")) {
-    nsCOMPtr<nsIContent> popup;
-
-    GetImmediateChild(content, nsGkAtoms::menupopup, getter_AddRefs(popup));
+    nsCOMPtr<nsIContent> popup = GetImmediateChild(content, nsGkAtoms::menupopup);
     if (popup)
       popupElement = do_QueryInterface(popup);
     else {

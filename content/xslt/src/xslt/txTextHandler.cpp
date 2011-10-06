@@ -61,7 +61,7 @@ txTextHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
 }
 
 nsresult
-txTextHandler::characters(const nsSubstring& aData, PRBool aDOE)
+txTextHandler::characters(const nsSubstring& aData, bool aDOE)
 {
     if (mLevel == 0)
         mValue.Append(aData);

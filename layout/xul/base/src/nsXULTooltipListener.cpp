@@ -296,7 +296,7 @@ nsXULTooltipListener::ToolbarTipsPrefChanged(const char *aPref,
 //////////////////////////////////////////////////////////////////////////
 //// nsXULTooltipListener
 
-PRBool nsXULTooltipListener::sShowTooltips = PR_FALSE;
+bool nsXULTooltipListener::sShowTooltips = false;
 PRUint32 nsXULTooltipListener::sTooltipListenerCount = 0;
 
 nsresult
@@ -570,7 +570,7 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
     return NS_OK;
   }
 
-  PRBool closed;
+  bool closed;
   window->GetClosed(&closed);
 
   if (closed) {

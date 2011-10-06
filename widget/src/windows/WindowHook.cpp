@@ -130,12 +130,12 @@ WindowHook::DeleteIfEmpty(MessageData *data) {
   mMessageData.RemoveElementAt(idx);
 }
 
-PRBool
+bool
 WindowHook::Notify(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam,
                    LRESULT *aResult) {
   MessageData *data = Lookup(nMsg);
   if (!data)
-    return PR_FALSE;
+    return false;
 
   PRUint32 length = data->monitors.Length();
   for (PRUint32 midx = 0; midx < length; midx++) {
@@ -145,11 +145,11 @@ WindowHook::Notify(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam,
   return data->hook.Invoke(hWnd, nMsg, wParam, lParam, aResult);
 }
 
-PRBool
+bool
 WindowHook::CallbackData::Invoke(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam,
                                  LRESULT *aResult) {
   if (!cb)
-    return PR_FALSE;
+    return false;
   return cb(context, hWnd, msg, wParam, lParam, aResult);
 }
 } // namespace widget

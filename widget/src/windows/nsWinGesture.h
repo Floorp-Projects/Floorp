@@ -233,36 +233,36 @@ public:
   nsWinGesture();
 
 public:
-  PRBool SetWinGestureSupport(HWND hWnd, nsGestureNotifyEvent::ePanDirection aDirection);
-  PRBool ShutdownWinGestureSupport();
-  PRBool RegisterTouchWindow(HWND hWnd);
-  PRBool UnregisterTouchWindow(HWND hWnd);
-  PRBool GetTouchInputInfo(HTOUCHINPUT hTouchInput, PRUint32 cInputs, PTOUCHINPUT pInputs);
-  PRBool CloseTouchInputHandle(HTOUCHINPUT hTouchInput);
-  PRBool IsAvailable();
+  bool SetWinGestureSupport(HWND hWnd, nsGestureNotifyEvent::ePanDirection aDirection);
+  bool ShutdownWinGestureSupport();
+  bool RegisterTouchWindow(HWND hWnd);
+  bool UnregisterTouchWindow(HWND hWnd);
+  bool GetTouchInputInfo(HTOUCHINPUT hTouchInput, PRUint32 cInputs, PTOUCHINPUT pInputs);
+  bool CloseTouchInputHandle(HTOUCHINPUT hTouchInput);
+  bool IsAvailable();
   
   // Simple gesture process
-  PRBool ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam, nsSimpleGestureEvent& evt);
+  bool ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam, nsSimpleGestureEvent& evt);
 
   // Pan processing
-  PRBool IsPanEvent(LPARAM lParam);
-  PRBool ProcessPanMessage(HWND hWnd, WPARAM wParam, LPARAM lParam);
-  PRBool PanDeltaToPixelScrollX(nsMouseScrollEvent& evt);
-  PRBool PanDeltaToPixelScrollY(nsMouseScrollEvent& evt);
-  void UpdatePanFeedbackX(HWND hWnd, PRInt32 scrollOverflow, PRBool& endFeedback);
-  void UpdatePanFeedbackY(HWND hWnd, PRInt32 scrollOverflow, PRBool& endFeedback);
-  void PanFeedbackFinalize(HWND hWnd, PRBool endFeedback);
+  bool IsPanEvent(LPARAM lParam);
+  bool ProcessPanMessage(HWND hWnd, WPARAM wParam, LPARAM lParam);
+  bool PanDeltaToPixelScrollX(nsMouseScrollEvent& evt);
+  bool PanDeltaToPixelScrollY(nsMouseScrollEvent& evt);
+  void UpdatePanFeedbackX(HWND hWnd, PRInt32 scrollOverflow, bool& endFeedback);
+  void UpdatePanFeedbackY(HWND hWnd, PRInt32 scrollOverflow, bool& endFeedback);
+  void PanFeedbackFinalize(HWND hWnd, bool endFeedback);
   
 public:
   // Helpers
-  PRBool GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
-  PRBool CloseGestureInfoHandle(HGESTUREINFO hGestureInfo);
-  PRBool GetGestureExtraArgs(HGESTUREINFO hGestureInfo, UINT cbExtraArgs, PBYTE pExtraArgs);
-  PRBool SetGestureConfig(HWND hWnd, UINT cIDs, PGESTURECONFIG pGestureConfig);
-  PRBool GetGestureConfig(HWND hWnd, DWORD dwFlags, PUINT pcIDs, PGESTURECONFIG pGestureConfig);
-  PRBool BeginPanningFeedback(HWND hWnd);
-  PRBool EndPanningFeedback(HWND hWnd);
-  PRBool UpdatePanningFeedback(HWND hWnd, LONG offsetX, LONG offsetY, BOOL fInInertia);
+  bool GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
+  bool CloseGestureInfoHandle(HGESTUREINFO hGestureInfo);
+  bool GetGestureExtraArgs(HGESTUREINFO hGestureInfo, UINT cbExtraArgs, PBYTE pExtraArgs);
+  bool SetGestureConfig(HWND hWnd, UINT cIDs, PGESTURECONFIG pGestureConfig);
+  bool GetGestureConfig(HWND hWnd, DWORD dwFlags, PUINT pcIDs, PGESTURECONFIG pGestureConfig);
+  bool BeginPanningFeedback(HWND hWnd);
+  bool EndPanningFeedback(HWND hWnd);
+  bool UpdatePanningFeedback(HWND hWnd, LONG offsetX, LONG offsetY, BOOL fInInertia);
 
 protected:
 
@@ -296,7 +296,7 @@ private:
   static CloseTouchInputHandlePtr closeTouchInputHandle;
 
   // Delay load info 
-  PRBool InitLibrary();
+  bool InitLibrary();
 
   static HMODULE sLibraryHandle;
   static const PRUnichar kGestureLibraryName[];
@@ -305,11 +305,11 @@ private:
   nsPointWin mPanIntermediate;
   nsPointWin mPanRefPoint;
   nsPointWin mPixelScrollDelta;
-  PRPackedBool mPanActive;
-  PRPackedBool mFeedbackActive;
-  PRPackedBool mXAxisFeedback;
-  PRPackedBool mYAxisFeedback;
-  PRPackedBool mPanInertiaActive;
+  bool mPanActive;
+  bool mFeedbackActive;
+  bool mXAxisFeedback;
+  bool mYAxisFeedback;
+  bool mPanInertiaActive;
   nsPointWin mPixelScrollOverflow;
 
   // Zoom state

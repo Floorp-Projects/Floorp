@@ -92,19 +92,19 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mDrawingModel(0),
 #endif
     mRunning(NOT_STARTED),
-    mWindowless(PR_FALSE),
-    mWindowlessLocal(PR_FALSE),
-    mTransparent(PR_FALSE),
-    mUsesDOMForCursor(PR_FALSE),
-    mInPluginInitCall(PR_FALSE),
+    mWindowless(false),
+    mWindowlessLocal(false),
+    mTransparent(false),
+    mUsesDOMForCursor(false),
+    mInPluginInitCall(false),
     mPlugin(plugin),
     mMIMEType(nsnull),
     mOwner(nsnull),
     mCurrentPluginEvent(nsnull),
 #if defined(MOZ_X11) || defined(XP_WIN) || defined(XP_MACOSX)
-    mUsePluginLayersPref(PR_TRUE)
+    mUsePluginLayersPref(true)
 #else
-    mUsePluginLayersPref(PR_FALSE)
+    mUsePluginLayersPref(false)
 #endif
 {
   NS_ASSERTION(mPlugin != NULL, "Plugin is required when creating an instance.");
@@ -116,7 +116,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
 
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs) {
-    PRBool useLayersPref;
+    bool useLayersPref;
     nsresult rv = prefs->GetBoolPref("plugins.use_layers", &useLayersPref);
     if (NS_SUCCEEDED(rv))
       mUsePluginLayersPref = useLayersPref;
@@ -403,8 +403,8 @@ nsNPAPIPluginInstance::InitializePlugin()
     }
   }
 
-  PRBool oldVal = mInPluginInitCall;
-  mInPluginInitCall = PR_TRUE;
+  bool oldVal = mInPluginInitCall;
+  mInPluginInitCall = true;
 
   // Need this on the stack before calling NPP_New otherwise some callbacks that
   // the plugin may make could fail (NPN_HasProperty, for example).
@@ -466,8 +466,8 @@ nsresult nsNPAPIPluginInstance::SetWindow(NPWindow* window)
 
     PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::SetWindow (about to call it) this=%p\n",this));
 
-    PRBool oldVal = mInPluginInitCall;
-    mInPluginInitCall = PR_TRUE;
+    bool oldVal = mInPluginInitCall;
+    mInPluginInitCall = true;
 
     NPPAutoPusher nppPusher(&mNPP);
 
@@ -653,7 +653,7 @@ nsNPAPIPluginInstance::GetURI()
   return mURI.get();
 }
 
-NPError nsNPAPIPluginInstance::SetWindowless(PRBool aWindowless)
+NPError nsNPAPIPluginInstance::SetWindowless(bool aWindowless)
 {
   mWindowless = aWindowless;
 
@@ -666,32 +666,32 @@ NPError nsNPAPIPluginInstance::SetWindowless(PRBool aWindowless)
     // PluginInstanceChild::InitQuirksMode.
     NS_NAMED_LITERAL_CSTRING(silverlight, "application/x-silverlight");
     if (!PL_strncasecmp(mMIMEType, silverlight.get(), silverlight.Length())) {
-      mTransparent = PR_TRUE;
+      mTransparent = true;
     }
   }
 
   return NPERR_NO_ERROR;
 }
 
-NPError nsNPAPIPluginInstance::SetWindowlessLocal(PRBool aWindowlessLocal)
+NPError nsNPAPIPluginInstance::SetWindowlessLocal(bool aWindowlessLocal)
 {
   mWindowlessLocal = aWindowlessLocal;
   return NPERR_NO_ERROR;
 }
 
-NPError nsNPAPIPluginInstance::SetTransparent(PRBool aTransparent)
+NPError nsNPAPIPluginInstance::SetTransparent(bool aTransparent)
 {
   mTransparent = aTransparent;
   return NPERR_NO_ERROR;
 }
 
-NPError nsNPAPIPluginInstance::SetUsesDOMForCursor(PRBool aUsesDOMForCursor)
+NPError nsNPAPIPluginInstance::SetUsesDOMForCursor(bool aUsesDOMForCursor)
 {
   mUsesDOMForCursor = aUsesDOMForCursor;
   return NPERR_NO_ERROR;
 }
 
-PRBool
+bool
 nsNPAPIPluginInstance::UsesDOMForCursor()
 {
   return mUsesDOMForCursor;
@@ -726,7 +726,7 @@ void nsNPAPIPluginInstance::SetDrawingModel(PRUint32 aModel)
 class SurfaceGetter : public nsRunnable {
 public:
   SurfaceGetter(NPPluginFuncs* aPluginFunctions, NPP_t aNPP) : 
-    mHaveSurface(PR_FALSE), mPluginFunctions(aPluginFunctions), mNPP(aNPP) {
+    mHaveSurface(false), mPluginFunctions(aPluginFunctions), mNPP(aNPP) {
     mLock = new Mutex("SurfaceGetter::Lock");
     mCondVar = new CondVar(*mLock, "SurfaceGetter::CondVar");
     
@@ -738,13 +738,13 @@ public:
   nsresult Run() {
     MutexAutoLock lock(*mLock);
     (*mPluginFunctions->getvalue)(&mNPP, kJavaSurface_ANPGetValue, &mSurface);
-    mHaveSurface = PR_TRUE;
+    mHaveSurface = true;
     mCondVar->Notify();
     return NS_OK;
   }
   void* GetSurface() {
     MutexAutoLock lock(*mLock);
-    mHaveSurface = PR_FALSE;
+    mHaveSurface = false;
     AndroidBridge::Bridge()->PostToJavaThread(this);
     while (!mHaveSurface)
       mCondVar->Wait();
@@ -755,7 +755,7 @@ private:
   void* mSurface;
   Mutex* mLock;
   CondVar* mCondVar;
-  PRBool mHaveSurface;
+  bool mHaveSurface;
   NPPluginFuncs* mPluginFunctions;
 };
 
@@ -785,7 +785,7 @@ nsresult nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 #endif
 }
 
-nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(PRBool* aDrawing)
+nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(bool* aDrawing)
 {
 #ifdef XP_MACOSX
   if (!mPlugin)
@@ -874,11 +874,11 @@ nsNPAPIPluginInstance::DefineJavaProperties()
 }
 
 nsresult
-nsNPAPIPluginInstance::IsWindowless(PRBool* isWindowless)
+nsNPAPIPluginInstance::IsWindowless(bool* isWindowless)
 {
 #ifdef ANDROID
   // On android, pre-honeycomb, all plugins are treated as windowless.
-  *isWindowless = PR_TRUE;
+  *isWindowless = true;
 #else
   *isWindowless = mWindowless;
 #endif
@@ -966,7 +966,7 @@ nsNPAPIPluginInstance::NotifyPainted(void)
 }
 
 nsresult
-nsNPAPIPluginInstance::UseAsyncPainting(PRBool* aIsAsync)
+nsNPAPIPluginInstance::UseAsyncPainting(bool* aIsAsync)
 {
   if (!mUsePluginLayersPref) {
     *aIsAsync = mUsePluginLayersPref;
@@ -1023,7 +1023,7 @@ nsNPAPIPluginInstance::EndUpdateBackground(gfxContext* aContext,
 }
 
 nsresult
-nsNPAPIPluginInstance::IsTransparent(PRBool* isTransparent)
+nsNPAPIPluginInstance::IsTransparent(bool* isTransparent)
 {
   *isTransparent = mTransparent;
   return NS_OK;
@@ -1049,7 +1049,7 @@ nsNPAPIPluginInstance::GetFormValue(nsAString& aValue)
 }
 
 nsresult
-nsNPAPIPluginInstance::PushPopupsEnabledState(PRBool aEnabled)
+nsNPAPIPluginInstance::PushPopupsEnabledState(bool aEnabled)
 {
   nsCOMPtr<nsPIDOMWindow> window = GetDOMWindow();
   if (!window)
@@ -1057,7 +1057,7 @@ nsNPAPIPluginInstance::PushPopupsEnabledState(PRBool aEnabled)
 
   PopupControlState oldState =
     window->PushPopupControlState(aEnabled ? openAllowed : openAbused,
-                                  PR_TRUE);
+                                  true);
 
   if (!mPopupStates.AppendElement(oldState)) {
     // Appending to our state stack failed, pop what we just pushed.
@@ -1127,7 +1127,7 @@ nsNPAPIPluginInstance::PrivateModeStateChanged()
     
     nsCOMPtr<nsIPrivateBrowsingService> pbs = do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
     if (pbs) {
-      PRBool pme = PR_FALSE;
+      bool pme = false;
       nsresult rv = pbs->GetPrivateBrowsingEnabled(&pme);
       if (NS_FAILED(rv))
         return rv;
@@ -1172,9 +1172,9 @@ PluginTimerCallback(nsITimer *aTimer, void *aClosure)
 
   // Some plugins (Flash on Android) calls unscheduletimer
   // from this callback.
-  t->inCallback = PR_TRUE;
+  t->inCallback = true;
   (*(t->callback))(npp, id);
-  t->inCallback = PR_FALSE;
+  t->inCallback = false;
 
   // Make sure we still have an instance and the timer is still alive
   // after the callback.
@@ -1208,7 +1208,7 @@ nsNPAPIPluginInstance::ScheduleTimer(uint32_t interval, NPBool repeat, void (*ti
 {
   nsNPAPITimer *newTimer = new nsNPAPITimer();
 
-  newTimer->inCallback = PR_FALSE;
+  newTimer->inCallback = false;
   newTimer->npp = &mNPP;
 
   // generate ID that is unique to this instance
@@ -1280,7 +1280,7 @@ nsNPAPIPluginInstance::ConvertPoint(double sourceX, double sourceY, NPCoordinate
   if (mOwner)
     return mOwner->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
 
-  return PR_FALSE;
+  return false;
 }
 
 nsresult
@@ -1452,7 +1452,7 @@ CarbonEventModelFailureEvent::Run()
 {
   nsString type = NS_LITERAL_STRING("npapi-carbon-event-model-failure");
   nsContentUtils::DispatchTrustedEvent(mContent->GetDocument(), mContent,
-                                       type, PR_TRUE, PR_TRUE);
+                                       type, true, true);
   return NS_OK;
 }
 

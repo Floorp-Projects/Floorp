@@ -67,8 +67,8 @@ typedef nsresult   (* GetServiceManagerFunc)(nsIServiceManager* *result);
 typedef nsresult   (* GetComponentManagerFunc)(nsIComponentManager* *result);
 typedef nsresult   (* GetComponentRegistrarFunc)(nsIComponentRegistrar* *result);
 typedef nsresult   (* GetMemoryManagerFunc)(nsIMemory* *result);
-typedef nsresult   (* NewLocalFileFunc)(const nsAString &path, PRBool followLinks, nsILocalFile* *result);
-typedef nsresult   (* NewNativeLocalFileFunc)(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
+typedef nsresult   (* NewLocalFileFunc)(const nsAString &path, bool followLinks, nsILocalFile* *result);
+typedef nsresult   (* NewNativeLocalFileFunc)(const nsACString &path, bool followLinks, nsILocalFile* *result);
 
 typedef nsresult   (* GetDebugFunc)(nsIDebug* *result);
 typedef nsresult   (* GetTraceRefcntFunc)(nsITraceRefcnt* *result);
@@ -76,26 +76,26 @@ typedef nsresult   (* GetTraceRefcntFunc)(nsITraceRefcnt* *result);
 typedef nsresult   (* StringContainerInitFunc)(nsStringContainer&);
 typedef nsresult   (* StringContainerInit2Func)(nsStringContainer&, const PRUnichar *, PRUint32, PRUint32);
 typedef void       (* StringContainerFinishFunc)(nsStringContainer&);
-typedef PRUint32   (* StringGetDataFunc)(const nsAString&, const PRUnichar**, PRBool*);
+typedef PRUint32   (* StringGetDataFunc)(const nsAString&, const PRUnichar**, bool*);
 typedef PRUint32   (* StringGetMutableDataFunc)(nsAString&, PRUint32, PRUnichar**);
 typedef PRUnichar* (* StringCloneDataFunc)(const nsAString&);
 typedef nsresult   (* StringSetDataFunc)(nsAString&, const PRUnichar*, PRUint32);
 typedef nsresult   (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, const PRUnichar*, PRUint32);
 typedef nsresult   (* StringCopyFunc)(nsAString &, const nsAString &);
-typedef void       (* StringSetIsVoidFunc)(nsAString &, const PRBool);
-typedef PRBool     (* StringGetIsVoidFunc)(const nsAString &);
+typedef void       (* StringSetIsVoidFunc)(nsAString &, const bool);
+typedef bool       (* StringGetIsVoidFunc)(const nsAString &);
 
 typedef nsresult   (* CStringContainerInitFunc)(nsCStringContainer&);
 typedef nsresult   (* CStringContainerInit2Func)(nsCStringContainer&, const char *, PRUint32, PRUint32);
 typedef void       (* CStringContainerFinishFunc)(nsCStringContainer&);
-typedef PRUint32   (* CStringGetDataFunc)(const nsACString&, const char**, PRBool*);
+typedef PRUint32   (* CStringGetDataFunc)(const nsACString&, const char**, bool*);
 typedef PRUint32   (* CStringGetMutableDataFunc)(nsACString&, PRUint32, char**);
 typedef char*      (* CStringCloneDataFunc)(const nsACString&);
 typedef nsresult   (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
 typedef nsresult   (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
 typedef nsresult   (* CStringCopyFunc)(nsACString &, const nsACString &);
-typedef void       (* CStringSetIsVoidFunc)(nsACString &, const PRBool);
-typedef PRBool     (* CStringGetIsVoidFunc)(const nsACString &);
+typedef void       (* CStringSetIsVoidFunc)(nsACString &, const bool);
+typedef bool       (* CStringGetIsVoidFunc)(const nsACString &);
 
 typedef nsresult   (* CStringToUTF16)(const nsACString &, nsCStringEncoding, nsAString &);
 typedef nsresult   (* UTF16ToCString)(const nsAString &, nsCStringEncoding, nsACString &);
@@ -117,10 +117,10 @@ typedef void       (* LogCOMPtrFunc)(void*, nsISupports*);
 typedef nsresult   (* GetXPTCallStubFunc)(REFNSIID, nsIXPTCProxy*, nsISomeInterface**);
 typedef void       (* DestroyXPTCallStubFunc)(nsISomeInterface*);
 typedef nsresult   (* InvokeByIndexFunc)(nsISupports*, PRUint32, PRUint32, nsXPTCVariant*);
-typedef PRBool     (* CycleCollectorFunc)(nsISupports*);
+typedef bool       (* CycleCollectorFunc)(nsISupports*);
 typedef nsPurpleBufferEntry*
                    (* CycleCollectorSuspect2Func)(nsISupports*);
-typedef PRBool     (* CycleCollectorForget2Func)(nsPurpleBufferEntry*);
+typedef bool       (* CycleCollectorForget2Func)(nsPurpleBufferEntry*);
 
 // PRIVATE AND DEPRECATED
 typedef NS_CALLBACK(XPCOMExitRoutine)(void);
@@ -301,7 +301,7 @@ void LogTerm();
 #endif
 #endif
 
-extern PRBool gXPCOMShuttingDown;
+extern bool gXPCOMShuttingDown;
 
 namespace mozilla {
 namespace services {

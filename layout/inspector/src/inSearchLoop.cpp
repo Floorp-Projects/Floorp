@@ -66,7 +66,7 @@ inSearchLoop::Start()
 nsresult
 inSearchLoop::Step()
 {
-  PRBool done = PR_FALSE;
+  bool done = false;
   mSearchProcess->SearchStep(&done);
 
   if (done)

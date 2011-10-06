@@ -522,11 +522,6 @@ Class js::RegExpClass = {
 JSBool
 js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
 {
-    if (!obj->isRegExp()) {
-        ReportIncompatibleMethod(cx, vp, &RegExpClass);
-        return false;
-    }
-
     RegExp *re = RegExp::extractFrom(obj);
     if (!re) {
         *vp = StringValue(cx->runtime->emptyString);
@@ -564,10 +559,14 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
 static JSBool
 regexp_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, regexp_toString, &RegExpClass, &ok);
     if (!obj)
-        return false;
-    return js_regexp_toString(cx, obj, vp);
+        return ok;
+
+    return js_regexp_toString(cx, obj, &args.rval());
 }
 
 /*
@@ -626,8 +625,6 @@ SwapRegExpInternals(JSContext *cx, JSObject *obj, Value *rval, JSString *str, ui
     return true;
 }
 
-enum ExecType { RegExpExec, RegExpTest };
-
 /*
  * ES5 15.10.6.2 (and 15.10.6.3, which calls 15.10.6.2).
  *
@@ -635,16 +632,15 @@ enum ExecType { RegExpExec, RegExpTest };
  * |execType| to perform this optimization.
  */
 static JSBool
-ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
+ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /* Step 1. */
-    JSObject *obj = ToObject(cx, &vp[1]);
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, native, &RegExpClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isRegExp()) {
-        ReportIncompatibleMethod(cx, vp, &RegExpClass);
-        return false;
-    }
+        return ok;
 
     RegExp *re = RegExp::extractFrom(obj);
     if (!re)
@@ -658,7 +654,7 @@ ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
     RegExpStatics *res = cx->regExpStatics();
 
     /* Step 2. */
-    JSString *input = js_ValueToString(cx, argc > 0 ?  vp[2] : UndefinedValue());    
+    JSString *input = js_ValueToString(cx, args.length() > 0 ?  args[0] : UndefinedValue());    
     if (!input)
         return false;
     
@@ -680,18 +676,18 @@ ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
     /* Step 9a. */
     if (i < 0 || i > length) {
         obj->zeroRegExpLastIndex();
-        *vp = NullValue();
+        args.rval() = NullValue();
         return true;
     }
 
     /* Steps 8-21. */
     size_t lastIndexInt(i);
-    if (!re->execute(cx, res, input, &lastIndexInt, execType == RegExpTest, vp))
+    if (!re->execute(cx, res, input, &lastIndexInt, native == js_regexp_test, &args.rval()))
         return false;
 
     /* Step 11 (with sticky extension). */
-    if (re->global() || (!vp->isNull() && re->sticky())) {
-        if (vp->isNull())
+    if (re->global() || (!args.rval().isNull() && re->sticky())) {
+        if (args.rval().isNull())
             obj->zeroRegExpLastIndex();
         else
             obj->setRegExpLastIndex(lastIndexInt);
@@ -704,14 +700,14 @@ ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
 JSBool
 js_regexp_exec(JSContext *cx, uintN argc, Value *vp)
 {
-    return ExecuteRegExp(cx, RegExpExec, argc, vp);
+    return ExecuteRegExp(cx, js_regexp_exec, argc, vp);
 }
 
 /* ES5 15.10.6.3. */
 JSBool
 js_regexp_test(JSContext *cx, uintN argc, Value *vp)
 {
-    if (!ExecuteRegExp(cx, RegExpTest, argc, vp))
+    if (!ExecuteRegExp(cx, js_regexp_test, argc, vp))
         return false;
     if (!vp->isTrue())
         vp->setBoolean(false);
@@ -788,15 +784,14 @@ CompileRegExpAndSwap(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Valu
 static JSBool
 regexp_compile(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj)
-        return false;
-    if (!obj->isRegExp()) {
-        ReportIncompatibleMethod(cx, vp, &RegExpClass);
-        return false;
-    }
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    return CompileRegExpAndSwap(cx, obj, argc, JS_ARGV(cx, vp), &JS_RVAL(cx, vp));
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, regexp_compile, &RegExpClass, &ok);
+    if (!obj)
+        return ok;
+
+    return CompileRegExpAndSwap(cx, obj, args.length(), args.array(), &args.rval());
 }
 
 static JSBool

@@ -70,7 +70,7 @@ UnaryExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
 TX_IMPL_EXPR_STUBS_1(UnaryExpr, NODESET_RESULT, expr)
 
-PRBool
+bool
 UnaryExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     return expr->isSensitiveTo(aContext);

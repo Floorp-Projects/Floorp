@@ -83,7 +83,7 @@ protected:
     // Helper to share code between Equals methods.
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
-                                    PRBool* result);
+                                    bool* result);
 
     // Helper to be used by inherited classes who want to test
     // equality given an assumed nsSimpleURI.  This must NOT check
@@ -102,8 +102,8 @@ protected:
     nsCString mScheme;
     nsCString mPath; // NOTE: mPath does not include ref, as an optimization
     nsCString mRef;  // so that URIs with different refs can share string data.
-    PRPackedBool mMutable;
-    PRPackedBool mIsRefValid; // To distinguish between empty-ref and no-ref.
+    bool mMutable;
+    bool mIsRefValid; // To distinguish between empty-ref and no-ref.
 };
 
 #endif // nsSimpleURI_h__

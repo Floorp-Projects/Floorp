@@ -137,7 +137,7 @@ protected:
   nsresult HasAnnotationInternal(nsIURI* aURI,
                                  PRInt64 aItemId,
                                  const nsACString& aName,
-                                 PRBool* _hasAnno);
+                                 bool* _hasAnno);
 
   nsresult StartGetAnnotation(nsIURI* aURI,
                               PRInt64 aItemId,
@@ -189,7 +189,7 @@ protected:
                                     PRInt64 aItemId,
                                     const nsACString& aName);
 
-  PRBool InPrivateBrowsingMode() const;
+  bool InPrivateBrowsingMode() const;
 
   bool mShuttingDown;
 

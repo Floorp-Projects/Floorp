@@ -178,7 +178,7 @@ checkResponseAccessThrows(xhr); // Check twice to ensure that we still throw
 // test response (responseType='blob')
 var onloadCount = 0;
 function checkOnloadCount() {
-  if (++onloadCount >= 2) SimpleTest.finish();
+  if (++onloadCount >= 3) SimpleTest.finish();
 };
 
 // with a simple text file
@@ -203,7 +203,8 @@ fr.onload = function() {
 fr.readAsBinaryString(b);
 
 // with a binary file
-xhr = new XMLHttpRequest();
+(function(){
+var xhr = new XMLHttpRequest();
 xhr.onreadystatechange = function() {
   switch (xhr.readyState) {
   case 2:
@@ -228,6 +229,37 @@ xhr.onreadystatechange = function() {
 };
 xhr.open("GET", 'file_XHR_binary1.bin', true);
 xhr.send(null);
+})();
+
+(function(){
+// with a larger binary file
+var xhr = new XMLHttpRequest();
+xhr.onreadystatechange = function() {
+  if (xhr.readyState == 4) {
+    b = xhr.response;
+    ok(b != null, "should have a non-null blob");
+    is(b.size, 65536, "wrong blob size");
+
+    var fr = new FileReader();
+    fr.onload = function() {
+      var u8 = new Uint8Array(fr.result);
+      for (var i = 0; i < 65536; i++) {
+        if (u8[i] !== (i & 255)) {
+          break;
+        }
+      }
+      is(i, 65536, "wrong value at offset " + i);
+      checkOnloadCount();
+    };
+    xhr = null; // kill the XHR object
+    SpecialPowers.gc();
+    fr.readAsArrayBuffer(b);
+  }
+};
+xhr.open("GET", 'file_XHR_binary2.bin', true);
+xhr.responseType = 'blob';
+xhr.send(null);
+})();
 
 var client = new XMLHttpRequest();
 client.onreadystatechange = function() {

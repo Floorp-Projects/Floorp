@@ -75,6 +75,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerBytes(0),
     gcLastBytes(0),
     hold(false),
+    typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
 #ifdef JS_TRACER
     traceMonitor_(NULL),
 #endif
@@ -139,11 +140,6 @@ JSCompartment::init(JSContext *cx)
 {
     activeAnalysis = activeInference = false;
     types.init(cx);
-
-    /* Duplicated from jscntxt.cpp. :XXX: bug 675150 fix hack. */
-    static const size_t ARENA_HEADER_SIZE_HACK = 40;
-
-    JS_InitArenaPool(&pool, "analysis", 4096 - ARENA_HEADER_SIZE_HACK, 8);
 
     if (!crossCompartmentWrappers.init())
         return false;
@@ -214,13 +210,6 @@ JSCompartment::getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) 
 }
 #endif
 
-static bool
-IsCrossCompartmentWrapper(JSObject *wrapper)
-{
-    return wrapper->isWrapper() &&
-           !!(JSWrapper::wrapperHandler(wrapper)->flags() & JSWrapper::CROSS_COMPARTMENT);
-}
-
 bool
 JSCompartment::wrap(JSContext *cx, Value *vp)
 {
@@ -259,8 +248,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (cx->hasfp()) {
         global = cx->fp()->scopeChain().getGlobal();
     } else {
-        global = cx->globalObject;
-        if (!NULLABLE_OBJ_TO_INNER_OBJECT(cx, global))
+        global = JS_ObjectToInnerObject(cx, cx->globalObject);
+        if (!global)
             return false;
     }
 
@@ -278,9 +267,9 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
         /* Don't unwrap an outer window proxy. */
         if (!obj->getClass()->ext.innerObject) {
-            obj = vp->toObject().unwrap(&flags);
+            obj = UnwrapObject(&vp->toObject(), &flags);
             vp->setObject(*obj);
-            if (obj->getCompartment() == this)
+            if (obj->compartment() == this)
                 return true;
 
             if (cx->runtime->preWrapObjectCallback) {
@@ -290,7 +279,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             }
 
             vp->setObject(*obj);
-            if (obj->getCompartment() == this)
+            if (obj->compartment() == this)
                 return true;
         } else {
             if (cx->runtime->preWrapObjectCallback) {
@@ -317,12 +306,12 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         *vp = p->value;
         if (vp->isObject()) {
             JSObject *obj = &vp->toObject();
-            JS_ASSERT(IsCrossCompartmentWrapper(obj));
+            JS_ASSERT(obj->isCrossCompartmentWrapper());
             if (global->getJSClass() != &js_dummy_class && obj->getParent() != global) {
                 do {
                     obj->setParent(global);
                     obj = obj->getProto();
-                } while (obj && IsCrossCompartmentWrapper(obj));
+                } while (obj && obj->isCrossCompartmentWrapper());
             }
         }
         return true;
@@ -371,7 +360,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (wrapper->getProto() != proto && !SetProto(cx, wrapper, proto, false))
         return false;
 
-    if (!crossCompartmentWrappers.put(wrapper->getProxyPrivate(), *vp))
+    if (!crossCompartmentWrappers.put(GetProxyPrivate(wrapper), *vp))
         return false;
 
     wrapper->setParent(global);
@@ -664,8 +653,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
          * Clear the analysis pool, but don't release its data yet. While
          * sweeping types any live data will be allocated into the pool.
          */
-        JSArenaPool oldPool;
-        MoveArenaPool(&pool, &oldPool);
+        LifoAlloc oldAlloc(typeLifoAlloc.defaultChunkSize());
+        oldAlloc.steal(&typeLifoAlloc);
 
         /*
          * Sweep analysis information and everything depending on it from the
@@ -698,9 +687,6 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
             JSScript *script = i.get<JSScript>();
             script->clearAnalysis();
         }
-
-        /* Reset the analysis pool, releasing all analysis and intermediate type data. */
-        JS_FinishArenaPool(&oldPool);
     }
 
     active = false;

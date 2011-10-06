@@ -78,7 +78,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsSVGStopFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }

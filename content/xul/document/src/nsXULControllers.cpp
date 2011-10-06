@@ -140,7 +140,7 @@ nsXULControllers::GetControllerForCommand(const char *aCommand, nsIController** 
       controllerData->GetController(getter_AddRefs(controller));
       if (controller)
       {
-        PRBool supportsCommand;
+        bool supportsCommand;
         controller->SupportsCommand(aCommand, &supportsCommand);
         if (supportsCommand) {
           *_retval = controller;

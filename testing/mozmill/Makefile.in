@@ -95,6 +95,7 @@ install-develop: mozmill-dir
 endif
 
 # Rules for staging the necessary harness bits for a test package
-stage-package: PKG_STAGE = $(DIST)/test-package-stage
 stage-package: install
+
+PKG_STAGE = $(DIST)/test-package-stage
 	

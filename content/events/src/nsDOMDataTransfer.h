@@ -99,9 +99,9 @@ protected:
   // needed to a new data transfer.
   nsDOMDataTransfer(PRUint32 aEventType,
                     const PRUint32 aEffectAllowed,
-                    PRBool aCursorState,
-                    PRBool aIsExternal,
-                    PRBool aUserCancelled,
+                    bool aCursorState,
+                    bool aIsExternal,
+                    bool aUserCancelled,
                     nsTArray<nsTArray<TransferItem> >& aItems,
                     nsIDOMElement* aDragImage,
                     PRUint32 aDragImageX,
@@ -127,7 +127,7 @@ public:
 
   // converts the data in the variant to an nsISupportString if possible or
   // an nsISupports or null otherwise.
-  PRBool ConvertFromVariant(nsIVariant* aVariant,
+  bool ConvertFromVariant(nsIVariant* aVariant,
                             nsISupports** aSupports,
                             PRUint32* aLength);
 
@@ -175,18 +175,18 @@ protected:
   PRUint32 mEffectAllowed;
 
   // Indicates the behavior of the cursor during drag operations
-  PRPackedBool mCursorState;
+  bool mCursorState;
 
   // readonly data transfers may not be modified except the drop effect and
   // effect allowed.
-  PRPackedBool mReadOnly;
+  bool mReadOnly;
 
   // true for drags started without a data transfer, for example, those from
   // another application.
-  PRPackedBool mIsExternal;
+  bool mIsExternal;
 
   // true if the user cancelled the drag. Used only for the dragend event.
-  PRPackedBool mUserCancelled;
+  bool mUserCancelled;
 
   // array of items, each containing an array of format->data pairs
   nsTArray<nsTArray<TransferItem> > mItems;

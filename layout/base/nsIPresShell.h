@@ -132,9 +132,9 @@ class LayerManager;
 
 typedef struct CapturingContentInfo {
   // capture should only be allowed during a mousedown event
-  PRPackedBool mAllowed;
-  PRPackedBool mRetargetToElement;
-  PRPackedBool mPreventDrag;
+  bool mAllowed;
+  bool mRetargetToElement;
+  bool mPreventDrag;
   nsIContent* mContent;
 } CapturingContentInfo;
 
@@ -217,7 +217,7 @@ public:
    */
   virtual NS_HIDDEN_(void) Destroy() = 0;
 
-  PRBool IsDestroying() { return mIsDestroying; }
+  bool IsDestroying() { return mIsDestroying; }
 
   // All frames owned by the shell are allocated from an arena.  They
   // are also recycled using free lists.  Separate free lists are
@@ -276,8 +276,8 @@ public:
    */
   // XXX these could easily be inlined, but there is a circular #include
   // problem with nsStyleSet.
-  NS_HIDDEN_(void) SetAuthorStyleDisabled(PRBool aDisabled);
-  NS_HIDDEN_(PRBool) GetAuthorStyleDisabled() const;
+  NS_HIDDEN_(void) SetAuthorStyleDisabled(bool aDisabled);
+  NS_HIDDEN_(bool) GetAuthorStyleDisabled() const;
 
   /*
    * Called when stylesheets are added/removed/enabled/disabled to rebuild
@@ -305,7 +305,7 @@ public:
    *
    * - initially created for bugs 31816, 20760, 22963
    */
-  virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(PRBool aForceReflow) = 0;
+  virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(bool aForceReflow) = 0;
 
   /**
    * FrameSelection will return the Frame based selection API.
@@ -330,7 +330,7 @@ public:
   /**
    * Return whether InitialReflow() was previously called.
    */
-  PRBool DidInitialReflow() const { return mDidInitialReflow; }
+  bool DidInitialReflow() const { return mDidInitialReflow; }
 
   /**
    * Perform the initial reflow. Constructs the frame for the root content
@@ -360,12 +360,12 @@ public:
   /**
    * Returns true if ResizeReflowOverride has been called.
    */
-  virtual PRBool GetIsViewportOverridden() = 0;
+  virtual bool GetIsViewportOverridden() = 0;
 
   /**
    * Return true if the presshell expects layout flush.
    */
-  virtual PRBool IsLayoutFlushObserver() = 0;
+  virtual bool IsLayoutFlushObserver() = 0;
 
   /**
    * Reflow the frame model with a reflow reason of eReflowReason_StyleChange
@@ -477,7 +477,7 @@ public:
    * @param aIsSafeToFlush PR_TRUE if it is safe, PR_FALSE otherwise.
    * 
    */
-  virtual NS_HIDDEN_(PRBool) IsSafeToFlush() const = 0;
+  virtual NS_HIDDEN_(bool) IsSafeToFlush() const = 0;
 
   /**
    * Flush pending notifications of the type specified.  This method
@@ -514,7 +514,7 @@ public:
    * the pres shell that there is no current target, and |aScroll| must
    * be false.
    */
-  virtual NS_HIDDEN_(nsresult) GoToAnchor(const nsAString& aAnchorName, PRBool aScroll) = 0;
+  virtual NS_HIDDEN_(nsresult) GoToAnchor(const nsAString& aAnchorName, bool aScroll) = 0;
 
   /**
    * Tells the presshell to scroll again to the last anchor scrolled to by
@@ -594,7 +594,7 @@ public:
    * contain this document in a iframe or the like.
    * @return true if any scrolling happened, false if no scrolling happened
    */
-  virtual PRBool ScrollFrameRectIntoView(nsIFrame*     aFrame,
+  virtual bool ScrollFrameRectIntoView(nsIFrame*     aFrame,
                                          const nsRect& aRect,
                                          PRIntn        aVPercent,
                                          PRIntn        aHPercent,
@@ -622,7 +622,7 @@ public:
    * Suppress notification of the frame manager that frames are
    * being destroyed.
    */
-  virtual NS_HIDDEN_(void) SetIgnoreFrameDestruction(PRBool aIgnore) = 0;
+  virtual NS_HIDDEN_(void) SetIgnoreFrameDestruction(bool aIgnore) = 0;
 
   /**
    * Notification sent by a frame informing the pres shell that it is about to
@@ -717,20 +717,20 @@ public:
    * Get and set the history state for the current document 
    */
 
-  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage = PR_FALSE) = 0;
+  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, bool aLeavingPage = false) = 0;
 
   /**
    * Determine if reflow is currently locked
    * returns PR_TRUE if reflow is locked, PR_FALSE otherwise
    */
-  PRBool IsReflowLocked() const { return mIsReflowing; }
+  bool IsReflowLocked() const { return mIsReflowing; }
 
   /**
    * Called to find out if painting is suppressed for this presshell.  If it is suppressd,
    * we don't allow the painting of any layer but the background, and we don't
    * recur into our children.
    */
-  PRBool IsPaintingSuppressed() const { return mPaintingSuppressed; }
+  bool IsPaintingSuppressed() const { return mPaintingSuppressed; }
 
   /**
    * Unsuppress painting.
@@ -749,7 +749,7 @@ public:
   /**
    * Indicates whether theme support is enabled.
    */
-  PRBool IsThemeSupportEnabled() const { return !mIsThemeSupportDisabled; }
+  bool IsThemeSupportEnabled() const { return !mIsThemeSupportDisabled; }
 
   /**
    * Get the set of agent style sheets for this presentation
@@ -790,12 +790,12 @@ public:
    * (any non-zero debug level will work). Or, call SetVerifyReflowEnable
    * with PR_TRUE.
    */
-  static PRBool GetVerifyReflowEnable();
+  static bool GetVerifyReflowEnable();
 
   /**
    * Set the verify-reflow enable flag.
    */
-  static void SetVerifyReflowEnable(PRBool aEnabled);
+  static void SetVerifyReflowEnable(bool aEnabled);
 
   virtual nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
 
@@ -808,8 +808,8 @@ public:
                                       nsIFrame * aFrame,
                                       const nsPoint& aOffset,
                                       PRUint32 aColor) = 0;
-  virtual NS_HIDDEN_(void) SetPaintFrameCount(PRBool aOn) = 0;
-  virtual PRBool IsPaintingFrameCounts() = 0;
+  virtual NS_HIDDEN_(void) SetPaintFrameCount(bool aOn) = 0;
+  virtual bool IsPaintingFrameCounts() = 0;
 #endif
 
 #ifdef DEBUG
@@ -839,7 +839,7 @@ public:
    * XXX this should include image animations
    */
   virtual void Freeze() = 0;
-  PRBool IsFrozen() { return mFrozen; }
+  bool IsFrozen() { return mFrozen; }
 
   /**
    * Restarts active elements (plugins) in this presentation and in the
@@ -847,7 +847,7 @@ public:
    */
   virtual void Thaw() = 0;
 
-  virtual void FireOrClearDelayedEvents(PRBool aFireEvents) = 0;
+  virtual void FireOrClearDelayedEvents(bool aFireEvents) = 0;
 
   /**
    * When this shell is disconnected from its containing docshell, we
@@ -972,7 +972,7 @@ public:
    * @param aDisable If true, disable all non synthetic test mouse
    * events on all presShells.  Otherwise, enable them.
    */
-  virtual NS_HIDDEN_(void) DisableNonTestMouseEvents(PRBool aDisable) = 0;
+  virtual NS_HIDDEN_(void) DisableNonTestMouseEvents(bool aDisable) = 0;
 
   /**
    * Record the background color of the most recently drawn canvas. This color
@@ -1025,18 +1025,18 @@ public:
    */
   virtual nscolor ComputeBackstopColor(nsIView* aDisplayRoot) = 0;
 
-  void ObserveNativeAnonMutationsForPrint(PRBool aObserve)
+  void ObserveNativeAnonMutationsForPrint(bool aObserve)
   {
     mObservesMutationsForPrint = aObserve;
   }
-  PRBool ObservesNativeAnonMutationsForPrint()
+  bool ObservesNativeAnonMutationsForPrint()
   {
     return mObservesMutationsForPrint;
   }
 
-  virtual nsresult SetIsActive(PRBool aIsActive) = 0;
+  virtual nsresult SetIsActive(bool aIsActive) = 0;
 
-  PRBool IsActive()
+  bool IsActive()
   {
     return mIsActive;
   }
@@ -1075,7 +1075,7 @@ public:
   /**
    * Allow or disallow mouse capturing.
    */
-  static void AllowMouseCapture(PRBool aAllowed)
+  static void AllowMouseCapture(bool aAllowed)
   {
     gCaptureInfo.mAllowed = aAllowed;
   }
@@ -1084,7 +1084,7 @@ public:
    * Returns true if there is an active mouse capture that wants to prevent
    * drags.
    */
-  static PRBool IsMouseCapturePreventingDrag()
+  static bool IsMouseCapturePreventingDrag()
   {
     return gCaptureInfo.mPreventDrag && gCaptureInfo.mContent;
   }
@@ -1112,8 +1112,8 @@ public:
    * of painting.  If we are ignoring, then layers aren't clipped to
    * the CSS viewport and scrollbars aren't drawn.
    */
-  virtual void SetIgnoreViewportScrolling(PRBool aIgnore) = 0;
-  PRBool IgnoringViewportScrolling() const
+  virtual void SetIgnoreViewportScrolling(bool aIgnore) = 0;
+  bool IgnoringViewportScrolling() const
   { return mRenderFlags & STATE_IGNORING_VIEWPORT_SCROLLING; }
 
    /**
@@ -1134,22 +1134,22 @@ public:
    * this PresShell is visible. This is used when the contents of the page
    * moved (aFromScroll is false) or scrolled (aFromScroll is true).
    */
-  virtual void SynthesizeMouseMove(PRBool aFromScroll) = 0;
+  virtual void SynthesizeMouseMove(bool aFromScroll) = 0;
 
   /**
    * Refresh observer management.
    */
 protected:
-  virtual PRBool AddRefreshObserverExternal(nsARefreshObserver* aObserver,
+  virtual bool AddRefreshObserverExternal(nsARefreshObserver* aObserver,
                                             mozFlushType aFlushType);
-  PRBool AddRefreshObserverInternal(nsARefreshObserver* aObserver,
+  bool AddRefreshObserverInternal(nsARefreshObserver* aObserver,
                                     mozFlushType aFlushType);
-  virtual PRBool RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
+  virtual bool RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
                                                mozFlushType aFlushType);
-  PRBool RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
+  bool RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
                                        mozFlushType aFlushType);
 public:
-  PRBool AddRefreshObserver(nsARefreshObserver* aObserver,
+  bool AddRefreshObserver(nsARefreshObserver* aObserver,
                             mozFlushType aFlushType) {
 #ifdef _IMPL_NS_LAYOUT
     return AddRefreshObserverInternal(aObserver, aFlushType);
@@ -1158,7 +1158,7 @@ public:
 #endif
   }
 
-  PRBool RemoveRefreshObserver(nsARefreshObserver* aObserver,
+  bool RemoveRefreshObserver(nsARefreshObserver* aObserver,
                                mozFlushType aFlushType) {
 #ifdef _IMPL_NS_LAYOUT
     return RemoveRefreshObserverInternal(aObserver, aFlushType);
@@ -1201,23 +1201,23 @@ protected:
 
   PRInt16                   mSelectionFlags;
 
-  PRPackedBool              mStylesHaveChanged;
-  PRPackedBool              mDidInitialReflow;
-  PRPackedBool              mIsDestroying;
-  PRPackedBool              mIsReflowing;
-  PRPackedBool              mPaintingSuppressed;  // For all documents we initially lock down painting.
-  PRPackedBool              mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
-  PRPackedBool              mIsActive;
-  PRPackedBool              mFrozen;
+  bool                      mStylesHaveChanged;
+  bool                      mDidInitialReflow;
+  bool                      mIsDestroying;
+  bool                      mIsReflowing;
+  bool                      mPaintingSuppressed;  // For all documents we initially lock down painting.
+  bool                      mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
+  bool                      mIsActive;
+  bool                      mFrozen;
 
-  PRPackedBool              mObservesMutationsForPrint;
+  bool                      mObservesMutationsForPrint;
 
-  PRPackedBool              mReflowScheduled; // If true, we have a reflow
+  bool                      mReflowScheduled; // If true, we have a reflow
                                               // scheduled. Guaranteed to be
                                               // false if mReflowContinueTimer
                                               // is non-null.
 
-  PRPackedBool              mSuppressInterruptibleReflows;
+  bool                      mSuppressInterruptibleReflows;
 
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;

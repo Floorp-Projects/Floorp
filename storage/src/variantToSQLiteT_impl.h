@@ -89,7 +89,7 @@ variantToSQLiteT(T aObj,
     }
     case nsIDataType::VTYPE_BOOL:
     {
-      PRBool value;
+      bool value;
       nsresult rv = aValue->GetAsBool(&value);
       NS_ENSURE_SUCCESS(rv, SQLITE_MISMATCH);
       return sqlite3_T_int(aObj, value ? 1 : 0);

@@ -191,7 +191,7 @@ private:
    */
   nsresult databaseElementExists(enum DatabaseElementType aElementType,
                                  const nsACString& aElementName,
-                                 PRBool *_exists);
+                                 bool *_exists);
 
   bool findFunctionByInstance(nsISupports *aInstance);
 
@@ -224,7 +224,7 @@ private:
    * Tracks if we have a transaction in progress or not.  Access protected by
    * mDBMutex.
    */
-  PRBool mTransactionInProgress;
+  bool mTransactionInProgress;
 
   /**
    * Stores the mapping of a given function by name to its instance.  Access is

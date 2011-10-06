@@ -134,7 +134,7 @@ nsXREDirProvider::Initialize(nsIFile *aXULAppDir,
   if (!mProfileDir) {
     nsCOMPtr<nsIDirectoryServiceProvider> app(do_QueryInterface(mAppProvider));
     if (app) {
-      PRBool per = PR_FALSE;
+      bool per = false;
       app->GetFile(NS_APP_USER_PROFILE_50_DIR, &per, getter_AddRefs(mProfileDir));
       NS_ASSERTION(per, "NS_APP_USER_PROFILE_50_DIR must be persistent!"); 
       NS_ASSERTION(mProfileDir, "NS_APP_USER_PROFILE_50_DIR not defined! This shouldn't happen!"); 
@@ -183,12 +183,12 @@ nsXREDirProvider::Release()
 }
 
 NS_IMETHODIMP
-nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
+nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
 			  nsIFile** aFile)
 {
   nsresult rv;
 
-  PRBool gettingProfile = PR_FALSE;
+  bool gettingProfile = false;
 
   if (!strcmp(aProperty, NS_APP_USER_PROFILE_LOCAL_50_DIR)) {
     // If XRE_NotifyProfile hasn't been called, don't fall through to
@@ -349,7 +349,7 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     return NS_OK;
   }
 
-  PRBool ensureFilePermissions = PR_FALSE;
+  bool ensureFilePermissions = false;
 
   if (NS_SUCCEEDED(GetProfileDir(getter_AddRefs(file)))) {
     if (!strcmp(aProperty, NS_APP_PREFS_50_DIR)) {
@@ -393,8 +393,8 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     return NS_ERROR_FAILURE;
 
   if (ensureFilePermissions) {
-    PRBool fileToEnsureExists;
-    PRBool isWritable;
+    bool fileToEnsureExists;
+    bool isWritable;
     if (NS_SUCCEEDED(file->Exists(&fileToEnsureExists)) && fileToEnsureExists
         && NS_SUCCEEDED(file->IsWritable(&isWritable)) && !isWritable) {
       PRUint32 permissions;
@@ -425,7 +425,7 @@ LoadAppDirIntoArray(nsIFile* aXULAppDir,
   for (; *aAppendList; ++aAppendList)
     subdir->AppendNative(nsDependentCString(*aAppendList));
 
-  PRBool exists;
+  bool exists;
   if (NS_SUCCEEDED(subdir->Exists(&exists)) && exists)
     aDirectories.AppendObject(subdir);
 }
@@ -436,7 +436,7 @@ LoadDirsIntoArray(nsCOMArray<nsIFile>& aSourceDirs,
                   nsCOMArray<nsIFile>& aDirectories)
 {
   nsCOMPtr<nsIFile> appended;
-  PRBool exists;
+  bool exists;
 
   for (PRInt32 i = 0; i < aSourceDirs.Count(); ++i) {
     aSourceDirs[i]->Clone(getter_AddRefs(appended));
@@ -646,7 +646,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
       mProfileDir->Clone(getter_AddRefs(overrideFile));
       overrideFile->AppendNative(NS_LITERAL_CSTRING(PREF_OVERRIDE_DIRNAME));
 
-      PRBool exists;
+      bool exists;
       if (NS_SUCCEEDED(overrideFile->Exists(&exists)) && exists)
         directories.AppendObject(overrideFile);
     }
@@ -839,7 +839,7 @@ GetShellFolderPath(int folder, nsAString& _retval)
  * SHGetPathFromIDListW is unable to provide these paths (Bug 513958).
  */
 static nsresult
-GetRegWindowsAppDataFolder(PRBool aLocal, nsAString& _retval)
+GetRegWindowsAppDataFolder(bool aLocal, nsAString& _retval)
 {
   HKEY key;
   NS_NAMED_LITERAL_STRING(keyName,
@@ -946,7 +946,7 @@ nsXREDirProvider::GetProfileStartupDir(nsIFile* *aResult)
 
   if (mAppProvider) {
     nsCOMPtr<nsIFile> needsclone;
-    PRBool dummy;
+    bool dummy;
     nsresult rv = mAppProvider->GetFile(NS_APP_PROFILE_DIR_STARTUP,
                                         &dummy,
                                         getter_AddRefs(needsclone));
@@ -969,7 +969,7 @@ nsXREDirProvider::GetProfileDir(nsIFile* *aResult)
 
   if (mAppProvider) {
     nsCOMPtr<nsIFile> needsclone;
-    PRBool dummy;
+    bool dummy;
     nsresult rv = mAppProvider->GetFile(NS_APP_USER_PROFILE_50_DIR,
                                         &dummy,
                                         getter_AddRefs(needsclone));
@@ -981,7 +981,7 @@ nsXREDirProvider::GetProfileDir(nsIFile* *aResult)
 }
 
 nsresult
-nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, PRBool aLocal)
+nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, bool aLocal)
 {
   // Copied from nsAppFileLocationProvider (more or less)
   nsresult rv;
@@ -1133,7 +1133,7 @@ nsXREDirProvider::GetSystemExtensionsDirectory(nsILocalFile** aFile)
 #endif
 
 nsresult
-nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
+nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, bool aLocal)
 {
   nsCOMPtr<nsILocalFile> localDir;
   nsresult rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), aLocal);
@@ -1157,7 +1157,7 @@ nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
 nsresult
 nsXREDirProvider::EnsureDirectoryExists(nsIFile* aDirectory)
 {
-  PRBool exists;
+  bool exists;
   nsresult rv = aDirectory->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 #ifdef DEBUG_jungshik
@@ -1181,7 +1181,7 @@ void
 nsXREDirProvider::EnsureProfileFileExists(nsIFile *aFile)
 {
   nsresult rv;
-  PRBool exists;
+  bool exists;
 
   rv = aFile->Exists(&exists);
   if (NS_FAILED(rv) || exists) return;

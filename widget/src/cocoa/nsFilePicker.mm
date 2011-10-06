@@ -62,7 +62,7 @@ using namespace mozilla;
 const float kAccessoryViewPadding = 5;
 const int   kSaveTypeControlTag = 1;
 
-static PRBool gCallSecretHiddenFileAPI = PR_FALSE;
+static bool gCallSecretHiddenFileAPI = false;
 const char kShowHiddenFilesPref[] = "filepicker.showHiddenFiles";
 
 /**
@@ -91,9 +91,9 @@ static void SetShowHiddenFileState(NSSavePanel* panel)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  PRBool show = PR_FALSE;
+  bool show = false;
   if (NS_SUCCEEDED(Preferences::GetBool(kShowHiddenFilesPref, &show))) {
-    gCallSecretHiddenFileAPI = PR_TRUE;
+    gCallSecretHiddenFileAPI = true;
   }
 
   if (gCallSecretHiddenFileAPI) {
@@ -252,11 +252,11 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   switch (mMode)
   {
     case modeOpen:
-      userClicksOK = GetLocalFiles(mTitle, PR_FALSE, mFiles);
+      userClicksOK = GetLocalFiles(mTitle, false, mFiles);
       break;
     
     case modeOpenMultiple:
-      userClicksOK = GetLocalFiles(mTitle, PR_TRUE, mFiles);
+      userClicksOK = GetLocalFiles(mTitle, true, mFiles);
       break;
       
     case modeSave:
@@ -321,7 +321,7 @@ void UpdatePanelFileTypes(NSOpenPanel* aPanel, NSArray* aFilters)
 
 // Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in the dialog. 
 PRInt16
-nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles)
+nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -405,7 +405,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
     }
 
     nsCOMPtr<nsILocalFile> localFile;
-    NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
+    NS_NewLocalFile(EmptyString(), true, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
     if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)url))) {
       outFiles.AppendObject(localFile);
@@ -457,7 +457,7 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
   NSURL *theURL = [[thePanel URLs] objectAtIndex:0];
   if (theURL) {
     nsCOMPtr<nsILocalFile> localFile;
-    NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
+    NS_NewLocalFile(EmptyString(), true, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
     if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)theURL))) {
       *outFile = localFile;
@@ -511,7 +511,7 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
   NSURL* fileURL = [thePanel URL];
   if (fileURL) { 
     nsCOMPtr<nsILocalFile> localFile;
-    NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
+    NS_NewLocalFile(EmptyString(), true, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
     if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)fileURL))) {
       *outFile = localFile;

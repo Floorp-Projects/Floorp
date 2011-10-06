@@ -55,7 +55,7 @@ namespace XPCNativeWrapper {
   ((_wn)->GetScriptableInfo() &&                   \
    (_wn)->GetScriptableInfo()->GetFlags()._flag())
 
-PRBool
+bool
 AttachNewConstructorObject(XPCCallContext &ccx, JSObject *aGlobalObject);
 
 } // namespace XPCNativeWrapper
@@ -79,7 +79,7 @@ GetSecurityManager()
 inline JSBool
 IsSecurityWrapper(JSObject *wrapper)
 {
-  return wrapper->isWrapper();
+  return js::IsWrapper(wrapper);
 }
 
 /**

@@ -111,14 +111,14 @@ nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
   mOwner = aWindow;
   mScriptContext = aScriptContext;
 
-  if (Preferences::GetBool("notification.disabled", PR_FALSE)) {
+  if (Preferences::GetBool("notification.disabled", false)) {
     return;
   }
 
   // If we are in testing mode (running mochitests, for example)
   // and we are suppose to allow requests, then just post an allow event.
-  if (Preferences::GetBool("notification.prompt.testing", PR_FALSE) &&
-      Preferences::GetBool("notification.prompt.testing.allow", PR_TRUE)) {
+  if (Preferences::GetBool("notification.prompt.testing", false) &&
+      Preferences::GetBool("notification.prompt.testing.allow", true)) {
     mAllow = PR_TRUE;
     return;
   }
@@ -140,10 +140,10 @@ nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
     
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
     // Corresponding release occurs in DeallocPContentPermissionRequest.
-    request->AddRef();
+    nsRefPtr<nsDesktopNotificationRequest> copy = request;
 
     nsCString type = NS_LITERAL_CSTRING("desktop-notification");
-    child->SendPContentPermissionRequestConstructor(request, type, IPC::URI(mURI));
+    child->SendPContentPermissionRequestConstructor(copy.forget().get(), type, IPC::URI(mURI));
     
     request->Sendprompt();
     return;
@@ -182,7 +182,7 @@ nsDOMDesktopNotification::DispatchNotificationEvent(const nsString& aName)
 }
 
 void
-nsDOMDesktopNotification::SetAllow(PRBool aAllow)
+nsDOMDesktopNotification::SetAllow(bool aAllow)
 {
   mAllow = aAllow;
 

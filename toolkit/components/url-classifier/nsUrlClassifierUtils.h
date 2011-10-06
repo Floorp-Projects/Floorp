@@ -64,7 +64,7 @@ private:
     /**
      * Do a quick lookup to see if the letter is in the map.
      */
-    PRBool Contains(unsigned char c) const
+    bool Contains(unsigned char c) const
     {
       return mMap[c >> 5] & (1 << (c & 31));
     }
@@ -94,14 +94,14 @@ public:
   // space), 37(%), and anything 127 or above (special characters).  Url is the
   // string to encode, ret is the encoded string.  Function returns true if
   // ret != url.
-  PRBool SpecialEncode(const nsACString & url,
-                       PRBool foldSlashes,
+  bool SpecialEncode(const nsACString & url,
+                       bool foldSlashes,
                        nsACString & _retval);
 
   void ParseIPAddress(const nsACString & host, nsACString & _retval);
   void CanonicalNum(const nsACString & num,
                     PRUint32 bytes,
-                    PRBool allowOctal,
+                    bool allowOctal,
                     nsACString & _retval);
 
   // Convert an urlsafe base64 string to a normal base64 string.
@@ -117,7 +117,7 @@ private:
   nsUrlClassifierUtils(const nsUrlClassifierUtils&);
 
   // Function to tell if we should encode a character.
-  PRBool ShouldURLEscape(const unsigned char c) const;
+  bool ShouldURLEscape(const unsigned char c) const;
 
   void CleanupHostname(const nsACString & host, nsACString & _retval);
 

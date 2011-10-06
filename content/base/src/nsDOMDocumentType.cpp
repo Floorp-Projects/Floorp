@@ -107,7 +107,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 NS_IMPL_ADDREF_INHERITED(nsDOMDocumentType, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(nsDOMDocumentType, nsGenericDOMDataNode)
 
-PRBool
+bool
 nsDOMDocumentType::IsNodeOfType(PRUint32 aFlags) const
 {
   // Don't claim to be eDATA_NODE since we're just inheriting
@@ -154,7 +154,7 @@ nsDOMDocumentType::GetInternalSubset(nsAString& aInternalSubset)
 }
 
 nsGenericDOMDataNode*
-nsDOMDocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
+nsDOMDocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
 {
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   return new nsDOMDocumentType(ni.forget(), mPublicId, mSystemId,

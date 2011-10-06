@@ -192,7 +192,7 @@ nsDOMSubtreeIterator::Init(nsIDOMNode* aNode)
  * some general purpose editor utils
  *****************************************************************************/
 
-PRBool 
+bool 
 nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset) 
 {
   NS_ENSURE_TRUE(aNode || aParent, PR_FALSE);
@@ -224,10 +224,10 @@ nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *a
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsEditorUtils::IsLeafNode(nsIDOMNode *aNode)
 {
-  PRBool hasChildren = PR_FALSE;
+  bool hasChildren = false;
   if (aNode)
     aNode->HasChildNodes(&hasChildren);
   return !hasChildren;
@@ -252,7 +252,7 @@ nsEditorHookUtils::GetHookEnumeratorFromDocument(nsIDOMDocument *aDoc,
   return hookObj->GetHookEnumerator(aResult);
 }
 
-PRBool
+bool
 nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent,  
                                    nsITransferable *aTrans)
 {
@@ -260,7 +260,7 @@ nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent
   GetHookEnumeratorFromDocument(aDoc, getter_AddRefs(enumerator));
   NS_ENSURE_TRUE(enumerator, PR_TRUE);
 
-  PRBool hasMoreHooks = PR_FALSE;
+  bool hasMoreHooks = false;
   while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks)) && hasMoreHooks)
   {
     nsCOMPtr<nsISupports> isupp;
@@ -270,7 +270,7 @@ nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent
     nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
     if (override)
     {
-      PRBool doInsert = PR_TRUE;
+      bool doInsert = true;
 #ifdef DEBUG
       nsresult hookResult =
 #endif

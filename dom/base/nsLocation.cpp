@@ -83,7 +83,7 @@ GetContextFromStack(nsIJSContextStack *aStack, JSContext **aContext)
   nsresult rv = iterator->Reset(aStack);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool done;
+  bool done;
   while (NS_SUCCEEDED(iterator->Done(&done)) && !done) {
     rv = iterator->Prev(aContext);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Broken iterator implementation");
@@ -259,7 +259,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
       docCurrentURI = frameDoc->GetDocumentURI();
     }
 
-    PRBool urisEqual = PR_FALSE;
+    bool urisEqual = false;
     if (docOriginalURI && docCurrentURI && principalURI) {
       principalURI->Equals(docOriginalURI, &urisEqual);
     }
@@ -291,7 +291,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 }
 
 nsresult
-nsLocation::GetURI(nsIURI** aURI, PRBool aGetInnermostURI)
+nsLocation::GetURI(nsIURI** aURI, bool aGetInnermostURI)
 {
   *aURI = nsnull;
 
@@ -344,7 +344,7 @@ nsLocation::GetWritableURI(nsIURI** aURI)
 }
 
 nsresult
-nsLocation::SetURI(nsIURI* aURI, PRBool aReplace)
+nsLocation::SetURI(nsIURI* aURI, bool aReplace)
 {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (docShell) {
@@ -579,7 +579,7 @@ nsLocation::SetHref(const nsAString& aHref)
 
 nsresult
 nsLocation::SetHrefWithContext(JSContext* cx, const nsAString& aHref,
-                               PRBool aReplace)
+                               bool aReplace)
 {
   nsCOMPtr<nsIURI> base;
 
@@ -595,7 +595,7 @@ nsLocation::SetHrefWithContext(JSContext* cx, const nsAString& aHref,
 
 nsresult
 nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
-                            PRBool aReplace)
+                            bool aReplace)
 {
   nsresult result;
   nsCOMPtr<nsIURI> newUri;
@@ -619,7 +619,7 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
      * anywhere else. This is part of solution for bug # 39938, 72197
      * 
      */
-    PRBool inScriptTag=PR_FALSE;
+    bool inScriptTag=false;
     // Get JSContext from stack.
     nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result));
 
@@ -830,7 +830,7 @@ nsLocation::SetSearch(const nsAString& aSearch)
 }
 
 NS_IMETHODIMP
-nsLocation::Reload(PRBool aForceget)
+nsLocation::Reload(bool aForceget)
 {
   nsresult rv;
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));

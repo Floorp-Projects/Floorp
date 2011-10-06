@@ -135,13 +135,13 @@ protected:
    */
   void OpenDragPopup();
 
-  PRPackedBool mCanDrop;
-  PRPackedBool mOnlyChromeDrop;
-  PRPackedBool mDoingDrag;
+  bool mCanDrop;
+  bool mOnlyChromeDrop;
+  bool mDoingDrag;
   // true if mImage should be used to set a drag image
-  PRPackedBool mHasImage;
+  bool mHasImage;
   // true if the user cancelled the drag operation
-  PRPackedBool mUserCancelled;
+  bool mUserCancelled;
 
   PRUint32 mDragAction;
   nsSize mTargetSize;

@@ -95,13 +95,13 @@ public:
 
   // Resolve all the fields for this implementation on the object |obj| False
   // return means a JS exception was set.
-  PRBool ResolveAllFields(JSContext *cx, JSObject *obj) const;
+  bool ResolveAllFields(JSContext *cx, JSObject *obj) const;
 
   // Undefine all our fields from object |obj| (which should be a
   // JSObject for a bound element).
   void UndefineFields(JSContext* cx, JSObject* obj) const;
 
-  PRBool CompiledMembers() const {
+  bool CompiledMembers() const {
     return mClassObject != nsnull;
   }
 

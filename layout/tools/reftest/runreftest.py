@@ -68,6 +68,10 @@ class RefTest(object):
       defaultManifestPath = os.path.join(path, 'reftest.list')
       if os.path.exists(defaultManifestPath):
         path = defaultManifestPath
+      else:
+        defaultManifestPath = os.path.join(path, 'crashtests.list')
+        if os.path.exists(defaultManifestPath):
+          path = defaultManifestPath
     return path
 
   def createReftestProfile(self, options, profileDir, server='localhost'):

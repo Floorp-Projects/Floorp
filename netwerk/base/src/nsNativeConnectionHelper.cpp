@@ -50,7 +50,7 @@
 // API typically invoked on the socket transport thread
 //-----------------------------------------------------------------------------
 
-PRBool
+bool
 nsNativeConnectionHelper::OnConnectionFailed(const PRUnichar* hostName)
 {
   // On mobile platforms, instead of relying on the link service, we
@@ -69,7 +69,7 @@ nsNativeConnectionHelper::OnConnectionFailed(const PRUnichar* hostName)
     return PR_FALSE;
 }
 
-PRBool
+bool
 nsNativeConnectionHelper::IsAutodialEnabled()
 {
     nsAutodial autodial;

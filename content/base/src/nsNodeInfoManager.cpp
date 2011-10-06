@@ -418,7 +418,7 @@ nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
   }
 
 #ifdef DEBUG
-  PRBool ret =
+  bool ret =
 #endif
   PL_HashTableRemove(mNodeInfoHash, &aNodeInfo->mInner);
 

@@ -168,11 +168,11 @@ static void FreeStringArray(PRUint32 variants, char ** array)
 
 // nsPluginsDir class
 
-PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
+bool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
     nsCAutoString leaf;
     if (NS_FAILED(file->GetNativeLeafName(leaf)))
-        return PR_FALSE;
+        return false;
 
     const char *leafname = leaf.get();
     
@@ -183,10 +183,10 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
           (0 == strnicmp( &(leafname[len - 4]), ".dll", 4)) &&
           (0 == strnicmp( leafname, "np", 2)))
       {
-        return PR_TRUE;
+        return true;
       }
     }
-    return PR_FALSE;
+    return false;
 }
 
 // nsPluginFile implementation

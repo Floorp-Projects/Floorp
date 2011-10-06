@@ -182,7 +182,7 @@ var Browser = {
     /* handles web progress management for open browsers */
     Elements.browsers.webProgress = new Browser.WebProgress();
 
-    this.keySender = new ContentCustomKeySender(Elements.browsers);
+    this.keyFilter = new KeyFilter(Elements.browsers);
     let mouseModule = new MouseModule();
     let gestureModule = new GestureModule(Elements.browsers);
     let scrollWheelModule = new ScrollwheelModule(Elements.browsers);
@@ -601,8 +601,7 @@ var Browser = {
         this.closeTab(oldTab, { forceClose: true });
         oldTab = null;
       }
-    }
-    else {
+    } else {
       let params = aParams || {};
       let flags = params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
       browser.loadURIWithFlags(aURI, flags, params.referrerURI, params.charset, params.postData);
@@ -1236,14 +1235,19 @@ var Browser = {
         break;
       }
 
-      case "Browser:KeyPress":
+      case "Browser:KeyPress": {
+        let keyset = document.getElementById("mainKeyset");
+        keyset.setAttribute("disabled", "false");
+        if (json.preventDefault)
+          break;
+
         let event = document.createEvent("KeyEvents");
         event.initKeyEvent("keypress", true, true, null,
                            json.ctrlKey, json.altKey, json.shiftKey, json.metaKey,
                            json.keyCode, json.charCode);
-        document.getElementById("mainKeyset").dispatchEvent(event);
+        keyset.dispatchEvent(event);
         break;
-
+      }
       case "Browser:ZoomToPoint:Return":
         if (json.zoomTo) {
           let rect = Rect.fromRect(json.zoomTo);
@@ -1272,60 +1276,6 @@ var Browser = {
         this._handleErrorPage(aMessage);
         break;
     }
-  },
-
-  _grabbedSidebar: false, // true while the user is dragging the sidebar
-  _sidebarOffset: 0, // tracks how far the sidebar has been dragged
-  _slideMultiplier: 1, // set greater than 1 to amplify sidebar drags (makes swiping easier)
-
-  /**
-   * Call this function in landscape tablet mode to begin dragging the tab sidebar.
-   * Hiding the sidebar makes the viewable area grow; showing the sidebar makes it shrink.
-   */
-  grabSidebar: function grabSidebar() {
-    this._grabbedSidebar = true;
-    ViewableAreaObserver.update();
-
-    let ltr = (Util.localeDir == Util.LOCALE_DIR_LTR);
-
-    if (TabsPopup.visible) {
-      this._setSidebarOffset(ltr ? 0 : ViewableAreaObserver.sidebarWidth);
-      this._slideMultiplier = 3;
-    } else {
-      // If the tab bar is hidden, un-collapse it but scroll it offscreen.
-      TabsPopup.show();
-      this._setSidebarOffset(ltr ? ViewableAreaObserver.sidebarWidth : 0);
-      this._slideMultiplier = 6;
-    }
-  },
-
-  /** Move the tablet sidebar by aX pixels. */
-  slideSidebarBy: function slideSidebarBy(aX) {
-    this._setSidebarOffset(this._sidebarOffset + (aX * this._slideMultiplier));
-  },
-
-  /** Call this when tablet sidebar dragging is finished. */
-  ungrabSidebar: function ungrabSidebar() {
-    if (!this._grabbedSidebar)
-      return;
-    this._grabbedSidebar = false;
-
-    let finalOffset = this._sidebarOffset;
-    this._setSidebarOffset(0);
-
-    let rtl = (Util.localeDir == Util.LOCALE_DIR_RTL);
-    if (finalOffset > (ViewableAreaObserver.sidebarWidth / 2) ^ rtl)
-      TabsPopup.hide();
-    else
-      // we already called TabsPopup.show() in grabSidebar; just need to update the width again.
-      ViewableAreaObserver.update();
-  },
-
-  /** Move the tablet sidebar. */
-  _setSidebarOffset: function _setSidebarOffset(aOffset) {
-    this._sidebarOffset = aOffset;
-    let scrollX = Util.clamp(aOffset, 0, ViewableAreaObserver.sidebarWidth);
-    Browser.controlsScrollboxScroller.scrollTo(scrollX, 0);
   }
 };
 
@@ -1357,14 +1307,16 @@ Browser.MainDragger.prototype = {
     let isTablet = Util.isTablet();
     this._panToolbars = !isTablet;
 
+    this._grabSidebar = false;
+    this._canGrabSidebar = false;
     // In landscape portrait mode, swiping from the left margin drags the tab sidebar.
-    this._grabSidebar = isTablet && !Util.isPortrait() &&
-      ((Util.localeDir == Util.LOCALE_DIR_LTR) ?
-       (clientX - bcr.left < 30) :
-       (bcr.right - clientX < 30));
-
-    if (this._grabSidebar)
-      Browser.grabSidebar();
+    if (isTablet && !Util.isPortrait()) {
+      let grabSidebarMargin = TabletSidebar.visible ? 30 : 5;
+      // Don't actually grab until we see whether the swipe is horizontal in dragMove.
+      this._canGrabSidebar = ((Util.localeDir == Util.LOCALE_DIR_LTR)
+                           ? (clientX - bcr.left < 30)
+                           : (bcr.right - clientX < 30));
+    }
 
     if (this._sidebarTimeout) {
       clearTimeout(this._sidebarTimeout);
@@ -1374,9 +1326,10 @@ Browser.MainDragger.prototype = {
 
   dragStop: function dragStop(dx, dy, scroller) {
     if (this._grabSidebar) {
-      Browser.ungrabSidebar();
+      TabletSidebar.ungrab();
       return;
     }
+
     if (this._contentView && this._contentView._updateCacheViewport)
       this._contentView._updateCacheViewport();
     this._contentView = null;
@@ -1385,8 +1338,12 @@ Browser.MainDragger.prototype = {
   },
 
   dragMove: function dragMove(dx, dy, scroller, aIsKinetic) {
+    if (this._canGrabSidebar && !this._grabSidebar && dx) {
+      this._grabSidebar = true;
+      TabletSidebar.grab();
+    }
     if (this._grabSidebar) {
-      Browser.slideSidebarBy(dx);
+      TabletSidebar.slideBy(dx);
       return;
     }
 
@@ -2060,47 +2017,27 @@ const ContentTouchHandler = {
 };
 
 
-/** Watches for mouse events in chrome and sends them to content. */
-function ContentCustomKeySender(container) {
+/** Prevent chrome from consuming key events before remote content has a chance. */
+function KeyFilter(container) {
   container.addEventListener("keypress", this, false);
   container.addEventListener("keyup", this, false);
   container.addEventListener("keydown", this, false);
 }
 
-ContentCustomKeySender.prototype = {
+KeyFilter.prototype = {
   handleEvent: function handleEvent(aEvent) {
     if (Elements.contentShowing.getAttribute("disabled") == "true")
       return;
 
     let browser = getBrowser();
-    if (browser && browser.active && browser.getAttribute("remote") == "true") {
+    if (browser && browser.active) {
       aEvent.stopPropagation();
-      aEvent.preventDefault();
-
-      let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-      fl.sendCrossProcessKeyEvent(aEvent.type,
-                                  aEvent.keyCode,
-                                  (aEvent.type != "keydown") ? aEvent.charCode : null,
-                                  this._parseModifiers(aEvent));
+      document.getElementById("mainKeyset").setAttribute("disabled", "true");
     }
   },
 
-  _parseModifiers: function _parseModifiers(aEvent) {
-    const masks = Ci.nsIDOMNSEvent;
-    let mval = 0;
-    if (aEvent.shiftKey)
-      mval |= masks.SHIFT_MASK;
-    if (aEvent.ctrlKey)
-      mval |= masks.CONTROL_MASK;
-    if (aEvent.altKey)
-      mval |= masks.ALT_MASK;
-    if (aEvent.metaKey)
-      mval |= masks.META_MASK;
-    return mval;
-  },
-
   toString: function toString() {
-    return "[ContentCustomKeySender] { }";
+    return "[KeyFilter] { }";
   }
 };
 
@@ -2942,7 +2879,7 @@ Tab.prototype = {
 
     try {
       let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      let postData = "postData" in aParams ? aParams.postData.value : null;
+      let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
       let charset = "charset" in aParams ? aParams.charset : null;
       browser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
@@ -3008,7 +2945,6 @@ Tab.prototype = {
 
     let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     fl.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
-    fl.eventMode = Ci.nsIFrameLoader.EVENT_MODE_DONT_FORWARD_TO_CHILD;
 
     return browser;
   },
@@ -3111,15 +3047,16 @@ Tab.prototype = {
     if (md && md.defaultZoom)
       return this.clampZoomLevel(md.defaultZoom);
 
-    let pageZoom = this.getPageZoomLevel();
+    let browserWidth = this._browser.getBoundingClientRect().width;
+    let defaultZoom = browserWidth / this._browser.contentWindowWidth;
 
-    // If pageZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
+    // If defaultZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
     let granularity = Services.prefs.getIntPref("browser.ui.zoom.pageFitGranularity");
     let threshold = 1 - 1 / granularity;
-    if (threshold < pageZoom && pageZoom < 1)
-      pageZoom = 1;
+    if (threshold < defaultZoom && defaultZoom < 1)
+      defaultZoom = 1;
 
-    return this.clampZoomLevel(pageZoom);
+    return this.clampZoomLevel(defaultZoom);
   },
 
   /**
@@ -3245,7 +3182,7 @@ function rendererFactory(aBrowser, aCanvas) {
 var ViewableAreaObserver = {
   get width() {
     let width = this._width || window.innerWidth;
-    if (!Browser._grabbedSidebar && Util.isTablet())
+    if (!TabletSidebar._grabbed && Util.isTablet())
       width -= this.sidebarWidth;
     return width;
   },

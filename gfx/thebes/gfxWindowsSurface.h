@@ -103,8 +103,10 @@ public:
     virtual gfxASurface::MemoryLocation GetMemoryLocation() const;
 
 private:
-    PRPackedBool mOwnsDC;
-    PRPackedBool mForPrinting;
+    void MakeInvalid(gfxIntSize& size);
+
+    bool mOwnsDC;
+    bool mForPrinting;
 
     HDC mDC;
     HWND mWnd;

@@ -115,7 +115,7 @@ nsDataHandler::NewURI(const nsACString &aSpec,
     } else {
         // Otherwise, we'll assume |spec| is a fully-specified data URI
         nsCAutoString contentType, contentCharset, dataBuffer, hashRef;
-        PRBool base64;
+        bool base64;
         rv = ParseURI(spec, contentType, contentCharset, base64, dataBuffer, hashRef);
         if (NS_FAILED(rv))
             return rv;
@@ -160,7 +160,7 @@ nsDataHandler::NewChannel(nsIURI* uri, nsIChannel* *result) {
 }
 
 NS_IMETHODIMP 
-nsDataHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval) {
+nsDataHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval) {
     // don't override anything.  
     *_retval = PR_FALSE;
     return NS_OK;
@@ -170,7 +170,7 @@ nsresult
 nsDataHandler::ParseURI(nsCString& spec,
                         nsCString& contentType,
                         nsCString& contentCharset,
-                        PRBool&    isBase64,
+                        bool&    isBase64,
                         nsCString& dataBuffer,
                         nsCString& hashRef) {
     isBase64 = PR_FALSE;

@@ -65,6 +65,7 @@ _TEST_FILES =\
 		test_img.html \
 		test_invalidationlist.html \
 		test_list.html \
+		test_map.html \
 		test_media.html \
 		test_select.html \
 		test_tabbox.xul \

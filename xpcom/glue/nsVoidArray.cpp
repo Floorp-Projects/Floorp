@@ -140,7 +140,7 @@ VoidStats gVoidStats;
 
 void
 nsVoidArray::SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount,
-                      PRBool aOwner, PRBool aHasAuto)
+                      bool aOwner, bool aHasAuto)
 {
   // old mImpl has been realloced and so we don't free/delete it
   NS_PRECONDITION(newImpl, "can't set size");
@@ -154,11 +154,11 @@ nsVoidArray::SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount,
 // This does all allocation/reallocation of the array.
 // It also will compact down to N - good for things that might grow a lot
 // at times,  but usually are smaller, like JS deferred GC releases.
-PRBool nsVoidArray::SizeTo(PRInt32 aSize)
+bool nsVoidArray::SizeTo(PRInt32 aSize)
 {
   PRUint32 oldsize = GetArraySize();
-  PRBool isOwner = IsArrayOwner();
-  PRBool hasAuto = HasAutoBuffer();
+  bool isOwner = IsArrayOwner();
+  bool hasAuto = HasAutoBuffer();
 
   if (aSize == (PRInt32) oldsize)
     return PR_TRUE; // no change
@@ -262,7 +262,7 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
   return PR_TRUE;
 }
 
-PRBool nsVoidArray::GrowArrayBy(PRInt32 aGrowBy)
+bool nsVoidArray::GrowArrayBy(PRInt32 aGrowBy)
 {
   // We have to grow the array. Grow by kMinGrowArrayBy slots if we're
   // smaller than kLinearThreshold bytes, or a power of two if we're
@@ -376,7 +376,7 @@ nsVoidArray::~nsVoidArray()
     free(reinterpret_cast<char*>(mImpl));
 }
 
-PRBool nsVoidArray::SetCount(PRInt32 aNewCount)
+bool nsVoidArray::SetCount(PRInt32 aNewCount)
 {
   NS_ASSERTION(aNewCount >= 0,"SetCount(negative index)");
   if (aNewCount < 0)
@@ -440,7 +440,7 @@ PRInt32 nsVoidArray::IndexOf(void* aPossibleElement) const
   return -1;
 }
 
-PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
+bool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
 {
   PRInt32 oldCount = Count();
   NS_ASSERTION(aIndex >= 0,"InsertElementAt(negative index)");
@@ -483,7 +483,7 @@ PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
   return PR_TRUE;
 }
 
-PRBool nsVoidArray::InsertElementsAt(const nsVoidArray& other, PRInt32 aIndex)
+bool nsVoidArray::InsertElementsAt(const nsVoidArray& other, PRInt32 aIndex)
 {
   PRInt32 oldCount = Count();
   PRInt32 otherCount = other.Count();
@@ -532,7 +532,7 @@ PRBool nsVoidArray::InsertElementsAt(const nsVoidArray& other, PRInt32 aIndex)
   return PR_TRUE;
 }
 
-PRBool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
+bool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 {
   NS_ASSERTION(aIndex >= 0,"ReplaceElementAt(negative index)");
   if (aIndex < 0)
@@ -583,7 +583,7 @@ PRBool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 }
 
 // useful for doing LRU arrays
-PRBool nsVoidArray::MoveElement(PRInt32 aFrom, PRInt32 aTo)
+bool nsVoidArray::MoveElement(PRInt32 aFrom, PRInt32 aTo)
 {
   void *tempElement;
 
@@ -616,7 +616,7 @@ PRBool nsVoidArray::MoveElement(PRInt32 aFrom, PRInt32 aTo)
   return PR_TRUE;
 }
 
-PRBool nsVoidArray::RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount)
+bool nsVoidArray::RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount)
 {
   PRInt32 oldCount = Count();
   NS_ASSERTION(aIndex >= 0,"RemoveElementsAt(negative index)");
@@ -641,7 +641,7 @@ PRBool nsVoidArray::RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount)
   return PR_TRUE;
 }
 
-PRBool nsVoidArray::RemoveElement(void* aElement)
+bool nsVoidArray::RemoveElement(void* aElement)
 {
   PRInt32 theIndex = IndexOf(aElement);
   if (theIndex != -1)
@@ -712,10 +712,10 @@ void nsVoidArray::Sort(nsVoidArrayComparatorFunc aFunc, void* aData)
   }
 }
 
-PRBool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
+bool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
   PRInt32 index = -1;
-  PRBool  running = PR_TRUE;
+  bool    running = true;
 
   if (mImpl)
   {
@@ -727,9 +727,9 @@ PRBool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
   return running;
 }
 
-PRBool nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
+bool nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
-  PRBool  running = PR_TRUE;
+  bool    running = true;
 
   if (mImpl)
   {
@@ -868,7 +868,7 @@ nsCStringArray::IndexOfIgnoreCase(const nsACString& aPossibleString) const
 }
 #endif
 
-PRBool 
+bool 
 nsCStringArray::InsertCStringAt(const nsACString& aCString, PRInt32 aIndex)
 {
   nsCString* string = new nsCString(aCString);
@@ -881,7 +881,7 @@ nsCStringArray::InsertCStringAt(const nsACString& aCString, PRInt32 aIndex)
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsCStringArray::ReplaceCStringAt(const nsACString& aCString, PRInt32 aIndex)
 {
   nsCString* string = static_cast<nsCString*>(nsVoidArray::ElementAt(aIndex));
@@ -893,7 +893,7 @@ nsCStringArray::ReplaceCStringAt(const nsACString& aCString, PRInt32 aIndex)
   return PR_FALSE;
 }
 
-PRBool 
+bool 
 nsCStringArray::RemoveCString(const nsACString& aCString)
 {
   PRInt32 index = IndexOf(aCString);
@@ -905,7 +905,7 @@ nsCStringArray::RemoveCString(const nsACString& aCString)
 }
 
 #ifdef MOZILLA_INTERNAL_API
-PRBool 
+bool 
 nsCStringArray::RemoveCStringIgnoreCase(const nsACString& aCString)
 {
   PRInt32 index = IndexOfIgnoreCase(aCString);
@@ -917,7 +917,7 @@ nsCStringArray::RemoveCStringIgnoreCase(const nsACString& aCString)
 }
 #endif
 
-PRBool nsCStringArray::RemoveCStringAt(PRInt32 aIndex)
+bool nsCStringArray::RemoveCStringAt(PRInt32 aIndex)
 {
   nsCString* string = CStringAt(aIndex);
   if (nsnull != string)
@@ -990,10 +990,10 @@ void nsCStringArray::Sort(nsCStringArrayComparatorFunc aFunc, void* aData)
   nsVoidArray::Sort(reinterpret_cast<nsVoidArrayComparatorFunc>(aFunc), aData);
 }
 
-PRBool 
+bool 
 nsCStringArray::EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData)
 {
-  PRBool  running = PR_TRUE;
+  bool    running = true;
 
   if (mImpl)
   {
@@ -1006,10 +1006,10 @@ nsCStringArray::EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData)
   return running;
 }
 
-PRBool 
+bool 
 nsCStringArray::EnumerateBackwards(nsCStringArrayEnumFunc aFunc, void* aData)
 {
-  PRBool  running = PR_TRUE;
+  bool    running = true;
 
   if (mImpl)
   {
@@ -1099,7 +1099,7 @@ nsSmallVoidArray::IndexOf(void* aPossibleElement) const
   return AsArray()->IndexOf(aPossibleElement);
 }
 
-PRBool
+bool
 nsSmallVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
 {
   NS_ASSERTION(!(NS_PTR_TO_INT32(aElement) & 0x1),
@@ -1118,7 +1118,7 @@ nsSmallVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
   return AsArray()->InsertElementAt(aElement, aIndex);
 }
 
-PRBool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &aOther, PRInt32 aIndex)
+bool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &aOther, PRInt32 aIndex)
 {
 #ifdef DEBUG  
   for (int i = 0; i < aOther.Count(); i++) {
@@ -1140,7 +1140,7 @@ PRBool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &aOther, PRInt32 aIn
   return AsArray()->InsertElementsAt(aOther, aIndex);
 }
 
-PRBool
+bool
 nsSmallVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 {
   NS_ASSERTION(!(NS_PTR_TO_INT32(aElement) & 0x1),
@@ -1159,7 +1159,7 @@ nsSmallVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
   return AsArray()->ReplaceElementAt(aElement, aIndex);
 }
 
-PRBool
+bool
 nsSmallVoidArray::AppendElement(void* aElement)
 {
   NS_ASSERTION(!(NS_PTR_TO_INT32(aElement) & 0x1),
@@ -1178,7 +1178,7 @@ nsSmallVoidArray::AppendElement(void* aElement)
   return AsArray()->AppendElement(aElement);
 }
 
-PRBool
+bool
 nsSmallVoidArray::RemoveElement(void* aElement)
 {
   if (HasSingle()) {
@@ -1193,7 +1193,7 @@ nsSmallVoidArray::RemoveElement(void* aElement)
   return AsArray()->RemoveElement(aElement);
 }
 
-PRBool
+bool
 nsSmallVoidArray::RemoveElementAt(PRInt32 aIndex)
 {
   if (HasSingle()) {
@@ -1209,7 +1209,7 @@ nsSmallVoidArray::RemoveElementAt(PRInt32 aIndex)
   return AsArray()->RemoveElementAt(aIndex);
 }
 
-PRBool
+bool
 nsSmallVoidArray::RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount)
 {
   if (HasSingle()) {
@@ -1238,7 +1238,7 @@ nsSmallVoidArray::Clear()
   }
 }
 
-PRBool
+bool
 nsSmallVoidArray::SizeTo(PRInt32 aMin)
 {
   if (!HasSingle()) {
@@ -1284,7 +1284,7 @@ nsSmallVoidArray::Sort(nsVoidArrayComparatorFunc aFunc, void* aData)
   }
 }
 
-PRBool
+bool
 nsSmallVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
   if (HasSingle()) {
@@ -1293,7 +1293,7 @@ nsSmallVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
   return AsArray()->EnumerateForwards(aFunc,aData);
 }
 
-PRBool
+bool
 nsSmallVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
   if (HasSingle()) {
@@ -1302,7 +1302,7 @@ nsSmallVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
   return AsArray()->EnumerateBackwards(aFunc,aData);
 }
 
-PRBool
+bool
 nsSmallVoidArray::EnsureArray()
 {
   if (!HasSingle()) {

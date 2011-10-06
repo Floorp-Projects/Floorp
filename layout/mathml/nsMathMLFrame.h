@@ -59,7 +59,7 @@ public:
 
   // nsIMathMLFrame ---
 
-  virtual PRBool
+  virtual bool
   IsSpaceLike() {
     return NS_MATHML_IS_SPACE_LIKE(mPresentationData.flags);
   }
@@ -135,7 +135,7 @@ public:
                          nsIContent*      aContent,
                          nsStyleContext*  aParenStyleContext,
                          nsMathMLChar*    aMathMLChar,
-                         PRBool           aIsMutableChar);
+                         bool             aIsMutableChar);
 
   // helper to get the mEmbellishData of a frame
   // The MathML REC precisely defines an "embellished operator" as:
@@ -161,7 +161,7 @@ public:
   static void
   GetPresentationDataFrom(nsIFrame*           aFrame,
                           nsPresentationData& aPresentationData,
-                          PRBool              aClimbTree = PR_TRUE);
+                          bool                aClimbTree = true);
 
   // helper used by <mstyle> and <mtable> to see if they have a displaystyle attribute 
   static void
@@ -172,7 +172,7 @@ public:
   // the attribute is not there, check if the attribute is on the mstyle hierarchy
   // @return PR_TRUE  --if attribute exists
   //         PR_FALSE --if attribute doesn't exist
-  static PRBool
+  static bool
   GetAttribute(nsIContent* aContent,
                nsIFrame*   aMathMLmstyleFrame,          
                nsIAtom*    aAttributeAtom,
@@ -180,7 +180,7 @@ public:
 
   // utilities to parse and retrieve numeric values in CSS units
   // All values are stored in twips.
-  static PRBool
+  static bool
   ParseNumericValue(const nsString& aString,
                     nsCSSValue&     aCSSValue) {
     return nsMathMLElement::ParseNumericValue(aString, aCSSValue,
@@ -193,7 +193,7 @@ public:
              nsStyleContext*   aStyleContext,
              const nsCSSValue& aCSSValue);
 
-  static PRBool
+  static bool
   ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
                        nsString&   aString,
                        nsCSSValue& aCSSValue);

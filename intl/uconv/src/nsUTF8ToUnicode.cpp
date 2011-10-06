@@ -238,7 +238,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
   PRInt32 mUcs4 = this->mUcs4;
   PRUint8 mState = this->mState;
   PRUint8 mBytes = this->mBytes;
-  PRPackedBool mFirst = this->mFirst;
+  bool mFirst = this->mFirst;
 
   // Set mFirst to PR_FALSE now so we don't have to every time through the ASCII
   // branch within the loop.

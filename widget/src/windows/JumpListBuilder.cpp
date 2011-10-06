@@ -69,7 +69,7 @@ static NS_DEFINE_CID(kJumpListShortcutCID, NS_WIN_JUMPLISTSHORTCUT_CID);
 // defined in WinTaskbar.cpp
 extern const wchar_t *gMozillaJumpListIDGeneric;
 
-PRPackedBool JumpListBuilder::sBuildingList = PR_FALSE;
+bool JumpListBuilder::sBuildingList = false;
 const char kPrefTaskbarEnabled[] = "browser.taskbar.lists.enabled";
 
 NS_IMPL_ISUPPORTS2(JumpListBuilder, nsIJumpListBuilder, nsIObserver)
@@ -80,7 +80,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncDeleteAllFaviconsFromDisk, nsIRunnable)
 
 JumpListBuilder::JumpListBuilder() :
   mMaxItems(0),
-  mHasCommit(PR_FALSE)
+  mHasCommit(false)
 {
   ::CoInitialize(NULL);
   
@@ -102,16 +102,16 @@ JumpListBuilder::~JumpListBuilder()
 /* readonly attribute short available; */
 NS_IMETHODIMP JumpListBuilder::GetAvailable(PRInt16 *aAvailable)
 {
-  *aAvailable = PR_FALSE;
+  *aAvailable = false;
 
   if (mJumpListMgr)
-    *aAvailable = PR_TRUE;
+    *aAvailable = true;
 
   return NS_OK;
 }
 
 /* readonly attribute boolean isListCommitted; */
-NS_IMETHODIMP JumpListBuilder::GetIsListCommitted(PRBool *aCommit)
+NS_IMETHODIMP JumpListBuilder::GetIsListCommitted(bool *aCommit)
 {
   *aCommit = mHasCommit;
 
@@ -145,11 +145,11 @@ NS_IMETHODIMP JumpListBuilder::GetMaxListItems(PRInt16 *aMaxItems)
 }
 
 /* boolean initListBuild(in nsIMutableArray removedItems); */
-NS_IMETHODIMP JumpListBuilder::InitListBuild(nsIMutableArray *removedItems, PRBool *_retval)
+NS_IMETHODIMP JumpListBuilder::InitListBuild(nsIMutableArray *removedItems, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(removedItems);
 
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
@@ -167,8 +167,8 @@ NS_IMETHODIMP JumpListBuilder::InitListBuild(nsIMutableArray *removedItems, PRBo
 
     RemoveIconCacheForItems(removedItems);
 
-    sBuildingList = PR_TRUE;
-    *_retval = PR_TRUE;
+    sBuildingList = true;
+    *_retval = true;
     return NS_OK;
   }
 
@@ -244,7 +244,7 @@ nsresult JumpListBuilder::RemoveIconCacheForAllItems()
   
   // Loop through each directory entry and remove all ICO files found
   do {
-    PRBool hasMore = PR_FALSE;
+    bool hasMore = false;
     if (NS_FAILED(entries->HasMoreElements(&hasMore)) || !hasMore)
       break;
 
@@ -260,12 +260,12 @@ nsresult JumpListBuilder::RemoveIconCacheForAllItems()
     PRInt32 len = path.Length();
     if (StringTail(path, 4).LowerCaseEqualsASCII(".ico")) {
       // Check if the cached ICO file exists
-      PRBool exists;
+      bool exists;
       if (NS_FAILED(currFile->Exists(&exists)) || !exists)
         continue;
 
       // We found an ICO file that exists, so we should remove it
-      currFile->Remove(PR_FALSE);
+      currFile->Remove(false);
     }
   } while(true);
 
@@ -273,11 +273,11 @@ nsresult JumpListBuilder::RemoveIconCacheForAllItems()
 }
 
 /* boolean addListToBuild(in short aCatType, [optional] in nsIArray items, [optional] in AString catName); */
-NS_IMETHODIMP JumpListBuilder::AddListToBuild(PRInt16 aCatType, nsIArray *items, const nsAString &catName, PRBool *_retval)
+NS_IMETHODIMP JumpListBuilder::AddListToBuild(PRInt16 aCatType, nsIArray *items, const nsAString &catName, bool *_retval)
 {
   nsresult rv;
 
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
@@ -327,21 +327,21 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(PRInt16 aCatType, nsIArray *items,
       // Add the tasks
       hr = mJumpListMgr->AddUserTasks(pArray);
       if (SUCCEEDED(hr))
-        *_retval = PR_TRUE;
+        *_retval = true;
       return NS_OK;
     }
     break;
     case nsIJumpListBuilder::JUMPLIST_CATEGORY_RECENT:
     {
       if (SUCCEEDED(mJumpListMgr->AppendKnownCategory(KDC_RECENT)))
-        *_retval = PR_TRUE;
+        *_retval = true;
       return NS_OK;
     }
     break;
     case nsIJumpListBuilder::JUMPLIST_CATEGORY_FREQUENT:
     {
       if (SUCCEEDED(mJumpListMgr->AppendKnownCategory(KDC_FREQUENT)))
-        *_retval = PR_TRUE;
+        *_retval = true;
       return NS_OK;
     }
     break;
@@ -408,7 +408,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(PRInt16 aCatType, nsIArray *items,
       // Add the tasks
       hr = mJumpListMgr->AppendCategory(catName.BeginReading(), pArray);
       if (SUCCEEDED(hr))
-        *_retval = PR_TRUE;
+        *_retval = true;
       return NS_OK;
     }
     break;
@@ -423,35 +423,35 @@ NS_IMETHODIMP JumpListBuilder::AbortListBuild()
     return NS_ERROR_NOT_AVAILABLE;
 
   mJumpListMgr->AbortList();
-  sBuildingList = PR_FALSE;
+  sBuildingList = false;
 
   return NS_OK;
 }
 
 /* boolean commitListBuild(); */
-NS_IMETHODIMP JumpListBuilder::CommitListBuild(PRBool *_retval)
+NS_IMETHODIMP JumpListBuilder::CommitListBuild(bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
 
   HRESULT hr = mJumpListMgr->CommitList();
-  sBuildingList = PR_FALSE;
+  sBuildingList = false;
 
   // XXX We might want some specific error data here.
   if (SUCCEEDED(hr)) {
-    *_retval = PR_TRUE;
-    mHasCommit = PR_TRUE;
+    *_retval = true;
+    mHasCommit = true;
   }
 
   return NS_OK;
 }
 
 /* boolean deleteActiveList(); */
-NS_IMETHODIMP JumpListBuilder::DeleteActiveList(PRBool *_retval)
+NS_IMETHODIMP JumpListBuilder::DeleteActiveList(bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
@@ -464,23 +464,23 @@ NS_IMETHODIMP JumpListBuilder::DeleteActiveList(PRBool *_retval)
     return NS_OK;
 
   if (SUCCEEDED(mJumpListMgr->DeleteList(uid.get())))
-    *_retval = PR_TRUE;
+    *_retval = true;
 
   return NS_OK;
 }
 
 /* internal */
 
-PRBool JumpListBuilder::IsSeparator(nsCOMPtr<nsIJumpListItem>& item)
+bool JumpListBuilder::IsSeparator(nsCOMPtr<nsIJumpListItem>& item)
 {
   PRInt16 type;
   item->GetType(&type);
   if (NS_FAILED(item->GetType(&type)))
-    return PR_FALSE;
+    return false;
     
   if (type == nsIJumpListItem::JUMPLIST_ITEM_SEPARATOR)
-    return PR_TRUE;
-  return PR_FALSE;
+    return true;
+  return false;
 }
 
 // TransferIObjectArrayToIMutableArray - used in converting removed items
@@ -524,7 +524,7 @@ nsresult JumpListBuilder::TransferIObjectArrayToIMutableArray(IObjectArray *objA
       pItem->Release();
 
     if (NS_SUCCEEDED(rv)) {
-      removedItems->AppendElement(item, PR_FALSE);
+      removedItems->AppendElement(item, false);
     }
   }
   return NS_OK;
@@ -535,7 +535,7 @@ NS_IMETHODIMP JumpListBuilder::Observe(nsISupports* aSubject,
                                         const PRUnichar* aData)
 {
   if (nsDependentString(aData).EqualsASCII(kPrefTaskbarEnabled)) {
-    PRBool enabled = Preferences::GetBool(kPrefTaskbarEnabled, true);
+    bool enabled = Preferences::GetBool(kPrefTaskbarEnabled, true);
     if (!enabled) {
       
       nsCOMPtr<nsIRunnable> event = new AsyncDeleteAllFaviconsFromDisk();
@@ -691,19 +691,19 @@ NS_IMETHODIMP AsyncDeleteIconFromDisk::Run()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check if the cached ICO file exists
-  PRBool exists;
+  bool exists;
   rv = icoFile->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check that we aren't deleting some arbitrary file that is not an icon
   if (StringTail(mIconPath, 4).LowerCaseEqualsASCII(".ico")) {
     // Check if the cached ICO file exists
-    PRBool exists;
+    bool exists;
     if (NS_FAILED(icoFile->Exists(&exists)) || !exists)
       return NS_ERROR_FAILURE;
 
     // We found an ICO file that exists, so we should remove it
-    icoFile->Remove(PR_FALSE);
+    icoFile->Remove(false);
   }
 
   return NS_OK;
@@ -732,7 +732,7 @@ NS_IMETHODIMP AsyncDeleteAllFaviconsFromDisk::Run()
 
   // Loop through each directory entry and remove all ICO files found
   do {
-    PRBool hasMore = PR_FALSE;
+    bool hasMore = false;
     if (NS_FAILED(entries->HasMoreElements(&hasMore)) || !hasMore)
       break;
 
@@ -748,12 +748,12 @@ NS_IMETHODIMP AsyncDeleteAllFaviconsFromDisk::Run()
     PRInt32 len = path.Length();
     if (StringTail(path, 4).LowerCaseEqualsASCII(".ico")) {
       // Check if the cached ICO file exists
-      PRBool exists;
+      bool exists;
       if (NS_FAILED(currFile->Exists(&exists)) || !exists)
         continue;
 
       // We found an ICO file that exists, so we should remove it
-      currFile->Remove(PR_FALSE);
+      currFile->Remove(false);
     }
   } while(true);
 

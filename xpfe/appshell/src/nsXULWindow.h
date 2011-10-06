@@ -95,8 +95,8 @@ public:
    NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULWINDOW_IMPL_CID)
 
    void LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; }
-   PRBool IsLocked() const { return mLockedUntilChromeLoad; }
-   void IgnoreXULSizeMode(PRBool aEnable) { mIgnoreXULSizeMode = aEnable; }
+   bool IsLocked() const { return mLockedUntilChromeLoad; }
+   void IgnoreXULSizeMode(bool aEnable) { mIgnoreXULSizeMode = aEnable; }
 
 protected:
    enum persistentAttributes {
@@ -117,9 +117,9 @@ protected:
    void OnChromeLoaded();
    void StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
                         PRInt32 aSpecWidth, PRInt32 aSpecHeight);
-   PRBool     LoadPositionFromXUL();
-   PRBool     LoadSizeFromXUL();
-   PRBool     LoadMiscPersistentAttributesFromXUL();
+   bool       LoadPositionFromXUL();
+   bool       LoadSizeFromXUL();
+   bool       LoadMiscPersistentAttributesFromXUL();
    void       SyncAttributesToWidget();
    NS_IMETHOD SavePersistentAttributes();
 
@@ -128,7 +128,7 @@ protected:
 
    // See nsIDocShellTreeOwner for docs on next two methods
    NS_HIDDEN_(nsresult) ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-                                          PRBool aPrimary, PRBool aTargetable,
+                                          bool aPrimary, bool aTargetable,
                                           const nsAString& aID);
    NS_HIDDEN_(nsresult) ContentShellRemoved(nsIDocShellTreeItem* aContentShell);
    NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, PRInt32 aCX, 
@@ -139,13 +139,13 @@ protected:
    NS_IMETHOD CreateNewContentWindow(PRInt32 aChromeFlags,
       nsIAppShell* aAppShell, nsIXULWindow **_retval);
 
-   void       EnableParent(PRBool aEnable);
-   PRBool     ConstrainToZLevel(PRBool aImmediate, nsWindowZ *aPlacement,
+   void       EnableParent(bool aEnable);
+   bool       ConstrainToZLevel(bool aImmediate, nsWindowZ *aPlacement,
                                 nsIWidget *aReqBelow, nsIWidget **aActualBelow);
    void       PlaceWindowLayersBehind(PRUint32 aLowLevel, PRUint32 aHighLevel,
                                       nsIXULWindow *aBehind);
-   void       SetContentScrollbarVisibility(PRBool aVisible);
-   PRBool     GetContentScrollbarVisibility();
+   void       SetContentScrollbarVisibility(bool aVisible);
+   bool       GetContentScrollbarVisibility();
    void       PersistentAttributesDirty(PRUint32 aDirtyFlags);
    PRUint32   AppUnitsPerDevPixel();
 
@@ -162,18 +162,18 @@ protected:
    nsCOMPtr<nsIDocShellTreeItem> mPrimaryContentShell;
    nsTArray<nsContentShellInfo*> mContentShells; // array of doc shells by id
    nsresult                mModalStatus;
-   PRPackedBool            mContinueModalLoop;
-   PRPackedBool            mDebuting;       // being made visible right now
-   PRPackedBool            mChromeLoaded; // True when chrome has loaded
-   PRPackedBool            mShowAfterLoad;
-   PRPackedBool            mIntrinsicallySized; 
-   PRPackedBool            mCenterAfterLoad;
-   PRPackedBool            mIsHiddenWindow;
-   PRPackedBool            mLockedUntilChromeLoad;
-   PRPackedBool            mIgnoreXULSize;
-   PRPackedBool            mIgnoreXULPosition;
-   PRPackedBool            mChromeFlagsFrozen;
-   PRPackedBool            mIgnoreXULSizeMode;
+   bool                    mContinueModalLoop;
+   bool                    mDebuting;       // being made visible right now
+   bool                    mChromeLoaded; // True when chrome has loaded
+   bool                    mShowAfterLoad;
+   bool                    mIntrinsicallySized; 
+   bool                    mCenterAfterLoad;
+   bool                    mIsHiddenWindow;
+   bool                    mLockedUntilChromeLoad;
+   bool                    mIgnoreXULSize;
+   bool                    mIgnoreXULPosition;
+   bool                    mChromeFlagsFrozen;
+   bool                    mIgnoreXULSizeMode;
    PRUint32                mContextFlags;
    PRUint32                mBlurSuppressionLevel;
    PRUint32                mPersistentAttributesDirty; // persistentAttributes

@@ -242,7 +242,7 @@ mtable[frame="dashed"] {
   border: dashed thin;
 }
 
-mtr {
+mtr, mlabeledtr {
   display: table-row;
   vertical-align: baseline;
 }
@@ -254,10 +254,17 @@ mtd {
   white-space: nowrap;
 }
 
-/* Don't support mtr without mtable, nor mtd without mtr */
+/* Don't support m(labeled)tr without mtable, nor mtd without m(labeled)tr */
 :not(mtable) > mtr,
-:not(mtr) > mtd {
+:not(mtable) > mlabeledtr,
+:not(mtr):not(mlabeledtr) > mtd {
   display: none !important;
+}
+
+/* Hide the label because mlabeledtr is not supported yet (bug 356870). This
+   rule can be overriden by users. */
+mlabeledtr > mtd:first-child {
+    display: none;
 }
 
 /***********************/

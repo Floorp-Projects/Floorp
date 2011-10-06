@@ -65,8 +65,10 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 interface nsIDOMWindow;
+interface nsIDOMFile;
+interface nsIFile;
 
-[scriptable, uuid(748746a7-a6f4-41d6-bc82-1788981b2623)]
+[scriptable, uuid(bc6c156a-c41f-43dd-ace3-e3bca9894ed1)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -887,6 +889,11 @@ interface nsIDOMWindowUtils : nsISupports {
                                   in AString property,
                                   in AString value1,
                                   in AString value2);
+
+  /**
+   * Wrap an nsIFile in an nsIDOMFile
+   */
+  nsIDOMFile wrapDOMFile(in nsIFile aFile);
 
   /**
    * Get the type of the currently focused html input, if any.

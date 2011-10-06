@@ -63,7 +63,7 @@ public:
   NS_IMETHOD BeginPage() { return NS_OK; }
   NS_IMETHOD EndPage() { return NS_OK; }
 
-  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
+  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview);
 
   void GetDriverName(PRUnichar *&aDriverName) const   { aDriverName = mDriverName;     }
   void GetDeviceName(PRUnichar *&aDeviceName) const   { aDeviceName = mDeviceName;     }

@@ -142,8 +142,8 @@ class nsIParserService : public nsISupports {
   NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
                                         nsCString& aEntity) const = 0;
 
-  NS_IMETHOD IsContainer(PRInt32 aId, PRBool& aIsContainer) const = 0;
-  NS_IMETHOD IsBlock(PRInt32 aId, PRBool& aIsBlock) const = 0;
+  NS_IMETHOD IsContainer(PRInt32 aId, bool& aIsContainer) const = 0;
+  NS_IMETHOD IsBlock(PRInt32 aId, bool& aIsBlock) const = 0;
 
   // Observer mechanism
   NS_IMETHOD RegisterObserver(nsIElementObserver* aObserver,
@@ -156,10 +156,10 @@ class nsIParserService : public nsISupports {
                                nsIObserverEntry** aEntry) = 0;
 
   virtual nsresult CheckQName(const nsAString& aQName,
-                              PRBool aNamespaceAware,
+                              bool aNamespaceAware,
                               const PRUnichar** aColon) = 0;
-  virtual PRBool IsXMLLetter(PRUnichar aChar) = 0;
-  virtual PRBool IsXMLNCNameChar(PRUnichar aChar) = 0;
+  virtual bool IsXMLLetter(PRUnichar aChar) = 0;
+  virtual bool IsXMLNCNameChar(PRUnichar aChar) = 0;
 
   /**
    * Decodes an entity into a UTF-16 character. If a ; is found between aStart

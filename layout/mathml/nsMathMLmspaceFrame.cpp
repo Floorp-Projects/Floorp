@@ -62,7 +62,7 @@ nsMathMLmspaceFrame::~nsMathMLmspaceFrame()
 {
 }
 
-PRBool
+bool
 nsMathMLmspaceFrame::IsLeaf() const
 {
   return PR_TRUE;

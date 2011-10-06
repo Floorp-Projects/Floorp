@@ -123,7 +123,7 @@ nsXMLProcessingInstruction::GetTarget(nsAString& aTarget)
   return NS_OK;
 }
 
-PRBool
+bool
 nsXMLProcessingInstruction::GetAttrValue(nsIAtom *aName, nsAString& aValue)
 {
   nsAutoString data;
@@ -132,7 +132,7 @@ nsXMLProcessingInstruction::GetAttrValue(nsIAtom *aName, nsAString& aValue)
   return nsParserUtils::GetQuotedAttributeValue(data, aName, aValue);
 }
 
-PRBool
+bool
 nsXMLProcessingInstruction::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | ePROCESSING_INSTRUCTION | eDATA_NODE));
@@ -140,7 +140,7 @@ nsXMLProcessingInstruction::IsNodeOfType(PRUint32 aFlags) const
 
 nsGenericDOMDataNode*
 nsXMLProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
-                                          PRBool aCloneText) const
+                                          bool aCloneText) const
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
@@ -167,7 +167,7 @@ nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
 
 void
 nsXMLProcessingInstruction::DumpContent(FILE* out, PRInt32 aIndent,
-                                        PRBool aDumpAll) const
+                                        bool aDumpAll) const
 {
 }
 #endif

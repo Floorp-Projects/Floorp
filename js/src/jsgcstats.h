@@ -97,6 +97,7 @@ enum ConservativeGCTest
     CGCT_VALID,
     CGCT_LOWBITSET, /* excluded because one of the low bits was set */
     CGCT_NOTARENA,  /* not within arena range in a chunk */
+    CGCT_OTHERCOMPARTMENT,  /* in another compartment */
     CGCT_NOTCHUNK,  /* not within a valid chunk */
     CGCT_FREEARENA, /* within arena containing only free things */
     CGCT_NOTLIVE,   /* gcthing is not allocated */

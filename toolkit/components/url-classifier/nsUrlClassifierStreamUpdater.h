@@ -101,10 +101,10 @@ private:
 
   nsresult FetchNext();
 
-  PRBool mIsUpdating;
-  PRBool mInitialized;
-  PRBool mDownloadError;
-  PRBool mBeganStream;
+  bool mIsUpdating;
+  bool mInitialized;
+  bool mDownloadError;
+  bool mBeganStream;
   nsCOMPtr<nsIURI> mUpdateUrl;
   nsCString mStreamTable;
   nsCString mServerMAC;

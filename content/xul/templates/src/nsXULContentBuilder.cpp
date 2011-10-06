@@ -105,11 +105,11 @@ class nsXULContentBuilder : public nsXULTemplateBuilder
 {
 public:
     // nsIXULTemplateBuilder interface
-    NS_IMETHOD CreateContents(nsIContent* aElement, PRBool aForceCreation);
+    NS_IMETHOD CreateContents(nsIContent* aElement, bool aForceCreation);
 
     NS_IMETHOD HasGeneratedContent(nsIRDFResource* aResource,
                                    nsIAtom* aTag,
-                                   PRBool* aGenerated);
+                                   bool* aGenerated);
 
     NS_IMETHOD GetResultForContent(nsIDOMElement* aContent,
                                    nsIXULTemplateResult** aResult);
@@ -129,7 +129,7 @@ protected:
         mSortState.Traverse(cb);
     }
 
-    virtual void Uninit(PRBool aIsFinal);
+    virtual void Uninit(bool aIsFinal);
 
     // Implementation methods
     nsresult
@@ -147,10 +147,10 @@ protected:
     BuildContentFromTemplate(nsIContent *aTemplateNode,
                              nsIContent *aResourceNode,
                              nsIContent *aRealNode,
-                             PRBool aIsUnique,
-                             PRBool aIsSelfReference,
+                             bool aIsUnique,
+                             bool aIsSelfReference,
                              nsIXULTemplateResult* aChild,
-                             PRBool aNotify,
+                             bool aNotify,
                              nsTemplateMatch* aMatch,
                              nsIContent** aContainer,
                              PRInt32* aNewIndexInContainer);
@@ -168,7 +168,7 @@ protected:
     CopyAttributesToElement(nsIContent* aTemplateNode,
                             nsIContent* aRealNode,
                             nsIXULTemplateResult* aResult,
-                            PRBool aNotify);
+                            bool aNotify);
 
     /**
      * Add any necessary persistent attributes (persist="...") from the
@@ -215,7 +215,7 @@ protected:
      */
     nsresult
     CreateTemplateAndContainerContents(nsIContent* aElement,
-                                       PRBool aForceCreation);
+                                       bool aForceCreation);
 
     /**
      * Generate the results for a template, by calling
@@ -230,9 +230,9 @@ protected:
     nsresult
     CreateContainerContents(nsIContent* aElement,
                             nsIXULTemplateResult* aResult,
-                            PRBool aForceCreation,
-                            PRBool aNotify,
-                            PRBool aNotifyAtEnd);
+                            bool aForceCreation,
+                            bool aNotify,
+                            bool aNotifyAtEnd);
 
     /**
      * Generate the results for a query.
@@ -246,7 +246,7 @@ protected:
     nsresult
     CreateContainerContentsForQuerySet(nsIContent* aElement,
                                        nsIXULTemplateResult* aResult,
-                                       PRBool aNotify,
+                                       bool aNotify,
                                        nsTemplateQuerySet* aQuerySet,
                                        nsIContent** aContainer,
                                        PRInt32* aNewIndexInContainer);
@@ -266,10 +266,10 @@ protected:
     EnsureElementHasGenericChild(nsIContent* aParent,
                                  PRInt32 aNameSpaceID,
                                  nsIAtom* aTag,
-                                 PRBool aNotify,
+                                 bool aNotify,
                                  nsIContent** aResult);
 
-    PRBool
+    bool
     IsOpen(nsIContent* aElement);
 
     nsresult
@@ -298,8 +298,8 @@ protected:
     nsresult
     SetContainerAttrs(nsIContent *aElement,
                       nsIXULTemplateResult* aResult,
-                      PRBool aIgnoreNonContainers,
-                      PRBool aNotify);
+                      bool aIgnoreNonContainers,
+                      bool aNotify);
 
     virtual nsresult
     RebuildAll();
@@ -312,7 +312,7 @@ protected:
      * generated content. For the content builder, aLocations will be set
      * to the list of containers where the content should be inserted.
      */
-    virtual PRBool
+    virtual bool
     GetInsertionLocations(nsIXULTemplateResult* aOldResult,
                           nsCOMArray<nsIContent>** aLocations);
 
@@ -352,7 +352,7 @@ protected:
     InsertSortedNode(nsIContent* aContainer,
                      nsIContent* aNode,
                      nsIXULTemplateResult* aResult,
-                     PRBool aNotify);
+                     bool aNotify);
 
     /**
      * Maintains a mapping between elements in the DOM and the matches
@@ -401,7 +401,7 @@ nsXULContentBuilder::nsXULContentBuilder()
 }
 
 void
-nsXULContentBuilder::Uninit(PRBool aIsFinal)
+nsXULContentBuilder::Uninit(bool aIsFinal)
 {
     if (! aIsFinal && mRoot) {
         nsresult rv = RemoveGeneratedContent(mRoot);
@@ -422,10 +422,10 @@ nsresult
 nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                               nsIContent *aResourceNode,
                                               nsIContent *aRealNode,
-                                              PRBool aIsUnique,
-                                              PRBool aIsSelfReference,
+                                              bool aIsUnique,
+                                              bool aIsSelfReference,
                                               nsIXULTemplateResult* aChild,
-                                              PRBool aNotify,
+                                              bool aNotify,
                                               nsTemplateMatch* aMatch,
                                               nsIContent** aContainer,
                                               PRInt32* aNewIndexInContainer)
@@ -498,10 +498,9 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
     // Iterate through all of the template children, constructing
     // "real" content model nodes for each "template" child.
-    PRUint32 count = aTemplateNode->GetChildCount();
-
-    for (PRUint32 kid = 0; kid < count; kid++) {
-        nsIContent *tmplKid = aTemplateNode->GetChildAt(kid);
+    for (nsIContent* tmplKid = aTemplateNode->GetFirstChild();
+         tmplKid;
+         tmplKid = tmplKid->GetNextSibling()) {
 
         PRInt32 nameSpaceID = tmplKid->GetNameSpaceID();
 
@@ -544,8 +543,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
         // isUnique will be true for nodes above the generation element,
         // isGenerationElement will be true for the generation element,
         // and both will be false for descendants
-        PRBool isGenerationElement = PR_FALSE;
-        PRBool isUnique = aIsUnique;
+        bool isGenerationElement = false;
+        bool isUnique = aIsUnique;
 
         {
             // We identify the resource element by presence of a
@@ -571,7 +570,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
         // Set to PR_TRUE if the child we're trying to create now
         // already existed in the content model.
-        PRBool realKidAlreadyExisted = PR_FALSE;
+        bool realKidAlreadyExisted = false;
 
         nsCOMPtr<nsIContent> realKid;
         if (isUnique) {
@@ -766,7 +765,7 @@ nsresult
 nsXULContentBuilder::CopyAttributesToElement(nsIContent* aTemplateNode,
                                              nsIContent* aRealNode,
                                              nsIXULTemplateResult* aResult,
-                                             PRBool aNotify)
+                                             bool aNotify)
 {
     nsresult rv;
 
@@ -969,7 +968,7 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContent)
 
 nsresult
 nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
-                                                        PRBool aForceCreation)
+                                                        bool aForceCreation)
 {
     // Generate both 1) the template content for the current element,
     // and 2) recursive subcontent (if the current element refers to a
@@ -1020,9 +1019,9 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
 nsresult
 nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
                                              nsIXULTemplateResult* aResult,
-                                             PRBool aForceCreation,
-                                             PRBool aNotify,
-                                             PRBool aNotifyAtEnd)
+                                             bool aForceCreation,
+                                             bool aNotify,
+                                             bool aNotifyAtEnd)
 {
     if (!aForceCreation && !IsOpen(aElement))
         return NS_OK;
@@ -1032,7 +1031,7 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
         if (mFlags & eDontRecurse)
             return NS_OK;
 
-        PRBool mayProcessChildren;
+        bool mayProcessChildren;
         nsresult rv = aResult->GetMayProcessChildren(&mayProcessChildren);
         if (NS_FAILED(rv) || !mayProcessChildren)
             return rv;
@@ -1104,7 +1103,7 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
 nsresult
 nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
                                                         nsIXULTemplateResult* aResult,
-                                                        PRBool aNotify,
+                                                        bool aNotify,
                                                         nsTemplateQuerySet* aQuerySet,
                                                         nsIContent** aContainer,
                                                         PRInt32* aNewIndexInContainer)
@@ -1129,7 +1128,7 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
     if (NS_FAILED(rv) || !results)
         return rv;
 
-    PRBool hasMoreResults;
+    bool hasMoreResults;
     rv = results->HasMoreElements(&hasMoreResults);
 
     for (; NS_SUCCEEDED(rv) && hasMoreResults;
@@ -1161,7 +1160,7 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
         // query already generated content so the match is just added to the
         // end of the set of matches.
 
-        PRBool generateContent = PR_TRUE;
+        bool generateContent = true;
 
         nsTemplateMatch* prevmatch = nsnull;
         nsTemplateMatch* existingmatch = nsnull;
@@ -1261,7 +1260,7 @@ nsresult
 nsXULContentBuilder::EnsureElementHasGenericChild(nsIContent* parent,
                                                   PRInt32 nameSpaceID,
                                                   nsIAtom* tag,
-                                                  PRBool aNotify,
+                                                  bool aNotify,
                                                   nsIContent** result)
 {
     nsresult rv;
@@ -1292,7 +1291,7 @@ nsXULContentBuilder::EnsureElementHasGenericChild(nsIContent* parent,
     }
 }
 
-PRBool
+bool
 nsXULContentBuilder::IsOpen(nsIContent* aElement)
 {
     // Determine if this is a <treeitem> or <menu> element
@@ -1417,14 +1416,14 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
 nsresult
 nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement,
                                        nsIXULTemplateResult* aResult,
-                                       PRBool aIgnoreNonContainers,
-                                       PRBool aNotify)
+                                       bool aIgnoreNonContainers,
+                                       bool aNotify)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    PRBool iscontainer;
+    bool iscontainer;
     aResult->GetIsContainer(&iscontainer);
 
     if (aIgnoreNonContainers && !iscontainer)
@@ -1440,7 +1439,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement,
                       newcontainer, aNotify);
 
     if (iscontainer && !(mFlags & eDontTestEmpty)) {
-        PRBool isempty;
+        bool isempty;
         aResult->GetIsEmpty(&isempty);
 
         const nsAString& newempty =
@@ -1460,7 +1459,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement,
 //
 
 NS_IMETHODIMP
-nsXULContentBuilder::CreateContents(nsIContent* aElement, PRBool aForceCreation)
+nsXULContentBuilder::CreateContents(nsIContent* aElement, bool aForceCreation)
 {
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
@@ -1477,7 +1476,7 @@ nsXULContentBuilder::CreateContents(nsIContent* aElement, PRBool aForceCreation)
 NS_IMETHODIMP
 nsXULContentBuilder::HasGeneratedContent(nsIRDFResource* aResource,
                                          nsIAtom* aTag,
-                                         PRBool* aGenerated)
+                                         bool* aGenerated)
 {
     *aGenerated = PR_FALSE;
     NS_ENSURE_TRUE(mRoot, NS_ERROR_NOT_INITIALIZED);
@@ -1608,7 +1607,7 @@ nsXULContentBuilder::NodeWillBeDestroyed(const nsINode* aNode)
 // nsXULTemplateBuilder methods
 //
 
-PRBool
+bool
 nsXULContentBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
                                            nsCOMArray<nsIContent>** aLocations)
 {
@@ -1629,7 +1628,7 @@ nsXULContentBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
     xuldoc->GetElementsForID(ref, **aLocations);
     PRUint32 count = (*aLocations)->Count();
 
-    PRBool found = PR_FALSE;
+    bool found = false;
 
     for (PRUint32 t = 0; t < count; t++) {
         nsCOMPtr<nsIContent> content = (*aLocations)->SafeObjectAt(t);
@@ -1758,7 +1757,7 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
         if (mFlags & eDontRecurse)
             return NS_OK;
 
-        PRBool rightBuilder = PR_FALSE;
+        bool rightBuilder = false;
 
         nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(aElement->GetDocument());
         if (! xuldoc)
@@ -1877,7 +1876,7 @@ nsresult
 nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
                                       nsIContent* aNode,
                                       nsIXULTemplateResult* aResult,
-                                      PRBool aNotify)
+                                      bool aNotify)
 {
     nsresult rv;
 
@@ -1911,7 +1910,7 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
         }
     }
 
-    PRBool childAdded = PR_FALSE;
+    bool childAdded = false;
     PRUint32 numChildren = aContainer->GetChildCount();
 
     if (mSortState.direction != nsSortState_natural ||
@@ -1935,8 +1934,10 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
                 staticCount = 0;
         } else {
             // compute the "static" XUL element count
-            for (PRUint32 childLoop = 0; childLoop < numChildren; ++childLoop) {
-                child = aContainer->GetChildAt(childLoop);
+            for (nsIContent* child = aContainer->GetFirstChild();
+                 child;
+                 child = child->GetNextSibling()) {
+                 
                 if (nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
                                                     nsGkAtoms::_template))
                     break;

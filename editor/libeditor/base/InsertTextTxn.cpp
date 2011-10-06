@@ -41,7 +41,7 @@
 #include "EditAggregateTxn.h"
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static bool gNoisy = false;
 #endif
 
 InsertTextTxn::InsertTextTxn()
@@ -109,7 +109,7 @@ NS_IMETHODIMP InsertTextTxn::DoTransaction(void)
   NS_ENSURE_SUCCESS(result, result);
 
   // only set selection to insertion point if editor gives permission
-  PRBool bAdjustSelection;
+  bool bAdjustSelection;
   mEditor->ShouldTxnSetSelection(&bAdjustSelection);
   if (bAdjustSelection)
   {
@@ -145,7 +145,7 @@ NS_IMETHODIMP InsertTextTxn::UndoTransaction(void)
   return mElement->DeleteData(mOffset, length);
 }
 
-NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
+NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, bool *aDidMerge)
 {
   // set out param default value
   if (aDidMerge)
@@ -194,7 +194,7 @@ NS_IMETHODIMP InsertTextTxn::GetData(nsString& aResult)
   return NS_OK;
 }
 
-PRBool InsertTextTxn::IsSequentialInsert(InsertTextTxn *aOtherTxn)
+bool InsertTextTxn::IsSequentialInsert(InsertTextTxn *aOtherTxn)
 {
   NS_ASSERTION(aOtherTxn, "null param");
   if (aOtherTxn && aOtherTxn->mElement == mElement)

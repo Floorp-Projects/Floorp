@@ -142,7 +142,7 @@ enum EscapeMask {
  *
  * @return TRUE if escaping was performed, FALSE otherwise.
  */
-PRBool NS_EscapeURL(const char *str,
+bool NS_EscapeURL(const char *str,
                            PRInt32 len,
                            PRUint32 flags,
                            nsACString &result);
@@ -158,7 +158,7 @@ PRBool NS_EscapeURL(const char *str,
  *
  * @return TRUE if unescaping was performed, FALSE otherwise.
  */
-PRBool NS_UnescapeURL(const char *str,
+bool NS_UnescapeURL(const char *str,
                              PRInt32 len,
                              PRUint32 flags,
                              nsACString &result);
@@ -188,7 +188,7 @@ NS_UnescapeURL(const nsCSubstring &str, PRUint32 flags, nsCSubstring &result) {
  * CString version of nsEscape. Returns true on success, false
  * on out of memory. To reverse this function, use NS_UnescapeURL.
  */
-inline PRBool
+inline bool
 NS_Escape(const nsCString& aOriginal, nsCString& aEscaped,
           nsEscapeMask aMask)
 {

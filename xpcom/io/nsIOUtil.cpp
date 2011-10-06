@@ -44,7 +44,7 @@
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsIOUtil, nsIIOUtil)
 
 NS_IMETHODIMP
-nsIOUtil::InputStreamIsBuffered(nsIInputStream* aStream, PRBool* _retval)
+nsIOUtil::InputStreamIsBuffered(nsIInputStream* aStream, bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(aStream);
   *_retval = NS_InputStreamIsBuffered(aStream);
@@ -52,7 +52,7 @@ nsIOUtil::InputStreamIsBuffered(nsIInputStream* aStream, PRBool* _retval)
 }
 
 NS_IMETHODIMP
-nsIOUtil::OutputStreamIsBuffered(nsIOutputStream* aStream, PRBool* _retval)
+nsIOUtil::OutputStreamIsBuffered(nsIOutputStream* aStream, bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(aStream);
   *_retval = NS_OutputStreamIsBuffered(aStream);

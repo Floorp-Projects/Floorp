@@ -90,7 +90,7 @@ public:
   virtual PRUint64 NativeState();
 
   virtual void InvalidateChildren();
-  virtual PRBool RemoveChild(nsAccessible* aAccessible);
+  virtual bool RemoveChild(nsAccessible* aAccessible);
 
   // nsHyperTextAccessible (static helper method)
 
@@ -169,7 +169,7 @@ public:
   nsAccessible *DOMPointToHypertextOffset(nsINode *aNode,
                                           PRInt32 aNodeOffset,
                                           PRInt32 *aHypertextOffset,
-                                          PRBool aIsEndOffset = PR_FALSE);
+                                          bool aIsEndOffset = false);
 
   /**
    * Turn a hypertext offsets into DOM point.
@@ -233,7 +233,7 @@ public:
    *                           cached offsets for next siblings of the child
    */
   PRInt32 GetChildOffset(nsAccessible* aChild,
-                         PRBool aInvalidateAfter = PR_FALSE)
+                         bool aInvalidateAfter = false)
   {
     PRInt32 index = GetIndexOf(aChild);
     return index == -1 ? -1 : GetChildOffset(index, aInvalidateAfter);
@@ -243,7 +243,7 @@ public:
    * Return text offset for the child accessible index.
    */
   PRInt32 GetChildOffset(PRUint32 aChildIndex,
-                         PRBool aInvalidateAfter = PR_FALSE);
+                         bool aInvalidateAfter = false);
 
   /**
    * Return child accessible at the given text offset.
@@ -313,7 +313,7 @@ protected:
   PRInt32 GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame,
                             PRInt32 aFromOffset, nsAccessible *aFromAccessible,
                             nsSelectionAmount aAmount, nsDirection aDirection,
-                            PRBool aNeedsStart);
+                            bool aNeedsStart);
 
   /**
     * Provides information for substring that is defined by the given start
@@ -397,8 +397,8 @@ protected:
    * @param aHTOffset       [out] the result offset
    */
   nsresult DOMRangeBoundToHypertextOffset(nsIDOMRange *aRange,
-                                          PRBool aIsStartBound,
-                                          PRBool aIsStartOffset,
+                                          bool aIsStartBound,
+                                          bool aIsStartOffset,
                                           PRInt32 *aHTOffset);
 
   /**

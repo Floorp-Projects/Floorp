@@ -63,19 +63,19 @@ public:
 
   virtual nsresult Init(nsBuiltinDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
-  virtual PRBool DecodeAudioData();
+  virtual bool DecodeAudioData();
 
   // If the Theora granulepos has not been captured, it may read several packets
   // until one with a granulepos has been captured, to ensure that all packets
   // read have valid time info.  
-  virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
+  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                   PRInt64 aTimeThreshold);
 
-  virtual PRBool HasAudio() {
+  virtual bool HasAudio() {
     return mVorbisState != 0 && mVorbisState->mActive;
   }
 
-  virtual PRBool HasVideo() {
+  virtual bool HasVideo() {
     return mTheoraState != 0 && mTheoraState->mActive;
   }
 
@@ -85,7 +85,7 @@ public:
 
 private:
 
-  PRBool HasSkeleton() {
+  bool HasSkeleton() {
     return mSkeletonState != 0 && mSkeletonState->mActive;
   }
 
@@ -124,7 +124,7 @@ private:
         mTimeEnd(aTimeEnd)
     {}
 
-    PRBool IsNull() const {
+    bool IsNull() const {
       return mOffsetStart == 0 &&
              mOffsetEnd == 0 &&
              mTimeStart == 0 &&
@@ -163,14 +163,14 @@ private:
 
   // Get the end time of aEndOffset, without reading before aStartOffset.
   // This is the playback position we'd reach after playback finished at
-  // aEndOffset. If PRBool aCachedDataOnly is PR_TRUE, then we'll only read
+  // aEndOffset. If bool aCachedDataOnly is true, then we'll only read
   // from data which is cached in the media cached, otherwise we'll do
-  // regular blocking reads from the media stream. If PRBool aCachedDataOnly
-  // is PR_TRUE, this can safely be called on the main thread, otherwise it
+  // regular blocking reads from the media stream. If bool aCachedDataOnly
+  // is true, this can safely be called on the main thread, otherwise it
   // must be called on the state machine thread.
   PRInt64 RangeEndTime(PRInt64 aStartOffset,
                        PRInt64 aEndOffset,
-                       PRBool aCachedDataOnly);
+                       bool aCachedDataOnly);
 
   // Get the start time of the range beginning at aOffset. This is the start
   // time of the first frame and or audio sample we'd be able to play if we
@@ -189,7 +189,7 @@ private:
 
   // Returns true if the serial number is for a stream we encountered
   // while reading metadata. Call on the main thread only.
-  PRBool IsKnownStream(PRUint32 aSerial);
+  bool IsKnownStream(PRUint32 aSerial);
 
   // Fills aRanges with SeekRanges denoting the sections of the media which
   // have been downloaded and are stored in the media cache. The reader
@@ -199,9 +199,9 @@ private:
 
   // Returns the range in which you should perform a seek bisection if
   // you wish to seek to aTarget usecs, given the known (buffered) byte ranges
-  // in aRanges. If aExact is PR_TRUE, we only return an exact copy of a
+  // in aRanges. If aExact is true, we only return an exact copy of a
   // range in which aTarget lies, or a null range if aTarget isn't contained
-  // in any of the (buffered) ranges. Otherwise, when aExact is PR_FALSE,
+  // in any of the (buffered) ranges. Otherwise, when aExact is false,
   // we'll construct the smallest possible range we can, based on the times
   // and byte offsets known in aRanges. We can then use this to minimize our
   // bisection's search space when the target isn't in a known buffered range.
@@ -209,7 +209,7 @@ private:
                             PRInt64 aTarget,
                             PRInt64 aStartTime,
                             PRInt64 aEndTime,
-                            PRBool aExact);
+                            bool aExact);
 private:
 
   // Decodes a packet of Vorbis data, and inserts its samples into the 
@@ -229,9 +229,9 @@ private:
 
   // Reads and decodes header packets for aState, until either header decode
   // fails, or is complete. Initializes the codec state before returning.
-  // Returns PR_TRUE if reading headers and initializtion of the stream
+  // Returns true if reading headers and initializtion of the stream
   // succeeds.
-  PRBool ReadHeaders(nsOggCodecState* aState);
+  bool ReadHeaders(nsOggCodecState* aState);
 
   // Returns the next Ogg packet for an bitstream/codec state. Returns a
   // pointer to an ogg_packet on success, or nsnull if the read failed.

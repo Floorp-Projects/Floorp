@@ -104,7 +104,7 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindow *parent,
                                                   const char *dialogURL,
                                                   nsISupports *parameters, 
                                                   nsIObserver *openDialogObserver, 
-                                                  PRBool *notifyOnOpen)
+                                                  bool *notifyOnOpen)
 {
   *notifyOnOpen = PR_TRUE;
   m_observer = openDialogObserver;
@@ -147,7 +147,7 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindow *parent,
 }
 
 /* void closeProgressDialog (in boolean forceClose); */
-NS_IMETHODIMP nsPrintProgress::CloseProgressDialog(PRBool forceClose)
+NS_IMETHODIMP nsPrintProgress::CloseProgressDialog(bool forceClose)
 {
   m_closeProgress = PR_TRUE;
   return OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, forceClose);
@@ -166,13 +166,13 @@ NS_IMETHODIMP nsPrintProgress::GetPrompter(nsIPrompt **_retval)
 }
 
 /* attribute boolean processCanceledByUser; */
-NS_IMETHODIMP nsPrintProgress::GetProcessCanceledByUser(PRBool *aProcessCanceledByUser)
+NS_IMETHODIMP nsPrintProgress::GetProcessCanceledByUser(bool *aProcessCanceledByUser)
 {
   NS_ENSURE_ARG_POINTER(aProcessCanceledByUser);
   *aProcessCanceledByUser = m_processCanceled;
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintProgress::SetProcessCanceledByUser(PRBool aProcessCanceledByUser)
+NS_IMETHODIMP nsPrintProgress::SetProcessCanceledByUser(bool aProcessCanceledByUser)
 {
   m_processCanceled = aProcessCanceledByUser;
   OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, PR_FALSE);

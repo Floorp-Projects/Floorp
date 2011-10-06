@@ -59,7 +59,13 @@ _BROWSER_FILES = \
 		browser_inspector_bug_674871.js \
 		browser_inspector_editor.js \
 		browser_inspector_bug_566084_location_changed.js \
+		browser_inspector_infobar.js \
+		browser_inspector_bug_690361.js \
+		browser_inspector_bug_672902_keyboard_shortcuts.js \
 		$(NULL)
+
+# Disabled due to constant failures
+# 		browser_inspector_treePanel_click.js \
 
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

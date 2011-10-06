@@ -69,7 +69,7 @@ private:
   PRUint32              mIdleThreadTimeout;
   PRUint32              mIdleCount;
   nsCOMPtr<nsIThreadPoolListener> mListener;
-  PRBool                mShutdown;
+  bool                  mShutdown;
 };
 
 #define NS_THREADPOOL_CLASSNAME "nsThreadPool"

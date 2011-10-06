@@ -108,13 +108,15 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
   ["SelectionHelper", "chrome://browser/content/SelectionHelper.js"],
   ["ContentPopupHelper", "chrome://browser/content/ContentPopupHelper.js"],
   ["SharingUI", "chrome://browser/content/SharingUI.js"],
+  ["TabletSidebar", "chrome://browser/content/TabletSidebar.js"],
   ["TabsPopup", "chrome://browser/content/TabsPopup.js"],
   ["MasterPasswordUI", "chrome://browser/content/MasterPasswordUI.js"],
 #ifdef MOZ_SERVICES_SYNC
   ["WeaveGlue", "chrome://browser/content/sync.js"],
 #endif
   ["WebappsUI", "chrome://browser/content/WebappsUI.js"],
-  ["SSLExceptions", "chrome://browser/content/exceptions.js"]
+  ["SSLExceptions", "chrome://browser/content/exceptions.js"],
+  ["CapturePickerUI", "chrome://browser/content/CapturePickerUI.js"]
 ].forEach(function (aScript) {
   let [name, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {

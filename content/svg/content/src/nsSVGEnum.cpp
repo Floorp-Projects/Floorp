@@ -71,7 +71,7 @@ nsSVGEnum::GetMapping(nsSVGElement *aSVGElement)
 nsresult
 nsSVGEnum::SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
-                              PRBool aDoSetAttr)
+                              bool aDoSetAttr)
 {
   nsCOMPtr<nsIAtom> valAtom = do_GetAtom(aValue);
 
@@ -122,7 +122,7 @@ nsSVGEnum::GetBaseValueString(nsAString& aValue, nsSVGElement *aSVGElement)
 nsresult
 nsSVGEnum::SetBaseValue(PRUint16 aValue,
                         nsSVGElement *aSVGElement,
-                        PRBool aDoSetAttr)
+                        bool aDoSetAttr)
 {
   nsSVGEnumMapping *mapping = GetMapping(aSVGElement);
 
@@ -179,7 +179,7 @@ nsresult
 nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* /*aSrcElement*/,
                                      nsSMILValue& aValue,
-                                     PRBool& aPreventCachingOfSandwich) const
+                                     bool& aPreventCachingOfSandwich) const
 {
   nsCOMPtr<nsIAtom> valAtom = do_GetAtom(aStr);
   nsSVGEnumMapping *mapping = mVal->GetMapping(mSVGElement);

@@ -94,9 +94,9 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
   foundDER.len = 0;
   foundDER.data = nsnull;
 
-  PRBool isDomainMismatch = PR_FALSE;
-  PRBool isNotValidAtThisTime = PR_FALSE;
-  PRBool isUntrusted = PR_FALSE;
+  bool isDomainMismatch = false;
+  bool isNotValidAtThisTime = false;
+  bool isUntrusted = false;
 
   {
     ReentrantMonitorAutoEnter lock(monitor);
@@ -154,9 +154,9 @@ nsRecentBadCertsService::AddBadCert(const nsAString &hostWithPort,
   rv = aStatus->GetServerCert(getter_AddRefs(cert));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool isDomainMismatch;
-  PRBool isNotValidAtThisTime;
-  PRBool isUntrusted;
+  bool isDomainMismatch;
+  bool isNotValidAtThisTime;
+  bool isUntrusted;
 
   rv = aStatus->GetIsDomainMismatch(&isDomainMismatch);
   NS_ENSURE_SUCCESS(rv, rv);

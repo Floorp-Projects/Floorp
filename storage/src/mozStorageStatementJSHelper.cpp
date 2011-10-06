@@ -87,7 +87,7 @@ stepFunc(JSContext *aCtx,
     static_cast<mozIStorageStatement *>(wrapper->Native())
   );
 
-  PRBool hasMore = PR_FALSE;
+  bool hasMore = false;
   rv = stmt->ExecuteStep(&hasMore);
   if (NS_SUCCEEDED(rv) && !hasMore) {
     *_vp = JSVAL_FALSE;
@@ -207,7 +207,7 @@ StatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
                                JSObject *aScopeObj,
                                jsid aId,
                                jsval *_result,
-                               PRBool *_retval)
+                               bool *_retval)
 {
   if (!JSID_IS_STRING(aId))
     return NS_OK;
@@ -242,7 +242,7 @@ StatementJSHelper::NewResolve(nsIXPConnectWrappedNative *aWrapper,
                               jsid aId,
                               PRUint32 aFlags,
                               JSObject **_objp,
-                              PRBool *_retval)
+                              bool *_retval)
 {
   if (!JSID_IS_STRING(aId))
     return NS_OK;

@@ -55,6 +55,7 @@
 #include "jsstaticcheck.h"
 #include "jstypedarray.h"
 #include "jsxml.h"
+#include "jswrapper.h"
 
 /* Headers included for inline implementations used by this header. */
 #include "jsbool.h"
@@ -87,7 +88,7 @@ JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
             return false;
         }
     } else {
-        if (!GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, props))
+        if (!js::GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, props))
             return false;
     }
 
@@ -1143,6 +1144,24 @@ JSObject::getSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp)
     return getGeneric(cx, SPECIALID_TO_JSID(sid), vp);
 }
 
+inline bool
+JSObject::isProxy() const
+{
+    return js::IsProxy(this);
+}
+
+inline bool
+JSObject::isCrossCompartmentWrapper() const
+{
+    return js::IsCrossCompartmentWrapper(this);
+}
+
+inline bool
+JSObject::isWrapper() const
+{
+    return js::IsWrapper(this);
+}
+
 static inline bool
 js_IsCallable(const js::Value &v)
 {
@@ -1331,8 +1350,8 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::AllocKind kind)
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
     JSObject *global;
     if (!cx->hasfp()) {
-        global = cx->globalObject;
-        if (!NULLABLE_OBJ_TO_INNER_OBJECT(cx, global))
+        global = JS_ObjectToInnerObject(cx, cx->globalObject);
+        if (!global)
             return NULL;
     } else {
         global = cx->fp()->scopeChain().getGlobal();
@@ -1682,6 +1701,87 @@ PropDesc::checkSetter(JSContext *cx)
         return false;
     }
     return true;
+}
+
+namespace detail {
+
+template<typename T> class PrimitiveBehavior { };
+
+template<>
+class PrimitiveBehavior<JSString *> {
+  public:
+    static inline bool isType(const Value &v) { return v.isString(); }
+    static inline JSString *extract(const Value &v) { return v.toString(); }
+    static inline Class *getClass() { return &StringClass; }
+};
+
+template<>
+class PrimitiveBehavior<bool> {
+  public:
+    static inline bool isType(const Value &v) { return v.isBoolean(); }
+    static inline bool extract(const Value &v) { return v.toBoolean(); }
+    static inline Class *getClass() { return &BooleanClass; }
+};
+
+template<>
+class PrimitiveBehavior<double> {
+  public:
+    static inline bool isType(const Value &v) { return v.isNumber(); }
+    static inline double extract(const Value &v) { return v.toNumber(); }
+    static inline Class *getClass() { return &NumberClass; }
+};
+
+} /* namespace detail */
+
+inline JSObject *
+NonGenericMethodGuard(JSContext *cx, CallArgs args, Native native, Class *clasp, bool *ok)
+{
+    const Value &thisv = args.thisv();
+    if (thisv.isObject()) {
+        JSObject &obj = thisv.toObject();
+        if (obj.getClass() == clasp) {
+            *ok = true;  /* quell gcc overwarning */
+            return &obj;
+        }
+    }
+
+    *ok = HandleNonGenericMethodClassMismatch(cx, args, native, clasp);
+    return NULL;
+}
+
+template <typename T>
+inline bool
+BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, Native native, T *v, bool *ok)
+{
+    typedef detail::PrimitiveBehavior<T> Behavior;
+
+    const Value &thisv = args.thisv();
+    if (Behavior::isType(thisv)) {
+        *v = Behavior::extract(thisv);
+        return true;
+    }
+
+    if (!NonGenericMethodGuard(cx, args, native, Behavior::getClass(), ok))
+        return false;
+
+    *v = Behavior::extract(thisv.toObject().getPrimitiveThis());
+    return true;
+}
+
+inline bool
+ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx)
+{
+    if (JS_UNLIKELY(obj.isProxy()))
+        return Proxy::objectClassIs(&obj, classValue, cx);
+
+    switch (classValue) {
+      case ESClass_Array: return obj.isArray();
+      case ESClass_Number: return obj.isNumber();
+      case ESClass_String: return obj.isString();
+      case ESClass_Boolean: return obj.isBoolean();
+    }
+    JS_NOT_REACHED("bad classValue");
+    return false;
 }
 
 } /* namespace js */

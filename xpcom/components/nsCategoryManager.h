@@ -136,7 +136,7 @@ public:
    * observer service. This is to be used by nsComponentManagerImpl
    * on startup while reading the stored category list.
    */
-  NS_METHOD SuppressNotifications(PRBool aSuppress);
+  NS_METHOD SuppressNotifications(bool aSuppress);
 
   void AddCategoryEntry(const char* aCategory,
                         const char* aKey,
@@ -163,7 +163,7 @@ private:
   PLArenaPool mArena;
   nsClassHashtable<nsDepCharHashKey, CategoryNode> mTable;
   mozilla::Mutex mLock;
-  PRBool mSuppressNotifications;
+  bool mSuppressNotifications;
 };
 
 #endif

@@ -213,10 +213,8 @@
         <method name="onResize">
             <body>
             <![CDATA[
-                // XXX the <notificationbox/>; to be made app-agnostic later
-                let container = this.parentNode.parentNode;
-                let availWidth = container.clientWidth;
-                let availHeight = container.clientHeight;
+                let availWidth = this.clientWidth;
+                let availHeight = this.clientHeight;
                 if (availWidth == this.availWidth && availHeight == this.availHeight)
                     return;
                 this.availWidth = availWidth;

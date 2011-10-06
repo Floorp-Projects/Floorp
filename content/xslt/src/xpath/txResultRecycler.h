@@ -94,7 +94,7 @@ public:
      * clients and must not be modified. Never returns nsnull.
      */
     void getEmptyStringResult(txAExprResult** aResult);
-    void getBoolResult(PRBool aValue, txAExprResult** aResult);
+    void getBoolResult(bool aValue, txAExprResult** aResult);
 
     /**
      * Functions that return non-shared resultsobjects

@@ -47,7 +47,7 @@
 
 //-----------------------------------------------------------------------------
 
-static PRBool
+static bool
 ServerIsNES3x(nsIHttpChannel *httpChannel)
 {
     nsCAutoString server;
@@ -182,7 +182,7 @@ nsURIChecker::Init(nsIURI *aURI)
             // We can have an HTTP channel that has a non-HTTP URL if
             // we're doing FTP via an HTTP proxy, for example.  See for
             // example bug 148813
-            PRBool isReallyHTTP = PR_FALSE;
+            bool isReallyHTTP = false;
             aURI->SchemeIs("http", &isReallyHTTP);
             if (!isReallyHTTP)
                 aURI->SchemeIs("https", &isReallyHTTP);
@@ -242,7 +242,7 @@ nsURIChecker::GetName(nsACString &aName)
 }
 
 NS_IMETHODIMP
-nsURIChecker::IsPending(PRBool *aPendingRet)
+nsURIChecker::IsPending(bool *aPendingRet)
 {
     *aPendingRet = mIsPending;
     return NS_OK;

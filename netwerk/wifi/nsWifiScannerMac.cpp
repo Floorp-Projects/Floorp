@@ -72,7 +72,7 @@ nsWifiMonitor::DoScanWithCoreWLAN()
     if (NS_FAILED(rv))
       return rv;
 
-    PRBool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
+    bool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
     ReplaceArray(lastAccessPoints, accessPoints);
 
     rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);
@@ -162,7 +162,7 @@ nsWifiMonitor::DoScanOld()
       accessPoints.AppendObject(ap);
     }
 
-    PRBool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
+    bool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
     ReplaceArray(lastAccessPoints, accessPoints);
 
     nsresult rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);

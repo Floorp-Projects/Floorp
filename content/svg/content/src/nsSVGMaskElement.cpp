@@ -149,7 +149,7 @@ nsSVGMaskElement::GetEnumInfo()
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGMaskElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -157,6 +157,7 @@ nsSVGMaskElement::IsAttributeMapped(const nsIAtom* name) const
     sFiltersMap,
     sFontSpecificationMap,
     sGradientStopMap,
+    sGraphicsMap,
     sMarkersMap,
     sTextContentElementsMap,
     sViewportsMap

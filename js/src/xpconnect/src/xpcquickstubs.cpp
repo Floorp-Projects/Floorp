@@ -312,10 +312,10 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
     // Also be careful not to overwrite existing properties!
 
     if(!JSID_IS_STRING(id) ||
-       !IS_PROTO_CLASS(desc.obj->getClass()) ||
+       !IS_PROTO_CLASS(js::GetObjectClass(desc.obj)) ||
        (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
        !(desc.getter || desc.setter) ||
-       desc.setter == desc.obj->getJSClass()->setProperty)
+       desc.setter == js::GetObjectJSClass(desc.obj)->setProperty)
     {
         JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return JS_TRUE;
@@ -361,7 +361,7 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    JSNative forward = wantGetter ? js_obj_defineGetter : js_obj_defineSetter;
+    JSNative forward = wantGetter ? js::obj_defineGetter : js::obj_defineSetter;
     jsval idval = (argc >= 1) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
     if(!JSVAL_IS_STRING(idval))
         return forward(cx, argc, vp);
@@ -379,7 +379,7 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
     if(!obj2 ||
        (attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
        !(getter || setter) ||
-       !IS_PROTO_CLASS(obj2->getClass()))
+       !IS_PROTO_CLASS(js::GetObjectClass(obj2)))
         return forward(cx, argc, vp);
 
     // Reify the getter and setter...
@@ -415,7 +415,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
      * searching the interfaces forward.  Here, definitions toward the
      * front of 'interfaces' overwrite those toward the back.
      */
-    PRBool definedProperty = PR_FALSE;
+    bool definedProperty = false;
     for(uint32 i = ifacec; i-- != 0;)
     {
         const nsID &iid = *interfaces[i];
@@ -515,8 +515,8 @@ GetMemberInfo(JSObject *obj, jsid memberId, const char **ifaceName)
     // but this code often produces a more specific error message, e.g.
     *ifaceName = "Unknown";
 
-    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()) ||
-                 obj->getClass() == &XPC_WN_Tearoff_JSClass,
+    NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(obj)) ||
+                 js::GetObjectClass(obj) == &XPC_WN_Tearoff_JSClass,
                  "obj must be a wrapper");
     XPCWrappedNativeProto *proto;
     if(IS_SLIM_WRAPPER(obj))
@@ -525,7 +525,7 @@ GetMemberInfo(JSObject *obj, jsid memberId, const char **ifaceName)
     }
     else
     {
-        XPCWrappedNative *wrapper = (XPCWrappedNative *) obj->getPrivate();
+        XPCWrappedNative *wrapper = (XPCWrappedNative *) js::GetObjectPrivate(obj);
         proto = wrapper->GetProto();
     }
     if(proto)
@@ -726,8 +726,10 @@ xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval,
 
     size_t len;
     const jschar *chars = JS_GetStringCharsZAndLength(cx, s, &len);
-    if (!chars)
+    if (!chars) {
+        mValid = JS_FALSE;
         return;
+    }
 
     new(mBuf) implementation_type(chars, len);
     mValid = JS_TRUE;
@@ -772,8 +774,10 @@ xpc_qsAUTF8String::xpc_qsAUTF8String(JSContext *cx, jsval v, jsval *pval)
 
     size_t len;
     const PRUnichar *chars = JS_GetStringCharsZAndLength(cx, s, &len);
-    if (!chars)
+    if (!chars) {
+        mValid = JS_FALSE;
         return;
+    }
 
     new(mBuf) implementation_type(chars, len);
     mValid = JS_TRUE;
@@ -1148,8 +1152,8 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, qsObjectHelper &aHelper,
 
 #ifdef DEBUG
     JSObject* jsobj = JSVAL_TO_OBJECT(*rval);
-    if(jsobj && !jsobj->getParent())
-        NS_ASSERTION(jsobj->getClass()->flags & JSCLASS_IS_GLOBAL,
+    if(jsobj && !js::GetObjectParent(jsobj))
+        NS_ASSERTION(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
                      "Why did we recreate this wrapper?");
 #endif
 

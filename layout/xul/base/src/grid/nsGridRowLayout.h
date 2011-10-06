@@ -76,7 +76,7 @@ public:
                                 const nsFrameList::Slice& aNewChildren);
   virtual void ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
-  virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal);
+  virtual nsMargin GetTotalMargin(nsIBox* aBox, bool aIsHorizontal);
 
   virtual nsIGridPart* AsGridPart() { return this; }
 

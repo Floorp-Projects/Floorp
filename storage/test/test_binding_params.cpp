@@ -69,7 +69,7 @@ test_ASCIIString()
   nsCAutoString inserted("I'm an ASCII string");
   {
     mozStorageStatementScoper scoper(insert);
-    PRBool hasResult;
+    bool hasResult;
     do_check_true(NS_SUCCEEDED(insert->BindUTF8StringByIndex(0, inserted)));
     do_check_true(NS_SUCCEEDED(insert->ExecuteStep(&hasResult)));
     do_check_false(hasResult);
@@ -78,7 +78,7 @@ test_ASCIIString()
   nsCAutoString result;
   {
     mozStorageStatementScoper scoper(select);
-    PRBool hasResult;
+    bool hasResult;
     do_check_true(NS_SUCCEEDED(select->ExecuteStep(&hasResult)));
     do_check_true(hasResult);
     do_check_true(NS_SUCCEEDED(select->GetUTF8String(0, result)));
@@ -115,7 +115,7 @@ test_CString()
   do_check_true(inserted.Length() == NS_ARRAY_LENGTH(sCharArray) - 1);
   {
     mozStorageStatementScoper scoper(insert);
-    PRBool hasResult;
+    bool hasResult;
     do_check_true(NS_SUCCEEDED(insert->BindUTF8StringByIndex(0, inserted)));
     do_check_true(NS_SUCCEEDED(insert->ExecuteStep(&hasResult)));
     do_check_false(hasResult);
@@ -125,7 +125,7 @@ test_CString()
     nsCAutoString result;
 
     mozStorageStatementScoper scoper(select);
-    PRBool hasResult;
+    bool hasResult;
     do_check_true(NS_SUCCEEDED(select->ExecuteStep(&hasResult)));
     do_check_true(hasResult);
     do_check_true(NS_SUCCEEDED(select->GetUTF8String(0, result)));
@@ -164,7 +164,7 @@ test_UTFStrings()
   do_check_true(insertedUTF8 == NS_ConvertUTF16toUTF8(insertedUTF16));
   {
     mozStorageStatementScoper scoper(insert);
-    PRBool hasResult;
+    bool hasResult;
     do_check_true(NS_SUCCEEDED(insert->BindUTF8StringByIndex(0, insertedUTF8)));
     do_check_true(NS_SUCCEEDED(insert->ExecuteStep(&hasResult)));
     do_check_false(hasResult);
@@ -174,7 +174,7 @@ test_UTFStrings()
     nsCAutoString result;
 
     mozStorageStatementScoper scoper(select);
-    PRBool hasResult;
+    bool hasResult;
     do_check_true(NS_SUCCEEDED(select->ExecuteStep(&hasResult)));
     do_check_true(hasResult);
     do_check_true(NS_SUCCEEDED(select->GetUTF8String(0, result)));
@@ -187,7 +187,7 @@ test_UTFStrings()
     nsAutoString result;
 
     mozStorageStatementScoper scoper(select);
-    PRBool hasResult;
+    bool hasResult;
     do_check_true(NS_SUCCEEDED(select->ExecuteStep(&hasResult)));
     do_check_true(hasResult);
     do_check_true(NS_SUCCEEDED(select->GetString(0, result)));
@@ -200,7 +200,7 @@ test_UTFStrings()
   // Roundtrip the same string using UTF16 input and UTF8 output.
   {
     mozStorageStatementScoper scoper(insert);
-    PRBool hasResult;
+    bool hasResult;
     do_check_true(NS_SUCCEEDED(insert->BindStringByIndex(0, insertedUTF16)));
     do_check_true(NS_SUCCEEDED(insert->ExecuteStep(&hasResult)));
     do_check_false(hasResult);
@@ -210,7 +210,7 @@ test_UTFStrings()
     nsCAutoString result;
 
     mozStorageStatementScoper scoper(select);
-    PRBool hasResult;
+    bool hasResult;
     do_check_true(NS_SUCCEEDED(select->ExecuteStep(&hasResult)));
     do_check_true(hasResult);
     do_check_true(NS_SUCCEEDED(select->GetUTF8String(0, result)));
@@ -223,7 +223,7 @@ test_UTFStrings()
     nsAutoString result;
 
     mozStorageStatementScoper scoper(select);
-    PRBool hasResult;
+    bool hasResult;
     do_check_true(NS_SUCCEEDED(select->ExecuteStep(&hasResult)));
     do_check_true(hasResult);
     do_check_true(NS_SUCCEEDED(select->GetString(0, result)));

@@ -141,7 +141,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
   headList->Item(0, getter_AddRefs(headNode));
   NS_ENSURE_TRUE(headNode, NS_ERROR_FAILURE);
 
-  PRBool   newTitleNode = PR_FALSE;
+  bool     newTitleNode = false;
   PRUint32 newTitleIndex = 0;
 
   if (!titleNode)
@@ -203,7 +203,7 @@ NS_IMETHODIMP SetDocTitleTxn::GetTxnDescription(nsAString& aString)
   return NS_OK;
 }
 
-NS_IMETHODIMP SetDocTitleTxn::GetIsTransient(PRBool *aIsTransient)
+NS_IMETHODIMP SetDocTitleTxn::GetIsTransient(bool *aIsTransient)
 {
   NS_ENSURE_TRUE(aIsTransient, NS_ERROR_NULL_POINTER);  
   *aIsTransient = mIsTransient;

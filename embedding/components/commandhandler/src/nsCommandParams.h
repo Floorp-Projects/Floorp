@@ -72,7 +72,7 @@ protected:
     PRUint8       mEntryType;
     union {
     
-      PRBool                  mBoolean;
+      bool                    mBoolean;
       PRInt32                 mLong;
       double                  mDouble;
       nsString*               mString;
@@ -153,7 +153,7 @@ protected:
 
   static PLDHashNumber HashKey(PLDHashTable *table, const void *key);
 
-  static PRBool        HashMatchEntry(PLDHashTable *table,
+  static bool          HashMatchEntry(PLDHashTable *table,
                                       const PLDHashEntryHdr *entry, const void *key);
   
   static void          HashMoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,

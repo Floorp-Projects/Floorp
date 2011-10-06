@@ -315,7 +315,7 @@
       </xul:box>
     </content>
     <implementation>
-      <field name="_fadeTimer"/>
+      <field name="_fadeTimer">null</field>
     </implementation>
     <handlers>
       <handler event="popupshowing">
@@ -383,10 +383,10 @@
 
             // If the popup is on the left of the anchor.
             if (smallerTo(popupLeft, anchorLeft, epsilon) && smallerTo(popupRight, anchorRight, epsilon)) {
-              pack = (popupLeft + popupRect.width / 2 < anchorLeft) ? "end" : "start";
+              pack = "end";
             // If the popup is on the right of the anchor.
             } else if (smallerTo(anchorLeft, popupLeft, epsilon) && smallerTo(anchorRight, popupRight, epsilon)) {
-              pack = (popupLeft + popupRect.width / 2 > anchorRight) ? "start" : "end";
+              pack = "start"; //(popupLeft + popupRect.width / 2 > anchorRight) ? "start" : "end";
             // If the popup is not on the right nor on the left.
             // Basically, that means one is above the other and one is bigger
             // than the other.

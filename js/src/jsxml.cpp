@@ -253,7 +253,7 @@ namespace_toString(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return JS_FALSE;
     if (!obj->isNamespace()) {
-        ReportIncompatibleMethod(cx, vp, &NamespaceClass);
+        ReportIncompatibleMethod(cx, CallReceiverFromVp(vp), &NamespaceClass);
         return JS_FALSE;
     }
     *vp = obj->getNameURIVal();
@@ -448,7 +448,7 @@ qname_toString(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     if (!obj->isQName()) {
-        ReportIncompatibleMethod(cx, vp, &QNameClass);
+        ReportIncompatibleMethod(cx, CallReceiverFromVp(vp), &QNameClass);
         return false;
     }
 
@@ -5331,7 +5331,7 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
     if (!*objp)
         return NULL;
     if (!(*objp)->isXML()) {
-        ReportIncompatibleMethod(cx, vp, &XMLClass);
+        ReportIncompatibleMethod(cx, CallReceiverFromVp(vp), &XMLClass);
         return NULL;
     }
     xml = (JSXML *) (*objp)->getPrivate();
@@ -5365,7 +5365,7 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
     if (!obj)                                                                 \
         return JS_FALSE;                                                      \
     if (!obj->isXML()) {                                                      \
-        ReportIncompatibleMethod(cx, vp, &XMLClass);                          \
+        ReportIncompatibleMethod(cx, CallReceiverFromVp(vp), &XMLClass);      \
         return JS_FALSE;                                                      \
     }                                                                         \
     JSXML *xml = (JSXML *)obj->getPrivate();                                  \
@@ -5852,7 +5852,7 @@ xml_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
     if (!obj)
         return JS_FALSE;
     if (!obj->isXML()) {
-        ReportIncompatibleMethod(cx, vp, &XMLClass);
+        ReportIncompatibleMethod(cx, CallReceiverFromVp(vp), &XMLClass);
         return JS_FALSE;
     }
 

@@ -122,14 +122,18 @@ public:
    *   this element to the userspace established by the ancestor on which
    *   getBBox was called. This will be the identity matrix if we are the
    *   element on which getBBox was called.
+   *
+   * @param aFlags Flags indicating whether, stroke, for example, should be
+   *   included in the bbox calculation.
    */
-  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace) = 0;
+  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+                                      PRUint32 aFlags) = 0;
 
   // Are we a container frame?
-  NS_IMETHOD_(PRBool) IsDisplayContainer()=0;
+  NS_IMETHOD_(bool) IsDisplayContainer()=0;
 
   // Does this frame have an current covered region in mRect (aka GetRect())?
-  NS_IMETHOD_(PRBool) HasValidCoveredRect()=0;
+  NS_IMETHOD_(bool) HasValidCoveredRect()=0;
 };
 
 #endif // __NS_ISVGCHILDFRAME_H__

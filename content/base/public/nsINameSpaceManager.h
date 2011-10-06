@@ -92,7 +92,7 @@ public:
   virtual nsresult GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI) = 0;
   virtual PRInt32 GetNameSpaceID(const nsAString& aURI) = 0;
 
-  virtual PRBool HasElementCreator(PRInt32 aNameSpaceID) = 0;
+  virtual bool HasElementCreator(PRInt32 aNameSpaceID) = 0;
 };
  
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINameSpaceManager, NS_INAMESPACEMANAGER_IID)

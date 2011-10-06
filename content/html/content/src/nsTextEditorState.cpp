@@ -113,7 +113,7 @@ private:
 };
 
 /*static*/
-PRBool
+bool
 nsITextControlElement::GetWrapPropertyEnum(nsIContent* aContent,
   nsITextControlElement::nsHTMLTextWrap& aWrapProp)
 {
@@ -140,10 +140,10 @@ nsITextControlElement::GetWrapPropertyEnum(nsIContent* aContent,
   return PR_FALSE;
 }
 
-static PRBool
+static bool
 SuppressEventHandlers(nsPresContext* aPresContext)
 {
-  PRBool suppressHandlers = PR_FALSE;
+  bool suppressHandlers = false;
 
   if (aPresContext)
   {
@@ -197,26 +197,26 @@ public:
   NS_IMETHOD ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion, PRInt16 aFlags);
   NS_IMETHOD RepaintSelection(PRInt16 type);
   NS_IMETHOD RepaintSelection(nsPresContext* aPresContext, SelectionType aSelectionType);
-  NS_IMETHOD SetCaretEnabled(PRBool enabled);
-  NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
-  NS_IMETHOD GetCaretEnabled(PRBool *_retval);
-  NS_IMETHOD GetCaretVisible(PRBool *_retval);
-  NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
-  NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD SetCaretEnabled(bool enabled);
+  NS_IMETHOD SetCaretReadOnly(bool aReadOnly);
+  NS_IMETHOD GetCaretEnabled(bool *_retval);
+  NS_IMETHOD GetCaretVisible(bool *_retval);
+  NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility);
+  NS_IMETHOD CharacterMove(bool aForward, bool aExtend);
   NS_IMETHOD CharacterExtendForDelete();
   NS_IMETHOD CharacterExtendForBackspace();
-  NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD WordExtendForDelete(PRBool aForward);
-  NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD CompleteScroll(PRBool aForward);
-  NS_IMETHOD CompleteMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD ScrollPage(PRBool aForward);
-  NS_IMETHOD ScrollLine(PRBool aForward);
-  NS_IMETHOD ScrollHorizontal(PRBool aLeft);
+  NS_IMETHOD WordMove(bool aForward, bool aExtend);
+  NS_IMETHOD WordExtendForDelete(bool aForward);
+  NS_IMETHOD LineMove(bool aForward, bool aExtend);
+  NS_IMETHOD IntraLineMove(bool aForward, bool aExtend);
+  NS_IMETHOD PageMove(bool aForward, bool aExtend);
+  NS_IMETHOD CompleteScroll(bool aForward);
+  NS_IMETHOD CompleteMove(bool aForward, bool aExtend);
+  NS_IMETHOD ScrollPage(bool aForward);
+  NS_IMETHOD ScrollLine(bool aForward);
+  NS_IMETHOD ScrollHorizontal(bool aLeft);
   NS_IMETHOD SelectAll(void);
-  NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval);
+  NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, bool *_retval);
 
 private:
   nsRefPtr<nsFrameSelection> mFrameSelection;
@@ -340,7 +340,7 @@ nsTextInputSelectionImpl::RepaintSelection(nsPresContext* aPresContext, Selectio
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::SetCaretEnabled(PRBool enabled)
+nsTextInputSelectionImpl::SetCaretEnabled(bool enabled)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
 
@@ -357,7 +357,7 @@ nsTextInputSelectionImpl::SetCaretEnabled(PRBool enabled)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
+nsTextInputSelectionImpl::SetCaretReadOnly(bool aReadOnly)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;
@@ -377,13 +377,13 @@ nsTextInputSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::GetCaretEnabled(PRBool *_retval)
+nsTextInputSelectionImpl::GetCaretEnabled(bool *_retval)
 {
   return GetCaretVisible(_retval);
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::GetCaretVisible(PRBool *_retval)
+nsTextInputSelectionImpl::GetCaretVisible(bool *_retval)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;
@@ -402,7 +402,7 @@ nsTextInputSelectionImpl::GetCaretVisible(PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::SetCaretVisibilityDuringSelection(PRBool aVisibility)
+nsTextInputSelectionImpl::SetCaretVisibilityDuringSelection(bool aVisibility)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;
@@ -422,7 +422,7 @@ nsTextInputSelectionImpl::SetCaretVisibilityDuringSelection(PRBool aVisibility)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::CharacterMove(PRBool aForward, PRBool aExtend)
+nsTextInputSelectionImpl::CharacterMove(bool aForward, bool aExtend)
 {
   if (mFrameSelection)
     return mFrameSelection->CharacterMove(aForward, aExtend);
@@ -446,7 +446,7 @@ nsTextInputSelectionImpl::CharacterExtendForBackspace()
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::WordMove(PRBool aForward, PRBool aExtend)
+nsTextInputSelectionImpl::WordMove(bool aForward, bool aExtend)
 {
   if (mFrameSelection)
     return mFrameSelection->WordMove(aForward, aExtend);
@@ -454,7 +454,7 @@ nsTextInputSelectionImpl::WordMove(PRBool aForward, PRBool aExtend)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::WordExtendForDelete(PRBool aForward)
+nsTextInputSelectionImpl::WordExtendForDelete(bool aForward)
 {
   if (mFrameSelection)
     return mFrameSelection->WordExtendForDelete(aForward);
@@ -462,7 +462,7 @@ nsTextInputSelectionImpl::WordExtendForDelete(PRBool aForward)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::LineMove(PRBool aForward, PRBool aExtend)
+nsTextInputSelectionImpl::LineMove(bool aForward, bool aExtend)
 {
   if (mFrameSelection)
   {
@@ -476,7 +476,7 @@ nsTextInputSelectionImpl::LineMove(PRBool aForward, PRBool aExtend)
 
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::IntraLineMove(PRBool aForward, PRBool aExtend)
+nsTextInputSelectionImpl::IntraLineMove(bool aForward, bool aExtend)
 {
   if (mFrameSelection)
     return mFrameSelection->IntraLineMove(aForward, aExtend);
@@ -485,7 +485,7 @@ nsTextInputSelectionImpl::IntraLineMove(PRBool aForward, PRBool aExtend)
 
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::PageMove(PRBool aForward, PRBool aExtend)
+nsTextInputSelectionImpl::PageMove(bool aForward, bool aExtend)
 {
   // expected behavior for PageMove is to scroll AND move the caret
   // and to remain relative position of the caret in view. see Bug 4302.
@@ -500,7 +500,7 @@ nsTextInputSelectionImpl::PageMove(PRBool aForward, PRBool aExtend)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::CompleteScroll(PRBool aForward)
+nsTextInputSelectionImpl::CompleteScroll(bool aForward)
 {
   if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
@@ -512,7 +512,7 @@ nsTextInputSelectionImpl::CompleteScroll(PRBool aForward)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
+nsTextInputSelectionImpl::CompleteMove(bool aForward, bool aExtend)
 {
   // grab the parent / root DIV for this text widget
   nsIContent* parentDIV = mFrameSelection->GetLimiter();
@@ -531,7 +531,7 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
 
     if (offset > 0)
     {
-      nsIContent *child = parentDIV->GetChildAt(offset - 1);
+      nsIContent *child = parentDIV->GetLastChild();
 
       if (child->Tag() == nsGkAtoms::br)
       {
@@ -549,7 +549,7 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::ScrollPage(PRBool aForward)
+nsTextInputSelectionImpl::ScrollPage(bool aForward)
 {
   if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
@@ -561,7 +561,7 @@ nsTextInputSelectionImpl::ScrollPage(PRBool aForward)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::ScrollLine(PRBool aForward)
+nsTextInputSelectionImpl::ScrollLine(bool aForward)
 {
   if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
@@ -573,7 +573,7 @@ nsTextInputSelectionImpl::ScrollLine(PRBool aForward)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::ScrollHorizontal(PRBool aLeft)
+nsTextInputSelectionImpl::ScrollHorizontal(bool aLeft)
 {
   if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
@@ -593,7 +593,7 @@ nsTextInputSelectionImpl::SelectAll()
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval)
+nsTextInputSelectionImpl::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, bool *_retval)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;
@@ -624,7 +624,7 @@ public:
    */
   void SetFrame(nsTextControlFrame *aFrame){mFrame = aFrame;}
 
-  void SettingValue(PRBool aValue) { mSettingValue = aValue; }
+  void SettingValue(bool aValue) { mSettingValue = aValue; }
 
   NS_DECL_ISUPPORTS
 
@@ -646,22 +646,22 @@ protected:
 
   nsITextControlElement* const mTxtCtrlElement;
 
-  PRPackedBool    mSelectionWasCollapsed;
+  bool            mSelectionWasCollapsed;
   /**
    * Whether we had undo items or not the last time we got EditAction()
    * notification (when this state changes we update undo and redo menus)
    */
-  PRPackedBool    mHadUndoItems;
+  bool            mHadUndoItems;
   /**
    * Whether we had redo items or not the last time we got EditAction()
    * notification (when this state changes we update undo and redo menus)
    */
-  PRPackedBool    mHadRedoItems;
+  bool            mHadRedoItems;
   /**
    * Whether we're in the process of a SetValue call, and should therefore
    * refrain from calling OnValueChanged.
    */
-  PRPackedBool mSettingValue;
+  bool mSettingValue;
 };
 
 
@@ -694,7 +694,7 @@ NS_IMPL_ISUPPORTS4(nsTextInputListener,
 NS_IMETHODIMP
 nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel, PRInt16 aReason)
 {
-  PRBool collapsed;
+  bool collapsed;
   nsWeakFrame weakFrame = mFrame;
 
   if (!aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)))
@@ -795,7 +795,7 @@ nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
   if (bindings &&
       nsContentUtils::DOMEventToNativeKeyEvent(keyEvent, &nativeEvent, PR_FALSE)) {
 
-    PRBool handled = PR_FALSE;
+    bool handled = false;
     if (eventType.EqualsLiteral("keydown")) {
       handled = bindings->KeyDown(nativeEvent, DoCommandCallback, mFrame);
     }
@@ -863,7 +863,7 @@ nsTextInputListener::EditAction()
   }
 
   // Fire input event
-  PRBool trusted = PR_FALSE;
+  bool trusted = false;
   editor->GetLastKeypressEventTrusted(&trusted);
   frame->FireOnInput(trusted);
 
@@ -895,7 +895,7 @@ nsINativeKeyBindings*
 nsTextInputListener::GetKeyBindings()
 {
   if (mTxtCtrlElement->IsTextArea()) {
-    static PRBool sNoTextAreaBindings = PR_FALSE;
+    static bool sNoTextAreaBindings = false;
 
     if (!sNativeTextAreaBindings && !sNoTextAreaBindings) {
       CallGetService(NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "textarea",
@@ -909,7 +909,7 @@ nsTextInputListener::GetKeyBindings()
     return sNativeTextAreaBindings;
   }
 
-  static PRBool sNoInputBindings = PR_FALSE;
+  static bool sNoInputBindings = false;
   if (!sNativeInputBindings && !sNoInputBindings) {
     CallGetService(NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "input",
                    &sNativeInputBindings);
@@ -1164,7 +1164,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   // performance.
   editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
 
-  PRBool shouldInitializeEditor = PR_FALSE;
+  bool shouldInitializeEditor = false;
   nsCOMPtr<nsIEditor> newEditor; // the editor that we might create
   nsresult rv;
   if (!mEditor) {
@@ -1234,7 +1234,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
     if (controllers) {
       PRUint32 numControllers;
-      PRBool found = PR_FALSE;
+      bool found = false;
       rv = controllers->GetControllerCount(&numControllers);
       for (PRUint32 i = 0; i < numControllers; i ++) {
         nsCOMPtr<nsIController> controller;
@@ -1643,7 +1643,7 @@ be called if @placeholder is the empty string when trimmed from line breaks");
   return NS_OK;
 }
 
-PRBool
+bool
 nsTextEditorState::GetMaxLength(PRInt32* aMaxLength)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
@@ -1662,10 +1662,10 @@ nsTextEditorState::GetMaxLength(PRInt32* aMaxLength)
 }
 
 void
-nsTextEditorState::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
+nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
 {
   if (mEditor && mBoundFrame && (mEditorInitialized || !IsSingleLineTextControl())) {
-    PRBool canCache = aIgnoreWrap && !IsSingleLineTextControl();
+    bool canCache = aIgnoreWrap && !IsSingleLineTextControl();
     if (canCache && !mCachedValue.IsEmpty()) {
       aValue = mCachedValue;
       return;
@@ -1726,7 +1726,7 @@ nsTextEditorState::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
 }
 
 void
-nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
+nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
 {
   if (mEditor && mBoundFrame) {
     // The InsertText call below might flush pending notifications, which
@@ -1736,7 +1736,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
     // PrepareEditor cannot be called prematurely.
     nsAutoScriptBlocker scriptBlocker;
 
-    PRBool fireChangeEvent = mBoundFrame->GetFireChangeEventState();
+    bool fireChangeEvent = mBoundFrame->GetFireChangeEventState();
     if (aUserInput) {
       mBoundFrame->SetFireChangeEventState(PR_TRUE);
     }
@@ -1753,7 +1753,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
       // Grab the current value directly from the text node to make sure that we
       // deal with stale data correctly.
       NS_ASSERTION(mRootNode, "We should have a root node here");
-      nsIContent *textContent = mRootNode->GetChildAt(0);
+      nsIContent *textContent = mRootNode->GetFirstChild();
       nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(textContent);
       if (textNode) {
         textNode->GetData(currentValue);
@@ -1944,14 +1944,14 @@ nsTextEditorState::ShutDown()
 }
 
 void
-nsTextEditorState::ValueWasChanged(PRBool aNotify)
+nsTextEditorState::ValueWasChanged(bool aNotify)
 {
   // placeholder management
   if (!mPlaceholderDiv) {
     return;
   }
 
-  PRBool showPlaceholder = PR_FALSE;
+  bool showPlaceholder = false;
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
   if (!nsContentUtils::IsFocusedContent(content)) {
     // If the content is focused, we don't care about the changes because
@@ -1964,7 +1964,7 @@ nsTextEditorState::ValueWasChanged(PRBool aNotify)
 }
 
 void
-nsTextEditorState::UpdatePlaceholderText(PRBool aNotify)
+nsTextEditorState::UpdatePlaceholderText(bool aNotify)
 {
   NS_ASSERTION(mPlaceholderDiv, "This function should not be called if "
                                 "mPlaceholderDiv isn't set");
@@ -1978,14 +1978,14 @@ nsTextEditorState::UpdatePlaceholderText(PRBool aNotify)
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
   content->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, placeholderValue);
   nsContentUtils::RemoveNewlines(placeholderValue);
-  NS_ASSERTION(mPlaceholderDiv->GetChildAt(0), "placeholder div has no child");
-  mPlaceholderDiv->GetChildAt(0)->SetText(placeholderValue, aNotify);
+  NS_ASSERTION(mPlaceholderDiv->GetFirstChild(), "placeholder div has no child");
+  mPlaceholderDiv->GetFirstChild()->SetText(placeholderValue, aNotify);
   ValueWasChanged(aNotify);
 }
 
 void
-nsTextEditorState::SetPlaceholderClass(PRBool aVisible,
-                                       PRBool aNotify)
+nsTextEditorState::SetPlaceholderClass(bool aVisible,
+                                       bool aNotify)
 {
   NS_ASSERTION(mPlaceholderDiv, "This function should not be called if "
                                 "mPlaceholderDiv isn't set");

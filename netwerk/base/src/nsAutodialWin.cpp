@@ -140,7 +140,7 @@ nsresult nsAutodial::Init()
 // Should we attempt to dial on a network error? Yes if the Internet Options
 // configured as such. Yes if the RAS autodial service is running (we'll try to
 // force it to dial in that case by adding the network address to its db.)
-PRBool nsAutodial::ShouldDialOnNetworkError()
+bool nsAutodial::ShouldDialOnNetworkError()
 {
     // Don't try to dial again within a few seconds of when user pressed cancel.
     if (mDontRetryUntil) 
@@ -310,7 +310,7 @@ nsresult nsAutodial::DialDefault(const PRUnichar* hostName)
             memset(&rasDialDlg, 0, sizeof(rasDialDlg));
             rasDialDlg.dwSize = sizeof(rasDialDlg);
 
-            PRBool dialed = 
+            bool dialed = 
              (*mpRasDialDlg)(nsnull, mDefaultEntryName, nsnull, &rasDialDlg);
 
             if (!dialed)
@@ -341,7 +341,7 @@ nsresult nsAutodial::DialDefault(const PRUnichar* hostName)
             memset(&rasPBDlg, 0, sizeof(rasPBDlg));
             rasPBDlg.dwSize = sizeof(rasPBDlg);
  
-            PRBool dialed = (*mpRasPhonebookDlg)(nsnull, nsnull, &rasPBDlg);
+            bool dialed = (*mpRasPhonebookDlg)(nsnull, nsnull, &rasPBDlg);
 
             if (!dialed)
             {
@@ -369,7 +369,7 @@ nsresult nsAutodial::DialDefault(const PRUnichar* hostName)
 
 
 // Check to see if RAS is already connected.
-PRBool nsAutodial::IsRASConnected()
+bool nsAutodial::IsRASConnected()
 {
     DWORD connections;
     RASCONN rasConn;
@@ -545,7 +545,7 @@ nsresult nsAutodial::GetDefaultEntryName(PRUnichar* entryName, int bufferSize)
 
 
 // Determine if the autodial service is running on this PC.
-PRBool nsAutodial::IsAutodialServiceRunning()
+bool nsAutodial::IsAutodialServiceRunning()
 {
     SC_HANDLE hSCManager = 
       OpenSCManager(nsnull, SERVICES_ACTIVE_DATABASE, SERVICE_QUERY_STATUS);
@@ -580,7 +580,7 @@ PRBool nsAutodial::IsAutodialServiceRunning()
 }
 
 // Add the specified address to the autodial directory.
-PRBool nsAutodial::AddAddressToAutodialDirectory(const PRUnichar* hostName)
+bool nsAutodial::AddAddressToAutodialDirectory(const PRUnichar* hostName)
 {
     // Need to load the DLL if not loaded yet.
     if (!LoadRASapi32DLL())
@@ -663,7 +663,7 @@ int nsAutodial::GetCurrentLocation()
 }
 
 // Check to see if autodial for the specified location is enabled. 
-PRBool nsAutodial::IsAutodialServiceEnabled(int location)
+bool nsAutodial::IsAutodialServiceEnabled(int location)
 {
     if (location < 0)
         return PR_FALSE;
@@ -683,7 +683,7 @@ PRBool nsAutodial::IsAutodialServiceEnabled(int location)
 
 
 
-PRBool nsAutodial::LoadRASapi32DLL()
+bool nsAutodial::LoadRASapi32DLL()
 {
     if (!mhRASapi32)
     {
@@ -732,7 +732,7 @@ PRBool nsAutodial::LoadRASapi32DLL()
     return PR_TRUE;
 }
 
-PRBool nsAutodial::LoadRASdlgDLL()
+bool nsAutodial::LoadRASdlgDLL()
 {
     if (!mhRASdlg)
     {

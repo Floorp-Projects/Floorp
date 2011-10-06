@@ -1250,8 +1250,8 @@ PluginScriptableObjectParent::AnswerNPN_Evaluate(const nsCString& aScript,
 
 JSBool
 PluginScriptableObjectParent::GetPropertyHelper(NPIdentifier aName,
-                                                PRBool* aHasProperty,
-                                                PRBool* aHasMethod,
+                                                bool* aHasProperty,
+                                                bool* aHasMethod,
                                                 NPVariant* aResult)
 {
   NS_ASSERTION(Type() == Proxy, "Bad type!");

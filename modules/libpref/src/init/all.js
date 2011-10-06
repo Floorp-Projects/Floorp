@@ -3362,4 +3362,4 @@ pref("full-screen-api.key-input-restricted", true);
 pref("dom.event.handling-user-input-time-limit", 1000);
  
 //3D Transforms
-pref("layout.3d-transforms.enabled", false);
+pref("layout.3d-transforms.enabled", true);
