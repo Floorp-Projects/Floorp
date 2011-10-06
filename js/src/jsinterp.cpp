@@ -3342,7 +3342,7 @@ do_incop:
 
         {
             JSAutoResolveFlags rf(cx, setPropFlags);
-            if (!obj->setProperty(cx, id, &ref, script->strictModeCode))
+            if (!obj->setGeneric(cx, id, &ref, script->strictModeCode))
                 goto error;
         }
 
@@ -3359,7 +3359,7 @@ do_incop:
 
         {
             JSAutoResolveFlags rf(cx, setPropFlags);
-            if (!obj->setProperty(cx, id, &regs.sp[-1], script->strictModeCode))
+            if (!obj->setGeneric(cx, id, &regs.sp[-1], script->strictModeCode))
                 goto error;
         }
 
@@ -3795,7 +3795,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
             if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode))
                 goto error;
         } else {
-            if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
+            if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
                 goto error;
             ABORT_RECORDING(cx, "Non-native set");
         }
@@ -3944,7 +3944,7 @@ BEGIN_CASE(JSOP_SETELEM)
         }
     } while (0);
     rval = regs.sp[-1];
-    if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
+    if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
         goto error;
   end_setelem:;
 }
@@ -3958,7 +3958,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
     Value rval = regs.sp[-3];
-    if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
+    if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
         goto error;
     regs.sp -= 3;
 }
@@ -4666,8 +4666,6 @@ BEGIN_CASE(JSOP_DEFFUN)
     Value rval = ObjectValue(*obj);
 
     do {
-        PropertyName *name = fun->atom->asPropertyName();
-
         /* Steps 5d, 5f. */
         if (!prop || pobj != parent) {
             if (!parent->defineProperty(cx, name, rval,
@@ -4709,7 +4707,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, id, &rval, script->strictModeCode))
+        if (!parent->setProperty(cx, name, &rval, script->strictModeCode))
             goto error;
     } while (false);
 }
@@ -4736,10 +4734,10 @@ BEGIN_CASE(JSOP_DEFFUN_FC)
     if (!CheckRedeclaration(cx, &parent, id, attrs))
         goto error;
 
+    PropertyName *name = fun->atom->asPropertyName();
     if ((attrs == JSPROP_ENUMERATE)
-        ? !parent.setProperty(cx, id, &rval, script->strictModeCode)
-        : !parent.defineProperty(cx, fun->atom->asPropertyName(), rval,
-                                 JS_PropertyStub, JS_StrictPropertyStub, attrs))
+        ? !parent.setProperty(cx, name, &rval, script->strictModeCode)
+        : !parent.defineProperty(cx, name, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs))
     {
         goto error;
     }
@@ -5580,7 +5578,7 @@ BEGIN_CASE(JSOP_SETXMLNAME)
     Value rval = regs.sp[-1];
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
-    if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
+    if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
         goto error;
     rval = regs.sp[-1];
     regs.sp -= 2;

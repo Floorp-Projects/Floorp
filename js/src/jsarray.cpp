@@ -481,7 +481,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
     JS_ASSERT(!JSID_IS_VOID(idr.id()));
 
     Value tmp = v;
-    return obj->setProperty(cx, idr.id(), &tmp, true);
+    return obj->setGeneric(cx, idr.id(), &tmp, true);
 }
 
 #ifdef JS_TRACER
@@ -564,13 +564,10 @@ SetOrDeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index,
 JSBool
 js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length)
 {
-    Value v;
-    jsid id;
+    Value v = NumberValue(length);
 
-    v.setNumber(length);
-    id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     /* We don't support read-only array length yet. */
-    return obj->setProperty(cx, id, &v, false);
+    return obj->setProperty(cx, cx->runtime->atomState.lengthAtom, &v, false);
 }
 
 /*
@@ -902,7 +899,7 @@ array_typeOf(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+array_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     uint32 i;
 
@@ -935,6 +932,12 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool stric
     if (!obj->makeDenseArraySlow(cx))
         return false;
     return js_SetPropertyHelper(cx, obj, id, 0, vp, strict);
+}
+
+static JSBool
+array_setProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict)
+{
+    return array_setGeneric(cx, obj, ATOM_TO_JSID(name), vp, strict);
 }
 
 static JSBool
@@ -979,7 +982,7 @@ array_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool s
 static JSBool
 array_setSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
 {
-    return array_setProperty(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
+    return array_setGeneric(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
 }
 
 JSBool
@@ -1273,7 +1276,7 @@ Class js::ArrayClass = {
         array_getProperty,
         array_getElement,
         array_getSpecial,
-        array_setProperty,
+        array_setGeneric,
         array_setProperty,
         array_setElement,
         array_setSpecial,
@@ -1816,7 +1819,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, cons
     do {
         *tvr.addr() = *vector++;
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||
-            !obj->setProperty(cx, idr.id(), tvr.addr(), true)) {
+            !obj->setGeneric(cx, idr.id(), tvr.addr(), true)) {
             return JS_FALSE;
         }
         idval.getDoubleRef() += 1;

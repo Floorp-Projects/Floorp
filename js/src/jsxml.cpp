@@ -4863,9 +4863,9 @@ xml_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 }
 
 static JSBool
-xml_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+xml_setProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict)
 {
-    return xml_setGeneric(cx, obj, id, vp, strict);
+    return xml_setGeneric(cx, obj, ATOM_TO_JSID(name), vp, strict);
 }
 
 static JSBool
@@ -5345,7 +5345,7 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_getProperty,
         xml_getElement,
         xml_getSpecial,
-        xml_setProperty,
+        xml_setGeneric,
         xml_setProperty,
         xml_setElement,
         xml_setSpecial,
@@ -6032,7 +6032,7 @@ NamespacesToJSArray(JSContext *cx, JSXMLArray *array, jsval *rval)
         if (!ns)
             continue;
         tvr.set(ObjectValue(*ns));
-        if (!arrayobj->setProperty(cx, INT_TO_JSID(i), tvr.addr(), false))
+        if (!arrayobj->setElement(cx, i, tvr.addr(), false))
             return false;
     }
     return true;
