@@ -72,6 +72,7 @@ EXTRA_PP_JS_MODULES = \
 
 EXTRA_JS_MODULES = \
   LightweightThemeManager.jsm \
+  SpellCheckDictionaryBootstrap.js \
   $(NULL)
 
 ifdef ENABLE_TESTS
