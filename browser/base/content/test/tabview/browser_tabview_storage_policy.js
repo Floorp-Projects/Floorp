@@ -48,7 +48,7 @@ function test1() {
     HttpRequestObserver.cacheControlValue = null;
   });
 
-  newTab.linkedBrowser.loadURI("http://www.example.com/browser/browser/components/tabview/test/dummy_page.html");
+  newTab.linkedBrowser.loadURI("http://www.example.com/browser/browser/base/content/test/tabview/dummy_page.html");
 }
 
 function test2() {
@@ -73,7 +73,7 @@ function test3() {
 
   Services.prefs.setBoolPref(PREF_DISK_CACHE_SSL, true);
 
-  newTab.linkedBrowser.loadURI("https://example.com/browser/browser/components/tabview/test/dummy_page.html");
+  newTab.linkedBrowser.loadURI("https://example.com/browser/browser/base/content/test/tabview/dummy_page.html");
   afterAllTabsLoaded(function() {
     let tabItem = newTab._tabViewTabItem;
 
@@ -91,7 +91,7 @@ function test4() {
 
   Services.prefs.setBoolPref(PREF_DISK_CACHE_SSL, false);
 
-  newTab.linkedBrowser.loadURI("https://example.com/browser/browser/components/tabview/test/");
+  newTab.linkedBrowser.loadURI("https://example.com/browser/browser/base/content/test/tabview/");
   afterAllTabsLoaded(function() {
     let tabItem = newTab._tabViewTabItem;
 

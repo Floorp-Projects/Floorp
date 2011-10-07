@@ -68,5 +68,5 @@ function onTabViewWindowLoaded() {
   newTab.addEventListener("error", errorHandler, false);
 
   newTab.linkedBrowser.loadURI(
-    "http://mochi.test:8888/browser/browser/components/tabview/test/test_bug600645.html");
+    "http://mochi.test:8888/browser/browser/base/content/test/tabview/test_bug600645.html");
 }
