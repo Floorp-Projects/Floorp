@@ -68,7 +68,9 @@ var TabletSidebar = {
    */
   grab: function grab() {
     this._grabbed = true;
-    ViewableAreaObserver.update();
+    // While sliding the sidebar, tell ViewableAreaObserver to size the browser
+    // as if the sidebar weren't there.  This avoids resizing the browser while dragging.
+    ViewableAreaObserver.update({ setIgnoreTabletSidebar: true });
 
     let ltr = (Util.localeDir == Util.LOCALE_DIR_LTR);
 
@@ -102,7 +104,7 @@ var TabletSidebar = {
       this.hide();
     else
       // we already called show() in grab; just need to update the width again.
-      ViewableAreaObserver.update();
+      ViewableAreaObserver.update({ setIgnoreTabletSidebar: false });
   },
 
   /** Move the tablet sidebar. */
