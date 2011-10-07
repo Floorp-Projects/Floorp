@@ -109,9 +109,6 @@ _CHROME_FILES = imgutils.js \
                 test_svg_filter_animation.html \
                 test_xultree_animation.xhtml \
                 test_changeOfSource.html \
-                test_undisplayed_iframe.html \
-                iframe.html \
-                ref-iframe.html \
                 $(NULL)
 
 libs:: $(_TEST_FILES)
