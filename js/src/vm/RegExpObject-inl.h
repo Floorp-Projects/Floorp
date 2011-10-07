@@ -356,6 +356,7 @@ RegExpPrivateCode::compile(JSContext *cx, JSLinearString &pattern, TokenStream *
      * case we have to bytecode compile it.
      */
 
+#ifdef JS_METHODJIT
     if (isJITRuntimeEnabled(cx) && !yarrPattern.m_containsBackreferences) {
         if (!cx->compartment->ensureJaegerCompartmentExists(cx))
             return false;
@@ -365,6 +366,7 @@ RegExpPrivateCode::compile(JSContext *cx, JSLinearString &pattern, TokenStream *
         if (!codeBlock.isFallBack())
             return true;
     }
+#endif
 
     codeBlock.setFallBack(true);
     byteCode = byteCompile(yarrPattern, cx->compartment->regExpAllocator).get();
