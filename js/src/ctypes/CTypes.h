@@ -328,6 +328,7 @@ struct ClosureInfo
   JSObject* typeObj;     // FunctionType describing the C function
   JSObject* thisObj;     // 'this' object to use for the JS function call
   JSObject* jsfnObj;     // JS function
+  void* errResult;       // Result that will be returned if the closure throws
   ffi_closure* closure;  // The C closure itself
 #ifdef DEBUG
   jsword cxThread;       // The thread on which the context may be used
@@ -337,12 +338,15 @@ struct ClosureInfo
   // NULL here.
   ClosureInfo(JSRuntime* runtime)
     : rt(runtime)
+    , errResult(NULL)
     , closure(NULL)
   {}
 
   ~ClosureInfo() {
     if (closure)
       ffi_closure_free(closure);
+    if (errResult)
+      rt->free_(errResult);
   };
 };
 
