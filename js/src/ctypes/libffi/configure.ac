@@ -316,7 +316,8 @@ if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64
 fi
 
 case "$target" in
-     *-apple-darwin10* | *-*-freebsd* | *-*-openbsd* | *-pc-solaris*)
+     # Darwin 10 (OSX 10.6) and beyond allocate non-executable pages
+     *-apple-darwin1* | *-*-freebsd* | *-*-openbsd* | *-pc-solaris*)
        AC_DEFINE(FFI_MMAP_EXEC_WRIT, 1,
                  [Cannot use malloc on this target, so, we revert to
                    alternative means])
