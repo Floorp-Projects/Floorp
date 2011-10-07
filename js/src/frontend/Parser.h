@@ -61,6 +61,8 @@ typedef struct BindData BindData;
 namespace js {
 
 enum FunctionSyntaxKind { Expression, Statement };
+enum LetContext { LetExpresion, LetStatement };
+enum VarContext { HoistVars, DontHoistVars };
 
 struct Parser : private AutoGCRooter
 {
@@ -196,7 +198,7 @@ struct Parser : private AutoGCRooter
     ParseNode *letStatement();
 #endif
     ParseNode *expressionStatement();
-    ParseNode *variables(ParseNodeKind kind, bool inLetHead);
+    ParseNode *variables(ParseNodeKind kind, JSObject *blockObj = NULL, VarContext varContext = HoistVars);
     ParseNode *expr();
     ParseNode *assignExpr();
     ParseNode *condExpr1();
@@ -240,7 +242,7 @@ struct Parser : private AutoGCRooter
     ParseNode *generatorExpr(ParseNode *kid);
     JSBool argumentList(ParseNode *listNode);
     ParseNode *bracketedExpr();
-    ParseNode *letBlock(JSBool statement);
+    ParseNode *letBlock(LetContext letContext);
     ParseNode *returnOrYield(bool useAssignExpr);
     ParseNode *destructuringExpr(BindData *data, TokenKind tt);
 

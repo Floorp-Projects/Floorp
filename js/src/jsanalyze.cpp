@@ -119,11 +119,11 @@ ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
 
     JSAtom *atom;
     if (JSOp(*pc) == JSOP_DEFFUN) {
-        JSFunction *fun = script->getFunction(js_GetIndexFromBytecode(cx, script, pc, 0));
+        JSFunction *fun = script->getFunction(js_GetIndexFromBytecode(script, pc, 0));
         atom = fun->atom;
     } else {
         JS_ASSERT(JOF_TYPE(js_CodeSpec[*pc].format) == JOF_ATOM);
-        atom = script->getAtom(js_GetIndexFromBytecode(cx, script, pc, 0));
+        atom = script->getAtom(js_GetIndexFromBytecode(script, pc, 0));
     }
 
     uintN index;
@@ -389,6 +389,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             isInlineable = canTrackVars = false;
             break;
 
+          case JSOP_ENTERLET0:
+          case JSOP_ENTERLET1:
           case JSOP_ENTERBLOCK:
           case JSOP_LEAVEBLOCK:
             addsScopeObjects_ = true;
