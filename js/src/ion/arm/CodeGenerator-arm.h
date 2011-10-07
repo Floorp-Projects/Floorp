@@ -58,13 +58,15 @@ class CodeGeneratorARM : public CodeGeneratorShared
     // Label for the common return path.
     HeapLabel *returnLabel_;
     HeapLabel *deoptLabel_;
-
+    // ugh.  this is not going to be pretty to move over.
+    // stack slotted variables are not useful on arm.
+    // it looks like this will need to return one of two types.
     inline Operand ToOperand(const LAllocation &a) {
         if (a.isGeneralReg())
             return Operand(a.toGeneralReg()->reg());
         if (a.isFloatReg())
             return Operand(a.toFloatReg()->reg());
-        return Operand(StackPointer, ToStackOffset(&a));
+        return Operand(DTRAddr(StackPointer, DtrOffImm(ToStackOffset(&a))));
     }
     inline Operand ToOperand(const LAllocation *a) {
         return ToOperand(*a);
@@ -76,19 +78,20 @@ class CodeGeneratorARM : public CodeGeneratorShared
     MoveResolver::MoveOperand toMoveOperand(const LAllocation *a) const;
 
     bool bailoutIf(Assembler::Condition condition, LSnapshot *snapshot);
-
+    bool bailoutFrom(Label *label, LSnapshot *snapshot);
   protected:
     bool generatePrologue();
     bool generateEpilogue();
     bool generateOutOfLineCode();
 
-    bool emitDoubleToInt32(const FloatRegister &src, const Register &dest, LSnapshot *snapshot);
-
+    bool emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
+    void emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
   public:
     // Instruction visitors.
     virtual bool visitGoto(LGoto *jump);
     virtual bool visitAddI(LAddI *ins);
     virtual bool visitMulI(LMulI *ins);
+    virtual bool visitDivI(LDivI *ins);
     virtual bool visitBitNot(LBitNot *ins);
     virtual bool visitBitOp(LBitOp *ins);
     virtual bool visitMoveGroup(LMoveGroup *group);
@@ -124,6 +127,10 @@ private:
 
   protected:
     ValueOperand ToValue(LInstruction *ins, size_t pos);
+
+    // Functions for LTestVAndBranch.
+    Register splitTagForTest(const ValueOperand &value);
+    Assembler::Condition testStringTruthy(bool truthy, const ValueOperand &value);
 
   protected:
     void linkAbsoluteLabels();

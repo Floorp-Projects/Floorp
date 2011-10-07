@@ -107,7 +107,7 @@ CodeGeneratorX86::visitValue(LValue *value)
     return true;
 }
 
-static inline JSValueTag 
+static inline JSValueTag
 MIRTypeToTag(MIRType type)
 {
     switch (type) {

@@ -75,6 +75,8 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool assignSnapshot(LInstruction *ins);
     void lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
     bool defineUntypedPhi(MPhi *phi, size_t lirIndex);
+    bool lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, 
+                       MDefinition *rhs);
 
     bool lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir,
                      MDefinition *input);
@@ -87,6 +89,8 @@ class LIRGeneratorARM : public LIRGeneratorShared
                      MDefinition *lhs, MDefinition *rhs);
 
     bool lowerConstantDouble(double d, MInstruction *ins);
+    bool lowerDivI(MDiv *div);
+
 
   public:
     bool visitConstant(MConstant *ins);

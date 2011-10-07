@@ -113,8 +113,8 @@ MacroAssembler::callWithABI(void *fun)
 
     // To avoid relocation issues, just move the C pointer into the return
     // register and call indirectly.
-    movePtr(ImmWord(fun), ReturnReg);
-    call(ReturnReg);
+    movePtr(ImmWord(fun), CallReg);
+    call(CallReg);
 
     freeStack(stackAdjust_);
     if (dynamicAlignment_)
@@ -123,4 +123,3 @@ MacroAssembler::callWithABI(void *fun)
     JS_ASSERT(inCall_);
     inCall_ = false;
 }
-

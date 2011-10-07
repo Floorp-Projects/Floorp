@@ -60,6 +60,11 @@
 
 // TODO: We don't print the condition code in our JaegerSpew lines. Doing this
 // is awkward whilst maintaining a consistent field width.
+namespace js {
+    namespace ion {
+        class Assembler;
+    }
+}
 
 namespace JSC {
 
@@ -138,7 +143,6 @@ namespace JSC {
             return (FPRegisterID)(d / 2);
         }
     } // namespace ARMRegisters
-
     class ARMAssembler {
     public:
         
@@ -283,6 +287,7 @@ namespace JSC {
 
         class JmpSrc {
             friend class ARMAssembler;
+            friend class js::ion::Assembler;
         public:
             JmpSrc()
                 : m_offset(-1)
@@ -300,6 +305,7 @@ namespace JSC {
 
         class JmpDst {
             friend class ARMAssembler;
+            friend class js::ion::Assembler;
         public:
             JmpDst()
                 : m_offset(-1)
@@ -1733,7 +1739,21 @@ namespace JSC {
             // seems to work for current usage.
             m_buffer.putInt(static_cast<ARMWord>(cc) | FMSTAT);
         }
-    };
+
+
+        // things added to make IONMONKEY happy!
+        // what is the offset (from the beginning of the buffer) to the address
+        // of the next instruction
+        int nextOffset() {
+            return m_buffer.uncheckedSize();
+        }
+        void putInst32(uint32 data) {
+            m_buffer.putInt(data);
+        }
+        uint32 *editSrc(JmpSrc src) {
+            return (uint32*)(((char*)m_buffer.data()) + src.offset());
+        }
+    }; // ARMAssembler
 
 } // namespace JSC
 
