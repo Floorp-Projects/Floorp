@@ -147,5 +147,6 @@ test("new Date()", function(d) justDontThrow(Date.prototype.toTimeString.call(d)
 test("new Date()", function(d) justDontThrow(Date.prototype.toDateString.call(d)));
 test("new Date()", function(d) justDontThrow(Date.prototype.toSource.call(d)));
 test("new Date()", function(d) justDontThrow(Date.prototype.toString.call(d)));
+test("new Date()", function(d) justDontThrow(Date.prototype.valueOf.call(d)));
 
 throw "done";
