@@ -3179,9 +3179,11 @@ function rendererFactory(aBrowser, aCanvas) {
  * window but floats over it.
  */
 var ViewableAreaObserver = {
+  _ignoreTabletSidebar: false, // Don't leave room for the tablet tabs sidebar
+
   get width() {
     let width = this._width || window.innerWidth;
-    if (!TabletSidebar._grabbed && Util.isTablet())
+    if (!this._ignoreTabletSidebar && Util.isTablet())
       width -= this.sidebarWidth;
     return width;
   },
@@ -3248,7 +3250,11 @@ var ViewableAreaObserver = {
 #endif
   },
 
-  update: function va_update() {
+  update: function va_update(aParams) {
+    aParams = aParams || {};
+    if ("setIgnoreTabletSidebar" in aParams)
+      this._ignoreTabletSidebar = aParams.setIgnoreTabletSidebar;
+
     this._sidebarWidth = null;
 
     let oldHeight = parseInt(Browser.styles["viewable-height"].height);
