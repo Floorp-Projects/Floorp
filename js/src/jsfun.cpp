@@ -2436,7 +2436,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
                 return NULL;
 
             js_CallNewScriptHook(cx, cfun->script(), cfun);
-            Debugger::onNewScript(cx, cfun->script(), cfun, Debugger::NewHeldScript);
+            Debugger::onNewScript(cx, cfun->script(), cfun, NULL);
         }
     }
     return clone;

@@ -17,6 +17,10 @@
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
 }
 
+#eula-dialog[addontype="dictionary"] #icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
+}
+
 #heading-container {
   -moz-box-align: center;
 }

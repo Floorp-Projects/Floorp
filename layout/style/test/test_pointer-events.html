@@ -4,7 +4,7 @@
   <title>Test for pointer-events in HTML</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <style type="text/css">
 
   div       { height: 10px; width: 10px; background: black; }
@@ -69,8 +69,9 @@ function synthesizeMouseEvent(type,                // string
                               modifiers,           // long
                               ignoreWindowBounds)  // boolean
 {
-  SpecialPowers.DOMWindowUtils.sendMouseEvent(type, x, y, button, clickCount,
-                                              modifiers, ignoreWindowBounds);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.sendMouseEvent(type, x, y, button, clickCount,
+                       modifiers, ignoreWindowBounds);
 }
 
 function run_test()
