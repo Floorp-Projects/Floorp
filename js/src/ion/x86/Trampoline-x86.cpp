@@ -358,7 +358,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     // Load the value the interpreter returned.
     masm.movl(Operand(esp, 4), JSReturnReg_Type);
     masm.movl(Operand(esp, 0), JSReturnReg_Data);
-    masm.addl(Imm32(8), esp);
+    masm.addl(Imm32(sizeof(Value)), esp);
 
     // We're back, aligned to the frame prefix. Check for an exception.
     masm.testl(eax, eax);

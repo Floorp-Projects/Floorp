@@ -67,7 +67,8 @@ static const int32 INVALID_STACK_SLOT       = -1;
 // Size of each bailout table entry. On arm, this is at most a ldr, then a branch
 static const uint32 BAILOUT_TABLE_ENTRY_SIZE    = 8;
 
-class Registers {
+class Registers
+{
   public:
     typedef JSC::ARMRegisters::RegisterID Code;
 
@@ -83,7 +84,7 @@ class Registers {
     static const Code Invalid = JSC::ARMRegisters::invalid_reg;
 
     static const uint32 Total = 16;
-    static const uint32 Allocatable = 14;
+    static const uint32 Allocatable = 13;
 
     static const uint32 AllMask = (1 << Total) - 1;
 
@@ -111,12 +112,19 @@ class Registers {
     // possibly the stack as well.
     static const uint32 NonAllocatableMask =
         (1 << JSC::ARMRegisters::sp) |
+        (1 << JSC::ARMRegisters::r12) | // r12 = ip = scratch
         (1 << JSC::ARMRegisters::pc);
 
+    static const uint32 JSCallClobberMask =
+              (1 << JSC::ARMRegisters::r0) |
+              (1 << JSC::ARMRegisters::r1) |
+              (1 << JSC::ARMRegisters::r2) |
+              (1 << JSC::ARMRegisters::r3);
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
-class FloatRegisters {
+class FloatRegisters
+{
   public:
     typedef JSC::ARMRegisters::FPRegisterID Code;
 
@@ -141,9 +149,14 @@ class FloatRegisters {
     static const uint32 NonAllocatableMask =
         // the scratch float register for ARM.
         (1 << JSC::ARMRegisters::SD0);
-
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
+    static const uint32 JSCallClobberMask = AllocatableMask;
+
 };
+
+bool hasMOVWT();
+bool hasVFPv3();
+
 } // namespace ion
 } // namespace js
 
