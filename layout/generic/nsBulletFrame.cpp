@@ -78,7 +78,6 @@ public:
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
   NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
                              const nsIntRect *aRect);
-  NS_IMETHOD OnStartDecode(imgIRequest *aRequest);
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
                           const PRUnichar *statusArg);
   // imgIContainerObserver (override nsStubImageDecoderObserver)
@@ -102,10 +101,6 @@ nsBulletFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Stop image loading first
   if (mImageRequest) {
-    // Deregister our image request from the refresh driver
-    nsLayoutUtils::DeregisterImageRequest(PresContext(),
-                                          mImageRequest,
-                                          &mRequestRegistered);
     mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
     mImageRequest = nsnull;
   }
@@ -175,8 +170,6 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
         if (same) {
           needNewRequest = PR_FALSE;
         } else {
-          nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
-                                                &mRequestRegistered);
           mImageRequest->Cancel(NS_ERROR_FAILURE);
           mImageRequest = nsnull;
         }
@@ -185,15 +178,10 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
     if (needNewRequest) {
       newRequest->Clone(mListener, getter_AddRefs(mImageRequest));
-      nsLayoutUtils::RegisterImageRequest(PresContext(), mImageRequest,
-                                          &mRequestRegistered);
     }
   } else {
     // No image request on the new style context
     if (mImageRequest) {
-      nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
-                                            &mRequestRegistered);
-
       mImageRequest->Cancel(NS_ERROR_FAILURE);
       mImageRequest = nsnull;
     }
@@ -1533,17 +1521,6 @@ NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBulletFrame::OnStartDecode(imgIRequest* aRequest)
-{
-  // Register the image request with the refresh driver.
-  if (aRequest == mImageRequest) {
-    nsLayoutUtils::RegisterImageRequest(PresContext(), mImageRequest,
-                                        &mRequestRegistered);
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest,
                                           nsresult aStatus,
                                           const PRUnichar *aStatusArg)
@@ -1559,14 +1536,6 @@ NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest,
     }
   }
 #endif
-
-  // Deregister the imgIRequest with the refresh driver if the
-  // image is not animated.
-  if (aRequest == mImageRequest) {
-    nsLayoutUtils::DeregisterImageRequestIfNotAnimated(PresContext(),
-                                                       mImageRequest,
-                                                       &mRequestRegistered);
-  }
 
   return NS_OK;
 }
@@ -1665,17 +1634,9 @@ NS_IMETHODIMP nsBulletListener::OnDataAvailable(imgIRequest *aRequest,
                                                 const nsIntRect *aRect)
 {
   if (!mFrame)
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
   return mFrame->OnDataAvailable(aRequest, aCurrentFrame, aRect);
-}
-
-NS_IMETHODIMP nsBulletListener::OnStartDecode(imgIRequest *aRequest)
-{
-  if (!mFrame)
-      return NS_OK;
-
-  return mFrame->OnStartDecode(aRequest);
 }
 
 NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
@@ -1683,7 +1644,7 @@ NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
                                              const PRUnichar *statusArg)
 {
   if (!mFrame)
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   
   return mFrame->OnStopDecode(aRequest, status, statusArg);
 }
@@ -1692,7 +1653,7 @@ NS_IMETHODIMP nsBulletListener::FrameChanged(imgIContainer *aContainer,
                                              const nsIntRect *aDirtyRect)
 {
   if (!mFrame)
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
   return mFrame->FrameChanged(aContainer, aDirtyRect);
 }
