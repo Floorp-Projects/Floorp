@@ -4411,7 +4411,7 @@ JS_IsNativeFunction(JSObject *funobj, JSNative call)
     return fun->isNative() && fun->native() == call;
 }
 
-static JSBool
+JSBool
 js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
     JSFunctionSpec *fs = (JSFunctionSpec *) vp->toObject().getReservedSlot(0).toPrivate();
