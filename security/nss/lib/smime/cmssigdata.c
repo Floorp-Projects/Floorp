@@ -37,7 +37,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.31 2011/02/11 01:53:17 emaldona%redhat.com Exp $
+ * $Id: cmssigdata.c,v 1.32 2011/09/30 19:42:09 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -406,6 +406,25 @@ NSS_CMSSignedData_Decode_BeforeData(NSSCMSSignedData *sigd)
     if (rv != SECSuccess) {
 	return SECFailure;
     }
+    /* handle issue with Windows 2003 servers and kerberos */
+    if (sigd->digestAlgorithms != NULL) {
+	int i;
+	for (i=0; sigd->digestAlgorithms[i] != NULL; i++) {
+	    SECAlgorithmID *algid = sigd->digestAlgorithms[i];
+	    SECOidTag senttag= SECOID_FindOIDTag(&algid->algorithm);
+	    SECOidTag maptag = NSS_CMSUtil_MapSignAlgs(senttag);
+
+	    if (maptag != senttag) {
+		SECOidData *hashoid = SECOID_FindOIDByTag(maptag);
+		rv = SECITEM_CopyItem(sigd->cmsg->poolp, &algid->algorithm 
+							,&hashoid->oid);
+		if (rv != SECSuccess) {
+		    return rv;
+		}
+	    }
+	}
+    }
+
     /* set up the digests */
     if (sigd->digestAlgorithms != NULL && sigd->digests == NULL) {
 	/* if digests are already there, do nothing */
