@@ -42,7 +42,6 @@ interface nsIChannel;
 interface nsIStreamListener;
 interface nsIURI;
 interface nsIDocument;
-interface nsIFrame;
 
 /**
  * This interface represents a content node that loads images.  The interface
@@ -66,7 +65,7 @@ interface nsIFrame;
  * sufficient, when combined with the imageBlockingStatus information.)
  */
 
-[scriptable, uuid(f7debb84-2854-4731-a57b-1bd752ad71f8)]
+[scriptable, uuid(95c74255-df9a-4060-b5a0-0d111fcafe08)]
 interface nsIImageLoadingContent : imgIDecoderObserver
 {
   /**
@@ -128,18 +127,6 @@ interface nsIImageLoadingContent : imgIDecoderObserver
    * known
    */
   imgIRequest getRequest(in long aRequestType);
-
-  /**
-   * Used to notify the image loading content node that a frame has been
-   * created.
-   */
-  void frameCreated(in nsIFrame aFrame);
-
-  /**
-   * Used to notify the image loading content node that a frame has been
-   * destroyed.
-   */
-  void frameDestroyed(in nsIFrame aFrame);
 
   /**
    * Used to find out what type of request one is dealing with (eg
