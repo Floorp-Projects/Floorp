@@ -3033,7 +3033,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 JSFixedString *
 js_NewString(JSContext *cx, jschar *chars, size_t length)
 {
-    if (!CheckStringLength(cx, length))
+    if (!JSString::validateLength(cx, length))
         return NULL;
 
     JSFixedString *s = JSFixedString::new_(cx, chars, length);
