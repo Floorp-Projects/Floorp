@@ -223,10 +223,6 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
       nsCxPusher pusher;
       pusher.PushNull();
 
-      // Notify our image loading content that we are going away so it can
-      // deregister with our refresh driver.
-      imageLoader->FrameDestroyed(this);
-
       imageLoader->RemoveObserver(mListener);
     }
     
@@ -271,10 +267,6 @@ nsImageFrame::Init(nsIContent*      aContent,
   
   if (!gIconLoad)
     LoadIcons(aPresContext);
-
-  // We have a PresContext now, so we need to notify the image content node
-  // that it can register images.
-  imageLoader->FrameCreated(this);
 
   // Give image loads associated with an image frame a small priority boost!
   nsCOMPtr<imgIRequest> currentRequest;
