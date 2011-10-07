@@ -2661,6 +2661,14 @@ fail:
     gDesiredDebugMode = gDebugMode = JS_FALSE;
 }
 
+NS_EXPORT_(void)
+xpc_ActivateDebugMode()
+{
+    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
+    nsXPConnect::GetXPConnect()->SetDebugModeWhenPossible(true);
+    nsXPConnect::CheckForDebugMode(rt->GetJSRuntime());
+}
+
 /* JSContext Pop (); */
 NS_IMETHODIMP
 nsXPConnect::Pop(JSContext * *_retval)
