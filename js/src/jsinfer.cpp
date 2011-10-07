@@ -254,6 +254,15 @@ types::TypeObjectString(TypeObject *type)
     return TypeString(Type::ObjectType(type));
 }
 
+unsigned JSScript::id() {
+    if (!id_) {
+        id_ = ++compartment()->types.scriptCount;
+        InferSpew(ISpewOps, "script #%u: %p %s:%d",
+                  id_, this, filename ? filename : "<null>", lineno);
+    }
+    return id_;
+}
+
 void
 types::InferSpew(SpewChannel channel, const char *fmt, ...)
 {
