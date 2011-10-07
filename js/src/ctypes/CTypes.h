@@ -322,6 +322,8 @@ struct FunctionInfo
 struct ClosureInfo
 {
   JSContext* cx;         // JSContext to use
+  JSRuntime* rt;         // Used in the destructor, where cx might have already
+                         // been GCed.
   JSObject* closureObj;  // CClosure object
   JSObject* typeObj;     // FunctionType describing the C function
   JSObject* thisObj;     // 'this' object to use for the JS function call
@@ -330,6 +332,18 @@ struct ClosureInfo
 #ifdef DEBUG
   jsword cxThread;       // The thread on which the context may be used
 #endif
+
+  // Anything conditionally freed in the destructor should be initialized to
+  // NULL here.
+  ClosureInfo(JSRuntime* runtime)
+    : rt(runtime)
+    , closure(NULL)
+  {}
+
+  ~ClosureInfo() {
+    if (closure)
+      ffi_closure_free(closure);
+  };
 };
 
 bool IsCTypesGlobal(JSContext* cx, JSObject* obj);
