@@ -103,9 +103,6 @@ _CHROME_FILES = imgutils.js \
                 test_svg_animatedGIF.html \
                 test_bullet_animation.html \
                 test_background_image_anim.html \
-                filter.svg \
-                filter-final.svg \
-                test_svg_filter_animation.html \
                 $(NULL)
 
 libs:: $(_TEST_FILES)
