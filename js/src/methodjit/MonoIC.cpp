@@ -52,6 +52,8 @@
 #include "InlineFrameAssembler.h"
 #include "jsobj.h"
 
+#include "builtin/RegExp.h"
+
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
@@ -1039,8 +1041,8 @@ class CallCompiler : public BaseCompiler
          * break inferred types for the call's result and any subsequent test,
          * as RegExp.exec has a type handler with unknown result.
          */
-        if (native == js_regexp_exec && !CallResultEscapes(f.pc()))
-            native = js_regexp_test;
+        if (native == regexp_exec && !CallResultEscapes(f.pc()))
+            native = regexp_test;
 
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, native), false);
 
