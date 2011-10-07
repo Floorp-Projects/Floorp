@@ -1,7 +1,7 @@
 /*
  * e10s event dispatcher from content->chrome
  *
- * type = eventName (QuitApplication, LoggerInit, LoggerClose, Logger, GetPref, SetPref)
+ * type = eventName (QuitApplication)
  * data = json object {"filename":filename} <- for LoggerInit
  */
 function getElement(id) {
@@ -311,6 +311,8 @@ TestRunner.runNextTest = function() {
           indicator.style.backgroundColor = "red";
         }
 
+        SpecialPowers.unregisterProcessCrashObservers();
+
         TestRunner.log("TEST-START | Shutdown"); // used by automation.py
         TestRunner.log("Passed: " + $("pass-count").innerHTML);
         TestRunner.log("Failed: " + $("fail-count").innerHTML);
@@ -384,7 +386,7 @@ TestRunner.testFinished = function(tests) {
 
     SpecialPowers.executeAfterFlushingMessageQueue(function() {
         cleanUpCrashDumpFiles();
-        runNextTest();
+        SpecialPowers.flushPrefEnv(runNextTest);
     });
 };
 

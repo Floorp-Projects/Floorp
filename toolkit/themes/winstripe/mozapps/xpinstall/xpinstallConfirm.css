@@ -91,3 +91,7 @@ installitem[type="locale"] .xpinstallItemIcon {
 installitem[type="plugin"] .xpinstallItemIcon {
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
 }
+
+installitem[type="dictionary"] .xpinstallItemIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
+}

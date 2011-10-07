@@ -63,7 +63,7 @@ const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const API_VERSION = "1.5";
-const DEFAULT_CACHE_TYPES = "extension,theme,locale";
+const DEFAULT_CACHE_TYPES = "extension,theme,locale,dictionary";
 
 const KEY_PROFILEDIR = "ProfD";
 const FILE_DATABASE  = "addons.sqlite";
@@ -932,6 +932,9 @@ var AddonRepository = {
               break;
             case 2:
               addon.type = "theme";
+              break;
+            case 3:
+              addon.type = "dictionary";
               break;
             default:
               WARN("Unknown type id when parsing addon: " + id);

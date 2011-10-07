@@ -411,14 +411,7 @@ struct JSRuntime {
      */
     js::gc::Chunk       *gcSystemAvailableChunkListHead;
     js::gc::Chunk       *gcUserAvailableChunkListHead;
-
-    /*
-     * Singly-linked list of empty chunks and its length. We use the list not
-     * to release empty chunks immediately so they can be used for future
-     * allocations. This avoids very high overhead of chunk release/allocation.
-     */
-    js::gc::Chunk       *gcEmptyChunkListHead;
-    size_t              gcEmptyChunkCount;
+    js::gc::ChunkPool   gcChunkPool;
 
     js::RootedValueMap  gcRootsHash;
     js::GCLocks         gcLocksHash;

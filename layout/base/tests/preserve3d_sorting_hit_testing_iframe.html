@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<title>preserve-3d hit testing</title>
+<style>
+  #stage {
+  }
+
+  #parent {
+    -moz-transform-style: preserve-3d;
+  }
+
+  #big {
+    width: 1000px;
+    height: 1000px;
+    background-color: #995C7F;
+    -moz-transform: rotatey(45deg);
+  }
+
+  #small {
+    width: 100px;
+    height: 100px;
+    background-color: #835A99;
+    -moz-transform: translate3d(600px, 200px, 0px);
+  }
+
+</style>
+<body>
+  <div id="stage">
+    <div id="parent">
+      <div id="small"></div>
+      <div id="big"></div>
+    </div>
+  </div>
