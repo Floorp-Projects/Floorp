@@ -1338,10 +1338,12 @@ Browser.MainDragger.prototype = {
   },
 
   dragMove: function dragMove(dx, dy, scroller, aIsKinetic) {
-    if (this._canGrabSidebar && !this._grabSidebar && dx) {
-      this._grabSidebar = true;
-      TabletSidebar.grab();
+    if (this._canGrabSidebar) {
+      this._grabSidebar = TabletSidebar.tryGrab(dx);
+      // After trying once, don't keep checking every move.
+      this._canGrabSidebar = false;
     }
+
     if (this._grabSidebar) {
       TabletSidebar.slideBy(dx);
       return;
