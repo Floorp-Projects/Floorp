@@ -1225,6 +1225,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'x':
             JS_ToggleOptions(cx, JSOPTION_XML);
             break;
+        case 'd':
+            xpc_ActivateDebugMode();
+            break;
         case 'P':
             if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
                 JSObject *gobj;
