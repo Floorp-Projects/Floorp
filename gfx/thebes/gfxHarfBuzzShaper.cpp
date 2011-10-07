@@ -899,7 +899,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
     hb_buffer_destroy(buffer);
     hb_font_destroy(font);
 
-    return PR_TRUE;
+    return NS_SUCCEEDED(rv);
 }
 
 /**
