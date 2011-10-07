@@ -14,5 +14,5 @@
 == select-2.html select-2-ref.html
 == select-3.html select-3-ref.html
 == multi-column-1.html multi-column-1-ref.html
-== button-1.html button-1-ref.html
-== button-2.html button-2-ref.html
+fails-if(Android) == button-1.html button-1-ref.html # bug 692821
+fails-if(Android) == button-2.html button-2-ref.html # bug 692821
