@@ -3304,30 +3304,28 @@ PointerType::ConstructData(JSContext* cx,
   }
 
   jsval* argv = JS_ARGV(cx, vp);
-  if (argc >= 1) {
-    JSObject* baseObj = PointerType::GetBaseType(cx, obj);
-    if (CType::GetTypeCode(cx, baseObj) == TYPE_function &&
-        JSVAL_IS_OBJECT(argv[0]) &&
-        JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(argv[0]))) {
-      // Construct a FunctionType.ptr from a JS function, and allow an
-      // optional 'this' argument.
-      JSObject* thisObj = NULL;
-      if (argc == 2) {
-        if (JSVAL_IS_OBJECT(argv[1])) {
-          thisObj = JSVAL_TO_OBJECT(argv[1]);
-        } else if (!JS_ValueToObject(cx, argv[1], &thisObj)) {
-          return JS_FALSE;
-        }
-      }
-
-      JSObject* fnObj = JSVAL_TO_OBJECT(argv[0]);
-      return FunctionType::ConstructData(cx, baseObj, result, fnObj, thisObj);
-    }
-
+  JSObject* baseObj = PointerType::GetBaseType(cx, obj);
+  if (CType::GetTypeCode(cx, baseObj) == TYPE_function &&
+      JSVAL_IS_OBJECT(argv[0]) &&
+      JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(argv[0]))) {
+    // Construct a FunctionType.ptr from a JS function, and allow an
+    // optional 'this' argument.
+    JSObject* thisObj = NULL;
     if (argc == 2) {
-      JS_ReportError(cx, "first argument must be a function");
-      return JS_FALSE;
+      if (JSVAL_IS_OBJECT(argv[1])) {
+        thisObj = JSVAL_TO_OBJECT(argv[1]);
+      } else if (!JS_ValueToObject(cx, argv[1], &thisObj)) {
+        return JS_FALSE;
+      }
     }
+
+    JSObject* fnObj = JSVAL_TO_OBJECT(argv[0]);
+    return FunctionType::ConstructData(cx, baseObj, result, fnObj, thisObj);
+  }
+
+  if (argc == 2) {
+    JS_ReportError(cx, "first argument must be a function");
+    return JS_FALSE;
   }
 
   // Construct from a raw pointer value.
