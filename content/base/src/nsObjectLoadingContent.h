@@ -65,7 +65,8 @@ enum PluginSupportState {
   ePluginBlocklisted,  // The plugin is blocklisted and disabled
   ePluginOutdated,     // The plugin is considered outdated, but not disabled
   ePluginOtherState,   // Something else (e.g. uninitialized or not a plugin)
-  ePluginCrashed
+  ePluginCrashed,
+  ePluginClickToPlay
 };
 
 /**

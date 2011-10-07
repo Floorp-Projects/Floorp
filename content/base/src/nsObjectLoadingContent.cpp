@@ -105,6 +105,10 @@ static PRLogModuleInfo* gObjectLog = PR_NewLogModule("objlc");
 #define LOG(args) PR_LOG(gObjectLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gObjectLog, PR_LOG_DEBUG)
 
+#ifdef ANDROID
+#include "nsXULAppAPI.h"
+#endif
+
 class nsAsyncInstantiateEvent : public nsRunnable {
 public:
   // This stores both the content and the frame so that Instantiate calls can be
@@ -200,6 +204,9 @@ nsPluginErrorEvent::Run()
        mContent.get()));
   nsString type;
   switch (mState) {
+    case ePluginClickToPlay:
+      type = NS_LITERAL_STRING("PluginClickToPlay");
+      break;
     case ePluginUnsupported:
       type = NS_LITERAL_STRING("PluginNotFound");
       break;
@@ -1056,7 +1063,11 @@ nsObjectLoadingContent::ObjectState() const
     case eType_Image:
       return ImageState();
     case eType_Plugin:
-    case eType_Document:
+#ifdef ANDROID
+      if (XRE_GetProcessType() == GeckoProcessType_Content)
+        return NS_EVENT_STATE_TYPE_CLICK_TO_PLAY;
+#endif
+   case eType_Document:
       // These are OK. If documents start to load successfully, they display
       // something, and are thus not broken in this sense. The same goes for
       // plugins.
@@ -1070,6 +1081,8 @@ nsObjectLoadingContent::ObjectState() const
       // Otherwise, broken
       nsEventStates state = NS_EVENT_STATE_BROKEN;
       switch (mFallbackReason) {
+        case ePluginClickToPlay:
+          return NS_EVENT_STATE_TYPE_CLICK_TO_PLAY;
         case ePluginDisabled:
           state |= NS_EVENT_STATE_HANDLER_DISABLED;
           break;
@@ -1949,6 +1962,10 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
 /* static */ PluginSupportState
 nsObjectLoadingContent::GetPluginDisabledState(const nsCString& aContentType)
 {
+#ifdef ANDROID
+      if (XRE_GetProcessType() == GeckoProcessType_Content)
+        return ePluginClickToPlay;
+#endif
   nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
   if (!pluginHost) {
