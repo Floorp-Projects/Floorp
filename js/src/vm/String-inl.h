@@ -43,7 +43,29 @@
 
 #include "String.h"
 
+#include "jscntxt.h"
 #include "jsgcinlines.h"
+
+JS_ALWAYS_INLINE bool
+JSString::validateLength(JSContext *cx, size_t length)
+{
+    if (JS_UNLIKELY(length > JSString::MAX_LENGTH)) {
+        if (JS_ON_TRACE(cx)) {
+            /*
+             * If we can't leave the trace, signal OOM condition, otherwise
+             * exit from trace before throwing.
+             */
+            if (!js::CanLeaveTrace(cx))
+                return NULL;
+
+            js::LeaveTrace(cx);
+        }
+        js_ReportAllocationOverflow(cx);
+        return false;
+    }
+
+    return true;
+}
 
 JS_ALWAYS_INLINE void
 JSRope::init(JSString *left, JSString *right, size_t length)
