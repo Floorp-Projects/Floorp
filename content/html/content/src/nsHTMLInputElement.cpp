@@ -2694,14 +2694,17 @@ nsHTMLInputElement::GetSelectionStart(PRInt32* aSelectionStart)
 {
   NS_ENSURE_ARG_POINTER(aSelectionStart);
 
-  nsTextEditorState *state = GetEditorState();
-  if (state && state->IsSelectionCached()) {
-    *aSelectionStart = state->GetSelectionProperties().mStart;
-    return NS_OK;
-  }
-
   PRInt32 selEnd;
-  return GetSelectionRange(aSelectionStart, &selEnd);
+  nsresult rv = GetSelectionRange(aSelectionStart, &selEnd);
+
+  if (NS_FAILED(rv)) {
+    nsTextEditorState *state = GetEditorState();
+    if (state && state->IsSelectionCached()) {
+      *aSelectionStart = state->GetSelectionProperties().mStart;
+      return NS_OK;
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2731,14 +2734,17 @@ nsHTMLInputElement::GetSelectionEnd(PRInt32* aSelectionEnd)
 {
   NS_ENSURE_ARG_POINTER(aSelectionEnd);
 
-  nsTextEditorState *state = GetEditorState();
-  if (state && state->IsSelectionCached()) {
-    *aSelectionEnd = state->GetSelectionProperties().mEnd;
-    return NS_OK;
-  }
-
   PRInt32 selStart;
-  return GetSelectionRange(&selStart, aSelectionEnd);
+  nsresult rv = GetSelectionRange(&selStart, aSelectionEnd);
+
+  if (NS_FAILED(rv)) {
+    nsTextEditorState *state = GetEditorState();
+    if (state && state->IsSelectionCached()) {
+      *aSelectionEnd = state->GetSelectionProperties().mEnd;
+      return NS_OK;
+    }
+  }
+  return rv;
 }
 
 
@@ -2818,12 +2824,6 @@ DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirecti
 NS_IMETHODIMP
 nsHTMLInputElement::GetSelectionDirection(nsAString& aDirection)
 {
-  nsTextEditorState *state = GetEditorState();
-  if (state && state->IsSelectionCached()) {
-    DirectionToName(state->GetSelectionProperties().mDirection, aDirection);
-    return NS_OK;
-  }
-
   nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
@@ -2835,6 +2835,14 @@ nsHTMLInputElement::GetSelectionDirection(nsAString& aDirection)
       if (NS_SUCCEEDED(rv)) {
         DirectionToName(dir, aDirection);
       }
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    nsTextEditorState *state = GetEditorState();
+    if (state && state->IsSelectionCached()) {
+      DirectionToName(state->GetSelectionProperties().mDirection, aDirection);
+      return NS_OK;
     }
   }
 
