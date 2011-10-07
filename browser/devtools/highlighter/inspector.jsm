@@ -887,8 +887,7 @@ InspectorUI.prototype = {
   initTools: function IUI_initTools()
   {
     // Style inspector
-    // XXX bug 689164, remove /false &&/ from below when bug 689160 fixed.
-    if (false && Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
+    if (Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
         !this.toolRegistered("styleinspector")) {
       let stylePanel = StyleInspector.createPanel(true);
       this.registerTool({
