@@ -45,7 +45,6 @@
 
 #include "prlog.h"
 #include "prnetdb.h"
-#include "nsIPrompt.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
@@ -65,7 +64,6 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsRecentBadCerts.h"
-#include "nsISSLCertErrorDialog.h"
 #include "nsIStrictTransportSecurityService.h"
 
 #include "nsXPIDLString.h"
@@ -441,20 +439,11 @@ nsNSSSocketInfo::EnsureDocShellDependentStuffKnown()
   return NS_OK;
 }
 
-nsresult
-nsNSSSocketInfo::GetExternalErrorReporting(bool* state)
+bool
+nsNSSSocketInfo::GetExternalErrorReporting()
 {
   nsresult rv = EnsureDocShellDependentStuffKnown();
-  NS_ENSURE_SUCCESS(rv, rv);
-  *state = mExternalErrorReporting;
-  return NS_OK;
-}
-
-nsresult
-nsNSSSocketInfo::SetExternalErrorReporting(bool aState)
-{
-  mExternalErrorReporting = aState;
-  return NS_OK;
+  return NS_SUCCEEDED(rv) && mExternalErrorReporting;
 }
 
 NS_IMETHODIMP
@@ -551,10 +540,9 @@ nsNSSSocketInfo::GetErrorMessage(PRUnichar** aText) {
   return NS_OK;
 }
 
-nsresult
+void
 nsNSSSocketInfo::SetErrorMessage(const PRUnichar* aText) {
   mErrorMessage.Assign(aText);
-  return NS_OK;
 }
 
 /* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
@@ -951,7 +939,6 @@ static nsresult
 getErrorMessage(PRInt32 err, 
                 const nsString &host,
                 PRInt32 port,
-                bool externalErrorReporting,
                 nsINSSComponent *component,
                 nsString &returnedMessage)
 {
@@ -964,14 +951,14 @@ getErrorMessage(PRInt32 err,
   {
     nsString hostWithPort;
 
-    // For now, hide port when it's 443 and we're reporting the error using
-    // external reporting. In the future a better mechanism should be used
+    // For now, hide port when it's 443 and we're reporting the error.
+    // In the future a better mechanism should be used
     // to make a decision about showing the port number, possibly by requiring
     // the context object to implement a specific interface.
     // The motivation is that Mozilla browser would like to hide the port number
     // in error pages in the common case.
 
-    if (externalErrorReporting && port == 443) {
+    if (port == 443) {
       params[0] = host.get();
     }
     else {
@@ -1148,7 +1135,6 @@ static void
 AppendErrorTextMismatch(const nsString &host,
                         nsIX509Cert* ix509,
                         nsINSSComponent *component,
-                        bool wantsHtml,
                         nsString &returnedMessage)
 {
   const PRUnichar *params[1];
@@ -1212,14 +1198,8 @@ AppendErrorTextMismatch(const nsString &host,
     const PRUnichar *params[1];
     params[0] = allNames.get();
 
-    const char *stringID;
-    if (wantsHtml)
-      stringID = "certErrorMismatchSingle2";
-    else
-      stringID = "certErrorMismatchSinglePlain";
-
     nsString formattedString;
-    rv = component->PIPBundleFormatStringFromName(stringID, 
+    rv = component->PIPBundleFormatStringFromName("certErrorMismatchSingle2", 
                                                   params, 1, 
                                                   formattedString);
     if (NS_SUCCEEDED(rv)) {
@@ -1355,8 +1335,6 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
                            const nsString &hostWithPort,
                            PRInt32 port,
                            nsIX509Cert* ix509,
-                           bool externalErrorReporting,
-                           bool wantsHtml,
                            nsINSSComponent *component,
                            nsString &returnedMessage)
 {
@@ -1365,14 +1343,14 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
   const PRUnichar *params[1];
   nsresult rv;
 
-  // For now, hide port when it's 443 and we're reporting the error using
-  // external reporting. In the future a better mechanism should be used
+  // For now, hide port when it's 443 and we're reporting the error.
+  // In the future a better mechanism should be used
   // to make a decision about showing the port number, possibly by requiring
   // the context object to implement a specific interface.
   // The motivation is that Mozilla browser would like to hide the port number
   // in error pages in the common case.
   
-  if (externalErrorReporting && port == 443)
+  if (port == 443)
     params[0] = host.get();
   else
     params[0] = hostWithPort.get();
@@ -1395,7 +1373,7 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
 
   if (multipleCollectedErrors & nsICertOverrideService::ERROR_MISMATCH)
   {
-    AppendErrorTextMismatch(host, ix509, component, wantsHtml, returnedMessage);
+    AppendErrorTextMismatch(host, ix509, component, returnedMessage);
   }
 
   if (multipleCollectedErrors & nsICertOverrideService::ERROR_TIME)
@@ -1408,62 +1386,28 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
   return NS_OK;
 }
 
-static nsresult
-displayAlert(nsAFlatString &formattedString, nsNSSSocketInfo *infoObject)
-{
-  // The interface requestor object may not be safe, so proxy the call to get
-  // the nsIPrompt.
-
-  if (nsSSLThread::stoppedOrStopping())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
-  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                       NS_GET_IID(nsIInterfaceRequestor),
-                       static_cast<nsIInterfaceRequestor*>(infoObject),
-                       NS_PROXY_SYNC,
-                       getter_AddRefs(proxiedCallbacks));
-
-  nsCOMPtr<nsIPrompt> prompt (do_GetInterface(proxiedCallbacks));
-  if (!prompt)
-    return NS_ERROR_NO_INTERFACE;
-
-  // Finally, get a proxy for the nsIPrompt
-
-  nsCOMPtr<nsIPrompt> proxyPrompt;
-  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                       NS_GET_IID(nsIPrompt),
-                       prompt,
-                       NS_PROXY_SYNC,
-                       getter_AddRefs(proxyPrompt));
-
-  proxyPrompt->Alert(nsnull, formattedString.get());
-  return NS_OK;
-}
-
-static nsresult
+static void
 nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
 {
   if (socketInfo->GetCanceled()) {
     // If the socket has been flagged as canceled,
     // the code who did was responsible for showing
     // an error message (if desired).
-    return NS_OK;
+    return;
   }
 
   if (nsSSLThread::stoppedOrStopping()) {
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   nsresult rv;
   NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
   if (NS_FAILED(rv))
-    return rv;
+    return;
 
   nsXPIDLCString hostName;
   socketInfo->GetHostName(getter_Copies(hostName));
-  NS_ConvertASCIItoUTF16 hostNameU(hostName);
 
   PRInt32 port;
   socketInfo->GetPort(&port);
@@ -1496,107 +1440,17 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
         rv = proxy_sel->NotifySSLError(csi, err, hostWithPortString, 
                                        &suppressMessage);
         if (NS_SUCCEEDED(rv) && suppressMessage)
-          return NS_OK;
+          return;
       }
     }
   }
 
-  bool external = false;
-  socketInfo->GetExternalErrorReporting(&external);
-  
-  nsString formattedString;
-  rv = getErrorMessage(err, hostNameU, port, external, nssComponent, formattedString);
-
-  if (external)
-  {
+  if (socketInfo->GetExternalErrorReporting()) {
+    NS_ConvertASCIItoUTF16 hostNameU(hostName);
+    nsString formattedString;
+    (void) getErrorMessage(err, hostNameU, port, nssComponent, formattedString);
     socketInfo->SetErrorMessage(formattedString.get());
   }
-  else
-  {
-    nsPSMUITracker tracker;
-    if (tracker.isUIForbidden()) {
-      rv = NS_ERROR_NOT_AVAILABLE;
-    }
-    else {
-      rv = displayAlert(formattedString, socketInfo);
-    }
-  }
-  return rv;
-}
-
-static nsresult
-nsHandleInvalidCertError(nsNSSSocketInfo *socketInfo, 
-                         PRUint32 multipleCollectedErrors, 
-                         const nsACString &host, 
-                         const nsACString &hostWithPort,
-                         PRInt32 port,
-                         PRErrorCode errorCodeToReport,
-                         PRErrorCode errTrust, 
-                         PRErrorCode errMismatch, 
-                         PRErrorCode errExpired,
-                         bool wantsHtml,
-                         nsIX509Cert* ix509)
-{
-  nsresult rv;
-  NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  NS_ConvertASCIItoUTF16 hostU(host);
-  NS_ConvertASCIItoUTF16 hostWithPortU(hostWithPort);
-
-  // What mechanism is used to inform the user?
-  // The highest priority has the "external error reporting" feature,
-  // if set, we'll provide the strings to be used by the nsINSSErrorsService
-
-  bool external = false;
-  socketInfo->GetExternalErrorReporting(&external);
-  
-  nsString formattedString;
-  rv = getInvalidCertErrorMessage(multipleCollectedErrors, errorCodeToReport,
-                                  errTrust, errMismatch, errExpired,
-                                  hostU, hostWithPortU, port, 
-                                  ix509, external, wantsHtml,
-                                  nssComponent, formattedString);
-
-  if (external)
-  {
-    socketInfo->SetErrorMessage(formattedString.get());
-  }
-  else
-  {
-    nsPSMUITracker tracker;
-    if (tracker.isUIForbidden()) {
-      rv = NS_ERROR_NOT_AVAILABLE;
-    }
-    else {
-      nsISSLCertErrorDialog *dialogs = nsnull;
-      rv = getNSSDialogs((void**)&dialogs, 
-        NS_GET_IID(nsISSLCertErrorDialog), 
-        NS_SSLCERTERRORDIALOG_CONTRACTID);
-  
-      if (NS_SUCCEEDED(rv)) {
-        nsPSMUITracker tracker;
-        if (tracker.isUIForbidden()) {
-          rv = NS_ERROR_NOT_AVAILABLE;
-        }
-        else {
-          nsCOMPtr<nsISSLStatus> status;
-          socketInfo->GetSSLStatus(getter_AddRefs(status));
-
-          nsString empty;
-
-          rv = dialogs->ShowCertError(nsnull, status, ix509, 
-                                      formattedString, 
-                                      empty, host, port);
-        }
-  
-        NS_RELEASE(dialogs);
-      }
-    }
-  }
-  return rv;
 }
 
 static PRStatus PR_CALLBACK
@@ -3579,7 +3433,6 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   // giving the caller a chance to suppress the error messages.
 
   bool suppressMessage = false;
-  nsresult rv;
 
   // Try to get a nsIBadCertListener2 implementation from the socket consumer.
   nsCOMPtr<nsIInterfaceRequestor> cb;
@@ -3602,8 +3455,8 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
                            getter_AddRefs(proxy_bcl));
       if (proxy_bcl) {
         nsIInterfaceRequestor *csi = static_cast<nsIInterfaceRequestor*>(infoObject);
-        rv = proxy_bcl->NotifyCertProblem(csi, status, hostWithPortString, 
-                                          &suppressMessage);
+        (void) proxy_bcl->NotifyCertProblem(csi, status, hostWithPortString, 
+                                            &suppressMessage);
       }
     }
   }
@@ -3624,21 +3477,16 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   else if (remaining_display_errors & nsICertOverrideService::ERROR_TIME)
     errorCodeToReport = errorCodeExpired;
 
-  if (!suppressMessage) {
-    bool external = false;
-    infoObject->GetExternalErrorReporting(&external);
-
-    nsHandleInvalidCertError(infoObject,
-                             remaining_display_errors,
-                             hostString,
-                             hostWithPortString,
-                             port,
-                             errorCodeToReport,
-                             errorCodeTrust,
-                             errorCodeMismatch,
-                             errorCodeExpired,
-                             external, // wantsHtml
-                             ix509);
+  if (!suppressMessage && infoObject->GetExternalErrorReporting()) {
+    NS_ConvertASCIItoUTF16 hostU(hostString);
+    NS_ConvertASCIItoUTF16 hostWithPortU(hostWithPortString);
+    nsString formattedString;
+    (void) getInvalidCertErrorMessage(remaining_display_errors,
+                                      errorCodeToReport, errorCodeTrust,
+                                      errorCodeMismatch, errorCodeExpired, hostU,
+                                      hostWithPortU, port, ix509, inss,
+                                      formattedString);
+    infoObject->SetErrorMessage(formattedString.get());
   }
 
   PR_SetError(errorCodeToReport, 0);
