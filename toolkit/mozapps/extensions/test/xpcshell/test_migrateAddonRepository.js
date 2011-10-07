@@ -2,13 +2,15 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const EXPECTED_SCHEMA_VERSION = 2;
+let dbfile;
 
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // Write out a minimal database.
-  let dbfile = gProfD.clone();
+  dbfile = gProfD.clone();
   dbfile.append("addons.sqlite");
   let db = AM_Cc["@mozilla.org/storage/service;1"].
            getService(AM_Ci.mozIStorageService).
@@ -83,11 +85,11 @@ function run_test() {
       db = AM_Cc["@mozilla.org/storage/service;1"].
            getService(AM_Ci.mozIStorageService).
            openDatabase(dbfile);
-      do_check_eq(db.schemaVersion, 2);
+      do_check_eq(db.schemaVersion, EXPECTED_SCHEMA_VERSION);
       do_check_true(db.indexExists("developer_idx"));
       do_check_true(db.indexExists("screenshot_idx"));
       db.close();
-      do_test_finished();
+      run_test_2();
     }
   }, "addon-repository-shutdown", null);
 
@@ -99,6 +101,40 @@ function run_test() {
     do_check_true(aAddon.screenshots[0].height === null);
     do_check_true(aAddon.screenshots[0].thumbnailWidth === null);
     do_check_true(aAddon.screenshots[0].thumbnailHeight === null);
+    AddonRepository.shutdown();
+  });
+}
+
+function run_test_2() {
+  // Write out a minimal database.
+  let db = AM_Cc["@mozilla.org/storage/service;1"].
+           getService(AM_Ci.mozIStorageService).
+           openDatabase(dbfile);
+
+  db.createTable("futuristicSchema",
+                 "id INTEGER, " +
+                 "sharks TEXT, " +
+                 "lasers TEXT");
+
+  db.schemaVersion = 1000;
+  db.close();
+
+  Services.obs.addObserver({
+    observe: function () {
+      Services.obs.removeObserver(this, "addon-repository-shutdown");
+      // Check the DB schema has changed once AddonRepository has freed it.
+      db = AM_Cc["@mozilla.org/storage/service;1"].
+           getService(AM_Ci.mozIStorageService).
+           openDatabase(dbfile);
+      do_check_eq(db.schemaVersion, EXPECTED_SCHEMA_VERSION);
+      db.close();
+      do_test_finished();
+    }
+  }, "addon-repository-shutdown", null);
+
+  // Force a connection to the addon database to be opened.
+  Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
+  AddonRepository.getCachedAddonByID("test1@tests.mozilla.org", function (aAddon) {
     AddonRepository.shutdown();
   });
 }

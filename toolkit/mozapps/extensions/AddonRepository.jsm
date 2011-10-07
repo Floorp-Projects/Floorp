@@ -1331,7 +1331,7 @@ var AddonDatabase = {
     let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
     let dbMissing = !dbfile.exists();
 
-    function tryAgain() {
+    var tryAgain = (function() {
       LOG("Deleting database, and attempting openConnection again");
       this.initialized = false;
       if (this.connection.connectionReady)
@@ -1339,7 +1339,7 @@ var AddonDatabase = {
       if (dbfile.exists())
         dbfile.remove(false);
       return this.openConnection(true);
-    }
+    }).bind(this);
 
     try {
       this.connection = Services.storage.openUnsharedDatabase(dbfile);
