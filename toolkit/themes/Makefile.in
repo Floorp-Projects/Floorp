@@ -62,10 +62,10 @@ ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
 DIRS    += gnomestripe
 endif
 ifneq (,$(filter os2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS    += pmstripe
+DIRS += pmstripe/global
 endif
 ifdef MOZ_THEME_FASTSTRIPE
-DIRS	+= faststripe
+DIRS += faststripe/global
 endif
 
 endif

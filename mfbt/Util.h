@@ -64,12 +64,6 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
 MOZ_END_EXTERN_C
 
 /*
- * A static assertion, just like PR_STATIC_ASSERT.
- */
-#define MOZ_STATIC_ASSERT(condition) \
-  extern void moz_static_assert(int arg[(condition) ? 1 : -1])
-
-/*
  * MOZ_ASSERT() is a "strong" assertion of state, like libc's
  * assert().  If a MOZ_ASSERT() fails in a debug build, the process in
  * which it fails will stop running in a loud and dramatic way.
