@@ -491,7 +491,7 @@ namespace FunctionType {
 
 namespace CClosure {
   JSObject* Create(JSContext* cx, JSObject* typeObj, JSObject* fnObj,
-    JSObject* thisObj, PRFuncPtr* fnptr);
+    JSObject* thisObj, jsval errVal, PRFuncPtr* fnptr);
 }
 
 namespace CData {

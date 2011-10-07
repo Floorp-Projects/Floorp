@@ -144,7 +144,7 @@ namespace StructType {
 namespace FunctionType {
   static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ConstructData(JSContext* cx, JSObject* typeObj,
-    JSObject* dataObj, JSObject* fnObj, JSObject* thisObj);
+    JSObject* dataObj, JSObject* fnObj, JSObject* thisObj, jsval errVal);
 
   static JSBool Call(JSContext* cx, uintN argc, jsval* vp);
 
@@ -3354,7 +3354,7 @@ PointerType::ConstructData(JSContext* cx,
     errVal = argv[2];
 
   JSObject* fnObj = JSVAL_TO_OBJECT(argv[0]);
-  return FunctionType::ConstructData(cx, baseObj, result, fnObj, thisObj);
+  return FunctionType::ConstructData(cx, baseObj, result, fnObj, thisObj, errVal);
 }
 
 JSObject*
@@ -4945,7 +4945,8 @@ FunctionType::ConstructData(JSContext* cx,
                             JSObject* typeObj,
                             JSObject* dataObj,
                             JSObject* fnObj,
-                            JSObject* thisObj)
+                            JSObject* thisObj,
+                            jsval errVal)
 {
   JS_ASSERT(CType::GetTypeCode(cx, typeObj) == TYPE_function);
 
@@ -4962,7 +4963,7 @@ FunctionType::ConstructData(JSContext* cx,
     return JS_FALSE;
   }
 
-  JSObject* closureObj = CClosure::Create(cx, typeObj, fnObj, thisObj, data);
+  JSObject* closureObj = CClosure::Create(cx, typeObj, fnObj, thisObj, errVal, data);
   if (!closureObj)
     return JS_FALSE;
   js::AutoObjectRooter root(cx, closureObj);
@@ -5243,6 +5244,7 @@ CClosure::Create(JSContext* cx,
                  JSObject* typeObj,
                  JSObject* fnObj,
                  JSObject* thisObj,
+                 jsval errVal,
                  PRFuncPtr* fnptr)
 {
   JS_ASSERT(fnObj);
