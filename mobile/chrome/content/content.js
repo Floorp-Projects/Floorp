@@ -501,7 +501,8 @@ let Content = {
         if (!this.formAssistant.open(element, x, y))
           sendAsyncMessage("FindAssist:Hide", { });
 
-        if (this._highlightElement) {
+        // don't fire mouse events on selects, see bug 685197
+        if (this._highlightElement && !(element instanceof HTMLSelectElement)) {
           this._sendMouseEvent("mousemove", this._highlightElement, x, y);
           this._sendMouseEvent("mousedown", this._highlightElement, x, y);
           this._sendMouseEvent("mouseup", this._highlightElement, x, y);

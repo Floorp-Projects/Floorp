@@ -56,10 +56,6 @@ interface imgIDecoderObserver;
 #include "limits.h"
 
 class nsIFrame;
-
-namespace mozilla {
-class TimeStamp;
-}
 %}
 
 [ptr] native gfxImageSurface(gfxImageSurface);
@@ -72,7 +68,6 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
 [ref] native nsIntRect(nsIntRect);
 [ref] native nsIntSize(nsIntSize);
 [ptr] native nsIFrame(nsIFrame);
-[ref] native TimeStamp(mozilla::TimeStamp);
 
 /**
  * imgIContainer is the interface that represents an image. It allows
@@ -265,13 +260,6 @@ interface imgIContainer : nsISupports
     * In other words, the lock count is not allowed to be negative.
     */
   void unlockImage();
-
-  /**
-    * Indicates that this imgIContainer has been triggered to update
-    * its internal animation state. Likely this should only be called
-    * from within nsImageFrame or objects of similar type.
-    */
-  [notxpcom] void requestRefresh([const] in TimeStamp aTime);
 
   /**
    * Animation mode Constants

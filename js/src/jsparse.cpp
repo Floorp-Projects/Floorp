@@ -93,15 +93,10 @@
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
-#include "jsregexpinlines.h"
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
-
-// Grr, windows.h or something under it #defines CONST...
-#ifdef CONST
-#undef CONST
-#endif
+#include "vm/RegExpObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -8877,29 +8872,26 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         if (!pn)
             return NULL;
 
-        JSObject *obj;
-        if (context->hasfp()) {
-            obj = RegExp::createObject(context, context->regExpStatics(),
-                                       tokenStream.getTokenbuf().begin(),
-                                       tokenStream.getTokenbuf().length(),
-                                       tokenStream.currentToken().t_reflags,
-                                       &tokenStream);
-        } else {
-            obj = RegExp::createObjectNoStatics(context,
-                                                tokenStream.getTokenbuf().begin(),
-                                                tokenStream.getTokenbuf().length(),
-                                                tokenStream.currentToken().t_reflags,
-                                                &tokenStream);
-        }
+        const jschar *chars = tokenStream.getTokenbuf().begin();
+        size_t length = tokenStream.getTokenbuf().length();
+        RegExpFlag flags = RegExpFlag(tokenStream.currentToken().t_reflags);
+        RegExpStatics *res = context->regExpStatics();
 
-        if (!obj)
+        RegExpObject *reobj;
+        if (context->hasfp())
+            reobj = RegExpObject::create(context, res, chars, length, flags, &tokenStream);
+        else
+            reobj = RegExpObject::createNoStatics(context, chars, length, flags, &tokenStream);
+
+        if (!reobj)
             return NULL;
+
         if (!tc->compileAndGo()) {
-            obj->clearParent();
-            obj->clearType();
+            reobj->clearParent();
+            reobj->clearType();
         }
 
-        pn->pn_objbox = tc->parser->newObjectBox(obj);
+        pn->pn_objbox = tc->parser->newObjectBox(reobj);
         if (!pn->pn_objbox)
             return NULL;
 

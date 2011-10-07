@@ -1,4 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=99 ft=cpp:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -11,17 +14,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla SpiderMonkey JavaScript code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Dave Hyatt <hyatt@mozilla.org> (Original Author)
- *   Jan Varga <varga@ku.sk>
- *   Scott Johnson <sjohnson@mozilla.com>, Mozilla Corporation
+ *  Chris Leary <cdleary@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,28 +38,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsITreeImageListener_h__
-#define nsITreeImageListener_h__
+#ifndef RegExp_h___
+#define RegExp_h___
 
-// The interface for our image listener.
-// {90586540-2D50-403e-8DCE-981CAA778444}
-#define NS_ITREEIMAGELISTENER_IID \
-{ 0x90586540, 0x2d50, 0x403e, { 0x8d, 0xce, 0x98, 0x1c, 0xaa, 0x77, 0x84, 0x44 } }
+#include "jsprvtd.h"
 
-class nsITreeImageListener : public nsISupports
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITREEIMAGELISTENER_IID)
+JSObject *
+js_InitRegExpClass(JSContext *cx, JSObject *obj);
 
-  NS_IMETHOD AddCell(PRInt32 aIndex, nsITreeColumn* aCol) = 0;
+/*
+ * The following builtin natives are extern'd for pointer comparison in
+ * other parts of the engine.
+ */
 
-  /**
-   * Clear the internal frame pointer to prevent dereferencing an object
-   * that no longer exists.
-   */
-  NS_IMETHOD ClearFrame() = 0;
-};
+namespace js {
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsITreeImageListener, NS_ITREEIMAGELISTENER_IID)
+extern JSBool
+regexp_exec(JSContext *cx, uintN argc, Value *vp);
+
+extern JSBool
+regexp_test(JSContext *cx, uintN argc, Value *vp);
+
+} /* namespace js */
 
 #endif

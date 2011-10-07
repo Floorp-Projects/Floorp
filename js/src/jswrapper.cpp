@@ -46,7 +46,6 @@
 #include "jsgcmark.h"
 #include "jsiter.h"
 #include "jsnum.h"
-#include "jsregexp.h"
 #include "jswrapper.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
@@ -54,6 +53,8 @@
 # include "assembler/jit/ExecutableAllocator.h"
 #endif
 #include "jscompartment.h"
+
+#include "vm/RegExpObject.h"
 
 #include "jsobjinlines.h"
 

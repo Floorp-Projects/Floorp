@@ -72,7 +72,6 @@
 #include "nsIDOMNode.h"
 
 #include "nsContentUtils.h"
-#include "nsLayoutUtils.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsEventDispatcher.h"
@@ -117,9 +116,7 @@ nsImageLoadingContent::nsImageLoadingContent()
     mNewRequestsWillNeedAnimationReset(PR_FALSE),
     mPendingRequestNeedsResetAnimation(PR_FALSE),
     mCurrentRequestNeedsResetAnimation(PR_FALSE),
-    mStateChangerDepth(0),
-    mCurrentRequestRegistered(false),
-    mPendingRequestRegistered(false)
+    mStateChangerDepth(0)
 {
   if (!nsContentUtils::GetImgLoader()) {
     mLoadingEnabled = PR_FALSE;
@@ -333,13 +330,6 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
   nsIPresShell* shell = doc ? doc->GetShell() : nsnull;
   if (shell) {
 
-    // Make sure that our image requests are deregistered from the refresh
-    // driver if they aren't animated. Note that this must be mCurrentRequest,
-    // or we would have aborted up above.
-    nsLayoutUtils::DeregisterImageRequestIfNotAnimated(GetFramePresContext(),
-                                                       mCurrentRequest,
-                                                       &mCurrentRequestRegistered);
-
     // We need to figure out whether to kick off decoding
     bool doRequestDecode = false;
 
@@ -512,44 +502,6 @@ nsImageLoadingContent::GetRequest(PRInt32 aRequestType,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
-nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
-{
-  NS_ASSERTION(aFrame, "aFrame is null");
-
-  // We need to make sure that our image request is registered.
-  nsPresContext* presContext = aFrame->PresContext();
-
-  if (mCurrentRequest) {
-    nsLayoutUtils::RegisterImageRequest(presContext, mCurrentRequest,
-                                        &mCurrentRequestRegistered);
-    nsLayoutUtils::DeregisterImageRequestIfNotAnimated(presContext,
-                                                       mCurrentRequest,
-                                                       &mCurrentRequestRegistered);
-  } else if (mPendingRequest) {
-    // We don't need to do the same check for animation, because this will be
-    // done when decoding is finished.
-    nsLayoutUtils::RegisterImageRequest(presContext, mPendingRequest,
-                                        &mPendingRequestRegistered);
-  }
-}
-
-NS_IMETHODIMP_(void)
-nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
-{
-  NS_ASSERTION(aFrame, "aFrame is null");
-
-  // We need to make sure that our image request is deregistered.
-  if (mCurrentRequest) {
-    nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(),
-                                          mCurrentRequest,
-                                          &mCurrentRequestRegistered);
-  } else if (mPendingRequest) {
-    nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(),
-                                          mPendingRequest,
-                                          &mPendingRequestRegistered);
-  }
-}
 
 NS_IMETHODIMP
 nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
@@ -916,23 +868,6 @@ nsImageLoadingContent::GetOurDocument()
   return thisContent->GetOwnerDoc();
 }
 
-nsIFrame*
-nsImageLoadingContent::GetOurPrimaryFrame()
-{
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
-  return thisContent->GetPrimaryFrame();
-}
-
-nsPresContext* nsImageLoadingContent::GetFramePresContext()
-{
-  nsIFrame* frame = GetOurPrimaryFrame();
-  if (!frame) {
-    return nsnull;
-  }
-
-  return frame->PresContext();
-}
-
 nsresult
 nsImageLoadingContent::StringToURI(const nsAString& aSpec,
                                    nsIDocument* aDocument,
@@ -1052,11 +987,6 @@ nsImageLoadingContent::ClearCurrentRequest(nsresult aReason)
   NS_ABORT_IF_FALSE(!mCurrentURI,
                     "Shouldn't have both mCurrentRequest and mCurrentURI!");
 
-  // Deregister this image from the refresh driver so it no longer receives
-  // notifications.
-  nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(), mCurrentRequest,
-                                        &mCurrentRequestRegistered);
-
   // Clean up the request.
   UntrackImage(mCurrentRequest);
   mCurrentRequest->CancelAndForgetObserver(aReason);
@@ -1080,27 +1010,10 @@ nsImageLoadingContent::ClearPendingRequest(nsresult aReason)
   nsCxPusher pusher;
   pusher.PushNull();
 
-  // Deregister this image from the refresh driver so it no longer receives
-  // notifications.
-  nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(), mPendingRequest,
-                                        &mPendingRequestRegistered);
-
   UntrackImage(mPendingRequest);
   mPendingRequest->CancelAndForgetObserver(aReason);
   mPendingRequest = nsnull;
   mPendingRequestNeedsResetAnimation = PR_FALSE;
-}
-
-bool*
-nsImageLoadingContent::GetRegisteredFlagForRequest(imgIRequest* aRequest)
-{
-  if (aRequest == mCurrentRequest) {
-    return &mCurrentRequestRegistered;
-  } else if (aRequest == mPendingRequest) {
-    return &mPendingRequestRegistered;
-  } else {
-    return nsnull;
-  }
 }
 
 bool

@@ -66,11 +66,12 @@
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsparse.h"
-#include "jsregexp.h"
 #include "jsscan.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
 #include "jsvector.h"
+
+#include "vm/RegExpObject.h"
 
 #include "jsscriptinlines.h"
 
@@ -2020,12 +2021,12 @@ TokenStream::getTokenInternal()
                 c = peekChar();
                 if (c == 'g' && !(reflags & JSREG_GLOB))
                     reflags |= JSREG_GLOB;
-                else if (c == 'i' && !(reflags & JSREG_FOLD))
-                    reflags |= JSREG_FOLD;
-                else if (c == 'm' && !(reflags & JSREG_MULTILINE))
-                    reflags |= JSREG_MULTILINE;
-                else if (c == 'y' && !(reflags & JSREG_STICKY))
-                    reflags |= JSREG_STICKY;
+                else if (c == 'i' && !(reflags & IgnoreCaseFlag))
+                    reflags |= IgnoreCaseFlag;
+                else if (c == 'm' && !(reflags & MultilineFlag))
+                    reflags |= MultilineFlag;
+                else if (c == 'y' && !(reflags & StickyFlag))
+                    reflags |= StickyFlag;
                 else
                     break;
                 getChar();
