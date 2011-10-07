@@ -5259,7 +5259,7 @@ CClosure::Create(JSContext* cx,
   JS_ASSERT(!fninfo->mIsVariadic);
   JS_ASSERT(GetABICode(cx, fninfo->mABI) != ABI_WINAPI);
 
-  AutoPtr<ClosureInfo> cinfo(cx->new_<ClosureInfo>());
+  AutoPtr<ClosureInfo> cinfo(cx->new_<ClosureInfo>(JS_GetRuntime(cx)));
   if (!cinfo) {
     JS_ReportOutOfMemory(cx);
     return NULL;
@@ -5319,17 +5319,14 @@ CClosure::Create(JSContext* cx,
   ffi_status status = ffi_prep_closure_loc(cinfo->closure, &fninfo->mCIF,
     CClosure::ClosureStub, cinfo.get(), code);
   if (status != FFI_OK) {
-    ffi_closure_free(cinfo->closure);
     JS_ReportError(cx, "couldn't create closure - libffi error");
     return NULL;
   }
 
   // Stash the ClosureInfo struct on our new object.
   if (!JS_SetReservedSlot(cx, result, SLOT_CLOSUREINFO,
-         PRIVATE_TO_JSVAL(cinfo.get()))) {
-    ffi_closure_free(cinfo->closure);
+         PRIVATE_TO_JSVAL(cinfo.get())))
     return NULL;
-  }
   cinfo.forget();
 
   // Casting between void* and a function pointer is forbidden in C and C++.
@@ -5369,9 +5366,6 @@ CClosure::Finalize(JSContext* cx, JSObject* obj)
     return;
 
   ClosureInfo* cinfo = static_cast<ClosureInfo*>(JSVAL_TO_PRIVATE(slot));
-  if (cinfo->closure)
-    ffi_closure_free(cinfo->closure);
-
   cx->delete_(cinfo);
 }
 
