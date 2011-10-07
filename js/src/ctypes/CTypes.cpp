@@ -5435,8 +5435,9 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   // Initialize the result to zero, in case something fails. Small integer types
   // are promoted to a word-sized ffi_arg, so we must be careful to zero the
   // whole word.
+  size_t rvSize = 0;
   if (cif->rtype != &ffi_type_void) {
-    size_t size = cif->rtype->size;
+    rvSize = cif->rtype->size;
     switch (typeCode) {
 #define DEFINE_INT_TYPE(name, type, ffiType)                                   \
     case TYPE_##name:
@@ -5445,12 +5446,12 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
 #define DEFINE_CHAR_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
 #define DEFINE_JSCHAR_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
 #include "typedefs.h"
-      size = Align(size, sizeof(ffi_arg));
+      rvSize = Align(rvSize, sizeof(ffi_arg));
       break;
     default:
       break;
     }
-    memset(result, 0, size);
+    memset(result, 0, rvSize);
   }
 
   // Get a death grip on 'closureObj'.
@@ -5475,21 +5476,51 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   // Call the JS function. 'thisObj' may be NULL, in which case the JS engine
   // will find an appropriate object to use.
   jsval rval;
-  if (!JS_CallFunctionValue(cx, thisObj, OBJECT_TO_JSVAL(jsfnObj), cif->nargs,
-       argv.begin(), &rval))
-    return;
-
-  // If the callback doesn't return anything, we're done.
-  if (cif->rtype == &ffi_type_void)
-    return;
+  JSBool success = JS_CallFunctionValue(cx, thisObj, OBJECT_TO_JSVAL(jsfnObj),
+                                        cif->nargs, argv.begin(), &rval);
 
   // Convert the result. Note that we pass 'isArgument = false', such that
   // ImplicitConvert will *not* autoconvert a JS string into a pointer-to-char
   // type, which would require an allocation that we can't track. The JS
   // function must perform this conversion itself and return a PointerType
   // CData; thusly, the burden of freeing the data is left to the user.
-  if (!ImplicitConvert(cx, rval, fninfo->mReturnType, result, false, NULL))
-    return;
+  if (success && cif->rtype != &ffi_type_void)
+    success = ImplicitConvert(cx, rval, fninfo->mReturnType, result, false,
+                              NULL);
+
+  if (!success) {
+    // Something failed. The callee may have thrown, or it may not have
+    // returned a value that ImplicitConvert() was happy with. Depending on how
+    // prudent the consumer has been, we may or may not have a recovery plan.
+
+    // In any case, a JS exception cannot be passed to C code, so report the
+    // exception if any and clear it from the cx.
+    if (JS_IsExceptionPending(cx))
+      JS_ReportPendingException(cx);
+
+    if (cinfo->errResult) {
+      // Good case: we have a sentinel that we can return. Copy it in place of
+      // the actual return value, and then proceed.
+
+      // The buffer we're returning might be larger than the size of the return
+      // type, due to libffi alignment issues (see above). But it should never
+      // be smaller.
+      size_t copySize = CType::GetSize(cx, fninfo->mReturnType);
+      JS_ASSERT(copySize <= rvSize);
+      memcpy(result, cinfo->errResult, copySize);
+    } else {
+      // Bad case: not much we can do here. The rv is already zeroed out, so we
+      // just report (another) error and hope for the best. JS_ReportError will
+      // actually throw an exception here, so then we have to report it. Again.
+      // Ugh.
+      JS_ReportError(cx, "JavaScript callback failed, and an error sentinel "
+                         "was not specified.");
+      if (JS_IsExceptionPending(cx))
+        JS_ReportPendingException(cx);
+
+      return;
+    }
+  }
 
   // Small integer types must be returned as a word-sized ffi_arg. Coerce it
   // back into the size libffi expects.
