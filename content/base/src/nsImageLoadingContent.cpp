@@ -512,7 +512,7 @@ nsImageLoadingContent::GetRequest(PRInt32 aRequestType,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "aFrame is null");
@@ -532,9 +532,11 @@ nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
     nsLayoutUtils::RegisterImageRequest(presContext, mPendingRequest,
                                         &mPendingRequestRegistered);
   }
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "aFrame is null");
@@ -549,6 +551,8 @@ nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
                                           mPendingRequest,
                                           &mPendingRequestRegistered);
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
