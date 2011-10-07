@@ -1882,7 +1882,7 @@ MatchLabel(JSContext *cx, TokenStream *ts, PropertyName **label)
  * must already be in such a scope.
  *
  * Throw a SyntaxError if 'atom' is an invalid name. Otherwise create a
- * property for the new variable on the block object, tc->blockChain();
+ * property for the new variable on the block object, tc->blockChain;
  * populate data->pn->pn_{op,cookie,defn,dflags}; and stash a pointer to
  * data->pn in a slot of the block object.
  */
@@ -1903,7 +1903,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
     if (!CheckStrictBinding(cx, tc, atom->asPropertyName(), pn))
         return false;
 
-    blockObj = tc->blockChain();
+    blockObj = tc->blockChain;
     Definition *dn = tc->decls.lookupFirst(atom);
     if (dn && dn->pn_blockid == tc->blockid()) {
         JSAutoByteString name;
@@ -1966,7 +1966,7 @@ PopStatement(TreeContext *tc)
     StmtInfo *stmt = tc->topStmt;
 
     if (stmt->flags & SIF_SCOPE) {
-        JSObject *obj = stmt->blockBox->object;
+        JSObject *obj = stmt->blockObj;
         JS_ASSERT(!obj->isClonedBlock());
 
         for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
@@ -2613,8 +2613,8 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *
      */
     if (data &&
         data->binder == BindLet &&
-        OBJ_BLOCK_COUNT(cx, tc->blockChain()) == 0 &&
-        !DefineNativeProperty(cx, tc->blockChain(),
+        OBJ_BLOCK_COUNT(cx, tc->blockChain) == 0 &&
+        !DefineNativeProperty(cx, tc->blockChain,
                               ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
                               UndefinedValue(), NULL, NULL,
                               JSPROP_ENUMERATE | JSPROP_PERMANENT,
@@ -2778,7 +2778,7 @@ PushLexicalScope(JSContext *cx, TokenStream *ts, TreeContext *tc, StmtInfo *stmt
     if (!blockbox)
         return NULL;
 
-    PushBlockScope(tc, stmt, blockbox, -1);
+    PushBlockScope(tc, stmt, obj, -1);
     pn->setOp(JSOP_LEAVEBLOCK);
     pn->pn_objbox = blockbox;
     pn->pn_cookie.makeFree();
@@ -3639,7 +3639,7 @@ Parser::letStatement()
         }
 
         if (stmt && (stmt->flags & SIF_SCOPE)) {
-            JS_ASSERT(tc->blockChainBox == stmt->blockBox);
+            JS_ASSERT(tc->blockChain == stmt->blockObj);
         } else {
             if (!stmt || (stmt->flags & SIF_BODY_BLOCK)) {
                 /*
@@ -3685,10 +3685,9 @@ Parser::letStatement()
             stmt->downScope = tc->topScopeStmt;
             tc->topScopeStmt = stmt;
 
-            obj->setStaticBlockScopeChain(tc->blockChain());
-            blockbox->parent = tc->blockChainBox;
-            tc->blockChainBox = blockbox;
-            stmt->blockBox = blockbox;
+            obj->setStaticBlockScopeChain(tc->blockChain);
+            tc->blockChain = obj;
+            stmt->blockObj = obj;
 
 #ifdef DEBUG
             ParseNode *tmp = tc->blockNode;
@@ -4196,7 +4195,7 @@ Parser::variables(ParseNodeKind kind, bool inLetHead)
      * this code will change soon.
      */
     if (let) {
-        JS_ASSERT(tc->blockChainBox == scopeStmt->blockBox);
+        JS_ASSERT(tc->blockChain == scopeStmt->blockObj);
         data.binder = BindLet;
         data.let.overflow = JSMSG_TOO_MANY_LOCALS;
     } else {
