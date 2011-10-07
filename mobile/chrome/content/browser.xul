@@ -68,9 +68,10 @@
         title="&brandShortName;"
 #ifdef MOZ_PLATFORM_MAEMO
         sizemode="fullscreen"
-#endif
+#else
         width="480"
         height="800"
+#endif
         onkeypress="onDebugKeyPress(event);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:svg="http://www.w3.org/2000/svg"

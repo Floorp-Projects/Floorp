@@ -576,10 +576,6 @@ protected:
   /**
    * Implements Destroy(). Do not call this directly except from within a
    * DestroyFrom() implementation.
-   *
-   * @note This will always be called, so it is not necessary to override
-   *       Destroy() in subclasses of nsFrame, just DestroyFrom().
-   *
    * @param  aDestructRoot is the root of the subtree being destroyed
    */
   virtual void DestroyFrom(nsIFrame* aDestructRoot) = 0;
