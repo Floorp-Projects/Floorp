@@ -261,6 +261,13 @@ class JSString : public js::gc::Cell
         return (length << LENGTH_SHIFT) | flags;
     }
 
+    /*
+     * Helper function to validate that a string of a given length is
+     * representable by a JSString. An allocation overflow is reported if false
+     * is returned.
+     */
+    static inline bool validateLength(JSContext *cx, size_t length);
+
     static void staticAsserts() {
         JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
         JS_STATIC_ASSERT(((JSString::MAX_LENGTH << JSString::LENGTH_SHIFT) >>
