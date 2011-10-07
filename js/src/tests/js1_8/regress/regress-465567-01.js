@@ -49,11 +49,11 @@ expect = '99999';
 jit(true);
 
 for (let j = 0; j < 5; ++j) {
+  var e;
   e = 9;
   print(actual += '' + e);
   e = 47;
   if (e & 0) {
-    var e;
     let e;
   }
 }

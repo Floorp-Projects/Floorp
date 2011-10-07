@@ -271,7 +271,8 @@ OPDEF(JSOP_DECLOCAL,  102,"declocal",   NULL,         3,  0,  1, 15,  JOF_LOCAL|
 OPDEF(JSOP_LOCALINC,  103,"localinc",   NULL,         3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_INC|JOF_POST|JOF_TMPSLOT3)
 OPDEF(JSOP_LOCALDEC,  104,"localdec",   NULL,         3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_DEC|JOF_POST|JOF_TMPSLOT3)
 
-OPDEF(JSOP_UNUSED1,   105,"unused0",    NULL,         1,  0,  0,  0,  JOF_BYTE)
+/* Leave a for-let-in block leaving its storage pushed (to be popped after enditer). */
+OPDEF(JSOP_LEAVEFORLETIN, 105,"leaveforletin",NULL,   1,  0,  0,  0,  JOF_BYTE)
 
 /* The argument is the offset to the next statement and is used by IonMonkey. */
 OPDEF(JSOP_LABEL,     106,"label",     NULL,          3,  0,  0,  0,  JOF_JUMP)
@@ -440,8 +441,11 @@ OPDEF(JSOP_DELDESC,       183,"deldesc",    NULL,     1,  2,  1, 15,  JOF_BYTE|J
 
 OPDEF(JSOP_CALLPROP,      184,"callprop",   NULL,     3,  1,  2, 18,  JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_CALLOP|JOF_TMPSLOT3)
 
-OPDEF(JSOP_UNUSED2,       185,"unused1",    NULL,     1,  0,  0,  0, JOF_BYTE)
-OPDEF(JSOP_UNUSED3,       186,"unused2",    NULL,     1,  0,  0,  0, JOF_BYTE)
+/* Enter a let block/expr whose slots are at the top of the stack. */
+OPDEF(JSOP_ENTERLET0,     185,"enterlet0",  NULL,     3, -1, -1,  0,  JOF_OBJECT)
+
+/* Enter a let block/expr whose slots are 1 below the top of the stack. */
+OPDEF(JSOP_ENTERLET1,     186,"enterlet1",  NULL,     3, -1, -1,  0,  JOF_OBJECT)
 
 /*
  * Opcode to hold 24-bit immediate integer operands.

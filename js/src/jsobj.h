@@ -1341,7 +1341,7 @@ struct JSObject : js::gc::Cell
 
     bool swap(JSContext *cx, JSObject *other);
 
-    const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index);
+    const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index, bool *redeclared);
 
     inline bool isArguments() const;
     inline bool isArrayBuffer() const;

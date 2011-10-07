@@ -1821,12 +1821,15 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
 
     JS_ASSERT(!f.regs.inlined());
     JS_ASSERT(obj->isStaticBlock());
-    JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
-    Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
-    JS_ASSERT(regs.sp < vp);
-    JS_ASSERT(vp <= fp->slots() + fp->script()->nslots);
-    SetValueRangeToUndefined(regs.sp, vp);
-    regs.sp = vp;
+
+    if (*regs.pc == JSOP_ENTERBLOCK) {
+        JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
+        Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
+        JS_ASSERT(regs.sp < vp);
+        JS_ASSERT(vp <= fp->slots() + fp->script()->nslots);
+        SetValueRangeToUndefined(regs.sp, vp);
+        regs.sp = vp;
+    }
 
 #ifdef DEBUG
     JSContext *cx = f.cx;

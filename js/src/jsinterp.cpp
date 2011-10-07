@@ -1857,9 +1857,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 /* No-ops for ease of decompilation. */
 ADD_EMPTY_CASE(JSOP_NOP)
 ADD_EMPTY_CASE(JSOP_UNUSED0)
-ADD_EMPTY_CASE(JSOP_UNUSED1)
-ADD_EMPTY_CASE(JSOP_UNUSED2)
-ADD_EMPTY_CASE(JSOP_UNUSED3)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -5109,16 +5106,28 @@ END_CASE(JSOP_GETFUNNS)
 #endif /* JS_HAS_XML_SUPPORT */
 
 BEGIN_CASE(JSOP_ENTERBLOCK)
+BEGIN_CASE(JSOP_ENTERLET0)
+BEGIN_CASE(JSOP_ENTERLET1)
 {
     JSObject *obj;
     LOAD_OBJECT(0, obj);
     JS_ASSERT(obj->isStaticBlock());
-    JS_ASSERT(regs.fp()->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
-    Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
-    JS_ASSERT(regs.sp < vp);
-    JS_ASSERT(vp <= regs.fp()->slots() + script->nslots);
-    SetValueRangeToUndefined(regs.sp, vp);
-    regs.sp = vp;
+    JS_ASSERT(regs.fp()->maybeBlockChain() == obj->staticBlockScopeChain());
+
+    if (op == JSOP_ENTERBLOCK) {
+        JS_ASSERT(regs.fp()->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
+        Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
+        JS_ASSERT(regs.sp < vp);
+        JS_ASSERT(vp <= regs.fp()->slots() + script->nslots);
+        SetValueRangeToUndefined(regs.sp, vp);
+        regs.sp = vp;
+    } else if (op == JSOP_ENTERLET0) {
+        JS_ASSERT(regs.fp()->base() + OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
+                  == regs.sp);
+    } else if (op == JSOP_ENTERLET1) {
+        JS_ASSERT(regs.fp()->base() + OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
+                  == regs.sp - 1);
+    }
 
 #ifdef DEBUG
     JS_ASSERT(regs.fp()->maybeBlockChain() == obj->staticBlockScopeChain());
@@ -5134,7 +5143,8 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
     while (obj2->isWith())
         obj2 = obj2->internalScopeChain();
     if (obj2->isBlock() &&
-        obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, regs.fp())) {
+        obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, regs.fp()))
+    {
         JSObject *youngestProto = obj2->getProto();
         JS_ASSERT(youngestProto->isStaticBlock());
         JSObject *parent = obj;
@@ -5147,14 +5157,14 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
 }
 END_CASE(JSOP_ENTERBLOCK)
 
-BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
 BEGIN_CASE(JSOP_LEAVEBLOCK)
+BEGIN_CASE(JSOP_LEAVEFORLETIN)
+BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
 {
-#ifdef DEBUG
     JS_ASSERT(regs.fp()->blockChain().isStaticBlock());
-    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, &regs.fp()->blockChain());
+    DebugOnly<uintN> blockDepth = OBJ_BLOCK_DEPTH(cx, &regs.fp()->blockChain());
     JS_ASSERT(blockDepth <= StackDepth(script));
-#endif
+
     /*
      * If we're about to leave the dynamic scope of a block that has been
      * cloned onto fp->scopeChain, clear its private data, move its locals from
@@ -5167,19 +5177,22 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
             goto error;
     }
 
-    /* Pop the block chain, too. */
     regs.fp()->setBlockChain(regs.fp()->blockChain().staticBlockScopeChain());
 
-    /* Move the result of the expression to the new topmost stack slot. */
-    Value *vp = NULL;  /* silence GCC warnings */
-    if (op == JSOP_LEAVEBLOCKEXPR)
-        vp = &regs.sp[-1];
-    regs.sp -= GET_UINT16(regs.pc);
-    if (op == JSOP_LEAVEBLOCKEXPR) {
+    if (op == JSOP_LEAVEBLOCK) {
+        /* Pop the block's slots. */
+        regs.sp -= GET_UINT16(regs.pc);
+        JS_ASSERT(regs.fp()->base() + blockDepth == regs.sp);
+    } else if (op == JSOP_LEAVEBLOCKEXPR) {
+        /* Pop the block's slots maintaining the topmost expr. */
+        Value *vp = &regs.sp[-1];
+        regs.sp -= GET_UINT16(regs.pc);
         JS_ASSERT(regs.fp()->base() + blockDepth == regs.sp - 1);
         regs.sp[-1] = *vp;
     } else {
-        JS_ASSERT(regs.fp()->base() + blockDepth == regs.sp);
+        /* Another op will pop; nothing to do here. */
+        len = JSOP_LEAVEFORLETIN_LENGTH;
+        DO_NEXT_OP(len);
     }
 }
 END_CASE(JSOP_LEAVEBLOCK)

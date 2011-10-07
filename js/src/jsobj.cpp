@@ -3678,20 +3678,28 @@ block_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *v
 }
 
 const Shape *
-JSObject::defineBlockVariable(JSContext *cx, jsid id, intN index)
+JSObject::defineBlockVariable(JSContext *cx, jsid id, intN index, bool *redeclared)
 {
     JS_ASSERT(isStaticBlock());
 
+    *redeclared = false;
+
+    /* Inline JSObject::addProperty in order to trap the redefinition case. */
+    Shape **spp = nativeSearch(cx, id, true);
+    if (SHAPE_FETCH(spp)) {
+        *redeclared = true;
+        return NULL;
+    }
+
     /*
-     * Use JSPROP_ENUMERATE to aid the disassembler, and don't convert this
-     * object to dictionary mode so that we can clone the block's shape later.
+     * Don't convert this object to dictionary mode so that we can clone the
+     * block's shape later.
      */
     uint32_t slot = JSSLOT_FREE(&BlockClass) + index;
-    const Shape *shape = addProperty(cx, id,
-                                     block_getProperty, block_setProperty,
-                                     slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                     Shape::HAS_SHORTID, index,
-                                     /* allowDictionary = */ false);
+    const Shape *shape = addPropertyInternal(cx, id, block_getProperty, block_setProperty,
+                                             slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                             Shape::HAS_SHORTID, index, spp,
+                                             /* allowDictionary = */ false);
     if (!shape)
         return NULL;
     return shape;
@@ -4191,8 +4199,11 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             if (!js_XDRAtom(xdr, &atom))
                 return false;
 
-            if (!obj->defineBlockVariable(cx, ATOM_TO_JSID(atom), i))
+            bool redeclared;
+            if (!obj->defineBlockVariable(cx, ATOM_TO_JSID(atom), i, &redeclared)) {
+                JS_ASSERT(!redeclared);
                 return false;
+            }
         }
     } else {
         AutoShapeVector shapes(cx);
