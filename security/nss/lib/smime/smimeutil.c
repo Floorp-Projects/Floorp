@@ -37,7 +37,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.21 2011/08/01 07:08:09 kaie%kuix.de Exp $
+ * $Id: smimeutil.c,v 1.22 2011/08/21 01:14:18 wtc%google.com Exp $
  */
 
 #include "secmime.h"
@@ -152,8 +152,7 @@ static smime_cipher_map_entry smime_cipher_map[] = {
     { SMIME_RC2_CBC_64,		SEC_OID_RC2_CBC,	&param_int64,	PR_TRUE, PR_TRUE },
     { SMIME_RC2_CBC_128,	SEC_OID_RC2_CBC,	&param_int128,	PR_TRUE, PR_TRUE },
     { SMIME_DES_EDE3_168,	SEC_OID_DES_EDE3_CBC,	NULL,		PR_TRUE, PR_TRUE },
-    { SMIME_AES_CBC_128,	SEC_OID_AES_128_CBC,	NULL,		PR_TRUE, PR_TRUE },
-    { SMIME_FORTEZZA,		SEC_OID_FORTEZZA_SKIPJACK, NULL,	PR_TRUE, PR_TRUE }
+    { SMIME_AES_CBC_128,	SEC_OID_AES_128_CBC,	NULL,		PR_TRUE, PR_TRUE }
 };
 static const int smime_cipher_map_count = sizeof(smime_cipher_map) / sizeof(smime_cipher_map_entry);
 
@@ -273,10 +272,8 @@ nss_smime_get_cipher_for_alg_and_key(SECAlgorithmID *algid, PK11SymKey *key, uns
     case SEC_OID_AES_128_CBC:
 	c = SMIME_AES_CBC_128;
 	break;
-    case SEC_OID_FORTEZZA_SKIPJACK:
-	c = SMIME_FORTEZZA;
-	break;
     default:
+	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 	return SECFailure;
     }
     *cipher = c;
@@ -393,7 +390,6 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
     int weak_mapi;
     int strong_mapi;
     int rcount, mapi, max, i;
-    PRBool scert_is_fortezza = (scert == NULL) ? PR_FALSE : PK11_FortezzaHasKEA(scert);
 
     chosen_cipher = SMIME_RC2_CBC_40;		/* the default, LCD */
     weak_mapi = smime_mapi_by_cipher(chosen_cipher);
@@ -407,14 +403,8 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
     if (cipher_votes == NULL || cipher_abilities == NULL)
 	goto done;
 
-    /* If the user has the Fortezza preference turned on, make
-     *  that the strong cipher. Otherwise, use triple-DES. */
+    /* Make triple-DES the strong cipher. */
     strong_mapi = smime_mapi_by_cipher (SMIME_DES_EDE3_168);
-    if (scert_is_fortezza) {
-	mapi = smime_mapi_by_cipher(SMIME_FORTEZZA);
-	if (mapi >= 0 && smime_cipher_map[mapi].enabled)
-	    strong_mapi = mapi;
-    }
 
     /* walk all the recipient's certs */
     for (rcount = 0; rcerts[rcount] != NULL; rcount++) {
@@ -498,9 +488,6 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
 	/* if cipher is not enabled or not allowed by policy, forget it */
 	if (!smime_cipher_map[mapi].enabled || !smime_cipher_map[mapi].allowed)
 	    continue;
-	/* if we're not doing fortezza, but the cipher is fortezza, forget it */
-	if (!scert_is_fortezza  && (smime_cipher_map[mapi].cipher == SMIME_FORTEZZA))
-	    continue;
 	/* now see if this one has more votes than the last best one */
 	if (cipher_votes[mapi] >= max) {
 	    /* if equal number of votes, prefer the ones further down in the list */
@@ -541,7 +528,6 @@ smime_keysize_by_cipher (unsigned long which)
 	break;
       case SMIME_DES_CBC_56:
       case SMIME_DES_EDE3_168:
-      case SMIME_FORTEZZA:
 	/*
 	 * These are special; since the key size is fixed, we actually
 	 * want to *avoid* specifying a key size.
@@ -588,10 +574,9 @@ NSS_SMIMEUtil_FindBulkAlgForRecipients(CERTCertificate **rcerts, SECOidTag *bulk
  *
  * "poolp" - arena pool to create the S/MIME capabilities data on
  * "dest" - SECItem to put the data in
- * "includeFortezzaCiphers" - PR_TRUE if fortezza ciphers should be included
  */
 SECStatus
-NSS_SMIMEUtil_CreateSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool includeFortezzaCiphers)
+NSS_SMIMEUtil_CreateSMIMECapabilities(PLArenaPool *poolp, SECItem *dest)
 {
     NSSSMIMECapability *cap;
     NSSSMIMECapability **smime_capabilities;
@@ -617,12 +602,6 @@ NSS_SMIMEUtil_CreateSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool 
 	/* Find the corresponding entry in the cipher map. */
 	map = &(smime_cipher_map[i]);
 	if (!map->enabled)
-	    continue;
-
-	/* If we're using a non-Fortezza cert, only advertise non-Fortezza
-	   capabilities. (We advertise all capabilities if we have a 
-	   Fortezza cert.) */
-	if ((!includeFortezzaCiphers) && (map->cipher == SMIME_FORTEZZA))
 	    continue;
 
 	/* get next SMIME capability */

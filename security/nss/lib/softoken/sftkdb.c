@@ -1495,6 +1495,9 @@ sftkdb_CloseDB(SFTKDBHandle *handle)
         }
 	(*handle->db->sdb_Close)(handle->db);
     }
+    if (handle->passwordKey.data) {
+	PORT_ZFree(handle->passwordKey.data, handle->passwordKey.len);
+    }
     if (handle->passwordLock) {
 	SKIP_AFTER_FORK(PZ_DestroyLock(handle->passwordLock));
     }
