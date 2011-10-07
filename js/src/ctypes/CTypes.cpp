@@ -3286,8 +3286,8 @@ PointerType::ConstructData(JSContext* cx,
     return JS_FALSE;
   }
 
-  if (argc > 2) {
-    JS_ReportError(cx, "constructor takes 0, 1, or 2 arguments");
+  if (argc > 3) {
+    JS_ReportError(cx, "constructor takes 0, 1, 2, or 3 arguments");
     return JS_FALSE;
   }
 
@@ -3298,38 +3298,63 @@ PointerType::ConstructData(JSContext* cx,
   // Set return value early, must not observe *vp after
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(result));
 
-  if (argc == 0) {
-    // Construct a null pointer.
-    return JS_TRUE;
-  }
+  // There are 3 things that we might be creating here:
+  // 1 - A null pointer (no arguments)
+  // 2 - An initialized pointer (1 argument)
+  // 3 - A closure (1-3 arguments)
+  //
+  // The API doesn't give us a perfect way to distinguish 2 and 3, but the
+  // heuristics we use should be fine.
 
+  //
+  // Case 1 - Null pointer
+  //
+  if (argc == 0)
+    return JS_TRUE;
+
+  // Analyze the arguments a bit to decide what to do next.
   jsval* argv = JS_ARGV(cx, vp);
   JSObject* baseObj = PointerType::GetBaseType(cx, obj);
-  if (CType::GetTypeCode(cx, baseObj) == TYPE_function &&
-      JSVAL_IS_OBJECT(argv[0]) &&
-      JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(argv[0]))) {
-    // Construct a FunctionType.ptr from a JS function, and allow an
-    // optional 'this' argument.
-    JSObject* thisObj = NULL;
-    if (argc == 2) {
-      if (JSVAL_IS_OBJECT(argv[1])) {
-        thisObj = JSVAL_TO_OBJECT(argv[1]);
-      } else if (!JS_ValueToObject(cx, argv[1], &thisObj)) {
-        return JS_FALSE;
-      }
+  bool looksLikeClosure = CType::GetTypeCode(cx, baseObj) == TYPE_function &&
+                          JSVAL_IS_OBJECT(argv[0]) &&
+                          JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(argv[0]));
+
+  //
+  // Case 2 - Initialized pointer
+  //
+  if (!looksLikeClosure) {
+    if (argc != 1) {
+      JS_ReportError(cx, "first argument must be a function");
+      return JS_FALSE;
     }
-
-    JSObject* fnObj = JSVAL_TO_OBJECT(argv[0]);
-    return FunctionType::ConstructData(cx, baseObj, result, fnObj, thisObj);
+    return ExplicitConvert(cx, argv[0], obj, CData::GetData(cx, result));
   }
 
-  if (argc == 2) {
-    JS_ReportError(cx, "first argument must be a function");
-    return JS_FALSE;
+  //
+  // Case 3 - Closure
+  //
+
+  // The second argument is an optional 'this' parameter with which to invoke
+  // the given js function. Callers may leave this blank, or pass null if they
+  // wish to pass the third argument.
+  JSObject* thisObj = NULL;
+  if (argc >= 2) {
+    if (JSVAL_IS_OBJECT(argv[1])) {
+      thisObj = JSVAL_TO_OBJECT(argv[1]);
+    } else if (!JS_ValueToObject(cx, argv[1], &thisObj)) {
+      return JS_FALSE;
+    }
   }
 
-  // Construct from a raw pointer value.
-  return ExplicitConvert(cx, argv[0], obj, CData::GetData(cx, result));
+  // The third argument is an optional error sentinel that js-ctypes will return
+  // if an exception is raised while executing the closure. The type must match
+  // the return type of the callback.
+  jsval errVal = JSVAL_VOID;
+  if (argc == 3)
+    errVal = argv[2];
+
+  JSObject* fnObj = JSVAL_TO_OBJECT(argv[0]);
+  return FunctionType::ConstructData(cx, baseObj, result, fnObj, thisObj);
 }
 
 JSObject*
