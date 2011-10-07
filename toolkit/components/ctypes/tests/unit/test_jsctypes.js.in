@@ -2289,6 +2289,10 @@ function run_single_closure_tests(library, abi, suffix)
   let closure2 = fn_t(closure_fn, thisobj);
   do_check_eq(closure2(-17), -17 + thisobj.a);
   do_check_eq(test_closure(-52, closure2), -52 + thisobj.a);
+
+  // Test a callback that returns void (see bug 682504).
+  var fn_v_t = ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, []).ptr;
+  fn_v_t(function() {})(); // Don't crash
 }
 
 function run_variadic_tests(library) {
