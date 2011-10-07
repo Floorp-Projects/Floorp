@@ -1318,12 +1318,14 @@ DirectEval(JSContext *cx, const CallArgs &args)
 
     AutoFunctionCallProbe callProbe(cx, args.callee().toFunction(), caller->script());
 
-    JSObject *scopeChain =
-        GetScopeChainFast(cx, caller, JSOP_EVAL, JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
+    JSObject *scopeChain = GetScopeChain(cx, caller);
+    if (!scopeChain)
+        return false;
 
-    return scopeChain &&
-           WarnOnTooManyArgs(cx, args) &&
-           EvalKernel(cx, args, DIRECT_EVAL, caller, *scopeChain);
+    if (!WarnOnTooManyArgs(cx, args))
+        return false;
+
+    return EvalKernel(cx, args, DIRECT_EVAL, caller, *scopeChain);
 }
 
 bool
@@ -4134,7 +4136,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 
     if (xdr->mode == JSXDR_ENCODE) {
         obj = *objp;
-        parent = obj->getStaticBlockScopeChain();
+        parent = obj->staticBlockScopeChain();
         parentId = JSScript::isValidOffset(xdr->script->objectsOffset)
                    ? FindObjectIndex(xdr->script->objects(), parent)
                    : NO_PARENT_INDEX;
@@ -7458,6 +7460,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             fprintf(stderr, "\n");
         }
         MaybeDumpObject("argsobj", fp->maybeArgsObj());
+        MaybeDumpObject("blockChain", fp->maybeBlockChain());
         if (!fp->isDummyFrame()) {
             MaybeDumpValue("this", fp->thisValue());
             fprintf(stderr, "  rval: ");

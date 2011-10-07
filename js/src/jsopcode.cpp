@@ -2902,14 +2902,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     todo = -2;
                     pc2 = pc + oplen;
 
-                    /* Skip a block chain annotation if one appears here. */
-                    if (*pc2 == JSOP_NOP) {
-                        if (pc2[JSOP_NOP_LENGTH] == JSOP_NULLBLOCKCHAIN)
-                            pc2 += JSOP_NOP_LENGTH + JSOP_NULLBLOCKCHAIN_LENGTH;
-                        else if (pc2[JSOP_NOP_LENGTH] == JSOP_BLOCKCHAIN)
-                            pc2 += JSOP_NOP_LENGTH + JSOP_BLOCKCHAIN_LENGTH;
-                    }
-
                     if (*pc2 == JSOP_NOP) {
                         sn = js_GetSrcNote(jp->script, pc2);
                         if (sn) {
@@ -4409,12 +4401,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                      * arrange to advance over the call to this lambda.
                      */
                     pc += len;
-                    if (*pc == JSOP_BLOCKCHAIN) {
-                        pc += JSOP_BLOCKCHAIN_LENGTH;
-                    } else {
-                        LOCAL_ASSERT(*pc == JSOP_NULLBLOCKCHAIN);
-                        pc += JSOP_NULLBLOCKCHAIN_LENGTH;
-                    }
                     LOCAL_ASSERT(*pc == JSOP_UNDEFINED);
                     pc += JSOP_UNDEFINED_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);
