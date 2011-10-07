@@ -16,8 +16,8 @@ function test() {
 function setupOne(win) {
   win.TabView.firstUseExperienced = true;
 
-  win.gBrowser.addTab("http://mochi.test:8888/browser/browser/components/tabview/test/search1.html");
-  win.gBrowser.addTab("http://mochi.test:8888/browser/browser/components/tabview/test/dummy_page.html");
+  win.gBrowser.addTab("http://mochi.test:8888/browser/browser/base/content/test/tabview/search1.html");
+  win.gBrowser.addTab("http://mochi.test:8888/browser/browser/base/content/test/tabview/dummy_page.html");
 
   afterAllTabsLoaded(function () setupTwo(win), win);
 }
