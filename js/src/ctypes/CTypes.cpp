@@ -5429,6 +5429,10 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
        argv.begin(), &rval))
     return;
 
+  // If the callback doesn't return anything, we're done.
+  if (cif->rtype == &ffi_type_void)
+    return;
+
   // Convert the result. Note that we pass 'isArgument = false', such that
   // ImplicitConvert will *not* autoconvert a JS string into a pointer-to-char
   // type, which would require an allocation that we can't track. The JS
