@@ -874,12 +874,8 @@ public:
 
     void newType(JSContext *cx, TypeSet *source, Type type)
     {
-        if (!target->hasType(type)) {
+        if (!target->hasType(type))
             script->analysis()->addTypeBarrier(cx, pc, target, type);
-            return;
-        }
-
-        target->addType(cx, type);
     }
 };
 
