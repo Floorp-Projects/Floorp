@@ -138,7 +138,7 @@ struct StmtInfo {
     ptrdiff_t       continues;      /* offset of last continue in loop */
     union {
         JSAtom      *label;         /* name of LABEL */
-        ObjectBox   *blockBox;      /* block scope object */
+        JSObject    *blockObj;      /* block scope object */
     };
     StmtInfo        *down;          /* info for enclosing statement */
     StmtInfo        *downScope;     /* next enclosing lexical scope */
@@ -299,7 +299,7 @@ struct TreeContext {                /* tree context for semantic checks */
                                        at non-zero depth in current paren tree */
     StmtInfo        *topStmt;       /* top of statement info stack */
     StmtInfo        *topScopeStmt;  /* top lexical scope statement */
-    ObjectBox       *blockChainBox; /* compile time block scope chain (NB: one
+    JSObject        *blockChain;    /* compile time block scope chain (NB: one
                                        deeper than the topScopeStmt/downScope
                                        chain when in head of let block/expr) */
     ParseNode       *blockNode;     /* parse node for a block with let declarations
@@ -375,10 +375,6 @@ struct TreeContext {                /* tree context for semantic checks */
     }
 
     uintN blockid() { return topStmt ? topStmt->blockid : bodyid; }
-
-    JSObject *blockChain() {
-        return blockChainBox ? blockChainBox->object : NULL;
-    }
 
     /*
      * True if we are at the topmost level of a entire script or function body.
@@ -797,12 +793,6 @@ ptrdiff_t
 Emit3(JSContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1, jsbytecode op2);
 
 /*
- * Emit five bytecodes, an opcode with two 16-bit immediates.
- */
-ptrdiff_t
-Emit5(JSContext *cx, BytecodeEmitter *bce, JSOp op, uint16_t op1, uint16_t op2);
-
-/*
  * Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
  */
 ptrdiff_t
@@ -843,7 +833,7 @@ PushStatement(TreeContext *tc, StmtInfo *stmt, StmtType type, ptrdiff_t top);
  * (if generating code), PopStatementBCE.
  */
 void
-PushBlockScope(TreeContext *tc, StmtInfo *stmt, ObjectBox *blockBox, ptrdiff_t top);
+PushBlockScope(TreeContext *tc, StmtInfo *stmt, JSObject *blockObj, ptrdiff_t top);
 
 /*
  * Pop tc->topStmt. If the top StmtInfo struct is not stack-allocated, it

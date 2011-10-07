@@ -3405,8 +3405,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_INDEXBASE3:
       case JSOP_RESETBASE:
       case JSOP_RESETBASE0:
-      case JSOP_BLOCKCHAIN:
-      case JSOP_NULLBLOCKCHAIN:
       case JSOP_POPV:
       case JSOP_DEBUGGER:
       case JSOP_SETCALL:

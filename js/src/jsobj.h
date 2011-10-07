@@ -908,7 +908,7 @@ struct JSObject : js::gc::Cell
      * on scope chains but mirror their structure, and can have a NULL
      * scope chain.
      */
-    inline JSObject *getStaticBlockScopeChain() const;
+    inline JSObject *staticBlockScopeChain() const;
     inline void setStaticBlockScopeChain(JSObject *obj);
 
     /* Common fixed slot for the scope chain of internal scope objects. */

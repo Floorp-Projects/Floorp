@@ -14,7 +14,7 @@ function myparent(nested) {
   }
 }
 /* JSOP_CALL to doNothing in myparent with nested = false. */
-trap(myparent, 35, "myparent(true)");
+trap(myparent, 34, "myparent(true)");
 
 function success() {
   x = "success";

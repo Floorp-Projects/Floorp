@@ -1293,8 +1293,6 @@ struct ObjectBox {
     ObjectBox           *traceLink;
     ObjectBox           *emitLink;
     JSObject            *object;
-    ObjectBox           *parent;
-    uintN               index;
     bool                isFunctionBox;
 };
 
