@@ -93,12 +93,8 @@ _TEST_FILES =   imgutils.js \
 # test_bug478398.html disabled - See bug 579139
 
 _CHROME_FILES = imgutils.js \
-                animationPolling.js \
                 lime-anim-100x100.svg \
                 test_animSVGImage.html \
-                test_animation.html \
-                animated-gif-finalframe.gif \
-                animated-gif.gif \
                 $(NULL)
 
 libs:: $(_TEST_FILES)
