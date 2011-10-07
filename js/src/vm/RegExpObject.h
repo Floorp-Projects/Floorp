@@ -149,14 +149,6 @@ ResetRegExpObject(JSContext *cx, RegExpObject *reobj, JSString *str, RegExpFlag 
 inline bool
 ResetRegExpObject(JSContext *cx, AlreadyIncRefed<RegExpPrivate> rep);
 
-/*
- * Ensure that the presence of the YARR JIT implies the presence of the
- * method JIT so that we can use jaegerCompartments and such.
- */
-#if ENABLE_YARR_JIT && !defined(JS_METHODJIT)
-# error "YARR JIT without method JIT is an unsupported configuration."
-#endif
-
 /* Abstracts away the gross |RegExpPrivate| backend details. */
 class RegExpPrivateCode
 {
