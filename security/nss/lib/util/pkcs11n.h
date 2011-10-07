@@ -39,7 +39,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.22 $ $Date: 2011/04/13 00:10:27 $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.23 $ $Date: 2011/09/14 01:21:10 $";
 #endif /* DEBUG */
 
 /*
@@ -343,7 +343,7 @@ typedef CK_ULONG          CK_TRUST;
 
 /*
  * old definitions. They still exist, but the plain meaning of the
- * labels have never been accurate to was was really implemented.
+ * labels have never been accurate to what was really implemented.
  * The new labels correctly reflect what the values effectively mean.
  */
 #if __GNUC__ > 3

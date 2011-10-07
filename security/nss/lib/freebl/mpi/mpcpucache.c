@@ -660,9 +660,13 @@ s_mpi_is_sse2()
 	return 0;
     }
     freebl_cpuid(0, &eax, &ebx, &ecx, &edx);
+    /* string holds the CPU's manufacturer ID string - a twelve
+     * character ASCII string stored in ebx, edx, ecx, and
+     * the 32-bit extended feature flags are in edx, ecx.
+     */
     *(int *)string = ebx;
-    *(int *)&string[4] = edx;
-    *(int *)&string[8] = ecx;
+    *(int *)&string[4] = (int)edx;
+    *(int *)&string[8] = (int)ecx;
     string[12] = 0;
 
     /* has no SSE2 extensions */
@@ -703,9 +707,13 @@ s_mpi_getProcessorLineSize()
     /* Pentium, cpuid command is available */
     freebl_cpuid(0, &eax, &ebx, &ecx, &edx);
     cpuidLevel = eax;
+    /* string holds the CPU's manufacturer ID string - a twelve
+     * character ASCII string stored in ebx, edx, ecx, and
+     * the 32-bit extended feature flags are in edx, ecx.
+     */
     *(int *)string = ebx;
-    *(int *)&string[4] = edx;
-    *(int *)&string[8] = ecx;
+    *(int *)&string[4] = (int)edx;
+    *(int *)&string[8] = (int)ecx;
     string[12] = 0;
 
     manufacturer = MAN_UNKNOWN;
