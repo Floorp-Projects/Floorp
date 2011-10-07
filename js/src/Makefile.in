@@ -411,6 +411,7 @@ CPPSRCS +=	Lowering-arm.cpp \
 		Assembler-arm.cpp \
 		Bailouts-arm.cpp \
 		MoveEmitter-arm.cpp \
+		Architecture-arm.cpp \
 		$(NULL)
 endif
 endif #ENABLE_ION

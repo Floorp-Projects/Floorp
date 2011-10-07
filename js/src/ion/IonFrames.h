@@ -45,30 +45,29 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
+#if defined(JS_CPU_X86) || defined (JS_CPU_X64)
+#  include "ion/shared/IonFrames-x86-shared.h"
+#elif defined (JS_CPU_ARM)
+#  include "ion/arm/IonFrames-arm.h"
+#else
+#  error "unsupported architecture"
+#endif
+
 struct JSFunction;
 struct JSScript;
 
 namespace js {
 namespace ion {
-
 // The layout of an Ion frame on the C stack:
-//   argN     _ 
+//   argN     _
 //   ...       \ - These are jsvals
 //   arg0      /
 //   this    _/
+//   (padding) (only exists on arm)
 //   calleeToken - Encodes script or JSFunction
 //   sizeDescriptor  - Size of the parent frame, with lower bits for FrameType.
 //   returnAddr - Return address, entering into the next call.
 //   .. locals ..
-
-// Layout of the frame prefix. This assumes the stack architecture grows down.
-// If this is ever not the case, we'll have to refactor.
-struct IonFrameData
-{
-    void *returnAddress_;
-    uintptr_t sizeDescriptor_;
-    void *calleeToken_;
-};
 
 class IonFramePrefix : protected IonFrameData
 {

@@ -53,8 +53,8 @@ static void
 GenerateReturn(MacroAssembler &masm, int returnCode)
 {
     // Restore non-volatile registers
-    masm.mov(Imm32(returnCode), r0);
-    masm.startDataTransferM(true, sp);
+    masm.ma_mov(Imm32(returnCode), r0);
+    masm.startDataTransferM(IsLoad, sp, IA, WriteBack);
     masm.transferReg(r4);
     masm.transferReg(r5);
     masm.transferReg(r6);
@@ -63,17 +63,17 @@ GenerateReturn(MacroAssembler &masm, int returnCode)
     masm.transferReg(r9);
     masm.transferReg(r10);
     masm.transferReg(r11);
-    masm.transferReg(r12);
+    // r12 isn't saved, so it shouldn't be restored.
     masm.transferReg(pc);
     masm.finishDataTransfer();
 }
 
 /* This method generates a trampoline on x86 for a c++ function with
  * the following signature:
- *   JSBool blah(void *code, int argc, Value *argv, Value *vp)*
+ *   JSBool blah(void *code, int argc, Value *argv, Value *vp, CalleeToken calleeToken)*
  *                    =r0       =r1          =r2          =r3
- *   ...using standard cdecl calling convention
- *   ...cdecl has no business existing on ARM
+ *   ...using standard EABI calling convention
+
  */
 IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
@@ -81,259 +81,213 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     MacroAssembler masm(cx);
     Assembler *aasm = &masm;
     // store all of the callee saved registers.  they may be gone for a while
-    masm.startDataTransferM(true, sp, true);
-    masm.transferReg(r4);
-    masm.transferReg(r5);
-    masm.transferReg(r6);
-    masm.transferReg(r7);
-    masm.transferReg(r8);
-    masm.transferReg(r9);
-    masm.transferReg(r10);
-    masm.transferReg(r11);
-    masm.transferReg(r12);
-    masm.transferReg(lr);
+    masm.startDataTransferM(IsStore, sp, DB, WriteBack);
+    masm.transferReg(r3); // [sp]  save the pointer we'll write our return value into
+    masm.transferReg(r4); // [sp,4]
+    masm.transferReg(r5); // [sp,8]
+    masm.transferReg(r6); // [sp,12]
+    masm.transferReg(r7); // [sp,16]
+    masm.transferReg(r8); // [sp,20]
+    masm.transferReg(r9); // [sp,24]
+    masm.transferReg(r10); // [sp,28]
+    masm.transferReg(r11); // [sp,32]
+    // The abi does not expect r12 (ip) to be preserved
+    masm.transferReg(lr);  // [sp,36]
+    // OAur 5th argument is located at [sp, 40]
     masm.finishDataTransfer();
+    // Load said argument int r10
+    aasm->as_dtr(IsLoad, 32, Offset, r10, DTRAddr(sp, DtrOffImm(40)));
+    aasm->as_mov(r9, lsl(r1, 3)); // r9 = 8*argc
+    // The size of the IonFrame is actually 16, and we pushed r3 when we aren't
+    // going to pop it, BUT, we pop the return value, rather than just branching
+    // to it, AND we need to access the value pushed by r3, which we need to
+    // not be at a negative offsett, so after removing the ionframe and the
+    // ionfunction's arguments from the stack, we want the sp to be pointing at
+    // the location that r3 was stored in, then we'll pop that value, use it
+    // and pop r4-r11, pc to return.
+    aasm->as_add(r9, r9, Imm8(16-4));
+
 #if 0
-    // there are r1 2-word arguments
+    // This is in case we want to go back to using frames that
+    // aren't 8 byte alinged
+    // there are r1 2-word arguments to the js code
     // we want 2 word alignment, so this shouldn't matter.
     // After the arguments have been pushed, we want to push an additional 3 words of
     // data, so in all, we want to decrease sp by 4 if it is currently aligned to
     // 8, and not touch it otherwise
-    aasm->sub_r(sp, sp, imm8(4));
-    aasm->orr_r(sp, sp, imm8(4));
-    // subtract off the size of the arguments from the stack pointer, store elsewhere
-    aasm->sub_r(r4, sp, lsl(r1, 3));
-    // get the final position of the stack pointer into the stack pointer
-    aasm->sub_r(sp,r4, imm8(16));
-    // get a copy of the number of args to use as a decrement counter, also
-    // set the zero condition code
-    aasm->mov_r(r5, r1, setCond);
+    aasm->as_sub(sp, sp, Imm8(4));
+    aasm->as_orr(sp, sp, Imm8(4));
+#endif
+    // Subtract off the size of the arguments from the stack pointer, store elsewhere
+    aasm->as_sub(r4, sp, O2RegImmShift(r1, LSL, 3)); //r4 = sp - argc*8
+    // Get the final position of the stack pointer into the stack pointer
+    aasm->as_sub(sp, r4, Imm8(16)); // sp' = sp - argc*8 - 16
+    // Get a copy of the number of args to use as a decrement counter, also
+    // Set the zero condition code
+    aasm->as_mov(r5, O2Reg(r1), SetCond);
 
-
-    // loop over arguments, copying them over
+    // Loop over arguments, copying them from an unknown buffer onto the Ion
+    // stack so they can be accessed from JIT'ed code.
     {
         Label header, footer;
         // If there aren't any arguments, don't do anything
-        aasm->branch(footer, Zero);
-        // get the top of the loop
+        aasm->as_b(&footer, Assembler::Zero);
+        // Get the top of the loop
         masm.bind(&header);
-        aasm->sub_r(r5, r5, imm8(1), setCond);
-        // we could be more awesome, and unroll this, using a loadm
+        aasm->as_sub(r5, r5, Imm8(1), SetCond);
+        // We could be more awesome, and unroll this, using a loadm
         // (particularly since the offset is effectively 0)
         // but that seems more error prone, and complex.
-        aasm->dataTransferN(true, true, 64, r6, r2, imm8(8), postIndex);
-        aasm->dataTransferN(false, true, 64, r6, r4, imm8(8), postIndex);
-        aasm->branch(header, NotZero);
+        aasm->as_extdtr(IsLoad,  64, true, PostIndex, r6, EDtrAddr(r2, EDtrOffImm(8)));
+        aasm->as_extdtr(IsStore, 64, true, PostIndex, r6, EDtrAddr(r4, EDtrOffImm(8)));
+        aasm->as_b(&header, Assembler::NonZero);
         masm.bind(&footer);
     }
-
-// this is all rubbish. and X86
-    // We need to ensure that the stack is aligned on a 12-byte boundary, so
-    // inside the JIT function the stack is 16-byte aligned. Our stack right
-    // now might not be aligned on some platforms (win32, gcc) so we factor
-    // this possibility in, and simulate what the new stack address would be.
-    //   +argc * 8 for arguments
-    //   +4 for pushing alignment
-    //   +4 for pushing the callee token
-    //   +4 for pushing the return address
-    masm.movl(esp, ecx);
-    masm.subl(eax, ecx);
-    masm.subl(Imm32(12), ecx);
-    // could probably be ecx = ecx & 12 -- all the other bits should be 0.
-
-    // ecx = ecx & 15, holds alignment.
-    masm.andl(Imm32(15), ecx);
-    masm.subl(ecx, esp);
-
-    /***************************************************************
-    Loop over argv vector, push arguments onto stack in reverse order
-    ***************************************************************/
-
-    // ebx = argv   --argv pointer is in ebp + 16
-    masm.movl(Operand(ebp, 16), ebx);
-
-    // eax = argv[8(argc)]  --eax now points one value past the last argument
-    masm.addl(ebx, eax);
-
-    // while (eax > ebx)  --while still looping through arguments
-    {
-        Label header, footer;
-        masm.bind(&header);
-
-        masm.cmpl(eax, ebx);
-        masm.j(Assembler::BelowOrEqual, &footer);
-
-        // eax -= 8  --move to previous argument
-        masm.subl(Imm32(8), eax);
-
-        // Push what eax points to on stack, a Value is 2 words
-        masm.push(Operand(eax, 4));
-        masm.push(Operand(eax, 0));
-
-        masm.jmp(&header);
-        masm.bind(&footer);
-    }
-
-    // Push the callee token.
-    masm.push(Operand(ebp, 24));
-
-    // Save the stack size so we can remove arguments and alignment after the
-    // call.
-    masm.movl(Operand(ebp, 12), eax);
-    masm.shll(Imm32(3), eax);
-    masm.addl(eax, ecx);
-    masm.addl(Imm32(4), ecx);
-    masm.push(ecx);
-
-    /***************************************************************
-        Call passed-in code, get return value and fill in the
-        passed in return value pointer
-    ***************************************************************/
-    // Call code  --code pointer is in ebp + 8
-    masm.call(Operand(ebp, 8));
-
-    // Pop arguments off the stack.
-    // eax <- 8*argc (size of all arugments we pushed on the stack)
-    masm.pop(eax);
-    masm.addl(eax, esp);
-
-    // |ebp| could have been clobbered by the inner function. For now, re-grab
-    // |vp| directly off the stack:
-    //
-    //  +32 vp
-    //  +28 argv
-    //  +24 argc
-    //  +20 code
-    //  +16 <return>
-    //  +12 ebp
-    //  +8  ebx
-    //  +4  esi
-    //  +0  edi
-    masm.movl(Operand(esp, 32), eax);
-    masm.movl(JSReturnReg_Type, Operand(eax, 4));
-    masm.movl(JSReturnReg_Data, Operand(eax, 0));
-
-    /**************************************************************
-        Return stack and registers to correct state
-    **************************************************************/
+    masm.startDataTransferM(IsStore, sp, IB, NoWriteBack);
+    masm.transferReg(r9);  // [sp',4]  = argc*8+20
+    masm.transferReg(r10); // [sp',8]  = callee token
+    masm.transferReg(r11); // [sp',12] = fill in the buffer value with junk.
+    masm.finishDataTransfer();
+    // Throw our return address onto the stack.  this setup seems less-than-ideal
+    aasm->as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
+    // Call the function.  using lr as the link register would be *so* nice
+    aasm->as_bx(r0);
+    // The top of the stack now points to *ABOVE* our return address... great
+    // Load off of the stack the size of our local stack
+    aasm->as_dtr(IsLoad, 32, Offset, r5, DTRAddr(sp, DtrOffImm(0)));
+    // TODO: these can be fused into one!
+    aasm->as_add(sp, sp, O2Reg(r5));
+    // Reach into our saved arguments, and find the pointer to where we want
+    // to write our return value.
+    aasm->as_dtr(IsLoad, 32, PostIndex, r5, DTRAddr(sp, DtrOffImm(4)));
+    // We're using a load-double here.  In order for that to work,
+    // the data needs to be stored in two consecutive registers,
+    // make sure this is the case
+    ASSERT(JSReturnReg_Type.code() == JSReturnReg_Data.code()+1);
+    // The lower reg also needs to be an even regster.
+    ASSERT((JSReturnReg_Data.code() & 1) == 0);
+    aasm->as_extdtr(IsStore, 64, true, Offset,
+                    JSReturnReg_Data, EDtrAddr(r5, EDtrOffImm(0)));
     GenerateReturn(masm, JS_TRUE);
-
     Linker linker(masm);
     return linker.newCode(cx);
-#endif
-    return NULL;
 }
 
 IonCode *
 IonCompartment::generateReturnError(JSContext *cx)
 {
     MacroAssembler masm(cx);
-#if 0
-
-    // Pop arguments off the stack.
-    // eax <- 8*argc (size of all arugments we pushed on the stack)
-    masm.pop(eax);
-    masm.addl(eax, esp);
+    // This is where the stack size is stored on x86. where is it stored here?
+    masm.ma_pop(r0);
+    masm.ma_add(r0, sp, sp);
 
     GenerateReturn(masm, JS_FALSE);
-#endif
     Linker linker(masm);
     return linker.newCode(cx);
 }
-
 static void
 GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
 {
-#if 0
-    // Push registers such that we can access them from [base + code].
-    masm.reserveStack(Registers::Total * sizeof(void *));
+    // STEP 1a: save our register sets to the stack so Bailout() can
+    // read everything.
+    // sp % 8 == 0
+    masm.startDataTransferM(IsStore, sp, DB, WriteBack);
+    // We don't have to push everything, but this is likely easier.
     for (uint32 i = 0; i < Registers::Total; i++)
-        masm.movl(Register::FromCode(i), Operand(esp, i * sizeof(void *)));
-
-    // Push xmm registers, such that we can access them from [base + code].
-    masm.reserveStack(FloatRegisters::Total * sizeof(double));
+        masm.transferReg(Register::FromCode(i));
+    masm.finishDataTransfer();
+    // Float transfer hasn't been implemented yet.  this is a NOP.
+    masm.startFloatTransferM(IsStore, sp, true);
     for (uint32 i = 0; i < FloatRegisters::Total; i++)
-        masm.movsd(FloatRegister::FromCode(i), Operand(esp, i * sizeof(double)));
+        masm.transferFloatReg(FloatRegister::FromCode(i));
+    masm.finishFloatTransfer();
 
-    // Push the bailout table number.
-    masm.push(Imm32(frameClass));
+    // STEP 1b: push the frameClass argument to the stack, below
+    //          the saved registers.  This will be read as part of a
+    //          structure by bailout to figure out what variables
+    //          are in what registers
 
-    // Get the stack pointer into a register, pre-alignment.
-    masm.movl(esp, eax);
+    // now place the frameClass onto the stack, via a register
+    masm.ma_mov(Imm32(frameClass), r4);
+    // And onto the stack.  Since the stack is full, we need to put this
+    // one past the end of the current stack. Sadly, the ABI says that we need
+    // to always point to the lowest place that has been written.  the OS is
+    // free to do whatever it wants below sp.
+    masm.as_dtr(IsStore, 32, PreIndex, r4, DTRAddr(sp, DtrOffImm(-4)));
+    // SP % 8 == 4
+    // STEP 1c: Call the bailout function, giving a pointer to the
+    //          structure we just blitted onto the stack
+    masm.setupAlignedABICall(1);
 
-    // Call the bailout function.
-    masm.setupUnalignedABICall(1, ecx);
-    masm.setABIArg(0, eax);
+    // Copy the present stack pointer into a temp register (it happens to be the
+    // argument register)
+    masm.as_mov(r0, O2Reg(sp));
+
+    // Decrement sp by another 4, so we keep alignment
+    masm.as_sub(sp, sp, Imm8(4));
+
+    // Set the old (4-byte aligned) value of the sp as the first argument
+    masm.setABIArg(0, r0);
+
+    // Sp % 8 == 0
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
-
     // Common size of a bailout frame.
     uint32 bailoutFrameSize = sizeof(void *) + // frameClass
                               sizeof(double) * FloatRegisters::Total +
                               sizeof(void *) * Registers::Total;
-    // Remove the Ion frame.
+
     if (frameClass == NO_FRAME_SIZE_CLASS_ID) {
-        // Stack is:
-        //    ... frame ...
-        //    snapshotOffset
-        //    frameSize
-        //    ... bailoutFrame ...
-        masm.addl(Imm32(bailoutFrameSize), esp);
-        masm.pop(ecx);
-        masm.lea(Operand(esp, ecx, TimesOne, sizeof(void *)), esp);
+        // Make sure the bailout frame size fits into the offset for a load
+        masm.as_dtr(IsLoad, 32, PreIndex,
+                    r4, DTRAddr(sp, DtrOffImm(bailoutFrameSize)));
+        // And now the stack is all fixed up.
+        masm.as_add(sp, sp, O2Reg(r4));
     } else {
-        // Stack is:
-        //    ... frame ...
-        //    bailoutId
-        //    ... bailoutFrame ...
         uint32 frameSize = FrameSizeClass::FromClass(frameClass).frameSize();
-        masm.addl(Imm32(bailoutFrameSize + sizeof(void *) + frameSize), esp);
+        masm.ma_add(Imm32(frameSize), sp);
     }
 
     Label exception;
 
-    // Either interpret or handle an exception.
-    masm.testl(eax, eax);
-    masm.j(Assembler::NonZero, &exception);
-
-    // If we're about to interpret, we've removed the depth of the local ion
-    // frame, meaning we're aligned to its (callee, size, return) prefix. Save
-    // this prefix in a register.
-    masm.movl(esp, eax);
-
-    // Reserve space for Interpret() to store a Value.
-    masm.subl(Imm32(sizeof(Value)), esp);
-    masm.movl(esp, ecx);
-
-    // Call out to the interpreter.
-    masm.setupUnalignedABICall(2, edx);
-    masm.setABIArg(0, eax);
-    masm.setABIArg(1, ecx);
+    // See if the bailout code says it is an exception
+    masm.as_cmp(r0, Imm8(0));
+    masm.as_b(&exception, Assembler::NonZero);
+    // The actual thunk gets two arguments: the previous frame's
+    // stack (sp), and the place where it is going to return
+    // its value (namely, right below the *present* sp;
+    masm.as_mov(r0, O2Reg(sp));
+    // Make room on the stack
+    masm.as_sub(sp, sp, Imm8(sizeof(Value)));
+    // And make that the second argument
+    masm.as_mov(r1, O2Reg(sp));
+    // Do the call
+    masm.setupAlignedABICall(2);
+    // These should be NOPs
+    masm.setABIArg(0, r0);
+    masm.setABIArg(1, r1);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
 
-    // Load the value the interpreter returned.
-    masm.movl(Operand(esp, 4), JSReturnReg_Type);
-    masm.movl(Operand(esp, 0), JSReturnReg_Data);
-    masm.addl(Imm32(8), esp);
+    // Load the value that the interpreter returned *and* return the stack
+    // to its previous location
+    masm.as_extdtr(IsLoad, 64, true, PostIndex,
+                   JSReturnReg_Data, EDtrAddr(sp, EDtrOffImm(8)));
 
-    // We're back, aligned to the frame prefix. Check for an exception.
-    masm.testl(eax, eax);
-    masm.j(Assembler::Zero, &exception);
-
-    // Return to the caller.
-    masm.ret();
-
+    // Test for an exception
+    masm.as_cmp(r0, Imm8(0));
+    masm.as_b(&exception, Assembler::Zero);
+    masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
     masm.bind(&exception);
 
-    // Call into HandleException, passing in the top frame prefix.
-    masm.movl(esp, eax);
-    masm.setupUnalignedABICall(1, ecx);
-    masm.setABIArg(0, eax);
+    // Call into HandleException, passing in the top frame prefix
+    masm.as_mov(r0, O2Reg(sp));
+    masm.setupAlignedABICall(1);
+    masm.setABIArg(0,r0);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, HandleException));
-
     // The return value is how much stack to adjust before returning.
-    masm.addl(eax, esp);
-    masm.ret();
-#endif
+    masm.as_add(sp, sp, O2Reg(r0));
+    // We're going to be returning by the ion calling convention, which returns
+    // by ??? (for now, I think ldr pc, [sp]!)
+    masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
 }
 
 IonCode *
@@ -343,7 +297,7 @@ IonCompartment::generateBailoutTable(JSContext *cx, uint32 frameClass)
 
     Label bailout;
     for (size_t i = 0; i < BAILOUT_TABLE_SIZE; i++)
-        masm.call(&bailout);
+        masm.ma_bl(&bailout);
     masm.bind(&bailout);
 
     GenerateBailoutThunk(masm, frameClass);

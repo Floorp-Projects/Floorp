@@ -39,23 +39,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ionframes_arm_h__
-#define jsion_ionframes_arm_h__
-
 namespace js {
 namespace ion {
+
 // Layout of the frame prefix. This assumes the stack architecture grows down.
 // If this is ever not the case, we'll have to refactor.
-class IonFrameData
+struct IonFrameData
 {
-  protected:
     void *returnAddress_;
     uintptr_t sizeDescriptor_;
     void *calleeToken_;
-    void *padding; // this is here so we can keep 8-byte stack alignment.
 };
 
-
-} // ion
-} // js
-#endif // jsion_ionframes_arm_h
+}
+}

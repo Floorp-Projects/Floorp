@@ -168,9 +168,8 @@ LIRGeneratorARM::assignSnapshot(LInstruction *ins)
     if (!snapshot)
         return false;
 
-    MSnapshot *mir = snapshot->mir();
-    for (size_t i = 0; i < mir->numOperands(); i++) {
-        MDefinition *ins = mir->getOperand(i);
+    for (size_t i = 0; i < lastResumePoint_->numOperands(); i++) {
+        MDefinition *ins = lastResumePoint_->getOperand(i);
         LAllocation *type = snapshot->getEntry(i * 2);
         LAllocation *payload = snapshot->getEntry(i * 2 + 1);
 
@@ -179,7 +178,7 @@ LIRGeneratorARM::assignSnapshot(LInstruction *ins)
         // interpreter state with the given information. Note that for
         // constants, including known types, we record a dummy placeholder,
         // since we can recover the same information, much cleaner, from MIR.
-        if (ins->isConstant()) {
+        if (ins->isConstant() || ins->isUnused()) {
             *type = LConstantIndex::Bogus();
             *payload = LConstantIndex::Bogus();
         } else if (ins->type() != MIRType_Value) {
@@ -264,3 +263,25 @@ LIRGeneratorARM::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *b
     payload->setOperand(inputPosition, LUse(VirtualRegisterOfPayload(operand), LUse::ANY));
 }
 
+bool
+LIRGeneratorARM::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
+{
+    ins->setOperand(0, useRegister(lhs));
+    // this check probably not necessary, it is a carry-over from the x86 code.
+    if (rhs->isConstant())
+        ins->setOperand(1, useOrConstant(rhs));
+    else
+        ins->setOperand(1, useRegister(rhs));
+
+    return define(ins, mir,
+                  LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
+}
+
+bool
+LIRGeneratorARM::lowerDivI(MDiv *div)
+{
+    LDivI *lir = new LDivI(useRegister(div->lhs()), useRegister(div->rhs()), temp(LDefinition::INTEGER), temp(LDefinition::INTEGER));
+    return define(lir, div,
+                  LDefinition(LDefinition::TypeFrom(div->type()), LDefinition::DEFAULT))
+    && assignSnapshot(lir);
+}
