@@ -724,9 +724,9 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     masm.movePtr(Operand(objreg, offsetof(JSFunction, u.i.script)), objreg);
     masm.movePtr(Operand(objreg, offsetof(JSScript, ion)), objreg);
 
-    // Bail if the callee has not yet been JITted.
-    masm.testPtr(objreg, objreg);
-    if (!bailoutIf(Assembler::Zero, call->snapshot()))
+    // Bail if the callee is uncompiled.
+    masm.cmpPtr(objreg, ImmWord(ION_DISABLED_SCRIPT));
+    if (!bailoutIf(Assembler::BelowOrEqual, call->snapshot()))
         return false;
 
     // Remember the size of the frame above this point, in case of bailout.
