@@ -314,14 +314,6 @@ RasterImage::Init(imgIDecoderObserver *aObserver,
 }
 
 //******************************************************************************
-/* [notxpcom] void requestRefresh ([const] in TimeStamp aTime); */
-NS_IMETHODIMP_(void)
-RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
-{
-  // TODO: Implement me as part of b666446
-}
-
-//******************************************************************************
 /* [noscript] imgIContainer extractFrame(PRUint32 aWhichFrame,
  *                                       [const] in nsIntRect aRegion,
  *                                       in PRUint32 aFlags); */
