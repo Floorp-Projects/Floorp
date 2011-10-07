@@ -5302,6 +5302,37 @@ CClosure::Create(JSContext* cx,
   cinfo->cxThread = JS_GetContextThread(cx);
 #endif
 
+  // Prepare the error sentinel value. It's important to do this now, because
+  // we might be unable to convert the value to the proper type. If so, we want
+  // the caller to know about it _now_, rather than some uncertain time in the
+  // future when the error sentinel is actually needed.
+  if (!JSVAL_IS_VOID(errVal)) {
+
+    // Make sure the callback returns something.
+    if (CType::GetTypeCode(cx, fninfo->mReturnType) == TYPE_void_t) {
+      JS_ReportError(cx, "A void callback can't pass an error sentinel");
+      return NULL;
+    }
+
+    // With the exception of void, the FunctionType constructor ensures that
+    // the return type has a defined size.
+    JS_ASSERT(CType::IsSizeDefined(cx, fninfo->mReturnType));
+
+    // Allocate a buffer for the return value.
+    size_t rvSize = CType::GetSize(cx, fninfo->mReturnType);
+    cinfo->errResult = cx->malloc_(rvSize);
+    if (!cinfo->errResult)
+      return NULL;
+
+    // Do the value conversion. This might fail, in which case we throw.
+    if (!ImplicitConvert(cx, errVal, fninfo->mReturnType, cinfo->errResult,
+                         false, NULL))
+      return NULL;
+  } else {
+    cinfo->errResult = NULL;
+  }
+
+  // Copy the important bits of context into cinfo.
   cinfo->closureObj = result;
   cinfo->typeObj = typeObj;
   cinfo->thisObj = thisObj;
