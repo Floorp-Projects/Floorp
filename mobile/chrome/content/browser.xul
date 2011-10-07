@@ -203,6 +203,7 @@
         <!-- Left toolbar -->
         <vbox id="tabs-container" class="panel-dark" flex="1" observes="bcast_urlbarState">
           <vbox id="tabs" flex="1" observes="bcast_urlbarState"
+                ondoubletap="BrowserUI.newTab();"
                 onselect="BrowserUI.selectTab(this);"
                 onreloadtab="BrowserUI.undoCloseTab()"
                 onclosetab="BrowserUI.closeTab(this)"
