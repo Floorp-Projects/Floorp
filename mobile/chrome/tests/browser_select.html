@@ -69,16 +69,31 @@
     <br>
     <!-- Multi-select listbox -->
     <select id="listbox-multiselect" size="5" multiple="true">
+        <optgroup label="first">
         <option>Alpha</option>
         <option>Beta</option>
+        </optgroup>
         <option>Gamma</option>
         <option>Epsilon</option>
         <option>One</option>
         <option>Two</option>
         <option>Three</option>
-        <option>Four</option>
+        <option selected="true">Four</option>
     </select>
     <br>
     <button onclick="unselectCombo(document.getElementById('listbox-multiselect'));">Unselect</button>
+<pre id="result"></pre>
+<script>
+var x=document.getElementById('result');
+
+function mwdoe(aEvent) {
+x.innerHTML += aEvent.type + '\n';
+}
+
+window.addEventListener('mousedown', mwdoe, true);
+window.addEventListener('mouseup', mwdoe, true);
+window.addEventListener('click', mwdoe, true);
+
+</script>
 </body>
 </html>
