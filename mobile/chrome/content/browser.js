@@ -1978,8 +1978,7 @@ const ContentTouchHandler = {
   },
 
   tapOver: function tapOver(aX, aY) {
-    if (!this.clickPrevented)
-      this._dispatchMouseEvent("Browser:MouseOver", aX, aY);
+    this._dispatchMouseEvent("Browser:MouseOver", aX, aY);
   },
 
   tapUp: function tapUp(aX, aY) {
