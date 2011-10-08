@@ -478,13 +478,8 @@ struct JSObject : js::gc::Cell {
 
     uint32      flags;                      /* flags */
 
-    union {
-        /* If prototype, type of values using this as their prototype. */
-        js::types::TypeObject *newType;
-
-        /* If dense array, the initialized length (see jsarray.cpp). */
-        jsuword initializedLength;
-    };
+    /* If dense array, the initialized length (see jsarray.cpp). */
+    jsuword initializedLength;
 
     JS_FRIEND_API(size_t) sizeOfSlotsArray(JSUsableSizeFun usf);
 
@@ -783,9 +778,6 @@ struct JSObject : js::gc::Cell {
      */
     inline bool setSingletonType(JSContext *cx);
 
-    /* Called from GC, reverts a singleton object to having a lazy type. */
-    inline void revertLazyType();
-
     inline js::types::TypeObject *getType(JSContext *cx);
 
     js::types::TypeObject *type() const {
@@ -800,14 +792,15 @@ struct JSObject : js::gc::Cell {
 
     static inline size_t offsetOfType() { return offsetof(JSObject, type_); }
 
-    inline void clearType();
+    inline bool clearType(JSContext *cx);
     inline void setType(js::types::TypeObject *newType);
 
-    inline js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL,
-                                             bool markUnknown = false);
-  private:
-    void makeNewType(JSContext *cx, JSFunction *fun, bool markUnknown);
-  public:
+    js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL,
+                                      bool markUnknown = false);
+
+#ifdef DEBUG
+    bool hasNewType(js::types::TypeObject *newType);
+#endif
 
     /* Set a new prototype for an object with a singleton type. */
     bool splicePrototype(JSContext *cx, JSObject *proto);

@@ -227,8 +227,6 @@ MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name)
     JS_ASSERT(trc);
     JS_ASSERT(type);
     JS_SET_TRACING_NAME(trc, name);
-    if (type == &types::emptyTypeObject)
-        return;
     Mark(trc, type);
 
     /*
@@ -713,8 +711,7 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
         return;
 
     types::TypeObject *type = obj->typeFromGC();
-    if (type != &types::emptyTypeObject)
-        PushMarkStack(gcmarker, type);
+    PushMarkStack(gcmarker, type);
 
     if (JSObject *parent = obj->getParent())
         PushMarkStack(gcmarker, parent);
@@ -733,13 +730,8 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
                 clasp->trace(gcmarker, obj);
             }
         } else {
-            if (obj->newType)
-                PushMarkStack(gcmarker, obj->newType);
             clasp->trace(gcmarker, obj);
         }
-    } else {
-        if (obj->newType)
-            PushMarkStack(gcmarker, obj->newType);
     }
 
     js::Shape *shape = obj->lastProp;
@@ -795,8 +787,6 @@ MarkChildren(JSTracer *trc, JSObject *obj)
     MarkTypeObject(trc, obj->typeFromGC(), "type");
 
     /* Trace universal (ops-independent) members. */
-    if (!obj->isDenseArray() && obj->newType)
-        MarkTypeObject(trc, obj->newType, "new_type");
     if (JSObject *parent = obj->getParent())
         MarkObject(trc, *parent, "parent");
 

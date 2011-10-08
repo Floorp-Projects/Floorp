@@ -1285,20 +1285,19 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
          * as for dense arrays we will need to get the address of the fixed
          * slots first.
          */
+        JS_ASSERT(!templateObject->initializedLength);
         if (templateObject->isDenseArray()) {
-            JS_ASSERT(!templateObject->initializedLength);
             addPtr(Imm32(-thingSize + sizeof(JSObject)), result);
             storePtr(result, Address(result, -(int)sizeof(JSObject) + JSObject::offsetOfSlots()));
             addPtr(Imm32(-(int)sizeof(JSObject)), result);
         } else {
-            JS_ASSERT(!templateObject->newType);
             addPtr(Imm32(-thingSize), result);
             storePtr(ImmPtr(NULL), Address(result, JSObject::offsetOfSlots()));
         }
 
         storePtr(ImmPtr(templateObject->lastProp), Address(result, offsetof(JSObject, lastProp)));
         store32(Imm32(templateObject->flags), Address(result, offsetof(JSObject, flags)));
-        storePtr(ImmPtr(templateObject->newType), Address(result, offsetof(JSObject, newType)));
+        storePtr(ImmPtr((void *) templateObject->initializedLength), Address(result, offsetof(JSObject, initializedLength)));
         storePtr(ImmPtr(templateObject->parent), Address(result, offsetof(JSObject, parent)));
         storePtr(ImmPtr(templateObject->privateData), Address(result, offsetof(JSObject, privateData)));
         storePtr(ImmPtr((void *) templateObject->capacity), Address(result, offsetof(JSObject, capacity)));

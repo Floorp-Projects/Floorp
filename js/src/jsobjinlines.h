@@ -311,7 +311,11 @@ JSObject::finalize(JSContext *cx, bool background)
 inline bool
 JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
 {
-    init(cx, &js::types::emptyTypeObject, parent, NULL, false);
+    js::types::TypeObject *type = cx->compartment->getEmptyType(cx);
+    if (!type)
+        return false;
+
+    init(cx, type, parent, NULL, false);
     setMap(bindings.lastShape());
 
     JS_ASSERT(isCall());
@@ -853,38 +857,17 @@ JSObject::getType(JSContext *cx)
     return type_;
 }
 
-inline js::types::TypeObject *
-JSObject::getNewType(JSContext *cx, JSFunction *fun, bool markUnknown)
-{
-    if (isDenseArray() && !makeDenseArraySlow(cx))
-        return NULL;
-    if (newType) {
-        /*
-         * If set, the newType's newScript indicates the script used to create
-         * all objects in existence which have this type. If there are objects
-         * in existence which are not created by calling 'new' on newScript,
-         * we must clear the new script information from the type and will not
-         * be able to assume any definite properties for instances of the type.
-         * This case is rare, but can happen if, for example, two scripted
-         * functions have the same value for their 'prototype' property, or if
-         * Object.create is called with a prototype object that is also the
-         * 'prototype' property of some scripted function.
-         */
-        if (newType->newScript && newType->newScript->fun != fun)
-            newType->clearNewScript(cx);
-        if (markUnknown && cx->typeInferenceEnabled() && !newType->unknownProperties())
-            newType->markUnknown(cx);
-    } else {
-        makeNewType(cx, fun, markUnknown);
-    }
-    return newType;
-}
-
-inline void
-JSObject::clearType()
+inline bool
+JSObject::clearType(JSContext *cx)
 {
     JS_ASSERT(!hasSingletonType());
-    type_ = &js::types::emptyTypeObject;
+
+    js::types::TypeObject *type = cx->compartment->getEmptyType(cx);
+    if (!type)
+        return false;
+
+    type_ = type;
+    return true;
 }
 
 inline void
@@ -969,8 +952,7 @@ JSObject::init(JSContext *cx, js::types::TypeObject *type,
         js::ClearValueRange(fixedSlots(), capacity, denseArray);
     }
 
-    newType = NULL;
-    JS_ASSERT(initializedLength == 0);
+    initializedLength = 0;
 
     setType(type);
     setParent(parent);
@@ -1612,7 +1594,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
           return NULL;
     }
 
-    types::TypeObject *type = proto ? proto->getNewType(cx) : &js::types::emptyTypeObject;
+    types::TypeObject *type = proto ? proto->getNewType(cx) : cx->compartment->getEmptyType(cx);
     if (!type)
         return NULL;
 
@@ -1712,7 +1694,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 static JS_ALWAYS_INLINE JSObject *
 NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::AllocKind kind)
 {
-    JS_ASSERT(type == type->proto->newType);
+    JS_ASSERT(type->proto->hasNewType(type));
 
     if (CanBeFinalizedInBackground(kind, &ObjectClass))
         kind = GetBackgroundAllocKind(kind);

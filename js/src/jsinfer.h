@@ -872,9 +872,6 @@ struct TypeObject : gc::Cell
     }
 };
 
-/* Global singleton for the generic type of objects with no prototype. */
-extern TypeObject emptyTypeObject;
-
 /*
  * Call to mark a script's arguments as having been created, recompile any
  * dependencies and walk the stack if necessary to fix any lazy arguments.

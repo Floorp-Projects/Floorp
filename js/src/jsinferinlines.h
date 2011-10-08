@@ -1312,4 +1312,12 @@ js::analyze::ScriptAnalysis::addPushedType(JSContext *cx, uint32 offset, uint32 
     pushed->addType(cx, type);
 }
 
+inline js::types::TypeObject *
+JSCompartment::getEmptyType(JSContext *cx)
+{
+    if (!emptyTypeObject)
+        emptyTypeObject = types.newTypeObject(cx, NULL, JSProto_Object, NULL, true);
+    return emptyTypeObject;
+}
+
 #endif // jsinferinlines_h___
