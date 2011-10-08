@@ -2775,11 +2775,11 @@ ASTSerializer::xml(JSParseNode *pn, Value *dst)
         return builder.xmlComment(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
       case TOK_XMLPI:
-        if (!pn->pn_atom2)
-            return builder.xmlPI(atomContents(pn->pn_atom), &pn->pn_pos, dst);
+        if (!pn->pn_pidata)
+            return builder.xmlPI(atomContents(pn->pn_pitarget), &pn->pn_pos, dst);
         else
-            return builder.xmlPI(atomContents(pn->pn_atom),
-                                 atomContents(pn->pn_atom2),
+            return builder.xmlPI(atomContents(pn->pn_pitarget),
+                                 atomContents(pn->pn_pidata),
                                  &pn->pn_pos,
                                  dst);
 #endif
