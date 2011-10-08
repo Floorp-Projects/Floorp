@@ -566,10 +566,10 @@
                 if (this.mTab.hasAttribute("busy")) {
                   this.mTab.removeAttribute("busy");
                   this.mTabBrowser._tabAttrModified(this.mTab);
+                  if (!this.mTab.selected)
+                    this.mTab.setAttribute("unread", "true");
                 }
                 this.mTab.removeAttribute("progress");
-                if (!this.mTab.selected)
-                  this.mTab.setAttribute("unread", "true");
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
 
