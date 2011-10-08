@@ -138,14 +138,24 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                 nsIAtom*        aAttribute,
                                 PRInt32         aModType)
 {
-  if (aNameSpaceID == kNameSpaceID_None &&
-      (aAttribute == nsGkAtoms::x ||
-       aAttribute == nsGkAtoms::y)) {
-    // make sure our cached transform matrix gets (lazily) updated
-    mCanvasTM = nsnull;
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::x ||
+        aAttribute == nsGkAtoms::y) {
+      // make sure our cached transform matrix gets (lazily) updated
+      mCanvasTM = nsnull;
     
-    nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
-    return NS_OK;
+      nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
+    } else if (aAttribute == nsGkAtoms::width ||
+               aAttribute == nsGkAtoms::height) {
+      static_cast<nsSVGUseElement*>(mContent)->SyncWidthHeight(aAttribute);
+    }
+  } else if (aNameSpaceID == kNameSpaceID_XLink &&
+             aAttribute == nsGkAtoms::href) {
+    // we're changing our nature, clear out the clone information
+    nsSVGUseElement *use = static_cast<nsSVGUseElement*>(mContent);
+    use->mOriginal = nsnull;
+    use->UnlinkSource();
+    use->TriggerReclone();
   }
 
   return nsSVGUseFrameBase::AttributeChanged(aNameSpaceID,
