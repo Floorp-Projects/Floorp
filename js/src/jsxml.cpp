@@ -1595,7 +1595,7 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
             if (!qn)
                 goto fail;
 
-            str = pn->pn_atom2 ? pn->pn_atom2 : cx->runtime->emptyString;
+            str = pn->pn_pidata ? pn->pn_pidata : cx->runtime->emptyString;
             xml_class = JSXML_CLASS_PROCESSING_INSTRUCTION;
         } else {
             /* CDATA section content, or element text. */

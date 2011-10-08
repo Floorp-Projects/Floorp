@@ -241,17 +241,73 @@ struct Token {
     union {
         struct {                        /* name or string literal */
             JSOp        op;             /* operator, for minimal parser */
-            JSAtom      *atom;          /* atom table entry */
+            union {
+              private:
+                friend class Token;
+                PropertyName *name;     /* non-numeric atom */
+                JSAtom       *atom;     /* potentially-numeric atom */
+            } n;
         } s;
         uintN           reflags;        /* regexp flags, use tokenbuf to access
                                            regexp chars */
-        struct {                        /* atom pair, for XML PIs */
-            JSAtom      *atom2;         /* auxiliary atom table entry */
-            JSAtom      *atom;          /* main atom table entry */
-        } p;
+        class {                         /* pair for <?target data?> XML PI */
+            friend class Token;
+            JSAtom       *data;         /* auxiliary atom table entry */
+            PropertyName *target;       /* main atom table entry */
+        } xmlpi;
         jsdouble        dval;           /* floating point number */
     } u;
+
+    /* Mutators */
+
+    void setName(JSOp op, PropertyName *name) {
+        JS_ASSERT(op == JSOP_NAME);
+        u.s.op = op;
+        u.s.n.name = name;
+    }
+
+    void setAtom(JSOp op, JSAtom *atom) {
+        JS_ASSERT(op == JSOP_STRING || op == JSOP_XMLCOMMENT || JSOP_XMLCDATA);
+        u.s.op = op;
+        u.s.n.atom = atom;
+    }
+
+    void setProcessingInstruction(PropertyName *target, JSAtom *data) {
+        u.xmlpi.target = target;
+        u.xmlpi.data = data;
+    }
+
+    /* Type-safe accessors */
+
+    PropertyName *name() const {
+        JS_ASSERT(type == TOK_NAME);
+        return u.s.n.name->asPropertyName(); /* poor-man's type verification */
+    }
+
+    JSAtom *atom() const {
+        JS_ASSERT(type == TOK_STRING ||
+                  type == TOK_XMLNAME ||
+                  type == TOK_XMLATTR ||
+                  type == TOK_XMLTEXT ||
+                  type == TOK_XMLCDATA ||
+                  type == TOK_XMLSPACE ||
+                  type == TOK_XMLCOMMENT);
+        return u.s.n.atom;
+    }
+
+    PropertyName *xmlPITarget() const {
+        JS_ASSERT(type == TOK_XMLPI);
+        return u.xmlpi.target;
+    }
+    JSAtom *xmlPIData() const {
+        JS_ASSERT(type == TOK_XMLPI);
+        return u.xmlpi.data;
+    }
 };
+
+#define t_op            u.s.op
+#define t_reflags       u.reflags
+#define t_dval          u.dval
 
 enum TokenStreamFlags
 {
@@ -289,12 +345,6 @@ enum TokenStreamFlags
      */
     TSF_IN_HTML_COMMENT = 0x2000
 };
-
-#define t_op            u.s.op
-#define t_reflags       u.reflags
-#define t_atom          u.s.atom
-#define t_atom2         u.p.atom2
-#define t_dval          u.dval
 
 class TokenStream
 {
