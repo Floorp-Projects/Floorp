@@ -38,7 +38,6 @@
 
 DOMCI_CLASS(Window)
 DOMCI_CLASS(Location)
-DOMCI_CLASS(CaretPosition)
 DOMCI_CLASS(Navigator)
 DOMCI_CLASS(Plugin)
 DOMCI_CLASS(PluginArray)
