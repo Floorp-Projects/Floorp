@@ -4683,9 +4683,9 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
 }
 
 /*
- * XML objects are native. Thus xml_lookupProperty must return a valid
+ * XML objects are native. Thus xml_lookupGeneric must return a valid
  * Shape pointer parameter via *propp to signify "property found". Since the
- * only call to xml_lookupProperty is via JSObject::lookupProperty, and then
+ * only call to xml_lookupGeneric is via JSObject::lookupGeneric, and then
  * only from js_FindProperty (in jsobj.c, called from jsinterp.c) or from
  * JSOP_IN case in the interpreter, the only time we add a Shape here is when
  * an unqualified name is being accessed or when "name in xml" is called.
@@ -4696,7 +4696,7 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
  * NB: xml_deleteProperty must take care to remove any property added here.
  *
  * FIXME This clashes with the function namespace implementation which also
- * uses native properties. Effectively after xml_lookupProperty any property
+ * uses native properties. Effectively after xml_lookupGeneric any property
  * stored previously using assignments to xml.function::name will be removed.
  * We partially workaround the problem in GetXMLFunction. There we take
  * advantage of the fact that typically function:: is used to access the
@@ -4706,8 +4706,7 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
  * For a proper solution see bug 355257.
 */
 static JSBool
-xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
-                   JSProperty **propp)
+xml_lookupGeneric(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, JSProperty **propp)
 {
     JSBool found;
     JSXML *xml;
@@ -4744,6 +4743,13 @@ xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 }
 
 static JSBool
+xml_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name, JSObject **objp,
+                   JSProperty **propp)
+{
+    return xml_lookupGeneric(cx, obj, ATOM_TO_JSID(name), objp, propp);
+}
+
+static JSBool
 xml_lookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
                   JSProperty **propp)
 {
@@ -4773,7 +4779,7 @@ xml_lookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
 static JSBool
 xml_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp, JSProperty **propp)
 {
-    return xml_lookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
+    return xml_lookupGeneric(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 static JSBool
@@ -4955,7 +4961,7 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool st
 
     /*
      * If this object has its own (mutable) scope,  then we may have added a
-     * property to the scope in xml_lookupProperty for it to return to mean
+     * property to the scope in xml_lookupGeneric for it to return to mean
      * "found" and to provide a handle for access operations to call the
      * property's getter or setter. But now it's time to remove any such
      * property, to purge the property cache and remove the scope entry.
@@ -4982,7 +4988,7 @@ xml_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBoo
 
     /*
      * If this object has its own (mutable) scope,  then we may have added a
-     * property to the scope in xml_lookupProperty for it to return to mean
+     * property to the scope in xml_lookupGeneric for it to return to mean
      * "found" and to provide a handle for access operations to call the
      * property's getter or setter. But now it's time to remove any such
      * property, to purge the property cache and remove the scope entry.
@@ -5298,7 +5304,7 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
     xml_trace,
     JS_NULL_CLASS_EXT,
     {
-        xml_lookupProperty,
+        xml_lookupGeneric,
         xml_lookupProperty,
         xml_lookupElement,
         xml_lookupSpecial,
@@ -7668,7 +7674,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
                 return JS_TRUE;
             }
         } else if (!JSID_IS_VOID(funid)) {
-            if (!target->lookupProperty(cx, funid, &pobj, &prop))
+            if (!target->lookupGeneric(cx, funid, &pobj, &prop))
                 return JS_FALSE;
             if (prop) {
                 *idp = funid;
@@ -7693,7 +7699,7 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     JS_ASSERT(obj->isXML());
 
     /*
-     * See comments before xml_lookupProperty about the need for the proto
+     * See comments before xml_lookupGeneric about the need for the proto
      * chain lookup.
      */
     JSObject *target = obj;

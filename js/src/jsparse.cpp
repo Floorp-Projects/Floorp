@@ -1392,20 +1392,20 @@ CheckStrictAssignment(JSContext *cx, JSTreeContext *tc, JSParseNode *lhs)
  * tc's token stream if pn is NULL.
  */
 bool
-CheckStrictBinding(JSContext *cx, JSTreeContext *tc, JSAtom *atom, JSParseNode *pn)
+CheckStrictBinding(JSContext *cx, JSTreeContext *tc, PropertyName *name, JSParseNode *pn)
 {
     if (!tc->needStrictChecks())
         return true;
 
     JSAtomState *atomState = &cx->runtime->atomState;
-    if (atom == atomState->evalAtom ||
-        atom == atomState->argumentsAtom ||
-        FindKeyword(atom->charsZ(), atom->length()))
+    if (name == atomState->evalAtom ||
+        name == atomState->argumentsAtom ||
+        FindKeyword(name->charsZ(), name->length()))
     {
-        JSAutoByteString name;
-        if (!js_AtomToPrintableString(cx, atom, &name))
+        JSAutoByteString bytes;
+        if (!js_AtomToPrintableString(cx, name, &bytes))
             return false;
-        return ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_BAD_BINDING, name.ptr());
+        return ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_BAD_BINDING, bytes.ptr());
     }
 
     return true;
@@ -2607,7 +2607,7 @@ EnterFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
 }
 
 static bool
-LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
+LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, PropertyName *funName = NULL,
               FunctionSyntaxKind kind = Expression)
 {
     JSTreeContext *tc = funtc->parent;
@@ -2635,7 +2635,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
             JSDefinition *dn = r.front().value();
             JS_ASSERT(dn->isPlaceholder());
 
-            if (atom == funAtom && kind == Expression) {
+            if (atom == funName && kind == Expression) {
                 dn->setOp(JSOP_CALLEE);
                 dn->pn_cookie.set(funtc->staticLevel, UpvarCookie::CALLEE_SLOT);
                 dn->pn_dflags |= PND_BOUND;
@@ -2760,7 +2760,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
             fn->pn_body->setKind(TOK_UPVARS);
             fn->pn_body->pn_pos = body->pn_pos;
             if (foundCallee)
-                funtc->lexdeps->remove(funAtom);
+                funtc->lexdeps->remove(funName);
             /* Transfer ownership of the lexdep map to the parse node. */
             fn->pn_body->pn_names = funtc->lexdeps;
             funtc->lexdeps.clearMap();
@@ -2796,7 +2796,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
 }
 
 static bool
-DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom);
+DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, PropertyName *name);
 
 /*
  * FIXME? this Parser method was factored from Parser::functionDef with minimal
@@ -2943,9 +2943,9 @@ Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSParseNo
 }
 
 JSParseNode *
-Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
+Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind kind)
 {
-    JS_ASSERT_IF(kind == Statement, funAtom);
+    JS_ASSERT_IF(kind == Statement, funName);
 
     /* Make a TOK_FUNCTION node. */
     tokenStream.mungeCurrentToken(TOK_FUNCTION, JSOP_NOP);
@@ -2972,7 +2972,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
      * avoid optimizing variable references that might name a function.
      */
     if (kind == Statement) {
-        if (JSDefinition *dn = tc->decls.lookupFirst(funAtom)) {
+        if (JSDefinition *dn = tc->decls.lookupFirst(funName)) {
             JSDefinition::Kind dn_kind = dn->kind();
 
             JS_ASSERT(!dn->isUsed());
@@ -2980,7 +2980,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
 
             if (context->hasStrictOption() || dn_kind == JSDefinition::CONST) {
                 JSAutoByteString name;
-                if (!js_AtomToPrintableString(context, funAtom, &name) ||
+                if (!js_AtomToPrintableString(context, funName, &name) ||
                     !reportErrorNumber(NULL,
                                        (dn_kind != JSDefinition::CONST)
                                        ? JSREPORT_WARNING | JSREPORT_STRICT
@@ -2993,11 +2993,11 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
             }
 
             if (bodyLevel) {
-                tc->decls.updateFirst(funAtom, (JSDefinition *) pn);
+                tc->decls.updateFirst(funName, (JSDefinition *) pn);
                 pn->setDefn(true);
                 pn->dn_uses = dn; /* dn->dn_uses is now pn_link */
 
-                if (!MakeDefIntoUse(dn, pn, funAtom, tc))
+                if (!MakeDefIntoUse(dn, pn, funName, tc))
                     return NULL;
             }
         } else if (bodyLevel) {
@@ -3007,7 +3007,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
              * put in tc->lexdeps on first forward reference, and recycle pn.
              */
 
-            if (JSDefinition *fn = tc->lexdeps.lookupDefn(funAtom)) {
+            if (JSDefinition *fn = tc->lexdeps.lookupDefn(funName)) {
                 JS_ASSERT(fn->isDefn());
                 fn->setKind(TOK_FUNCTION);
                 fn->setArity(PN_FUNC);
@@ -3022,12 +3022,12 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
                 fn->pn_body = NULL;
                 fn->pn_cookie.makeFree();
 
-                tc->lexdeps->remove(funAtom);
+                tc->lexdeps->remove(funName);
                 RecycleTree(pn, tc);
                 pn = fn;
             }
 
-            if (!Define(pn, funAtom, tc))
+            if (!Define(pn, funName, tc))
                 return NULL;
         }
 
@@ -3048,11 +3048,11 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
              * already exists.
              */
             uintN index;
-            switch (tc->bindings.lookup(context, funAtom, &index)) {
+            switch (tc->bindings.lookup(context, funName, &index)) {
               case NONE:
               case ARGUMENT:
                 index = tc->bindings.countVars();
-                if (!tc->bindings.addVariable(context, funAtom))
+                if (!tc->bindings.addVariable(context, funName))
                     return NULL;
                 /* FALL THROUGH */
 
@@ -3073,7 +3073,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
     if (!funtc.init(context))
         return NULL;
 
-    JSFunctionBox *funbox = EnterFunction(pn, &funtc, funAtom, kind);
+    JSFunctionBox *funbox = EnterFunction(pn, &funtc, funName, kind);
     if (!funbox)
         return NULL;
 
@@ -3134,7 +3134,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
     if (!body)
         return NULL;
 
-    if (funAtom && !CheckStrictBinding(context, &funtc, funAtom, pn))
+    if (funName && !CheckStrictBinding(context, &funtc, funName, pn))
         return NULL;
 
     if (!CheckStrictParameters(context, &funtc))
@@ -3253,13 +3253,13 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
 
     if (!outertc->inFunction() && bodyLevel && kind == Statement && outertc->compiling()) {
         JS_ASSERT(pn->pn_cookie.isFree());
-        if (!DefineGlobal(pn, outertc->asCodeGenerator(), funAtom))
+        if (!DefineGlobal(pn, outertc->asCodeGenerator(), funName))
             return NULL;
     }
 
     pn->pn_blockid = outertc->blockid();
 
-    if (!LeaveFunction(pn, &funtc, funAtom, kind))
+    if (!LeaveFunction(pn, &funtc, funName, kind))
         return NULL;
 
     /* If the surrounding function is not strict code, reset the lexer. */
@@ -3272,9 +3272,9 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
 JSParseNode *
 Parser::functionStmt()
 {
-    JSAtom *name = NULL;
+    PropertyName *name = NULL;
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME) {
-        name = tokenStream.currentToken().t_atom;
+        name = tokenStream.currentToken().t_atom->asPropertyName();
     } else {
         /* Unnamed function expressions are forbidden in statement context. */
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_UNNAMED_FUNCTION_STMT);
@@ -3293,9 +3293,9 @@ Parser::functionStmt()
 JSParseNode *
 Parser::functionExpr()
 {
-    JSAtom *name = NULL;
+    PropertyName *name = NULL;
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME)
-        name = tokenStream.currentToken().t_atom;
+        name = tokenStream.currentToken().t_atom->asPropertyName();
     else
         tokenStream.ungetToken();
     return functionDef(name, Normal, Expression);
@@ -3512,7 +3512,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     JS_ASSERT(!tc->atBodyLevel());
 
     pn = data->pn;
-    if (!CheckStrictBinding(cx, tc, atom, pn))
+    if (!CheckStrictBinding(cx, tc, atom->asPropertyName(), pn))
         return false;
 
     blockObj = tc->blockChain();
@@ -3622,7 +3622,7 @@ OuterLet(JSTreeContext *tc, JSStmtInfo *stmt, JSAtom *atom)
  * stack frame slots.
  */
 static bool
-DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
+DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, PropertyName *name)
 {
     GlobalScope *globalScope = cg->compiler()->globalScope;
     JSObject *globalObj = globalScope->globalObj;
@@ -3630,13 +3630,13 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
     if (!cg->compileAndGo() || !globalObj || cg->compilingForEval())
         return true;
 
-    AtomIndexAddPtr p = globalScope->names.lookupForAdd(atom);
+    AtomIndexAddPtr p = globalScope->names.lookupForAdd(name);
     if (!p) {
         JSContext *cx = cg->parser->context;
 
         JSObject *holder;
         JSProperty *prop;
-        if (!globalObj->lookupProperty(cx, ATOM_TO_JSID(atom), &holder, &prop))
+        if (!globalObj->lookupProperty(cx, name, &holder, &prop))
             return false;
 
         JSFunctionBox *funbox = pn->isKind(TOK_FUNCTION) ? pn->pn_funbox : NULL;
@@ -3661,14 +3661,14 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
             
             def = GlobalScope::GlobalDef(shape->slot);
         } else {
-            def = GlobalScope::GlobalDef(atom, funbox);
+            def = GlobalScope::GlobalDef(name, funbox);
         }
 
         if (!globalScope->defs.append(def))
             return false;
 
         jsatomid index = globalScope->names.count();
-        if (!globalScope->names.add(p, atom, index))
+        if (!globalScope->names.add(p, name, index))
             return false;
 
         JS_ASSERT(index == globalScope->defs.length() - 1);
@@ -3748,7 +3748,7 @@ BindTopLevelVar(JSContext *cx, BindData *data, JSParseNode *pn, JSTreeContext *t
      * is present, try to bake in either an already available slot or a
      * predicted slot that will be defined after compiling is completed.
      */
-    return DefineGlobal(pn, tc->asCodeGenerator(), pn->pn_atom);
+    return DefineGlobal(pn, tc->asCodeGenerator(), pn->pn_atom->asPropertyName());
 }
 
 static bool
@@ -3806,7 +3806,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     /* Default best op for pn is JSOP_NAME; we'll try to improve below. */
     pn->setOp(JSOP_NAME);
 
-    if (!CheckStrictBinding(cx, tc, atom, pn))
+    if (!CheckStrictBinding(cx, tc, atom->asPropertyName(), pn))
         return false;
 
     JSStmtInfo *stmt = js_LexicalLookup(tc, atom, NULL);
