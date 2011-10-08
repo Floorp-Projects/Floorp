@@ -1535,6 +1535,9 @@ PKIX_PL_Cert_VerifySignature(
  *  If the Certificate is not intrinsically trustworthy, it still might end up a
  *  component in a successful chain.
  *
+ *  If the Certificate is intrinsically untrustworthy, this function will return
+ *  an error. 
+ *
  * PARAMETERS
  *  "cert"
  *      Address of Cert whose trustworthiness is to be determined. Must be
@@ -1556,6 +1559,43 @@ PKIX_Error *
 PKIX_PL_Cert_IsCertTrusted(
         PKIX_PL_Cert *cert,
         PKIX_Boolean trustOnlyUserAnchors,
+        PKIX_Boolean *pTrusted,
+        void *plContext);
+
+/*
+ * FUNCTION: PKIX_PL_Cert_IsLeafCertTrusted
+ * DESCRIPTION:
+ *
+ *  Checks the Leaf Cert specified by "cert" to determine, in a manner that 
+ *  depends on the underlying platform, whether it is trusted, and stores the 
+ *  result in "pTrusted". If a certificate is trusted it means that this
+ *  End Entify certificate has been marked as trusted for the requested usage,
+ *  policy, validity, and other tests.
+ *
+ *  If the Certificate is not intrinsically trustworthy, we can still try to 
+ *  build a successful chain.
+ *
+ *  If the Certificate is intrinsically untrustworthy, this function will return
+ *  an error. 
+ *
+ * PARAMETERS
+ *  "cert"
+ *      Address of Cert whose trustworthiness is to be determined. Must be
+ *      non-NULL.
+ *  "pTrusted"
+ *      Address where the Boolean value will be stored. Must be non-NULL.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a CERT Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_PL_Cert_IsLeafCertTrusted(
+        PKIX_PL_Cert *cert,
         PKIX_Boolean *pTrusted,
         void *plContext);
 

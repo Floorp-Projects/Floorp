@@ -69,8 +69,10 @@
 #ifdef MOZ_PLATFORM_MAEMO
         sizemode="fullscreen"
 #else
+#ifndef ANDROID
         width="480"
         height="800"
+#endif
 #endif
         onkeypress="onDebugKeyPress(event);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
