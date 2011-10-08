@@ -1251,11 +1251,11 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     /* Tell the debugger about this compiled script. */
     js_CallNewScriptHook(cx, script, fun);
     if (!cg->parent) {
-        Debugger::onNewScript(cx, script,
-                              fun ? fun : (script->u.object ? script->u.object : cg->scopeChain()),
-                              (fun || script->u.object)
-                              ? Debugger::NewHeldScript
-                              : Debugger::NewNonHeldScript);
+        JSObject *owner = fun ? fun : script->u.object;
+        GlobalObject *compileAndGoGlobal = NULL;
+        if (script->compileAndGo)
+            compileAndGoGlobal = (owner ? owner : cg->scopeChain())->getGlobal();
+        Debugger::onNewScript(cx, script, owner, compileAndGoGlobal);
     }
 
     return script;
@@ -1330,7 +1330,6 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
     if (JSDestroyScriptHook hook = cx->debugHooks->destroyScriptHook)
         hook(cx, script, cx->debugHooks->destroyScriptHookData);
     script->callDestroyHook = false;
-    Debugger::onDestroyScript(script);
     JS_ClearScriptTraps(cx, script);
 }
 

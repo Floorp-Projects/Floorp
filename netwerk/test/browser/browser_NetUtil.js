@@ -24,6 +24,9 @@ var tests = [
 
 var gCertErrorDialogShown = 0;
 
+// We used to show a dialog box by default when we encountered an SSL
+// certificate error. Now we treat these errors just like other
+// networking errors; the dialog is no longer shown.
 function test_asyncFetchBadCert() {
   let listener = new WindowListener("chrome://pippki/content/certerror.xul", function (domwindow) {
     gCertErrorDialogShown++;
@@ -39,7 +42,7 @@ function test_asyncFetchBadCert() {
     ok(!Components.isSuccessCode(aStatusCode), "request failed");
     ok(aRequest instanceof Ci.nsIHttpChannel, "request is an nsIHttpChannel");
 
-    is(gCertErrorDialogShown, 0, "cert error was suppressed");
+    is(gCertErrorDialogShown, 0, "cert error dialog was not shown");
 
     // Now try again with a channel whose notificationCallbacks doesn't suprress errors
     let channel = NetUtil.newChannel("https://untrusted.example.com");
@@ -54,7 +57,7 @@ function test_asyncFetchBadCert() {
       ok(!Components.isSuccessCode(aStatusCode), "request failed");
       ok(aRequest instanceof Ci.nsIHttpChannel, "request is an nsIHttpChannel");
 
-      is(gCertErrorDialogShown, 1, "cert error was not suppressed");
+      is(gCertErrorDialogShown, 0, "cert error dialog was not shown");
 
       // Now try a valid request
       NetUtil.asyncFetch("https://example.com", function (aInputStream, aStatusCode, aRequest) {
@@ -62,7 +65,7 @@ function test_asyncFetchBadCert() {
         ok(aRequest instanceof Ci.nsIHttpChannel, "request is an nsIHttpChannel");
         ok(aRequest.requestSucceeded, "HTTP request succeeded");
   
-        is(gCertErrorDialogShown, 1, "cert error was not shown");
+        is(gCertErrorDialogShown, 0, "cert error dialog was not shown");
 
         Services.wm.removeListener(listener);
         nextTest();

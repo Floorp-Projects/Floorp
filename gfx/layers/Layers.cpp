@@ -48,6 +48,7 @@
 #include "gfxUtils.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Util.h"
+#include "LayerSorter.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -416,10 +417,34 @@ ContainerLayer::HasMultipleChildren()
 }
 
 void
+ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
+{
+  nsAutoTArray<Layer*, 10> toSort;
+
+  for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
+    ContainerLayer* container = l->AsContainerLayer();
+    if (container && container->GetContentFlags() & CONTENT_PRESERVE_3D) {
+      toSort.AppendElement(l);
+    } else {
+      if (toSort.Length() > 0) {
+        SortLayersBy3DZOrder(toSort);
+        aArray.MoveElementsFrom(toSort);
+      }
+      aArray.AppendElement(l);
+    }
+  }
+  if (toSort.Length() > 0) {
+    SortLayersBy3DZOrder(toSort);
+    aArray.MoveElementsFrom(toSort);
+  }
+}
+
+void
 ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
 {
   gfxMatrix residual;
   gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
+  idealTransform.ProjectTo2D();
   mEffectiveTransform = SnapTransform(idealTransform, gfxRect(0, 0, 0, 0), &residual);
 
   bool useIntermediateSurface;
@@ -429,9 +454,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
   } else {
     useIntermediateSurface = PR_FALSE;
     gfxMatrix contTransform;
-    if (!mEffectiveTransform.Is2D(&contTransform)) {
-     useIntermediateSurface = PR_TRUE;   
-    } else if (
+    if (!mEffectiveTransform.Is2D(&contTransform) ||
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
         !contTransform.PreservesAxisAlignedRectangles()) {
 #else

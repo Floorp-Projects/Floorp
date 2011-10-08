@@ -46,7 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS	= \
 	lib \
 	src \
-	test \
+	test/unit \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

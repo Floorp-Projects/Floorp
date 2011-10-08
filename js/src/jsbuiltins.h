@@ -637,7 +637,7 @@ JS_DECLARE_CALLINFO(js_Object_tn)
 JS_DECLARE_CALLINFO(js_CreateThisFromTrace)
 JS_DECLARE_CALLINFO(js_InitializerObject)
 
-/* Defined in jsregexp.cpp. */
+/* Defined in vm/RegExpObject.cpp. */
 JS_DECLARE_CALLINFO(js_CloneRegExpObject)
 
 /* Defined in jsstr.cpp. */

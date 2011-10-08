@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.53 2011/01/15 19:54:49 nelson%bolyard.com Exp $ */
+/* $Id: loader.c,v 1.54 2011/10/04 22:05:53 wtc%google.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1756,15 +1756,6 @@ JPAKE_Final(PLArenaPool * arena, const SECItem * p, const SECItem  *q,
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
         return SECFailure;
     return (vector->p_JPAKE_Final)(arena, p, q, x2, gx4, x2s, B, K);
-}
-
-SECStatus
-MGF1(HASH_HashType hashAlg, unsigned char *mask, unsigned int maskLen,
-     const unsigned char *mgfSeed, unsigned int mgfSeedLen)
-{
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-	return SECFailure;
-    return (vector->p_MGF1)(hashAlg, mask, maskLen, mgfSeed, mgfSeedLen);
 }
 
 SECStatus 

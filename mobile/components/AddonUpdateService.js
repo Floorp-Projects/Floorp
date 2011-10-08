@@ -186,19 +186,37 @@ var RecommendedSearchResults = {
   },
   
   searchSucceeded: function(aAddons, aAddonCount, aTotalResults) {
-    let json = {
-      addons: aAddons,
-      addonCount: aAddonCount,
-      totalResults: aTotalResults
-    };
+    let self = this;
 
-    // Avoid any NSS costs. Convert https to http.
-    json.addons.forEach(function(aAddon){
-      aAddon.iconURL = aAddon.iconURL.replace(/^https/, "http");
+    // Filter addons already installed
+    AddonManager.getAllAddons(function(aAllAddons) {
+      let addons = aAddons.filter(function(addon) {
+        for (let i = 0; i < aAllAddons.length; i++)
+          if (addon.id == aAllAddons[i].id)
+            return false;
+
+        return true;
+      });
+
+      let json = {
+        addons: []
+      };
+
+      // Avoid any NSS costs. Convert https to http.
+      addons.forEach(function(aAddon){
+        json.addons.push({
+          id: aAddon.id,
+          name: aAddon.name,
+          version: aAddon.version,
+          description: aAddon.description,
+          averageRating: aAddon.averageRating,
+          iconURL: aAddon.iconURL.replace(/^https/, "http")
+        })
+      });
+
+      let file = self._getFile();
+      self._writeFile(file, JSON.stringify(json));
     });
-
-    let file = this._getFile();
-    this._writeFile(file, JSON.stringify(json));
   },
   
   searchFailed: function searchFailed() { },

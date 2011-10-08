@@ -140,7 +140,6 @@ CPPSRCS		= \
 		jspropertycache.cpp \
 		jspropertytree.cpp \
 		jsreflect.cpp \
-		jsregexp.cpp \
 		jsscan.cpp \
 		jsscope.cpp \
 		jsscript.cpp \
@@ -161,6 +160,9 @@ CPPSRCS		= \
 		String.cpp \
 		ParseMaps.cpp \
 		LifoAlloc.cpp \
+		RegExpObject.cpp \
+		RegExpStatics.cpp \
+		RegExp.cpp \
 		Unicode.cpp \
 		$(NULL)
 
@@ -229,9 +231,10 @@ INSTALLED_HEADERS = \
 # BEGIN include sources for the engine subdirectories
 #
 VPATH		+= \
-		$(srcdir)/vm \
-		$(srcdir)/frontend \
+		$(srcdir)/builtin \
 		$(srcdir)/ds \
+		$(srcdir)/frontend \
+		$(srcdir)/vm \
 		$(NULL)
 
 EXPORTS_NAMESPACES = vm ds

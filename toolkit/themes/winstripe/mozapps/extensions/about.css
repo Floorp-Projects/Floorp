@@ -45,6 +45,10 @@
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
 }
 
+#genericAbout[addontype="dictionary"] #extensionIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
+}
+
 #extensionName {
   font-size: 200%;
   font-weight: bolder;

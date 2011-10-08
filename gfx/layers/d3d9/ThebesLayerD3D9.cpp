@@ -619,25 +619,17 @@ ShadowThebesLayerD3D9::~ShadowThebesLayerD3D9()
 {}
 
 void
-ShadowThebesLayerD3D9::SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
-                                     const nsIntRegion& aValidRegion)
+ShadowThebesLayerD3D9::Swap(const ThebesBuffer& aNewFront,
+                           const nsIntRegion& aUpdatedRegion,
+                           OptionalThebesBuffer* aNewBack,
+                           nsIntRegion* aNewBackValidRegion,
+                           OptionalThebesBuffer* aReadOnlyFront,
+                           nsIntRegion* aFrontUpdatedRegion)
 {
   if (!mBuffer) {
     mBuffer = new ShadowBufferD3D9(this);
   }
 
-  NS_ASSERTION(OptionalThebesBuffer::Tnull_t == aNewFront.type(),
-               "Only one system-memory buffer expected");
-}
-
-void
-ShadowThebesLayerD3D9::Swap(const ThebesBuffer& aNewFront,
-                           const nsIntRegion& aUpdatedRegion,
-                           ThebesBuffer* aNewBack,
-                           nsIntRegion* aNewBackValidRegion,
-                           OptionalThebesBuffer* aReadOnlyFront,
-                           nsIntRegion* aFrontUpdatedRegion)
-{
   if (mBuffer) {
     nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront.buffer());
     mBuffer->Upload(surf, GetVisibleRegion().GetBounds());

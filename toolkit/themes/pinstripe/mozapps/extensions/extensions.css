@@ -286,6 +286,9 @@
 #category-plugin > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-plugins.png");
 }
+#category-dictionary > .category-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/category-dictionaries.png");
+}
 #category-availableUpdates > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-available.png");
 }
@@ -497,6 +500,10 @@
 
 .addon-view[type="plugin"] .icon {
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
+}
+
+.addon-view[type="dictionary"] .icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
 }
 
 .name-container {
