@@ -833,10 +833,9 @@ int main(int argc, char **argv)
 	return 1;
     }
 
-    /* disable ssl2 and ssl2-compatible client hellos. */
     rv = SSL_OptionSet(s, SSL_V2_COMPATIBLE_HELLO, !disableSSL2);
     if (rv != SECSuccess) {
-	SECU_PrintError(progName, "error disabling v2 compatibility");
+	SECU_PrintError(progName, "error enabling SSLv2 compatible hellos ");
 	return 1;
     }
 

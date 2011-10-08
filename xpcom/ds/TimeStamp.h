@@ -186,6 +186,12 @@ private:
  *     platform
  *   - PRIntervalTime otherwise.  We detect wraparounds of
  *     PRIntervalTime and work around them.
+ *
+ * This class is similar to C++11's time_point, however it is
+ * explicitly nullable and provides an IsNull() method. time_point
+ * is initialized to the clock's epoch and provides a
+ * time_since_epoch() method that functions similiarly. i.e.
+ * t.IsNull() is equivalent to t.time_since_epoch() == decltype(t)::duration::zero();
  */
 class TimeStamp
 {

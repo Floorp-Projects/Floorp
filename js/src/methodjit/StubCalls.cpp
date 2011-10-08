@@ -69,6 +69,7 @@
 #include "jsfuninlines.h"
 #include "jstypedarray.h"
 
+#include "vm/RegExpObject-inl.h"
 #include "vm/String-inl.h"
 
 #ifdef XP_WIN

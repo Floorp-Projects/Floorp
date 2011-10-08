@@ -350,7 +350,7 @@ pk11_SignedToUnsigned(CK_ATTRIBUTE *attrib) {
     char *ptr = (char *)attrib->pValue;
     unsigned long len = attrib->ulValueLen;
 
-    while (len && (*ptr == 0)) {
+    while ((len > 1) && (*ptr == 0)) {
 	len--;
 	ptr++;
     }

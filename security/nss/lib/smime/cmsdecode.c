@@ -37,7 +37,7 @@
 /*
  * CMS decoding.
  *
- * $Id: cmsdecode.c,v 1.13 2011/03/15 17:45:21 emaldona%redhat.com Exp $
+ * $Id: cmsdecode.c,v 1.14 2011/09/30 22:10:13 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -60,6 +60,8 @@ struct NSSCMSDecoderContextStr {
     int				error;
     NSSCMSContentCallback	cb;
     void *			cb_arg;
+    PRBool			first_decoded;
+    PRBool			need_indefinite_finish;
 };
 
 struct NSSCMSDecoderDataStr {
@@ -316,6 +318,11 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
     */
     childp7dcx->cb = p7dcx->cb;
     childp7dcx->cb_arg = p7dcx->cb_arg;
+    childp7dcx->first_decoded = PR_FALSE;
+    childp7dcx->need_indefinite_finish = PR_FALSE;
+    if (childtype == SEC_OID_PKCS7_SIGNED_DATA) {
+	childp7dcx->first_decoded = PR_TRUE;
+    }
 
     /* now set up the parent to hand decoded data to the next level decoder */
     p7dcx->cb = (NSSCMSContentCallback)NSS_CMSDecoder_Update;
@@ -348,6 +355,13 @@ nss_cms_after_data(NSSCMSDecoderContext *p7dcx)
     if (p7dcx->childp7dcx != NULL) {
 	childp7dcx = p7dcx->childp7dcx;
 	if (childp7dcx->dcx != NULL) {
+	    /* we started and indefinite sequence somewhere, not complete it */
+	    if (childp7dcx->need_indefinite_finish) {
+		static const char lbuf[2] = { 0, 0 };
+		NSS_CMSDecoder_Update(childp7dcx, lbuf, sizeof(lbuf));
+		childp7dcx->need_indefinite_finish = PR_FALSE;
+	    }
+
 	    if (SEC_ASN1DecoderFinish(childp7dcx->dcx) != SECSuccess) {
 		/* do what? free content? */
 		rv = SECFailure;
@@ -647,7 +661,8 @@ NSS_CMSDecoder_Start(PRArenaPool *poolp,
 
     p7dcx->cb = cb;
     p7dcx->cb_arg = cb_arg;
-
+    p7dcx->first_decoded = PR_FALSE;
+    p7dcx->need_indefinite_finish = PR_FALSE;
     return p7dcx;
 }
 
@@ -658,16 +673,37 @@ SECStatus
 NSS_CMSDecoder_Update(NSSCMSDecoderContext *p7dcx, const char *buf, 
                       unsigned long len)
 {
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     if (p7dcx->dcx != NULL && p7dcx->error == 0) {	
     	/* if error is set already, don't bother */
-	rv = SEC_ASN1DecoderUpdate(p7dcx->dcx, buf, len);
-	if (rv != SECSuccess) {
-	    p7dcx->error = PORT_GetError();
-	    PORT_Assert (p7dcx->error);
-	    if (p7dcx->error == 0)
-		p7dcx->error = -1;
+	if ((p7dcx->type == SEC_OID_PKCS7_SIGNED_DATA) 
+		&& (p7dcx->first_decoded==PR_TRUE)
+		&& (buf[0] == SEC_ASN1_INTEGER)) {
+	    /* Microsoft Windows 2008 left out the Sequence wrapping in some
+	     * of their kerberos replies. If we are here, we most likely are
+	     * dealing with one of those replies. Supply the Sequence wrap
+	     * as indefinite encoding (since we don't know the total length
+	     * yet) */
+	     static const char lbuf[2] = 
+		{ SEC_ASN1_SEQUENCE|SEC_ASN1_CONSTRUCTED, 0x80 };
+	     rv = SEC_ASN1DecoderUpdate(p7dcx->dcx, lbuf, sizeof(lbuf));
+	     if (rv != SECSuccess) {
+		goto loser;
+	    }
+	    /* ok, we're going to need the indefinite finish when we are done */
+	    p7dcx->need_indefinite_finish = PR_TRUE;
 	}
+	
+	rv = SEC_ASN1DecoderUpdate(p7dcx->dcx, buf, len);
+    }
+
+loser:
+    p7dcx->first_decoded = PR_FALSE;
+    if (rv != SECSuccess) {
+	p7dcx->error = PORT_GetError();
+	PORT_Assert (p7dcx->error);
+	if (p7dcx->error == 0)
+	    p7dcx->error = -1;
     }
 
     if (p7dcx->error == 0)

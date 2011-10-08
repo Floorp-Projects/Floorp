@@ -42,12 +42,13 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
+class nsIURI;
 class nsIUGenCategory;
 
 class nsHyphenator
 {
 public:
-  nsHyphenator(nsIFile *aFile);
+  nsHyphenator(nsIURI *aURI);
 
   NS_INLINE_DECL_REFCOUNTING(nsHyphenator)
 

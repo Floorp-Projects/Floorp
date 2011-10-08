@@ -849,7 +849,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(mResponseXML);
   if (mResponseCharset != document->GetDocumentCharacterSet()) {
-    mResponseCharset == document->GetDocumentCharacterSet();
+    mResponseCharset = document->GetDocumentCharacterSet();
     mResponseText.Truncate();
     mResponseBodyDecodedPos = 0;
 

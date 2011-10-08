@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef ENABLE_TESTS
 ifneq (mobile,$(MOZ_BUILD_APP))
-	DIRS += test
+DIRS += test/browser
 endif
 endif
 

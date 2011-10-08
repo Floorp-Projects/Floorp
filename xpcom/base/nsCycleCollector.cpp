@@ -125,6 +125,7 @@
 #endif
 #endif
 
+#include "base/process_util.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectorUtils.h"
 #include "nsIProgrammingLanguage.h"
@@ -1372,7 +1373,7 @@ public:
     NS_IMETHOD Begin()
     {
         char name[255];
-        sprintf(name, "cc-edges-%d.log", ++gLogCounter);
+        sprintf(name, "cc-edges-%d.%d.log", ++gLogCounter, base::GetCurrentProcId());
         mStream = fopen(name, "w");
 
         return mStream ? NS_OK : NS_ERROR_FAILURE;

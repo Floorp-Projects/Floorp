@@ -529,7 +529,6 @@ class Mochitest(object):
     self.automation.initializeProfile(options.profilePath, options.extraPrefs, useServerLocations = True)
     manifest = self.addChromeToProfile(options)
     self.copyExtraFilesToProfile(options)
-
     self.installSpecialPowersExtension(options)
     self.installExtensionsToProfile(options)
     return manifest

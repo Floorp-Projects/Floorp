@@ -28,9 +28,19 @@ var AwesomeScreen = {
     ]
   },
 
+  _popupShowing: false,
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
+      case "PopupChanged" :
+        this._popupShowing = (aEvent.detail != null);
+        break;
       case "TapDown" :
+        // If a popup has been shown on top of the active
+        // awesome panel (e.g. context menu), the panel should
+        // not be dismissed on TapDown.
+        if (this._popupShowing)
+          break;
+
         let target = aEvent.target;
         while (target && this._targets.indexOf(target) == -1)
           target = target.parentNode;
@@ -51,6 +61,7 @@ var AwesomeScreen = {
       BrowserUI._editURI();
       this.container.hidden = this.headers.hidden = false;
       window.addEventListener("TapDown", this, false);
+      window.addEventListener("PopupChanged", this, false);
     }
 
     if (aPanel) {
@@ -67,6 +78,7 @@ var AwesomeScreen = {
       BrowserUI._edit.detachController();
       BrowserUI.popDialog();
       window.removeEventListener("TapDown", this, false);
+      window.removeEventListener("PopupChanged", this, false);
     }
 
     if (this._activePanel)

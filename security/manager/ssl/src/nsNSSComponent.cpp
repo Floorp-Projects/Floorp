@@ -1694,15 +1694,6 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
       }
     }
 
-    {
-      nsCOMPtr<nsICertOverrideService> icos =
-        do_GetService("@mozilla.org/security/certoverride;1", &rv);
-      if (NS_FAILED(rv)) {
-        nsPSMInitPanic::SetPanic();
-        return rv;
-      }
-    }
-
     hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare,
       certHashtable_valueCompare, 0, 0 );
 

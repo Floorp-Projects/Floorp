@@ -34,6 +34,7 @@ EXPORTS	= \
 	gfxPoint.h \
 	gfxPoint3D.h \
 	gfxPointH3D.h \
+	gfxQuad.h \
 	gfxQuaternion.h \
 	gfxRect.h \
 	gfxSkipChars.h \

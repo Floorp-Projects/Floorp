@@ -169,11 +169,14 @@ const char *linker_get_error(void)
  * This function is an empty stub where GDB locates a breakpoint to get notified
  * about linker activity.
  */
-extern void __attribute__((noinline)) rtld_db_dlactivity(void);
+static struct r_debug *_r_debug = NULL;
+static struct link_map *r_debug_insert = NULL;
 
-static struct r_debug _r_debug = {1, NULL, &rtld_db_dlactivity,
-                                  RT_CONSISTENT, 0};
-static struct link_map *r_debug_tail = 0;
+static inline void rtld_db_dlactivity(void)
+{
+    if (_r_debug)
+        _r_debug->r_brk();
+}
 
 static pthread_mutex_t _r_debug_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -188,36 +191,32 @@ static void insert_soinfo_into_debug_map(soinfo * info)
     map->l_name = (char*) info->name;
     map->l_ld = (uintptr_t)info->dynamic;
 
-    /* Stick the new library at the end of the list.
-     * gdb tends to care more about libc than it does
-     * about leaf libraries, and ordering it this way
-     * reduces the back-and-forth over the wire.
+    /* Stick the new library before libmozutils.so
      */
-    if (r_debug_tail) {
-        r_debug_tail->l_next = map;
-        map->l_prev = r_debug_tail;
-        map->l_next = 0;
-    } else {
-        _r_debug.r_map = map;
-        map->l_prev = 0;
-        map->l_next = 0;
-    }
-    r_debug_tail = map;
+    if (!_r_debug)
+        return;
+    map->l_next = r_debug_insert;
+    map->l_prev = r_debug_insert->l_prev;
+    r_debug_insert->l_prev->l_next = map;
+    r_debug_insert->l_prev = map;
 }
 
 static void remove_soinfo_from_debug_map(soinfo * info)
 {
     struct link_map * map = &(info->linkmap);
 
-    if (r_debug_tail == map)
-        r_debug_tail = map->l_prev;
+    if (r_debug_insert == map)
+        r_debug_insert = map->l_prev;
 
     if (map->l_prev) map->l_prev->l_next = map->l_next;
     if (map->l_next) map->l_next->l_prev = map->l_prev;
 }
 
-void notify_gdb_of_load(soinfo * info)
+static void notify_gdb_of_load(soinfo * info)
 {
+    if (!_r_debug)
+        return;
+
     if (info->flags & FLAG_EXE) {
         // GDB already knows about the main executable
         return;
@@ -225,19 +224,22 @@ void notify_gdb_of_load(soinfo * info)
 
     pthread_mutex_lock(&_r_debug_lock);
 
-    _r_debug.r_state = RT_ADD;
+    _r_debug->r_state = RT_ADD;
     rtld_db_dlactivity();
 
     insert_soinfo_into_debug_map(info);
 
-    _r_debug.r_state = RT_CONSISTENT;
+    _r_debug->r_state = RT_CONSISTENT;
     rtld_db_dlactivity();
 
     pthread_mutex_unlock(&_r_debug_lock);
 }
 
-void notify_gdb_of_unload(soinfo * info)
+static void notify_gdb_of_unload(soinfo * info)
 {
+    if (!_r_debug)
+        return;
+
     if (info->flags & FLAG_EXE) {
         // GDB already knows about the main executable
         return;
@@ -245,12 +247,12 @@ void notify_gdb_of_unload(soinfo * info)
 
     pthread_mutex_lock(&_r_debug_lock);
 
-    _r_debug.r_state = RT_DELETE;
+    _r_debug->r_state = RT_DELETE;
     rtld_db_dlactivity();
 
     remove_soinfo_from_debug_map(info);
 
-    _r_debug.r_state = RT_CONSISTENT;
+    _r_debug->r_state = RT_CONSISTENT;
     rtld_db_dlactivity();
 
     pthread_mutex_unlock(&_r_debug_lock);
@@ -258,9 +260,9 @@ void notify_gdb_of_unload(soinfo * info)
 
 void notify_gdb_of_libraries()
 {
-    _r_debug.r_state = RT_ADD;
+    _r_debug->r_state = RT_ADD;
     rtld_db_dlactivity();
-    _r_debug.r_state = RT_CONSISTENT;
+    _r_debug->r_state = RT_CONSISTENT;
     rtld_db_dlactivity();
 }
 
@@ -2108,7 +2110,7 @@ static int link_image(soinfo *si, unsigned wr_offset)
             break;
         case DT_DEBUG:
             // Set the DT_DEBUG entry to the addres of _r_debug for GDB
-            *d = (int) &_r_debug;
+            *d = (int) _r_debug;
             break;
 #ifdef ANDROID_SH_LINKER
         case DT_RELA:
@@ -2367,8 +2369,93 @@ static void * __tls_area[ANDROID_TLS_SLOTS];
 #ifdef MOZ_LINKER
 void simple_linker_init(void)
 {
+    int fd;
+    char buf[4096];
+    uintptr_t *auxv;
+    char *base;
+    int phnum = -1;
+    Elf32_Phdr *phdr;
+    Elf32_Dyn *dyn;
+    Elf32_Addr dyn_addr = 0;
+    struct r_debug *debug = NULL;
+    ssize_t len;
+
     pid = getpid();
     ba_init(&ba_nonprelink);
+
+    /* Get program headers location and size for program
+     * /proc/self/auxv contains ELF Auxiliary Vectors passed by the kernel */
+    fd = open("/proc/self/auxv", O_RDONLY);
+    if (fd < 0) {
+        DEBUG("Failed to open /proc/self/auxv\n");
+        return;
+    }
+    len = read(fd, buf, sizeof(buf));
+    if (len < sizeof(uintptr_t) * 2) {
+        DEBUG("Didn't read enough from /proc/self/auxv\n");
+        return;
+    }
+    close(fd);
+    auxv = (uintptr_t *) buf;
+    while ((void *)auxv < (void *)(buf + len) && *auxv) {
+        switch(*auxv) {
+        case AT_PHDR: {
+            phdr = (Elf32_Phdr*) auxv[1];
+            /* Assume the program base is at the beginning of the same page
+             * It should start with the ELF magic number */
+            base = (char *) (auxv[1] & ~0xfff);
+            if (memcmp(base, ELFMAG, 4)) {
+                DEBUG("Couldn't find program base\n");
+                return;
+            }
+            break;
+        }
+        case AT_PHNUM:
+            phnum = (int) auxv[1];
+            break;
+        }
+        auxv += 2;
+    }
+
+    /* Search for the program PT_DYNAMIC segment */
+    for (; phnum >= 0; phnum--, phdr++) {
+      /* Adjust base address with the virtual address of the PT_LOAD segment
+       * corresponding to offset 0 */
+      if (phdr->p_type == PT_LOAD && phdr->p_offset == 0)
+        base -= phdr->p_vaddr;
+      if (phdr->p_type == PT_DYNAMIC)
+        dyn_addr = phdr->p_vaddr;
+    }
+    if (!dyn_addr) {
+        DEBUG("Failed to find PT_DYNAMIC section in program\n");
+        return;
+    }
+    dyn = (Elf32_Dyn *) (dyn_addr + base);
+ 
+    /* Search for the DT_DEBUG information */
+    while (dyn->d_tag) {
+        if (dyn->d_tag == DT_DEBUG) {
+            debug = (struct r_debug *) dyn->d_un.d_ptr;
+            break;
+        }
+        dyn++;
+    }
+    if (!debug) {
+        DEBUG("Failed to find DT_DEBUG info in program\n");
+        return;
+    }
+
+    /* Find link_map info for ourselves, we will be inserting libraries we
+     * load before that */
+    struct link_map *map = debug->r_map;
+    while (map) {
+        if (strcmp(map->l_name, "libmozutils.so"))
+            r_debug_insert = map;
+        map = map->l_next;
+    }
+
+    if (r_debug_insert)
+        _r_debug = debug;
 }
 #else
 unsigned __linker_init(unsigned **elfdata)
