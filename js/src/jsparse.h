@@ -1258,7 +1258,7 @@ private:
     enum FunctionType { Getter, Setter, Normal };
     bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSParseNode **list);
     JSParseNode *functionBody();
-    JSParseNode *functionDef(JSAtom *name, FunctionType type, FunctionSyntaxKind kind);
+    JSParseNode *functionDef(PropertyName *name, FunctionType type, FunctionSyntaxKind kind);
 
     JSParseNode *condition();
     JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,

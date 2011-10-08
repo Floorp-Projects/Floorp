@@ -391,7 +391,7 @@ GetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp
 
     JSObject *obj2;
     JSProperty *prop;
-    if (!obj->lookupProperty(cx, idr.id(), &obj2, &prop))
+    if (!obj->lookupGeneric(cx, idr.id(), &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         *hole = JS_TRUE;
@@ -713,8 +713,8 @@ IsDenseArrayId(JSContext *cx, JSObject *obj, jsid id)
 }
 
 static JSBool
-array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
-                     JSProperty **propp)
+array_lookupGeneric(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                    JSProperty **propp)
 {
     if (!obj->isDenseArray())
         return js_LookupProperty(cx, obj, id, objp, propp);
@@ -731,7 +731,14 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
         *propp = NULL;
         return JS_TRUE;
     }
-    return proto->lookupProperty(cx, id, objp, propp);
+    return proto->lookupGeneric(cx, id, objp, propp);
+}
+
+static JSBool
+array_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name, JSObject **objp,
+                     JSProperty **propp)
+{
+    return array_lookupGeneric(cx, obj, ATOM_TO_JSID(name), objp, propp);
 }
 
 static JSBool
@@ -759,7 +766,7 @@ static JSBool
 array_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp,
                     JSProperty **propp)
 {
-    return array_lookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
+    return array_lookupGeneric(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 JSBool
@@ -1227,7 +1234,7 @@ Class js::ArrayClass = {
     array_trace,    /* trace       */
     JS_NULL_CLASS_EXT,
     {
-        array_lookupProperty,
+        array_lookupGeneric,
         array_lookupProperty,
         array_lookupElement,
         array_lookupSpecial,

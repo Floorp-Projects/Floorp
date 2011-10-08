@@ -75,13 +75,14 @@ struct JS_FRIEND_API(ArrayBuffer) {
     obj_trace(JSTracer *trc, JSObject *obj);
 
     static JSBool
-    obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
+    obj_lookupGeneric(JSContext *cx, JSObject *obj, jsid id,
+                      JSObject **objp, JSProperty **propp);
+    static JSBool
+    obj_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name,
                        JSObject **objp, JSProperty **propp);
-
     static JSBool
     obj_lookupElement(JSContext *cx, JSObject *obj, uint32 index,
                       JSObject **objp, JSProperty **propp);
-
     static JSBool
     obj_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp,
                       JSProperty **propp);
@@ -212,7 +213,9 @@ struct JS_FRIEND_API(TypedArray) {
     static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
     static JSBool prop_getLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 
-    static JSBool obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
+    static JSBool obj_lookupGeneric(JSContext *cx, JSObject *obj, jsid id,
+                                    JSObject **objp, JSProperty **propp);
+    static JSBool obj_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name,
                                      JSObject **objp, JSProperty **propp);
     static JSBool obj_lookupElement(JSContext *cx, JSObject *obj, uint32 index,
                                     JSObject **objp, JSProperty **propp);
