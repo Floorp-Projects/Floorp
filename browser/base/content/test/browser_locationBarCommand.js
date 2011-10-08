@@ -73,7 +73,6 @@ let gTests = [
     check: function(aTab) {
       // Right click should do nothing (context menu will be shown)
       is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
-      ok(gURLBar.focused, "Urlbar is still focused after click");
     }
   },
 
