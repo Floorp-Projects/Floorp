@@ -1333,7 +1333,6 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 
     /* The initialized length is used iff this is a dense array. */
     initializedLength = 0;
-    JS_ASSERT(newType == NULL);
 
     /*
      * Begin with the length property to share more of the property tree.
@@ -2681,7 +2680,7 @@ TryReuseArrayType(JSObject *obj, JSObject *nobj)
      * and has the same prototype.
      */
     JS_ASSERT(nobj->isDenseArray());
-    JS_ASSERT(nobj->type() == nobj->getProto()->newType);
+    JS_ASSERT(nobj->getProto()->hasNewType(nobj->type()));
 
     if (obj->isArray() && !obj->hasSingletonType() && obj->getProto() == nobj->getProto())
         nobj->setType(obj->type());

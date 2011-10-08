@@ -95,6 +95,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     emptyDeclEnvShape(NULL),
     emptyEnumeratorShape(NULL),
     emptyWithShape(NULL),
+    emptyTypeObject(NULL),
     initialRegExpShape(NULL),
     initialStringShape(NULL),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
@@ -493,10 +494,10 @@ JSCompartment::markTypes(JSTracer *trc)
 
 template <class T>
 void
-CheckWeakShape(JSContext *cx, T *&shape)
+CheckWeakReference(JSContext *cx, T *&ptr)
 {
-    if (shape && IsAboutToBeFinalized(cx, shape))
-        shape = NULL;
+    if (ptr && IsAboutToBeFinalized(cx, ptr))
+        ptr = NULL;
 }
 
 void
@@ -513,20 +514,23 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         }
     }
 
-    /* Remove dead empty shapes. */
-    CheckWeakShape(cx, emptyStrictArgumentsShape);
-    CheckWeakShape(cx, emptyNormalArgumentsShape);
-    CheckWeakShape(cx, emptyBlockShape);
-    CheckWeakShape(cx, emptyCallShape);
-    CheckWeakShape(cx, emptyDeclEnvShape);
-    CheckWeakShape(cx, emptyEnumeratorShape);
-    CheckWeakShape(cx, emptyWithShape);
+    /* Remove dead references held weakly by the compartment. */
 
-    CheckWeakShape(cx, initialRegExpShape);
-    CheckWeakShape(cx, initialStringShape);
+    CheckWeakReference(cx, emptyStrictArgumentsShape);
+    CheckWeakReference(cx, emptyNormalArgumentsShape);
+    CheckWeakReference(cx, emptyBlockShape);
+    CheckWeakReference(cx, emptyCallShape);
+    CheckWeakReference(cx, emptyDeclEnvShape);
+    CheckWeakReference(cx, emptyEnumeratorShape);
+    CheckWeakReference(cx, emptyWithShape);
 
-    /* Remove dead base shapes */
+    CheckWeakReference(cx, initialRegExpShape);
+    CheckWeakReference(cx, initialStringShape);
+
     sweepBaseShapeTable(cx);
+    sweepNewTypeObjectTable(cx);
+
+    CheckWeakReference(cx, emptyTypeObject);
 
     sweepBreakpoints(cx);
 

@@ -1947,7 +1947,8 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
                        parent, atom);
     if (fun && !tc->compileAndGo()) {
         fun->clearParent();
-        fun->clearType();
+        if (!fun->clearType(context))
+            return NULL;
     }
     return fun;
 }
@@ -8884,7 +8885,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
         if (!tc->compileAndGo()) {
             obj->clearParent();
-            obj->clearType();
+            if (!obj->clearType(context))
+                return NULL;
         }
 
         pn->pn_objbox = tc->parser->newObjectBox(obj);
