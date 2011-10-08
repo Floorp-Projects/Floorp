@@ -761,10 +761,14 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     if (!envobj)
         return NULL;
 
+    types::TypeObject *type = cx->compartment->getEmptyType(cx);
+    if (!type)
+        return NULL;
+
     EmptyShape *emptyDeclEnvShape = EmptyShape::getEmptyDeclEnvShape(cx);
     if (!emptyDeclEnvShape)
         return NULL;
-    envobj->init(cx, &emptyTypeObject, &fp->scopeChain(), fp, false);
+    envobj->init(cx, type, &fp->scopeChain(), fp, false);
     envobj->setMap(emptyDeclEnvShape);
 
     return envobj;
@@ -1568,7 +1572,8 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         if (!fun)
             return false;
         fun->clearParent();
-        fun->clearType();
+        if (!fun->clearType(cx))
+            return false;
     }
 
     AutoObjectRooter tvr(cx, fun);

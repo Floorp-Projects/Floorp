@@ -1886,8 +1886,6 @@ TypeSet::hasGlobalObject(JSContext *cx, JSObject *global)
 // TypeCompartment
 /////////////////////////////////////////////////////////////////////
 
-TypeObject types::emptyTypeObject(NULL, false, true);
-
 void
 TypeCompartment::init(JSContext *cx)
 {
@@ -2402,7 +2400,6 @@ GetValueTypeForTable(JSContext *cx, const Value &v)
 {
     Type type = GetValueType(cx, v);
     JS_ASSERT(!type.isSingleObject());
-    JS_ASSERT_IF(type.isTypeObject(), type.typeObject() != &emptyTypeObject);
     return type;
 }
 
@@ -5575,7 +5572,7 @@ JSObject::splicePrototype(JSContext *cx, JSObject *proto)
     }
 
     if (!cx->typeInferenceEnabled()) {
-        TypeObject *type = proto ? proto->getNewType(cx) : &emptyTypeObject;
+        TypeObject *type = proto ? proto->getNewType(cx) : cx->compartment->getEmptyType(cx);
         if (!type)
             return false;
         type_ = type;
@@ -5662,21 +5659,75 @@ JSObject::makeLazyType(JSContext *cx)
     flags &= ~LAZY_TYPE;
 }
 
-void
-JSObject::makeNewType(JSContext *cx, JSFunction *fun, bool unknown)
+/* static */ inline HashNumber
+JSCompartment::NewTypeObjectEntry::hash(JSObject *proto)
 {
-    JS_ASSERT(!newType);
+    return PointerHasher<JSObject *, 3>::hash(proto);
+}
+
+/* static */ inline bool
+JSCompartment::NewTypeObjectEntry::match(TypeObject *key, JSObject *lookup)
+{
+    return key->proto == lookup;
+}
+
+#ifdef DEBUG
+bool
+JSObject::hasNewType(TypeObject *type)
+{
+    JSCompartment::NewTypeObjectSet &table = compartment()->newTypeObjects;
+
+    if (!table.initialized())
+        return false;
+
+    JSCompartment::NewTypeObjectSet::AddPtr p = table.lookupForAdd(this);
+    return p && *p == type;
+}
+#endif /* DEBUG */
+
+TypeObject *
+JSObject::getNewType(JSContext *cx, JSFunction *fun, bool markUnknown)
+{
+    JSCompartment::NewTypeObjectSet &table = cx->compartment->newTypeObjects;
+
+    if (!table.initialized() && !table.init())
+        return NULL;
+
+    JSCompartment::NewTypeObjectSet::AddPtr p = table.lookupForAdd(this);
+    if (p) {
+        TypeObject *type = *p;
+
+        /*
+         * If set, the type's newScript indicates the script used to create
+         * all objects in existence which have this type. If there are objects
+         * in existence which are not created by calling 'new' on newScript,
+         * we must clear the new script information from the type and will not
+         * be able to assume any definite properties for instances of the type.
+         * This case is rare, but can happen if, for example, two scripted
+         * functions have the same value for their 'prototype' property, or if
+         * Object.create is called with a prototype object that is also the
+         * 'prototype' property of some scripted function.
+         */
+        if (type->newScript && type->newScript->fun != fun)
+            type->clearNewScript(cx);
+        if (markUnknown && cx->typeInferenceEnabled() && !type->unknownProperties())
+            type->markUnknown(cx);
+
+        return type;
+    }
 
     TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
-                                                            JSProto_Object, this, unknown);
+                                                            JSProto_Object, this, markUnknown);
     if (!type)
-        return;
+        return NULL;
 
-    newType = type;
+    if (!table.relookupOrAdd(p, this, type))
+        return NULL;
+
     setDelegate();
 
     if (!cx->typeInferenceEnabled())
-        return;
+        return type;
 
     AutoEnterTypeInference enter(cx);
 
@@ -5710,6 +5761,8 @@ JSObject::makeNewType(JSContext *cx, JSFunction *fun, bool unknown)
      */
     if (type->unknownProperties())
         type->flags |= OBJECT_FLAG_SETS_MARKED_UNKNOWN;
+
+    return type;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -5762,15 +5815,6 @@ TypeSet::sweep(JSContext *cx, JSCompartment *compartment)
 }
 
 inline void
-JSObject::revertLazyType()
-{
-    JS_ASSERT(hasSingletonType() && !hasLazyType());
-    JS_ASSERT_IF(type_->proto, type_->proto->newType);
-    flags |= LAZY_TYPE;
-    type_ = (type_->proto) ? type_->proto->newType : &emptyTypeObject;
-}
-
-inline void
 TypeObject::clearProperties()
 {
     setBasePropertyCount(0);
@@ -5802,19 +5846,6 @@ TypeObject::sweep(JSContext *cx)
          * as code gets reanalyzed.
          */
         clearProperties();
-
-        if (!isMarked()) {
-            /*
-             * Singleton objects do not hold strong references on their types.
-             * When removing the type, however, we need to fixup the singleton
-             * so that it has a lazy type again. The generic 'new' type for the
-             * proto must be live, since the type's prototype and its 'new'
-             * type are both strong references.
-             */
-            JS_ASSERT_IF(singleton->isMarked() && proto,
-                         proto->isMarked() && proto->newType->isMarked());
-            singleton->revertLazyType();
-        }
 
         return;
     }
@@ -5905,9 +5936,6 @@ struct SweepTypeObjectOp
 void
 SweepTypeObjects(JSContext *cx, JSCompartment *compartment)
 {
-    JS_ASSERT(!emptyTypeObject.emptyShapes);
-    JS_ASSERT(!emptyTypeObject.newScript);
-
     SweepTypeObjectOp op(cx);
     gc::ForEachArenaAndCell(compartment, gc::FINALIZE_TYPE_OBJECT, gc::EmptyArenaOp, op);
 }
@@ -5989,6 +6017,18 @@ TypeCompartment::sweep(JSContext *cx)
 
     pendingArray = NULL;
     pendingCapacity = 0;
+}
+
+void
+JSCompartment::sweepNewTypeObjectTable(JSContext *cx)
+{
+    if (newTypeObjects.initialized()) {
+        for (NewTypeObjectSet::Enum e(newTypeObjects); !e.empty(); e.popFront()) {
+            TypeObject *type = e.front();
+            if (!type->isMarked())
+                e.removeFront();
+        }
+    }
 }
 
 TypeCompartment::~TypeCompartment()

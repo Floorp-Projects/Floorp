@@ -507,6 +507,29 @@ struct JS_FRIEND_API(JSCompartment) {
     void sweepBaseShapeTable(JSContext *cx);
 
     /*
+     * Set of all type objects in the compartment which are the default 'new'
+     * types of some (possibly NULL) prototype.
+     */
+
+    struct NewTypeObjectEntry {
+        typedef JSObject *Lookup;
+
+        static inline js::HashNumber hash(JSObject *base);
+        static inline bool match(js::types::TypeObject *key, JSObject *lookup);
+    };
+
+    typedef js::HashSet<js::types::TypeObject *, NewTypeObjectEntry, js::SystemAllocPolicy> NewTypeObjectSet;
+
+    NewTypeObjectSet             newTypeObjects;
+
+    void sweepNewTypeObjectTable(JSContext *cx);
+
+    js::types::TypeObject        *emptyTypeObject;
+
+    /* Get the default 'new' type for objects with a NULL prototype. */
+    inline js::types::TypeObject *getEmptyType(JSContext *cx);
+
+    /*
      * Initial shapes given to RegExp and String objects, encoding the initial
      * sets of built-in instance properties and the fixed slots where they must
      * be stored (see JSObject::JSSLOT_(REGEXP|STRING)_*). Later property
