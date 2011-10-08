@@ -16,19 +16,11 @@ function ApplyToFrameScript(code, skip, f) {
     g.eval(code);
 }
 
-var savedScript;
-
 ApplyToFrameScript('debugger;', 0,
                    function (script) {
                        assertEq(script instanceof Debugger.Script, true);
-                       assertEq(script.live, true);
-                       savedScript = script;
                    });
-assertEq(savedScript.live, false);
 ApplyToFrameScript("(function () { eval('debugger;'); })();", 0,
                    function (script) {
                        assertEq(script instanceof Debugger.Script, true);
-                       assertEq(script.live, true);
-                       savedScript = script;
                    });
-assertEq(savedScript.live, false);

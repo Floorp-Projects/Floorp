@@ -65,8 +65,6 @@ EXTRA_COMPONENTS = \
   storage-mozStorage.js \
   $(NULL)
 
-DIRS = content
-
 ifdef ENABLE_TESTS
 DIRS += test
 endif

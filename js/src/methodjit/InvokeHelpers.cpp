@@ -1562,7 +1562,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             JS_NOT_REACHED("Bad branch op");
         }
         if (takeBranch)
-            f.regs.pc = nextpc + GET_JUMP_OFFSET(nextpc);
+            f.regs.pc = nextpc + analyze::GetJumpOffset(nextpc, nextpc);
         else
             f.regs.pc = nextpc + analyze::GetBytecodeLength(nextpc);
         break;

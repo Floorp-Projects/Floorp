@@ -45,6 +45,10 @@
 #include "maiRedundantObjectFactory.h"
 #endif 
 
+#if defined(MOZ_WIDGET_GTK2)
+#include "gtk2compat.h"
+#endif
+
 /* init methods */
 static void moz_container_class_init          (MozContainerClass *klass);
 static void moz_container_init                (MozContainer      *container);
@@ -199,15 +203,16 @@ moz_container_class_init (MozContainerClass *klass)
 void
 moz_container_init (MozContainer *container)
 {
-    GTK_WIDGET_SET_FLAGS(container, GTK_CAN_FOCUS);
-    container->container.resize_mode = GTK_RESIZE_IMMEDIATE;
-    gtk_widget_set_redraw_on_allocate(GTK_WIDGET(container),
-                                      FALSE);
+    gtk_widget_set_can_focus(GTK_WIDGET(container), TRUE);
+    gtk_container_set_resize_mode(GTK_CONTAINER(container), GTK_RESIZE_IMMEDIATE);
+    gtk_widget_set_redraw_on_allocate(GTK_WIDGET(container), FALSE);
 
+#if defined(MOZ_WIDGET_GTK2)
     /* Mozilla uses the the gdbrgb colormap and visual throughout the
        backend so for widgets we just use that colormap instead of the
        default one. */
     gtk_widget_set_colormap(GTK_WIDGET(container), gdk_rgb_get_colormap());
+#endif
 }
 
 void
@@ -220,30 +225,30 @@ moz_container_map (GtkWidget *widget)
     g_return_if_fail (IS_MOZ_CONTAINER(widget));
     container = MOZ_CONTAINER (widget);
 
-    GTK_WIDGET_SET_FLAGS (widget, GTK_MAPPED);
+    gtk_widget_set_mapped(widget, TRUE);
 
     tmp_list = container->children;
     while (tmp_list) {
         tmp_child = ((MozContainerChild *)tmp_list->data)->widget;
     
-        if (GTK_WIDGET_VISIBLE(tmp_child)) {
-            if (!GTK_WIDGET_MAPPED(tmp_child))
+        if (gtk_widget_get_visible(tmp_child)) {
+            if (!gtk_widget_get_mapped(tmp_child))
                 gtk_widget_map(tmp_child);
         }
         tmp_list = tmp_list->next;
     }
 
-    gdk_window_show (widget->window);
+    gdk_window_show (gtk_widget_get_window(widget));
 }
 
 void
 moz_container_unmap (GtkWidget *widget)
 {
     g_return_if_fail (IS_MOZ_CONTAINER (widget));
-  
-    GTK_WIDGET_UNSET_FLAGS (widget, GTK_MAPPED);
 
-    gdk_window_hide (widget->window);
+    gtk_widget_set_mapped(widget, FALSE);
+
+    gdk_window_hide (gtk_widget_get_window(widget));
 }
 
 void
@@ -252,12 +257,13 @@ moz_container_realize (GtkWidget *widget)
     GdkWindowAttr attributes;
     gint attributes_mask = 0;
     MozContainer *container;
+    GtkAllocation allocation;
 
     g_return_if_fail(IS_MOZ_CONTAINER(widget));
 
     container = MOZ_CONTAINER(widget);
 
-    GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
+    gtk_widget_set_realized(widget, TRUE);
 
     /* create the shell window */
 
@@ -270,28 +276,38 @@ moz_container_realize (GtkWidget *widget)
                              GDK_POINTER_MOTION_HINT_MASK |
 #endif
                              GDK_POINTER_MOTION_MASK);
-    attributes.x = widget->allocation.x;
-    attributes.y = widget->allocation.y;
-    attributes.width = widget->allocation.width;
-    attributes.height = widget->allocation.height;
+    gtk_widget_get_allocation(widget, &allocation);
+    attributes.x = allocation.x;
+    attributes.y = allocation.y;
+    attributes.width = allocation.width;
+    attributes.height = allocation.height;
     attributes.wclass = GDK_INPUT_OUTPUT;
     attributes.visual = gtk_widget_get_visual (widget);
+#if defined(MOZ_WIDGET_GTK2)    
     attributes.colormap = gtk_widget_get_colormap (widget);
+#endif
     attributes.window_type = GDK_WINDOW_CHILD;
 
-    attributes_mask |= GDK_WA_VISUAL | GDK_WA_COLORMAP |
-        GDK_WA_X | GDK_WA_Y;
+    attributes_mask |= GDK_WA_VISUAL | GDK_WA_X | GDK_WA_Y;
+#if defined(MOZ_WIDGET_GTK2)
+    attributes_mask |= GDK_WA_COLORMAP;
+#endif
 
-    widget->window = gdk_window_new (gtk_widget_get_parent_window (widget),
-                                     &attributes, attributes_mask);
+    gtk_widget_set_window(widget, gdk_window_new (gtk_widget_get_parent_window (widget),
+                                                  &attributes, attributes_mask));
     /*  printf("widget->window is %p\n", (void *)widget->window); */
-    gdk_window_set_user_data (widget->window, container);
+    gdk_window_set_user_data (gtk_widget_get_window(widget), container);
 
+#if defined(MOZ_WIDGET_GTK2)    
     widget->style = gtk_style_attach (widget->style, widget->window);
+#endif
 
+/* TODO GTK3? */
+#if defined(MOZ_WIDGET_GTK2)    
     /* set the back pixmap to None so that you don't end up with the gtk
        default which is BlackPixel */
     gdk_window_set_back_pixmap (widget->window, NULL, FALSE);
+#endif
 }
 
 void
@@ -315,15 +331,16 @@ moz_container_size_allocate (GtkWidget     *widget,
 
     /* short circuit if you can */
     container = MOZ_CONTAINER (widget);
+    gtk_widget_get_allocation(widget, &tmp_allocation);
     if (!container->children &&
-        widget->allocation.x == allocation->x &&
-        widget->allocation.y == allocation->y &&
-        widget->allocation.width == allocation->width &&
-        widget->allocation.height == allocation->height) {
+        tmp_allocation.x == allocation->x &&
+        tmp_allocation.y == allocation->y &&
+        tmp_allocation.width == allocation->width &&
+        tmp_allocation.height == allocation->height) {
         return;
     }
 
-    widget->allocation = *allocation;
+    gtk_widget_set_allocation(widget, allocation);
 
     tmp_list = container->children;
 
@@ -335,12 +352,12 @@ moz_container_size_allocate (GtkWidget     *widget,
         tmp_list = tmp_list->next;
     }
 
-    if (GTK_WIDGET_REALIZED (widget)) {
-        gdk_window_move_resize(widget->window,
-                               widget->allocation.x,
-                               widget->allocation.y,
-                               widget->allocation.width,
-                               widget->allocation.height);
+    if (gtk_widget_get_realized(widget)) {
+        gdk_window_move_resize(gtk_widget_get_window(widget),
+                               allocation->x,
+                               allocation->y,
+                               allocation->width,
+                               allocation->height);
     }
 }
 
@@ -383,7 +400,7 @@ moz_container_remove (GtkContainer *container, GtkWidget *child_widget)
          * the parent_window if the child_widget is placed in another
          * container.
          */
-        if (parent_window != GTK_WIDGET(container)->window)
+        if (parent_window != gtk_widget_get_window(GTK_WIDGET(container)))
             gtk_widget_set_parent_window(child_widget, parent_window);
 
         g_object_unref(parent_window);
@@ -421,12 +438,11 @@ moz_container_allocate_child (MozContainer *container,
     GtkAllocation  allocation;
     GtkRequisition requisition;
 
+    gtk_widget_get_allocation (child->widget, &allocation);
     allocation.x = child->x;
     allocation.y = child->y;
     /* gtk_widget_get_child_requisition (child->widget, &requisition); */
     /* gtk_widget_size_request (child->widget, &requisition); */
-    allocation.width = child->widget->allocation.width;
-    allocation.height = child->widget->allocation.height;
 
     gtk_widget_size_allocate (child->widget, &allocation);
 }

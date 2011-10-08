@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sha512.c,v 1.18 2011/03/30 22:35:43 wtc%google.com Exp $ */
+/* $Id: sha512.c,v 1.19 2011/09/14 17:48:03 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -569,12 +569,6 @@ SHA224_Begin(SHA224Context *ctx)
 {
     memset(ctx, 0, sizeof *ctx);
     memcpy(H, H224, sizeof H224);
-}
-
-static void
-SHA224_Compress(SHA224Context *ctx)
-{
-    SHA256_Compress(ctx);
 }
 
 void

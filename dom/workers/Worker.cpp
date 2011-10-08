@@ -191,7 +191,7 @@ private:
     const char* name = sEventStrings[JSID_TO_INT(aIdval)];
     WorkerPrivate* worker = GetInstancePrivate(aCx, aObj, name);
     if (!worker) {
-      return false;
+      return !JS_IsExceptionPending(aCx);
     }
 
     return worker->GetEventListenerOnEventTarget(aCx, name + 2, aVp);
@@ -207,7 +207,7 @@ private:
     const char* name = sEventStrings[JSID_TO_INT(aIdval)];
     WorkerPrivate* worker = GetInstancePrivate(aCx, aObj, name);
     if (!worker) {
-      return false;
+      return !JS_IsExceptionPending(aCx);
     }
 
     return worker->SetEventListenerOnEventTarget(aCx, name + 2, aVp);
@@ -248,7 +248,7 @@ private:
     const char*& name = sFunctions[0].name;
     WorkerPrivate* worker = GetInstancePrivate(aCx, obj, name);
     if (!worker) {
-      return false;
+      return !JS_IsExceptionPending(aCx);
     }
 
     return worker->Terminate(aCx);
@@ -262,7 +262,7 @@ private:
     const char*& name = sFunctions[1].name;
     WorkerPrivate* worker = GetInstancePrivate(aCx, obj, name);
     if (!worker) {
-      return false;
+      return !JS_IsExceptionPending(aCx);
     }
 
     jsval message;

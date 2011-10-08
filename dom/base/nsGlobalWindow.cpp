@@ -10178,6 +10178,11 @@ nsGlobalWindow::SetHasOrientationEventListener()
   EnableDeviceMotionUpdates();
 }
 
+void
+nsGlobalWindow::RemoveOrientationEventListener() {
+  DisableDeviceMotionUpdates();
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::GetURL(nsIDOMMozURLProperty** aURL)
 {

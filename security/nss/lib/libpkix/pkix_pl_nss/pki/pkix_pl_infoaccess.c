@@ -632,7 +632,7 @@ pkix_pl_InfoAccess_ParseTokens(
 
                     separator = terminator;
 
-                    if (endPos == '\0') {
+                    if (*endPos == '\0') {
                         *startPos = endPos;
                         break;
                     } else {
