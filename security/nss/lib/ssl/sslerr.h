@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslerr.h,v 1.13 2010/09/01 19:43:48 wtc%google.com Exp $ */
+/* $Id: sslerr.h,v 1.14 2011/10/05 18:07:18 emaldona%redhat.com Exp $ */
 #ifndef __SSL_ERR_H_
 #define __SSL_ERR_H_
 
@@ -57,11 +57,13 @@ SSL_ERROR_NO_CYPHER_OVERLAP 		= (SSL_ERROR_BASE +  2),
  */
 SSL_ERROR_NO_CERTIFICATE /*_ALERT */	= (SSL_ERROR_BASE +  3),
 SSL_ERROR_BAD_CERTIFICATE            	= (SSL_ERROR_BASE +  4),
+SSL_ERROR_UNUSED_5			= (SSL_ERROR_BASE +  5),
 					/* error 5 is obsolete */
 SSL_ERROR_BAD_CLIENT 			= (SSL_ERROR_BASE +  6),
 SSL_ERROR_BAD_SERVER 			= (SSL_ERROR_BASE +  7),
 SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE	= (SSL_ERROR_BASE +  8),
 SSL_ERROR_UNSUPPORTED_VERSION 		= (SSL_ERROR_BASE +  9),
+SSL_ERROR_UNUSED_10			= (SSL_ERROR_BASE + 10),
 					/* error 10 is obsolete */
 SSL_ERROR_WRONG_CERTIFICATE		= (SSL_ERROR_BASE + 11),
 SSL_ERROR_BAD_CERT_DOMAIN 		= (SSL_ERROR_BASE + 12),

@@ -37,7 +37,7 @@
 /*
  * CMS encoding.
  *
- * $Id: cmsencode.c,v 1.11 2011/02/11 01:53:17 emaldona%redhat.com Exp $
+ * $Id: cmsencode.c,v 1.12 2011/08/21 01:14:18 wtc%google.com Exp $
  */
 
 #include "cmslocal.h"
@@ -726,7 +726,6 @@ NSS_CMSEncoder_Finish(NSSCMSEncoderContext *p7ecx)
 {
     SECStatus rv = SECFailure;
     NSSCMSContentInfo *cinfo;
-    SECOidTag childtype;
 
     /*
      * Finish any inner decoders before us so that all the encoded data is flushed
