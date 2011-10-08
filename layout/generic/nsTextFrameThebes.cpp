@@ -4948,6 +4948,9 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
   }
   
   // Draw text
+  const nsStyleText* textStyle = GetStyleText();
+  nsRect dirtyRect(aDirtyRect.x, aDirtyRect.y,
+                   aDirtyRect.width, aDirtyRect.height);
   SelectionIterator iterator(prevailingSelections, aContentOffset, aContentLength,
                              aProvider, mTextRun, startXOffset);
   while (iterator.GetNextSegment(&xOffset, &offset, &length, &hyphenWidth,
@@ -4955,11 +4958,23 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
     nscolor foreground, background;
     GetSelectionTextColors(type, aTextPaintStyle, rangeStyle,
                            &foreground, &background);
+    gfxPoint textBaselinePt(aFramePt.x + xOffset, aTextBaselinePt.y);
+
+    // Draw shadows, if any
+    if (textStyle->mTextShadow) {
+      for (PRUint32 i = textStyle->mTextShadow->Length(); i > 0; --i) {
+        PaintOneShadow(offset, length,
+                       textStyle->mTextShadow->ShadowAt(i - 1), &aProvider,
+                       dirtyRect, aFramePt, textBaselinePt, aCtx,
+                       foreground, aClipEdges, xOffset);
+      }
+    }
+
     // Draw text segment
     aCtx->SetColor(gfxRGBA(foreground));
     gfxFloat advance;
 
-    DrawText(aCtx, aDirtyRect, aFramePt, gfxPoint(aFramePt.x + xOffset, aTextBaselinePt.y),
+    DrawText(aCtx, aDirtyRect, aFramePt, textBaselinePt,
              offset, length, aProvider, aTextPaintStyle, aClipEdges, advance,
              hyphenWidth > 0);
     if (hyphenWidth) {
@@ -5280,20 +5295,6 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   nsCharClipDisplayItem::ClipEdges clipEdges(aItem, snappedLeftEdge,
                                              snappedRightEdge);
   nsTextPaintStyle textPaintStyle(this);
-  nscolor foregroundColor = textPaintStyle.GetTextColor();
-
-  // Paint the text shadow before doing any foreground stuff
-  const nsStyleText* textStyle = GetStyleText();
-  if (textStyle->mTextShadow) {
-    // Text shadow happens with the last value being painted at the back,
-    // ie. it is painted first.
-    for (PRUint32 i = textStyle->mTextShadow->Length(); i > 0; --i) {
-      PaintOneShadow(startOffset, maxLength,
-                     textStyle->mTextShadow->ShadowAt(i - 1), &provider,
-                     aDirtyRect, framePt, textBaselinePt, ctx,
-                     foregroundColor, clipEdges, snappedLeftEdge);
-    }
-  }
 
   gfxRect dirtyRect(aDirtyRect.x, aDirtyRect.y,
                     aDirtyRect.width, aDirtyRect.height);
@@ -5307,6 +5308,19 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
                                provider, contentOffset, contentLength,
                                textPaintStyle, clipEdges))
       return;
+  }
+
+  nscolor foregroundColor = textPaintStyle.GetTextColor();
+  const nsStyleText* textStyle = GetStyleText();
+  if (textStyle->mTextShadow) {
+    // Text shadow happens with the last value being painted at the back,
+    // ie. it is painted first.
+    for (PRUint32 i = textStyle->mTextShadow->Length(); i > 0; --i) {
+      PaintOneShadow(startOffset, maxLength,
+                     textStyle->mTextShadow->ShadowAt(i - 1), &provider,
+                     aDirtyRect, framePt, textBaselinePt, ctx,
+                     foregroundColor, clipEdges, snappedLeftEdge);
+    }
   }
 
   ctx->SetColor(gfxRGBA(foregroundColor));
