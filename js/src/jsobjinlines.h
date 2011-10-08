@@ -919,7 +919,7 @@ JSObject::hasProperty(JSContext *cx, jsid id, bool *foundp, uintN flags)
     JSObject *pobj;
     JSProperty *prop;
     JSAutoResolveFlags rf(cx, flags);
-    if (!lookupProperty(cx, id, &pobj, &prop))
+    if (!lookupGeneric(cx, id, &pobj, &prop))
         return false;
     *foundp = !!prop;
     return true;
@@ -1104,10 +1104,29 @@ JSObject::setSharedNonNativeMap()
 }
 
 inline JSBool
+JSObject::lookupGeneric(JSContext *cx, jsid id, JSObject **objp, JSProperty **propp)
+{
+    js::LookupGenericOp op = getOps()->lookupGeneric;
+    return (op ? op : js_LookupProperty)(cx, this, id, objp, propp);
+}
+
+inline JSBool
+JSObject::lookupProperty(JSContext *cx, js::PropertyName *name, JSObject **objp, JSProperty **propp)
+{
+    return lookupGeneric(cx, ATOM_TO_JSID(name), objp, propp);
+}
+
+inline JSBool
 JSObject::lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty **propp)
 {
     js::LookupElementOp op = getOps()->lookupElement;
     return (op ? op : js_LookupElement)(cx, this, index, objp, propp);
+}
+
+inline JSBool
+JSObject::lookupSpecial(JSContext *cx, js::SpecialId sid, JSObject **objp, JSProperty **propp)
+{
+    return lookupGeneric(cx, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 inline JSBool

@@ -3160,7 +3160,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         if (!desc.obj)
             return true;
     } else {
-        if (!referent->lookupProperty(cx, id, objp, &prop))
+        if (!referent->lookupGeneric(cx, id, objp, &prop))
             return false;
         if (*objp != referent)
             return true;
