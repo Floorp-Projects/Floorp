@@ -53,7 +53,6 @@ GFMethod *
 GFMethod_consGFp_mont(const mp_int *irr)
 {
 	mp_err res = MP_OKAY;
-	int i;
 	GFMethod *meth = NULL;
 	mp_mont_modulus *mmm;
 

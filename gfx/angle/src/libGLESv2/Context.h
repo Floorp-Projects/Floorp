@@ -230,10 +230,22 @@ class VertexDeclarationCache
 
     GLenum applyDeclaration(TranslatedAttribute attributes[], Program *program);
 
+    void markStateDirty();
+
   private:
     UINT mMaxLru;
 
     enum { NUM_VERTEX_DECL_CACHE_ENTRIES = 16 };
+
+    struct VBData
+    {
+        unsigned int serial;
+        unsigned int stride;
+        unsigned int offset;
+    };
+
+    VBData mAppliedVBs[MAX_VERTEX_ATTRIBS];
+    IDirect3DVertexDeclaration9 *mLastSetVDecl;
 
     struct VertexDeclCacheEntry
     {
@@ -526,7 +538,12 @@ class Context
     unsigned int mAppliedRenderTargetSerial;
     unsigned int mAppliedDepthbufferSerial;
     unsigned int mAppliedStencilbufferSerial;
+    unsigned int mAppliedIBSerial;
     bool mDepthStencilInitialized;
+    bool mViewportInitialized;
+    D3DVIEWPORT9 mSetViewport;
+    bool mRenderTargetDescInitialized;
+    D3DSURFACE_DESC mRenderTargetDesc;
 
     bool mSupportsShaderModel3;
     bool mSupportsVertexTexture;

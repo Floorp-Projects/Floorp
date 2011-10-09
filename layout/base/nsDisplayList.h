@@ -1012,8 +1012,6 @@ public:
    */
   void SortByContentOrder(nsDisplayListBuilder* aBuilder, nsIContent* aCommonAncestor);
 
-  void SortByZPosition(nsDisplayListBuilder* aBuilder, nsIContent* aCommonAncestor);
-
   /**
    * Generic stable sort. Take care, because some of the items might be nsDisplayLists
    * themselves.
@@ -2079,16 +2077,16 @@ public:
    * ferries the underlying frame to the nsDisplayItem constructor.
    */
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayList *aList) :
-    nsDisplayItem(aBuilder, aFrame), mStoredList(aBuilder, aFrame, aList)
+                     nsDisplayList *aList, PRUint32 aIndex = 0) :
+    nsDisplayItem(aBuilder, aFrame), mStoredList(aBuilder, aFrame, aList), mIndex(aIndex)
   {
     MOZ_COUNT_CTOR(nsDisplayTransform);
     NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
   }
 
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayItem *aItem) :
-  nsDisplayItem(aBuilder, aFrame), mStoredList(aBuilder, aFrame, aItem)
+                     nsDisplayItem *aItem, PRUint32 aIndex = 0) :
+  nsDisplayItem(aBuilder, aFrame), mStoredList(aBuilder, aFrame, aItem), mIndex(aIndex)
   {
     MOZ_COUNT_CTOR(nsDisplayTransform);
     NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
@@ -2127,8 +2125,16 @@ public:
                                    nsRegion *aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion);
   virtual bool TryMerge(nsDisplayListBuilder *aBuilder, nsDisplayItem *aItem);
+  
+  virtual PRUint32 GetPerFrameKey() { return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
+
+  enum {
+    INDEX_MAX = PR_UINT32_MAX >> nsDisplayItem::TYPE_BITS
+  };
 
   const gfx3DMatrix& GetTransform(float aFactor);
+
+  float GetHitDepthAtPoint(const nsPoint& aPoint);
 
   /**
    * TransformRect takes in as parameters a rectangle (in aFrame's coordinate
@@ -2205,6 +2211,7 @@ private:
   nsDisplayWrapList mStoredList;
   gfx3DMatrix mTransform;
   float mCachedFactor;
+  PRUint32 mIndex;
 };
 
 /**

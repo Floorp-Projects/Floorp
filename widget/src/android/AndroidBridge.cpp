@@ -48,7 +48,6 @@
 #include "nsOSHelperAppService.h"
 #include "nsWindow.h"
 #include "mozilla/Preferences.h"
-#include "nsINetworkLinkService.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -143,7 +142,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jSetKeepScreenOn = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setKeepScreenOn", "(Z)V");
     jIsNetworkLinkUp = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "isNetworkLinkUp", "()Z");
     jIsNetworkLinkKnown = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "isNetworkLinkKnown", "()Z");
-    jGetNetworkLinkType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNetworkLinkType", "()I");
     jSetSelectedLocale = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setSelectedLocale", "(Ljava/lang/String;)V");
     jScanMedia = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
     jGetSystemColors = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getSystemColors", "()[I");
@@ -683,13 +681,6 @@ AndroidBridge::IsNetworkLinkKnown()
 {
     ALOG_BRIDGE("AndroidBridge::IsNetworkLinkKnown");
     return !!mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass, jIsNetworkLinkKnown);
-}
-
-int
-AndroidBridge::GetNetworkLinkType()
-{
-    ALOG_BRIDGE("AndroidBridge::GetNetworkLinkType");
-    return (int) mJNIEnv->CallStaticIntMethod(mGeckoAppShellClass, jGetNetworkLinkType);
 }
 
 void

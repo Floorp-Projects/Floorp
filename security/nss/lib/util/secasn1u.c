@@ -37,7 +37,7 @@
 /*
  * Utility routines to complement the ASN.1 encoding and decoding functions.
  *
- * $Id: secasn1u.c,v 1.4 2005/04/09 05:06:34 julien.pierre.bugs%sun.com Exp $
+ * $Id: secasn1u.c,v 1.5 2011/10/01 00:39:15 wtc%google.com Exp $
  */
 
 #include "secasn1.h"
@@ -118,7 +118,7 @@ PRBool SEC_ASN1IsTemplateSimple(const SEC_ASN1Template *theTemplate)
     if (! (theTemplate->kind & (~SEC_ASN1_TAGNUM_MASK))) {
 	return PR_TRUE; /* primitive type */
     }
-    if (!theTemplate->kind & SEC_ASN1_CHOICE) {
+    if (!(theTemplate->kind & SEC_ASN1_CHOICE)) {
 	return PR_FALSE; /* no choice means not simple */
     }
     while (++theTemplate && theTemplate->kind) {

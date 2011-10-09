@@ -56,14 +56,17 @@ _BROWSER_FILES = \
   remote_formsZoom.js \
   remote_vkb.js \
   browser_addons.js \
+  browser_addons_locales.js \
   browser_appmenu.js \
   browser_autocompletesearch.js\
   browser_awesomescreen.js \
   browser_blank_01.html \
   browser_blank_02.html \
+  browser_blank_03.html \
   browser_bookmarks.js \
   browser_contacts.js \
   browser_dragger.js \
+  browser_escape.js \
   browser_find.js \
   browser_focus.html \
   browser_focus.js \
@@ -72,6 +75,8 @@ _BROWSER_FILES = \
   browser_formsZoom.html \
   $(warning browser_formsZoom.js disabled due to failures) \
   browser_history.js \
+  browser_localepicker.js \
+  browser_localepicker_escape.js \
   browser_mainui.js \
   browser_preferences_text.js \
   browser_preferences_fulltoggle.js \

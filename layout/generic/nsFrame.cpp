@@ -1518,45 +1518,76 @@ DisplayDebugBorders(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
 #endif
 
 static nsresult
-WrapPreserve3DList(nsIFrame *aFrame, nsDisplayListBuilder *aBuilder, nsDisplayList *aList)
+WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder, nsDisplayList *aList, PRUint32& aIndex)
 {
+  if (aIndex > nsDisplayTransform::INDEX_MAX) {
+    return NS_OK;
+  }
+
   nsresult rv = NS_OK;
   nsDisplayList newList;
+  nsDisplayList temp;
   while (nsDisplayItem *item = aList->RemoveBottom()) {
     nsIFrame *childFrame = item->GetUnderlyingFrame();
-    NS_ASSERTION(childFrame, "All display items to be wrapped must have a frame!");
-    if (childFrame->GetParent()->Preserves3DChildren()) {
+
+    // We accumulate sequential items that aren't transforms into the 'temp' list
+    // and then flush this list into newList by wrapping the whole lot with a single
+    // nsDisplayTransform.
+
+    if (childFrame && childFrame->GetParent()->Preserves3DChildren()) {
       switch (item->GetType()) {
         case nsDisplayItem::TYPE_TRANSFORM: {
+          if (!temp.IsEmpty()) {
+            newList.AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder, aFrame, &temp, aIndex++));
+          }
+          newList.AppendToTop(item);
           break;
         }
         case nsDisplayItem::TYPE_WRAP_LIST: {
+          if (!temp.IsEmpty()) {
+            newList.AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder, aFrame, &temp, aIndex++));
+          }
           nsDisplayWrapList *list = static_cast<nsDisplayWrapList*>(item);
-          rv = WrapPreserve3DList(aFrame, aBuilder, list->GetList());
+          rv = WrapPreserve3DListInternal(aFrame, aBuilder, list->GetList(), aIndex);
+          newList.AppendToTop(list->GetList());
+          list->~nsDisplayWrapList();
           break;
         }
         case nsDisplayItem::TYPE_OPACITY: {
+          if (!temp.IsEmpty()) {
+            newList.AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder, aFrame, &temp, aIndex++));
+          }
           nsDisplayOpacity *opacity = static_cast<nsDisplayOpacity*>(item);
-          rv = WrapPreserve3DList(aFrame, aBuilder, opacity->GetList());
+          rv = WrapPreserve3DListInternal(aFrame, aBuilder, opacity->GetList(), aIndex);
+          newList.AppendToTop(item);
           break;
         }
         default: {
-          item = new (aBuilder) nsDisplayTransform(aBuilder, childFrame, item);
+          temp.AppendToTop(item);
           break;
         }
       } 
     } else {
-      item = new (aBuilder) nsDisplayTransform(aBuilder, childFrame, item);
+      temp.AppendToTop(item);
     }
  
-    if (NS_FAILED(rv) || !item)
+    if (NS_FAILED(rv) || !item || aIndex > nsDisplayTransform::INDEX_MAX)
       return rv;
-
-    newList.AppendToTop(item);
+  }
+    
+  if (!temp.IsEmpty()) {
+    newList.AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder, aFrame, &temp, aIndex++));
   }
 
   aList->AppendToTop(&newList);
   return NS_OK;
+}
+
+static nsresult
+WrapPreserve3DList(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayList *aList)
+{
+  PRUint32 index = 0;
+  return WrapPreserve3DListInternal(aFrame, aBuilder, aList, index);
 }
 
 nsresult
@@ -1614,7 +1645,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   }
 
   // Mark the display list items for absolutely positioned children
-  MarkAbsoluteFramesForDisplayList(aBuilder, aDirtyRect);
+  MarkAbsoluteFramesForDisplayList(aBuilder, dirtyRect);
 
   nsDisplayListCollection set;
   nsresult rv;
@@ -1744,13 +1775,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       rv = WrapPreserve3DList(this, aBuilder, &resultList);
       if (NS_FAILED(rv))
         return rv;
-
-      if (resultList.Count() > 1) {
-        rv = resultList.AppendNewToTop(
-          new (aBuilder) nsDisplayWrapList(aBuilder, this, &resultList));
-        if (NS_FAILED(rv))
-          return rv;
-      }
     } else {
       rv = resultList.AppendNewToTop(
         new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList));
@@ -2247,12 +2271,12 @@ nsFrame::IsSelectable(bool* aSelectable, PRUint8* aSelectStyle) const
     selectStyle = NS_STYLE_USER_SELECT_NONE;
 
   // return stuff
-  if (aSelectable)
-    *aSelectable = (selectStyle != NS_STYLE_USER_SELECT_NONE);
   if (aSelectStyle)
     *aSelectStyle = selectStyle;
   if (mState & NS_FRAME_GENERATED_CONTENT)
     *aSelectable = PR_FALSE;
+  else
+    *aSelectable = (selectStyle != NS_STYLE_USER_SELECT_NONE);
   return NS_OK;
 }
 
@@ -4044,7 +4068,8 @@ nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther, const PRInt32 aAPD) const
   if (PresContext()->GetRootPresContext() !=
         aOther->PresContext()->GetRootPresContext()) {
     // crash right away, we are almost certainly going to crash anyway.
-    *(static_cast<PRInt32*>(nsnull)) = 3;
+    NS_RUNTIMEABORT("trying to get the offset between frames in different "
+                    "document hierarchies?");
   }
 
   const nsIFrame* root = nsnull;

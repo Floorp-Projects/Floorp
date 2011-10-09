@@ -36,13 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "base/message_loop.h"
+
 #include "nsBaseAppShell.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Services.h"
-
-#include "base/message_loop.h"
 
 // When processing the next thread event, the appshell may process native
 // events (if not in performance mode), which can result in suppressing the

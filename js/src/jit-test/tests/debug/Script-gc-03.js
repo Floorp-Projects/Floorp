@@ -10,6 +10,6 @@ assertEq(arr.length, 100);
 gc(g);
 
 for (var i = 0; i < arr.length; i++)
-    assertEq(arr[i].live, true);  // XXX FIXME replace with something that touches the script
+    assertEq(arr[i].lineCount, 1);
 
 gc();

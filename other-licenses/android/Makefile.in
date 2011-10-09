@@ -71,6 +71,7 @@ CSRCS = \
   ba.c \
   debugger.c \
   dlfcn.c \
+  getaddrinfo.c \
   linker.c \
   linker_format.c \
   rt.c \

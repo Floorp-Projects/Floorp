@@ -67,9 +67,9 @@ nsUXThemeData::sDwmDLL = NULL;
 BOOL
 nsUXThemeData::sFlatMenus = FALSE;
 bool
-nsUXThemeData::sIsXPOrLater = PR_FALSE;
+nsUXThemeData::sIsXPOrLater = false;
 bool
-nsUXThemeData::sIsVistaOrLater = PR_FALSE;
+nsUXThemeData::sIsVistaOrLater = false;
 
 bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
@@ -148,7 +148,7 @@ nsUXThemeData::Initialize()
     dwmSetWindowAttributePtr = (DwmSetWindowAttributeProc)::GetProcAddress(sDwmDLL, "DwmSetWindowAttribute");
     dwmInvalidateIconicBitmapsPtr = (DwmInvalidateIconicBitmapsProc)::GetProcAddress(sDwmDLL, "DwmInvalidateIconicBitmaps");
     dwmDwmDefWindowProcPtr = (DwmDefWindowProcProc)::GetProcAddress(sDwmDLL, "DwmDefWindowProc");
-    CheckForCompositor(PR_TRUE);
+    CheckForCompositor(true);
   }
 #endif
 
@@ -164,15 +164,15 @@ nsUXThemeData::Invalidate() {
     }
   }
   if (sIsXPOrLater) {
-    BOOL useFlat = PR_FALSE;
+    BOOL useFlat = false;
     sFlatMenus = ::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ?
-                     useFlat : PR_FALSE;
+                     useFlat : false;
   } else {
     // Contrary to Microsoft's documentation, SPI_GETFLATMENU will not fail
     // on Windows 2000, and it is also possible (though unlikely) for WIN2K
     // to be misconfigured in such a way that it would return true, so we
     // shall give WIN2K special treatment
-    sFlatMenus = PR_FALSE;
+    sFlatMenus = false;
   }
 }
 
@@ -289,7 +289,7 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
                                                           sizeof(captionButtons)))) {
       sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cx = captionButtons.right - captionButtons.left - 3;
       sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy = (captionButtons.bottom - captionButtons.top) - 1;
-      sTitlebarInfoPopulatedAero = PR_TRUE;
+      sTitlebarInfoPopulatedAero = true;
     }
   }
 #endif
@@ -348,7 +348,7 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   sCommandButtons[2].cx = info.rgrect[5].right - info.rgrect[5].left;
   sCommandButtons[2].cy = info.rgrect[5].bottom - info.rgrect[5].top;
 
-  sTitlebarInfoPopulatedThemed = PR_TRUE;
+  sTitlebarInfoPopulatedThemed = true;
 }
 
 // visual style (aero glass, aero basic)
@@ -378,7 +378,7 @@ LookAndFeel::WindowsTheme
 nsUXThemeData::sThemeId = LookAndFeel::eWindowsTheme_Generic;
 
 bool
-nsUXThemeData::sIsDefaultWindowsTheme = PR_FALSE;
+nsUXThemeData::sIsDefaultWindowsTheme = false;
 
 // static
 LookAndFeel::WindowsTheme
@@ -400,7 +400,7 @@ nsUXThemeData::UpdateNativeThemeInfo()
   // Trigger a refresh of themed button metrics if needed
   sTitlebarInfoPopulatedThemed = (nsWindow::GetWindowsVersion() < VISTA_VERSION);
 
-  sIsDefaultWindowsTheme = PR_FALSE;
+  sIsDefaultWindowsTheme = false;
   sThemeId = LookAndFeel::eWindowsTheme_Generic;
 
   if (!IsAppThemed() || !getCurrentThemeName) {
@@ -434,7 +434,7 @@ nsUXThemeData::UpdateNativeThemeInfo()
     return;
 
   if (theme == WINTHEME_AERO || theme == WINTHEME_LUNA)
-    sIsDefaultWindowsTheme = PR_TRUE;
+    sIsDefaultWindowsTheme = true;
   
   if (theme != WINTHEME_LUNA) {
     switch(theme) {

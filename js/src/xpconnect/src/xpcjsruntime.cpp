@@ -108,7 +108,7 @@ WrappedJSDyingJSObjectFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
     {
         if(wrapper->IsSubjectToFinalization())
         {
-            JS::AutoSwitchCompartment sc(data->cx,
+            js::AutoSwitchCompartment sc(data->cx,
                                          wrapper->GetJSObjectPreserveColor());
             if(JS_IsAboutToBeFinalized(data->cx,
                                        wrapper->GetJSObjectPreserveColor()))

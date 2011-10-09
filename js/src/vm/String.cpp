@@ -268,6 +268,8 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         return left;
 
     size_t wholeLength = leftLen + rightLen;
+    if (!JSString::validateLength(cx, wholeLength))
+        return NULL;
 
     if (JSShortString::lengthFits(wholeLength)) {
         JSShortString *str = js_NewGCShortString(cx);
@@ -285,16 +287,6 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         PodCopy(buf + leftLen, rightChars, rightLen);
         buf[wholeLength] = 0;
         return str;
-    }
-
-    if (wholeLength > JSString::MAX_LENGTH) {
-        if (JS_ON_TRACE(cx)) {
-            if (!CanLeaveTrace(cx))
-                return NULL;
-            LeaveTrace(cx);
-        }
-        js_ReportAllocationOverflow(cx);
-        return NULL;
     }
 
     return JSRope::new_(cx, left, right, wholeLength);

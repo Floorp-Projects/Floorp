@@ -231,7 +231,6 @@ _TEST_FILES1 = \
 		test_bug438519.html \
 		test_bug444722.html \
 		test_bug451376.html \
-		test_text_replaceWholeText.html \
 		test_text_wholeText.html \
 		test_bug433533.html \
 		wholeTexty-helper.xml \
@@ -509,7 +508,6 @@ _TEST_FILES2 = \
 		test_bug666604.html \
 		test_bug675121.html \
 		file_bug675121.sjs \
-		test_bug654352.html \
 		test_bug675166.html \
 		test_bug682554.html \
 		test_bug682592.html \
@@ -518,6 +516,8 @@ _TEST_FILES2 = \
 		test_bug684671.html \
 		test_bug685798.html \
 		test_bug686449.xhtml \
+		test_bug692434.html \
+		file_bug692434.xml \
 		$(NULL)
 
 _CHROME_FILES =	\

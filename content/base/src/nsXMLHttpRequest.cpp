@@ -849,7 +849,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(mResponseXML);
   if (mResponseCharset != document->GetDocumentCharacterSet()) {
-    mResponseCharset == document->GetDocumentCharacterSet();
+    mResponseCharset = document->GetDocumentCharacterSet();
     mResponseText.Truncate();
     mResponseBodyDecodedPos = 0;
 
@@ -1401,10 +1401,7 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
 
   if (aUseLSEventWrapper) {
     nsCOMPtr<nsIDOMProgressEvent> xhrprogressEvent =
-      new nsXMLHttpProgressEvent(progress, aPosition, aTotalSize);
-    if (!xhrprogressEvent) {
-      return;
-    }
+      new nsXMLHttpProgressEvent(progress, aPosition, aTotalSize, mOwner);
     event = xhrprogressEvent;
   }
   aTarget->DispatchDOMEvent(nsnull, event, nsnull, nsnull);
@@ -3240,7 +3237,9 @@ nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 // DOM event class to handle progress notifications
 nsXMLHttpProgressEvent::nsXMLHttpProgressEvent(nsIDOMProgressEvent* aInner,
                                                PRUint64 aCurrentProgress,
-                                               PRUint64 aMaxProgress)
+                                               PRUint64 aMaxProgress,
+                                               nsPIDOMWindow* aWindow)
+  : mWindow(aWindow)
 {
   mInner = static_cast<nsDOMProgressEvent*>(aInner);
   mCurProgress = aCurrentProgress;
@@ -3270,11 +3269,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXMLHttpProgressEvent)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXMLHttpProgressEvent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInner);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mWindow);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXMLHttpProgressEvent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mInner,
                                                        nsIDOMProgressEvent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mWindow);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP nsXMLHttpProgressEvent::GetInput(nsIDOMLSInput * *aInput)
@@ -3283,8 +3284,23 @@ NS_IMETHODIMP nsXMLHttpProgressEvent::GetInput(nsIDOMLSInput * *aInput)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void
+nsXMLHttpProgressEvent::WarnAboutLSProgressEvent(nsIDocument::DeprecatedOperations aOperation)
+{
+  if (!mWindow) {
+    return;
+  }
+  nsCOMPtr<nsIDocument> document =
+    do_QueryInterface(mWindow->GetExtantDocument());
+  if (!document) {
+    return;
+  }
+  document->WarnOnceAbout(aOperation);
+}
+
 NS_IMETHODIMP nsXMLHttpProgressEvent::GetPosition(PRUint32 *aPosition)
 {
+  WarnAboutLSProgressEvent(nsIDocument::ePosition);
   // XXX can we change the iface?
   LL_L2UI(*aPosition, mCurProgress);
   return NS_OK;
@@ -3292,8 +3308,8 @@ NS_IMETHODIMP nsXMLHttpProgressEvent::GetPosition(PRUint32 *aPosition)
 
 NS_IMETHODIMP nsXMLHttpProgressEvent::GetTotalSize(PRUint32 *aTotalSize)
 {
+  WarnAboutLSProgressEvent(nsIDocument::eTotalSize);
   // XXX can we change the iface?
   LL_L2UI(*aTotalSize, mMaxProgress);
   return NS_OK;
 }
-

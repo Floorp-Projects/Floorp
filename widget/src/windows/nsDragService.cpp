@@ -81,7 +81,7 @@
 //
 //-------------------------------------------------------------------------
 nsDragService::nsDragService()
-  : mNativeDragSrc(nsnull), mNativeDragTarget(nsnull), mDataObject(nsnull), mSentLocalDropEvent(PR_FALSE)
+  : mNativeDragSrc(nsnull), mNativeDragTarget(nsnull), mDataObject(nsnull), mSentLocalDropEvent(false)
 {
 }
 
@@ -103,11 +103,11 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
                                SHDRAGIMAGE *psdi)
 {
   if (!psdi)
-    return PR_FALSE;
+    return false;
 
   memset(psdi, 0, sizeof(SHDRAGIMAGE));
   if (!aDOMNode) 
-    return PR_FALSE;
+    return false;
 
   // Prepare the drag image
   nsIntRect dragRect;
@@ -117,12 +117,12 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
            mScreenX, mScreenY,
            &dragRect, getter_AddRefs(surface), &pc);
   if (!surface)
-    return PR_FALSE;
+    return false;
 
   PRUint32 bmWidth = dragRect.width, bmHeight = dragRect.height;
 
   if (bmWidth == 0 || bmHeight == 0)
-    return PR_FALSE;
+    return false;
 
   psdi->crColorKey = CLR_NONE;
 
@@ -130,11 +130,11 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
     gfxIntSize(bmWidth, bmHeight), 
     gfxImageSurface::ImageFormatARGB32);
   if (!imgSurface)
-    return PR_FALSE;
+    return false;
 
   nsRefPtr<gfxContext> context = new gfxContext(imgSurface);
   if (!context)
-    return PR_FALSE;
+    return false;
 
   context->SetOperator(gfxContext::OPERATOR_SOURCE);
   context->SetSource(surface);
@@ -298,7 +298,7 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
   // XXX not sure why we bother to cache this, it can change during
   // the drag
   mDragAction = aActionType;
-  mSentLocalDropEvent = PR_FALSE;
+  mSentLocalDropEvent = false;
 
   // Start dragging
   StartDragSession();
@@ -351,9 +351,9 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
   cpos.x = GET_X_LPARAM(pos);
   cpos.y = GET_Y_LPARAM(pos);
   SetDragEndPoint(nsIntPoint(cpos.x, cpos.y));
-  EndDragSession(PR_TRUE);
+  EndDragSession(true);
 
-  mDoingDrag = PR_FALSE;
+  mDoingDrag = false;
 
   return DRAGDROP_S_DROP == res ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -485,7 +485,7 @@ nsDragService::SetDroppedLocal()
 {
   // Sent from the native drag handler, letting us know
   // a drop occurred within the application vs. outside of it.
-  mSentLocalDropEvent = PR_TRUE;
+  mSentLocalDropEvent = true;
   return;
 }
 
@@ -501,7 +501,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
     NS_WARNING("DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD");
 #endif
 
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   FORMATETC fe;
   UINT format = 0;
@@ -520,7 +520,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
       for (PRUint32 i=0;i<cnt;++i) {
         IDataObject * dataObj = dataObjCol->GetDataObjectAt(i);
         if (S_OK == dataObj->QueryGetData(&fe))
-          *_retval = PR_TRUE;             // found it!
+          *_retval = true;             // found it!
       }
     }
   } // if special collection object
@@ -533,7 +533,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
     SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
                   TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
     if (mDataObject->QueryGetData(&fe) == S_OK)
-      *_retval = PR_TRUE;                 // found it!
+      *_retval = true;                 // found it!
     else {
       // We haven't found the exact flavor the client asked for, but
       // maybe we can still find it from something else that's on the
@@ -546,7 +546,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
         SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
                       TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
         if (mDataObject->QueryGetData(&fe) == S_OK)
-          *_retval = PR_TRUE;                 // found it!
+          *_retval = true;                 // found it!
       }
       else if (strcmp(aDataFlavor, kURLMime) == 0) {
         // client asked for a url and it wasn't present, but if we
@@ -556,7 +556,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
         SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
                       TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
         if (mDataObject->QueryGetData(&fe) == S_OK)
-          *_retval = PR_TRUE;                 // found it!
+          *_retval = true;                 // found it!
       }
     } // else try again
   }
@@ -589,7 +589,7 @@ nsDragService::IsCollectionObject(IDataObject* inDataObj)
   // ask the object if it supports it. If yes, we have a collection
   // object
   if (inDataObj->QueryGetData(&sFE) == S_OK)
-    isCollection = PR_TRUE;
+    isCollection = true;
 
   return isCollection;
 

@@ -41,7 +41,6 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsobj.h"
 
 #include "nsTraceRefcnt.h"
 #include "xpcprivate.h"

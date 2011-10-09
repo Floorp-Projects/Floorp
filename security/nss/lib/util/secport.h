@@ -37,7 +37,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.23 2009/10/30 09:44:47 nelson%bolyard.com Exp $
+ * $Id: secport.h,v 1.27 2011/10/04 18:46:04 emaldona%redhat.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -148,6 +148,16 @@ SEC_END_PROTOS
 /* Please, keep these defines sorted alphabetically.  Thanks! */
 
 #define PORT_Atoi(buff)	(int)strtol(buff, NULL, 10)
+
+/* Returns a UTF-8 encoded constant error string for err.
+ * Returns NULL if initialization of the error tables fails
+ * due to insufficient memory.
+ *
+ * This string must not be modified by the application.
+ */
+#define PORT_ErrorToString(err) PR_ErrorToString((err), PR_LANGUAGE_I_DEFAULT)
+
+#define PORT_ErrorToName PR_ErrorToName
 
 #define PORT_Memcmp 	memcmp
 #define PORT_Memcpy 	memcpy

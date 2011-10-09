@@ -86,7 +86,7 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
     static bool sInitialized = false;
 
     if (!sInitialized) {
-        sInitialized = PR_TRUE;
+        sInitialized = true;
         InitLookAndFeel();
     }
 }
@@ -367,7 +367,7 @@ static void darken_gdk_color(GdkColor *src, GdkColor *dest)
 }
 
 static PRInt32 CheckWidgetStyle(GtkWidget* aWidget, const char* aStyle, PRInt32 aResult) {
-    gboolean value = PR_FALSE;
+    gboolean value = FALSE;
     gtk_widget_style_get(aWidget, aStyle, &value, NULL);
     return value ? aResult : 0;
 }
@@ -813,8 +813,8 @@ nsLookAndFeel::RefreshImpl()
 bool
 nsLookAndFeel::GetEchoPasswordImpl() {
 #ifdef MOZ_PLATFORM_MAEMO
-    return PR_TRUE;
+    return true;
 #else
-    return PR_FALSE;
+    return false;
 #endif
 }

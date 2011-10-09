@@ -36,7 +36,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#ifndef mozilla_dom_CrashReporterChild_h
+#define mozilla_dom_CrashReporterChild_h
+
 #include "mozilla/dom/PCrashReporterChild.h"
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#include "nsXULAppAPI.h"
+#endif
 
 namespace mozilla {
 namespace dom {
@@ -45,11 +53,16 @@ class CrashReporterChild :
 {
  public:
     CrashReporterChild() {
-      MOZ_COUNT_CTOR(CrashReporterChild);
+        MOZ_COUNT_CTOR(CrashReporterChild);
     }
-    virtual ~CrashReporterChild() {
-      MOZ_COUNT_DTOR(CrashReporterChild);
+    ~CrashReporterChild() {
+        MOZ_COUNT_DTOR(CrashReporterChild);
     }
+
+    static PCrashReporterChild* GetCrashReporter();
 };
+
 } // namespace dom
 } // namespace mozilla
+
+#endif // mozilla_dom_CrashReporterChild_h

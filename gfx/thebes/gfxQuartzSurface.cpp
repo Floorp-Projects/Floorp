@@ -40,15 +40,23 @@
 
 #include "cairo-quartz.h"
 
-gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format,
-                                   bool aForPrinting)
-    : mCGContext(NULL), mSize(size), mForPrinting(aForPrinting)
+void
+gfxQuartzSurface::MakeInvalid()
 {
-    unsigned int width = (unsigned int) floor(size.width);
-    unsigned int height = (unsigned int) floor(size.height);
+    mSize = gfxIntSize(-1, -1);    
+}
 
-    if (!CheckSurfaceSize(gfxIntSize(width, height)))
-        return;
+gfxQuartzSurface::gfxQuartzSurface(const gfxSize& desiredSize, gfxImageFormat format,
+                                   bool aForPrinting)
+    : mCGContext(NULL), mSize(desiredSize), mForPrinting(aForPrinting)
+{
+    gfxIntSize size((unsigned int) floor(desiredSize.width),
+                    (unsigned int) floor(desiredSize.height));
+    if (!CheckSurfaceSize(size))
+        MakeInvalid();
+
+    unsigned int width = static_cast<unsigned int>(mSize.width);
+    unsigned int height = static_cast<unsigned int>(mSize.height);
 
     cairo_surface_t *surf = cairo_quartz_surface_create
         ((cairo_format_t) format, width, height);
@@ -61,12 +69,17 @@ gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format,
 }
 
 gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
-                                   const gfxSize& size,
+                                   const gfxSize& desiredSize,
                                    bool aForPrinting)
-    : mCGContext(context), mSize(size), mForPrinting(aForPrinting)
+    : mCGContext(context), mSize(desiredSize), mForPrinting(aForPrinting)
 {
-    unsigned int width = (unsigned int) floor(size.width);
-    unsigned int height = (unsigned int) floor(size.height);
+    gfxIntSize size((unsigned int) floor(desiredSize.width),
+                    (unsigned int) floor(desiredSize.height));
+    if (!CheckSurfaceSize(size))
+        MakeInvalid();
+
+    unsigned int width = static_cast<unsigned int>(mSize.width);
+    unsigned int height = static_cast<unsigned int>(mSize.height);
 
     cairo_surface_t *surf = 
         cairo_quartz_surface_create_for_cg_context(context,
@@ -88,17 +101,19 @@ gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
 }
 
 gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
-                                   const gfxSize& size,
+                                   const gfxSize& desiredSize,
                                    long stride,
                                    gfxImageFormat format,
                                    bool aForPrinting)
-    : mCGContext(nsnull), mSize(size), mForPrinting(aForPrinting)
+    : mCGContext(nsnull), mSize(desiredSize), mForPrinting(aForPrinting)
 {
-    unsigned int width = (unsigned int) floor(size.width);
-    unsigned int height = (unsigned int) floor(size.height);
+    gfxIntSize size((unsigned int) floor(desiredSize.width),
+                    (unsigned int) floor(desiredSize.height));
+    if (!CheckSurfaceSize(size))
+        MakeInvalid();
 
-    if (!CheckSurfaceSize(gfxIntSize(width, height)))
-        return;
+    unsigned int width = static_cast<unsigned int>(mSize.width);
+    unsigned int height = static_cast<unsigned int>(mSize.height);
 
     cairo_surface_t *surf = cairo_quartz_surface_create_for_data
         (data, (cairo_format_t) format, width, height, stride);

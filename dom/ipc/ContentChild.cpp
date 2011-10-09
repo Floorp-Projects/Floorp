@@ -52,13 +52,14 @@
 #include "AudioChild.h"
 #endif
 
+#include "mozilla/dom/ExternalHelperAppChild.h"
+#include "mozilla/dom/PCrashReporterChild.h"
+#include "mozilla/dom/StorageChild.h"
+#include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/ipc/TestShellChild.h"
-#include "mozilla/net/NeckoChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
-#include "mozilla/dom/ExternalHelperAppChild.h"
-#include "mozilla/dom/StorageChild.h"
-#include "mozilla/dom/PCrashReporterChild.h"
+#include "mozilla/net/NeckoChild.h"
 
 #if defined(MOZ_SYDNEYAUDIO)
 #include "nsAudioStream.h"
@@ -74,6 +75,7 @@
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
 #include "nsJSEnvironment.h"
+#include "SandboxHal.h"
 
 #include "History.h"
 #include "nsDocShellCID.h"
@@ -109,6 +111,7 @@
 #include "nsIAccessibilityService.h"
 #endif
 
+using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -265,8 +268,12 @@ ContentChild::Init(MessageLoop* aIOLoop,
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 
-#if defined(ANDROID) && defined(MOZ_CRASHREPORTER)
-    PCrashReporterChild* crashreporter = SendPCrashReporterConstructor();
+#ifdef MOZ_CRASHREPORTER
+    SendPCrashReporterConstructor(CrashReporter::CurrentThreadId(),
+                                  XRE_GetProcessType());
+#if defined(ANDROID)
+    PCrashReporterChild* crashreporter = ManagedPCrashReporterChild()[0];
+
     InfallibleTArray<Mapping> mappings;
     const struct mapping_info *info = getLibraryMapping();
     while (info && info->name) {
@@ -278,6 +285,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
         info++;
     }
     crashreporter->SendAddLibraryMappings(mappings);
+#endif
 #endif
 
     return true;
@@ -418,15 +426,33 @@ ContentChild::DeallocPBrowser(PBrowserChild* iframe)
 }
 
 PCrashReporterChild*
-ContentChild::AllocPCrashReporter()
+ContentChild::AllocPCrashReporter(const mozilla::dom::NativeThreadId& id,
+                                  const PRUint32& processType)
 {
+#ifdef MOZ_CRASHREPORTER
     return new CrashReporterChild();
+#else
+    return nsnull;
+#endif
 }
 
 bool
 ContentChild::DeallocPCrashReporter(PCrashReporterChild* crashreporter)
 {
     delete crashreporter;
+    return true;
+}
+
+PHalChild*
+ContentChild::AllocPHal()
+{
+    return CreateHalChild();
+}
+
+bool
+ContentChild::DeallocPHal(PHalChild* aHal)
+{
+    delete aHal;
     return true;
 }
 
@@ -776,6 +802,14 @@ ContentChild::RecvCycleCollect()
 {
     nsJSContext::GarbageCollectNow();
     nsJSContext::CycleCollectNow();
+    return true;
+}
+
+bool
+ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID)
+{
+    mAppInfo.version.Assign(version);
+    mAppInfo.buildID.Assign(buildID);
     return true;
 }
 

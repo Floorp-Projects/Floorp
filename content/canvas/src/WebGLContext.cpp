@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "WebGLContext.h"
+#include "WebGLExtensions.h"
 
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
@@ -941,12 +942,23 @@ WebGLContext::MozGetUnderlyingParamString(PRUint32 pname, nsAString& retval)
 
 bool WebGLContext::IsExtensionSupported(WebGLExtensionID ei)
 {
-    if (ei == WebGL_OES_texture_float) {
-        MakeContextCurrent();
-        return gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float
-                                                      : GLContext::ARB_texture_float);
+    bool isSupported;
+
+    switch (ei) {
+        case WebGL_OES_texture_float:
+            MakeContextCurrent();
+            isSupported = gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float 
+                                                                 : GLContext::ARB_texture_float);
+	    break;
+        case WebGL_OES_standard_derivatives:
+            // We always support this extension.
+            isSupported = true;
+            break;
+        default:
+            isSupported = false;
     }
-    return false;
+
+    return isSupported;
 }
 
 NS_IMETHODIMP
@@ -960,12 +972,23 @@ WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
         if (IsExtensionSupported(WebGL_OES_texture_float))
             ei = WebGL_OES_texture_float;
     }
+    else if (aName.EqualsLiteral("OES_standard_derivatives")) {
+        if (IsExtensionSupported(WebGL_OES_standard_derivatives))
+            ei = WebGL_OES_standard_derivatives;
+    }
 
-    // create a WebGLExtension object for extensions that don't
-    // have any additional tokens or methods
     if (ei != WebGLExtensionID_Max) {
         if (!IsExtensionEnabled(ei)) {
-            mEnabledExtensions[ei] = new WebGLExtension(this);
+            switch (ei) {
+                case WebGL_OES_standard_derivatives:
+                    mEnabledExtensions[ei] = new WebGLExtensionStandardDerivatives(this);
+                    break;
+                // create an extension for any types that don't
+                // have any additional tokens or methods
+                default:
+                    mEnabledExtensions[ei] = new WebGLExtension(this);
+                    break;
+            }
         }
         NS_ADDREF(*retval = mEnabledExtensions[ei]);
     }
@@ -1209,6 +1232,19 @@ NS_INTERFACE_MAP_BEGIN(WebGLExtension)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtension)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(WebGLExtensionStandardDerivatives)
+NS_IMPL_RELEASE(WebGLExtensionStandardDerivatives)
+
+DOMCI_DATA(WebGLExtensionStandardDerivatives, WebGLExtensionStandardDerivatives)
+
+NS_INTERFACE_MAP_BEGIN(WebGLExtensionStandardDerivatives)
+  //NS_INTERFACE_MAP_ENTRY(WebGLExtensionStandardDerivatives)
+  //NS_INTERFACE_MAP_ENTRY(WebGLExtension)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLExtensionStandardDerivatives)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, WebGLExtension)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtensionStandardDerivatives)
+NS_INTERFACE_MAP_END_INHERITING(WebGLExtension)
+
 /* readonly attribute WebGLsizei drawingBufferWidth; */
 NS_IMETHODIMP
 WebGLContext::GetDrawingBufferWidth(WebGLsizei *aWidth)
@@ -1272,6 +1308,8 @@ WebGLContext::GetSupportedExtensions(nsIVariant **retval)
 
     if (IsExtensionSupported(WebGL_OES_texture_float))
         extList.InsertElementAt(extList.Length(), "OES_texture_float");
+    if (IsExtensionSupported(WebGL_OES_standard_derivatives))
+        extList.InsertElementAt(extList.Length(), "OES_standard_derivatives");
 
     nsresult rv;
     if (extList.Length() > 0) {

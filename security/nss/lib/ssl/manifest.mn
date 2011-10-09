@@ -46,11 +46,6 @@ EXPORTS = \
 	preenc.h \
 	$(NULL)
 
-PRIVATE_EXPORTS = \
-	sslerrstrs.h \
-	SSLerrs.h \
- 	$(NULL)
-
 MODULE = nss
 MAPFILE = $(OBJDIR)/ssl.def
 

@@ -47,7 +47,7 @@
  */
 interface nsISelection;
 
-[scriptable, uuid(DA6A8183-3C50-4F4A-9EFC-0E050B9A856A)]
+[scriptable, uuid(5c7d1c5a-98a4-4fbe-bec1-f98193f98c7d)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
   readonly attribute DOMString            URL;

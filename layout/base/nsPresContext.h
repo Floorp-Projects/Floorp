@@ -675,14 +675,12 @@ public:
   bool GetBackgroundImageDraw() const { return mDrawImageBackground; }
   void   SetBackgroundImageDraw(bool aCanDraw)
   {
-    NS_ASSERTION(!(aCanDraw & ~1), "Value must be true or false");
     mDrawImageBackground = aCanDraw;
   }
 
   bool GetBackgroundColorDraw() const { return mDrawColorBackground; }
   void   SetBackgroundColorDraw(bool aCanDraw)
   {
-    NS_ASSERTION(!(aCanDraw & ~1), "Value must be true or false");
     mDrawColorBackground = aCanDraw;
   }
 
@@ -725,7 +723,6 @@ public:
    */
   void SetVisualMode(bool aIsVisual)
   {
-    NS_ASSERTION(!(aIsVisual & ~1), "Value must be true or false");
     mIsVisual = aIsVisual;
   }
 
@@ -757,7 +754,6 @@ public:
    */
   void SetIsRenderingOnlySelection(bool aResult)
   {
-    NS_ASSERTION(!(aResult & ~1), "Value must be true or false");
     mIsRenderingOnlySelection = aResult;
   }
 

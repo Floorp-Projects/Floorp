@@ -108,6 +108,7 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
   ["SelectionHelper", "chrome://browser/content/SelectionHelper.js"],
   ["ContentPopupHelper", "chrome://browser/content/ContentPopupHelper.js"],
   ["SharingUI", "chrome://browser/content/SharingUI.js"],
+  ["TabletSidebar", "chrome://browser/content/TabletSidebar.js"],
   ["TabsPopup", "chrome://browser/content/TabsPopup.js"],
   ["MasterPasswordUI", "chrome://browser/content/MasterPasswordUI.js"],
 #ifdef MOZ_SERVICES_SYNC

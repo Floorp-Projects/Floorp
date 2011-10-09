@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.41 $ $Date: 2011/04/13 00:10:25 $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.42 $ $Date: 2011/09/14 00:28:48 $";
 #endif /* DEBUG */
 
 #include "pkcs11.h"
@@ -437,6 +437,7 @@ nssCryptokiTrust_GetAttributes (
     CK_TRUST csTrust = CKT_NSS_TRUST_UNKNOWN;
     CK_ATTRIBUTE_PTR attr;
     CK_ATTRIBUTE trust_template[7];
+    CK_ATTRIBUTE_PTR sha1_hash_attr;
     CK_ULONG trust_size;
 
     /* Use the trust object to find the trust settings */
@@ -447,6 +448,7 @@ nssCryptokiTrust_GetAttributes (
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_EMAIL_PROTECTION, epTrust);
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CODE_SIGNING,     csTrust);
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_STEP_UP_APPROVED, stepUp);
+    sha1_hash_attr = attr;
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CERT_SHA1_HASH,     sha1_hash);
     NSS_CK_TEMPLATE_FINISH(trust_template, attr, trust_size);
 
@@ -473,6 +475,11 @@ nssCryptokiTrust_GetAttributes (
 	}
     }
 
+    if (sha1_hash_attr->ulValueLen == -1) {
+	/* The trust object does not have the CKA_CERT_SHA1_HASH attribute. */
+	sha1_hash_attr->ulValueLen = 0;
+    }
+    sha1_hash->size = sha1_hash_attr->ulValueLen;
     *serverAuth = get_nss_trust(saTrust);
     *clientAuth = get_nss_trust(caTrust);
     *emailProtection = get_nss_trust(epTrust);

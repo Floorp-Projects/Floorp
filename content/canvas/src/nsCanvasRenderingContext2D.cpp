@@ -852,7 +852,7 @@ nsCanvasRenderingContext2D::Reset()
 
     // only do this for non-docshell created contexts,
     // since those are the ones that we created a surface for
-    if (mValid && !mDocShell)
+    if (mValid && !mDocShell && mSurface)
         gCanvasMemoryUsed -= mWidth * mHeight * 4;
 
     mSurface = nsnull;
@@ -1834,6 +1834,15 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
+    nsCOMPtr<nsIContent> content = do_QueryInterface(image);
+    nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(content);
+    if (canvas) {
+        nsIntSize size = canvas->GetSize();
+        if (size.width == 0 || size.height == 0) {
+            return NS_ERROR_DOM_INVALID_STATE_ERR;
+        }
+    }
+
     // The canvas spec says that createPattern should use the first frame
     // of animated images
     nsLayoutUtils::SurfaceFromElementResult res =
@@ -1849,9 +1858,6 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
     nsRefPtr<nsCanvasPattern> pat = new nsCanvasPattern(thebespat, res.mPrincipal,
                                                         res.mIsWriteOnly,
                                                         res.mCORSUsed);
-    if (!pat)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     *_retval = pat.forget().get();
     return NS_OK;
 }
@@ -2601,9 +2607,6 @@ nsCanvasRenderingContext2D::SetTextAlign(const nsAString& ta)
         CurrentState().textAlign = TEXT_ALIGN_RIGHT;
     else if (ta.EqualsLiteral("center"))
         CurrentState().textAlign = TEXT_ALIGN_CENTER;
-    // spec says to not throw error for invalid arg, but do it anyway
-    else
-        return NS_ERROR_INVALID_ARG;
 
     return NS_OK;
 }
@@ -2651,9 +2654,6 @@ nsCanvasRenderingContext2D::SetTextBaseline(const nsAString& tb)
         CurrentState().textBaseline = TEXT_BASELINE_IDEOGRAPHIC;
     else if (tb.EqualsLiteral("bottom"))
         CurrentState().textBaseline = TEXT_BASELINE_BOTTOM;
-    // spec says to not throw error for invalid arg, but do it anyway
-    else
-        return NS_ERROR_INVALID_ARG;
 
     return NS_OK;
 }

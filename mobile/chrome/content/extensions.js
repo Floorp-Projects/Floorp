@@ -59,6 +59,11 @@ XPCOMUtils.defineLazyGetter(this, "AddonRepository", function() {
   return AddonRepository;
 });
 
+XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
+  Cu.import("resource://gre/modules/NetUtil.jsm");
+  return NetUtil;
+});
+
 var ExtensionsView = {
   _strings: {},
   _list: null,
@@ -416,6 +421,34 @@ var ExtensionsView = {
     aItem.setAttribute("opType", opType);
   },
 
+  _getLocalesInAddon: function(aAddon, aCallback) {
+    if (!aCallback || typeof aCallback != "function")
+      throw "_getLocalesInAddon requires a callback function";
+
+    let uri = aAddon.getResourceURI("chrome.manifest");
+    NetUtil.asyncFetch(uri, function(aStream, aResult, aRequest) {
+      var data = NetUtil.readInputStreamToString(aStream, aStream.available());
+      let reg = new RegExp("locale browser ([a-zA-Z\-]*)", "g");
+      let res = reg.exec(data)
+      let list = [];
+      while(res) {
+        if (list.indexOf(res[1]) == -1)
+          list.push(res[1]);
+        res = reg.exec(data);
+      }
+      if (aCallback)
+        aCallback(list);
+    });
+  },
+
+  _resetLanguagePref: function(aAddon) {
+      this._getLocalesInAddon(aAddon, function(aLocales) {
+        let currentLocale = Services.prefs.getCharPref("general.useragent.locale");
+        if (aLocales.indexOf(currentLocale) > -1)
+          Services.prefs.clearUserPref("general.useragent.locale");
+      });    
+  },
+
   disable: function ev_disable(aItem) {
     let opType;
     if (aItem.getAttribute("type") == "search") {
@@ -426,7 +459,7 @@ var ExtensionsView = {
       aItem.addon.userDisabled = true;
       aItem.setAttribute("isDisabled", true);
     } else if (aItem.getAttribute("type") == "locale") {
-      Services.prefs.clearUserPref("general.useragent.locale");
+      this._resetLanguagePref(aItem.addon);
       aItem.addon.userDisabled = true;
       aItem.setAttribute("isDisabled", true);
     } else {
@@ -475,6 +508,9 @@ var ExtensionsView = {
       } else {
         this._list.removeChild(aItem);
       }
+
+      if (aItem.getAttribute("type") == "locale")
+        this._resetLanguagePref(aItem.addon);
     }
   },
 
@@ -913,7 +949,6 @@ function AddonInstallListener() {
 }
 
 AddonInstallListener.prototype = {
-
   onInstallEnded: function(aInstall, aAddon) {
     let needsRestart = false;
     let mode = "";
@@ -924,6 +959,8 @@ AddonInstallListener.prototype = {
       needsRestart = true;
       mode = "normal";
     }
+
+    this._clearRecommendedCache();
 
     // if we already have a mode, then we need to show a restart notification
     // otherwise, we are likely a bootstrapped addon
@@ -1065,4 +1102,12 @@ AddonInstallListener.prototype = {
 
     ExtensionsView.showAlert(strings.GetStringFromName(stringName), !aNeedsRestart);
   },
+
+  _clearRecommendedCache: function xpidm_clearRecommendedCache() {
+    let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    let file = dirService.get("ProfD", Ci.nsILocalFile);
+    file.append("recommended-addons.json");
+    if (file.exists())
+      file.remove(false);
+  }
 };

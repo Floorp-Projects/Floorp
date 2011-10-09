@@ -48,7 +48,6 @@ GRE_MODULE	= 1
 
 SDK_XPIDLSRCS =                                 \
 	nsIDOMAttr.idl				\
-	nsIDOMCaretPosition.idl			\
 	nsIDOMCDATASection.idl			\
 	nsIDOMCharacterData.idl			\
 	nsIDOMComment.idl			\
@@ -66,7 +65,6 @@ SDK_XPIDLSRCS =                                 \
 	$(NULL)
 XPIDLSRCS =                                     \
 	nsIDOMDOMStringList.idl			\
-	nsIDOMNameList.idl			\
 	nsIDOMXMLDocument.idl			\
 	nsIDOMUserDataHandler.idl		\
 	nsIDOMNSEditableElement.idl		\

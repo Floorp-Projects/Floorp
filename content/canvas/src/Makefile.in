@@ -69,6 +69,7 @@ CPPSRCS += \
 	WebGLContextGL.cpp \
 	WebGLContextUtils.cpp \
 	WebGLContextValidate.cpp \
+	WebGLExtensionStandardDerivatives.cpp \
 	$(NULL)
 
 DEFINES += -DUSE_ANGLE

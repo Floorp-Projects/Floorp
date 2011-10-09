@@ -1,4 +1,5 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 .controlBar {
   height: 28px;
@@ -178,6 +179,24 @@
 
 .statusIcon[type="error"] {
   background: url(chrome://global/skin/media/error.png) no-repeat center;
+}
+
+/* Statistics formatting */
+html|td {
+  padding: 2px;
+}
+html|table {
+  font-family: Helvetica, Ariel, sans-serif;
+  font-size: 11px;
+  color: white;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+  width: 100%;
+  background: rgba(68,68,68,.7);
+  table-layout: fixed;
 }
 
 /* CSS Transitions */

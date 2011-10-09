@@ -58,6 +58,7 @@
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsfriendapi.h"
 #include "jstypedarray.h"
 #include "nsJSUtils.h"
 
@@ -200,7 +201,7 @@ nsHTMLAudioElement::MozWriteAudio(const jsval &aData, JSContext *aCx, PRUint32 *
   JSObject *tsrc = NULL;
 
   // Allow either Float32Array or plain JS Array
-  if (darray->getClass() == &js::TypedArray::fastClasses[js::TypedArray::TYPE_FLOAT32])
+  if (js::GetObjectClass(darray) == &js::TypedArray::fastClasses[js::TypedArray::TYPE_FLOAT32])
   {
     tsrc = js::TypedArray::getTypedArray(darray);
   } else if (JS_IsArrayObject(aCx, darray)) {

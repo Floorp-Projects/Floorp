@@ -139,6 +139,21 @@ interface nsIWebGLExtension : nsISupports
 {
 };
 
+/* Classes that extend on nsIWebGLExtension and provide
+ * extra tokens, functions, etc.
+ */
+[scriptable, uuid(3de3dfd9-864a-4e4c-989b-2977eaa80b7b)]
+interface nsIWebGLExtensionStandardDerivatives : nsIWebGLExtension
+{
+  //
+  //  CONSTANTS
+  //
+
+  /* Fragment shader hint */
+  const WebGLenum FRAGMENT_SHADER_DERIVATIVE_HINT_OES   = 0x8B8B;
+};
+
+
 [scriptable, uuid(ef15ae85-4670-4dc4-848d-51ca81e8397a)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {

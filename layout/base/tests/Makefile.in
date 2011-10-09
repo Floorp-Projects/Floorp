@@ -63,11 +63,19 @@ DEFINES += -D_IMPL_NS_LAYOUT
 
 _TEST_FILES =	\
 		border_radius_hit_testing_iframe.html \
+		test_preserve3d_sorting_hit_testing.html \
+		preserve3d_sorting_hit_testing_iframe.html \
 		bug369950-subframe.xml \
 		decoration_line_rendering.js \
 		test_after_paint_pref.html \
 		test_border_radius_hit_testing.html \
 		test_bug66619.html \
+		test_bug93077-1.html \
+		test_bug93077-2.html \
+		test_bug93077-3.html \
+		test_bug93077-4.html \
+		test_bug93077-5.html \
+		test_bug93077-6.html \
 		test_bug114649.html \
 		$(warning test_bug369950.html disabled due to random orange; see bug 492575) \
 		test_bug386575.xhtml \

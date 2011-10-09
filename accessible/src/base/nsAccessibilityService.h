@@ -230,18 +230,6 @@ private:
   void Shutdown();
 
   /**
-   * Return accessible for HTML area element associated with an image map.
-   *
-   * @param  aImageFrame       [in] image frame
-   * @param  aAreaNode         [in] area node
-   * @param  aWeakShell        [in] presshell of image frame
-   * @param  aImageAccessible  [out, optional] image accessible, isn't addrefed
-   */
-  nsAccessible* GetAreaAccessible(nsIFrame* aImageFrame, nsINode* aAreaNode,
-                                  nsIWeakReference* aWeakShell,
-                                  nsAccessible** aImageAccessible = nsnull);
-
-  /**
    * Create accessible for the element implementing nsIAccessibleProvider
    * interface.
    */

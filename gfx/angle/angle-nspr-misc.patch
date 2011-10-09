@@ -1,26 +1,2 @@
 # HG changeset patch
-# Parent 99de3c7d00973e65e295911b2b8b66c75cfe24bb
-diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclude.h
---- a/gfx/angle/src/compiler/osinclude.h
-+++ b/gfx/angle/src/compiler/osinclude.h
-@@ -7,17 +7,19 @@
- #ifndef __OSINCLUDE_H
- #define __OSINCLUDE_H
- 
- //
- // This file contains contains os-specific datatypes and
- // declares any os-specific functions.
- //
- 
--#if defined(_WIN32) || defined(_WIN64)
-+#if defined(ANGLE_USE_NSPR)
-+/* no need to define anything when using NSPR */
-+#elif defined(_WIN32) || defined(_WIN64)
- #define ANGLE_OS_WIN
- #elif defined(__APPLE__) || defined(__linux__) || \
-       defined(__FreeBSD__) || defined(__OpenBSD__) || \
-       defined(__sun)
- #define ANGLE_OS_POSIX
- #else
- #error Unsupported platform.
- #endif
+# Parent 6a9ec71ad85de76c551a5398b1427d9f76430b1f
