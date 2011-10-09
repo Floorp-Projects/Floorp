@@ -54,6 +54,10 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
+  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aModType);
+
   nsresult FilterPaint(nsSVGRenderState *aContext,
                        nsIFrame *aTarget, nsSVGFilterPaintCallback *aPaintCallback,
                        const nsIntRect* aDirtyRect);
