@@ -899,6 +899,7 @@ var ContextHandler = {
     }
 
     let elem = popupNode;
+    let isText = false;
     while (elem) {
       if (elem.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
         // Link?
@@ -947,14 +948,16 @@ var ContextHandler = {
                    elem instanceof Ci.nsIDOMHTMLPreElement ||
                    elem instanceof Ci.nsIDOMHTMLHeadingElement ||
                    elem instanceof Ci.nsIDOMHTMLTableCellElement) {
-          state.types.push("content-text");
-          break;
+          isText = true;
         }
       }
 
       elem = elem.parentNode;
     }
 
+    if (isText)
+      state.types.push("content-text");
+    
     for (let i = 0; i < this._types.length; i++)
       if (this._types[i].handler(state, popupNode))
         state.types.push(this._types[i].name);

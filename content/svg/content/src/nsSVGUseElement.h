@@ -103,10 +103,6 @@ public:
 
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
-  virtual void DidChangeLength(PRUint8 aAttrEnum, bool aDoSetAttr);
-  virtual void DidAnimateLength(PRUint8 aAttrEnum);
-  virtual void DidChangeString(PRUint8 aAttrEnum);
-  virtual void DidAnimateString(PRUint8 aAttrEnum);
 
   // nsIContent interface
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -133,7 +129,7 @@ protected:
   virtual StringAttributesInfo GetStringInfo();
 
   bool HasValidDimensions();
-  void SyncWidthHeight(PRUint8 aAttrEnum);
+  void SyncWidthHeight(nsIAtom *aName);
   void LookupHref();
   void TriggerReclone();
   void UnlinkSource();

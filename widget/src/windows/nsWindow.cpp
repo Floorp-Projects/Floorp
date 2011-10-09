@@ -2651,32 +2651,46 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(bool aShouldHide)
 
 /**************************************************************
  *
- * SECTION: nsIWidget::Invalidate
+ * SECTION: nsWindow::Invalidate
  *
  * Invalidate an area of the client for painting.
  *
  **************************************************************/
 
 // Invalidate this component visible area
-NS_METHOD nsWindow::Invalidate(bool aIsSynchronous)
+NS_METHOD nsWindow::Invalidate(bool aIsSynchronous, 
+                               bool aEraseBackground, 
+                               bool aUpdateNCArea,
+                               bool aIncludeChildren)
 {
-  if (mWnd)
-  {
+  if (!mWnd) {
+    return NS_OK;
+  }
+
 #ifdef WIDGET_DEBUG_OUTPUT
-    debug_DumpInvalidate(stdout,
-                         this,
-                         nsnull,
-                         aIsSynchronous,
-                         nsCAutoString("noname"),
-                         (PRInt32) mWnd);
+  debug_DumpInvalidate(stdout,
+                       this,
+                       nsnull,
+                       aIsSynchronous,
+                       nsCAutoString("noname"),
+                       (PRInt32) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
 
-    VERIFY(::InvalidateRect(mWnd, NULL, FALSE));
-
-    if (aIsSynchronous) {
-      VERIFY(::UpdateWindow(mWnd));
-    }
+  DWORD flags = RDW_INVALIDATE;
+  if (aEraseBackground) {
+    flags |= RDW_ERASE;
   }
+  if (aIsSynchronous) {
+    flags |= RDW_UPDATENOW;
+  }
+  if (aUpdateNCArea) {
+    flags |= RDW_FRAME;
+  }
+  if (aIncludeChildren) {
+    flags |= RDW_ALLCHILDREN;
+  }
+
+  VERIFY(::RedrawWindow(mWnd, NULL, NULL, flags));
   return NS_OK;
 }
 
@@ -4687,7 +4701,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
       // Invalidate the window so that the repaint will
       // pick up the new theme.
-      Invalidate(false);
+      Invalidate(true, true, true, true);
     }
     break;
 
@@ -5366,7 +5380,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
     DispatchStandardEvent(NS_THEMECHANGED);
     UpdateGlass();
-    Invalidate(false);
+    Invalidate(true, true, true, true);
     break;
 #endif
 

@@ -4,7 +4,7 @@
 /**
  * This file tests migration invariants from a database with schema version 11
  * that was then downgraded to a database with a schema version 10.  Places
- * should then migrate this database to one with a schema version of 11.
+ * should then migrate this database to one with the current schema version.
  */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +109,7 @@ function test_final_state()
   dbFile.append(kDBName);
   let db = Services.storage.openUnsharedDatabase(dbFile);
 
-  do_check_eq(db.schemaVersion, 11);
+  do_check_eq(db.schemaVersion, CURRENT_SCHEMA_VERSION);
 
   db.close();
   run_next_test();
