@@ -52,8 +52,7 @@ public:
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue);
 
   void SetBaseValue(bool aValue, nsSVGElement *aSVGElement);

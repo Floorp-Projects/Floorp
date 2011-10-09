@@ -382,7 +382,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       NumberAttributesInfo numberInfo = GetNumberInfo();
       for (i = 0; i < numberInfo.mNumberCount; i++) {
         if (aAttribute == *numberInfo.mNumberInfo[i].mName) {
-          rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this, PR_FALSE);
+          rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             numberInfo.Reset(i);
           }
@@ -397,7 +397,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       NumberPairAttributesInfo numberPairInfo = GetNumberPairInfo();
       for (i = 0; i < numberPairInfo.mNumberPairCount; i++) {
         if (aAttribute == *numberPairInfo.mNumberPairInfo[i].mName) {
-          rv = numberPairInfo.mNumberPairs[i].SetBaseValueString(aValue, this, PR_FALSE);
+          rv = numberPairInfo.mNumberPairs[i].SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             numberPairInfo.Reset(i);
           }
@@ -412,7 +412,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       IntegerAttributesInfo integerInfo = GetIntegerInfo();
       for (i = 0; i < integerInfo.mIntegerCount; i++) {
         if (aAttribute == *integerInfo.mIntegerInfo[i].mName) {
-          rv = integerInfo.mIntegers[i].SetBaseValueString(aValue, this, PR_FALSE);
+          rv = integerInfo.mIntegers[i].SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             integerInfo.Reset(i);
           }
@@ -427,7 +427,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       IntegerPairAttributesInfo integerPairInfo = GetIntegerPairInfo();
       for (i = 0; i < integerPairInfo.mIntegerPairCount; i++) {
         if (aAttribute == *integerPairInfo.mIntegerPairInfo[i].mName) {
-          rv = integerPairInfo.mIntegerPairs[i].SetBaseValueString(aValue, this, PR_FALSE);
+          rv = integerPairInfo.mIntegerPairs[i].SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             integerPairInfo.Reset(i);
           }
@@ -457,7 +457,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       BooleanAttributesInfo booleanInfo = GetBooleanInfo();
       for (i = 0; i < booleanInfo.mBooleanCount; i++) {
         if (aAttribute == *booleanInfo.mBooleanInfo[i].mName) {
-          rv = booleanInfo.mBooleans[i].SetBaseValueString(aValue, this, PR_FALSE);
+          rv = booleanInfo.mBooleans[i].SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             booleanInfo.Reset(i);
           }
@@ -472,7 +472,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       EnumAttributesInfo enumInfo = GetEnumInfo();
       for (i = 0; i < enumInfo.mEnumCount; i++) {
         if (aAttribute == *enumInfo.mEnumInfo[i].mName) {
-          rv = enumInfo.mEnums[i].SetBaseValueString(aValue, this, PR_FALSE);
+          rv = enumInfo.mEnums[i].SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             enumInfo.Reset(i);
           }
@@ -487,7 +487,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       if (aAttribute == nsGkAtoms::viewBox) {
         nsSVGViewBox* viewBox = GetViewBox();
         if (viewBox) {
-          rv = viewBox->SetBaseValueString(aValue, this, PR_FALSE);
+          rv = viewBox->SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             viewBox->Init();
           }
@@ -498,7 +498,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
         SVGAnimatedPreserveAspectRatio *preserveAspectRatio =
           GetPreserveAspectRatio();
         if (preserveAspectRatio) {
-          rv = preserveAspectRatio->SetBaseValueString(aValue, this, PR_FALSE);
+          rv = preserveAspectRatio->SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             preserveAspectRatio->Init();
           }
