@@ -509,8 +509,6 @@ DOMCI_CLASS(IDBVersionChangeEvent)
 DOMCI_CLASS(IDBVersionChangeRequest)
 DOMCI_CLASS(IDBDatabaseException)
 
-DOMCI_CLASS(EventException)
-
 DOMCI_CLASS(Touch)
 DOMCI_CLASS(TouchList)
 DOMCI_CLASS(TouchEvent)
