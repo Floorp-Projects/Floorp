@@ -197,13 +197,13 @@ DefaultController::GetThumbnailAspectRatio(float *aThumbnailAspectRatio) {
 
 NS_IMETHODIMP
 DefaultController::DrawPreview(nsIDOMCanvasRenderingContext2D *ctx, bool *rDrawFrame) {
-  *rDrawFrame = PR_TRUE;
+  *rDrawFrame = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 DefaultController::DrawThumbnail(nsIDOMCanvasRenderingContext2D *ctx, PRUint32 width, PRUint32 height, bool *rDrawFrame) {
-  *rDrawFrame = PR_FALSE;
+  *rDrawFrame = false;
   return NS_OK;
 }
 
@@ -215,7 +215,7 @@ DefaultController::OnClose(void) {
 
 NS_IMETHODIMP
 DefaultController::OnActivate(bool *rAcceptActivation) {
-  *rAcceptActivation = PR_TRUE;
+  *rAcceptActivation = true;
   NS_NOTREACHED("OnActivate should not be called for TaskbarWindowPreviews");
   return NS_OK;
 }
@@ -239,7 +239,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(WinTaskbar, nsIWinTaskbar)
 bool
 WinTaskbar::Initialize() {
   if (mTaskbar)
-    return PR_TRUE;
+    return true;
 
   ::CoInitialize(NULL);
   HRESULT hr = ::CoCreateInstance(CLSID_TaskbarList,
@@ -248,15 +248,15 @@ WinTaskbar::Initialize() {
                                   IID_ITaskbarList4,
                                   (void**)&mTaskbar);
   if (FAILED(hr))
-    return PR_FALSE;
+    return false;
 
   hr = mTaskbar->HrInit();
   if (FAILED(hr)) {
     NS_WARNING("Unable to initialize taskbar");
     NS_RELEASE(mTaskbar);
-    return PR_FALSE;
+    return false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 WinTaskbar::WinTaskbar() 
@@ -276,7 +276,7 @@ WinTaskbar::GetAppUserModelID(nsAString & aDefaultGroupId) {
   nsCOMPtr<nsIXULAppInfo> appInfo =
     do_GetService("@mozilla.org/xre/app-info;1");
   if (!appInfo)
-    return PR_FALSE;
+    return false;
 
   // The default, pulled from application.ini:
   // 'vendor.application.version'
@@ -294,14 +294,14 @@ WinTaskbar::GetAppUserModelID(nsAString & aDefaultGroupId) {
   }
 
   if (aDefaultGroupId.IsEmpty())
-    return PR_FALSE;
+    return false;
 
   // Differentiate 64-bit builds
 #if defined(_WIN64)
   aDefaultGroupId.AppendLiteral(".Win64");
 #endif
 
-  return PR_TRUE;
+  return true;
 }
 
 /* readonly attribute AString defaultGroupId; */
@@ -317,14 +317,14 @@ WinTaskbar::GetDefaultGroupId(nsAString & aDefaultGroupId) {
 bool
 WinTaskbar::RegisterAppUserModelID() {
   if (nsWindow::GetWindowsVersion() < WIN7_VERSION)
-    return PR_FALSE;
+    return false;
 
   SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nsnull;
   bool retVal = false;
 
   nsAutoString uid;
   if (!GetAppUserModelID(uid))
-    return PR_FALSE;
+    return false;
 
   HMODULE hDLL = ::LoadLibraryW(kShellLibraryName);
 
@@ -333,11 +333,11 @@ WinTaskbar::RegisterAppUserModelID() {
 
   if (!funcAppUserModelID) {
     ::FreeLibrary(hDLL);
-    return PR_FALSE;
+    return false;
   }
 
   if (SUCCEEDED(funcAppUserModelID(uid.get())))
-    retVal = PR_TRUE;
+    retVal = true;
 
   if (hDLL)
     ::FreeLibrary(hDLL);
@@ -349,7 +349,7 @@ NS_IMETHODIMP
 WinTaskbar::GetAvailable(bool *aAvailable) {
   *aAvailable = 
     nsWindow::GetWindowsVersion() < WIN7_VERSION ?
-    PR_FALSE : PR_TRUE;
+    false : true;
 
   return NS_OK;
 }

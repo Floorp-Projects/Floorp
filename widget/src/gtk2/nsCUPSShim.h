@@ -88,15 +88,15 @@ class nsCUPSShim {
          * Initialize this object. Attempt to load the CUPS shared
          * library and find function pointers for the supported
          * functions (see below).
-         * @return PR_FALSE if the shared library could not be loaded, or if
+         * @return false if the shared library could not be loaded, or if
          *                  any of the functions could not be found.
-         *         PR_TRUE  for successful initialization.
+         *         true  for successful initialization.
          */
         bool Init();
 
         /**
-         * @return PR_TRUE  if the object was initialized successfully.
-         *         PR_FALSE otherwise.
+         * @return true  if the object was initialized successfully.
+         *         false otherwise.
          */
         bool IsInitialized() { return nsnull != mCupsLib; }
 

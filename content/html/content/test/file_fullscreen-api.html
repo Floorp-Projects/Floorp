@@ -140,7 +140,23 @@ function fullScreenChange(event) {
       break;
     }
     case 7: {
-      ok(!document.mozFullScreen, "Should have left full-screen mode (last time).");      
+      ok(!document.mozFullScreen, "Should have left full-screen mode (last time).");
+
+      SpecialPowers.setBoolPref("full-screen-api.enabled", false);
+      is(document.mozFullScreenEnabled, false, "document.mozFullScreenEnabled should be false if full-screen-api.enabled is false");
+      document.body.mozRequestFullScreen();
+      ok(!document.mozFullScreen, "Should still be in normal mode, because pref is not enabled.");
+
+      SpecialPowers.setBoolPref("full-screen-api.enabled", true);
+      is(document.mozFullScreenEnabled, true, "document.mozFullScreenEnabled should be true if full-screen-api.enabled is true");
+
+      iframe = document.createElement("iframe");
+      document.body.appendChild(iframe);
+      iframe.src = iframeContents;
+      ok(!document.mozFullScreen, "Should still be in normal mode, because iframe did not have mozallowfullscreen attribute.");
+      document.body.removeChild(iframe);
+      iframe = null;
+
       // Set timeout for calling finish(), so that any pending "mozfullscreenchange" events
       // would have a chance to fire.
       setTimeout(function(){opener.apiTestFinished();}, 0);

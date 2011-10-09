@@ -992,16 +992,7 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo
 void
 nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildBox, nscoord aOnePixel, bool aIsHorizontal, nscoord* aSize)
 {
-  //printf("current=%d, pref=%d", current/onePixel, pref/onePixel);
- 
-  nscoord current = 0;
-
   nsRect rect(aChildBox->GetRect());
-  if (aIsHorizontal) 
-    current = rect.width;
-  else
-    current = rect.height;
-
   nscoord pref = 0;
 
   if (!aSize)

@@ -40,7 +40,6 @@
 #include "nsIXPConnect.h"
 #include "nsThreadUtils.h"
 #include "jsapi.h"
-#include "jsobj.h"
 #include "jsgc.h"
 #include "jsfriendapi.h"
 #include "jsdbgapi.h"

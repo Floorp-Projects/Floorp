@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.35 2011/01/29 22:17:20 nelson%bolyard.com Exp $
+ * $Id: certi.h,v 1.36 2011/09/14 23:16:14 wtc%google.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -396,6 +396,20 @@ cert_GetSubjectAltNameList(CERTCertificate *cert, PRArenaPool *arena);
 /* Count DNS names and IP addresses in a list of GeneralNames */
 PRUint32
 cert_CountDNSPatterns(CERTGeneralName *firstName);
+
+/*
+ * returns the trust status of the leaf certificate based on usage.
+ * If the leaf is explicitly untrusted, this function will fail and 
+ * failedFlags will be set to the trust bit value that lead to the failure.
+ * If the leaf is trusted, isTrusted is set to true and the function returns 
+ * SECSuccess. This function does not check if the cert is fit for a 
+ * particular usage.
+ */
+SECStatus
+cert_CheckLeafTrust(CERTCertificate *cert,
+                    SECCertUsage usage, 
+                    unsigned int *failedFlags,
+                    PRBool *isTrusted);
 
 #endif /* _CERTI_H_ */
 

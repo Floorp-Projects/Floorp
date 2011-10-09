@@ -198,7 +198,7 @@ nsXMLPrettyPrinter::MaybeUnhook(nsIContent* aContent)
 {
     // If there either aContent is null (the document-node was modified) or
     // there isn't a binding parent we know it's non-anonymous content.
-    if (!aContent || !aContent->GetBindingParent() && !mUnhookPending) {
+    if ((!aContent || !aContent->GetBindingParent()) && !mUnhookPending) {
         // Can't blindly to mUnhookPending after AddScriptRunner,
         // since AddScriptRunner _could_ in theory run us
         // synchronously

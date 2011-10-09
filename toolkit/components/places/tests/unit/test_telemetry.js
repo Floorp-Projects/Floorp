@@ -64,8 +64,10 @@ function run_test() {
   PlacesUtils.tagging.tagURI(uri, ["tag"]);
   PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "keyword");
 
-  // Test generic database probes.
-  PlacesDBUtils._telemetry();
+  // Request to gather telemetry data.
+  Cc["@mozilla.org/places/categoriesStarter;1"]
+    .getService(Ci.nsIObserver)
+    .observe(null, "gather-telemetry", null);
 
   waitForAsyncUpdates(continue_test);
 }

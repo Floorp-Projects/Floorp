@@ -1669,6 +1669,11 @@ protected:
 
     bool mBound;
     bool mIsLocked;
+
+    virtual void ApplyFilter()
+    {
+        mGLContext->ApplyFilterToBoundTexture(mFilter);
+    }
 };
 
 already_AddRefed<TextureImage>
@@ -1677,7 +1682,7 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
                                  GLenum aWrapMode,
                                  bool aUseNearestFilter)
 {
-    nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType);
+    nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType, aUseNearestFilter);
     return t.forget();
 };
 

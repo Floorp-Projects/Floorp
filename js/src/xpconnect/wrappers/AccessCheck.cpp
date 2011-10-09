@@ -87,14 +87,15 @@ AccessCheck::isSameOrigin(JSCompartment *a, JSCompartment *b)
 bool
 AccessCheck::isLocationObjectSameOrigin(JSContext *cx, JSObject *wrapper)
 {
-    JSObject *obj = wrapper->unwrap()->getParent();
-    if (!obj->getClass()->ext.innerObject) {
-        obj = obj->unwrap();
-        JS_ASSERT(obj->getClass()->ext.innerObject);
+    JSObject *obj = js::GetObjectParent(js::UnwrapObject(wrapper));
+    if (!js::GetObjectClass(obj)->ext.innerObject) {
+        obj = js::UnwrapObject(obj);
+        JS_ASSERT(js::GetObjectClass(obj)->ext.innerObject);
     }
-    OBJ_TO_INNER_OBJECT(cx, obj);
+    obj = JS_ObjectToInnerObject(cx, obj);
     return obj &&
-           (isSameOrigin(wrapper->compartment(), obj->compartment()) ||
+           (isSameOrigin(js::GetObjectCompartment(wrapper),
+                         js::GetObjectCompartment(obj)) ||
             documentDomainMakesSameOrigin(cx, obj));
 }
 
@@ -220,7 +221,7 @@ GetPrincipal(JSObject *obj)
 {
     NS_ASSERTION(!IS_SLIM_WRAPPER(obj), "global object is a slim wrapper?");
     if (!IS_WN_WRAPPER(obj)) {
-        NS_ASSERTION(!(~obj->getClass()->flags &
+        NS_ASSERTION(!(~js::GetObjectClass(obj)->flags &
                        (JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE)),
                      "bad object");
         nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
@@ -293,7 +294,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
     JSObject *obj = Wrapper::wrappedObject(wrapper);
 
     const char *name;
-    js::Class *clasp = obj->getClass();
+    js::Class *clasp = js::GetObjectClass(obj);
     NS_ASSERTION(Jsvalify(clasp) != &XrayUtils::HolderClass, "shouldn't have a holder here");
     if (clasp->ext.innerObject)
         name = "Window";
@@ -357,7 +358,7 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
     static const char prefix[] = "chrome://global/";
     const char *filename;
     if (fp &&
-        (filename = JS_GetFrameScript(cx, fp)->filename) &&
+        (filename = JS_GetScriptFilename(cx, JS_GetFrameScript(cx, fp))) &&
         !strncmp(filename, prefix, NS_ARRAY_LENGTH(prefix) - 1)) {
         return true;
     }
@@ -371,17 +372,17 @@ AccessCheck::needsSystemOnlyWrapper(JSObject *obj)
     if (!IS_WN_WRAPPER(obj))
         return false;
 
-    XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(obj->getPrivate());
+    XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj));
     return wn->NeedsSOW();
 }
 
 bool
 AccessCheck::isScriptAccessOnly(JSContext *cx, JSObject *wrapper)
 {
-    JS_ASSERT(wrapper->isWrapper());
+    JS_ASSERT(js::IsWrapper(wrapper));
 
     uintN flags;
-    JSObject *obj = wrapper->unwrap(&flags);
+    JSObject *obj = js::UnwrapObject(wrapper, &flags);
 
     // If the wrapper indicates script-only access, we are done.
     if (flags & WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG) {
@@ -402,7 +403,7 @@ AccessCheck::isScriptAccessOnly(JSContext *cx, JSObject *wrapper)
     }
 
     // In addition, chrome objects can explicitly opt-in by setting .scriptOnly to true.
-    if (wrapper->getProxyHandler() == &FilteringWrapper<CrossCompartmentWrapper,
+    if (js::GetProxyHandler(wrapper) == &FilteringWrapper<CrossCompartmentWrapper,
         CrossOriginAccessiblePropertiesOnly>::singleton) {
         jsid scriptOnlyId = GetRTIdByIndex(cx, XPCJSRuntime::IDX_SCRIPTONLY);
         jsval scriptOnly;

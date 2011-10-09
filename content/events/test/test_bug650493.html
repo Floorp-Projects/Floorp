@@ -209,22 +209,6 @@ check();
 is(children.length, 0, "should have received DOMNodeRemoved for all frag children when appending");
 is(frag.childNodes.length, 0, "fragment should be empty when appending");
 
-testName = "prepare replaceWholeText";
-var textNode;
-root.appendChild(document.createTextNode("hello"));
-root.appendChild(document.createTextNode(""));
-root.appendChild(textNode = document.createTextNode("world"));
-root.appendChild(document.createTextNode("fahrvergnugen"));
-root.appendChild(document.createTextNode(""));
-root.appendChild(document.createElement("div"));
-root.appendChild(document.createTextNode("smorgasbord"));
-root.appendChild(document.createTextNode(""));
-check();
-
-testName = "run replaceWholeText";
-textNode.replaceWholeText("supercalifragilisticexpialidocious");
-check();
-
 </script>
 </body>
 </html>

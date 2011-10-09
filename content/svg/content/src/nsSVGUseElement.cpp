@@ -417,24 +417,25 @@ bool nsSVGUseElement::HasValidDimensions()
 }
 
 void
-nsSVGUseElement::SyncWidthHeight(PRUint8 aAttrEnum)
+nsSVGUseElement::SyncWidthHeight(nsIAtom* aName)
 {
+  NS_ASSERTION(aName == nsGkAtoms::width || aName == nsGkAtoms::height,
+               "The clue is in the function name");
+
   if (HasValidDimensions() == !mClone) {
     TriggerReclone();
     return;
   }
 
-  if (mClone && (aAttrEnum == WIDTH || aAttrEnum == HEIGHT)) {
+  if (mClone) {
     nsCOMPtr<nsIDOMSVGSymbolElement> symbol = do_QueryInterface(mClone);
     nsCOMPtr<nsIDOMSVGSVGElement>    svg    = do_QueryInterface(mClone);
 
     if (symbol || svg) {
-      nsIAtom* aAttrName = aAttrEnum == WIDTH ?
-        nsGkAtoms::width : nsGkAtoms::height;
-
-      if (mLengthAttributes[aAttrEnum].IsExplicitlySet()) {
+      PRUint32 index = *sLengthInfo[WIDTH].mName == aName ? WIDTH : HEIGHT;
+      if (mLengthAttributes[index].IsExplicitlySet()) {
         static_cast<nsSVGElement*>(mClone.get())->
-          SetLength(aAttrName, mLengthAttributes[aAttrEnum]);
+          SetLength(aName, mLengthAttributes[index]);
       } else {
         // Our width/height attribute is now no longer explicitly set, so we
         // need to revert the clone's width/height to the width/height of the
@@ -497,54 +498,11 @@ nsSVGUseElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
   return matrix.PreMultiply(gfxMatrix().Translate(gfxPoint(x, y)));
 }
 
-void
-nsSVGUseElement::DidChangeLength(PRUint8 aAttrEnum, bool aDoSetAttr)
-{
-  nsSVGUseElementBase::DidChangeLength(aAttrEnum, aDoSetAttr);
-
-  SyncWidthHeight(aAttrEnum);
-}
-
-void
-nsSVGUseElement::DidAnimateLength(PRUint8 aAttrEnum)
-{
-  nsSVGUseElementBase::DidAnimateLength(aAttrEnum);
-
-  SyncWidthHeight(aAttrEnum);
-}
-
 nsSVGElement::LengthAttributesInfo
 nsSVGUseElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
-}
-
-void
-nsSVGUseElement::DidChangeString(PRUint8 aAttrEnum)
-{
-  nsSVGUseElementBase::DidChangeString(aAttrEnum);
-
-  if (aAttrEnum == HREF) {
-    // we're changing our nature, clear out the clone information
-    mOriginal = nsnull;
-    UnlinkSource();
-    TriggerReclone();
-  }
-}
-
-void
-nsSVGUseElement::DidAnimateString(PRUint8 aAttrEnum)
-{
-  if (aAttrEnum == HREF) {
-    // we're changing our nature, clear out the clone information
-    mOriginal = nsnull;
-    UnlinkSource();
-    TriggerReclone();
-    return;
-  }
-
-  nsSVGUseElementBase::DidAnimateString(aAttrEnum);
 }
 
 nsSVGElement::StringAttributesInfo

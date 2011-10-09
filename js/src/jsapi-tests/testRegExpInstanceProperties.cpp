@@ -22,14 +22,14 @@ BEGIN_TEST(testRegExpInstanceProperties)
 
     JS_GC(cx);
 
-    CHECK_EQUAL(regexpProto->getCompartment()->initialRegExpShape, NULL);
+    CHECK_EQUAL(regexpProto->compartment()->initialRegExpShape, NULL);
 
     jsval regexp;
     EVAL("/foopy/", &regexp);
     JSObject *robj = JSVAL_TO_OBJECT(regexp);
 
     CHECK(robj->lastProperty());
-    CHECK_EQUAL(robj->getCompartment()->initialRegExpShape, robj->lastProperty());
+    CHECK_EQUAL(robj->compartment()->initialRegExpShape, robj->lastProperty());
 
     return true;
 }
@@ -46,7 +46,7 @@ JS_NEVER_INLINE bool helper(JSObject *regexpProto)
     const js::Shape *shape = regexpProto->lastProperty();
     js::AutoShapeRooter root(cx, shape);
     for (js::Shape::Range r = shape;
-         &r.front() != regexpProto->getCompartment()->initialRegExpShape;
+         &r.front() != regexpProto->compartment()->initialRegExpShape;
          r.popFront())
     {
          CHECK(!r.empty());
@@ -63,7 +63,7 @@ JS_NEVER_INLINE bool helper(JSObject *regexpProto)
     js::AutoShapeRooter root2(cx, shape2);
     js::Shape::Range r2 = shape2;
     while (!r2.empty()) {
-        CHECK(&r2.front() != regexpProto->getCompartment()->initialRegExpShape);
+        CHECK(&r2.front() != regexpProto->compartment()->initialRegExpShape);
         r2.popFront();
     }
 

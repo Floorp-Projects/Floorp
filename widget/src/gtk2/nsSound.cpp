@@ -121,7 +121,7 @@ NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()
 {
-    mInited = PR_FALSE;
+    mInited = false;
 }
 
 nsSound::~nsSound()
@@ -136,7 +136,7 @@ nsSound::Init()
     if (mInited) 
         return NS_OK;
 
-    mInited = PR_TRUE;
+    mInited = true;
 
     if (!elib) {
         elib = PR_LoadLibrary("libesd.so.0");
@@ -504,7 +504,7 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 
     // create a nsILocalFile and then a nsIFileURL from that
     nsCOMPtr <nsILocalFile> soundFile;
-    rv = NS_NewLocalFile(aSoundAlias, PR_TRUE, 
+    rv = NS_NewLocalFile(aSoundAlias, true, 
                          getter_AddRefs(soundFile));
     NS_ENSURE_SUCCESS(rv,rv);
 

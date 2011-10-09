@@ -1,0 +1,145 @@
+# HG changeset patch
+# Parent 74f1894d664435118be4fdefd53cabfdaa9985bc
+diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
+--- a/gfx/angle/Makefile.in
++++ b/gfx/angle/Makefile.in
+@@ -123,16 +123,18 @@ CSRCS   = \
+         memory.c \
+         scanner.c \
+         symbols.c \
+         tokens.c \
+ 	$(NULL)
+ 
+ DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD
+ 
++EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB)
++
+ ifdef MOZ_ANGLE
+ 
+ # libEGL depends on (links against!) libGLESv2!
+ DIRS = src/libGLESv2 src/libEGL
+ 
+ libs::
+ 	expand "$(MOZ_D3DX9_CAB)" -F:$(MOZ_D3DX9_DLL) "$(DIST)/bin"
+ 	expand "$(MOZ_D3DCOMPILER_CAB)" -F:$(MOZ_D3DCOMPILER_DLL) "$(DIST)/bin"
+diff --git a/gfx/angle/README.mozilla b/gfx/angle/README.mozilla
+--- a/gfx/angle/README.mozilla
++++ b/gfx/angle/README.mozilla
+@@ -4,16 +4,17 @@ Current revision: r740
+ 
+ == Applied local patches ==
+ 
+ In this order:
+   angle-nspr-misc.patch - don't bother with ANGLE_OS detection with NSPR
+   angle-renaming.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
+   angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
+   angle-limit-identifiers-to-250-chars.patch - see bug 675625
++  angle-use-xmalloc.patch - see bug 680840. Can drop this patch whenever the new preprocessor lands.
+ 
+ In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
+ 
+ == How to update this ANGLE copy ==
+ 
+ 1. Unapply patches
+ 2. Apply diff with new ANGLE version
+ 3. Reapply patches.
+diff --git a/gfx/angle/angle-limit-identifiers-to-250-chars.patch b/gfx/angle/angle-limit-identifiers-to-250-chars.patch
+--- a/gfx/angle/angle-limit-identifiers-to-250-chars.patch
++++ b/gfx/angle/angle-limit-identifiers-to-250-chars.patch
+@@ -1,8 +1,10 @@
++# HG changeset patch
++# Parent f9415c10c3ebd27856500cca7a0ee0f28a16f53c
+ diff --git a/gfx/angle/src/compiler/preprocessor/scanner.h b/gfx/angle/src/compiler/preprocessor/scanner.h
+ --- a/gfx/angle/src/compiler/preprocessor/scanner.h
+ +++ b/gfx/angle/src/compiler/preprocessor/scanner.h
+ @@ -44,17 +44,19 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
+  //
+  // scanner.h
+  //
+  
+diff --git a/gfx/angle/src/compiler/preprocessor/atom.c b/gfx/angle/src/compiler/preprocessor/atom.c
+--- a/gfx/angle/src/compiler/preprocessor/atom.c
++++ b/gfx/angle/src/compiler/preprocessor/atom.c
+@@ -48,16 +48,18 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
+ 
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+ 
+ #include "compiler/compilerdebug.h"
+ #include "compiler/preprocessor/slglobals.h"
+ 
++#include "../../../../../memory/mozalloc/mozalloc.h"
++
+ #undef malloc
+ #undef realloc
+ #undef free
+ 
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+ ////////////////////////////////////////// String table: //////////////////////////////////////
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+ 
+@@ -318,31 +320,23 @@ static int AddAtomFixed(AtomTable *atabl
+  */
+ 
+ static int GrowAtomTable(AtomTable *atable, int size)
+ {
+     int *newmap, *newrev;
+ 
+     if (atable->size < size) {
+         if (atable->amap) {
+-            newmap = realloc(atable->amap, sizeof(int)*size);
+-            newrev = realloc(atable->arev, sizeof(int)*size);
++            newmap = moz_xrealloc(atable->amap, sizeof(int)*size);
++            newrev = moz_xrealloc(atable->arev, sizeof(int)*size);
+         } else {
+-            newmap = malloc(sizeof(int)*size);
+-            newrev = malloc(sizeof(int)*size);
++            newmap = moz_xmalloc(sizeof(int)*size);
++            newrev = moz_xmalloc(sizeof(int)*size);
+             atable->size = 0;
+         }
+-        if (!newmap || !newrev) {
+-            /* failed to grow -- error */
+-            if (newmap)
+-                atable->amap = newmap;
+-            if (newrev)
+-                atable->arev = newrev;
+-            return -1;
+-        }
+         memset(&newmap[atable->size], 0, (size - atable->size) * sizeof(int));
+         memset(&newrev[atable->size], 0, (size - atable->size) * sizeof(int));
+         atable->amap = newmap;
+         atable->arev = newrev;
+         atable->size = size;
+     }
+     return 0;
+ } // GrowAtomTable
+diff --git a/gfx/angle/src/libEGL/Makefile.in b/gfx/angle/src/libEGL/Makefile.in
+--- a/gfx/angle/src/libEGL/Makefile.in
++++ b/gfx/angle/src/libEGL/Makefile.in
+@@ -150,8 +150,10 @@ RCFILE = $(srcdir)/libEGL.rc
+ include $(topsrcdir)/config/rules.mk
+ 
+ EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib" \
+                    "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/dxguid.lib" \
+ 		   "$(DIST)/lib/libGLESv2.lib" \
+ 		   dwmapi.lib \
+ 		   delayimp.lib \
+ 		   /delayload:dwmapi.dll
++
++EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)
+diff --git a/gfx/angle/src/libGLESv2/Makefile.in b/gfx/angle/src/libGLESv2/Makefile.in
+--- a/gfx/angle/src/libGLESv2/Makefile.in
++++ b/gfx/angle/src/libGLESv2/Makefile.in
+@@ -159,8 +159,10 @@ CPPSRCS	+= \
+ DEFFILE = $(srcdir)/libGLESv2.def
+ RCFILE = $(srcdir)/libGLESv2.rc
+ 
+ include $(topsrcdir)/config/rules.mk
+ 
+ EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib" \
+                    "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3dx9.lib" \
+ 		   "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/D3DCompiler.lib"
++
++EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)

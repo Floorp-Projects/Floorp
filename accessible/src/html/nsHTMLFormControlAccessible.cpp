@@ -278,8 +278,8 @@ nsHTMLButtonAccessible::NativeState()
 {
   PRUint64 state = nsHyperTextAccessibleWrap::NativeState();
 
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::submit, eIgnoreCase))
+  nsEventStates elmState = mContent->AsElement()->State();
+  if (elmState.HasState(NS_EVENT_STATE_DEFAULT))
     state |= states::DEFAULT;
 
   return state;
@@ -382,8 +382,8 @@ nsHTML4ButtonAccessible::NativeState()
 
   state |= states::FOCUSABLE;
 
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::submit, eIgnoreCase))
+  nsEventStates elmState = mContent->AsElement()->State();
+  if (elmState.HasState(NS_EVENT_STATE_DEFAULT))
     state |= states::DEFAULT;
 
   return state;
@@ -510,6 +510,10 @@ nsHTMLTextFieldAccessible::NativeState()
     state |= states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION;
     return state;
   }
+
+  // Expose autocomplete state if it has associated autocomplete list.
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::list))
+    return state | states::SUPPORTS_AUTOCOMPLETION;
 
   // No parent can mean a fake widget created for XUL textbox. If accessible
   // is unattached from tree then we don't care.

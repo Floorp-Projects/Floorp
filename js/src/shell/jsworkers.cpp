@@ -46,6 +46,7 @@
 #include "prcvar.h"
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsdbgapi.h"
 #include "jshashtable.h"
 #include "jsstdint.h"
 #include "jslock.h"

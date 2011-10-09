@@ -92,9 +92,8 @@
                                        global object */
 
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
-#define JSFUN_TRCINFO       0x2000  /* when set, u.n.trcinfo is non-null,
-                                       JSFunctionSpec::call points to a
-                                       JSNativeTraceInfo. */
+                                    /* 0x2000 is JSFUN_TRCINFO:
+                                       u.n.trcinfo is non-null */
 #define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.n */
 #define JSFUN_FLAT_CLOSURE  0x8000  /* flat (aka "display") closure */
 #define JSFUN_NULL_CLOSURE  0xc000  /* null closure entrains no scope chain */
@@ -116,9 +115,10 @@ struct JSFunction : public JSObject_Slots2
             JSNativeTraceInfo *trcinfo;
         } n;
         struct Scripted {
-            JSScript    *script;  /* interpreted bytecode descriptor or null */
+            JSScript    *script_; /* interpreted bytecode descriptor or null;
+                                     use the setter! */
             uint16       skipmin; /* net skip amount up (toward zero) from
-                                     script->staticLevel to nearest upvar,
+                                     script_->staticLevel to nearest upvar,
                                      including upvars in nested functions */
             js::Shape   *names;   /* argument and variable names */
         } i;
@@ -197,7 +197,13 @@ struct JSFunction : public JSObject_Slots2
 
     JSScript *script() const {
         JS_ASSERT(isInterpreted());
-        return u.i.script;
+        return u.i.script_;
+    }
+
+    void setScript(JSScript *script) {
+        JS_ASSERT(isInterpreted());
+        u.i.script_ = script;
+        script->setOwnerObject(this);
     }
 
     JSScript * maybeScript() const {
@@ -214,7 +220,7 @@ struct JSFunction : public JSObject_Slots2
     }
 
     static uintN offsetOfNativeOrScript() {
-        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, i.script));
+        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, i.script_));
         JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, nativeOrScript));
         return offsetof(JSFunction, u.nativeOrScript);
     }

@@ -371,6 +371,7 @@ case "$target" in
     AR="$android_toolchain"/bin/"$android_tool_prefix"-ar
     RANLIB="$android_toolchain"/bin/"$android_tool_prefix"-ranlib
     STRIP="$android_toolchain"/bin/"$android_tool_prefix"-strip
+    OBJCOPY="$android_toolchain"/bin/"$android_tool_prefix"-objcopy
 
     case "${target_cpu}" in
     arm*)
@@ -443,6 +444,9 @@ case "$target" in
     MOZ_CHROME_FILE_FORMAT=omni
     ZLIB_DIR=yes
     ;;
+*-linux*)
+    AC_PATH_PROG(OBJCOPY,objcopy)
+    ;;
 esac
 
 AC_SUBST(ANDROID_NDK)
@@ -451,6 +455,7 @@ AC_SUBST(ANDROID_PLATFORM)
 AC_SUBST(ANDROID_SDK)
 AC_SUBST(ANDROID_PLATFORM_TOOLS)
 AC_SUBST(ANDROID_PACKAGE_NAME)
+AC_SUBST(OBJCOPY)
 
 dnl ========================================================
 dnl Checks for compilers.
@@ -2031,6 +2036,10 @@ case "$target" in
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O3"
     _PEDANTIC=
+    # Due to performance regressions, statically disable jemalloc on 10.5. See bug 414946.
+    if test "$HAVE_64BIT_OS"; then
+        MOZ_MEMORY=1
+    fi
     CFLAGS="$CFLAGS -fno-common"
     CXXFLAGS="$CXXFLAGS -fno-common"
     DLL_SUFFIX=".dylib"
@@ -6863,7 +6872,7 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -n "$MOZ_DEBUG_FLAGS"; then
             fi
         else
              dnl We really don't expect to get here, but just in case
-             AC_ERROR([couldn't compile a simple C file])
+             GC_SECTIONS_BREAKS_DEBUG_RANGES="no, but it's broken in some other way"
         fi
         rm -rf conftest*])
     if test "$GC_SECTIONS_BREAKS_DEBUG_RANGES" = no; then
@@ -7065,7 +7074,7 @@ dnl We need to wrap dlopen and related functions on Android because we use
 dnl our own linker.
 if test "$OS_TARGET" = Android; then
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozutils"
-    WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
+    WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr,--wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
 fi
 
 dnl ========================================================

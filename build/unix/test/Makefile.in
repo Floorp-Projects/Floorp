@@ -42,23 +42,19 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-TS = .ts
-GENERATED_DIRS += $(TS)
-GARBAGE_DIRS   += $(TS)
-
 include $(topsrcdir)/config/rules.mk
 
 ##################################################
 ## Gather a list of tests, generate timestamp deps
 ##################################################
+TS=.ts
 ifneq (,$(findstring check,$(MAKECMDGOALS)))
           allsrc = $(wildcard $(srcdir)/*)
        tests2run = $(notdir $(filter %.tpl,$(allsrc)))
   check_targets += $(addprefix $(TS)/,$(tests2run))
 endif
 
-check:: $(AUTO_DEPS) $(check_targets)
+check:: $(TS) $(check_targets)
 
 #############################################
 # Only invoke tests when sources have changed
@@ -66,5 +62,15 @@ check:: $(AUTO_DEPS) $(check_targets)
 $(TS)/%: $(srcdir)/%
 	$(PERL) $(srcdir)/runtest $<
 	@touch $@
+
+#####################################################
+## Extra dep needed to synchronize parallel execution
+#####################################################
+$(TS): $(TS)/.done
+$(TS)/.done:
+	$(MKDIR) -p $(dir $@)
+	touch $@
+
+GARBAGE_DIRS += $(TS)
 
 # EOF

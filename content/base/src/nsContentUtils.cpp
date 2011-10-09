@@ -5137,7 +5137,7 @@ nsContentUtils::CanAccessNativeAnon()
   static const char prefix[] = "chrome://global/";
   const char *filename;
   if (fp && JS_IsScriptFrame(cx, fp) &&
-      (filename = JS_GetFrameScript(cx, fp)->filename) &&
+      (filename = JS_GetScriptFilename(cx, JS_GetFrameScript(cx, fp))) &&
       !strncmp(filename, prefix, NS_ARRAY_LENGTH(prefix) - 1)) {
     return PR_TRUE;
   }

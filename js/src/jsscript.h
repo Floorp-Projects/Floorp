@@ -594,7 +594,7 @@ struct JSScript : public js::gc::Cell {
      */
     uint32 id_;
     uint32 idpad;
-    unsigned id() { return id_; }
+    unsigned id();
 #else
     unsigned id() { return 0; }
 #endif
@@ -965,12 +965,5 @@ js_CloneScript(JSContext *cx, JSScript *script);
  */
 extern JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp);
-
-inline JSScript *
-JSObject::getScript() const
-{
-    JS_ASSERT(isScript());
-    return static_cast<JSScript *>(getPrivate());
-}
 
 #endif /* jsscript_h___ */

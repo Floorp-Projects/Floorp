@@ -380,7 +380,8 @@ class nsXMLHttpProgressEvent : public nsIDOMProgressEvent,
 public:
   nsXMLHttpProgressEvent(nsIDOMProgressEvent* aInner,
                          PRUint64 aCurrentProgress,
-                         PRUint64 aMaxProgress);
+                         PRUint64 aMaxProgress,
+                         nsPIDOMWindow* aWindow);
   virtual ~nsXMLHttpProgressEvent();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -421,9 +422,12 @@ public:
   }
 
 protected:
+  void WarnAboutLSProgressEvent(nsIDocument::DeprecatedOperations);
+
   // Use nsDOMProgressEvent so that we can forward
   // most of the method calls easily.
   nsRefPtr<nsDOMProgressEvent> mInner;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
   PRUint64 mCurProgress;
   PRUint64 mMaxProgress;
 };

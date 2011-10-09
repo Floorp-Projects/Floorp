@@ -203,12 +203,8 @@
 #include "nsDOMTouchEvent.h"
 
 #include "mozilla/Preferences.h"
-#include "nsFrame.h"
 
 #include "imgILoader.h"
-
-#include "nsDOMCaretPosition.h"
-#include "nsIDOMHTMLTextAreaElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -4493,11 +4489,6 @@ nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
 {
   *aReturn = nsnull;
 
-  // There are no PIs for HTML
-  if (IsHTML()) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
   nsresult rv = nsContentUtils::CheckQName(aTarget, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5890,23 +5881,6 @@ nsDocument::GetInputEncoding(nsAString& aInputEncoding)
   }
 
   SetDOMStringToNull(aInputEncoding);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetXmlEncoding(nsAString& aXmlEncoding)
-{
-  WarnOnceAbout(eXmlEncoding);
-  if (!IsHTML() &&
-      mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
-      mXMLDeclarationBits & XML_DECLARATION_BITS_ENCODING_EXISTS) {
-    // XXX We don't store the encoding given in the xml declaration.
-    // For now, just output the inputEncoding which we do store.
-    GetInputEncoding(aXmlEncoding);
-  } else {
-    SetDOMStringToNull(aXmlEncoding);
-  }
-
   return NS_OK;
 }
 
@@ -8402,58 +8376,6 @@ nsDocument::CreateTouchList(nsIVariant* aPoints,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocument::CaretPositionFromPoint(float aX, float aY, nsIDOMCaretPosition** aCaretPos)
-{
-  NS_ENSURE_ARG_POINTER(aCaretPos);
-  *aCaretPos = nsnull;
-  
-  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
-  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
-  nsPoint pt(x, y);
-
-  nsIPresShell *ps = GetShell();
-  if (!ps) {
-    return NS_OK;
-  }
-
-  nsIFrame *rootFrame = ps->GetRootFrame();
-
-  // XUL docs, unlike HTML, have no frame tree until everything's done loading
-  if (!rootFrame) {
-    return NS_OK; // return null to premature XUL callers as a reminder to wait
-  }
-
-  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt, PR_TRUE,
-                                                      PR_FALSE);
-  if (!ptFrame) {
-    return NS_OK;
-  }
-
-  nsFrame::ContentOffsets offsets = ptFrame->GetContentOffsetsFromPoint(pt);
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(offsets.content);
-  nsIContent* ptContent = offsets.content;
-  PRInt32 offset = offsets.offset;
-  if (ptContent && ptContent->IsInNativeAnonymousSubtree()) {
-    nsIContent* nonanon = ptContent->FindFirstNonNativeAnonymous();
-    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(nonanon);
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(nonanon);
-    bool isText;
-    if (textArea || (input &&
-                     NS_SUCCEEDED(input->MozIsTextField(PR_FALSE, &isText)) && 
-                     isText)) {
-      node = do_QueryInterface(nonanon);
-    } else {
-      node = nsnull;
-      offset = 0;
-    }
-  }
-
-  *aCaretPos = new nsDOMCaretPosition(node, offset);
-  NS_ADDREF(*aCaretPos);
-  return NS_OK;
-}
-
 PRInt64
 nsIDocument::SizeOf() const
 {
@@ -8679,6 +8601,38 @@ nsDocument::GetMozFullScreen(bool *aFullScreen)
 {
   NS_ENSURE_ARG_POINTER(aFullScreen);
   *aFullScreen = nsContentUtils::IsFullScreenApiEnabled() && IsFullScreenDoc();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
+{
+  NS_ENSURE_ARG_POINTER(aFullScreen);
+  *aFullScreen = false;
+
+  if (!nsContentUtils::IsFullScreenApiEnabled()) {
+    return NS_OK;
+  }
+
+  // todo: Bug 684618 - Deny requests for DOM full-screen when windowed
+  // plugins are present.
+
+  // Ensure that all ancestor <iframe> elements have the mozallowfullscreen
+  // boolean attribute set.
+  nsINode* node = static_cast<nsINode*>(this);
+  do {
+    nsIContent* content = static_cast<nsIContent*>(node);
+    if (content->IsHTML(nsGkAtoms::iframe) &&
+        !content->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen)) {
+      // The node requesting fullscreen, or one of its crossdoc ancestors,
+      // is an iframe which doesn't have the "mozalllowfullscreen" attribute.
+      // This request is not authorized by the parent document.
+      return NS_OK;
+    }
+    node = nsContentUtils::GetCrossDocParentNode(node);
+  } while (node);
+
+  *aFullScreen = true;
   return NS_OK;
 }
 

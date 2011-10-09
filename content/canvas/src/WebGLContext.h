@@ -75,8 +75,9 @@ class WebGLShader;
 class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLUniformLocation;
+class WebGLExtension;
 
-class WebGLZeroingObject;
+template<int PreallocatedOwnersCapacity> class WebGLZeroingObject;
 class WebGLContextBoundObject;
 
 enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
@@ -108,6 +109,7 @@ inline bool is_pot_assuming_nonnegative(WebGLsizei x)
 class WebGLObjectBaseRefPtr
 {
 protected:
+    template<int PreallocatedOwnersCapacity>
     friend class WebGLZeroingObject;
 
     WebGLObjectBaseRefPtr()
@@ -475,9 +477,10 @@ protected:
     // extensions
     enum WebGLExtensionID {
         WebGL_OES_texture_float,
+        WebGL_OES_standard_derivatives,
         WebGLExtensionID_Max
     };
-    nsCOMPtr<nsIWebGLExtension> mEnabledExtensions[WebGLExtensionID_Max];
+    nsCOMPtr<WebGLExtension> mEnabledExtensions[WebGLExtensionID_Max];
     bool IsExtensionEnabled(WebGLExtensionID ext) const {
         NS_ABORT_IF_FALSE(ext >= 0 && ext < WebGLExtensionID_Max, "bogus index!");
         return mEnabledExtensions[ext] != nsnull;
@@ -679,6 +682,12 @@ public:
 // by WebGLObjectRefPtr to tell the object who holds references, so that
 // we can zero them out appropriately when the object is deleted, because
 // it will be unbound in the GL.
+//
+// PreallocatedOwnersCapacity is the preallocated capacity for the array of refptrs to owners.
+// Having some minimal preallocated capacity is an important optimization, see bug 522193. In this
+// bug, a benchmark was using WebGLBuffer with a number of owners oscillating between 0 and 2.
+// At this time mRefOwners was a nsTArray, and the too frequent reallocations were slowing us down.
+template<int PreallocatedOwnersCapacity>
 class WebGLZeroingObject
 {
 public:
@@ -704,7 +713,7 @@ public:
     }
 
 protected:
-    nsTArray<WebGLObjectBaseRefPtr *> mRefOwners;
+    nsAutoTArray<WebGLObjectBaseRefPtr *, PreallocatedOwnersCapacity> mRefOwners;
 };
 
 // this class is a mixin for GL objects that have dimensions
@@ -771,7 +780,7 @@ protected:
     {0xd69f22e9, 0x6f98, 0x48bd, {0xb6, 0x94, 0x34, 0x17, 0xed, 0x06, 0x11, 0xab}}
 class WebGLBuffer :
     public nsIWebGLBuffer,
-    public WebGLZeroingObject,
+    public WebGLZeroingObject<8>, // almost never has more than 8 owners
     public WebGLContextBoundObject
 {
 public:
@@ -907,7 +916,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLBuffer, WEBGLBUFFER_PRIVATE_IID)
     {0x4c19f189, 0x1f86, 0x4e61, {0x96, 0x21, 0x0a, 0x11, 0xda, 0x28, 0x10, 0xdd}}
 class WebGLTexture :
     public nsIWebGLTexture,
-    public WebGLZeroingObject,
+    public WebGLZeroingObject<8>, // almost never has more than 8 owners
     public WebGLContextBoundObject
 {
 public:
@@ -1346,7 +1355,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLTexture, WEBGLTEXTURE_PRIVATE_IID)
     {0x48cce975, 0xd459, 0x4689, {0x83, 0x82, 0x37, 0x82, 0x6e, 0xac, 0xe0, 0xa7}}
 class WebGLShader :
     public nsIWebGLShader,
-    public WebGLZeroingObject,
+    public WebGLZeroingObject<8>, // almost never has more than 8 owners
     public WebGLContextBoundObject
 {
 public:
@@ -1412,7 +1421,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLShader, WEBGLSHADER_PRIVATE_IID)
     {0xb3084a5b, 0xa5b4, 0x4ee0, {0xa0, 0xf0, 0xfb, 0xdd, 0x64, 0xaf, 0x8e, 0x82}}
 class WebGLProgram :
     public nsIWebGLProgram,
-    public WebGLZeroingObject,
+    public WebGLZeroingObject<8>, // can actually have many more owners (WebGLUniformLocations),
+                                  // but that shouldn't be performance-critical as references to the uniformlocations are stored
+                                  // in mMapUniformLocations, limiting the churning
     public WebGLContextBoundObject
 {
 public:
@@ -1539,7 +1550,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLProgram, WEBGLPROGRAM_PRIVATE_IID)
     {0x3cbc2067, 0x5831, 0x4e3f, {0xac, 0x52, 0x7e, 0xf4, 0x5c, 0x04, 0xff, 0xae}}
 class WebGLRenderbuffer :
     public nsIWebGLRenderbuffer,
-    public WebGLZeroingObject,
+    public WebGLZeroingObject<8>, // almost never has more than 8 owners
     public WebGLRectangleObject,
     public WebGLContextBoundObject
 {
@@ -1710,7 +1721,7 @@ public:
     {0x0052a16f, 0x4bc9, 0x4a55, {0x9d, 0xa3, 0x54, 0x95, 0xaa, 0x4e, 0x80, 0xb9}}
 class WebGLFramebuffer :
     public nsIWebGLFramebuffer,
-    public WebGLZeroingObject,
+    public WebGLZeroingObject<8>, // almost never has more than 8 owners
     public WebGLContextBoundObject
 {
 public:
@@ -1985,7 +1996,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLFramebuffer, WEBGLFRAMEBUFFER_PRIVATE_IID)
     {0x01a8a614, 0xb109, 0x42f1, {0xb4, 0x40, 0x8d, 0x8b, 0x87, 0x0b, 0x43, 0xa7}}
 class WebGLUniformLocation :
     public nsIWebGLUniformLocation,
-    public WebGLZeroingObject,
+    public WebGLZeroingObject<2>, // never saw a WebGLUniformLocation have more than 2 owners, and since these
+                                  // are small objects and there are many of them, it's worth saving some memory
+                                  // by using a small value such as 2 here.
     public WebGLContextBoundObject
 {
 public:
@@ -2052,7 +2065,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLActiveInfo, WEBGLACTIVEINFO_PRIVATE_IID)
 class WebGLExtension :
     public nsIWebGLExtension,
     public WebGLContextBoundObject,
-    public WebGLZeroingObject
+    public WebGLZeroingObject<2> // WebGLExtensions probably won't have many owers and
+                                 // can be very small objects. Also, we have a static array of those. So, saving some memory
+                                 // by using a small value such as 2 here.
 {
 public:
     WebGLExtension(WebGLContext *baseContext)

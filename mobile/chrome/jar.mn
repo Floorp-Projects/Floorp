@@ -33,6 +33,7 @@ chrome.jar:
   content/SelectHelperUI.js            (content/SelectHelperUI.js)
   content/SelectionHelper.js           (content/SelectionHelper.js)
   content/SharingUI.js                 (content/SharingUI.js)
+  content/TabletSidebar.js             (content/TabletSidebar.js)
   content/TabsPopup.js                 (content/TabsPopup.js)
   content/MasterPasswordUI.js          (content/MasterPasswordUI.js)
 * content/content.js                   (content/content.js)

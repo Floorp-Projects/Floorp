@@ -695,7 +695,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   // dialog is disabled.
   JSObject* global = ::JS_GetGlobalForScopeChain(cx);
   bool isTrackingChromeCodeTime =
-    global && xpc::AccessCheck::isChrome(global->getCompartment());
+    global && xpc::AccessCheck::isChrome(js::GetObjectCompartment(global));
   if (duration < (isTrackingChromeCodeTime ?
                   sMaxChromeScriptRunTime : sMaxScriptRunTime)) {
     return JS_TRUE;
@@ -1873,8 +1873,8 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 #ifdef NS_FUNCTION_TIMER
   {
     JSObject *obj = static_cast<JSObject *>(aHandler);
-    if (obj->isFunctionProxy())
-      obj = obj->unwrap(NULL);
+    if (js::IsFunctionProxy(obj))
+      obj = js::UnwrapObject(obj);
     JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(mContext, obj)));
     JSAutoByteString bytes;
     const char *name = !id ? "anonymous" : bytes.encode(mContext, id) ? bytes.ptr() : "<error>";
@@ -2166,8 +2166,7 @@ nsJSContext::GetGlobalObject()
 
 #ifdef DEBUG
   {
-    JSObject *inner = global;
-    OBJ_TO_INNER_OBJECT(mContext, inner);
+    JSObject *inner = JS_ObjectToInnerObject(mContext, global);
 
     // If this assertion hits then it means that we have a window object as
     // our global, but we never called CreateOuterObject.
@@ -2182,7 +2181,7 @@ nsJSContext::GetGlobalObject()
     return nsnull;
   }
 
-  nsISupports *priv = (nsISupports *)global->getPrivate();
+  nsISupports *priv = (nsISupports *)js::GetObjectPrivate(global);
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native =
     do_QueryInterface(priv);
@@ -2333,8 +2332,7 @@ nsJSContext::SetOuterObject(void *aOuterObject)
 nsresult
 nsJSContext::InitOuterWindow()
 {
-  JSObject *global = JS_GetGlobalObject(mContext);
-  OBJ_TO_INNER_OBJECT(mContext, global);
+  JSObject *global = JS_ObjectToInnerObject(mContext, JS_GetGlobalObject(mContext));
 
   nsresult rv = InitClasses(global); // this will complete global object initialization
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3023,7 +3021,7 @@ nsJSContext::ClearScope(void *aGlobalObj, bool aClearFromProtoChain)
       }
     }
 
-    if (!obj->getParent()) {
+    if (!js::GetObjectParent(obj)) {
       JS_ClearRegExpStatics(mContext, obj);
     }
 

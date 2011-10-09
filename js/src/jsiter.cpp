@@ -178,6 +178,17 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
 {
     JS_ASSERT_IF(flags & JSITER_OWNONLY, obj == pobj);
 
+    /*
+     * We implement __proto__ using a property on |Object.prototype|, but
+     * because __proto__ is highly deserving of removal, we don't want it to
+     * show up in property enumeration, even if only for |Object.prototype|
+     * (think introspection by Prototype-like frameworks that add methods to
+     * the built-in prototypes).  So exclude __proto__ if the object where the
+     * property was found has no [[Prototype]] and might be |Object.prototype|.
+     */
+    if (JS_UNLIKELY(!pobj->getProto() && JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)))
+        return true;
+
     if (!(flags & JSITER_OWNONLY) || pobj->isProxy() || pobj->getOps()->enumerate) {
         /* If we've already seen this, we definitely won't add it. */
         IdSet::AddPtr p = ht.lookupForAdd(id);
@@ -313,10 +324,8 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
     return true;
 }
 
-namespace js {
-
 bool
-VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
+js::VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 {
     JS_STATIC_ASSERT(sizeof(JSIdArray) > sizeof(jsid));
     size_t len = props.length();
@@ -333,11 +342,9 @@ VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 }
 
 JS_FRIEND_API(bool)
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
+js::GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
 {
     return Snapshot(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props);
-}
-
 }
 
 size_t sCustomIteratorCount = 0;
@@ -717,7 +724,7 @@ iterator_next(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &IteratorClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, iterator_next, &IteratorClass, &ok);
     if (!obj)
         return ok;
 
@@ -931,18 +938,31 @@ js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32 index)
 }
 
 class IndexRangePredicate {
-    jsint begin, end;
-public:
-    IndexRangePredicate(jsint begin, jsint end) : begin(begin), end(end) {}
+    uint32 begin, end;
+
+  public:
+    IndexRangePredicate(uint32 begin, uint32 end) : begin(begin), end(end) {}
 
     bool operator()(jsid id) {
-        return JSID_IS_INT(id) && begin <= JSID_TO_INT(id) && JSID_TO_INT(id) < end;
+        if (JSID_IS_INT(id)) {
+            jsint i = JSID_TO_INT(id);
+            return i > 0 && begin <= uint32(i) && uint32(i) < end;
+        }
+
+        if (JS_LIKELY(JSID_IS_ATOM(id))) {
+            JSAtom *atom = JSID_TO_ATOM(id);
+            uint32 index;
+            return atom->isIndex(&index) && begin <= index && index < end;
+        }
+
+        return false;
     }
+
     bool matchesAtMostOne() { return false; }
 };
 
 bool
-js_SuppressDeletedIndexProperties(JSContext *cx, JSObject *obj, jsint begin, jsint end)
+js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32 begin, uint32 end)
 {
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }
@@ -1339,14 +1359,14 @@ CloseGenerator(JSContext *cx, JSObject *obj)
  * Common subroutine of generator_(next|send|throw|close) methods.
  */
 static JSBool
-generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
+generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, uintN argc)
 {
     LeaveTrace(cx);
 
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &GeneratorClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, native, &GeneratorClass, &ok);
     if (!obj)
         return ok;
 
@@ -1403,25 +1423,25 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
 static JSBool
 generator_send(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_SEND, vp, argc);
+    return generator_op(cx, generator_send, JSGENOP_SEND, vp, argc);
 }
 
 static JSBool
 generator_next(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_NEXT, vp, argc);
+    return generator_op(cx, generator_next, JSGENOP_NEXT, vp, argc);
 }
 
 static JSBool
 generator_throw(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_THROW, vp, argc);
+    return generator_op(cx, generator_throw, JSGENOP_THROW, vp, argc);
 }
 
 static JSBool
 generator_close(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_CLOSE, vp, argc);
+    return generator_op(cx, generator_close, JSGENOP_CLOSE, vp, argc);
 }
 
 static JSFunctionSpec generator_methods[] = {

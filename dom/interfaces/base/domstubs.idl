@@ -60,7 +60,6 @@ interface nsIDOMProcessingInstruction;
 interface nsIDOMText;
 interface nsIDOMDOMStringList;
 interface nsIDOMDOMTokenList;
-interface nsIDOMNameList;
 interface nsIDOMClientRect;
 interface nsIDOMClientRectList;
 

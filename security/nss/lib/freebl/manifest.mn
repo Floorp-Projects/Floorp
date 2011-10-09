@@ -128,7 +128,6 @@ CSRCS = \
 	md5.c \
 	sha512.c \
 	alghmac.c \
-	mgf1.c \
 	rawhash.c \
 	alg2268.c \
 	arcfour.c \

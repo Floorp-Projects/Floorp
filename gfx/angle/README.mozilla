@@ -1,15 +1,16 @@
-This is the ANGLE project, from http://code.google.com/p/angleproject/.
+This is the ANGLE project, from http://code.google.com/p/angleproject/
 
-Current revision: r740
+Current revision: r774
 
 == Applied local patches ==
 
 In this order:
   angle-nspr-misc.patch - don't bother with ANGLE_OS detection with NSPR
   angle-renaming.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
-  angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
+  angle-instrinsic-msvc2005.patch - work around a MSVC 2005 compile error
   angle-limit-identifiers-to-250-chars.patch - see bug 675625
   angle-use-xmalloc.patch - see bug 680840. Can drop this patch whenever the new preprocessor lands.
+  angle-mCurrentValueOffsets-size_t.patch - ANGLE bug 220 - compile fix on win64
 
 In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
 

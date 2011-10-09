@@ -330,8 +330,6 @@ protected:
 
   nsresult GetWholeText(nsAString& aWholeText);
 
-  nsresult ReplaceWholeText(const nsAString& aContent, nsIDOMText **aReturn);
-
   nsresult GetIsElementContentWhitespace(bool *aReturn)
   {
     GetOwnerDoc()->WarnOnceAbout(nsIDocument::eIsElementContentWhitespace);

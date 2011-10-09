@@ -55,11 +55,11 @@
 #include "jsdhash.h"
 #include "jsprf.h"
 #include "prprf.h"
-#include "jsinterp.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
+#include "jswrapper.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
@@ -2350,7 +2350,7 @@ extern JSBool MorphSlimWrapper(JSContext *cx, JSObject *obj);
 static inline XPCWrappedNativeProto*
 GetSlimWrapperProto(JSObject *obj)
 {
-  const js::Value &v = obj->getSlot(0);
+  const js::Value &v = js::GetReservedSlot(obj, 0);
   return static_cast<XPCWrappedNativeProto*>(v.toPrivate());
 }
 
@@ -4339,7 +4339,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
 inline void *
 xpc_GetJSPrivate(JSObject *obj)
 {
-    return obj->getPrivate();
+    return js::GetObjectPrivate(obj);
 }
 
 

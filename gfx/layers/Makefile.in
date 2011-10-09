@@ -66,6 +66,7 @@ EXPORTS = \
         LayerManagerOGL.h \
         LayerManagerOGLProgram.h \
         ReadbackLayer.h \
+        LayerSorter.h \
         $(NULL)
 
 CPPSRCS = \
@@ -80,6 +81,7 @@ CPPSRCS = \
         ImageLayerOGL.cpp \
         LayerManagerOGL.cpp \
         ThebesLayerOGL.cpp \
+        LayerSorter.cpp \
         $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

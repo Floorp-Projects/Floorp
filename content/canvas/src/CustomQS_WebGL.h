@@ -67,12 +67,12 @@
 
 static inline bool
 helper_isInt32Array(JSObject *obj) {
-    return obj->getClass() == &js::TypedArray::fastClasses[js::TypedArray::TYPE_INT32];
+    return js::GetObjectClass(obj) == &js::TypedArray::fastClasses[js::TypedArray::TYPE_INT32];
 }
 
 static inline bool
 helper_isFloat32Array(JSObject *obj) {
-    return obj->getClass() == &js::TypedArray::fastClasses[js::TypedArray::TYPE_FLOAT32];
+    return js::GetObjectClass(obj) == &js::TypedArray::fastClasses[js::TypedArray::TYPE_FLOAT32];
 }
 
 /*

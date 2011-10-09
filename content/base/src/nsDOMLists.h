@@ -38,15 +38,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Implementations of nsIDOMDOMStringList and nsIDOMNameList, used by various
- * DOM3 stuff and some interfaces specified by WHATWG.
+ * Implementation of nsIDOMDOMStringList, used by various DOM stuff.
  */
 
 #ifndef nsDOMLists_h___
 #define nsDOMLists_h___
 
 #include "nsIDOMDOMStringList.h"
-#include "nsIDOMNameList.h"
 #include "nsTArray.h"
 #include "nsString.h"
 
@@ -65,22 +63,6 @@ public:
   }
 
 private:
-  nsTArray<nsString> mNames;
-};
-
-class nsNameList : public nsIDOMNameList
-{
-public:
-  nsNameList();
-  virtual ~nsNameList();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMNAMELIST
-
-  bool Add(const nsAString& aNamespaceURI, const nsAString& aName);
-
-private:
-  nsTArray<nsString> mNamespaceURIs;
   nsTArray<nsString> mNames;
 };
 

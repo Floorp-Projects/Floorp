@@ -83,8 +83,8 @@ nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem,
                                  NSMenuItem*    aNativeMenuItem)
 : mContent(aContent)
 , mMenuObject(aMenuItem)
-, mLoadedIcon(PR_FALSE)
-, mSetIcon(PR_FALSE)
+, mLoadedIcon(false)
+, mSetIcon(false)
 , mNativeMenuItem(aNativeMenuItem)
 {
   //  printf("Creating icon for menu item %d, menu %d, native item is %d\n", aMenuItem, aMenu, aNativeMenuItem);
@@ -303,7 +303,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
     mIconRequest = nsnull;
   }
 
-  mLoadedIcon = PR_FALSE;
+  mLoadedIcon = false;
 
   if (!mContent) return NS_ERROR_FAILURE;
 
@@ -327,7 +327,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
     static bool sInitializedPlaceholder;
     static NSImage* sPlaceholderIconImage;
     if (!sInitializedPlaceholder) {
-      sInitializedPlaceholder = PR_TRUE;
+      sInitializedPlaceholder = true;
 
       // Note that we only create the one and reuse it forever, so this is not a leak.
       sPlaceholderIconImage = [[NSImage alloc] initWithSize:NSMakeSize(kIconWidth, kIconHeight)];
@@ -521,8 +521,8 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   [newImage release];
   ::CGImageRelease(iconImage);
 
-  mLoadedIcon = PR_TRUE;
-  mSetIcon = PR_TRUE;
+  mLoadedIcon = true;
+  mSetIcon = true;
 
   return NS_OK;
 
