@@ -404,6 +404,8 @@ const EXPIRATION_QUERIES = {
   // The following queries are used to adjust the sqlite_stat1 table to help the
   // query planner create better queries.  These should always be run LAST, and
   // are therefore at the end of the object.
+  // Since also nsNavHistory.cpp executes ANALYZE, the analyzed tables
+  // must be the same in both components.  So ensure they are in sync.
 
   QUERY_ANALYZE_MOZ_PLACES: {
     sql: "ANALYZE moz_places",

@@ -179,6 +179,8 @@ CanvasLayerD3D10::UpdateSurface()
       destination = (PRUint8*)map.pData;
     }
 
+    mGLContext->MakeCurrent();
+
     // We have to flush to ensure that any buffered GL operations are
     // in the framebuffer before we read.
     mGLContext->fFlush();
