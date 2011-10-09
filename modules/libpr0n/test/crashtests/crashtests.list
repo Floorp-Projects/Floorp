@@ -8,7 +8,7 @@ load invalid-size.gif
 load invalid-size-second-frame.gif
 
 # Animated gifs with a very large canvas, but tiny actual content.
-asserts(2) load delaytest.html?523528-1.gif # Bug 564231
+load delaytest.html?523528-1.gif
 load delaytest.html?523528-2.gif
 
 # this would have exposed the leak discovered in bug 642902

@@ -24,7 +24,7 @@ function test2() {
   ok(TabView.isVisible(), "Tab View is visible");
 
   whenSearchIsEnabled(function() {
-    ok(contentWindow.isSearchEnabled(), "The search is enabled")
+    ok(contentWindow.Search.isEnabled(), "The search is enabled")
 
     whenSearchIsDisabled(test3);
     hideSearch();
@@ -33,7 +33,7 @@ function test2() {
 }
 
 function test3() {
-  ok(!contentWindow.isSearchEnabled(), "The search is disabled")
+  ok(!contentWindow.Search.isEnabled(), "The search is disabled")
 
   is(gBrowser.tabs.length, 1, "There is one tab before cmd/ctrl + t is pressed");
 

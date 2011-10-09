@@ -398,6 +398,10 @@ OpenFile(const nsAFlatString &name, PRIntn osflags, PRIntn mode,
       flag6 |= FILE_FLAG_DELETE_ON_CLOSE;
     }
 
+    if (osflags && nsILocalFile::OS_READAHEAD) {
+      flag6 |= FILE_FLAG_SEQUENTIAL_SCAN;
+    }
+
     HANDLE file = ::CreateFileW(name.get(), access,
                                 FILE_SHARE_READ|FILE_SHARE_WRITE,
                                 NULL, flags, flag6, NULL);

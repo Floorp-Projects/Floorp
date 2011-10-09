@@ -106,9 +106,10 @@
       gQueue.push(new synthContextMenu(editableDoc, new contextMenuChecker()));
       gQueue.push(new synthDownKey(editableDoc, new focusContextMenuItemChecker()));
       gQueue.push(new synthEscapeKey(editableDoc, new focusChecker(editableDoc)));
-
-      todo(false, "shift+tab doesn't issue the focus, see bug 684818");
-      //gQuee.push(new synthShiftTab("link", new focusChecker("link")));
+      if (LINUX)
+        todo(false, "shift tab from editable document Fails on linux!");
+      else
+        gQueue.push(new synthShiftTab("link", new focusChecker("link")));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

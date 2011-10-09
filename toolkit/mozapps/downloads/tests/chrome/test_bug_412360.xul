@@ -176,14 +176,18 @@ function test()
       if (aTopic != DLMGR_UI_DONE)
         return;
 
-      SimpleTest.waitForFocus(function () { sendEnter(aSubject) }, aSubject);
-    }
-  };
+      os.removeObserver(testObs, DLMGR_UI_DONE);
 
-  function sendEnter(win) {
-    // Send the enter key to Download Manager to retry the download
-    synthesizeKey("VK_ENTER", {}, win);
-    os.removeObserver(testObs, DLMGR_UI_DONE);
+      SimpleTest.waitForFocus(function () {
+        let win = aSubject;
+
+        // Down arrow to select the download
+        synthesizeKey("VK_DOWN", {}, win);
+
+        // Enter key to retry the download
+        synthesizeKey("VK_ENTER", {}, win);
+      }, aSubject);
+    }
   };
 
   // Register with the observer service

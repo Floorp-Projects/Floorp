@@ -40,6 +40,7 @@
 
 let doc;
 let h1;
+let div;
 
 function createDocument()
 {
@@ -49,7 +50,7 @@ function createDocument()
   let p2 = doc.createElement("p");
   let div2 = doc.createElement("div");
   let p3 = doc.createElement("p");
-  doc.title = "Inspector Tree Selection Test";
+  doc.title = "Inspector Highlighter Meatballs";
   h1.textContent = "Inspector Tree Selection Test";
   p1.textContent = "This is some example text";
   p2.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
@@ -66,19 +67,28 @@ function createDocument()
     "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
     "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
     "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+  let div3 = doc.createElement("div");
+  div3.id = "checkOutThisWickedSpread";
+  div3.setAttribute("style", "position: absolute; top: 20px; right: 20px; height: 20px; width: 20px; background-color: yellow; border: 1px dashed black;");
+  let p4 = doc.createElement("p");
+  p4.setAttribute("style", "font-weight: 200; font-size: 8px; text-align: center;");
+  p4.textContent = "Smörgåsbord!";
   div.appendChild(h1);
   div.appendChild(p1);
   div.appendChild(p2);
   div2.appendChild(p3);
+  div3.appendChild(p4);
   doc.body.appendChild(div);
   doc.body.appendChild(div2);
+  doc.body.appendChild(div3);
+
   setupHighlighterTests();
 }
 
 function setupHighlighterTests()
 {
-  h1 = doc.querySelectorAll("h1")[0];
-  ok(h1, "we have the header node");
+  h1 = doc.querySelector("h1");
+  ok(h1, "we have the header");
   Services.obs.addObserver(runSelectionTests,
     InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.toggleInspectorUI();
@@ -99,7 +109,7 @@ function runSelectionTests()
 function performTestComparisons(evt)
 {
   Services.obs.removeObserver(performTestComparisons,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
 
   InspectorUI.stopInspecting();
   ok(InspectorUI.highlighter.isHighlighting, "highlighter is highlighting");
@@ -107,7 +117,61 @@ function performTestComparisons(evt)
   is(InspectorUI.selection, h1, "selection matches node");
   is(InspectorUI.selection, InspectorUI.highlighter.highlitNode, "selection matches highlighter");
 
-  doc = h1 = null;
+  Services.obs.addObserver(finishTestComparisons,
+      InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+
+  div = doc.querySelector("div#checkOutThisWickedSpread");
+
+  executeSoon(function() {
+    InspectorUI.inspectNode(div);
+  });
+}
+
+function finishTestComparisons()
+{
+  Services.obs.removeObserver(finishTestComparisons,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+
+  // get dimensions of div element
+  let divDims = div.getBoundingClientRect();
+  let divWidth = divDims.width;
+  let divHeight = divDims.height;
+
+  // get dimensions of transparent veil box over element
+  let veilBoxDims = 
+    InspectorUI.highlighter.veilTransparentBox.getBoundingClientRect();
+  let veilBoxWidth = veilBoxDims.width;
+  let veilBoxHeight = veilBoxDims.height;
+
+  is(veilBoxWidth, divWidth, "transparent veil box width matches dimensions of element (no zoom)");
+  is(veilBoxHeight, divHeight, "transparent veil box height matches dimensions of element (no zoom)");
+  // zoom the page by a factor of 2
+  let contentViewer = InspectorUI.browser.docShell.contentViewer
+                             .QueryInterface(Ci.nsIMarkupDocumentViewer);
+  contentViewer.fullZoom = 2;
+
+  // check what zoom factor we're at, should be 2
+  let zoom =
+      InspectorUI.win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+      .getInterface(Components.interfaces.nsIDOMWindowUtils)
+      .screenPixelsPerCSSPixel;
+
+  is(zoom, 2, "zoom is 2?");
+
+  // simulate the zoomed dimensions of the div element
+  let divDims = div.getBoundingClientRect();
+  let divWidth = divDims.width * zoom;
+  let divHeight = divDims.height * zoom;
+
+  // now zoomed, get new dimensions of transparent veil box over element
+  let veilBoxDims = InspectorUI.highlighter.veilTransparentBox.getBoundingClientRect();
+  let veilBoxWidth = veilBoxDims.width;
+  let veilBoxHeight = veilBoxDims.height;
+
+  is(veilBoxWidth, divWidth, "transparent veil box width matches width of element (2x zoom)");
+  is(veilBoxHeight, divHeight, "transparent veil box height matches width of element (2x zoom)");
+
+  doc = h1 = div = null;
   executeSoon(finishUp);
 }
 

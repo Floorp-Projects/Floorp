@@ -45,7 +45,7 @@
  * you.  If that has a problem, then just move out what you need, changing
  * its name as appropriate!
  *
- * $Id: p7local.h,v 1.2 2004/04/25 15:03:13 gerv%gerv.net Exp $
+ * $Id: p7local.h,v 1.3 2011/08/21 01:14:17 wtc%google.com Exp $
  */
 
 #ifndef _P7LOCAL_H_
@@ -166,12 +166,6 @@ extern SECStatus sec_PKCS7Encrypt (sec_PKCS7CipherObject *obj,
 				   const unsigned char *input,
 				   unsigned int input_len,
 				   PRBool final);
-
-/* return the correct kea template based on the template selector. skipjack
- * does not have the extra IV.
- */
-const SEC_ASN1Template * 
-sec_pkcs7_get_kea_template(SECKEATemplateSelector whichTemplate);
 
 /************************************************************************/
 SEC_END_PROTOS

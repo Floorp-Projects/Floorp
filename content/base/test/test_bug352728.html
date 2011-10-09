@@ -87,10 +87,32 @@ function testPI(aTarget, aData, aShouldSucceed, aReason)
 {
   try {
     var pi = document.createProcessingInstruction(aTarget, aData);
-    ok(0, "Invalid processing instruction creation",
-       "Shouldn't create processing instructions in HTML");
+    var types = [ ProcessingInstruction, Node ];
+    checkTypes(pi, "processing instruction", types);
+
+    var interfaces = [ "nsIDOMProcessingInstruction", "nsIDOMNode",
+                       "nsIDOMEventTarget" ];
+    checkInterfaces(pi, "processing instruction", interfaces);
+
+    is(pi.target, aTarget, "Check target");
+    is(pi.data, aData, "Check data");
+    is(pi.nodeName, aTarget, "Check nodeName");
+    is(pi.nodeValue, aData, "Check nodeValue");
+    is(pi.localName, null, "Check localName")
+    is(pi.namespaceURI, null, "Check namespaceURI");
+    
+    is(pi.nodeType, Node.PROCESSING_INSTRUCTION_NODE, "Check nodeType");
+
+    if (!aShouldSucceed) {
+      ok(false, "Invalid processing instruction creation", aReason);
+    }
   } catch (e) {
-    is(e.code, DOMException.NOT_SUPPORTED_ERR, "Check exception code");
+    if (aShouldSucceed) {
+      ok(false, "Correct functioning of processing instruction stuff",
+         "something broke: " + e);
+    } else {
+      is(e.code, DOMException.INVALID_CHARACTER_ERR, "Check exception code");
+    }
   }
 }
 

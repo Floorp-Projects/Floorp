@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=691215
+-->
+<head>
+  <title>Test for Bug 691215</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=691215">Mozilla Bug 691215</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 691215 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var url = "data:text/xml,<root/>";
+var w;
+
+addLoadEvent(function() {
+  // Need a separate window because we do not prettyprint in iframes.  This is
+  // why this test can't be a crashtest.
+  w = window.open(url);
+  // Need to poll for load completion, sadly
+  setTimeout(checker, 0);
+});
+
+function checker() {
+  if (w.location.href != url ||
+      w.document.readyState != "complete") {
+    setTimeout(checker, 0);
+    return;
+  }
+  var doc = w.document;
+  var n = doc.createElement("span");
+  doc.replaceChild(n, doc.documentElement);
+  w.close();
+  ok(1, "Hey, we got here, that's good");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

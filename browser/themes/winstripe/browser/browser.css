@@ -141,6 +141,10 @@
   -moz-appearance: toolbox;
 }
 
+#browser-bottombox:not(:-moz-lwtheme) {
+  background-color: -moz-dialog;
+}
+
 /* ::::: app menu button ::::: */
 
 #appmenu-button {
@@ -2467,12 +2471,14 @@ panel[dimmed="true"] {
 /* Add-on bar */
 
 #addon-bar {
+  -moz-appearance: none;
   min-height: 20px;
-  border-top: 1px solid ThreeDShadow !important;
-}
-
-#addon-bar:not(:-moz-lwtheme) {
-  -moz-appearance: statusbar;
+  border-top-style: none;
+  border-bottom-style: none;
+  padding-top: 1px;
+  background-image: -moz-linear-gradient(rgba(0,0,0,.15) 1px, rgba(255,255,255,.15) 1px);
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
 }
 
 #status-bar {

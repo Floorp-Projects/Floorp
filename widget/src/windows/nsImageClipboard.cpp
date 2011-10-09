@@ -462,7 +462,7 @@ void nsImageFromClipboard::CalcBitmask(PRUint32 aMask, PRUint8& aBegin, PRUint8&
     if (!started && (aMask & (1 << pos))) 
     {
       aBegin = pos;
-      started = PR_TRUE;
+      started = true;
     }
     else if (started && !(aMask & (1 << pos))) 
     {

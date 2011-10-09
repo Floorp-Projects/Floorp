@@ -51,11 +51,11 @@
 #include "jsdhash.h"
 #include "jsbit.h"
 #include "jsgcchunk.h"
+#include "jshashtable.h"
+#include "jslock.h"
 #include "jsutil.h"
 #include "jsvector.h"
 #include "jsversion.h"
-#include "jsobj.h"
-#include "jsfun.h"
 #include "jsgcstats.h"
 #include "jscell.h"
 
@@ -641,8 +641,6 @@ struct Chunk {
         return addr;
     }
 
-    void init();
-
     bool unused() const {
         return info.numFree == ArenasPerChunk;
     }
@@ -657,10 +655,41 @@ struct Chunk {
     ArenaHeader *allocateArena(JSCompartment *comp, AllocKind kind);
 
     void releaseArena(ArenaHeader *aheader);
+
+    static Chunk *allocate();
+    static inline void release(Chunk *chunk);
+
+  private:
+    inline void init();
 };
 
 JS_STATIC_ASSERT(sizeof(Chunk) <= GC_CHUNK_SIZE);
 JS_STATIC_ASSERT(sizeof(Chunk) + BytesPerArena > GC_CHUNK_SIZE);
+
+class ChunkPool {
+    Chunk   *emptyChunkListHead;
+    size_t  emptyCount;
+
+  public:
+    ChunkPool()
+      : emptyChunkListHead(NULL),
+        emptyCount(0) { }
+
+    size_t getEmptyCount() const {
+        return emptyCount;
+    }
+
+    inline bool wantBackgroundAllocation(JSRuntime *rt) const;
+
+    /* Must be called with the GC lock taken. */
+    inline Chunk *get(JSRuntime *rt);
+
+    /* Must be called either during the GC or with the GC lock taken. */
+    inline void put(JSRuntime *rt, Chunk *chunk);
+
+    /* Must be called either during the GC or with the GC lock taken. */
+    void expire(JSRuntime *rt, bool releaseAll);
+};
 
 inline uintptr_t
 Cell::address() const
@@ -1288,32 +1317,44 @@ namespace js {
 
 #ifdef JS_THREADSAFE
 
-/*
- * During the finalization we do not free immediately. Rather we add the
- * corresponding pointers to a buffer which we later release on a separated
- * thread.
- *
- * The buffer is implemented as a vector of 64K arrays of pointers, not as a
- * simple vector, to avoid realloc calls during the vector growth and to not
- * bloat the binary size of the inlined freeLater method. Any OOM during
- * buffer growth results in the pointer being freed immediately.
- */
 class GCHelperThread {
+    enum State {
+        IDLE,
+        SWEEPING,
+        ALLOCATING,
+        CANCEL_ALLOCATION,
+        SHUTDOWN
+    };
+
+    /*
+     * During the finalization we do not free immediately. Rather we add the
+     * corresponding pointers to a buffer which we later release on a
+     * separated thread.
+     *
+     * The buffer is implemented as a vector of 64K arrays of pointers, not as
+     * a simple vector, to avoid realloc calls during the vector growth and to
+     * not bloat the binary size of the inlined freeLater method. Any OOM
+     * during buffer growth results in the pointer being freed immediately.
+     */
     static const size_t FREE_ARRAY_SIZE = size_t(1) << 16;
     static const size_t FREE_ARRAY_LENGTH = FREE_ARRAY_SIZE / sizeof(void *);
 
-    JSContext         *cx;
-    PRThread*         thread;
-    PRCondVar*        wakeup;
-    PRCondVar*        sweepingDone;
-    bool              shutdown;
-    JSGCInvocationKind lastGCKind;
+    JSRuntime         *const rt;
+    PRThread          *thread;
+    PRCondVar         *wakeup;
+    PRCondVar         *done;
+    volatile State    state;
+
+    JSContext         *context;
+    bool              shrinkFlag;
 
     Vector<void **, 16, js::SystemAllocPolicy> freeVector;
     void            **freeCursor;
     void            **freeCursorEnd;
 
     Vector<js::gc::ArenaHeader *, 64, js::SystemAllocPolicy> finalizeVector;
+
+    bool    backgroundAllocation;
 
     friend struct js::gc::ArenaLists;
 
@@ -1328,38 +1369,69 @@ class GCHelperThread {
     }
 
     static void threadMain(void* arg);
+    void threadLoop();
 
-    void threadLoop(JSRuntime *rt);
+    /* Must be called with the GC lock taken. */
     void doSweep();
 
   public:
-    GCHelperThread()
-      : thread(NULL),
+    GCHelperThread(JSRuntime *rt)
+      : rt(rt),
+        thread(NULL),
         wakeup(NULL),
-        sweepingDone(NULL),
-        shutdown(false),
+        done(NULL),
+        state(IDLE),
         freeCursor(NULL),
         freeCursorEnd(NULL),
-        sweeping(false) { }
+        backgroundAllocation(true)
+    { }
 
-    volatile bool     sweeping;
-    bool init(JSRuntime *rt);
-    void finish(JSRuntime *rt);
+    bool init();
+    void finish();
 
-    /* Must be called with GC lock taken. */
-    void startBackgroundSweep(JSRuntime *rt, JSGCInvocationKind gckind);
+    /* Must be called with the GC lock taken. */
+    inline void startBackgroundSweep(bool shouldShrink);
 
-    void waitBackgroundSweepEnd(JSRuntime *rt, bool gcUnlocked = true);
+    /* Must be called with the GC lock taken. */
+    void waitBackgroundSweepEnd();
+
+    /* Must be called with the GC lock taken. */
+    void waitBackgroundSweepOrAllocEnd();
+
+    /* Must be called with the GC lock taken. */
+    inline void startBackgroundAllocationIfIdle();
+
+    bool canBackgroundAllocate() const {
+        return backgroundAllocation;
+    }
+
+    void disableBackgroundAllocation() {
+        backgroundAllocation = false;
+    }
+
+    /*
+     * Outside the GC lock may give true answer when in fact the sweeping has
+     * been done.
+     */
+    bool sweeping() const {
+        return state == SWEEPING;
+    }
+
+    bool shouldShrink() const {
+        JS_ASSERT(sweeping());
+        return shrinkFlag;
+    }
 
     void freeLater(void *ptr) {
-        JS_ASSERT(!sweeping);
+        JS_ASSERT(!sweeping());
         if (freeCursor != freeCursorEnd)
             *freeCursor++ = ptr;
         else
             replenishAndFreeLater(ptr);
     }
 
-    bool prepareForBackgroundSweep(JSContext *context);
+    /* Must be called with the GC lock taken. */
+    bool prepareForBackgroundSweep(JSContext *cx);
 };
 
 #endif /* JS_THREADSAFE */
@@ -1603,13 +1675,11 @@ NewCompartment(JSContext *cx, JSPrincipals *principals);
 void
 RunDebugGC(JSContext *cx);
 
-} /* namespace js */
 } /* namespace gc */
 
-inline JSCompartment *
-JSObject::getCompartment() const
-{
-    return compartment();
-}
+static inline JSCompartment *
+GetObjectCompartment(JSObject *obj) { return reinterpret_cast<js::gc::Cell *>(obj)->compartment(); }
+
+} /* namespace js */
 
 #endif /* jsgc_h___ */

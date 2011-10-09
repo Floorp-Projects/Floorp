@@ -777,7 +777,7 @@ nsPIDOMWindow::~nsPIDOMWindow() {}
 JSString *
 nsOuterWindowProxy::obj_toString(JSContext *cx, JSObject *proxy)
 {
-    JS_ASSERT(proxy->isProxy());
+    JS_ASSERT(js::IsProxy(proxy));
 
     return JS_NewStringCopyZ(cx, "[object Window]");
 }
@@ -793,9 +793,9 @@ NS_NewOuterWindowProxy(JSContext *cx, JSObject *parent)
     return nsnull;
   }
 
-  JSObject *obj = js::Wrapper::New(cx, parent, parent->getProto(), parent,
+  JSObject *obj = js::Wrapper::New(cx, parent, js::GetObjectProto(parent), parent,
                                    &nsOuterWindowProxy::singleton);
-  NS_ASSERTION(obj->getClass()->ext.innerObject, "bad class");
+  NS_ASSERTION(js::GetObjectClass(obj)->ext.innerObject, "bad class");
   return obj;
 }
 
@@ -2242,7 +2242,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       if (navigatorHolder) {
         JS_ASSERT(JSVAL_IS_OBJECT(nav));
 
-        if (JSVAL_TO_OBJECT(nav)->compartment() == newInnerWindow->mJSObject->compartment()) {
+        if (js::GetObjectCompartment(JSVAL_TO_OBJECT(nav)) ==
+            js::GetObjectCompartment(newInnerWindow->mJSObject)) {
           // Restore window.navigator onto the new inner window.
 
           ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
@@ -10175,6 +10176,11 @@ nsGlobalWindow::SetHasOrientationEventListener()
 {
   mHasDeviceMotion = PR_TRUE;
   EnableDeviceMotionUpdates();
+}
+
+void
+nsGlobalWindow::RemoveOrientationEventListener() {
+  DisableDeviceMotionUpdates();
 }
 
 NS_IMETHODIMP

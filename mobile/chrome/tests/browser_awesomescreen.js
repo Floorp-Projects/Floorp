@@ -25,6 +25,10 @@ function runNextTest() {
   if (gTests.length > 0) {
     gCurrentTest = gTests.shift();
     info(gCurrentTest.desc);
+
+    // Ensure all tests start with hidden awesome screen
+    AwesomeScreen.activePanel = null;
+
     gCurrentTest.run();
   }
   else {
@@ -60,7 +64,8 @@ gTests.push({
     ok(BrowserUI._title.collapsed, "The urlbar title element is not visible");
 
     waitForNavigationPanel(gCurrentTest.onPopupHidden, true);
-    EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+
+    EventUtils.synthesizeKey("VK_ESCAPE", {type: "keypress"}, window);
   },
 
   onPopupHidden: function() {
@@ -108,7 +113,7 @@ gTests.push({
       runNextTest();
     }, true);
 
-    EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+    EventUtils.synthesizeKey("VK_ESCAPE", {type: "keypress"}, window);
   }
 });
 
@@ -137,7 +142,7 @@ gTests.push({
     is(BrowserUI._edit.readOnly, false, "urlbar should not be readonly after an input");
 
     waitForNavigationPanel(gCurrentTest.onPopupHidden, true);
-    EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+    EventUtils.synthesizeKey("VK_ESCAPE", {type: "keypress"}, window);
   },
 
   onPopupHidden: function() {
@@ -186,7 +191,6 @@ gTests.push({
     });
 
     setTimeout(function() {
-      AwesomeScreen.activePanel = null;
       runNextTest();
     }, 0);
   }
@@ -281,8 +285,6 @@ gTests.push({
 
     edit.clickSelectsAll = oldClickSelectsAll;
 
-    AwesomeScreen.activePanel = null;
-
     // Ensure the tab is well closed before doing the rest of the code, otherwise
     // this cause some bugs with the composition events
     let tabCount = Browser.tabs.length;
@@ -347,7 +349,6 @@ gTests.push({
         self.onPopupReady();
       }, 500);
     } else {
-      AwesomeScreen.activePanel = null;
       runNextTest();
     }
   }
@@ -434,3 +435,36 @@ gTests.push({
   }
 });
 
+// Case: Test context popup dismiss on top of awesome panel
+gTests.push({
+  desc: "Case: Test context popup dismiss on top of awesome panel",
+
+  run: function() {
+    waitForNavigationPanel(gCurrentTest.onPopupReady);
+    AllPagesList.doCommand();
+  },
+
+  onPopupReady: function() {
+    EventUtils.synthesizeMouse(AllPagesList.panel, AllPagesList.panel.width / 2,
+                               AllPagesList.panel.height / 2, { type: "mousedown" });
+
+    // Simulate a long tap
+    setTimeout(function(self) {
+      EventUtils.synthesizeMouse(AllPagesList.panel, AllPagesList.panel.width / 2,
+                                 AllPagesList.panel.height / 2, { type: "mouseup" });
+
+      let contextContainer = document.getElementById("context-container");
+
+      ok(!AllPagesList.panel.hidden, "The context popup is still visible after long tap");
+      ok(!contextContainer.hidden, "The context popup is visible after long tap");
+
+      EventUtils.synthesizeMouse(AllPagesList.panel, 0, 0, {});
+
+      ok(contextContainer.hidden, "The context popup is not visible after tap");
+      ok(!AllPagesList.panel.hidden, "The awesome panel is still visible after popup is dismissed");
+
+      AwesomeScreen.activePanel = null;
+      runNextTest();
+    }, 500, this);
+  }
+});

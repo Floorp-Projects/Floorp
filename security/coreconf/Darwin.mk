@@ -59,8 +59,12 @@ CC              += -arch i386
 override CPU_ARCH	= x86
 endif
 else
+ifeq (arm,$(CPU_ARCH))
+# Nothing set for arm currently.
+else
 OS_REL_CFLAGS	= -Dppc
 CC              += -arch ppc
+endif
 endif
 
 ifneq (,$(MACOS_SDK_DIR))

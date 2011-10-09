@@ -453,7 +453,7 @@ void nsMenuBarX::HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsICont
   inDoc->GetElementById(inID, getter_AddRefs(menuItem));  
   nsCOMPtr<nsIContent> menuContent(do_QueryInterface(menuItem));
   if (menuContent) {
-    menuContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, NS_LITERAL_STRING("true"), PR_FALSE);
+    menuContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, NS_LITERAL_STRING("true"), false);
     if (outHiddenNode) {
       *outHiddenNode = menuContent.get();
       NS_IF_ADDREF(*outHiddenNode);

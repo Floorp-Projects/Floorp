@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=93077
+-->
+<head>
+  <title>Test for Bug 93077</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #filler { height: 200cm; background: papayawhip; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=93077">Mozilla Bug 93077</a>
+<p id="display"></p>
+<div id=filler>...</div>
+<p id=below></p>
+<p id=top>Top</p>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 93077 **/
+["#TOP", "#Top"].forEach(function(fragid) {
+  document.getElementById("below").scrollIntoView()
+  isnot(window.scrollY, 0)
+  location.hash = fragid
+  is(window.scrollY, 0)
+})
+location.hash = "#top"
+isnot(window.scrollY, 0)
+</script>
+</pre>
+</body>
+</html>

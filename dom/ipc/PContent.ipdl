@@ -39,14 +39,16 @@
 include protocol PAudio;
 include protocol PBrowser;
 include protocol PCrashReporter;
-include protocol PTestShell;
-include protocol PNecko;
 include protocol PExternalHelperApp;
-include protocol PStorage;
+include protocol PHal;
 include protocol PMemoryReportRequest;
+include protocol PNecko;
+include protocol PStorage;
+include protocol PTestShell;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
+include "mozilla/dom/TabMessageUtils.h";
 
 include "nsGeoPositionIPCSerialiser.h";
 include "PPrefTuple.h";
@@ -60,6 +62,7 @@ using OverrideMapping;
 using IPC::URI;
 using IPC::Permission;
 using mozilla::null_t;
+using mozilla::dom::NativeThreadId;
 using gfxIntSize;
 
 namespace mozilla {
@@ -97,11 +100,12 @@ rpc protocol PContent
     manages PAudio;
     manages PBrowser;
     manages PCrashReporter;
-    manages PTestShell;
-    manages PNecko;
     manages PExternalHelperApp;
-    manages PStorage;
+    manages PHal;
     manages PMemoryReportRequest;
+    manages PNecko;
+    manages PStorage;
+    manages PTestShell;
 
 child:
     PBrowser(PRUint32 chromeFlags);
@@ -141,13 +145,18 @@ child:
      */
     ActivateA11y();
 
+    AppInfo(nsCString version, nsCString buildID);
+
 parent:
+    PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
+
+    sync PCrashReporter(NativeThreadId tid, PRUint32 processType);
+
+    PHal();
+
     PNecko();
-    PCrashReporter();
     
     PStorage(StorageConstructData data);
-
-    PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
 
     // Services remoting
 

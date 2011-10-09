@@ -193,7 +193,7 @@ nsresult nsDataObj::CStream::WaitForCompletion()
   // We are guaranteed OnStopRequest will get called, so this should be ok.
   while (!mChannelRead) {
     // Pump messages
-    NS_ProcessNextEvent(nsnull, PR_TRUE);
+    NS_ProcessNextEvent(nsnull, true);
   }
 
   if (!mChannelData.Length())
@@ -483,7 +483,7 @@ STDMETHODIMP_(ULONG) nsDataObj::Release()
                                    500, nsITimer::TYPE_ONE_SHOT);
       return AddRef();
     }
-    mCachedTempFile->Remove(PR_FALSE);
+    mCachedTempFile->Remove(false);
     mCachedTempFile = NULL;
   }
 
@@ -558,13 +558,13 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC aFormat, LPSTGMEDIUM pSTM)
 
       default:
         if ( format == fileDescriptorFlavorA )
-          return GetFileDescriptor ( *aFormat, *pSTM, PR_FALSE );
+          return GetFileDescriptor ( *aFormat, *pSTM, false );
         if ( format == fileDescriptorFlavorW )
-          return GetFileDescriptor ( *aFormat, *pSTM, PR_TRUE);
+          return GetFileDescriptor ( *aFormat, *pSTM, true);
         if ( format == uniformResourceLocatorA )
-          return GetUniformResourceLocator( *aFormat, *pSTM, PR_FALSE);
+          return GetUniformResourceLocator( *aFormat, *pSTM, false);
         if ( format == uniformResourceLocatorW )
-          return GetUniformResourceLocator( *aFormat, *pSTM, PR_TRUE);
+          return GetUniformResourceLocator( *aFormat, *pSTM, true);
         if ( format == fileFlavor )
           return GetFileContents ( *aFormat, *pSTM );
         if ( format == PreferredDropEffect )
@@ -664,7 +664,7 @@ nsDataObj::LookupArbitraryFormat(FORMATETC *aFormat, LPDATAENTRY *aDataEntry, BO
   *aDataEntry = NULL;
 
   if (aFormat->ptd != NULL)
-    return PR_FALSE;
+    return false;
 
   // See if it's already in our list. If so return the data entry.
   for (PRUint32 idx = 0; idx < mDataEntryList.Length(); idx++) {
@@ -675,21 +675,21 @@ nsDataObj::LookupArbitraryFormat(FORMATETC *aFormat, LPDATAENTRY *aDataEntry, BO
         // If the caller requests we update, or if the 
         // medium type matches, return the entry. 
         *aDataEntry = mDataEntryList[idx];
-        return PR_TRUE;
+        return true;
       } else {
         // Medium does not match, not found.
-        return PR_FALSE;
+        return false;
       }
     }
   }
 
   if (!aAddorUpdate)
-    return PR_FALSE;
+    return false;
 
   // Add another entry to mDataEntryList
   LPDATAENTRY dataEntry = (LPDATAENTRY)CoTaskMemAlloc(sizeof(DATAENTRY));
   if (!dataEntry)
-    return PR_FALSE;
+    return false;
   
   dataEntry->fe = *aFormat;
   *aDataEntry = dataEntry;
@@ -702,7 +702,7 @@ nsDataObj::LookupArbitraryFormat(FORMATETC *aFormat, LPDATAENTRY *aDataEntry, BO
   // Store a copy internally in the arbitrary formats array.
   mDataEntryList.AppendElement(dataEntry);
 
-  return PR_TRUE;
+  return true;
 }
 
 bool
@@ -721,10 +721,10 @@ nsDataObj::CopyMediumData(STGMEDIUM *aMediumDst, STGMEDIUM *aMediumSrc, LPFORMAT
       if (!aMediumSrc->pUnkForRelease) {
         if (aSetData) {
           if (aMediumSrc->tymed != TYMED_HGLOBAL)
-            return PR_FALSE;
+            return false;
           stgmOut.hGlobal = OleDuplicateData(aMediumSrc->hGlobal, aFormat->cfFormat, 0);
           if (!stgmOut.hGlobal)
-            return PR_FALSE;
+            return false;
         } else {
           // We are returning this data from LookupArbitraryFormat, indicate to the
           // shell we hold it and will free it.
@@ -733,7 +733,7 @@ nsDataObj::CopyMediumData(STGMEDIUM *aMediumDst, STGMEDIUM *aMediumSrc, LPFORMAT
       }
     break;
     default:
-      return PR_FALSE;
+      return false;
   }
 
   if (stgmOut.pUnkForRelease)
@@ -741,7 +741,7 @@ nsDataObj::CopyMediumData(STGMEDIUM *aMediumDst, STGMEDIUM *aMediumSrc, LPFORMAT
 
   *aMediumDst = stgmOut;
 
-  return PR_TRUE;
+  return true;
 }
 
 //-----------------------------------------------------
@@ -947,7 +947,7 @@ MangleTextToValidFilename(nsString & aText)
   };
 
   aText.StripChars(FILE_PATH_SEPARATOR  FILE_ILLEGAL_CHARACTERS);
-  aText.CompressWhitespace(PR_TRUE, PR_TRUE);
+  aText.CompressWhitespace(true, true);
   PRUint32 nameLen;
   for (size_t n = 0; n < NS_ARRAY_LENGTH(forbiddenNames); ++n) {
     nameLen = (PRUint32) strlen(forbiddenNames[n]);
@@ -977,7 +977,7 @@ CreateFilenameFromTextA(nsString & aText, const char * aExtension,
   // text empty.
   MangleTextToValidFilename(aText);
   if (aText.IsEmpty())
-    return PR_FALSE;
+    return false;
 
   // repeatably call WideCharToMultiByte as long as the title doesn't fit in the buffer 
   // available to us. Continually reduce the length of the source title until the MBCS
@@ -995,11 +995,11 @@ CreateFilenameFromTextA(nsString & aText, const char * aExtension,
   while (currLen == 0 && textLen > 0 && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
   if (currLen > 0 && textLen > 0) {
     strcpy(&aFilename[currLen], aExtension);
-    return PR_TRUE;
+    return true;
   }
   else {
     // empty names aren't permitted
-    return PR_FALSE;
+    return false;
   }
 }
 
@@ -1012,14 +1012,14 @@ CreateFilenameFromTextW(nsString & aText, const wchar_t * aExtension,
   // text empty.
   MangleTextToValidFilename(aText);
   if (aText.IsEmpty())
-    return PR_FALSE;
+    return false;
 
   const int extensionLen = wcslen(aExtension);
   if (aText.Length() + extensionLen + 1 > aFilenameLen)
     aText.Truncate(aFilenameLen - extensionLen - 1);
   wcscpy(&aFilename[0], aText.get());
   wcscpy(&aFilename[aText.Length()], aExtension);
-  return PR_TRUE;
+  return true;
 }
 
 #define PAGEINFO_PROPERTIES "chrome://navigator/locale/pageInfo.properties"
@@ -1030,13 +1030,13 @@ GetLocalizedString(const PRUnichar * aName, nsXPIDLString & aString)
   nsCOMPtr<nsIStringBundleService> stringService =
     mozilla::services::GetStringBundleService();
   if (!stringService)
-    return PR_FALSE;
+    return false;
 
   nsCOMPtr<nsIStringBundle> stringBundle;
   nsresult rv = stringService->CreateBundle(PAGEINFO_PROPERTIES,
                                             getter_AddRefs(stringBundle));
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 
   rv = stringBundle->GetStringFromName(aName, getter_Copies(aString));
   return NS_SUCCEEDED(rv);
@@ -1180,12 +1180,12 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
 bool nsDataObj :: IsFlavourPresent(const char *inFlavour)
 {
   bool retval = false;
-  NS_ENSURE_TRUE(mTransferable, PR_FALSE);
+  NS_ENSURE_TRUE(mTransferable, false);
   
   // get the list of flavors available in the transferable
   nsCOMPtr<nsISupportsArray> flavorList;
   mTransferable->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
-  NS_ENSURE_TRUE(flavorList, PR_FALSE);
+  NS_ENSURE_TRUE(flavorList, false);
 
   // try to find requested flavour
   PRUint32 cnt;
@@ -1198,7 +1198,7 @@ bool nsDataObj :: IsFlavourPresent(const char *inFlavour)
       nsCAutoString flavorStr;
       currentFlavor->GetData(flavorStr);
       if (flavorStr.Equals(inFlavour)) {
-        retval = PR_TRUE;         // found it!
+        retval = true;         // found it!
         break;
       }
     }
@@ -2143,7 +2143,7 @@ void nsDataObj::RemoveTempFile(nsITimer* aTimer, void* aClosure)
 {
   nsDataObj *timedDataObj = static_cast<nsDataObj *>(aClosure);
   if (timedDataObj->mCachedTempFile) {
-    timedDataObj->mCachedTempFile->Remove(PR_FALSE);
+    timedDataObj->mCachedTempFile->Remove(false);
     timedDataObj->mCachedTempFile = NULL;
   }
   timedDataObj->Release();

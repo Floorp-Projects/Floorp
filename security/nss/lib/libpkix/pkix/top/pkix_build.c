@@ -3235,6 +3235,7 @@ pkix_Build_InitiateBuildChain(
         PKIX_ForwardBuilderState *state = NULL;
         PKIX_CertStore_CheckTrustCallback trustCallback = NULL;
         PKIX_CertSelector_MatchCallback selectorCallback = NULL;
+        PKIX_Boolean trusted = PKIX_FALSE;
         PKIX_PL_AIAMgr *aiaMgr = NULL;
 
         PKIX_ENTER(BUILD, "pkix_Build_InitiateBuildChain");
@@ -3339,6 +3340,15 @@ pkix_Build_InitiateBuildChain(
             if (targetCert == NULL) {
                 PKIX_ERROR(PKIX_NOTARGETCERTSUPPLIED);
             }
+
+            PKIX_CHECK(PKIX_PL_Cert_IsLeafCertTrusted
+                    (targetCert,
+                    &trusted, 
+                    plContext),
+                    PKIX_CERTISCERTTRUSTEDFAILED);
+            /* future: look at the |trusted| flag and force success. We only
+             * want to do this if we aren't validating against a policy (like
+             * EV). */
 
             PKIX_CHECK(PKIX_PL_Cert_GetAllSubjectNames
                     (targetCert,

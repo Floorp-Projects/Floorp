@@ -59,7 +59,6 @@ function add_page(aURL, aTime)
 add_test(function test_addPageWithDetails()
 {
   add_page(TEST_URL);
-  do_check_eq(TEST_URL, PlacesUtils.bhistory.lastPageVisited);
   do_check_eq(1, PlacesUtils.bhistory.count);
   run_next_test();
 });
@@ -68,7 +67,6 @@ add_test(function test_removePage()
 {
   PlacesUtils.bhistory.removePage(NetUtil.newURI(TEST_URL));
   do_check_eq(0, PlacesUtils.bhistory.count);
-  do_check_eq("", PlacesUtils.bhistory.lastPageVisited);
   run_next_test();
 });
 
@@ -98,7 +96,6 @@ add_test(function test_removePages()
 
   PlacesUtils.bhistory.removePages(pages, pages.length);
   do_check_eq(0, PlacesUtils.bhistory.count);
-  do_check_eq("", PlacesUtils.bhistory.lastPageVisited);
 
   // Check that the bookmark and its annotation still exist.
   do_check_true(PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0) > 0);

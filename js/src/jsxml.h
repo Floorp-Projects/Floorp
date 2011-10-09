@@ -332,4 +332,11 @@ js_TestXMLEquality(JSContext *cx, const js::Value &v1, const js::Value &v2,
 extern JSBool
 js_ConcatenateXML(JSContext *cx, JSObject *obj1, JSObject *obj2, js::Value *vp);
 
+namespace js {
+
+extern bool
+GetLocalNameFromFunctionQName(JSObject *qn, JSAtom **namep, JSContext *cx);
+
+} /* namespace js */
+
 #endif /* jsxml_h___ */

@@ -175,7 +175,6 @@ ContainerRender(Container* aContainer,
   float opacity = aContainer->GetEffectiveOpacity();
   const gfx3DMatrix& transform = aContainer->GetEffectiveTransform();
   bool needsFramebuffer = aContainer->UseIntermediateSurface();
-  gfxMatrix contTransform;
   if (needsFramebuffer) {
     LayerManagerOGL::InitMode mode = LayerManagerOGL::InitModeClear;
     nsIntRect framebufferRect = visibleRect;
@@ -213,19 +212,16 @@ ContainerRender(Container* aContainer,
     frameBuffer = aPreviousFrameBuffer;
     aContainer->mSupportsComponentAlphaChildren = (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE) ||
       (aContainer->GetParent() && aContainer->GetParent()->SupportsComponentAlphaChildren());
-#ifdef DEBUG
-    bool is2d =
-#endif
-    transform.Is2D(&contTransform);
-    NS_ASSERTION(is2d, "Transform must be 2D");
   }
+
+  nsAutoTArray<Layer*, 12> children;
+  aContainer->SortChildrenBy3DZOrder(children);
 
   /**
    * Render this container's contents.
    */
-  for (LayerOGL* layerToRender = aContainer->GetFirstChildOGL();
-       layerToRender != nsnull;
-       layerToRender = GetNextSibling(layerToRender)) {
+  for (PRUint32 i = 0; i < children.Length(); i++) {
+    LayerOGL* layerToRender = static_cast<LayerOGL*>(children.ElementAt(i)->ImplData());
 
     if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
       continue;

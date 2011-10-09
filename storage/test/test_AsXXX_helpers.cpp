@@ -99,8 +99,8 @@ test_asyncNULLFallback()
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  (void)db->CreateStatement(NS_LITERAL_CSTRING(
+  nsCOMPtr<mozIStorageAsyncStatement> stmt;
+  (void)db->CreateAsyncStatement(NS_LITERAL_CSTRING(
     "SELECT NULL"
   ), getter_AddRefs(stmt));
 

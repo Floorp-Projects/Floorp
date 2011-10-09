@@ -148,11 +148,6 @@ members = [
     'nsIDOMDOMStringList.*',
     'nsIDOMDOMTokenList.*',
     'nsIDOMDOMSettableTokenList.*',
-    'nsIDOMNameList.getName',
-    'nsIDOMNameList.contains',
-    'nsIDOMNameList.containsNS',
-    'nsIDOMNameList.length',
-    'nsIDOMNameList.getNamespaceURI',
     'nsIDOMXULDocument.getBoxObjectFor',
     'nsIDOMNSElement.*',
 
@@ -495,6 +490,7 @@ irregularFilenames = {
     'nsIWebGLActiveInfo': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLUniformLocation': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLExtension': 'nsIDOMWebGLRenderingContext',
+    'nsIWebGLExtensionStandardDerivatives' : 'nsIDOMWebGLRenderingContext',
 
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
 

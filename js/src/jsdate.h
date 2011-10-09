@@ -44,7 +44,7 @@
 #ifndef jsdate_h___
 #define jsdate_h___
 
-#include "jsobj.h"
+#include "jscntxt.h"
 
 #define HalfTimeDomain  8.64e15
 

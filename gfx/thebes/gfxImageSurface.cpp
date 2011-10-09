@@ -70,6 +70,14 @@ gfxImageSurface::gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
 }
 
 void
+gfxImageSurface::MakeInvalid()
+{
+    mSize = gfxIntSize(-1, -1);
+    mData = NULL;
+    mStride = 0;
+}
+
+void
 gfxImageSurface::InitWithData(unsigned char *aData, const gfxIntSize& aSize,
                               long aStride, gfxImageFormat aFormat)
 {
@@ -80,7 +88,7 @@ gfxImageSurface::InitWithData(unsigned char *aData, const gfxIntSize& aSize,
     mStride = aStride;
 
     if (!CheckSurfaceSize(aSize))
-        return;
+        MakeInvalid();
 
     cairo_surface_t *surface =
         cairo_image_surface_create_for_data((unsigned char*)mData,
@@ -121,7 +129,7 @@ gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) 
     mStride = ComputeStride();
 
     if (!CheckSurfaceSize(size))
-        return;
+        MakeInvalid();
 
     // if we have a zero-sized surface, just leave mData nsnull
     if (mSize.height * mStride > 0) {

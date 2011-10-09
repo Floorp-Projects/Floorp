@@ -103,8 +103,8 @@ struct retrieval_context
     void    *data;
 
     retrieval_context()
-      : completed(PR_FALSE),
-        timed_out(PR_FALSE),
+      : completed(false),
+        timed_out(false),
         data(nsnull)
     { }
 };
@@ -147,7 +147,7 @@ nsClipboard::Init(void)
     if (!os)
       return NS_ERROR_FAILURE;
 
-    os->AddObserver(this, "quit-application", PR_FALSE);
+    os->AddObserver(this, "quit-application", false);
 
     return NS_OK;
 }
@@ -239,7 +239,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
                 if (!imagesAdded) {
                     // accept any writable image type
                     gtk_target_list_add_image_targets(list, 0, TRUE);
-                    imagesAdded = PR_TRUE;
+                    imagesAdded = true;
                 }
                 continue;
             }
@@ -329,7 +329,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
                     data = (guchar *)ToNewUnicode(ucs2string);
                     length = ucs2string.Length() * 2;
                     g_free(new_text);
-                    foundData = PR_TRUE;
+                    foundData = true;
                     foundFlavor = kUnicodeMime;
                     break;
                 }
@@ -385,7 +385,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
                         break;
                     memcpy(data, selectionData->data, length);
                 }
-                foundData = PR_TRUE;
+                foundData = true;
                 foundFlavor = flavorStr;
                 break;
             }
@@ -435,7 +435,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
     if (!aFlavorList || !_retval)
         return NS_ERROR_NULL_POINTER;
 
-    *_retval = PR_FALSE;
+    *_retval = false;
 
     GtkSelectionData *selection_data =
         GetTargets(GetSelectionAtom(aWhichClipboard));
@@ -456,7 +456,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
         // We special case text/unicode here.
         if (!strcmp(aFlavorList[i], kUnicodeMime) && 
             gtk_selection_data_targets_include_text(selection_data)) {
-            *_retval = PR_TRUE;
+            *_retval = true;
             break;
         }
 
@@ -466,11 +466,11 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
                 continue;
 
             if (!strcmp(atom_name, aFlavorList[i]))
-                *_retval = PR_TRUE;
+                *_retval = true;
 
             // X clipboard wants image/jpeg, not image/jpg
             if (!strcmp(aFlavorList[i], kJPEGImageMime) && !strcmp(atom_name, "image/jpeg"))
-                *_retval = PR_TRUE;
+                *_retval = true;
 
             g_free(atom_name);
 
@@ -487,7 +487,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
 NS_IMETHODIMP
 nsClipboard::SupportsSelectionClipboard(bool *_retval)
 {
-    *_retval = PR_TRUE; // yeah, unix supports the selection clipboard
+    *_retval = true; // yeah, unix supports the selection clipboard
     return NS_OK;
 }
 
@@ -897,7 +897,7 @@ static bool
 wait_for_retrieval(GtkClipboard *clipboard, retrieval_context *r_context)
 {
     if (r_context->completed)  // the request completed synchronously
-        return PR_TRUE;
+        return true;
 
     Display *xDisplay = GDK_DISPLAY();
     checkEventContext context;
@@ -930,7 +930,7 @@ wait_for_retrieval(GtkClipboard *clipboard, retrieval_context *r_context)
                 DispatchPropertyNotifyEvent(context.cbWidget, &xevent);
 
             if (r_context->completed)
-                return PR_TRUE;
+                return true;
         }
 
         tv.tv_sec = 0;
@@ -942,8 +942,8 @@ wait_for_retrieval(GtkClipboard *clipboard, retrieval_context *r_context)
 #ifdef DEBUG_CLIPBOARD
     printf("exceeded clipboard timeout\n");
 #endif
-    r_context->timed_out = PR_TRUE;
-    return PR_FALSE;
+    r_context->timed_out = true;
+    return false;
 }
 
 static void
@@ -953,11 +953,10 @@ clipboard_contents_received(GtkClipboard     *clipboard,
 {
     retrieval_context *context = static_cast<retrieval_context *>(data);
     if (context->timed_out) {
-        delete context;
         return;
     }
 
-    context->completed = PR_TRUE;
+    context->completed = true;
 
     if (selection_data->length >= 0)
         context->data = gtk_selection_data_copy(selection_data);
@@ -967,20 +966,16 @@ clipboard_contents_received(GtkClipboard     *clipboard,
 static GtkSelectionData *
 wait_for_contents(GtkClipboard *clipboard, GdkAtom target)
 {
-    retrieval_context *context = new retrieval_context();
+    retrieval_context context;
     gtk_clipboard_request_contents(clipboard, target,
                                    clipboard_contents_received,
-                                   context);
+                                   &context);
 
-    if (!wait_for_retrieval(clipboard, context)) {
-        // Don't delete |context|; the callback will when it eventually
-        // comes back.
+    if (!wait_for_retrieval(clipboard, &context)) {
         return nsnull;
     }
 
-    GtkSelectionData *result = static_cast<GtkSelectionData *>(context->data);
-    delete context;
-    return result;
+    return static_cast<GtkSelectionData *>(context.data);
 }
 
 static void
@@ -990,27 +985,22 @@ clipboard_text_received(GtkClipboard *clipboard,
 {
     retrieval_context *context = static_cast<retrieval_context *>(data);
     if (context->timed_out) {
-        delete context;
         return;
     }
 
-    context->completed = PR_TRUE;
+    context->completed = true;
     context->data = g_strdup(text);
 }
 
 static gchar *
 wait_for_text(GtkClipboard *clipboard)
 {
-    retrieval_context *context = new retrieval_context();
-    gtk_clipboard_request_text(clipboard, clipboard_text_received, context);
+    retrieval_context context;
+    gtk_clipboard_request_text(clipboard, clipboard_text_received, &context);
 
-    if (!wait_for_retrieval(clipboard, context)) {
-        // Don't delete |context|; the callback will when it eventually
-        // comes back.
+    if (!wait_for_retrieval(clipboard, &context)) {
         return nsnull;
     }
 
-    gchar *result = static_cast<gchar *>(context->data);
-    delete context;
-    return result;
+    return static_cast<gchar *>(context.data);
 }

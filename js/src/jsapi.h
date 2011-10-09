@@ -2214,27 +2214,41 @@ JS_END_EXTERN_C
 
 class JS_PUBLIC_API(JSAutoEnterCompartment)
 {
-    JSCrossCompartmentCall *call;
+    /*
+     * This is a poor man's Maybe<AutoCompartment>, because we don't have
+     * access to the AutoCompartment definition here.  We statically assert in
+     * jsapi.cpp that we have the right size here.
+     */
+#if !defined(_MSC_VER) && !defined(__arm__)
+    void* bytes[13];
+#else
+    void* bytes[sizeof(void*) == 4 ? 16 : 13];
+#endif
+
+    /*
+     * This object may be in one of three states.  If enter() or
+     * enterAndIgnoreErrors() hasn't been called, it's in STATE_UNENTERED.
+     * Otherwise, if we were asked to enter into the current compartment, our
+     * state is STATE_SAME_COMPARTMENT.  If we actually created an
+     * AutoCompartment and entered another compartment, our state is
+     * STATE_OTHER_COMPARTMENT.
+     */
+    enum State {
+        STATE_UNENTERED,
+        STATE_SAME_COMPARTMENT,
+        STATE_OTHER_COMPARTMENT
+    } state;
 
   public:
-    JSAutoEnterCompartment() : call(NULL) {}
+    JSAutoEnterCompartment() : state(STATE_UNENTERED) {}
 
     bool enter(JSContext *cx, JSObject *target);
 
     void enterAndIgnoreErrors(JSContext *cx, JSObject *target);
 
-    bool entered() const { return call != NULL; }
+    bool entered() const { return state != STATE_UNENTERED; }
 
-    ~JSAutoEnterCompartment() {
-        if (call && call != reinterpret_cast<JSCrossCompartmentCall*>(1))
-            JS_LeaveCrossCompartmentCall(call);
-    }
-
-    void swap(JSAutoEnterCompartment &other) {
-        JSCrossCompartmentCall *tmp = call;
-        call = other.call;
-        other.call = tmp;
-    }
+    ~JSAutoEnterCompartment();
 };
 
 JS_BEGIN_EXTERN_C
@@ -2841,7 +2855,7 @@ typedef enum JSGCParamKey {
     /* Select GC mode. */
     JSGC_MODE = 6,
 
-    /* Number of GC chunks waiting to expire. */
+    /* Number of cached empty GC chunks. */
     JSGC_UNUSED_CHUNKS = 7,
 
     /* Total number of allocated GC chunks. */
@@ -3941,7 +3955,7 @@ Call(JSContext *cx, jsval thisv, JSObject *funObj, uintN argc, jsval *argv, jsva
     return Call(cx, thisv, OBJECT_TO_JSVAL(funObj), argc, argv, rval);
 }
 
-} /* namespace js */
+} /* namespace JS */
 
 JS_BEGIN_EXTERN_C
 #endif /* __cplusplus */
@@ -4622,8 +4636,6 @@ JS_ObjectIsDate(JSContext *cx, JSObject *obj);
 #define JSREG_GLOB      0x02    /* global exec, creates array of matches */
 #define JSREG_MULTILINE 0x04    /* treat ^ and $ as begin and end of line */
 #define JSREG_STICKY    0x08    /* only match starting at lastIndex */
-#define JSREG_FLAT      0x10    /* parse as a flat regexp */
-#define JSREG_NOCOMPILE 0x20    /* do not try to compile to native code */
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uintN flags);

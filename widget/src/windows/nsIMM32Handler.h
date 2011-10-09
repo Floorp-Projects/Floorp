@@ -127,7 +127,7 @@ public:
 
   static bool IsDoingKakuteiUndo(HWND aWnd);
 
-  static void NotifyEndStatusChange() { sIsStatusChanged = PR_FALSE; }
+  static void NotifyEndStatusChange() { sIsStatusChanged = false; }
 
   static bool CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage);
 
