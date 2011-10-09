@@ -17,10 +17,11 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
-          src="chrome://mochitests/content/a11y/accessible/treeview.js" />
-
-  <script type="application/javascript"
           src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
   <script type="application/javascript"
           src="../events.js" />
 
@@ -34,6 +35,7 @@
     // Hack to make xul:tabbrowser work
 
     const Ci = Components.interfaces;
+    const CC = Components.classes;
 
     Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -45,23 +47,78 @@
       }
     };
 
+    var gURLBar = {
+      focused: false
+    };
+
+    var gFindBarInitialized = false;
+
     ////////////////////////////////////////////////////////////////////////////
     // Tests
 
-    var gScrollHandler = {
-      handleEvent: function gScrollHandler_handleEvent(aEvent) {
-        if (aEvent.DOMNode.getAttribute("name") == "link1") {
-          ok(true, "scrolling start event was handled on link1");
-          unregisterA11yEventListener(EVENT_SCROLLING_START, this);
-          SimpleTest.finish();
+    function getTabDocument()
+    {
+      return getNode("tabBrowser").selectedBrowser.contentDocument;
+    }
+
+    function getAnchorJumpInTabDocument()
+    {
+      return getTabDocument().querySelector("a[name='link1']");
+    }
+
+    function loadTab(aTabBrowserID, aURL)
+    {
+      function loadTabChecker()
+      {
+        this.type = EVENT_REORDER;
+        this.match = function loadTabChecker_match(aEvent)
+        {
+          var target = aEvent.accessible;
+          if (target.role == ROLE_INTERNAL_FRAME &&
+              target.parent.parent == getAccessible(getNode(aTabBrowserID).mTabBox.tabpanels)) {
+            return true;
+          }
+          return false;
         }
       }
-    };
 
+      this.eventSeq = [ new loadTabChecker() ];
+
+      this.invoke = function loadTab_invoke()
+      {
+        getNode(aTabBrowserID).loadURI(aURL);
+      }
+
+      this.getID = function loadTab_getID()
+      {
+        return "load tab " + aURL + " for " + prettyName(aTabBrowserID);
+      }
+    }
+
+    function advanceFocusIntoTab(aTabBrowserID)
+    {
+      this.eventSeq = [
+        new focusChecker(getTabDocument),
+        new invokerChecker(EVENT_SCROLLING_START, getAnchorJumpInTabDocument)
+      ];
+
+      this.invoke = function advanceFocusIntoTab_invoke()
+      {
+        var tabDoc = getAccessible(getTabDocument());
+        tabDoc.takeFocus();
+      }
+
+      this.getID = function advanceFocusIntoTab_getID()
+      {
+        return "advance focus into loaded tab";
+      }
+    }
+
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
     function doTest()
     {
-      registerA11yEventListener(EVENT_SCROLLING_START, gScrollHandler);
-
       var rootDir = getRootDirectory(window.location.href);
 
       /*
@@ -74,10 +131,12 @@
         var tmpdir = extractJarToTmp(jar);
         rootDir = "file://" + tmpdir.path + '/';
       }
-
       var url = rootDir + "scroll.html#link1";
-      var tabBrowser = document.getElementById("tabBrowser");
-      tabBrowser.loadURI(url);
+
+      gQueue = new eventQueue();
+      gQueue.push(new loadTab("tabBrowser", url));
+      gQueue.push(new advanceFocusIntoTab("tabBrowser"));
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -97,6 +156,11 @@
          title="Same page links to targets with content fires scrolling start accessible event on leaf text node">
         Mozilla Bug 519303
       </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=691734"
+         title="Make sure scrolling start event is fired when document receive focus">
+        Mozilla Bug 691734
+      </a>
 
       <p id="display"></p>
       <div id="content" style="display: none">
@@ -115,13 +179,17 @@
           </menupopup>
         </menu>
       </menubar>
+      <keyset>
+        <key id="key_close"/>
+      </keyset>
 
+      <hbox>
       <tabs id="tabbrowser-tabs" class="tabbrowser-tabs"
             tabbrowser="tabBrowser"
-            flex="1"
-            setfocus="false">
-        <tab class="tabbrowser-tab" selected="true"/>
+            flex="1">
+        <tab class="tabbrowser-tab" selected="true" label="tab"/>
       </tabs>
+      </hbox>
       <tabbrowser id="tabBrowser"
                   type="content-primary"
                   tabcontainer="tabbrowser-tabs"

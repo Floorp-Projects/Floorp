@@ -1088,7 +1088,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     JS_ASSERT(cursor + length * sizeof(jsbytecode) + nsrcnotes * sizeof(jssrcnote) == data + size);
 
 #ifdef DEBUG
-    script->id_ = ++cx->compartment->types.scriptCount;
+    script->id_ = 0;
 #endif
 
     JS_ASSERT(script->getVersion() == version);

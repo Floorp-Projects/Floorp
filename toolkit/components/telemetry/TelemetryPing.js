@@ -62,6 +62,10 @@ const MEM_HISTOGRAMS = {
   "heap-allocated": "MEMORY_HEAP_ALLOCATED",
   "page-faults-hard": "PAGE_FAULTS_HARD"
 };
+// Seconds of idle time before pinging.
+// On idle-daily a gather-telemetry notification is fired, during it probes can
+// start asynchronous tasks to gather data.  On the next idle the data is sent.
+const IDLE_TIMEOUT_SECONDS = 5 * 60;
 
 var gLastMemoryPoll = null;
 
@@ -341,6 +345,10 @@ TelemetryPing.prototype = {
       return;
     Services.obs.removeObserver(this, "idle-daily");
     Services.obs.removeObserver(this, "cycle-collector-begin");
+    if (this._isIdleObserver) {
+      idle.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+      this._isIdleObserver = false;
+    }
   },
 
   /**
@@ -416,11 +424,26 @@ TelemetryPing.prototype = {
         this.attachObservers()
       }
       break;
+    case "idle-daily":
+      // Enqueue to main-thread, otherwise components may be inited by the
+      // idle-daily category and miss the gather-telemetry notification.
+      Services.tm.mainThread.dispatch((function() {
+        // Notify that data should be gathered now, since ping will happen soon.
+        Services.obs.notifyObservers(null, "gather-telemetry", null);
+        // The ping happens at the first idle of length IDLE_TIMEOUT_SECONDS.
+        idle.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+        this._isIdleObserver = true;
+      }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+      break;
     case "test-ping":
       server = aData;
       // fall through
-    case "idle-daily":
-      this.send(aTopic, server);
+    case "idle":
+      if (this._isIdleObserver) {
+        idle.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+        this._isIdleObserver = false;
+      }
+      this.send(aTopic == "idle" ? "idle-daily" : aTopic, server);
       break;
     }
   },

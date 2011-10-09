@@ -12362,7 +12362,7 @@ $as_echo "#define HAVE_AS_STRING_PSEUDO_OP 1" >>confdefs.h
 fi
 
 case "$target" in
-     *-apple-darwin10* | *-*-freebsd* | *-*-openbsd* | *-pc-solaris*)
+     *-apple-darwin1* | *-*-freebsd* | *-*-openbsd* | *-pc-solaris*)
 
 $as_echo "#define FFI_MMAP_EXEC_WRIT 1" >>confdefs.h
 
