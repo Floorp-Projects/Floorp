@@ -241,36 +241,3 @@ nsSVGFilterElement::GetStringInfo()
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               NS_ARRAY_LENGTH(sStringInfo));
 }
-
-inline static void DidAnimateAttr(nsSVGFilterElement *aFilterElement)
-{
-  // nsSVGFilterFrame doesn't implement a useful AttributeChanged
-  nsIFrame* frame = aFilterElement->GetPrimaryFrame();
-  if (frame) {
-    nsSVGEffects::InvalidateRenderingObservers(frame);
-  }
-}
-
-void
-nsSVGFilterElement::DidAnimateLength(PRUint8 aAttrEnum)
-{
-  DidAnimateAttr(this);
-}
-
-void
-nsSVGFilterElement::DidAnimateIntegerPair(PRUint8 aAttrEnum)
-{
-  DidAnimateAttr(this);
-}
-
-void
-nsSVGFilterElement::DidAnimateEnum(PRUint8 aAttrEnum)
-{
-  DidAnimateAttr(this);
-}
-
-void
-nsSVGFilterElement::DidAnimateString(PRUint8 aAttrEnum)
-{
-  DidAnimateAttr(this);
-}
