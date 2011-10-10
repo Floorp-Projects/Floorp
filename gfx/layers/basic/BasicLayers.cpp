@@ -2357,6 +2357,8 @@ BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
                   aSize.width, aSize.height));
 
   if (IsSurfaceDescriptorValid(mBackBuffer)) {
+    BasicManager()->DestroyedThebesBuffer(BasicManager()->Hold(this),
+                                          mBackBuffer);
     mBackBuffer = SurfaceDescriptor();
   }
 
