@@ -1261,7 +1261,7 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     TypeObject *type = (TypeObject *) f.scratch;
 
     if (!baseobj) {
-        gc::AllocKind kind = GuessObjectGCKind(0, false);
+        gc::AllocKind kind = GuessObjectGCKind(0);
         JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
             THROW();

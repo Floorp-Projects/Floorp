@@ -186,11 +186,11 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 
     void loadShape(RegisterID obj, RegisterID shape) {
-        loadPtr(Address(obj, offsetof(JSObject, lastProp)), shape);
+        loadPtr(Address(obj, JSObject::offsetOfShape()), shape);
     }
 
     Jump guardShape(RegisterID objReg, JSObject *obj) {
-        return branchPtr(NotEqual, Address(objReg, offsetof(JSObject, lastProp)),
+        return branchPtr(NotEqual, Address(objReg, JSObject::offsetOfShape()),
                          ImmPtr(obj->lastProperty()));
     }
 
@@ -751,14 +751,15 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         Jump holeCheck;
     };
 
-    // Guard an array's capacity, length or initialized length.
-    Jump guardArrayExtent(uint32 offset, RegisterID objReg, const Int32Key &key, Condition cond) {
-        Address initlen(objReg, offset);
+    // Guard an extent (capacity, length or initialized length) on an array or typed array.
+    Jump guardArrayExtent(int offset, RegisterID reg,
+                          const Int32Key &key, Condition cond) {
+        Address extent(reg, offset);
         if (key.isConstant()) {
             JS_ASSERT(key.index() >= 0);
-            return branch32(cond, initlen, Imm32(key.index()));
+            return branch32(cond, extent, Imm32(key.index()));
         }
-        return branch32(cond, initlen, key.reg());
+        return branch32(cond, extent, key.reg());
     }
 
     // Load a jsval from an array slot, given a key. |objReg| is clobbered.
@@ -766,19 +767,19 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
                                      RegisterID typeReg, RegisterID dataReg) {
         JS_ASSERT(objReg != typeReg);
 
-        FastArrayLoadFails fails;
-        fails.rangeCheck = guardArrayExtent(offsetof(JSObject, initializedLength),
-                                            objReg, key, BelowOrEqual);
+        RegisterID elementsReg = objReg;
+        loadPtr(Address(objReg, JSObject::offsetOfElements()), elementsReg);
 
-        RegisterID dslotsReg = objReg;
-        loadPtr(Address(objReg, JSObject::offsetOfSlots()), dslotsReg);
+        FastArrayLoadFails fails;
+        fails.rangeCheck = guardArrayExtent(ObjectElements::offsetOfInitializedLength(),
+                                            objReg, key, BelowOrEqual);
 
         // Load the slot out of the array.
         if (key.isConstant()) {
-            Address slot(objReg, key.index() * sizeof(Value));
+            Address slot(elementsReg, key.index() * sizeof(Value));
             fails.holeCheck = fastArrayLoadSlot(slot, true, typeReg, dataReg);
         } else {
-            BaseIndex slot(objReg, key.reg(), JSVAL_SCALE);
+            BaseIndex slot(elementsReg, key.reg(), JSVAL_SCALE);
             fails.holeCheck = fastArrayLoadSlot(slot, true, typeReg, dataReg);
         }
 
@@ -814,7 +815,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 
     void loadObjClass(RegisterID obj, RegisterID dest) {
-        loadPtr(Address(obj, offsetof(JSObject, lastProp)), dest);
+        loadPtr(Address(obj, JSObject::offsetOfShape()), dest);
         loadPtr(Address(dest, Shape::offsetOfBase()), dest);
         loadPtr(Address(dest, BaseShape::offsetOfClass()), dest);
     }
@@ -824,7 +825,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 
     Jump testObjClass(Condition cond, RegisterID obj, RegisterID temp, js::Class *clasp) {
-        loadPtr(Address(obj, offsetof(JSObject, lastProp)), temp);
+        loadPtr(Address(obj, JSObject::offsetOfShape()), temp);
         loadPtr(Address(temp, Shape::offsetOfBase()), temp);
         return branchPtr(cond, Address(temp, BaseShape::offsetOfClass()), ImmPtr(clasp));
     }
@@ -1250,7 +1251,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         int thingSize = (int)gc::Arena::thingSize(allocKind);
 
         JS_ASSERT(cx->typeInferenceEnabled());
-        JS_ASSERT(!templateObject->hasSlotsArray());
+        JS_ASSERT(!templateObject->hasDynamicSlots());
+        JS_ASSERT(!templateObject->hasDynamicElements());
 
 #ifdef JS_GC_ZEAL
         if (cx->runtime->needZealousGC())
@@ -1280,32 +1282,41 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
          * pinned against GC either by the script or by some type object.
          */
 
+        int elementsOffset = JSObject::offsetOfFixedElements();
+
         /*
-         * Write out the slots pointer before readjusting the result register,
+         * Write out the elements pointer before readjusting the result register,
          * as for dense arrays we will need to get the address of the fixed
-         * slots first.
+         * elements first.
          */
-        JS_ASSERT(!templateObject->initializedLength);
         if (templateObject->isDenseArray()) {
-            addPtr(Imm32(-thingSize + sizeof(JSObject)), result);
-            storePtr(result, Address(result, -(int)sizeof(JSObject) + JSObject::offsetOfSlots()));
-            addPtr(Imm32(-(int)sizeof(JSObject)), result);
+            JS_ASSERT(!templateObject->getDenseArrayInitializedLength());
+            addPtr(Imm32(-thingSize + elementsOffset), result);
+            storePtr(result, Address(result, -elementsOffset + JSObject::offsetOfElements()));
+            addPtr(Imm32(-elementsOffset), result);
         } else {
             addPtr(Imm32(-thingSize), result);
-            storePtr(ImmPtr(NULL), Address(result, JSObject::offsetOfSlots()));
+            storePtr(ImmPtr(emptyObjectElements), Address(result, JSObject::offsetOfElements()));
         }
 
-        storePtr(ImmPtr(templateObject->lastProp), Address(result, offsetof(JSObject, lastProp)));
+        storePtr(ImmPtr(templateObject->lastProperty()), Address(result, JSObject::offsetOfShape()));
+        storePtr(ImmPtr(templateObject->type()), Address(result, JSObject::offsetOfType()));
         store32(Imm32(templateObject->flags), Address(result, offsetof(JSObject, flags)));
-        storePtr(ImmPtr((void *) templateObject->initializedLength), Address(result, offsetof(JSObject, initializedLength)));
+        storePtr(ImmPtr(NULL), Address(result, JSObject::offsetOfSlots()));
         storePtr(ImmPtr(templateObject->parent), Address(result, offsetof(JSObject, parent)));
         storePtr(ImmPtr(templateObject->privateData), Address(result, offsetof(JSObject, privateData)));
-        storePtr(ImmPtr((void *) templateObject->capacity), Address(result, offsetof(JSObject, capacity)));
-        storePtr(ImmPtr(templateObject->type()), Address(result, JSObject::offsetOfType()));
 
-        /* Fixed slots of non-array objects are required to be initialized. */
-        if (!templateObject->isDenseArray()) {
-            for (unsigned i = 0; i < templateObject->numFixedSlots(); i++)
+        if (templateObject->isDenseArray()) {
+            /* Fill in the elements header. */
+            store32(Imm32(templateObject->getDenseArrayCapacity()),
+                    Address(result, elementsOffset + ObjectElements::offsetOfCapacity()));
+            store32(Imm32(templateObject->getDenseArrayInitializedLength()),
+                    Address(result, elementsOffset + ObjectElements::offsetOfInitializedLength()));
+            store32(Imm32(templateObject->getArrayLength()),
+                    Address(result, elementsOffset + ObjectElements::offsetOfLength()));
+        } else {
+            /* Non-array object slots need to be initialized up to the slot span. */
+            for (unsigned i = 0; i < templateObject->slotSpan(); i++)
                 storeValue(UndefinedValue(), Address(result, JSObject::getFixedSlotOffset(i)));
         }
 

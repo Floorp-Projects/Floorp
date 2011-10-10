@@ -2029,8 +2029,10 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
      */
     if ((cg->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
         cg->bindings.extensibleParents()) {
-        if (!Shape::setExtensibleParents(cx, &blockObj->lastProp))
+        Shape *shape = Shape::setExtensibleParents(cx, blockObj->lastProperty());
+        if (!shape)
             return false;
+        blockObj->setLastPropertyInfallible(shape);
     }
 
     return true;
@@ -4858,7 +4860,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
       case TOK_RC: {
         JS_ASSERT(isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
 
-        gc::AllocKind kind = GuessObjectGCKind(pn_count, false);
+        gc::AllocKind kind = GuessObjectGCKind(pn_count);
         JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
             return false;
@@ -7143,7 +7145,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         JSObject *obj = NULL;
         if (!cg->hasSharps() && cg->compileAndGo()) {
-            gc::AllocKind kind = GuessObjectGCKind(pn->pn_count, false);
+            gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
             obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
             if (!obj)
                 return JS_FALSE;

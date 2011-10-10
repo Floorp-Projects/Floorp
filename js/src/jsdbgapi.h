@@ -470,9 +470,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script);
  * Return true if obj is a "system" object, that is, one created by
  * JS_NewSystemObject with the system flag set and not JS_NewObject.
  *
- * What "system" means is up to the API client, but it can be used to implement
- * access control policies based on script filenames and their prefixes, using
- * JS_FlagScriptFilenamePrefix and JS_GetTopScriptFilenameFlags.
+ * What "system" means is up to the API client.
  */
 extern JS_PUBLIC_API(JSBool)
 JS_IsSystemObject(JSContext *cx, JSObject *obj);

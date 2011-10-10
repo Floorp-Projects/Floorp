@@ -443,7 +443,8 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
         break;
 
       case ACCSET_OBJ_CAPACITY:
-        ok = OK_OBJ_FIELD(LIR_ldi, capacity) || OK_OBJ_FIELD(LIR_ldi, initializedLength);
+        ok = false;
+        // OK_OBJ_FIELD(LIR_ldi, capacity) || OK_OBJ_FIELD(LIR_ldi, initializedLength);
         break;
 
       case ACCSET_OBJ_SLOTS:

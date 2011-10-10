@@ -120,9 +120,7 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
 JS_FRIEND_API(uint32)
 JS_ObjectCountDynamicSlots(JSObject *obj)
 {
-    if (obj->hasSlotsArray())
-        return obj->numDynamicSlots(obj->numSlots());
-    return 0;
+    return (obj->slotsAndStructSize() - obj->structSize()) / sizeof(Value);
 }
 
 JS_FRIEND_API(JSPrincipals *)
@@ -171,15 +169,6 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
     /* The old compartment may have been destroyed, so we can't use cx->setCompartment. */
     cx->compartment = oldCompartment;
 }
-
-#ifdef DEBUG
-JS_FRIEND_API(void)
-js::CheckReservedSlot(const JSObject *obj, size_t slot)
-{
-    JS_ASSERT(slot < obj->numSlots());
-    JS_ASSERT(slot < JSSLOT_FREE(obj->getClass()));
-}
-#endif
 
 /*
  * The below code is for temporary telemetry use. It can be removed when

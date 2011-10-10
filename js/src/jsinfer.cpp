@@ -2443,7 +2443,7 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
      * If the array is heterogenous, keep the existing type object, which has
      * unknown properties.
      */
-    JS_ASSERT(obj->isPackedDenseArray());
+    JS_ASSERT(obj->isDenseArray());
 
     unsigned len = obj->getDenseArrayInitializedLength();
     if (len == 0)

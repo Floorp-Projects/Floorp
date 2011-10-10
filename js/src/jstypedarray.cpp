@@ -161,25 +161,29 @@ JSObject::allocateArrayBufferSlots(JSContext *cx, uint32 size)
      * ArrayBuffer objects delegate added properties to another JSObject, so
      * their internal layout can use the object's fixed slots for storage.
      */
-    JS_ASSERT(isArrayBuffer() && !hasSlotsArray());
+    JS_ASSERT(isArrayBuffer() && !hasDynamicSlots() && !hasDynamicElements());
 
-    uint32 bytes = size + sizeof(Value);
-    if (size > sizeof(Value) * ARRAYBUFFER_RESERVED_SLOTS - sizeof(Value) ) {
-        Value *tmpslots = (Value *)cx->calloc_(bytes);
-        if (!tmpslots)
+    JS_STATIC_ASSERT(sizeof(ObjectElements) == 2 * sizeof(js::Value));
+
+    if (size > sizeof(Value) * (ARRAYBUFFER_RESERVED_SLOTS - 2) ) {
+        ObjectElements *tmpheader = (ObjectElements *)cx->calloc_(size + sizeof(ObjectElements));
+        if (!tmpheader)
             return false;
-        slots = tmpslots;
-        /*
-         * Note that |bytes| may not be a multiple of |sizeof(Value)|, so
-         * |capacity * sizeof(Value)| may underestimate the size by up to
-         * |sizeof(Value) - 1| bytes.
-         */
-        capacity = bytes / sizeof(Value);
+        elements = tmpheader->elements();
+        tmpheader->length = size;
     } else {
-        slots = fixedSlots();
-        memset(slots, 0, bytes);
+        elements = fixedElements();
+        memset(fixedSlots(), 0, size + sizeof(ObjectElements));
     }
-    *((uint32*)slots) = size;
+    getElementsHeader()->length = size;
+
+    /*
+     * Note that |bytes| may not be a multiple of |sizeof(Value)|, so
+     * |capacity * sizeof(Value)| may underestimate the size by up to
+     * |sizeof(Value) - 1| bytes.
+     */
+    getElementsHeader()->capacity = size / sizeof(Value);
+
     return true;
 }
 
@@ -213,8 +217,10 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
 
     JS_ASSERT(obj->getClass() == &ArrayBuffer::slowClass);
 
-    if (!InitScopeForNonNativeObject(cx, obj, &ArrayBufferClass))
-        return NULL;
+    js::EmptyShape *empty = BaseShape::lookupEmpty(cx, &ArrayBufferClass);
+    if (!empty)
+        return false;
+    obj->setLastPropertyInfallible(empty);
 
     /*
      * The first 8 bytes hold the length.
@@ -1287,8 +1293,10 @@ class TypedArrayTemplate
 
         JS_ASSERT(obj->getClass() == slowClass());
 
-        if (!InitScopeForNonNativeObject(cx, obj, fastClass()))
-            return NULL;
+        js::EmptyShape *empty = BaseShape::lookupEmpty(cx, fastClass());
+        if (!empty)
+            return false;
+        obj->setLastPropertyInfallible(empty);
 
         // FIXME Bug 599008: make it ok to call preventExtensions here.
         obj->flags |= JSObject::NOT_EXTENSIBLE;

@@ -216,7 +216,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 
     /* Can't fail from here on, so initialize everything in argsobj. */
     obj->init(cx, type, proto->getParent(), NULL, false);
-    obj->setMap(emptyArgumentsShape);
+    obj->setInitialPropertyInfallible(emptyArgumentsShape);
 
     ArgumentsObject *argsobj = obj->asArguments();
 
@@ -769,7 +769,7 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     if (!emptyDeclEnvShape)
         return NULL;
     envobj->init(cx, type, &fp->scopeChain(), fp, false);
-    envobj->setMap(emptyDeclEnvShape);
+    envobj->setInitialPropertyInfallible(emptyDeclEnvShape);
 
     return envobj;
 }
@@ -868,8 +868,6 @@ js_PutCallObject(StackFrame *fp)
 
         uintN n = bindings.countArgsAndVars();
         if (n > 0) {
-            JS_ASSERT(CallObject::RESERVED_SLOTS + n <= callobj.numSlots());
-
             uint32 nvars = bindings.countVars();
             uint32 nargs = bindings.countArgs();
             JS_ASSERT(fun->nargs == nargs);
@@ -1909,12 +1907,9 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
         if (!toDictionaryMode(cx))
             return false;
         JS_ASSERT(slotSpan() == JSSLOT_FREE(&FunctionClass));
-        lastProp->base()->setSlotSpan(slotSpan() + argslen);
-
-        if (!ensureInstanceReservedSlots(cx, argslen))
+        if (!setSlotSpan(cx, slotSpan() + argslen))
             return false;
 
-        JS_ASSERT(numSlots() >= argslen + FUN_CLASS_RESERVED_SLOTS);
         copySlotRange(FUN_CLASS_RESERVED_SLOTS, args, argslen);
     }
     return true;

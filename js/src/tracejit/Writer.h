@@ -528,13 +528,15 @@ class Writer
     }
 
     nj::LIns *ldiDenseArrayInitializedLength(nj::LIns *array) const {
-        return name(lir->insLoad(nj::LIR_ldi, array, offsetof(JSObject, initializedLength),
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insLoad(nj::LIR_ldi, array, 0,
                                  ACCSET_OBJ_CAPACITY),
                     "capacity");
     }
 
     nj::LIns *ldpObjSlots(nj::LIns *obj) const {
-        return name(lir->insLoad(nj::LIR_ldp, obj, JSObject::offsetOfSlots(), ACCSET_OBJ_SLOTS),
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insLoad(nj::LIR_ldp, obj, 0, ACCSET_OBJ_SLOTS),
                     "slots");
     }
 

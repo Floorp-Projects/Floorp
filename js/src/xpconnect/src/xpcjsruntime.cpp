@@ -1349,7 +1349,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         case JSTRACE_OBJECT:
         {
             JSObject *obj = static_cast<JSObject *>(thing);
-            curr->objectSlots += obj->sizeOfSlotsArray(moz_malloc_usable_size);
+            curr->objectSlots += JS_ObjectCountDynamicSlots(obj) * sizeof(JS::Value);
             break;
         }
         case JSTRACE_STRING:
@@ -1380,6 +1380,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
             JS_GetTypeInferenceObjectStats(obj, &curr->typeInferenceMemory);
             break;
         }
+        case JSTRACE_BASE_SHAPE:
         case JSTRACE_XML:
         {
             break;

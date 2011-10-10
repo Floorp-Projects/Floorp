@@ -1636,7 +1636,9 @@ class TraceRecorder
              * Do slot arithmetic manually to avoid getSlotRef assertions which
              * do not need to be satisfied for this purpose.
              */
-            const Value *vp = globalObj->getRawSlot(slot, globalObj->getRawSlots());
+            //const Value *vp = globalObj->getRawSlot(slot, globalObj->getRawSlots());
+            JS_NOT_REACHED("FIXME");
+            const Value *vp = NULL;
 
             /* If this global is definitely being tracked, then the write is unexpected. */
             if (tracker.has(vp))
