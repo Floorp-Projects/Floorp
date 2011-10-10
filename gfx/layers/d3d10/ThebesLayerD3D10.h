@@ -108,9 +108,12 @@ public:
   ShadowThebesLayerD3D10(LayerManagerD3D10* aManager);
   virtual ~ShadowThebesLayerD3D10();
 
+  // ShadowThebesLayer impl
+  virtual void SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
+                              const nsIntRegion& aValidRegion);
   virtual void
   Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
-       OptionalThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
+       ThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
        OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion);
   virtual void DestroyFrontBuffer();
 
