@@ -436,19 +436,8 @@ nsMemoryReporterManager::Init()
     REGISTER(Private);
 #endif
 
-#if defined(HAVE_JEMALLOC_STATS) && defined(XP_WIN)
-    // heap-committed is only meaningful where we have MALLOC_DECOMMIT defined
-    // (currently, just on Windows).  Elsewhere, it's the same as
-    // stats->mapped, which is heap-allocated + heap-unallocated.
-    //
-    // Ideally, we'd check for MALLOC_DECOMMIT in the #if defined above, but
-    // MALLOC_DECOMMIT is defined in jemalloc.c, not a header, so we'll just
-    // have to settle for the OS check for now.
-
-    REGISTER(HeapCommitted);
-#endif
-
 #if defined(HAVE_JEMALLOC_STATS)
+    REGISTER(HeapCommitted);
     REGISTER(HeapDirty);
 #elif defined(XP_MACOSX) && !defined(MOZ_MEMORY)
     REGISTER(HeapZone0Committed);
