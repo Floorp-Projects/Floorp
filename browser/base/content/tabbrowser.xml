@@ -878,6 +878,10 @@
             this.mCurrentTab = this.selectedTab;
             this.showTab(this.mCurrentTab);
 
+            var backForwardContainer = document.getElementById("unified-back-forward-button");
+            if (backForwardContainer)
+              backForwardContainer.setAttribute("switchingtabs", "true");
+
             if (updatePageReport)
               this.mCurrentBrowser.updatePageReport();
 
@@ -944,6 +948,9 @@
                                            nsIWebProgressListener.STATE_IS_NETWORK, 0],
                                           true, false);
             }
+
+            if (backForwardContainer)
+              backForwardContainer.removeAttribute("switchingtabs");
 
             if (this.mCurrentTab.selected)
               this._setCloseKeyState(!this.mCurrentTab.pinned);

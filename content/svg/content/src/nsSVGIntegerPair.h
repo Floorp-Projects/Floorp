@@ -65,12 +65,11 @@ public:
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(PRInt32 aValue, PairIndex aIndex, nsSVGElement *aSVGElement, bool aDoSetAttr);
-  void SetBaseValues(PRInt32 aValue1, PRInt32 aValue2, nsSVGElement *aSVGElement, bool aDoSetAttr);
+  void SetBaseValue(PRInt32 aValue, PairIndex aIndex, nsSVGElement *aSVGElement);
+  void SetBaseValues(PRInt32 aValue1, PRInt32 aValue2, nsSVGElement *aSVGElement);
   PRInt32 GetBaseValue(PairIndex aIndex) const
     { return mBaseVal[aIndex == eFirst ? 0 : 1]; }
   void SetAnimValue(const PRInt32 aValue[2], nsSVGElement *aSVGElement);
@@ -118,7 +117,7 @@ public:
       { *aResult = mVal->GetBaseValue(mIndex); return NS_OK; }
     NS_IMETHOD SetBaseVal(PRInt32 aValue)
       {
-        mVal->SetBaseValue(aValue, mIndex, mSVGElement, PR_TRUE);
+        mVal->SetBaseValue(aValue, mIndex, mSVGElement);
         return NS_OK;
       }
 
