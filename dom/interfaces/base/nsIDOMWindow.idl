@@ -70,7 +70,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(3f5b2af2-604e-4253-8d25-6d3cafc13a69)]
+[scriptable, uuid(8f577294-d572-4473-94b1-d2c5a74a2a74)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -462,6 +462,9 @@ interface nsIDOMWindow : nsISupports
    */
   [implicit_jscontext] attribute jsval ondevicemotion;
   [implicit_jscontext] attribute jsval ondeviceorientation;
+
+  [implicit_jscontext] attribute jsval onmouseenter;
+  [implicit_jscontext] attribute jsval onmouseleave;
 };
 
 [scriptable, uuid(2146c906-57f7-486c-a1b4-8cdb57ef577f)]
@@ -477,5 +480,5 @@ interface nsIDOMWindowPerformance : nsISupports
  * Empty interface for compatibility with older versions.
  * @deprecated Use nsIDOMWindow instead
  */
-[scriptable, uuid(8614bdb7-5b07-4d00-a7ba-4d44697a343d)]
+[scriptable, uuid(8da641ab-906a-456e-97f2-b77df4ca2d95)]
 interface nsIDOMWindowInternal : nsIDOMWindow {};

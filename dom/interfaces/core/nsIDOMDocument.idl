@@ -66,7 +66,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(ed54b6e5-2f05-4069-af07-7b89bd997312)]
+[scriptable, uuid(3f845f32-cb34-459c-8f79-2dfaa3088bbf)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -408,4 +408,7 @@ interface nsIDOMDocument : nsIDOMNode
    * Inline event handler for readystatechange events.
    */
   [implicit_jscontext] attribute jsval onreadystatechange;
+
+  [implicit_jscontext] attribute jsval onmouseenter;
+  [implicit_jscontext] attribute jsval onmouseleave;
 };
