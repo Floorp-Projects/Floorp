@@ -95,7 +95,6 @@
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "mozilla/Preferences.h"
 #include "nsLocation.h"
-#include "nsIDOMCaretPosition.h"
 
 // Window scriptable helper includes
 #include "nsIDocShell.h"
@@ -497,7 +496,6 @@
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
 #include "mozilla/dom/indexedDB/IDBIndex.h"
 #include "nsIIDBDatabaseException.h"
-#include "nsIDOMEventException.h"
 
 #include "nsIDOMMediaQueryList.h"
 
@@ -656,9 +654,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Location, nsLocationSH,
                            (DOM_DEFAULT_SCRIPTABLE_FLAGS &
                             ~nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE))
-
-  NS_DEFINE_CLASSINFO_DATA(CaretPosition, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(Navigator, nsNavigatorSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
@@ -1506,9 +1501,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(IDBDatabaseException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(EventException, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(Touch, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TouchList, nsDOMTouchListSH,
@@ -2271,10 +2263,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Location, nsIDOMLocation)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLocation)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CaretPosition, nsIDOMCaretPosition)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCaretPosition)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
@@ -4101,11 +4089,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(IDBDatabaseException, nsIIDBDatabaseException)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBDatabaseException)
-    DOM_CLASSINFO_MAP_ENTRY(nsIException)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(EventException, nsIDOMEventException)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventException)
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
