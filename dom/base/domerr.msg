@@ -122,8 +122,6 @@ DOM_MSG_DEF(NS_ERROR_DOM_QUOTA_REACHED, "Persistent storage maximum size reached
 DOM_MSG_DEF(NS_ERROR_DOM_FILE_NOT_FOUND_ERR, "File was not found")
 DOM_MSG_DEF(NS_ERROR_DOM_FILE_NOT_READABLE_ERR, "File could not be read")
 
-DOM_MSG_DEF(NS_ERROR_DOM_UNSPECIFIED_EVENT_TYPE_ERR, "Unspecified event type")
-
 /* common global codes (from nsError.h) */
 
 DOM_MSG_DEF(NS_OK                                  , "Success")

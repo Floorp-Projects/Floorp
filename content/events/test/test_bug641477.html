@@ -26,10 +26,10 @@ try {
   is(e.type, "", "Event type should be empty string before initialization");
   document.dispatchEvent(e);
 } catch(ex) {
-  didThrow = (ex.code == 0);
+  didThrow = (ex.code == DOMException.INVALID_STATE_ERR);
 }
 
-ok(didThrow, "Should have thrown UNSPECIFIED_EVENT_TYPE_ERR!");
+ok(didThrow, "Should have thrown INVALID_STATE_ERR!");
 
 </script>
 </pre>
