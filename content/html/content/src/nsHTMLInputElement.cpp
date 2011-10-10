@@ -2320,6 +2320,9 @@ nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                      aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent,
+                                    aCompileEventHandlers);
+
   if (mType == NS_FORM_INPUT_IMAGE) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
@@ -2365,6 +2368,8 @@ nsHTMLInputElement::UnbindFromTree(bool aDeep, bool aNullParent)
   if (!mForm && mType == NS_FORM_INPUT_RADIO) {
     WillRemoveFromRadioGroup();
   }
+
+  nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
 
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 
