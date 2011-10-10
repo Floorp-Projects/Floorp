@@ -244,8 +244,7 @@ const EXPIRATION_QUERIES = {
        + "FROM moz_places h "
        + "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
        + "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
-       + "WHERE h.last_visit_date IS NULL "
-       +   "AND v.id IS NULL "
+       + "WHERE v.id IS NULL "
        +   "AND b.id IS NULL "
        +   "AND frecency <> -1 "
        + "LIMIT :limit_uris",
@@ -269,8 +268,7 @@ const EXPIRATION_QUERIES = {
        +   "FROM moz_places h "
        +   "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
        +   "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
-       +   "WHERE h.last_visit_date IS NULL "
-       +     "AND v.id IS NULL "
+       +   "WHERE v.id IS NULL "
        +     "AND b.id IS NULL "
        +   "LIMIT :limit_uris "
        + ")",
@@ -295,7 +293,9 @@ const EXPIRATION_QUERIES = {
     sql: "DELETE FROM moz_annos WHERE id in ( "
        +   "SELECT a.id FROM moz_annos a "
        +   "LEFT JOIN moz_places h ON a.place_id = h.id "
+       +   "LEFT JOIN moz_historyvisits v ON a.place_id = v.place_id "
        +   "WHERE h.id IS NULL "
+       +      "OR (v.id IS NULL AND a.expiration <> :expire_never) "
        +   "LIMIT :limit_annos "
        + ")",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
@@ -935,8 +935,8 @@ nsPlacesExpiration.prototype = {
         params.limit_favicons = baseLimit;
         break;
       case "QUERY_EXPIRE_ANNOS":
-        // Each page may have multiple annos.
-        params.limit_annos = baseLimit * EXPIRE_AGGRESSIVITY_MULTIPLIER;
+        params.expire_never = Ci.nsIAnnotationService.EXPIRE_NEVER;
+        params.limit_annos = baseLimit;
         break;
       case "QUERY_EXPIRE_ANNOS_WITH_POLICY":
       case "QUERY_EXPIRE_ITEMS_ANNOS_WITH_POLICY":
