@@ -1275,7 +1275,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 @conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) + #urlbar-container > #urlbar {
   /* when not hovered anymore, trigger a new transition to hide the forward button immediately */
-  margin-left: @conditionalForwardWithUrlbarWidth@.01px;
+  margin-left: -@conditionalForwardWithUrlbarWidth@.01px;
 }
 
 @conditionalForwardWithUrlbar@ + #urlbar-container:-moz-locale-dir(rtl),
