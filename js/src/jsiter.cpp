@@ -418,7 +418,7 @@ NewIteratorObject(JSContext *cx, uintN flags)
             return NULL;
 
         obj->init(cx, type, NULL, NULL, false);
-        obj->setMap(emptyEnumeratorShape);
+        obj->setInitialPropertyInfallible(emptyEnumeratorShape);
         return obj;
     }
 

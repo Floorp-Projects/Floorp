@@ -206,6 +206,9 @@ JS_DEFINE_CALLINFO_3(extern, INT32, js_StringToInt32, CONTEXT, STRING, BOOLPTR,
 static inline JSBool
 AddPropertyHelper(JSContext* cx, JSObject* obj, Shape* shape, bool isDefinitelyAtom)
 {
+    JS_NOT_REACHED("FIXME");
+    return true;
+#if 0
     JS_ASSERT(shape->previous() == obj->lastProperty());
 
     if (obj->nativeEmpty()) {
@@ -227,6 +230,7 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, Shape* shape, bool isDefinitelyA
 
     obj->extend(cx, shape, isDefinitelyAtom);
     return true;
+#endif
 }
 
 JSBool FASTCALL

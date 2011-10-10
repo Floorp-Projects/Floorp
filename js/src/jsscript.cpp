@@ -89,8 +89,7 @@ Bindings::lookup(JSContext *cx, JSAtom *name, uintN *indexp) const
         return NONE;
 
     Shape *shape =
-        SHAPE_FETCH(Shape::search(cx, const_cast<Shape **>(&lastBinding),
-                    ATOM_TO_JSID(name)));
+        SHAPE_FETCH(Shape::search(cx, lastBinding, ATOM_TO_JSID(name)));
     if (!shape)
         return NONE;
 

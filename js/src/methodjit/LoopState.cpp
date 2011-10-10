@@ -1324,10 +1324,12 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
              * in the invariant list, so don't recheck this is an object.
              */
             masm.loadPayload(frame.addressOf(entry.u.check.arraySlot), T0);
-            if (entry.kind == InvariantEntry::DENSE_ARRAY_BOUNDS_CHECK)
-                masm.load32(Address(T0, offsetof(JSObject, initializedLength)), T0);
-            else
+            if (entry.kind == InvariantEntry::DENSE_ARRAY_BOUNDS_CHECK) {
+                masm.loadPtr(Address(T0, JSObject::offsetOfElements()), T0);
+                masm.load32(Address(T0, ObjectElements::offsetOfInitializedLength()), T0);
+            } else {
                 masm.load32(Address(T0, TypedArray::lengthOffset()), T0);
+            }
 
             int32 constant = entry.u.check.constant;
 
@@ -1393,18 +1395,16 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
             Jump notObject = masm.testObject(Assembler::NotEqual, frame.addressOf(array));
             jumps->append(notObject);
             masm.loadPayload(frame.addressOf(array), T0);
-
-            uint32 offset = (entry.kind == InvariantEntry::DENSE_ARRAY_SLOTS)
-                ? JSObject::offsetOfSlots()
-                : offsetof(JSObject, privateData);
+            masm.loadPtr(Address(T0, JSObject::offsetOfElements()), T0);
 
             Address address = frame.addressOf(frame.getTemporary(entry.u.array.temporary));
 
-            masm.loadPtr(Address(T0, offset), T0);
-            if (entry.kind == InvariantEntry::DENSE_ARRAY_LENGTH)
+            if (entry.kind == InvariantEntry::DENSE_ARRAY_LENGTH) {
+                masm.load32(Address(T0, ObjectElements::offsetOfLength()), T0);
                 masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), T0, address);
-            else
+            } else {
                 masm.storePayload(T0, address);
+            }
             break;
           }
 

@@ -367,7 +367,7 @@ Debugger::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
         JSObject *frameobj =
             NewNonFunction<WithProto::Given>(cx, &DebuggerFrame_class, proto, NULL);
-        if (!frameobj || !frameobj->ensureClassReservedSlots(cx))
+        if (!frameobj)
             return false;
         frameobj->setPrivate(fp);
         frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*object));
@@ -502,7 +502,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, Value *vp)
             JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject();
             JSObject *dobj =
                 NewNonFunction<WithProto::Given>(cx, &DebuggerObject_class, proto, NULL);
-            if (!dobj || !dobj->ensureClassReservedSlots(cx))
+            if (!dobj)
                 return false;
             dobj->setPrivate(obj);
             dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
@@ -1614,7 +1614,7 @@ Debugger::construct(JSContext *cx, uintN argc, Value *vp)
      * the reserved slots are for hooks; they default to undefined.
      */
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, &Debugger::jsclass, proto, NULL);
-    if (!obj || !obj->ensureClassReservedSlots(cx))
+    if (!obj)
         return false;
     for (uintN slot = JSSLOT_DEBUG_PROTO_START; slot < JSSLOT_DEBUG_PROTO_STOP; slot++)
         obj->setReservedSlot(slot, proto->getReservedSlot(slot));
@@ -1885,7 +1885,7 @@ Debugger::newDebuggerScript(JSContext *cx, JSScript *script, JSObject *holder)
     JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject();
     JS_ASSERT(proto);
     JSObject *scriptobj = NewNonFunction<WithProto::Given>(cx, &DebuggerScript_class, proto, NULL);
-    if (!scriptobj || !scriptobj->ensureClassReservedSlots(cx))
+    if (!scriptobj)
         return false;
     scriptobj->setPrivate(script);
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
@@ -3645,7 +3645,7 @@ JS_DefineDebuggerObject(JSContext *cx, JSObject *obj)
     JSObject *debugProto = js_InitClass(cx, obj, objProto, &Debugger::jsclass, Debugger::construct,
                                         1, Debugger::properties, Debugger::methods, NULL, NULL,
                                         &debugCtor);
-    if (!debugProto || !debugProto->ensureClassReservedSlots(cx))
+    if (!debugProto)
         return false;
 
     JSObject *frameProto = js_InitClass(cx, debugCtor, objProto, &DebuggerFrame_class,

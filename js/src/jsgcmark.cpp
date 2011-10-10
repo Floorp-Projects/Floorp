@@ -734,12 +734,11 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
         }
     }
 
-    js::Shape *shape = obj->lastProp;
+    js::Shape *shape = obj->lastProperty();
     PushMarkStack(gcmarker, shape);
 
     if (shape->isNative()) {
         uint32 nslots = obj->slotSpan();
-        JS_ASSERT(obj->slotSpan() <= obj->numSlots());
         if (nslots > LARGE_OBJECT_CHUNK_SIZE) {
             if (gcmarker->largeStack.push(LargeMarkItem(obj)))
                 return;
@@ -797,7 +796,6 @@ MarkChildren(JSTracer *trc, JSObject *obj)
     MarkShape(trc, obj->lastProperty(), "shape");
 
     if (obj->lastProperty()->isNative()) {
-        JS_ASSERT(obj->slotSpan() <= obj->numSlots());
         uint32 nslots = obj->slotSpan();
         for (uint32 i = 0; i < nslots; i++) {
             JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
@@ -1055,7 +1053,6 @@ JSObject::scanSlots(GCMarker *gcmarker)
      * Scan the fixed slots and the dynamic slots separately, to avoid
      * branching inside nativeGetSlot().
      */
-    JS_ASSERT(slotSpan() <= numSlots());
     unsigned i, nslots = slotSpan();
     if (slots) {
         unsigned nfixed = numFixedSlots();

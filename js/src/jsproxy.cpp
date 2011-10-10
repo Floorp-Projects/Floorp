@@ -65,7 +65,7 @@ GetCall(JSObject *proxy) {
 
 static inline Value
 GetConstruct(JSObject *proxy) {
-    if (proxy->numSlots() <= JSSLOT_PROXY_CONSTRUCT)
+    if (proxy->slotSpan() < JSSLOT_PROXY_CONSTRUCT)
         return UndefinedValue();
     return proxy->getSlot(JSSLOT_PROXY_CONSTRUCT);
 }
@@ -1394,7 +1394,7 @@ js::NewProxyObject(JSContext *cx, ProxyHandler *handler, const Value &priv, JSOb
         proto->getNewType(cx, NULL, /* markUnknown = */ true);
 
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
-    if (!obj || !obj->ensureInstanceReservedSlots(cx, 0))
+    if (!obj)
         return NULL;
     obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
     obj->setSlot(JSSLOT_PROXY_PRIVATE, priv);

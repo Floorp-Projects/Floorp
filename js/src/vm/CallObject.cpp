@@ -79,12 +79,8 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
         return NULL;
     obj->makeVarObj();
 
-    /* This must come after callobj->lastProp has been set. */
-    if (!obj->ensureInstanceReservedSlots(cx, argsVars))
-        return NULL;
-
 #ifdef DEBUG
-    for (Shape::Range r = obj->lastProp; !r.empty(); r.popFront()) {
+    for (Shape::Range r = obj->lastProperty(); !r.empty(); r.popFront()) {
         const Shape &s = r.front();
         if (s.hasSlot()) {
             JS_ASSERT(s.slot() + 1 == obj->slotSpan());

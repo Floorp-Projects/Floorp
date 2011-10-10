@@ -2687,7 +2687,9 @@ TraceRecorder::nativeGlobalOffset(const Value* p) const
 bool
 TraceRecorder::isGlobal(const Value* p) const
 {
-    return (size_t(p - globalObj->slots) < globalObj->numSlots() - globalObj->numFixedSlots());
+    JS_NOT_REACHED("FIXME");
+    return false;
+    //return (size_t(p - globalObj->slots) < globalObj->numSlots() - globalObj->numFixedSlots());
 }
 
 bool
@@ -3867,7 +3869,8 @@ JS_REQUIRES_STACK void
 TraceRecorder::importGlobalSlot(unsigned slot)
 {
     JS_ASSERT(slot == uint16(slot));
-    JS_ASSERT(globalObj->numSlots() <= MAX_GLOBAL_SLOTS);
+    JS_NOT_REACHED("FIXME");
+    //JS_ASSERT(globalObj->numSlots() <= MAX_GLOBAL_SLOTS);
 
     const Value* vp = &globalObj->getSlot(slot);
     JS_ASSERT(!known(vp));
@@ -3900,8 +3903,9 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
      * If the global object grows too large, alloca in ExecuteTree might fail,
      * so abort tracing on global objects with unreasonably many slots.
      */
-    if (globalObj->numSlots() > MAX_GLOBAL_SLOTS)
-        return false;
+    JS_NOT_REACHED("FIXME");
+    //if (globalObj->numSlots() > MAX_GLOBAL_SLOTS)
+    //    return false;
     const Value* vp = &globalObj->getSlot(slot);
     if (known(vp))
         return true; /* we already have it */
@@ -4102,6 +4106,8 @@ TraceRecorder::known(JSObject** p)
 JS_REQUIRES_STACK void
 TraceRecorder::checkForGlobalObjectReallocationHelper()
 {
+    JS_NOT_REACHED("FIXME");
+    /*
     debug_only_print0(LC_TMTracer, "globalObj->slots relocated, updating tracker\n");
     const Value* src = global_slots;
     const Value* dst = globalObj->getRawSlots();
@@ -4117,6 +4123,7 @@ TraceRecorder::checkForGlobalObjectReallocationHelper()
         tracker.set(slot, map[n]);
     }
     global_slots = globalObj->getRawSlots();
+    */
 }
 
 /* Determine whether the current branch is a loop edge (taken or not taken). */
@@ -9803,7 +9810,6 @@ TraceRecorder::stobj_set_slot(JSObject *obj, LIns* obj_ins, unsigned slot, LIns*
      * ensure that future objects have the same number of fixed slots.
      */
     if (obj->isFixedSlot(slot)) {
-        JS_ASSERT(slot < obj->numSlots());
         stobj_set_fslot(obj_ins, slot, v, v_ins);
     } else {
         stobj_set_dslot(obj_ins, obj->dynamicSlotIndex(slot), slots_ins, v, v_ins);

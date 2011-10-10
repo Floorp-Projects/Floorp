@@ -275,9 +275,6 @@ GlobalObject::create(JSContext *cx, Class *clasp)
 bool
 GlobalObject::initStandardClasses(JSContext *cx)
 {
-    /* Native objects get their reserved slots from birth. */
-    JS_ASSERT(numSlots() >= JSSLOT_FREE(getClass()));
-
     JSAtomState &state = cx->runtime->atomState;
 
     /* Define a top-level property 'undefined' with the undefined value. */

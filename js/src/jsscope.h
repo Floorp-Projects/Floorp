@@ -509,7 +509,7 @@ struct Shape : public js::gc::Cell
                                    else to obj->lastProp */
     };
 
-    static inline js::Shape **search(JSContext *cx, js::Shape **startp, jsid id,
+    static inline js::Shape **search(JSContext *cx, js::Shape *start, jsid id,
                                      bool adding = false);
     static js::Shape *newDictionaryList(JSContext *cx, js::Shape **listp);
 
@@ -715,6 +715,12 @@ struct Shape : public js::gc::Cell
         return JSID_IS_EMPTY(propid_);
     }
 
+    uint32 slotSpan() const {
+        JS_ASSERT(!inDictionary());
+        uint32 free = JSSLOT_FREE(getClass());
+        return hasMissingSlot() ? free : Max(free, maybeSlot() + 1);
+    }
+
     jsid propid() const { JS_ASSERT(!isEmptyShape()); return maybePropid(); }
     jsid maybePropid() const { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
 
@@ -800,7 +806,7 @@ struct Shape : public js::gc::Cell
      * Call or Block objects need unique shapes. If the flag is clear, then we
      * can use lastBinding's shape.
      */
-    static bool setExtensibleParents(JSContext *cx, Shape **pshape);
+    static Shape * setExtensibleParents(JSContext *cx, Shape *shape);
     bool extensibleParents() const { return !!(base()->flags & BaseShape::EXTENSIBLE_PARENTS); }
 
     uint32 entryCount() const {
@@ -890,9 +896,8 @@ struct EmptyShape : public js::Shape
 namespace js {
 
 JS_ALWAYS_INLINE js::Shape **
-Shape::search(JSContext *cx, js::Shape **startp, jsid id, bool adding)
+Shape::search(JSContext *cx, js::Shape *start, jsid id, bool adding)
 {
-    js::Shape *start = *startp;
     if (start->hasTable())
         return start->table().search(id, adding);
 
@@ -908,14 +913,14 @@ Shape::search(JSContext *cx, js::Shape **startp, jsid id, bool adding)
 
     /*
      * Not enough searches done so far to justify hashing: search linearly
-     * from *startp.
+     * from start.
      *
      * We don't use a Range here, or stop at null parent (the empty shape
      * at the end), to avoid an extra load per iteration just to save a
      * load and id test at the end (when missing).
      */
     js::Shape **spp;
-    for (spp = startp; js::Shape *shape = *spp; spp = &shape->parent) {
+    for (spp = &start; js::Shape *shape = *spp; spp = &shape->parent) {
         if (shape->maybePropid() == id)
             return spp;
     }
@@ -932,7 +937,7 @@ Shape::search(JSContext *cx, js::Shape **startp, jsid id, bool adding)
 inline js::Class *
 JSObject::getClass() const
 {
-    return lastProp->getClass();
+    return lastProperty()->getClass();
 }
 
 inline JSClass *

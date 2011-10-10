@@ -4774,7 +4774,7 @@ BEGIN_CASE(JSOP_NEWINIT)
     if (i == JSProto_Array) {
         obj = NewDenseEmptyArray(cx);
     } else {
-        gc::AllocKind kind = GuessObjectGCKind(0, false);
+        gc::AllocKind kind = GuessObjectGCKind(0);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
     }
 
