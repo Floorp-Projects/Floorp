@@ -1,0 +1,357 @@
+diff --git a/other-licenses/android/getaddrinfo.c b/other-licenses/android/getaddrinfo.c
+--- a/other-licenses/android/getaddrinfo.c
++++ b/other-licenses/android/getaddrinfo.c
+@@ -31,6 +31,16 @@
+  */
+ 
+ /*
++ * This version of getaddrinfo.c is derived from Android 2.3 "Gingerbread",
++ * which contains uncredited changes by Android/Google developers.  It has
++ * been modified in 2011 for use in the Android build of Mozilla Firefox by
++ * Mozilla contributors (including Michael Edwards <m.k.edwards@gmail.com>).
++ * These changes are offered under the same license as the original NetBSD
++ * file, whose copyright and license are unchanged above.
++ */
++#define ANDROID_CHANGES 1
++
++/*
+  * Issues to be discussed:
+  * - Thread safe-ness must be checked.
+  * - Return values.  There are nonstandard return values defined and used
+@@ -84,6 +94,7 @@
+ #include <sys/param.h>
+ #include <sys/socket.h>
+ #include <sys/un.h>
++#include <sys/mman.h>
+ #include <net/if.h>
+ #include <netinet/in.h>
+ #include <arpa/inet.h>
+@@ -94,7 +105,6 @@
+ #include <netdb.h>
+ #include "resolv_private.h"
+ #include <stddef.h>
+-#include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>
+@@ -103,10 +113,95 @@
+ #include <stdarg.h>
+ #include "nsswitch.h"
+ 
++#ifdef MOZ_GETADDRINFO_LOG_VERBOSE
++#include <android/log.h>
++#endif
++
+ #ifdef ANDROID_CHANGES
+ #include <sys/system_properties.h>
+ #endif /* ANDROID_CHANGES */
+ 
++typedef struct _pseudo_FILE {
++    int fd;
++    off_t maplen;
++    void* mapping;
++    off_t offset;
++} _pseudo_FILE;
++
++#define _PSEUDO_FILE_INITIALIZER { -1, 0, MAP_FAILED, 0 }
++
++static void
++_pseudo_fclose(_pseudo_FILE * __restrict__ fp)
++{
++    assert(fp);
++    fp->offset = 0;
++    if (fp->mapping != MAP_FAILED) {
++        (void) munmap(fp->mapping, fp->maplen);
++        fp->mapping = MAP_FAILED;
++    }
++    fp->maplen = 0;
++    if (fp->fd != -1) {
++        (void) close(fp->fd);
++        fp->fd = -1;
++    }
++}
++
++static _pseudo_FILE *
++_pseudo_fopen_r(_pseudo_FILE * __restrict__ fp, const char* fname)
++{
++    struct stat statbuf;
++    assert(fp);
++    fp->fd = open(fname, O_RDONLY);
++    if (fp->fd < 0) {
++        fp->fd = -1;
++        return NULL;
++    }
++    if ((0 != fstat(fp->fd, &statbuf)) || (statbuf.st_size <= 0)) {
++        close(fp->fd);
++        fp->fd = -1;
++        return NULL;
++    }
++    fp->maplen = statbuf.st_size;
++    fp->mapping = mmap(NULL, fp->maplen, PROT_READ, MAP_PRIVATE, fp->fd, 0);
++    if (fp->mapping == MAP_FAILED) {
++        close(fp->fd);
++        fp->fd = -1;
++        return NULL;
++    }
++    fp->offset = 0;
++    return fp;
++}
++
++static void
++_pseudo_rewind(_pseudo_FILE * __restrict__ fp)
++{
++    assert(fp);
++    fp->offset = 0;
++}
++
++static char*
++_pseudo_fgets(char* buf, int bufsize, _pseudo_FILE * __restrict__ fp)
++{
++    char* current;
++    char* endp;
++    int maxcopy;
++    assert(fp);
++    maxcopy = fp->maplen - fp->offset;
++    if (fp->mapping == MAP_FAILED)
++        return NULL;
++    if (maxcopy > bufsize - 1)
++        maxcopy = bufsize - 1;
++    if (maxcopy <= 0)
++        return NULL;
++    current = ((char*) fp->mapping) + fp->offset;
++    endp = memccpy(buf, current, '\n', maxcopy);
++    if (endp)
++        maxcopy = endp - buf;
++    buf[maxcopy] = '\0';
++    fp->offset += maxcopy;
++    return buf;
++}
++
+ typedef union sockaddr_union {
+     struct sockaddr     generic;
+     struct sockaddr_in  in;
+@@ -231,9 +326,9 @@ static int ip6_str2scopeid(char *, struc
+ static struct addrinfo *getanswer(const querybuf *, int, const char *, int,
+ 	const struct addrinfo *);
+ static int _dns_getaddrinfo(void *, void *, va_list);
+-static void _sethtent(FILE **);
+-static void _endhtent(FILE **);
+-static struct addrinfo *_gethtent(FILE **, const char *,
++static void _sethtent(_pseudo_FILE * __restrict__);
++static void _endhtent(_pseudo_FILE * __restrict__);
++static struct addrinfo *_gethtent(_pseudo_FILE * __restrict__, const char *,
+     const struct addrinfo *);
+ static int _files_getaddrinfo(void *, void *, va_list);
+ 
+@@ -303,19 +398,52 @@ do { 								\
+ #define MATCH(x, y, w) 							\
+ 	((x) == (y) || (/*CONSTCOND*/(w) && ((x) == ANY || (y) == ANY)))
+ 
++#pragma GCC visibility push(default)
++
++extern const char *
++__wrap_gai_strerror(int ecode);
++extern void
++__wrap_freeaddrinfo(struct addrinfo *ai);
++extern int
++__wrap_getaddrinfo(const char *hostname, const char *servname,
++    const struct addrinfo *hints, struct addrinfo **res);
++
++int android_sdk_version;
++
++#pragma GCC visibility pop
++
++int android_sdk_version = -1;
++
++static int honeycomb_or_later()
++{
++#ifdef MOZ_GETADDRINFO_LOG_VERBOSE
++	__android_log_print(ANDROID_LOG_INFO, "getaddrinfo",
++		"I am%s Honeycomb\n",
++		(android_sdk_version >= 11) ? "" : " not");
++#endif
++	return android_sdk_version >= 11;
++}
++
+ const char *
+-gai_strerror(int ecode)
++__wrap_gai_strerror(int ecode)
+ {
++	if (honeycomb_or_later())
++		return gai_strerror(ecode);
+ 	if (ecode < 0 || ecode > EAI_MAX)
+ 		ecode = EAI_MAX;
+ 	return ai_errlist[ecode];
+ }
+ 
+ void
+-freeaddrinfo(struct addrinfo *ai)
++__wrap_freeaddrinfo(struct addrinfo *ai)
+ {
+ 	struct addrinfo *next;
+ 
++	if (honeycomb_or_later()) {
++		freeaddrinfo(ai);
++		return;
++	}
++
+ 	assert(ai != NULL);
+ 
+ 	do {
+@@ -399,7 +527,7 @@ _have_ipv4() {
+ }
+ 
+ int
+-getaddrinfo(const char *hostname, const char *servname,
++__wrap_getaddrinfo(const char *hostname, const char *servname,
+     const struct addrinfo *hints, struct addrinfo **res)
+ {
+ 	struct addrinfo sentinel;
+@@ -410,6 +538,9 @@ getaddrinfo(const char *hostname, const 
+ 	struct addrinfo *pai;
+ 	const struct explore *ex;
+ 
++	if (honeycomb_or_later())
++		return getaddrinfo(hostname, servname, hints, res);
++
+ 	/* hostname is allowed to be NULL */
+ 	/* servname is allowed to be NULL */
+ 	/* hints is allowed to be NULL */
+@@ -594,7 +725,7 @@ getaddrinfo(const char *hostname, const 
+  free:
+  bad:
+ 	if (sentinel.ai_next)
+-		freeaddrinfo(sentinel.ai_next);
++		__wrap_freeaddrinfo(sentinel.ai_next);
+ 	*res = NULL;
+ 	return error;
+ }
+@@ -655,7 +786,7 @@ explore_fqdn(const struct addrinfo *pai,
+ 
+ free:
+ 	if (result)
+-		freeaddrinfo(result);
++		__wrap_freeaddrinfo(result);
+ 	return error;
+ }
+ 
+@@ -723,7 +854,7 @@ explore_null(const struct addrinfo *pai,
+ 
+ free:
+ 	if (sentinel.ai_next)
+-		freeaddrinfo(sentinel.ai_next);
++		__wrap_freeaddrinfo(sentinel.ai_next);
+ 	return error;
+ }
+ 
+@@ -810,7 +941,7 @@ explore_numeric(const struct addrinfo *p
+ free:
+ bad:
+ 	if (sentinel.ai_next)
+-		freeaddrinfo(sentinel.ai_next);
++		__wrap_freeaddrinfo(sentinel.ai_next);
+ 	return error;
+ }
+ 
+@@ -1373,8 +1504,6 @@ _get_label(const struct sockaddr *addr)
+ 		const struct sockaddr_in6 *addr6 = (const struct sockaddr_in6 *)addr;
+ 		if (IN6_IS_ADDR_LOOPBACK(&addr6->sin6_addr)) {
+ 			return 0;
+-		} else if (IN6_IS_ADDR_ULA(&addr6->sin6_addr)) {
+-			return 1;
+ 		} else if (IN6_IS_ADDR_V4MAPPED(&addr6->sin6_addr)) {
+ 			return 3;
+ 		} else if (IN6_IS_ADDR_6TO4(&addr6->sin6_addr)) {
+@@ -1414,8 +1543,6 @@ _get_precedence(const struct sockaddr *a
+ 		const struct sockaddr_in6 *addr6 = (const struct sockaddr_in6 *)addr;
+ 		if (IN6_IS_ADDR_LOOPBACK(&addr6->sin6_addr)) {
+ 			return 60;
+-		} else if (IN6_IS_ADDR_ULA(&addr6->sin6_addr)) {
+-			return 50;
+ 		} else if (IN6_IS_ADDR_V4MAPPED(&addr6->sin6_addr)) {
+ 			return 30;
+ 		} else if (IN6_IS_ADDR_6TO4(&addr6->sin6_addr)) {
+@@ -1804,27 +1931,24 @@ _dns_getaddrinfo(void *rv, void	*cb_data
+ }
+ 
+ static void
+-_sethtent(FILE **hostf)
++_sethtent(_pseudo_FILE * __restrict__ hostf)
+ {
+-
+-	if (!*hostf)
+-		*hostf = fopen(_PATH_HOSTS, "r" );
++	assert(hostf);
++	if (hostf->mapping == MAP_FAILED)
++		(void) _pseudo_fopen_r(hostf, _PATH_HOSTS);
+ 	else
+-		rewind(*hostf);
++		_pseudo_rewind(hostf);
+ }
+ 
+ static void
+-_endhtent(FILE **hostf)
++_endhtent(_pseudo_FILE * __restrict__ hostf)
+ {
+-
+-	if (*hostf) {
+-		(void) fclose(*hostf);
+-		*hostf = NULL;
+-	}
++	assert(hostf);
++	(void) _pseudo_fclose(hostf);
+ }
+ 
+ static struct addrinfo *
+-_gethtent(FILE **hostf, const char *name, const struct addrinfo *pai)
++_gethtent(_pseudo_FILE * __restrict__ hostf, const char *name, const struct addrinfo *pai)
+ {
+ 	char *p;
+ 	char *cp, *tname, *cname;
+@@ -1833,14 +1957,17 @@ _gethtent(FILE **hostf, const char *name
+ 	const char *addr;
+ 	char hostbuf[8*1024];
+ 
++	assert(hostf);
+ //	fprintf(stderr, "_gethtent() name = '%s'\n", name);
+ 	assert(name != NULL);
+ 	assert(pai != NULL);
+ 
+-	if (!*hostf && !(*hostf = fopen(_PATH_HOSTS, "r" )))
++	if (hostf->mapping == MAP_FAILED)
++		(void) _pseudo_fopen_r(hostf, _PATH_HOSTS);
++	if (hostf->mapping == MAP_FAILED)
+ 		return (NULL);
+  again:
+-	if (!(p = fgets(hostbuf, sizeof hostbuf, *hostf)))
++	if (!(p = _pseudo_fgets(hostbuf, sizeof hostbuf, hostf)))
+ 		return (NULL);
+ 	if (*p == '#')
+ 		goto again;
+@@ -1872,7 +1999,7 @@ _gethtent(FILE **hostf, const char *name
+ found:
+ 	hints = *pai;
+ 	hints.ai_flags = AI_NUMERICHOST;
+-	error = getaddrinfo(addr, NULL, &hints, &res0);
++	error = __wrap_getaddrinfo(addr, NULL, &hints, &res0);
+ 	if (error)
+ 		goto again;
+ 	for (res = res0; res; res = res->ai_next) {
+@@ -1881,7 +2008,7 @@ found:
+ 
+ 		if (pai->ai_flags & AI_CANONNAME) {
+ 			if (get_canonname(pai, res, cname) != 0) {
+-				freeaddrinfo(res0);
++				__wrap_freeaddrinfo(res0);
+ 				goto again;
+ 			}
+ 		}
+@@ -1897,7 +2024,7 @@ _files_getaddrinfo(void *rv, void *cb_da
+ 	const struct addrinfo *pai;
+ 	struct addrinfo sentinel, *cur;
+ 	struct addrinfo *p;
+-	FILE *hostf = NULL;
++	_pseudo_FILE hostf = _PSEUDO_FILE_INITIALIZER;
+ 
+ 	name = va_arg(ap, char *);
+ 	pai = va_arg(ap, struct addrinfo *);
