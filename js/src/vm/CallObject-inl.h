@@ -134,7 +134,7 @@ CallObject::setVar(uintN i, const js::Value &v)
 inline void
 CallObject::copyValues(uintN nargs, Value *argv, uintN nvars, Value *slots)
 {
-    JS_ASSERT(numSlots() >= RESERVED_SLOTS + nargs + nvars);
+    JS_ASSERT(slotInRange(RESERVED_SLOTS + nargs + nvars, /* sentinelAllowed = */ true));
     copySlotRange(RESERVED_SLOTS, argv, nargs);
     copySlotRange(RESERVED_SLOTS + nargs, slots, nvars);
 }

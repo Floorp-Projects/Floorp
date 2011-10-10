@@ -116,11 +116,13 @@ JSObject::updateFlags(const js::Shape *shape, bool isDefinitelyAtom)
         setIndexed();
 }
 
-inline void
+inline bool
 JSObject::extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom)
 {
-    setLastProperty(shape);
+    if (!setLastProperty(cx, shape))
+        return false;
     updateFlags(shape, isDefinitelyAtom);
+    return true;
 }
 
 namespace js {
@@ -132,7 +134,7 @@ StringObject::init(JSContext *cx, JSString *str)
 
     const Shape **shapep = &cx->compartment->initialStringShape;
     if (*shapep) {
-        setLastProperty(*shapep);
+        setLastPropertyInfallible(*shapep);
     } else {
         *shapep = assignInitialShape(cx);
         if (!*shapep)
@@ -263,8 +265,8 @@ Shape::removeFromDictionary(JSObject *obj)
     JS_ASSERT(obj->inDictionaryMode());
     JS_ASSERT(listp);
 
-    JS_ASSERT(obj->lastProp->inDictionary());
-    JS_ASSERT(obj->lastProp->listp == &obj->lastProp);
+    JS_ASSERT(obj->shape_->inDictionary());
+    JS_ASSERT(obj->shape_->listp == &obj->shape_);
 
     if (parent)
         parent->listp = listp;

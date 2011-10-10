@@ -187,14 +187,16 @@ struct Shape {
 };
 
 struct Object {
-    Shape       *lastProp;
+    Shape       *shape;
+    TypeObject  *type;
     uint32      flags;
-    void        *_2;
     JSObject    *parent;
     void        *privateData;
-    jsuword     _3;
     js::Value   *slots;
-    TypeObject  *type;
+    js::Value   *_1;
+#if JS_BITS_PER_WORD == 32
+    js::Value   *_2;
+#endif
 
     static const uint32 FIXED_SLOTS_SHIFT = 27;
 
@@ -224,7 +226,7 @@ extern JS_FRIEND_DATA(js::Class) XMLClass;
 inline js::Class *
 GetObjectClass(const JSObject *obj)
 {
-    return reinterpret_cast<const shadow::Object*>(obj)->lastProp->base->clasp;
+    return reinterpret_cast<const shadow::Object*>(obj)->shape->base->clasp;
 }
 
 inline JSClass *
@@ -251,12 +253,6 @@ GetObjectPrivate(const JSObject *obj)
     return reinterpret_cast<const shadow::Object*>(obj)->privateData;
 }
 
-#ifdef DEBUG
-extern JS_FRIEND_API(void) CheckReservedSlot(const JSObject *obj, size_t slot);
-#else
-inline void CheckReservedSlot(const JSObject *obj, size_t slot) {}
-#endif
-
 /*
  * Get a slot that is both reserved for object's clasp *and* is fixed (fits
  * within the maximum capacity for the object's fixed slots).
@@ -264,14 +260,14 @@ inline void CheckReservedSlot(const JSObject *obj, size_t slot) {}
 inline const Value &
 GetReservedSlot(const JSObject *obj, size_t slot)
 {
-    CheckReservedSlot(obj, slot);
+    JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
 inline void
 SetReservedSlot(JSObject *obj, size_t slot, const Value &value)
 {
-    CheckReservedSlot(obj, slot);
+    JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     reinterpret_cast<shadow::Object *>(obj)->slotRef(slot) = value;
 }
 

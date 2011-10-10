@@ -753,7 +753,7 @@ JSObject::initRegExp(JSContext *cx, js::RegExp *re)
             if (!*shapep)
                 return false;
         }
-        setLastProperty(*shapep);
+        setLastPropertyInfallible(*shapep);
         JS_ASSERT(!nativeEmpty());
     }
 

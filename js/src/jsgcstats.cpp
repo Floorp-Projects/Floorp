@@ -45,6 +45,7 @@
 #include "jscompartment.h"
 
 #include "jsgcinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::gc;

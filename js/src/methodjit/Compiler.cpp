@@ -4295,9 +4295,12 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
                 if (rejoin == REJOIN_GETTER)
                     testPushedType(rejoin, -1);
             }
+            RegisterID result = frame.allocReg();
             RegisterID reg = frame.tempRegForData(top);
             frame.pop();
-            frame.pushWord(Address(reg, offsetof(JSObject, privateData)), JSVAL_TYPE_INT32);
+            masm.loadPtr(Address(reg, JSObject::offsetOfElements()), result);
+            masm.load32(Address(result, ObjectElements::offsetOfLength()), result);
+            frame.pushTypedPayload(JSVAL_TYPE_INT32, result);
             if (!isObject)
                 stubcc.rejoin(Changes(1));
             return true;
@@ -4474,7 +4477,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
         testPushedType(rejoin, -1);
 
     /* Load the base slot address. */
-    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
+    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, JSObject::offsetOfSlots()),
                                                                objReg);
 
     /* Copy the slot value to the expression stack. */
@@ -4591,7 +4594,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     testPushedType(REJOIN_FALLTHROUGH, -1);
 
     /* Load the base slot address. */
-    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
+    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, JSObject::offsetOfSlots()),
                                                                objReg);
 
     /* Copy the slot value to the expression stack. */
@@ -4742,7 +4745,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     testPushedType(REJOIN_FALLTHROUGH, -1);
 
     /* Load the base slot address. */
-    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
+    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, JSObject::offsetOfSlots()),
                                                                objReg);
 
     /* Copy the slot value to the expression stack. */
@@ -5250,7 +5253,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
     }
 
     /* Load dslots. */
-    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
+    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, JSObject::offsetOfSlots()),
                                                        objReg);
 
     /* Store RHS into object slot. */
@@ -5985,7 +5988,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
 
         objReg = frame.allocReg();
 
-        masm.loadPtrFromImm(&obj->lastProp, objReg);
+        masm.loadPtrFromImm(obj->addressOfShape(), objReg);
         shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, objReg,
                                              ic.shape, ImmPtr(NULL));
         masm.move(ImmPtr(obj), objReg);
@@ -6012,7 +6015,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
     /* Garbage value. */
     uint32 slot = 1 << 24;
 
-    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+    masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), objReg);
     Address address(objReg, slot);
 
     /* Allocate any register other than objReg. */
@@ -6214,7 +6217,7 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
         ic.shapeReg = ic.objReg;
         ic.objConst = true;
 
-        masm.loadPtrFromImm(&obj->lastProp, ic.shapeReg);
+        masm.loadPtrFromImm(obj->addressOfShape(), ic.shapeReg);
         shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, ic.shapeReg,
                                              ic.shape, ImmPtr(NULL));
         masm.move(ImmPtr(obj), ic.objReg);
@@ -6240,7 +6243,7 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
 
     ic.usePropertyCache = usePropertyCache;
 
-    masm.loadPtr(Address(ic.objReg, offsetof(JSObject, slots)), ic.objReg);
+    masm.loadPtr(Address(ic.objReg, JSObject::offsetOfSlots()), ic.objReg);
     Address address(ic.objReg, slot);
 
     if (ic.vr.isConstant()) {
@@ -6448,7 +6451,7 @@ mjit::Compiler::jsop_newinit()
         !globalObj ||
         (isArray && count >= gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST)) ||
         (!isArray && !baseobj) ||
-        (!isArray && baseobj->hasSlotsArray())) {
+        (!isArray && baseobj->hasDynamicSlots())) {
         prepareStubCall(Uses(0));
         masm.storePtr(ImmPtr(type), FrameAddress(offsetof(VMFrame, scratch)));
         masm.move(ImmPtr(stubArg), Registers::ArgReg1);

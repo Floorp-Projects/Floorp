@@ -2250,15 +2250,17 @@ namespace js {
 /************************************************************************/
 
 static JS_ALWAYS_INLINE void
-ClearValueRange(Value *vec, uintN len, bool useHoles)
+ClearValueRange(Value *vec, uintN len)
 {
-    if (useHoles) {
-        for (uintN i = 0; i < len; i++)
-            vec[i].setMagic(JS_ARRAY_HOLE);
-    } else {
-        for (uintN i = 0; i < len; i++)
-            vec[i].setUndefined();
-    }
+    for (uintN i = 0; i < len; i++)
+        vec[i].setUndefined();
+}
+
+static JS_ALWAYS_INLINE void
+SetValueRangeToHoles(Value *vec, uintN len)
+{
+    for (uintN i = 0; i < len; i++)
+        vec[i].setMagic(JS_ARRAY_HOLE);
 }
 
 static JS_ALWAYS_INLINE void
