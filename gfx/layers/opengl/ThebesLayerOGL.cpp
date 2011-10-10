@@ -879,17 +879,30 @@ ShadowThebesLayerOGL::~ShadowThebesLayerOGL()
 {}
 
 void
+ShadowThebesLayerOGL::SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
+                                     const nsIntRegion& aValidRegion)
+{
+  if (mDestroyed) {
+    return;
+  }
+
+  if (!mBuffer) {
+    mBuffer = new ShadowBufferOGL(this);
+  }
+
+  NS_ASSERTION(OptionalThebesBuffer::Tnull_t == aNewFront.type(),
+               "Only one system-memory buffer expected");
+}
+
+void
 ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
                            const nsIntRegion& aUpdatedRegion,
-                           OptionalThebesBuffer* aNewBack,
+                           ThebesBuffer* aNewBack,
                            nsIntRegion* aNewBackValidRegion,
                            OptionalThebesBuffer* aReadOnlyFront,
                            nsIntRegion* aFrontUpdatedRegion)
 {
-  if (!mDestroyed) {
-    if (!mBuffer) {
-      mBuffer = new ShadowBufferOGL(this);
-    }
+  if (!mDestroyed && mBuffer) {
     nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront.buffer());
     mBuffer->Upload(surf, aUpdatedRegion, aNewFront.rect(), aNewFront.rotation());
   }
