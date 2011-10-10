@@ -90,7 +90,7 @@ public:
   }
 
   ~AutoTimer() {
-    Accumulate(id, static_cast<PRUint32>((TimeStamp::Now() - start).ToMilliseconds()));
+    AccumulateTimeDelta(id, start);
   }
 
 private:
