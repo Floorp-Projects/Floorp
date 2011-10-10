@@ -3949,7 +3949,6 @@ ConstructProxyObject(XPCCallContext &ccx,
 
     nsWrapperCache *cache = aHelper.GetWrapperCache();
     JSObject *flat = cache->GetWrapper();
-    NS_ASSERTION(flat, "PreCreate is supposed to create the wrapper");
     return flat;
 }
 
