@@ -188,7 +188,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: isShowingCachedData
   // Returns a boolean indicates whether the cached data is being displayed or
   // not. 
-  isShowingCachedData: function() {
+  isShowingCachedData: function TabItem_isShowingCachedData() {
     return (this._cachedImageData != null);
   },
 
@@ -888,7 +888,7 @@ let TabItems = {
   // ----------
   // Function: isComplete
   // Return whether the xul:tab has fully loaded.
-  isComplete: function TabItems_update(tab) {
+  isComplete: function TabItems_isComplete(tab) {
     // If our readyState is complete, but we're showing about:blank,
     // and we're not loading about:blank, it means we haven't really
     // started loading. This can happen to the first few tabs in a
