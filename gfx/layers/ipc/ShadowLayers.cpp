@@ -185,6 +185,31 @@ ShadowLayerForwarder::CreatedCanvasLayer(ShadowableLayer* aCanvas)
 }
 
 void
+ShadowLayerForwarder::CreatedThebesBuffer(ShadowableLayer* aThebes,
+                                          const nsIntRegion& aFrontValidRegion,
+                                          const nsIntRect& aBufferRect,
+                                          const SurfaceDescriptor& aTempFrontBuffer)
+{
+  OptionalThebesBuffer buffer = null_t();
+  if (IsSurfaceDescriptorValid(aTempFrontBuffer)) {
+    buffer = ThebesBuffer(aTempFrontBuffer,
+                          aBufferRect,
+                          nsIntPoint(0, 0));
+  }
+  mTxn->AddEdit(OpCreateThebesBuffer(NULL, Shadow(aThebes),
+                                     buffer,
+                                     aFrontValidRegion));
+}
+
+void
+ShadowLayerForwarder::DestroyedThebesBuffer(ShadowableLayer* aThebes,
+                                            const SurfaceDescriptor& aBackBufferToDestroy)
+{
+  mTxn->AddEdit(OpDestroyThebesFrontBuffer(NULL, Shadow(aThebes)));
+  mTxn->AddBufferToDestroy(aBackBufferToDestroy);
+}
+
+void
 ShadowLayerForwarder::Mutated(ShadowableLayer* aMutant)
 {
   mTxn->AddMutant(aMutant);
