@@ -134,10 +134,8 @@ Shape::handoffTableTo(Shape *shape)
 
     BaseShape *nbase = base();
 
-    /* Update the slot span when growing dictionaries. */
     uint32 span = nbase->slotSpan();
-    if (shape->hasSlot())
-        span = Max(span, shape->slot() + 1);
+    JS_ASSERT_IF(shape->hasSlot(), span > shape->slot());
 
     PropertyTable &table = nbase->table();
 
@@ -359,6 +357,10 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, Shape &child)
         shape = js_NewGCShape(cx);
         if (!shape)
             return NULL;
+        if (child.hasSlot() && child.slot() >= lastProperty()->base()->slotSpan()) {
+            if (!setSlotSpan(cx, child.slot() + 1))
+                return NULL;
+        }
         shape->initDictionaryShape(child, &shape_);
     } else {
         shape = JS_PROPERTY_TREE(cx).getChild(cx, parent, child);
