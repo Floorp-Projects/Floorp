@@ -679,8 +679,10 @@ JSRuntime::JSRuntime()
 #endif
     gcCallback(NULL),
     gcMallocBytes(0),
-    gcExtraRootsTraceOp(NULL),
-    gcExtraRootsData(NULL),
+    gcBlackRootsTraceOp(NULL),
+    gcBlackRootsData(NULL),
+    gcGrayRootsTraceOp(NULL),
+    gcGrayRootsData(NULL),
     NaNValue(UndefinedValue()),
     negativeInfinityValue(UndefinedValue()),
     positiveInfinityValue(UndefinedValue()),
@@ -2283,10 +2285,10 @@ JS_UnlockGCThingRT(JSRuntime *rt, void *thing)
 }
 
 JS_PUBLIC_API(void)
-JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
+JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
-    rt->gcExtraRootsTraceOp = traceOp;
-    rt->gcExtraRootsData = data;
+    rt->gcBlackRootsTraceOp = traceOp;
+    rt->gcBlackRootsData = data;
 }
 
 JS_PUBLIC_API(void)
