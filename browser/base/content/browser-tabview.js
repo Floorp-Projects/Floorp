@@ -42,6 +42,7 @@ let TabView = {
   _window: null,
   _initialized: false,
   _browserKeyHandlerInitialized: false,
+  _closedLastVisibleTabBeforeFrameInitialized: false,
   _isFrameLoading: false,
   _initFrameCallbacks: [],
   _lastSessionGroupName: null,
@@ -124,14 +125,24 @@ let TabView = {
         let self = this;
         // if a tab is changed from hidden to unhidden and the iframe is not
         // initialized, load the iframe and setup the tab.
-        this._tabShowEventListener = function (event) {
+        this._tabShowEventListener = function(event) {
           if (!self._window)
             self._initFrame(function() {
               self._window.UI.onTabSelect(gBrowser.selectedTab);
+              if (self._closedLastVisibleTabBeforeFrameInitialized) {
+                self._closedLastVisibleTabBeforeFrameInitialized = false;
+                self._window.UI.showTabView(false);
+              }
             });
         };
+        this._tabCloseEventListener = function(event) {
+          if (!self._window && gBrowser.visibleTabs.length == 0)
+            self._closedLastVisibleTabBeforeFrameInitialized = true;
+        };
         gBrowser.tabContainer.addEventListener(
-          "TabShow", this._tabShowEventListener, true);
+          "TabShow", this._tabShowEventListener, false);
+        gBrowser.tabContainer.addEventListener(
+          "TabClose", this._tabCloseEventListener, false);
 
        // grab the last used group title
        this._lastSessionGroupName = sessionstore.getWindowValue(window,
@@ -161,10 +172,13 @@ let TabView = {
 
     Services.prefs.removeObserver(this.PREF_BRANCH, this);
 
-    if (this._tabShowEventListener) {
+    if (this._tabShowEventListener)
       gBrowser.tabContainer.removeEventListener(
-        "TabShow", this._tabShowEventListener, true);
-    }
+        "TabShow", this._tabShowEventListener, false);
+
+    if (this._tabCloseEventListener)
+      gBrowser.tabContainer.removeEventListener(
+        "TabClose", this._tabCloseEventListener, false);
 
     this._initialized = false;
   },
@@ -213,10 +227,14 @@ let TabView = {
 
       if (self._tabShowEventListener) {
         gBrowser.tabContainer.removeEventListener(
-          "TabShow", self._tabShowEventListener, true);
+          "TabShow", self._tabShowEventListener, false);
         self._tabShowEventListener = null;
       }
-
+      if (self._tabCloseEventListener) {
+        gBrowser.tabContainer.removeEventListener(
+          "TabClose", self._tabCloseEventListener, false);
+        self._tabCloseEventListener = null;
+      }
       self._initFrameCallbacks.forEach(function (cb) cb());
       self._initFrameCallbacks = [];
     }, false);
