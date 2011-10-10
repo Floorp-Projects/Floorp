@@ -762,11 +762,12 @@ nsAppStartup::GetStartupInfo()
 
   MaybeDefineProperty(cx, obj, "process", gProcessCreationTimestamp);
 
-  if (gXRE_mainTimestamp >= gProcessCreationTimestamp)
-    MaybeDefineProperty(cx, obj, "main", gXRE_mainTimestamp);
-  else
+  if (gXRE_mainTimestamp < gProcessCreationTimestamp)
     Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, INVALID_MAIN);
 
+  // always define main to aid with bug 689256
+  MaybeDefineProperty(cx, obj, "main", gXRE_mainTimestamp);
+  
   if (gCreateTopLevelWindowTimestamp >= gProcessCreationTimestamp)
     MaybeDefineProperty(cx, obj, "createTopLevelWindow", gCreateTopLevelWindowTimestamp);
   else
