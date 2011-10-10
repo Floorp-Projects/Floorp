@@ -47,9 +47,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "gfxPlatform.h"
 #include "nsSVGSVGElement.h"
-#include "mozilla/Preferences.h"
-
-using namespace mozilla;
 
 class nsSVGImageFrame;
 
@@ -75,15 +72,14 @@ private:
   nsSVGImageFrame *mFrame;
 };
 
-typedef nsSVGPathGeometryFrame nsSVGImageFrameBase;
 
-class nsSVGImageFrame : public nsSVGImageFrameBase
+class nsSVGImageFrame : public nsSVGPathGeometryFrame
 {
   friend nsIFrame*
   NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
-  nsSVGImageFrame(nsStyleContext* aContext) : nsSVGImageFrameBase(aContext) {}
+  nsSVGImageFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
   virtual ~nsSVGImageFrame();
 
 public:
@@ -172,7 +168,7 @@ nsSVGImageFrame::Init(nsIContent* aContent,
   NS_ASSERTION(image, "Content is not an SVG image!");
 #endif
 
-  nsresult rv = nsSVGImageFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsresult rv = nsSVGPathGeometryFrame::Init(aContent, aParent, aPrevInFlow);
   if (NS_FAILED(rv)) return rv;
   
   mListener = new nsSVGImageListener(this);
@@ -199,34 +195,18 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                   nsIAtom*        aAttribute,
                                   PRInt32         aModType)
 {
-  if (aNameSpaceID == kNameSpaceID_None &&
-      (aAttribute == nsGkAtoms::x ||
-       aAttribute == nsGkAtoms::y ||
-       aAttribute == nsGkAtoms::width ||
-       aAttribute == nsGkAtoms::height ||
-       aAttribute == nsGkAtoms::preserveAspectRatio)) {
-    nsSVGUtils::UpdateGraphic(this);
-    return NS_OK;
-  }
-  if (aNameSpaceID == kNameSpaceID_XLink &&
-      aAttribute == nsGkAtoms::href) {
-    // If caller is not chrome and dom.disable_image_src_set is true,
-    // prevent setting image.src by exiting early
-    if (Preferences::GetBool("dom.disable_image_src_set") &&
-        !nsContentUtils::IsCallerChrome()) {
-      return NS_OK;
-    }
-    nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
+   if (aNameSpaceID == kNameSpaceID_None &&
+       (aAttribute == nsGkAtoms::x ||
+        aAttribute == nsGkAtoms::y ||
+        aAttribute == nsGkAtoms::width ||
+        aAttribute == nsGkAtoms::height ||
+        aAttribute == nsGkAtoms::preserveAspectRatio)) {
+     nsSVGUtils::UpdateGraphic(this);
+     return NS_OK;
+   }
 
-    if (element->mStringAttributes[nsSVGImageElement::HREF].IsExplicitlySet()) {
-      element->LoadSVGImage(PR_TRUE, PR_FALSE);
-    } else {
-      element->CancelImageRequests(PR_FALSE);
-    }
-  }
-
-  return nsSVGImageFrameBase::AttributeChanged(aNameSpaceID,
-                                               aAttribute, aModType);
+   return nsSVGPathGeometryFrame::AttributeChanged(aNameSpaceID,
+                                                   aAttribute, aModType);
 }
 
 gfxMatrix
@@ -446,7 +426,7 @@ nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
     // just fall back on our <image> element's own bounds here.
   }
 
-  return nsSVGImageFrameBase::GetFrameForPoint(aPoint);
+  return nsSVGPathGeometryFrame::GetFrameForPoint(aPoint);
 }
 
 nsIAtom *
