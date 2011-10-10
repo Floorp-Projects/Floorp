@@ -373,10 +373,12 @@ function ViewSourceReload()
                            Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
 }
 
-// Strips the |view-source:| for saveURL()
+// Strips the |view-source:| for internalSave()
 function ViewSourceSavePage()
 {
-  saveURL(window.content.location.href.substring(12), null, "SaveLinkTitle");
+  internalSave(window.content.location.href.substring(12), 
+               null, null, null, null, null,
+               "SaveLinkTitle", null, null, null, gPageLoader);
 }
 
 var PrintPreviewListener = {

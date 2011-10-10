@@ -705,24 +705,21 @@ let PlacesDBUtils = {
       ")");
     cleanupStatements.push(fixInvalidFaviconIds);
 
-/* XXX needs test
-    // L.2 recalculate visit_count
-    let detectWrongCountPlaces = DBConn.createStatement(
-      "SELECT id FROM moz_places h " +
-      "WHERE h.visit_count <> " +
-          "(SELECT count(*) FROM moz_historyvisits " +
-            "WHERE place_id = h.id AND visit_type NOT IN (0,4,7,8))");
-    while (detectWrongCountPlaces.executeStep()) {
-      let placeId = detectWrongCountPlaces.getInt64(0);
-      let fixCountForPlace = DBConn.createStatement(
-        "UPDATE moz_places SET visit_count = ( " +
-          "(SELECT count(*) FROM moz_historyvisits " +
-            "WHERE place_id = :place_id AND visit_type NOT IN (0,4,7,8)) + "
-        ") WHERE id = :place_id");
-      fixCountForPlace.params["place_id"] = placeId;
-      cleanupStatements.push(fixCountForPlace);
-    }
-*/
+    // L.2 recalculate visit_count and last_visit_date
+    let fixVisitStats = DBConn.createAsyncStatement(
+      "UPDATE moz_places " +
+      "SET visit_count = (SELECT count(*) FROM moz_historyvisits " +
+                         "WHERE place_id = moz_places.id AND visit_type NOT IN (0,4,7,8)), " +
+          "last_visit_date = (SELECT MAX(visit_date) FROM moz_historyvisits " +
+                             "WHERE place_id = moz_places.id) " +
+      "WHERE id IN ( " +
+        "SELECT h.id FROM moz_places h " +
+        "WHERE visit_count <> (SELECT count(*) FROM moz_historyvisits v " +
+                              "WHERE v.place_id = h.id AND visit_type NOT IN (0,4,7,8)) " +
+           "OR last_visit_date <> (SELECT MAX(visit_date) FROM moz_historyvisits v " +
+                                  "WHERE v.place_id = h.id) " +
+      ")");
+    cleanupStatements.push(fixVisitStats);
 
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
 
