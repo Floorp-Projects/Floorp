@@ -117,7 +117,7 @@ function run_test() {
   // Expire all expirable pages.
   setMaxPages(0);
 
-  let now = Date.now() * 1000;
+  let now = getExpirablePRTime();
   // Add some bookmarked page and timed annotations for each.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
@@ -144,6 +144,27 @@ function run_test() {
     add_old_anno(id, "persist_lm_months", "test", as.EXPIRE_MONTHS, 181, 179);
     // Add a 181 days old anno.
     add_old_anno(id, "expire_months", "test", as.EXPIRE_MONTHS, 181);
+
+    // Add a 6 days old anno.
+    add_old_anno(pageURI, "persist_days", "test", as.EXPIRE_DAYS, 6);
+    // Add a 8 days old anno, modified 5 days ago.
+    add_old_anno(pageURI, "persist_lm_days", "test", as.EXPIRE_DAYS, 8, 6);
+    // Add a 8 days old anno.
+    add_old_anno(pageURI, "expire_days", "test", as.EXPIRE_DAYS, 8);
+
+    // Add a 29 days old anno.
+    add_old_anno(pageURI, "persist_weeks", "test", as.EXPIRE_WEEKS, 29);
+    // Add a 31 days old anno, modified 29 days ago.
+    add_old_anno(pageURI, "persist_lm_weeks", "test", as.EXPIRE_WEEKS, 31, 29);
+    // Add a 31 days old anno.
+    add_old_anno(pageURI, "expire_weeks", "test", as.EXPIRE_WEEKS, 31);
+
+    // Add a 179 days old anno.
+    add_old_anno(pageURI, "persist_months", "test", as.EXPIRE_MONTHS, 179);
+    // Add a 181 days old anno, modified 179 days ago.
+    add_old_anno(pageURI, "persist_lm_months", "test", as.EXPIRE_MONTHS, 181, 179);
+    // Add a 181 days old anno.
+    add_old_anno(pageURI, "expire_months", "test", as.EXPIRE_MONTHS, 181);
   }
 
   // Add some visited page and timed annotations for each.
@@ -190,7 +211,7 @@ function run_test() {
       ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
        "persist_months", "persist_lm_months"].forEach(function(aAnno) {
         let pages = as.getPagesWithAnnotation(aAnno);
-        do_check_eq(pages.length, 5);
+        do_check_eq(pages.length, 10);
       });
 
       ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
