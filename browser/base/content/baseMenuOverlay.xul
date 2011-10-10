@@ -100,7 +100,6 @@
                   accesskey="&helpSafeMode.accesskey;"
                   label="&helpSafeMode.label;"
                   oncommand="safeModeRestart();"/>
-        <menuseparator/>
         <menuseparator id="aboutSeparator"/>
         <menuitem id="aboutName"
                   accesskey="&aboutProduct.accesskey;"
