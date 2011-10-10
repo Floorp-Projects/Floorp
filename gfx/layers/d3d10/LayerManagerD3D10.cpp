@@ -729,6 +729,11 @@ LayerManagerD3D10::Render()
         windowLayer = new WindowLayer(this);
         windowLayer->SetShadow(ConstructShadowFor(windowLayer));
         CreatedThebesLayer(windowLayer);
+        ShadowLayerForwarder::CreatedThebesBuffer(windowLayer,
+                                                  contentRect,
+                                                  contentRect,
+                                                  SurfaceDescriptor());
+
         mRootForShadowTree->InsertAfter(windowLayer, nsnull);
         ShadowLayerForwarder::InsertAfter(mRootForShadowTree, windowLayer);
     }
