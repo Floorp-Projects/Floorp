@@ -2356,6 +2356,7 @@ void
 TypeCompartment::print(JSContext *cx, bool force)
 {
     JSCompartment *compartment = this->compartment();
+    AutoEnterAnalysis enter(compartment);
 
     if (!force && !InferSpewActive(ISpewResult))
         return;
@@ -4724,7 +4725,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
 void
 ScriptAnalysis::printTypes(JSContext *cx)
 {
-    AutoEnterAnalysis enter(cx);
+    AutoEnterAnalysis enter(script->compartment());
     TypeCompartment *compartment = &script->compartment()->types;
 
     /*
