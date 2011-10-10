@@ -119,6 +119,7 @@ EXPORTS = \
 EXPORTS_mozilla = \
   AutoRestore.h \
   BlockingResourceBase.h \
+  COMPtrAndFlag.h \
   CondVar.h \
   DeadlockDetector.h \
   FileUtils.h \

@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
+#include "mozilla/COMPtrAndFlag.h"
 
 #define NS_IFOO_IID \
 { 0x6f7652e0,  0xee43, 0x11d1, \
@@ -586,6 +587,43 @@ main()
 			AVoidPtrPtrContext( getter_AddRefs(supportsP) );
 			AnISupportsPtrPtrContext( getter_AddRefs(supportsP) );
 		}
+
+    {
+      IBar* ibar1 = new IBar;
+      mozilla::COMPtrAndFlag<IFoo> foop( do_QueryInterface(ibar1) , false);
+      if (foop.Flag())
+        return -1;
+      if (foop.Ptr() != ibar1)
+        return -1;
+
+      foop.SetFlag(true);
+      if (!foop.Flag())
+        return -1;
+      if (foop.Ptr() != ibar1)
+        return -1;
+
+      IBar* ibar2 = new IBar;
+      mozilla::COMPtrAndFlag<IFoo> foop2( do_QueryInterface(ibar2) , true);
+
+      if (!foop2.Flag())
+        return -1;
+      if (foop2.Ptr() != ibar2)
+        return -1;
+
+      foop2.SetFlag(false);
+      if (foop2.Flag())
+        return -1;
+      if (foop2.Ptr() != ibar2)
+        return -1;
+
+    }
+
+    {
+      mozilla::COMPtrAndFlag<nsISupports> supportsP;
+
+      AVoidPtrPtrContext( getter_AddRefs(supportsP) );
+      AnISupportsPtrPtrContext( getter_AddRefs(supportsP) );
+    }
 
 
     printf("\n### Test 25: will a static |nsCOMPtr| |Release| before program termination?\n");
