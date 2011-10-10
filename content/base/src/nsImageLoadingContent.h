@@ -53,7 +53,6 @@
 #include "nsContentUtils.h" // NS_CONTENT_DELETE_LIST_MEMBER
 #include "nsString.h"
 #include "nsEventStates.h"
-#include "mozilla/COMPtrAndFlag.h"
 
 class nsIURI;
 class nsIDocument;
@@ -139,14 +138,13 @@ protected:
                      nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL);
 
   /**
-   * helpers to get the document for this content (from the nodeinfo
-   * and such).  Not named GetOwnerDoc/GetCurrentDoc to prevent ambiguous
-   * method names in subclasses
+   * helper to get the document for this content (from the nodeinfo
+   * and such).  Not named GetDocument to prevent ambiguous method
+   * names in subclasses
    *
    * @return the document we belong to
    */
-  nsIDocument* GetOurOwnerDoc();
-  nsIDocument* GetOurCurrentDoc();
+  nsIDocument* GetOurDocument();
 
   /**
    * CancelImageRequests is called by subclasses when they want to
@@ -186,11 +184,6 @@ protected:
    * default implementation returns CORS_NONE unconditionally.
    */
   virtual CORSMode GetCORSMode();
-
-  // Subclasses are *required* to call BindToTree/UnbindFromTree.
-  void BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                  nsIContent* aBindingParent, bool aCompileEventHandlers);
-  void UnbindFromTree(bool aDeep, bool aNullParent);
 
 private:
   /**
@@ -279,18 +272,13 @@ protected:
 
   void CreateStaticImageClone(nsImageLoadingContent* aDest) const;
 
-  // The flag on these pointers tells whether or not the image "should" be
-  // tracked by the document.  The only situation in which we should be
-  // tracked but aren't is when we are not in a document.
-  typedef mozilla::COMPtrAndFlag<imgIRequest> RequestWithState;
-
   /**
    * Prepare and returns a reference to the "next request". If there's already
    * a _usable_ current request (one with SIZE_AVAILABLE), this request is
    * "pending" until it becomes usable. Otherwise, this becomes the current
    * request.
    */
-   RequestWithState& PrepareNextRequest();
+   nsCOMPtr<imgIRequest>& PrepareNextRequest();
 
   /**
    * Called when we would normally call PrepareNextRequest(), but the request was
@@ -299,13 +287,14 @@ protected:
   void SetBlockedRequest(nsIURI* aURI, PRInt16 aContentDecision);
 
   /**
-   * Cleans up and cancels the appropriate request. Note that if you just want
+   * Returns a COMPtr reference to the current/pending image requests, cleaning
+   * up and canceling anything that was there before. Note that if you just want
    * to get rid of one of the requests, you should call
    * Clear*Request(NS_BINDING_ABORTED) instead, since it passes a more appropriate
    * aReason than Prepare*Request() does (NS_ERROR_IMAGE_SRC_CHANGED).
    */
-  void PrepareCurrentRequest();
-  void PreparePendingRequest();
+  nsCOMPtr<imgIRequest>& PrepareCurrentRequest();
+  nsCOMPtr<imgIRequest>& PreparePendingRequest();
 
   /**
    * Cancels and nulls-out the "current" and "pending" requests if they exist.
@@ -324,12 +313,12 @@ protected:
    *
    * No-op if aImage is null.
    */
-  nsresult TrackImage(RequestWithState& aImage);
-  nsresult UntrackImage(RequestWithState& aImage);
+  nsresult TrackImage(imgIRequest* aImage);
+  nsresult UntrackImage(imgIRequest* aImage);
 
   /* MEMBERS */
-  RequestWithState mCurrentRequest;
-  RequestWithState mPendingRequest;
+  nsCOMPtr<imgIRequest> mCurrentRequest;
+  nsCOMPtr<imgIRequest> mPendingRequest;
 
   // If the image was blocked or if there was an error loading, it's nice to
   // still keep track of what the URI was despite not having an imgIRequest.

@@ -965,7 +965,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
 
     // When in a plugin document, the document will take care of calling
     // instantiate
-    nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(GetOurOwnerDoc()));
+    nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(GetOurDocument()));
     if (pDoc) {
       bool willHandleInstantiation;
       pDoc->GetWillHandleInstantiation(&willHandleInstantiation);
