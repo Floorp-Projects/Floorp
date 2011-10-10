@@ -85,6 +85,7 @@ static PRLogModuleInfo *gCompressedImageAccountingLog = PR_NewLogModule ("Compre
 // Tweakable progressive decoding parameters
 static PRUint32 gDecodeBytesAtATime = 200000;
 static PRUint32 gMaxMSBeforeYield = 400;
+static PRUint32 gMaxBytesForSyncDecode = 150000;
 
 void
 RasterImage::SetDecodeBytesAtATime(PRUint32 aBytesAtATime)
@@ -95,6 +96,11 @@ void
 RasterImage::SetMaxMSBeforeYield(PRUint32 aMaxMS)
 {
   gMaxMSBeforeYield = aMaxMS;
+}
+void
+RasterImage::SetMaxBytesForSyncDecode(PRUint32 aMaxBytes)
+{
+  gMaxBytesForSyncDecode = aMaxBytes;
 }
 
 /* We define our own error checking macros here for 2 reasons:
@@ -683,12 +689,10 @@ RasterImage::GetFrame(PRUint32 aWhichFrame,
 
   nsresult rv = NS_OK;
 
-  PRUint32 desiredDecodeFlags = aFlags & DECODE_FLAGS_MASK;
-
   if (mDecoded) {
     // If we have decoded data, and it is not a perfect match for what we are
     // looking for, we must discard to be able to generate the proper data.
-
+    PRUint32 desiredDecodeFlags = aFlags & DECODE_FLAGS_MASK;
     if (desiredDecodeFlags != mFrameDecodeFlags) {
       // if we can't discard, then we're screwed; we have no way
       // to re-decode.  Similarly if we aren't allowed to do a sync
@@ -699,10 +703,10 @@ RasterImage::GetFrame(PRUint32 aWhichFrame,
         return NS_ERROR_NOT_AVAILABLE;
   
       ForceDiscard();
+  
+      mFrameDecodeFlags = desiredDecodeFlags;
     }
   }
-
-  mFrameDecodeFlags = desiredDecodeFlags;
 
   // If the caller requested a synchronous decode, do it
   if (aFlags & FLAG_SYNC_DECODE) {
@@ -2382,12 +2386,13 @@ RasterImage::RequestDecode()
   if (mBytesDecoded == mSourceData.Length())
     return NS_OK;
 
-  // If we can do decoding now, do so.  Small images will decode completely,
-  // large images will decode a bit and post themselves to the event loop
-  // to finish decoding.
-  if (!mDecoded && !mInDecoder && mHasSourceData)
-    return mWorker->Run();
+  // If it's a smallish image, it's not worth it to do things async
+  if (!mDecoded && !mInDecoder && mHasSourceData && (mSourceData.Length() < gMaxBytesForSyncDecode))
+    return SyncDecode();
 
+  // If we get this far, dispatch the worker. We do this instead of starting
+  // any immediate decoding to guarantee that all our decode notifications are
+  // dispatched asynchronously, and to ensure we stay responsive.
   return mWorker->Dispatch();
 }
 
