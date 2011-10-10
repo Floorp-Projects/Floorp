@@ -862,7 +862,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: _fadeAwayUndoButton
   // Fades away the undo button
-  _fadeAwayUndoButton: function GroupItem__fadeAwayUdoButton() {
+  _fadeAwayUndoButton: function GroupItem__fadeAwayUndoButton() {
     let self = this;
 
     if (this.$undoContainer) {
@@ -956,7 +956,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Sets up fade away undo button timeout. 
-  setupFadeAwayUndoButtonTimer: function() {
+  setupFadeAwayUndoButtonTimer: function GroupItem_setupFadeAwayUndoButtonTimer() {
     let self = this;
 
     if (!this._undoButtonTimeoutId) {
@@ -968,7 +968,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   
   // ----------
   // Cancels the fade away undo button timeout. 
-  _cancelFadeAwayUndoButtonTimer: function() {
+  _cancelFadeAwayUndoButtonTimer: function GroupItem__cancelFadeAwayUndoButtonTimer() {
     clearTimeout(this._undoButtonTimeoutId);
     this._undoButtonTimeoutId = null;
   }, 
@@ -2089,7 +2089,7 @@ let GroupItems = {
   // ----------
   // Function: getAppTabFavIconUrl
   // Gets the fav icon url for app tab.
-  getAppTabFavIconUrl: function GroupItems__getAppTabFavIconUrl(xulTab) {
+  getAppTabFavIconUrl: function GroupItems_getAppTabFavIconUrl(xulTab) {
     let iconUrl;
 
     if (UI.shouldLoadFavIcon(xulTab.linkedBrowser))
@@ -2548,7 +2548,7 @@ let GroupItems = {
   // Paramaters:
   //  tab - the <xul:tab>.
   //  groupItemId - the <groupItem>'s id.  If nothing, create a new <groupItem>.
-  moveTabToGroupItem : function GroupItems_moveTabToGroupItem (tab, groupItemId) {
+  moveTabToGroupItem : function GroupItems_moveTabToGroupItem(tab, groupItemId) {
     if (tab.pinned)
       return;
 

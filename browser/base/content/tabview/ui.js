@@ -1009,7 +1009,7 @@ let UI = {
   },
   
   // ----------
-  updateTabButton: function UI__updateTabButton() {
+  updateTabButton: function UI_updateTabButton() {
     let exitButton = document.getElementById("exit-button");
     let numberOfGroups = GroupItems.groupItems.length;
 
