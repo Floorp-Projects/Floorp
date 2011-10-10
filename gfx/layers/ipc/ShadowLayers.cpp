@@ -185,6 +185,13 @@ ShadowLayerForwarder::CreatedCanvasLayer(ShadowableLayer* aCanvas)
 }
 
 void
+ShadowLayerForwarder::DestroyedThebesBuffer(ShadowableLayer* aThebes,
+                                            const SurfaceDescriptor& aBackBufferToDestroy)
+{
+  mTxn->AddBufferToDestroy(aBackBufferToDestroy);
+}
+
+void
 ShadowLayerForwarder::Mutated(ShadowableLayer* aMutant)
 {
   mTxn->AddMutant(aMutant);
