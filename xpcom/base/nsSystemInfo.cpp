@@ -47,10 +47,6 @@
 
 #ifdef ANDROID
 #include "AndroidBridge.h"
-
-extern "C" {
-extern int android_sdk_version;
-}
 #endif
 
 nsSystemInfo::nsSystemInfo()
@@ -156,7 +152,6 @@ nsSystemInfo::Init()
         PRInt32 version;
         if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &version))
             version = 0;
-        android_sdk_version = version;
         if (version >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str))
             SetPropertyAsAString(NS_LITERAL_STRING("hardware"), str);
         SetPropertyAsAString(NS_LITERAL_STRING("shellName"), NS_LITERAL_STRING("Android"));
