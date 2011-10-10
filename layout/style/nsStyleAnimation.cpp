@@ -1360,8 +1360,8 @@ TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
     return PR_TRUE;
   }
 
-  if (func1 == eCSSKeyword_rotatez && func2 == eCSSKeyword_rotate ||
-      func1 == eCSSKeyword_rotate && func2 == eCSSKeyword_rotatez) {
+  if ((func1 == eCSSKeyword_rotatez && func2 == eCSSKeyword_rotate) ||
+      (func1 == eCSSKeyword_rotate && func2 == eCSSKeyword_rotatez)) {
     return PR_TRUE;
   }
   return PR_FALSE;

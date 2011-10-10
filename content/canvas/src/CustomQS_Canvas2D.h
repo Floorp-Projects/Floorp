@@ -375,17 +375,24 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
         return xpc_qsThrow(cx, NS_ERROR_DOM_TYPE_MISMATCH_ERR);
 
     JSObject *dataObject = JSVAL_TO_OBJECT(argv[0]);
-    int32 x, y;
-    if (!JS_ValueToECMAInt32(cx, argv[1], &x) ||
-        !JS_ValueToECMAInt32(cx, argv[2], &y))
-        return JS_FALSE;
 
-    uint32 w, h;
-    JSObject *darray;
+    double xd, yd;
+    if (!JS_ValueToNumber(cx, argv[1], &xd) ||
+        !JS_ValueToNumber(cx, argv[2], &yd)) {
+        return false;
+    }
 
-    // grab width, height, and the dense array from the dataObject
+    if (!NS_finite(xd) || !NS_finite(yd)) {
+        return xpc_qsThrow(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    }
+
+    int32 x = JS_DoubleToInt32(xd);
+    int32 y = JS_DoubleToInt32(yd);
+
+    // Grab width, height, and the dense array from the dataObject.
     js::AutoValueRooter tv(cx);
 
+    uint32 w, h;
     if (!GetImageDataDimensions(cx, dataObject, &w, &h))
         return JS_FALSE;
 
@@ -397,13 +404,25 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
           dirtyHeight = h;
 
     if (argc >= 7) {
-        if (!JS_ValueToECMAInt32(cx, argv[3], &dirtyX) ||
-            !JS_ValueToECMAInt32(cx, argv[4], &dirtyY) ||
-            !JS_ValueToECMAInt32(cx, argv[5], &dirtyWidth) ||
-            !JS_ValueToECMAInt32(cx, argv[6], &dirtyHeight))
-            return JS_FALSE;
+        double dx, dy, dw, dh;
+        if (!JS_ValueToNumber(cx, argv[3], &dx) ||
+            !JS_ValueToNumber(cx, argv[4], &dy) ||
+            !JS_ValueToNumber(cx, argv[5], &dw) ||
+            !JS_ValueToNumber(cx, argv[6], &dh)) {
+            return false;
+        }
 
-        hasDirtyRect = PR_TRUE;
+        if (!NS_finite(dx) || !NS_finite(dy) ||
+            !NS_finite(dw) || !NS_finite(dh)) {
+            return xpc_qsThrow(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+        }
+
+        dirtyX = JS_DoubleToInt32(dx);
+        dirtyY = JS_DoubleToInt32(dy);
+        dirtyWidth = JS_DoubleToInt32(dw);
+        dirtyHeight = JS_DoubleToInt32(dh);
+
+        hasDirtyRect = true;
     }
 
     if (!JS_GetProperty(cx, dataObject, "data", tv.jsval_addr()))
@@ -412,7 +431,7 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
     if (JSVAL_IS_PRIMITIVE(tv.jsval_value()))
         return xpc_qsThrow(cx, NS_ERROR_DOM_TYPE_MISMATCH_ERR);
 
-    darray = JSVAL_TO_OBJECT(tv.jsval_value());
+    JSObject *darray = JSVAL_TO_OBJECT(tv.jsval_value());
 
     js::AutoValueRooter tsrc_tvr(cx);
 
@@ -435,7 +454,7 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
     }
 
     // make the call
-    rv = self->PutImageData_explicit(x, y, w, h, (PRUint8*) JS_GetTypedArrayData(tsrc), JS_GetTypedArrayByteLength(tsrc), hasDirtyRect, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
+    rv = self->PutImageData_explicit(x, y, w, h, static_cast<PRUint8*>(JS_GetTypedArrayData(tsrc)), JS_GetTypedArrayByteLength(tsrc), hasDirtyRect, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
     if (NS_FAILED(rv))
         return xpc_qsThrowMethodFailed(cx, rv, vp);
 
