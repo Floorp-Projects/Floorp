@@ -144,7 +144,6 @@ public:
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
 
   virtual nsEventStates IntrinsicState() const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -254,12 +253,12 @@ nsHTMLImageElement::GetComplete(bool* aComplete)
   NS_PRECONDITION(aComplete, "Null out param!");
   *aComplete = PR_TRUE;
 
-  if (!mCurrentRequest.Ptr()) {
+  if (!mCurrentRequest) {
     return NS_OK;
   }
 
   PRUint32 status;
-  mCurrentRequest.Ptr()->GetImageStatus(&status);
+  mCurrentRequest->GetImageStatus(&status);
   *aComplete =
     (status &
      (imgIRequest::STATUS_LOAD_COMPLETE | imgIRequest::STATUS_ERROR)) != 0;
@@ -282,8 +281,8 @@ nsHTMLImageElement::GetWidthHeight()
   } else {
     const nsAttrValue* value;
     nsCOMPtr<imgIContainer> image;
-    if (mCurrentRequest.Ptr()) {
-      mCurrentRequest.Ptr()->GetImage(getter_AddRefs(image));
+    if (mCurrentRequest) {
+      mCurrentRequest->GetImage(getter_AddRefs(image));
     }
 
     if ((value = GetParsedAttr(nsGkAtoms::width)) &&
@@ -530,9 +529,6 @@ nsHTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent,
-                                    aCompileEventHandlers);
-
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
     // FIXME: Bug 660963 it would be nice if we could just have
     // ClearBrokenState update our state and do it fast...
@@ -548,13 +544,6 @@ nsHTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   return rv;
-}
-
-void
-nsHTMLImageElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
-  nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 void
@@ -614,12 +603,12 @@ nsHTMLImageElement::GetNaturalHeight(PRUint32* aNaturalHeight)
 
   *aNaturalHeight = 0;
 
-  if (!mCurrentRequest.Ptr()) {
+  if (!mCurrentRequest) {
     return NS_OK;
   }
   
   nsCOMPtr<imgIContainer> image;
-  mCurrentRequest.Ptr()->GetImage(getter_AddRefs(image));
+  mCurrentRequest->GetImage(getter_AddRefs(image));
   if (!image) {
     return NS_OK;
   }
@@ -638,12 +627,12 @@ nsHTMLImageElement::GetNaturalWidth(PRUint32* aNaturalWidth)
 
   *aNaturalWidth = 0;
 
-  if (!mCurrentRequest.Ptr()) {
+  if (!mCurrentRequest) {
     return NS_OK;
   }
   
   nsCOMPtr<imgIContainer> image;
-  mCurrentRequest.Ptr()->GetImage(getter_AddRefs(image));
+  mCurrentRequest->GetImage(getter_AddRefs(image));
   if (!image) {
     return NS_OK;
   }
