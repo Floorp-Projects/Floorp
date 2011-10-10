@@ -1334,11 +1334,11 @@ public class GeckoAppShell
         try {
             int showPassword =
                 Settings.System.getInt(GeckoApp.mAppContext.getContentResolver(),
-                                       Settings.System.TEXT_SHOW_PASSWORD, 1);
+                                       Settings.System.TEXT_SHOW_PASSWORD);
             return (showPassword > 0);
         }
         catch (Exception e) {
-            return true;
+            return false;
         }
     }
     public static void addPluginView(final View view,
