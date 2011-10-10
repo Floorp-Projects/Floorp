@@ -439,11 +439,6 @@ interface nsIDOMWindow : nsISupports
   readonly attribute nsIDOMMozURLProperty URL;
 
   /**
-   * Global storage, accessible by domain.
-   */
-  readonly attribute nsIDOMStorageList globalStorage;
-
-  /**
    * HTML5 event attributes that only apply to windows and <body>/<frameset>
    */
   [implicit_jscontext] attribute jsval onafterprint;
