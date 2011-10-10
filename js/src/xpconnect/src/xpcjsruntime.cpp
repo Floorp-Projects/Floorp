@@ -345,7 +345,7 @@ XPCJSRuntime::RemoveJSHolder(void* aHolder)
 }
 
 // static
-void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
+void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
 {
     XPCJSRuntime* self = (XPCJSRuntime*)data;
 
@@ -379,17 +379,15 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
         for(e = self->mObjectHolderRoots; e; e = e->GetNextRoot())
             static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
     }
+}
+
+// static
+void XPCJSRuntime::TraceGrayJS(JSTracer* trc, void* data)
+{
+    XPCJSRuntime* self = (XPCJSRuntime*)data;
 
     // Mark these roots as gray so the CC can walk them later.
-    js::GCMarker *gcmarker = NULL;
-    if (IS_GC_MARKING_TRACER(trc)) {
-        gcmarker = static_cast<js::GCMarker *>(trc);
-        JS_ASSERT(gcmarker->getMarkColor() == XPC_GC_COLOR_BLACK);
-        gcmarker->setMarkColor(XPC_GC_COLOR_GRAY);
-    }
     self->TraceXPConnectRoots(trc);
-    if (gcmarker)
-        gcmarker->setMarkColor(XPC_GC_COLOR_BLACK);
 }
 
 static void
@@ -2078,7 +2076,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_SetContextCallback(mJSRuntime, ContextCallback);
         JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
-        JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
+        JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
+        JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
         JS_SetWrapObjectCallbacks(mJSRuntime,
                                   xpc::WrapperFactory::Rewrap,
                                   xpc::WrapperFactory::PrepareForWrapping);

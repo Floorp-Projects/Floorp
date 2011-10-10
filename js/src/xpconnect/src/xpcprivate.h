@@ -746,7 +746,8 @@ public:
         return mStrings[index];
     }
 
-    static void TraceJS(JSTracer* trc, void* data);
+    static void TraceBlackJS(JSTracer* trc, void* data);
+    static void TraceGrayJS(JSTracer* trc, void* data);
     void TraceXPConnectRoots(JSTracer *trc);
     void AddXPConnectRoots(JSContext* cx,
                            nsCycleCollectionTraversalCallback& cb);
