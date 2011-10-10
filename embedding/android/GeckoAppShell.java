@@ -1591,7 +1591,8 @@ public class GeckoAppShell
             sCamera.setPreviewCallbackWithBuffer(new android.hardware.Camera.PreviewCallback() {
                 public void onPreviewFrame(byte[] data, android.hardware.Camera camera) {
                     cameraCallbackBridge(data);
-                    sCamera.addCallbackBuffer(sCameraBuffer);
+                    if (sCamera != null)
+                        sCamera.addCallbackBuffer(sCameraBuffer);
                 }
             });
             sCamera.startPreview();
