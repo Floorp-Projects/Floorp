@@ -2221,12 +2221,11 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
      * This is a poor man's Maybe<AutoCompartment>, because we don't have
      * access to the AutoCompartment definition here.  We statically assert in
      * jsapi.cpp that we have the right size here.
+     *
+     * In practice, 32-bit Windows and Android get 16-word |bytes|, while
+     * other platforms get 13-word |bytes|.
      */
-#if !defined(_MSC_VER) && !defined(__arm__)
-    void* bytes[13];
-#else
-    void* bytes[sizeof(void*) == 4 ? 16 : 13];
-#endif
+    void* bytes[sizeof(void*) == 4 && MOZ_ALIGNOF(JSUint64) == 8 ? 16 : 13];
 
     /*
      * This object may be in one of three states.  If enter() or
