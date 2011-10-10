@@ -47,6 +47,13 @@
 using namespace js;
 using namespace JS;
 
+JS_FRIEND_API(void)
+JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
+{
+    rt->gcGrayRootsTraceOp = traceOp;
+    rt->gcGrayRootsData = data;
+}
+
 JS_FRIEND_API(JSString *)
 JS_GetAnonymousString(JSRuntime *rt)
 {

@@ -1649,7 +1649,7 @@ namespace js {
  */
 
 GCMarker::GCMarker(JSContext *cx)
-  : color(0),
+  : color(BLACK),
     unmarkedArenaStackTop(NULL),
     objStack(cx->runtime->gcMarkStackObjs, sizeof(cx->runtime->gcMarkStackObjs)),
     ropeStack(cx->runtime->gcMarkStackRopes, sizeof(cx->runtime->gcMarkStackRopes)),
@@ -1970,12 +1970,15 @@ MarkRuntime(JSTracer *trc)
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
 
-    /*
-     * We mark extra roots at the end so that the hook can use additional
-     * colors to implement cycle collection.
-     */
-    if (rt->gcExtraRootsTraceOp)
-        rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
+    /* The embedding can register additional roots here. */
+    if (JSTraceDataOp op = rt->gcBlackRootsTraceOp)
+        (*op)(trc, rt->gcBlackRootsData);
+
+    if (!IS_GC_MARKING_TRACER(trc)) {
+        /* We don't want to miss these when called from TraceRuntime. */
+        if (JSTraceDataOp op = rt->gcGrayRootsTraceOp)
+            (*op)(trc, rt->gcGrayRootsData);
+    }
 }
 
 void
@@ -2391,6 +2394,13 @@ static void
 EndMarkPhase(JSContext *cx, GCMarker *gcmarker, JSGCInvocationKind gckind GCTIMER_PARAM)
 {
     JSRuntime *rt = cx->runtime;
+
+    gcmarker->setMarkColor(GRAY);
+    if (JSTraceDataOp op = rt->gcGrayRootsTraceOp)
+        (*op)(gcmarker, rt->gcGrayRootsData);
+    gcmarker->drainMarkStack();
+    gcmarker->setMarkColor(BLACK);
+
     /*
      * Mark weak roots.
      */
