@@ -88,7 +88,6 @@
 #define DECODEONDRAW_PREF "image.mem.decodeondraw"
 #define BYTESATATIME_PREF "image.mem.decode_bytes_at_a_time"
 #define MAXMS_PREF "image.mem.max_ms_before_yield"
-#define MAXBYTESFORSYNC_PREF "image.mem.max_bytes_for_sync_decode"
 #define SVG_MIMETYPE "image/svg+xml"
 
 using namespace mozilla;
@@ -130,11 +129,6 @@ ReloadPrefs()
 
   if (NS_SUCCEEDED(Preferences::GetInt(MAXMS_PREF, &maxMS))) {
     RasterImage::SetMaxMSBeforeYield(maxMS);
-  }
-
-  if (NS_SUCCEEDED(Preferences::GetInt(MAXBYTESFORSYNC_PREF,
-                                       &maxBytesForSync))) {
-    RasterImage::SetMaxBytesForSyncDecode(maxBytesForSync);
   }
 
   // Discard timeout
