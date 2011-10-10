@@ -585,7 +585,8 @@ mjit::Compiler::compileArrayWithArgs(uint32 argc)
      */
     JS_ASSERT(argc >= 2);
 
-    if (argc >= gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST))
+    JS_STATIC_ASSERT(sizeof(ObjectElements) == 2 * sizeof(js::Value));
+    if (argc >= gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST) - 2)
         return Compile_InlineAbort;
 
     types::TypeObject *type = types::TypeScript::InitObject(cx, script, PC, JSProto_Array);
