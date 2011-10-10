@@ -1352,6 +1352,7 @@ protected:
   nsresult doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                            bool aNotify, nsAttrAndChildArray& aChildArray);
 
+public:
   /* Event stuff that documents and elements share.  This needs to be
      NS_IMETHOD because some subclasses implement DOM methods with
      this exact name and signature and then the calling convention
@@ -1370,6 +1371,7 @@ protected:
 #undef TOUCH_EVENT
 #undef EVENT  
 
+protected:
   static void Trace(nsINode *tmp, TraceCallback cb, void *closure);
   static bool Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb);
   static void Unlink(nsINode *tmp);
