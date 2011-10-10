@@ -152,7 +152,6 @@ public:
 
   virtual void InitAsSessionStorage(nsIURI* aDomainURI);
   virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist);
-  virtual void InitAsGlobalStorage(const nsACString& aDomainDemanded);
 
   virtual nsTArray<nsString>* GetKeys(bool aCallerSecure) = 0;
   virtual nsresult GetLength(bool aCallerSecure, PRUint32* aLength) = 0;
@@ -251,7 +250,6 @@ public:
 
   virtual void InitAsSessionStorage(nsIURI* aDomainURI);
   virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist);
-  virtual void InitAsGlobalStorage(const nsACString& aDomainDemanded);
 
   bool SessionOnly() {
     return mSessionOnly;
@@ -362,7 +360,6 @@ public:
   // nsPIDOMStorage
   virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI);
   virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI);
-  virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded);
   virtual already_AddRefed<nsIDOMStorage> Clone();
   virtual already_AddRefed<nsIDOMStorage> Fork(const nsSubstring &aDocumentURI);
   virtual bool IsForkOf(nsIDOMStorage* aThat);
@@ -442,7 +439,6 @@ public:
   // nsPIDOMStorage
   virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI);
   virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI);
-  virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded);
   virtual already_AddRefed<nsIDOMStorage> Clone();
   virtual already_AddRefed<nsIDOMStorage> Fork(const nsSubstring &aDocumentURI);
   virtual bool IsForkOf(nsIDOMStorage* aThat);

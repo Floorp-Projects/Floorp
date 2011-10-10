@@ -59,7 +59,6 @@ public:
 
   virtual void InitAsSessionStorage(nsIURI* aDomainURI);
   virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist);
-  virtual void InitAsGlobalStorage(const nsACString& aDomainDemanded);
 
   virtual bool CacheStoragePermissions();
   

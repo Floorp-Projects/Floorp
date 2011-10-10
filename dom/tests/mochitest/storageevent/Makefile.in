@@ -47,9 +47,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
-    frameGlobalStorageMaster.html \
-    frameGlobalStorageSlaveEqual.html \
-    frameGlobalStorageSlaveNotEqual.html \
     frameLocalStorageMaster.html \
     frameLocalStorageSlaveEqual.html \
     frameLocalStorageSlaveNotEqual.html \
@@ -57,8 +54,6 @@ _TEST_FILES	= \
     frameSessionStorageMasterNotEqual.html \
     frameSessionStorageSlaveEqual.html \
     frameSessionStorageSlaveNotEqual.html \
-    test_storageGlobalStorageEventCheckNoPropagation.html \
-    test_storageGlobalStorageEventCheckPropagation.html \
     test_storageLocalStorageEventCheckNoPropagation.html \
     test_storageLocalStorageEventCheckPropagation.html \
     test_storageSessionStorageEventCheckPropagation.html \
