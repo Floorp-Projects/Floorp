@@ -313,13 +313,17 @@ ImageContainerOGL::GetCurrentAsSurface(gfxIntSize *aSize)
     return imageSurface.forget().get();
   }
 
-  if (mActiveImage->GetFormat() == Image::CAIRO_SURFACE) {
-    CairoImageOGL *cairoImage =
-      static_cast<CairoImageOGL*>(mActiveImage.get());
-    size = cairoImage->mSize;
-    gl = cairoImage->mTexture.GetGLContext();
-    tex1 = cairoImage->mTexture.GetTextureID();
+  if (mActiveImage->GetFormat() != Image::CAIRO_SURFACE)
+  {
+    *aSize = gfxIntSize(0, 0);
+    return nsnull;
   }
+
+  CairoImageOGL *cairoImage =
+    static_cast<CairoImageOGL*>(mActiveImage.get());
+  size = cairoImage->mSize;
+  gl = cairoImage->mTexture.GetGLContext();
+  tex1 = cairoImage->mTexture.GetTextureID();
 
   nsRefPtr<gfxImageSurface> s = gl->ReadTextureImage(tex1, size, LOCAL_GL_RGBA);
   *aSize = size;

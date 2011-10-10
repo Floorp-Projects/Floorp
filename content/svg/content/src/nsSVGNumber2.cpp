@@ -116,8 +116,7 @@ GetValueFromString(const nsAString &aValueAsString,
 
 nsresult
 nsSVGNumber2::SetBaseValueString(const nsAString &aValueAsString,
-                                 nsSVGElement *aSVGElement,
-                                 bool aDoSetAttr)
+                                 nsSVGElement *aSVGElement)
 {
   float val;
 
@@ -154,8 +153,7 @@ nsSVGNumber2::GetBaseValueString(nsAString & aValueAsString)
 
 void
 nsSVGNumber2::SetBaseValue(float aValue,
-                           nsSVGElement *aSVGElement,
-                           bool aDoSetAttr)
+                           nsSVGElement *aSVGElement)
 {
   mBaseVal = aValue;
   mIsBaseSet = PR_TRUE;
@@ -167,7 +165,7 @@ nsSVGNumber2::SetBaseValue(float aValue,
     aSVGElement->AnimationNeedsResample();
   }
 #endif
-  aSVGElement->DidChangeNumber(mAttrEnum, aDoSetAttr);
+  aSVGElement->DidChangeNumber(mAttrEnum, true);
 }
 
 void

@@ -39,7 +39,7 @@
  
 /*
  * This interface allows any module to access the routine 
- * for MIME header parameter parsing (RFC 2231)
+ * for MIME header parameter parsing (RFC 2231/5987)
  */
 
 #include "nsISupports.idl"
@@ -97,6 +97,18 @@ interface nsIMIMEHeaderParam : nsISupports {
                        in ACString aFallbackCharset,
                        in boolean aTryLocaleCharset, 
                        out string aLang);
+
+
+  /**
+   * Like getParameter, but using RFC 5987 instead of 2231.  This removes
+   * support for header parameter continuations (foo*0, foo*1, etc).
+   */
+  AString getParameter5987(in ACString aHeaderVal,
+                           in string aParamName,
+                           in ACString aFallbackCharset,
+                           in boolean aTryLocaleCharset, 
+                           out string aLang);
+
   /** 
    * Given the value of a single header field  (such as
    * Content-Disposition and Content-Type) and the name of a parameter
