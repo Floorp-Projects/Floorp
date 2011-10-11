@@ -139,6 +139,16 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
     {
         MutexAutoLock lock(mLock);
 
+#if defined(ANDROID)
+        {
+            nsXPIDLString msg;
+            message->GetMessageMoz(getter_Copies(msg));
+            __android_log_print(ANDROID_LOG_ERROR, "nsConsoleService",
+                        "%s",
+                        NS_LossyConvertUTF16toASCII(msg).get());
+        }
+#endif
+
         /*
          * If there's already a message in the slot we're about to replace,
          * we've wrapped around, and we need to release the old message.  We
@@ -193,12 +203,6 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
 NS_IMETHODIMP
 nsConsoleService::LogStringMessage(const PRUnichar *message)
 {
-#if defined(ANDROID)
-    __android_log_print(ANDROID_LOG_ERROR, "nsConsoleService",
-                        "%s",
-                        NS_LossyConvertUTF16toASCII(message).get());
-#endif
-
     nsConsoleMessage *msg = new nsConsoleMessage(message);
     return this->LogMessage(msg);
 }
