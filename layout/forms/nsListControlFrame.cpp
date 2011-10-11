@@ -48,7 +48,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLOptionsCollection.h"
-#include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsComboboxControlFrame.h"

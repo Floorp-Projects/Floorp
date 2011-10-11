@@ -42,6 +42,7 @@ let TabView = {
   _window: null,
   _initialized: false,
   _browserKeyHandlerInitialized: false,
+  _closedLastVisibleTabBeforeFrameInitialized: false,
   _isFrameLoading: false,
   _initFrameCallbacks: [],
   _lastSessionGroupName: null,
@@ -92,6 +93,12 @@ let TabView = {
 
   // ----------
   init: function TabView_init() {
+    // disable the ToggleTabView command for popup windows
+    if (!window.toolbar.visible) {
+      goSetCommandEnabled("Browser:ToggleTabView", false);
+      return;
+    }
+
     if (this._initialized)
       return;
 
@@ -118,14 +125,24 @@ let TabView = {
         let self = this;
         // if a tab is changed from hidden to unhidden and the iframe is not
         // initialized, load the iframe and setup the tab.
-        this._tabShowEventListener = function (event) {
+        this._tabShowEventListener = function(event) {
           if (!self._window)
             self._initFrame(function() {
               self._window.UI.onTabSelect(gBrowser.selectedTab);
+              if (self._closedLastVisibleTabBeforeFrameInitialized) {
+                self._closedLastVisibleTabBeforeFrameInitialized = false;
+                self._window.UI.showTabView(false);
+              }
             });
         };
+        this._tabCloseEventListener = function(event) {
+          if (!self._window && gBrowser.visibleTabs.length == 0)
+            self._closedLastVisibleTabBeforeFrameInitialized = true;
+        };
         gBrowser.tabContainer.addEventListener(
-          "TabShow", this._tabShowEventListener, true);
+          "TabShow", this._tabShowEventListener, false);
+        gBrowser.tabContainer.addEventListener(
+          "TabClose", this._tabCloseEventListener, false);
 
        // grab the last used group title
        this._lastSessionGroupName = sessionstore.getWindowValue(window,
@@ -155,10 +172,13 @@ let TabView = {
 
     Services.prefs.removeObserver(this.PREF_BRANCH, this);
 
-    if (this._tabShowEventListener) {
+    if (this._tabShowEventListener)
       gBrowser.tabContainer.removeEventListener(
-        "TabShow", this._tabShowEventListener, true);
-    }
+        "TabShow", this._tabShowEventListener, false);
+
+    if (this._tabCloseEventListener)
+      gBrowser.tabContainer.removeEventListener(
+        "TabClose", this._tabCloseEventListener, false);
 
     this._initialized = false;
   },
@@ -168,6 +188,10 @@ let TabView = {
   // If the frame already exists, calls the callback immediately. 
   _initFrame: function TabView__initFrame(callback) {
     let hasCallback = typeof callback == "function";
+
+    // prevent frame to be initialized for popup windows
+    if (!window.toolbar.visible)
+      return;
 
     if (this._window) {
       if (hasCallback)
@@ -203,10 +227,14 @@ let TabView = {
 
       if (self._tabShowEventListener) {
         gBrowser.tabContainer.removeEventListener(
-          "TabShow", self._tabShowEventListener, true);
+          "TabShow", self._tabShowEventListener, false);
         self._tabShowEventListener = null;
       }
-
+      if (self._tabCloseEventListener) {
+        gBrowser.tabContainer.removeEventListener(
+          "TabClose", self._tabCloseEventListener, false);
+        self._tabCloseEventListener = null;
+      }
       self._initFrameCallbacks.forEach(function (cb) cb());
       self._initFrameCallbacks = [];
     }, false);
@@ -226,7 +254,7 @@ let TabView = {
   },
 
   // ----------
-  show: function() {
+  show: function TabView_show() {
     if (this.isVisible())
       return;
 
@@ -237,7 +265,7 @@ let TabView = {
   },
 
   // ----------
-  hide: function() {
+  hide: function TabView_hide() {
     if (!this.isVisible())
       return;
 
@@ -245,7 +273,7 @@ let TabView = {
   },
 
   // ----------
-  toggle: function() {
+  toggle: function TabView_toggle() {
     if (this.isVisible())
       this.hide();
     else 
@@ -277,7 +305,7 @@ let TabView = {
   },
 
   // ----------
-  updateContextMenu: function(tab, popup) {
+  updateContextMenu: function TabView_updateContextMenu(tab, popup) {
     let separator = document.getElementById("context_tabViewNamedGroups");
     let isEmpty = true;
 
@@ -364,7 +392,7 @@ let TabView = {
 
   // ----------
   // Prepares the tab view for undo close tab.
-  prepareUndoCloseTab: function(blankTabToRemove) {
+  prepareUndoCloseTab: function TabView_prepareUndoCloseTab(blankTabToRemove) {
     if (this._window) {
       this._window.UI.restoredClosedTab = true;
 
@@ -375,7 +403,7 @@ let TabView = {
 
   // ----------
   // Cleans up the tab view after undo close tab.
-  afterUndoCloseTab: function () {
+  afterUndoCloseTab: function TabView_afterUndoCloseTab() {
     if (this._window)
       this._window.UI.restoredClosedTab = false;
   },
@@ -425,7 +453,7 @@ let TabView = {
   // Function: enableSessionRestore
   // Enables automatic session restore when the browser is started. Does
   // nothing if we already did that once in the past.
-  enableSessionRestore: function UI_enableSessionRestore() {
+  enableSessionRestore: function TabView_enableSessionRestore() {
     if (!this._window || !this.firstUseExperienced)
       return;
 

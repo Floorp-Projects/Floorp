@@ -115,6 +115,7 @@ cert_log() ######################    write the cert_status file
 certu()
 {
     echo "$SCRIPTNAME: ${CU_ACTION} --------------------------"
+    EXPECTED=${RETEXPECTED-0}
 
     if [ -n "${CU_SUBJECT}" ]; then
         #the subject of the cert contains blanks, and the shell 
@@ -128,9 +129,9 @@ certu()
         ${PROFTOOL} ${BINDIR}/certutil $*
         RET=$?
     fi
-    if [ "$RET" -ne 0 ]; then
+    if [ "$RET" -ne "$EXPECTED" ]; then
         CERTFAILED=$RET
-        html_failed "${CU_ACTION} ($RET) " 
+        html_failed "${CU_ACTION} ($RET=$EXPECTED) " 
         cert_log "ERROR: ${CU_ACTION} failed $RET"
     else
         html_passed "${CU_ACTION}"
@@ -280,7 +281,7 @@ cert_create_cert()
 
     CU_ACTION="Import Root CA for $CERTNAME"
     certu -A -n "TestCA" -t "TC,TC,TC" -f "${R_PWFILE}" -d "${PROFILEDIR}" \
-          -i "${R_CADIR}/root.cert" 2>&1
+          -i "${R_CADIR}/TestCA.ca.cert" 2>&1
     if [ "$RET" -ne 0 ]; then
         return $RET
     fi
@@ -288,7 +289,7 @@ cert_create_cert()
     if [ -n "$NSS_ENABLE_ECC" ] ; then
 	CU_ACTION="Import EC Root CA for $CERTNAME"
 	certu -A -n "TestCA-ec" -t "TC,TC,TC" -f "${R_PWFILE}" \
-	    -d "${PROFILEDIR}" -i "${R_CADIR}/ecroot.cert" 2>&1
+	    -d "${PROFILEDIR}" -i "${R_CADIR}/TestCA-ec.ca.cert" 2>&1
 	if [ "$RET" -ne 0 ]; then
             return $RET
 	fi
@@ -1029,7 +1030,7 @@ cert_eccurves()
 
     CU_ACTION="Import EC Root CA for $CERTNAME"
     certu -A -n "TestCA-ec" -t "TC,TC,TC" -f "${R_PWFILE}" \
-        -d "${PROFILEDIR}" -i "${R_CADIR}/ecroot.cert" 2>&1
+        -d "${PROFILEDIR}" -i "${R_CADIR}/TestCA-ec.ca.cert" 2>&1
 
     if [ -n "${NSS_ECC_MORE_THAN_SUITE_B}" ] ; then
       CURVE_LIST="c2pnb163v1 c2pnb163v2 c2pnb163v3 c2pnb176v1 \
@@ -1396,6 +1397,78 @@ cert_test_password()
   certu -V -n PasswordCert -u S -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" 2>&1
 }
 
+###############################
+# test if we can distrust a certificate.
+#
+# we create 3 new certs:
+#   1 leaf signed by the trusted root.
+#   1 intermediate signed by the trusted root.
+#   1 leaf signed by the intermediate.
+#
+#  we mark the first leaf and the intermediate as explicitly untrusted.
+#  we then try to verify the two leaf certs for our possible usages.
+#  All verification should fail.
+# 
+cert_test_distrust()
+{
+  echo "$SCRIPTNAME: Creating Distrusted Certificate"
+  cert_create_cert ${DISTRUSTDIR} "Distrusted" 2000 ${D_DISTRUST}
+  CU_ACTION="Mark CERT as unstrusted"
+  certu -M -n "Distrusted" -t p,p,p -d ${PROFILEDIR} -f "${R_PWFILE}" 2>&1
+  echo "$SCRIPTNAME: Creating Distrusted Intermediate"
+  CERTNAME="DistrustedCA"
+  ALL_CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  cert_CA ${CADIR} "${CERTNAME}" "-c TestCA" ",," ${D_CA} 2010 2>&1
+  CU_ACTION="Import Distrusted Intermediate"
+  certu -A -n "${CERTNAME}" -t "p,p,p" -f "${R_PWFILE}" -d "${PROFILEDIR}" \
+          -i "${R_CADIR}/DistrustedCA.ca.cert" 2>&1
+
+  # now create the last leaf signed by our distrusted CA
+  # since it's not signed by TestCA it requires more steps.
+  CU_ACTION="Generate Cert Request for Leaf Chained to Distrusted CA"
+  CERTNAME="LeafChainedToDistrustedCA"
+  CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
+
+  CU_ACTION="Sign ${CERTNAME}'s Request"
+  cp ${CERTDIR}/req ${CADIR}
+  certu -C -c "DistrustedCA" -m 100 -v 60 -d "${P_R_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
+
+  CU_ACTION="Import $CERTNAME's Cert  -t u,u,u"
+  certu -A -n "$CERTNAME" -t "u,u,u" -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+        -i "${CERTNAME}.cert" 2>&1
+
+  RETEXPECTED=255
+  CU_ACTION="Verify ${CERTNAME} Cert for SSL Server"
+  certu -V -n ${CERTNAME} -u V -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  CU_ACTION="Verify ${CERTNAME} Cert for SSL Client"
+  certu -V -n ${CERTNAME} -u C -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  CU_ACTION="Verify ${CERTNAME} Cert for Email signer"
+  certu -V -n ${CERTNAME} -u S -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  CU_ACTION="Verify ${CERTNAME} Cert for Email recipient"
+  certu -V -n ${CERTNAME} -u R -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  CU_ACTION="Verify ${CERTNAME} Cert for OCSP responder"
+  certu -V -n ${CERTNAME} -u O -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  CU_ACTION="Verify ${CERTNAME} Cert for Object Signer"
+  certu -V -n ${CERTNAME} -u J -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+
+  CERTNAME="Distrusted"
+  CU_ACTION="Verify ${CERTNAME} Cert for SSL Server"
+  certu -V -n ${CERTNAME} -u V -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  CU_ACTION="Verify ${CERTNAME} Cert for SSL Client"
+  certu -V -n ${CERTNAME} -u C -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  CU_ACTION="Verify ${CERTNAME} Cert for Email signer"
+  certu -V -n ${CERTNAME} -u S -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  CU_ACTION="Verify ${CERTNAME} Cert for Email recipient"
+  certu -V -n ${CERTNAME} -u R -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  CU_ACTION="Verify ${CERTNAME} Cert for OCSP responder"
+  certu -V -n ${CERTNAME} -u O -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  CU_ACTION="Verify ${CERTNAME} Cert for Object Signer"
+  certu -V -n ${CERTNAME} -u J -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+  RETEXPECTED=0
+}
+
 ############################## cert_cleanup ############################
 # local shell function to finish this script (no exit since it might be
 # sourced)
@@ -1419,6 +1492,7 @@ cert_fips
 cert_eccurves
 cert_extensions
 cert_test_password
+cert_test_distrust
 
 if [ -z "$NSS_TEST_DISABLE_CRL" ] ; then
     cert_crl_ssl

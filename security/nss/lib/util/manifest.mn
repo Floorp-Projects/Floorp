@@ -70,7 +70,6 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
-	errstrs.h \
 	templates.c \
 	$(NULL)
 

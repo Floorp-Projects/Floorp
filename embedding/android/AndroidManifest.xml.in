@@ -115,7 +115,8 @@
 #endif
 
         <activity android:name="LauncherShortcuts"
-                  android:label="@string/launcher_shortcuts_title">
+                  android:label="@string/launcher_shortcuts_title"
+                  android:theme="@android:style/Theme.Translucent">
             <!--  This intent-filter allows your shortcuts to be created in the launcher. -->
             <intent-filter>
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />

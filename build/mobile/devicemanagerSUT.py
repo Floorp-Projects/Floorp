@@ -684,7 +684,7 @@ class DeviceManagerSUT(DeviceManager):
         return None
       # prompt should follow
       read_exact(len(prompt), buffer, 'could not find prompt')
-      print 'DeviceManager: error pulling file: %s' % error_str
+      print "DeviceManager: error pulling file '%s': %s" % (remoteFile, error_str)
       return None
 
     # read file data

@@ -80,8 +80,7 @@ GetValueFromString(const nsAString &aValueAsString,
 
 nsresult
 nsSVGInteger::SetBaseValueString(const nsAString &aValueAsString,
-                                 nsSVGElement *aSVGElement,
-                                 bool aDoSetAttr)
+                                 nsSVGElement *aSVGElement)
 {
   PRInt32 value;
 
@@ -112,8 +111,7 @@ nsSVGInteger::GetBaseValueString(nsAString & aValueAsString)
 
 void
 nsSVGInteger::SetBaseValue(int aValue,
-                           nsSVGElement *aSVGElement,
-                           bool aDoSetAttr)
+                           nsSVGElement *aSVGElement)
 {
   mBaseVal = aValue;
   mIsBaseSet = PR_TRUE;
@@ -125,7 +123,7 @@ nsSVGInteger::SetBaseValue(int aValue,
     aSVGElement->AnimationNeedsResample();
   }
 #endif
-  aSVGElement->DidChangeInteger(mAttrEnum, aDoSetAttr);
+  aSVGElement->DidChangeInteger(mAttrEnum, true);
 }
 
 void

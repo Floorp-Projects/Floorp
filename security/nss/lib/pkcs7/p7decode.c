@@ -38,7 +38,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.25 2008/03/10 00:01:26 wtc%google.com Exp $
+ * $Id: p7decode.c,v 1.26 2011/08/21 01:14:17 wtc%google.com Exp $
  */
 
 #include "p7local.h"
@@ -428,7 +428,6 @@ sec_pkcs7_decoder_finish_digests (SEC_PKCS7DecoderContext *p7dcx,
  * XXX Need comment explaining following helper function (which is used
  * by sec_pkcs7_decoder_start_decrypt).
  */
-extern const SEC_ASN1Template SEC_SMIMEKEAParamTemplateAllParams[];
 
 static PK11SymKey *
 sec_pkcs7_decoder_get_recipient_key (SEC_PKCS7DecoderContext *p7dcx,
@@ -460,7 +459,7 @@ sec_pkcs7_decoder_get_recipient_key (SEC_PKCS7DecoderContext *p7dcx,
 
     keyalgtag = SECOID_GetAlgorithmTag(&(cert->subjectPublicKeyInfo.algorithm));
     encalgtag = SECOID_GetAlgorithmTag (&(ri->keyEncAlg));
-    if ((encalgtag != SEC_OID_NETSCAPE_SMIME_KEA) && (keyalgtag != encalgtag)) {
+    if (keyalgtag != encalgtag) {
 	p7dcx->error = SEC_ERROR_PKCS7_KEYALG_MISMATCH;
 	goto no_key_found;
     }
@@ -477,117 +476,6 @@ sec_pkcs7_decoder_get_recipient_key (SEC_PKCS7DecoderContext *p7dcx,
 	    goto no_key_found;
 	}
 	break;
-	/* ### mwelch -- KEA */ 
-        case SEC_OID_NETSCAPE_SMIME_KEA:
-	  {
-	      SECStatus err;
-	      CK_MECHANISM_TYPE bulkType;
-	      PK11SymKey *tek;
-	      SECKEYPublicKey *senderPubKey;
-	      SEC_PKCS7SMIMEKEAParameters   keaParams;
-
-	      (void) memset(&keaParams, 0, sizeof(keaParams));
-
-	      /* Decode the KEA algorithm parameters. */
-	      err = SEC_ASN1DecodeItem(NULL,
-				       &keaParams,
-				       SEC_SMIMEKEAParamTemplateAllParams,
-				       &(ri->keyEncAlg.parameters));
-	      if (err != SECSuccess)
-	      {
-		  p7dcx->error = err;
-		  PORT_SetError(0);
-		  goto no_key_found;
-	      }
-	  
-
-	      /* We just got key data, no key structure. So, we
-		 create one. */
-	     senderPubKey = 
-		  PK11_MakeKEAPubKey(keaParams.originatorKEAKey.data,
-				     keaParams.originatorKEAKey.len);
-	     if (senderPubKey == NULL)
-	     {
-		    p7dcx->error = PORT_GetError();
-		    PORT_SetError(0);
-		    goto no_key_found;
-	     }
-	      
-	     /* Generate the TEK (token exchange key) which we use
-	         to unwrap the bulk encryption key. */
-	     tek = PK11_PubDerive(privkey, senderPubKey, 
-				   PR_FALSE,
-				   &keaParams.originatorRA,
-				   NULL,
-				   CKM_KEA_KEY_DERIVE, CKM_SKIPJACK_WRAP,
-				   CKA_WRAP, 0, p7dcx->pwfn_arg);
-	     SECKEY_DestroyPublicKey(senderPubKey);
-	      
-	     if (tek == NULL)
-	     {
-		  p7dcx->error = PORT_GetError();
-		  PORT_SetError(0);
-		  goto no_key_found;
-	     }
-	      
-	      /* Now that we have the TEK, unwrap the bulk key
-	         with which to decrypt the message. We have to
-		 do one of two different things depending on 
-		 whether Skipjack was used for bulk encryption 
-		 of the message. */
-	      bulkType = PK11_AlgtagToMechanism (bulkalgtag);
-	      switch(bulkType)
-	      {
-	      case CKM_SKIPJACK_CBC64:
-	      case CKM_SKIPJACK_ECB64:
-	      case CKM_SKIPJACK_OFB64:
-	      case CKM_SKIPJACK_CFB64:
-	      case CKM_SKIPJACK_CFB32:
-	      case CKM_SKIPJACK_CFB16:
-	      case CKM_SKIPJACK_CFB8:
-		  /* Skipjack is being used as the bulk encryption algorithm.*/
-		  /* Unwrap the bulk key. */
-		  bulkkey = PK11_UnwrapSymKey(tek, CKM_SKIPJACK_WRAP,
-					      NULL, &ri->encKey, 
-					      CKM_SKIPJACK_CBC64, 
-					      CKA_DECRYPT, 0);
-		  break;
-	      default:
-		  /* Skipjack was not used for bulk encryption of this
-		     message. Use Skipjack CBC64, with the nonSkipjackIV
-		     part of the KEA key parameters, to decrypt 
-		     the bulk key. If we got a parameter indicating that the
-		     bulk key size is different than the encrypted key size,
-		     pass in the real key size. */
-		  
-		  /* Check for specified bulk key length (unspecified implies
-		     that the bulk key length is the same as encrypted length) */
-		  if (keaParams.bulkKeySize.len > 0)
-		  {
-		      p7dcx->error = SEC_ASN1DecodeItem(NULL, &bulkLength,
-					SEC_ASN1_GET(SEC_IntegerTemplate),
-					&keaParams.bulkKeySize);
-		  }
-		  
-		  if (p7dcx->error != SECSuccess)
-		      goto no_key_found;
-		  
-		  bulkkey = PK11_UnwrapSymKey(tek, CKM_SKIPJACK_CBC64,
-					      &keaParams.nonSkipjackIV, 
-					      &ri->encKey,
-					      bulkType,
-					      CKA_DECRYPT, bulkLength);
-	      }
-	      
-	      
-	      if (bulkkey == NULL)
-	      {
-		  p7dcx->error = PORT_GetError();
-		  PORT_SetError(0);
-		  goto no_key_found;
-	      }
-	      break;
-	  }
       default:
 	p7dcx->error = SEC_ERROR_UNSUPPORTED_KEYALG;
 	break;

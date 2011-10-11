@@ -12,16 +12,16 @@ window.addEventListener("load", testOnLoad, false);
 function testOnLoad() {
   window.removeEventListener("load", testOnLoad, false);
 
-  // Make sure to launch the test harness for the first opened window only
-  var prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-  if (prefs.prefHasUserValue("testing.browserTestHarness.running"))
-    return;
-
-  prefs.setBoolPref("testing.browserTestHarness.running", true);
   gConfig = readConfig();
-
   if (gConfig.testRoot == "browser") {
+    // Make sure to launch the test harness for the first opened window only
+    var prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
+    if (prefs.prefHasUserValue("testing.browserTestHarness.running"))
+      return;
+
+    prefs.setBoolPref("testing.browserTestHarness.running", true);
+
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);
     var sstring = Cc["@mozilla.org/supports-string;1"].
@@ -30,6 +30,22 @@ function testOnLoad() {
 
     ww.openWindow(window, "chrome://mochikit/content/browser-harness.xul", "browserTest",
                   "chrome,centerscreen,dialog=no,resizable,titlebar,toolbar=no,width=800,height=600", sstring);
+  } else {
+    // This code allows us to redirect without requiring specialpowers for chrome and a11y tests.
+    function messageHandler(m) {
+      messageManager.removeMessageListener("chromeEvent", messageHandler);
+      var url = m.json.data;
+
+      // Window is the [ChromeWindow] for messageManager, so we need content.window 
+      // Currently chrome tests are run in a content window instead of a ChromeWindow
+      var webNav = content.window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                         .getInterface(Components.interfaces.nsIWebNavigation);
+      webNav.loadURI(url, null, null, null, null);
+    }
+
+    var listener = 'data:,function doLoad(e) { var data=e.getData("data");removeEventListener("contentEvent", function (e) { doLoad(e); }, false, true);sendAsyncMessage("chromeEvent", {"data":data}); };addEventListener("contentEvent", function (e) { doLoad(e); }, false, true);';
+    messageManager.loadFrameScript(listener, true);
+    messageManager.addMessageListener("chromeEvent", messageHandler);
   }
 }
 
@@ -48,6 +64,9 @@ function Tester(aTests, aDumper, aCallback) {
                        getService(Ci.mozIJSSubScriptLoader);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", this.EventUtils);
   var simpleTestScope = {};
+  this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/specialpowersAPI.js", simpleTestScope);
+  this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/SpecialPowersObserverAPI.js", simpleTestScope);
+  this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromePowers.js", simpleTestScope);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/SimpleTest.js", simpleTestScope);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/chrome-harness.js", simpleTestScope);
   this.SimpleTest = simpleTestScope.SimpleTest;

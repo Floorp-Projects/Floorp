@@ -42,7 +42,7 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(212371ab-d8b9-4835-b867-d0eb78c0cb18)]
+[scriptable, uuid(d092f5a5-33a8-456c-ac89-6ae6f880bd04)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
     /**
@@ -59,11 +59,6 @@ interface nsIBrowserHistory : nsIGlobalHistory2
     void addPageWithDetails(in nsIURI aURI,
                             in wstring aTitle,
                             in long long aLastVisited);
-
-    /**
-     * The last page that was visited in a top-level window.
-     */
-    readonly attribute AUTF8String lastPageVisited;
 
     /**
      * Indicates if there are entries in global history.

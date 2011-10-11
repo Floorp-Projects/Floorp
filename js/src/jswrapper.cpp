@@ -46,7 +46,6 @@
 #include "jsgcmark.h"
 #include "jsiter.h"
 #include "jsnum.h"
-#include "jsregexp.h"
 #include "jswrapper.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
@@ -54,6 +53,8 @@
 # include "assembler/jit/ExecutableAllocator.h"
 #endif
 #include "jscompartment.h"
+
+#include "vm/RegExpObject.h"
 
 #include "jsobjinlines.h"
 
@@ -733,11 +734,15 @@ CrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc,
     return call.origin->wrap(cx, rval);
 }
 
+extern JSBool
+js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp);
+
 bool
 CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs srcArgs)
 {
     JS_ASSERT_IF(!srcArgs.calleev().isUndefined(),
-                 srcArgs.callee().getFunctionPrivate()->native() == native);
+                 srcArgs.callee().getFunctionPrivate()->native() == native ||
+                 srcArgs.callee().getFunctionPrivate()->native() == js_generic_native_method_dispatcher);
     JS_ASSERT(&srcArgs.thisv().toObject() == wrapper);
     JS_ASSERT(!UnwrapObject(wrapper)->isCrossCompartmentWrapper());
 

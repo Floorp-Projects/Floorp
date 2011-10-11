@@ -37,7 +37,7 @@
 /*
  * CMS ASN.1 templates
  *
- * $Id: cmsasn1.c,v 1.9 2011/01/31 23:56:30 rrelyea%redhat.com Exp $
+ * $Id: cmsasn1.c,v 1.10 2011/08/21 01:14:18 wtc%google.com Exp $
  */
 
 #include "cmslocal.h"
@@ -492,66 +492,6 @@ const SEC_ASN1Template NSS_PointerToCMSGenericWrapperDataTemplate[] = {
 };
 
 SEC_ASN1_CHOOSER_IMPLEMENT(NSS_PointerToCMSGenericWrapperDataTemplate);
-
-/* -----------------------------------------------------------------------------
- * FORTEZZA KEA
- */
-const SEC_ASN1Template NSS_SMIMEKEAParamTemplateSkipjack[] = {
-	{ SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(NSSCMSSMIMEKEAParameters) },
-	{ SEC_ASN1_OCTET_STRING /* | SEC_ASN1_OPTIONAL */,
-	  offsetof(NSSCMSSMIMEKEAParameters,originatorKEAKey) },
-	{ SEC_ASN1_OCTET_STRING,
-	  offsetof(NSSCMSSMIMEKEAParameters,originatorRA) },
-	{ 0 }
-};
-
-const SEC_ASN1Template NSS_SMIMEKEAParamTemplateNoSkipjack[] = {
-	{ SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(NSSCMSSMIMEKEAParameters) },
-	{ SEC_ASN1_OCTET_STRING /* | SEC_ASN1_OPTIONAL */,
-	  offsetof(NSSCMSSMIMEKEAParameters,originatorKEAKey) },
-	{ SEC_ASN1_OCTET_STRING,
-	  offsetof(NSSCMSSMIMEKEAParameters,originatorRA) },
-	{ SEC_ASN1_OCTET_STRING  | SEC_ASN1_OPTIONAL ,
-	  offsetof(NSSCMSSMIMEKEAParameters,nonSkipjackIV) },
-	{ 0 }
-};
-
-const SEC_ASN1Template NSS_SMIMEKEAParamTemplateAllParams[] = {
-	{ SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(NSSCMSSMIMEKEAParameters) },
-	{ SEC_ASN1_OCTET_STRING /* | SEC_ASN1_OPTIONAL */,
-	  offsetof(NSSCMSSMIMEKEAParameters,originatorKEAKey) },
-	{ SEC_ASN1_OCTET_STRING,
-	  offsetof(NSSCMSSMIMEKEAParameters,originatorRA) },
-	{ SEC_ASN1_OCTET_STRING  | SEC_ASN1_OPTIONAL ,
-	  offsetof(NSSCMSSMIMEKEAParameters,nonSkipjackIV) },
-	{ SEC_ASN1_OCTET_STRING  | SEC_ASN1_OPTIONAL ,
-	  offsetof(NSSCMSSMIMEKEAParameters,bulkKeySize) },
-	{ 0 }
-};
-
-const SEC_ASN1Template *
-nss_cms_get_kea_template(NSSCMSKEATemplateSelector whichTemplate)
-{
-	const SEC_ASN1Template *returnVal = NULL;
-
-	switch(whichTemplate)
-	{
-	case NSSCMSKEAUsesNonSkipjack:
-		returnVal = NSS_SMIMEKEAParamTemplateNoSkipjack;
-		break;
-	case NSSCMSKEAUsesSkipjack:
-		returnVal = NSS_SMIMEKEAParamTemplateSkipjack;
-		break;
-	case NSSCMSKEAUsesNonSkipjackWithPaddedEncKey:
-	default:
-		returnVal = NSS_SMIMEKEAParamTemplateAllParams;
-		break;
-	}
-	return returnVal;
-}
 
 /* -----------------------------------------------------------------------------
  *

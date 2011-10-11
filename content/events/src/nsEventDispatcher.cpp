@@ -479,7 +479,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   // sure it is initialized!
   // If aTargets is non-null, the event isn't going to be dispatched.
   NS_ENSURE_TRUE(aEvent->message || !aDOMEvent || aTargets,
-                 NS_ERROR_DOM_UNSPECIFIED_EVENT_TYPE_ERR);
+                 NS_ERROR_DOM_INVALID_STATE_ERR);
 
 #ifdef NS_FUNCTION_TIMER
   const char* timer_event_name = nsDOMEvent::GetEventName(aEvent->message);

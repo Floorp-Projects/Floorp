@@ -64,14 +64,14 @@
 #include "nsIJSContextStack.h"
 #include "nsXPIDLString.h"
 #include "nsDOMError.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsCRT.h"
 #include "nsIProtocolHandler.h"
 #include "nsReadableUtils.h"
 #include "nsITextToSubURI.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
-#include "jsdbgapi.h"
+#include "jsfriendapi.h"
 
 static nsresult
 GetContextFromStack(nsIJSContextStack *aStack, JSContext **aContext)
@@ -179,7 +179,7 @@ GetFrameDocument(JSContext *cx, JSStackFrame *fp)
   if (!cx || !fp)
     return nsnull;
 
-  JSObject* scope = JS_GetFrameScopeChain(cx, fp);
+  JSObject* scope = JS_GetGlobalForFrame(fp);
   if (!scope)
     return nsnull;
 

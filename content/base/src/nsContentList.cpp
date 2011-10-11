@@ -52,6 +52,8 @@
 
 #include "nsGkAtoms.h"
 
+#include "dombindings.h"
+
 // Form related includes
 #include "nsIDOMHTMLFormElement.h"
 
@@ -76,10 +78,15 @@ nsBaseContentList::~nsBaseContentList()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsBaseContentList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBaseContentList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mElements)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBaseContentList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mElements)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsBaseContentList)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 #define NS_CONTENT_LIST_INTERFACES(_class)                                    \
     NS_INTERFACE_TABLE_ENTRY(_class, nsINodeList)                             \
@@ -177,6 +184,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
 
 NS_IMPL_ADDREF_INHERITED(nsSimpleContentList, nsBaseContentList)
 NS_IMPL_RELEASE_INHERITED(nsSimpleContentList, nsBaseContentList)
+
+JSObject*
+nsSimpleContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                                bool *triedToWrap)
+{
+  return mozilla::dom::binding::NodeList::create(cx, scope, this, triedToWrap);
+}
 
 // nsFormContentList
 
@@ -486,6 +500,14 @@ nsContentList::~nsContentList()
     // Clean up mData
     (*mDestroyFunc)(mData);
   }
+}
+
+JSObject*
+nsContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                          bool *triedToWrap)
+{
+  return mozilla::dom::binding::HTMLCollection::create(cx, scope, this,
+                                                       triedToWrap);
 }
 
 DOMCI_DATA(ContentList, nsContentList)
