@@ -2776,7 +2776,7 @@ CallMethodHelper::InitializeDispatchParams()
     {
         nsXPTCVariant* dp = &mDispatchParams[mOptArgcIndex];
         dp->type = nsXPTType::T_U8;
-        dp->val.u8 = mArgc - requiredArgs;
+        dp->val.u8 = NS_MIN<PRUint32>(mArgc, paramCount) - requiredArgs;
     }
 
     return JS_TRUE;
