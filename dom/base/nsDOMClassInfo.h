@@ -48,6 +48,7 @@
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 #include "nsIScriptGlobalObject.h"
 #include "nsContentUtils.h"
+#include "xpcpublic.h"
 
 namespace mozilla {
 class DOMSVGLengthList;
@@ -58,7 +59,7 @@ class DOMSVGTransformList;
 }
 class nsGlobalWindow;
 class nsIDOMDocument;
-class nsIDOMNSHTMLOptionCollection;
+class nsIDOMHTMLOptionsCollection;
 class nsIDOMNodeList;
 class nsIDOMSVGLength;
 class nsIDOMSVGLengthList;
@@ -100,6 +101,8 @@ struct nsDOMClassInfoData
   PRUint32 mInterfacesBitmap;
   bool mChromeOnly;
   bool mDisabled;
+  // For new style DOM bindings.
+  mozilla::dom::binding::DefineInterface mDefineDOMInterface;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
@@ -938,7 +941,7 @@ public:
                          JSObject *obj, jsid id, jsval *vp, bool *_retval);
 
   static nsresult SetOption(JSContext *cx, jsval *vp, PRUint32 aIndex,
-                            nsIDOMNSHTMLOptionCollection *aOptCollection);
+                            nsIDOMHTMLOptionsCollection *aOptCollection);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {

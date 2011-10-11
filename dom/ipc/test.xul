@@ -96,21 +96,14 @@
                           .getService(Components.interfaces.nsIFrameMessageManager);
       var gm = Components.classes["@mozilla.org/globalmessagemanager;1"]
                          .getService(Components.interfaces.nsIChromeFrameMessageManager);
-      var didThrow = false;
-      try {
-        var cpm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
+      var cpm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
                             .getService(Components.interfaces.nsISyncMessageSender);  
-      } catch (ex) {
-        didThrow = true;
-      }
-      if (!didThrow) {
-        alert("One shouldn't be able to create content process message manager in chrome process!");
-      }
+
       var tppm = ppm.QueryInterface(Components.interfaces.nsITreeItemFrameMessageManager);
-      if (tppm.childCount != 1) {
-        alert("Should have one child process!");
+      if (tppm.childCount != 2) {
+        alert("Should have two child processes!");
       }
-      var childprocessmm = tppm.getChildAt(0);
+      var childprocessmm = tppm.getChildAt(1); // 0 is the in-process child process mm
       
       childprocessmm.addMessageListener("ppm-sync",
         function(m) {

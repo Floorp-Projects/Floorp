@@ -1669,6 +1669,11 @@ protected:
 
     bool mBound;
     bool mIsLocked;
+
+    virtual void ApplyFilter()
+    {
+        mGLContext->ApplyFilterToBoundTexture(mFilter);
+    }
 };
 
 already_AddRefed<TextureImage>

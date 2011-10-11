@@ -43,7 +43,29 @@
 
 #include "String.h"
 
+#include "jscntxt.h"
 #include "jsgcinlines.h"
+
+JS_ALWAYS_INLINE bool
+JSString::validateLength(JSContext *cx, size_t length)
+{
+    if (JS_UNLIKELY(length > JSString::MAX_LENGTH)) {
+        if (JS_ON_TRACE(cx)) {
+            /*
+             * If we can't leave the trace, signal OOM condition, otherwise
+             * exit from trace before throwing.
+             */
+            if (!js::CanLeaveTrace(cx))
+                return NULL;
+
+            js::LeaveTrace(cx);
+        }
+        js_ReportAllocationOverflow(cx);
+        return false;
+    }
+
+    return true;
+}
 
 JS_ALWAYS_INLINE void
 JSRope::init(JSString *left, JSString *right, size_t length)
@@ -56,6 +78,8 @@ JSRope::init(JSString *left, JSString *right, size_t length)
 JS_ALWAYS_INLINE JSRope *
 JSRope::new_(JSContext *cx, JSString *left, JSString *right, size_t length)
 {
+    if (!validateLength(cx, length))
+        return NULL;
     JSRope *str = (JSRope *)js_NewGCString(cx);
     if (!str)
         return NULL;
@@ -114,9 +138,10 @@ JSFixedString::init(const jschar *chars, size_t length)
 JS_ALWAYS_INLINE JSFixedString *
 JSFixedString::new_(JSContext *cx, const jschar *chars, size_t length)
 {
-    JS_ASSERT(length <= MAX_LENGTH);
     JS_ASSERT(chars[length] == jschar(0));
 
+    if (!validateLength(cx, length))
+        return NULL;
     JSFixedString *str = (JSFixedString *)js_NewGCString(cx);
     if (!str)
         return NULL;
@@ -185,6 +210,8 @@ JSExternalString::new_(JSContext *cx, const jschar *chars, size_t length, intN t
     JS_ASSERT(uintN(type) < JSExternalString::TYPE_LIMIT);
     JS_ASSERT(chars[length] == 0);
 
+    if (!validateLength(cx, length))
+        return NULL;
     JSExternalString *str = js_NewGCExternalString(cx);
     if (!str)
         return NULL;

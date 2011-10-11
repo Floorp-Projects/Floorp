@@ -42,7 +42,7 @@
  * you.  If that has a problem, then just move out what you need, changing
  * its name as appropriate!
  *
- * $Id: cmslocal.h,v 1.6 2011/01/28 23:03:59 rrelyea%redhat.com Exp $
+ * $Id: cmslocal.h,v 1.8 2011/09/30 19:42:09 rrelyea%redhat.com Exp $
  */
 
 #ifndef _CMSLOCAL_H_
@@ -200,14 +200,6 @@ extern PK11SymKey *
 NSS_CMSUtil_DecryptSymKey_RSA(SECKEYPrivateKey *privkey, SECItem *encKey, SECOidTag bulkalgtag);
 
 extern SECStatus
-NSS_CMSUtil_EncryptSymKey_MISSI(PLArenaPool *poolp, CERTCertificate *cert, PK11SymKey *key,
-			SECOidTag symalgtag, SECItem *encKey, SECItem **pparams, void *pwfn_arg);
-
-extern PK11SymKey *
-NSS_CMSUtil_DecryptSymKey_MISSI(SECKEYPrivateKey *privkey, SECItem *encKey,
-			SECAlgorithmID *keyEncAlg, SECOidTag bulkalgtag, void *pwfn_arg);
-
-extern SECStatus
 NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11SymKey *key,
 			SECItem *encKey, SECItem **ukm, SECAlgorithmID *keyEncAlg,
 			SECItem *originatorPubKey);
@@ -355,6 +347,12 @@ NSS_CMSAttributeArray_SetAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, SECO
  */
 extern SECStatus
 NSS_CMSSignedData_AddTempCertificate(NSSCMSSignedData *sigd, CERTCertificate *cert);
+
+/*
+ * local function to handle compatibility issues
+ * by mapping a signature algorithm back to a digest.
+ */
+SECOidTag NSS_CMSUtil_MapSignAlgs(SECOidTag signAlg);
 
 
 /************************************************************************/

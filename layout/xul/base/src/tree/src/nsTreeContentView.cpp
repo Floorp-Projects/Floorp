@@ -41,13 +41,14 @@
 #include "nsTreeUtils.h"
 #include "nsTreeContentView.h"
 #include "nsChildIterator.h"
-#include "nsIDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsEventStates.h"
 #include "nsINodeInfo.h"
 #include "nsIXULSortService.h"
 #include "nsContentUtils.h"
 #include "nsTreeBodyFrame.h"
 #include "mozilla/dom/Element.h"
+#include "nsServiceManagerUtils.h"
 
 namespace dom = mozilla::dom;
 

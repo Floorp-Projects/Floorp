@@ -47,7 +47,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(56aaaf03-f8f1-4c06-9cb5-f3e33a39e5c3)]
+[scriptable, uuid(1f249e8b-7b41-44c0-a8d5-15298c1198cd)]
 interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
@@ -89,4 +89,7 @@ interface nsIDOMElement : nsIDOMNode
   // Introduced in DOM Level 2:
   boolean            hasAttributeNS(in DOMString namespaceURI, 
                                     in DOMString localName);
+
+  [implicit_jscontext] attribute jsval onmouseenter;
+  [implicit_jscontext] attribute jsval onmouseleave;
 };

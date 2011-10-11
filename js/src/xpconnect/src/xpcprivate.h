@@ -746,7 +746,8 @@ public:
         return mStrings[index];
     }
 
-    static void TraceJS(JSTracer* trc, void* data);
+    static void TraceBlackJS(JSTracer* trc, void* data);
+    static void TraceGrayJS(JSTracer* trc, void* data);
     void TraceXPConnectRoots(JSTracer *trc);
     void AddXPConnectRoots(JSContext* cx,
                            nsCycleCollectionTraversalCallback& cb);
@@ -793,6 +794,11 @@ public:
 
     static void ActivityCallback(void *arg, JSBool active);
 
+    bool NewDOMBindingsEnabled()
+    {
+        return gNewDOMBindingsEnabled;
+    }
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
@@ -801,6 +807,8 @@ private:
     void RescheduleWatchdog(XPCContext* ccx);
 
     static void WatchdogMain(void *arg);
+
+    static bool gNewDOMBindingsEnabled;
 
     static const char* mStrings[IDX_TOTAL_COUNT];
     jsid mStrIDs[IDX_TOTAL_COUNT];
@@ -1600,6 +1608,27 @@ public:
     XPCContext *GetContext() { return mContext; }
     void SetContext(XPCContext *xpcc) { mContext = nsnull; }
 
+    nsDataHashtable<nsDepCharHashKey, JSObject*>& GetCachedDOMPrototypes()
+    {
+        return mCachedDOMPrototypes;
+    }
+
+    static XPCWrappedNativeScope *GetNativeScope(JSContext *cx, JSObject *obj)
+    {
+        JS_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
+
+        const js::Value &v = js::GetSlot(obj, JSCLASS_GLOBAL_SLOT_COUNT);
+        return v.isUndefined()
+               ? nsnull
+               : static_cast<XPCWrappedNativeScope *>(v.toPrivate());
+    }
+    void TraceDOMPrototypes(JSTracer *trc);
+
+    JSBool NewDOMBindingsEnabled()
+    {
+        return mNewDOMBindingsEnabled;
+    }
+
 protected:
     XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal);
     virtual ~XPCWrappedNativeScope();
@@ -1639,6 +1668,10 @@ private:
     // How do we deal?  Do we need to?  I suspect this isn't worth worrying
     // about, since all of our scope objects are verified as not doing that.
     nsIScriptObjectPrincipal* mScriptObjectPrincipal;
+
+    nsDataHashtable<nsDepCharHashKey, JSObject*> mCachedDOMPrototypes;
+
+    JSBool mNewDOMBindingsEnabled;
 };
 
 JSObject* xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj,
@@ -2666,6 +2699,9 @@ public:
         JSObject* wrapper = GetWrapperPreserveColor();
         if(wrapper)
             JS_CALL_OBJECT_TRACER(trc, wrapper, "XPCWrappedNative::mWrapper");
+        if(mScriptableInfo &&
+           (mScriptableInfo->GetJSClass()->flags & JSCLASS_XPCONNECT_GLOBAL))
+            GetScope()->TraceDOMPrototypes(trc);
     }
 
     inline void AutoTrace(JSTracer* trc)
@@ -4409,7 +4445,8 @@ struct CompartmentPrivate
           wantXrays(wantXrays),
           cycleCollectionEnabled(cycleCollectionEnabled),
           waiverWrapperMap(nsnull),
-          expandoMap(nsnull)
+          expandoMap(nsnull),
+          domExpandoMap(nsnull)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
@@ -4420,7 +4457,8 @@ struct CompartmentPrivate
           wantXrays(wantXrays),
           cycleCollectionEnabled(cycleCollectionEnabled),
           waiverWrapperMap(nsnull),
-          expandoMap(nsnull)
+          expandoMap(nsnull),
+          domExpandoMap(nsnull)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
@@ -4435,6 +4473,7 @@ struct CompartmentPrivate
     JSObject2JSObjectMap *waiverWrapperMap;
     // NB: we don't want this map to hold a strong reference to the wrapper.
     nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *> *expandoMap;
+    nsTHashtable<nsPtrHashKey<JSObject> > *domExpandoMap;
     nsCString location;
 
     bool RegisterExpandoObject(XPCWrappedNative *wn, JSObject *expando) {
@@ -4466,6 +4505,22 @@ struct CompartmentPrivate
         JSObject *obj = LookupExpandoObjectPreserveColor(wn);
         xpc_UnmarkGrayObject(obj);
         return obj;
+    }
+
+    bool RegisterDOMExpandoObject(JSObject *expando) {
+        if (!domExpandoMap) {
+            domExpandoMap = new nsTHashtable<nsPtrHashKey<JSObject> >();
+            if(!domExpandoMap->Init(8))
+            {
+                domExpandoMap = nsnull;
+                return false;
+            }
+        }
+        return domExpandoMap->PutEntry(expando);
+    }
+    void RemoveDOMExpandoObject(JSObject *expando) {
+        if(domExpandoMap)
+            domExpandoMap->RemoveEntry(expando);
     }
 };
 

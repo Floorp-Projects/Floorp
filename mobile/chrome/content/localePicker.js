@@ -204,6 +204,21 @@ let LocaleUI = {
     }
   },
 
+  goBack: function goBack() {
+    switch (this.selectedPanel) {
+      case this.mainPage:
+        // Do nothing on the "Loading..." screen.
+        break;
+      case this.pickerpage:
+        this.cancelPicker();
+        break;
+      case this.installerPage:
+        this.cancelInstall();
+        this.showPicker();
+        break;
+    }
+  },
+
   cancelPicker: function() {
     if (this.pendingInstall)
       this.pendingInstall = null;

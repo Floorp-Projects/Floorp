@@ -95,7 +95,6 @@
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "mozilla/Preferences.h"
 #include "nsLocation.h"
-#include "nsIDOMCaretPosition.h"
 
 // Window scriptable helper includes
 #include "nsIDocShell.h"
@@ -170,7 +169,6 @@
 // HTMLOptionsCollection includes
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
-#include "nsIDOMNSHTMLOptionCollectn.h"
 
 // ContentList includes
 #include "nsContentList.h"
@@ -497,12 +495,14 @@
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
 #include "mozilla/dom/indexedDB/IDBIndex.h"
 #include "nsIIDBDatabaseException.h"
-#include "nsIDOMEventException.h"
 
 #include "nsIDOMMediaQueryList.h"
 
 #include "nsDOMTouchEvent.h"
 #include "nsIDOMCustomEvent.h"
+
+#include "nsWrapperCacheInlines.h"
+#include "dombindings.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -603,6 +603,7 @@ DOMCI_DATA(DOMConstructor, void)
     0,                                                                        \
     PR_FALSE,                                                                 \
     PR_FALSE,                                                                 \
+    NULL,                                                                     \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
@@ -619,6 +620,7 @@ DOMCI_DATA(DOMConstructor, void)
     0,                                                                        \
     PR_TRUE,                                                                  \
     PR_FALSE,                                                                 \
+    NULL,                                                                     \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
@@ -656,9 +658,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Location, nsLocationSH,
                            (DOM_DEFAULT_SCRIPTABLE_FLAGS &
                             ~nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE))
-
-  NS_DEFINE_CLASSINFO_DATA(CaretPosition, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(Navigator, nsNavigatorSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
@@ -1464,7 +1463,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(AnimationEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(ContentFrameMessageManager, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(ContentFrameMessageManager, nsEventTargetSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(FormData, nsDOMGenericSH,
@@ -1504,9 +1503,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(IDBVersionChangeRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBDatabaseException, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(EventException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(Touch, nsDOMGenericSH,
@@ -2273,10 +2269,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLocation)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(CaretPosition, nsIDOMCaretPosition)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCaretPosition)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocation)
@@ -2507,7 +2499,6 @@ nsDOMClassInfo::Init()
     // Order is significant.  nsIDOMHTMLOptionsCollection.length shadows
     // nsIDOMHTMLCollection.length, which is readonly.
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOptionsCollection)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLOptionCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
   DOM_CLASSINFO_MAP_END
 
@@ -4104,11 +4095,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(EventException, nsIDOMEventException)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventException)
-    DOM_CLASSINFO_MAP_ENTRY(nsIException)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(Touch, nsIDOMTouch,
                                         !nsDOMTouchEvent::PrefEnabled())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouch)
@@ -4195,6 +4181,8 @@ nsDOMClassInfo::Init()
 
   sDisableGlobalScopePollutionSupport =
     Preferences::GetBool("browser.dom.global_scope_pollution.disabled");
+
+  mozilla::dom::binding::Register(sClassInfoData);
 
   sIsInitialized = PR_TRUE;
 
@@ -6175,6 +6163,17 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     if (name_struct->mDOMClassInfoID == eDOMClassInfo_EventSource_id) {
       if (!nsEventSource::PrefEnabled()) {
         return NS_OK;
+      }
+    }
+
+    // Lookup new DOM bindings.
+    if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+      mozilla::dom::binding::DefineInterface define =
+        sClassInfoData[name_struct->mDOMClassInfoID].mDefineDOMInterface;
+      if (define && mozilla::dom::binding::DefineConstructor(cx, obj, define, &rv)) {
+        *did_resolve = NS_SUCCEEDED(rv);
+
+        return rv;
       }
     }
 
@@ -8425,14 +8424,20 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
 
   if (!JSVAL_IS_PRIMITIVE(collection)) {
     // We already have a node list in our reserved slot, use it.
-
-    nsISupports *native =
-      sXPConnect->GetNativeOfWrapper(cx, JSVAL_TO_OBJECT(collection));
-    if (native) {
-      NS_ADDREF(*nodeList = nsContentList::FromSupports(native));
+    JSObject *obj = JSVAL_TO_OBJECT(collection);
+    if (mozilla::dom::binding::HTMLCollection::objIsWrapper(obj)) {
+      nsIHTMLCollection *native =
+        mozilla::dom::binding::HTMLCollection::getNative(obj);
+      NS_ADDREF(*nodeList = static_cast<nsContentList*>(native));
     }
     else {
-      rv = NS_ERROR_FAILURE;
+      nsISupports *native = sXPConnect->GetNativeOfWrapper(cx, obj);
+      if (native) {
+        NS_ADDREF(*nodeList = nsContentList::FromSupports(native));
+      }
+      else {
+        rv = NS_ERROR_FAILURE;
+      }
     }
   } else {
     // No node list for this document.all yet, create one...
@@ -9203,7 +9208,7 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 // static
 nsresult
 nsHTMLSelectElementSH::SetOption(JSContext *cx, jsval *vp, PRUint32 aIndex,
-                                 nsIDOMNSHTMLOptionCollection *aOptCollection)
+                                 nsIDOMHTMLOptionsCollection *aOptCollection)
 {
   JSAutoRequest ar(cx);
 
@@ -9241,10 +9246,7 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
     nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
     select->GetOptions(getter_AddRefs(options));
 
-    nsCOMPtr<nsIDOMNSHTMLOptionCollection> oc(do_QueryInterface(options));
-    NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
-
-    nsresult rv = SetOption(cx, vp, n, oc);
+    nsresult rv = SetOption(cx, vp, n, options);
     return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
   }
 
@@ -9647,7 +9649,7 @@ nsHTMLOptionsCollectionSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNSHTMLOptionCollection> oc =
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> oc =
     do_QueryWrappedNative(wrapper, obj);
   NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
 

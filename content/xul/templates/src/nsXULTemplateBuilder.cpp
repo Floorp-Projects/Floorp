@@ -99,7 +99,7 @@
 #include "rdf.h"
 #include "pldhash.h"
 #include "plhash.h"
-#include "nsIDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsPIDOMWindow.h"
 #include "nsIConsoleService.h" 
 #include "nsNetUtil.h"

@@ -37,7 +37,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.20 2008/06/06 01:16:18 wtc%google.com Exp $
+ * $Id: cmsrecinfo.c,v 1.21 2011/08/21 01:14:18 wtc%google.com Exp $
  */
 
 #include "cmslocal.h"
@@ -579,11 +579,6 @@ NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex,
 	    /* get the symmetric (bulk) key by unwrapping it using our private key */
 	    bulkkey = NSS_CMSUtil_DecryptSymKey_RSA(privkey, enckey, bulkalgtag);
 	    break;
-	case SEC_OID_NETSCAPE_SMIME_KEA:
-	    /* FORTEZZA key exchange algorithm */
-	    /* the supplemental data is in the parameters of encalg */
-	    bulkkey = NSS_CMSUtil_DecryptSymKey_MISSI(privkey, enckey, encalg, bulkalgtag, ri->cmsg->pwfn_arg);
-	    break;
 	default:
 	    error = SEC_ERROR_UNSUPPORTED_KEYALG;
 	    goto loser;
@@ -604,6 +599,7 @@ NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex,
 	    /* content encryption key using a Unwrap op */
 	    /* the derive operation has to generate the key using the algorithm in RFC2631 */
 	    error = SEC_ERROR_UNSUPPORTED_KEYALG;
+	    goto loser;
 	    break;
 	default:
 	    error = SEC_ERROR_UNSUPPORTED_KEYALG;
@@ -623,6 +619,7 @@ NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex,
     return bulkkey;
 
 loser:
+    PORT_SetError(error);
     return NULL;
 }
 

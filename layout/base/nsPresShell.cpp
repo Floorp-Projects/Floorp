@@ -3906,6 +3906,16 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
                            __LINE__, docURL__.get(), flushTypeNames[aType - 1]);
 #endif
 
+#ifdef ACCESSIBILITY
+#ifdef DEBUG
+  nsAccessibilityService* accService = GetAccService();
+  if (accService) {
+    NS_ASSERTION(!accService->IsProcessingRefreshDriverNotification(),
+                 "Flush during accessible tree update!");
+  }
+#endif
+#endif
+
   NS_ASSERTION(aType >= Flush_Frames, "Why did we get called?");
 
   bool isSafeToFlush = IsSafeToFlush();

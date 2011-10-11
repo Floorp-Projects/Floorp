@@ -38,7 +38,7 @@
 /*
  * PKCS7 encoding.
  *
- * $Id: p7encode.c,v 1.13 2008/03/10 00:01:26 wtc%google.com Exp $
+ * $Id: p7encode.c,v 1.14 2011/08/21 01:14:17 wtc%google.com Exp $
  */
 
 #include "p7local.h"
@@ -91,7 +91,6 @@ sec_pkcs7_encoder_start_encrypt (SEC_PKCS7ContentInfo *cinfo,
     sec_PKCS7CipherObject *encryptobj;
     SEC_PKCS7RecipientInfo **recipientinfos, *ri;
     SEC_PKCS7EncryptedContentInfo *enccinfo;
-    SEC_PKCS7SMIMEKEAParameters   keaParams;
     SECKEYPublicKey *publickey = NULL;
     SECKEYPrivateKey *ourPrivKey = NULL;
     PK11SymKey  *bulkkey;
@@ -101,9 +100,6 @@ sec_pkcs7_encoder_start_encrypt (SEC_PKCS7ContentInfo *cinfo,
 
     /* Get the context in case we need it below. */
     wincx = cinfo->pwfn_arg;
-
-    /* Clear keaParams, since cleanup code checks the lengths */
-    (void) memset(&keaParams, 0, sizeof(keaParams));
 
     kind = SEC_PKCS7ContentType (cinfo);
     switch (kind) {
@@ -197,8 +193,7 @@ sec_pkcs7_encoder_start_encrypt (SEC_PKCS7ContentInfo *cinfo,
 	 * down into the subjectPublicKeyInfo myself) and another which
 	 * takes a public key and algorithm tag and data and encrypts
 	 * the data.  Or something like that.  The point is that all
-	 * of the following hardwired RSA and KEA stuff should be done
-	 * elsewhere.
+	 * of the following hardwired RSA stuff should be done elsewhere.
 	 */
 
 	certalgtag=SECOID_GetAlgorithmTag(&(cert->subjectPublicKeyInfo.algorithm));
@@ -223,149 +218,6 @@ sec_pkcs7_encoder_start_encrypt (SEC_PKCS7ContentInfo *cinfo,
 	    if (rv != SECSuccess) goto loser;
 	    params = NULL; /* paranoia */
 	    break;
-	/* ### mwelch -- KEA */ 
-      case SEC_OID_MISSI_KEA_DSS_OLD:
-      case SEC_OID_MISSI_KEA_DSS:
-      case SEC_OID_MISSI_KEA:
-	    {
-#define SMIME_FORTEZZA_RA_LENGTH 128
-#define SMIME_FORTEZZA_IV_LENGTH 24
-#define SMIME_FORTEZZA_MAX_KEY_SIZE 256
-		SECStatus err;
-		PK11SymKey *tek;
-		CERTCertificate *ourCert;
-		SECKEYPublicKey *ourPubKey;
-		SECKEATemplateSelector whichKEA = SECKEAInvalid;
-
-		/* We really want to show our KEA tag as the
-		   key exchange algorithm tag. */
-		encalgtag = SEC_OID_NETSCAPE_SMIME_KEA;
-
-		/* Get the public key of the recipient. */
-		publickey = CERT_ExtractPublicKey(cert);
-		if (publickey == NULL) goto loser;
-
-		/* Find our own cert, and extract its keys. */
-		ourCert = PK11_FindBestKEAMatch(cert,wincx);
-		if (ourCert == NULL) goto loser;
-
-		arena = PORT_NewArena(1024);
-		if (arena == NULL) goto loser;
-
-		ourPubKey = CERT_ExtractPublicKey(ourCert);
-		if (ourPubKey == NULL)
-		{
-		    CERT_DestroyCertificate(ourCert);
-		    goto loser;
-		}
-
-		/* While we're here, copy the public key into the outgoing
-		 * KEA parameters. */
-		SECITEM_CopyItem(arena, &(keaParams.originatorKEAKey),
-				 &(ourPubKey->u.fortezza.KEAKey));
-		SECKEY_DestroyPublicKey(ourPubKey);
-		ourPubKey = NULL;
-
-		/* Extract our private key in order to derive the 
-		 * KEA key. */
-		ourPrivKey = PK11_FindKeyByAnyCert(ourCert,wincx);
-		CERT_DestroyCertificate(ourCert); /* we're done with this */
-		if (!ourPrivKey) goto loser;
-
-		/* Prepare raItem with 128 bytes (filled with zeros). */
-		keaParams.originatorRA.data = 
-		  (unsigned char*)PORT_ArenaAlloc(arena,SMIME_FORTEZZA_RA_LENGTH);
-		keaParams.originatorRA.len = SMIME_FORTEZZA_RA_LENGTH;
-
-
-		/* Generate the TEK (token exchange key) which we use
-		 * to wrap the bulk encryption key. (raItem) will be
-		 * filled with a random seed which we need to send to
-		 * the recipient. */
-		tek = PK11_PubDerive(ourPrivKey, publickey, PR_TRUE,
-				     &keaParams.originatorRA, NULL,
-				     CKM_KEA_KEY_DERIVE, CKM_SKIPJACK_WRAP,
-				     CKA_WRAP, 0, wincx);
-
-		    SECKEY_DestroyPublicKey(publickey);
-		    SECKEY_DestroyPrivateKey(ourPrivKey);
-		    publickey = NULL;
-		    ourPrivKey = NULL;
-		
-		if (!tek)
-		    goto loser;
-
-		ri->encKey.data = (unsigned char*)PORT_ArenaAlloc(cinfo->poolp,
-						  SMIME_FORTEZZA_MAX_KEY_SIZE);
-		ri->encKey.len = SMIME_FORTEZZA_MAX_KEY_SIZE;
-
-		if (ri->encKey.data == NULL)
-		{
-		    PK11_FreeSymKey(tek);
-		    goto loser;
-		}
-
-		/* Wrap the bulk key. What we do with the resulting data
-		   depends on whether we're using Skipjack to wrap the key. */
-		switch(PK11_AlgtagToMechanism(enccinfo->encalg))
-		{
-		case CKM_SKIPJACK_CBC64:
-		case CKM_SKIPJACK_ECB64:
-		case CKM_SKIPJACK_OFB64:
-		case CKM_SKIPJACK_CFB64:
-		case CKM_SKIPJACK_CFB32:
-		case CKM_SKIPJACK_CFB16:
-		case CKM_SKIPJACK_CFB8:
-		    /* do SKIPJACK, we use the wrap mechanism */
-		    err = PK11_WrapSymKey(CKM_SKIPJACK_WRAP, NULL, 
-				      tek, bulkkey, &ri->encKey);
-		    whichKEA = SECKEAUsesSkipjack;
-		    break;
-		default:
-		    /* Not SKIPJACK, we encrypt the raw key data */
-		    keaParams.nonSkipjackIV .data = 
-		      (unsigned char*)PORT_ArenaAlloc(arena,
-						     SMIME_FORTEZZA_IV_LENGTH);
-		    keaParams.nonSkipjackIV.len = SMIME_FORTEZZA_IV_LENGTH;
-		    err = PK11_WrapSymKey(CKM_SKIPJACK_CBC64,
-					  &keaParams.nonSkipjackIV, 
-				          tek, bulkkey, &ri->encKey);
-		    if (err != SECSuccess)
-			goto loser;
-
-		    if (ri->encKey.len != PK11_GetKeyLength(bulkkey))
-		    {
-			/* The size of the encrypted key is not the same as
-			   that of the original bulk key, presumably due to
-			   padding. Encode and store the real size of the
-			   bulk key. */
-			if (SEC_ASN1EncodeInteger(arena, 
-						  &keaParams.bulkKeySize,
-						  PK11_GetKeyLength(bulkkey))
-			    == NULL)
-			    err = (SECStatus)PORT_GetError();
-			else
-			    /* use full template for encoding */
-			    whichKEA = SECKEAUsesNonSkipjackWithPaddedEncKey;
-		    }
-		    else
-			/* enc key length == bulk key length */
-			whichKEA = SECKEAUsesNonSkipjack; 
-		    break;
-		}
-
-		PK11_FreeSymKey(tek);
-		if (err != SECSuccess)
-		    goto loser;
-
-		PORT_Assert( whichKEA != SECKEAInvalid);
-
-		/* Encode the KEA parameters into the recipient info. */
-		params = SEC_ASN1EncodeItem(arena,NULL, &keaParams, 
-				      sec_pkcs7_get_kea_template(whichKEA));
-		if (params == NULL) goto loser;
-		break;
-	    }
 	default:
 	    PORT_SetError (SEC_ERROR_INVALID_ALGORITHM);
 	    goto loser;
@@ -939,10 +791,6 @@ sec_pkcs7_encoder_sig_and_certs (SEC_PKCS7ContentInfo *cinfo,
 	     * so that I do not have to know about subjectPublicKeyInfo...
 	     */
 	    signalgtag = SECOID_GetAlgorithmTag (&(cert->subjectPublicKeyInfo.algorithm));
-
-	    /* Fortezza MISSI have weird signature formats.  Map them
-	     * to standard DSA formats */
-	    signalgtag = PK11_FortezzaMapSig(signalgtag);
 
 	    if (signerinfo->authAttr != NULL) {
 		SEC_PKCS7Attribute *attr;

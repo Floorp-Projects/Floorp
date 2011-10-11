@@ -38,7 +38,7 @@
  * Header file for routines specific to S/MIME.  Keep things that are pure
  * pkcs7 out of here; this is for S/MIME policy, S/MIME interoperability, etc.
  *
- * $Id: smime.h,v 1.10 2011/08/01 07:08:09 kaie%kuix.de Exp $
+ * $Id: smime.h,v 1.11 2011/08/21 01:14:18 wtc%google.com Exp $
  */
 
 #ifndef _SECMIME_H_
@@ -126,7 +126,7 @@ extern PRBool NSS_SMIMEUtil_EncryptionPossible(void);
  * scans the list of allowed and enabled ciphers and construct a PKCS9-compliant
  * S/MIME capabilities attribute value.
  */
-extern SECStatus NSS_SMIMEUtil_CreateSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool includeFortezzaCiphers);
+extern SECStatus NSS_SMIMEUtil_CreateSMIMECapabilities(PLArenaPool *poolp, SECItem *dest);
 
 /*
  * NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs - create S/MIME encryption key preferences attr value

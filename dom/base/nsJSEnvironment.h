@@ -45,10 +45,10 @@
 #include "nsIXPCScriptNotify.h"
 #include "prtime.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsScriptNameSpaceManager.h"
 
 class nsIXPConnectJSObjectHolder;
 class nsRootedJSValueArray;
+class nsScriptNameSpaceManager;
 namespace js {
 class AutoArrayRooter;
 }

@@ -69,7 +69,9 @@ endif
 EXTRA_COMPONENTS = nsTryToClose.js nsTryToClose.manifest
 
 ifdef ENABLE_TESTS
-DIRS += tests
+ifneq (mobile,$(MOZ_BUILD_APP))
+DIRS += tests/browser
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

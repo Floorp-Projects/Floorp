@@ -80,9 +80,13 @@ class BumpChunk
 
     char *base() const { return limit - bumpSpaceSize; }
 
+    BumpChunk *thisDuringConstruction() { return this; }
+
     explicit BumpChunk(size_t bumpSpaceSize)
-      : bump(reinterpret_cast<char *>(this) + sizeof(BumpChunk)), limit(bump + bumpSpaceSize),
-        next_(NULL), bumpSpaceSize(bumpSpaceSize) {
+      : bump(reinterpret_cast<char *>(thisDuringConstruction()) + sizeof(BumpChunk)),
+        limit(bump + bumpSpaceSize),
+        next_(NULL), bumpSpaceSize(bumpSpaceSize)
+    {
         JS_ASSERT(bump == AlignPtr(bump));
     }
 

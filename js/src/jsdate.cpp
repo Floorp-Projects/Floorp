@@ -2513,32 +2513,32 @@ date_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
-    /*
-     * It is an error to call date_valueOf on a non-date object, but we don't
-     * need to check for that explicitly here because every path calls
-     * GetUTCTime, which does the check.
-     */
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_valueOf, &DateClass, &ok);
+    if (!obj)
+        return ok;
 
     /* If called directly with no arguments, convert to a time number. */
-    if (argc == 0)
-        return date_getTime(cx, argc, vp);
-
-    /* Verify this before extracting a string from the first argument. */
-    JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj)
-        return false;
+    if (argc == 0) {
+        args.rval() = obj->getDateUTCTime();
+        return true;
+    }
 
     /* Convert to number only if the hint was given, otherwise favor string. */
-    JSString *str = js_ValueToString(cx, vp[2]);
+    JSString *str = js_ValueToString(cx, args[0]);
     if (!str)
         return false;
     JSLinearString *linear_str = str->ensureLinear(cx);
     if (!linear_str)
         return false;
     JSAtom *number_str = cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER];
-    if (EqualStrings(linear_str, number_str))
-        return date_getTime(cx, argc, vp);
-    return date_toString(cx, argc, vp);
+    if (EqualStrings(linear_str, number_str)) {
+        args.rval() = obj->getDateUTCTime();
+        return true;
+    }
+    return date_format(cx, obj->getDateUTCTime().toNumber(), FORMATSPEC_FULL, args);
 }
 
 // Don't really need an argument here, but we don't support arg-less builtins

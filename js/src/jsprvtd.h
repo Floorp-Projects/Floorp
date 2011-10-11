@@ -129,8 +129,17 @@ namespace js {
 struct ArgumentsData;
 struct Class;
 
-class RegExp;
+class RegExpPrivate;
 class RegExpStatics;
+
+enum RegExpFlag
+{
+    IgnoreCaseFlag  = JS_BIT(0),
+    GlobalFlag      = JS_BIT(1),
+    MultilineFlag   = JS_BIT(2),
+    StickyFlag      = JS_BIT(3)
+};
+
 class AutoStringRooter;
 class ExecuteArgsGuard;
 class InvokeFrameGuard;

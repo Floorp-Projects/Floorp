@@ -14,6 +14,39 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   var didRunAsync = false;
   var didRunLocal = false;
   var global = Components.classes["@mozilla.org/globalmessagemanager;1"].getService(Components.interfaces.nsIChromeFrameMessageManager);
+  var ppm = Components.classes["@mozilla.org/parentprocessmessagemanager;1"].getService(Components.interfaces.nsIFrameMessageManager);
+  var cpm = Components.classes["@mozilla.org/childprocessmessagemanager;1"].getService(Components.interfaces.nsISyncMessageSender);
+
+  var asyncPPML = false;
+  function ppmASL(m) {
+    asyncPPML = true;
+  }
+  var syncPPML = false;
+  function ppmSL(m) {
+    syncPPML = true;
+  }
+  ppm.addMessageListener("processmessageAsync", ppmASL);
+  ppm.addMessageListener("processmessageSync", ppmSL);
+
+  cpm.sendAsyncMessage("processmessageAsync", "");
+  cpm.sendSyncMessage("processmessageSync", "");
+
+  var asyncCPML = false;
+  function cpmASL(m) {
+    asyncCPML = true;
+  }
+  cpm.addMessageListener("childprocessmessage", cpmASL);
+  ppm.sendAsyncMessage("childprocessmessage", "");
+  
+  function checkPMMMessages() {
+    opener.wrappedJSObject.ok(asyncPPML, "should have handled async message");
+    opener.wrappedJSObject.ok(syncPPML, "should have handled sync message");
+    opener.wrappedJSObject.ok(asyncCPML, "should have handled async message");
+    ppm.removeMessageListener("processmessageAsync", ppmASL);
+    ppm.removeMessageListener("processmessageSync", ppmSL);
+    cpm.removeMessageListener("childprocessmessage", cpmASL);
+  }
+
   var globalListenerCallCount = 0;
   function globalListener(m) {
     ++globalListenerCallCount;
@@ -85,6 +118,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     opener.wrappedJSObject.is(globalListenerCallCount, oldValue + 1,
                               "Wrong message count");
 
+    setTimeout(checkPMMMessages, 0);
     setTimeout(loadScript, 0);
   }
 

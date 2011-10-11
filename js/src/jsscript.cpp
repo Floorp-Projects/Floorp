@@ -1088,7 +1088,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     JS_ASSERT(cursor + length * sizeof(jsbytecode) + nsrcnotes * sizeof(jssrcnote) == data + size);
 
 #ifdef DEBUG
-    script->id_ = ++cx->compartment->types.scriptCount;
+    script->id_ = 0;
 #endif
 
     JS_ASSERT(script->getVersion() == version);
@@ -1215,7 +1215,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     fun = NULL;
     if (cg->inFunction()) {
         /*
-         * We initialize fun->u.i.script to be the script constructed above
+         * We initialize fun->script() to be the script constructed above
          * so that the debugger has a valid fun->script().
          */
         fun = cg->fun();
@@ -1238,8 +1238,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         if (!script->typeSetFunction(cx, fun, singleton))
             return NULL;
 
-        fun->u.i.script = script;
-        script->setOwnerObject(fun);
+        fun->setScript(script);
     } else {
         /*
          * Initialize script->object, if necessary, so that the debugger has a
@@ -1252,11 +1251,11 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     /* Tell the debugger about this compiled script. */
     js_CallNewScriptHook(cx, script, fun);
     if (!cg->parent) {
-        Debugger::onNewScript(cx, script,
-                              fun ? fun : (script->u.object ? script->u.object : cg->scopeChain()),
-                              (fun || script->u.object)
-                              ? Debugger::NewHeldScript
-                              : Debugger::NewNonHeldScript);
+        JSObject *owner = fun ? fun : script->u.object;
+        GlobalObject *compileAndGoGlobal = NULL;
+        if (script->compileAndGo)
+            compileAndGoGlobal = (owner ? owner : cg->scopeChain())->getGlobal();
+        Debugger::onNewScript(cx, script, owner, compileAndGoGlobal);
     }
 
     return script;
@@ -1331,7 +1330,6 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
     if (JSDestroyScriptHook hook = cx->debugHooks->destroyScriptHook)
         hook(cx, script, cx->debugHooks->destroyScriptHookData);
     script->callDestroyHook = false;
-    Debugger::onDestroyScript(script);
     JS_ClearScriptTraps(cx, script);
 }
 

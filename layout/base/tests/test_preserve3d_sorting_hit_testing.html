@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=684759
+-->
+<head>
+  <title>Test for Bug 684759</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=684759">Mozilla Bug 684759</a>
+<iframe src="preserve3d_sorting_hit_testing_iframe.html" id="iframe" height="1000" width="1000" style="border:none"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 684759 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  
+  var iframe = document.getElementById("iframe");
+  
+  var doc = iframe.contentDocument;
+
+  var big= doc.getElementById("big");
+  var small = doc.getElementById("small");
+
+  function check(x, y, expected_element, description)
+  {
+	is(doc.elementFromPoint(x, y), expected_element,
+	   "point (" + x + ", " + y + "): " + description);
+  }
+
+  check(650, 250, small, "Small object should be infront of big");
+  check(650, 308, big, "Check bounds of small object");
+  check(650, 207, big, "Check bounds of small object");
+  check(607, 250, big, "Check bounds of small object");
+  check(708, 250, big, "Check bounds of small object");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
