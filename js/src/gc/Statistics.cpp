@@ -163,6 +163,16 @@ Statistics::endGC()
     endPhase(PHASE_GC);
     crash::SnapshotGCStack();
 
+    if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback) {
+        (*cb)(JS_TELEMETRY_GC_REASON, triggerReason);
+        (*cb)(JS_TELEMETRY_GC_IS_COMPARTMENTAL, compartment ? 1 : 0);
+        (*cb)(JS_TELEMETRY_GC_IS_SHAPE_REGEN,
+              runtime->shapeGen & SHAPE_OVERFLOW_BIT ? 1 : 0);
+        (*cb)(JS_TELEMETRY_GC_MS, t(PHASE_GC));
+        (*cb)(JS_TELEMETRY_GC_MARK_MS, t(PHASE_MARK));
+        (*cb)(JS_TELEMETRY_GC_SWEEP_MS, t(PHASE_SWEEP));
+    }
+
     if (fp)
         printStats();
 
