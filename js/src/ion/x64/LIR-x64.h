@@ -66,27 +66,15 @@ class LBox : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Given an untyped input, guards on whether it's an integer and returns an
-// integer payload.
-class LUnboxBoolean : public LInstructionHelper<1, 1, 1>
+// Given an untyped input, guards on whether it's a specific type and returns
+// the unboxed payload.
+class LUnbox : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LIR_HEADER(UnboxBoolean);
+    LIR_HEADER(Unbox);
 
-    LUnboxBoolean(const LAllocation &input, const LDefinition &temp) {
-        setOperand(0, input);
-        setTemp(0, temp);
-    }
-};
-
-// Given an untyped input, guards on whether it's an integer and returns an
-// integer payload.
-class LUnboxInteger : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(UnboxInteger);
-
-    LUnboxInteger(const LAllocation &input) {
+    LUnbox(const LAllocation &input)
+    {
         setOperand(0, input);
     }
 
@@ -95,54 +83,8 @@ class LUnboxInteger : public LInstructionHelper<1, 1, 0>
     const LDefinition *output() {
         return getDef(0);
     }
-};
-
-// Given an untyped input, guards on whether it's a double and returns a double
-// payload.
-class LUnboxDouble : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(UnboxDouble);
-
-    LUnboxDouble(const LAllocation &input) {
-        setOperand(0, input);
-    }
-
-    static const size_t Input = 0;
-
-    const LDefinition *output() {
-        return getDef(0);
-    }
-};
-
-// Given an untyped input, guards on whether it's an object and returns the
-// pointer.
-class LUnboxObject : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(UnboxObject);
-
-    LUnboxObject(const LAllocation &input) {
-        setOperand(0, input);
-    }
-
-    static const size_t Input = 0;
-
-    const LDefinition *output() {
-        return getDef(0);
-    }
-};
-
-// Given an untyped input, guards on whether it's a string and returns the
-// pointer.
-class LUnboxString : public LInstructionHelper<1, 1, 1>
-{
-  public:
-    LIR_HEADER(UnboxString);
-
-    LUnboxString(const LAllocation &input, const LDefinition &temp) {
-        setOperand(0, input);
-        setTemp(0, temp);
+    MUnbox *mir() const {
+        return mir_->toUnbox();
     }
 };
 

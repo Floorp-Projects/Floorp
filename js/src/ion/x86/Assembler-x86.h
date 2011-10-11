@@ -110,22 +110,27 @@ class Operand
     int32 index_ : 5;
 
   public:
-    explicit Operand(const Register &reg)
+    explicit Operand(Register reg)
       : kind_(REG),
         base_(reg.code())
     { }
-    explicit Operand(const FloatRegister &reg)
+    explicit Operand(FloatRegister reg)
       : kind_(FPREG),
         base_(reg.code())
     { }
-    explicit Operand(const Register &base, const Register &index, Scale scale, int32 disp = 0)
+    explicit Operand(const Address &address)
+      : kind_(REG_DISP),
+        base_(address.base.code()),
+        disp_(address.offset)
+    { }
+    Operand(Register base, Register index, Scale scale, int32 disp = 0)
       : kind_(SCALE),
         base_(base.code()),
         scale_(scale),
         disp_(disp),
         index_(index.code())
     { }
-    Operand(const Register &reg, int32 disp)
+    Operand(Register reg, int32 disp)
       : kind_(REG_DISP),
         base_(reg.code()),
         disp_(disp)
@@ -209,6 +214,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::jmp;
     using AssemblerX86Shared::movsd;
     using AssemblerX86Shared::retarget;
+    using AssemblerX86Shared::cmpl;
 
     static void TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
@@ -259,6 +265,10 @@ class Assembler : public AssemblerX86Shared
     }
     void cvttsd2s(const FloatRegister &src, const Register &dest) {
         cvttsd2si(src, dest);
+    }
+
+    void cmpl(const Register src, ImmGCPtr ptr) {
+        masm.cmpl_ir(ptr.value, src.code());
     }
 
     void jmp(void *target, Relocation::Kind reloc) {

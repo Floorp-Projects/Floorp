@@ -92,6 +92,11 @@ class MacroAssemblerX86Shared : public Assembler
         }
     }
 
+    void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
+        testl(Operand(address.base, address.offset), imm);
+        j(cond, label);
+    }
+
     // The following functions are exposed for use in platform-shared code.
     void Push(const Register &reg) {
         push(reg);

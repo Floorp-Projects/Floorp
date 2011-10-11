@@ -116,7 +116,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Sets a variable slot to the top of the stack, correctly creating copies
     // as needed.
-    bool setVariable(uint32 slot);
+    void setVariable(uint32 slot);
 
   public:
     ///////////////////////////////////////////////////////
@@ -142,8 +142,12 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Sets the instruction associated with various slot types. The
     // instruction must lie at the top of the stack.
-    bool setLocal(uint32 local);
-    bool setArg(uint32 arg);
+    void setLocal(uint32 local);
+    void setArg(uint32 arg);
+
+    // Rewrites a slot directly, bypassing the stack transition. This should
+    // not be used under most circumstances.
+    void rewriteSlot(uint32 slot, MDefinition *ins);
 
     // Tracks an instruction as being pushed onto the operand stack.
     void push(MDefinition *ins);
@@ -432,6 +436,9 @@ class MIRGraph
     }
     uint32 getMaxInstructionId() {
         return idGen_;
+    }
+    MResumePoint *entryResumePoint() {
+        return blocks_.begin()->entryResumePoint();
     }
 };
 

@@ -555,9 +555,12 @@ class LInstruction : public TempObject,
     LSnapshot *snapshot_;
 
   protected:
+    MDefinition *mir_;
+
     LInstruction()
       : id_(0),
-        snapshot_(NULL)
+        snapshot_(NULL),
+        mir_(NULL)
     { }
 
   public:
@@ -599,6 +602,9 @@ class LInstruction : public TempObject,
     }
     LSnapshot *snapshot() const {
         return snapshot_;
+    }
+    void setMir(MDefinition *mir) {
+        mir_ = mir;
     }
     void assignSnapshot(LSnapshot *snapshot);
 
@@ -874,6 +880,9 @@ class LIRGraph
     // Number of stack slots needed for argument construction for calls.
     uint32 argumentSlotCount_;
 
+    // Snapshot taken before any LIR has been lowered.
+    LSnapshot *entrySnapshot_;
+
     MIRGraph &mir_;
 
   public:
@@ -922,6 +931,12 @@ class LIRGraph
     }
     const Value &getConstant(size_t index) const {
         return constantPool_[index];
+    }
+    void setEntrySnapshot(LSnapshot *snapshot) {
+        entrySnapshot_ = snapshot;
+    }
+    LSnapshot *entrySnapshot() const {
+        return entrySnapshot_;
     }
 };
 

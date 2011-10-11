@@ -47,6 +47,7 @@
 #include "jsbool.h"
 #include "jsnum.h"
 #include "shared/Lowering-shared-inl.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace ion;
@@ -156,7 +157,7 @@ LIRGenerator::visitCall(MCall *call)
 
     // A call is entirely stateful, depending upon arguments already being
     // stored in an argument vector. Therefore visitCall() may be generic.
-    LCallGeneric *ins = new LCallGeneric(call, useRegister(call->getFunction()),
+    LCallGeneric *ins = new LCallGeneric(useRegister(call->getFunction()),
                                          argslot, temp(LDefinition::POINTER),
                                          temp(LDefinition::POINTER));
     if (!defineReturn(ins, call))
@@ -312,7 +313,7 @@ LIRGenerator::lowerShiftOp(JSOp op, MInstruction *ins)
     MDefinition *rhs = ins->getOperand(1);
 
     if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
-        LShiftOp *lir = new LShiftOp(ins, op);
+        LShiftOp *lir = new LShiftOp(op);
         if (op == JSOP_URSH) {
             MUrsh *ursh = ins->toUrsh();
             if (ursh->fallible() && !assignSnapshot(lir))
@@ -401,7 +402,7 @@ LIRGenerator::visitMul(MMul *ins)
     if (ins->specialization() == MIRType_Int32) {
         JS_ASSERT(lhs->type() == MIRType_Int32);
         ReorderCommutative(&lhs, &rhs);
-        LMulI *lir = new LMulI(ins);
+        LMulI *lir = new LMulI;
         if (ins->fallible() && !assignSnapshot(lir))
             return false;
         return lowerForALU(lir, ins, lhs, rhs);
@@ -438,8 +439,12 @@ LIRGenerator::visitDiv(MDiv *ins)
 bool
 LIRGenerator::visitStart(MStart *start)
 {
-    // This is a no-op.
-    return true;
+    // Create a snapshot that captures the initial state of the function.
+    LStart *lir = new LStart;
+    if (!assignSnapshot(lir))
+        return false;
+    lirGraph_.setEntrySnapshot(lir->snapshot());
+    return add(lir);
 }
 
 bool

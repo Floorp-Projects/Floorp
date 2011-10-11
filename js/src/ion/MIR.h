@@ -64,23 +64,7 @@ MIRType MIRTypeFromValue(const js::Value &vp)
 {
     if (vp.isDouble())
         return MIRType_Double;
-    switch (vp.extractNonDoubleType()) {
-      case JSVAL_TYPE_INT32:
-        return MIRType_Int32;
-      case JSVAL_TYPE_UNDEFINED:
-        return MIRType_Undefined;
-      case JSVAL_TYPE_STRING:
-        return MIRType_String;
-      case JSVAL_TYPE_BOOLEAN:
-        return MIRType_Boolean;
-      case JSVAL_TYPE_NULL:
-        return MIRType_Null;
-      case JSVAL_TYPE_OBJECT:
-        return MIRType_Object;
-      default:
-        JS_NOT_REACHED("unexpected jsval type");
-        return MIRType_None;
-    }
+    return MIRTypeFromValueType(vp.extractNonDoubleType());
 }
 
 #define MIR_FLAG_LIST(_)                                                        \
@@ -1022,8 +1006,11 @@ class MBox : public MUnaryInstruction
 // deoptimization.
 class MUnbox : public MUnaryInstruction
 {
-    MUnbox(MDefinition *ins, MIRType type)
-      : MUnaryInstruction(ins)
+    bool checkType_;
+
+    MUnbox(MDefinition *ins, MIRType type, bool checkType)
+      : MUnaryInstruction(ins),
+        checkType_(checkType)
     {
         JS_ASSERT(ins->type() == MIRType_Value);
         setResultType(type);
@@ -1034,7 +1021,15 @@ class MUnbox : public MUnaryInstruction
     INSTRUCTION_HEADER(Unbox);
     static MUnbox *New(MDefinition *ins, MIRType type)
     {
-        return new MUnbox(ins, type);
+        return new MUnbox(ins, type, true);
+    }
+    static MUnbox *NewUnchecked(MDefinition *ins, MIRType type)
+    {
+        return new MUnbox(ins, type, false);
+    }
+
+    bool checkType() const {
+        return checkType_;
     }
 };
 

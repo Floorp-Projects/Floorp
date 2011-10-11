@@ -240,6 +240,8 @@ class IonBuilder : public MIRGenerator
     bool resumeAt(MInstruction *ins, jsbytecode *pc);
     bool resumeAfter(MInstruction *ins);
 
+    void initParameters();
+    void rewriteParameters();
     bool pushConstant(const Value &v);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);

@@ -80,6 +80,7 @@ LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, c
     // virtual register to the MIR, so we can map MIR to LIR during lowering.
     lir->setDef(0, def);
     lir->getDef(0)->setVirtualRegister(vreg);
+    lir->setMir(mir);
     mir->setVirtualRegister(vreg);
     return add(lir);
 }
@@ -113,6 +114,7 @@ LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, M
 #elif defined(JS_PUNBOX64)
     lir->setDef(0, LDefinition(vreg, LDefinition::BOX, policy));
 #endif
+    lir->setMir(mir);
 
     mir->setVirtualRegister(vreg);
     return add(lir);

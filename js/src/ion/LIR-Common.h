@@ -187,15 +187,14 @@ class LCallGeneric : public LInstructionHelper<BOX_PIECES, 1, 2>
     // Slot below which %esp should be adjusted to make the call.
     // Zero for a function without arguments.
     uint32 argslot_;
-    MCall *mir_;
 
   public:
     LIR_HEADER(CallGeneric);
 
-    LCallGeneric(MCall *mir, const LAllocation &func,
+    LCallGeneric(const LAllocation &func,
                  uint32 argslot, const LDefinition &token,
                  const LDefinition &nargsreg)
-      : argslot_(argslot), mir_(mir)
+      : argslot_(argslot)
     {
         setOperand(0, func);
         setTemp(0, token);
@@ -205,10 +204,13 @@ class LCallGeneric : public LInstructionHelper<BOX_PIECES, 1, 2>
     uint32 argslot() const {
         return argslot_;
     }
+    MCall *mir() const {
+        return mir_->toCall();
+    }
 
     uint32 nargs() const {
-        JS_ASSERT(mir_->argc() >= 1);
-        return mir_->argc() - 1; // |this| is not a formal argument.
+        JS_ASSERT(mir()->argc() >= 1);
+        return mir()->argc() - 1; // |this| is not a formal argument.
     }
 
     const LAllocation *getFunction() {
@@ -225,22 +227,20 @@ class LCallGeneric : public LInstructionHelper<BOX_PIECES, 1, 2>
 // Takes a tableswitch with an integer to decide
 class LTableSwitch : public LInstructionHelper<0, 1, 2>
 {
-    MTableSwitch *mir_;
-
   public:
     LIR_HEADER(TableSwitch);
 
     LTableSwitch(const LAllocation &in, const LDefinition &inputCopy,
-                 const LDefinition &jumpTablePointer, MTableSwitch *mir)
-      : mir_(mir)
+                 const LDefinition &jumpTablePointer, MTableSwitch *ins)
     {
         setOperand(0, in);
         setTemp(0, inputCopy);
         setTemp(1, jumpTablePointer);
+        setMir(ins);
     }
 
     MTableSwitch *mir() const {
-        return mir_;
+        return mir_->toTableSwitch();
     }
 
     const LAllocation *index() {
@@ -488,15 +488,13 @@ class LBitOp : public LInstructionHelper<1, 2, 0>
 // a 32-bit integer result as an output.
 class LShiftOp : public LInstructionHelper<1, 2, 0>
 {
-    MInstruction *mir_;
     JSOp op_;
 
   public:
     LIR_HEADER(ShiftOp);
 
-    LShiftOp(MInstruction *mir, JSOp op)
-      : mir_(mir),
-        op_(op)
+    LShiftOp(JSOp op)
+      : op_(op)
     { }
 
     JSOp bitop() {
@@ -504,7 +502,7 @@ class LShiftOp : public LInstructionHelper<1, 2, 0>
     }
 
     MInstruction *mir() {
-        return mir_;
+        return mir_->toInstruction();
     }
 };
 
@@ -548,17 +546,11 @@ class LSubI : public LBinaryMath<0>
 // Adds two integers, returning an integer value.
 class LMulI : public LBinaryMath<0>
 {
-    MMul *mir_;
-
   public:
     LIR_HEADER(MulI);
 
-    LMulI(MMul *mir)
-      : mir_(mir)
-    { }
-
     MMul *mir() {
-        return mir_;
+        return mir_->toMul();
     }
 };
 
@@ -667,6 +659,15 @@ class LTruncateDToInt32 : public LInstructionHelper<1, 1, 0>
     const LDefinition *output() {
         return getDef(0);
     }
+};
+
+// No-op instruction that is used to hold the entry snapshot. This simplifies
+// register allocation as it doesn't need to sniff the snapshot out of the
+// LIRGraph.
+class LStart : public LInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(Start);
 };
 
 class MPhi;
