@@ -79,7 +79,7 @@ abstract public class GeckoApp
     public static final String ACTION_BOOKMARK    = "org.mozilla.gecko.BOOKMARK";
 
     public static LinearLayout mainLayout;
-    public static AbsoluteLayout geckoLayout;
+    public static RelativeLayout geckoLayout;
     public static GeckoSurfaceView surfaceView;
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
@@ -398,7 +398,7 @@ abstract public class GeckoApp
         mAppContext = this;
 
         // setup gecko layout
-        geckoLayout = (AbsoluteLayout) findViewById(R.id.geckoLayout);
+        geckoLayout = (RelativeLayout) findViewById(R.id.geckoLayout);
 
         if (surfaceView == null) {
             surfaceView = new GeckoSurfaceView(this);
@@ -775,7 +775,7 @@ abstract public class GeckoApp
         return status;
     }
 
-    private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue();
+    private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();
     public String showFilePicker(String aMimeType) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
