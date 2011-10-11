@@ -70,12 +70,6 @@ CodeGeneratorShared::generateOutOfLineCode()
 }
 
 bool
-CodeGeneratorShared::visitParameter(LParameter *param)
-{
-    return true;
-}
-
-bool
 CodeGeneratorShared::addOutOfLineCode(OutOfLineCode *code)
 {
     return outOfLineCode_.append(code);

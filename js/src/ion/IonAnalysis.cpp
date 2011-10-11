@@ -443,12 +443,12 @@ ShouldSpecializeInput(MDefinition *box, MNode *use, MUnbox *unbox)
         // If this resume point is attached to the definition, being effectful,
         // we *cannot* replace its use! The resume point comes in between the
         // definition and the unbox.
-        MResumePoint *defResumePoint;
+        MResumePoint *defResumePoint = NULL;
         if (box->isInstruction())
             defResumePoint = box->toInstruction()->resumePoint();
         else if (box->isPhi())
             defResumePoint = box->block()->entryResumePoint();
-        return (defResumePoint != resumePoint);
+        return !defResumePoint || (defResumePoint != resumePoint);
     }
 
     MDefinition *def = use->toDefinition();

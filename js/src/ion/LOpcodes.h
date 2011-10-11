@@ -72,7 +72,8 @@
     _(Int32ToDouble)                \
     _(ValueToDouble)                \
     _(ValueToInt32)                 \
-    _(TruncateDToInt32)
+    _(TruncateDToInt32)             \
+    _(Start)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

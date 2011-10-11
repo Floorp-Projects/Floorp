@@ -142,6 +142,11 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABI(void *fun);
+
+    // Emits a test of a value against all types in a TypeSet. A scratch
+    // register is required.
+    void guardTypeSet(const Address &address, types::TypeSet *types, Register scratch,
+                      Label *mismatched);
 };
 
 } // namespace ion

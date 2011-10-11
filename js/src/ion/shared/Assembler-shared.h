@@ -79,6 +79,17 @@ struct ImmGCPtr
     { }
 };
 
+// Specifies an address computed in the form of a register base and a constant,
+// 32-bit offset.
+struct Address
+{
+    Register base;
+    int32 offset;
+
+    Address(Register base, int32 offset) : base(base), offset(offset)
+    { }
+};
+
 class Relocation {
   public:
     enum Kind {

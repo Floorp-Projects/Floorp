@@ -157,18 +157,7 @@ IonBuilder::build()
 
     IonSpew(IonSpew_MIR, "Analying script %s:%d", script->filename, script->lineno);
 
-    // Initialize argument references if inside a function frame.
-    if (fun()) {
-        MParameter *param = MParameter::New(MParameter::THIS_SLOT, oracle->thisTypeSet(script));
-        current->add(param);
-        current->initSlot(thisSlot(), param);
-
-        for (uint32 i = 0; i < nargs(); i++) {
-            param = MParameter::New(int(i), oracle->parameterTypeSet(script, i));
-            current->add(param);
-            current->initSlot(argSlot(i), param);
-        }
-    }
+    initParameters();
 
     // Initialize local variables.
     for (uint32 i = 0; i < nlocals(); i++) {
@@ -177,19 +166,94 @@ IonBuilder::build()
         current->initSlot(localSlot(i), undef);
     }
 
-    current->makeStart(new MStart());
+    current->makeStart(MStart::New());
 
-    // Attach a resume point to each parameter, so the type analyzer doesn't
-    // replace its first use.
+    // The type analysis phase attempts to insert unbox operations near
+    // definitions of values. It also attempts to replace uses in resume points
+    // with the narrower, unboxed variants. However, we must prevent this
+    // replacement from happening on values in the entry snapshot. Otherwise we
+    // could get this:
+    //
+    //       v0 = MParameter(0)
+    //       v1 = MParameter(1)
+    //       --   ResumePoint(v2, v3)
+    //       v2 = Unbox(v0, INT32)
+    //       v3 = Unbox(v1, INT32)
+    //
+    // So we attach the initial resume point to each parameter, which the type
+    // analysis explicitly checks (this is the same mechanism used for
+    // effectful operations).
     for (uint32 i = 0; i < CountArgSlots(fun()); i++) {
-        MParameter *param = current->getEntrySlot(i)->toInstruction()->toParameter();
-        param->setResumePoint(current->entryResumePoint());
+        MInstruction *ins = current->getEntrySlot(i)->toInstruction();
+        if (ins->type() == MIRType_Value)
+            ins->setResumePoint(current->entryResumePoint());
     }
 
     if (!traverseBytecode())
         return false;
 
     return true;
+}
+
+// Apply Type Inference information to parameters early on, unboxing them if
+// they have a definitive type. The actual guards will be emitted by the code
+// generator, explicitly, as part of the function prologue.
+void
+IonBuilder::rewriteParameters()
+{
+    for (uint32 i = 0; i < CountArgSlots(fun()); i++) {
+        MParameter *param = current->getSlot(i)->toParameter();
+        types::TypeSet *types = param->typeSet();
+        if (!types)
+            continue;
+
+        JSValueType definiteType = types->getKnownTypeTag(cx);
+        if (definiteType == JSVAL_TYPE_UNKNOWN)
+            continue;
+
+        MInstruction *actual = NULL;
+        switch (definiteType) {
+          case JSVAL_TYPE_UNDEFINED:
+            actual = MConstant::New(UndefinedValue());
+            break;
+
+          case JSVAL_TYPE_NULL:
+            actual = MConstant::New(NullValue());
+            break;
+
+          default:
+            actual = MUnbox::NewUnchecked(param, MIRTypeFromValueType(definiteType));
+            break;
+        }
+
+        // Careful! We leave the original MParameter in the entry resume point. The
+        // arguments still need to be checked unless proven otherwise at the call
+        // site, and these checks can bailout. We can end up:
+        //   v0 = Parameter(0)
+        //   v1 = Unbox(v0, INT32)
+        //   --   ResumePoint(v0)
+        // 
+        // As usual, it would be invalid for v1 to be captured in the initial
+        // resume point, rather than v0.
+        current->rewriteSlot(i, actual);
+    }
+}
+
+void
+IonBuilder::initParameters()
+{
+    if (!fun())
+        return;
+
+    MParameter *param = MParameter::New(MParameter::THIS_SLOT, oracle->thisTypeSet(script));
+    current->add(param);
+    current->initSlot(thisSlot(), param);
+
+    for (uint32 i = 0; i < nargs(); i++) {
+        param = MParameter::New(i, oracle->parameterTypeSet(script, i));
+        current->add(param);
+        current->initSlot(argSlot(i), param);
+    }
 }
 
 // We try to build a control-flow graph in the order that it would be built as
@@ -441,7 +505,8 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_SETLOCAL:
-        return current->setLocal(GET_SLOTNO(pc));
+        current->setLocal(GET_SLOTNO(pc));
+        return true;
 
       case JSOP_POP:
         current->pop();
@@ -1711,8 +1776,7 @@ IonBuilder::jsop_localinc(JSOp op)
     if (!jsop_binary(JSOP_ADD))
         return false;
 
-    if (!current->setLocal(GET_SLOTNO(pc)))
-        return false;
+    current->setLocal(GET_SLOTNO(pc));
 
     if (post_incr)
         current->pop();
@@ -1737,8 +1801,7 @@ IonBuilder::jsop_arginc(JSOp op)
     if (!jsop_binary(JSOP_ADD))
         return false;
 
-    if (!current->setArg(GET_SLOTNO(pc)))
-        return false;
+    current->setArg(GET_SLOTNO(pc));
 
     if (post_incr)
         current->pop();

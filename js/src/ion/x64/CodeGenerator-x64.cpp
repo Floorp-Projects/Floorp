@@ -122,43 +122,45 @@ CodeGeneratorX64::visitBox(LBox *box)
 }
 
 bool
-CodeGeneratorX64::visitUnboxInteger(LUnboxInteger *unbox)
+CodeGeneratorX64::visitUnbox(LUnbox *unbox)
 {
-    const ValueOperand value = ToValue(unbox, LUnboxInteger::Input);
+    const ValueOperand value = ToValue(unbox, LUnbox::Input);
     const LDefinition *result = unbox->output();
+    MUnbox *mir = unbox->mir();
 
-    Assembler::Condition cond = masm.testInt32(Assembler::NotEqual, value);
-    if (!bailoutIf(cond, unbox->snapshot()))
-        return false;
-    masm.unboxInt32(value, ToRegister(result));
+    if (mir->checkType()) {
+        Assembler::Condition cond;
+        switch (mir->type()) {
+          case MIRType_Int32:
+            cond = masm.testInt32(Assembler::NotEqual, value);
+            break;
+          case MIRType_Double:
+            cond = masm.testDouble(Assembler::NotEqual, value);
+            break;
+          case MIRType_Object:
+            cond = masm.testObject(Assembler::NotEqual, value);
+            break;
+          default:
+            JS_NOT_REACHED("NYI");
+            return false;
+        }
+        if (!bailoutIf(cond, unbox->snapshot()))
+            return false;
+    }
 
-    return true;
-}
-
-bool
-CodeGeneratorX64::visitUnboxDouble(LUnboxDouble *unbox)
-{
-    const ValueOperand value = ToValue(unbox, LUnboxDouble::Input);
-    const LDefinition *result = unbox->output();
-
-    Assembler::Condition cond = masm.testDouble(Assembler::NotEqual, value);
-    if (!bailoutIf(cond, unbox->snapshot()))
-        return false;
-    masm.unboxDouble(value, ToFloatRegister(result));
-
-    return true;
-}
-
-bool
-CodeGeneratorX64::visitUnboxObject(LUnboxObject *unbox)
-{
-    const ValueOperand value = ToValue(unbox, LUnboxObject::Input);
-    const LDefinition *object = unbox->output();
-
-    Assembler::Condition cond = masm.testObject(Assembler::NotEqual, value);
-    if (!bailoutIf(cond, unbox->snapshot()))
-        return false;
-    masm.unboxObject(value, ToRegister(object));
+    switch (mir->type()) {
+      case MIRType_Int32:
+        masm.unboxInt32(value, ToRegister(result));
+        break;
+      case MIRType_Double:
+        masm.unboxDouble(value, ToFloatRegister(result));
+        break;
+      case MIRType_Object:
+        masm.unboxObject(value, ToRegister(result));
+        break;
+      default:
+        JS_NOT_REACHED("NYI");
+    }
     
     return true;
 }
@@ -174,13 +176,6 @@ CodeGeneratorX64::visitReturn(LReturn *ret)
     if (current->mir() != *gen->graph().poBegin())
         masm.jmp(returnLabel_);
     return true;
-}
-
-Register
-CodeGeneratorX64::splitTagForTest(const ValueOperand &value)
-{
-    masm.splitTag(value, ScratchReg);
-    return ScratchReg;
 }
 
 Assembler::Condition

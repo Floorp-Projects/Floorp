@@ -255,7 +255,7 @@ MBasicBlock::setSlot(uint32 slot, MDefinition *ins)
 // new SSA names, we lazily create them when applying a setVariable() whose
 // stack top was pushed by a pushVariable(). That also means we do not create
 // "copies" for calls to push().
-bool
+void
 MBasicBlock::setVariable(uint32 index)
 {
     JS_ASSERT(stackPosition_ > gen()->firstStackSlot());
@@ -290,22 +290,26 @@ MBasicBlock::setVariable(uint32 index)
         top.nextCopy = slots_[index].firstCopy;
         slots_[index].firstCopy = stackPosition_ - 1;
     }
-
-    return true;
 }
 
-bool
+void
 MBasicBlock::setArg(uint32 arg)
 {
     // :TODO:  assert not closed
-    return setVariable(gen()->argSlot(arg));
+    setVariable(gen()->argSlot(arg));
 }
 
-bool
+void
 MBasicBlock::setLocal(uint32 local)
 {
     // :TODO:  assert not closed
-    return setVariable(gen()->localSlot(local));
+    setVariable(gen()->localSlot(local));
+}
+
+void
+MBasicBlock::rewriteSlot(uint32 slot, MDefinition *ins)
+{
+    setSlot(slot, ins);
 }
 
 void

@@ -58,7 +58,6 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     ValueOperand ToValue(LInstruction *ins, size_t pos);
 
     // This returns the tag in ScratchReg.
-    Register splitTagForTest(const ValueOperand &value);
     Assembler::Condition testStringTruthy(bool truthy, const ValueOperand &value);
 
   public:
@@ -69,9 +68,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitReturn(LReturn *ret);
     bool visitStackArg(LStackArg *arg);
     bool visitBox(LBox *box);
-    bool visitUnboxInteger(LUnboxInteger *unbox);
-    bool visitUnboxDouble(LUnboxDouble *unbox);
-    bool visitUnboxObject(LUnboxObject *unbox);
+    bool visitUnbox(LUnbox *unbox);
     bool visitDouble(LDouble *ins);
 };
 
