@@ -78,12 +78,12 @@ abstract public class GeckoApp
     public static final String ACTION_DEBUG       = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_BOOKMARK    = "org.mozilla.gecko.BOOKMARK";
 
-    public static LinearLayout mMainLayout;
-    public static AbsoluteLayout mGeckoLayout;
-    public static GeckoSurfaceView mSurfaceView;
+    public static LinearLayout mainLayout;
+    public static AbsoluteLayout geckoLayout;
+    public static GeckoSurfaceView surfaceView;
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
-    public static File mGREDir = null;
+    public static File sGREDir = null;
     public Handler mMainHandler;
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
@@ -91,7 +91,7 @@ abstract public class GeckoApp
     public static ProgressBar mProgressBar;
     private static SQLiteDatabase mDb;
     private static DatabaseHelper mDbHelper;
-    private static Stack<HistoryEntry> mSessionHistory;
+    private static Stack<HistoryEntry> sessionHistory;
 
     enum LaunchState {Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -376,8 +376,8 @@ abstract public class GeckoApp
 
     private void quit() {
         Log.i(LOG_FILE_NAME, "pleaseKillMe");
-        if (mSurfaceView != null)
-            mSurfaceView.saveLast();
+        if (surfaceView != null)
+            surfaceView.saveLast();
         System.exit(0);
     }
 
@@ -398,25 +398,25 @@ abstract public class GeckoApp
         mAppContext = this;
 
         // setup gecko layout
-        mGeckoLayout = (AbsoluteLayout) findViewById(R.id.geckoLayout);
+        geckoLayout = (AbsoluteLayout) findViewById(R.id.geckoLayout);
 
-        if (mSurfaceView == null) {
-            mSurfaceView = new GeckoSurfaceView(this);
-            mGeckoLayout.addView(mSurfaceView);
-        } else if (mGeckoLayout.getChildCount() == 0) {
-           //mSurfaceView still holds to the old one during rotation. re-add it to new activity
-           ((ViewGroup) mSurfaceView.getParent()).removeAllViews();
-           mGeckoLayout.addView(mSurfaceView);
+        if (surfaceView == null) {
+            surfaceView = new GeckoSurfaceView(this);
+            geckoLayout.addView(surfaceView);
+        } else if (geckoLayout.getChildCount() == 0) {
+           //surfaceView still holds to the old one during rotation. re-add it to new activity
+           ((ViewGroup) surfaceView.getParent()).removeAllViews();
+           geckoLayout.addView(surfaceView);
         }
 
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - UI almost up");
 
-        if (mGREDir == null)
-            mGREDir = new File(this.getApplicationInfo().dataDir);
+        if (sGREDir == null)
+            sGREDir = new File(this.getApplicationInfo().dataDir);
 
         mDbHelper = new DatabaseHelper(this);
 
-        mSessionHistory = new Stack<HistoryEntry>();
+        sessionHistory = new Stack<HistoryEntry>();
 
         mMainHandler = new Handler();
 
@@ -438,7 +438,7 @@ abstract public class GeckoApp
             });
         }
 
-        mMainLayout = (LinearLayout) findViewById(R.id.mainLayout);
+        mainLayout = (LinearLayout) findViewById(R.id.mainLayout);
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         // setup awesome bar
@@ -462,7 +462,7 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() {
             public void run() {
-                mSurfaceView.loadStartupBitmap();
+                surfaceView.loadStartupBitmap();
             }
         });
 
@@ -496,8 +496,8 @@ abstract public class GeckoApp
                 ContentValues values = new ContentValues();
                 values.put("url", entry.uri);
                 values.put("title", entry.title);
-                if (mSessionHistory.empty() || !mSessionHistory.peek().uri.equals(entry.uri))
-                    mSessionHistory.push(entry);
+                if (sessionHistory.empty() || !sessionHistory.peek().uri.equals(entry.uri))
+                    sessionHistory.push(entry);
                 mDb = mDbHelper.getWritableDatabase();
                 long id = mDb.insertWithOnConflict("moz_places", null, values, SQLiteDatabase.CONFLICT_REPLACE);
                 values = new ContentValues();
@@ -525,12 +525,12 @@ abstract public class GeckoApp
             launchButton.setOnClickListener(new Button.OnClickListener() {
                 public void onClick (View v) {
                     // hide the button so we can't be launched again
-                    mMainLayout.removeView(launchButton);
+                    mainLayout.removeView(launchButton);
                     setLaunchState(LaunchState.Launching);
                     launch(null);
                 }
             });
-            mMainLayout.addView(launchButton, 300, 200);
+            mainLayout.addView(launchButton, 300, 200);
             return;
         }
         if (checkLaunchState(LaunchState.WaitButton) || launch(intent))
@@ -802,8 +802,8 @@ abstract public class GeckoApp
     public boolean onSearchRequested() {
         Intent searchIntent = new Intent(getBaseContext(), AwesomeBar.class);
         searchIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-        if (!mSessionHistory.empty())
-            searchIntent.putExtra(AwesomeBar.CURRENT_URL_KEY, mSessionHistory.peek().uri);
+        if (!sessionHistory.empty())
+            searchIntent.putExtra(AwesomeBar.CURRENT_URL_KEY, sessionHistory.peek().uri);
 
         startActivityForResult(searchIntent, AWESOMEBAR_REQUEST);
         return true;
@@ -811,18 +811,18 @@ abstract public class GeckoApp
 
     public boolean doReload() {
         Log.i("GeckoApp", "Reload requested");
-        if (mSessionHistory.empty())
+        if (sessionHistory.empty())
             return false;
-        String currUri = mSessionHistory.peek().uri;
+        String currUri = sessionHistory.peek().uri;
         GeckoAppShell.sendEventToGecko(new GeckoEvent(currUri));
         return true;
     }
 
     @Override
     public void onBackPressed() {
-        if (mSessionHistory.size() > 1) {
-            mSessionHistory.pop();
-            String uri = mSessionHistory.peek().uri;
+        if (sessionHistory.size() > 1) {
+            sessionHistory.pop();
+            String uri = sessionHistory.peek().uri;
             Log.i("GeckoApp", "going back to page: " + uri);
             loadUrl(uri);
         } else {
@@ -867,7 +867,7 @@ abstract public class GeckoApp
                         fileExt = name.substring(period);
                         fileName = name.substring(0, period);
                     }
-                    File file = File.createTempFile(fileName, fileExt, mGREDir);
+                    File file = File.createTempFile(fileName, fileExt, sGREDir);
 
                     FileOutputStream fos = new FileOutputStream(file);
                     InputStream is = cr.openInputStream(uri);
