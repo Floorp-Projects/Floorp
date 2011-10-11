@@ -45,6 +45,7 @@
  */
 #include <string.h>
 
+#include "jsfriendapi.h"
 #include "jsprvtd.h"
 #include "jsatom.h"
 #include "jsclist.h"
@@ -603,6 +604,9 @@ struct JSRuntime {
 
     /* Structured data callbacks are runtime-wide. */
     const JSStructuredCloneCallbacks *structuredCloneCallbacks;
+
+    /* Call this to accumulate telemetry data. */
+    JSAccumulateTelemetryDataCallback telemetryCallback;
 
     /*
      * The propertyRemovals counter is incremented for every JSObject::clear,
