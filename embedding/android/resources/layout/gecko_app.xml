@@ -3,7 +3,8 @@
          android:id="@+android:id/mainLayout"
          android:layout_width="match_parent"
          android:layout_height="match_parent"
-         android:orientation="vertical">
+         android:orientation="vertical"
+         android:background="#fff">
 
     <ProgressBar android:id="@+android:id/progressBar"
               style="@android:style/Widget.ProgressBar.Horizontal"
@@ -14,25 +15,44 @@
     <LinearLayout android:id="@+android:id/addressBar"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
-              android:orientation="horizontal">
+              android:orientation="horizontal"
+              android:background="@drawable/address_bar_bg">
 
               <ImageButton android:id="@+android:id/favicon"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="40dip"
+                        android:layout_height="43dip"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:scaleType="centerInside"
+                        android:background="@drawable/address_bar_button_left"
                         android:src="@drawable/favicon"/>
 
-              <EditText android:id="@+android:id/awesomeBar"
+              <Button android:id="@+android:id/awesomeBar"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="43dip"
                         android:orientation="horizontal"
                         android:layout_weight="1"
+                        android:layout_marginLeft="0dp"
+                        android:layout_marginRight="0dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:background="@drawable/address_bar_button_middle"
                         android:singleLine="true"
-                        android:imeOptions="actionGo"
-                        android:inputType="textNoSuggestions|textFilter"/>
+                        android:textSize="18sp"
+                        android:textColor="#666"
+                        android:gravity="center_vertical|left"/>
 
               <ImageButton android:id="@+android:id/reload"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="40dip"
+                        android:layout_height="43dip"
+                        android:layout_marginRight="5dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:scaleType="centerInside"
+                        android:background="@drawable/address_bar_button_right"
                         android:src="@drawable/reload"/>
 
     </LinearLayout>

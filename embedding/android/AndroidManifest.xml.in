@@ -42,7 +42,6 @@
         <activity android:name="App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc"
-                  android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTask"
                   android:theme="@style/GreyTheme">
             <intent-filter>
@@ -123,6 +122,15 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name="org.mozilla.gecko.AwesomeBar"></activity>
+
+        <activity android:name="org.mozilla.gecko.AwesomeBar"
+                  android:theme="@android:style/Theme.Translucent"
+                  android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
+                  android:windowIsTranslucent="true"
+                  android:windowContentOverlay="@null"
+                  android:windowNoTitle="true"
+                  android:windowIsFloating="true"
+                  android:backgroundDimEnabled="false">
+        </activity>
     </application>
 </manifest> 
