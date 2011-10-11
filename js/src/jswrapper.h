@@ -158,6 +158,28 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
 };
 
 /*
+ * Base class for security wrappers. A security wrapper is potentially hiding
+ * all or part of some wrapped object thus SecurityWrapper defaults to denying
+ * access to the wrappee. This is the opposite of Wrapper which tries to be
+ * completely transparent.
+ *
+ * NB: Currently, only a few ProxyHandler operations are overridden to deny
+ * access, relying on derived SecurityWrapper to block access when necessary.
+ */
+template <class Base>
+class JS_FRIEND_API(SecurityWrapper) : public Base
+{
+  public:
+    SecurityWrapper(uintN flags);
+
+    virtual bool nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args);
+    virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx);
+};
+
+typedef SecurityWrapper<Wrapper> SameCompartmentSecurityWrapper;
+typedef SecurityWrapper<CrossCompartmentWrapper> CrossCompartmentSecurityWrapper;
+
+/*
  * A hacky class that lets a friend force a fake frame. We must already be
  * in the compartment of |target| when we enter the forced frame.
  */

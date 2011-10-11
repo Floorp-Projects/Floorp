@@ -43,7 +43,8 @@
 
 #include <stddef.h>
 #include "jsobj.h"
-#include "jstl.h"
+
+#include "js/TemplateLib.h"
 
 #include "yarr/Yarr.h"
 #if ENABLE_YARR_JIT
