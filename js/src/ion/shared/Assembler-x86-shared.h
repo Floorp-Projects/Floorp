@@ -384,16 +384,16 @@ class AssemblerX86Shared
     void testl(const Register &lhs, const Register &rhs) {
         masm.testl_rr(rhs.code(), lhs.code());
     }
-    void testl(Imm32 lhs, const Register &rhs) {
-        masm.testl_i32r(lhs.value, rhs.code());
+    void testl(const Register &lhs, Imm32 rhs) {
+        masm.testl_i32r(rhs.value, lhs.code());
     }
-    void testl(Imm32 lhs, const Operand &rhs) {
-        switch (rhs.kind()) {
+    void testl(const Operand &lhs, Imm32 rhs) {
+        switch (lhs.kind()) {
           case Operand::REG:
-            masm.testl_i32r(lhs.value, rhs.reg());
+            masm.testl_i32r(rhs.value, lhs.reg());
             break;
           case Operand::REG_DISP:
-            masm.testl_i32m(lhs.value, rhs.disp(), rhs.base());
+            masm.testl_i32m(rhs.value, lhs.disp(), lhs.base());
             break;
           default:
             JS_NOT_REACHED("unexpected operand kind");

@@ -142,9 +142,6 @@ class CodeGeneratorShared : public LInstructionVisitor
 
   public:
     CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph);
-
-    // Opcodes that are the same on all platforms.
-    virtual bool visitParameter(LParameter *param);
 };
 
 // Wrapper around Label, on the heap, to avoid a bogus assert with OOM.

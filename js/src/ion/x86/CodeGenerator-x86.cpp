@@ -128,9 +128,9 @@ MIRTypeToTag(MIRType type)
 bool
 CodeGeneratorX86::visitBox(LBox *box)
 {
-    const LAllocation *a = box->getOperand(0);
     const LDefinition *type = box->getDef(TYPE_INDEX);
 
+    DebugOnly<const LAllocation *> a = box->getOperand(0);
     JS_ASSERT(!a->isConstant());
 
     // On x86, the input operand and the output payload have the same
@@ -156,10 +156,13 @@ CodeGeneratorX86::visitBoxDouble(LBoxDouble *box)
 bool
 CodeGeneratorX86::visitUnbox(LUnbox *unbox)
 {
-    LAllocation *type = unbox->getOperand(TYPE_INDEX);
-    masm.cmpl(ToOperand(type), Imm32(MIRTypeToTag(unbox->type())));
-    if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
-        return false;
+    MUnbox *mir = unbox->mir();
+    if (mir->checkType()) {
+        LAllocation *type = unbox->getOperand(TYPE_INDEX);
+        masm.cmpl(ToOperand(type), Imm32(MIRTypeToTag(mir->type())));
+        if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
+            return false;
+    }
     return true;
 }
 
@@ -231,17 +234,14 @@ CodeGeneratorX86::visitUnboxDouble(LUnboxDouble *ins)
     const ValueOperand box = ToValue(ins, LUnboxDouble::Input);
     const LDefinition *result = ins->output();
 
-    Assembler::Condition cond = masm.testDouble(Assembler::NotEqual, box);
-    if (!bailoutIf(cond, ins->snapshot()))
-        return false;
+    MUnbox *mir = ins->mir();
+    if (mir->checkType()) {
+        Assembler::Condition cond = masm.testDouble(Assembler::NotEqual, box);
+        if (!bailoutIf(cond, ins->snapshot()))
+            return false;
+    }
     masm.unboxDouble(box, ToFloatRegister(result));
     return true;
-}
-
-Register
-CodeGeneratorX86::splitTagForTest(const ValueOperand &value)
-{
-    return value.typeReg();
 }
 
 Assembler::Condition
@@ -251,7 +251,7 @@ CodeGeneratorX86::testStringTruthy(bool truthy, const ValueOperand &value)
     Operand lengthAndFlags(string, JSString::offsetOfLengthAndFlags());
 
     size_t mask = (0xFFFFFFFF << JSString::LENGTH_SHIFT);
-    masm.testl(Imm32(mask), lengthAndFlags);
+    masm.testl(lengthAndFlags, Imm32(mask));
     return truthy ? Assembler::NonZero : Assembler::Zero;
 }
 

@@ -130,24 +130,28 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
         if (!ensureDefined(inner))
             return false;
 
-        LUnboxDouble *lir = new LUnboxDouble();
-        if (!assignSnapshot(lir))
+        LUnboxDouble *lir = new LUnboxDouble;
+        if (unbox->checkType() && !assignSnapshot(lir))
             return false;
         if (!useBox(lir, LUnboxDouble::Input, inner))
             return false;
         return define(lir, unbox);
     }
 
-    LUnbox *lir = new LUnbox(unbox->type());
+    LUnbox *lir = new LUnbox;
     lir->setOperand(0, useType(inner, LUse::ANY));
     lir->setOperand(1, usePayloadInRegister(inner));
+    lir->setMir(unbox);
 
     // Re-use the inner payload's def, for better register allocation.
     LDefinition::Type type = LDefinition::TypeFrom(unbox->type());
     lir->setDef(0, LDefinition(VirtualRegisterOfPayload(inner), type, LDefinition::REDEFINED));
     unbox->setVirtualRegister(VirtualRegisterOfPayload(inner));
 
-    return assignSnapshot(lir) && add(lir);
+    if (unbox->checkType() && !assignSnapshot(lir))
+        return false;
+
+    return add(lir);
 }
 
 bool
@@ -167,7 +171,7 @@ LIRGeneratorX86::assignSnapshot(LInstruction *ins)
 {
     LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_);
     if (!snapshot)
-        return false;
+        return NULL;
 
     for (size_t i = 0; i < lastResumePoint_->numOperands(); i++) {
         MDefinition *ins = lastResumePoint_->getOperand(i);

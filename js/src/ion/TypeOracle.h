@@ -120,6 +120,30 @@ class TypeInferenceOracle : public TypeOracle
     types::TypeSet *parameterTypeSet(JSScript *script, size_t index);
 };
 
+static inline MIRType
+MIRTypeFromValueType(JSValueType type)
+{
+    switch (type) {
+      case JSVAL_TYPE_DOUBLE:
+        return MIRType_Double;
+      case JSVAL_TYPE_INT32:
+        return MIRType_Int32;
+      case JSVAL_TYPE_UNDEFINED:
+        return MIRType_Undefined;
+      case JSVAL_TYPE_STRING:
+        return MIRType_String;
+      case JSVAL_TYPE_BOOLEAN:
+        return MIRType_Boolean;
+      case JSVAL_TYPE_NULL:
+        return MIRType_Null;
+      case JSVAL_TYPE_OBJECT:
+        return MIRType_Object;
+      default:
+        JS_NOT_REACHED("unexpected jsval type");
+        return MIRType_None;
+    }
+}
+
 static inline JSValueType
 ValueTypeFromMIRType(MIRType type)
 {

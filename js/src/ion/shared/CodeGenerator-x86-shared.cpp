@@ -309,7 +309,7 @@ CodeGeneratorX86Shared::bailout(const T &binder, LSnapshot *snapshot)
     // Though the assembler doesn't track all frame pushes, at least make sure
     // the known value makes sense. We can't use bailout tables if the stack
     // isn't properly aligned to the static frame size.
-    JS_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
+    JS_ASSERT_IF(frameClass_ != FrameSizeClass::None() && deoptTable_,
                  frameClass_.frameSize() == masm.framePushed());
 
 #ifdef JS_CPU_X86

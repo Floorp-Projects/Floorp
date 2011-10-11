@@ -128,22 +128,27 @@ class Operand
     int32 index_ : 5;
 
   public:
-    explicit Operand(const Register &reg)
+    explicit Operand(Register reg)
       : kind_(REG),
         base_(reg.code())
     { }
-    explicit Operand(const FloatRegister &reg)
+    explicit Operand(FloatRegister reg)
       : kind_(FPREG),
         base_(reg.code())
     { }
-    explicit Operand(const Register &base, const Register &index, Scale scale, int32 disp = 0)
+    explicit Operand(const Address &address)
+      : kind_(REG_DISP),
+        base_(address.base.code()),
+        disp_(address.offset)
+    { }
+    Operand(Register base, Register index, Scale scale, int32 disp = 0)
       : kind_(SCALE),
         base_(base.code()),
         scale_(scale),
         disp_(disp),
         index_(index.code())
     { }
-    Operand(const Register &reg, int32 disp)
+    Operand(Register reg, int32 disp)
       : kind_(REG_DISP),
         base_(reg.code()),
         disp_(disp)
@@ -420,11 +425,11 @@ class Assembler : public AssemblerX86Shared
         masm.cmpq_ir(lhs.value, rhs.code());
     }
     
-    void testq(Imm32 lhs, const Register &rhs) {
-        masm.testq_i32r(lhs.value, rhs.code());
+    void testq(const Register &lhs, Imm32 rhs) {
+        masm.testq_i32r(rhs.value, lhs.code());
     }
     void testq(const Register &lhs, const Register &rhs) {
-        masm.testq_rr(lhs.code(), rhs.code());
+        masm.testq_rr(rhs.code(), lhs.code());
     }
 
     void jmp(void *target, Relocation::Kind reloc) {

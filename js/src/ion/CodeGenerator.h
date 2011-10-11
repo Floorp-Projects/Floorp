@@ -57,6 +57,7 @@ namespace ion {
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
+    bool generateArgumentsChecks();
     bool generateBody();
 
   public:
@@ -65,6 +66,8 @@ class CodeGenerator : public CodeGeneratorSpecific
   public:
     bool generate();
 
+    virtual bool visitParameter(LParameter *lir);
+    virtual bool visitStart(LStart *lir);
     virtual bool visitValueToInt32(LValueToInt32 *lir);
     virtual bool visitValueToDouble(LValueToDouble *lir);
     virtual bool visitInt32ToDouble(LInt32ToDouble *lir);

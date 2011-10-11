@@ -51,6 +51,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 {
     static const uint32 StackAlignment = 16;
 
+  private:
+    Operand payloadOf(const Address &address) {
+        return Operand(address.base, address.offset);
+    }
+    Operand tagOf(const Address &address) {
+        return Operand(address.base, address.offset + 4);
+    }
+
   protected:
     uint32 alignStackForCall(uint32 stackForArgs) {
         // framePushed_ is accurate, so precisely adjust the stack requirement.
@@ -84,7 +92,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return Operand(Register::FromCode(base.base()),
                        base.disp() + sizeof(void *));
     }
-    void moveValue(const Value &val, const Register &type, const Register &data) {
+    void moveValue(const Value &val, Register type, Register data) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         movl(Imm32(jv.s.tag), type);
         movl(Imm32(jv.s.payload.i32), data);
@@ -99,6 +107,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void movePtr(Operand op, const Register &dest) {
         movl(op, dest);
+    }
+
+    // Returns the register containing the type tag.
+    Register splitTagForTest(const ValueOperand &value) {
+        return value.typeReg();
     }
 
     Condition testUndefined(Condition cond, const Register &tag) {
@@ -137,6 +150,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(tag, ImmTag(JSVAL_TAG_OBJECT));
         return cond;
     }
+    Condition testNumber(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
+        return cond == Equal ? BelowOrEqual : Above;
+    }
     Condition testUndefined(Condition cond, const ValueOperand &value) {
         return testUndefined(cond, value.typeReg());
     }
@@ -157,6 +175,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     Condition testObject(Condition cond, const ValueOperand &value) {
         return testObject(cond, value.typeReg());
+    }
+    Condition testNumber(Condition cond, const ValueOperand &value) {
+        return testNumber(cond, value.typeReg());
+    }
+
+    void cmpPtr(const Register &lhs, const ImmWord rhs) {
+        cmpl(lhs, Imm32(rhs.value));
+    }
+    void testPtr(const Register &lhs, const Register &rhs) {
+        return testl(lhs, rhs);
     }
 
     /////////////////////////////////////////////////////////////////
@@ -181,18 +209,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         subl(imm, dest);
     }
 
-    void cmpPtr(const Register &lhs, const Imm32 rhs) {
-        return cmpl(lhs, rhs);
-    }
-    void cmpPtr(const Register &lhs, const ImmWord rhs) {
-        return cmpl(lhs, Imm32(rhs.value));
-    }
-    void testPtr(const Register &lhs, const Register &rhs) {
-        return testl(lhs, rhs);
+    void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
+        cmpl(lhs, ptr);
+        j(cond, label);
     }
 
-    void movePtr(ImmWord imm, const Register &dest) {
+    void movePtr(ImmWord imm, Register dest) {
         movl(Imm32(imm.value), dest);
+    }
+    void loadPtr(const Address &address, Register dest) {
+        movl(Operand(address), dest);
     }
     void setStackArg(const Register &reg, uint32 arg) {
         movl(reg, Operand(esp, arg * STACK_SLOT_SIZE));
@@ -201,7 +227,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 #ifdef DEBUG
         Label good;
         movl(esp, eax);
-        testl(Imm32(StackAlignment - 1), eax);
+        testl(eax, Imm32(StackAlignment - 1));
         j(Equal, &good);
         breakpoint();
         bind(&good);
@@ -245,6 +271,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cond = testObject(cond, t);
         j(cond, label);
     }
+    template <typename T>
+    void branchTestNumber(Condition cond, const T &t, Label *label) {
+        cond = testNumber(cond, t);
+        j(cond, label);
+    }
 
     void unboxInt32(const ValueOperand &operand, const Register &dest) {
         movl(operand.payloadReg(), dest);
@@ -262,6 +293,18 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             movd(operand.typeReg(), ScratchFloatReg);
             unpcklps(ScratchFloatReg, dest);
         }
+    }
+
+    // Extended unboxing API. If the payload is already in a register, returns
+    // that register. Otherwise, provides a move to the given scratch register,
+    // and returns that.
+    Register extractObject(const Address &address, Register scratch) {
+        movl(payloadOf(address), scratch);
+        return scratch;
+    }
+    Register extractTag(const Address &address, Register scratch) {
+        movl(tagOf(address), scratch);
+        return scratch;
     }
 
     void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {

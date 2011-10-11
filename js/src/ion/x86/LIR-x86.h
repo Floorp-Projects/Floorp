@@ -82,12 +82,8 @@ class LUnbox : public LInstructionHelper<1, 2, 0>
   public:
     LIR_HEADER(Unbox);
 
-    LUnbox(MIRType type)
-      : type_(type)
-    { }
-
-    MIRType type() const {
-        return type_;
+    MUnbox *mir() const {
+        return mir_->toUnbox();
     }
 };
 
@@ -100,6 +96,9 @@ class LUnboxDouble : public LInstructionHelper<1, 2, 0>
 
     const LDefinition *output() {
         return getDef(0);
+    }
+    MUnbox *mir() const {
+        return mir_->toUnbox();
     }
 };
 
