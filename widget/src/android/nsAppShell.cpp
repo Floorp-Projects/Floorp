@@ -374,6 +374,9 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         if (!cmdline)
             break;
 
+        if (curEvent->Characters().Length() == 0)
+            break;
+
         char *uri = ToNewUTF8String(curEvent->Characters());
         if (!uri)
             break;

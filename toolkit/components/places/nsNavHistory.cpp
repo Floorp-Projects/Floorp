@@ -473,6 +473,13 @@ nsNavHistory::~nsNavHistory()
 nsresult
 nsNavHistory::Init()
 {
+
+  // XXX
+  // For the native ui on android, we will not be using MOZ_PLACES.
+  // Currently places has deeply weaved it way throughout the gecko codebase.
+  // Here we disable all database creation and loading of places. 
+  return NS_ERROR_NOT_IMPLEMENTED;
+
   NS_TIME_FUNCTION;
 
   nsCOMPtr<nsIPrefService> prefService =

@@ -174,6 +174,7 @@ protected:
     void BringToFront();
     nsWindow *FindTopLevel();
     bool DrawTo(gfxASurface *targetSurface);
+    bool DrawToFile(const nsAString &path);
     bool IsTopLevel();
     void OnIMEAddRange(mozilla::AndroidGeckoEvent *ae);
 

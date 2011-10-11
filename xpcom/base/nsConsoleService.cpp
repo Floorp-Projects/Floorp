@@ -53,6 +53,10 @@
 #include "nsConsoleMessage.h"
 #include "nsIClassInfoImpl.h"
 
+#if defined(ANDROID)
+#include <android/log.h>
+#endif
+
 using namespace mozilla;
 
 NS_IMPL_THREADSAFE_ADDREF(nsConsoleService)
@@ -189,6 +193,12 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
 NS_IMETHODIMP
 nsConsoleService::LogStringMessage(const PRUnichar *message)
 {
+#if defined(ANDROID)
+    __android_log_print(ANDROID_LOG_ERROR, "nsConsoleService",
+                        "%s",
+                        NS_LossyConvertUTF16toASCII(message).get());
+#endif
+
     nsConsoleMessage *msg = new nsConsoleMessage(message);
     return this->LogMessage(msg);
 }

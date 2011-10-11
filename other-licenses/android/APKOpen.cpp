@@ -565,6 +565,10 @@ report_mapping(char *name, void *base, uint32_t len, uint32_t offset)
 
 extern "C" void simple_linker_init(void);
 
+extern "C" struct timeval timings[2];
+#define TIMING_RELOC 0
+#define TIMING_CONSTRUCTORS 1
+
 static void
 loadLibs(const char *apkName)
 {
@@ -651,6 +655,9 @@ loadLibs(const char *apkName)
                       (usage2.ru_utime.tv_sec - usage1.ru_utime.tv_sec)*1000 + (usage2.ru_utime.tv_usec - usage1.ru_utime.tv_usec)/1000,
                       (usage2.ru_stime.tv_sec - usage1.ru_stime.tv_sec)*1000 + (usage2.ru_stime.tv_usec - usage1.ru_stime.tv_usec)/1000,
                       usage2.ru_majflt-usage1.ru_majflt);
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Spent %dms on relocations, %dms on constructors",
+                      timings[TIMING_RELOC].tv_sec * 1000 + timings[TIMING_RELOC].tv_usec / 1000,
+                      timings[TIMING_CONSTRUCTORS].tv_sec * 1000 + timings[TIMING_CONSTRUCTORS].tv_usec / 1000);
 }
 
 extern "C" NS_EXPORT void JNICALL
