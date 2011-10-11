@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "mozilla/MapsMemoryReporter.h"
 #include "nsIMemoryReporter.h"
 #include "nsString.h"
@@ -183,7 +185,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(MapsReporter, nsIMemoryMultiReporter)
 
 MapsReporter::MapsReporter()
 {
-  const PRUint32 len = NS_ARRAY_LENGTH(mozillaLibraries);
+  const PRUint32 len = ArrayLength(mozillaLibraries);
   mMozillaLibraries.Init(len);
   for (PRUint32 i = 0; i < len; i++) {
     nsCAutoString str;

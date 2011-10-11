@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsHTMLMediaElement.h"
@@ -1536,7 +1538,7 @@ static bool IsRawType(const nsACString& aType)
 {
   if (!IsRawEnabled())
     return false;
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gRawTypes); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(gRawTypes); ++i) {
     if (aType.EqualsASCII(gRawTypes[i]))
       return true;
   }
@@ -1569,7 +1571,7 @@ nsHTMLMediaElement::IsOggType(const nsACString& aType)
 {
   if (!IsOggEnabled())
     return false;
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gOggTypes); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(gOggTypes); ++i) {
     if (aType.EqualsASCII(gOggTypes[i]))
       return true;
   }
@@ -1604,7 +1606,7 @@ nsHTMLMediaElement::IsWaveType(const nsACString& aType)
 {
   if (!IsWaveEnabled())
     return false;
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWaveTypes); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(gWaveTypes); ++i) {
     if (aType.EqualsASCII(gWaveTypes[i]))
       return true;
   }
@@ -1636,7 +1638,7 @@ nsHTMLMediaElement::IsWebMType(const nsACString& aType)
 {
   if (!IsWebMEnabled())
     return false;
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWebMTypes); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(gWebMTypes); ++i) {
     if (aType.EqualsASCII(gWebMTypes[i]))
       return true;
   }

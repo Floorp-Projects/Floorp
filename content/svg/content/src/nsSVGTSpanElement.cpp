@@ -36,11 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGTSpanElement.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextPositioningElement.h"
 #include "nsContentUtils.h"
+
+using namespace mozilla;
 
 typedef nsSVGTextPositioningElement nsSVGTSpanElementBase;
 
@@ -134,7 +138,7 @@ nsSVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const
     sTextContentElementsMap
   };
   
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGTSpanElementBase::IsAttributeMapped(name);
 }
 

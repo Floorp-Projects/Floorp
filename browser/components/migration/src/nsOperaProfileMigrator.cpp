@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsBrowserProfileMigratorUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -67,6 +69,8 @@
 #ifdef XP_WIN
 #include <windows.h>
 #endif
+
+using namespace mozilla;
 
 #define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
 
@@ -482,7 +486,7 @@ nsOperaProfileMigrator::CopyProxySettings(nsINIParser &aParser,
   char toggleBuf[15], serverBuf[20], serverPrefBuf[20], 
        serverPortPrefBuf[25];
   PRInt32 enabled;
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(protocols); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(protocols); ++i) {
     sprintf(toggleBuf, "Use %s", protocols[i]);
     GetInteger(aParser, "Proxy", toggleBuf, &enabled);
     if (enabled) {

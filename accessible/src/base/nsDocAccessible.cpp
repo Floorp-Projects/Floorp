@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "AccIterator.h"
 #include "States.h"
 #include "nsAccCache.h"
@@ -77,7 +79,7 @@
 #include "nsIXULDocument.h"
 #endif
 
-namespace dom = mozilla::dom;
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +96,7 @@ static nsIAtom** kRelationAttrs[] =
   &nsGkAtoms::control
 };
 
-static const PRUint32 kRelationAttrsLen = NS_ARRAY_LENGTH(kRelationAttrs);
+static const PRUint32 kRelationAttrsLen = ArrayLength(kRelationAttrs);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/desctructor

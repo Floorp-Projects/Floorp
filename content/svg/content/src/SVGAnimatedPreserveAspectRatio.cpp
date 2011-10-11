@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsWhitespaceTokenizer.h"
 #ifdef MOZ_SMIL
@@ -102,7 +104,7 @@ static const char *sMeetOrSliceStrings[] = { "meet", "slice" };
 static PRUint16
 GetAlignForString(const nsAString &aAlignString)
 {
-  for (PRUint32 i = 0 ; i < NS_ARRAY_LENGTH(sAlignStrings) ; i++) {
+  for (PRUint32 i = 0 ; i < ArrayLength(sAlignStrings) ; i++) {
     if (aAlignString.EqualsASCII(sAlignStrings[i])) {
       return (i + nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE);
     }
@@ -127,7 +129,7 @@ GetAlignString(nsAString& aAlignString, PRUint16 aAlign)
 static PRUint16
 GetMeetOrSliceForString(const nsAString &aMeetOrSlice)
 {
-  for (PRUint32 i = 0 ; i < NS_ARRAY_LENGTH(sMeetOrSliceStrings) ; i++) {
+  for (PRUint32 i = 0 ; i < ArrayLength(sMeetOrSliceStrings) ; i++) {
     if (aMeetOrSlice.EqualsASCII(sMeetOrSliceStrings[i])) {
       return (i + nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET);
     }

@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "prtypes.h"
 #include "nsAlgorithm.h"
 #include "prmem.h"
@@ -62,6 +64,8 @@
 #include "gfxUserFontSet.h"
 
 #include "nsUnicodeRange.h"
+
+using namespace mozilla;
 
 // standard font descriptors that we construct the first time they're needed
 CTFontDescriptorRef gfxCoreTextShaper::sDefaultFeaturesDescriptor = NULL;
@@ -556,7 +560,7 @@ gfxCoreTextShaper::CreateDefaultFeaturesDescriptor()
         ::CFDictionaryCreate(kCFAllocatorDefault,
                              (const void **) keys,
                              (const void **) values,
-                             NS_ARRAY_LENGTH(keys),
+                             ArrayLength(keys),
                              &kCFTypeDictionaryKeyCallBacks,
                              &kCFTypeDictionaryValueCallBacks);
     ::CFRelease(lineInitialsOffSelector);
@@ -571,7 +575,7 @@ gfxCoreTextShaper::CreateDefaultFeaturesDescriptor()
         ::CFDictionaryCreate(kCFAllocatorDefault,
                              (const void **) keys,
                              (const void **) values,
-                             NS_ARRAY_LENGTH(keys),
+                             ArrayLength(keys),
                              &kCFTypeDictionaryKeyCallBacks,
                              &kCFTypeDictionaryValueCallBacks);
     ::CFRelease(lineFinalsOffSelector);
@@ -580,7 +584,7 @@ gfxCoreTextShaper::CreateDefaultFeaturesDescriptor()
     CFArrayRef featuresArray =
         ::CFArrayCreate(kCFAllocatorDefault,
                         (const void **) featureSettings,
-                        NS_ARRAY_LENGTH(featureSettings),
+                        ArrayLength(featureSettings),
                         &kCFTypeArrayCallBacks);
     ::CFRelease(featureSettings[0]);
     ::CFRelease(featureSettings[1]);
@@ -591,7 +595,7 @@ gfxCoreTextShaper::CreateDefaultFeaturesDescriptor()
         ::CFDictionaryCreate(kCFAllocatorDefault,
                              (const void **) attrKeys,
                              (const void **) attrValues,
-                             NS_ARRAY_LENGTH(attrKeys),
+                             ArrayLength(attrKeys),
                              &kCFTypeDictionaryKeyCallBacks,
                              &kCFTypeDictionaryValueCallBacks);
     ::CFRelease(featuresArray);
@@ -626,7 +630,7 @@ gfxCoreTextShaper::CreateCTFontWithDisabledLigatures(CGFloat aSize)
             ::CFDictionaryCreate(kCFAllocatorDefault,
                                  (const void **) keys,
                                  (const void **) values,
-                                 NS_ARRAY_LENGTH(keys),
+                                 ArrayLength(keys),
                                  &kCFTypeDictionaryKeyCallBacks,
                                  &kCFTypeDictionaryValueCallBacks);
         ::CFRelease(ligaturesType);

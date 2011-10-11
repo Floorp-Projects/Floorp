@@ -42,6 +42,8 @@
  * values they accept
  */
 
+#include "mozilla/Util.h"
+
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsStyleConsts.h"
@@ -54,6 +56,8 @@
 #include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"
 #include "prlog.h" // for PR_STATIC_ASSERT
+
+using namespace mozilla;
 
 // required to make the symbol external, so that TestCSSPropertyLookup.cpp can link with it
 extern const char* const kCSSRawProperties[];
@@ -223,13 +227,12 @@ nsCSSProps::BuildShorthandsContainingTable()
 
   // Sort with lowest count at the start and highest at the end, and
   // within counts sort in reverse property index order.
-  NS_QuickSort(&subpropCounts, NS_ARRAY_LENGTH(subpropCounts),
+  NS_QuickSort(&subpropCounts, ArrayLength(subpropCounts),
                sizeof(subpropCounts[0]), SortPropertyAndCount, nsnull);
 
   // Fill in all the entries in gShorthandsContainingTable
   for (const PropertyAndCount *shorthandAndCount = subpropCounts,
-                           *shorthandAndCountEnd =
-                                subpropCounts + NS_ARRAY_LENGTH(subpropCounts);
+                           *shorthandAndCountEnd = ArrayEnd(subpropCounts);
        shorthandAndCount < shorthandAndCountEnd;
        ++shorthandAndCount) {
 #ifdef DEBUG_SHORTHANDS_CONTAINING
@@ -344,7 +347,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
   if (res == eCSSProperty_UNKNOWN) {
     for (const CSSPropertyAlias *alias = gAliases,
-                            *alias_end = gAliases + NS_ARRAY_LENGTH(gAliases);
+                            *alias_end = ArrayEnd(gAliases);
          alias < alias_end; ++alias) {
       if (aProperty.LowerCaseEqualsASCII(alias->name)) {
         res = alias->id;
@@ -365,7 +368,7 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
   if (res == eCSSProperty_UNKNOWN) {
     for (const CSSPropertyAlias *alias = gAliases,
-                            *alias_end = gAliases + NS_ARRAY_LENGTH(gAliases);
+                            *alias_end = ArrayEnd(gAliases);
          alias < alias_end; ++alias) {
       if (aProperty.LowerCaseEqualsASCII(alias->name)) {
         res = alias->id;

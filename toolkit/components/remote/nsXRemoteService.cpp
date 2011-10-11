@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsXRemoteService.h"
 #include "nsIObserverService.h"
 #include "nsCOMPtr.h"
@@ -69,6 +71,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 
+using namespace mozilla;
 
 #define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
 #define MOZILLA_LOCK_PROP      "_MOZILLA_LOCK"
@@ -404,7 +407,7 @@ nsXRemoteService::EnsureAtoms(void)
   if (sMozVersionAtom)
     return;
 
-  XInternAtoms(mozilla::DefaultXDisplay(), XAtomNames, NS_ARRAY_LENGTH(XAtomNames),
+  XInternAtoms(mozilla::DefaultXDisplay(), XAtomNames, ArrayLength(XAtomNames),
                False, XAtoms);
 
   int i = 0;

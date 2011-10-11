@@ -39,7 +39,8 @@
 
 #include "TestHarness.h"
 #include "nsTObserverArray.h"
-#include "nsMemory.h" // for NS_ARRAY_LENGTH
+
+using namespace mozilla;
 
 typedef nsTObserverArray<int> Array;
 
@@ -48,7 +49,7 @@ typedef nsTObserverArray<int> Array;
     ++testNum;                                                        \
     count = 0;                                                        \
     Array::_type iter(arr);                                           \
-    while (iter.HasMore() && count != NS_ARRAY_LENGTH(_exp)) {        \
+    while (iter.HasMore() && count != ArrayLength(_exp)) {            \
       _code                                                           \
       int next = iter.GetNext();                                      \
       int expected = _exp[count++];                                   \
@@ -62,7 +63,7 @@ typedef nsTObserverArray<int> Array;
       fail("During test %d, iterator ran over", testNum);             \
       rv = 1;                                                         \
     }                                                                 \
-    if (count != NS_ARRAY_LENGTH(_exp)) {                             \
+    if (count != ArrayLength(_exp)) {                             \
       fail("During test %d, iterator finished too early", testNum);   \
       rv = 1;                                                         \
     }                                                                 \

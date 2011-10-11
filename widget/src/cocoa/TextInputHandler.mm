@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "TextInputHandler.h"
 
 #ifdef MOZ_LOGGING
@@ -64,6 +66,7 @@
 #endif
 #include "prlog.h"
 
+using namespace mozilla;
 using namespace mozilla::widget;
 
 #ifdef PR_LOGGING
@@ -1203,7 +1206,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
     const NSUInteger kModifierMaskTable[] =
       { NSShiftKeyMask, NSControlKeyMask,
         NSAlternateKeyMask, NSCommandKeyMask };
-    const PRUint32 kModifierCount = NS_ARRAY_LENGTH(kModifierMaskTable);
+    const PRUint32 kModifierCount = ArrayLength(kModifierMaskTable);
 
     for (PRUint32 i = 0; i < kModifierCount; i++) {
       NSUInteger modifierBit = kModifierMaskTable[i];
@@ -3543,7 +3546,7 @@ TextInputHandlerBase::SynthesizeNativeKeyEvent(
   };
 
   PRUint32 modifierFlags = 0;
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sModifierFlagMap); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(sModifierFlagMap); ++i) {
     if (aModifierFlags & sModifierFlagMap[i][0]) {
       modifierFlags |= sModifierFlagMap[i][1];
     }

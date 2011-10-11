@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "base/basictypes.h"
 #include "IPC/IPCMessageUtils.h"
 #include "nsCOMPtr.h"
@@ -442,7 +444,7 @@ ReportUseOfDeprecatedMethod(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
   const PRUnichar *strings[] = { type.get() };
   nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                   aWarning,
-                                  strings, NS_ARRAY_LENGTH(strings),
+                                  strings, ArrayLength(strings),
                                   nsnull,
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,

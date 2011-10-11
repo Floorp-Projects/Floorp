@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "mozilla/Util.h"
+
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLFontElement.h"
 #include "nsIDOMEventTarget.h"
@@ -44,6 +47,8 @@
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
 #include "nsIDocument.h"
+
+using namespace mozilla;
 
 class nsHTMLFontElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLFontElement
@@ -276,7 +281,7 @@ nsHTMLFontElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sCommonAttributeMap,
   };
 
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
 }
 
 
