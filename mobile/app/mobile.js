@@ -679,3 +679,6 @@ pref("browser.dom.window.dump.enabled", true);
 // controls if we want camera support
 pref("device.camera.enabled", true);
 pref("media.realtime_decoder.enabled", true);
+
+pref("dom.report_all_js_exceptions", true);
+pref("javascript.options.showInConsole", true);
