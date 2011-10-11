@@ -62,7 +62,7 @@ enum Reason {
     SHAPE,
     REFILL
 };
-static int NUM_REASONS = REFILL + 1;
+static const int NUM_REASONS = REFILL + 1;
 
 static inline const char *
 ExplainReason(Reason r)
