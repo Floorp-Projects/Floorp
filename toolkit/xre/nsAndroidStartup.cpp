@@ -57,6 +57,9 @@
 
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, MOZ_APP_NAME, args)
 
+#define _STR(s) # s
+#define STR(s) _STR(s)
+
 struct AutoAttachJavaThread {
     AutoAttachJavaThread() {
         attached = mozilla_AndroidBridge_SetMainThread((void*)pthread_self());
@@ -97,20 +100,6 @@ GeckoStart(void *data)
         LOG("Failed to get GRE_HOME from the env vars");
         return 0;
     }
-    nsCAutoString appini_path(greHome);
-    appini_path.AppendLiteral("/application.ini");
-    rv = NS_NewNativeLocalFile(appini_path, PR_FALSE, getter_AddRefs(appini));
-    if (NS_FAILED(rv)) {
-        LOG("Failed to create nsILocalFile for appdata\n");
-        return 0;
-    }
-
-    nsXREAppData *appData;
-    rv = XRE_CreateAppData(appini, &appData);
-    if (NS_FAILED(rv)) {
-        LOG("Failed to load application.ini from %s\n", appini_path.get());
-        return 0;
-    }
 
     nsCOMPtr<nsILocalFile> xreDir;
     rv = NS_NewNativeLocalFile(nsDependentCString(greHome), PR_FALSE, getter_AddRefs(xreDir));
@@ -119,7 +108,25 @@ GeckoStart(void *data)
         return 0;
     }
 
-    appData->xreDirectory = xreDir.get();
+    nsXREAppData appData = {
+        sizeof(nsXREAppData),
+        xreDir.get(),
+        "Mozilla",
+        "Fennec",
+        STR(APP_VERSION),
+        STR(GRE_BUILDID),
+        "{a23983c0-fd0e-11dc-95ff-0800200c9a66}",
+        NULL,
+#ifdef MOZILLA_OFFICIAL
+        NS_XRE_ENABLE_EXTENSION_MANAGER | NS_XRE_ENABLE_CRASH_REPORTER,
+#else
+        NS_XRE_ENABLE_EXTENSION_MANAGER,
+#endif
+        xreDir.get(),
+        STR(GRE_MILESTONE),
+        STR(GRE_MILESTONE),
+        "https://crash-reports.mozilla.com/submit"
+    };
 
     nsTArray<char *> targs;
     char *arg = strtok(static_cast<char *>(data), " ");
@@ -129,12 +136,10 @@ GeckoStart(void *data)
     }
     targs.AppendElement(static_cast<char *>(nsnull));
 
-    int result = XRE_main(targs.Length() - 1, targs.Elements(), appData);
+    int result = XRE_main(targs.Length() - 1, targs.Elements(), &appData);
 
     if (result)
         LOG("XRE_main returned %d", result);
-
-    XRE_FreeAppData(appData);
 
     mozilla::AndroidBridge::Bridge()->NotifyXreExit();
 
