@@ -81,6 +81,8 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Util.h"
 
+#include "mozilla/Util.h"
+
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
 #ifdef _MSC_VER
@@ -3885,7 +3887,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   // CSS Transitions
   PRUint32 numTransitions =
     CountTransitionProps(transitionPropInfo, transitionPropData,
-                         NS_ARRAY_LENGTH(transitionPropData),
+                         ArrayLength(transitionPropData),
                          display, parentDisplay, aRuleData,
                          canStoreInRuleTree);
 
@@ -4044,7 +4046,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 
   PRUint32 numAnimations =
     CountTransitionProps(animationPropInfo, animationPropData,
-                         NS_ARRAY_LENGTH(animationPropData),
+                         ArrayLength(animationPropData),
                          display, parentDisplay, aRuleData,
                          canStoreInRuleTree);
 
@@ -4786,8 +4788,8 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
   {
     nsStyleBackground::Position &position = aComputedValue;
     for (const BackgroundPositionAxis *axis = gBGPosAxes,
-                        *axis_end = gBGPosAxes + NS_ARRAY_LENGTH(gBGPosAxes);
-         axis != axis_end; ++axis) {
+                        *axis_end = ArrayEnd(gBGPosAxes);
+         axis < axis_end; ++axis) {
       const nsCSSValue &specified = aSpecifiedValue->*(axis->specified);
       if (eCSSUnit_Percent == specified.GetUnit()) {
         (position.*(axis->result)).mLength = 0;
@@ -4848,8 +4850,8 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
   {
     nsStyleBackground::Size &size = aComputedValue;
     for (const BackgroundSizeAxis *axis = gBGSizeAxes,
-                        *axis_end = gBGSizeAxes + NS_ARRAY_LENGTH(gBGSizeAxes);
-         axis != axis_end; ++axis) {
+                        *axis_end = ArrayEnd(gBGSizeAxes);
+         axis < axis_end; ++axis) {
       const nsCSSValue &specified = aSpecifiedValue->*(axis->specified);
       if (eCSSUnit_Auto == specified.GetUnit()) {
         size.*(axis->type) = nsStyleBackground::Size::eAuto;
@@ -7121,7 +7123,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
                      NS_ARRAY_LENGTH(paddingValues)];
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
-    for (PRUint32 i = 0, i_end = NS_ARRAY_LENGTH(backgroundValues);
+    for (PRUint32 i = 0, i_end = ArrayLength(backgroundValues);
          i < i_end; ++i) {
       if (backgroundValues[i] == eCSSProperty_background_color) {
         backColorIndex = nValues;
@@ -7131,14 +7133,14 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   }
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER) {
-    for (PRUint32 i = 0, i_end = NS_ARRAY_LENGTH(borderValues);
+    for (PRUint32 i = 0, i_end = ArrayLength(borderValues);
          i < i_end; ++i) {
       values[nValues++] = ruleData.ValueFor(borderValues[i]);
     }
   }
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
-    for (PRUint32 i = 0, i_end = NS_ARRAY_LENGTH(paddingValues);
+    for (PRUint32 i = 0, i_end = ArrayLength(paddingValues);
          i < i_end; ++i) {
       values[nValues++] = ruleData.ValueFor(paddingValues[i]);
     }

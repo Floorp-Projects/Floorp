@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
 
 #include "nsPlaintextEditor.h"
 
@@ -69,6 +70,8 @@
 #include "nsFrameSelection.h"
 #include "nsEventDispatcher.h"
 #include "nsContentUtils.h"
+
+using namespace mozilla;
 
 NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transferable)
 {
@@ -483,7 +486,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, bool *aCanPast
 
   bool haveFlavors;
   rv = clipboard->HasDataMatchingFlavors(textEditorFlavors,
-                                         NS_ARRAY_LENGTH(textEditorFlavors),
+                                         ArrayLength(textEditorFlavors),
                                          aSelectionType, &haveFlavors);
   NS_ENSURE_SUCCESS(rv, rv);
   

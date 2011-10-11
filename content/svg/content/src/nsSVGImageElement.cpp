@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSVGImageElement.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
@@ -234,7 +236,7 @@ nsSVGImageElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap,
   };
   
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGImageElementBase::IsAttributeMapped(name);
 }
 
@@ -263,7 +265,7 @@ nsSVGElement::LengthAttributesInfo
 nsSVGImageElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              NS_ARRAY_LENGTH(sLengthInfo));
+                              ArrayLength(sLengthInfo));
 }
 
 SVGAnimatedPreserveAspectRatio *
@@ -276,7 +278,7 @@ nsSVGElement::StringAttributesInfo
 nsSVGImageElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 void

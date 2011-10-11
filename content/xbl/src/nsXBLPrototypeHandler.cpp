@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLPrototypeBinding.h"
@@ -990,7 +992,7 @@ nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar*
   const PRUnichar* params[] = { aKey, aModifiers };
   nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
                                   aMessageName,
-                                  params, NS_ARRAY_LENGTH(params),
+                                  params, ArrayLength(params),
                                   nsnull, EmptyString(), mLineNumber, 0,
                                   nsIScriptError::warningFlag,
                                   "XBL Prototype Handler", doc);

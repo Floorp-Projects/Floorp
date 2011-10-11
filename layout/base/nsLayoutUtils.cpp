@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsLayoutUtils.h"
 #include "nsIFormControlFrame.h"
 #include "nsPresContext.h"
@@ -114,9 +116,9 @@
 #include "nsXULPopupManager.h"
 #endif
 
+using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
-namespace css = mozilla::css;
 
 #ifdef DEBUG
 // TODO: remove, see bug 598468.
@@ -4225,7 +4227,7 @@ nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
   while (aFrame) {
     nsIFrame::ChildListID childLists[] = { nsIFrame::kPrincipalList,
                                            nsIFrame::kPopupList };
-    for (int i = 0; i < NS_ARRAY_LENGTH(childLists); ++i) {
+    for (int i = 0; i < ArrayLength(childLists); ++i) {
       nsFrameList children(aFrame->GetChildList(childLists[i]));
       for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
         nsIFrame* child = e.get();

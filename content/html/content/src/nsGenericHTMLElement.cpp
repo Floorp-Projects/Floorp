@@ -37,6 +37,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "mozilla/Util.h"
+
 #include "nscore.h"
 #include "nsGenericHTMLElement.h"
 #include "nsCOMPtr.h"
@@ -1446,7 +1449,7 @@ nsGenericHTMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sCommonAttributeMap
   };
   
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
 }
 
 nsMapRuleToAttributesFunc
@@ -2167,7 +2170,7 @@ nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttri
     aData->ValueForOverflowX(),
     aData->ValueForOverflowY(),
   };
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(overflowValues); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(overflowValues); ++i) {
     if (overflowValues[i]->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::scrolling);
       if (value && value->Type() == nsAttrValue::eEnum) {

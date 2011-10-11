@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsProtocolProxyService.h"
 #include "nsProxyInfo.h"
 #include "nsIClassInfoImpl.h"
@@ -61,6 +63,8 @@
 #include "nsPACMan.h"
 
 //----------------------------------------------------------------------------
+
+using namespace mozilla;
 
 #include "prlog.h"
 #if defined(PR_LOGGING)
@@ -945,7 +949,7 @@ nsProtocolProxyService::NewProxyInfo(const nsACString &aType,
     // resolve type; this allows us to avoid copying the type string into each
     // proxy info instance.  we just reference the string literals directly :)
     const char *type = nsnull;
-    for (PRUint32 i=0; i<NS_ARRAY_LENGTH(types); ++i) {
+    for (PRUint32 i=0; i<ArrayLength(types); ++i) {
         if (aType.LowerCaseEqualsASCII(types[i])) {
             type = types[i];
             break;
