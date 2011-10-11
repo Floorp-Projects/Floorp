@@ -101,6 +101,8 @@ using namespace mozilla::ipc::windows;
 
 // pulled from widget's nsAppShell
 extern const PRUnichar* kAppShellEventId;
+// pulled from accessibility's win utils
+extern const PRUnichar* kPropNameTabContent;
 
 namespace {
 
@@ -376,6 +378,12 @@ WindowIsDeferredWindow(HWND hWnd)
   int length = GetClassNameW(hWnd, (wchar_t*)buffer, sizeof(buffer) - 1);
   if (length <= 0) {
     NS_WARNING("Failed to get class name!");
+    return false;
+  }
+
+  // Tab content creates a window that responds to accessible WM_GETOBJECT
+  // calls. This window can safely be ignored.
+  if (::GetPropW(hWnd, kPropNameTabContent)) {
     return false;
   }
 

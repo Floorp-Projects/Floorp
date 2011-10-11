@@ -41,10 +41,9 @@
 #define jsjaeger_poly_ic_h__
 
 #include "jscntxt.h"
-#include "jstl.h"
-#include "jsvector.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
+#include "js/Vector.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/ICRepatcher.h"
 #include "BaseAssembler.h"

@@ -71,8 +71,6 @@
 #include "jsscope.h"
 #include "jsstaticcheck.h"
 #include "jsstr.h"
-#include "jsbit.h"
-#include "jsvector.h"
 #include "jsversion.h"
 
 #include "vm/GlobalObject.h"
