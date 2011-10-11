@@ -45,6 +45,8 @@
 #endif
 #include "jspubtd.h"
 #include "jsprvtd.h"
+#include "jsscript.h"
+#include "jsobj.h"
 
 namespace js {
 
