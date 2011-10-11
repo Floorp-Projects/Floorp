@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "jstypes.h"
 #include "jscntxt.h"
 #include "jsgcstats.h"
@@ -46,6 +48,7 @@
 
 #include "jsgcinlines.h"
 
+using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
@@ -61,7 +64,7 @@ void
 ConservativeGCStats::dump(FILE *fp)
 {
     size_t words = 0;
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(counter); ++i)
+    for (size_t i = 0; i < ArrayLength(counter); ++i)
         words += counter[i];
    
 #define ULSTAT(x)       ((unsigned long)(x))

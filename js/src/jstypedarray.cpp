@@ -39,6 +39,8 @@
 
 #include <string.h>
 
+#include "mozilla/Util.h"
+
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -68,6 +70,7 @@
 #include "jsobjinlines.h"
 #include "jstypedarrayinlines.h"
 
+using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
@@ -2409,7 +2412,7 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
         argc++;
     }
 
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vals), vals);
+    AutoArrayRooter tvr(cx, ArrayLength(vals), vals);
     return TypedArrayConstruct(cx, atype, argc, &vals[0]);
 }
 
