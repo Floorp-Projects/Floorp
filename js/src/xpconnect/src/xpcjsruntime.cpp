@@ -41,6 +41,8 @@
 
 /* Per JSRuntime object */
 
+#include "mozilla/Util.h"
+
 #include "xpcprivate.h"
 #include "xpcpublic.h"
 #include "WrapperFactory.h"
@@ -1644,7 +1646,7 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
         PRInt64 used = stats.gcHeapArenaHeaders +
                        stats.gcHeapArenaPadding +
                        stats.gcHeapArenaUnused;
-        for (size_t i = 0; i != JS_ARRAY_LENGTH(stats.gcHeapKinds); ++i)
+        for (size_t i = 0; i != ArrayLength(stats.gcHeapKinds); ++i)
             used += stats.gcHeapKinds[i];
 
         data->gcHeapChunkDirtyUnused -= used;
