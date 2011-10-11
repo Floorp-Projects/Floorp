@@ -41,6 +41,8 @@
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
 
+#include "mozilla/Util.h"
+
 #include <nsITaskbarPreviewController.h>
 #include "TaskbarWindowPreview.h"
 #include "WindowHook.h"
@@ -188,7 +190,7 @@ TaskbarWindowPreview::SetProgressState(nsTaskbarProgressState aState,
                                        PRUint64 aCurrentValue,
                                        PRUint64 aMaxValue)
 {
-  NS_ENSURE_ARG_RANGE(aState, 0, NS_ARRAY_LENGTH(sNativeStates) - 1);
+  NS_ENSURE_ARG_RANGE(aState, 0, ArrayLength(sNativeStates) - 1);
 
   TBPFLAG nativeState = sNativeStates[aState];
   if (nativeState == TBPF_NOPROGRESS || nativeState == TBPF_INDETERMINATE) {

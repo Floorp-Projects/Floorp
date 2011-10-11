@@ -37,6 +37,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "mozilla/Util.h"
+
 #include "nsICharsetAlias.h"
 
 #include "nsCOMPtr.h"
@@ -3189,7 +3192,7 @@ ConvertToMidasInternalCommandInner(const nsAString & inCommandID,
 
             NS_ConvertUTF16toUTF8 convertedParam(Substring(start, end));
             PRUint32 j;
-            for (j = 0; j < NS_ARRAY_LENGTH(gBlocks); ++j) {
+            for (j = 0; j < ArrayLength(gBlocks); ++j) {
               if (convertedParam.Equals(gBlocks[j],
                                         nsCaseInsensitiveCStringComparator())) {
                 outParam.Assign(gBlocks[j]);
@@ -3197,7 +3200,7 @@ ConvertToMidasInternalCommandInner(const nsAString & inCommandID,
               }
             }
 
-            return j != NS_ARRAY_LENGTH(gBlocks);
+            return j != ArrayLength(gBlocks);
           }
           else {
             CopyUTF16toUTF8(inParam, outParam);

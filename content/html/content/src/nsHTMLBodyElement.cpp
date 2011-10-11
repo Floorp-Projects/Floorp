@@ -36,6 +36,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "mozilla/Util.h"
+
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLBodyElement.h"
@@ -60,6 +63,8 @@
 #include "jsapi.h"
 
 //----------------------------------------------------------------------
+
+using namespace mozilla;
 
 class nsHTMLBodyElement;
 
@@ -468,7 +473,7 @@ nsHTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sBackgroundAttributeMap,
   };
 
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
 }
 
 already_AddRefed<nsIEditor>

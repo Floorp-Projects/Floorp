@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "DOMSVGAnimatedTransformList.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGURIReference.h"
@@ -101,14 +103,14 @@ nsSVGElement::EnumAttributesInfo
 nsSVGGradientElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGGradientElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //----------------------------------------------------------------------
@@ -156,7 +158,7 @@ nsSVGGradientElement::IsAttributeMapped(const nsIAtom* name) const
     sGradientStopMap
   };
   
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGGradientElementBase::IsAttributeMapped(name);
 }
 
@@ -245,7 +247,7 @@ nsSVGElement::LengthAttributesInfo
 nsSVGLinearGradientElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              NS_ARRAY_LENGTH(sLengthInfo));
+                              ArrayLength(sLengthInfo));
 }
 
 //-------------------------- Radial Gradients ----------------------------
@@ -330,5 +332,5 @@ nsSVGElement::LengthAttributesInfo
 nsSVGRadialGradientElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              NS_ARRAY_LENGTH(sLengthInfo));
+                              ArrayLength(sLengthInfo));
 }

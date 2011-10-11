@@ -102,6 +102,8 @@
  **************************************************************
  **************************************************************/
 
+#include "mozilla/Util.h"
+
 #include "mozilla/ipc/RPCChannel.h"
 
 #include "nsWindow.h"
@@ -6957,18 +6959,18 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       if (KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
         numOfUniChars = numOfShiftStates =
           gKbdLayout.GetUniChars(uniChars, shiftStates,
-                                 NS_ARRAY_LENGTH(uniChars));
+                                 ArrayLength(uniChars));
       }
 
       if (aModKeyState.mIsControlDown ^ aModKeyState.mIsAltDown) {
         PRUint8 capsLockState = (::GetKeyState(VK_CAPITAL) & 1) ? eCapsLock : 0;
         numOfUnshiftedChars =
           gKbdLayout.GetUniCharsWithShiftState(virtualKeyCode, capsLockState,
-                       unshiftedChars, NS_ARRAY_LENGTH(unshiftedChars));
+                       unshiftedChars, ArrayLength(unshiftedChars));
         numOfShiftedChars =
           gKbdLayout.GetUniCharsWithShiftState(virtualKeyCode,
                        capsLockState | eShift,
-                       shiftedChars, NS_ARRAY_LENGTH(shiftedChars));
+                       shiftedChars, ArrayLength(shiftedChars));
 
         // The current keyboard cannot input alphabets or numerics,
         // we should append them for Shortcut/Access keys.
@@ -7224,7 +7226,7 @@ LRESULT nsWindow::OnCharRaw(UINT charCode, UINT aScanCode,
 void
 nsWindow::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifiers)
 {
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sModifierKeyMap); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(sModifierKeyMap); ++i) {
     const PRUint32* map = sModifierKeyMap[i];
     if (aModifiers & map[0]) {
       aArray->AppendElement(KeyPair(map[1], map[2]));
@@ -7647,7 +7649,7 @@ static bool IsElantechHelperWindow(HWND aHWND)
   HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
   if (hProcess) {
     PRUnichar path[256] = {L'\0'};
-    if (pGetProcessImageFileName(hProcess, path, NS_ARRAY_LENGTH(path))) {
+    if (pGetProcessImageFileName(hProcess, path, ArrayLength(path))) {
       int pathLength = lstrlenW(path);
       if (pathLength >= filenameSuffixLength) {
         if (lstrcmpiW(path + pathLength - filenameSuffixLength, filenameSuffix) == 0) {

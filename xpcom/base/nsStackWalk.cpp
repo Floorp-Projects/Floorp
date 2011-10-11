@@ -40,6 +40,8 @@
 
 /* API for getting a stack trace of the C/C++ stack on the current thread */
 
+#include "mozilla/Util.h"
+
 #include "nsStackWalk.h"
 
 #if defined(_WIN32) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_IA64)) // WIN32 x86 stack walking code
@@ -49,7 +51,7 @@
 #include <process.h>
 #include <stdio.h>
 #include "plstr.h"
-#include "nsMemory.h" // for NS_ARRAY_LENGTH
+#include "nsMemory.h" // for ArrayLength
 #include "mozilla/FunctionTimer.h"
 
 #include "nspr.h"
@@ -62,6 +64,8 @@
 #define USING_WXP_VERSION 1
 #endif
 #endif
+
+using namespace mozilla;
 
 // Define these as static pointers so that we can load the DLL on the
 // fly (and not introduce a link-time dependency on it). Tip o' the
@@ -688,7 +692,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     void *local_pcs[1024];
     data.pcs = local_pcs;
     data.pc_count = 0;
-    data.pc_size = NS_ARRAY_LENGTH(local_pcs);
+    data.pc_size = ArrayLength(local_pcs);
 
     ::PostThreadMessage(gStackWalkThread, WM_USER, 0, (LPARAM)&data);
 
@@ -715,7 +719,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     for (PRUint32 i = 0; i < data.pc_count; ++i)
         (*aCallback)(data.pcs[i], aClosure);
 
-    if (data.pc_size > NS_ARRAY_LENGTH(local_pcs))
+    if (data.pc_size > ArrayLength(local_pcs))
         free(data.pcs);
 
     return NS_OK;

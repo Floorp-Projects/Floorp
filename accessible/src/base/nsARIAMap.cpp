@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsARIAMap.h"
 
 #include "nsIAccessibleRole.h"
@@ -44,6 +46,7 @@
 
 #include "nsIContent.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 /**
@@ -574,7 +577,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   }
 };
 
-PRUint32 nsARIAMap::gWAIRoleMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIRoleMap);
+PRUint32 nsARIAMap::gWAIRoleMapLength = ArrayLength(nsARIAMap::gWAIRoleMap);
 
 nsRoleMapEntry nsARIAMap::gLandmarkRoleMap = {
   "",
@@ -731,7 +734,7 @@ nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
   {&nsGkAtoms::aria_valuetext,         ATTR_BYPASSOBJ                 }
 };
 
-PRUint32 nsARIAMap::gWAIUnivAttrMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIUnivAttrMap);
+PRUint32 nsARIAMap::gWAIUnivAttrMapLength = ArrayLength(nsARIAMap::gWAIUnivAttrMap);
 
 
 ////////////////////////////////////////////////////////////////////////////////

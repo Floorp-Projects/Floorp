@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 // JavaScript includes
 #include "jsapi.h"
 #include "jsprvtd.h"    // we are using private JS typedefs...
@@ -2159,7 +2161,7 @@ nsDOMClassInfo::RegisterExternalClasses()
     };                                                                        \
                                                                               \
     /* Compact the interface list */                                          \
-    size_t count = NS_ARRAY_LENGTH(interface_list);                           \
+    size_t count = ArrayLength(interface_list);                               \
     /* count is the number of array entries, which is one greater than the */ \
     /* number of interfaces due to the terminating null */                    \
     for (size_t i = 0; i < count - 1; ++i) {                                  \
@@ -4130,7 +4132,7 @@ nsDOMClassInfo::Init()
 
 #ifdef NS_DEBUG
   {
-    PRUint32 i = NS_ARRAY_LENGTH(sClassInfoData);
+    PRUint32 i = ArrayLength(sClassInfoData);
 
     if (i != eDOMClassInfoIDCount) {
       NS_ERROR("The number of items in sClassInfoData doesn't match the "
@@ -5264,7 +5266,7 @@ static const char*
 FindConstructorContractID(const nsDOMClassInfoData *aDOMClassInfoData)
 {
   PRUint32 i;
-  for (i = 0; i < NS_ARRAY_LENGTH(kConstructorMap); ++i) {
+  for (i = 0; i < ArrayLength(kConstructorMap); ++i) {
     if (&sClassInfoData[kConstructorMap[i].mDOMClassInfoID] ==
         aDOMClassInfoData) {
       return kConstructorMap[i].mContractID;
@@ -5276,7 +5278,7 @@ FindConstructorContractID(const nsDOMClassInfoData *aDOMClassInfoData)
 static nsDOMConstructorFunc
 FindConstructorFunc(const nsDOMClassInfoData *aDOMClassInfoData)
 {
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kConstructorFuncMap); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(kConstructorFuncMap); ++i) {
     if (&sClassInfoData[kConstructorFuncMap[i].mDOMClassInfoID] ==
         aDOMClassInfoData) {
       return kConstructorFuncMap[i].mConstructorFunc;
@@ -6651,7 +6653,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     JSAutoRequest ar(cx);
 
     // Resolve special classes.
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sOtherResolveFuncs); i++) {
+    for (PRUint32 i = 0; i < ArrayLength(sOtherResolveFuncs); i++) {
       if (!sOtherResolveFuncs[i](cx, obj, id, flags, objp)) {
         return NS_ERROR_FAILURE;
       }

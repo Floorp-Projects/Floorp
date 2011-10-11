@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -244,7 +246,7 @@ nsSVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap
   };
 
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGMarkerElementBase::IsAttributeMapped(name);
 }
 
@@ -308,21 +310,21 @@ nsSVGElement::LengthAttributesInfo
 nsSVGMarkerElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              NS_ARRAY_LENGTH(sLengthInfo));
+                              ArrayLength(sLengthInfo));
 }
 
 nsSVGElement::AngleAttributesInfo
 nsSVGMarkerElement::GetAngleInfo()
 {
   return AngleAttributesInfo(mAngleAttributes, sAngleInfo,
-                             NS_ARRAY_LENGTH(sAngleInfo));
+                             ArrayLength(sAngleInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGMarkerElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGViewBox *

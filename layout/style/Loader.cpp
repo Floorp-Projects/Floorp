@@ -48,6 +48,8 @@
 
 /* loading of CSS style sheets using the network APIs */
 
+#include "mozilla/Util.h"
+
 #include "mozilla/css/Loader.h"
 #include "nsIRunnable.h"
 #include "nsIUnicharStreamLoader.h"
@@ -969,7 +971,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     nsCOMPtr<nsIURI> referrer = GetReferrerURI();
     nsContentUtils::ReportToConsole(nsContentUtils::eCSS_PROPERTIES,
                                     errorMessage,
-                                    strings, NS_ARRAY_LENGTH(strings),
+                                    strings, ArrayLength(strings),
                                     referrer, EmptyString(), 0, 0, errorFlag,
                                     "CSS Loader", mLoader->mDocument);
 

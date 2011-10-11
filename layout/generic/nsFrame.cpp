@@ -42,6 +42,8 @@
 
 /* base class of all rendering objects */
 
+#include "mozilla/Util.h"
+
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsFrameList.h"
@@ -8847,7 +8849,7 @@ nsHTMLReflowState::DisplayInitFrameTypeExit(nsIFrame* aFrame,
       "inline-stack", "deck", "popup", "groupbox",
 #endif
     };
-    if (disp->mDisplay >= NS_ARRAY_LENGTH(displayTypes))
+    if (disp->mDisplay >= ArrayLength(displayTypes))
       printf(" display=%u", disp->mDisplay);
     else
       printf(" display=%s", displayTypes[disp->mDisplay]);
@@ -8860,7 +8862,7 @@ nsHTMLReflowState::DisplayInitFrameTypeExit(nsIFrame* aFrame,
     bool repNoBlock = NS_FRAME_IS_REPLACED_NOBLOCK(aState->mFrameType);
     bool repBlock = NS_FRAME_IS_REPLACED_CONTAINS_BLOCK(aState->mFrameType);
 
-    if (bareType >= NS_ARRAY_LENGTH(cssFrameTypes)) {
+    if (bareType >= ArrayLength(cssFrameTypes)) {
       printf(" result=type %u", bareType);
     } else {
       printf(" result=%s", cssFrameTypes[bareType]);

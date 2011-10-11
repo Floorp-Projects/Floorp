@@ -118,6 +118,8 @@
 // objects alive during the unlinking.
 // 
 
+#include "mozilla/Util.h"
+
 #if !defined(__MINGW32__)
 #ifdef WIN32
 #include <crtdbg.h>
@@ -804,11 +806,11 @@ public:
         // Put all the entries in the block on the free list.
         nsPurpleBufferEntry *entries = aBlock->mEntries;
         mFreeList = entries;
-        for (PRUint32 i = 1; i < NS_ARRAY_LENGTH(aBlock->mEntries); ++i) {
+        for (PRUint32 i = 1; i < ArrayLength(aBlock->mEntries); ++i) {
             entries[i - 1].mNextInFreeList =
                 (nsPurpleBufferEntry*)(PRUword(entries + i) | 1);
         }
-        entries[NS_ARRAY_LENGTH(aBlock->mEntries) - 1].mNextInFreeList =
+        entries[ArrayLength(aBlock->mEntries) - 1].mNextInFreeList =
             (nsPurpleBufferEntry*)1;
     }
 
@@ -833,7 +835,7 @@ public:
     void UnmarkRemainingPurple(Block *b)
     {
         for (nsPurpleBufferEntry *e = b->mEntries,
-                              *eEnd = e + NS_ARRAY_LENGTH(b->mEntries);
+                              *eEnd = ArrayEnd(b->mEntries);
              e != eEnd; ++e) {
             if (!(PRUword(e->mObject) & PRUword(1))) {
                 // This is a real entry (rather than something on the
@@ -986,7 +988,7 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
     // Walk through all the blocks.
     for (Block *b = &mFirstBlock; b; b = b->mNext) {
         for (nsPurpleBufferEntry *e = b->mEntries,
-                              *eEnd = e + NS_ARRAY_LENGTH(b->mEntries);
+                              *eEnd = ArrayEnd(b->mEntries);
             e != eEnd; ++e) {
             if (!(PRUword(e->mObject) & PRUword(1))) {
                 // This is a real entry (rather than something on the
@@ -1846,7 +1848,7 @@ nsPurpleBuffer::NoteAll(GCGraphBuilder &builder)
 
     for (Block *b = &mFirstBlock; b; b = b->mNext) {
         for (nsPurpleBufferEntry *e = b->mEntries,
-                              *eEnd = e + NS_ARRAY_LENGTH(b->mEntries);
+                              *eEnd = ArrayEnd(b->mEntries);
             e != eEnd; ++e) {
             if (!(PRUword(e->mObject) & PRUword(1)) && e->mObject) {
                 builder.NoteXPCOMRoot(e->mObject);

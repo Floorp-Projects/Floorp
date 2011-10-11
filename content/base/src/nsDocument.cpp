@@ -47,6 +47,8 @@
  * Base class for all our document implementations.
  */
 
+#include "mozilla/Util.h"
+
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
 #define FORCE_PR_LOG 1
@@ -1801,7 +1803,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
     nsCAutoString uri;
     if (tmp->mDocumentURI)
       tmp->mDocumentURI->GetSpec(uri);
-    if (nsid < NS_ARRAY_LENGTH(kNSURIs)) {
+    if (nsid < ArrayLength(kNSURIs)) {
       PR_snprintf(name, sizeof(name), "nsDocument%s %s", kNSURIs[nsid],
                   uri.get());
     }

@@ -42,6 +42,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
 #endif
@@ -772,7 +774,7 @@ NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const nsACSt
 {
   *aApplyDecoding = PR_TRUE;
   PRUint32 i;
-  for(i = 0; i < NS_ARRAY_LENGTH(nonDecodableExtensions); ++i) {
+  for(i = 0; i < ArrayLength(nonDecodableExtensions); ++i) {
     if (aExtension.LowerCaseEqualsASCII(nonDecodableExtensions[i].mFileExtension) &&
         aEncodingType.LowerCaseEqualsASCII(nonDecodableExtensions[i].mMimeType)) {
       *aApplyDecoding = PR_FALSE;
@@ -1153,7 +1155,7 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
     PRUnichar(0x202d), // Left-to-Right Override
     PRUnichar(0x202e)  // Right-to-Left Override
   };
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(unsafeBidiCharacters); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(unsafeBidiCharacters); ++i) {
     mSuggestedFileName.ReplaceChar(unsafeBidiCharacters[i], '_');
     mTempFileExtension.ReplaceChar(unsafeBidiCharacters[i], '_');
   }
@@ -2590,7 +2592,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
 
   nsresult rv = NS_OK;
   // First of all, check our default entries
-  for (size_t i = 0; i < NS_ARRAY_LENGTH(defaultMimeEntries); i++)
+  for (size_t i = 0; i < ArrayLength(defaultMimeEntries); i++)
   {
     if (aFileExt.LowerCaseEqualsASCII(defaultMimeEntries[i].mFileExtension)) {
       aContentType = defaultMimeEntries[i].mMimeType;
@@ -2759,7 +2761,7 @@ nsresult nsExternalHelperAppService::FillMIMEInfoForMimeTypeFromExtras(
   // Look for default entry with matching mime type.
   nsCAutoString MIMEType(aContentType);
   ToLowerCase(MIMEType);
-  PRInt32 numEntries = NS_ARRAY_LENGTH(extraMimeEntries);
+  PRInt32 numEntries = ArrayLength(extraMimeEntries);
   for (PRInt32 index = 0; index < numEntries; index++)
   {
       if ( MIMEType.Equals(extraMimeEntries[index].mMimeType) )
@@ -2790,7 +2792,7 @@ bool nsExternalHelperAppService::GetTypeFromExtras(const nsACString& aExtension,
 
   // Look for default entry with matching extension.
   nsDependentCString::const_iterator start, end, iter;
-  PRInt32 numEntries = NS_ARRAY_LENGTH(extraMimeEntries);
+  PRInt32 numEntries = ArrayLength(extraMimeEntries);
   for (PRInt32 index = 0; index < numEntries; index++)
   {
       nsDependentCString extList(extraMimeEntries[index].mFileExtensions);

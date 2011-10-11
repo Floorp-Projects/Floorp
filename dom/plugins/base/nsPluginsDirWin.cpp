@@ -43,6 +43,8 @@
   by Alex Musil
  */
 
+#include "mozilla/Util.h"
+
 #include "nsPluginsDir.h"
 #include "prlink.h"
 #include "plstr.h"
@@ -57,6 +59,8 @@
 #include "nsUnicharUtils.h"
 #include "nsSetDllDirectory.h"
 
+using namespace mozilla;
+
 /* Local helper functions */
 
 static char* GetKeyValue(void* verbuf, const WCHAR* key,
@@ -68,7 +72,7 @@ static char* GetKeyValue(void* verbuf, const WCHAR* key,
   WCHAR *buf = NULL;
   UINT blen;
 
-  if (_snwprintf_s(keybuf, NS_ARRAY_LENGTH(keybuf), _TRUNCATE,
+  if (_snwprintf_s(keybuf, ArrayLength(keybuf), _TRUNCATE,
                    keyFormat, language, codepage, key) < 0)
   {
     NS_NOTREACHED("plugin info key too long for buffer!");
