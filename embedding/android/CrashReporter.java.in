@@ -159,7 +159,7 @@ public class CrashReporter extends Activity
     backgroundSendReport();
   }
 
-  boolean readStringsFromFile(String filePath, Map stringMap)
+  boolean readStringsFromFile(String filePath, Map<String, String> stringMap)
   {
     try {
       BufferedReader reader = new BufferedReader(
@@ -171,7 +171,7 @@ public class CrashReporter extends Activity
     }
   }
 
-  boolean readStringsFromReader(BufferedReader reader, Map stringMap)
+  boolean readStringsFromReader(BufferedReader reader, Map<String, String> stringMap)
     throws java.io.IOException
   {
     String line;

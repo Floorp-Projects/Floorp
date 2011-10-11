@@ -195,7 +195,7 @@ public class LauncherShortcuts extends Activity {
             try {
                 JSONObject webApps = (JSONObject) new JSONTokener(webappsJson).nextValue();
 
-                Iterator<Object> appKeys = webApps.keys();
+                Iterator appKeys = webApps.keys();
                 HashMap<String, String> map;
 
                 while (appKeys.hasNext()) {
@@ -235,7 +235,6 @@ public class LauncherShortcuts extends Activity {
                     new String[] { "favicon", "title" },
                     new int[] { R.id.favicon, R.id.title }
                 ), new DialogInterface.OnClickListener() {
-                    @Override
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.dismiss();
                         onListItemClick(id);
@@ -244,7 +243,6 @@ public class LauncherShortcuts extends Activity {
                 });
                 
                 builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
                     public void onCancel(DialogInterface dialog) {
                         dialog.dismiss();
                         finish();

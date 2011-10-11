@@ -57,7 +57,7 @@
 
     </LinearLayout>
 
-    <AbsoluteLayout android:id="@+android:id/geckoLayout"
+    <RelativeLayout android:id="@+android:id/geckoLayout"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
               android:layout_weight="1"/>
