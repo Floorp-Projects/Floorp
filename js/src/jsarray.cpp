@@ -245,7 +245,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
     JS_ASSERT(index > JSID_INT_MAX);
 
     jschar buf[10];
-    jschar *start = JS_ARRAY_END(buf);
+    jschar *start = ArrayEnd(buf);
     do {
         --start;
         *start = (jschar)('0' + index % 10);
@@ -261,13 +261,13 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
      */
     JSAtom *atom;
     if (!createAtom && (obj->isSlowArray() || obj->isArguments() || obj->isObject())) {
-        atom = js_GetExistingStringAtom(cx, start, JS_ARRAY_END(buf) - start);
+        atom = js_GetExistingStringAtom(cx, start, ArrayEnd(buf) - start);
         if (!atom) {
             *idp = JSID_VOID;
             return JS_TRUE;
         }
     } else {
-        atom = js_AtomizeChars(cx, start, JS_ARRAY_END(buf) - start);
+        atom = js_AtomizeChars(cx, start, ArrayEnd(buf) - start);
         if (!atom)
             return JS_FALSE;
     }

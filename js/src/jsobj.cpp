@@ -43,6 +43,9 @@
  */
 #include <stdlib.h>
 #include <string.h>
+
+#include "mozilla/Util.h"
+
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -108,6 +111,7 @@
 
 #include "jsautooplen.h"
 
+using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
@@ -512,7 +516,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
 
     Value localroot[4];
     PodArrayZero(localroot);
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroot), localroot);
+    AutoArrayRooter tvr(cx, ArrayLength(localroot), localroot);
 
     /* If outermost, we need parentheses to be an expression, not a block. */
     JSBool outermost = (cx->sharpObjectMap.depth == 0);
@@ -1407,7 +1411,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, jsval old,
         return true;
 
     Value argv[] = { IdToValue(id), old, *nvp };
-    return Invoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable), JS_ARRAY_LENGTH(argv), argv, nvp);
+    return Invoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable), ArrayLength(argv), argv, nvp);
 }
 
 static JSBool

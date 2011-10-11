@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "jsstdint.h"
 #include "jsprf.h"
 #include <math.h>               // standard headers next
@@ -115,6 +117,8 @@
 #include <string.h>
 #include <elf.h>
 #endif
+
+using namespace mozilla;
 
 #ifdef DEBUG
 namespace js {
@@ -13843,13 +13847,13 @@ TraceRecorder::record_JSOP_FUNAPPLY()
             RETURN_STOP_A("arguments parameter of apply is not a dense array or argments object");
         }
 
-        if (length >= JS_ARRAY_LENGTH(funapply_imacro_table))
+        if (length >= ArrayLength(funapply_imacro_table))
             RETURN_STOP_A("too many arguments to apply");
 
         return InjectStatus(callImacro(funapply_imacro_table[length]));
     }
 
-    if (argc >= JS_ARRAY_LENGTH(funcall_imacro_table))
+    if (argc >= ArrayLength(funcall_imacro_table))
         RETURN_STOP_A("too many arguments to call");
 
     return InjectStatus(callImacro(funcall_imacro_table[argc]));

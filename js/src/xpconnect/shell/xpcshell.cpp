@@ -46,6 +46,9 @@
 /* XPConnect JavaScript interactive shell. */
 
 #include <stdio.h>
+
+#include "mozilla/Util.h"
+
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
@@ -105,6 +108,8 @@
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
 #endif
+
+using namespace mozilla;
 
 class XPCShellDirProvider : public nsIDirectoryServiceProvider2
 {
@@ -727,7 +732,7 @@ static const struct {
 static uint32
 MapContextOptionNameToFlag(JSContext* cx, const char* name)
 {
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
+    for (size_t i = 0; i < ArrayLength(js_options); ++i) {
         if (strcmp(name, js_options[i].name) == 0)
             return js_options[i].flag;
     }
@@ -735,13 +740,13 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
     char* msg = JS_sprintf_append(NULL,
                                   "unknown option name '%s'."
                                   " The valid names are ", name);
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
+    for (size_t i = 0; i < ArrayLength(js_options); ++i) {
         if (!msg)
             break;
         msg = JS_sprintf_append(msg, "%s%s", js_options[i].name,
-                                (i + 2 < JS_ARRAY_LENGTH(js_options)
+                                (i + 2 < ArrayLength(js_options)
                                  ? ", "
-                                 : i + 2 == JS_ARRAY_LENGTH(js_options)
+                                 : i + 2 == ArrayLength(js_options)
                                  ? " and "
                                  : "."));
     }
@@ -781,7 +786,7 @@ Options(JSContext *cx, uintN argc, jsval *vp)
 
     names = NULL;
     found = JS_FALSE;
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); i++) {
+    for (size_t i = 0; i < ArrayLength(js_options); i++) {
         if (js_options[i].flag & optset) {
             found = JS_TRUE;
             names = JS_sprintf_append(names, "%s%s",
