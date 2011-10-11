@@ -47,6 +47,8 @@
 #include "jsobj.h"
 #include "jsgcmark.h"
 
+#include "js/HashTable.h"
+
 namespace js {
 
 // A subclass template of js::HashMap whose keys and values may be garbage-collected. When

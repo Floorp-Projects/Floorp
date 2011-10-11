@@ -41,7 +41,6 @@
 #define jsjaeger_compilerbase_h__
 
 #include "jscntxt.h"
-#include "jstl.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/LinkBuffer.h"
 #include "assembler/assembler/RepatchBuffer.h"
@@ -149,6 +148,7 @@ class LinkerHelper : public JSC::LinkBuffer
         // on any failure.
         JSScript *script = cx->fp()->script();
         JSC::ExecutableAllocator *allocator = script->compartment()->jaegerCompartment()->execAlloc();
+        allocator->setDestroyCallback(Probes::discardExecutableRegion);
         JSC::ExecutablePool *pool;
         m_code = executableAllocAndCopy(masm, allocator, &pool);
         if (!m_code) {
@@ -159,9 +159,12 @@ class LinkerHelper : public JSC::LinkBuffer
         return pool;
     }
 
-    JSC::CodeLocationLabel finalize() {
+    JSC::CodeLocationLabel finalize(VMFrame &f) {
         masm.finalize(*this);
-        return finalizeCodeAddendum();
+        JSC::CodeLocationLabel label = finalizeCodeAddendum();
+        Probes::registerICCode(f.cx, f.jit(), f.script(), f.pc(),
+                               label.executableAddress(), masm.size());
+        return label;
     }
 
     void maybeLink(MaybeJump jump, JSC::CodeLocationLabel label) {

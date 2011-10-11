@@ -45,7 +45,6 @@
 #include "jsemit.h"
 #include "jsgcmark.h"
 #include "jsobj.h"
-#include "jstl.h"
 #include "jswrapper.h"
 #include "jsarrayinlines.h"
 #include "jsinterpinlines.h"

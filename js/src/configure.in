@@ -4421,28 +4421,6 @@ if test -n "$MOZ_TRACEVIS"; then
 fi
 
 dnl ========================================================
-dnl = Use GCTimer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gctimer,
-[  --enable-gctimer        Enable GC timer (default=no)],
-    MOZ_GCTIMER=1,
-    MOZ_GCTIMER= )
-if test -n "$MOZ_GCTIMER"; then
-    AC_DEFINE(MOZ_GCTIMER)
-fi
-
-dnl ========================================================
-dnl = Don't enable GC-TestPilot plumbing
-dnl ========================================================
-JSGC_TESTPILOT=1
-MOZ_ARG_DISABLE_BOOL(gctestpilot,
-[  --disable-gctestpilot    Disable GC TestPilot study hooks],
-    JSGC_TESTPILOT= )
-if test -n "$JSGC_TESTPILOT"; then
-    AC_DEFINE(JSGC_TESTPILOT)
-fi
-
-dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(valgrind,
@@ -4657,6 +4635,23 @@ dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
     AC_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
 fi
+
+dnl ========================================================
+dnl JIT observers
+dnl ========================================================
+
+MOZ_ARG_WITH_STRING(jitreport-granularity,
+[  --jitreport-granularity=N
+                           Default granularity at which to report JIT code
+                           to external tools
+                             0 - no info
+                             1 - code ranges for whole functions only
+                             2 - per-line information
+                             3 - per-op information],
+  JITREPORT_GRANULARITY=$withval,
+  JITREPORT_GRANULARITY=3)
+
+AC_DEFINE_UNQUOTED(JS_DEFAULT_JITREPORT_GRANULARITY, $JITREPORT_GRANULARITY)
 
 dnl ========================================================
 dnl =

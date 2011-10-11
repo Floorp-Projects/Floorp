@@ -37,6 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jstypes.h"
+#include "jspubtd.h"
+
 #ifdef JS_THREADSAFE
 
 /*
@@ -51,11 +54,8 @@
 # include <unistd.h>
 #endif
 
-#include "jspubtd.h"
 #include "jsutil.h"
-#include "jstypes.h"
 #include "jsstdint.h"
-#include "jsbit.h"
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jslock.h"
@@ -504,7 +504,7 @@ js_SetupLocks(int listc, int globc)
     if (globc > 100 || globc < 0)   /* globc == number of global locks */
         printf("Bad number %d in js_SetupLocks()!\n", listc);
 #endif
-    global_locks_log2 = JS_CeilingLog2(globc);
+    global_locks_log2 = JS_CEILING_LOG2W(globc);
     global_locks_mask = JS_BITMASK(global_locks_log2);
     global_lock_count = JS_BIT(global_locks_log2);
     global_locks = (PRLock **) OffTheBooks::malloc_(global_lock_count * sizeof(PRLock*));
@@ -763,4 +763,28 @@ js_IsRuntimeLocked(JSRuntime *rt)
     return js_CurrentThreadId() == rt->rtLockOwner;
 }
 #endif /* DEBUG */
+
+static PRStatus
+CallOnce(void *func)
+{
+    JSInitCallback init = JS_DATA_TO_FUNC_PTR(JSInitCallback, func);
+    return init() ? PR_FAILURE : PR_SUCCESS;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_CallOnce(JSCallOnceType *once, JSInitCallback func)
+{
+    return PR_CallOnceWithArg(once, CallOnce, JS_FUNC_TO_DATA_PTR(void *, func)) == PR_SUCCESS;
+}
+#else /* JS_THREADSAFE */
+JS_PUBLIC_API(JSBool)
+JS_CallOnce(JSCallOnceType *once, JSInitCallback func)
+{
+    if (!*once) {
+        *once = true;
+        return func();
+    } else {
+        return JS_TRUE;
+    }
+}
 #endif /* JS_THREADSAFE */

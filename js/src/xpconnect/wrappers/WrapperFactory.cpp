@@ -303,7 +303,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                     if (proxy) {
                         wrapper = &XrayProxy::singleton;
                     } else {
-                        typedef XrayWrapper<CrossCompartmentWrapper> Xray;
+                        typedef XrayWrapper<CrossCompartmentSecurityWrapper> Xray;
                         wrapper = &Xray::singleton;
                         xrayHolder = Xray::createHolder(cx, obj, parent);
                         if (!xrayHolder)
@@ -327,14 +327,14 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         if (targetdata &&
             (wn = GetWrappedNative(cx, obj)) &&
             wn->HasProto() && wn->GetProto()->ClassIsDOMObject()) {
-            typedef XrayWrapper<CrossCompartmentWrapper> Xray;
+            typedef XrayWrapper<CrossCompartmentSecurityWrapper> Xray;
             wrapper = &FilteringWrapper<Xray,
                                         CrossOriginAccessiblePropertiesOnly>::singleton;
             xrayHolder = Xray::createHolder(cx, obj, parent);
             if (!xrayHolder)
                 return nsnull;
         } else {
-            wrapper = &FilteringWrapper<CrossCompartmentWrapper,
+            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         ExposedPropertiesOnly>::singleton;
         }
     } else if (AccessCheck::isSameOrigin(origin, target)) {
@@ -342,7 +342,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         // for an Xray or the wrapper needs a SOW.
         bool proxy;
         if (AccessCheck::needsSystemOnlyWrapper(obj)) {
-            wrapper = &FilteringWrapper<CrossCompartmentWrapper,
+            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         OnlyIfSubjectIsSystem>::singleton;
         } else if (targetdata && targetdata->wantXrays && CanXray(obj, &proxy)) {
             if (proxy) {
@@ -367,14 +367,14 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         // we filter out access to that property.
         bool proxy;
         if (!CanXray(obj, &proxy)) {
-            wrapper = &FilteringWrapper<CrossCompartmentWrapper,
+            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         CrossOriginAccessiblePropertiesOnly>::singleton;
         } else {
             if (proxy) {
                 wrapper = &FilteringWrapper<XrayProxy,
-                        CrossOriginAccessiblePropertiesOnly>::singleton;
+                                            CrossOriginAccessiblePropertiesOnly>::singleton;
             } else {
-                typedef XrayWrapper<CrossCompartmentWrapper> Xray;
+                typedef XrayWrapper<CrossCompartmentSecurityWrapper> Xray;
 
                 // Location objects can become same origin after navigation, so we might
                 // have to grant transparent access later on.
@@ -403,7 +403,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     return wrapperObj;
 }
 
-typedef FilteringWrapper<XrayWrapper<Wrapper>,
+typedef FilteringWrapper<XrayWrapper<SameCompartmentSecurityWrapper>,
                          SameOriginOrCrossOriginAccessiblePropertiesOnly> LW;
 
 bool
@@ -457,7 +457,7 @@ WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
 {
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, JS_GetPrototype(cx, obj), JS_GetGlobalForObject(cx, obj),
-                     &FilteringWrapper<Wrapper,
+                     &FilteringWrapper<SameCompartmentSecurityWrapper,
                                        OnlyIfSubjectIsSystem>::singleton);
     return wrapperObj;
 }

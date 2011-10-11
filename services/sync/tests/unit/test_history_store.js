@@ -163,11 +163,21 @@ add_test(function test_null_title() {
 
 add_test(function test_invalid_records() {
   _("Make sure we handle invalid URLs in places databases gracefully.");
-  let query = "INSERT INTO moz_places "
-    + "(url, title, rev_host, visit_count, last_visit_date) "
-    + "VALUES ('invalid-uri', 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")";
-  let stmt = PlacesUtils.history.DBConnection.createAsyncStatement(query);
-  let result = Async.querySpinningly(stmt);
+  let stmt = PlacesUtils.history.DBConnection.createAsyncStatement(
+    "INSERT INTO moz_places "
+  + "(url, title, rev_host, visit_count, last_visit_date) "
+  + "VALUES ('invalid-uri', 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")"
+  );
+  Async.querySpinningly(stmt);
+  stmt.finalize();
+  // Add the corresponding visit to retain database coherence.
+  stmt = PlacesUtils.history.DBConnection.createAsyncStatement(
+    "INSERT INTO moz_historyvisits "
+  + "(place_id, visit_date, visit_type, session) "
+  + "VALUES ((SELECT id FROM moz_places WHERE url = 'invalid-uri'), "
+  + TIMESTAMP3 + ", " + Ci.nsINavHistoryService.TRANSITION_TYPED + ", 1)"
+  );
+  Async.querySpinningly(stmt);
   stmt.finalize();
   do_check_attribute_count(store.getAllIDs(), 4);
 

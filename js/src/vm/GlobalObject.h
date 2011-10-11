@@ -43,7 +43,8 @@
 
 #include "jsfun.h"
 #include "jsiter.h"
-#include "jsvector.h"
+
+#include "js/Vector.h"
 
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
