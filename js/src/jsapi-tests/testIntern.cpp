@@ -1,11 +1,13 @@
 #include "tests.h"
 #include "jsatom.h"
 
+using namespace mozilla;
+
 BEGIN_TEST(testAtomizedIsNotInterned)
 {
     /* Try to pick a string that won't be interned by other tests in this runtime. */
     static const char someChars[] = "blah blah blah? blah blah blah";
-    JSAtom *atom = js_Atomize(cx, someChars, JS_ARRAY_LENGTH(someChars));
+    JSAtom *atom = js_Atomize(cx, someChars, ArrayLength(someChars));
     CHECK(!JS_StringHasBeenInterned(cx, atom));
     CHECK(JS_InternJSString(cx, atom));
     CHECK(JS_StringHasBeenInterned(cx, atom));
