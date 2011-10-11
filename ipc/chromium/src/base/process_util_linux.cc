@@ -54,17 +54,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
   fd_shuffle1.reserve(fds_to_remap.size());
   fd_shuffle2.reserve(fds_to_remap.size());
 
-#ifdef MOZ_MEMORY_ANDROID
-  /* We specifically don't call pthread_atfork in jemalloc because it is not
-    available in bionic until 2.3. However without it, jemalloc could
-    potentially deadlock, when stl allocates memory through jemalloc, after
-    fork and before execvp. Therefore, we must manually inform jemalloc here */
-  ::_malloc_prefork();
-#endif
   pid_t pid = fork();
-#ifdef MOZ_MEMORY_ANDROID
-  ::_malloc_postfork();
-#endif
   if (pid < 0)
     return false;
 
