@@ -65,10 +65,13 @@ typedef std::vector<InjectionArc> InjectiveMultimap;
 
 bool PerformInjectiveMultimap(const InjectiveMultimap& map,
                               InjectionDelegate* delegate);
+bool PerformInjectiveMultimapDestructive(InjectiveMultimap* map,
+                                         InjectionDelegate* delegate);
 
-static inline bool ShuffleFileDescriptors(const InjectiveMultimap& map) {
+// This function will not call malloc but will mutate |map|
+static inline bool ShuffleFileDescriptors(InjectiveMultimap *map) {
   FileDescriptorTableInjection delegate;
-  return PerformInjectiveMultimap(map, &delegate);
+  return PerformInjectiveMultimapDestructive(map, &delegate);
 }
 
 }  // namespace base
