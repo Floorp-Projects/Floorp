@@ -1253,6 +1253,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         JS_ASSERT(cx->typeInferenceEnabled());
         JS_ASSERT(!templateObject->hasDynamicSlots());
         JS_ASSERT(!templateObject->hasDynamicElements());
+        JS_ASSERT(!(templateObject->getClass()->flags & JSCLASS_HAS_PRIVATE));
 
 #ifdef JS_GC_ZEAL
         if (cx->runtime->needZealousGC())
@@ -1304,7 +1305,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         store32(Imm32(templateObject->flags), Address(result, offsetof(JSObject, flags)));
         storePtr(ImmPtr(NULL), Address(result, JSObject::offsetOfSlots()));
         storePtr(ImmPtr(templateObject->parent), Address(result, offsetof(JSObject, parent)));
-        storePtr(ImmPtr(templateObject->privateData), Address(result, offsetof(JSObject, privateData)));
 
         if (templateObject->isDenseArray()) {
             /* Fill in the elements header. */

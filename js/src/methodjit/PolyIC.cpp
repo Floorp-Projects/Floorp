@@ -357,7 +357,7 @@ class SetPropCompiler : public PICStubCompiler
             uint16 slot = uint16(shape->shortid());
 
             /* Guard that the call object has a frame. */
-            masm.loadObjPrivate(pic.objReg, pic.shapeReg);
+            masm.loadObjPrivate(pic.objReg, pic.shapeReg, obj->numFixedSlots());
             Jump escapedFrame = masm.branchTestPtr(Assembler::Zero, pic.shapeReg, pic.shapeReg);
 
             {
@@ -1554,7 +1554,7 @@ class ScopeNameCompiler : public PICStubCompiler
         }
 
         /* Get callobj's stack frame. */
-        masm.loadObjPrivate(pic.objReg, pic.shapeReg);
+        masm.loadObjPrivate(pic.objReg, pic.shapeReg, getprop.holder->numFixedSlots());
 
         JSFunction *fun = getprop.holder->asCall().getCalleeFunction();
         uint16 slot = uint16(shape->shortid());
@@ -2556,7 +2556,7 @@ GetElementIC::attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid
     }    
     Jump holeCheck = masm.branchPtr(Assembler::Equal, objReg, ImmType(JSVAL_TYPE_MAGIC));
 
-    Address privateData(typeReg, offsetof(JSObject, privateData));
+    Address privateData(typeReg, JSObject::getPrivateDataOffset(ArgumentsObject::NFIXED_SLOTS));
     Jump liveArguments = masm.branchPtr(Assembler::NotEqual, privateData, ImmPtr(0));
    
     masm.loadPrivate(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::DATA_SLOT)), objReg);

@@ -1259,7 +1259,6 @@ Class js::ArrayClass = {
 
 Class js::SlowArrayClass = {
     "Array",
-    JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     slowarray_addProperty,
     JS_PropertyStub,         /* delProperty */

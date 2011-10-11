@@ -74,8 +74,12 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-/* slots can only be upto 255 */
-static const uint8 ARRAYBUFFER_RESERVED_SLOTS = 16;
+/*
+ * Allocate array buffers with the maximum number of fixed slots marked as
+ * reserved, so that the fixed slots may be used for the buffer's contents.
+ * The last fixed slot is kept for the object's private data.
+ */
+static const uint8 ARRAYBUFFER_RESERVED_SLOTS = JSObject::MAX_FIXED_SLOTS - 1;
 
 static bool
 ValueIsLength(JSContext *cx, const Value &v, jsuint *len)
@@ -765,7 +769,7 @@ TypedArray::lengthOffset()
 /* static */ int
 TypedArray::dataOffset()
 {
-    return offsetof(JSObject, privateData);
+    return JSObject::getPrivateDataOffset(NUM_FIXED_SLOTS);
 }
 
 /* Helper clamped uint8 type */
@@ -1297,6 +1301,8 @@ class TypedArrayTemplate
         if (!empty)
             return false;
         obj->setLastPropertyInfallible(empty);
+
+        JS_ASSERT(obj->numFixedSlots() == NUM_FIXED_SLOTS);
 
         // FIXME Bug 599008: make it ok to call preventExtensions here.
         obj->flags |= JSObject::NOT_EXTENSIBLE;

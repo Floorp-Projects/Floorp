@@ -93,25 +93,43 @@ JSObject::asGlobal()
     return reinterpret_cast<js::GlobalObject *>(this);
 }
 
-inline void *
-JSObject::getPrivate() const
+inline bool
+JSObject::hasPrivate() const
 {
-    JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-    return privateData;
+    return getClass()->flags & JSCLASS_HAS_PRIVATE;
 }
+
+inline void *&
+JSObject::privateAddress(uint32 nfixed) const
+{
+    /*
+     * The private pointer of an object can hold any word sized value.
+     * Private pointers are stored immediately after the last fixed slot of
+     * the object.
+     */
+    JS_ASSERT(nfixed == numFixedSlots());
+    JS_ASSERT_IF(!isNewborn(), hasPrivate());
+    js::Value *end = &fixedSlots()[nfixed];
+    return *reinterpret_cast<void**>(end);
+}
+
+inline void *
+JSObject::getPrivate() const { return privateAddress(numFixedSlots()); }
+
+inline void *
+JSObject::getPrivate(size_t nfixed) const { return privateAddress(nfixed); }
 
 inline JSFunction *
 JSObject::getFunctionPrivate() const
 {
     JS_ASSERT(isFunction());
-    return reinterpret_cast<JSFunction *>(getPrivate());
+    return reinterpret_cast<JSFunction *>(getPrivate(FUN_CLASS_NFIXED_SLOTS));
 }
 
 inline void
 JSObject::setPrivate(void *data)
 {
-    JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-    privateData = data;
+    privateAddress(numFixedSlots()) = data;
 }
 
 inline bool
@@ -315,7 +333,7 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
     if (!type)
         return false;
 
-    init(cx, type, parent, NULL, false);
+    init(cx, type, parent, false);
     if (!setInitialProperty(cx, bindings.lastShape()))
         return false;
 
@@ -338,10 +356,12 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
 inline bool
 JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *frame)
 {
-    init(cx, type, NULL, frame, false);
+    init(cx, type, NULL, false);
 
     if (!setInitialProperty(cx, getProto()->lastProperty()))
         return false;
+
+    setPrivate(frame);
 
     JS_ASSERT(!inDictionaryMode());
     JS_ASSERT(isClonedBlock());
@@ -929,10 +949,8 @@ JSObject::isQName() const
 
 inline void
 JSObject::init(JSContext *cx, js::types::TypeObject *type,
-               JSObject *parent, void *priv, bool denseArray)
+               JSObject *parent, bool denseArray)
 {
-    privateData = priv;
-
     JS_STATIC_ASSERT(sizeof(js::ObjectElements) == 2 * sizeof(js::Value));
 
     uint32 numSlots = numFixedSlots();
@@ -948,7 +966,6 @@ JSObject::init(JSContext *cx, js::types::TypeObject *type,
         new (getElementsHeader()) js::ObjectElements(numSlots - 2);
     } else {
         elements = js::emptyObjectElements;
-        js::ClearValueRange(fixedSlots(), numSlots);
     }
 
     setType(type);
@@ -972,7 +989,7 @@ JSObject::initSharingEmptyShape(JSContext *cx,
                                 void *privateValue,
                                 js::gc::AllocKind kind)
 {
-    init(cx, type, parent, privateValue, false);
+    init(cx, type, parent, false);
 
     js::EmptyShape *empty = type->getEmptyShape(cx, aclasp, kind);
     if (!empty)
@@ -980,6 +997,9 @@ JSObject::initSharingEmptyShape(JSContext *cx,
 
     if (!setInitialProperty(cx, empty))
         return false;
+
+    if (privateValue)
+        setPrivate(privateValue);
 
     JS_ASSERT(!isDenseArray());
     return true;
@@ -1132,9 +1152,10 @@ JSObject::hasPropertyTable() const
 inline size_t
 JSObject::structSize() const
 {
-    return (isFunction() && !getPrivate())
-           ? sizeof(JSFunction)
-           : (sizeof(JSObject) + sizeof(js::Value) * numFixedSlots());
+    if (isFunction() && !getFunctionPrivate())
+        return sizeof(JSFunction);
+    uint32 nfixed = numFixedSlots() + (hasPrivate() ? 1 : 0);
+    return sizeof(JSObject) + (nfixed * sizeof(js::Value));
 }
 
 inline size_t
@@ -1424,7 +1445,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
      * the parent of the prototype's constructor.
      */
     bool denseArray = (clasp == &ArrayClass);
-    obj->init(cx, type, parent, NULL, denseArray);
+    obj->init(cx, type, parent, denseArray);
 
     JS_ASSERT(type->canProvideEmptyShape(clasp));
     js::EmptyShape *empty = type->getEmptyShape(cx, clasp, kind);
@@ -1437,7 +1458,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
 static inline JSObject *
 NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent)
 {
-    gc::AllocKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
+    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
     return NewNativeClassInstance(cx, clasp, proto, parent, kind);
 }
 
@@ -1486,7 +1507,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::AllocKind kind)
 static inline JSObject *
 NewBuiltinClassInstance(JSContext *cx, Class *clasp)
 {
-    gc::AllocKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
+    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
     return NewBuiltinClassInstance(cx, clasp, kind);
 }
 
@@ -1578,8 +1599,8 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
     if (!obj)
         goto out;
 
-    /* This needs to match up with the size of JSFunction::data_padding. */
-    JS_ASSERT_IF(isFunction, kind == gc::FINALIZE_OBJECT2);
+    /* This needs to match up with the superclass of JSFunction. */
+    JS_ASSERT_IF(isFunction, kind == gc::FINALIZE_OBJECT4);
 
     /*
      * Default parent to the parent of the prototype, which was set from
@@ -1587,7 +1608,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
      */
     obj->init(cx, type,
               (!parent && proto) ? proto->getParent() : parent,
-              NULL, clasp == &ArrayClass);
+              clasp == &ArrayClass);
 
     if (clasp->isNative()
         ? !InitScopeForObject(cx, obj, clasp, type, kind)
@@ -1608,14 +1629,14 @@ NewFunction(JSContext *cx, js::GlobalObject &global)
     if (!js_GetClassPrototype(cx, &global, JSProto_Function, &proto))
         return NULL;
     return detail::NewObject<WithProto::Given, true>(cx, &FunctionClass, proto, &global,
-                                                     gc::FINALIZE_OBJECT2);
+                                                     gc::FINALIZE_OBJECT4);
 }
 
 static JS_ALWAYS_INLINE JSObject *
 NewFunction(JSContext *cx, JSObject *parent)
 {
     return detail::NewObject<WithProto::Class, true>(cx, &FunctionClass, NULL, parent,
-                                                     gc::FINALIZE_OBJECT2);
+                                                     gc::FINALIZE_OBJECT4);
 }
 
 template <WithProto::e withProto>
@@ -1630,7 +1651,7 @@ template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
 NewNonFunction(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 {
-    gc::AllocKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
+    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
     return detail::NewObject<withProto, false>(cx, clasp, proto, parent, kind);
 }
 
@@ -1648,7 +1669,7 @@ template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
 NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 {
-    gc::AllocKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
+    gc::AllocKind kind = gc::GetGCObjectKind(clasp);
     return NewObject<withProto>(cx, clasp, proto, parent, kind);
 }
 
@@ -1674,7 +1695,7 @@ NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::
      */
     obj->init(cx, type,
               (!parent && type->proto) ? type->proto->getParent() : parent,
-              NULL, false);
+              false);
 
     if (!InitScopeForObject(cx, obj, &ObjectClass, type, kind)) {
         obj = NULL;

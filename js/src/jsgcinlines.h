@@ -77,6 +77,15 @@ GetGCObjectKind(size_t numSlots)
     return slotsToThingKind[numSlots];
 }
 
+static inline AllocKind
+GetGCObjectKind(Class *clasp)
+{
+    uint32 nslots = JSCLASS_RESERVED_SLOTS(clasp);
+    if (clasp->flags & JSCLASS_HAS_PRIVATE)
+        nslots++;
+    return GetGCObjectKind(nslots);
+}
+
 /* As for GetGCObjectKind, but for dense array allocation. */
 static inline AllocKind
 GetGCArrayKind(size_t numSlots)
@@ -400,7 +409,7 @@ js_NewGCFunction(JSContext *cx)
 {
     JSFunction *fun = NewGCThing<JSFunction>(cx, js::gc::FINALIZE_FUNCTION, sizeof(JSFunction));
     if (fun)
-        fun->earlyInit(JSObject::FUN_CLASS_RESERVED_SLOTS);
+        fun->earlyInit(JSObject::FUN_CLASS_NFIXED_SLOTS + 1);  /* Add one for private data. */
 
     return fun;
 }
