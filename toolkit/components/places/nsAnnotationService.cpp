@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsAnnotationService.h"
 #include "nsNavHistory.h"
 
@@ -53,6 +55,8 @@
 #include "Helpers.h"
 
 #include "mozilla/storage.h"
+
+using namespace mozilla;
 
 #define ENSURE_ANNO_TYPE(_type, _statement)                                    \
   PR_BEGIN_MACRO                                                               \
@@ -2038,7 +2042,7 @@ nsAnnotationService::FinalizeStatements() {
   , mDBCheckItemAnnotation
   };
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
+  for (PRUint32 i = 0; i < ArrayLength(stmts); i++) {
     nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }

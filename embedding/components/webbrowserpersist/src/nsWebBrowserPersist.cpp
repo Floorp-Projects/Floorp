@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nspr.h"
 
 #include "nsIFileStreams.h"       // New Necko file streams
@@ -121,6 +123,8 @@
 #include "nsIProtocolHandler.h"
 
 #include "nsWebBrowserPersist.h"
+
+using namespace mozilla;
 
 // Buffer file writes in 32kb chunks
 #define BUFFERED_OUTPUT_SIZE (1024 * 32)
@@ -3949,7 +3953,7 @@ static bool IsSpecialXHTMLTag(nsIDOMNode *aNode)
         return PR_FALSE;
 
     aNode->GetLocalName(tmp);
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kSpecialXHTMLTags); i++) {
+    for (PRUint32 i = 0; i < ArrayLength(kSpecialXHTMLTags); i++) {
         if (tmp.EqualsASCII(kSpecialXHTMLTags[i]))
         {
             // XXX This element MAY have URI attributes, but

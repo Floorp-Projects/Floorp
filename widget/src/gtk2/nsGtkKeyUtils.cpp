@@ -49,6 +49,10 @@
 #include "nsGUIEvent.h"
 #include "keysym2ucs.h"
 
+#include "mozilla/Util.h"
+
+using namespace mozilla;
+
 #define MAX_UNICODE 0x10FFFF
 
 struct nsKeyConverter {
@@ -209,13 +213,13 @@ GdkKeyCodeToDOMKeyCode(int aKeysym)
         return aKeysym - GDK_KP_0 + NS_VK_NUMPAD0;
 
     // map Sun Keyboard special keysyms
-    for (i = 0; i < NS_ARRAY_LENGTH(nsSunKeycodes); i++) {
+    for (i = 0; i < ArrayLength(nsSunKeycodes); i++) {
         if (nsSunKeycodes[i].keysym == aKeysym)
             return(nsSunKeycodes[i].vkCode);
     }
 
     // misc other things
-    for (i = 0; i < NS_ARRAY_LENGTH(nsKeycodes); i++) {
+    for (i = 0; i < ArrayLength(nsKeycodes); i++) {
         if (nsKeycodes[i].keysym == aKeysym)
             return(nsKeycodes[i].vkCode);
     }
@@ -250,7 +254,7 @@ DOMKeyCodeToGdkKeyCode(int aKeysym)
       return aKeysym - NS_VK_NUMPAD0 + GDK_KP_0;
 
     // misc other things
-    for (i = 0; i < NS_ARRAY_LENGTH(nsKeycodes); ++i) {
+    for (i = 0; i < ArrayLength(nsKeycodes); ++i) {
       if (nsKeycodes[i].vkCode == aKeysym) {
         return nsKeycodes[i].keysym;
       }

@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include <gtk/gtk.h>
 
 #include "nsIFileURL.h"
@@ -58,6 +60,8 @@
 #if (MOZ_PLATFORM_MAEMO == 5)
 #include <hildon-fm-2/hildon/hildon-file-chooser-dialog.h>
 #endif
+
+using namespace mozilla;
 
 #define MAX_PREVIEW_SIZE 180
 
@@ -408,7 +412,7 @@ confirm_overwrite_file(GtkWidget *parent, nsILocalFile* file)
   bundle->GetStringFromName(NS_LITERAL_STRING("confirmTitle").get(),
                             getter_Copies(title));
   bundle->FormatStringFromName(NS_LITERAL_STRING("confirmFileReplacing").get(),
-                               formatStrings, NS_ARRAY_LENGTH(formatStrings),
+                               formatStrings, ArrayLength(formatStrings),
                                getter_Copies(message));
 
   GtkWindow *parent_window = GTK_WINDOW(parent);

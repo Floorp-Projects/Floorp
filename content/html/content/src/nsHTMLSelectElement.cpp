@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsHTMLSelectElement.h"
 
 #include "nsHTMLOptionElement.h"
@@ -71,6 +73,7 @@
 #include "mozAutoDocUpdate.h"
 #include "dombindings.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS1(nsSelectState, nsSelectState)
@@ -1528,7 +1531,7 @@ nsHTMLSelectElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sImageAlignAttributeMap
   };
 
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
 }
 
 nsMapRuleToAttributesFunc

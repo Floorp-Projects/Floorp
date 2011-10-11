@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsDOMDataTransfer.h"
 
 #include "prlog.h"
@@ -53,6 +55,8 @@
 #include "nsIContent.h"
 #include "nsCRT.h"
 #include "nsIScriptObjectPrincipal.h"
+
+using namespace mozilla;
 
 NS_IMPL_CYCLE_COLLECTION_2(nsDOMDataTransfer, mDragTarget, mDragImage)
 
@@ -178,7 +182,7 @@ nsDOMDataTransfer::SetEffectAllowed(const nsAString& aEffectAllowed)
   PR_STATIC_ASSERT(nsIDragService::DRAGDROP_ACTION_MOVE == 2);
   PR_STATIC_ASSERT(nsIDragService::DRAGDROP_ACTION_LINK == 4);
 
-  for (PRUint32 e = 0; e < NS_ARRAY_LENGTH(sEffects); e++) {
+  for (PRUint32 e = 0; e < ArrayLength(sEffects); e++) {
     if (aEffectAllowed.EqualsASCII(sEffects[e])) {
       mEffectAllowed = e;
       break;
@@ -860,7 +864,7 @@ nsDOMDataTransfer::CacheExternalFormats()
   PRUint32 count;
   dragSession->GetNumDropItems(&count);
   for (PRUint32 c = 0; c < count; c++) {
-    for (PRUint32 f = 0; f < NS_ARRAY_LENGTH(formats); f++) {
+    for (PRUint32 f = 0; f < ArrayLength(formats); f++) {
       // IsDataFlavorSupported doesn't take an index as an argument and just
       // checks if any of the items support a particular flavor, even though
       // the GetData method does take an index. Here, we just assume that

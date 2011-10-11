@@ -45,6 +45,8 @@
 #include "nsQtKeyUtils.h"
 #endif
 
+#include "mozilla/Util.h"
+
 #include "PluginBackgroundDestroyer.h"
 #include "PluginInstanceChild.h"
 #include "PluginModuleChild.h"
@@ -70,6 +72,7 @@ using mozilla::gfx::SharedDIBSurface;
 #include "mozilla/ipc/SyncChannel.h"
 #include "mozilla/AutoRestore.h"
 
+using namespace mozilla;
 using mozilla::ipc::ProcessChild;
 using namespace mozilla::plugins;
 
@@ -1540,7 +1543,7 @@ PluginInstanceChild::TrackPopupHookProc(HMENU hMenu,
   // surface within the browser. Prevents resetting the parent on child ui
   // displayed by plugins that have working parent-child relationships.
   PRUnichar szClass[21];
-  bool haveClass = GetClassNameW(hWnd, szClass, NS_ARRAY_LENGTH(szClass));
+  bool haveClass = GetClassNameW(hWnd, szClass, ArrayLength(szClass));
   if (!haveClass || 
       (wcscmp(szClass, L"MozillaWindowClass") &&
        wcscmp(szClass, L"SWFlash_Placeholder"))) {

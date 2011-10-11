@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsIPlatformCharset.h"
 #include "nsUConvPropertySearch.h"
 #include "pratom.h"
@@ -46,6 +48,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsPlatformCharset.h"
 #include "nsEncoderDecoderUtils.h"
+
+using namespace mozilla;
 
 static const char* kWinCharsets[][3] = {
 #include "wincharset.properties.h"
@@ -71,7 +75,7 @@ nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharse
   LossyCopyUTF16toASCII(inANSICodePage, key);
 
   nsresult rv = nsUConvPropertySearch::SearchPropertyValue(kWinCharsets,
-      NS_ARRAY_LENGTH(kWinCharsets), key, outCharset);
+      ArrayLength(kWinCharsets), key, outCharset);
   if (NS_FAILED(rv)) {
     outCharset.AssignLiteral("windows-1252");
     return NS_SUCCESS_USING_FALLBACK_LOCALE;
@@ -103,7 +107,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
 
   PRUnichar acp_name[6];
   if (GetLocaleInfoW(localeAsLCID, LOCALE_IDEFAULTANSICODEPAGE, acp_name,
-                     NS_ARRAY_LENGTH(acp_name))==0) {
+                     ArrayLength(acp_name))==0) {
     return NS_ERROR_FAILURE; 
   }
   nsAutoString acp_key(NS_LITERAL_STRING("acp."));

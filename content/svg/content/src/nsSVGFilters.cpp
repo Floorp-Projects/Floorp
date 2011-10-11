@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSVGElement.h"
 #include "nsGkAtoms.h"
 #include "nsSVGNumber2.h"
@@ -293,7 +295,7 @@ nsSVGFE::IsAttributeMapped(const nsIAtom* name) const
     sFiltersMap
   };
   
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGFEBase::IsAttributeMapped(name);
 }
 
@@ -304,7 +306,7 @@ nsSVGElement::LengthAttributesInfo
 nsSVGFE::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              NS_ARRAY_LENGTH(sLengthInfo));
+                              ArrayLength(sLengthInfo));
 }
 
 inline static void DidAnimateAttr(Element *aFilterPrimitive)
@@ -846,14 +848,14 @@ nsSVGElement::NumberPairAttributesInfo
 nsSVGFEGaussianBlurElement::GetNumberPairInfo()
 {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
-                                  NS_ARRAY_LENGTH(sNumberPairInfo));
+                                  ArrayLength(sNumberPairInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFEGaussianBlurElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------Blend------------------------
@@ -1048,14 +1050,14 @@ nsSVGElement::EnumAttributesInfo
 nsSVGFEBlendElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFEBlendElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------Color Matrix------------------------
@@ -1344,21 +1346,21 @@ nsSVGElement::EnumAttributesInfo
 nsSVGFEColorMatrixElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFEColorMatrixElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 nsSVGElement::NumberListAttributesInfo
 nsSVGFEColorMatrixElement::GetNumberListInfo()
 {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
-                                  NS_ARRAY_LENGTH(sNumberListInfo));
+                                  ArrayLength(sNumberListInfo));
 }
 
 //---------------------Composite------------------------
@@ -1638,21 +1640,21 @@ nsSVGElement::NumberAttributesInfo
 nsSVGFECompositeElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
+                              ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGFECompositeElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFECompositeElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------Component Transfer------------------------
@@ -1750,7 +1752,7 @@ nsSVGElement::StringAttributesInfo
 nsSVGFEComponentTransferElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //--------------------------------------------
@@ -2042,21 +2044,21 @@ nsSVGElement::NumberListAttributesInfo
 nsSVGComponentTransferFunctionElement::GetNumberListInfo()
 {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
-                                  NS_ARRAY_LENGTH(sNumberListInfo));
+                                  ArrayLength(sNumberListInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGComponentTransferFunctionElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::NumberAttributesInfo
 nsSVGComponentTransferFunctionElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
+                              ArrayLength(sNumberInfo));
 }
 
 class nsSVGFEFuncRElement : public nsSVGComponentTransferFunctionElement,
@@ -2393,7 +2395,7 @@ nsSVGElement::StringAttributesInfo
 nsSVGFEMergeElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------Merge Node------------------------
@@ -2447,7 +2449,7 @@ nsSVGElement::StringAttributesInfo
 nsSVGFEMergeNodeElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------Offset------------------------
@@ -2629,14 +2631,14 @@ nsSVGElement::NumberAttributesInfo
 nsSVGFEOffsetElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
+                              ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFEOffsetElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------Flood------------------------
@@ -2766,7 +2768,7 @@ nsSVGFEFloodElement::IsAttributeMapped(const nsIAtom* name) const
     sFEFloodMap
   };
   
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGFEFloodElementBase::IsAttributeMapped(name);
 }
 
@@ -2777,7 +2779,7 @@ nsSVGElement::StringAttributesInfo
 nsSVGFEFloodElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------Tile------------------------
@@ -2968,7 +2970,7 @@ nsSVGElement::StringAttributesInfo
 nsSVGFETileElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------Turbulence------------------------
@@ -3469,35 +3471,35 @@ nsSVGElement::NumberAttributesInfo
 nsSVGFETurbulenceElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
+                              ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::NumberPairAttributesInfo
 nsSVGFETurbulenceElement::GetNumberPairInfo()
 {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
-                                 NS_ARRAY_LENGTH(sNumberPairInfo));
+                                 ArrayLength(sNumberPairInfo));
 }
 
 nsSVGElement::IntegerAttributesInfo
 nsSVGFETurbulenceElement::GetIntegerInfo()
 {
   return IntegerAttributesInfo(mIntegerAttributes, sIntegerInfo,
-                               NS_ARRAY_LENGTH(sIntegerInfo));
+                               ArrayLength(sIntegerInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGFETurbulenceElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFETurbulenceElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------Morphology------------------------
@@ -3804,21 +3806,21 @@ nsSVGElement::NumberPairAttributesInfo
 nsSVGFEMorphologyElement::GetNumberPairInfo()
 {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
-                                  NS_ARRAY_LENGTH(sNumberPairInfo));
+                                  ArrayLength(sNumberPairInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGFEMorphologyElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFEMorphologyElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------Convolve Matrix------------------------
@@ -4262,56 +4264,56 @@ nsSVGElement::NumberAttributesInfo
 nsSVGFEConvolveMatrixElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
+                              ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::NumberPairAttributesInfo
 nsSVGFEConvolveMatrixElement::GetNumberPairInfo()
 {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
-                                  NS_ARRAY_LENGTH(sNumberPairInfo));
+                                  ArrayLength(sNumberPairInfo));
 }
 
 nsSVGElement::IntegerAttributesInfo
 nsSVGFEConvolveMatrixElement::GetIntegerInfo()
 {
   return IntegerAttributesInfo(mIntegerAttributes, sIntegerInfo,
-                               NS_ARRAY_LENGTH(sIntegerInfo));
+                               ArrayLength(sIntegerInfo));
 }
 
 nsSVGElement::IntegerPairAttributesInfo
 nsSVGFEConvolveMatrixElement::GetIntegerPairInfo()
 {
   return IntegerPairAttributesInfo(mIntegerPairAttributes, sIntegerPairInfo,
-                                   NS_ARRAY_LENGTH(sIntegerPairInfo));
+                                   ArrayLength(sIntegerPairInfo));
 }
 
 nsSVGElement::BooleanAttributesInfo
 nsSVGFEConvolveMatrixElement::GetBooleanInfo()
 {
   return BooleanAttributesInfo(mBooleanAttributes, sBooleanInfo,
-                               NS_ARRAY_LENGTH(sBooleanInfo));
+                               ArrayLength(sBooleanInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGFEConvolveMatrixElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFEConvolveMatrixElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 nsSVGElement::NumberListAttributesInfo
 nsSVGFEConvolveMatrixElement::GetNumberListInfo()
 {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
-                                  NS_ARRAY_LENGTH(sNumberListInfo));
+                                  ArrayLength(sNumberListInfo));
 }
 
 //---------------------DistantLight------------------------
@@ -4402,7 +4404,7 @@ nsSVGElement::NumberAttributesInfo
 nsSVGFEDistantLightElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
+                              ArrayLength(sNumberInfo));
 }
 
 //---------------------PointLight------------------------
@@ -4498,7 +4500,7 @@ nsSVGElement::NumberAttributesInfo
 nsSVGFEPointLightElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
+                              ArrayLength(sNumberInfo));
 }
 
 //---------------------SpotLight------------------------
@@ -4633,7 +4635,7 @@ nsSVGElement::NumberAttributesInfo
 nsSVGFESpotLightElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
+                              ArrayLength(sNumberInfo));
 }
 
 //------------------------------------------------------------
@@ -4732,7 +4734,7 @@ nsSVGFELightingElement::IsAttributeMapped(const nsIAtom* name) const
     sLightingEffectsMap
   };
 
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGFELightingElementBase::IsAttributeMapped(name);
 }
 
@@ -4991,21 +4993,21 @@ nsSVGElement::NumberAttributesInfo
 nsSVGFELightingElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
+                              ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::NumberPairAttributesInfo
 nsSVGFELightingElement::GetNumberPairInfo()
 {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
-                                  NS_ARRAY_LENGTH(sNumberPairInfo));
+                                  ArrayLength(sNumberPairInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFELightingElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //---------------------DiffuseLighting------------------------
@@ -5460,7 +5462,7 @@ nsSVGFEImageElement::IsAttributeMapped(const nsIAtom* name) const
     sGraphicsMap
   };
   
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGFEImageElementBase::IsAttributeMapped(name);
 }
 
@@ -5615,7 +5617,7 @@ nsSVGElement::StringAttributesInfo
 nsSVGFEImageElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 void
@@ -5950,19 +5952,19 @@ nsSVGElement::NumberAttributesInfo
 nsSVGFEDisplacementMapElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
+                              ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGFEDisplacementMapElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFEDisplacementMapElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }

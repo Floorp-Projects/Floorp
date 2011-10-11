@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsNativeKeyBindings.h"
 #include "nsString.h"
 #include "nsMemory.h"
@@ -45,6 +47,8 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdk.h>
+
+using namespace mozilla;
 
 static nsINativeKeyBindings::DoCommandCallback gCurrentCallback;
 static void *gCurrentCallbackData;
@@ -95,7 +99,7 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
   gHandled = true;
 
   bool forward = count > 0;
-  if (PRUint32(del_type) >= NS_ARRAY_LENGTH(sDeleteCommands)) {
+  if (PRUint32(del_type) >= ArrayLength(sDeleteCommands)) {
     // unsupported deletion type
     return;
   }
@@ -186,7 +190,7 @@ move_cursor_cb(GtkWidget *w, GtkMovementStep step, gint count,
   g_signal_stop_emission_by_name(w, "move_cursor");
   gHandled = true;
   bool forward = count > 0;
-  if (PRUint32(step) >= NS_ARRAY_LENGTH(sMoveCommands)) {
+  if (PRUint32(step) >= ArrayLength(sMoveCommands)) {
     // unsupported movement type
     return;
   }

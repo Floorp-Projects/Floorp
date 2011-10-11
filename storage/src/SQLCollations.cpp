@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "SQLCollations.h"
 
 namespace mozilla {
@@ -165,7 +167,7 @@ registerCollations(sqlite3 *aDB,
   };
 
   int rv = SQLITE_OK;
-  for (size_t i = 0; SQLITE_OK == rv && i < NS_ARRAY_LENGTH(collations); ++i) {
+  for (size_t i = 0; SQLITE_OK == rv && i < ArrayLength(collations); ++i) {
     struct Collations *p = &collations[i];
     rv = ::sqlite3_create_collation(aDB, p->zName, p->enc, aService,
                                     p->xCompare);

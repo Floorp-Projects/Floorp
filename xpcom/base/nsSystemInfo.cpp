@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSystemInfo.h"
 #include "prsystem.h"
 #include "nsString.h"
@@ -50,6 +52,8 @@
 #ifdef ANDROID
 #include "AndroidBridge.h"
 #endif
+
+using namespace mozilla;
 
 nsSystemInfo::nsSystemInfo()
 {
@@ -114,7 +118,7 @@ nsSystemInfo::Init()
         { "hasNEON", mozilla::supports_neon }
     };
 
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(cpuPropItems); i++) {
+    for (PRUint32 i = 0; i < ArrayLength(cpuPropItems); i++) {
         rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16(cpuPropItems[i].name),
                                cpuPropItems[i].propfun());
         NS_ENSURE_SUCCESS(rv, rv);

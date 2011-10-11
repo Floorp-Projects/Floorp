@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSVGGraphicElement.h"
 #include "nsSVGSVGElement.h"
 #include "DOMSVGAnimatedTransformList.h"
@@ -173,7 +175,7 @@ nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
     sGraphicsMap
   };
   
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGGraphicElementBase::IsAttributeMapped(name);
 }
 

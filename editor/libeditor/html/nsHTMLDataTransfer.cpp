@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
 
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
@@ -1220,7 +1221,7 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
     endHTML = aCfhtml.Find(endFragmentMarker);
     if (endHTML == -1)
       return PR_FALSE;
-    endHTML += NS_ARRAY_LENGTH(endFragmentMarker) - 1;
+    endHTML += ArrayLength(endFragmentMarker) - 1;
   }
 
   // create context string
@@ -1831,7 +1832,7 @@ bool nsHTMLEditor::HavePrivateHTMLFlavor(nsIClipboard *aClipboard)
   const char* flavArray[] = { kHTMLContext };
   
   if (NS_SUCCEEDED(aClipboard->HasDataMatchingFlavors(flavArray,
-    NS_ARRAY_LENGTH(flavArray), nsIClipboard::kGlobalClipboard,
+    ArrayLength(flavArray), nsIClipboard::kGlobalClipboard,
     &bHavePrivateHTMLFlavor )))
     return bHavePrivateHTMLFlavor;
     
@@ -1997,11 +1998,11 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, bool *aCanPaste)
   // Use the flavors depending on the current editor mask
   if (IsPlaintextEditor())
     rv = clipboard->HasDataMatchingFlavors(textEditorFlavors,
-                                           NS_ARRAY_LENGTH(textEditorFlavors),
+                                           ArrayLength(textEditorFlavors),
                                            aSelectionType, &haveFlavors);
   else
     rv = clipboard->HasDataMatchingFlavors(textHtmlEditorFlavors,
-                                           NS_ARRAY_LENGTH(textHtmlEditorFlavors),
+                                           ArrayLength(textHtmlEditorFlavors),
                                            aSelectionType, &haveFlavors);
   
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2033,10 +2034,10 @@ NS_IMETHODIMP nsHTMLEditor::CanPasteTransferable(nsITransferable *aTransferable,
   unsigned length;
   if (IsPlaintextEditor()) {
     flavors = textEditorFlavors;
-    length = NS_ARRAY_LENGTH(textEditorFlavors);
+    length = ArrayLength(textEditorFlavors);
   } else {
     flavors = textHtmlEditorFlavors;
-    length = NS_ARRAY_LENGTH(textHtmlEditorFlavors);
+    length = ArrayLength(textHtmlEditorFlavors);
   }
 
   for (unsigned int i = 0; i < length; i++, flavors++) {

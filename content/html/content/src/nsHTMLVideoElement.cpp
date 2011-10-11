@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "mozilla/Util.h"
+
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsHTMLVideoElement.h"
@@ -64,6 +67,7 @@
 #include "nsIDOMProgressEvent.h"
 #include "nsMediaError.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Video)
@@ -150,7 +154,7 @@ nsHTMLVideoElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sCommonAttributeMap
   };
 
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
 }
 
 nsMapRuleToAttributesFunc

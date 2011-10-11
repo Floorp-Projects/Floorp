@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "txStylesheetCompiler.h"
 #include "txStylesheetCompileHandlers.h"
 #include "nsWhitespaceTokenizer.h"
@@ -49,6 +51,8 @@
 #include "txNamespaceMap.h"
 #include "txURIUtils.h"
 #include "txXSLTFunctions.h"
+
+using namespace mozilla;
 
 txHandlerTable* gTxIgnoreHandler = 0;
 txHandlerTable* gTxRootHandler = 0;
@@ -3031,7 +3035,7 @@ txHandlerTable::find(PRInt32 aNamespaceID, nsIAtom* aLocalName)
     INIT_HANDLER(_name);                                             \
                                                                      \
     rv = gTx##_name##Handler->init(gTx##_name##ElementHandlers,      \
-                                   NS_ARRAY_LENGTH(gTx##_name##ElementHandlers)); \
+                                   ArrayLength(gTx##_name##ElementHandlers)); \
     if (NS_FAILED(rv))                                               \
         return PR_FALSE
 

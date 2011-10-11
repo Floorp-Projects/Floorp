@@ -40,6 +40,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
 
 #include "nsIconChannel.h"
 #include "nsIIconURI.h"
@@ -72,6 +73,8 @@
 #include <shlobj.h>
 #include <objbase.h>
 #include <wchar.h>
+
+using namespace mozilla;
 
 struct ICONFILEHEADER {
   PRUint16 ifhReserved;
@@ -270,14 +273,14 @@ static DWORD GetSpecialFolderIcon(nsIFile* aFile, int aFolder, SHFILEINFOW* aSFI
   PRUnichar fileNativePath[MAX_PATH];
   nsAutoString fileNativePathStr;
   aFile->GetPath(fileNativePathStr);
-  ::GetShortPathNameW(fileNativePathStr.get(), fileNativePath, NS_ARRAY_LENGTH(fileNativePath));
+  ::GetShortPathNameW(fileNativePathStr.get(), fileNativePath, ArrayLength(fileNativePath));
 
   LPITEMIDLIST idList;
   HRESULT hr = ::SHGetSpecialFolderLocation(NULL, aFolder, &idList);
   if (SUCCEEDED(hr)) {
     PRUnichar specialNativePath[MAX_PATH];
     ::SHGetPathFromIDListW(idList, specialNativePath);
-    ::GetShortPathNameW(specialNativePath, specialNativePath, NS_ARRAY_LENGTH(specialNativePath));
+    ::GetShortPathNameW(specialNativePath, specialNativePath, ArrayLength(specialNativePath));
   
     if (!wcsicmp(fileNativePath, specialNativePath)) {
       aInfoFlags |= (SHGFI_PIDL | SHGFI_SYSICONINDEX);

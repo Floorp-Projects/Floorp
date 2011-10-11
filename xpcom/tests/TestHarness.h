@@ -52,6 +52,8 @@
 #define STATIC_JS_API
 #endif
 
+#include "mozilla/Util.h"
+
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCOMPtr.h"

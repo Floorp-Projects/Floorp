@@ -45,6 +45,8 @@
  *****************************************************************************
  */
 
+#include "mozilla/Util.h"
+
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsMemory.h"
@@ -513,7 +515,7 @@ nsProcess::RunProcess(bool blocking, char **my_argv, nsIObserver* observer,
     }
 
     // Set spawn attributes.
-    size_t attr_count = NS_ARRAY_LENGTH(pref_cpu_types);
+    size_t attr_count = ArrayLength(pref_cpu_types);
     size_t attr_ocount = 0;
     if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, pref_cpu_types, &attr_ocount) != 0 ||
         attr_ocount != attr_count) {

@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "mozilla/Util.h"
+
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -41,6 +44,7 @@
 #include "nsIDOMDocument.h"
 #include "nsDOMError.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 class nsHTMLFrameElement : public nsGenericHTMLFrameElement,
@@ -169,7 +173,7 @@ nsHTMLFrameElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sCommonAttributeMap,
   };
   
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
 }
 
 nsMapRuleToAttributesFunc

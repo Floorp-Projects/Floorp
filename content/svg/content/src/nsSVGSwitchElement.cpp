@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSVGFeatures.h"
 #include "nsSVGSwitchElement.h"
 #include "nsIFrame.h"
@@ -150,7 +152,7 @@ nsSVGSwitchElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap
   };
 
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGSwitchElementBase::IsAttributeMapped(name);
 }
 

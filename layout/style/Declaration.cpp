@@ -44,6 +44,8 @@
  * stylesheet
  */
 
+#include "mozilla/Util.h"
+
 #include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
 
@@ -305,7 +307,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       };
       bool match = true;
       for (const nsCSSProperty** subprops = subproptables,
-               **subprops_end = subproptables + NS_ARRAY_LENGTH(subproptables);
+               **subprops_end = ArrayEnd(subproptables);
            subprops < subprops_end; ++subprops) {
         // Check only the first four subprops in each table, since the
         // others are extras for dimensional box properties.
