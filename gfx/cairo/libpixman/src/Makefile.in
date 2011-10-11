@@ -94,11 +94,17 @@ MMX_CFLAGS+=--param inline-unit-growth=10000 --param large-function-growth=10000
 endif
 endif
 ifeq (arm,$(findstring arm,$(OS_TEST)))
+# Apple's arm assembler doesn't support the same syntax as
+# the standard GNU assembler, so use the C fallback paths for now.
+# This may be fixable if clang's ARM/iOS assembler improves into a
+# viable solution in the future.
+ifneq (Darwin,$(OS_ARCH))
 ifdef HAVE_ARM_SIMD
 USE_ARM_SIMD_GCC=1
 endif
 ifdef HAVE_ARM_NEON
 USE_ARM_NEON_GCC=1
+endif
 endif
 endif
 
