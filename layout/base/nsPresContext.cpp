@@ -118,20 +118,23 @@
 //needed for resetting of image service color
 #include "nsLayoutCID.h"
 
+#include "nsCSSParser.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
 static nscolor
-MakeColorPref(const nsCString& aColor)
+MakeColorPref(const nsString& aColor)
 {
-  PRUint32 red, green, blue;
-  nscolor colorref;
-
-  // 4.x stored RGB color values as a string rather than as an int,
-  // thus we need to do this conversion
-  PR_sscanf(aColor.get(), "#%02x%02x%02x", &red, &green, &blue);
-  colorref = NS_RGB(red, green, blue);
-  return colorref;
+  nscolor color;
+  nsCSSParser parser;
+  nsresult rv =
+    parser.ParseColorString(aColor, nsnull, 0, &color);
+  if (NS_FAILED(rv)) {
+    // Any better choices?
+    color = NS_RGB(0, 0, 0);
+  }
+  return color;
 }
 
 int
@@ -601,14 +604,14 @@ nsPresContext::GetDocumentColorPreferences()
   }
 
   if (usePrefColors) {
-    nsAdoptingCString colorStr =
-      Preferences::GetCString("browser.display.foreground_color");
+    nsAdoptingString colorStr =
+      Preferences::GetString("browser.display.foreground_color");
 
     if (!colorStr.IsEmpty()) {
       mDefaultColor = MakeColorPref(colorStr);
     }
 
-    colorStr = Preferences::GetCString("browser.display.background_color");
+    colorStr = Preferences::GetString("browser.display.background_color");
 
     if (!colorStr.IsEmpty()) {
       mBackgroundColor = MakeColorPref(colorStr);
@@ -656,19 +659,19 @@ nsPresContext::GetUserPreferences()
   mUnderlineLinks =
     Preferences::GetBool("browser.underline_anchors", mUnderlineLinks);
 
-  nsAdoptingCString colorStr = Preferences::GetCString("browser.anchor_color");
+  nsAdoptingString colorStr = Preferences::GetString("browser.anchor_color");
 
   if (!colorStr.IsEmpty()) {
     mLinkColor = MakeColorPref(colorStr);
   }
 
-  colorStr = Preferences::GetCString("browser.active_color");
+  colorStr = Preferences::GetString("browser.active_color");
 
   if (!colorStr.IsEmpty()) {
     mActiveLinkColor = MakeColorPref(colorStr);
   }
 
-  colorStr = Preferences::GetCString("browser.visited_color");
+  colorStr = Preferences::GetString("browser.visited_color");
 
   if (!colorStr.IsEmpty()) {
     mVisitedLinkColor = MakeColorPref(colorStr);
@@ -680,13 +683,13 @@ nsPresContext::GetUserPreferences()
   mFocusTextColor = mDefaultColor;
   mFocusBackgroundColor = mBackgroundColor;
 
-  colorStr = Preferences::GetCString("browser.display.focus_text_color");
+  colorStr = Preferences::GetString("browser.display.focus_text_color");
 
   if (!colorStr.IsEmpty()) {
     mFocusTextColor = MakeColorPref(colorStr);
   }
 
-  colorStr = Preferences::GetCString("browser.display.focus_background_color");
+  colorStr = Preferences::GetString("browser.display.focus_background_color");
 
   if (!colorStr.IsEmpty()) {
     mFocusBackgroundColor = MakeColorPref(colorStr);
