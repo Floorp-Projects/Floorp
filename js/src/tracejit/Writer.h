@@ -510,19 +510,22 @@ class Writer
     }
 
     nj::LIns *ldpObjPrivate(nj::LIns *obj) const {
-        return name(lir->insLoad(nj::LIR_ldp, obj, offsetof(JSObject, privateData),
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insLoad(nj::LIR_ldp, obj, 0,
                                  ACCSET_OBJ_PRIVATE),
                     "private");
     }
 
     nj::LIns *lduiObjPrivate(nj::LIns *obj) const {
-        return name(lir->insLoad(nj::LIR_ldi, obj, offsetof(JSObject, privateData),
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insLoad(nj::LIR_ldi, obj, 0,
                                  ACCSET_OBJ_PRIVATE),
                     "private_uint32");
     }
 
     nj::LIns *stuiObjPrivate(nj::LIns *obj, nj::LIns *value) const {
-        return name(lir->insStore(nj::LIR_sti, value, obj, offsetof(JSObject, privateData),
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insStore(nj::LIR_sti, value, obj, 0,
                                   ACCSET_OBJ_PRIVATE),
                     "private_uint32");
     }
@@ -557,7 +560,8 @@ class Writer
     }
 
     nj::LIns *ldpConstTypedArrayData(nj::LIns *obj) const {
-        return name(lir->insLoad(nj::LIR_ldp, obj, offsetof(JSObject, privateData), ACCSET_TARRAY, nj::LOAD_CONST), "typedArrayData");
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insLoad(nj::LIR_ldp, obj, 0, ACCSET_TARRAY, nj::LOAD_CONST), "typedArrayData");
     }
 
     nj::LIns *ldc2iTypedArrayElement(nj::LIns *elems, nj::LIns *index) const {

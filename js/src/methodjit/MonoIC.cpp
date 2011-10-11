@@ -747,7 +747,7 @@ class CallCompiler : public BaseCompiler
 
         /* Guard that it's the same function. */
         JSFunction *fun = obj->getFunctionPrivate();
-        masm.loadObjPrivate(ic.funObjReg, t0);
+        masm.loadObjPrivate(ic.funObjReg, t0, JSObject::FUN_CLASS_NFIXED_SLOTS);
         Jump funGuard = masm.branchPtr(Assembler::NotEqual, t0, ImmPtr(fun));
         Jump done = masm.jump();
 

@@ -199,7 +199,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 
     JS_STATIC_ASSERT(NormalArgumentsObject::RESERVED_SLOTS == 2);
     JS_STATIC_ASSERT(StrictArgumentsObject::RESERVED_SLOTS == 2);
-    JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
+    JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT4);
     if (!obj)
         return NULL;
 
@@ -215,7 +215,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     SetValueRangeToUndefined(data->slots, argc);
 
     /* Can't fail from here on, so initialize everything in argsobj. */
-    obj->init(cx, type, proto->getParent(), NULL, false);
+    obj->init(cx, type, proto->getParent(), false);
     obj->setInitialPropertyInfallible(emptyArgumentsShape);
 
     ArgumentsObject *argsobj = obj->asArguments();
@@ -224,6 +224,9 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     argsobj->setInitialLength(argc);
 
     argsobj->setCalleeAndData(callee, data);
+
+    JS_ASSERT(argsobj->numFixedSlots() == NormalArgumentsObject::NFIXED_SLOTS);
+    JS_ASSERT(argsobj->numFixedSlots() == StrictArgumentsObject::NFIXED_SLOTS);
 
     return argsobj;
 }
@@ -768,8 +771,9 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     EmptyShape *emptyDeclEnvShape = EmptyShape::getEmptyDeclEnvShape(cx);
     if (!emptyDeclEnvShape)
         return NULL;
-    envobj->init(cx, type, &fp->scopeChain(), fp, false);
+    envobj->init(cx, type, &fp->scopeChain(), false);
     envobj->setInitialPropertyInfallible(emptyDeclEnvShape);
+    envobj->setPrivate(fp);
 
     return envobj;
 }

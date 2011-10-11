@@ -56,7 +56,7 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
 {
     Bindings &bindings = script->bindings;
     size_t argsVars = bindings.countArgsAndVars();
-    size_t slots = RESERVED_SLOTS + argsVars;
+    size_t slots = RESERVED_SLOTS + argsVars + 1;  /* Add one for privateData. */
     gc::AllocKind kind = gc::GetGCObjectKind(slots);
 
     /*
