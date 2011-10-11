@@ -877,7 +877,6 @@ Proxy::typeOf(JSContext *cx, JSObject *proxy)
 bool
 Proxy::objectClassIs(JSObject *proxy, ESClassValue classValue, JSContext *cx)
 {
-    JS_CHECK_RECURSION(cx, JS_NOT_REACHED("cannot reenter"));
     AutoPendingProxyOperation pending(cx, proxy);
     return GetProxyHandler(proxy)->objectClassIs(proxy, classValue, cx);
 }
