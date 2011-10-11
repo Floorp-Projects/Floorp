@@ -509,7 +509,7 @@ struct Shape : public js::gc::Cell
                                    else to obj->lastProp */
     };
 
-    static inline js::Shape **search(JSContext *cx, js::Shape *start, jsid id,
+    static inline js::Shape **search(JSContext *cx, js::Shape **pstart, jsid id,
                                      bool adding = false);
     static js::Shape *newDictionaryList(JSContext *cx, js::Shape **listp);
 
@@ -896,8 +896,9 @@ struct EmptyShape : public js::Shape
 namespace js {
 
 JS_ALWAYS_INLINE js::Shape **
-Shape::search(JSContext *cx, js::Shape *start, jsid id, bool adding)
+Shape::search(JSContext *cx, js::Shape **pstart, jsid id, bool adding)
 {
+    Shape *start = *pstart;
     if (start->hasTable())
         return start->table().search(id, adding);
 
@@ -920,7 +921,7 @@ Shape::search(JSContext *cx, js::Shape *start, jsid id, bool adding)
      * load and id test at the end (when missing).
      */
     js::Shape **spp;
-    for (spp = &start; js::Shape *shape = *spp; spp = &shape->parent) {
+    for (spp = pstart; js::Shape *shape = *spp; spp = &shape->parent) {
         if (shape->maybePropid() == id)
             return spp;
     }

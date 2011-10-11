@@ -64,7 +64,7 @@ public:
     static CallObject *
     create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *callee);
 
-    static const uint32 RESERVED_SLOTS = 2;
+    static const uint32 RESERVED_SLOTS = 3;
 
     /* True if this is for a strict mode eval frame or for a function call. */
     inline bool isForEval() const;
