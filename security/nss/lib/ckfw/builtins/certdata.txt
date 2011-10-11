@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-CVS_ID "@(#) $RCSfile: certdata.txt,v $ $Revision: 1.75 $ $Date: 2011/08/01 06:33:47 $"
+CVS_ID "@(#) $RCSfile: certdata.txt,v $ $Revision: 1.79 $ $Date: 2011/09/02 19:40:56 $"
 
 #
 # certdata.txt

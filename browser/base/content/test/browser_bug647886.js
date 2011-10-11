@@ -4,6 +4,7 @@
 function test() {
   waitForExplicitFinish();
 
+  gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function () {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
@@ -26,6 +27,7 @@ function testBackButton() {
 
     ok(true, "history menu opened");
     event.target.hidePopup();
+    gBrowser.removeTab(gBrowser.selectedTab);
     finish();
   }, false);
 

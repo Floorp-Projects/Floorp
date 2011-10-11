@@ -391,9 +391,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapUnallocated,
     GetHeapUnallocated,
     "Memory mapped by the heap allocator that is not part of an active "
     "allocation. Much of this memory may be uncommitted -- that is, it does not "
-    "take up space in physical memory or in the swap file. Committed and "
-    "unallocated memory, perhaps a result of fragmentation, is reported in "
-    "heap-dirty, if that measure is available.")
+    "take up space in physical memory or in the swap file.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapAllocated,
     "heap-allocated",

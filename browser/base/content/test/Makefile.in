@@ -181,6 +181,7 @@ _BROWSER_FILES = \
                  browser_getshortcutoruri.js \
                  browser_hide_removing.js \
                  browser_overflowScroll.js \
+                 browser_locationBarCommand.js \
                  browser_locationBarExternalLoad.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \

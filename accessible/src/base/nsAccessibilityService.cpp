@@ -162,7 +162,7 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent* aTargetNode)
   if (documentNode) {
     nsDocAccessible* document = GetDocAccessible(documentNode);
     if (document)
-      document->HandleAnchorJump(aTargetNode);
+      document->SetAnchorJump(aTargetNode);
   }
 }
 

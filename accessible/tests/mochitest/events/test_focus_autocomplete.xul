@@ -73,7 +73,7 @@
 
       this.invoke = function initFormAutoCompleteBy_invoke()
       {
-        var iframeDOMDoc = getFormAutoCompleteDOMDoc(aIFrameID);
+        var iframeDOMDoc = getIFrameDOMDoc(aIFrameID);
 
         var inputNode = iframeDOMDoc.getElementById("input");
         inputNode.value = aAutoCompleteValue;
@@ -84,6 +84,30 @@
       this.getID = function initFormAutoCompleteBy_getID()
       {
         return "init form autocomplete by '" + aAutoCompleteValue + "'";
+      }
+    }
+
+    function loadHTML5ListAutoComplete(aIFrameID)
+    {
+      this.iframeNode = getNode(aIFrameID);
+      this.iframe = getAccessible(aIFrameID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.iframe)
+      ];
+
+      this.invoke = function loadHTML5ListAutoComplete_invoke()
+      {
+        var url = "data:text/html,<html><body>" +
+          "<datalist id='cities'><option>hello</option><option>hi</option></datalist>" +
+          "<input id='input' list='cities'>" +
+          "</body></html>";
+        this.iframeNode.setAttribute("src", url);
+      }
+
+      this.getID = function loadHTML5ListAutoComplete_getID()
+      {
+        return "load HTML5 list autocomplete page";
       }
     }
 
@@ -279,7 +303,7 @@
       this.index = aIdx;
     }
 
-    function getFormAutoCompleteDOMDoc(aIFrameID)
+    function getIFrameDOMDoc(aIFrameID)
     {
       return getNode(aIFrameID).contentDocument;
     }
@@ -362,6 +386,7 @@
       gInitQueue.push(new loadFormAutoComplete("iframe"));
       gInitQueue.push(new initFormAutoCompleteBy("iframe", "hello"));
       gInitQueue.push(new initFormAutoCompleteBy("iframe", "hi"));
+      gInitQueue.push(new loadHTML5ListAutoComplete("iframe2"));
       gInitQueue.onFinish = function initQueue_onFinish()
       {
         SimpleTest.executeSoon(doTests);
@@ -386,7 +411,11 @@
 
       ////////////////////////////////////////////////////////////////////////////
       // HTML form autocomplete tests
-      queueAutoCompleteTests(getFormAutoCompleteDOMDoc("iframe").getElementById("input"));
+      queueAutoCompleteTests(getIFrameDOMDoc("iframe").getElementById("input"));
+
+      ////////////////////////////////////////////////////////////////////////////
+      // HTML5 list autocomplete tests
+      queueAutoCompleteTests(getIFrameDOMDoc("iframe2").getElementById("input"));
 
       ////////////////////////////////////////////////////////////////////////////
       // searchbar tests
@@ -438,6 +467,11 @@
          title="Rework accessible focus handling">
         Mozilla Bug 673958
       </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=559766"
+         title="Add accessibility support for @list on HTML input and for HTML datalist">
+        Mozilla Bug 559766
+      </a>
       <p id="display"></p>
       <div id="content" style="display: none"></div>
       <pre id="test">
@@ -454,6 +488,8 @@
       <panel id="richpopup" type="autocomplete-richlistbox" noautofocus="true"/>
 
       <iframe id="iframe"/>
+
+      <iframe id="iframe2"/>
 
       <searchbar id="searchbar"/>
 

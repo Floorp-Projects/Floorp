@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.42 2011/08/01 07:08:09 kaie%kuix.de Exp $ */
+/* $Id: ssl.h,v 1.44 2011/10/06 22:42:33 wtc%google.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -100,7 +100,7 @@ SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
                                		  /* (off by default) */
 #define SSL_HANDSHAKE_AS_SERVER		6 /* force connect to hs as server */
                                		  /* (off by default) */
-#define SSL_ENABLE_SSL2			7 /* enable ssl v2 (on by default) */
+#define SSL_ENABLE_SSL2			7 /* enable ssl v2 (off by default) */
 #define SSL_ENABLE_SSL3		        8 /* enable ssl v3 (on by default) */
 #define SSL_NO_CACHE		        9 /* don't use the session cache */
                     		          /* (off by default) */
@@ -109,7 +109,7 @@ SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 #define SSL_ENABLE_FDX                 11 /* permit simultaneous read/write */
                                           /* (off by default) */
 #define SSL_V2_COMPATIBLE_HELLO        12 /* send v3 client hello in v2 fmt */
-                                          /* (on by default) */
+                                          /* (off by default) */
 #define SSL_ENABLE_TLS		       13 /* enable TLS (on by default) */
 #define SSL_ROLLBACK_DETECTION         14 /* for compatibility, default: on */
 #define SSL_NO_STEP_DOWN               15 /* Disable export cipher suites   */
@@ -139,6 +139,34 @@ SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 /* occur on RSA or DH ciphersuites where the cipher's key length is >= 80   */
 /* bits. The advantage of False Start is that it saves a round trip for     */
 /* client-speaks-first protocols when performing a full handshake.          */
+
+/* For SSL 3.0 and TLS 1.0, by default we prevent chosen plaintext attacks
+ * on SSL CBC mode cipher suites (see RFC 4346 Section F.3) by splitting
+ * non-empty application_data records into two records; the first record has
+ * only the first byte of plaintext, and the second has the rest.
+ *
+ * This only prevents the attack in the sending direction; the connection may
+ * still be vulnerable to such attacks if the peer does not implement a similar
+ * countermeasure.
+ *
+ * This protection mechanism is on by default; the default can be overridden by
+ * setting NSS_SSL_CBC_RANDOM_IV=0 in the environment prior to execution,
+ * and/or by the application setting the option SSL_CBC_RANDOM_IV to PR_FALSE.
+ *
+ * The per-record IV in TLS 1.1 and later adds one block of overhead per
+ * record, whereas this hack will add at least two blocks of overhead per
+ * record, so TLS 1.1+ will always be more efficient.
+ *
+ * Other implementations (e.g. some versions of OpenSSL, in some
+ * configurations) prevent the same attack by prepending an empty
+ * application_data record to every application_data record they send; we do
+ * not do that because some implementations cannot handle empty
+ * application_data records. Also, we only split application_data records and
+ * not other types of records, because some implementations will not accept
+ * fragmented records of some other types (e.g. some versions of NSS do not
+ * accept fragmented alerts).
+ */
+#define SSL_CBC_RANDOM_IV 23
 
 #ifdef SSL_DEPRECATED_FUNCTION 
 /* Old deprecated function names */

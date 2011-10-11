@@ -66,6 +66,8 @@
 #include "jsdIDebuggerService.h"
 
 #include "xpcquickstubs.h"
+#include "dombindings.h"
+#include "nsWrapperCacheInlines.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
@@ -908,6 +910,13 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)");
         cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
     }
+    else if(mozilla::dom::binding::instanceIsProxy(obj))
+    {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "js::GetProxyPrivate(obj)");
+        nsISupports *identity =
+            static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
+        cb.NoteXPCOMChild(identity);
+    }
 
     return NS_OK;
 }
@@ -1071,6 +1080,40 @@ CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     return true;
 }
 
+#ifdef DEBUG
+struct VerifyTraceXPCGlobalCalledTracer
+{
+    JSTracer base;
+    bool ok;
+};
+
+static void
+VerifyTraceXPCGlobalCalled(JSTracer *trc, void *thing, JSGCTraceKind kind)
+{
+    // We don't do anything here, we only want to verify that TraceXPCGlobal
+    // was called.
+}
+#endif
+
+void
+TraceXPCGlobal(JSTracer *trc, JSObject *obj)
+{
+#ifdef DEBUG
+    if(trc->callback == VerifyTraceXPCGlobalCalled)
+    {
+        // We don't do anything here, we only want to verify that TraceXPCGlobal
+        // was called.
+        reinterpret_cast<VerifyTraceXPCGlobalCalledTracer*>(trc)->ok = JS_TRUE;
+        return;
+    }
+#endif
+
+    XPCWrappedNativeScope *scope =
+        XPCWrappedNativeScope::GetNativeScope(trc->context, obj);
+    if(scope)
+        scope->TraceDOMPrototypes(trc);
+}
+
 nsresult
 xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
                        nsIPrincipal *principal, nsISupports *ptr,
@@ -1105,6 +1148,17 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
             return UnexpectedFailure(NS_ERROR_FAILURE);
         *global = tempGlobal;
     }
+
+#ifdef DEBUG
+    if(clasp->flags & JSCLASS_XPCONNECT_GLOBAL)
+    {
+        VerifyTraceXPCGlobalCalledTracer trc;
+        JS_TRACER_INIT(&trc.base, cx, VerifyTraceXPCGlobalCalled);
+        trc.ok = JS_FALSE;
+        JS_TraceChildren(&trc.base, *global, JSTRACE_OBJECT);
+        NS_ABORT_IF_FALSE(trc.ok, "Trace hook needs to call TraceXPCGlobal if JSCLASS_XPCONNECT_GLOBAL is set.");
+    }
+#endif
 
     return NS_OK;
 }
@@ -1486,9 +1540,22 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
     nsIXPConnectWrappedNative* wrapper =
         XPCWrappedNative::GetWrappedNativeOfJSObject(aJSContext, aJSObj, nsnull,
                                                      &obj2);
+    if(wrapper)
+        return wrapper->Native();
 
-    return wrapper ? wrapper->Native() :
-                     (obj2 ? (nsISupports*)xpc_GetJSPrivate(obj2) : nsnull);
+    if(obj2)
+        return (nsISupports*)xpc_GetJSPrivate(obj2);
+
+    if(mozilla::dom::binding::instanceIsProxy(aJSObj)) {
+        // FIXME: Provide a fast non-refcounting way to get the canonical
+        //        nsISupports from the proxy.
+        nsISupports *supports =
+            static_cast<nsISupports*>(js::GetProxyPrivate(aJSObj).toPrivate());
+        nsCOMPtr<nsISupports> canonical = do_QueryInterface(supports);
+        return canonical.get();
+    }
+
+    return nsnull;
 }
 
 /* JSObjectPtr getJSObjectOfWrapper (in JSContextPtr aJSContext, in JSObjectPtr aJSObj); */
@@ -1517,6 +1584,11 @@ nsXPConnect::GetJSObjectOfWrapper(JSContext * aJSContext,
     if(obj2)
     {
         *_retval = obj2;
+        return NS_OK;
+    }
+    if(mozilla::dom::binding::instanceIsProxy(aJSObj))
+    {
+        *_retval = aJSObj;
         return NS_OK;
     }
     // else...

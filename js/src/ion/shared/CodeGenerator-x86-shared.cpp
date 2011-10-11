@@ -721,7 +721,7 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     masm.mov(objreg, tokreg);
 
     // Knowing that objreg is a non-native function, load the JSScript.
-    masm.movePtr(Operand(objreg, offsetof(JSFunction, u.i.script)), objreg);
+    masm.movePtr(Operand(objreg, offsetof(JSFunction, u.i.script_)), objreg);
     masm.movePtr(Operand(objreg, offsetof(JSScript, ion)), objreg);
 
     // Bail if the callee is uncompiled.

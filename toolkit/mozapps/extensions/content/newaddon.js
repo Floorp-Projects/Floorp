@@ -62,14 +62,14 @@ function initialize() {
   if (pos >= 0)
     query = spec.substring(pos + 1);
 
-  let bundle = Services.strings.createBundle("chrome://mozapps/locale/extensions/newaddon.properties");
-
   // Just assume the query is "id=<id>"
   let id = query.substring(3);
   if (!id) {
-    window.close();
+    window.location = "about:blank";
     return;
   }
+
+  let bundle = Services.strings.createBundle("chrome://mozapps/locale/extensions/newaddon.properties");
 
   AddonManager.getAddonByID(id, function(aAddon) {
     // If the add-on doesn't exist or it is already enabled or it cannot be

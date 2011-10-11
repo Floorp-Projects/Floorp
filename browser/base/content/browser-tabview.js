@@ -92,6 +92,12 @@ let TabView = {
 
   // ----------
   init: function TabView_init() {
+    // disable the ToggleTabView command for popup windows
+    if (!window.toolbar.visible) {
+      goSetCommandEnabled("Browser:ToggleTabView", false);
+      return;
+    }
+
     if (this._initialized)
       return;
 
@@ -168,6 +174,10 @@ let TabView = {
   // If the frame already exists, calls the callback immediately. 
   _initFrame: function TabView__initFrame(callback) {
     let hasCallback = typeof callback == "function";
+
+    // prevent frame to be initialized for popup windows
+    if (!window.toolbar.visible)
+      return;
 
     if (this._window) {
       if (hasCallback)

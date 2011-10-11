@@ -61,11 +61,10 @@ public:
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(float aValue, nsSVGElement *aSVGElement, bool aDoSetAttr);
+  void SetBaseValue(float aValue, nsSVGElement *aSVGElement);
   float GetBaseValue() const
     { return mBaseVal; }
   void SetAnimValue(float aValue, nsSVGElement *aSVGElement);
@@ -114,7 +113,7 @@ public:
         if (!NS_finite(aValue)) {
           return NS_ERROR_ILLEGAL_VALUE;
         }
-        mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE);
+        mVal->SetBaseValue(aValue, mSVGElement);
         return NS_OK;
       }
 

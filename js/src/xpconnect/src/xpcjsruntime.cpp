@@ -52,6 +52,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
 #include "prsystem.h"
+#include "mozilla/Preferences.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -260,6 +261,7 @@ xpc::CompartmentPrivate::~CompartmentPrivate()
 {
     delete waiverWrapperMap;
     delete expandoMap;
+    delete domExpandoMap;
     MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
 }
 
@@ -428,12 +430,22 @@ TraceExpandos(XPCWrappedNative *wn, JSObject *&expando, void *aClosure)
 }
 
 static PLDHashOperator
+TraceDOMExpandos(nsPtrHashKey<JSObject> *expando, void *aClosure)
+{
+    JS_CALL_OBJECT_TRACER(static_cast<JSTracer *>(aClosure), expando->GetKey(),
+                          "DOM expando object");
+    return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
 TraceCompartment(xpc::PtrAndPrincipalHashKey *aKey, JSCompartment *compartment, void *aClosure)
 {
     xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
         JS_GetCompartmentPrivate(static_cast<JSTracer *>(aClosure)->context, compartment);
     if (priv->expandoMap)
         priv->expandoMap->Enumerate(TraceExpandos, aClosure);
+    if (priv->domExpandoMap)
+        priv->domExpandoMap->EnumerateEntries(TraceDOMExpandos, aClosure);
     return PL_DHASH_NEXT;
 }
 
@@ -530,11 +542,19 @@ XPCJSRuntime::SuspectWrappedNative(JSContext *cx, XPCWrappedNative *wrapper,
 }
 
 static PLDHashOperator
-SuspectExpandos(XPCWrappedNative *wrapper, JSObject *&expando, void *arg)
+SuspectExpandos(XPCWrappedNative *wrapper, JSObject *expando, void *arg)
 {
     Closure* closure = static_cast<Closure*>(arg);
     XPCJSRuntime::SuspectWrappedNative(closure->cx, wrapper, *closure->cb);
 
+    return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+SuspectDOMExpandos(nsPtrHashKey<JSObject> *expando, void *arg)
+{
+    Closure *closure = static_cast<Closure*>(arg);
+    closure->cb->NoteXPCOMRoot(static_cast<nsISupports*>(expando->GetKey()->getPrivate()));
     return PL_DHASH_NEXT;
 }
 
@@ -545,7 +565,9 @@ SuspectCompartment(xpc::PtrAndPrincipalHashKey *key, JSCompartment *compartment,
     xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
         JS_GetCompartmentPrivate(closure->cx, compartment);
     if (priv->expandoMap)
-        priv->expandoMap->Enumerate(SuspectExpandos, arg);
+        priv->expandoMap->EnumerateRead(SuspectExpandos, arg);
+    if (priv->domExpandoMap)
+        priv->domExpandoMap->EnumerateEntries(SuspectDOMExpandos, arg);
     return PL_DHASH_NEXT;
 }
 
@@ -1998,6 +2020,8 @@ DiagnosticMemoryCallback(void *ptr, size_t size)
 }
 #endif
 
+bool XPCJSRuntime::gNewDOMBindingsEnabled;
+
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
  : mXPConnect(aXPConnect),
    mJSRuntime(nsnull),
@@ -2033,6 +2057,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     NS_TIME_FUNCTION;
 
     DOM_InitInterfaces();
+    Preferences::AddBoolVarCache(&gNewDOMBindingsEnabled, "dom.new_bindings",
+                                 JS_FALSE);
+
 
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = JSID_VOID;
@@ -2136,18 +2163,24 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     if(JSID_IS_VOID(mStrIDs[0]))
     {
         JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
-        JSAutoRequest ar(cx);
-        for(uintN i = 0; i < IDX_TOTAL_COUNT; i++)
         {
-            JSString* str = JS_InternString(cx, mStrings[i]);
-            if(!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &mStrIDs[i]))
+            // Scope the JSAutoRequest so it goes out of scope before calling
+            // mozilla::dom::binding::DefineStaticJSVals.
+            JSAutoRequest ar(cx);
+            for(uintN i = 0; i < IDX_TOTAL_COUNT; i++)
             {
-                mStrIDs[0] = JSID_VOID;
-                ok = JS_FALSE;
-                break;
+                JSString* str = JS_InternString(cx, mStrings[i]);
+                if(!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &mStrIDs[i]))
+                {
+                    mStrIDs[0] = JSID_VOID;
+                    ok = JS_FALSE;
+                    break;
+                }
+                mStrJSVals[i] = STRING_TO_JSVAL(str);
             }
-            mStrJSVals[i] = STRING_TO_JSVAL(str);
         }
+
+        ok = mozilla::dom::binding::DefineStaticJSVals(cx);
     }
     if (!ok)
         return JS_FALSE;

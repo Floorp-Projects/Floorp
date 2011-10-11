@@ -65,6 +65,12 @@
       testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
     }
 
+    // autocomplete states
+    testStates("autocomplete-default", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-off", 0, 0, 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-formoff", 0, 0, 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-list", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+    testStates("autocomplete-list2", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     SimpleTest.finish();
   }
 
@@ -98,6 +104,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=601205"
      title="Expose intrinsic invalid state to accessibility API">
     Mozilla Bug 601205
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=559766"
+     title="Add accessibility support for @list on HTML input and for HTML datalist">
+    Mozilla Bug 559766
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -154,6 +165,19 @@
   <input id="email2" type="email" value="foo@bar.com">
   <input id="url" type="url" value="foo">
   <input id="url2" type="url" value="http://mozilla.org/">
+
+  <!-- autocomplete -->
+  <input id="autocomplete-default">
+  <input id="autocomplete-off" autocomplete="off">
+  <form autocomplete="off">
+    <input id="autocomplete-formoff">
+  </form>
+  <datalist id="cities">
+    <option>Paris</option>
+    <option>San Francisco</option>
+  </datalist>
+  <input id="autocomplete-list" list="cities">
+  <input id="autocomplete-list2" list="cities" autocomplete="off">
 
   </body>
 </html>

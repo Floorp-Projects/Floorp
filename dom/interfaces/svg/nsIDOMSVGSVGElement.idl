@@ -55,7 +55,7 @@ interface nsIDOMSVGTransform;
 #endif
 %}
 
-[scriptable, uuid(4de866e9-f937-41ab-bb78-4b50584437e4)]
+[scriptable, uuid(e7ff88bd-26f8-4f2e-b01c-4e7b80d45117)]
 interface nsIDOMSVGSVGElement
   : nsIDOMSVGElement
 /*

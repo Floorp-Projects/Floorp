@@ -95,6 +95,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         FIPSDIR=${HOSTDIR}/fips
         DBPASSDIR=${HOSTDIR}/dbpass
         ECCURVES_DIR=${HOSTDIR}/eccurves
+        DISTRUSTDIR=${HOSTDIR}/distrust
 
         SERVER_CADIR=${HOSTDIR}/serverCA
         CLIENT_CADIR=${HOSTDIR}/clientCA
@@ -526,6 +527,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     D_EXT_SERVER="ExtendedServer.$version"
     D_EXT_CLIENT="ExtendedClient.$version"
     D_CERT_EXTENSTIONS="CertExtensions.$version"
+    D_DISTRUST="Distrust.$version"
 
     # we need relative pathnames of these files abd directories, since our 
     # tools can't handle the unix style absolut pathnames on cygnus

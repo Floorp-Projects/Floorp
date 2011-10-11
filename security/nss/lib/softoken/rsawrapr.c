@@ -23,6 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Hanno Boeck <hanno@hboeck.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: rsawrapr.c,v 1.17 2010/08/07 18:10:35 wtc%google.com Exp $ */
+/* $Id: rsawrapr.c,v 1.18 2011/10/04 22:05:53 wtc%google.com Exp $ */
 
 #include "blapi.h"
 #include "softoken.h"
@@ -942,6 +943,53 @@ RSA_DecryptRaw(NSSLOWKEYPrivateKey *key,
 
 failure:
     return SECFailure;
+}
+
+/*
+ * Mask generation function MGF1 as defined in PKCS #1 v2.1 / RFC 3447.
+ */
+static SECStatus
+MGF1(HASH_HashType hashAlg, unsigned char *mask, unsigned int maskLen,
+     const unsigned char *mgfSeed, unsigned int mgfSeedLen)
+{
+    unsigned int digestLen;
+    PRUint32 counter, rounds;
+    unsigned char *tempHash, *temp;
+    const SECHashObject *hash;
+    void *hashContext;
+    unsigned char C[4];
+
+    hash = HASH_GetRawHashObject(hashAlg);
+    if (hash == NULL)
+        return SECFailure;
+
+    hashContext = (*hash->create)();
+    rounds = (maskLen + hash->length - 1) / hash->length;
+    for (counter = 0; counter < rounds; counter++) {
+        C[0] = (unsigned char)((counter >> 24) & 0xff);
+        C[1] = (unsigned char)((counter >> 16) & 0xff);
+        C[2] = (unsigned char)((counter >> 8) & 0xff);
+        C[3] = (unsigned char)(counter & 0xff);
+
+        /* This could be optimized when the clone functions in
+         * rawhash.c are implemented. */
+        (*hash->begin)(hashContext);
+        (*hash->update)(hashContext, mgfSeed, mgfSeedLen); 
+        (*hash->update)(hashContext, C, sizeof C);
+
+        tempHash = mask + counter * hash->length;
+        if (counter != (rounds-1)) {
+            (*hash->end)(hashContext, tempHash, &digestLen, hash->length);
+        } else { /* we're in the last round and need to cut the hash */
+            temp = PORT_Alloc(hash->length);
+            (*hash->end)(hashContext, temp, &digestLen, hash->length);
+            PORT_Memcpy(tempHash, temp, maskLen - counter * hash->length);
+            PORT_Free(temp);
+        }
+    }
+    (*hash->destroy)(hashContext, PR_TRUE);
+
+    return SECSuccess;
 }
 
 /*

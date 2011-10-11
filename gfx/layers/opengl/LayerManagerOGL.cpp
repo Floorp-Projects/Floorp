@@ -1166,21 +1166,6 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
   *aTexture = tex;
 }
 
-void 
-LayerOGL::ApplyFilter(gfxPattern::GraphicsFilter aFilter)
-{
-  if (aFilter == gfxPattern::FILTER_NEAREST) {
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
-  } else {
-    if (aFilter != gfxPattern::FILTER_GOOD) {
-      NS_WARNING("Unsupported filter type!");
-    }
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  }
-}
-
 already_AddRefed<ShadowThebesLayer>
 LayerManagerOGL::CreateShadowThebesLayer()
 {

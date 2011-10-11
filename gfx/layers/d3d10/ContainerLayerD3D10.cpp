@@ -265,12 +265,14 @@ ContainerLayerD3D10::RenderLayer()
                        oldD3D10Scissor.right - oldD3D10Scissor.left,
                        oldD3D10Scissor.bottom - oldD3D10Scissor.top);
 
+  nsAutoTArray<Layer*, 12> children;
+  SortChildrenBy3DZOrder(children);
+
   /*
    * Render this container's contents.
    */
-  for (LayerD3D10* layerToRender = GetFirstChildD3D10();
-       layerToRender != nsnull;
-       layerToRender = GetNextSiblingD3D10(layerToRender)) {
+  for (PRUint32 i = 0; i < children.Length(); i++) {
+    LayerD3D10* layerToRender = static_cast<LayerD3D10*>(children.ElementAt(i)->ImplData());
 
     if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
       continue;

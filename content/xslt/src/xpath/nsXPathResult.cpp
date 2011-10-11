@@ -42,7 +42,7 @@
 #include "nsDOMError.h"
 #include "mozilla/dom/Element.h"
 #include "nsIAttribute.h"
-#include "nsIDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsDOMString.h"

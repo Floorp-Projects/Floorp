@@ -77,7 +77,6 @@
 #include "jsparse.h"
 #include "jsprobes.h"
 #include "jsproxy.h"
-#include "jsregexp.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -89,17 +88,19 @@
 #include "jswrapper.h"
 #include "jstypedarray.h"
 
+#include "ds/LifoAlloc.h"
+#include "builtin/RegExp.h"
+
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
-#include "jsregexpinlines.h"
 #include "jsscriptinlines.h"
 #include "assembler/wtf/Platform.h"
 
+#include "vm/RegExpObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
-#include "ds/LifoAlloc.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
@@ -652,8 +653,6 @@ JSRuntime::JSRuntime()
     protoHazardShape(0),
     gcSystemAvailableChunkListHead(NULL),
     gcUserAvailableChunkListHead(NULL),
-    gcEmptyChunkListHead(NULL),
-    gcEmptyChunkCount(0),
     gcKeepAtoms(0),
     gcBytes(0),
     gcTriggerBytes(0),
@@ -699,6 +698,7 @@ JSRuntime::JSRuntime()
     requestDone(NULL),
     requestCount(0),
     gcThread(NULL),
+    gcHelperThread(this),
     rtLock(NULL),
 # ifdef DEBUG
     rtLockOwner(0),
@@ -1404,7 +1404,7 @@ JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment)
 {
     CHECK_REQUEST(cx);
-    return compartment->data;
+    return js_GetCompartmentPrivate(compartment);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2806,9 +2806,9 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
       case JSGC_MODE:
         return uint32(rt->gcMode);
       case JSGC_UNUSED_CHUNKS:
-        return uint32(rt->gcEmptyChunkCount);
+        return uint32(rt->gcChunkPool.getEmptyCount());
       case JSGC_TOTAL_CHUNKS:
-        return uint32(rt->gcChunkSet.count() + rt->gcEmptyChunkCount);
+        return uint32(rt->gcChunkSet.count() + rt->gcChunkPool.getEmptyCount());
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return rt->gcNumber;
@@ -4423,6 +4423,15 @@ JS_ObjectIsCallable(JSContext *cx, JSObject *obj)
     return obj->isCallable();
 }
 
+JS_PUBLIC_API(JSBool)
+JS_IsNativeFunction(JSObject *funobj, JSNative call)
+{
+    if (!funobj->isFunction())
+        return false;
+    JSFunction *fun = funobj->getFunctionPrivate();
+    return fun->isNative() && fun->native() == call;
+}
+
 static JSBool
 js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
@@ -4864,7 +4873,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
                                        chars, length, filename, lineno, version)) {
         return NULL;
     }
-    
+
     if (obj && funAtom &&
         !obj->defineProperty(cx, ATOM_TO_JSID(funAtom), ObjectValue(*fun),
                              NULL, NULL, JSPROP_ENUMERATE)) {
@@ -5935,8 +5944,9 @@ JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uin
     jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
-    JSObject *reobj = RegExp::createObject(cx, res, chars, length, flags, NULL);
+
+    RegExpStatics *res = obj->asGlobal()->getRegExpStatics();
+    RegExpObject *reobj = RegExpObject::create(cx, res, chars, length, RegExpFlag(flags), NULL);
     cx->free_(chars);
     return reobj;
 }
@@ -5945,8 +5955,8 @@ JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
-    return RegExp::createObject(cx, res, chars, length, flags, NULL);
+    RegExpStatics *res = obj->asGlobal()->getRegExpStatics();
+    return RegExpObject::create(cx, res, chars, length, RegExpFlag(flags), NULL);
 }
 
 JS_PUBLIC_API(void)
@@ -5955,7 +5965,7 @@ JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, JSBool multilin
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
 
-    RegExpStatics::extractFrom(obj->asGlobal())->reset(input, !!multiline);
+    obj->asGlobal()->getRegExpStatics()->reset(input, !!multiline);
 }
 
 JS_PUBLIC_API(void)
@@ -5964,7 +5974,7 @@ JS_ClearRegExpStatics(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
     JS_ASSERT(obj);
 
-    RegExpStatics::extractFrom(obj->asGlobal())->clear();
+    obj->asGlobal()->getRegExpStatics()->clear();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5973,15 +5983,16 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, s
 {
     CHECK_REQUEST(cx);
 
-    RegExp *re = RegExp::extractFrom(reobj);
-    if (!re)
+    RegExpPrivate *rep = reobj->asRegExp()->getPrivate();
+    if (!rep)
         return false;
 
     JSString *str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return false;
 
-    return re->execute(cx, RegExpStatics::extractFrom(obj->asGlobal()), str, indexp, test, rval);
+    RegExpStatics *res = obj->asGlobal()->getRegExpStatics();
+    return rep->execute(cx, res, str, indexp, test, rval);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -5991,16 +6002,16 @@ JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, uintN fla
     jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    JSObject *obj = RegExp::createObjectNoStatics(cx, chars, length, flags, NULL);
+    RegExpObject *reobj = RegExpObject::createNoStatics(cx, chars, length, RegExpFlag(flags), NULL);
     cx->free_(chars);
-    return obj;
+    return reobj;
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    return RegExp::createObjectNoStatics(cx, chars, length, flags, NULL);
+    return RegExpObject::createNoStatics(cx, chars, length, RegExpFlag(flags), NULL);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6009,15 +6020,15 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *obj, jschar *chars, size_t le
 {
     CHECK_REQUEST(cx);
 
-    RegExp *re = RegExp::extractFrom(obj);
-    if (!re)
+    RegExpPrivate *rep = obj->asRegExp()->getPrivate();
+    if (!rep)
         return false;
 
     JSString *str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return false;
 
-    return re->executeNoStatics(cx, str, indexp, test, rval);
+    return rep->executeNoStatics(cx, str, indexp, test, rval);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6032,8 +6043,7 @@ JS_GetRegExpFlags(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);
 
-    RegExp *re = RegExp::extractFrom(obj);
-    return re->getFlags();
+    return obj->asRegExp()->getFlags();
 }
 
 JS_PUBLIC_API(JSString *)
@@ -6041,8 +6051,7 @@ JS_GetRegExpSource(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);
 
-    RegExp *re = RegExp::extractFrom(obj);
-    return re->getSource();
+    return obj->asRegExp()->getSource();
 }
 
 /************************************************************************/
@@ -6271,6 +6280,12 @@ JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment)
     cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 #endif
+
+JS_FRIEND_API(void *)
+js_GetCompartmentPrivate(JSCompartment *compartment)
+{
+    return compartment->data;
+}
 
 /************************************************************************/
 
