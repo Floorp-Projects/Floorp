@@ -508,7 +508,7 @@ struct JSObject : js::gc::Cell
     inline js::Shape **addressOfShape() { return &shape_; }
 
     inline js::Shape **nativeSearch(JSContext *cx, jsid id, bool adding = false);
-    inline const js::Shape *nativeLookup(JSContext *cx, jsid id);
+    const js::Shape *nativeLookup(JSContext *cx, jsid id);
 
     inline bool nativeContains(JSContext *cx, jsid id);
     inline bool nativeContains(JSContext *cx, const js::Shape &shape);
