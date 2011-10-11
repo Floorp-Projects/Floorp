@@ -64,7 +64,7 @@
 #endif // MOZ_MEDIA
 #include "nsImageLoadingContent.h"
 #include "jsgc.h"
-#include "xpcpublic.h"
+#include "nsWrapperCacheInlines.h"
 
 using namespace mozilla::dom;
 
@@ -611,6 +611,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
         if (aNode->PreservingWrapper()) {
           preservedWrapper = wrapper;
           nsContentUtils::ReleaseWrapper(aNode, aNode);
+          NS_ASSERTION(aNode->GetWrapper(),
+                       "ReleaseWrapper cleared our wrapper, this code needs to "
+                       "be changed to deal with that!");
         }
 
         nsCOMPtr<nsIXPConnectJSObjectHolder> oldWrapper;

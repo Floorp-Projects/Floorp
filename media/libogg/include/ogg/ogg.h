@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: toplevel libogg include
- last mod: $Id: ogg.h 17098 2010-03-29 05:35:11Z gmaxwell $
+ last mod: $Id: ogg.h 18044 2011-08-01 17:55:20Z gmaxwell $
 
  ********************************************************************/
 #ifndef _OGG_H
@@ -78,7 +78,7 @@ typedef struct {
   ogg_int64_t  packetno;  /* sequence number for decode; the framing
                              knows where there's a hole in the data,
                              but we need coupling so that the codec
-                             (which is in a seperate abstraction
+                             (which is in a separate abstraction
                              layer) also knows about the gap */
   ogg_int64_t   granulepos;
 
@@ -98,7 +98,7 @@ typedef struct {
   ogg_int64_t  packetno;     /* sequence number for decode; the framing
                                 knows where there's a hole in the data,
                                 but we need coupling so that the codec
-                                (which is in a seperate abstraction
+                                (which is in a separate abstraction
                                 layer) also knows about the gap */
 } ogg_packet;
 
@@ -161,6 +161,7 @@ extern int      ogg_stream_iovecin(ogg_stream_state *os, ogg_iovec_t *iov,
 extern int      ogg_stream_pageout(ogg_stream_state *os, ogg_page *og);
 extern int      ogg_stream_pageout_fill(ogg_stream_state *os, ogg_page *og, int nfill);
 extern int      ogg_stream_flush(ogg_stream_state *os, ogg_page *og);
+extern int      ogg_stream_flush_fill(ogg_stream_state *os, ogg_page *og, int nfill);
 
 /* Ogg BITSTREAM PRIMITIVES: decoding **************************/
 

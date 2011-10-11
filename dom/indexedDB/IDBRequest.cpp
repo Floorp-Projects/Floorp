@@ -44,8 +44,9 @@
 #include "nsIVariant.h"
 
 #include "nsComponentManagerUtils.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsDOMJSUtils.h"
+#include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsStringGlue.h"
@@ -54,6 +55,7 @@
 #include "AsyncConnectionHelper.h"
 #include "IDBEvents.h"
 #include "IDBTransaction.h"
+#include "nsContentUtils.h"
 
 USING_INDEXEDDB_NAMESPACE
 

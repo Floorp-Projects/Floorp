@@ -514,11 +514,15 @@ struct JSRuntime {
 
   public:
     /*
-     * The trace operation and its data argument to trace embedding-specific
-     * GC roots.
+     * The trace operations to trace embedding-specific GC roots. One is for
+     * tracing through black roots and the other is for tracing through gray
+     * roots. The black/gray distinction is only relevant to the cycle
+     * collector.
      */
-    JSTraceDataOp       gcExtraRootsTraceOp;
-    void                *gcExtraRootsData;
+    JSTraceDataOp       gcBlackRootsTraceOp;
+    void                *gcBlackRootsData;
+    JSTraceDataOp       gcGrayRootsTraceOp;
+    void                *gcGrayRootsData;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     js::Value           NaNValue;

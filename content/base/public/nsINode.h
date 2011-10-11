@@ -283,8 +283,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xb59269fe, 0x7f60, 0x4672, \
-  { 0x8e, 0x56, 0x01, 0x84, 0xb2, 0x58, 0x14, 0xb0 } }
+{ 0x38f966a0, 0xd652, 0x4979, \
+  { 0xae, 0x37, 0xc8, 0x75, 0x84, 0xfc, 0xf8, 0x43 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -1352,6 +1352,7 @@ protected:
   nsresult doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                            bool aNotify, nsAttrAndChildArray& aChildArray);
 
+public:
   /* Event stuff that documents and elements share.  This needs to be
      NS_IMETHOD because some subclasses implement DOM methods with
      this exact name and signature and then the calling convention
@@ -1370,6 +1371,7 @@ protected:
 #undef TOUCH_EVENT
 #undef EVENT  
 
+protected:
   static void Trace(nsINode *tmp, TraceCallback cb, void *closure);
   static bool Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb);
   static void Unlink(nsINode *tmp);

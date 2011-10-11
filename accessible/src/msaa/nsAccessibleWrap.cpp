@@ -1617,19 +1617,21 @@ nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
     nsIFrame* frame = aAccessible->GetFrame();
     if (frame) {
       nsIWidget* widget = frame->GetNearestWidget();
-      bool isVisible = false;
-      widget->IsVisible(isVisible);
-      if (isVisible) {
-        nsCOMPtr<nsIPresShell> shell(aAccessible->GetPresShell());
-        nsIViewManager* vm = shell->GetViewManager();
-        if (vm) {
-          nsCOMPtr<nsIWidget> rootWidget;
-          vm->GetRootWidget(getter_AddRefs(rootWidget));
-          // Make sure the accessible belongs to popup. If not then use
-          // document HWND (which might be different from root widget in the
-          // case of window emulation).
-          if (rootWidget != widget)
-            return static_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
+      if (widget) {
+        bool isVisible = false;
+        widget->IsVisible(isVisible);
+        if (isVisible) {
+          nsCOMPtr<nsIPresShell> shell(aAccessible->GetPresShell());
+          nsIViewManager* vm = shell->GetViewManager();
+          if (vm) {
+            nsCOMPtr<nsIWidget> rootWidget;
+            vm->GetRootWidget(getter_AddRefs(rootWidget));
+            // Make sure the accessible belongs to popup. If not then use
+            // document HWND (which might be different from root widget in the
+            // case of window emulation).
+            if (rootWidget != widget)
+              return static_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
+          }
         }
       }
     }

@@ -129,6 +129,10 @@ XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal)
         // called by nsXPConnect::InitClasses.
         scope->SetGlobal(ccx, aGlobal);
     }
+    if(js::GetObjectClass(aGlobal)->flags & JSCLASS_XPCONNECT_GLOBAL)
+        JS_ALWAYS_TRUE(JS_SetReservedSlot(ccx, aGlobal,
+                                          JSCLASS_GLOBAL_SLOT_COUNT,
+                                          PRIVATE_TO_JSVAL(scope)));
     return scope;
 }
 
@@ -144,7 +148,8 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
         mPrototypeJSObject(nsnull),
         mPrototypeJSFunction(nsnull),
         mPrototypeNoHelper(nsnull),
-        mScriptObjectPrincipal(nsnull)
+        mScriptObjectPrincipal(nsnull),
+        mNewDOMBindingsEnabled(ccx.GetRuntime()->NewDOMBindingsEnabled())
 {
     // add ourselves to the scopes list
     {   // scoped lock
@@ -449,6 +454,8 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
         {
             cur->mGlobalJSObject = nsnull;
             cur->mScriptObjectPrincipal = nsnull;
+            if(cur->GetCachedDOMPrototypes().IsInitialized())
+                 cur->GetCachedDOMPrototypes().Clear();
             // Move this scope from the live list to the dying list.
             if(prev)
                 prev->mNext = next;
@@ -803,6 +810,13 @@ XPCWrappedNativeScope::FindInJSObjectScope(JSContext* cx, JSObject* obj,
 
     obj = JS_GetGlobalForObject(cx, obj);
 
+    if(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL)
+    {
+        scope = XPCWrappedNativeScope::GetNativeScope(cx, obj);
+        if(scope)
+            return scope;
+    }
+
     if(!runtime)
     {
         runtime = nsXPConnect::GetRuntimeInstance();
@@ -905,6 +919,22 @@ XPCWrappedNativeScope::RemoveWrappedNativeProtos()
         GetRuntime()->GetDetachedWrappedNativeProtoMap());
     mMainThreadWrappedNativeProtoMap->Enumerate(WNProtoRemover, 
         GetRuntime()->GetDetachedWrappedNativeProtoMap());
+}
+
+static PLDHashOperator
+TraceDOMPrototype(const char* aKey, JSObject* aData, void* aClosure)
+{
+    JSTracer *trc = static_cast<JSTracer*>(aClosure);
+    JS_CALL_OBJECT_TRACER(trc, aData, "DOM prototype");
+    return PL_DHASH_NEXT;
+}
+
+void
+XPCWrappedNativeScope::TraceDOMPrototypes(JSTracer *trc)
+{
+    if(mCachedDOMPrototypes.IsInitialized()) {
+        mCachedDOMPrototypes.EnumerateRead(TraceDOMPrototype, trc);
+    }
 }
 
 /***************************************************************************/

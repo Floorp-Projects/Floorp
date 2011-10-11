@@ -11,7 +11,7 @@
  ********************************************************************
 
   function: packing variable sized words into an octet stream
-  last mod: $Id: bitwise.c 17287 2010-06-10 13:42:06Z tterribe $
+  last mod: $Id: bitwise.c 18051 2011-08-04 17:56:39Z giles $
 
  ********************************************************************/
 
@@ -93,11 +93,11 @@ void oggpack_write(oggpack_buffer *b,unsigned long value,int bits){
     b->ptr=b->buffer+b->endbyte;
   }
 
-  value&=mask[bits]; 
+  value&=mask[bits];
   bits+=b->endbit;
 
-  b->ptr[0]|=value<<b->endbit;  
-  
+  b->ptr[0]|=value<<b->endbit;
+
   if(bits>=8){
     b->ptr[1]=(unsigned char)(value>>(8-b->endbit));
     if(bits>=16){
@@ -136,11 +136,11 @@ void oggpackB_write(oggpack_buffer *b,unsigned long value,int bits){
     b->ptr=b->buffer+b->endbyte;
   }
 
-  value=(value&mask[bits])<<(32-bits); 
+  value=(value&mask[bits])<<(32-bits);
   bits+=b->endbit;
 
-  b->ptr[0]|=value>>(24+b->endbit);  
-  
+  b->ptr[0]|=value>>(24+b->endbit);
+
   if(bits>=8){
     b->ptr[1]=(unsigned char)(value>>(16+b->endbit));
     if(bits>=16){
@@ -193,7 +193,7 @@ static void oggpack_writecopy_helper(oggpack_buffer *b,
     int i;
     /* unaligned copy.  Do it the hard way. */
     for(i=0;i<bytes;i++)
-      w(b,(unsigned long)(ptr[i]),8);    
+      w(b,(unsigned long)(ptr[i]),8);
   }else{
     /* aligned block copy */
     if(b->endbyte+bytes+1>=b->storage){
@@ -215,9 +215,9 @@ static void oggpack_writecopy_helper(oggpack_buffer *b,
   }
   if(bits){
     if(msb)
-      w(b,(unsigned long)(ptr[bytes]>>(8-bits)),bits);    
+      w(b,(unsigned long)(ptr[bytes]>>(8-bits)),bits);
     else
-      w(b,(unsigned long)(ptr[bytes]),bits);    
+      w(b,(unsigned long)(ptr[bytes]),bits);
   }
   return;
  err:
@@ -281,11 +281,11 @@ long oggpack_look(oggpack_buffer *b,int bits){
 
   ret=b->ptr[0]>>b->endbit;
   if(bits>8){
-    ret|=b->ptr[1]<<(8-b->endbit);  
+    ret|=b->ptr[1]<<(8-b->endbit);
     if(bits>16){
-      ret|=b->ptr[2]<<(16-b->endbit);  
+      ret|=b->ptr[2]<<(16-b->endbit);
       if(bits>24){
-        ret|=b->ptr[3]<<(24-b->endbit);  
+        ret|=b->ptr[3]<<(24-b->endbit);
         if(bits>32 && b->endbit)
           ret|=b->ptr[4]<<(32-b->endbit);
       }
@@ -312,11 +312,11 @@ long oggpackB_look(oggpack_buffer *b,int bits){
 
   ret=b->ptr[0]<<(24+b->endbit);
   if(bits>8){
-    ret|=b->ptr[1]<<(16+b->endbit);  
+    ret|=b->ptr[1]<<(16+b->endbit);
     if(bits>16){
-      ret|=b->ptr[2]<<(8+b->endbit);  
+      ret|=b->ptr[2]<<(8+b->endbit);
       if(bits>24){
-        ret|=b->ptr[3]<<(b->endbit);  
+        ret|=b->ptr[3]<<(b->endbit);
         if(bits>32 && b->endbit)
           ret|=b->ptr[4]>>(8-b->endbit);
       }
@@ -386,11 +386,11 @@ long oggpack_read(oggpack_buffer *b,int bits){
 
   ret=b->ptr[0]>>b->endbit;
   if(bits>8){
-    ret|=b->ptr[1]<<(8-b->endbit);  
+    ret|=b->ptr[1]<<(8-b->endbit);
     if(bits>16){
-      ret|=b->ptr[2]<<(16-b->endbit);  
+      ret|=b->ptr[2]<<(16-b->endbit);
       if(bits>24){
-        ret|=b->ptr[3]<<(24-b->endbit);  
+        ret|=b->ptr[3]<<(24-b->endbit);
         if(bits>32 && b->endbit){
           ret|=b->ptr[4]<<(32-b->endbit);
         }
@@ -429,11 +429,11 @@ long oggpackB_read(oggpack_buffer *b,int bits){
 
   ret=b->ptr[0]<<(24+b->endbit);
   if(bits>8){
-    ret|=b->ptr[1]<<(16+b->endbit);  
+    ret|=b->ptr[1]<<(16+b->endbit);
     if(bits>16){
-      ret|=b->ptr[2]<<(8+b->endbit);  
+      ret|=b->ptr[2]<<(8+b->endbit);
       if(bits>24){
-        ret|=b->ptr[3]<<(b->endbit);  
+        ret|=b->ptr[3]<<(b->endbit);
         if(bits>32 && b->endbit)
           ret|=b->ptr[4]>>(8-b->endbit);
       }
@@ -511,7 +511,7 @@ long oggpackB_bytes(oggpack_buffer *b){
 long oggpackB_bits(oggpack_buffer *b){
   return oggpack_bits(b);
 }
-  
+
 unsigned char *oggpack_get_buffer(oggpack_buffer *b){
   return(b->buffer);
 }
@@ -534,7 +534,7 @@ static int ilog(unsigned int v){
   }
   return(ret);
 }
-      
+
 oggpack_buffer o;
 oggpack_buffer r;
 
@@ -581,7 +581,7 @@ void cliptest(unsigned long *b,int vals,int bits,int *comp,int compsize){
 void cliptestB(unsigned long *b,int vals,int bits,int *comp,int compsize){
   long bytes,i;
   unsigned char *buffer;
-  
+
   oggpackB_reset(&o);
   for(i=0;i<vals;i++)
     oggpackB_write(&o,b[i],bits?bits:ilog(b[i]));
@@ -851,7 +851,7 @@ int main(void){
 
 
   return(0);
-}  
+}
 #endif  /* _V_SELFTEST */
 
 #undef BUFFER_INCREMENT

@@ -679,8 +679,10 @@ JSRuntime::JSRuntime()
 #endif
     gcCallback(NULL),
     gcMallocBytes(0),
-    gcExtraRootsTraceOp(NULL),
-    gcExtraRootsData(NULL),
+    gcBlackRootsTraceOp(NULL),
+    gcBlackRootsData(NULL),
+    gcGrayRootsTraceOp(NULL),
+    gcGrayRootsData(NULL),
     NaNValue(UndefinedValue()),
     negativeInfinityValue(UndefinedValue()),
     positiveInfinityValue(UndefinedValue()),
@@ -1395,7 +1397,7 @@ JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment)
 {
     CHECK_REQUEST(cx);
-    return compartment->data;
+    return js_GetCompartmentPrivate(compartment);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2058,13 +2060,6 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetScopeChain(JSContext *cx)
-{
-    CHECK_REQUEST(cx);
-    return GetScopeChain(cx);
-}
-
-JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
@@ -2290,10 +2285,10 @@ JS_UnlockGCThingRT(JSRuntime *rt, void *thing)
 }
 
 JS_PUBLIC_API(void)
-JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
+JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
-    rt->gcExtraRootsTraceOp = traceOp;
-    rt->gcExtraRootsData = data;
+    rt->gcBlackRootsTraceOp = traceOp;
+    rt->gcBlackRootsData = data;
 }
 
 JS_PUBLIC_API(void)
@@ -4303,7 +4298,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     assertSameCompartment(cx, parent);  // XXX no funobj for now
     if (!parent) {
         if (cx->hasfp())
-            parent = GetScopeChain(cx, cx->fp());
+            parent = &cx->fp()->scopeChain();
         if (!parent)
             parent = cx->globalObject;
         JS_ASSERT(parent);
@@ -4409,7 +4404,16 @@ JS_ObjectIsCallable(JSContext *cx, JSObject *obj)
     return obj->isCallable();
 }
 
-static JSBool
+JS_PUBLIC_API(JSBool)
+JS_IsNativeFunction(JSObject *funobj, JSNative call)
+{
+    if (!funobj->isFunction())
+        return false;
+    JSFunction *fun = funobj->getFunctionPrivate();
+    return fun->isNative() && fun->native() == call;
+}
+
+JSBool
 js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
     JSFunctionSpec *fs = (JSFunctionSpec *) vp->toObject().getReservedSlot(0).toPrivate();
@@ -6257,6 +6261,12 @@ JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment)
     cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 #endif
+
+JS_FRIEND_API(void *)
+js_GetCompartmentPrivate(JSCompartment *compartment)
+{
+    return compartment->data;
+}
 
 /************************************************************************/
 

@@ -1989,6 +1989,10 @@ setting[type="bool"]:hover:active .setting-input > checkbox[checked="true"] > .c
   -moz-border-start: @border_width_tiny@ solid @color_button_border@;
 }
 
+.documenttab-popup-closebutton > .button-box {
+  border: none;
+}
+
 #tabs-popup-newtab-button:hover:active {
   background-color: @color_background_highlight@;  
 }
@@ -2028,6 +2032,7 @@ setting[type="bool"]:hover:active .setting-input > checkbox[checked="true"] > .c
 
 #tabs-popup-newtab-button > .button-box {
   min-height: -moz-calc(0.75 * @touch_row@);
+  border: none;
   border-top: @border_width_tiny@ solid @color_button_border@;
 }
 

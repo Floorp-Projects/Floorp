@@ -4925,8 +4925,13 @@ nsBrowserAccess.prototype = {
       return null;
     }
 
-    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW)
-      aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
+    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
+      if (isExternal &&
+          gPrefService.prefHasUserValue("browser.link.open_newwindow.override.external"))
+        aWhere = gPrefService.getIntPref("browser.link.open_newwindow.override.external");
+      else
+        aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
+    }
     switch (aWhere) {
       case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
         // FIXME: Bug 408379. So how come this doesn't send the
@@ -8524,7 +8529,7 @@ function switchToTabHavingURI(aURI, aOpenNew) {
     if (isBrowserWindow && isTabEmpty(gBrowser.selectedTab))
       gBrowser.selectedBrowser.loadURI(aURI.spec);
     else
-      openUILinkIn(aURI.spec, "tab");
+      openUILinkIn(aURI.spec, "tab", { inBackground: false });
   }
 
   return false;
