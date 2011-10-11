@@ -24,6 +24,7 @@ script stringify-missing-arguments.js
 script stringify-nonarray-noncallable-replacer.js
 script stringify-primitives.js
 script stringify-replacer.js
+script stringify-replacer-array-boxed-elements.js
 script stringify-replacer-array-duplicated-element.js
 script stringify-replacer-array-edgecase-jsid-elements.js
 script stringify-replacer-array-hijinks.js
