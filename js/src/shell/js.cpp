@@ -1913,7 +1913,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
           case SRC_FUNCDEF: {
             index = js_GetSrcNoteOffset(sn, 0);
             JSObject *obj = script->getObject(index);
-            JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, obj);
+            JSFunction *fun = obj->toFunction();
             str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             JSAutoByteString bytes;
             if (!str || !bytes.encode(cx, str))

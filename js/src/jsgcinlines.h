@@ -101,7 +101,7 @@ GetGCArrayKind(size_t numSlots)
      * unused.
      */
     JS_STATIC_ASSERT(sizeof(ObjectElements) == 2 * sizeof(Value));
-    if (numSlots + 2 >= SLOTS_TO_THING_KIND_LIMIT)
+    if (numSlots > JSObject::NSLOTS_LIMIT || numSlots + 2 >= SLOTS_TO_THING_KIND_LIMIT)
         return FINALIZE_OBJECT2;
     return slotsToThingKind[numSlots + 2];
 }

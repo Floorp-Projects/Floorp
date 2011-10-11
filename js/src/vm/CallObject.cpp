@@ -66,8 +66,8 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
      * call object's frame has finished.
      */
     if (cx->typeInferenceEnabled() && gc::GetGCKindSlots(kind) < slots) {
-        kind = gc::GetGCObjectKind(RESERVED_SLOTS);
-        JS_ASSERT(gc::GetGCKindSlots(kind) == RESERVED_SLOTS);
+        kind = gc::GetGCObjectKind(RESERVED_SLOTS + 1);
+        JS_ASSERT(gc::GetGCKindSlots(kind) == RESERVED_SLOTS + 1);
     }
 
     JSObject *obj = js_NewGCObject(cx, kind);

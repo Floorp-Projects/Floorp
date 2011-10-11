@@ -1074,7 +1074,7 @@ JSObject::isNative() const
 inline js::Shape **
 JSObject::nativeSearch(JSContext *cx, jsid id, bool adding)
 {
-    return js::Shape::search(cx, lastProperty(), id, adding);
+    return js::Shape::search(cx, &shape_, id, adding);
 }
 
 inline const js::Shape *
