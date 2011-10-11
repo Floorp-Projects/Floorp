@@ -1507,8 +1507,10 @@ struct JSObject : js::gc::Cell {
 
         JS_STATIC_ASSERT(offsetof(JSObject, clasp) == offsetof(js::shadow::Object, clasp));
         JS_STATIC_ASSERT(offsetof(JSObject, flags) == offsetof(js::shadow::Object, flags));
+        JS_STATIC_ASSERT(offsetof(JSObject, objShape) == offsetof(js::shadow::Object, objShape));
         JS_STATIC_ASSERT(offsetof(JSObject, parent) == offsetof(js::shadow::Object, parent));
         JS_STATIC_ASSERT(offsetof(JSObject, privateData) == offsetof(js::shadow::Object, privateData));
+        JS_STATIC_ASSERT(offsetof(JSObject, capacity) == offsetof(js::shadow::Object, capacity));
         JS_STATIC_ASSERT(offsetof(JSObject, slots) == offsetof(js::shadow::Object, slots));
         JS_STATIC_ASSERT(offsetof(JSObject, type_) == offsetof(js::shadow::Object, type));
         JS_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::shadow::Object));

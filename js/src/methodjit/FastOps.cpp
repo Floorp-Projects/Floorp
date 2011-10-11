@@ -2371,7 +2371,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
         if (maybeNotStr->isNotType(JSVAL_TYPE_STRING)) {
             frame.popn(2);
-            frame.push(BooleanValue(false));
+            frame.push(BooleanValue(op == JSOP_STRICTNE));
             return;
         }
 

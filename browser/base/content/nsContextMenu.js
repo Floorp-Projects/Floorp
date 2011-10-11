@@ -854,7 +854,7 @@ nsContextMenu.prototype = {
     canvas.height = video.videoHeight;
     var ctxDraw = canvas.getContext("2d");
     ctxDraw.drawImage(video, 0, 0);
-    saveImageURL(canvas.toDataURL("image/jpg", ""), name, "SaveImageTitle", true, false, document.documentURIObject);
+    saveImageURL(canvas.toDataURL("image/jpeg", ""), name, "SaveImageTitle", true, false, document.documentURIObject);
   },
 
   fullScreenVideo: function () {

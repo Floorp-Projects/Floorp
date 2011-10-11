@@ -635,24 +635,6 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
         NS_WARNING("Int overflow calculating audio end time");
         break;
       }
-
-      PRInt64 audioAhead = mAudioEndTime - GetMediaTime();
-      if (audioAhead > AMPLE_AUDIO_USECS &&
-          framesWritten > minWriteFrames)
-      {
-        // We've pushed enough audio onto the hardware that we've queued up a
-        // significant amount ahead of the playback position. The decode
-        // thread will be going to sleep, so we won't get any new audio
-        // anyway, so sleep until we need to push to the hardware again.
-        Wait(AMPLE_AUDIO_USECS / 2);
-        // Kick the decode thread; since above we only do a NotifyAll when
-        // we pop an audio chunk of the queue, the decoder won't wake up if
-        // we've got no more decoded chunks to push to the hardware. We can
-        // hit this condition if the last frame in the stream doesn't have
-        // it's EOS flag set, and the decode thread sleeps just after decoding
-        // that packet, but before realising there's no more packets.
-        mon.NotifyAll();
-      }
     }
   }
   if (mReader->mAudioQueue.AtEndOfStream() &&

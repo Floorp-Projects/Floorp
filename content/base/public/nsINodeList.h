@@ -46,23 +46,17 @@ class nsIContent;
 
 // IID for the nsINodeList interface
 #define NS_INODELIST_IID \
-{ 0xa842c1b5, 0x9a6f, 0x4afa, \
- { 0x9c, 0x1c, 0xf5, 0xf7, 0xdc, 0x70, 0x82, 0xd9 } }
+{ 0xe60b773e, 0x5d20, 0x43f6, \
+ { 0xb0, 0x8c, 0xfd, 0x65, 0x26, 0xce, 0xe0, 0x7a } }
 
 /**
- * An internal interface that allows QI-less getting of nodes from
- * node lists and reasonably fast indexOf.
+ * An internal interface for a reasonably fast indexOf.
  */
 class nsINodeList : public nsIDOMNodeList,
                     public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODELIST_IID)
-
-  /**
-   * Get the node at the index.  Returns null if the index is out of bounds
-   */
-  virtual nsIContent* GetNodeAt(PRUint32 aIndex) = 0;
 
   /**
    * Get the index of the given node in the list.  Will return -1 if the node

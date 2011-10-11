@@ -2335,7 +2335,7 @@ nsCanvasRenderingContext2DAzure::QuadraticCurveTo(float cpx, float cpy, float x,
     mPathBuilder->QuadraticBezierTo(Point(cpx, cpy), Point(x, y));
   } else {
     Matrix transform = mTarget->GetTransform();
-    mDSPathBuilder->QuadraticBezierTo(transform * Point(cpx, cpy), transform * Point(cpx, cpy));
+    mDSPathBuilder->QuadraticBezierTo(transform * Point(cpx, cpy), transform * Point(x, y));
   }
 
   return NS_OK;

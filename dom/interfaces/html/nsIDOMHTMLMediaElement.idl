@@ -57,7 +57,7 @@
 #endif
 %}
 
-[scriptable, uuid(1b38c0a1-e532-41f1-9ec8-c76236d42cb7)]
+[scriptable, uuid(ea907d2b-55af-4876-9886-1e01432d7c17)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state

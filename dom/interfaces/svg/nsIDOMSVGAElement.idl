@@ -44,7 +44,7 @@
 
 interface nsIDOMSVGAnimatedString;
 
-[scriptable, uuid(139491ec-3bc2-490e-bce6-ec1b1b5aeaf9)]
+[scriptable, uuid(f1b259b6-587c-46fe-8800-2f0156fe04e8)]
 interface nsIDOMSVGAElement
   : nsIDOMSVGElement
 /*

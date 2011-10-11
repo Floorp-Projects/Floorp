@@ -2209,6 +2209,9 @@ js_TransplantObjectWithWrapper(JSContext *cx,
                                JSObject *targetobj,
                                JSObject *targetwrapper);
 
+extern JS_FRIEND_API(void *)
+js_GetCompartmentPrivate(JSCompartment *compartment);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
@@ -2218,12 +2221,11 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
      * This is a poor man's Maybe<AutoCompartment>, because we don't have
      * access to the AutoCompartment definition here.  We statically assert in
      * jsapi.cpp that we have the right size here.
+     *
+     * In practice, 32-bit Windows and Android get 16-word |bytes|, while
+     * other platforms get 13-word |bytes|.
      */
-#if !defined(_MSC_VER) && !defined(__arm__)
-    void* bytes[13];
-#else
-    void* bytes[sizeof(void*) == 4 ? 16 : 13];
-#endif
+    void* bytes[sizeof(void*) == 4 && MOZ_ALIGNOF(JSUint64) == 8 ? 16 : 13];
 
     /*
      * This object may be in one of three states.  If enter() or
@@ -2302,9 +2304,6 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);
-
-extern JS_PUBLIC_API(JSObject *)
-JS_GetScopeChain(JSContext *cx);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
@@ -2614,7 +2613,7 @@ JS_UnlockGCThingRT(JSRuntime *rt, void *thing);
  * data:    the data argument to pass to each invocation of traceOp.
  */
 extern JS_PUBLIC_API(void)
-JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
+JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 
 /*
  * JS_CallTracer API and related macros for implementors of JSTraceOp, to
@@ -3043,6 +3042,8 @@ struct JSClass {
 #define JSCLASS_FREEZE_PROTO            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
 #define JSCLASS_FREEZE_CTOR             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
 
+#define JSCLASS_XPCONNECT_GLOBAL        (1<<(JSCLASS_HIGH_FLAGS_SHIFT+7))
+
 /* Global flags. */
 #define JSGLOBAL_FLAGS_CLEARED          0x1
 
@@ -3058,8 +3059,13 @@ struct JSClass {
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
 #define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 8)
+#define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n)                                    \
+    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))
 #define JSCLASS_GLOBAL_FLAGS                                                  \
-    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT))
+    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0)
+#define JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(clasp)                              \
+  (((clasp)->flags & JSCLASS_IS_GLOBAL)                                       \
+   && JSCLASS_RESERVED_SLOTS(clasp) >= JSCLASS_GLOBAL_SLOT_COUNT)
 
 /* Fast access to the original value of each standard class's prototype. */
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
@@ -3690,6 +3696,9 @@ JS_ObjectIsFunction(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
 JS_ObjectIsCallable(JSContext *cx, JSObject *obj);
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsNativeFunction(JSObject *funobj, JSNative call);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);

@@ -1834,6 +1834,15 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
+    nsCOMPtr<nsIContent> content = do_QueryInterface(image);
+    nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(content);
+    if (canvas) {
+        nsIntSize size = canvas->GetSize();
+        if (size.width == 0 || size.height == 0) {
+            return NS_ERROR_DOM_INVALID_STATE_ERR;
+        }
+    }
+
     // The canvas spec says that createPattern should use the first frame
     // of animated images
     nsLayoutUtils::SurfaceFromElementResult res =
@@ -1849,9 +1858,6 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
     nsRefPtr<nsCanvasPattern> pat = new nsCanvasPattern(thebespat, res.mPrincipal,
                                                         res.mIsWriteOnly,
                                                         res.mCORSUsed);
-    if (!pat)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     *_retval = pat.forget().get();
     return NS_OK;
 }

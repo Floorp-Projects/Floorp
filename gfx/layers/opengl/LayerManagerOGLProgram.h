@@ -247,14 +247,14 @@ protected:
       log.SetLength(len);
 
       if (!success) {
-        fprintf (stderr, "=== SHADER COMPILATION FAILED ===\n");
+        printf_stderr("=== SHADER COMPILATION FAILED ===\n");
       } else {
-        fprintf (stderr, "=== SHADER COMPILATION WARNINGS ===\n");
+        printf_stderr("=== SHADER COMPILATION WARNINGS ===\n");
       }
 
-        fprintf (stderr, "=== Source:\n%s\n", aShaderSource);
-        fprintf (stderr, "=== Log:\n%s\n", log.get());
-        fprintf (stderr, "============\n");
+        printf_stderr("=== Source:\n%s\n", aShaderSource);
+        printf_stderr("=== Log:\n%s\n", log.get());
+        printf_stderr("============\n");
 
       if (!success) {
         mGL->fDeleteShader(sh);
@@ -303,12 +303,12 @@ protected:
       log.SetLength(len);
 
       if (!success) {
-        fprintf (stderr, "=== PROGRAM LINKING FAILED ===\n");
+        printf_stderr("=== PROGRAM LINKING FAILED ===\n");
       } else {
-        fprintf (stderr, "=== PROGRAM LINKING WARNINGS ===\n");
+        printf_stderr("=== PROGRAM LINKING WARNINGS ===\n");
       }
-      fprintf (stderr, "=== Log:\n%s\n", log.get());
-      fprintf (stderr, "============\n");
+      printf_stderr("=== Log:\n%s\n", log.get());
+      printf_stderr("============\n");
     }
 
     // We can mark the shaders for deletion; they're attached to the program

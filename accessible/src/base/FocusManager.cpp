@@ -335,6 +335,21 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   nsRefPtr<AccEvent> focusEvent =
     new AccEvent(nsIAccessibleEvent::EVENT_FOCUS, target, fromUserInputFlag);
   nsEventShell::FireEvent(focusEvent);
+
+  // Fire scrolling_start event when the document receives the focus if it has
+  // an anchor jump. If an accessible within the document receive the focus
+  // then null out the anchor jump because it no longer applies.
+  nsDocAccessible* targetDocument = target->GetDocAccessible();
+  nsAccessible* anchorJump = targetDocument->AnchorJump();
+  if (anchorJump) {
+    if (target == targetDocument) {
+      // XXX: bug 625699, note in some cases the node could go away before we
+      // we receive focus event, for example if the node is removed from DOM.
+      nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
+                              anchorJump, fromUserInputFlag);
+    }
+    targetDocument->SetAnchorJump(nsnull);
+  }
 }
 
 nsIContent*

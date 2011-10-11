@@ -43,10 +43,20 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+// Fired by TelemetryPing when async telemetry data should be collected.
+const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
+
 // Seconds between maintenance runs.
 const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
 
+////////////////////////////////////////////////////////////////////////////////
+//// Imports
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesDBUtils",
+                                  "resource://gre/modules/PlacesDBUtils.jsm");
 
 /**
  * This component can be used as a starter for modules that have to run when
@@ -54,6 +64,8 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
  */
 function PlacesCategoriesStarter()
 {
+  Services.obs.addObserver(this, TOPIC_GATHER_TELEMETRY, false);
+  Services.obs.addObserver(this, PlacesUtils.TOPIC_SHUTDOWN, false);
 }
 
 PlacesCategoriesStarter.prototype = {
@@ -63,15 +75,22 @@ PlacesCategoriesStarter.prototype = {
   observe: function PCS_observe(aSubject, aTopic, aData)
   {
     switch (aTopic) {
+      case PlacesUtils.TOPIC_SHUTDOWN:
+        Services.obs.removeObserver(this, PlacesUtils.TOPIC_SHUTDOWN);
+        Services.obs.removeObserver(this, TOPIC_GATHER_TELEMETRY);
+        break;
+      case TOPIC_GATHER_TELEMETRY:
+        PlacesDBUtils.telemetry();
+        break;
       case "idle-daily":
         // Once a week run places.sqlite maintenance tasks.
         let lastMaintenance = 0;
         try {
-          lastMaintenance = Services.prefs.getIntPref("places.database.lastMaintenance");
+          lastMaintenance =
+            Services.prefs.getIntPref("places.database.lastMaintenance");
         } catch (ex) {}
         let nowSeconds = parseInt(Date.now() / 1000);
         if (lastMaintenance < nowSeconds - MAINTENANCE_INTERVAL_SECONDS) {
-          Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
           PlacesDBUtils.maintenanceOnIdle();
         }
         break;

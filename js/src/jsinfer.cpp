@@ -254,6 +254,15 @@ types::TypeObjectString(TypeObject *type)
     return TypeString(Type::ObjectType(type));
 }
 
+unsigned JSScript::id() {
+    if (!id_) {
+        id_ = ++compartment()->types.scriptCount;
+        InferSpew(ISpewOps, "script #%u: %p %s:%d",
+                  id_, this, filename ? filename : "<null>", lineno);
+    }
+    return id_;
+}
+
 void
 types::InferSpew(SpewChannel channel, const char *fmt, ...)
 {
@@ -874,12 +883,8 @@ public:
 
     void newType(JSContext *cx, TypeSet *source, Type type)
     {
-        if (!target->hasType(type)) {
+        if (!target->hasType(type))
             script->analysis()->addTypeBarrier(cx, pc, target, type);
-            return;
-        }
-
-        target->addType(cx, type);
     }
 };
 
@@ -2351,6 +2356,7 @@ void
 TypeCompartment::print(JSContext *cx, bool force)
 {
     JSCompartment *compartment = this->compartment();
+    AutoEnterAnalysis enter(compartment);
 
     if (!force && !InferSpewActive(ISpewResult))
         return;
@@ -2907,7 +2913,7 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
 
     this->flags |= flags;
 
-    InferSpew(ISpewOps, "%s: setFlags %u", TypeObjectString(this), flags);
+    InferSpew(ISpewOps, "%s: setFlags 0x%x", TypeObjectString(this), flags);
 
     ObjectStateChange(cx, this, false, false);
 }
@@ -4719,7 +4725,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
 void
 ScriptAnalysis::printTypes(JSContext *cx)
 {
-    AutoEnterAnalysis enter(cx);
+    AutoEnterAnalysis enter(script->compartment());
     TypeCompartment *compartment = &script->compartment()->types;
 
     /*

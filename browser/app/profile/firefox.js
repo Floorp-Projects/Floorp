@@ -356,8 +356,13 @@ pref("browser.search.suggest.enabled", true);
 pref("browser.sessionhistory.max_entries", 50);
 
 // handle links targeting new windows
-// 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
+// 1=current window/tab, 2=new window, 3=new tab in most recent window
 pref("browser.link.open_newwindow", 3);
+
+// handle external links (i.e. links opened from a different application)
+// default: use browser.link.open_newwindow
+// 1-3: see browser.link.open_newwindow for interpretation
+pref("browser.link.open_newwindow.override.external", -1);
 
 // 0: no restrictions - divert everything
 // 1: don't divert window.open at all

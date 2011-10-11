@@ -326,7 +326,7 @@ Range.prototype = {
   // Function: contains
   // Whether the <Range> contains the given <Range> or value or not.
   //
-  // Paramaters
+  // Parameters
   //  - a number or <Range>
   contains: function Range_contains(value) {
     if (Utils.isNumber(value))
@@ -338,11 +338,11 @@ Range.prototype = {
 
   // ----------
   // Function: overlaps
-  // Whether the <Range> overlaps with the given <Range> or value or not.
+  // Whether the <Range> overlaps with the given <Range> value or not.
   //
-  // Paramaters
+  // Parameters
   //  - a number or <Range>
-  overlaps: function Rect_overlaps(value) {
+  overlaps: function Range_overlaps(value) {
     if (Utils.isNumber(value))
       return this.contains(value);
     if (Utils.isRange(value))
@@ -355,7 +355,7 @@ Range.prototype = {
   // Maps the given value to the range [0,1], so that it returns 0 if the value is <= the min,
   // returns 1 if the value >= the max, and returns an interpolated "proportion" in (min, max).
   //
-  // Paramaters
+  // Parameters
   //  - a number
   //  - (bool) smooth? If true, a smooth tanh-based function will be used instead of the linear.
   proportion: function Range_proportion(value, smooth) {
@@ -386,7 +386,7 @@ Range.prototype = {
   // Function: scale
   // Takes the given value in [0,1] and maps it to the associated value on the Range.
   //
-  // Paramaters
+  // Parameters
   //  - a number in [0,1]
   scale: function Range_scale(value) {
     if (value > 1)
@@ -783,7 +783,7 @@ let Utils = {
   // Tries to execute a number of functions. Returns immediately the return
   // value of the first non-failed function without executing successive
   // functions, or null.
-  attempt: function () {
+  attempt: function Utils_attempt() {
     let args = arguments;
 
     for (let i = 0; i < args.length; i++) {
