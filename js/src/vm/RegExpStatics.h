@@ -42,7 +42,8 @@
 #define RegExpStatics_h__
 
 #include "jscntxt.h"
-#include "jsvector.h"
+
+#include "js/Vector.h"
 
 namespace js {
 

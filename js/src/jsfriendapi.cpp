@@ -222,3 +222,9 @@ JS_GetCustomIteratorCount(JSContext *cx)
 {
     return sCustomIteratorCount;
 }
+
+JS_FRIEND_API(void)
+JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback)
+{
+    rt->telemetryCallback = callback;
+}

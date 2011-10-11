@@ -285,8 +285,10 @@ class DeviceManagerADB(DeviceManager):
   #  success: output of pullfile, string
   #  failure: None
   def getFile(self, remoteFile, localFile = 'tmpfile_dm_adb'):
+    # TODO: add debug flags and allow for printing stdout
+    # self.runCmd(["pull", remoteFile, localFile])
     try:
-      self.checkCmd(["pull",  remoteFile, localFile])
+      self.runCmd(["pull",  remoteFile, localFile]).stdout.read()
       f = open(localFile)
       ret = f.read()
       f.close()

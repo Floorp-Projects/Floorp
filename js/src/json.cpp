@@ -50,6 +50,7 @@
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "json.h"
 #include "jsonparser.h"
 #include "jsprf.h"
 #include "jsscan.h"
@@ -58,9 +59,6 @@
 #include "jsstdint.h"
 #include "jsutil.h"
 #include "jsxml.h"
-#include "jsvector.h"
-
-#include "json.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"

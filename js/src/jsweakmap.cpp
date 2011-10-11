@@ -43,7 +43,6 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
-#include "jshashtable.h"
 #include "jsobj.h"
 #include "jsgc.h"
 #include "jsgcmark.h"

@@ -41,9 +41,8 @@
 #ifndef ParseMaps_h__
 #define ParseMaps_h__
 
-#include "jsvector.h"
-
-#include "mfbt/InlineMap.h"
+#include "ds/InlineMap.h"
+#include "js/HashTable.h"
 
 namespace js {
 

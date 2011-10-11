@@ -123,6 +123,6 @@ include $(topsrcdir)/config/rules.mk
 
 libs:: $(FINAL_TARGET)/dependentlibs.list
 
-$(FINAL_TARGET)/dependentlibs.list: Makefile.in
+$(FINAL_TARGET)/dependentlibs.list: Makefile.in $(DEPTH)/config/autoconf.mk
 	$(EXIT_ON_ERROR) \
 	( $(foreach dlib,$(DEPENDENT_LIBS_LIST),echo $(dlib);) ) > $@

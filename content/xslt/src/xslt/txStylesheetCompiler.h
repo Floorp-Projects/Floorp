@@ -77,8 +77,8 @@ public:
 class txACompileObserver
 {
 public:
-    virtual void AddRef() = 0;
-    virtual void Release() = 0;
+    NS_IMETHOD_(nsrefcnt) AddRef() = 0;
+    NS_IMETHOD_(nsrefcnt) Release() = 0;
 
     virtual nsresult loadURI(const nsAString& aUri,
                              const nsAString& aReferrerUri,

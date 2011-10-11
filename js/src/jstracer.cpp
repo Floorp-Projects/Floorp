@@ -40,7 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "jsstdint.h"
-#include "jsbit.h"              // low-level (NSPR-based) headers next
 #include "jsprf.h"
 #include <math.h>               // standard headers next
 
@@ -75,7 +74,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
-#include "jstl.h"
 #include "jstracer.h"
 #include "jsxml.h"
 #include "jstypedarray.h"
@@ -7939,10 +7937,10 @@ PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
 
     /* A recorder script is being evaluated and can not be destroyed or GC-ed. */
     JS_ASSERT_IF(tm->recorder,
-                 JS_UPTRDIFF(tm->recorder->getTree()->ip, script->code) >= script->length);
+                 UnsignedPtrDiff(tm->recorder->getTree()->ip, script->code) >= script->length);
 
     for (LoopProfileMap::Enum e(*tm->loopProfiles); !e.empty(); e.popFront()) {
-        if (JS_UPTRDIFF(e.front().key, script->code) < script->length)
+        if (UnsignedPtrDiff(e.front().key, script->code) < script->length)
             e.removeFront();
     }
 
@@ -7954,7 +7952,7 @@ PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         TreeFragment** fragp = &tm->vmfragments[i];
         while (TreeFragment* frag = *fragp) {
-            if (JS_UPTRDIFF(frag->ip, script->code) < script->length) {
+            if (UnsignedPtrDiff(frag->ip, script->code) < script->length) {
                 /* This fragment is associated with the script. */
                 debug_only_printf(LC_TMTracer,
                                   "Disconnecting TreeFragment %p "
@@ -7976,7 +7974,7 @@ PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
 
     RecordAttemptMap &table = *tm->recordAttempts;
     for (RecordAttemptMap::Enum e(table); !e.empty(); e.popFront()) {
-        if (JS_UPTRDIFF(e.front().key, script->code) < script->length)
+        if (UnsignedPtrDiff(e.front().key, script->code) < script->length)
             e.removeFront();
     }
 }

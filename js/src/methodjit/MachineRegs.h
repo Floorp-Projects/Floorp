@@ -40,7 +40,6 @@
 #if !defined jsjaeger_regstate_h__ && defined JS_METHODJIT
 #define jsjaeger_regstate_h__
 
-#include "jsbit.h"
 #include "assembler/assembler/MacroAssembler.h"
 
 namespace js {

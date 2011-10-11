@@ -40,7 +40,10 @@
 
 #include "jsapi.h"
 #include "jsprvtd.h"
-#include "jsvector.h"
+#include "jsalloc.h"
+
+#include "js/Vector.h"
+
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>

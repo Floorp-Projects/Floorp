@@ -42,7 +42,6 @@
 #define jsstub_compiler_h__
 
 #include "jscntxt.h"
-#include "jstl.h"
 #include "MethodJIT.h"
 #include "methodjit/FrameState.h"
 #include "CodeGenIncludes.h"

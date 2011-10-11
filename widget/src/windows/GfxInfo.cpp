@@ -822,7 +822,6 @@ static const PRUint32 deviceFamilyNvidiaBlockD3D9Layers[] = {
     0x0167, /* NV43 [GeForce Go 6200/6400 (TM)] */
     0x0168, /* NV43 [GeForce Go 6200/6400 (TM)] */
     0x0169, /* NV44 [GeForce 6250 (TM)] */
-    0x0221, /* NV44A [GeForce 6200 (TM)] */
     0x0222, /* NV44 [GeForce 6200 A-LE (TM)] */
     0x0240, /* C51PV [GeForce 6150 (TM)] */
     0x0241, /* C51 [GeForce 6150 LE (TM)] */

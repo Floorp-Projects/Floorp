@@ -45,9 +45,9 @@
 #include "jscntxt.h"
 #include "jsinfer.h"
 #include "jsscript.h"
-#include "jstl.h"
 
 #include "ds/LifoAlloc.h"
+#include "js/TemplateLib.h"
 
 struct JSScript;
 

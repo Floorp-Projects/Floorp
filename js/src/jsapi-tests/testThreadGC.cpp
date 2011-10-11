@@ -164,7 +164,7 @@ BEGIN_TEST(testThreadGC_bug590533)
              * loop. Then run the GC with JSRuntime->gcIsNeeded flag set.
              */
             js::AutoLockGC lock(rt);
-            js::TriggerGC(rt);
+            js::TriggerGC(rt, js::gcstats::PUBLIC_API);
         }
 
         JS_GC(cx);

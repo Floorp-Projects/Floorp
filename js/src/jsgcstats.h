@@ -43,49 +43,6 @@
 # define JS_DUMP_CONSERVATIVE_GC_ROOTS 1
 #endif
 
-#ifdef JSGC_TESTPILOT
-JS_BEGIN_EXTERN_C
-
-struct JSGCInfo
-{
-    double appTime, gcTime, waitTime, markTime, sweepTime;
-    double sweepObjTime, sweepStringTime, sweepScriptTime, sweepShapeTime;
-    double destroyTime, endTime;
-    bool isCompartmental;
-};
-
-extern JS_PUBLIC_API(void)
-JS_SetGCInfoEnabled(JSRuntime *rt, bool enabled);
-
-extern JS_PUBLIC_API(bool)
-JS_GetGCInfoEnabled(JSRuntime *rt);
-
-/*
- * Data in the circular buffer may end up clobbered before the API client
- * consumes it. Because of this we have a multi-part API. The client uses code
- * like the following:
- *
- * - Call GetInfo, which provides an info pointer.
- * - Read data out of the info pointer to a location the client owns.
- * - Call PopInfo, which provides a "did info get dropped?" value. If that
- *   value is true, the data read out of the info pointer may be tainted, and
- *   must be thrown out. Otherwise, the data was definitely safe to read, and
- *   may be committed to a database or some such.
- *
- * When PopInfo indicates that data has been dropped, all of the information in
- * the circular buffer is reset.
- */
-
-extern JS_PUBLIC_API(JSGCInfo *)
-JS_GCInfoFront(JSRuntime *rt);
-
-/* Return whether info has dropped. See comment above. */
-extern JS_PUBLIC_API(bool)
-JS_GCInfoPopFront(JSRuntime *rt);
-
-JS_END_EXTERN_C
-#endif
-
 namespace js {
 namespace gc {
 /*
@@ -121,79 +78,6 @@ struct ConservativeGCStats
 
 } //gc
 
-#if defined(MOZ_GCTIMER) || defined(JSGC_TESTPILOT)
-
-extern jsrefcount newChunkCount;
-extern jsrefcount destroyChunkCount;
-
-struct GCTimer
-{
-    JSRuntime *rt;
-
-    uint64 enter;
-    uint64 startMark;
-    uint64 startSweep;
-    uint64 sweepObjectEnd;
-    uint64 sweepStringEnd;
-    uint64 sweepScriptEnd;
-    uint64 sweepShapeEnd;
-    uint64 sweepDestroyEnd;
-    uint64 end;
-
-    bool isCompartmental;
-    bool enabled; /* Disabled timers should cause no PRMJ calls. */
-
-    GCTimer(JSRuntime *rt, JSCompartment *comp);
-
-    uint64 getFirstEnter();
-
-    void clearTimestamps() {
-        memset(&enter, 0, &end - &enter + sizeof(end));
-    }
-
-    void finish(bool lastGC);
-
-    enum JSGCReason {
-        PUBLIC_API,
-        MAYBEGC,
-        LASTCONTEXT,
-        DESTROYCONTEXT,
-        COMPARTMENT,
-        LASTDITCH,
-        TOOMUCHMALLOC,
-        ALLOCTRIGGER,
-        REFILL,
-        SHAPE,
-        NOREASON
-    };
-};
-
-/* We accept the possiblility of races for this variable. */
-extern volatile GCTimer::JSGCReason gcReason;
-
-#define GCREASON(x) ((gcReason == GCTimer::NOREASON) ? gcReason = GCTimer::x : gcReason = gcReason)
-
-# define GCTIMER_PARAM              , GCTimer &gcTimer
-# define GCTIMER_ARG                , gcTimer
-# define GCTIMESTAMP(stamp_name_) \
-    JS_BEGIN_MACRO \
-        if (gcTimer.enabled) \
-            gcTimer.stamp_name_ = PRMJ_Now(); \
-    JS_END_MACRO
-# define GCTIMER_BEGIN(rt, comp)    GCTimer gcTimer(rt, comp)
-# define GCTIMER_END(last)          (gcTimer.finish(last))
-#else
-# define GCREASON(x)                ((void) 0)
-# define GCTIMER_PARAM
-# define GCTIMER_ARG
-# define GCTIMESTAMP(x)             ((void) 0)
-# define GCTIMER_BEGIN(rt, comp)    ((void) 0)
-# define GCTIMER_END(last)          ((void) 0)
-#endif
-
 } //js
-
-extern JS_FRIEND_API(void)
-js_DumpGCStats(JSRuntime *rt, FILE *fp);
 
 #endif /* jsgcstats_h__ */

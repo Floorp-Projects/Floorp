@@ -45,8 +45,15 @@
 #endif
 #include "jspubtd.h"
 #include "jsprvtd.h"
+#include "jsscript.h"
+#include "jsobj.h"
 
 namespace js {
+
+namespace mjit {
+struct NativeAddressInfo;
+struct Compiler_ActiveFrame;
+}
 
 namespace Probes {
 
@@ -85,6 +92,9 @@ extern bool ProfilingActive;
 extern const char nullName[];
 extern const char anonymousName[];
 
+/* Called when first runtime is created for this process */
+JSBool startEngine();
+
 /* JSRuntime created, with currently valid fields */
 bool createRuntime(JSRuntime *rt);
 
@@ -100,6 +110,12 @@ bool shutdown();
  * firing.
  */
 bool callTrackingActive(JSContext *);
+
+/*
+ * Test whether anything is looking for JIT native code registration events.
+ * This information will not be collected otherwise.
+ */
+bool wantNativeAddressInfo(JSContext *);
 
 /* Entering a JS function */
 bool enterJSFun(JSContext *, JSFunction *, JSScript *, int counter = 1);
@@ -195,6 +211,97 @@ bool CustomMark(JSString *string);
 bool CustomMark(const char *string);
 bool CustomMark(int marker);
 
+/* JIT code observation */
+
+enum JITReportGranularity {
+    JITREPORT_GRANULARITY_NONE = 0,
+    JITREPORT_GRANULARITY_FUNCTION = 1,
+    JITREPORT_GRANULARITY_LINE = 2,
+    JITREPORT_GRANULARITY_OP = 3
+};
+
+/*
+ * Observer class for JIT code allocation/deallocation. Currently, this only
+ * handles the method JIT, and does not get notifications when JIT code is
+ * changed (patched) with no new allocation.
+ */
+class JITWatcher {
+public:
+    virtual JITReportGranularity granularityRequested() = 0;
+
+    virtual void registerMJITCode(JSContext *cx, js::mjit::JITScript *jscr,
+                                  JSScript *script, JSFunction *fun,
+                                  mjit::Compiler_ActiveFrame** inlineFrames,
+                                  void *mainCodeAddress, size_t mainCodeSize,
+                                  void *stubCodeAddress, size_t stubCodeSize) = 0;
+
+    virtual void discardMJITCode(JSContext *cx, mjit::JITScript *jscr, JSScript *script,
+                                 void* address) = 0;
+
+    virtual void registerICCode(JSContext *cx,
+                                js::mjit::JITScript *jscr, JSScript *script, jsbytecode* pc,
+                                void *start, size_t size) = 0;
+
+    virtual void discardExecutableRegion(void *start, size_t size) = 0;
+};
+
+/*
+ * Register a JITWatcher subclass to be informed of JIT code
+ * allocation/deallocation.
+ */
+bool
+addJITWatcher(JITWatcher *watcher);
+
+/*
+ * Remove (and destroy) a registered JITWatcher. rt may be NULL. Returns false
+ * if the watcher is not found.
+ */
+bool
+removeJITWatcher(JSRuntime *rt, JITWatcher *watcher);
+
+/*
+ * Remove (and destroy) all registered JITWatchers. rt may be NULL.
+ */
+void
+removeAllJITWatchers(JSRuntime *rt);
+
+/*
+ * Finest granularity of JIT information desired by all watchers.
+ */
+JITReportGranularity
+JITGranularityRequested();
+
+/*
+ * New method JIT code has been created
+ */
+void
+registerMJITCode(JSContext *cx, js::mjit::JITScript *jscr,
+                 JSScript *script, JSFunction *fun,
+                 mjit::Compiler_ActiveFrame** inlineFrames,
+                 void *mainCodeAddress, size_t mainCodeSize,
+                 void *stubCodeAddress, size_t stubCodeSize);
+
+/*
+ * Method JIT code is about to be discarded
+ */
+void
+discardMJITCode(JSContext *cx, mjit::JITScript *jscr, JSScript *script, void* address);
+
+/*
+ * IC code has been allocated within the given JITScript
+ */
+void
+registerICCode(JSContext *cx,
+               mjit::JITScript *jscr, JSScript *script, jsbytecode* pc,
+               void *start, size_t size);
+
+/*
+ * A whole region of code has been deallocated, containing any number of ICs.
+ * (ICs are unregistered in a batch, so individual ICs are not registered.)
+ */
+void
+discardExecutableRegion(void *start, size_t size);
+
 /*
  * Internal: DTrace-specific functions to be called during Probes::enterJSFun
  * and Probes::exitJSFun. These will not be inlined, but the argument
@@ -243,42 +350,9 @@ bool ETWResizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize);
 } /* namespace Probes */
 
 /*
- * Probe handlers are implemented inline for minimal performance impact,
+ * Many probe handlers are implemented inline for minimal performance impact,
  * especially important when no backends are enabled.
  */
-
-inline bool
-Probes::createRuntime(JSRuntime *rt)
-{
-    bool ok = true;
-#ifdef MOZ_ETW
-    if (!ETWCreateRuntime(rt))
-        ok = false;
-#endif
-    return ok;
-}
-
-inline bool
-Probes::destroyRuntime(JSRuntime *rt)
-{
-    bool ok = true;
-#ifdef MOZ_ETW
-    if (!ETWDestroyRuntime(rt))
-        ok = false;
-#endif
-    return ok;
-}
-
-inline bool
-Probes::shutdown()
-{
-    bool ok = true;
-#ifdef MOZ_ETW
-    if (!ETWShutdown())
-        ok = false;
-#endif
-    return ok;
-}
 
 inline bool
 Probes::callTrackingActive(JSContext *cx)
@@ -296,6 +370,13 @@ Probes::callTrackingActive(JSContext *cx)
         return true;
 #endif
     return false;
+}
+
+inline bool
+Probes::wantNativeAddressInfo(JSContext *cx)
+{
+    return (cx->reportGranularity >= JITREPORT_GRANULARITY_FUNCTION &&
+            JITGranularityRequested() >= JITREPORT_GRANULARITY_FUNCTION);
 }
 
 inline bool

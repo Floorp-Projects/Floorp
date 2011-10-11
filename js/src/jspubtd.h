@@ -241,6 +241,13 @@ typedef struct JSFlatString                 JSFlatString;
 typedef struct JSString                     JSString;
 #endif
 
+#ifdef JS_THREADSAFE
+typedef struct PRCallOnceType    JSCallOnceType;
+#else
+typedef JSBool                   JSCallOnceType;
+#endif
+typedef JSBool                 (*JSInitCallback)(void);
+
 JS_END_EXTERN_C
 
 #endif /* jspubtd_h___ */
