@@ -65,6 +65,30 @@ BumpChunk::new_(size_t chunkSize)
     return result;
 }
 
+void
+BumpChunk::delete_(BumpChunk *chunk)
+{
+#ifdef DEBUG
+        memset(chunk, 0xcd, sizeof(*chunk) + chunk->bumpSpaceSize);
+#endif
+        js_free(chunk);
+}
+
+bool
+BumpChunk::canAlloc(size_t n)
+{
+    char *aligned = AlignPtr(bump);
+    char *bumped = aligned + n;
+    return bumped <= limit && bumped > headerBase();
+}
+
+bool
+BumpChunk::canAllocUnaligned(size_t n)
+{
+    char *bumped = bump + n;
+    return bumped <= limit && bumped > headerBase();
+}
+
 void *
 BumpChunk::tryAllocUnaligned(size_t n)
 {
@@ -73,6 +97,7 @@ BumpChunk::tryAllocUnaligned(size_t n)
     if (newBump > limit)
         return NULL;
 
+    JS_ASSERT(canAllocUnaligned(n));
     setBump(newBump);
     return oldBump;
 }
@@ -136,9 +161,20 @@ LifoAlloc::getOrCreateChunk(size_t n)
     }
 
     size_t defaultChunkFreeSpace = defaultChunkSize_ - sizeof(BumpChunk);
-    size_t chunkSize = n > defaultChunkFreeSpace
-                       ? RoundUpPow2(n + sizeof(BumpChunk))
-                       : defaultChunkSize_;
+    size_t chunkSize;
+    if (n > defaultChunkFreeSpace) {
+        size_t allocSizeWithHeader = n + sizeof(BumpChunk);
+
+        /* Guard for overflow. */
+        if (allocSizeWithHeader < n ||
+            (allocSizeWithHeader & (size_t(1) << (tl::BitSize<size_t>::result - 1)))) {
+            return NULL;
+        }
+
+        chunkSize = RoundUpPow2(allocSizeWithHeader);
+    } else {
+        chunkSize = defaultChunkSize_;
+    }
 
     /* If we get here, we couldn't find an existing BumpChunk to fill the request. */
     BumpChunk *newChunk = BumpChunk::new_(chunkSize);
