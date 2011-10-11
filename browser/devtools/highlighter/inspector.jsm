@@ -1030,6 +1030,7 @@ InspectorUI.prototype = {
     this.inspecting = true;
     this.toolsDim(true);
     this.highlighter.veilContainer.removeAttribute("locked");
+    this.highlighter.nodeInfo.container.removeAttribute("locked");
   },
 
   /**
@@ -1054,6 +1055,7 @@ InspectorUI.prototype = {
       this.select(null, true, true);
     }
     this.highlighter.veilContainer.setAttribute("locked", true);
+    this.highlighter.nodeInfo.container.setAttribute("locked", true);
   },
 
   /**
