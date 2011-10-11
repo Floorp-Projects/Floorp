@@ -49,7 +49,6 @@
 #include "jsstdint.h"
 #include "jsutil.h"
 #include "jsclist.h"
-#include "jshashtable.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsversion.h"
@@ -69,6 +68,7 @@
 #include "jsstr.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
+
 #include "vm/Debugger.h"
 
 #include "jsatominlines.h"

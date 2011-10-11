@@ -46,7 +46,6 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsbit.h"
 #include "jsprf.h"
 #include "jsutil.h"
 #include "jsapi.h"
@@ -68,7 +67,6 @@
 #include "jsstr.h"
 #include "jsxml.h"
 #include "jsstaticcheck.h"
-#include "jsvector.h"
 
 #include "vm/GlobalObject.h"
 

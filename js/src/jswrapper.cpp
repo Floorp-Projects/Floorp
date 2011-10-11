@@ -271,6 +271,13 @@ Wrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc, Value *argv, Va
 }
 
 bool
+Wrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args)
+{
+    const jsid id = JSID_VOID;
+    CHECKED(CallJSNative(cx, native, args), CALL);
+}
+
+bool
 Wrapper::hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp)
 {
     *bp = false; // default result if we refuse to perform this action
@@ -774,13 +781,6 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *cla
 }
 
 bool
-Wrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args)
-{
-    const jsid id = JSID_VOID;
-    CHECKED(CallJSNative(cx, native, args), CALL);
-}
-
-bool
 CrossCompartmentWrapper::hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp)
 {
     AutoCompartment call(cx, wrappedObject(wrapper));
@@ -848,3 +848,34 @@ CrossCompartmentWrapper::trace(JSTracer *trc, JSObject *wrapper)
 }
 
 CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
+
+/* Security wrappers. */
+
+template <class Base>
+SecurityWrapper<Base>::SecurityWrapper(uintN flags)
+  : Base(flags)
+{}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native,
+                                  CallArgs args)
+{
+    /* Let ProxyHandler report the error. */
+    bool ret = ProxyHandler::nativeCall(cx, wrapper, clasp, native, args);
+    JS_ASSERT(!ret && cx->isExceptionPending());
+    return ret;
+}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx)
+{
+    /* Let ProxyHandler say 'no'. */
+    bool ret = ProxyHandler::objectClassIs(obj, classValue, cx);
+    JS_ASSERT(!ret && !cx->isExceptionPending());
+    return ret;
+}
+
+template class SecurityWrapper<Wrapper>;
+template class SecurityWrapper<CrossCompartmentWrapper>;

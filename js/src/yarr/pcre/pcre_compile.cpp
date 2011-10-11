@@ -45,7 +45,7 @@ supporting internal functions that are not used by other modules. */
 
 #include <string.h>
 #include "yarr/ASCIICType.h"
-#include "jsvector.h"
+#include "js/Vector.h"
 
 using namespace WTF;
 

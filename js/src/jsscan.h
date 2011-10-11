@@ -51,7 +51,8 @@
 #include "jsopcode.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
-#include "jsvector.h"
+
+#include "js/Vector.h"
 
 #define JS_KEYWORD(keyword, type, op, version) \
     extern const char js_##keyword##_str[];

@@ -83,7 +83,6 @@
 #include "jstracer.h"
 #include "prmjtime.h"
 #include "jsstaticcheck.h"
-#include "jsvector.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
 #include "jstypedarray.h"
@@ -96,7 +95,6 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "assembler/wtf/Platform.h"
 
 #include "vm/RegExpObject-inl.h"
 #include "vm/Stack-inl.h"
@@ -664,6 +662,7 @@ JSRuntime::JSRuntime()
     gcMode(JSGC_MODE_GLOBAL),
     gcIsNeeded(0),
     gcWeakMapList(NULL),
+    gcStats(thisFromCtor()),
     gcTriggerCompartment(NULL),
     gcCurrentCompartment(NULL),
     gcCheckCompartment(NULL),
@@ -696,7 +695,7 @@ JSRuntime::JSRuntime()
     requestDone(NULL),
     requestCount(0),
     gcThread(NULL),
-    gcHelperThread(this),
+    gcHelperThread(thisFromCtor()),
     rtLock(NULL),
 # ifdef DEBUG
     rtLockOwner(0),
@@ -706,6 +705,7 @@ JSRuntime::JSRuntime()
     debuggerMutations(0),
     securityCallbacks(NULL),
     structuredCloneCallbacks(NULL),
+    telemetryCallback(NULL),
     propertyRemovals(0),
     scriptFilenameTable(NULL),
 #ifdef JS_THREADSAFE
@@ -2706,14 +2706,12 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 
     LeaveTrace(cx);
 
-    GCREASON(PUBLIC_API);
-    js_GC(cx, comp, GC_NORMAL);
+    js_GC(cx, comp, GC_NORMAL, gcstats::PUBLIC_API);
 }
 
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
-    GCREASON(PUBLIC_API);
     JS_CompartmentGC(cx, NULL);
 }
 

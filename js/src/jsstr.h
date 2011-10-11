@@ -44,10 +44,10 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jsprvtd.h"
-#include "jshashtable.h"
 #include "jslock.h"
 #include "jscell.h"
 
+#include "js/HashTable.h"
 #include "vm/Unicode.h"
 
 namespace js {

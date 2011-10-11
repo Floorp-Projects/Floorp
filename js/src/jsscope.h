@@ -52,11 +52,12 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jshashtable.h"
 #include "jsobj.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jspropertytree.h"
+
+#include "js/HashTable.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)

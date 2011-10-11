@@ -1531,7 +1531,7 @@ public class GeckoAppShell
 
     static int kPreferedFps = 25;
     static byte[] sCameraBuffer = null;
- 
+
     static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
         Log.i("GeckoAppJava", "initCamera(" + aContentType + ", " + aWidth + "x" + aHeight + ") on thread " + Thread.currentThread().getId());
 
@@ -1583,6 +1583,14 @@ public class GeckoAppShell
                     params.setPreviewSize(size.width, size.height);
                     bufferSize = size.width * size.height;
                 }
+            }
+
+            try {
+                sCamera.setPreviewDisplay(GeckoApp.cameraView.getHolder());
+            } catch(IOException e) {
+                Log.e("GeckoAppJava", "Error setPreviewDisplay:", e);
+            } catch(RuntimeException e) {
+                Log.e("GeckoAppJava", "Error setPreviewDisplay:", e);
             }
 
             sCamera.setParameters(params);

@@ -79,6 +79,7 @@ abstract public class GeckoApp
 
     public static AbsoluteLayout mainLayout;
     public static GeckoSurfaceView surfaceView;
+    public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
     public static File sGREDir = null;
@@ -377,6 +378,11 @@ abstract public class GeckoApp
                              WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
                              WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        if (cameraView == null) {
+            cameraView = new SurfaceView(this);
+            cameraView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        }
+
         if (surfaceView == null)
             surfaceView = new GeckoSurfaceView(this);
         else
@@ -388,6 +394,10 @@ abstract public class GeckoApp
                                                            AbsoluteLayout.LayoutParams.MATCH_PARENT,
                                                            0,
                                                            0));
+
+        // Some phones (eg. nexus S) need at least a 8x16 preview size
+        mainLayout.addView(cameraView, new AbsoluteLayout.LayoutParams(8, 16, 0, 0));
+
         setContentView(mainLayout,
                        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT,
                                                   ViewGroup.LayoutParams.FILL_PARENT));

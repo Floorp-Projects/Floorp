@@ -44,7 +44,7 @@
 
 #include "nsCRT.h"
 #include "nsNetUtil.h"
-#include "nsWWJSUtils.h"
+#include "nsJSUtils.h"
 #include "plstr.h"
 
 #include "nsIBaseWindow.h"
@@ -316,7 +316,7 @@ nsresult JSContextAutoPopper::Push(JSContext *cx)
     // Save cx in mContext to indicate need to pop.
     if (cx && NS_SUCCEEDED(mService->Push(cx))) {
       mContext = cx;
-      mContextKungFuDeathGrip = nsWWJSUtils::GetDynamicScriptContext(cx);
+      mContextKungFuDeathGrip = nsJSUtils::GetDynamicScriptContext(cx);
     }
   }
   return mContext ? NS_OK : NS_ERROR_FAILURE;
@@ -925,7 +925,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
     // get its document, if any
     if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
-      nsIScriptGlobalObject *sgo = nsWWJSUtils::GetDynamicScriptGlobal(ccx);
+      nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(ccx);
 
       nsCOMPtr<nsPIDOMWindow> w(do_QueryInterface(sgo));
       if (w) {
@@ -1374,7 +1374,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
      in nsGlobalWindow.cpp.) */
   JSContext *cx = GetJSContextFromCallStack();
   if (cx) {
-    nsIScriptContext *scriptcx = nsWWJSUtils::GetDynamicScriptContext(cx);
+    nsIScriptContext *scriptcx = nsJSUtils::GetDynamicScriptContext(cx);
     if (scriptcx) {
       baseWindow = do_QueryInterface(scriptcx->GetGlobalObject());
     }
@@ -1717,7 +1717,7 @@ nsWindowWatcher::GetCallerTreeItem(nsIDocShellTreeItem* aParentItem)
 
   if (cx) {
     nsCOMPtr<nsIWebNavigation> callerWebNav =
-      do_GetInterface(nsWWJSUtils::GetDynamicScriptGlobal(cx));
+      do_GetInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
 
     if (callerWebNav) {
       CallQueryInterface(callerWebNav, &callerItem);

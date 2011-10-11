@@ -40,8 +40,8 @@ nsTreeView.prototype =
   getCellText: function getCellText(aRow, aCol)
   {
     var data = this.getDataForIndex(aRow);
-    if (aCol in data.colsText)
-      return data.colsText[aCol];
+    if (aCol.id in data.colsText)
+      return data.colsText[aCol.id];
 
     return data.text + aCol.id;
   },
@@ -120,7 +120,7 @@ nsTreeView.prototype =
   setCellText: function setCellText(aRow, aCol, aValue)
   {
     var data = this.getDataForIndex(aRow);
-    data.colsText[aCol] = aValue;
+    data.colsText[aCol.id] = aValue;
   },
   setCellValue: function setCellValue(aRow, aCol, aValue)
   {

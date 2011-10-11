@@ -53,6 +53,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "prsystem.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -2017,6 +2018,31 @@ DiagnosticMemoryCallback(void *ptr, size_t size)
 }
 #endif
 
+static void
+AccumulateTelemetryCallback(int id, JSUint32 sample)
+{
+    switch (id) {
+      case JS_TELEMETRY_GC_REASON:
+        Telemetry::Accumulate(Telemetry::GC_REASON, sample);
+        break;
+      case JS_TELEMETRY_GC_IS_COMPARTMENTAL:
+        Telemetry::Accumulate(Telemetry::GC_IS_COMPARTMENTAL, sample);
+        break;
+      case JS_TELEMETRY_GC_IS_SHAPE_REGEN:
+        Telemetry::Accumulate(Telemetry::GC_IS_SHAPE_REGEN, sample);
+        break;
+      case JS_TELEMETRY_GC_MS:
+        Telemetry::Accumulate(Telemetry::GC_MS, sample);
+        break;
+      case JS_TELEMETRY_GC_MARK_MS:
+        Telemetry::Accumulate(Telemetry::GC_MARK_MS, sample);
+        break;
+      case JS_TELEMETRY_GC_SWEEP_MS:
+        Telemetry::Accumulate(Telemetry::GC_SWEEP_MS, sample);
+        break;
+    }
+}
+
 bool XPCJSRuntime::gNewDOMBindingsEnabled;
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
@@ -2084,6 +2110,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 #ifdef MOZ_CRASHREPORTER
         JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
 #endif
+        JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
         mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
         if (!mWatchdogWakeup)
             NS_RUNTIMEABORT("JS_NEW_CONDVAR failed.");
