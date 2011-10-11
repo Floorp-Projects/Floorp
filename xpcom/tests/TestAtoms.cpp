@@ -34,18 +34,23 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "mozilla/Util.h"
+
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "UTFStrings.h"
 #include "nsIServiceManager.h"
 #include "nsStaticAtom.h"
 
+using namespace mozilla;
+
 namespace TestAtoms {
 
 bool
 test_basic()
 {
-  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
+  for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
     nsDependentString str16(ValidStrings[i].m16);
     nsDependentCString str8(ValidStrings[i].m8);
 
@@ -76,7 +81,7 @@ test_basic()
 bool
 test_16vs8()
 {
-  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
+  for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
     nsCOMPtr<nsIAtom> atom16 = do_GetAtom(ValidStrings[i].m16);
     nsCOMPtr<nsIAtom> atom8 = do_GetAtom(ValidStrings[i].m8);
     if (atom16 != atom8)
@@ -119,7 +124,7 @@ test_null()
 bool
 test_invalid()
 {
-  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid16Strings); ++i) {
+  for (unsigned int i = 0; i < ArrayLength(Invalid16Strings); ++i) {
     nsrefcnt count = NS_GetNumberOfAtoms();
 
     {
@@ -132,7 +137,7 @@ test_invalid()
       return PR_FALSE;
   }
 
-  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid8Strings); ++i) {
+  for (unsigned int i = 0; i < ArrayLength(Invalid8Strings); ++i) {
     nsrefcnt count = NS_GetNumberOfAtoms();
 
     {
@@ -151,7 +156,7 @@ test_invalid()
 #ifndef DEBUG
   nsCOMPtr<nsIAtom> emptyAtom = do_GetAtom("");
 
-  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
+  for (unsigned int i = 0; i < ArrayLength(Malformed8Strings); ++i) {
     nsrefcnt count = NS_GetNumberOfAtoms();
 
     nsCOMPtr<nsIAtom> atom8 = do_GetAtom(Malformed8Strings[i]);
@@ -207,7 +212,7 @@ test_atomtable()
   if (!thirdNonPerm || NS_GetNumberOfAtoms() != count + 1)
     return PR_FALSE;
 
-  NS_RegisterStaticAtoms(sAtoms_info, NS_ARRAY_LENGTH(sAtoms_info));
+  NS_RegisterStaticAtoms(sAtoms_info, ArrayLength(sAtoms_info));
 
   return sAtom1 &&
          sAtom1->Equals(NS_LITERAL_STRING(FIRST_ATOM_STR)) &&

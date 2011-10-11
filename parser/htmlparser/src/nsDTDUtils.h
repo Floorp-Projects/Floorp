@@ -452,7 +452,7 @@ protected:
 
 
 struct TagList {
-  PRUint32 mCount;
+  size_t mCount;
   const eHTMLTags *mTags;
 };
 

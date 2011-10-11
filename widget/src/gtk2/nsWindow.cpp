@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #ifdef MOZ_PLATFORM_MAEMO
 // needed to include hildon parts in gtk.h
 #define MAEMO_CHANGES
@@ -481,7 +483,7 @@ nsWindow::~nsWindow()
 /* static */ void
 nsWindow::ReleaseGlobals()
 {
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gCursorCache); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(gCursorCache); ++i) {
     if (gCursorCache[i]) {
       gdk_cursor_unref(gCursorCache[i]);
       gCursorCache[i] = nsnull;
@@ -1801,9 +1803,9 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     const char extensions[6][7] = { ".png", "16.png", "32.png", "48.png",
                                     ".xpm", "16.xpm" };
 
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(extensions); i++) {
+    for (PRUint32 i = 0; i < ArrayLength(extensions); i++) {
         // Don't bother looking for XPM versions if we found a PNG.
-        if (i == NS_ARRAY_LENGTH(extensions) - 2 && iconList.Length())
+        if (i == ArrayLength(extensions) - 2 && iconList.Length())
             break;
 
         nsAutoString extension;
