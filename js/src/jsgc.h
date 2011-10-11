@@ -1586,9 +1586,18 @@ struct GCMarker : public JSTracer {
         return color;
     }
 
+    /*
+     * The only valid color transition during a GC is from black to gray. It is
+     * wrong to switch the mark color from gray to black. The reason is that the
+     * cycle collector depends on the invariant that there are no black to gray
+     * edges in the GC heap. This invariant lets the CC not trace through black
+     * objects. If this invariant is violated, the cycle collector may free
+     * objects that are still reachable.
+     *
+     * We don't assert this yet, but we should.
+     */
     void setMarkColor(uint32 newColor) {
-        /* We must process the mark stack here, otherwise we confuse colors. */
-        drainMarkStack();
+        //JS_ASSERT(color == BLACK && newColor == GRAY);
         color = newColor;
     }
 
@@ -1604,7 +1613,7 @@ struct GCMarker : public JSTracer {
                largeStack.isEmpty();
     }
 
-    JS_FRIEND_API(void) drainMarkStack();
+    void drainMarkStack();
 
     void pushObject(JSObject *obj) {
         if (!objStack.push(obj))

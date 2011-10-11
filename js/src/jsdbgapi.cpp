@@ -578,13 +578,6 @@ JS_IsScriptFrame(JSContext *cx, JSStackFrame *fp)
     return !Valueify(fp)->isDummyFrame();
 }
 
-/* this is deprecated, use JS_GetFrameScopeChain instead */
-JS_PUBLIC_API(JSObject *)
-JS_GetFrameObject(JSContext *cx, JSStackFrame *fp)
-{
-    return &Valueify(fp)->scopeChain();
-}
-
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
 {

@@ -296,6 +296,13 @@ static PRInt64 GetHeapCommitted()
     return (PRInt64) stats.committed;
 }
 
+static PRInt64 GetHeapCommittedUnallocatedFraction()
+{
+    jemalloc_stats_t stats;
+    jemalloc_stats(&stats);
+    return (PRInt64) 10000 * (1 - stats.allocated / (double)stats.committed);
+}
+
 static PRInt64 GetHeapDirty()
 {
     jemalloc_stats_t stats;
@@ -314,6 +321,16 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapCommitted,
     "external fragmentation; that is, the allocator allocated a large block of "
     "memory and is unable to decommit it because a small part of that block is "
     "currently in use.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(HeapCommittedUnallocatedFraction,
+    "heap-committed-unallocated-fraction",
+    KIND_OTHER,
+    UNITS_PERCENTAGE,
+    GetHeapCommittedUnallocatedFraction,
+    "Fraction of committed bytes which do not correspond to an active "
+    "allocation; i.e., 1 - (heap-allocated / heap-committed).  Although the "
+    "allocator will waste some space under any circumstances, a large value here "
+    "may indicate that the heap is highly fragmented.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapDirty,
     "heap-dirty",
@@ -391,9 +408,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapUnallocated,
     GetHeapUnallocated,
     "Memory mapped by the heap allocator that is not part of an active "
     "allocation. Much of this memory may be uncommitted -- that is, it does not "
-    "take up space in physical memory or in the swap file. Committed and "
-    "unallocated memory, perhaps a result of fragmentation, is reported in "
-    "heap-dirty, if that measure is available.")
+    "take up space in physical memory or in the swap file.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapAllocated,
     "heap-allocated",
@@ -438,19 +453,9 @@ nsMemoryReporterManager::Init()
     REGISTER(Private);
 #endif
 
-#if defined(HAVE_JEMALLOC_STATS) && defined(XP_WIN)
-    // heap-committed is only meaningful where we have MALLOC_DECOMMIT defined
-    // (currently, just on Windows).  Elsewhere, it's the same as
-    // stats->mapped, which is heap-allocated + heap-unallocated.
-    //
-    // Ideally, we'd check for MALLOC_DECOMMIT in the #if defined above, but
-    // MALLOC_DECOMMIT is defined in jemalloc.c, not a header, so we'll just
-    // have to settle for the OS check for now.
-
-    REGISTER(HeapCommitted);
-#endif
-
 #if defined(HAVE_JEMALLOC_STATS)
+    REGISTER(HeapCommitted);
+    REGISTER(HeapCommittedUnallocatedFraction);
     REGISTER(HeapDirty);
 #elif defined(XP_MACOSX) && !defined(MOZ_MEMORY)
     REGISTER(HeapZone0Committed);

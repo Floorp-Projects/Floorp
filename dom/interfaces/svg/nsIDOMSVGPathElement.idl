@@ -60,7 +60,7 @@ interface nsIDOMSVGPathSegCurvetoCubicSmoothRel;
 interface nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs;
 interface nsIDOMSVGPathSegCurvetoQuadraticSmoothRel;
 
-[scriptable, uuid(bb09822e-c8a7-4a76-b282-b9609a8c5bdd)]
+[scriptable, uuid(906f82c7-c632-4b1f-9dfd-3905b9080935)]
 interface nsIDOMSVGPathElement
   : nsIDOMSVGElement
 /*

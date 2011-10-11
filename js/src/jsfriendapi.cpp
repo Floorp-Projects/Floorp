@@ -47,6 +47,13 @@
 using namespace js;
 using namespace JS;
 
+JS_FRIEND_API(void)
+JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
+{
+    rt->gcGrayRootsTraceOp = traceOp;
+    rt->gcGrayRootsData = data;
+}
+
 JS_FRIEND_API(JSString *)
 JS_GetAnonymousString(JSRuntime *rt)
 {
@@ -82,9 +89,9 @@ JS_GetObjectFunction(JSObject *obj)
 }
 
 JS_FRIEND_API(JSObject *)
-JS_GetFrameScopeChainRaw(JSStackFrame *fp)
+JS_GetGlobalForFrame(JSStackFrame *fp)
 {
-    return &Valueify(fp)->scopeChain();
+    return Valueify(fp)->scopeChain().getGlobal();
 }
 
 JS_FRIEND_API(JSBool)
@@ -176,8 +183,14 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
 JS_FRIEND_API(void)
 js::CheckReservedSlot(const JSObject *obj, size_t slot)
 {
-    JS_ASSERT(slot < obj->numSlots());
+    CheckSlot(obj, slot);
     JS_ASSERT(slot < JSSLOT_FREE(obj->getClass()));
+}
+
+JS_FRIEND_API(void)
+js::CheckSlot(const JSObject *obj, size_t slot)
+{
+    JS_ASSERT(slot < obj->numSlots());
 }
 #endif
 

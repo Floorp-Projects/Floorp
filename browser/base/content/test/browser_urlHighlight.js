@@ -62,6 +62,8 @@ function test() {
   testVal("<https://>mozilla.org</sub/file.ext?foo&bar#top>");
 
   testVal("<https://sub.>mozilla.org<:666/file.ext>");
+  testVal("<sub.>mozilla.org<:666/file.ext>");
+  testVal("localhost<:666/file.ext>");
 
   let IPs = ["192.168.1.1",
              "[::]",
@@ -87,6 +89,7 @@ function test() {
   IPs.forEach(function (IP) {
     testVal(IP);
     testVal(IP + "</file.ext>");
+    testVal(IP + "<:666/file.ext>");
     testVal("<https://>" + IP);
     testVal("<https://>" + IP + "</file.ext>");
     testVal("<https://user:pass@>" + IP + "<:666/file.ext>");

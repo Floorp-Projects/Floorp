@@ -60,7 +60,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsEventListenerInfo)
   NS_DECL_NSIEVENTLISTENERINFO
 protected:
-  bool GetJSVal(jsval* aJSVal);
+  bool GetJSVal(JSContext* aCx, JSAutoEnterCompartment& aAc, jsval* aJSVal);
 
   nsString                      mType;
   // nsReftPtr because that is what nsListenerStruct uses too.

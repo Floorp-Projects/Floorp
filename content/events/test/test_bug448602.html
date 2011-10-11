@@ -22,9 +22,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448602
 
 function runTests() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+/*
+  Disabled due to lack of present support for JSD in JM
   var jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
   var jsd = Components.classes['@mozilla.org/js/jsd/debugger-service;1']
                       .getService(jsdIDebuggerService);
+*/
   var els = Components.classes["@mozilla.org/eventlistenerservice;1"]
                       .getService(Components.interfaces.nsIEventListenerService);
 
@@ -43,6 +46,7 @@ function runTests() {
   is(infos[0].capturing, false, "Wrong phase (1)");
   is(infos[0].allowsUntrusted, true, "Should allow untrusted events (1)");
 
+/*
   var jsdOn = jsd.isOn;
   if (!jsdOn) {
     is(infos[0].getDebugObject(), null,
@@ -52,6 +56,7 @@ function runTests() {
   }
   var jsdvalue = infos[0].getDebugObject().QueryInterface(Components.interfaces.jsdIValue);
   is(jsdvalue.jsType, 3, "Event listener should be a function! (1)");
+*/
 
   root.removeAttribute("onclick");
   infos = els.getListenerInfoFor(root, {});
@@ -67,9 +72,11 @@ function runTests() {
   is(infos[0].type, "foo", "Wrong type (2)");
   is(infos[0].capturing, true, "Wrong phase (2)");
   is(infos[0].allowsUntrusted, true, "Should allow untrusted events (2)");
+/*
   jsdvalue = infos[0].getDebugObject().QueryInterface(Components.interfaces.jsdIValue);
   is(jsdvalue.jsType, 3, "Event listener should be a function!(2)");
   is(jsdvalue.getWrappedValue(), l, "Wrong JS value! (1)");
+*/
 
   is(infos[1].toSource(), "(function (e) {alert(e);})",
      "Unexpected serialization (3)");
@@ -77,9 +84,11 @@ function runTests() {
   is(infos[1].capturing, false, "Wrong phase (3)");
   is(infos[1].allowsUntrusted, false, "Shouldn't allow untrusted events (1)");
 
+/*
   jsdvalue2 = infos[1].getDebugObject().QueryInterface(Components.interfaces.jsdIValue);
   is(jsdvalue2.jsType, 3, "Event listener should be a function! (3)");
   is(jsdvalue2.getWrappedValue(), l, "Wrong JS value! (2)");
+*/
   root.removeEventListener("foo", l, true);
   root.removeEventListener("foo", l, false);
   infos = els.getListenerInfoFor(root, {});
@@ -117,12 +126,19 @@ function runTests() {
 
   ok(hasDocumentInChain, "Should have document in event target chain!");
   ok(hasWindowInChain, "Should have window in event target chain!");
-
+/*
   if (!jsdOn) {
     jsd.off();
     ok(!jsd.isOn, "JSD shouldn't be running anymore.");
   }
+*/	
 
+  try {
+    els.getListenerInfoFor(null, {});
+    ok(false, "Should have thrown an exception.");
+  } catch (ex) {
+    ok(true, "We should be still running.");
+  }
   
   SimpleTest.finish();
 }

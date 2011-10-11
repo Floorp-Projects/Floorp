@@ -9931,14 +9931,12 @@ FirstLetterCount(const nsTextFragment* aFragment)
 {
   PRInt32 count = 0;
   PRInt32 firstLetterLength = 0;
-  bool done = false;
 
   PRInt32 i, n = aFragment->GetLength();
   for (i = 0; i < n; i++) {
     PRUnichar ch = aFragment->CharAt(i);
     if (XP_IS_SPACE(ch)) {
       if (firstLetterLength) {
-        done = PR_TRUE;
         break;
       }
       count++;
@@ -9947,7 +9945,6 @@ FirstLetterCount(const nsTextFragment* aFragment)
     // XXX I18n
     if ((ch == '\'') || (ch == '\"')) {
       if (firstLetterLength) {
-        done = PR_TRUE;
         break;
       }
       // keep looping
@@ -9955,7 +9952,6 @@ FirstLetterCount(const nsTextFragment* aFragment)
     }
     else {
       count++;
-      done = PR_TRUE;
       break;
     }
   }
