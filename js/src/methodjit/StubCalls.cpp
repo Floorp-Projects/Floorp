@@ -1435,11 +1435,10 @@ stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
      * for this JSOP_CALL.
      */
     const Value &cref = f.regs.sp[1 - (iargc + 2)];
-    JSObject *callee;
+    JSFunction *callee;
 
     if (IsFunctionObject(cref, &callee)) {
-        JSFunction *calleeFun = callee->getFunctionPrivate();
-        Native native = calleeFun->maybeNative();
+        Native native = callee->maybeNative();
 
         if (native) {
             if (iargc == 1 && native == array_sort)

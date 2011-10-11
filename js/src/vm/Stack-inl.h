@@ -126,7 +126,7 @@ StackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
                             LOWERED_CALL_APPLY |
                             OVERFLOW_ARGS |
                             UNDERFLOW_ARGS)) == 0);
-    JS_ASSERT(fun == callee.getFunctionPrivate());
+    JS_ASSERT(script == callee.toFunction()->script());
     JS_ASSERT(script == fun->script());
 
     /* Initialize stack frame members. */
@@ -169,7 +169,7 @@ StackFrame::resetCallFrame(JSScript *script)
               HAS_PREVPC |
               UNDERFLOW_ARGS;
 
-    JS_ASSERT(exec.fun == callee().getFunctionPrivate());
+    JS_ASSERT(exec.fun->script() == callee().toFunction()->script());
     scopeChain_ = callee().getParent();
 
     SetValueRangeToUndefined(slots(), script->nfixed);
@@ -222,7 +222,7 @@ StackFrame::initJitFrameLatePrologue(JSContext *cx, Value **limit)
 inline void
 StackFrame::overwriteCallee(JSObject &newCallee)
 {
-    JS_ASSERT(callee().getFunctionPrivate() == newCallee.getFunctionPrivate());
+    JS_ASSERT(callee().toFunction()->script() == newCallee.toFunction()->script());
     mutableCalleev().setObject(newCallee);
 }
 
@@ -555,7 +555,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
-    JS_ASSERT(callee.getFunctionPrivate() == fun);
+    JS_ASSERT(fun->script() == callee.toFunction()->script());
     JS_ASSERT(fun->script() == script);
 
     /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
@@ -591,7 +591,7 @@ ContextStack::getFixupFrame(JSContext *cx, MaybeReportError report,
                             void *ncode, InitialFrameFlags initial, Value **stackLimit)
 {
     JS_ASSERT(onTop());
-    JS_ASSERT(args.callee().getFunctionPrivate() == fun);
+    JS_ASSERT(fun->script() == args.callee().toFunction()->script());
     JS_ASSERT(fun->script() == script);
 
     /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);

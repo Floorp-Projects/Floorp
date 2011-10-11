@@ -1124,7 +1124,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
             return;
         }
 
-        if (obj->getFunctionPrivate()->isNative()) {
+        if (obj->toFunction()->isNative()) {
             /*
              * The return value and all side effects within native calls should
              * be dynamically monitored, except when the compiler is generating
@@ -1140,7 +1140,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
              * which specializes particular natives.
              */
 
-            Native native = obj->getFunctionPrivate()->native();
+            Native native = obj->toFunction()->native();
 
             if (native == js::array_push) {
                 for (size_t i = 0; i < callsite->argumentCount; i++) {
@@ -1170,7 +1170,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
             return;
         }
 
-        callee = obj->getFunctionPrivate();
+        callee = obj->toFunction();
     } else if (type.isTypeObject()) {
         callee = type.typeObject()->interpretedFunction;
         if (!callee)
@@ -1243,9 +1243,9 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
 
     if (type.isSingleObject()) {
         JSObject *object = type.singleObject();
-        if (!object->isFunction() || !object->getFunctionPrivate()->isInterpreted())
+        if (!object->isFunction() || !object->toFunction()->isInterpreted())
             return;
-        callee = object->getFunctionPrivate();
+        callee = object->toFunction();
     } else if (type.isTypeObject()) {
         TypeObject *object = type.typeObject();
         if (!object->interpretedFunction)
@@ -4561,11 +4561,11 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
             JSObject *funcallObj = funcallTypes->getSingleton(cx, false);
             JSObject *scriptObj = scriptTypes->getSingleton(cx, false);
             if (!funcallObj || !scriptObj || !scriptObj->isFunction() ||
-                !scriptObj->getFunctionPrivate()->isInterpreted()) {
+                !scriptObj->toFunction()->isInterpreted()) {
                 return false;
             }
 
-            JSFunction *function = scriptObj->getFunctionPrivate();
+            JSFunction *function = scriptObj->toFunction();
             JS_ASSERT(!function->script()->isInnerFunction);
 
             /*
@@ -4900,8 +4900,8 @@ void
 TypeMonitorCallSlow(JSContext *cx, JSObject *callee,
                     const CallArgs &args, bool constructing)
 {
-    unsigned nargs = callee->getFunctionPrivate()->nargs;
-    JSScript *script = callee->getFunctionPrivate()->script();
+    unsigned nargs = callee->toFunction()->nargs;
+    JSScript *script = callee->toFunction()->script();
 
     if (!constructing)
         TypeScript::SetThis(cx, script, args.thisv());
@@ -5618,8 +5618,8 @@ JSObject::makeLazyType(JSContext *cx)
 
     type->singleton = this;
 
-    if (isFunction() && getFunctionPrivate() && getFunctionPrivate()->isInterpreted()) {
-        type->interpretedFunction = getFunctionPrivate();
+    if (isFunction() && toFunction()->isInterpreted()) {
+        type->interpretedFunction = toFunction();
         JSScript *script = type->interpretedFunction->script();
         if (script->createdArgs)
             type->flags |= OBJECT_FLAG_CREATED_ARGUMENTS;

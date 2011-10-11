@@ -82,7 +82,7 @@ CallObject::getCallee() const
 inline JSFunction *
 CallObject::getCalleeFunction() const
 {
-    return getFixedSlot(CALLEE_SLOT).toObject().getFunctionPrivate();
+    return getFixedSlot(CALLEE_SLOT).toObject().toFunction();
 }
 
 inline const js::Value &

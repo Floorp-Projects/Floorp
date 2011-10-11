@@ -680,7 +680,7 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
     JS_ASSERT(space().firstUnused() == args.end());
 
     JSObject &callee = args.callee();
-    JSFunction *fun = callee.getFunctionPrivate();
+    JSFunction *fun = callee.toFunction();
     JSScript *script = fun->script();
 
     /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
@@ -1067,7 +1067,7 @@ StackIter::settleOnNewState()
                 if (IsNativeFunction(*vp)) {
                     if (sp_ != sp) {
                         JS_ASSERT(argc == 2);
-                        JS_ASSERT(vp[0].toObject().getFunctionPrivate()->native() == js_fun_apply);
+                        JS_ASSERT(vp[0].toObject().toFunction()->native() == js_fun_apply);
                         JS_ASSERT(sp_ >= vp + 3);
                         argc = sp_ - (vp + 2);
                     }

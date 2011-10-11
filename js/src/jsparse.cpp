@@ -1176,7 +1176,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
                 JSObject *obj = arr->vector[i];
                 if (!obj->isFunction())
                     continue;
-                JSFunction *fun = obj->getFunctionPrivate();
+                JSFunction *fun = obj->toFunction();
                 JS_ASSERT(fun->isInterpreted());
                 JSScript *inner = fun->script();
                 if (outer->isHeavyweightFunction) {
@@ -2775,7 +2775,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
      * we create it eagerly whenever parameters are (or might, in the case of
      * calls to eval) be assigned.
      */
-    if (funtc->inStrictMode() && funbox->object->getFunctionPrivate()->nargs > 0) {
+    if (funtc->inStrictMode() && funbox->object->toFunction()->nargs > 0) {
         AtomDeclsIter iter(&funtc->decls);
         JSDefinition *dn;
 

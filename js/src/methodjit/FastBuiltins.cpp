@@ -653,8 +653,7 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
     if (!globalObj || globalObj != callee->getGlobal())
         return Compile_InlineAbort;
 
-    JSFunction *fun = callee->getFunctionPrivate();
-    Native native = fun->maybeNative();
+    Native native = callee->toFunction()->maybeNative();
 
     if (!native)
         return Compile_InlineAbort;

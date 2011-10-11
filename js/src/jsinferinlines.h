@@ -321,7 +321,7 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 
     JSObject *callee = &args.callee();
     if (callee->isFunction()) {
-        JSFunction *fun = callee->getFunctionPrivate();
+        JSFunction *fun = callee->toFunction();
         if (fun->isInterpreted()) {
             JSScript *script = fun->script();
             if (!script->ensureRanAnalysis(cx, fun, callee->getParent()))
