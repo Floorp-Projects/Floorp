@@ -77,7 +77,7 @@ JS_FRIEND_API(JSFunction *)
 JS_GetObjectFunction(JSObject *obj)
 {
     if (obj->isFunction())
-        return obj->getFunctionPrivate();
+        return obj->toFunction();
     return NULL;
 }
 

@@ -1333,7 +1333,7 @@ DirectEval(JSContext *cx, const CallArgs &args)
     JS_ASSERT(IsBuiltinEvalForScope(&caller->scopeChain(), args.calleev()));
     JS_ASSERT(js_GetOpcode(cx, cx->fp()->script(), cx->regs().pc) == JSOP_EVAL);
 
-    AutoFunctionCallProbe callProbe(cx, args.callee().getFunctionPrivate(), caller->script());
+    AutoFunctionCallProbe callProbe(cx, args.callee().toFunction(), caller->script());
 
     JSObject *scopeChain =
         GetScopeChainFast(cx, caller, JSOP_EVAL, JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
@@ -1358,8 +1358,8 @@ IsAnyBuiltinEval(JSFunction *fun)
 JSPrincipals *
 PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx)
 {
-    JS_ASSERT(IsAnyBuiltinEval(call.callee().getFunctionPrivate()) ||
-              IsBuiltinFunctionConstructor(call.callee().getFunctionPrivate()));
+    JS_ASSERT(IsAnyBuiltinEval(call.callee().toFunction()) ||
+              IsBuiltinFunctionConstructor(call.callee().toFunction()));
 
     /*
      * To compute the principals of the compiled eval/Function code, we simply
@@ -2965,7 +2965,7 @@ js_CreateThis(JSContext *cx, JSObject *callee)
 
     Class *newclasp = &ObjectClass;
     if (clasp == &FunctionClass) {
-        JSFunction *fun = callee->getFunctionPrivate();
+        JSFunction *fun = callee->toFunction();
         if (fun->isNative() && fun->u.n.clasp)
             newclasp = fun->u.n.clasp;
     }
@@ -3009,7 +3009,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
     JSObject *res;
 
     if (proto) {
-        types::TypeObject *type = proto->getNewType(cx, callee->getFunctionPrivate());
+        types::TypeObject *type = proto->getNewType(cx, callee->toFunction());
         if (!type)
             return NULL;
         res = CreateThisForFunctionWithType(cx, type, callee->getParent());
@@ -3019,7 +3019,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
     }
 
     if (res && cx->typeInferenceEnabled())
-        TypeScript::SetThis(cx, callee->getFunctionPrivate()->script(), types::Type::ObjectType(res));
+        TypeScript::SetThis(cx, callee->toFunction()->script(), types::Type::ObjectType(res));
 
     return res;
 }
@@ -3046,7 +3046,7 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
         if (!obj->setSingletonType(cx))
             return NULL;
 
-        JSScript *calleeScript = callee->getFunctionPrivate()->script();
+        JSScript *calleeScript = callee->toFunction()->script();
         TypeScript::SetThis(cx, calleeScript, types::Type::ObjectType(obj));
     }
 
@@ -3100,7 +3100,7 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
 {
 #ifdef DEBUG
     JS_ASSERT(ctor->isFunction());
-    JS_ASSERT(ctor->getFunctionPrivate()->isInterpreted());
+    JS_ASSERT(ctor->toFunction()->isInterpreted());
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     const Shape *shape = ctor->nativeLookup(cx, id);
     JS_ASSERT(shape->slot() == protoSlot);
@@ -5384,7 +5384,7 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
             JS_ASSERT(!getter && !setter);
 
             JSObject *funobj = &value.toObject();
-            if (funobj->getFunctionPrivate() == funobj)
+            if (!funobj->toFunction()->isClonedMethod())
                 flags |= Shape::METHOD;
         }
 
@@ -6125,18 +6125,14 @@ JSObject::callMethod(JSContext *cx, jsid id, uintN argc, Value *argv, Value *vp)
 static bool
 CloneFunctionForSetMethod(JSContext *cx, Value *vp)
 {
-    JSObject *funobj = &vp->toObject();
-    JSFunction *fun = funobj->getFunctionPrivate();
+    JSFunction *fun = vp->toObject().toFunction();
 
-    /*
-     * If fun is already different from the original JSFunction, it does not
-     * need to be cloned again.
-     */
-    if (fun == funobj) {
-        funobj = CloneFunctionObject(cx, fun);
-        if (!funobj)
+    /* Clone the fun unless it already has been. */
+    if (!fun->isClonedMethod()) {
+        fun = CloneFunctionObject(cx, fun);
+        if (!fun)
             return false;
-        vp->setObject(*funobj);
+        vp->setObject(*fun);
     }
     return true;
 }
@@ -6343,8 +6339,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
             JSObject *funobj = &vp->toObject();
-            JSFunction *fun = funobj->getFunctionPrivate();
-            if (fun == funobj)
+            if (!funobj->toFunction()->isClonedMethod())
                 flags |= Shape::METHOD;
         }
 
@@ -6513,24 +6508,20 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
          * so the only way they could have the method's joined function object
          * as callee is through an API abusage. We break any such edge case.
          */
-        JSObject *funobj;
-        if (IsFunctionObject(v, &funobj)) {
-            JSFunction *fun = funobj->getFunctionPrivate();
-
-            if (fun != funobj) {
-                for (StackFrame *fp = cx->maybefp(); fp; fp = fp->prev()) {
-                    if (fp->isFunctionFrame() &&
-                        fp->callee() == fun->compiledFunObj() &&
-                        fp->thisValue().isObject())
-                    {
-                        JSObject *tmp = &fp->thisValue().toObject();
-                        do {
-                            if (tmp == obj) {
-                                fp->overwriteCallee(*funobj);
-                                break;
-                            }
-                        } while ((tmp = tmp->getProto()) != NULL);
-                    }
+        JSFunction *fun;
+        if (IsFunctionObject(v, &fun) && fun->isClonedMethod()) {
+            for (StackFrame *fp = cx->maybefp(); fp; fp = fp->prev()) {
+                if (fp->isFunctionFrame() &&
+                    fp->fun() == fun &&
+                    fp->thisValue().isObject())
+                {
+                    JSObject *tmp = &fp->thisValue().toObject();
+                    do {
+                        if (tmp == obj) {
+                            fp->overwriteCallee(*fun);
+                            break;
+                        }
+                    } while ((tmp = tmp->getProto()) != NULL);
                 }
             }
         }
@@ -7163,7 +7154,7 @@ js::HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Class *cla
     if (args.thisv().isObject()) {
         JSObject &thisObj = args.thisv().toObject();
         if (thisObj.isProxy()) {
-            Native native = args.callee().getFunctionPrivate()->native();
+            Native native = args.callee().toFunction()->native();
             return Proxy::nativeCall(cx, &thisObj, clasp, native, args);
         }
     }
@@ -7256,8 +7247,7 @@ dumpValue(const Value &v)
     else if (v.isString())
         dumpString(v.toString());
     else if (v.isObject() && v.toObject().isFunction()) {
-        JSObject *funobj = &v.toObject();
-        JSFunction *fun = funobj->getFunctionPrivate();
+        JSFunction *fun = v.toObject().toFunction();
         if (fun->atom) {
             fputs("<function ", stderr);
             FileEscapedString(stderr, fun->atom, 0);
@@ -7269,7 +7259,7 @@ dumpValue(const Value &v)
             fprintf(stderr, " (%s:%u)",
                     script->filename ? script->filename : "", script->lineno);
         }
-        fprintf(stderr, " at %p (JSFunction at %p)>", (void *) funobj, (void *) fun);
+        fprintf(stderr, " at %p>", (void *) fun);
     } else if (v.isObject()) {
         JSObject *obj = &v.toObject();
         Class *clasp = obj->getClass();

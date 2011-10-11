@@ -902,8 +902,7 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
     }
 
     if (type->emptyShapes) {
-        int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
-        for (int i = 0; i < count; i++) {
+        for (size_t i = 0; i < TYPE_OBJECT_EMPTY_SHAPE_COUNT; i++) {
             if (type->emptyShapes[i])
                 PushMarkStack(gcmarker, type->emptyShapes[i]);
         }
@@ -939,8 +938,7 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
     }
 
     if (type->emptyShapes) {
-        int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
-        for (int i = 0; i < count; i++) {
+        for (size_t i = 0; i < TYPE_OBJECT_EMPTY_SHAPE_COUNT; i++) {
             if (type->emptyShapes[i])
                 MarkShape(trc, type->emptyShapes[i], "empty_shape");
         }

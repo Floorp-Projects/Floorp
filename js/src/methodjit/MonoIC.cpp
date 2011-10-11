@@ -611,9 +611,8 @@ class CallCompiler : public BaseCompiler
         void *ncode = ic.funGuard.labelAtOffset(ic.joinPointOffset).executableAddress();
         inlFrame.assemble(ncode, f.pc());
 
-        /* funPtrReg is still valid. Check if a compilation is needed. */
-        Address scriptAddr(ic.funPtrReg, offsetof(JSFunction, u) +
-                           offsetof(JSFunction::U::Scripted, script));
+        /* funObjReg is still valid. Check if a compilation is needed. */
+        Address scriptAddr(ic.funObjReg, JSFunction::offsetOfNativeOrScript());
         masm.loadPtr(scriptAddr, t0);
 
         /*
@@ -734,7 +733,7 @@ class CallCompiler : public BaseCompiler
     {
         JS_ASSERT(ic.frameSize.isStatic());
 
-        /* Slightly less fast path - guard on fun->getFunctionPrivate() instead. */
+        /* Slightly less fast path - guard on fun->script() instead. */
         Assembler masm;
 
         Registers tempRegs(Registers::AvailRegs);
@@ -745,10 +744,10 @@ class CallCompiler : public BaseCompiler
         /* Guard that it's actually a function object. */
         Jump claspGuard = masm.testObjClass(Assembler::NotEqual, ic.funObjReg, t0, &FunctionClass);
 
-        /* Guard that it's the same function. */
-        JSFunction *fun = obj->getFunctionPrivate();
-        masm.loadObjPrivate(ic.funObjReg, t0, JSObject::FUN_CLASS_NFIXED_SLOTS);
-        Jump funGuard = masm.branchPtr(Assembler::NotEqual, t0, ImmPtr(fun));
+        /* Guard that it's the same script. */
+        Address scriptAddr(ic.funObjReg, JSFunction::offsetOfNativeOrScript());
+        Jump funGuard = masm.branchPtr(Assembler::NotEqual, scriptAddr,
+                                       ImmPtr(obj->toFunction()->script()));
         Jump done = masm.jump();
 
         LinkerHelper linker(masm, JSC::METHOD_CODE);
@@ -800,11 +799,10 @@ class CallCompiler : public BaseCompiler
             args = CallArgsFromSp(f.u.call.dynamicArgc, f.regs.sp);
         }
 
-        JSObject *obj;
-        if (!IsFunctionObject(args.calleev(), &obj))
+        JSFunction *fun;
+        if (!IsFunctionObject(args.calleev(), &fun))
             return false;
 
-        JSFunction *fun = obj->getFunctionPrivate();
         if ((!callingNew && !fun->isNative()) || (callingNew && !fun->isConstructor()))
             return false;
 
@@ -840,7 +838,7 @@ class CallCompiler : public BaseCompiler
         Assembler masm;
 
         /* Guard on the function object identity, for now. */
-        Jump funGuard = masm.branchPtr(Assembler::NotEqual, ic.funObjReg, ImmPtr(obj));
+        Jump funGuard = masm.branchPtr(Assembler::NotEqual, ic.funObjReg, ImmPtr(fun));
 
         /*
          * Write the rejoin state for the recompiler to use if this call
@@ -937,7 +935,7 @@ class CallCompiler : public BaseCompiler
 
         linker.patchJump(ic.slowPathStart.labelAtOffset(ic.slowJoinOffset));
 
-        ic.fastGuardedNative = obj;
+        ic.fastGuardedNative = fun;
 
         linker.link(funGuard, ic.slowPathStart);
         JSC::CodeLocationLabel start = linker.finalize();
@@ -984,8 +982,6 @@ class CallCompiler : public BaseCompiler
         JS_ASSERT(fun);
         JSScript *script = fun->script();
         JS_ASSERT(script);
-        JSObject *callee = ucr.callee;
-        JS_ASSERT(callee);
 
         uint32 flags = callingNew ? StackFrame::CONSTRUCTING : 0;
 
@@ -998,17 +994,17 @@ class CallCompiler : public BaseCompiler
             if (!generateFullCallStub(jit, script, flags))
                 THROWV(NULL);
         } else {
-            if (!ic.fastGuardedObject && patchInlinePath(jit, script, callee)) {
+            if (!ic.fastGuardedObject && patchInlinePath(jit, script, fun)) {
                 // Nothing, done.
             } else if (ic.fastGuardedObject &&
                        !ic.hasJsFunCheck &&
                        !ic.fastGuardedNative &&
-                       ic.fastGuardedObject->getFunctionPrivate() == fun) {
+                       ic.fastGuardedObject->toFunction()->script() == fun->script()) {
                 /*
                  * Note: Multiple "function guard" stubs are not yet
                  * supported, thus the fastGuardedNative check.
                  */
-                if (!generateStubForClosures(jit, callee))
+                if (!generateStubForClosures(jit, fun))
                     THROWV(NULL);
             } else {
                 if (!generateFullCallStub(jit, script, flags))
@@ -1086,7 +1082,7 @@ ic::SplatApplyArgs(VMFrame &f)
      */
     if (f.u.call.lazyArgsObj) {
         Value *vp = f.regs.sp - 3;
-        JS_ASSERT(JS_CALLEE(cx, vp).toObject().getFunctionPrivate()->u.n.native == js_fun_apply);
+        JS_ASSERT(JS_CALLEE(cx, vp).toObject().toFunction()->u.n.native == js_fun_apply);
 
         StackFrame *fp = f.regs.fp();
         if (!fp->hasOverriddenArgs()) {
@@ -1140,7 +1136,7 @@ ic::SplatApplyArgs(VMFrame &f)
     }
 
     Value *vp = f.regs.sp - 4;
-    JS_ASSERT(JS_CALLEE(cx, vp).toObject().getFunctionPrivate()->u.n.native == js_fun_apply);
+    JS_ASSERT(JS_CALLEE(cx, vp).toObject().toFunction()->u.n.native == js_fun_apply);
 
     /*
      * This stub should mimic the steps taken by js_fun_apply. Step 1 and part

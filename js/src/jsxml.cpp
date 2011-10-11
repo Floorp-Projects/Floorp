@@ -5349,7 +5349,7 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
         }
     }
 
-    fun = JSVAL_TO_OBJECT(*vp)->getFunctionPrivate();
+    fun = JSVAL_TO_OBJECT(*vp)->toFunction();
     JS_snprintf(numBuf, sizeof numBuf, "%u", xml->xml_kids.length);
     JSAutoByteString funNameBytes;
     if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {

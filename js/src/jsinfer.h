@@ -1088,6 +1088,9 @@ class TypeScript
     static void Sweep(JSContext *cx, JSScript *script);
     inline void trace(JSTracer *trc);
     void destroy();
+
+    /* For JIT access. */
+    static inline size_t offsetOfFunction() { return offsetof(TypeScript, function); }
 };
 
 struct ArrayTableKey;

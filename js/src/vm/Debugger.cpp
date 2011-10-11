@@ -2751,7 +2751,7 @@ DebuggerFrame_getScript(JSContext *cx, uintN argc, Value *vp)
 
     JSObject *scriptObject = NULL;
     if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
-        JSFunction *callee = fp->callee().getFunctionPrivate();
+        JSFunction *callee = fp->callee().toFunction();
         if (callee->isInterpreted()) {
             scriptObject = debug->wrapFunctionScript(cx, callee);
             if (!scriptObject)
@@ -3124,7 +3124,7 @@ DebuggerObject_getName(JSContext *cx, uintN argc, Value *vp)
         return true;
     }
 
-    JSString *name = obj->getFunctionPrivate()->atom;
+    JSString *name = obj->toFunction()->atom;
     if (!name) {
         args.rval().setUndefined();
         return true;
@@ -3146,7 +3146,7 @@ DebuggerObject_getParameterNames(JSContext *cx, uintN argc, Value *vp)
         return true;
     }
 
-    const JSFunction *fun = obj->getFunctionPrivate();
+    const JSFunction *fun = obj->toFunction();
     JSObject *result = NewDenseAllocatedArray(cx, fun->nargs, NULL);
     if (!result)
         return false;
@@ -3184,7 +3184,7 @@ DebuggerObject_getScript(JSContext *cx, uintN argc, Value *vp)
     if (!obj->isFunction())
         return true;
 
-    JSFunction *fun = obj->getFunctionPrivate();
+    JSFunction *fun = obj->toFunction();
     if (!fun->isInterpreted())
         return true;
 

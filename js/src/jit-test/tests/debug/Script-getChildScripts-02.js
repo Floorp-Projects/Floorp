@@ -1,5 +1,7 @@
 // getChildScripts returns scripts in source order.
 
+// XXX bug 693754 disabled
+/*
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var scripts = [];
@@ -18,3 +20,4 @@ assertEq(scripts.length, 3);
 assertEq(cs.length, 2);
 assertEq(cs[0], scripts[1]);
 assertEq(cs[1], scripts[2]);
+*/

@@ -3486,7 +3486,7 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
     JS_ASSERT_IF(proto, proto->isArray());
 
     gc::AllocKind kind = GuessArrayGCKind(length);
-    JSObject *obj = detail::NewObject<WithProto::Class, false>(cx, &ArrayClass, proto, NULL, kind);
+    JSObject *obj = NewObject<WithProto::Class>(cx, &ArrayClass, proto, NULL, kind);
     if (!obj)
         return NULL;
 

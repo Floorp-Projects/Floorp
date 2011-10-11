@@ -203,7 +203,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     if (!obj)
         return NULL;
 
-    bool strict = callee.getFunctionPrivate()->inStrictMode();
+    bool strict = callee.toFunction()->inStrictMode();
     EmptyShape *emptyArgumentsShape = EmptyShape::getEmptyArgumentsShape(cx, strict);
     if (!emptyArgumentsShape)
         return NULL;
@@ -867,7 +867,7 @@ js_PutCallObject(StackFrame *fp)
         callobj.copyValues(0, NULL, bindings.countVars(), fp->slots());
     } else {
         JSFunction *fun = fp->fun();
-        JS_ASSERT(fun == callobj.getCalleeFunction());
+        JS_ASSERT(script == callobj.getCalleeFunction()->script());
         JS_ASSERT(script == fun->script());
 
         uintN n = bindings.countArgsAndVars();
@@ -1116,7 +1116,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp
     JSObject *callee = obj->asCall().getCallee();
 #ifdef DEBUG
     if (callee) {
-        JSScript *script = callee->getFunctionPrivate()->script();
+        JSScript *script = callee->toFunction()->script();
         JS_ASSERT(!script->bindings.hasBinding(cx, JSID_TO_ATOM(id)));
     }
 #endif
@@ -1183,8 +1183,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
     }
 
     JSFunction *fun = this->fun();
-    JSObject &funobj = callee();
-    vp->setObject(funobj);
+    vp->setObject(*fun);
 
     /*
      * Check for an escape attempt by a joined function object, which must go
@@ -1192,88 +1191,84 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
      * atom by which it was uniquely associated with a property.
      */
     const Value &thisv = functionThis();
-    if (thisv.isObject()) {
-        JS_ASSERT(funobj.getFunctionPrivate() == fun);
+    if (thisv.isObject() && fun->methodAtom() && !fun->isClonedMethod()) {
+        JSObject *thisp = &thisv.toObject();
+        JSObject *first_barriered_thisp = NULL;
 
-        if (fun->compiledFunObj() == funobj && fun->methodAtom()) {
-            JSObject *thisp = &thisv.toObject();
-            JSObject *first_barriered_thisp = NULL;
+        do {
+            /*
+             * While a non-native object is responsible for handling its
+             * entire prototype chain, notable non-natives including dense
+             * and typed arrays have native prototypes, so keep going.
+             */
+            if (!thisp->isNative())
+                continue;
 
-            do {
+            const Shape *shape = thisp->nativeLookup(cx, ATOM_TO_JSID(fun->methodAtom()));
+            if (shape) {
                 /*
-                 * While a non-native object is responsible for handling its
-                 * entire prototype chain, notable non-natives including dense
-                 * and typed arrays have native prototypes, so keep going.
+                 * Two cases follow: the method barrier was not crossed
+                 * yet, so we cross it here; the method barrier *was*
+                 * crossed but after the call, in which case we fetch
+                 * and validate the cloned (unjoined) funobj from the
+                 * method property's slot.
+                 *
+                 * In either case we must allow for the method property
+                 * to have been replaced, or its value overwritten.
                  */
-                if (!thisp->isNative())
-                    continue;
-
-                const Shape *shape = thisp->nativeLookup(cx, ATOM_TO_JSID(fun->methodAtom()));
-                if (shape) {
-                    /*
-                     * Two cases follow: the method barrier was not crossed
-                     * yet, so we cross it here; the method barrier *was*
-                     * crossed but after the call, in which case we fetch
-                     * and validate the cloned (unjoined) funobj from the
-                     * method property's slot.
-                     *
-                     * In either case we must allow for the method property
-                     * to have been replaced, or its value overwritten.
-                     */
-                    if (shape->isMethod() && thisp->nativeGetMethod(shape) == &funobj) {
-                        if (!thisp->methodReadBarrier(cx, *shape, vp))
-                            return false;
-                        overwriteCallee(vp->toObject());
-                        return true;
-                    }
-
-                    if (shape->hasSlot()) {
-                        Value v = thisp->getSlot(shape->slot());
-                        JSObject *clone;
-
-                        if (IsFunctionObject(v, &clone) &&
-                            clone->getFunctionPrivate() == fun &&
-                            clone->hasMethodObj(*thisp)) {
-                            /*
-                             * N.B. If the method barrier was on a function
-                             * with singleton type, then while crossing the
-                             * method barrier CloneFunctionObject will have
-                             * ignored the attempt to clone the function.
-                             */
-                            JS_ASSERT_IF(!clone->hasSingletonType(), clone != &funobj);
-                            *vp = v;
-                            overwriteCallee(*clone);
-                            return true;
-                        }
-                    }
+                if (shape->isMethod() && thisp->nativeGetMethod(shape) == fun) {
+                    if (!thisp->methodReadBarrier(cx, *shape, vp))
+                        return false;
+                    overwriteCallee(vp->toObject());
+                    return true;
                 }
 
-                if (!first_barriered_thisp)
-                    first_barriered_thisp = thisp;
-            } while ((thisp = thisp->getProto()) != NULL);
+                if (shape->hasSlot()) {
+                    Value v = thisp->getSlot(shape->slot());
+                    JSFunction *clone;
+
+                    if (IsFunctionObject(v, &clone) &&
+                        clone->script() == fun->script() &&
+                        clone->hasMethodObj(*thisp)) {
+                        /*
+                         * N.B. If the method barrier was on a function
+                         * with singleton type, then while crossing the
+                         * method barrier CloneFunctionObject will have
+                         * ignored the attempt to clone the function.
+                         */
+                        JS_ASSERT_IF(!clone->hasSingletonType(), clone != fun);
+                        *vp = v;
+                        overwriteCallee(*clone);
+                        return true;
+                    }
+                }
+            }
 
             if (!first_barriered_thisp)
-                return true;
+                first_barriered_thisp = thisp;
+        } while ((thisp = thisp->getProto()) != NULL);
 
-            /*
-             * At this point, we couldn't find an already-existing clone (or
-             * force to exist a fresh clone) created via thisp's method read
-             * barrier, so we must clone fun and store it in fp's callee to
-             * avoid re-cloning upon repeated foo.caller access.
-             *
-             * This must mean the code in js_DeleteProperty could not find this
-             * stack frame on the stack when the method was deleted. We've lost
-             * track of the method, so we associate it with the first barriered
-             * object found starting from thisp on the prototype chain.
-             */
-            JSObject *newfunobj = CloneFunctionObject(cx, fun);
-            if (!newfunobj)
-                return false;
-            newfunobj->setMethodObj(*first_barriered_thisp);
-            overwriteCallee(*newfunobj);
-            vp->setObject(*newfunobj);
+        if (!first_barriered_thisp)
             return true;
-        }
+
+        /*
+         * At this point, we couldn't find an already-existing clone (or
+         * force to exist a fresh clone) created via thisp's method read
+         * barrier, so we must clone fun and store it in fp's callee to
+         * avoid re-cloning upon repeated foo.caller access.
+         *
+         * This must mean the code in js_DeleteProperty could not find this
+         * stack frame on the stack when the method was deleted. We've lost
+         * track of the method, so we associate it with the first barriered
+         * object found starting from thisp on the prototype chain.
+         */
+        JSFunction *newfunobj = CloneFunctionObject(cx, fun);
+        if (!newfunobj)
+            return false;
+        newfunobj->setMethodObj(*first_barriered_thisp);
+        overwriteCallee(*newfunobj);
+        vp->setObject(*newfunobj);
+        return true;
     }
 
     return true;
@@ -1287,7 +1282,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (!obj)
             return true;
     }
-    JSFunction *fun = obj->getFunctionPrivate();
+    JSFunction *fun = obj->toFunction();
 
     /*
      * Mark the function's script as uninlineable, to expand any of its
@@ -1359,7 +1354,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (caller.compartment() != cx->compartment) {
             vp->setNull();
         } else if (caller.isFunction()) {
-            JSFunction *callerFun = caller.getFunctionPrivate();
+            JSFunction *callerFun = caller.toFunction();
             if (callerFun->isInterpreted() && callerFun->inStrictMode()) {
                 JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
                                              JSMSG_CALLER_IS_STRICT);
@@ -1419,7 +1414,7 @@ static JSObject *
 ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
 {
 #ifdef DEBUG
-    JSFunction *fun = obj->getFunctionPrivate();
+    JSFunction *fun = obj->toFunction();
     JS_ASSERT(fun->isInterpreted());
     JS_ASSERT(!fun->isFunctionPrototype());
 #endif
@@ -1469,7 +1464,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     if (!JSID_IS_ATOM(id))
         return true;
 
-    JSFunction *fun = obj->getFunctionPrivate();
+    JSFunction *fun = obj->toFunction();
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.classPrototypeAtom)) {
         /*
@@ -1558,7 +1553,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 
     cx = xdr->cx;
     if (xdr->mode == JSXDR_ENCODE) {
-        fun = (*objp)->getFunctionPrivate();
+        fun = (*objp)->toFunction();
         if (!fun->isInterpreted()) {
             JSAutoByteString funNameBytes;
             if (const char *name = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
@@ -1655,30 +1650,19 @@ fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 static void
 fun_trace(JSTracer *trc, JSObject *obj)
 {
-    /* A newborn function object may have a not yet initialized private slot. */
-    JSFunction *fun = (JSFunction *) obj->getPrivate();
-    if (!fun)
-        return;
+    JSFunction *fun = obj->toFunction();
 
-    if (fun != obj) {
-        /* obj is a cloned function object, trace the clone-parent, fun. */
-        MarkObject(trc, *fun, "private");
-
-        /* The function could be a flat closure with upvar copies in the clone. */
-        if (fun->isFlatClosure() && fun->script()->bindings.hasUpvars()) {
-            MarkValueRange(trc, fun->script()->bindings.countUpvars(),
-                           obj->getFlatClosureUpvars(), "upvars");
-        }
-        return;
+    if (fun->isFlatClosure() && fun->script()->bindings.hasUpvars()) {
+        Value *upvars = obj->getFlatClosureUpvars();
+        if (upvars)
+            MarkValueRange(trc, fun->script()->bindings.countUpvars(), upvars, "upvars");
     }
 
     if (fun->atom)
         MarkString(trc, fun->atom, "atom");
 
-    if (fun->isInterpreted() && fun->script()) {
-        CheckScriptOwner(fun->script(), obj);
+    if (fun->isInterpreted() && fun->script())
         MarkScript(trc, fun->script(), "script");
-    }
 }
 
 static void
@@ -1694,7 +1678,7 @@ fun_finalize(JSContext *cx, JSObject *obj)
  */
 JS_FRIEND_DATA(Class) js::FunctionClass = {
     js_Function_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSFunction::CLASS_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     JS_PropertyStub,         /* addProperty */
@@ -1727,7 +1711,7 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
         return NULL;
     }
 
-    JSFunction *fun = obj->getFunctionPrivate();
+    JSFunction *fun = obj->toFunction();
     if (!fun)
         return NULL;
 
@@ -2011,13 +1995,11 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 fun_isGenerator(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *funobj;
-    if (!IsFunctionObject(vp[1], &funobj)) {
+    JSFunction *fun;
+    if (!IsFunctionObject(vp[1], &fun)) {
         JS_SET_RVAL(cx, vp, BooleanValue(false));
         return true;
     }
-
-    JSFunction *fun = funobj->getFunctionPrivate();
 
     bool result = false;
     if (fun->isInterpreted()) {
@@ -2059,13 +2041,13 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
     /* Steps 15-16. */
     uintN length = 0;
     if (target->isFunction()) {
-        uintN nargs = target->getFunctionPrivate()->nargs;
+        uintN nargs = target->toFunction()->nargs;
         if (nargs > argslen)
             length = nargs - argslen;
     }
 
     /* Step 4-6, 10-11. */
-    JSAtom *name = target->isFunction() ? target->getFunctionPrivate()->atom : NULL;
+    JSAtom *name = target->isFunction() ? target->toFunction()->atom : NULL;
 
     /* NB: Bound functions abuse |parent| to store their target. */
     JSObject *funobj =
@@ -2301,7 +2283,7 @@ const Shape *
 LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
 {
 #ifdef DEBUG
-    JSFunction *fun = funobj->getFunctionPrivate();
+    JSFunction *fun = funobj->toFunction();
     JS_ASSERT(fun->isInterpreted());
     JS_ASSERT(!fun->isFunctionPrototype());
     JS_ASSERT(!funobj->isBoundFunction());
@@ -2339,7 +2321,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         if (native && !funobj->setSingletonType(cx))
             return NULL;
     }
-    JS_ASSERT(!funobj->getPrivate());
     fun = static_cast<JSFunction *>(funobj);
 
     /* Initialize all function members. */
@@ -2369,28 +2350,26 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
     }
     fun->atom = atom;
 
-    /* Set private to self to indicate non-cloned fully initialized function. */
-    fun->setPrivate(fun);
     return fun;
 }
 
-JSObject * JS_FASTCALL
+JSFunction * JS_FASTCALL
 js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
                        JSObject *proto)
 {
     JS_ASSERT(parent);
     JS_ASSERT(proto);
 
-    JSObject *clone;
-    if (cx->compartment == fun->compartment()) {
-        /*
-         * The cloned function object does not need the extra JSFunction members
-         * beyond JSObject as it points to fun via the private slot.
-         */
-        clone = NewNativeClassInstance(cx, &FunctionClass, proto, parent);
-        if (!clone)
-            return NULL;
+    JSFunction *clone = NewFunction(cx, parent);
+    if (!clone)
+        return NULL;
 
+    clone->nargs = fun->nargs;
+    clone->flags = fun->flags;
+    clone->u = fun->toFunction()->u;
+    clone->atom = fun->atom;
+
+    if (cx->compartment == fun->compartment()) {
         /*
          * We can use the same type as the original function provided that (a)
          * its prototype is correct, and (b) its type is not a singleton. The
@@ -2400,49 +2379,37 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
          */
         if (fun->getProto() == proto && !fun->hasSingletonType())
             clone->setType(fun->type());
-
-        clone->setPrivate(fun);
     } else {
         /*
-         * Across compartments we have to deep copy JSFunction and clone the
-         * script (for interpreted functions).
+         * Across compartments we have to clone the script for interpreted
+         * functions.
          */
-        clone = NewFunction(cx, parent);
-        if (!clone)
-            return NULL;
-
-        JSFunction *cfun = (JSFunction *) clone;
-        cfun->nargs = fun->nargs;
-        cfun->flags = fun->flags;
-        cfun->u = fun->getFunctionPrivate()->u;
-        cfun->atom = fun->atom;
-        clone->setPrivate(cfun);
-        if (cfun->isInterpreted()) {
-            JSScript *script = cfun->script();
+        if (clone->isInterpreted()) {
+            JSScript *script = clone->script();
             JS_ASSERT(script);
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT(script->compartment() != cx->compartment);
             JS_OPT_ASSERT(script->ownerObject == fun);
 
-            cfun->u.i.script = NULL;
+            clone->u.i.script = NULL;
             JSScript *cscript = js_CloneScript(cx, script);
             if (!cscript)
                 return NULL;
 
-            cfun->u.i.script = cscript;
-            if (!cfun->u.i.script->typeSetFunction(cx, cfun))
+            clone->u.i.script = cscript;
+            if (!clone->u.i.script->typeSetFunction(cx, clone))
                 return NULL;
 
-            cfun->script()->setOwnerObject(cfun);
-            js_CallNewScriptHook(cx, cfun->script(), cfun);
-            Debugger::onNewScript(cx, cfun->script(), cfun, Debugger::NewHeldScript);
+            clone->script()->setOwnerObject(clone);
+            js_CallNewScriptHook(cx, clone->script(), clone);
+            Debugger::onNewScript(cx, clone->script(), clone, Debugger::NewHeldScript);
         }
     }
     return clone;
 }
 
 #ifdef JS_TRACER
-JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CloneFunctionObject, CONTEXT, FUNCTION, OBJECT, OBJECT, 0,
+JS_DEFINE_CALLINFO_4(extern, FUNCTION, js_CloneFunctionObject, CONTEXT, FUNCTION, OBJECT, OBJECT, 0,
                      nanojit::ACCSET_STORE_ANY)
 #endif
 
@@ -2594,24 +2561,12 @@ JS_STATIC_ASSERT((JSV2F_CONSTRUCT & JSV2F_SEARCH_STACK) == 0);
 JSFunction *
 js_ValueToFunction(JSContext *cx, const Value *vp, uintN flags)
 {
-    JSObject *funobj;
-    if (!IsFunctionObject(*vp, &funobj)) {
+    JSFunction *fun;
+    if (!IsFunctionObject(*vp, &fun)) {
         js_ReportIsNotFunction(cx, vp, flags);
         return NULL;
     }
-    return funobj->getFunctionPrivate();
-}
-
-JSObject *
-js_ValueToFunctionObject(JSContext *cx, Value *vp, uintN flags)
-{
-    JSObject *funobj;
-    if (!IsFunctionObject(*vp, &funobj)) {
-        js_ReportIsNotFunction(cx, vp, flags);
-        return NULL;
-    }
-
-    return funobj;
+    return fun;
 }
 
 JSObject *

@@ -259,7 +259,6 @@ struct CallICInfo {
     uint32 slowJoinOffset  : 16;
 
     RegisterID funObjReg : 5;
-    RegisterID funPtrReg : 5;
     bool hit : 1;
     bool hasJsFunCheck : 1;
     bool typeMonitored : 1;
