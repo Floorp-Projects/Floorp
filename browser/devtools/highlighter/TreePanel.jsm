@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -141,6 +141,7 @@ TreePanel.prototype = {
     this.treeLoaded = true;
     this.treeIFrame.addEventListener("click", this.onTreeClick.bind(this), false);
     this.treeIFrame.addEventListener("dblclick", this.onTreeDblClick.bind(this), false);
+    this.treeIFrame.addEventListener("keypress", this.IUI, false);
     delete this.initializingTreePanel;
     Services.obs.notifyObservers(null,
       this.IUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, null);
@@ -694,6 +695,7 @@ TreePanel.prototype = {
     }
 
     if (this.treeIFrame) {
+      this.treeIFrame.removeEventListener("keypress", this.IUI, false);
       this.treeIFrame.removeEventListener("dblclick", this.onTreeDblClick, false);
       this.treeIFrame.removeEventListener("click", this.onTreeClick, false);
       let parent = this.treeIFrame.parentNode;
