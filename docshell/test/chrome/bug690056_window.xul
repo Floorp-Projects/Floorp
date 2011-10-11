@@ -1,0 +1,176 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="690056Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 6500056 test">
+
+  <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src="docshell_helpers.js" />
+  <script type="application/javascript"><![CDATA[
+    var tests = testIterator();
+
+    function nextTest() {
+      tests.next();
+    }
+
+    // Makes sure that we fire the visibilitychange events
+    function testIterator() {
+      // Enable bfcache
+      enableBFCache(8);
+
+      // Load something for a start
+      doPageNavigation({
+        uri: 'data:text/html,<title>initial load</title>',
+        onNavComplete: nextTest
+      });
+      yield;
+
+      // Now load a new page
+      doPageNavigation({
+        uri: 'data:text/html,<title>new load</title>',
+        eventsToListenFor: [ "pageshow", "pagehide", "mozvisibilitychange" ],
+        expectedEvents: [ { type: "pagehide",
+                            title: "initial load",
+                            persisted: true },
+                          { type: "mozvisibilitychange",
+                            title: "initial load",
+                            visibilityState: "hidden",
+                            hidden: true },
+                          // No visibilitychange events fired for initial pageload
+                          { type: "pageshow",
+                            title: "new load",
+                            persisted: false }, // false on initial load
+                        ],
+        onNavComplete: nextTest
+      });
+      yield;
+
+      // Now go back
+      doPageNavigation({
+        back: true,
+        eventsToListenFor: [ "pageshow", "pagehide", "mozvisibilitychange" ],
+        expectedEvents: [ { type: "pagehide",
+                            title: "new load",
+                            persisted: true },
+                          { type: "mozvisibilitychange",
+                            title: "new load",
+                            visibilityState: "hidden",
+                            hidden: true },
+                          { type: "mozvisibilitychange",
+                            title: "initial load",
+                            visibilityState: "visible",
+                            hidden: false },
+                          { type: "pageshow",
+                            title: "initial load",
+                            persisted: true },
+                        ],
+        onNavComplete: nextTest
+      });
+      yield;
+
+      // And forward
+      doPageNavigation({
+        forward: true,
+        eventsToListenFor: [ "pageshow", "pagehide", "mozvisibilitychange" ],
+        expectedEvents: [ { type: "pagehide",
+                            title: "initial load",
+                            persisted: true },
+                          { type: "mozvisibilitychange",
+                            title: "initial load",
+                            visibilityState: "hidden",
+                            hidden: true },
+                          { type: "mozvisibilitychange",
+                            title: "new load",
+                            visibilityState: "visible",
+                            hidden: false },
+                          { type: "pageshow",
+                            title: "new load",
+                            persisted: true },
+                        ],
+        onNavComplete: nextTest
+      });
+      yield;
+
+      function generateDetector(state, hidden, title, name) {
+        var detector = function (event) {
+          is(event.target.mozHidden, hidden,
+             name + " hidden value does not match");
+          is(event.target.mozVisibilityState, state,
+             name + " state value does not match");
+          is(event.target.title, title,
+             name + " title value does not match");
+          document.getElementById("content")
+                  .removeEventListener("mozvisibilitychange",
+                                       detector,
+                                       true);
+          nextTest();
+        }
+
+        document.getElementById("content")
+                .addEventListener("mozvisibilitychange", detector, true);
+      }
+      
+      generateDetector("hidden", true, "new load", "Going hidden");
+        
+      // Now flip our docshell to not active
+      document.getElementById("content").docShellIsActive = false;
+      yield;
+
+      // And navigate back; there should be no visibility state transitions
+      doPageNavigation({
+        back: true,
+        eventsToListenFor: [ "pageshow", "pagehide", "mozvisibilitychange" ],
+        expectedEvents: [ { type: "pagehide",
+                            title: "new load",
+                            persisted: true },
+                          { type: "pageshow",
+                            title: "initial load",
+                            persisted: true },
+                        ],
+        unexpectedEvents: [ "mozvisibilitychange" ],
+        onNavComplete: nextTest
+      });
+      yield;
+
+      generateDetector("visible", false, "initial load", "Going visible");
+
+      // Now set the docshell active again
+      document.getElementById("content").docShellIsActive = true;
+      yield;
+
+      // And forward
+      doPageNavigation({
+        forward: true,
+        eventsToListenFor: [ "pageshow", "pagehide", "mozvisibilitychange" ],
+        expectedEvents: [ { type: "pagehide",
+                            title: "initial load",
+                            persisted: true },
+                          { type: "mozvisibilitychange",
+                            title: "initial load",
+                            visibilityState: "hidden",
+                            hidden: true },
+                          { type: "mozvisibilitychange",
+                            title: "new load",
+                            visibilityState: "visible",
+                            hidden: false },
+                          { type: "pageshow",
+                            title: "new load",
+                            persisted: true },
+                        ],
+        onNavComplete: nextTest
+      });
+      yield;
+
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;      
+    }
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

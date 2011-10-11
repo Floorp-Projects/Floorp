@@ -120,6 +120,8 @@ _TEST_FILES =	\
 		662200a.html \
 		662200b.html \
 		662200c.html \
+		test_bug690056.xul \
+		bug690056_window.xul \
 		$(NULL)
 
 _DOCSHELL_SUBHARNESS = \
