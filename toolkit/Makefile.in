@@ -50,7 +50,6 @@ PARALLEL_DIRS = \
   content \
   locales \
   mozapps/downloads \
-  mozapps/extensions \
   mozapps/handling \
   mozapps/preferences \
   mozapps/plugins \
@@ -62,6 +61,16 @@ PARALLEL_DIRS = \
   profile \
   themes \
   $(NULL)
+
+#
+# The native front end is not going to use extensions based on this code.
+# If it isn't used, it still takes up .5mb in cached statement.  fail for me.
+# Ideally we start moving other optional stuff into this section.
+ifdef XXXXX 
+PARALLEL_DIRS += \
+  mozapps/extensions \
+  $(NULL)
+endif
 
 ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
 PARALLEL_DIRS += system/unixproxy

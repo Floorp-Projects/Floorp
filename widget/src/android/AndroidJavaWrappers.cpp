@@ -437,6 +437,11 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case SAVE_STATE: {
+            ReadCharactersField(jenv);
+            break;
+        }
+
         default:
             break;
     }

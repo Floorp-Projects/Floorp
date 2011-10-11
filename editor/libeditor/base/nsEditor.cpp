@@ -51,9 +51,13 @@
 #include "nsReadableUtils.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+
+#ifdef MOZ_SPELLCHECK
 #include "mozISpellCheckingEngine.h"
 #include "nsIEditorSpellCheck.h"
 #include "mozInlineSpellChecker.h"
+#include "nsIInlineSpellChecker.h"
+#endif
 
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
@@ -107,7 +111,6 @@
 #include "nsEditorUtils.h"
 #include "nsEditorEventListener.h"
 #include "nsISelectionDisplay.h"
-#include "nsIInlineSpellChecker.h"
 #include "nsINameSpaceManager.h"
 #include "nsIHTMLDocument.h"
 #include "nsIParserService.h"
@@ -308,12 +311,14 @@ nsEditor::PostCreate()
     NotifyDocumentListeners(eDocumentCreated);
     NotifyDocumentListeners(eDocumentStateChanged);
 
+#ifdef MOZ_SPELLCHECK
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->AddObserver(this,
                        SPELLCHECK_DICTIONARY_UPDATE_NOTIFICATION,
                        PR_FALSE);
     }
+#endif
   }
 
   // update nsTextStateManager and caret if we have focus
@@ -426,11 +431,13 @@ nsEditor::PreDestroy(bool aDestroyingFrames)
   if (mDidPreDestroy)
     return NS_OK;
 
+#ifdef MOZ_SPELLCHECK
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this,
                         SPELLCHECK_DICTIONARY_UPDATE_NOTIFICATION);
   }
+#endif
 
   // Let spellchecker clean up its observers etc. It is important not to
   // actually free the spellchecker here, since the spellchecker could have
@@ -1294,6 +1301,7 @@ nsEditor::MarkNodeDirty(nsIDOMNode* aNode)
 NS_IMETHODIMP nsEditor::GetInlineSpellChecker(bool autoCreate,
                                               nsIInlineSpellChecker ** aInlineSpellChecker)
 {
+#ifdef MOZ_SPELLCHECK
   NS_ENSURE_ARG_POINTER(aInlineSpellChecker);
 
   if (mDidPreDestroy) {
@@ -1326,11 +1334,15 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(bool autoCreate,
   NS_IF_ADDREF(*aInlineSpellChecker = mInlineSpellChecker);
 
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE;
+#endif
 }
 
 NS_IMETHODIMP nsEditor::Observe(nsISupports* aSubj, const char *aTopic,
                                 const PRUnichar *aData)
 {
+#ifdef MOZ_SPELLCHECK
   NS_ASSERTION(!strcmp(aTopic,
                        SPELLCHECK_DICTIONARY_UPDATE_NOTIFICATION),
                "Unexpected observer topic");
@@ -1354,6 +1366,9 @@ NS_IMETHODIMP nsEditor::Observe(nsISupports* aSubj, const char *aTopic,
   }
 
   return NS_OK;
+#else
+  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP nsEditor::SyncRealTimeSpell()

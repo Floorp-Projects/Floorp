@@ -674,7 +674,7 @@ pref("browser.firstrun.show.localepicker", true);
 // $ adb shell stop
 // $ adb shell setprop log.redirect-stdio true
 // $ adb shell start
-pref("browser.dom.window.dump.enabled", false);
+pref("browser.dom.window.dump.enabled", true);
 
 // controls if we want camera support
 pref("device.camera.enabled", true);

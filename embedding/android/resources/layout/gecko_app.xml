@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+         android:id="@+android:id/mainLayout"
+         android:layout_width="match_parent"
+         android:layout_height="match_parent"
+         android:orientation="vertical">
+
+    <ProgressBar android:id="@+android:id/progressBar"
+              style="@android:style/Widget.ProgressBar.Horizontal"
+              android:layout_width="fill_parent"
+              android:layout_height="10dip"
+              android:visibility="gone"/>
+
+    <LinearLayout android:id="@+android:id/addressBar"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:orientation="horizontal">
+
+              <ImageButton android:id="@+android:id/favicon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/favicon"/>
+
+              <EditText android:id="@+android:id/awesomeBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_weight="1"
+                        android:singleLine="true"
+                        android:imeOptions="actionGo"
+                        android:inputType="textNoSuggestions|textFilter"/>
+
+              <ImageButton android:id="@+android:id/reload"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/reload"/>
+
+    </LinearLayout>
+
+    <AbsoluteLayout android:id="@+android:id/geckoLayout"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:layout_weight="1"/>
+
+ </LinearLayout>

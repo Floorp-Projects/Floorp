@@ -123,5 +123,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity android:name="org.mozilla.gecko.AwesomeBar"></activity>
     </application>
 </manifest> 

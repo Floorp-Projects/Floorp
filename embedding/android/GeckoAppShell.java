@@ -71,6 +71,9 @@ import android.net.NetworkInfo;
 import android.graphics.drawable.*;
 import android.graphics.Bitmap;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class GeckoAppShell
 {
     private static final String LOG_FILE_NAME = "GeckoAppShell";
@@ -1046,10 +1049,6 @@ public class GeckoAppShell
         imm.showInputMethodPicker();
     }
 
-    public static void hideProgressDialog() {
-        GeckoApp.surfaceView.mShowingSplashScreen = false;
-    }
-
     public static void setKeepScreenOn(final boolean on) {
         GeckoApp.mAppContext.runOnUiThread(new Runnable() {
             public void run() {
@@ -1354,17 +1353,17 @@ public class GeckoAppShell
                                                                                      (int)x,
                                                                                      (int)y);
 
-                    if (GeckoApp.mainLayout.indexOfChild(view) == -1) {
+                    if (GeckoApp.geckoLayout.indexOfChild(view) == -1) {
                         view.setWillNotDraw(false);
                         if(view instanceof SurfaceView)
                             ((SurfaceView)view).setZOrderOnTop(true);
 
-                        GeckoApp.mainLayout.addView(view, lp);
+                        GeckoApp.geckoLayout.addView(view, lp);
                     }
                     else
                     {
                         try {
-                            GeckoApp.mainLayout.updateViewLayout(view, lp);
+                            GeckoApp.geckoLayout.updateViewLayout(view, lp);
                         } catch (IllegalArgumentException e) {
                             Log.i("updateViewLayout - IllegalArgumentException", "e:" + e);
                             // it can be the case where we
@@ -1381,7 +1380,7 @@ public class GeckoAppShell
         getMainHandler().post(new Runnable() { 
                 public void run() {
                     try {
-                        GeckoApp.mainLayout.removeView(view);
+                        GeckoApp.geckoLayout.removeView(view);
                     } catch (Exception e) {}
                 }
             });
@@ -1618,6 +1617,81 @@ public class GeckoAppShell
             sCamera.release();
             sCamera = null;
             sCameraBuffer = null;
+        }
+    }
+
+    public static void handleGeckoMessage(String message) {
+        //        
+        //        {"gecko": {
+        //                "type": "value",
+        //                "event_specific": "value",
+        //                ....
+        try {
+            JSONObject json = new JSONObject(message);
+            JSONObject geckoObject = json.getJSONObject("gecko");
+            String type = geckoObject.getString("type");
+
+            if (type.equals("DOMContentLoaded")) {
+                final String uri = geckoObject.getString("uri");
+                final String title = geckoObject.getString("title");
+                final String stat = geckoObject.getString("stat");
+                final CharSequence titleText = title;
+                getMainHandler().post(new Runnable() { 
+                        public void run() {
+                            GeckoApp.mAwesomeBar.setText(titleText);
+                            GeckoApp.addHistoryEntry(new GeckoApp.HistoryEntry(uri, title));
+                            GeckoApp.mProgressBar.setVisibility(View.GONE);
+                        }
+                    });
+                Log.i("GeckoShell", "URI - " + uri + ", title - " + title + ", status - " + stat);
+            }
+            else if (type.equals("log")) {
+                // generic log listener
+                final String msg = geckoObject.getString("msg");
+                Log.i("GeckoShell", "Log: " + msg);
+            }
+            else if (type.equals("onLocationChange")) {
+                final String uri = geckoObject.getString("uri");
+                final CharSequence uriText = uri;
+                Log.i("GeckoShell", "URI - " + uri);
+                getMainHandler().post(new Runnable() { 
+                        public void run() {
+                            GeckoApp.mAwesomeBar.setText(uriText);
+                        }
+                    });
+            }
+            else if (type.equals("onStateChange")) {
+                String state = geckoObject.getString("state");
+                String stateIs = geckoObject.getString("stateIs");
+
+                if (state == "start") {
+                    GeckoApp.mProgressBar.setVisibility(View.VISIBLE);
+                    GeckoApp.mProgressBar.setIndeterminate(true);
+                }
+            }
+            else if (type.equals("onProgressChange")) {
+                final int current = geckoObject.getInt("current");
+                final int total = geckoObject.getInt("total");
+
+                getMainHandler().post(new Runnable() { 
+                        public void run() {
+                            if (total == -1) {
+                                GeckoApp.mProgressBar.setIndeterminate(true);
+                            } else if (current < total) {
+                                GeckoApp.mProgressBar.setIndeterminate(false);
+                                GeckoApp.mProgressBar.setMax(total);
+                                GeckoApp.mProgressBar.setProgress(current);
+                            }
+                            else {
+                                GeckoApp.mProgressBar.setIndeterminate(false);
+                            }
+                        }
+                    });
+
+                Log.i("GeckoShell", "progress - " + current + "/" + total);
+            }
+        } catch (Exception e) {
+            Log.i("GeckoShell", "handleGeckoMessage throws "+e);
         }
     }
 }
