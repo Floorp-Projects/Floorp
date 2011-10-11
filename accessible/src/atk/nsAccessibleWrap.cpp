@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsAccessible.h"
 #include "nsAccessibleWrap.h"
 
@@ -69,6 +71,7 @@
 #include "nsMaiInterfaceDocument.h"
 #include "nsMaiInterfaceImage.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 nsAccessibleWrap::EAvailableAtkSignals nsAccessibleWrap::gAvailableAtkSignals =
@@ -522,7 +525,7 @@ GetMaiAtkType(PRUint16 interfacesBits)
                                   atkTypeName,
                                   &tinfo, GTypeFlags(0));
 
-    for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(atk_if_infos); index++) {
+    for (PRUint32 index = 0; index < ArrayLength(atk_if_infos); index++) {
       if (interfacesBits & (1 << index)) {
         g_type_add_interface_static(type,
                                     GetAtkTypeForMai((MaiInterfaceType)index),
@@ -963,7 +966,7 @@ refRelationSetCB(AtkObject *aAtkObj)
     nsIAccessibleRelation::RELATION_DESCRIPTION_FOR,
   };
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(relationTypes); i++) {
+  for (PRUint32 i = 0; i < ArrayLength(relationTypes); i++) {
     AtkRelationType atkType = static_cast<AtkRelationType>(relationTypes[i]);
     AtkRelation* atkRelation =
       atk_relation_set_get_relation_by_type(relation_set, atkType);

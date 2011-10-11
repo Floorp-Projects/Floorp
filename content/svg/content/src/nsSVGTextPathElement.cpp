@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSVGStylableElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGTextPathElement.h"
@@ -43,6 +45,8 @@
 #include "nsSVGTextPathElement.h"
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
+
+using namespace mozilla;
 
 nsSVGElement::LengthInfo nsSVGTextPathElement::sLengthInfo[1] =
 {
@@ -151,7 +155,7 @@ nsSVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const
     sTextContentElementsMap
   };
   
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGTextPathElementBase::IsAttributeMapped(name);
 }
 
@@ -168,19 +172,19 @@ nsSVGElement::LengthAttributesInfo
 nsSVGTextPathElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              NS_ARRAY_LENGTH(sLengthInfo));
+                              ArrayLength(sLengthInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGTextPathElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGTextPathElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }

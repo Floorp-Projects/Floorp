@@ -32,12 +32,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGAltGlyphElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsSVGString.h"
 #include "nsSVGTextPositioningElement.h"
 #include "nsContentUtils.h"
+
+using namespace mozilla;
 
 typedef nsSVGTextPositioningElement nsSVGAltGlyphElementBase;
 
@@ -173,7 +177,7 @@ nsSVGAltGlyphElement::IsAttributeMapped(const nsIAtom* name) const
     sTextContentElementsMap
   };
   
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGAltGlyphElementBase::IsAttributeMapped(name);
 }
 
@@ -190,5 +194,5 @@ nsSVGElement::StringAttributesInfo
 nsSVGAltGlyphElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }

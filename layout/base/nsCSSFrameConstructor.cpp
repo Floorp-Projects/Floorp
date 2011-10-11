@@ -43,6 +43,8 @@
  * tree and updating of that tree in response to dynamic changes
  */
 
+#include "mozilla/Util.h"
+
 #include "nsCSSFrameConstructor.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
@@ -3527,7 +3529,7 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
   };
 
   return FindDataByTag(aTag, aElement, aStyleContext, sHTMLData,
-                       NS_ARRAY_LENGTH(sHTMLData));
+                       ArrayLength(sHTMLData));
 }
 
 /* static */
@@ -3588,7 +3590,7 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
   NS_ASSERTION(control, "input doesn't implement nsIFormControl?");
 
   return FindDataByInt(control->GetType(), aElement, aStyleContext,
-                       sInputData, NS_ARRAY_LENGTH(sInputData));
+                       sInputData, ArrayLength(sInputData));
 }
 
 /* static */
@@ -3626,7 +3628,7 @@ nsCSSFrameConstructor::FindObjectData(Element* aElement,
   };
 
   return FindDataByInt((PRInt32)type, aElement, aStyleContext,
-                       sObjectData, NS_ARRAY_LENGTH(sObjectData));
+                       sObjectData, ArrayLength(sObjectData));
 }
 
 nsresult
@@ -4019,7 +4021,7 @@ nsCSSFrameConstructor::FindXULTagData(Element* aElement,
 };
 
   return FindDataByTag(aTag, aElement, aStyleContext, sXULTagData,
-                       NS_ARRAY_LENGTH(sXULTagData));
+                       ArrayLength(sXULTagData));
 }
 
 #ifdef MOZ_XUL
@@ -4170,7 +4172,7 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay* aDisplay,
 
   // Processing by display here:
   return FindDataByInt(aDisplay->mDisplay, aElement, aStyleContext,
-                       sXULDisplayData, NS_ARRAY_LENGTH(sXULDisplayData));
+                       sXULDisplayData, ArrayLength(sXULDisplayData));
 }
 
 already_AddRefed<nsStyleContext>
@@ -4398,7 +4400,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
   };
 
   return FindDataByInt(aDisplay->mDisplay, aElement, aStyleContext,
-                       sDisplayData, NS_ARRAY_LENGTH(sDisplayData));
+                       sDisplayData, ArrayLength(sDisplayData));
 }
 
 nsresult
@@ -4676,7 +4678,7 @@ nsCSSFrameConstructor::FindMathMLData(Element* aElement,
   };
 
   return FindDataByTag(aTag, aElement, aStyleContext, sMathMLData,
-                       NS_ARRAY_LENGTH(sMathMLData));
+                       ArrayLength(sMathMLData));
 }
 
 // Only outer <svg> elements can be floated or positioned.  All other SVG
@@ -4851,7 +4853,7 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
 
   const FrameConstructionData* data =
     FindDataByTag(aTag, aElement, aStyleContext, sSVGData,
-                  NS_ARRAY_LENGTH(sSVGData));
+                  ArrayLength(sSVGData));
 
   if (!data) {
     data = &sContainerData;
@@ -9621,7 +9623,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
         ? "NeededToWrapXULInlineBox" : "NeededToWrapXUL";
     nsContentUtils::ReportToConsole(nsContentUtils::eXUL_PROPERTIES,
                                     message,
-                                    params, NS_ARRAY_LENGTH(params),
+                                    params, ArrayLength(params),
                                     nsnull,
                                     EmptyString(), 0, 0, // not useful
                                     nsIScriptError::warningFlag,
