@@ -537,6 +537,8 @@ listTemplateFooter = (
 "${methods}\n"
 "};\n"
 "\n"
+"template class ListBase<${name}Class>;\n"
+"\n"
 "JSObject*\n"
 "${name}::create(JSContext *cx, XPCWrappedNativeScope *scope, ${nativeClass} *list, nsWrapperCache *cache, bool *triedToWrap)\n"
 "{\n"
