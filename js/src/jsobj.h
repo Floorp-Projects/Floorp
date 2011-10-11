@@ -1089,21 +1089,18 @@ struct JSObject : js::gc::Cell
      * "method barrier" comments and methods.
      */
 
-    static const uint32 JSSLOT_FUN_METHOD_ATOM = 0;
-    static const uint32 JSSLOT_FUN_METHOD_OBJ  = 1;
-
     static const uint32 JSSLOT_BOUND_FUNCTION_THIS       = 0;
     static const uint32 JSSLOT_BOUND_FUNCTION_ARGS_COUNT = 1;
 
   public:
     static const uint32 FUN_CLASS_RESERVED_SLOTS = 2;
-    static const uint32 FUN_CLASS_NFIXED_SLOTS = 3;
 
     static size_t getFlatClosureUpvarsOffset() {
         return getFixedSlotOffset(JSSLOT_FLAT_CLOSURE_UPVARS);
     }
 
-    inline JSFunction *getFunctionPrivate() const;
+    inline JSFunction *toFunction();
+    inline const JSFunction *toFunction() const;
 
     inline js::Value *getFlatClosureUpvars() const;
     inline js::Value getFlatClosureUpvar(uint32 i) const;
@@ -1113,9 +1110,6 @@ struct JSObject : js::gc::Cell
 
     /* See comments in fun_finalize. */
     inline void finalizeUpvarsIfFlatClosure();
-
-    inline bool hasMethodObj(const JSObject& obj) const;
-    inline void setMethodObj(JSObject& obj);
 
     inline bool initBoundFunction(JSContext *cx, const js::Value &thisArg,
                                   const js::Value *args, uintN argslen);

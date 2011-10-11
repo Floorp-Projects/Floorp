@@ -427,7 +427,7 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
     JS_ASSERT(!thisv.isMagic());
 
 #ifdef DEBUG
-    JSFunction *fun = call.callee().isFunction() ? call.callee().getFunctionPrivate() : NULL;
+    JSFunction *fun = call.callee().isFunction() ? call.callee().toFunction() : NULL;
     JS_ASSERT_IF(fun && fun->isInterpreted(), !fun->inStrictMode());
 #endif
 
@@ -623,7 +623,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     }
 
     /* Invoke native functions. */
-    JSFunction *fun = callee.getFunctionPrivate();
+    JSFunction *fun = callee.toFunction();
     JS_ASSERT_IF(construct, !fun->isConstructor());
     if (fun->isNative())
         return CallJSNative(cx, fun->u.n.native, args);
@@ -1073,7 +1073,7 @@ js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
         JSObject *callee = &args.callee();
         Class *clasp = callee->getClass();
         if (clasp == &FunctionClass) {
-            JSFunction *fun = callee->getFunctionPrivate();
+            JSFunction *fun = callee->toFunction();
 
             if (fun->isConstructor()) {
                 args.thisv().setMagicWithObjectOrNullPayload(NULL);
@@ -1120,7 +1120,7 @@ js::InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value
     Class *clasp = callee.getClass();
     JSFunction *fun;
     bool ok;
-    if (clasp == &FunctionClass && (fun = callee.getFunctionPrivate())->isConstructor()) {
+    if (clasp == &FunctionClass && (fun = callee.toFunction())->isConstructor()) {
         args.thisv().setMagicWithObjectOrNullPayload(thisobj);
         Probes::calloutBegin(cx, fun);
         ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
@@ -3728,11 +3728,10 @@ BEGIN_CASE(JSOP_FUNAPPLY)
 
     bool construct = (*regs.pc == JSOP_NEW);
 
-    JSObject *callee;
     JSFunction *fun;
 
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
-    if (!IsFunctionObject(args.calleev(), &callee, &fun) || !fun->isInterpretedConstructor()) {
+    if (!IsFunctionObject(args.calleev(), &fun) || !fun->isInterpretedConstructor()) {
         if (construct) {
             if (!InvokeConstructorKernel(cx, args))
                 goto error;
@@ -3753,7 +3752,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
 
     JSScript *newScript = fun->script();
-    if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, fun, newScript, initial))
+    if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, fun, newScript, initial))
         goto error;
 
     RESTORE_INTERP_VARS();
@@ -4266,7 +4265,7 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
     uintN index = GET_UINT16(regs.pc);
     JSObject *obj = &argv[-2].toObject();
 
-    JS_ASSERT(index < obj->getFunctionPrivate()->script()->bindings.countUpvars());
+    JS_ASSERT(index < obj->toFunction()->script()->bindings.countUpvars());
     PUSH_COPY(obj->getFlatClosureUpvar(index));
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
     if (op == JSOP_CALLFCSLOT)
@@ -4588,11 +4587,10 @@ BEGIN_CASE(JSOP_LAMBDA)
                      * is the callee for this JSOP_CALL.
                      */
                     const Value &cref = regs.sp[1 - (iargc + 2)];
-                    JSObject *callee;
+                    JSFunction *fun;
 
-                    if (IsFunctionObject(cref, &callee)) {
-                        JSFunction *calleeFun = callee->getFunctionPrivate();
-                        if (Native native = calleeFun->maybeNative()) {
+                    if (IsFunctionObject(cref, &fun)) {
+                        if (Native native = fun->maybeNative()) {
                             if ((iargc == 1 && native == array_sort) ||
                                 (iargc == 2 && native == str_replace)) {
                                 break;

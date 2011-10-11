@@ -854,7 +854,7 @@ JSCompartment::getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbyte
     JS_ASSERT(pc < script->code + script->length);
     JS_ASSERT_IF(scriptObject, scriptObject->isScript() || scriptObject->isFunction());
     JS_ASSERT_IF(scriptObject && scriptObject->isFunction(),
-                 scriptObject->getFunctionPrivate()->script() == script);
+                 scriptObject->toFunction()->script() == script);
     JS_ASSERT_IF(scriptObject && scriptObject->isScript(), scriptObject->getScript() == script);
 
     BreakpointSiteMap::AddPtr p = breakpointSites.lookupForAdd(pc);

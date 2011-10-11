@@ -339,11 +339,11 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
             *va_arg(ap, JSObject **) = obj;
             break;
           case 'f':
-            obj = js_ValueToFunctionObject(cx, sp, 0);
+            obj = js_ValueToFunction(cx, sp, 0);
             if (!obj)
                 return JS_FALSE;
             *sp = OBJECT_TO_JSVAL(obj);
-            *va_arg(ap, JSFunction **) = obj->getFunctionPrivate();
+            *va_arg(ap, JSFunction **) = obj->toFunction();
             break;
           case 'v':
             *va_arg(ap, jsval *) = *sp;
@@ -432,7 +432,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
         break;
       case JSTYPE_FUNCTION:
         *vp = v;
-        obj = js_ValueToFunctionObject(cx, vp, JSV2F_SEARCH_STACK);
+        obj = js_ValueToFunction(cx, vp, JSV2F_SEARCH_STACK);
         ok = (obj != NULL);
         break;
       case JSTYPE_STRING:
@@ -2372,7 +2372,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
             JSObject  *obj = (JSObject *)thing;
             Class *clasp = obj->getClass();
             if (clasp == &FunctionClass) {
-                JSFunction *fun = obj->getFunctionPrivate();
+                JSFunction *fun = obj->toFunction();
                 if (!fun) {
                     JS_snprintf(buf, bufsize, "<newborn>");
                 } else if (fun != obj) {
@@ -3082,8 +3082,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
         if (!proto->getProperty(cx, cx->runtime->atomState.constructorAtom, &cval))
             return NULL;
     }
-    JSObject *funobj;
-    if (!IsFunctionObject(cval, &funobj)) {
+    if (!IsFunctionObject(cval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR,
                              proto->getClass()->name);
         return NULL;
@@ -4305,7 +4304,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         return NULL;
     }
 
-    JSFunction *fun = funobj->getFunctionPrivate();
+    JSFunction *fun = funobj->toFunction();
     if (!fun->isInterpreted())
         return CloneFunctionObject(cx, fun, parent);
 

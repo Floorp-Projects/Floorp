@@ -128,11 +128,8 @@ inline JSFunction *
 JSScript::getFunction(size_t index)
 {
     JSObject *funobj = getObject(index);
-    JS_ASSERT(funobj->isFunction());
-    JS_ASSERT(funobj == (JSObject *) funobj->getPrivate());
-    JSFunction *fun = (JSFunction *) funobj;
-    JS_ASSERT(fun->isInterpreted());
-    return fun;
+    JS_ASSERT(funobj->isFunction() && funobj->toFunction()->isInterpreted());
+    return funobj->toFunction();
 }
 
 inline JSFunction *

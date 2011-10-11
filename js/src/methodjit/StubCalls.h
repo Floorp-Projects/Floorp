@@ -90,13 +90,11 @@ void JS_FASTCALL ScriptProbeOnlyEpilogue(VMFrame &f);
  *       to JM native code. Then all fields are non-NULL.
  */
 struct UncachedCallResult {
-    JSObject   *callee;       // callee object
     JSFunction *fun;          // callee function
     void       *codeAddr;     // code address of compiled callee function
     bool       unjittable;    // did we try to JIT and fail?
 
     void init() {
-        callee = NULL;
         fun = NULL;
         codeAddr = NULL;
         unjittable = false;

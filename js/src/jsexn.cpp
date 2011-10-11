@@ -544,7 +544,7 @@ ValueToShortSource(JSContext *cx, const Value &v)
         /*
          * XXX Avoid function decompilation bloat for now.
          */
-        str = JS_GetFunctionId(obj->getFunctionPrivate());
+        str = JS_GetFunctionId(obj->toFunction());
         if (!str && !(str = js_ValueToSource(cx, v))) {
             /*
              * Continue to soldier on if the function couldn't be

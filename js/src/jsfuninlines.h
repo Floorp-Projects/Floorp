@@ -53,15 +53,34 @@ inline void
 JSFunction::setJoinable()
 {
     JS_ASSERT(isInterpreted());
-    setSlot(METHOD_ATOM_SLOT, js::NullValue());
+    setSlot(JSSLOT_FUN_METHOD_ATOM, js::NullValue());
     flags |= JSFUN_JOINABLE;
+}
+
+inline bool
+JSFunction::isClonedMethod() const
+{
+    return getFixedSlot(JSSLOT_FUN_METHOD_OBJ).isObject();
 }
 
 inline void
 JSFunction::setMethodAtom(JSAtom *atom)
 {
     JS_ASSERT(joinable());
-    setSlot(METHOD_ATOM_SLOT, js::StringValue(atom));
+    setSlot(JSSLOT_FUN_METHOD_ATOM, js::StringValue(atom));
+}
+
+inline bool
+JSFunction::hasMethodObj(const JSObject& obj) const
+{
+    return getFixedSlot(JSSLOT_FUN_METHOD_OBJ).isObject() &&
+           getFixedSlot(JSSLOT_FUN_METHOD_OBJ).toObject() == obj;
+}
+
+inline void
+JSFunction::setMethodObj(JSObject& obj)
+{
+    setFixedSlot(JSSLOT_FUN_METHOD_OBJ, js::ObjectValue(obj));
 }
 
 namespace js {
@@ -73,25 +92,13 @@ IsFunctionObject(const js::Value &v)
 }
 
 static JS_ALWAYS_INLINE bool
-IsFunctionObject(const js::Value &v, JSObject **funobj)
-{
-    return v.isObject() && (*funobj = &v.toObject())->isFunction();
-}
-
-static JS_ALWAYS_INLINE bool
-IsFunctionObject(const js::Value &v, JSObject **funobj, JSFunction **fun)
-{
-    bool b = IsFunctionObject(v, funobj);
-    if (b)
-        *fun = (*funobj)->getFunctionPrivate();
-    return b;
-}
-
-static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v, JSFunction **fun)
 {
-    JSObject *funobj;
-    return IsFunctionObject(v, &funobj, fun);
+    if (v.isObject() && v.toObject().isFunction()) {
+        *fun = v.toObject().toFunction();
+        return true;
+    }
+    return false;
 }
 
 static JS_ALWAYS_INLINE bool
@@ -152,7 +159,7 @@ IsConstructing(const Value *vp)
 #ifdef DEBUG
     JSObject *callee = &JS_CALLEE(cx, vp).toObject();
     if (callee->isFunction()) {
-        JSFunction *fun = callee->getFunctionPrivate();
+        JSFunction *fun = callee->toFunction();
         JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
     } else {
         JS_ASSERT(callee->getClass()->construct != NULL);
@@ -173,7 +180,7 @@ IsConstructing_PossiblyWithGivenThisObject(const Value *vp, JSObject **ctorThis)
 #ifdef DEBUG
     JSObject *callee = &JS_CALLEE(cx, vp).toObject();
     if (callee->isFunction()) {
-        JSFunction *fun = callee->getFunctionPrivate();
+        JSFunction *fun = callee->toFunction();
         JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
     } else {
         JS_ASSERT(callee->getClass()->construct != NULL);

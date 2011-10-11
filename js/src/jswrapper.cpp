@@ -737,7 +737,7 @@ bool
 CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs srcArgs)
 {
     JS_ASSERT_IF(!srcArgs.calleev().isUndefined(),
-                 srcArgs.callee().getFunctionPrivate()->native() == native);
+                 srcArgs.callee().toFunction()->native() == native);
     JS_ASSERT(&srcArgs.thisv().toObject() == wrapper);
     JS_ASSERT(!UnwrapObject(wrapper)->isProxy());
 

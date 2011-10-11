@@ -314,7 +314,6 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     JS_ASSERT(JS_ON_TRACE(cx));
 
     JSFunction *fun = (JSFunction*) funobj;
-    JS_ASSERT(funobj->getFunctionPrivate() == fun);
 
     types::TypeObject *type = proto->getNewType(cx);
     if (!type)

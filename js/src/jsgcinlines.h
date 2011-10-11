@@ -80,6 +80,8 @@ GetGCObjectKind(size_t numSlots)
 static inline AllocKind
 GetGCObjectKind(Class *clasp)
 {
+    if (clasp == &FunctionClass)
+        return FINALIZE_FUNCTION;
     uint32 nslots = JSCLASS_RESERVED_SLOTS(clasp);
     if (clasp->flags & JSCLASS_HAS_PRIVATE)
         nslots++;
@@ -116,7 +118,7 @@ GetGCObjectFixedSlotsKind(size_t numFixedSlots)
 static inline bool
 IsBackgroundAllocKind(AllocKind kind)
 {
-    JS_ASSERT(kind <= FINALIZE_OBJECT_LAST);
+    JS_ASSERT(kind <= FINALIZE_FUNCTION);
     return kind % 2 == 1;
 }
 
@@ -152,6 +154,7 @@ GetGCKindSlots(AllocKind thingKind)
         return 0;
       case FINALIZE_OBJECT2:
       case FINALIZE_OBJECT2_BACKGROUND:
+      case FINALIZE_FUNCTION:
         return 2;
       case FINALIZE_OBJECT4:
       case FINALIZE_OBJECT4_BACKGROUND:
@@ -378,7 +381,7 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
 inline JSObject *
 js_NewGCObject(JSContext *cx, js::gc::AllocKind kind)
 {
-    JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
+    JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_FUNCTION);
     JSObject *obj = NewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
     if (obj)
         obj->earlyInit(js::gc::GetGCKindSlots(kind));
@@ -402,16 +405,6 @@ js_NewGCExternalString(JSContext *cx)
 {
     return NewGCThing<JSExternalString>(cx, js::gc::FINALIZE_EXTERNAL_STRING,
                                         sizeof(JSExternalString));
-}
-
-inline JSFunction*
-js_NewGCFunction(JSContext *cx)
-{
-    JSFunction *fun = NewGCThing<JSFunction>(cx, js::gc::FINALIZE_FUNCTION, sizeof(JSFunction));
-    if (fun)
-        fun->earlyInit(JSObject::FUN_CLASS_NFIXED_SLOTS + 1);  /* Add one for private data. */
-
-    return fun;
 }
 
 inline JSScript *

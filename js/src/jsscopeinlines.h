@@ -57,6 +57,11 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
+JS_STATIC_ASSERT(js::gc::FINALIZE_OBJECT0 % 2 == 0);
+JS_STATIC_ASSERT(js::gc::FINALIZE_FUNCTION == js::gc::FINALIZE_OBJECT_LAST + 1);
+static const uint32 TYPE_OBJECT_EMPTY_SHAPE_COUNT =
+    ((js::gc::FINALIZE_FUNCTION - js::gc::FINALIZE_OBJECT0) / 2) + 1;
+
 inline js::EmptyShape *
 js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
                                      gc::AllocKind kind)
@@ -70,12 +75,16 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
      */
     JS_ASSERT(proto->hasNewType(this));
 
-    JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
-    int i = kind - js::gc::FINALIZE_OBJECT0;
+    JS_ASSERT(kind >= gc::FINALIZE_OBJECT0 &&
+              kind <= gc::FINALIZE_FUNCTION_AND_OBJECT_LAST);
+
+    JS_STATIC_ASSERT(gc::FINALIZE_OBJECT0 % 2 == 0);
+    JS_STATIC_ASSERT(gc::FINALIZE_FUNCTION == gc::FINALIZE_OBJECT_LAST + 1);
+    int i = (kind - gc::FINALIZE_OBJECT0) / 2;
 
     if (!emptyShapes) {
-        emptyShapes = (js::EmptyShape**)
-            cx->calloc_(sizeof(js::EmptyShape*) * js::gc::FINALIZE_FUNCTION_AND_OBJECT_LAST);
+        emptyShapes = (EmptyShape**)
+            cx->calloc_(sizeof(EmptyShape*) * TYPE_OBJECT_EMPTY_SHAPE_COUNT);
         if (!emptyShapes)
             return NULL;
 
@@ -83,7 +92,7 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
          * Always fill in emptyShapes[0], so canProvideEmptyShape works.
          * Other empty shapes are filled in lazily.
          */
-        emptyShapes[0] = js::EmptyShape::create(cx, aclasp);
+        emptyShapes[0] = EmptyShape::create(cx, aclasp);
         if (!emptyShapes[0]) {
             cx->free_(emptyShapes);
             emptyShapes = NULL;
@@ -94,7 +103,7 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
     JS_ASSERT(aclasp == emptyShapes[0]->getClass());
 
     if (!emptyShapes[i]) {
-        emptyShapes[i] = js::EmptyShape::create(cx, aclasp);
+        emptyShapes[i] = EmptyShape::create(cx, aclasp);
         if (!emptyShapes[i])
             return NULL;
     }
