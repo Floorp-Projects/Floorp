@@ -44,7 +44,6 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsbit.h"
 #include "jsutil.h"
 #include "jshash.h"
 
@@ -107,7 +106,7 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
     if (n <= MINBUCKETS) {
         n = MINBUCKETSLOG2;
     } else {
-        n = JS_CeilingLog2(n);
+        n = JS_CEILING_LOG2W(n);
         if ((int32)n < 0)
             return NULL;
     }
@@ -387,7 +386,7 @@ out:
         JS_ASSERT(ht->nentries < nlimit);
         nbuckets = NBUCKETS(ht);
         if (MINBUCKETS < nbuckets && ht->nentries < UNDERLOADED(nbuckets)) {
-            newlog2 = JS_CeilingLog2(ht->nentries);
+            newlog2 = JS_CEILING_LOG2W(ht->nentries);
             if (newlog2 < MINBUCKETSLOG2)
                 newlog2 = MINBUCKETSLOG2;
 

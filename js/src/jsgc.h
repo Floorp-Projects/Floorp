@@ -45,19 +45,21 @@
  */
 #include <setjmp.h>
 
+#include "jsalloc.h"
 #include "jstypes.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsdhash.h"
-#include "jsbit.h"
 #include "jsgcchunk.h"
-#include "jshashtable.h"
 #include "jslock.h"
 #include "jsutil.h"
-#include "jsvector.h"
 #include "jsversion.h"
 #include "jsgcstats.h"
 #include "jscell.h"
+
+#include "gc/Statistics.h"
+#include "js/HashTable.h"
+#include "js/Vector.h"
 
 struct JSCompartment;
 
@@ -656,8 +658,8 @@ struct Chunk {
 
     void releaseArena(ArenaHeader *aheader);
 
-    static Chunk *allocate();
-    static inline void release(Chunk *chunk);
+    static Chunk *allocate(JSRuntime *rt);
+    static inline void release(JSRuntime *rt, Chunk *chunk);
 
   private:
     inline void init();
@@ -1265,11 +1267,11 @@ MarkContext(JSTracer *trc, JSContext *acx);
 
 /* Must be called with GC lock taken. */
 extern void
-TriggerGC(JSRuntime *rt);
+TriggerGC(JSRuntime *rt, js::gcstats::Reason reason);
 
 /* Must be called with GC lock taken. */
 extern void
-TriggerCompartmentGC(JSCompartment *comp);
+TriggerCompartmentGC(JSCompartment *comp, js::gcstats::Reason reason);
 
 extern void
 MaybeGC(JSContext *cx);
@@ -1295,7 +1297,7 @@ typedef enum JSGCInvocationKind {
 
 /* Pass NULL for |comp| to get a full GC. */
 extern void
-js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind);
+js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, js::gcstats::Reason r);
 
 #ifdef JS_THREADSAFE
 /*
