@@ -253,6 +253,12 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
     aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
 
+    if (aDriverInfo) {
+      // We don't implement the downloaded blacklist yet. Don't evaluate
+      // anything.
+      return NS_OK;
+    }
+
 #ifdef MOZ_PLATFORM_MAEMO
     // on Maemo, the glxtest probe doesn't build, and we don't really need GfxInfo anyway
     return NS_OK;
