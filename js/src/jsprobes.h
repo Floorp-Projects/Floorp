@@ -229,6 +229,7 @@ class JITWatcher {
 public:
     virtual JITReportGranularity granularityRequested() = 0;
 
+#ifdef JS_METHODJIT
     virtual void registerMJITCode(JSContext *cx, js::mjit::JITScript *jscr,
                                   JSScript *script, JSFunction *fun,
                                   mjit::Compiler_ActiveFrame** inlineFrames,
@@ -241,6 +242,7 @@ public:
     virtual void registerICCode(JSContext *cx,
                                 js::mjit::JITScript *jscr, JSScript *script, jsbytecode* pc,
                                 void *start, size_t size) = 0;
+#endif
 
     virtual void discardExecutableRegion(void *start, size_t size) = 0;
 };
@@ -271,6 +273,7 @@ removeAllJITWatchers(JSRuntime *rt);
 JITReportGranularity
 JITGranularityRequested();
 
+#ifdef JS_METHODJIT
 /*
  * New method JIT code has been created
  */
@@ -294,6 +297,7 @@ void
 registerICCode(JSContext *cx,
                mjit::JITScript *jscr, JSScript *script, jsbytecode* pc,
                void *start, size_t size);
+#endif /* JS_METHODJIT */
 
 /*
  * A whole region of code has been deallocated, containing any number of ICs.

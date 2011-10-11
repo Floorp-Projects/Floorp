@@ -113,6 +113,7 @@ Probes::JITGranularityRequested()
     return want;
 }
 
+#ifdef JS_METHODJIT
 void
 Probes::registerMJITCode(JSContext *cx, js::mjit::JITScript *jscr,
                          JSScript *script, JSFunction *fun,
@@ -142,6 +143,7 @@ Probes::registerICCode(JSContext *cx,
     for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p)
         (*p)->registerICCode(cx, jscr, script, pc, start, size);
 }
+#endif
 
 /* ICs are unregistered in a batch */
 void
