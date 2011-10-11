@@ -87,7 +87,7 @@ abstract public class GeckoApp
     public Handler mMainHandler;
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
-    public static EditText mAwesomeBar;
+    public static Button mAwesomeBar;
     public static ProgressBar mProgressBar;
     private static SQLiteDatabase mDb;
     private static DatabaseHelper mDbHelper;
@@ -399,12 +399,16 @@ abstract public class GeckoApp
 
         // setup gecko layout
         geckoLayout = (AbsoluteLayout) findViewById(R.id.geckoLayout);
-        surfaceView = new GeckoSurfaceView(this);
-        geckoLayout.addView(surfaceView,
-                            new AbsoluteLayout.LayoutParams(AbsoluteLayout.LayoutParams.MATCH_PARENT,
-                                                            AbsoluteLayout.LayoutParams.MATCH_PARENT,
-                                                            0,
-                                                            0));
+
+        if (surfaceView == null) {
+            surfaceView = new GeckoSurfaceView(this);
+            geckoLayout.addView(surfaceView);
+        } else if (geckoLayout.getChildCount() == 0) {
+           //surfaceView still holds to the old one during rotation. re-add it to new activity
+           ((ViewGroup) surfaceView.getParent()).removeAllViews();
+           geckoLayout.addView(surfaceView);
+        }
+
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - UI almost up");
 
         if (sGREDir == null)
@@ -438,7 +442,7 @@ abstract public class GeckoApp
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         // setup awesome bar
-        mAwesomeBar = (EditText) findViewById(R.id.awesomeBar);
+        mAwesomeBar = (Button) findViewById(R.id.awesomeBar);
         mAwesomeBar.setOnClickListener(new EditText.OnClickListener() {
             public void onClick(View v) {
                 onSearchRequested();

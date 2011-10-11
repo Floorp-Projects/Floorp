@@ -52,6 +52,7 @@ import android.widget.*;
 import android.database.sqlite.*;
 import android.database.*;
 import android.view.*;
+import android.view.View.*;
 import android.net.Uri;
 import android.graphics.*;
 
@@ -125,7 +126,7 @@ public class AwesomeBar extends ListActivity {
             R.layout.awesomebar_row,
             null,
             new String[] { TITLE_KEY, URL_KEY },
-            new int[] { android.R.id.text1, android.R.id.text2 }
+            new int[] { R.id.title, R.id.url }
         );
         setListAdapter(adapter);
 
@@ -157,14 +158,15 @@ public class AwesomeBar extends ListActivity {
 
         text.setOnKeyListener(new View.OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (keyCode != KeyEvent.KEYCODE_ENTER)
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra(URL_KEY, text.getText().toString());
+                    setResult(Activity.RESULT_OK, resultIntent);
+                    finish();
+                    return true;
+                } else {
                     return false;
-
-                Intent resultIntent = new Intent();
-                resultIntent.putExtra(URL_KEY, text.getText().toString());
-                setResult(Activity.RESULT_OK, resultIntent);
-                finish();
-                return true;
+                }
             }
         });
 
