@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _MOCHITEST_FILES = \
   utils.js \
+  test_defaultValue.html \
   test_getauthenticationinfo.html \
   test_npobject_getters.html \
   test_npruntime_npnevaluate.html \

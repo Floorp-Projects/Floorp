@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <title>NPObject [[DefaultValue]] implementation</title>
+
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+
+  <body onload="run()">
+
+    <embed id="plugin" type="application/x-test" wmode="window"></embed>
+
+    <script class="testbody" type="application/javascript">
+      SimpleTest.waitForExplicitFinish();
+
+      function run() {
+        var plugin = document.getElementById("plugin");
+        var pluginProto = Object.getPrototypeOf(plugin);
+
+        plugin.propertyAndMethod = {};
+        plugin.propertyAndMethod + "baz";
+        ok(true, "|plugin.propertyAndMethod + \"baz\"| shouldn't assert");
+        pluginProto.propertyAndMethod = {};
+        pluginProto.propertyAndMethod + "quux";
+        ok(true, "|pluginProto.propertyAndMethod + \"quux\"| shouldn't assert");
+
+        plugin + "foo";
+        ok(true, "|plugin + \"foo\"| shouldn't assert");
+        pluginProto + "bar";
+        ok(true, "|pluginProto + \"bar\"| shouldn't assert");
+
+        SimpleTest.finish();
+      }
+    </script>
+  </body>
+</html>
