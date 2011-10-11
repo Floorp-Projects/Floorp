@@ -1,7 +1,6 @@
 # Global options
 mk_add_options MOZ_MAKE_FLAGS=-j4
 ac_add_options --enable-debug
-ac_add_options --disable-optimize
 
 # Build Fennec
 ac_add_options --enable-application=mobile

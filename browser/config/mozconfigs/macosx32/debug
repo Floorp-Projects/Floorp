@@ -3,7 +3,6 @@
 
 ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.5.sdk
 
-ac_add_options --disable-optimize
 ac_add_options --enable-debug
 ac_add_options --enable-libxul
 
