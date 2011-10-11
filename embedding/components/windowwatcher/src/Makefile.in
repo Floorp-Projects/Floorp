@@ -46,9 +46,7 @@ MODULE		= embedcomponents
 LIBRARY_NAME	= windowwatcher_s
 LIBXUL_LIBRARY	= 1
 
-
 CPPSRCS		= \
-                  nsWWJSUtils.cpp \
                   nsWindowWatcher.cpp  \
                   nsAutoWindowStateHelper.cpp \
                   $(NULL)
@@ -62,5 +60,7 @@ endif
 # static lib.
 FORCE_STATIC_LIB = 1
 
-include $(topsrcdir)/config/rules.mk
+# For nsJSUtils
+LOCAL_INCLUDES += -I$(topsrcdir)/dom/base
 
+include $(topsrcdir)/config/rules.mk
