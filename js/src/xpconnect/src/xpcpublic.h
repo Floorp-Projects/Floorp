@@ -45,6 +45,7 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jspubtd.h"
+#include "jsproxy.h"
 
 #include "nsISupports.h"
 #include "nsIPrincipal.h"
@@ -53,6 +54,7 @@
 #include "nsTArray.h"
 
 class nsIPrincipal;
+struct nsDOMClassInfoData;
 
 static const uint32 XPC_GC_COLOR_BLACK = 0;
 static const uint32 XPC_GC_COLOR_GRAY = 1;
@@ -67,6 +69,13 @@ nsresult
 xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
                          nsISupports *ptr, JSObject **global,
                          JSCompartment **compartment);
+
+#define XPCONNECT_GLOBAL_FLAGS \
+    JSCLASS_XPCONNECT_GLOBAL | JSCLASS_HAS_PRIVATE | \
+    JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(1)
+
+void
+TraceXPCGlobal(JSTracer *trc, JSObject *obj);
 
 // XXX where should this live?
 NS_EXPORT_(void)
@@ -124,11 +133,11 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
         JSObject* wrapper = cache->GetWrapper();
         NS_ASSERTION(!wrapper ||
                      !cache->IsProxy() ||
-                     !IS_SLIM_WRAPPER_OBJECT(wrapper),
+                     !IS_SLIM_WRAPPER(wrapper),
                      "Should never have a slim wrapper when IsProxy()");
         if (wrapper &&
             js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(scope) &&
-            (IS_SLIM_WRAPPER_OBJECT(wrapper) ||
+            (IS_SLIM_WRAPPER(wrapper) ||
              xpc_OkToHandOutWrapper(cache))) {
             *vp = OBJECT_TO_JSVAL(wrapper);
             return wrapper;
@@ -174,14 +183,6 @@ xpc_UnmarkGrayObject(JSObject *obj)
 {
     if(obj && xpc_IsGrayGCThing(obj))
         xpc_UnmarkGrayObjectRecursive(obj);
-}
-
-inline JSObject*
-nsWrapperCache::GetWrapper() const
-{
-  JSObject* obj = GetWrapperPreserveColor();
-  xpc_UnmarkGrayObject(obj);
-  return obj;
 }
 
 class nsIMemoryMultiReporterCallback;
@@ -261,6 +262,41 @@ ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
 
 } // namespace memory
 } // namespace xpconnect
+
+namespace dom {
+namespace binding {
+
+extern int HandlerFamily;
+inline void* ProxyFamily() { return &HandlerFamily; }
+inline bool instanceIsProxy(JSObject *obj)
+{
+    return js::IsProxy(obj) &&
+           js::GetProxyHandler(obj)->family() == ProxyFamily();
+}
+extern JSClass ExpandoClass;
+inline bool isExpandoObject(JSObject *obj)
+{
+    return js::GetObjectJSClass(obj) == &ExpandoClass;
+}
+
+enum {
+    JSPROXYSLOT_PROTOSHAPE = 0,
+    JSPROXYSLOT_EXPANDO = 1
+};
+
+typedef JSObject*
+(*DefineInterface)(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
+
+extern bool
+DefineStaticJSVals(JSContext *cx);
+void
+Register(nsDOMClassInfoData *aData);
+extern bool
+DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine,
+                  nsresult *aResult);
+
+} // namespace binding
+} // namespace dom
 } // namespace mozilla
 
 #endif

@@ -257,6 +257,11 @@ public:
     virtual void BindTexture(GLenum aTextureUnit) = 0;
     virtual void ReleaseTexture() {};
 
+    void BindTextureAndApplyFilter(GLenum aTextureUnit) {
+        BindTexture(aTextureUnit);
+        ApplyFilter();
+    }
+
     class ScopedBindTexture
     {
     public:
@@ -275,10 +280,22 @@ public:
             }       
         }
 
-    private:
+    protected:
         TextureImage *mTexture;
     };
 
+    class ScopedBindTextureAndApplyFilter
+        : public ScopedBindTexture
+    {
+    public:
+        ScopedBindTextureAndApplyFilter(TextureImage *aTexture, GLenum aTextureUnit) :
+          ScopedBindTexture(aTexture, aTextureUnit)
+        {
+            if (mTexture) {
+                mTexture->ApplyFilter();
+            }
+        }
+    };
 
     /**
      * Returns the shader program type that should be used to render
@@ -306,6 +323,8 @@ public:
 
     bool IsRGB() const { return mIsRGBFormat; }
 
+    void SetFilter(gfxPattern::GraphicsFilter aFilter) { mFilter = aFilter; }
+
 protected:
     friend class GLContext;
 
@@ -324,11 +343,18 @@ protected:
         , mIsRGBFormat(aIsRGB)
     {}
 
+    /**
+     * Applies this TextureImage's filter, assuming that its texture is
+     * the currently bound texture.
+     */
+    virtual void ApplyFilter() = 0;
+
     nsIntSize mSize;
     GLenum mWrapMode;
     ContentType mContentType;
     bool mIsRGBFormat;
     ShaderProgramType mShaderType;
+    gfxPattern::GraphicsFilter mFilter;
 };
 
 /**
@@ -391,6 +417,8 @@ protected:
 
     // The offset into the update surface at which the update rect is located.
     nsIntPoint mUpdateOffset;
+
+    virtual void ApplyFilter();
 };
 
 /**
@@ -434,6 +462,8 @@ protected:
     // The region of update requested
     nsIntRegion mUpdateRegion;
     TextureState mTextureState;
+
+    virtual void ApplyFilter();
 };
 
 struct THEBES_API ContextFormat
@@ -659,6 +689,12 @@ public:
      * Releases a color buffer that is being used as a texture
      */
     virtual bool ReleaseTexImage() { return false; }
+
+    /**
+     * Applies aFilter to the texture currently bound to GL_TEXTURE_2D.
+     */
+    void ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter);
+
 
     /*
      * Offscreen support API

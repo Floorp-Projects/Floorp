@@ -109,10 +109,63 @@ gtk_widget_get_allocation(GtkWidget *widget, GtkAllocation *allocation)
   *allocation = widget->allocation;
 }
 
+static inline void
+gtk_widget_set_allocation(GtkWidget *widget, const GtkAllocation *allocation)
+{
+  widget->allocation = *allocation;
+}
+
 static inline gboolean
 gdk_window_is_destroyed(GdkWindow *window)
 {
   return GDK_WINDOW_OBJECT(window)->destroyed;
+}
+
+static inline void 
+gtk_widget_set_can_focus(GtkWidget *widget, gboolean can_focus)
+{
+  if (can_focus)
+    GTK_WIDGET_SET_FLAGS (widget, GTK_CAN_FOCUS);
+  else
+    GTK_WIDGET_UNSET_FLAGS (widget, GTK_CAN_FOCUS);
+}
+
+static inline void
+gtk_widget_set_window(GtkWidget *widget, GdkWindow *window)
+{
+  widget->window = window;
+}
+#endif
+
+#if !GTK_CHECK_VERSION(2, 20, 0)
+static inline void
+gtk_widget_set_mapped(GtkWidget *widget, gboolean mapped)
+{
+  if (mapped)
+    GTK_WIDGET_SET_FLAGS (widget, GTK_MAPPED);
+  else
+    GTK_WIDGET_UNSET_FLAGS (widget, GTK_MAPPED);
+}
+
+static inline gboolean
+gtk_widget_get_mapped(GtkWidget *widget)
+{
+  return GTK_WIDGET_MAPPED (widget);
+}
+
+static inline void
+gtk_widget_set_realized(GtkWidget *widget, gboolean realized)
+{
+  if (realized)
+    GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
+  else
+    GTK_WIDGET_UNSET_FLAGS(widget, GTK_REALIZED);
+}
+
+static inline gboolean
+gtk_widget_get_realized(GtkWidget *widget)
+{
+  return GTK_WIDGET_REALIZED (widget);
 }
 #endif
 
@@ -131,12 +184,13 @@ gdk_drag_context_get_actions(GdkDragContext *context)
 #endif
 
 #if !GTK_CHECK_VERSION(2, 24, 0)
+#ifdef GDK_WINDOW_XDISPLAY
 static inline GdkWindow *
 gdk_x11_window_lookup_for_display(GdkDisplay *display, Window window)
 {
   return gdk_window_lookup_for_display(display, window);
 }
-
+#endif
 static inline GdkDisplay *
 gdk_window_get_display(GdkWindow *window)
 {
@@ -150,11 +204,13 @@ gdk_window_get_screen (GdkWindow *window)
 }
 #endif
 
+#ifdef GDK_WINDOW_XWINDOW
 static inline Window 
 gdk_x11_window_get_xid(GdkWindow *window)
 {
   return(GDK_WINDOW_XWINDOW(window));
 }
+#endif
 
 #ifdef __cplusplus
 }

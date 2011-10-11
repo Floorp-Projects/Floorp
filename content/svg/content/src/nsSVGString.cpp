@@ -64,8 +64,8 @@ nsSVGString::SetBaseValue(const nsAString& aValue,
 {
   NS_ASSERTION(aSVGElement, "Null element passed to SetBaseValue");
 
+  mIsBaseSet = PR_TRUE;
   if (aDoSetAttr) {
-    mIsBaseSet = PR_TRUE;
     aSVGElement->SetStringBaseValue(mAttrEnum, aValue);
   }
 #ifdef MOZ_SMIL

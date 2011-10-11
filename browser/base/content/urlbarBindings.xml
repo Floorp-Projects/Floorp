@@ -204,7 +204,7 @@
           let textNode = this.editor.rootElement.firstChild;
           let value = textNode.textContent;
 
-          let protocol = value.match(/^[a-z\d.+\-]+:/);
+          let protocol = value.match(/^[a-z\d.+\-]+:(?=[^\d])/);
           if (protocol &&
               ["http:", "https:", "ftp:"].indexOf(protocol[0]) == -1)
             return;
@@ -334,26 +334,35 @@
           // area when the current tab is re-selected.
           gBrowser.selectedBrowser.focus();
 
-          if (aTriggeringEvent instanceof MouseEvent) {
-            // We have a mouse event (from the go button), so use the standard
-            // UI link behaviors
-            let where = whereToOpenLink(aTriggeringEvent, false, false);
+          let isMouseEvent = aTriggeringEvent instanceof MouseEvent;
+          let altEnter = !isMouseEvent && aTriggeringEvent && aTriggeringEvent.altKey;
+
+          if (altEnter) {
+            // XXX This was added a long time ago, and I'm not sure why it is
+            // necessary. Alt+Enter's default action might cause a system beep,
+            // or something like that?
+            aTriggeringEvent.preventDefault();
+            aTriggeringEvent.stopPropagation();
+          }
+
+          // If the current tab is empty, ignore Alt+Enter (just reuse this tab)
+          altEnter = altEnter && !isTabEmpty(gBrowser.selectedTab);
+
+          if (isMouseEvent || altEnter) {
+            // Use the standard UI link behaviors for clicks or Alt+Enter
+            let where = "tab";
+            if (isMouseEvent)
+              where = whereToOpenLink(aTriggeringEvent, false, false);
+
             if (where == "current") {
               loadCurrent();
             } else {
               this.handleRevert();
-              openUILinkIn(url, where,
-                           { allowThirdPartyFixup: true, postData: postData });
+              let params = { allowThirdPartyFixup: true, postData: postData };
+              if (altEnter)
+                params.inBackground = false;
+              openUILinkIn(url, where, params);
             }
-          } else if (aTriggeringEvent && aTriggeringEvent.altKey &&
-                     !isTabEmpty(gBrowser.selectedTab)) {
-            this.handleRevert();
-            gBrowser.loadOneTab(url, {
-                                postData: postData,
-                                inBackground: false,
-                                allowThirdPartyFixup: true});
-            aTriggeringEvent.preventDefault();
-            aTriggeringEvent.stopPropagation();
           } else {
             loadCurrent();
           }

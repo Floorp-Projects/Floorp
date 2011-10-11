@@ -71,7 +71,7 @@ public:
   const nsSVGViewBoxRect& GetBaseValue() const
     { return mBaseVal; }
   void SetBaseValue(float aX, float aY, float aWidth, float aHeight,
-                    nsSVGElement *aSVGElement, bool aDoSetAttr);
+                    nsSVGElement *aSVGElement);
 
   const nsSVGViewBoxRect& GetAnimValue() const
     { return mAnimVal ? *mAnimVal : mBaseVal; }
@@ -79,8 +79,7 @@ public:
                     nsSVGElement *aSVGElement);
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue) const;
 
   nsresult ToDOMAnimatedRect(nsIDOMSVGAnimatedRect **aResult,

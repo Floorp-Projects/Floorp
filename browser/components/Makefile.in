@@ -69,7 +69,7 @@ PARALLEL_DIRS = \
   search \
   sessionstore \
   shell \
-  sidebar \
+  sidebar/src \
   migration \
   $(NULL)
 
@@ -82,7 +82,7 @@ PARALLEL_DIRS += safebrowsing
 endif
 
 ifdef ENABLE_TESTS
-DIRS += test
+DIRS += test/browser
 endif
 
 DIRS += build

@@ -49,7 +49,7 @@
 
 interface nsIDOMSVGAnimatedNumber;
 
-[scriptable, uuid(296682ac-e8e6-40c5-a8d0-31b904ec1b13)]
+[scriptable, uuid(b59416e8-62e4-4416-b3e1-b73a1cf0d88a)]
 interface nsIDOMSVGStopElement
   : nsIDOMSVGElement
 /*

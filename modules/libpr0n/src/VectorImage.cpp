@@ -171,6 +171,7 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
   gfxContextMatrixAutoSaveRestore contextMatrixRestorer(aContext);
   aContext->Multiply(gfxMatrix(aTransform).Invert());
 
+
   nsPresContext* presContext = presShell->GetPresContext();
   NS_ABORT_IF_FALSE(presContext, "pres shell w/out pres context");
 
@@ -326,14 +327,6 @@ VectorImage::GetWidth(PRInt32* aWidth)
   }
 
   return NS_OK;
-}
-
-//******************************************************************************
-/* [notxpcom] void requestRefresh ([const] in TimeStamp aTime); */
-NS_IMETHODIMP_(void)
-VectorImage::RequestRefresh(const mozilla::TimeStamp& aTime)
-{
-  // TODO: Implement for b666446.
 }
 
 //******************************************************************************

@@ -53,11 +53,10 @@ public:
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(PRInt32 aValue, nsSVGElement *aSVGElement, bool aDoSetAttr);
+  void SetBaseValue(PRInt32 aValue, nsSVGElement *aSVGElement);
   PRInt32 GetBaseValue() const
     { return mBaseVal; }
 
@@ -103,7 +102,7 @@ public:
     NS_IMETHOD GetBaseVal(PRInt32* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
     NS_IMETHOD SetBaseVal(PRInt32 aValue)
-      { mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); return NS_OK; }
+      { mVal->SetBaseValue(aValue, mSVGElement); return NS_OK; }
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.

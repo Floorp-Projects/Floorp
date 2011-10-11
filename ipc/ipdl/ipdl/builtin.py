@@ -75,7 +75,19 @@ Types = (
     'nsresult',
     'nsString',
     'nsCString',
-    'mozilla::ipc::Shmem'
+    'mozilla::ipc::Shmem',
+
+    # quasi-stdint types used by "public" Gecko headers
+    'int8',
+    'uint8',
+    'int16',
+    'uint16',
+    'int32',
+    'uint32',
+    'int64',
+    'uint64',
+    'intptr',
+    'uintptr',
 )
 
 
