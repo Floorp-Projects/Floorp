@@ -71,10 +71,12 @@
 #include "nsIScriptError.h"
 #include "nsConsoleMessage.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsAppRunner.h"
 #include "IDBFactory.h"
 #if defined(MOZ_SYDNEYAUDIO)
 #include "AudioParent.h"
 #endif
+#include "SandboxHal.h"
 
 #if defined(ANDROID) || defined(LINUX)
 #include <sys/time.h>
@@ -93,6 +95,7 @@
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/StorageParent.h"
+#include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "nsDeviceMotion.h"
@@ -115,6 +118,7 @@ static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
 using mozilla::Preferences;
 using namespace mozilla::ipc;
+using namespace mozilla::hal_sandbox;
 using namespace mozilla::net;
 using namespace mozilla::places;
 using mozilla::unused; // heh
@@ -427,6 +431,14 @@ ContentParent::ContentParent()
         static_cast<nsChromeRegistryChrome*>(registrySvc.get());
     chromeRegistry->SendRegisteredChrome(this);
     mMessageManager = nsFrameMessageManager::NewProcessMessageManager(this);
+
+    if (gAppData) {
+        nsCString version(gAppData->version);
+        nsCString buildID(gAppData->buildID);
+
+        //Sending all information to content process
+        SendAppInfo(version, buildID);
+    }
 }
 
 ContentParent::~ContentParent()
@@ -809,6 +821,19 @@ ContentParent::DeallocPCrashReporter(PCrashReporterParent* crashreporter)
 {
   delete crashreporter;
   return true;
+}
+
+PHalParent*
+ContentParent::AllocPHal()
+{
+    return CreateHalParent();
+}
+
+bool
+ContentParent::DeallocPHal(PHalParent* aHal)
+{
+    delete aHal;
+    return true;
 }
 
 PMemoryReportRequestParent*

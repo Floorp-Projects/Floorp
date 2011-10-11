@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=692434
+-->
+<head>
+  <title>Test for Bug 692434</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload=runTest();>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=692434">Mozilla Bug 692434</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 692434 **/
+SimpleTest.waitForExplicitFinish();
+
+var xhr = new XMLHttpRequest();
+
+function runTest() {
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      ok(this.responseXML, "Should have gotten responseXML");
+      is(this.responseXML.characterSet, "windows-1251", "Wrong character encoding");
+      is(this.responseXML.documentElement.firstChild.data, "\u042E", "Decoded using the wrong encoding.");
+      is(this.responseText.indexOf("\u042E"), 51, "Bad responseText");
+      SimpleTest.finish();
+    }
+  }
+  xhr.open("GET", "file_bug692434.xml");
+  xhr.send();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

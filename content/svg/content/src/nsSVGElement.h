@@ -519,6 +519,9 @@ protected:
   static nsSVGEnumMapping sSVGUnitTypesMap[];
 
 private:
+  void UnsetAttrInternal(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                         bool aNotify);
+
   nsRefPtr<mozilla::css::StyleRule> mContentStyleRule;
 };
 

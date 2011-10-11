@@ -130,7 +130,6 @@
     let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
     let gChromeWin = null;
 
-    Cu.import("resource://gre/modules/AddonManager.jsm");
     Cu.import("resource://gre/modules/NetUtil.jsm");
 
     function openLink(aElement) {
@@ -158,7 +157,7 @@
     function openLocalePicker() {
       let win = getChromeWin();
       win.BrowserUI.showPanel("prefs-container");
-      win.document.getElementById("prefs-languages").click();
+      win.document.getElementById("prefs-uilanguage-button").click();
     }
 
     function init() {
@@ -193,10 +192,15 @@
           return;
         }
 
-        let content = NetUtil.readInputStreamToString(aStream, aStream.available()) || "";
+        let fileSize = aStream.available();
+        let cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+        cvstream.init(aStream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+        let content = {};
+        cvstream.readString(fileSize, content);
+        cvstream.close();
         aStream.close();
 
-        aCallback(content.replace(/\r\n?/g, "\n"));
+        aCallback(content.value.replace(/\r\n?/g, "\n"));
       });
     }
 
@@ -321,7 +325,7 @@
         return file;
       },
 
-      _loadAddons: function(aAddons, aAddonCount, aTotalResults) {
+      _loadAddons: function(aAddons) {
         let list = document.getElementById("newAddons");
         let loading = document.getElementById("loadingAddons");
 
@@ -376,23 +380,11 @@
           _readFile(file, function(aContent) {
             let json = JSON.parse(aContent);
             if (!json || json.addons.length == 0) {
-              self._loadAddons([], 0, 0);
+              self._loadAddons([]);
               return;
             }
   
-            // Ignore addons already installed
-            let addonsCache = json.addons;
-            AddonManager.getAllAddons(function(aAddons) {
-              let addons = addonsCache.filter(function(addon) {
-                for (let i =0; i < aAddons.length; i++)
-                  if (addon.id == aAddons[i].id)
-                    return false;
-  
-                return true;
-              });
-  
-              self._loadAddons(addons, addons.length, json.totalResults);
-            });
+            self._loadAddons(json.addons);
           });
         } else {
           setTimeout(function() {

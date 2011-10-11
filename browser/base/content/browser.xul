@@ -472,6 +472,7 @@
 
       <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
                    context="backForwardMenu" removable="true"
+                   forwarddisabled="true"
                    title="&backForwardItem.title;">
         <toolbarbutton id="back-button" class="toolbarbutton-1"
                        label="&backCmd.label;"
@@ -483,6 +484,13 @@
                        command="Browser:ForwardOrForwardDuplicate"
                        onclick="checkForMiddleClick(this, event);"
                        tooltip="forward-button-tooltip"/>
+        <dummyobservertarget hidden="true"
+                             onbroadcast="if (this.getAttribute('disabled') == 'true')
+                                            this.parentNode.setAttribute('forwarddisabled', 'true');
+                                          else
+                                            this.parentNode.removeAttribute('forwarddisabled');">
+          <observes element="Browser:ForwardOrForwardDuplicate" attribute="disabled"/>
+        </dummyobservertarget>
       </toolbaritem>
 
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
@@ -1001,6 +1009,10 @@
     <svg:mask id="winstripe-keyhole-forward-mask-hover" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
       <svg:circle cx="-0.35" cy="0.5" r="0.58"/>
+    </svg:mask>
+    <svg:mask id="winstripe-urlbar-back-button-mask" maskContentUnits="userSpaceOnUse">
+      <svg:rect x="0" y="0" width="10000" height="50" fill="white"/>
+      <svg:circle cx="-11" cy="12" r="15"/>
     </svg:mask>
   </svg:svg>
 #endif

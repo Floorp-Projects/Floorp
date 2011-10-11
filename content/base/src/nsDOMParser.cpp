@@ -47,7 +47,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
-#include "nsIDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsStreamUtils.h"

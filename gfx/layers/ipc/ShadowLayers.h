@@ -141,27 +141,6 @@ public:
   void CreatedCanvasLayer(ShadowableLayer* aCanvas);
 
   /**
-   * Notify the shadow manager that a buffer has been created for the
-   * specificed layer.  |aInitialFrontSurface| is one of the newly
-   * created, transparent black buffers for the layer; the "real"
-   * layer holds on to the other as its back buffer.  We send it
-   * across on buffer creation to avoid special cases in the buffer
-   * swapping logic for Painted*() operations.
-   *
-   * It is expected that Created*Buffer() will be followed by a
-   * Painted*Buffer() in the same transaction, so that
-   * |aInitialFrontBuffer| is never actually drawn to screen.  It is
-   * OK if it is drawn though.
-   */
-  /**
-   * |aBufferRect| is the screen rect covered by |aInitialFrontBuffer|.
-   */
-  void CreatedThebesBuffer(ShadowableLayer* aThebes,
-                           const nsIntRegion& aFrontValidRegion,
-                           const nsIntRect& aBufferRect,
-                           const SurfaceDescriptor& aInitialFrontBuffer);
-
-  /**
    * The specified layer is destroying its buffers.
    * |aBackBufferToDestroy| is deallocated when this transaction is
    * posted to the parent.  During the parent-side transaction, the
@@ -506,15 +485,6 @@ class ShadowThebesLayer : public ShadowLayer,
                           public ThebesLayer
 {
 public:
-  /**
-   * CONSTRUCTION PHASE ONLY
-   *
-   * Override the front buffer and its valid region with the specified
-   * values.  This is called when a new buffer has been created.
-   */
-  virtual void SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
-                              const nsIntRegion& aValidRegion) = 0;
-
   virtual void InvalidateRegion(const nsIntRegion& aRegion)
   {
     NS_RUNTIMEABORT("ShadowThebesLayers can't fill invalidated regions");
@@ -538,7 +508,7 @@ public:
    */
   virtual void
   Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
-       ThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
+       OptionalThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
        OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion) = 0;
 
   /**

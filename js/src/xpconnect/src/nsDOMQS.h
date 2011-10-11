@@ -127,7 +127,7 @@ xpc_qsUnwrapThis<nsGenericElement>(JSContext *cx,
             xpc_qsThrow(cx, NS_ERROR_XPC_BAD_OP_ON_WN_PROTO);
     }
 
-    if(!failureFatal && !ok)
+    if(!failureFatal && (!ok || !content))
     {
       ok = JS_TRUE;
       *ppThis = nsnull;

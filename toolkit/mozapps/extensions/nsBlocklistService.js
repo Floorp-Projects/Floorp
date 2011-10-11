@@ -907,7 +907,7 @@ Blocklist.prototype = {
     var addonList = [];
 
     var self = this;
-    AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(addons) {
+    AddonManager.getAddonsByTypes(["extension", "theme", "locale", "dictionary"], function(addons) {
 
       for (let i = 0; i < addons.length; i++) {
         let oldState = Ci.nsIBlocklistService.STATE_NOTBLOCKED;

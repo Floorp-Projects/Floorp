@@ -52,7 +52,6 @@ CSRCS		= secutil.c \
 		derprint.c \
 		moreoids.c \
 		pppolicy.c \
-		secerror.c \
 		ffs.c \
 		pk11table.c \
 		$(NULL)

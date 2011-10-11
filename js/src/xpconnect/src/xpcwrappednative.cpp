@@ -44,7 +44,7 @@
 #include "xpcprivate.h"
 #include "nsCRT.h"
 #include "XPCWrapper.h"
-#include "nsWrapperCache.h"
+#include "nsWrapperCacheInlines.h"
 #include "xpclog.h"
 #include "jstl.h"
 #include "nsINode.h"
@@ -52,6 +52,7 @@
 #include "jsproxy.h"
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
+#include "dombindings.h"
 
 bool
 xpc_OkToHandOutWrapper(nsWrapperCache *cache)
@@ -59,10 +60,10 @@ xpc_OkToHandOutWrapper(nsWrapperCache *cache)
     NS_ABORT_IF_FALSE(cache->GetWrapper(), "Must have wrapper");
     NS_ABORT_IF_FALSE(cache->IsProxy() || IS_WN_WRAPPER(cache->GetWrapper()),
                       "Must have proxy or XPCWrappedNative wrapper");
-    return
-        !cache->IsProxy() &&
+    return cache->IsProxy() ?
+        mozilla::dom::binding::instanceIsProxy(cache->GetWrapper()) :
         !static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cache->GetWrapper()))->
-                    NeedsSOW();
+            NeedsSOW();
 }
 
 /***************************************************************************/
@@ -1139,7 +1140,7 @@ XPCWrappedNative::Init(XPCCallContext& ccx,
         // JS class without the proper global flags. Notice that here and fix
         // the problem.
         if(!(jsclazz->flags & JSCLASS_IS_GLOBAL))
-            jsclazz->flags |= JSCLASS_GLOBAL_FLAGS;
+            jsclazz->flags |= XPCONNECT_GLOBAL_FLAGS;
     }
     else
         NS_ASSERTION(!(jsclazz->flags & JSCLASS_IS_GLOBAL),
@@ -2775,7 +2776,7 @@ CallMethodHelper::InitializeDispatchParams()
     {
         nsXPTCVariant* dp = &mDispatchParams[mOptArgcIndex];
         dp->type = nsXPTType::T_U8;
-        dp->val.u8 = mArgc - requiredArgs;
+        dp->val.u8 = NS_MIN<PRUint32>(mArgc, paramCount) - requiredArgs;
     }
 
     return JS_TRUE;
@@ -2979,8 +2980,8 @@ CallMethodHelper::ConvertDependentParams()
 
             if((datum_type.IsPointer() &&
                 (datum_type.TagPart() == nsXPTType::T_IID ||
-                 datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS) ||
-                 datum_type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS) ||
+                 datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
+                 datum_type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS)) ||
                (isArray && datum_type.TagPart() == nsXPTType::T_CHAR_STR))
             {
                 dp->SetValNeedsCleanup();
@@ -3948,7 +3949,6 @@ ConstructProxyObject(XPCCallContext &ccx,
 
     nsWrapperCache *cache = aHelper.GetWrapperCache();
     JSObject *flat = cache->GetWrapper();
-    NS_ASSERTION(flat, "PreCreate is supposed to create the wrapper");
     return flat;
 }
 

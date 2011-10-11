@@ -83,6 +83,7 @@
 #include "nsIConstraintValidation.h"
 
 #include "nsIDOMHTMLButtonElement.h"
+#include "dombindings.h"
 
 using namespace mozilla::dom;
 
@@ -106,7 +107,8 @@ bool nsHTMLFormElement::gPasswordManagerInitialized = false;
 
 
 // nsFormControlList
-class nsFormControlList : public nsIHTMLCollection
+class nsFormControlList : public nsIHTMLCollection,
+                          public nsWrapperCache
 {
 public:
   nsFormControlList(nsHTMLFormElement* aForm);
@@ -121,18 +123,9 @@ public:
   // nsIDOMHTMLCollection interface
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual nsIContent* GetNodeAt(PRUint32 aIndex)
+  virtual nsINode* GetParentObject()
   {
-    FlushPendingNotifications();
-
-    return mElements.SafeElementAt(aIndex, nsnull);
-  }
-  virtual nsISupports* GetNamedItem(const nsAString& aName,
-                                    nsWrapperCache **aCache)
-  {
-    nsISupports *item = NamedItemInternal(aName, PR_TRUE);
-    *aCache = nsnull;
-    return item;
+    return mForm;
   }
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
@@ -155,6 +148,14 @@ public:
    */
   nsresult GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aControls) const;
 
+  // nsWrapperCache
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap)
+  {
+    return mozilla::dom::binding::HTMLCollection::create(cx, scope, this,
+                                                         triedToWrap);
+  }
+
   nsHTMLFormElement* mForm;  // WEAK - the form owns me
 
   nsTArray<nsGenericHTMLFormElement*> mElements;  // Holds WEAK references - bug 36639
@@ -166,7 +167,7 @@ public:
 
   nsTArray<nsGenericHTMLFormElement*> mNotInElements; // Holds WEAK references
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFormControlList, nsIHTMLCollection)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsFormControlList)
 
 protected:
   // Drop all our references to the form elements
@@ -2149,6 +2150,8 @@ nsFormControlList::nsFormControlList(nsHTMLFormElement* aForm) :
   // of 8 to reduce allocations on small forms.
   mElements(8)
 {
+  // Mark ourselves as a proxy
+  SetIsProxy();
 }
 
 nsFormControlList::~nsFormControlList()
@@ -2215,15 +2218,21 @@ ControlTraverser(const nsAString& key, nsISupports* control, void* userArg)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsFormControlList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFormControlList)
   tmp->Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormControlList)
   tmp->mNameLookupTable.EnumerateRead(ControlTraverser, &cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsFormControlList)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMCI_DATA(HTMLCollection, nsFormControlList)
 
 // XPConnect interface list for nsFormControlList
 NS_INTERFACE_TABLE_HEAD(nsFormControlList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_TABLE2(nsFormControlList,
                       nsIHTMLCollection,
                       nsIDOMHTMLCollection)
@@ -2544,4 +2553,20 @@ nsFormControlList::GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aContr
 #endif
 
   return NS_OK;
+}
+
+nsIContent*
+nsFormControlList::GetNodeAt(PRUint32 aIndex)
+{
+  FlushPendingNotifications();
+
+  return mElements.SafeElementAt(aIndex, nsnull);
+}
+
+nsISupports*
+nsFormControlList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache)
+{
+  nsISupports *item = NamedItemInternal(aName, true);
+  *aCache = nsnull;
+  return item;
 }

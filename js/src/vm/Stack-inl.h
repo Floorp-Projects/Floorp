@@ -356,10 +356,8 @@ StackFrame::callObj() const
     JS_ASSERT_IF(isNonEvalFunctionFrame() || isStrictEvalFrame(), hasCallObj());
 
     JSObject *pobj = &scopeChain();
-    while (JS_UNLIKELY(!pobj->isCall())) {
-        JS_ASSERT(IsCacheableNonGlobalScope(pobj) || pobj->isWith());
+    while (JS_UNLIKELY(!pobj->isCall()))
         pobj = pobj->getParent();
-    }
     return pobj->asCall();
 }
 

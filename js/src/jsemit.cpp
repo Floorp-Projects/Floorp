@@ -61,7 +61,6 @@
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsparse.h"
-#include "jsregexp.h"
 #include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
@@ -75,6 +74,7 @@
 
 #include "frontend/ParseMaps-inl.h"
 #include "ds/LifoAlloc.h"
+#include "vm/RegExpObject.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK_LENGTH  1024    /* initial bytecode chunk length */

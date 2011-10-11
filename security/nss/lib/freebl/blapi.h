@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.41 2010/12/06 17:22:49 kaie%kuix.de Exp $ */
+/* $Id: blapi.h,v 1.42 2011/10/04 22:05:53 wtc%google.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -1256,13 +1256,6 @@ PRNGTEST_Generate(PRUint8 *bytes, unsigned int bytes_len,
 
 extern SECStatus
 PRNGTEST_Uninstantiate(void);
-
-/*
- * Mask generation function MGF1
- */
-extern SECStatus
-MGF1(HASH_HashType hashAlg, unsigned char *mask, unsigned int maskLen,
-     const unsigned char *mgfSeed, unsigned int mgfSeedLen);
 
 /* Generate PQGParams and PQGVerify structs.
  * Length of seed and length of h both equal length of P. 

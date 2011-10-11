@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslmutex.h,v 1.12 2009/06/05 02:34:15 nelson%bolyard.com Exp $ */
+/* $Id: sslmutex.h,v 1.13 2011/09/30 23:27:08 rrelyea%redhat.com Exp $ */
 #ifndef __SSLMUTEX_H_
 #define __SSLMUTEX_H_ 1
 
@@ -138,7 +138,10 @@ SEC_BEGIN_PROTOS
 
 extern SECStatus sslMutex_Init(sslMutex *sem, int shared);
 
-extern SECStatus sslMutex_Destroy(sslMutex *sem);
+/* If processLocal is set to true, then just free resources which are *only* associated
+ * with the current process. Leave any shared resources (including the state of 
+ * shared memory) intact. */
+extern SECStatus sslMutex_Destroy(sslMutex *sem, PRBool processLocal);
 
 extern SECStatus sslMutex_Unlock(sslMutex *sem);
 

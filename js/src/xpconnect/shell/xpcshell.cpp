@@ -266,7 +266,7 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
         char line[256] = { '\0' };
         fputs(prompt, gOutFile);
         fflush(gOutFile);
-        if (!fgets(line, sizeof line, file) && errno != EINTR || feof(file))
+        if ((!fgets(line, sizeof line, file) && errno != EINTR) || feof(file))
             return JS_FALSE;
         strcpy(bufp, line);
     }
@@ -541,10 +541,8 @@ static JSBool
 GC(JSContext *cx, uintN argc, jsval *vp)
 {
     JSRuntime *rt;
-    uint32 preBytes;
 
     rt = cx->runtime;
-    preBytes = rt->gcBytes;
     JS_GC(cx);
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);

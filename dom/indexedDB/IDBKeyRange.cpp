@@ -42,7 +42,7 @@
 #include "nsIXPConnect.h"
 
 #include "jscntxt.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
@@ -114,7 +114,7 @@ ReturnKeyRange(JSContext* aCx,
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ASSERTION(xpc, "This should never be null!");
 
-  JSObject* global = JS_GetGlobalForObject(aCx, JS_GetScopeChain(aCx));
+  JSObject* global = JS_GetGlobalForScopeChain(aCx);
   NS_ENSURE_TRUE(global, JS_FALSE);
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;

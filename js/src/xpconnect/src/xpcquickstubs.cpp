@@ -875,13 +875,31 @@ castNative(JSContext *cx,
     }
     else if(cur)
     {
-        NS_ABORT_IF_FALSE(IS_SLIM_WRAPPER(cur), "should be a slim wrapper");
-        nsISupports *native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
-        if(NS_SUCCEEDED(getNative(native, GetOffsetsFromSlimWrapper(cur),
-                                  cur, iid, ppThis, pThisRef, vp)))
+        nsISupports *native;
+        QITableEntry *entries;
+        if(IS_SLIM_WRAPPER(cur))
+        {
+            native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
+            entries = GetOffsetsFromSlimWrapper(cur);
+        }
+        else
+        {
+            NS_ABORT_IF_FALSE(mozilla::dom::binding::instanceIsProxy(cur),
+                              "what kind of wrapper is this?");
+            native = static_cast<nsISupports*>(js::GetProxyPrivate(cur).toPrivate());
+            entries = nsnull;
+        }
+
+        if(NS_SUCCEEDED(getNative(native, entries, cur, iid, ppThis, pThisRef, vp)))
         {
             if(lccx)
+            {
+                // This only matters for unwrapping of this objects, so we
+                // shouldn't end up here for the new DOM bindings.
+                NS_ABORT_IF_FALSE(IS_SLIM_WRAPPER(cur),
+                                  "what kind of wrapper is this?");
                 lccx->SetWrapper(cur);
+            }
 
             return NS_OK;
         }
@@ -953,8 +971,16 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     XPCWrappedNative *wrapper;
     XPCWrappedNativeTearOff *tearoff;
     JSObject *obj2;
-    rv = getWrapper(cx, src, nsnull, &wrapper, &obj2, &tearoff);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if(mozilla::dom::binding::instanceIsProxy(src))
+    {
+        wrapper = nsnull;
+        obj2 = src;
+    }
+    else
+    {
+        rv = getWrapper(cx, src, nsnull, &wrapper, &obj2, &tearoff);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     if(wrapper || obj2)
     {

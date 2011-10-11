@@ -594,7 +594,7 @@ struct JSScript : public js::gc::Cell {
      */
     uint32 id_;
     uint32 idpad;
-    unsigned id() { return id_; }
+    unsigned id();
 #else
     unsigned id() { return 0; }
 #endif
