@@ -306,11 +306,9 @@ abstract public class GeckoApp
         if (!checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
             return false;
 
-        if (intent == null)
-            intent = getIntent();
-        final Intent i = intent;
-        new Thread() {
-            public void run() {
+        class GeckoTask extends AsyncTask<Intent, Void, Void> {
+            protected Void doInBackground(Intent... intents) {
+                Intent intent = intents[0];
                 File cacheFile = GeckoAppShell.getCacheDir();
                 File libxulFile = new File(cacheFile, "libxul.so");
 
@@ -343,18 +341,25 @@ abstract public class GeckoApp
 
                 // and then fire us up
                 try {
-                    String env = i.getStringExtra("env0");
+                    String env = intent.getStringExtra("env0");
                     GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
-                                           i.getStringExtra("args"),
-                                           i.getDataString());
+                                           intent.getStringExtra("args"),
+                                           intent.getDataString());
                 } catch (Exception e) {
                     Log.e(LOG_FILE_NAME, "top level exception", e);
                     StringWriter sw = new StringWriter();
                     e.printStackTrace(new PrintWriter(sw));
                     GeckoAppShell.reportJavaCrash(sw.toString());
                 }
+                return null;
             }
-        }.start();
+        }
+
+        if (intent == null)
+            intent = getIntent();
+
+        new GeckoTask().execute(intent);
+
         return true;
     }
 
@@ -489,9 +494,12 @@ abstract public class GeckoApp
         }, 50);
     }
 
+
     public static void addHistoryEntry(final HistoryEntry entry) {
-        new Thread(new Runnable() {
-            public void run() {
+
+        class HistoryEntryTask extends AsyncTask<HistoryEntry, Void, Void> {
+            protected Void doInBackground(HistoryEntry... entries) {
+                HistoryEntry entry = entries[0];
                 Log.d("GeckoApp", "adding uri=" + entry.uri + ", title=" + entry.title + " to history");
                 ContentValues values = new ContentValues();
                 values.put("url", entry.uri);
@@ -503,8 +511,11 @@ abstract public class GeckoApp
                 values = new ContentValues();
                 values.put("place_id", id);
                 mDb.insertWithOnConflict("moz_historyvisits", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                return null;
             }
-        }).start();
+        }
+
+        new HistoryEntryTask().execute(entry);
     }
 
     @Override
