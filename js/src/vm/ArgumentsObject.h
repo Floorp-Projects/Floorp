@@ -151,6 +151,7 @@ class ArgumentsObject : public ::JSObject
 
   public:
     static const uint32 RESERVED_SLOTS = 2;
+    static const uint32 NFIXED_SLOTS = 3;
 
   private:
     /* Lower-order bit stolen from the length slot. */

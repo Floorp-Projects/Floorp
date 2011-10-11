@@ -405,7 +405,7 @@ NewIteratorObject(JSContext *cx, uintN flags)
          * helper objects) expect it to have a non-null map pointer, so we
          * share an empty Enumerator scope in the runtime.
          */
-        JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT0);
+        JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
         if (!obj)
             return NULL;
 
@@ -417,8 +417,10 @@ NewIteratorObject(JSContext *cx, uintN flags)
         if (!emptyEnumeratorShape)
             return NULL;
 
-        obj->init(cx, type, NULL, NULL, false);
+        obj->init(cx, type, NULL, false);
         obj->setInitialPropertyInfallible(emptyEnumeratorShape);
+
+        JS_ASSERT(obj->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
         return obj;
     }
 

@@ -191,19 +191,20 @@ struct Object {
     TypeObject  *type;
     uint32      flags;
     JSObject    *parent;
-    void        *privateData;
     js::Value   *slots;
     js::Value   *_1;
-#if JS_BITS_PER_WORD == 32
-    js::Value   *_2;
-#endif
 
     static const uint32 FIXED_SLOTS_SHIFT = 27;
 
+    size_t numFixedSlots() const { return flags >> FIXED_SLOTS_SHIFT; }
+    Value *fixedSlots() const {
+        return (Value *)((jsuword) this + sizeof(shadow::Object));
+    }
+
     js::Value &slotRef(size_t slot) const {
-        size_t nfixed = flags >> FIXED_SLOTS_SHIFT;
+        size_t nfixed = numFixedSlots();
         if (slot < nfixed)
-            return ((Value *)((jsuword) this + sizeof(shadow::Object)))[slot];
+            return fixedSlots()[slot];
         return slots[slot - nfixed];
     }
 };
@@ -250,7 +251,9 @@ GetObjectProto(const JSObject *obj)
 inline void *
 GetObjectPrivate(const JSObject *obj)
 {
-    return reinterpret_cast<const shadow::Object*>(obj)->privateData;
+    const shadow::Object *nobj = reinterpret_cast<const shadow::Object*>(obj);
+    void **addr = reinterpret_cast<void**>(&nobj->fixedSlots()[nobj->numFixedSlots()]);
+    return *addr;
 }
 
 /*

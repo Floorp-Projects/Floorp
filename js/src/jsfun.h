@@ -100,7 +100,7 @@
 #define JSFUN_KINDMASK      0xc000  /* encode interp vs. native and closure
                                        optimization level -- see above */
 
-struct JSFunction : public JSObject_Slots2
+struct JSFunction : public JSObject_Slots4
 {
     /* Functions always have two fixed slots (FUN_CLASS_RESERVED_SLOTS). */
 

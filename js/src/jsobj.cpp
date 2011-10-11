@@ -3464,13 +3464,13 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     if (!type)
         return NULL;
 
-    obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
+    obj = js_NewGCObject(cx, FINALIZE_OBJECT4);
     if (!obj)
         return NULL;
 
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
-    obj->init(cx, type, parent, priv, false);
+    obj->init(cx, type, parent, false);
 
     EmptyShape *emptyWithShape = EmptyShape::getEmptyWithShape(cx);
     if (!emptyWithShape)
@@ -3478,6 +3478,8 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 
     obj->setInitialPropertyInfallible(emptyWithShape);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
+
+    obj->setPrivate(priv);
 
     AutoObjectRooter tvr(cx, obj);
     JSObject *thisp = proto->thisObject(cx);
@@ -3509,7 +3511,7 @@ js_NewBlockObject(JSContext *cx)
     if (!emptyBlockShape)
         return NULL;
 
-    blockObj->init(cx, type, NULL, NULL, false);
+    blockObj->init(cx, type, NULL, false);
     blockObj->setInitialPropertyInfallible(emptyBlockShape);
 
     return blockObj;
@@ -3757,7 +3759,7 @@ JS_CloneObject(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent)
             return NULL;
         }
 
-        if (obj->getClass()->flags & JSCLASS_HAS_PRIVATE)
+        if (obj->hasPrivate())
             clone->setPrivate(obj->getPrivate());
     } else {
         JS_ASSERT(obj->isProxy());
@@ -3772,11 +3774,15 @@ struct JSObject::TradeGutsReserved {
     JSContext *cx;
     Vector<Value> avals;
     Vector<Value> bvals;
+    uint32 newafixed;
+    uint32 newbfixed;
     Value *newaslots;
     Value *newbslots;
 
     TradeGutsReserved(JSContext *cx)
-        : cx(cx), avals(cx), bvals(cx), newaslots(NULL), newbslots(NULL)
+        : cx(cx), avals(cx), bvals(cx),
+          newafixed(0), newbfixed(0),
+          newaslots(NULL), newbslots(NULL)
     {}
 
     ~TradeGutsReserved()
@@ -3798,7 +3804,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
      * swaps can be performed infallibly.
      */
 
-    if (a->structSize() == b->structSize())
+    if (a->structSize() == b->structSize() && a->hasPrivate() == b->hasPrivate())
         return true;
 
     /*
@@ -3822,16 +3828,31 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
     JS_ASSERT(b->elements == emptyObjectElements);
 
     /*
+     * The newafixed/newbfixed hold the number of fixed slots in the objects
+     * after the swap. Adjust these counts according to whether the objects
+     * use their last fixed slot for storing private data.
+     */
+
+    reserved.newafixed = a->numFixedSlots();
+    reserved.newbfixed = b->numFixedSlots();
+
+    if (a->hasPrivate()) {
+        reserved.newafixed++;
+        reserved.newbfixed--;
+    }
+    if (b->hasPrivate()) {
+        reserved.newbfixed++;
+        reserved.newafixed--;
+    }
+
+    /*
      * The newaslots/newbslots arrays hold any dynamic slots for the objects
      * if they do not have enough fixed slots to accomodate the slots in the
      * other object.
      */
 
-    unsigned afixed = a->numFixedSlots();
-    unsigned bfixed = b->numFixedSlots();
-
-    unsigned adynamic = dynamicSlotsCount(afixed, b->slotSpan());
-    unsigned bdynamic = dynamicSlotsCount(bfixed, a->slotSpan());
+    unsigned adynamic = dynamicSlotsCount(reserved.newafixed, b->slotSpan());
+    unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan());
 
     if (adynamic) {
         reserved.newaslots = (Value *) cx->malloc_(sizeof(Value) * adynamic);
@@ -3880,7 +3901,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
 
     /* Trade the guts of the objects. */
     const size_t size = a->structSize();
-    if (size == b->structSize()) {
+    if (size == b->structSize() && a->hasPrivate() == b->hasPrivate()) {
         /*
          * If the objects are the same size, then we make no assumptions about
          * whether they have dynamically allocated slots and instead just copy
@@ -3914,21 +3935,25 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         if (b->hasDynamicSlots())
             cx->free_(b->slots);
 
-        unsigned afixed = a->numFixedSlots();
-        unsigned bfixed = b->numFixedSlots();
+        void *apriv = a->hasPrivate() ? a->getPrivate() : NULL;
+        void *bpriv = b->hasPrivate() ? b->getPrivate() : NULL;
 
         JSObject tmp;
         memcpy(&tmp, a, sizeof tmp);
         memcpy(a, b, sizeof tmp);
         memcpy(b, &tmp, sizeof tmp);
 
-        a->updateFixedSlots(afixed);
+        a->updateFixedSlots(reserved.newafixed);
         a->slots = reserved.newaslots;
         a->copySlotRange(0, reserved.bvals.begin(), bcap);
+        if (a->hasPrivate())
+            a->setPrivate(bpriv);
 
-        b->updateFixedSlots(bfixed);
+        b->updateFixedSlots(reserved.newbfixed);
         b->slots = reserved.newbslots;
         b->copySlotRange(0, reserved.avals.begin(), acap);
+        if (b->hasPrivate())
+            b->setPrivate(apriv);
 
         /* Make sure the destructor for reserved doesn't free the slots. */
         reserved.newaslots = NULL;
@@ -4495,12 +4520,28 @@ JSObject::updateSlotsForSpan(size_t oldSpan, size_t newSpan)
         invalidateSlotRange(newSpan, oldSpan - newSpan);
 }
 
+inline void
+JSObject::initializePrivate()
+{
+    size_t nfixed = numFixedSlots();
+    JS_ASSERT(nfixed != 0);
+
+    /* Remove a fixed slot, to make room for the private data. */
+    flags = flags ^ (nfixed << FIXED_SLOTS_SHIFT);
+    flags |= (nfixed - 1) << FIXED_SLOTS_SHIFT;
+
+    setPrivate(NULL);
+}
+
 bool
 JSObject::setInitialProperty(JSContext *cx, const js::Shape *shape)
 {
     JS_ASSERT(isNewborn());
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
+
+    if (shape->getClass()->flags & JSCLASS_HAS_PRIVATE)
+        initializePrivate();
 
     size_t span = shape->slotSpan();
 
@@ -4524,6 +4565,10 @@ JSObject::setInitialPropertyInfallible(const js::Shape *shape)
     JS_ASSERT(isNewborn());
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
+
+    if (shape->getClass()->flags & JSCLASS_HAS_PRIVATE)
+        initializePrivate();
+
     JS_ASSERT(dynamicSlotsCount(numFixedSlots(), shape->slotSpan()) == 0);
 
     shape_ = const_cast<js::Shape *>(shape);

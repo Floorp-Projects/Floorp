@@ -544,17 +544,11 @@ struct JSObject : js::gc::Cell
     };
 
     uint32      flags;                      /* flags */
-
     JSObject    *parent;                    /* object's parent */
-    void        *privateData;               /* private data */
 
   private:
     js::Value   *slots;                     /* Slots for object properties. */
     js::Value   *elements;                  /* Slots for object elements. */
-
-#if JS_BITS_PER_WORD == 32
-    void *padding;
-#endif
 
   public:
 
@@ -668,6 +662,8 @@ struct JSObject : js::gc::Cell
 
     inline size_t numFixedSlots() const;
 
+    static const uint32 MAX_FIXED_SLOTS = 16;
+
   private:
     inline js::Value* fixedSlots() const;
   public:
@@ -685,6 +681,7 @@ struct JSObject : js::gc::Cell
 
     /* JIT Accessors */
     static inline size_t getFixedSlotOffset(size_t slot);
+    static inline size_t getPrivateDataOffset(size_t nfixed);
     static inline size_t offsetOfSlots() { return offsetof(JSObject, slots); }
 
     /* Minimum size for dynamically allocated slots. */
@@ -891,7 +888,9 @@ struct JSObject : js::gc::Cell
     inline bool isGlobal() const;
     inline js::GlobalObject *asGlobal();
 
+    inline bool hasPrivate() const;
     inline void *getPrivate() const;
+    inline void *getPrivate(size_t nfixed) const;
     inline void setPrivate(void *data);
 
     /* N.B. Infallible: NULL means 'no principal', not an error. */
@@ -913,6 +912,9 @@ struct JSObject : js::gc::Cell
     bool sealOrFreeze(JSContext *cx, ImmutabilityType it);
 
     bool isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp);
+
+    inline void *&privateAddress(uint32 nfixed) const;
+    inline void initializePrivate();
 
   public:
     bool isExtensible() const { return !(flags & NOT_EXTENSIBLE); }
@@ -1095,6 +1097,7 @@ struct JSObject : js::gc::Cell
 
   public:
     static const uint32 FUN_CLASS_RESERVED_SLOTS = 2;
+    static const uint32 FUN_CLASS_NFIXED_SLOTS = 3;
 
     static size_t getFlatClosureUpvarsOffset() {
         return getFixedSlotOffset(JSSLOT_FLAT_CLOSURE_UPVARS);
@@ -1160,6 +1163,8 @@ struct JSObject : js::gc::Cell
     /*
      * Iterator-specific getters and setters.
      */
+
+    static const uint32 ITER_CLASS_NFIXED_SLOTS = 1;
 
     inline js::NativeIterator *getNativeIterator() const;
     inline void setNativeIterator(js::NativeIterator *);
@@ -1236,7 +1241,7 @@ struct JSObject : js::gc::Cell
 
     /* The last property is not initialized here and should be set separately. */
     void init(JSContext *cx, js::types::TypeObject *type,
-              JSObject *parent, void *priv, bool denseArray);
+              JSObject *parent, bool denseArray);
 
     inline void finish(JSContext *cx);
     JS_ALWAYS_INLINE void finalize(JSContext *cx, bool background);
@@ -1433,7 +1438,6 @@ struct JSObject : js::gc::Cell
         JS_STATIC_ASSERT(offsetof(JSObject, shape_) == offsetof(js::shadow::Object, shape));
         JS_STATIC_ASSERT(offsetof(JSObject, flags) == offsetof(js::shadow::Object, flags));
         JS_STATIC_ASSERT(offsetof(JSObject, parent) == offsetof(js::shadow::Object, parent));
-        JS_STATIC_ASSERT(offsetof(JSObject, privateData) == offsetof(js::shadow::Object, privateData));
         JS_STATIC_ASSERT(offsetof(JSObject, slots) == offsetof(js::shadow::Object, slots));
         JS_STATIC_ASSERT(offsetof(JSObject, type_) == offsetof(js::shadow::Object, type));
         JS_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::shadow::Object));
@@ -1472,6 +1476,11 @@ JSObject::numFixedSlots() const
 /* static */ inline size_t
 JSObject::getFixedSlotOffset(size_t slot) {
     return sizeof(JSObject) + (slot * sizeof(js::Value));
+}
+
+/* static */ inline size_t
+JSObject::getPrivateDataOffset(size_t nfixed) {
+    return getFixedSlotOffset(nfixed);
 }
 
 struct JSObject_Slots2 : JSObject { js::Value fslots[2]; };

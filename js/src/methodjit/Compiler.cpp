@@ -3340,7 +3340,7 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
     if (origCalleeType.isSet())
         isObj = masm.testObject(Assembler::NotEqual, origCalleeType.reg());
     Jump isFun = masm.testFunction(Assembler::NotEqual, origCalleeData, temp);
-    masm.loadObjPrivate(origCalleeData, origCalleeData);
+    masm.loadObjPrivate(origCalleeData, origCalleeData, JSObject::FUN_CLASS_NFIXED_SLOTS);
     Native native = *PC == JSOP_FUNCALL ? js_fun_call : js_fun_apply;
     Jump isNative = masm.branchPtr(Assembler::NotEqual,
                                    Address(origCalleeData, JSFunction::offsetOfNativeOrScript()),
@@ -3621,7 +3621,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
         Jump notFunction = stubcc.masm.testFunction(Assembler::NotEqual, icCalleeData, tmp);
 
         /* Test if the function is scripted. */
-        stubcc.masm.loadObjPrivate(icCalleeData, funPtrReg);
+        stubcc.masm.loadObjPrivate(icCalleeData, funPtrReg, JSObject::FUN_CLASS_NFIXED_SLOTS);
         stubcc.masm.load16(Address(funPtrReg, offsetof(JSFunction, flags)), tmp);
         stubcc.masm.and32(Imm32(JSFUN_KINDMASK), tmp);
         Jump isNative = stubcc.masm.branch32(Assembler::Below, tmp, Imm32(JSFUN_INTERPRETED));
@@ -5670,7 +5670,7 @@ mjit::Compiler::iter(uintN flags)
     stubcc.linkExit(nullIterator, Uses(1));
 
     /* Get NativeIterator from iter obj. */
-    masm.loadObjPrivate(ioreg, nireg);
+    masm.loadObjPrivate(ioreg, nireg, JSObject::ITER_CLASS_NFIXED_SLOTS);
 
     /* Test for active iterator. */
     Address flagsAddr(nireg, offsetof(NativeIterator, flags));
@@ -5759,7 +5759,7 @@ mjit::Compiler::iterNext(ptrdiff_t offset)
     stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. */
-    masm.loadObjPrivate(reg, T1);
+    masm.loadObjPrivate(reg, T1, JSObject::ITER_CLASS_NFIXED_SLOTS);
 
     RegisterID T3 = frame.allocReg();
     RegisterID T4 = frame.allocReg();
@@ -5814,7 +5814,7 @@ mjit::Compiler::iterMore(jsbytecode *target)
     stubcc.linkExitForBranch(notFast);
 
     /* Get private from iter obj. */
-    masm.loadObjPrivate(reg, reg);
+    masm.loadObjPrivate(reg, reg, JSObject::ITER_CLASS_NFIXED_SLOTS);
 
     /* Test that the iterator supports fast iteration. */
     notFast = masm.branchTest32(Assembler::NonZero, Address(reg, offsetof(NativeIterator, flags)),
@@ -5853,7 +5853,7 @@ mjit::Compiler::iterEnd()
     stubcc.linkExit(notIterator, Uses(1));
 
     /* Get private from iter obj. */
-    masm.loadObjPrivate(reg, T1);
+    masm.loadObjPrivate(reg, T1, JSObject::ITER_CLASS_NFIXED_SLOTS);
 
     RegisterID T2 = frame.allocReg();
 
