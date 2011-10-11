@@ -174,7 +174,6 @@ public class AwesomeBar extends ListActivity {
         mDb = dbHelper.getReadableDatabase();
 
         adapter.setFilterQueryProvider(new FilterQueryProvider() {
-            @Override
             public Cursor runQuery(CharSequence constraint) {
 
                 // _id column required for CursorAdapter; provide a dummy here
