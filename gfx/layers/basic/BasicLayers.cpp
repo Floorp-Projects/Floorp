@@ -1887,13 +1887,16 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     }
   } else {
     ReadbackProcessor readback;
+    ContainerLayer* container = static_cast<ContainerLayer*>(aLayer);
     if (IsRetained()) {
-      ContainerLayer* container = static_cast<ContainerLayer*>(aLayer);
       readback.BuildUpdates(container);
     }
+  
+    nsAutoTArray<Layer*, 12> children;
+    container->SortChildrenBy3DZOrder(children);
 
-    for (; child; child = child->GetNextSibling()) {
-      PaintLayer(groupTarget, child, aCallback, aCallbackData, &readback);
+    for (PRUint32 i = 0; i < children.Length(); i++) {
+      PaintLayer(groupTarget, children.ElementAt(i), aCallback, aCallbackData, &readback);
       if (mTransactionIncomplete)
         break;
     }

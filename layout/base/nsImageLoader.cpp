@@ -57,7 +57,6 @@
 
 #include "nsStyleContext.h"
 #include "nsGkAtoms.h"
-#include "nsLayoutUtils.h"
 
 // Paint forcing
 #include "prenv.h"
@@ -68,8 +67,7 @@ nsImageLoader::nsImageLoader(nsIFrame *aFrame, PRUint32 aActions,
                              nsImageLoader *aNextLoader)
   : mFrame(aFrame),
     mActions(aActions),
-    mNextLoader(aNextLoader),
-    mRequestRegistered(false)
+    mNextLoader(aNextLoader)
 {
 }
 
@@ -107,15 +105,12 @@ nsImageLoader::Destroy()
     todestroy->Destroy();
   }
 
-  if (mRequest) {
-    nsPresContext* presContext = mFrame->PresContext();
+  mFrame = nsnull;
 
-    nsLayoutUtils::DeregisterImageRequest(presContext, mRequest,
-                                          &mRequestRegistered);
+  if (mRequest) {
     mRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
   }
 
-  mFrame = nsnull;
   mRequest = nsnull;
 }
 
@@ -273,32 +268,4 @@ nsImageLoader::DoRedraw(const nsRect* aDamageRect)
   if (mFrame->GetStyleVisibility()->IsVisible()) {
     mFrame->Invalidate(bounds);
   }
-}
-
-NS_IMETHODIMP
-nsImageLoader::OnStartDecode(imgIRequest *aRequest)
-{
-  // Register our image request with the refresh driver.
-  nsPresContext* presContext = mFrame->PresContext();
-  if (!presContext) {
-    return NS_OK;
-  }
-
-  nsLayoutUtils::RegisterImageRequest(presContext, aRequest,
-                                      &mRequestRegistered);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageLoader::OnStopDecode(imgIRequest *aRequest, nsresult status,
-                            const PRUnichar *statusArg)
-{
-  // Deregister the imgIRequest with the refresh driver if the
-  // image is not animated.
-  nsLayoutUtils::DeregisterImageRequestIfNotAnimated(mFrame->PresContext(),
-                                                     mRequest,
-                                                     &mRequestRegistered);
-
-  return NS_OK;
 }

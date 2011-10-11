@@ -182,11 +182,11 @@ struct Object {
     void        *_1;
     js::Class   *clasp;
     uint32      flags;
-    uint32      _3;
-    void        *_4;
+    uint32      objShape;
+    void        *_2;
     JSObject    *parent;
     void        *privateData;
-    jsuword     _5;
+    jsuword     capacity;
     js::Value   *slots;
     TypeObject  *type;
 
@@ -245,10 +245,20 @@ GetObjectPrivate(const JSObject *obj)
     return reinterpret_cast<const shadow::Object*>(obj)->privateData;
 }
 
+inline JSObject *
+GetObjectGlobal(JSObject *obj)
+{
+    while (JSObject *parent = GetObjectParent(obj))
+        obj = parent;
+    return obj;
+}
+
 #ifdef DEBUG
 extern JS_FRIEND_API(void) CheckReservedSlot(const JSObject *obj, size_t slot);
+extern JS_FRIEND_API(void) CheckSlot(const JSObject *obj, size_t slot);
 #else
 inline void CheckReservedSlot(const JSObject *obj, size_t slot) {}
+inline void CheckSlot(const JSObject *obj, size_t slot) {}
 #endif
 
 /*
@@ -267,6 +277,25 @@ SetReservedSlot(JSObject *obj, size_t slot, const Value &value)
 {
     CheckReservedSlot(obj, slot);
     reinterpret_cast<shadow::Object *>(obj)->slotRef(slot) = value;
+}
+
+inline uint32
+GetNumSlots(const JSObject *obj)
+{
+    return uint32(reinterpret_cast<const shadow::Object *>(obj)->capacity);
+}
+
+inline const Value &
+GetSlot(const JSObject *obj, size_t slot)
+{
+    CheckSlot(obj, slot);
+    return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
+}
+
+inline uint32
+GetObjectShape(const JSObject *obj)
+{
+    return reinterpret_cast<const shadow::Object*>(obj)->objShape;
 }
 
 static inline js::PropertyOp

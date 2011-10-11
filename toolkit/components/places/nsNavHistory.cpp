@@ -163,7 +163,7 @@ using namespace mozilla::places;
 
 // This is the schema version, update it at any schema change and add a
 // corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 11
+#define DATABASE_SCHEMA_VERSION 12
 
 // Filename of the database.
 #define DATABASE_FILENAME NS_LITERAL_STRING("places.sqlite")
@@ -311,6 +311,49 @@ namespace mozilla {
       }
 
       _sqlFragment.AppendLiteral(" AS tags ");
+    }
+
+    /**
+     * Updates sqlite_stat1 table through ANALYZE.
+     * Since also nsPlacesExpiration.js executes ANALYZE, the analyzed tables
+     * must be the same in both components.  So ensure they are in sync.
+     */
+    nsresult updateSQLiteStatistics(mozIStorageConnection* aDBConn)
+    {
+      nsCOMPtr<mozIStorageAsyncStatement> analyzePlacesStmt;
+      nsresult rv = aDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+        "ANALYZE moz_places"
+      ), getter_AddRefs(analyzePlacesStmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<mozIStorageAsyncStatement> analyzeBookmarksStmt;
+      rv = aDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+        "ANALYZE moz_bookmarks"
+      ), getter_AddRefs(analyzeBookmarksStmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<mozIStorageAsyncStatement> analyzeVisitsStmt;
+      rv = aDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+        "ANALYZE moz_historyvisits"
+      ), getter_AddRefs(analyzeVisitsStmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<mozIStorageAsyncStatement> analyzeInputStmt;
+      rv = aDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+        "ANALYZE moz_inputhistory"
+      ), getter_AddRefs(analyzeInputStmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mozIStorageBaseStatement *stmts[] = {
+        analyzePlacesStmt,
+        analyzeBookmarksStmt,
+        analyzeVisitsStmt,
+        analyzeInputStmt
+      };
+
+      nsCOMPtr<mozIStoragePendingStatement> ps;
+      rv = aDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), nsnull,
+                                 getter_AddRefs(ps));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return NS_OK;
     }
 
   } // namespace places
@@ -926,6 +969,9 @@ nsNavHistory::InitDB()
 
   // Set the schema version to the current one.
   rv = UpdateSchemaVersion();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = updateSQLiteStatistics(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -4072,35 +4118,6 @@ nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return SetPageTitleInternal(aURI, nsString(aTitle));
-}
-
-
-/**
- * This was once used when the new window was set to "previous page".
- * Currently it is still referenced by browser.startup.page == 2, but that value
- * is not selectable from the UI.
- * TODO: Should be deprecated? There is no fast alternative to get this info.
- */
-NS_IMETHODIMP
-nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
-{
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT url FROM moz_places "
-      "WHERE hidden = 0 "
-        "AND last_visit_date NOTNULL "
-      "ORDER BY last_visit_date DESC "),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMatch = false;
-  if (NS_SUCCEEDED(statement->ExecuteStep(&hasMatch)) && hasMatch)
-    return statement->GetUTF8String(0, aLastPageVisited);
-
-  aLastPageVisited.Truncate(0);
-  return NS_OK;
 }
 
 

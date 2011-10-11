@@ -44,7 +44,6 @@ var gTabsPane = {
    *
    * browser.link.open_newwindow
    * - determines where pages which would open in a new window are opened:
-   *     0 opens such links in the default window,
    *     1 opens such links in the most recent window or tab,
    *     2 opens such links in a new window,
    *     3 opens such links in a new tab

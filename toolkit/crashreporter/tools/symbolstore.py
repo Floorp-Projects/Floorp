@@ -634,6 +634,7 @@ class Dumper_Win32(Dumper):
         return result
 
 class Dumper_Linux(Dumper):
+    objcopy = os.environ['OBJCOPY'] if 'OBJCOPY' in os.environ else 'objcopy'
     def ShouldProcess(self, file):
         """This function will allow processing of files that are
         executable, or end with the .so extension, and additionally
@@ -648,8 +649,8 @@ class Dumper_Linux(Dumper):
         # .gnu_debuglink section to the object, so the debugger can
         # actually load our debug info later.
         file_dbg = file + ".dbg"
-        if call(['objcopy', '--only-keep-debug', file, file_dbg]) == 0 and \
-           call(['objcopy', '--add-gnu-debuglink=%s' % file_dbg, file]) == 0:
+        if call([self.objcopy, '--only-keep-debug', file, file_dbg]) == 0 and \
+           call([self.objcopy, '--add-gnu-debuglink=%s' % file_dbg, file]) == 0:
             rel_path = os.path.join(debug_file,
                                     guid,
                                     debug_file + ".dbg")

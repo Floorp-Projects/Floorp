@@ -140,7 +140,7 @@ bool
 js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32 index);
 
 bool
-js_SuppressDeletedIndexProperties(JSContext *cx, JSObject *obj, jsint begin, jsint end);
+js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32 begin, uint32 end);
 
 /*
  * IteratorMore() indicates whether another value is available. It might

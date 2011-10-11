@@ -76,6 +76,7 @@
 #include "Principal.h"
 #include "RuntimeService.h"
 #include "ScriptLoader.h"
+#include "Worker.h"
 #include "WorkerFeature.h"
 #include "WorkerScope.h"
 
@@ -646,7 +647,7 @@ public:
       NS_WARNING("Failed to dispatch, going to leak!");
     }
 
-    mFinishedWorker->FinalizeInstance(aCx);
+    mFinishedWorker->FinalizeInstance(aCx, false);
 
     RuntimeService* runtime = RuntimeService::GetService();
     NS_ASSERTION(runtime, "This should never be null!");
@@ -678,7 +679,7 @@ public:
 
     RuntimeService::AutoSafeJSContext cx;
 
-    mFinishedWorker->FinalizeInstance(cx);
+    mFinishedWorker->FinalizeInstance(cx, false);
 
     RuntimeService* runtime = RuntimeService::GetService();
     NS_ASSERTION(runtime, "This should never be null!");
@@ -1772,7 +1773,7 @@ WorkerPrivateParent<Derived>::Notify(JSContext* aCx, Status aStatus)
     mParentStatus = aStatus;
   }
 
-  FinalizeInstance(aCx);
+  FinalizeInstance(aCx, false);
 
   if (pending) {
     WorkerPrivate* self = ParentAsWorkerPrivate();
@@ -1867,13 +1868,21 @@ WorkerPrivateParent<Derived>::Resume(JSContext* aCx)
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::FinalizeInstance(JSContext* aCx)
+WorkerPrivateParent<Derived>::FinalizeInstance(JSContext* aCx,
+                                               bool aFromJSFinalizer)
 {
   AssertIsOnParentThread();
 
   if (mJSObject) {
+    // Make sure we're in the right compartment.
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(aCx, mJSObject)) {
+      NS_ERROR("How can this fail?!");
+      return;
+    }
+
     // Decouple the object from the private now.
-    SetJSPrivateSafeish(aCx, mJSObject, nsnull);
+    worker::ClearPrivateSlot(aCx, mJSObject, !aFromJSFinalizer);
 
     // Clear the JS object.
     mJSObject = nsnull;

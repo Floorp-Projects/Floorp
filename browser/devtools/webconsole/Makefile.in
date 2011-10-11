@@ -57,7 +57,7 @@ EXTRA_PP_JS_MODULES = \
 
 ifdef ENABLE_TESTS
 ifneq (mobile,$(MOZ_BUILD_APP))
-	DIRS += test
+DIRS += test/browser
 endif
 endif
 

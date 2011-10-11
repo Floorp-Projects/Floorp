@@ -64,7 +64,7 @@
 #include "nsIJSContextStack.h"
 #include "nsXPIDLString.h"
 #include "nsDOMError.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsCRT.h"
 #include "nsIProtocolHandler.h"
 #include "nsReadableUtils.h"

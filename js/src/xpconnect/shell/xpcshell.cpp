@@ -541,10 +541,8 @@ static JSBool
 GC(JSContext *cx, uintN argc, jsval *vp)
 {
     JSRuntime *rt;
-    uint32 preBytes;
 
     rt = cx->runtime;
-    preBytes = rt->gcBytes;
     JS_GC(cx);
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);

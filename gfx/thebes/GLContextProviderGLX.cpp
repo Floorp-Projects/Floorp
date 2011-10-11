@@ -916,6 +916,11 @@ private:
     GLXPixmap mPixmap;
     bool mInUpdate;
     GLuint mTexture;
+
+    virtual void ApplyFilter()
+    {
+        mGLContext->ApplyFilterToBoundTexture(mFilter);
+    }
 };
 
 already_AddRefed<TextureImage>

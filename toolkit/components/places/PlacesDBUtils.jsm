@@ -54,6 +54,8 @@ let EXPORTED_SYMBOLS = [ "PlacesDBUtils" ];
 
 const FINISHED_MAINTENANCE_TOPIC = "places-maintenance-finished";
 
+const BYTES_PER_MEBIBYTE = 1048576;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Smart getters
 
@@ -115,7 +117,6 @@ let PlacesDBUtils = {
       this.checkIntegrity
     , this.checkCoherence
     , this._refreshUI
-    , this._telemetry
     ]);
     tasks.callback = aCallback;
     tasks.scope = aScope;
@@ -704,24 +705,21 @@ let PlacesDBUtils = {
       ")");
     cleanupStatements.push(fixInvalidFaviconIds);
 
-/* XXX needs test
-    // L.2 recalculate visit_count
-    let detectWrongCountPlaces = DBConn.createStatement(
-      "SELECT id FROM moz_places h " +
-      "WHERE h.visit_count <> " +
-          "(SELECT count(*) FROM moz_historyvisits " +
-            "WHERE place_id = h.id AND visit_type NOT IN (0,4,7,8))");
-    while (detectWrongCountPlaces.executeStep()) {
-      let placeId = detectWrongCountPlaces.getInt64(0);
-      let fixCountForPlace = DBConn.createStatement(
-        "UPDATE moz_places SET visit_count = ( " +
-          "(SELECT count(*) FROM moz_historyvisits " +
-            "WHERE place_id = :place_id AND visit_type NOT IN (0,4,7,8)) + "
-        ") WHERE id = :place_id");
-      fixCountForPlace.params["place_id"] = placeId;
-      cleanupStatements.push(fixCountForPlace);
-    }
-*/
+    // L.2 recalculate visit_count and last_visit_date
+    let fixVisitStats = DBConn.createAsyncStatement(
+      "UPDATE moz_places " +
+      "SET visit_count = (SELECT count(*) FROM moz_historyvisits " +
+                         "WHERE place_id = moz_places.id AND visit_type NOT IN (0,4,7,8)), " +
+          "last_visit_date = (SELECT MAX(visit_date) FROM moz_historyvisits " +
+                             "WHERE place_id = moz_places.id) " +
+      "WHERE id IN ( " +
+        "SELECT h.id FROM moz_places h " +
+        "WHERE visit_count <> (SELECT count(*) FROM moz_historyvisits v " +
+                              "WHERE v.place_id = h.id AND visit_type NOT IN (0,4,7,8)) " +
+           "OR last_visit_date <> (SELECT MAX(visit_date) FROM moz_historyvisits v " +
+                                  "WHERE v.place_id = h.id) " +
+      ")");
+    cleanupStatements.push(fixVisitStats);
 
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
 
@@ -861,7 +859,7 @@ let PlacesDBUtils = {
    * @param [optional] aTasks
    *        Tasks object to execute.
    */
-  _telemetry: function PDBU__telemetry(aTasks)
+  telemetry: function PDBU_telemetry(aTasks)
   {
     let tasks = new Tasks(aTasks);
 
@@ -911,7 +909,7 @@ let PlacesDBUtils = {
         let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
         DBFile.append("places.sqlite");
         try {
-          return parseInt(DBFile.fileSize / 1024);
+          return parseInt(DBFile.fileSize / BYTES_PER_MEBIBYTE);
         } catch (ex) {
           return 0;
         }
@@ -921,7 +919,7 @@ let PlacesDBUtils = {
         let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
         DBFile.append("places.sqlite-wal");
         try {
-          return parseInt(DBFile.fileSize / 1024);
+          return parseInt(DBFile.fileSize / BYTES_PER_MEBIBYTE);
         } catch (ex) {
           return 0;
         }

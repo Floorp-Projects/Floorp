@@ -94,6 +94,7 @@ tier_platform_dirs	+= gfx/qcms
 tier_platform_dirs += ipc js/ipc js/jetpack
 
 tier_platform_dirs += \
+		hal \
 		js/src/xpconnect \
 		intl/chardet \
 		$(NULL)
@@ -222,7 +223,7 @@ tier_platform_dirs += services/crypto/component
 
 tier_platform_dirs += startupcache
 
-tier_platform_dirs += js/ductwork
+tier_platform_dirs += js/ductwork/debugger
 
 ifdef APP_LIBXUL_STATICDIRS
 # Applications can cheat and ask for code to be
