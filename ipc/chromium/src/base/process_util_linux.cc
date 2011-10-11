@@ -48,6 +48,12 @@ bool LaunchApp(const std::vector<std::string>& argv,
                const environment_map& env_vars_to_set,
                bool wait, ProcessHandle* process_handle,
                ProcessArchitecture arch) {
+  scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
+  // Illegal to allocate memory after fork and before execvp
+  InjectiveMultimap fd_shuffle1, fd_shuffle2;
+  fd_shuffle1.reserve(fds_to_remap.size());
+  fd_shuffle2.reserve(fds_to_remap.size());
+
 #ifdef MOZ_MEMORY_ANDROID
   /* We specifically don't call pthread_atfork in jemalloc because it is not
     available in bionic until 2.3. However without it, jemalloc could
@@ -63,24 +69,23 @@ bool LaunchApp(const std::vector<std::string>& argv,
     return false;
 
   if (pid == 0) {
-    InjectiveMultimap fd_shuffle;
     for (file_handle_mapping_vector::const_iterator
         it = fds_to_remap.begin(); it != fds_to_remap.end(); ++it) {
-      fd_shuffle.push_back(InjectionArc(it->first, it->second, false));
+      fd_shuffle1.push_back(InjectionArc(it->first, it->second, false));
+      fd_shuffle2.push_back(InjectionArc(it->first, it->second, false));
     }
 
-    if (!ShuffleFileDescriptors(fd_shuffle))
-      exit(127);
+    if (!ShuffleFileDescriptors(&fd_shuffle1))
+      _exit(127);
 
-    CloseSuperfluousFds(fd_shuffle);
+    CloseSuperfluousFds(fd_shuffle2);
 
     for (environment_map::const_iterator it = env_vars_to_set.begin();
          it != env_vars_to_set.end(); ++it) {
       if (setenv(it->first.c_str(), it->second.c_str(), 1/*overwrite*/))
-        exit(127);
+        _exit(127);
     }
 
-    scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
     for (size_t i = 0; i < argv.size(); i++)
       argv_cstr[i] = const_cast<char*>(argv[i].c_str());
     argv_cstr[argv.size()] = NULL;

@@ -1,3 +1,4 @@
+//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -25,6 +26,7 @@
 #include "base/sys_info.h"
 #include "base/time.h"
 #include "base/waitable_event.h"
+#include "base/dir_reader_posix.h"
 
 const int kMicrosecondsPerSecond = 1000000;
 
@@ -86,6 +88,10 @@ bool KillProcess(ProcessHandle process_id, int exit_code, bool wait) {
   return result;
 }
 
+#ifdef ANDROID
+typedef unsigned long int rlim_t;
+#endif
+
 // A class to handle auto-closing of DIR*'s.
 class ScopedDIRClose {
  public:
@@ -97,19 +103,20 @@ class ScopedDIRClose {
 };
 typedef scoped_ptr_malloc<DIR, ScopedDIRClose> ScopedDIR;
 
-#ifdef ANDROID
-typedef unsigned long int rlim_t;
-#endif
 
 void CloseSuperfluousFds(const base::InjectiveMultimap& saved_mapping) {
-#if defined(OS_LINUX)
+  // DANGER: no calls to malloc are allowed from now on:
+  // http://crbug.com/36678
+#if defined(ANDROID)
+  static const rlim_t kSystemDefaultMaxFds = 1024;
+  static const char kFDDir[] = "/proc/self/fd";
+#elif defined(OS_LINUX)
   static const rlim_t kSystemDefaultMaxFds = 8192;
-  static const char fd_dir[] = "/proc/self/fd";
+  static const char kFDDir[] = "/proc/self/fd";
 #elif defined(OS_MACOSX)
   static const rlim_t kSystemDefaultMaxFds = 256;
-  static const char fd_dir[] = "/dev/fd";
+  static const char kFDDir[] = "/dev/fd";
 #endif
-  std::set<int> saved_fds;
 
   // Get the maximum number of FDs possible.
   struct rlimit nofile;
@@ -125,52 +132,63 @@ void CloseSuperfluousFds(const base::InjectiveMultimap& saved_mapping) {
   if (max_fds > INT_MAX)
     max_fds = INT_MAX;
 
-  // Don't close stdin, stdout and stderr
-  saved_fds.insert(STDIN_FILENO);
-  saved_fds.insert(STDOUT_FILENO);
-  saved_fds.insert(STDERR_FILENO);
+  DirReaderPosix fd_dir(kFDDir);
 
-  for (base::InjectiveMultimap::const_iterator
-       i = saved_mapping.begin(); i != saved_mapping.end(); ++i) {
-    saved_fds.insert(i->dest);
-  }
-
-  ScopedDIR dir_closer(opendir(fd_dir));
-  DIR *dir = dir_closer.get();
-  if (NULL == dir) {
-    DLOG(ERROR) << "Unable to open " << fd_dir;
-
+  if (!fd_dir.IsValid()) {
     // Fallback case: Try every possible fd.
     for (rlim_t i = 0; i < max_fds; ++i) {
       const int fd = static_cast<int>(i);
-      if (saved_fds.find(fd) != saved_fds.end())
+      if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO)
+        continue;
+      InjectiveMultimap::const_iterator j;
+      for (j = saved_mapping.begin(); j != saved_mapping.end(); j++) {
+        if (fd == j->dest)
+          break;
+      }
+      if (j != saved_mapping.end())
         continue;
 
+      // Since we're just trying to close anything we can find,
+      // ignore any error return values of close().
       HANDLE_EINTR(close(fd));
     }
     return;
   }
 
-  struct dirent *ent;
-  while ((ent = readdir(dir))) {
+  const int dir_fd = fd_dir.fd();
+
+  for ( ; fd_dir.Next(); ) {
     // Skip . and .. entries.
-    if (ent->d_name[0] == '.')
+    if (fd_dir.name()[0] == '.')
       continue;
 
     char *endptr;
     errno = 0;
-    const long int fd = strtol(ent->d_name, &endptr, 10);
-    if (ent->d_name[0] == 0 || *endptr || fd < 0 || errno)
+    const long int fd = strtol(fd_dir.name(), &endptr, 10);
+    if (fd_dir.name()[0] == 0 || *endptr || fd < 0 || errno)
       continue;
-    if (saved_fds.find(fd) != saved_fds.end())
+    if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO)
+      continue;
+    InjectiveMultimap::const_iterator i;
+    for (i = saved_mapping.begin(); i != saved_mapping.end(); i++) {
+      if (fd == i->dest)
+        break;
+    }
+    if (i != saved_mapping.end())
+      continue;
+    if (fd == dir_fd)
       continue;
 
     // When running under Valgrind, Valgrind opens several FDs for its
     // own use and will complain if we try to close them.  All of
     // these FDs are >= |max_fds|, so we can check against that here
     // before closing.  See https://bugs.kde.org/show_bug.cgi?id=191758
-    if (fd < static_cast<int>(max_fds))
-      HANDLE_EINTR(close(fd));
+    if (fd < static_cast<int>(max_fds)) {
+      int ret = HANDLE_EINTR(close(fd));
+      if (ret != 0) {
+        DLOG(ERROR) << "Problem closing fd";
+      }
+    }
   }
 }
 
@@ -419,6 +437,13 @@ bool GetAppOutput(const CommandLine& cl, std::string* output) {
   int pipe_fd[2];
   pid_t pid;
 
+  // Illegal to allocate memory after fork and before execvp
+  InjectiveMultimap fd_shuffle1, fd_shuffle2;
+  fd_shuffle1.reserve(3);
+  fd_shuffle2.reserve(3);
+  const std::vector<std::string>& argv = cl.argv();
+  scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
+
   if (pipe(pipe_fd) < 0)
     return false;
 
@@ -429,27 +454,35 @@ bool GetAppOutput(const CommandLine& cl, std::string* output) {
       return false;
     case 0:  // child
       {
+        // Obscure fork() rule: in the child, if you don't end up doing exec*(),
+        // you call _exit() instead of exit(). This is because _exit() does not
+        // call any previously-registered (in the parent) exit handlers, which
+        // might do things like block waiting for threads that don't even exist
+        // in the child.
         int dev_null = open("/dev/null", O_WRONLY);
         if (dev_null < 0)
-          exit(127);
+          _exit(127);
 
-        InjectiveMultimap fd_shuffle;
-        fd_shuffle.push_back(InjectionArc(pipe_fd[1], STDOUT_FILENO, true));
-        fd_shuffle.push_back(InjectionArc(dev_null, STDERR_FILENO, true));
-        fd_shuffle.push_back(InjectionArc(dev_null, STDIN_FILENO, true));
+        fd_shuffle1.push_back(InjectionArc(pipe_fd[1], STDOUT_FILENO, true));
+        fd_shuffle1.push_back(InjectionArc(dev_null, STDERR_FILENO, true));
+        fd_shuffle1.push_back(InjectionArc(dev_null, STDIN_FILENO, true));
+        // Adding another element here? Remeber to increase the argument to
+        // reserve(), above.
 
-        if (!ShuffleFileDescriptors(fd_shuffle))
-          exit(127);
+        std::copy(fd_shuffle1.begin(), fd_shuffle1.end(),
+                  std::back_inserter(fd_shuffle2));
 
-        CloseSuperfluousFds(fd_shuffle);
+        // fd_shuffle1 is mutated by this call because it cannot malloc.
+        if (!ShuffleFileDescriptors(&fd_shuffle1))
+          _exit(127);
 
-        const std::vector<std::string> argv = cl.argv();
-        scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
+        CloseSuperfluousFds(fd_shuffle2);
+
         for (size_t i = 0; i < argv.size(); i++)
           argv_cstr[i] = const_cast<char*>(argv[i].c_str());
         argv_cstr[argv.size()] = NULL;
         execvp(argv_cstr[0], argv_cstr.get());
-        exit(127);
+        _exit(127);
       }
     default:  // parent
       {
