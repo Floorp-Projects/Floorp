@@ -1339,6 +1339,7 @@ JSContext::JSContext(JSRuntime *rt)
     throwing(false),
     exception(UndefinedValue()),
     runOptions(0),
+    reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
     localeCallbacks(NULL),
     resolvingList(NULL),
     generatingError(false),
@@ -1370,7 +1371,6 @@ JSContext::JSContext(JSRuntime *rt)
     resolveFlags(0),
     rngSeed(0),
     iterValue(MagicValue(JS_NO_ITER_VALUE)),
-    reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
 #ifdef JS_TRACER
     traceJitEnabled(false),
 #endif
