@@ -30,11 +30,11 @@ assertEq(JSON.stringify({ 3: 3, 4: 4 }, [S]),
 
 Number.prototype.toString = function() { return new String(42); };
 assertEq(JSON.stringify({ 3: 3, 4: 4 }, [N]),
-         '{"3":3}');
+         '{"4":4}');
 
 String.prototype.toString = function() { return new Number(17); };
 assertEq(JSON.stringify({ 3: 3, 4: 4 }, [S]),
-         '{"4":4}');
+         '{"3":3}');
 
 Number.prototype.toString = null;
 assertEq(JSON.stringify({ 3: 3, 4: 4 }, [N]),
