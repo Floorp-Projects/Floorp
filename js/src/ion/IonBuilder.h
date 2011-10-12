@@ -244,7 +244,7 @@ class IonBuilder : public MIRGenerator
     void initParameters();
     void rewriteParameters();
     bool pushConstant(const Value &v);
-    bool pushTypeBarrier(MInstruction *ins, types::TypeSet *observed);
+    bool pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::TypeSet *observed);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);
     bool jsop_binary(JSOp op);
