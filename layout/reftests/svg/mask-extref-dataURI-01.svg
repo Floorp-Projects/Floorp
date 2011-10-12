@@ -1,0 +1,38 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE svg [
+  <!-- entities etc. here -->
+  <!ENTITY dataURI
+     "data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg'&gt;&lt;g id='empty'/&gt;&lt;mask id='mask' maskContentUnits='userSpaceOnUse'&gt;&lt;rect width='50' height='50' fill='white'/&gt;&lt;/mask&gt;&lt;/svg&gt;">
+]>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>
+    Testcase for bug 686013: CSS mask targeting a fragment in a data URI
+  </title>
+  <style type="text/css">
+    .masked {
+      mask: url("&dataURI;#mask");
+    }
+  </style>
+
+  <!-- use an empty g to force resource document to load before onload -->
+  <use xlink:href="&dataURI;#empty"/>
+
+  <!-- giant lime background -->
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <!-- Masked red rect, covered by lime rect
+       (to make sure mask doesn't let too much through) -->
+  <rect width="75" height="75" fill="red" class="masked"/>
+  <rect width="50" height="50" fill="lime"/>
+
+  <!-- Masked lime rect, covering red rect
+       (to make sure mask lets enough through) -->
+  <g transform="translate(0, 100)">
+    <rect width="50" height="50" fill="red"/>
+    <rect width="75" height="75" fill="lime" class="masked"/>
+  </g>
+</svg>

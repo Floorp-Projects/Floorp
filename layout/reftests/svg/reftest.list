@@ -105,6 +105,7 @@ random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == use-01.svg pass.svg
 == use-01-extref.svg pass.svg
 == use-02-extref.svg use-02-extref-ref.svg
+== use-extref-dataURI-01.svg pass.svg
 == use-children.svg pass.svg
 == fallback-color-01a.svg pass.svg
 == fallback-color-01b.svg pass.svg
@@ -116,6 +117,7 @@ random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == filter-basic-03.svg pass.svg
 == filter-bounds-01.svg pass.svg
 == filter-bounds-02.svg pass.svg
+== filter-extref-differentOrigin-01.svg pass.svg
 == filter-foreignObject-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
 == filter-scaled-01.svg pass.svg
@@ -146,6 +148,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == marker-viewBox-01.svg marker-viewBox-01-ref.svg
 == mask-basic-01.svg pass.svg
 == mask-basic-02.svg mask-basic-02-ref.svg
+== mask-extref-dataURI-01.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
