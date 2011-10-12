@@ -5680,7 +5680,6 @@ main(int argc, char **argv, char **envp)
         || !op.addOptionalMultiStringArg("scriptArgs",
                                          "String arguments to bind as |arguments| in the "
                                          "shell's global")
-#ifdef JS_ION
         || !op.addBoolOption('\0', "ion", "Enable IonMonkey")
         || !op.addStringOption('\0', "ion-gvn", "[mode]",
                                "Specify Ion global value numbering:\n"
@@ -5694,7 +5693,6 @@ main(int argc, char **argv, char **envp)
                                "  greedy: Greedy register allocation\n"
                                "  lsra: Linear Scan register allocation (default)")
         || !op.addBoolOption('\0', "ion-eager", "Always compile methods")
-#endif
     )
     {
         return EXIT_FAILURE;
