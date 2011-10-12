@@ -17,6 +17,7 @@
                         android:layout_margin="5dip"
                         android:textSize="18sp"
                         android:singleLine="true"
+                        android:inputType="textUri"
                         android:imeOptions="actionGo">
                         <requestFocus/>
               </EditText>
