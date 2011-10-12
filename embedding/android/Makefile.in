@@ -149,9 +149,16 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/crash_reporter.png
 RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
-MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/desktop_notification.png embedding/android/resources/drawable/favicon.png embedding/android/resources/drawable/reload.png
-MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/address_bar_button_left.9.png embedding/android/resources/drawable/address_bar_button_right.9.png
-MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/address_bar_button_middle.9.png embedding/android/resources/drawable/address_bar_bg.9.png
+MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/desktop_notification.png        \
+	                     embedding/android/resources/drawable/favicon.png                     \
+                         embedding/android/resources/drawable/reload.png                      \
+                         embedding/android/resources/drawable/quit.png                        \
+                         embedding/android/resources/drawable/address_bar_button_left.9.png   \
+                         embedding/android/resources/drawable/address_bar_button_right.9.png  \
+                         embedding/android/resources/drawable/address_bar_button_middle.9.png \
+                         embedding/android/resources/drawable/address_bar_bg.9.png            \
+                         $(NULL)
+
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 

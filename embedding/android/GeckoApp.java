@@ -368,15 +368,20 @@ abstract public class GeckoApp
     {
         final Activity self = this;
 
-        MenuItem quitItem = menu.add("Quit");
-        quitItem.setIcon(android.R.drawable.ic_menu_close_clear_cancel);
-        quitItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                public boolean onMenuItemClick(MenuItem item) {
-                    quit();
-                    return true;
-                }
-            });
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.layout.gecko_menu, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+           case R.id.quit:
+               quit();
+               return true;
+           default:
+               return super.onOptionsItemSelected(item);
+        }
     }
 
     private void quit() {
