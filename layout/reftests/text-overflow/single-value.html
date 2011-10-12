@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: text-overflow: <single value>, scrolled and non-scrolled tests, (bug 684266)
+-->
+<html class="reftest-wait"><head>
+<title>text-overflow: &lt;single value&gt;, scrolled and non-scrolled tests, (bug 684266)</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff),url(DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+body {padding:10px 40px;}
+
+div {
+  text-overflow: ellipsis;
+  width:100px;
+  white-space:nowrap;
+}
+.hidden {overflow:hidden}
+.auto {overflow:auto}
+.autolong {overflow:auto; width:100%;}
+.scroll {overflow:scroll}
+
+.ltr { direction:ltr; unicode-bidi: bidi-override; }
+.rtl { direction:rtl; unicode-bidi: bidi-override; }
+
+.ltr.p { text-indent: -5px; padding-left: 40px; } /* overflow into padding, but not outside the padding edge */
+.rtl.p { text-indent: -5px; padding-right: 40px; } /* overflow into padding, but not outside the padding edge */
+
+.s { text-indent: -5px; } /* overflow start edge outside the padding edge */
+</style>
+
+<script>
+function scrolldivs() {
+ var divs = document.getElementsByTagName('div');
+  for (i = 0; i < divs.length; ++i) {
+    var elm = divs[i];
+    if (elm.hasAttribute('scroll')) {
+      if (window.getComputedStyle(elm).direction == 'ltr')
+        elm.scrollLeft = 8;
+      else
+        elm.scrollLeft = -8;
+    }
+  }
+  document.documentElement.removeAttribute('class');
+}
+</script>
+</head>
+<body onload="scrolldivs()">
+
+    <div class="ltr start p hidden">A long line that does not break (overflow:hidden)</div>
+    <div class="ltr start p auto">A long line that does not break (overflow:auto)</div>
+    <div class="ltr start p autolong">A long line that does not break (overflow:auto)</div>
+    <div class="ltr start p scroll">A long line that does not break (overflow:scroll)</div>
+    <div class="ltr start s hidden">A long line that does not break (overflow:hidden)</div>
+    <div class="ltr start s auto">A long line that does not break (overflow:auto)</div>
+    <div class="ltr start s autolong">A long line that does not break (overflow:auto)</div>
+    <div class="ltr start s scroll">A long line that does not break (overflow:scroll)</div>
+
+    <div scroll class="ltr start p hidden">A long line that does not break (overflow:hidden)</div>
+    <div scroll class="ltr start p auto">A long line that does not break (overflow:auto)</div>
+    <div scroll class="ltr start p autolong">A long line that does not break (overflow:auto)</div>
+    <div scroll class="ltr start p scroll">A long line that does not break (overflow:scroll)</div>
+    <div scroll class="ltr start s hidden">A long line that does not break (overflow:hidden)</div>
+    <div scroll class="ltr start s auto">A long line that does not break (overflow:auto)</div>
+    <div scroll class="ltr start s autolong">A long line that does not break (overflow:auto)</div>
+    <div scroll class="ltr start s scroll">A long line that does not break (overflow:scroll)</div>
+
+<div class="rtl" style="float:right">
+    <div class="rtl start p hidden">A long line that does not break (overflow:hidden)</div>
+    <div class="rtl start p auto">A long line that does not break (overflow:auto)</div>
+    <div class="rtl start p autolong">A long line that does not break (overflow:auto)</div>
+    <div class="rtl start p scroll">A long line that does not break (overflow:scroll)</div>
+    <div class="rtl start s hidden">A long line that does not break (overflow:hidden)</div>
+    <div class="rtl start s auto">A long line that does not break (overflow:auto)</div>
+    <div class="rtl start s autolong">A long line that does not break (overflow:auto)</div>
+    <div class="rtl start s scroll">A long line that does not break (overflow:scroll)</div>
+
+    <div scroll class="rtl start p hidden">A long line that does not break (overflow:hidden)</div>
+    <div scroll class="rtl start p auto">A long line that does not break (overflow:auto)</div>
+    <div scroll class="rtl start p autolong">A long line that does not break (overflow:auto)</div>
+    <div scroll class="rtl start p scroll">A long line that does not break (overflow:scroll)</div>
+    <div scroll class="rtl start s hidden">A long line that does not break (overflow:hidden)</div>
+    <div scroll class="rtl start s auto">A long line that does not break (overflow:auto)</div>
+    <div scroll class="rtl start s autolong">A long line that does not break (overflow:auto)</div>
+    <div scroll class="rtl start s scroll">A long line that does not break (overflow:scroll)</div>
+</div>
+
+
+</body>
+</hml>

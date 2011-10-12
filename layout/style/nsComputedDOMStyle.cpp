@@ -2486,33 +2486,35 @@ nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetTextOverflow()
 {
   const nsStyleTextReset *style = GetStyleTextReset();
-  nsROCSSPrimitiveValue *left = GetROCSSPrimitiveValue();
-  if (style->mTextOverflow.mLeft.mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
+  nsROCSSPrimitiveValue *first = GetROCSSPrimitiveValue();
+  const nsStyleTextOverflowSide *side = style->mTextOverflow.GetFirstValue();
+  if (side->mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
     nsString str;
-    nsStyleUtil::AppendEscapedCSSString(style->mTextOverflow.mLeft.mString, str);
-    left->SetString(str);
+    nsStyleUtil::AppendEscapedCSSString(side->mString, str);
+    first->SetString(str);
   } else {
-    left->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(style->mTextOverflow.mLeft.mType,
+    first->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(side->mType,
                                      nsCSSProps::kTextOverflowKTable));
   }
-  if (style->mTextOverflow.mLeft == style->mTextOverflow.mRight) {
-    return left;
+  side = style->mTextOverflow.GetSecondValue();
+  if (!side) {
+    return first;
   }
-  nsROCSSPrimitiveValue *right = GetROCSSPrimitiveValue();
-  if (style->mTextOverflow.mRight.mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
+  nsROCSSPrimitiveValue *second = GetROCSSPrimitiveValue();
+  if (side->mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
     nsString str;
-    nsStyleUtil::AppendEscapedCSSString(style->mTextOverflow.mRight.mString, str);
-    right->SetString(str);
+    nsStyleUtil::AppendEscapedCSSString(side->mString, str);
+    second->SetString(str);
   } else {
-    right->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(style->mTextOverflow.mRight.mType,
+    second->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(side->mType,
                                      nsCSSProps::kTextOverflowKTable));
   }
 
   nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
-  valueList->AppendCSSValue(left);
-  valueList->AppendCSSValue(right);
+  valueList->AppendCSSValue(first);
+  valueList->AppendCSSValue(second);
   return valueList;
 }
 
