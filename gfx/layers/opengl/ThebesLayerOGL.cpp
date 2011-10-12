@@ -147,8 +147,6 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
 
     if (passes == 2) {
       ComponentAlphaTextureLayerProgram *alphaProgram;
-      NS_ASSERTION(!mTexImage->IsRGB() && !mTexImageOnWhite->IsRGB(),
-                   "Only BGR image surported with component alpha (currently!)");
       if (pass == 1) {
         alphaProgram = aManager->GetComponentAlphaPass1LayerProgram();
         gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,

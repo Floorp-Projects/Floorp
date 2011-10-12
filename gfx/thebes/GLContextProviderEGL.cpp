@@ -1275,9 +1275,6 @@ public:
             return mUpdateSurface;
         }
 
-        // if we get this far, then we're using Cairo's byte order
-        mIsRGBFormat = PR_FALSE;
-
         //printf_stderr("creating image surface %dx%d format %d\n", mUpdateRect.width, mUpdateRect.height, mUpdateFormat);
 
         mUpdateSurface =
