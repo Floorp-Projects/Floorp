@@ -98,7 +98,7 @@ class SnapshotReader
         }
         static Location From(int32 stackSlot) {
             Location loc;
-            loc.reg = InvalidReg.code();
+            loc.reg_ = Register::Code(0);      // Quell compiler warnings.
             loc.stackSlot_ = stackSlot;
             return loc;
         }
