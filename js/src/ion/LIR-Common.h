@@ -715,7 +715,9 @@ class LLoadSlotV : public LInstructionHelper<BOX_PIECES, 1, 0>
     }
 };
 
-// Load a value from an object's dslots or a slots vector.
+// Load a typed value from an object's dslots or a slots vector. Unlike
+// LLoadSlotV, this can bypass extracting a type tag, directly retrieving a
+// pointer, integer, or double.
 class LLoadSlotT : public LInstructionHelper<1, 1, 0>
 {
   public:

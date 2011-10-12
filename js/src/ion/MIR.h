@@ -1010,9 +1010,9 @@ class MUnbox : public MUnaryInstruction
 {
   public:
     enum Mode {
-        Fallible,
-        Infallible,
-        TypeBarrier
+        Fallible,       // Guard on the type, and deoptimize otherwise.
+        Infallible,     // Type guard is not necessary.
+        TypeBarrier     // Guard on the type, and act like a TypeBarrier on failure.
     };
 
   private:
@@ -1041,6 +1041,7 @@ class MUnbox : public MUnaryInstruction
         return getOperand(0);
     }
     BailoutKind bailoutKind() const {
+        // If infallible, no bailout should be generated.
         JS_ASSERT(fallible());
         return mode() == Fallible
                ? Bailout_Normal
