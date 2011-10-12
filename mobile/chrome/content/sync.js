@@ -443,7 +443,7 @@ let WeaveGlue = {
 
     // Show what went wrong with login if necessary
     if (aTopic == "weave:service:login:error") {
-      if (Weave.Status.login == "service.master_password_locked")
+      if (Weave.Status.login == Weave.MASTER_PASSWORD_LOCKED)
         Weave.Service.logout();
       else
         connect.setAttribute("desc", Weave.Utils.getErrorString(Weave.Status.login));
