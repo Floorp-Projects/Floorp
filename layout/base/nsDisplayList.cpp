@@ -2547,6 +2547,19 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
     (newOrigin + toMozOrigin, result);
 }
 
+/* If the matrix is singular, or a hidden backface is shown, the frame won't be visible or hit. */
+static bool IsFrameVisible(nsIFrame* aFrame, const gfx3DMatrix& aMatrix) 
+{
+  if (aMatrix.IsSingular()) {
+    return false;
+  }
+  if (aFrame->GetStyleDisplay()->mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN &&
+      aMatrix.IsBackfaceVisible()) {
+    return false;
+  }
+  return true;
+}
+
 const gfx3DMatrix&
 nsDisplayTransform::GetTransform(float aFactor)
 {
@@ -2567,9 +2580,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
   const gfx3DMatrix& newTransformMatrix = 
     GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel());
 
-  if (newTransformMatrix.IsSingular() ||
-      (mFrame->GetStyleDisplay()->mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN &&
-       newTransformMatrix.GetNormalVector().z <= 0.0)) {
+  if (!IsFrameVisible(mFrame, newTransformMatrix)) {
     return nsnull;
   }
 
@@ -2646,11 +2657,8 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
   float factor = nsPresContext::AppUnitsPerCSSPixel();
   gfx3DMatrix matrix = GetTransform(factor);
 
-  /* If the matrix is singular, or a hidden backface is shown, we didn't hit anything. */
-  if (matrix.IsSingular() ||
-      (mFrame->GetStyleDisplay()->mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN &&
-       matrix.GetNormalVector().z <= 0.0)) {
-          return;
+  if (!IsFrameVisible(mFrame, matrix)) {
+    return;
   }
 
   /* We want to go from transformed-space to regular space.
@@ -2708,9 +2716,7 @@ nsDisplayTransform::GetHitDepthAtPoint(const nsPoint& aPoint)
   float factor = nsPresContext::AppUnitsPerCSSPixel();
   gfx3DMatrix matrix = GetTransform(factor);
 
-  NS_ASSERTION(!matrix.IsSingular(), "We can't have hit a singular matrix!");
-  NS_ASSERTION(mFrame->GetStyleDisplay()->mBackfaceVisibility != NS_STYLE_BACKFACE_VISIBILITY_HIDDEN || 
-               matrix.GetNormalVector().z > 0.0, "We can't have hit the hidden backface of a layer!");
+  NS_ASSERTION(IsFrameVisible(mFrame, matrix), "We can't have hit a frame that isn't visible!");
     
   gfxPoint point = 
     matrix.Inverse().ProjectPoint(gfxPoint(NSAppUnitsToFloatPixels(aPoint.x, factor),
