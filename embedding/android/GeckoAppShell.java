@@ -849,6 +849,7 @@ public class GeckoAppShell
 
     static SynchronousQueue<String> sClipboardQueue =
         new SynchronousQueue<String>();
+    private static String EMPTY_STRING = new String();
 
     // On some devices, access to the clipboard service needs to happen
     // on a thread with a looper, so dispatch this to our looper thread
@@ -876,12 +877,12 @@ public class GeckoAppShell
                         text = cm.getText().toString();
                 }
                 try {
-                    sClipboardQueue.put(text != null ? text : "");
+                    sClipboardQueue.put(text != null ? text : EMPTY_STRING);
                 } catch (InterruptedException ie) {}
             }});
         try {
             String ret = sClipboardQueue.take();
-            return ret == "" ? null : ret;
+            return (ret == EMPTY_STRING ? null : ret);
         } catch (InterruptedException ie) {}
         return null;
     }
