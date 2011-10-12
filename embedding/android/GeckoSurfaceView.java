@@ -125,10 +125,6 @@ class GeckoSurfaceView
         if (mStartupBitmap == null) {
             Log.e(LOG_FILE_NAME, "!!! NO STARTUP BITMAP !!!");
             loadStartupBitmap();
-            if (mStartupBitmap == null) {
-                mShowingLoadScreen = false;
-                return;
-            }
         }
 
         Canvas c = holder.lockCanvas();
@@ -138,9 +134,19 @@ class GeckoSurfaceView
             return;
         }
 
-        Drawable drawable = new BitmapDrawable(mStartupBitmap);
-        drawable.setBounds(0, 0, width, height);
-        drawable.draw(c);
+        if (mStartupBitmap == null) {
+            Resources res = getResources();
+            Drawable drawable = res.getDrawable(R.drawable.start);
+            drawable.setBounds(0, 0, width, height);
+            drawable.draw(c);
+
+            Paint paint = new Paint();
+            c.drawText("Place holder. Missing screenshot.", 10.0f, 20.0f, paint);
+        } else {
+            Drawable drawable = new BitmapDrawable(mStartupBitmap);
+            drawable.setBounds(0, 0, width, height);
+            drawable.draw(c);
+        }
         holder.unlockCanvasAndPost(c);
     }
 

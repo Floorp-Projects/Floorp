@@ -150,9 +150,10 @@ RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
 MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/desktop_notification.png        \
-	                     embedding/android/resources/drawable/favicon.png                     \
+                         embedding/android/resources/drawable/favicon.png                     \
                          embedding/android/resources/drawable/reload.png                      \
                          embedding/android/resources/drawable/quit.png                        \
+                         embedding/android/resources/drawable/start.png                       \
                          embedding/android/resources/drawable/address_bar_button_left.9.png   \
                          embedding/android/resources/drawable/address_bar_button_right.9.png  \
                          embedding/android/resources/drawable/address_bar_button_middle.9.png \
