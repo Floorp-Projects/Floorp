@@ -73,7 +73,6 @@
 #include "jsopcode.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jsstaticcheck.h"
 #include "jstracer.h"
 #include "jsxml.h"
 #include "jstypedarray.h"
