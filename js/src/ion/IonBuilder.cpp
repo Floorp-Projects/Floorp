@@ -1942,27 +1942,68 @@ TestSingletonProperty(JSContext *cx, JSObject *obj, jsid id, bool *isKnownConsta
     return true;
 }
 
+// Given an actual and observed type set, annotates the IR as much as possible:
+// (1) If no type information is provided, the value on the top of the stack is
+//     left in place.
+// (2) If a single type definitely exists, and no type barrier is in place,
+//     then an infallible unbox instruction replaces the value on the top of
+//     the stack.
+// (3) If a type barrier is in place, but has an unknown type set, leave the
+//     value at the top of the stack.
+// (4) If a type barrier is in place, and has a single type, an unbox
+//     instruction replaces the top of the stack.
+// (5) Lastly, a type barrier instruction replaces the top of the stack.
 bool
-IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *observed)
+IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::TypeSet *observed)
 {
-    // Push the instruction onto the stack, and create a resume point if
-    // necessary. If the instruction is idempotent, we'll resume the entire
-    // operation. The actual type barrier will occur in the interpreter. If the
+    // If the instruction is idempotent, we'll resume the entire operation.
+    // The actual type barrier will occur in the interpreter. If the
     // instruction is not idempotent, even if it has a singleton type,
-    // there must be a resume point capturing the original def.
-    current->push(ins);
-    if (!ins->isIdempotent() && !resumeAfter(ins))
-        return false;
+    // there must be a resume point capturing the original def, and resuming
+    // to that point will explicitly monitor the new type.
 
-    if (!observed || observed->unknown())
+    if (!actual) {
+        JS_ASSERT(!observed);
         return true;
-    observed->addFreeze(cx);
+    }
 
-    // Remove the instruction off the top of the stack.
+    if (!observed) {
+        JSValueType type = actual->getKnownTypeTag(cx);
+        MInstruction *replace = NULL;
+        switch (type) {
+          case JSVAL_TYPE_UNDEFINED:
+            replace = MConstant::New(UndefinedValue());
+            break;
+          case JSVAL_TYPE_NULL:
+            replace = MConstant::New(NullValue());
+            break;
+          case JSVAL_TYPE_UNKNOWN:
+            break;
+          default:
+            replace = MUnbox::New(ins, MIRTypeFromValueType(type), MUnbox::Infallible);
+            break;
+        }
+        if (replace) {
+            current->pop();
+            current->add(replace);
+            current->push(replace);
+        }
+        return true;
+    }
+
+    if (observed->unknown())
+        return true;
+
     current->pop();
+    observed->addFreeze(cx);
 
     MInstruction *barrier;
     JSValueType type = observed->getKnownTypeTag(cx);
+
+    // An unbox instruction isn't enough to capture JSVAL_TYPE_OBJECT.
+    if (type == JSVAL_TYPE_OBJECT && !observed->hasType(types::Type::AnyObjectType()))
+        type = JSVAL_TYPE_UNKNOWN;
+
     if (type == JSVAL_TYPE_UNKNOWN) {
         barrier = MTypeBarrier::New(ins, observed);
         current->add(barrier);
@@ -1974,7 +2015,6 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *observed)
     } else {
         MUnbox::Mode mode = ins->isIdempotent() ? MUnbox::Fallible : MUnbox::TypeBarrier;
         barrier = MUnbox::New(ins, MIRTypeFromValueType(type), mode);
-        barrier->setTypeSet(observed);
         current->add(barrier);
     }
     current->push(barrier);
