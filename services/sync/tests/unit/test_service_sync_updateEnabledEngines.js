@@ -3,9 +3,11 @@ Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/status.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/policies.js");
 
 initTestLogging();
 
@@ -84,6 +86,9 @@ const PAYLOAD = 42;
 
 function run_test() {
   initTestLogging("Trace");
+  Log4Moz.repository.getLogger("Sync.Service").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.ErrorHandler").level = Log4Moz.Level.Trace;
+
   run_next_test();
 }
 
@@ -184,6 +189,50 @@ add_test(function test_disabledLocally() {
     Service.startOver();
     server.stop(run_next_test);
   }
+});
+
+add_test(function test_disabledLocally_wipe503() {
+  _("Test: Engine is enabled on remote clients and disabled locally");
+  Service.syncID = "abcdefghij";
+  let engine = Engines.get("steam");
+  let metaWBO = new ServerWBO("global", {
+    syncID: Service.syncID,
+    storageVersion: STORAGE_VERSION,
+    engines: {steam: {syncID: engine.syncID,
+                      version: engine.version}}
+  });
+  let steamCollection = new ServerWBO("steam", PAYLOAD);
+
+  function service_unavailable(request, response) {
+    let body = "Service Unavailable";
+    response.setStatusLine(request.httpVersion, 503, "Service Unavailable");
+    response.setHeader("Retry-After", "23");
+    response.bodyOutputStream.write(body, body.length);
+  }
+
+  let server = sync_httpd_setup({
+    "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
+    "/1.1/johndoe/storage/steam": service_unavailable
+  });
+  setUp();
+
+  _("Disable engine locally.");
+  Service._ignorePrefObserver = true;
+  engine.enabled = true;
+  Service._ignorePrefObserver = false;
+  engine.enabled = false;
+
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+
+    do_check_eq(Status.sync, SERVER_MAINTENANCE);
+
+    Service.startOver();
+    server.stop(run_next_test);
+  });
+
+  _("Sync.");
+  ErrorHandler.syncAndReportErrors();
 });
 
 add_test(function test_enabledRemotely() {
