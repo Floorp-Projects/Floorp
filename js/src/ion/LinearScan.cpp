@@ -60,9 +60,9 @@ UseCompatibleWith(const LUse *use, LAllocation alloc)
         return alloc.isRegister();
       case LUse::FIXED:
         if (alloc.isGeneralReg())
-            return alloc.toGeneralReg()->reg().code() == use->registerCode();
+            return uint32(alloc.toGeneralReg()->reg().code()) == use->registerCode();
         if (alloc.isFloatReg())
-            return alloc.toFloatReg()->reg().code() == use->registerCode();
+            return uint32(alloc.toFloatReg()->reg().code()) == use->registerCode();
         return false;
       default:
         JS_NOT_REACHED("Unknown use policy");
