@@ -47,6 +47,8 @@
 namespace js {
 namespace ion {
 
+class CompactBufferWriter;
+
 // CompactBuffers are byte streams designed for compressable integers. It has
 // helper functions for writing bytes, fixed-size integers, and variable-sized
 // integers. Variable sized integers are encoded in 1-5 bytes, each byte
@@ -82,6 +84,7 @@ class CompactBufferReader
       : buffer_(start),
         end_(end)
     { }
+    inline CompactBufferReader(const CompactBufferWriter &writer);
     uint8 readByte() {
         JS_ASSERT(buffer_ < end_);
         return *buffer_++;
@@ -168,6 +171,12 @@ class CompactBufferWriter
         return !enoughMemory_;
     }
 };
+
+CompactBufferReader::CompactBufferReader(const CompactBufferWriter &writer)
+  : buffer_(writer.buffer()),
+    end_(writer.buffer() + writer.length())
+{
+}
 
 } // namespace ion
 } // namespace js
