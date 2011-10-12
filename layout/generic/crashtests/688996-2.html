@@ -1,0 +1,15 @@
+<!DOCTYPE html><html><head><script>
+function boom()
+{
+  var a = document.getElementsByTagName('div')[0];
+  var b = a.firstChild;
+
+  var r = document.createRange();
+  r.setStart(b, 1);
+  r.setEnd(a, 1);
+
+  b.splitText(0);
+}
+</script></head><body onload="boom();">
+<div>b</div>
+</body></html>

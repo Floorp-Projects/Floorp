@@ -357,7 +357,7 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
     DoSetRange(newStartNode, newStartOffset, newEndNode, newEndOffset,
                newRoot ? newRoot : mRoot.get()
 #ifdef DEBUG
-               , !newEndNode->GetParent()
+               , !newEndNode->GetParent() || !newStartNode->GetParent()
 #endif
                );
   }
