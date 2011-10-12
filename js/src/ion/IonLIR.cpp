@@ -93,12 +93,13 @@ LBlock::lastId()
     return last->id();
 }
 
-LSnapshot::LSnapshot(MResumePoint *mir)
+LSnapshot::LSnapshot(MResumePoint *mir, BailoutKind kind)
   : numSlots_(mir->numOperands() * BOX_PIECES),
     slots_(NULL),
     mir_(mir),
     snapshotOffset_(INVALID_SNAPSHOT_OFFSET),
-    bailoutId_(INVALID_BAILOUT_ID)
+    bailoutId_(INVALID_BAILOUT_ID),
+    bailoutKind_(kind)
 { }
 
 bool
@@ -109,9 +110,9 @@ LSnapshot::init(MIRGenerator *gen)
 }
 
 LSnapshot *
-LSnapshot::New(MIRGenerator *gen, MResumePoint *mir)
+LSnapshot::New(MIRGenerator *gen, MResumePoint *mir, BailoutKind kind)
 {
-    LSnapshot *snapshot = new LSnapshot(mir);
+    LSnapshot *snapshot = new LSnapshot(mir, kind);
     if (!snapshot->init(gen))
         return NULL;
 

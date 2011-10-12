@@ -443,7 +443,6 @@ MPhi::foldsTo(bool useValueNumbers)
     return first;
 }
 
-
 bool
 MPhi::congruentTo(MDefinition *const &ins) const
 {

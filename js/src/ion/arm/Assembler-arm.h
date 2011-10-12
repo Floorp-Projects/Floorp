@@ -692,7 +692,7 @@ class Imm16
     Imm16(uint32 imm)
         : lower(imm & 0xfff), pad(0), upper((imm>>12) & 0xf)
     {
-        JS_ASSERT((lower | (upper << 12)) == imm);
+        JS_ASSERT(uint32(lower | (upper << 12)) == imm);
     }
     uint32 toInt() { return lower | upper << 16; }
 };

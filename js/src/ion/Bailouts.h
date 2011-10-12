@@ -43,6 +43,7 @@
 #define jsion_bailouts_h__
 
 #include "jstypes.h"
+#include "vm/Stack.h"
 
 #if defined(JS_CPU_X86)
 # include "ion/x86/Bailouts-x86.h"
@@ -132,6 +133,21 @@ namespace ion {
 
 typedef uint32 BailoutId;
 static const BailoutId INVALID_BAILOUT_ID = BailoutId(-1);
+
+// Different kinds of bailouts. When extending this enum, make sure to check
+// the bits reserved for bailout kinds.
+enum BailoutKind
+{
+    // A normal bailout triggered from type, shape, and assorted overflow
+    // guards in the compiler.
+    Bailout_Normal,
+
+    // A bailout required to monitor a newly observed type in a type inference
+    // barrier.
+    Bailout_TypeBarrier
+};
+
+static const uint32 BAILOUT_KIND_BITS = 1;
 
 // Keep this arbitrarily small for now, for testing.
 static const uint32 BAILOUT_TABLE_SIZE = 16;

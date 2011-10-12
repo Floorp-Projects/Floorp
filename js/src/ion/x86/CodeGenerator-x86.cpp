@@ -43,6 +43,7 @@
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 #include "jsnum.h"
+#include "jsscope.h"
 
 using namespace js;
 using namespace js::ion;
@@ -101,7 +102,7 @@ CodeGeneratorX86::visitValue(LValue *value)
 
     masm.movl(Imm32(jv.s.tag), ToRegister(type));
     if (value->value().isMarkable())
-        masm.movl(ImmGCPtr(jv.s.payload.ptr), ToRegister(payload));
+        masm.movl(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), ToRegister(payload));
     else
         masm.movl(Imm32(jv.s.payload.u32), ToRegister(payload));
     return true;
@@ -157,7 +158,7 @@ bool
 CodeGeneratorX86::visitUnbox(LUnbox *unbox)
 {
     MUnbox *mir = unbox->mir();
-    if (mir->checkType()) {
+    if (mir->fallible()) {
         LAllocation *type = unbox->getOperand(TYPE_INDEX);
         masm.cmpl(ToOperand(type), Imm32(MIRTypeToTag(mir->type())));
         if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
@@ -235,7 +236,7 @@ CodeGeneratorX86::visitUnboxDouble(LUnboxDouble *ins)
     const LDefinition *result = ins->output();
 
     MUnbox *mir = ins->mir();
-    if (mir->checkType()) {
+    if (mir->fallible()) {
         Assembler::Condition cond = masm.testDouble(Assembler::NotEqual, box);
         if (!bailoutIf(cond, ins->snapshot()))
             return false;
@@ -253,5 +254,42 @@ CodeGeneratorX86::testStringTruthy(bool truthy, const ValueOperand &value)
     size_t mask = (0xFFFFFFFF << JSString::LENGTH_SHIFT);
     masm.testl(lengthAndFlags, Imm32(mask));
     return truthy ? Assembler::NonZero : Assembler::Zero;
+}
+
+bool
+CodeGeneratorX86::visitLoadSlotV(LLoadSlotV *load)
+{
+    Register type = ToRegister(load->getDef(TYPE_INDEX));
+    Register payload = ToRegister(load->getDef(PAYLOAD_INDEX));
+    Register base = ToRegister(load->input());
+    int32 offset = load->mir()->slot() * sizeof(js::Value);
+
+    masm.movl(Operand(base, offset + NUNBOX32_TYPE_OFFSET), type);
+    masm.movl(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), payload);
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitLoadSlotT(LLoadSlotT *load)
+{
+    Register base = ToRegister(load->input());
+    int32 offset = load->mir()->slot() * sizeof(js::Value);
+
+    if (load->mir()->type() == MIRType_Double)
+        masm.movsd(Operand(base, offset), ToFloatRegister(load->output()));
+    else
+        masm.movl(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), ToRegister(load->output()));
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitGuardShape(LGuardShape *guard)
+{
+    Register obj = ToRegister(guard->input());
+
+    masm.cmpl(Operand(obj, offsetof(JSObject, lastProp)), ImmGCPtr(guard->mir()->shape()));
+    if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
+        return false;
+    return true;
 }
 

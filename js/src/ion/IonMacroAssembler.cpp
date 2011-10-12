@@ -126,8 +126,8 @@ MacroAssembler::callWithABI(void *fun)
     inCall_ = false;
 }
 
-void
-MacroAssembler::guardTypeSet(const Address &address, types::TypeSet *types,
+template <typename T> void
+MacroAssembler::guardTypeSet(const T &address, types::TypeSet *types,
                              Register scratch, Label *mismatched)
 {
     JS_ASSERT(!types->unknown());
@@ -180,4 +180,9 @@ MacroAssembler::guardTypeSet(const Address &address, types::TypeSet *types,
     jmp(mismatched);
     bind(&matched);
 }
+
+template void MacroAssembler::guardTypeSet(const Address &address, types::TypeSet *types,
+                                           Register scratch, Label *mismatched);
+template void MacroAssembler::guardTypeSet(const ValueOperand &value, types::TypeSet *types,
+                                           Register scratch, Label *mismatched);
 

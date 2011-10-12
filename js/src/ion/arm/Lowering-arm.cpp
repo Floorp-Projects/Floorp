@@ -162,9 +162,9 @@ LIRGeneratorARM::visitReturn(MReturn *ret)
 }
 
 bool
-LIRGeneratorARM::assignSnapshot(LInstruction *ins)
+LIRGeneratorARM::assignSnapshot(LInstruction *ins, BailoutKind kind)
 {
-    LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_);
+    LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_, kind);
     if (!snapshot)
         return false;
 

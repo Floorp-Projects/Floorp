@@ -533,6 +533,10 @@ class LDefinition
           case MIRType_Value:
             return LDefinition::BOX;
 #endif
+          case MIRType_Slots:
+            // When we begin allocating slots vectors from the GC, this will
+            // need to change to ::OBJECT.
+            return LDefinition::POINTER;
           default:
             JS_NOT_REACHED("unexpected type");
             return LDefinition::BOX;
@@ -755,12 +759,13 @@ class LSnapshot : public TempObject
     MResumePoint *mir_;
     SnapshotOffset snapshotOffset_;
     BailoutId bailoutId_;
+    BailoutKind bailoutKind_;
 
-    LSnapshot(MResumePoint *mir);
+    LSnapshot(MResumePoint *mir, BailoutKind kind);
     bool init(MIRGenerator *gen);
 
   public:
-    static LSnapshot *New(MIRGenerator *gen, MResumePoint *snapshot);
+    static LSnapshot *New(MIRGenerator *gen, MResumePoint *snapshot, BailoutKind kind);
 
     size_t numEntries() const {
         return numSlots_;
@@ -804,6 +809,9 @@ class LSnapshot : public TempObject
     void setBailoutId(BailoutId id) {
         JS_ASSERT(bailoutId_ == INVALID_BAILOUT_ID);
         bailoutId_ = id;
+    }
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
     }
 };
 
@@ -967,6 +975,21 @@ LAllocation::toRegister() const
     bool accept(LInstructionVisitor *visitor) {                             \
         return visitor->visit##opcode(this);                                \
     }
+
+#if defined(JS_NUNBOX32)
+# define BOX_OUTPUT_ACCESSORS()                                             \
+    const LDefinition *outputType() {                                       \
+        return getDef(TYPE_INDEX);                                          \
+    }                                                                       \
+    const LDefinition *outputPayload() {                                    \
+        return getDef(PAYLOAD_INDEX);                                       \
+    }
+#elif defined(JS_PUNBOX64)
+# define BOX_OUTPUT_ACCESSORS()                                             \
+    const LDefinition *outputValue() {                                      \
+        return getDef(0);                                                   \
+    }
+#endif
 
 #include "LIR-Common.h"
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)

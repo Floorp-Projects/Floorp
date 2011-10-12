@@ -217,6 +217,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void movePtr(ImmWord imm, Register dest) {
         movl(Imm32(imm.value), dest);
     }
+    void movePtr(ImmGCPtr imm, Register dest) {
+        movl(imm, dest);
+    }
     void loadPtr(const Address &address, Register dest) {
         movl(Operand(address), dest);
     }
@@ -302,9 +305,15 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(payloadOf(address), scratch);
         return scratch;
     }
+    Register extractObject(const ValueOperand &value, Register scratch) {
+        return value.payloadReg();
+    }
     Register extractTag(const Address &address, Register scratch) {
         movl(tagOf(address), scratch);
         return scratch;
+    }
+    Register extractTag(const ValueOperand &value, Register scratch) {
+        return value.typeReg();
     }
 
     void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {

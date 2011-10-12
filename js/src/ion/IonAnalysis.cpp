@@ -84,7 +84,7 @@ ion::EliminateDeadCode(MIRGraph &graph)
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
         // Remove unused instructions.
         for (MInstructionReverseIterator inst = block->rbegin(); inst != block->rend(); ) {
-            if (inst->isIdempotent() && !inst->hasUses())
+            if (inst->isIdempotent() && !inst->hasUses() && !inst->isGuard())
                 inst = block->removeAt(inst);
             else
                 inst++;
@@ -480,7 +480,7 @@ TypeAnalyzer::adjustOutput(MDefinition *def)
     }
 
     MBasicBlock *block = def->block();
-    MUnbox *unbox = MUnbox::New(def, usedAs);
+    MUnbox *unbox = MUnbox::New(def, usedAs, MUnbox::Fallible);
     if (def->isPhi()) {
         // Insert at the beginning of the block.
         block->insertBefore(*block->begin(), unbox);
@@ -537,9 +537,15 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
         if (in->type() == MIRType_Value)
             continue;
 
-        MBox *box = MBox::New(in);
-        in->block()->insertBefore(in->block()->lastIns(), box);
-        phi->replaceOperand(i, box);
+        if (in->isUnbox()) {
+            // The input is being explicitly unboxed, so sneak past and grab
+            // the original box.
+            phi->replaceOperand(i, in->toUnbox()->input());
+        } else {
+            MBox *box = MBox::New(in);
+            in->block()->insertBefore(in->block()->lastIns(), box);
+            phi->replaceOperand(i, box);
+        }
     }
 }
 

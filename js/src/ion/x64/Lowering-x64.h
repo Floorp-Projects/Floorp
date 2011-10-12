@@ -55,7 +55,7 @@ class LIRGeneratorX64 : public LIRGeneratorShared
     { }
 
   protected:
-    bool assignSnapshot(LInstruction *ins);
+    bool assignSnapshot(LInstruction *ins, BailoutKind kind = Bailout_Normal);
     void lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
     bool defineUntypedPhi(MPhi *phi, size_t lirIndex);
 

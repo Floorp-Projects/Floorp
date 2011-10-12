@@ -91,7 +91,8 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
             (void *)snapshot, nfixed, exprStack);
 
     SnapshotOffset offset = snapshots_.start(gen->fun(), gen->script, snapshot->mir()->pc(),
-                                             masm.framePushed(), exprStack);
+                                             masm.framePushed(), exprStack,
+                                             snapshot->bailoutKind());
 
     for (uint32 i = 0; i < nslots; i++) {
         MDefinition *mir = snapshot->mir()->getOperand(i);
