@@ -62,14 +62,14 @@ public class AwesomeBar extends ListActivity {
     public static final String CURRENT_URL_KEY = "currenturl";
 
     public class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
-        private Cursor _cursor;
-        private Context _context;
+        private Cursor mAdapterCursor;
+        private Context mContext;
 
         public AwesomeBarCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
             // Using the older, deprecated constructor so we can work on API < 11
             super(context, layout, c, from, to);
-            _cursor = c;
-            _context = context;
+            mAdapterCursor = c;
+            mContext = context;
         }
 
         @Override
