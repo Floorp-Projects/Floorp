@@ -711,6 +711,27 @@ SyncServer.prototype = {
   },
 
   /**
+   * Delete all of the collections for the named user.
+   *
+   * @param username
+   *        The name of the affected user.
+   *
+   * @return a timestamp.
+   */
+  deleteCollections: function deleteCollections(username) {
+    if (!(username in this.users)) {
+      throw new Error("Unknown user.");
+    }
+    let userCollections = this.users[username].collections;
+    for each (let [name, coll] in Iterator(userCollections)) {
+      this._log.trace("Bulk deleting " + name + " for " + username + "...");
+      coll.delete({});
+    }
+    this.users[username].collections = {};
+    return this.timestamp();
+  },
+
+  /**
    * Simple accessor to allow collective binding and abbreviation of a bunch of
    * methods. Yay!
    * Use like this:
@@ -727,11 +748,13 @@ SyncServer.prototype = {
     let modified         = function (collectionName) {
       return collection(collectionName).timestamp;
     }
+    let deleteCollections = this.deleteCollections.bind(this, username);
     return {
-      collection:       collection,
-      createCollection: createCollection,
-      createContents:   createContents,
-      modified:         modified
+      collection:        collection,
+      createCollection:  createCollection,
+      createContents:    createContents,
+      deleteCollections: deleteCollections,
+      modified:          modified
     };
   },
 
@@ -752,9 +775,9 @@ SyncServer.prototype = {
    * server code.
    *
    * Path: [all, version, username, first, rest]
-   * Storage: [all, collection, id?]
+   * Storage: [all, collection?, id?]
    */
-  pathRE: /^\/([0-9]+(?:\.[0-9]+)?)\/([-._a-zA-Z0-9]+)\/([^\/]+)\/(.*)$/,
+  pathRE: /^\/([0-9]+(?:\.[0-9]+)?)\/([-._a-zA-Z0-9]+)(?:\/([^\/]+)(?:\/(.+))?)?$/,
   storageRE: /^([-_a-zA-Z0-9]+)(?:\/([-_a-zA-Z0-9]+)\/?)?$/,
 
   defaultHeaders: {},
@@ -826,6 +849,25 @@ SyncServer.prototype = {
    */
   toplevelHandlers: {
     "storage": function handleStorage(handler, req, resp, version, username, rest) {
+      let respond = this.respond.bind(this, req, resp);
+      if (!rest || !rest.length) {
+        this._log.debug("SyncServer: top-level storage " +
+                        req.method + " request.");
+
+        // TODO: verify if this is spec-compliant.
+        if (req.method != "DELETE") {
+          respond(405, "Method Not Allowed", "[]", {"Allow": "DELETE"});
+          return;
+        }
+
+        // Delete all collections and track the timestamp for the response.
+        let timestamp = this.user(username).deleteCollections();
+
+        // Return timestamp and OK for deletion.
+        respond(200, "OK", JSON.stringify(timestamp));
+        return;
+      }
+
       let match = this.storageRE.exec(rest);
       if (!match) {
         this._log.warn("SyncServer: Unknown storage operation " + rest);
@@ -833,7 +875,6 @@ SyncServer.prototype = {
       }
       let [all, collection, wboID] = match;
       let coll = this.getCollection(username, collection);
-      let respond = this.respond.bind(this, req, resp);
       switch (req.method) {
         case "GET":
           if (!coll) {
