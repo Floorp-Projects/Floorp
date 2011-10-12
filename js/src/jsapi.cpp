@@ -82,7 +82,6 @@
 #include "jsstr.h"
 #include "jstracer.h"
 #include "prmjtime.h"
-#include "jsstaticcheck.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
 #include "jstypedarray.h"
