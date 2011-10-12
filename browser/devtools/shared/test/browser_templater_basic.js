@@ -55,7 +55,7 @@ function runTest(index) {
       }.bind(this);
     }
 
-    setTimeout(createTester(holder, options), 200);
+    executeSoon(createTester(holder, options));
   }
   else {
     runNextTest();
