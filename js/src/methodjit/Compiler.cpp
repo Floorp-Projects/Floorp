@@ -4382,8 +4382,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
             }
             RegisterID reg = frame.copyDataIntoReg(top);
             frame.pop();
-            frame.pushWord(Address(reg, TypedArray::lengthOffset()), JSVAL_TYPE_INT32);
-            frame.freeReg(reg);
+            masm.loadPayload(Address(reg, TypedArray::lengthOffset()), reg);
+            frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
             if (!isObject)
                 stubcc.rejoin(Changes(1));
             return true;
