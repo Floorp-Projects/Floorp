@@ -50,30 +50,29 @@ import java.text.NumberFormat;
 public class AlertNotification
     extends Notification
 {
-    Context mContext;
-    int mId;
-    int mIcon;
-    String mTitle;
-    String mText;
-    boolean mProgressStyle;
-    NotificationManager mNotificationManager;
-    double mPrevPercent  = -1;
-    String mPrevAlertText = "";
-    static final double UPDATE_THRESHOLD = .01;
+    private final int mId;
+    private final int mIcon;
+    private final String mTitle;
+    private final String mText;
+    private final NotificationManager mNotificationManager;
+
+    private boolean mProgressStyle; // = false
+    private double mPrevPercent  = -1;
+    private String mPrevAlertText = "";
+
+    private static final double UPDATE_THRESHOLD = .01;
 
     public AlertNotification(Context aContext, int aNotificationId, int aIcon,
                              String aTitle, String aText, long aWhen) {
         super(aIcon, (aText.length() > 0) ? aText : aTitle, aWhen);
 
-        mContext = aContext;
         mIcon = aIcon;
         mTitle = aTitle;
         mText = aText;
-        mProgressStyle = false;
         mId = aNotificationId;
 
         mNotificationManager = (NotificationManager)
-            mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+            aContext.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     public boolean isProgressStyle() {
