@@ -280,8 +280,8 @@ TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
   PRUint8 direction = aBlockFrame->GetStyleVisibility()->mDirection;
   textOverflow->mBlockIsRTL = direction == NS_STYLE_DIRECTION_RTL;
   const nsStyleTextReset* style = aBlockFrame->GetStyleTextReset();
-  textOverflow->mLeft.Init(*style->mTextOverflow.GetLeft(direction));
-  textOverflow->mRight.Init(*style->mTextOverflow.GetRight(direction));
+  textOverflow->mLeft.Init(style->mTextOverflow.GetLeft(direction));
+  textOverflow->mRight.Init(style->mTextOverflow.GetRight(direction));
   // The left/right marker string is setup in ExamineLineFrames when a line
   // has overflow on that side.
 
@@ -405,6 +405,19 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
   // No ellipsing for 'clip' style.
   bool suppressLeft = mLeft.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
   bool suppressRight = mRight.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
+  if (mCanHaveHorizontalScrollbar) {
+    nsIScrollableFrame* scroll = nsLayoutUtils::GetScrollableFrameFor(mBlock);
+    nsPoint pos = scroll->GetScrollPosition();
+    nsRect scrollRange = scroll->GetScrollRange();
+    // No ellipsing when nothing to scroll to on that side (this includes
+    // overflow:auto that doesn't trigger a horizontal scrollbar).
+    if (pos.x <= scrollRange.x) {
+      suppressLeft = true;
+    }
+    if (pos.x >= scrollRange.XMost()) {
+      suppressRight = true;
+    }
+  }
 
   // Scrolling to the end position can leave some text still overflowing due to
   // pixel snapping behaviour in our scrolling code so we move the edges 1px
