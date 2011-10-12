@@ -1025,6 +1025,8 @@ class MUnbox : public MUnaryInstruction
         JS_ASSERT(ins->type() == MIRType_Value);
         setResultType(type);
         setIdempotent();
+        if (mode_ == TypeBarrier && !ins->isIdempotent())
+            setGuard();
     }
 
   public:

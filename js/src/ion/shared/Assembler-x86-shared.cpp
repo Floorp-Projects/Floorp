@@ -107,6 +107,10 @@ AssemblerX86Shared::InvertCondition(Condition cond)
         return BelowOrEqual;
       case AboveOrEqual:
         return Below;
+      case Below:
+        return AboveOrEqual;
+      case BelowOrEqual:
+        return Above;
       default:
         JS_NOT_REACHED("unexpected condition");
         return Equal;
