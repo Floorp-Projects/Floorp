@@ -1384,28 +1384,57 @@
       <xul:richlistbox anonid="child-items" class="remotetabs-list-children" flex="1" batch="25"/>
     </content>
     <implementation>
+      <field name="_syncTopics"><![CDATA[([
+        "browser:sync:setup:userabort",
+        "browser:sync:setup:networkerror",
+        "weave:service:login:finish",
+        "weave:service:login:error"
+      ])]]>
+      </field>
+
       <method name="open">
         <body><![CDATA[
           let self = this;
           this.setAttribute("loading", "true");
           this.removeAttribute("message");
 
-          if (Weave.Service.isLoggedIn) {
-            setTimeout(function() self._loadChildren(), 0);
-          } else {
-            // Wait until login or setup finishes before loading items.
-            let topics = [
-              "browser:sync:setup:userabort",
-              "browser:sync:setup:networkerror",
-              "weave:service:login:finish",
-              "weave:service:login:error"
-            ];
-            function observe() {
-              topics.forEach(function(topic) Services.obs.removeObserver(observe, topic, false));
-              self._loadChildren();
-            }
-            topics.forEach(function(topic) Services.obs.addObserver(observe, topic, false));
-          }
+          // Try loading remote tabs straight away. It will
+          // simply return if sync is not setup.
+          setTimeout(function() {
+            if (self._loadChildren())
+              self.removeAttribute("loading");
+          }, 0);
+
+          this._syncObserver = function() {
+            this.removeAttribute("loading");
+            this._removeSyncObservers();
+            this._loadChildren();
+          }.bind(this);
+
+          // Wait for sync signals
+          this._syncTopics.forEach(function(topic) Services.obs.addObserver(self._syncObserver, topic, false));
+        ]]></body>
+      </method>
+
+      <method name="close">
+        <body><![CDATA[
+          this.removeAttribute("message");
+          this.removeAttribute("loading");
+
+          // Stop listening to sync signals
+          this._removeSyncObservers();
+        ]]></body>
+      </method>
+
+      <method name="_removeSyncObservers">
+        <body><![CDATA[
+          if (!this._syncObserver)
+            return;
+
+          let self = this;
+          this._syncTopics.forEach(function(topic) Services.obs.removeObserver(self._syncObserver, topic));
+
+          delete this._syncObserver;
         ]]></body>
       </method>
 
@@ -1417,22 +1446,23 @@
 
           let engine = this._getWeaveEngine();
 
-          // Only load items if the tabs engine is ready. In case
-          // sync fails, WeaveGlue will show an error dialog. If sync
-          // succeeds but has no data to display, a message is presented
-          // in the panel (see "message" attribute).
-          if (engine) {
-            let items = this._getRemoteTabs(engine);
+          // Only load items if the tabs engine is ready
+          if (!engine)
+            return false;
 
-            if (items.length) {
-              children.setItems(items.map(this.createItem));
-            } else {
-              let bundle = Services.strings.createBundle("chrome://browser/locale/sync.properties");
-              this.setAttribute("message", bundle.GetStringFromName("sync.message.notabs"));
-            }
+          // In case sync fails, WeaveGlue will show an error dialog
+          let items = this._getRemoteTabs(engine);
+
+          // If sync succeeds but has no data to display, a message
+          // is presented in the panel (see "message" attribute).
+          if (items.length) {
+            children.setItems(items.map(this.createItem));
+          } else {
+            let bundle = Services.strings.createBundle("chrome://browser/locale/sync.properties");
+            this.setAttribute("message", bundle.GetStringFromName("sync.message.notabs"));
           }
 
-          this.removeAttribute("loading");
+          return true;
         ]]></body>
       </method>
 
