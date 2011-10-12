@@ -813,8 +813,14 @@ placeitem[ui="manage"] > .bookmark-manage textbox[anonid="uri"]:-moz-locale-dir(
 
 #awesome-header .panel-row-button {
   -moz-padding-end: 0px;
-  padding: @padding_normal@ !important;
-  border: none !important;
+  padding: @padding_large@ !important;
+  height: @touch_row@;
+  margin: 0px;
+  border: 0px;
+}
+
+#awesome-header .panel-row-button .toolbarbutton-text {
+  font-size: @font_xxtiny@ !important;
 }
 
 #awesome-header {
