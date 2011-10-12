@@ -100,10 +100,14 @@ TypeInferenceOracle::binaryOp(JSScript *script, jsbytecode *pc)
     JSOp op = (JSOp)*pc;
 
     Binary res;
-    if (js_CodeSpec[op].format & JOF_INCDEC) {
-        res.lhs = getMIRType(script->analysis()->poppedTypes(pc, 0));
+    if ((js_CodeSpec[op].format & JOF_INCDEC)) {
+        res.lhs = getMIRType(script->analysis()->pushedTypes(pc, 0));
         res.rhs = MIRType_Int32;
         res.rval = res.lhs;
+    } else if (op == JSOP_NEG) {
+        res.lhs = getMIRType(script->analysis()->poppedTypes(pc, 0));
+        res.rhs = MIRType_Int32;
+        res.rval = getMIRType(script->analysis()->pushedTypes(pc, 0));
     } else {
         res.lhs = getMIRType(script->analysis()->poppedTypes(pc, 1));
         res.rhs = getMIRType(script->analysis()->poppedTypes(pc, 0));
