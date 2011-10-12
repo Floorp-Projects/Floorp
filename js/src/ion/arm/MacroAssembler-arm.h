@@ -614,6 +614,9 @@ public:
         framePushed_ -= amount;
     }
 
+    void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
+        JS_NOT_REACHED("NYI");
+    }
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
         JS_NOT_REACHED("NYI");
     }
@@ -727,6 +730,24 @@ public:
         JS_ASSERT(dest != ScratchFloatReg);
         as_vxfer(operand.payloadReg(), operand.typeReg(),
                 VFPRegister(dest), FloatToCore);
+    }
+
+    // Extended unboxing API. If the payload is already in a register, returns
+    // that register. Otherwise, provides a move to the given scratch register,
+    // and returns that.
+    Register extractObject(const Address &address, Register scratch) {
+        JS_NOT_REACHED("NYI");
+        return scratch;
+    }
+    Register extractObject(const ValueOperand &value, Register scratch) {
+        return value.payloadReg();
+    }
+    Register extractTag(const Address &address, Register scratch) {
+        JS_NOT_REACHED("NYI");
+        return scratch;
+    }
+    Register extractTag(const ValueOperand &value, Register scratch) {
+        return value.typeReg();
     }
 
     void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
@@ -843,7 +864,10 @@ public:
     void branchTestUndefined(Condition cond, const T & t, Label *label) {
         JS_NOT_REACHED("feature NYI");
     }
-
+    template <typename T>
+    void branchTestNumber(Condition cond, const T &t, Label *label) {
+        JS_NOT_REACHED("feature NYI");
+    }
 
     template<typename T>
     void branchTestBooleanTruthy(bool b, const T & t, Label *label) {

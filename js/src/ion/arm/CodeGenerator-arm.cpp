@@ -636,7 +636,7 @@ CodeGeneratorARM::ToValue(LInstruction *ins, size_t pos)
 }
 
 bool
- CodeGeneratorARM::visitValue(LValue *value)
+CodeGeneratorARM::visitValue(LValue *value)
 {
     jsval_layout jv = JSVAL_TO_IMPL(value->value());
 
@@ -645,7 +645,7 @@ bool
 
     masm.ma_mov(Imm32(jv.s.tag), ToRegister(type));
     if (value->value().isMarkable())
-        masm.ma_mov(ImmGCPtr(jv.s.payload.ptr), ToRegister(payload));
+        masm.ma_mov(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), ToRegister(payload));
     else
         masm.ma_mov(Imm32(jv.s.payload.u32), ToRegister(payload));
     return true;
