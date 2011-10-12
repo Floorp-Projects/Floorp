@@ -67,6 +67,7 @@ function startup() {
         uri = Services.prefs.getCharPref("browser.last.uri");
     } catch (e){};
     // XXX maybe we don't do this if the launch was kicked off from external
+    Services.io.offline = false;
     frame.loadURI(uri, null, null);
 }
 
@@ -79,6 +80,7 @@ nsBrowserAccess.prototype = {
 
   openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
       let frame = this.chrome.document.getElementById("home");
+      Services.io.offline = false;
       frame.loadURI(aURI.spec, null, null);
       return null;
   },
