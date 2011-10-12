@@ -44,8 +44,6 @@
 #ifndef jsutil_h___
 #define jsutil_h___
 
-#include "jsstaticcheck.h"
-
 #include "js/Utility.h"
 
 /* Forward declarations. */

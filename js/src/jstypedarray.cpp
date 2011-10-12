@@ -57,7 +57,6 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
-#include "jsstaticcheck.h"
 #include "jstypedarray.h"
 #include "jsutil.h"
 

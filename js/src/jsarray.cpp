@@ -123,7 +123,6 @@
 #include "jsobj.h"
 #include "jsscope.h"
 #include "jsstr.h"
-#include "jsstaticcheck.h"
 #include "jstracer.h"
 #include "jswrapper.h"
 #include "methodjit/MethodJIT.h"
