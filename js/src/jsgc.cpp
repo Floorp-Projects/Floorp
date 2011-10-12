@@ -92,7 +92,9 @@
 #include "vm/String.h"
 #include "vm/Debugger.h"
 #include "ion/IonCode.h"
-#include "ion/IonMacroAssembler.h"
+#ifdef JS_ION
+# include "ion/IonMacroAssembler.h"
+#endif
 
 #include "jsobjinlines.h"
 
@@ -416,7 +418,9 @@ FinalizeArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind)
 	FinalizeTypedArenas<JSExternalString>(cx, al, thingKind);
         break;
       case FINALIZE_IONCODE:
+#ifdef JS_ION
         FinalizeTypedArenas<ion::IonCode>(cx, al, thingKind);
+#endif
         break;
     }
 }

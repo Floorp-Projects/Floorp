@@ -2304,7 +2304,7 @@ BEGIN_CASE(JSOP_STOP)
         interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
 
         /* The JIT inlines ScriptEpilogue. */
-#ifdef JS_METHODJIT
+#if defined(JS_METHODJIT) || defined(JS_ION)
   jit_return:
 #endif
 
