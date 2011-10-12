@@ -167,7 +167,7 @@ MacroAssembler::guardTypeSet(const T &address, types::TypeSet *types,
             if (JSObject *object = types->getSingleObject(i))
                 branchPtr(Equal, obj, ImmGCPtr(object), &matched);
         }
-        jmp(mismatched);
+        jump(mismatched);
 
         bind(&notSingleton);
         loadPtr(Address(obj, JSObject::offsetOfType()), scratch);
@@ -177,7 +177,7 @@ MacroAssembler::guardTypeSet(const T &address, types::TypeSet *types,
         }
     }
 
-    jmp(mismatched);
+    jump(mismatched);
     bind(&matched);
 }
 
