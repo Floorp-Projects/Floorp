@@ -698,7 +698,7 @@ JSRuntime::JSRuntime()
     requestDone(NULL),
     requestCount(0),
     gcThread(NULL),
-    gcHelperThread(this),
+    gcHelperThread(thisFromCtor()),
     rtLock(NULL),
 # ifdef DEBUG
     rtLockOwner(0),

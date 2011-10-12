@@ -98,6 +98,7 @@ class SnapshotReader
         }
         static Location From(int32 stackSlot) {
             Location loc;
+            loc.reg = InvalidReg.code();
             loc.stackSlot_ = stackSlot;
             return loc;
         }
