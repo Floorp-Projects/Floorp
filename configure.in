@@ -7127,17 +7127,6 @@ if test -n "$MOZ_TRACEVIS"; then
 fi
 
 dnl ========================================================
-dnl = Use GCTimer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gctimer,
-[  --enable-gctimer        Enable GC timer (default=no)],
-    MOZ_GCTIMER=1,
-    MOZ_GCTIMER= )
-if test -n "$MOZ_GCTIMER"; then
-    AC_DEFINE(MOZ_GCTIMER)
-fi
-
-dnl ========================================================
 dnl ETW - Event Tracing for Windows
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(ETW,
@@ -7403,6 +7392,23 @@ dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
     MOZ_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
 fi
+
+dnl ========================================================
+dnl JIT observers
+dnl ========================================================
+
+MOZ_ARG_WITH_STRING(jitreport-granularity,
+[  --jitreport-granularity=N
+                           Default granularity at which to report JIT code
+                           to external tools
+                             0 - no info
+                             1 - code ranges for whole functions only
+                             2 - per-line information
+                             3 - per-op information],
+  JITREPORT_GRANULARITY=$withval,
+  JITREPORT_GRANULARITY=3)
+
+AC_DEFINE_UNQUOTED(JS_DEFAULT_JITREPORT_GRANULARITY, $JITREPORT_GRANULARITY)
 
 dnl ========================================================
 dnl =

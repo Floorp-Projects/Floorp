@@ -47,7 +47,7 @@
 
 namespace xpc {
 
-NoWaiverWrapper::NoWaiverWrapper(uintN flags) : CrossCompartmentWrapper(flags)
+NoWaiverWrapper::NoWaiverWrapper(uintN flags) : js::CrossCompartmentWrapper(flags)
 {
 }
 

@@ -47,8 +47,9 @@
 #include <stdio.h>
 #include "js-config.h"
 #include "jspubtd.h"
-#include "jsutil.h"
 #include "jsval.h"
+
+#include "js/Utility.h"
 
 /************************************************************************/
 
@@ -1695,6 +1696,17 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
  * JSFunctionSpec structs are allocated in static arrays.
  */
 #define JSFUN_GENERIC_NATIVE    JSFUN_LAMBDA
+
+/*
+ * The first call to JS_CallOnce by any thread in a process will call 'func'.
+ * Later calls to JS_CallOnce with the same JSCallOnceType object will be
+ * suppressed.
+ *
+ * Equivalently: each distinct JSCallOnceType object will allow one JS_CallOnce
+ * to invoke its JSInitCallback.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_CallOnce(JSCallOnceType *once, JSInitCallback func);
 
 /*
  * Microseconds since the epoch, midnight, January 1, 1970 UTC.  See the

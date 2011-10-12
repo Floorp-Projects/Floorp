@@ -7,6 +7,8 @@ pref("app.update.interval", 86400);
 // The time interval between the downloading of mar file chunks in the
 // background (in seconds)
 pref("app.update.download.backgroundInterval", 600);
+// Give the user x seconds to react before showing the big UI. default=24 hours
+pref("app.update.promptWaitTime", 86400);
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.
 pref("app.update.url.manual", "http://www.firefox.com");

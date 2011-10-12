@@ -170,9 +170,8 @@ pref("app.update.url", "https://aus3.mozilla.org/update/3/%PRODUCT%/%VERSION%/%B
 //pref("app.update.url.override", "");
 
 // app.update.interval is in branding section
+// app.update.promptWaitTime is in branding section
 
-// Give the user x seconds to react before showing the big UI. default=12 hours
-pref("app.update.promptWaitTime", 43200);
 // Show the Update Checking/Ready UI when the user was idle for x seconds
 pref("app.update.idletime", 60);
 
