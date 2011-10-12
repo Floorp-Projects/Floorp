@@ -1,0 +1,170 @@
+<html>
+
+<head>
+  <title>Text selection testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Invokers
+     */
+    function addSelection(aID, aStartOffset, aEndOffset)
+    {
+      this.hyperTextNode = getNode(aID);
+      this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
+      ];
+
+      this.invoke = function addSelection_invoke()
+      {
+        this.hyperText.addSelection(aStartOffset, aEndOffset);
+      }
+
+      this.finalCheck = function addSelection_finalCheck()
+      {
+        is(this.hyperText.selectionCount, 1,
+           "addSelection: Wrong selection count for " + aID);
+        var startOffset = {}, endOffset = {};
+        this.hyperText.getSelectionBounds(0, startOffset, endOffset);
+
+        is(startOffset.value, aStartOffset,
+           "addSelection: Wrong start offset for " + aID);
+        is(endOffset.value, aEndOffset,
+           "addSelection: Wrong end offset for " + aID);
+      }
+
+      this.getID = function addSelection_getID()
+      {
+        return "nsIAccessibleText::addSelection test for " + aID;
+      }
+    }
+
+    function changeSelection(aID, aStartOffset, aEndOffset)
+    {
+      this.hyperTextNode = getNode(aID);
+      this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
+      ];
+
+      this.invoke = function changeSelection_invoke()
+      {
+        this.hyperText.setSelectionBounds(0, aStartOffset, aEndOffset);
+      }
+
+      this.finalCheck = function changeSelection_finalCheck()
+      {
+        is(this.hyperText.selectionCount, 1,
+           "setSelectionBounds: Wrong selection count for " + aID);
+        var startOffset = {}, endOffset = {};
+        this.hyperText.getSelectionBounds(0, startOffset, endOffset);
+
+        is(startOffset.value, aStartOffset,
+           "setSelectionBounds: Wrong start offset for " + aID);
+        is(endOffset.value, aEndOffset,
+           "setSelectionBounds: Wrong end offset for " + aID);
+      }
+
+      this.getID = function changeSelection_getID()
+      {
+        return "nsIAccessibleText::setSelectionBounds test for " + aID;
+      }
+    }
+
+    function removeSelection(aID)
+    {
+      this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
+      ];
+
+      this.invoke = function removeSelection_invoke()
+      {
+        this.hyperText.removeSelection(0);
+      }
+
+      this.finalCheck = function removeSelection_finalCheck()
+      {
+        is(this.hyperText.selectionCount, 0,
+           "removeSelection: Wrong selection count for " + aID);
+      }
+
+      this.getID = function removeSelection_getID()
+      {
+        return "nsIAccessibleText::removeSelection test for " + aID;
+      }
+    }
+
+    function onfocusEventSeq(aID)
+    {
+      var caretMovedChecker =
+        new invokerChecker(EVENT_TEXT_CARET_MOVED, aID);
+      var selChangedChecker =
+        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID);
+      selChangedChecker.unexpected = true;
+
+      return [ caretMovedChecker, selChangedChecker ];
+    }
+
+    /**
+     * Do tests
+     */
+
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new addSelection("paragraph", 1, 3));
+      gQueue.push(new changeSelection("paragraph", 2, 4));
+      //gQueue.push(new removeSelection("paragraph"));
+      todo(false, "removeSelection doesn't fire text selection changed events, see bug bug 688124.");
+
+      gQueue.push(new synthFocus("textbox", onfocusEventSeq("textbox")));
+      gQueue.push(new changeSelection("textbox", 1, 3));
+
+      gQueue.push(new synthFocus("textarea", onfocusEventSeq("textarea")));
+      gQueue.push(new changeSelection("textarea", 1, 3));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=688126"
+     title="nsIAccessibleText::setSelectionBounds doesn't fire text selection changed events in some cases">
+    Mozilla Bug 688126
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p id="paragraph">hello</p>
+  <input id="textbox" value="hello"/>
+  <textarea id="textarea">hello</textarea>
+
+</body>
+</html>

@@ -883,6 +883,17 @@ nsXULTextFieldAccessible::CacheChildren()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsXULTextFieldAccessible: nsHyperTextAccessible protected
+
+already_AddRefed<nsFrameSelection>
+nsXULTextFieldAccessible::FrameSelection()
+{
+  nsCOMPtr<nsIContent> inputContent(GetInputField());
+  nsIFrame* frame = inputContent->GetPrimaryFrame();
+  return frame->GetFrameSelection();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // nsXULTextFieldAccessible protected
 
 already_AddRefed<nsIContent>
