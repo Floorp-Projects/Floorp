@@ -37,8 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jstypes.h"
+#include "jsapi.h"
 #include "jspubtd.h"
+#include "jstypes.h"
 
 #ifdef JS_THREADSAFE
 
