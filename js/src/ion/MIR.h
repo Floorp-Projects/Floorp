@@ -55,6 +55,7 @@
 #include "MOpcodes.h"
 #include "FixedArityList.h"
 #include "IonMacroAssembler.h"
+#include "Bailouts.h"
 
 namespace js {
 namespace ion {
@@ -75,6 +76,7 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(Idempotent)    /* The instruction has no side-effects. */                 \
     _(NeverHoisted)  /* Don't hoist, even if loop invariant */                  \
     _(Lowered)       /* (Debug only) has a virtual register */                  \
+    _(Guard)         /* Not removable if uses == 0 */                           \
                                                                                 \
     /* The instruction has been marked dead for lazy removal from resume
      * points.
@@ -1006,11 +1008,19 @@ class MBox : public MUnaryInstruction
 // deoptimization.
 class MUnbox : public MUnaryInstruction
 {
-    bool checkType_;
+  public:
+    enum Mode {
+        Fallible,
+        Infallible,
+        TypeBarrier
+    };
 
-    MUnbox(MDefinition *ins, MIRType type, bool checkType)
+  private:
+    Mode mode_;
+
+    MUnbox(MDefinition *ins, MIRType type, Mode mode)
       : MUnaryInstruction(ins),
-        checkType_(checkType)
+        mode_(mode)
     {
         JS_ASSERT(ins->type() == MIRType_Value);
         setResultType(type);
@@ -1019,17 +1029,25 @@ class MUnbox : public MUnaryInstruction
 
   public:
     INSTRUCTION_HEADER(Unbox);
-    static MUnbox *New(MDefinition *ins, MIRType type)
+    static MUnbox *New(MDefinition *ins, MIRType type, Mode mode)
     {
-        return new MUnbox(ins, type, true);
-    }
-    static MUnbox *NewUnchecked(MDefinition *ins, MIRType type)
-    {
-        return new MUnbox(ins, type, false);
+        return new MUnbox(ins, type, mode);
     }
 
-    bool checkType() const {
-        return checkType_;
+    Mode mode() const {
+        return mode_;
+    }
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    BailoutKind bailoutKind() const {
+        JS_ASSERT(fallible());
+        return mode() == Fallible
+               ? Bailout_Normal
+               : Bailout_TypeBarrier;
+    }
+    bool fallible() const {
+        return mode() != Infallible;
     }
 };
 
@@ -1503,6 +1521,149 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     MDefinition *foldsTo(bool useValueNumbers);
 
     bool congruentTo(MDefinition * const &ins) const;
+};
+
+// Returns obj->slots.
+class MSlots
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    MSlots(MDefinition *from)
+      : MUnaryInstruction(from)
+    {
+        setResultType(MIRType_Slots);
+        setIdempotent();
+        JS_ASSERT(from->type() == MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Slots);
+
+    static MSlots *New(MDefinition *from) {
+        return new MSlots(from);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+};
+
+// Guard on an object's shape.
+class MGuardShape
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    const Shape *shape_;
+
+    MGuardShape(MDefinition *obj, const Shape *shape)
+      : MUnaryInstruction(obj),
+        shape_(shape)
+    {
+        setIdempotent();
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(GuardShape);
+
+    static MGuardShape *New(MDefinition *obj, const Shape *shape) {
+        return new MGuardShape(obj, shape);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *obj() const {
+        return getOperand(0);
+    }
+    const Shape *shape() const {
+        return shape_;
+    }
+    bool congruentTo(MDefinition * const &ins) const {
+        if (!ins->isGuardShape())
+            return false;
+        if (shape() != ins->toGuardShape()->shape())
+            return false;
+        return MDefinition::congruentTo(ins);
+    }
+};
+
+// Load from vp[slot] (slots that are not inline in an object).
+class MLoadSlot
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    uint32 slot_;
+
+    MLoadSlot(MDefinition *from, uint32 slot)
+      : MUnaryInstruction(from),
+        slot_(slot)
+    {
+        setResultType(MIRType_Value);
+        setIdempotent();
+        JS_ASSERT(from->type() == MIRType_Slots);
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadSlot);
+
+    static MLoadSlot *New(MDefinition *from, uint32 slot) {
+        return new MLoadSlot(from, slot);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    uint32 slot() const {
+        return slot_;
+    }
+    bool congruentTo(MDefinition * const &ins) const {
+        if (!ins->isLoadSlot())
+            return false;
+        if (slot() != ins->toLoadSlot()->slot())
+            return false;
+        return MDefinition::congruentTo(ins);
+    }
+};
+
+// Given a value, guard that the value is in a particular TypeSet, then returns
+// that value.
+class MTypeBarrier : public MUnaryInstruction
+{
+    BailoutKind bailoutKind_;
+
+    MTypeBarrier(MDefinition *def, types::TypeSet *types)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType_Value);
+        setGuard();
+        setTypeSet(types);
+        bailoutKind_ = def->isIdempotent()
+                       ? Bailout_Normal
+                       : Bailout_TypeBarrier;
+    }
+
+  public:
+    INSTRUCTION_HEADER(TypeBarrier);
+
+    static MTypeBarrier *New(MDefinition *def, types::TypeSet *types) {
+        return new MTypeBarrier(def, types);
+    }
+    bool congruentTo(MDefinition * const &def) const {
+        return false;
+    }
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
+    }
 };
 
 // A resume point contains the information needed to reconstruct the interpreter

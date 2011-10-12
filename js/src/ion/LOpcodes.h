@@ -73,7 +73,12 @@
     _(ValueToDouble)                \
     _(ValueToInt32)                 \
     _(TruncateDToInt32)             \
-    _(Start)
+    _(Start)                        \
+    _(Slots)                        \
+    _(LoadSlotV)                    \
+    _(LoadSlotT)                    \
+    _(GuardShape)                   \
+    _(TypeBarrier)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

@@ -73,9 +73,7 @@ struct ImmGCPtr
 {
     uintptr_t value;
 
-    ImmGCPtr(uintptr_t value) : value(value)
-    { }
-    ImmGCPtr(void *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
+    explicit ImmGCPtr(const gc::Cell *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
     { }
 };
 

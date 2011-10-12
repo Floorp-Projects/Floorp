@@ -217,6 +217,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void movePtr(ImmWord imm, Register dest) {
         movq(imm, dest);
     }
+    void movePtr(ImmGCPtr imm, Register dest) {
+        movq(imm, dest);
+    }
     void loadPtr(const Address &address, Register dest) {
         movq(Operand(address), dest);
     }
@@ -332,7 +335,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void unboxObject(const ValueOperand &src, const Register &dest) {
         // TODO: Can we unbox more efficiently? Bug 680294.
-        movq(JSVAL_PAYLOAD_MASK, ScratchReg);
+        movq(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
         if (src.valueReg() != dest)
             movq(src.valueReg(), dest);
         andq(ScratchReg, dest);
@@ -347,10 +350,20 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         unboxObject(ValueOperand(scratch), scratch);
         return scratch;
     }
+    Register extractObject(const ValueOperand &value, Register scratch) {
+        JS_ASSERT(scratch != ScratchReg);
+        unboxObject(value, scratch);
+        return scratch;
+    }
     Register extractTag(const Address &address, Register scratch) {
         JS_ASSERT(scratch != ScratchReg);
         loadPtr(address, scratch);
         splitTag(scratch, scratch);
+        return scratch;
+    }
+    Register extractTag(const ValueOperand &value, Register scratch) {
+        JS_ASSERT(scratch != ScratchReg);
+        splitTag(value, scratch);
         return scratch;
     }
 

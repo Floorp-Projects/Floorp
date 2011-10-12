@@ -61,7 +61,8 @@ enum MIRType
     MIRType_Object,
     MIRType_Value,
     MIRType_Any,        // Any type.
-    MIRType_None        // Invalid, used as a placeholder.
+    MIRType_None,       // Invalid, used as a placeholder.
+    MIRType_Slots       // A slots vector
 };
 
 class TypeOracle
@@ -82,6 +83,11 @@ class TypeOracle
     virtual Binary binaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual types::TypeSet *thisTypeSet(JSScript *script) { return NULL; }
     virtual types::TypeSet *parameterTypeSet(JSScript *script, size_t index) { return NULL; }
+    virtual types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc,
+                                         types::TypeSet **barrier) {
+        *barrier = NULL;
+        return NULL;
+    }
 };
 
 class DummyOracle : public TypeOracle
@@ -118,6 +124,7 @@ class TypeInferenceOracle : public TypeOracle
     Binary binaryOp(JSScript *script, jsbytecode *pc);
     types::TypeSet *thisTypeSet(JSScript *script);
     types::TypeSet *parameterTypeSet(JSScript *script, size_t index);
+    types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
 };
 
 static inline MIRType
@@ -190,6 +197,8 @@ StringFromMIRType(MIRType type)
       return "Any";
     case MIRType_None:
       return "None";
+    case MIRType_Slots:
+      return "Slots";
     default:
       JS_NOT_REACHED("Unknown MIRType.");
       return "";

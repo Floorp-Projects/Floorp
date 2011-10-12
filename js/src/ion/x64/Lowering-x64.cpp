@@ -98,7 +98,7 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
     MDefinition *box = unbox->getOperand(0);
     LUnbox *lir = new LUnbox(useRegister(box));
 
-    if (unbox->checkType() && !assignSnapshot(lir))
+    if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
         return false;
 
     return define(lir, unbox);
@@ -116,9 +116,9 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
 }
 
 bool
-LIRGeneratorX64::assignSnapshot(LInstruction *ins)
+LIRGeneratorX64::assignSnapshot(LInstruction *ins, BailoutKind kind)
 {
-    LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_);
+    LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_, kind);
     if (!snapshot)
         return false;
 

@@ -1138,7 +1138,9 @@ public:
 
     void cmpl_im_force32(int imm, int offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cmpl       $0x%x, %s0x%x(%s)\n", MAYBE_PAD,
+                       imm, PRETTY_PRINT_OFFSET(offset), nameIReg(4,base));
         m_formatter.oneByteOp(OP_GROUP1_EvIz, GROUP1_OP_CMP, base, offset);
         m_formatter.immediate32(imm);
     }

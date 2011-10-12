@@ -95,6 +95,9 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitStackArg(LStackArg *arg);
     bool visitReturn(LReturn *ret);
     bool visitDouble(LDouble *ins);
+    bool visitLoadSlotV(LLoadSlotV *load);
+    bool visitLoadSlotT(LLoadSlotT *load);
+    bool visitGuardShape(LGuardShape *guard);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;

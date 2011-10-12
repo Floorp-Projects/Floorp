@@ -125,6 +125,10 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitToInt32(MToInt32 *convert);
     bool visitTruncateToInt32(MTruncateToInt32 *truncate);
     bool visitCopy(MCopy *ins);
+    bool visitSlots(MSlots *ins);
+    bool visitLoadSlot(MLoadSlot *ins);
+    bool visitGuardShape(MGuardShape *ins);
+    bool visitTypeBarrier(MTypeBarrier *ins);
 };
 
 } // namespace js
