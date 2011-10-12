@@ -1091,7 +1091,10 @@ var AddonManagerInternal = {
   },
 
   get autoUpdateDefault() {
-    return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
+    try {
+      return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
+    } catch(e) { }
+    return true;
   }
 };
 
