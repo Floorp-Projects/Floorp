@@ -573,8 +573,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 
     if (obj) {
         /* Enumerate Iterator.prototype directly. */
-        JSIteratorOp op = obj->getClass()->ext.iteratorObject;
-        if (op && (obj->getClass() != &IteratorClass || obj->getNativeIterator())) {
+        if (JSIteratorOp op = obj->getClass()->ext.iteratorObject) {
             JSObject *iterobj = op(cx, obj, !(flags & JSITER_FOREACH));
             if (!iterobj)
                 return false;
@@ -972,12 +971,10 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->isIterator()) {
         /* Key iterators are handled by fast-paths. */
         ni = iterobj->getNativeIterator();
-        if (ni) {
-            bool more = ni->props_cursor < ni->props_end;
-            if (ni->isKeyIter() || !more) {
-                rval->setBoolean(more);
-                return true;
-            }
+        bool more = ni->props_cursor < ni->props_end;
+        if (ni->isKeyIter() || !more) {
+            rval->setBoolean(more);
+            return true;
         }
     }
 
@@ -1032,7 +1029,7 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
          * read-only and permanent.
          */
         NativeIterator *ni = iterobj->getNativeIterator();
-        if (ni && ni->isKeyIter()) {
+        if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
             *rval = IdToValue(*ni->current());
             ni->incCursor();
@@ -1457,6 +1454,14 @@ InitIteratorClass(JSContext *cx, GlobalObject *global)
     JSObject *iteratorProto = global->createBlankPrototype(cx, &IteratorClass);
     if (!iteratorProto)
         return false;
+
+    AutoIdVector blank(cx);
+    NativeIterator *ni = NativeIterator::allocateIterator(cx, 0, blank);
+    if (!ni)
+        return false;
+    ni->init(NULL, 0 /* flags */, 0, 0);
+
+    iteratorProto->setNativeIterator(ni);
 
     JSFunction *ctor = global->createConstructor(cx, Iterator, &IteratorClass,
                                                  CLASS_ATOM(cx, Iterator), 2);
