@@ -86,7 +86,7 @@ CodeFromJump(uint8 *jump)
 }
 
 void
-Assembler::TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
+Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
 {
     RelocationIterator iter(reader);
     while (iter.read()) {

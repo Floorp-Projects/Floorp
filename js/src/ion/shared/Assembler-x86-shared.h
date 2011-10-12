@@ -65,10 +65,14 @@ class AssemblerX86Shared
     js::Vector<DeferredData *, 0, SystemAllocPolicy> data_;
     js::Vector<CodeLabel *, 0, SystemAllocPolicy> codeLabels_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
-    CompactBufferWriter relocations_;
+    CompactBufferWriter jumpRelocations_;
+    CompactBufferWriter dataRelocations_;
     size_t dataBytesNeeded_;
-
     bool enoughMemory_;
+
+    void writeDataRelocation(size_t offs) {
+        dataRelocations_.writeUnsigned(offs);
+    }
 
   protected:
     JSC::X86Assembler masm;
@@ -104,7 +108,7 @@ class AssemblerX86Shared
 
     static Condition InvertCondition(Condition cond);
 
-    static void TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
+    static void TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
     // MacroAssemblers hold onto gcthings, so they are traced by the GC.
     void trace(JSTracer *trc);
@@ -112,13 +116,15 @@ class AssemblerX86Shared
     bool oom() const {
         return masm.oom() ||
                !enoughMemory_ ||
-               relocations_.oom();
+               jumpRelocations_.oom() ||
+               dataRelocations_.oom();
     }
 
     void executableCopy(void *buffer);
     void processDeferredData(IonCode *code, uint8 *data);
     void processCodeLabels(IonCode *code);
-    void copyRelocationTable(uint8 *buffer);
+    void copyJumpRelocationTable(uint8 *buffer);
+    void copyDataRelocationTable(uint8 *buffer);
 
     bool addDeferredData(DeferredData *data, size_t bytes) {
         data->setOffset(dataBytesNeeded_);
@@ -136,16 +142,22 @@ class AssemblerX86Shared
     size_t size() const {
         return masm.size();
     }
-    // Size of the relocation table, in bytes.
-    size_t relocationTableSize() const {
-        return relocations_.length();
+    // Size of the jump relocation table, in bytes.
+    size_t jumpRelocationTableBytes() const {
+        return jumpRelocations_.length();
+    }
+    size_t dataRelocationTableBytes() const {
+        return dataRelocations_.length();
     }
     // Size of the data table, in bytes.
     size_t dataSize() const {
         return dataBytesNeeded_;
     }
     size_t bytesNeeded() const {
-        return size() + dataSize() + relocationTableSize();
+        return size() +
+               dataSize() +
+               jumpRelocationTableBytes() +
+               dataRelocationTableBytes();
     }
 
   public:
@@ -373,18 +385,6 @@ class AssemblerX86Shared
             break;
           case Operand::REG_DISP:
             masm.cmpl_im(imm.value, op.disp(), op.base());
-            break;
-          default:
-            JS_NOT_REACHED("unexpected operand kind");
-        }
-    }
-    void cmpl(const Operand &op, ImmGCPtr imm) {
-        switch (op.kind()) {
-          case Operand::REG:
-            masm.cmpl_ir_force32(imm.value, op.reg());
-            break;
-          case Operand::REG_DISP:
-            masm.cmpl_im_force32(imm.value, op.disp(), op.base());
             break;
           default:
             JS_NOT_REACHED("unexpected operand kind");

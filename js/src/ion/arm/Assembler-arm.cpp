@@ -104,7 +104,7 @@ CodeFromJump(uint8 *jump)
 }
 
 void
-Assembler::TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
+Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
 {
     JS_NOT_REACHED("Feature NYI");
 #if 0
@@ -117,10 +117,10 @@ Assembler::TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &r
 }
 
 void
-Assembler::copyRelocationTable(uint8 *dest)
+Assembler::copyJumpRelocationTable(uint8 *dest)
 {
-    if (relocations_.length())
-        memcpy(dest, relocations_.buffer(), relocations_.length());
+    if (jumpRelocations_.length())
+        memcpy(dest, jumpRelocations_.buffer(), jumpRelocations_.length());
 }
 
 void

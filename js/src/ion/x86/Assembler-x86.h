@@ -200,7 +200,7 @@ class ValueOperand
 class Assembler : public AssemblerX86Shared
 {
     void writeRelocation(JmpSrc src) {
-        relocations_.writeUnsigned(src.offset());
+        jumpRelocations_.writeUnsigned(src.offset());
     }
     void addPendingJump(JmpSrc src, void *target, Relocation::Kind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), target, kind));
@@ -216,7 +216,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::retarget;
     using AssemblerX86Shared::cmpl;
 
-    static void TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
+    static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.
@@ -230,6 +230,7 @@ class Assembler : public AssemblerX86Shared
 
     void movl(const ImmGCPtr &ptr, const Register &dest) {
         masm.movl_i32r(ptr.value, dest.code());
+        writeDataRelocation(masm.currentOffset());
     }
 
     void mov(const Imm32 &imm32, const Register &dest) {
@@ -269,6 +270,21 @@ class Assembler : public AssemblerX86Shared
 
     void cmpl(const Register src, ImmGCPtr ptr) {
         masm.cmpl_ir(ptr.value, src.code());
+        writeDataRelocation(masm.currentOffset());
+    }
+    void cmpl(const Operand &op, ImmGCPtr imm) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.cmpl_ir_force32(imm.value, op.reg());
+            writeDataRelocation(masm.currentOffset());
+            break;
+          case Operand::REG_DISP:
+            masm.cmpl_im_force32(imm.value, op.disp(), op.base());
+            writeDataRelocation(masm.currentOffset());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
     }
 
     void jmp(void *target, Relocation::Kind reloc) {

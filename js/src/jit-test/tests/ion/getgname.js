@@ -24,8 +24,10 @@ for (var i = 0; i < 100; i++)
     ReturnArray();
 for (var i = 0; i < 100; i++)
     ReturnX();
- for (var i = 0; i < 100; i++)
-     ReturnZ();
+for (var i = 0; i < 100; i++)
+    ReturnZ();
+
+gc();
 
 assertEq(ReturnArray(), Array);
 assertEq(ReturnObject(), Object);

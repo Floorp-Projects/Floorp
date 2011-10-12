@@ -2431,6 +2431,10 @@ public:
                        IPFX "#label     ((%d))\n", MAYBE_PAD, r.m_offset);
         return r;
     }
+
+    size_t currentOffset() const {
+        return m_formatter.size();
+    }
     
     static JmpDst labelFor(JmpSrc jump, intptr_t offset = 0)
     {
