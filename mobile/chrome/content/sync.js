@@ -53,7 +53,7 @@ let WeaveGlue = {
     this.setupData = { account: "", password: "" , synckey: "", serverURL: "" };
 
     // Generating keypairs is expensive on mobile, so disable it
-    if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
+    if (Services.prefs.prefHasUserValue("services.sync.username")) {
       // Put the settings UI into a state of "connecting..." if we are going to auto-connect
       this._elements.connect.firstChild.disabled = true;
       this._elements.connect.setAttribute("title", this._bundle.GetStringFromName("connecting.label"));
@@ -259,7 +259,7 @@ let WeaveGlue = {
 
   tryConnect: function login() {
     // If Sync is not configured, simply show the setup dialog
-    if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
+    if (!Services.prefs.prefHasUserValue("services.sync.username")) {
       this.open();
       return;
     }
