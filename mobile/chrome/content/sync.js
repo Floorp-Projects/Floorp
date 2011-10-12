@@ -264,12 +264,6 @@ let WeaveGlue = {
       return;
     }
 
-    // If user is already logged-in, try to connect straight away
-    if (Weave.Service.isLoggedIn) {
-      this.connect();
-      return;
-    }
-
     // No setup data, do nothing
     if (!this.setupData)
       return;
@@ -403,12 +397,12 @@ let WeaveGlue = {
     let disconnect = this._elements.disconnect;
     let sync = this._elements.sync;
 
-    let loggedIn = Weave.Service.isLoggedIn;
+    let isConfigured = Services.prefs.prefHasUserValue("services.sync.username");
 
-    connect.collapsed = loggedIn;
-    connected.collapsed = !loggedIn;
+    connect.collapsed = isConfigured;
+    connected.collapsed = !isConfigured;
 
-    if (!loggedIn) {
+    if (!isConfigured) {
       connect.setAttribute("title", this._bundle.GetStringFromName("notconnected.label"));
       connect.firstChild.disabled = false;
       details.checked = false;
