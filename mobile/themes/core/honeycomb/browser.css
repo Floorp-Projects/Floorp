@@ -1705,6 +1705,7 @@ setting[type="bool"]:hover:active .setting-input > checkbox[checked="true"] > .c
   border-top: @border_width_tiny@ solid @color_button_border@;
   border-bottom: none;
   background-color: transparent;
+  font-size: @font_snormal@ !important;
 }
 
 #appmenu-popup-sitecommands {
@@ -1714,7 +1715,7 @@ setting[type="bool"]:hover:active .setting-input > checkbox[checked="true"] > .c
 }
 
 #appmenu-popup-sitecommands > .appmenu-pageaction {
-  font-size: @font_tiny@;
+  font-size: @font_xxtiny@;
   display: inline-block;
   min-height: -moz-calc(1.5 * @touch_button_xlarge@) !important;
   min-width: -moz-calc(1.5 * @touch_button_xlarge@) !important;
