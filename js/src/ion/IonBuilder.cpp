@@ -1762,10 +1762,12 @@ IonBuilder::jsop_call(uint32 argc)
 
     current->add(ins);
     current->push(ins);
-
     if (!resumeAfter(ins))
         return false;
-    return true;
+
+    types::TypeSet *barrier;
+    types::TypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
+    return pushTypeBarrier(ins, types, barrier);
 }
 
 bool
@@ -2047,12 +2049,10 @@ IonBuilder::jsop_getgname(JSAtom *atom)
     load->setTypeSet(types);
 
     // Slot loads can be typed, if they have a single, known, definitive type.
-    if (knownType != JSVAL_TYPE_UNKNOWN && !barrier) {
+    if (knownType != JSVAL_TYPE_UNKNOWN && !barrier)
         load->setResultType(MIRTypeFromValueType(knownType));
-        current->push(load);
-        return true;
-    }
 
-    return pushTypeBarrier(load, barrier);
+    current->push(load);
+    return pushTypeBarrier(load, types, barrier);
 }
 

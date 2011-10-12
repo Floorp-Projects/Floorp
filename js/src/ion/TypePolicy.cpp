@@ -68,6 +68,8 @@ BoxInputsPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
 MDefinition *
 BoxInputsPolicy::boxAt(MInstruction *at, MDefinition *operand)
 {
+    if (operand->isUnbox())
+        return operand->toUnbox()->input();
     MBox *box = MBox::New(operand);
     at->block()->insertBefore(at, box);
     return box;

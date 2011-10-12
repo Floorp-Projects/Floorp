@@ -46,6 +46,9 @@
 #include "Snapshots.h"
 #include "Ion.h"
 #include "IonCompartment.h"
+#include "jsinfer.h"
+#include "jsanalyze.h"
+#include "jsinferinlines.h"
 
 using namespace js;
 using namespace js::ion;
@@ -246,8 +249,24 @@ ConvertFrames(JSContext *cx, IonActivation *activation, BailoutEnvironment *env)
         JS_NOT_REACHED("NYI");
     }
 
-    // TypeBarriers on non-idempotent ops not supported yet.
-    JS_ASSERT(iter.bailoutKind() == Bailout_Normal);
+    switch (iter.bailoutKind()) {
+      case Bailout_Normal:
+        break;
+
+      case Bailout_TypeBarrier:
+      {
+        JSScript *script = cx->fp()->script();
+        if (script->hasAnalysis() && script->analysis()->ranInference()) {
+            types::AutoEnterTypeInference enter(cx);
+            script->analysis()->breakTypeBarriers(cx, cx->regs().pc - script->code, false);
+        }
+
+        // When a type barrier fails, the bad value is at the top of the stack.
+        Value &result = cx->regs().sp[-1];
+        types::TypeScript::Monitor(cx, script, cx->regs().pc, result);
+        break;
+      }
+    }
 
     return true;
 }

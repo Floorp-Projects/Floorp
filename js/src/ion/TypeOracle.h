@@ -88,6 +88,10 @@ class TypeOracle
         *barrier = NULL;
         return NULL;
     }
+    virtual types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier) {
+        *barrier = NULL;
+        return NULL;
+    }
 };
 
 class DummyOracle : public TypeOracle
@@ -125,6 +129,7 @@ class TypeInferenceOracle : public TypeOracle
     types::TypeSet *thisTypeSet(JSScript *script);
     types::TypeSet *parameterTypeSet(JSScript *script, size_t index);
     types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
+    types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
 };
 
 static inline MIRType
