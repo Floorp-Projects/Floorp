@@ -65,7 +65,9 @@ namespace ion {
 //   this    _/
 //   (padding) (only exists on arm)
 //   calleeToken - Encodes script or JSFunction
-//   sizeDescriptor  - Size of the parent frame, with lower bits for FrameType.
+//   sizeDescriptor - Delta between the /top/ of the current IonFramePrefix
+//                    and the /bottom/ of the parent IonFramePrefix.
+//                    The lower FrameType bits are hijacked to store type.
 //   returnAddr - Return address, entering into the next call.
 //   .. locals ..
 
@@ -87,14 +89,15 @@ class IonFramePrefix : protected IonFrameData
     bool isEntryFrame() const {
         return !!(sizeDescriptor_ & EntryFrame);
     }
-    // The depth of the parent frame.
+    // Distance from top of current IonFramePrefix to parent IonFramePrefix.
     size_t prevFrameDepth() const {
         JS_ASSERT(!isEntryFrame());
         return sizeDescriptor_ >> FrameTypeBits;
     }
     IonFramePrefix *prev() const {
         JS_ASSERT(!isEntryFrame());
-        return (IonFramePrefix *)((uint8 *)this - prevFrameDepth());
+        return (IonFramePrefix *)((uint8 *)this +
+                sizeof(IonFramePrefix) + prevFrameDepth());
     }
     void *calleeToken() const {
         return calleeToken_;
