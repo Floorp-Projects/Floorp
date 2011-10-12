@@ -117,6 +117,12 @@ Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReade
 }
 
 void
+Assembler::TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
+{
+    JS_NOT_REACHED("Feature NYI");
+}
+
+void
 Assembler::copyJumpRelocationTable(uint8 *dest)
 {
     if (jumpRelocations_.length())
@@ -124,9 +130,16 @@ Assembler::copyJumpRelocationTable(uint8 *dest)
 }
 
 void
+Assembler::copyDataRelocationTable(uint8 *dest)
+{
+    if (dataRelocations_.length())
+        memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
+}
+
+void
 Assembler::trace(JSTracer *trc)
 {
-    JS_NOT_REACHED("Feature NYI");
+    JS_NOT_REACHED("Feature NYI - must trace jump and data");
 #if 0
     for (size_t i = 0; i < jumps_.length(); i++) {
         RelativePatch &rp = jumps_[i];
