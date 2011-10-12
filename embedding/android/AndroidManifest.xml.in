@@ -42,6 +42,7 @@
         <activity android:name="App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTask"
                   android:theme="@style/GreyTheme">
             <intent-filter>
