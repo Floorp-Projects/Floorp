@@ -7,8 +7,7 @@
         xmlns:svg="http://www.w3.org/2000/svg"
         xmlns:html="http://www.w3.org/1999/xhtml">
 
-<script type="application/javascript" src="chrome://browser/content/browser.js"/>
+  <script type="application/javascript" src="chrome://browser/content/browser.js"/>
 
-<browser id="home" type="content-primary" flex="1"/>
-
+  <browser id="browser" type="content-primary" flex="1"/>
 </window>
