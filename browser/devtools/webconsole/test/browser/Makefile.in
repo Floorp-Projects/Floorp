@@ -147,6 +147,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_664131_console_group.js \
 	browser_gcli_require.js \
 	browser_gcli_integrate.js \
+	browser_gcli_web.js \
 	head.js \
 	$(NULL)
 
