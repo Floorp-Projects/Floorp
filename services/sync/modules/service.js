@@ -1560,22 +1560,34 @@ WeaveSvc.prototype = {
     CollectionKeys.clear();
     this.upgradeSyncKey(this.syncID);
 
+    // Wipe the server.
+    let wipeTimestamp = this.wipeServer();
+
+    // Upload a new meta/global record.
     let meta = new WBORecord("meta", "global");
     meta.payload.syncID = this.syncID;
     meta.payload.storageVersion = STORAGE_VERSION;
     meta.isNew = true;
 
     this._log.debug("New metadata record: " + JSON.stringify(meta.payload));
-    let resp = new Resource(this.metaURL).put(meta);
-    if (!resp.success)
+    let res = new Resource(this.metaURL);
+    // It would be good to set the X-If-Unmodified-Since header to `timestamp`
+    // for this PUT to ensure at least some level of transactionality.
+    // Unfortunately, the servers don't support it after a wipe right now
+    // (bug 693893), so we're going to defer this until bug 692700.
+    let resp = res.put(meta);
+    if (!resp.success) {
+      // If we got into a race condition, we'll abort the sync this way, too.
+      // That's fine. We'll just wait till the next sync. The client that we're
+      // racing is probably busy uploading stuff right now anyway.
       throw resp;
+    }
     Records.set(this.metaURL, meta);
 
     // Wipe everything we know about except meta because we just uploaded it
     let collections = [Clients].concat(Engines.getAll()).map(function(engine) {
       return engine.name;
     });
-    this.wipeServer(collections);
 
     // Generate, upload, and download new keys. Do this last so we don't wipe
     // them...
@@ -1586,36 +1598,51 @@ WeaveSvc.prototype = {
    * Wipe user data from the server.
    *
    * @param collections [optional]
-   *        Array of collections to wipe. If not given, all collections are wiped.
+   *        Array of collections to wipe. If not given, all collections are
+   *        wiped by issuing a DELETE request for `storageURL`.
    *
-   * @param includeKeys [optional]
-   *        If true, keys/pubkey and keys/privkey are deleted from the server.
-   *        This is false by default, which will cause the usual upgrade paths
-   *        to leave those keys on the server. This is to solve Bug 614737: old
-   *        clients check for keys *before* checking storage versions.
-   *
-   *        Note that this parameter only has an effect if `collections` is not
-   *        passed. If you explicitly pass a list of collections, they will be
-   *        processed regardless of the value of `includeKeys`.
+   * @return the server's timestamp of the (last) DELETE.
    */
-  wipeServer: function wipeServer(collections, includeKeyPairs)
+  wipeServer: function wipeServer(collections)
     this._notify("wipe-server", "", function() {
+      let response;
       if (!collections) {
-        collections = [];
-        let info = new Resource(this.infoURL).get();
-        for (let name in info.obj) {
-          if (includeKeyPairs || (name != "keys"))
-            collections.push(name);
+        // Strip the trailing slash.
+        let res = new Resource(this.storageURL.slice(0, -1));
+        res.setHeader("X-Confirm-Delete", "1");
+        try {
+          response = res.delete();
+        } catch (ex) {
+          this._log.debug("Failed to wipe server: " + Utils.exceptionStr(ex));
+          throw ex;
         }
+        if (response.status != 200 && response.status != 404) {
+          this._log.debug("Aborting wipeServer. Server responded with " +
+                          response.status + " response for " + this.storageURL);
+          throw response;
+        }
+        return response.headers["x-weave-timestamp"];
       }
+      let timestamp;
       for each (let name in collections) {
         let url = this.storageURL + name;
-        let response = new Resource(url).delete();
+        try {
+          response = new Resource(url).delete();
+        } catch (ex) {
+          this._log.debug("Failed to wipe '" + name + "' collection: " +
+                          Utils.exceptionStr(ex));
+          throw ex;
+        }
         if (response.status != 200 && response.status != 404) {
-          throw "Aborting wipeServer. Server responded with "
-                + response.status + " response for " + url;
+          this._log.debug("Aborting wipeServer. Server responded with " +
+                          response.status + " response for " + url);
+          throw response;
+        }
+        if ("x-weave-timestamp" in response.headers) {
+          timestamp = response.headers["x-weave-timestamp"];
         }
       }
+      return timestamp;
     })(),
 
   /**
