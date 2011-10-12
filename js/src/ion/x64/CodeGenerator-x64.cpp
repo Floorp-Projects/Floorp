@@ -43,6 +43,7 @@
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 #include "jsnum.h"
+#include "jsscope.h"
 
 using namespace js;
 using namespace js::ion;
@@ -128,7 +129,7 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
     const LDefinition *result = unbox->output();
     MUnbox *mir = unbox->mir();
 
-    if (mir->checkType()) {
+    if (mir->fallible()) {
         Assembler::Condition cond;
         switch (mir->type()) {
           case MIRType_Int32:
@@ -191,6 +192,46 @@ CodeGeneratorX64::testStringTruthy(bool truthy, const ValueOperand &value)
 }
 
 bool
+CodeGeneratorX64::visitLoadSlotV(LLoadSlotV *load)
+{
+    Register dest = ToRegister(load->outputValue());
+    Register base = ToRegister(load->input());
+    int32 offset = load->mir()->slot() * sizeof(js::Value);
+
+    masm.movq(Operand(base, offset), dest);
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitLoadSlotT(LLoadSlotT *load)
+{
+    Register base = ToRegister(load->input());
+    int32 offset = load->mir()->slot() * sizeof(js::Value);
+
+    switch (load->mir()->type()) {
+      case MIRType_Double:
+        masm.movsd(Operand(base, offset), ToFloatRegister(load->output()));
+        break;
+      case MIRType_Object:
+      case MIRType_String:
+      {
+        Register out = ToRegister(load->output());
+        masm.movq(Operand(base, offset), out);
+        masm.unboxObject(ValueOperand(out), out);
+        break;
+      }
+      case MIRType_Int32:
+      case MIRType_Boolean:
+        masm.movl(Operand(base, offset), ToRegister(load->output()));
+        break;
+      default:
+        JS_NOT_REACHED("unexpected type");
+        return false;
+    }
+    return true;
+}
+
+bool
 CodeGeneratorX64::visitStackArg(LStackArg *arg)
 {
     ValueOperand val = ToValue(arg, 0);
@@ -198,6 +239,17 @@ CodeGeneratorX64::visitStackArg(LStackArg *arg)
     int32 stack_offset = StackOffsetOfPassedArg(argslot);
 
     masm.storeValue(val, Operand(StackPointer, stack_offset));
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitGuardShape(LGuardShape *guard)
+{
+    Register obj = ToRegister(guard->input());
+    masm.movq(ImmGCPtr(guard->mir()->shape()), ScratchReg);
+    masm.cmpq(Operand(obj, offsetof(JSObject, lastProp)), ScratchReg);
+    if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
+        return false;
     return true;
 }
 

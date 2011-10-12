@@ -378,6 +378,18 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void cmpl(const Operand &op, ImmGCPtr imm) {
+        switch (op.kind()) {
+          case Operand::REG:
+            masm.cmpl_ir_force32(imm.value, op.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.cmpl_im_force32(imm.value, op.disp(), op.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void setCC(Condition cond, const Register &r) {
         masm.setCC_r(static_cast<JSC::X86Assembler::Condition>(cond), r.code());
     }

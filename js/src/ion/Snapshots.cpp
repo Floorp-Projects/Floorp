@@ -52,7 +52,8 @@ using namespace js::ion;
 //
 //   [ptr] Debug only: JSScript *
 //   [vwu] pc offset
-//   [vwu] # of slots, including nargs
+//   [vwu] bits (n-31]: # of slots, including nargs (max 65535).
+//         bits [0,n):  bailout kind (n = BAILOUT_KIND_BITS)
 // [slot*] N slot entries, where N = nargs + nfixed + stackDepth
 //
 // Encodings:
@@ -125,7 +126,10 @@ SnapshotReader::SnapshotReader(const uint8 *buffer, const uint8 *end)
 #endif
 
     pcOffset_ = reader_.readUnsigned();
-    slotCount_ = reader_.readUnsigned();
+
+    uint32 bits = reader_.readUnsigned();
+    slotCount_ = bits >> BAILOUT_KIND_BITS;
+    bailoutKind_ = (BailoutKind)(bits & ((1 << BAILOUT_KIND_BITS) - 1));
 }
 
 #ifdef JS_NUNBOX32
@@ -235,7 +239,7 @@ SnapshotWriter::SnapshotWriter()
 
 SnapshotOffset
 SnapshotWriter::start(JSFunction *fun, JSScript *script, jsbytecode *pc,
-                      uint32 frameSize, uint32 exprStack)
+                      uint32 frameSize, uint32 exprStack, BailoutKind kind)
 {
     JS_ASSERT(CountArgSlots(fun) < SNAPSHOT_MAX_NARGS);
     JS_ASSERT(exprStack < SNAPSHOT_MAX_STACK);
@@ -257,8 +261,11 @@ SnapshotWriter::start(JSFunction *fun, JSScript *script, jsbytecode *pc,
         writer_.writeByte(u.bytes[i]);
 #endif
 
+    JS_ASSERT(((nslots_ << BAILOUT_KIND_BITS) >> BAILOUT_KIND_BITS) == nslots_);
+    JS_ASSERT((1 << BAILOUT_KIND_BITS) > uint32(kind));
+
     writer_.writeUnsigned(uint32(pc - script->code));
-    writer_.writeUnsigned(nslots_);
+    writer_.writeUnsigned((nslots_ << BAILOUT_KIND_BITS) | uint32(kind));
 
     return lastStart_;
 }

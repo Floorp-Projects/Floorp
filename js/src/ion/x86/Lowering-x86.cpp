@@ -131,7 +131,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
             return false;
 
         LUnboxDouble *lir = new LUnboxDouble;
-        if (unbox->checkType() && !assignSnapshot(lir))
+        if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
             return false;
         if (!useBox(lir, LUnboxDouble::Input, inner))
             return false;
@@ -148,7 +148,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     lir->setDef(0, LDefinition(VirtualRegisterOfPayload(inner), type, LDefinition::REDEFINED));
     unbox->setVirtualRegister(VirtualRegisterOfPayload(inner));
 
-    if (unbox->checkType() && !assignSnapshot(lir))
+    if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
         return false;
 
     return add(lir);
@@ -167,9 +167,9 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
 }
 
 bool
-LIRGeneratorX86::assignSnapshot(LInstruction *ins)
+LIRGeneratorX86::assignSnapshot(LInstruction *ins, BailoutKind kind)
 {
-    LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_);
+    LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_, kind);
     if (!snapshot)
         return NULL;
 

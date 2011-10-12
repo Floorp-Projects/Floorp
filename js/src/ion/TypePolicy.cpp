@@ -208,12 +208,6 @@ ComparePolicy::adjustInputs(MInstruction *def)
     return true;
 }
 
-bool
-BitwisePolicy::respecialize(MInstruction *ins)
-{
-    return false;
-}
-
 void
 BitwisePolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
 {
@@ -248,18 +242,9 @@ BitwisePolicy::adjustInputs(MInstruction *ins)
     return true;
 }
 
-bool
-TableSwitchPolicy::respecialize(MInstruction *ins)
-{
-    // Has no outputs
-    return false;
-}
-
 void
 TableSwitchPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
 {
-    // We try to ask for the type Int32,
-    // because this gives us the best code
     analysis->preferType(ins->getOperand(0), MIRType_Int32);
 }
 
@@ -273,7 +258,7 @@ TableSwitchPolicy::adjustInputs(MInstruction *ins)
     // - Value: unbox to int32
     switch (in->type()) {
       case MIRType_Value:
-        replace = MUnbox::New(in, MIRType_Int32);
+        replace = MUnbox::New(in, MIRType_Int32, MUnbox::Fallible);
         break;
       default:
         return true;
@@ -281,6 +266,31 @@ TableSwitchPolicy::adjustInputs(MInstruction *ins)
     
     ins->block()->insertBefore(ins, replace);
     ins->replaceOperand(0, replace);
+
+    return true;
+}
+
+void
+ObjectPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analyzer)
+{
+    analyzer->preferType(ins->getOperand(0), MIRType_Object);
+}
+
+bool
+ObjectPolicy::adjustInputs(MInstruction *def)
+{
+    MDefinition *in = def->getOperand(0);
+    if (in->type() == MIRType_Object || in->type() == MIRType_Slots)
+        return true;
+
+    // Once we have C++ calls, we can change this to insert a PrimitiveToObject
+    // call.
+    if (in->type() != MIRType_Value)
+        in = boxAt(def, in);
+
+    MUnbox *replace = MUnbox::New(in, MIRType_Object, MUnbox::Fallible);
+    def->block()->insertBefore(def, replace);
+    def->replaceOperand(0, replace);
 
     return true;
 }
@@ -305,7 +315,7 @@ CallPolicy::adjustInputs(MInstruction *ins)
     if (func->type() != MIRType_Value)
         func = boxAt(call, func);
 
-    MInstruction *unbox = MUnbox::New(func, MIRType_Object);
+    MInstruction *unbox = MUnbox::New(func, MIRType_Object, MUnbox::Fallible);
     call->block()->insertBefore(call, unbox);
     call->replaceFunction(unbox);
 

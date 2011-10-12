@@ -45,6 +45,7 @@
 #include "IonCode.h"
 #include "IonRegisters.h"
 #include "CompactBuffer.h"
+#include "Bailouts.h"
 
 namespace js {
 namespace ion {
@@ -59,8 +60,9 @@ class SnapshotReader
 {
     CompactBufferReader reader_;
 
-    uint32 pcOffset_;       // Offset from script->code.
-    uint32 slotCount_;      // Number of slots.
+    uint32 pcOffset_;           // Offset from script->code.
+    uint32 slotCount_;          // Number of slots.
+    BailoutKind bailoutKind_;
 
 #ifdef DEBUG
     // In debug mode we include the JSScript in order to make a few assertions.
@@ -217,6 +219,9 @@ class SnapshotReader
     uint32 slots() const {
         return slotCount_;
     }
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
+    }
 
     Slot readSlot();
     void finishReading();
@@ -241,7 +246,7 @@ class SnapshotWriter
     SnapshotWriter();
 
     SnapshotOffset start(JSFunction *fun, JSScript *script, jsbytecode *pc,
-                         uint32 frameSize, uint32 exprStack);
+                         uint32 frameSize, uint32 exprStack, BailoutKind kind);
     void addSlot(const FloatRegister &reg);
     void addSlot(JSValueType type, const Register &reg);
     void addSlot(JSValueType type, int32 stackOffset);

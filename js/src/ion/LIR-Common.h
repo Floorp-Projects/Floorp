@@ -110,16 +110,23 @@ class LInteger : public LInstructionHelper<1, 0, 0>
     }
 };
 
-// Constant 64-bit pointer.
+// Constant 64-bit gc-pointer.
 class LPointer : public LInstructionHelper<1, 0, 0>
 {
-    void *ptr_;
+    gc::Cell *ptr_;
 
   public:
     LIR_HEADER(Pointer);
 
-    LPointer(void *ptr) : ptr_(ptr)
+    LPointer(gc::Cell *ptr) : ptr_(ptr)
     { }
+
+    gc::Cell *ptr() const {
+        return ptr_;
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
 };
 
 // A constant Value.
@@ -668,6 +675,102 @@ class LStart : public LInstructionHelper<0, 0, 0>
 {
   public:
     LIR_HEADER(Start);
+};
+
+// Load the "dslots" member out of a JSObject.
+//   Input: JSObject pointer
+//   Output: dslots pointer
+class LSlots : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(Slots);
+
+    LSlots(const LAllocation &in) {
+        setOperand(0, in);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+// Load a value from an object's dslots or a slots vector.
+class LLoadSlotV : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(LoadSlotV);
+    BOX_OUTPUT_ACCESSORS();
+
+    LLoadSlotV(const LAllocation &in) {
+        setOperand(0, in);
+    }
+    const MLoadSlot *mir() const {
+        return mir_->toLoadSlot();
+    }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+};
+
+// Load a value from an object's dslots or a slots vector.
+class LLoadSlotT : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(LoadSlotT);
+
+    LLoadSlotT(const LAllocation &in) {
+        setOperand(0, in);
+    }
+    const MLoadSlot *mir() const {
+        return mir_->toLoadSlot();
+    }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+// Guard against an object's shape.
+class LGuardShape : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(GuardShape);
+
+    LGuardShape(const LAllocation &in) {
+        setOperand(0, in);
+    }
+    const MGuardShape *mir() const {
+        return mir_->toGuardShape();
+    }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+};
+
+// Guard that a value is in a TypeSet.
+class LTypeBarrier : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1>
+{
+  public:
+    LIR_HEADER(TypeBarrier);
+    BOX_OUTPUT_ACCESSORS();
+
+    LTypeBarrier(const LDefinition &temp) {
+        setTemp(0, temp);
+    }
+
+    static const size_t Input = 0;
+
+    const MTypeBarrier *mir() const {
+        return mir_->toTypeBarrier();
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
 };
 
 class MPhi;

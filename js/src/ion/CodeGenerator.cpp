@@ -238,6 +238,34 @@ CodeGenerator::visitStart(LStart *lir)
 }
 
 bool
+CodeGenerator::visitPointer(LPointer *lir)
+{
+    masm.movePtr(ImmGCPtr(lir->ptr()), ToRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGenerator::visitSlots(LSlots *lir)
+{
+    Address slots(ToRegister(lir->input()), JSObject::offsetOfSlots());
+    masm.loadPtr(slots, ToRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGenerator::visitTypeBarrier(LTypeBarrier *lir)
+{
+    ValueOperand operand = ToValue(lir, LTypeBarrier::Input);
+    Register scratch = ToRegister(lir->temp());
+
+    Label mismatched;
+    masm.guardTypeSet(operand, lir->mir()->typeSet(), scratch, &mismatched);
+    if (!bailoutFrom(&mismatched, lir->snapshot()))
+        return false;
+    return true;
+}
+
+bool
 CodeGenerator::generateArgumentsChecks()
 {
     MIRGraph &mir = gen->graph();
@@ -272,7 +300,6 @@ CodeGenerator::generateArgumentsChecks()
 
     return true;
 }
-
 
 bool
 CodeGenerator::generateBody()

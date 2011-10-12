@@ -120,7 +120,6 @@ class BitwisePolicy : public BoxInputsPolicy
     MIRType specialization_;
 
   public:
-    bool respecialize(MInstruction *def);
     void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);
     bool adjustInputs(MInstruction *def);
 };
@@ -128,7 +127,6 @@ class BitwisePolicy : public BoxInputsPolicy
 class TableSwitchPolicy : public BoxInputsPolicy
 {
   public:
-    bool respecialize(MInstruction *def);
     void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);
     bool adjustInputs(MInstruction *def);
 };
@@ -145,6 +143,15 @@ class ComparePolicy : public BoxInputsPolicy
 };
 
 class CallPolicy : public BoxInputsPolicy
+{
+  public:
+    void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);
+    bool adjustInputs(MInstruction *def);
+};
+
+// Single-object input. If the input is a Value, it is unboxed. If it is
+// a primitive, we use ValueToNonNullObject.
+class ObjectPolicy : public BoxInputsPolicy
 {
   public:
     void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);

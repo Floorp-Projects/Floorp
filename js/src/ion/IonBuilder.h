@@ -181,6 +181,7 @@ class IonBuilder : public MIRGenerator
     ControlStatus snoopControlFlow(JSOp op);
     bool inspectOpcode(JSOp op);
     uint32 readIndex(jsbytecode *pc);
+    JSAtom *readAtom(jsbytecode *pc);
 
     void popCfgStack();
     bool processDeferredContinues(CFGState &state);
@@ -243,6 +244,7 @@ class IonBuilder : public MIRGenerator
     void initParameters();
     void rewriteParameters();
     bool pushConstant(const Value &v);
+    bool pushTypeBarrier(MInstruction *ins, types::TypeSet *observed);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);
     bool jsop_binary(JSOp op);
@@ -254,6 +256,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_localinc(JSOp op);
     bool jsop_arginc(JSOp op);
     bool jsop_compare(JSOp op);
+    bool jsop_getgname(JSAtom *atom);
 
   private:
     JSAtom **atoms;

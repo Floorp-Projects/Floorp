@@ -70,6 +70,9 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitBox(LBox *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitDouble(LDouble *ins);
+    bool visitLoadSlotV(LLoadSlotV *ins);
+    bool visitLoadSlotT(LLoadSlotT *load);
+    bool visitGuardShape(LGuardShape *guard);
 };
 
 typedef CodeGeneratorX64 CodeGeneratorSpecific;

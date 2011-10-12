@@ -613,8 +613,19 @@ public:
             ma_add(Imm32(amount), sp);
         framePushed_ -= amount;
     }
-    void movePtr(ImmWord imm, const Register &dest) {
+
+    void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
+        JS_NOT_REACHED("NYI");
+    }
+
+    void movePtr(ImmWord imm, Register dest) {
         ma_mov(Imm32(imm.value), dest);
+    }
+    void movePtr(ImmGCPtr imm, Register dest) {
+        ma_mov(imm, dest);
+    }
+    void loadPtr(const Address &address, Register dest) {
+        JS_NOT_REACHED("NYI");
     }
     void setStackArg(const Register &reg, uint32 arg) {
         ma_dataTransferN(IsStore, 32, sp, Imm32(arg * STACK_SLOT_SIZE), reg);
@@ -629,6 +640,11 @@ public:
         bind(&good);
     }
 #endif
+
+    // Returns the register containing the type tag.
+    Register splitTagForTest(const ValueOperand &value) {
+        return value.typeReg();
+    }
 
     // higher level tag testing code
     Condition testInt32(Condition cond, const ValueOperand &value) {

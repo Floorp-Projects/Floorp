@@ -46,8 +46,8 @@
 #include "IonSpewer.h"
 #include "jsbool.h"
 #include "jsnum.h"
-#include "shared/Lowering-shared-inl.h"
 #include "jsobjinlines.h"
+#include "shared/Lowering-shared-inl.h"
 
 using namespace js;
 using namespace ion;
@@ -559,6 +559,50 @@ LIRGenerator::visitCopy(MCopy *ins)
 {
     JS_NOT_REACHED("unexpected copy");
     return false;
+}
+
+
+bool
+LIRGenerator::visitSlots(MSlots *ins)
+{
+    return define(new LSlots(useRegister(ins->input())), ins);
+}
+
+bool
+LIRGenerator::visitLoadSlot(MLoadSlot *ins)
+{
+    switch (ins->type()) {
+      case MIRType_Value:
+        return defineBox(new LLoadSlotV(useRegister(ins->input())), ins);
+
+      case MIRType_Undefined:
+      case MIRType_Null:
+        JS_NOT_REACHED("typed load must have a payload");
+        return false;
+
+      default:
+        return define(new LLoadSlotT(useRegister(ins->input())), ins);
+    }
+
+    return true;
+}
+
+bool
+LIRGenerator::visitGuardShape(MGuardShape *ins)
+{
+    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()));
+    return assignSnapshot(guard) && add(guard, ins);
+}
+
+bool
+LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
+{
+    LTypeBarrier *barrier = new LTypeBarrier(temp(LDefinition::POINTER));
+    if (!useBox(barrier, LTypeBarrier::Input, ins->input()))
+        return false;
+    if (!assignSnapshot(barrier, ins->bailoutKind()))
+        return false;
+    return defineAs(barrier, ins, ins->input()) && add(barrier);
 }
 
 static void
