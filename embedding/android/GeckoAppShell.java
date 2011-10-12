@@ -95,6 +95,12 @@ public class GeckoAppShell
     static private final int NOTIFY_IME_CANCELCOMPOSITION = 2;
     static private final int NOTIFY_IME_FOCUSCHANGE = 3;
 
+    /* Keep in sync with constants found here:
+      http://mxr.mozilla.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl
+    */
+    static private final int WPL_STATE_START = 0x00000001;
+    static private final int WPL_STATE_IS_DOCUMENT = 0x00020000;
+
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
 
@@ -1635,64 +1641,64 @@ public class GeckoAppShell
             if (type.equals("DOMContentLoaded")) {
                 final String uri = geckoObject.getString("uri");
                 final String title = geckoObject.getString("title");
-                final String stat = geckoObject.getString("stat");
                 final CharSequence titleText = title;
                 getMainHandler().post(new Runnable() { 
-                        public void run() {
-                            GeckoApp.mAwesomeBar.setText(titleText);
-                            GeckoApp.addHistoryEntry(new GeckoApp.HistoryEntry(uri, title));
-                            GeckoApp.mProgressBar.setVisibility(View.GONE);
-                        }
-                    });
-                Log.i("GeckoShell", "URI - " + uri + ", title - " + title + ", status - " + stat);
-            }
-            else if (type.equals("log")) {
+                    public void run() {
+                        GeckoApp.mAwesomeBar.setText(titleText);
+                        GeckoApp.addHistoryEntry(new GeckoApp.HistoryEntry(uri, title));
+                        GeckoApp.mProgressBar.setVisibility(View.GONE);
+                    }
+                });
+                Log.i("GeckoShell", "URI - " + uri + ", title - " + title);
+            } else if (type.equals("log")) {
                 // generic log listener
                 final String msg = geckoObject.getString("msg");
                 Log.i("GeckoShell", "Log: " + msg);
-            }
-            else if (type.equals("onLocationChange")) {
+            } else if (type.equals("onLocationChange")) {
                 final String uri = geckoObject.getString("uri");
                 final CharSequence uriText = uri;
                 Log.i("GeckoShell", "URI - " + uri);
                 getMainHandler().post(new Runnable() { 
-                        public void run() {
-                            GeckoApp.mAwesomeBar.setText(uriText);
-                        }
-                    });
-            }
-            else if (type.equals("onStateChange")) {
-                String state = geckoObject.getString("state");
-                String stateIs = geckoObject.getString("stateIs");
-
-                if (state == "start") {
-                    GeckoApp.mProgressBar.setVisibility(View.VISIBLE);
-                    GeckoApp.mProgressBar.setIndeterminate(true);
+                    public void run() {
+                        GeckoApp.mAwesomeBar.setText(uriText);
+                    }
+                });
+            } else if (type.equals("onStateChange")) {
+                int state = geckoObject.getInt("state");
+                Log.i("GeckoShell", "State - " + state);
+                if ((state & WPL_STATE_START) != 0) {
+                    if ((state & WPL_STATE_IS_DOCUMENT) != 0) {
+                        Log.i("GeckoShell", "Got a document start");
+                        getMainHandler().post(new Runnable() { 
+                            public void run() {
+                                GeckoApp.mProgressBar.setVisibility(View.VISIBLE);
+                                GeckoApp.mProgressBar.setIndeterminate(true);
+                            }
+                        });
+                    }
                 }
-            }
-            else if (type.equals("onProgressChange")) {
+            } else if (type.equals("onProgressChange")) {
                 final int current = geckoObject.getInt("current");
                 final int total = geckoObject.getInt("total");
 
                 getMainHandler().post(new Runnable() { 
-                        public void run() {
-                            if (total == -1) {
-                                GeckoApp.mProgressBar.setIndeterminate(true);
-                            } else if (current < total) {
-                                GeckoApp.mProgressBar.setIndeterminate(false);
-                                GeckoApp.mProgressBar.setMax(total);
-                                GeckoApp.mProgressBar.setProgress(current);
-                            }
-                            else {
-                                GeckoApp.mProgressBar.setIndeterminate(false);
-                            }
+                    public void run() {
+                        if (total == -1) {
+                            GeckoApp.mProgressBar.setIndeterminate(true);
+                        } else if (current < total) {
+                            GeckoApp.mProgressBar.setIndeterminate(false);
+                            GeckoApp.mProgressBar.setMax(total);
+                            GeckoApp.mProgressBar.setProgress(current);
+                        } else {
+                            GeckoApp.mProgressBar.setIndeterminate(false);
                         }
-                    });
+                    }
+                });
 
                 Log.i("GeckoShell", "progress - " + current + "/" + total);
             }
         } catch (Exception e) {
-            Log.i("GeckoShell", "handleGeckoMessage throws "+e);
+            Log.i("GeckoShell", "handleGeckoMessage throws " + e);
         }
     }
 }
