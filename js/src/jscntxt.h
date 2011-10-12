@@ -720,6 +720,9 @@ struct JSRuntime {
 
     JSRuntime();
     ~JSRuntime();
+    JSRuntime *thisFromCtor() {
+        return this;
+    }
 
     bool init(uint32 maxbytes);
 
