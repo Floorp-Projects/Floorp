@@ -4882,6 +4882,10 @@ nsDocShell::SetIsActive(bool aIsActive)
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mScriptGlobal);
   if (win) {
       win->SetIsBackground(!aIsActive);
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(win->GetExtantDocument());
+      if (doc) {
+          doc->PostVisibilityUpdateEvent();
+      }
   }
 
   // Recursively tell all of our children

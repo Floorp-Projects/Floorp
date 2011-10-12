@@ -516,6 +516,7 @@ _TEST_FILES2 = \
 		test_bug684671.html \
 		test_bug685798.html \
 		test_bug686449.xhtml \
+		test_bug690056.html \
 		test_bug692434.html \
 		file_bug692434.xml \
 		$(NULL)
