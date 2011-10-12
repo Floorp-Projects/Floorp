@@ -775,7 +775,6 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
                                            aFrom + nsIntPoint(xPos, yPos));
     }
     mShaderType = mImages[0]->GetShaderProgramType();
-    mIsRGBFormat = mImages[0]->IsRGB();
     mTextureState = Valid;
     return result;
 }
@@ -888,7 +887,6 @@ TiledTextureImage::EndUpdate()
         mInUpdate = PR_FALSE;
         mTextureState = Valid;
         mShaderType = mImages[mCurrentImage]->GetShaderProgramType();
-        mIsRGBFormat = mImages[mCurrentImage]->IsRGB();
         return;
     }
 
@@ -916,7 +914,6 @@ TiledTextureImage::EndUpdate()
     mUpdateSurface = nsnull;
     mInUpdate = PR_FALSE;
     mShaderType = mImages[0]->GetShaderProgramType();
-    mIsRGBFormat = mImages[0]->IsRGB();
     mTextureState = Valid;
 }
 
