@@ -238,8 +238,6 @@ MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name)
     if (IS_GC_MARKING_TRACER(trc)) {
         if (type->singleton)
             MarkObject(trc, *type->singleton, "type_singleton");
-        if (type->interpretedFunction)
-            MarkObject(trc, *type->interpretedFunction, "type_function");
     }
 }
 
@@ -916,12 +914,15 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
         PushMarkStack(gcmarker, type->newScript->shape);
     }
 
+    if (type->interpretedFunction)
+        PushMarkStack(gcmarker, type->interpretedFunction);
+
     /*
-     * Don't need to trace singleton or functionScript, an object with this
-     * type must have already been traced and it will also hold a reference
-     * on the script (singleton and functionScript types cannot be the newType
-     * of another object). Attempts to mark type objects directly must use
-     * MarkTypeObject, which will itself mark these extra bits.
+     * Don't need to trace singleton, an object with this type must have
+     * already been traced and it will also hold a reference on the script
+     * (singleton and functionScript types cannot be the newType of another
+     * object). Attempts to mark type objects directly must use MarkTypeObject,
+     * which will itself mark these extra bits.
      */
 }
 

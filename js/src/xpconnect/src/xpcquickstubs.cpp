@@ -548,7 +548,7 @@ GetMethodInfo(JSContext *cx, jsval *vp, const char **ifaceNamep, jsid *memberIdp
     JSObject *funobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
     NS_ASSERTION(JS_ObjectIsFunction(cx, funobj),
                  "JSNative callee should be Function object");
-    JSString *str = JS_GetFunctionId((JSFunction *) JS_GetPrivate(cx, funobj));
+    JSString *str = JS_GetFunctionId(JS_GetObjectFunction(funobj));
     jsid methodId = str ? INTERNED_STRING_TO_JSID(cx, str) : JSID_VOID;
     GetMemberInfo(JSVAL_TO_OBJECT(vp[1]), methodId, ifaceNamep);
     *memberIdp = methodId;
