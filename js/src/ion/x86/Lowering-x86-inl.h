@@ -73,7 +73,6 @@ LIRGeneratorX86::useType(MDefinition *mir, LUse::Policy policy)
 LUse
 LIRGeneratorX86::usePayload(MDefinition *mir, LUse::Policy policy)
 {
-    JS_ASSERT(mir->virtualRegister());
     JS_ASSERT(mir->type() == MIRType_Value);
 
     return LUse(VirtualRegisterOfPayload(mir), policy);

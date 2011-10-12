@@ -982,7 +982,9 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
 void
 MarkChildren(JSTracer *trc, ion::IonCode *code)
 {
+#ifdef JS_ION
     code->trace(trc);
+#endif
 }
 
 #ifdef JS_HAS_XML_SUPPORT

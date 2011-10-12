@@ -1554,7 +1554,7 @@ JSContext::purge()
     }
 }
 
-#if defined(JS_TRACER) || defined(JS_METHODJIT)
+#if (defined(JS_TRACER) && !defined(JS_ION)) || defined(JS_METHODJIT)
 static bool
 ComputeIsJITBroken()
 {
