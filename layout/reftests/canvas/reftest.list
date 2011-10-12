@@ -67,3 +67,6 @@ fails == ctm-singular-sanity.html data:text/html,<body>Pass  # Bug 612033
 
 fails-if(cocoaWidget) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html # Bug 673333
 == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum-ref.html
+
+!= 693610-1.html 693610-1-notref.html # bug 693610: multiple glyph runs should not be overprinted
+
