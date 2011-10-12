@@ -47,7 +47,9 @@ XPIDL_MODULE	= xpcom_threads
 LIBRARY_NAME	= xpcomthreads_s
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
+LIBXUL_LIBRARY = 1
 
+EXPORTS_NAMESPACES = mozilla
 
 CPPSRCS		= \
 		nsEventQueue.cpp \
@@ -58,6 +60,7 @@ CPPSRCS		= \
 		nsProcessCommon.cpp \
 		nsTimerImpl.cpp \
 		TimerThread.cpp \
+		HangMonitor.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -65,6 +68,10 @@ EXPORTS		= \
 		nsEventQueue.h \
 		nsThreadUtilsInternal.h \
 		$(NULL)
+
+EXPORTS_mozilla = \
+  HangMonitor.h \
+  $(NULL)
 
 XPIDLSRCS	= \
 		nsIEventTarget.idl \
