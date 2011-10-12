@@ -128,7 +128,6 @@ var tests = [
   };},
 
   // Bug 692031: DOMTemplate async loops do not drop the loop element
-  /*
   function() { return {
     name: 'asyncLoopElement',
     template: '<loop foreach="i in ${array}">${i}</loop>',
@@ -136,7 +135,6 @@ var tests = [
     result: '<span></span>',
     later: '123'
   };},
-  //*/
 
   function() { return {
     name: 'saveElement',
