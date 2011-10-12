@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# vim: set ts=4 sw=4 tw=99 et:
 
 # jit_test.py -- Python harness for JavaScript trace tests.
 
@@ -423,6 +424,8 @@ def main(argv):
                   help='Use js-shell file indirection instead of piping stdio.')
     op.add_option('--write-failure-output', dest='write_failure_output', action='store_true',
                   help='With --write-failures=FILE, additionally write the output of failed tests to [FILE]')
+    op.add_option('--ion', dest='ion', action='store_true',
+                  help='Test all IonMonkey options')
     (OPTIONS, args) = op.parse_args(argv)
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
@@ -488,12 +491,27 @@ def main(argv):
 
     # The full test list is ready. Now create copies for each JIT configuration.
     job_list = []
-    jitflags_list = parse_jitflags()
-    for test in test_list:
-        for jitflags in jitflags_list:
-            new_test = test.copy()
-            new_test.jitflags.extend(jitflags)
-            job_list.append(new_test)
+    if OPTIONS.ion:
+        ion_flags = [ '--ion-eager',
+                      '--ion-regalloc=greedy',
+                      '--ion-gvn=off',
+                      '--ion-licm=off' ]
+        for test in test_list:
+            for i in range(0, 2 ** len(ion_flags)):
+                args = ['--ion']
+                for j in range(0, len(ion_flags)):
+                    if i & (1 << j):
+                        args.append(ion_flags[j])
+                new_test = test.copy()
+                new_test.jitflags.extend(args)
+                job_list.append(new_test)
+    else:
+        jitflags_list = parse_jitflags()
+        for test in test_list:
+            for jitflags in jitflags_list:
+                new_test = test.copy()
+                new_test.jitflags.extend(jitflags)
+                job_list.append(new_test)
     
 
     shell_args = shlex.split(OPTIONS.shell_args)

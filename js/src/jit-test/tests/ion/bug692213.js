@@ -1,6 +1,6 @@
 function X(n) {
-    while ('' + (n--)) {
+    while ((n--)) {
         switch ( n ) { default : }   
     }
 }
-(X)();
+(X)(0);
