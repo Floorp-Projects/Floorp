@@ -1,4 +1,6 @@
 function run_test() {
+  Log4Moz.repository.getLogger("Sync.Test.Server").level = Log4Moz.Level.Trace;
+  initTestLogging();
   run_next_test();
 }
 
@@ -16,13 +18,44 @@ add_test(function test_creation() {
 
 add_test(function test_url_parsing() {
   let s = new SyncServer();
+
+  // Check that we can parse a WBO URI.
   let parts = s.pathRE.exec("/1.1/johnsmith/storage/crypto/keys");
   let [all, version, username, first, rest] = parts;
+  do_check_eq(all, "/1.1/johnsmith/storage/crypto/keys");
   do_check_eq(version, "1.1");
   do_check_eq(username, "johnsmith");
   do_check_eq(first, "storage");
   do_check_eq(rest, "crypto/keys");
   do_check_eq(null, s.pathRE.exec("/nothing/else"));
+
+  // Check that we can parse a collection URI.
+  parts = s.pathRE.exec("/1.1/johnsmith/storage/crypto");
+  let [all, version, username, first, rest] = parts;
+  do_check_eq(all, "/1.1/johnsmith/storage/crypto");
+  do_check_eq(version, "1.1");
+  do_check_eq(username, "johnsmith");
+  do_check_eq(first, "storage");
+  do_check_eq(rest, "crypto");
+
+  // We don't allow trailing slash on storage URI.
+  parts = s.pathRE.exec("/1.1/johnsmith/storage/");
+  do_check_eq(parts, undefined);
+
+  // storage alone is a valid request.
+  parts = s.pathRE.exec("/1.1/johnsmith/storage");
+  let [all, version, username, first, rest] = parts;
+  do_check_eq(all, "/1.1/johnsmith/storage");
+  do_check_eq(version, "1.1");
+  do_check_eq(username, "johnsmith");
+  do_check_eq(first, "storage");
+  do_check_eq(rest, undefined);
+
+  parts = s.storageRE.exec("storage");
+  let [all, storage, collection, id] = parts;
+  do_check_eq(all, "storage");
+  do_check_eq(collection, undefined);
+
   run_next_test();
 });
 
@@ -109,6 +142,8 @@ add_test(function test_info_collections() {
 add_test(function test_storage_request() {
   let keysURL = "/1.1/john/storage/crypto/keys?foo=bar";
   let foosURL = "/1.1/john/storage/crypto/foos";
+  let storageURL = "/1.1/john/storage";
+
   let s = new SyncServer();
   let creation = s.timestamp();
   s.registerUser("john", "password");
@@ -145,12 +180,36 @@ add_test(function test_storage_request() {
       Utils.nextTick(next);
     });
   }
+  function deleteStorage(next) {
+    _("Testing DELETE on /storage.");
+    let now = s.timestamp();
+    _("Timestamp: " + now);
+    let req = localRequest(storageURL);
+    req.delete(function (err) {
+      _("Body is " + this.response.body);
+      _("Modified is " + this.response.newModified);
+      let parsedBody = JSON.parse(this.response.body);
+      do_check_true(parsedBody >= now);
+      do_check_empty(s.users["john"].collections);
+      Utils.nextTick(next);
+    });
+  }
+  function getStorageFails(next) {
+    _("Testing that GET on /storage fails.");
+    let req = localRequest(storageURL);
+    req.get(function (err) {
+      do_check_eq(this.response.status, 405);
+      do_check_eq(this.response.headers["allow"], "DELETE");
+      Utils.nextTick(next);
+    });
+  }
   s.start(8080, function () {
     retrieveWBONotExists(
-      retrieveWBOExists.bind(this, function () {
-        s.stop(run_next_test);
-      })
-    );
+      retrieveWBOExists.bind(this,
+        getStorageFails.bind(this,
+          deleteStorage.bind(this, function () {
+            s.stop(run_next_test);
+          }))));
   });
 });
 
