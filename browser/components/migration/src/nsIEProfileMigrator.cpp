@@ -39,8 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
@@ -110,8 +108,6 @@
   NS_LITERAL_STRING("Software\\Microsoft\\Internet Explorer\\Toolbar")
 #define REGISTRY_IE_SEARCHURL_KEY \
   NS_LITERAL_STRING("Software\\Microsoft\\Internet Explorer\\SearchUrl")
-
-using namespace mozilla;
 
 const int sInitialCookieBufferSize = 1024; // but it can grow
 const int sUsernameLengthLimit     = 80;
@@ -1677,7 +1673,7 @@ nsIEProfileMigrator::CopyPreferences(bool aReplace)
 {
   bool            regKeyOpen = false;
   const regEntry  *entry,
-                  *endEntry = ArrayEnd(gRegEntries);
+                  *endEntry = gRegEntries + NS_ARRAY_LENGTH(gRegEntries);
                               
 
   nsCOMPtr<nsIPrefBranch> prefs;
@@ -2172,7 +2168,7 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
 
       PRInt32 startIndex = 0, count = 0;
       bool foundSpecificProxy = false;
-      for (PRUint32 i = 0; i < ArrayLength(data); ++i) {
+      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(data); ++i) {
         PRInt32 offset = buf.Find(NS_ConvertASCIItoUTF16(data[i].prefix));
         if (offset >= 0) {
           foundSpecificProxy = PR_TRUE;
@@ -2195,7 +2191,7 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
         // No proxy config for any specific type was found, assume 
         // the ProxyServer value is of the form host:port and that 
         // it applies to all protocols.
-        for (PRUint32 i = 0; i < ArrayLength(data); ++i)
+        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(data); ++i)
           SetProxyPref(buf, data[i].hostPref, data[i].portPref, aPrefs);
         aPrefs->SetBoolPref("network.proxy.share_proxy_settings", PR_TRUE);
       }

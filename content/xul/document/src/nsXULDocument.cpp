@@ -58,8 +58,6 @@
 
 */
 
-#include "mozilla/Util.h"
-
 // Note the ALPHABETICAL ORDERING
 #include "nsXULDocument.h"
 
@@ -3054,7 +3052,7 @@ nsXULDocument::ResumeWalk()
                     nsContentUtils::ReportToConsole(
                                         nsContentUtils::eXUL_PROPERTIES,
                                         "PINotInProlog",
-                                        params, ArrayLength(params),
+                                        params, NS_ARRAY_LENGTH(params),
                                         overlayURI,
                                         EmptyString(), /* source line */
                                         0, /* line number */
@@ -3351,7 +3349,7 @@ nsXULDocument::ReportMissingOverlay(nsIURI* aURI)
     const PRUnichar* params[] = { utfSpec.get() };
     nsContentUtils::ReportToConsole(nsContentUtils::eXUL_PROPERTIES,
                                     "MissingOverlay",
-                                    params, ArrayLength(params),
+                                    params, NS_ARRAY_LENGTH(params),
                                     nsnull,
                                     EmptyString(), /* source line */
                                     0, /* line number */

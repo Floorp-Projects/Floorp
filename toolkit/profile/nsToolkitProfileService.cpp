@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "nsProfileLock.h"
@@ -70,7 +68,6 @@
 #include "nsReadableUtils.h"
 #include "nsNativeCharsetUtils.h"
 
-using namespace mozilla;
 
 class nsToolkitProfile : public nsIToolkitProfile
 {
@@ -623,7 +620,7 @@ static void SaltProfileName(nsACString& aName)
 
     int i;
     for (i = 0; i < 8; ++i)
-        salt[i] = kTable[rand() % ArrayLength(kTable)];
+        salt[i] = kTable[rand() % NS_ARRAY_LENGTH(kTable)];
 
     salt[8] = '.';
 

@@ -39,8 +39,6 @@
 #ifndef nsCSSPropertySet_h__
 #define nsCSSPropertySet_h__
 
-#include "mozilla/Util.h"
-
 #include "nsCSSProperty.h"
 #include <limits.h> // for CHAR_BIT
 
@@ -89,7 +87,7 @@ public:
     }
 
     void AssertIsEmpty(const char* aText) const {
-        for (size_t i = 0; i < mozilla::ArrayLength(mProperties); ++i) {
+        for (size_t i = 0; i < NS_ARRAY_LENGTH(mProperties); ++i) {
             NS_ASSERTION(mProperties[i] == 0, aText);
         }
     }

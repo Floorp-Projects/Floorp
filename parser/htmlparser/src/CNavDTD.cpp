@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsDebug.h"
 #include "nsIAtom.h"
 #include "CNavDTD.h"
@@ -66,8 +64,6 @@
 #ifdef NS_DEBUG
 #include "nsLoggingSink.h"
 #endif
-
-using namespace mozilla;
 
 /*
  * Ignore kFontStyle and kPhrase tags when the stack is deep, bug 58917.
@@ -583,7 +579,7 @@ CNavDTD::HandleToken(CToken* aToken)
 
     eHTMLTags theParentTag = mBodyContext->Last();
     if (FindTagInSet(theTag, gLegalElements,
-                     ArrayLength(gLegalElements)) ||
+                     NS_ARRAY_LENGTH(gLegalElements)) ||
         (gHTMLElements[theParentTag].CanContain(theTag, mDTDMode) &&
          // Here's a problem.  If theTag is legal in here, we don't move it
          // out.  So if we're moving stuff out of here, the parent of theTag
@@ -599,7 +595,7 @@ CNavDTD::HandleToken(CToken* aToken)
           theTag == eHTMLTag_script)) ||
         (theTag == eHTMLTag_input && theType == eToken_start &&
          FindTagInSet(theParentTag, gLegalElements,
-                      ArrayLength(gLegalElements)) &&
+                      NS_ARRAY_LENGTH(gLegalElements)) &&
          IsHiddenInput(theToken, mTokenizer))) {
       // Reset the state since all the misplaced tokens are about to get
       // handled.
@@ -857,7 +853,7 @@ CanBeContained(eHTMLTags aChildTag, nsDTDContext& aContext)
               break;
             }
           } else if (FindTagInSet(theParentTag, gTableElements,
-                                  ArrayLength(gTableElements))) {
+                                  NS_ARRAY_LENGTH(gTableElements))) {
             // Added this to catch a case we missed; bug 57173.
             result = PR_TRUE;
             break;
@@ -904,7 +900,7 @@ CNavDTD::HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
       bool isHiddenInputInsideTableElement = false;
       if (aChildTag == eHTMLTag_input &&
           FindTagInSet(theParentTag, sTableElements,
-                       ArrayLength(sTableElements))) {
+                       NS_ARRAY_LENGTH(sTableElements))) {
         PRInt32 attrCount = aNode->GetAttributeCount();
         for (PRInt32 attrIndex = 0; attrIndex < attrCount; ++attrIndex) {
           const nsAString& key = aNode->GetKeyAt(attrIndex);
@@ -1663,7 +1659,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
             };
 
             if (!FindTagInSet(theParentTag, gBarriers,
-                              ArrayLength(gBarriers)) &&
+                              NS_ARRAY_LENGTH(gBarriers)) &&
                 nsHTMLElement::IsResidualStyleTag(theChildTag)) {
               // Fix bug 77746
               mBodyContext->RemoveStyle(theChildTag);
@@ -2972,7 +2968,7 @@ CNavDTD::AddHeadContent(nsIParserNode *aNode)
   // says so.  Since we don't have this support yet..lets ignore the
   // SCRIPT inside NOTAGS.  Ref Bug 25880.
   if (eHTMLTag_meta == theTag || eHTMLTag_script == theTag) {
-    if (HasOpenContainer(gNoXTags, ArrayLength(gNoXTags))) {
+    if (HasOpenContainer(gNoXTags, NS_ARRAY_LENGTH(gNoXTags))) {
       return result;
     }
   }

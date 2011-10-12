@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "prtypes.h"
 #include "MacLaunchHelper.h"
 
@@ -48,8 +46,6 @@
 #include <stdio.h>
 #include <spawn.h>
 #include <crt_externs.h>
-
-using namespace mozilla;
 
 namespace {
 cpu_type_t pref_cpu_types[2] = {
@@ -89,14 +85,14 @@ void LaunchChildMac(int aArgc, char** aArgv, PRUint32 aRestartType)
   }
 
   cpu_type_t *wanted_type = pref_cpu_types;
-  size_t attr_count = ArrayLength(pref_cpu_types);
+  size_t attr_count = NS_ARRAY_LENGTH(pref_cpu_types);
 
   if (aRestartType & nsIAppStartup::eRestarti386) {
     wanted_type = cpu_i386_types;
-    attr_count = ArrayLength(cpu_i386_types);
+    attr_count = NS_ARRAY_LENGTH(cpu_i386_types);
   } else if (aRestartType & nsIAppStartup::eRestartx86_64) {
     wanted_type = cpu_x64_86_types;
-    attr_count = ArrayLength(cpu_x64_86_types);
+    attr_count = NS_ARRAY_LENGTH(cpu_x64_86_types);
   }
 
   // Set spawn attributes.

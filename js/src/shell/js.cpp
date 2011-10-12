@@ -48,9 +48,6 @@
 #include <string.h>
 #include <signal.h>
 #include <locale.h>
-
-#include "mozilla/Util.h"
-
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -117,7 +114,6 @@
 #include "jswin.h"
 #endif
 
-using namespace mozilla;
 using namespace js;
 using namespace js::cli;
 
@@ -610,7 +606,7 @@ cleanup:
  * JSContext option name to flag map. The option names are in alphabetical
  * order for better reporting.
  */
-static const struct JSOption {
+static const struct {
     const char  *name;
     uint32      flag;
 } js_options[] = {
@@ -629,7 +625,7 @@ static const struct JSOption {
 static uint32
 MapContextOptionNameToFlag(JSContext* cx, const char* name)
 {
-    for (size_t i = 0; i < ArrayLength(js_options); ++i) {
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
         if (strcmp(name, js_options[i].name) == 0)
             return js_options[i].flag;
     }
@@ -637,13 +633,13 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
     char* msg = JS_sprintf_append(NULL,
                                   "unknown option name '%s'."
                                   " The valid names are ", name);
-    for (size_t i = 0; i < ArrayLength(js_options); ++i) {
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
         if (!msg)
             break;
         msg = JS_sprintf_append(msg, "%s%s", js_options[i].name,
-                                (i + 2 < ArrayLength(js_options)
+                                (i + 2 < JS_ARRAY_LENGTH(js_options)
                                  ? ", "
-                                 : i + 2 == ArrayLength(js_options)
+                                 : i + 2 == JS_ARRAY_LENGTH(js_options)
                                  ? " and "
                                  : "."));
     }
@@ -745,7 +741,7 @@ Options(JSContext *cx, uintN argc, jsval *vp)
 
     names = NULL;
     found = JS_FALSE;
-    for (size_t i = 0; i < ArrayLength(js_options); i++) {
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); i++) {
         if (js_options[i].flag & optset) {
             found = JS_TRUE;
             names = JS_sprintf_append(names, "%s%s",
@@ -1221,20 +1217,20 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
-static const struct ParamPair {
-    const char      *name;
-    JSGCParamKey    param;
-} paramMap[] = {
-    {"maxBytes",            JSGC_MAX_BYTES },
-    {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
-    {"gcStackpoolLifespan", JSGC_STACKPOOL_LIFESPAN},
-    {"gcBytes",             JSGC_BYTES},
-    {"gcNumber",            JSGC_NUMBER},
-};
-
 static JSBool
 GCParameter(JSContext *cx, uintN argc, jsval *vp)
 {
+    static const struct {
+        const char      *name;
+        JSGCParamKey    param;
+    } paramMap[] = {
+        {"maxBytes",            JSGC_MAX_BYTES },
+        {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
+        {"gcStackpoolLifespan", JSGC_STACKPOOL_LIFESPAN},
+        {"gcBytes",             JSGC_BYTES},
+        {"gcNumber",            JSGC_NUMBER},
+    };
+
     JSString *str;
     if (argc == 0) {
         str = JS_ValueToString(cx, JSVAL_VOID);
@@ -1252,7 +1248,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
 
     size_t paramIndex = 0;
     for (;; paramIndex++) {
-        if (paramIndex == ArrayLength(paramMap)) {
+        if (paramIndex == JS_ARRAY_LENGTH(paramMap)) {
             JS_ReportError(cx,
                            "the first argument argument must be maxBytes, "
                            "maxMallocBytes, gcStackpoolLifespan, gcBytes or "
@@ -1416,18 +1412,6 @@ CountHeapNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
     countTracer->traceList = node;
 }
 
-static const struct TraceKindPair {
-    const char       *name;
-    int32             kind;
-} traceKindNames[] = {
-    { "all",        -1                  },
-    { "object",     JSTRACE_OBJECT      },
-    { "string",     JSTRACE_STRING      },
-#if JS_HAS_XML_SUPPORT
-    { "xml",        JSTRACE_XML         },
-#endif
-};
-
 static JSBool
 CountHeap(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -1439,6 +1423,18 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
     JSCountHeapTracer countTracer;
     JSCountHeapNode *node;
     size_t counter;
+
+    static const struct {
+        const char       *name;
+        int32             kind;
+    } traceKindNames[] = {
+        { "all",        -1                  },
+        { "object",     JSTRACE_OBJECT      },
+        { "string",     JSTRACE_STRING      },
+#if JS_HAS_XML_SUPPORT
+        { "xml",        JSTRACE_XML         },
+#endif
+    };
 
     startThing = NULL;
     startTraceKind = JSTRACE_OBJECT;
@@ -1468,7 +1464,7 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
                 traceKind = traceKindNames[i].kind;
                 break;
             }
-            if (++i == ArrayLength(traceKindNames)) {
+            if (++i == JS_ARRAY_LENGTH(traceKindNames)) {
                 JSAutoByteString bytes(cx, str);
                 if (!!bytes)
                     JS_ReportError(cx, "trace kind name '%s' is unknown", bytes.ptr());
@@ -1992,7 +1988,7 @@ TryNotes(JSContext *cx, JSScript *script, Sprinter *sp)
     tnlimit = tn + script->trynotes()->length;
     Sprint(sp, "\nException table:\nkind      stack    start      end\n");
     do {
-        JS_ASSERT(tn->kind < ArrayLength(TryNoteNames));
+        JS_ASSERT(tn->kind < JS_ARRAY_LENGTH(TryNoteNames));
         Sprint(sp, " %-7s %6u %8u %8u\n",
                TryNoteNames[tn->kind], tn->stackDepth,
                tn->start, tn->start + tn->length);
@@ -3160,7 +3156,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         if (!desc.obj)
             return true;
     } else {
-        if (!referent->lookupGeneric(cx, id, objp, &prop))
+        if (!referent->lookupProperty(cx, id, objp, &prop))
             return false;
         if (*objp != referent)
             return true;
@@ -4481,7 +4477,7 @@ CheckHelpMessages()
     const char *lp;
 
     /* Messages begin with "function_name(" prefix and don't end with \n. */
-    for (m = shell_help_messages; m < ArrayEnd(shell_help_messages) - EXTERNAL_FUNCTION_COUNT; ++m) {
+    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages) - EXTERNAL_FUNCTION_COUNT; ++m) {
         lp = strchr(*m, '(');
         JS_ASSERT(lp);
         JS_ASSERT(memcmp(shell_functions[m - shell_help_messages].name,
@@ -4510,7 +4506,7 @@ Help(JSContext *cx, uintN argc, jsval *vp)
     fprintf(gOutFile, "%s\n", JS_GetImplementationVersion());
     if (argc == 0) {
         fputs(shell_help_header, gOutFile);
-        for (i = 0; i < ArrayLength(shell_help_messages); ++i)
+        for (i = 0; i < JS_ARRAY_LENGTH(shell_help_messages); ++i)
             fprintf(gOutFile, "%s\n", shell_help_messages[i]);
     } else {
         did_header = 0;
@@ -4530,7 +4526,7 @@ Help(JSContext *cx, uintN argc, jsval *vp)
                 JSAutoByteString funcName(cx, str);
                 if (!funcName)
                     return JS_FALSE;
-                for (j = 0; j < ArrayLength(shell_help_messages); ++j) {
+                for (j = 0; j < JS_ARRAY_LENGTH(shell_help_messages); ++j) {
                     /* Help messages are required to be formatted "functionName(..." */
                     const char *msg = shell_help_messages[j];
                     const char *p = strchr(msg, '(');

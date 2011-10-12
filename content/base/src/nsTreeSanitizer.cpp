@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsTreeSanitizer.h"
 #include "nsCSSParser.h"
 #include "nsCSSProperty.h"
@@ -55,8 +53,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsNullPrincipal.h"
 #include "nsContentUtils.h"
-
-using namespace mozilla;
 
 //
 // Thanks to Mark Pilgrim and Sam Ruby for the initial whitelist
@@ -1457,37 +1453,37 @@ nsTreeSanitizer::InitializeStatics()
   NS_PRECONDITION(!sElementsHTML, "Initializing a second time.");
 
   sElementsHTML = new nsTHashtable<nsISupportsHashKey> ();
-  sElementsHTML->Init(ArrayLength(kElementsHTML));
+  sElementsHTML->Init(NS_ARRAY_LENGTH(kElementsHTML));
   for (PRUint32 i = 0; kElementsHTML[i]; i++) {
     sElementsHTML->PutEntry(*kElementsHTML[i]);
   }
 
   sAttributesHTML = new nsTHashtable<nsISupportsHashKey> ();
-  sAttributesHTML->Init(ArrayLength(kAttributesHTML));
+  sAttributesHTML->Init(NS_ARRAY_LENGTH(kAttributesHTML));
   for (PRUint32 i = 0; kAttributesHTML[i]; i++) {
     sAttributesHTML->PutEntry(*kAttributesHTML[i]);
   }
 
   sElementsSVG = new nsTHashtable<nsISupportsHashKey> ();
-  sElementsSVG->Init(ArrayLength(kElementsSVG));
+  sElementsSVG->Init(NS_ARRAY_LENGTH(kElementsSVG));
   for (PRUint32 i = 0; kElementsSVG[i]; i++) {
     sElementsSVG->PutEntry(*kElementsSVG[i]);
   }
 
   sAttributesSVG = new nsTHashtable<nsISupportsHashKey> ();
-  sAttributesSVG->Init(ArrayLength(kAttributesSVG));
+  sAttributesSVG->Init(NS_ARRAY_LENGTH(kAttributesSVG));
   for (PRUint32 i = 0; kAttributesSVG[i]; i++) {
     sAttributesSVG->PutEntry(*kAttributesSVG[i]);
   }
 
   sElementsMathML = new nsTHashtable<nsISupportsHashKey> ();
-  sElementsMathML->Init(ArrayLength(kElementsMathML));
+  sElementsMathML->Init(NS_ARRAY_LENGTH(kElementsMathML));
   for (PRUint32 i = 0; kElementsMathML[i]; i++) {
     sElementsMathML->PutEntry(*kElementsMathML[i]);
   }
 
   sAttributesMathML = new nsTHashtable<nsISupportsHashKey> ();
-  sAttributesMathML->Init(ArrayLength(kAttributesMathML));
+  sAttributesMathML->Init(NS_ARRAY_LENGTH(kAttributesMathML));
   for (PRUint32 i = 0; kAttributesMathML[i]; i++) {
     sAttributesMathML->PutEntry(*kAttributesMathML[i]);
   }

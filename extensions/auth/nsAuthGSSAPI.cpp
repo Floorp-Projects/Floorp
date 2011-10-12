@@ -50,8 +50,6 @@
 //
 //
 
-#include "mozilla/Util.h"
-
 #include "prlink.h"
 #include "nsCOMPtr.h"
 #include "nsIPrefService.h"
@@ -78,8 +76,6 @@ typedef KLStatus (*KLCacheHasValidTickets_type)(
 #include <resolv.h>
 #endif
 
-using namespace mozilla;
-
 //-----------------------------------------------------------------------------
 
 // We define GSS_C_NT_HOSTBASED_SERVICE explicitly since it may be referenced
@@ -94,35 +90,35 @@ static const char kNegotiateAuthGssLib[] =
 static const char kNegotiateAuthNativeImp[] = 
    "network.negotiate-auth.using-native-gsslib";
 
-static struct {
-    const char *str;
-    PRFuncPtr func;
-} gssFuncs[] = {
-    { "gss_display_status", NULL },
-    { "gss_init_sec_context", NULL },
-    { "gss_indicate_mechs", NULL },
-    { "gss_release_oid_set", NULL },
-    { "gss_delete_sec_context", NULL },
-    { "gss_import_name", NULL },
-    { "gss_release_buffer", NULL },
-    { "gss_release_name", NULL },
-    { "gss_wrap", NULL },
-    { "gss_unwrap", NULL }
+static const char *gssFuncStr[] = {
+    "gss_display_status", 
+    "gss_init_sec_context", 
+    "gss_indicate_mechs",
+    "gss_release_oid_set",
+    "gss_delete_sec_context",
+    "gss_import_name",
+    "gss_release_buffer",
+    "gss_release_name",
+    "gss_wrap",
+    "gss_unwrap"
 };
 
+#define gssFuncItems NS_ARRAY_LENGTH(gssFuncStr)
+
+static PRFuncPtr gssFunPtr[gssFuncItems]; 
 static bool      gssNativeImp = true;
 static PRLibrary* gssLibrary = nsnull;
 
-#define gss_display_status_ptr      ((gss_display_status_type)*gssFuncs[0].func)
-#define gss_init_sec_context_ptr    ((gss_init_sec_context_type)*gssFuncs[1].func)
-#define gss_indicate_mechs_ptr      ((gss_indicate_mechs_type)*gssFuncs[2].func)
-#define gss_release_oid_set_ptr     ((gss_release_oid_set_type)*gssFuncs[3].func)
-#define gss_delete_sec_context_ptr  ((gss_delete_sec_context_type)*gssFuncs[4].func)
-#define gss_import_name_ptr         ((gss_import_name_type)*gssFuncs[5].func)
-#define gss_release_buffer_ptr      ((gss_release_buffer_type)*gssFuncs[6].func)
-#define gss_release_name_ptr        ((gss_release_name_type)*gssFuncs[7].func)
-#define gss_wrap_ptr                ((gss_wrap_type)*gssFuncs[8].func)
-#define gss_unwrap_ptr              ((gss_unwrap_type)*gssFuncs[9].func)
+#define gss_display_status_ptr      ((gss_display_status_type)*gssFunPtr[0])
+#define gss_init_sec_context_ptr    ((gss_init_sec_context_type)*gssFunPtr[1])
+#define gss_indicate_mechs_ptr      ((gss_indicate_mechs_type)*gssFunPtr[2])
+#define gss_release_oid_set_ptr     ((gss_release_oid_set_type)*gssFunPtr[3])
+#define gss_delete_sec_context_ptr  ((gss_delete_sec_context_type)*gssFunPtr[4])
+#define gss_import_name_ptr         ((gss_import_name_type)*gssFunPtr[5])
+#define gss_release_buffer_ptr      ((gss_release_buffer_type)*gssFunPtr[6])
+#define gss_release_name_ptr        ((gss_release_name_type)*gssFunPtr[7])
+#define gss_wrap_ptr                ((gss_wrap_type)*gssFunPtr[8])
+#define gss_unwrap_ptr              ((gss_unwrap_type)*gssFunPtr[9])
 
 #ifdef XP_MACOSX
 static PRFuncPtr KLCacheHasValidTicketsPtr;
@@ -168,7 +164,7 @@ gssInit()
             "libgssapi.so.1"       /* Heimdal - Suse9, CITI - FC, MDK, Suse10*/
         };
 
-        for (size_t i = 0; i < ArrayLength(verLibNames) && !lib; ++i) {
+        for (size_t i = 0; i < NS_ARRAY_LENGTH(verLibNames) && !lib; ++i) {
             lib = PR_LoadLibrary(verLibNames[i]);
  
             /* The CITI libgssapi library calls exit() during
@@ -187,7 +183,7 @@ gssInit()
             }
         }
 
-        for (size_t i = 0; i < ArrayLength(libNames) && !lib; ++i) {
+        for (size_t i = 0; i < NS_ARRAY_LENGTH(libNames) && !lib; ++i) {
             char *libName = PR_GetLibraryName(NULL, libNames[i]);
             if (libName) {
                 lib = PR_LoadLibrary(libName);
@@ -213,10 +209,10 @@ gssInit()
 
     LOG(("Attempting to load gss functions\n"));
 
-    for (size_t i = 0; i < ArrayLength(gssFuncs); ++i) {
-        gssFuncs[i].func = PR_FindFunctionSymbol(lib, gssFuncs[i].str);
-        if (!gssFuncs[i].func) {
-            LOG(("Fail to load %s function from gssapi library\n", gssFuncs[i].str));
+    for (size_t i = 0; i < gssFuncItems; ++i) {
+        gssFunPtr[i] = PR_FindFunctionSymbol(lib, gssFuncStr[i]);
+        if (!gssFunPtr[i]) {
+            LOG(("Fail to load %s function from gssapi library\n", gssFuncStr[i]));
             PR_UnloadLibrary(lib);
             return NS_ERROR_FAILURE;
         }

@@ -56,8 +56,6 @@
 
 /* a presentation of a document, part 2 */
 
-#include "mozilla/Util.h"
-
 #include "nsPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -8450,7 +8448,7 @@ void ReflowCountMgr::DoGrandHTMLTotals()
 
     static const char * title[] = {"Class", "Reflows"};
     fprintf(mFD, "<tr>");
-    for (PRUint32 i=0; i < ArrayLength(title); i++) {
+    for (PRUint32 i=0; i < NS_ARRAY_LENGTH(title); i++) {
       fprintf(mFD, "<td><center><b>%s<b></center></td>", title[i]);
     }
     fprintf(mFD, "</tr>\n");

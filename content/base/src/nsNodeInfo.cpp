@@ -41,8 +41,6 @@
  * prefix, namespace, and localName.
  */
 
-#include "mozilla/Util.h"
-
 #include "nscore.h"
 #include "nsNodeInfo.h"
 #include "nsNodeInfoManager.h"
@@ -59,8 +57,6 @@
 #include "prprf.h"
 #include "nsIDocument.h"
 #include "nsGkAtoms.h"
-
-using namespace mozilla;
 
 static const size_t kNodeInfoPoolSizes[] = {
   sizeof(nsNodeInfo)
@@ -196,7 +192,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsNodeInfo)
     char name[72];
     PRUint32 nsid = tmp->NamespaceID();
     nsAtomCString localName(tmp->NameAtom());
-    if (nsid < ArrayLength(kNSURIs)) {
+    if (nsid < NS_ARRAY_LENGTH(kNSURIs)) {
       PR_snprintf(name, sizeof(name), "nsNodeInfo%s %s", kNSURIs[nsid],
                   localName.get());
     }

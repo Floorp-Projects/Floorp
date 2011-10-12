@@ -43,8 +43,6 @@
 #include "NestedLoopTimer.h"
 #endif
 
-#include "mozilla/Util.h"
-
 #include "mozilla/plugins/PluginModuleChild.h"
 #include "mozilla/ipc/SyncChannel.h"
 
@@ -83,7 +81,6 @@
 #include "PluginUtilsOSX.h"
 #endif
 
-using namespace mozilla;
 using namespace mozilla::plugins;
 using mozilla::dom::CrashReporterChild;
 using mozilla::dom::PCrashReporterChild;
@@ -1906,7 +1903,7 @@ PMCGetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi)
 
   if (!sBrowserHwnd) {
       PRUnichar szClass[20];
-      if (GetClassNameW(hWnd, szClass, ArrayLength(szClass)) && 
+      if (GetClassNameW(hWnd, szClass, NS_ARRAY_LENGTH(szClass)) && 
           !wcscmp(szClass, kMozillaWindowClass)) {
           sBrowserHwnd = hWnd;
       }

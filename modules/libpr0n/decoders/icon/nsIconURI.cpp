@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsIconURI.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
@@ -46,8 +44,6 @@
 #include "prprf.h"
 #include "plstr.h"
 #include <stdlib.h>
-
-using namespace mozilla;
 
 #define DEFAULT_IMAGE_SIZE 16
 
@@ -219,7 +215,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
     if (!sizeString.IsEmpty())
     {      
       const char *sizeStr = sizeString.get();
-      for (PRUint32 i = 0; i < ArrayLength(kSizeStrings); i++)
+      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kSizeStrings); i++)
       {
         if (PL_strcasecmp(sizeStr, kSizeStrings[i]) == 0)
         {
@@ -238,7 +234,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
     if (!stateString.IsEmpty())
     {
       const char *stateStr = stateString.get();
-      for (PRUint32 i = 0; i < ArrayLength(kStateStrings); i++)
+      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kStateStrings); i++)
       {
         if (PL_strcasecmp(stateStr, kStateStrings[i]) == 0)
         {

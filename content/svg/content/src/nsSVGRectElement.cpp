@@ -37,15 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGRectElement.h"
 #include "nsSVGLength2.h"
 #include "nsGkAtoms.h"
 #include "gfxContext.h"
-
-using namespace mozilla;
 
 typedef nsSVGPathGeometryElement nsSVGRectElementBase;
 
@@ -167,7 +163,7 @@ nsSVGElement::LengthAttributesInfo
 nsSVGRectElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              ArrayLength(sLengthInfo));
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }
 
 //----------------------------------------------------------------------

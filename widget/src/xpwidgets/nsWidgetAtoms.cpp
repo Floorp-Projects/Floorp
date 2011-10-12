@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsWidgetAtoms.h"
 #include "nsStaticAtom.h"
 #include "nsMemory.h"
@@ -60,5 +58,5 @@ static const nsStaticAtom widget_atoms[] = {
 
 void nsWidgetAtoms::RegisterAtoms() {
 
-  NS_RegisterStaticAtoms(widget_atoms, mozilla::ArrayLength(widget_atoms));
+  NS_RegisterStaticAtoms(widget_atoms, NS_ARRAY_LENGTH(widget_atoms));
 }

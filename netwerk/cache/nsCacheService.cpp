@@ -41,8 +41,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "necko-config.h"
 
 #include "nsCache.h"
@@ -296,7 +294,7 @@ nsCacheProfilePrefObserver::Install()
         return NS_ERROR_FAILURE;
     
     nsresult rv, rv2 = NS_OK;
-    for (unsigned int i=0; i<ArrayLength(observerList); i++) {
+    for (unsigned int i=0; i<NS_ARRAY_LENGTH(observerList); i++) {
         rv = observerService->AddObserver(this, observerList[i], PR_FALSE);
         if (NS_FAILED(rv)) 
             rv2 = rv;
@@ -306,7 +304,7 @@ nsCacheProfilePrefObserver::Install()
     nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!branch) return NS_ERROR_FAILURE;
 
-    for (unsigned int i=0; i<ArrayLength(prefList); i++) {
+    for (unsigned int i=0; i<NS_ARRAY_LENGTH(prefList); i++) {
         rv = branch->AddObserver(prefList[i], this, PR_FALSE);
         if (NS_FAILED(rv))
             rv2 = rv;
@@ -345,7 +343,7 @@ nsCacheProfilePrefObserver::Remove()
     nsCOMPtr<nsIObserverService> obs =
         mozilla::services::GetObserverService();
     if (obs) {
-        for (unsigned int i=0; i<ArrayLength(observerList); i++) {
+        for (unsigned int i=0; i<NS_ARRAY_LENGTH(observerList); i++) {
             obs->RemoveObserver(this, observerList[i]);
         }
     }
@@ -355,7 +353,7 @@ nsCacheProfilePrefObserver::Remove()
         do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefs)
         return;
-    for (unsigned int i=0; i<ArrayLength(prefList); i++)
+    for (unsigned int i=0; i<NS_ARRAY_LENGTH(prefList); i++)
         prefs->RemoveObserver(prefList[i], this); // remove cache pref observers
 }
 

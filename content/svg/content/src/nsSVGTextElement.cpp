@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsSVGGraphicElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGTextElement.h"
@@ -359,7 +357,7 @@ nsSVGTextElement::IsAttributeMapped(const nsIAtom* name) const
     sFontSpecificationMap
   };
 
-  return FindAttributeDependence(name, map, ArrayLength(map)) ||
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGTextElementBase::IsAttributeMapped(name);
 }
 
@@ -378,7 +376,7 @@ nsSVGElement::LengthListAttributesInfo
 nsSVGTextElement::GetLengthListInfo()
 {
   return LengthListAttributesInfo(mLengthListAttributes, sLengthListInfo,
-                                  ArrayLength(sLengthListInfo));
+                                  NS_ARRAY_LENGTH(sLengthListInfo));
 }
 
 nsSVGElement::NumberListInfo nsSVGTextElement::sNumberListInfo[1] =
@@ -390,6 +388,6 @@ nsSVGElement::NumberListAttributesInfo
 nsSVGTextElement::GetNumberListInfo()
 {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
-                                  ArrayLength(sNumberListInfo));
+                                  NS_ARRAY_LENGTH(sNumberListInfo));
 }
 

@@ -41,8 +41,6 @@
  * refresh rate.  (Perhaps temporary, until replaced by compositor.)
  */
 
-#include "mozilla/Util.h"
-
 #include "nsRefreshDriver.h"
 #include "nsPresContext.h"
 #include "nsComponentManagerUtils.h"
@@ -235,7 +233,7 @@ PRUint32
 nsRefreshDriver::ObserverCount() const
 {
   PRUint32 sum = 0;
-  for (PRUint32 i = 0; i < ArrayLength(mObservers); ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mObservers); ++i) {
     sum += mObservers[i].Length();
   }
   // Even while throttled, we need to process layout and style changes.  Style
@@ -321,7 +319,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
    * the pres context, which will cause our |mPresContext| to become
    * null.  If this happens, we must stop notifying observers.
    */
-  for (PRUint32 i = 0; i < ArrayLength(mObservers); ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mObservers); ++i) {
     ObserverArray::EndLimitedIterator etor(mObservers[i]);
     while (etor.HasMore()) {
       nsRefPtr<nsARefreshObserver> obs = etor.GetNext();

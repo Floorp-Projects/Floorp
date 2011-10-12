@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsXMLHttpRequest.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIXPConnect.h"
@@ -102,8 +100,6 @@
 #include "nsStringBuffer.h"
 #include "nsDOMFile.h"
 #include "nsIFileChannel.h"
-
-using namespace mozilla;
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -1274,7 +1270,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
     };
     bool safeHeader = false;
     PRUint32 i;
-    for (i = 0; i < ArrayLength(kCrossOriginSafeHeaders); ++i) {
+    for (i = 0; i < NS_ARRAY_LENGTH(kCrossOriginSafeHeaders); ++i) {
       if (header.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
         safeHeader = PR_TRUE;
         break;
@@ -2653,7 +2649,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
       "transfer-encoding", "upgrade", "user-agent", "via"
     };
     PRUint32 i;
-    for (i = 0; i < ArrayLength(kInvalidHeaders); ++i) {
+    for (i = 0; i < NS_ARRAY_LENGTH(kInvalidHeaders); ++i) {
       if (header.LowerCaseEqualsASCII(kInvalidHeaders[i])) {
         NS_WARNING("refusing to set request header");
         return NS_OK;
@@ -2675,7 +2671,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
         "accept", "accept-language", "content-language", "content-type",
         "last-event-id"
       };
-      for (i = 0; i < ArrayLength(kCrossOriginSafeHeaders); ++i) {
+      for (i = 0; i < NS_ARRAY_LENGTH(kCrossOriginSafeHeaders); ++i) {
         if (header.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
           safeHeader = true;
           break;

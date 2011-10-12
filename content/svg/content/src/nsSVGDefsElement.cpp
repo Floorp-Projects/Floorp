@@ -36,12 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGDefsElement.h"
-
-using namespace mozilla;
 
 typedef nsSVGGraphicElement nsSVGDefsElementBase;
 
@@ -126,6 +122,6 @@ nsSVGDefsElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap
   };
   
-  return FindAttributeDependence(name, map, ArrayLength(map)) ||
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGDefsElementBase::IsAttributeMapped(name);
 }

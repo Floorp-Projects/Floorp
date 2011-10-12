@@ -39,8 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "nsXBLService.h"
@@ -137,7 +135,7 @@ IsAncestorBinding(nsIDocument* aDocument,
       const PRUnichar* params[] = { bindingURI.get() };
       nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
                                       "TooDeepBindingRecursion",
-                                      params, ArrayLength(params),
+                                      params, NS_ARRAY_LENGTH(params),
                                       nsnull,
                                       EmptyString(), 0, 0,
                                       nsIScriptError::warningFlag,
@@ -971,7 +969,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
             const PRUnichar* params[] = { display.get() };
             nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
                                             "InvalidExtendsBinding",
-                                            params, ArrayLength(params),
+                                            params, NS_ARRAY_LENGTH(params),
                                             nsnull,
                                             EmptyString(), 0, 0,
                                             nsIScriptError::errorFlag,
@@ -1006,7 +1004,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
             const PRUnichar* params[] = { protoSpec.get(), value.get() };
             nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
                                             "CircularExtendsBinding",
-                                            params, ArrayLength(params),
+                                            params, NS_ARRAY_LENGTH(params),
                                             nsnull,
                                             EmptyString(), 0, 0,
                                             nsIScriptError::warningFlag,

@@ -41,8 +41,6 @@
 #ifndef RegExpObject_inl_h___
 #define RegExpObject_inl_h___
 
-#include "mozilla/Util.h"
-
 #include "RegExpObject.h"
 #include "RegExpStatics.h"
 
@@ -405,13 +403,12 @@ RegExpPrivate::compile(JSContext *cx, TokenStream *ts)
     static const jschar prefix[] = {'^', '(', '?', ':'};
     static const jschar postfix[] = {')'};
 
-    using mozilla::ArrayLength;
     StringBuffer sb(cx);
-    if (!sb.reserve(ArrayLength(prefix) + source->length() + ArrayLength(postfix)))
+    if (!sb.reserve(JS_ARRAY_LENGTH(prefix) + source->length() + JS_ARRAY_LENGTH(postfix)))
         return false;
-    sb.infallibleAppend(prefix, ArrayLength(prefix));
+    sb.infallibleAppend(prefix, JS_ARRAY_LENGTH(prefix));
     sb.infallibleAppend(source->chars(), source->length());
-    sb.infallibleAppend(postfix, ArrayLength(postfix));
+    sb.infallibleAppend(postfix, JS_ARRAY_LENGTH(postfix));
 
     JSLinearString *fakeySource = sb.finishString();
     if (!fakeySource)

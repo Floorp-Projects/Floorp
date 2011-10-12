@@ -39,8 +39,6 @@
 #ifndef jsgcstats_h___
 #define jsgcstats_h___
 
-#include "mozilla/Util.h"
-
 #if !defined JS_DUMP_CONSERVATIVE_GC_ROOTS && defined DEBUG
 # define JS_DUMP_CONSERVATIVE_GC_ROOTS 1
 #endif
@@ -71,7 +69,7 @@ struct ConservativeGCStats
                                        thing start pointers */ 
 
     void add(const ConservativeGCStats &another) {
-        for (size_t i = 0; i < mozilla::ArrayLength(counter); ++i)
+        for (size_t i = 0; i != JS_ARRAY_LENGTH(counter); ++i)
             counter[i] += another.counter[i];
     }
 

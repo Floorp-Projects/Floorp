@@ -49,8 +49,6 @@
  * you change the database layout at all, you will have to update both services.
  */
 
-#include "mozilla/Util.h"
-
 #include "nsFaviconService.h"
 
 #include "nsPlacesTables.h"
@@ -91,7 +89,6 @@
 // OptimizeFaviconImage.
 #define DEFAULT_MIME_TYPE "image/png"
 
-using namespace mozilla;
 using namespace mozilla::places;
 
 /**
@@ -243,7 +240,7 @@ nsFaviconService::ExpireAllFavicons()
   nsCOMPtr<mozIStoragePendingStatement> ps;
   nsCOMPtr<ExpireFaviconsStatementCallbackNotifier> callback =
     new ExpireFaviconsStatementCallbackNotifier(&mFaviconsExpirationRunning);
-  nsresult rv = mDBConn->ExecuteAsync(stmts, ArrayLength(stmts), callback,
+  nsresult rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), callback,
                                       getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -954,7 +951,7 @@ nsFaviconService::FinalizeStatements() {
     mDBRemoveAllFavicons,
   };
 
-  for (PRUint32 i = 0; i < ArrayLength(stmts); i++) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
     nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }

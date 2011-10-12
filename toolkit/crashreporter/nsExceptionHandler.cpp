@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "mozilla/dom/CrashReporterChild.h"
 #include "nsXULAppAPI.h"
 
@@ -116,7 +114,8 @@ CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
 
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
-using namespace mozilla;
+using mozilla::Mutex;
+using mozilla::MutexAutoLock;
 using mozilla::dom::CrashReporterChild;
 using mozilla::dom::PCrashReporterChild;
 
@@ -705,7 +704,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   }
 
   // Set spawn attributes.
-  size_t attr_count = ArrayLength(pref_cpu_types);
+  size_t attr_count = NS_ARRAY_LENGTH(pref_cpu_types);
   size_t attr_ocount = 0;
   if (posix_spawnattr_setbinpref_np(&spawnattr,
                                     attr_count,
@@ -1824,7 +1823,7 @@ OnChildProcessDumpRequested(void* aContext,
 
   if (!WriteExtraForMinidump(minidump,
                              Blacklist(kSubprocessBlacklist,
-                                       ArrayLength(kSubprocessBlacklist)),
+                                       NS_ARRAY_LENGTH(kSubprocessBlacklist)),
                              getter_AddRefs(extraFile)))
     return;
 
@@ -2176,7 +2175,7 @@ CreatePairedMinidumps(ProcessHandle childPid,
   nsCOMPtr<nsILocalFile> childMinidump;
   nsCOMPtr<nsILocalFile> childExtra;
   Blacklist childBlacklist(kSubprocessBlacklist,
-                           ArrayLength(kSubprocessBlacklist));
+                           NS_ARRAY_LENGTH(kSubprocessBlacklist));
   PairedDumpContext childCtx =
     { &childMinidump, &childExtra, childBlacklist };
   if (!google_breakpad::ExceptionHandler::WriteMinidumpForChild(

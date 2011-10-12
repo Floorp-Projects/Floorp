@@ -42,8 +42,6 @@
  * same-origin with anything but themselves.
  */
 
-#include "mozilla/Util.h"
-
 #include "nsNullPrincipal.h"
 #include "nsNullPrincipalURI.h"
 #include "nsMemory.h"
@@ -54,8 +52,6 @@
 #include "nsNetCID.h"
 #include "nsDOMError.h"
 #include "nsScriptSecurityManager.h"
-
-using namespace mozilla;
 
 NS_IMPL_CLASSINFO(nsNullPrincipal, NULL, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_NULLPRINCIPAL_CID)
@@ -115,7 +111,7 @@ nsNullPrincipal::Init()
   id.ToProvidedString(chars);
 
   PRUint32 suffixLen = NSID_LENGTH - 1;
-  PRUint32 prefixLen = ArrayLength(NS_NULLPRINCIPAL_PREFIX) - 1;
+  PRUint32 prefixLen = NS_ARRAY_LENGTH(NS_NULLPRINCIPAL_PREFIX) - 1;
 
   // Use an nsCString so we only do the allocation once here and then share
   // with nsJSPrincipals

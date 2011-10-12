@@ -38,8 +38,6 @@
 
 /* rendering object for replaced elements with bitmap image data */
 
-#include "mozilla/Util.h"
-
 #include "nsHTMLParts.h"
 #include "nsCOMPtr.h"
 #include "nsImageFrame.h"
@@ -1907,7 +1905,7 @@ nsImageFrame::IconLoad::Observe(nsISupports *aSubject, const char* aTopic,
                "wrong topic");
 #ifdef DEBUG
   // assert |aData| is one of our prefs.
-  for (PRUint32 i = 0; i < ArrayLength(kIconLoadPrefs) ||
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kIconLoadPrefs) ||
                        (NS_NOTREACHED("wrong pref"), PR_FALSE); ++i)
     if (NS_ConvertASCIItoUTF16(kIconLoadPrefs[i]) == nsDependentString(aData))
       break;

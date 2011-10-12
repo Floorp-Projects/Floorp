@@ -255,8 +255,8 @@ JS_BEGIN_EXTERN_C
  * TOK_XMLATTR, nullary     pn_atom: attribute value string; pn_op: JSOP_STRING
  * TOK_XMLCDATA,
  * TOK_XMLCOMMENT
- * TOK_XMLPI    nullary     pn_pitarget: XML processing instruction target
- *                          pn_pidata: XML PI data, or null if no data
+ * TOK_XMLPI    nullary     pn_atom: XML processing instruction target
+ *                          pn_atom2: XML PI content, or null if no content
  * TOK_XMLTEXT  nullary     pn_atom: marked-up text, or null if empty string
  * TOK_LC       unary       {expr} in XML tag or content; pn_kid is expr
  *
@@ -432,10 +432,10 @@ struct JSParseNode {
             js::AtomDefnMapPtr  defnMap;
             JSParseNode         *tree;  /* sub-tree containing name uses */
         } nameset;
-        struct {                        /* PN_NULLARY variant for E4X XML PI */
-            js::PropertyName *target;   /* target in <?target data?> */
-            JSAtom           *data;     /* data (or null) in <?target data?> */
-        } xmlpi;
+        struct {                        /* PN_NULLARY variant for E4X */
+            JSAtom      *atom;          /* first atom in pair */
+            JSAtom      *atom2;         /* second atom in pair or null */
+        } apair;
         jsdouble        dval;           /* aligned numeric literal value */
     } pn_u;
 
@@ -467,8 +467,7 @@ struct JSParseNode {
 #define pn_names        pn_u.nameset.defnMap
 #define pn_tree         pn_u.nameset.tree
 #define pn_dval         pn_u.dval
-#define pn_pitarget     pn_u.xmlpi.target
-#define pn_pidata       pn_u.xmlpi.data
+#define pn_atom2        pn_u.apair.atom2
 
 protected:
     void init(js::TokenKind type, JSOp op, JSParseNodeArity arity) {
@@ -1259,7 +1258,7 @@ private:
     enum FunctionType { Getter, Setter, Normal };
     bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSParseNode **list);
     JSParseNode *functionBody();
-    JSParseNode *functionDef(PropertyName *name, FunctionType type, FunctionSyntaxKind kind);
+    JSParseNode *functionDef(JSAtom *name, FunctionType type, FunctionSyntaxKind kind);
 
     JSParseNode *condition();
     JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,

@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsWebSocket.h"
 
 #include "nsIScriptGlobalObject.h"
@@ -420,11 +418,11 @@ nsWebSocketEstablishedConnection::ConsoleError()
     if (mStatus < CONN_CONNECTED_AND_READY) {
       PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
                           NS_LITERAL_STRING("connectionFailure").get(),
-                          formatStrings, ArrayLength(formatStrings));
+                          formatStrings, NS_ARRAY_LENGTH(formatStrings));
     } else {
       PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
                           NS_LITERAL_STRING("netInterrupt").get(),
-                          formatStrings, ArrayLength(formatStrings));
+                          formatStrings, NS_ARRAY_LENGTH(formatStrings));
     }
   }
   /// todo some specific errors - like for message too large

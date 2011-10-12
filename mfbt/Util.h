@@ -420,31 +420,6 @@ PointerRangeSize(T* begin, T* end)
     return (size_t(end) - size_t(begin)) / sizeof(T);
 }
 
-/*
- * Compute the length of an array with constant length.  (Use of this method
- * with a non-array pointer will not compile.)
- *
- * Beware of the implicit trailing '\0' when using this with string constants.
- */
-template<typename T, size_t N>
-size_t
-ArrayLength(T (&arr)[N])
-{
-    return N;
-}
-
-/*
- * Compute the address one past the last element of a constant-length array.
- *
- * Beware of the implicit trailing '\0' when using this with string constants.
- */
-template<typename T, size_t N>
-T*
-ArrayEnd(T (&arr)[N])
-{
-    return arr + ArrayLength(arr);
-}
-
 } /* namespace mozilla */
 
 #endif /* __cplusplus */

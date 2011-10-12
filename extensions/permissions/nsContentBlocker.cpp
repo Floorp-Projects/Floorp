@@ -33,7 +33,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
 #include "nsContentBlocker.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"

@@ -79,7 +79,7 @@ int main(int argc, char** argv)
   // be in the table. Futz with the case to make sure any case will
   // work
 
-  for (PRUint32 index = 0 ; index < ArrayLength(kColorNames); index++) {
+  for (PRUint32 index = 0 ; index < NS_ARRAY_LENGTH(kColorNames); index++) {
     // Lookup color by name and make sure it has the right id
     nsCString tagName(kColorNames[index]);
 
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
   }
 
   // Now make sure we don't find some garbage
-  for (PRUint32 i = 0; i < ArrayLength(kJunkNames); i++) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kJunkNames); i++) {
     nsCString tag(kJunkNames[i]);
     if (NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tag), &rgb)) {
       fail("found '%s'", kJunkNames[i] ? kJunkNames[i] : "(null)");

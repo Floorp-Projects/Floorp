@@ -39,8 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #if defined(MOZ_WIDGET_GTK2)
 #include "gfxPlatformGtk.h"
 #define gfxToolkitPlatform gfxPlatformGtk
@@ -91,8 +89,6 @@
 #include "nsIWindowsRegKey.h"
 #include <windows.h>
 #endif
-
-using namespace mozilla;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gFontInfoLog = PR_NewLogModule("fontInfoLog");
@@ -932,7 +928,7 @@ gfxFT2FontList::FindFonts()
         {
             bool isStdFont = false;
             for (unsigned int i = 0;
-                 i < ArrayLength(sStandardFonts) && !isStdFont; i++)
+                 i < NS_ARRAY_LENGTH(sStandardFonts) && !isStdFont; i++)
             {
                 isStdFont = strcmp(sStandardFonts[i], ent->d_name) == 0;
             }

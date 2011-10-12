@@ -42,9 +42,6 @@
  * JavaScript iterators.
  */
 #include <string.h>     /* for memcpy */
-
-#include "mozilla/Util.h"
-
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -83,7 +80,6 @@
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
@@ -165,7 +161,7 @@ static inline bool
 NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)
 {
     Value vec[2] = { IdToValue(id), val };
-    AutoArrayRooter tvr(cx, ArrayLength(vec), vec);
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vec), vec);
 
     JSObject *aobj = NewDenseCopiedArray(cx, 2, vec);
     if (!aobj)
@@ -867,7 +863,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                         AutoObjectRooter proto(cx, obj->getProto());
                         AutoObjectRooter obj2(cx);
                         JSProperty *prop;
-                        if (!proto.object()->lookupGeneric(cx, *idp, obj2.addr(), &prop))
+                        if (!proto.object()->lookupProperty(cx, *idp, obj2.addr(), &prop))
                             return false;
                         if (prop) {
                             uintN attrs;

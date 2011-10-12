@@ -41,8 +41,6 @@
 
 /* A namespace class for static layout utilities. */
 
-#include "mozilla/Util.h"
-
 #include "jsapi.h"
 #include "jsdbgapi.h"
 
@@ -533,8 +531,8 @@ nsContentUtils::InitializeEventTable() {
   sUserDefinedEvents = new nsCOMArray<nsIAtom>(64);
 
   if (!sAtomEventTable || !sStringEventTable || !sUserDefinedEvents ||
-      !sAtomEventTable->Init(int(ArrayLength(eventArray) / 0.75) + 1) ||
-      !sStringEventTable->Init(int(ArrayLength(eventArray) / 0.75) + 1)) {
+      !sAtomEventTable->Init(int(NS_ARRAY_LENGTH(eventArray) / 0.75) + 1) ||
+      !sStringEventTable->Init(int(NS_ARRAY_LENGTH(eventArray) / 0.75) + 1)) {
     delete sAtomEventTable;
     sAtomEventTable = nsnull;
     delete sStringEventTable;
@@ -545,7 +543,7 @@ nsContentUtils::InitializeEventTable() {
   }
 
   // Subtract one from the length because of the trailing null
-  for (PRUint32 i = 0; i < ArrayLength(eventArray) - 1; ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(eventArray) - 1; ++i) {
     if (!sAtomEventTable->Put(eventArray[i].mAtom, eventArray[i]) ||
         !sStringEventTable->Put(Substring(nsDependentAtomString(eventArray[i].mAtom), 2),
                                 eventArray[i])) {
@@ -576,7 +574,7 @@ nsContentUtils::InitializeTouchEventTable()
       nsnull
     };
     // Subtract one from the length because of the trailing null
-    for (PRUint32 i = 0; i < ArrayLength(touchEventArray) - 1; ++i) {
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(touchEventArray) - 1; ++i) {
       if (!sAtomEventTable->Put(touchEventArray[i].mAtom, touchEventArray[i]) ||
           !sStringEventTable->Put(Substring(nsDependentAtomString(touchEventArray[i].mAtom), 2),
                                   touchEventArray[i])) {
@@ -4140,7 +4138,7 @@ nsContentUtils::GetLocalizedEllipsis()
   if (!sBuf[0]) {
     nsAdoptingString tmp = Preferences::GetLocalizedString("intl.ellipsis");
     PRUint32 len = NS_MIN(PRUint32(tmp.Length()),
-                          PRUint32(ArrayLength(sBuf) - 1));
+                          PRUint32(NS_ARRAY_LENGTH(sBuf) - 1));
     CopyUnicodeTo(tmp, 0, sBuf, len);
     if (!sBuf[0])
       sBuf[0] = PRUnichar(0x2026);
@@ -5141,7 +5139,7 @@ nsContentUtils::CanAccessNativeAnon()
   const char *filename;
   if (fp && JS_IsScriptFrame(cx, fp) &&
       (filename = JS_GetScriptFilename(cx, JS_GetFrameScript(cx, fp))) &&
-      !strncmp(filename, prefix, ArrayLength(prefix) - 1)) {
+      !strncmp(filename, prefix, NS_ARRAY_LENGTH(prefix) - 1)) {
     return PR_TRUE;
   }
 
@@ -5659,7 +5657,7 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 #ifdef MOZ_MEDIA
 #ifdef MOZ_OGG
   if (nsHTMLMediaElement::IsOggEnabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gOggTypes); ++i) {
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(nsHTMLMediaElement::gOggTypes); ++i) {
       const char* type = nsHTMLMediaElement::gOggTypes[i];
       if (!strcmp(aType, type)) {
         docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
@@ -5674,7 +5672,7 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 
 #ifdef MOZ_WEBM
   if (nsHTMLMediaElement::IsWebMEnabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gWebMTypes); ++i) {
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(nsHTMLMediaElement::gWebMTypes); ++i) {
       const char* type = nsHTMLMediaElement::gWebMTypes[i];
       if (!strcmp(aType, type)) {
         docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");

@@ -45,8 +45,6 @@
  * matching and cascading
  */
 
-#include "mozilla/Util.h"
-
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleProcessorData.h"
 
@@ -889,7 +887,7 @@ struct RuleCascadeData {
 #ifdef MOZ_XUL
     PL_DHashTableFinish(&mXULTreeRules);
 #endif
-    for (PRUint32 i = 0; i < ArrayLength(mPseudoElementRuleHashes); ++i) {
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mPseudoElementRuleHashes); ++i) {
       delete mPseudoElementRuleHashes[i];
     }
   }
@@ -942,7 +940,7 @@ RuleCascadeData::SizeOf() const
   PRInt64 n = sizeof(*this);
 
   n += mRuleHash.SizeOf();
-  for (PRUint32 i = 0; i < ArrayLength(mPseudoElementRuleHashes); ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mPseudoElementRuleHashes); ++i) {
     if (mPseudoElementRuleHashes[i])
       n += mPseudoElementRuleHashes[i]->SizeOf();
   }

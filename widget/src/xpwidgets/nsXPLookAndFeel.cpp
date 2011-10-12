@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nscore.h"
 
 #include "nsXPLookAndFeel.h"
@@ -403,21 +401,21 @@ nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure)
 
   nsDependentCString prefName(aPref);
   unsigned int i;
-  for (i = 0; i < ArrayLength(sIntPrefs); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(sIntPrefs); ++i) {
     if (prefName.Equals(sIntPrefs[i].name)) {
       IntPrefChanged(&sIntPrefs[i]);
       return 0;
     }
   }
 
-  for (i = 0; i < ArrayLength(sFloatPrefs); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(sFloatPrefs); ++i) {
     if (prefName.Equals(sFloatPrefs[i].name)) {
       FloatPrefChanged(&sFloatPrefs[i]);
       return 0;
     }
   }
 
-  for (i = 0; i < ArrayLength(sColorPrefs); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(sColorPrefs); ++i) {
     if (prefName.Equals(sColorPrefs[i])) {
       ColorPrefChanged(i, sColorPrefs[i]);
       return 0;
@@ -447,15 +445,15 @@ nsXPLookAndFeel::Init()
   Preferences::RegisterCallback(OnPrefChanged, "accessibility.tabfocus");
 
   unsigned int i;
-  for (i = 0; i < ArrayLength(sIntPrefs); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(sIntPrefs); ++i) {
     InitFromPref(&sIntPrefs[i]);
   }
 
-  for (i = 0; i < ArrayLength(sFloatPrefs); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(sFloatPrefs); ++i) {
     InitFromPref(&sFloatPrefs[i]);
   }
 
-  for (i = 0; i < ArrayLength(sColorPrefs); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(sColorPrefs); ++i) {
     InitColorFromPref(i);
   }
 
@@ -676,7 +674,7 @@ nsXPLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
     break;
   }
 
-  for (unsigned int i = 0; i < ArrayLength(sIntPrefs); ++i) {
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(sIntPrefs); ++i) {
     if (sIntPrefs[i].isSet && (sIntPrefs[i].id == aID)) {
       aResult = sIntPrefs[i].intVar;
       return NS_OK;
@@ -692,7 +690,7 @@ nsXPLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
   if (!sInitialized)
     Init();
 
-  for (unsigned int i = 0; i < ArrayLength(sFloatPrefs); ++i) {
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(sFloatPrefs); ++i) {
     if (sFloatPrefs[i].isSet && sFloatPrefs[i].id == aID) {
       aResult = sFloatPrefs[i].floatVar;
       return NS_OK;
