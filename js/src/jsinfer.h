@@ -45,11 +45,10 @@
 #include "jsalloc.h"
 #include "jscell.h"
 #include "jsfriendapi.h"
-#include "jstl.h"
 #include "jsprvtd.h"
-#include "jshashtable.h"
 
 #include "ds/LifoAlloc.h"
+#include "js/HashTable.h"
 
 namespace js {
 namespace types {

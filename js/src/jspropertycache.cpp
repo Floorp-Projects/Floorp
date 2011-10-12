@@ -498,7 +498,7 @@ PropertyCache::purgeForScript(JSContext *cx, JSScript *script)
     JS_ASSERT(!cx->runtime->gcRunning);
 
     for (PropertyCacheEntry *entry = table; entry < table + SIZE; entry++) {
-        if (JS_UPTRDIFF(entry->kpc, script->code) < script->length) {
+        if (UnsignedPtrDiff(entry->kpc, script->code) < script->length) {
             entry->kpc = NULL;
 #ifdef DEBUG
             entry->kshape = entry->vcap = 0;
