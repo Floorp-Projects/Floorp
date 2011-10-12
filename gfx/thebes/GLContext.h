@@ -321,8 +321,6 @@ public:
     virtual bool InUpdate() const = 0;
     GLenum GetWrapMode() const { return mWrapMode; }
 
-    bool IsRGB() const { return mIsRGBFormat; }
-
     void SetFilter(gfxPattern::GraphicsFilter aFilter) { mFilter = aFilter; }
 
 protected:
@@ -340,7 +338,6 @@ protected:
         : mSize(aSize)
         , mWrapMode(aWrapMode)
         , mContentType(aContentType)
-        , mIsRGBFormat(aIsRGB)
     {}
 
     /**
@@ -352,7 +349,6 @@ protected:
     nsIntSize mSize;
     GLenum mWrapMode;
     ContentType mContentType;
-    bool mIsRGBFormat;
     ShaderProgramType mShaderType;
     gfxPattern::GraphicsFilter mFilter;
 };

@@ -209,7 +209,6 @@ INSTALLED_HEADERS = \
 		jsotypes.h \
 		jsproxy.h \
 		jsprf.h \
-		jsprobes.h \
 		jspropertycache.h \
 		jspropertytree.h \
 		jsproto.tbl \

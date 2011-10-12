@@ -1339,6 +1339,7 @@ JSContext::JSContext(JSRuntime *rt)
     throwing(false),
     exception(UndefinedValue()),
     runOptions(0),
+    reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
     localeCallbacks(NULL),
     resolvingList(NULL),
     generatingError(false),
