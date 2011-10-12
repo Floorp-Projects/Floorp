@@ -288,15 +288,23 @@ ion::HandleException(IonFramePrefix *top)
     JSContext *cx = GetIonContext()->cx;
     IonCompartment *ioncompartment = cx->compartment->ionCompartment();
 
-    // Currently, function calls are not supported.
-    JS_ASSERT(top->isEntryFrame());
+    // Find the boundary between this IonActivation and the Interpreter.
+    // Since try blocks are unsupported, exceptions propagate through Ion code.
+    IonFramePrefix *entry = top;
+    uint32 stack_adjust = 0;
+    while (!entry->isEntryFrame()) {
+        stack_adjust += sizeof(IonFramePrefix) + entry->prevFrameDepth();
+        entry = entry->prev();
+    }
 
     // Currently, try blocks are not supported, so we don't have to implement
     // logic to bailout a bunch o' frames.
     if (BailoutClosure *closure = ioncompartment->activation()->maybeTakeBailout())
         cx->delete_(closure);
 
-    top->setReturnAddress(ioncompartment->returnError()->raw());
-    return 0;
+    uint8 *returnAddress = ioncompartment->returnError()->raw();
+    entry->setReturnAddress(returnAddress);
+
+    return stack_adjust;
 }
 
