@@ -326,7 +326,7 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
     }
 
-    pixman_image = pixman_image_create_bits (pixman_format, width ? width : 1, height ? height : 1,
+    pixman_image = pixman_image_create_bits (pixman_format, width, height,
 					     (uint32_t *) data, stride ? stride : 4);
 
     if (unlikely (pixman_image == NULL))
