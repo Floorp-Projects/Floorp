@@ -1230,7 +1230,7 @@ var BrowserUI = {
         AwesomeScreen.activePanel = HistoryList;
         break;
       case "cmd_remoteTabs":
-        if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
+        if (!Services.prefs.prefHasUserValue("services.sync.username")) {
           // We have to set activePanel before showing sync's dialog
           // to make the sure the dialog stacking is correct.
           AwesomeScreen.activePanel = RemoteTabsList;

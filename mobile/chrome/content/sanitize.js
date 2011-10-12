@@ -101,7 +101,7 @@ Sanitizer.prototype = {
 
       get canClear()
       {
-        return (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED);
+        return (Services.prefs.prefHasUserValue("services.sync.username"));
       }
     },
 
