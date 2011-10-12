@@ -4883,14 +4883,14 @@ mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
     while (nobj) {
         if (!nobj->isNative())
             return false;
-        if (nobj->getClass()->ops.lookupGeneric)
+        if (nobj->getClass()->ops.lookupProperty)
             return false;
         nobj = nobj->getProto();
     }
 
     JSObject *holder;
     JSProperty *prop = NULL;
-    if (!obj->lookupGeneric(cx, id, &holder, &prop))
+    if (!obj->lookupProperty(cx, id, &holder, &prop))
         return false;
     if (!prop)
         return false;

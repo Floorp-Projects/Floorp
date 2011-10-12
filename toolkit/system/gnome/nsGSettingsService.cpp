@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsGSettingsService.h"
 #include "nsStringAPI.h"
 #include "nsCOMPtr.h"
@@ -47,8 +45,6 @@
 
 #include <glib.h>
 #include <glib-object.h>
-
-using namespace mozilla;
 
 typedef struct _GSettings GSettings;
 typedef struct _GVariantType GVariantType;
@@ -286,7 +282,7 @@ nsGSettingsService::Init()
       return NS_ERROR_FAILURE;
   }
 
-  for (PRUint32 i = 0; i < ArrayLength(kGSettingsSymbols); i++) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kGSettingsSymbols); i++) {
     *kGSettingsSymbols[i].function =
       PR_FindFunctionSymbol(gioLib, kGSettingsSymbols[i].functionName);
     if (!*kGSettingsSymbols[i].function) {

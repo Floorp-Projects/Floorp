@@ -75,8 +75,6 @@
 
 #define TOPIC_PLACES_MAINTENANCE "places-maintenance-finished"
 
-using namespace mozilla;
-
 const PRInt32 nsNavBookmarks::kFindURIBookmarksIndex_Id = 0;
 const PRInt32 nsNavBookmarks::kFindURIBookmarksIndex_Guid = 1;
 const PRInt32 nsNavBookmarks::kFindURIBookmarksIndex_ParentId = 2;
@@ -607,7 +605,7 @@ nsNavBookmarks::FinalizeStatements() {
     mDBFindRedirectedBookmark,
   };
 
-  for (PRUint32 i = 0; i < ArrayLength(stmts); i++) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
     nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }

@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "txExpr.h"
 #include "nsAutoPtr.h"
 #include "txNodeSet.h"
@@ -48,8 +46,6 @@
 #include <math.h>
 #include "txStringUtils.h"
 #include "txXMLUtils.h"
-
-using namespace mozilla;
 
 struct txCoreFunctionDescriptor
 {
@@ -758,7 +754,7 @@ bool
 txCoreFunctionCall::getTypeFromAtom(nsIAtom* aName, eType& aType)
 {
     PRUint32 i;
-    for (i = 0; i < ArrayLength(descriptTable); ++i) {
+    for (i = 0; i < NS_ARRAY_LENGTH(descriptTable); ++i) {
         if (aName == *descriptTable[i].mName) {
             aType = static_cast<eType>(i);
 

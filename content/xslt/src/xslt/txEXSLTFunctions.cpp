@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsIAtom.h"
 #include "nsGkAtoms.h"
 #include "txExecutionState.h"
@@ -55,8 +53,6 @@
 #include "nsIContent.h"
 #include "nsIDOMDocumentFragment.h"
 #include "txMozillaXMLOutput.h"
-
-using namespace mozilla;
 
 class txStylesheetCompilerState;
 
@@ -749,7 +745,7 @@ TX_ConstructEXSLTFunction(nsIAtom *aName,
                           FunctionCall **aResult)
 {
     PRUint32 i;
-    for (i = 0; i < ArrayLength(descriptTable); ++i) {
+    for (i = 0; i < NS_ARRAY_LENGTH(descriptTable); ++i) {
         txEXSLTFunctionDescriptor& desc = descriptTable[i];
         if (aName == *desc.mName && aNamespaceID == desc.mNamespaceID) {
             *aResult = new txEXSLTFunctionCall(
@@ -766,7 +762,7 @@ extern bool
 TX_InitEXSLTFunction()
 {
     PRUint32 i;
-    for (i = 0; i < ArrayLength(descriptTable); ++i) {
+    for (i = 0; i < NS_ARRAY_LENGTH(descriptTable); ++i) {
         txEXSLTFunctionDescriptor& desc = descriptTable[i];
         NS_ConvertASCIItoUTF16 namespaceURI(desc.mNamespaceURI);
         desc.mNamespaceID =

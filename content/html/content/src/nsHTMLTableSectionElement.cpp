@@ -34,9 +34,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#include "mozilla/Util.h"
-
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDOMEventTarget.h"
 #include "nsMappedAttributes.h"
@@ -49,8 +46,6 @@
 #include "nsDOMError.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
-
-using namespace mozilla;
 
 // you will see the phrases "rowgroup" and "section" used interchangably
 
@@ -326,7 +321,7 @@ nsHTMLTableSectionElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sBackgroundAttributeMap,
   };
 
-  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 

@@ -42,16 +42,12 @@
 // complete description of the expected file format and parsing rules, see
 // http://wiki.mozilla.org/Gecko:Effective_TLD_Service
 
-#include "mozilla/Util.h"
-
 #include "nsEffectiveTLDService.h"
 #include "nsIIDNService.h"
 #include "nsNetUtil.h"
 #include "prnetdb.h"
 
 #include "mozilla/FunctionTimer.h"
-
-using namespace mozilla;
 
 NS_IMPL_ISUPPORTS1(nsEffectiveTLDService, nsIEffectiveTLDService)
 
@@ -72,7 +68,7 @@ nsEffectiveTLDService::Init()
   // use a perfect hash, but at least we'll save a few rehashes along the way.
   // Next optimization here is to precompute the hash using something like
   // gperf, but one step at a time.  :-)
-  if (!mHash.Init(ArrayLength(gEntries) - 1))
+  if (!mHash.Init(NS_ARRAY_LENGTH(gEntries) - 1))
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv;
@@ -80,7 +76,7 @@ nsEffectiveTLDService::Init()
   if (NS_FAILED(rv)) return rv;
 
   // Initialize eTLD hash from static array
-  for (PRUint32 i = 0; i < ArrayLength(gEntries) - 1; i++) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gEntries) - 1; i++) {
 #ifdef DEBUG
     nsDependentCString name(gEntries[i].domain);
     nsCAutoString normalizedName(gEntries[i].domain);

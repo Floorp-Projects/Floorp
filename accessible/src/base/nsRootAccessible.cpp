@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #define CreateEvent CreateEventA
 #include "nsIDOMDocument.h"
 
@@ -85,7 +83,7 @@
 #include "nsIXULWindow.h"
 #endif
 
-using namespace mozilla;
+namespace dom = mozilla::dom;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,7 +255,7 @@ nsresult nsRootAccessible::AddEventListeners()
 
   if (nstarget) {
     for (const char* const* e = docEvents,
-                   * const* e_end = ArrayEnd(docEvents);
+                   * const* e_end = docEvents + NS_ARRAY_LENGTH(docEvents);
          e < e_end; ++e) {
       nsresult rv = nstarget->AddEventListener(NS_ConvertASCIItoUTF16(*e),
                                                this, PR_TRUE, PR_TRUE, 2);
@@ -277,7 +275,7 @@ nsresult nsRootAccessible::RemoveEventListeners()
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
   if (target) { 
     for (const char* const* e = docEvents,
-                   * const* e_end = ArrayEnd(docEvents);
+                   * const* e_end = docEvents + NS_ARRAY_LENGTH(docEvents);
          e < e_end; ++e) {
       nsresult rv = target->RemoveEventListener(NS_ConvertASCIItoUTF16(*e), this, PR_TRUE);
       NS_ENSURE_SUCCESS(rv, rv);

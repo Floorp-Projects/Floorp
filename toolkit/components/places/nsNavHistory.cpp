@@ -47,8 +47,6 @@
 
 #include <stdio.h>
 
-#include "mozilla/Util.h"
-
 #include "nsNavHistory.h"
 
 #include "nsTArray.h"
@@ -351,7 +349,7 @@ namespace mozilla {
       };
 
       nsCOMPtr<mozIStoragePendingStatement> ps;
-      rv = aDBConn->ExecuteAsync(stmts, ArrayLength(stmts), nsnull,
+      rv = aDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), nsnull,
                                  getter_AddRefs(ps));
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5447,7 +5445,7 @@ nsNavHistory::DecayFrecency()
     deleteAdaptive
   };
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  rv = mDBConn->ExecuteAsync(stmts, ArrayLength(stmts), nsnull,
+  rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), nsnull,
                              getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -6768,7 +6766,7 @@ nsNavHistory::UpdateFrecency(PRInt64 aPlaceId)
   nsCOMPtr<AsyncStatementCallbackNotifier> callback =
     new AsyncStatementCallbackNotifier(TOPIC_FRECENCY_UPDATED);
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  nsresult rv = mDBConn->ExecuteAsync(stmts, ArrayLength(stmts), callback,
+  nsresult rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), callback,
                                       getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -6929,7 +6927,7 @@ nsNavHistory::FinalizeStatements() {
     mDBUpdateHiddenOnFrecency,
   };
 
-  for (PRUint32 i = 0; i < ArrayLength(stmts); i++) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
     nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }

@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsAutoPtr.h"
 #include "nsGenericHTMLElement.h"
 #include "nsObjectLoadingContent.h"
@@ -53,7 +51,6 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsIConstraintValidation.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 
 class nsHTMLObjectElement : public nsGenericHTMLFormElement
@@ -492,7 +489,7 @@ nsHTMLObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
     sImageAlignAttributeMap,
   };
 
-  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 

@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsDeviceContextSpecWin.h"
 #include "prmem.h"
 
@@ -81,8 +79,6 @@ PRLogModuleInfo * kWidgetPrintingLogMod = PR_NewLogModule("printing-widget");
 #else
 #define PR_PL(_p1)
 #endif
-
-using namespace mozilla;
 
 //----------------------------------------------------------------------------------
 // The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecWin
@@ -970,7 +966,7 @@ GlobalPrinters::EnumerateNativePrinters()
   WCHAR szDefaultPrinterName[1024];    
   DWORD status = GetProfileStringW(L"devices", 0, L",",
                                    szDefaultPrinterName,
-                                   ArrayLength(szDefaultPrinterName));
+                                   NS_ARRAY_LENGTH(szDefaultPrinterName));
   if (status > 0) {
     DWORD count = 0;
     LPWSTR sPtr   = szDefaultPrinterName;
@@ -1001,7 +997,7 @@ GlobalPrinters::GetDefaultPrinterName(nsString& aDefaultPrinterName)
   WCHAR szDefaultPrinterName[1024];    
   DWORD status = GetProfileStringW(L"windows", L"device", 0,
                                    szDefaultPrinterName,
-                                   ArrayLength(szDefaultPrinterName));
+                                   NS_ARRAY_LENGTH(szDefaultPrinterName));
   if (status > 0) {
     WCHAR comma = ',';
     LPWSTR sPtr = szDefaultPrinterName;

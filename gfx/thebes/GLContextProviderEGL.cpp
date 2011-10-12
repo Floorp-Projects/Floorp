@@ -39,8 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #if defined(XP_UNIX)
 
 #ifdef MOZ_WIDGET_GTK2
@@ -1809,9 +1807,9 @@ CreateConfig(EGLConfig* aConfig)
     };
 
     EGLConfig configs[64];
-    for (unsigned i = 0; i < ArrayLength(attribsToTry); ++i) {
+    for (unsigned i = 0; i < NS_ARRAY_LENGTH(attribsToTry); ++i) {
         const EGLAttribs& attribs = attribsToTry[i];
-        EGLint ncfg = ArrayLength(configs);
+        EGLint ncfg = NS_ARRAY_LENGTH(configs);
 
         if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(), attribs.mAttribs,
                                        configs, ncfg, &ncfg) ||

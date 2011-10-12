@@ -47,8 +47,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "base/basictypes.h"
 
 // Local Includes
@@ -4634,7 +4632,7 @@ nsGlobalWindow::MakeScriptDialogTitle(nsAString &aOutTitle)
               nsXPIDLString tempString;
               nsContentUtils::FormatLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
                                                     "ScriptDlgHeading",
-                                                    formatStrings, ArrayLength(formatStrings),
+                                                    formatStrings, NS_ARRAY_LENGTH(formatStrings),
                                                     tempString);
               aOutTitle = tempString;
             }

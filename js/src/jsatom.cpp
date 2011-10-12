@@ -44,7 +44,6 @@
 #include <string.h>
 
 #include "mozilla/RangedPtr.h"
-#include "mozilla/Util.h"
 
 #include "jstypes.h"
 #include "jsstdint.h"
@@ -69,7 +68,6 @@
 
 #include "vm/String-inl.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
@@ -365,7 +363,7 @@ js_InitCommonAtoms(JSContext *cx)
 {
     JSAtomState *state = &cx->runtime->atomState;
     JSAtom **atoms = state->commonAtomsStart();
-    for (size_t i = 0; i < ArrayLength(js_common_atom_names); i++, atoms++) {
+    for (size_t i = 0; i < JS_ARRAY_LENGTH(js_common_atom_names); i++, atoms++) {
         JSAtom *atom = js_Atomize(cx, js_common_atom_names[i], strlen(js_common_atom_names[i]),
                                   InternAtom);
         if (!atom)
@@ -679,7 +677,7 @@ IndexToIdSlow(JSContext *cx, uint32 index, jsid *idp)
     JS_ASSERT(index > JSID_INT_MAX);
 
     jschar buf[UINT32_CHAR_BUFFER_LENGTH];
-    RangedPtr<jschar> end(buf + ArrayLength(buf), buf, buf + ArrayLength(buf));
+    RangedPtr<jschar> end(buf + JS_ARRAY_LENGTH(buf), buf, buf + JS_ARRAY_LENGTH(buf));
     RangedPtr<jschar> start = BackfillIndexInCharBuffer(index, end);
 
     JSAtom *atom = js_AtomizeChars(cx, start.get(), end - start);

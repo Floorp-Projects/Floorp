@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include <windows.h>
 #include <setupapi.h>
 #include "gfxWindowsPlatform.h"
@@ -56,7 +54,7 @@
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #endif
 
-using namespace mozilla;
+
 using namespace mozilla::widget;
 
 #ifdef DEBUG
@@ -151,14 +149,14 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
     ClearTypeParameterInfo& params = clearTypeParams[d];
 
     if (displayNames) {
-      swprintf_s(valStr, ArrayLength(valStr),
+      swprintf_s(valStr, NS_ARRAY_LENGTH(valStr),
                  L"%s [ ", params.displayName.get());
       outStr.Append(valStr);
     }
 
     if (params.gamma >= 0) {
       foundData = true;
-      swprintf_s(valStr, ArrayLength(valStr),
+      swprintf_s(valStr, NS_ARRAY_LENGTH(valStr),
                  L"Gamma: %d ", params.gamma);
       outStr.Append(valStr);
     }
@@ -168,12 +166,12 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
       if (params.pixelStructure == PIXEL_STRUCT_RGB ||
           params.pixelStructure == PIXEL_STRUCT_BGR)
       {
-        swprintf_s(valStr, ArrayLength(valStr),
+        swprintf_s(valStr, NS_ARRAY_LENGTH(valStr),
                    L"Pixel Structure: %s ",
                    (params.pixelStructure == PIXEL_STRUCT_RGB ?
                       L"RGB" : L"BGR"));
       } else {
-        swprintf_s(valStr, ArrayLength(valStr),
+        swprintf_s(valStr, NS_ARRAY_LENGTH(valStr),
                    L"Pixel Structure: %d ", params.pixelStructure);
       }
       outStr.Append(valStr);
@@ -181,14 +179,14 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
 
     if (params.clearTypeLevel >= 0) {
       foundData = true;
-      swprintf_s(valStr, ArrayLength(valStr),
+      swprintf_s(valStr, NS_ARRAY_LENGTH(valStr),
                  L"ClearType Level: %d ", params.clearTypeLevel);
       outStr.Append(valStr);
     }
 
     if (params.enhancedContrast >= 0) {
       foundData = true;
-      swprintf_s(valStr, ArrayLength(valStr),
+      swprintf_s(valStr, NS_ARRAY_LENGTH(valStr),
                  L"Enhanced Contrast: %d ", params.enhancedContrast);
       outStr.Append(valStr);
     }
@@ -353,8 +351,8 @@ GfxInfo::Init()
   }
 
   // make sure the string is NULL terminated
-  if (wcsnlen(displayDevice.DeviceKey, ArrayLength(displayDevice.DeviceKey))
-      == ArrayLength(displayDevice.DeviceKey)) {
+  if (wcsnlen(displayDevice.DeviceKey, NS_ARRAY_LENGTH(displayDevice.DeviceKey))
+      == NS_ARRAY_LENGTH(displayDevice.DeviceKey)) {
     // we did not find a NULL
     return rv;
   }
@@ -364,11 +362,11 @@ GfxInfo::Init()
   /* DeviceKey is "reserved" according to MSDN so we'll be careful with it */
   /* check that DeviceKey begins with DEVICE_KEY_PREFIX */
   /* some systems have a DeviceKey starting with \REGISTRY\Machine\ so we need to compare case insenstively */
-  if (_wcsnicmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX, ArrayLength(DEVICE_KEY_PREFIX)-1) != 0)
+  if (_wcsnicmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX, NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1) != 0)
     return rv;
 
   // chop off DEVICE_KEY_PREFIX
-  mDeviceKey = displayDevice.DeviceKey + ArrayLength(DEVICE_KEY_PREFIX)-1;
+  mDeviceKey = displayDevice.DeviceKey + NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1;
 
   mDeviceID = displayDevice.DeviceID;
   mDeviceString = displayDevice.DeviceString;

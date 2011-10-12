@@ -37,15 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGLineElement.h"
 #include "nsSVGLength2.h"
 #include "nsGkAtoms.h"
 #include "gfxContext.h"
-
-using namespace mozilla;
 
 typedef nsSVGPathGeometryElement nsSVGLineElementBase;
 
@@ -161,7 +157,7 @@ nsSVGLineElement::IsAttributeMapped(const nsIAtom* name) const
     sMarkersMap
   };
   
-  return FindAttributeDependence(name, map, ArrayLength(map)) ||
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGLineElementBase::IsAttributeMapped(name);
 }
 
@@ -172,7 +168,7 @@ nsSVGElement::LengthAttributesInfo
 nsSVGLineElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              ArrayLength(sLengthInfo));
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }
 
 //----------------------------------------------------------------------

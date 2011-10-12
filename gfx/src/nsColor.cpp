@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "plstr.h"
 #include "nsColor.h"
 #include "nsColorNames.h"
@@ -48,8 +46,6 @@
 #include <math.h>
 #include "prprf.h"
 #include "nsStaticNameTable.h"
-
-using namespace mozilla;
 
 // define an array of all color names
 #define GFX_COLOR(_name, _value) #_name,
@@ -65,7 +61,7 @@ static const nscolor kColors[] = {
 };
 #undef GFX_COLOR
 
-#define eColorName_COUNT (ArrayLength(kColorNames))
+#define eColorName_COUNT (NS_ARRAY_LENGTH(kColorNames))
 #define eColorName_UNKNOWN (-1)
 
 static nsStaticCaseInsensitiveNameTable* gColorTable = nsnull;

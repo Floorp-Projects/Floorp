@@ -41,8 +41,6 @@
 
 /* This parsing code originally lived in xpfe/components/directory/ - bbaetz */
 
-#include "mozilla/Util.h"
-
 #include "prprf.h"
 
 #include "nsDirIndexParser.h"
@@ -57,8 +55,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
-
-using namespace mozilla;
 
 NS_IMPL_ISUPPORTS3(nsDirIndexParser,
                    nsIRequestObserver,
@@ -194,7 +190,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
     ++num;
     // There are a maximum of six allowed header fields (doubled plus
     // terminator, just in case) -- Bug 443299
-    if (num > (2 * ArrayLength(gFieldTable)))
+    if (num > (2 * NS_ARRAY_LENGTH(gFieldTable)))
       return NS_ERROR_UNEXPECTED;
 
     if (! *pos)

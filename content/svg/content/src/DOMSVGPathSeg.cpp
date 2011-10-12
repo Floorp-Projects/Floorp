@@ -34,8 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "DOMSVGPathSeg.h"
 #include "DOMSVGPathSegList.h"
 #include "SVGPathSegUtils.h"
@@ -174,7 +172,7 @@ DOMSVGPathSeg::IndexIsValid()
 // Implementation of DOMSVGPathSeg sub-classes below this point
 
 #define CHECK_ARG_COUNT_IN_SYNC(segType)                                      \
-          NS_ABORT_IF_FALSE(ArrayLength(mArgs) ==                         \
+          NS_ABORT_IF_FALSE(NS_ARRAY_LENGTH(mArgs) ==                         \
             SVGPathSegUtils::ArgCountForType(PRUint32(segType)) ||            \
             PRUint32(segType) == nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH,         \
             "Arg count/array size out of sync")

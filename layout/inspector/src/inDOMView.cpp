@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "inDOMView.h"
 #include "inIDOMUtils.h"
 
@@ -66,7 +64,7 @@
 #include "nsIAccessibilityService.h"
 #endif
 
-using namespace mozilla;
+namespace dom = mozilla::dom;
 
 ////////////////////////////////////////////////////////////////////////
 // inDOMViewNode
@@ -142,7 +140,7 @@ inDOMView::~inDOMView()
 /* static */ void
 inDOMView::InitAtoms()
 {
-  NS_RegisterStaticAtoms(Atoms_info, ArrayLength(Atoms_info));
+  NS_RegisterStaticAtoms(Atoms_info, NS_ARRAY_LENGTH(Atoms_info));
 }
 
 ////////////////////////////////////////////////////////////////////////

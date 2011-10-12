@@ -64,7 +64,6 @@
 #include "assembler/jit/ExecutableAllocator.h"
 #endif
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
@@ -123,7 +122,7 @@ JSCompartment::~JSCompartment()
     Foreground::delete_(watchpointMap);
 
 #ifdef DEBUG
-    for (size_t i = 0; i < ArrayLength(evalCache); ++i)
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(evalCache); ++i)
         JS_ASSERT(!evalCache[i]);
 #endif
 }
@@ -663,7 +662,7 @@ JSCompartment::purge(JSContext *cx)
      * not null when we have script owned by an object and not from the eval
      * cache.
      */
-    for (size_t i = 0; i < ArrayLength(evalCache); ++i) {
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(evalCache); ++i) {
         for (JSScript **listHeadp = &evalCache[i]; *listHeadp; ) {
             JSScript *script = *listHeadp;
             JS_ASSERT(GetGCThingTraceKind(script) == JSTRACE_SCRIPT);

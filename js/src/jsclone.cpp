@@ -574,7 +574,7 @@ JSStructuredCloneWriter::write(const Value &v)
                  */
                 JSObject *obj2;
                 JSProperty *prop;
-                if (!js_HasOwnProperty(context(), obj->getOps()->lookupGeneric, obj, id,
+                if (!js_HasOwnProperty(context(), obj->getOps()->lookupProperty, obj, id,
                                        &obj2, &prop)) {
                     return false;
                 }

@@ -34,9 +34,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#include "mozilla/Util.h"
-
 #include "nsIDOMHTMLDivElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
@@ -44,8 +41,6 @@
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
 #include "nsDOMMemoryReporter.h"
-
-using namespace mozilla;
 
 class nsHTMLDivElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLDivElement
@@ -170,7 +165,7 @@ nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
       sDivAlignAttributeMap,
       sCommonAttributeMap
     };
-    return FindAttributeDependence(aAttribute, map, ArrayLength(map));
+    return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
   }
   if (mNodeInfo->Equals(nsGkAtoms::marquee)) {  
     static const MappedAttributeEntry* const map[] = {
@@ -178,7 +173,7 @@ nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
       sBackgroundColorAttributeMap,
       sCommonAttributeMap
     };
-    return FindAttributeDependence(aAttribute, map, ArrayLength(map));
+    return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
   }
 
   return nsGenericHTMLElement::IsAttributeMapped(aAttribute);

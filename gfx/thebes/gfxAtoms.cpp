@@ -34,13 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "gfxAtoms.h"
 #include "nsStaticAtom.h"
 #include "nsMemory.h"
-
-using namespace mozilla;
 
 #define GFX_ATOM(name_, value_) nsIAtom* gfxAtoms::name_ = 0;
 #include "gfxAtomList.h"
@@ -58,5 +54,5 @@ static const nsStaticAtom atoms[] = {
 
 void gfxAtoms::RegisterAtoms()
 {
-    NS_RegisterStaticAtoms(atoms, ArrayLength(atoms));
+    NS_RegisterStaticAtoms(atoms, NS_ARRAY_LENGTH(atoms));
 }

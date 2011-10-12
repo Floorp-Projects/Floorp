@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsBaseWidget.h"
 #include "nsDeviceContext.h"
 #include "nsCOMPtr.h"
@@ -1348,7 +1346,7 @@ nsBaseWidget::debug_GetCachedBoolPref(const char * aPrefName)
 {
   NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
 
-  for (PRUint32 i = 0; i < ArrayLength(debug_PrefValues); i++)
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(debug_PrefValues); i++)
   {
     if (strcmp(debug_PrefValues[i].name, aPrefName) == 0)
     {
@@ -1363,7 +1361,7 @@ static void debug_SetCachedBoolPref(const char * aPrefName,bool aValue)
 {
   NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
 
-  for (PRUint32 i = 0; i < ArrayLength(debug_PrefValues); i++)
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(debug_PrefValues); i++)
   {
     if (strcmp(debug_PrefValues[i].name, aPrefName) == 0)
     {
@@ -1409,7 +1407,7 @@ debug_RegisterPrefCallbacks()
   once = PR_FALSE;
 
   nsCOMPtr<nsIObserver> obs(new Debug_PrefObserver());
-  for (PRUint32 i = 0; i < ArrayLength(debug_PrefValues); i++) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(debug_PrefValues); i++) {
     // Initialize the pref values
     debug_PrefValues[i].value =
       Preferences::GetBool(debug_PrefValues[i].name, false);

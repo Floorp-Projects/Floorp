@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "ManifestParser.h"
 
 #include <string.h>
@@ -67,8 +65,6 @@
 #include "nsIScriptError.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
-
-using namespace mozilla;
 
 struct ManifestDirective
 {
@@ -544,7 +540,7 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
 
     const ManifestDirective* directive = NULL;
     for (const ManifestDirective* d = kParsingTable;
-	 d < ArrayEnd(kParsingTable);
+	 d < kParsingTable + NS_ARRAY_LENGTH(kParsingTable);
 	 ++d) {
       if (!strcmp(d->directive, token)) {
 	directive = d;

@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsClipboardPrivacyHandler.h"
 #include "nsITransferable.h"
 #include "nsISupportsPrimitives.h"
@@ -53,8 +51,6 @@
 #if defined(XP_WIN)
 #include <ole2.h>
 #endif
-
-using namespace mozilla;
 
 #define NS_MOZ_DATA_FROM_PRIVATEBROWSING "application/x-moz-private-browsing"
 
@@ -110,7 +106,7 @@ nsClipboardPrivacyHandler::Observe(nsISupports *aSubject, char const *aTopic, PR
     const char * flavors[] = { NS_MOZ_DATA_FROM_PRIVATEBROWSING };
     bool haveFlavors;
     rv = clipboard->HasDataMatchingFlavors(flavors,
-                                           ArrayLength(flavors),
+                                           NS_ARRAY_LENGTH(flavors),
                                            nsIClipboard::kGlobalClipboard,
                                            &haveFlavors);
     if (NS_SUCCEEDED(rv) && haveFlavors) {

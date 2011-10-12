@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLHRElement.h"
 
@@ -47,8 +45,6 @@
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
 #include "nsCSSProps.h"
-
-using namespace mozilla;
 
 class nsHTMLHRElement : public nsGenericHTMLElement,
                         public nsIDOMHTMLHRElement
@@ -334,7 +330,7 @@ nsHTMLHRElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sCommonAttributeMap,
   };
 
-  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 

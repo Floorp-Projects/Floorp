@@ -34,12 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsSVGClipPathElement.h"
 #include "nsGkAtoms.h"
-
-using namespace mozilla;
 
 nsSVGElement::EnumInfo nsSVGClipPathElement::sEnumInfo[1] =
 {
@@ -84,7 +80,7 @@ nsSVGElement::EnumAttributesInfo
 nsSVGClipPathElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            ArrayLength(sEnumInfo));
+                            NS_ARRAY_LENGTH(sEnumInfo));
 }
 
 //----------------------------------------------------------------------

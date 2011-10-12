@@ -46,8 +46,6 @@
 
 /* parsing of CSS stylesheets, based on a token stream from the CSS scanner */
 
-#include "mozilla/Util.h"
-
 #include "nsCSSParser.h"
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
@@ -710,7 +708,7 @@ static void AppendRuleToSheet(css::Rule* aRule, void* aParser)
   mScanner.ReportUnexpected(#msg_)
 
 #define REPORT_UNEXPECTED_P(msg_, params_) \
-  mScanner.ReportUnexpectedParams(#msg_, params_, ArrayLength(params_))
+  mScanner.ReportUnexpectedParams(#msg_, params_, NS_ARRAY_LENGTH(params_))
 
 #define REPORT_UNEXPECTED_EOF(lf_) \
   mScanner.ReportUnexpectedEOF(#lf_)
@@ -723,7 +721,7 @@ static void AppendRuleToSheet(css::Rule* aRule, void* aParser)
 
 #define REPORT_UNEXPECTED_TOKEN_P(msg_, params_) \
   mScanner.ReportUnexpectedTokenParams(mToken, #msg_, \
-                                       params_, ArrayLength(params_))
+                                       params_, NS_ARRAY_LENGTH(params_))
 
 
 #define OUTPUT_ERROR() \
@@ -4319,7 +4317,7 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
   PRInt32   type = 0;
   if (!aUnit.IsEmpty()) {
     PRUint32 i;
-    for (i = 0; i < ArrayLength(UnitData); ++i) {
+    for (i = 0; i < NS_ARRAY_LENGTH(UnitData); ++i) {
       if (aUnit.LowerCaseEqualsASCII(UnitData[i].name,
                                      UnitData[i].length)) {
         units = UnitData[i].unit;
@@ -4328,7 +4326,7 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
       }
     }
 
-    if (i == ArrayLength(UnitData)) {
+    if (i == NS_ARRAY_LENGTH(UnitData)) {
       // Unknown unit
       return PR_FALSE;
     }
@@ -6867,7 +6865,7 @@ CSSParserImpl::ParseColumns()
     eCSSProperty__moz_column_count,
     eCSSProperty__moz_column_width
   };
-  const PRInt32 numProps = ArrayLength(columnIDs);
+  const PRInt32 numProps = NS_ARRAY_LENGTH(columnIDs);
 
   nsCSSValue values[numProps];
   PRInt32 found = ParseChoice(values, columnIDs, numProps);
@@ -6919,12 +6917,12 @@ CSSParserImpl::ParseContent()
   // Verify that these two lists add up to the size of
   // nsCSSProps::kContentKTable.
   NS_ABORT_IF_FALSE(nsCSSProps::kContentKTable[
-                      ArrayLength(kContentListKWs) +
-                      ArrayLength(kContentSolitaryKWs) - 4] ==
+                      NS_ARRAY_LENGTH(kContentListKWs) +
+                      NS_ARRAY_LENGTH(kContentSolitaryKWs) - 4] ==
                     eCSSKeyword_UNKNOWN &&
                     nsCSSProps::kContentKTable[
-                      ArrayLength(kContentListKWs) +
-                      ArrayLength(kContentSolitaryKWs) - 3] == -1,
+                      NS_ARRAY_LENGTH(kContentListKWs) +
+                      NS_ARRAY_LENGTH(kContentSolitaryKWs) - 3] == -1,
                     "content keyword tables out of sync");
 
   nsCSSValue value;
@@ -7814,9 +7812,9 @@ CSSParserImpl::ParseListStyle()
     eCSSProperty_list_style_image
   };
 
-  nsCSSValue values[ArrayLength(listStyleIDs)];
+  nsCSSValue values[NS_ARRAY_LENGTH(listStyleIDs)];
   PRInt32 found =
-    ParseChoice(values, listStyleIDs, ArrayLength(listStyleIDs));
+    ParseChoice(values, listStyleIDs, NS_ARRAY_LENGTH(listStyleIDs));
   if (found < 1 || !ExpectEndProperty()) {
     return PR_FALSE;
   }
@@ -7851,7 +7849,7 @@ CSSParserImpl::ParseListStyle()
   }
 
   // Start at 1 to avoid appending fake value.
-  for (PRUint32 index = 1; index < ArrayLength(listStyleIDs); ++index) {
+  for (PRUint32 index = 1; index < NS_ARRAY_LENGTH(listStyleIDs); ++index) {
     AppendValue(listStyleIDs[index], values[index]);
   }
   return PR_TRUE;
@@ -8450,7 +8448,7 @@ CSSParserImpl::ParseTransition()
     // any keyword.
     eCSSProperty_transition_property
   };
-  static const PRUint32 numProps = ArrayLength(kTransitionProperties);
+  static const PRUint32 numProps = NS_ARRAY_LENGTH(kTransitionProperties);
   // this is a shorthand property that accepts -property, -delay,
   // -duration, and -timing-function with some components missing.
   // there can be multiple transitions, separated with commas
@@ -8535,7 +8533,7 @@ CSSParserImpl::ParseAnimation()
     // 'animation-name' accepts any keyword.
     eCSSProperty_animation_name
   };
-  static const PRUint32 numProps = ArrayLength(kAnimationProperties);
+  static const PRUint32 numProps = NS_ARRAY_LENGTH(kAnimationProperties);
   // this is a shorthand property that accepts -property, -delay,
   // -duration, and -timing-function with some components missing.
   // there can be multiple animations, separated with commas

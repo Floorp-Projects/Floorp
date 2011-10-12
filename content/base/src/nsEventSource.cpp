@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsEventSource.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
@@ -1098,11 +1096,11 @@ nsEventSource::ConsoleError()
   if (mReadyState == nsIEventSource::CONNECTING) {
     rv = PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
                              NS_LITERAL_STRING("connectionFailure").get(),
-                             formatStrings, ArrayLength(formatStrings));
+                             formatStrings, NS_ARRAY_LENGTH(formatStrings));
   } else {
     rv = PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
                              NS_LITERAL_STRING("netInterrupt").get(),
-                             formatStrings, ArrayLength(formatStrings));
+                             formatStrings, NS_ARRAY_LENGTH(formatStrings));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

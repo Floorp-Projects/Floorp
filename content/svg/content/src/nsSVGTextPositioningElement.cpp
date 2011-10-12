@@ -33,8 +33,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsSVGTextPositioningElement.h"
 #include "SVGAnimatedLengthList.h"
 #include "DOMSVGAnimatedLengthList.h"
@@ -56,7 +54,7 @@ nsSVGElement::LengthListAttributesInfo
 nsSVGTextPositioningElement::GetLengthListInfo()
 {
   return LengthListAttributesInfo(mLengthListAttributes, sLengthListInfo,
-                                  ArrayLength(sLengthListInfo));
+                                  NS_ARRAY_LENGTH(sLengthListInfo));
 }
 
 
@@ -69,7 +67,7 @@ nsSVGElement::NumberListAttributesInfo
 nsSVGTextPositioningElement::GetNumberListInfo()
 {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
-                                  ArrayLength(sNumberListInfo));
+                                  NS_ARRAY_LENGTH(sNumberListInfo));
 }
 
 //----------------------------------------------------------------------

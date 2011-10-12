@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
@@ -2448,7 +2447,7 @@ nsLocalFile::IsExecutable(bool *_retval)
             "wsf",
             "wsh"};
         nsDependentSubstring ext = Substring(path, dotIdx + 1);
-        for ( int i = 0; i < ArrayLength(executableExts); i++ ) {
+        for ( int i = 0; i < NS_ARRAY_LENGTH(executableExts); i++ ) {
             if ( ext.EqualsASCII(executableExts[i])) {
                 // Found a match.  Set result and quit.
                 *_retval = PR_TRUE;
@@ -3112,11 +3111,11 @@ nsLocalFile::EnsureShortPath()
 
     WCHAR shortPath[MAX_PATH + 1];
     DWORD lengthNeeded = ::GetShortPathNameW(mWorkingPath.get(), shortPath,
-                                             ArrayLength(shortPath));
+                                             NS_ARRAY_LENGTH(shortPath));
     // If an error occurred then lengthNeeded is set to 0 or the length of the
     // needed buffer including NULL termination.  If it succeeds the number of
     // wide characters not including NULL termination is returned.
-    if (lengthNeeded != 0 && lengthNeeded < ArrayLength(shortPath))
+    if (lengthNeeded != 0 && lengthNeeded < NS_ARRAY_LENGTH(shortPath))
         mShortWorkingPath.Assign(shortPath);
     else
         mShortWorkingPath.Assign(mWorkingPath);

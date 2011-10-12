@@ -39,8 +39,6 @@
 
 #include <string.h>
 
-#include "mozilla/Util.h"
-
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -70,7 +68,6 @@
 #include "jsobjinlines.h"
 #include "jstypedarrayinlines.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
@@ -241,8 +238,8 @@ ArrayBuffer::obj_trace(JSTracer *trc, JSObject *obj)
 static JSProperty * const PROPERTY_FOUND = reinterpret_cast<JSProperty *>(1);
 
 JSBool
-ArrayBuffer::obj_lookupGeneric(JSContext *cx, JSObject *obj, jsid id,
-                               JSObject **objp, JSProperty **propp)
+ArrayBuffer::obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
+                                JSObject **objp, JSProperty **propp)
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
         *propp = PROPERTY_FOUND;
@@ -254,7 +251,7 @@ ArrayBuffer::obj_lookupGeneric(JSContext *cx, JSObject *obj, jsid id,
     if (!delegate)
         return false;
 
-    JSBool delegateResult = delegate->lookupGeneric(cx, id, objp, propp);
+    JSBool delegateResult = delegate->lookupProperty(cx, id, objp, propp);
 
     /* If false, there was an error, so propagate it.
      * Otherwise, if propp is non-null, the property
@@ -277,14 +274,7 @@ ArrayBuffer::obj_lookupGeneric(JSContext *cx, JSObject *obj, jsid id,
         return true;
     }
 
-    return proto->lookupGeneric(cx, id, objp, propp);
-}
-
-JSBool
-ArrayBuffer::obj_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name,
-                                JSObject **objp, JSProperty **propp)
-{
-    return obj_lookupGeneric(cx, obj, ATOM_TO_JSID(name), objp, propp);
+    return proto->lookupProperty(cx, id, objp, propp);
 }
 
 JSBool
@@ -322,7 +312,7 @@ JSBool
 ArrayBuffer::obj_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid,
                                JSObject **objp, JSProperty **propp)
 {
-    return obj_lookupGeneric(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
+    return obj_lookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 JSBool
@@ -665,8 +655,8 @@ TypedArray::prop_getLength(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 JSBool
-TypedArray::obj_lookupGeneric(JSContext *cx, JSObject *obj, jsid id,
-                              JSObject **objp, JSProperty **propp)
+TypedArray::obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
+                               JSObject **objp, JSProperty **propp)
 {
     JSObject *tarray = getTypedArray(obj);
     JS_ASSERT(tarray);
@@ -684,14 +674,7 @@ TypedArray::obj_lookupGeneric(JSContext *cx, JSObject *obj, jsid id,
         return true;
     }
 
-    return proto->lookupGeneric(cx, id, objp, propp);
-}
-
-JSBool
-TypedArray::obj_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name,
-                               JSObject **objp, JSProperty **propp)
-{
-    return obj_lookupGeneric(cx, obj, ATOM_TO_JSID(name), objp, propp);
+    return proto->lookupProperty(cx, id, objp, propp);
 }
 
 JSBool
@@ -719,7 +702,7 @@ JSBool
 TypedArray::obj_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid,
                               JSObject **objp, JSProperty **propp)
 {
-    return obj_lookupGeneric(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
+    return obj_lookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 JSBool
@@ -2030,7 +2013,7 @@ Class js::ArrayBufferClass = {
     ArrayBuffer::obj_trace,
     JS_NULL_CLASS_EXT,
     {
-        ArrayBuffer::obj_lookupGeneric,
+        ArrayBuffer::obj_lookupProperty,
         ArrayBuffer::obj_lookupProperty,
         ArrayBuffer::obj_lookupElement,
         ArrayBuffer::obj_lookupSpecial,
@@ -2142,7 +2125,7 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
     _typedArray::obj_trace,  /* trace       */                                 \
     JS_NULL_CLASS_EXT,                                                         \
     {                                                                          \
-        _typedArray::obj_lookupGeneric,                                        \
+        _typedArray::obj_lookupProperty,                                       \
         _typedArray::obj_lookupProperty,                                       \
         _typedArray::obj_lookupElement,                                        \
         _typedArray::obj_lookupSpecial,                                        \
@@ -2426,7 +2409,7 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
         argc++;
     }
 
-    AutoArrayRooter tvr(cx, ArrayLength(vals), vals);
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vals), vals);
     return TypedArrayConstruct(cx, atype, argc, &vals[0]);
 }
 

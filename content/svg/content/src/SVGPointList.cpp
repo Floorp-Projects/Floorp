@@ -34,8 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "SVGPointList.h"
 #include "SVGAnimatedPointList.h"
 #include "nsSVGElement.h"
@@ -70,7 +68,7 @@ SVGPointList::GetValueAsString(nsAString& aValue) const
   for (PRUint32 i = 0; i < mItems.Length(); ++i) {
     // Would like to use aValue.AppendPrintf("%f,%f", item.mX, item.mY),
     // but it's not possible to always avoid trailing zeros.
-    nsTextFormatter::snprintf(buf, ArrayLength(buf),
+    nsTextFormatter::snprintf(buf, NS_ARRAY_LENGTH(buf),
                               NS_LITERAL_STRING("%g,%g").get(),
                               double(mItems[i].mX), double(mItems[i].mY));
     // We ignore OOM, since it's not useful for us to return an error.

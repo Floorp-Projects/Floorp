@@ -36,13 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <unistd.h>
-
-#include "mozilla/Util.h"
-
 #include "nsDeviceMotionSystem.h"
 #include "nsIServiceManager.h"
-
-using namespace mozilla;
 
 typedef struct {
   const char* mPosition;
@@ -199,7 +194,7 @@ void nsDeviceMotionSystem::Startup()
 {
   // Accelerometers in Linux are used by reading a file (yay UNIX!), which is
   // in a slightly different location depending on the driver.
-  for (unsigned int i = 0; i < ArrayLength(gAccelerometers); i++) {
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(gAccelerometers); i++) {
     if (!(mPositionFile = fopen(gAccelerometers[i].mPosition, "r")))
       continue;
 

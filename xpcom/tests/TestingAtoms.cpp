@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "TestingAtoms.h"
 #include "nsStaticAtom.h"
 #include "nsMemory.h"
@@ -58,5 +56,5 @@ static const nsStaticAtom TestingAtoms_info[] = {
 
 void TestingAtoms::AddRefAtoms()
 {
-  NS_RegisterStaticAtoms(TestingAtoms_info, mozilla::ArrayLength(TestingAtoms_info));
+  NS_RegisterStaticAtoms(TestingAtoms_info, NS_ARRAY_LENGTH(TestingAtoms_info));
 }

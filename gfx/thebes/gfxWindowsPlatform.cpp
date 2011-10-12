@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "gfxWindowsPlatform.h"
 
 #include "gfxImageSurface.h"
@@ -75,7 +73,6 @@
 
 #include <string>
 
-using namespace mozilla;
 using namespace mozilla::gfx;
 
 #ifdef CAIRO_HAS_D2D_SURFACE
@@ -802,7 +799,7 @@ gfxWindowsPlatform::GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams
 
     // enumerate over subkeys
     for (i = 0, rv = ERROR_SUCCESS; rv != ERROR_NO_MORE_ITEMS; i++) {
-        size = ArrayLength(displayName);
+        size = NS_ARRAY_LENGTH(displayName);
         rv = RegEnumKeyExW(hKey, i, displayName, &size, NULL, NULL, NULL, NULL);
         if (rv != ERROR_SUCCESS) {
             continue;
@@ -814,7 +811,7 @@ gfxWindowsPlatform::GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams
         DWORD subrv, value;
         bool foundData = false;
 
-        swprintf_s(subkeyName, ArrayLength(subkeyName),
+        swprintf_s(subkeyName, NS_ARRAY_LENGTH(subkeyName),
                    L"Software\\Microsoft\\Avalon.Graphics\\%s", displayName);
 
         // subkey for gamma, pixel structure

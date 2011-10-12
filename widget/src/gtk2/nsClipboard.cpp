@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsClipboard.h"
 #include "nsSupportsPrimitives.h"
 #include "nsString.h"
@@ -61,8 +59,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-using namespace mozilla;
 
 // Callback when someone asks us for the data
 void
@@ -599,7 +595,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         nsCOMPtr<nsISupports> item;
         PRUint32 len;
         nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive;
-        for (PRUint32 i = 0; !ptrPrimitive && i < ArrayLength(imageMimeTypes); i++) {
+        for (PRUint32 i = 0; !ptrPrimitive && i < NS_ARRAY_LENGTH(imageMimeTypes); i++) {
             rv = trans->GetTransferData(imageMimeTypes[i], getter_AddRefs(item), &len);
             ptrPrimitive = do_QueryInterface(item);
         }
