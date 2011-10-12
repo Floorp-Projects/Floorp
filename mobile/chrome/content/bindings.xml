@@ -1477,7 +1477,7 @@
           // Return null if the Weave isn't ready
           if (document.getElementById("cmd_remoteTabs").getAttribute("disabled") ==     "true")
             return null;
-          if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED)
+          if (!Services.prefs.prefHasUserValue("services.sync.username")) {
             return null;
 
           return Weave.Engines.get("tabs");
