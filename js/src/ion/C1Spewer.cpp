@@ -126,7 +126,7 @@ static void
 DumpDefinition(FILE *fp, MDefinition *def)
 {
     fprintf(fp, "      ");
-    fprintf(fp, "%u %lu ", def->id(), def->useCount());
+    fprintf(fp, "%u %u ", def->id(), uint32(def->useCount()));
     def->printName(fp);
     fprintf(fp, " ");
     def->printOpcode(fp);
