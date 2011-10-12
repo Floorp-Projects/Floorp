@@ -1300,9 +1300,21 @@ pageaction > vbox {
 
 /* Override richlistbox and richlistitem styles */
 #context-header {
-  background-color: transparent;
-  border-bottom: @border_width_xlarge@ solid @color_divider_border@;
-  margin: @margin_large@ @margin_large@ 0px;
+  margin: 0px;
+  padding: 0px @padding_xlarge@;
+  min-height: @touch_row@
+}
+
+#context-header > label {
+  border-bottom: @border_width_xxlarge@ solid @color_divider_border@;
+  padding: @padding_xlarge@ @padding_large@;
+  color: @color_text_default@;
+  font-size: @font_snormal@;
+  margin: 0px;
+}
+
+#context-header > label[value=""] {
+  visibility: collapse;
 }
 
 #context-commands > scrollbox {
@@ -1312,18 +1324,21 @@ pageaction > vbox {
 .action-button,
 .context-command {
   -moz-box-align: center;
-  padding: 0px @padding_large@;
+  padding: 0px @padding_xlarge@;
   border: none;
   border-top: @border_width_tiny@ solid transparent;
+  font-size: @font_snormal@;
 }
 
 .action-button > label,
 .context-command > label {
   min-height: @touch_row@;
+  padding: 0px @padding_large@;
   padding-top: -moz-calc(@touch_row@ / 2 - 0.75em);
   -moz-box-align: center;
   border-bottom: @border_width_tiny@ solid @color_button_border@;
   -moz-box-flex: 1;
+  margin: 0px;
   margin-bottom: -@border_width_tiny@;
 }
 
@@ -1412,15 +1427,10 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 #share-title,
-#bookmark-popup-title,
-#context-hint {
+#bookmark-popup-title {
   color: @color_text_default@;
   font-size: @font_small@;
   padding: @padding_small@;
-}
-
-#context-hint[value=""] {
-  visibility: collapse;
 }
 
 #search-engines-list > .action-button > .button-box > .button-icon {
