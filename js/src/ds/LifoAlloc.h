@@ -92,19 +92,18 @@ class BumpChunk
         JS_ASSERT(bump == AlignPtr(bump));
     }
 
-    void clobberUnused() {
-#ifdef DEBUG
-        memset(bump, 0xcd, limit - bump);
-#endif
-    }
-
     void setBump(void *ptr) {
         JS_ASSERT(bumpBase() <= ptr);
         JS_ASSERT(ptr <= limit);
         DebugOnly<char *> prevBump = bump;
         bump = static_cast<char *>(ptr);
-        if (prevBump < bump)
-            clobberUnused();
+#ifdef DEBUG
+        JS_ASSERT(contains(prevBump));
+
+        /* Clobber the now-free space. */
+        if (prevBump > bump)
+            memset(bump, 0xcd, prevBump - bump);
+#endif
     }
 
   public:
