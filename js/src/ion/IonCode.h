@@ -70,7 +70,9 @@ class IonCode : public gc::Cell
     uint32 bufferSize_;             // Total buffer size.
     uint32 insnSize_;               // Instruction stream size.
     uint32 dataSize_;               // Size of the read-only data area.
-    uint32 relocTableSize_;         // Size of the relocation table.
+    uint32 jumpRelocTableBytes_;    // Size of the jump relocation table.
+    uint32 dataRelocTableBytes_;    // Size of the data relocation table.
+    uint32 padding0_;
 
     IonCode()
       : code_(NULL),
@@ -82,14 +84,18 @@ class IonCode : public gc::Cell
         bufferSize_(bufferSize),
         insnSize_(0),
         dataSize_(0),
-        relocTableSize_(0)
+        jumpRelocTableBytes_(0),
+        dataRelocTableBytes_(0)
     { }
 
     uint32 dataOffset() const {
         return insnSize_;
     }
-    uint32 relocTableOffset() const {
+    uint32 jumpRelocTableOffset() const {
         return dataOffset() + dataSize_;
+    }
+    uint32 dataRelocTableOffset() const {
+        return jumpRelocTableOffset() + jumpRelocTableBytes_;
     }
 
   public:

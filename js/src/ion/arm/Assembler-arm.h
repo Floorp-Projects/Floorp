@@ -784,7 +784,7 @@ class Assembler
     js::Vector<DeferredData *, 0, SystemAllocPolicy> data_;
     js::Vector<CodeLabel *, 0, SystemAllocPolicy> codeLabels_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
-    CompactBufferWriter relocations_;
+    CompactBufferWriter jumpRelocations_;
     size_t dataBytesNeeded_;
 
     bool enoughMemory_;
@@ -842,13 +842,13 @@ class Assembler
     bool oom() const {
         return m_buffer.oom() ||
             !enoughMemory_ ||
-            relocations_.oom();
+            jumpRelocations_.oom();
     }
 
     void executableCopy(void *buffer);
     void processDeferredData(IonCode *code, uint8 *data);
     void processCodeLabels(IonCode *code);
-    void copyRelocationTable(uint8 *buffer);
+    void copyJumpRelocationTable(uint8 *buffer);
 
     bool addDeferredData(DeferredData *data, size_t bytes) {
         data->setOffset(dataBytesNeeded_);
@@ -866,8 +866,8 @@ class Assembler
     size_t size() const {
         return m_buffer.uncheckedSize();
     }
-    // Size of the relocation table, in bytes.
-    size_t relocationTableSize() const {
+    // Size of the jump relocation table, in bytes.
+    size_t jumpRelocationTableSize() const {
         return relocations_.length();
     }
     // Size of the data table, in bytes.
@@ -875,7 +875,7 @@ class Assembler
         return dataBytesNeeded_;
     }
     size_t bytesNeeded() const {
-        return size() + dataSize() + relocationTableSize();
+        return size() + dataSize() + jumpRelocationTableSize();
     }
     // write a blob of binary into the instruction stream
     void writeBlob(uint32 x)
@@ -1394,7 +1394,7 @@ class Assembler
     }
 #endif
   public:
-    static void TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
+    static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.

@@ -46,10 +46,33 @@ using namespace js;
 using namespace js::ion;
 
 void
-AssemblerX86Shared::copyRelocationTable(uint8 *dest)
+AssemblerX86Shared::copyJumpRelocationTable(uint8 *dest)
 {
-    if (relocations_.length())
-        memcpy(dest, relocations_.buffer(), relocations_.length());
+    if (jumpRelocations_.length())
+        memcpy(dest, jumpRelocations_.buffer(), jumpRelocations_.length());
+}
+
+void
+AssemblerX86Shared::copyDataRelocationTable(uint8 *dest)
+{
+    if (dataRelocations_.length())
+        memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
+}
+
+static void
+TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
+{
+    while (reader.more()) {
+        size_t offset = reader.readUnsigned();
+        void *ptr = JSC::X86Assembler::getPointer(buffer + offset);
+        gc::MarkGCThing(trc, ptr, "immgcptr");
+    }
+}
+
+void
+AssemblerX86Shared::TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
+{
+    ::TraceDataRelocations(trc, code->raw(), reader);
 }
 
 void
@@ -59,6 +82,10 @@ AssemblerX86Shared::trace(JSTracer *trc)
         RelativePatch &rp = jumps_[i];
         if (rp.kind == Relocation::CODE)
             MarkIonCode(trc, IonCode::FromExecutable((uint8 *)rp.target), "masmrel32");
+    }
+    if (dataRelocations_.length()) {
+        CompactBufferReader reader(dataRelocations_);
+        ::TraceDataRelocations(trc, masm.buffer(), reader);
     }
 }
 

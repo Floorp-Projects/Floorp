@@ -268,11 +268,14 @@ IonCode::copyFrom(MacroAssembler &masm)
     insnSize_ = masm.instructionsSize();
     masm.executableCopy(code_);
 
-    relocTableSize_ = masm.relocationTableSize();
-    masm.copyRelocationTable(code_ + relocTableOffset());
-
     dataSize_ = masm.dataSize();
     masm.processDeferredData(this, code_ + dataOffset());
+
+    jumpRelocTableBytes_ = masm.jumpRelocationTableBytes();
+    masm.copyJumpRelocationTable(code_ + jumpRelocTableOffset());
+
+    dataRelocTableBytes_ = masm.dataRelocationTableBytes();
+    masm.copyDataRelocationTable(code_ + dataRelocTableOffset());
 
     masm.processCodeLabels(this);
 }
@@ -280,10 +283,15 @@ IonCode::copyFrom(MacroAssembler &masm)
 void
 IonCode::trace(JSTracer *trc)
 {
-    if (relocTableSize_) {
-        uint8 *start = code_ + relocTableOffset();
-        CompactBufferReader reader(start, start + relocTableSize_);
-        MacroAssembler::TraceRelocations(trc, this, reader);
+    if (jumpRelocTableBytes_) {
+        uint8 *start = code_ + jumpRelocTableOffset();
+        CompactBufferReader reader(start, start + jumpRelocTableBytes_);
+        MacroAssembler::TraceJumpRelocations(trc, this, reader);
+    }
+    if (dataRelocTableBytes_) {
+        uint8 *start = code_ + dataRelocTableOffset();
+        CompactBufferReader reader(start, start + dataRelocTableBytes_);
+        MacroAssembler::TraceDataRelocations(trc, this, reader);
     }
 }
 
