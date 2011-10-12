@@ -1896,7 +1896,7 @@ IonBuilder::resumeAt(MInstruction *ins, jsbytecode *pc)
 }
 
 static inline bool
-TestSingletonProperty(JSContext *cx, JSObject *obj, jsid id, bool *result)
+TestSingletonProperty(JSContext *cx, JSObject *obj, jsid id, bool *isKnownConstant)
 {
     // We would like to completely no-op property/global accesses which can
     // produce only a particular JSObject or undefined, provided we can
@@ -1908,7 +1908,7 @@ TestSingletonProperty(JSContext *cx, JSObject *obj, jsid id, bool *result)
     // property has a default or method shape, the only way it can produce
     // undefined in the future is if it is deleted. Deletion causes type
     // properties to be explicitly marked with undefined.
-    *result = false;
+    *isKnownConstant = false;
 
     JSObject *pobj = obj;
     while (pobj) {
@@ -1936,7 +1936,7 @@ TestSingletonProperty(JSContext *cx, JSObject *obj, jsid id, bool *result)
         return true;
     }
 
-    *result = true;
+    *isKnownConstant = true;
     return true;
 }
 
@@ -2017,10 +2017,10 @@ IonBuilder::jsop_getgname(JSAtom *atom)
         if (!barrier) {
             if (singleton) {
                 // Try to inline a known constant value.
-                bool result;
-                if (!TestSingletonProperty(cx, globalObj, id, &result))
+                bool isKnownConstant;
+                if (!TestSingletonProperty(cx, globalObj, id, &isKnownConstant))
                     return false;
-                if (result)
+                if (isKnownConstant)
                     return pushConstant(ObjectValue(*singleton));
             }
             if (knownType == JSVAL_TYPE_UNDEFINED)
