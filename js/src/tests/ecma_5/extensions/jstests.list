@@ -1,6 +1,7 @@
 url-prefix ../../jsreftest.html?test=ecma_5/extensions/
 fails-if(Android) script 8.12.5-01.js
 script 15.4.4.11.js
+script 15.9.4.2.js
 script Boolean-toSource.js
 script Number-toSource.js
 script Object-keys-and-object-ids.js
