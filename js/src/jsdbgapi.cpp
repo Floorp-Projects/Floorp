@@ -681,7 +681,6 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fpArg)
         return NULL;
 
     JS_ASSERT(fp->callee().isFunction());
-    JS_ASSERT(fp->callee().getPrivate() == fp->fun());
     return &fp->callee();
 }
 

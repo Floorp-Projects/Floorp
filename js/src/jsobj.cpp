@@ -3774,8 +3774,8 @@ struct JSObject::TradeGutsReserved {
     JSContext *cx;
     Vector<Value> avals;
     Vector<Value> bvals;
-    uint32 newafixed;
-    uint32 newbfixed;
+    int newafixed;
+    int newbfixed;
     Value *newaslots;
     Value *newbslots;
 
@@ -3844,6 +3844,9 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
         reserved.newbfixed++;
         reserved.newafixed--;
     }
+
+    JS_ASSERT(reserved.newafixed >= 0);
+    JS_ASSERT(reserved.newbfixed >= 0);
 
     /*
      * The newaslots/newbslots arrays hold any dynamic slots for the objects
