@@ -60,7 +60,6 @@
 #include "jsopcode.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jsstaticcheck.h"
 #include "jswrapper.h"
 
 #include "vm/GlobalObject.h"

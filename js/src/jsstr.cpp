@@ -69,7 +69,6 @@
 #include "jsopcode.h"
 #include "jsprobes.h"
 #include "jsscope.h"
-#include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jsversion.h"
 
