@@ -140,7 +140,7 @@ class CompactBufferWriter
     void writeSigned(int32 v) {
         bool isNegative = v < 0;
         uint32 value = isNegative ? -v : v;
-        uint8 byte = ((value & 0x3F) << 2) | ((value > 0x3F) << 1) | isNegative;
+        uint8 byte = ((value & 0x3F) << 2) | ((value > 0x3F) << 1) | uint32(isNegative);
         writeByte(byte);
 
         // Write out the rest of the bytes, if needed.

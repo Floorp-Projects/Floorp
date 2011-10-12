@@ -80,9 +80,9 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
     if (!left->isConstant() || !right->isConstant())
         return NULL;
 
-    js::Value lhs = left->toConstant()->value();
-    js::Value rhs = right->toConstant()->value();
-    js::Value ret;
+    Value lhs = left->toConstant()->value();
+    Value rhs = right->toConstant()->value();
+    Value ret = UndefinedValue();
 
     switch(ins->op()) {
       case MDefinition::Op_BitAnd:
@@ -121,6 +121,7 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
         break;
       default:
         JS_NOT_REACHED("NYI");
+        return NULL;
     }
 
     if (ins->type() != MIRTypeFromValue(ret))
