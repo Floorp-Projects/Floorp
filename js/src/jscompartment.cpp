@@ -562,8 +562,10 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     if (initialStringShape && IsAboutToBeFinalized(cx, initialStringShape))
         initialStringShape = NULL;
 
+#ifdef JS_ION
     if (ionCompartment_)
         ionCompartment_->sweep(cx);
+#endif
 
     sweepBreakpoints(cx);
 
