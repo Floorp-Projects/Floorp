@@ -42,7 +42,6 @@
 
 #include "jsanalyze.h"
 #include "jscntxt.h"
-#include "jstl.h"
 #include "MethodJIT.h"
 #include "CodeGenIncludes.h"
 #include "BaseCompiler.h"
@@ -391,6 +390,7 @@ class Compiler : public BaseCompiler
      * the outermost script.
      */
 
+public:
     struct ActiveFrame {
         ActiveFrame *parent;
         jsbytecode *parentPC;
@@ -405,6 +405,11 @@ class Compiler : public BaseCompiler
 
         /* Current types for non-escaping vars in the script. */
         VarType *varTypes;
+
+        /* JIT code generation tracking state */
+        size_t mainCodeStart;
+        size_t stubCodeStart;
+        size_t inlinePCOffset;
 
         /* State for managing return from inlined frames. */
         bool needReturnValue;          /* Return value will be used. */
@@ -424,6 +429,8 @@ class Compiler : public BaseCompiler
         ActiveFrame(JSContext *cx);
         ~ActiveFrame();
     };
+
+private:
     ActiveFrame *a;
     ActiveFrame *outer;
 

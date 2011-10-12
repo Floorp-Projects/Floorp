@@ -887,8 +887,7 @@ InspectorUI.prototype = {
   initTools: function IUI_initTools()
   {
     // Style inspector
-    // XXX bug 689164, remove /false &&/ from below when bug 689160 fixed.
-    if (false && Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
+    if (Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
         !this.toolRegistered("styleinspector")) {
       let stylePanel = StyleInspector.createPanel(true);
       this.registerTool({
@@ -990,6 +989,7 @@ InspectorUI.prototype = {
     }
 
     this.stopInspecting();
+    this.browser.removeEventListener("keypress", this, true);
 
     this.saveToolState(this.winID);
     this.toolsDo(function IUI_toolsHide(aTool) {
@@ -997,6 +997,9 @@ InspectorUI.prototype = {
     }.bind(this));
 
     if (this.highlighter) {
+      this.highlighter.highlighterContainer.removeEventListener("keypress",
+                                                                this,
+                                                                true);
       this.highlighter.destroy();
       this.highlighter = null;
     }
@@ -1027,10 +1030,16 @@ InspectorUI.prototype = {
       this.treePanel.closeEditor();
 
     this.inspectToolbutton.checked = true;
-    this.attachPageListeners();
+    // Attach event listeners to content window and child windows to enable
+    // highlighting and click to stop inspection.
+    this.browser.addEventListener("keypress", this, true);
+    this.highlighter.highlighterContainer.addEventListener("keypress", this, true);
+    this.highlighter.attachInspectListeners();
+
     this.inspecting = true;
     this.toolsDim(true);
     this.highlighter.veilContainer.removeAttribute("locked");
+    this.highlighter.nodeInfo.container.removeAttribute("locked");
   },
 
   /**
@@ -1046,7 +1055,12 @@ InspectorUI.prototype = {
     }
 
     this.inspectToolbutton.checked = false;
-    this.detachPageListeners();
+    // Detach event listeners from content window and child windows to disable
+    // highlighting. We still want to be notified if the user presses "ESCAPE"
+    // to unlock the node, so we don't remove the "keypress" event until
+    // the highlighter is removed.
+    this.highlighter.detachInspectListeners();
+
     this.inspecting = false;
     this.toolsDim(false);
     if (this.highlighter.node) {
@@ -1055,6 +1069,7 @@ InspectorUI.prototype = {
       this.select(null, true, true);
     }
     this.highlighter.veilContainer.setAttribute("locked", true);
+    this.highlighter.nodeInfo.container.setAttribute("locked", true);
   },
 
   /**
@@ -1165,11 +1180,9 @@ InspectorUI.prototype = {
         switch (event.keyCode) {
           case this.chromeWin.KeyEvent.DOM_VK_RETURN:
           case this.chromeWin.KeyEvent.DOM_VK_ESCAPE:
-            if (this.inspecting) {
-              this.stopInspecting();
-              event.preventDefault();
-              event.stopPropagation();
-            }
+            this.toggleInspection();
+            event.preventDefault();
+            event.stopPropagation();
             break;
           case this.chromeWin.KeyEvent.DOM_VK_LEFT:
             let node;
@@ -1237,26 +1250,6 @@ InspectorUI.prototype = {
         }
         break;
     }
-  },
-
-  /**
-   * Attach event listeners to content window and child windows to enable
-   * highlighting and click to stop inspection.
-   */
-  attachPageListeners: function IUI_attachPageListeners()
-  {
-    this.browser.addEventListener("keypress", this, true);
-    this.highlighter.attachInspectListeners();
-  },
-
-  /**
-   * Detach event listeners from content window and child windows
-   * to disable highlighting.
-   */
-  detachPageListeners: function IUI_detachPageListeners()
-  {
-    this.browser.removeEventListener("keypress", this, true);
-    this.highlighter.detachInspectListeners();
   },
 
   /////////////////////////////////////////////////////////////////////////

@@ -79,6 +79,21 @@ JS_SetProtoCalled(JSContext *cx);
 extern JS_FRIEND_API(size_t)
 JS_GetCustomIteratorCount(JSContext *cx);
 
+enum {
+    JS_TELEMETRY_GC_REASON,
+    JS_TELEMETRY_GC_IS_COMPARTMENTAL,
+    JS_TELEMETRY_GC_IS_SHAPE_REGEN,
+    JS_TELEMETRY_GC_MS,
+    JS_TELEMETRY_GC_MARK_MS,
+    JS_TELEMETRY_GC_SWEEP_MS
+};
+
+typedef void
+(* JSAccumulateTelemetryDataCallback)(int id, JSUint32 sample);
+
+extern JS_FRIEND_API(void)
+JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback);
+
 /* Data for tracking analysis/inference memory usage. */
 typedef struct TypeInferenceMemoryStats
 {

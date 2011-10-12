@@ -46,6 +46,10 @@
 #include "nsArrayUtils.h"
 #include "nsIDocShellTreeItem.h"
 
+// Window property used by ipc related code in identifying accessible
+// tab windows.
+const PRUnichar* kPropNameTabContent = L"AccessibleTabWindow";
+
 HRESULT
 nsWinUtils::ConvertToIA2Array(nsIArray *aGeckoArray, IUnknown ***aIA2Array,
                               long *aIA2ArrayLen)
@@ -149,14 +153,19 @@ nsWinUtils::CreateNativeWindow(LPCWSTR aWindowClass, HWND aParentWnd,
                                int aX, int aY, int aWidth, int aHeight,
                                bool aIsActive)
 {
-  return ::CreateWindowExW(WS_EX_TRANSPARENT, aWindowClass,
-                           L"NetscapeDispatchWnd",
-                           WS_CHILD | (aIsActive ? WS_VISIBLE : 0),
-                           aX, aY, aWidth, aHeight,
-                           aParentWnd,
-                           NULL,
-                           GetModuleHandle(NULL),
-                           NULL);
+  HWND hwnd = ::CreateWindowExW(WS_EX_TRANSPARENT, aWindowClass,
+                                L"NetscapeDispatchWnd",
+                                WS_CHILD | (aIsActive ? WS_VISIBLE : 0),
+                                aX, aY, aWidth, aHeight,
+                                aParentWnd,
+                                NULL,
+                                GetModuleHandle(NULL),
+                                NULL);
+  if (hwnd) {
+    // Mark this window so that ipc related code can identify it.
+    ::SetPropW(hwnd, kPropNameTabContent, (HANDLE)1);
+  }
+  return hwnd;
 }
 
 void
