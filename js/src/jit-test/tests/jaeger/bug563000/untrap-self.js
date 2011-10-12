@@ -6,7 +6,6 @@ function main() {
   untrap(main, 24);
   x = "success";
 }
-dis(main);
 function failure() { x = "failure"; }
 
 /* JSOP_STOP in main. */
