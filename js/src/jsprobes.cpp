@@ -50,7 +50,6 @@
 #include "jsinterp.h"
 #include "jsobj.h"
 #include "jsscript.h"
-#include "jsstaticcheck.h"
 #include "jsstr.h"
 
 #include "jsprobes.h"
