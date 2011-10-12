@@ -623,17 +623,20 @@ dialog {
 .prompt-message {
   -moz-box-pack: center;
   font-size: @font_snormal@;
-  padding-bottom: @padding_normal@;
-  min-height: 4em;
+  padding: @padding_normal@ @padding_large@;
+  min-height: @touch_row@;
 }
 
 .prompt-header {
   border-bottom: @border_width_tiny@ solid @color_button_border@;
-  margin: @margin_normal@ @margin_large@ 0px !important;
+  margin: 0px @margin_large@ !important;
 }
 
 .prompt-title {
   font-size: @font_snormal@;
+  min-height: @touch_row@;
+  padding: @padding_xlarge@ @padding_large@;
+  margin: 0px;
 }
 
 /* Authentication dialogs do not have a title */
@@ -644,8 +647,8 @@ dialog {
 
 .prompt-line {
   background-color: transparent;
-  border-bottom: @border_width_xlarge@ solid @color_divider_border@;
-  height: @padding_normal@ !important;
+  border-bottom: @border_width_xxlarge@ solid @color_divider_border@;
+  height: @border_width_xxlarge@ !important;
 }
 
 .prompt-buttons {
