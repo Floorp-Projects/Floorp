@@ -39,8 +39,6 @@
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLRenderers.h>
 
-#include "mozilla/Util.h"
-
 #include "GfxInfo.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/FunctionTimer.h"
@@ -55,7 +53,6 @@
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #endif
 
-using namespace mozilla;
 using namespace mozilla::widget;
 
 GfxInfo::GfxInfo()
@@ -111,7 +108,7 @@ IsATIRadeonX1000(PRUint32 aVendorID, PRUint32 aDeviceID)
   if (aVendorID == 0x1002) {
     // this list is from the ATIRadeonX1000.kext Info.plist
     PRUint32 devices[] = {0x7187, 0x7210, 0x71DE, 0x7146, 0x7142, 0x7109, 0x71C5, 0x71C0, 0x7240, 0x7249, 0x7291};
-    for (size_t i = 0; i < ArrayLength(devices); i++) {
+    for (size_t i = 0; i < NS_ARRAY_LENGTH(devices); i++) {
       if (aDeviceID == devices[i])
         return true;
     }
@@ -138,7 +135,7 @@ GfxInfo::Init()
   if (CGLQueryRendererInfo(0xffffffff, &renderer, &rendererCount) != kCGLNoError)
     return rv;
 
-  rendererCount = (GLint) NS_MIN(rendererCount, (GLint) ArrayLength(mRendererIDs));
+  rendererCount = (GLint) NS_MIN(rendererCount, (GLint) NS_ARRAY_LENGTH(mRendererIDs));
   for (GLint i = 0; i < rendererCount; i++) {
     GLint prop = 0;
 
@@ -373,7 +370,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
     // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
     // being used.
 
-    for (PRUint32 i = 0; i < ArrayLength(mRendererIDs); ++i) {
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRendererIDs); ++i) {
       switch (mRendererIDs[i]) {
         case kCGLRendererATIRage128ID: // non-programmable
         case kCGLRendererATIRadeonID: // non-programmable

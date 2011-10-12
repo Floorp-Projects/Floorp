@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nscore.h"
 #include "nsLayoutCID.h"
 #include "nsIAtom.h"
@@ -66,7 +64,6 @@
 #define LOCK_DOC(doc)
 #define UNLOCK_DOC(doc)
 
-using namespace mozilla;
 
 class OffsetEntry
 {
@@ -136,7 +133,7 @@ nsTextServicesDocument::RegisterAtoms()
 #undef TS_ATOM
   };
 
-  NS_RegisterStaticAtoms(ts_atoms, ArrayLength(ts_atoms));
+  NS_RegisterStaticAtoms(ts_atoms, NS_ARRAY_LENGTH(ts_atoms));
 }
 
 /* static */

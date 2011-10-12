@@ -40,8 +40,6 @@
 #if !defined jsjaeger_regstate_h__ && defined JS_METHODJIT
 #define jsjaeger_regstate_h__
 
-#include "mozilla/Util.h"
-
 #include "assembler/assembler/MacroAssembler.h"
 
 namespace js {
@@ -338,8 +336,8 @@ struct Registers {
             JSC::SparcRegisters::o5
         };
 #endif
-        JS_ASSERT(numArgRegs(conv) == mozilla::ArrayLength(regs));
-        if (i > mozilla::ArrayLength(regs))
+        JS_ASSERT(numArgRegs(conv) == JS_ARRAY_LENGTH(regs));
+        if (i > JS_ARRAY_LENGTH(regs))
             return false;
         *reg = regs[i];
         return true;

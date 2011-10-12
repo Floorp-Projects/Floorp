@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "dombindings.h"
 #include "xpcprivate.h"
 #include "xpcquickstubs.h"
@@ -427,7 +425,7 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
     if (!interfacePrototype)
         return NULL;
 
-    for (size_t n = 0; n < ArrayLength(sProtoProperties); ++n) {
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
         JS_ASSERT(sProtoProperties[n].getter);
         jsid id = sProtoProperties[n].id;
         uintN attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
@@ -438,7 +436,7 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
             return NULL;
     }
 
-    for (size_t n = 0; n < ArrayLength(sProtoMethods); ++n) {
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
         jsid id = sProtoMethods[n].id;
         JSFunction *fun = JS_NewFunctionById(cx, sProtoMethods[n].native, sProtoMethods[n].nargs,
                                              0, js::GetObjectParent(interfacePrototype), id);
@@ -818,7 +816,7 @@ bool
 ListBase<LC>::shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *shouldCache)
 {
     JSPropertyDescriptor desc;
-    for (size_t n = 0; n < ArrayLength(sProtoProperties); ++n) {
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
         jsid id = sProtoProperties[n].id;
         if (!JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, &desc))
             return false;
@@ -829,7 +827,7 @@ ListBase<LC>::shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *should
         }
     }
 
-    for (size_t n = 0; n < ArrayLength(sProtoMethods); ++n) {
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
         jsid id = sProtoMethods[n].id;
         if (!JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, &desc))
             return false;
@@ -850,7 +848,7 @@ ListBase<LC>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, Propert
 {
     JS_ASSERT(xpc::WrapperFactory::IsXrayWrapper(proxy));
 
-    for (size_t n = 0; n < ArrayLength(sProtoProperties); ++n) {
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
         if (id == sProtoProperties[n].id) {
             desc->attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
             if (!sProtoProperties[n].setter)
@@ -862,7 +860,7 @@ ListBase<LC>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, Propert
         }
     }
 
-    for (size_t n = 0; n < ArrayLength(sProtoMethods); ++n) {
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
         if (id == sProtoMethods[n].id) {
             JSFunction *fun = JS_NewFunctionById(cx, sProtoMethods[n].native,
                                                  sProtoMethods[n].nargs, 0, proxy, id);
@@ -890,7 +888,7 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
     JS_ASSERT(shouldCacheProtoShape(cx, proto, &shouldCache) && shouldCache);
 #endif
 
-    for (size_t n = 0; n < ArrayLength(sProtoProperties); ++n) {
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoProperties); ++n) {
         if (id == sProtoProperties[n].id) {
             *found = true;
             if (!vp)
@@ -899,7 +897,7 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
             return sProtoProperties[n].getter(cx, proxy, id, vp);
         }
     }
-    for (size_t n = 0; n < ArrayLength(sProtoMethods); ++n) {
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
         if (id == sProtoMethods[n].id) {
             *found = true;
             if (!vp)

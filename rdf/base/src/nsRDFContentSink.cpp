@@ -71,8 +71,6 @@
 
 */
 
-#include "mozilla/Util.h"
-
 #include "nsCOMPtr.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIContentSink.h"
@@ -99,8 +97,6 @@
 #include "nsStaticAtom.h"
 #include "nsIScriptError.h"
 #include "nsIDTD.h"
-
-using namespace mozilla;
 
 ////////////////////////////////////////////////////////////////////////
 // XPCOM IIDs
@@ -337,7 +333,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
 
         rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
 
-        NS_RegisterStaticAtoms(rdf_atoms, ArrayLength(rdf_atoms));
+        NS_RegisterStaticAtoms(rdf_atoms, NS_ARRAY_LENGTH(rdf_atoms));
     }
 
     mNodeIDMap.Init();

@@ -45,8 +45,6 @@
 
 /* DOM object returned from element.getComputedStyle() */
 
-#include "mozilla/Util.h"
-
 #include "nsComputedDOMStyle.h"
 
 #include "nsDOMError.h"
@@ -84,8 +82,8 @@
 #include "mozilla/dom/Element.h"
 #include "CSSCalc.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
+namespace css = mozilla::css;
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -2191,10 +2189,10 @@ nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
   PRUint32 shadowValuesLength;
   if (aIsBoxShadow) {
     shadowValues = shadowValuesWithSpread;
-    shadowValuesLength = ArrayLength(shadowValuesWithSpread);
+    shadowValuesLength = NS_ARRAY_LENGTH(shadowValuesWithSpread);
   } else {
     shadowValues = shadowValuesNoSpread;
-    shadowValuesLength = ArrayLength(shadowValuesNoSpread);
+    shadowValuesLength = NS_ARRAY_LENGTH(shadowValuesNoSpread);
   }
 
   nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
@@ -4577,7 +4575,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
 
   };
 
-  *aLength = ArrayLength(map);
+  *aLength = NS_ARRAY_LENGTH(map);
 
   return map;
 }

@@ -43,8 +43,6 @@
  * utility methods for subclasses, and so forth.
  */
 
-#include "mozilla/Util.h"
-
 #include "nsGenericElement.h"
 
 #include "nsDOMAttribute.h"
@@ -153,8 +151,8 @@
 
 #include "xpcpublic.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
+namespace css = mozilla::css;
 
 NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
 
@@ -4325,7 +4323,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
     char name[72];
     PRUint32 nsid = tmp->GetNameSpaceID();
     nsAtomCString localName(tmp->NodeInfo()->NameAtom());
-    if (nsid < ArrayLength(kNSURIs)) {
+    if (nsid < NS_ARRAY_LENGTH(kNSURIs)) {
       PR_snprintf(name, sizeof(name), "nsGenericElement%s %s", kNSURIs[nsid],
                   localName.get());
     }

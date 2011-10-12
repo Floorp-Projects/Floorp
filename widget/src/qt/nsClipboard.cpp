@@ -49,8 +49,6 @@
 #include <QImageWriter>
 #include <QBuffer>
 
-#include "mozilla/Util.h"
-
 #include "nsClipboard.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
@@ -62,8 +60,6 @@
 
 #include "imgIContainer.h"
 #include "gfxImageSurface.h"
-
-using namespace mozilla;
 
 NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 
@@ -198,7 +194,7 @@ nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
                 static const char* const imageMimeTypes[] = {
                     kNativeImageMime, kPNGImageMime, kJPEGImageMime, kGIFImageMime };
                 nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive;
-                for (PRUint32 i = 0; !ptrPrimitive && i < ArrayLength(imageMimeTypes); i++)
+                for (PRUint32 i = 0; !ptrPrimitive && i < NS_ARRAY_LENGTH(imageMimeTypes); i++)
                 {
                     aTransferable->GetTransferData(imageMimeTypes[i], getter_AddRefs(clip), &len);
                     ptrPrimitive = do_QueryInterface(clip);

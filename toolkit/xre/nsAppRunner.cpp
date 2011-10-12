@@ -46,8 +46,6 @@
 #include <os2safe.h>
 #endif
 
-#include "mozilla/Util.h"
-
 #define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
 
 #if defined(MOZ_WIDGET_QT)
@@ -126,7 +124,6 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/unused.h"
 
-using namespace mozilla;
 using mozilla::unused;
 
 #ifdef XP_WIN
@@ -2369,7 +2366,7 @@ static struct {
 
 static void SaveStateForAppInitiatedRestart()
 {
-  for (size_t i = 0; i < ArrayLength(gSavedVars); ++i) {
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(gSavedVars); ++i) {
     const char *s = PR_GetEnv(gSavedVars[i].name);
     if (s)
       gSavedVars[i].value = PR_smprintf("%s=%s", gSavedVars[i].name, s);
@@ -2378,7 +2375,7 @@ static void SaveStateForAppInitiatedRestart()
 
 static void RestoreStateForAppInitiatedRestart()
 {
-  for (size_t i = 0; i < ArrayLength(gSavedVars); ++i) {
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(gSavedVars); ++i) {
     if (gSavedVars[i].value)
       PR_SetEnv(gSavedVars[i].value);
   }

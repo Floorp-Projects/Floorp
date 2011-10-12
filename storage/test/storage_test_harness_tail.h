@@ -51,7 +51,7 @@ main(int aArgc,
 {
   ScopedXPCOM xpcom(TEST_NAME);
 
-  for (size_t i = 0; i < mozilla::ArrayLength(gTests); i++)
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(gTests); i++)
     gTests[i]();
 
   if (gPassedTests == gTotalTests)

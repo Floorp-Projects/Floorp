@@ -57,7 +57,6 @@
 
  */
 
-#include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
@@ -91,8 +90,6 @@
 #include "nsILocaleService.h"
 #include "nsIConsoleService.h"
 #include "nsEscape.h"
-
-using namespace mozilla;
 
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 
@@ -228,7 +225,7 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     nsresult rv;
 
     PRUnichar buf[128];
-    nsFixedString id(buf, ArrayLength(buf), 0);
+    nsFixedString id(buf, NS_ARRAY_LENGTH(buf), 0);
 
     // Whoa.  Why the "id" attribute?  What if it's not even a XUL
     // element?  This is totally bogus!
@@ -419,7 +416,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAString& aAttribute
     nsresult rv;
 
     PRUnichar buf[256];
-    nsFixedString uri(buf, ArrayLength(buf), 0);
+    nsFixedString uri(buf, NS_ARRAY_LENGTH(buf), 0);
     if (aNameSpaceID != kNameSpaceID_Unknown && aNameSpaceID != kNameSpaceID_None) {
         rv = nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, uri);
         // XXX ignore failure; treat as "no namespace"

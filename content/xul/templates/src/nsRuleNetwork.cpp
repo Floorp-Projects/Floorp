@@ -50,8 +50,6 @@
 
  */
 
-#include "mozilla/Util.h"
-
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -75,8 +73,6 @@ extern PRLogModuleInfo* gXULTemplateLog;
 #include "nsRDFConMemberTestNode.h"
 #include "nsRDFPropertyTestNode.h"
 
-using namespace mozilla;
-
 bool MemoryElement::gPoolInited;
 nsFixedSizeAllocator MemoryElement::gPool;
 
@@ -91,7 +87,7 @@ MemoryElement::Init()
         };
 
         if (NS_FAILED(gPool.Init("MemoryElement", bucketsizes,
-                                 ArrayLength(bucketsizes), 256)))
+                                 NS_ARRAY_LENGTH(bucketsizes), 256)))
             return PR_FALSE;
 
         gPoolInited = PR_TRUE;

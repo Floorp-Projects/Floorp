@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "gfxFontUtils.h"
 
 #include "nsServiceManagerUtils.h"
@@ -62,7 +60,7 @@
 
 #define UNICODE_BMP_LIMIT 0x10000
 
-using namespace mozilla;
+using namespace mozilla; // for the AutoSwap_* types
 
 /* Unicode subrange table
  *   from: http://msdn.microsoft.com/en-us/library/dd374090
@@ -1303,7 +1301,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
                                              NAME_ID_POSTSCRIPT};
 
     // calculate new name table size
-    PRUint16 nameCount = ArrayLength(neededNameIDs);
+    PRUint16 nameCount = NS_ARRAY_LENGTH(neededNameIDs);
 
     // leave room for null-terminator
     PRUint16 nameStrLength = (aName.Length() + 1) * sizeof(PRUnichar); 

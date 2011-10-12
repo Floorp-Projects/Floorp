@@ -42,8 +42,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include <ole2.h>
 #include <shlobj.h>
 
@@ -71,9 +69,6 @@
 
 // XXX Duped from profile/src/nsProfile.cpp.
 #include <stdlib.h>
-
-using namespace mozilla;
-
 #define TABLE_SIZE 36
 static const char table[] =
     { 'a','b','c','d','e','f','g','h','i','j',
@@ -954,7 +949,7 @@ MangleTextToValidFilename(nsString & aText)
   aText.StripChars(FILE_PATH_SEPARATOR  FILE_ILLEGAL_CHARACTERS);
   aText.CompressWhitespace(true, true);
   PRUint32 nameLen;
-  for (size_t n = 0; n < ArrayLength(forbiddenNames); ++n) {
+  for (size_t n = 0; n < NS_ARRAY_LENGTH(forbiddenNames); ++n) {
     nameLen = (PRUint32) strlen(forbiddenNames[n]);
     if (aText.EqualsIgnoreCase(forbiddenNames[n], nameLen)) {
       // invalid name is either the entire string, or a prefix with a period

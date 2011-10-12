@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsXBLContentSink.h"
 #include "nsIDocument.h"
 #include "nsBindingManager.h"
@@ -63,7 +61,6 @@
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 
 nsresult
@@ -249,7 +246,7 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
 
   return nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
                                          "UnexpectedElement",
-                                         params, ArrayLength(params),
+                                         params, NS_ARRAY_LENGTH(params),
                                          nsnull,
                                          EmptyString() /* source line */,
                                          aLineNumber, 0 /* column number */,

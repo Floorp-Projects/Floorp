@@ -50,9 +50,6 @@
  */
 #include <math.h>
 #include <string.h>     /* for memset used when DEBUG */
-
-#include "mozilla/Util.h"
-
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -105,7 +102,6 @@
 # include <valgrind/memcheck.h>
 #endif
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
@@ -552,7 +548,7 @@ Chunk::init()
 
     /* Assemble all arenas into a linked list and mark them as not allocated. */
     ArenaHeader **prevp = &info.emptyArenaListHead;
-    Arena *end = &arenas[ArrayLength(arenas)];
+    Arena *end = &arenas[JS_ARRAY_LENGTH(arenas)];
     for (Arena *a = &arenas[0]; a != end; ++a) {
         *prevp = &a->aheader;
         a->aheader.setAsNotAllocated();
@@ -944,7 +940,7 @@ MarkThreadDataConservatively(JSTracer *trc, ThreadData *td)
     JS_ASSERT(stackMin <= stackEnd);
     MarkRangeConservatively(trc, stackMin, stackEnd);
     MarkRangeConservatively(trc, ctd->registerSnapshot.words,
-                            ArrayEnd(ctd->registerSnapshot.words));
+                            JS_ARRAY_END(ctd->registerSnapshot.words));
 }
 
 void

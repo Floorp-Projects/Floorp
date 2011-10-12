@@ -38,9 +38,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#include "mozilla/Util.h"
-
 #include "nsIPlatformCharset.h"
 #include "nsUConvPropertySearch.h"
 #include "pratom.h"
@@ -52,8 +49,6 @@
 #include "nsLocaleCID.h"
 #include "nsIServiceManager.h"
 #include "nsPlatformCharset.h"
-
-using namespace mozilla;
 
 static const char* kOS2Charsets[][3] = {
 #include "os2charset.properties.h"
@@ -81,7 +76,7 @@ nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharse
   LossyCopyUTF16toASCII(inANSICodePage, key);
 
   nsresult rv = nsUConvPropertySearch::SearchPropertyValue(kOS2Charsets,
-      ArrayLength(kOS2Charsets), key, outCharset);
+      NS_ARRAY_LENGTH(kOS2Charsets), key, outCharset);
   if (NS_FAILED(rv)) {
     outCharset.AssignLiteral("IBM850");
   }

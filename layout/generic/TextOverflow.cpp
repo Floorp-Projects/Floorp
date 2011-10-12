@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "TextOverflow.h"
 
 // Please maintain alphabetical order below
@@ -69,9 +67,9 @@ static nsDependentString GetEllipsis(nsIFrame* aFrame)
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   return firstFont && firstFont->HasCharacter(kEllipsisChar[0])
     ? nsDependentString(kEllipsisChar,
-                        ArrayLength(kEllipsisChar) - 1)
+                        NS_ARRAY_LENGTH(kEllipsisChar) - 1)
     : nsDependentString(kASCIIPeriodsChar,
-                        ArrayLength(kASCIIPeriodsChar) - 1);
+                        NS_ARRAY_LENGTH(kASCIIPeriodsChar) - 1);
 }
 
 static nsIFrame*
@@ -541,7 +539,7 @@ TextOverflow::ProcessLine(const nsDisplayListSet& aLists,
 
   // Clip and remove display items as needed at the final marker edges.
   nsDisplayList* lists[] = { aLists.Content(), aLists.PositionedDescendants() };
-  for (PRUint32 i = 0; i < ArrayLength(lists); ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(lists); ++i) {
     PruneDisplayListContents(lists[i], framesToHide, insideMarkersArea);
   }
   CreateMarkers(aLine, needLeft, needRight, insideMarkersArea);

@@ -37,13 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsMemory.h"
 #include "nsStaticAtom.h"
 #include "nsEditProperty.h"
 
-using namespace mozilla;
 
 #define EDITOR_ATOM(name_, value_) nsIAtom* nsEditProperty::name_ = 0;
 #include "nsEditPropertyAtomList.h"
@@ -85,5 +82,5 @@ nsEditProperty::RegisterAtoms()
 #undef EDITOR_ATOM
   };
   
-  NS_RegisterStaticAtoms(property_atoms, ArrayLength(property_atoms));
+  NS_RegisterStaticAtoms(property_atoms, NS_ARRAY_LENGTH(property_atoms));
 }

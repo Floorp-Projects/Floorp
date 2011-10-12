@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsHTMLEditUtils.h"
 #include "nsTextEditUtils.h"
 
@@ -50,8 +48,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsHTMLTags.h"
-
-using namespace mozilla;
 
 ///////////////////////////////////////////////////////////////////////////
 //                  
@@ -774,7 +770,7 @@ nsHTMLEditUtils::CanContain(PRInt32 aParent, PRInt32 aChild)
     };
 
     PRUint32 j;
-    for (j = 0; j < ArrayLength(kButtonExcludeKids); ++j) {
+    for (j = 0; j < NS_ARRAY_LENGTH(kButtonExcludeKids); ++j) {
       if (kButtonExcludeKids[j] == aChild) {
         return PR_FALSE;
       }

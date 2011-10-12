@@ -41,7 +41,6 @@
 
 #include "SQLiteMutex.h"
 
-using namespace mozilla;
 using namespace mozilla::storage;
 
 /**
@@ -55,7 +54,7 @@ test_AutoLock()
     SQLITE_MUTEX_FAST,
     SQLITE_MUTEX_RECURSIVE,
   };
-  for (size_t i = 0; i < ArrayLength(lockTypes); i++) {
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(lockTypes); i++) {
     // Get our test mutex (we have to allocate a SQLite mutex of the right type
     // too!).
     SQLiteMutex mutex("TestMutex");
@@ -83,7 +82,7 @@ test_AutoUnlock()
     SQLITE_MUTEX_FAST,
     SQLITE_MUTEX_RECURSIVE,
   };
-  for (size_t i = 0; i < ArrayLength(lockTypes); i++) {
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(lockTypes); i++) {
     // Get our test mutex (we have to allocate a SQLite mutex of the right type
     // too!).
     SQLiteMutex mutex("TestMutex");

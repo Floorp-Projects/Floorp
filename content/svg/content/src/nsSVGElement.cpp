@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsSVGElement.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGSwitchElement.h"
@@ -2148,7 +2146,7 @@ nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
                                  attributeValue.get() };
   return nsSVGUtils::ReportToConsole(aDocument,
                                      "AttributeParseWarning",
-                                     strings, ArrayLength(strings));
+                                     strings, NS_ARRAY_LENGTH(strings));
 }
 
 void

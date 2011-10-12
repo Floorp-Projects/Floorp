@@ -46,7 +46,6 @@
 #endif
 #include <new>
 #include <string.h>
-
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -5473,7 +5472,7 @@ static bool
 EmitXMLProcessingInstruction(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
     jsatomid index;
-    if (!cg->makeAtomIndex(pn->pn_pidata, &index))
+    if (!cg->makeAtomIndex(pn->pn_atom2, &index))
         return false;
     if (!EmitIndexOp(cx, JSOP_QNAMEPART, index, cg))
         return false;

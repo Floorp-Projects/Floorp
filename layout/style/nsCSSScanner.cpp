@@ -36,10 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
 #include <math.h>
-
-#include "mozilla/Util.h"
 
 /* tokenization of CSS style sheets */
 
@@ -287,7 +284,7 @@ nsCSSScanner::nsCSSScanner()
   , mLowLevelError(NS_OK)
   , mSVGMode(PR_FALSE)
 #ifdef CSS_REPORT_PARSE_ERRORS
-  , mError(mErrorBuf, ArrayLength(mErrorBuf), 0)
+  , mError(mErrorBuf, NS_ARRAY_LENGTH(mErrorBuf), 0)
   , mInnerWindowID(0)
   , mWindowIDCached(PR_FALSE)
   , mSheet(nsnull)
@@ -296,7 +293,7 @@ nsCSSScanner::nsCSSScanner()
 {
   MOZ_COUNT_CTOR(nsCSSScanner);
   mPushback = mLocalPushback;
-  mPushbackSize = ArrayLength(mLocalPushback);
+  mPushbackSize = NS_ARRAY_LENGTH(mLocalPushback);
   // No need to init the other members, since they represent state
   // which can get cleared.  We'll init them every time Init() is
   // called.
@@ -550,7 +547,7 @@ nsCSSScanner::ReportUnexpectedEOF(const char* aLookingFor)
   };
   nsXPIDLString str;
   gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
-                                      params, ArrayLength(params),
+                                      params, NS_ARRAY_LENGTH(params),
                                       getter_Copies(str));
   AddToError(str);
 }
@@ -567,7 +564,7 @@ nsCSSScanner::ReportUnexpectedEOF(PRUnichar aLookingFor)
   const PRUnichar *params[] = { lookingForStr };
   nsXPIDLString str;
   gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
-                                      params, ArrayLength(params),
+                                      params, NS_ARRAY_LENGTH(params),
                                       getter_Copies(str));
   AddToError(str);
 }
@@ -587,7 +584,7 @@ nsCSSScanner::ReportUnexpectedToken(nsCSSToken& tok,
     tokenString.get()
   };
 
-  ReportUnexpectedParams(aMessage, params, ArrayLength(params));
+  ReportUnexpectedParams(aMessage, params, NS_ARRAY_LENGTH(params));
 }
 
 // aParams's first entry must be null, and we'll fill in the token
@@ -634,7 +631,7 @@ nsCSSScanner::Close()
   if (mPushback != mLocalPushback) {
     delete [] mPushback;
     mPushback = mLocalPushback;
-    mPushbackSize = ArrayLength(mLocalPushback);
+    mPushbackSize = NS_ARRAY_LENGTH(mLocalPushback);
   }
 }
 

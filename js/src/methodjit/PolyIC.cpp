@@ -552,7 +552,7 @@ class SetPropCompiler : public PICStubCompiler
 
         /* lookupProperty can trigger recompilations. */
         RecompilationMonitor monitor(cx);
-        if (!obj->lookupGeneric(cx, id, &holder, &prop))
+        if (!obj->lookupProperty(cx, id, &holder, &prop))
             return error();
         if (monitor.recompiled())
             return Lookup_Uncacheable;
@@ -789,7 +789,7 @@ struct GetPropertyHelper {
             return ic.disable(cx, "non-native");
 
         RecompilationMonitor monitor(cx);
-        if (!aobj->lookupGeneric(cx, ATOM_TO_JSID(atom), &holder, &prop))
+        if (!aobj->lookupProperty(cx, ATOM_TO_JSID(atom), &holder, &prop))
             return ic.error(cx);
         if (monitor.recompiled())
             return Lookup_Uncacheable;

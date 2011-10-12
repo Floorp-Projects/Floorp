@@ -34,8 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsIDOMSVGSymbolElement.h"
 #include "nsSVGStylableElement.h"
 #include "nsSVGViewBox.h"
@@ -149,7 +147,7 @@ nsSVGSymbolElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap
    };
 
-  return FindAttributeDependence(name, map, ArrayLength(map)) ||
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGSymbolElementBase::IsAttributeMapped(name);
 }
 

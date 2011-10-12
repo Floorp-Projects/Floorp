@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include "nsTArray.h"
@@ -49,8 +47,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsXPCOM.h"
 #include "nsILocalFile.h"
-
-using namespace mozilla;
 
 namespace TestTArray {
 
@@ -195,22 +191,22 @@ static bool test_basic_array(ElementType *data,
 
 static bool test_int_array() {
   int data[] = {4,6,8,2,4,1,5,7,3};
-  return test_basic_array(data, ArrayLength(data), int(14));
+  return test_basic_array(data, NS_ARRAY_LENGTH(data), int(14));
 }
 
 static bool test_int64_array() {
   PRInt64 data[] = {4,6,8,2,4,1,5,7,3};
-  return test_basic_array(data, ArrayLength(data), PRInt64(14));
+  return test_basic_array(data, NS_ARRAY_LENGTH(data), PRInt64(14));
 }
 
 static bool test_char_array() {
   char data[] = {4,6,8,2,4,1,5,7,3};
-  return test_basic_array(data, ArrayLength(data), char(14));
+  return test_basic_array(data, NS_ARRAY_LENGTH(data), char(14));
 }
 
 static bool test_uint32_array() {
   PRUint32 data[] = {4,6,8,2,4,1,5,7,3};
-  return test_basic_array(data, ArrayLength(data), PRUint32(14));
+  return test_basic_array(data, NS_ARRAY_LENGTH(data), PRUint32(14));
 }
 
 //----
@@ -252,12 +248,12 @@ static bool test_object_array() {
   nsTArray<Object> objArray;
   const char kdata[] = "hello world";
   PRUint32 i;
-  for (i = 0; i < ArrayLength(kdata); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(kdata); ++i) {
     char x[] = {kdata[i],'\0'};
     if (!objArray.AppendElement(Object(x, i)))
       return PR_FALSE;
   }
-  for (i = 0; i < ArrayLength(kdata); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(kdata); ++i) {
     if (objArray[i].Str()[0] != kdata[i])
       return PR_FALSE;
     if (objArray[i].Num() != i)
@@ -265,7 +261,7 @@ static bool test_object_array() {
   }
   objArray.Sort();
   const char ksorted[] = "\0 dehllloorw";
-  for (i = 0; i < ArrayLength(kdata)-1; ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(kdata)-1; ++i) {
     if (objArray[i].Str()[0] != ksorted[i])
       return PR_FALSE;
   }
@@ -277,7 +273,7 @@ static bool test_object_array() {
 static bool test_autoptr_array() {
   nsTArray< nsAutoPtr<Object> > objArray;
   const char kdata[] = "hello world";
-  for (PRUint32 i = 0; i < ArrayLength(kdata); ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kdata); ++i) {
     char x[] = {kdata[i],'\0'};
     nsAutoPtr<Object> obj(new Object(x,i));
     if (!objArray.AppendElement(obj))  // XXX does not call copy-constructor for nsAutoPtr!!!
@@ -286,7 +282,7 @@ static bool test_autoptr_array() {
       return PR_FALSE;
     obj.forget();  // the array now owns the reference
   }
-  for (PRUint32 i = 0; i < ArrayLength(kdata); ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kdata); ++i) {
     if (objArray[i]->Str()[0] != kdata[i])
       return PR_FALSE;
     if (objArray[i]->Num() != i)
@@ -306,13 +302,13 @@ static bool test_string_array() {
   nsTArray<nsCString> strArray;
   const char kdata[] = "hello world";
   PRUint32 i;
-  for (i = 0; i < ArrayLength(kdata); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(kdata); ++i) {
     nsCString str;
     str.Assign(kdata[i]);
     if (!strArray.AppendElement(str))
       return PR_FALSE;
   }
-  for (i = 0; i < ArrayLength(kdata); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(kdata); ++i) {
     if (strArray[i].CharAt(0) != kdata[i])
       return PR_FALSE;
   }
@@ -330,7 +326,7 @@ static bool test_string_array() {
 
   strArray.Sort();
   const char ksorted[] = "\0 dehllloorw";
-  for (i = ArrayLength(kdata); i--; ) {
+  for (i = NS_ARRAY_LENGTH(kdata); i--; ) {
     if (strArray[i].CharAt(0) != ksorted[i])
       return PR_FALSE;
     if (i > 0 && strArray[i] == strArray[i - 1])
@@ -343,10 +339,10 @@ static bool test_string_array() {
   if (strArray.BinaryIndexOf(EmptyCString()) != strArray.NoIndex)
     return PR_FALSE;
 
-  nsCString rawArray[NS_ARRAY_LENGTH(kdata) - 1];
-  for (i = 0; i < ArrayLength(rawArray); ++i)
+  nsCString rawArray[NS_ARRAY_LENGTH(kdata)-1];
+  for (i = 0; i < NS_ARRAY_LENGTH(rawArray); ++i)
     rawArray[i].Assign(kdata + i);  // substrings of kdata
-  return test_basic_array(rawArray, ArrayLength(rawArray),
+  return test_basic_array(rawArray, NS_ARRAY_LENGTH(rawArray),
                           nsCString("foopy"));
 }
 
@@ -373,7 +369,7 @@ static bool test_comptr_array() {
   };
   nsTArray<FilePointer> fileArray;
   PRUint32 i;
-  for (i = 0; i < ArrayLength(kNames); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(kNames); ++i) {
     FilePointer f;
     tmpDir->Clone(getter_AddRefs(f));
     if (!f)
@@ -481,7 +477,7 @@ static bool test_autoarray() {
     return PR_FALSE;
 
   array.RemoveElement(1u);
-  array.AppendElements(data, ArrayLength(data));
+  array.AppendElements(data, NS_ARRAY_LENGTH(data));
   if (hdr != array.DebugGetHeader())
     return PR_FALSE;
 
@@ -493,7 +489,7 @@ static bool test_autoarray() {
   array.Compact();
   if (hdr != array.DebugGetHeader())
     return PR_FALSE;
-  array.AppendElements(data, ArrayLength(data));
+  array.AppendElements(data, NS_ARRAY_LENGTH(data));
   if (hdr != array.DebugGetHeader())
     return PR_FALSE;
 
@@ -505,7 +501,7 @@ static bool test_autoarray() {
   if (hdr == array2.DebugGetHeader())
     return PR_FALSE;
   PRUint32 i;
-  for (i = 0; i < ArrayLength(data); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(data); ++i) {
     if (array2[i] != data[i])
       return PR_FALSE;
   }
@@ -513,16 +509,16 @@ static bool test_autoarray() {
     return PR_FALSE;
 
   array.Compact();
-  array.AppendElements(data, ArrayLength(data));
+  array.AppendElements(data, NS_ARRAY_LENGTH(data));
   PRUint32 data3[] = {5, 7, 11};
   nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data3)> array3;
-  array3.AppendElements(data3, ArrayLength(data3));  
+  array3.AppendElements(data3, NS_ARRAY_LENGTH(data3));  
   array.SwapElements(array3);
-  for (i = 0; i < ArrayLength(data); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(data); ++i) {
     if (array3[i] != data[i])
       return PR_FALSE;
   }
-  for (i = 0; i < ArrayLength(data3); ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(data3); ++i) {
     if (array[i] != data3[i])
       return PR_FALSE;
   }
@@ -562,24 +558,24 @@ static bool is_heap(const Array& ary, PRUint32 len) {
 static bool test_heap() {
   const int data[] = {4,6,8,2,4,1,5,7,3};
   nsTArray<int> ary;
-  ary.AppendElements(data, ArrayLength(data));
+  ary.AppendElements(data, NS_ARRAY_LENGTH(data));
   // make a heap and make sure it's a heap
   ary.MakeHeap();
-  if (!is_heap(ary, ArrayLength(data)))
+  if (!is_heap(ary, NS_ARRAY_LENGTH(data)))
     return PR_FALSE;
   // pop the root and make sure it's still a heap
   int root = ary[0];
   ary.PopHeap();
-  if (!is_heap(ary, ArrayLength(data) - 1))
+  if (!is_heap(ary, NS_ARRAY_LENGTH(data) - 1))
     return PR_FALSE;
   // push the previously poped value back on and make sure it's still a heap
   ary.PushHeap(root);
-  if (!is_heap(ary, ArrayLength(data)))
+  if (!is_heap(ary, NS_ARRAY_LENGTH(data)))
     return PR_FALSE;
   // make sure the heap looks like what we expect
   const int expected_data[] = {8,7,5,6,4,1,4,2,3};
   PRUint32 index;
-  for (index = 0; index < ArrayLength(data); index++)
+  for (index = 0; index < NS_ARRAY_LENGTH(data); index++)
     if (ary[index] != expected_data[index])
       return PR_FALSE;
   return PR_TRUE;
@@ -633,8 +629,8 @@ static bool test_heap() {
 
 #define CHECK_ARRAY(arr, data) \
   do {                                                          \
-    CHECK_EQ_INT((arr).Length(), ArrayLength(data));            \
-    for (PRUint32 _i = 0; _i < ArrayLength(data); _i++) {       \
+    CHECK_EQ_INT((arr).Length(), NS_ARRAY_LENGTH(data));        \
+    for (PRUint32 _i = 0; _i < NS_ARRAY_LENGTH(data); _i++) {   \
       CHECK_EQ_INT((arr)[_i], (data)[_i]);                      \
     }                                                           \
   } while(0)
@@ -649,8 +645,8 @@ static bool test_swap() {
     nsAutoTArray<int, 8> a;
     nsAutoTArray<int, 6> b;
 
-    a.AppendElements(data1, ArrayLength(data1));
-    b.AppendElements(data2, ArrayLength(data2));
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
     CHECK_IS_USING_AUTO(a);
     CHECK_IS_USING_AUTO(b);
 
@@ -668,9 +664,9 @@ static bool test_swap() {
     nsAutoTArray<int, 3> a;
     nsAutoTArray<int, 3> b;
 
-    a.AppendElements(data1, ArrayLength(data1));
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
     a.RemoveElementAt(3);
-    b.AppendElements(data2, ArrayLength(data2));
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
 
     // Here and elsewhere, we assert that if we start with an auto array
     // capable of storing N elements, we store N+1 elements into the array, and
@@ -700,10 +696,10 @@ static bool test_swap() {
   {
     nsAutoTArray<int, 3> a;
     nsAutoTArray<int, 2> b;
-    a.AppendElements(data1, ArrayLength(data1));
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
     a.RemoveElementAt(3);
 
-    b.AppendElements(data2, ArrayLength(data2));
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
     b.RemoveElementAt(2);
 
     CHECK_NOT_USING_AUTO(a);
@@ -725,8 +721,8 @@ static bool test_swap() {
     nsAutoTArray<int, 1> a;
     nsAutoTArray<int, 3> b;
 
-    a.AppendElements(data1, ArrayLength(data1));
-    b.AppendElements(data2, ArrayLength(data2));
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
 
     a.SwapElements(b);
 
@@ -739,7 +735,7 @@ static bool test_swap() {
     nsTArray<int> a;
     nsAutoTArray<int, 3> b;
 
-    b.AppendElements(data2, ArrayLength(data2));
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
     CHECK_IS_USING_AUTO(b);
 
     a.SwapElements(b);
@@ -782,7 +778,7 @@ static bool test_swap() {
   {
     nsTArray<int> a;
     nsTArray<int> b;
-    b.AppendElements(data2, ArrayLength(data2));
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
 
     CHECK_EQ_INT(a.Capacity(), 0);
     PRUint32 bCapacity = b.Capacity();
@@ -802,7 +798,7 @@ static bool test_swap() {
     nsTArray<int> a;
     nsAutoTArray<int, 3> b;
 
-    a.AppendElements(data1, ArrayLength(data1));
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
 
     a.SwapElements(b);
 
@@ -820,7 +816,7 @@ static bool test_swap() {
     nsAutoTArray<int, 16> a;
     nsAutoTArray<int, 3> b;
 
-    a.AppendElements(data1, ArrayLength(data1));
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
 
     a.SwapElements(b);
 
@@ -852,7 +848,7 @@ static bool test_swap() {
     nsAutoTArray<int, 2> a;
     nsAutoTArray<int, 1> b;
 
-    a.AppendElements(data1, ArrayLength(data1));
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
 
     a.SwapElements(b);
 

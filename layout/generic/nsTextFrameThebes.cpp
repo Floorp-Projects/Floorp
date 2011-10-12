@@ -51,8 +51,6 @@
 
 /* rendering object for textual content of elements */
 
-#include "mozilla/Util.h"
-
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
@@ -3215,7 +3213,7 @@ nsTextPaintStyle::nsTextPaintStyle(nsTextFrame* aFrame)
     mInitCommonColors(PR_FALSE),
     mInitSelectionColors(PR_FALSE)
 {
-  for (PRUint32 i = 0; i < ArrayLength(mSelectionStyle); i++)
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mSelectionStyle); i++)
     mSelectionStyle[i].mInit = PR_FALSE;
 }
 

@@ -98,8 +98,6 @@
 #include "keyhi.h"
 #include "secport.h"
 
-#include "mozilla/Util.h"
-
 using namespace mozilla;
 using namespace mozilla::psm;
 
@@ -1287,7 +1285,7 @@ AppendErrorTextTime(nsIX509Cert* ix509,
   rv = component->PIPBundleFormatStringFromName(
            key,
            params, 
-           ArrayLength(params),
+           NS_ARRAY_LENGTH(params),
            formattedString);
   if (NS_SUCCEEDED(rv))
   {

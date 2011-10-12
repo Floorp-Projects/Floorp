@@ -42,8 +42,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #define PANGO_ENABLE_BACKEND
 #define PANGO_ENABLE_ENGINE
 
@@ -85,8 +83,6 @@
 #endif
 
 #include <math.h>
-
-using namespace mozilla;
 
 #define FLOAT_PANGO_SCALE ((gfxFloat)PANGO_SCALE)
 
@@ -313,10 +309,10 @@ gfxFcFontEntry::ShouldUseHarfBuzz(PRInt32 aRunScript) {
     // Prefer HarfBuzz if the font also has support for OpenType shaping of
     // this script.
     const FcChar8 otCapTemplate[] = "otlayout:XXXX";
-    FcChar8 otCap[ArrayLength(otCapTemplate)];
-    memcpy(otCap, otCapTemplate, ArrayLength(otCapTemplate));
+    FcChar8 otCap[NS_ARRAY_LENGTH(otCapTemplate)];
+    memcpy(otCap, otCapTemplate, NS_ARRAY_LENGTH(otCapTemplate));
     // Subtract 5, for 4 characters and NUL. 
-    const PRUint32 scriptOffset = ArrayLength(otCapTemplate) - 5;
+    const PRUint32 scriptOffset = NS_ARRAY_LENGTH(otCapTemplate) - 5;
 
     for (const hb_tag_t *scriptTags = hb_ot_tags_from_script(script);
          hb_tag_t scriptTag = *scriptTags;

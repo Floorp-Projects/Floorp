@@ -37,14 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
  
 #include "nsPaperPS.h"
 #include "plstr.h"
 #include "nsCoord.h"
 #include "nsMemory.h"
-
-using namespace mozilla;
 
 const nsPaperSizePS_ nsPaperSizePS::mList[] =
 {
@@ -61,7 +58,7 @@ const nsPaperSizePS_ nsPaperSizePS::mList[] =
 #undef SIZE_MM
 };
 
-const unsigned int nsPaperSizePS::mCount = ArrayLength(mList);
+const unsigned int nsPaperSizePS::mCount = NS_ARRAY_LENGTH(mList);
 
 bool
 nsPaperSizePS::Find(const char *aName)

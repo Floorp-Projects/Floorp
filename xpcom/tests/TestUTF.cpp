@@ -34,8 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "nsString.h"
@@ -45,14 +43,12 @@
 #include "UTFStrings.h"
 #include "nsCRT.h"
 
-using namespace mozilla;
-
 namespace TestUTF {
 
 bool
 test_valid()
 {
-  for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
     nsDependentCString str8(ValidStrings[i].m8);
     nsDependentString str16(ValidStrings[i].m16);
 
@@ -82,7 +78,7 @@ test_valid()
 bool
 test_invalid16()
 {
-  for (unsigned int i = 0; i < ArrayLength(Invalid16Strings); ++i) {
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid16Strings); ++i) {
     nsDependentString str16(Invalid16Strings[i].m16);
     nsDependentCString str8(Invalid16Strings[i].m8);
 
@@ -104,7 +100,7 @@ test_invalid16()
 bool
 test_invalid8()
 {
-  for (unsigned int i = 0; i < ArrayLength(Invalid8Strings); ++i) {
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid8Strings); ++i) {
     nsDependentString str16(Invalid8Strings[i].m16);
     nsDependentCString str8(Invalid8Strings[i].m8);
 
@@ -128,7 +124,7 @@ test_malformed8()
 {
 // Don't run this test in debug builds as that intentionally asserts.
 #ifndef DEBUG
-  for (unsigned int i = 0; i < ArrayLength(Malformed8Strings); ++i) {
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
     nsDependentCString str8(Malformed8Strings[i]);
 
     if (!NS_ConvertUTF8toUTF16(str8).IsEmpty())
@@ -150,7 +146,7 @@ test_malformed8()
 bool
 test_hashas16()
 {
-  for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
     nsDependentCString str8(ValidStrings[i].m8);
     bool err;
     if (nsCRT::HashCode(ValidStrings[i].m16) !=
@@ -159,7 +155,7 @@ test_hashas16()
       return PR_FALSE;
   }
 
-  for (unsigned int i = 0; i < ArrayLength(Invalid8Strings); ++i) {
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid8Strings); ++i) {
     nsDependentCString str8(Invalid8Strings[i].m8);
     bool err;
     if (nsCRT::HashCode(Invalid8Strings[i].m16) !=
@@ -170,7 +166,7 @@ test_hashas16()
 
 // Don't run this test in debug builds as that intentionally asserts.
 #ifndef DEBUG
-  for (unsigned int i = 0; i < ArrayLength(Malformed8Strings); ++i) {
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
     nsDependentCString str8(Malformed8Strings[i]);
     bool err;
     if (nsCRT::HashCodeAsUTF16(str8.get(), str8.Length(), &err) != 0 ||

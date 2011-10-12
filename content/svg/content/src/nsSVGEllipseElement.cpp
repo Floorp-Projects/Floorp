@@ -37,16 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGEllipseElement.h"
 #include "nsSVGLength2.h"
 #include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
 #include "gfxContext.h"
-
-using namespace mozilla;
 
 typedef nsSVGPathGeometryElement nsSVGEllipseElementBase;
 
@@ -154,7 +150,7 @@ nsSVGElement::LengthAttributesInfo
 nsSVGEllipseElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              ArrayLength(sLengthInfo));
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }
 
 //----------------------------------------------------------------------
