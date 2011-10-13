@@ -153,6 +153,7 @@ FennecProgressListener.prototype = {
 
 function FennecEventHandler(browser) {
   this.browser = browser;
+  this.motionBuffer = new Array();
   this._updateLastPosition(0, 0);
 }
 
@@ -183,6 +184,11 @@ FennecEventHandler.prototype = {
   
         this._updateLastPosition(aEvent.clientX, aEvent.clientY);
   
+        // Set panning to true *after* calling updateLastPosition, so
+        // that it can clear the motion buffer the first time we call
+        // it.
+        this.panning = true;
+
         aEvent.stopPropagation();
         aEvent.preventDefault();
         break;
@@ -197,9 +203,102 @@ FennecEventHandler.prototype = {
         aEvent.preventDefault();
         break;
       case "mouseup":
-        if (Math.abs(aEvent.clientX - this.startX) > 10 || Math.abs(aEvent.clientY - this.startY) > 10) {
+        this.panning = false;
+        let isDrag = (Math.abs(aEvent.clientX - this.startX) > 10 ||
+                      Math.abs(aEvent.clientY - this.startY) > 10);
+
+        if (isDrag)
           this.blockClick = true;
+
+        if (isDrag && Math.abs(this.motionBuffer[0].time -
+                               this.motionBuffer[4].time) < 1000) {
+          // We've exceeded the scroll threshold, start kinetic pan
+
+          // Find the average velocity over the last few motion events
+          this.panX = 0;
+          this.panY = 0;
+          for (let i = 1; i < 5; i++) {
+              let timeDelta = this.motionBuffer[i].time -
+                this.motionBuffer[i - 1].time;
+              this.panX += (this.motionBuffer[i].x -
+                            this.motionBuffer[i - 1].x) / timeDelta;
+              this.panY += (this.motionBuffer[i].y -
+                            this.motionBuffer[i - 1].y) / timeDelta;
+          }
+          this.panX /= 4;
+          this.panY /= 4;
+
+          // TODO: Use the kinetic scrolling prefs
+          this.panDeceleration = 0.999;
+          this.panAccumulatedDeltaX = 0;
+          this.panAccumulatedDeltaY = 0;
+          this.panLastTime = window.mozAnimationStartTime;
+
+          // TODO: Find the deepest scrollable element at the
+          // mouse coordinates
+          this.browser.contentWindow.wrappedJSObject.
+            scrollBy(this.panX, this.panY);
+
+          let self = this;
+          let callback = {
+            onBeforePaint: function kineticPanCallback(timeStamp) {
+              if (self.panning)
+                return;
+
+              let timeDelta = timeStamp - self.panLastTime;
+              self.panLastTime = timeStamp;
+
+              // Adjust deceleration
+              self.panX *= Math.pow(self.panDeceleration, timeDelta);
+              self.panY *= Math.pow(self.panDeceleration, timeDelta);
+
+              // Calculate panning motion
+              let dx = self.panX * timeDelta;
+              let dy = self.panY * timeDelta;
+
+              // We only want to set integer scroll coordinates
+              self.panAccumulatedDeltaX += dx - Math.floor(dx);
+              self.panAccumulatedDeltaY += dy - Math.floor(dy);
+
+              dx = Math.floor(dx);
+              dy = Math.floor(dy);
+
+              if (Math.abs(self.panAccumulatedDeltaX) >= 1.0) {
+                  let adx = Math.floor(self.panAccumulatedDeltaX);
+                  dx += adx;
+                  self.panAccumulatedDeltaX -= adx;
+              }
+
+              if (Math.abs(self.panAccumulatedDeltaY) >= 1.0) {
+                  let ady = Math.floor(self.panAccumulatedDeltaY);
+                  dy += ady;
+                  self.panAccumulatedDeltaY -= ady;
+              }
+
+              self.browser.contentWindow.wrappedJSObject.
+                scrollBy(-dx, -dy);
+
+              // If we're moving at a rate slower than 0.015
+              // pixels/ms, stop requesting frames.
+              // This is roughly equivalent to a pixel every
+              // 4 frames at 60fps.
+              if (Math.abs(self.panX) >= 0.015 || Math.abs(self.panY) >= 0.015)
+                window.mozRequestAnimationFrame(this);
+            }
+          };
+
+          // If an axis is moving slower than 0.3 pixels per ms
+          // (about five pixels per frame at 60fps), lock that axis
+          if (Math.abs(this.panX) < 0.3)
+            this.panX = 0;
+          if (Math.abs(this.panY) < 0.3)
+            this.panY = 0;
+
+          // Don't start kinetic panning if we're not moving
+          if (Math.abs(this.panX) > 0 || Math.abs(this.panY) > 0)
+            window.mozRequestAnimationFrame(callback);
         }
+
         aEvent.stopPropagation();
         aEvent.preventDefault();
         break;
@@ -224,5 +323,18 @@ FennecEventHandler.prototype = {
   _updateLastPosition: function(x, y) {
     this.lastX = x;
     this.lastY = y;
+    this.lastTime = Date.now();
+
+    for (let i = 0; i < 4; i++) {
+      if (this.panning) {
+        this.motionBuffer[i] = this.motionBuffer[i + 1];
+      } else {
+        this.motionBuffer[i] =
+          { x: this.lastX, y: this.lastY, time: this.lastTime };
+      }
+    }
+
+    this.motionBuffer[4] =
+      { x: this.lastX, y: this.lastY, time: this.lastTime };
   }
 };
