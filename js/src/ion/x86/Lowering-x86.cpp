@@ -126,10 +126,10 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     // second, so that the result can re-use the first input.
     MDefinition *inner = unbox->getOperand(0);
 
-    if (unbox->type() == MIRType_Double) {
-        if (!ensureDefined(inner))
-            return false;
+    if (!ensureDefined(inner))
+        return false;
 
+    if (unbox->type() == MIRType_Double) {
         LUnboxDouble *lir = new LUnboxDouble;
         if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
             return false;
