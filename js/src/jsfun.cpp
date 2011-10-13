@@ -2053,12 +2053,14 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
     /* Step 4-6, 10-11. */
     JSAtom *name = target->isFunction() ? target->toFunction()->atom : NULL;
 
-    /* NB: Bound functions abuse |parent| to store their target. */
     JSObject *funobj =
         js_NewFunction(cx, NULL, CallOrConstructBoundFunction, length,
                        JSFUN_CONSTRUCTOR, target, name);
     if (!funobj)
         return false;
+
+    /* NB: Bound functions abuse |parent| to store their target. */
+    funobj->setParent(target);
 
     /* Steps 7-9. */
     Value thisArg = args.length() >= 1 ? args[0] : UndefinedValue();
@@ -2317,9 +2319,9 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
 
     if (funobj) {
         JS_ASSERT(funobj->isFunction());
-        funobj->setParent(parent);
+        JS_ASSERT(funobj->getParent() == parent);
     } else {
-        funobj = NewFunction(cx, parent);
+        funobj = NewFunction(cx, parent ? parent->getGlobal() : NULL);
         if (!funobj)
             return NULL;
         if (native && !funobj->setSingletonType(cx))
@@ -2335,6 +2337,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         JS_ASSERT(nargs == 0);
         fun->u.i.skipmin = 0;
         fun->u.i.script = NULL;
+        fun->setCallScope(parent);
     } else {
         fun->u.n.clasp = NULL;
         if (flags & JSFUN_TRCINFO) {
@@ -2364,7 +2367,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
     JS_ASSERT(parent);
     JS_ASSERT(proto);
 
-    JSFunction *clone = NewFunction(cx, parent);
+    JSFunction *clone = NewFunction(cx, parent->getGlobal());
     if (!clone)
         return NULL;
 
@@ -2372,6 +2375,9 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
     clone->flags = fun->flags;
     clone->u = fun->toFunction()->u;
     clone->atom = fun->atom;
+
+    if (clone->isInterpreted())
+        clone->setCallScope(parent);
 
     if (cx->compartment == fun->compartment()) {
         /*

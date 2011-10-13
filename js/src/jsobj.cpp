@@ -1034,25 +1034,14 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
 
                 if (src == str || EqualStrings(src, str)) {
                     /*
-                     * Source matches, qualify by comparing scopeobj to the
-                     * COMPILE_N_GO-memoized parent of the first literal
-                     * function or regexp object if any. If none, then this
-                     * script has no compiled-in dependencies on the prior
-                     * eval's scopeobj.
+                     * Source matches. Make sure there are no inner objects
+                     * which might use the wrong parent and/or call scope by
+                     * reusing the previous eval's script. Skip the script's
+                     * first object, which entrains the eval's scope.
                      */
-                    JSObjectArray *objarray = script->objects();
-                    int i = 1;
-
-                    if (objarray->length == 1) {
-                        if (JSScript::isValidOffset(script->regexpsOffset)) {
-                            objarray = script->regexps();
-                            i = 0;
-                        } else {
-                            i = -1;
-                        }
-                    }
-                    if (i < 0 ||
-                        objarray->vector[i]->getParent() == &scopeobj) {
+                    JS_ASSERT(script->objects()->length >= 1);
+                    if (script->objects()->length == 1 &&
+                        !JSScript::isValidOffset(script->regexpsOffset)) {
                         JS_ASSERT(staticLevel == script->staticLevel);
                         *scriptp = script->u.evalHashLink;
                         script->u.evalHashLink = NULL;

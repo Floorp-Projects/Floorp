@@ -73,7 +73,7 @@ StackFrame::scopeChain() const
 {
     JS_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
     if (!(flags_ & HAS_SCOPECHAIN)) {
-        scopeChain_ = callee().getParent();
+        scopeChain_ = callee().toFunction()->callScope();
         flags_ |= HAS_SCOPECHAIN;
     }
     return *scopeChain_;
@@ -158,7 +158,7 @@ StackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
     flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | flagsArg;
     exec.fun = fun;
     args.nactual = nactual;
-    scopeChain_ = callee.getParent();
+    scopeChain_ = callee.toFunction()->callScope();
     ncode_ = NULL;
     initPrev(cx);
     JS_ASSERT(!hasImacropc());
@@ -195,7 +195,7 @@ StackFrame::resetCallFrame(JSScript *script)
               UNDERFLOW_ARGS;
 
     JS_ASSERT(exec.fun->script() == callee().toFunction()->script());
-    scopeChain_ = callee().getParent();
+    scopeChain_ = callee().toFunction()->callScope();
 
     SetValueRangeToUndefined(slots(), script->nfixed);
 }
@@ -478,7 +478,7 @@ StackFrame::markFunctionEpilogueDone()
              * scope chain.
              */
             scopeChain_ = isFunctionFrame()
-                          ? callee().getParent()
+                          ? callee().toFunction()->callScope()
                           : scopeChain_->scopeChain();
             flags_ &= ~HAS_CALL_OBJ;
         }

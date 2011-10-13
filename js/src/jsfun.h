@@ -163,7 +163,15 @@ struct JSFunction : public JSObject_Slots2
         return flags & JSFUN_JOINABLE;
     }
 
+    /*
+     * Accessors for the scope chain to use when calling an interpreted
+     * function. The parent link for such functions points to the scope chain's
+     * global object.
+     */
     inline JSObject *callScope() const;
+    inline void setCallScope(JSObject *obj);
+
+    static inline size_t offsetOfCallScope() { return offsetof(JSFunction, u.i.scope); }
 
     /*
      * FunctionClass reserves two slots, which are free in JSObject::fslots
