@@ -86,16 +86,28 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     bool emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
     void emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
+    // Emits a conditional set.
+    void emitSet(Assembler::Condition cond, const Register &dest);
+
+    // Emits a branch that directs control flow to the true block if |cond| is
+    // true, and the false block if |cond| is false.
+    void emitBranch(Assembler::Condition cond, MBasicBlock *ifTrue, MBasicBlock *ifFalse);
+
   public:
     // Instruction visitors.
     virtual bool visitGoto(LGoto *jump);
     virtual bool visitAddI(LAddI *ins);
-    virtual bool visitMulI(LMulI *ins);
-    virtual bool visitDivI(LDivI *ins);
+    virtual bool visitSubI(LSubI *ins);
     virtual bool visitBitNot(LBitNot *ins);
     virtual bool visitBitOp(LBitOp *ins);
+
+    virtual bool visitMulI(LMulI *ins);
+
+    virtual bool visitDivI(LDivI *ins);
     virtual bool visitMoveGroup(LMoveGroup *group);
     virtual bool visitInteger(LInteger *ins);
+    virtual bool visitShiftOp(LShiftOp *ins);
+
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
     virtual bool visitCompareI(LCompareI *comp);
     virtual bool visitCompareIAndBranch(LCompareIAndBranch *comp);
@@ -148,6 +160,9 @@ private:
     bool visitDouble(LDouble *ins);
     bool visitCompareD(LCompareD *comp);
     bool visitCompareDAndBranch(LCompareDAndBranch *comp);
+    bool visitStackArg(LStackArg *arg);
+    bool visitCallGeneric(LCallGeneric *call);
+
 };
 
 typedef CodeGeneratorARM CodeGeneratorSpecific;
