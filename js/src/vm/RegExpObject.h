@@ -284,6 +284,9 @@ class RegExpPrivate
     void incref(JSContext *cx);
     void decref(JSContext *cx);
 
+    /* For JIT access. */
+    size_t *addressOfRefCount() { return &refCount; }
+
     /* Accessors */
 
     JSLinearString *getSource() const { return source; }

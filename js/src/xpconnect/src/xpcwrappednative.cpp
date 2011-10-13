@@ -3923,34 +3923,6 @@ MorphSlimWrapper(JSContext *cx, JSObject *obj)
 static PRUint32 sSlimWrappers;
 #endif
 
-JSObject *
-ConstructProxyObject(XPCCallContext &ccx,
-                     xpcObjectHelper &aHelper,
-                     XPCWrappedNativeScope *xpcscope)
-{
-    nsISupports *identityObj = aHelper.GetCanonical();
-    nsXPCClassInfo *classInfoHelper = aHelper.GetXPCClassInfo();
-
-#ifdef DEBUG
-    {
-        JSUint32 flagsInt;
-        nsresult debug_rv = classInfoHelper->GetScriptableFlags(&flagsInt);
-        XPCNativeScriptableFlags flags(flagsInt);
-        NS_ASSERTION(NS_SUCCEEDED(debug_rv) && flags.WantPreCreate(),
-                     "bad flags, cache->IsProxy() implies WantPreCreate()");
-    }
-#endif
-
-    // We re-use the PreCreate hook to create the actual proxy object.
-    JSObject* parent = xpcscope->GetGlobalJSObject();
-    nsresult rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
-    nsWrapperCache *cache = aHelper.GetWrapperCache();
-    JSObject *flat = cache->GetWrapper();
-    return flat;
-}
-
 JSBool
 ConstructSlimWrapper(XPCCallContext &ccx,
                      xpcObjectHelper &aHelper,

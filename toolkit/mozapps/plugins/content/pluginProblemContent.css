@@ -13,11 +13,13 @@ html|applet:not([height]), html|applet[height=""] {
 }
 
 :-moz-type-unsupported .mainBox,
+:-moz-handler-clicktoplay .mainBox,
 :-moz-handler-disabled .mainBox,
 :-moz-handler-blocked .mainBox {
   -moz-user-focus: normal;
 }
 :-moz-type-unsupported .mainBox:focus,
+:-moz-handler-clicktoplay .mainBox:focus,
 :-moz-handler-disabled .mainBox:focus,
 :-moz-handler-blocked .mainBox:focus {
   outline: 1px dotted;
@@ -40,6 +42,7 @@ html|applet:not([height]), html|applet[height=""] {
 }
 
 :-moz-type-unsupported .msgUnsupported,
+:-moz-handler-clicktoplay .msgClickToPlay,
 :-moz-handler-disabled .msgDisabled,
 :-moz-handler-disabled .msgManagePlugins,
 :-moz-handler-blocked .msgBlocked,
