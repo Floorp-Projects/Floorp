@@ -330,9 +330,12 @@ GreedyAllocator::allocateWritableOperand(LAllocation *a, VirtualRegister *vr)
                 return false;
             align(vr->reg(), reg);
         } else {
-            // Otherwise, just steal the register.
+            // Otherwise, clobber the register, and restore it on the way out.
             reg = vr->reg();
-            if (!evict(vr->reg()))
+
+            if (!allocateStack(vr))
+                return false;
+            if (!restore(vr->backingStack(), reg))
                 return false;
         }
     }
