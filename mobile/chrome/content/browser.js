@@ -16,6 +16,22 @@ function SendMessageToJava(aMessage) {
   bridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
 
+let SessionListener = {
+  init: function() {
+    Services.obs.addObserver(this, "session-back", false);
+    Services.obs.addObserver(this, "session-reload", false);
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+      let browser = document.getElementById("browser");
+      if (aTopic == "session-back")
+          browser.goBack();
+      else if (aTopic == "session-reload")
+          browser.reload();
+  },
+};
+SessionListener.init();
+
 var fennecProgressListener = null;
 var fennecEventHandler = null;
 

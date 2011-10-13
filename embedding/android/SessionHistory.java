@@ -73,8 +73,8 @@ class SessionHistory
     boolean doReload() {
         if (mHistory.empty())
             return false;
-        String currUri = mHistory.peek().mUri;
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(currUri));
+        GeckoEvent e = new GeckoEvent("session-reload", "");
+        GeckoAppShell.sendEventToGecko(e);
         return true;
     }
 
@@ -83,9 +83,8 @@ class SessionHistory
             return false;
         }
         mHistory.pop();
-        String uri = mHistory.peek().mUri;
-        Log.i("GeckoApp", "going back to page: " + uri);
-        mApp.loadUrl(uri);
+        GeckoEvent e = new GeckoEvent("session-back", "");
+        GeckoAppShell.sendEventToGecko(e);
         return true;
     }
 

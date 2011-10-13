@@ -99,6 +99,7 @@ public class GeckoAppShell
       http://mxr.mozilla.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl
     */
     static private final int WPL_STATE_START = 0x00000001;
+    static private final int WPL_STATE_STOP = 0x00000010;
     static private final int WPL_STATE_IS_DOCUMENT = 0x00020000;
 
     static private File sCacheFile = null;
@@ -1647,7 +1648,6 @@ public class GeckoAppShell
                     public void run() {
                         GeckoApp.mAwesomeBar.setText(titleText);
                         GeckoApp.mAppContext.getSessionHistory().add(new SessionHistory.HistoryEntry(uri, title));
-                        GeckoApp.mProgressBar.setVisibility(View.GONE);
                     }
                 });
                 Log.i("GeckoShell", "URI - " + uri + ", title - " + title);
@@ -1666,13 +1666,21 @@ public class GeckoAppShell
             } else if (type.equals("onStateChange")) {
                 int state = geckoObject.getInt("state");
                 Log.i("GeckoShell", "State - " + state);
-                if ((state & WPL_STATE_START) != 0) {
-                    if ((state & WPL_STATE_IS_DOCUMENT) != 0) {
+                if ((state & WPL_STATE_IS_DOCUMENT) != 0) {
+                    if ((state & WPL_STATE_START) != 0) {
                         Log.i("GeckoShell", "Got a document start");
                         getMainHandler().post(new Runnable() { 
                             public void run() {
                                 GeckoApp.mProgressBar.setVisibility(View.VISIBLE);
                                 GeckoApp.mProgressBar.setIndeterminate(true);
+                            }
+                        });
+                    }
+                    else if ((state & WPL_STATE_STOP) != 0) {
+                        Log.i("GeckoShell", "Got a document stop");
+                        getMainHandler().post(new Runnable() { 
+                            public void run() {
+                                GeckoApp.mProgressBar.setVisibility(View.GONE);
                             }
                         });
                     }
