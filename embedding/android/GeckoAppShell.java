@@ -1357,10 +1357,9 @@ public class GeckoAppShell
 
         getMainHandler().post(new Runnable() { 
                 public void run() {
-                    AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams((int)w,
-                                                                                     (int)h,
-                                                                                     (int)x,
-                                                                                     (int)y);
+                    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams((int) w, (int) h);
+                    lp.leftMargin = (int) x;
+                    lp.topMargin = (int) y;
 
                     if (GeckoApp.geckoLayout.indexOfChild(view) == -1) {
                         view.setWillNotDraw(false);
