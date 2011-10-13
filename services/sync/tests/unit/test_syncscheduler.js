@@ -257,8 +257,9 @@ add_test(function test_scheduleNextSync_noBackoff() {
 
 add_test(function test_scheduleNextSync_backoff() {
  _("scheduleNextSync() will honour backoff in all scheduling requests.");
-  Status.backoffInterval = 7337000;
-  do_check_true(Status.backoffInterval > SyncScheduler.syncInterval);
+  // Let's take a backoff interval that's bigger than the default sync interval.
+  const BACKOFF = 7337;
+  Status.backoffInterval = SyncScheduler.syncInterval + BACKOFF;
 
   _("Test setting sync interval when nextSync == 0");
   SyncScheduler.nextSync = 0;
@@ -582,7 +583,8 @@ add_test(function test_back_triggersSync_observesBackoff() {
   do_check_false(SyncScheduler.idle);
 
   // Set up: Set backoff, define 2 clients and put the system in idle.
-  Status.backoffInterval = 7337000;
+  const BACKOFF = 7337;
+  Status.backoffInterval = SyncScheduler.idleInterval + BACKOFF;
   SyncScheduler.numClients = 2;
   SyncScheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
   do_check_eq(SyncScheduler.idle, true);
