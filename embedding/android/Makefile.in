@@ -134,7 +134,7 @@ RES_LAYOUT = \
   res/layout/gecko_menu.xml \
   $(NULL)
 
-RES_VALUES = res/values/colors.xml res/values/themes.xml
+RES_VALUES = res/values/colors.xml res/values/themes.xml res/values/styles.xml
 
 AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
 
