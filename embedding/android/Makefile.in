@@ -131,6 +131,7 @@ RES_LAYOUT = \
   res/layout/launch_app_listitem.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_row.xml \
+  res/layout/gecko_menu.xml \
   $(NULL)
 
 RES_VALUES = res/values/colors.xml res/values/themes.xml
