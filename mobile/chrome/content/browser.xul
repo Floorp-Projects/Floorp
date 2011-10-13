@@ -1,13 +1,11 @@
 <?xml version="1.0"?>
 
 <window id="main-window"
-        onload="startup();"
+        onload="BrowserApp.startup();"
         windowtype="navigator:browser"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:svg="http://www.w3.org/2000/svg"
-        xmlns:html="http://www.w3.org/1999/xhtml">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
 
-  <browser id="browser" type="content-primary" flex="1"/>
+  <deck id="browsers" flex="1"/>
 </window>

@@ -16,52 +16,122 @@ function SendMessageToJava(aMessage) {
   bridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
 
-let SessionListener = {
-  init: function() {
+
+var BrowserApp = {
+  _tabs: [],
+  _selectedTab: null,
+
+  deck: null,
+
+  startup: function startup() {
+    window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
+    dump("zerdatime " + Date.now() + " - browser chrome startup finished.");
+
+    this.deck = document.getElementById("browsers");
+    BrowserEventHandler.init();
+
     Services.obs.addObserver(this, "session-back", false);
     Services.obs.addObserver(this, "session-reload", false);
+
+    let uri = "about:support";
+    try {
+      uri = Services.prefs.getCharPref("browser.last.uri");
+    } catch (e) {};
+  
+    // XXX maybe we don't do this if the launch was kicked off from external
+    Services.io.offline = false;
+    let newTab = this.addTab(uri);
+    newTab.active = true;
+  },
+
+  shutdown: function shutdown() {
+  },
+
+  get tabs() {
+    return this._tabs;
+  },
+
+  get selectedTab() {
+    return this._selectedTab;
+  },
+
+  set selectedTab(aTab) {
+    this._selectedTab = aTab;
+    if (!aTab)
+      return;
+
+    this.deck.selectedPanel = aTab.browser;
+  },
+
+  get selectedBrowser() {
+    if (this._selectedTab)
+      return this._selectedTab.browser;
+    return null;
+  },
+
+  getTabForBrowser: function getTabForBrowser(aBrowser) {
+    let tabs = this._tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].browser == aBrowser)
+        return tabs[i];
+    }
+    return null;
+  },
+
+  getBrowserForWindow: function getBrowserForWindow(aWindow) {
+    let tabs = this._tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].browser.contentWindow == aWindow)
+        return tabs[i].browser;
+    }
+    return null;
+  },
+
+  getBrowserForDocument: function getBrowserForDocument(aDocument) {
+    let tabs = this._tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].browser.contentDocument == aDocument)
+        return tabs[i].browser;
+    }
+    return null;
+  },
+
+  loadURI: function loadURI(aURI, aParams) {
+    let browser = this.selectedBrowser;
+    if (!browser)
+      return;
+
+    let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
+    let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
+    let charset = "charset" in aParams ? aParams.charset : null;
+    browser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
+  },
+
+  addTab: function addTab(aURI) {
+    let newTab = new Tab(aURI);
+    this._tabs.push(newTab);
+    return newTab;
+  },
+
+  closeTab: function closeTab(aTab) {
+    if (aTab == this.selectedTab)
+      this.selectedTab = null;
+
+    aTab.destroy();
+    this._tabs.splice(this._tabs.indexOf(aTab), 1);
   },
 
   observe: function(aSubject, aTopic, aData) {
-      let browser = document.getElementById("browser");
-      if (aTopic == "session-back")
-          browser.goBack();
-      else if (aTopic == "session-reload")
-          browser.reload();
-  },
-};
-SessionListener.init();
+    let browser = this.selectedBrowser;
+    if (!browser)
+      return;
 
-var fennecProgressListener = null;
-var fennecEventHandler = null;
-
-function startup() {
-  window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess(this);
-  dump("zerdatime " + Date.now() + " - browser chrome startup finished.");
-
-  fennecProgressListener = new FennecProgressListener(this);
-
-  let browser = document.getElementById("browser");
-  browser.addProgressListener(fennecProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
-
-  fennecEventHandler = new FennecEventHandler(browser);
-  window.addEventListener("click", fennecEventHandler, true);
-  window.addEventListener("mousedown", fennecEventHandler, true);
-  window.addEventListener("mouseup", fennecEventHandler, true);
-  window.addEventListener("mousemove", fennecEventHandler, true);
-
-  browser.addEventListener("MozMagnifyGestureStart", fennecEventHandler, true);
-  browser.addEventListener("MozMagnifyGestureUpdate", fennecEventHandler, true);
-  browser.addEventListener("DOMContentLoaded", fennecEventHandler, true);
-
-  let uri = "about:support";
-  try {
-    uri = Services.prefs.getCharPref("browser.last.uri");
-  } catch (e) {};
-
-  // XXX maybe we don't do this if the launch was kicked off from external
-  Services.io.offline = false;
-  browser.loadURI(uri, null, null);
+    if (aTopic == "session-back")
+      browser.goBack();
+    else if (aTopic == "session-reload")
+      browser.reload();
+  }
 }
 
 
@@ -71,7 +141,9 @@ function nsBrowserAccess() {
 nsBrowserAccess.prototype = {
   openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
     dump("nsBrowserAccess::openURI");
-    let browser = document.getElementById("browser");
+    let browser = BrowserApp.selectedBrowser;
+    if (!browser)
+      browser = BrowserApp.addTab("about:blank").browser;
 
     // Why does returning the browser.contentWindow not work here?
     Services.io.offline = false;
@@ -85,19 +157,63 @@ nsBrowserAccess.prototype = {
   },
 
   isTabContentWindow: function(aWindow) {
-    // We have no tabs yet
-    return false;
+    return BrowserApp.getBrowserForWindow(aWindow) != null;
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow])
 };
 
-function FennecProgressListener() {
+function Tab(aURL) {
+  this.browser = null;
+  this.create(aURL);
 }
 
-FennecProgressListener.prototype = {
+Tab.prototype = {
+  create: function(aURL) {
+    if (this.browser)
+      return;
+
+    this.browser = document.createElement("browser");
+    this.browser.setAttribute("type", "content");
+    BrowserApp.deck.appendChild(this.browser);
+    this.browser.stop();
+
+    let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
+                Ci.nsIWebProgress.NOTIFY_LOCATION |
+                Ci.nsIWebProgress.NOTIFY_PROGRESS;
+    this.browser.addProgressListener(this, flags);
+    this.browser.loadURI(aURL);
+  },
+
+  destroy: function() {
+    if (!this.browser)
+      return;
+
+    this.browser.removeProgressListener(this);
+    BrowserApp.deck.removeChild(this.browser);
+    this.browser = null;
+  },
+
+  set active(aActive) {
+    if (!this.browser)
+      return;
+
+    if (aActive) {
+      this.browser.setAttribute("type", "content-primary");
+      BrowserApp.selectedTab = this;
+    } else {
+      this.browser.setAttribute("type", "content");
+    }
+  },
+
+  get active() {
+    if (!this.browser)
+      return false;
+    return this.browser.getAttribute("type") == "content-primary";
+  },
+
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    let windowID = 0; //aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
     let message = {
       gecko: {
         type: "onStateChange",
@@ -111,9 +227,9 @@ FennecProgressListener.prototype = {
 
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
     try {
-      let browser = document.getElementById("browser");
+      let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
       let uri = browser.currentURI.spec;
-      let windowID = 0;
+      let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 
       dump("Setting Last uri to: " + uri);
       Services.prefs.setCharPref("browser.last.uri", uri);
@@ -148,7 +264,7 @@ FennecProgressListener.prototype = {
   },
 
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
-    let windowID = 0; //aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
     let message = {
       gecko: {
         type: "onProgressChange",
@@ -167,25 +283,37 @@ FennecProgressListener.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference])
 };
 
-function FennecEventHandler(browser) {
-  this.browser = browser;
-  this.motionBuffer = new Array();
-  this._updateLastPosition(0, 0);
-}
 
-FennecEventHandler.prototype = {
+var BrowserEventHandler = {
+  init: function init() {
+    this.motionBuffer = [];
+    this._updateLastPosition(0, 0);
+
+    window.addEventListener("click", this, true);
+    window.addEventListener("mousedown", this, true);
+    window.addEventListener("mouseup", this, true);
+    window.addEventListener("mousemove", this, true);
+
+    BrowserApp.deck.addEventListener("MozMagnifyGestureStart", this, true);
+    BrowserApp.deck.addEventListener("MozMagnifyGestureUpdate", this, true);
+    BrowserApp.deck.addEventListener("DOMContentLoaded", this, true);
+  },
+
   handleEvent: function(aEvent) {
+    let browser = aEvent.originalTa
     switch (aEvent.type) {
-      case "DOMContentLoaded":
+      case "DOMContentLoaded": {
+        let browser = BrowserApp.getBrowserForDocument(aEvent.target);
         SendMessageToJava({
           gecko: {
             type: "DOMContentLoaded",
             windowID: 0,
-            uri: this.browser.currentURI.spec,
-            title: this.browser.contentTitle
+            uri: browser.currentURI.spec,
+            title: browser.contentTitle
           }
         });
         break;
+      }
       case "click":
         if (this.blockClick) {
           aEvent.stopPropagation();
@@ -212,7 +340,7 @@ FennecEventHandler.prototype = {
         let dx = aEvent.clientX - this.lastX;
         let dy = aEvent.clientY - this.lastY;
   
-        this.browser.contentWindow.wrappedJSObject.scrollBy(-dx, -dy);
+        BrowserApp.selectedBrowser.contentWindow.wrappedJSObject.scrollBy(-dx, -dy);
         this._updateLastPosition(aEvent.clientX, aEvent.clientY);
   
         aEvent.stopPropagation();
@@ -252,7 +380,7 @@ FennecEventHandler.prototype = {
 
           // TODO: Find the deepest scrollable element at the
           // mouse coordinates
-          this.browser.contentWindow.wrappedJSObject.
+          BrowserApp.selectedBrowser.contentWindow.wrappedJSObject.
             scrollBy(this.panX, this.panY);
 
           let self = this;
@@ -291,7 +419,7 @@ FennecEventHandler.prototype = {
                   self.panAccumulatedDeltaY -= ady;
               }
 
-              self.browser.contentWindow.wrappedJSObject.
+              BrowserApp.selectedBrowser.contentWindow.wrappedJSObject.
                 scrollBy(-dx, -dy);
 
               // If we're moving at a rate slower than 0.015
@@ -329,7 +457,7 @@ FennecEventHandler.prototype = {
   
         if (Math.abs(this._pinchDelta) >= 1) {
           let delta = Math.round(this._pinchDelta);
-          this.browser.markupDocumentViewer.fullZoom += delta;
+          BrowserApp.selectedBrowser.markupDocumentViewer.fullZoom += delta;
           this._pinchDelta = 0;
         }
         break;
