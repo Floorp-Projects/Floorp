@@ -113,24 +113,18 @@ class GeckoSurfaceView
     }
 
     public void loadStartupBitmap() {
-        try {
-            String filePath = getStartupBitmapFilePath();
-            mStartupBitmap = BitmapFactory.decodeFile(filePath);
-        } catch (Exception e) {
-            Log.e(LOG_FILE_NAME, e.toString());
-        }
+        new Thread(new Runnable() {
+                public void run() {
+                    String filePath = getStartupBitmapFilePath();
+                    mStartupBitmap = BitmapFactory.decodeFile(filePath);
+                }}).start();
     }
 
     public void drawStartupBitmap(SurfaceHolder holder, int width, int height) {
-        if (mStartupBitmap == null) {
-            Log.e(LOG_FILE_NAME, "!!! NO STARTUP BITMAP !!!");
-            loadStartupBitmap();
-        }
 
         Canvas c = holder.lockCanvas();
         if (c == null) {
             Log.e(LOG_FILE_NAME, "!!! NO CANVAS !!!");
-            mShowingLoadScreen = false;
             return;
         }
 
@@ -193,8 +187,7 @@ class GeckoSurfaceView
 
         if (mShowingLoadScreen) {
             drawStartupBitmap(holder, width, height);
-            if (mStartupBitmap != null)
-                return;
+            return;
         }
 
         // Force exactly one frame to render
@@ -296,7 +289,6 @@ class GeckoSurfaceView
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.i(LOG_FILE_NAME, "surface destroyed");
         saveLast();
-        mShowingLoadScreen = true;
         mStartupBitmap = mLastBitmap;
 
         mSurfaceValid = false;
@@ -621,6 +613,7 @@ class GeckoSurfaceView
             mShowingLoadScreen = false;
             surfaceChanged(getHolder(), mFormat, mWidth, mHeight);
         }
+
         GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
         return true;
     }
