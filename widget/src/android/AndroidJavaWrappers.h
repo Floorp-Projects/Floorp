@@ -413,6 +413,7 @@ public:
     double Z() { return mZ; }
     const nsIntRect& Rect() { return mRect; }
     nsAString& Characters() { return mCharacters; }
+    nsAString& CharactersExtra() { return mCharactersExtra; }
     int KeyCode() { return mKeyCode; }
     int MetaState() { return mMetaState; }
     int Flags() { return mFlags; }
@@ -440,7 +441,7 @@ protected:
     int mRangeForeColor, mRangeBackColor;
     double mAlpha, mBeta, mGamma;
     double mX, mY, mZ;
-    nsString mCharacters;
+    nsString mCharacters, mCharactersExtra;
     nsRefPtr<nsGeoPosition> mGeoPosition;
     nsRefPtr<nsGeoPositionAddress> mGeoAddress;
 
@@ -448,6 +449,7 @@ protected:
     void ReadP1Field(JNIEnv *jenv);
     void ReadRectField(JNIEnv *jenv);
     void ReadCharactersField(JNIEnv *jenv);
+    void ReadCharactersExtraField(JNIEnv *jenv);
 
     static jclass jGeckoEventClass;
     static jfieldID jActionField;
@@ -465,6 +467,7 @@ protected:
     static jfieldID jNativeWindowField;
 
     static jfieldID jCharactersField;
+    static jfieldID jCharactersExtraField;
     static jfieldID jKeyCodeField;
     static jfieldID jMetaStateField;
     static jfieldID jFlagsField;
@@ -499,6 +502,7 @@ public:
         FORCED_RESIZE = 16,
         ACTIVITY_START = 17,
         SAVE_STATE = 18,
+        BROADCAST = 19,
         dummy_java_enum_list_end
     };
 
