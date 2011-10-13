@@ -390,6 +390,11 @@ abstract public class GeckoApp
     {
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - onCreate");
 
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                                   .detectDiskReads().detectDiskWrites().detectNetwork()
+                                   .penaltyLog().build());
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().penaltyLog().build());
+
         super.onCreate(savedInstanceState);
         
         getWindow().setFlags(mFullscreen ?
@@ -411,6 +416,8 @@ abstract public class GeckoApp
            ((ViewGroup) surfaceView.getParent()).removeAllViews();
            geckoLayout.addView(surfaceView);
         }
+
+        surfaceView.loadStartupBitmap();
 
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - UI almost up");
 
@@ -460,12 +467,6 @@ abstract public class GeckoApp
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         mConnectivityReceiver = new GeckoConnectivityReceiver();
-
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                surfaceView.loadStartupBitmap();
-            }
-        });
 
         final GeckoApp self = this;
  
