@@ -87,6 +87,22 @@ CodeGeneratorARM::generateEpilogue()
     return true;
 }
 
+void
+CodeGeneratorARM::emitBranch(Assembler::Condition cond, MBasicBlock *mirTrue, MBasicBlock *mirFalse)
+{
+    LBlock *ifTrue = mirTrue->lir();
+    LBlock *ifFalse = mirFalse->lir();
+    if (isNextBlock(ifFalse)) {
+        masm.ma_b(ifTrue->label(), cond);
+    } else {
+        masm.ma_b(ifFalse->label(), Assembler::InvertCondition(cond));
+        if (!isNextBlock(ifTrue)) {
+            masm.ma_b(ifTrue->label());
+        }
+    }
+}
+
+
 bool
 OutOfLineBailout::accept(CodeGeneratorARM *codegen)
 {
@@ -114,7 +130,7 @@ CodeGeneratorARM::visitTestIAndBranch(LTestIAndBranch *test)
     LBlock *ifFalse = test->ifFalse()->lir();
 
     // Test the operand
-    masm.ma_cmp(ToRegister(opd), ToRegister(opd));
+    masm.ma_cmp(Imm32(0), ToRegister(opd));
 
     if (isNextBlock(ifFalse)) {
         masm.ma_b(ifTrue->label(), Assembler::NonZero);
@@ -141,10 +157,27 @@ CodeGeneratorARM::visitCompareI(LCompareI *comp)
     return true;
 }
 
+static inline Assembler::Condition
+JSOpToCondition(JSOp op)
+{
+    switch (op) {
+      case JSOP_LT:
+        return Assembler::LessThan;
+      case JSOP_LE:
+        return Assembler::LessThanOrEqual;
+      case JSOP_GT:
+        return Assembler::GreaterThan;
+      case JSOP_GE:
+        return Assembler::GreaterThanOrEqual;
+      default:
+        JS_NOT_REACHED("Unrecognized comparison operation");
+        return Assembler::Equal;
+    }
+}
+
 bool
 CodeGeneratorARM::visitCompareIAndBranch(LCompareIAndBranch *comp)
 {
-    JS_NOT_REACHED("Feature NYI");
 #if 0
     const LAllocation *left = comp->getOperand(0);
     const LAllocation *right = comp->getOperand(1);
@@ -164,8 +197,13 @@ CodeGeneratorARM::visitCompareIAndBranch(LCompareIAndBranch *comp)
         masm.ma_b(ifTrue->label(), cond);
         masm.ma_b(ifFalse->label(), Assembler::Always);
     }
+    return true;
 #endif
-    return false;
+    Assembler::Condition cond = JSOpToCondition(comp->jsop());
+    masm.ma_cmp(ToRegister(comp->left()), ToOperand(comp->right()));
+    emitBranch(cond, comp->ifTrue(), comp->ifFalse());
+    return true;
+
 }
 
 bool
@@ -251,14 +289,33 @@ CodeGeneratorARM::visitAddI(LAddI *ins)
     const LAllocation *rhs = ins->getOperand(1);
     const LDefinition *dest = ins->getDef(0);
 
-    if (rhs->isConstant())
+    if (rhs->isConstant()) {
         masm.ma_add(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest));
-    else
+    } else {
         masm.ma_add(ToRegister(lhs), ToOperand(rhs), ToRegister(dest));
+    }
 
     if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
         return false;
 
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitSubI(LSubI *ins)
+{
+    const LAllocation *lhs = ins->getOperand(0);
+    const LAllocation *rhs = ins->getOperand(1);
+    const LDefinition *dest = ins->getDef(0);
+
+    if (rhs->isConstant()) {
+        masm.ma_sub(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest));
+    } else {
+        masm.ma_sub(ToRegister(lhs), ToOperand(rhs), ToRegister(dest));
+    }
+
+    if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
+        return false;
     return true;
 }
 
@@ -405,26 +462,83 @@ CodeGeneratorARM::visitBitOp(LBitOp *ins)
     const LDefinition *dest = ins->getDef(0);
     // all of these bitops should be either imm32's, or integer registers.
     switch (ins->bitop()) {
-        case JSOP_BITOR:
-            if (rhs->isConstant())
-                masm.ma_orr(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest));
-            else
-                masm.ma_orr(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
+      case JSOP_BITOR:
+        if (rhs->isConstant()) {
+            masm.ma_orr(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest));
+        } else {
+            masm.ma_orr(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
+        }
+        break;
+      case JSOP_BITXOR:
+        if (rhs->isConstant()) {
+            masm.ma_eor(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest));
+        } else {
+            masm.ma_eor(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
+        }
+        break;
+      case JSOP_BITAND:
+        if (rhs->isConstant()) {
+            masm.ma_and(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest));
+        } else {
+            masm.ma_and(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
+        }
+        break;
+      default:
+        JS_NOT_REACHED("unexpected binary opcode");
+    }
+
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitShiftOp(LShiftOp *ins)
+{
+    const LAllocation *lhs = ins->getOperand(0);
+    const LAllocation *rhs = ins->getOperand(1);
+    const LDefinition *dest = ins->getDef(0);
+    // TODO: the shift amounts should be AND'ed into the 0-31 range since
+    // arm shifts by the lower byte of the register (it will attempt to shift by
+    // 250 if you ask it to, and the result will probably not be what you want.
+    switch (ins->bitop()) {
+        case JSOP_LSH:
+          if (rhs->isConstant()) {
+                masm.ma_lsl(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs), ToRegister(dest));
+          } else {
+                masm.ma_lsl(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
+          }
             break;
-        case JSOP_BITXOR:
-            if (rhs->isConstant())
-                masm.ma_eor(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest));
-            else
-                masm.ma_eor(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
+        case JSOP_RSH:
+          if (rhs->isConstant()) {
+                masm.ma_asr(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs), ToRegister(dest));
+          } else {
+                masm.ma_asr(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
+          }
             break;
-        case JSOP_BITAND:
-            if (rhs->isConstant())
-                masm.ma_and(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest));
-            else
-                masm.ma_and(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
+        case JSOP_URSH: {
+            MUrsh *ursh = ins->mir()->toUrsh();
+            if (rhs->isConstant()) {
+                masm.ma_lsr(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs), ToRegister(dest));
+            } else {
+                masm.ma_lsr(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
+            }
+
+            // Note: this is an unsigned operation.
+            // We don't have a UINT32 type, so we will emulate this with INT32
+            // The bit representation of an integer from ToInt32 and ToUint32 are the same.
+            // So the inputs are ok.
+            // But we need to bring the output back again from UINT32 to INT32.
+            // Both representation overlap each other in the positive numbers. (in INT32)
+            // So there is only a problem when solution (in INT32) is negative.
+            if (ursh->canOverflow()) {
+                masm.ma_cmp(Imm32(0), ToRegister(lhs));
+                if (!bailoutIf(Assembler::LessThan, ins->snapshot())) {
+                    return false;
+                }
+            }
             break;
+        }
         default:
-            JS_NOT_REACHED("unexpected binary opcode");
+            JS_NOT_REACHED("unexpected shift opcode");
     }
 
     return true;
@@ -473,8 +587,9 @@ CodeGeneratorARM::visitMoveGroup(LMoveGroup *group)
                                         ? MoveResolver::Move::DOUBLE
                                         : MoveResolver::Move::GENERAL;
 
-        if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind))
+        if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind)) {
             return false;
+        }
     }
 
     if (!resolver.resolve())
@@ -644,10 +759,11 @@ CodeGeneratorARM::visitValue(LValue *value)
     LDefinition *payload = value->getDef(PAYLOAD_INDEX);
 
     masm.ma_mov(Imm32(jv.s.tag), ToRegister(type));
-    if (value->value().isMarkable())
+    if (value->value().isMarkable()) {
         masm.ma_mov(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), ToRegister(payload));
-    else
+    } else {
         masm.ma_mov(Imm32(jv.s.payload.u32), ToRegister(payload));
+    }
     return true;
 }
 
@@ -672,10 +788,6 @@ MIRTypeToTag(MIRType type)
 bool
 CodeGeneratorARM::visitBox(LBox *box)
 {
-    JS_NOT_REACHED("Codegen for visitBox NYI");
-    return false;
-
-#if 0
     const LAllocation *a = box->getOperand(0);
     const LDefinition *type = box->getDef(TYPE_INDEX);
 
@@ -685,41 +797,30 @@ CodeGeneratorARM::visitBox(LBox *box)
     // virtual register. All that needs to be written is the type tag for
     // the type definition.
     // this is different on ARM.  fix this accordingly.
-    masm.movl(Imm32(MIRTypeToTag(box->type())), ToRegister(type));
+    masm.ma_mov(Imm32(MIRTypeToTag(box->type())), ToRegister(type));
     return true;
-#endif
 }
 
 bool
 CodeGeneratorARM::visitBoxDouble(LBoxDouble *box)
 {
-    JS_NOT_REACHED("Codegen for visitBoxDouble NYI");
-    return false;
-#if 0
     const LDefinition *payload = box->getDef(PAYLOAD_INDEX);
     const LDefinition *type = box->getDef(TYPE_INDEX);
     const LAllocation *in = box->getOperand(0);
 
-    masm.movd(ToFloatRegister(in), ToRegister(payload));
-    masm.psrlq(Imm32(4), ToFloatRegister(in));
-    masm.movd(ToFloatRegister(in), ToRegister(type));
+    masm.as_vxfer(ToRegister(payload), ToRegister(type),
+                  VFPRegister(ToFloatRegister(in)), Assembler::FloatToCore);
     return true;
-#endif
 }
 
 bool
 CodeGeneratorARM::visitUnbox(LUnbox *unbox)
 {
-    JS_NOT_REACHED("Codegen for unbox NYI");
-    return false;
-
-#if 0
     LAllocation *type = unbox->getOperand(TYPE_INDEX);
-    masm.cmpl(ToOperand(type), Imm32(MIRTypeToTag(unbox->type())));
+    masm.ma_cmp(Imm32(MIRTypeToTag(unbox->type())), ToRegister(type));
     if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
         return false;
     return true;
-#endif
 }
 
 bool
@@ -755,22 +856,23 @@ bool
 CodeGeneratorARM::visitDouble(LDouble *ins)
 {
 
-    JS_NOT_REACHED("Codegen for visitDouble NYI");
-    return false;
-
-#if 0
     const LDefinition *out = ins->getDef(0);
     const LConstantIndex *cindex = ins->getOperand(0)->toConstantIndex();
     const Value &v = graph.getConstant(cindex->index());
 
     jsdpun dpun;
     dpun.d = v.toDouble();
+    if ((dpun.u64 & 0xffffffff) == 0) {
+        VFPImm dblEnc(dpun.u64 >> 32);
+        if (dblEnc.isValid()) {
+            masm.as_vimm(ToFloatRegister(out), dblEnc);
+            return true;
+        }
 
-    if (dpun.u64 == 0) {
-        masm.xorpd(ToFloatRegister(out), ToFloatRegister(out));
-        return true;
     }
-
+    JS_NOT_REACHED("immediate NYI");
+    return false;
+#if 0
     DeferredDouble *d = new DeferredDouble(cindex->index());
     if (!deferredDoubles_.append(d))
         return false;
@@ -783,10 +885,6 @@ CodeGeneratorARM::visitDouble(LDouble *ins)
 bool
 CodeGeneratorARM::visitUnboxDouble(LUnboxDouble *ins)
 {
-    JS_NOT_REACHED("Codegen for vvisitUnboxDouble NYI");
-
-    return false;
-#if 0
     const ValueOperand box = ToValue(ins, LUnboxDouble::Input);
     const LDefinition *result = ins->output();
 
@@ -795,7 +893,6 @@ CodeGeneratorARM::visitUnboxDouble(LUnboxDouble *ins)
         return false;
     masm.unboxDouble(box, ToFloatRegister(result));
     return true;
-#endif
 }
 Register
 CodeGeneratorARM::splitTagForTest(const ValueOperand &value)
@@ -826,5 +923,127 @@ bool
 CodeGeneratorARM::visitCompareDAndBranch(LCompareDAndBranch *comp)
 {
     JS_NOT_REACHED("Codegen for CompareDAndBranch NYI");
+    return false;
+}
+
+
+bool
+CodeGeneratorARM::visitStackArg(LStackArg *arg)
+{
+    ValueOperand val = ToValue(arg, 0);
+    uint32 argslot = arg->argslot();
+    int32 stack_offset = StackOffsetOfPassedArg(argslot);
+
+    masm.ma_str(val.typeReg(), DTRAddr(StackPointer, DtrOffImm(stack_offset)));
+    masm.ma_str(val.payloadReg(), DTRAddr(StackPointer, DtrOffImm(stack_offset+4)));
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
+{
+
+    // Holds the function object.
+    const LAllocation *obj = call->getFunction();
+    Register objreg  = ToRegister(obj);
+
+    // Holds the callee token. Initially undefined.
+    const LAllocation *tok = call->getToken();
+    Register tokreg  = ToRegister(tok);
+
+    // Holds the function nargs. Initially undefined.
+    const LAllocation *nargs = call->getNargsReg();
+    Register nargsreg = ToRegister(nargs);
+
+    uint32 callargslot  = call->argslot();
+    uint32 unused_stack = StackOffsetOfPassedArg(callargslot);
+
+
+#if 0
+    // Guard that objreg is actually a function object.
+    masm.ma_ldr(DTRAddr(objreg, DtrOffImm(JSObject::offsetOfClassPointer())), tokreg);
+    masm.ma_ldr(DTRAddr(tokreg, DtrOffImm(0)), tokreg);
+
+    masm.cmpPtr(tokreg, ImmWord(&js::FunctionClass));
+    if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
+        return false;
+
+    // Extract the function object.
+    masm.movePtr(Operand(objreg, offsetof(JSObject, privateData)), objreg);
+
+    // Guard that objreg is a non-native function:
+    // Non-native iff (obj->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
+    masm.movl(Operand(objreg, offsetof(JSFunction, flags)), tokreg);
+    masm.andl(Imm32(JSFUN_KINDMASK), tokreg);
+    masm.cmpl(tokreg, Imm32(JSFUN_INTERPRETED));
+    if (!bailoutIf(Assembler::Below, call->snapshot()))
+        return false;
+
+    // Save the calleeToken, which equals the function object.
+    masm.mov(objreg, tokreg);
+
+    // Knowing that objreg is a non-native function, load the JSScript.
+    masm.movePtr(Operand(objreg, offsetof(JSFunction, u.i.script)), objreg);
+    masm.movePtr(Operand(objreg, offsetof(JSScript, ion)), objreg);
+
+    // Bail if the callee has not yet been JITted.
+    masm.testPtr(objreg, objreg);
+    if (!bailoutIf(Assembler::Zero, call->snapshot()))
+        return false;
+
+    // Remember the size of the frame above this point, in case of bailout.
+    JS_STATIC_ASSERT(IonFramePrefix::JSFrame == 0x0);
+    uint32 stack_size = masm.framePushed() - unused_stack;
+    uint32 size_descriptor = stack_size << IonFramePrefix::FrameTypeBits;
+
+    // Nestle %esp up to the argument vector.
+    if (unused_stack)
+        masm.addPtr(Imm32(unused_stack), StackPointer);
+
+    // Construct the IonFramePrefix.
+    masm.push(tokreg);
+    masm.push(Imm32(size_descriptor));
+
+    // Call the function, padding with |undefined| in case of insufficient args.
+    {
+        Label thunk, rejoin;
+
+        // Get the address of the argumentsRectifier code.
+        IonCompartment *ion = gen->ionCompartment();
+        IonCode *argumentsRectifier = ion->getArgumentsRectifier(gen->cx);
+        if (!argumentsRectifier)
+            return false;
+
+        // Check whether the provided arguments satisfy target argc.
+        masm.load16(Operand(tokreg, offsetof(JSFunction, nargs)), nargsreg);
+        masm.cmpl(nargsreg, Imm32(call->nargs()));
+        masm.j(Assembler::Above, &thunk);
+
+        // No argument fixup needed. Call the function normally.
+        masm.movePtr(Operand(objreg, offsetof(IonScript, method_)), objreg);
+        masm.movePtr(Operand(objreg, IonCode::OffsetOfCode()), objreg);
+        masm.call(objreg);
+        masm.jump(&rejoin);
+
+        // Argument fixup needed. Create a frame with correct |nargs| and then call.
+        masm.bind(&thunk);
+        masm.mov(Imm32(call->nargs()), ArgumentsRectifierReg);
+        masm.movePtr(ImmWord(argumentsRectifier->raw()), ecx); // safe to take: return reg.
+        masm.call(ecx);
+
+        masm.bind(&rejoin);
+    }
+
+    // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
+    int prefix_garbage = 2 * sizeof(void *);
+    int restore_diff = prefix_garbage - unused_stack;
+    
+    if (restore_diff > 0)
+        masm.addPtr(Imm32(restore_diff), StackPointer);
+    else if (restore_diff < 0)
+        masm.subPtr(Imm32(-restore_diff), StackPointer);
+
+    return true;
+#endif
     return false;
 }

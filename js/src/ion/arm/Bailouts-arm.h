@@ -57,12 +57,13 @@ class IonCompartment;
 class BailoutStack
 {
     uintptr_t frameClassId_;
-    double    fpregs_[FloatRegisters::Total];
-    uintptr_t regs_[Registers::Total];
     union {
         uintptr_t frameSize_;
         uintptr_t tableOffset_;
     };
+    double    fpregs_[FloatRegisters::Total];
+    uintptr_t regs_[Registers::Total];
+
 
   public:
     FrameSizeClass frameClass() const {

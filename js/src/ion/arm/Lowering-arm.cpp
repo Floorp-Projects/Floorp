@@ -113,7 +113,7 @@ LIRGeneratorARM::visitBox(MBox *box)
 
     lir->setDef(0, LDefinition(vreg, LDefinition::TYPE));
     lir->setDef(1, LDefinition(inner->id(), LDefinition::PAYLOAD, LDefinition::REDEFINED));
-    box->setId(vreg);
+    box->setVirtualRegister(vreg);
     return add(lir);
 }
 
@@ -138,13 +138,13 @@ LIRGeneratorARM::visitUnbox(MUnbox *unbox)
     }
 
     LUnbox *lir = new LUnbox(unbox->type());
-    lir->setOperand(0, useType(inner, LUse::ANY));
+    lir->setOperand(0, useType(inner, LUse::REGISTER));
     lir->setOperand(1, usePayloadInRegister(inner));
 
     // Re-use the inner payload's def, for better register allocation.
     LDefinition::Type type = LDefinition::TypeFrom(unbox->type());
     lir->setDef(0, LDefinition(VirtualRegisterOfPayload(inner), type, LDefinition::REDEFINED));
-    unbox->setId(VirtualRegisterOfPayload(inner));
+    unbox->setVirtualRegister(VirtualRegisterOfPayload(inner));
 
     return assignSnapshot(lir) && add(lir);
 }
@@ -240,7 +240,7 @@ LIRGeneratorARM::defineUntypedPhi(MPhi *phi, size_t lirIndex)
     if (typeVreg >= MAX_VIRTUAL_REGISTERS)
         return false;
 
-    phi->setId(typeVreg);
+    phi->setVirtualRegister(typeVreg);
 
     uint32 payloadVreg = getVirtualRegister();
     if (payloadVreg >= MAX_VIRTUAL_REGISTERS)
