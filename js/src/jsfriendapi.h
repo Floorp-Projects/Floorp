@@ -334,6 +334,9 @@ CastAsJSStrictPropertyOp(JSObject *object)
 JS_FRIEND_API(bool)
 GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector *props);
 
+JS_FRIEND_API(bool)
+StringIsArrayIndex(JSLinearString *str, jsuint *indexp);
+
 /*
  * NB: these flag bits are encoded into the bytecode stream in the immediate
  * operand of JSOP_ITER, so don't change them without advancing jsxdrapi.h's

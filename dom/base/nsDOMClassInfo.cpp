@@ -7981,6 +7981,31 @@ nsNamedNodeMapSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
 // HTMLCollection helper
 
 nsresult
+nsHTMLCollectionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                              JSObject *globalObj, JSObject **parentObj)
+{
+  nsIHTMLCollection* list = static_cast<nsIHTMLCollection*>(nativeObj);
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIHTMLCollection> list_qi = do_QueryInterface(nativeObj);
+
+    // If this assertion fires the QI implementation for the object in
+    // question doesn't use the nsIHTMLCollection pointer as the nsISupports
+    // pointer. That must be fixed, or we'll crash...
+    NS_ASSERTION(list_qi == list, "Uh, fix QI!");
+  }
+#endif
+
+  nsINode* native_parent = list->GetParentObject();
+
+  nsresult rv =
+    WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
+}
+
+nsresult
 nsHTMLCollectionSH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                               JSObject *obj, PRUint32 *length)
 {
