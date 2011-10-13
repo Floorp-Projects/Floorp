@@ -11,7 +11,7 @@ function dump(a) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
 }
 
-function SendMessageToJava(aMessage) {
+function sendMessageToJava(aMessage) {
   let bridge = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
   bridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
@@ -222,7 +222,7 @@ Tab.prototype = {
       }
     };
 
-    SendMessageToJava(message);
+    sendMessageToJava(message);
   },
 
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
@@ -242,7 +242,7 @@ Tab.prototype = {
         }
       };
 
-      SendMessageToJava(message);
+      sendMessageToJava(message);
 
       if (uri == Services.prefs.getCharPref("browser.last.uri")) {
         let showMessage = {
@@ -252,7 +252,7 @@ Tab.prototype = {
           }
         };
 
-        SendMessageToJava(showMessage);
+        sendMessageToJava(showMessage);
       }
     } catch (e) {
       dump("onLocationChange throws " + e);
@@ -274,7 +274,7 @@ Tab.prototype = {
       }
     };
 
-    SendMessageToJava(message);
+    sendMessageToJava(message);
   },
   onStatusChange: function(aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
     dump("progressListener.onStatusChange");
@@ -304,7 +304,7 @@ var BrowserEventHandler = {
     switch (aEvent.type) {
       case "DOMContentLoaded": {
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
-        SendMessageToJava({
+        sendMessageToJava({
           gecko: {
             type: "DOMContentLoaded",
             windowID: 0,
