@@ -141,10 +141,15 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsnull;
 
+  bool svg = nsCRT::strcmp(contentType, "image/svg+xml") == 0;
+
   // For now, we can only create XML documents.
+  //XXXsmaug Should we create an HTMLDocument (in XHTML mode)
+  //         for "application/xhtml+xml"?
   if ((nsCRT::strcmp(contentType, "text/xml") != 0) &&
       (nsCRT::strcmp(contentType, "application/xml") != 0) &&
-      (nsCRT::strcmp(contentType, "application/xhtml+xml") != 0))
+      (nsCRT::strcmp(contentType, "application/xhtml+xml") != 0) &&
+      !svg)
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
@@ -183,7 +188,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(), nsnull,
                                       mDocumentURI, mBaseURI,
                                       mOriginalPrincipal,
-                                      scriptHandlingObject,
+                                      scriptHandlingObject, svg,
                                       getter_AddRefs(domDocument));
   NS_ENSURE_SUCCESS(rv, rv);
 
