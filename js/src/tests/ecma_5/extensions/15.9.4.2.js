@@ -12,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is JavaScript Engine testing utilities.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Bruce Hoult
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,30 +35,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsWWJSUtils_h__
-#define nsWWJSUtils_h__
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 682754;
 
-/**
- * Utility functions copied from nsJSUtils in dom/src/base.
- */
 
-#include "nsISupports.h"
-#include "jsapi.h"
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-class nsIScriptContext;
-class nsIScriptGlobalObject;
+function iso(d)
+{
+  return new Date(d).toISOString();
+}
 
-class nsWWJSUtils {
-public:
-  static nsIScriptGlobalObject *GetStaticScriptGlobal(JSContext* aContext,
-                                                      JSObject* aObj);
+function check(s, millis){
+  description = "Date.parse('"+s+"') == '"+iso(millis)+"'";
+  expected = millis;
+  actual = Date.parse(s);
+  reportCompare(expected, actual, description);
+}
 
-  static nsIScriptContext *GetStaticScriptContext(JSContext* aContext,
-                                                  JSObject* aObj);
+function checkInvalid(s)
+{
+  description = "Date.parse('"+s+"') produces invalid date";
+  expected = NaN;
+  actual = Date.parse(s);
+  reportCompare(expected, actual, description);
+}
 
-  static nsIScriptGlobalObject *GetDynamicScriptGlobal(JSContext *aContext);
+function dd(year, month, day, hour, minute, second, millis){
+  return Date.UTC(year, month-1, day, hour, minute, second, millis);
+}
 
-  static nsIScriptContext *GetDynamicScriptContext(JSContext *aContext);
-};
+function TZAtDate(d){
+  return d.getTimezoneOffset() * 60000;
+}
 
-#endif /* nsWWJSUtils_h__ */
+function TZInMonth(month){
+  return TZAtDate(new Date(dd(2009,month,1,0,0,0,0)));
+}
+
+function test()
+{
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+
+  JanTZ = TZInMonth(1);
+  JulTZ = TZInMonth(7);
+  CurrTZ = TZAtDate(new Date());
+
+  // Allow non-standard "-0700" as timezone, not just "-07:00"
+  check("2009-07-23T00:53:21.001-0700", dd(2009,7,23,7,53,21,1));
+
+  exitFunc ('test');
+}

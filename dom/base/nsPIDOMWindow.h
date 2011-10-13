@@ -97,21 +97,29 @@ public:
 
   virtual void SetActive(bool aActive)
   {
+    NS_PRECONDITION(IsOuterWindow(),
+                    "active state is only maintained on outer windows");
     mIsActive = aActive;
   }
 
   bool IsActive()
   {
+    NS_PRECONDITION(IsOuterWindow(),
+                    "active state is only maintained on outer windows");
     return mIsActive;
   }
 
   virtual void SetIsBackground(bool aIsBackground)
   {
+    NS_PRECONDITION(IsOuterWindow(),
+                    "background state is only maintained on outer windows");
     mIsBackground = aIsBackground;
   }
 
   bool IsBackground()
   {
+    NS_PRECONDITION(IsOuterWindow(),
+                    "background state is only maintained on outer windows");
     return mIsBackground;
   }
 
