@@ -916,6 +916,7 @@ WeaveSvc.prototype = {
 
   startOver: function() {
     Svc.Obs.notify("weave:engine:stop-tracking");
+    Status.resetSync();
 
     // We want let UI consumers of the following notification know as soon as
     // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
@@ -944,7 +945,6 @@ WeaveSvc.prototype = {
     this.resetClient();
     CollectionKeys.clear();
     Status.resetBackoff();
-    Status.resetSync();
 
     // Reset Weave prefs.
     this._ignorePrefObserver = true;
@@ -954,7 +954,6 @@ WeaveSvc.prototype = {
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
     this.password = "";
-    this.passphrase = "";
     Services.logins.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
       Services.logins.removeLogin(login);
     });

@@ -175,8 +175,18 @@ function run_test() {
   // res.data has been updated with the result from the request
   do_check_eq(res.data, content);
 
+  // Observe logging messages.
+  let logger = res._log;
+  let dbg    = logger.debug;
+  let debugMessages = [];
+  logger.debug = function (msg) {
+    debugMessages.push(msg);
+    dbg.call(this, msg);
+  }
+
   // Since we didn't receive proper JSON data, accessing content.obj
-  // will result in a SyntaxError from JSON.parse
+  // will result in a SyntaxError from JSON.parse.
+  // Furthermore, we'll have logged.
   let didThrow = false;
   try {
     content.obj;
@@ -184,6 +194,10 @@ function run_test() {
     didThrow = true;
   }
   do_check_true(didThrow);
+  do_check_eq(debugMessages.length, 1);
+  do_check_eq(debugMessages[0],
+              "Parse fail: Response body starts: \"\"This path exists\"\".");
+  logger.debug = dbg;
 
   _("Test that the BasicAuthenticator doesn't screw up header case.");
   let res1 = new Resource("http://localhost:8080/foo");
