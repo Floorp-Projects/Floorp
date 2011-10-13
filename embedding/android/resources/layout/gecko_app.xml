@@ -1,65 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
- <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-         android:id="@+android:id/mainLayout"
-         android:layout_width="match_parent"
-         android:layout_height="match_parent"
-         android:orientation="vertical"
-         android:background="#fff">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+android:id/mainLayout"
+              style="@style/Screen">
 
     <ProgressBar android:id="@+android:id/progressBar"
-              style="@android:style/Widget.ProgressBar.Horizontal"
-              android:layout_width="fill_parent"
-              android:layout_height="10dip"
-              android:visibility="gone"/>
+                 style="@android:style/Widget.ProgressBar.Horizontal"
+                 android:layout_width="fill_parent"
+                 android:layout_height="10dip"
+                 android:visibility="gone"/>
 
     <LinearLayout android:id="@+android:id/addressBar"
-              android:layout_width="fill_parent"
-              android:layout_height="wrap_content"
-              android:orientation="horizontal"
-              android:background="@drawable/address_bar_bg">
+                  style="@style/AddressBar">
 
-              <ImageButton android:id="@+android:id/favicon"
-                        android:layout_width="40dip"
-                        android:layout_height="43dip"
-                        android:layout_marginLeft="5dp"
-                        android:layout_marginTop="5dp"
-                        android:layout_marginBottom="5dp"
-                        android:scaleType="centerInside"
-                        android:background="@drawable/address_bar_button_left"
-                        android:src="@drawable/favicon"/>
+        <ImageButton android:id="@+android:id/favicon"
+                     style="@style/AddressBar.ImageButton.Left"
+                     android:src="@drawable/favicon"/>
 
-              <Button android:id="@+android:id/awesomeBar"
-                        android:layout_width="wrap_content"
-                        android:layout_height="43dip"
-                        android:orientation="horizontal"
-                        android:layout_weight="1"
-                        android:layout_marginLeft="0dp"
-                        android:layout_marginRight="0dp"
-                        android:layout_marginTop="5dp"
-                        android:layout_marginBottom="5dp"
-                        android:paddingLeft="10dp"
-                        android:paddingRight="10dp"
-                        android:background="@drawable/address_bar_button_middle"
-                        android:singleLine="true"
-                        android:textSize="18sp"
-                        android:textColor="#666"
-                        android:gravity="center_vertical|left"/>
+            <Button android:id="@+android:id/awesomeBar"
+                    style="@style/AddressBar.URL"
+                    android:textColor="#666"/>
 
-              <ImageButton android:id="@+android:id/reload"
-                        android:layout_width="40dip"
-                        android:layout_height="43dip"
-                        android:layout_marginRight="5dp"
-                        android:layout_marginTop="5dp"
-                        android:layout_marginBottom="5dp"
-                        android:scaleType="centerInside"
-                        android:background="@drawable/address_bar_button_right"
-                        android:src="@drawable/reload"/>
+             <ImageButton android:id="@+android:id/reload"
+                          style="@style/AddressBar.ImageButton.Right"
+                          android:src="@drawable/reload"/>
 
     </LinearLayout>
 
     <RelativeLayout android:id="@+android:id/geckoLayout"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:layout_weight="1"/>
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"/>
 
  </LinearLayout>

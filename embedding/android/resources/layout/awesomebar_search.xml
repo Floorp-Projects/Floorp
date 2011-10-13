@@ -1,26 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
- <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-         android:id="@+id/awesomeScreen"
-         android:orientation="vertical"
-         android:layout_width="match_parent"
-         android:layout_height="match_parent"
-         android:background="#00000000">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/awesomeScreen"
+              style="@style/Screen">
 
-    <LinearLayout android:layout_width="fill_parent"
-              android:layout_height="wrap_content"
-              android:orientation="horizontal"
-              android:background="@drawable/address_bar_bg">
+    <LinearLayout style="@style/AddressBar">
     
-              <EditText android:id="@+android:id/awesomebar_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="43dip"
-                        android:layout_margin="5dip"
-                        android:textSize="18sp"
-                        android:singleLine="true"
-                        android:inputType="textUri"
-                        android:imeOptions="actionGo">
-                        <requestFocus/>
-              </EditText>
+        <EditText android:id="@+android:id/awesomebar_text"
+                  style="@style/AddressBar.URL"
+                  android:background="@android:drawable/edit_text"
+                  android:inputType="textUri"
+                  android:imeOptions="actionGo">
+             <requestFocus/>
+        </EditText>
 
     </LinearLayout>
 
