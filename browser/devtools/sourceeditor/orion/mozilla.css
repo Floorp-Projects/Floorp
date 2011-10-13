@@ -1,0 +1,11 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+
+.rulerLines {
+  background: -moz-Dialog;
+  color: -moz-DialogText;
+  min-width: 1.4em;
+  padding-left: 4px;
+  padding-right: 4px;
+}
