@@ -2568,8 +2568,8 @@ var gCSSProperties = {
 		domProp: "textOverflow",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "clip", "clip clip" ],
-		other_values: [ "ellipsis", '""', "''", '"hello"', 'clip ellipsis', 'clip ""', '"hello" ""', '"" ellipsis' ],
+		initial_values: [ "clip" ],
+		other_values: [ "ellipsis", '""', "''", '"hello"', 'clip clip', 'ellipsis ellipsis', 'clip ellipsis', 'clip ""', '"hello" ""', '"" ellipsis' ],
 		invalid_values: [ "none", "auto", '"hello" inherit', 'inherit "hello"', 'clip initial', 'initial clip', 'initial inherit', 'inherit initial', 'inherit none']
 	},
 	"text-shadow": {

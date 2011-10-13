@@ -301,37 +301,40 @@ enum {
      * Some objects are not dense arrays, or are dense arrays whose length
      * property does not fit in an int32.
      */
-    OBJECT_FLAG_NON_DENSE_ARRAY       = 0x0010000,
+    OBJECT_FLAG_NON_DENSE_ARRAY       = 0x00010000,
 
     /* Whether any objects this represents are not packed arrays. */
-    OBJECT_FLAG_NON_PACKED_ARRAY      = 0x0020000,
+    OBJECT_FLAG_NON_PACKED_ARRAY      = 0x00020000,
 
     /* Whether any objects this represents are not typed arrays. */
-    OBJECT_FLAG_NON_TYPED_ARRAY       = 0x0040000,
+    OBJECT_FLAG_NON_TYPED_ARRAY       = 0x00040000,
 
     /* Whether any represented script has had arguments objects created. */
-    OBJECT_FLAG_CREATED_ARGUMENTS     = 0x0080000,
+    OBJECT_FLAG_CREATED_ARGUMENTS     = 0x00080000,
 
     /* Whether any represented script is considered uninlineable. */
-    OBJECT_FLAG_UNINLINEABLE          = 0x0100000,
+    OBJECT_FLAG_UNINLINEABLE          = 0x00100000,
 
     /* Whether any objects have an equality hook. */
-    OBJECT_FLAG_SPECIAL_EQUALITY      = 0x0200000,
+    OBJECT_FLAG_SPECIAL_EQUALITY      = 0x00200000,
 
     /* Whether any objects have been iterated over. */
-    OBJECT_FLAG_ITERATED              = 0x0400000,
+    OBJECT_FLAG_ITERATED              = 0x00400000,
 
     /* Outer function which has been marked reentrant. */
-    OBJECT_FLAG_REENTRANT_FUNCTION    = 0x0800000,
+    OBJECT_FLAG_REENTRANT_FUNCTION    = 0x00800000,
+
+    /* For a global object, whether flags were set on the RegExpStatics. */
+    OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x01000000,
 
     /* Flags which indicate dynamic properties of represented objects. */
-    OBJECT_FLAG_DYNAMIC_MASK          = 0x0ff0000,
+    OBJECT_FLAG_DYNAMIC_MASK          = 0x01ff0000,
 
     /*
      * Whether all properties of this object are considered unknown.
      * If set, all flags in DYNAMIC_MASK will also be set.
      */
-    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x1000000,
+    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x80000000,
 
     /* Mask for objects created with unknown properties. */
     OBJECT_FLAG_UNKNOWN_MASK =

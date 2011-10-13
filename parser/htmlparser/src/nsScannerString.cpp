@@ -44,10 +44,16 @@
    * nsScannerBufferList
    */
 
+#define MAX_CAPACITY ((PR_UINT32_MAX / sizeof(PRUnichar)) - \
+                      (sizeof(Buffer) + sizeof(PRUnichar)))
+
 nsScannerBufferList::Buffer*
 nsScannerBufferList::AllocBufferFromString( const nsAString& aString )
   {
     PRUint32 len = aString.Length();
+
+    if (len > MAX_CAPACITY)
+      return nsnull;
 
     Buffer* buf = (Buffer*) malloc(sizeof(Buffer) + (len + 1) * sizeof(PRUnichar));
     if (buf)
@@ -71,6 +77,9 @@ nsScannerBufferList::AllocBufferFromString( const nsAString& aString )
 nsScannerBufferList::Buffer*
 nsScannerBufferList::AllocBuffer( PRUint32 capacity )
   {
+    if (capacity > MAX_CAPACITY)
+      return nsnull;
+
     Buffer* buf = (Buffer*) malloc(sizeof(Buffer) + (capacity + 1) * sizeof(PRUnichar));
     if (buf)
       {

@@ -177,15 +177,12 @@ struct DebugOnly
 
     T& operator->() { return value; }
 
-    bool operator<(const T& other) { return value < other; }
-
 #else
     DebugOnly() {}
     DebugOnly(const T&) {}
     DebugOnly& operator=(const T&) { return *this; }
     void operator++(int) {}
     void operator--(int) {}
-    bool operator<(const T&) { return false; }
 #endif
 
     /*

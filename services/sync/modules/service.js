@@ -759,10 +759,9 @@ WeaveSvc.prototype = {
             // Go ahead and do remote setup, so that we can determine
             // conclusively that our passphrase is correct.
             if (this._remoteSetup()) {
-
               // Username/password verified.
-            Status.login = LOGIN_SUCCEEDED;
-            return true;
+              Status.login = LOGIN_SUCCEEDED;
+              return true;
             }
 
             this._log.warn("Remote setup failed.");

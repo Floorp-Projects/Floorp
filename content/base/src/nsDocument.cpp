@@ -1099,8 +1099,18 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
                               nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = requestingPrincipal->CheckMayLoad(aURI, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Allow data URIs (let them skip the CheckMayLoad call), since we want
+  // to allow external resources from data URIs regardless of the difference
+  // in URI scheme.
+  bool doesInheritSecurityContext;
+  rv =
+    NS_URIChainHasFlags(aURI,
+                        nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                        &doesInheritSecurityContext);
+  if (NS_FAILED(rv) || !doesInheritSecurityContext) {
+    rv = requestingPrincipal->CheckMayLoad(aURI, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
