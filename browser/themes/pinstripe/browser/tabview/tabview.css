@@ -628,6 +628,10 @@ html[dir=rtl] #otherresults {
   -moz-margin-end: 5px;
 }
 
+#otherresults .label:-moz-window-inactive {
+  color: #404040;
+}
+
 .inlineMatch {
   background-color: #EBEBEB;
   border-radius: 0.4em;
