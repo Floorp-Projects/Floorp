@@ -475,10 +475,14 @@ abstract public class GeckoApp
 
                 Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - pre checkLaunchState");
 
+                /*
+                  XXXX see bug 635342
+                   We want to disable this code if possible.  It is about 145ms in runtime
                 SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
                 String localeCode = settings.getString(getPackageName() + ".locale", "");
                 if (localeCode != null && localeCode.length() > 0)
                     GeckoAppShell.setSelectedLocale(localeCode);
+                */
 
                 if (!checkLaunchState(LaunchState.Launched)) {
                     return;
