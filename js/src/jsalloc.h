@@ -41,6 +41,7 @@
 
 #include "jspubtd.h"
 #include "jsutil.h"
+#include "jsstaticcheck.h"
 
 namespace js {
 

@@ -67,6 +67,7 @@
 #include "jsparse.h"
 #include "jsscan.h"
 #include "jsscript.h"
+#include "jsstaticcheck.h"
 
 #include "vm/RegExpObject.h"
 
