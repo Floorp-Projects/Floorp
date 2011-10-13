@@ -1658,6 +1658,9 @@ public class GeckoAppShell
                 });
 
                 Log.i("GeckoShell", "progress - " + current + "/" + total);
+            } else if (type.equals("onCameraCapture")) {
+                //GeckoApp.mAppContext.doCameraCapture(geckoObject.getString("path"));
+                GeckoApp.mAppContext.doCameraCapture();
             }
         } catch (Exception e) {
             Log.i("GeckoShell", "handleGeckoMessage throws " + e);

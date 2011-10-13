@@ -45,7 +45,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 function CapturePicker() {
-  this.messageManager = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+
 }
 
 CapturePicker.prototype = {
@@ -56,6 +56,7 @@ CapturePicker.prototype = {
   _title: "",
   _type: "",
   _window: null,
+  _done: null,
 
   //
   // nsICapturePicker
@@ -71,12 +72,33 @@ CapturePicker.prototype = {
       throw Cr.NS_ERROR_UNEXPECTED;
 
     this._shown = true;
+    this._file = null;
+    this._done = false;
 
-    let res = this.messageManager.sendSyncMessage("CapturePicker:Show", { title: this._title, mode: this._mode, type: this._type })[0];
-    if (res.value)
-      this._file = res.path;
+    Services.obs.addObserver(this, "cameraCaptureDone", false);
 
-    return (res.value ? Ci.nsICapturePicker.RETURN_OK : Ci.nsICapturePicker.RETURN_CANCEL);
+    let msg = { gecko: { type: "onCameraCapture" } };
+    Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge).handleGeckoMessage(JSON.stringify(msg));
+
+    // we need to turn all the async messaging into a blocking call
+    while (!this._done)
+      Services.tm.currentThread.processNextEvent(true);
+
+    if (this._res.ok) {
+      this._file = this._res.path;
+      // delete the file when exiting
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(this._res.path);
+      Cc["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Ci.nsPIExternalAppLauncher).deleteTemporaryFileOnExit(file);
+    }
+
+    return (this._res.ok ? Ci.nsICapturePicker.RETURN_OK : Ci.nsICapturePicker.RETURN_CANCEL);
+  },
+
+  observe: function(aObject, aTopic, aData) {
+    Services.obs.removeObserver(this, "cameraCaptureDone");
+    this._done = true;
+    this._res = JSON.parse(aData);
   },
 
   modeMayBeAvailable: function(aMode) {
@@ -108,7 +130,7 @@ CapturePicker.prototype = {
   },
 
   // QI
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICapturePicker]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICapturePicker, Ci.nsIObserver]),
 
   // XPCOMUtils factory
   classID: Components.ID("{cb5a47f0-b58c-4fc3-b61a-358ee95f8238}"),

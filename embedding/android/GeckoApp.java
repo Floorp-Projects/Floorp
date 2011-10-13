@@ -98,6 +98,7 @@ abstract public class GeckoApp
 
     private static final int FILE_PICKER_REQUEST = 1;
     private static final int AWESOMEBAR_REQUEST = 2;
+    private static final int CAMERA_CAPTURE_REQUEST = 3;
 
     static boolean checkLaunchState(LaunchState checkState) {
         synchronized(sLaunchState) {
@@ -804,6 +805,8 @@ abstract public class GeckoApp
         }
     }
 
+    static int kCaptureIndex = 0;
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent data) {
@@ -876,7 +879,25 @@ abstract public class GeckoApp
 
 
             break;
+        case CAMERA_CAPTURE_REQUEST:
+            Log.i(LOG_FILE_NAME, "Returning from CAMERA_CAPTURE_REQUEST: " + resultCode);
+            File file = new File(Environment.getExternalStorageDirectory(), "cameraCapture-" + Integer.toString(kCaptureIndex) + ".jpg");
+            kCaptureIndex++;
+            GeckoEvent e = new GeckoEvent("cameraCaptureDone", resultCode == Activity.RESULT_OK ?
+                                          "{\"ok\": true,  \"path\": \"" + file.getPath() + "\" }" :
+                                          "{\"ok\": false, \"path\": \"" + file.getPath() + "\" }");
+            GeckoAppShell.sendEventToGecko(e);
+            break;
         }
+    }
+
+    public void doCameraCapture() {
+        File file = new File(Environment.getExternalStorageDirectory(), "cameraCapture-" + Integer.toString(kCaptureIndex) + ".jpg");
+
+        Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
+
+        startActivityForResult(intent, CAMERA_CAPTURE_REQUEST);
     }
 
     public void loadUrl(String url) {
