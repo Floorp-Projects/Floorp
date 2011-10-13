@@ -69,7 +69,6 @@
 #include "nsIAnimationFrameListener.h"
 #include "nsEventStates.h"
 #include "nsIStructuredCloneContainer.h"
-#include "nsIBFCacheEntry.h"
 #include "nsDOMMemoryReporter.h"
 
 class nsIContent;
@@ -126,8 +125,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0x448c396a, 0x013c, 0x47b8, \
- { 0x95, 0xf4, 0x56, 0x68, 0x0f, 0x5f, 0x12, 0xf8 } }
+{ 0x4114a7c7, 0xb2f4, 0x4dea, \
+ { 0xac, 0x78, 0x20, 0xab, 0xda, 0x6f, 0xb2, 0xaf } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -480,15 +479,11 @@ public:
     return GetBFCacheEntry() ? nsnull : mPresShell;
   }
 
-  void SetBFCacheEntry(nsIBFCacheEntry* aEntry)
-  {
-    mBFCacheEntry = aEntry;
+  void SetBFCacheEntry(nsISHEntry* aSHEntry) {
+    mSHEntry = aSHEntry;
   }
 
-  nsIBFCacheEntry* GetBFCacheEntry() const
-  {
-    return mBFCacheEntry;
-  }
+  nsISHEntry* GetBFCacheEntry() const { return mSHEntry; }
 
   /**
    * Return the parent document of this document. Will return null
@@ -1791,9 +1786,9 @@ protected:
 
   AnimationListenerList mAnimationFrameListeners;
 
-  // This object allows us to evict ourself from the back/forward cache.  The
-  // pointer is non-null iff we're currently in the bfcache.
-  nsIBFCacheEntry *mBFCacheEntry;
+  // The session history entry in which we're currently bf-cached. Non-null
+  // if and only if we're currently in the bfcache.
+  nsISHEntry* mSHEntry;
 
   // Our base target.
   nsString mBaseTarget;
