@@ -261,12 +261,18 @@
                 accesskey="&display.accesskey;"
                 key="sp-key-display"
                 command="sp-cmd-display"/>
+      <menuseparator/>
+      <menuitem id="sp-text-resetContext"
+                label="&resetContext.label;"
+                accesskey="&resetContext.accesskey;"
+                command="sp-cmd-resetContext"/>
     </menupopup>
   </menu>
 
   <menu id="sp-environment-menu"
         label="&environmentMenu.label;"
-        accesskey="&environmentMenu.accesskey;">
+        accesskey="&environmentMenu.accesskey;"
+        hidden="true">
     <menupopup id="sp-menu-environment">
       <menuitem id="sp-menu-content"
                 label="&contentContext.label;"
@@ -274,33 +280,11 @@
                 command="sp-cmd-contentContext"
                 checked="true"
                 type="radio"/>
-      <menuitem id="sp-menu-browser" hidden="true"
+      <menuitem id="sp-menu-browser"
                 command="sp-cmd-browserContext"
                 label="&browserContext.label;"
                 accesskey="&browserContext.accesskey;"
                 type="radio"/>
-      <menuseparator/>
-      <menuitem id="sp-menu-resetContext"
-                command="sp-cmd-resetContext"
-                label="&resetContext.label;"
-                accesskey="&resetContext.accesskey;"/>
-    </menupopup>
-  </menu>
-
-  <menu id="sp-tools-menu"
-        label="&toolsMenu.label;"
-        accesskey="&toolsMenu.accesskey;">
-    <menupopup id="sp-menu-tools">
-      <menuitem id="sp-menu-errorConsole" hidden="true"
-                label="&errorConsoleCmd.label;"
-                accesskey="&errorConsoleCmd.accesskey;"
-                key="sp-key-errorConsole"
-                command="sp-cmd-errorConsole"/>
-      <menuitem id="sp-menu-webConsole"
-                label="&webConsoleCmd.label;"
-                accesskey="&webConsoleCmd.accesskey;"
-                key="sp-key-webConsole"
-                command="sp-cmd-webConsole"/>
     </menupopup>
   </menu>
 </menubar>
@@ -329,15 +313,16 @@
               accesskey="&display.accesskey;"
               key="sp-key-display"
               command="sp-cmd-display"/>
+    <menuseparator/>
+    <menuitem id="sp-text-resetContext"
+              label="&resetContext.label;"
+              accesskey="&resetContext.accesskey;"
+              command="sp-cmd-resetContext"/>
   </menupopup>
 </popupset>
 
-<hbox id="scratchpad-editor" flex="1" context="scratchpad-text-popup" />
+<notificationbox id="scratchpad-notificationbox" flex="1">
+  <hbox id="scratchpad-editor" flex="1" context="scratchpad-text-popup" />
+</notificationbox>
 
-<statusbar id="scratchpad-statusbar" align="end">
-  <statusbarpanel id="scratchpad-status"
-                  label="&contentContext.label;"
-                  class="statusbarpanel-iconic-text"/>
-  <spacer flex="1"/>
-</statusbar>
 </window>
