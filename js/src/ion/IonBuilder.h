@@ -169,6 +169,8 @@ class IonBuilder : public MIRGenerator
         static CFGState IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse);
     };
 
+    static int CmpSuccessors(const void *a, const void *b);
+
   public:
     IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
                MIRGraph &graph, TypeOracle *oracle);
