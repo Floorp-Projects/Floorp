@@ -42,7 +42,6 @@
 #include "mozilla/PluginLibrary.h"
 #include "nsNPAPIPlugin.h"
 #include "npfunctions.h"
-#include "nsIXULRuntime.h"
 
 namespace mozilla {
 
