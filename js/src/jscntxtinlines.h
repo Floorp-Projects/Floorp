@@ -45,6 +45,7 @@
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jsinterp.h"
+#include "jsstaticcheck.h"
 #include "jsxml.h"
 #include "jsgc.h"
 

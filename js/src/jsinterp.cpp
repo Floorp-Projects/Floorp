@@ -70,6 +70,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsstaticcheck.h"
 #include "jstracer.h"
 #include "jslibmath.h"
 
