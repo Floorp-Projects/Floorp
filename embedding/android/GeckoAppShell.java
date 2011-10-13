@@ -1143,52 +1143,6 @@ public class GeckoAppShell
         return result;
     }
 
-    public static void putChildInBackground() {
-        try {
-            File cgroupFile = new File("/proc/" + android.os.Process.myPid() + "/cgroup");
-            BufferedReader br = new BufferedReader(new FileReader(cgroupFile));
-            String[] cpuLine = br.readLine().split("/");
-            br.close();
-            final String backgroundGroup = cpuLine.length == 2 ? cpuLine[1] : "";
-            GeckoProcessesVisitor visitor = new GeckoProcessesVisitor() {
-                public boolean callback(int pid) {
-                    if (pid != android.os.Process.myPid()) {
-                        try {
-                            FileOutputStream fos = new FileOutputStream(
-                                new File("/dev/cpuctl/" + backgroundGroup +"/tasks"));
-                            fos.write(new Integer(pid).toString().getBytes());
-                            fos.close();
-                        } catch(Exception e) {
-                            Log.e(LOG_FILE_NAME, "error putting child in the background", e);
-                        }
-                    }
-                    return true;
-                }
-            };
-            EnumerateGeckoProcesses(visitor);
-        } catch (Exception e) {
-            Log.e("GeckoInputStream", "error reading cgroup", e);
-        }
-    }
-
-    public static void putChildInForeground() {
-        GeckoProcessesVisitor visitor = new GeckoProcessesVisitor() {
-            public boolean callback(int pid) {
-                if (pid != android.os.Process.myPid()) {
-                    try {
-                        FileOutputStream fos = new FileOutputStream(new File("/dev/cpuctl/tasks"));
-                        fos.write(new Integer(pid).toString().getBytes());
-                        fos.close();
-                    } catch(Exception e) {
-                        Log.e(LOG_FILE_NAME, "error putting child in the foreground", e);
-                    }
-                }
-                return true;
-            }
-        };   
-        EnumerateGeckoProcesses(visitor);
-    }
-
     public static void killAnyZombies() {
         GeckoProcessesVisitor visitor = new GeckoProcessesVisitor() {
             public boolean callback(int pid) {
