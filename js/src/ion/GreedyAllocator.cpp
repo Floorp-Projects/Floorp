@@ -645,16 +645,16 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
     if (!prescanUses(ins))
         return false;
 
-    // Step 4. Allocate registers for each definition.
+    // Step 4. Assign fields of a snapshot.
+    if (ins->snapshot() && !informSnapshot(ins->snapshot()))
+        return false;
+
+    // Step 5. Allocate registers for each definition.
     if (!allocateDefinitions(ins))
         return false;
 
-    // Step 5. Allocate inputs and temporaries.
+    // Step 6. Allocate inputs and temporaries.
     if (!allocateInputs(ins))
-        return false;
-
-    // Step 6. Assign fields of a snapshot.
-    if (ins->snapshot() && !informSnapshot(ins->snapshot()))
         return false;
 
     if (aligns)
