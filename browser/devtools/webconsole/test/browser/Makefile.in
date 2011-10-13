@@ -108,7 +108,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_600183_charset.js \
 	browser_webconsole_bug_601177_log_levels.js \
 	browser_webconsole_bug_597460_filter_scroll.js \
-	browser_webconsole_gcli_require.js \
 	browser_webconsole_console_extras.js \
 	browser_webconsole_bug_598357_jsterm_output.js \
 	browser_webconsole_bug_603750_websocket.js \
@@ -146,6 +145,9 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_659907_console_dir.js \
 	browser_webconsole_bug_678816.js \
 	browser_webconsole_bug_664131_console_group.js \
+	browser_gcli_require.js \
+	browser_gcli_integrate.js \
+	browser_gcli_web.js \
 	head.js \
 	$(NULL)
 

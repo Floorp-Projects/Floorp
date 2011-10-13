@@ -35,23 +35,17 @@ function runTests()
   let sp = gScratchpadWindow.Scratchpad;
   ok(sp, "Scratchpad object exists in new window");
 
-  let chromeContextMenu = gScratchpadWindow.document.
-                          getElementById("sp-menu-browser");
-  ok(chromeContextMenu, "Chrome context menuitem element exists");
-  ok(!chromeContextMenu.hasAttribute("hidden"),
-     "Chrome context menuitem is visible");
+  let environmentMenu = gScratchpadWindow.document.
+                          getElementById("sp-environment-menu");
+  ok(environmentMenu, "Environment menu element exists");
+  ok(!environmentMenu.hasAttribute("hidden"),
+     "Environment menu is visible");
 
   let errorConsoleCommand = gScratchpadWindow.document.
                             getElementById("sp-cmd-errorConsole");
   ok(errorConsoleCommand, "Error console command element exists");
   ok(!errorConsoleCommand.hasAttribute("disabled"),
      "Error console command is enabled");
-
-  let errorConsoleMenu = gScratchpadWindow.document.
-                         getElementById("sp-menu-errorConsole");
-  ok(errorConsoleMenu, "Error console menu element exists");
-  ok(!errorConsoleMenu.hasAttribute("hidden"),
-     "Error console menuitem is visible");
 
   let chromeContextCommand = gScratchpadWindow.document.
                             getElementById("sp-cmd-browserContext");
