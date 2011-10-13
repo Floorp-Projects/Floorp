@@ -1384,6 +1384,17 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     return ControlStatus_Jumped;
 }
 
+int
+IonBuilder::CmpSuccessors(const void *a, const void *b)
+{
+    const MBasicBlock *a0 = * (MBasicBlock * const *)a;
+    const MBasicBlock *b0 = * (MBasicBlock * const *)b;
+    if (a0->pc() == b0->pc())
+        return 0;
+
+    return (a0->pc() > b0->pc()) ? 1 : -1;
+}
+
 IonBuilder::ControlStatus
 IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
 {
@@ -1393,10 +1404,10 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     // 0: Offset of default case
     // 1: Lowest number in tableswitch
     // 2: Highest number in tableswitch
-    // 3: Offset of first case
-    // 4: Offset of second case
+    // 3: Offset of case low
+    // 4: Offset of case low+1
     // .: ...
-    // .: Offset of last case
+    // .: Offset of case high
 
     JS_ASSERT(op == JSOP_TABLESWITCH);
 
@@ -1424,6 +1435,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     MBasicBlock *defaultcase = newBlock(current, defaultpc);
     if (!defaultcase)
         return ControlStatus_Error;
+    tableswitch->addDefault(defaultcase);
 
     // Create cases
     jsbytecode *casepc = NULL, *prevcasepc; 
@@ -1432,11 +1444,6 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
         casepc = pc + GET_JUMP_OFFSET(pc2);
         
         JS_ASSERT(casepc >= pc && casepc <= exitpc);
-
-        // Test if the default case appears before this case.
-        // If it does add the default case
-        if (defaultpc >= prevcasepc && defaultpc < casepc)
-            tableswitch->addDefault(defaultcase);
 
         // If the casepc equals the current pc, it is not a written case,
         // but a filled gap. That way we can use a tableswitch instead of 
@@ -1453,13 +1460,12 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
         pc2 += JUMP_OFFSET_LEN;
     }
 
-    // Test if the default case comes behind all cases
-    // or if there are no case, add the default case now.
-    if (!casepc || defaultpc >= casepc)
-        tableswitch->addDefault(defaultcase);
-
     JS_ASSERT(tableswitch->numCases() == (uint32)(high - low + 1));
     JS_ASSERT(tableswitch->numSuccessors() > 0);
+
+    // Sort the successors
+    qsort(tableswitch->successors(), tableswitch->numSuccessors(),
+          sizeof(MBasicBlock*), CmpSuccessors);
 
     // Create info 
     ControlFlowInfo switchinfo(cfgStack_.length(), exitpc);
