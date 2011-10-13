@@ -1207,7 +1207,7 @@ public:
             // for RGB24.  No easy way to upload that to GL.
             // 
             // Note that if we start using RGB565 here, we'll need to
-            // watch for a) setting mIsRGBFormat to TRUE; and b) getting
+            // watch for a) setting the correct format; and b) getting
             // the stride right.
             if (mUpdateFormat == gfxASurface::ImageFormatRGB24) {
                 mUpdateFormat = gfxASurface::ImageFormatARGB32;
@@ -1274,9 +1274,6 @@ public:
 
             return mUpdateSurface;
         }
-
-        // if we get this far, then we're using Cairo's byte order
-        mIsRGBFormat = PR_FALSE;
 
         //printf_stderr("creating image surface %dx%d format %d\n", mUpdateRect.width, mUpdateRect.height, mUpdateFormat);
 
@@ -1646,7 +1643,6 @@ public:
         }
 
         mBackingSurface = xsurface;
-        mIsRGBFormat = PR_TRUE;
 #endif
 
         return mBackingSurface != nsnull;

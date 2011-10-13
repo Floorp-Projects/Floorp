@@ -95,7 +95,14 @@ endif
 FORCE_STATIC_LIB = 1
 DIST_INSTALL = 1
 
-VPATH		= $(srcdir)
+VPATH		= \
+		$(srcdir) \
+		$(srcdir)/builtin \
+		$(srcdir)/ds \
+		$(srcdir)/frontend \
+		$(srcdir)/gc \
+		$(srcdir)/vm \
+		$(NULL)
 
 CPPSRCS		= \
 		jsalloc.cpp \
@@ -163,6 +170,7 @@ CPPSRCS		= \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
 		RegExp.cpp \
+		Statistics.cpp \
 		Unicode.cpp \
 		$(NULL)
 
@@ -177,7 +185,6 @@ INSTALLED_HEADERS = \
 		jsalloc.h \
 		jsapi.h \
 		jsatom.h \
-		jsbit.h \
 		jsclass.h \
 		jsclist.h \
 		jsclone.h \
@@ -202,7 +209,6 @@ INSTALLED_HEADERS = \
 		jsotypes.h \
 		jsproxy.h \
 		jsprf.h \
-		jsprobes.h \
 		jspropertycache.h \
 		jspropertytree.h \
 		jsproto.tbl \
@@ -217,9 +223,6 @@ INSTALLED_HEADERS = \
 		jstypedarray.h \
 		jstypes.h \
 		jsutil.h \
-		jsvector.h \
-		jstl.h \
-		jshashtable.h \
 		jsversion.h \
 		jswrapper.h \
 		jsxdrapi.h \
@@ -228,16 +231,10 @@ INSTALLED_HEADERS = \
 		$(NULL)
 
 ######################################################
-# BEGIN include sources for the engine subdirectories
+# BEGIN exported headers that are only exported
+#       because of inclusion by an INSTALLED_HEADER
 #
-VPATH		+= \
-		$(srcdir)/builtin \
-		$(srcdir)/ds \
-		$(srcdir)/frontend \
-		$(srcdir)/vm \
-		$(NULL)
-
-EXPORTS_NAMESPACES = vm ds
+EXPORTS_NAMESPACES += vm ds gc
 
 EXPORTS_vm = \
 		String.h \
@@ -246,7 +243,32 @@ EXPORTS_vm = \
 		$(NULL)
 
 EXPORTS_ds = \
-		LifoAlloc.h
+		LifoAlloc.h \
+		$(NULL)
+
+EXPORTS_gc = \
+		Statistics.h \
+		$(NULL)
+
+######################################################
+# BEGIN include exported headers from the JS engine
+#
+#       Ultimately, after cleansing INSTALLED_HEADERS,
+#       these will be the ONLY headers exported by
+#       the js engine
+#
+VPATH		+= \
+		$(srcdir)/../public \
+		$(NULL)
+
+EXPORTS_NAMESPACES += js
+
+EXPORTS_js = \
+		HashTable.h \
+		TemplateLib.h \
+		Utility.h \
+		Vector.h \
+		$(NULL)
 
 ###############################################
 # BEGIN include sources for low-level code shared with Gecko
@@ -259,9 +281,9 @@ EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
 		RangedPtr.h \
-		RefPtr.h	\
-		Types.h		\
-		Util.h          \
+		RefPtr.h \
+		Types.h	\
+		Util.h \
 		$(NULL)
 
 ifdef ENABLE_TRACEJIT

@@ -95,9 +95,4 @@ typedef JSInt8 int8;
 
 typedef JSFloat64 float64;
 
-/* Re: jsbit.h */
-#define TEST_BIT        JS_TEST_BIT
-#define SET_BIT         JS_SET_BIT
-#define CLEAR_BIT       JS_CLEAR_BIT
-
 #endif /* !defined(PROTYPES_H) */

@@ -307,6 +307,12 @@ public:
   gfxPoint3D GetNormalVector() const;
 
   /**
+   * Returns true if a plane transformed by this matrix will
+   * have it's back face visible.
+   */
+  bool IsBackfaceVisible() const;
+
+  /**
    * Check if matrix is singular (no inverse exists).
    */
   bool IsSingular() const;
