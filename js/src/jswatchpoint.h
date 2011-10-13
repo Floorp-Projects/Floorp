@@ -40,9 +40,11 @@
 #ifndef jswatchpoint_h___
 #define jswatchpoint_h___
 
-#include "jshashtable.h"
+#include "jsalloc.h"
 #include "jsprvtd.h"
 #include "jsapi.h"
+
+#include "js/HashTable.h"
 
 namespace js {
 

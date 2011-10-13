@@ -68,7 +68,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsstaticcheck.h"
-#include "jsvector.h"
 
 #include "vm/Debugger.h"
 
@@ -4100,7 +4099,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     outer = jp->script;
                     outerfun = jp->fun;
                     outerLocalNames = jp->localNames;
-                    LOCAL_ASSERT(JS_UPTRDIFF(pc, outer->code) <= outer->length);
+                    LOCAL_ASSERT(UnsignedPtrDiff(pc, outer->code) <= outer->length);
                     jp->script = inner;
                     jp->fun = fun;
                     jp->localNames = innerLocalNames;

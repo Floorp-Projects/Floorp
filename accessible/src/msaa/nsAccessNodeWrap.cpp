@@ -743,6 +743,10 @@ nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible> nsAccessNodeWrap::sHWNDCach
 LRESULT CALLBACK
 nsAccessNodeWrap::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  // Note, this window's message handling should not invoke any call that
+  // may result in a cross-process ipc call. Doing so may violate RPC
+  // message semantics.
+
   switch (msg) {
     case WM_GETOBJECT:
     {
