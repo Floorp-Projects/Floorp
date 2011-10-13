@@ -432,18 +432,7 @@ members = [
 
     # webgl
     'nsIDOMWebGLRenderingContext.*',
-    # These all use GetCurrentNativeCallContext and should be
-    # custom-quickstubbed.
-    '-nsIDOMWebGLRenderingContext.getActiveAttrib',
-    '-nsIDOMWebGLRenderingContext.getActiveUniform',
-    '-nsIDOMWebGLRenderingContext.getParameter',
-    '-nsIDOMWebGLRenderingContext.getBufferParameter',
-    '-nsIDOMWebGLRenderingContext.getFramebufferAttachmentParameter',
-    '-nsIDOMWebGLRenderingContext.getRenderbufferParameter',
-    '-nsIDOMWebGLRenderingContext.getProgramParameter',
-    '-nsIDOMWebGLRenderingContext.getUniform',
-    '-nsIDOMWebGLRenderingContext.getVertexAttrib',
-    '-nsIDOMWebGLRenderingContext.getShaderParameter',
+    # getContextAttributes is directly manipulating its return value
     '-nsIDOMWebGLRenderingContext.getContextAttributes',
 
     # Audio
