@@ -218,9 +218,12 @@ public:
 
       // First check if the document the IDBDatabase is part of is bfcached
       nsCOMPtr<nsIDocument> ownerDoc = database->GetOwnerDocument();
-      nsIBFCacheEntry* bfCacheEntry;
-      if (ownerDoc && (bfCacheEntry = ownerDoc->GetBFCacheEntry())) {
-        bfCacheEntry->RemoveFromBFCacheSync();
+      nsISHEntry* shEntry;
+      if (ownerDoc && (shEntry = ownerDoc->GetBFCacheEntry())) {
+        nsCOMPtr<nsISHEntryInternal> sheInternal = do_QueryInterface(shEntry);
+        if (sheInternal) {
+          sheInternal->RemoveFromBFCacheSync();
+        }
         NS_ASSERTION(database->IsClosed(),
                      "Kicking doc out of bfcache should have closed database");
         continue;
