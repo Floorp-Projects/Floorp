@@ -423,8 +423,19 @@ JSObject::toDictionaryMode(JSContext *cx)
 
     uint32 span = slotSpan();
 
-    if (!Shape::newDictionaryList(cx, &shape_))
+    /*
+     * Clone the shapes into a new dictionary list. Don't update the
+     * last property of this object until done, otherwise a GC
+     * triggered while creating the dictionary will get the wrong
+     * slot span for this object.
+     */
+    Shape *last = lastProperty();
+    if (!Shape::newDictionaryList(cx, &last))
         return false;
+
+    JS_ASSERT(last->listp == &last);
+    last->listp = &shape_;
+    shape_ = last;
 
     JS_ASSERT(lastProperty()->hasTable());
     lastProperty()->base()->setSlotSpan(span);
