@@ -373,7 +373,7 @@
         document.getElementById("newAddons").setAttribute("showlist", "true");
       },
 
-      loadFromCacheOrScheduleUpdate: function(aDelay) {
+      loadFromCache: function loadFromCache() {
         let self = this;
         let file = this._getFile();
         if (file.exists()) {
@@ -386,18 +386,12 @@
   
             self._loadAddons(json.addons);
           });
-        } else {
-          setTimeout(function() {
-            let aus = Cc["@mozilla.org/browser/addon-update-service;1"].getService(Ci.nsITimerCallback);
-            aus.notify(null);
-          }, aDelay);
         }
       }
     }
 
     function updateAddons() {
-      // If a cache does not exist, start an update after 6 seconds
-      RecommendedAddons.loadFromCacheOrScheduleUpdate(6000);
+      RecommendedAddons.loadFromCache();
     }
 
     function initAddons() {
