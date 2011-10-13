@@ -863,6 +863,7 @@ public class GeckoAppShell
     // gecko thread, which is most likely this thread
     static String getClipboardText() {
         getHandler().post(new Runnable() { 
+            @SuppressWarnings("deprecation")
             public void run() {
                 Context context = GeckoApp.surfaceView.getContext();
                 String text = null;
@@ -895,6 +896,7 @@ public class GeckoAppShell
 
     static void setClipboardText(final String text) {
         getHandler().post(new Runnable() { 
+            @SuppressWarnings("deprecation")
             public void run() {
                 Context context = GeckoApp.surfaceView.getContext();
                 if (android.os.Build.VERSION.SDK_INT >= 11) {
