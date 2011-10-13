@@ -48,6 +48,7 @@
 #include "nsJSUtils.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
+#include "jsfriendapi.h"
 #include "prprf.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
@@ -107,8 +108,7 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
   if (!glob)
     return nsnull;
 
-  while ((parent = ::JS_GetParent(aContext, glob)))
-    glob = parent;
+  glob = js::GetGlobalForObject(glob);
 
   clazz = JS_GET_CLASS(aContext, glob);
 

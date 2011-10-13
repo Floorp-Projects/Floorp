@@ -88,7 +88,7 @@ stubs::BindName(VMFrame &f)
     PropertyCacheEntry *entry;
 
     /* Fast-path should have caught this. See comment in interpreter. */
-    JS_ASSERT(f.fp()->scopeChain().getParent());
+    JS_ASSERT(f.fp()->scopeChain().isScope());
 
     JSAtom *atom;
     JSObject *obj2;
@@ -1886,13 +1886,13 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
      */
     JSObject *obj2 = &fp->scopeChain();
     while (obj2->isWith())
-        obj2 = obj2->getParent();
+        obj2 = obj2->scopeChain();
     if (obj2->isBlock() &&
         obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, fp)) {
         JSObject *youngestProto = obj2->getProto();
         JS_ASSERT(youngestProto->isStaticBlock());
         JSObject *parent = obj;
-        while ((parent = parent->getParent()) != youngestProto)
+        while ((parent = parent->getParentOrScopeChain()) != youngestProto)
             JS_ASSERT(parent);
     }
 #endif

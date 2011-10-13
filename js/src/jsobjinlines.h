@@ -315,6 +315,70 @@ JSObject::finalize(JSContext *cx, bool background)
     finish(cx);
 }
 
+inline JSObject *
+JSObject::getParent() const
+{
+    JS_ASSERT(!isScope());
+    return parent;
+}
+
+inline void
+JSObject::clearParent()
+{
+    JS_ASSERT(!isScope());
+    parent = NULL;
+}
+
+inline void
+JSObject::setParent(JSObject *newParent)
+{
+#ifdef DEBUG
+    JS_ASSERT_IF(!isNewborn(), !isScope());
+    for (JSObject *obj = newParent; obj; obj = obj->getParentOrScopeChain())
+        JS_ASSERT(obj != this);
+#endif
+    setDelegateNullSafe(newParent);
+    parent = newParent;
+}
+
+inline bool
+JSObject::isScope() const
+{
+    return isCall() || isDeclEnv() || isClonedBlock() || isWith();
+}
+
+inline JSObject *
+JSObject::scopeChain() const
+{
+    JS_ASSERT(isScope());
+    return &getFixedSlot(0).toObject();
+}
+
+inline JSObject *
+JSObject::getParentOrScopeChain() const
+{
+    return isScope() ? scopeChain() : getParent();
+}
+
+inline JSObject *
+JSObject::getParentMaybeScope() const
+{
+    return parent;
+}
+
+inline void
+JSObject::setScopeChain(JSObject *obj)
+{
+    JS_ASSERT(isScope());
+    setFixedSlot(0, JS::ObjectValue(*obj));
+}
+
+/*static*/ inline size_t
+JSObject::offsetOfScopeChain()
+{
+    return getFixedSlotOffset(0);
+}
+
 /* 
  * Initializer for Call objects for functions and eval frames. Set class,
  * parent, map, and shape, and allocate slots.
@@ -326,12 +390,14 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
     if (!type)
         return false;
 
-    init(cx, type, parent, false);
+    init(cx, type, parent->getGlobal(), false);
     if (!setInitialProperty(cx, bindings.lastShape()))
         return false;
 
     JS_ASSERT(isCall());
     JS_ASSERT(!inDictionaryMode());
+
+    setScopeChain(parent);
 
     /*
      * If |bindings| is for a function that has extensible parents, that means
@@ -349,7 +415,7 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
 inline bool
 JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *frame)
 {
-    init(cx, type, NULL, false);
+    init(cx, type, frame->scopeChain().getGlobal(), false);
 
     if (!setInitialProperty(cx, getProto()->lastProperty()))
         return false;
@@ -382,7 +448,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JS_ASSERT(!fun->isClonedMethod());
     JS_ASSERT(fun->isNullClosure());
 
-    fun = CloneFunctionObject(cx, fun);
+    fun = js::CloneFunctionObject(cx, fun);
     if (!fun)
         return NULL;
     fun->setMethodObj(*this);

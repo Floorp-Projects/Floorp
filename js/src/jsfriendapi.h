@@ -236,11 +236,20 @@ GetObjectJSClass(const JSObject *obj)
     return js::Jsvalify(GetObjectClass(obj));
 }
 
+bool IsScopeObject(const JSObject *obj);
+
 inline JSObject *
 GetObjectParent(const JSObject *obj)
 {
+    JS_ASSERT(!IsScopeObject(obj));
     return reinterpret_cast<const shadow::Object*>(obj)->parent;
 }
+
+JS_FRIEND_API(JSObject *)
+GetObjectParentMaybeScope(const JSObject *obj);
+
+JS_FRIEND_API(JSObject *)
+GetGlobalForObject(JSObject *obj);
 
 inline JSObject *
 GetObjectProto(const JSObject *obj)

@@ -151,7 +151,7 @@ StackFrame::stealFrameAndSlots(Value *vp, StackFrame *otherfp,
         obj.setPrivate(this);
         otherfp->flags_ &= ~HAS_CALL_OBJ;
         if (js_IsNamedLambda(fun())) {
-            JSObject *env = obj.getParent();
+            JSObject *env = obj.scopeChain();
             JS_ASSERT(env->isDeclEnv());
             env->setPrivate(this);
         }
