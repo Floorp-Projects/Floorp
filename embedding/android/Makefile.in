@@ -53,7 +53,7 @@ JAVAFILES = \
   GeckoSurfaceView.java \
   GeckoInputConnection.java \
   AlertNotification.java \
-  SurfaceInfo.java \
+  SurfaceLockInfo.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
