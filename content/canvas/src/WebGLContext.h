@@ -2110,10 +2110,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLExtension, WEBGLACTIVEINFO_PRIVATE_IID)
  ** Template implementations
  **/
 
-/* Helper function taking a BaseInterfaceType pointer and check that
- * it matches the required concrete implementation type (if it's
- * non-null), that it's not null/deleted unless we allowed it to, and
- * obtain a pointer to the concrete object.
+/* Helper function taking a BaseInterfaceType pointer, casting it to
+ * ConcreteObjectType and performing some checks along the way.
  *
  * By default, null (respectively: deleted) aInterface pointers are
  * not allowed, but if you pass a non-null isNull (respectively:
@@ -2151,12 +2149,18 @@ WebGLContext::GetConcreteObject(const char *info,
     if (isNull)
         *isNull = PR_FALSE;
 
-    nsresult rv;
-    nsCOMPtr<ConcreteObjectType> tmp(do_QueryInterface(aInterface, &rv));
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-
-    *aConcreteObject = tmp;
+#ifdef DEBUG
+    {
+        // once bug 694114 is implemented, we want to replace this by a static assertion, without #ifdef DEBUG
+        nsresult rv;
+        do_QueryInterface(aInterface, &rv);
+        NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
+                          "QueryInterface failed. WebGL objects are builtinclass, so this should never happen. "
+                          "Please file a bug at bugzilla.mozilla.org -> Core -> Canvas:WebGL and link to the present page.");
+    }
+#endif
+    
+    *aConcreteObject = static_cast<ConcreteObjectType*>(aInterface);
 
     if (!(*aConcreteObject)->IsCompatibleWithContext(this)) {
         // the object doesn't belong to this WebGLContext
