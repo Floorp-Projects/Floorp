@@ -957,7 +957,7 @@ static void
 AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
 {
 #ifdef DEBUG
-    for (JSObject *o = &scopeobj; o; o = o->getParent()) {
+    for (JSObject *o = &scopeobj; o; o = o->getParentOrScopeChain()) {
         if (JSObjectOp op = o->getClass()->ext.innerObject)
             JS_ASSERT(op(cx, o) == o);
     }
@@ -3401,7 +3401,7 @@ with_ThisObject(JSContext *cx, JSObject *obj)
 
 Class js::WithClass = {
     "With",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(3) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -3470,7 +3470,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
-    obj->init(cx, type, parent, false);
+    obj->init(cx, type, parent->getGlobal(), false);
 
     EmptyShape *emptyWithShape = EmptyShape::getEmptyWithShape(cx);
     if (!emptyWithShape)
@@ -3479,6 +3479,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     obj->setInitialPropertyInfallible(emptyWithShape);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
+    obj->setScopeChain(parent);
     obj->setPrivate(priv);
 
     AutoObjectRooter tvr(cx, obj);
@@ -3499,7 +3500,7 @@ js_NewBlockObject(JSContext *cx)
      * Null obj's proto slot so that Object.prototype.* does not pollute block
      * scopes and to give the block object its own scope.
      */
-    JSObject *blockObj = js_NewGCObject(cx, FINALIZE_OBJECT2);
+    JSObject *blockObj = js_NewGCObject(cx, FINALIZE_OBJECT4);
     if (!blockObj)
         return NULL;
 
@@ -3517,13 +3518,15 @@ js_NewBlockObject(JSContext *cx)
     return blockObj;
 }
 
+static const uint32 BLOCK_RESERVED_SLOTS = 2;
+
 JSObject *
 js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
 {
     JS_ASSERT(proto->isStaticBlock());
 
     size_t count = OBJ_BLOCK_COUNT(cx, proto);
-    gc::AllocKind kind = gc::GetGCObjectKind(count + 1);
+    gc::AllocKind kind = gc::GetGCObjectKind(count + BLOCK_RESERVED_SLOTS + 1);
 
     TypeObject *type = proto->getNewType(cx);
     if (!type)
@@ -3539,7 +3542,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     if (!clone->initClonedBlock(cx, type, priv))
         return NULL;
 
-    JS_ASSERT(clone->slotSpan() >= count + 1);
+    JS_ASSERT(clone->slotSpan() >= count + BLOCK_RESERVED_SLOTS);
 
     clone->setSlot(JSSLOT_BLOCK_DEPTH, proto->getSlot(JSSLOT_BLOCK_DEPTH));
 
@@ -3575,7 +3578,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 
     /* We must clear the private slot even with errors. */
     obj->setPrivate(NULL);
-    fp->setScopeChainNoCallObj(*obj->getParent());
+    fp->setScopeChainNoCallObj(*obj->scopeChain());
     return normalUnwind;
 }
 
@@ -4148,7 +4151,9 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 
 Class js::BlockClass = {
     "Block",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_RESERVED_SLOTS(BLOCK_RESERVED_SLOTS) |
+    JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -4559,6 +4564,8 @@ JSObject::setInitialProperty(JSContext *cx, const js::Shape *shape)
 
     shape_ = const_cast<js::Shape *>(shape);
     updateSlotsForSpan(0, span);
+
+    JS_ASSERT_IF(isScope(), parent);
     return true;
 }
 
@@ -4579,6 +4586,8 @@ JSObject::setInitialPropertyInfallible(const js::Shape *shape)
     size_t span = shape->slotSpan();
     if (span)
         updateSlotsForSpan(0, span);
+
+    JS_ASSERT_IF(isScope(), parent);
 }
 
 bool
@@ -4974,11 +4983,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
         start = &fp->scopeChain();
 
     if (start) {
-        /* Find the topmost object in the scope chain. */
-        do {
-            obj = start;
-            start = obj->getParent();
-        } while (start);
+        obj = start->getGlobal();
     } else {
         obj = cx->globalObject;
         if (!obj) {
@@ -5169,7 +5174,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
             if (!obj->shadowingShapeChange(cx, *shape))
                 return false;
 
-            if (!obj->getParent()) {
+            if (obj->isGlobal()) {
                 /*
                  * All scope chains end in a global object, so this will change
                  * the global shape. jstracer.cpp assumes that the global shape
@@ -5198,7 +5203,7 @@ js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id)
      * may gain such properties via eval introducing new vars; see bug 490364.
      */
     if (obj->isCall()) {
-        while ((obj = obj->getParent()) != NULL) {
+        while ((obj = obj->getParentOrScopeChain()) != NULL) {
             if (!PurgeProtoChain(cx, obj, id))
                 return false;
         }
@@ -5643,7 +5648,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
     /* Scan entries on the scope chain that we can cache across. */
     entry = JS_NO_PROP_CACHE_FILL;
     obj = scopeChain;
-    parent = obj->getParent();
+    parent = obj->getParentOrScopeChain();
     for (scopeIndex = 0;
          parent
          ? IsCacheableNonGlobalScope(obj)
@@ -5689,7 +5694,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
             goto out;
         }
         obj = parent;
-        parent = obj->getParent();
+        parent = obj->getParentOrScopeChain();
     }
 
     for (;;) {
@@ -5704,7 +5709,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
          * We conservatively assume that a resolve hook could mutate the scope
          * chain during JSObject::lookupProperty. So we read parent here again.
          */
-        parent = obj->getParent();
+        parent = obj->getParentOrScopeChain();
         if (!parent) {
             pobj = NULL;
             break;
@@ -5738,7 +5743,6 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
      * This function should not be called for a global object or from the
      * trace and should have a valid cache entry for native scopeChain.
      */
-    JS_ASSERT(scopeChain->getParent());
     JS_ASSERT(!JS_ON_TRACE(cx));
 
     JSObject *obj = scopeChain;
@@ -5753,7 +5757,7 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
      * must not be passed a global object (i.e. one with null parent).
      */
     for (int scopeIndex = 0;
-         !obj->getParent() || IsCacheableNonGlobalScope(obj);
+         obj->isGlobal() || IsCacheableNonGlobalScope(obj);
          scopeIndex++) {
         JSObject *pobj;
         JSProperty *prop;
@@ -5761,17 +5765,17 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
             return NULL;
         if (prop) {
             if (!pobj->isNative()) {
-                JS_ASSERT(!obj->getParent());
+                JS_ASSERT(obj->isGlobal());
                 return obj;
             }
-            JS_ASSERT_IF(obj->getParent(), pobj->getClass() == obj->getClass());
+            JS_ASSERT_IF(obj->isScope(), pobj->getClass() == obj->getClass());
             DebugOnly<PropertyCacheEntry*> entry =
                 JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj, (Shape *) prop);
             JS_ASSERT(entry);
             return obj;
         }
 
-        JSObject *parent = obj->getParent();
+        JSObject *parent = obj->getParentOrScopeChain();
         if (!parent)
             return obj;
         obj = parent;
@@ -5791,11 +5795,11 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
          * chain during JSObject::lookupProperty. So we must check if parent is
          * not null here even if it wasn't before the lookup.
          */
-        JSObject *parent = obj->getParent();
+        JSObject *parent = obj->getParentOrScopeChain();
         if (!parent)
             break;
         obj = parent;
-    } while (obj->getParent());
+    } while (obj->isScope());
     return obj;
 }
 
@@ -7098,7 +7102,7 @@ GlobalObject *
 JSObject::getGlobal() const
 {
     JSObject *obj = const_cast<JSObject *>(this);
-    while (JSObject *parent = obj->getParent())
+    while (JSObject *parent = obj->getParentMaybeScope())
         obj = parent;
     return obj->asGlobal();
 }
@@ -7397,7 +7401,7 @@ js_DumpObject(JSObject *obj)
     fputc('\n', stderr);
 
     fprintf(stderr, "parent ");
-    dumpValue(ObjectOrNullValue(obj->getParent()));
+    dumpValue(ObjectOrNullValue(obj->getParentMaybeScope()));
     fputc('\n', stderr);
 
     if (clasp->flags & JSCLASS_HAS_PRIVATE)

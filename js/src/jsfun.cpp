@@ -747,7 +747,9 @@ Class js::StrictArgumentsObjectClass = {
  */
 Class js::DeclEnvClass = {
     js_Object_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_RESERVED_SLOTS(CallObject::DECL_ENV_RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -771,9 +773,11 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     EmptyShape *emptyDeclEnvShape = EmptyShape::getEmptyDeclEnvShape(cx);
     if (!emptyDeclEnvShape)
         return NULL;
-    envobj->init(cx, type, &fp->scopeChain(), false);
+    envobj->init(cx, type, fp->scopeChain().getGlobal(), false);
     envobj->setInitialPropertyInfallible(emptyDeclEnvShape);
     envobj->setPrivate(fp);
+
+    envobj->setScopeChain(&fp->scopeChain());
 
     return envobj;
 }
@@ -915,7 +919,7 @@ js_PutCallObject(StackFrame *fp)
 
         /* Clear private pointers to fp, which is about to go away. */
         if (js_IsNamedLambda(fun)) {
-            JSObject *env = callobj.getParent();
+            JSObject *env = callobj.scopeChain();
 
             JS_ASSERT(env->isDeclEnv());
             JS_ASSERT(env->getPrivate() == fp);

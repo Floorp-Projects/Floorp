@@ -866,27 +866,30 @@ struct JSObject : js::gc::Cell
         return type_->proto;
     }
 
-    JSObject *getParent() const {
-        return parent;
-    }
-
-    void clearParent() {
-        parent = NULL;
-    }
-
-    void setParent(JSObject *newParent) {
-#ifdef DEBUG
-        for (JSObject *obj = newParent; obj; obj = obj->getParent())
-            JS_ASSERT(obj != this);
-#endif
-        setDelegateNullSafe(newParent);
-        parent = newParent;
-    }
+    inline JSObject *getParent() const;
+    inline void clearParent();
+    inline void setParent(JSObject *newParent);
 
     JS_FRIEND_API(js::GlobalObject *) getGlobal() const;
 
     inline bool isGlobal() const;
     inline js::GlobalObject *asGlobal();
+
+    /*
+     * Information for non-global scope chain objects (call/with/etc.). All
+     * objects on a scope chain are either isScope() or isGlobal(). isScope()
+     * objects do not escape to script and only appear on scope chains.
+     */
+    inline bool isScope() const;
+    inline JSObject *scopeChain() const;
+    inline void setScopeChain(JSObject *obj);
+
+    static inline size_t offsetOfScopeChain();
+
+    inline JSObject *getParentOrScopeChain() const;
+    inline JSObject *getParentMaybeScope() const;
+
+    static const uint32 SCOPE_CHAIN_SLOT = 0;
 
     inline bool hasPrivate() const;
     inline void *getPrivate() const;
@@ -1520,21 +1523,22 @@ class ValueArray {
  * Block scope object macros.  The slots reserved by BlockClass are:
  *
  *   private              StackFrame *      active frame pointer or null
+ *   JSSLOT_SCOPE_CHAIN   JSObject *        scope chain, as for other scopes
  *   JSSLOT_BLOCK_DEPTH   int               depth of block slots in frame
  *
  * After JSSLOT_BLOCK_DEPTH come one or more slots for the block locals.
  *
- * A With object is like a Block object, in that both have one reserved slot
+ * A With object is like a Block object, in that both have a reserved slot
  * telling the stack depth of the relevant slots (the slot whose value is the
  * object named in the with statement, the slots containing the block's local
  * variables); and both have a private slot referring to the StackFrame in
  * whose activation they were created (or null if the with or block object
  * outlives the frame).
  */
-static const uint32 JSSLOT_BLOCK_DEPTH = 0;
+static const uint32 JSSLOT_BLOCK_DEPTH = 1;
 static const uint32 JSSLOT_BLOCK_FIRST_FREE_SLOT = JSSLOT_BLOCK_DEPTH + 1;
 
-static const uint32 JSSLOT_WITH_THIS = 1;
+static const uint32 JSSLOT_WITH_THIS = 2;
 
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
     (obj)->propertyCount()

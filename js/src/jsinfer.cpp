@@ -5115,7 +5115,7 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
      * the script is nested inside.
      */
     while (!scope->isCall())
-        scope = scope->getParent();
+        scope = scope->scopeChain();
 
     CallObject &call = scope->asCall();
 
@@ -5148,7 +5148,7 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
     if (!parent->ensureHasTypes(cx, parentFun))
         return false;
     if (!parent->types->hasScope()) {
-        if (!SetScope(cx, parent, scope->getParent()))
+        if (!SetScope(cx, parent, scope->scopeChain()))
             return false;
         parent->nesting()->activeCall = scope;
         parent->nesting()->argArray = call.argArray();
@@ -5243,7 +5243,7 @@ CheckNestingParent(JSContext *cx, JSObject *scope, JSScript *script)
     JS_ASSERT(parent);
 
     while (!scope->isCall() || scope->asCall().getCalleeFunction()->script() != parent)
-        scope = scope->getParent();
+        scope = scope->scopeChain();
 
     if (scope != parent->nesting()->activeCall) {
         parent->reentrantOuterFunction = true;
@@ -5258,7 +5258,7 @@ CheckNestingParent(JSContext *cx, JSObject *scope, JSScript *script)
          * parent.
          */
         if (parent->nesting()->parent) {
-            scope = scope->getParent();
+            scope = scope->scopeChain();
             script = parent;
             goto restart;
         }

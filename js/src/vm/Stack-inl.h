@@ -62,12 +62,37 @@ namespace js {
 static inline bool
 IsCacheableNonGlobalScope(JSObject *obj)
 {
-    JS_ASSERT(obj->getParent());
-
     bool cacheable = (obj->isCall() || obj->isBlock() || obj->isDeclEnv());
 
     JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
     return cacheable;
+}
+
+inline JSObject &
+StackFrame::scopeChain() const
+{
+    JS_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
+    if (!(flags_ & HAS_SCOPECHAIN)) {
+        scopeChain_ = callee().getParent();
+        flags_ |= HAS_SCOPECHAIN;
+    }
+    return *scopeChain_;
+}
+
+inline JSObject &
+StackFrame::varObj()
+{
+    JSObject *obj = &scopeChain();
+    while (!obj->isVarObj())
+        obj = obj->getParentOrScopeChain();
+    return *obj;
+}
+
+inline JSCompartment *
+StackFrame::compartment() const
+{
+    JS_ASSERT_IF(isScriptFrame(), scopeChain().compartment() == script()->compartment());
+    return scopeChain().compartment();
 }
 
 inline void
@@ -352,10 +377,10 @@ StackFrame::setScopeChainNoCallObj(JSObject &obj)
         if (hasCallObj()) {
             JSObject *pobj = &obj;
             while (pobj && pobj->getPrivate() != this)
-                pobj = pobj->getParent();
+                pobj = pobj->scopeChain();
             JS_ASSERT(pobj);
         } else {
-            for (JSObject *pobj = &obj; pobj; pobj = pobj->getParent())
+            for (JSObject *pobj = &obj; pobj->isScope(); pobj = pobj->scopeChain())
                 JS_ASSERT_IF(pobj->isCall(), pobj->getPrivate() != this);
         }
     }
@@ -381,7 +406,7 @@ StackFrame::callObj() const
     JSObject *pobj = &scopeChain();
     while (JS_UNLIKELY(!pobj->isCall())) {
         JS_ASSERT(IsCacheableNonGlobalScope(pobj) || pobj->isWith());
-        pobj = pobj->getParent();
+        pobj = pobj->scopeChain();
     }
     return pobj->asCall();
 }
@@ -454,7 +479,7 @@ StackFrame::markFunctionEpilogueDone()
              */
             scopeChain_ = isFunctionFrame()
                           ? callee().getParent()
-                          : scopeChain_->getParent();
+                          : scopeChain_->scopeChain();
             flags_ &= ~HAS_CALL_OBJ;
         }
     }

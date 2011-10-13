@@ -170,6 +170,24 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
     cx->compartment = oldCompartment;
 }
 
+bool
+js::IsScopeObject(const JSObject *obj)
+{
+    return obj->isScope();
+}
+
+JS_FRIEND_API(JSObject *)
+js::GetObjectParentMaybeScope(const JSObject *obj)
+{
+    return obj->getParentOrScopeChain();
+}
+
+JS_FRIEND_API(JSObject *)
+js::GetGlobalForObject(JSObject *obj)
+{
+    return obj->getGlobal();
+}
+
 /*
  * The below code is for temporary telemetry use. It can be removed when
  * sufficient data has been harvested.

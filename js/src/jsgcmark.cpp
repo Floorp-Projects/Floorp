@@ -711,7 +711,7 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
     types::TypeObject *type = obj->typeFromGC();
     PushMarkStack(gcmarker, type);
 
-    if (JSObject *parent = obj->getParent())
+    if (JSObject *parent = obj->getParentMaybeScope())
         PushMarkStack(gcmarker, parent);
 
     /*
@@ -784,7 +784,7 @@ MarkChildren(JSTracer *trc, JSObject *obj)
     MarkTypeObject(trc, obj->typeFromGC(), "type");
 
     /* Trace universal (ops-independent) members. */
-    if (JSObject *parent = obj->getParent())
+    if (JSObject *parent = obj->getParentMaybeScope())
         MarkObject(trc, *parent, "parent");
 
     Class *clasp = obj->getClass();

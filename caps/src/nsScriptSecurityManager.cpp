@@ -2429,7 +2429,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
         jsClass = js::GetObjectClass(aObj);
 
         if (jsClass == &js::CallClass) {
-            aObj = js::GetObjectParent(aObj);
+            aObj = js::GetObjectParentMaybeScope(aObj);
 
             if (!aObj)
                 return nsnull;
@@ -2481,7 +2481,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
             }
         }
 
-        aObj = js::GetObjectParent(aObj);
+        aObj = js::GetObjectParentMaybeScope(aObj);
 
         if (!aObj)
             break;
