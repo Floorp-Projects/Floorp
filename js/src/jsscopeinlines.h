@@ -180,7 +180,7 @@ Shape::Shape(BaseShape *base)
   : base_(base),
     propid_(JSID_EMPTY),
     numLinearSearches(0),
-    slot_(-1),
+    slot_(SHAPE_INVALID_SLOT >> (32 - SLOT_BITS)),
     attrs(JSPROP_SHARED),
     flags(0),
     shortid_(0),

@@ -417,7 +417,7 @@ class SetPropCompiler : public PICStubCompiler
         CodeLocationLabel cs = buffer.finalize();
         JaegerSpew(JSpew_PICs, "generate setprop stub %p %p %d at %p\n",
                    (void*)&pic,
-                   initialShape,
+                   (void*)initialShape,
                    pic.stubsGenerated,
                    cs.executableAddress());
 
@@ -2432,7 +2432,7 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
     char *chars = DeflateString(cx, v.toString()->getChars(cx), v.toString()->length());
     JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom %p (\"%s\") shape %p (%s: %d)\n",
                js_CodeName[op], cs.executableAddress(), (void*)JSID_TO_ATOM(id), chars,
-               holder->lastProperty(), cx->fp()->script()->filename, CurrentLine(cx));
+               (void*)holder->lastProperty(), cx->fp()->script()->filename, CurrentLine(cx));
     cx->free_(chars);
 #endif
 
