@@ -60,9 +60,9 @@ typedef uint32_t IOSurfaceID;
 class THEBES_API nsCARenderer {
   NS_INLINE_DECL_REFCOUNTING(nsCARenderer)
 public:
-  nsCARenderer() : mCARenderer(nsnull), mPixelBuffer(nsnull), mOpenGLContext(nsnull),
+  nsCARenderer() : mCARenderer(nsnull), mFBOTexture(nsnull), mOpenGLContext(nsnull),
                    mCGImage(nsnull), mCGData(nsnull), mIOSurface(nsnull), mFBO(nsnull),
-                   mIOTexture(nsnull), 
+                   mIOTexture(nsnull),
                    mUnsupportedWidth(UINT32_MAX), mUnsupportedHeight(UINT32_MAX) {}
   ~nsCARenderer();
   nsresult SetupRenderer(void* aCALayer, int aWidth, int aHeight);
@@ -72,15 +72,15 @@ public:
    * Render the CALayer to an IOSurface. If no IOSurface
    * is attached then an internal pixel buffer will be
    * used.
-   */ 
+   */
   void AttachIOSurface(nsRefPtr<nsIOSurface> aSurface);
   IOSurfaceID GetIOSurfaceID();
-  static nsresult DrawSurfaceToCGContext(CGContextRef aContext, 
-                                         nsIOSurface *surf, 
-                                         CGColorSpaceRef aColorSpace, 
+  static nsresult DrawSurfaceToCGContext(CGContextRef aContext,
+                                         nsIOSurface *surf,
+                                         CGColorSpaceRef aColorSpace,
                                          int aX, int aY,
                                          size_t aWidth, size_t aHeight);
-  
+
   // Remove & Add the layer without destroying
   // the renderer for fast back buffer swapping.
   void DettachCALayer();
@@ -92,7 +92,7 @@ private:
   void Destroy();
 
   void *mCARenderer;
-  _CGLPBufferObject     *mPixelBuffer;
+  GLuint                 mFBOTexture;
   _CGLContextObject     *mOpenGLContext;
   CGImageRef             mCGImage;
   void                  *mCGData;
