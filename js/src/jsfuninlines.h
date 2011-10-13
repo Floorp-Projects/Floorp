@@ -53,8 +53,14 @@ inline JSObject *
 JSFunction::callScope() const
 {
     JS_ASSERT(isInterpreted());
-    return getParent();
-    //return u.i.scope;
+    return u.i.scope;
+}
+
+inline void
+JSFunction::setCallScope(JSObject *obj)
+{
+    JS_ASSERT(isInterpreted());
+    u.i.scope = obj;
 }
 
 inline void
@@ -249,7 +255,7 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
      */
     if (ignoreSingletonClone && fun->hasSingletonType()) {
         JS_ASSERT(fun->getProto() == proto);
-        fun->setParent(parent);
+        fun->setCallScope(parent);
         return fun;
     }
 
@@ -271,7 +277,7 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun)
     if (fun->hasSingletonType())
         return fun;
 
-    return js_CloneFunctionObject(cx, fun, fun->getParent(), fun->getProto());
+    return js_CloneFunctionObject(cx, fun, fun->callScope(), fun->getProto());
 }
 
 } /* namespace js */

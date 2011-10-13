@@ -706,7 +706,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      * windows, and user-defined JS functions precompiled and then shared among
      * requests in server-side JS.
      */
-    if (obj->getParent() != obj2) {
+    if (obj->toFunction()->callScope() != obj2) {
         obj = CloneFunctionObject(cx, fun, obj2, true);
         if (!obj)
             THROW();
@@ -1351,7 +1351,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
         if (!parent)
             THROWV(NULL);
 
-        if (obj->getParent() != parent) {
+        if (obj->toFunction()->callScope() != parent) {
             obj = CloneFunctionObject(f.cx, fun, parent, true);
             if (!obj)
                 THROWV(NULL);

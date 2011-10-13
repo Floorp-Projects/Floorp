@@ -1664,17 +1664,6 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 }
 
 static JS_ALWAYS_INLINE JSFunction *
-NewFunction(JSContext *cx, js::GlobalObject &global)
-{
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, &global, JSProto_Function, &proto))
-        return NULL;
-    JSObject *obj = NewObject<WithProto::Given>(cx, &FunctionClass, proto, &global,
-                                                gc::FINALIZE_FUNCTION);
-    return static_cast<JSFunction *>(obj);
-}
-
-static JS_ALWAYS_INLINE JSFunction *
 NewFunction(JSContext *cx, JSObject *parent)
 {
     JSObject *obj = NewObject<WithProto::Class>(cx, &FunctionClass, NULL, parent,

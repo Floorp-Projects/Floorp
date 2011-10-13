@@ -785,7 +785,7 @@ mjit::Compiler::generatePrologue()
                 Jump hasScope = masm.branchTest32(Assembler::NonZero,
                                                   FrameFlagsAddress(), Imm32(StackFrame::HAS_SCOPECHAIN));
                 masm.loadPayload(Address(JSFrameReg, StackFrame::offsetOfCallee(script->function())), t0);
-                masm.loadPtr(Address(t0, offsetof(JSObject, parent)), t0);
+                masm.loadPtr(Address(t0, JSFunction::offsetOfCallScope()), t0);
                 masm.storePtr(t0, Address(JSFrameReg, StackFrame::offsetOfScopeChain()));
                 hasScope.linkTo(masm.label(), &masm);
             }
@@ -6124,7 +6124,7 @@ mjit::Compiler::jsop_callgname_epilogue()
      * If the callee's parent is not equal to the global, jump to
      * OOL slow path.
      */
-    masm.loadPtr(Address(objReg, offsetof(JSObject, parent)), objReg);
+    masm.loadPtr(Address(objReg, JSFunction::offsetOfCallScope()), objReg);
     Jump globalMismatch = masm.branchPtr(Assembler::NotEqual, objReg, ImmPtr(globalObj));
     stubcc.linkExit(globalMismatch, Uses(1));
     frame.freeReg(objReg);

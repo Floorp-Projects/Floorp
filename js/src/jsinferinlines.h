@@ -324,7 +324,7 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
         JSFunction *fun = callee->toFunction();
         if (fun->isInterpreted()) {
             JSScript *script = fun->script();
-            if (!script->ensureRanAnalysis(cx, fun, callee->getParent()))
+            if (!script->ensureRanAnalysis(cx, fun, fun->callScope()))
                 return;
             if (cx->typeInferenceEnabled())
                 TypeMonitorCallSlow(cx, callee, args, constructing);
