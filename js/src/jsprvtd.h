@@ -55,6 +55,7 @@
  */
 
 #include "jsapi.h"
+#include "jsstaticcheck.h"
 #include "jsutil.h"
 
 JS_BEGIN_EXTERN_C

@@ -66,6 +66,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsxml.h"
+#include "jsstaticcheck.h"
 
 #include "vm/GlobalObject.h"
 

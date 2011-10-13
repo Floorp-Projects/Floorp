@@ -216,6 +216,7 @@ INSTALLED_HEADERS = \
 		jspubtd.h \
 		jsreflect.h \
 		jsscan.h \
+		jsstaticcheck.h \
 		jsstdint.h \
 		jsstr.h \
 		jstracer.h \

@@ -69,6 +69,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsexn.h"
+#include "jsstaticcheck.h"
 #include "jstracer.h"
 #include "vm/CallObject.h"
 #include "vm/Debugger.h"
