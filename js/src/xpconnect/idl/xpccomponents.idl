@@ -153,7 +153,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(fed2d752-6cb3-4135-97b0-2c290e541e2d)]
+[scriptable, uuid(11785c1f-346f-475c-950e-fe1bacce70f1)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -264,6 +264,21 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     void schedulePreciseGC(in ScheduledGCCallback callback);
+
+    /**
+     * Return the keys in a weak map.  This operation is
+     * non-deterministic because it is affected by the scheduling of the
+     * garbage collector and the cycle collector.
+     *
+     * This should only be used to write tests of the interaction of
+     * the GC and CC with weak maps.
+     *
+     * @param aMap weak map or other JavaScript value
+     * @returns If aMap is a weak map object, return the keys of the weak
+                map as an array.  Otherwise, return undefined.
+     */
+    [implicit_jscontext]
+    jsval nondeterministicGetWeakMapKeys(in jsval aMap);
 
     /*
      * To be called from JS only.
