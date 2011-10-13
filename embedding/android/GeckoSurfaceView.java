@@ -648,6 +648,7 @@ class GeckoSurfaceView
 
     private boolean processKeyDown(int keyCode, KeyEvent event, boolean isPreIme) {
         switch (keyCode) {
+            case KeyEvent.KEYCODE_MENU:
             case KeyEvent.KEYCODE_BACK:
             case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_VOLUME_DOWN:
