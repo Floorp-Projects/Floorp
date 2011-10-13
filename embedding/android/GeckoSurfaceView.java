@@ -649,14 +649,6 @@ class GeckoSurfaceView
     private boolean processKeyDown(int keyCode, KeyEvent event, boolean isPreIme) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-                if (event.getRepeatCount() == 0) {
-                    event.startTracking();
-                    return true;
-                } else {
-                    return false;
-                }
-            case KeyEvent.KEYCODE_MENU:
-                return false;
             case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_VOLUME_DOWN:
             case KeyEvent.KEYCODE_SEARCH:
@@ -700,10 +692,6 @@ class GeckoSurfaceView
     private boolean processKeyUp(int keyCode, KeyEvent event, boolean isPreIme) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-                if (!event.isTracking() || event.isCanceled())
-                    return false;
-                GeckoApp.mAppContext.onBackPressed();
-                return true;
             case KeyEvent.KEYCODE_SEARCH:
             case KeyEvent.KEYCODE_MENU:
                 return false;
@@ -734,9 +722,6 @@ class GeckoSurfaceView
     @Override
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
         switch (keyCode) {
-            case KeyEvent.KEYCODE_BACK:
-                GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
-                return true;
             case KeyEvent.KEYCODE_MENU:
                 InputMethodManager imm = (InputMethodManager)
                     getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
