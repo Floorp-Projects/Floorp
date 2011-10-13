@@ -368,6 +368,21 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         break;
     }
 
+    case AndroidGeckoEvent::BROADCAST: {
+
+        if (curEvent->Characters().Length() == 0)
+            break;
+
+        nsCOMPtr<nsIObserverService> obsServ =
+            mozilla::services::GetObserverService();
+
+        const NS_ConvertUTF16toUTF8 topic(curEvent->Characters());
+        const nsPromiseFlatString& data = PromiseFlatString(curEvent->CharactersExtra());
+
+        obsServ->NotifyObservers(nsnull, topic.get(), data.get());
+        break;
+    }
+
     case AndroidGeckoEvent::LOAD_URI: {
         nsCOMPtr<nsICommandLineRunner> cmdline
             (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));

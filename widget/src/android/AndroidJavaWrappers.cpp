@@ -56,6 +56,7 @@ jfieldID AndroidGeckoEvent::jRectField = 0;
 jfieldID AndroidGeckoEvent::jNativeWindowField = 0;
 
 jfieldID AndroidGeckoEvent::jCharactersField = 0;
+jfieldID AndroidGeckoEvent::jCharactersExtraField = 0;
 jfieldID AndroidGeckoEvent::jKeyCodeField = 0;
 jfieldID AndroidGeckoEvent::jMetaStateField = 0;
 jfieldID AndroidGeckoEvent::jFlagsField = 0;
@@ -157,6 +158,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
+    jCharactersExtraField = getField("mCharactersExtra", "Ljava/lang/String;");
     jKeyCodeField = getField("mKeyCode", "I");
     jMetaStateField = getField("mMetaState", "I");
     jFlagsField = getField("mFlags", "I");
@@ -352,6 +354,20 @@ AndroidGeckoEvent::ReadCharactersField(JNIEnv *jenv)
 }
 
 void
+AndroidGeckoEvent::ReadCharactersExtraField(JNIEnv *jenv)
+{
+    jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jCharactersExtraField);
+    if (!s) {
+        mCharactersExtra.SetIsVoid(PR_TRUE);
+        return;
+    }
+
+    int len = jenv->GetStringLength(s);
+    mCharactersExtra.SetLength(len);
+    jenv->GetStringRegion(s, 0, len, mCharactersExtra.BeginWriting());
+}
+
+void
 AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 {
     NS_ASSERTION(!wrapped_obj, "Init called on non-null wrapped_obj!");
@@ -434,6 +450,12 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case LOAD_URI: {
             ReadCharactersField(jenv);
+            break;
+        }
+
+        case BROADCAST: {
+            ReadCharactersField(jenv);
+            ReadCharactersExtraField(jenv);
             break;
         }
 
