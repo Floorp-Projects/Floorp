@@ -1656,11 +1656,10 @@ public class GeckoAppShell
                 Log.i("GeckoShell", "Log: " + msg);
             } else if (type.equals("onLocationChange")) {
                 final String uri = geckoObject.getString("uri");
-                final CharSequence uriText = uri;
                 Log.i("GeckoShell", "URI - " + uri);
                 getMainHandler().post(new Runnable() { 
                     public void run() {
-                        GeckoApp.mAwesomeBar.setText(uriText);
+                        GeckoApp.mAwesomeBar.setText(uri);
                     }
                 });
             } else if (type.equals("onStateChange")) {
