@@ -49,6 +49,14 @@ JSFunction::inStrictMode() const
     return script()->strictModeCode;
 }
 
+inline JSObject *
+JSFunction::callScope() const
+{
+    JS_ASSERT(isInterpreted());
+    return getParent();
+    //return u.i.scope;
+}
+
 inline void
 JSFunction::setJoinable()
 {
@@ -222,6 +230,49 @@ IsBuiltinFunctionConstructor(JSFunction *fun);
  */
 const Shape *
 LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj);
+
+inline JSFunction *
+CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
+                    bool ignoreSingletonClone = false)
+{
+    JS_ASSERT(parent);
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, parent, JSProto_Function, &proto))
+        return NULL;
+
+    /*
+     * For attempts to clone functions at a function definition opcode or from
+     * a method barrier, don't perform the clone if the function has singleton
+     * type. CloneFunctionObject was called pessimistically, and we need to
+     * preserve the type's property that if it is singleton there is only a
+     * single object with its type in existence.
+     */
+    if (ignoreSingletonClone && fun->hasSingletonType()) {
+        JS_ASSERT(fun->getProto() == proto);
+        fun->setParent(parent);
+        return fun;
+    }
+
+    return js_CloneFunctionObject(cx, fun, parent, proto);
+}
+
+inline JSFunction *
+CloneFunctionObject(JSContext *cx, JSFunction *fun)
+{
+    /*
+     * Variant which makes an exact clone of fun, preserving parent and proto.
+     * Calling the above version CloneFunctionObject(cx, fun, fun->getParent())
+     * is not equivalent: API clients, including XPConnect, can reparent
+     * objects so that fun->getGlobal() != fun->getProto()->getGlobal().
+     * See ReparentWrapperIfFound.
+     */
+    JS_ASSERT(fun->getParent() && fun->getProto());
+
+    if (fun->hasSingletonType())
+        return fun;
+
+    return js_CloneFunctionObject(cx, fun, fun->getParent(), fun->getProto());
+}
 
 } /* namespace js */
 

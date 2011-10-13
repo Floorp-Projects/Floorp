@@ -1360,13 +1360,6 @@ class ScopeNameCompiler : public PICStubCompiler
                 return disable("non-cacheable scope chain object");
             JS_ASSERT(tobj->isNative());
 
-            if (tobj != scopeChain) {
-                /* scopeChain will never be NULL, but parents can be NULL. */
-                Jump j = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
-                if (!fails.append(j))
-                    return error();
-            }
-
             /* Guard on intervening shapes. */
             masm.loadShape(pic.objReg, pic.shapeReg);
             Jump j = masm.branchPtr(Assembler::NotEqual, pic.shapeReg,
@@ -1375,10 +1368,10 @@ class ScopeNameCompiler : public PICStubCompiler
                 return error();
 
             /* Load the next link in the scope chain. */
-            Address parent(pic.objReg, offsetof(JSObject, parent));
+            Address parent(pic.objReg, JSObject::offsetOfScopeChain());
             masm.loadPtr(parent, pic.objReg);
 
-            tobj = tobj->getParent();
+            tobj = tobj->scopeChain();
         }
 
         if (tobj != getprop.holder)
@@ -1657,7 +1650,7 @@ class ScopeNameCompiler : public PICStubCompiler
         if (status != Lookup_Cacheable)
             return status;
 
-        if (!obj->getParent())
+        if (obj->isGlobal())
             return generateGlobalStub(obj);
 
         return disable("scope object not handled yet");
@@ -1757,20 +1750,17 @@ class BindNameCompiler : public PICStubCompiler
 
         /* Walk up the scope chain. */
         JSObject *tobj = scopeChain;
-        Address parent(pic.objReg, offsetof(JSObject, parent));
+        Address parent(pic.objReg, JSObject::offsetOfScopeChain());
         while (tobj && tobj != obj) {
             if (!IsCacheableNonGlobalScope(tobj))
                 return disable("non-cacheable obj in scope chain");
             masm.loadPtr(parent, pic.objReg);
-            Jump nullTest = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
-            if (!fails.append(nullTest))
-                return error();
             masm.loadShape(pic.objReg, pic.shapeReg);
             Jump shapeTest = masm.branchPtr(Assembler::NotEqual, pic.shapeReg,
                                             ImmPtr(tobj->lastProperty()));
             if (!fails.append(shapeTest))
                 return error();
-            tobj = tobj->getParent();
+            tobj = tobj->scopeChain();
         }
         if (tobj != obj)
             return disable("indirect hit");
@@ -1814,7 +1804,6 @@ class BindNameCompiler : public PICStubCompiler
 
     JSObject *update()
     {
-        JS_ASSERT(scopeChain->getParent());
         RecompilationMonitor monitor(cx);
 
         JSObject *obj = js_FindIdentifierBase(cx, scopeChain, ATOM_TO_JSID(atom));

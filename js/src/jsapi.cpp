@@ -3063,6 +3063,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
+    JS_ASSERT(!obj->isScope());
     JS_ASSERT(parent || !obj->getParent());
     assertSameCompartment(cx, obj, parent);
     obj->setParent(parent);
@@ -4346,7 +4347,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
                                      JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
                 return NULL;
             }
-            obj = obj->getParent();
+            obj = obj->getParentOrScopeChain();
         }
 
         Value v;

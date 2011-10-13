@@ -300,7 +300,7 @@ GetScopeChainFull(JSContext *cx, StackFrame *fp, JSObject *blockChain)
          */
         limitClone = &fp->scopeChain();
         while (limitClone->isWith())
-            limitClone = limitClone->getParent();
+            limitClone = limitClone->scopeChain();
         JS_ASSERT(limitClone);
 
         /*
@@ -358,10 +358,10 @@ GetScopeChainFull(JSContext *cx, StackFrame *fp, JSObject *blockChain)
         if (!clone)
             return NULL;
 
-        newChild->setParent(clone);
+        newChild->setScopeChain(clone);
         newChild = clone;
     }
-    newChild->setParent(&fp->scopeChain());
+    newChild->setScopeChain(&fp->scopeChain());
 
 
     /*
@@ -1208,7 +1208,7 @@ LeaveWith(JSContext *cx)
     JS_ASSERT(withobj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()));
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
     withobj->setPrivate(NULL);
-    cx->fp()->setScopeChainNoCallObj(*withobj->getParent());
+    cx->fp()->setScopeChainNoCallObj(*withobj->scopeChain());
 }
 
 bool
@@ -2185,7 +2185,7 @@ BEGIN_CASE(JSOP_POPN)
     JS_ASSERT_IF(obj,
                  OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
                  <= (size_t) (regs.sp - regs.fp()->base()));
-    for (obj = &regs.fp()->scopeChain(); obj; obj = obj->getParent()) {
+    for (obj = &regs.fp()->scopeChain(); obj; obj = obj->getParentOrScopeChain()) {
         if (!obj->isBlock() || !obj->isWith())
             continue;
         if (obj->getPrivate() != js_FloatingFrameIfGenerator(cx, regs.fp()))
@@ -2683,7 +2683,7 @@ BEGIN_CASE(JSOP_BINDNAME)
          * forms.
          */
         obj = &regs.fp()->scopeChain();
-        if (!obj->getParent())
+        if (obj->isGlobal())
             break;
 
         PropertyCacheEntry *entry;
@@ -4360,7 +4360,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * windows, and user-defined JS functions precompiled and then shared among
      * requests in server-side JS.
      */
-    if (obj->getParent() != obj2) {
+    if (obj->toFunction()->callScope() != obj2) {
         obj = CloneFunctionObject(cx, fun, obj2, true);
         if (!obj)
             goto error;
@@ -4487,7 +4487,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
         if (!parent)
             goto error;
 
-        if (obj->getParent() != parent) {
+        if (obj->toFunction()->callScope() != parent) {
 #ifdef JS_TRACER
             if (TRACE_RECORDER(cx))
                 AbortRecording(cx, "DEFLOCALFUN for closure");
@@ -5472,13 +5472,13 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
      */
     JSObject *obj2 = &regs.fp()->scopeChain();
     while (obj2->isWith())
-        obj2 = obj2->getParent();
+        obj2 = obj2->scopeChain();
     if (obj2->isBlock() &&
         obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, regs.fp())) {
         JSObject *youngestProto = obj2->getProto();
         JS_ASSERT(youngestProto->isStaticBlock());
         JSObject *parent = obj;
-        while ((parent = parent->getParent()) != youngestProto)
+        while ((parent = parent->getParentOrScopeChain()) != youngestProto)
             JS_ASSERT(parent);
     }
 #endif
