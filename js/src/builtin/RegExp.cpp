@@ -310,7 +310,7 @@ DEFINE_STATIC_SETTER(static_input_setter,
 DEFINE_STATIC_SETTER(static_multiline_setter,
                      if (!JSVAL_IS_BOOLEAN(*vp) && !JS_ConvertValue(cx, *vp, JSTYPE_BOOLEAN, vp))
                          return false;
-                     res->setMultiline(!!JSVAL_TO_BOOLEAN(*vp)))
+                     res->setMultiline(cx, !!JSVAL_TO_BOOLEAN(*vp)))
 
 const uint8 REGEXP_STATIC_PROP_ATTRS    = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE;
 const uint8 RO_REGEXP_STATIC_PROP_ATTRS = REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY;

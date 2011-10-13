@@ -63,6 +63,7 @@ static const PRUint64 kNsPerSec  = 1000000000;
 static const double kNsPerMsd    =    1000000.0;
 static const double kNsPerSecd   = 1000000000.0;
 
+static bool gInitialized = false;
 static double sNsPerTick;
 
 static PRUint64
@@ -111,12 +112,14 @@ namespace mozilla {
 double
 TimeDuration::ToSeconds() const
 {
+  NS_ABORT_IF_FALSE(gInitialized, "calling TimeDuration too early");
   return (mValue * sNsPerTick) / kNsPerSecd;
 }
 
 double
 TimeDuration::ToSecondsSigDigits() const
 {
+  NS_ABORT_IF_FALSE(gInitialized, "calling TimeDuration too early");
   // don't report a value < mResolution ...
   PRInt64 valueSigDigs = sResolution * (mValue / sResolution);
   // and chop off insignificant digits
@@ -127,12 +130,14 @@ TimeDuration::ToSecondsSigDigits() const
 TimeDuration
 TimeDuration::FromMilliseconds(double aMilliseconds)
 {
+  NS_ABORT_IF_FALSE(gInitialized, "calling TimeDuration too early");
   return TimeDuration::FromTicks(PRInt64((aMilliseconds * kNsPerMsd) / sNsPerTick));
 }
 
 TimeDuration
 TimeDuration::Resolution()
 {
+  NS_ABORT_IF_FALSE(gInitialized, "calling TimeDuration too early");
   return TimeDuration::FromTicks(PRInt64(sResolution));
 }
 
@@ -147,7 +152,6 @@ struct TimeStampInitialization
 };
 
 static TimeStampInitialization initOnce;
-static bool gInitialized = false;
 
 nsresult
 TimeStamp::Startup()

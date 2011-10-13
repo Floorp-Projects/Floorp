@@ -1539,8 +1539,8 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     return res->createLastMatch(cx, &v) && arrayobj->defineElement(cx, count, v);
 }
 
-static JSBool
-str_match(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::str_match(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str = ThisToStringForStringProto(cx, vp);
     if (!str)
@@ -1572,8 +1572,8 @@ str_match(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-static JSBool
-str_search(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::str_search(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str = ThisToStringForStringProto(cx, vp);
     if (!str)
@@ -2436,8 +2436,8 @@ class SplitStringMatcher {
 };
 
 /* ES5 15.5.4.14 */
-static JSBool
-str_split(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::str_split(JSContext *cx, uintN argc, Value *vp)
 {
     /* Steps 1-2. */
     JSString *str = ThisToStringForStringProto(cx, vp);

@@ -191,11 +191,6 @@ LIBS_DESC_SUFFIX = @LIBS_DESC_SUFFIX@
 USE_N32		= @USE_N32@
 HAVE_64BIT_OS	= @HAVE_64BIT_OS@
 
-# Temp hack.  It is not my intention to leave this crap in here for ever.
-# Im talking to fur right now to solve the problem without introducing
-# NS_USE_NATIVE to the build system -ramiro.
-NS_USE_NATIVE = @NS_USE_NATIVE@
-
 CC		    = @CC@
 CXX		    = @CXX@
 

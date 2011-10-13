@@ -148,6 +148,8 @@ class RegExpStatics
      */
     bool makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, Value *out) const;
 
+    void markFlagsSet(JSContext *cx);
+
     struct InitBuffer {};
     explicit RegExpStatics(InitBuffer) : bufferLink(NULL), copied(false) {}
 
@@ -157,7 +159,6 @@ class RegExpStatics
     RegExpStatics() : bufferLink(NULL), copied(false) { clear(); }
 
     static JSObject *create(JSContext *cx, GlobalObject *parent);
-    static RegExpStatics *extractFrom(GlobalObject *globalObj);
 
     /* Mutators. */
 
@@ -177,13 +178,7 @@ class RegExpStatics
         return true;
     }
 
-    void setMultiline(bool enabled) {
-        aboutToWrite();
-        if (enabled)
-            flags = RegExpFlag(flags | MultilineFlag);
-        else
-            flags = RegExpFlag(flags & ~MultilineFlag);
-    }
+    inline void setMultiline(JSContext *cx, bool enabled);
 
     void clear() {
         aboutToWrite();
@@ -194,13 +189,7 @@ class RegExpStatics
     }
 
     /* Corresponds to JSAPI functionality to set the pending RegExp input. */
-    void reset(JSString *newInput, bool newMultiline) {
-        aboutToWrite();
-        clear();
-        pendingInput = newInput;
-        setMultiline(newMultiline);
-        checkInvariants();
-    }
+    inline void reset(JSContext *cx, JSString *newInput, bool newMultiline);
 
     void setPendingInput(JSString *newInput) {
         aboutToWrite();
