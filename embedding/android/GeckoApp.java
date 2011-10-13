@@ -89,9 +89,7 @@ abstract public class GeckoApp
     private BroadcastReceiver mConnectivityReceiver;
     public static Button mAwesomeBar;
     public static ProgressBar mProgressBar;
-    private static SQLiteDatabase mDb;
-    private static DatabaseHelper mDbHelper;
-    private static Stack<HistoryEntry> sessionHistory;
+    private SessionHistory mSessionHistory;
 
     enum LaunchState {Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -100,15 +98,6 @@ abstract public class GeckoApp
 
     private static final int FILE_PICKER_REQUEST = 1;
     private static final int AWESOMEBAR_REQUEST = 2;
-
-    public static class HistoryEntry {
-        public String uri;
-        public String title;
-        public HistoryEntry(String uri, String title) {
-            this.uri = uri;
-            this.title = title;
-        }
-    }
 
     static boolean checkLaunchState(LaunchState checkState) {
         synchronized(sLaunchState) {
@@ -391,6 +380,10 @@ abstract public class GeckoApp
         System.exit(0);
     }
 
+    SessionHistory getSessionHistory() {
+        return mSessionHistory;
+    }
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -424,9 +417,7 @@ abstract public class GeckoApp
         if (sGREDir == null)
             sGREDir = new File(this.getApplicationInfo().dataDir);
 
-        mDbHelper = new DatabaseHelper(this);
-
-        sessionHistory = new Stack<HistoryEntry>();
+        mSessionHistory = new SessionHistory(this);
 
         mMainHandler = new Handler();
 
@@ -497,30 +488,6 @@ abstract public class GeckoApp
                 }
             }
         }, 50);
-    }
-
-
-    public static void addHistoryEntry(final HistoryEntry entry) {
-
-        class HistoryEntryTask extends AsyncTask<HistoryEntry, Void, Void> {
-            protected Void doInBackground(HistoryEntry... entries) {
-                HistoryEntry entry = entries[0];
-                Log.d("GeckoApp", "adding uri=" + entry.uri + ", title=" + entry.title + " to history");
-                ContentValues values = new ContentValues();
-                values.put("url", entry.uri);
-                values.put("title", entry.title);
-                if (sessionHistory.empty() || !sessionHistory.peek().uri.equals(entry.uri))
-                    sessionHistory.push(entry);
-                mDb = mDbHelper.getWritableDatabase();
-                long id = mDb.insertWithOnConflict("moz_places", null, values, SQLiteDatabase.CONFLICT_REPLACE);
-                values = new ContentValues();
-                values.put("place_id", id);
-                mDb.insertWithOnConflict("moz_historyvisits", null, values, SQLiteDatabase.CONFLICT_REPLACE);
-                return null;
-            }
-        }
-
-        new HistoryEntryTask().execute(entry);
     }
 
     @Override
@@ -652,8 +619,7 @@ abstract public class GeckoApp
     {
         Log.i(LOG_FILE_NAME, "destroy");
 
-        if (mDb != null)
-            mDb.close();
+        mSessionHistory.cleanup();
 
         // Tell Gecko to shutting down; we'll end up calling System.exit()
         // in onXreExit.
@@ -818,30 +784,19 @@ abstract public class GeckoApp
     public boolean onSearchRequested() {
         Intent searchIntent = new Intent(getBaseContext(), AwesomeBar.class);
         searchIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-        if (!sessionHistory.empty())
-            searchIntent.putExtra(AwesomeBar.CURRENT_URL_KEY, sessionHistory.peek().uri);
-
+        mSessionHistory.searchRequested(searchIntent);
         startActivityForResult(searchIntent, AWESOMEBAR_REQUEST);
         return true;
     }
 
     public boolean doReload() {
         Log.i("GeckoApp", "Reload requested");
-        if (sessionHistory.empty())
-            return false;
-        String currUri = sessionHistory.peek().uri;
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(currUri));
-        return true;
+        return mSessionHistory.doReload();
     }
 
     @Override
     public void onBackPressed() {
-        if (sessionHistory.size() > 1) {
-            sessionHistory.pop();
-            String uri = sessionHistory.peek().uri;
-            Log.i("GeckoApp", "going back to page: " + uri);
-            loadUrl(uri);
-        } else {
+        if (!mSessionHistory.doBack()) {
             finish();
         }
     }
