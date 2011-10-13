@@ -201,9 +201,17 @@ ContainerLayerD3D10::RenderLayer()
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
     desc.SampleDesc.Count = 1;
     desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    device()->CreateTexture2D(&desc, NULL, getter_AddRefs(renderTexture));
-    
-    device()->CreateRenderTargetView(renderTexture, NULL, getter_AddRefs(rtView));
+    HRESULT hr;
+    hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(renderTexture));
+
+    if (FAILED(hr)) {
+      LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("Failed to create new texture for ContainerLayerD3D10!"), 
+                                       hr);
+      return;
+    }
+
+    hr = device()->CreateRenderTargetView(renderTexture, NULL, getter_AddRefs(rtView));
+    NS_ASSERTION(SUCCEEDED(hr), "Failed to create render target view for ContainerLayerD3D10!");
 
     effect()->GetVariableByName("vRenderTargetOffset")->
       GetRawValue(previousRenderTargetOffset, 0, 8);
