@@ -197,15 +197,17 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
         masm.transferReg(Register::FromCode(i));
     masm.finishDataTransfer();
     // Float transfer hasn't been implemented yet.  this is a NOP.
-    masm.startFloatTransferM(IsStore, sp, true);
+    masm.startFloatTransferM(IsStore, sp, DB, WriteBack);
     for (uint32 i = 0; i < FloatRegisters::Total; i++)
         masm.transferFloatReg(FloatRegister::FromCode(i));
     masm.finishFloatTransfer();
 
-    // STEP 1b: push the frameClass argument to the stack, below
-    //          the saved registers.  This will be read as part of a
-    //          structure by bailout to figure out what variables
-    //          are in what registers
+    // STEP 1b: Push both the "return address" of the function call (the
+    //          address of the instruction after the call that we used to get
+    //          here) as well as the callee token onto the stack.  The return
+    //          address is currently in r14.  We will proceed by loading the
+    //          callee token into a sacrificial register <= r14, then pushing
+    //          both onto the stack
 
     // now place the frameClass onto the stack, via a register
     masm.ma_mov(Imm32(frameClass), r4);
@@ -213,7 +215,11 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     // one past the end of the current stack. Sadly, the ABI says that we need
     // to always point to the lowest place that has been written.  the OS is
     // free to do whatever it wants below sp.
-    masm.as_dtr(IsStore, 32, PreIndex, r4, DTRAddr(sp, DtrOffImm(-4)));
+    masm.startDataTransferM(IsStore, sp, DB, WriteBack);
+    masm.transferReg(r4);
+    masm.transferReg(lr);
+    masm.finishDataTransfer();
+
     // SP % 8 == 4
     // STEP 1c: Call the bailout function, giving a pointer to the
     //          structure we just blitted onto the stack
@@ -221,13 +227,14 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
 
     // Copy the present stack pointer into a temp register (it happens to be the
     // argument register)
-    masm.as_mov(r0, O2Reg(sp));
+    //masm.as_mov(r0, O2Reg(sp));
 
     // Decrement sp by another 4, so we keep alignment
-    masm.as_sub(sp, sp, Imm8(4));
+    // Not Anymore!  pushing both the snapshotoffset as well as the
+    // masm.as_sub(sp, sp, Imm8(4));
 
     // Set the old (4-byte aligned) value of the sp as the first argument
-    masm.setABIArg(0, r0);
+    masm.setABIArg(0, sp);
 
     // Sp % 8 == 0
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
@@ -244,7 +251,10 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
         masm.as_add(sp, sp, O2Reg(r4));
     } else {
         uint32 frameSize = FrameSizeClass::FromClass(frameClass).frameSize();
-        masm.ma_add(Imm32(frameSize), sp);
+        masm.ma_add(Imm32(frameSize // the frame that was added when we entered the most recent function
+                          + sizeof(void*) // the size of the "return address" that was dumped on the stack
+                          + bailoutFrameSize) // everything else that was pushed on the stack
+                    , sp);
     }
 
     Label exception;

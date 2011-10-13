@@ -44,21 +44,70 @@
 
 using namespace js;
 using namespace js::ion;
-int
+uint32
 js::ion::RT(Register r)
 {
     return r.code() << 12;
 }
-int
+
+uint32
 js::ion::RN(Register r)
 {
     return r.code() << 16;
 }
-int
+
+uint32
 js::ion::RD(Register r)
 {
     return r.code() << 12;
 }
+uint32
+js::ion::VD(VFPRegister vr)
+{
+    if (vr.isMissing())
+        return 0;
+    //bits 15,14,13,12, 22
+    VFPRegister::VFPRegIndexSplit s = vr.encode();
+    return s.bit << 22 | s.block << 12;
+}
+uint32
+js::ion::VN(VFPRegister vr)
+{
+    if (vr.isMissing())
+        return 0;
+    // bits 19,18,17,16, 7
+    VFPRegister::VFPRegIndexSplit s = vr.encode();
+    return s.bit << 7 | s.block << 16;
+}
+uint32
+js::ion::VM(VFPRegister vr)
+{
+    if (vr.isMissing())
+        return 0;
+    // bits 5, 3,2,1,0
+    VFPRegister::VFPRegIndexSplit s = vr.encode();
+    return s.bit << 5 | s.block;
+}
+
+
+VFPRegister::VFPRegIndexSplit
+ion::VFPRegister::encode()
+{
+    JS_ASSERT(!_isInvalid);
+
+    switch (kind) {
+      case Double:
+        return VFPRegIndexSplit(_code &0xf , _code >> 4);
+      case Single:
+        return VFPRegIndexSplit(_code >> 1, _code & 1);
+      default:
+        JS_ASSERT(_code &0xf == _code);
+        return VFPRegIndexSplit(_code, 0);
+    }
+}
+
+VFPRegister js::ion::NoVFPRegister(true);
+
 void
 Assembler::executableCopy(uint8 *buffer)
 {
@@ -68,6 +117,7 @@ Assembler::executableCopy(uint8 *buffer)
         JS_NOT_REACHED("Feature NYI");
         //JSC::ARMAssembler::setRel32(buffer + rp.offset, rp.target);
     }
+    JSC::ExecutableAllocator::cacheFlush(buffer, m_buffer.size());
 }
 
 class RelocationIterator
@@ -185,7 +235,7 @@ Assembler::processCodeLabels(IonCode *code)
 }
 
 Assembler::Condition
-Assembler::inverseCondition(Condition cond)
+Assembler::InvertCondition(Condition cond)
 {
     switch (cond) {
       case Equal:
@@ -335,7 +385,7 @@ ion::ALUNeg(ALUOp op, Imm32 *imm)
       default:
         break;
     }
-    return op;
+    return op_invalid;
 }
 
 bool
@@ -418,3 +468,41 @@ ion::asr (Register r, int amt)
 {
     return O2RegImmShift(r, ASR, amt);
 }
+
+
+O2RegRegShift
+ion::lsl(Register r, Register amt)
+{
+
+    return O2RegRegShift(r, LSL, amt);
+}
+
+O2RegRegShift
+ion::lsr(Register r, Register amt)
+{
+    return O2RegRegShift(r, LSR, amt);
+}
+
+O2RegRegShift
+ion::ror(Register r, Register amt)
+{
+    return O2RegRegShift(r, ROR, amt);
+}
+
+O2RegRegShift
+ion::asr (Register r, Register amt)
+{
+    return O2RegRegShift(r, ASR, amt);
+}
+
+
+js::ion::VFPImm::VFPImm(uint32 top)
+{
+    data = -1;
+    datastore::Imm8VFPImmData tmp;
+    if (DoubleEncoder::lookup(top, &tmp)) {
+        data = tmp.encode();
+    }
+}
+
+js::ion::DoubleEncoder js::ion::DoubleEncoder::_this;

@@ -80,7 +80,7 @@ class MoveEmitterARM
     Operand cycleSlot() const;
     Operand spillSlot() const;
     Operand doubleSpillSlot() const;
-    Operand toOperand(const MoveOperand &operand) const;
+    Operand toOperand(const MoveOperand &operand, bool isFloat) const;
 
     void emitMove(const MoveOperand &from, const MoveOperand &to);
     void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);

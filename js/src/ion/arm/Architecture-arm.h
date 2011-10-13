@@ -63,8 +63,12 @@ static const int32 INVALID_STACK_SLOT       = -1;
 // These offsets are related to bailouts.
 ////
 
-// Size of each bailout table entry. On arm, this is at most a ldr, then a branch
-static const uint32 BAILOUT_TABLE_ENTRY_SIZE    = 8;
+// Size of each bailout table entry. On arm, this is presently
+// a single call (which is wrong!). the call clobbers lr.
+// For now, I've dealt with this by ensuring that we never allocate to lr.
+// it should probably be 8 bytes, a mov of an immediate into r12 (not
+// allocated presently, or ever) followed by a branch to the apropriate code.
+static const uint32 BAILOUT_TABLE_ENTRY_SIZE    = 4;
 
 class Registers
 {
@@ -112,6 +116,7 @@ class Registers
     static const uint32 NonAllocatableMask =
         (1 << JSC::ARMRegisters::sp) |
         (1 << JSC::ARMRegisters::r12) | // r12 = ip = scratch
+        (1 << JSC::ARMRegisters::lr) |
         (1 << JSC::ARMRegisters::pc);
 
     // Registers that can be allocated without being saved, generally.
@@ -150,7 +155,7 @@ class FloatRegisters
 
     static const uint32 NonAllocatableMask =
         // the scratch float register for ARM.
-        (1 << JSC::ARMRegisters::SD0);
+        (1 << JSC::ARMRegisters::d0);
 
     // Registers that can be allocated without being saved, generally.
     static const uint32 TempMask = VolatileMask & ~NonAllocatableMask;
