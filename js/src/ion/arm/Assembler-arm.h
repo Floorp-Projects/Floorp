@@ -162,41 +162,11 @@ class VFPRegister
     bool isSInt()   { return kind == Int; }
     bool isUInt()   { return kind == UInt; }
     bool equiv(VFPRegister other) { return other.kind == kind; }
-    VFPRegister doubleOverlay() {
-        JS_ASSERT(!_isInvalid);
-        if (kind != Double) {
-            return VFPRegister(_code >> 1, Double);
-        } else {
-            return *this;
-        }
-    }
-    VFPRegister singleOverlay() {
-        JS_ASSERT(!_isInvalid);
-        if (kind == Double) {
-            // There are no corresponding float registers for d16-d31
-            ASSERT(_code < 16);
-            return VFPRegister(_code << 1, Double);
-        } else {
-            return VFPRegister(_code, Single);
-        }
-    }
-    VFPRegister intOverlay() {
-        JS_ASSERT(!_isInvalid);
-        if (kind == Double) {
-            // There are no corresponding float registers for d16-d31
-            ASSERT(_code < 16);
-            return VFPRegister(_code << 1, Double);
-        } else {
-            return VFPRegister(_code, Int);
-        }
-    }
-    bool isInvalid() {
-        return _isInvalid;
-    }
-    bool isMissing() {
-        JS_ASSERT(!_isInvalid);
-        return _isMissing;
-    }
+    VFPRegister doubleOverlay();
+    VFPRegister singleOverlay();
+    VFPRegister intOverlay();
+    bool isInvalid();
+    bool isMissing();
     struct VFPRegIndexSplit;
     VFPRegIndexSplit encode();
     // for serializing values
@@ -387,7 +357,7 @@ class ValueOperand
 // integer argument.  Imm8 will verify that its argument can be encoded
 // as an ARM 12 bit imm8, encode it using an Imm8data, and finally call
 // its parent's (Operand2) constructor with the Imm8data.  The Operand2
-// constructor will then call the Imm8data's toInt() function to extract
+// constructor will then call the Imm8data's encode() function to extract
 // the raw bits from it.  In the future, we should be able to extract
 // data from the Operand2 by asking it for its component Imm8data
 // structures.  The reason this is so horribly round-about is I wanted
@@ -409,7 +379,7 @@ struct Reg
     uint32 pad : 20;
     Reg(uint32 rm, ShiftType type, uint32 rsr, uint32 shiftamount)
         : RM(rm), RRS(rsr), Type(type), ShiftAmount(shiftamount), pad(0) {}
-    uint32 toInt() {
+    uint32 encode() {
         return RM | RRS << 4 | Type << 5 | ShiftAmount << 7;
     }
 };
@@ -428,7 +398,7 @@ struct Imm8mData
     uint32 buff : 19;
   public:
     uint32 invalid : 1;
-    uint32 toInt() {
+    uint32 encode() {
         JS_ASSERT(!invalid);
         return data | rot << 8;
     };
@@ -445,7 +415,7 @@ struct Imm8Data
     uint32 pad : 4;
     uint32 imm4H : 4;
   public:
-    uint32 toInt() {
+    uint32 encode() {
         return imm4L | (imm4H << 8);
     };
     Imm8Data(uint32 imm) : imm4L(imm&0xf), imm4H(imm>>4) {
@@ -459,7 +429,7 @@ struct Imm8VFPOffData
   private:
     uint32 data;
   public:
-    uint32 toInt() {
+    uint32 encode() {
         return data;
     };
     Imm8VFPOffData(uint32 imm) : data (imm) {
@@ -491,14 +461,14 @@ struct Imm12Data
 {
     uint32 data : 12;
     Imm12Data(uint32 imm) : data(imm) { JS_ASSERT(data == imm); }
-    uint32 toInt() { return data; }
+    uint32 encode() { return data; }
 };
 
 struct RIS
 {
     uint32 ShiftAmount : 5;
     RIS(uint32 imm) : ShiftAmount(imm) { ASSERT(ShiftAmount == imm); }
-    uint32 toInt () {
+    uint32 encode () {
         return ShiftAmount;
     }
 };
@@ -508,7 +478,7 @@ struct RRS
     // the register that holds the shift amount
     uint32 RS : 4;
     RRS(uint32 rs) : RS(rs) { ASSERT(rs == RS); }
-    uint32 toInt () {return RS << 1;}
+    uint32 encode () {return RS << 1;}
 };
 
 } // datastore
@@ -525,16 +495,16 @@ class Operand2
   protected:
     friend class MacroAssemblerARM;
     Operand2(datastore::Imm8mData base)
-        : oper(base.invalid ? -1 : (base.toInt() | (uint32)IsImmOp2)),
+        : oper(base.invalid ? -1 : (base.encode() | (uint32)IsImmOp2)),
           invalid(base.invalid)
     {
     }
-    Operand2(datastore::Reg base) : oper(base.toInt() | (uint32)IsNotImmOp2) {}
+    Operand2(datastore::Reg base) : oper(base.encode() | (uint32)IsNotImmOp2) {}
   private:
     friend class Operand;
     Operand2(int blob) : oper(blob) {}
   public:
-    uint32 toInt() { return oper; }
+    uint32 encode() { return oper; }
 };
 
 class Imm8 : public Operand2
@@ -586,9 +556,9 @@ class Op2Reg : public Operand2
 {
   protected:
     Op2Reg(Register rm, ShiftType type, datastore::RIS shiftImm)
-        : Operand2(datastore::Reg(rm.code(), type, 0, shiftImm.toInt())) {}
+        : Operand2(datastore::Reg(rm.code(), type, 0, shiftImm.encode())) {}
     Op2Reg(Register rm, ShiftType type, datastore::RRS shiftReg)
-        : Operand2(datastore::Reg(rm.code(), type, 1, shiftReg.toInt())) {}
+        : Operand2(datastore::Reg(rm.code(), type, 1, shiftReg.encode())) {}
 };
 class O2RegImmShift : public Op2Reg
 {
@@ -625,11 +595,11 @@ class DtrOff
     uint32 data;
   protected:
     DtrOff(datastore::Imm12Data immdata, IsUp_ iu)
-    : data(immdata.toInt() | (uint32)IsImmDTR | ((uint32)iu)) {}
+    : data(immdata.encode() | (uint32)IsImmDTR | ((uint32)iu)) {}
     DtrOff(datastore::Reg reg, IsUp_ iu = IsUp)
-        : data(reg.toInt() | (uint32) IsNotImmDTR | iu) {}
+        : data(reg.encode() | (uint32) IsNotImmDTR | iu) {}
   public:
-    uint32 toInt() { return data; }
+    uint32 encode() { return data; }
 };
 
 class DtrOffImm : public DtrOff
@@ -646,9 +616,9 @@ class DtrOffReg : public DtrOff
     // Constructing the necessary RIS/RRS structures are annoying
   protected:
     DtrOffReg(Register rn, ShiftType type, datastore::RIS shiftImm)
-        : DtrOff(datastore::Reg(rn.code(), type, 0, shiftImm.toInt())) {}
+        : DtrOff(datastore::Reg(rn.code(), type, 0, shiftImm.encode())) {}
     DtrOffReg(Register rn, ShiftType type, datastore::RRS shiftReg)
-        : DtrOff(datastore::Reg(rn.code(), type, 1, shiftReg.toInt())) {}
+        : DtrOff(datastore::Reg(rn.code(), type, 1, shiftReg.encode())) {}
 };
 
 class DtrRegImmShift : public DtrOffReg
@@ -672,8 +642,8 @@ class DTRAddr
     uint32 data;
   public:
     DTRAddr(Register reg, DtrOff dtr)
-        : data(dtr.toInt() | (reg.code() << 16)) {}
-    uint32 toInt() { return data; }
+        : data(dtr.encode() | (reg.code() << 16)) {}
+    uint32 encode() { return data; }
   private:
     friend class Operand;
     DTRAddr(uint32 blob) : data(blob) {}
@@ -686,11 +656,11 @@ class EDtrOff
   protected:
     uint32 data;
     EDtrOff(datastore::Imm8Data imm8, IsUp_ iu = IsUp)
-        : data(imm8.toInt() | IsImmEDTR | (uint32)iu) {}
+        : data(imm8.encode() | IsImmEDTR | (uint32)iu) {}
     EDtrOff(Register rm, IsUp_ iu = IsUp)
         : data(rm.code() | IsNotImmEDTR | iu) {}
   public:
-    uint32 toInt() { return data; }
+    uint32 encode() { return data; }
 };
 
 class EDtrOffImm : public EDtrOff
@@ -713,8 +683,8 @@ class EDtrAddr
 {
     uint32 data;
   public:
-    EDtrAddr(Register r, EDtrOff off) : data(RN(r) | off.toInt()) {}
-    uint32 toInt() { return data; }
+    EDtrAddr(Register r, EDtrOff off) : data(RN(r) | off.encode()) {}
+    uint32 encode() { return data; }
 };
 
 class VFPOff
@@ -722,7 +692,7 @@ class VFPOff
     uint32 data;
   protected:
     VFPOff(datastore::Imm8VFPOffData imm, IsUp_ isup)
-        : data(imm.toInt() | (uint32)isup) {}
+        : data(imm.encode() | (uint32)isup) {}
   public:
     uint32 encode() { return data; }
 };
@@ -743,7 +713,7 @@ class VFPAddr
         : data(RN(base) | off.encode())
     {
     }
-    uint32 toInt() { return data; }
+    uint32 encode() { return data; }
 };
 
 class VFPImm {
@@ -758,7 +728,7 @@ class BOffImm
 {
     uint32 data;
   public:
-    uint32 toInt() {
+    uint32 encode() {
         return data;
     }
     BOffImm(int offset) : data (offset >> 2 & 0x00ffffff) {
@@ -778,7 +748,7 @@ class Imm16
     {
         JS_ASSERT(uint32(lower | (upper << 12)) == imm);
     }
-    uint32 toInt() { return lower | upper << 16; }
+    uint32 encode() { return lower | upper << 16; }
 };
 // FP Instructions use a different set of registers,
 // with a different encoding, so this calls for a different class.
@@ -811,11 +781,11 @@ class Operand
     Tag_ Tag;
     uint32 data;
   public:
-    Operand (Operand2 init) : Tag(OP2), data(init.toInt()) {}
-    Operand (Register reg)  : Tag(OP2), data(O2Reg(reg).toInt()) {}
+    Operand (Operand2 init) : Tag(OP2), data(init.encode()) {}
+    Operand (Register reg)  : Tag(OP2), data(O2Reg(reg).encode()) {}
     Operand (FloatRegister reg)  : Tag(FOP), data(reg.code()) {}
-    Operand (DTRAddr addr) : Tag(DTR), data(addr.toInt()) {}
-    Operand (VFPAddr addr) : Tag(VDTR), data(addr.toInt()) {}
+    Operand (DTRAddr addr) : Tag(DTR), data(addr.encode()) {}
+    Operand (VFPAddr addr) : Tag(VDTR), data(addr.encode()) {}
     Tag_ getTag() { return Tag; }
     Operand2 toOp2() { return Operand2(data); }
     DTRAddr toDTRAddr() {JS_ASSERT(Tag == DTR); return DTRAddr(data); }
@@ -932,11 +902,7 @@ public:
     // MacroAssemblers hold onto gcthings, so they are traced by the GC.
     void trace(JSTracer *trc);
 
-    bool oom() const {
-        return m_buffer.oom() ||
-            !enoughMemory_ ||
-            jumpRelocations_.oom();
-    }
+    bool oom() const;
 
     void executableCopy(void *buffer);
     void processDeferredData(IonCode *code, uint8 *data);
@@ -944,278 +910,109 @@ public:
     void copyJumpRelocationTable(uint8 *buffer);
     void copyDataRelocationTable(uint8 *buffer);
 
-    bool addDeferredData(DeferredData *data, size_t bytes) {
-        data->setOffset(dataBytesNeeded_);
-        dataBytesNeeded_ += bytes;
-        if (dataBytesNeeded_ >= MAX_BUFFER_SIZE)
-            return false;
-        return data_.append(data);
-    }
+    bool addDeferredData(DeferredData *data, size_t bytes);
 
-    bool addCodeLabel(CodeLabel *label) {
-        return codeLabels_.append(label);
-    }
+    bool addCodeLabel(CodeLabel *label);
 
     // Size of the instruction stream, in bytes.
-    size_t size() const {
-        return m_buffer.uncheckedSize();
-    }
+    size_t size() const;
     // Size of the jump relocation table, in bytes.
-    size_t jumpRelocationTableBytes() const {
-        return jumpRelocations_.length();
-    }
-    size_t dataRelocationTableBytes() const {
-        return dataRelocations_.length();
-    }
+    size_t jumpRelocationTableBytes() const;
+    size_t dataRelocationTableBytes() const;
     // Size of the data table, in bytes.
-    size_t dataSize() const {
-        return dataBytesNeeded_;
-    }
-    size_t bytesNeeded() const {
-        return size() +
-               dataSize() +
-               jumpRelocationTableBytes() +
-               dataRelocationTableBytes();
-    }
+    size_t dataSize() const;
+    size_t bytesNeeded() const;
     // write a blob of binary into the instruction stream
-    void writeBlob(uint32 x)
-    {
-        m_buffer.putInt(x);
-    }
+    void writeInst(uint32 x);
 
   public:
-    void align(int alignment) {
-        while (!m_buffer.isAligned(alignment))
-            as_mov(r0, O2Reg(r0));
-
-    }
+    void align(int alignment);
     void as_alu(Register dest, Register src1, Operand2 op2,
-                ALUOp op, SetCond_ sc = NoSetCond, Condition c = Always) {
-        writeBlob((int)op | (int)sc | (int) c | op2.toInt() |
-                  ((dest == InvalidReg) ? 0 : RD(dest)) |
-                  ((src1 == InvalidReg) ? 0 : RN(src1)));
-    }
+                ALUOp op, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_mov(Register dest,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, InvalidReg, op2, op_mov, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_mvn(Register dest, Operand2 op2,
-                SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, InvalidReg, op2, op_mvn, sc, c);
-    }
+                SetCond_ sc = NoSetCond, Condition c = Always);
     // logical operations
     void as_and(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, src1, op2, op_and, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_bic(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, src1, op2, op_bic, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_eor(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, src1, op2, op_eor, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_orr(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, src1, op2, op_orr, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     // mathematical operations
     void as_adc(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, src1, op2, op_adc, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_add(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, src1, op2, op_add, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_sbc(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, src1, op2, op_sbc, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_sub(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, src1, op2, op_sub, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_rsb(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, src1, op2, op_rsb, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     void as_rsc(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always) {
-        as_alu(dest, src1, op2, op_rsc, sc, c);
-    }
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
     // test operations
     void as_cmn(Register src1, Operand2 op2,
-                Condition c = Always) {
-        as_alu(InvalidReg, src1, op2, op_cmn, SetCond, c);
-    }
+                Condition c = Always);
     void as_cmp(Register src1, Operand2 op2,
-                Condition c = Always) {
-        as_alu(InvalidReg, src1, op2, op_cmp, SetCond, c);
-    }
+                Condition c = Always);
     void as_teq(Register src1, Operand2 op2,
-                Condition c = Always) {
-        as_alu(InvalidReg, src1, op2, op_teq, SetCond, c);
-    }
+                Condition c = Always);
     void as_tst(Register src1, Operand2 op2,
-                Condition c = Always) {
-        as_alu(InvalidReg, src1, op2, op_tst, SetCond, c);
-    }
+                Condition c = Always);
 
     // Not quite ALU worthy, but useful none the less:
     // These also have the isue of these being formatted
     // completly differently from the standard ALU operations.
-    void as_movw(Register dest, Imm16 imm, Condition c = Always) {
-        JS_ASSERT(hasMOVWT());
-        writeBlob(0x03000000 | c | imm.toInt() | RD(dest));
-    }
-    void as_movt(Register dest, Imm16 imm, Condition c = Always) {
-        JS_ASSERT(hasMOVWT());
-        writeBlob(0x03400000 | c | imm.toInt() | RD(dest));
-    }
+    void as_movw(Register dest, Imm16 imm, Condition c = Always);
+    void as_movt(Register dest, Imm16 imm, Condition c = Always);
     // Data transfer instructions: ldr, str, ldrb, strb.
     // Using an int to differentiate between 8 bits and 32 bits is
     // overkill, but meh
     void as_dtr(LoadStore ls, int size, Index mode,
-                Register rt, DTRAddr addr, Condition c = Always)
-    {
-        JS_ASSERT(size == 32 || size == 8);
-        writeBlob( 0x04000000 | ls | (size == 8 ? 0x00400000 : 0) | mode | c |
-                   RT(rt) | addr.toInt());
-        return;
-    }
+                Register rt, DTRAddr addr, Condition c = Always);
     // Handles all of the other integral data transferring functions:
     // ldrsb, ldrsh, ldrd, etc.
     // size is given in bits.
     void as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
-                   Register rt, EDtrAddr addr, Condition c = Always)
-    {
-        int extra_bits2 = 0;
-        int extra_bits1 = 0;
-        switch(size) {
-          case 8:
-            JS_ASSERT(IsSigned);
-            JS_ASSERT(ls!=IsStore);
-            break;
-          case 16:
-            //case 32:
-            // doesn't need to be handled-- it is handled by the default ldr/str
-            extra_bits2 = 0x01;
-            extra_bits1 = (ls == IsStore) ? 0 : 1;
-            if (IsSigned) {
-                JS_ASSERT(ls != IsStore);
-                extra_bits2 |= 0x2;
-            }
-            break;
-          case 64:
-            if (ls == IsStore) {
-                extra_bits2 = 0x3;
-            } else {
-                extra_bits2 = 0x2;
-            }
-            extra_bits1 = 0;
-            break;
-          default:
-            JS_NOT_REACHED("SAY WHAT?");
-        }
-        writeBlob(extra_bits2 << 5 | extra_bits1 << 20 | 0x90 |
-                  addr.toInt() | RT(rt) | c);
-        return;
-    }
+                   Register rt, EDtrAddr addr, Condition c = Always);
 
     void as_dtm(LoadStore ls, Register rn, uint32 mask,
-                DTMMode mode, DTMWriteBack wb, Condition c = Always)
-    {
-        writeBlob(0x08000000 | RN(rn) | ls |
-                  mode | mask | c | wb);
-
-        return;
-    }
+                DTMMode mode, DTMWriteBack wb, Condition c = Always);
 
     // Control flow stuff:
 
     // bx can *only* branch to a register
     // never to an immediate.
-    void as_bx(Register r, Condition c = Always)
-    {
-        writeBlob(((int) c) | op_bx | r.code());
-    }
+    void as_bx(Register r, Condition c = Always);
 
     // Branch can branch to an immediate *or* to a register.
     // Branches to immediates are pc relative, branches to registers
     // are absolute
-    void as_b(BOffImm off, Condition c)
-    {
-        writeBlob(((int)c) | op_b | off.toInt());
-    }
+    void as_b(BOffImm off, Condition c);
 
-    void as_b(Label *l, Condition c = Always)
-    {
-        BufferOffset next = nextOffset();
-        if (l->bound()) {
-            as_b(BufferOffset(l).diffB(next), c);
-        } else {
-            // Ugh.  int32 :(
-            int32 old = l->use(next.getOffset());
-            if (old == LabelBase::INVALID_OFFSET) {
-                old = -4;
-            }
-            // This will currently throw an assertion if we couldn't actually
-            // encode the offset of the branch.
-            as_b(BOffImm(old), c);
-        }
-    }
-    void as_b(BOffImm off, Condition c, BufferOffset inst)
-    {
-        *editSrc(inst) = ((int)c) | op_b | off.toInt();
-    }
+    void as_b(Label *l, Condition c = Always);
+    void as_b(BOffImm off, Condition c, BufferOffset inst);
 
     // blx can go to either an immediate or a register.
     // When blx'ing to a register, we change processor mode
     // depending on the low bit of the register
     // when blx'ing to an immediate, we *always* change processor state.
-    void as_blx(Label *l)
-    {
-        JS_NOT_REACHED("Feature NYI");
-    }
+    void as_blx(Label *l);
 
-    void as_blx(Register r, Condition c = Always)
-    {
-        writeBlob(((int) c) | op_blx | r.code());
-    }
-    void as_bl(BOffImm off, Condition c)
-    {
-        writeBlob(((int)c) | op_bl | off.toInt());
-    }
+    void as_blx(Register r, Condition c = Always);
+    void as_bl(BOffImm off, Condition c);
     // bl can only branch+link to an immediate, never to a register
     // it never changes processor state
-    void as_bl()
-    {
-        JS_NOT_REACHED("Feature NYI");
-    }
+    void as_bl();
     // bl #imm can have a condition code, blx #imm cannot.
     // blx reg can be conditional.
-    void as_bl(Label *l, Condition c)
-    {
-        BufferOffset next = nextOffset();
-        if (l->bound()) {
-            as_bl(BufferOffset(l).diffB(next), c);
-        } else {
-            int32 old = l->use(next.getOffset());
-            // See if the list was empty :(
-            if (old == -1) {
-                old = -4;
-            }
-            // This will fail if we couldn't actually
-            // encode the offset of the branch.
-            as_bl(BOffImm(old), c);
-        }
-    }
-    void as_bl(BOffImm off, Condition c, BufferOffset inst)
-    {
-        *editSrc(inst) = ((int)c) | op_bl | off.toInt();
-    }
+    void as_bl(Label *l, Condition c);
+    void as_bl(BOffImm off, Condition c, BufferOffset inst);
 
     // VFP instructions!
     enum vfp_size {
@@ -1225,86 +1022,40 @@ public:
     // Unityped variants: all registers hold the same (ieee754 single/double)
     // notably not included are vcvt; vmov vd, #imm; vmov rt, vn.
     void as_vfp_float(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                      VFPOp op, Condition c = Always)
-    {
-        // Make sure we believe that all of our operands are the same kind
-        JS_ASSERT(vd.equiv(vn) && vd.equiv(vm));
-        vfp_size sz = isDouble;
-        if (!vd.isDouble()) {
-            sz = isSingle;
-        }
-        writeBlob(VD(vd) | VN(vn) | VM(vm) | op | c | sz | 0x0e000a00);
-    }
+                      VFPOp op, Condition c = Always);
 
     void as_vadd(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c = Always)
-    {
-        as_vfp_float(vd, vn, vm, opv_add, c);
-    }
+                 Condition c = Always);
 
     void as_vdiv(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c = Always)
-    {
-        as_vfp_float(vd, vn, vm, opv_mul, c);
-    }
+                 Condition c = Always);
 
     void as_vmul(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c = Always)
-    {
-        as_vfp_float(vd, vn, vm, opv_mul, c);
-    }
+                 Condition c = Always);
 
     void as_vnmul(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                  Condition c = Always)
-    {
-        as_vfp_float(vd, vn, vm, opv_mul, c);
-        JS_NOT_REACHED("Feature NYI");
-    }
+                  Condition c = Always);
 
     void as_vnmla(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                  Condition c = Always)
-    {
-        JS_NOT_REACHED("Feature NYI");
-    }
+                  Condition c = Always);
 
     void as_vnmls(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                  Condition c = Always)
-    {
-        JS_NOT_REACHED("Feature NYI");
-    }
+                  Condition c = Always);
 
-    void as_vneg(VFPRegister vd, VFPRegister vm, Condition c = Always)
-    {
-        as_vfp_float(vd, NoVFPRegister, vm, opv_neg, c);
-    }
+    void as_vneg(VFPRegister vd, VFPRegister vm, Condition c = Always);
 
-    void as_vsqrt(VFPRegister vd, VFPRegister vm, Condition c = Always)
-    {
-        as_vfp_float(vd, NoVFPRegister, vm, opv_sqrt, c);
-    }
+    void as_vsqrt(VFPRegister vd, VFPRegister vm, Condition c = Always);
 
-    void as_vabs(VFPRegister vd, VFPRegister vm, Condition c = Always)
-    {
-        as_vfp_float(vd, NoVFPRegister, vm, opv_abs, c);
-    }
+    void as_vabs(VFPRegister vd, VFPRegister vm, Condition c = Always);
 
     void as_vsub(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c = Always)
-    {
-        as_vfp_float(vd, vn, vm, opv_sub, c);
-    }
+                 Condition c = Always);
 
     void as_vcmp(VFPRegister vd, VFPRegister vm,
-                 Condition c = Always)
-    {
-        as_vfp_float(vd, NoVFPRegister, vm, opv_sub, c);
-    }
+                 Condition c = Always);
 
     // specifically, a move between two same sized-registers
-    void as_vmov(VFPRegister vd, VFPRegister vsrc, Condition c = Always)
-    {
-        as_vfp_float(vd, NoVFPRegister, vsrc, opv_mov, c);
-    }
+    void as_vmov(VFPRegister vd, VFPRegister vsrc, Condition c = Always);
     /*xfer between Core and VFP*/
     enum FloatToCore_ {
         FloatToCore = 1 << 20,
@@ -1323,153 +1074,33 @@ public:
     // determined by the float2core.
 
     void as_vxfer(Register vt1, Register vt2, VFPRegister vm, FloatToCore_ f2c,
-                  Condition c = Always)
-    {
-        vfp_size sz = isSingle;
-        if (vm.isDouble()) {
-            // Technically, this can be done with a vmov à la ARM ARM under vmov
-            // however, that requires at least an extra bit saying if the
-            // operation should be performed on the lower or upper half of the
-            // double.  Moving a single to/from 2N/2N+1 isn't equivalent,
-            // since there are 32 single registers, and 32 double registers
-            // so there is no way to encode the last 16 double registers.
-            JS_ASSERT(vt2 != InvalidReg);
-            sz = isDouble;
-        }
-        VFPXferSize xfersz = WordTransfer;
-        if (vt2 != InvalidReg) {
-            // We are doing a 64 bit transfer.
-            xfersz = DoubleTransfer;
-        }
-        writeBlob(xfersz | f2c | c | sz |
-                 RT(vt1) | ((vt2 != InvalidReg) ? RN(vt2) : 0) | VM(vm));
-    }
+                  Condition c = Always);
 
     // our encoding actually allows just the src and the dest (and theiyr types)
     // to uniquely specify the encoding that we are going to use.
     void as_vcvt(VFPRegister vd, VFPRegister vm,
-                 Condition c = Always)
-    {
-        JS_NOT_REACHED("Feature NYI");
-    }
+                 Condition c = Always);
     /* xfer between VFP and memory*/
     void as_vdtr(LoadStore ls, VFPRegister vd, VFPAddr addr,
-                 Condition c = Always /* vfp doesn't have a wb option*/) {
-        vfp_size sz = isDouble;
-        if (!vd.isDouble()) {
-            sz = isSingle;
-        }
-
-        writeBlob(0x0D000A00 | addr.toInt() | VD(vd) | sz | c);
-    }
+                 Condition c = Always /* vfp doesn't have a wb option*/);
 
     // VFP's ldm/stm work differently from the standard arm ones.
     // You can only transfer a range
 
     void as_vdtm(LoadStore st, Register rn, VFPRegister vd, int length,
-                 /*also has update conditions*/Condition c = Always)
-    {
-        JS_ASSERT(length <= 16 && length >= 0);
-        vfp_size sz = isDouble;
-        if (!vd.isDouble()) {
-            sz = isSingle;
-        } else {
-            length *= 2;
-        }
-        writeBlob(dtmLoadStore | RN(rn) | VD(vd) |
-                  length |
-                  dtmMode | dtmUpdate | dtmCond |
-                  0x0C000B00 | sz);
-    }
+                 /*also has update conditions*/Condition c = Always);
 
-    void as_vimm(VFPRegister vd, VFPImm imm, Condition c = Always)
-    {
-        vfp_size sz = isDouble;
-        if (!vd.isDouble()) {
-            // totally do not know how to handle this right now
-            sz = isSingle;
-            JS_NOT_REACHED("non-double immediate");
-        }
-        writeBlob(c | sz | imm.encode() | VD(vd) | 0x0EB00A00);
+    void as_vimm(VFPRegister vd, VFPImm imm, Condition c = Always);
 
-    }
+    bool nextLink(BufferOffset b, BufferOffset *next);
 
-    bool nextLink(BufferOffset b, BufferOffset *next)
-    {
-        uint32 branch = *editSrc(b);
-        JS_ASSERT(((branch & op_b_mask) == op_b) ||
-                  ((branch & op_b_mask) == op_bl));
-        uint32 dest = (branch & op_b_dest_mask);
-        // turns out the end marker is the same as the mask.
-        if (dest == op_b_dest_mask)
-            return false;
-        // add in the extra 2 bits of padding that we chopped off when we made the b
-        dest = dest << 2;
-        // and let everyone know about it.
-        new (next) BufferOffset(dest);
-        return true;
-    }
+    void bind(Label *label);
 
-    void bind(Label *label) {
-        //        JSC::MacroAssembler::Label jsclabel;
-        if (label->used()) {
-            bool more;
-            BufferOffset dest = nextOffset();
-            BufferOffset b(label);
-            do {
-                BufferOffset next;
-                more = nextLink(b, &next);
-                uint32 branch = *editSrc(b);
-                Condition c = getCondition(branch);
-                switch (branch & op_b_mask) {
-                  case op_b:
-                    as_b(dest.diffB(b), c, b);
-                    break;
-                  case op_bl:
-                    as_bl(dest.diffB(b), c, b);
-                    break;
-                  default:
-                    JS_NOT_REACHED("crazy fixup!");
-                }
-                b = next;
-            } while (more);
-        }
-        label->bind(nextOffset().getOffset());
-    }
+    static void Bind(IonCode *code, AbsoluteLabel *label, const void *address);
 
-    static void Bind(IonCode *code, AbsoluteLabel *label, const void *address) {
-#if 0
-        uint8 *raw = code->raw();
-        if (label->used()) {
-            intptr_t src = label->offset();
-            do {
-                intptr_t next = reinterpret_cast<intptr_t>(JSC::ARMAssembler::getPointer(raw + src));
-                JSC::ARMAssembler::setPointer(raw + src, address);
-                src = next;
-            } while (src != AbsoluteLabel::INVALID_OFFSET);
-        }
-        JS_ASSERT(((uint8 *)address - raw) >= 0 && ((uint8 *)address - raw) < INT_MAX);
-        label->bind();
-#endif
-        JS_NOT_REACHED("Feature NYI");
-    }
+    void call(Label *label);
 
-    void call(Label *label) {
-#if 0
-        if (label->bound()) {
-            masm.linkJump(masm.call(), JmpDst(label->offset()));
-        } else {
-            JmpSrc j = masm.call();
-            JmpSrc prev = JmpSrc(label->use(j.offset()));
-            masm.setNextJump(j, prev);
-        }
-#endif
-        JS_NOT_REACHED("Feature NYI");
-    }
-
-    void as_bkpt() {
-        writeBlob(0xe1200070);
-    }
+    void as_bkpt();
 
   public:
     static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);

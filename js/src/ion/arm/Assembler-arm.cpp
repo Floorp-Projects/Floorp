@@ -506,3 +506,672 @@ js::ion::VFPImm::VFPImm(uint32 top)
 }
 
 js::ion::DoubleEncoder js::ion::DoubleEncoder::_this;
+
+//VFPRegister implementation
+VFPRegister
+VFPRegister::doubleOverlay()
+{
+    JS_ASSERT(!_isInvalid);
+    if (kind != Double) {
+        return VFPRegister(_code >> 1, Double);
+    } else {
+        return *this;
+    }
+}
+VFPRegister
+VFPRegister::singleOverlay()
+{
+    JS_ASSERT(!_isInvalid);
+    if (kind == Double) {
+        // There are no corresponding float registers for d16-d31
+        ASSERT(_code < 16);
+        return VFPRegister(_code << 1, Double);
+    } else {
+        return VFPRegister(_code, Single);
+    }
+}
+
+VFPRegister
+VFPRegister::intOverlay()
+{
+    JS_ASSERT(!_isInvalid);
+    if (kind == Double) {
+        // There are no corresponding float registers for d16-d31
+        ASSERT(_code < 16);
+        return VFPRegister(_code << 1, Double);
+    } else {
+        return VFPRegister(_code, Int);
+    }
+}
+bool
+VFPRegister::isInvalid()
+{
+    return _isInvalid;
+}
+
+bool
+VFPRegister::isMissing()
+{
+    JS_ASSERT(!_isInvalid);
+    return _isMissing;
+}
+
+
+bool
+Assembler::oom() const
+{
+    return m_buffer.oom() ||
+        !enoughMemory_ ||
+        jumpRelocations_.oom();
+}
+
+bool
+Assembler::addDeferredData(DeferredData *data, size_t bytes)
+{
+    data->setOffset(dataBytesNeeded_);
+    dataBytesNeeded_ += bytes;
+    if (dataBytesNeeded_ >= MAX_BUFFER_SIZE)
+        return false;
+    return data_.append(data);
+}
+
+bool
+Assembler::addCodeLabel(CodeLabel *label)
+{
+    return codeLabels_.append(label);
+}
+
+// Size of the instruction stream, in bytes.
+size_t
+Assembler::size() const
+{
+    return m_buffer.uncheckedSize();
+}
+// Size of the relocation table, in bytes.
+size_t
+Assembler::jumpRelocationTableBytes() const
+{
+    return jumpRelocations_.length();
+}
+size_t
+Assembler::dataRelocationTableBytes() const
+{
+    return dataRelocations_.length();
+}
+
+// Size of the data table, in bytes.
+size_t
+Assembler::dataSize() const
+{
+    return dataBytesNeeded_;
+}
+size_t
+Assembler::bytesNeeded() const
+{
+    return size() +
+        dataSize() +
+        jumpRelocationTableBytes() +
+        dataRelocationTableBytes();
+}
+// write a blob of binary into the instruction stream
+void
+Assembler::writeInst(uint32 x)
+{
+    m_buffer.putInt(x);
+}
+
+void
+Assembler::align(int alignment)
+{
+    while (!m_buffer.isAligned(alignment))
+        as_mov(r0, O2Reg(r0));
+
+}
+void
+Assembler::as_alu(Register dest, Register src1, Operand2 op2,
+                ALUOp op, SetCond_ sc, Condition c)
+{
+    writeInst((int)op | (int)sc | (int) c | op2.encode() |
+              ((dest == InvalidReg) ? 0 : RD(dest)) |
+              ((src1 == InvalidReg) ? 0 : RN(src1)));
+}
+void
+Assembler::as_mov(Register dest,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, InvalidReg, op2, op_mov, sc, c);
+}
+void
+Assembler::as_mvn(Register dest, Operand2 op2,
+                SetCond_ sc, Condition c)
+{
+    as_alu(dest, InvalidReg, op2, op_mvn, sc, c);
+}
+// logical operations
+void
+Assembler::as_and(Register dest, Register src1,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op_and, sc, c);
+}
+void
+Assembler::as_bic(Register dest, Register src1,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op_bic, sc, c);
+}
+void
+Assembler::as_eor(Register dest, Register src1,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op_eor, sc, c);
+}
+void
+Assembler::as_orr(Register dest, Register src1,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op_orr, sc, c);
+}
+// mathematical operations
+void
+Assembler::as_adc(Register dest, Register src1,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op_adc, sc, c);
+}
+void
+Assembler::as_add(Register dest, Register src1,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op_add, sc, c);
+}
+void
+Assembler::as_sbc(Register dest, Register src1,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op_sbc, sc, c);
+}
+void
+Assembler::as_sub(Register dest, Register src1,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op_sub, sc, c);
+}
+void
+Assembler::as_rsb(Register dest, Register src1,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op_rsb, sc, c);
+}
+void
+Assembler::as_rsc(Register dest, Register src1,
+                Operand2 op2, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op_rsc, sc, c);
+}
+// test operations
+void
+Assembler::as_cmn(Register src1, Operand2 op2,
+                Condition c)
+{
+    as_alu(InvalidReg, src1, op2, op_cmn, SetCond, c);
+}
+void
+Assembler::as_cmp(Register src1, Operand2 op2,
+                Condition c)
+{
+    as_alu(InvalidReg, src1, op2, op_cmp, SetCond, c);
+}
+void
+Assembler::as_teq(Register src1, Operand2 op2,
+                Condition c)
+{
+    as_alu(InvalidReg, src1, op2, op_teq, SetCond, c);
+}
+void
+Assembler::as_tst(Register src1, Operand2 op2,
+                Condition c)
+{
+    as_alu(InvalidReg, src1, op2, op_tst, SetCond, c);
+}
+
+// Not quite ALU worthy, but useful none the less:
+// These also have the isue of these being formatted
+// completly differently from the standard ALU operations.
+void
+Assembler::as_movw(Register dest, Imm16 imm, Condition c)
+{
+    JS_ASSERT(hasMOVWT());
+    writeInst(0x03000000 | c | imm.encode() | RD(dest));
+}
+void
+Assembler::as_movt(Register dest, Imm16 imm, Condition c)
+{
+    JS_ASSERT(hasMOVWT());
+    writeInst(0x03400000 | c | imm.encode() | RD(dest));
+}
+// Data transfer instructions: ldr, str, ldrb, strb.
+// Using an int to differentiate between 8 bits and 32 bits is
+// overkill, but meh
+void
+Assembler::as_dtr(LoadStore ls, int size, Index mode,
+                Register rt, DTRAddr addr, Condition c)
+{
+    JS_ASSERT(size == 32 || size == 8);
+    writeInst( 0x04000000 | ls | (size == 8 ? 0x00400000 : 0) | mode | c |
+               RT(rt) | addr.encode());
+    return;
+}
+// Handles all of the other integral data transferring functions:
+// ldrsb, ldrsh, ldrd, etc.
+// size is given in bits.
+void
+Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
+                   Register rt, EDtrAddr addr, Condition c)
+{
+    int extra_bits2 = 0;
+    int extra_bits1 = 0;
+    switch(size) {
+      case 8:
+        JS_ASSERT(IsSigned);
+        JS_ASSERT(ls!=IsStore);
+        break;
+      case 16:
+        //case 32:
+        // doesn't need to be handled-- it is handled by the default ldr/str
+        extra_bits2 = 0x01;
+        extra_bits1 = (ls == IsStore) ? 0 : 1;
+        if (IsSigned) {
+            JS_ASSERT(ls != IsStore);
+            extra_bits2 |= 0x2;
+        }
+        break;
+      case 64:
+        if (ls == IsStore) {
+            extra_bits2 = 0x3;
+        } else {
+            extra_bits2 = 0x2;
+        }
+        extra_bits1 = 0;
+        break;
+      default:
+        JS_NOT_REACHED("SAY WHAT?");
+    }
+    writeInst(extra_bits2 << 5 | extra_bits1 << 20 | 0x90 |
+              addr.encode() | RT(rt) | c);
+    return;
+}
+
+void
+Assembler::as_dtm(LoadStore ls, Register rn, uint32 mask,
+                DTMMode mode, DTMWriteBack wb, Condition c)
+{
+    writeInst(0x08000000 | RN(rn) | ls |
+              mode | mask | c | wb);
+
+    return;
+}
+
+// Control flow stuff:
+
+// bx can *only* branch to a register
+// never to an immediate.
+void
+Assembler::as_bx(Register r, Condition c)
+{
+    writeInst(((int) c) | op_bx | r.code());
+}
+
+// Branch can branch to an immediate *or* to a register.
+// Branches to immediates are pc relative, branches to registers
+// are absolute
+void
+Assembler::as_b(BOffImm off, Condition c)
+{
+    writeInst(((int)c) | op_b | off.encode());
+}
+
+void
+Assembler::as_b(Label *l, Condition c)
+{
+    BufferOffset next = nextOffset();
+    if (l->bound()) {
+        as_b(BufferOffset(l).diffB(next), c);
+    } else {
+        // Ugh.  int32 :(
+        int32 old = l->use(next.getOffset());
+        if (old == LabelBase::INVALID_OFFSET) {
+            old = -4;
+        }
+        // This will currently throw an assertion if we couldn't actually
+        // encode the offset of the branch.
+        as_b(BOffImm(old), c);
+    }
+}
+void
+Assembler::as_b(BOffImm off, Condition c, BufferOffset inst)
+{
+    *editSrc(inst) = ((int)c) | op_b | off.encode();
+}
+
+// blx can go to either an immediate or a register.
+// When blx'ing to a register, we change processor mode
+// depending on the low bit of the register
+// when blx'ing to an immediate, we *always* change processor state.
+void
+Assembler::as_blx(Label *l)
+{
+    JS_NOT_REACHED("Feature NYI");
+}
+
+void
+Assembler::as_blx(Register r, Condition c)
+{
+    writeInst(((int) c) | op_blx | r.code());
+}
+void
+Assembler::as_bl(BOffImm off, Condition c)
+{
+    writeInst(((int)c) | op_bl | off.encode());
+}
+// bl can only branch+link to an immediate, never to a register
+// it never changes processor state
+void
+Assembler::as_bl()
+{
+    JS_NOT_REACHED("Feature NYI");
+}
+// bl #imm can have a condition code, blx #imm cannot.
+// blx reg can be conditional.
+void
+Assembler::as_bl(Label *l, Condition c)
+{
+    BufferOffset next = nextOffset();
+    if (l->bound()) {
+        as_bl(BufferOffset(l).diffB(next), c);
+    } else {
+        int32 old = l->use(next.getOffset());
+        // See if the list was empty :(
+        if (old == -1) {
+            old = -4;
+        }
+        // This will fail if we couldn't actually
+        // encode the offset of the branch.
+        as_bl(BOffImm(old), c);
+    }
+}
+void
+Assembler::as_bl(BOffImm off, Condition c, BufferOffset inst)
+{
+    *editSrc(inst) = ((int)c) | op_bl | off.encode();
+}
+
+// VFP instructions!
+
+// Unityped variants: all registers hold the same (ieee754 single/double)
+// notably not included are vcvt; vmov vd, #imm; vmov rt, vn.
+void
+Assembler::as_vfp_float(VFPRegister vd, VFPRegister vn, VFPRegister vm,
+                  VFPOp op, Condition c)
+{
+    // Make sure we believe that all of our operands are the same kind
+    JS_ASSERT(vd.equiv(vn) && vd.equiv(vm));
+    vfp_size sz = isDouble;
+    if (!vd.isDouble()) {
+        sz = isSingle;
+    }
+    writeInst(VD(vd) | VN(vn) | VM(vm) | op | c | sz | 0x0e000a00);
+}
+
+void
+Assembler::as_vadd(VFPRegister vd, VFPRegister vn, VFPRegister vm,
+                 Condition c)
+{
+    as_vfp_float(vd, vn, vm, opv_add, c);
+}
+
+void
+Assembler::as_vdiv(VFPRegister vd, VFPRegister vn, VFPRegister vm,
+                 Condition c)
+{
+    as_vfp_float(vd, vn, vm, opv_mul, c);
+}
+
+void
+Assembler::as_vmul(VFPRegister vd, VFPRegister vn, VFPRegister vm,
+                 Condition c)
+{
+    as_vfp_float(vd, vn, vm, opv_mul, c);
+}
+
+void
+Assembler::as_vnmul(VFPRegister vd, VFPRegister vn, VFPRegister vm,
+                  Condition c)
+{
+    as_vfp_float(vd, vn, vm, opv_mul, c);
+    JS_NOT_REACHED("Feature NYI");
+}
+
+void
+Assembler::as_vnmla(VFPRegister vd, VFPRegister vn, VFPRegister vm,
+                  Condition c)
+{
+    JS_NOT_REACHED("Feature NYI");
+}
+
+void
+Assembler::as_vnmls(VFPRegister vd, VFPRegister vn, VFPRegister vm,
+                  Condition c)
+{
+    JS_NOT_REACHED("Feature NYI");
+}
+
+void
+Assembler::as_vneg(VFPRegister vd, VFPRegister vm, Condition c)
+{
+    as_vfp_float(vd, NoVFPRegister, vm, opv_neg, c);
+}
+
+void
+Assembler::as_vsqrt(VFPRegister vd, VFPRegister vm, Condition c)
+{
+    as_vfp_float(vd, NoVFPRegister, vm, opv_sqrt, c);
+}
+
+void
+Assembler::as_vabs(VFPRegister vd, VFPRegister vm, Condition c)
+{
+    as_vfp_float(vd, NoVFPRegister, vm, opv_abs, c);
+}
+
+void
+Assembler::as_vsub(VFPRegister vd, VFPRegister vn, VFPRegister vm,
+                 Condition c)
+{
+    as_vfp_float(vd, vn, vm, opv_sub, c);
+}
+
+void
+Assembler::as_vcmp(VFPRegister vd, VFPRegister vm,
+                 Condition c)
+{
+    as_vfp_float(vd, NoVFPRegister, vm, opv_sub, c);
+}
+
+// specifically, a move between two same sized-registers
+void
+Assembler::as_vmov(VFPRegister vd, VFPRegister vsrc, Condition c)
+{
+    as_vfp_float(vd, NoVFPRegister, vsrc, opv_mov, c);
+}
+//xfer between Core and VFP
+
+// Unlike the next function, moving between the core registers and vfp
+// registers can't be *that* properly typed.  Namely, since I don't want to
+// munge the type VFPRegister to also include core registers.  Thus, the core
+// and vfp registers are passed in based on their type, and src/dest is
+// determined by the float2core.
+
+void
+Assembler::as_vxfer(Register vt1, Register vt2, VFPRegister vm, FloatToCore_ f2c,
+                  Condition c)
+{
+    vfp_size sz = isSingle;
+    if (vm.isDouble()) {
+        // Technically, this can be done with a vmov à la ARM ARM under vmov
+        // however, that requires at least an extra bit saying if the
+        // operation should be performed on the lower or upper half of the
+        // double.  Moving a single to/from 2N/2N+1 isn't equivalent,
+        // since there are 32 single registers, and 32 double registers
+        // so there is no way to encode the last 16 double registers.
+        JS_ASSERT(vt2 != InvalidReg);
+        sz = isDouble;
+    }
+    VFPXferSize xfersz = WordTransfer;
+    if (vt2 != InvalidReg) {
+        // We are doing a 64 bit transfer.
+        xfersz = DoubleTransfer;
+    }
+    writeInst(xfersz | f2c | c | sz |
+              RT(vt1) | ((vt2 != InvalidReg) ? RN(vt2) : 0) | VM(vm));
+}
+
+// our encoding actually allows just the src and the dest (and theiyr types)
+// to uniquely specify the encoding that we are going to use.
+void
+Assembler::as_vcvt(VFPRegister vd, VFPRegister vm,
+                 Condition c)
+{
+    JS_NOT_REACHED("Feature NYI");
+}
+// xfer between VFP and memory
+void
+Assembler::as_vdtr(LoadStore ls, VFPRegister vd, VFPAddr addr,
+                 Condition c /* vfp doesn't have a wb option*/)
+{
+    vfp_size sz = isDouble;
+    if (!vd.isDouble()) {
+        sz = isSingle;
+    }
+
+    writeInst(0x0D000A00 | addr.encode() | VD(vd) | sz | c);
+}
+
+// VFP's ldm/stm work differently from the standard arm ones.
+// You can only transfer a range
+
+void
+Assembler::as_vdtm(LoadStore st, Register rn, VFPRegister vd, int length,
+                 /*also has update conditions*/Condition c)
+{
+    JS_ASSERT(length <= 16 && length >= 0);
+    vfp_size sz = isDouble;
+    if (!vd.isDouble()) {
+        sz = isSingle;
+    } else {
+        length *= 2;
+    }
+    writeInst(dtmLoadStore | RN(rn) | VD(vd) |
+              length |
+              dtmMode | dtmUpdate | dtmCond |
+              0x0C000B00 | sz);
+}
+
+void
+Assembler::as_vimm(VFPRegister vd, VFPImm imm, Condition c)
+{
+    vfp_size sz = isDouble;
+    if (!vd.isDouble()) {
+        // totally do not know how to handle this right now
+        sz = isSingle;
+        JS_NOT_REACHED("non-double immediate");
+    }
+    writeInst(c | sz | imm.encode() | VD(vd) | 0x0EB00A00);
+
+}
+
+bool
+Assembler::nextLink(BufferOffset b, BufferOffset *next)
+{
+    uint32 branch = *editSrc(b);
+    JS_ASSERT(((branch & op_b_mask) == op_b) ||
+              ((branch & op_b_mask) == op_bl));
+    uint32 dest = (branch & op_b_dest_mask);
+    // turns out the end marker is the same as the mask.
+    if (dest == op_b_dest_mask)
+        return false;
+    // add in the extra 2 bits of padding that we chopped off when we made the b
+    dest = dest << 2;
+    // and let everyone know about it.
+    new (next) BufferOffset(dest);
+    return true;
+}
+
+void
+Assembler::bind(Label *label)
+{
+    //        JSC::MacroAssembler::Label jsclabel;
+    if (label->used()) {
+        bool more;
+        BufferOffset dest = nextOffset();
+        BufferOffset b(label);
+        do {
+            BufferOffset next;
+            more = nextLink(b, &next);
+            uint32 branch = *editSrc(b);
+            Condition c = getCondition(branch);
+            switch (branch & op_b_mask) {
+              case op_b:
+                as_b(dest.diffB(b), c, b);
+                break;
+              case op_bl:
+                as_bl(dest.diffB(b), c, b);
+                break;
+              default:
+                JS_NOT_REACHED("crazy fixup!");
+            }
+            b = next;
+        } while (more);
+    }
+    label->bind(nextOffset().getOffset());
+}
+
+void
+Assembler::Bind(IonCode *code, AbsoluteLabel *label, const void *address)
+{
+#if 0
+    uint8 *raw = code->raw();
+    if (label->used()) {
+        intptr_t src = label->offset();
+        do {
+            intptr_t next = reinterpret_cast<intptr_t>(JSC::ARMAssembler::getPointer(raw + src));
+            JSC::ARMAssembler::setPointer(raw + src, address);
+            src = next;
+        } while (src != AbsoluteLabel::INVALID_OFFSET);
+    }
+    JS_ASSERT(((uint8 *)address - raw) >= 0 && ((uint8 *)address - raw) < INT_MAX);
+    label->bind();
+#endif
+    JS_NOT_REACHED("Feature NYI");
+}
+
+void
+Assembler::call(Label *label)
+{
+#if 0
+    if (label->bound()) {
+        masm.linkJump(masm.call(), JmpDst(label->offset()));
+    } else {
+        JmpSrc j = masm.call();
+        JmpSrc prev = JmpSrc(label->use(j.offset()));
+        masm.setNextJump(j, prev);
+    }
+#endif
+    JS_NOT_REACHED("Feature NYI");
+}
+
+void
+Assembler::as_bkpt()
+{
+    writeInst(0xe1200070);
+}
