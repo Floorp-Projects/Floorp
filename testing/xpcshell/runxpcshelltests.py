@@ -502,15 +502,11 @@ class XPCShellTests(object):
       # The test file will have to be loaded after the head files.
       cmdT = self.buildCmdTestFile(name)
 
-      args = self.xpcsRunArgs
-      if 'debug' in test:
-          args.insert(0, '-d')
-
       try:
         self.log.info("TEST-INFO | %s | running test ..." % name)
         startTime = time.time()
 
-        proc = self.launchProcess(cmdH + cmdT + args,
+        proc = self.launchProcess(cmdH + cmdT + self.xpcsRunArgs,
                     stdout=pStdout, stderr=pStderr, env=self.env, cwd=testdir)
 
         # Allow user to kill hung subprocess with SIGINT w/o killing this script
