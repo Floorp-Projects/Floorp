@@ -752,7 +752,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         if(clazz == &XPC_WN_Tearoff_JSClass)
         {
             XPCWrappedNative *wrapper =
-                (XPCWrappedNative*)xpc_GetJSPrivate(obj->getParent());
+                (XPCWrappedNative*)xpc_GetJSPrivate(js::GetObjectParent(obj));
             dontTraverse = WrapperIsNotMainThreadOnly(wrapper);
         }
         else if(IS_WRAPPER_CLASS(clazz) && IS_WN_WRAPPER_OBJECT(obj))
@@ -857,9 +857,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         }
 
         if(traceKind == JSTRACE_OBJECT) {
-            JSObject *global = static_cast<JSObject*>(p), *parent;
-            while((parent = global->getParent()))
-                global = parent;
+            JSObject *global = js::GetGlobalForObject(static_cast<JSObject*>(p));
             char fullname[100];
             JS_snprintf(fullname, sizeof(fullname),
                         "%s (global=%p)", name, global);
@@ -1218,7 +1216,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     // voodoo to fixup scoping and parenting...
 
-    JS_ASSERT(!globalJSObj->getParent());
+    JS_ASSERT(!js::GetObjectParent(globalJSObj));
 
     JSObject* oldGlobal = JS_GetGlobalObject(aJSContext);
     if(!oldGlobal || oldGlobal == tempGlobal)
