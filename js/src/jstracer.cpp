@@ -11093,6 +11093,8 @@ TraceRecorder::record_JSOP_OBJTOP()
 RecordingStatus
 TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
 {
+    JS_NOT_REACHED("FIXME");
+#if 0
     /*
      * This function requires that |ctor| be a built-in class function in order
      * to have an immutable |ctor.prototype| that can be burned into the trace
@@ -11134,12 +11136,15 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     JS_ASSERT_IF(clasp != &ArrayClass, proto->getNewType(cx)->emptyShapes[0]->getObjectClass() == clasp);
 
     proto_ins = w.immpObjGC(proto);
+#endif
     return RECORD_CONTINUE;
 }
 
 RecordingStatus
 TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
 {
+    JS_NOT_REACHED("FIXME");
+#if 0
 #ifdef DEBUG
     TraceMonitor &localtm = *traceMonitor;
 #endif
@@ -11163,6 +11168,7 @@ TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
 #endif
 
     proto_ins = w.immpObjGC(proto);
+#endif
     return RECORD_CONTINUE;
 }
 

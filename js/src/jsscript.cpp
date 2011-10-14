@@ -168,7 +168,7 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
     if (!nbase)
         return NULL;
 
-    Shape child(nbase, id, slot, attrs, Shape::HAS_SHORTID, *indexp);
+    Shape child(nbase, id, slot, 0, attrs, Shape::HAS_SHORTID, *indexp);
 
     /* Shapes in bindings cannot be dictionaries. */
     Shape *shape = lastBinding->getChildBinding(cx, child, &lastBinding);

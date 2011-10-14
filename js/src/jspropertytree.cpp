@@ -179,8 +179,8 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
 
     UnownedBaseShape *base = child.base()->unowned();
 
-    new (shape) Shape(base, child.propid_, child.slot_, child.attrs,
-                      child.flags, child.shortid_);
+    new (shape) Shape(&child);
+    shape->base_ = base;
 
     if (!insertChild(cx, parent, shape))
         return NULL;

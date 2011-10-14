@@ -3463,9 +3463,11 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
-    obj->init(cx, type, false);
+    obj->init(cx, type);
 
-    Shape *emptyWithShape = BaseShape::lookupInitialShape(cx, &WithClass, parent->getGlobal());
+    Shape *emptyWithShape = BaseShape::lookupInitialShape(cx, &WithClass,
+                                                          parent->getGlobal(),
+                                                          FINALIZE_OBJECT4);
     if (!emptyWithShape)
         return NULL;
 
@@ -3501,11 +3503,12 @@ js_NewBlockObject(JSContext *cx)
     if (!type)
         return NULL;
 
-    Shape *emptyBlockShape = BaseShape::lookupInitialShape(cx, &BlockClass, NULL);
+    Shape *emptyBlockShape = BaseShape::lookupInitialShape(cx, &BlockClass, NULL,
+                                                           FINALIZE_OBJECT4);
     if (!emptyBlockShape)
         return NULL;
 
-    blockObj->init(cx, type, false);
+    blockObj->init(cx, type);
     blockObj->setInitialPropertyInfallible(emptyBlockShape);
 
     return blockObj;
@@ -3519,13 +3522,12 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     JS_ASSERT(proto->isStaticBlock());
 
     size_t count = OBJ_BLOCK_COUNT(cx, proto);
-    gc::AllocKind kind = gc::GetGCObjectKind(count + BLOCK_RESERVED_SLOTS + 1);
 
     TypeObject *type = proto->getNewType(cx);
     if (!type)
         return NULL;
 
-    JSObject *clone = js_NewGCObject(cx, kind);
+    JSObject *clone = js_NewGCObject(cx, FINALIZE_OBJECT4);
     if (!clone)
         return NULL;
 
@@ -3772,12 +3774,15 @@ struct JSObject::TradeGutsReserved {
     Vector<Value> bvals;
     int newafixed;
     int newbfixed;
+    Shape *newashape;
+    Shape *newbshape;
     Value *newaslots;
     Value *newbslots;
 
     TradeGutsReserved(JSContext *cx)
         : cx(cx), avals(cx), bvals(cx),
           newafixed(0), newbfixed(0),
+          newashape(NULL), newbshape(NULL),
           newaslots(NULL), newbslots(NULL)
     {}
 
@@ -3800,18 +3805,33 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
      * swaps can be performed infallibly.
      */
 
-    if (a->structSize() == b->structSize() && a->hasPrivate() == b->hasPrivate())
+    if (a->structSize() == b->structSize())
         return true;
 
     /*
      * If either object is native, it needs a new shape to preserve the
      * invariant that objects with the same shape have the same number of
-     * inline slots.
+     * inline slots. The fixed slots will be updated in place during TradeGuts.
+     * Non-native objects need to be reshaped according to the new count.
      */
-    if (a->isNative() && !a->generateOwnShape(cx))
-        return false;
-    if (b->isNative() && !b->generateOwnShape(cx))
-        return false;
+    if (a->isNative()) {
+        if (!a->generateOwnShape(cx))
+            return false;
+    } else {
+        reserved.newbshape = BaseShape::lookupInitialShape(cx, a->getClass(), a->getParent(),
+                                                           b->getAllocKind());
+        if (!reserved.newbshape)
+            return false;
+    }
+    if (b->isNative()) {
+        if (!b->generateOwnShape(cx))
+            return false;
+    } else {
+        reserved.newashape = BaseShape::lookupInitialShape(cx, b->getClass(), b->getParent(),
+                                                           a->getAllocKind());
+        if (!reserved.newashape)
+            return false;
+    }
 
     /* The avals/bvals vectors hold all original values from the objects. */
 
@@ -3870,12 +3890,6 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
 }
 
 void
-JSObject::updateFixedSlots(uintN fixed)
-{
-    flags = (flags & ~FIXED_SLOTS_MASK) | (fixed << FIXED_SLOTS_SHIFT);
-}
-
-void
 JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &reserved)
 {
     JS_ASSERT(a->compartment() == b->compartment());
@@ -3900,7 +3914,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
 
     /* Trade the guts of the objects. */
     const size_t size = a->structSize();
-    if (size == b->structSize() && a->hasPrivate() == b->hasPrivate()) {
+    if (size == b->structSize()) {
         /*
          * If the objects are the same size, then we make no assumptions about
          * whether they have dynamically allocated slots and instead just copy
@@ -3942,13 +3956,21 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         memcpy(a, b, sizeof tmp);
         memcpy(b, &tmp, sizeof tmp);
 
-        a->updateFixedSlots(reserved.newafixed);
+        if (a->isNative())
+            a->shape_->setNumFixedSlots(reserved.newafixed);
+        else
+            a->shape_ = reserved.newashape;
+
         a->slots = reserved.newaslots;
         a->copySlotRange(0, reserved.bvals.begin(), bcap);
         if (a->hasPrivate())
             a->setPrivate(bpriv);
 
-        b->updateFixedSlots(reserved.newbfixed);
+        if (b->isNative())
+            b->shape_->setNumFixedSlots(reserved.newbfixed);
+        else
+            b->shape_ = reserved.newbshape;
+
         b->slots = reserved.newbslots;
         b->copySlotRange(0, reserved.avals.begin(), acap);
         if (b->hasPrivate())
@@ -4521,18 +4543,23 @@ JSObject::updateSlotsForSpan(size_t oldSpan, size_t newSpan)
         invalidateSlotRange(newSpan, oldSpan - newSpan);
 }
 
-inline void
-JSObject::initializePrivate()
+#ifdef DEBUG
+size_t
+JSObject::numFixedSlotsFromAllocationKind(Class *clasp) const
 {
-    size_t nfixed = numFixedSlots();
-    JS_ASSERT(nfixed != 0);
-
-    /* Remove a fixed slot, to make room for the private data. */
-    flags = flags ^ (nfixed << FIXED_SLOTS_SHIFT);
-    flags |= (nfixed - 1) << FIXED_SLOTS_SHIFT;
-
-    setPrivate(NULL);
+    /*
+     * For checking that the fixed slot information in a shape is consistent
+     * with the allocation kind of this object.
+     */
+    gc::AllocKind kind = getAllocKind();
+    size_t slots = gc::GetGCKindSlots(kind);
+    if (clasp->flags & JSCLASS_HAS_PRIVATE) {
+        JS_ASSERT(slots > 0);
+        slots--;
+    }
+    return slots;
 }
+#endif
 
 bool
 JSObject::setInitialProperty(JSContext *cx, const js::Shape *shape)
@@ -4540,23 +4567,22 @@ JSObject::setInitialProperty(JSContext *cx, const js::Shape *shape)
     JS_ASSERT(isNewborn());
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
-
-    if (shape->getObjectClass()->flags & JSCLASS_HAS_PRIVATE)
-        initializePrivate();
+    JS_ASSERT(numFixedSlotsFromAllocationKind(shape->getObjectClass()) == shape->numFixedSlots());
 
     size_t span = shape->slotSpan();
 
-    if (!span) {
-        shape_ = const_cast<js::Shape *>(shape);
-        return true;
+    if (span) {
+        size_t count = dynamicSlotsCount(shape->numFixedSlots(), span);
+        if (count && !growSlots(cx, 0, count))
+            return false;
     }
 
-    size_t count = dynamicSlotsCount(numFixedSlots(), span);
-    if (count && !growSlots(cx, 0, count))
-        return false;
-
     shape_ = const_cast<js::Shape *>(shape);
-    updateSlotsForSpan(0, span);
+    if (hasPrivate())
+        setPrivate(NULL);
+
+    if (span)
+        updateSlotsForSpan(0, span);
 
     return true;
 }
@@ -4567,13 +4593,13 @@ JSObject::setInitialPropertyInfallible(const js::Shape *shape)
     JS_ASSERT(isNewborn());
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
+    JS_ASSERT(numFixedSlotsFromAllocationKind(shape->getObjectClass()) == shape->numFixedSlots());
 
-    if (shape->getObjectClass()->flags & JSCLASS_HAS_PRIVATE)
-        initializePrivate();
-
-    JS_ASSERT(dynamicSlotsCount(numFixedSlots(), shape->slotSpan()) == 0);
+    JS_ASSERT(dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == 0);
 
     shape_ = const_cast<js::Shape *>(shape);
+    if (hasPrivate())
+        setPrivate(NULL);
 
     size_t span = shape->slotSpan();
     if (span)
@@ -4587,6 +4613,7 @@ JSObject::setLastProperty(JSContext *cx, const js::Shape *shape)
     JS_ASSERT(!inDictionaryMode());
     JS_ASSERT(!shape->inDictionary());
     JS_ASSERT(shape->compartment() == compartment());
+    JS_ASSERT(shape->numFixedSlots() == numFixedSlots());
 
     size_t oldSpan = lastProperty()->slotSpan();
     size_t newSpan = shape->slotSpan();
@@ -4644,11 +4671,12 @@ JSObject::growSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
      */
     JS_ASSERT_IF(!isNewborn() && isCall(), asCall().maybeStackFrame() != NULL);
 
-    /* Don't let nslots get close to wrapping around uint32. */
-    if (newCount >= NSLOTS_LIMIT) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
+    /*
+     * Slot capacities are determined by the span of allocated objects. Due to
+     * the limited number of bits to store shape slots, object growth is
+     * throttled well before the slot capacity can overflow.
+     */
+    JS_ASSERT(newCount < NELEMENTS_LIMIT);
 
     size_t oldSize = Probes::objectResizeActive() ? slotsAndStructSize() : 0;
     size_t newSize = oldSize + (newCount - oldCount) * sizeof(Value);
@@ -4756,8 +4784,8 @@ JSObject::growElements(JSContext *cx, uintN newcap)
     else if (actualCapacity < SLOT_CAPACITY_MIN)
         actualCapacity = SLOT_CAPACITY_MIN;
 
-    /* Don't let nslots get close to wrapping around uint32. */
-    if (actualCapacity >= NSLOTS_LIMIT || actualCapacity < oldcap || actualCapacity < newcap) {
+    /* Don't let nelements get close to wrapping around uint32. */
+    if (actualCapacity >= NELEMENTS_LIMIT || actualCapacity < oldcap || actualCapacity < newcap) {
         JS_ReportOutOfMemory(cx);
         return false;
     }
@@ -5113,6 +5141,11 @@ JSObject::allocSlot(JSContext *cx, uint32 *slotp)
             setSlot(last, UndefinedValue());
             return true;
         }
+    }
+
+    if (slot >= SHAPE_MAXIMUM_SLOT) {
+        js_ReportOutOfMemory(cx);
+        return false;
     }
 
     *slotp = slot;

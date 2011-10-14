@@ -57,11 +57,6 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
-JS_STATIC_ASSERT(js::gc::FINALIZE_OBJECT0 % 2 == 0);
-JS_STATIC_ASSERT(js::gc::FINALIZE_FUNCTION == js::gc::FINALIZE_OBJECT_LAST + 1);
-static const uint32 TYPE_OBJECT_EMPTY_SHAPE_COUNT =
-    ((js::gc::FINALIZE_FUNCTION - js::gc::FINALIZE_OBJECT0) / 2) + 1;
-
 inline js::EmptyShape *
 js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp, gc::AllocKind kind)
 {
@@ -74,46 +69,40 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp, gc::Alloc
      */
     JS_ASSERT(proto->hasNewType(this));
 
-    JS_ASSERT(kind >= gc::FINALIZE_OBJECT0 &&
-              kind <= gc::FINALIZE_FUNCTION_AND_OBJECT_LAST);
-
-    JS_STATIC_ASSERT(gc::FINALIZE_OBJECT0 % 2 == 0);
-    JS_STATIC_ASSERT(gc::FINALIZE_FUNCTION == gc::FINALIZE_OBJECT_LAST + 1);
-    int i = (kind - gc::FINALIZE_OBJECT0) / 2;
-
     if (!emptyShapes) {
-        emptyShapes = (EmptyShape**)
-            cx->calloc_(sizeof(EmptyShape*) * TYPE_OBJECT_EMPTY_SHAPE_COUNT);
+        emptyShapes = cx->new_<ShapeKindArray>();
         if (!emptyShapes)
             return NULL;
 
         /*
-         * Always fill in emptyShapes[0], so canProvideEmptyShape works.
+         * Always fill in the first empty shape, so canProvideEmptyShape works.
          * Other empty shapes are filled in lazily.
          */
-        emptyShapes[0] = EmptyShape::create(cx, aclasp, proto->getParent());
-        if (!emptyShapes[0]) {
-            cx->free_(emptyShapes);
+        Shape *first = EmptyShape::create(cx, aclasp, proto->getParent(), 0);
+        if (!first) {
+            cx->delete_(emptyShapes);
             emptyShapes = NULL;
             return NULL;
         }
+        emptyShapes->get(gc::FINALIZE_OBJECT0) = first;
     }
 
-    JS_ASSERT(aclasp == emptyShapes[0]->getObjectClass());
+    JS_ASSERT(aclasp == emptyShapes->get(gc::FINALIZE_OBJECT0)->getObjectClass());
 
-    if (!emptyShapes[i]) {
-        emptyShapes[i] = EmptyShape::create(cx, aclasp, proto->getParent());
-        if (!emptyShapes[i])
-            return NULL;
+    Shape *&empty = emptyShapes->get(kind);
+    if (!empty) {
+        empty = EmptyShape::create(cx, aclasp, proto->getParent(),
+                                   gc::GetGCKindSlots(kind, aclasp));
     }
 
-    return emptyShapes[i];
+    return static_cast<EmptyShape *>(empty);
 }
 
 inline bool
 js::types::TypeObject::canProvideEmptyShape(js::Class *aclasp)
 {
-    return proto && !singleton && (!emptyShapes || emptyShapes[0]->getObjectClass() == aclasp);
+    return proto && !singleton &&
+        (!emptyShapes || emptyShapes->get(gc::FINALIZE_OBJECT0)->getObjectClass() == aclasp);
 }
 
 inline void
@@ -139,9 +128,10 @@ inline bool
 StringObject::init(JSContext *cx, JSString *str)
 {
     JS_ASSERT(nativeEmpty());
+    JS_ASSERT(getAllocKind() == gc::FINALIZE_OBJECT2);
 
     const js::Shape *shape = BaseShape::lookupInitialShape(cx, getClass(), getParent(),
-                                                           lastProperty());
+                                                           gc::FINALIZE_OBJECT2, lastProperty());
     if (!shape)
         return false;
     if (shape != lastProperty()) {
@@ -150,7 +140,7 @@ StringObject::init(JSContext *cx, JSString *str)
         shape = assignInitialShape(cx);
         if (!shape)
             return false;
-        BaseShape::insertInitialShape(cx, shape);
+        BaseShape::insertInitialShape(cx, gc::FINALIZE_OBJECT2, shape);
     }
     JS_ASSERT(!nativeEmpty());
     JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot() == LENGTH_SLOT);
@@ -179,12 +169,11 @@ BaseShape::adoptUnowned(UnownedBaseShape *other)
 }
 
 inline
-Shape::Shape(BaseShape *base, jsid propid, uint32 slot,
+Shape::Shape(BaseShape *base, jsid propid, uint32 slot, uint32 nfixed,
              uintN attrs, uintN flags, intN shortid)
   : base_(base),
     propid_(propid),
-    numLinearSearches(0),
-    slot_(slot),
+    slotInfo(slot | (nfixed << FIXED_SLOTS_SHIFT)),
     attrs(uint8(attrs)),
     flags(uint8(flags)),
     shortid_(int16(shortid)),
@@ -200,8 +189,7 @@ inline
 Shape::Shape(const Shape *other)
   : base_(other->base()->unowned()),
     propid_(other->maybePropid()),
-    numLinearSearches(0),
-    slot_(other->maybeSlot()),
+    slotInfo(other->slotInfo & ~LINEAR_SEARCHES_MASK),
     attrs(other->attrs),
     flags(other->flags),
     shortid_(other->maybeShortid()),
@@ -211,11 +199,10 @@ Shape::Shape(const Shape *other)
 }
 
 inline
-Shape::Shape(BaseShape *base)
+Shape::Shape(BaseShape *base, uint32 nfixed)
   : base_(base),
     propid_(JSID_EMPTY),
-    numLinearSearches(0),
-    slot_(SHAPE_INVALID_SLOT >> (32 - SLOT_BITS)),
+    slotInfo(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
     attrs(JSPROP_SHARED),
     flags(0),
     shortid_(0),
@@ -234,7 +221,7 @@ Shape::hash() const
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & PUBLIC_FLAGS);
     hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid_;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ slot_;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ maybeSlot();
     hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(propid_);
     return hash;
 }
@@ -243,7 +230,7 @@ inline bool
 Shape::matches(const js::Shape *other) const
 {
     return propid_ == other->propid_ &&
-           matchesParamsAfterId(other->base(), other->slot_, other->attrs,
+           matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs,
                                 other->flags, other->shortid_);
 }
 
@@ -252,7 +239,7 @@ Shape::matchesParamsAfterId(BaseShape *base, uint32 aslot,
                             uintN aattrs, uintN aflags, intN ashortid) const
 {
     return base->unowned() == this->base()->unowned() &&
-           slot_ == aslot &&
+           maybeSlot() == aslot &&
            attrs == aattrs &&
            ((flags ^ aflags) & PUBLIC_FLAGS) == 0 &&
            shortid_ == ashortid;
@@ -344,7 +331,8 @@ Shape::initDictionaryShape(const Shape &child, Shape **dictp)
 {
     UnownedBaseShape *base = child.base()->unowned();
 
-    new (this) Shape(base, child.maybePropid(), child.maybeSlot(), child.attrs,
+    new (this) Shape(base, child.maybePropid(),
+                     child.maybeSlot(), child.numFixedSlots(), child.attrs,
                      child.flags | IN_DICTIONARY, child.maybeShortid());
 
     this->listp = NULL;
@@ -352,8 +340,8 @@ Shape::initDictionaryShape(const Shape &child, Shape **dictp)
 }
 
 inline
-EmptyShape::EmptyShape(BaseShape *base)
-  : js::Shape(base)
+EmptyShape::EmptyShape(BaseShape *base, uint32 nfixed)
+  : js::Shape(base, nfixed)
 {
     /* Only empty shapes can be NON_NATIVE. */
     if (!getObjectClass()->isNative())
