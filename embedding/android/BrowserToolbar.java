@@ -82,7 +82,7 @@ public class BrowserToolbar extends LinearLayout {
             }
         });
 
-        mFavicon = (ImageButton) findViewById(R.id.favimage);
+        mFavicon = (ImageButton) findViewById(R.id.favicon);
     }
 
     private void onAwesomeBarSearch() {

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/awesomeScreen"
+              android:id="@+id/awesome_screen"
               style="@style/Screen">
 
     <LinearLayout style="@style/AddressBar">
     
-        <EditText android:id="@+android:id/awesomebar_text"
+        <EditText android:id="@+id/awesomebar_text"
                   style="@style/AddressBar.URL"
                   android:background="@android:drawable/edit_text"
                   android:inputType="textUri"
