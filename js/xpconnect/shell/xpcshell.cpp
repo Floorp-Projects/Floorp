@@ -1944,7 +1944,7 @@ main(int argc, char **argv, char **envp)
                                                   systemprincipal,
                                                   nsnull,
                                                   nsIXPConnect::
-                                                      FLAG_SYSTEM_GLOBAL_OBJECT,
+                                                  FLAG_SYSTEM_GLOBAL_OBJECT,
                                                   getter_AddRefs(holder));
         if (NS_FAILED(rv))
             return 1;

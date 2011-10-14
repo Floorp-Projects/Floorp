@@ -318,14 +318,14 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
     if(aMessage)
     {
         if(!(mMessage = (char*) nsMemory::Clone(aMessage,
-                                           sizeof(char)*(strlen(aMessage)+1))))
+                                                sizeof(char)*(strlen(aMessage)+1))))
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
     if(aName)
     {
         if(!(mName = (char*) nsMemory::Clone(aName,
-                                           sizeof(char)*(strlen(aName)+1))))
+                                             sizeof(char)*(strlen(aName)+1))))
             return NS_ERROR_OUT_OF_MEMORY;
     }
 

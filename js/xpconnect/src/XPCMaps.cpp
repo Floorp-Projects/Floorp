@@ -56,8 +56,8 @@ HashIIDPtrKey(JSDHashTable *table, const void *key)
 
 static JSBool
 MatchIIDPtrKey(JSDHashTable *table,
-            const JSDHashEntryHdr *entry,
-            const void *key)
+               const JSDHashEntryHdr *entry,
+               const void *key)
 {
     return ((const nsID*)key)->
                 Equals(*((const nsID*)((JSDHashEntryStub*)entry)->key));
@@ -485,8 +485,8 @@ XPCNativeScriptableSharedMap::Entry::Hash(JSDHashTable *table, const void *key)
 
 JSBool
 XPCNativeScriptableSharedMap::Entry::Match(JSDHashTable *table,
-                                         const JSDHashEntryHdr *entry,
-                                         const void *key)
+                                           const JSDHashEntryHdr *entry,
+                                           const void *key)
 {
     XPCNativeScriptableShared* obj1 =
         ((XPCNativeScriptableSharedMap::Entry*) entry)->key;

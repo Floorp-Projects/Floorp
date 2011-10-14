@@ -407,7 +407,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
     return nsnull != (xpc = nsXPConnect::GetXPConnect()) &&
            NS_SUCCEEDED(xpc->WrapJS(ccx, jsobj,
-                        iid, getter_AddRefs(wrapper))) &&
+                                    iid, getter_AddRefs(wrapper))) &&
            NS_SUCCEEDED(nsVariant::SetFromInterface(&mData, iid, wrapper));
 }
 
@@ -434,10 +434,10 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
     nsresult rv = variant->GetAsJSVal(&realVal);
 
     if(NS_SUCCEEDED(rv) &&
-      (JSVAL_IS_PRIMITIVE(realVal) ||
-       type == nsIDataType::VTYPE_ARRAY ||
-       type == nsIDataType::VTYPE_EMPTY_ARRAY ||
-       type == nsIDataType::VTYPE_ID))
+       (JSVAL_IS_PRIMITIVE(realVal) ||
+        type == nsIDataType::VTYPE_ARRAY ||
+        type == nsIDataType::VTYPE_EMPTY_ARRAY ||
+        type == nsIDataType::VTYPE_ID))
     {
         JSContext *cx = lccx.GetJSContext();
         if(!JS_WrapValue(cx, &realVal))
@@ -570,7 +570,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
             break;
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:
             if(NS_FAILED(variant->GetAsWStringWithSize(&size,
-                                                      (PRUnichar**)&xpctvar.val.p)))
+                                                       (PRUnichar**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PWSTRING_SIZE_IS | XPT_TDP_POINTER);
             xpctvar.SetValNeedsCleanup();

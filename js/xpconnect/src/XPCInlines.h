@@ -479,8 +479,8 @@ XPCNativeSet::FindMember(jsid name,
         !protoSet ||
         (protoSet != this &&
          !protoSet->MatchesSetUpToInterface(this, Interface) &&
-          (!protoSet->FindMember(name, &protoMember, (PRUint16*)nsnull) ||
-           protoMember != Member));
+         (!protoSet->FindMember(name, &protoMember, (PRUint16*)nsnull) ||
+          protoMember != Member));
 
     return JS_TRUE;
 }

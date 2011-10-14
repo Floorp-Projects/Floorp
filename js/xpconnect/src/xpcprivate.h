@@ -312,7 +312,7 @@ typedef nsDataHashtable<xpc::PtrAndPrincipalHashKey, JSCompartment *> XPCCompart
     char* result;                                                             \
     if(src)                                                                   \
         result = (char*) nsMemory::Clone(src,                                 \
-                                sizeof(char)*(strlen(src)+1));                \
+                                         sizeof(char)*(strlen(src)+1));       \
     else                                                                      \
         result = nsnull;                                                      \
     *dest = result;                                                           \
@@ -2730,9 +2730,8 @@ public:
     char* ToString(XPCCallContext& ccx,
                    XPCWrappedNativeTearOff* to = nsnull) const;
 
-    static void GatherProtoScriptableCreateInfo(
-                        nsIClassInfo* classInfo,
-                        XPCNativeScriptableCreateInfo& sciProto);
+    static void GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
+                                                XPCNativeScriptableCreateInfo& sciProto);
 
     JSBool HasExternalReference() const {return mRefCnt > 1;}
 
@@ -2822,14 +2821,13 @@ private:
                          JSBool needJSObject);
 
     JSBool InitTearOffJSObject(XPCCallContext& ccx,
-                                XPCWrappedNativeTearOff* to);
+                               XPCWrappedNativeTearOff* to);
 
 public:
-    static const XPCNativeScriptableCreateInfo& GatherScriptableCreateInfo(
-                        nsISupports* obj,
-                        nsIClassInfo* classInfo,
-                        XPCNativeScriptableCreateInfo& sciProto,
-                        XPCNativeScriptableCreateInfo& sciWrapper);
+    static const XPCNativeScriptableCreateInfo& GatherScriptableCreateInfo(nsISupports* obj,
+                                                                           nsIClassInfo* classInfo,
+                                                                           XPCNativeScriptableCreateInfo& sciProto,
+                                                                           XPCNativeScriptableCreateInfo& sciWrapper);
 
 private:
     union

@@ -51,13 +51,12 @@ public:
     static nsresult CreateStack(JSContext* cx, JSStackFrame* fp,
                                 XPCJSStackFrame** stack);
 
-    static nsresult CreateStackFrameLocation(
-                                        PRUint32 aLanguage,
-                                        const char* aFilename,
-                                        const char* aFunctionName,
-                                        PRInt32 aLineNumber,
-                                        nsIStackFrame* aCaller,
-                                        XPCJSStackFrame** stack);
+    static nsresult CreateStackFrameLocation(PRUint32 aLanguage,
+                                             const char* aFilename,
+                                             const char* aFunctionName,
+                                             PRInt32 aLineNumber,
+                                             nsIStackFrame* aCaller,
+                                             XPCJSStackFrame** stack);
 
     XPCJSStackFrame();
     virtual ~XPCJSStackFrame();
@@ -99,13 +98,12 @@ XPCJSStack::CreateStackFrameLocation(PRUint32 aLanguage,
                                      nsIStackFrame* aCaller,
                                      nsIStackFrame** stack)
 {
-    return XPCJSStackFrame::CreateStackFrameLocation(
-                                        aLanguage,
-                                        aFilename,
-                                        aFunctionName,
-                                        aLineNumber,
-                                        aCaller,
-                                        (XPCJSStackFrame**) stack);
+    return XPCJSStackFrame::CreateStackFrameLocation(aLanguage,
+                                                     aFilename,
+                                                     aFunctionName,
+                                                     aLineNumber,
+                                                     aCaller,
+                                                     (XPCJSStackFrame**) stack);
 }
 
 
@@ -232,7 +230,7 @@ XPCJSStackFrame::CreateStackFrameLocation(PRUint32 aLanguage,
     {
         self->mFilename = (char*)
                 nsMemory::Clone(aFilename,
-                        sizeof(char)*(strlen(aFilename)+1));
+                                sizeof(char)*(strlen(aFilename)+1));
         if(!self->mFilename)
             failed = JS_TRUE;
     }
@@ -241,7 +239,7 @@ XPCJSStackFrame::CreateStackFrameLocation(PRUint32 aLanguage,
     {
         self->mFunname = (char*)
                 nsMemory::Clone(aFunctionName,
-                        sizeof(char)*(strlen(aFunctionName)+1));
+                                sizeof(char)*(strlen(aFunctionName)+1));
         if(!self->mFunname)
             failed = JS_TRUE;
     }

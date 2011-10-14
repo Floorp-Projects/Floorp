@@ -117,7 +117,7 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
     {
         nsCOMPtr<nsIXPCScriptNotify> scriptNotify =
             do_QueryInterface(static_cast<nsISupports*>
-                                         (JS_GetContextPrivate(mJSContext)));
+                              (JS_GetContextPrivate(mJSContext)));
         if(scriptNotify)
             scriptNotify->ScriptExecuted();
     }
@@ -957,7 +957,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
     if(type_tag == nsXPTType::T_INTERFACE)
     {
         if(NS_SUCCEEDED(GetInterfaceInfo()->
-                GetIIDForParamNoAlloc(methodIndex, &param, result)))
+                        GetIIDForParamNoAlloc(methodIndex, &param, result)))
         {
             return JS_TRUE;
         }
@@ -1414,11 +1414,11 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                             nsCOMPtr<nsISupports> newThis;
 
                             if(NS_FAILED(translator->
-                              TranslateThis((nsISupports*)nativeParams[0].val.p,
-                                            mInfo, methodIndex,
-                                            &hideFirstParamFromJS,
-                                            &newWrapperIID,
-                                            getter_AddRefs(newThis))))
+                                         TranslateThis((nsISupports*)nativeParams[0].val.p,
+                                                       mInfo, methodIndex,
+                                                       &hideFirstParamFromJS,
+                                                       &newWrapperIID,
+                                                       getter_AddRefs(newThis))))
                             {
                                 goto pre_call_clean_up;
                             }
@@ -1433,9 +1433,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                 xpcObjectHelper helper(newThis);
                                 JSBool ok =
                                   XPCConvert::NativeInterface2JSObject(ccx,
-                                        &v, nsnull, helper, newWrapperIID,
-                                        nsnull, PR_FALSE, PR_FALSE,
-                                        nsnull);
+                                                                       &v, nsnull, helper, newWrapperIID,
+                                                                       nsnull, PR_FALSE, PR_FALSE,
+                                                                       nsnull);
                                 if(newWrapperIID)
                                     nsMemory::Free(newWrapperIID);
                                 if(!ok)
@@ -1543,9 +1543,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             else if(isSizedString)
             {
                 if(!XPCConvert::NativeStringWithSize2JS(ccx, &val,
-                                               (const void*)&pv->val,
-                                               datum_type,
-                                               array_count, nsnull))
+                                                        (const void*)&pv->val,
+                                                        datum_type,
+                                                        array_count, nsnull))
                     goto pre_call_clean_up;
             }
             else
@@ -1569,8 +1569,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             if(param.IsIn())
             {
                 if(!JS_SetPropertyById(cx, out_obj,
-                        mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
-                        &val))
+                                       mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
+                                       &val))
                 {
                     goto pre_call_clean_up;
                 }
@@ -1735,8 +1735,8 @@ pre_call_clean_up:
             val = rval;
         else if(JSVAL_IS_PRIMITIVE(argv[i]) ||
                 !JS_GetPropertyById(cx, JSVAL_TO_OBJECT(argv[i]),
-                    mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
-                    &val))
+                                    mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
+                                    &val))
             break;
 
         // setup allocator and/or iid
@@ -1744,8 +1744,8 @@ pre_call_clean_up:
         if(type_tag == nsXPTType::T_INTERFACE)
         {
             if(NS_FAILED(GetInterfaceInfo()->
-                            GetIIDForParamNoAlloc(methodIndex, &param,
-                                                  &param_iid)))
+                         GetIIDForParamNoAlloc(methodIndex, &param,
+                                               &param_iid)))
                 break;
         }
 
@@ -1782,8 +1782,8 @@ pre_call_clean_up:
             if(param.IsRetval())
                 val = rval;
             else if(!JS_GetPropertyById(cx, JSVAL_TO_OBJECT(argv[i]),
-                        mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
-                        &val))
+                                        mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
+                                        &val))
                 break;
 
             // setup allocator and/or iid
@@ -1825,9 +1825,9 @@ pre_call_clean_up:
             else if(isSizedString)
             {
                 if(!XPCConvert::JSStringWithSize2Native(ccx,
-                                                   (void*)&pv->val, val,
-                                                   array_count, array_count,
-                                                   datum_type, nsnull))
+                                                        (void*)&pv->val, val,
+                                                        array_count, array_count,
+                                                        datum_type, nsnull))
                     break;
             }
             else
@@ -1947,7 +1947,7 @@ nsXPCWrappedJSClass::DebugDump(PRInt16 depth)
             for(uint16 i = 0; i < methodCount; i++)
             {
                 XPC_LOG_ALWAYS(("Method %d is %s%s", \
-                        i, IsReflectable(i) ? "":" NOT ","reflectable"));
+                                i, IsReflectable(i) ? "":" NOT ","reflectable"));
             }
             XPC_LOG_OUTDENT();
             depth++;

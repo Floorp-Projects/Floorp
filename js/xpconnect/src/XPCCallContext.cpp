@@ -232,8 +232,8 @@ XPCCallContext::SetName(jsid name)
         if(mSet &&
            mSet->FindMember(name, &mMember, &mInterface,
                             mWrapper->HasProto() ?
-                                mWrapper->GetProto()->GetSet() :
-                                nsnull,
+                            mWrapper->GetProto()->GetSet() :
+                            nsnull,
                             &mStaticMemberIsLocal))
         {
             if(mMember && !mMember->IsConstant())
@@ -387,7 +387,7 @@ XPCCallContext::~XPCCallContext()
 #endif
             NS_ASSERTION(!mThreadData->GetJSContextStack() ||
                          !mThreadData->GetJSContextStack()->
-                            DEBUG_StackHasJSContext(mJSContext),
+                         DEBUG_StackHasJSContext(mJSContext),
                          "JSContext still in threadjscontextstack!");
 
             JS_DestroyContext(mJSContext);
