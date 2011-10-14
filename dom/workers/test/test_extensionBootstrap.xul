@@ -32,7 +32,7 @@
           is(topic, "message", "Correct type of event");
           is(data, message, "Correct message");
 
-          AddonManager.getAddonByID("workerbootstrap@tests.mozilla.org",
+          AddonManager.getAddonByID("workerbootstrap-test@mozilla.org",
                                     function(addon) {
             addon.uninstall();
 
