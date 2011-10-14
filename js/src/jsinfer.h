@@ -718,6 +718,13 @@ struct TypeObject : gc::Cell
      */
     JSObject *singleton;
 
+    /*
+     * Value held by singleton if this is a standin type for a singleton JS
+     * object whose type has not been constructed yet.
+     */
+    static const size_t LAZY_SINGLETON = 1;
+    bool lazy() const { return singleton == (JSObject *) LAZY_SINGLETON; }
+
     /* Lazily filled array of empty shapes for each size of objects with this type. */
     js::ShapeKindArray *emptyShapes;
 

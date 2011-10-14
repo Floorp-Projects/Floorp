@@ -521,17 +521,6 @@ struct JSObject : js::gc::Cell
     inline bool nativeContains(JSContext *cx, jsid id);
     inline bool nativeContains(JSContext *cx, const js::Shape &shape);
 
-    enum {
-        SINGLETON_TYPE            =    0x10000,
-        LAZY_TYPE                 =    0x20000,
-
-        UNUSED_FLAG_BITS          = 0x07FC70A0
-    };
-
-    uint32      flags;                      /* flags */
-
-    uint32 padding;
-
     /* Upper bound on the number of elements in an object. */
     static const uint32 NELEMENTS_LIMIT = JS_BIT(29);
 
@@ -792,13 +781,13 @@ struct JSObject : js::gc::Cell
      * Whether this is the only object which has its specified type. This
      * object will have its type constructed lazily as needed by analysis.
      */
-    bool hasSingletonType() const { return flags & SINGLETON_TYPE; }
+    bool hasSingletonType() const { return !!type_->singleton; }
 
     /*
      * Whether the object's type has not been constructed yet. If an object
      * might have a lazy type, use getType() below, otherwise type().
      */
-    bool hasLazyType() const { return flags & LAZY_TYPE; }
+    bool hasLazyType() const { return type_->lazy(); }
 
     /*
      * Marks this object as having a singleton type, and leave the type lazy.

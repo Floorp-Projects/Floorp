@@ -878,8 +878,11 @@ JSObject::setSingletonType(JSContext *cx)
     JS_ASSERT(!hasLazyType());
     JS_ASSERT_IF(getProto(), type() == getProto()->getNewType(cx, NULL));
 
-    flags |= SINGLETON_TYPE | LAZY_TYPE;
+    js::types::TypeObject *type = cx->compartment->getLazyType(cx, getProto());
+    if (!type)
+        return false;
 
+    type_ = type;
     return true;
 }
 
@@ -914,7 +917,7 @@ JSObject::setType(js::types::TypeObject *newType)
 #endif
     JS_ASSERT_IF(!isNewborn() && hasSpecialEquality(),
                  newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
-    JS_ASSERT(!hasSingletonType());
+    JS_ASSERT_IF(!isNewborn(), !hasSingletonType());
     type_ = newType;
 }
 
@@ -1022,7 +1025,6 @@ JSObject::init(JSContext *cx, js::types::TypeObject *type)
 {
     slots = NULL;
     elements = js::emptyObjectElements;
-    flags = 0;
 
     setType(type);
 }
@@ -1831,7 +1833,6 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
         return NULL;
 
     obj->setType(type);
-    obj->flags = baseobj->flags;
 
     if (!obj->setLastProperty(cx, baseobj->lastProperty()))
         return NULL;

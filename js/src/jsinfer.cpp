@@ -5654,7 +5654,6 @@ JSObject::makeLazyType(JSContext *cx)
 
     if (type->unknownProperties()) {
         type_ = type;
-        flags &= ~LAZY_TYPE;
         return;
     }
 
@@ -5664,7 +5663,6 @@ JSObject::makeLazyType(JSContext *cx)
                 |  OBJECT_FLAG_NON_TYPED_ARRAY;
 
     type_ = type;
-    flags &= ~LAZY_TYPE;
 }
 
 /* static */ inline HashNumber
@@ -5770,6 +5768,34 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun, bool markUnknown)
      */
     if (type->unknownProperties())
         type->flags |= OBJECT_FLAG_SETS_MARKED_UNKNOWN;
+
+    return type;
+}
+
+TypeObject *
+JSCompartment::getLazyType(JSContext *cx, JSObject *proto)
+{
+    JSCompartment::NewTypeObjectSet &table = cx->compartment->lazyTypeObjects;
+
+    if (!table.initialized() && !table.init())
+        return NULL;
+
+    JSCompartment::NewTypeObjectSet::AddPtr p = table.lookupForAdd(proto);
+    if (p) {
+        TypeObject *type = *p;
+        JS_ASSERT(type->lazy());
+        return type;
+    }
+
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
+                                                            JSProto_Object, proto, false);
+    if (!type)
+        return NULL;
+
+    if (!table.relookupOrAdd(p, proto, type))
+        return NULL;
+
+    type->singleton = (JSObject *) TypeObject::LAZY_SINGLETON;
 
     return type;
 }
@@ -6029,10 +6055,10 @@ TypeCompartment::sweep(JSContext *cx)
 }
 
 void
-JSCompartment::sweepNewTypeObjectTable(JSContext *cx)
+JSCompartment::sweepNewTypeObjectTable(JSContext *cx, NewTypeObjectSet &table)
 {
-    if (newTypeObjects.initialized()) {
-        for (NewTypeObjectSet::Enum e(newTypeObjects); !e.empty(); e.popFront()) {
+    if (table.initialized()) {
+        for (NewTypeObjectSet::Enum e(table); !e.empty(); e.popFront()) {
             TypeObject *type = e.front();
             if (!type->isMarked())
                 e.removeFront();
