@@ -737,7 +737,7 @@ XRE_SendTestShellCommand(JSContext* aCx,
     NS_ENSURE_TRUE(tsp, false);
 
     nsDependentJSString command;
-    NS_ENSURE_TRUE(command.init(aCx, aCommand), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(command.init(aCx, aCommand), false);
 
     if (!aCallback) {
         return tsp->SendExecuteCommand(command);

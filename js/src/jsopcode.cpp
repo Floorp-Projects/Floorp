@@ -67,7 +67,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jsstaticcheck.h"
 
 #include "vm/Debugger.h"
 

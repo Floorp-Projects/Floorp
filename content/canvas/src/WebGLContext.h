@@ -63,6 +63,24 @@
 
 #include "CheckedInt.h"
 
+/* 
+ * Minimum value constants defined in 6.2 State Tables of OpenGL ES - 2.0.25
+ *   https://bugzilla.mozilla.org/show_bug.cgi?id=686732
+ * 
+ * Exceptions: some of the following values are set to higher values than in the spec because
+ * the values in the spec are ridiculously low. They are explicitly marked below
+*/
+#define MINVALUE_GL_MAX_TEXTURE_SIZE                  1024  // Different from the spec, which sets it to 64 on page 162
+#define MINVALUE_GL_MAX_CUBE_MAP_TEXTURE_SIZE         512   // Different from the spec, which sets it to 16 on page 162
+#define MINVALUE_GL_MAX_VERTEX_ATTRIBS                8     // Page 164
+#define MINVALUE_GL_MAX_FRAGMENT_UNIFORM_VECTORS      16    // Page 164
+#define MINVALUE_GL_MAX_VERTEX_UNIFORM_VECTORS        128   // Page 164
+#define MINVALUE_GL_MAX_VARYING_VECTORS               8     // Page 164
+#define MINVALUE_GL_MAX_TEXTURE_IMAGE_UNITS           8     // Page 164
+#define MINVALUE_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS    0     // Page 164
+#define MINVALUE_GL_MAX_RENDERBUFFER_SIZE             1024  // Different from the spec, which sets it to 1 on page 164
+#define MINVALUE_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS  8     // Page 164
+
 class nsIDocShell;
 class nsIPropertyBag;
 
@@ -415,6 +433,10 @@ public:
         GLenum currentGLError;
         UpdateWebGLErrorAndClearGLError(&currentGLError);
     }
+    
+    bool MinCapabilityMode() const {
+        return mMinCapability;
+    }
 
 protected:
     void SetDontKnowIfNeedFakeBlack() {
@@ -456,6 +478,8 @@ protected:
     bool mResetLayer;
     bool mVerbose;
     bool mOptionsFrozen;
+    bool mMinCapability;
+    bool mDisableExtensions;
 
     WebGLuint mActiveTexture;
     WebGLenum mWebGLError;
@@ -2086,10 +2110,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLExtension, WEBGLACTIVEINFO_PRIVATE_IID)
  ** Template implementations
  **/
 
-/* Helper function taking a BaseInterfaceType pointer and check that
- * it matches the required concrete implementation type (if it's
- * non-null), that it's not null/deleted unless we allowed it to, and
- * obtain a pointer to the concrete object.
+/* Helper function taking a BaseInterfaceType pointer, casting it to
+ * ConcreteObjectType and performing some checks along the way.
  *
  * By default, null (respectively: deleted) aInterface pointers are
  * not allowed, but if you pass a non-null isNull (respectively:
@@ -2127,12 +2149,18 @@ WebGLContext::GetConcreteObject(const char *info,
     if (isNull)
         *isNull = PR_FALSE;
 
-    nsresult rv;
-    nsCOMPtr<ConcreteObjectType> tmp(do_QueryInterface(aInterface, &rv));
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-
-    *aConcreteObject = tmp;
+#ifdef DEBUG
+    {
+        // once bug 694114 is implemented, we want to replace this by a static assertion, without #ifdef DEBUG
+        nsresult rv;
+        do_QueryInterface(aInterface, &rv);
+        NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
+                          "QueryInterface failed. WebGL objects are builtinclass, so this should never happen. "
+                          "Please file a bug at bugzilla.mozilla.org -> Core -> Canvas:WebGL and link to the present page.");
+    }
+#endif
+    
+    *aConcreteObject = static_cast<ConcreteObjectType*>(aInterface);
 
     if (!(*aConcreteObject)->IsCompatibleWithContext(this)) {
         // the object doesn't belong to this WebGLContext
