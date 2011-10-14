@@ -273,6 +273,18 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
                   tileRegionRect.MoveBy(-currentTileRect.TopLeft());
               }
 
+#ifdef ANDROID
+              // Bug 691354
+              // Using the LINEAR filter we get unexplained artifacts.
+              // Use NEAREST when no scaling is required.
+              gfxMatrix matrix;
+              bool is2D = mLayer->GetEffectiveTransform().Is2D(&matrix);
+              if (is2D && !matrix.HasNonTranslationOrFlip()) {
+                gl()->ApplyFilterToBoundTexture(gfxPattern::FILTER_NEAREST);
+              } else {
+                mTexImage->ApplyFilter();
+              }
+#endif
               program->SetLayerQuadRect(tileScreenRect);
               aManager->BindAndDrawQuadWithTextureRect(program, tileRegionRect,
                                                        tileRect.Size(),
