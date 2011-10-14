@@ -662,5 +662,19 @@ SpecialPowersAPI.prototype = {
                       getService(Components.interfaces.nsIClipboardHelper);
     cbHelperSvc.copyString(preExpectedVal);
   },
+
+  snapshotWindow: function (win, withCaret) {
+    var el = this.window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    el.width = win.innerWidth;
+    el.height = win.innerHeight;
+    var ctx = el.getContext("2d");
+    var flags = 0;
+
+    ctx.drawWindow(win, win.scrollX, win.scrollY,
+                   win.innerWidth, win.innerHeight,
+                   "rgb(255,255,255)",
+                   withCaret ? ctx.DRAWWINDOW_DRAW_CARET : 0);
+    return el;
+  },
 };
 
