@@ -45,9 +45,9 @@
 #include "jscntxt.h"
 #include "jsinfer.h"
 #include "jsscript.h"
-#include "jstl.h"
 
 #include "ds/LifoAlloc.h"
+#include "js/TemplateLib.h"
 
 struct JSScript;
 
@@ -1263,23 +1263,29 @@ class ScriptAnalysis
 };
 
 /* Protect analysis structures from GC while they are being used. */
-struct AutoEnterAnalysis
+class AutoEnterAnalysis
 {
-    JSContext *cx;
+    JSCompartment *compartment;
     bool oldActiveAnalysis;
     bool left;
 
-    AutoEnterAnalysis(JSContext *cx)
-        : cx(cx), oldActiveAnalysis(cx->compartment->activeAnalysis), left(false)
+    void construct(JSCompartment *compartment)
     {
-        cx->compartment->activeAnalysis = true;
+        this->compartment = compartment;
+        oldActiveAnalysis = compartment->activeAnalysis;
+        compartment->activeAnalysis = true;
+        left = false;
     }
+
+  public:
+    AutoEnterAnalysis(JSContext *cx) { construct(cx->compartment); }
+    AutoEnterAnalysis(JSCompartment *compartment) { construct(compartment); }
 
     void leave()
     {
         if (!left) {
             left = true;
-            cx->compartment->activeAnalysis = oldActiveAnalysis;
+            compartment->activeAnalysis = oldActiveAnalysis;
         }
     }
 

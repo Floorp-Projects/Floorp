@@ -46,6 +46,9 @@
 
 JS_BEGIN_EXTERN_C
 
+extern JS_FRIEND_API(void)
+JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
+
 extern JS_FRIEND_API(JSString *)
 JS_GetAnonymousString(JSRuntime *rt);
 
@@ -56,7 +59,7 @@ extern JS_FRIEND_API(JSFunction *)
 JS_GetObjectFunction(JSObject *obj);
 
 extern JS_FRIEND_API(JSObject *)
-JS_GetFrameScopeChainRaw(JSStackFrame *fp);
+JS_GetGlobalForFrame(JSStackFrame *fp);
 
 extern JS_FRIEND_API(JSBool)
 JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto);
@@ -75,6 +78,24 @@ JS_SetProtoCalled(JSContext *cx);
 
 extern JS_FRIEND_API(size_t)
 JS_GetCustomIteratorCount(JSContext *cx);
+
+extern JS_FRIEND_API(JSBool)
+JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret);
+
+enum {
+    JS_TELEMETRY_GC_REASON,
+    JS_TELEMETRY_GC_IS_COMPARTMENTAL,
+    JS_TELEMETRY_GC_IS_SHAPE_REGEN,
+    JS_TELEMETRY_GC_MS,
+    JS_TELEMETRY_GC_MARK_MS,
+    JS_TELEMETRY_GC_SWEEP_MS
+};
+
+typedef void
+(* JSAccumulateTelemetryDataCallback)(int id, JSUint32 sample);
+
+extern JS_FRIEND_API(void)
+JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback);
 
 /* Data for tracking analysis/inference memory usage. */
 typedef struct TypeInferenceMemoryStats

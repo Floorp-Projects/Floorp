@@ -45,19 +45,21 @@
  */
 #include <setjmp.h>
 
+#include "jsalloc.h"
 #include "jstypes.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsdhash.h"
-#include "jsbit.h"
 #include "jsgcchunk.h"
-#include "jshashtable.h"
 #include "jslock.h"
 #include "jsutil.h"
-#include "jsvector.h"
 #include "jsversion.h"
 #include "jsgcstats.h"
 #include "jscell.h"
+
+#include "gc/Statistics.h"
+#include "js/HashTable.h"
+#include "js/Vector.h"
 
 struct JSCompartment;
 
@@ -656,8 +658,8 @@ struct Chunk {
 
     void releaseArena(ArenaHeader *aheader);
 
-    static Chunk *allocate();
-    static inline void release(Chunk *chunk);
+    static Chunk *allocate(JSRuntime *rt);
+    static inline void release(JSRuntime *rt, Chunk *chunk);
 
   private:
     inline void init();
@@ -1265,11 +1267,11 @@ MarkContext(JSTracer *trc, JSContext *acx);
 
 /* Must be called with GC lock taken. */
 extern void
-TriggerGC(JSRuntime *rt);
+TriggerGC(JSRuntime *rt, js::gcstats::Reason reason);
 
 /* Must be called with GC lock taken. */
 extern void
-TriggerCompartmentGC(JSCompartment *comp);
+TriggerCompartmentGC(JSCompartment *comp, js::gcstats::Reason reason);
 
 extern void
 MaybeGC(JSContext *cx);
@@ -1295,7 +1297,7 @@ typedef enum JSGCInvocationKind {
 
 /* Pass NULL for |comp| to get a full GC. */
 extern void
-js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind);
+js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, js::gcstats::Reason r);
 
 #ifdef JS_THREADSAFE
 /*
@@ -1586,9 +1588,18 @@ struct GCMarker : public JSTracer {
         return color;
     }
 
+    /*
+     * The only valid color transition during a GC is from black to gray. It is
+     * wrong to switch the mark color from gray to black. The reason is that the
+     * cycle collector depends on the invariant that there are no black to gray
+     * edges in the GC heap. This invariant lets the CC not trace through black
+     * objects. If this invariant is violated, the cycle collector may free
+     * objects that are still reachable.
+     *
+     * We don't assert this yet, but we should.
+     */
     void setMarkColor(uint32 newColor) {
-        /* We must process the mark stack here, otherwise we confuse colors. */
-        drainMarkStack();
+        //JS_ASSERT(color == BLACK && newColor == GRAY);
         color = newColor;
     }
 
@@ -1604,7 +1615,7 @@ struct GCMarker : public JSTracer {
                largeStack.isEmpty();
     }
 
-    JS_FRIEND_API(void) drainMarkStack();
+    void drainMarkStack();
 
     void pushObject(JSObject *obj) {
         if (!objStack.push(obj))

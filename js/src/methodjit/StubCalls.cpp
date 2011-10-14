@@ -45,7 +45,6 @@
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsxml.h"
-#include "jsstaticcheck.h"
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jsiter.h"
@@ -1430,7 +1429,7 @@ stubs::DefLocalFun_FC(VMFrame &f, JSFunction *fun)
     return obj;
 }
 
-JSObject * JS_FASTCALL
+void JS_FASTCALL
 stubs::RegExp(VMFrame &f, JSObject *regex)
 {
     /*
@@ -1443,12 +1442,12 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
      */
     JSObject *proto;
     if (!js_GetClassPrototype(f.cx, &f.fp()->scopeChain(), JSProto_RegExp, &proto))
-        THROWV(NULL);
+        THROW();
     JS_ASSERT(proto);
     JSObject *obj = js_CloneRegExpObject(f.cx, regex, proto);
     if (!obj)
-        THROWV(NULL);
-    return obj;
+        THROW();
+    f.regs.sp[0].setObject(*obj);
 }
 
 JSObject * JS_FASTCALL

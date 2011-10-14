@@ -19,3 +19,4 @@ skip-if(Android) == clipped-elements.html clipped-elements-ref.html
 == theme-overflow.html theme-overflow-ref.html
 HTTP(..) == table-cell.html table-cell-ref.html
 HTTP(..) == two-value-syntax.html two-value-syntax-ref.html
+HTTP(..) == single-value.html single-value-ref.html 

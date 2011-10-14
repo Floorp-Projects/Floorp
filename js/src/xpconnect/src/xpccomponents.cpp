@@ -3628,11 +3628,10 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     {
         JSAutoRequest req(cx);
 
-        callingScope = JS_GetScopeChain(cx);
+        callingScope = JS_GetGlobalForScopeChain(cx);
         if (!callingScope) {
             return NS_ERROR_FAILURE;
         }
-        callingScope = JS_GetGlobalForObject(cx, callingScope);
     }
 
     nsRefPtr<ContextHolder> sandcx = new ContextHolder(cx, sandbox);
@@ -3861,6 +3860,23 @@ nsXPCComponents_Utils::SchedulePreciseGC(ScheduledGCCallback* aCallback, JSConte
 {
     nsRefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCx, aCallback);
     return NS_DispatchToMainThread(event);
+}
+
+/* [implicit_jscontext] jsval nondeterministicGetWeakMapKeys(in jsval aMap); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const jsval &aMap,
+                                                      JSContext *aCx,
+                                                      jsval *aKeys)
+{
+    if(!JSVAL_IS_OBJECT(aMap)) {
+        *aKeys = JSVAL_VOID;
+        return NS_OK; 
+    }
+    JSObject *objRet;
+    if(!JS_NondeterministicGetWeakMapKeys(aCx, JSVAL_TO_OBJECT(aMap), &objRet))
+        return NS_ERROR_OUT_OF_MEMORY;
+    *aKeys = objRet ? OBJECT_TO_JSVAL(objRet) : JSVAL_VOID;
+    return NS_OK;
 }
 
 /* void getGlobalForObject(); */

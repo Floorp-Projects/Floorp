@@ -52,7 +52,6 @@
 #include "jspropertytree.h"
 #include "jsproxy.h"
 #include "jsscope.h"
-#include "jsstaticcheck.h"
 #include "jstypedarray.h"
 #include "jsxml.h"
 #include "jswrapper.h"
@@ -71,7 +70,6 @@
 #include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
-#include "jsprobes.h"
 #include "jsscopeinlines.h"
 
 inline bool

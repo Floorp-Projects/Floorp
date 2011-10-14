@@ -918,6 +918,9 @@ ListBase<LC>::getPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id, bo
                                      js::Value *vp)
 {
     JSObject *proto = js::GetObjectProto(proxy);
+    if (!proto)
+        return true;
+
     bool hit;
     if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
         if (!shouldCacheProtoShape(cx, proto, &hit))

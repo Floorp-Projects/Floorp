@@ -53,6 +53,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "prsystem.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -259,9 +260,6 @@ ContextCallback(JSContext *cx, uintN operation)
 
 xpc::CompartmentPrivate::~CompartmentPrivate()
 {
-    delete waiverWrapperMap;
-    delete expandoMap;
-    delete domExpandoMap;
     MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
 }
 
@@ -345,7 +343,7 @@ XPCJSRuntime::RemoveJSHolder(void* aHolder)
 }
 
 // static
-void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
+void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
 {
     XPCJSRuntime* self = (XPCJSRuntime*)data;
 
@@ -379,17 +377,15 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
         for(e = self->mObjectHolderRoots; e; e = e->GetNextRoot())
             static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
     }
+}
+
+// static
+void XPCJSRuntime::TraceGrayJS(JSTracer* trc, void* data)
+{
+    XPCJSRuntime* self = (XPCJSRuntime*)data;
 
     // Mark these roots as gray so the CC can walk them later.
-    js::GCMarker *gcmarker = NULL;
-    if (IS_GC_MARKING_TRACER(trc)) {
-        gcmarker = static_cast<js::GCMarker *>(trc);
-        JS_ASSERT(gcmarker->getMarkColor() == XPC_GC_COLOR_BLACK);
-        gcmarker->setMarkColor(XPC_GC_COLOR_GRAY);
-    }
     self->TraceXPConnectRoots(trc);
-    if (gcmarker)
-        gcmarker->setMarkColor(XPC_GC_COLOR_BLACK);
 }
 
 static void
@@ -2019,6 +2015,31 @@ DiagnosticMemoryCallback(void *ptr, size_t size)
 }
 #endif
 
+static void
+AccumulateTelemetryCallback(int id, JSUint32 sample)
+{
+    switch (id) {
+      case JS_TELEMETRY_GC_REASON:
+        Telemetry::Accumulate(Telemetry::GC_REASON, sample);
+        break;
+      case JS_TELEMETRY_GC_IS_COMPARTMENTAL:
+        Telemetry::Accumulate(Telemetry::GC_IS_COMPARTMENTAL, sample);
+        break;
+      case JS_TELEMETRY_GC_IS_SHAPE_REGEN:
+        Telemetry::Accumulate(Telemetry::GC_IS_SHAPE_REGEN, sample);
+        break;
+      case JS_TELEMETRY_GC_MS:
+        Telemetry::Accumulate(Telemetry::GC_MS, sample);
+        break;
+      case JS_TELEMETRY_GC_MARK_MS:
+        Telemetry::Accumulate(Telemetry::GC_MARK_MS, sample);
+        break;
+      case JS_TELEMETRY_GC_SWEEP_MS:
+        Telemetry::Accumulate(Telemetry::GC_SWEEP_MS, sample);
+        break;
+    }
+}
+
 bool XPCJSRuntime::gNewDOMBindingsEnabled;
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
@@ -2078,13 +2099,15 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_SetContextCallback(mJSRuntime, ContextCallback);
         JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
-        JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
+        JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
+        JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
         JS_SetWrapObjectCallbacks(mJSRuntime,
                                   xpc::WrapperFactory::Rewrap,
                                   xpc::WrapperFactory::PrepareForWrapping);
 #ifdef MOZ_CRASHREPORTER
         JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
 #endif
+        JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
         mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
         if (!mWatchdogWakeup)
             NS_RUNTIMEABORT("JS_NEW_CONDVAR failed.");
