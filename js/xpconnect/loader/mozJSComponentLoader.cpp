@@ -1435,8 +1435,7 @@ mozJSComponentLoader::Observe(nsISupports *subject, const char *topic,
 {
     if (!strcmp(topic, "xpcom-shutdown-loaders")) {
         UnloadModules();
-    }
-    else {
+    } else {
         NS_ERROR("Unexpected observer topic.");
     }
 

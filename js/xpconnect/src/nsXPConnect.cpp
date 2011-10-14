@@ -451,8 +451,7 @@ NoteJSRoot(JSTracer *trc, void *thing, JSGCTraceKind kind)
             tracer->mCb.NoteRoot(nsIProgrammingLanguage::JAVASCRIPT, thing,
                                  nsXPConnect::GetXPConnect());
         }
-    }
-    else if (kind != JSTRACE_STRING) {
+    } else if (kind != JSTRACE_STRING) {
         JS_TraceChildren(trc, thing, kind);
     }
 }
@@ -692,8 +691,7 @@ NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
         }
 #endif
         tracer->cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
-    }
-    else if (kind != JSTRACE_STRING) {
+    } else if (kind != JSTRACE_STRING) {
         JS_TraceChildren(trc, thing, kind);
     }
 }
@@ -737,8 +735,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             XPCWrappedNative *wrapper =
                 (XPCWrappedNative*)xpc_GetJSPrivate(obj->getParent());
             dontTraverse = WrapperIsNotMainThreadOnly(wrapper);
-        }
-        else if (IS_WRAPPER_CLASS(clazz) && IS_WN_WRAPPER_OBJECT(obj)) {
+        } else if (IS_WRAPPER_CLASS(clazz) && IS_WN_WRAPPER_OBJECT(obj)) {
             XPCWrappedNative *wrapper = (XPCWrappedNative*)xpc_GetJSPrivate(obj);
             dontTraverse = WrapperIsNotMainThreadOnly(wrapper);
             markJSObject = dontTraverse && wrapper->HasExternalReference();
@@ -763,8 +760,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         PLDHashEntryHdr* entry =
             PL_DHashTableOperate(&mJSRoots, p, PL_DHASH_LOOKUP);
         isMarked = markJSObject || PL_DHASH_ENTRY_IS_BUSY(entry);
-    }
-    else
+    } else
 #endif
     {
         // Normal codepath (matches non-DEBUG_CC codepath).
@@ -783,36 +779,30 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             if (si) {
                 JS_snprintf(name, sizeof(name), "JS Object (%s - %s)",
                             clazz->name, si->GetJSClass()->name);
-            }
-            else if (clazz == &js::ScriptClass) {
+            } else if (clazz == &js::ScriptClass) {
                 JSScript* script = (JSScript*) xpc_GetJSPrivate(obj);
                 if (script->filename) {
                     JS_snprintf(name, sizeof(name),
                                 "JS Object (Script - %s)",
                                 script->filename);
-                }
-                else {
+                } else {
                     JS_snprintf(name, sizeof(name), "JS Object (Script)");
                 }
-            }
-            else if (clazz == &js::FunctionClass) {
+            } else if (clazz == &js::FunctionClass) {
                 JSFunction* fun = (JSFunction*) xpc_GetJSPrivate(obj);
                 JSString* str = JS_GetFunctionId(fun);
                 if (str) {
                     NS_ConvertUTF16toUTF8 fname(JS_GetInternedStringChars(str));
                     JS_snprintf(name, sizeof(name),
                                 "JS Object (Function - %s)", fname.get());
-                }
-                else {
+                } else {
                     JS_snprintf(name, sizeof(name), "JS Object (Function)");
                 }
-            }
-            else {
+            } else {
                 JS_snprintf(name, sizeof(name), "JS Object (%s)",
                             clazz->name);
             }
-        }
-        else {
+        } else {
             static const char trace_types[][11] = {
                 "Object",
                 "String",
@@ -874,8 +864,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
              clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)");
         cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
-    }
-    else if (mozilla::dom::binding::instanceIsProxy(obj)) {
+    } else if (mozilla::dom::binding::instanceIsProxy(obj)) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "js::GetProxyPrivate(obj)");
         nsISupports *identity =
             static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
@@ -1097,8 +1086,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
         }
 
         map.Put(&key, *compartment);
-    }
-    else {
+    } else {
         js::AutoSwitchCompartment sc(cx, *compartment);
 
         JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
@@ -1141,8 +1129,7 @@ xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
         }
 
         map.Put(ptr, *compartment);
-    }
-    else {
+    } else {
         js::AutoSwitchCompartment sc(cx, *compartment);
 
         JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
@@ -1701,8 +1688,7 @@ MoveWrapper(XPCCallContext& ccx, XPCWrappedNative *wrapper,
         NS_ENSURE_SUCCESS(rv, rv);
 
         newParent = parentWrapper->GetFlatJSObject();
-    }
-    else
+    } else
         NS_ASSERTION(betterScope == newScope, "Weird scope returned");
 
     // Now, reparent the wrapper, since we know that it wants to be
@@ -2218,8 +2204,7 @@ nsXPConnect::DebugDump(PRInt16 depth)
                 mRuntime->DebugDump(depth);
             else
                 XPC_LOG_ALWAYS(("XPCJSRuntime @ %x", mRuntime));
-        }
-        else
+        } else
             XPC_LOG_ALWAYS(("mRuntime is null"));
         XPCWrappedNativeScope::DebugDumpAllScopes(depth);
     XPC_LOG_OUTDENT();
@@ -2249,26 +2234,22 @@ nsXPConnect::DebugDumpObject(nsISupports *p, PRInt16 depth)
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnect..."));
         xpc->DebugDump(depth);
         NS_RELEASE(xpc);
-    }
-    else if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPCWrappedJSClass),
-                                            (void**)&wjsc))) {
+    } else if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPCWrappedJSClass),
+                                              (void**)&wjsc))) {
         XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedJSClass..."));
         wjsc->DebugDump(depth);
         NS_RELEASE(wjsc);
-    }
-    else if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedNative),
-                                            (void**)&wn))) {
+    } else if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedNative),
+                                              (void**)&wn))) {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedNative..."));
         wn->DebugDump(depth);
         NS_RELEASE(wn);
-    }
-    else if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedJS),
-                                            (void**)&wjs))) {
+    } else if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedJS),
+                                              (void**)&wjs))) {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedJS..."));
         wjs->DebugDump(depth);
         NS_RELEASE(wjs);
-    }
-    else
+    } else
         XPC_LOG_ALWAYS(("*** Could not dump the nsISupports @ %x", p));
 #endif
     return NS_OK;
@@ -2673,8 +2654,7 @@ nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
                 }
             }
         }
-    }
-    else {
+    } else {
         if (allowShortCircuit) {
             nsIPrincipal *result =
                 GetSlimWrapperProto(obj)->GetScope()->GetPrincipal();
@@ -2946,33 +2926,27 @@ JS_EXPORT_API(void) DumpJSValue(jsval val)
     printf("Dumping 0x%llu.\n", (long long) val.asRawBits());
     if (JSVAL_IS_NULL(val)) {
         printf("Value is null\n");
-    }
-    else if (JSVAL_IS_OBJECT(val) || JSVAL_IS_NULL(val)) {
+    } else if (JSVAL_IS_OBJECT(val) || JSVAL_IS_NULL(val)) {
         printf("Value is an object\n");
         JSObject* obj = JSVAL_TO_OBJECT(val);
         DumpJSObject(obj);
-    }
-    else if (JSVAL_IS_NUMBER(val)) {
+    } else if (JSVAL_IS_NUMBER(val)) {
         printf("Value is a number: ");
         if (JSVAL_IS_INT(val))
           printf("Integer %i\n", JSVAL_TO_INT(val));
         else if (JSVAL_IS_DOUBLE(val))
           printf("Floating-point value %f\n", JSVAL_TO_DOUBLE(val));
-    }
-    else if (JSVAL_IS_STRING(val)) {
+    } else if (JSVAL_IS_STRING(val)) {
         printf("Value is a string: ");
         putc('<', stdout);
         JS_FileEscapedString(stdout, JSVAL_TO_STRING(val), 0);
         fputs(">\n", stdout);
-    }
-    else if (JSVAL_IS_BOOLEAN(val)) {
+    } else if (JSVAL_IS_BOOLEAN(val)) {
         printf("Value is boolean: ");
         printf(JSVAL_TO_BOOLEAN(val) ? "true" : "false");
-    }
-    else if (JSVAL_IS_VOID(val)) {
+    } else if (JSVAL_IS_VOID(val)) {
         printf("Value is undefined\n");
-    }
-    else {
+    } else {
         printf("No idea what this value is.\n");
     }
 }

@@ -241,8 +241,7 @@ ContextCallback(JSContext *cx, uintN operation)
         if (operation == JSCONTEXT_NEW) {
             if (!self->OnJSContextNew(cx))
                 return JS_FALSE;
-        }
-        else if (operation == JSCONTEXT_DESTROY) {
+        } else if (operation == JSCONTEXT_DESTROY) {
             delete XPCContext::GetXPCContext(cx);
         }
     }
@@ -277,8 +276,7 @@ CompartmentCallback(JSContext *cx, JSCompartment *compartment, uintN op)
         }
 #endif
         map.Remove(key);
-    }
-    else {
+    } else {
         nsISupports *ptr = priv->ptr;
         XPCMTCompartmentMap &map = self->GetMTCompartmentMap();
 #ifdef DEBUG
@@ -1489,8 +1487,7 @@ CompartmentStats::CompartmentStats(JSContext *cx, JSCompartment *c)
 
     if (c == cx->runtime->atomsCompartment) {
         name.AssignLiteral("atoms");
-    }
-    else if (c->principals) {
+    } else if (c->principals) {
         if (c->principals->codebase) {
             name.Assign(c->principals->codebase);
 
@@ -1514,12 +1511,10 @@ CompartmentStats::CompartmentStats(JSContext *cx, JSCompartment *c)
             // treated as path separators.  Users of the reporters
             // (such as about:memory) have to undo this change.
             name.ReplaceChar('/', '\\');
-        }
-        else {
+        } else {
             name.AssignLiteral("null-codebase");
         }
-    }
-    else {
+    } else {
         name.AssignLiteral("null-principal");
     }
 }

@@ -924,8 +924,7 @@ public:
             if (mSecurityManager) {
                 if (flags & mSecurityManagerFlags)
                     return mSecurityManager;
-            }
-            else {
+            } else {
                 nsIXPCSecurityManager* mgr;
                 nsXPConnect* xpc = mRuntime->GetXPConnect();
                 mgr = xpc->GetDefaultSecurityManager();
@@ -2260,8 +2259,7 @@ public:
         if (!InitedOffsets()) {
             if (mClassInfoFlags & nsIClassInfo::CONTENT_NODE) {
                 identity->QueryInterface(kThisPtrOffsetsSID, (void**)&mOffsets);
-            }
-            else {
+            } else {
                 mOffsets = nsnull;
             }
         }
@@ -3645,8 +3643,7 @@ public:
 
             if (cx->thread() == sMainJSThread)
                 return sMainThreadData;
-        }
-        else if (sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread()) {
+        } else if (sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread()) {
             return sMainThreadData;
         }
 

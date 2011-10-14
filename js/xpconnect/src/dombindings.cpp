@@ -273,8 +273,7 @@ ListBase<LC>::instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *calle
     if (XPCWrapper::IsSecurityWrapper(obj)) {
         if (callee && js::GetObjectGlobal(obj) == js::GetObjectGlobal(callee)) {
             obj = js::UnwrapObject(obj);
-        }
-        else {
+        } else {
             obj = XPCWrapper::Unwrap(cx, obj);
             if (!obj)
                 return Throw(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
@@ -365,8 +364,7 @@ interface_hasInstance(JSContext *cx, JSObject *obj, const js::Value *vp, JSBool 
             ProxyHandler *handler = static_cast<ProxyHandler*>(js::GetProxyHandler(other));
             if (handler->isInstanceOf(JSVAL_TO_OBJECT(prototype))) {
                 *bp = JS_TRUE;
-            }
-            else {
+            } else {
                 JSObject *protoObj = JSVAL_TO_OBJECT(prototype);
                 JSObject *proto = other;
                 while ((proto = JS_GetPrototype(cx, proto))) {
@@ -411,8 +409,7 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
     if (cache.IsInitialized()) {
         if (cache.Get(sInterfaceClass.name, &interfacePrototype))
             return interfacePrototype;
-    }
-    else if (!cache.Init()) {
+    } else if (!cache.Init()) {
         return NULL;
     }
 
@@ -573,8 +570,7 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
             FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);
             return true;
         }
-    }
-    else {
+    } else {
         if (hasIndexGetter) {
             int32 index = GetArrayIndexFromId(cx, id);
             if (index >= 0) {
@@ -927,8 +923,7 @@ ListBase<LC>::getPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id, bo
             return false;
         if (hit)
             setProtoShape(proxy, js::GetObjectShape(proto));
-    }
-    else {
+    } else {
         hit = true;
     }
 

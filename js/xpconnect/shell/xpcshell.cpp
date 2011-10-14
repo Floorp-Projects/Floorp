@@ -1018,8 +1018,7 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
 
     if (forceTTY) {
         file = stdin;
-    }
-    else
+    } else
 #ifdef HAVE_ISATTY
     if (!isatty(fileno(file)))
 #endif

@@ -565,8 +565,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 return JS_FALSE;
             LL_I2L(*((int64*)d),ti);
 
-        }
-        else {
+        } else {
             if (!JS_ValueToNumber(cx, s, &td))
                 return JS_FALSE;
             LL_D2L(*((int64*)d),td);
@@ -591,8 +590,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             if (!JS_ValueToECMAUint32(cx, s, &tu))
                 return JS_FALSE;
             LL_UI2L(*((int64*)d),tu);
-        }
-        else {
+        } else {
             if (!JS_ValueToNumber(cx, s, &td))
                 return JS_FALSE;
 #ifdef XP_WIN
@@ -711,13 +709,11 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 if (isDOMString) {
                     chars  = VOID_STRING;
                     length = NS_ARRAY_LENGTH(VOID_STRING) - 1;
-                }
-                else {
+                } else {
                     chars = EMPTY_STRING;
                     length = 0;
                 }
-            }
-            else if (!JSVAL_IS_NULL(s)) {
+            } else if (!JSVAL_IS_NULL(s)) {
                 str = JS_ValueToString(cx, s);
                 if (!str)
                     return JS_FALSE;
@@ -729,8 +725,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                         return JS_FALSE;
                     if (STRING_TO_JSVAL(str) != s)
                         isNewString = JS_TRUE;
-                }
-                else {
+                } else {
                     str = nsnull;
                     chars = EMPTY_STRING;
                 }
@@ -750,31 +745,27 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                         return JS_FALSE;
 
                     *((const nsAString**)d) = wrapper;
-                }
-                else if (JSVAL_IS_NULL(s)) {
+                } else if (JSVAL_IS_NULL(s)) {
                     XPCReadableJSStringWrapper *wrapper =
                         new XPCReadableJSStringWrapper();
                     if (!wrapper)
                         return JS_FALSE;
 
                     *((const nsAString**)d) = wrapper;
-                }
-                else {
+                } else {
                     // use nsString to encourage sharing
                     const nsAString *rs = new nsString(chars, length);
                     if (!rs)
                         return JS_FALSE;
                     *((const nsAString**)d) = rs;
                 }
-            }
-            else {
+            } else {
                 nsAString* ws = *((nsAString**)d);
 
                 if (JSVAL_IS_NULL(s) || (!isDOMString && JSVAL_IS_VOID(s))) {
                     ws->Truncate();
                     ws->SetIsVoid(PR_TRUE);
-                }
-                else
+                } else
                     ws->Assign(chars, length);
             }
             return JS_TRUE;
@@ -873,8 +864,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
                     rs->SetIsVoid(PR_TRUE);
                     *((nsACString**)d) = rs;
-                }
-                else {
+                } else {
                     nsCString* rs = *((nsCString**)d);
                     rs->Truncate();
                     rs->SetIsVoid(PR_TRUE);
@@ -899,8 +889,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                     return JS_FALSE;
 
                 *((const nsCString**)d) = rs;
-            }
-            else {
+            } else {
                 rs = *((nsCString**)d);
             }
             const PRUnichar* start = (const PRUnichar*)chars;
@@ -919,8 +908,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
                     rs->SetIsVoid(PR_TRUE);
                     *((nsACString**)d) = rs;
-                }
-                else {
+                } else {
                     nsACString* rs = *((nsACString**)d);
                     rs->Truncate();
                     rs->SetIsVoid(PR_TRUE);
@@ -945,8 +933,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 if (!rs)
                     return JS_FALSE;
                 *((const nsACString**)d) = rs;
-            }
-            else {
+            } else {
                 rs = *((nsACString**)d);
             }
 
@@ -971,9 +958,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                     return JS_FALSE;
                 *((nsISupports**)d) = static_cast<nsIVariant*>(variant);
                 return JS_TRUE;
-            }
-            else if (iid->Equals(NS_GET_IID(nsIAtom)) &&
-                     JSVAL_IS_STRING(s)) {
+            } else if (iid->Equals(NS_GET_IID(nsIAtom)) &&
+                       JSVAL_IS_STRING(s)) {
                 // We're trying to pass a string as an nsIAtom.  Let's atomize!
                 JSString* str = JSVAL_TO_STRING(s);
                 const PRUnichar* chars = JS_GetStringCharsZ(cx, str);
@@ -1116,16 +1102,14 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         if (!dest) {
             if (!flat) {
                 tryConstructSlimWrapper = PR_TRUE;
-            }
-            else if (IS_SLIM_WRAPPER_OBJECT(flat)) {
+            } else if (IS_SLIM_WRAPPER_OBJECT(flat)) {
                 if (js::GetObjectCompartment(flat) == cx->compartment) {
                     *d = OBJECT_TO_JSVAL(flat);
                     return JS_TRUE;
                 }
             }
         }
-    }
-    else {
+    } else {
         flat = nsnull;
     }
 
@@ -1191,8 +1175,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                             getter_AddRefs(strongWrapper));
 
         wrapper = strongWrapper;
-    }
-    else if (IS_WN_WRAPPER_OBJECT(flat)) {
+    } else if (IS_WN_WRAPPER_OBJECT(flat)) {
         wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(flat));
 
         // If asked to return the wrapper we'll return a strong reference,
@@ -1208,8 +1191,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                  &rv);
         else
             rv = NS_OK;
-    }
-    else {
+    } else {
         NS_ASSERTION(IS_SLIM_WRAPPER(flat),
                      "What kind of wrapper is this?");
 
@@ -1270,9 +1252,8 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             }
 
             flat = locationWrapper;
-        }
-        else if (wrapper->NeedsSOW() &&
-                 !xpc::AccessCheck::isChrome(cx->compartment)) {
+        } else if (wrapper->NeedsSOW() &&
+                   !xpc::AccessCheck::isChrome(cx->compartment)) {
             JSObject *sowWrapper = wrapper->GetWrapper();
             if (!sowWrapper) {
                 sowWrapper = xpc::WrapperFactory::WrapSOWObject(cx, flat);
@@ -1285,8 +1266,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             }
 
             flat = sowWrapper;
-        }
-        else {
+        } else {
             flat = JS_ObjectToOuterObject(cx, flat);
             NS_ASSERTION(flat, "bad outer object hook!");
             NS_ASSERTION(js::GetObjectCompartment(flat) == cx->compartment,
@@ -1300,8 +1280,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         // The strongWrapper still holds the original flat object.
         if (flat == original) {
             *dest = strongWrapper.forget().get();
-        }
-        else {
+        } else {
             nsRefPtr<XPCJSObjectHolder> objHolder =
                 XPCJSObjectHolder::newHolder(ccx, flat);
             if (!objHolder)
@@ -1512,15 +1491,13 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
                 NS_ADDREF(temp);
                 *exceptn = temp;
                 return NS_OK;
-            }
-            else {
+            } else {
                 // it is a wrapped native, but not an exception!
                 return ConstructException(NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT,
                                           nsnull, ifaceName, methodName, supports,
                                           exceptn, nsnull, nsnull);
             }
-        }
-        else {
+        } else {
             // It is a JSObject, but not a wrapped native...
 
             // If it is an engine Error with an error report then let's
@@ -1600,8 +1577,7 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
                 isResult = JS_TRUE;
             else
                 number = (double) JSVAL_TO_INT(s);
-        }
-        else {
+        } else {
             number = JSVAL_TO_DOUBLE(s);
             if (number > 0.0 &&
                 number < (double)0xffffffff &&
@@ -1666,11 +1642,9 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
         nsAutoString bestMessage;
         if (report && report->ucmessage) {
             bestMessage = (const PRUnichar *)report->ucmessage;
-        }
-        else if (message) {
+        } else if (message) {
             bestMessage.AssignWithConversion(message);
-        }
-        else {
+        } else {
             bestMessage.AssignLiteral("JavaScript Error");
         }
 
@@ -1695,8 +1669,7 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
                                 formattedMsg.get(), ifaceName, methodName,
                                 static_cast<nsIScriptError*>(data.get()),
                                 exceptn, nsnull, nsnull);
-    }
-    else {
+    } else {
         rv = ConstructException(NS_ERROR_XPC_JAVASCRIPT_ERROR,
                                 nsnull, ifaceName, methodName, nsnull,
                                 exceptn, nsnull, nsnull);
@@ -1927,8 +1900,7 @@ failure:
                 nsISupports* p = a[i];
                 NS_IF_RELEASE(p);
             }
-        }
-        else if (cleanupMode == fr) {
+        } else if (cleanupMode == fr) {
             void** a = (void**) array;
             for (PRUint32 i = 0; i < initedCount; i++) {
                 void* p = a[i];

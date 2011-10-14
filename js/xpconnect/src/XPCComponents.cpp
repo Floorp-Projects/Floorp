@@ -1861,8 +1861,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         case 4:     // argv[3] is object for eData
             if (JSVAL_IS_NULL(argv[3])) {
                 // do nothing, leave eData as null
-            }
-            else {
+            } else {
                 if (JSVAL_IS_PRIMITIVE(argv[3]) ||
                     NS_FAILED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(argv[3]),
                                           NS_GET_IID(nsISupports),
@@ -1873,8 +1872,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         case 3:     // argv[2] is object for eStack
             if (JSVAL_IS_NULL(argv[2])) {
                 // do nothing, leave eStack as null
-            }
-            else {
+            } else {
                 if (JSVAL_IS_PRIMITIVE(argv[2]) ||
                     NS_FAILED(xpc->WrapJS(cx, JSVAL_TO_OBJECT(argv[2]),
                                           NS_GET_IID(nsIStackFrame),
@@ -2453,8 +2451,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
             !(cInterfaceID = do_QueryWrappedNative(wn))) {
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
         }
-    }
-    else {
+    } else {
         nsCOMPtr<nsIInterfaceInfo> info;
         xpc->GetInfoForIID(&NS_GET_IID(nsISupports), getter_AddRefs(info));
 
@@ -4223,8 +4220,7 @@ nsXPCComponents::GetProperty(nsIXPConnectWrappedNative *wrapper,
     if (id == rt->GetStringID(XPCJSRuntime::IDX_LAST_RESULT)) {
         res = xpcc->GetLastResult();
         doResult = JS_TRUE;
-    }
-    else if (id == rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE)) {
+    } else if (id == rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE)) {
         res = xpcc->GetPendingResult();
         doResult = JS_TRUE;
     }

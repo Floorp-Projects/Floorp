@@ -77,8 +77,7 @@ XPCVariant::XPCVariant(XPCCallContext& ccx, jsval aJSVal)
                                                          nsnull,
                                                          &proto);
         mReturnRawObject = !wn && !proto;
-    }
-    else
+    } else
         mReturnRawObject = JS_FALSE;
 }
 
@@ -232,8 +231,7 @@ XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
         else if (JSVAL_IS_VOID(val)) {
             state = tVar;
             break;
-        }
-        else if (JSVAL_IS_NULL(val))
+        } else if (JSVAL_IS_NULL(val))
             type = tNull;
         else if (JSVAL_IS_STRING(val))
             type = tStr;
@@ -685,8 +683,7 @@ VARIANT_DONE:
                                                       (const void*)&xpctvar.val,
                                                       xpctvar.type,
                                                       size, pErr);
-    }
-    else {
+    } else {
         success = XPCConvert::NativeData2JS(lccx, pJSVal,
                                             (const void*)&xpctvar.val,
                                             xpctvar.type,

@@ -78,8 +78,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
         Set      = Key->GetBaseSet();
         Addition = Key->GetAddition();
         Position = Key->GetPosition();
-    }
-    else {
+    } else {
         Set      = (XPCNativeSet*) Key;
         Addition = nsnull;
         Position = 0;
@@ -90,8 +89,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
         // This would be an XOR like below.
         // But "0 ^ x == x". So it does not matter.
         h = (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
-    }
-    else {
+    } else {
         XPCNativeInterface** Current = Set->GetInterfaceArray();
         PRUint16 count = Set->GetInterfaceCount();
         if (Addition) {
@@ -102,8 +100,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
                 else
                     h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
             }
-        }
-        else {
+        } else {
             for (PRUint16 i = 0; i < count; i++)
                 h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
         }
@@ -355,8 +352,7 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
         if (Addition && i == Position) {
             if (Addition != *(CurrentInTable++))
                 return JS_FALSE;
-        }
-        else {
+        } else {
             if (*(Current++) != *(CurrentInTable++))
                 return JS_FALSE;
         }
@@ -653,8 +649,7 @@ WrappedNative2WrapperMap::MoveLink(JSDHashTable* table,
     if (PR_CLIST_IS_EMPTY(&oldEntry->value)) {
         PR_INIT_CLIST(&newEntry->value);
         newEntry->value.obj = oldEntry->value.obj;
-    }
-    else {
+    } else {
         newEntry->value = oldEntry->value;
         newEntry->value.next->prev = &newEntry->value;
         newEntry->value.prev->next = &newEntry->value;
