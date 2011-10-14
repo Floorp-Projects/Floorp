@@ -2092,7 +2092,6 @@ IonBuilder::jsop_getgname(JSAtom *atom)
     current->add(slots);
     MLoadSlot *load = MLoadSlot::New(slots, shape->slot - globalObj->numFixedSlots());
     current->add(load);
-    load->setTypeSet(types);
 
     // Slot loads can be typed, if they have a single, known, definitive type.
     if (knownType != JSVAL_TYPE_UNKNOWN && !barrier)

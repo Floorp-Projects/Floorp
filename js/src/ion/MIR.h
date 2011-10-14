@@ -201,7 +201,6 @@ class MDefinition : public MNode
     uint32 id_;                    // Instruction ID, which after block re-ordering
                                    // is sorted within a basic block.
     uint32 valueNumber_;           // The instruction's value number (see GVN for details in use)
-    types::TypeSet *typeSet_;      // Possible types of values produced by this definition.
     MIRType resultType_;           // Representation of result type.
     uint32 usedTypes_;             // Set of used types.
     uint32 flags_;                 // Bit flags.
@@ -233,7 +232,6 @@ class MDefinition : public MNode
     MDefinition()
       : id_(0),
         valueNumber_(0),
-        typeSet_(NULL),
         resultType_(MIRType_None),
         usedTypes_(0),
         flags_(0)
@@ -285,10 +283,6 @@ class MDefinition : public MNode
 
     MIR_FLAG_LIST(FLAG_ACCESSOR)
 #undef FLAG_ACCESSOR
-
-    types::TypeSet *typeSet() const {
-        return typeSet_;
-    }
 
     MIRType type() const {
         return resultType_;
@@ -373,10 +367,6 @@ class MDefinition : public MNode
     inline MInstruction *toInstruction();
     bool isInstruction() const {
         return !isPhi();
-    }
-
-    void setTypeSet(types::TypeSet *types) {
-        typeSet_ = types;
     }
 
     void setResultType(MIRType type) {
@@ -528,12 +518,14 @@ class MConstant : public MAryInstruction<0>
 class MParameter : public MAryInstruction<0>
 {
     int32 index_;
+    types::TypeSet *typeSet_;
 
   public:
     static const int32 THIS_SLOT = -1;
 
-    MParameter(int32 index)
-      : index_(index)
+    MParameter(int32 index, types::TypeSet *types)
+      : index_(index),
+        typeSet_(types)
     {
         setResultType(MIRType_Value);
     }
@@ -544,6 +536,9 @@ class MParameter : public MAryInstruction<0>
 
     int32 index() const {
         return index_;
+    }
+    types::TypeSet *typeSet() const {
+        return typeSet_;
     }
     void printOpcode(FILE *fp);
 
@@ -1644,13 +1639,14 @@ class MLoadSlot
 class MTypeBarrier : public MUnaryInstruction
 {
     BailoutKind bailoutKind_;
+    types::TypeSet *typeSet_;
 
     MTypeBarrier(MDefinition *def, types::TypeSet *types)
-      : MUnaryInstruction(def)
+      : MUnaryInstruction(def),
+        typeSet_(types)
     {
         setResultType(MIRType_Value);
         setGuard();
-        setTypeSet(types);
         bailoutKind_ = def->isIdempotent()
                        ? Bailout_Normal
                        : Bailout_TypeBarrier;
@@ -1670,6 +1666,9 @@ class MTypeBarrier : public MUnaryInstruction
     }
     BailoutKind bailoutKind() const {
         return bailoutKind_;
+    }
+    types::TypeSet *typeSet() const {
+        return typeSet_;
     }
 };
 
