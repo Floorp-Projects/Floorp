@@ -95,6 +95,7 @@ commonFiles=(
   vp8/decoder/decodframe.c
   vp8/decoder/dequantize.c
   vp8/decoder/detokenize.c
+  vp8/decoder/error_concealment.c
   vp8/decoder/idct_blk.c
   vp8/decoder/onyxd_if.c
   vp8/decoder/reconintra_mt.c
@@ -170,6 +171,8 @@ commonFiles=(
   vp8/decoder/decoderthreading.h
   vp8/decoder/dequantize.h
   vp8/decoder/detokenize.h
+  vp8/decoder/ec_types.h
+  vp8/decoder/error_concealment.h
   vp8/decoder/onyxd_int.h
   vp8/decoder/reconintra_mt.h
   vp8/decoder/treereader.h

@@ -51,3 +51,9 @@
 #include "vpx_config_generic-gnu.h"
 #endif
 
+/* Control error-concealment support using our own #define rather than
+   hard-coding it. */
+#if defined(MOZ_VP8_ERROR_CONCEALMENT)
+#undef CONFIG_ERROR_CONCEALMENT
+#define CONFIG_ERROR_CONCEALMENT 1
+#endif
