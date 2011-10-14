@@ -199,7 +199,6 @@ fails-if(Android&&layersOpenGL) == path-04.svg pass.svg
 == rect-with-rx-and-ry-01.svg pass.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg
-== script-empty-01.svg pass.svg
 == selector-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
 == style-property-not-on-script-element-01.svg pass.svg
