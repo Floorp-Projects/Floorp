@@ -114,7 +114,7 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
     if (JS_GetOptions(mJSContext) & JSOPTION_PRIVATE_IS_NSISUPPORTS) {
         nsCOMPtr<nsIXPCScriptNotify> scriptNotify =
             do_QueryInterface(static_cast<nsISupports*>
-                              (JS_GetContextPrivate(mJSContext)));
+                                         (JS_GetContextPrivate(mJSContext)));
         if (scriptNotify)
             scriptNotify->ScriptExecuted();
     }

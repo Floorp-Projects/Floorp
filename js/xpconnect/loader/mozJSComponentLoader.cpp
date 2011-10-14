@@ -158,10 +158,10 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
         PRUint32 column = rep->uctokenptr - rep->uclinebuf;
 
         rv = errorObject->Init(reinterpret_cast<const PRUnichar*>
-                               (rep->ucmessage),
+                                               (rep->ucmessage),
                                fileUni.get(),
                                reinterpret_cast<const PRUnichar*>
-                               (rep->uclinebuf),
+                                               (rep->uclinebuf),
                                rep->lineno, column, rep->flags,
                                "component javascript");
         if (NS_SUCCEEDED(rv)) {
