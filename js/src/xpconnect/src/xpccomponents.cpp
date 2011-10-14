@@ -3862,6 +3862,23 @@ nsXPCComponents_Utils::SchedulePreciseGC(ScheduledGCCallback* aCallback, JSConte
     return NS_DispatchToMainThread(event);
 }
 
+/* [implicit_jscontext] jsval nondeterministicGetWeakMapKeys(in jsval aMap); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const jsval &aMap,
+                                                      JSContext *aCx,
+                                                      jsval *aKeys)
+{
+    if(!JSVAL_IS_OBJECT(aMap)) {
+        *aKeys = JSVAL_VOID;
+        return NS_OK; 
+    }
+    JSObject *objRet;
+    if(!JS_NondeterministicGetWeakMapKeys(aCx, JSVAL_TO_OBJECT(aMap), &objRet))
+        return NS_ERROR_OUT_OF_MEMORY;
+    *aKeys = objRet ? OBJECT_TO_JSVAL(objRet) : JSVAL_VOID;
+    return NS_OK;
+}
+
 /* void getGlobalForObject(); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetGlobalForObject()

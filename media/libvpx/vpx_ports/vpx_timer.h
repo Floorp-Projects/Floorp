@@ -12,6 +12,8 @@
 #ifndef VPX_TIMER_H
 #define VPX_TIMER_H
 
+#if CONFIG_OS_SUPPORT
+
 #if defined(_WIN32)
 /*
  * Win32 specific includes
@@ -93,5 +95,27 @@ vpx_usec_timer_elapsed(struct vpx_usec_timer *t)
 #endif
 }
 
+#else /* CONFIG_OS_SUPPORT = 0*/
+
+/* Empty timer functions if CONFIG_OS_SUPPORT = 0 */
+#ifndef timersub
+#define timersub(a, b, result)
+#endif
+
+struct vpx_usec_timer
+{
+    void *dummy;
+};
+
+static void
+vpx_usec_timer_start(struct vpx_usec_timer *t) { }
+
+static void
+vpx_usec_timer_mark(struct vpx_usec_timer *t) { }
+
+static long
+vpx_usec_timer_elapsed(struct vpx_usec_timer *t) { return 0; }
+
+#endif /* CONFIG_OS_SUPPORT */
 
 #endif

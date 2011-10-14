@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=688277
+-->
+<window title="Mozilla Bug "
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id="
+     target="_blank">Mozilla Bug 688277</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 688277 **/
+
+  let Cu = Components.utils;
+
+  /* Fail gracefully if junk is passed in. */
+  is(Cu.nondeterministicGetWeakMapKeys(11), undefined,
+    "nondeterministicGetWeakMapKeys should return undefined for non-objects");
+  is(Cu.nondeterministicGetWeakMapKeys({}), undefined,
+    "nondeterministicGetWeakMapKeys should return undefined for non-weakmap objects");
+  is(Cu.nondeterministicGetWeakMapKeys(null), undefined,
+    "nondeterministicGetWeakMapKeys should return undefined for null");
+
+  /* return an empty array for an empty WeakMap */
+  let mempty = WeakMap();
+  is(Cu.nondeterministicGetWeakMapKeys(mempty).length, 0,
+    "nondeterministicGetWeakMapKeys should return empty array for empty weakmap");
+
+  /* Test freeing/nonfreeing. */
+  let m = WeakMap();
+  let liveKeys = new Array();
+
+  let add_elements = function () {
+    let k1 = {};
+    m.set(k1, "live1");
+    liveKeys.push(k1);
+
+    let k2 = {};
+    m.set(k2, "dead1");
+
+    let k = {};
+    m.set(k, k); /* simple cycle */
+  };
+
+  add_elements();
+
+  Cu.schedulePreciseGC(function () {
+    let keys = Cu.nondeterministicGetWeakMapKeys(m);
+    is(liveKeys.length, 1, "Wrong number of live keys.");
+    is(keys.length, 1, "Should have one weak map key.");
+    is(m.get(keys[0]), "live1", "live1 should be live");
+    SimpleTest.finish();
+  });
+
+  SimpleTest.waitForExplicitFinish();
+
+  ]]>
+  </script>
+</window>
