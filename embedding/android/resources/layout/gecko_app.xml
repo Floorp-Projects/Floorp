@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+android:id/mainLayout"
+              android:id="@+id/main_layout"
               style="@style/Screen">
 
     <org.mozilla.gecko.BrowserToolbar android:id="@+id/browser_toolbar"
                                       style="@style/BrowserToolbar"/>
 
-    <RelativeLayout android:id="@+android:id/geckoLayout"
+    <RelativeLayout android:id="@+id/gecko_layout"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:layout_weight="1"/>

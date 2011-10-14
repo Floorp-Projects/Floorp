@@ -93,10 +93,10 @@ public class AlertNotification
         try {
             URL url = new URL(aIconUri.toString());
             Bitmap bm = BitmapFactory.decodeStream(url.openStream());
-            view.setImageViewBitmap(R.id.notificationImage, bm);
-            view.setTextViewText(R.id.notificationTitle, mTitle);
+            view.setImageViewBitmap(R.id.notification_image, bm);
+            view.setTextViewText(R.id.notification_title, mTitle);
             if (mText.length() > 0) {
-                view.setTextViewText(R.id.notificationText, mText);
+                view.setTextViewText(R.id.notification_text, mText);
             }
             contentView = view;
             mNotificationManager.notify(mId, this); 
@@ -111,8 +111,8 @@ public class AlertNotification
             int layout =  aAlertText.length() > 0 ? R.layout.notification_progress_text : R.layout.notification_progress;
 
             RemoteViews view = new RemoteViews(GeckoApp.mAppContext.getPackageName(), layout);
-            view.setImageViewResource(R.id.notificationImage, mIcon);
-            view.setTextViewText(R.id.notificationTitle, mTitle);
+            view.setImageViewResource(R.id.notification_image, mIcon);
+            view.setTextViewText(R.id.notification_title, mTitle);
             contentView = view;
             flags |= FLAG_ONGOING_EVENT | FLAG_ONLY_ALERT_ONCE;
 
@@ -132,8 +132,8 @@ public class AlertNotification
         if (mPrevAlertText.equals(text) && Math.abs(mPrevPercent - percent) < UPDATE_THRESHOLD)
             return;
 
-        contentView.setTextViewText(R.id.notificationText, text);
-        contentView.setProgressBar(R.id.notificationProgressbar, (int)aProgressMax, (int)aProgress, false);
+        contentView.setTextViewText(R.id.notification_text, text);
+        contentView.setProgressBar(R.id.notification_progressbar, (int)aProgressMax, (int)aProgress, false);
 
         // Update the notification
         mNotificationManager.notify(mId, this);

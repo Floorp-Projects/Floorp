@@ -1028,7 +1028,7 @@ abstract public class GeckoApp
         mAppContext = this;
 
         // setup gecko layout
-        mGeckoLayout = (RelativeLayout) findViewById(R.id.geckoLayout);
+        mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mDoorHanger = new DoorHanger(this);
 
         Tab tab = Tabs.getInstance().getSelectedTab();
@@ -1074,7 +1074,7 @@ abstract public class GeckoApp
             });
         }
 
-        mMainLayout = (LinearLayout) findViewById(R.id.mainLayout);
+        mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
         
         //register for events
