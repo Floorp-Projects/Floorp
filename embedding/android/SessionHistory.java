@@ -15,13 +15,11 @@
  * The Original Code is Mozilla Android code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * Portions created by the Initial Developer are Copyright (C) 2009-2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
- *   Matt Brubeck <mbrubeck@mozilla.com>
- *   Vivien Nicolas <vnicolas@mozilla.com>
+ *   Brian Nicholson <bnichnolson@mozilla.com>
  *   Kartikaya Gupta <kgupta@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -42,7 +40,8 @@ package org.mozilla.gecko;
 
 import java.util.Stack;
 
-import android.content.*;
+import android.content.ContentValues;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.util.Log;
