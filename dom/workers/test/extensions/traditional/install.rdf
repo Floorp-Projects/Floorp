@@ -8,7 +8,7 @@
     <em:description>Worker functions for use in testing.</em:description>
     <em:creator>Mozilla</em:creator>
     <em:version>2011.10.10</em:version>
-#expand    <em:id>__XPI_NAME__@tests.mozilla.org</em:id>
+#expand    <em:id>__XPI_NAME__-test@mozilla.org</em:id>
     <em:type>2</em:type>
     <em:targetApplication>
       <Description>
