@@ -269,7 +269,7 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared,
             elif haveCcx:
                 f.write("        xpc_qsThrowBadArgWithCcx(ccx, rv, %d);\n" % i)
             else:
-                f.write("        xpc_qsThrowBadArg(cx, rv, vp, %d);\n" % i)
+                f.write("        xpc_qsThrowBadArgWithDetails(cx, rv, %d, %s, %s);\n" % (i, "\"\"", "\"\""))
             f.write("        return JS_FALSE;\n"
                     "    }\n")
             return True
