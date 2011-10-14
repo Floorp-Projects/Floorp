@@ -243,7 +243,7 @@ struct Token {
             JSOp        op;             /* operator, for minimal parser */
             union {
               private:
-                friend class Token;
+                friend struct Token;
                 PropertyName *name;     /* non-numeric atom */
                 JSAtom       *atom;     /* potentially-numeric atom */
             } n;
@@ -251,7 +251,7 @@ struct Token {
         uintN           reflags;        /* regexp flags, use tokenbuf to access
                                            regexp chars */
         class {                         /* pair for <?target data?> XML PI */
-            friend class Token;
+            friend struct Token;
             JSAtom       *data;         /* auxiliary atom table entry */
             PropertyName *target;       /* main atom table entry */
         } xmlpi;
