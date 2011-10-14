@@ -60,6 +60,7 @@ JAVAFILES = \
   Tab.java \
   Tabs.java \
   GeckoEventListener.java \
+  GeckoPreferences.java \
   PromptService.java \
   SurfaceInfo.java \
   DoorHanger.java \
@@ -157,6 +158,8 @@ RES_VALUES = \
   res/values/themes.xml \
   $(NULL)
 
+RES_XML = res/xml/preferences.xml
+
 AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
@@ -229,10 +232,14 @@ $(RES_VALUES): $(subst res/,$(srcdir)/resources/,$(RES_VALUES))
 	$(NSINSTALL) -D res/values
 	$(NSINSTALL) $^  res/values
 
-R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
+$(RES_XML): $(subst res/,$(srcdir)/resources/,$(RES_XML))
+	$(NSINSTALL) -D res/xml
+	$(NSINSTALL) $(srcdir)/resources/xml/* res/xml/
+
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) $(RES_XML) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH)
