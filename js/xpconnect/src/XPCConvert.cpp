@@ -209,8 +209,8 @@ XPCConvert::RemoveXPCOMUCStringFinalizer()
 }
 
 
-#define FIT_U32(i)     ((i) <= JSVAL_INT_MAX      \
-                        ? INT_TO_JSVAL(i)         \
+#define FIT_U32(i)     ((i) <= JSVAL_INT_MAX                                  \
+                        ? INT_TO_JSVAL(i)                                     \
                         : DOUBLE_TO_JSVAL(i))
 
 /*
@@ -1875,14 +1875,14 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
     jsval current = JSVAL_NULL;
     AUTO_MARK_JSVAL(ccx, &current);
 
-#define POPULATE(_t)                                                         \
-    PR_BEGIN_MACRO                                                           \
-        for(i = 0; i < count; i++)                                           \
-        {                                                                    \
-            if(!NativeData2JS(ccx, &current, ((_t*)*s)+i, type, iid, pErr) ||\
-               !JS_SetElement(cx, array, i, &current))                       \
-                goto failure;                                                \
-        }                                                                    \
+#define POPULATE(_t)                                                          \
+    PR_BEGIN_MACRO                                                            \
+        for(i = 0; i < count; i++)                                            \
+        {                                                                     \
+            if(!NativeData2JS(ccx, &current, ((_t*)*s)+i, type, iid, pErr) || \
+               !JS_SetElement(cx, array, i, &current))                        \
+                goto failure;                                                 \
+        }                                                                     \
     PR_END_MACRO
 
     // XXX check IsPtr - esp. to handle array of nsID (as opposed to nsID*)
@@ -1994,24 +1994,24 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
     if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
 
-#define POPULATE(_mode, _t)                                                  \
-    PR_BEGIN_MACRO                                                           \
-        cleanupMode = _mode;                                                 \
-        size_t max = PR_UINT32_MAX / sizeof(_t);                             \
-        if (capacity > max ||                                                \
-            nsnull == (array = nsMemory::Alloc(capacity * sizeof(_t))))      \
-        {                                                                    \
-            if(pErr)                                                         \
-                *pErr = NS_ERROR_OUT_OF_MEMORY;                              \
-            goto failure;                                                    \
-        }                                                                    \
-        for(initedCount = 0; initedCount < count; initedCount++)             \
-        {                                                                    \
-            if(!JS_GetElement(cx, jsarray, initedCount, &current) ||         \
-               !JSData2Native(ccx, ((_t*)array)+initedCount, current, type,  \
-                              JS_TRUE, iid, pErr))                           \
-                goto failure;                                                \
-        }                                                                    \
+#define POPULATE(_mode, _t)                                                   \
+    PR_BEGIN_MACRO                                                            \
+        cleanupMode = _mode;                                                  \
+        size_t max = PR_UINT32_MAX / sizeof(_t);                              \
+        if (capacity > max ||                                                 \
+            nsnull == (array = nsMemory::Alloc(capacity * sizeof(_t))))       \
+        {                                                                     \
+            if(pErr)                                                          \
+                *pErr = NS_ERROR_OUT_OF_MEMORY;                               \
+            goto failure;                                                     \
+        }                                                                     \
+        for(initedCount = 0; initedCount < count; initedCount++)              \
+        {                                                                     \
+            if(!JS_GetElement(cx, jsarray, initedCount, &current) ||          \
+               !JSData2Native(ccx, ((_t*)array)+initedCount, current, type,   \
+                              JS_TRUE, iid, pErr))                            \
+                goto failure;                                                 \
+        }                                                                     \
     PR_END_MACRO
 
 

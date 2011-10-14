@@ -286,8 +286,8 @@ NS_METHOD GetSharedScriptableHelperForJSIID(PRUint32 language,
 
 static JSBool gClassObjectsWereInited = JS_FALSE;
 
-#define NULL_CID \
-{ 0x00000000, 0x0000, 0x0000, \
+#define NULL_CID                                                              \
+{ 0x00000000, 0x0000, 0x0000,                                                 \
   { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }
 
 NS_DECL_CI_INTERFACE_GETTER(nsJSIID)

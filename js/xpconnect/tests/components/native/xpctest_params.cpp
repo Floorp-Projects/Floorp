@@ -46,16 +46,16 @@ nsXPCTestParams::~nsXPCTestParams()
 {
 }
 
-#define GENERIC_METHOD_IMPL { \
-    *_retval = *b; \
-    *b = a; \
-    return NS_OK; \
+#define GENERIC_METHOD_IMPL {                                                 \
+    *_retval = *b;                                                            \
+    *b = a;                                                                   \
+    return NS_OK;                                                             \
 }
 
-#define STRING_METHOD_IMPL { \
-    _retval.Assign(b); \
-    b.Assign(a); \
-    return NS_OK; \
+#define STRING_METHOD_IMPL {                                                  \
+    _retval.Assign(b);                                                        \
+    b.Assign(a);                                                              \
+    return NS_OK;                                                             \
 }
 
 /* boolean testBoolean (in boolean a, inout boolean b); */

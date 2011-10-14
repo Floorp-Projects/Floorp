@@ -519,8 +519,8 @@ NS_IMETHODIMP xpcProperty::GetValue(nsIVariant * *aValue)
 // used for anything else (hence it is declared in this implementation file).
 
 // {5C5C3BB0-A9BA-11d2-BA64-00805F8A5DD7}
-#define NS_IXPCONNECT_WRAPPED_JS_IDENTITY_CLASS_IID \
-{ 0x5c5c3bb0, 0xa9ba, 0x11d2,                       \
+#define NS_IXPCONNECT_WRAPPED_JS_IDENTITY_CLASS_IID                           \
+{ 0x5c5c3bb0, 0xa9ba, 0x11d2,                                                 \
   { 0xba, 0x64, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
 
 class WrappedJSIdentity

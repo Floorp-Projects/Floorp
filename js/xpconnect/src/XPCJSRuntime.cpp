@@ -2294,8 +2294,8 @@ XPCJSRuntime::DebugDump(PRInt16 depth)
             XPC_LOG_OUTDENT();
         }
 
-        XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %x with %d wrapperclasses(s)", \
-                         mWrappedJSClassMap, mWrappedJSClassMap ? \
+        XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %x with %d wrapperclasses(s)",  \
+                         mWrappedJSClassMap, mWrappedJSClassMap ?             \
                                             mWrappedJSClassMap->Count() : 0));
         // iterate wrappersclasses...
         if(depth && mWrappedJSClassMap && mWrappedJSClassMap->Count())
@@ -2304,8 +2304,8 @@ XPCJSRuntime::DebugDump(PRInt16 depth)
             mWrappedJSClassMap->Enumerate(WrappedJSClassMapDumpEnumerator, &depth);
             XPC_LOG_OUTDENT();
         }
-        XPC_LOG_ALWAYS(("mWrappedJSMap @ %x with %d wrappers(s)", \
-                         mWrappedJSMap, mWrappedJSMap ? \
+        XPC_LOG_ALWAYS(("mWrappedJSMap @ %x with %d wrappers(s)",             \
+                         mWrappedJSMap, mWrappedJSMap ?                       \
                                             mWrappedJSMap->Count() : 0));
         // iterate wrappers...
         if(depth && mWrappedJSMap && mWrappedJSMap->Count())
@@ -2315,20 +2315,20 @@ XPCJSRuntime::DebugDump(PRInt16 depth)
             XPC_LOG_OUTDENT();
         }
 
-        XPC_LOG_ALWAYS(("mIID2NativeInterfaceMap @ %x with %d interface(s)", \
-                         mIID2NativeInterfaceMap, mIID2NativeInterfaceMap ? \
+        XPC_LOG_ALWAYS(("mIID2NativeInterfaceMap @ %x with %d interface(s)",  \
+                         mIID2NativeInterfaceMap, mIID2NativeInterfaceMap ?   \
                                     mIID2NativeInterfaceMap->Count() : 0));
 
-        XPC_LOG_ALWAYS(("mClassInfo2NativeSetMap @ %x with %d sets(s)", \
-                         mClassInfo2NativeSetMap, mClassInfo2NativeSetMap ? \
+        XPC_LOG_ALWAYS(("mClassInfo2NativeSetMap @ %x with %d sets(s)",       \
+                         mClassInfo2NativeSetMap, mClassInfo2NativeSetMap ?   \
                                     mClassInfo2NativeSetMap->Count() : 0));
 
-        XPC_LOG_ALWAYS(("mThisTranslatorMap @ %x with %d translator(s)", \
-                         mThisTranslatorMap, mThisTranslatorMap ? \
+        XPC_LOG_ALWAYS(("mThisTranslatorMap @ %x with %d translator(s)",      \
+                         mThisTranslatorMap, mThisTranslatorMap ?             \
                                     mThisTranslatorMap->Count() : 0));
 
-        XPC_LOG_ALWAYS(("mNativeSetMap @ %x with %d sets(s)", \
-                         mNativeSetMap, mNativeSetMap ? \
+        XPC_LOG_ALWAYS(("mNativeSetMap @ %x with %d sets(s)",                 \
+                         mNativeSetMap, mNativeSetMap ?                       \
                                     mNativeSetMap->Count() : 0));
 
         // iterate sets...
