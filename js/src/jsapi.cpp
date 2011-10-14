@@ -5961,16 +5961,9 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, s
 {
     CHECK_REQUEST(cx);
 
-    RegExpPrivate *rep = reobj->asRegExp()->getPrivate();
-    if (!rep)
-        return false;
-
-    JSString *str = js_NewStringCopyN(cx, chars, length);
-    if (!str)
-        return false;
-
     RegExpStatics *res = obj->asGlobal()->getRegExpStatics();
-    return rep->execute(cx, res, str, indexp, test, rval);
+    return ExecuteRegExp(cx, res, reobj->asRegExp(), NULL, chars, length,
+                         indexp, test ? RegExpTest : RegExpExec, rval);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -5998,15 +5991,8 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *obj, jschar *chars, size_t le
 {
     CHECK_REQUEST(cx);
 
-    RegExpPrivate *rep = obj->asRegExp()->getPrivate();
-    if (!rep)
-        return false;
-
-    JSString *str = js_NewStringCopyN(cx, chars, length);
-    if (!str)
-        return false;
-
-    return rep->executeNoStatics(cx, str, indexp, test, rval);
+    return ExecuteRegExp(cx, NULL, obj->asRegExp(), NULL, chars, length, indexp,
+                         test ? RegExpTest : RegExpExec, rval);
 }
 
 JS_PUBLIC_API(JSBool)

@@ -1353,7 +1353,15 @@ public:
          * quality. This may involve disabling ligatures and/or kerning or
          * other effects.
          */
-        TEXT_OPTIMIZE_SPEED          = 0x0100
+        TEXT_OPTIMIZE_SPEED          = 0x0100,
+        /**
+         * For internal use by the memory reporter when accounting for
+         * storage used by textruns.
+         * Because the reporter may visit each textrun multiple times while
+         * walking the frame trees and textrun cache, it needs to mark
+         * textruns that have been seen so as to avoid multiple-accounting.
+         */
+        TEXT_RUN_SIZE_ACCOUNTED      = 0x0200
     };
 
     /**
@@ -2038,6 +2046,21 @@ public:
     // user font set generation when text run was created
     PRUint64 GetUserFontSetGeneration() { return mUserFontSetGeneration; }
 
+    // return storage used by this run, for memory reporter;
+    // nsTransformedTextRun needs to override this as it holds additional data
+    virtual PRUint64 ComputeSize();
+
+    void AccountForSize(PRUint64* aTotal)  {
+        if (mFlags & gfxTextRunFactory::TEXT_RUN_SIZE_ACCOUNTED) {
+            return;
+        }
+        mFlags |= gfxTextRunFactory::TEXT_RUN_SIZE_ACCOUNTED;
+        *aTotal += ComputeSize();
+    }
+    void ClearSizeAccounted() {
+        mFlags &= ~gfxTextRunFactory::TEXT_RUN_SIZE_ACCOUNTED;
+    }
+
 #ifdef DEBUG
     // number of entries referencing this textrun in the gfxTextRunWordCache
     PRUint32 mCachedWords;
@@ -2206,6 +2229,11 @@ private:
                 }
             }
             return details;
+        }
+
+        PRUint32 SizeOf() {
+            return sizeof(DetailedGlyphStore) +
+                mDetails.SizeOf() + mOffsetToIndex.SizeOf();
         }
 
     private:
