@@ -1206,21 +1206,12 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
 
             loadPayload(address, reg);
 
-            Jump notSingleton = branchTest32(Assembler::Zero,
-                                             Address(reg, offsetof(JSObject, flags)),
-                                             Imm32(JSObject::SINGLETON_TYPE));
-
             for (unsigned i = 0; i < count; i++) {
                 if (JSObject *object = types->getSingleObject(i)) {
                     if (!matches.append(branchPtr(Assembler::Equal, reg, ImmPtr(object))))
                         return false;
                 }
             }
-
-            if (!mismatches->append(jump()))
-                return false;
-
-            notSingleton.linkTo(label(), this);
 
             loadPtr(Address(reg, JSObject::offsetOfType()), reg);
 
@@ -1305,7 +1296,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
 
         storePtr(ImmPtr(templateObject->lastProperty()), Address(result, JSObject::offsetOfShape()));
         storePtr(ImmPtr(templateObject->type()), Address(result, JSObject::offsetOfType()));
-        store32(Imm32(templateObject->flags), Address(result, offsetof(JSObject, flags)));
         storePtr(ImmPtr(NULL), Address(result, JSObject::offsetOfSlots()));
 
         if (templateObject->isDenseArray()) {

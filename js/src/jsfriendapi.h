@@ -194,10 +194,8 @@ struct Shape {
 struct Object {
     Shape       *shape;
     TypeObject  *type;
-    uint32      _1;
-    uint32      _2;
     js::Value   *slots;
-    js::Value   *_3;
+    js::Value   *_1;
 
     size_t numFixedSlots() const { return shape->slotInfo >> Shape::FIXED_SLOTS_SHIFT; }
     Value *fixedSlots() const {

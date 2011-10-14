@@ -502,7 +502,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     /* Remove dead references held weakly by the compartment. */
 
     sweepBaseShapeTable(cx);
-    sweepNewTypeObjectTable(cx);
+    sweepNewTypeObjectTable(cx, newTypeObjects);
+    sweepNewTypeObjectTable(cx, lazyTypeObjects);
 
     if (emptyTypeObject && IsAboutToBeFinalized(cx, emptyTypeObject))
         emptyTypeObject = NULL;

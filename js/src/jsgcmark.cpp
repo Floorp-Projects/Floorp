@@ -236,7 +236,7 @@ MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name)
      * members, and we don't need to handle them here.
      */
     if (IS_GC_MARKING_TRACER(trc)) {
-        if (type->singleton)
+        if (type->singleton && !type->lazy())
             MarkObject(trc, *type->singleton, "type_singleton");
     }
 }
@@ -950,7 +950,7 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
     if (type->proto)
         MarkObject(trc, *type->proto, "type_proto");
 
-    if (type->singleton)
+    if (type->singleton && !type->lazy())
         MarkObject(trc, *type->singleton, "type_singleton");
 
     if (type->newScript) {
