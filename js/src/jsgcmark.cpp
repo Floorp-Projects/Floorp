@@ -900,9 +900,10 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
     }
 
     if (type->emptyShapes) {
-        for (size_t i = 0; i < TYPE_OBJECT_EMPTY_SHAPE_COUNT; i++) {
-            if (type->emptyShapes[i])
-                PushMarkStack(gcmarker, type->emptyShapes[i]);
+        for (unsigned i = 0; i < ShapeKindArray::SHAPE_COUNT; i++) {
+            Shape *shape = type->emptyShapes->getIndex(i);
+            if (shape)
+                PushMarkStack(gcmarker, shape);
         }
     }
 
@@ -939,9 +940,10 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
     }
 
     if (type->emptyShapes) {
-        for (size_t i = 0; i < TYPE_OBJECT_EMPTY_SHAPE_COUNT; i++) {
-            if (type->emptyShapes[i])
-                MarkShape(trc, type->emptyShapes[i], "empty_shape");
+        for (unsigned i = 0; i < ShapeKindArray::SHAPE_COUNT; i++) {
+            Shape *shape = type->emptyShapes->getIndex(i);
+            if (shape)
+                MarkShape(trc, shape, "empty_shape");
         }
     }
 

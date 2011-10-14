@@ -48,6 +48,7 @@
 #include "jsregexp.h"
 #include "jsscript.h"
 #include "jsscope.h"
+#include "vm/CallObject.h"
 #include "vm/GlobalObject.h"
 
 #include "jsscopeinlines.h"
@@ -93,7 +94,11 @@ bool
 Bindings::ensureShape(JSContext *cx)
 {
     if (!lastBinding) {
-        lastBinding = BaseShape::lookupInitialShape(cx, &CallClass, NULL);
+        /* Get an allocation kind to match an empty call object. */
+        gc::AllocKind kind = gc::FINALIZE_OBJECT4;
+        JS_ASSERT(gc::GetGCKindSlots(kind) == CallObject::RESERVED_SLOTS + 1);
+
+        lastBinding = BaseShape::lookupInitialShape(cx, &CallClass, NULL, kind);
         if (!lastBinding)
             return false;
     }

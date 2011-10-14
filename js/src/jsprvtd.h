@@ -199,6 +199,7 @@ class BaseShape;
 class UnownedBaseShape;
 struct Shape;
 struct EmptyShape;
+class ShapeKindArray;
 class Bindings;
 
 class MultiDeclRange;

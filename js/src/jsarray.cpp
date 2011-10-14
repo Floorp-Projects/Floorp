@@ -282,7 +282,7 @@ JSObject::willBeSparseDenseArray(uintN requiredCapacity, uintN newElementsHint)
     uintN cap = getDenseArrayCapacity();
     JS_ASSERT(requiredCapacity >= cap);
 
-    if (requiredCapacity >= JSObject::NSLOTS_LIMIT)
+    if (requiredCapacity >= JSObject::NELEMENTS_LIMIT)
         return true;
 
     uintN minimalDenseCount = requiredCapacity / 4;
@@ -3491,6 +3491,7 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
     if (!obj)
         return NULL;
 
+    obj->initDenseArray();
     obj->setArrayLength(cx, length);
 
     if (allocateCapacity && !obj->ensureElements(cx, length))

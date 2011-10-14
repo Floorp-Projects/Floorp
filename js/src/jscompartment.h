@@ -489,7 +489,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     struct BaseShapeEntry {
         js::UnownedBaseShape *base;
-        js::Shape *shape;
+        js::ShapeKindArray *shapes;
 
         typedef const js::BaseShape *Lookup;
 

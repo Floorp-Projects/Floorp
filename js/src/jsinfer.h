@@ -719,7 +719,7 @@ struct TypeObject : gc::Cell
     JSObject *singleton;
 
     /* Lazily filled array of empty shapes for each size of objects with this type. */
-    js::EmptyShape **emptyShapes;
+    js::ShapeKindArray *emptyShapes;
 
     /* Flags for this object. */
     TypeObjectFlags flags;

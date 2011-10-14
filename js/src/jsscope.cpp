@@ -313,6 +313,30 @@ Shape::getChildBinding(JSContext *cx, const js::Shape &child, Shape **lastBindin
         JS_ASSERT(shape->parent == this);
         JS_ASSERT(this == *lastBinding);
         *lastBinding = shape;
+
+        /*
+         * Update the number of fixed slots which bindings of this shape will
+         * have. Bindings are constructed as new properties come in, so the
+         * call object allocation class is not known ahead of time. Compute
+         * the fixed slot count here, which will feed into call objects created
+         * off of the bindings.
+         */
+        uint32 slots = child.slotSpan() + 1;  /* Add one for private data. */
+        gc::AllocKind kind = gc::GetGCObjectKind(slots);
+
+        /*
+         * Make sure that the arguments and variables in the call object all
+         * end up in a contiguous range of slots. We need this to be able to
+         * embed the args/vars arrays in the TypeScriptNesting for the function
+         * after the call object's frame has finished.
+         */
+        uint32 nfixed = gc::GetGCKindSlots(kind);
+        if (nfixed < slots) {
+            nfixed = CallObject::RESERVED_SLOTS + 1;
+            JS_ASSERT(gc::GetGCKindSlots(gc::GetGCObjectKind(nfixed)) == CallObject::RESERVED_SLOTS + 1);
+        }
+
+        shape->setNumFixedSlots(nfixed - 1);
     }
     return shape;
 }
@@ -355,13 +379,13 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, Shape &child)
      * JS_ClearScope call.
      */
     if (!child.hasSlot()) {
-        child.slot_ = parent->maybeSlot();
+        child.setSlot(parent->maybeSlot());
     } else {
         if (child.hasMissingSlot()) {
             uint32 slot;
             if (!allocSlot(cx, &slot))
                 return NULL;
-            child.slot_ = slot;
+            child.setSlot(slot);
         } else {
             /* Slots can only be allocated out of order on objects in dictionary mode. */
             JS_ASSERT(inDictionaryMode() ||
@@ -625,7 +649,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
         if (!nbase)
             return NULL;
 
-        Shape child(nbase, id, slot, attrs, flags, shortid);
+        Shape child(nbase, id, slot, numFixedSlots(), attrs, flags, shortid);
         shape = getChildProperty(cx, lastProperty(), child);
     }
 
@@ -773,7 +797,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
         else
             shape->base_ = nbase;
 
-        shape->slot_ = slot;
+        shape->setSlot(slot);
         shape->attrs = uint8(attrs);
         shape->flags = flags | Shape::IN_DICTIONARY;
         shape->shortid_ = int16(shortid);
@@ -803,7 +827,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
         JS_ASSERT(shape == lastProperty());
 
         /* Find or create a property tree node labeled by our arguments. */
-        Shape child(nbase, id, slot, attrs, flags, shortid);
+        Shape child(nbase, id, slot, numFixedSlots(), attrs, flags, shortid);
         Shape *newShape = getChildProperty(cx, shape->parent, child);
 
         if (!newShape) {
@@ -1178,7 +1202,7 @@ LookupBaseShape(JSContext *cx, const BaseShape &base)
 
     JSCompartment::BaseShapeEntry entry;
     entry.base = static_cast<UnownedBaseShape *>(nbase);
-    entry.shape = NULL;
+    entry.shapes = NULL;
 
     if (!table.relookupOrAdd(p, &base, entry))
         return NULL;
@@ -1194,32 +1218,41 @@ BaseShape::lookup(JSContext *cx, const BaseShape &base)
 }
 
 /* static */ Shape *
-BaseShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *parent, Shape *initial)
+BaseShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *parent,
+                              AllocKind kind, Shape *initial)
 {
     js::BaseShape base(clasp, parent);
     JSCompartment::BaseShapeEntry *entry = LookupBaseShape(cx, base);
     if (!entry)
         return NULL;
-    if (entry->shape)
-        return entry->shape;
-
-    if (initial) {
-        entry->shape = initial;
-        return entry->shape;
+    if (!entry->shapes) {
+        entry->shapes = cx->new_<ShapeKindArray>();
+        if (!entry->shapes)
+            return NULL;
     }
 
-    entry->shape = JS_PROPERTY_TREE(cx).newShape(cx);
-    if (!entry->shape)
+    Shape *&shape = entry->shapes->get(kind);
+
+    if (shape)
+        return shape;
+
+    if (initial) {
+        shape = initial;
+        return initial;
+    }
+
+    shape = JS_PROPERTY_TREE(cx).newShape(cx);
+    if (!shape)
         return NULL;
-    return new (entry->shape) EmptyShape(entry->base);
+    return new (shape) EmptyShape(entry->base, gc::GetGCKindSlots(kind, clasp));
 }
 
 /* static */ void
-BaseShape::insertInitialShape(JSContext *cx, const Shape *initial)
+BaseShape::insertInitialShape(JSContext *cx, AllocKind kind, const Shape *initial)
 {
     JSCompartment::BaseShapeEntry *entry = LookupBaseShape(cx, *initial->base());
-    JS_ASSERT(entry && entry->base == initial->base());
-    entry->shape = const_cast<Shape *>(initial);
+    JS_ASSERT(entry && entry->base == initial->base() && entry->shapes);
+    entry->shapes->get(kind) = const_cast<Shape *>(initial);
 }
 
 void
@@ -1229,10 +1262,17 @@ JSCompartment::sweepBaseShapeTable(JSContext *cx)
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
             JSCompartment::BaseShapeEntry &entry =
                 const_cast<JSCompartment::BaseShapeEntry &>(e.front());
-            if (!entry.base->isMarked())
+            if (!entry.base->isMarked()) {
+                if (entry.shapes)
+                    cx->delete_(entry.shapes);
                 e.removeFront();
-            else if (entry.shape && !entry.shape->isMarked())
-                entry.shape = NULL;
+            } else if (entry.shapes) {
+                for (size_t i = 0; i < ShapeKindArray::SHAPE_COUNT; i++) {
+                    Shape *&shape = entry.shapes->getIndex(i);
+                    if (shape && !shape->isMarked())
+                        shape = NULL;
+                }
+            }
         }
     }
 }

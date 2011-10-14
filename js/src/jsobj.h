@@ -535,25 +535,15 @@ struct JSObject : js::gc::Cell
         SINGLETON_TYPE            =    0x10000,
         LAZY_TYPE                 =    0x20000,
 
-        /* The top 5 bits of an object's flags are its number of fixed slots. */
-        FIXED_SLOTS_SHIFT         =         27,
-        FIXED_SLOTS_MASK          =       0x1f << FIXED_SLOTS_SHIFT,
-
         UNUSED_FLAG_BITS          = 0x07FC70A0
-    };
-
-    /*
-     * Impose a sane upper bound, originally checked only for dense arrays, on
-     * number of slots in an object.
-     */
-    enum {
-        NSLOTS_BITS     = 29,
-        NSLOTS_LIMIT    = JS_BIT(NSLOTS_BITS)
     };
 
     uint32      flags;                      /* flags */
 
     uint32 padding;
+
+    /* Upper bound on the number of elements in an object. */
+    static const uint32 NELEMENTS_LIMIT = JS_BIT(29);
 
   private:
     js::Value   *slots;                     /* Slots for object properties. */
@@ -670,6 +660,10 @@ struct JSObject : js::gc::Cell
     inline size_t slotsAndStructSize() const;
 
     inline size_t numFixedSlots() const;
+
+#ifdef DEBUG
+    size_t numFixedSlotsFromAllocationKind(js::Class *clasp) const;
+#endif
 
     static const uint32 MAX_FIXED_SLOTS = 16;
 
@@ -929,7 +923,6 @@ struct JSObject : js::gc::Cell
     bool isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp);
 
     inline void *&privateAddress(uint32 nfixed) const;
-    inline void initializePrivate();
 
   public:
     bool isExtensible() const { return !(flags & NOT_EXTENSIBLE); }
@@ -1240,16 +1233,20 @@ struct JSObject : js::gc::Cell
     inline bool isCallable();
 
     /* Do initialization required immediately after allocation. */
-    void earlyInit(jsuword capacity)
+    void earlyInit()
     {
-        flags = capacity << FIXED_SLOTS_SHIFT;
-
         /* Stops obj from being scanned until initializated. */
         shape_ = NULL;
     }
 
     /* The last property is not initialized here and should be set separately. */
-    void init(JSContext *cx, js::types::TypeObject *type, bool denseArray);
+    void init(JSContext *cx, js::types::TypeObject *type);
+
+    /*
+     * Finish initializing the elements in a dense array, after its initial
+     * property has been set.
+     */
+    void initDenseArray();
 
     inline void finish(JSContext *cx);
     JS_ALWAYS_INLINE void finalize(JSContext *cx, bool background);
@@ -1313,8 +1310,6 @@ struct JSObject : js::gc::Cell
 
     static void TradeGuts(JSContext *cx, JSObject *a, JSObject *b,
                           TradeGutsReserved &reserved);
-
-    void updateFixedSlots(uintN fixed);
 
   public:
     /* Add a property whose id is not yet in this scope. */
@@ -1443,11 +1438,9 @@ struct JSObject : js::gc::Cell
         JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0);
 
         JS_STATIC_ASSERT(offsetof(JSObject, shape_) == offsetof(js::shadow::Object, shape));
-        JS_STATIC_ASSERT(offsetof(JSObject, flags) == offsetof(js::shadow::Object, flags));
         JS_STATIC_ASSERT(offsetof(JSObject, slots) == offsetof(js::shadow::Object, slots));
         JS_STATIC_ASSERT(offsetof(JSObject, type_) == offsetof(js::shadow::Object, type));
         JS_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::shadow::Object));
-        JS_STATIC_ASSERT(FIXED_SLOTS_SHIFT == js::shadow::Object::FIXED_SLOTS_SHIFT);
     }
 };
 
@@ -1476,7 +1469,7 @@ JSObject::fixedSlots() const {
 inline size_t
 JSObject::numFixedSlots() const
 {
-    return flags >> FIXED_SLOTS_SHIFT;
+    return reinterpret_cast<const js::shadow::Object *>(this)->numFixedSlots();
 }
 
 /* static */ inline size_t

@@ -741,6 +741,7 @@ inline bool
 JSObject::initRegExp(JSContext *cx, js::RegExp *re)
 {
     JS_ASSERT(isRegExp());
+    JS_ASSERT(getAllocKind() == js::gc::FINALIZE_OBJECT8);
 
     /*
      * It's currently possible to swap RegExp guts. In that case this object
@@ -748,14 +749,14 @@ JSObject::initRegExp(JSContext *cx, js::RegExp *re)
      */
     if (nativeEmpty()) {
         const js::Shape *shape = js::BaseShape::lookupInitialShape(cx, getClass(), getParent(),
-                                                                   lastProperty());
+                                                                   js::gc::FINALIZE_OBJECT8, lastProperty());
         if (!shape)
             return false;
         if (shape == lastProperty()) {
             shape = assignInitialRegExpShape(cx);
             if (!shape)
                 return false;
-            js::BaseShape::insertInitialShape(cx, shape);
+            js::BaseShape::insertInitialShape(cx, js::gc::FINALIZE_OBJECT8, shape);
         }
         setLastPropertyInfallible(shape);
         JS_ASSERT(!nativeEmpty());

@@ -101,7 +101,7 @@ GetGCArrayKind(size_t numSlots)
      * unused.
      */
     JS_STATIC_ASSERT(sizeof(ObjectElements) == 2 * sizeof(Value));
-    if (numSlots > JSObject::NSLOTS_LIMIT || numSlots + 2 >= SLOTS_TO_THING_KIND_LIMIT)
+    if (numSlots > JSObject::NELEMENTS_LIMIT || numSlots + 2 >= SLOTS_TO_THING_KIND_LIMIT)
         return FINALIZE_OBJECT2;
     return slotsToThingKind[numSlots + 2];
 }
@@ -172,6 +172,17 @@ GetGCKindSlots(AllocKind thingKind)
         JS_NOT_REACHED("Bad object finalize kind");
         return 0;
     }
+}
+
+static inline size_t
+GetGCKindSlots(AllocKind thingKind, Class *clasp)
+{
+    size_t nslots = GetGCKindSlots(thingKind);
+    if (clasp->flags & JSCLASS_HAS_PRIVATE) {
+        JS_ASSERT(nslots > 0);
+        nslots--;
+    }
+    return nslots;
 }
 
 static inline void
@@ -384,7 +395,7 @@ js_NewGCObject(JSContext *cx, js::gc::AllocKind kind)
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_FUNCTION);
     JSObject *obj = NewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
     if (obj)
-        obj->earlyInit(js::gc::GetGCKindSlots(kind));
+        obj->earlyInit();
     return obj;
 }
 

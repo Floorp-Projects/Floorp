@@ -413,11 +413,12 @@ NewIteratorObject(JSContext *cx, uintN flags)
         if (!type)
             return NULL;
 
-        Shape *emptyEnumeratorShape = BaseShape::lookupInitialShape(cx, &IteratorClass, NULL);
+        Shape *emptyEnumeratorShape = BaseShape::lookupInitialShape(cx, &IteratorClass, NULL,
+                                                                    FINALIZE_OBJECT2);
         if (!emptyEnumeratorShape)
             return NULL;
 
-        obj->init(cx, type, false);
+        obj->init(cx, type);
         obj->setInitialPropertyInfallible(emptyEnumeratorShape);
 
         JS_ASSERT(obj->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);

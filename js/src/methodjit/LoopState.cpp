@@ -316,7 +316,7 @@ LoopState::entryRedundant(const InvariantEntry &e0, const InvariantEntry &e1)
     int32 c1 = e1.u.check.constant;
 
     /*
-     * initialized lengths are always <= JSObject::NSLOTS_LIMIT, check for
+     * initialized lengths are always <= JSObject::NELEMENTS_LIMIT, check for
      * integer overflow checks redundant given initialized length checks.
      * If Y <= c0 and Y + c1 < initlen(array):
      *
@@ -331,7 +331,7 @@ LoopState::entryRedundant(const InvariantEntry &e0, const InvariantEntry &e1)
             constant = c0;
         else if (!SafeAdd(c0, c1, &constant))
             return false;
-        return constant >= JSObject::NSLOTS_LIMIT;
+        return constant >= (int32) JSObject::NELEMENTS_LIMIT;
     }
 
     /* Look for matching tests that differ only in their constants. */

@@ -197,22 +197,23 @@
  * scope->table isn't worth it.  So instead of always allocating scope->table,
  * we leave it null while initializing all the other scope members as if it
  * were non-null and minimal-length.  Until a scope is searched
- * MAX_LINEAR_SEARCHES times, we use linear search from obj->lastProp to find a
+ * LINEAR_SEARCHES_MAX times, we use linear search from obj->lastProp to find a
  * given id, and save on the time and space overhead of creating a hash table.
  */
 
-#define SHAPE_INVALID_SLOT                  0xffffffff
-
 namespace js {
+
+/* Limit on the number of slotful properties in an object. */
+static const uint32 SHAPE_INVALID_SLOT = JS_BIT(24) - 1;
+static const uint32 SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
 
 /*
  * Shapes use multiplicative hashing, _a la_ jsdhash.[ch], but specialized to
  * minimize footprint.  But if a Shape lineage has been searched fewer than
- * MAX_LINEAR_SEARCHES times, we use linear search and avoid allocating
+ * LINEAR_SEARCHES_MAX times, we use linear search and avoid allocating
  * scope->table.
  */
 struct PropertyTable {
-    static const uint32 MAX_LINEAR_SEARCHES = 7;
     static const uint32 MIN_SIZE_LOG2       = 4;
     static const uint32 MIN_SIZE            = JS_BIT(MIN_SIZE_LOG2);
 
@@ -425,10 +426,10 @@ class BaseShape : public js::gc::Cell
      * if none was found.
      */
     static Shape *lookupInitialShape(JSContext *cx, Class *clasp, JSObject *parent,
-                                     Shape *initial = NULL);
+                                     gc::AllocKind kind, Shape *initial = NULL);
 
     /* Reinsert a possibly modified initial shape to the baseShapes table. */
-    static void insertInitialShape(JSContext *cx, const Shape *initial);
+    static void insertInitialShape(JSContext *cx, gc::AllocKind kind, const Shape *initial);
 
     /* Get the canonical base shape. */
     inline UnownedBaseShape *unowned();
@@ -481,24 +482,32 @@ struct Shape : public js::gc::Cell
     BaseShape           *base_;
     jsid                propid_;
 
-    /* 
-     * numLinearSearches starts at zero and is incremented initially on each
-     * search() call.  Once numLinearSearches reaches MAX_LINEAR_SEARCHES
-     * (which is a small integer), the table is created on the next search()
-     * call.  The table can also be created when hashifying for dictionary
-     * mode.
-     */
-    uint8               numLinearSearches:3;
+    enum {
+        /* Number of fixed slots in objects with this shape. */
+        FIXED_SLOTS_MAX        = 0x1f,
+        FIXED_SLOTS_SHIFT      = 27,
+        FIXED_SLOTS_MASK       = FIXED_SLOTS_MAX << FIXED_SLOTS_SHIFT,
 
-    /*
-     * Index in object slots for shapes which hasSlot(). For !hasSlot() shapes
-     * in the property tree with a parent, stores the parent's slot (which may
-     * be invalid), and invalid for all other shapes.
-     */
-    uint32              slot_:29;
+        /* 
+         * numLinearSearches starts at zero and is incremented initially on
+         * search() calls. Once numLinearSearches reaches LINEAR_SEARCHES_MAX,
+         * the table is created on the next search() call. The table can also
+         * be created when hashifying for dictionary mode.
+         */
+        LINEAR_SEARCHES_MAX    = 0x7,
+        LINEAR_SEARCHES_SHIFT  = 24,
+        LINEAR_SEARCHES_MASK   = LINEAR_SEARCHES_MAX << LINEAR_SEARCHES_SHIFT,
 
-    static const size_t SLOT_BITS = 29;
+        /*
+         * Mask to get the index in object slots for shapes which hasSlot().
+         * For !hasSlot() shapes in the property tree with a parent, stores the
+         * parent's slot index (which may be invalid), and invalid for all
+         * other shapes.
+         */
+        SLOT_MASK              = JS_BIT(24) - 1
+    };
 
+    uint32              slotInfo;       /* mask of above info */
     uint8               attrs;          /* attributes, see jsapi.h JSPROP_* */
     uint8               flags;          /* flags, see below for defines */
     int16               shortid_;       /* tinyid, or local arg/var index */
@@ -532,8 +541,10 @@ struct Shape : public js::gc::Cell
     void handoffTableTo(Shape *newShape);
 
     void setParent(js::Shape *p) {
-        JS_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(), p->slot_ <= slot_);
-        JS_ASSERT_IF(p && !inDictionary(), hasSlot() == (p->slot_ != slot_));
+        JS_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(),
+                     p->maybeSlot() <= maybeSlot());
+        JS_ASSERT_IF(p && !inDictionary(),
+                     hasSlot() == (p->maybeSlot() != maybeSlot()));
         parent = p;
     }
 
@@ -619,13 +630,13 @@ struct Shape : public js::gc::Cell
         UNUSED_BITS     = 0x3C
     };
 
-    Shape(BaseShape *base, jsid id, uint32 slot, uintN attrs, uintN flags, intN shortid);
+    Shape(BaseShape *base, jsid id, uint32 slot, uint32 nfixed, uintN attrs, uintN flags, intN shortid);
 
     /* Get a shape identical to this one, without parent/kids information. */
     Shape(const Shape *other);
 
     /* Used by EmptyShape (see jsscopeinlines.h). */
-    Shape(BaseShape *base);
+    Shape(BaseShape *base, uint32 nfixed);
 
     /* Copy constructor disabled, to avoid misuse of the above form. */
     Shape(const Shape &other);
@@ -638,7 +649,7 @@ struct Shape : public js::gc::Cell
      * if the shape is being constructed and has not had a slot assigned yet.
      * After construction, hasSlot() implies !hasMissingSlot().
      */
-    bool hasMissingSlot() const { return slot_ == (SHAPE_INVALID_SLOT >> (32 - SLOT_BITS)); }
+    bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 
   public:
     /* Public bits stored in shape->flags. */
@@ -724,8 +735,8 @@ struct Shape : public js::gc::Cell
     BaseShape *base() const { return base_; }
 
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
-    uint32 slot() const { JS_ASSERT(hasSlot() && !hasMissingSlot()); return slot_; }
-    uint32 maybeSlot() const { return hasMissingSlot() ? SHAPE_INVALID_SLOT : slot_; }
+    uint32 slot() const { JS_ASSERT(hasSlot() && !hasMissingSlot()); return maybeSlot(); }
+    uint32 maybeSlot() const { return slotInfo & SLOT_MASK; }
 
     bool isEmptyShape() const {
         JS_ASSERT_IF(JSID_IS_EMPTY(propid_), hasMissingSlot());
@@ -736,6 +747,33 @@ struct Shape : public js::gc::Cell
         JS_ASSERT(!inDictionary());
         uint32 free = JSSLOT_FREE(getObjectClass());
         return hasMissingSlot() ? free : Max(free, maybeSlot() + 1);
+    }
+
+    void setSlot(uint32 slot) {
+        JS_ASSERT(slot <= SHAPE_INVALID_SLOT);
+        slotInfo = slotInfo & ~SLOT_MASK;
+        slotInfo = slotInfo | slot;
+    }
+
+    uint32 numFixedSlots() const {
+        return (slotInfo >> FIXED_SLOTS_SHIFT);
+    }
+
+    void setNumFixedSlots(uint32 nfixed) {
+        JS_ASSERT(nfixed < FIXED_SLOTS_MAX);
+        slotInfo = slotInfo & ~FIXED_SLOTS_MASK;
+        slotInfo = slotInfo | (nfixed << FIXED_SLOTS_SHIFT);
+    }
+
+    uint32 numLinearSearches() const {
+        return (slotInfo & LINEAR_SEARCHES_MASK) >> LINEAR_SEARCHES_SHIFT;
+    }
+
+    void incrementNumLinearSearches() {
+        uint32 count = numLinearSearches();
+        JS_ASSERT(count < LINEAR_SEARCHES_MAX);
+        slotInfo = slotInfo & ~LINEAR_SEARCHES_MASK;
+        slotInfo = slotInfo | ((count + 1) << LINEAR_SEARCHES_SHIFT);
     }
 
     jsid propid() const { JS_ASSERT(!isEmptyShape()); return maybePropid(); }
@@ -852,14 +890,16 @@ struct Shape : public js::gc::Cell
   private:
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(Shape, base_) == offsetof(js::shadow::Shape, base));
+        JS_STATIC_ASSERT(offsetof(Shape, slotInfo) == offsetof(js::shadow::Shape, slotInfo));
+        JS_STATIC_ASSERT(FIXED_SLOTS_SHIFT == js::shadow::Shape::FIXED_SLOTS_SHIFT);
     }
 };
 
 struct EmptyShape : public js::Shape
 {
-    EmptyShape(BaseShape *base);
+    EmptyShape(BaseShape *base, uint32 nfixed);
 
-    static EmptyShape *create(JSContext *cx, js::Class *clasp, JSObject *parent) {
+    static EmptyShape *create(JSContext *cx, js::Class *clasp, JSObject *parent, uint32 nfixed) {
         BaseShape lookup(clasp, parent);
         BaseShape *base = BaseShape::lookup(cx, lookup);
         if (!base)
@@ -868,7 +908,37 @@ struct EmptyShape : public js::Shape
         js::Shape *eprop = JS_PROPERTY_TREE(cx).newShape(cx);
         if (!eprop)
             return NULL;
-        return new (eprop) EmptyShape(base);
+        return new (eprop) EmptyShape(base, nfixed);
+    }
+};
+
+/* Heap-allocated array of shapes for each object allocation size. */
+class ShapeKindArray
+{
+  public:
+    static const uint32 SHAPE_COUNT =
+        ((js::gc::FINALIZE_FUNCTION - js::gc::FINALIZE_OBJECT0) / 2) + 1;
+
+    ShapeKindArray() { PodZero(this); }
+
+    Shape *&get(gc::AllocKind kind) {
+        JS_ASSERT(kind >= gc::FINALIZE_OBJECT0 &&
+                  kind <= gc::FINALIZE_FUNCTION_AND_OBJECT_LAST);
+        int i = (kind - gc::FINALIZE_OBJECT0) / 2;
+        return shapes[i];
+    }
+
+    Shape *&getIndex(size_t i) {
+        JS_ASSERT(i < SHAPE_COUNT);
+        return shapes[i];
+    }
+
+  private:
+    Shape *shapes[SHAPE_COUNT];
+
+    void staticAsserts() {
+        JS_STATIC_ASSERT(gc::FINALIZE_OBJECT0 % 2 == 0);
+        JS_STATIC_ASSERT(gc::FINALIZE_FUNCTION == gc::FINALIZE_OBJECT_LAST + 1);
     }
 };
 
@@ -902,14 +972,13 @@ Shape::search(JSContext *cx, js::Shape **pstart, jsid id, bool adding)
     if (start->hasTable())
         return start->table().search(id, adding);
 
-    if (start->numLinearSearches == PropertyTable::MAX_LINEAR_SEARCHES) {
+    if (start->numLinearSearches() == LINEAR_SEARCHES_MAX) {
         if (start->hashify(cx))
             return start->table().search(id, adding);
         /* OOM!  Don't increment numLinearSearches, to keep hasTable() false. */
         JS_ASSERT(!start->hasTable());
     } else {
-        JS_ASSERT(start->numLinearSearches < PropertyTable::MAX_LINEAR_SEARCHES);
-        start->numLinearSearches++;
+        start->incrementNumLinearSearches();
     }
 
     /*

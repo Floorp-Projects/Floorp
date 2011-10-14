@@ -55,20 +55,7 @@ CallObject *
 CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *callee)
 {
     Bindings &bindings = script->bindings;
-    size_t argsVars = bindings.countArgsAndVars();
-    size_t slots = RESERVED_SLOTS + argsVars + 1;  /* Add one for privateData. */
-    gc::AllocKind kind = gc::GetGCObjectKind(slots);
-
-    /*
-     * Make sure that the arguments and variables in the call object all end up
-     * in a contiguous range of slots. We need this to be able to embed the
-     * args/vars arrays in the TypeScriptNesting for the function, after the
-     * call object's frame has finished.
-     */
-    if (cx->typeInferenceEnabled() && gc::GetGCKindSlots(kind) < slots) {
-        kind = gc::GetGCObjectKind(RESERVED_SLOTS + 1);
-        JS_ASSERT(gc::GetGCKindSlots(kind) == RESERVED_SLOTS + 1);
-    }
+    gc::AllocKind kind = gc::GetGCObjectKind(bindings.lastShape()->numFixedSlots() + 1);
 
     JSObject *obj = js_NewGCObject(cx, kind);
     if (!obj)
