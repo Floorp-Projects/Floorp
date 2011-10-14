@@ -180,6 +180,7 @@ struct TypeObject {
 
 struct BaseShape {
     js::Class   *clasp;
+    JSObject    *parent;
 };
 
 struct Shape {
@@ -190,7 +191,7 @@ struct Object {
     Shape       *shape;
     TypeObject  *type;
     uint32      flags;
-    JSObject    *parent;
+    uint32      _2;
     js::Value   *slots;
     js::Value   *_1;
 
@@ -242,7 +243,7 @@ inline JSObject *
 GetObjectParent(const JSObject *obj)
 {
     JS_ASSERT(!IsScopeObject(obj));
-    return reinterpret_cast<const shadow::Object*>(obj)->parent;
+    return reinterpret_cast<const shadow::Object*>(obj)->shape->base->parent;
 }
 
 JS_FRIEND_API(JSObject *)

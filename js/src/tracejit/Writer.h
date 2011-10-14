@@ -505,7 +505,8 @@ class Writer
     }
 
     nj::LIns *ldpObjParent(nj::LIns *obj) const {
-        return name(lir->insLoad(nj::LIR_ldp, obj, offsetof(JSObject, parent), ACCSET_OBJ_PARENT),
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insLoad(nj::LIR_ldp, obj, 0, ACCSET_OBJ_PARENT),
                     "parent");
     }
 

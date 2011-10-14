@@ -436,7 +436,6 @@ class Compiler : public BaseCompiler
     js::Vector<uint32, 16> jumpTableOffsets;
     js::Vector<LoopEntry, 16> loopEntries;
     js::Vector<JSObject *, 0, CompilerAllocPolicy> rootedObjects;
-    Shape *denseArrayShape;
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;

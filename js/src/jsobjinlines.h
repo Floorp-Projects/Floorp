@@ -319,32 +319,13 @@ inline JSObject *
 JSObject::getParent() const
 {
     JS_ASSERT(!isScope());
-    return parent;
-}
-
-inline void
-JSObject::clearParent()
-{
-    JS_ASSERT(!isScope());
-    parent = NULL;
-}
-
-inline void
-JSObject::setParent(JSObject *newParent)
-{
-#ifdef DEBUG
-    JS_ASSERT_IF(!isNewborn(), !isScope());
-    for (JSObject *obj = newParent; obj; obj = obj->getParentOrScopeChain())
-        JS_ASSERT(obj != this);
-#endif
-    setDelegateNullSafe(newParent);
-    parent = newParent;
+    return lastProperty()->getObjectParent();
 }
 
 inline bool
 JSObject::isScope() const
 {
-    return isCall() || isDeclEnv() || isClonedBlock() || isWith();
+    return isCall() || isDeclEnv() || isBlock() || isWith();
 }
 
 inline JSObject *
@@ -361,9 +342,20 @@ JSObject::getParentOrScopeChain() const
 }
 
 inline JSObject *
+JSObject::getStaticBlockScopeChain() const
+{
+    /*
+     * Unlike other scope objects, static blocks not nested in one another
+     * do not have a scope chain.
+     */
+    JS_ASSERT(isStaticBlock());
+    return getFixedSlot(0).isObject() ? &getFixedSlot(0).toObject() : NULL;
+}
+
+inline JSObject *
 JSObject::getParentMaybeScope() const
 {
-    return parent;
+    return lastProperty()->getObjectParent();
 }
 
 inline void
@@ -390,9 +382,21 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
     if (!type)
         return false;
 
-    init(cx, type, parent->getGlobal(), false);
+    init(cx, type, false);
     if (!setInitialProperty(cx, bindings.lastShape()))
         return false;
+
+    /*
+     * Update the parent for bindings associated with non-compileAndGo scripts,
+     * whose call objects do not have a consistent global variable and need
+     * to be updated dynamically.
+     */
+    JSObject *global = parent->getGlobal();
+    if (global != getParentMaybeScope()) {
+        JS_ASSERT(getParentMaybeScope() == NULL);
+        if (!setParent(cx, global))
+            return false;
+    }
 
     JS_ASSERT(isCall());
     JS_ASSERT(!inDictionaryMode());
@@ -415,10 +419,18 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
 inline bool
 JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *frame)
 {
-    init(cx, type, frame->scopeChain().getGlobal(), false);
+    init(cx, type, false);
 
     if (!setInitialProperty(cx, getProto()->lastProperty()))
         return false;
+
+    /* Set the parent if necessary, as for call objects. */
+    JSObject *global = frame->scopeChain().getGlobal();
+    if (global != getParentMaybeScope()) {
+        JS_ASSERT(getParentMaybeScope() == NULL);
+        if (!setParent(cx, global))
+            return false;
+    }
 
     setPrivate(frame);
 
@@ -527,6 +539,28 @@ JSObject::setLastPropertyInfallible(const js::Shape *shape)
     JS_ASSERT(slotSpan() == shape->slotSpan());
 
     shape_ = const_cast<js::Shape *>(shape);
+}
+
+inline void
+JSObject::removeLastProperty(JSContext *cx)
+{
+    JS_ASSERT(canRemoveLastProperty());
+    JS_ALWAYS_TRUE(setLastProperty(cx, lastProperty()->previous()));
+}
+
+inline bool
+JSObject::canRemoveLastProperty()
+{
+    /*
+     * Some information stored in shapes describes the object itself, and can
+     * be changed via replaceLastProperty without converting to a dictionary.
+     * Parent shapes in the property tree may not have this information set,
+     * and we need to ensure when unwinding properties that the per-object
+     * information is not accidentally reset.
+     */
+    JS_ASSERT(!inDictionaryMode());
+    const js::Shape *previous = lastProperty()->previous();
+    return previous->getObjectParent() == lastProperty()->getObjectParent();
 }
 
 inline js::Value
@@ -985,8 +1019,7 @@ JSObject::isQName() const
 }
 
 inline void
-JSObject::init(JSContext *cx, js::types::TypeObject *type,
-               JSObject *parent, bool denseArray)
+JSObject::init(JSContext *cx, js::types::TypeObject *type, bool denseArray)
 {
     JS_STATIC_ASSERT(sizeof(js::ObjectElements) == 2 * sizeof(js::Value));
 
@@ -1006,7 +1039,6 @@ JSObject::init(JSContext *cx, js::types::TypeObject *type,
     }
 
     setType(type);
-    setParent(parent);
 }
 
 inline void
@@ -1022,11 +1054,10 @@ inline bool
 JSObject::initSharingEmptyShape(JSContext *cx,
                                 js::Class *aclasp,
                                 js::types::TypeObject *type,
-                                JSObject *parent,
                                 void *privateValue,
                                 js::gc::AllocKind kind)
 {
-    init(cx, type, parent, false);
+    init(cx, type, false);
 
     js::EmptyShape *empty = type->getEmptyShape(cx, aclasp, kind);
     if (!empty)
@@ -1396,18 +1427,18 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
 };
 
 static inline bool
-InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::TypeObject *type,
-                   gc::AllocKind kind)
+InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject *parent,
+                   js::types::TypeObject *type, gc::AllocKind kind)
 {
     JS_ASSERT(clasp->isNative());
 
     /* Share proto's emptyShape only if obj is similar to proto. */
     js::EmptyShape *empty = NULL;
 
-    if (type->canProvideEmptyShape(clasp))
+    if (type->canProvideEmptyShape(clasp) && parent == type->proto->getParent())
         empty = type->getEmptyShape(cx, clasp, kind);
     else
-        empty = js::EmptyShape::create(cx, clasp);
+        empty = js::EmptyShape::create(cx, clasp, parent);
     if (!empty) {
         JS_ASSERT(obj->isNewborn());
         return false;
@@ -1417,13 +1448,14 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
 }
 
 static inline bool
-InitScopeForNonNativeObject(JSContext *cx, JSObject *obj, js::Class *clasp)
+InitScopeForNonNativeObject(JSContext *cx, JSObject *obj, js::Class *clasp, JSObject *parent)
 {
     JS_ASSERT(!clasp->isNative());
 
-    js::EmptyShape *empty = js::BaseShape::lookupEmpty(cx, clasp);
+    const js::Shape *empty = js::BaseShape::lookupInitialShape(cx, clasp, parent);
     if (!empty)
         return false;
+    JS_ASSERT(empty->isEmptyShape());
 
     obj->setInitialPropertyInfallible(empty);
     return true;
@@ -1450,15 +1482,12 @@ CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
 /*
  * Helper optimized for creating a native instance of the given class (not the
  * class's prototype object). Use this in preference to NewObject, but use
- * NewBuiltinClassInstance if you need the default class prototype as proto,
- * and its parent global as parent.
+ * NewBuiltinClassInstance if you need the default class prototype as proto.
  */
 static inline JSObject *
-NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
-                       JSObject *parent, gc::AllocKind kind)
+NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, gc::AllocKind kind)
 {
     JS_ASSERT(proto);
-    JS_ASSERT(parent);
     JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
 
     types::TypeObject *type = proto->getNewType(cx);
@@ -1482,9 +1511,10 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
      * the parent of the prototype's constructor.
      */
     bool denseArray = (clasp == &ArrayClass);
-    obj->init(cx, type, parent, denseArray);
+    obj->init(cx, type, denseArray);
 
     JS_ASSERT(type->canProvideEmptyShape(clasp));
+
     js::EmptyShape *empty = type->getEmptyShape(cx, clasp, kind);
     if (!empty || !obj->setInitialProperty(cx, empty))
         return NULL;
@@ -1493,10 +1523,10 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
 }
 
 static inline JSObject *
-NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent)
+NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto)
 {
     gc::AllocKind kind = gc::GetGCObjectKind(clasp);
-    return NewNativeClassInstance(cx, clasp, proto, parent, kind);
+    return NewNativeClassInstance(cx, clasp, proto, kind);
 }
 
 bool
@@ -1532,13 +1562,13 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::AllocKind kind)
     JSObject *proto;
     if (v.isObject()) {
         proto = &v.toObject();
-        JS_ASSERT(proto->getParent() == global);
     } else {
         if (!FindClassPrototype(cx, global, protoKey, &proto, clasp))
             return NULL;
     }
+    JS_ASSERT(proto->getParent() == global);
 
-    return NewNativeClassInstance(cx, clasp, proto, global, kind);
+    return NewNativeClassInstance(cx, clasp, proto, kind);
 }
 
 static inline JSObject *
@@ -1636,17 +1666,18 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
     if (!obj)
         goto out;
 
+    obj->init(cx, type, clasp == &ArrayClass);
+
     /*
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    obj->init(cx, type,
-              (!parent && proto) ? proto->getParent() : parent,
-              clasp == &ArrayClass);
+    if (!parent && proto)
+        parent = proto->getParent();
 
     if (clasp->isNative()
-        ? !InitScopeForObject(cx, obj, clasp, type, kind)
-        : !InitScopeForNonNativeObject(cx, obj, clasp)) {
+        ? !InitScopeForObject(cx, obj, clasp, parent, type, kind)
+        : !InitScopeForNonNativeObject(cx, obj, clasp, parent)) {
         obj = NULL;
     }
 
@@ -1703,15 +1734,16 @@ NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::
     if (!obj)
         goto out;
 
+    obj->init(cx, type, false);
+
     /*
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    obj->init(cx, type,
-              (!parent && type->proto) ? type->proto->getParent() : parent,
-              false);
+    if (!parent && type->proto)
+        parent = type->proto->getParent();
 
-    if (!InitScopeForObject(cx, obj, &ObjectClass, type, kind)) {
+    if (!InitScopeForObject(cx, obj, &ObjectClass, parent, type, kind)) {
         obj = NULL;
         goto out;
     }
@@ -1777,7 +1809,7 @@ NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
     if (!obj)
         return NULL;
 
-    if (!obj->initSharingEmptyShape(cx, clasp, type, proto->getParent(), NULL, kind))
+    if (!obj->initSharingEmptyShape(cx, clasp, type, NULL, kind))
         return NULL;
     return obj;
 }

@@ -282,7 +282,7 @@ Shape::dumpSubtree(JSContext *cx, int level, FILE *fp) const
     if (!parent) {
         JS_ASSERT(level == 0);
         JS_ASSERT(JSID_IS_EMPTY(propid_));
-        fprintf(fp, "class %s emptyShape\n", getClass()->name);
+        fprintf(fp, "class %s emptyShape\n", getObjectClass()->name);
     } else {
         fprintf(fp, "%*sid ", level, "");
         dump(cx, fp);

@@ -3087,6 +3087,9 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, ST
 JSObject * FASTCALL
 js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
 {
+    JS_NOT_REACHED("FIXME");
+    return NULL;
+#if 0
 #ifdef DEBUG
     JS_ASSERT(ctor->isFunction());
     JS_ASSERT(ctor->toFunction()->isInterpreted());
@@ -3113,6 +3116,7 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
 
     gc::AllocKind kind = NewObjectGCKind(cx, &ObjectClass);
     return NewNativeClassInstance(cx, &ObjectClass, proto, parent, kind);
+#endif
 }
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_CreateThisFromTrace, CONTEXT, OBJECT, UINTN, 0,
                      nanojit::ACCSET_STORE_ANY)
@@ -3459,9 +3463,9 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
-    obj->init(cx, type, parent->getGlobal(), false);
+    obj->init(cx, type, false);
 
-    EmptyShape *emptyWithShape = EmptyShape::getEmptyWithShape(cx);
+    Shape *emptyWithShape = BaseShape::lookupInitialShape(cx, &WithClass, parent->getGlobal());
     if (!emptyWithShape)
         return NULL;
 
@@ -3497,11 +3501,11 @@ js_NewBlockObject(JSContext *cx)
     if (!type)
         return NULL;
 
-    EmptyShape *emptyBlockShape = EmptyShape::getEmptyBlockShape(cx);
+    Shape *emptyBlockShape = BaseShape::lookupInitialShape(cx, &BlockClass, NULL);
     if (!emptyBlockShape)
         return NULL;
 
-    blockObj->init(cx, type, NULL, false);
+    blockObj->init(cx, type, false);
     blockObj->setInitialPropertyInfallible(emptyBlockShape);
 
     return blockObj;
@@ -4044,7 +4048,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 
     if (xdr->mode == JSXDR_ENCODE) {
         obj = *objp;
-        parent = obj->getParent();
+        parent = obj->scopeChain();
         parentId = JSScript::isValidOffset(xdr->script->objectsOffset)
                    ? FindObjectIndex(xdr->script->objects(), parent)
                    : NO_PARENT_INDEX;
@@ -4075,7 +4079,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             parent = NULL;
         else
             parent = xdr->script->getObject(parentId);
-        obj->setParent(parent);
+        obj->setScopeChain(parent);
     }
 
     AutoObjectRooter tvr(cx, obj);
@@ -4537,7 +4541,7 @@ JSObject::setInitialProperty(JSContext *cx, const js::Shape *shape)
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
 
-    if (shape->getClass()->flags & JSCLASS_HAS_PRIVATE)
+    if (shape->getObjectClass()->flags & JSCLASS_HAS_PRIVATE)
         initializePrivate();
 
     size_t span = shape->slotSpan();
@@ -4554,7 +4558,6 @@ JSObject::setInitialProperty(JSContext *cx, const js::Shape *shape)
     shape_ = const_cast<js::Shape *>(shape);
     updateSlotsForSpan(0, span);
 
-    JS_ASSERT_IF(isScope(), parent);
     return true;
 }
 
@@ -4565,7 +4568,7 @@ JSObject::setInitialPropertyInfallible(const js::Shape *shape)
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
 
-    if (shape->getClass()->flags & JSCLASS_HAS_PRIVATE)
+    if (shape->getObjectClass()->flags & JSCLASS_HAS_PRIVATE)
         initializePrivate();
 
     JS_ASSERT(dynamicSlotsCount(numFixedSlots(), shape->slotSpan()) == 0);
@@ -4575,8 +4578,6 @@ JSObject::setInitialPropertyInfallible(const js::Shape *shape)
     size_t span = shape->slotSpan();
     if (span)
         updateSlotsForSpan(0, span);
-
-    JS_ASSERT_IF(isScope(), parent);
 }
 
 bool

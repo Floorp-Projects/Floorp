@@ -1946,7 +1946,8 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
                        JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0),
                        parent, atom);
     if (fun && !tc->compileAndGo()) {
-        fun->clearParent();
+        if (!fun->clearParent(context))
+            return NULL;
         if (!fun->clearType(context))
             return NULL;
     }
@@ -5529,7 +5530,8 @@ Parser::letStatement()
             stmt->downScope = tc->topScopeStmt;
             tc->topScopeStmt = stmt;
 
-            obj->setParent(tc->blockChain());
+            if (tc->blockChain())
+                obj->setScopeChain(tc->blockChain());
             blockbox->parent = tc->blockChainBox;
             tc->blockChainBox = blockbox;
             stmt->blockBox = blockbox;
@@ -8884,7 +8886,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         if (!obj)
             return NULL;
         if (!tc->compileAndGo()) {
-            obj->clearParent();
+            if (!obj->clearParent(context))
+                return NULL;
             if (!obj->clearType(context))
                 return NULL;
         }

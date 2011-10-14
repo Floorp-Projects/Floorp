@@ -3066,8 +3066,7 @@ JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
     JS_ASSERT(!obj->isScope());
     JS_ASSERT(parent || !obj->getParent());
     assertSameCompartment(cx, obj, parent);
-    obj->setParent(parent);
-    return true;
+    return obj->setParent(cx, parent);
 }
 
 JS_PUBLIC_API(JSObject *)

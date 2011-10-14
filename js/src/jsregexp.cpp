@@ -144,7 +144,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     JS_ASSERT(obj->isRegExp());
     JS_ASSERT(proto->isRegExp());
 
-    JSObject *clone = NewNativeClassInstance(cx, &RegExpClass, proto, proto->getParent());
+    JSObject *clone = NewNativeClassInstance(cx, &RegExpClass, proto);
     if (!clone)
         return NULL;
 
@@ -310,7 +310,6 @@ RegExp::createFlagged(JSContext *cx, JSString *str, JSString *opt, TokenStream *
 const Shape *
 JSObject::assignInitialRegExpShape(JSContext *cx)
 {
-    JS_ASSERT(!cx->compartment->initialRegExpShape);
     JS_ASSERT(isRegExp());
     JS_ASSERT(nativeEmpty());
 
@@ -468,7 +467,8 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         JSObject *obj = NewBuiltinClassInstance(xdr->cx, &RegExpClass);
         if (!obj)
             return false;
-        obj->clearParent();
+        if (!obj->clearParent(xdr->cx))
+            return false;
         if (!obj->clearType(xdr->cx))
             return false;
 
