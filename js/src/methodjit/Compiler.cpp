@@ -7447,30 +7447,16 @@ mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterI
         Jump notObject = masm.testObject(Assembler::NotEqual, typeReg);
         Address typeAddress(dataReg, JSObject::offsetOfType());
 
-        /*
-         * Test for a singleton objects first. If singletons have lazy types
-         * then they may share their raw type pointer with another type object
-         * in the observed set and we can get a spurious match.
-         */
-        Jump notSingleton = masm.branchTest32(Assembler::Zero,
-                                              Address(dataReg, offsetof(JSObject, flags)),
-                                              Imm32(JSObject::SINGLETON_TYPE));
-
         for (unsigned i = 0; i < count; i++) {
             if (JSObject *object = types->getSingleObject(i))
                 matches.append(masm.branchPtr(Assembler::Equal, dataReg, ImmPtr(object)));
         }
-
-        Jump singletonMismatch = masm.jump();
-
-        notSingleton.linkTo(masm.label(), &masm);
 
         for (unsigned i = 0; i < count; i++) {
             if (types::TypeObject *object = types->getTypeObject(i))
                 matches.append(masm.branchPtr(Assembler::Equal, typeAddress, ImmPtr(object)));
         }
 
-        singletonMismatch.linkTo(masm.label(), &masm);
         notObject.linkTo(masm.label(), &masm);
     }
 

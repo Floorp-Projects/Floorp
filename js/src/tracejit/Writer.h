@@ -487,7 +487,8 @@ class Writer
     }
 
     nj::LIns *ldiObjFlags(nj::LIns *obj) const {
-        return name(lir->insLoad(nj::LIR_ldi, obj, offsetof(JSObject, flags), ACCSET_OBJ_FLAGS),
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insLoad(nj::LIR_ldi, obj, 0, ACCSET_OBJ_FLAGS),
                     "flags");
     }
 

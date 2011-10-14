@@ -505,7 +505,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     /*
      * Set of all type objects in the compartment which are the default 'new'
-     * types of some (possibly NULL) prototype.
+     * or the lazy types of some (possibly NULL) prototype.
      */
 
     struct NewTypeObjectEntry {
@@ -518,13 +518,16 @@ struct JS_FRIEND_API(JSCompartment) {
     typedef js::HashSet<js::types::TypeObject *, NewTypeObjectEntry, js::SystemAllocPolicy> NewTypeObjectSet;
 
     NewTypeObjectSet             newTypeObjects;
+    NewTypeObjectSet             lazyTypeObjects;
 
-    void sweepNewTypeObjectTable(JSContext *cx);
+    void sweepNewTypeObjectTable(JSContext *cx, NewTypeObjectSet &table);
 
     js::types::TypeObject        *emptyTypeObject;
 
     /* Get the default 'new' type for objects with a NULL prototype. */
     inline js::types::TypeObject *getEmptyType(JSContext *cx);
+
+    js::types::TypeObject *getLazyType(JSContext *cx, JSObject *proto);
 
   private:
     enum { DebugFromC = 1, DebugFromJS = 2 };

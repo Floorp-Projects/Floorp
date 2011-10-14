@@ -4563,8 +4563,6 @@ JSObject::setInitialProperty(JSContext *cx, const js::Shape *shape)
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
     JS_ASSERT(numFixedSlotsFromAllocationKind(shape->getObjectClass()) == shape->numFixedSlots());
-    JS_ASSERT_IF(shape->getObjectClass()->ext.equality && !hasSingletonType(),
-                 type()->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
 
     size_t span = shape->slotSpan();
 
@@ -7382,25 +7380,17 @@ js_DumpObject(JSObject *obj)
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
 
     fprintf(stderr, "flags:");
-    uint32 flags = obj->flags;
     if (obj->isDelegate()) fprintf(stderr, " delegate");
     if (obj->isSystem()) fprintf(stderr, " system");
     if (!obj->isExtensible()) fprintf(stderr, " not_extensible");
     if (obj->isIndexed()) fprintf(stderr, " indexed");
 
-    bool anyFlags = flags != 0;
     if (obj->isNative()) {
-        if (obj->inDictionaryMode()) {
+        if (obj->inDictionaryMode())
             fprintf(stderr, " inDictionaryMode");
-            anyFlags = true;
-        }
-        if (obj->hasPropertyTable()) {
+        if (obj->hasPropertyTable())
             fprintf(stderr, " hasPropertyTable");
-            anyFlags = true;
-        }
     }
-    if (!anyFlags)
-        fprintf(stderr, " none");
     fprintf(stderr, "\n");
 
     if (obj->isDenseArray()) {
