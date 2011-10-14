@@ -77,7 +77,7 @@ JSValIsInterfaceOfType(JSContext *cx, jsval v, REFNSIID iid)
     if(!JSVAL_IS_PRIMITIVE(v) &&
        nsnull != (xpc = nsXPConnect::GetXPConnect()) &&
        NS_SUCCEEDED(xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(v),
-                            getter_AddRefs(wn))) && wn &&
+                                                    getter_AddRefs(wn))) && wn &&
        NS_SUCCEEDED(wn->Native()->QueryInterface(iid, (void**)&iface)) && iface)
     {
         NS_RELEASE(iface);
@@ -148,7 +148,7 @@ nsXPCComponents_Interfaces::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -170,7 +170,7 @@ oom:
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::GetHelperForLanguage(PRUint32 language,
-                                      nsISupports **retval)
+                                                 nsISupports **retval)
 {
     *retval = nsnull;
     return NS_OK;
@@ -203,8 +203,7 @@ nsXPCComponents_Interfaces::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-nsXPCComponents_Interfaces::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+nsXPCComponents_Interfaces::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
@@ -463,7 +462,7 @@ nsXPCComponents_InterfacesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -485,7 +484,7 @@ oom:
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::GetHelperForLanguage(PRUint32 language,
-                                      nsISupports **retval)
+                                                     nsISupports **retval)
 {
     *retval = nsnull;
     return NS_OK;
@@ -518,8 +517,7 @@ nsXPCComponents_InterfacesByID::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-nsXPCComponents_InterfacesByID::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+nsXPCComponents_InterfacesByID::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
@@ -784,7 +782,7 @@ nsXPCComponents_Classes::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -805,7 +803,7 @@ oom:
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP
 nsXPCComponents_Classes::GetHelperForLanguage(PRUint32 language,
-                                      nsISupports **retval)
+                                              nsISupports **retval)
 {
     *retval = nsnull;
     return NS_OK;
@@ -838,8 +836,7 @@ nsXPCComponents_Classes::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-nsXPCComponents_Classes::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+nsXPCComponents_Classes::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
@@ -1036,7 +1033,7 @@ nsXPCComponents_ClassesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -1057,7 +1054,7 @@ oom:
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP
 nsXPCComponents_ClassesByID::GetHelperForLanguage(PRUint32 language,
-                                      nsISupports **retval)
+                                                  nsISupports **retval)
 {
     *retval = nsnull;
     return NS_OK;
@@ -1090,8 +1087,7 @@ nsXPCComponents_ClassesByID::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-nsXPCComponents_ClassesByID::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+nsXPCComponents_ClassesByID::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
@@ -1307,7 +1303,7 @@ nsXPCComponents_Results::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -1328,7 +1324,7 @@ oom:
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP
 nsXPCComponents_Results::GetHelperForLanguage(PRUint32 language,
-                                      nsISupports **retval)
+                                              nsISupports **retval)
 {
     *retval = nsnull;
     return NS_OK;
@@ -1361,8 +1357,7 @@ nsXPCComponents_Results::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-nsXPCComponents_Results::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+nsXPCComponents_Results::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
@@ -1536,7 +1531,7 @@ nsXPCComponents_ID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -1557,7 +1552,7 @@ oom:
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP
 nsXPCComponents_ID::GetHelperForLanguage(PRUint32 language,
-                                      nsISupports **retval)
+                                         nsISupports **retval)
 {
     *retval = nsnull;
     return NS_OK;
@@ -1590,8 +1585,7 @@ nsXPCComponents_ID::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-nsXPCComponents_ID::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+nsXPCComponents_ID::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
@@ -1677,8 +1671,7 @@ nsXPCComponents_ID::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     // Do the security check if necessary
 
     nsIXPCSecurityManager* sm =
-            xpcc->GetAppropriateSecurityManager(
-                        nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
+            xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
     if(sm && NS_FAILED(sm->CanCreateInstance(cx, nsJSID::GetCID())))
     {
         // the security manager vetoed. It should have set an exception.
@@ -1764,7 +1757,7 @@ nsXPCComponents_Exception::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -1785,7 +1778,7 @@ oom:
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP
 nsXPCComponents_Exception::GetHelperForLanguage(PRUint32 language,
-                                      nsISupports **retval)
+                                                nsISupports **retval)
 {
     *retval = nsnull;
     return NS_OK;
@@ -1818,8 +1811,7 @@ nsXPCComponents_Exception::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-nsXPCComponents_Exception::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+nsXPCComponents_Exception::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
@@ -1901,8 +1893,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     // Do the security check if necessary
 
     nsIXPCSecurityManager* sm =
-            xpcc->GetAppropriateSecurityManager(
-                        nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
+            xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
     if(sm && NS_FAILED(sm->CanCreateInstance(cx, nsXPCException::GetCID())))
     {
         // the security manager vetoed. It should have set an exception.
@@ -1974,7 +1965,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     JSObject* newObj = nsnull;
 
     if(NS_FAILED(xpc->WrapNative(cx, obj, e, NS_GET_IID(nsIXPCException),
-                 getter_AddRefs(holder))) || !holder ||
+                                 getter_AddRefs(holder))) || !holder ||
        NS_FAILED(holder->GetJSObject(&newObj)) || !newObj)
     {
         return ThrowAndFail(NS_ERROR_XPC_CANT_CREATE_WN, cx, _retval);
@@ -2059,7 +2050,7 @@ nsXPCConstructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -2080,7 +2071,7 @@ oom:
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP
 nsXPCConstructor::GetHelperForLanguage(PRUint32 language,
-                                      nsISupports **retval)
+                                       nsISupports **retval)
 {
     *retval = nsnull;
     return NS_OK;
@@ -2113,8 +2104,7 @@ nsXPCConstructor::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-nsXPCConstructor::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+nsXPCConstructor::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
@@ -2233,10 +2223,10 @@ nsXPCConstructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     JSObject* iidObj;
 
     if(NS_FAILED(xpc->WrapNative(cx, obj, mClassID, NS_GET_IID(nsIJSCID),
-                 getter_AddRefs(cidHolder))) || !cidHolder ||
+                                 getter_AddRefs(cidHolder))) || !cidHolder ||
        NS_FAILED(cidHolder->GetJSObject(&cidObj)) || !cidObj ||
        NS_FAILED(xpc->WrapNative(cx, obj, mInterfaceID, NS_GET_IID(nsIJSIID),
-                 getter_AddRefs(iidHolder))) || !iidHolder ||
+                                 getter_AddRefs(iidHolder))) || !iidHolder ||
        NS_FAILED(iidHolder->GetJSObject(&iidObj)) || !iidObj)
     {
         return ThrowAndFail(NS_ERROR_XPC_CANT_CREATE_WN, cx, _retval);
@@ -2325,7 +2315,7 @@ nsXPCComponents_Constructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -2346,7 +2336,7 @@ oom:
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP
 nsXPCComponents_Constructor::GetHelperForLanguage(PRUint32 language,
-                                      nsISupports **retval)
+                                                  nsISupports **retval)
 {
     *retval = nsnull;
     return NS_OK;
@@ -2379,8 +2369,7 @@ nsXPCComponents_Constructor::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-nsXPCComponents_Constructor::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+nsXPCComponents_Constructor::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
@@ -2474,8 +2463,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     // Do the security check if necessary
 
     nsIXPCSecurityManager* sm =
-            xpcc->GetAppropriateSecurityManager(
-                        nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
+            xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
     if(sm && NS_FAILED(sm->CanCreateInstance(cx, nsXPCConstructor::GetCID())))
     {
         // the security manager vetoed. It should have set an exception.
@@ -2530,7 +2518,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
         if(NS_FAILED(xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(val),
-                                getter_AddRefs(wn))) || !wn ||
+                                                     getter_AddRefs(wn))) || !wn ||
            !(cInterfaceID = do_QueryWrappedNative(wn)))
         {
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
@@ -2544,8 +2532,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         if(info)
         {
             cInterfaceID =
-                dont_AddRef(
-                    static_cast<nsIJSIID*>(nsJSIID::NewID(info)));
+                dont_AddRef(static_cast<nsIJSIID*>(nsJSIID::NewID(info)));
         }
         if(!cInterfaceID)
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
@@ -2584,7 +2571,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
         if(NS_FAILED(xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(val),
-                                getter_AddRefs(wn))) || !wn ||
+                                                     getter_AddRefs(wn))) || !wn ||
            !(cClassID = do_QueryWrappedNative(wn)))
         {
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
@@ -2601,7 +2588,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     JSObject* newObj = nsnull;
 
     if(NS_FAILED(xpc->WrapNative(cx, obj, ctor, NS_GET_IID(nsIXPCConstructor),
-                 getter_AddRefs(holder2))) || !holder2 ||
+                                 getter_AddRefs(holder2))) || !holder2 ||
        NS_FAILED(holder2->GetJSObject(&newObj)) || !newObj)
     {
         return ThrowAndFail(NS_ERROR_XPC_CANT_CREATE_WN, cx, _retval);
@@ -2719,8 +2706,8 @@ nsXPCComponents_Utils::LookupMethod()
     nsCOMPtr<nsISupports> callee;
     cc->GetCallee(getter_AddRefs(callee));
     if(!callee || callee.get() !=
-                  static_cast<const nsISupports*>
-                             (static_cast<const nsIXPCComponents_Utils*>(this)))
+       static_cast<const nsISupports*>
+       (static_cast<const nsIXPCComponents_Utils*>(this)))
         return NS_ERROR_FAILURE;
 #endif
 
@@ -2834,11 +2821,9 @@ nsXPCComponents_Utils::ReportError()
     // This function shall never fail! Silently eat any failure conditions.
     nsresult rv;
 
-    nsCOMPtr<nsIConsoleService> console(
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+    nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
 
-    nsCOMPtr<nsIScriptError2> scripterr(
-      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+    nsCOMPtr<nsIScriptError2> scripterr(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
 
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
     if(!scripterr || !console || !xpc)
@@ -2858,8 +2843,8 @@ nsXPCComponents_Utils::ReportError()
     nsCOMPtr<nsISupports> callee;
     cc->GetCallee(getter_AddRefs(callee));
     if(!callee || callee.get() !=
-                  static_cast<const nsISupports*>
-                             (static_cast<const nsIXPCComponents_Utils*>(this))) {
+       static_cast<const nsISupports*>
+       (static_cast<const nsIXPCComponents_Utils*>(this))) {
         NS_ERROR("reportError() must only be called from JS!");
         return NS_ERROR_FAILURE;
     }
@@ -2899,10 +2884,10 @@ nsXPCComponents_Utils::ReportError()
         PRUint32 column = err->uctokenptr - err->uclinebuf;
 
         rv = scripterr->InitWithWindowID(reinterpret_cast<const PRUnichar*>
-                                                       (err->ucmessage),
+                                         (err->ucmessage),
                                          fileUni.get(),
                                          reinterpret_cast<const PRUnichar*>
-                                                         (err->uclinebuf),
+                                         (err->uclinebuf),
                                          err->lineno,
                                          column,
                                          err->flags,
@@ -3329,7 +3314,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
             do_GetService(kScriptSecurityManagerContractID);
         if (!secman ||
             NS_FAILED(rv = secman->GetCodebasePrincipal(uri,
-                                                 getter_AddRefs(principal))) ||
+                                                        getter_AddRefs(principal))) ||
             !principal) {
             if (NS_SUCCEEDED(rv))
                 rv = NS_ERROR_FAILURE;
@@ -3649,7 +3634,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     if (data && (stack = data->GetJSContextStack())) {
         if (NS_FAILED(stack->Push(sandcx->GetJSContext()))) {
             JS_ReportError(cx,
-                    "Unable to initialize XPConnect with the sandbox context");
+                           "Unable to initialize XPConnect with the sandbox context");
             JSPRINCIPALS_DROP(cx, jsPrincipals);
             return NS_ERROR_FAILURE;
         }
@@ -3680,7 +3665,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
             JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
                                              jsPrincipals,
                                              reinterpret_cast<const jschar *>
-                                                             (PromiseFlatString(source).get()),
+                                             (PromiseFlatString(source).get()),
                                              source.Length(), filename, lineNo,
                                              &v);
         if (ok && returnStringOnly && !(JSVAL_IS_VOID(v))) {
@@ -4104,7 +4089,7 @@ nsXPCComponents::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -4159,8 +4144,7 @@ nsXPCComponents::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-nsXPCComponents::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+nsXPCComponents::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;

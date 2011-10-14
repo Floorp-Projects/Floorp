@@ -229,8 +229,7 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, uintN argc, jsval *vp)
     nsIXPCSecurityManager* sm;
     XPCContext* xpcc = ccx.GetXPCContext();
 
-    sm = xpcc->GetAppropriateSecurityManager(
-                    nsIXPCSecurityManager::HOOK_GET_PROPERTY);
+    sm = xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_GET_PROPERTY);
     if(sm)
     {
         AutoMarkingNativeInterfacePtr iface(ccx);
@@ -244,12 +243,12 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, uintN argc, jsval *vp)
 
             ccx.SetCallInfo(iface, iface->GetMemberAt(1), JS_FALSE);
             if(NS_FAILED(sm->
-                    CanAccess(nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                              &ccx, ccx,
-                              ccx.GetFlattenedJSObject(),
-                              wrapper->GetIdentityObject(),
-                              wrapper->GetClassInfo(), id,
-                              wrapper->GetSecurityInfoAddr())))
+                         CanAccess(nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
+                                   &ccx, ccx,
+                                   ccx.GetFlattenedJSObject(),
+                                   wrapper->GetIdentityObject(),
+                                   wrapper->GetClassInfo(), id,
+                                   wrapper->GetSecurityInfoAddr())))
             {
                 // The SecurityManager should have set an exception.
                 return JS_FALSE;
@@ -355,7 +354,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                name.encode(ccx, JSID_TO_STRING(id)) &&
                (iface2 = XPCNativeInterface::GetNewOrUsed(ccx, name.ptr()), iface2) &&
                nsnull != (to = wrapperToReflectInterfaceNames->
-                                    FindTearOff(ccx, iface2, JS_TRUE, &rv)) &&
+                          FindTearOff(ccx, iface2, JS_TRUE, &rv)) &&
                nsnull != (jso = to->GetJSObject()))
 
             {
@@ -1170,7 +1169,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             oldResolvingWrapper = ccx.SetResolvingWrapper(wrapper);
 
         rv = si->GetCallback()->NewResolve(wrapper, cx, obj, id, flags,
-                                             &obj2FromScriptable, &retval);
+                                           &obj2FromScriptable, &retval);
 
         if(allowPropMods)
             (void)ccx.SetResolvingWrapper(oldResolvingWrapper);
@@ -1684,12 +1683,11 @@ XPC_WN_GetterSetter(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 XPC_WN_Shared_Proto_Enumerate(JSContext *cx, JSObject *obj)
 {
-    NS_ASSERTION(
-        js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
-        js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass ||
-        js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
-        js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
-        "bad proto");
+    NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
+                 js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass ||
+                 js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
+                 js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
+                 "bad proto");
     XPCWrappedNativeProto* self =
         (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
     if(!self)
@@ -1749,10 +1747,9 @@ XPC_WN_Shared_Proto_Trace(JSTracer *trc, JSObject *obj)
 static JSBool
 XPC_WN_ModsAllowed_Proto_Resolve(JSContext *cx, JSObject *obj, jsid id)
 {
-    NS_ASSERTION(
-        js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
-        js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass,
-        "bad proto");
+    NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
+                 js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass,
+                 "bad proto");
 
     XPCWrappedNativeProto* self =
         (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);

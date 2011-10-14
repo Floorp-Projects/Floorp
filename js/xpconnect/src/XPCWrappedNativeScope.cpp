@@ -557,12 +557,9 @@ XPCWrappedNativeScope::ASSERT_NoInterfaceSetsAreMarked()
 {
     for(XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
     {
-        cur->mWrappedNativeMap->Enumerate(
-            ASSERT_WrappedNativeSetNotMarked, nsnull);
-        cur->mWrappedNativeProtoMap->Enumerate(
-            ASSERT_WrappedNativeProtoSetNotMarked, nsnull);
-        cur->mMainThreadWrappedNativeProtoMap->Enumerate(
-            ASSERT_WrappedNativeProtoSetNotMarked, nsnull);
+        cur->mWrappedNativeMap->Enumerate(ASSERT_WrappedNativeSetNotMarked, nsnull);
+        cur->mWrappedNativeProtoMap->Enumerate(ASSERT_WrappedNativeProtoSetNotMarked, nsnull);
+        cur->mMainThreadWrappedNativeProtoMap->Enumerate(ASSERT_WrappedNativeProtoSetNotMarked, nsnull);
     }
 }
 #endif
@@ -869,7 +866,7 @@ WNProtoSecPolicyClearer(JSDHashTable *table, JSDHashEntryHdr *hdr,
 
 static JSDHashOperator
 WNSecPolicyClearer(JSDHashTable *table, JSDHashEntryHdr *hdr,
-                    uint32 number, void *arg)
+                   uint32 number, void *arg)
 {
     XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
     if(wrapper->HasProto() && !wrapper->HasSharedProto())
@@ -916,9 +913,9 @@ XPCWrappedNativeScope::RemoveWrappedNativeProtos()
     XPCAutoLock al(mRuntime->GetMapLock());
 
     mWrappedNativeProtoMap->Enumerate(WNProtoRemover,
-        GetRuntime()->GetDetachedWrappedNativeProtoMap());
+                                      GetRuntime()->GetDetachedWrappedNativeProtoMap());
     mMainThreadWrappedNativeProtoMap->Enumerate(WNProtoRemover,
-        GetRuntime()->GetDetachedWrappedNativeProtoMap());
+                                                GetRuntime()->GetDetachedWrappedNativeProtoMap());
 }
 
 static PLDHashOperator
@@ -995,8 +992,8 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
         XPC_LOG_ALWAYS(("mPrototypeNoHelper @ %x", mPrototypeNoHelper));
 
         XPC_LOG_ALWAYS(("mWrappedNativeMap @ %x with %d wrappers(s)",         \
-                         mWrappedNativeMap,                                   \
-                         mWrappedNativeMap ? mWrappedNativeMap->Count() : 0));
+                        mWrappedNativeMap,                                    \
+                        mWrappedNativeMap ? mWrappedNativeMap->Count() : 0));
         // iterate contexts...
         if(depth && mWrappedNativeMap && mWrappedNativeMap->Count())
         {
@@ -1006,8 +1003,8 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
         }
 
         XPC_LOG_ALWAYS(("mWrappedNativeProtoMap @ %x with %d protos(s)",      \
-                         mWrappedNativeProtoMap,                              \
-                         mWrappedNativeProtoMap ? mWrappedNativeProtoMap->Count() : 0));
+                        mWrappedNativeProtoMap,                               \
+                        mWrappedNativeProtoMap ? mWrappedNativeProtoMap->Count() : 0));
         // iterate contexts...
         if(depth && mWrappedNativeProtoMap && mWrappedNativeProtoMap->Count())
         {
@@ -1017,8 +1014,8 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
         }
 
         XPC_LOG_ALWAYS(("mMainThreadWrappedNativeProtoMap @ %x with %d protos(s)", \
-                         mMainThreadWrappedNativeProtoMap,                    \
-                         mMainThreadWrappedNativeProtoMap ? mMainThreadWrappedNativeProtoMap->Count() : 0));
+                        mMainThreadWrappedNativeProtoMap,                     \
+                        mMainThreadWrappedNativeProtoMap ? mMainThreadWrappedNativeProtoMap->Count() : 0));
         // iterate contexts...
         if(depth && mMainThreadWrappedNativeProtoMap && mMainThreadWrappedNativeProtoMap->Count())
         {

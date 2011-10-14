@@ -285,17 +285,17 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 /***************************************************************************/
 
 typedef bool (*InfoTester)(nsIInterfaceInfoManager* manager, const void* data,
-                             nsIInterfaceInfo** info);
+                           nsIInterfaceInfo** info);
 
 static bool IIDTester(nsIInterfaceInfoManager* manager, const void* data,
-                        nsIInterfaceInfo** info)
+                      nsIInterfaceInfo** info)
 {
     return NS_SUCCEEDED(manager->GetInfoForIID((const nsIID *) data, info)) &&
            *info;
 }
 
 static bool NameTester(nsIInterfaceInfoManager* manager, const void* data,
-                      nsIInterfaceInfo** info)
+                       nsIInterfaceInfo** info)
 {
     return NS_SUCCEEDED(manager->GetInfoForName((const char *) data, info)) &&
            *info;
@@ -702,8 +702,7 @@ NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
                             tracer->debugPrintIndex);
                 tracer->cb.NoteNextEdgeName(buffer);
             } else {
-                tracer->cb.NoteNextEdgeName(
-                  static_cast<const char*>(tracer->debugPrintArg));
+                tracer->cb.NoteNextEdgeName(static_cast<const char*>(tracer->debugPrintArg));
             }
         }
 #endif
@@ -2257,7 +2256,7 @@ nsXPConnect::ReleaseJSContext(JSContext * aJSContext, bool noGC)
 
         NS_ASSERTION(!tls->GetJSContextStack() ||
                      !tls->GetJSContextStack()->
-                        DEBUG_StackHasJSContext(aJSContext),
+                     DEBUG_StackHasJSContext(aJSContext),
                      "JSContext still in threadjscontextstack!");
     }
 
@@ -2315,28 +2314,28 @@ nsXPConnect::DebugDumpObject(nsISupports *p, PRInt16 depth)
     nsIXPConnectWrappedJS* wjs;
 
     if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnect),
-                        (void**)&xpc)))
+                                      (void**)&xpc)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnect..."));
         xpc->DebugDump(depth);
         NS_RELEASE(xpc);
     }
     else if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPCWrappedJSClass),
-                        (void**)&wjsc)))
+                                           (void**)&wjsc)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedJSClass..."));
         wjsc->DebugDump(depth);
         NS_RELEASE(wjsc);
     }
     else if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedNative),
-                        (void**)&wn)))
+                                           (void**)&wn)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedNative..."));
         wn->DebugDump(depth);
         NS_RELEASE(wn);
     }
     else if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedJS),
-                        (void**)&wjs)))
+                                           (void**)&wjs)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedJS..."));
         wjs->DebugDump(depth);

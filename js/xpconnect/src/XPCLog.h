@@ -120,7 +120,7 @@ extern void LogSlimWrapperNotCreated(JSContext *cx, nsISupports *obj,
         if (strId)                                                            \
         {                                                                     \
           NS_ConvertUTF16toUTF8 name((PRUnichar*)::JS_GetStringChars(strId),  \
-                                      ::JS_GetStringLength(strId));           \
+                                     ::JS_GetStringLength(strId));            \
           LOG_WILL_MORPH_FOR_PROP(cx, obj, name.get());                       \
         }                                                                     \
         else                                                                  \

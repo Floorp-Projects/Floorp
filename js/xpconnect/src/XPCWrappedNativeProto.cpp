@@ -88,10 +88,9 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
 }
 
 JSBool
-XPCWrappedNativeProto::Init(
-                XPCCallContext& ccx,
-                JSBool isGlobal,
-                const XPCNativeScriptableCreateInfo* scriptableCreateInfo)
+XPCWrappedNativeProto::Init(XPCCallContext& ccx,
+                            JSBool isGlobal,
+                            const XPCNativeScriptableCreateInfo* scriptableCreateInfo)
 {
     nsIXPCScriptable *callback = scriptableCreateInfo ?
                                  scriptableCreateInfo->GetCallback() :

@@ -217,10 +217,9 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
         {
            // Ask the provider for the exception, if there is no provider
            // we expect it to set e to null
-            exceptionManager->GetExceptionFromProvider(
-               rv,
-               defaultException,
-               getter_AddRefs(finalException));
+            exceptionManager->GetExceptionFromProvider(rv,
+                                                       defaultException,
+                                                       getter_AddRefs(finalException));
             // We should get at least the defaultException back,
             // but just in case
             if(finalException == nsnull)

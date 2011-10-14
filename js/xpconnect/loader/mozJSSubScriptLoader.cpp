@@ -155,9 +155,8 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
 
     if (charset) {
         nsString script;
-        rv = nsScriptLoader::ConvertToUTF16(
-                nsnull, reinterpret_cast<const PRUint8*>(buf.get()), len,
-                nsDependentString(reinterpret_cast<PRUnichar*>(charset)), nsnull, script);
+        rv = nsScriptLoader::ConvertToUTF16(nsnull, reinterpret_cast<const PRUint8*>(buf.get()), len,
+                                            nsDependentString(reinterpret_cast<PRUnichar*>(charset)), nsnull, script);
 
         if (NS_FAILED(rv)) {
             JSPRINCIPALS_DROP(cx, jsPrincipals);

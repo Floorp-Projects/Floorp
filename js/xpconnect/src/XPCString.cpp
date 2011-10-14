@@ -121,7 +121,7 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
 
         jschar *chars = reinterpret_cast<jschar *>
                                         (JS_malloc(cx, (length + 1) *
-                                                      sizeof(jschar)));
+                                                   sizeof(jschar)));
         if (!chars)
             return JSVAL_NULL;
 

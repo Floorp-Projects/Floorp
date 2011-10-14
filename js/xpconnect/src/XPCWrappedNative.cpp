@@ -956,9 +956,8 @@ XPCWrappedNative::Destroy()
 // This is factored out so that it can be called publicly
 // static
 void
-XPCWrappedNative::GatherProtoScriptableCreateInfo(
-                        nsIClassInfo* classInfo,
-                        XPCNativeScriptableCreateInfo& sciProto)
+XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
+                                                  XPCNativeScriptableCreateInfo& sciProto)
 {
     NS_ASSERTION(classInfo, "bad param");
     NS_ASSERTION(!sciProto.GetCallback(), "bad param");
@@ -982,9 +981,8 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(
     }
 
     nsCOMPtr<nsISupports> possibleHelper;
-    nsresult rv = classInfo->GetHelperForLanguage(
-                                    nsIProgrammingLanguage::JAVASCRIPT,
-                                    getter_AddRefs(possibleHelper));
+    nsresult rv = classInfo->GetHelperForLanguage(nsIProgrammingLanguage::JAVASCRIPT,
+                                                  getter_AddRefs(possibleHelper));
     if(NS_SUCCEEDED(rv) && possibleHelper)
     {
         nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(possibleHelper));
@@ -1003,11 +1001,10 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(
 
 // static
 const XPCNativeScriptableCreateInfo&
-XPCWrappedNative::GatherScriptableCreateInfo(
-                        nsISupports* obj,
-                        nsIClassInfo* classInfo,
-                        XPCNativeScriptableCreateInfo& sciProto,
-                        XPCNativeScriptableCreateInfo& sciWrapper)
+XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
+                                             nsIClassInfo* classInfo,
+                                             XPCNativeScriptableCreateInfo& sciProto,
+                                             XPCNativeScriptableCreateInfo& sciWrapper)
 {
     NS_ASSERTION(!sciWrapper.GetCallback(), "bad param");
 
@@ -1036,53 +1033,53 @@ XPCWrappedNative::GatherScriptableCreateInfo(
         // the siWrapper...
 
         NS_ASSERTION(!(sciWrapper.GetFlags().WantPreCreate() &&
-                        !sciProto.GetFlags().WantPreCreate()),
+                       !sciProto.GetFlags().WantPreCreate()),
                      "Can't set WANT_PRECREATE on an instance scriptable "
                      "without also setting it on the class scriptable");
 
         NS_ASSERTION(!(sciWrapper.GetFlags().DontEnumStaticProps() &&
-                        !sciProto.GetFlags().DontEnumStaticProps() &&
-                        sciProto.GetCallback() &&
-                        !sciProto.GetFlags().DontSharePrototype()),
+                       !sciProto.GetFlags().DontEnumStaticProps() &&
+                       sciProto.GetCallback() &&
+                       !sciProto.GetFlags().DontSharePrototype()),
                      "Can't set DONT_ENUM_STATIC_PROPS on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
         NS_ASSERTION(!(sciWrapper.GetFlags().DontEnumQueryInterface() &&
-                        !sciProto.GetFlags().DontEnumQueryInterface() &&
-                        sciProto.GetCallback() &&
-                        !sciProto.GetFlags().DontSharePrototype()),
+                       !sciProto.GetFlags().DontEnumQueryInterface() &&
+                       sciProto.GetCallback() &&
+                       !sciProto.GetFlags().DontSharePrototype()),
                      "Can't set DONT_ENUM_QUERY_INTERFACE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
         NS_ASSERTION(!(sciWrapper.GetFlags().DontAskInstanceForScriptable() &&
-                        !sciProto.GetFlags().DontAskInstanceForScriptable()),
+                       !sciProto.GetFlags().DontAskInstanceForScriptable()),
                      "Can't set DONT_ASK_INSTANCE_FOR_SCRIPTABLE on an instance scriptable "
                      "without also setting it on the class scriptable");
 
         NS_ASSERTION(!(sciWrapper.GetFlags().ClassInfoInterfacesOnly() &&
-                        !sciProto.GetFlags().ClassInfoInterfacesOnly() &&
-                        sciProto.GetCallback() &&
-                        !sciProto.GetFlags().DontSharePrototype()),
+                       !sciProto.GetFlags().ClassInfoInterfacesOnly() &&
+                       sciProto.GetCallback() &&
+                       !sciProto.GetFlags().DontSharePrototype()),
                      "Can't set CLASSINFO_INTERFACES_ONLY on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
         NS_ASSERTION(!(sciWrapper.GetFlags().AllowPropModsDuringResolve() &&
-                        !sciProto.GetFlags().AllowPropModsDuringResolve() &&
-                        sciProto.GetCallback() &&
-                        !sciProto.GetFlags().DontSharePrototype()),
+                       !sciProto.GetFlags().AllowPropModsDuringResolve() &&
+                       sciProto.GetCallback() &&
+                       !sciProto.GetFlags().DontSharePrototype()),
                      "Can't set ALLOW_PROP_MODS_DURING_RESOLVE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
         NS_ASSERTION(!(sciWrapper.GetFlags().AllowPropModsToPrototype() &&
-                        !sciProto.GetFlags().AllowPropModsToPrototype() &&
-                        sciProto.GetCallback() &&
-                        !sciProto.GetFlags().DontSharePrototype()),
+                       !sciProto.GetFlags().AllowPropModsToPrototype() &&
+                       sciProto.GetCallback() &&
+                       !sciProto.GetFlags().DontSharePrototype()),
                      "Can't set ALLOW_PROP_MODS_TO_PROTOTYPE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
         NS_ASSERTION(!(sciWrapper.GetFlags().DontSharePrototype() &&
-                        !sciProto.GetFlags().DontSharePrototype() &&
-                        sciProto.GetCallback()),
+                       !sciProto.GetFlags().DontSharePrototype() &&
+                       sciProto.GetCallback()),
                      "Can't set DONT_SHARE_PROTOTYPE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
@@ -1221,7 +1218,7 @@ XPCWrappedNative::FinishInit(XPCCallContext &ccx)
     if(HasProto() && GetProto()->ClassIsMainThreadOnly() && !NS_IsMainThread())
     {
         DEBUG_ReportWrapperThreadSafetyError(ccx,
-            "MainThread only wrapper created on the wrong thread", this);
+                                             "MainThread only wrapper created on the wrong thread", this);
         return JS_FALSE;
     }
 #endif
@@ -1573,11 +1570,10 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                     // this stuff. So, if these don't match then the caller is
                     // doing something bad here.
 
-                    NS_ASSERTION(
-                       oldProto->GetScriptableInfo()->GetScriptableShared() ==
-                       newProto->GetScriptableInfo()->GetScriptableShared(),
-                       "Changing proto is also changing JSObject Classname or "
-                       "helper's nsIXPScriptable flags. This is not allowed!");
+                    NS_ASSERTION(oldProto->GetScriptableInfo()->GetScriptableShared() ==
+                                 newProto->GetScriptableInfo()->GetScriptableShared(),
+                                 "Changing proto is also changing JSObject Classname or "
+                                 "helper's nsIXPScriptable flags. This is not allowed!");
 
                     wrapper->mScriptableInfo = newProto->GetScriptableInfo();
                 }
@@ -1844,20 +1840,18 @@ XPCWrappedNative::ExtendSet(XPCCallContext& ccx, XPCNativeInterface* aInterface)
 
 XPCWrappedNativeTearOff*
 XPCWrappedNative::LocateTearOff(XPCCallContext& ccx,
-                              XPCNativeInterface* aInterface)
+                                XPCNativeInterface* aInterface)
 {
     XPCAutoLock al(GetLock()); // hold the lock throughout
 
-    for(
-        XPCWrappedNativeTearOffChunk* chunk = &mFirstChunk;
+    for(XPCWrappedNativeTearOffChunk* chunk = &mFirstChunk;
         chunk != nsnull;
         chunk = chunk->mNextChunk)
     {
         XPCWrappedNativeTearOff* tearOff = chunk->mTearOffs;
         XPCWrappedNativeTearOff* const end = tearOff +
             XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK;
-        for(
-            tearOff = chunk->mTearOffs;
+        for(tearOff = chunk->mTearOffs;
             tearOff < end;
             tearOff++)
         {
@@ -1891,8 +1885,7 @@ XPCWrappedNative::FindTearOff(XPCCallContext& ccx,
         to = chunk->mTearOffs;
         XPCWrappedNativeTearOff* const end = chunk->mTearOffs +
             XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK;
-        for(
-            to = chunk->mTearOffs;
+        for(to = chunk->mTearOffs;
             to < end;
             to++)
         {
@@ -2055,7 +2048,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                         proto = jso->getProto();
 
                         NS_ASSERTION(proto && proto != our_proto,
-                            "!!! xpconnect/xbl check - wrapper has no special proto");
+                                     "!!! xpconnect/xbl check - wrapper has no special proto");
 
                         bool found_our_proto = false;
                         while(proto && !found_our_proto) {
@@ -2065,7 +2058,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                         }
 
                         NS_ASSERTION(found_our_proto,
-                            "!!! xpconnect/xbl check - wrapper has extra proto");
+                                     "!!! xpconnect/xbl check - wrapper has extra proto");
                     }
                     else
                     {
@@ -2107,11 +2100,10 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
         }
 
         nsIXPCSecurityManager* sm;
-           sm = ccx.GetXPCContext()->GetAppropriateSecurityManager(
-                                nsIXPCSecurityManager::HOOK_CREATE_WRAPPER);
+           sm = ccx.GetXPCContext()->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_WRAPPER);
         if(sm && NS_FAILED(sm->
-                    CanCreateWrapper(ccx, *iid, identity,
-                                     GetClassInfo(), GetSecurityInfoAddr())))
+                           CanCreateWrapper(ccx, *iid, identity,
+                                            GetClassInfo(), GetSecurityInfoAddr())))
         {
             // the security manager vetoed. It should have set an exception.
             NS_RELEASE(obj);
@@ -3837,16 +3829,16 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper)
         {
             XPCCallContext ccx(NATIVE_CALLER);
             DEBUG_ReportWrapperThreadSafetyError(ccx,
-                "Main Thread Only wrapper accessed on another thread", wrapper);
+                                                 "Main Thread Only wrapper accessed on another thread", wrapper);
         }
     }
     else if(PR_GetCurrentThread() != wrapper->mThread)
     {
         XPCCallContext ccx(NATIVE_CALLER);
         DEBUG_ReportWrapperThreadSafetyError(ccx,
-            "XPConnect WrappedNative is being accessed on multiple threads but "
-            "the underlying native xpcom object does not have a "
-            "nsIClassInfo with the 'THREADSAFE' flag set", wrapper);
+                                             "XPConnect WrappedNative is being accessed on multiple threads but "
+                                             "the underlying native xpcom object does not have a "
+                                             "nsIClassInfo with the 'THREADSAFE' flag set", wrapper);
     }
 }
 #endif

@@ -539,7 +539,7 @@ nsXPCWrappedJS::FindInherited(REFNSIID aIID)
     {
         bool found;
         if(NS_SUCCEEDED(cur->GetClass()->GetInterfaceInfo()->
-                                HasAncestor(&aIID, &found)) && found)
+                        HasAncestor(&aIID, &found)) && found)
             return cur;
     }
 
@@ -658,7 +658,7 @@ nsXPCWrappedJS::DebugDump(PRInt16 depth)
 
         bool isRoot = mRoot == this;
         XPC_LOG_ALWAYS(("%s wrapper around JSObject @ %x", \
-                         isRoot ? "ROOT":"non-root", mJSObj));
+                        isRoot ? "ROOT":"non-root", mJSObj));
         char* name;
         GetClass()->GetInterfaceInfo()->GetName(&name);
         XPC_LOG_ALWAYS(("interface name is %s", name));
