@@ -45,12 +45,14 @@
 
 #include "js/Vector.h"
 
+#include "vm/MatchPairs.h"
+
 namespace js {
 
 class RegExpStatics
 {
-    typedef Vector<int, 20, SystemAllocPolicy> MatchPairs;
-    MatchPairs      matchPairs;
+    typedef Vector<int, 20, SystemAllocPolicy> Pairs;
+    Pairs           matchPairs;
     /* The input that was used to produce matchPairs. */
     JSLinearString  *matchPairsInput;
     /* The input last set on the statics. */
@@ -162,17 +164,20 @@ class RegExpStatics
 
     /* Mutators. */
 
-    bool updateFromMatch(JSContext *cx, JSLinearString *input, int *buf, size_t matchItemCount) {
+    bool updateFromMatchPairs(JSContext *cx, JSLinearString *input, MatchPairs *newPairs) {
+        JS_ASSERT(input);
         aboutToWrite();
         pendingInput = input;
 
-        if (!matchPairs.resizeUninitialized(matchItemCount)) {
+        if (!matchPairs.resizeUninitialized(2 * newPairs->pairCount())) {
             js_ReportOutOfMemory(cx);
             return false;
         }
 
-        for (size_t i = 0; i < matchItemCount; ++i)
-            matchPairs[i] = buf[i];
+        for (size_t i = 0; i < newPairs->pairCount(); ++i) {
+            matchPairs[2 * i] = newPairs->pair(i).start;
+            matchPairs[2 * i + 1] = newPairs->pair(i).limit;
+        }
 
         matchPairsInput = input;
         return true;

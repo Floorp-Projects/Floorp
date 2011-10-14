@@ -346,7 +346,7 @@ __BitScanReverse64(unsigned __int64 val)
 #  define js_FloorLog2wImpl(n)                                                \
     ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz32(n)))
 # else
-#  define js_FloorLog2wImpl(n) ((size_t)JS_FloorLog2(n))
+extern size_t js_FloorLog2wImpl(size_t n);
 # endif
 #elif JS_BYTES_PER_WORD == 8
 # ifdef JS_HAS_BUILTIN_BITSCAN64
