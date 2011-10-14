@@ -50,13 +50,13 @@
 bool
 xpc::PtrAndPrincipalHashKey::KeyEquals(const PtrAndPrincipalHashKey* aKey) const
 {
-    if(aKey->mPtr != mPtr)
+    if (aKey->mPtr != mPtr)
         return PR_FALSE;
-    if(aKey->mPrincipal == mPrincipal)
+    if (aKey->mPrincipal == mPrincipal)
         return PR_TRUE;
 
     bool equals;
-    if(NS_FAILED(mPrincipal->EqualsIgnoringDomain(aKey->mPrincipal, &equals)))
+    if (NS_FAILED(mPrincipal->EqualsIgnoringDomain(aKey->mPrincipal, &equals)))
     {
         NS_ERROR("we failed, guessing!");
         return PR_FALSE;
@@ -181,7 +181,7 @@ inline nsISupports*
 XPCCallContext::GetIdentityObject() const
 {
     CHECK_STATE(HAVE_OBJECT);
-    if(mWrapper)
+    if (mWrapper)
         return mWrapper->GetIdentityObject();
     return mFlattenedJSObject ?
            static_cast<nsISupports*>(xpc_GetJSPrivate(mFlattenedJSObject)) :
@@ -191,7 +191,7 @@ XPCCallContext::GetIdentityObject() const
 inline XPCWrappedNative*
 XPCCallContext::GetWrapper() const
 {
-    if(mState == INIT_FAILED)
+    if (mState == INIT_FAILED)
         return nsnull;
 
     CHECK_STATE(HAVE_OBJECT);
@@ -202,7 +202,7 @@ inline XPCWrappedNativeProto*
 XPCCallContext::GetProto() const
 {
     CHECK_STATE(HAVE_OBJECT);
-    if(mWrapper)
+    if (mWrapper)
         return mWrapper->GetProto();
     return mFlattenedJSObject ? GetSlimWrapperProto(mFlattenedJSObject) : nsnull;
 }
@@ -312,7 +312,7 @@ inline void
 XPCCallContext::SetRetVal(jsval val)
 {
     CHECK_STATE(HAVE_ARGS);
-    if(mRetVal)
+    if (mRetVal)
         *mRetVal = val;
 }
 
@@ -392,8 +392,8 @@ inline XPCNativeMember*
 XPCNativeInterface::FindMember(jsid name) const
 {
     const XPCNativeMember* member = mMembers;
-    for(int i = (int) mMemberCount; i > 0; i--, member++)
-        if(member->GetName() == name)
+    for (int i = (int) mMemberCount; i > 0; i--, member++)
+        if (member->GetName() == name)
             return const_cast<XPCNativeMember*>(member);
     return nsnull;
 }
@@ -418,27 +418,27 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
 
     // look for interface names first
 
-    for(i = 0, iface = mInterfaces; i < count; i++, iface++)
+    for (i = 0, iface = mInterfaces; i < count; i++, iface++)
     {
-        if(name == (*iface)->GetName())
+        if (name == (*iface)->GetName())
         {
-            if(pMember)
+            if (pMember)
                 *pMember = nsnull;
-            if(pInterfaceIndex)
+            if (pInterfaceIndex)
                 *pInterfaceIndex = (PRUint16) i;
             return JS_TRUE;
         }
     }
 
     // look for method names
-    for(i = 0, iface = mInterfaces; i < count; i++, iface++)
+    for (i = 0, iface = mInterfaces; i < count; i++, iface++)
     {
         XPCNativeMember* member = (*iface)->FindMember(name);
-        if(member)
+        if (member)
         {
-            if(pMember)
+            if (pMember)
                 *pMember = member;
-            if(pInterfaceIndex)
+            if (pInterfaceIndex)
                 *pInterfaceIndex = (PRUint16) i;
             return JS_TRUE;
         }
@@ -451,7 +451,7 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
                          XPCNativeInterface** pInterface) const
 {
     PRUint16 index;
-    if(!FindMember(name, pMember, &index))
+    if (!FindMember(name, pMember, &index))
         return JS_FALSE;
     *pInterface = mInterfaces[index];
     return JS_TRUE;
@@ -468,7 +468,7 @@ XPCNativeSet::FindMember(jsid name,
     XPCNativeInterface* Interface;
     XPCNativeMember* protoMember;
 
-    if(!FindMember(name, &Member, &Interface))
+    if (!FindMember(name, &Member, &Interface))
         return JS_FALSE;
 
     *pMember = Member;
@@ -490,11 +490,11 @@ XPCNativeSet::FindNamedInterface(jsid name) const
 {
     XPCNativeInterface* const * pp = mInterfaces;
 
-    for(int i = (int) mInterfaceCount; i > 0; i--, pp++)
+    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
     {
         XPCNativeInterface* iface = *pp;
 
-        if(name == iface->GetName())
+        if (name == iface->GetName())
             return iface;
     }
     return nsnull;
@@ -505,11 +505,11 @@ XPCNativeSet::FindInterfaceWithIID(const nsIID& iid) const
 {
     XPCNativeInterface* const * pp = mInterfaces;
 
-    for(int i = (int) mInterfaceCount; i > 0; i--, pp++)
+    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
     {
         XPCNativeInterface* iface = *pp;
 
-        if(iface->GetIID()->Equals(iid))
+        if (iface->GetIID()->Equals(iid))
             return iface;
     }
     return nsnull;
@@ -520,9 +520,9 @@ XPCNativeSet::HasInterface(XPCNativeInterface* aInterface) const
 {
     XPCNativeInterface* const * pp = mInterfaces;
 
-    for(int i = (int) mInterfaceCount; i > 0; i--, pp++)
+    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
     {
-        if(aInterface == *pp)
+        if (aInterface == *pp)
             return JS_TRUE;
     }
     return JS_FALSE;
@@ -539,12 +539,12 @@ XPCNativeSet::HasInterfaceWithAncestor(const nsIID* iid) const
 {
     // We can safely skip the first interface which is *always* nsISupports.
     XPCNativeInterface* const * pp = mInterfaces+1;
-    for(int i = (int) mInterfaceCount; i > 1; i--, pp++)
-        if((*pp)->HasAncestor(iid))
+    for (int i = (int) mInterfaceCount; i > 1; i--, pp++)
+        if ((*pp)->HasAncestor(iid))
             return JS_TRUE;
 
     // This is rare, so check last.
-    if(iid == &NS_GET_IID(nsISupports))
+    if (iid == &NS_GET_IID(nsISupports))
         return PR_TRUE;
 
     return JS_FALSE;
@@ -559,12 +559,12 @@ XPCNativeSet::MatchesSetUpToInterface(const XPCNativeSet* other,
     XPCNativeInterface* const * pp1 = mInterfaces;
     XPCNativeInterface* const * pp2 = other->mInterfaces;
 
-    for(int i = (int) count; i > 0; i--, pp1++, pp2++)
+    for (int i = (int) count; i > 0; i--, pp1++, pp2++)
     {
         XPCNativeInterface* cur = (*pp1);
-        if(cur != (*pp2))
+        if (cur != (*pp2))
             return JS_FALSE;
-        if(cur == iface)
+        if (cur == iface)
             return JS_TRUE;
     }
     return JS_FALSE;
@@ -572,12 +572,12 @@ XPCNativeSet::MatchesSetUpToInterface(const XPCNativeSet* other,
 
 inline void XPCNativeSet::Mark()
 {
-    if(IsMarked())
+    if (IsMarked())
         return;
 
     XPCNativeInterface* const * pp = mInterfaces;
 
-    for(int i = (int) mInterfaceCount; i > 0; i--, pp++)
+    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
         (*pp)->Mark();
 
     MarkSelfOnly();
@@ -590,7 +590,7 @@ inline void XPCNativeSet::ASSERT_NotMarked()
 
     XPCNativeInterface* const * pp = mInterfaces;
 
-    for(int i = (int) mInterfaceCount; i > 0; i--, pp++)
+    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
         NS_ASSERTION(!(*pp)->IsMarked(), "bad");
 }
 #endif
@@ -627,22 +627,22 @@ inline void
 XPCWrappedNative::SweepTearOffs()
 {
     XPCWrappedNativeTearOffChunk* chunk;
-    for(chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk)
+    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk)
     {
         XPCWrappedNativeTearOff* to = chunk->mTearOffs;
-        for(int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK; i > 0; i--, to++)
+        for (int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK; i > 0; i--, to++)
         {
             JSBool marked = to->IsMarked();
             to->Unmark();
-            if(marked)
+            if (marked)
                 continue;
 
             // If this tearoff does not have a live dedicated JSObject,
             // then let's recycle it.
-            if(!to->GetJSObject())
+            if (!to->GetJSObject())
             {
                 nsISupports* obj = to->GetNative();
-                if(obj)
+                if (obj)
                 {
                     obj->Release();
                     to->SetNative(nsnull);
@@ -660,7 +660,7 @@ xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsid id)
 {
     jsval prop;
 
-    if(!JS_LookupPropertyById(cx, obj, id, &prop))
+    if (!JS_LookupPropertyById(cx, obj, id, &prop))
         return JS_FALSE;
     return JS_TRUE;
 }
@@ -719,7 +719,7 @@ XPCLazyCallContext::SetWrapper(XPCWrappedNative* wrapper,
 {
     mWrapper = wrapper;
     mTearOff = tearoff;
-    if(mTearOff)
+    if (mTearOff)
         mFlattenedJSObject = mTearOff->GetJSObject();
     else
         mFlattenedJSObject = mWrapper->GetFlatJSObject();

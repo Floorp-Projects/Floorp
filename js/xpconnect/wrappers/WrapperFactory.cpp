@@ -458,7 +458,7 @@ WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, JS_GetPrototype(cx, obj), JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper,
-                                       OnlyIfSubjectIsSystem>::singleton);
+                     OnlyIfSubjectIsSystem>::singleton);
     return wrapperObj;
 }
 

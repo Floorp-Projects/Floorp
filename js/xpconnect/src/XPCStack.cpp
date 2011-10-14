@@ -80,11 +80,11 @@ private:
 nsresult
 XPCJSStack::CreateStack(JSContext* cx, nsIStackFrame** stack)
 {
-    if(!cx)
+    if (!cx)
         return NS_ERROR_FAILURE;
 
     JSStackFrame *fp = NULL;
-    if(!JS_FrameIterator(cx, &fp))
+    if (!JS_FrameIterator(cx, &fp))
         return NS_ERROR_FAILURE;
     return XPCJSStackFrame::CreateStack(cx, fp, (XPCJSStackFrame**) stack);
 }
@@ -119,9 +119,9 @@ XPCJSStackFrame::XPCJSStackFrame()
 
 XPCJSStackFrame::~XPCJSStackFrame()
 {
-    if(mFilename)
+    if (mFilename)
         nsMemory::Free(mFilename);
-    if(mFunname)
+    if (mFunname)
         nsMemory::Free(mFunname);
 }
 
@@ -136,9 +136,9 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
 
     nsRefPtr<XPCJSStackFrame> first = new XPCJSStackFrame();
     nsRefPtr<XPCJSStackFrame> self = first;
-    while(fp && self)
+    while (fp && self)
     {
-        if(!JS_IsScriptFrame(cx, fp))
+        if (!JS_IsScriptFrame(cx, fp))
         {
             self->mLanguage = nsIProgrammingLanguage::CPLUSPLUS;
         }
@@ -147,13 +147,13 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
             self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
             JSScript* script = JS_GetFrameScript(cx, fp);
             jsbytecode* pc = JS_GetFramePC(cx, fp);
-            if(script && pc)
+            if (script && pc)
             {
                 JS::AutoEnterFrameCompartment ac;
-                if(ac.enter(cx, fp))
+                if (ac.enter(cx, fp))
                 {
                     const char* filename = JS_GetScriptFilename(cx, script);
-                    if(filename)
+                    if (filename)
                     {
                         self->mFilename = (char*)
                             nsMemory::Clone(filename,
@@ -163,16 +163,16 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
                     self->mLineno = (PRInt32) JS_PCToLineNumber(cx, script, pc);
 
                     JSFunction* fun = JS_GetFrameFunction(cx, fp);
-                    if(fun)
+                    if (fun)
                     {
                         JSString *funid = JS_GetFunctionId(fun);
-                        if(funid)
+                        if (funid)
                         {
                             size_t length = JS_GetStringEncodingLength(cx, funid);
-                            if(length != size_t(-1))
+                            if (length != size_t(-1))
                             {
                                 self->mFunname = static_cast<char *>(nsMemory::Alloc(length + 1));
-                                if(self->mFunname)
+                                if (self->mFunname)
                                 {
                                     JS_EncodeStringToBuffer(funid, self->mFunname, length);
                                     self->mFunname[length] = '\0';
@@ -192,7 +192,7 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
         {
             fp = NULL;
         }
-        else if(JS_FrameIterator(cx, &fp))
+        else if (JS_FrameIterator(cx, &fp))
         {
             XPCJSStackFrame* frame = new XPCJSStackFrame();
             self->mCaller = frame;
@@ -215,41 +215,41 @@ XPCJSStackFrame::CreateStackFrameLocation(PRUint32 aLanguage,
 {
     JSBool failed = JS_FALSE;
     XPCJSStackFrame* self = new XPCJSStackFrame();
-    if(self)
+    if (self)
         NS_ADDREF(self);
     else
         failed = JS_TRUE;
 
-    if(!failed)
+    if (!failed)
     {
         self->mLanguage = aLanguage;
         self->mLineno = aLineNumber;
     }
 
-    if(!failed && aFilename)
+    if (!failed && aFilename)
     {
         self->mFilename = (char*)
                 nsMemory::Clone(aFilename,
                                 sizeof(char)*(strlen(aFilename)+1));
-        if(!self->mFilename)
+        if (!self->mFilename)
             failed = JS_TRUE;
     }
 
-    if(!failed && aFunctionName)
+    if (!failed && aFunctionName)
     {
         self->mFunname = (char*)
                 nsMemory::Clone(aFunctionName,
                                 sizeof(char)*(strlen(aFunctionName)+1));
-        if(!self->mFunname)
+        if (!self->mFunname)
             failed = JS_TRUE;
     }
 
-    if(!failed && aCaller)
+    if (!failed && aCaller)
     {
         self->mCaller = aCaller;
     }
 
-    if(failed && self)
+    if (failed && self)
     {
         NS_RELEASE(self);   // sets self to nsnull
     }
@@ -272,7 +272,7 @@ NS_IMETHODIMP XPCJSStackFrame::GetLanguageName(char * *aLanguageName)
     static const char cpp[] = "C++";
     char* temp;
 
-    if(IsJSFrame())
+    if (IsJSFrame())
         *aLanguageName = temp = (char*) nsMemory::Clone(js, sizeof(js));
     else
         *aLanguageName = temp = (char*) nsMemory::Clone(cpp, sizeof(cpp));
@@ -325,7 +325,7 @@ NS_IMETHODIMP XPCJSStackFrame::ToString(char **_retval)
               sizeof(format) + 6 /* space for lineno */;
 
     char* buf = (char*) nsMemory::Alloc(len);
-    if(!buf)
+    if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
 
     JS_snprintf(buf, len, format, frametype, filename, funname, mLineno);

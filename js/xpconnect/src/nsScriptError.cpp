@@ -158,12 +158,12 @@ nsScriptError::InitWithWindowID(const PRUnichar *message,
     mTimeStamp = PR_Now() / 1000;
     mInnerWindowID = aInnerWindowID;
 
-    if(aInnerWindowID) {
+    if (aInnerWindowID) {
         nsGlobalWindow* window =
           nsGlobalWindow::GetInnerWindowWithId(aInnerWindowID);
-        if(window) {
+        if (window) {
             nsPIDOMWindow* outer = window->GetOuterWindow();
-            if(outer)
+            if (outer)
                 mOuterWindowID = outer->WindowID();
         }
     }
@@ -191,14 +191,14 @@ nsScriptError::ToString(nsACString& /*UTF8*/ aResult)
     char* tempSourceName = nsnull;
     char* tempSourceLine = nsnull;
 
-    if(!mMessage.IsEmpty())
+    if (!mMessage.IsEmpty())
         tempMessage = ToNewUTF8String(mMessage);
-    if(!mSourceName.IsEmpty())
+    if (!mSourceName.IsEmpty())
         tempSourceName = ToNewUTF8String(mSourceName);
-    if(!mSourceLine.IsEmpty())
+    if (!mSourceLine.IsEmpty())
         tempSourceLine = ToNewUTF8String(mSourceLine);
 
-    if(nsnull != tempSourceName && nsnull != tempSourceLine)
+    if (nsnull != tempSourceName && nsnull != tempSourceLine)
         temp = JS_smprintf(format0,
                            severity,
                            tempMessage,
@@ -206,7 +206,7 @@ nsScriptError::ToString(nsACString& /*UTF8*/ aResult)
                            mLineNumber,
                            mColumnNumber,
                            tempSourceLine);
-    else if(!mSourceName.IsEmpty())
+    else if (!mSourceName.IsEmpty())
         temp = JS_smprintf(format1,
                            severity,
                            tempMessage,
@@ -217,11 +217,11 @@ nsScriptError::ToString(nsACString& /*UTF8*/ aResult)
                            severity,
                            tempMessage);
 
-    if(nsnull != tempMessage)
+    if (nsnull != tempMessage)
         nsMemory::Free(tempMessage);
-    if(nsnull != tempSourceName)
+    if (nsnull != tempSourceName)
         nsMemory::Free(tempSourceName);
-    if(nsnull != tempSourceLine)
+    if (nsnull != tempSourceLine)
         nsMemory::Free(tempSourceLine);
 
     if (!temp)

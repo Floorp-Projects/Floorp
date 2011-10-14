@@ -57,9 +57,9 @@ nsJSID::nsJSID()
 
 nsJSID::~nsJSID()
 {
-    if(mNumber && mNumber != gNoString)
+    if (mNumber && mNumber != gNoString)
         NS_Free(mNumber);
-    if(mName && mName != gNoString)
+    if (mName && mName != gNoString)
         NS_Free(mName);
 }
 
@@ -67,9 +67,9 @@ void nsJSID::Reset()
 {
     mID = GetInvalidIID();
 
-    if(mNumber && mNumber != gNoString)
+    if (mNumber && mNumber != gNoString)
         NS_Free(mNumber);
-    if(mName && mName != gNoString)
+    if (mName && mName != gNoString)
         NS_Free(mName);
 
     mNumber = mName = nsnull;
@@ -87,10 +87,10 @@ nsJSID::SetName(const char* name)
 NS_IMETHODIMP
 nsJSID::GetName(char * *aName)
 {
-    if(!aName)
+    if (!aName)
         return NS_ERROR_NULL_POINTER;
 
-    if(!NameIsSet())
+    if (!NameIsSet())
         SetNameToNoString();
     NS_ASSERTION(mName, "name not set");
     *aName = NS_strdup(mName);
@@ -100,12 +100,12 @@ nsJSID::GetName(char * *aName)
 NS_IMETHODIMP
 nsJSID::GetNumber(char * *aNumber)
 {
-    if(!aNumber)
+    if (!aNumber)
         return NS_ERROR_NULL_POINTER;
 
-    if(!mNumber)
+    if (!mNumber)
     {
-        if(!(mNumber = mID.ToString()))
+        if (!(mNumber = mID.ToString()))
             mNumber = gNoString;
     }
 
@@ -122,7 +122,7 @@ nsJSID::GetID()
 NS_IMETHODIMP
 nsJSID::GetValid(bool *aValid)
 {
-    if(!aValid)
+    if (!aValid)
         return NS_ERROR_NULL_POINTER;
 
     *aValid = IsValid();
@@ -132,10 +132,10 @@ nsJSID::GetValid(bool *aValid)
 NS_IMETHODIMP
 nsJSID::Equals(nsIJSID *other, bool *_retval)
 {
-    if(!_retval)
+    if (!_retval)
         return NS_ERROR_NULL_POINTER;
 
-    if(!other || mID.Equals(GetInvalidIID()))
+    if (!other || mID.Equals(GetInvalidIID()))
     {
         *_retval = PR_FALSE;
         return NS_OK;
@@ -148,16 +148,16 @@ nsJSID::Equals(nsIJSID *other, bool *_retval)
 NS_IMETHODIMP
 nsJSID::Initialize(const char *idString)
 {
-    if(!idString)
+    if (!idString)
         return NS_ERROR_NULL_POINTER;
 
-    if(*idString != '\0' && mID.Equals(GetInvalidIID()))
+    if (*idString != '\0' && mID.Equals(GetInvalidIID()))
     {
         Reset();
 
-        if(idString[0] == '{')
+        if (idString[0] == '{')
         {
-            if(mID.Parse(idString))
+            if (mID.Parse(idString))
             {
                 return NS_OK;
             }
@@ -182,7 +182,7 @@ nsJSID::InitWithName(const nsID& id, const char *nameString)
 NS_IMETHODIMP
 nsJSID::ToString(char **_retval)
 {
-    if(mName && mName != gNoString)
+    if (mName && mName != gNoString)
         return GetName(_retval);
 
     return GetNumber(_retval);
@@ -201,17 +201,17 @@ nsJSID::GetInvalidIID() const
 nsJSID*
 nsJSID::NewID(const char* str)
 {
-    if(!str)
+    if (!str)
     {
         NS_ERROR("no string");
         return nsnull;
     }
 
     nsJSID* idObj = new nsJSID();
-    if(idObj)
+    if (idObj)
     {
         NS_ADDREF(idObj);
-        if(NS_FAILED(idObj->Initialize(str)))
+        if (NS_FAILED(idObj->Initialize(str)))
             NS_RELEASE(idObj);
     }
     return idObj;
@@ -222,7 +222,7 @@ nsJSID*
 nsJSID::NewID(const nsID& id)
 {
     nsJSID* idObj = new nsJSID();
-    if(idObj)
+    if (idObj)
     {
         NS_ADDREF(idObj);
         idObj->mID = id;
@@ -272,7 +272,7 @@ static nsIXPCScriptable* gSharedScriptableHelperForJSIID;
 NS_METHOD GetSharedScriptableHelperForJSIID(PRUint32 language,
                                             nsISupports **helper)
 {
-    if(language == nsIProgrammingLanguage::JAVASCRIPT)
+    if (language == nsIProgrammingLanguage::JAVASCRIPT)
     {
         NS_IF_ADDREF(gSharedScriptableHelperForJSIID);
         *helper = gSharedScriptableHelperForJSIID;
@@ -299,7 +299,7 @@ NS_IMPL_CLASSINFO(nsJSCID, NULL, nsIClassInfo::THREADSAFE, NULL_CID)
 
 void xpc_InitJSxIDClassObjects()
 {
-    if(!gClassObjectsWereInited) {
+    if (!gClassObjectsWereInited) {
         gSharedScriptableHelperForJSIID = new SharedScriptableHelperForJSIID();
         NS_ADDREF(gSharedScriptableHelperForJSIID);
     }
@@ -380,10 +380,10 @@ NS_IMETHODIMP nsJSIID::GetValid(bool *aValid)
 
 NS_IMETHODIMP nsJSIID::Equals(nsIJSID *other, bool *_retval)
 {
-    if(!_retval)
+    if (!_retval)
         return NS_ERROR_NULL_POINTER;
 
-    if(!other)
+    if (!other)
     {
         *_retval = PR_FALSE;
         return NS_OK;
@@ -407,14 +407,14 @@ NS_IMETHODIMP nsJSIID::ToString(char **_retval)
 nsJSIID*
 nsJSIID::NewID(nsIInterfaceInfo* aInfo)
 {
-    if(!aInfo)
+    if (!aInfo)
     {
         NS_ERROR("no info");
         return nsnull;
     }
 
     bool canScript;
-    if(NS_FAILED(aInfo->IsScriptable(&canScript)) || !canScript)
+    if (NS_FAILED(aInfo->IsScriptable(&canScript)) || !canScript)
         return nsnull;
 
     nsJSIID* idObj = new nsJSIID(aInfo);
@@ -439,14 +439,14 @@ nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
     iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
 
-    if(!iface)
+    if (!iface)
         return NS_OK;
 
     XPCNativeMember* member = iface->FindMember(id);
-    if(member && member->IsConstant())
+    if (member && member->IsConstant())
     {
         jsval val;
-        if(!member->GetConstantValue(ccx, iface, &val))
+        if (!member->GetConstantValue(ccx, iface, &val))
             return NS_ERROR_OUT_OF_MEMORY;
 
         *objp = obj;
@@ -474,15 +474,15 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
 
     iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
 
-    if(!iface)
+    if (!iface)
         return NS_OK;
 
     PRUint16 count = iface->GetMemberCount();
-    for(PRUint16 i = 0; i < count; i++)
+    for (PRUint16 i = 0; i < count; i++)
     {
         XPCNativeMember* member = iface->GetMemberAt(i);
-        if(member && member->IsConstant() &&
-           !xpc_ForcePropertyResolve(cx, obj, member->GetName()))
+        if (member && member->IsConstant() &&
+            !xpc_ForcePropertyResolve(cx, obj, member->GetName()))
         {
             return NS_ERROR_UNEXPECTED;
         }
@@ -499,7 +499,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
     *bp = JS_FALSE;
     nsresult rv = NS_OK;
 
-    if(!JSVAL_IS_PRIMITIVE(val))
+    if (!JSVAL_IS_PRIMITIVE(val))
     {
         // we have a JSObject
         JSObject* obj = JSVAL_TO_OBJECT(val);
@@ -510,10 +510,10 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         const nsIID* iid;
         mInfo->GetIIDShared(&iid);
 
-        if(IS_SLIM_WRAPPER(obj))
+        if (IS_SLIM_WRAPPER(obj))
         {
             XPCWrappedNativeProto* proto = GetSlimWrapperProto(obj);
-            if(proto->GetSet()->HasInterfaceWithAncestor(iid))
+            if (proto->GetSet()->HasInterfaceWithAncestor(iid))
             {
                 *bp = JS_TRUE;
                 return NS_OK;
@@ -524,7 +524,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
             iid->ToProvidedString(foo);
             SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, foo);
 #endif
-            if(!MorphSlimWrapper(cx, obj))
+            if (!MorphSlimWrapper(cx, obj))
                 return NS_ERROR_FAILURE;
         }
 
@@ -538,7 +538,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
             AutoMarkingNativeSetPtr set(ccx);
             set = XPCNativeSet::GetNewOrUsed(ccx, ci);
-            if(!set)
+            if (!set)
                 return NS_ERROR_FAILURE;
             *bp = set->HasInterfaceWithAncestor(iid);
             return NS_OK;
@@ -547,13 +547,13 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         XPCWrappedNative* other_wrapper =
            XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
 
-        if(!other_wrapper)
+        if (!other_wrapper)
             return NS_OK;
 
         // We'll trust the interface set of the wrapper if this is known
         // to be an interface that the objects *expects* to be able to
         // handle.
-        if(other_wrapper->HasInterfaceNoQI(*iid))
+        if (other_wrapper->HasInterfaceNoQI(*iid))
         {
             *bp = JS_TRUE;
             return NS_OK;
@@ -566,7 +566,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
 
         nsresult findResult = NS_OK;
-        if(iface && other_wrapper->FindTearOff(ccx, iface, JS_FALSE, &findResult))
+        if (iface && other_wrapper->FindTearOff(ccx, iface, JS_FALSE, &findResult))
             *bp = JS_TRUE;
         if (NS_FAILED(findResult) && findResult != NS_ERROR_NO_INTERFACE)
             rv = findResult;
@@ -660,7 +660,7 @@ NS_IMETHODIMP nsJSCID::ToString(char **_retval)
 void
 nsJSCID::ResolveName()
 {
-    if(!mDetails.NameIsSet())
+    if (!mDetails.NameIsSet())
         mDetails.SetNameToNoString();
 }
 
@@ -668,21 +668,21 @@ nsJSCID::ResolveName()
 nsJSCID*
 nsJSCID::NewID(const char* str)
 {
-    if(!str)
+    if (!str)
     {
         NS_ERROR("no string");
         return nsnull;
     }
 
     nsJSCID* idObj = new nsJSCID();
-    if(idObj)
+    if (idObj)
     {
         bool success = false;
         NS_ADDREF(idObj);
 
-        if(str[0] == '{')
+        if (str[0] == '{')
         {
-            if(NS_SUCCEEDED(idObj->Initialize(str)))
+            if (NS_SUCCEEDED(idObj->Initialize(str)))
                 success = PR_TRUE;
         }
         else
@@ -692,14 +692,14 @@ nsJSCID::NewID(const char* str)
             if (registrar)
             {
                 nsCID *cid;
-                if(NS_SUCCEEDED(registrar->ContractIDToCID(str, &cid)))
+                if (NS_SUCCEEDED(registrar->ContractIDToCID(str, &cid)))
                 {
                     success = idObj->mDetails.InitWithName(*cid, str);
                     nsMemory::Free(cid);
                 }
             }
         }
-        if(!success)
+        if (!success)
             NS_RELEASE(idObj);
     }
     return idObj;
@@ -711,13 +711,13 @@ GetIIDArg(PRUint32 argc, jsval* argv, JSContext* cx)
     const nsID* iid;
 
     // If an IID was passed in then use it
-    if(argc)
+    if (argc)
     {
         JSObject* iidobj;
         jsval val = *argv;
-        if(JSVAL_IS_PRIMITIVE(val) ||
-           !(iidobj = JSVAL_TO_OBJECT(val)) ||
-           !(iid = xpc_JSObjectToID(cx, iidobj)))
+        if (JSVAL_IS_PRIMITIVE(val) ||
+            !(iidobj = JSVAL_TO_OBJECT(val)) ||
+            !(iid = xpc_JSObjectToID(cx, iidobj)))
         {
             return nsnull;
         }
@@ -732,16 +732,16 @@ GetIIDArg(PRUint32 argc, jsval* argv, JSContext* cx)
 NS_IMETHODIMP
 nsJSCID::CreateInstance(nsISupports **_retval)
 {
-    if(!mDetails.IsValid())
+    if (!mDetails.IsValid())
         return NS_ERROR_XPC_BAD_CID;
 
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if(!xpc)
+    if (!xpc)
         return NS_ERROR_UNEXPECTED;
 
     nsAXPCNativeCallContext *ccxp = nsnull;
     xpc->GetCurrentNativeCallContext(&ccxp);
-    if(!ccxp)
+    if (!ccxp)
         return NS_ERROR_UNEXPECTED;
 
     PRUint32 argc;
@@ -765,7 +765,7 @@ nsJSCID::CreateInstance(nsISupports **_retval)
 
     nsIXPCSecurityManager* sm;
     sm = xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
-    if(sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID())))
+    if (sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID())))
     {
         NS_ERROR("how are we not being called from chrome here?");
         return NS_OK;
@@ -785,11 +785,11 @@ nsJSCID::CreateInstance(nsISupports **_retval)
     rv = compMgr->CreateInstance(mDetails.ID(), nsnull, *iid, getter_AddRefs(inst));
     NS_ASSERTION(NS_FAILED(rv) || inst, "component manager returned success, but instance is null!");
 
-    if(NS_FAILED(rv) || !inst)
+    if (NS_FAILED(rv) || !inst)
         return NS_ERROR_XPC_CI_RETURNED_FAILURE;
 
     rv = xpc->WrapNativeToJSVal(cx, obj, inst, nsnull, iid, PR_TRUE, vp, nsnull);
-    if(NS_FAILED(rv) || JSVAL_IS_PRIMITIVE(*vp))
+    if (NS_FAILED(rv) || JSVAL_IS_PRIMITIVE(*vp))
         return NS_ERROR_XPC_CANT_CREATE_WN;
     ccxp->SetReturnValueWasSet(JS_TRUE);
     return NS_OK;
@@ -799,16 +799,16 @@ nsJSCID::CreateInstance(nsISupports **_retval)
 NS_IMETHODIMP
 nsJSCID::GetService(nsISupports **_retval)
 {
-    if(!mDetails.IsValid())
+    if (!mDetails.IsValid())
         return NS_ERROR_XPC_BAD_CID;
 
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if(!xpc)
+    if (!xpc)
         return NS_ERROR_UNEXPECTED;
 
     nsAXPCNativeCallContext *ccxp = nsnull;
     xpc->GetCurrentNativeCallContext(&ccxp);
-    if(!ccxp)
+    if (!ccxp)
         return NS_ERROR_UNEXPECTED;
 
     PRUint32 argc;
@@ -832,7 +832,7 @@ nsJSCID::GetService(nsISupports **_retval)
 
     nsIXPCSecurityManager* sm;
     sm = xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_GET_SERVICE);
-    if(sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID())))
+    if (sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID())))
     {
         NS_ASSERTION(JS_IsExceptionPending(cx),
                      "security manager vetoed GetService without setting exception");
@@ -852,13 +852,13 @@ nsJSCID::GetService(nsISupports **_retval)
     nsCOMPtr<nsISupports> srvc;
     rv = svcMgr->GetService(mDetails.ID(), *iid, getter_AddRefs(srvc));
     NS_ASSERTION(NS_FAILED(rv) || srvc, "service manager returned success, but service is null!");
-    if(NS_FAILED(rv) || !srvc)
+    if (NS_FAILED(rv) || !srvc)
         return NS_ERROR_XPC_GS_RETURNED_FAILURE;
 
     JSObject* instJSObj;
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNative(cx, obj, srvc, *iid, getter_AddRefs(holder));
-    if(NS_FAILED(rv) || !holder || NS_FAILED(holder->GetJSObject(&instJSObj)))
+    if (NS_FAILED(rv) || !holder || NS_FAILED(holder->GetJSObject(&instJSObj)))
         return NS_ERROR_XPC_CANT_CREATE_WN;
 
     *vp = OBJECT_TO_JSVAL(instJSObj);
@@ -874,7 +874,7 @@ nsJSCID::Construct(nsIXPConnectWrappedNative *wrapper,
                    bool *_retval)
 {
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    if(!rt)
+    if (!rt)
         return NS_ERROR_FAILURE;
 
     // 'push' a call context and call on it
@@ -895,7 +895,7 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
     *bp = JS_FALSE;
     nsresult rv = NS_OK;
 
-    if(!JSVAL_IS_PRIMITIVE(val))
+    if (!JSVAL_IS_PRIMITIVE(val))
     {
         // we have a JSObject
         JSObject* obj = JSVAL_TO_OBJECT(val);
@@ -907,7 +907,7 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         XPCWrappedNative* other_wrapper =
            XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nsnull, &obj2);
 
-        if(!other_wrapper && !obj2)
+        if (!other_wrapper && !obj2)
             return NS_OK;
 
         nsIClassInfo* ci = other_wrapper ?
@@ -916,10 +916,10 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
         // We consider CID equality to be the thing that matters here.
         // This is perhaps debatable.
-        if(ci)
+        if (ci)
         {
             nsID cid;
-            if(NS_SUCCEEDED(ci->GetClassIDNoAlloc(&cid)))
+            if (NS_SUCCEEDED(ci->GetClassIDNoAlloc(&cid)))
                 *bp = cid.Equals(mDetails.ID());
         }
     }
@@ -936,17 +936,17 @@ xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID)
 
     nsCOMPtr<nsIJSID> iid =
             dont_AddRef(static_cast<nsIJSID*>(nsJSID::NewID(aID)));
-    if(iid)
+    if (iid)
     {
         nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-        if(xpc)
+        if (xpc)
         {
             nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
             nsresult rv = xpc->WrapNative(cx, jsobj,
                                           static_cast<nsISupports*>(iid),
                                           NS_GET_IID(nsIJSID),
                                           getter_AddRefs(holder));
-            if(NS_SUCCEEDED(rv) && holder)
+            if (NS_SUCCEEDED(rv) && holder)
             {
                 holder->GetJSObject(&obj);
             }
@@ -959,16 +959,16 @@ xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID)
 const nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj)
 {
-    if(!cx || !obj)
+    if (!cx || !obj)
         return nsnull;
 
     // NOTE: this call does NOT addref
     XPCWrappedNative* wrapper =
         XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
-    if(wrapper &&
-       (wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSID))  ||
-        wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSIID)) ||
-        wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSCID))))
+    if (wrapper &&
+        (wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSID))  ||
+         wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSIID)) ||
+         wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSCID))))
     {
         return ((nsIJSID*)wrapper->GetIdentityObject())->GetID();
     }

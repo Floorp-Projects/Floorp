@@ -295,7 +295,7 @@ class PtrAndPrincipalHashKey : public PLDHashEntryHdr
 
 // NB: nsDataHashtableMT is usually not very useful as all it does is lock
 // around each individual operation performed on it. That would imply, that
-// the pattern: if(!map.Get(key)) map.Put(key, value); is not safe as another
+// the pattern: if (!map.Get(key)) map.Put(key, value); is not safe as another
 // thread could race to insert key into map. However, in our case, only one
 // thread at any time could attempt to insert |key| into |map|, so it works
 // well enough for our uses.
@@ -310,7 +310,7 @@ typedef nsDataHashtable<xpc::PtrAndPrincipalHashKey, JSCompartment *> XPCCompart
 #define XPC_STRING_GETTER_BODY(dest, src)                                     \
     NS_ENSURE_ARG_POINTER(dest);                                              \
     char* result;                                                             \
-    if(src)                                                                   \
+    if (src)                                                                  \
         result = (char*) nsMemory::Clone(src,                                 \
                                          sizeof(char)*(strlen(src)+1));       \
     else                                                                      \
@@ -367,13 +367,13 @@ public:
         : mLock(lock)
     {
         MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-        if(mLock)
+        if (mLock)
             mLock->Enter();
     }
 
     ~XPCAutoLock()
     {
-        if(mLock)
+        if (mLock)
         {
             mLock->Exit();
         }
@@ -407,7 +407,7 @@ public:
         : mLock(lock)
     {
         MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-        if(mLock)
+        if (mLock)
         {
             mLock->Exit();
         }
@@ -415,7 +415,7 @@ public:
 
     ~XPCAutoUnlock()
     {
-        if(mLock)
+        if (mLock)
             mLock->Enter();
     }
 
@@ -778,7 +778,7 @@ public:
          JSDHashEntryHdr *entry =
             JS_DHashTableOperate(DEBUG_WrappedNativeHashtable,
                                  wrapper, JS_DHASH_ADD);
-         if(entry) ((JSDHashEntryStub *)entry)->key = wrapper;}
+         if (entry) ((JSDHashEntryStub *)entry)->key = wrapper;}
 
    void DEBUG_RemoveWrappedNative(nsIXPConnectWrappedNative* wrapper)
         {XPCAutoLock lock(GetMapLock());
@@ -921,11 +921,11 @@ public:
     nsIXPCSecurityManager* GetAppropriateSecurityManager(PRUint16 flags) const
         {
             NS_ASSERTION(CallerTypeIsKnown(),"missing caller type set somewhere");
-            if(!CallerTypeIsJavaScript())
+            if (!CallerTypeIsJavaScript())
                 return nsnull;
-            if(mSecurityManager)
+            if (mSecurityManager)
             {
-                if(flags & mSecurityManagerFlags)
+                if (flags & mSecurityManagerFlags)
                     return mSecurityManager;
             }
             else
@@ -933,7 +933,7 @@ public:
                 nsIXPCSecurityManager* mgr;
                 nsXPConnect* xpc = mRuntime->GetXPConnect();
                 mgr = xpc->GetDefaultSecurityManager();
-                if(mgr && (flags & xpc->GetDefaultSecurityManagerFlags()))
+                if (mgr && (flags & xpc->GetDefaultSecurityManagerFlags()))
                     return mgr;
             }
             return nsnull;
@@ -1266,9 +1266,9 @@ public:
     }
     ~XPCLazyCallContext()
     {
-        if(mCcxToDestroy)
+        if (mCcxToDestroy)
             mCcxToDestroy->~XPCCallContext();
-        else if(mCallBeginRequest == CALLED_BEGINREQUEST)
+        else if (mCallBeginRequest == CALLED_BEGINREQUEST)
             JS_EndRequest(mCx);
     }
     void SetWrapper(XPCWrappedNative* wrapper,
@@ -1277,10 +1277,10 @@ public:
 
     JSContext *GetJSContext()
     {
-        if(mCcx)
+        if (mCcx)
             return mCcx->GetJSContext();
 
-        if(mCallBeginRequest == CALL_BEGINREQUEST) {
+        if (mCallBeginRequest == CALL_BEGINREQUEST) {
             JS_BeginRequest(mCx);
             mCallBeginRequest = CALLED_BEGINREQUEST;
         }
@@ -1289,14 +1289,14 @@ public:
     }
     JSObject *GetScopeForNewJSObjects() const
     {
-        if(mCcx)
+        if (mCcx)
             return mCcx->GetScopeForNewJSObjects();
 
         return mObj;
     }
     void SetScopeForNewJSObjects(JSObject *obj)
     {
-        if(mCcx) {
+        if (mCcx) {
             mCcx->SetScopeForNewJSObjects(obj);
             return;
         }
@@ -1305,14 +1305,14 @@ public:
     }
     JSObject *GetFlattenedJSObject() const
     {
-        if(mCcx)
+        if (mCcx)
             return mCcx->GetFlattenedJSObject();
 
         return mFlattenedJSObject;
     }
     XPCCallContext &GetXPCCallContext()
     {
-        if(!mCcx)
+        if (!mCcx)
         {
             mCcxToDestroy = mCcx =
                 new (mData) XPCCallContext(mCallerLanguage, mCx,
@@ -1320,7 +1320,7 @@ public:
                                            mObj,
                                            mFlattenedJSObject, mWrapper,
                                            mTearOff);
-            if(!mCcx->IsValid())
+            if (!mCcx->IsValid())
             {
                 NS_ERROR("This is not supposed to fail!");
             }
@@ -2059,7 +2059,7 @@ public:
     JSClass*                        GetJSClass()
         {return Jsvalify(&mJSClass.base);}
     JSClass*                        GetSlimJSClass()
-        {if(mCanBeSlim) return GetJSClass(); return nsnull;}
+        {if (mCanBeSlim) return GetJSClass(); return nsnull;}
 
     XPCNativeScriptableShared(JSUint32 aFlags, char* aName,
                               PRUint32 interfacesBitmap)
@@ -2071,7 +2071,7 @@ public:
          MOZ_COUNT_CTOR(XPCNativeScriptableShared);}
 
     ~XPCNativeScriptableShared()
-        {if(mJSClass.base.name)nsMemory::Free((void*)mJSClass.base.name);
+        {if (mJSClass.base.name)nsMemory::Free((void*)mJSClass.base.name);
          MOZ_COUNT_DTOR(XPCNativeScriptableShared);}
 
     char* TransferNameOwnership()
@@ -2127,7 +2127,7 @@ public:
     void
     SetScriptableShared(XPCNativeScriptableShared* shared) {mShared = shared;}
 
-    void Mark() {if(mShared) mShared->Mark();}
+    void Mark() {if (mShared) mShared->Mark();}
 
 protected:
     XPCNativeScriptableInfo(nsIXPCScriptable* scriptable = nsnull,
@@ -2254,7 +2254,7 @@ public:
         static NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
 
 #ifdef DEBUG
-        if(InitedOffsets() && mOffsets)
+        if (InitedOffsets() && mOffsets)
         {
             QITableEntry* offsets;
             identity->QueryInterface(kThisPtrOffsetsSID, (void**)&offsets);
@@ -2264,9 +2264,9 @@ public:
         }
 #endif
 
-        if(!InitedOffsets())
+        if (!InitedOffsets())
         {
-            if(mClassInfoFlags & nsIClassInfo::CONTENT_NODE)
+            if (mClassInfoFlags & nsIClassInfo::CONTENT_NODE)
             {
                 identity->QueryInterface(kThisPtrOffsetsSID, (void**)&mOffsets);
             }
@@ -2309,12 +2309,12 @@ public:
 
     void TraceJS(JSTracer* trc)
     {
-        if(mJSProtoObject)
+        if (mJSProtoObject)
         {
             JS_CALL_OBJECT_TRACER(trc, mJSProtoObject,
                                   "XPCWrappedNativeProto::mJSProtoObject");
         }
-        if(mScriptableInfo && JS_IsGCMarkingTracer(trc))
+        if (mScriptableInfo && JS_IsGCMarkingTracer(trc))
             mScriptableInfo->Mark();
     }
 
@@ -2324,7 +2324,7 @@ public:
     // Yes, we *do* need to mark the mScriptableInfo in both cases.
     void Mark() const
         {mSet->Mark();
-         if(mScriptableInfo) mScriptableInfo->Mark();}
+         if (mScriptableInfo) mScriptableInfo->Mark();}
 
 #ifdef DEBUG
     void ASSERT_SetNotMarked() const {mSet->ASSERT_NotMarked();}
@@ -2539,7 +2539,7 @@ public:
      */
     JSObject*
     GetFlatJSObject() const
-        {if(mFlatJSObject != INVALID_OBJECT)
+        {if (mFlatJSObject != INVALID_OBJECT)
              xpc_UnmarkGrayObject(mFlatJSObject);
          return mFlatJSObject;}
 
@@ -2637,7 +2637,7 @@ public:
         JSObject *obj2 = nsnull;
         XPCWrappedNative* wrapper =
             GetWrappedNativeOfJSObject(cx, obj, nsnull, &obj2);
-        if(wrapper || !obj2)
+        if (wrapper || !obj2)
             return wrapper;
 
         NS_ASSERTION(IS_SLIM_WRAPPER(obj2),
@@ -2682,21 +2682,21 @@ public:
     void Mark() const
     {
         mSet->Mark();
-        if(mScriptableInfo) mScriptableInfo->Mark();
-        if(HasProto()) GetProto()->Mark();
+        if (mScriptableInfo) mScriptableInfo->Mark();
+        if (HasProto()) GetProto()->Mark();
     }
 
     // Yes, we *do* need to mark the mScriptableInfo in both cases.
     inline void TraceJS(JSTracer* trc)
     {
-        if(mScriptableInfo && JS_IsGCMarkingTracer(trc))
+        if (mScriptableInfo && JS_IsGCMarkingTracer(trc))
             mScriptableInfo->Mark();
-        if(HasProto()) GetProto()->TraceJS(trc);
+        if (HasProto()) GetProto()->TraceJS(trc);
         JSObject* wrapper = GetWrapperPreserveColor();
-        if(wrapper)
+        if (wrapper)
             JS_CALL_OBJECT_TRACER(trc, wrapper, "XPCWrappedNative::mWrapper");
-        if(mScriptableInfo &&
-           (mScriptableInfo->GetJSClass()->flags & JSCLASS_XPCONNECT_GLOBAL))
+        if (mScriptableInfo &&
+            (mScriptableInfo->GetJSClass()->flags & JSCLASS_XPCONNECT_GLOBAL))
             GetScope()->TraceDOMPrototypes(trc);
     }
 
@@ -2707,7 +2707,7 @@ public:
         // This is the only time we should be tracing our mFlatJSObject,
         // normally somebody else is doing that. Be careful not to trace the
         // bogus INVALID_OBJECT value we can have during init, though.
-        if(mFlatJSObject && mFlatJSObject != INVALID_OBJECT)
+        if (mFlatJSObject && mFlatJSObject != INVALID_OBJECT)
         {
             JS_CALL_OBJECT_TRACER(trc, mFlatJSObject,
                                   "XPCWrappedNative::mFlatJSObject");
@@ -2717,11 +2717,11 @@ public:
 #ifdef DEBUG
     void ASSERT_SetsNotMarked() const
         {mSet->ASSERT_NotMarked();
-         if(HasProto()){GetProto()->ASSERT_SetNotMarked();}}
+         if (HasProto()){GetProto()->ASSERT_SetNotMarked();}}
 
     int DEBUG_CountOfTearoffChunks() const
         {int i = 0; const XPCWrappedNativeTearOffChunk* to;
-         for(to = &mFirstChunk; to; to = to->mNextChunk) {i++;} return i;}
+         for (to = &mFirstChunk; to; to = to->mNextChunk) {i++;} return i;}
 #endif
 
     inline void SweepTearOffs();
@@ -2746,7 +2746,7 @@ public:
     JSObject* GetWrapper()
     {
         JSObject* wrapper = GetWrapperPreserveColor();
-        if(wrapper)
+        if (wrapper)
         {
             xpc_UnmarkGrayObject(wrapper);
             // Call this to unmark mFlatJSObject.
@@ -2767,12 +2767,12 @@ public:
 
     QITableEntry* GetOffsets()
     {
-        if(!HasProto() || !GetProto()->ClassIsDOMObject())
+        if (!HasProto() || !GetProto()->ClassIsDOMObject())
             return nsnull;
 
         XPCWrappedNativeProto* proto = GetProto();
         QITableEntry* offsets = proto->GetOffsets();
-        if(!offsets)
+        if (!offsets)
         {
             static NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
             mIdentity->QueryInterface(kThisPtrOffsetsSID, (void**)&offsets);
@@ -2932,7 +2932,7 @@ private:
     JSBool IsReflectable(uint16 i) const
         {return (JSBool)(mDescriptors[i/32] & (1 << (i%32)));}
     void SetReflectable(uint16 i, JSBool b)
-        {if(b) mDescriptors[i/32] |= (1 << (i%32));
+        {if (b) mDescriptors[i/32] |= (1 << (i%32));
          else mDescriptors[i/32] &= ~(1 << (i%32));}
 
     enum SizeMode {GET_SIZE, GET_LENGTH};
@@ -3136,9 +3136,9 @@ public:
       mCache(aCache),
       mIsNode(PR_FALSE)
     {
-        if(!mCache)
+        if (!mCache)
         {
-            if(aObject)
+            if (aObject)
                 CallQueryInterface(aObject, &mCache);
             else
                 mCache = nsnull;
@@ -3171,17 +3171,17 @@ public:
 
     nsIClassInfo *GetClassInfo()
     {
-        if(mXPCClassInfo)
+        if (mXPCClassInfo)
           return mXPCClassInfo;
-        if(!mClassInfo)
+        if (!mClassInfo)
             mClassInfo = do_QueryInterface(mObject);
         return mClassInfo;
     }
     nsXPCClassInfo *GetXPCClassInfo()
     {
-        if(!mXPCClassInfo)
+        if (!mXPCClassInfo)
         {
-            if(mIsNode)
+            if (mIsNode)
                 mXPCClassInfo = static_cast<nsINode*>(GetCanonical())->GetClassInfo();
             else
                 CallQueryInterface(mObject, getter_AddRefs(mXPCClassInfo));
@@ -3209,7 +3209,7 @@ protected:
       mCache(aCache),
       mIsNode(aIsNode)
     {
-        if(!mCache && aObject)
+        if (!mCache && aObject)
             CallQueryInterface(aObject, &mCache);
     }
 
@@ -3656,14 +3656,14 @@ public:
     // Get the instance of this object for the current thread
     static inline XPCPerThreadData* GetData(JSContext *cx)
     {
-        if(cx)
+        if (cx)
         {
             NS_ASSERTION(cx->thread(), "Uh, JS context w/o a thread?");
 
-            if(cx->thread() == sMainJSThread)
+            if (cx->thread() == sMainJSThread)
                 return sMainThreadData;
         }
-        else if(sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread())
+        else if (sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread())
         {
             return sMainThreadData;
         }
@@ -3677,7 +3677,7 @@ public:
 
     nsresult GetException(nsIException** aException)
     {
-        if(EnsureExceptionManager())
+        if (EnsureExceptionManager())
             return mExceptionManager->GetCurrentException(aException);
 
         NS_IF_ADDREF(mException);
@@ -3687,7 +3687,7 @@ public:
 
     nsresult SetException(nsIException* aException)
     {
-        if(EnsureExceptionManager())
+        if (EnsureExceptionManager())
             return mExceptionManager->SetCurrentException(aException);
 
         NS_IF_ADDREF(aException);
@@ -3698,24 +3698,24 @@ public:
 
     nsIExceptionManager* GetExceptionManager()
     {
-        if(EnsureExceptionManager())
+        if (EnsureExceptionManager())
             return mExceptionManager;
         return nsnull;
     }
 
     JSBool EnsureExceptionManager()
     {
-        if(mExceptionManager)
+        if (mExceptionManager)
             return JS_TRUE;
 
-        if(mExceptionManagerNotAvailable)
+        if (mExceptionManagerNotAvailable)
             return JS_FALSE;
 
         nsCOMPtr<nsIExceptionService> xs =
             do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
-        if(xs)
+        if (xs)
             xs->GetCurrentExceptionManager(&mExceptionManager);
-        if(mExceptionManager)
+        if (mExceptionManager)
             return JS_TRUE;
 
         mExceptionManagerNotAvailable = JS_TRUE;
@@ -4093,14 +4093,14 @@ public:
          Link();}
 
     void Link()
-        {if(!mTLS) return;
+        {if (!mTLS) return;
          AutoMarkingPtr** list = mTLS->GetAutoRootsAdr();
          mNext = *list; *list = this;}
 
     void Unlink()
-        {if(!mTLS) return;
+        {if (!mTLS) return;
          AutoMarkingPtr** cur = mTLS->GetAutoRootsAdr();
-         while(*cur != this) {
+         while (*cur != this) {
             NS_ASSERTION(*cur, "This object not in list!");
             cur = &(*cur)->mNext;
          }
@@ -4131,15 +4131,15 @@ public:                                                                       \
     virtual ~ class_ () {}                                                    \
                                                                               \
     virtual void TraceJS(JSTracer* trc)                                       \
-        {if(mPtr) {                                                           \
+        {if (mPtr) {                                                          \
            mPtr->TraceJS(trc);                                                \
            mPtr->AutoTrace(trc);                                              \
          }                                                                    \
-         if(mNext) mNext->TraceJS(trc);}                                      \
+         if (mNext) mNext->TraceJS(trc);}                                     \
                                                                               \
     virtual void MarkAfterJSFinalize()                                        \
-        {if(mPtr) mPtr->Mark();                                               \
-         if(mNext) mNext->MarkAfterJSFinalize();}                             \
+        {if (mPtr) mPtr->Mark();                                              \
+         if (mNext) mNext->MarkAfterJSFinalize();}                            \
                                                                               \
     type_ * get()        const  {return mPtr;}                                \
     operator type_ *()   const  {return mPtr;}                                \
@@ -4172,34 +4172,34 @@ public:                                                                       \
             bool aClear = false)                                              \
         : AutoMarkingPtr(ccx), mPtr(aPtr), mCount(aCount)                     \
     {                                                                         \
-        if(!mPtr) mCount = 0;                                                 \
-        else if(aClear) memset(mPtr, 0, mCount*sizeof(type_*));               \
+        if (!mPtr) mCount = 0;                                                \
+        else if (aClear) memset(mPtr, 0, mCount*sizeof(type_*));              \
     }                                                                         \
     virtual ~ class_ () {}                                                    \
                                                                               \
     virtual void TraceJS(JSTracer* trc)                                       \
     {                                                                         \
-        for(PRUint32 i = 0; i < mCount; ++i)                                  \
+        for (PRUint32 i = 0; i < mCount; ++i)                                 \
         {                                                                     \
             type_* cur = mPtr[i];                                             \
-            if(cur)                                                           \
+            if (cur)                                                          \
             {                                                                 \
                 cur->TraceJS(trc);                                            \
                 cur->AutoTrace(trc);                                          \
             }                                                                 \
         }                                                                     \
-        if(mNext) mNext->TraceJS(trc);                                        \
+        if (mNext) mNext->TraceJS(trc);                                       \
     }                                                                         \
                                                                               \
     virtual void MarkAfterJSFinalize()                                        \
     {                                                                         \
-        for(PRUint32 i = 0; i < mCount; ++i)                                  \
+        for (PRUint32 i = 0; i < mCount; ++i)                                 \
         {                                                                     \
             type_* cur = mPtr[i];                                             \
-            if(cur)                                                           \
+            if (cur)                                                          \
                 cur->Mark();                                                  \
         }                                                                     \
-        if(mNext) mNext->MarkAfterJSFinalize();                               \
+        if (mNext) mNext->MarkAfterJSFinalize();                              \
     }                                                                         \
                                                                               \
     type_ ** get()       const  {return mPtr;}                                \
@@ -4276,7 +4276,7 @@ public:
      * kept alive past the next CC.
      */
     jsval GetJSVal() const
-        {if(!JSVAL_IS_PRIMITIVE(mJSVal))
+        {if (!JSVAL_IS_PRIMITIVE(mJSVal))
              xpc_UnmarkGrayObject(JSVAL_TO_OBJECT(mJSVal));
          return mJSVal;}
 
@@ -4500,7 +4500,7 @@ struct CompartmentPrivate
     bool RegisterDOMExpandoObject(JSObject *expando) {
         if (!domExpandoMap) {
             domExpandoMap = new nsTHashtable<nsPtrHashKey<JSObject> >();
-            if(!domExpandoMap->Init(8)) {
+            if (!domExpandoMap->Init(8)) {
                 domExpandoMap = nsnull;
                 return false;
             }
@@ -4508,7 +4508,7 @@ struct CompartmentPrivate
         return domExpandoMap->PutEntry(expando);
     }
     void RemoveDOMExpandoObject(JSObject *expando) {
-        if(domExpandoMap)
+        if (domExpandoMap)
             domExpandoMap->RemoveEntry(expando);
     }
 };

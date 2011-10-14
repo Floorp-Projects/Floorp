@@ -135,7 +135,7 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
     const jschar *propChars = JS_GetInternedStringCharsAndLength(prop, &propLength);
     if (!propLength)
         return false;
-    switch(name[0]) {
+    switch (name[0]) {
         NAME('D', "DOMException",
              PROP('c', RW("code"))
              PROP('m', RW("message"))
@@ -405,7 +405,7 @@ AccessCheck::isScriptAccessOnly(JSContext *cx, JSObject *wrapper)
     // In addition, chrome objects can explicitly opt-in by setting .scriptOnly to true.
     if (js::GetProxyHandler(wrapper) ==
         &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                          CrossOriginAccessiblePropertiesOnly>::singleton) {
+        CrossOriginAccessiblePropertiesOnly>::singleton) {
         jsid scriptOnlyId = GetRTIdByIndex(cx, XPCJSRuntime::IDX_SCRIPTONLY);
         jsval scriptOnly;
         if (JS_LookupPropertyById(cx, obj, scriptOnlyId, &scriptOnly) &&

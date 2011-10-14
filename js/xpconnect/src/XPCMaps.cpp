@@ -74,7 +74,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
     XPCNativeInterface* Addition;
     PRUint16            Position;
 
-    if(Key->IsAKey())
+    if (Key->IsAKey())
     {
         Set      = Key->GetBaseSet();
         Addition = Key->GetAddition();
@@ -87,7 +87,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
         Position = 0;
     }
 
-    if(!Set)
+    if (!Set)
     {
         NS_ASSERTION(Addition, "bad key");
         // This would be an XOR like below.
@@ -98,12 +98,12 @@ HashNativeKey(JSDHashTable *table, const void *key)
     {
         XPCNativeInterface** Current = Set->GetInterfaceArray();
         PRUint16 count = Set->GetInterfaceCount();
-        if(Addition)
+        if (Addition)
         {
             count++;
-            for(PRUint16 i = 0; i < count; i++)
+            for (PRUint16 i = 0; i < count; i++)
             {
-                if(i == Position)
+                if (i == Position)
                     h ^= (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
                 else
                     h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
@@ -111,7 +111,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
         }
         else
         {
-            for(PRUint16 i = 0; i < count; i++)
+            for (PRUint16 i = 0; i < count; i++)
                 h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
         }
     }
@@ -127,7 +127,7 @@ JSObject2WrappedJSMap*
 JSObject2WrappedJSMap::newMap(int size)
 {
     JSObject2WrappedJSMap* map = new JSObject2WrappedJSMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -141,7 +141,7 @@ JSObject2WrappedJSMap::JSObject2WrappedJSMap(int size)
 
 JSObject2WrappedJSMap::~JSObject2WrappedJSMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -153,7 +153,7 @@ Native2WrappedNativeMap*
 Native2WrappedNativeMap::newMap(int size)
 {
     Native2WrappedNativeMap* map = new Native2WrappedNativeMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -167,7 +167,7 @@ Native2WrappedNativeMap::Native2WrappedNativeMap(int size)
 
 Native2WrappedNativeMap::~Native2WrappedNativeMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -190,7 +190,7 @@ IID2WrappedJSClassMap*
 IID2WrappedJSClassMap::newMap(int size)
 {
     IID2WrappedJSClassMap* map = new IID2WrappedJSClassMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -203,7 +203,7 @@ IID2WrappedJSClassMap::IID2WrappedJSClassMap(int size)
 
 IID2WrappedJSClassMap::~IID2WrappedJSClassMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -227,7 +227,7 @@ IID2NativeInterfaceMap*
 IID2NativeInterfaceMap::newMap(int size)
 {
     IID2NativeInterfaceMap* map = new IID2NativeInterfaceMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -240,7 +240,7 @@ IID2NativeInterfaceMap::IID2NativeInterfaceMap(int size)
 
 IID2NativeInterfaceMap::~IID2NativeInterfaceMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -252,7 +252,7 @@ ClassInfo2NativeSetMap*
 ClassInfo2NativeSetMap::newMap(int size)
 {
     ClassInfo2NativeSetMap* map = new ClassInfo2NativeSetMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -266,7 +266,7 @@ ClassInfo2NativeSetMap::ClassInfo2NativeSetMap(int size)
 
 ClassInfo2NativeSetMap::~ClassInfo2NativeSetMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -278,7 +278,7 @@ ClassInfo2WrappedNativeProtoMap*
 ClassInfo2WrappedNativeProtoMap::newMap(int size)
 {
     ClassInfo2WrappedNativeProtoMap* map = new ClassInfo2WrappedNativeProtoMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -292,7 +292,7 @@ ClassInfo2WrappedNativeProtoMap::ClassInfo2WrappedNativeProtoMap(int size)
 
 ClassInfo2WrappedNativeProtoMap::~ClassInfo2WrappedNativeProtoMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -307,23 +307,23 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
     XPCNativeSetKey* Key = (XPCNativeSetKey*) key;
 
     // See the comment in the XPCNativeSetKey declaration in xpcprivate.h.
-    if(!Key->IsAKey())
+    if (!Key->IsAKey())
     {
         XPCNativeSet* Set1 = (XPCNativeSet*) key;
         XPCNativeSet* Set2 = ((Entry*)entry)->key_value;
 
-        if(Set1 == Set2)
+        if (Set1 == Set2)
             return JS_TRUE;
 
         PRUint16 count = Set1->GetInterfaceCount();
-        if(count != Set2->GetInterfaceCount())
+        if (count != Set2->GetInterfaceCount())
             return JS_FALSE;
 
         XPCNativeInterface** Current1 = Set1->GetInterfaceArray();
         XPCNativeInterface** Current2 = Set2->GetInterfaceArray();
-        for(PRUint16 i = 0; i < count; i++)
+        for (PRUint16 i = 0; i < count; i++)
         {
-            if(*(Current1++) != *(Current2++))
+            if (*(Current1++) != *(Current2++))
                 return JS_FALSE;
         }
 
@@ -334,7 +334,7 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
     XPCNativeSet*       Set        = Key->GetBaseSet();
     XPCNativeInterface* Addition   = Key->GetAddition();
 
-    if(!Set)
+    if (!Set)
     {
         // This is a special case to deal with the invariant that says:
         // "All sets have exactly one nsISupports interface and it comes first."
@@ -351,26 +351,26 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
                  SetInTable->GetInterfaceAt(1) == Addition));
     }
 
-    if(!Addition && Set == SetInTable)
+    if (!Addition && Set == SetInTable)
         return JS_TRUE;
 
     PRUint16 count = Set->GetInterfaceCount() + (Addition ? 1 : 0);
-    if(count != SetInTable->GetInterfaceCount())
+    if (count != SetInTable->GetInterfaceCount())
         return JS_FALSE;
 
     PRUint16 Position = Key->GetPosition();
     XPCNativeInterface** CurrentInTable = SetInTable->GetInterfaceArray();
     XPCNativeInterface** Current = Set->GetInterfaceArray();
-    for(PRUint16 i = 0; i < count; i++)
+    for (PRUint16 i = 0; i < count; i++)
     {
-        if(Addition && i == Position)
+        if (Addition && i == Position)
         {
-            if(Addition != *(CurrentInTable++))
+            if (Addition != *(CurrentInTable++))
                 return JS_FALSE;
         }
         else
         {
-            if(*(Current++) != *(CurrentInTable++))
+            if (*(Current++) != *(CurrentInTable++))
                 return JS_FALSE;
         }
     }
@@ -394,7 +394,7 @@ NativeSetMap*
 NativeSetMap::newMap(int size)
 {
     NativeSetMap* map = new NativeSetMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -407,7 +407,7 @@ NativeSetMap::NativeSetMap(int size)
 
 NativeSetMap::~NativeSetMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -445,7 +445,7 @@ IID2ThisTranslatorMap*
 IID2ThisTranslatorMap::newMap(int size)
 {
     IID2ThisTranslatorMap* map = new IID2ThisTranslatorMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -458,7 +458,7 @@ IID2ThisTranslatorMap::IID2ThisTranslatorMap(int size)
 
 IID2ThisTranslatorMap::~IID2ThisTranslatorMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -496,14 +496,14 @@ XPCNativeScriptableSharedMap::Entry::Match(JSDHashTable *table,
 
     // match the flags, the classname string and the interfaces bitmap
 
-    if(obj1->GetFlags() != obj2->GetFlags() ||
-       obj1->GetInterfacesBitmap() != obj2->GetInterfacesBitmap())
+    if (obj1->GetFlags() != obj2->GetFlags() ||
+        obj1->GetInterfacesBitmap() != obj2->GetInterfacesBitmap())
         return JS_FALSE;
 
     const char* name1 = obj1->GetJSClass()->name;
     const char* name2 = obj2->GetJSClass()->name;
 
-    if(!name1 || !name2)
+    if (!name1 || !name2)
         return name1 == name2;
 
     return 0 == strcmp(name1, name2);
@@ -526,7 +526,7 @@ XPCNativeScriptableSharedMap::newMap(int size)
 {
     XPCNativeScriptableSharedMap* map =
         new XPCNativeScriptableSharedMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -539,7 +539,7 @@ XPCNativeScriptableSharedMap::XPCNativeScriptableSharedMap(int size)
 
 XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -556,17 +556,17 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(JSUint32 flags,
     XPCNativeScriptableShared key(flags, name, interfacesBitmap);
     Entry* entry = (Entry*)
         JS_DHashTableOperate(mTable, &key, JS_DHASH_ADD);
-    if(!entry)
+    if (!entry)
         return JS_FALSE;
 
     XPCNativeScriptableShared* shared = entry->key;
 
-    if(!shared)
+    if (!shared)
     {
         entry->key = shared =
             new XPCNativeScriptableShared(flags, key.TransferNameOwnership(),
                                           interfacesBitmap);
-        if(!shared)
+        if (!shared)
             return JS_FALSE;
         shared->PopulateJSClass(isGlobal);
     }
@@ -582,7 +582,7 @@ XPCWrappedNativeProtoMap*
 XPCWrappedNativeProtoMap::newMap(int size)
 {
     XPCWrappedNativeProtoMap* map = new XPCWrappedNativeProtoMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -596,7 +596,7 @@ XPCWrappedNativeProtoMap::XPCWrappedNativeProtoMap(int size)
 
 XPCWrappedNativeProtoMap::~XPCWrappedNativeProtoMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -608,7 +608,7 @@ XPCNativeWrapperMap*
 XPCNativeWrapperMap::newMap(int size)
 {
     XPCNativeWrapperMap* map = new XPCNativeWrapperMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -622,7 +622,7 @@ XPCNativeWrapperMap::XPCNativeWrapperMap(int size)
 
 XPCNativeWrapperMap::~XPCNativeWrapperMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -664,7 +664,7 @@ WrappedNative2WrapperMap::MoveLink(JSDHashTable* table,
     newEntry->key = oldEntry->key;
 
     // Now update the list.
-    if(PR_CLIST_IS_EMPTY(&oldEntry->value))
+    if (PR_CLIST_IS_EMPTY(&oldEntry->value))
     {
         PR_INIT_CLIST(&newEntry->value);
         newEntry->value.obj = oldEntry->value.obj;
@@ -682,7 +682,7 @@ WrappedNative2WrapperMap*
 WrappedNative2WrapperMap::newMap(int size)
 {
     WrappedNative2WrapperMap* map = new WrappedNative2WrapperMap(size);
-    if(map && map->mTable)
+    if (map && map->mTable)
         return map;
     delete map;
     return nsnull;
@@ -695,7 +695,7 @@ WrappedNative2WrapperMap::WrappedNative2WrapperMap(int size)
 
 WrappedNative2WrapperMap::~WrappedNative2WrapperMap()
 {
-    if(mTable)
+    if (mTable)
         JS_DHashTableDestroy(mTable);
 }
 
@@ -707,7 +707,7 @@ WrappedNative2WrapperMap::Add(WrappedNative2WrapperMap* head,
     NS_PRECONDITION(wrappedObject,"bad param");
     Entry* entry = (Entry*)
         JS_DHashTableOperate(mTable, wrappedObject, JS_DHASH_ADD);
-    if(!entry)
+    if (!entry)
         return nsnull;
     NS_ASSERTION(!entry->key || this == head, "dangling pointer?");
     entry->key = wrappedObject;
@@ -715,7 +715,7 @@ WrappedNative2WrapperMap::Add(WrappedNative2WrapperMap* head,
 
     NS_ASSERTION(!l->obj, "Uh, how'd this happen?");
 
-    if(!l->next)
+    if (!l->next)
     {
         // Initialize the circular list. This case only happens when
         // this == head.
@@ -724,10 +724,10 @@ WrappedNative2WrapperMap::Add(WrappedNative2WrapperMap* head,
 
     l->obj = wrapper;
 
-    if(this != head)
+    if (this != head)
     {
         Link* headLink = head->FindLink(wrappedObject);
-        if(!headLink)
+        if (!headLink)
         {
             Entry* dummy = (Entry*)
                 JS_DHashTableOperate(head->mTable, wrappedObject, JS_DHASH_ADD);
@@ -748,7 +748,7 @@ WrappedNative2WrapperMap::AddLink(JSObject* wrappedObject, Link* oldLink)
 {
     Entry* entry = (Entry*)
         JS_DHashTableOperate(mTable, wrappedObject, JS_DHASH_ADD);
-    if(!entry)
+    if (!entry)
         return PR_FALSE;
     NS_ASSERTION(!entry->key, "Eh? What's happening?");
     entry->key = wrappedObject;
