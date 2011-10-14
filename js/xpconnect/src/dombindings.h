@@ -252,6 +252,7 @@ public:
     static ListType *getListObject(JSObject *obj);
 
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
+    static inline bool protoIsClean(JSContext *cx, JSObject *proto, bool *isClean);
     static bool shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *shouldCache);
     static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id,
                                   JSPropertyDescriptor *desc);
