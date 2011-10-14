@@ -91,7 +91,7 @@ abstract public class GeckoApp
     public static Button mAwesomeBar;
     public static ImageButton mFavicon;
     public static ProgressBar mProgressBar;
-    private SessionHistory mSessionHistory;
+    private static SessionHistory mSessionHistory;
 
     enum LaunchState {Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -438,7 +438,9 @@ abstract public class GeckoApp
         if (sGREDir == null)
             sGREDir = new File(this.getApplicationInfo().dataDir);
 
-        mSessionHistory = new SessionHistory(this);
+        if (mSessionHistory == null) {
+            mSessionHistory = new SessionHistory(this);
+        } // else: keep session history across orientation changes
 
         mMainHandler = new Handler();
 
