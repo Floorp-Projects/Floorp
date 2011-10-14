@@ -676,5 +676,34 @@ SpecialPowersAPI.prototype = {
                    withCaret ? ctx.DRAWWINDOW_DRAW_CARET : 0);
     return el;
   },
+  
+  swapFactoryRegistration: function(cid, contractID, newFactory, oldFactory) {  
+    var componentRegistrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+
+    var unregisterFactory = newFactory;
+    var registerFactory = oldFactory;
+    
+    if (cid == null) {
+      if (contractID != null) {
+        cid = componentRegistrar.contractIDToCID(contractID);
+        oldFactory = Components.manager.getClassObject(Components.classes[contractID],
+                                                            Components.interfaces.nsIFactory);
+      } else {
+        return {'error': "trying to register a new contract ID: Missing contractID"};
+      }
+
+      unregisterFactory = oldFactory;
+      registerFactory = newFactory;
+    }
+    componentRegistrar.unregisterFactory(cid,
+                                         unregisterFactory);
+
+    // Restore the original factory.
+    componentRegistrar.registerFactory(cid,
+                                       "",
+                                       contractID,
+                                       registerFactory);
+    return {'cid':cid, 'originalFactory':oldFactory};
+  },
 };
 
