@@ -10,8 +10,8 @@
 
 
 #include "vpx_ports/config.h"
-#include "recon.h"
-#include "reconintra.h"
+#include "vp8/common/recon.h"
+#include "vp8/common/reconintra.h"
 #include "vpx_mem/vpx_mem.h"
 #include "onyxd_int.h"
 
@@ -21,7 +21,6 @@
 
 void vp8mt_build_intra_predictors_mby(VP8D_COMP *pbi, MACROBLOCKD *x, int mb_row, int mb_col)
 {
-#if CONFIG_MULTITHREAD
     unsigned char *yabove_row;    /* = x->dst.y_buffer - x->dst.y_stride; */
     unsigned char *yleft_col;
     unsigned char yleft_buf[16];
@@ -146,17 +145,10 @@ void vp8mt_build_intra_predictors_mby(VP8D_COMP *pbi, MACROBLOCKD *x, int mb_row
     case MB_MODE_COUNT:
         break;
     }
-#else
-    (void) pbi;
-    (void) x;
-    (void) mb_row;
-    (void) mb_col;
-#endif
 }
 
 void vp8mt_build_intra_predictors_mby_s(VP8D_COMP *pbi, MACROBLOCKD *x, int mb_row, int mb_col)
 {
-#if CONFIG_MULTITHREAD
     unsigned char *yabove_row;    /* = x->dst.y_buffer - x->dst.y_stride; */
     unsigned char *yleft_col;
     unsigned char yleft_buf[16];
@@ -289,17 +281,10 @@ void vp8mt_build_intra_predictors_mby_s(VP8D_COMP *pbi, MACROBLOCKD *x, int mb_r
     case MB_MODE_COUNT:
         break;
     }
-#else
-    (void) pbi;
-    (void) x;
-    (void) mb_row;
-    (void) mb_col;
-#endif
 }
 
 void vp8mt_build_intra_predictors_mbuv(VP8D_COMP *pbi, MACROBLOCKD *x, int mb_row, int mb_col)
 {
-#if CONFIG_MULTITHREAD
     unsigned char *uabove_row;   /* = x->dst.u_buffer - x->dst.uv_stride; */
     unsigned char *uleft_col;    /*[16];*/
     unsigned char uleft_buf[8];
@@ -452,17 +437,10 @@ void vp8mt_build_intra_predictors_mbuv(VP8D_COMP *pbi, MACROBLOCKD *x, int mb_ro
     case MB_MODE_COUNT:
         break;
     }
-#else
-    (void) pbi;
-    (void) x;
-    (void) mb_row;
-    (void) mb_col;
-#endif
 }
 
 void vp8mt_build_intra_predictors_mbuv_s(VP8D_COMP *pbi, MACROBLOCKD *x, int mb_row, int mb_col)
 {
-#if CONFIG_MULTITHREAD
     unsigned char *uabove_row;  /* = x->dst.u_buffer - x->dst.uv_stride; */
     unsigned char *uleft_col;   /*[16];*/
     unsigned char uleft_buf[8];
@@ -621,12 +599,6 @@ void vp8mt_build_intra_predictors_mbuv_s(VP8D_COMP *pbi, MACROBLOCKD *x, int mb_
     case MB_MODE_COUNT:
         break;
     }
-#else
-    (void) pbi;
-    (void) x;
-    (void) mb_row;
-    (void) mb_col;
-#endif
 }
 
 
@@ -638,7 +610,6 @@ void vp8mt_predict_intra4x4(VP8D_COMP *pbi,
                           int mb_col,
                           int num)
 {
-#if CONFIG_MULTITHREAD
     int i, r, c;
 
     unsigned char *Above;   /* = *(x->base_dst) + x->dst - x->dst_stride; */
@@ -935,15 +906,6 @@ void vp8mt_predict_intra4x4(VP8D_COMP *pbi,
 
 
     }
-#else
-    (void) pbi;
-    (void) xd;
-    (void) b_mode;
-    (void) predictor;
-    (void) mb_row;
-    (void) mb_col;
-    (void) num;
-#endif
 }
 
 /* copy 4 bytes from the above right down so that the 4x4 prediction modes using pixels above and
@@ -951,7 +913,6 @@ void vp8mt_predict_intra4x4(VP8D_COMP *pbi,
  */
 void vp8mt_intra_prediction_down_copy(VP8D_COMP *pbi, MACROBLOCKD *x, int mb_row, int mb_col)
 {
-#if CONFIG_MULTITHREAD
     unsigned char *above_right;   /* = *(x->block[0].base_dst) + x->block[0].dst - x->block[0].dst_stride + 16; */
     unsigned int *src_ptr;
     unsigned int *dst_ptr0;
@@ -973,10 +934,4 @@ void vp8mt_intra_prediction_down_copy(VP8D_COMP *pbi, MACROBLOCKD *x, int mb_row
     *dst_ptr0 = *src_ptr;
     *dst_ptr1 = *src_ptr;
     *dst_ptr2 = *src_ptr;
-#else
-    (void) pbi;
-    (void) x;
-    (void) mb_row;
-    (void) mb_col;
-#endif
 }
