@@ -178,6 +178,12 @@ CSRCS += \
   yv12extend.c \
   $(NULL)
 
+ifdef MOZ_VP8_ERROR_CONCEALMENT
+CSRCS += \
+  error_concealment.c \
+  $(NULL)
+endif
+
 ifdef VPX_X86_ASM
 # Building on an x86 platform with a supported assembler, include
 # the optimized assembly in the build.
