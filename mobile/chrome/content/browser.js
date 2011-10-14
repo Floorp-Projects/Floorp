@@ -226,14 +226,10 @@ Tab.prototype = {
   },
 
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
-    try {
       let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
       let uri = browser.currentURI.spec;
       let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-
-      dump("Setting Last uri to: " + uri);
-      Services.prefs.setCharPref("browser.last.uri", uri);
-
+      
       let message = {
         gecko: {
           type: "onLocationChange",
@@ -243,20 +239,6 @@ Tab.prototype = {
       };
 
       sendMessageToJava(message);
-
-      if (uri == Services.prefs.getCharPref("browser.last.uri")) {
-        let showMessage = {
-          gecko: {
-            type: "hideLoadingScreen",
-            windowID: windowID
-          }
-        };
-
-        sendMessageToJava(showMessage);
-      }
-    } catch (e) {
-      dump("onLocationChange throws " + e);
-    }
   },
 
   onSecurityChange: function(aBrowser, aWebProgress, aRequest, aState) {
@@ -303,11 +285,16 @@ var BrowserEventHandler = {
     switch (aEvent.type) {
       case "DOMContentLoaded": {
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
+        let uri = browser.currentURI.spec;
+
+        dump("Setting Last uri to: " + uri);
+        Services.prefs.setCharPref("browser.last.uri", uri);
+
         sendMessageToJava({
           gecko: {
             type: "DOMContentLoaded",
             windowID: 0,
-            uri: browser.currentURI.spec,
+            uri: uri,
             title: browser.contentTitle
           }
         });
