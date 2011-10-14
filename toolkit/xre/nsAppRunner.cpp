@@ -71,6 +71,9 @@
 #include "MacLaunchHelper.h"
 #include "MacApplicationDelegate.h"
 #include "MacAutoreleasePool.h"
+// these are needed for sysctl
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #endif
 
 #ifdef XP_OS2
@@ -2655,6 +2658,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     NS_BREAK();
 #endif
 
+  TriggerQuirks();
+
   // see bug 639842
   // it's very important to fire this process BEFORE we set up error handling.
   // indeed, this process is expected to be crashy, and we don't want the user to see its crashes.
@@ -3787,3 +3792,48 @@ SetupErrorHandling(const char* progname)
   fpsetmask(0);
 #endif
 }
+
+void
+TriggerQuirks()
+{
+#if defined(XP_MACOSX)
+  int mib[2];
+
+  mib[0] = CTL_KERN;
+  mib[1] = KERN_OSRELEASE;
+  // we won't support versions greater than 10.7.99
+  char release[sizeof("10.7.99")];
+  size_t len = sizeof(release);
+  // sysctl will return ENOMEM if the release string is longer than sizeof(release)
+  int ret = sysctl(mib, 2, release, &len, NULL, 0);
+  // we only want to trigger this on OS X 10.6, on versions 10.6.8 or newer
+  // Darwin version 10 corresponds to OS X version 10.6, version 11 is 10.7
+  // http://en.wikipedia.org/wiki/Darwin_(operating_system)#Release_history
+  if (ret == 0 && NS_CompareVersions(release, "10.8.0") >= 0 && NS_CompareVersions(release, "11") < 0) {
+    CFBundleRef mainBundle = CFBundleGetMainBundle();
+    if (mainBundle) {
+      CFRetain(mainBundle);
+
+      CFStringRef bundleID = CFBundleGetIdentifier(mainBundle);
+      if (bundleID) {
+        CFRetain(bundleID);
+
+        CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFBundleGetInfoDictionary(mainBundle);
+        CFDictionarySetValue(dict, CFSTR("CFBundleIdentifier"), CFSTR("org.mozilla.firefox"));
+
+        // Calling Gestalt will trigger a load of the quirks table for org.mozilla.firefox
+        SInt32 major;
+        ::Gestalt(gestaltSystemVersionMajor, &major);
+
+        // restore the original id
+        dict = (CFMutableDictionaryRef)CFBundleGetInfoDictionary(mainBundle);
+        CFDictionarySetValue(dict, CFSTR("CFBundleIdentifier"), bundleID);
+
+        CFRelease(bundleID);
+      }
+      CFRelease(mainBundle);
+    }
+  }
+#endif
+}
+
