@@ -1304,49 +1304,17 @@ public class GeckoAppShell
             return true;
         }
     }
-    public static void addPluginView(final View view,
-                                     final double x, final double y,
-                                     final double w, final double h) {
-
+    public static void addPluginView(View view,
+                                     double x, double y,
+                                     double w, double h)
+    {
         Log.i("GeckoAppShell", "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h ) ;
-
-        getMainHandler().post(new Runnable() { 
-                public void run() {
-                    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams((int) w, (int) h);
-                    lp.leftMargin = (int) x;
-                    lp.topMargin = (int) y;
-
-                    if (GeckoApp.geckoLayout.indexOfChild(view) == -1) {
-                        view.setWillNotDraw(false);
-                        if(view instanceof SurfaceView)
-                            ((SurfaceView)view).setZOrderOnTop(true);
-
-                        GeckoApp.geckoLayout.addView(view, lp);
-                    }
-                    else
-                    {
-                        try {
-                            GeckoApp.geckoLayout.updateViewLayout(view, lp);
-                        } catch (IllegalArgumentException e) {
-                            Log.i("updateViewLayout - IllegalArgumentException", "e:" + e);
-                            // it can be the case where we
-                            // get an update before the view
-                            // is actually attached.
-                        }
-                    }
-                }
-            });
+        GeckoApp.mAppContext.addPluginView(view, x, y, w, h);
     }
 
-    public static void removePluginView(final View view) {
+    public static void removePluginView(View view) {
         Log.i("GeckoAppShell", "remove view:" + view);
-        getMainHandler().post(new Runnable() { 
-                public void run() {
-                    try {
-                        GeckoApp.geckoLayout.removeView(view);
-                    } catch (Exception e) {}
-                }
-            });
+        GeckoApp.mAppContext.removePluginView(view);
     }
 
     public static Class<?> loadPluginClass(String className, String libName) {

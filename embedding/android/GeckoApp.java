@@ -81,8 +81,8 @@ abstract public class GeckoApp
     public static final String ACTION_DEBUG       = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_BOOKMARK    = "org.mozilla.gecko.BOOKMARK";
 
-    public static LinearLayout mainLayout;
-    public static RelativeLayout geckoLayout;
+    private LinearLayout mMainLayout;
+    private RelativeLayout mGeckoLayout;
     public static GeckoSurfaceView surfaceView;
     public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
@@ -477,6 +477,45 @@ abstract public class GeckoApp
         }
     }
 
+    void addPluginView(final View view,
+                       final double x, final double y,
+                       final double w, final double h) {
+        mMainHandler.post(new Runnable() { 
+            public void run() {
+                RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams((int) w, (int) h);
+                lp.leftMargin = (int) x;
+                lp.topMargin = (int) y;
+
+                if (mGeckoLayout.indexOfChild(view) == -1) {
+                    view.setWillNotDraw(false);
+                    if (view instanceof SurfaceView)
+                        ((SurfaceView)view).setZOrderOnTop(true);
+
+                    mGeckoLayout.addView(view, lp);
+                } else {
+                    try {
+                        mGeckoLayout.updateViewLayout(view, lp);
+                    } catch (IllegalArgumentException e) {
+                        Log.i("updateViewLayout - IllegalArgumentException", "e:" + e);
+                        // it can be the case where we
+                        // get an update before the view
+                        // is actually attached.
+                    }
+                }
+            }
+        });
+    }
+
+    void removePluginView(final View view) {
+        mMainHandler.post(new Runnable() { 
+            public void run() {
+                try {
+                    mGeckoLayout.removeView(view);
+                } catch (Exception e) {}
+            }
+        });
+    }
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -501,15 +540,15 @@ abstract public class GeckoApp
         mAppContext = this;
 
         // setup gecko layout
-        geckoLayout = (RelativeLayout) findViewById(R.id.geckoLayout);
+        mGeckoLayout = (RelativeLayout) findViewById(R.id.geckoLayout);
 
         if (surfaceView == null) {
             surfaceView = new GeckoSurfaceView(this);
-            geckoLayout.addView(surfaceView);
-        } else if (geckoLayout.getChildCount() == 0) {
+            mGeckoLayout.addView(surfaceView);
+        } else if (mGeckoLayout.getChildCount() == 0) {
            //surfaceView still holds to the old one during rotation. re-add it to new activity
            ((ViewGroup) surfaceView.getParent()).removeAllViews();
-           geckoLayout.addView(surfaceView);
+           mGeckoLayout.addView(surfaceView);
         }
 
         surfaceView.loadStartupBitmap();
@@ -543,7 +582,7 @@ abstract public class GeckoApp
             });
         }
 
-        mainLayout = (LinearLayout) findViewById(R.id.mainLayout);
+        mMainLayout = (LinearLayout) findViewById(R.id.mainLayout);
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         // setup awesome bar
@@ -612,12 +651,12 @@ abstract public class GeckoApp
             launchButton.setOnClickListener(new Button.OnClickListener() {
                 public void onClick (View v) {
                     // hide the button so we can't be launched again
-                    mainLayout.removeView(launchButton);
+                    mMainLayout.removeView(launchButton);
                     setLaunchState(LaunchState.Launching);
                     launch(null);
                 }
             });
-            mainLayout.addView(launchButton, 300, 200);
+            mMainLayout.addView(launchButton, 300, 200);
             return;
         }
         if (checkLaunchState(LaunchState.WaitButton) || launch(intent))
