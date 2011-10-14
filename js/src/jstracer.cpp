@@ -9160,6 +9160,8 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
             if (l.isNull())
                 op = LIR_eqp;
         } else if (l.isObject()) {
+            JS_NOT_REACHED("FIXME");
+#if 0
             if (l.toObject().getClass()->ext.equality)
                 RETURN_STOP_A("Can't trace extended class equality operator");
             LIns* flags_ins = w.ldiObjFlags(l_ins);
@@ -9168,6 +9170,7 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
 
             op = LIR_eqp;
             cond = (l == r);
+#endif
         } else if (l.isBoolean()) {
             JS_ASSERT(r.isBoolean());
             cond = (l == r);

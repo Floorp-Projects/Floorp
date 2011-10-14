@@ -748,17 +748,24 @@ JSObject::initRegExp(JSContext *cx, js::RegExp *re)
      * will already have the relevant properties, at the relevant locations.
      */
     if (nativeEmpty()) {
-        const js::Shape *shape = js::BaseShape::lookupInitialShape(cx, getClass(), getParent(),
-                                                                   js::gc::FINALIZE_OBJECT8, lastProperty());
-        if (!shape)
-            return false;
-        if (shape == lastProperty()) {
-            shape = assignInitialRegExpShape(cx);
+        if (isDelegate()) {
+            if (!assignInitialRegExpShape(cx))
+                return false;
+        } else {
+            const js::Shape *shape =
+                js::BaseShape::lookupInitialShape(cx, getClass(), getParent(),
+                                                  js::gc::FINALIZE_OBJECT8, 0,
+                                                  lastProperty());
             if (!shape)
                 return false;
-            js::BaseShape::insertInitialShape(cx, js::gc::FINALIZE_OBJECT8, shape);
+            if (shape == lastProperty()) {
+                shape = assignInitialRegExpShape(cx);
+                if (!shape)
+                    return false;
+                js::BaseShape::insertInitialShape(cx, js::gc::FINALIZE_OBJECT8, shape);
+            }
+            setLastPropertyInfallible(shape);
         }
-        setLastPropertyInfallible(shape);
         JS_ASSERT(!nativeEmpty());
     }
 

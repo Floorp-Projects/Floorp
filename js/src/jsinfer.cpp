@@ -2881,7 +2881,7 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
         JS_ASSERT_IF(flags & OBJECT_FLAG_REENTRANT_FUNCTION,
                      interpretedFunction->script()->reentrantOuterFunction);
         JS_ASSERT_IF(flags & OBJECT_FLAG_ITERATED,
-                     singleton->flags & JSObject::ITERATED);
+                     singleton->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON));
     }
 
     this->flags |= flags;
@@ -5637,7 +5637,7 @@ JSObject::makeLazyType(JSContext *cx)
             type->flags |= OBJECT_FLAG_REENTRANT_FUNCTION;
     }
 
-    if (flags & ITERATED)
+    if (lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON))
         type->flags |= OBJECT_FLAG_ITERATED;
 
 #if JS_HAS_XML_SUPPORT
@@ -5696,6 +5696,9 @@ JSObject::hasNewType(TypeObject *type)
 TypeObject *
 JSObject::getNewType(JSContext *cx, JSFunction *fun, bool markUnknown)
 {
+    if (!setDelegate(cx))
+        return NULL;
+
     JSCompartment::NewTypeObjectSet &table = cx->compartment->newTypeObjects;
 
     if (!table.initialized() && !table.init())
@@ -5731,8 +5734,6 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun, bool markUnknown)
 
     if (!table.relookupOrAdd(p, this, type))
         return NULL;
-
-    setDelegate();
 
     if (!cx->typeInferenceEnabled())
         return type;

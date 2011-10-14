@@ -522,16 +522,6 @@ struct JSObject : js::gc::Cell
     inline bool nativeContains(JSContext *cx, const js::Shape &shape);
 
     enum {
-        DELEGATE                  =       0x01,
-        SYSTEM                    =       0x02,
-        NOT_EXTENSIBLE            =       0x04,
-        GENERIC                   =       0x10,
-        INDEXED                   =       0x40,
-        BOUND_FUNCTION            =      0x400,
-        HAS_EQUALITY              =      0x800,
-        VAROBJ                    =     0x1000,
-        WATCHED                   =     0x2000,
-        ITERATED                  =     0x8000,
         SINGLETON_TYPE            =    0x10000,
         LAZY_TYPE                 =    0x20000,
 
@@ -571,49 +561,38 @@ struct JSObject : js::gc::Cell
      * definition helps to optimize shape-based property cache invalidation
      * (see Purge{Scope,Proto}Chain in jsobj.cpp).
      */
-    bool isDelegate() const     { return !!(flags & DELEGATE); }
-    void setDelegate()          { flags |= DELEGATE; }
-    void clearDelegate()        { flags &= ~DELEGATE; }
+    inline bool isDelegate() const;
+    inline bool setDelegate(JSContext *cx);
 
-    bool isBoundFunction() const { return !!(flags & BOUND_FUNCTION); }
-
-    static void setDelegateNullSafe(JSObject *obj) {
-        if (obj)
-            obj->setDelegate();
-    }
+    inline bool isBoundFunction() const;
 
     /*
      * The meaning of the system object bit is defined by the API client. It is
      * set in JS_NewSystemObject and is queried by JS_IsSystemObject, but it
      * has no intrinsic meaning to SpiderMonkey.
      */
-    bool isSystem() const       { return !!(flags & SYSTEM); }
-    void setSystem()            { flags |= SYSTEM; }
+    inline bool isSystem() const;
+    inline bool setSystem(JSContext *cx);
 
-    bool generic()              { return !!(flags & GENERIC); }
-    void setGeneric()           { flags |= GENERIC; }
+    inline bool hasSpecialEquality() const;
 
-    bool hasSpecialEquality() const { return !!(flags & HAS_EQUALITY); }
-    inline void assertSpecialEqualitySynced() const;
+    inline bool watched() const;
+    inline bool setWatched(JSContext *cx);
 
-    /* Sets an object's HAS_EQUALITY flag based on its clasp. */
-    inline void syncSpecialEquality();
+    /* See StackFrame::varObj. */
+    inline bool isVarObj() const;
+    inline bool setVarObj(JSContext *cx);
 
-    bool watched() const { return !!(flags & WATCHED); }
-
-    bool setWatched(JSContext *cx) {
-        if (!watched()) {
-            flags |= WATCHED;
-            return generateOwnShape(cx);
-        }
-        return true;
-    }
-
-   /* See StackFrame::varObj. */
-   inline bool isVarObj() const { return flags & VAROBJ; }
-   inline void makeVarObj() { flags |= VAROBJ; }
   private:
     bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL);
+
+    enum GenerateShape {
+        GENERATE_NONE,
+        GENERATE_SHAPE
+    };
+
+    bool setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32 flag,
+                 GenerateShape generateShape = GENERATE_NONE);
 
   public:
     inline bool nativeEmpty() const;
@@ -627,11 +606,6 @@ struct JSObject : js::gc::Cell
     bool protoShapeChange(JSContext *cx);
     bool shadowingShapeChange(JSContext *cx, const js::Shape &shape);
 
-    bool extensibleShapeChange(JSContext *cx) {
-        /* This will do for now. */
-        return generateOwnShape(cx);
-    }
-
     /*
      * Read barrier to clone a joined function object stored as a method.
      * Defined in jsobjinlines.h, but not declared inline per standard style in
@@ -642,8 +616,8 @@ struct JSObject : js::gc::Cell
     /* Whether method shapes can be added to this object. */
     inline bool canHaveMethodBarrier() const;
 
-    bool isIndexed() const          { return !!(flags & INDEXED); }
-    void setIndexed()               { flags |= INDEXED; }
+    inline bool isIndexed() const;
+    inline bool setIndexed(JSContext *cx);
 
     /*
      * Return true if this object is a native one that has been converted from
@@ -809,7 +783,7 @@ struct JSObject : js::gc::Cell
     }
 
     /* Defined in jsscopeinlines.h to avoid including implementation dependencies here. */
-    inline void updateFlags(const js::Shape *shape, bool isDefinitelyAtom = false);
+    inline bool updateFlags(JSContext *cx, jsid id, bool isDefinitelyAtom = false);
 
     /* Extend this object to have shape as its last-added property. */
     inline bool extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom = false);
@@ -854,6 +828,8 @@ struct JSObject : js::gc::Cell
 #ifdef DEBUG
     bool hasNewType(js::types::TypeObject *newType);
 #endif
+
+    inline bool setIteratedSingleton(JSContext *cx);
 
     /* Set a new prototype for an object with a singleton type. */
     bool splicePrototype(JSContext *cx, JSObject *proto);
@@ -925,7 +901,7 @@ struct JSObject : js::gc::Cell
     inline void *&privateAddress(uint32 nfixed) const;
 
   public:
-    bool isExtensible() const { return !(flags & NOT_EXTENSIBLE); }
+    inline bool isExtensible() const;
     bool preventExtensions(JSContext *cx, js::AutoIdVector *props);
 
     /* ES5 15.2.3.8: non-extensible, all props non-configurable */
@@ -1703,23 +1679,6 @@ js_CreateThis(JSContext *cx, JSObject *callee);
 
 extern jsid
 js_CheckForStringIndex(jsid id);
-
-/*
- * js_PurgeScopeChain does nothing if obj is not itself a prototype or parent
- * scope, else it reshapes the scope and prototype chains it links. It calls
- * js_PurgeScopeChainHelper, which asserts that obj is flagged as a delegate
- * (i.e., obj has ever been on a prototype or parent chain).
- */
-extern bool
-js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id);
-
-inline bool
-js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
-{
-    if (obj->isDelegate())
-        return js_PurgeScopeChainHelper(cx, obj, id);
-    return true;
-}
 
 /*
  * Find or create a property named by id in obj's scope, with the given getter

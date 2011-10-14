@@ -131,7 +131,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
              * Make sure that a later shadowing assignment will enter
              * PurgeProtoChain and invalidate this entry, bug 479198.
              */
-            obj->setDelegate();
+            if (!obj->isDelegate())
+                return JS_NO_PROP_CACHE_FILL;
         }
     }
 

@@ -259,8 +259,8 @@ GlobalObject::create(JSContext *cx, Class *clasp)
         return NULL;
 
     GlobalObject *globalObj = obj->asGlobal();
-    globalObj->makeVarObj();
-    globalObj->syncSpecialEquality();
+    if (!globalObj->setVarObj(cx))
+        return NULL;
 
     /* Construct a regexp statics object for this global object. */
     JSObject *res = regexp_statics_construct(cx, globalObj);
