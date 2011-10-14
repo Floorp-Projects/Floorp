@@ -42,6 +42,8 @@ package org.mozilla.gecko;
 import java.io.*;
 import java.util.*;
 import java.util.zip.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.*;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.*;
@@ -55,6 +57,7 @@ import android.view.inputmethod.*;
 import android.content.*;
 import android.content.res.*;
 import android.graphics.*;
+import android.graphics.drawable.Drawable;
 import android.widget.*;
 import android.hardware.*;
 
@@ -88,9 +91,9 @@ abstract public class GeckoApp
     public Handler mMainHandler;
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
-    public static Button mAwesomeBar;
-    public static ImageButton mFavicon;
-    public static ProgressBar mProgressBar;
+    private Button mAwesomeBar;
+    private ImageButton mFavicon;
+    private ProgressBar mProgressBar;
     private static SessionHistory mSessionHistory;
 
     enum LaunchState {Launching, WaitButton,
@@ -394,6 +397,84 @@ abstract public class GeckoApp
 
     SessionHistory getSessionHistory() {
         return mSessionHistory;
+    }
+
+    void handleLocationChange(final String uri) {
+        mMainHandler.post(new Runnable() { 
+            public void run() {
+                mAwesomeBar.setText(uri);
+            }
+        });
+    }
+
+    void handleDocumentStart() {
+        mMainHandler.post(new Runnable() { 
+            public void run() {
+                mProgressBar.setVisibility(View.VISIBLE);
+                mProgressBar.setIndeterminate(true);
+            }
+        });
+    }
+
+    void handleDocumentStop() {
+        mMainHandler.post(new Runnable() { 
+            public void run() {
+                mProgressBar.setVisibility(View.GONE);
+                surfaceView.hideStartupBitmap();
+            }
+        });
+    }
+
+    void handleProgressChange(final int current, final int total) {
+        mMainHandler.post(new Runnable() { 
+            public void run() {
+                if (total == -1) {
+                    mProgressBar.setIndeterminate(true);
+                } else if (current < total) {
+                    mProgressBar.setIndeterminate(false);
+                    mProgressBar.setMax(total);
+                    mProgressBar.setProgress(current);
+                } else {
+                    mProgressBar.setIndeterminate(false);
+                }
+            }
+        });
+    }
+
+    void handleContentLoaded(final String uri, final String title) {
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                mAwesomeBar.setText(title);
+                mSessionHistory.add(new SessionHistory.HistoryEntry(uri, title));
+            }
+        });
+    }
+
+    void handleTitleChanged(final String title) {
+        mMainHandler.post(new Runnable() { 
+            public void run() {
+                mAwesomeBar.setText(title);
+            }
+        });
+    }
+
+    void handleLinkAdded(String rel, final String href) {
+        if (rel.indexOf("icon") != -1) {
+            mMainHandler.post(new Runnable() { 
+                public void run() {
+                    try {
+                        URL url = new URL(href);
+                        InputStream is = (InputStream) url.getContent();
+                        Drawable image = Drawable.createFromStream(is, "src");
+                        mFavicon.setImageDrawable(image);
+                    } catch (MalformedURLException e) {
+                        Log.d("GeckoShell", "Error loading favicon: " + e);
+                    } catch (IOException e) {
+                        Log.d("GeckoShell", "Error loading favicon: " + e);
+                    }
+                }
+            });
+        }
     }
 
     /** Called when the activity is first created. */
