@@ -72,7 +72,7 @@ contract @mozilla.org/embedcomp/prompt-service;1 {9a61149b-2276-4a0a-b79c-be994a
 category wakeup-request PromptService @mozilla.org/embedcomp/prompt-service;1,nsIPromptService,getService,Prompt:Call
 
 # BrowserCLH.js
-component {be623d20-d305-11de-8a39-0800200c9a66} BrowserCLH.js application={aa3c5121-dab2-40e2-81ca-7ea25febc110}
+component {be623d20-d305-11de-8a39-0800200c9a66} BrowserCLH.js application={a23983c0-fd0e-11dc-95ff-0800200c9a66}
 contract @mozilla.org/browser/browser-clh;1 {be623d20-d305-11de-8a39-0800200c9a66}
 category command-line-handler x-browser @mozilla.org/browser/browser-clh;1
 
