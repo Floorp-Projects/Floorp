@@ -1102,7 +1102,8 @@ XrayProxy::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
     AutoLeaveHelper<CrossCompartmentWrapper> helper(*this, cx, wrapper);
 
     JSObject *obj = &js::GetProxyPrivate(wrapper).toObject();
-    if (XrayUtils::IsTransparent(cx, wrapper)) { {
+    if (XrayUtils::IsTransparent(cx, wrapper)) {
+        {
             JSAutoEnterCompartment ac;
             if (!ac.enter(cx, obj))
                 return false;
@@ -1172,7 +1173,8 @@ XrayProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
     AutoLeaveHelper<CrossCompartmentWrapper> helper(*this, cx, wrapper);
 
     JSObject *obj = &js::GetProxyPrivate(wrapper).toObject();
-    if (XrayUtils::IsTransparent(cx, wrapper)) { {
+    if (XrayUtils::IsTransparent(cx, wrapper)) {
+        {
             JSAutoEnterCompartment ac;
             if (!ac.enter(cx, obj))
                 return false;
