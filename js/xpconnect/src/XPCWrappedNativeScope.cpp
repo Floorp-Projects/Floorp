@@ -271,8 +271,7 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
             JS_GetPropertyById(ccx, JSVAL_TO_OBJECT(val), idProto, &val) &&
             !JSVAL_IS_PRIMITIVE(val)) {
             mPrototypeJSObject = JSVAL_TO_OBJECT(val);
-        }
-        else {
+        } else {
             NS_ERROR("Can't get globalObject.Object.prototype");
         }
 
@@ -281,8 +280,7 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
             JS_GetPropertyById(ccx, JSVAL_TO_OBJECT(val), idProto, &val) &&
             !JSVAL_IS_PRIMITIVE(val)) {
             mPrototypeJSFunction = JSVAL_TO_OBJECT(val);
-        }
-        else {
+        } else {
             NS_ERROR("Can't get globalObject.Function.prototype");
         }
     }
@@ -444,8 +442,7 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
             cur->mNext = gDyingScopes;
             gDyingScopes = cur;
             cur = nsnull;
-        }
-        else {
+        } else {
             if (cur->mPrototypeJSObject &&
                 JS_IsAboutToBeFinalized(cx, cur->mPrototypeJSObject)) {
                 cur->mPrototypeJSObject = nsnull;

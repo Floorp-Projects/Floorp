@@ -211,8 +211,7 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
                     }
                 }
             }
-        }
-        else {
+        } else {
             mDescriptors = &zero_methods_descriptor;
         }
     }
@@ -329,8 +328,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
                             JS_ClearPendingException(cx);
                         }
                     }
-                }
-                else if (JSVAL_IS_NUMBER(jsexception)) {
+                } else if (JSVAL_IS_NUMBER(jsexception)) {
                     // JS often throws an nsresult.
                     if (JSVAL_IS_DOUBLE(jsexception))
                         rv = (nsresult)(JSVAL_TO_DOUBLE(jsexception));
@@ -917,8 +915,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
                          GetIIDForParamNoAlloc(methodIndex, &param, result))) {
             return JS_TRUE;
         }
-    }
-    else if (type_tag == nsXPTType::T_INTERFACE_IS) {
+    } else if (type_tag == nsXPTType::T_INTERFACE_IS) {
         uint8 argnum;
         nsresult rv;
         rv = mInfo->GetInterfaceIsArgNumberForParam(methodIndex,
@@ -935,8 +932,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
                 if (!p || !*p)
                     return JS_FALSE;
                 *result = **p;
-            }
-            else {
+            } else {
                 nsID* p = (nsID*) nativeParams[argnum].val.p;
                 if (!p)
                     return JS_FALSE;
@@ -959,8 +955,7 @@ nsXPCWrappedJSClass::CleanupPointerArray(const nsXPTType& datum_type,
             nsISupports* p = pp[k];
             NS_IF_RELEASE(p);
         }
-    }
-    else {
+    } else {
         void** pp = (void**) arrayp;
         for (JSUint32 k = 0; k < array_count; k++) {
             void* p = pp[k];
@@ -977,8 +972,7 @@ nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
     if (type.IsInterfacePointer()) {
         nsISupports* p = *((nsISupports**)pp);
         if (p) p->Release();
-    }
-    else {
+    } else {
         void* p = *((void**)pp);
         if (p) nsMemory::Free(p);
     }
@@ -1096,8 +1090,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                     fputs(text, stdout);
                     fputs("\n", stdout);
                     nsMemory::Free(text);
-                }
-                else
+                } else
                     fputs(cant_get_text, stdout);
                 fputs(line, stdout);
 #endif
@@ -1167,8 +1160,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                 return e_result;
             }
         }
-    }
-    else {
+    } else {
         // see if JS code signaled failure result without throwing exception
         if (NS_FAILED(pending_result)) {
             return pending_result;
@@ -1362,8 +1354,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                     }
                 }
             }
-        }
-        else if (!JS_GetMethod(cx, obj, name, &thisObj, &fval)) {
+        } else if (!JS_GetMethod(cx, obj, name, &thisObj, &fval)) {
             // XXX We really want to factor out the error reporting better and
             // specifically report the failure to find a function with this name.
             // This is what we do below if the property is found but is not a
@@ -1411,8 +1402,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             if (NS_FAILED(mInfo->GetTypeForParam(methodIndex, &param, 1,
                                                  &datum_type)))
                 goto pre_call_clean_up;
-        }
-        else
+        } else
             datum_type = type;
 
         if (param.IsIn()) {
@@ -1443,15 +1433,13 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                                 datum_type, &param_iid,
                                                 array_count, nsnull))
                     goto pre_call_clean_up;
-            }
-            else if (isSizedString) {
+            } else if (isSizedString) {
                 if (!XPCConvert::NativeStringWithSize2JS(ccx, &val,
                                                          (const void*)&pv->val,
                                                          datum_type,
                                                          array_count, nsnull))
                     goto pre_call_clean_up;
-            }
-            else {
+            } else {
                 if (!XPCConvert::NativeData2JS(ccx, &val, &pv->val, type,
                                                &param_iid, nsnull))
                     goto pre_call_clean_up;
@@ -1474,8 +1462,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                 }
             }
             *sp++ = OBJECT_TO_JSVAL(out_obj);
-        }
-        else
+        } else
             *sp++ = val;
     }
 
@@ -1515,8 +1502,7 @@ pre_call_clean_up:
                     // always release the array if it is inout
                     nsMemory::Free(pp);
                 }
-            }
-            else
+            } else
                 CleanupPointerTypeObject(type, (void**)p);
         }
         *((void**)p) = nsnull;
@@ -1536,12 +1522,10 @@ pre_call_clean_up:
     if (XPT_MD_IS_GETTER(info->flags)) {
         success = JS_GetProperty(cx, obj, name, argv);
         rval = *argv;
-    }
-    else if (XPT_MD_IS_SETTER(info->flags)) {
+    } else if (XPT_MD_IS_SETTER(info->flags)) {
         success = JS_SetProperty(cx, obj, name, argv);
         rval = *argv;
-    }
-    else {
+    } else {
         if (!JSVAL_IS_PRIMITIVE(fval)) {
             uint32 oldOpts = JS_GetOptions(cx);
             JS_SetOptions(cx, oldOpts | JSOPTION_DONT_REPORT_UNCAUGHT);
@@ -1549,8 +1533,7 @@ pre_call_clean_up:
             success = JS_CallFunctionValue(cx, thisObj, fval, argc, argv, &rval);
 
             JS_SetOptions(cx, oldOpts);
-        }
-        else {
+        } else {
             // The property was not an object so can't be a function.
             // Let's build and 'throw' an exception.
 
@@ -1674,8 +1657,7 @@ pre_call_clean_up:
                 if (NS_FAILED(mInfo->GetTypeForParam(methodIndex, &param, 1,
                                                      &datum_type)))
                     break;
-            }
-            else
+            } else
                 datum_type = type;
 
             if (datum_type.IsInterfacePointer()) {
@@ -1699,15 +1681,13 @@ pre_call_clean_up:
                                                 datum_type, &param_iid,
                                                 nsnull))
                     break;
-            }
-            else if (isSizedString) {
+            } else if (isSizedString) {
                 if (!XPCConvert::JSStringWithSize2Native(ccx,
                                                          (void*)&pv->val, val,
                                                          array_count, array_count,
                                                          datum_type, nsnull))
                     break;
-            }
-            else {
+            } else {
                 if (!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
                                                JS_TRUE, &param_iid,
                                                nsnull))
@@ -1748,13 +1728,11 @@ pre_call_clean_up:
                     }
                     nsMemory::Free(pp);
                 }
-            }
-            else
+            } else
                 CleanupPointerTypeObject(type, (void**)p);
             *((void**)p) = nsnull;
         }
-    }
-    else {
+    } else {
         // set to whatever the JS code might have set as the result
         retval = pending_result;
     }

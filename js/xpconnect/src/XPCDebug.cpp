@@ -222,8 +222,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
                 buf = JS_sprintf_append(buf, TAB "this = %s\n", thisValBytes.ptr());
                 if (!buf) goto out;
             }
-        }
-        else
+        } else
             buf = JS_sprintf_append(buf, TAB "<failed to get 'this' value>\n");
     }
 
@@ -352,8 +351,7 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text)
         nsnull != (str = JS_ValueToString(cx, rval)) &&
         bytes.encode(cx, str)) {
         printf("%s\n", bytes.ptr());
-    }
-    else
+    } else
         puts("eval failed!");
     JS_SetErrorReporter(cx, older);
     JS_RestoreExceptionState(cx, exceptionState);

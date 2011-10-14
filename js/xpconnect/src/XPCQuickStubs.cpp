@@ -225,8 +225,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id, uintN orig_attrs,
             return JS_FALSE;
         roots[0] = OBJECT_TO_JSVAL(getterobj);
         attrs |= JSPROP_GETTER;
-    }
-    else
+    } else
         getterobj = nsnull;
 
     JSObject *setterobj;
@@ -236,8 +235,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id, uintN orig_attrs,
             return JS_FALSE;
         roots[1] = OBJECT_TO_JSVAL(setterobj);
         attrs |= JSPROP_SETTER;
-    }
-    else
+    } else
         setterobj = nsnull;
 
     if (getterobjp)
@@ -284,8 +282,7 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
                         OBJECT_TO_JSVAL(JS_FUNC_TO_DATA_PTR(JSObject *, desc.getter)));
             return JS_TRUE;
         }
-    }
-    else {
+    } else {
         if (desc.attrs & JSPROP_SETTER) {
             JS_SET_RVAL(cx, vp,
                         OBJECT_TO_JSVAL(JS_FUNC_TO_DATA_PTR(JSObject *, desc.setter)));
@@ -495,8 +492,7 @@ GetMemberInfo(JSObject *obj, jsid memberId, const char **ifaceName)
     XPCWrappedNativeProto *proto;
     if (IS_SLIM_WRAPPER(obj)) {
         proto = GetSlimWrapperProto(obj);
-    }
-    else {
+    } else {
         XPCWrappedNative *wrapper = (XPCWrappedNative *) js::GetObjectPrivate(obj);
         proto = wrapper->GetProto();
     }
@@ -562,8 +558,7 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
         && name) {
         sz = JS_smprintf("%s 0x%x (%s) [%s.%s]",
                          format, rv, name, ifaceName, memberName);
-    }
-    else {
+    } else {
         sz = JS_smprintf("%s 0x%x [%s.%s]",
                          format, rv, ifaceName, memberName);
     }
@@ -831,15 +826,13 @@ castNative(JSContext *cx,
 
         if (rv != NS_ERROR_NO_INTERFACE)
             return rv;
-    }
-    else if (cur) {
+    } else if (cur) {
         nsISupports *native;
         QITableEntry *entries;
         if (IS_SLIM_WRAPPER(cur)) {
             native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
             entries = GetOffsetsFromSlimWrapper(cur);
-        }
-        else {
+        } else {
             NS_ABORT_IF_FALSE(mozilla::dom::binding::instanceIsProxy(cur),
                               "what kind of wrapper is this?");
             native = static_cast<nsISupports*>(js::GetProxyPrivate(cur).toPrivate());
@@ -925,8 +918,7 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     if (mozilla::dom::binding::instanceIsProxy(src)) {
         wrapper = nsnull;
         obj2 = src;
-    }
-    else {
+    } else {
         rv = getWrapper(cx, src, nsnull, &wrapper, &obj2, &tearoff);
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -995,11 +987,9 @@ xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes)
     JS_ASSERT(!bytes->ptr());
     if (JSVAL_IS_STRING(v)) {
         str = JSVAL_TO_STRING(v);
-    }
-    else if (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v)) {
+    } else if (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v)) {
         return true;
-    }
-    else {
+    } else {
         if (!(str = JS_ValueToString(cx, v)))
             return false;
     }
@@ -1013,12 +1003,10 @@ xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, PRUnichar **pstr)
 
     if (JSVAL_IS_STRING(v)) {
         str = JSVAL_TO_STRING(v);
-    }
-    else if (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v)) {
+    } else if (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v)) {
         *pstr = NULL;
         return JS_TRUE;
-    }
-    else {
+    } else {
         if (!(str = JS_ValueToString(cx, v)))
             return JS_FALSE;
         *pval = STRING_TO_JSVAL(str);  // Root the new string.

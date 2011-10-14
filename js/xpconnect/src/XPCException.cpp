@@ -331,8 +331,7 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
             return rc;
         if (NS_FAILED(rc = aLocation->GetLineNumber(&mLineNumber)))
             return rc;
-    }
-    else {
+    } else {
         nsresult rv;
         nsXPConnect* xpc = nsXPConnect::GetXPConnect();
         if (!xpc)
@@ -436,8 +435,7 @@ nsXPCException::NewException(const char *aMessage,
         if (aLocation) {
             location = aLocation;
             NS_ADDREF(location);
-        }
-        else {
+        } else {
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();
             if (!xpc) {
                 NS_RELEASE(e);

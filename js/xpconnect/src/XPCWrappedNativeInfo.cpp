@@ -159,8 +159,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
             argc-- ;
 
         callback = XPC_WN_CallMethod;
-    }
-    else {
+    } else {
         argc = 0;
         callback = XPC_WN_GetterSetter;
     }
@@ -220,8 +219,7 @@ XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid)
             NS_ERROR("failed to add our interface!");
             DestroyInstance(iface);
             iface = nsnull;
-        }
-        else if (iface2 != iface) {
+        } else if (iface2 != iface) {
             DestroyInstance(iface);
             iface = iface2;
         }
@@ -265,8 +263,7 @@ XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, nsIInterfaceInfo* info)
             NS_ERROR("failed to add our interface!");
             DestroyInstance(iface);
             iface = nsnull;
-        }
-        else if (iface2 != iface) {
+        } else if (iface2 != iface) {
             DestroyInstance(iface);
             iface = iface2;
         }
@@ -342,8 +339,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
         members = new XPCNativeMember[totalCount];
         if (!members)
             return nsnull;
-    }
-    else {
+    } else {
         members = local_members;
     }
 
@@ -381,8 +377,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
             NS_ASSERTION(cur->IsReadOnlyAttribute(),"bad setter");
             NS_ASSERTION(cur->GetIndex() == i-1,"bad setter");
             cur->SetWritableAttribute();
-        }
-        else {
+        } else {
             // XXX need better way to find dups
             // NS_ASSERTION(!LookupMemberByID(name),"duplicate method name");
             cur = &members[realTotalCount++];
@@ -517,8 +512,7 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid)
             NS_ERROR("failed to add our set!");
             DestroyInstance(set);
             set = nsnull;
-        }
-        else if (set2 != set) {
+        } else if (set2 != set) {
             DestroyInstance(set);
             set = set2;
         }
@@ -619,11 +613,9 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, nsIClassInfo* classInfo)
                     }
                 }
             }
-        }
-        else
+        } else
             set = GetNewOrUsed(ccx, &NS_GET_IID(nsISupports));
-    }
-    else
+    } else
         set = GetNewOrUsed(ccx, &NS_GET_IID(nsISupports));
 
     if (set)
@@ -698,8 +690,7 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx,
             NS_ERROR("failed to add our set!");
             DestroyInstance(set);
             set = nsnull;
-        }
-        else if (set2 != set) {
+        } else if (set2 != set) {
             DestroyInstance(set);
             set = set2;
         }
@@ -803,8 +794,7 @@ XPCNativeSet::NewInstanceMutate(XPCNativeSet*       otherSet,
                 else
                     *dest++ = *src++;
             }
-        }
-        else {
+        } else {
             obj->mMemberCount = newInterface->GetMemberCount();
             obj->mInterfaceCount = 1;
             obj->mInterfaces[0] = newInterface;

@@ -355,13 +355,11 @@ protected:
         JSString *s;
         if (JSVAL_IS_STRING(v)) {
             s = JSVAL_TO_STRING(v);
-        }
-        else {
+        } else {
             StringificationBehavior behavior = eStringify;
             if (JSVAL_IS_NULL(v)) {
                 behavior = nullBehavior;
-            }
-            else if (JSVAL_IS_VOID(v)) {
+            } else if (JSVAL_IS_VOID(v)) {
                 behavior = undefinedBehavior;
             }
 
@@ -565,8 +563,7 @@ castNativeFromWrapper(JSContext *cx,
                   (XPCWrappedNative*)xpc_GetJSPrivate(obj) :
                   nsnull;
         tearoff = nsnull;
-    }
-    else {
+    } else {
         *rv = getWrapper(cx, obj, callee, &wrapper, &cur, &tearoff);
         if (NS_FAILED(*rv))
             return nsnull;
@@ -576,8 +573,7 @@ castNativeFromWrapper(JSContext *cx,
     if (wrapper) {
         native = wrapper->GetIdentityObject();
         cur = wrapper->GetFlatJSObject();
-    }
-    else {
+    } else {
         native = cur ?
                  static_cast<nsISupports*>(xpc_GetJSPrivate(cur)) :
                  nsnull;
@@ -717,8 +713,7 @@ xpc_qsValueToInt64(JSContext *cx,
         if (!JS_ValueToECMAInt32(cx, v, &intval))
             return JS_FALSE;
         *result = static_cast<PRInt64>(intval);
-    }
-    else {
+    } else {
         jsdouble doubleval;
         if (!JS_ValueToNumber(cx, v, &doubleval))
             return JS_FALSE;
@@ -754,8 +749,7 @@ xpc_qsValueToUint64(JSContext *cx,
         if (!JS_ValueToECMAUint32(cx, v, &intval))
             return JS_FALSE;
         *result = static_cast<PRUint64>(intval);
-    }
-    else {
+    } else {
         jsdouble doubleval;
         if (!JS_ValueToNumber(cx, v, &doubleval))
             return JS_FALSE;

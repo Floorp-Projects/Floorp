@@ -112,14 +112,12 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
             jsclazz = flags.WantCall() ?
                 &XPC_WN_ModsAllowed_WithCall_Proto_JSClass :
                 &XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
-        }
-        else {
+        } else {
             jsclazz = flags.WantCall() ?
                 &XPC_WN_NoMods_WithCall_Proto_JSClass :
                 &XPC_WN_NoMods_NoCall_Proto_JSClass;
         }
-    }
-    else {
+    } else {
         jsclazz = &XPC_WN_NoMods_NoCall_Proto_JSClass;
     }
 
@@ -222,8 +220,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
          ScriptableCreateInfo->GetFlags().DontSharePrototype())) {
         ciFlags |= XPC_PROTO_DONT_SHARE;
         shared = JS_FALSE;
-    }
-    else {
+    } else {
         shared = JS_TRUE;
     }
 

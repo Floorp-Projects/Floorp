@@ -465,8 +465,7 @@ XrayToString(JSContext *cx, uintN argc, jsval *vp)
             return false;
         }
         result.Append(chars, length);
-    }
-    else {
+    } else {
         JSObject *holder = GetHolder(wrapper);
         XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
         JSObject *wrappednative = wn->GetFlatJSObject();
