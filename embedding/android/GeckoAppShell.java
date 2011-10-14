@@ -45,8 +45,6 @@ import java.text.*;
 import java.util.*;
 import java.util.zip.*;
 import java.util.concurrent.*;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import android.os.*;
 import android.app.*;
@@ -70,8 +68,8 @@ import android.net.Uri;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import android.graphics.drawable.*;
 import android.graphics.Bitmap;
+import android.graphics.drawable.*;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -1609,42 +1607,18 @@ public class GeckoAppShell
                 final String uri = geckoObject.getString("uri");
                 final String title = geckoObject.getString("title");
                 final CharSequence titleText = title;
-                getMainHandler().post(new Runnable() { 
-                    public void run() {
-                        GeckoApp.mAwesomeBar.setText(titleText);
-                        GeckoApp.mAppContext.getSessionHistory().add(new SessionHistory.HistoryEntry(uri, title));
-                    }
-                });
+                GeckoApp.mAppContext.handleContentLoaded(uri, title);
                 Log.i("GeckoShell", "URI - " + uri + ", title - " + title);
             } else if (type.equals("DOMTitleChanged")) {
                 final String title = geckoObject.getString("title");
                 final CharSequence titleText = title;
-                getMainHandler().post(new Runnable() { 
-                    public void run() {
-                        GeckoApp.mAwesomeBar.setText(titleText);
-                    }
-                });
+                GeckoApp.mAppContext.handleTitleChanged(title);
                 Log.i("GeckoShell", "title - " + title);
             } else if (type.equals("DOMLinkAdded")) {
                 final String rel = geckoObject.getString("rel");
                 final String href = geckoObject.getString("href");
                 Log.i("GeckoShell", "link rel - " + rel + ", href - " + href);
-                if (rel.indexOf("icon") != -1) {
-                    getMainHandler().post(new Runnable() { 
-                        public void run() {
-                            try {
-                                URL url = new URL(href);
-                                InputStream is = (InputStream) url.getContent();
-                                Drawable image = Drawable.createFromStream(is, "src");
-                                GeckoApp.mFavicon.setImageDrawable(image);
-                            } catch (MalformedURLException e) {
-                                Log.d("GeckoShell", "Error loading favicon: " + e);
-                            } catch (IOException e) {
-                                Log.d("GeckoShell", "Error loading favicon: " + e);
-                            }
-                        }
-                    });
-                }
+                GeckoApp.mAppContext.handleLinkAdded(rel, href);
             } else if (type.equals("log")) {
                 // generic log listener
                 final String msg = geckoObject.getString("msg");
@@ -1652,52 +1626,24 @@ public class GeckoAppShell
             } else if (type.equals("onLocationChange")) {
                 final String uri = geckoObject.getString("uri");
                 Log.i("GeckoShell", "URI - " + uri);
-                getMainHandler().post(new Runnable() { 
-                    public void run() {
-                        GeckoApp.mAwesomeBar.setText(uri);
-                    }
-                });
+                GeckoApp.mAppContext.handleLocationChange(uri);
             } else if (type.equals("onStateChange")) {
                 int state = geckoObject.getInt("state");
                 Log.i("GeckoShell", "State - " + state);
                 if ((state & WPL_STATE_IS_DOCUMENT) != 0) {
                     if ((state & WPL_STATE_START) != 0) {
                         Log.i("GeckoShell", "Got a document start");
-                        getMainHandler().post(new Runnable() { 
-                            public void run() {
-                                GeckoApp.mProgressBar.setVisibility(View.VISIBLE);
-                                GeckoApp.mProgressBar.setIndeterminate(true);
-                            }
-                        });
-                    }
-                    else if ((state & WPL_STATE_STOP) != 0) {
+                        GeckoApp.mAppContext.handleDocumentStart();
+                    } else if ((state & WPL_STATE_STOP) != 0) {
                         Log.i("GeckoShell", "Got a document stop");
-                        getMainHandler().post(new Runnable() { 
-                            public void run() {
-                                GeckoApp.mProgressBar.setVisibility(View.GONE);
-                                GeckoApp.surfaceView.hideStartupBitmap();
-                            }
-                        });
+                        GeckoApp.mAppContext.handleDocumentStop();
                     }
                 }
             } else if (type.equals("onProgressChange")) {
                 final int current = geckoObject.getInt("current");
                 final int total = geckoObject.getInt("total");
 
-                getMainHandler().post(new Runnable() { 
-                    public void run() {
-                        if (total == -1) {
-                            GeckoApp.mProgressBar.setIndeterminate(true);
-                        } else if (current < total) {
-                            GeckoApp.mProgressBar.setIndeterminate(false);
-                            GeckoApp.mProgressBar.setMax(total);
-                            GeckoApp.mProgressBar.setProgress(current);
-                        } else {
-                            GeckoApp.mProgressBar.setIndeterminate(false);
-                        }
-                    }
-                });
-
+                GeckoApp.mAppContext.handleProgressChange(current, total);
                 Log.i("GeckoShell", "progress - " + current + "/" + total);
             } else if (type.equals("onCameraCapture")) {
                 //GeckoApp.mAppContext.doCameraCapture(geckoObject.getString("path"));
