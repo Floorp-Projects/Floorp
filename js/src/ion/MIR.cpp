@@ -336,10 +336,7 @@ MConstant::printOpcode(FILE *fp)
 MParameter *
 MParameter::New(int32 index, types::TypeSet *types)
 {
-    MParameter *res = new MParameter(index);
-    if (types)
-        res->setTypeSet(types);
-    return res;
+    return new MParameter(index, types);
 }
 
 void
