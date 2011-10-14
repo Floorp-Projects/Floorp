@@ -1054,7 +1054,10 @@ public:
       NS_ASSERTION(aTarget, "This should never be null!");
 
       bool preventDefaultCalled;
-      if (aWorkerPrivate) {
+      nsIScriptGlobalObject* sgo;
+
+      if (aWorkerPrivate ||
+          !(sgo = nsJSUtils::GetStaticScriptGlobal(aCx, aTarget))) {
         // Fire a normal ErrorEvent if we're running on a worker thread.
         JSObject* event = events::CreateErrorEvent(aCx, message, filename,
                                                    aLineNumber, false);
@@ -1069,10 +1072,6 @@ public:
       }
       else {
         // Icky, we have to fire an nsScriptErrorEvent...
-        nsIScriptGlobalObject* sgo =
-          nsJSUtils::GetStaticScriptGlobal(aCx, aTarget);
-        NS_ASSERTION(sgo, "This should never be null!");
-
         nsScriptErrorEvent event(true, NS_LOAD_ERROR);
         event.lineNr = aLineNumber;
         event.errorMsg = aMessage.get();
@@ -2044,7 +2043,7 @@ PRUint64
 WorkerPrivateParent<Derived>::GetInnerWindowId()
 {
   AssertIsOnMainThread();
-  return mDocument->InnerWindowID();
+  return mDocument ? mDocument->InnerWindowID() : 0;
 }
 
 template <class Derived>
