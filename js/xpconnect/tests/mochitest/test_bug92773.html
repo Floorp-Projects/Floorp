@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=92773
+-->
+<head>
+  <title>Test for Bug 92773</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=92773">Mozilla Bug 92773</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 92773 **/
+function go() {
+    try {
+        $('ifr').contentWindow.foo;
+        ok(false, "able to access cross-origin getter");
+    } catch (e) {
+        ok(/Permission denied/.exec(e), "unable to access cross-origin getter");
+    }
+
+    SimpleTest.finish();
+}
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+
+<iframe id='ifr'
+        src='http://example.com/tests/js/xpconnect/tests/mochitest/bug92773_helper.html'
+        onload="go()">
+</iframe>
+
+</body>
+</html>
