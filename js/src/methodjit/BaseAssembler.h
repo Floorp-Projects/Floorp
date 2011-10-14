@@ -1304,7 +1304,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         storePtr(ImmPtr(templateObject->type()), Address(result, JSObject::offsetOfType()));
         store32(Imm32(templateObject->flags), Address(result, offsetof(JSObject, flags)));
         storePtr(ImmPtr(NULL), Address(result, JSObject::offsetOfSlots()));
-        storePtr(ImmPtr(templateObject->parent), Address(result, offsetof(JSObject, parent)));
 
         if (templateObject->isDenseArray()) {
             /* Fill in the elements header. */

@@ -123,7 +123,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     jumpTableOffsets(CompilerAllocPolicy(cx, *thisFromCtor())),
     loopEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
     rootedObjects(CompilerAllocPolicy(cx, *thisFromCtor())),
-    denseArrayShape(NULL),
     stubcc(cx, *thisFromCtor(), frame),
     debugMode_(cx->compartment->debugMode()),
 #if defined JS_TRACER
@@ -999,7 +998,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
     }
     jit->pcLengths = pcLengths;
-    jit->denseArrayShape = denseArrayShape;
 
     /*
      * WARNING: mics(), callICs() et al depend on the ordering of these
@@ -5480,11 +5478,13 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
     RESERVE_IC_SPACE(masm);
     pic.fastPathStart = masm.label();
 
-    Address parent(pic.objReg, offsetof(JSObject, parent));
     masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfScopeChain()), pic.objReg);
+    masm.loadPtr(Address(pic.objReg, JSObject::offsetOfShape()), pic.shapeReg);
+    masm.loadPtr(Address(pic.shapeReg, Shape::offsetOfBase()), pic.shapeReg);
+    Address parent(pic.shapeReg, BaseShape::offsetOfParent());
 
     pic.shapeGuard = masm.label();
-    Jump inlineJump = masm.branchPtr(Assembler::NotEqual, parent, ImmPtr(0));
+    Jump inlineJump = masm.branchPtr(Assembler::NotEqual, parent, ImmPtr(NULL));
     {
         RESERVE_OOL_SPACE(stubcc.masm);
         pic.slowPathStart = stubcc.linkExit(inlineJump, Uses(0));

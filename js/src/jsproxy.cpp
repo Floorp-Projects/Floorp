@@ -1571,7 +1571,7 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
                 return false;
         }
 
-        JSObject *newobj = NewNativeClassInstance(cx, &ObjectClass, proto, proto->getParent());
+        JSObject *newobj = NewNativeClassInstance(cx, &ObjectClass, proto);
         if (!newobj)
             return false;
 

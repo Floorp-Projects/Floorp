@@ -192,7 +192,7 @@ js::GetBlockChain(JSContext *cx, StackFrame *fp)
         else if (op == JSOP_ENTERBLOCK)
             blockChain = script->getObject(indexBase + GET_INDEX(pc));
         else if (op == JSOP_LEAVEBLOCK || op == JSOP_LEAVEBLOCKEXPR)
-            blockChain = blockChain->getParent();
+            blockChain = blockChain->getStaticBlockScopeChain();
         else if (op == JSOP_BLOCKCHAIN)
             blockChain = script->getObject(indexBase + GET_INDEX(pc));
         else if (op == JSOP_NULLBLOCKCHAIN)
@@ -347,7 +347,7 @@ GetScopeChainFull(JSContext *cx, StackFrame *fp, JSObject *blockChain)
     JSObject *newChild = innermostNewChild;
     for (;;) {
         JS_ASSERT(newChild->getProto() == sharedBlock);
-        sharedBlock = sharedBlock->getParent();
+        sharedBlock = sharedBlock->getStaticBlockScopeChain();
 
         /* Sometimes limitBlock will be NULL, so check that first.  */
         if (sharedBlock == limitBlock || !sharedBlock)

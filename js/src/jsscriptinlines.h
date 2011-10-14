@@ -93,7 +93,7 @@ bool
 Bindings::ensureShape(JSContext *cx)
 {
     if (!lastBinding) {
-        lastBinding = EmptyShape::getEmptyCallShape(cx);
+        lastBinding = BaseShape::lookupInitialShape(cx, &CallClass, NULL);
         if (!lastBinding)
             return false;
     }

@@ -474,25 +474,22 @@ struct JS_FRIEND_API(JSCompartment) {
 #endif
 
     /*
-     * Runtime-shared empty scopes for well-known built-in objects that lack
-     * class prototypes (the usual locus of an emptyShape). Mnemonic: ABCDEW
-     */
-    js::EmptyShape               *emptyStrictArgumentsShape;
-    js::EmptyShape               *emptyNormalArgumentsShape;
-    js::EmptyShape               *emptyBlockShape;
-    js::EmptyShape               *emptyCallShape;
-    js::EmptyShape               *emptyDeclEnvShape;
-    js::EmptyShape               *emptyEnumeratorShape;
-    js::EmptyShape               *emptyWithShape;
-
-    /*
-     * Set of all unowned base shapes in the compartment, with optional empty
-     * scopes. For sharing between shapes with common state.
+     * Set of all unowned base shapes in the compartment, with optional initial
+     * shape for objects with the base shape. The initial shape is filled in
+     * several circumstances:
+     *
+     * - For non-native classes and classes without class prototypes (scope
+     *   chain classes, arguments, and iterators), the initial shape is set to
+     *   an empty shape for the class/parent.
+     *
+     * - For the String and RegExp classes, the initial shape is preloaded with
+     *   non-configurable properties of the objects mapping the class's various
+     *   fixed slots.
      */
 
     struct BaseShapeEntry {
         js::UnownedBaseShape *base;
-        js::EmptyShape *empty;
+        js::Shape *shape;
 
         typedef const js::BaseShape *Lookup;
 
@@ -528,18 +525,6 @@ struct JS_FRIEND_API(JSCompartment) {
 
     /* Get the default 'new' type for objects with a NULL prototype. */
     inline js::types::TypeObject *getEmptyType(JSContext *cx);
-
-    /*
-     * Initial shapes given to RegExp and String objects, encoding the initial
-     * sets of built-in instance properties and the fixed slots where they must
-     * be stored (see JSObject::JSSLOT_(REGEXP|STRING)_*). Later property
-     * additions may cause these shapes to not be used by a RegExp or String
-     * (even along the entire shape parent chain, should the object go into
-     * dictionary mode). But because all the initial properties are
-     * non-configurable, they will always map to fixed slots.
-     */
-    const js::Shape              *initialRegExpShape;
-    const js::Shape              *initialStringShape;
 
   private:
     enum { DebugFromC = 1, DebugFromJS = 2 };

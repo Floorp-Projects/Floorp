@@ -1374,7 +1374,8 @@ js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObjectBox *blockBox,
     js_PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
     blockBox->parent = tc->blockChainBox;
-    blockBox->object->setParent(tc->blockChain());
+    if (tc->blockChain())
+        blockBox->object->setScopeChain(tc->blockChain());
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
     tc->blockChainBox = blockBox;
@@ -2029,8 +2030,8 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
      */
     if ((cg->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
         cg->bindings.extensibleParents()) {
-        Shape *shape = Shape::setExtensibleParents(cx, blockObj->lastProperty());
-        if (!shape)
+        Shape *shape = blockObj->lastProperty();
+        if (!Shape::setExtensibleParents(cx, &shape))
             return false;
         blockObj->setLastPropertyInfallible(shape);
     }

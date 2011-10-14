@@ -1552,17 +1552,11 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     RESERVE_OOL_SPACE(stubcc.masm);
     ic.slowPathStart = stubcc.syncExit(Uses(3));
 
-    if (!denseArrayShape) {
-        denseArrayShape = BaseShape::lookupEmpty(cx, &ArrayClass);
-        if (!denseArrayShape)
-            return false;
-    }
-
     // Guard obj is a dense array.
-    ic.shapeGuard = masm.branchPtr(Assembler::NotEqual,
-                                   Address(ic.objReg, JSObject::offsetOfShape()),
-                                   ImmPtr(denseArrayShape));
+    ic.shapeGuard = masm.testObjClass(Assembler::NotEqual, ic.objReg, ic.objReg, &ArrayClass);
     stubcc.linkExitDirect(ic.shapeGuard, ic.slowPathStart);
+
+    masm.rematPayload(ic.objRemat, ic.objReg);
 
     // Load the dynamic elements vector.
     masm.loadPtr(Address(ic.objReg, JSObject::offsetOfElements()), ic.objReg);
@@ -2113,16 +2107,8 @@ mjit::Compiler::jsop_getelem(bool isCall)
             stubcc.linkExitDirect(ic.typeGuard.get(), ic.slowPathStart);
         }
 
-        if (!denseArrayShape) {
-            denseArrayShape = BaseShape::lookupEmpty(cx, &ArrayClass);
-            if (!denseArrayShape)
-                return false;
-        }
-
         // Guard obj is a dense array.
-        ic.shapeGuard = masm.branchPtr(Assembler::NotEqual,
-                                       Address(ic.objReg, JSObject::offsetOfShape()),
-                                       ImmPtr(denseArrayShape));
+        ic.shapeGuard = masm.testObjClass(Assembler::NotEqual, ic.objReg, ic.typeReg, &ArrayClass);
         stubcc.linkExitDirect(ic.shapeGuard, ic.slowPathStart);
 
         Int32Key key = id->isConstant()

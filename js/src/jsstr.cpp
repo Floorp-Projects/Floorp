@@ -2983,7 +2983,6 @@ static JSFunctionSpec string_static_methods[] = {
 const Shape *
 StringObject::assignInitialShape(JSContext *cx)
 {
-    JS_ASSERT(!cx->compartment->initialStringShape);
     JS_ASSERT(nativeEmpty());
 
     return addDataProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),

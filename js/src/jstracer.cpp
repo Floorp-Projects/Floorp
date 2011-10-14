@@ -11131,7 +11131,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     JS_ASSERT(!pval.isPrimitive());
     JSObject *proto = &pval.toObject();
     JS_ASSERT(!proto->isDenseArray());
-    JS_ASSERT_IF(clasp != &ArrayClass, proto->getNewType(cx)->emptyShapes[0]->getClass() == clasp);
+    JS_ASSERT_IF(clasp != &ArrayClass, proto->getNewType(cx)->emptyShapes[0]->getObjectClass() == clasp);
 
     proto_ins = w.immpObjGC(proto);
     return RECORD_CONTINUE;
@@ -11158,7 +11158,7 @@ TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
         JS_ASSERT(proto->getNewType(cx)->emptyShapes);
         EmptyShape *empty = proto->getNewType(cx)->emptyShapes[0];
         JS_ASSERT(empty);
-        JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(empty->getClass()) == key);
+        JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(empty->getObjectClass()) == key);
     }
 #endif
 

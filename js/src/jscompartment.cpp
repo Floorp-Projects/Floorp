@@ -88,16 +88,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     regExpAllocator(NULL),
 #endif
     propertyTree(thisForCtor()),
-    emptyStrictArgumentsShape(NULL),
-    emptyNormalArgumentsShape(NULL),
-    emptyBlockShape(NULL),
-    emptyCallShape(NULL),
-    emptyDeclEnvShape(NULL),
-    emptyEnumeratorShape(NULL),
-    emptyWithShape(NULL),
     emptyTypeObject(NULL),
-    initialRegExpShape(NULL),
-    initialStringShape(NULL),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     mathCache(NULL),
     breakpointSites(rt),
@@ -281,7 +272,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             JS_ASSERT(obj->isCrossCompartmentWrapper());
             if (global->getJSClass() != &js_dummy_class && obj->getParent() != global) {
                 do {
-                    obj->setParent(global);
+                    if (!obj->setParent(cx, global))
+                        return false;
                     obj = obj->getProto();
                 } while (obj && obj->isCrossCompartmentWrapper());
             }
@@ -335,7 +327,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (!crossCompartmentWrappers.put(GetProxyPrivate(wrapper), *vp))
         return false;
 
-    wrapper->setParent(global);
+    if (!wrapper->setParent(cx, global))
+        return false;
     return true;
 }
 
@@ -492,14 +485,6 @@ JSCompartment::markTypes(JSTracer *trc)
         MarkTypeObject(trc, i.get<types::TypeObject>(), "mark_types_scan");
 }
 
-template <class T>
-void
-CheckWeakReference(JSContext *cx, T *&ptr)
-{
-    if (ptr && IsAboutToBeFinalized(cx, ptr))
-        ptr = NULL;
-}
-
 void
 JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 {
@@ -516,21 +501,11 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
     /* Remove dead references held weakly by the compartment. */
 
-    CheckWeakReference(cx, emptyStrictArgumentsShape);
-    CheckWeakReference(cx, emptyNormalArgumentsShape);
-    CheckWeakReference(cx, emptyBlockShape);
-    CheckWeakReference(cx, emptyCallShape);
-    CheckWeakReference(cx, emptyDeclEnvShape);
-    CheckWeakReference(cx, emptyEnumeratorShape);
-    CheckWeakReference(cx, emptyWithShape);
-
-    CheckWeakReference(cx, initialRegExpShape);
-    CheckWeakReference(cx, initialStringShape);
-
     sweepBaseShapeTable(cx);
     sweepNewTypeObjectTable(cx);
 
-    CheckWeakReference(cx, emptyTypeObject);
+    if (emptyTypeObject && IsAboutToBeFinalized(cx, emptyTypeObject))
+        emptyTypeObject = NULL;
 
     sweepBreakpoints(cx);
 

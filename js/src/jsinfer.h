@@ -800,11 +800,9 @@ struct TypeObject : gc::Cell
     }
 
     /*
-     * Return an immutable, shareable, empty shape with the same clasp as this
-     * and the same slotSpan as this had when empty.
-     *
-     * If |this| is the scope of an object |proto|, the resulting scope can be
-     * used as the scope of a new object whose prototype is |proto|.
+     * Return an immutable, shareable, empty shape for objects with this type
+     * and the specified class, and finalize kind (fixed slot count). Objects
+     * created with this shape have the same parent as the type's prototype.
      */
     inline bool canProvideEmptyShape(js::Class *clasp);
     inline js::EmptyShape *getEmptyShape(JSContext *cx, js::Class *aclasp, gc::AllocKind kind);

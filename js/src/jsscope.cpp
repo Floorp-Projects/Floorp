@@ -134,14 +134,10 @@ Shape::handoffTableTo(Shape *shape)
 
     BaseShape *nbase = base();
 
-    uint32 span = nbase->slotSpan();
-    JS_ASSERT_IF(shape->hasSlot(), span > shape->slot());
-
-    PropertyTable &table = nbase->table();
+    JS_ASSERT_IF(shape->hasSlot(), nbase->slotSpan() > shape->slot());
 
     this->base_ = nbase->baseUnowned();
-
-    new (nbase) BaseShape(shape->base()->toUnowned(), &table, span);
+    nbase->adoptUnowned(shape->base()->toUnowned());
 
     shape->base_ = nbase;
 }
@@ -319,6 +315,30 @@ Shape::getChildBinding(JSContext *cx, const js::Shape &child, Shape **lastBindin
         *lastBinding = shape;
     }
     return shape;
+}
+
+/* static */ bool
+Shape::replaceLastProperty(JSContext *cx, const js::Shape &child, Shape **lastp)
+{
+    Shape *shape = *lastp;
+
+    JS_ASSERT(!child.inDictionary());
+    JS_ASSERT(!shape->inDictionary());
+
+    Shape *newShape;
+    if (shape->parent) {
+        newShape = JS_PROPERTY_TREE(cx).getChild(cx, shape->parent, child);
+        if (!newShape)
+            return false;
+    } else {
+        newShape = js_NewGCShape(cx);
+        if (!newShape)
+            return false;
+        new (newShape) Shape(&child);
+    }
+
+    *lastp = newShape;
+    return true;
 }
 
 /*
@@ -600,7 +620,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
     /* Find or create a property tree node labeled by our arguments. */
     Shape *shape;
     {
-        BaseShape base(getClass(), attrs, getter, setter);
+        BaseShape base(getClass(), getParentMaybeScope(), attrs, getter, setter);
         BaseShape *nbase = BaseShape::lookup(cx, base);
         if (!nbase)
             return NULL;
@@ -698,7 +718,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
     UnownedBaseShape *nbase;
     {
-        BaseShape base(getClass(), attrs, getter, setter);
+        BaseShape base(getClass(), getParentMaybeScope(), attrs, getter, setter);
         nbase = BaseShape::lookup(cx, base);
         if (!nbase)
             return NULL;
@@ -748,13 +768,10 @@ JSObject::putProperty(JSContext *cx, jsid id,
                 return NULL;
         }
 
-        if (shape == lastProperty()) {
-            uint32 span = shape->base()->slotSpan();
-            PropertyTable *table = &shape->base()->table();
-            new (shape->base()) BaseShape(nbase, table, span);
-        } else {
+        if (shape == lastProperty())
+            shape->base()->adoptUnowned(nbase);
+        else
             shape->base_ = nbase;
-        }
 
         shape->slot_ = slot;
         shape->attrs = uint8(attrs);
@@ -778,7 +795,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
          * If any shape in the tree has a property hashtable, it is shared and
          * immutable too, therefore we must not update *spp.
          */
-        BaseShape base(getClass(), attrs, getter, setter);
+        BaseShape base(getClass(), getParentMaybeScope(), attrs, getter, setter);
         BaseShape *nbase = BaseShape::lookup(cx, base);
         if (!nbase)
             return NULL;
@@ -865,8 +882,11 @@ JSObject::removeProperty(JSContext *cx, jsid id)
     if (!shape)
         return true;
 
-    /* If shape is not the last property added, switch to dictionary mode. */
-    if (shape != lastProperty() && !inDictionaryMode()) {
+    /*
+     * If shape is not the last property added, or the last property cannot
+     * be removed, switch to dictionary mode.
+     */
+    if (!inDictionaryMode() && (shape != lastProperty() || !canRemoveLastProperty())) {
         if (!toDictionaryMode(cx))
             return false;
         spp = nativeSearch(cx, shape->propid());
@@ -944,7 +964,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
          * lineage.
          */
         JS_ASSERT(shape == lastProperty());
-        JS_ALWAYS_TRUE(setLastProperty(cx, shape->parent));
+        removeLastProperty(cx);
     }
 
     CHECK_SHAPE_CONSISTENCY(this);
@@ -976,17 +996,22 @@ JSObject::clear(JSContext *cx)
 void
 JSObject::rollbackProperties(JSContext *cx, uint32 slotSpan)
 {
-    /* Remove properties from this object until it has a matching slot span. */
+    /*
+     * Remove properties from this object until it has a matching slot span.
+     * The object cannot have escaped in a way which would prevent safe
+     * removal of the last properties.
+     */
     JS_ASSERT(!inDictionaryMode() && slotSpan <= this->slotSpan());
     while (this->slotSpan() != slotSpan) {
         JS_ASSERT(lastProperty()->hasSlot() && getSlot(lastProperty()->slot()).isUndefined());
-        JS_ALWAYS_TRUE(setLastProperty(cx, lastProperty()->parent));
+        removeLastProperty(cx);
     }
 }
 
 bool
 JSObject::generateOwnShape(JSContext *cx, Shape *newShape)
 {
+#if 0
 #ifdef JS_TRACER
     JS_ASSERT_IF(!parent && JS_ON_TRACE(cx), JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit);
     LeaveTraceIfGlobalObject(cx, this);
@@ -998,6 +1023,7 @@ JSObject::generateOwnShape(JSContext *cx, Shape *newShape)
      */
     if (TraceRecorder *tr = TRACE_RECORDER(cx))
         tr->forgetGuardedShapesForObject(this);
+#endif
 #endif
 
     if (!inDictionaryMode() && !toDictionaryMode(cx))
@@ -1073,13 +1099,46 @@ JSObject::shadowingShapeChange(JSContext *cx, const Shape &shape)
     return generateOwnShape(cx);
 }
 
+bool
+JSObject::clearParent(JSContext *cx)
+{
+    return setParent(cx, NULL);
+}
+
+bool
+JSObject::setParent(JSContext *cx, JSObject *parent)
+{
+    if (inDictionaryMode()) {
+        lastProperty()->base()->setParent(parent);
+        return true;
+    }
+
+    return Shape::setObjectParent(cx, parent, &shape_);
+}
+
+/* static */ bool
+Shape::setObjectParent(JSContext *cx, JSObject *parent, Shape **listp)
+{
+    BaseShape base(*(*listp)->base()->unowned());
+    base.setParent(parent);
+    BaseShape *nbase = BaseShape::lookup(cx, base);
+    if (!nbase)
+        return false;
+
+    Shape child(*listp);
+    child.base_ = nbase;
+
+    return replaceLastProperty(cx, child, listp);
+}
+
 /* static */ inline HashNumber
 JSCompartment::BaseShapeEntry::hash(const js::BaseShape *base)
 {
     JS_ASSERT(!base->isOwned());
 
     JSDHashNumber hash = base->flags;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(base->clasp);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(base->clasp) >> 3);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(base->parent) >> 3);
     if (base->rawGetter)
         hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(base->rawGetter);
     if (base->rawSetter)
@@ -1095,6 +1154,7 @@ JSCompartment::BaseShapeEntry::match(const BaseShapeEntry &entry, const BaseShap
 
     return key->flags == lookup->flags
         && key->clasp == lookup->clasp
+        && key->parent == lookup->parent
         && key->getterObj == lookup->getterObj
         && key->setterObj == lookup->setterObj;
 }
@@ -1118,7 +1178,7 @@ LookupBaseShape(JSContext *cx, const BaseShape &base)
 
     JSCompartment::BaseShapeEntry entry;
     entry.base = static_cast<UnownedBaseShape *>(nbase);
-    entry.empty = NULL;
+    entry.shape = NULL;
 
     if (!table.relookupOrAdd(p, &base, entry))
         return NULL;
@@ -1133,20 +1193,33 @@ BaseShape::lookup(JSContext *cx, const BaseShape &base)
     return entry ? entry->base : NULL;
 }
 
-/* static */ EmptyShape *
-BaseShape::lookupEmpty(JSContext *cx, Class *clasp)
+/* static */ Shape *
+BaseShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *parent, Shape *initial)
 {
-    js::BaseShape base(clasp);
+    js::BaseShape base(clasp, parent);
     JSCompartment::BaseShapeEntry *entry = LookupBaseShape(cx, base);
     if (!entry)
         return NULL;
-    if (entry->empty)
-        return entry->empty;
+    if (entry->shape)
+        return entry->shape;
 
-    entry->empty = (EmptyShape *) JS_PROPERTY_TREE(cx).newShape(cx);
-    if (!entry->empty)
+    if (initial) {
+        entry->shape = initial;
+        return entry->shape;
+    }
+
+    entry->shape = JS_PROPERTY_TREE(cx).newShape(cx);
+    if (!entry->shape)
         return NULL;
-    return new (entry->empty) EmptyShape(entry->base);
+    return new (entry->shape) EmptyShape(entry->base);
+}
+
+/* static */ void
+BaseShape::insertInitialShape(JSContext *cx, const Shape *initial)
+{
+    JSCompartment::BaseShapeEntry *entry = LookupBaseShape(cx, *initial->base());
+    JS_ASSERT(entry && entry->base == initial->base());
+    entry->shape = const_cast<Shape *>(initial);
 }
 
 void
@@ -1158,8 +1231,8 @@ JSCompartment::sweepBaseShapeTable(JSContext *cx)
                 const_cast<JSCompartment::BaseShapeEntry &>(e.front());
             if (!entry.base->isMarked())
                 e.removeFront();
-            else if (entry.empty && !entry.empty->isMarked())
-                entry.empty = NULL;
+            else if (entry.shape && !entry.shape->isMarked())
+                entry.shape = NULL;
         }
     }
 }
@@ -1173,32 +1246,22 @@ BaseShape::finalize(JSContext *cx, bool background)
     }
 }
 
-/* static */ Shape *
-Shape::setExtensibleParents(JSContext *cx, Shape *shape)
+/* static */ bool
+Shape::setExtensibleParents(JSContext *cx, Shape **listp)
 {
+    Shape *shape = *listp;
     JS_ASSERT(!shape->inDictionary());
 
-    BaseShape base(shape->getClass(), shape->attrs, shape->getter(), shape->setter());
+    BaseShape base(*shape->base()->unowned());
     base.flags |= BaseShape::EXTENSIBLE_PARENTS;
     BaseShape *nbase = BaseShape::lookup(cx, base);
     if (!nbase)
         return NULL;
 
-    Shape child(nbase, shape->maybePropid(), shape->maybeSlot(),
-                shape->attrs, shape->flags, shape->maybeShortid());
-    Shape *newShape;
-    if (shape->parent) {
-        newShape = JS_PROPERTY_TREE(cx).getChild(cx, shape->parent, child);
-        if (!newShape)
-            return NULL;
-    } else {
-        newShape = js_NewGCShape(cx);
-        if (!newShape)
-            return NULL;
-        new (newShape) Shape(child);
-    }
+    Shape child(shape);
+    child.base_ = nbase;
 
-    return newShape;
+    return replaceLastProperty(cx, child, listp);
 }
 
 bool
@@ -1206,9 +1269,13 @@ Bindings::setExtensibleParents(JSContext *cx)
 {
     if (!ensureShape(cx))
         return false;
-    Shape *shape = Shape::setExtensibleParents(cx, lastBinding);
-    if (!shape)
+    return Shape::setExtensibleParents(cx, &lastBinding);
+}
+
+bool
+Bindings::setParent(JSContext *cx, JSObject *obj)
+{
+    if (!ensureShape(cx))
         return false;
-    lastBinding = shape;
-    return true;
+    return Shape::setObjectParent(cx, obj, &lastBinding);
 }
