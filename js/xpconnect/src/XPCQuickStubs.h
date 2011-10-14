@@ -114,14 +114,14 @@ template <typename Interface> struct QS_CastableTo {
   static true_type p(Interface*);
 };
 
-#define QS_CASTABLE_TO(_interface, _class)                                 \
-  (sizeof(QS_CastableTo<_interface>::p(static_cast<_class*>(0))) ==        \
+#define QS_CASTABLE_TO(_interface, _class)                                    \
+  (sizeof(QS_CastableTo<_interface>::p(static_cast<_class*>(0))) ==           \
    sizeof(QS_CastableTo<_interface>::true_type))
 
 #endif
 
-#define QS_IS_NODE(_class)                                                 \
-  QS_CASTABLE_TO(nsINode, _class) ||                                       \
+#define QS_IS_NODE(_class)                                                    \
+  QS_CASTABLE_TO(nsINode, _class) ||                                          \
   QS_CASTABLE_TO(nsIDOMNode, _class)
 
 class qsObjectHelper : public xpcObjectHelper

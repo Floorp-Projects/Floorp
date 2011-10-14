@@ -994,8 +994,8 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
         XPC_LOG_ALWAYS(("mPrototypeJSFunction @ %x", mPrototypeJSFunction));
         XPC_LOG_ALWAYS(("mPrototypeNoHelper @ %x", mPrototypeNoHelper));
 
-        XPC_LOG_ALWAYS(("mWrappedNativeMap @ %x with %d wrappers(s)", \
-                         mWrappedNativeMap, \
+        XPC_LOG_ALWAYS(("mWrappedNativeMap @ %x with %d wrappers(s)",         \
+                         mWrappedNativeMap,                                   \
                          mWrappedNativeMap ? mWrappedNativeMap->Count() : 0));
         // iterate contexts...
         if(depth && mWrappedNativeMap && mWrappedNativeMap->Count())
@@ -1005,8 +1005,8 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
             XPC_LOG_OUTDENT();
         }
 
-        XPC_LOG_ALWAYS(("mWrappedNativeProtoMap @ %x with %d protos(s)", \
-                         mWrappedNativeProtoMap, \
+        XPC_LOG_ALWAYS(("mWrappedNativeProtoMap @ %x with %d protos(s)",      \
+                         mWrappedNativeProtoMap,                              \
                          mWrappedNativeProtoMap ? mWrappedNativeProtoMap->Count() : 0));
         // iterate contexts...
         if(depth && mWrappedNativeProtoMap && mWrappedNativeProtoMap->Count())
@@ -1017,7 +1017,7 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
         }
 
         XPC_LOG_ALWAYS(("mMainThreadWrappedNativeProtoMap @ %x with %d protos(s)", \
-                         mMainThreadWrappedNativeProtoMap, \
+                         mMainThreadWrappedNativeProtoMap,                    \
                          mMainThreadWrappedNativeProtoMap ? mMainThreadWrappedNativeProtoMap->Count() : 0));
         // iterate contexts...
         if(depth && mMainThreadWrappedNativeProtoMap && mMainThreadWrappedNativeProtoMap->Count())
