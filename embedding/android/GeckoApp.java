@@ -398,10 +398,12 @@ abstract public class GeckoApp
     {
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - onCreate");
 
-        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                                   .detectDiskReads().detectDiskWrites().detectNetwork()
-                                   .penaltyLog().build());
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().penaltyLog().build());
+        if (Build.VERSION.SDK_INT >= 9) {
+            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                                       .detectDiskReads().detectDiskWrites().detectNetwork()
+                                       .penaltyLog().build());
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().penaltyLog().build());
+        }
 
         super.onCreate(savedInstanceState);
         
