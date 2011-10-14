@@ -4326,6 +4326,7 @@ MOZ_WAVE=1
 MOZ_MEDIA=
 MOZ_WEBM=1
 MOZ_VP8_ERROR_CONCEALMENT=
+MOZ_VP8_ENCODER=
 VPX_AS=
 VPX_ASFLAGS=
 VPX_AS_DASH_C_FLAG=
@@ -5350,6 +5351,9 @@ if test -n "$MOZ_WEBM"; then
     if test -n "$MOZ_VP8_ERROR_CONCEALMENT" ; then
         AC_DEFINE(MOZ_VP8_ERROR_CONCEALMENT)
     fi
+    if test -n "$MOZ_VP8_ENCODER" ; then
+        AC_DEFINE(MOZ_VP8_ENCODER)
+    fi
 
     if test -n "$LIBVPX_DIR" -a "$LIBVPX_DIR" != no; then
         _SAVE_CFLAGS=$CFLAGS
@@ -5423,6 +5427,7 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
     dnl We currently require gcc on all arm platforms.
     VPX_AS=$YASM
     VPX_ASM_SUFFIX=asm
+    VPX_NEED_OBJ_INT_EXTRACT=
 
     dnl See if we have assembly on this platform.
     case "$OS_ARCH:$CPU_ARCH" in
@@ -5466,6 +5471,7 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
         else
           VPX_ASFLAGS="-f win32 -rnasm -pnasm -DPIC"
           VPX_X86_ASM=1
+          dnl The encoder needs obj_int_extract to get asm offsets.
         fi
       fi
     ;;
@@ -5484,6 +5490,16 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
     if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
       AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
+    fi
+
+    if test -n "$MOZ_VP8_ENCODER" -a \
+            -z "$GNU_CC" -a -z "$INTEL_CC" -a -z "$CLANG_CC" ; then
+      dnl We prefer to get asm offsets using inline assembler, which the above
+      dnl compilers can do. When we're not using one of those, we have to fall
+      dnl back to obj_int_extract, which reads them from a compiled object
+      dnl file. Unfortunately, that only works if we're compiling on a system
+      dnl with the header files for the appropriate object file format.
+      VPX_NEED_OBJ_INT_EXTRACT=1
     fi
 
     if test -n "$VPX_X86_ASM"; then
@@ -8500,6 +8516,7 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
+AC_SUBST(MOZ_VP8_ENCODER)
 AC_SUBST(MOZ_OGG)
 AC_SUBST(MOZ_ALSA_LIBS)
 AC_SUBST(VPX_AS)
@@ -8509,6 +8526,7 @@ AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_ASM_SUFFIX)
 AC_SUBST(VPX_X86_ASM)
 AC_SUBST(VPX_ARM_ASM)
+AC_SUBST(VPX_NEED_OBJ_INT_EXTRACT)
 AC_SUBST(MOZ_INSTRUMENT_EVENT_LOOP)
 AC_SUBST(LIBJPEG_TURBO_AS)
 AC_SUBST(LIBJPEG_TURBO_ASFLAGS)
