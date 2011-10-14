@@ -117,8 +117,7 @@ extern void LogSlimWrapperNotCreated(JSContext *cx, nsISupports *obj,
 #define SLIM_LOG_WILL_MORPH_FOR_ID(cx, obj, id)                               \
     PR_BEGIN_MACRO                                                            \
         JSString* strId = ::JS_ValueToString(cx, id);                         \
-        if (strId)                                                            \
-        {                                                                     \
+        if (strId) {                                                          \
           NS_ConvertUTF16toUTF8 name((PRUnichar*)::JS_GetStringChars(strId),  \
                                      ::JS_GetStringLength(strId));            \
           LOG_WILL_MORPH_FOR_PROP(cx, obj, name.get());                       \

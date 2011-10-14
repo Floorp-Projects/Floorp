@@ -60,8 +60,7 @@ static bool Init()
 {
     g_LogMod = PR_NewLogModule("xpclog");
     g_Spaces = new char[SPACE_COUNT+1];
-    if (!g_LogMod || !g_Spaces || !PR_LOG_TEST(g_LogMod,1))
-    {
+    if (!g_LogMod || !g_Spaces || !PR_LOG_TEST(g_LogMod,1)) {
         g_InitState = 1;
         XPC_Log_Finish();
         return PR_FALSE;
@@ -75,8 +74,7 @@ static bool Init()
 void
 XPC_Log_Finish()
 {
-    if (g_InitState == 1)
-    {
+    if (g_InitState == 1) {
         delete [] g_Spaces;
         // we'd like to properly cleanup the LogModule, but nspr owns that
         g_LogMod = nsnull;
@@ -132,8 +130,7 @@ void
 LogSlimWrapperWillMorph(JSContext *cx, JSObject *obj, const char *propname,
                         const char *functionName)
 {
-    if (obj && IS_SLIM_WRAPPER(obj))
-    {
+    if (obj && IS_SLIM_WRAPPER(obj)) {
         XPCNativeScriptableInfo *si =
             GetSlimWrapperProto(obj)->GetScriptableInfo();
         printf("***** morphing %s from %s", si->GetJSClass()->name,

@@ -232,8 +232,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     /* set mJSPrincipals if it's not here already */
-    if (!mSystemPrincipal)
-    {
+    if (!mSystemPrincipal) {
         nsCOMPtr<nsIScriptSecurityManager> secman =
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
         if (!secman)
@@ -250,20 +249,17 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     JSObject *target_obj = nsnull;
     jschar   *charset = nsnull;
     ok = JS_ConvertArguments (cx, argc, argv, "S / o W", &url, &target_obj, &charset);
-    if (!ok)
-    {
+    if (!ok) {
         /* let the exception raised by JS_ConvertArguments show through */
         return NS_OK;
     }
 
     JSAutoByteString urlbytes(cx, url);
-    if (!urlbytes)
-    {
+    if (!urlbytes) {
         return NS_OK;
     }
 
-    if (!target_obj)
-    {
+    if (!target_obj) {
         /* if the user didn't provide an object to eval onto, find the global
          * object by walking the parent chain of the calling object */
 
@@ -287,8 +283,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         fprintf (stderr, "Parent chain: %p", target_obj);
 #endif
         JSObject *maybe_glob = JS_GetParent (cx, target_obj);
-        while (maybe_glob != nsnull)
-        {
+        while (maybe_glob != nsnull) {
 #ifdef DEBUG_rginda
             fprintf (stderr, ", %p", maybe_glob);
 #endif
@@ -308,8 +303,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     if (!target_obj)
         return NS_ERROR_FAILURE;
 
-    if (target_obj != result_obj)
-    {
+    if (target_obj != result_obj) {
         nsCOMPtr<nsIScriptSecurityManager> secman =
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
         if (!secman)
@@ -345,8 +339,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
             script = JS_GetFrameScript(cx, frame);
     } while (frame && !script);
 
-    if (!script)
-    {
+    if (!script) {
         // No script means we don't know who's calling, bail.
 
         return NS_ERROR_FAILURE;
@@ -378,8 +371,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         return ReportError(cx, LOAD_ERROR_NOSCHEME);
     }
 
-    if (!scheme.EqualsLiteral("chrome"))
-    {
+    if (!scheme.EqualsLiteral("chrome")) {
         // This might be a URI to a local file, though!
         nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(uri);
         nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(innerURI);

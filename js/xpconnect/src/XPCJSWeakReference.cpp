@@ -123,16 +123,14 @@ xpcJSWeakReference::Get()
         wrappedObj) {
         JSObject *obj;
         wrappedObj->GetJSObject(&obj);
-        if (obj)
-        {
+        if (obj) {
             // Most users of XPCWrappedJS don't need to worry about
             // re-wrapping because things are implicitly rewrapped by
             // xpcconvert. However, because we're doing this directly
             // through the native call context, we need to call
             // JS_WrapObject().
 
-            if (!JS_WrapObject(cx, &obj))
-            {
+            if (!JS_WrapObject(cx, &obj)) {
                 return NS_ERROR_FAILURE;
             }
 

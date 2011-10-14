@@ -373,8 +373,7 @@ public:
 
     ~XPCAutoLock()
     {
-        if (mLock)
-        {
+        if (mLock) {
             mLock->Exit();
         }
     }
@@ -407,8 +406,7 @@ public:
         : mLock(lock)
     {
         MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-        if (mLock)
-        {
+        if (mLock) {
             mLock->Exit();
         }
     }
@@ -923,13 +921,11 @@ public:
             NS_ASSERTION(CallerTypeIsKnown(),"missing caller type set somewhere");
             if (!CallerTypeIsJavaScript())
                 return nsnull;
-            if (mSecurityManager)
-            {
+            if (mSecurityManager) {
                 if (flags & mSecurityManagerFlags)
                     return mSecurityManager;
             }
-            else
-            {
+            else {
                 nsIXPCSecurityManager* mgr;
                 nsXPConnect* xpc = mRuntime->GetXPConnect();
                 mgr = xpc->GetDefaultSecurityManager();
@@ -1312,16 +1308,14 @@ public:
     }
     XPCCallContext &GetXPCCallContext()
     {
-        if (!mCcx)
-        {
+        if (!mCcx) {
             mCcxToDestroy = mCcx =
                 new (mData) XPCCallContext(mCallerLanguage, mCx,
                                            mCallBeginRequest == CALL_BEGINREQUEST,
                                            mObj,
                                            mFlattenedJSObject, mWrapper,
                                            mTearOff);
-            if (!mCcx->IsValid())
-            {
+            if (!mCcx->IsValid()) {
                 NS_ERROR("This is not supposed to fail!");
             }
         }
@@ -2254,8 +2248,7 @@ public:
         static NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
 
 #ifdef DEBUG
-        if (InitedOffsets() && mOffsets)
-        {
+        if (InitedOffsets() && mOffsets) {
             QITableEntry* offsets;
             identity->QueryInterface(kThisPtrOffsetsSID, (void**)&offsets);
             NS_ASSERTION(offsets == mOffsets,
@@ -2264,14 +2257,11 @@ public:
         }
 #endif
 
-        if (!InitedOffsets())
-        {
-            if (mClassInfoFlags & nsIClassInfo::CONTENT_NODE)
-            {
+        if (!InitedOffsets()) {
+            if (mClassInfoFlags & nsIClassInfo::CONTENT_NODE) {
                 identity->QueryInterface(kThisPtrOffsetsSID, (void**)&mOffsets);
             }
-            else
-            {
+            else {
                 mOffsets = nsnull;
             }
         }
@@ -2309,8 +2299,7 @@ public:
 
     void TraceJS(JSTracer* trc)
     {
-        if (mJSProtoObject)
-        {
+        if (mJSProtoObject) {
             JS_CALL_OBJECT_TRACER(trc, mJSProtoObject,
                                   "XPCWrappedNativeProto::mJSProtoObject");
         }
@@ -2707,8 +2696,7 @@ public:
         // This is the only time we should be tracing our mFlatJSObject,
         // normally somebody else is doing that. Be careful not to trace the
         // bogus INVALID_OBJECT value we can have during init, though.
-        if (mFlatJSObject && mFlatJSObject != INVALID_OBJECT)
-        {
+        if (mFlatJSObject && mFlatJSObject != INVALID_OBJECT) {
             JS_CALL_OBJECT_TRACER(trc, mFlatJSObject,
                                   "XPCWrappedNative::mFlatJSObject");
         }
@@ -2746,8 +2734,7 @@ public:
     JSObject* GetWrapper()
     {
         JSObject* wrapper = GetWrapperPreserveColor();
-        if (wrapper)
-        {
+        if (wrapper) {
             xpc_UnmarkGrayObject(wrapper);
             // Call this to unmark mFlatJSObject.
             GetFlatJSObject();
@@ -2772,8 +2759,7 @@ public:
 
         XPCWrappedNativeProto* proto = GetProto();
         QITableEntry* offsets = proto->GetOffsets();
-        if (!offsets)
-        {
+        if (!offsets) {
             static NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
             mIdentity->QueryInterface(kThisPtrOffsetsSID, (void**)&offsets);
         }
@@ -3136,8 +3122,7 @@ public:
       mCache(aCache),
       mIsNode(PR_FALSE)
     {
-        if (!mCache)
-        {
+        if (!mCache) {
             if (aObject)
                 CallQueryInterface(aObject, &mCache);
             else
@@ -3179,8 +3164,7 @@ public:
     }
     nsXPCClassInfo *GetXPCClassInfo()
     {
-        if (!mXPCClassInfo)
-        {
+        if (!mXPCClassInfo) {
             if (mIsNode)
                 mXPCClassInfo = static_cast<nsINode*>(GetCanonical())->GetClassInfo();
             else
@@ -3656,15 +3640,13 @@ public:
     // Get the instance of this object for the current thread
     static inline XPCPerThreadData* GetData(JSContext *cx)
     {
-        if (cx)
-        {
+        if (cx) {
             NS_ASSERTION(cx->thread(), "Uh, JS context w/o a thread?");
 
             if (cx->thread() == sMainJSThread)
                 return sMainThreadData;
         }
-        else if (sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread())
-        {
+        else if (sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread()) {
             return sMainThreadData;
         }
 
@@ -4179,11 +4161,9 @@ public:                                                                       \
                                                                               \
     virtual void TraceJS(JSTracer* trc)                                       \
     {                                                                         \
-        for (PRUint32 i = 0; i < mCount; ++i)                                 \
-        {                                                                     \
+        for (PRUint32 i = 0; i < mCount; ++i) {                               \
             type_* cur = mPtr[i];                                             \
-            if (cur)                                                          \
-            {                                                                 \
+            if (cur) {                                                        \
                 cur->TraceJS(trc);                                            \
                 cur->AutoTrace(trc);                                          \
             }                                                                 \
@@ -4193,8 +4173,7 @@ public:                                                                       \
                                                                               \
     virtual void MarkAfterJSFinalize()                                        \
     {                                                                         \
-        for (PRUint32 i = 0; i < mCount; ++i)                                 \
-        {                                                                     \
+        for (PRUint32 i = 0; i < mCount; ++i) {                               \
             type_* cur = mPtr[i];                                             \
             if (cur)                                                          \
                 cur->Mark();                                                  \

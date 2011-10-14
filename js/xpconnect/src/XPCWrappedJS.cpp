@@ -109,8 +109,7 @@ nsXPCWrappedJS::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)
     // to be in QueryInterface before the possible delegation to 'outer', but
     // we don't want to do this check twice in one call in the normal case:
     // once in QueryInterface and once in DelegatedQueryInterface.
-    if (aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS)))
-    {
+    if (aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS))) {
         NS_ADDREF(this);
         *aInstancePtr = (void*) static_cast<nsIXPConnectWrappedJS*>(this);
         return NS_OK;
@@ -122,8 +121,7 @@ nsXPCWrappedJS::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-    if (nsnull == aInstancePtr)
-    {
+    if (nsnull == aInstancePtr) {
         NS_PRECONDITION(0, "null pointer");
         return NS_ERROR_NULL_POINTER;
     }
@@ -133,8 +131,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_OK;
     }
 
-    if (aIID.Equals(NS_GET_IID(nsCycleCollectionISupports)))
-    {
+    if (aIID.Equals(NS_GET_IID(nsCycleCollectionISupports))) {
         *aInstancePtr =
             NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Upcast(this);
         return NS_OK;
@@ -145,8 +142,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     // Always check for this first so that our 'outer' can get this interface
     // from us without recurring into a call to the outer's QI!
-    if (aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS)))
-    {
+    if (aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS))) {
         NS_ADDREF(this);
         *aInstancePtr = (void*) static_cast<nsIXPConnectWrappedJS*>(this);
         return NS_OK;
@@ -187,8 +183,7 @@ nsXPCWrappedJS::AddRef(void)
     nsrefcnt cnt = NS_AtomicIncrementRefcnt(mRefCnt);
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
 
-    if (2 == cnt && IsValid())
-    {
+    if (2 == cnt && IsValid()) {
         XPCJSRuntime* rt = mClass->GetRuntime();
         rt->AddWrappedJSRoot(this);
     }
@@ -211,13 +206,11 @@ do_decrement:
     nsrefcnt cnt = NS_AtomicDecrementRefcnt(mRefCnt);
     NS_LOG_RELEASE(this, cnt, "nsXPCWrappedJS");
 
-    if (0 == cnt)
-    {
+    if (0 == cnt) {
         delete this;   // also unlinks us from chain
         return 0;
     }
-    if (1 == cnt)
-    {
+    if (1 == cnt) {
         if (IsValid())
             RemoveFromRootSet(rt->GetMapLock());
 
@@ -288,8 +281,7 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
     JSBool release_root = JS_FALSE;
 
     map = rt->GetWrappedJSMap();
-    if (!map)
-    {
+    if (!map) {
         NS_ASSERTION(map,"bad map");
         return NS_ERROR_FAILURE;
     }
@@ -310,22 +302,18 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
     {   // scoped lock
         XPCAutoLock lock(rt->GetMapLock());
         root = map->Find(rootJSObj);
-        if (root)
-        {
+        if (root) {
             if ((nsnull != (wrapper = root->Find(aIID))) ||
-                (nsnull != (wrapper = root->FindInherited(aIID))))
-            {
+                (nsnull != (wrapper = root->FindInherited(aIID)))) {
                 NS_ADDREF(wrapper);
                 goto return_wrapper;
             }
         }
     }
 
-    if (!root)
-    {
+    if (!root) {
         // build the root wrapper
-        if (rootJSObj == aJSObj)
-        {
+        if (rootJSObj == aJSObj) {
             // the root will do double duty as the interface wrapper
             wrapper = root = new nsXPCWrappedJS(ccx, aJSObj, clazz, nsnull,
                                                 aOuter);
@@ -340,8 +328,7 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
             }
             goto return_wrapper;
         }
-        else
-        {
+        else {
             // just a root wrapper
             nsXPCWrappedJSClass* rootClazz = nsnull;
             nsXPCWrappedJSClass::GetNewOrUsed(ccx, NS_GET_IID(nsISupports),
@@ -372,8 +359,7 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
     NS_ASSERTION(root,"bad root");
     NS_ASSERTION(clazz,"bad clazz");
 
-    if (!wrapper)
-    {
+    if (!wrapper) {
         wrapper = new nsXPCWrappedJS(ccx, aJSObj, clazz, root, aOuter);
         if (!wrapper)
             goto return_wrapper;
@@ -436,13 +422,11 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
 
-    if (mRoot == this)
-    {
+    if (mRoot == this) {
         // Remove this root wrapper from the map
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
         JSObject2WrappedJSMap* map = rt->GetWrappedJSMap();
-        if (map)
-        {
+        if (map) {
             XPCAutoLock lock(rt->GetMapLock());
             map->Remove(this);
         }
@@ -453,17 +437,13 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
 void
 nsXPCWrappedJS::Unlink()
 {
-    if (IsValid())
-    {
+    if (IsValid()) {
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-        if (rt)
-        {
-            if (mRoot == this)
-            {
+        if (rt) {
+            if (mRoot == this) {
                 // remove this root wrapper from the map
                 JSObject2WrappedJSMap* map = rt->GetWrappedJSMap();
-                if (map)
-                {
+                if (map) {
                     XPCAutoLock lock(rt->GetMapLock());
                     map->Remove(this);
                 }
@@ -476,18 +456,14 @@ nsXPCWrappedJS::Unlink()
         mJSObj = nsnull;
     }
 
-    if (mRoot == this)
-    {
+    if (mRoot == this) {
         ClearWeakReferences();
     }
-    else if (mRoot)
-    {
+    else if (mRoot) {
         // unlink this wrapper
         nsXPCWrappedJS* cur = mRoot;
-        while (1)
-        {
-            if (cur->mNext == this)
-            {
+        while (1) {
+            if (cur->mNext == this) {
                 cur->mNext = mNext;
                 break;
             }
@@ -499,16 +475,13 @@ nsXPCWrappedJS::Unlink()
     }
 
     NS_IF_RELEASE(mClass);
-    if (mOuter)
-    {
+    if (mOuter) {
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-        if (rt->GetThreadRunningGC())
-        {
+        if (rt->GetThreadRunningGC()) {
             rt->DeferredRelease(mOuter);
             mOuter = nsnull;
         }
-        else
-        {
+        else {
             NS_RELEASE(mOuter);
         }
     }
@@ -520,8 +493,7 @@ nsXPCWrappedJS::Find(REFNSIID aIID)
     if (aIID.Equals(NS_GET_IID(nsISupports)))
         return mRoot;
 
-    for (nsXPCWrappedJS* cur = mRoot; cur; cur = cur->mNext)
-    {
+    for (nsXPCWrappedJS* cur = mRoot; cur; cur = cur->mNext) {
         if (aIID.Equals(cur->GetIID()))
             return cur;
     }
@@ -535,8 +507,7 @@ nsXPCWrappedJS::FindInherited(REFNSIID aIID)
 {
     NS_ASSERTION(!aIID.Equals(NS_GET_IID(nsISupports)), "bad call sequence");
 
-    for (nsXPCWrappedJS* cur = mRoot; cur; cur = cur->mNext)
-    {
+    for (nsXPCWrappedJS* cur = mRoot; cur; cur = cur->mNext) {
         bool found;
         if (NS_SUCCEEDED(cur->GetClass()->GetInterfaceInfo()->
                          HasAncestor(&aIID, &found)) && found)
@@ -672,10 +643,8 @@ nsXPCWrappedJS::DebugDump(PRInt16 depth)
 
         if (!isRoot)
             XPC_LOG_OUTDENT();
-        if (mNext)
-        {
-            if (isRoot)
-            {
+        if (mNext) {
+            if (isRoot) {
                 XPC_LOG_ALWAYS(("Additional wrappers for this object..."));
                 XPC_LOG_INDENT();
             }

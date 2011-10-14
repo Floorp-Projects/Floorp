@@ -109,16 +109,14 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
     XPCJSContextStack* stack = mThreadData->GetJSContextStack();
     JSContext* topJSContext;
 
-    if (!stack || NS_FAILED(stack->Peek(&topJSContext)))
-    {
+    if (!stack || NS_FAILED(stack->Peek(&topJSContext))) {
         // If we don't have a stack we're probably in shutdown.
         NS_ASSERTION(!stack, "Bad, Peek failed!");
         mJSContext = nsnull;
         return;
     }
 
-    if (!mJSContext)
-    {
+    if (!mJSContext) {
         // This is slightly questionable. If called without an explicit
         // JSContext (generally a call to a wrappedJS) we will use the JSContext
         // on the top of the JSContext stack - if there is one - *before*
@@ -133,10 +131,8 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
             return;
     }
 
-    if (topJSContext != mJSContext)
-    {
-        if (NS_FAILED(stack->Push(mJSContext)))
-        {
+    if (topJSContext != mJSContext) {
+        if (NS_FAILED(stack->Push(mJSContext))) {
             NS_ERROR("bad!");
             return;
         }
@@ -176,14 +172,12 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
     mState = HAVE_OBJECT;
 
     mTearOff = nsnull;
-    if (wrapperInitOptions == INIT_SHOULD_LOOKUP_WRAPPER)
-    {
+    if (wrapperInitOptions == INIT_SHOULD_LOOKUP_WRAPPER) {
         mWrapper = XPCWrappedNative::GetWrappedNativeOfJSObject(mJSContext, obj,
                                                                 funobj,
                                                                 &mFlattenedJSObject,
                                                                 &mTearOff);
-        if (mWrapper)
-        {
+        if (mWrapper) {
             DEBUG_CheckWrapperThreadSafety(mWrapper);
 
             mFlattenedJSObject = mWrapper->GetFlatJSObject();
@@ -193,8 +187,7 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
             else
                 mScriptableInfo = mWrapper->GetScriptableInfo();
         }
-        else
-        {
+        else {
             NS_ABORT_IF_FALSE(!mFlattenedJSObject || IS_SLIM_WRAPPER(mFlattenedJSObject),
                               "should have a slim wrapper");
         }
@@ -216,8 +209,7 @@ XPCCallContext::SetName(jsid name)
 
     mName = name;
 
-    if (mTearOff)
-    {
+    if (mTearOff) {
         mSet = nsnull;
         mInterface = mTearOff->GetInterface();
         mMember = mInterface->FindMember(name);
@@ -225,8 +217,7 @@ XPCCallContext::SetName(jsid name)
         if (mMember && !mMember->IsConstant())
             mMethodIndex = mMember->GetIndex();
     }
-    else
-    {
+    else {
         mSet = mWrapper ? mWrapper->GetSet() : nsnull;
 
         if (mSet &&
@@ -234,13 +225,11 @@ XPCCallContext::SetName(jsid name)
                              mWrapper->HasProto() ?
                              mWrapper->GetProto()->GetSet() :
                              nsnull,
-                             &mStaticMemberIsLocal))
-        {
+                             &mStaticMemberIsLocal)) {
             if (mMember && !mMember->IsConstant())
                 mMethodIndex = mMember->GetIndex();
         }
-        else
-        {
+        else {
             mMember = nsnull;
             mInterface = nsnull;
             mStaticMemberIsLocal = JS_FALSE;
@@ -280,8 +269,7 @@ XPCCallContext::SetArgsAndResultPtr(uintN argc,
 {
     CHECK_STATE(HAVE_OBJECT);
 
-    if (mState < HAVE_NAME)
-    {
+    if (mState < HAVE_NAME) {
         mSet = nsnull;
         mInterface = nsnull;
         mMember = nsnull;
@@ -306,11 +294,9 @@ XPCCallContext::CanCallNow()
     if (mState < HAVE_ARGS)
         return NS_ERROR_UNEXPECTED;
 
-    if (!mTearOff)
-    {
+    if (!mTearOff) {
         mTearOff = mWrapper->FindTearOff(*this, mInterface, JS_FALSE, &rv);
-        if (!mTearOff || mTearOff->GetInterface() != mInterface)
-        {
+        if (!mTearOff || mTearOff->GetInterface() != mInterface) {
             mTearOff = nsnull;
             return NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED;
         }
@@ -343,8 +329,7 @@ XPCCallContext::~XPCCallContext()
 
     bool shouldReleaseXPC = false;
 
-    if (mXPCContext)
-    {
+    if (mXPCContext) {
         mXPCContext->SetCallingLangType(mPrevCallerLanguage);
 
 #ifdef DEBUG
@@ -361,12 +346,10 @@ XPCCallContext::~XPCCallContext()
     if (mJSContext && mCallerLanguage == NATIVE_CALLER)
         JS_EndRequest(mJSContext);
 
-    if (mContextPopRequired)
-    {
+    if (mContextPopRequired) {
         XPCJSContextStack* stack = mThreadData->GetJSContextStack();
         NS_ASSERTION(stack, "bad!");
-        if (stack)
-        {
+        if (stack) {
 #ifdef DEBUG
             JSContext* poppedCX;
             nsresult rv = stack->Pop(&poppedCX);
@@ -377,10 +360,8 @@ XPCCallContext::~XPCCallContext()
         }
     }
 
-    if (mJSContext)
-    {
-        if (mDestroyJSContextInDestructor)
-        {
+    if (mJSContext) {
+        if (mDestroyJSContextInDestructor) {
 #ifdef DEBUG_xpc_hacker
             printf("!xpc - doing deferred destruction of JSContext @ %p\n",
                    mJSContext);
@@ -395,8 +376,7 @@ XPCCallContext::~XPCCallContext()
     }
 
 #ifdef DEBUG
-    for (PRUint32 i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i)
-    {
+    for (PRUint32 i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i) {
         NS_ASSERTION(!mScratchStrings[i].mInUse, "Uh, string wrapper still in use!");
     }
 #endif
@@ -408,12 +388,10 @@ XPCCallContext::~XPCCallContext()
 XPCReadableJSStringWrapper *
 XPCCallContext::NewStringWrapper(const PRUnichar *str, PRUint32 len)
 {
-    for (PRUint32 i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i)
-    {
+    for (PRUint32 i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i) {
         StringWrapperEntry& ent = mScratchStrings[i];
 
-        if (!ent.mInUse)
-        {
+        if (!ent.mInUse) {
             ent.mInUse = PR_TRUE;
 
             // Construct the string using placement new.
@@ -430,11 +408,9 @@ XPCCallContext::NewStringWrapper(const PRUnichar *str, PRUint32 len)
 void
 XPCCallContext::DeleteString(nsAString *string)
 {
-    for (PRUint32 i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i)
-    {
+    for (PRUint32 i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i) {
         StringWrapperEntry& ent = mScratchStrings[i];
-        if (string == ent.mString.addr())
-        {
+        if (string == ent.mString.addr()) {
             // One of our internal strings is no longer in use, mark
             // it as such and destroy the string.
 
