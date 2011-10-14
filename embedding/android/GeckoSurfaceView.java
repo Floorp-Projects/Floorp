@@ -112,6 +112,11 @@ class GeckoSurfaceView
         return file.toString();
     }
 
+    public void hideStartupBitmap() {
+        mShowingLoadScreen = false;
+        surfaceChanged(getHolder(), mFormat, mWidth, mHeight);
+    }
+
     public void loadStartupBitmap() {
         new Thread(new Runnable() {
                 public void run() {
@@ -608,12 +613,6 @@ class GeckoSurfaceView
     // event stuff
     public boolean onTouchEvent(MotionEvent event) {
         this.requestFocus(FOCUS_UP, null);
-
-        if (mShowingLoadScreen == true) {
-            mShowingLoadScreen = false;
-            surfaceChanged(getHolder(), mFormat, mWidth, mHeight);
-        }
-
         GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
         return true;
     }
