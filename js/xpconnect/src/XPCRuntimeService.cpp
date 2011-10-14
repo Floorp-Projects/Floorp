@@ -106,7 +106,7 @@ BackstagePass::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     nsIID* clone;
 #define PUSH_IID(id)                                                          \
     clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                    sizeof(nsIID)));          \
+                                                 sizeof(nsIID)));             \
     if (!clone)                                                               \
         goto oom;                                                             \
     array[index++] = clone;
@@ -127,7 +127,7 @@ oom:
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
 NS_IMETHODIMP
 BackstagePass::GetHelperForLanguage(PRUint32 language,
-                                      nsISupports **retval)
+                                    nsISupports **retval)
 {
     *retval = nsnull;
     return NS_OK;
@@ -160,8 +160,7 @@ BackstagePass::GetClassID(nsCID * *aClassID)
 
 /* readonly attribute PRUint32 implementationLanguage; */
 NS_IMETHODIMP
-BackstagePass::GetImplementationLanguage(
-    PRUint32 *aImplementationLanguage)
+BackstagePass::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
     *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;

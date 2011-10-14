@@ -94,8 +94,7 @@ LookupInterfaceOrAncestor(PRUint32 tableSize, const xpc_qsHashEntry *table,
          * supports, including ancestors.
          */
         nsCOMPtr<nsIInterfaceInfo> info;
-        if(NS_FAILED(nsXPConnect::GetXPConnect()->GetInfoForIID(
-                          &iid, getter_AddRefs(info))))
+        if(NS_FAILED(nsXPConnect::GetXPConnect()->GetInfoForIID(&iid, getter_AddRefs(info))))
             return nsnull;
 
         const nsIID *piid;
@@ -446,10 +445,9 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                 {
                     for(; fs->name; fs++)
                     {
-                        if(!JS_DefineFunction(
-                               cx, proto, fs->name,
-                               reinterpret_cast<JSNative>(fs->native),
-                               fs->arity, flags))
+                        if(!JS_DefineFunction(cx, proto, fs->name,
+                                              reinterpret_cast<JSNative>(fs->native),
+                                              fs->arity, flags))
                             return JS_FALSE;
                     }
                 }
@@ -459,9 +457,8 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                 {
                     for(; ts->name; ts++)
                     {
-                        if(!JS_DefineFunction(
-                               cx, proto, ts->name, ts->native, ts->arity,
-                               flags | JSFUN_STUB_GSOPS | JSFUN_TRCINFO))
+                        if(!JS_DefineFunction(cx, proto, ts->name, ts->native, ts->arity,
+                                              flags | JSFUN_STUB_GSOPS | JSFUN_TRCINFO))
                             return JS_FALSE;
                     }
                 }
@@ -577,9 +574,8 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
 
     // else...
 
-    if(!nsXPCException::NameAndFormatForNSResult(
-            NS_ERROR_XPC_NATIVE_RETURNED_FAILURE, nsnull, &format) ||
-        !format)
+    if(!nsXPCException::NameAndFormatForNSResult(NS_ERROR_XPC_NATIVE_RETURNED_FAILURE, nsnull, &format) ||
+       !format)
     {
         format = "";
     }
@@ -591,7 +587,7 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
                      : "unknown";
     }
     if(nsXPCException::NameAndFormatForNSResult(rv, &name, nsnull)
-        && name)
+       && name)
     {
         sz = JS_smprintf("%s 0x%x (%s) [%s.%s]",
                          format, rv, name, ifaceName, memberName);
@@ -942,8 +938,8 @@ xpc_qsUnwrapObj(jsval v, nsISupports **ppArgRef, nsresult *rv)
     {
         *ppArgRef = nsnull;
         *rv = ((JSVAL_IS_INT(v) && JSVAL_TO_INT(v) == 0)
-              ? NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL
-              : NS_ERROR_XPC_BAD_CONVERT_JS);
+               ? NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL
+               : NS_ERROR_XPC_BAD_CONVERT_JS);
         return nsnull;
     }
 

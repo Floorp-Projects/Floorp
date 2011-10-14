@@ -105,9 +105,9 @@ XPCContext::DebugDump(PRInt16 depth)
         }
 
         XPC_LOG_ALWAYS(("mCallingLangType of %s",
-                         mCallingLangType == LANG_UNKNOWN ? "LANG_UNKNOWN" :
-                         mCallingLangType == LANG_JS      ? "LANG_JS" :
-                                                            "LANG_NATIVE"));
+                        mCallingLangType == LANG_UNKNOWN ? "LANG_UNKNOWN" :
+                        mCallingLangType == LANG_JS      ? "LANG_JS" :
+                        "LANG_NATIVE"));
         XPC_LOG_OUTDENT();
 #endif
 }

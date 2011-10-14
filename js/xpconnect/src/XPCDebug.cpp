@@ -179,10 +179,10 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
                         JSAutoByteString valueBytes;
                         const char *value = JSVAL2String(cx, val, &isString, &valueBytes);
                         buf = JS_sprintf_append(buf, "%s%s%s%s",
-                                        k ? ", " : "",
-                                        isString ? "\"" : "",
-                                        value ? value : "?unknown?",
-                                        isString ? "\"" : "");
+                                                k ? ", " : "",
+                                                isString ? "\"" : "",
+                                                value ? value : "?unknown?",
+                                                isString ? "\"" : "");
                         if(!buf) goto out;
                     }
                 }

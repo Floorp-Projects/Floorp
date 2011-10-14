@@ -378,8 +378,7 @@ protected:
             {
                 // Here behavior == eStringify implies !pval, so both eNull and
                 // eStringify should end up with void strings.
-                (new(mBuf) implementation_type(
-                    traits::sEmptyBuffer, PRUint32(0)))->
+                (new(mBuf) implementation_type(traits::sEmptyBuffer, PRUint32(0)))->
                     SetIsVoid(behavior != eEmpty);
                 mValid = JS_TRUE;
                 return nsnull;

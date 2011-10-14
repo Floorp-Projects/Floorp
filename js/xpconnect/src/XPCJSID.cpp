@@ -764,8 +764,7 @@ nsJSCID::CreateInstance(nsISupports **_retval)
     XPCContext* xpcc = XPCContext::GetXPCContext(cx);
 
     nsIXPCSecurityManager* sm;
-    sm = xpcc->GetAppropriateSecurityManager(
-                        nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
+    sm = xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
     if(sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID())))
     {
         NS_ERROR("how are we not being called from chrome here?");
@@ -832,8 +831,7 @@ nsJSCID::GetService(nsISupports **_retval)
     XPCContext* xpcc = XPCContext::GetXPCContext(cx);
 
     nsIXPCSecurityManager* sm;
-    sm = xpcc->GetAppropriateSecurityManager(
-                        nsIXPCSecurityManager::HOOK_GET_SERVICE);
+    sm = xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_GET_SERVICE);
     if(sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID())))
     {
         NS_ASSERTION(JS_IsExceptionPending(cx),

@@ -275,7 +275,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
             bool b = *((bool*)s);
 
             NS_WARN_IF_FALSE(b == 1 || b == 0,
-                    "Passing a malformed bool through XPConnect");
+                             "Passing a malformed bool through XPConnect");
             *d = BOOLEAN_TO_JSVAL(!!b);
             break;
         }
@@ -454,9 +454,9 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                         return JS_FALSE;
 
                     JSString* jsString = JS_NewExternalString(cx,
-                                             (jschar*)unicodeString,
-                                             cString->Length(),
-                                             sXPCOMUCStringFinalizerIndex);
+                                                              (jschar*)unicodeString,
+                                                              cString->Length(),
+                                                              sXPCOMUCStringFinalizerIndex);
 
                     if(!jsString)
                     {
@@ -1050,7 +1050,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 }
                 PRUint32 length = JS_GetStringLength(str);
                 nsIAtom* atom = NS_NewAtom(nsDependentSubstring(chars,
-                                             chars + length));
+                                                                chars + length));
                 if (!atom && pErr)
                     *pErr = NS_ERROR_OUT_OF_MEMORY;
                 *((nsISupports**)d) = atom;
@@ -1607,7 +1607,7 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
         // is this really a native xpcom object with a wrapper?
         XPCWrappedNative* wrapper;
         if(nsnull != (wrapper =
-           XPCWrappedNative::GetWrappedNativeOfJSObject(cx,obj)))
+                      XPCWrappedNative::GetWrappedNativeOfJSObject(cx,obj)))
         {
             nsISupports* supports = wrapper->GetIdentityObject();
             nsCOMPtr<nsIException> iface = do_QueryInterface(supports);
@@ -1737,11 +1737,10 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
             nsISupportsDouble* data;
             nsCOMPtr<nsIComponentManager> cm;
             if(NS_FAILED(NS_GetComponentManager(getter_AddRefs(cm))) || !cm ||
-               NS_FAILED(cm->CreateInstanceByContractID(
-                                NS_SUPPORTS_DOUBLE_CONTRACTID,
-                                nsnull,
-                                NS_GET_IID(nsISupportsDouble),
-                                (void**)&data)))
+               NS_FAILED(cm->CreateInstanceByContractID(NS_SUPPORTS_DOUBLE_CONTRACTID,
+                                                        nsnull,
+                                                        NS_GET_IID(nsISupportsDouble),
+                                                        (void**)&data)))
                 return NS_ERROR_FAILURE;
             data->SetData(number);
             rv = ConstructException(NS_ERROR_XPC_JS_THREW_NUMBER, nsnull,

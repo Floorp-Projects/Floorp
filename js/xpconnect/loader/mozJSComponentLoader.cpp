@@ -158,10 +158,10 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
         PRUint32 column = rep->uctokenptr - rep->uclinebuf;
 
         rv = errorObject->Init(reinterpret_cast<const PRUnichar*>
-                                               (rep->ucmessage),
+                               (rep->ucmessage),
                                fileUni.get(),
                                reinterpret_cast<const PRUnichar*>
-                                               (rep->uclinebuf),
+                               (rep->uclinebuf),
                                rep->lineno, column, rep->flags,
                                "component javascript");
         if (NS_SUCCEEDED(rv)) {
@@ -778,7 +778,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
                                               mSystemPrincipal,
                                               nsnull,
                                               nsIXPConnect::
-                                                  FLAG_SYSTEM_GLOBAL_OBJECT,
+                                              FLAG_SYSTEM_GLOBAL_OBJECT,
                                               getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -869,7 +869,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
         // eagerly report the exception.
         uint32 oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_NO_SCRIPT_RVAL |
-                          (exception ? JSOPTION_DONT_REPORT_UNCAUGHT : 0));
+                      (exception ? JSOPTION_DONT_REPORT_UNCAUGHT : 0));
 
         if (realFile) {
 #ifdef HAVE_PR_MEMMAP
@@ -919,9 +919,8 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
                 return NS_ERROR_FAILURE;
             }
 
-            script = JS_CompileScriptForPrincipalsVersion(
-              cx, global, jsPrincipals, buf, fileSize32, nativePath.get(), 1,
-              JSVERSION_LATEST);
+            script = JS_CompileScriptForPrincipalsVersion(cx, global, jsPrincipals, buf, fileSize32, nativePath.get(), 1,
+                                                          JSVERSION_LATEST);
 
             PR_MemUnmap(buf, fileSize32);
 
@@ -939,8 +938,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
                 return NS_ERROR_FILE_NOT_FOUND;
             }
 
-            script = JS_CompileFileHandleForPrincipalsVersion(
-              cx, global, nativePath.get(), fileHandle, jsPrincipals, JSVERSION_LATEST);
+            script = JS_CompileFileHandleForPrincipalsVersion(cx, global, nativePath.get(), fileHandle, jsPrincipals, JSVERSION_LATEST);
 
             /* JS will close the filehandle after compilation is complete. */
 #endif /* HAVE_PR_MEMMAP */
@@ -975,9 +973,8 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 
             buf[len] = '\0';
 
-            script = JS_CompileScriptForPrincipalsVersion(
-              cx, global, jsPrincipals, buf, bytesRead, nativePath.get(), 1,
-              JSVERSION_LATEST);
+            script = JS_CompileScriptForPrincipalsVersion(cx, global, jsPrincipals, buf, bytesRead, nativePath.get(), 1,
+                                                          JSVERSION_LATEST);
         }
         // Propagate the exception, if one exists. Also, don't leave the stale
         // exception on this context.
@@ -1346,7 +1343,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
             logBuffer.AppendLiteral(" ");
             if (i == symbolCount - 1) {
                 LOG(("%s] from %s\n", logBuffer.get(),
-                                      PromiseFlatCString(aLocation).get()));
+                     PromiseFlatCString(aLocation).get()));
             }
 #endif
         }
