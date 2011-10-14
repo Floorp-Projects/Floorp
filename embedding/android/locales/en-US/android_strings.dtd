@@ -19,5 +19,8 @@
 <!ENTITY  launcher_shortcuts_empty "No web apps were found">
 
 <!ENTITY choose_file "Choose File">
+<!ENTITY bookmarks_title "Bookmarks">
+<!ENTITY bookmarks "Bookmarks">
+<!ENTITY bookmark_add "Add Bookmark">
 
 <!ENTITY quit "Quit">

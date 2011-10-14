@@ -56,6 +56,7 @@ JAVAFILES = \
   SurfaceLockInfo.java \
   AwesomeBar.java \
   DatabaseHelper.java \
+  GeckoBookmarks.java \
   SessionHistory.java \
   $(NULL)
 
@@ -124,6 +125,7 @@ endif
 
 RES_LAYOUT = \
   res/layout/gecko_app.xml \
+  res/layout/gecko_menu.xml \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
   res/layout/notification_icon_text.xml \
@@ -132,9 +134,15 @@ RES_LAYOUT = \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_row.xml \
   res/layout/gecko_menu.xml \
+  res/layout/bookmarks.xml \
+  res/layout/bookmark_list_row.xml \
   $(NULL)
 
-RES_VALUES = res/values/colors.xml res/values/themes.xml res/values/styles.xml
+RES_VALUES = \
+	res/values/colors.xml \
+       res/values/styles.xml \
+	res/values/themes.xml \
+	$(NULL)
 
 AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
 
@@ -201,11 +209,11 @@ $(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
 
 $(RES_LAYOUT): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT))
 	$(NSINSTALL) -D res/layout
-	$(NSINSTALL) $(srcdir)/resources/layout/* res/layout/
+	$(NSINSTALL) $^  res/layout
 
 $(RES_VALUES): $(subst res/,$(srcdir)/resources/,$(RES_VALUES))
 	$(NSINSTALL) -D res/values
-	$(NSINSTALL) $(srcdir)/resources/values/* res/values/
+	$(NSINSTALL) $^  res/values
 
 R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
