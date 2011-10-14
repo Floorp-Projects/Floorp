@@ -145,7 +145,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
                     name = nsnull;
                 JSAutoByteString valueBytes;
                 const char* value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
-                
+
                 buf = JS_sprintf_append(buf, "%s%s%s%s%s%s",
                                         namedArgCount ? ", " : "",
                                         name ? name :"",

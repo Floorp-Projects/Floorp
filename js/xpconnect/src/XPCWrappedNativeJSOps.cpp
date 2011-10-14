@@ -136,7 +136,7 @@ XPC_WN_Shared_ToString(JSContext *cx, uintN argc, jsval *vp)
 
         return JS_TRUE;
     }
-    
+
     XPCCallContext ccx(JS_CALLER, cx, obj);
     ccx.SetName(ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_TO_STRING));
     ccx.SetArgsAndResultPtr(argc, JS_ARGV(cx, vp), vp);
@@ -710,7 +710,7 @@ TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper)
     // here is because the bits used in that marking do unpleasant things to the
     // member counts in the interface and interface set objects. Those counts
     // are used in the DealWithDyingGCThings calls that are part of this JS GC
-    // marking phase. By doing these calls later during our GC callback we 
+    // marking phase. By doing these calls later during our GC callback we
     // avoid that problem. Arguably this could be changed. But it ain't broke.
     //
     // However, we do need to call the wrapper's TraceJS so that
@@ -724,7 +724,7 @@ TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper)
     // need to use the JSClass. So, some marking is required for protection.
 
     wrapper->TraceJS(trc);
-     
+
     TraceScopeJSObjects(trc, wrapper->GetScope());
 }
 
@@ -880,12 +880,12 @@ js::Class XPC_WN_NoHelper_JSClass = {
     XPC_WN_CannotModifyPropertyStub,   // delProperty
     JS_PropertyStub,                   // getProperty
     XPC_WN_OnlyIWrite_SetPropertyStub, // setProperty
-   
+
     XPC_WN_Shared_Enumerate,           // enumerate
     XPC_WN_NoHelper_Resolve,           // resolve
     XPC_WN_Shared_Convert,             // convert
     XPC_WN_NoHelper_Finalize,          // finalize
-   
+
     /* Optionally non-null members start here. */
     nsnull,                         // reserved0
     nsnull,                         // checkAccess
@@ -904,7 +904,7 @@ js::Class XPC_WN_NoHelper_JSClass = {
         nsnull, // unused
         true,   // isWrappedNative
     },
-   
+
     // ObjectOps
     {
         nsnull, // lookupGeneric
@@ -1314,13 +1314,13 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
         rv = si->GetCallback()->
             NewEnumerate(wrapper, cx, obj, enum_op, statep, idp, &retval);
-        
+
         if((enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL) &&
            (NS_FAILED(rv) || !retval))
         {
             *statep = JSVAL_NULL;
         }
-        
+
         if(NS_FAILED(rv))
             return Throw(rv, cx);
         return retval;

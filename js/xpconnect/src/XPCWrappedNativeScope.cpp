@@ -901,7 +901,7 @@ WNProtoRemover(JSDHashTable *table, JSDHashEntryHdr *hdr,
                uint32 number, void *arg)
 {
     XPCWrappedNativeProtoMap* detachedMap = (XPCWrappedNativeProtoMap*)arg;
-    
+
     XPCWrappedNativeProto* proto = (XPCWrappedNativeProto*)
         ((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value;
 
@@ -914,10 +914,10 @@ void
 XPCWrappedNativeScope::RemoveWrappedNativeProtos()
 {
     XPCAutoLock al(mRuntime->GetMapLock());
-    
-    mWrappedNativeProtoMap->Enumerate(WNProtoRemover, 
+
+    mWrappedNativeProtoMap->Enumerate(WNProtoRemover,
         GetRuntime()->GetDetachedWrappedNativeProtoMap());
-    mMainThreadWrappedNativeProtoMap->Enumerate(WNProtoRemover, 
+    mMainThreadWrappedNativeProtoMap->Enumerate(WNProtoRemover,
         GetRuntime()->GetDetachedWrappedNativeProtoMap());
 }
 

@@ -221,7 +221,7 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
                rv,
                defaultException,
                getter_AddRefs(finalException));
-            // We should get at least the defaultException back, 
+            // We should get at least the defaultException back,
             // but just in case
             if(finalException == nsnull)
             {
@@ -234,7 +234,7 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
     if(finalException)
         success = ThrowExceptionObject(cx, finalException);
     // If we weren't able to build or throw an exception we're
-    // most likely out of memory 
+    // most likely out of memory
     if(!success)
         JS_ReportOutOfMemory(cx);
 }
