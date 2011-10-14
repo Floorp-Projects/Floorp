@@ -52,6 +52,7 @@
 #include "Image.h"
 #include "ImageErrors.h"
 #include "ImageLogging.h"
+#include "imgLoader.h"
 
 #include "nspr.h"
 
@@ -527,6 +528,14 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
   // This is wrong!!! We need to notify asynchronously, but there's code that
   // assumes that we don't. This will be fixed in bug 580466.
   clone->SyncNotifyListener();
+
+  // It's weird to defer notifications now that we just dispatched
+  // them, but we need to do the latter, and imgCacheValidator demands
+  // the former.
+  if (mOwner->mValidator) {
+    clone->SetNotificationsDeferred(PR_TRUE);
+    mOwner->mValidator->AddProxy(clone);
+  }
 
   return NS_OK;
 }
