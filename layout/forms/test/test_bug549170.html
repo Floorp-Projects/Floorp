@@ -33,10 +33,12 @@ SimpleTest.waitForExplicitFinish();
 function mouseHandler(aEvent)
 {
   gNumberOfMouseEventsCatched++;
+  var classList = SpecialPowers.getPrivilegedProps(aEvent, "originalTarget.classList");
+  var nodeName = SpecialPowers.getPrivilegedProps(aEvent, "originalTarget.nodeName");
 
-  is(aEvent.originalTarget.nodeName, "DIV", "An inner div should be the target of the event");
+  is(nodeName, "DIV", "An inner div should be the target of the event");
 
-  ok(aEvent.originalTarget.classList.contains("anonymous-div") && !aEvent.originalTarget.classList.contains("placeholder"),
+  ok(classList.contains("anonymous-div") && !classList.contains("placeholder"),
     "The target div class doesn't correcspond to the editor div class");
 }
 
@@ -44,13 +46,13 @@ function checkMouseEvents(element)
 {
   gNumberOfMouseEventsCatched = 0;
 
-  synthesizeMouse(element, 5, 5, {type: "mousedown", button: 0})
-  synthesizeMouse(element, 5, 5, {type: "mouseup",   button: 0})
-  synthesizeMouse(element, 5, 5, {type: "mousedown", button: 1})
+  synthesizeMouse(element, 5, 5, {type: "mousedown", button: 0});
+  synthesizeMouse(element, 5, 5, {type: "mouseup",   button: 0});
+  synthesizeMouse(element, 5, 5, {type: "mousedown", button: 1});
   // NOTE: this event is going to copy the buffer on linux, this should not be a problem
-  synthesizeMouse(element, 5, 5, {type: "mouseup",   button: 1})
-  synthesizeMouse(element, 5, 5, {type: "mousedown", button: 2})
-  synthesizeMouse(element, 5, 5, {type: "mouseup",   button: 2})
+  synthesizeMouse(element, 5, 5, {type: "mouseup",   button: 1});
+  synthesizeMouse(element, 5, 5, {type: "mousedown", button: 2});
+  synthesizeMouse(element, 5, 5, {type: "mouseup",   button: 2});
 
   is(gNumberOfMouseEventsCatched, 6, "Some mouse events have not been catched");
 }
