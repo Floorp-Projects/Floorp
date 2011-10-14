@@ -372,9 +372,11 @@ abstract public class GeckoApp
            case R.id.bookmarks:
                Intent intent = new Intent(this, GeckoBookmarks.class);
                SessionHistory.HistoryEntry he = getSessionHistory().getHistoryEntryAt(0);
-               intent.setData(android.net.Uri.parse(he.mUri));
-               intent.putExtra("title", he.mTitle);
-               startActivity(intent);
+               if (he != null) {
+                intent.setData(android.net.Uri.parse(he.mUri));
+                intent.putExtra("title", he.mTitle);
+                startActivity(intent);
+               }
                return true;
            default:
                return super.onOptionsItemSelected(item);
