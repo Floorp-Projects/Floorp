@@ -386,7 +386,7 @@ abstract public class GeckoApp
     private void quit() {
         Log.i(LOG_FILE_NAME, "pleaseKillMe");
         if (surfaceView != null)
-            surfaceView.saveLast();
+            surfaceView.saveLast(true);
         System.exit(0);
     }
 
