@@ -2927,6 +2927,15 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
+{
+    CHECK_REQUEST(cx);
+    JS_ASSERT(obj != NULL);
+    JS_ASSERT(hint == JSTYPE_VOID || hint == JSTYPE_STRING || hint == JSTYPE_NUMBER);
+    return obj->defaultValue(cx, hint, vp);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     return JS_TRUE;
