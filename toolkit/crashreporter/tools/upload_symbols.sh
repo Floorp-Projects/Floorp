@@ -63,7 +63,7 @@ SYMBOL_ARCHIVE="$2"
 hash=`openssl dgst -sha1 "${SYMBOL_ARCHIVE}" | sed 's/^.*)=//' | sed 's/\ //g'`
 archive="${hash}-"`basename "${SYMBOL_ARCHIVE}" | sed 's/\ //g'`
 echo "Transferring symbols... ${SYMBOL_ARCHIVE}"
-scp ${SYMBOL_SERVER_PORT:+-P $SYMBOL_SERVER_PORT} \
+scp -oLogLevel=DEBUG -oRekeyLimit=10M ${SYMBOL_SERVER_PORT:+-P $SYMBOL_SERVER_PORT} \
   ${SYMBOL_SERVER_SSH_KEY:+-i "$SYMBOL_SERVER_SSH_KEY"} "${SYMBOL_ARCHIVE}" \
   ${SYMBOL_SERVER_USER}@${SYMBOL_SERVER_HOST}:"${SYMBOL_SERVER_PATH}/${archive}"
 echo "Unpacking symbols on remote host..."
