@@ -42,6 +42,7 @@
 #include <string.h>
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
 #include "jsgc.h"
@@ -230,6 +231,27 @@ WeakMap_set(JSContext *cx, uintN argc, Value *vp)
   out_of_memory:
     JS_ReportOutOfMemory(cx);
     return false;
+}
+
+JS_FRIEND_API(JSBool)
+JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret)
+{
+    if (!obj || !obj->isWeakMap()) {
+        *ret = NULL;
+        return true;
+    }
+    JSObject *arr = NewDenseEmptyArray(cx);
+    if (!arr)
+        return false;
+    ObjectValueMap *map = GetObjectMap(obj);
+    if (map) {
+        for (ObjectValueMap::Range r = map->nondeterministicAll(); !r.empty(); r.popFront()) {
+            if (!js_NewbornArrayPush(cx, arr, ObjectValue(*r.front().key)))
+                return false;
+        }
+    }
+    *ret = arr;
+    return true;
 }
 
 static void

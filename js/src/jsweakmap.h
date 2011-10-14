@@ -192,12 +192,18 @@ template <class Key, class Value,
 class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, public WeakMapBase {
   private:
     typedef HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy> Base;
-    typedef typename Base::Range Range;
     typedef typename Base::Enum Enum;
 
   public:
+    typedef typename Base::Range Range;
+
     explicit WeakMap(JSRuntime *rt) : Base(rt) { }
     explicit WeakMap(JSContext *cx) : Base(cx) { }
+
+    // Use with caution, as result can be affected by garbage collection.
+    Range nondeterministicAll() {
+        return Base::all();
+    }
 
   private:
     void nonMarkingTrace(JSTracer *tracer) {

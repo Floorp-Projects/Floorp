@@ -9,8 +9,8 @@
  */
 
 #include "vpx_ports/config.h"
-#include "idct.h"
-#include "dequantize.h"
+#include "vp8/common/idct.h"
+#include "vp8/decoder/dequantize.h"
 
 void vp8_dequant_dc_idct_add_y_block_v6
             (short *q, short *dq, unsigned char *pre,

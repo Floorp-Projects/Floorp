@@ -260,9 +260,6 @@ ContextCallback(JSContext *cx, uintN operation)
 
 xpc::CompartmentPrivate::~CompartmentPrivate()
 {
-    delete waiverWrapperMap;
-    delete expandoMap;
-    delete domExpandoMap;
     MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
 }
 

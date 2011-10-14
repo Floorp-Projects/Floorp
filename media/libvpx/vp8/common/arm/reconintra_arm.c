@@ -10,10 +10,10 @@
 
 
 #include "vpx_ports/config.h"
-#include "blockd.h"
-#include "reconintra.h"
+#include "vp8/common/blockd.h"
+#include "vp8/common/reconintra.h"
 #include "vpx_mem/vpx_mem.h"
-#include "recon.h"
+#include "vp8/common/recon.h"
 
 #if HAVE_ARMV7
 extern void vp8_build_intra_predictors_mby_neon_func(
