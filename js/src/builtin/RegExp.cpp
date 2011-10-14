@@ -529,7 +529,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     RegExpStatics *res = cx->regExpStatics();
 
     /* Step 2. */
-    JSString *input = js_ValueToString(cx, args.length() > 0 ?  args[0] : UndefinedValue());
+    JSString *input = js_ValueToString(cx, (args.length() > 0) ? args[0] : UndefinedValue());
     if (!input)
         return false;
 
@@ -558,7 +558,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     }
 
     /* Steps 8-21. */
-    RegExpExecType execType = native == regexp_test ? RegExpTest : RegExpExec;
+    RegExpExecType execType = (native == regexp_test) ? RegExpTest : RegExpExec;
     size_t lastIndexInt(i);
     if (!ExecuteRegExp(cx, res, rep, linearInput, chars, length, &lastIndexInt, execType,
                        &args.rval())) {

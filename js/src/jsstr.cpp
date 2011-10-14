@@ -1449,7 +1449,7 @@ class RegExpGuard
 static JS_ALWAYS_INLINE bool
 Matched(RegExpExecType type, const Value &v)
 {
-    return type == RegExpTest ? v.isTrue() : !v.isNull();
+    return (type == RegExpTest) ? v.isTrue() : !v.isNull();
 }
 
 typedef bool (*DoMatchCallback)(JSContext *cx, RegExpStatics *res, size_t count, void *data);
@@ -1482,7 +1482,7 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpPair &regE
 
     if (rep->global()) {
         /* global matching ('g') */
-        RegExpExecType type = flags & TEST_GLOBAL_BIT ? RegExpTest : RegExpExec;
+        RegExpExecType type = (flags & TEST_GLOBAL_BIT) ? RegExpTest : RegExpExec;
         if (RegExpObject *reobj = regExpPair.reobj())
             reobj->zeroLastIndex();
 

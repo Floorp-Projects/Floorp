@@ -114,7 +114,7 @@ class MatchPairs
             return;
 
         for (int *it = buffer_; it < buffer_ + 2 * pairCount_; ++it)
-            *it = *it < 0 ? -1 : *it + amount;
+            *it = (*it < 0) ? -1 : *it + amount;
     }
 
     inline void checkAgainst(size_t length);
