@@ -382,7 +382,7 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
     if (!type)
         return false;
 
-    init(cx, type, false);
+    init(cx, type);
     if (!setInitialProperty(cx, bindings.lastShape()))
         return false;
 
@@ -419,7 +419,7 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
 inline bool
 JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *frame)
 {
-    init(cx, type, false);
+    init(cx, type);
 
     if (!setInitialProperty(cx, getProto()->lastProperty()))
         return false;
@@ -537,6 +537,7 @@ JSObject::setLastPropertyInfallible(const js::Shape *shape)
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!inDictionaryMode());
     JS_ASSERT(slotSpan() == shape->slotSpan());
+    JS_ASSERT(numFixedSlots() == shape->numFixedSlots());
 
     shape_ = const_cast<js::Shape *>(shape);
 }
@@ -1019,26 +1020,26 @@ JSObject::isQName() const
 }
 
 inline void
-JSObject::init(JSContext *cx, js::types::TypeObject *type, bool denseArray)
+JSObject::init(JSContext *cx, js::types::TypeObject *type)
 {
-    JS_STATIC_ASSERT(sizeof(js::ObjectElements) == 2 * sizeof(js::Value));
-
-    uint32 numSlots = numFixedSlots();
-
-    /*
-     * Fill the fixed slots with undefined if needed.  This object must
-     * already have its numFixedSlots() filled in, as by js_NewGCObject.
-     */
     slots = NULL;
-    if (denseArray) {
-        JS_ASSERT(numSlots >= 2);
-        elements = fixedElements();
-        new (getElementsHeader()) js::ObjectElements(numSlots - 2);
-    } else {
-        elements = js::emptyObjectElements;
-    }
+    elements = js::emptyObjectElements;
+    flags = 0;
 
     setType(type);
+}
+
+inline void
+JSObject::initDenseArray()
+{
+    JS_ASSERT(hasClass(&js::ArrayClass));
+
+    JS_STATIC_ASSERT(sizeof(js::ObjectElements) == 2 * sizeof(js::Value));
+    JS_ASSERT(numFixedSlots() >= 2);
+
+    /* Fill in the object's inline elements header. */
+    elements = fixedElements();
+    new (getElementsHeader()) js::ObjectElements(numFixedSlots() - 2);
 }
 
 inline void
@@ -1057,7 +1058,7 @@ JSObject::initSharingEmptyShape(JSContext *cx,
                                 void *privateValue,
                                 js::gc::AllocKind kind)
 {
-    init(cx, type, false);
+    init(cx, type);
 
     js::EmptyShape *empty = type->getEmptyShape(cx, aclasp, kind);
     if (!empty)
@@ -1438,7 +1439,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject *par
     if (type->canProvideEmptyShape(clasp) && parent == type->proto->getParent())
         empty = type->getEmptyShape(cx, clasp, kind);
     else
-        empty = js::EmptyShape::create(cx, clasp, parent);
+        empty = js::EmptyShape::create(cx, clasp, parent, gc::GetGCKindSlots(kind, clasp));
     if (!empty) {
         JS_ASSERT(obj->isNewborn());
         return false;
@@ -1448,11 +1449,12 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject *par
 }
 
 static inline bool
-InitScopeForNonNativeObject(JSContext *cx, JSObject *obj, js::Class *clasp, JSObject *parent)
+InitScopeForNonNativeObject(JSContext *cx, JSObject *obj, js::Class *clasp, JSObject *parent,
+                            gc::AllocKind kind)
 {
     JS_ASSERT(!clasp->isNative());
 
-    const js::Shape *empty = js::BaseShape::lookupInitialShape(cx, clasp, parent);
+    const js::Shape *empty = js::BaseShape::lookupInitialShape(cx, clasp, parent, kind);
     if (!empty)
         return false;
     JS_ASSERT(empty->isEmptyShape());
@@ -1510,8 +1512,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, gc::AllocKi
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    bool denseArray = (clasp == &ArrayClass);
-    obj->init(cx, type, denseArray);
+    obj->init(cx, type);
 
     JS_ASSERT(type->canProvideEmptyShape(clasp));
 
@@ -1666,7 +1667,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
     if (!obj)
         goto out;
 
-    obj->init(cx, type, clasp == &ArrayClass);
+    obj->init(cx, type);
 
     /*
      * Default parent to the parent of the prototype, which was set from
@@ -1677,7 +1678,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
 
     if (clasp->isNative()
         ? !InitScopeForObject(cx, obj, clasp, parent, type, kind)
-        : !InitScopeForNonNativeObject(cx, obj, clasp, parent)) {
+        : !InitScopeForNonNativeObject(cx, obj, clasp, parent, kind)) {
         obj = NULL;
     }
 
@@ -1734,7 +1735,7 @@ NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::
     if (!obj)
         goto out;
 
-    obj->init(cx, type, false);
+    obj->init(cx, type);
 
     /*
      * Default parent to the parent of the prototype, which was set from

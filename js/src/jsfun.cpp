@@ -205,7 +205,8 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 
     bool strict = callee.toFunction()->inStrictMode();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
-    Shape *emptyArgumentsShape = BaseShape::lookupInitialShape(cx, clasp, proto->getParent());
+    Shape *emptyArgumentsShape = BaseShape::lookupInitialShape(cx, clasp, proto->getParent(),
+                                                               FINALIZE_OBJECT4);
     if (!emptyArgumentsShape)
         return NULL;
 
@@ -216,7 +217,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     SetValueRangeToUndefined(data->slots, argc);
 
     /* Can't fail from here on, so initialize everything in argsobj. */
-    obj->init(cx, type, false);
+    obj->init(cx, type);
     obj->setInitialPropertyInfallible(emptyArgumentsShape);
 
     ArgumentsObject *argsobj = obj->asArguments();
@@ -772,10 +773,11 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
         return NULL;
 
     JSObject *parent = fp->scopeChain().getGlobal();
-    Shape *emptyDeclEnvShape = BaseShape::lookupInitialShape(cx, &DeclEnvClass, parent);
+    Shape *emptyDeclEnvShape = BaseShape::lookupInitialShape(cx, &DeclEnvClass, parent,
+                                                             FINALIZE_OBJECT2);
     if (!emptyDeclEnvShape)
         return NULL;
-    envobj->init(cx, type, false);
+    envobj->init(cx, type);
     envobj->setInitialPropertyInfallible(emptyDeclEnvShape);
     envobj->setPrivate(fp);
 

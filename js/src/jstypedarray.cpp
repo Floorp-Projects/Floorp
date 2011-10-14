@@ -208,6 +208,7 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
     JSObject *obj = NewBuiltinClassInstance(cx, &ArrayBuffer::slowClass);
     if (!obj)
         return NULL;
+    JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT16);
 
     if (nbytes < 0) {
         /*
@@ -221,7 +222,8 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
 
     JS_ASSERT(obj->getClass() == &ArrayBuffer::slowClass);
 
-    js::Shape *empty = BaseShape::lookupInitialShape(cx, &ArrayBufferClass, obj->getParent());
+    js::Shape *empty = BaseShape::lookupInitialShape(cx, &ArrayBufferClass, obj->getParent(),
+                                                     gc::FINALIZE_OBJECT16);
     if (!empty)
         return false;
     obj->setLastPropertyInfallible(empty);
@@ -1264,6 +1266,7 @@ class TypedArrayTemplate
         JSObject *obj = NewBuiltinClassInstance(cx, slowClass());
         if (!obj)
             return NULL;
+        JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT8);
 
         /*
          * Specialize the type of the object on the current scripted location,
@@ -1297,7 +1300,8 @@ class TypedArrayTemplate
 
         JS_ASSERT(obj->getClass() == slowClass());
 
-        js::Shape *empty = BaseShape::lookupInitialShape(cx, fastClass(), obj->getParent());
+        js::Shape *empty = BaseShape::lookupInitialShape(cx, fastClass(), obj->getParent(),
+                                                         gc::FINALIZE_OBJECT8);
         if (!empty)
             return false;
         obj->setLastPropertyInfallible(empty);

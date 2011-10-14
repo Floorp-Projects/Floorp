@@ -185,19 +185,21 @@ struct BaseShape {
 
 struct Shape {
     BaseShape   *base;
+    jsid        _1;
+    uint32      slotInfo;
+
+    static const uint32 FIXED_SLOTS_SHIFT = 27;
 };
 
 struct Object {
     Shape       *shape;
     TypeObject  *type;
-    uint32      flags;
+    uint32      _1;
     uint32      _2;
     js::Value   *slots;
-    js::Value   *_1;
+    js::Value   *_3;
 
-    static const uint32 FIXED_SLOTS_SHIFT = 27;
-
-    size_t numFixedSlots() const { return flags >> FIXED_SLOTS_SHIFT; }
+    size_t numFixedSlots() const { return shape->slotInfo >> Shape::FIXED_SLOTS_SHIFT; }
     Value *fixedSlots() const {
         return (Value *)((jsuword) this + sizeof(shadow::Object));
     }
