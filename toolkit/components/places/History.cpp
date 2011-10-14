@@ -59,6 +59,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/Util.h"
 #include "nsContentUtils.h"
+#include "nsIMemoryReporter.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_SIZE 128
@@ -1284,6 +1285,22 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
   (void)NS_DispatchToMainThread(event);
 }
 
+PRInt64 GetHistoryObserversSize()
+{
+  History* history = History::GetService();
+  if (!history)
+    return 0;
+  return sizeof(*history) + history->SizeOf();
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(HistoryService,
+    "explicit/history-links-hashtable",
+    KIND_HEAP,
+    UNITS_BYTES,
+    GetHistoryObserversSize,
+    "Memory used by the hashtable of observers Places uses to notify objects of "
+    "changes to links' visited state.")
+
 } // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1303,6 +1320,8 @@ History::History()
   if (os) {
     (void)os->AddObserver(this, TOPIC_PLACES_SHUTDOWN, PR_FALSE);
   }
+
+  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(HistoryService));
 }
 
 History::~History()
@@ -1548,6 +1567,27 @@ History::FetchPageInfo(VisitData& _place)
   }
 
   return true;
+}
+
+PLDHashOperator
+History::SizeOfEnumerator(KeyClass* aEntry, void* aArg)
+{
+  PRInt64 *size = reinterpret_cast<PRInt64*>(aArg);
+
+  // Don't add in sizeof(*aEntry); that's already accounted for in
+  // mObservers.SizeOf().
+  *size += aEntry->array.SizeOf();
+  return PL_DHASH_NEXT;
+}
+
+PRInt64
+History::SizeOf()
+{
+  PRInt64 size = mObservers.SizeOf();
+  if (mObservers.IsInitialized()) {
+    mObservers.EnumerateEntries(SizeOfEnumerator, &size);
+  }
+  return size;
 }
 
 /* static */

@@ -170,9 +170,8 @@ pref("app.update.url", "https://aus3.mozilla.org/update/3/%PRODUCT%/%VERSION%/%B
 //pref("app.update.url.override", "");
 
 // app.update.interval is in branding section
+// app.update.promptWaitTime is in branding section
 
-// Give the user x seconds to react before showing the big UI. default=12 hours
-pref("app.update.promptWaitTime", 43200);
 // Show the Update Checking/Ready UI when the user was idle for x seconds
 pref("app.update.idletime", 60);
 
@@ -1010,6 +1009,9 @@ pref("devtools.scratchpad.enabled", true);
 
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);
+
+// Disable the GCLI enhanced command line.
+pref("devtools.gcli.enable", false);
 
 // The last Web Console height. This is initially 0 which means that the Web
 // Console will use the default height next time it shows.

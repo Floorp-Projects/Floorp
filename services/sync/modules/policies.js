@@ -520,9 +520,10 @@ let ErrorHandler = {
         this._log.debug(engine_name + " failed: " + Utils.exceptionStr(exception));
         break;
       case "weave:service:login:error":
+        this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                          LOG_PREFIX_ERROR);
+
         if (this.shouldReportError()) {
-          this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
-                            LOG_PREFIX_ERROR);
           this.notifyOnNextTick("weave:ui:login:error");
         } else {
           this.notifyOnNextTick("weave:ui:clear-error");
@@ -535,9 +536,10 @@ let ErrorHandler = {
           Weave.Service.logout();
         }
 
+        this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                          LOG_PREFIX_ERROR);
+
         if (this.shouldReportError()) {
-          this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
-                            LOG_PREFIX_ERROR);
           this.notifyOnNextTick("weave:ui:sync:error");
         } else {
           this.notifyOnNextTick("weave:ui:sync:finish");

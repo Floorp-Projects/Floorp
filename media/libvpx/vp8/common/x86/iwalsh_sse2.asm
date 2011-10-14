@@ -17,7 +17,7 @@ sym(vp8_short_inv_walsh4x4_sse2):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 2
-    SAVE_XMM
+    SAVE_XMM 6
     push        rsi
     push        rdi
     ; end prolog
@@ -41,7 +41,7 @@ sym(vp8_short_inv_walsh4x4_sse2):
     movdqa    xmm4, xmm0
     punpcklqdq  xmm0, xmm3          ;d1 a1
     punpckhqdq  xmm4, xmm3          ;c1 b1
-    movd    xmm7, eax
+    movd    xmm6, eax
 
     movdqa    xmm1, xmm4          ;c1 b1
     paddw   xmm4, xmm0          ;dl+cl a1+b1 aka op[4] op[0]
@@ -66,7 +66,7 @@ sym(vp8_short_inv_walsh4x4_sse2):
     pshufd    xmm2, xmm1, 4eh       ;ip[8] ip[12]
     movdqa    xmm3, xmm4          ;ip[4] ip[0]
 
-    pshufd    xmm7, xmm7, 0       ;03 03 03 03 03 03 03 03
+    pshufd    xmm6, xmm6, 0       ;03 03 03 03 03 03 03 03
 
     paddw   xmm4, xmm2          ;ip[4]+ip[8] ip[0]+ip[12] aka b1 a1
     psubw   xmm3, xmm2          ;ip[4]-ip[8] ip[0]-ip[12] aka c1 d1
@@ -90,8 +90,8 @@ sym(vp8_short_inv_walsh4x4_sse2):
     punpcklwd xmm5, xmm0          ; 31 21 11 01 30 20 10 00
     punpckhwd xmm1, xmm0          ; 33 23 13 03 32 22 12 02
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    paddw   xmm5, xmm7
-    paddw   xmm1, xmm7
+    paddw   xmm5, xmm6
+    paddw   xmm1, xmm6
 
     psraw   xmm5, 3
     psraw   xmm1, 3

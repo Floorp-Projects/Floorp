@@ -247,11 +247,11 @@ AccessCheck::documentDomainMakesSameOrigin(JSContext *cx, JSObject *obj)
         }
 
         if (fp)
-            scope = JS_GetFrameScopeChainRaw(fp);
+            scope = JS_GetGlobalForFrame(fp);
     }
 
     if (!scope)
-        scope = JS_GetScopeChain(cx);
+        scope = JS_GetGlobalForScopeChain(cx);
 
     nsIPrincipal *subject;
     nsIPrincipal *object;
@@ -262,7 +262,7 @@ AccessCheck::documentDomainMakesSameOrigin(JSContext *cx, JSObject *obj)
         if (!ac.enter(cx, scope))
             return false;
 
-        subject = GetPrincipal(JS_GetGlobalForObject(cx, scope));
+        subject = GetPrincipal(scope);
     }
 
     if (!subject)
@@ -403,8 +403,9 @@ AccessCheck::isScriptAccessOnly(JSContext *cx, JSObject *wrapper)
     }
 
     // In addition, chrome objects can explicitly opt-in by setting .scriptOnly to true.
-    if (js::GetProxyHandler(wrapper) == &FilteringWrapper<CrossCompartmentWrapper,
-        CrossOriginAccessiblePropertiesOnly>::singleton) {
+    if (js::GetProxyHandler(wrapper) ==
+        &FilteringWrapper<CrossCompartmentSecurityWrapper,
+                          CrossOriginAccessiblePropertiesOnly>::singleton) {
         jsid scriptOnlyId = GetRTIdByIndex(cx, XPCJSRuntime::IDX_SCRIPTONLY);
         jsval scriptOnly;
         if (JS_LookupPropertyById(cx, obj, scriptOnlyId, &scriptOnly) &&

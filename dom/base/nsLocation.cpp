@@ -71,7 +71,7 @@
 #include "nsITextToSubURI.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
-#include "jsdbgapi.h"
+#include "jsfriendapi.h"
 
 static nsresult
 GetContextFromStack(nsIJSContextStack *aStack, JSContext **aContext)
@@ -179,7 +179,7 @@ GetFrameDocument(JSContext *cx, JSStackFrame *fp)
   if (!cx || !fp)
     return nsnull;
 
-  JSObject* scope = JS_GetFrameScopeChain(cx, fp);
+  JSObject* scope = JS_GetGlobalForFrame(fp);
   if (!scope)
     return nsnull;
 

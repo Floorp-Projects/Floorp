@@ -81,6 +81,7 @@ abstract public class GeckoApp
     public static LinearLayout mainLayout;
     public static RelativeLayout geckoLayout;
     public static GeckoSurfaceView surfaceView;
+    public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
     public static File sGREDir = null;

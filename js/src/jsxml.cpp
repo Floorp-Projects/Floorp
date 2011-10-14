@@ -46,7 +46,6 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsbit.h"
 #include "jsprf.h"
 #include "jsutil.h"
 #include "jsapi.h"
@@ -67,8 +66,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsxml.h"
-#include "jsstaticcheck.h"
-#include "jsvector.h"
 
 #include "vm/GlobalObject.h"
 
@@ -1682,6 +1679,14 @@ GetXMLSettingFlags(JSContext *cx, uintN *flagsp)
     return true;
 }
 
+static JSObject *
+GetCurrentScopeChain(JSContext *cx)
+{
+    if (cx->hasfp())
+        return &cx->fp()->scopeChain();
+    return JS_ObjectToInnerObject(cx, cx->globalObject);
+}
+
 static JSXML *
 ParseXMLSource(JSContext *cx, JSString *src)
 {
@@ -1756,11 +1761,12 @@ ParseXMLSource(JSContext *cx, JSString *src)
     {
         Parser parser(cx);
         if (parser.init(chars, length, filename, lineno, cx->findVersion())) {
-            JSObject *scopeChain = GetScopeChain(cx);
+            JSObject *scopeChain = GetCurrentScopeChain(cx);
             if (!scopeChain) {
                 cx->free_(chars);
-                return NULL;
+                return false;
             }
+
             JSParseNode *pn = parser.parseXMLText(scopeChain, false);
             uintN flags;
             if (pn && GetXMLSettingFlags(cx, &flags)) {
@@ -7467,7 +7473,9 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     JSObject *ns, *obj, *tmp;
     jsval v;
 
-    JSObject *scopeChain = GetScopeChain(cx);
+    JSObject *scopeChain = GetCurrentScopeChain(cx);
+    if (!scopeChain)
+        return false;
 
     obj = NULL;
     for (tmp = scopeChain; tmp; tmp = tmp->getParent()) {

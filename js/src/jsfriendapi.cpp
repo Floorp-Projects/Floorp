@@ -47,6 +47,13 @@
 using namespace js;
 using namespace JS;
 
+JS_FRIEND_API(void)
+JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
+{
+    rt->gcGrayRootsTraceOp = traceOp;
+    rt->gcGrayRootsData = data;
+}
+
 JS_FRIEND_API(JSString *)
 JS_GetAnonymousString(JSRuntime *rt)
 {
@@ -82,9 +89,9 @@ JS_GetObjectFunction(JSObject *obj)
 }
 
 JS_FRIEND_API(JSObject *)
-JS_GetFrameScopeChainRaw(JSStackFrame *fp)
+JS_GetGlobalForFrame(JSStackFrame *fp)
 {
-    return &Valueify(fp)->scopeChain();
+    return Valueify(fp)->scopeChain().getGlobal();
 }
 
 JS_FRIEND_API(JSBool)
@@ -214,4 +221,10 @@ JS_FRIEND_API(size_t)
 JS_GetCustomIteratorCount(JSContext *cx)
 {
     return sCustomIteratorCount;
+}
+
+JS_FRIEND_API(void)
+JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback)
+{
+    rt->telemetryCallback = callback;
 }

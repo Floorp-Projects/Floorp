@@ -46,7 +46,6 @@
 #include "XPCWrapper.h"
 #include "nsWrapperCacheInlines.h"
 #include "xpclog.h"
-#include "jstl.h"
 #include "nsINode.h"
 #include "xpcquickstubs.h"
 #include "jsproxy.h"
@@ -2776,7 +2775,7 @@ CallMethodHelper::InitializeDispatchParams()
     {
         nsXPTCVariant* dp = &mDispatchParams[mOptArgcIndex];
         dp->type = nsXPTType::T_U8;
-        dp->val.u8 = mArgc - requiredArgs;
+        dp->val.u8 = NS_MIN<PRUint32>(mArgc, paramCount) - requiredArgs;
     }
 
     return JS_TRUE;
@@ -3923,34 +3922,6 @@ MorphSlimWrapper(JSContext *cx, JSObject *obj)
 #ifdef DEBUG_slimwrappers
 static PRUint32 sSlimWrappers;
 #endif
-
-JSObject *
-ConstructProxyObject(XPCCallContext &ccx,
-                     xpcObjectHelper &aHelper,
-                     XPCWrappedNativeScope *xpcscope)
-{
-    nsISupports *identityObj = aHelper.GetCanonical();
-    nsXPCClassInfo *classInfoHelper = aHelper.GetXPCClassInfo();
-
-#ifdef DEBUG
-    {
-        JSUint32 flagsInt;
-        nsresult debug_rv = classInfoHelper->GetScriptableFlags(&flagsInt);
-        XPCNativeScriptableFlags flags(flagsInt);
-        NS_ASSERTION(NS_SUCCEEDED(debug_rv) && flags.WantPreCreate(),
-                     "bad flags, cache->IsProxy() implies WantPreCreate()");
-    }
-#endif
-
-    // We re-use the PreCreate hook to create the actual proxy object.
-    JSObject* parent = xpcscope->GetGlobalJSObject();
-    nsresult rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
-    nsWrapperCache *cache = aHelper.GetWrapperCache();
-    JSObject *flat = cache->GetWrapper();
-    return flat;
-}
 
 JSBool
 ConstructSlimWrapper(XPCCallContext &ccx,

@@ -605,7 +605,7 @@ let UI = {
 #endif
     gTabViewDeck.selectedPanel = gBrowserPanel;
     gWindow.TabsInTitlebar.allowedBy("tabview-open", true);
-    gBrowser.contentWindow.focus();
+    gBrowser.selectedBrowser.focus();
 
     gBrowser.updateTitlebar();
 #ifdef XP_MACOSX
@@ -1009,7 +1009,7 @@ let UI = {
   },
   
   // ----------
-  updateTabButton: function UI__updateTabButton() {
+  updateTabButton: function UI_updateTabButton() {
     let exitButton = document.getElementById("exit-button");
     let numberOfGroups = GroupItems.groupItems.length;
 

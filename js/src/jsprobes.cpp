@@ -50,7 +50,6 @@
 #include "jsinterp.h"
 #include "jsobj.h"
 #include "jsscript.h"
-#include "jsstaticcheck.h"
 #include "jsstr.h"
 
 #include "jsprobes.h"
@@ -64,6 +63,148 @@ const char Probes::nullName[] = "(null)";
 const char Probes::anonymousName[] = "(anonymous)";
 
 bool Probes::ProfilingActive = true;
+
+static Vector<Probes::JITWatcher*, 4, SystemAllocPolicy> jitWatchers;
+
+bool
+Probes::addJITWatcher(JITWatcher *watcher)
+{
+    return jitWatchers.append(watcher);
+}
+
+bool
+Probes::removeJITWatcher(JSRuntime *rt, JITWatcher *watcher)
+{
+    JITWatcher **place = Find(jitWatchers, watcher);
+    if (!place)
+        return false;
+    if (rt)
+        rt->delete_(*place);
+    else
+        Foreground::delete_(*place);
+    jitWatchers.erase(place);
+    return true;
+}
+
+void
+Probes::removeAllJITWatchers(JSRuntime *rt)
+{
+    if (rt) {
+        for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p)
+            rt->delete_(*p);
+    } else {
+        for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p)
+            Foreground::delete_(*p);
+    }
+    jitWatchers.clear();
+}
+
+Probes::JITReportGranularity
+Probes::JITGranularityRequested()
+{
+    JITReportGranularity want = JITREPORT_GRANULARITY_NONE;
+    for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p) {
+        JITReportGranularity request = (*p)->granularityRequested();
+        if (request > want)
+            want = request;
+    }
+
+    return want;
+}
+
+#ifdef JS_METHODJIT
+void
+Probes::registerMJITCode(JSContext *cx, js::mjit::JITScript *jscr,
+                         JSScript *script, JSFunction *fun,
+                         js::mjit::Compiler_ActiveFrame **inlineFrames,
+                         void *mainCodeAddress, size_t mainCodeSize,
+                         void *stubCodeAddress, size_t stubCodeSize)
+{
+    for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p)
+        (*p)->registerMJITCode(cx, jscr, script, fun,
+                               inlineFrames,
+                               mainCodeAddress, mainCodeSize,
+                               stubCodeAddress, stubCodeSize);
+}
+
+void
+Probes::discardMJITCode(JSContext *cx, mjit::JITScript *jscr, JSScript *script, void* address)
+{
+    for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p)
+        (*p)->discardMJITCode(cx, jscr, script, address);
+}
+
+void
+Probes::registerICCode(JSContext *cx,
+                       mjit::JITScript *jscr, JSScript *script, jsbytecode* pc,
+                       void *start, size_t size)
+{
+    for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p)
+        (*p)->registerICCode(cx, jscr, script, pc, start, size);
+}
+#endif
+
+/* ICs are unregistered in a batch */
+void
+Probes::discardExecutableRegion(void *start, size_t size)
+{
+    for (JITWatcher **p = jitWatchers.begin(); p != jitWatchers.end(); ++p)
+        (*p)->discardExecutableRegion(start, size);
+}
+
+static JSRuntime *initRuntime;
+
+JSBool
+Probes::startEngine()
+{
+    bool ok = true;
+
+    return ok;
+}
+
+bool
+Probes::createRuntime(JSRuntime *rt)
+{
+    bool ok = true;
+
+    static JSCallOnceType once = { 0 };
+    initRuntime = rt;
+    if (!JS_CallOnce(&once, Probes::startEngine))
+        ok = false;
+
+#ifdef MOZ_ETW
+    if (!ETWCreateRuntime(rt))
+        ok = false;
+#endif
+
+    return ok;
+}
+
+bool
+Probes::destroyRuntime(JSRuntime *rt)
+{
+    bool ok = true;
+#ifdef MOZ_ETW
+    if (!ETWDestroyRuntime(rt))
+        ok = false;
+#endif
+
+    return ok;
+}
+
+bool
+Probes::shutdown()
+{
+    bool ok = true;
+#ifdef MOZ_ETW
+    if (!ETWShutdown())
+        ok = false;
+#endif
+
+    Probes::removeAllJITWatchers(NULL);
+
+    return ok;
+}
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 static const char *

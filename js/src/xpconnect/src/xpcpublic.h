@@ -56,9 +56,6 @@
 class nsIPrincipal;
 struct nsDOMClassInfoData;
 
-static const uint32 XPC_GC_COLOR_BLACK = 0;
-static const uint32 XPC_GC_COLOR_GRAY = 1;
-
 nsresult
 xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
                        nsIPrincipal *principal, nsISupports *ptr,
@@ -162,7 +159,7 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope)
 inline JSBool
 xpc_IsGrayGCThing(void *thing)
 {
-    return js_GCThingIsMarked(thing, XPC_GC_COLOR_GRAY);
+    return js_GCThingIsMarked(thing, js::gc::GRAY);
 }
 
 // The cycle collector only cares about JS objects and XML objects that

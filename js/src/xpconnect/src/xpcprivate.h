@@ -746,7 +746,8 @@ public:
         return mStrings[index];
     }
 
-    static void TraceJS(JSTracer* trc, void* data);
+    static void TraceBlackJS(JSTracer* trc, void* data);
+    static void TraceGrayJS(JSTracer* trc, void* data);
     void TraceXPConnectRoots(JSTracer *trc);
     void AddXPConnectRoots(JSContext* cx,
                            nsCycleCollectionTraversalCallback& cb);
@@ -2369,10 +2370,6 @@ private:
 };
 
 class xpcObjectHelper;
-JSObject *
-ConstructProxyObject(XPCCallContext &ccx,
-                     xpcObjectHelper &aHelper,
-                     XPCWrappedNativeScope *xpcscope);
 extern JSBool ConstructSlimWrapper(XPCCallContext &ccx,
                                    xpcObjectHelper &aHelper,
                                    XPCWrappedNativeScope* xpcScope,
@@ -4442,10 +4439,7 @@ struct CompartmentPrivate
         : key(key),
           ptr(nsnull),
           wantXrays(wantXrays),
-          cycleCollectionEnabled(cycleCollectionEnabled),
-          waiverWrapperMap(nsnull),
-          expandoMap(nsnull),
-          domExpandoMap(nsnull)
+          cycleCollectionEnabled(cycleCollectionEnabled)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
@@ -4454,10 +4448,7 @@ struct CompartmentPrivate
         : key(nsnull),
           ptr(ptr),
           wantXrays(wantXrays),
-          cycleCollectionEnabled(cycleCollectionEnabled),
-          waiverWrapperMap(nsnull),
-          expandoMap(nsnull),
-          domExpandoMap(nsnull)
+          cycleCollectionEnabled(cycleCollectionEnabled)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
@@ -4469,17 +4460,19 @@ struct CompartmentPrivate
     nsCOMPtr<nsISupports> ptr;
     bool wantXrays;
     bool cycleCollectionEnabled;
-    JSObject2JSObjectMap *waiverWrapperMap;
+    nsAutoPtr<JSObject2JSObjectMap> waiverWrapperMap;
     // NB: we don't want this map to hold a strong reference to the wrapper.
-    nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *> *expandoMap;
-    nsTHashtable<nsPtrHashKey<JSObject> > *domExpandoMap;
+    nsAutoPtr<nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *> > expandoMap;
+    nsAutoPtr<nsTHashtable<nsPtrHashKey<JSObject> > > domExpandoMap;
     nsCString location;
 
     bool RegisterExpandoObject(XPCWrappedNative *wn, JSObject *expando) {
         if (!expandoMap) {
             expandoMap = new nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *>();
-            if (!expandoMap->Init(8))
+            if (!expandoMap->Init(8)) {
+                expandoMap = nsnull;
                 return false;
+            }
         }
         return expandoMap->Put(wn, expando);
     }
@@ -4509,8 +4502,7 @@ struct CompartmentPrivate
     bool RegisterDOMExpandoObject(JSObject *expando) {
         if (!domExpandoMap) {
             domExpandoMap = new nsTHashtable<nsPtrHashKey<JSObject> >();
-            if(!domExpandoMap->Init(8))
-            {
+            if(!domExpandoMap->Init(8)) {
                 domExpandoMap = nsnull;
                 return false;
             }
