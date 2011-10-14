@@ -89,6 +89,7 @@ abstract public class GeckoApp
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
     public static Button mAwesomeBar;
+    public static ImageButton mFavicon;
     public static ProgressBar mProgressBar;
     private SessionHistory mSessionHistory;
 
@@ -469,6 +470,8 @@ abstract public class GeckoApp
                 onSearchRequested();
             }
         });
+
+        mFavicon = (ImageButton) findViewById(R.id.favimage);
 
         ImageButton reload = (ImageButton) findViewById(R.id.reload);
         reload.setOnClickListener(new ImageButton.OnClickListener() {
