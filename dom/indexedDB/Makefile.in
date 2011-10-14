@@ -97,7 +97,7 @@ LOCAL_INCLUDES = \
 DEFINES += -D_IMPL_NS_LAYOUT
 
 # Make sure to quickstub as much as possible here! See
-# js/src/xpconnect/src/dom_quickstubs.qsconf.
+# js/xpconnect/src/dom_quickstubs.qsconf.
 XPIDLSRCS = \
   nsIIDBCursor.idl \
   nsIIDBCursorWithValue.idl \

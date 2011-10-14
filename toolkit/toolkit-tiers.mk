@@ -95,7 +95,7 @@ tier_platform_dirs += ipc js/ipc js/jetpack
 
 tier_platform_dirs += \
 		hal \
-		js/src/xpconnect \
+		js/xpconnect \
 		intl/chardet \
 		$(NULL)
 
