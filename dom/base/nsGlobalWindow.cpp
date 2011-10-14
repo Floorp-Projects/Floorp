@@ -7220,17 +7220,6 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction)
   return NS_OK;
 }
 
-bool
-nsGlobalWindow::GetBlurSuppression()
-{
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  bool suppress = false;
-  if (treeOwnerAsWin)
-    treeOwnerAsWin->GetBlurSuppression(&suppress);
-  return suppress;
-}
-
 NS_IMETHODIMP
 nsGlobalWindow::GetSelection(nsISelection** aSelection)
 {

@@ -653,20 +653,6 @@ nsDocShellTreeOwner::SetEnabled(bool aEnabled)
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::GetBlurSuppression(bool *aBlurSuppression)
-{
-  NS_ENSURE_ARG_POINTER(aBlurSuppression);
-  *aBlurSuppression = PR_FALSE;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocShellTreeOwner::SetBlurSuppression(bool aBlurSuppression)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocShellTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
     return NS_ERROR_NULL_POINTER;
