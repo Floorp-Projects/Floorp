@@ -1182,7 +1182,7 @@ struct TypeCompartment
 
     /* Add a type to register with a list of constraints. */
     inline void addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *source, Type type);
-    void growPendingArray(JSContext *cx);
+    bool growPendingArray(JSContext *cx);
 
     /* Resolve pending type registrations, excluding delayed ones. */
     inline void resolvePending(JSContext *cx);
