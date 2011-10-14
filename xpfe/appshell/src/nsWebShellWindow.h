@@ -80,8 +80,6 @@ protected:
   
   virtual ~nsWebShellWindow();
 
-  nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsAString & aWebShellName);
-
   void                     LoadContentAreas();
   bool                     ExecuteCloseHandler();
   void                     ConstrainToOpenerScreen(PRInt32* aX, PRInt32* aY);
