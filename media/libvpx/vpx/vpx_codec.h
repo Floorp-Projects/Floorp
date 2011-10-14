@@ -16,7 +16,7 @@
  * @{
  */
 
-/*!\file vpx_codec.h
+/*!\file
  * \brief Describes the codec algorithm interface to applications.
  *
  * This file describes the interface between an application and a
@@ -145,7 +145,7 @@ extern "C" {
     typedef long vpx_codec_caps_t;
 #define VPX_CODEC_CAP_DECODER 0x1 /**< Is a decoder */
 #define VPX_CODEC_CAP_ENCODER 0x2 /**< Is an encoder */
-#define VPX_CODEC_CAP_XMA     0x4 /**< Supports e_xternal Memory Allocation */
+#define VPX_CODEC_CAP_XMA     0x4 /**< Supports eXternal Memory Allocation */
 
 
     /*! \brief Initialization-time Feature Enabling
@@ -156,7 +156,7 @@ extern "C" {
      *  The available flags are specified by VPX_CODEC_USE_* defines.
      */
     typedef long vpx_codec_flags_t;
-#define VPX_CODEC_USE_XMA 0x00000001    /**< Use e_xternal Memory Allocation mode */
+#define VPX_CODEC_USE_XMA 0x00000001    /**< Use eXternal Memory Allocation mode */
 
 
     /*!\brief Codec interface structure.
@@ -232,7 +232,7 @@ extern "C" {
     /*!\brief Return the version major number */
 #define vpx_codec_version_major() ((vpx_codec_version()>>16)&0xff)
 
-    /*!\brief Return the version minr number */
+    /*!\brief Return the version minor number */
 #define vpx_codec_version_minor() ((vpx_codec_version()>>8)&0xff)
 
     /*!\brief Return the version patch number */
@@ -338,9 +338,9 @@ extern "C" {
 
     /*!\brief Get the capabilities of an algorithm.
      *
-     * Retrieves the capabliities bitfield from the algorithm's interface.
+     * Retrieves the capabilities bitfield from the algorithm's interface.
      *
-     * \param[in] iface   Pointer to the alogrithm interface
+     * \param[in] iface   Pointer to the algorithm interface
      *
      */
     vpx_codec_caps_t vpx_codec_get_caps(vpx_codec_iface_t *iface);
@@ -354,7 +354,7 @@ extern "C" {
      *
      * This wrapper function dispatches the request to the helper function
      * associated with the given ctrl_id. It tries to call this function
-     * transparantly, but will return #VPX_CODEC_ERROR if the request could not
+     * transparently, but will return #VPX_CODEC_ERROR if the request could not
      * be dispatched.
      *
      * Note that this function should not be used directly. Call the
@@ -498,7 +498,7 @@ extern "C" {
      * Iterates over a list of the segments to allocate. The iterator storage
      * should be initialized to NULL to start the iteration. Iteration is complete
      * when this function returns VPX_CODEC_LIST_END. The amount of memory needed to
-     * allocate is dependant upon the size of the encoded stream. In cases where the
+     * allocate is dependent upon the size of the encoded stream. In cases where the
      * stream is not available at allocation time, a fixed size must be requested.
      * The codec will not be able to operate on streams larger than the size used at
      * allocation time.
@@ -525,7 +525,7 @@ extern "C" {
      * passed in the order they are read from vpx_codec_get_mem_map(), but may be
      * passed in groups of any size. Segments \ref MUST be set only once. The
      * allocation function \ref MUST ensure that the vpx_codec_mmap_t::base member
-     * is non-NULL. If the segment requires cleanup handling (eg, calling free()
+     * is non-NULL. If the segment requires cleanup handling (e.g., calling free()
      * or close()) then the vpx_codec_mmap_t::dtor member \ref MUST be populated.
      *
      * \param[in]      ctx     Pointer to this instance's context.

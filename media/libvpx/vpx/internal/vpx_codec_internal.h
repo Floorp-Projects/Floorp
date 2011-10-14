@@ -9,7 +9,7 @@
  */
 
 
-/*!\file decoder_impl.h
+/*!\file
  * \brief Describes the decoder algorithm interface for algorithm
  *        implementations.
  *
@@ -214,7 +214,7 @@ typedef vpx_image_t*(*vpx_codec_get_frame_fn_t)(vpx_codec_alg_priv_t *ctx,
         vpx_codec_iter_t     *iter);
 
 
-/*\brief e_xternal Memory Allocation memory map get iterator
+/*\brief eXternal Memory Allocation memory map get iterator
  *
  * Iterates over a list of the memory maps requested by the decoder. The
  * iterator storage should be initialized to NULL to start the iteration.
@@ -230,7 +230,7 @@ typedef vpx_codec_err_t (*vpx_codec_get_mmap_fn_t)(const vpx_codec_ctx_t      *c
         vpx_codec_iter_t           *iter);
 
 
-/*\brief e_xternal Memory Allocation memory map set iterator
+/*\brief eXternal Memory Allocation memory map set iterator
  *
  * Sets a memory descriptor inside the decoder instance.
  *
@@ -321,7 +321,7 @@ typedef struct vpx_codec_priv_cb_pair
     {
         vpx_codec_put_frame_cb_fn_t    put_frame;
         vpx_codec_put_slice_cb_fn_t    put_slice;
-    } fn;
+    } u;
     void                            *user_priv;
 } vpx_codec_priv_cb_pair_t;
 
@@ -332,7 +332,7 @@ typedef struct vpx_codec_priv_cb_pair
  * extended in one of two ways. First, a second, algorithm specific structure
  * can be allocated and the priv member pointed to it. Alternatively, this
  * structure can be made the first member of the algorithm specific structure,
- * and the pointer casted to the proper type.
+ * and the pointer cast to the proper type.
  */
 struct vpx_codec_priv
 {
@@ -405,7 +405,7 @@ vpx_codec_iface_t  id##_algo
 
 /* Internal Utility Functions
  *
- * The following functions are indended to be used inside algorithms as
+ * The following functions are intended to be used inside algorithms as
  * utilities for manipulating vpx_codec_* data structures.
  */
 struct vpx_codec_pkt_list

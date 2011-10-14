@@ -130,12 +130,13 @@ CSRCS += \
   alloccommon.c \
   blockd.c \
   debugmodes.c \
+  defaultcoefcounts.c \
   dsystemdependent.c \
   entropy.c \
   entropymode.c \
   entropymv.c \
   extend.c \
-  filter_c.c \
+  filter.c \
   findnearmv.c \
   idctllm.c \
   invtrans.c \
@@ -145,7 +146,6 @@ CSRCS += \
   modecont.c \
   modecontext.c \
   postproc.c \
-  predictdc.c \
   quant_common.c \
   recon.c \
   reconinter.c \
@@ -173,7 +173,7 @@ CSRCS += \
   vpx_mem.c \
   gen_scalers.c \
   vpxscale.c \
-  scalesystemdependant.c \
+  scalesystemdependent.c \
   yv12config.c \
   yv12extend.c \
   $(NULL)
@@ -186,6 +186,7 @@ CSRCS += \
   idct_blk_mmx.c \
   idct_blk_sse2.c \
   loopfilter_x86.c \
+  recon_wrapper_sse2.c \
   vp8_asm_stubs.c \
   x86_systemdependent.c \
   x86_dsystemdependent.c \
@@ -284,11 +285,6 @@ VPX_ASFILES = \
   dequantizeb_neon.asm \
   $(NULL)
 
-# The ARM asm needs to extract the offsets of various C struct members.
-# We need a program that runs on the host to pull them out of a .o file.
-HOST_CSRCS = obj_int_extract.c
-HOST_PROGRAM = host_obj_int_extract$(HOST_BIN_SUFFIX)
-
 ifdef VPX_AS_CONVERSION
 # The ARM asm is written in ARM RVCT syntax, but we actually build it with
 # gas using GNU syntax. Add some rules to perform the conversion.
@@ -303,8 +299,6 @@ else
 ASFILES += $(VPX_ASFILES)
 endif
 
-GARBAGE += vpx_asm_offsets.$(OBJ_SUFFIX) vpx_asm_offsets.asm
-
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -317,9 +311,4 @@ filter_c.o: filter_c.c Makefile.in
 	@$(MAKE_DEPS_AUTO_CC)
 	$(CC) -o $@ -c $(patsubst -xO[45],-xO3,$(COMPILE_CFLAGS)) $<
 endif
-endif
-
-ifdef VPX_ARM_ASM
-vpx_asm_offsets.asm: vpx_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
-	./$(HOST_PROGRAM) rvds $< $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
 endif
