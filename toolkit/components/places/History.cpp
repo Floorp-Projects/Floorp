@@ -1778,8 +1778,9 @@ History::RegisterVisitedCallback(nsIURI* aURI,
   // would be nice if we could be smarter about what we
   // persist and have some sort of memory/time limit before
   // evicting.
+#ifdef ANDROID
   return NS_ERROR_NOT_IMPLEMENTED;
-
+#endif
 
   NS_ASSERTION(aURI, "Must pass a non-null URI!");
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
