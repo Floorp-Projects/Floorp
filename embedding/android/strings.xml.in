@@ -26,4 +26,7 @@
   <string name="choose_file">&choose_file;</string>
 
   <string name="quit">&quit;</string>
+  <string name="bookmarks_title">&bookmarks_title;</string>
+  <string name="bookmarks">&bookmarks;</string>
+  <string name="bookmark_add">&bookmark_add;</string>
 </resources>

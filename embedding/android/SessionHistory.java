@@ -121,4 +121,7 @@ class SessionHistory
             return null;
         }
     }
+    HistoryEntry getHistoryEntryAt(int index) {
+        return mHistory.get(index);
+    }
 }

@@ -44,6 +44,7 @@ public class App extends GeckoApp {
     public String getPackageName() {
 	return "@ANDROID_PACKAGE_NAME@";
     }
+
     public String getContentProcessName() {
         return "@MOZ_CHILD_PROCESS_NAME@";
     }
