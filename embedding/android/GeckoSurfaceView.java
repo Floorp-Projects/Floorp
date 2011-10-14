@@ -284,16 +284,20 @@ class GeckoSurfaceView
         GeckoAppShell.sendEventToGecko(e);
     }
 
-    public void saveLast() {
+    public void saveLast(boolean sync) {
+        Log.i(LOG_FILE_NAME, "save last");
         GeckoEvent event = new GeckoEvent();
         event.mType = GeckoEvent.SAVE_STATE;
         event.mCharacters = getStartupBitmapFilePath();
-        GeckoAppShell.sendEventToGecko(event);
+        if (sync)
+            GeckoAppShell.sendEventToGeckoSync(event);
+        else
+            GeckoAppShell.sendEventToGecko(event);
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.i(LOG_FILE_NAME, "surface destroyed");
-        saveLast();
+        saveLast(false);
         mStartupBitmap = mLastBitmap;
 
         mSurfaceValid = false;
