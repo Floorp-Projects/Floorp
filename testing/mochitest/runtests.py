@@ -860,7 +860,14 @@ overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/brows
 
     # Install custom extensions.
     for f in options.extensionsToInstall:
-      self.automation.installExtension(self.getFullPath(f), options.profilePath)
+      if f.endswith(os.sep):
+        f = f[:-1]
+
+      extensionPath = self.getFullPath(f)
+
+      self.automation.log.info("INFO | runtests.py | Installing extension at %s to %s." %
+                               (extensionPath, options.profilePath))
+      self.automation.installExtension(extensionPath, options.profilePath)
 
 def main():
   automation = Automation()
