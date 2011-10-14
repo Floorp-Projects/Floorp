@@ -34,14 +34,6 @@ if (window.SpecialPowers == undefined && window.opener && window.opener.SpecialP
     window.SpecialPowers = window.opener.SpecialPowers;
 }
 
-// Running in e10s build and need to use IPC?
-var ipcMode = false;
-if (parentRunner) {
-    ipcMode = parentRunner.ipcMode;
-} else if (typeof SpecialPowers != 'undefined') {
-    ipcMode = SpecialPowers.hasContentProcesses();
-}
-
 /* Helper functions pulled out of various MochiKit modules */
 if (typeof(repr) == 'undefined') {
     function repr(o) {
