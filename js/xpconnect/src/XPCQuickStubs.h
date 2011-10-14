@@ -139,8 +139,7 @@ public:
   : xpcObjectHelper(ToSupports(aObject.get()),
                     ToCanonicalSupports(aObject.get()), aCache, QS_IS_NODE(T))
   {
-    if (mCanonical)
-    {
+    if (mCanonical) {
         // Transfer the strong reference.
         mCanonicalStrong = dont_AddRef(mCanonical);
         aObject.forget();
@@ -152,8 +151,7 @@ public:
   : xpcObjectHelper(ToSupports(aObject.get()),
                     ToCanonicalSupports(aObject.get()), aCache, QS_IS_NODE(T))
   {
-    if (mCanonical)
-    {
+    if (mCanonical) {
         // Transfer the strong reference.
         mCanonicalStrong = dont_AddRef(mCanonical);
         aObject.forget();
@@ -355,27 +353,22 @@ protected:
                               StringificationBehavior nullBehavior,
                               StringificationBehavior undefinedBehavior) {
         JSString *s;
-        if (JSVAL_IS_STRING(v))
-        {
+        if (JSVAL_IS_STRING(v)) {
             s = JSVAL_TO_STRING(v);
         }
-        else
-        {
+        else {
             StringificationBehavior behavior = eStringify;
-            if (JSVAL_IS_NULL(v))
-            {
+            if (JSVAL_IS_NULL(v)) {
                 behavior = nullBehavior;
             }
-            else if (JSVAL_IS_VOID(v))
-            {
+            else if (JSVAL_IS_VOID(v)) {
                 behavior = undefinedBehavior;
             }
 
             // If pval is null, that means the argument was optional and
             // not passed; turn those into void strings if they're
             // supposed to be stringified.
-            if (behavior != eStringify || !pval)
-            {
+            if (behavior != eStringify || !pval) {
                 // Here behavior == eStringify implies !pval, so both eNull and
                 // eStringify should end up with void strings.
                 (new(mBuf) implementation_type(traits::sEmptyBuffer, PRUint32(0)))->
@@ -385,8 +378,7 @@ protected:
             }
 
             s = JS_ValueToString(cx, v);
-            if (!s)
-            {
+            if (!s) {
                 mValid = JS_FALSE;
                 return nsnull;
             }
@@ -567,29 +559,25 @@ castNativeFromWrapper(JSContext *cx,
     XPCWrappedNativeTearOff *tearoff;
     JSObject *cur;
 
-    if (!callee && IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
-    {
+    if (!callee && IS_WRAPPER_CLASS(js::GetObjectClass(obj))) {
         cur = obj;
         wrapper = IS_WN_WRAPPER_OBJECT(cur) ?
                   (XPCWrappedNative*)xpc_GetJSPrivate(obj) :
                   nsnull;
         tearoff = nsnull;
     }
-    else
-    {
+    else {
         *rv = getWrapper(cx, obj, callee, &wrapper, &cur, &tearoff);
         if (NS_FAILED(*rv))
             return nsnull;
     }
 
     nsISupports *native;
-    if (wrapper)
-    {
+    if (wrapper) {
         native = wrapper->GetIdentityObject();
         cur = wrapper->GetFlatJSObject();
     }
-    else
-    {
+    else {
         native = cur ?
                  static_cast<nsISupports*>(xpc_GetJSPrivate(cur)) :
                  nsnull;
@@ -610,8 +598,7 @@ castNativeFromWrapper(JSContext *cx,
     *pRef = nsnull;
     *pVal = OBJECT_TO_JSVAL(cur);
 
-    if (lccx)
-    {
+    if (lccx) {
         if (wrapper)
             lccx->SetWrapper(wrapper, tearoff);
         else

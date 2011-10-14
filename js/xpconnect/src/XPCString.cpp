@@ -88,18 +88,15 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
     PRUint32 length = readable.Length();
 
     JSAtom *atom;
-    if (length == 0 && (atom = cx->runtime->atomState.emptyAtom))
-    {
+    if (length == 0 && (atom = cx->runtime->atomState.emptyAtom)) {
         return STRING_TO_JSVAL(atom);
     }
 
     nsStringBuffer *buf = nsStringBuffer::FromString(readable);
-    if (buf)
-    {
+    if (buf) {
         // yay, we can share the string's buffer!
 
-        if (sDOMStringFinalizerIndex == -1)
-        {
+        if (sDOMStringFinalizerIndex == -1) {
             sDOMStringFinalizerIndex =
                     JS_AddExternalStringFinalizer(DOMStringFinalizer);
             if (sDOMStringFinalizerIndex == -1)
@@ -110,13 +107,11 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
                                    reinterpret_cast<jschar *>(buf->Data()),
                                    length, sDOMStringFinalizerIndex);
 
-        if (str)
-        {
+        if (str) {
             *sharedBuffer = buf;
         }
     }
-    else
-    {
+    else {
         // blech, have to copy.
 
         jschar *chars = reinterpret_cast<jschar *>
@@ -127,8 +122,7 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
 
         if (length && !CopyUnicodeTo(readable, 0,
                                      reinterpret_cast<PRUnichar *>(chars),
-                                     length))
-        {
+                                     length)) {
             JS_free(cx, chars);
             return JSVAL_NULL;
         }

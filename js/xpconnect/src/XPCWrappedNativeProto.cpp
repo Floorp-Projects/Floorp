@@ -95,8 +95,7 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
     nsIXPCScriptable *callback = scriptableCreateInfo ?
                                  scriptableCreateInfo->GetCallback() :
                                  nsnull;
-    if (callback)
-    {
+    if (callback) {
         mScriptableInfo =
             XPCNativeScriptableInfo::Construct(ccx, isGlobal, scriptableCreateInfo);
         if (!mScriptableInfo)
@@ -106,25 +105,21 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
     js::Class* jsclazz;
 
 
-    if (mScriptableInfo)
-    {
+    if (mScriptableInfo) {
         const XPCNativeScriptableFlags& flags(mScriptableInfo->GetFlags());
 
-        if (flags.AllowPropModsToPrototype())
-        {
+        if (flags.AllowPropModsToPrototype()) {
             jsclazz = flags.WantCall() ?
                 &XPC_WN_ModsAllowed_WithCall_Proto_JSClass :
                 &XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
         }
-        else
-        {
+        else {
             jsclazz = flags.WantCall() ?
                 &XPC_WN_NoMods_WithCall_Proto_JSClass :
                 &XPC_WN_NoMods_NoCall_Proto_JSClass;
         }
     }
-    else
-    {
+    else {
         jsclazz = &XPC_WN_NoMods_NoCall_Proto_JSClass;
     }
 
@@ -137,11 +132,9 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
 
     JSBool ok = mJSProtoObject && JS_SetPrivate(ccx, mJSProtoObject, this);
 
-    if (ok && callback)
-    {
+    if (ok && callback) {
         nsresult rv = callback->PostCreatePrototype(ccx, mJSProtoObject);
-        if (NS_FAILED(rv))
-        {
+        if (NS_FAILED(rv)) {
             JS_SetPrivate(ccx, mJSProtoObject, nsnull);
             mJSProtoObject = nsnull;
             XPCThrower::Throw(rv, ccx);
@@ -161,8 +154,7 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(JSContext *cx, JSObject *obj)
 
     // Map locking is not necessary since we are running gc.
 
-    if (IsShared())
-    {
+    if (IsShared()) {
         // Only remove this proto from the map if it is the one in the map.
         ClassInfo2WrappedNativeProtoMap* map =
             GetScope()->GetWrappedNativeProtoMap(ClassIsMainThreadOnly());
@@ -184,16 +176,14 @@ XPCWrappedNativeProto::SystemIsBeingShutDown(JSContext* cx)
 
 #ifdef XPC_TRACK_PROTO_STATS
     static bool DEBUG_DumpedStats = false;
-    if (!DEBUG_DumpedStats)
-    {
+    if (!DEBUG_DumpedStats) {
         printf("%d XPCWrappedNativeProto(s) alive at shutdown\n",
                gDEBUG_LiveProtoCount);
         DEBUG_DumpedStats = PR_TRUE;
     }
 #endif
 
-    if (mJSProtoObject)
-    {
+    if (mJSProtoObject) {
         // short circuit future finalization
         JS_SetPrivate(cx, mJSProtoObject, nsnull);
         mJSProtoObject = nsnull;
@@ -222,26 +212,22 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
     if (NS_FAILED(ClassInfo->GetFlags(&ciFlags)))
         ciFlags = 0;
 
-    if (ciFlags & XPC_PROTO_DONT_SHARE)
-    {
+    if (ciFlags & XPC_PROTO_DONT_SHARE) {
         NS_ERROR("reserved flag set!");
         ciFlags &= ~XPC_PROTO_DONT_SHARE;
     }
 
     if (ForceNoSharing || (ciFlags & nsIClassInfo::PLUGIN_OBJECT) ||
         (ScriptableCreateInfo &&
-         ScriptableCreateInfo->GetFlags().DontSharePrototype()))
-    {
+         ScriptableCreateInfo->GetFlags().DontSharePrototype())) {
         ciFlags |= XPC_PROTO_DONT_SHARE;
         shared = JS_FALSE;
     }
-    else
-    {
+    else {
         shared = JS_TRUE;
     }
 
-    if (shared)
-    {
+    if (shared) {
         JSBool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
         map = Scope->GetWrappedNativeProtoMap(mainThreadOnly);
         lock = mainThreadOnly ? nsnull : Scope->GetRuntime()->GetMapLock();
@@ -260,8 +246,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
 
     proto = new XPCWrappedNativeProto(Scope, ClassInfo, ciFlags, set, offsets);
 
-    if (!proto || !proto->Init(ccx, isGlobal, ScriptableCreateInfo))
-    {
+    if (!proto || !proto->Init(ccx, isGlobal, ScriptableCreateInfo)) {
         delete proto.get();
         return nsnull;
     }
@@ -288,8 +273,7 @@ XPCWrappedNativeProto::DebugDump(PRInt16 depth)
         XPC_LOG_ALWAYS(("mSet @ %x", mSet));
         XPC_LOG_ALWAYS(("mSecurityInfo of %x", mSecurityInfo));
         XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
-        if (depth && mScriptableInfo)
-        {
+        if (depth && mScriptableInfo) {
             XPC_LOG_INDENT();
             XPC_LOG_ALWAYS(("mScriptable @ %x", mScriptableInfo->GetCallback()));
             XPC_LOG_ALWAYS(("mFlags of %x", (PRUint32)mScriptableInfo->GetFlags()));
