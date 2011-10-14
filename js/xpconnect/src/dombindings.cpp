@@ -64,6 +64,8 @@ static jsid s_prototype_id = JSID_VOID;
 
 static jsid s_length_id = JSID_VOID;
 
+static jsid s_VOID_id = JSID_VOID;
+
 bool
 DefineStaticJSVal(JSContext *cx, jsid &id, const char *string)
 {
@@ -242,6 +244,20 @@ Unwrap(JSContext *cx, jsval v, NoType **ppArg, nsISupports **ppArgRef, jsval *vp
 // object we check if all the DOM properties on that DOM prototype object still match the real DOM
 // properties. If they do we set the value to USE_CACHE again, if they're not we set the value to
 // DONT_USE_CACHE. If the value is USE_CACHE we do the fast lookup.
+
+template<class LC>
+typename ListBase<LC>::Properties ListBase<LC>::sProtoProperties[] = {
+    { s_VOID_id, NULL, NULL }
+};
+template<class LC>
+size_t ListBase<LC>::sProtoPropertiesCount = 0;
+
+template<class LC>
+typename ListBase<LC>::Methods ListBase<LC>::sProtoMethods[] = {
+    { s_VOID_id, NULL, 0 }
+};
+template<class LC>
+size_t ListBase<LC>::sProtoMethodsCount = 0;
 
 template<class LC>
 ListBase<LC> ListBase<LC>::instance;
@@ -479,7 +495,7 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
     if (!interfacePrototype)
         return NULL;
 
-    for (size_t n = 0; n < ArrayLength(sProtoProperties); ++n) {
+    for (size_t n = 0; n < sProtoPropertiesCount; ++n) {
         JS_ASSERT(sProtoProperties[n].getter);
         jsid id = sProtoProperties[n].id;
         uintN attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
@@ -490,7 +506,7 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
             return NULL;
     }
 
-    for (size_t n = 0; n < ArrayLength(sProtoMethods); ++n) {
+    for (size_t n = 0; n < sProtoMethodsCount; ++n) {
         jsid id = sProtoMethods[n].id;
         JSFunction *fun = JS_NewFunctionById(cx, sProtoMethods[n].native, sProtoMethods[n].nargs,
                                              0, js::GetObjectParent(interfacePrototype), id);
@@ -897,7 +913,7 @@ bool
 ListBase<LC>::protoIsClean(JSContext *cx, JSObject *proto, bool *isClean)
 {
     JSPropertyDescriptor desc;
-    for (size_t n = 0; n < ArrayLength(sProtoProperties); ++n) {
+    for (size_t n = 0; n < sProtoPropertiesCount; ++n) {
         jsid id = sProtoProperties[n].id;
         if (!JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, &desc))
             return false;
@@ -910,7 +926,7 @@ ListBase<LC>::protoIsClean(JSContext *cx, JSObject *proto, bool *isClean)
         }
     }
 
-    for (size_t n = 0; n < ArrayLength(sProtoMethods); ++n) {
+    for (size_t n = 0; n < sProtoMethodsCount; ++n) {
         jsid id = sProtoMethods[n].id;
         if (!JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, &desc))
             return false;
@@ -951,7 +967,7 @@ ListBase<LC>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, JSPrope
 {
     JS_ASSERT(xpc::WrapperFactory::IsXrayWrapper(proxy));
 
-    for (size_t n = 0; n < ArrayLength(sProtoProperties); ++n) {
+    for (size_t n = 0; n < sProtoPropertiesCount; ++n) {
         if (id == sProtoProperties[n].id) {
             desc->attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
             if (!sProtoProperties[n].setter)
@@ -963,7 +979,7 @@ ListBase<LC>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, JSPrope
         }
     }
 
-    for (size_t n = 0; n < ArrayLength(sProtoMethods); ++n) {
+    for (size_t n = 0; n < sProtoMethodsCount; ++n) {
         if (id == sProtoMethods[n].id) {
             JSFunction *fun = JS_NewFunctionById(cx, sProtoMethods[n].native,
                                                  sProtoMethods[n].nargs, 0, proxy, id);
@@ -1007,7 +1023,7 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
 #endif
     }
 
-    for (size_t n = 0; n < ArrayLength(sProtoProperties); ++n) {
+    for (size_t n = 0; n < sProtoPropertiesCount; ++n) {
         if (id == sProtoProperties[n].id) {
             *found = true;
             if (!vp)
@@ -1016,7 +1032,7 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
             return sProtoProperties[n].getter(cx, proxy, id, vp);
         }
     }
-    for (size_t n = 0; n < ArrayLength(sProtoMethods); ++n) {
+    for (size_t n = 0; n < sProtoMethodsCount; ++n) {
         if (id == sProtoMethods[n].id) {
             *found = true;
             if (!vp)

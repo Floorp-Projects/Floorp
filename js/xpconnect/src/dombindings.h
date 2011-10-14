@@ -183,7 +183,9 @@ private:
     };
 
     static Properties sProtoProperties[];
+    static size_t sProtoPropertiesCount;
     static Methods sProtoMethods[];
+    static size_t sProtoMethodsCount;
 
     static JSObject *ensureExpandoObject(JSContext *cx, JSObject *obj);
 
