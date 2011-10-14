@@ -4283,6 +4283,39 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
 }
 
 /* static */
+nsresult
+nsLayoutUtils::GetTextRunMemoryForFrames(nsIFrame* aFrame, PRUint64* aTotal)
+{
+  NS_PRECONDITION(aFrame, "NULL frame pointer");
+
+  if (aFrame->GetType() == nsGkAtoms::textFrame) {
+    nsTextFrame* textFrame = static_cast<nsTextFrame*>(aFrame);
+    gfxTextRun *run = textFrame->GetTextRun();
+    if (run) {
+      if (aTotal) {
+        run->AccountForSize(aTotal);
+      } else {
+        run->ClearSizeAccounted();
+      }
+    }
+    return NS_OK;
+  }
+
+  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
+  aFrame->GetChildLists(&childListArray);
+
+  for (nsIFrame::ChildListArrayIterator childLists(childListArray);
+       !childLists.IsDone(); childLists.Next()) {
+    for (nsFrameList::Enumerator e(childLists.CurrentList());
+         !e.AtEnd(); e.Next()) {
+      GetTextRunMemoryForFrames(e.get(), aTotal);
+    }
+  }
+
+  return NS_OK;
+}
+
+/* static */
 void
 nsLayoutUtils::Shutdown()
 {
