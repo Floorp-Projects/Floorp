@@ -1669,8 +1669,12 @@ fun_trace(JSTracer *trc, JSObject *obj)
     if (fun->atom)
         MarkString(trc, fun->atom, "atom");
 
-    if (fun->isInterpreted() && fun->script())
-        MarkScript(trc, fun->script(), "script");
+    if (fun->isInterpreted()) {
+        if (fun->script())
+            MarkScript(trc, fun->script(), "script");
+        if (fun->callScope())
+            MarkObject(trc, *fun->callScope(), "fun_callscope");
+    }
 }
 
 static void
