@@ -1635,6 +1635,7 @@ public class GeckoAppShell
                         getMainHandler().post(new Runnable() { 
                             public void run() {
                                 GeckoApp.mProgressBar.setVisibility(View.GONE);
+                                GeckoApp.surfaceView.hideStartupBitmap();
                             }
                         });
                     }
