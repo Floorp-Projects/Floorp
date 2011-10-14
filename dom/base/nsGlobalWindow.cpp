@@ -1009,6 +1009,9 @@ nsGlobalWindow::~nsGlobalWindow()
       PR_REMOVE_AND_INIT_LINK(w);
     }
   } else {
+    Telemetry::Accumulate(Telemetry::INNERWINDOWS_WITH_MUTATION_LISTENERS,
+                          mMutationBits ? 1 : 0);
+
     if (mListenerManager) {
       mListenerManager->Disconnect();
       mListenerManager = nsnull;
@@ -2364,6 +2367,9 @@ nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 #ifdef DEBUG
   mLastOpenedURI = aDocument->GetDocumentURI();
 #endif
+
+  Telemetry::Accumulate(Telemetry::INNERWINDOWS_WITH_MUTATION_LISTENERS,
+                        mMutationBits ? 1 : 0);
 
   // Clear our mutation bitfield.
   mMutationBits = 0;
