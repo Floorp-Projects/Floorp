@@ -309,6 +309,9 @@ JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanIntToString, CONTEXT, INT32, 1, A
 JSObject* FASTCALL
 js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* parent)
 {
+    JS_NOT_REACHED("FIXME");
+    return NULL;
+#if 0
     JS_ASSERT(funobj->isFunction());
     JS_ASSERT(proto->isFunction());
     JS_ASSERT(JS_ON_TRACE(cx));
@@ -328,6 +331,7 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
         return NULL;
     }
     return closure;
+#endif
 }
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT,
                      0, ACCSET_STORE_ANY)

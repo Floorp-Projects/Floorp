@@ -63,8 +63,7 @@ static const uint32 TYPE_OBJECT_EMPTY_SHAPE_COUNT =
     ((js::gc::FINALIZE_FUNCTION - js::gc::FINALIZE_OBJECT0) / 2) + 1;
 
 inline js::EmptyShape *
-js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
-                                     gc::AllocKind kind)
+js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp, gc::AllocKind kind)
 {
     JS_ASSERT(!singleton);
 
@@ -92,7 +91,7 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
          * Always fill in emptyShapes[0], so canProvideEmptyShape works.
          * Other empty shapes are filled in lazily.
          */
-        emptyShapes[0] = EmptyShape::create(cx, aclasp);
+        emptyShapes[0] = EmptyShape::create(cx, aclasp, proto->getParent());
         if (!emptyShapes[0]) {
             cx->free_(emptyShapes);
             emptyShapes = NULL;
@@ -100,10 +99,10 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
         }
     }
 
-    JS_ASSERT(aclasp == emptyShapes[0]->getClass());
+    JS_ASSERT(aclasp == emptyShapes[0]->getObjectClass());
 
     if (!emptyShapes[i]) {
-        emptyShapes[i] = EmptyShape::create(cx, aclasp);
+        emptyShapes[i] = EmptyShape::create(cx, aclasp, proto->getParent());
         if (!emptyShapes[i])
             return NULL;
     }
@@ -114,7 +113,7 @@ js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
 inline bool
 js::types::TypeObject::canProvideEmptyShape(js::Class *aclasp)
 {
-    return proto && !singleton && (!emptyShapes || emptyShapes[0]->getClass() == aclasp);
+    return proto && !singleton && (!emptyShapes || emptyShapes[0]->getObjectClass() == aclasp);
 }
 
 inline void
@@ -141,20 +140,42 @@ StringObject::init(JSContext *cx, JSString *str)
 {
     JS_ASSERT(nativeEmpty());
 
-    const Shape **shapep = &cx->compartment->initialStringShape;
-    if (*shapep) {
-        setLastPropertyInfallible(*shapep);
+    const js::Shape *shape = BaseShape::lookupInitialShape(cx, getClass(), getParent(),
+                                                           lastProperty());
+    if (!shape)
+        return false;
+    if (shape != lastProperty()) {
+        setLastPropertyInfallible(shape);
     } else {
-        *shapep = assignInitialShape(cx);
-        if (!*shapep)
+        shape = assignInitialShape(cx);
+        if (!shape)
             return false;
+        BaseShape::insertInitialShape(cx, shape);
     }
-    JS_ASSERT(*shapep == lastProperty());
     JS_ASSERT(!nativeEmpty());
     JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot() == LENGTH_SLOT);
 
     setStringThis(str);
     return true;
+}
+
+inline void
+BaseShape::adoptUnowned(UnownedBaseShape *other)
+{
+    /*
+     * This is a base shape owned by a dictionary object, update it to reflect the
+     * unowned base shape of a new last property.
+     */
+    JS_ASSERT(isOwned());
+    JS_ASSERT(parent == other->parent);
+
+    uint32 span = slotSpan();
+    PropertyTable *table = &this->table();
+
+    *this = *static_cast<BaseShape *>(other);
+    setOwned(other);
+    setTable(table);
+    setSlotSpan(span);
 }
 
 inline
@@ -172,6 +193,20 @@ Shape::Shape(BaseShape *base, jsid propid, uint32 slot,
     JS_ASSERT(base);
     JS_ASSERT(!JSID_IS_VOID(propid));
     JS_ASSERT_IF(isMethod(), !base->rawGetter);
+    kids.setNull();
+}
+
+inline
+Shape::Shape(const Shape *other)
+  : base_(other->base()->unowned()),
+    propid_(other->maybePropid()),
+    numLinearSearches(0),
+    slot_(other->maybeSlot()),
+    attrs(other->attrs),
+    flags(other->flags),
+    shortid_(other->maybeShortid()),
+    parent(NULL)
+{
     kids.setNull();
 }
 
@@ -321,46 +356,8 @@ EmptyShape::EmptyShape(BaseShape *base)
   : js::Shape(base)
 {
     /* Only empty shapes can be NON_NATIVE. */
-    if (!getClass()->isNative())
+    if (!getObjectClass()->isNative())
         flags |= NON_NATIVE;
-}
-
-/* static */ inline EmptyShape *
-EmptyShape::getEmptyArgumentsShape(JSContext *cx, bool strict)
-{
-    if (strict)
-        return ensure(cx, &StrictArgumentsObjectClass, &cx->compartment->emptyStrictArgumentsShape);
-    return ensure(cx, &NormalArgumentsObjectClass, &cx->compartment->emptyNormalArgumentsShape);
-}
-
-/* static */ inline EmptyShape *
-EmptyShape::getEmptyBlockShape(JSContext *cx)
-{
-    return ensure(cx, &BlockClass, &cx->compartment->emptyBlockShape);
-}
-
-/* static */ inline EmptyShape *
-EmptyShape::getEmptyCallShape(JSContext *cx)
-{
-    return ensure(cx, &CallClass, &cx->compartment->emptyCallShape);
-}
-
-/* static */ inline EmptyShape *
-EmptyShape::getEmptyDeclEnvShape(JSContext *cx)
-{
-    return ensure(cx, &DeclEnvClass, &cx->compartment->emptyDeclEnvShape);
-}
-
-/* static */ inline EmptyShape *
-EmptyShape::getEmptyEnumeratorShape(JSContext *cx)
-{
-    return ensure(cx, &IteratorClass, &cx->compartment->emptyEnumeratorShape);
-}
-
-/* static */ inline EmptyShape *
-EmptyShape::getEmptyWithShape(JSContext *cx)
-{
-    return ensure(cx, &WithClass, &cx->compartment->emptyWithShape);
 }
 
 } /* namespace js */

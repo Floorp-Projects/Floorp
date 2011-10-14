@@ -430,7 +430,8 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
         break;
 
       case ACCSET_OBJ_PARENT:
-        ok = OK_OBJ_FIELD(LIR_ldp, parent);
+        ok = false;
+        //ok = OK_OBJ_FIELD(LIR_ldp, parent);
         break;
 
       case ACCSET_OBJ_PRIVATE:

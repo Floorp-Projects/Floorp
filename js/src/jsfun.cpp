@@ -204,7 +204,8 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
         return NULL;
 
     bool strict = callee.toFunction()->inStrictMode();
-    EmptyShape *emptyArgumentsShape = EmptyShape::getEmptyArgumentsShape(cx, strict);
+    Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
+    Shape *emptyArgumentsShape = BaseShape::lookupInitialShape(cx, clasp, proto->getParent());
     if (!emptyArgumentsShape)
         return NULL;
 
@@ -215,7 +216,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     SetValueRangeToUndefined(data->slots, argc);
 
     /* Can't fail from here on, so initialize everything in argsobj. */
-    obj->init(cx, type, proto->getParent(), false);
+    obj->init(cx, type, false);
     obj->setInitialPropertyInfallible(emptyArgumentsShape);
 
     ArgumentsObject *argsobj = obj->asArguments();
@@ -770,10 +771,11 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     if (!type)
         return NULL;
 
-    EmptyShape *emptyDeclEnvShape = EmptyShape::getEmptyDeclEnvShape(cx);
+    JSObject *parent = fp->scopeChain().getGlobal();
+    Shape *emptyDeclEnvShape = BaseShape::lookupInitialShape(cx, &DeclEnvClass, parent);
     if (!emptyDeclEnvShape)
         return NULL;
-    envobj->init(cx, type, fp->scopeChain().getGlobal(), false);
+    envobj->init(cx, type, false);
     envobj->setInitialPropertyInfallible(emptyDeclEnvShape);
     envobj->setPrivate(fp);
 
@@ -1435,11 +1437,10 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
      * Make the prototype object an instance of Object with the same parent
      * as the function object itself.
      */
-    JSObject *parent = obj->getParent();
     JSObject *objProto;
-    if (!js_GetClassPrototype(cx, parent, JSProto_Object, &objProto))
+    if (!js_GetClassPrototype(cx, obj->getParent(), JSProto_Object, &objProto))
         return NULL;
-    JSObject *proto = NewNativeClassInstance(cx, &ObjectClass, objProto, parent);
+    JSObject *proto = NewNativeClassInstance(cx, &ObjectClass, objProto);
     if (!proto || !proto->setSingletonType(cx))
         return NULL;
 
@@ -1572,7 +1573,8 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return false;
-        fun->clearParent();
+        if (!fun->clearParent(cx))
+            return false;
         if (!fun->clearType(cx))
             return false;
     }
@@ -2060,7 +2062,8 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* NB: Bound functions abuse |parent| to store their target. */
-    funobj->setParent(target);
+    if (!funobj->setParent(cx, target))
+        return false;
 
     /* Steps 7-9. */
     Value thisArg = args.length() >= 1 ? args[0] : UndefinedValue();

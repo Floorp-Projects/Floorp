@@ -640,9 +640,6 @@ struct JITScript {
     // Additional ExecutablePools for native call and getter stubs.
     Vector<NativeCallStub, 0, SystemAllocPolicy> nativeCallStubs;
 
-    // Rooted shape for dense arrays. :XXX: bug 685358 remove
-    Shape *denseArrayShape;
-
     NativeMapEntry *nmap() const;
     js::mjit::InlineFrame *inlineFrames() const;
     js::mjit::CallSite *callSites() const;

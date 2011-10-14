@@ -350,7 +350,8 @@ class BaseShape : public js::gc::Cell
         EXTENSIBLE_PARENTS = 0x8
     };
 
-    Class               *clasp;         /* Class of referring shape/object. */
+    Class               *clasp;         /* Class of referring object. */
+    JSObject            *parent;        /* Parent of referring object. */
     uint32              flags;          /* Vector of above flags. */
     uint32              slotSpan_;      /* Object slot span for BaseShapes at
                                          * dictionary last properties. */
@@ -373,21 +374,20 @@ class BaseShape : public js::gc::Cell
     /* For owned BaseShapes, the shape's property table. */
     PropertyTable       *table_;
 
-#if JS_BITS_PER_WORD == 32
-    void *padding;
-#endif
-
   public:
     void finalize(JSContext *cx, bool background);
 
-    BaseShape(Class *clasp) {
+    BaseShape(Class *clasp, JSObject *parent) {
         PodZero(this);
         this->clasp = clasp;
+        this->parent = parent;
     }
 
-    BaseShape(Class *clasp, uint8 attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter) {
+    BaseShape(Class *clasp, JSObject *parent,
+              uint8 attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter) {
         PodZero(this);
         this->clasp = clasp;
+        this->parent = parent;
         this->rawGetter = rawGetter;
         this->rawSetter = rawSetter;
         if ((attrs & JSPROP_GETTER) && rawGetter)
@@ -396,10 +396,12 @@ class BaseShape : public js::gc::Cell
             flags |= HAS_SETTER_OBJECT;
     }
 
-    inline BaseShape(UnownedBaseShape *base, PropertyTable *table, uint32 slotSpan);
+    inline void adoptUnowned(UnownedBaseShape *other);
 
     bool isOwned() const { return !!(flags & OWNED_SHAPE); }
     void setOwned(UnownedBaseShape *unowned) { flags |= OWNED_SHAPE; this->unowned_ = unowned; }
+
+    void setParent(JSObject *obj) { parent = obj; }
 
     bool hasGetterObject() const { return !!(flags & HAS_GETTER_OBJECT); }
     JSObject *getterObject() const { JS_ASSERT(hasGetterObject()); return getterObj; }
@@ -416,7 +418,17 @@ class BaseShape : public js::gc::Cell
 
     /* Lookup base shapes from the compartment's baseShapes table. */
     static UnownedBaseShape *lookup(JSContext *cx, const BaseShape &base);
-    static EmptyShape *lookupEmpty(JSContext *cx, Class *clasp);
+
+    /*
+     * Lookup a base shape from the baseShapes table, returning any associated
+     * initial shape and, constructing one (or reusing the 'shape' parameter)
+     * if none was found.
+     */
+    static Shape *lookupInitialShape(JSContext *cx, Class *clasp, JSObject *parent,
+                                     Shape *initial = NULL);
+
+    /* Reinsert a possibly modified initial shape to the baseShapes table. */
+    static void insertInitialShape(JSContext *cx, const Shape *initial);
 
     /* Get the canonical base shape. */
     inline UnownedBaseShape *unowned();
@@ -429,6 +441,7 @@ class BaseShape : public js::gc::Cell
 
     /* For JIT usage */
     static inline size_t offsetOfClass() { return offsetof(BaseShape, clasp); }
+    static inline size_t offsetOfParent() { return offsetof(BaseShape, parent); }
 
   private:
     static void staticAsserts() {
@@ -437,14 +450,6 @@ class BaseShape : public js::gc::Cell
 };
 
 class UnownedBaseShape : public BaseShape {};
-
-BaseShape::BaseShape(UnownedBaseShape *base, PropertyTable *table, uint32 slotSpan)
-{
-    *this = *static_cast<BaseShape *>(base);
-    setOwned(base);
-    setTable(table);
-    setSlotSpan(slotSpan);
-}
 
 UnownedBaseShape *
 BaseShape::unowned()
@@ -462,7 +467,7 @@ UnownedBaseShape *
 BaseShape::baseUnowned()
 {
     JS_ASSERT(isOwned() && unowned_); return unowned_;
- }
+}
 
 struct Shape : public js::gc::Cell
 {
@@ -520,6 +525,9 @@ struct Shape : public js::gc::Cell
 
     js::Shape *getChildBinding(JSContext *cx, const js::Shape &child, js::Shape **lastBinding);
 
+    /* Replace the last shape in a non-dictionary lineage with child. */
+    static bool replaceLastProperty(JSContext *cx, const js::Shape &child, Shape **lastp);
+
     bool hashify(JSContext *cx);
     void handoffTableTo(Shape *newShape);
 
@@ -553,7 +561,7 @@ struct Shape : public js::gc::Cell
     }
 
     bool isNative() const {
-        JS_ASSERT(!(flags & NON_NATIVE) == getClass()->isNative());
+        JS_ASSERT(!(flags & NON_NATIVE) == getObjectClass()->isNative());
         return !(flags & NON_NATIVE);
     }
 
@@ -590,7 +598,10 @@ struct Shape : public js::gc::Cell
         return Range(this);
     }
 
-    Class *getClass() const { return base()->clasp; }
+    Class *getObjectClass() const { return base()->clasp; }
+    JSObject *getObjectParent() const { return base()->parent; }
+
+    static bool setObjectParent(JSContext *cx, JSObject *obj, Shape **listp);
 
   protected:
     /*
@@ -610,8 +621,14 @@ struct Shape : public js::gc::Cell
 
     Shape(BaseShape *base, jsid id, uint32 slot, uintN attrs, uintN flags, intN shortid);
 
+    /* Get a shape identical to this one, without parent/kids information. */
+    Shape(const Shape *other);
+
     /* Used by EmptyShape (see jsscopeinlines.h). */
     Shape(BaseShape *base);
+
+    /* Copy constructor disabled, to avoid misuse of the above form. */
+    Shape(const Shape &other);
 
     bool inDictionary() const { return (flags & IN_DICTIONARY) != 0; }
 
@@ -717,7 +734,7 @@ struct Shape : public js::gc::Cell
 
     uint32 slotSpan() const {
         JS_ASSERT(!inDictionary());
-        uint32 free = JSSLOT_FREE(getClass());
+        uint32 free = JSSLOT_FREE(getObjectClass());
         return hasMissingSlot() ? free : Max(free, maybeSlot() + 1);
     }
 
@@ -806,7 +823,7 @@ struct Shape : public js::gc::Cell
      * Call or Block objects need unique shapes. If the flag is clear, then we
      * can use lastBinding's shape.
      */
-    static Shape * setExtensibleParents(JSContext *cx, Shape *shape);
+    static bool setExtensibleParents(JSContext *cx, Shape **listp);
     bool extensibleParents() const { return !!(base()->flags & BaseShape::EXTENSIBLE_PARENTS); }
 
     uint32 entryCount() const {
@@ -842,8 +859,8 @@ struct EmptyShape : public js::Shape
 {
     EmptyShape(BaseShape *base);
 
-    static EmptyShape *create(JSContext *cx, js::Class *clasp) {
-        BaseShape lookup(clasp);
+    static EmptyShape *create(JSContext *cx, js::Class *clasp, JSObject *parent) {
+        BaseShape lookup(clasp, parent);
         BaseShape *base = BaseShape::lookup(cx, lookup);
         if (!base)
             return NULL;
@@ -853,23 +870,6 @@ struct EmptyShape : public js::Shape
             return NULL;
         return new (eprop) EmptyShape(base);
     }
-
-    static EmptyShape *ensure(JSContext *cx, js::Class *clasp, EmptyShape **shapep) {
-        EmptyShape *shape = *shapep;
-        if (!shape) {
-            if (!(shape = create(cx, clasp)))
-                return NULL;
-            return *shapep = shape;
-        }
-        return shape;
-    }
-
-    static inline EmptyShape *getEmptyArgumentsShape(JSContext *cx, bool strict);
-    static inline EmptyShape *getEmptyBlockShape(JSContext *cx);
-    static inline EmptyShape *getEmptyCallShape(JSContext *cx);
-    static inline EmptyShape *getEmptyDeclEnvShape(JSContext *cx);
-    static inline EmptyShape *getEmptyEnumeratorShape(JSContext *cx);
-    static inline EmptyShape *getEmptyWithShape(JSContext *cx);
 };
 
 } /* namespace js */
@@ -938,7 +938,7 @@ Shape::search(JSContext *cx, js::Shape **pstart, jsid id, bool adding)
 inline js::Class *
 JSObject::getClass() const
 {
-    return lastProperty()->getClass();
+    return lastProperty()->getObjectClass();
 }
 
 inline JSClass *

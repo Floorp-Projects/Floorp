@@ -3019,6 +3019,9 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
 
     Assembler masm;
 
+    // Restore |obj|.
+    masm.rematPayload(StateRemat::FromInt32(objRemat), objReg);
+
     // Guard on this typed array's shape.
     Jump shapeGuard = masm.guardShape(objReg, obj);
 
@@ -3029,9 +3032,6 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, Imm32(keyValue));
     else
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, keyReg);
-
-    // Restore |obj|.
-    masm.rematPayload(StateRemat::FromInt32(objRemat), objReg);
 
     // Load the array's packed data vector.
     masm.loadPtr(Address(objReg, TypedArray::dataOffset()), objReg);

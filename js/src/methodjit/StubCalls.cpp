@@ -88,7 +88,7 @@ stubs::BindName(VMFrame &f)
     PropertyCacheEntry *entry;
 
     /* Fast-path should have caught this. See comment in interpreter. */
-    JS_ASSERT(f.fp()->scopeChain().isScope());
+    JS_ASSERT(!f.fp()->scopeChain().isGlobal());
 
     JSAtom *atom;
     JSObject *obj2;

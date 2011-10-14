@@ -5094,6 +5094,14 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
     JS_ASSERT_IF(fun && scope, fun->getGlobal() == scope->getGlobal());
     script->types->global = fun ? fun->getGlobal() : scope->getGlobal();
 
+    /*
+     * Update the parent in the script's bindings. The bindings are created
+     * with a NULL parent, and fixing the parent now avoids the need to reshape
+     * every time a call object is created from the bindings.
+     */
+    if (!script->bindings.setParent(cx, script->types->global))
+        return false;
+
     if (!cx->typeInferenceEnabled())
         return true;
 
