@@ -331,6 +331,24 @@ SpecialPowersAPI.prototype = {
     this.wrappedJSObject.SpecialPowers._applyPrefs();
   },
 
+  addObserver: function(obs, notification, weak) {
+    var obsvc = Cc['@mozilla.org/observer-service;1']
+                   .getService(Ci.nsIObserverService);
+    obsvc.addObserver(obs, notification, weak);
+  },
+  removeObserver: function(obs, notification) {
+    var obsvc = Cc['@mozilla.org/observer-service;1']
+                   .getService(Ci.nsIObserverService);
+    obsvc.removeObserver(obs, notification);
+  },
+   
+  can_QI: function(obj) {
+    return obj.QueryInterface !== undefined;
+  },
+  do_QueryInterface: function(obj, iface) {
+    return obj.QueryInterface(Ci[iface]); 
+  },
+
   // Mimic the get*Pref API
   getBoolPref: function(aPrefName) {
     return (this._getPref(aPrefName, 'BOOL'));
