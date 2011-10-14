@@ -173,7 +173,6 @@ protected:
    bool                    mChromeFlagsFrozen;
    bool                    mIgnoreXULSizeMode;
    PRUint32                mContextFlags;
-   PRUint32                mBlurSuppressionLevel;
    PRUint32                mPersistentAttributesDirty; // persistentAttributes
    PRUint32                mPersistentAttributesMask;
    PRUint32                mChromeFlags;
