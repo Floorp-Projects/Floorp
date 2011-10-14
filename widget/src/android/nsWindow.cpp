@@ -202,7 +202,6 @@ nsWindow::Create(nsIWidget *aParent,
                  const nsIntRect &aRect,
                  EVENT_CALLBACK aHandleEventFunction,
                  nsDeviceContext *aContext,
-                 nsIAppShell *aAppShell,
                  nsIToolkit *aToolkit,
                  nsWidgetInitData *aInitData)
 {
@@ -232,7 +231,7 @@ nsWindow::Create(nsIWidget *aParent,
     }
 
     BaseCreate(nsnull, mBounds, aHandleEventFunction, aContext,
-               aAppShell, aToolkit, aInitData);
+               aToolkit, aInitData);
 
     NS_ASSERTION(IsTopLevel() || parent, "non top level windowdoesn't have a parent!");
 
