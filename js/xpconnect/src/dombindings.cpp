@@ -390,7 +390,7 @@ template<class LC>
 JSObject *
 ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled)
 {
-    if(!scope->NewDOMBindingsEnabled()) {
+    if (!scope->NewDOMBindingsEnabled()) {
         *enabled = false;
         return NULL;
     }

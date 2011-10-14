@@ -76,10 +76,10 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
     JSBool resolved;
 
     *_retval = !!JS_ResolveStandardClass(cx, obj, id, &resolved);
-    if(!*_retval)
+    if (!*_retval)
         return NS_OK;
 
-    if(resolved)
+    if (resolved)
     {
         *objp = obj;
         return NS_OK;
@@ -99,7 +99,7 @@ BackstagePass::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
-    if(!array)
+    if (!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 index = 0;

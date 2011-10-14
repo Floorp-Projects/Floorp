@@ -62,7 +62,7 @@
 
 #ifdef DEBUG
 #define XPC_LOG_INTERNAL(number,_args)  \
-    do{if(XPC_Log_Check(number)){XPC_Log_print _args;}}while(0)
+    do{if (XPC_Log_Check(number)){XPC_Log_print _args;}}while (0)
 
 #define XPC_LOG_ALWAYS(_args)   XPC_LOG_INTERNAL(1,_args)
 #define XPC_LOG_ERROR(_args)    XPC_LOG_INTERNAL(2,_args)

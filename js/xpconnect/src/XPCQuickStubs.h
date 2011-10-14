@@ -243,7 +243,7 @@ xpc_qsInt32ToJsval(JSContext *cx, PRInt32 i, jsval *rv)
 inline JSBool
 xpc_qsUint32ToJsval(JSContext *cx, PRUint32 u, jsval *rv)
 {
-    if(u <= JSVAL_INT_MAX)
+    if (u <= JSVAL_INT_MAX)
         *rv = INT_TO_JSVAL(u);
     else
         *rv = DOUBLE_TO_JSVAL(u);
@@ -355,18 +355,18 @@ protected:
                               StringificationBehavior nullBehavior,
                               StringificationBehavior undefinedBehavior) {
         JSString *s;
-        if(JSVAL_IS_STRING(v))
+        if (JSVAL_IS_STRING(v))
         {
             s = JSVAL_TO_STRING(v);
         }
         else
         {
             StringificationBehavior behavior = eStringify;
-            if(JSVAL_IS_NULL(v))
+            if (JSVAL_IS_NULL(v))
             {
                 behavior = nullBehavior;
             }
-            else if(JSVAL_IS_VOID(v))
+            else if (JSVAL_IS_VOID(v))
             {
                 behavior = undefinedBehavior;
             }
@@ -385,7 +385,7 @@ protected:
             }
 
             s = JS_ValueToString(cx, v);
-            if(!s)
+            if (!s)
             {
                 mValid = JS_FALSE;
                 return nsnull;
@@ -540,7 +540,7 @@ xpc_qsUnwrapThis(JSContext *cx,
     XPCWrappedNative *wrapper;
     XPCWrappedNativeTearOff *tearoff;
     nsresult rv = getWrapper(cx, obj, callee, &wrapper, &obj, &tearoff);
-    if(NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv))
         rv = castNative(cx, wrapper, obj, tearoff, NS_GET_TEMPLATE_IID(T),
                         reinterpret_cast<void **>(ppThis), pThisRef, pThisVal,
                         lccx);
@@ -567,7 +567,7 @@ castNativeFromWrapper(JSContext *cx,
     XPCWrappedNativeTearOff *tearoff;
     JSObject *cur;
 
-    if(!callee && IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
+    if (!callee && IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
     {
         cur = obj;
         wrapper = IS_WN_WRAPPER_OBJECT(cur) ?
@@ -583,7 +583,7 @@ castNativeFromWrapper(JSContext *cx,
     }
 
     nsISupports *native;
-    if(wrapper)
+    if (wrapper)
     {
         native = wrapper->GetIdentityObject();
         cur = wrapper->GetFlatJSObject();
@@ -597,22 +597,22 @@ castNativeFromWrapper(JSContext *cx,
 
     *rv = NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    if(!native)
+    if (!native)
         return nsnull;
 
     NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(cur)), "Not a wrapper?");
 
     XPCNativeScriptableSharedJSClass *clasp =
       (XPCNativeScriptableSharedJSClass*)js::GetObjectClass(cur);
-    if(!(clasp->interfacesBitmap & (1 << interfaceBit)))
+    if (!(clasp->interfacesBitmap & (1 << interfaceBit)))
         return nsnull;
 
     *pRef = nsnull;
     *pVal = OBJECT_TO_JSVAL(cur);
 
-    if(lccx)
+    if (lccx)
     {
-        if(wrapper)
+        if (wrapper)
             lccx->SetWrapper(wrapper, tearoff);
         else
             lccx->SetWrapper(cur);
@@ -674,7 +674,7 @@ castNativeArgFromWrapper(JSContext *cx,
                          nsresult *rv NS_OUTPARAM)
 {
     JSObject *src = xpc_qsUnwrapObj(v, pArgRef, rv);
-    if(!src)
+    if (!src)
         return nsnull;
 
     return castNativeFromWrapper(cx, src, nsnull, bit, pArgRef, vp, nsnull, rv);

@@ -95,22 +95,22 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
     nsIXPCScriptable *callback = scriptableCreateInfo ?
                                  scriptableCreateInfo->GetCallback() :
                                  nsnull;
-    if(callback)
+    if (callback)
     {
         mScriptableInfo =
             XPCNativeScriptableInfo::Construct(ccx, isGlobal, scriptableCreateInfo);
-        if(!mScriptableInfo)
+        if (!mScriptableInfo)
             return JS_FALSE;
     }
 
     js::Class* jsclazz;
 
 
-    if(mScriptableInfo)
+    if (mScriptableInfo)
     {
         const XPCNativeScriptableFlags& flags(mScriptableInfo->GetFlags());
 
-        if(flags.AllowPropModsToPrototype())
+        if (flags.AllowPropModsToPrototype())
         {
             jsclazz = flags.WantCall() ?
                 &XPC_WN_ModsAllowed_WithCall_Proto_JSClass :
@@ -137,10 +137,10 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
 
     JSBool ok = mJSProtoObject && JS_SetPrivate(ccx, mJSProtoObject, this);
 
-    if(ok && callback)
+    if (ok && callback)
     {
         nsresult rv = callback->PostCreatePrototype(ccx, mJSProtoObject);
-        if(NS_FAILED(rv))
+        if (NS_FAILED(rv))
         {
             JS_SetPrivate(ccx, mJSProtoObject, nsnull);
             mJSProtoObject = nsnull;
@@ -161,12 +161,12 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(JSContext *cx, JSObject *obj)
 
     // Map locking is not necessary since we are running gc.
 
-    if(IsShared())
+    if (IsShared())
     {
         // Only remove this proto from the map if it is the one in the map.
         ClassInfo2WrappedNativeProtoMap* map =
             GetScope()->GetWrappedNativeProtoMap(ClassIsMainThreadOnly());
-        if(map->Find(mClassInfo) == this)
+        if (map->Find(mClassInfo) == this)
             map->Remove(mClassInfo);
     }
 
@@ -184,7 +184,7 @@ XPCWrappedNativeProto::SystemIsBeingShutDown(JSContext* cx)
 
 #ifdef XPC_TRACK_PROTO_STATS
     static bool DEBUG_DumpedStats = false;
-    if(!DEBUG_DumpedStats)
+    if (!DEBUG_DumpedStats)
     {
         printf("%d XPCWrappedNativeProto(s) alive at shutdown\n",
                gDEBUG_LiveProtoCount);
@@ -192,7 +192,7 @@ XPCWrappedNativeProto::SystemIsBeingShutDown(JSContext* cx)
     }
 #endif
 
-    if(mJSProtoObject)
+    if (mJSProtoObject)
     {
         // short circuit future finalization
         JS_SetPrivate(cx, mJSProtoObject, nsnull);
@@ -219,18 +219,18 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
     JSBool shared;
 
     JSUint32 ciFlags;
-    if(NS_FAILED(ClassInfo->GetFlags(&ciFlags)))
+    if (NS_FAILED(ClassInfo->GetFlags(&ciFlags)))
         ciFlags = 0;
 
-    if(ciFlags & XPC_PROTO_DONT_SHARE)
+    if (ciFlags & XPC_PROTO_DONT_SHARE)
     {
         NS_ERROR("reserved flag set!");
         ciFlags &= ~XPC_PROTO_DONT_SHARE;
     }
 
-    if(ForceNoSharing || (ciFlags & nsIClassInfo::PLUGIN_OBJECT) ||
-       (ScriptableCreateInfo &&
-        ScriptableCreateInfo->GetFlags().DontSharePrototype()))
+    if (ForceNoSharing || (ciFlags & nsIClassInfo::PLUGIN_OBJECT) ||
+        (ScriptableCreateInfo &&
+         ScriptableCreateInfo->GetFlags().DontSharePrototype()))
     {
         ciFlags |= XPC_PROTO_DONT_SHARE;
         shared = JS_FALSE;
@@ -240,7 +240,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
         shared = JS_TRUE;
     }
 
-    if(shared)
+    if (shared)
     {
         JSBool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
         map = Scope->GetWrappedNativeProtoMap(mainThreadOnly);
@@ -248,25 +248,25 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
         {   // scoped lock
             XPCAutoLock al(lock);
             proto = map->Find(ClassInfo);
-            if(proto)
+            if (proto)
                 return proto;
         }
     }
 
     AutoMarkingNativeSetPtr set(ccx);
     set = XPCNativeSet::GetNewOrUsed(ccx, ClassInfo);
-    if(!set)
+    if (!set)
         return nsnull;
 
     proto = new XPCWrappedNativeProto(Scope, ClassInfo, ciFlags, set, offsets);
 
-    if(!proto || !proto->Init(ccx, isGlobal, ScriptableCreateInfo))
+    if (!proto || !proto->Init(ccx, isGlobal, ScriptableCreateInfo))
     {
         delete proto.get();
         return nsnull;
     }
 
-    if(shared)
+    if (shared)
     {   // scoped lock
         XPCAutoLock al(lock);
         map->Add(ClassInfo, proto);
@@ -288,7 +288,7 @@ XPCWrappedNativeProto::DebugDump(PRInt16 depth)
         XPC_LOG_ALWAYS(("mSet @ %x", mSet));
         XPC_LOG_ALWAYS(("mSecurityInfo of %x", mSecurityInfo));
         XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
-        if(depth && mScriptableInfo)
+        if (depth && mScriptableInfo)
         {
             XPC_LOG_INDENT();
             XPC_LOG_ALWAYS(("mScriptable @ %x", mScriptableInfo->GetCallback()));

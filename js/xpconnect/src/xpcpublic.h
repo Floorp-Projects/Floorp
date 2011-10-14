@@ -115,7 +115,7 @@ DebugCheckWrapperClass(JSObject* obj)
 inline JSObject *
 xpc_GetGlobalForObject(JSObject *obj)
 {
-    while(JSObject *parent = js::GetObjectParent(obj))
+    while (JSObject *parent = js::GetObjectParent(obj))
         obj = parent;
     return obj;
 }
@@ -178,7 +178,7 @@ xpc_UnmarkGrayObjectRecursive(JSObject* obj);
 inline void
 xpc_UnmarkGrayObject(JSObject *obj)
 {
-    if(obj && xpc_IsGrayGCThing(obj))
+    if (obj && xpc_IsGrayGCThing(obj))
         xpc_UnmarkGrayObjectRecursive(obj);
 }
 

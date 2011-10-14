@@ -55,7 +55,7 @@ xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
     nsISupports *native = castNativeFromWrapper(cx, obj, callee, _bit,        \
                                                 pThisRef, pThisVal, lccx,     \
                                                 &rv);                         \
-    if(failureFatal && !native)                                               \
+    if (failureFatal && !native)                                              \
         return xpc_qsThrow(cx, rv);                                           \
     *ppThis = static_cast<_interface*>(static_cast<_base*>(native));          \
     return JS_TRUE;                                                           \
@@ -72,7 +72,7 @@ xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
     nsresult rv;                                                              \
     nsISupports *native = castNativeArgFromWrapper(cx, v, _bit, ppArgRef, vp, \
                                                    &rv);                      \
-    if(NS_SUCCEEDED(rv))                                                      \
+    if (NS_SUCCEEDED(rv))                                                     \
         *ppArg = static_cast<_interface*>(static_cast<_base*>(native));       \
     return rv;                                                                \
 }
@@ -96,7 +96,7 @@ inline JSBool
 castToElement(nsIContent *content, jsval val, nsGenericElement **ppInterface,
               jsval *pVal)
 {
-    if(!content->IsElement())
+    if (!content->IsElement())
         return JS_FALSE;
     *ppInterface = static_cast<nsGenericElement*>(content->AsElement());
     *pVal = val;
@@ -119,15 +119,15 @@ xpc_qsUnwrapThis<nsGenericElement>(JSContext *cx,
     JSBool ok = xpc_qsUnwrapThis<nsIContent>(cx, obj, callee, &content,
                                              pThisRef, &val, lccx,
                                              failureFatal);
-    if(ok)
+    if (ok)
     {
-        if(failureFatal || content)
+        if (failureFatal || content)
           ok = castToElement(content, val, ppThis, pThisVal);
-        if(failureFatal && !ok)
+        if (failureFatal && !ok)
             xpc_qsThrow(cx, NS_ERROR_XPC_BAD_OP_ON_WN_PROTO);
     }
 
-    if(!failureFatal && (!ok || !content))
+    if (!failureFatal && (!ok || !content))
     {
       ok = JS_TRUE;
       *ppThis = nsnull;
@@ -147,7 +147,7 @@ xpc_qsUnwrapArg<nsGenericElement>(JSContext *cx,
     nsIContent *content;
     jsval val;
     nsresult rv = xpc_qsUnwrapArg<nsIContent>(cx, v, &content, ppArgRef, &val);
-    if(NS_SUCCEEDED(rv) && !castToElement(content, val, ppArg, vp))
+    if (NS_SUCCEEDED(rv) && !castToElement(content, val, ppArg, vp))
         rv = NS_ERROR_XPC_BAD_CONVERT_JS;
     return rv;
 }
