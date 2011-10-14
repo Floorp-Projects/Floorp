@@ -80,7 +80,7 @@
 #include "nsOS2Uni.h"
 #include "nsTHashtable.h"
 #include "nsToolkit.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "wdgtos2rc.h"
 
 #include "mozilla/Preferences.h"
@@ -2801,22 +2801,22 @@ bool nsWindow::DispatchCommandEvent(PRUint32 aEventCommand)
 
   switch (aEventCommand) {
     case APPCOMMAND_BROWSER_BACKWARD:
-      command = nsWidgetAtoms::Back;
+      command = nsGkAtoms::Back;
       break;
     case APPCOMMAND_BROWSER_FORWARD:
-      command = nsWidgetAtoms::Forward;
+      command = nsGkAtoms::Forward;
       break;
     case APPCOMMAND_BROWSER_REFRESH:
-      command = nsWidgetAtoms::Reload;
+      command = nsGkAtoms::Reload;
       break;
     case APPCOMMAND_BROWSER_STOP:
-      command = nsWidgetAtoms::Stop;
+      command = nsGkAtoms::Stop;
       break;
     default:
       return PR_FALSE;
   }
 
-  nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, command, this);
+  nsCommandEvent event(PR_TRUE, nsGkAtoms::onAppCommand, command, this);
   InitEvent(event);
   return DispatchWindowEvent(&event);
 }

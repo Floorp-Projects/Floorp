@@ -52,7 +52,7 @@
 
 #include "nsWeakReference.h"
 
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 
 #ifdef MOZ_LOGGING
 

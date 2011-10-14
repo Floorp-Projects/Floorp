@@ -50,7 +50,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsObjCExceptions.h"
 #include "nsHashtable.h"
@@ -161,7 +161,7 @@ void nsMenuBarX::ConstructNativeMenus()
   for (PRUint32 i = 0; i < count; i++) { 
     nsIContent *menuContent = mContent->GetChildAt(i);
     if (menuContent &&
-        menuContent->Tag() == nsWidgetAtoms::menu &&
+        menuContent->Tag() == nsGkAtoms::menu &&
         menuContent->IsXUL()) {
       nsMenuX* newMenu = new nsMenuX();
       if (newMenu) {
@@ -429,7 +429,7 @@ char nsMenuBarX::GetLocalizedAccelKey(const char *shortcutID)
     return 0;
 
   nsAutoString key;
-  shortcutContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, key);
+  shortcutContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, key);
   NS_LossyConvertUTF16toASCII keyASC(key.get());
   const char *keyASCPtr = keyASC.get();
   if (!keyASCPtr)
@@ -453,7 +453,7 @@ void nsMenuBarX::HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsICont
   inDoc->GetElementById(inID, getter_AddRefs(menuItem));  
   nsCOMPtr<nsIContent> menuContent(do_QueryInterface(menuItem));
   if (menuContent) {
-    menuContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, NS_LITERAL_STRING("true"), false);
+    menuContent->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden, NS_LITERAL_STRING("true"), false);
     if (outHiddenNode) {
       *outHiddenNode = menuContent.get();
       NS_IF_ADDREF(*outHiddenNode);
@@ -540,13 +540,13 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
       nsCOMPtr<nsIContent> keyContent (do_QueryInterface(keyElement));
       // first grab the key equivalent character
       nsAutoString keyChar(NS_LITERAL_STRING(" "));
-      keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
+      keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);
       if (!keyChar.EqualsLiteral(" ")) {
         keyEquiv = [[NSString stringWithCharacters:keyChar.get() length:keyChar.Length()] lowercaseString];
       }
       // now grab the key equivalent modifiers
       nsAutoString modifiersStr;
-      keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
+      keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiersStr);
       PRUint8 geckoModifiers = nsMenuUtilsX::GeckoModifiersForNodeAttribute(modifiersStr);
       macKeyModifiers = nsMenuUtilsX::MacModifiersForGeckoModifiers(geckoModifiers);
     }
