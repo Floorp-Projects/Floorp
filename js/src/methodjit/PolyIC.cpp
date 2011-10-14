@@ -1369,7 +1369,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
             /* Load the next link in the scope chain. */
             Address parent(pic.objReg, JSObject::offsetOfScopeChain());
-            masm.loadPtr(parent, pic.objReg);
+            masm.loadPayload(parent, pic.objReg);
 
             tobj = tobj->scopeChain();
         }
@@ -1754,7 +1754,7 @@ class BindNameCompiler : public PICStubCompiler
         while (tobj && tobj != obj) {
             if (!IsCacheableNonGlobalScope(tobj))
                 return disable("non-cacheable obj in scope chain");
-            masm.loadPtr(parent, pic.objReg);
+            masm.loadPayload(parent, pic.objReg);
             masm.loadShape(pic.objReg, pic.shapeReg);
             Jump shapeTest = masm.branchPtr(Assembler::NotEqual, pic.shapeReg,
                                             ImmPtr(tobj->lastProperty()));
