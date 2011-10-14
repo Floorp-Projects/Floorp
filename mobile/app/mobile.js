@@ -387,10 +387,10 @@ pref("geo.enabled", true);
 
 // content sink control -- controls responsiveness during page load
 // see https://bugzilla.mozilla.org/show_bug.cgi?id=481566#c9
-pref("content.sink.enable_perf_mode",  2); // 0 - switch, 1 - interactive, 2 - perf
-pref("content.sink.pending_event_mode", 0);
-pref("content.sink.perf_deflect_count", 1000000);
-pref("content.sink.perf_parse_time", 50000000);
+//pref("content.sink.enable_perf_mode",  2); // 0 - switch, 1 - interactive, 2 - perf
+//pref("content.sink.pending_event_mode", 0);
+/pref("content.sink.perf_deflect_count", 1000000);
+//pref("content.sink.perf_parse_time", 50000000);
 
 // Disable methodjit in chrome to save memory
 pref("javascript.options.methodjit.chrome",  false);
