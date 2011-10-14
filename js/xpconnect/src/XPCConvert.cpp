@@ -193,7 +193,7 @@ AddXPCOMUCStringFinalizer()
         JS_AddExternalStringFinalizer(FinalizeXPCOMUCString);
 
     if(sXPCOMUCStringFinalizerIndex == -1)
-    {        
+    {
         return JS_FALSE;
     }
 
@@ -273,7 +273,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
     case nsXPTType::T_BOOL  :
         {
             bool b = *((bool*)s);
-            
+
             NS_WARN_IF_FALSE(b == 1 || b == 0,
                     "Passing a malformed bool through XPConnect");
             *d = BOOLEAN_TO_JSVAL(!!b);
@@ -403,13 +403,13 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                 break;
             }
         case nsXPTType::T_UTF8STRING:
-            {                          
+            {
                 const nsACString* cString = *((const nsACString**)s);
 
                 if(!cString)
                     break;
-                
-                if(!cString->IsVoid()) 
+
+                if(!cString->IsVoid())
                 {
                     PRUint32 len;
                     jschar *p = (jschar *)UTF8ToNewUnicode(*cString, &len);
@@ -417,7 +417,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                     if(!p)
                         return JS_FALSE;
 
-                    if(sXPCOMUCStringFinalizerIndex == -1 && 
+                    if(sXPCOMUCStringFinalizerIndex == -1 &&
                        !AddXPCOMUCStringFinalizer())
                         return JS_FALSE;
 
@@ -426,8 +426,8 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                                              sXPCOMUCStringFinalizerIndex);
 
                     if(!jsString) {
-                        nsMemory::Free(p); 
-                        return JS_FALSE; 
+                        nsMemory::Free(p);
+                        return JS_FALSE;
                     }
 
                     *d = STRING_TO_JSVAL(jsString);
@@ -437,19 +437,19 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
 
             }
         case nsXPTType::T_CSTRING:
-            {                          
+            {
                 const nsACString* cString = *((const nsACString**)s);
 
                 if(!cString)
                     break;
-                
-                if(!cString->IsVoid()) 
+
+                if(!cString->IsVoid())
                 {
                     PRUnichar* unicodeString = ToNewUnicode(*cString);
                     if(!unicodeString)
                         return JS_FALSE;
 
-                    if(sXPCOMUCStringFinalizerIndex == -1 && 
+                    if(sXPCOMUCStringFinalizerIndex == -1 &&
                        !AddXPCOMUCStringFinalizer())
                         return JS_FALSE;
 
@@ -482,11 +482,11 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                         if(!variant)
                             return JS_FALSE;
 
-                        return XPCVariant::VariantDataToJS(lccx, variant, 
+                        return XPCVariant::VariantDataToJS(lccx, variant,
                                                            pErr, d);
                     }
                     // else...
-                    
+
                     // XXX The OBJ_IS_NOT_GLOBAL here is not really right. In
                     // fact, this code is depending on the fact that the
                     // global object will not have been collected, and
@@ -719,8 +719,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return JS_TRUE;
         }
 
-        case nsXPTType::T_ASTRING:        
-        {            
+        case nsXPTType::T_ASTRING:
+        {
             isDOMString = JS_FALSE;
             // Fall through to T_DOMSTRING case.
         }
@@ -736,7 +736,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             if(JSVAL_IS_VOID(s))
             {
-                if(isDOMString) 
+                if(isDOMString)
                 {
                     chars  = VOID_STRING;
                     length = NS_ARRAY_LENGTH(VOID_STRING) - 1;
@@ -909,7 +909,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return JS_TRUE;
         }
 
-        case nsXPTType::T_UTF8STRING:            
+        case nsXPTType::T_UTF8STRING:
         {
             const jschar* chars;
             PRUint32 length;
@@ -917,10 +917,10 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             if(JSVAL_IS_NULL(s) || JSVAL_IS_VOID(s))
             {
-                if(useAllocator) 
+                if(useAllocator)
                 {
                     nsACString *rs = new nsCString();
-                    if(!rs) 
+                    if(!rs)
                         return JS_FALSE;
 
                     rs->SetIsVoid(PR_TRUE);
@@ -947,7 +947,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             nsCString *rs;
             if(useAllocator)
-            {                
+            {
                 // Use nsCString to enable sharing
                 rs = new nsCString();
                 if(!rs)
@@ -972,7 +972,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 if(useAllocator)
                 {
                     nsACString *rs = new nsCString();
-                    if(!rs) 
+                    if(!rs)
                         return JS_FALSE;
 
                     rs->SetIsVoid(PR_TRUE);
@@ -1054,7 +1054,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 if (!atom && pErr)
                     *pErr = NS_ERROR_OUT_OF_MEMORY;
                 *((nsISupports**)d) = atom;
-                return atom != nsnull;                
+                return atom != nsnull;
             }
             //else ...
 
@@ -1442,8 +1442,8 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
     if(!aOuter)
     {
         // Note that if we have a non-null aOuter then it means that we are
-        // forcing the creation of a wrapper even if the object *is* a 
-        // wrappedNative or other wise has 'nsISupportness'. 
+        // forcing the creation of a wrapper even if the object *is* a
+        // wrappedNative or other wise has 'nsISupportness'.
         // This allows wrapJSAggregatedToNative to work.
 
         // If we're looking at a security wrapper, see now if we're allowed to
@@ -1499,15 +1499,15 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
     if(NS_SUCCEEDED(rv) && wrapper)
     {
         // We need to go through the QueryInterface logic to make this return
-        // the right thing for the various 'special' interfaces; e.g. 
-        // nsIPropertyBag. We must use AggregatedQueryInterface in cases where 
+        // the right thing for the various 'special' interfaces; e.g.
+        // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
         // there is an outer to avoid nasty recursion.
         rv = aOuter ? wrapper->AggregatedQueryInterface(*iid, dest) :
                       wrapper->QueryInterface(*iid, dest);
         if(pErr)
             *pErr = rv;
         NS_RELEASE(wrapper);
-        return NS_SUCCEEDED(rv);        
+        return NS_SUCCEEDED(rv);
     }
 
     // else...

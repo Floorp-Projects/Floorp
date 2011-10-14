@@ -47,10 +47,10 @@ NS_IMPL_ISUPPORTS1(xpcJSWeakReference, xpcIJSWeakReference)
 nsresult xpcJSWeakReference::Init()
 {
     nsresult rv;
-    
+
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
     if (!xpc) return NS_ERROR_UNEXPECTED;
-    
+
     nsAXPCNativeCallContext *cc = nsnull;
     rv = xpc->GetCurrentNativeCallContext(&cc);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -64,7 +64,7 @@ nsresult xpcJSWeakReference::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (argc != 1) return NS_ERROR_FAILURE;
-    
+
     jsval *argv = nsnull;
     rv = cc->GetArgvPtr(&argv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -72,11 +72,11 @@ nsresult xpcJSWeakReference::Init()
     JSAutoRequest ar(cx);
 
     if (JSVAL_IS_PRIMITIVE(argv[0])) return NS_ERROR_FAILURE;
-    
+
     JSObject *obj = JSVAL_TO_OBJECT(argv[0]);
-    
+
     XPCCallContext ccx(NATIVE_CALLER, cx);
-    
+
     nsRefPtr<nsXPCWrappedJS> wrapped;
     rv = nsXPCWrappedJS::GetNewOrUsed(ccx,
                                       obj,

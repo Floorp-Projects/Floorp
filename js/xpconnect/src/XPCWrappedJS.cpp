@@ -579,7 +579,7 @@ nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
         if (cs)
             cs->LogStringMessage(msg);
         NS_Free(msg);
-        
+
         return NS_ERROR_NOT_SAME_THREAD;
     }
     return GetClass()->CallMethod(this, methodIndex, info, params);
@@ -617,7 +617,7 @@ nsXPCWrappedJS::SystemIsBeingShutDown(JSRuntime* rt)
 /***************************************************************************/
 
 /* readonly attribute nsISimpleEnumerator enumerator; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator * *aEnumerate)
 {
     XPCCallContext ccx(NATIVE_CALLER);
@@ -629,7 +629,7 @@ nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator * *aEnumerate)
 }
 
 /* nsIVariant getProperty (in AString name); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant **_retval)
 {
     XPCCallContext ccx(NATIVE_CALLER);

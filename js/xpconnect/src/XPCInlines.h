@@ -358,7 +358,7 @@ XPCCallContext::SetMethodIndex(PRUint16 index)
     mMethodIndex = index;
 }
 
-inline JSBool   
+inline JSBool
 XPCCallContext::GetDestroyJSContextInDestructor() const
 {
     CHECK_STATE(HAVE_CONTEXT);
@@ -706,7 +706,7 @@ JSBool ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx)
     return JS_FALSE;
 }
 
-inline 
+inline
 void ThrowBadResult(nsresult result, XPCCallContext& ccx)
 {
     XPCThrower::ThrowBadResult(NS_ERROR_XPC_NATIVE_RETURNED_FAILURE,

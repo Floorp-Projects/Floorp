@@ -79,7 +79,7 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
 #ifdef DEBUG
     PR_ATOMIC_DECREMENT(&gDEBUG_LiveProtoCount);
 #endif
-    
+
     // Note that our weak ref to mScope is not to be trusted at this point.
 
     XPCNativeSet::ClearCacheEntryForClassInfo(mClassInfo);
@@ -165,7 +165,7 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(JSContext *cx, JSObject *obj)
     if(IsShared())
     {
         // Only remove this proto from the map if it is the one in the map.
-        ClassInfo2WrappedNativeProtoMap* map = 
+        ClassInfo2WrappedNativeProtoMap* map =
             GetScope()->GetWrappedNativeProtoMap(ClassIsMainThreadOnly());
         if(map->Find(mClassInfo) == this)
             map->Remove(mClassInfo);

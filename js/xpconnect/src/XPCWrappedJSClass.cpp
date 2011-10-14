@@ -115,7 +115,7 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
 
     if (JS_GetOptions(mJSContext) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
     {
-        nsCOMPtr<nsIXPCScriptNotify> scriptNotify = 
+        nsCOMPtr<nsIXPCScriptNotify> scriptNotify =
             do_QueryInterface(static_cast<nsISupports*>
                                          (JS_GetContextPrivate(mJSContext)));
         if(scriptNotify)
@@ -136,7 +136,7 @@ JSBool xpc_IsReportableErrorCode(nsresult code)
     switch(code)
     {
         // Error codes that we don't want to report as errors...
-        // These generally indicate bad interface design AFAIC. 
+        // These generally indicate bad interface design AFAIC.
         case NS_ERROR_FACTORY_REGISTER_AGAIN:
         case NS_BASE_STREAM_WOULD_BLOCK:
             return JS_FALSE;
@@ -378,10 +378,10 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
 
 /***************************************************************************/
 
-static JSBool 
-GetNamedPropertyAsVariantRaw(XPCCallContext& ccx, 
+static JSBool
+GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
                              JSObject* aJSObj,
-                             jsid aName, 
+                             jsid aName,
                              nsIVariant** aResult,
                              nsresult* pErr)
 {
@@ -398,9 +398,9 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
 
 // static
 nsresult
-nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx, 
+nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx,
                                                JSObject* aJSObj,
-                                               jsval aName, 
+                                               jsval aName,
                                                nsIVariant** aResult)
 {
     JSContext* cx = ccx.GetJSContext();
@@ -412,7 +412,7 @@ nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx,
     if (!scriptEval.StartEvaluating(aJSObj))
         return NS_ERROR_FAILURE;
 
-    ok = JS_ValueToId(cx, aName, &id) && 
+    ok = JS_ValueToId(cx, aName, &id) &&
          GetNamedPropertyAsVariantRaw(ccx, aJSObj, id, aResult, &rv);
 
     return ok ? NS_OK : NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
@@ -420,8 +420,8 @@ nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx,
 
 /***************************************************************************/
 
-// static 
-nsresult 
+// static
+nsresult
 nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
                                              JSObject* aJSObj,
                                              nsISimpleEnumerator** aEnumerate)
@@ -439,7 +439,7 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
     idArray = JS_Enumerate(cx, aJSObj);
     if(!idArray)
         return retval;
-    
+
     nsCOMArray<nsIProperty> propertyArray(idArray->length);
     for(i = 0; i < idArray->length; i++)
     {
@@ -447,11 +447,11 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
         jsid idName = idArray->vector[i];
         nsresult rv;
 
-        if(!GetNamedPropertyAsVariantRaw(ccx, aJSObj, idName, 
+        if(!GetNamedPropertyAsVariantRaw(ccx, aJSObj, idName,
                                          getter_AddRefs(value), &rv))
         {
             if(NS_FAILED(rv))
-                retval = rv;                                        
+                retval = rv;
             goto out;
         }
 
@@ -468,7 +468,7 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
         if (!chars)
             goto out;
 
-        nsCOMPtr<nsIProperty> property = 
+        nsCOMPtr<nsIProperty> property =
             new xpcProperty(chars, (PRUint32) length, value);
         if(!property)
             goto out;
@@ -489,7 +489,7 @@ out:
 
 NS_IMPL_ISUPPORTS1(xpcProperty, nsIProperty)
 
-xpcProperty::xpcProperty(const PRUnichar* aName, PRUint32 aNameLen, 
+xpcProperty::xpcProperty(const PRUnichar* aName, PRUint32 aNameLen,
                          nsIVariant* aValue)
     : mName(aName, aNameLen), mValue(aValue)
 {
@@ -1122,7 +1122,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                     }
                     reportable = onlyNativeStackFrames;
                 }
-                
+
                 // Ugly special case for GetInterface. It's "special" in the
                 // same way as QueryInterface in that a failure is not
                 // exceptional and shouldn't be reported. We have to do this
@@ -1371,18 +1371,18 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         if(NS_FAILED(mInfo->IsFunction(&isFunction)))
             goto pre_call_clean_up;
 
-        // In the xpidl [function] case we are making sure now that the 
-        // JSObject is callable. If it is *not* callable then we silently 
+        // In the xpidl [function] case we are making sure now that the
+        // JSObject is callable. If it is *not* callable then we silently
         // fallback to looking up the named property...
         // (because jst says he thinks this fallback is 'The Right Thing'.)
         //
-        // In the normal (non-function) case we just lookup the property by 
+        // In the normal (non-function) case we just lookup the property by
         // name and as long as the object has such a named property we go ahead
         // and try to make the call. If it turns out the named property is not
         // a callable object then the JS engine will throw an error and we'll
         // pass this along to the caller as an exception/result code.
 
-        if(isFunction && 
+        if(isFunction &&
            JS_TypeOfValue(ccx, OBJECT_TO_JSVAL(obj)) == JSTYPE_FUNCTION)
         {
             fval = OBJECT_TO_JSVAL(obj);

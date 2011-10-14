@@ -750,7 +750,7 @@ nsXPCComponents_InterfacesByID::CanSetProperty(const nsIID * iid, const PRUnicha
 
 
 
-class nsXPCComponents_Classes : 
+class nsXPCComponents_Classes :
   public nsIXPCComponents_Classes,
   public nsIXPCScriptable,
   public nsIClassInfo
@@ -768,9 +768,9 @@ public:
 };
 
 /***************************************************************************/
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] 
+/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval]
                        out nsIIDPtr array); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Classes::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
     const PRUint32 count = 2;
@@ -803,8 +803,8 @@ oom:
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-nsXPCComponents_Classes::GetHelperForLanguage(PRUint32 language, 
+NS_IMETHODIMP
+nsXPCComponents_Classes::GetHelperForLanguage(PRUint32 language,
                                       nsISupports **retval)
 {
     *retval = nsnull;
@@ -812,7 +812,7 @@ nsXPCComponents_Classes::GetHelperForLanguage(PRUint32 language,
 }
 
 /* readonly attribute string contractID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Classes::GetContractID(char * *aContractID)
 {
     *aContractID = nsnull;
@@ -820,7 +820,7 @@ nsXPCComponents_Classes::GetContractID(char * *aContractID)
 }
 
 /* readonly attribute string classDescription; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Classes::GetClassDescription(char * *aClassDescription)
 {
     static const char classDescription[] = "XPCComponents_Classes";
@@ -829,7 +829,7 @@ nsXPCComponents_Classes::GetClassDescription(char * *aClassDescription)
 }
 
 /* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Classes::GetClassID(nsCID * *aClassID)
 {
     *aClassID = nsnull;
@@ -837,7 +837,7 @@ nsXPCComponents_Classes::GetClassID(nsCID * *aClassID)
 }
 
 /* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Classes::GetImplementationLanguage(
     PRUint32 *aImplementationLanguage)
 {
@@ -846,7 +846,7 @@ nsXPCComponents_Classes::GetImplementationLanguage(
 }
 
 /* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Classes::GetFlags(PRUint32 *aFlags)
 {
     *aFlags = nsIClassInfo::THREADSAFE;
@@ -854,7 +854,7 @@ nsXPCComponents_Classes::GetFlags(PRUint32 *aFlags)
 }
 
 /* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Classes::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1020,9 +1020,9 @@ public:
 };
 
 /***************************************************************************/
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] 
+/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval]
                        out nsIIDPtr array); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ClassesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
     const PRUint32 count = 2;
@@ -1055,8 +1055,8 @@ oom:
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-nsXPCComponents_ClassesByID::GetHelperForLanguage(PRUint32 language, 
+NS_IMETHODIMP
+nsXPCComponents_ClassesByID::GetHelperForLanguage(PRUint32 language,
                                       nsISupports **retval)
 {
     *retval = nsnull;
@@ -1064,7 +1064,7 @@ nsXPCComponents_ClassesByID::GetHelperForLanguage(PRUint32 language,
 }
 
 /* readonly attribute string contractID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ClassesByID::GetContractID(char * *aContractID)
 {
     *aContractID = nsnull;
@@ -1072,7 +1072,7 @@ nsXPCComponents_ClassesByID::GetContractID(char * *aContractID)
 }
 
 /* readonly attribute string classDescription; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ClassesByID::GetClassDescription(char * *aClassDescription)
 {
     static const char classDescription[] = "XPCComponents_ClassesByID";
@@ -1081,7 +1081,7 @@ nsXPCComponents_ClassesByID::GetClassDescription(char * *aClassDescription)
 }
 
 /* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ClassesByID::GetClassID(nsCID * *aClassID)
 {
     *aClassID = nsnull;
@@ -1089,7 +1089,7 @@ nsXPCComponents_ClassesByID::GetClassID(nsCID * *aClassID)
 }
 
 /* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ClassesByID::GetImplementationLanguage(
     PRUint32 *aImplementationLanguage)
 {
@@ -1098,7 +1098,7 @@ nsXPCComponents_ClassesByID::GetImplementationLanguage(
 }
 
 /* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ClassesByID::GetFlags(PRUint32 *aFlags)
 {
     *aFlags = nsIClassInfo::THREADSAFE;
@@ -1106,7 +1106,7 @@ nsXPCComponents_ClassesByID::GetFlags(PRUint32 *aFlags)
 }
 
 /* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ClassesByID::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1291,9 +1291,9 @@ public:
 };
 
 /***************************************************************************/
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] 
+/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval]
                        out nsIIDPtr array); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Results::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
     const PRUint32 count = 2;
@@ -1326,8 +1326,8 @@ oom:
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-nsXPCComponents_Results::GetHelperForLanguage(PRUint32 language, 
+NS_IMETHODIMP
+nsXPCComponents_Results::GetHelperForLanguage(PRUint32 language,
                                       nsISupports **retval)
 {
     *retval = nsnull;
@@ -1335,7 +1335,7 @@ nsXPCComponents_Results::GetHelperForLanguage(PRUint32 language,
 }
 
 /* readonly attribute string contractID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Results::GetContractID(char * *aContractID)
 {
     *aContractID = nsnull;
@@ -1343,7 +1343,7 @@ nsXPCComponents_Results::GetContractID(char * *aContractID)
 }
 
 /* readonly attribute string classDescription; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Results::GetClassDescription(char * *aClassDescription)
 {
     static const char classDescription[] = "XPCComponents_Results";
@@ -1352,7 +1352,7 @@ nsXPCComponents_Results::GetClassDescription(char * *aClassDescription)
 }
 
 /* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Results::GetClassID(nsCID * *aClassID)
 {
     *aClassID = nsnull;
@@ -1360,7 +1360,7 @@ nsXPCComponents_Results::GetClassID(nsCID * *aClassID)
 }
 
 /* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Results::GetImplementationLanguage(
     PRUint32 *aImplementationLanguage)
 {
@@ -1369,7 +1369,7 @@ nsXPCComponents_Results::GetImplementationLanguage(
 }
 
 /* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Results::GetFlags(PRUint32 *aFlags)
 {
     *aFlags = nsIClassInfo::THREADSAFE;
@@ -1377,7 +1377,7 @@ nsXPCComponents_Results::GetFlags(PRUint32 *aFlags)
 }
 
 /* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Results::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1520,9 +1520,9 @@ private:
 };
 
 /***************************************************************************/
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] 
+/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval]
                        out nsIIDPtr array); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
     const PRUint32 count = 2;
@@ -1555,8 +1555,8 @@ oom:
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-nsXPCComponents_ID::GetHelperForLanguage(PRUint32 language, 
+NS_IMETHODIMP
+nsXPCComponents_ID::GetHelperForLanguage(PRUint32 language,
                                       nsISupports **retval)
 {
     *retval = nsnull;
@@ -1564,7 +1564,7 @@ nsXPCComponents_ID::GetHelperForLanguage(PRUint32 language,
 }
 
 /* readonly attribute string contractID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ID::GetContractID(char * *aContractID)
 {
     *aContractID = nsnull;
@@ -1572,7 +1572,7 @@ nsXPCComponents_ID::GetContractID(char * *aContractID)
 }
 
 /* readonly attribute string classDescription; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ID::GetClassDescription(char * *aClassDescription)
 {
     static const char classDescription[] = "XPCComponents_ID";
@@ -1581,7 +1581,7 @@ nsXPCComponents_ID::GetClassDescription(char * *aClassDescription)
 }
 
 /* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ID::GetClassID(nsCID * *aClassID)
 {
     *aClassID = nsnull;
@@ -1589,7 +1589,7 @@ nsXPCComponents_ID::GetClassID(nsCID * *aClassID)
 }
 
 /* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ID::GetImplementationLanguage(
     PRUint32 *aImplementationLanguage)
 {
@@ -1598,7 +1598,7 @@ nsXPCComponents_ID::GetImplementationLanguage(
 }
 
 /* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ID::GetFlags(PRUint32 *aFlags)
 {
     *aFlags = nsIClassInfo::THREADSAFE;
@@ -1606,7 +1606,7 @@ nsXPCComponents_ID::GetFlags(PRUint32 *aFlags)
 }
 
 /* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_ID::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1748,9 +1748,9 @@ private:
 };
 
 /***************************************************************************/
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] 
+/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval]
                        out nsIIDPtr array); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Exception::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
     const PRUint32 count = 2;
@@ -1783,8 +1783,8 @@ oom:
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-nsXPCComponents_Exception::GetHelperForLanguage(PRUint32 language, 
+NS_IMETHODIMP
+nsXPCComponents_Exception::GetHelperForLanguage(PRUint32 language,
                                       nsISupports **retval)
 {
     *retval = nsnull;
@@ -1792,7 +1792,7 @@ nsXPCComponents_Exception::GetHelperForLanguage(PRUint32 language,
 }
 
 /* readonly attribute string contractID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Exception::GetContractID(char * *aContractID)
 {
     *aContractID = nsnull;
@@ -1800,7 +1800,7 @@ nsXPCComponents_Exception::GetContractID(char * *aContractID)
 }
 
 /* readonly attribute string classDescription; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Exception::GetClassDescription(char * *aClassDescription)
 {
     static const char classDescription[] = "XPCComponents_Exception";
@@ -1809,7 +1809,7 @@ nsXPCComponents_Exception::GetClassDescription(char * *aClassDescription)
 }
 
 /* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Exception::GetClassID(nsCID * *aClassID)
 {
     *aClassID = nsnull;
@@ -1817,7 +1817,7 @@ nsXPCComponents_Exception::GetClassID(nsCID * *aClassID)
 }
 
 /* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Exception::GetImplementationLanguage(
     PRUint32 *aImplementationLanguage)
 {
@@ -1826,7 +1826,7 @@ nsXPCComponents_Exception::GetImplementationLanguage(
 }
 
 /* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Exception::GetFlags(PRUint32 *aFlags)
 {
     *aFlags = nsIClassInfo::THREADSAFE;
@@ -1834,7 +1834,7 @@ nsXPCComponents_Exception::GetFlags(PRUint32 *aFlags)
 }
 
 /* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Exception::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
     return NS_ERROR_NOT_AVAILABLE;
@@ -2043,9 +2043,9 @@ private:
 };
 
 /***************************************************************************/
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] 
+/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval]
                        out nsIIDPtr array); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCConstructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
     const PRUint32 count = 2;
@@ -2078,8 +2078,8 @@ oom:
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-nsXPCConstructor::GetHelperForLanguage(PRUint32 language, 
+NS_IMETHODIMP
+nsXPCConstructor::GetHelperForLanguage(PRUint32 language,
                                       nsISupports **retval)
 {
     *retval = nsnull;
@@ -2087,7 +2087,7 @@ nsXPCConstructor::GetHelperForLanguage(PRUint32 language,
 }
 
 /* readonly attribute string contractID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCConstructor::GetContractID(char * *aContractID)
 {
     *aContractID = nsnull;
@@ -2095,7 +2095,7 @@ nsXPCConstructor::GetContractID(char * *aContractID)
 }
 
 /* readonly attribute string classDescription; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCConstructor::GetClassDescription(char * *aClassDescription)
 {
     static const char classDescription[] = "XPCConstructor";
@@ -2104,7 +2104,7 @@ nsXPCConstructor::GetClassDescription(char * *aClassDescription)
 }
 
 /* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCConstructor::GetClassID(nsCID * *aClassID)
 {
     *aClassID = nsnull;
@@ -2112,7 +2112,7 @@ nsXPCConstructor::GetClassID(nsCID * *aClassID)
 }
 
 /* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCConstructor::GetImplementationLanguage(
     PRUint32 *aImplementationLanguage)
 {
@@ -2121,7 +2121,7 @@ nsXPCConstructor::GetImplementationLanguage(
 }
 
 /* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCConstructor::GetFlags(PRUint32 *aFlags)
 {
     *aFlags = nsIClassInfo::THREADSAFE;
@@ -2129,7 +2129,7 @@ nsXPCConstructor::GetFlags(PRUint32 *aFlags)
 }
 
 /* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCConstructor::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
     return NS_ERROR_NOT_AVAILABLE;
@@ -2309,9 +2309,9 @@ private:
 };
 
 /***************************************************************************/
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] 
+/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval]
                        out nsIIDPtr array); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Constructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
     const PRUint32 count = 2;
@@ -2344,8 +2344,8 @@ oom:
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-nsXPCComponents_Constructor::GetHelperForLanguage(PRUint32 language, 
+NS_IMETHODIMP
+nsXPCComponents_Constructor::GetHelperForLanguage(PRUint32 language,
                                       nsISupports **retval)
 {
     *retval = nsnull;
@@ -2353,7 +2353,7 @@ nsXPCComponents_Constructor::GetHelperForLanguage(PRUint32 language,
 }
 
 /* readonly attribute string contractID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Constructor::GetContractID(char * *aContractID)
 {
     *aContractID = nsnull;
@@ -2361,7 +2361,7 @@ nsXPCComponents_Constructor::GetContractID(char * *aContractID)
 }
 
 /* readonly attribute string classDescription; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Constructor::GetClassDescription(char * *aClassDescription)
 {
     static const char classDescription[] = "XPCComponents_Constructor";
@@ -2370,7 +2370,7 @@ nsXPCComponents_Constructor::GetClassDescription(char * *aClassDescription)
 }
 
 /* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Constructor::GetClassID(nsCID * *aClassID)
 {
     *aClassID = nsnull;
@@ -2378,7 +2378,7 @@ nsXPCComponents_Constructor::GetClassID(nsCID * *aClassID)
 }
 
 /* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Constructor::GetImplementationLanguage(
     PRUint32 *aImplementationLanguage)
 {
@@ -2387,7 +2387,7 @@ nsXPCComponents_Constructor::GetImplementationLanguage(
 }
 
 /* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Constructor::GetFlags(PRUint32 *aFlags)
 {
     *aFlags = nsIClassInfo::THREADSAFE;
@@ -2395,7 +2395,7 @@ nsXPCComponents_Constructor::GetFlags(PRUint32 *aFlags)
 }
 
 /* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents_Constructor::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
     return NS_ERROR_NOT_AVAILABLE;
@@ -2488,7 +2488,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     nsCOMPtr<nsIJSIID> cInterfaceID;
     const char*        cInitializer = nsnull;
     JSAutoByteString  cInitializerBytes;
-    
+
     if(argc >= 3)
     {
         // argv[2] is an initializer function or property name
@@ -3557,7 +3557,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
 
     JSAutoByteString filenameBytes;
     nsXPIDLCString filename;
-    
+
 
     // Optional fourth and fifth arguments: filename and line number.
     if (filenameStr) {
@@ -4088,9 +4088,9 @@ NS_INTERFACE_MAP_END_THREADSAFE
 NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents)
 NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents)
 
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] 
+/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval]
                        out nsIIDPtr array); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
     const PRUint32 count = 3;
@@ -4124,8 +4124,8 @@ oom:
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-nsXPCComponents::GetHelperForLanguage(PRUint32 language, 
+NS_IMETHODIMP
+nsXPCComponents::GetHelperForLanguage(PRUint32 language,
                                       nsISupports **retval)
 {
     *retval = nsnull;
@@ -4133,7 +4133,7 @@ nsXPCComponents::GetHelperForLanguage(PRUint32 language,
 }
 
 /* readonly attribute string contractID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents::GetContractID(char * *aContractID)
 {
     *aContractID = nsnull;
@@ -4141,7 +4141,7 @@ nsXPCComponents::GetContractID(char * *aContractID)
 }
 
 /* readonly attribute string classDescription; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents::GetClassDescription(char * *aClassDescription)
 {
     static const char classDescription[] = "XPCComponents";
@@ -4150,7 +4150,7 @@ nsXPCComponents::GetClassDescription(char * *aClassDescription)
 }
 
 /* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents::GetClassID(nsCID * *aClassID)
 {
     *aClassID = nsnull;
@@ -4158,7 +4158,7 @@ nsXPCComponents::GetClassID(nsCID * *aClassID)
 }
 
 /* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents::GetImplementationLanguage(
     PRUint32 *aImplementationLanguage)
 {
@@ -4167,7 +4167,7 @@ nsXPCComponents::GetImplementationLanguage(
 }
 
 /* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents::GetFlags(PRUint32 *aFlags)
 {
     *aFlags = nsIClassInfo::THREADSAFE;
@@ -4175,7 +4175,7 @@ nsXPCComponents::GetFlags(PRUint32 *aFlags)
 }
 
 /* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXPCComponents::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
     return NS_ERROR_NOT_AVAILABLE;

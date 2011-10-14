@@ -51,11 +51,11 @@
 #include "xpctest_params.h"
 
 class xpcTestObjectReadOnly : public nsIXPCTestObjectReadOnly {
- public: 
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCTESTOBJECTREADONLY
   xpcTestObjectReadOnly();
-   
+
  private:
     bool    boolProperty;
     PRInt16 shortProperty;
@@ -65,7 +65,7 @@ class xpcTestObjectReadOnly : public nsIXPCTestObjectReadOnly {
 };
 
 class xpcTestObjectReadWrite : public nsIXPCTestObjectReadWrite {
-  public: 
+  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCTESTOBJECTREADWRITE
 

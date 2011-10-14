@@ -114,7 +114,7 @@ public:
 };
 
 typedef Ops<NoOp, NoOp> NoOps;
- 
+
 template<class ListType, class Base, class IndexOps, class NameOps=NoOps>
 class DerivedListClass {
 public:
