@@ -2629,7 +2629,7 @@ nsXPCComponents_Utils::LookupMethod()
     cc->GetCallee(getter_AddRefs(callee));
     if (!callee || callee.get() !=
         static_cast<const nsISupports*>
-        (static_cast<const nsIXPCComponents_Utils*>(this)))
+                   (static_cast<const nsIXPCComponents_Utils*>(this)))
         return NS_ERROR_FAILURE;
 #endif
 
@@ -2766,7 +2766,7 @@ nsXPCComponents_Utils::ReportError()
     cc->GetCallee(getter_AddRefs(callee));
     if (!callee || callee.get() !=
         static_cast<const nsISupports*>
-        (static_cast<const nsIXPCComponents_Utils*>(this))) {
+                   (static_cast<const nsIXPCComponents_Utils*>(this))) {
         NS_ERROR("reportError() must only be called from JS!");
         return NS_ERROR_FAILURE;
     }
@@ -2805,10 +2805,10 @@ nsXPCComponents_Utils::ReportError()
         PRUint32 column = err->uctokenptr - err->uclinebuf;
 
         rv = scripterr->InitWithWindowID(reinterpret_cast<const PRUnichar*>
-                                         (err->ucmessage),
+                                                         (err->ucmessage),
                                          fileUni.get(),
                                          reinterpret_cast<const PRUnichar*>
-                                         (err->uclinebuf),
+                                                         (err->uclinebuf),
                                          err->lineno,
                                          column,
                                          err->flags,
@@ -3582,7 +3582,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
             JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
                                              jsPrincipals,
                                              reinterpret_cast<const jschar *>
-                                             (PromiseFlatString(source).get()),
+                                                             (PromiseFlatString(source).get()),
                                              source.Length(), filename, lineNo,
                                              &v);
         if (ok && returnStringOnly && !(JSVAL_IS_VOID(v))) {
