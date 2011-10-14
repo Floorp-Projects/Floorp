@@ -122,6 +122,8 @@ class SessionHistory
         }
     }
     HistoryEntry getHistoryEntryAt(int index) {
-        return mHistory.get(index);
+        if (index < mHistory.size())
+            return mHistory.get(index);
+        return null;
     }
 }
