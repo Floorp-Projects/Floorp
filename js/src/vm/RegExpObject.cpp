@@ -41,6 +41,7 @@
 #include "jsscan.h"
 
 #include "vm/RegExpStatics.h"
+#include "vm/MatchPairs.h"
 
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
@@ -59,88 +60,97 @@ JS_STATIC_ASSERT(GlobalFlag == JSREG_GLOB);
 JS_STATIC_ASSERT(MultilineFlag == JSREG_MULTILINE);
 JS_STATIC_ASSERT(StickyFlag == JSREG_STICKY);
 
-bool
-RegExpPrivate::executeInternal(JSContext *cx, RegExpStatics *res, JSString *inputstr,
-                               size_t *lastIndex, bool test, Value *rval)
+MatchPairs *
+MatchPairs::create(LifoAlloc &alloc, size_t pairCount, size_t backingPairCount)
 {
-    const size_t pairCount = parenCount + 1;
-    const size_t matchItemCount = pairCount * 2;
-    const size_t bufCount = RegExpPrivateCode::getOutputSize(pairCount);
+    void *mem = alloc.alloc(calculateSize(backingPairCount));
+    if (!mem)
+        return NULL;
 
-    LifoAllocScope las(&cx->tempLifoAlloc());
-    int *buf = cx->tempLifoAlloc().newArray<int>(bufCount);
-    if (!buf)
-        return false;
+    return new (mem) MatchPairs(pairCount);
+}
+
+inline void
+MatchPairs::checkAgainst(size_t inputLength)
+{
+#if DEBUG
+    for (size_t i = 0; i < pairCount(); ++i) {
+        MatchPair p = pair(i);
+        p.check();
+        if (p.isUndefined())
+            continue;
+        JS_ASSERT(size_t(p.limit) <= inputLength);
+    }
+#endif
+}
+
+RegExpRunStatus
+RegExpPrivate::execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
+                       LifoAllocScope &allocScope, MatchPairs **output)
+{
+    const size_t origLength = length;
+    size_t backingPairCount = RegExpPrivateCode::getOutputSize(pairCount());
+
+    MatchPairs *matchPairs = MatchPairs::create(allocScope.alloc(), pairCount(), backingPairCount);
+    if (!matchPairs)
+        return RegExpRunStatus_Error;
 
     /*
-     * The JIT regexp procedure doesn't always initialize matchPair values.
-     * Maybe we can make this faster by ensuring it does?
+     * |displacement| emulates sticky mode by matching from this offset
+     * into the char buffer and subtracting the delta off at the end.
      */
-    for (int *it = buf; it != buf + matchItemCount; ++it)
-        *it = -1;
-    
-    JSLinearString *input = inputstr->ensureLinear(cx);
-    if (!input)
-        return false;
-
-    JS::Anchor<JSString *> anchor(input);
-    size_t len = input->length();
-    const jschar *chars = input->chars();
-
-    /* 
-     * inputOffset emulates sticky mode by matching from this offset into the char buf and
-     * subtracting the delta off at the end.
-     */
-    size_t inputOffset = 0;
+    size_t start = *lastIndex;
+    size_t displacement = 0;
 
     if (sticky()) {
-        /* Sticky matches at the last index for the regexp object. */
-        chars += *lastIndex;
-        len -= *lastIndex;
-        inputOffset = *lastIndex;
+        displacement = *lastIndex;
+        chars += displacement;
+        length -= displacement;
+        start = 0;
     }
 
-    size_t start = *lastIndex - inputOffset;
-    RegExpPrivateCode::ExecuteResult result = code.execute(cx, chars, start, len, buf, bufCount);
+    RegExpRunStatus status = code.execute(cx, chars, length, start,
+                                          matchPairs->buffer(), backingPairCount);
 
-    switch (result) {
-      case RegExpPrivateCode::Error:
-        return false;
-      case RegExpPrivateCode::Success_NotFound:
-        *rval = NullValue();
-        return true;
+    switch (status) {
+      case RegExpRunStatus_Error:
+        return status;
+      case RegExpRunStatus_Success_NotFound:
+        *output = matchPairs;
+        return status;
       default:
-        JS_ASSERT(result == RegExpPrivateCode::Success);
+        JS_ASSERT(status == RegExpRunStatus_Success);
     }
 
-    /* 
-     * Adjust buf for the inputOffset. Use of sticky is rare and the matchItemCount is small, so
-     * just do another pass.
-     */
-    if (JS_UNLIKELY(inputOffset)) {
-        for (size_t i = 0; i < matchItemCount; ++i)
-            buf[i] = buf[i] < 0 ? -1 : buf[i] + inputOffset;
-    }
+    matchPairs->displace(displacement);
+    matchPairs->checkAgainst(origLength);
 
-    /* Make sure the populated contents of |buf| are sane values against |input|. */
-    checkMatchPairs(input, buf, matchItemCount);
+    *lastIndex = matchPairs->pair(0).limit;
+    *output = matchPairs;
 
-    if (res)
-        res->updateFromMatch(cx, input, buf, matchItemCount);
+    return RegExpRunStatus_Success;
+}
 
-    *lastIndex = buf[1];
-
-    if (test) {
-        *rval = BooleanValue(true);
-        return true;
-    }
-
-    JSObject *array = createResult(cx, input, buf, matchItemCount);
-    if (!array)
+bool
+RegExpObject::makePrivate(JSContext *cx)
+{
+    JS_ASSERT(!getPrivate());
+    AlreadyIncRefed<RegExpPrivate> rep = RegExpPrivate::create(cx, getSource(), getFlags(), NULL);
+    if (!rep)
         return false;
 
-    *rval = ObjectValue(*array);
+    setPrivate(rep.get());
     return true;
+}
+
+RegExpRunStatus
+RegExpObject::execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
+                      LifoAllocScope &allocScope, MatchPairs **output)
+{
+    if (!getPrivate() && !makePrivate(cx))
+        return RegExpRunStatus_Error;
+
+    return getPrivate()->execute(cx, chars, length, lastIndex, allocScope, output);
 }
 
 const Shape *
@@ -226,8 +236,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
 static void
 regexp_finalize(JSContext *cx, JSObject *obj)
 {
-    if (RegExpPrivate *rep = static_cast<RegExpObject *>(obj)->getPrivate())
-        rep->decref(cx);
+    obj->asRegExp()->finalize(cx);
 }
 
 Class js::RegExpClass = {
@@ -294,9 +303,9 @@ RegExpPrivateCode::reportPCREError(JSContext *cx, int error)
     return
     switch (error) {
       case -2: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
-      case 0: JS_NOT_REACHED("Precondition violation: an error must have occurred."); 
+      case 0: JS_NOT_REACHED("Precondition violation: an error must have occurred.");
       case 1: REPORT(JSMSG_TRAILING_SLASH);
-      case 2: REPORT(JSMSG_TRAILING_SLASH); 
+      case 2: REPORT(JSMSG_TRAILING_SLASH);
       case 3: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
       case 4: REPORT(JSMSG_BAD_QUANTIFIER);
       case 5: REPORT(JSMSG_BAD_QUANTIFIER);
@@ -317,6 +326,7 @@ RegExpPrivateCode::reportPCREError(JSContext *cx, int error)
     }
 #undef REPORT
 }
+
 #endif /* ENABLE_YARR_JIT */
 
 bool
@@ -357,7 +367,7 @@ js::ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut)
 }
 
 AlreadyIncRefed<RegExpPrivate>
-RegExpPrivate::createFlagged(JSContext *cx, JSString *str, JSString *opt, TokenStream *ts)
+RegExpPrivate::create(JSContext *cx, JSLinearString *str, JSString *opt, TokenStream *ts)
 {
     if (!opt)
         return create(cx, str, RegExpFlag(0), ts);
@@ -370,7 +380,7 @@ RegExpPrivate::createFlagged(JSContext *cx, JSString *str, JSString *opt, TokenS
 }
 
 RegExpObject *
-RegExpObject::clone(JSContext *cx, RegExpObject *obj, RegExpObject *proto)
+RegExpObject::clone(JSContext *cx, RegExpObject *reobj, RegExpObject *proto)
 {
     JSObject *clone = NewNativeClassInstance(cx, &RegExpClass, proto, proto->getParent());
     if (!clone)
@@ -380,41 +390,35 @@ RegExpObject::clone(JSContext *cx, RegExpObject *obj, RegExpObject *proto)
      * This clone functionality does not duplicate the JIT'd code blob,
      * which is necessary for cross-compartment cloning functionality.
      */
-    assertSameCompartment(cx, obj, clone);
+    assertSameCompartment(cx, reobj, clone);
 
     RegExpStatics *res = cx->regExpStatics();
+    RegExpObject *reclone = clone->asRegExp();
 
-    /* 
+    /*
      * Check that the RegExpPrivate for the original is okay to use in
-     * the clone -- if the RegExpStatics provides more flags we'll need
-     * a different RegExpPrivate.
+     * the clone -- if the |RegExpStatics| provides more flags we'll
+     * need a different |RegExpPrivate|.
      */
-    AlreadyIncRefed<RegExpPrivate> rep(NULL);
-    {
-        RegExpFlag origFlags = obj->getFlags();
-        RegExpFlag staticsFlags = res->getFlags();
-        if ((origFlags & staticsFlags) != staticsFlags) {
-            RegExpFlag newFlags = RegExpFlag(origFlags | staticsFlags);
-            rep = RegExpPrivate::create(cx, obj->getSource(), newFlags, NULL);
-            if (!rep)
-                return NULL;
-        } else {
-            RegExpPrivate *toShare = obj->getPrivate();
-            toShare->incref(cx);
-            rep = AlreadyIncRefed<RegExpPrivate>(toShare);
+    RegExpFlag origFlags = reobj->getFlags();
+    RegExpFlag staticsFlags = res->getFlags();
+    if ((origFlags & staticsFlags) != staticsFlags) {
+        RegExpFlag newFlags = RegExpFlag(origFlags | staticsFlags);
+        return reclone->reset(cx, reobj->getSource(), newFlags) ? reclone : NULL;
+    }
+
+    RegExpPrivate *toShare = reobj->getPrivate();
+    if (toShare) {
+        toShare->incref(cx);
+        if (!reclone->reset(cx, AlreadyIncRefed<RegExpPrivate>(toShare))) {
+            toShare->decref(cx);
+            return NULL;
         }
+    } else {
+        if (!reclone->reset(cx, reobj))
+            return NULL;
     }
 
-    JS_ASSERT(rep);
-
-    PreInitRegExpObject pireo(clone);
-    RegExpObject *reclone = pireo.get();
-    if (!ResetRegExpObject(cx, reclone, rep)) {
-        pireo.fail();
-        return NULL;
-    }
-
-    pireo.succeed();
     return reclone;
 }
 
@@ -435,11 +439,7 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneRegExpObject, CONTEXT, OBJECT, OBJE
 JSFlatString *
 RegExpObject::toString(JSContext *cx) const
 {
-    RegExpPrivate *rep = getPrivate();
-    if (!rep)
-        return cx->runtime->emptyString;
-
-    JSLinearString *src = rep->getSource();
+    JSLinearString *src = getSource();
     StringBuffer sb(cx);
     if (size_t len = src->length()) {
         if (!sb.reserve(len + 2))
@@ -451,13 +451,13 @@ RegExpObject::toString(JSContext *cx) const
         if (!sb.append("/(?:)/"))
             return NULL;
     }
-    if (rep->global() && !sb.append('g'))
+    if (global() && !sb.append('g'))
         return NULL;
-    if (rep->ignoreCase() && !sb.append('i'))
+    if (ignoreCase() && !sb.append('i'))
         return NULL;
-    if (rep->multiline() && !sb.append('m'))
+    if (multiline() && !sb.append('m'))
         return NULL;
-    if (rep->sticky() && !sb.append('y'))
+    if (sticky() && !sb.append('y'))
         return NULL;
 
     return sb.finishString();

@@ -2707,23 +2707,24 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
                                      nsCOMPtr<nsIDOMNode> *outNode,
                                      bool aTrustedInput)
 {
+  nsresult rv;
   nsCOMPtr<nsIDOMDocumentFragment> frag;
   NS_NewDocumentFragment(getter_AddRefs(frag),
                          aTargetDocument->NodeInfoManager());
   nsCOMPtr<nsIContent> fragment = do_QueryInterface(frag);
-  nsContentUtils::ParseFragmentHTML(aFragStr,
-                                    fragment,
-                                    aContextLocalName ?
-                                        aContextLocalName : nsGkAtoms::body,
-                                    kNameSpaceID_XHTML,
-                                    PR_FALSE,
-                                    PR_TRUE);
+  rv = nsContentUtils::ParseFragmentHTML(aFragStr,
+                                         fragment,
+                                         aContextLocalName ?
+                                           aContextLocalName : nsGkAtoms::body,
+                                        kNameSpaceID_XHTML,
+                                        PR_FALSE,
+                                        PR_TRUE);
   if (!aTrustedInput) {
     nsTreeSanitizer sanitizer(!!aContextLocalName, !aContextLocalName);
     sanitizer.Sanitize(fragment);
   }
   *outNode = do_QueryInterface(frag);
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,

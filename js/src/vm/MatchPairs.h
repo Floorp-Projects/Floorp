@@ -38,41 +38,87 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef RegExp_h___
-#define RegExp_h___
-
-#include "jsprvtd.h"
-
-JSObject *
-js_InitRegExpClass(JSContext *cx, JSObject *obj);
+#ifndef MatchPairs_h__
+#define MatchPairs_h__
 
 /*
- * The following builtin natives are extern'd for pointer comparison in
- * other parts of the engine.
+ * RegExp match results are succinctly represented by pairs of integer
+ * indices delimiting (start, limit] segments of the input string.
+ *
+ * The pair count for a given RegExp match is the capturing parentheses
+ * count plus one for the "0 capturing paren" whole text match.
  */
 
 namespace js {
 
-/* 
- * |res| may be null if the |RegExpStatics| are not to be updated.
- * |input| may be null if there is no |JSString| corresponding to
- * |chars| and |length|.
- */
-bool
-ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpObject *reobj, JSLinearString *input,
-              const jschar *chars, size_t length,
-              size_t *lastIndex, RegExpExecType type, Value *rval);
+struct MatchPair
+{
+    int start;
+    int limit;
 
-bool
-ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpPrivate *rep, JSLinearString *input,
-              const jschar *chars, size_t length,
-              size_t *lastIndex, RegExpExecType type, Value *rval);
+    MatchPair(int start, int limit) : start(start), limit(limit) {}
 
-extern JSBool
-regexp_exec(JSContext *cx, uintN argc, Value *vp);
+    size_t length() const {
+        JS_ASSERT(!isUndefined());
+        return limit - start;
+    }
 
-extern JSBool
-regexp_test(JSContext *cx, uintN argc, Value *vp);
+    bool isUndefined() const {
+        return start == -1;
+    }
+
+    void check() const {
+        JS_ASSERT(limit >= start);
+        JS_ASSERT_IF(!isUndefined(), start >= 0);
+    }
+};
+
+class MatchPairs
+{
+    size_t  pairCount_;
+    int     buffer_[1];
+
+    explicit MatchPairs(size_t pairCount) : pairCount_(pairCount) {
+        initPairValues();
+    }
+
+    void initPairValues() {
+        for (int *it = buffer_; it < buffer_ + 2 * pairCount_; ++it)
+            *it = -1;
+    }
+
+    static size_t calculateSize(size_t backingPairCount) {
+        return sizeof(MatchPairs) - sizeof(int) + sizeof(int) * backingPairCount;
+    }
+
+    int *buffer() { return buffer_; }
+
+    friend class RegExpPrivate;
+
+  public:
+    /*
+     * |backingPairCount| is necessary because PCRE uses extra space
+     * after the actual results in the buffer.
+     */
+    static MatchPairs *create(LifoAlloc &alloc, size_t pairCount, size_t backingPairCount);
+
+    size_t pairCount() const { return pairCount_; }
+
+    MatchPair pair(size_t i) {
+        JS_ASSERT(i < pairCount());
+        return MatchPair(buffer_[2 * i], buffer_[2 * i + 1]);
+    }
+
+    void displace(size_t amount) {
+        if (!amount)
+            return;
+
+        for (int *it = buffer_; it < buffer_ + 2 * pairCount_; ++it)
+            *it = (*it < 0) ? -1 : *it + amount;
+    }
+
+    inline void checkAgainst(size_t length);
+};
 
 } /* namespace js */
 

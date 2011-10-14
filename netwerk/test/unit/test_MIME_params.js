@@ -251,6 +251,21 @@ var tests = [
   // sanity check with WS on both sides
   ["attachment; filename = foo-A.html", 
    "attachment", "foo-A.html"],   
+
+  // Bug 692574: RFC2231/5987 decoding should not tolerate missing single
+  // quotes
+
+  // one missing
+  ["attachment; filename*=UTF-8'foo-%41.html", 
+   "attachment", Cr.NS_ERROR_INVALID_ARG],
+
+  // both missing
+  ["attachment; filename*=foo-%41.html", 
+   "attachment", Cr.NS_ERROR_INVALID_ARG],
+
+  // make sure fallback works
+  ["attachment; filename*=UTF-8'foo-%41.html; filename=bar.html", 
+   "attachment", "bar.html"],
 ];
 
 function do_tests(whichRFC)
