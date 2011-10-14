@@ -38,7 +38,7 @@
 
 #include "base/basictypes.h"
 
-#include "xpcmodule.h"
+#include "XPCModule.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsLayoutStatics.h"
 #include "nsContentCID.h"

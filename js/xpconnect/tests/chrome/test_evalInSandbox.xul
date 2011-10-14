@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=533596
+-->
+<window title="Mozilla Bug 533596"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+
+  <iframe src="http://example.org/tests/js/xpconnect/tests/mochitest/file_evalInSandbox.html"
+          onload="checkCrossOrigin(this)">
+  </iframe>
+  <iframe src="chrome://mochitests/content/chrome/js/xpconnect/tests/chrome/file_evalInSandbox.html"
+          onload="checkSameOrigin(this)">
+  </iframe>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+      const Cu = Components.utils;
+      const Ci = Components.interfaces;
+      const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils);
+
+      function checkCrossOriginSandbox(sandbox)
+      {
+          is(utils.getClassName(sandbox),
+             "Proxy",
+             "sandbox was wrapped correctly");
+
+          is(utils.getClassName(Cu.evalInSandbox("this.document", sandbox)),
+             "Proxy",
+             "return value was rewrapped correctly");
+      }
+
+      function checkCrossOriginXrayedSandbox(sandbox)
+      {
+        ok(Cu.evalInSandbox("!('windowfoo' in window);", sandbox),
+           "the window itself Xray is an XrayWrapper");
+        ok(Cu.evalInSandbox("('wrappedJSObject' in this.document);", sandbox),
+           "wrappers inside eIS are Xrays");
+        ok(Cu.evalInSandbox("!('foo' in this.document);", sandbox),
+           "must not see expandos");
+        ok('wrappedJSObject' in Cu.evalInSandbox("this.document", sandbox),
+           "wrappers returned from the sandbox are Xrays");
+        ok(!("foo" in Cu.evalInSandbox("this.document", sandbox)),
+           "must not see expandos in wrappers returned from the sandbox");
+
+        ok('wrappedJSObject' in sandbox.document,
+           "values obtained from the sandbox are Xrays");
+        ok(!("foo" in sandbox.document),
+           "must not see expandos in wrappers obtained from the sandbox");
+
+      }
+
+      function checkCrossOrigin(ifr) {
+        var win = ifr.contentWindow;
+        var sandbox =
+          new Cu.Sandbox(win, { sandboxPrototype: win, wantXrays: true } );
+
+        checkCrossOriginSandbox(sandbox);
+        checkCrossOriginXrayedSandbox(sandbox);
+
+        sandbox =
+          new Cu.Sandbox(win, { sandboxPrototype: win } );
+
+        checkCrossOriginSandbox(sandbox);
+        checkCrossOriginXrayedSandbox(sandbox);
+
+        sandbox =
+          new Cu.Sandbox(win, { sandboxPrototype: win, wantXrays: false } );
+
+        checkCrossOriginSandbox(sandbox);
+
+        ok(Cu.evalInSandbox("('foo' in this.document);", sandbox),
+           "can see expandos");
+        ok(("foo" in Cu.evalInSandbox("this.document", sandbox)),
+           "must see expandos in wrappers returned from the sandbox");
+
+        ok(("foo" in sandbox.document),
+           "must see expandos in wrappers obtained from the sandbox");
+
+        testDone();
+      }
+
+      function checkSameOrigin(ifr) {
+        var win = ifr.contentWindow;
+        var sandbox =
+          new Cu.Sandbox(win, { sandboxPrototype: win, wantXrays: true } );
+
+        ok(Cu.evalInSandbox("('foo' in this.document);", sandbox),
+           "must see expandos for a chrome sandbox");
+
+        sandbox =
+          new Cu.Sandbox(win, { sandboxPrototype: win } );
+
+        ok(Cu.evalInSandbox("('foo' in this.document);", sandbox),
+           "must see expandos for a chrome sandbox");
+
+        sandbox =
+          new Cu.Sandbox(win, { sandboxPrototype: win, wantXrays: false } );
+
+        ok(Cu.evalInSandbox("('foo' in this.document);", sandbox),
+           "can see expandos for a chrome sandbox");
+
+        testDone();
+      }
+
+      var testsRun = 0;
+      function testDone() {
+        if (++testsRun == 2)
+          SimpleTest.finish();
+      }
+
+      SimpleTest.waitForExplicitFinish();
+
+      try {
+        var sandbox = new Cu.Sandbox(win, { sandboxPrototype: undefined } );
+        ok(false, "undefined is not a valid prototype");
+      }
+      catch (e) {
+        ok(true, "undefined is not a valid prototype");
+      }
+
+      try {
+        var sandbox = new Cu.Sandbox(win, { wantXrays: undefined } );
+        ok(false, "undefined is not a valid value for wantXrays");
+      }
+      catch (e) {
+        ok(true, "undefined is not a valid value for wantXrays");
+      }
+
+      // Crash test for bug 601829.
+      try {
+        Components.utils.evalInSandbox('', null);
+      } catch (e) {
+        ok(true, "didn't crash on a null sandbox object");
+      }
+  ]]></script>
+</window>

@@ -2152,8 +2152,8 @@ WebGLContext::GetConcreteObject(const char *info,
 #ifdef DEBUG
     {
         // once bug 694114 is implemented, we want to replace this by a static assertion, without #ifdef DEBUG
-        nsresult rv;
-        do_QueryInterface(aInterface, &rv);
+        nsresult rv = NS_OK;
+        nsCOMPtr<ConcreteObjectType> tmp(do_QueryInterface(aInterface, &rv));
         NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
                           "QueryInterface failed. WebGL objects are builtinclass, so this should never happen. "
                           "Please file a bug at bugzilla.mozilla.org -> Core -> Canvas:WebGL and link to the present page.");
