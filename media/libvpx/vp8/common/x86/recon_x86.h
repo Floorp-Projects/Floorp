@@ -46,6 +46,8 @@ extern prototype_copy_block(vp8_copy_mem16x16_mmx);
 extern prototype_recon_block(vp8_recon2b_sse2);
 extern prototype_recon_block(vp8_recon4b_sse2);
 extern prototype_copy_block(vp8_copy_mem16x16_sse2);
+extern prototype_build_intra_predictors(vp8_build_intra_predictors_mbuv_sse2);
+extern prototype_build_intra_predictors(vp8_build_intra_predictors_mbuv_s_sse2);
 
 #if !CONFIG_RUNTIME_CPU_DETECT
 #undef  vp8_recon_recon2
@@ -56,6 +58,26 @@ extern prototype_copy_block(vp8_copy_mem16x16_sse2);
 
 #undef  vp8_recon_copy16x16
 #define vp8_recon_copy16x16 vp8_copy_mem16x16_sse2
+
+#undef  vp8_recon_build_intra_predictors_mbuv
+#define vp8_recon_build_intra_predictors_mbuv vp8_build_intra_predictors_mbuv_sse2
+
+#undef  vp8_recon_build_intra_predictors_mbuv_s
+#define vp8_recon_build_intra_predictors_mbuv_s vp8_build_intra_predictors_mbuv_s_sse2
+
+#endif
+#endif
+
+#if HAVE_SSSE3
+extern prototype_build_intra_predictors(vp8_build_intra_predictors_mbuv_ssse3);
+extern prototype_build_intra_predictors(vp8_build_intra_predictors_mbuv_s_ssse3);
+
+#if !CONFIG_RUNTIME_CPU_DETECT
+#undef  vp8_recon_build_intra_predictors_mbuv
+#define vp8_recon_build_intra_predictors_mbuv vp8_build_intra_predictors_mbuv_ssse3
+
+#undef  vp8_recon_build_intra_predictors_mbuv_s
+#define vp8_recon_build_intra_predictors_mbuv_s vp8_build_intra_predictors_mbuv_s_ssse3
 
 #endif
 #endif

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
+ *  Copyright (c) 2011 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -9,14 +9,14 @@
  */
 
 
-#ifndef DETOKENIZE_ARM_H
-#define DETOKENIZE_ARM_H
+#ifndef FILTER_H
+#define FILTER_H
 
-#if HAVE_ARMV6
-#if CONFIG_ARM_ASM_DETOK
-void vp8_init_detokenizer(VP8D_COMP *dx);
-void vp8_decode_mb_tokens_v6(DETOK *detoken, int type);
-#endif
-#endif
+#define BLOCK_HEIGHT_WIDTH 4
+#define VP8_FILTER_WEIGHT 128
+#define VP8_FILTER_SHIFT  7
 
-#endif
+extern const short vp8_bilinear_filters[8][2];
+extern const short vp8_sub_pel_filters[8][6];
+
+#endif //FILTER_H

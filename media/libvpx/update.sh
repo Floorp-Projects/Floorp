@@ -51,16 +51,17 @@ fi
 
 # These are relative to SDK source dir.
 commonFiles=(
+  vp8/vp8_dx_iface.c
   vp8/common/alloccommon.c
   vp8/common/blockd.c
   vp8/common/debugmodes.c
+  vp8/common/defaultcoefcounts.c
   vp8/common/entropy.c
   vp8/common/entropymode.c
   vp8/common/entropymv.c
   vp8/common/extend.c
-  vp8/common/filter_c.c
+  vp8/common/filter.c
   vp8/common/findnearmv.c
-  vp8/common/generic/systemdependent.c
   vp8/common/idctllm.c
   vp8/common/invtrans.c
   vp8/common/loopfilter.c
@@ -69,7 +70,6 @@ commonFiles=(
   vp8/common/modecont.c
   vp8/common/modecontext.c
   vp8/common/postproc.c
-  vp8/common/predictdc.c
   vp8/common/quant_common.c
   vp8/common/recon.c
   vp8/common/reconinter.c
@@ -84,9 +84,10 @@ commonFiles=(
   vp8/common/arm/filter_arm.c
   vp8/common/arm/loopfilter_arm.c
   vp8/common/arm/reconintra_arm.c
-  vp8/common/arm/vpx_asm_offsets.c
   vp8/common/arm/neon/recon_neon.c
+  vp8/common/generic/systemdependent.c
   vp8/common/x86/loopfilter_x86.c
+  vp8/common/x86/recon_wrapper_sse2.c
   vp8/common/x86/vp8_asm_stubs.c
   vp8/common/x86/x86_systemdependent.c
   vp8/decoder/dboolhuff.c
@@ -94,19 +95,18 @@ commonFiles=(
   vp8/decoder/decodframe.c
   vp8/decoder/dequantize.c
   vp8/decoder/detokenize.c
-  vp8/decoder/reconintra_mt.c
-  vp8/decoder/generic/dsystemdependent.c
   vp8/decoder/idct_blk.c
   vp8/decoder/onyxd_if.c
+  vp8/decoder/reconintra_mt.c
   vp8/decoder/threading.c
   vp8/decoder/arm/arm_dsystemdependent.c
   vp8/decoder/arm/dequantize_arm.c
   vp8/decoder/arm/armv6/idct_blk_v6.c
   vp8/decoder/arm/neon/idct_blk_neon.c
+  vp8/decoder/generic/dsystemdependent.c
   vp8/decoder/x86/idct_blk_mmx.c
   vp8/decoder/x86/idct_blk_sse2.c
   vp8/decoder/x86/x86_dsystemdependent.c
-  vp8/vp8_dx_iface.c
   vpx/src/vpx_codec.c
   vpx/src/vpx_decoder.c
   vpx/src/vpx_decoder_compat.c
@@ -114,7 +114,7 @@ commonFiles=(
   vpx/src/vpx_image.c
   vpx_mem/vpx_mem.c
   vpx_scale/generic/gen_scalers.c
-  vpx_scale/generic/scalesystemdependant.c
+  vpx_scale/generic/scalesystemdependent.c
   vpx_scale/generic/vpxscale.c
   vpx_scale/generic/yv12config.c
   vpx_scale/generic/yv12extend.c
@@ -128,6 +128,7 @@ commonFiles=(
   vp8/common/entropymode.h
   vp8/common/entropymv.h
   vp8/common/extend.h
+  vp8/common/filter.h
   vp8/common/findnearmv.h
   vp8/common/g_common.h
   vp8/common/header.h
@@ -142,8 +143,6 @@ commonFiles=(
   vp8/common/postproc.h
   vp8/common/ppflags.h
   vp8/common/pragmas.h
-  vp8/common/predictdc.h
-  vp8/common/preproc.h
   vp8/common/quant_common.h
   vp8/common/recon.h
   vp8/common/reconinter.h
@@ -156,7 +155,7 @@ commonFiles=(
   vp8/common/threading.h
   vp8/common/treecoder.h
   vp8/common/type_aliases.h
-  vp8/common/vpxerrors.h
+  vp8/common/arm/bilinearfilter_arm.h
   vp8/common/arm/idct_arm.h
   vp8/common/arm/loopfilter_arm.h
   vp8/common/arm/recon_arm.h
@@ -174,9 +173,7 @@ commonFiles=(
   vp8/decoder/onyxd_int.h
   vp8/decoder/reconintra_mt.h
   vp8/decoder/treereader.h
-  vp8/decoder/arm/dboolhuff_arm.h
   vp8/decoder/arm/dequantize_arm.h
-  vp8/decoder/arm/detokenize_arm.h
   vp8/decoder/x86/dequantize_x86.h
   vpx/internal/vpx_codec_internal.h
   vpx/vp8cx.h
@@ -240,7 +237,6 @@ commonFiles=(
   vp8/common/arm/neon/recon16x16mb_neon.asm
   vp8/common/arm/neon/buildintrapredictorsmby_neon.asm
   vp8/common/arm/neon/save_neon_reg.asm
-  vp8/decoder/arm/detokenize.asm
   vp8/decoder/arm/armv6/dequant_dc_idct_v6.asm
   vp8/decoder/arm/armv6/dequant_idct_v6.asm
   vp8/decoder/arm/armv6/dequantize_v6.asm
@@ -318,17 +314,5 @@ done
 # Patch to compile with Sun Studio on Solaris
 patch -p3 < solaris.patch
 
-# Patch to fix link with xcode4
-patch -p1 < xcode4.patch
-
-# Patch to fix data race on global function pointers
-patch -p3 < bug640935.patch
-
-# Patch to avoid text relocations on ARM
-patch -p3 < bug646815.patch
-
-# Patch to fix alignment problems with using ARM asm in Thumb mode.
-patch -p3 < bug666931.patch
-
-# Patch to make chroma planes 16-byte aligned.
-patch -p3 < bug671818.patch
+# Patch to fix errors including C headers in C++
+patch -p3 < compile_errors.patch

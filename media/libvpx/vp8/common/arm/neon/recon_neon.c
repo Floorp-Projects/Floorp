@@ -10,8 +10,8 @@
 
 
 #include "vpx_ports/config.h"
-#include "recon.h"
-#include "blockd.h"
+#include "vp8/common/recon.h"
+#include "vp8/common/blockd.h"
 
 extern void vp8_recon16x16mb_neon(unsigned char *pred_ptr, short *diff_ptr, unsigned char *dst_ptr, int ystride, unsigned char *udst_ptr, unsigned char *vdst_ptr);
 
