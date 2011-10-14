@@ -11,7 +11,7 @@
 
 #include "vpx_ports/config.h"
 #include "vpx_ports/x86.h"
-#include "onyxd_int.h"
+#include "vp8/decoder/onyxd_int.h"
 
 
 #if HAVE_MMX
@@ -28,6 +28,7 @@ void vp8_dequantize_b_mmx(BLOCKD *d)
 
 void vp8_arch_x86_decode_init(VP8D_COMP *pbi)
 {
+#if CONFIG_RUNTIME_CPU_DETECT
     int flags = x86_simd_caps();
 
     /* Note:
@@ -36,7 +37,6 @@ void vp8_arch_x86_decode_init(VP8D_COMP *pbi)
      * you modify any of the function mappings present in this file, be sure
      * to also update them in static mapings (<arch>/filename_<arch>.h)
      */
-#if CONFIG_RUNTIME_CPU_DETECT
     /* Override default functions with fastest ones for this CPU. */
 #if HAVE_MMX
     if (flags & HAS_MMX)

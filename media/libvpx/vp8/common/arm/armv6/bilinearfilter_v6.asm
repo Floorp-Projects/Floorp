@@ -15,33 +15,33 @@
     AREA    |.text|, CODE, READONLY  ; name this block of code
 
 ;-------------------------------------
-; r0    unsigned char *src_ptr,
-; r1    unsigned short *output_ptr,
-; r2    unsigned int src_pixels_per_line,
-; r3    unsigned int output_height,
-; stack    unsigned int output_width,
-; stack    const short *vp8_filter
+; r0    unsigned char  *src_ptr,
+; r1    unsigned short *dst_ptr,
+; r2    unsigned int    src_pitch,
+; r3    unsigned int    height,
+; stack unsigned int    width,
+; stack const short    *vp8_filter
 ;-------------------------------------
 ; The output is transposed stroed in output array to make it easy for second pass filtering.
 |vp8_filter_block2d_bil_first_pass_armv6| PROC
     stmdb   sp!, {r4 - r11, lr}
 
     ldr     r11, [sp, #40]                  ; vp8_filter address
-    ldr     r4, [sp, #36]                   ; output width
+    ldr     r4, [sp, #36]                   ; width
 
     mov     r12, r3                         ; outer-loop counter
-    sub     r2, r2, r4                      ; src increment for height loop
 
-    ;;IF ARCHITECTURE=6
-    pld     [r0]
-    ;;ENDIF
+    add     r7, r2, r4                      ; preload next row
+    pld     [r0, r7]
+
+    sub     r2, r2, r4                      ; src increment for height loop
 
     ldr     r5, [r11]                       ; load up filter coefficients
 
-    mov     r3, r3, lsl #1                  ; output_height*2
+    mov     r3, r3, lsl #1                  ; height*2
     add     r3, r3, #2                      ; plus 2 to make output buffer 4-bit aligned since height is actually (height+1)
 
-    mov     r11, r1                         ; save output_ptr for each row
+    mov     r11, r1                         ; save dst_ptr for each row
 
     cmp     r5, #128                        ; if filter coef = 128, then skip the filter
     beq     bil_null_1st_filter
@@ -96,9 +96,8 @@
     add     r0, r0, r2                      ; move to next input row
     subs    r12, r12, #1
 
-    ;;IF ARCHITECTURE=6
-    pld     [r0]
-    ;;ENDIF
+    add     r9, r2, r4, lsl #1              ; adding back block width
+    pld     [r0, r9]                        ; preload next row
 
     add     r11, r11, #2                    ; move over to next column
     mov     r1, r11
@@ -140,17 +139,17 @@
 
 ;---------------------------------
 ; r0    unsigned short *src_ptr,
-; r1    unsigned char *output_ptr,
-; r2    int output_pitch,
-; r3    unsigned int  output_height,
-; stack unsigned int  output_width,
-; stack const short *vp8_filter
+; r1    unsigned char  *dst_ptr,
+; r2    int             dst_pitch,
+; r3    unsigned int    height,
+; stack unsigned int    width,
+; stack const short    *vp8_filter
 ;---------------------------------
 |vp8_filter_block2d_bil_second_pass_armv6| PROC
     stmdb   sp!, {r4 - r11, lr}
 
     ldr     r11, [sp, #40]                  ; vp8_filter address
-    ldr     r4, [sp, #36]                   ; output width
+    ldr     r4, [sp, #36]                   ; width
 
     ldr     r5, [r11]                       ; load up filter coefficients
     mov     r12, r4                         ; outer-loop counter = width, since we work on transposed data matrix

@@ -1048,7 +1048,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
 
   case XML_HTTP_RESPONSE_TYPE_BLOB:
     if (mState & XML_HTTP_REQUEST_DONE && mResponseBlob) {
-      JSObject* scope = JS_GetScopeChain(aCx);
+      JSObject* scope = JS_GetGlobalForScopeChain(aCx);
       rv = nsContentUtils::WrapNative(aCx, scope, mResponseBlob, aResult,
                                       nsnull, PR_TRUE);
     } else {
@@ -1058,7 +1058,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
 
   case XML_HTTP_RESPONSE_TYPE_DOCUMENT:
     if (mState & XML_HTTP_REQUEST_DONE && mResponseXML) {
-      JSObject* scope = JS_GetScopeChain(aCx);
+      JSObject* scope = JS_GetGlobalForScopeChain(aCx);
       rv = nsContentUtils::WrapNative(aCx, scope, mResponseXML, aResult,
                                       nsnull, PR_TRUE);
     } else {
@@ -1880,7 +1880,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     const nsAString& emptyStr = EmptyString();
     nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(mOwner);
     rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, docURI,
-                                        baseURI, mPrincipal, global,
+                                        baseURI, mPrincipal, global, false,
                                         getter_AddRefs(mResponseXML));
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> responseDoc = do_QueryInterface(mResponseXML);

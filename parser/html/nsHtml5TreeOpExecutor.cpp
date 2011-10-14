@@ -352,9 +352,6 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
 void
 nsHtml5TreeOpExecutor::FlushSpeculativeLoads()
 {
-  if (NS_UNLIKELY(!mParser)) {
-    return;
-  }
   nsTArray<nsHtml5SpeculativeLoad> speculativeLoadQueue;
   mStage.MoveSpeculativeLoadsTo(speculativeLoadQueue);
   const nsHtml5SpeculativeLoad* start = speculativeLoadQueue.Elements();
@@ -362,6 +359,10 @@ nsHtml5TreeOpExecutor::FlushSpeculativeLoads()
   for (nsHtml5SpeculativeLoad* iter = const_cast<nsHtml5SpeculativeLoad*>(start);
        iter < end;
        ++iter) {
+    if (NS_UNLIKELY(!mParser)) {
+      // An extension terminated the parser from a HTTP observer.
+      return;
+    }
     iter->Perform(this);
   }
 }
@@ -453,11 +454,21 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
            iter < end;
            ++iter) {
         iter->Perform(this);
+        if (NS_UNLIKELY(!mParser)) {
+          // An extension terminated the parser from a HTTP observer.
+          mOpQueue.Clear(); // clear in order to be able to assert in destructor
+          return;
+        }
       }
     } else {
       FlushSpeculativeLoads(); // Make sure speculative loads never start after
                                // the corresponding normal loads for the same
                                // URLs.
+      if (NS_UNLIKELY(!mParser)) {
+        // An extension terminated the parser from a HTTP observer.
+        mOpQueue.Clear(); // clear in order to be able to assert in destructor
+        return;
+      }
       // Not sure if this grip is still needed, but previously, the code
       // gripped before calling ParseUntilBlocked();
       nsRefPtr<nsHtml5StreamParser> streamKungFuDeathGrip = 
@@ -547,15 +558,15 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
 void
 nsHtml5TreeOpExecutor::FlushDocumentWrite()
 {
-  if (!mParser) {
+  FlushSpeculativeLoads(); // Make sure speculative loads never start after the
+                // corresponding normal loads for the same URLs.
+
+  if (NS_UNLIKELY(!mParser)) {
     // The parse has ended.
     mOpQueue.Clear(); // clear in order to be able to assert in destructor
     return;
   }
   
-  FlushSpeculativeLoads(); // Make sure speculative loads never start after the 
-                // corresponding normal loads for the same URLs.
-
   if (mFlushState != eNotFlushing) {
     // XXX Can this happen? In case it can, let's avoid crashing.
     return;

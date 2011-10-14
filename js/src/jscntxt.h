@@ -45,21 +45,22 @@
  */
 #include <string.h>
 
+#include "jsfriendapi.h"
 #include "jsprvtd.h"
 #include "jsatom.h"
 #include "jsclist.h"
 #include "jsdhash.h"
 #include "jsgc.h"
 #include "jsgcchunk.h"
-#include "jshashtable.h"
 #include "jspropertycache.h"
 #include "jspropertytree.h"
-#include "jsstaticcheck.h"
 #include "jsutil.h"
-#include "jsvector.h"
 #include "prmjtime.h"
 
 #include "ds/LifoAlloc.h"
+#include "gc/Statistics.h"
+#include "js/HashTable.h"
+#include "js/Vector.h"
 #include "vm/StackSpace.h"
 
 #ifdef _MSC_VER
@@ -430,6 +431,10 @@ struct JSRuntime {
     JSGCMode            gcMode;
     volatile jsuword    gcIsNeeded;
     js::WeakMapBase     *gcWeakMapList;
+    js::gcstats::Statistics gcStats;
+
+    /* The reason that an interrupt-triggered GC should be called. */
+    js::gcstats::Reason gcTriggerReason;
 
     /* Pre-allocated space for the GC mark stacks. Pointer type ensures alignment. */
     void                *gcMarkStackObjs[js::OBJECT_MARK_STACK_SIZE / sizeof(void *)];
@@ -514,11 +519,15 @@ struct JSRuntime {
 
   public:
     /*
-     * The trace operation and its data argument to trace embedding-specific
-     * GC roots.
+     * The trace operations to trace embedding-specific GC roots. One is for
+     * tracing through black roots and the other is for tracing through gray
+     * roots. The black/gray distinction is only relevant to the cycle
+     * collector.
      */
-    JSTraceDataOp       gcExtraRootsTraceOp;
-    void                *gcExtraRootsData;
+    JSTraceDataOp       gcBlackRootsTraceOp;
+    void                *gcBlackRootsData;
+    JSTraceDataOp       gcGrayRootsTraceOp;
+    void                *gcGrayRootsData;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     js::Value           NaNValue;
@@ -595,6 +604,9 @@ struct JSRuntime {
     /* Structured data callbacks are runtime-wide. */
     const JSStructuredCloneCallbacks *structuredCloneCallbacks;
 
+    /* Call this to accumulate telemetry data. */
+    JSAccumulateTelemetryDataCallback telemetryCallback;
+
     /*
      * The propertyRemovals counter is incremented for every JSObject::clear,
      * and for each JSObject::remove method call that frees a slot in the given
@@ -669,58 +681,12 @@ struct JSRuntime {
      */
     int32               inOOMReport;
 
-#if defined(MOZ_GCTIMER) || defined(JSGC_TESTPILOT)
-    struct GCData {
-        GCData()
-          : firstEnter(0),
-            firstEnterValid(false)
-#ifdef JSGC_TESTPILOT
-            , infoEnabled(false),
-            start(0),
-            count(0)
-#endif
-        { }
-
-        /*
-         * Timestamp of the first GCTimer -- application runtime is determined
-         * relative to this value.
-         */
-        uint64      firstEnter;
-        bool        firstEnterValid;
-
-        void setFirstEnter(uint64 v) {
-            JS_ASSERT(!firstEnterValid);
-            firstEnter = v;
-            firstEnterValid = true;
-        }
-
-#ifdef JSGC_TESTPILOT
-        bool        infoEnabled;
-
-        bool isTimerEnabled() {
-            return infoEnabled;
-        }
-
-        /*
-         * Circular buffer with GC data.
-         * count may grow >= INFO_LIMIT, which would indicate data loss.
-         */
-        static const size_t INFO_LIMIT = 64;
-        JSGCInfo    info[INFO_LIMIT];
-        size_t      start;
-        size_t      count;
-#else /* defined(MOZ_GCTIMER) */
-        bool isTimerEnabled() {
-            return true;
-        }
-#endif
-    } gcData;
-#endif
-
     JSRuntime();
     ~JSRuntime();
 
     bool init(uint32 maxbytes);
+
+    JSRuntime *thisFromCtor() { return this; }
 
     void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(uint32 amount);
@@ -966,6 +932,8 @@ struct JSContext
     uintN               runOptions;            /* see jsapi.h for JSOPTION_* */
 
   public:
+    int32               reportGranularity;  /* see jsprobes.h */
+
     /* Locale specific callbacks for string conversion. */
     JSLocaleCallbacks   *localeCallbacks;
 

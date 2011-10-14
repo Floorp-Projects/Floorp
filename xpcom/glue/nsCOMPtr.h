@@ -443,9 +443,16 @@ nsCOMPtr_base
           */
         {
           private:
-            using T::AddRef;
-            using T::Release;
-            
+            NS_METHOD_(nsrefcnt) AddRef();
+            NS_METHOD_(nsrefcnt) Release();
+            //using T::AddRef;
+            //using T::Release;
+            /*
+             We could use |using| above, except that gcc 4.2 on Mac has a bug
+             which causes |using| be unable to make the function private in
+             templated derived classes (see bug 689397).
+            */
+
             ~nsDerivedSafe(); // NOT TO BE IMPLEMENTED
             /* 
               This dtor is added to make this class compatible with GCC 4.6.

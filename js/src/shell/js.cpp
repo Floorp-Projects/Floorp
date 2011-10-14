@@ -77,7 +77,6 @@
 #include "jstypedarrayinlines.h"
 #include "jsxml.h"
 #include "jsperf.h"
-#include "jshashtable.h"
 
 #include "prmjtime.h"
 

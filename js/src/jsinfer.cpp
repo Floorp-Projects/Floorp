@@ -39,7 +39,6 @@
 
 #include "jsapi.h"
 #include "jsautooplen.h"
-#include "jsbit.h"
 #include "jsbool.h"
 #include "jsdate.h"
 #include "jsexn.h"
@@ -55,7 +54,6 @@
 #include "jsscan.h"
 #include "jsscope.h"
 #include "jsstr.h"
-#include "jstl.h"
 #include "jsiter.h"
 
 #include "methodjit/MethodJIT.h"
@@ -2356,6 +2354,7 @@ void
 TypeCompartment::print(JSContext *cx, bool force)
 {
     JSCompartment *compartment = this->compartment();
+    AutoEnterAnalysis enter(compartment);
 
     if (!force && !InferSpewActive(ISpewResult))
         return;
@@ -4724,7 +4723,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
 void
 ScriptAnalysis::printTypes(JSContext *cx)
 {
-    AutoEnterAnalysis enter(cx);
+    AutoEnterAnalysis enter(script->compartment());
     TypeCompartment *compartment = &script->compartment()->types;
 
     /*

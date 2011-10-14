@@ -8186,8 +8186,9 @@ CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
   if (ParseVariant(right, VARIANT_KEYWORD | VARIANT_STRING,
                     nsCSSProps::kTextOverflowKTable))
     aValue.SetPairValue(left, right);
-  else
-    aValue.SetPairValue(left, left);
+  else {
+    aValue = left;
+  }
   return PR_TRUE;
 }
 

@@ -54,7 +54,6 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsbit.h"
 #include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
@@ -68,8 +67,6 @@
 #include "jsparse.h"
 #include "jsscan.h"
 #include "jsscript.h"
-#include "jsstaticcheck.h"
-#include "jsvector.h"
 
 #include "vm/RegExpObject.h"
 
@@ -1224,8 +1221,7 @@ TokenStream::getAtSourceMappingURL()
 
         jschar c;
         while (!IsSpaceOrBOM2((c = getChar())) &&
-               ((char) c) != '\0' &&
-               ((char) c) != EOF)
+               c && c != jschar(EOF))
             tokenbuf.append(c);
 
         if (tokenbuf.empty())

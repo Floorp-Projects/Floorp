@@ -6576,7 +6576,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     if (!Preserves3DChildren()) {
       NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
         nsRect& o = aOverflowAreas.Overflow(otype);
-       o = nsDisplayTransform::TransformRect(o, this, nsPoint(0, 0), &newBounds);
+        o = nsDisplayTransform::TransformRect(o, this, nsPoint(0, 0), &newBounds);
       }
     } else {
       ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);

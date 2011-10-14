@@ -99,6 +99,28 @@ nsTransformedTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
   return changed;
 }
 
+PRUint64
+nsTransformedTextRun::ComputeSize()
+{
+  PRUint32 total = gfxTextRun::ComputeSize();
+  if (moz_malloc_usable_size(this) == 0) {
+    total += sizeof(nsTransformedTextRun) - sizeof(gfxTextRun);
+  }
+  total += mStyles.SizeOf();
+  total += mCapitalize.SizeOf();
+  if (mOwnsFactory) {
+    PRUint32 factorySize = moz_malloc_usable_size(mFactory);
+    if (factorySize == 0) {
+      // this may not quite account for everything
+      // (e.g. nsCaseTransformTextRunFactory adds a couple of members)
+      // but I'm not sure it's worth the effort to track more precisely
+      factorySize = sizeof(nsTransformingTextRunFactory);
+    }
+    total += factorySize;
+  }
+  return total;
+}
+
 nsTransformedTextRun*
 nsTransformingTextRunFactory::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
                                           const gfxTextRunFactory::Parameters* aParams,

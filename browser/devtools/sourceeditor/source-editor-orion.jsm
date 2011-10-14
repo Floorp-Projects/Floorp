@@ -57,7 +57,8 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  * SourceEditor.THEMES to Orion CSS files.
  */
 const ORION_THEMES = {
-  textmate: "chrome://browser/content/orion.css",
+  textmate: ["chrome://browser/content/orion.css",
+             "chrome://browser/content/orion-mozilla.css"],
 };
 
 /**
@@ -196,9 +197,9 @@ SourceEditor.prototype = {
     });
 
     if (config.showLineNumbers) {
-      this._lines_ruler = new textview.LineNumberRuler("left",
-        {styleClass: "ruler_lines", style: {minWidth: "1.4em"}},
-        {styleClass: "ruler_lines_even"}, {styleClass: "ruler_lines_even"});
+      this._lines_ruler = new textview.LineNumberRuler(null, "left",
+        {styleClass: "rulerLines"}, {styleClass: "rulerLine odd"},
+        {styleClass: "rulerLine even"});
 
       this._view.addRuler(this._lines_ruler);
     }
@@ -390,7 +391,7 @@ SourceEditor.prototype = {
 
     let model = this._model;
     let lineIndex = model.getLineAtOffset(selection.start);
-    let lineText = model.getLine(lineIndex);
+    let lineText = model.getLine(lineIndex, true);
     let lineStart = model.getLineStart(lineIndex);
     let index = 0;
     let lineOffset = selection.start - lineStart;

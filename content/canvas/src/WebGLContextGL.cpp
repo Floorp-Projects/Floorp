@@ -1900,7 +1900,61 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     MakeContextCurrent();
-
+    
+    if (MinCapabilityMode()) {
+        bool override = true;
+        switch(pname) {
+            //
+            // Single-value params
+            //
+                
+// int
+            case LOCAL_GL_MAX_VERTEX_ATTRIBS:
+                wrval->SetAsInt32(MINVALUE_GL_MAX_VERTEX_ATTRIBS);
+                break;
+            
+            case LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS:
+                wrval->SetAsInt32(MINVALUE_GL_MAX_FRAGMENT_UNIFORM_VECTORS);
+                break;
+            
+            case LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS:
+                wrval->SetAsInt32(MINVALUE_GL_MAX_VERTEX_UNIFORM_VECTORS);
+                break;
+            
+            case LOCAL_GL_MAX_VARYING_VECTORS:
+                wrval->SetAsInt32(MINVALUE_GL_MAX_VARYING_VECTORS);
+                break;
+            
+            case LOCAL_GL_MAX_TEXTURE_SIZE:
+                wrval->SetAsInt32(MINVALUE_GL_MAX_TEXTURE_SIZE);
+                break;
+            
+            case LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE:
+                wrval->SetAsInt32(MINVALUE_GL_MAX_CUBE_MAP_TEXTURE_SIZE);
+                break;
+            
+            case LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS:
+                wrval->SetAsInt32(MINVALUE_GL_MAX_TEXTURE_IMAGE_UNITS);
+                break;
+            
+            case LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
+                wrval->SetAsInt32(MINVALUE_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+                break;
+                
+            case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
+                wrval->SetAsInt32(MINVALUE_GL_MAX_RENDERBUFFER_SIZE);
+                break;
+            
+            default:
+                override = false;
+        }
+        
+        if (override) {
+            *retval = wrval.forget().get();
+            return NS_OK;
+        }
+    }
+    
     switch (pname) {
         //
         // String params

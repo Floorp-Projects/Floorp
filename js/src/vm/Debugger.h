@@ -47,9 +47,10 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsgc.h"
-#include "jshashtable.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
+
+#include "js/HashTable.h"
 #include "vm/GlobalObject.h"
 
 namespace js {
