@@ -4952,20 +4952,6 @@ nsDocShell::SetEnabled(bool aEnabled)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetBlurSuppression(bool *aBlurSuppression)
-{
-  NS_ENSURE_ARG_POINTER(aBlurSuppression);
-  *aBlurSuppression = PR_FALSE;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetBlurSuppression(bool aBlurSuppression)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocShell::SetFocus()
 {
   return NS_OK;

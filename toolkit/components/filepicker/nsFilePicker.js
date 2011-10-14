@@ -256,14 +256,10 @@ nsFilePicker.prototype = {
       dump("file picker couldn't get base window\n"+ex+"\n");
     }
     try {
-      if (parentWin)
-        parentWin.blurSuppression = true;
       parent.openDialog("chrome://global/content/filepicker.xul",
                         "",
                         "chrome,modal,titlebar,resizable=yes,dependent=yes",
                         o);
-      if (parentWin)
-        parentWin.blurSuppression = false;
 
       this.mFilterIndex = o.retvals.filterIndex;
       this.mFilesEnumerator = o.retvals.files;
