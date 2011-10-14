@@ -58,19 +58,19 @@ static JSBool Throw(uintN errNum, JSContext* cx)
 
 // Handy macro used in many callback stub below.
 
-#define MORPH_SLIM_WRAPPER(cx, obj)                                          \
-    PR_BEGIN_MACRO                                                           \
-    SLIM_LOG_WILL_MORPH(cx, obj);                                            \
-    if(IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))                   \
-        return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);                   \
+#define MORPH_SLIM_WRAPPER(cx, obj)                                           \
+    PR_BEGIN_MACRO                                                            \
+    SLIM_LOG_WILL_MORPH(cx, obj);                                             \
+    if(IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))                    \
+        return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);                    \
     PR_END_MACRO
 
-#define THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper)                         \
-    PR_BEGIN_MACRO                                                           \
-    if(!wrapper)                                                             \
-        return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);                   \
-    if(!wrapper->IsValid())                                                  \
-        return Throw(NS_ERROR_XPC_HAS_BEEN_SHUTDOWN, cx);                    \
+#define THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper)                          \
+    PR_BEGIN_MACRO                                                            \
+    if(!wrapper)                                                              \
+        return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);                    \
+    if(!wrapper->IsValid())                                                   \
+        return Throw(NS_ERROR_XPC_HAS_BEEN_SHUTDOWN, cx);                     \
     PR_END_MACRO
 
 /***************************************************************************/
@@ -967,33 +967,33 @@ XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, J
 }
 
 // macro fun!
-#define PRE_HELPER_STUB_NO_SLIM                                              \
-    XPCWrappedNative* wrapper =                                              \
-        XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, obj);       \
-    THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                            \
-    bool retval = JS_TRUE;                                                 \
+#define PRE_HELPER_STUB_NO_SLIM                                               \
+    XPCWrappedNative* wrapper =                                               \
+        XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, obj);        \
+    THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                             \
+    bool retval = JS_TRUE;                                                    \
     nsresult rv = wrapper->GetScriptableCallback()->
 
-#define PRE_HELPER_STUB                                                      \
-    XPCWrappedNative* wrapper;                                               \
-    nsIXPCScriptable* si;                                                    \
-    if(IS_SLIM_WRAPPER(obj))                                                 \
-    {                                                                        \
-        wrapper = nsnull;                                                    \
-        si = GetSlimWrapperProto(obj)->GetScriptableInfo()->GetCallback();   \
-    }                                                                        \
-    else                                                                     \
-    {                                                                        \
-        wrapper = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);     \
-        THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                        \
-        si = wrapper->GetScriptableCallback();                               \
-    }                                                                        \
-    bool retval = JS_TRUE;                                                 \
+#define PRE_HELPER_STUB                                                       \
+    XPCWrappedNative* wrapper;                                                \
+    nsIXPCScriptable* si;                                                     \
+    if(IS_SLIM_WRAPPER(obj))                                                  \
+    {                                                                         \
+        wrapper = nsnull;                                                     \
+        si = GetSlimWrapperProto(obj)->GetScriptableInfo()->GetCallback();    \
+    }                                                                         \
+    else                                                                      \
+    {                                                                         \
+        wrapper = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);      \
+        THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                         \
+        si = wrapper->GetScriptableCallback();                                \
+    }                                                                         \
+    bool retval = JS_TRUE;                                                    \
     nsresult rv = si->
 
-#define POST_HELPER_STUB                                                     \
-    if(NS_FAILED(rv))                                                        \
-        return Throw(rv, cx);                                                \
+#define POST_HELPER_STUB                                                      \
+    if(NS_FAILED(rv))                                                         \
+        return Throw(rv, cx);                                                 \
     return retval;
 
 static JSBool

@@ -58,11 +58,11 @@ NS_IMPL_THREADSAFE_RELEASE(BackstagePass)
 #define XPC_MAP_CLASSNAME           BackstagePass
 #define XPC_MAP_QUOTED_CLASSNAME   "BackstagePass"
 #define                             XPC_MAP_WANT_NEWRESOLVE
-#define XPC_MAP_FLAGS       nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY   | \
-                            nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY   | \
-                            nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY   | \
-                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS       | \
-                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE    | \
+#define XPC_MAP_FLAGS       nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY   |  \
+                            nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY   |  \
+                            nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY   |  \
+                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS       |  \
+                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE    |  \
                             nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES
 #include "xpc_map_end.h" /* This will #undef the above */
 
@@ -104,11 +104,11 @@ BackstagePass::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCScriptable)

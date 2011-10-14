@@ -40,8 +40,8 @@
 #include "nsICSSDeclaration.h"
 
 #define CSS_PROP_DOMPROP_PREFIXED(prop_) Moz ## prop_
-#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_) \
+#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,        \
+                 stylestruct_, stylestructoffset_, animtype_)                 \
 static const nsCSSProperty QS_CSS_PROP_##method_ = eCSSProperty_##id_;
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL

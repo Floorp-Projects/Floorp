@@ -146,11 +146,11 @@ nsXPCComponents_Interfaces::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCComponents_Interfaces)
@@ -461,11 +461,11 @@ nsXPCComponents_InterfacesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCComponents_InterfacesByID)
@@ -782,11 +782,11 @@ nsXPCComponents_Classes::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCComponents_Classes)
@@ -1034,11 +1034,11 @@ nsXPCComponents_ClassesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCComponents_ClassesByID)
@@ -1305,11 +1305,11 @@ nsXPCComponents_Results::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCComponents_Results)
@@ -1534,11 +1534,11 @@ nsXPCComponents_ID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCComponents_ID)
@@ -1762,11 +1762,11 @@ nsXPCComponents_Exception::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCComponents_Exception)
@@ -2006,8 +2006,8 @@ nsXPCComponents_Exception::HasInstance(nsIXPConnectWrappedNative *wrapper,
 // to build a wrapper around an instance.
 
 // {B4A95150-E25A-11d3-8F61-0010A4E73D9A}
-#define NS_XPCCONSTRUCTOR_CID  \
-{ 0xb4a95150, 0xe25a, 0x11d3, \
+#define NS_XPCCONSTRUCTOR_CID                                                 \
+{ 0xb4a95150, 0xe25a, 0x11d3,                                                 \
     { 0x8f, 0x61, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a } }
 
 class nsXPCConstructor :
@@ -2057,11 +2057,11 @@ nsXPCConstructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCConstructor)
@@ -2323,11 +2323,11 @@ nsXPCComponents_Constructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCComponents_Constructor)
@@ -4102,11 +4102,11 @@ nsXPCComponents::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PRUint32 index = 0;
     nsIID* clone;
-#define PUSH_IID(id) \
-    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),   \
-                                                    sizeof(nsIID)));  \
-    if (!clone)                                                       \
-        goto oom;                                                     \
+#define PUSH_IID(id)                                                          \
+    clone = static_cast<nsIID *>(nsMemory::Clone(&NS_GET_IID( id ),           \
+                                                    sizeof(nsIID)));          \
+    if (!clone)                                                               \
+        goto oom;                                                             \
     array[index++] = clone;
 
     PUSH_IID(nsIXPCComponents)
@@ -4214,19 +4214,19 @@ nsXPCComponents::ClearMembers()
 }
 
 /*******************************************/
-#define XPC_IMPL_GET_OBJ_METHOD(_n) \
-NS_IMETHODIMP nsXPCComponents::Get##_n(nsIXPCComponents_##_n * *a##_n) { \
-    NS_ENSURE_ARG_POINTER(a##_n); \
-    if(!m##_n) { \
-        if(!(m##_n = new nsXPCComponents_##_n())) { \
-            *a##_n = nsnull; \
-            return NS_ERROR_OUT_OF_MEMORY; \
-        } \
-        NS_ADDREF(m##_n); \
-    } \
-    NS_ADDREF(m##_n); \
-    *a##_n = m##_n; \
-    return NS_OK; \
+#define XPC_IMPL_GET_OBJ_METHOD(_n)                                           \
+NS_IMETHODIMP nsXPCComponents::Get##_n(nsIXPCComponents_##_n * *a##_n) {      \
+    NS_ENSURE_ARG_POINTER(a##_n);                                             \
+    if(!m##_n) {                                                              \
+        if(!(m##_n = new nsXPCComponents_##_n())) {                           \
+            *a##_n = nsnull;                                                  \
+            return NS_ERROR_OUT_OF_MEMORY;                                    \
+        }                                                                     \
+        NS_ADDREF(m##_n);                                                     \
+    }                                                                         \
+    NS_ADDREF(m##_n);                                                         \
+    *a##_n = m##_n;                                                           \
+    return NS_OK;                                                             \
 }
 
 XPC_IMPL_GET_OBJ_METHOD(Interfaces)
