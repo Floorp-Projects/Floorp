@@ -352,7 +352,7 @@ nsJSIID::~nsJSIID() {}
 
 NS_IMETHODIMP nsJSIID::GetName(char * *aName)
 {
-    return mInfo->GetName(aName);    
+    return mInfo->GetName(aName);
 }
 
 NS_IMETHODIMP nsJSIID::GetNumber(char * *aNumber)
@@ -363,7 +363,7 @@ NS_IMETHODIMP nsJSIID::GetNumber(char * *aNumber)
     id->ToProvidedString(str);
     *aNumber = (char*) nsMemory::Clone(str, NSID_LENGTH);
     return *aNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}        
+}
 
 NS_IMETHODIMP_(const nsID*) nsJSIID::GetID()
 {
@@ -400,11 +400,11 @@ NS_IMETHODIMP nsJSIID::Initialize(const char *idString)
 
 NS_IMETHODIMP nsJSIID::ToString(char **_retval)
 {
-    return mInfo->GetName(_retval);    
+    return mInfo->GetName(_retval);
 }
 
-// static 
-nsJSIID* 
+// static
+nsJSIID*
 nsJSIID::NewID(nsIInterfaceInfo* aInfo)
 {
     if(!aInfo)
@@ -727,7 +727,7 @@ GetIIDArg(PRUint32 argc, jsval* argv, JSContext* cx)
 
     return iid;
 }
- 
+
 /* nsISupports createInstance (); */
 NS_IMETHODIMP
 nsJSCID::CreateInstance(nsISupports **_retval)

@@ -23,7 +23,7 @@
  *
  * Contributor(s):
  *   John Bandhauer <jband@netscape.com> (original author)
- *   Nate Nielsen <nielsen@memberwebs.com> 
+ *   Nate Nielsen <nielsen@memberwebs.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),

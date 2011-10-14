@@ -449,7 +449,7 @@ Dump(JSContext *cx, uintN argc, jsval *vp)
     JSAutoByteString bytes(cx, str);
     if (!bytes)
         return JS_FALSE;
-    
+
     fputs(bytes.ptr(), gOutFile);
     fflush(gOutFile);
     return JS_TRUE;
@@ -863,7 +863,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
     jsval idval;
     if (!JS_IdToValue(cx, id, &idval))
         return JS_FALSE;
-    
+
     idstr = JS_ValueToString(cx, idval);
     valstr = JS_ValueToString(cx, *vp);
     if (!idstr || !valstr)
@@ -1836,7 +1836,7 @@ main(int argc, char **argv, char **envp)
             } else {
                 appOmni = greOmni;
             }
-            
+
             XRE_InitOmnijar(greOmni, appOmni);
             argc-=2;
             argv+=2;

@@ -300,7 +300,7 @@ nsresult
 XPCCallContext::CanCallNow()
 {
     nsresult rv;
-    
+
     if(!HasInterfaceAndMember())
         return NS_ERROR_UNEXPECTED;
     if(mState < HAVE_ARGS)
@@ -311,7 +311,7 @@ XPCCallContext::CanCallNow()
         mTearOff = mWrapper->FindTearOff(*this, mInterface, JS_FALSE, &rv);
         if(!mTearOff || mTearOff->GetInterface() != mInterface)
         {
-            mTearOff = nsnull;    
+            mTearOff = nsnull;
             return NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED;
         }
     }
@@ -382,14 +382,14 @@ XPCCallContext::~XPCCallContext()
         if(mDestroyJSContextInDestructor)
         {
 #ifdef DEBUG_xpc_hacker
-            printf("!xpc - doing deferred destruction of JSContext @ %p\n", 
+            printf("!xpc - doing deferred destruction of JSContext @ %p\n",
                    mJSContext);
 #endif
-            NS_ASSERTION(!mThreadData->GetJSContextStack() || 
+            NS_ASSERTION(!mThreadData->GetJSContextStack() ||
                          !mThreadData->GetJSContextStack()->
                             DEBUG_StackHasJSContext(mJSContext),
                          "JSContext still in threadjscontextstack!");
-        
+
             JS_DestroyContext(mJSContext);
         }
     }

@@ -88,7 +88,7 @@ static PLDHashOperator
 TraverseExpandoObjects(xpc::PtrAndPrincipalHashKey *aKey, JSCompartment *compartment, void *aClosure)
 {
     TraverseExpandoObjectClosure *closure = static_cast<TraverseExpandoObjectClosure*>(aClosure);
-    xpc::CompartmentPrivate *priv = 
+    xpc::CompartmentPrivate *priv =
         (xpc::CompartmentPrivate *)JS_GetCompartmentPrivate(closure->cx, compartment);
 
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(closure->cb, "XPCWrappedNative expando object");
@@ -124,14 +124,14 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
     if(tmp->mRefCnt.get() > 1) {
 
         // If our refcount is > 1, our reference to the flat JS object is
-        // considered "strong", and we're going to traverse it. 
+        // considered "strong", and we're going to traverse it.
         //
         // If our refcount is <= 1, our reference to the flat JS object is
         // considered "weak", and we're *not* going to traverse it.
         //
         // This reasoning is in line with the slightly confusing lifecycle rules
         // for XPCWrappedNatives, described in a larger comment below and also
-        // on our wiki at http://wiki.mozilla.org/XPConnect_object_wrapping 
+        // on our wiki at http://wiki.mozilla.org/XPConnect_object_wrapping
 
         JSObject *obj = tmp->GetFlatJSObjectPreserveColor();
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mFlatJSObject");
@@ -352,7 +352,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     nsresult rv;
 
-    NS_ASSERTION(!Scope->GetRuntime()->GetThreadRunningGC(), 
+    NS_ASSERTION(!Scope->GetRuntime()->GetThreadRunningGC(),
                  "XPCWrappedNative::GetNewOrUsed called during GC");
 
     nsISupports *identity = helper.GetCanonical();
@@ -364,7 +364,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     }
 
     XPCLock* mapLock = Scope->GetRuntime()->GetMapLock();
-    
+
     // We use an AutoMarkingPtr here because it is possible for JS gc to happen
     // after we have Init'd the wrapper but *before* we add it to the hashtable.
     // This would cause the mSet to get collected and we'd later crash. I've
@@ -953,9 +953,9 @@ XPCWrappedNative::Destroy()
     mMaybeScope = nsnull;
 }
 
-// This is factored out so that it can be called publicly 
+// This is factored out so that it can be called publicly
 // static
-void 
+void
 XPCWrappedNative::GatherProtoScriptableCreateInfo(
                         nsIClassInfo* classInfo,
                         XPCNativeScriptableCreateInfo& sciProto)
@@ -1195,7 +1195,7 @@ XPCWrappedNative::FinishInit(XPCCallContext &ccx)
     // In the current JS engine JS_SetPrivate can't fail. But if it *did*
     // fail then we would not receive our finalizer call and would not be
     // able to properly cleanup. So, if it fails we null out mFlatJSObject
-    // to indicate the invalid state of this object and return false. 
+    // to indicate the invalid state of this object and return false.
     if(!JS_SetPrivate(ccx, mFlatJSObject, this))
     {
         mFlatJSObject = nsnull;
@@ -1854,11 +1854,11 @@ XPCWrappedNative::LocateTearOff(XPCCallContext& ccx,
         chunk = chunk->mNextChunk)
     {
         XPCWrappedNativeTearOff* tearOff = chunk->mTearOffs;
-        XPCWrappedNativeTearOff* const end = tearOff + 
+        XPCWrappedNativeTearOff* const end = tearOff +
             XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK;
         for(
             tearOff = chunk->mTearOffs;
-            tearOff < end; 
+            tearOff < end;
             tearOff++)
         {
             if(tearOff->GetInterface() == aInterface)
@@ -1889,11 +1889,11 @@ XPCWrappedNative::FindTearOff(XPCCallContext& ccx,
         lastChunk = chunk, chunk = chunk->mNextChunk)
     {
         to = chunk->mTearOffs;
-        XPCWrappedNativeTearOff* const end = chunk->mTearOffs + 
+        XPCWrappedNativeTearOff* const end = chunk->mTearOffs +
             XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK;
         for(
             to = chunk->mTearOffs;
-            to < end; 
+            to < end;
             to++)
         {
             if(to->GetInterface() == aInterface)
@@ -2009,7 +2009,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
         // of this wrapper then we will shadow the method that XBL has added to
         // the JSObject that it has inserted in the JS proto chain between our
         // JSObject and our XPCWrappedNativeProto's JSObject. If we let this
-        // set mutation happen then the interface's methods will be added to 
+        // set mutation happen then the interface's methods will be added to
         // our JSObject, but calls on those methods will get routed up to
         // native code and into the wrappedJS - which will do a method lookup
         // on *our* JSObject and find the same method and make another call
@@ -2034,17 +2034,17 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                 // QI activities on the underlying object. *And* most caller to
                 // FindTearOff only look for a non-null result and ignore the
                 // actual tearoff returned. The only callers that do use the
-                // returned tearoff make sure to check for either a non-null 
+                // returned tearoff make sure to check for either a non-null
                 // JSObject or a matching Interface before proceeding.
                 // I think we can get away with this bit of ugliness.
-                
+
 #ifdef DEBUG_xpc_hacker
                 {
                     // I want to make sure this only happens in xbl-like cases.
                     // So, some debug code to verify that there is at least
                     // *some* object between our JSObject and its inital proto.
                     // XXX This is a pretty funky test. Someone might hack it
-                    // a bit if false positives start showing up. Note that 
+                    // a bit if false positives start showing up. Note that
                     // this is only going to run for the few people in the
                     // DEBUG_xpc_hacker list.
                     if(HasProto())
@@ -2077,7 +2077,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                 aTearOff->SetInterface(nsnull);
                 return NS_OK;
             }
-            
+
             // Decide whether or not to expose nsIPropertyBag to calling
             // JS code in the double wrapped case.
             //
@@ -3819,7 +3819,7 @@ void DEBUG_ReportWrapperThreadSafetyError(XPCCallContext& ccx,
     printf("  JS call stack...\n");
     xpc_DumpJSStack(ccx, JS_TRUE, JS_TRUE, JS_TRUE);
     printf("---------------------------------------------------------------\n");
-    
+
     tls->ClearWrappedNativeThreadsafetyReportDepth();
 }
 

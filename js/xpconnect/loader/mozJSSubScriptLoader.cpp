@@ -90,7 +90,7 @@ mozJSSubScriptLoader::mozJSSubScriptLoader() : mSystemPrincipal(nsnull)
 {
 }
 
-mozJSSubScriptLoader::~mozJSSubScriptLoader()    
+mozJSSubScriptLoader::~mozJSSubScriptLoader()
 {
     /* empty */
 }
@@ -128,7 +128,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
     if (NS_FAILED(rv)) {
         return ReportError(cx, LOAD_ERROR_NOSTREAM);
     }
-    
+
     PRInt32 len = -1;
 
     rv = chan->GetContentLength(&len);
@@ -195,7 +195,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
      *   returns: Whatever jsval the script pointed to by the url returns.
      * Should ONLY (O N L Y !) be called from JavaScript code.
      */
-    
+
     /* gotta define most of this stuff up here because of all the gotos,
      * defined the rest up here to be consistent */
     nsresult  rv;
@@ -230,7 +230,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
 
     jsval *rval;
     rv = cc->GetRetValPtr (&rval);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;    
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     /* set mJSPrincipals if it's not here already */
     if (!mSystemPrincipal)
@@ -276,10 +276,10 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         target_obj = JS_GetParent (cx, got_glob);
         fprintf (stderr, "That glob's parent is %p.\n", target_obj);
 #endif
-        
+
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
         rv = cc->GetCalleeWrapper (getter_AddRefs(wn));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;    
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
         rv = wn->GetJSObject (&target_obj);
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
@@ -298,7 +298,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         }
 #ifdef DEBUG_rginda
         fprintf (stderr, "\n");
-#endif  
+#endif
     }
 
     // Remember an object out of the calling compartment so that we
@@ -372,7 +372,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     rv = uri->GetSpec(uriStr);
     if (NS_FAILED(rv)) {
         return ReportError(cx, LOAD_ERROR_NOSPEC);
-    }    
+    }
 
     rv = uri->GetScheme(scheme);
     if (NS_FAILED(rv)) {
@@ -420,7 +420,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     if (ok) {
         JSAutoEnterCompartment rac;
         if (!rac.enter(cx, result_obj) || !JS_WrapValue(cx, rval))
-            return NS_ERROR_UNEXPECTED; 
+            return NS_ERROR_UNEXPECTED;
     }
 
     if (cache && ok && writeScript) {

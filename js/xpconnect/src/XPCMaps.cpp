@@ -90,7 +90,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
     if(!Set)
     {
         NS_ASSERTION(Addition, "bad key");
-        // This would be an XOR like below. 
+        // This would be an XOR like below.
         // But "0 ^ x == x". So it does not matter.
         h = (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
     }

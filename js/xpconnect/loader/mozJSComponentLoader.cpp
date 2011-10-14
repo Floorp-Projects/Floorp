@@ -144,9 +144,9 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
      * error, then log it with the console service.  The UI can then
      * poll the service to update the Error console.
      */
-    nsCOMPtr<nsIScriptError> errorObject = 
+    nsCOMPtr<nsIScriptError> errorObject =
         do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
-    
+
     if (consoleService && errorObject) {
         /*
          * Got an error object; prepare appropriate-width versions of
@@ -325,7 +325,7 @@ public:
     JSCLAutoErrorReporterSetter(JSContext* cx, JSErrorReporter reporter)
         {mContext = cx; mOldReporter = JS_SetErrorReporter(cx, reporter);}
     ~JSCLAutoErrorReporterSetter()
-        {JS_SetErrorReporter(mContext, mOldReporter);} 
+        {JS_SetErrorReporter(mContext, mOldReporter);}
 private:
     JSContext* mContext;
     JSErrorReporter mOldReporter;
@@ -340,7 +340,7 @@ ReportOnCaller(nsAXPCNativeCallContext *cc,
     if (!cc) {
         return NS_ERROR_FAILURE;
     }
-    
+
     va_list ap;
     va_start(ap, format);
 
@@ -410,7 +410,7 @@ NS_IMPL_ISUPPORTS3(mozJSComponentLoader,
                    mozilla::ModuleLoader,
                    xpcIJSModuleLoader,
                    nsIObserver)
- 
+
 nsresult
 mozJSComponentLoader::ReallyInit()
 {
@@ -447,7 +447,7 @@ mozJSComponentLoader::ReallyInit()
     // Limit C stack consumption to a reasonable 512K
     JS_SetNativeStackQuota(mContext, 512 * 1024);
 
-    nsCOMPtr<nsIScriptSecurityManager> secman = 
+    nsCOMPtr<nsIScriptSecurityManager> secman =
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
     if (!secman)
         return NS_ERROR_FAILURE;
@@ -629,7 +629,7 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
 
     JSObject* cm_jsobj;
     nsCOMPtr<nsIXPConnectJSObjectHolder> cm_holder;
-    rv = xpc->WrapNative(cx, entry->global, cm, 
+    rv = xpc->WrapNative(cx, entry->global, cm,
                          NS_GET_IID(nsIComponentManager),
                          getter_AddRefs(cm_holder));
 
@@ -680,7 +680,7 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
                        spec.get());
         return NULL;
     }
-    
+
     JSObject *jsGetFactoryObj;
     if (!JS_ValueToObject(cx, NSGetFactory_val, &jsGetFactoryObj) ||
         !jsGetFactoryObj) {
@@ -804,7 +804,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     if (NS_SUCCEEDED(rv)) {
         fileURL->GetFile(getter_AddRefs(testFile));
     }
-    
+
     if (testFile) {
         realFile = true;
 
@@ -840,7 +840,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     // Before compiling the script, first check to see if we have it in
     // the startupcache.  Note: as a rule, startupcache errors are not fatal
     // to loading the script, since we can always slow-load.
-    
+
     bool writeToCache = false;
     StartupCache* cache = StartupCache::GetSingleton();
 
@@ -1002,7 +1002,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 #endif
 
     if (writeToCache) {
-        // We successfully compiled the script, so cache it. 
+        // We successfully compiled the script, so cache it.
         rv = WriteCachedScript(cache, cachePath, cx, script);
 
         // Don't treat failure to write as fatal, since we might be working
@@ -1043,7 +1043,7 @@ mozJSComponentLoader::ClearModules(const nsAString& key, ModuleEntry*& entry, vo
     entry->Clear();
     return PL_DHASH_REMOVE;
 }
-    
+
 void
 mozJSComponentLoader::UnloadModules()
 {
@@ -1079,7 +1079,7 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
     nsCOMPtr<nsIXPConnect> xpc =
         do_GetService(kXPConnectServiceContractID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     nsAXPCNativeCallContext *cc = nsnull;
     rv = xpc->GetCurrentNativeCallContext(&cc);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1134,7 +1134,7 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
         rv = cc->GetCalleeWrapper(getter_AddRefs(wn));
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         wn->GetJSObject(&targetObject);
         if (!targetObject) {
             NS_ERROR("null calling object");
@@ -1143,7 +1143,7 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
 
         targetObject = JS_GetGlobalForObject(cx, targetObject);
     }
- 
+
     JSAutoEnterCompartment ac;
     if (targetObject && !ac.enter(cx, targetObject)) {
         NS_ERROR("can't enter compartment");
@@ -1181,7 +1181,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
         rv = ReallyInit();
         NS_ENSURE_SUCCESS(rv, rv);
     }
-    
+
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1358,7 +1358,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
             return NS_ERROR_OUT_OF_MEMORY;
         newEntry.forget();
     }
-    
+
     return NS_OK;
 }
 
@@ -1472,7 +1472,7 @@ JSCLContextHelper::JSCLContextHelper(mozJSComponentLoader *loader)
     mContextThread = JS_GetContextThread(mContext);
     if (mContextThread) {
         JS_BeginRequest(mContext);
-    } 
+    }
 }
 
 JSCLContextHelper::~JSCLContextHelper()

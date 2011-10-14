@@ -185,7 +185,7 @@ XPCJSContextStack::Push(JSContext * cx)
 }
 
 #ifdef DEBUG
-JSBool 
+JSBool
 XPCJSContextStack::DEBUG_StackHasJSContext(JSContext*  aJSContext)
 {
     for(PRUint32 i = 0; i < mStack.Length(); i++)
@@ -238,8 +238,8 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
         {
             *aSafeJSContext = nsnull;
             return NS_ERROR_FAILURE;
-        }        
-        
+        }
+
         JSRuntime *rt;
         XPCJSRuntime* xpcrt;
 
@@ -575,7 +575,7 @@ nsXPCJSContextStackIterator::Prev(JSContext **aContext)
         mStack = nsnull;
     else
         --mPosition;
-    
+
     return NS_OK;
 }
 

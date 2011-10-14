@@ -70,7 +70,7 @@ NS_IMPL_THREADSAFE_RELEASE(BackstagePass)
 NS_IMETHODIMP
 BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
                           JSContext * cx, JSObject * obj,
-                          jsid id, PRUint32 flags, 
+                          jsid id, PRUint32 flags,
                           JSObject * *objp, bool *_retval)
 {
     JSBool resolved;
@@ -90,9 +90,9 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
 }
 
 /***************************************************************************/
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] 
+/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval]
                        out nsIIDPtr array); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 BackstagePass::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
     const PRUint32 count = 2;
@@ -125,8 +125,8 @@ oom:
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-BackstagePass::GetHelperForLanguage(PRUint32 language, 
+NS_IMETHODIMP
+BackstagePass::GetHelperForLanguage(PRUint32 language,
                                       nsISupports **retval)
 {
     *retval = nsnull;
@@ -134,7 +134,7 @@ BackstagePass::GetHelperForLanguage(PRUint32 language,
 }
 
 /* readonly attribute string contractID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 BackstagePass::GetContractID(char * *aContractID)
 {
     *aContractID = nsnull;
@@ -142,7 +142,7 @@ BackstagePass::GetContractID(char * *aContractID)
 }
 
 /* readonly attribute string classDescription; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 BackstagePass::GetClassDescription(char * *aClassDescription)
 {
     static const char classDescription[] = "BackstagePass";
@@ -151,7 +151,7 @@ BackstagePass::GetClassDescription(char * *aClassDescription)
 }
 
 /* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 BackstagePass::GetClassID(nsCID * *aClassID)
 {
     *aClassID = nsnull;
@@ -159,7 +159,7 @@ BackstagePass::GetClassID(nsCID * *aClassID)
 }
 
 /* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 BackstagePass::GetImplementationLanguage(
     PRUint32 *aImplementationLanguage)
 {
@@ -168,7 +168,7 @@ BackstagePass::GetImplementationLanguage(
 }
 
 /* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 BackstagePass::GetFlags(PRUint32 *aFlags)
 {
     *aFlags = nsIClassInfo::THREADSAFE;
@@ -176,7 +176,7 @@ BackstagePass::GetFlags(PRUint32 *aFlags)
 }
 
 /* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 BackstagePass::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
     return NS_ERROR_NOT_AVAILABLE;

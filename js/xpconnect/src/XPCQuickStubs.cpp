@@ -560,7 +560,7 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
 {
     /* Only one of memberId or memberName should be given. */
     JS_ASSERT(JSID_IS_VOID(memberId) != !memberName);
-    
+
     // From XPCThrower::ThrowBadResult.
     char* sz;
     const char* format;

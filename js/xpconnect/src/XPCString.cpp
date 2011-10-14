@@ -106,7 +106,7 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
                 return JSVAL_NULL;
         }
 
-        str = JS_NewExternalString(cx, 
+        str = JS_NewExternalString(cx,
                                    reinterpret_cast<jschar *>(buf->Data()),
                                    length, sDOMStringFinalizerIndex);
 
