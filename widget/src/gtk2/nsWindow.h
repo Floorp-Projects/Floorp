@@ -49,7 +49,7 @@
 
 #include "nsIDragService.h"
 #include "nsITimer.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 
 #include "gfxASurface.h"
 

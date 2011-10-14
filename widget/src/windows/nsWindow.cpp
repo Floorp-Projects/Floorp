@@ -138,7 +138,7 @@
 #include "nsRect.h"
 #include "nsThreadUtils.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -3701,30 +3701,30 @@ bool nsWindow::DispatchCommandEvent(PRUint32 aEventCommand)
   nsCOMPtr<nsIAtom> command;
   switch (aEventCommand) {
     case APPCOMMAND_BROWSER_BACKWARD:
-      command = nsWidgetAtoms::Back;
+      command = nsGkAtoms::Back;
       break;
     case APPCOMMAND_BROWSER_FORWARD:
-      command = nsWidgetAtoms::Forward;
+      command = nsGkAtoms::Forward;
       break;
     case APPCOMMAND_BROWSER_REFRESH:
-      command = nsWidgetAtoms::Reload;
+      command = nsGkAtoms::Reload;
       break;
     case APPCOMMAND_BROWSER_STOP:
-      command = nsWidgetAtoms::Stop;
+      command = nsGkAtoms::Stop;
       break;
     case APPCOMMAND_BROWSER_SEARCH:
-      command = nsWidgetAtoms::Search;
+      command = nsGkAtoms::Search;
       break;
     case APPCOMMAND_BROWSER_FAVORITES:
-      command = nsWidgetAtoms::Bookmarks;
+      command = nsGkAtoms::Bookmarks;
       break;
     case APPCOMMAND_BROWSER_HOME:
-      command = nsWidgetAtoms::Home;
+      command = nsGkAtoms::Home;
       break;
     default:
       return false;
   }
-  nsCommandEvent event(true, nsWidgetAtoms::onAppCommand, command, this);
+  nsCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
 
   InitEvent(event);
   DispatchWindowEvent(&event);
