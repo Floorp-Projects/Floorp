@@ -73,10 +73,8 @@ nsXPCException::NameAndFormatForNSResult(nsresult rv,
                                          const char** format)
 {
 
-    for (ResultMap* p = map; p->name; p++)
-    {
-        if (rv == p->rv)
-        {
+    for (ResultMap* p = map; p->name; p++) {
+        if (rv == p->rv) {
             if (name) *name = p->name;
             if (format) *format = p->format;
             return JS_TRUE;
@@ -99,8 +97,7 @@ nsXPCException::IterateNSResults(nsresult* rv,
         p++;
     if (!p->name)
         p = nsnull;
-    else
-    {
+    else {
         if (rv)
             *rv = p->rv;
         if (name)
@@ -159,8 +156,7 @@ nsXPCException::~nsXPCException()
 NS_IMETHODIMP
 nsXPCException::StealJSVal(jsval *vp NS_OUTPARAM)
 {
-    if (mThrownJSVal.IsHeld())
-    {
+    if (mThrownJSVal.IsHeld()) {
         *vp = mThrownJSVal.Release();
         return NS_OK;
     }
@@ -171,8 +167,7 @@ nsXPCException::StealJSVal(jsval *vp NS_OUTPARAM)
 NS_IMETHODIMP
 nsXPCException::StowJSVal(JSContext* cx, jsval v)
 {
-    if (mThrownJSVal.Hold(cx))
-    {
+    if (mThrownJSVal.Hold(cx)) {
         mThrownJSVal = v;
         return NS_OK;
     }
@@ -182,18 +177,15 @@ nsXPCException::StowJSVal(JSContext* cx, jsval v)
 void
 nsXPCException::Reset()
 {
-    if (mMessage)
-    {
+    if (mMessage) {
         nsMemory::Free(mMessage);
         mMessage = nsnull;
     }
-    if (mName)
-    {
+    if (mName) {
         nsMemory::Free(mName);
         mName = nsnull;
     }
-    if (mFilename)
-    {
+    if (mFilename) {
         nsMemory::Free(mFilename);
         mFilename = nsnull;
     }
@@ -315,15 +307,13 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
 
     Reset();
 
-    if (aMessage)
-    {
+    if (aMessage) {
         if (!(mMessage = (char*) nsMemory::Clone(aMessage,
                                                  sizeof(char)*(strlen(aMessage)+1))))
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if (aName)
-    {
+    if (aName) {
         if (!(mName = (char*) nsMemory::Clone(aName,
                                               sizeof(char)*(strlen(aName)+1))))
             return NS_ERROR_OUT_OF_MEMORY;
@@ -331,8 +321,7 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
 
     mResult = aResult;
 
-    if (aLocation)
-    {
+    if (aLocation) {
         mLocation = aLocation;
         NS_ADDREF(mLocation);
         // For now, fill in our location details from our stack frame.
@@ -343,8 +332,7 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
         if (NS_FAILED(rc = aLocation->GetLineNumber(&mLineNumber)))
             return rc;
     }
-    else
-    {
+    else {
         nsresult rv;
         nsXPConnect* xpc = nsXPConnect::GetXPConnect();
         if (!xpc)
@@ -354,13 +342,11 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
             return rv;
     }
 
-    if (aData)
-    {
+    if (aData) {
         mData = aData;
         NS_ADDREF(mData);
     }
-    if (aInner)
-    {
+    if (aInner) {
         mInner = aInner;
         NS_ADDREF(mInner);
     }
@@ -385,8 +371,7 @@ nsXPCException::ToString(char **_retval)
 
     char* indicatedLocation = nsnull;
 
-    if (mLocation)
-    {
+    if (mLocation) {
         // we need to free this if it does not fail
         nsresult rv = mLocation->ToString(&indicatedLocation);
         if (NS_FAILED(rv))
@@ -398,8 +383,7 @@ nsXPCException::ToString(char **_retval)
                                 indicatedLocation : defaultLocation;
     const char* resultName = mName;
     if (!resultName && !NameAndFormatForNSResult(mResult, &resultName,
-                                                 (!msg) ? &msg : nsnull))
-    {
+                                                 (!msg) ? &msg : nsnull)) {
         if (!msg)
             msg = defaultMsg;
         resultName = "<unknown>";
@@ -411,8 +395,7 @@ nsXPCException::ToString(char **_retval)
         nsMemory::Free(indicatedLocation);
 
     char* final = nsnull;
-    if (temp)
-    {
+    if (temp) {
         final = (char*) nsMemory::Clone(temp, sizeof(char)*(strlen(temp)+1));
         JS_smprintf_free(temp);
     }
@@ -438,8 +421,7 @@ nsXPCException::NewException(const char *aMessage,
     // This is bad because it means that wrapped exceptions will never have a
     // shared prototype. So... We force one to be created via the factory
     // *once* and then go about our business.
-    if (!sEverMadeOneFromFactory)
-    {
+    if (!sEverMadeOneFromFactory) {
         nsCOMPtr<nsIXPCException> e =
             do_CreateInstance(XPC_EXCEPTION_CONTRACTID);
         sEverMadeOneFromFactory = JS_TRUE;
@@ -447,27 +429,22 @@ nsXPCException::NewException(const char *aMessage,
 
     nsresult rv;
     nsXPCException* e = new nsXPCException();
-    if (e)
-    {
+    if (e) {
         NS_ADDREF(e);
 
         nsIStackFrame* location;
-        if (aLocation)
-        {
+        if (aLocation) {
             location = aLocation;
             NS_ADDREF(location);
         }
-        else
-        {
+        else {
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-            if (!xpc)
-            {
+            if (!xpc) {
                 NS_RELEASE(e);
                 return NS_ERROR_FAILURE;
             }
             rv = xpc->GetCurrentJSStack(&location);
-            if (NS_FAILED(rv))
-            {
+            if (NS_FAILED(rv)) {
                 NS_RELEASE(e);
                 return NS_ERROR_FAILURE;
             }
@@ -479,15 +456,13 @@ nsXPCException::NewException(const char *aMessage,
         }
         // We want to trim off any leading native 'dataless' frames
         if (location)
-            while (1)
-            {
+            while (1) {
                 PRUint32 language;
                 PRInt32 lineNumber;
                 if (NS_FAILED(location->GetLanguage(&language)) ||
                     language == nsIProgrammingLanguage::JAVASCRIPT ||
                     NS_FAILED(location->GetLineNumber(&lineNumber)) ||
-                    lineNumber)
-                {
+                    lineNumber) {
                     break;
                 }
                 nsCOMPtr<nsIStackFrame> caller;

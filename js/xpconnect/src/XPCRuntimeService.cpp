@@ -79,8 +79,7 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
     if (!*_retval)
         return NS_OK;
 
-    if (resolved)
-    {
+    if (resolved) {
         *objp = obj;
         return NS_OK;
     }

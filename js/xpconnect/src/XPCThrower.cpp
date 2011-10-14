@@ -176,21 +176,18 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
 {
     char* sz = nsnull;
 
-    if (ccx.HasInterfaceAndMember())
-    {
+    if (ccx.HasInterfaceAndMember()) {
         XPCNativeInterface* iface = ccx.GetInterface();
         jsid id = ccx.GetMember()->GetName();
         JSAutoByteString bytes;
         const char *name = JSID_IS_VOID(id) ? "Unknown" : bytes.encode(ccx, JSID_TO_STRING(id));
-        if (!name)
-        {
+        if (!name) {
             name = "";
         }
         sz = JS_smprintf("%s [%s.%s]", *psz, iface->GetNameString(), name);
     }
 
-    if (sz)
-    {
+    if (sz) {
         if (own)
             JS_smprintf_free(*psz);
         *psz = sz;
@@ -210,11 +207,9 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
     nsCOMPtr<nsIException> defaultException;
     nsXPCException::NewException(sz, rv, nsnull, nsnull, getter_AddRefs(defaultException));
     XPCPerThreadData* tls = XPCPerThreadData::GetData(cx);
-    if (tls)
-    {
+    if (tls) {
         nsIExceptionManager * exceptionManager = tls->GetExceptionManager();
-        if (exceptionManager)
-        {
+        if (exceptionManager) {
            // Ask the provider for the exception, if there is no provider
            // we expect it to set e to null
             exceptionManager->GetExceptionFromProvider(rv,
@@ -222,8 +217,7 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
                                                        getter_AddRefs(finalException));
             // We should get at least the defaultException back,
             // but just in case
-            if (finalException == nsnull)
-            {
+            if (finalException == nsnull) {
                 finalException = defaultException;
             }
         }
@@ -244,12 +238,10 @@ IsCallerChrome(JSContext* cx)
     nsresult rv;
 
     nsCOMPtr<nsIScriptSecurityManager> secMan;
-    if (XPCPerThreadData::IsMainThread(cx))
-    {
+    if (XPCPerThreadData::IsMainThread(cx)) {
         secMan = XPCWrapper::GetSecurityManager();
     }
-    else
-    {
+    else {
         nsXPConnect* xpc = nsXPConnect::GetXPConnect();
         if (!xpc)
             return PR_FALSE;
@@ -277,8 +269,7 @@ JSBool
 XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
 {
     JSBool success = JS_FALSE;
-    if (e)
-    {
+    if (e) {
         nsCOMPtr<nsIXPCException> xpcEx;
         jsval thrown;
         nsXPConnect* xpc;
@@ -288,15 +279,13 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
         // context (i.e., not chrome), rethrow the original value.
         if (!IsCallerChrome(cx) &&
             (xpcEx = do_QueryInterface(e)) &&
-            NS_SUCCEEDED(xpcEx->StealJSVal(&thrown)))
-        {
+            NS_SUCCEEDED(xpcEx->StealJSVal(&thrown))) {
             if (!JS_WrapValue(cx, &thrown))
                 return JS_FALSE;
             JS_SetPendingException(cx, thrown);
             success = JS_TRUE;
         }
-        else if ((xpc = nsXPConnect::GetXPConnect()))
-        {
+        else if ((xpc = nsXPConnect::GetXPConnect())) {
             JSObject* glob = JS_GetGlobalForScopeChain(cx);
             if (!glob)
                 return JS_FALSE;
@@ -305,11 +294,9 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
             nsresult rv = xpc->WrapNative(cx, glob, e,
                                           NS_GET_IID(nsIException),
                                           getter_AddRefs(holder));
-            if (NS_SUCCEEDED(rv) && holder)
-            {
+            if (NS_SUCCEEDED(rv) && holder) {
                 JSObject* obj;
-                if (NS_SUCCEEDED(holder->GetJSObject(&obj)))
-                {
+                if (NS_SUCCEEDED(holder->GetJSObject(&obj))) {
                     JS_SetPendingException(cx, OBJECT_TO_JSVAL(obj));
                     success = JS_TRUE;
                 }

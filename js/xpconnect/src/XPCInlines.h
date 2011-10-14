@@ -56,8 +56,7 @@ xpc::PtrAndPrincipalHashKey::KeyEquals(const PtrAndPrincipalHashKey* aKey) const
         return PR_TRUE;
 
     bool equals;
-    if (NS_FAILED(mPrincipal->EqualsIgnoringDomain(aKey->mPrincipal, &equals)))
-    {
+    if (NS_FAILED(mPrincipal->EqualsIgnoringDomain(aKey->mPrincipal, &equals))) {
         NS_ERROR("we failed, guessing!");
         return PR_FALSE;
     }
@@ -418,10 +417,8 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
 
     // look for interface names first
 
-    for (i = 0, iface = mInterfaces; i < count; i++, iface++)
-    {
-        if (name == (*iface)->GetName())
-        {
+    for (i = 0, iface = mInterfaces; i < count; i++, iface++) {
+        if (name == (*iface)->GetName()) {
             if (pMember)
                 *pMember = nsnull;
             if (pInterfaceIndex)
@@ -431,11 +428,9 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
     }
 
     // look for method names
-    for (i = 0, iface = mInterfaces; i < count; i++, iface++)
-    {
+    for (i = 0, iface = mInterfaces; i < count; i++, iface++) {
         XPCNativeMember* member = (*iface)->FindMember(name);
-        if (member)
-        {
+        if (member) {
             if (pMember)
                 *pMember = member;
             if (pInterfaceIndex)
@@ -490,8 +485,7 @@ XPCNativeSet::FindNamedInterface(jsid name) const
 {
     XPCNativeInterface* const * pp = mInterfaces;
 
-    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
-    {
+    for (int i = (int) mInterfaceCount; i > 0; i--, pp++) {
         XPCNativeInterface* iface = *pp;
 
         if (name == iface->GetName())
@@ -505,8 +499,7 @@ XPCNativeSet::FindInterfaceWithIID(const nsIID& iid) const
 {
     XPCNativeInterface* const * pp = mInterfaces;
 
-    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
-    {
+    for (int i = (int) mInterfaceCount; i > 0; i--, pp++) {
         XPCNativeInterface* iface = *pp;
 
         if (iface->GetIID()->Equals(iid))
@@ -520,8 +513,7 @@ XPCNativeSet::HasInterface(XPCNativeInterface* aInterface) const
 {
     XPCNativeInterface* const * pp = mInterfaces;
 
-    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
-    {
+    for (int i = (int) mInterfaceCount; i > 0; i--, pp++) {
         if (aInterface == *pp)
             return JS_TRUE;
     }
@@ -559,8 +551,7 @@ XPCNativeSet::MatchesSetUpToInterface(const XPCNativeSet* other,
     XPCNativeInterface* const * pp1 = mInterfaces;
     XPCNativeInterface* const * pp2 = other->mInterfaces;
 
-    for (int i = (int) count; i > 0; i--, pp1++, pp2++)
-    {
+    for (int i = (int) count; i > 0; i--, pp1++, pp2++) {
         XPCNativeInterface* cur = (*pp1);
         if (cur != (*pp2))
             return JS_FALSE;
@@ -627,11 +618,9 @@ inline void
 XPCWrappedNative::SweepTearOffs()
 {
     XPCWrappedNativeTearOffChunk* chunk;
-    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk)
-    {
+    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
         XPCWrappedNativeTearOff* to = chunk->mTearOffs;
-        for (int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK; i > 0; i--, to++)
-        {
+        for (int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK; i > 0; i--, to++) {
             JSBool marked = to->IsMarked();
             to->Unmark();
             if (marked)
@@ -639,11 +628,9 @@ XPCWrappedNative::SweepTearOffs()
 
             // If this tearoff does not have a live dedicated JSObject,
             // then let's recycle it.
-            if (!to->GetJSObject())
-            {
+            if (!to->GetJSObject()) {
                 nsISupports* obj = to->GetNative();
-                if (obj)
-                {
+                if (obj) {
                     obj->Release();
                     to->SetNative(nsnull);
                 }

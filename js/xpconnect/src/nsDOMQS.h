@@ -119,16 +119,14 @@ xpc_qsUnwrapThis<nsGenericElement>(JSContext *cx,
     JSBool ok = xpc_qsUnwrapThis<nsIContent>(cx, obj, callee, &content,
                                              pThisRef, &val, lccx,
                                              failureFatal);
-    if (ok)
-    {
+    if (ok) {
         if (failureFatal || content)
           ok = castToElement(content, val, ppThis, pThisVal);
         if (failureFatal && !ok)
             xpc_qsThrow(cx, NS_ERROR_XPC_BAD_OP_ON_WN_PROTO);
     }
 
-    if (!failureFatal && (!ok || !content))
-    {
+    if (!failureFatal && (!ok || !content)) {
       ok = JS_TRUE;
       *ppThis = nsnull;
     }

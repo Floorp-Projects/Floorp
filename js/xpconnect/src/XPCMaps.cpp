@@ -74,43 +74,36 @@ HashNativeKey(JSDHashTable *table, const void *key)
     XPCNativeInterface* Addition;
     PRUint16            Position;
 
-    if (Key->IsAKey())
-    {
+    if (Key->IsAKey()) {
         Set      = Key->GetBaseSet();
         Addition = Key->GetAddition();
         Position = Key->GetPosition();
     }
-    else
-    {
+    else {
         Set      = (XPCNativeSet*) Key;
         Addition = nsnull;
         Position = 0;
     }
 
-    if (!Set)
-    {
+    if (!Set) {
         NS_ASSERTION(Addition, "bad key");
         // This would be an XOR like below.
         // But "0 ^ x == x". So it does not matter.
         h = (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
     }
-    else
-    {
+    else {
         XPCNativeInterface** Current = Set->GetInterfaceArray();
         PRUint16 count = Set->GetInterfaceCount();
-        if (Addition)
-        {
+        if (Addition) {
             count++;
-            for (PRUint16 i = 0; i < count; i++)
-            {
+            for (PRUint16 i = 0; i < count; i++) {
                 if (i == Position)
                     h ^= (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
                 else
                     h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
             }
         }
-        else
-        {
+        else {
             for (PRUint16 i = 0; i < count; i++)
                 h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
         }
@@ -307,8 +300,7 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
     XPCNativeSetKey* Key = (XPCNativeSetKey*) key;
 
     // See the comment in the XPCNativeSetKey declaration in xpcprivate.h.
-    if (!Key->IsAKey())
-    {
+    if (!Key->IsAKey()) {
         XPCNativeSet* Set1 = (XPCNativeSet*) key;
         XPCNativeSet* Set2 = ((Entry*)entry)->key_value;
 
@@ -321,8 +313,7 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
 
         XPCNativeInterface** Current1 = Set1->GetInterfaceArray();
         XPCNativeInterface** Current2 = Set2->GetInterfaceArray();
-        for (PRUint16 i = 0; i < count; i++)
-        {
+        for (PRUint16 i = 0; i < count; i++) {
             if (*(Current1++) != *(Current2++))
                 return JS_FALSE;
         }
@@ -334,8 +325,7 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
     XPCNativeSet*       Set        = Key->GetBaseSet();
     XPCNativeInterface* Addition   = Key->GetAddition();
 
-    if (!Set)
-    {
+    if (!Set) {
         // This is a special case to deal with the invariant that says:
         // "All sets have exactly one nsISupports interface and it comes first."
         // See XPCNativeSet::NewInstance for details.
@@ -361,15 +351,12 @@ NativeSetMap::Entry::Match(JSDHashTable *table,
     PRUint16 Position = Key->GetPosition();
     XPCNativeInterface** CurrentInTable = SetInTable->GetInterfaceArray();
     XPCNativeInterface** Current = Set->GetInterfaceArray();
-    for (PRUint16 i = 0; i < count; i++)
-    {
-        if (Addition && i == Position)
-        {
+    for (PRUint16 i = 0; i < count; i++) {
+        if (Addition && i == Position) {
             if (Addition != *(CurrentInTable++))
                 return JS_FALSE;
         }
-        else
-        {
+        else {
             if (*(Current++) != *(CurrentInTable++))
                 return JS_FALSE;
         }
@@ -561,8 +548,7 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(JSUint32 flags,
 
     XPCNativeScriptableShared* shared = entry->key;
 
-    if (!shared)
-    {
+    if (!shared) {
         entry->key = shared =
             new XPCNativeScriptableShared(flags, key.TransferNameOwnership(),
                                           interfacesBitmap);
@@ -664,13 +650,11 @@ WrappedNative2WrapperMap::MoveLink(JSDHashTable* table,
     newEntry->key = oldEntry->key;
 
     // Now update the list.
-    if (PR_CLIST_IS_EMPTY(&oldEntry->value))
-    {
+    if (PR_CLIST_IS_EMPTY(&oldEntry->value)) {
         PR_INIT_CLIST(&newEntry->value);
         newEntry->value.obj = oldEntry->value.obj;
     }
-    else
-    {
+    else {
         newEntry->value = oldEntry->value;
         newEntry->value.next->prev = &newEntry->value;
         newEntry->value.prev->next = &newEntry->value;
@@ -715,8 +699,7 @@ WrappedNative2WrapperMap::Add(WrappedNative2WrapperMap* head,
 
     NS_ASSERTION(!l->obj, "Uh, how'd this happen?");
 
-    if (!l->next)
-    {
+    if (!l->next) {
         // Initialize the circular list. This case only happens when
         // this == head.
         PR_INIT_CLIST(l);
@@ -724,11 +707,9 @@ WrappedNative2WrapperMap::Add(WrappedNative2WrapperMap* head,
 
     l->obj = wrapper;
 
-    if (this != head)
-    {
+    if (this != head) {
         Link* headLink = head->FindLink(wrappedObject);
-        if (!headLink)
-        {
+        if (!headLink) {
             Entry* dummy = (Entry*)
                 JS_DHashTableOperate(head->mTable, wrappedObject, JS_DHASH_ADD);
             dummy->key = wrappedObject;
