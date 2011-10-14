@@ -1301,15 +1301,13 @@ class TypedArrayTemplate
         JS_ASSERT(obj->getClass() == slowClass());
 
         js::Shape *empty = BaseShape::lookupInitialShape(cx, fastClass(), obj->getParent(),
-                                                         gc::FINALIZE_OBJECT8);
+                                                         gc::FINALIZE_OBJECT8,
+                                                         BaseShape::NOT_EXTENSIBLE);
         if (!empty)
             return false;
         obj->setLastPropertyInfallible(empty);
 
         JS_ASSERT(obj->numFixedSlots() == NUM_FIXED_SLOTS);
-
-        // FIXME Bug 599008: make it ok to call preventExtensions here.
-        obj->flags |= JSObject::NOT_EXTENSIBLE;
 
         return obj;
     }

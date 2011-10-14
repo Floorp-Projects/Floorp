@@ -163,7 +163,7 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         id = ATOM_TO_JSID(name);
     }
 
-    BaseShape base(&CallClass, NULL, attrs, getter, setter);
+    BaseShape base(&CallClass, NULL, BaseShape::VAROBJ, attrs, getter, setter);
     BaseShape *nbase = BaseShape::lookup(cx, base);
     if (!nbase)
         return NULL;

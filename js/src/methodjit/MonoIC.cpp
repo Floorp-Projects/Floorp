@@ -334,10 +334,10 @@ class EqualityCompiler : public BaseCompiler
             linkToStub(rhsFail);
         }
 
-        Jump lhsHasEq = masm.branchTest32(Assembler::NonZero,
-                                          Address(lvr.dataReg(),
-                                                  offsetof(JSObject, flags)),
-                                          Imm32(JSObject::HAS_EQUALITY));
+        masm.loadObjClass(lvr.dataReg(), ic.tempReg);
+        Jump lhsHasEq = masm.branchPtr(Assembler::NotEqual,
+                                       Address(ic.tempReg, offsetof(Class, ext.equality)),
+                                       ImmPtr(NULL));
         linkToStub(lhsHasEq);
 
         if (rvr.isConstant()) {

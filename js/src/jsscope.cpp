@@ -416,7 +416,6 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, Shape &child)
             return NULL;
     }
 
-    updateFlags(shape);
     return shape;
 }
 
@@ -641,10 +640,14 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
         }
     }
 
+    if (!updateFlags(cx, id))
+        return NULL;
+
     /* Find or create a property tree node labeled by our arguments. */
     Shape *shape;
     {
-        BaseShape base(getClass(), getParentMaybeScope(), attrs, getter, setter);
+        BaseShape base(getClass(), getParentMaybeScope(), lastProperty()->getObjectFlags(),
+                       attrs, getter, setter);
         BaseShape *nbase = BaseShape::lookup(cx, base);
         if (!nbase)
             return NULL;
@@ -742,7 +745,8 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
     UnownedBaseShape *nbase;
     {
-        BaseShape base(getClass(), getParentMaybeScope(), attrs, getter, setter);
+        BaseShape base(getClass(), getParentMaybeScope(), lastProperty()->getObjectFlags(),
+                       attrs, getter, setter);
         nbase = BaseShape::lookup(cx, base);
         if (!nbase)
             return NULL;
@@ -808,7 +812,9 @@ JSObject::putProperty(JSContext *cx, jsid id,
          * clause just below, getChildProperty handles this for us. First update
          * flags.
          */
-        updateFlags(shape);
+        jsuint index;
+        if (js_IdIsIndex(shape->propid(), &index))
+            shape->base()->setObjectFlag(BaseShape::INDEXED);
     } else {
         /*
          * Updating the last property in a non-dictionary-mode object. Such
@@ -819,7 +825,8 @@ JSObject::putProperty(JSContext *cx, jsid id,
          * If any shape in the tree has a property hashtable, it is shared and
          * immutable too, therefore we must not update *spp.
          */
-        BaseShape base(getClass(), getParentMaybeScope(), attrs, getter, setter);
+        BaseShape base(getClass(), getParentMaybeScope(), lastProperty()->getObjectFlags(),
+                       attrs, getter, setter);
         BaseShape *nbase = BaseShape::lookup(cx, base);
         if (!nbase)
             return NULL;
@@ -1155,6 +1162,59 @@ Shape::setObjectParent(JSContext *cx, JSObject *parent, Shape **listp)
     return replaceLastProperty(cx, child, listp);
 }
 
+bool
+JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
+{
+    JS_ASSERT(isExtensible());
+
+    if (props) {
+        if (js::FixOp fix = getOps()->fix) {
+            bool success;
+            if (!fix(cx, this, &success, props))
+                return false;
+            if (!success) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+                return false;
+            }
+        } else {
+            if (!js::GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, props))
+                return false;
+        }
+    }
+
+    return setFlag(cx, BaseShape::NOT_EXTENSIBLE, GENERATE_SHAPE);
+}
+
+bool
+JSObject::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32 flag_, GenerateShape generateShape)
+{
+    BaseShape::Flag flag = (BaseShape::Flag) flag_;
+
+    if (inDictionaryMode()) {
+        if (generateShape == GENERATE_SHAPE && !generateOwnShape(cx))
+            return false;
+        lastProperty()->base()->setObjectFlag(flag);
+        return true;
+    }
+
+    return Shape::setObjectFlag(cx, flag, &shape_);
+}
+
+/* static */ bool
+Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, Shape **listp)
+{
+    BaseShape base(*(*listp)->base()->unowned());
+    base.flags |= flag;
+    BaseShape *nbase = BaseShape::lookup(cx, base);
+    if (!nbase)
+        return false;
+
+    Shape child(*listp);
+    child.base_ = nbase;
+
+    return replaceLastProperty(cx, child, listp);
+}
+
 /* static */ inline HashNumber
 JSCompartment::BaseShapeEntry::hash(const js::BaseShape *base)
 {
@@ -1219,9 +1279,9 @@ BaseShape::lookup(JSContext *cx, const BaseShape &base)
 
 /* static */ Shape *
 BaseShape::lookupInitialShape(JSContext *cx, Class *clasp, JSObject *parent,
-                              AllocKind kind, Shape *initial)
+                              AllocKind kind, uint32 objectFlags, Shape *initial)
 {
-    js::BaseShape base(clasp, parent);
+    js::BaseShape base(clasp, parent, objectFlags);
     JSCompartment::BaseShapeEntry *entry = LookupBaseShape(cx, base);
     if (!entry)
         return NULL;

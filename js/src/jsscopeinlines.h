@@ -105,20 +105,24 @@ js::types::TypeObject::canProvideEmptyShape(js::Class *aclasp)
         (!emptyShapes || emptyShapes->get(gc::FINALIZE_OBJECT0)->getObjectClass() == aclasp);
 }
 
-inline void
-JSObject::updateFlags(const js::Shape *shape, bool isDefinitelyAtom)
+inline bool
+JSObject::updateFlags(JSContext *cx, jsid id, bool isDefinitelyAtom)
 {
     jsuint index;
-    if (!isDefinitelyAtom && js_IdIsIndex(shape->propid(), &index))
-        setIndexed();
+    if (!isDefinitelyAtom && js_IdIsIndex(id, &index)) {
+        if (!setIndexed(cx))
+            return false;
+    }
+    return true;
 }
 
 inline bool
 JSObject::extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom)
 {
+    if (!updateFlags(cx, shape->propid(), isDefinitelyAtom))
+        return false;
     if (!setLastProperty(cx, shape))
         return false;
-    updateFlags(shape, isDefinitelyAtom);
     return true;
 }
 
@@ -130,17 +134,24 @@ StringObject::init(JSContext *cx, JSString *str)
     JS_ASSERT(nativeEmpty());
     JS_ASSERT(getAllocKind() == gc::FINALIZE_OBJECT2);
 
-    const js::Shape *shape = BaseShape::lookupInitialShape(cx, getClass(), getParent(),
-                                                           gc::FINALIZE_OBJECT2, lastProperty());
-    if (!shape)
-        return false;
-    if (shape != lastProperty()) {
-        setLastPropertyInfallible(shape);
+    if (isDelegate()) {
+        if (!assignInitialShape(cx))
+            return false;
     } else {
-        shape = assignInitialShape(cx);
+        const js::Shape *shape =
+            BaseShape::lookupInitialShape(cx, getClass(), getParent(),
+                                          gc::FINALIZE_OBJECT2, 0,
+                                          lastProperty());
         if (!shape)
             return false;
-        BaseShape::insertInitialShape(cx, gc::FINALIZE_OBJECT2, shape);
+        if (shape != lastProperty()) {
+            setLastPropertyInfallible(shape);
+        } else {
+            shape = assignInitialShape(cx);
+            if (!shape)
+                return false;
+            BaseShape::insertInitialShape(cx, gc::FINALIZE_OBJECT2, shape);
+        }
     }
     JS_ASSERT(!nativeEmpty());
     JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot() == LENGTH_SLOT);
@@ -157,13 +168,17 @@ BaseShape::adoptUnowned(UnownedBaseShape *other)
      * unowned base shape of a new last property.
      */
     JS_ASSERT(isOwned());
-    JS_ASSERT(parent == other->parent);
+
+    JSObject *parent = this->parent;
+    uint32 flags = (this->flags & OBJECT_FLAG_MASK);
 
     uint32 span = slotSpan();
     PropertyTable *table = &this->table();
 
     *this = *static_cast<BaseShape *>(other);
     setOwned(other);
+    this->parent = parent;
+    this->flags |= flags;
     setTable(table);
     setSlotSpan(span);
 }

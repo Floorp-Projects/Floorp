@@ -1143,8 +1143,7 @@ JS_IsSystemObject(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSBool)
 JS_MakeSystemObject(JSContext *cx, JSObject *obj)
 {
-    obj->setSystem();
-    return true;
+    return obj->setSystem(cx);
 }
 
 /************************************************************************/

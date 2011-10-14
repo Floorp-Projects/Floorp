@@ -332,25 +332,45 @@ class UnownedBaseShape;
 
 class BaseShape : public js::gc::Cell
 {
+  public:
     friend class Shape;
     friend struct JSCompartment::BaseShapeEntry;
 
-    enum {
+    enum Flag {
         /* Owned by the referring shape. */
-        OWNED_SHAPE       = 0x1,
+        OWNED_SHAPE        = 0x1,
 
         /* getterObj/setterObj are active in unions below. */
-        HAS_GETTER_OBJECT = 0x2,
-        HAS_SETTER_OBJECT = 0x4,
+        HAS_GETTER_OBJECT  = 0x2,
+        HAS_SETTER_OBJECT  = 0x4,
 
         /*
          * For the last property in static Block objects and Bindings,
          * indicates that cloned Block or Call objects need unique shapes.
          * See Shape::extensibleParents.
          */
-        EXTENSIBLE_PARENTS = 0x8
+        EXTENSIBLE_PARENTS = 0x8,
+
+        /*
+         * Flags set which describe the referring object. Once set these cannot
+         * be unset, and are transferred from shape to shape as the object's
+         * last property changes. It is rare for an object to have any of these
+         * flags set.
+         */
+
+        DELEGATE           = 0x010,
+        SYSTEM             = 0x020,
+        NOT_EXTENSIBLE     = 0x040,
+        INDEXED            = 0x080,
+        BOUND_FUNCTION     = 0x100,
+        VAROBJ             = 0x200,
+        WATCHED            = 0x400,
+        ITERATED_SINGLETON = 0x800,
+
+        OBJECT_FLAG_MASK  = 0xff0
     };
 
+  private:
     Class               *clasp;         /* Class of referring object. */
     JSObject            *parent;        /* Parent of referring object. */
     uint32              flags;          /* Vector of above flags. */
@@ -378,17 +398,21 @@ class BaseShape : public js::gc::Cell
   public:
     void finalize(JSContext *cx, bool background);
 
-    BaseShape(Class *clasp, JSObject *parent) {
+    BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags) {
+        JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
         PodZero(this);
         this->clasp = clasp;
         this->parent = parent;
+        this->flags = objectFlags;
     }
 
-    BaseShape(Class *clasp, JSObject *parent,
+    BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags,
               uint8 attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter) {
+        JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
         PodZero(this);
         this->clasp = clasp;
         this->parent = parent;
+        this->flags = objectFlags;
         this->rawGetter = rawGetter;
         this->rawSetter = rawSetter;
         if ((attrs & JSPROP_GETTER) && rawGetter)
@@ -403,6 +427,8 @@ class BaseShape : public js::gc::Cell
     void setOwned(UnownedBaseShape *unowned) { flags |= OWNED_SHAPE; this->unowned_ = unowned; }
 
     void setParent(JSObject *obj) { parent = obj; }
+
+    void setObjectFlag(Flag flag) { JS_ASSERT(!(flag & ~OBJECT_FLAG_MASK)); flags |= flag; }
 
     bool hasGetterObject() const { return !!(flags & HAS_GETTER_OBJECT); }
     JSObject *getterObject() const { JS_ASSERT(hasGetterObject()); return getterObj; }
@@ -426,7 +452,8 @@ class BaseShape : public js::gc::Cell
      * if none was found.
      */
     static Shape *lookupInitialShape(JSContext *cx, Class *clasp, JSObject *parent,
-                                     gc::AllocKind kind, Shape *initial = NULL);
+                                     gc::AllocKind kind, uint32 objectFlags = 0,
+                                     Shape *initial = NULL);
 
     /* Reinsert a possibly modified initial shape to the baseShapes table. */
     static void insertInitialShape(JSContext *cx, gc::AllocKind kind, const Shape *initial);
@@ -443,6 +470,7 @@ class BaseShape : public js::gc::Cell
     /* For JIT usage */
     static inline size_t offsetOfClass() { return offsetof(BaseShape, clasp); }
     static inline size_t offsetOfParent() { return offsetof(BaseShape, parent); }
+    static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 
   private:
     static void staticAsserts() {
@@ -613,6 +641,13 @@ struct Shape : public js::gc::Cell
     JSObject *getObjectParent() const { return base()->parent; }
 
     static bool setObjectParent(JSContext *cx, JSObject *obj, Shape **listp);
+    static bool setObjectFlag(JSContext *cx, BaseShape::Flag flag, Shape **listp);
+
+    uint32 getObjectFlags() const { return base()->flags & BaseShape::OBJECT_FLAG_MASK; }
+    bool hasObjectFlag(BaseShape::Flag flag) const {
+        JS_ASSERT(!(flag & ~BaseShape::OBJECT_FLAG_MASK));
+        return !!(base()->flags & flag);
+    }
 
   protected:
     /*
@@ -900,7 +935,7 @@ struct EmptyShape : public js::Shape
     EmptyShape(BaseShape *base, uint32 nfixed);
 
     static EmptyShape *create(JSContext *cx, js::Class *clasp, JSObject *parent, uint32 nfixed) {
-        BaseShape lookup(clasp, parent);
+        BaseShape lookup(clasp, parent, 0);
         BaseShape *base = BaseShape::lookup(cx, lookup);
         if (!base)
             return NULL;
