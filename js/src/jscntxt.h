@@ -54,7 +54,6 @@
 #include "jsgcchunk.h"
 #include "jspropertycache.h"
 #include "jspropertytree.h"
-#include "jsstaticcheck.h"
 #include "jsutil.h"
 #include "prmjtime.h"
 

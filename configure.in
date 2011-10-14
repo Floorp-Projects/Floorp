@@ -4325,6 +4325,8 @@ MOZ_TREMOR=
 MOZ_WAVE=1
 MOZ_MEDIA=
 MOZ_WEBM=1
+MOZ_VP8_ERROR_CONCEALMENT=
+MOZ_VP8_ENCODER=
 VPX_AS=
 VPX_ASFLAGS=
 VPX_AS_DASH_C_FLAG=
@@ -5346,6 +5348,12 @@ MOZ_LIBVPX_LIBS=
 
 if test -n "$MOZ_WEBM"; then
     AC_DEFINE(MOZ_WEBM)
+    if test -n "$MOZ_VP8_ERROR_CONCEALMENT" ; then
+        AC_DEFINE(MOZ_VP8_ERROR_CONCEALMENT)
+    fi
+    if test -n "$MOZ_VP8_ENCODER" ; then
+        AC_DEFINE(MOZ_VP8_ENCODER)
+    fi
 
     if test -n "$LIBVPX_DIR" -a "$LIBVPX_DIR" != no; then
         _SAVE_CFLAGS=$CFLAGS
@@ -5356,16 +5364,41 @@ if test -n "$MOZ_WEBM"; then
         fi
         CFLAGS="-I${LIBVPX_DIR}/include $CFLAGS"
         LDFLAGS="-L${LIBVPX_DIR}/lib $LDFLAGS"
+        MOZ_NATIVE_LIBVPX_DEC_TEST=
         MOZ_CHECK_HEADER(vpx/vpx_decoder.h,
             [if test ! -f "${LIBVPX_DIR}/include/vpx/vpx_decoder.h"; then
              AC_MSG_ERROR([vpx/vpx_decoder.h found, but is not in ${LIBVPX_DIR}/include])
             fi],
             AC_MSG_ERROR([--with-system-libvpx requested but vpx/vpx_decoder.h not found]))
         AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver,
-                     [MOZ_NATIVE_LIBVPX=1
-                      MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
-                      MOZ_LIBVPX_LIBS="-L${LIBVPX_DIR}/lib -lvpx"],
+                     [MOZ_NATIVE_LIBVPX_DEC_TEST=1],
                      ([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found]))
+        if test -n "$MOZ_NATIVE_LIBVPX_DEC_TEST" ; then
+            AC_MSG_CHECKING([for libvpx version >= v0.9.7])
+            dnl We need at least v0.9.7 to fix several crash bugs (for which we
+            dnl had local patches prior to v0.9.7).
+            dnl
+            dnl This is a terrible test for the library version, but we don't
+            dnl have a good one. There is no version number in a public header,
+            dnl and testing the headers still doesn't guarantee we link against
+            dnl the right version. While we could call vpx_codec_version() at
+            dnl run-time, that would break cross-compiling. There are no
+            dnl additional exported symbols between the v0.9.7 release and the
+            dnl v0.9.6 one to check for.
+            AC_TRY_COMPILE([
+                #include <vpx/vpx_decoder.h>
+                #if !defined(VPX_CODEC_USE_INPUT_PARTITION)
+                    #error "test failed."
+                #endif
+                ],
+                [return 0;],
+                [AC_MSG_RESULT([yes])
+                 MOZ_NATIVE_LIBVPX=1
+                 MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
+                 MOZ_LIBVPX_LIBS="-L${LIBVPX_DIR}/lib -lvpx"],
+                [AC_MSG_RESULT([no])
+                 AC_MSG_ERROR([--with-system-libvpx requested but it is not v0.9.7 or later])])
+        fi
         CFLAGS=$_SAVE_CFLAGS
         LDFLAGS=$_SAVE_LDFLAGS
         LIBS=$_SAVE_LIBS
@@ -5394,6 +5427,7 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
     dnl We currently require gcc on all arm platforms.
     VPX_AS=$YASM
     VPX_ASM_SUFFIX=asm
+    VPX_NEED_OBJ_INT_EXTRACT=
 
     dnl See if we have assembly on this platform.
     case "$OS_ARCH:$CPU_ARCH" in
@@ -5437,6 +5471,7 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
         else
           VPX_ASFLAGS="-f win32 -rnasm -pnasm -DPIC"
           VPX_X86_ASM=1
+          dnl The encoder needs obj_int_extract to get asm offsets.
         fi
       fi
     ;;
@@ -5455,6 +5490,16 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
     if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
       AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
+    fi
+
+    if test -n "$MOZ_VP8_ENCODER" -a \
+            -z "$GNU_CC" -a -z "$INTEL_CC" -a -z "$CLANG_CC" ; then
+      dnl We prefer to get asm offsets using inline assembler, which the above
+      dnl compilers can do. When we're not using one of those, we have to fall
+      dnl back to obj_int_extract, which reads them from a compiled object
+      dnl file. Unfortunately, that only works if we're compiling on a system
+      dnl with the header files for the appropriate object file format.
+      VPX_NEED_OBJ_INT_EXTRACT=1
     fi
 
     if test -n "$VPX_X86_ASM"; then
@@ -8470,6 +8515,8 @@ AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_WEBM)
+AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
+AC_SUBST(MOZ_VP8_ENCODER)
 AC_SUBST(MOZ_OGG)
 AC_SUBST(MOZ_ALSA_LIBS)
 AC_SUBST(VPX_AS)
@@ -8479,6 +8526,7 @@ AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_ASM_SUFFIX)
 AC_SUBST(VPX_X86_ASM)
 AC_SUBST(VPX_ARM_ASM)
+AC_SUBST(VPX_NEED_OBJ_INT_EXTRACT)
 AC_SUBST(MOZ_INSTRUMENT_EVENT_LOOP)
 AC_SUBST(LIBJPEG_TURBO_AS)
 AC_SUBST(LIBJPEG_TURBO_ASFLAGS)

@@ -19,7 +19,9 @@
 #include "entropy.h"
 #include "idct.h"
 #include "recon.h"
+#if CONFIG_POSTPROC
 #include "postproc.h"
+#endif
 
 /*#ifdef PACKET_TESTING*/
 #include "header.h"
@@ -35,13 +37,15 @@ void vp8_initialize_common(void);
 
 #define NUM_YV12_BUFFERS 4
 
+#define MAX_PARTITIONS 9
+
 typedef struct frame_contexts
 {
     vp8_prob bmode_prob [VP8_BINTRAMODES-1];
     vp8_prob ymode_prob [VP8_YMODES-1];   /* interframe intra mode probs */
     vp8_prob uv_mode_prob [VP8_UV_MODES-1];
     vp8_prob sub_mv_ref_prob [VP8_SUBMVREFS-1];
-    vp8_prob coef_probs [BLOCK_TYPES] [COEF_BANDS] [PREV_COEF_CONTEXTS] [vp8_coef_tokens-1];
+    vp8_prob coef_probs [BLOCK_TYPES] [COEF_BANDS] [PREV_COEF_CONTEXTS] [ENTROPY_NODES];
     MV_CONTEXT mvc[2];
     MV_CONTEXT pre_mvc[2];  /* not to caculate the mvcost for the frame if mvc doesn't change. */
 } FRAME_CONTEXT;
@@ -73,7 +77,9 @@ typedef struct VP8_COMMON_RTCD
     vp8_recon_rtcd_vtable_t       recon;
     vp8_subpix_rtcd_vtable_t      subpix;
     vp8_loopfilter_rtcd_vtable_t  loopfilter;
+#if CONFIG_POSTPROC
     vp8_postproc_rtcd_vtable_t    postproc;
+#endif
     int                           flags;
 #else
     int unused;
@@ -81,6 +87,7 @@ typedef struct VP8_COMMON_RTCD
 } VP8_COMMON_RTCD;
 
 typedef struct VP8Common
+
 {
     struct vpx_internal_error_info  error;
 
@@ -105,7 +112,8 @@ typedef struct VP8Common
     YV12_BUFFER_CONFIG post_proc_buffer;
     YV12_BUFFER_CONFIG temp_scale_frame;
 
-    FRAME_TYPE last_frame_type;  /* Add to check if vp8_frame_init_loop_filter() can be skipped. */
+
+    FRAME_TYPE last_frame_type;  /* Save last frame's frame type for motion search. */
     FRAME_TYPE frame_type;
 
     int show_frame;
@@ -119,7 +127,6 @@ typedef struct VP8Common
     /* profile settings */
     int mb_no_coeff_skip;
     int no_lpf;
-    int simpler_lpf;
     int use_bilinear_mc_filter;
     int full_pixel;
 
@@ -140,16 +147,15 @@ typedef struct VP8Common
 
     MODE_INFO *mip; /* Base of allocated array */
     MODE_INFO *mi;  /* Corresponds to upper left visible macroblock */
+    MODE_INFO *prev_mip; /* MODE_INFO array 'mip' from last decoded frame */
+    MODE_INFO *prev_mi;  /* 'mi' from last frame (points into prev_mip) */
 
 
     INTERPOLATIONFILTERTYPE mcomp_filter_type;
-    LOOPFILTERTYPE last_filter_type;
     LOOPFILTERTYPE filter_type;
-    loop_filter_info lf_info[MAX_LOOP_FILTER+1];
-    prototype_loopfilter_block((*lf_mbv));
-    prototype_loopfilter_block((*lf_mbh));
-    prototype_loopfilter_block((*lf_bv));
-    prototype_loopfilter_block((*lf_bh));
+
+    loop_filter_info_n lf_info;
+
     int filter_level;
     int last_sharpness_level;
     int sharpness_level;
@@ -196,13 +202,12 @@ typedef struct VP8Common
 #if CONFIG_RUNTIME_CPU_DETECT
     VP8_COMMON_RTCD rtcd;
 #endif
+#if CONFIG_MULTITHREAD
+    int processor_core_count;
+#endif
+#if CONFIG_POSTPROC
     struct postproc_state  postproc_state;
+#endif
 } VP8_COMMON;
-
-
-void vp8_adjust_mb_lf_value(MACROBLOCKD *mbd, int *filter_level);
-void vp8_init_loop_filter(VP8_COMMON *cm);
-void vp8_frame_init_loop_filter(loop_filter_info *lfi, int frame_type);
-extern void vp8_loop_filter_frame(VP8_COMMON *cm,    MACROBLOCKD *mbd,  int filt_val);
 
 #endif
