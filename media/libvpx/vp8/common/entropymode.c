@@ -33,11 +33,11 @@ typedef enum
     SUBMVREF_LEFT_ABOVE_ZED
 } sumvfref_t;
 
-int vp8_mv_cont(const MV *l, const MV *a)
+int vp8_mv_cont(const int_mv *l, const int_mv *a)
 {
-    int lez = (l->row == 0 && l->col == 0);
-    int aez = (a->row == 0 && a->col == 0);
-    int lea = (l->row == a->row && l->col == a->col);
+    int lez = (l->as_int == 0);
+    int aez = (a->as_int == 0);
+    int lea = (l->as_int == a->as_int);
 
     if (lea && lez)
         return SUBMVREF_LEFT_ABOVE_ZED;

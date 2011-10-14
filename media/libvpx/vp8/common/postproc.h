@@ -24,7 +24,15 @@
               char whiteclamp[16], char bothclamp[16],\
               unsigned int w, unsigned int h, int pitch)
 
-#define prototype_postproc_blend_mb(sym)\
+#define prototype_postproc_blend_mb_inner(sym)\
+    void sym (unsigned char *y, unsigned char *u, unsigned char *v,\
+              int y1, int u1, int v1, int alpha, int stride)
+
+#define prototype_postproc_blend_mb_outer(sym)\
+    void sym (unsigned char *y, unsigned char *u, unsigned char *v,\
+              int y1, int u1, int v1, int alpha, int stride)
+
+#define prototype_postproc_blend_b(sym)\
     void sym (unsigned char *y, unsigned char *u, unsigned char *v,\
               int y1, int u1, int v1, int alpha, int stride)
 
@@ -52,22 +60,36 @@ extern prototype_postproc(vp8_postproc_downacross);
 #endif
 extern prototype_postproc_addnoise(vp8_postproc_addnoise);
 
-#ifndef vp8_postproc_blend_mb
-#define vp8_postproc_blend_mb vp8_blend_mb_c
+#ifndef vp8_postproc_blend_mb_inner
+#define vp8_postproc_blend_mb_inner vp8_blend_mb_inner_c
 #endif
-extern prototype_postproc_blend_mb(vp8_postproc_blend_mb);
+extern prototype_postproc_blend_mb_inner(vp8_postproc_blend_mb_inner);
+
+#ifndef vp8_postproc_blend_mb_outer
+#define vp8_postproc_blend_mb_outer vp8_blend_mb_outer_c
+#endif
+extern prototype_postproc_blend_mb_outer(vp8_postproc_blend_mb_outer);
+
+#ifndef vp8_postproc_blend_b
+#define vp8_postproc_blend_b vp8_blend_b_c
+#endif
+extern prototype_postproc_blend_b(vp8_postproc_blend_b);
 
 typedef prototype_postproc((*vp8_postproc_fn_t));
 typedef prototype_postproc_inplace((*vp8_postproc_inplace_fn_t));
 typedef prototype_postproc_addnoise((*vp8_postproc_addnoise_fn_t));
-typedef prototype_postproc_blend_mb((*vp8_postproc_blend_mb_fn_t));
+typedef prototype_postproc_blend_mb_inner((*vp8_postproc_blend_mb_inner_fn_t));
+typedef prototype_postproc_blend_mb_outer((*vp8_postproc_blend_mb_outer_fn_t));
+typedef prototype_postproc_blend_b((*vp8_postproc_blend_b_fn_t));
 typedef struct
 {
-    vp8_postproc_inplace_fn_t   down;
-    vp8_postproc_inplace_fn_t   across;
-    vp8_postproc_fn_t           downacross;
-    vp8_postproc_addnoise_fn_t  addnoise;
-    vp8_postproc_blend_mb_fn_t  blend_mb;
+    vp8_postproc_inplace_fn_t           down;
+    vp8_postproc_inplace_fn_t           across;
+    vp8_postproc_fn_t                   downacross;
+    vp8_postproc_addnoise_fn_t          addnoise;
+    vp8_postproc_blend_mb_inner_fn_t    blend_mb_inner;
+    vp8_postproc_blend_mb_outer_fn_t    blend_mb_outer;
+    vp8_postproc_blend_b_fn_t           blend_b;
 } vp8_postproc_rtcd_vtable_t;
 
 #if CONFIG_RUNTIME_CPU_DETECT
@@ -89,7 +111,7 @@ struct postproc_state
 #include "onyxc_int.h"
 #include "ppflags.h"
 int vp8_post_proc_frame(struct VP8Common *oci, YV12_BUFFER_CONFIG *dest,
-                        int deblock_level, int noise_level, int flags);
+                        vp8_ppflags_t *flags);
 
 
 void vp8_de_noise(YV12_BUFFER_CONFIG         *source,

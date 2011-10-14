@@ -698,7 +698,7 @@ def writeStubFile(filename, config, interfaces):
                 f.write(string.Template(nameGetterTemplate).substitute(clazz))
             if clazz.nameSetter:
                 f.write(string.Template(nameSetterTemplate).substitute(clazz))
-            for member in clazz.members:
+            for member in sorted(clazz.members, key=lambda member: member.name):
                 if member.name == 'length':
                     if not member.readonly:
                         setterName = (clazz.name + '_' + header.attributeNativeName(member, False))

@@ -79,6 +79,9 @@ JS_SetProtoCalled(JSContext *cx);
 extern JS_FRIEND_API(size_t)
 JS_GetCustomIteratorCount(JSContext *cx);
 
+extern JS_FRIEND_API(JSBool)
+JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret);
+
 enum {
     JS_TELEMETRY_GC_REASON,
     JS_TELEMETRY_GC_IS_COMPARTMENTAL,
