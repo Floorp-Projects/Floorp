@@ -8,6 +8,10 @@
           android:title="@string/bookmarks"
           android:showAsAction="ifRoom"/>
 
+    <item android:id="@+id/preferences"
+          android:icon="@android:drawable/ic_menu_preferences"
+          android:title="@string/preferences" />
+
     <item android:id="@+id/share"
           android:icon="@drawable/share"
           android:title="@string/share" /> 

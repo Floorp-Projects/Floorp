@@ -478,6 +478,10 @@ abstract public class GeckoApp
            case R.id.saveaspdf:
                GeckoAppShell.sendEventToGecko(new GeckoEvent("SaveAs:PDF", null));
                return true;
+           case R.id.preferences:
+               intent = new Intent(this, GeckoPreferences.class);
+               startActivity(intent);
+               return true;
            default:
                return super.onOptionsItemSelected(item);
         }
@@ -701,6 +705,9 @@ abstract public class GeckoApp
             } else if (event.equals("Doorhanger:Add")) {
                 int tabId = message.getInt("tabID");
                 handleDoorHanger(message, tabId);
+            } else if (event.equals("Preferences:Data")) {
+                JSONArray jsonPrefs = message.getJSONArray("preferences");
+                GeckoPreferences.refresh(jsonPrefs);
             }
         } catch (Exception e) { 
             Log.i(LOG_FILE_NAME, "handleMessage throws " + e + " for message: " + event);
@@ -1085,6 +1092,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1280,6 +1288,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
 
         super.onDestroy();
     }

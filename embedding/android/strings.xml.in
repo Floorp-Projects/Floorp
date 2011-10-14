@@ -42,6 +42,11 @@
   <string name="share">&share;</string>
   <string name="saveaspdf">&saveaspdf;</string>
 
+  <string name="preferences">&preferences;</string>
+  <string name="preferences_title">&preferences_title;</string>
+  <string name="pref_category_privacy">&pref_category_privacy;</string>
+  <string name="pref_do_not_track">&pref_do_not_track;</string>
+
   <string name="reload">&reload;</string>
   <string name="new_tab">&new_tab;</string>
 </resources>
