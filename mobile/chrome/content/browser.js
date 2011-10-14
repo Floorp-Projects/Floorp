@@ -300,7 +300,6 @@ var BrowserEventHandler = {
   },
 
   handleEvent: function(aEvent) {
-    let browser = aEvent.originalTa
     switch (aEvent.type) {
       case "DOMContentLoaded": {
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
