@@ -64,9 +64,6 @@
 #include "nsGUIEvent.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
-#include "nsIAppShell.h"
-
-#include "nsIAppShellService.h"
 
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMNodeList.h"
@@ -149,7 +146,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsXULWindow)
 
 nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                       nsIXULWindow* aOpener,
-                                      nsIAppShell* aShell, nsIURI* aUrl,
+                                      nsIURI* aUrl,
                                       PRInt32 aInitialWidth,
                                       PRInt32 aInitialHeight,
                                       bool aIsHiddenWindow,
@@ -209,7 +206,6 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                   r,                                  // Widget dimensions
                   nsWebShellWindow::HandleEvent,      // Event handler function
                   nsnull,                             // Device context
-                  aShell,                             // Application shell
                   nsnull,                             // nsIToolkit
                   &widgetInitData);                   // Widget initialization data
   mWindow->GetClientBounds(r);
