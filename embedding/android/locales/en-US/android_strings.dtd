@@ -36,6 +36,11 @@
 
 <!ENTITY new_tab "New Tab">
 
+<!ENTITY preferences "Preferences">
+<!ENTITY preferences_title "Preferences">
+<!ENTITY pref_category_privacy "Privacy &amp; Security">
+<!ENTITY pref_do_not_track "Tell sites not to track me">
+
 <!ENTITY quit "Quit">
 
 <!ENTITY share "Share">

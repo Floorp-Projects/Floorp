@@ -74,6 +74,8 @@ var BrowserApp = {
     Services.obs.addObserver(this, "session-back", false);
     Services.obs.addObserver(this, "session-reload", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
+    Services.obs.addObserver(this, "Preferences:Get", false);
+    Services.obs.addObserver(this, "Preferences:Set", false);
 
     NativeWindow.init();
 
@@ -271,6 +273,56 @@ var BrowserApp = {
     webBrowserPrint.print(printSettings, listener);
   },
 
+  getPreferences: function getPreferences(aPrefNames) {
+    try {
+      let json = JSON.parse(aPrefNames);
+      let prefs = [];
+      
+      for each (let prefName in json) {
+        let pref = {
+          name: prefName,
+        };
+
+        switch (Services.prefs.getPrefType(prefName)) {
+          case Ci.nsIPrefBranch.PREF_BOOL:
+            pref.type = "bool";
+            pref.value = Services.prefs.getBoolPref(prefName);
+            break;
+          case Ci.nsIPrefBranch.PREF_INT:
+            pref.type = "int";
+            pref.value = Services.prefs.getIntPref(prefName);
+            break;
+          default:
+          case Ci.nsIPrefBranch.PREF_STRING:
+            pref.type = "string";
+            pref.value = Services.prefs.getComplexValue(prefName, Ci.nsISupportsString).data;
+            break;
+        }
+
+        prefs.push(pref);
+      }
+
+      sendMessageToJava({
+        gecko: {
+          type: "Preferences:Data",
+          preferences: prefs
+        }
+      });
+
+    } catch (e) {}
+  },
+
+  setPreferences: function setPreferences(aPref) {
+    let json = JSON.parse(aPref);
+
+    if (json.type == "bool")
+      Services.prefs.setBoolPref(json.name, json.value);
+    else if (json.type == "int")
+      Services.prefs.setIntPref(json.name, json.value);
+    else
+      Services.prefs.setStringPref(json.name, json.value);
+  },
+
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
     if (!browser)
@@ -291,6 +343,10 @@ var BrowserApp = {
       this.closeTab(this.getTabForId(parseInt(aData)));
     else if (aTopic == "SaveAs:PDF")
       this.saveAsPDF(browser);
+    else if (aTopic == "Preferences:Get") 
+      this.getPreferences(aData);
+    else if (aTopic == "Preferences:Set") 
+      this.setPreferences(aData);
   }
 }
 

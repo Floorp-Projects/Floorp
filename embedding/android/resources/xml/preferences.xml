@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/pref_category_privacy">
+
+        <CheckBoxPreference android:key="privacy.donottrackheader.enabled"
+                            android:title="@string/pref_do_not_track"
+                            android:defaultValue="false"
+                            android:persistent="false" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

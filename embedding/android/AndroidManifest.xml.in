@@ -136,6 +136,15 @@
                   android:windowIsFloating="true"
                   android:backgroundDimEnabled="false">
         </activity>
+
+        <activity android:name="org.mozilla.gecko.GeckoPreferences"
+                  android:label="@string/preferences_title"
+                  android:excludeFromRecents="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
 	<activity android:name="org.mozilla.gecko.GeckoBookmarks"
 		  android:label="@string/bookmarks_title"
 		  android:excludeFromRecents="true">
