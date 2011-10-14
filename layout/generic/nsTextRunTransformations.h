@@ -132,6 +132,9 @@ public:
     }
   }
 
+  // override the gfxTextRun impl to account for additional members here
+  virtual PRUint64 ComputeSize();
+
   nsTransformingTextRunFactory       *mFactory;
   nsTArray<nsRefPtr<nsStyleContext> > mStyles;
   nsTArray<bool>              mCapitalize;
