@@ -2966,10 +2966,7 @@ js_CreateThis(JSContext *cx, JSObject *callee)
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = callee->getParent();
     gc::AllocKind kind = NewObjectGCKind(cx, newclasp);
-    JSObject *obj = NewObject<WithProto::Class>(cx, newclasp, proto, parent, kind);
-    if (obj)
-        obj->syncSpecialEquality();
-    return obj;
+    return NewObject<WithProto::Class>(cx, newclasp, proto, parent, kind);
 }
 
 static inline JSObject *
@@ -4286,8 +4283,6 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     if (!type || !type->getEmptyShape(cx, proto->getClass(), FINALIZE_OBJECT0))
         return NULL;
 
-    proto->syncSpecialEquality();
-
     /* After this point, control must exit via label bad or out. */
     JSObject *ctor;
     bool named = false;
@@ -4568,6 +4563,8 @@ JSObject::setInitialProperty(JSContext *cx, const js::Shape *shape)
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
     JS_ASSERT(numFixedSlotsFromAllocationKind(shape->getObjectClass()) == shape->numFixedSlots());
+    JS_ASSERT_IF(shape->getObjectClass()->ext.equality && !hasSingletonType(),
+                 type()->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
 
     size_t span = shape->slotSpan();
 
@@ -4594,6 +4591,8 @@ JSObject::setInitialPropertyInfallible(const js::Shape *shape)
     JS_ASSERT(shape->compartment() == compartment());
     JS_ASSERT(!shape->inDictionary());
     JS_ASSERT(numFixedSlotsFromAllocationKind(shape->getObjectClass()) == shape->numFixedSlots());
+    JS_ASSERT_IF(shape->getObjectClass()->ext.equality && !hasSingletonType(),
+                 type()->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
 
     JS_ASSERT(dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == 0);
 
@@ -5085,7 +5084,6 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
     if (!obj)
         return NULL;
 
-    obj->syncSpecialEquality();
     MarkTypeObjectUnknownProperties(cx, obj->type());
 
     Value rval;
@@ -7385,12 +7383,10 @@ js_DumpObject(JSObject *obj)
 
     fprintf(stderr, "flags:");
     uint32 flags = obj->flags;
-    if (flags & JSObject::DELEGATE) fprintf(stderr, " delegate");
-    if (flags & JSObject::SYSTEM) fprintf(stderr, " system");
-    if (flags & JSObject::NOT_EXTENSIBLE) fprintf(stderr, " not_extensible");
-    if (flags & JSObject::GENERIC) fprintf(stderr, " generic");
-    if (flags & JSObject::INDEXED) fprintf(stderr, " indexed");
-    if (flags & JSObject::HAS_EQUALITY) fprintf(stderr, " has_equality");
+    if (obj->isDelegate()) fprintf(stderr, " delegate");
+    if (obj->isSystem()) fprintf(stderr, " system");
+    if (!obj->isExtensible()) fprintf(stderr, " not_extensible");
+    if (obj->isIndexed()) fprintf(stderr, " indexed");
 
     bool anyFlags = flags != 0;
     if (obj->isNative()) {

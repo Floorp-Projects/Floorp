@@ -1895,19 +1895,24 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
 {
     JS_ASSERT(isFunction());
 
-    flags |= JSObject::BOUND_FUNCTION;
     setSlot(JSSLOT_BOUND_FUNCTION_THIS, thisArg);
     setSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT, PrivateUint32Value(argslen));
-    if (argslen != 0) {
-        /* Convert to a dictionary to increase the slot span and cover the arguments. */
-        if (!toDictionaryMode(cx))
-            return false;
-        JS_ASSERT(slotSpan() == JSSLOT_FREE(&FunctionClass));
-        if (!setSlotSpan(cx, slotSpan() + argslen))
-            return false;
 
-        copySlotRange(FUN_CLASS_RESERVED_SLOTS, args, argslen);
-    }
+    /*
+     * Convert to a dictionary to set the BOUND_FUNCTION flag and increase
+     * the slot span to cover the arguments.
+     */
+    if (!toDictionaryMode(cx))
+        return false;
+
+    lastProperty()->base()->setObjectFlag(BaseShape::BOUND_FUNCTION);
+
+    JS_ASSERT(slotSpan() == JSSLOT_FREE(&FunctionClass));
+    if (!setSlotSpan(cx, slotSpan() + argslen))
+        return false;
+
+    copySlotRange(FUN_CLASS_RESERVED_SLOTS, args, argslen);
+
     return true;
 }
 
@@ -2513,57 +2518,12 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
         sop = NULL;
     }
 
-    /*
-     * Historically, all objects have had a parent member as intrinsic scope
-     * chain link. We want to move away from this universal parent, but JS
-     * requires that function objects have something like parent (ES3 and ES5
-     * call it the [[Scope]] internal property), to bake a particular static
-     * scope environment into each function object.
-     *
-     * All function objects thus have parent, including all native functions.
-     * All native functions defined by the JS_DefineFunction* APIs are created
-     * via the call below to js_NewFunction, which passes obj as the parent
-     * parameter, and so binds fun's parent to obj using JSObject::setParent,
-     * under js_NewFunction (in JSObject::init, called from NewObject -- see
-     * jsobjinlines.h).
-     *
-     * But JSObject::setParent sets the DELEGATE object flag on its receiver,
-     * to mark the object as a proto or parent of another object. Such objects
-     * may intervene in property lookups and scope chain searches, so require
-     * special handling when caching lookup and search results (since such
-     * intervening objects can in general grow shadowing properties later).
-     *
-     * Thus using setParent prematurely flags certain objects, notably class
-     * prototypes, so that defining native methods on them, where the method's
-     * name (e.g., toString) is already bound on Object.prototype, triggers
-     * shadowingShapeChange events and gratuitous shape regeneration.
-     *
-     * To fix this longstanding bug, we set check whether obj is already a
-     * delegate, and if not, then if js_NewFunction flagged obj as a delegate,
-     * we clear the flag.
-     *
-     * We thus rely on the fact that native functions (including indirect eval)
-     * do not use the property cache or equivalent JIT techniques that require
-     * this bit to be set on their parent-linked scope chain objects.
-     *
-     * Note: we keep API compatibility by setting parent to obj for all native
-     * function objects, even if obj->getGlobal() would suffice. This should be
-     * revisited when parent is narrowed to exist only for function objects and
-     * possibly a few prehistoric scope objects (e.g. event targets).
-     *
-     * FIXME: bug 611190.
-     */
-    bool wasDelegate = obj->isDelegate();
-
     fun = js_NewFunction(cx, NULL, native, nargs,
                          attrs & (JSFUN_FLAGS_MASK | JSFUN_TRCINFO),
                          obj,
                          JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
     if (!fun)
         return NULL;
-
-    if (!wasDelegate && obj->isDelegate())
-        obj->clearDelegate();
 
     if (!obj->defineProperty(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;

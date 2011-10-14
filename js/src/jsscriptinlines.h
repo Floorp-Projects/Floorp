@@ -98,7 +98,8 @@ Bindings::ensureShape(JSContext *cx)
         gc::AllocKind kind = gc::FINALIZE_OBJECT4;
         JS_ASSERT(gc::GetGCKindSlots(kind) == CallObject::RESERVED_SLOTS + 1);
 
-        lastBinding = BaseShape::lookupInitialShape(cx, &CallClass, NULL, kind);
+        lastBinding = BaseShape::lookupInitialShape(cx, &CallClass, NULL, kind,
+                                                    BaseShape::VAROBJ);
         if (!lastBinding)
             return false;
     }

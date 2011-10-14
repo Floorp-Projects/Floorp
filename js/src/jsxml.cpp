@@ -174,10 +174,7 @@ NewBuiltinClassInstanceXML(JSContext *cx, Class *clasp)
     if (!cx->runningWithTrustedPrincipals())
         ++sE4XObjectsCreated;
 
-    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
-    if (obj)
-        obj->syncSpecialEquality();
-    return obj;
+    return NewBuiltinClassInstance(cx, clasp);
 }
 
 #define DEFINE_GETTER(name,code)                                               \
@@ -7277,7 +7274,6 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
     JSFlatString *empty = cx->runtime->emptyString;
     namespaceProto->setNamePrefix(empty);
     namespaceProto->setNameURI(empty);
-    namespaceProto->syncSpecialEquality();
 
     const uintN NAMESPACE_CTOR_LENGTH = 2;
     JSFunction *ctor = global->createConstructor(cx, Namespace, &NamespaceClass,
@@ -7311,7 +7307,6 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
     JSAtom *empty = cx->runtime->emptyString;
     if (!InitXMLQName(cx, qnameProto, empty, empty, empty))
         return NULL;
-    qnameProto->syncSpecialEquality();
 
     const uintN QNAME_CTOR_LENGTH = 2;
     JSFunction *ctor = global->createConstructor(cx, QName, &QNameClass,

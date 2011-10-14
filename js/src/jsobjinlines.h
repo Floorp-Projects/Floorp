@@ -74,12 +74,6 @@
 #include "jsprobes.h"
 #include "jsscopeinlines.h"
 
-inline void
-JSObject::assertSpecialEqualitySynced() const
-{
-    JS_ASSERT(!!getClass()->ext.equality == hasSpecialEquality());
-}
-
 inline bool
 JSObject::isGlobal() const
 {
@@ -153,31 +147,6 @@ JSObject::thisObject(JSContext *cx)
 {
     JSObjectOp op = getOps()->thisObject;
     return op ? op(cx, this) : this;
-}
-
-inline bool
-JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
-{
-    JS_ASSERT(isExtensible());
-
-    if (js::FixOp fix = getOps()->fix) {
-        bool success;
-        if (!fix(cx, this, &success, props))
-            return false;
-        if (!success) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-            return false;
-        }
-    } else {
-        if (!js::GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, props))
-            return false;
-    }
-
-    if (isNative() && !extensibleShapeChange(cx))
-        return false;
-
-    flags |= NOT_EXTENSIBLE;
-    return true;
 }
 
 inline JSBool
@@ -281,15 +250,6 @@ JSObject::deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict)
     js::types::MarkTypePropertyConfigured(cx, this, id);
     js::DeleteIdOp op = getOps()->deleteProperty;
     return (op ? op : js_DeleteProperty)(cx, this, id, rval, strict);
-}
-
-inline void
-JSObject::syncSpecialEquality()
-{
-    if (getClass()->ext.equality) {
-        flags |= JSObject::HAS_EQUALITY;
-        JS_ASSERT_IF(!hasLazyType(), type()->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
-    }
 }
 
 inline void
@@ -561,7 +521,8 @@ JSObject::canRemoveLastProperty()
      */
     JS_ASSERT(!inDictionaryMode());
     const js::Shape *previous = lastProperty()->previous();
-    return previous->getObjectParent() == lastProperty()->getObjectParent();
+    return previous->getObjectParent() == lastProperty()->getObjectParent()
+        && previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
 
 inline js::Value
@@ -951,9 +912,46 @@ JSObject::setType(js::types::TypeObject *newType)
     for (JSObject *obj = newType->proto; obj; obj = obj->getProto())
         JS_ASSERT(obj != this);
 #endif
-    JS_ASSERT_IF(hasSpecialEquality(), newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
+    JS_ASSERT_IF(!isNewborn() && hasSpecialEquality(),
+                 newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     JS_ASSERT(!hasSingletonType());
     type_ = newType;
+}
+
+inline bool JSObject::setIteratedSingleton(JSContext *cx) {
+    return setFlag(cx, js::BaseShape::ITERATED_SINGLETON);
+}
+
+inline bool JSObject::setSystem(JSContext *cx) {
+    return setFlag(cx, js::BaseShape::SYSTEM);
+}
+
+inline bool JSObject::setDelegate(JSContext *cx) {
+    return setFlag(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
+}
+
+inline bool JSObject::setIndexed(JSContext *cx) {
+    return setFlag(cx, js::BaseShape::INDEXED);
+}
+
+inline bool JSObject::setVarObj(JSContext *cx) {
+    return setFlag(cx, js::BaseShape::VAROBJ);
+}
+
+inline bool JSObject::setWatched(JSContext *cx) {
+    return setFlag(cx, js::BaseShape::WATCHED, GENERATE_SHAPE);
+}
+
+inline bool JSObject::isSystem() const { return lastProperty()->hasObjectFlag(js::BaseShape::SYSTEM); }
+inline bool JSObject::isDelegate() const { return lastProperty()->hasObjectFlag(js::BaseShape::DELEGATE); }
+inline bool JSObject::isVarObj() const { return lastProperty()->hasObjectFlag(js::BaseShape::VAROBJ); }
+inline bool JSObject::isExtensible() const { return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE); }
+inline bool JSObject::isBoundFunction() const { return lastProperty()->hasObjectFlag(js::BaseShape::BOUND_FUNCTION); }
+inline bool JSObject::isIndexed() const { return lastProperty()->hasObjectFlag(js::BaseShape::INDEXED); }
+inline bool JSObject::watched() const { return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED); }
+
+inline bool JSObject::hasSpecialEquality() const {
+    return !!getClass()->ext.equality;
 }
 
 inline bool JSObject::isArguments() const { return isNormalArguments() || isStrictArguments(); }
@@ -1976,6 +1974,23 @@ inline JSObject *
 js_GetProtoIfDenseArray(JSObject *obj)
 {
     return obj->isDenseArray() ? obj->getProto() : obj;
+}
+
+/*
+ * js_PurgeScopeChain does nothing if obj is not itself a prototype or parent
+ * scope, else it reshapes the scope and prototype chains it links. It calls
+ * js_PurgeScopeChainHelper, which asserts that obj is flagged as a delegate
+ * (i.e., obj has ever been on a prototype or parent chain).
+ */
+extern bool
+js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id);
+
+inline bool
+js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
+{
+    if (obj->isDelegate())
+        return js_PurgeScopeChainHelper(cx, obj, id);
+    return true;
 }
 
 #endif /* jsobjinlines_h___ */
