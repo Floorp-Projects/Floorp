@@ -283,8 +283,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             found = JS_TRUE;
         else
             found = set->FindMember(id, &member, &iface);
-    }
-    else
+    } else
         found = (nsnull != (member = iface->FindMember(id)));
 
     if (!found) {
@@ -295,8 +294,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                 call = XPC_WN_Shared_ToString;
                 name = rt->GetStringName(XPCJSRuntime::IDX_TO_STRING);
                 id   = rt->GetStringID(XPCJSRuntime::IDX_TO_STRING);
-            }
-            else if (id == rt->GetStringID(XPCJSRuntime::IDX_TO_SOURCE)) {
+            } else if (id == rt->GetStringID(XPCJSRuntime::IDX_TO_SOURCE)) {
                 call = XPC_WN_Shared_ToSource;
                 name = rt->GetStringName(XPCJSRuntime::IDX_TO_SOURCE);
                 id   = rt->GetStringID(XPCJSRuntime::IDX_TO_SOURCE);
@@ -347,8 +345,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                 return JS_DefinePropertyById(ccx, obj, id, OBJECT_TO_JSVAL(jso),
                                              nsnull, nsnull,
                                              propFlags & ~JSPROP_ENUMERATE);
-            }
-            else if (NS_FAILED(rv) && rv != NS_ERROR_NO_INTERFACE) {
+            } else if (NS_FAILED(rv) && rv != NS_ERROR_NO_INTERFACE) {
                 return Throw(rv, ccx);
             }
         }
@@ -467,8 +464,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
         propFlags |= JSPROP_SETTER;
         propFlags &= ~JSPROP_READONLY;
         setter = JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, funobj);
-    }
-    else {
+    } else {
         setter = js_GetterOnlyPropertyStub;
     }
 
@@ -708,8 +704,7 @@ MarkWrappedNative(JSTracer *trc, JSObject *obj, bool helper)
                 wrapper->GetScriptableCallback()->Trace(wrapper, trc, obj);
              TraceForValidWrapper(trc, wrapper);
         }
-    }
-    else if (obj2) {
+    } else if (obj2) {
         GetSlimWrapperProto(obj2)->TraceJS(trc);
     }
 }
@@ -777,8 +772,7 @@ XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
         if (NS_FAILED(rv))
             return Throw(rv, cx);
         *bp = res;
-    }
-    else if (!JSVAL_IS_PRIMITIVE(v)) {
+    } else if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *other = JSVAL_TO_OBJECT(v);
 
         *bp = (obj == other ||
@@ -1135,8 +1129,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     if (obj2FromScriptable) {
         *objp = obj2FromScriptable;
-    }
-    else if (wrapper->HasMutatedSet()) {
+    } else if (wrapper->HasMutatedSet()) {
         // We are here if scriptable did not resolve this property and
         // it *might* be in the instance set but not the proto set.
 
@@ -1492,8 +1485,7 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
             mJSClass.base.call = XPC_WN_Helper_Call;
         if (mFlags.WantConstruct())
             mJSClass.base.construct = XPC_WN_Helper_Construct;
-    }
-    else {
+    } else {
         ops->typeOf = XPC_WN_JSOp_TypeOf_Object;
     }
 
@@ -1502,8 +1494,7 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
                      "If you want an Equality callback, you can't use a stub "
                      "equality hook");
         mJSClass.base.ext.equality = nsnull;
-    }
-    else {
+    } else {
         mJSClass.base.ext.equality = XPC_WN_Equality;
     }
 

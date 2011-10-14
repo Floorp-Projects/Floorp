@@ -267,8 +267,7 @@ NS_METHOD GetSharedScriptableHelperForJSIID(PRUint32 language,
     if (language == nsIProgrammingLanguage::JAVASCRIPT) {
         NS_IF_ADDREF(gSharedScriptableHelperForJSIID);
         *helper = gSharedScriptableHelperForJSIID;
-    }
-    else
+    } else
         *helper = nsnull;
     return NS_OK;
 }
@@ -662,8 +661,7 @@ nsJSCID::NewID(const char* str)
         if (str[0] == '{') {
             if (NS_SUCCEEDED(idObj->Initialize(str)))
                 success = PR_TRUE;
-        }
-        else {
+        } else {
             nsCOMPtr<nsIComponentRegistrar> registrar;
             NS_GetComponentRegistrar(getter_AddRefs(registrar));
             if (registrar) {
@@ -694,8 +692,7 @@ GetIIDArg(PRUint32 argc, jsval* argv, JSContext* cx)
             !(iid = xpc_JSObjectToID(cx, iidobj))) {
             return nsnull;
         }
-    }
-    else
+    } else
         iid = &NS_GET_IID(nsISupports);
 
     return iid;

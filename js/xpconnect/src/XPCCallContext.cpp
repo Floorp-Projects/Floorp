@@ -186,8 +186,7 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
                 mScriptableInfo = nsnull;
             else
                 mScriptableInfo = mWrapper->GetScriptableInfo();
-        }
-        else {
+        } else {
             NS_ABORT_IF_FALSE(!mFlattenedJSObject || IS_SLIM_WRAPPER(mFlattenedJSObject),
                               "should have a slim wrapper");
         }
@@ -216,8 +215,7 @@ XPCCallContext::SetName(jsid name)
         mStaticMemberIsLocal = JS_TRUE;
         if (mMember && !mMember->IsConstant())
             mMethodIndex = mMember->GetIndex();
-    }
-    else {
+    } else {
         mSet = mWrapper ? mWrapper->GetSet() : nsnull;
 
         if (mSet &&
@@ -228,8 +226,7 @@ XPCCallContext::SetName(jsid name)
                              &mStaticMemberIsLocal)) {
             if (mMember && !mMember->IsConstant())
                 mMethodIndex = mMember->GetIndex();
-        }
-        else {
+        } else {
             mMember = nsnull;
             mInterface = nsnull;
             mStaticMemberIsLocal = JS_FALSE;

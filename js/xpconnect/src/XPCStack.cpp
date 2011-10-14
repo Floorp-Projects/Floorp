@@ -139,8 +139,7 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
     while (fp && self) {
         if (!JS_IsScriptFrame(cx, fp)) {
             self->mLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-        }
-        else {
+        } else {
             self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
             JSScript* script = JS_GetFrameScript(cx, fp);
             jsbytecode* pc = JS_GetFramePC(cx, fp);
@@ -171,16 +170,14 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 self->mLanguage = nsIProgrammingLanguage::CPLUSPLUS;
             }
         }
 
         if (++numFrames > MAX_FRAMES) {
             fp = NULL;
-        }
-        else if (JS_FrameIterator(cx, &fp)) {
+        } else if (JS_FrameIterator(cx, &fp)) {
             XPCJSStackFrame* frame = new XPCJSStackFrame();
             self->mCaller = frame;
             self = frame;

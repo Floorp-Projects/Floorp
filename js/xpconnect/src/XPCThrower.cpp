@@ -240,8 +240,7 @@ IsCallerChrome(JSContext* cx)
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (XPCPerThreadData::IsMainThread(cx)) {
         secMan = XPCWrapper::GetSecurityManager();
-    }
-    else {
+    } else {
         nsXPConnect* xpc = nsXPConnect::GetXPConnect();
         if (!xpc)
             return PR_FALSE;
@@ -284,8 +283,7 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
                 return JS_FALSE;
             JS_SetPendingException(cx, thrown);
             success = JS_TRUE;
-        }
-        else if ((xpc = nsXPConnect::GetXPConnect())) {
+        } else if ((xpc = nsXPConnect::GetXPConnect())) {
             JSObject* glob = JS_GetGlobalForScopeChain(cx);
             if (!glob)
                 return JS_FALSE;
