@@ -45,6 +45,8 @@ import java.text.*;
 import java.util.*;
 import java.util.zip.*;
 import java.util.concurrent.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import android.os.*;
 import android.app.*;
@@ -1614,6 +1616,35 @@ public class GeckoAppShell
                     }
                 });
                 Log.i("GeckoShell", "URI - " + uri + ", title - " + title);
+            } else if (type.equals("DOMTitleChanged")) {
+                final String title = geckoObject.getString("title");
+                final CharSequence titleText = title;
+                getMainHandler().post(new Runnable() { 
+                    public void run() {
+                        GeckoApp.mAwesomeBar.setText(titleText);
+                    }
+                });
+                Log.i("GeckoShell", "title - " + title);
+            } else if (type.equals("DOMLinkAdded")) {
+                final String rel = geckoObject.getString("rel");
+                final String href = geckoObject.getString("href");
+                Log.i("GeckoShell", "link rel - " + rel + ", href - " + href);
+                if (rel.indexOf("icon") != -1) {
+                    getMainHandler().post(new Runnable() { 
+                        public void run() {
+                            try {
+                                URL url = new URL(href);
+                                InputStream is = (InputStream) url.getContent();
+                                Drawable image = Drawable.createFromStream(is, "src");
+                                GeckoApp.mFavicon.setImageDrawable(image);
+                            } catch (MalformedURLException e) {
+                                Log.d("GeckoShell", "Error loading favicon: " + e);
+                            } catch (IOException e) {
+                                Log.d("GeckoShell", "Error loading favicon: " + e);
+                            }
+                        }
+                    });
+                }
             } else if (type.equals("log")) {
                 // generic log listener
                 final String msg = geckoObject.getString("msg");

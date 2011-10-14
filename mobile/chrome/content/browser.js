@@ -226,19 +226,19 @@ Tab.prototype = {
   },
 
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
-      let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
-      let uri = browser.currentURI.spec;
-      let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-      
-      let message = {
-        gecko: {
-          type: "onLocationChange",
-          windowID: windowID,
-          uri: uri
-        }
-      };
+    let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
+    let uri = browser.currentURI.spec;
+    let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 
-      sendMessageToJava(message);
+    let message = {
+      gecko: {
+        type: "onLocationChange",
+        windowID: windowID,
+        uri: uri
+      }
+    };
+
+    sendMessageToJava(message);
   },
 
   onSecurityChange: function(aBrowser, aWebProgress, aRequest, aState) {
@@ -279,6 +279,8 @@ var BrowserEventHandler = {
     BrowserApp.deck.addEventListener("MozMagnifyGestureStart", this, true);
     BrowserApp.deck.addEventListener("MozMagnifyGestureUpdate", this, true);
     BrowserApp.deck.addEventListener("DOMContentLoaded", this, true);
+    BrowserApp.deck.addEventListener("DOMLinkAdded", this, true);
+    BrowserApp.deck.addEventListener("DOMTitleChanged", this, true);
   },
 
   handleEvent: function(aEvent) {
@@ -300,6 +302,37 @@ var BrowserEventHandler = {
         });
         break;
       }
+
+      case "DOMLinkAdded":
+        let target = aEvent.originalTarget;
+        if (!target.href || target.disabled)
+          return;
+
+        let json = {
+          type: "DOMLinkAdded",
+          windowId: target.ownerDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
+          href: target.href,
+          charset: target.ownerDocument.characterSet,
+          title: target.title,
+          rel: target.rel
+        };
+        
+        // rel=icon can also have a sizes attribute
+        if (target.hasAttribute("sizes"))
+          json.sizes = target.getAttribute("sizes");
+
+        sendMessageToJava({ gecko: json });
+        break;
+
+      case "DOMTitleChanged":
+        sendMessageToJava({
+          gecko: {
+            type: "DOMTitleChanged",
+            title: aEvent.target.title
+          }
+        });
+        break;
+
       case "click":
         if (this.blockClick) {
           aEvent.stopPropagation();
@@ -307,6 +340,7 @@ var BrowserEventHandler = {
         }
   
         break;
+
       case "mousedown":
         this.startX = aEvent.clientX;
         this.startY = aEvent.clientY;
@@ -322,6 +356,7 @@ var BrowserEventHandler = {
         aEvent.stopPropagation();
         aEvent.preventDefault();
         break;
+
       case "mousemove":
         let dx = aEvent.clientX - this.lastX;
         let dy = aEvent.clientY - this.lastY;
@@ -332,6 +367,7 @@ var BrowserEventHandler = {
         aEvent.stopPropagation();
         aEvent.preventDefault();
         break;
+
       case "mouseup":
         this.panning = false;
         let isDrag = (Math.abs(aEvent.clientX - this.startX) > 10 ||
@@ -432,9 +468,11 @@ var BrowserEventHandler = {
         aEvent.stopPropagation();
         aEvent.preventDefault();
         break;
+
       case "MozMagnifyGestureStart":
         this._pinchDelta = 0;
         break;
+
       case "MozMagnifyGestureUpdate":
         if (!aEvent.delta)
           break;
