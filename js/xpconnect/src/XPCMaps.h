@@ -71,7 +71,7 @@ public:
         NS_PRECONDITION(Obj,"bad param");
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, Obj, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_FREE(entry))
+        if (JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
         return entry->value;
     }
@@ -82,9 +82,9 @@ public:
         JSObject* obj = wrapper->GetJSObjectPreserveColor();
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, obj, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
-        if(entry->key)
+        if (entry->key)
             return entry->value;
         entry->key = obj;
         entry->value = wrapper;
@@ -128,7 +128,7 @@ public:
         NS_PRECONDITION(Obj,"bad param");
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, Obj, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_FREE(entry))
+        if (JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
         return entry->value;
     }
@@ -139,9 +139,9 @@ public:
         nsISupports* obj = wrapper->GetIdentityObject();
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, obj, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
-        if(entry->key)
+        if (entry->key)
             return entry->value;
         entry->key = obj;
         entry->value = wrapper;
@@ -192,7 +192,7 @@ public:
     {
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, &iid, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_FREE(entry))
+        if (JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
         return entry->value;
     }
@@ -203,9 +203,9 @@ public:
         const nsIID* iid = &clazz->GetIID();
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, iid, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
-        if(entry->key)
+        if (entry->key)
             return entry->value;
         entry->key = iid;
         entry->value = clazz;
@@ -249,7 +249,7 @@ public:
     {
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, &iid, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_FREE(entry))
+        if (JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
         return entry->value;
     }
@@ -260,9 +260,9 @@ public:
         const nsIID* iid = iface->GetIID();
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, iid, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
-        if(entry->key)
+        if (entry->key)
             return entry->value;
         entry->key = iid;
         entry->value = iface;
@@ -304,7 +304,7 @@ public:
     {
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, info, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_FREE(entry))
+        if (JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
         return entry->value;
     }
@@ -314,9 +314,9 @@ public:
         NS_PRECONDITION(info,"bad param");
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, info, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
-        if(entry->key)
+        if (entry->key)
             return entry->value;
         entry->key = info;
         entry->value = set;
@@ -358,7 +358,7 @@ public:
     {
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, info, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_FREE(entry))
+        if (JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
         return entry->value;
     }
@@ -368,9 +368,9 @@ public:
         NS_PRECONDITION(info,"bad param");
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, info, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
-        if(entry->key)
+        if (entry->key)
             return entry->value;
         entry->key = info;
         entry->value = proto;
@@ -418,7 +418,7 @@ public:
     {
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, key, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_FREE(entry))
+        if (JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
         return entry->key_value;
     }
@@ -429,9 +429,9 @@ public:
         NS_PRECONDITION(set,"bad param");
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, key, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
-        if(entry->key_value)
+        if (entry->key_value)
             return entry->key_value;
         entry->key_value = set;
         return set;
@@ -490,7 +490,7 @@ public:
     {
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, &iid, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_FREE(entry))
+        if (JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
         return entry->value;
     }
@@ -501,7 +501,7 @@ public:
 
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, &iid, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
         NS_IF_ADDREF(obj);
         NS_IF_RELEASE(entry->value);
@@ -576,9 +576,9 @@ public:
         NS_PRECONDITION(proto,"bad param");
         JSDHashEntryStub* entry = (JSDHashEntryStub*)
             JS_DHashTableOperate(mTable, proto, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
-        if(entry->key)
+        if (entry->key)
             return (XPCWrappedNativeProto*) entry->key;
         entry->key = proto;
         return proto;
@@ -612,9 +612,9 @@ public:
         NS_PRECONDITION(nw,"bad param");
         JSDHashEntryStub* entry = (JSDHashEntryStub*)
             JS_DHashTableOperate(mTable, nw, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
-        if(entry->key)
+        if (entry->key)
             return (JSObject*) entry->key;
         entry->key = nw;
         return nw;
@@ -666,7 +666,7 @@ public:
         NS_PRECONDITION(wrapper, "bad param");
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, wrapper, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_FREE(entry))
+        if (JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
         return entry->value.obj;
     }
@@ -682,7 +682,7 @@ public:
     {
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, wrappedObject, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_BUSY(entry))
+        if (JS_DHASH_ENTRY_IS_BUSY(entry))
             return &entry->value;
         return nsnull;
     }
@@ -725,7 +725,7 @@ public:
     static JSObject2JSObjectMap* newMap(int size)
     {
         JSObject2JSObjectMap* map = new JSObject2JSObjectMap(size);
-        if(map && map->mTable)
+        if (map && map->mTable)
             return map;
         delete map;
         return nsnull;
@@ -736,7 +736,7 @@ public:
         NS_PRECONDITION(key, "bad param");
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, key, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_FREE(entry))
+        if (JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
         return entry->value;
     }
@@ -747,9 +747,9 @@ public:
         NS_PRECONDITION(key,"bad param");
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, key, JS_DHASH_ADD);
-        if(!entry)
+        if (!entry)
             return nsnull;
-        if(entry->key)
+        if (entry->key)
             return entry->value;
         entry->key = key;
         entry->value = value;
@@ -771,7 +771,7 @@ public:
 
     ~JSObject2JSObjectMap()
     {
-        if(mTable)
+        if (mTable)
             JS_DHashTableDestroy(mTable);
     }
 

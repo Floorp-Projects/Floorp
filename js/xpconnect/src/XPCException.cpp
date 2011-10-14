@@ -73,12 +73,12 @@ nsXPCException::NameAndFormatForNSResult(nsresult rv,
                                          const char** format)
 {
 
-    for(ResultMap* p = map; p->name; p++)
+    for (ResultMap* p = map; p->name; p++)
     {
-        if(rv == p->rv)
+        if (rv == p->rv)
         {
-            if(name) *name = p->name;
-            if(format) *format = p->format;
+            if (name) *name = p->name;
+            if (format) *format = p->format;
             return JS_TRUE;
         }
     }
@@ -93,19 +93,19 @@ nsXPCException::IterateNSResults(nsresult* rv,
                                  void** iterp)
 {
     ResultMap* p = (ResultMap*) *iterp;
-    if(!p)
+    if (!p)
         p = map;
     else
         p++;
-    if(!p->name)
+    if (!p->name)
         p = nsnull;
     else
     {
-        if(rv)
+        if (rv)
             *rv = p->rv;
-        if(name)
+        if (name)
             *name = p->name;
-        if(format)
+        if (format)
             *format = p->format;
     }
     *iterp = p;
@@ -159,7 +159,7 @@ nsXPCException::~nsXPCException()
 NS_IMETHODIMP
 nsXPCException::StealJSVal(jsval *vp NS_OUTPARAM)
 {
-    if(mThrownJSVal.IsHeld())
+    if (mThrownJSVal.IsHeld())
     {
         *vp = mThrownJSVal.Release();
         return NS_OK;
@@ -171,7 +171,7 @@ nsXPCException::StealJSVal(jsval *vp NS_OUTPARAM)
 NS_IMETHODIMP
 nsXPCException::StowJSVal(JSContext* cx, jsval v)
 {
-    if(mThrownJSVal.Hold(cx))
+    if (mThrownJSVal.Hold(cx))
     {
         mThrownJSVal = v;
         return NS_OK;
@@ -182,17 +182,17 @@ nsXPCException::StowJSVal(JSContext* cx, jsval v)
 void
 nsXPCException::Reset()
 {
-    if(mMessage)
+    if (mMessage)
     {
         nsMemory::Free(mMessage);
         mMessage = nsnull;
     }
-    if(mName)
+    if (mName)
     {
         nsMemory::Free(mName);
         mName = nsnull;
     }
-    if(mFilename)
+    if (mFilename)
     {
         nsMemory::Free(mFilename);
         mFilename = nsnull;
@@ -207,7 +207,7 @@ nsXPCException::Reset()
 NS_IMETHODIMP
 nsXPCException::GetMessageMoz(char * *aMessage)
 {
-    if(!mInitialized)
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
     XPC_STRING_GETTER_BODY(aMessage, mMessage);
 }
@@ -216,9 +216,9 @@ nsXPCException::GetMessageMoz(char * *aMessage)
 NS_IMETHODIMP
 nsXPCException::GetResult(nsresult *aResult)
 {
-    if(!aResult)
+    if (!aResult)
         return NS_ERROR_NULL_POINTER;
-    if(!mInitialized)
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
     *aResult = mResult;
     return NS_OK;
@@ -228,11 +228,11 @@ nsXPCException::GetResult(nsresult *aResult)
 NS_IMETHODIMP
 nsXPCException::GetName(char * *aName)
 {
-    if(!mInitialized)
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
 
     const char* name = mName;
-    if(!name)
+    if (!name)
         NameAndFormatForNSResult(mResult, &name, nsnull);
 
     XPC_STRING_GETTER_BODY(aName, name);
@@ -241,7 +241,7 @@ nsXPCException::GetName(char * *aName)
 /* readonly attribute string filename; */
 NS_IMETHODIMP nsXPCException::GetFilename(char * *aFilename)
 {
-    if(!mInitialized)
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
     XPC_STRING_GETTER_BODY(aFilename, mFilename);
 }
@@ -249,9 +249,9 @@ NS_IMETHODIMP nsXPCException::GetFilename(char * *aFilename)
 /* readonly attribute PRUint32 lineNumber; */
 NS_IMETHODIMP nsXPCException::GetLineNumber(PRUint32 *aLineNumber)
 {
-    if(!aLineNumber)
+    if (!aLineNumber)
         return NS_ERROR_NULL_POINTER;
-    if(!mInitialized)
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
     *aLineNumber = mLineNumber;
     return NS_OK;
@@ -261,7 +261,7 @@ NS_IMETHODIMP nsXPCException::GetLineNumber(PRUint32 *aLineNumber)
 NS_IMETHODIMP nsXPCException::GetColumnNumber(PRUint32 *aColumnNumber)
 {
     NS_ENSURE_ARG_POINTER(aColumnNumber);
-    if(!mInitialized)
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
     *aColumnNumber = 0;
     return NS_OK;
@@ -271,9 +271,9 @@ NS_IMETHODIMP nsXPCException::GetColumnNumber(PRUint32 *aColumnNumber)
 NS_IMETHODIMP
 nsXPCException::GetLocation(nsIStackFrame * *aLocation)
 {
-    if(!aLocation)
+    if (!aLocation)
         return NS_ERROR_NULL_POINTER;
-    if(!mInitialized)
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
     *aLocation = mLocation;
     NS_IF_ADDREF(mLocation);
@@ -284,9 +284,9 @@ nsXPCException::GetLocation(nsIStackFrame * *aLocation)
 NS_IMETHODIMP
 nsXPCException::GetData(nsISupports * *aData)
 {
-    if(!aData)
+    if (!aData)
         return NS_ERROR_NULL_POINTER;
-    if(!mInitialized)
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
     *aData = mData;
     NS_IF_ADDREF(mData);
@@ -297,9 +297,9 @@ nsXPCException::GetData(nsISupports * *aData)
 NS_IMETHODIMP
 nsXPCException::GetInner(nsIException* *aException)
 {
-    if(!aException)
+    if (!aException)
         return NS_ERROR_NULL_POINTER;
-    if(!mInitialized)
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
     *aException = mInner;
     NS_IF_ADDREF(mInner);
@@ -310,56 +310,56 @@ nsXPCException::GetInner(nsIException* *aException)
 NS_IMETHODIMP
 nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIStackFrame *aLocation, nsISupports *aData, nsIException *aInner)
 {
-    if(mInitialized)
+    if (mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
 
     Reset();
 
-    if(aMessage)
+    if (aMessage)
     {
-        if(!(mMessage = (char*) nsMemory::Clone(aMessage,
-                                                sizeof(char)*(strlen(aMessage)+1))))
+        if (!(mMessage = (char*) nsMemory::Clone(aMessage,
+                                                 sizeof(char)*(strlen(aMessage)+1))))
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if(aName)
+    if (aName)
     {
-        if(!(mName = (char*) nsMemory::Clone(aName,
-                                             sizeof(char)*(strlen(aName)+1))))
+        if (!(mName = (char*) nsMemory::Clone(aName,
+                                              sizeof(char)*(strlen(aName)+1))))
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
     mResult = aResult;
 
-    if(aLocation)
+    if (aLocation)
     {
         mLocation = aLocation;
         NS_ADDREF(mLocation);
         // For now, fill in our location details from our stack frame.
         // Later we may allow other locations?
         nsresult rc;
-        if(NS_FAILED(rc = aLocation->GetFilename(&mFilename)))
+        if (NS_FAILED(rc = aLocation->GetFilename(&mFilename)))
             return rc;
-        if(NS_FAILED(rc = aLocation->GetLineNumber(&mLineNumber)))
+        if (NS_FAILED(rc = aLocation->GetLineNumber(&mLineNumber)))
             return rc;
     }
     else
     {
         nsresult rv;
         nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-        if(!xpc)
+        if (!xpc)
             return NS_ERROR_FAILURE;
         rv = xpc->GetCurrentJSStack(&mLocation);
-        if(NS_FAILED(rv))
+        if (NS_FAILED(rv))
             return rv;
     }
 
-    if(aData)
+    if (aData)
     {
         mData = aData;
         NS_ADDREF(mData);
     }
-    if(aInner)
+    if (aInner)
     {
         mInner = aInner;
         NS_ADDREF(mInner);
@@ -373,9 +373,9 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
 NS_IMETHODIMP
 nsXPCException::ToString(char **_retval)
 {
-    if(!_retval)
+    if (!_retval)
         return NS_ERROR_NULL_POINTER;
-    if(!mInitialized)
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
 
     static const char defaultMsg[] = "<no message>";
@@ -385,11 +385,11 @@ nsXPCException::ToString(char **_retval)
 
     char* indicatedLocation = nsnull;
 
-    if(mLocation)
+    if (mLocation)
     {
         // we need to free this if it does not fail
         nsresult rv = mLocation->ToString(&indicatedLocation);
-        if(NS_FAILED(rv))
+        if (NS_FAILED(rv))
             return rv;
     }
 
@@ -397,21 +397,21 @@ nsXPCException::ToString(char **_retval)
     const char* location = indicatedLocation ?
                                 indicatedLocation : defaultLocation;
     const char* resultName = mName;
-    if(!resultName && !NameAndFormatForNSResult(mResult, &resultName,
-                                                (!msg) ? &msg : nsnull))
+    if (!resultName && !NameAndFormatForNSResult(mResult, &resultName,
+                                                 (!msg) ? &msg : nsnull))
     {
-        if(!msg)
+        if (!msg)
             msg = defaultMsg;
         resultName = "<unknown>";
     }
     const char* data = mData ? "yes" : "no";
 
     char* temp = JS_smprintf(format, msg, mResult, resultName, location, data);
-    if(indicatedLocation)
+    if (indicatedLocation)
         nsMemory::Free(indicatedLocation);
 
     char* final = nsnull;
-    if(temp)
+    if (temp)
     {
         final = (char*) nsMemory::Clone(temp, sizeof(char)*(strlen(temp)+1));
         JS_smprintf_free(temp);
@@ -438,7 +438,7 @@ nsXPCException::NewException(const char *aMessage,
     // This is bad because it means that wrapped exceptions will never have a
     // shared prototype. So... We force one to be created via the factory
     // *once* and then go about our business.
-    if(!sEverMadeOneFromFactory)
+    if (!sEverMadeOneFromFactory)
     {
         nsCOMPtr<nsIXPCException> e =
             do_CreateInstance(XPC_EXCEPTION_CONTRACTID);
@@ -447,12 +447,12 @@ nsXPCException::NewException(const char *aMessage,
 
     nsresult rv;
     nsXPCException* e = new nsXPCException();
-    if(e)
+    if (e)
     {
         NS_ADDREF(e);
 
         nsIStackFrame* location;
-        if(aLocation)
+        if (aLocation)
         {
             location = aLocation;
             NS_ADDREF(location);
@@ -460,13 +460,13 @@ nsXPCException::NewException(const char *aMessage,
         else
         {
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-            if(!xpc)
+            if (!xpc)
             {
                 NS_RELEASE(e);
                 return NS_ERROR_FAILURE;
             }
             rv = xpc->GetCurrentJSStack(&location);
-            if(NS_FAILED(rv))
+            if (NS_FAILED(rv))
             {
                 NS_RELEASE(e);
                 return NS_ERROR_FAILURE;
@@ -478,20 +478,20 @@ nsXPCException::NewException(const char *aMessage,
             // components are implemented in JS.
         }
         // We want to trim off any leading native 'dataless' frames
-        if(location)
-            while(1)
+        if (location)
+            while (1)
             {
                 PRUint32 language;
                 PRInt32 lineNumber;
-                if(NS_FAILED(location->GetLanguage(&language)) ||
-                   language == nsIProgrammingLanguage::JAVASCRIPT ||
-                   NS_FAILED(location->GetLineNumber(&lineNumber)) ||
-                   lineNumber)
+                if (NS_FAILED(location->GetLanguage(&language)) ||
+                    language == nsIProgrammingLanguage::JAVASCRIPT ||
+                    NS_FAILED(location->GetLineNumber(&lineNumber)) ||
+                    lineNumber)
                 {
                     break;
                 }
                 nsCOMPtr<nsIStackFrame> caller;
-                if(NS_FAILED(location->GetCaller(getter_AddRefs(caller))) || !caller)
+                if (NS_FAILED(location->GetCaller(getter_AddRefs(caller))) || !caller)
                     break;
                 NS_RELEASE(location);
                 caller->QueryInterface(NS_GET_IID(nsIStackFrame), (void **)&location);
@@ -500,11 +500,11 @@ nsXPCException::NewException(const char *aMessage,
         // or no location at all
         rv = e->Initialize(aMessage, aResult, nsnull, location, aData, nsnull);
         NS_IF_RELEASE(location);
-        if(NS_FAILED(rv))
+        if (NS_FAILED(rv))
             NS_RELEASE(e);
     }
 
-    if(!e)
+    if (!e)
         return NS_ERROR_FAILURE;
 
     *exceptn = static_cast<nsIXPCException*>(e);

@@ -531,7 +531,7 @@ DumpXPC(JSContext *cx, uintN argc, jsval *vp)
     }
 
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-    if(xpc)
+    if (xpc)
         xpc->DebugDump((int16)depth);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
@@ -1034,8 +1034,8 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
          */
         int ch = fgetc(file);
         if (ch == '#') {
-            while((ch = fgetc(file)) != EOF) {
-                if(ch == '\n' || ch == '\r')
+            while ((ch = fgetc(file)) != EOF) {
+                if (ch == '\n' || ch == '\r')
                     break;
             }
         }
@@ -1925,7 +1925,7 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
-        if(NS_FAILED(cxstack->Push(cx))) {
+        if (NS_FAILED(cxstack->Push(cx))) {
             printf("failed to push the current JSContext on the nsThreadJSContextStack!\n");
             return 1;
         }

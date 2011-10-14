@@ -53,7 +53,7 @@ xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetStrReadOnly(char * *aStrReadOnly){
     char aString[] = "XPConnect Read-Only String";
 
-    if(!aStrReadOnly)
+    if (!aStrReadOnly)
         return NS_ERROR_NULL_POINTER;
     *aStrReadOnly = (char*) nsMemory::Clone(aString,
                                             sizeof(char)*(strlen(aString)+1));
@@ -99,7 +99,7 @@ xpcTestObjectReadWrite :: ~xpcTestObjectReadWrite()
 }
 
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetStringProperty(char * *aStringProperty) {
-    if(!aStringProperty)
+    if (!aStringProperty)
         return NS_ERROR_NULL_POINTER;
     *aStringProperty = (char*) nsMemory::Clone(stringProperty,
                                                sizeof(char)*(strlen(stringProperty)+1));
