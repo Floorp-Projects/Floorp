@@ -78,7 +78,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIContentViewer.h"
-#include "nsIDocumentViewer.h"
 #include "nsIWindowProvider.h"
 #include "nsIMutableArray.h"
 #include "nsISupportsArray.h"
