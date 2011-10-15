@@ -413,7 +413,7 @@ public class GeckoAppShell
         if (args != null)
             combinedArgs += " " + args;
         if (url != null)
-            combinedArgs += " " + url;
+            combinedArgs += " -remote " + url;
 
         // and go
         GeckoAppShell.nativeRun(combinedArgs);

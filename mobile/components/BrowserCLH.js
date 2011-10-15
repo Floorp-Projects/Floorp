@@ -13,6 +13,17 @@ function dump(a) {
         .logStringMessage(a);
 }
 
+function openWindow(aParent, aURL, aTarget, aFeatures, aArgs) {
+  let argString = null;
+  if (aArgs && !(aArgs instanceof Ci.nsISupportsArray)) {
+    argString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    argString.data = aArgs;
+  }
+
+  return Services.ww.openWindow(aParent, aURL, aTarget, aFeatures, argString || aArgs);
+}
+
+
 function BrowserCLH() { }
 
 BrowserCLH.prototype = {
@@ -20,11 +31,6 @@ BrowserCLH.prototype = {
   handle: function fs_handle(aCmdLine) {
       let urlParam = aCmdLine.handleFlagWithParam("remote", false);
       if (urlParam) {
-          // TODO:
-          // browserWin.browserDOMWindow will be null if
-          // the chrome page hasn't loaded yet.  We
-          // should test for this, and reschedule the
-          // event.
           aCmdLine.preventDefault = true;
           try {
               dump("fs_handle");
@@ -36,6 +42,12 @@ BrowserCLH.prototype = {
               dump("fs_handle: " + uri);
 
               let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+              if (!browserWin)
+                browserWin = openWindow(null, "chrome://browser/content/browser.xul", "_blank", "chrome,dialog=no,all", urlParam);
+
+              while (!browserWin.browserDOMWindow)
+                Services.tm.currentThread.processNextEvent(true);
+
               browserWin.browserDOMWindow.openURI(uri,
                                                   null,
                                                   Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW,
