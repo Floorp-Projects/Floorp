@@ -62,11 +62,11 @@ PARALLEL_DIRS = \
   themes \
   $(NULL)
 
-#
+
 # The native front end is not going to use extensions based on this code.
 # If it isn't used, it still takes up .5mb in cached statement.  fail for me.
 # Ideally we start moving other optional stuff into this section.
-ifdef XXXXX 
+ifneq ($(OS_TARGET),Android)
 PARALLEL_DIRS += \
   mozapps/extensions \
   $(NULL)
