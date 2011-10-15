@@ -5911,29 +5911,6 @@ nsDocument::GetMozSyntheticDocument(bool *aSyntheticDocument)
 }
 
 NS_IMETHODIMP
-nsDocument::GetXmlVersion(nsAString& aXmlVersion)
-{
-  WarnOnceAbout(eXmlVersion);
-  if (IsHTML()) {
-    SetDOMStringToNull(aXmlVersion);
-    return NS_OK;
-  }
-
-  // If there is no declaration, the value is "1.0".
-
-  // XXX We only support "1.0", so always output "1.0" until that changes.
-  aXmlVersion.AssignLiteral("1.0");
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::SetXmlVersion(const nsAString& aXmlVersion)
-{
-  return IsHTML() ? NS_ERROR_DOM_NOT_SUPPORTED_ERR : NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocument::GetDocumentURI(nsAString& aDocumentURI)
 {
   if (mDocumentURI) {
