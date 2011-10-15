@@ -8,9 +8,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 
 function dump(a) {
-    Cc["@mozilla.org/consoleservice;1"]
-        .getService(Ci.nsIConsoleService)
-        .logStringMessage(a);
+  Cc["@mozilla.org/consoleservice;1"]
+    .getService(Ci.nsIConsoleService)
+    .logStringMessage(a);
 }
 
 function openWindow(aParent, aURL, aTarget, aFeatures, aArgs) {
@@ -24,47 +24,52 @@ function openWindow(aParent, aURL, aTarget, aFeatures, aArgs) {
 }
 
 
-function BrowserCLH() { }
+function BrowserCLH() {}
 
 BrowserCLH.prototype = {
-
   handle: function fs_handle(aCmdLine) {
-      let urlParam = aCmdLine.handleFlagWithParam("remote", false);
-      if (urlParam) {
-          aCmdLine.preventDefault = true;
-          try {
-              dump("fs_handle");
-              let urifixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-              dump("fs_handle: " + urlParam);
-              let uri = urifixup.createFixupURI(urlParam, 1);
-              if (!uri)
-                  return;
-              dump("fs_handle: " + uri);
+    dump("fs_handle");
 
-              let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
-              if (!browserWin)
-                browserWin = openWindow(null, "chrome://browser/content/browser.xul", "_blank", "chrome,dialog=no,all", urlParam);
+    let urlParam = aCmdLine.handleFlagWithParam("remote", false);
+    if (!urlParam) {
+      urlParam = "about:support";
+      try {
+        urlParam = Services.prefs.getCharPref("browser.last.uri");
+      } catch (e) {};
+    }
+    dump("fs_handle: " + urlParam);
 
-              while (!browserWin.browserDOMWindow)
-                Services.tm.currentThread.processNextEvent(true);
+    try {
+      let urifixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+      let uri = urifixup.createFixupURI(urlParam, 1);
+      if (!uri)
+        return;
+      dump("fs_handle: " + uri);
 
-              browserWin.browserDOMWindow.openURI(uri,
-                                                  null,
-                                                  Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW,
-                                                  Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
-          } catch (x) {
-              Cc["@mozilla.org/consoleservice;1"]
-                  .getService(Ci.nsIConsoleService)
-                  .logStringMessage("fs_handle exception!:  " + x);
-          }
+      let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+      if (browserWin) {
+        browserWin.browserDOMWindow.openURI(uri,
+                                            null,
+                                            Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW,
+                                            Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+      } else {
+        browserWin = openWindow(null, "chrome://browser/content/browser.xul", "_blank", "chrome,dialog=no,all", urlParam);
       }
+
+      aCmdLine.preventDefault = true;
+      dump("fs_handle: done");
+    } catch (x) {
+      Cc["@mozilla.org/consoleservice;1"]
+          .getService(Ci.nsIConsoleService)
+          .logStringMessage("fs_handle exception!:  " + x);
+    }
   },
 
   // QI
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
 
   // XPCOMUtils factory
-  classID: Components.ID("{be623d20-d305-11de-8a39-0800200c9a66}"),
+  classID: Components.ID("{be623d20-d305-11de-8a39-0800200c9a66}")
 };
 
 var components = [ BrowserCLH ];

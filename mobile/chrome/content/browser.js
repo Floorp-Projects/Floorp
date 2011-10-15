@@ -37,10 +37,9 @@ var BrowserApp = {
     Services.obs.addObserver(this, "session-reload", false);
 
     let uri = "about:support";
-    try {
-      uri = Services.prefs.getCharPref("browser.last.uri");
-    } catch (e) {};
-  
+    if ("arguments" in window && window.arguments[0])
+      uri = window.arguments[0];
+
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
     let newTab = this.addTab(uri);
