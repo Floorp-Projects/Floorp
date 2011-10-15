@@ -330,13 +330,6 @@ protected:
 
   nsresult GetWholeText(nsAString& aWholeText);
 
-  nsresult GetIsElementContentWhitespace(bool *aReturn)
-  {
-    GetOwnerDoc()->WarnOnceAbout(nsIDocument::eIsElementContentWhitespace);
-    *aReturn = TextIsOnlyWhitespace();
-    return NS_OK;
-  }
-
   static PRInt32 FirstLogicallyAdjacentTextNode(nsIContent* aParent,
                                                 PRInt32 aIndex);
 
