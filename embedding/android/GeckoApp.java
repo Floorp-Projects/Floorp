@@ -89,12 +89,12 @@ abstract public class GeckoApp
     public static boolean mFullscreen = false;
     public static File sGREDir = null;
     public Handler mMainHandler;
+    public static DatabaseHelper mDbHelper;
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
     private Button mAwesomeBar;
     private ImageButton mFavicon;
     private ProgressBar mProgressBar;
-    private static SessionHistory mSessionHistory;
 
     enum LaunchState {Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -104,6 +104,7 @@ abstract public class GeckoApp
     private static final int FILE_PICKER_REQUEST = 1;
     private static final int AWESOMEBAR_REQUEST = 2;
     private static final int CAMERA_CAPTURE_REQUEST = 3;
+    private static final int SHOW_TABS_REQUEST = 4;
 
     static boolean checkLaunchState(LaunchState checkState) {
         synchronized(sLaunchState) {
@@ -376,12 +377,18 @@ abstract public class GeckoApp
                return true;
            case R.id.bookmarks:
                Intent intent = new Intent(this, GeckoBookmarks.class);
-               SessionHistory.HistoryEntry he = getSessionHistory().getHistoryEntryAt(0);
+               Tab tab = Tabs.getInstance().getSelectedTab();
+               Tab.HistoryEntry he = tab.getLastHistoryEntry();
                if (he != null) {
-                intent.setData(android.net.Uri.parse(he.mUri));
-                intent.putExtra("title", he.mTitle);
-                startActivity(intent);
+                   intent.setData(android.net.Uri.parse(he.mUri));
+                   intent.putExtra("title", he.mTitle);
+                   startActivity(intent);
                }
+               return true;
+           case R.id.show_tabs:
+               Intent showTabsIntent = new Intent(this, ShowTabs.class);
+               showTabsIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+               startActivityForResult(showTabsIntent, SHOW_TABS_REQUEST);
                return true;
            default:
                return super.onOptionsItemSelected(item);
@@ -395,11 +402,20 @@ abstract public class GeckoApp
         System.exit(0);
     }
 
-    SessionHistory getSessionHistory() {
-        return mSessionHistory;
+    public static DatabaseHelper getDatabaseHelper() {
+        if (mDbHelper == null)
+            mDbHelper = new DatabaseHelper(GeckoApp.mAppContext);
+        return mDbHelper;
     }
 
-    void handleLocationChange(final String uri) {
+    void handleLocationChange(final int tabId, final String uri) {
+        Tab tab = Tabs.getInstance().getTab(tabId);
+        if (tab != null)
+            tab.updateURL(uri);
+
+        if (!Tabs.getInstance().isSelectedTab(tab))
+            return;
+
         mMainHandler.post(new Runnable() { 
             public void run() {
                 mAwesomeBar.setText(uri);
@@ -407,7 +423,13 @@ abstract public class GeckoApp
         });
     }
 
-    void handleDocumentStart() {
+    void handleDocumentStart(final int tabId) {
+        Tab tab = Tabs.getInstance().getTab(tabId);
+        tab.setLoading(true);
+        
+        if (!Tabs.getInstance().isSelectedTab(tab))
+            return;
+
         mMainHandler.post(new Runnable() { 
             public void run() {
                 mProgressBar.setVisibility(View.VISIBLE);
@@ -416,7 +438,13 @@ abstract public class GeckoApp
         });
     }
 
-    void handleDocumentStop() {
+    void handleDocumentStop(final int tabId) {
+        Tab tab = Tabs.getInstance().getTab(tabId);
+        tab.setLoading(false);
+        
+        if (!Tabs.getInstance().isSelectedTab(tab))
+            return;
+
         mMainHandler.post(new Runnable() { 
             public void run() {
                 mProgressBar.setVisibility(View.GONE);
@@ -425,7 +453,11 @@ abstract public class GeckoApp
         });
     }
 
-    void handleProgressChange(final int current, final int total) {
+    void handleProgressChange(final int tabId, final int current, final int total) {
+        Tab tab = Tabs.getInstance().getTab(tabId);
+        if (!Tabs.getInstance().isSelectedTab(tab))
+	    return;
+        
         mMainHandler.post(new Runnable() { 
             public void run() {
                 if (total == -1) {
@@ -441,16 +473,28 @@ abstract public class GeckoApp
         });
     }
 
-    void handleContentLoaded(final String uri, final String title) {
+    void handleContentLoaded(final int tabId, final String uri, final String title) {
+        Tab tab = Tabs.getInstance().getTab(tabId);
+        tab.updateTitle(title);
+        tab.addHistory(new Tab.HistoryEntry(uri, title));
+
+        if (!Tabs.getInstance().isSelectedTab(tab))
+	    return;
+
         mMainHandler.post(new Runnable() {
             public void run() {
                 mAwesomeBar.setText(title);
-                mSessionHistory.add(new SessionHistory.HistoryEntry(uri, title));
             }
         });
     }
 
-    void handleTitleChanged(final String title) {
+    void handleTitleChanged(final int tabId, final String title) {
+        Tab tab = Tabs.getInstance().getTab(tabId);
+        tab.updateTitle(title);
+        
+        if (!Tabs.getInstance().isSelectedTab(tab))
+	    return;
+
         mMainHandler.post(new Runnable() { 
             public void run() {
                 mAwesomeBar.setText(title);
@@ -558,10 +602,6 @@ abstract public class GeckoApp
         if (sGREDir == null)
             sGREDir = new File(this.getApplicationInfo().dataDir);
 
-        if (mSessionHistory == null) {
-            mSessionHistory = new SessionHistory(this);
-        } // else: keep session history across orientation changes
-
         mMainHandler = new Handler();
 
         if (!sTryCatchAttached) {
@@ -589,7 +629,7 @@ abstract public class GeckoApp
         mAwesomeBar = (Button) findViewById(R.id.awesomeBar);
         mAwesomeBar.setOnClickListener(new EditText.OnClickListener() {
             public void onClick(View v) {
-                onSearchRequested();
+                onEditRequested();
             }
         });
 
@@ -760,8 +800,6 @@ abstract public class GeckoApp
     {
         Log.i(LOG_FILE_NAME, "destroy");
 
-        mSessionHistory.cleanup();
-
         // Tell Gecko to shutting down; we'll end up calling System.exit()
         // in onXreExit.
         if (isFinishing())
@@ -925,19 +963,33 @@ abstract public class GeckoApp
     public boolean onSearchRequested() {
         Intent searchIntent = new Intent(getBaseContext(), AwesomeBar.class);
         searchIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-        mSessionHistory.searchRequested(searchIntent);
+        searchIntent.putExtra(AwesomeBar.TYPE, AwesomeBar.Type.ADD.name());
         startActivityForResult(searchIntent, AWESOMEBAR_REQUEST);
+        return true;
+    }
+ 
+    public boolean onEditRequested() {
+        Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.putExtra(AwesomeBar.TYPE, AwesomeBar.Type.EDIT.name());
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (!tab.getHistory().empty()) {
+            intent.putExtra(AwesomeBar.CURRENT_URL_KEY, tab.getHistory().peek().mUri);
+        }
+        startActivityForResult(intent, AWESOMEBAR_REQUEST);
         return true;
     }
 
     public boolean doReload() {
         Log.i("GeckoApp", "Reload requested");
-        return mSessionHistory.doReload();
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        return tab.doReload();
     }
 
     @Override
     public void onBackPressed() {
-        if (!mSessionHistory.doBack()) {
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null || !tab.doBack()) {
             finish();
         }
     }
@@ -1004,17 +1056,15 @@ abstract public class GeckoApp
             }
             break;
         case AWESOMEBAR_REQUEST:
-
             if (data != null) {
                 String url = data.getStringExtra(AwesomeBar.URL_KEY);
+                AwesomeBar.Type type = AwesomeBar.Type.valueOf(data.getStringExtra(AwesomeBar.TYPE));
                 if (url != null && url.length() > 0) {
                     mProgressBar.setVisibility(View.VISIBLE);
                     mProgressBar.setIndeterminate(true);
-                    loadUrl(url);
+                    loadUrl(url, type);
                 }
             }
-
-
             break;
         case CAMERA_CAPTURE_REQUEST:
             Log.i(LOG_FILE_NAME, "Returning from CAMERA_CAPTURE_REQUEST: " + resultCode);
@@ -1025,7 +1075,28 @@ abstract public class GeckoApp
                                           "{\"ok\": false, \"path\": \"" + file.getPath() + "\" }");
             GeckoAppShell.sendEventToGecko(e);
             break;
-        }
+        case SHOW_TABS_REQUEST:
+            if (data != null) {
+                ShowTabs.Type type = ShowTabs.Type.valueOf(data.getStringExtra(ShowTabs.TYPE));
+                if (type == ShowTabs.Type.ADD) {
+                    Intent intent = new Intent(this, AwesomeBar.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+                    intent.putExtra(AwesomeBar.TYPE, AwesomeBar.Type.ADD.name());
+                    startActivityForResult(intent, AWESOMEBAR_REQUEST);
+                } else {
+                    int id = Integer.parseInt(data.getStringExtra(ShowTabs.ID));
+                    Tab tab = Tabs.getInstance().switchToTab(id);
+                    if (tab != null) {
+                        mAwesomeBar.setText(tab.getTitle());
+                        if (tab.isLoading())
+                           mProgressBar.setVisibility(View.VISIBLE);
+                        else
+                           mProgressBar.setVisibility(View.GONE);
+                    }
+                    GeckoAppShell.sendEventToGecko(new GeckoEvent("switch-to-tab", "" + id));
+                }
+            }
+       }
     }
 
     public void doCameraCapture() {
@@ -1037,9 +1108,14 @@ abstract public class GeckoApp
         startActivityForResult(intent, CAMERA_CAPTURE_REQUEST);
     }
 
-    public void loadUrl(String url) {
+    public void loadUrl(String url, AwesomeBar.Type type) {
         mAwesomeBar.setText(url);
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(url));
-    }
+        Log.d(LOG_FILE_NAME, type.name());
+        if (type == AwesomeBar.Type.ADD) {
+            GeckoAppShell.sendEventToGecko(new GeckoEvent("add-tab", url));
+        } else {
+            GeckoAppShell.sendEventToGecko(new GeckoEvent("load-tab", url));
+        }
+   }
 
 }

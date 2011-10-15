@@ -2,6 +2,7 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 let Cr = Components.results;
+let gTabIDFactory = 0;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -30,6 +31,9 @@ var BrowserApp = {
     this.deck = document.getElementById("browsers");
     BrowserEventHandler.init();
 
+    Services.obs.addObserver(this, "add-tab", false);
+    Services.obs.addObserver(this, "load-tab", false);
+    Services.obs.addObserver(this, "switch-to-tab", false);
     Services.obs.addObserver(this, "session-back", false);
     Services.obs.addObserver(this, "session-reload", false);
 
@@ -66,6 +70,15 @@ var BrowserApp = {
   get selectedBrowser() {
     if (this._selectedTab)
       return this._selectedTab.browser;
+    return null;
+  },
+
+  getTabForId: function getTabForId(aId) {
+    let tabs = this._tabs;
+    for (let i=0; i < tabs.length; i++) {
+       if (tabs[i].id == aId)
+         return tabs[i];
+    }
     return null;
   },
 
@@ -122,6 +135,13 @@ var BrowserApp = {
     this._tabs.splice(this._tabs.indexOf(aTab), 1);
   },
 
+  switchToTab: function switchToTab(aTabId) {
+    let tab = this.getTabForId(aTabId);
+    if (tab != null)
+      this.selectedTab = tab;
+      tab.active = true;
+  },
+
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
     if (!browser)
@@ -131,6 +151,13 @@ var BrowserApp = {
       browser.goBack();
     else if (aTopic == "session-reload")
       browser.reload();
+    else if (aTopic == "add-tab") {
+      let newTab = this.addTab(aData);
+      newTab.active = true;
+    } else if (aTopic == "load-tab") 
+      browser.loadURI(aData);
+    else if (aTopic == "switch-to-tab") 
+      this.switchToTab(parseInt(aData));
   }
 }
 
@@ -165,10 +192,19 @@ nsBrowserAccess.prototype = {
 
 function Tab(aURL) {
   this.browser = null;
+  this._id = 0;
   this.create(aURL);
 }
 
 Tab.prototype = {
+  get id() {
+    return this._id;
+  },
+
+  set id(aId) {
+    this._id = aId;
+  },
+
   create: function(aURL) {
     if (this.browser)
       return;
@@ -183,6 +219,16 @@ Tab.prototype = {
                 Ci.nsIWebProgress.NOTIFY_PROGRESS;
     this.browser.addProgressListener(this, flags);
     this.browser.loadURI(aURL);
+    let tabID = this.id = ++gTabIDFactory;
+    let message = {
+      gecko: {
+        type: "onCreateTab",
+        tabID: tabID,
+        uri: aURL
+      }
+    };
+
+    sendMessageToJava(message);
   },
 
   destroy: function() {
@@ -213,11 +259,20 @@ Tab.prototype = {
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+    let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
     let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    
+    let uri = "";
+    if (browser)
+      uri = browser.currentURI.spec;
+    let tabID = this.id;
+
     let message = {
       gecko: {
         type: "onStateChange",
+        tabID: tabID,
         windowID: windowID,
+        uri: uri,
         state: aStateFlags
       }
     };
@@ -230,9 +285,12 @@ Tab.prototype = {
     let uri = browser.currentURI.spec;
     let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 
+    let tabID = this.id;
+
     let message = {
       gecko: {
         type: "onLocationChange",
+        tabID: tabID,
         windowID: windowID,
         uri: uri
       }
@@ -247,9 +305,11 @@ Tab.prototype = {
 
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
     let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    let tabID = this.id;
     let message = {
       gecko: {
         type: "onProgressChange",
+        tabID: tabID,
         windowID: windowID,
         current: aCurTotalProgress,
         total: aMaxTotalProgress
@@ -287,6 +347,7 @@ var BrowserEventHandler = {
     switch (aEvent.type) {
       case "DOMContentLoaded": {
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
+        let tabID = BrowserApp.getTabForBrowser(browser).id;
         let uri = browser.currentURI.spec;
 
         dump("Setting Last uri to: " + uri);
@@ -295,6 +356,7 @@ var BrowserEventHandler = {
         sendMessageToJava({
           gecko: {
             type: "DOMContentLoaded",
+            tabID: tabID,
             windowID: 0,
             uri: uri,
             title: browser.contentTitle
@@ -303,11 +365,11 @@ var BrowserEventHandler = {
         break;
       }
 
-      case "DOMLinkAdded":
+      case "DOMLinkAdded": {
         let target = aEvent.originalTarget;
         if (!target.href || target.disabled)
           return;
-
+        
         let json = {
           type: "DOMLinkAdded",
           windowId: target.ownerDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
@@ -323,15 +385,20 @@ var BrowserEventHandler = {
 
         sendMessageToJava({ gecko: json });
         break;
+      }
 
-      case "DOMTitleChanged":
+      case "DOMTitleChanged": {
+        let browser = BrowserApp.getBrowserForDocument(aEvent.target);
+        let tabID = BrowserApp.getTabForBrowser(browser).id;
         sendMessageToJava({
           gecko: {
             type: "DOMTitleChanged",
+            tabID: tabID,
             title: aEvent.target.title
           }
         });
         break;
+      }
 
       case "click":
         if (this.blockClick) {

@@ -1572,15 +1572,17 @@ public class GeckoAppShell
             String type = geckoObject.getString("type");
 
             if (type.equals("DOMContentLoaded")) {
+                final int tabId = geckoObject.getInt("tabID");
                 final String uri = geckoObject.getString("uri");
                 final String title = geckoObject.getString("title");
                 final CharSequence titleText = title;
-                GeckoApp.mAppContext.handleContentLoaded(uri, title);
+                GeckoApp.mAppContext.handleContentLoaded(tabId, uri, title);
                 Log.i("GeckoShell", "URI - " + uri + ", title - " + title);
             } else if (type.equals("DOMTitleChanged")) {
+                final int tabId = geckoObject.getInt("tabID");
                 final String title = geckoObject.getString("title");
                 final CharSequence titleText = title;
-                GeckoApp.mAppContext.handleTitleChanged(title);
+                GeckoApp.mAppContext.handleTitleChanged(tabId, title);
                 Log.i("GeckoShell", "title - " + title);
             } else if (type.equals("DOMLinkAdded")) {
                 final String rel = geckoObject.getString("rel");
@@ -1592,30 +1594,38 @@ public class GeckoAppShell
                 final String msg = geckoObject.getString("msg");
                 Log.i("GeckoShell", "Log: " + msg);
             } else if (type.equals("onLocationChange")) {
+                final int tabId = geckoObject.getInt("tabID");
                 final String uri = geckoObject.getString("uri");
                 Log.i("GeckoShell", "URI - " + uri);
-                GeckoApp.mAppContext.handleLocationChange(uri);
+                GeckoApp.mAppContext.handleLocationChange(tabId, uri);
             } else if (type.equals("onStateChange")) {
+                final int tabId = geckoObject.getInt("tabID");
                 int state = geckoObject.getInt("state");
                 Log.i("GeckoShell", "State - " + state);
                 if ((state & WPL_STATE_IS_DOCUMENT) != 0) {
                     if ((state & WPL_STATE_START) != 0) {
                         Log.i("GeckoShell", "Got a document start");
-                        GeckoApp.mAppContext.handleDocumentStart();
+                        GeckoApp.mAppContext.handleDocumentStart(tabId);
                     } else if ((state & WPL_STATE_STOP) != 0) {
                         Log.i("GeckoShell", "Got a document stop");
-                        GeckoApp.mAppContext.handleDocumentStop();
+                        GeckoApp.mAppContext.handleDocumentStop(tabId);
                     }
                 }
             } else if (type.equals("onProgressChange")) {
+                final int tabId = geckoObject.getInt("tabID");
                 final int current = geckoObject.getInt("current");
                 final int total = geckoObject.getInt("total");
 
-                GeckoApp.mAppContext.handleProgressChange(current, total);
+                GeckoApp.mAppContext.handleProgressChange(tabId, current, total);
                 Log.i("GeckoShell", "progress - " + current + "/" + total);
             } else if (type.equals("onCameraCapture")) {
                 //GeckoApp.mAppContext.doCameraCapture(geckoObject.getString("path"));
                 GeckoApp.mAppContext.doCameraCapture();
+            } else if (type.equals("onCreateTab")) {
+                Log.i("GeckoShell", "Created a new tab");
+                int tabId = geckoObject.getInt("tabID");
+                String uri = geckoObject.getString("uri");
+                Tabs.getInstance().addTab(tabId, uri);
             }
         } catch (Exception e) {
             Log.i("GeckoShell", "handleGeckoMessage throws " + e);
