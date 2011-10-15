@@ -1,4 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -74,9 +74,9 @@ public class ShowTabs extends ListActivity {
         addTab.setText("+ add tab");
         addTab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-		Intent resultIntent = new Intent();
-		resultIntent.putExtra(TYPE, Type.ADD.name());
-		setResult(Activity.RESULT_OK, resultIntent);
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra(TYPE, Type.ADD.name());
+                setResult(Activity.RESULT_OK, resultIntent);
                 finish();
             }
         });

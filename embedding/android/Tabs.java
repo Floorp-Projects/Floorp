@@ -68,12 +68,13 @@ public class Tabs {
     }
 
     public void removeTab(int id) {
-        if (tabs.containsKey(id))
+        if (tabs.containsKey(id)) {
             tabs.remove(id);
-        Log.i(LOG_FILE_NAME, "Removed a tab with id: " + id);
+            Log.i(LOG_FILE_NAME, "Removed a tab with id: " + id);
+        }
     }
 
-    public Tab switchToTab(int id) {
+    public Tab selectTab(int id) {
         if (!tabs.containsKey(id))
             return null;
  

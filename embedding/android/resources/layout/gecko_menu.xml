@@ -10,6 +10,6 @@
  
     <item android:id="@+id/show_tabs"
           android:icon="@drawable/quit"
-          android:title="Show Tabs" />
+          android:title="@string/tabs" />
 
 </menu>

@@ -2,7 +2,6 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 let Cr = Components.results;
-let gTabIDFactory = 0;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -31,9 +30,9 @@ var BrowserApp = {
     this.deck = document.getElementById("browsers");
     BrowserEventHandler.init();
 
-    Services.obs.addObserver(this, "add-tab", false);
-    Services.obs.addObserver(this, "load-tab", false);
-    Services.obs.addObserver(this, "switch-to-tab", false);
+    Services.obs.addObserver(this, "tab-add", false);
+    Services.obs.addObserver(this, "tab-load", false);
+    Services.obs.addObserver(this, "tab-select", false);
     Services.obs.addObserver(this, "session-back", false);
     Services.obs.addObserver(this, "session-reload", false);
 
@@ -135,11 +134,12 @@ var BrowserApp = {
     this._tabs.splice(this._tabs.indexOf(aTab), 1);
   },
 
-  switchToTab: function switchToTab(aTabId) {
+  selectTab: function selectTab(aTabId) {
     let tab = this.getTabForId(aTabId);
-    if (tab != null)
+    if (tab != null) {
       this.selectedTab = tab;
       tab.active = true;
+    }
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -151,13 +151,13 @@ var BrowserApp = {
       browser.goBack();
     else if (aTopic == "session-reload")
       browser.reload();
-    else if (aTopic == "add-tab") {
+    else if (aTopic == "tab-add") {
       let newTab = this.addTab(aData);
       newTab.active = true;
-    } else if (aTopic == "load-tab") 
+    } else if (aTopic == "tab-load") 
       browser.loadURI(aData);
-    else if (aTopic == "switch-to-tab") 
-      this.switchToTab(parseInt(aData));
+    else if (aTopic == "tab-select") 
+      this.selectTab(parseInt(aData));
   }
 }
 
@@ -190,21 +190,16 @@ nsBrowserAccess.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow])
 };
 
+
+let gTabIDFactory = 0;
+
 function Tab(aURL) {
   this.browser = null;
-  this._id = 0;
+  this.id = 0;
   this.create(aURL);
 }
 
 Tab.prototype = {
-  get id() {
-    return this._id;
-  },
-
-  set id(aId) {
-    this._id = aId;
-  },
-
   create: function(aURL) {
     if (this.browser)
       return;
@@ -219,11 +214,12 @@ Tab.prototype = {
                 Ci.nsIWebProgress.NOTIFY_PROGRESS;
     this.browser.addProgressListener(this, flags);
     this.browser.loadURI(aURL);
-    let tabID = this.id = ++gTabIDFactory;
+
+    this.id = ++gTabIDFactory;
     let message = {
       gecko: {
         type: "onCreateTab",
-        tabID: tabID,
+        tabID: this.id,
         uri: aURL
       }
     };
@@ -265,12 +261,11 @@ Tab.prototype = {
     let uri = "";
     if (browser)
       uri = browser.currentURI.spec;
-    let tabID = this.id;
 
     let message = {
       gecko: {
         type: "onStateChange",
-        tabID: tabID,
+        tabID: this.id,
         windowID: windowID,
         uri: uri,
         state: aStateFlags
@@ -285,12 +280,10 @@ Tab.prototype = {
     let uri = browser.currentURI.spec;
     let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 
-    let tabID = this.id;
-
     let message = {
       gecko: {
         type: "onLocationChange",
-        tabID: tabID,
+        tabID: this.id,
         windowID: windowID,
         uri: uri
       }
@@ -305,11 +298,10 @@ Tab.prototype = {
 
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
     let windowID = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-    let tabID = this.id;
     let message = {
       gecko: {
         type: "onProgressChange",
-        tabID: tabID,
+        tabID: this.id,
         windowID: windowID,
         current: aCurTotalProgress,
         total: aMaxTotalProgress
