@@ -103,14 +103,15 @@ public class Tab {
     }
 
     public void updateURL(String url) {
-        if (!url.isEmpty()) {
+
+        if(url != null && url.length() > 0) {
             this.url = new String(url);
             Log.i(LOG_FILE_NAME, "Updated url: " + url + " for tab with id: " + this.id);
         }
     }
 
     public void updateTitle(String title) {
-        if (!title.isEmpty()) {
+        if(title != null && title.length() > 0) {
             this.title = new String(title);
             Log.i(LOG_FILE_NAME, "Updated title: " + title + " for tab with id: " + this.id);
         }
