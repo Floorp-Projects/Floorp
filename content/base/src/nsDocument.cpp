@@ -869,7 +869,7 @@ TransferShowingState(nsIDocument* aFromDoc, nsIDocument* aToDoc)
 
 nsresult
 nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
-                                           nsIDocumentViewer* aViewer,
+                                           nsIContentViewer* aViewer,
                                            nsILoadGroup* aLoadGroup,
                                            nsIDocument* aDisplayDocument)
 {
@@ -951,7 +951,7 @@ nsExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest *aRequest,
     return NS_BINDING_ABORTED;
   }
 
-  nsCOMPtr<nsIDocumentViewer> viewer;
+  nsCOMPtr<nsIContentViewer> viewer;
   nsCOMPtr<nsILoadGroup> loadGroup;
   nsresult rv = SetupViewer(aRequest, getter_AddRefs(viewer),
                             getter_AddRefs(loadGroup));
@@ -972,7 +972,7 @@ nsExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest *aRequest,
 
 nsresult
 nsExternalResourceMap::PendingLoad::SetupViewer(nsIRequest* aRequest,
-                                                nsIDocumentViewer** aViewer,
+                                                nsIContentViewer** aViewer,
                                                 nsILoadGroup** aLoadGroup)
 {
   NS_PRECONDITION(!mTargetListener, "Unexpected call to OnStartRequest");
@@ -1030,9 +1030,7 @@ nsExternalResourceMap::PendingLoad::SetupViewer(nsIRequest* aRequest,
                                         getter_AddRefs(listener),
                                         getter_AddRefs(viewer));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(viewer);
-  NS_ENSURE_TRUE(docViewer, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(viewer, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIParser> parser = do_QueryInterface(listener);
   if (!parser) {
@@ -1048,8 +1046,8 @@ nsExternalResourceMap::PendingLoad::SetupViewer(nsIRequest* aRequest,
   }
 
   listener.swap(mTargetListener);
-  docViewer.swap(*aViewer);
-  newLoadGroup.swap(*aLoadGroup);
+  viewer.forget(aViewer);
+  newLoadGroup.forget(aLoadGroup);
   return NS_OK;
 }
 
