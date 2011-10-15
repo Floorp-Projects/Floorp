@@ -906,9 +906,9 @@ SyncServer.prototype = {
             let wbo = coll.wbo(wboID);
             if (wbo) {
               wbo.delete();
+              this.callback.onItemDeleted(username, collection, wboID);
             }
             respond(200, "OK", "{}");
-            this.callback.onItemDeleted(username, collectin, wboID);
             return;
           }
           coll.collectionHandler(req, resp);
