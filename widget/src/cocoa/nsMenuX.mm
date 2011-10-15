@@ -54,7 +54,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "plstr.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsCRT.h"
 
@@ -189,7 +189,7 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOw
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   mContent = aNode;
-  mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, mLabel);
   mNativeMenu = CreateMenuWithGeckoString(mLabel);
 
   // register this menu to be notified when changes are made to our content object
@@ -216,8 +216,8 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOw
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
   [mNativeMenuItem setSubmenu:mNativeMenu];
 
-  SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
-                                    nsWidgetAtoms::_true, eCaseMatters));
+  SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                    nsGkAtoms::_true, eCaseMatters));
 
   // We call MenuConstruct here because keyboard commands are dependent upon
   // native menu items being created. If we only call MenuConstruct when a menu
@@ -367,7 +367,7 @@ nsresult nsMenuX::RemoveAll()
 nsEventStatus nsMenuX::MenuOpened()
 {
   // Open the node.
-  mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::open, NS_LITERAL_STRING("true"), true);
+  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::open, NS_LITERAL_STRING("true"), true);
 
   // Fire a handler. If we're told to stop, don't build the menu at all
   bool keepProcessing = OnOpen();
@@ -404,7 +404,7 @@ void nsMenuX::MenuClosed()
     if (mNeedsRebuild)
       mConstructed = false;
 
-    mContent->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::open, true);
+    mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::open, true);
 
     nsEventStatus status = nsEventStatus_eIgnore;
     nsMouseEvent event(true, NS_XUL_POPUP_HIDDEN, nsnull, nsMouseEvent::eReal);
@@ -469,9 +469,9 @@ void nsMenuX::MenuConstruct()
     if (child) {
       // depending on the type, create a menu item, separator, or submenu
       nsIAtom *tag = child->Tag();
-      if (tag == nsWidgetAtoms::menuitem || tag == nsWidgetAtoms::menuseparator)
+      if (tag == nsGkAtoms::menuitem || tag == nsGkAtoms::menuseparator)
         LoadMenuItem(child);
-      else if (tag == nsWidgetAtoms::menu)
+      else if (tag == nsGkAtoms::menu)
         LoadSubMenu(child);
     }
   } // for each menu item
@@ -532,18 +532,18 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
     return;
 
   nsAutoString menuitemName;
-  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuitemName);
+  inMenuItemContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, menuitemName);
 
   // printf("menuitem %s \n", NS_LossyConvertUTF16toASCII(menuitemName).get());
 
   EMenuItemType itemType = eRegularMenuItemType;
-  if (inMenuItemContent->Tag() == nsWidgetAtoms::menuseparator) {
+  if (inMenuItemContent->Tag() == nsGkAtoms::menuseparator) {
     itemType = eSeparatorMenuItemType;
   }
   else {
     static nsIContent::AttrValuesArray strings[] =
-  {&nsWidgetAtoms::checkbox, &nsWidgetAtoms::radio, nsnull};
-    switch (inMenuItemContent->FindAttrValueIn(kNameSpaceID_None, nsWidgetAtoms::type,
+  {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nsnull};
+    switch (inMenuItemContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                                strings, eCaseMatters)) {
       case 0: itemType = eCheckboxMenuItemType; break;
       case 1: itemType = eRadioMenuItemType; break;
@@ -621,10 +621,10 @@ bool nsMenuX::OnOpen()
   PRUint32 count = popupContent->GetChildCount();
   for (PRUint32 i = 0; i < count; i++) {
     nsIContent *grandChild = popupContent->GetChildAt(i);
-    if (grandChild->Tag() == nsWidgetAtoms::menuitem) {
+    if (grandChild->Tag() == nsGkAtoms::menuitem) {
       // See if we have a command attribute.
       nsAutoString command;
-      grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, command);
+      grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
       if (!command.IsEmpty()) {
         // We do! Look it up in our document
         nsCOMPtr<nsIDOMElement> commandElt;
@@ -633,33 +633,33 @@ bool nsMenuX::OnOpen()
         
         if (commandContent) {
           nsAutoString commandDisabled, menuDisabled;
-          commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled);
-          grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, menuDisabled);
+          commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::disabled, commandDisabled);
+          grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::disabled, menuDisabled);
           if (!commandDisabled.Equals(menuDisabled)) {
             // The menu's disabled state needs to be updated to match the command.
             if (commandDisabled.IsEmpty()) 
-              grandChild->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, true);
+              grandChild->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
             else
-              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, true);
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, commandDisabled, true);
           }
           
           // The menu's value and checked states need to be updated to match the command.
           // Note that (unlike the disabled state) if the command has *no* value for either, we
           // assume the menu is supplying its own.
           nsAutoString commandChecked, menuChecked;
-          commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked);
-          grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, menuChecked);
+          commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::checked, commandChecked);
+          grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::checked, menuChecked);
           if (!commandChecked.Equals(menuChecked)) {
             if (!commandChecked.IsEmpty()) 
-              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked, true);
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, commandChecked, true);
           }
           
           nsAutoString commandValue, menuValue;
-          commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, commandValue);
-          grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuValue);
+          commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, commandValue);
+          grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::label, menuValue);
           if (!commandValue.Equals(menuValue)) {
             if (!commandValue.IsEmpty()) 
-              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::label, commandValue, true);
+              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::label, commandValue, true);
           }
         }
       }
@@ -714,7 +714,7 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
     PRInt32 dummy;
     nsCOMPtr<nsIAtom> tag;
     xblService->ResolveTag(mContent, &dummy, getter_AddRefs(tag));
-    if (tag == nsWidgetAtoms::menupopup) {
+    if (tag == nsGkAtoms::menupopup) {
       *aResult = mContent;
       NS_ADDREF(*aResult);
       return;
@@ -730,7 +730,7 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
     nsIContent *child = mContent->GetChildAt(i);
     nsCOMPtr<nsIAtom> tag;
     xblService->ResolveTag(child, &dummy, getter_AddRefs(tag));
-    if (tag == nsWidgetAtoms::menupopup) {
+    if (tag == nsGkAtoms::menupopup) {
       *aResult = child;
       NS_ADDREF(*aResult);
       return;
@@ -748,7 +748,7 @@ bool nsMenuX::IsXULHelpMenu(nsIContent* aMenuContent)
   bool retval = false;
   if (aMenuContent) {
     nsAutoString id;
-    aMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, id);
+    aMenuContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
     if (id.Equals(NS_LITERAL_STRING("helpMenu")))
       retval = true;
   }
@@ -765,17 +765,17 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // ignore the |open| attribute, which is by far the most common
-  if (gConstructingMenu || (aAttribute == nsWidgetAtoms::open))
+  if (gConstructingMenu || (aAttribute == nsGkAtoms::open))
     return;
 
   nsMenuObjectTypeX parentType = mParent->MenuObjectType();
 
-  if (aAttribute == nsWidgetAtoms::disabled) {
-    SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
-                                      nsWidgetAtoms::_true, eCaseMatters));
+  if (aAttribute == nsGkAtoms::disabled) {
+    SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                      nsGkAtoms::_true, eCaseMatters));
   }
-  else if (aAttribute == nsWidgetAtoms::label) {
-    mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
+  else if (aAttribute == nsGkAtoms::label) {
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, mLabel);
 
     // invalidate my parent. If we're a submenu parent, we have to rebuild
     // the parent menu in order for the changes to be picked up. If we're
@@ -793,7 +793,7 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
       static_cast<nsStandaloneNativeMenu*>(mParent)->GetMenuXObject()->SetRebuild(true);
     }
   }
-  else if (aAttribute == nsWidgetAtoms::hidden || aAttribute == nsWidgetAtoms::collapsed) {
+  else if (aAttribute == nsGkAtoms::hidden || aAttribute == nsGkAtoms::collapsed) {
     SetRebuild(true);
 
     bool contentIsHiddenOrCollapsed = nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
@@ -833,7 +833,7 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
       }
     }
   }
-  else if (aAttribute == nsWidgetAtoms::image) {
+  else if (aAttribute == nsGkAtoms::image) {
     SetupIcon();
   }
 

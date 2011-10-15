@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Web Workers.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ *   The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Mike Pinkerton (pinkerton@netscape.com)
+ *   Ben Turner <bent.mozilla@gmail.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,37 +36,21 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsWidgetAtoms_h___
-#define nsWidgetAtoms_h___
 
-#include "prtypes.h"
-#include "nsIAtom.h"
+#include "nsISupports.idl"
 
-/**
- * This class wraps up the creation and destruction of the standard
- * set of xul atoms used during normal xul handling. This object
- * is created when the first xul content object is created, and
- * destroyed when the last such content object is destroyed.
- *
- * It's here because we cannot use nsGkAtoms from
- * the Widget shlb. They are components are we're not.
- */
-class nsWidgetAtoms {
-public:
-
-  static void RegisterAtoms();
-
-  /* Declare all atoms
-
-     The atom names and values are stored in nsWidgetAtomList.h and
-     are brought to you by the magic of C preprocessing
-
-     Add new atoms to nsWidgetAtomList and all support logic will be auto-generated
-   */
-#define WIDGET_ATOM(_name, _value) static nsIAtom* _name;
-#include "nsWidgetAtomList.h"
-#undef WIDGET_ATOM
-
+[scriptable, uuid(10f8ebdf-1373-4640-9c34-53dee99f526f)]
+interface nsIWorkerTestCallback : nsISupports
+{
+  void onmessage(in DOMString data);
+  void onerror(in DOMString data);
 };
 
-#endif /* nsWidgetAtoms_h___ */
+[scriptable, uuid(887a0614-a0f0-4c0e-80e0-cf31e6d4e286)]
+interface nsIWorkerTest : nsISupports
+{
+  void postMessage(in DOMString data);
+  void terminate();
+
+  attribute nsIWorkerTestCallback callback;
+};

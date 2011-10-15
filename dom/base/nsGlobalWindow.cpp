@@ -782,6 +782,18 @@ nsOuterWindowProxy::obj_toString(JSContext *cx, JSObject *proxy)
     return JS_NewStringCopyZ(cx, "[object Window]");
 }
 
+void
+nsOuterWindowProxy::finalize(JSContext *cx, JSObject *proxy)
+{
+  nsISupports *global =
+    static_cast<nsISupports*>(js::GetProxyExtra(proxy, 0).toPrivate());
+  if (global) {
+    nsWrapperCache *cache;
+    CallQueryInterface(global, &cache);
+    cache->ClearWrapperIfProxy();
+  }
+}
+
 nsOuterWindowProxy
 nsOuterWindowProxy::singleton;
 
@@ -999,6 +1011,11 @@ nsGlobalWindow::~nsGlobalWindow()
 #endif
 
   if (IsOuterWindow()) {
+    JSObject *proxy = GetWrapperPreserveColor();
+    if (proxy) {
+      js::SetProxyExtra(proxy, 0, js::PrivateValue(NULL));
+    }
+
     // An outer window is destroyed with inner windows still possibly
     // alive, iterate through the inner windows and null out their
     // back pointer to this outer, and pull them out of the list of
@@ -2119,11 +2136,16 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         return NS_ERROR_FAILURE;
       }
 
+      js::SetProxyExtra(mJSObject, 0, js::PrivateValue(NULL));
+
       outerObject = JS_TransplantObject(cx, mJSObject, outerObject);
       if (!outerObject) {
         NS_ERROR("unable to transplant wrappers, probably OOM");
         return NS_ERROR_FAILURE;
       }
+
+      nsIScriptGlobalObject *global = static_cast<nsIScriptGlobalObject*>(this);
+      js::SetProxyExtra(outerObject, 0, js::PrivateValue(global));
 
       mJSObject = outerObject;
       SetWrapper(mJSObject);
@@ -7202,17 +7224,6 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction)
   }
 
   return NS_OK;
-}
-
-bool
-nsGlobalWindow::GetBlurSuppression()
-{
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  bool suppress = false;
-  if (treeOwnerAsWin)
-    treeOwnerAsWin->GetBlurSuppression(&suppress);
-  return suppress;
 }
 
 NS_IMETHODIMP

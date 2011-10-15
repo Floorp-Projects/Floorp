@@ -782,8 +782,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
                 goto error;
         }
         tp->pos.end.lineno = lineno;
-        tp->t_op = JSOP_STRING;
-        tp->t_atom = atom;
+        tp->setAtom(JSOP_STRING, atom);
         goto out;
     }
 
@@ -840,8 +839,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
             atom = atomize(cx, tokenbuf);
             if (!atom)
                 goto error;
-            tp->t_op = JSOP_STRING;
-            tp->t_atom = atom;
+            tp->setAtom(JSOP_STRING, atom);
             tt = TOK_XMLNAME;
             goto out;
         }
@@ -893,8 +891,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
             if (!atom)
                 goto error;
             tp->pos.end.lineno = lineno;
-            tp->t_op = JSOP_STRING;
-            tp->t_atom = atom;
+            tp->setAtom(JSOP_STRING, atom);
             tt = TOK_XMLATTR;
             goto out;
 
@@ -964,10 +961,6 @@ TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
     TokenKind tt;
     int c;
     Token *tp = *tpp;
-    JSAtom *atom;
-    JSBool inTarget;
-    size_t targetLength;
-    ptrdiff_t contentIndex;
 
     /* Check for XML comment or CDATA section. */
     if (matchChar('!')) {
@@ -983,9 +976,16 @@ TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
                 if (!tokenbuf.append(c))
                     goto error;
             }
+            if (!matchChar('>'))
+                goto bad_xml_markup;
+
+            JSAtom *commentText = atomize(cx, tokenbuf);
+            if (!commentText)
+                goto error;
+            tp->setAtom(JSOP_XMLCOMMENT, commentText);
+            tp->pos.end.lineno = lineno;
             tt = TOK_XMLCOMMENT;
-            tp->t_op = JSOP_XMLCOMMENT;
-            goto finish_xml_markup;
+            goto out;
         }
 
         /* Scan CDATA section. */
@@ -1008,10 +1008,17 @@ TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
                     if (!tokenbuf.append(c))
                         goto error;
                 }
-                getChar();            /* discard ] but not > */
+                consumeKnownChar(']');
+                consumeKnownChar('>');
+
+                JSAtom *cdataContent = atomize(cx, tokenbuf);
+                if (!cdataContent)
+                    goto error;
+
+                tp->setAtom(JSOP_XMLCDATA, cdataContent);
+                tp->pos.end.lineno = lineno;
                 tt = TOK_XMLCDATA;
-                tp->t_op = JSOP_XMLCDATA;
-                goto finish_xml_markup;
+                goto out;
             }
             goto bad_xml_markup;
         }
@@ -1019,9 +1026,9 @@ TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
 
     /* Check for processing instruction. */
     if (matchChar('?')) {
-        inTarget = JS_TRUE;
-        targetLength = 0;
-        contentIndex = -1;
+        bool inTarget = true;
+        size_t targetLength = 0;
+        ptrdiff_t contentIndex = -1;
 
         tokenbuf.clear();
         while ((c = getChar()) != '?' || peekChar() != '>') {
@@ -1031,7 +1038,7 @@ TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
                 if (IsXMLSpace(c)) {
                     if (tokenbuf.empty())
                         goto bad_xml_markup;
-                    inTarget = JS_FALSE;
+                    inTarget = false;
                 } else {
                     if (!(tokenbuf.empty()
                           ? IsXMLNamespaceStart(c)
@@ -1049,26 +1056,24 @@ TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
         }
         if (targetLength == 0)
             goto bad_xml_markup;
+
+        JSAtom *data;
         if (contentIndex < 0) {
-            atom = cx->runtime->atomState.emptyAtom;
+            data = cx->runtime->atomState.emptyAtom;
         } else {
-            atom = js_AtomizeChars(cx, tokenbuf.begin() + contentIndex,
+            data = js_AtomizeChars(cx, tokenbuf.begin() + contentIndex,
                                    tokenbuf.length() - contentIndex);
-            if (!atom)
+            if (!data)
                 goto error;
         }
         tokenbuf.shrinkBy(tokenbuf.length() - targetLength);
-        tp->t_atom2 = atom;
-        tt = TOK_XMLPI;
-
-  finish_xml_markup:
-        if (!matchChar('>'))
-            goto bad_xml_markup;
-        atom = atomize(cx, tokenbuf);
-        if (!atom)
+        consumeKnownChar('>');
+        JSAtom *target = atomize(cx, tokenbuf);
+        if (!target)
             goto error;
-        tp->t_atom = atom;
+        tp->setProcessingInstruction(target->asPropertyName(), data);
         tp->pos.end.lineno = lineno;
+        tt = TOK_XMLPI;
         goto out;
     }
 
@@ -1541,8 +1546,7 @@ TokenStream::getTokenInternal()
             atom = NULL;
         if (!atom)
             goto error;
-        tp->t_op = JSOP_NAME;
-        tp->t_atom = atom;
+        tp->setName(JSOP_NAME, atom->asPropertyName());
         tt = TOK_NAME;
         goto out;
     }
@@ -1679,8 +1683,7 @@ TokenStream::getTokenInternal()
         if (!atom)
             goto error;
         tp->pos.end.lineno = lineno;
-        tp->t_op = JSOP_STRING;
-        tp->t_atom = atom;
+        tp->setAtom(JSOP_STRING, atom);
         tt = TOK_STRING;
         goto out;
     }

@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Dependent UTF-16 Buffer code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Mike Pinkerton (pinkerton@netscape.com)
+ *   Henri Sivonen <hsivonen@iki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,27 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsWidgetAtoms.h"
-#include "nsStaticAtom.h"
-#include "nsMemory.h"
+#include "nsHtml5DependentUTF16Buffer.h"
 
-#define WIDGET_ATOM(_name, _value) nsIAtom* nsWidgetAtoms::_name = 0;
-#include "nsWidgetAtomList.h"
-#undef WIDGET_ATOM
+nsHtml5DependentUTF16Buffer::nsHtml5DependentUTF16Buffer(const nsAString& aToWrap)
+  : nsHtml5UTF16Buffer(const_cast<PRUnichar*> (aToWrap.BeginReading()),
+                       aToWrap.Length())
+{
+  MOZ_COUNT_CTOR(nsHtml5DependentUTF16Buffer);
+}
 
-#define WIDGET_ATOM(_name, _value) NS_STATIC_ATOM_BUFFER(_name##_buffer, _value)
-#include "nsWidgetAtomList.h"
-#undef WIDGET_ATOM
+nsHtml5DependentUTF16Buffer::~nsHtml5DependentUTF16Buffer()
+{
+  MOZ_COUNT_DTOR(nsHtml5DependentUTF16Buffer);
+}
 
-static const nsStaticAtom widget_atoms[] = {
-// define storage for all atoms
-#define WIDGET_ATOM(_name, _value) NS_STATIC_ATOM(_name##_buffer, &nsWidgetAtoms::_name),
-#include "nsWidgetAtomList.h"
-#undef WIDGET_ATOM
-};
-
-
-void nsWidgetAtoms::RegisterAtoms() {
-
-  NS_RegisterStaticAtoms(widget_atoms, NS_ARRAY_LENGTH(widget_atoms));
+already_AddRefed<nsHtml5OwningUTF16Buffer>
+nsHtml5DependentUTF16Buffer::FalliblyCopyAsOwningBuffer()
+{
+  PRInt32 newLength = getEnd() - getStart();
+  nsRefPtr<nsHtml5OwningUTF16Buffer> newObj =
+    nsHtml5OwningUTF16Buffer::FalliblyCreate(newLength);
+  if (!newObj) {
+    return nsnull;
+  }
+  newObj->setEnd(newLength);
+  memcpy(newObj->getBuffer(),
+         getBuffer() + getStart(),
+         newLength * sizeof(PRUnichar));
+  return newObj.forget();
 }

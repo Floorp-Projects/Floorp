@@ -170,6 +170,8 @@ const TYPES = {
 
 const MSG_JAR_FLUSH = "AddonJarFlush";
 
+var gGlobalScope = this;
+
 /**
  * Valid IDs fit this pattern.
  */
@@ -3506,6 +3508,13 @@ var XPIProvider = {
     // Copy the reason values from the global object into the bootstrap scope.
     for (let name in BOOTSTRAP_REASONS)
       this.bootstrapScopes[aId][name] = BOOTSTRAP_REASONS[name];
+
+
+    // Add other stuff that extensions want.
+    const features = [ "Worker", "ChromeWorker" ];
+
+    for each (let feature in features)
+      this.bootstrapScopes[aId][feature] = gGlobalScope[feature];
   },
 
   /**

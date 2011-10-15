@@ -1304,7 +1304,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     if (!fp)
         return true;
 
-    while (!fp->isFunctionFrame() || fp->fun() != fun) {
+    while (!fp->isFunctionFrame() || fp->fun() != fun || fp->isEvalFrame()) {
         fp = fp->prev();
         if (!fp)
             return true;
@@ -2219,27 +2219,22 @@ Function(JSContext *cx, uintN argc, Value *vp)
                 if (tt != TOK_NAME)
                     return OnBadFormal(cx, tt);
 
-                /*
-                 * Get the atom corresponding to the name from the token
-                 * stream; we're assured at this point that it's a valid
-                 * identifier.
-                 */
-                JSAtom *atom = ts.currentToken().t_atom;
-
                 /* Check for a duplicate parameter name. */
-                if (bindings.hasBinding(cx, atom)) {
-                    JSAutoByteString name;
-                    if (!js_AtomToPrintableString(cx, atom, &name))
+                PropertyName *name = ts.currentToken().name();
+                if (bindings.hasBinding(cx, name)) {
+                    JSAutoByteString bytes;
+                    if (!js_AtomToPrintableString(cx, name, &bytes))
                         return false;
                     if (!ReportCompileErrorNumber(cx, &ts, NULL,
                                                   JSREPORT_WARNING | JSREPORT_STRICT,
-                                                  JSMSG_DUPLICATE_FORMAL, name.ptr())) {
+                                                  JSMSG_DUPLICATE_FORMAL, bytes.ptr()))
+                    {
                         return false;
                     }
                 }
 
                 uint16 dummy;
-                if (!bindings.addArgument(cx, atom, &dummy))
+                if (!bindings.addArgument(cx, name, &dummy))
                     return false;
 
                 /*

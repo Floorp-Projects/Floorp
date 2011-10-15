@@ -3287,7 +3287,7 @@ LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     JSAutoResolveFlags rf(cx, flags);
     id = js_CheckForStringIndex(id);
-    return obj->lookupProperty(cx, id, objp, propp);
+    return obj->lookupGeneric(cx, id, objp, propp);
 }
 
 #define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
@@ -3378,7 +3378,7 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id, uintN flag
     assertSameCompartment(cx, obj, id);
     ok = obj->isNative()
          ? LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop)
-         : obj->lookupProperty(cx, id, objp, &prop);
+         : obj->lookupGeneric(cx, id, objp, &prop);
     return ok && LookupResult(cx, obj, *objp, id, prop, vp);
 }
 

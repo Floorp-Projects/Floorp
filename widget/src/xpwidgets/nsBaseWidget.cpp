@@ -163,7 +163,6 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
                               const nsIntRect &aRect,
                               EVENT_CALLBACK aHandleEventFunction,
                               nsDeviceContext *aContext,
-                              nsIAppShell *aAppShell,
                               nsIToolkit *aToolkit,
                               nsWidgetInitData *aInitData)
 {
@@ -252,7 +251,6 @@ already_AddRefed<nsIWidget>
 nsBaseWidget::CreateChild(const nsIntRect  &aRect,
                           EVENT_CALLBACK   aHandleEventFunction,
                           nsDeviceContext *aContext,
-                          nsIAppShell      *aAppShell,
                           nsIToolkit       *aToolkit,
                           nsWidgetInitData *aInitData,
                           bool             aForceUseIWidgetParent)
@@ -280,7 +278,7 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
   if (widget &&
       NS_SUCCEEDED(widget->Create(parent, nativeParent, aRect,
                                   aHandleEventFunction,
-                                  aContext, aAppShell, aToolkit,
+                                  aContext, aToolkit,
                                   aInitData))) {
     return widget.forget();
   }

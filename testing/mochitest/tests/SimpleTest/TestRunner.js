@@ -24,10 +24,6 @@ function contentDispatchEvent(type, data, sync) {
   document.dispatchEvent(element);
 }
 
-function contentSyncEvent(type, data) {
-  contentDispatchEvent(type, data, 1);
-}
-
 function contentAsyncEvent(type, data) {
   contentDispatchEvent(type, data, 0);
 }
@@ -83,7 +79,6 @@ TestRunner._urls = [];
 TestRunner.timeout = 5 * 60 * 1000; // 5 minutes.
 TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
 
-TestRunner.ipcMode = SpecialPowers.hasContentProcesses();
 TestRunner._expectingProcessCrash = false;
 
 /**
@@ -182,9 +177,7 @@ TestRunner._makeIframe = function (url, retry) {
         // typically calling ourselves from setTimeout is sufficient
         // but we'll try focus() just in case that's needed
 
-        if (TestRunner.ipcMode) {
-          contentAsyncEvent("Focus");
-        }
+        contentAsyncEvent("Focus");
         window.focus();
         iframe.focus();
         if (retry < 3) {
