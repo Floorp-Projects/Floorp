@@ -283,7 +283,7 @@ add_test(function v5_upgrade() {
     catch (e) {
       _("Exception: " + e);
     }
-    _("Status: " + JSON.stringify(Status));
+    _("Status: " + Status);
     do_check_false(Weave.Service.isLoggedIn);
     do_check_eq(VERSION_OUT_OF_DATE, Status.sync);
 
