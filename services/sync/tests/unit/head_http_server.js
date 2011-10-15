@@ -878,6 +878,10 @@ SyncServer.prototype = {
       switch (req.method) {
         case "GET":
           if (!coll) {
+            if (wboID) {
+              respond(404, "Not found", "Not found");
+              return;
+            }
             // *cries inside*: Bug 687299.
             respond(200, "OK", "[]");
             return;

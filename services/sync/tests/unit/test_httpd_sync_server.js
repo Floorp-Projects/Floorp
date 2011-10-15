@@ -203,14 +203,25 @@ add_test(function test_storage_request() {
       Utils.nextTick(next);
     });
   }
-  server.start(8080, function () {
-    retrieveWBONotExists(
-      retrieveWBOExists.bind(this,
-        getStorageFails.bind(this,
-          deleteStorage.bind(this, function () {
-            server.stop(run_next_test);
-          }))));
-  });
+  function getMissingCollectionWBO(next) {
+    _("Testing that fetching a WBO from an on-existent collection 404s.");
+    let req = localRequest(storageURL + "/foobar/baz");
+    req.get(function (err) {
+      do_check_eq(this.response.status, 404);
+      Utils.nextTick(next);
+    });
+  }
+
+  server.start(8080,
+    Async.chain(
+      retrieveWBONotExists,
+      retrieveWBOExists,
+      getStorageFails,
+      getMissingCollectionWBO,
+      deleteStorage,
+      server.stop.bind(server),
+      run_next_test
+    ));
 });
 
 add_test(function test_x_weave_records() {
