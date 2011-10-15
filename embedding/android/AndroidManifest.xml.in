@@ -142,5 +142,15 @@
 	    <action android:name="android.intent.action.MAIN" />
 	  </intent-filter>
         </activity>
+
+        <activity android:name="org.mozilla.gecko.ShowTabs"
+                  android:theme="@android:style/Theme.Translucent"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:windowIsTranslucent="true"
+                  android:windowContentOverlay="@null"
+                  android:windowNoTitle="true"
+                  android:windowIsFloating="true"
+                  android:backgroundDimEnabled="false">
+        </activity>
     </application>
 </manifest> 
