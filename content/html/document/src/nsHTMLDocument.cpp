@@ -111,7 +111,7 @@
 #include "nsICharsetResolver.h"
 #include "nsICachingChannel.h"
 #include "nsIJSContextStack.h"
-#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 #include "nsIWyciwygChannel.h"
 #include "nsIScriptElement.h"
 #include "nsIScriptError.h"
@@ -1771,9 +1771,8 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
 
   nsCOMPtr<nsIContentViewer> cv;
   shell->GetContentViewer(getter_AddRefs(cv));
-  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv);
-  if (docViewer) {
-    docViewer->LoadStart(static_cast<nsIHTMLDocument *>(this));
+  if (cv) {
+    cv->LoadStart(static_cast<nsIHTMLDocument *>(this));
   }
 
   // Add a wyciwyg channel request into the document load group

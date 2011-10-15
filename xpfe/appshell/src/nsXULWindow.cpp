@@ -54,7 +54,7 @@
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIServiceManager.h"
-#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMBarProp.h"
 #include "nsIDOMDocument.h"

@@ -49,7 +49,7 @@
 #include "nsISupports.h"
 #include "nsIContent.h"
 #include "nsIContentViewerContainer.h"
-#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 #include "mozilla/FunctionTimer.h"
 #include "nsIDocumentViewerPrint.h"
 #include "nsIPrivateDOMEvent.h"
@@ -282,7 +282,7 @@ private:
 
 
 //-------------------------------------------------------------
-class DocumentViewerImpl : public nsIDocumentViewer,
+class DocumentViewerImpl : public nsIContentViewer,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
                            public nsIMarkupDocumentViewer,
@@ -307,24 +307,6 @@ public:
 
   // nsIContentViewer interface...
   NS_DECL_NSICONTENTVIEWER
-
-  // nsIDocumentViewer interface...
-  NS_IMETHOD GetPresShell(nsIPresShell** aResult);
-  NS_IMETHOD GetPresContext(nsPresContext** aResult);
-  NS_IMETHOD SetDocumentInternal(nsIDocument* aDocument,
-                                 bool aForceReuseInnerWindow);
-  /**
-   * Find the view to use as the container view for MakeWindow. Returns
-   * null if this will be the root of a view manager hierarchy. In that
-   * case, if mParentWidget is null then this document should not even
-   * be displayed.
-   */
-  virtual nsIView* FindContainerView();
-
-  /**
-   * Set collector for navigation timing data (load, unload events).
-   */
-  virtual void SetNavigationTiming(nsDOMNavigationTiming* timing);
 
   // nsIContentViewerEdit
   NS_DECL_NSICONTENTVIEWEREDIT
@@ -536,7 +518,7 @@ static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 
 //------------------------------------------------------------------
 nsresult
-NS_NewDocumentViewer(nsIDocumentViewer** aResult)
+NS_NewContentViewer(nsIContentViewer** aResult)
 {
   *aResult = new DocumentViewerImpl();
 
@@ -593,7 +575,6 @@ NS_IMPL_RELEASE(DocumentViewerImpl)
 
 NS_INTERFACE_MAP_BEGIN(DocumentViewerImpl)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewer)
-    NS_INTERFACE_MAP_ENTRY(nsIDocumentViewer)
     NS_INTERFACE_MAP_ENTRY(nsIMarkupDocumentViewer)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerFile)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerEdit)
@@ -1015,7 +996,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
      http://bugzilla.mozilla.org/show_bug.cgi?id=78445 for more
      explanation.
   */
-  nsCOMPtr<nsIDocumentViewer> kungFuDeathGrip(this);
+  nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
 
   // Flush out layout so it's up-to-date by the time onload is called.
   // Note that this could destroy the window, so do this before
@@ -1333,20 +1314,19 @@ AttachContainerRecurse(nsIDocShell* aShell)
 {
   nsCOMPtr<nsIContentViewer> viewer;
   aShell->GetContentViewer(getter_AddRefs(viewer));
-  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(viewer);
-  if (docViewer) {
-    nsIDocument* doc = docViewer->GetDocument();
+  if (viewer) {
+    nsIDocument* doc = viewer->GetDocument();
     if (doc) {
       doc->SetContainer(aShell);
     }
     nsRefPtr<nsPresContext> pc;
-    docViewer->GetPresContext(getter_AddRefs(pc));
+    viewer->GetPresContext(getter_AddRefs(pc));
     if (pc) {
       pc->SetContainer(aShell);
       pc->SetLinkHandler(nsCOMPtr<nsILinkHandler>(do_QueryInterface(aShell)));
     }
     nsCOMPtr<nsIPresShell> presShell;
-    docViewer->GetPresShell(getter_AddRefs(presShell));
+    viewer->GetPresShell(getter_AddRefs(presShell));
     if (presShell) {
       presShell->SetForwardingContainer(nsnull);
     }
@@ -1491,20 +1471,19 @@ DetachContainerRecurse(nsIDocShell *aShell)
   // Unhook this docshell's presentation
   nsCOMPtr<nsIContentViewer> viewer;
   aShell->GetContentViewer(getter_AddRefs(viewer));
-  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(viewer);
-  if (docViewer) {
-    nsIDocument* doc = docViewer->GetDocument();
+  if (viewer) {
+    nsIDocument* doc = viewer->GetDocument();
     if (doc) {
       doc->SetContainer(nsnull);
     }
     nsRefPtr<nsPresContext> pc;
-    docViewer->GetPresContext(getter_AddRefs(pc));
+    viewer->GetPresContext(getter_AddRefs(pc));
     if (pc) {
       pc->SetContainer(nsnull);
       pc->SetLinkHandler(nsnull);
     }
     nsCOMPtr<nsIPresShell> presShell;
-    docViewer->GetPresShell(getter_AddRefs(presShell));
+    viewer->GetPresShell(getter_AddRefs(presShell));
     if (presShell) {
       presShell->SetForwardingContainer(nsWeakPtr(do_GetWeakReference(aShell)));
     }

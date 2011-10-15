@@ -869,7 +869,7 @@ TransferShowingState(nsIDocument* aFromDoc, nsIDocument* aToDoc)
 
 nsresult
 nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
-                                           nsIDocumentViewer* aViewer,
+                                           nsIContentViewer* aViewer,
                                            nsILoadGroup* aLoadGroup,
                                            nsIDocument* aDisplayDocument)
 {
@@ -951,7 +951,7 @@ nsExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest *aRequest,
     return NS_BINDING_ABORTED;
   }
 
-  nsCOMPtr<nsIDocumentViewer> viewer;
+  nsCOMPtr<nsIContentViewer> viewer;
   nsCOMPtr<nsILoadGroup> loadGroup;
   nsresult rv = SetupViewer(aRequest, getter_AddRefs(viewer),
                             getter_AddRefs(loadGroup));
@@ -972,7 +972,7 @@ nsExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest *aRequest,
 
 nsresult
 nsExternalResourceMap::PendingLoad::SetupViewer(nsIRequest* aRequest,
-                                                nsIDocumentViewer** aViewer,
+                                                nsIContentViewer** aViewer,
                                                 nsILoadGroup** aLoadGroup)
 {
   NS_PRECONDITION(!mTargetListener, "Unexpected call to OnStartRequest");
@@ -1030,9 +1030,7 @@ nsExternalResourceMap::PendingLoad::SetupViewer(nsIRequest* aRequest,
                                         getter_AddRefs(listener),
                                         getter_AddRefs(viewer));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(viewer);
-  NS_ENSURE_TRUE(docViewer, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(viewer, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIParser> parser = do_QueryInterface(listener);
   if (!parser) {
@@ -1048,8 +1046,8 @@ nsExternalResourceMap::PendingLoad::SetupViewer(nsIRequest* aRequest,
   }
 
   listener.swap(mTargetListener);
-  docViewer.swap(*aViewer);
-  newLoadGroup.swap(*aLoadGroup);
+  viewer.forget(aViewer);
+  newLoadGroup.forget(aLoadGroup);
   return NS_OK;
 }
 
@@ -5904,52 +5902,10 @@ nsDocument::GetInputEncoding(nsAString& aInputEncoding)
 }
 
 NS_IMETHODIMP
-nsDocument::GetXmlStandalone(bool *aXmlStandalone)
-{
-  WarnOnceAbout(eXmlStandalone);
-  *aXmlStandalone = 
-    !IsHTML() &&
-    mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
-    mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_EXISTS &&
-    mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_YES;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::SetXmlStandalone(bool aXmlStandalone)
-{
-  return IsHTML() ? NS_ERROR_DOM_NOT_SUPPORTED_ERR : NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocument::GetMozSyntheticDocument(bool *aSyntheticDocument)
 {
   *aSyntheticDocument = mIsSyntheticDocument;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetXmlVersion(nsAString& aXmlVersion)
-{
-  WarnOnceAbout(eXmlVersion);
-  if (IsHTML()) {
-    SetDOMStringToNull(aXmlVersion);
-    return NS_OK;
-  }
-
-  // If there is no declaration, the value is "1.0".
-
-  // XXX We only support "1.0", so always output "1.0" until that changes.
-  aXmlVersion.AssignLiteral("1.0");
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::SetXmlVersion(const nsAString& aXmlVersion)
-{
-  return IsHTML() ? NS_ERROR_DOM_NOT_SUPPORTED_ERR : NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -5964,14 +5920,6 @@ nsDocument::GetDocumentURI(nsAString& aDocumentURI)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::SetDocumentURI(const nsAString& aDocumentURI)
-{
-  // Not allowing this yet, need to think about security ramifications first.
-  // We use mDocumentURI to get principals for this document.
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 static void BlastSubtreeToPieces(nsINode *aNode);
