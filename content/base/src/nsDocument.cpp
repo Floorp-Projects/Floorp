@@ -5904,25 +5904,6 @@ nsDocument::GetInputEncoding(nsAString& aInputEncoding)
 }
 
 NS_IMETHODIMP
-nsDocument::GetXmlStandalone(bool *aXmlStandalone)
-{
-  WarnOnceAbout(eXmlStandalone);
-  *aXmlStandalone = 
-    !IsHTML() &&
-    mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
-    mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_EXISTS &&
-    mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_YES;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::SetXmlStandalone(bool aXmlStandalone)
-{
-  return IsHTML() ? NS_ERROR_DOM_NOT_SUPPORTED_ERR : NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocument::GetMozSyntheticDocument(bool *aSyntheticDocument)
 {
   *aSyntheticDocument = mIsSyntheticDocument;
