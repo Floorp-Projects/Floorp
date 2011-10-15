@@ -60,6 +60,10 @@ public class AwesomeBar extends ListActivity {
     public static final String URL_KEY = "url";
     public static final String TITLE_KEY = "title";
     public static final String CURRENT_URL_KEY = "currenturl";
+    public static final String TYPE = "type";
+    public static enum Type { ADD, EDIT };
+    
+    private String mType;
 
     public class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
         private Cursor mAdapterCursor;
@@ -132,7 +136,9 @@ public class AwesomeBar extends ListActivity {
 
         final EditText text = (EditText)findViewById(R.id.awesomebar_text);
 
-        String currentUrl = getIntent().getStringExtra(CURRENT_URL_KEY);
+        Intent intent = getIntent();
+        String currentUrl = intent.getStringExtra(CURRENT_URL_KEY);
+        mType = intent.getStringExtra(TYPE);
         if (currentUrl != null) {
             text.setText(currentUrl);
             text.selectAll();
@@ -159,8 +165,12 @@ public class AwesomeBar extends ListActivity {
         text.setOnKeyListener(new View.OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                    if (event.getAction() != KeyEvent.ACTION_DOWN)
+                        return true;
+
                     Intent resultIntent = new Intent();
                     resultIntent.putExtra(URL_KEY, text.getText().toString());
+                    resultIntent.putExtra(TYPE, mType);
                     setResult(Activity.RESULT_OK, resultIntent);
                     finish();
                     return true;
@@ -206,6 +216,7 @@ public class AwesomeBar extends ListActivity {
         String url = cursor.getString(cursor.getColumnIndexOrThrow(URL_KEY));
         Intent resultIntent = new Intent();
         resultIntent.putExtra(URL_KEY, url);
+        resultIntent.putExtra(TYPE, mType);
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
     }

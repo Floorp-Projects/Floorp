@@ -15,7 +15,9 @@
               android:layout_height="wrap_content"
               android:textAppearance="?android:attr/textAppearanceMediumInverse"
               android:textColor="?android:attr/textColorPrimaryInverse"
-              android:layout_toRightOf="@id/favicon"/>
+              android:layout_toRightOf="@id/favicon"
+              android:singleLine="true"
+              android:ellipsize="middle"/>
 
     <TextView android:id="@+id/url"
               android:layout_width="wrap_content"

@@ -4,6 +4,12 @@
     <item android:id="@+id/quit"
           android:icon="@drawable/quit"
           android:title="@string/quit" />
+
     <item android:id="@+id/bookmarks"
           android:title="@string/bookmarks" />
+ 
+    <item android:id="@+id/show_tabs"
+          android:icon="@drawable/quit"
+          android:title="Show Tabs" />
+
 </menu>

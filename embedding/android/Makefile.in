@@ -57,7 +57,9 @@ JAVAFILES = \
   AwesomeBar.java \
   DatabaseHelper.java \
   GeckoBookmarks.java \
-  SessionHistory.java \
+  Tab.java \
+  Tabs.java \
+  ShowTabs.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
@@ -136,11 +138,12 @@ RES_LAYOUT = \
   res/layout/gecko_menu.xml \
   res/layout/bookmarks.xml \
   res/layout/bookmark_list_row.xml \
+  res/layout/show_tabs.xml \
   $(NULL)
 
 RES_VALUES = \
 	res/values/colors.xml \
-       res/values/styles.xml \
+        res/values/styles.xml \
 	res/values/themes.xml \
 	$(NULL)
 
