@@ -142,10 +142,10 @@ RES_LAYOUT = \
   $(NULL)
 
 RES_VALUES = \
-	res/values/colors.xml \
-        res/values/styles.xml \
-	res/values/themes.xml \
-	$(NULL)
+  res/values/colors.xml \
+  res/values/styles.xml \
+  res/values/themes.xml \
+  $(NULL)
 
 AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
 

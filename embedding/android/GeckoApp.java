@@ -1,4 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -456,7 +456,7 @@ abstract public class GeckoApp
     void handleProgressChange(final int tabId, final int current, final int total) {
         Tab tab = Tabs.getInstance().getTab(tabId);
         if (!Tabs.getInstance().isSelectedTab(tab))
-	    return;
+            return;
         
         mMainHandler.post(new Runnable() { 
             public void run() {
@@ -479,7 +479,7 @@ abstract public class GeckoApp
         tab.addHistory(new Tab.HistoryEntry(uri, title));
 
         if (!Tabs.getInstance().isSelectedTab(tab))
-	    return;
+            return;
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -493,7 +493,7 @@ abstract public class GeckoApp
         tab.updateTitle(title);
         
         if (!Tabs.getInstance().isSelectedTab(tab))
-	    return;
+            return;
 
         mMainHandler.post(new Runnable() { 
             public void run() {
@@ -1085,7 +1085,7 @@ abstract public class GeckoApp
                     startActivityForResult(intent, AWESOMEBAR_REQUEST);
                 } else {
                     int id = Integer.parseInt(data.getStringExtra(ShowTabs.ID));
-                    Tab tab = Tabs.getInstance().switchToTab(id);
+                    Tab tab = Tabs.getInstance().selectTab(id);
                     if (tab != null) {
                         mAwesomeBar.setText(tab.getTitle());
                         if (tab.isLoading())
@@ -1093,7 +1093,7 @@ abstract public class GeckoApp
                         else
                            mProgressBar.setVisibility(View.GONE);
                     }
-                    GeckoAppShell.sendEventToGecko(new GeckoEvent("switch-to-tab", "" + id));
+                    GeckoAppShell.sendEventToGecko(new GeckoEvent("tab-select", "" + id));
                 }
             }
        }
@@ -1112,9 +1112,9 @@ abstract public class GeckoApp
         mAwesomeBar.setText(url);
         Log.d(LOG_FILE_NAME, type.name());
         if (type == AwesomeBar.Type.ADD) {
-            GeckoAppShell.sendEventToGecko(new GeckoEvent("add-tab", url));
+            GeckoAppShell.sendEventToGecko(new GeckoEvent("tab-add", url));
         } else {
-            GeckoAppShell.sendEventToGecko(new GeckoEvent("load-tab", url));
+            GeckoAppShell.sendEventToGecko(new GeckoEvent("tab-load", url));
         }
    }
 
