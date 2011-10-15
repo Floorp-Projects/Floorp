@@ -317,7 +317,6 @@ class AssemblerX86Shared
                 src = next;
             } while (src != AbsoluteLabel::INVALID_OFFSET);
         }
-        JS_ASSERT(((uint8 *)address - raw) >= 0 && ((uint8 *)address - raw) < INT_MAX);
         label->bind();
     }
 
