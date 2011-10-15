@@ -180,6 +180,37 @@ add_test(function test_storage_request() {
       Utils.nextTick(next);
     });
   }
+  function deleteWBONotExists(next) {
+    let req = localRequest(keysURL);
+    server.callback.onItemDeleted = function (username, collection, wboID) {
+      do_throw("onItemDeleted should not have been called.");
+    };
+      
+    req.delete(function (err) {
+      _("Body is " + this.response.body);
+      _("Modified is " + this.response.newModified);
+      do_check_eq(this.response.status, 200);
+      delete server.callback.onItemDeleted;
+      Utils.nextTick(next);
+    });
+  }
+  function deleteWBOExists(next) {
+    let req = localRequest(foosURL);
+    server.callback.onItemDeleted = function (username, collection, wboID) {
+      _("onItemDeleted called for " + collection + "/" + wboID);
+      delete server.callback.onItemDeleted;
+      do_check_eq(username, "john");
+      do_check_eq(collection, "crypto");
+      do_check_eq(wboID, "foos");
+      Utils.nextTick(next);
+    };
+      
+    req.delete(function (err) {
+      _("Body is " + this.response.body);
+      _("Modified is " + this.response.newModified);
+      do_check_eq(this.response.status, 200);
+    });
+  }
   function deleteStorage(next) {
     _("Testing DELETE on /storage.");
     let now = server.timestamp();
@@ -216,6 +247,8 @@ add_test(function test_storage_request() {
     Async.chain(
       retrieveWBONotExists,
       retrieveWBOExists,
+      deleteWBOExists,
+      deleteWBONotExists,
       getStorageFails,
       getMissingCollectionWBO,
       deleteStorage,
