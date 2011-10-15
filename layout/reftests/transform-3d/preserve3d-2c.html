@@ -1,0 +1,28 @@
+<html>
+    <head>
+        <style type="text/css">
+        #grandparent {
+          -moz-transform-style: preserve-3d;
+        }
+        #parent {
+          -moz-transform-style: preserve-3d;
+        }
+
+        #child {
+          width: 100px;
+          height: 100px;
+          background-color: red;
+          -moz-transform: translatex(-200px);
+          margin-left: 200px
+        }
+
+        </style>
+    </head>
+    <body>
+        <div id="grandparent">
+            <div id="parent">
+                <div id="child"></div>
+            </div>
+        </div>
+    </body>
+</html>

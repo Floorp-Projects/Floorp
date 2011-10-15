@@ -113,9 +113,9 @@ if (params.repeat) {
   TestRunner.repeat = params.repeat;
 } 
 
-// closeWhenDone tells us to call quit.js when complete
+// closeWhenDone tells us to close the browser when complete
 if (params.closeWhenDone) {
-  TestRunner.onComplete = goQuitApplication;
+  TestRunner.onComplete = SpecialPowers.quit;
 }
 
 // logFile to write our results

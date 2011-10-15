@@ -55,7 +55,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsMenuFrame.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include <malloc.h>
 #include "nsWindow.h"
 #include "nsIComboboxControlFrame.h"
@@ -535,10 +535,10 @@ nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, PRUint8 aWidgetType)
 {
   nsIContent* content = aFrame->GetContent();
   if (content->IsXUL() &&
-      content->NodeInfo()->Equals(nsWidgetAtoms::richlistitem))
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::selected);
+      content->NodeInfo()->Equals(nsGkAtoms::richlistitem))
+    return CheckBooleanAttr(aFrame, nsGkAtoms::selected);
 
-  return CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
+  return CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
 }
 
 /**
@@ -983,7 +983,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_DROPDOWN_BUTTON: {
       bool isHTML = IsHTMLContent(aFrame);
       nsIFrame* parentFrame = aFrame->GetParent();
-      bool isMenulist = !isHTML && parentFrame->GetType() == nsWidgetAtoms::menuFrame;
+      bool isMenulist = !isHTML && parentFrame->GetType() == nsGkAtoms::menuFrame;
       bool isOpen = false;
 
       // HTML select and XUL menulist dropdown buttons get state from the parent.
@@ -1125,7 +1125,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         nsEventStates eventState = GetContentState(aFrame, aWidgetType);
 
         // NOTE: we can probably use NS_EVENT_STATE_CHECKED
-        isChecked = CheckBooleanAttr(aFrame, nsWidgetAtoms::checked);
+        isChecked = CheckBooleanAttr(aFrame, nsGkAtoms::checked);
 
         aPart = MENU_POPUPCHECK;
         aState = MC_CHECKMARKNORMAL;
@@ -1371,7 +1371,7 @@ RENDER_AGAIN:
   else if (aWidgetType == NS_THEME_MENUCHECKBOX || aWidgetType == NS_THEME_MENURADIO)
   {
       bool isChecked = false;
-      isChecked = CheckBooleanAttr(aFrame, nsWidgetAtoms::checked);
+      isChecked = CheckBooleanAttr(aFrame, nsGkAtoms::checked);
 
       if (isChecked)
       {
@@ -2239,13 +2239,13 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     // Check the attribute to see if it's relevant.  
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = false;
-    if (aAttribute == nsWidgetAtoms::disabled ||
-        aAttribute == nsWidgetAtoms::checked ||
-        aAttribute == nsWidgetAtoms::selected ||
-        aAttribute == nsWidgetAtoms::readonly ||
-        aAttribute == nsWidgetAtoms::open ||
-        aAttribute == nsWidgetAtoms::mozmenuactive ||
-        aAttribute == nsWidgetAtoms::focused)
+    if (aAttribute == nsGkAtoms::disabled ||
+        aAttribute == nsGkAtoms::checked ||
+        aAttribute == nsGkAtoms::selected ||
+        aAttribute == nsGkAtoms::readonly ||
+        aAttribute == nsGkAtoms::open ||
+        aAttribute == nsGkAtoms::menuactive ||
+        aAttribute == nsGkAtoms::focused)
       *aShouldRepaint = true;
   }
 
@@ -2367,7 +2367,7 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
       // match the usually white background of the scrollable container, so
       // only support the native resizer if not in a scrollframe.
       nsIFrame* parentFrame = aFrame->GetParent();
-      return (!parentFrame || parentFrame->GetType() != nsWidgetAtoms::scrollFrame);
+      return (!parentFrame || parentFrame->GetType() != nsGkAtoms::scrollFrame);
     }
     case NS_THEME_MENUBAR:
     case NS_THEME_MENUPOPUP:
@@ -2857,7 +2857,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
 
       nsIFrame* parentFrame = aFrame->GetParent();
       bool isHTML = IsHTMLContent(aFrame);
-      bool isMenulist = !isHTML && parentFrame->GetType() == nsWidgetAtoms::menuFrame;
+      bool isMenulist = !isHTML && parentFrame->GetType() == nsGkAtoms::menuFrame;
       bool isOpen = false;
 
       // HTML select and XUL menulist dropdown buttons get state from the parent.

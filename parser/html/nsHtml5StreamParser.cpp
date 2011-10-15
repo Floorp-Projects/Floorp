@@ -175,8 +175,8 @@ class nsHtml5LoadFlusher : public nsRunnable
 
 nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
                                          nsHtml5Parser* aOwner)
-  : mFirstBuffer(new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE))
-  , mLastBuffer(mFirstBuffer)
+  : mFirstBuffer(nsnull) // Will be filled when starting
+  , mLastBuffer(nsnull) // Will be filled when starting
   , mExecutor(aExecutor)
   , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor->GetStage(),
                                         mExecutor->GetStage()))
@@ -558,7 +558,12 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
     return WriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
   }
   if (!mSniffingBuffer) {
-    mSniffingBuffer = new PRUint8[NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE];
+    const mozilla::fallible_t fallible = mozilla::fallible_t();
+    mSniffingBuffer = new (fallible)
+      PRUint8[NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE];
+    if (!mSniffingBuffer) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   memcpy(mSniffingBuffer + mSniffingLength, aFromSegment, aCount);
   mSniffingLength += aCount;
@@ -572,9 +577,16 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
                                       PRUint32* aWriteCount)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
-  // mLastBuffer always points to a buffer of the size NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE.
+  // mLastBuffer always points to a buffer of the size
+  // NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE.
   if (mLastBuffer->getEnd() == NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE) {
-    mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE));
+    nsRefPtr<nsHtml5OwningUTF16Buffer> newBuf =
+      nsHtml5OwningUTF16Buffer::FalliblyCreate(
+        NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
+    if (!newBuf) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mLastBuffer = (mLastBuffer->next = newBuf.forget());
   }
   PRInt32 totalByteCount = 0;
   for (;;) {
@@ -623,7 +635,13 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
       ++end;
       mLastBuffer->setEnd(end);
       if (end == NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE) {
-          mLastBuffer = mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
+        nsRefPtr<nsHtml5OwningUTF16Buffer> newBuf =
+          nsHtml5OwningUTF16Buffer::FalliblyCreate(
+            NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
+        if (!newBuf) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        mLastBuffer = (mLastBuffer->next = newBuf.forget());
       }
 
       mUnicodeDecoder->Reset();
@@ -632,7 +650,13 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
         return NS_OK;
       }
     } else if (convResult == NS_PARTIAL_MORE_OUTPUT) {
-      mLastBuffer = mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
+      nsRefPtr<nsHtml5OwningUTF16Buffer> newBuf =
+        nsHtml5OwningUTF16Buffer::FalliblyCreate(
+          NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
+      if (!newBuf) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mLastBuffer = (mLastBuffer->next = newBuf.forget());
       // All input may have been consumed if there is a pending surrogate pair
       // that doesn't fit in the output buffer. Loop back to push a zero-length
       // input to the decoder in that case.
@@ -674,6 +698,19 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
    */
   mExecutor->WillBuildModel(eDTDMode_unknown);
   
+  nsRefPtr<nsHtml5OwningUTF16Buffer> newBuf =
+    nsHtml5OwningUTF16Buffer::FalliblyCreate(
+      NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
+  if (!newBuf) {
+    mExecutor->MarkAsBroken(); // marks this stream parser as terminated,
+                               // which prevents entry to code paths that
+                               // would use mFirstBuffer or mLastBuffer.
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ASSERTION(!mFirstBuffer, "How come we have the first buffer set?");
+  NS_ASSERTION(!mLastBuffer, "How come we have the last buffer set?");
+  mFirstBuffer = mLastBuffer = newBuf;
+
   nsresult rv = NS_OK;
 
   mReparseForbidden = PR_FALSE;
@@ -726,15 +763,17 @@ nsHtml5StreamParser::DoStopRequest()
     return;
   }
 
+  mStreamState = STREAM_ENDED;
+
   if (!mUnicodeDecoder) {
     PRUint32 writeCount;
-    FinalizeSniffing(nsnull, 0, &writeCount, 0);
-    // dropped nsresult here
+    if (NS_FAILED(FinalizeSniffing(nsnull, 0, &writeCount, 0))) {
+      MarkAsBroken();
+      return;
+    }
   } else if (mFeedChardet) {
     mChardet->Done();
   }
-
-  mStreamState = STREAM_ENDED;
 
   if (IsTerminatedOrInterrupted()) {
     return;
@@ -789,17 +828,21 @@ nsHtml5StreamParser::DoDataAvailable(PRUint8* aBuffer, PRUint32 aLength)
   }
 
   PRUint32 writeCount;
+  nsresult rv;
   if (HasDecoder()) {
     if (mFeedChardet) {
       bool dontFeed;
       mChardet->DoIt((const char*)aBuffer, aLength, &dontFeed);
       mFeedChardet = !dontFeed;
     }
-    WriteStreamBytes(aBuffer, aLength, &writeCount);
+    rv = WriteStreamBytes(aBuffer, aLength, &writeCount);
   } else {
-    SniffStreamBytes(aBuffer, aLength, &writeCount);
+    rv = SniffStreamBytes(aBuffer, aLength, &writeCount);
   }
-  // dropping nsresult here
+  if (NS_FAILED(rv)) {
+    MarkAsBroken();
+    return;
+  }
   NS_ASSERTION(writeCount == aLength, "Wrong number of stream bytes written/sniffed.");
 
   if (IsTerminatedOrInterrupted()) {
@@ -851,15 +894,24 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
+  if (mExecutor->IsBroken()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   NS_ASSERTION(mRequest == aRequest, "Got data on wrong stream.");
   PRUint32 totalRead;
-  nsAutoArrayPtr<PRUint8> data(new PRUint8[aLength]);
+  const mozilla::fallible_t fallible = mozilla::fallible_t();
+  nsAutoArrayPtr<PRUint8> data(new (fallible) PRUint8[aLength]);
+  if (!data) {
+    mExecutor->MarkAsBroken();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   nsresult rv = aInStream->Read(reinterpret_cast<char*>(data.get()),
   aLength, &totalRead);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(totalRead <= aLength, "Read more bytes than were available?");
   nsCOMPtr<nsIRunnable> dataAvailable = new nsHtml5DataAvailable(this,
-                                                                data.forget(),
+                                                                 data.forget(),
                                                                 totalRead);
   if (NS_FAILED(mThread->Dispatch(dataAvailable, nsIThread::DISPATCH_NORMAL))) {
     NS_WARNING("Dispatching DataAvailable event failed.");
@@ -1062,6 +1114,9 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
                                           bool aLastWasCR)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  if (mExecutor->IsBroken()) {
+    return;
+  }
   #ifdef DEBUG
     mExecutor->AssertStageEmpty();
   #endif
@@ -1136,7 +1191,7 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
                                       "DOM Events",
                                       mExecutor->GetDocument());
 
-      nsHtml5UTF16Buffer* buffer = mFirstBuffer->next;
+      nsHtml5OwningUTF16Buffer* buffer = mFirstBuffer->next;
       while (buffer) {
         buffer->setStart(0);
         buffer = buffer->next;
@@ -1280,5 +1335,20 @@ nsHtml5StreamParser::TimerFlush()
     if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
       NS_WARNING("failed to dispatch executor flush event");
     }
+  }
+}
+
+void
+nsHtml5StreamParser::MarkAsBroken()
+{
+  NS_ASSERTION(IsParserThread(), "Wrong thread!");
+  mTokenizerMutex.AssertCurrentThreadOwns();
+
+  Terminate();
+  mTreeBuilder->MarkAsBroken();
+  mozilla::DebugOnly<bool> hadOps = mTreeBuilder->Flush(PR_FALSE);
+  NS_ASSERTION(hadOps, "Should have had the markAsBroken op!");
+  if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
+    NS_WARNING("failed to dispatch executor flush event");
   }
 }

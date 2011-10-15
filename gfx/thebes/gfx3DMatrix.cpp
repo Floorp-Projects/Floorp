@@ -677,8 +677,7 @@ gfx3DMatrix::TransformRect(const gfxRect& aRect) const
   points[2] = Transform(gfxPoint(aRect.X() + aRect.Width(),
                                  aRect.Y() + aRect.Height()));
   points[3] = Transform(gfxPoint(aRect.X(), aRect.Y() + aRect.Height()));
-
-
+  
   // Could this ever result in lines that intersect? I don't think so.
   return gfxQuad(points[0], points[1], points[2], points[3]);
 }

@@ -3635,14 +3635,15 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
       static_cast<nsHtml5Parser*>(nsHtml5Module::NewHtml5Parser().get());
     // Now sHTMLFragmentParser owns the object
   }
-  sHTMLFragmentParser->ParseHtml5Fragment(aSourceBuffer,
-                                          aTargetNode,
-                                          aContextLocalName,
-                                          aContextNamespace,
-                                          aQuirks,
-                                          aPreventScriptExecution);
+  nsresult rv =
+    sHTMLFragmentParser->ParseHtml5Fragment(aSourceBuffer,
+                                            aTargetNode,
+                                            aContextLocalName,
+                                            aContextNamespace,
+                                            aQuirks,
+                                            aPreventScriptExecution);
   sHTMLFragmentParser->Reset();
-  return NS_OK;
+  return rv;
 }
 
 /* static */
