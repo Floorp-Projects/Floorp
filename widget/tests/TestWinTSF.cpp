@@ -1468,7 +1468,7 @@ TestApp::Run(void)
                            nsIWebBrowserChrome::CHROME_DEFAULT,
                            800 /*nsIAppShellService::SIZE_TO_CONTENT*/,
                            600 /*nsIAppShellService::SIZE_TO_CONTENT*/,
-                           mAppShell, getter_AddRefs(mWindow));
+                           getter_AddRefs(mWindow));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocShell> docShell;

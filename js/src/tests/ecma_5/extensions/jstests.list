@@ -14,6 +14,7 @@ script array-toString-recursion.js
 skip-if(!xulRuntime.shell) script cross-global-eval-is-indirect.js # needs newGlobal()
 script eval-native-callback-is-indirect.js
 script extension-methods-reject-null-undefined-this.js
+script function-caller-skips-eval-frames.js
 skip-if(!xulRuntime.shell) script function-definition-with.js # needs evaluate()
 script function-properties.js
 script getOwnPropertyNames-__proto__.js

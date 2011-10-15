@@ -2725,7 +2725,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_SETGNAME)
 
           BEGIN_CASE(JSOP_REGEXP)
-            jsop_regexp();
+            if (!jsop_regexp())
+                return Compile_Error;
           END_CASE(JSOP_REGEXP)
 
           BEGIN_CASE(JSOP_OBJECT)
@@ -4883,14 +4884,14 @@ mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
     while (nobj) {
         if (!nobj->isNative())
             return false;
-        if (nobj->getClass()->ops.lookupProperty)
+        if (nobj->getClass()->ops.lookupGeneric)
             return false;
         nobj = nobj->getProto();
     }
 
     JSObject *holder;
     JSProperty *prop = NULL;
-    if (!obj->lookupProperty(cx, id, &holder, &prop))
+    if (!obj->lookupGeneric(cx, id, &holder, &prop))
         return false;
     if (!prop)
         return false;
@@ -6575,7 +6576,7 @@ mjit::Compiler::jsop_newinit()
     return true;
 }
 
-void
+bool
 mjit::Compiler::jsop_regexp()
 {
     JSObject *obj = script->getRegExp(fullAtomIndex(PC));
@@ -6590,7 +6591,7 @@ mjit::Compiler::jsop_regexp()
         masm.move(ImmPtr(obj), Registers::ArgReg1);
         INLINE_STUBCALL(stubs::RegExp, REJOIN_FALLTHROUGH);
         frame.pushSynced(JSVAL_TYPE_OBJECT);
-        return;
+        return true;
     }
 
     RegExpObject *reobj = obj->asRegExp();
@@ -6619,7 +6620,7 @@ mjit::Compiler::jsop_regexp()
                 Native native = callee->getFunctionPrivate()->maybeNative();
                 if (native == js::regexp_exec || native == js::regexp_test) {
                     frame.push(ObjectValue(*obj));
-                    return;
+                    return true;
                 }
             }
         } else if (JSOp(*use) == JSOP_CALL && which == 0) {
@@ -6632,11 +6633,19 @@ mjit::Compiler::jsop_regexp()
                     native == js::str_replace ||
                     native == js::str_split) {
                     frame.push(ObjectValue(*obj));
-                    return;
+                    return true;
                 }
             }
         }
     }
+
+    /*
+     * Force creation of the RegExpPrivate in the script's RegExpObject so we take it in the
+     * getNewObject template copy.
+     */
+    RegExpPrivate *rep = reobj->getOrCreatePrivate(cx);
+    if (!rep)
+        return false;
 
     RegisterID result = frame.allocReg();
     Jump emptyFreeList = masm.getNewObject(cx, result, obj);
@@ -6647,9 +6656,14 @@ mjit::Compiler::jsop_regexp()
     stubcc.masm.move(ImmPtr(obj), Registers::ArgReg1);
     OOL_STUBCALL(stubs::RegExp, REJOIN_FALLTHROUGH);
 
+    /* Bump the refcount on the wrapped RegExp. */
+    size_t *refcount = rep->addressOfRefCount();
+    masm.add32(Imm32(1), AbsoluteAddress(refcount));
+
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, result);
 
     stubcc.rejoin(Changes(1));
+    return true;
 }
 
 bool

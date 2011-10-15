@@ -600,6 +600,10 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsCOMPtr<nsIContent> asContent = do_QueryInterface(docType);
       return AppendToDocument(asContent, aBuilder);
     }
+    case eTreeOpMarkAsBroken: {
+      aBuilder->MarkAsBroken();
+      return rv;
+    }
     case eTreeOpRunScript: {
       nsIContent* node = *(mOne.node);
       nsAHtml5TreeBuilderState* snapshot = mTwo.state;

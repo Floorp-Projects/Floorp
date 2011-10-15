@@ -223,12 +223,12 @@ nsSVGScriptElement::FreezeUriAsyncDefer()
     return;
   }
 
-  // variation of this code in nsHTMLScriptElement - check if changes
-  // need to be transfered when modifying
-  nsAutoString src;
-  mStringAttributes[HREF].GetAnimValue(src, this);
-  // preserving bug 528444 here due to being unsure how to fix correctly
-  if (!src.IsEmpty()) {
+  if (mStringAttributes[HREF].IsExplicitlySet()) {
+    // variation of this code in nsHTMLScriptElement - check if changes
+    // need to be transfered when modifying
+    nsAutoString src;
+    mStringAttributes[HREF].GetAnimValue(src, this);
+
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
     NS_NewURI(getter_AddRefs(mUri), src, nsnull, baseURI);
     // At this point mUri will be null for invalid URLs.
@@ -244,10 +244,7 @@ nsSVGScriptElement::FreezeUriAsyncDefer()
 bool
 nsSVGScriptElement::HasScriptContent()
 {
-  nsAutoString src;
-  mStringAttributes[HREF].GetAnimValue(src, this);
-  // preserving bug 528444 here due to being unsure how to fix correctly
-  return (mFrozen ? mExternal : !src.IsEmpty()) ||
+  return (mFrozen ? mExternal : mStringAttributes[HREF].IsExplicitlySet()) ||
          nsContentUtils::HasNonEmptyTextContent(this);
 }
 

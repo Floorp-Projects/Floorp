@@ -912,8 +912,8 @@ proxy_innerObject(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-proxy_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
-                     JSProperty **propp)
+proxy_LookupGeneric(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                    JSProperty **propp)
 {
     id = js_CheckForStringIndex(id);
 
@@ -932,19 +932,26 @@ proxy_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 }
 
 static JSBool
+proxy_LookupProperty(JSContext *cx, JSObject *obj, PropertyName *name, JSObject **objp,
+                     JSProperty **propp)
+{
+    return proxy_LookupGeneric(cx, obj, ATOM_TO_JSID(name), objp, propp);
+}
+
+static JSBool
 proxy_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
                     JSProperty **propp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return proxy_LookupProperty(cx, obj, id, objp, propp);
+    return proxy_LookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
 proxy_LookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp, JSProperty **propp)
 {
-    return proxy_LookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
+    return proxy_LookupGeneric(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 static JSBool
@@ -1202,7 +1209,7 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
     proxy_TraceObject,       /* trace       */
     JS_NULL_CLASS_EXT,
     {
-        proxy_LookupProperty,
+        proxy_LookupGeneric,
         proxy_LookupProperty,
         proxy_LookupElement,
         proxy_LookupSpecial,
@@ -1263,7 +1270,7 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
         NULL                 /* unused */
     },
     {
-        proxy_LookupProperty,
+        proxy_LookupGeneric,
         proxy_LookupProperty,
         proxy_LookupElement,
         proxy_LookupSpecial,
@@ -1336,7 +1343,7 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
     proxy_TraceFunction,     /* trace       */
     JS_NULL_CLASS_EXT,
     {
-        proxy_LookupProperty,
+        proxy_LookupGeneric,
         proxy_LookupProperty,
         proxy_LookupElement,
         proxy_LookupSpecial,

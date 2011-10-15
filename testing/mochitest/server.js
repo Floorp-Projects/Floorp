@@ -622,8 +622,6 @@ function testListing(metadata, response)
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/MozillaLogger.js"}),
         SCRIPT({type: "text/javascript",
-                 src: "/tests/SimpleTest/quit.js"}),
-        SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/setup.js"}),
         SCRIPT({type: "text/javascript"},
                "window.onload =  hookup; gTestList=" + tests + ";"

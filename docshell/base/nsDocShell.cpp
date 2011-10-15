@@ -4943,20 +4943,6 @@ nsDocShell::SetEnabled(bool aEnabled)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetBlurSuppression(bool *aBlurSuppression)
-{
-  NS_ENSURE_ARG_POINTER(aBlurSuppression);
-  *aBlurSuppression = PR_FALSE;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetBlurSuppression(bool aBlurSuppression)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocShell::SetFocus()
 {
   return NS_OK;
@@ -6114,13 +6100,10 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     if (timingChannel) {
         TimeStamp channelCreationTime;
         rv = timingChannel->GetChannelCreation(&channelCreationTime);
-        if (NS_SUCCEEDED(rv) && !channelCreationTime.IsNull()) {
-            PRUint32 interval = (PRUint32)
-                (TimeStamp::Now() - channelCreationTime)
-                .ToMilliseconds();
-            Telemetry::Accumulate(Telemetry::TOTAL_CONTENT_PAGE_LOAD_TIME, 
-                                  interval);
-        }
+        if (NS_SUCCEEDED(rv) && !channelCreationTime.IsNull())
+            Telemetry::AccumulateTimeDelta(
+                Telemetry::TOTAL_CONTENT_PAGE_LOAD_TIME,
+                channelCreationTime);
     }
 
     // Timing is picked up by the window, we don't need it anymore
