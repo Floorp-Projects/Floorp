@@ -61,7 +61,7 @@
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
 #include "nsContentPermissionHelper.h"
-#include "nsIDOMNSHTMLFrameElement.h"
+#include "nsIDOMHTMLFrameElement.h"
 #include "nsIDialogCreator.h"
 #include "nsThreadUtils.h"
 #include "nsSerializationHelper.h"

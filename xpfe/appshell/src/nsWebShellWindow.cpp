@@ -42,7 +42,7 @@
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsIWeakReference.h"
-
+#include "nsIContentViewer.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
@@ -80,7 +80,6 @@
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 
-#include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -719,11 +718,9 @@ bool nsWebShellWindow::ExecuteCloseHandler()
   if (eventTarget) {
     nsCOMPtr<nsIContentViewer> contentViewer;
     mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-    nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
-
-    if (docViewer) {
+    if (contentViewer) {
       nsRefPtr<nsPresContext> presContext;
-      docViewer->GetPresContext(getter_AddRefs(presContext));
+      contentViewer->GetPresContext(getter_AddRefs(presContext));
 
       nsEventStatus status = nsEventStatus_eIgnore;
       nsMouseEvent event(PR_TRUE, NS_XUL_CLOSE, nsnull,
