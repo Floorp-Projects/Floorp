@@ -477,8 +477,10 @@ nsNavHistory::Init()
   // XXX
   // For the native ui on android, we will not be using MOZ_PLACES.
   // Currently places has deeply weaved it way throughout the gecko codebase.
-  // Here we disable all database creation and loading of places. 
+  // Here we disable all database creation and loading of places.
+#ifdef ANDROID
   return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 
   NS_TIME_FUNCTION;
 
