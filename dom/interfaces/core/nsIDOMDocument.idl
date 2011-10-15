@@ -66,7 +66,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(CD4CD7C3-C688-4E50-9A72-4A00EABE66AB)]
+[scriptable, uuid(2008bf7d-3232-4fc2-b904-8728847d458f)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -112,7 +112,7 @@ interface nsIDOMDocument : nsIDOMNode
            attribute DOMString       xmlVersion;
                                         // raises(DOMException) on setting
   // Introduced in DOM Level 3:
-           attribute DOMString       documentURI;
+  readonly attribute DOMString       documentURI;
   // Introduced in DOM Level 3:
   nsIDOMNode         adoptNode(in nsIDOMNode source)
                                         raises(DOMException);
