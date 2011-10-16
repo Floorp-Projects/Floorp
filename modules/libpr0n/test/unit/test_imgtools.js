@@ -321,6 +321,26 @@ referenceBytes = streamToArray(istream);
 compareArrays(encodedBytes, referenceBytes);
 
 
+/* ========== 10 ========== */
+testnum++;
+testdesc = "test decoding a GIF";
+
+// 32x32 gif, 1809 bytes.
+imgName = "image4.gif";
+inMimeType = "image/gif";
+imgFile = do_get_file(imgName);
+
+istream = getFileInputStream(imgFile);
+do_check_eq(istream.available(), 1809);
+
+outParam = { value: null };
+imgTools.decodeImageData(istream, inMimeType, outParam);
+container = outParam.value;
+
+// It's not easy to look at the pixel values from JS, so just
+// check the container's size.
+do_check_eq(container.width, 32);
+do_check_eq(container.height, 32);
 
 
 /* ========== bug 363986 ========== */

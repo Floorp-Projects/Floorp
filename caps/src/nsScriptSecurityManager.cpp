@@ -40,6 +40,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "mozilla/Util.h"
+
 #include "xpcprivate.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIServiceManager.h"
@@ -944,7 +947,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             objectDomainUnicode.get()
         };
 
-        PRUint32 length = NS_ARRAY_LENGTH(formatStrings);
+        PRUint32 length = ArrayLength(formatStrings);
 
         // XXXbz Our localization system is stupid and can't handle not showing
         // some strings that get passed in.  Which means that we have to get
@@ -966,7 +969,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             if (!objectDomainUnicode.IsEmpty()) {
                 stringName.AppendLiteral("ObjectDomain");
                 length += 1;
-                if (length != NS_ARRAY_LENGTH(formatStrings)) {
+                if (length != ArrayLength(formatStrings)) {
                     // We have an object domain but not a subject domain.
                     // Scoot our string over one slot.  See the XXX comment
                     // above for why we need to do this.
@@ -1588,7 +1591,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         rv = sStrBundle->
             FormatStringFromName(NS_LITERAL_STRING("ProtocolFlagError").get(),
                                  formatStrings,
-                                 NS_ARRAY_LENGTH(formatStrings),
+                                 ArrayLength(formatStrings),
                                  getter_Copies(message));
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIConsoleService> console(
@@ -1629,7 +1632,7 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
     const PRUnichar *formatStrings[] = { ucsSourceSpec.get(), ucsTargetSpec.get() };
     rv = sStrBundle->FormatStringFromName(PromiseFlatString(messageTag).get(),
                                           formatStrings,
-                                          NS_ARRAY_LENGTH(formatStrings),
+                                          ArrayLength(formatStrings),
                                           getter_Copies(message));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1708,7 +1711,7 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
         nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI
     };
 
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(flags); ++i) {
+    for (PRUint32 i = 0; i < ArrayLength(flags); ++i) {
         rv = fixup->CreateFixupURI(aTargetURIStr, flags[i],
                                    getter_AddRefs(target));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -2681,7 +2684,7 @@ nsScriptSecurityManager::FormatCapabilityString(nsAString& aCapability)
             rv = sStrBundle->FormatStringFromName(
                                 NS_LITERAL_STRING("ExtensionCapability").get(),
                                 formatArgs,
-                                NS_ARRAY_LENGTH(formatArgs),
+                                ArrayLength(formatArgs),
                                 getter_Copies(extensionCap));
             if (NS_SUCCEEDED(rv))
                 newcaps += extensionCap;
@@ -2770,7 +2773,7 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
     nsXPIDLString message;
     rv = sStrBundle->FormatStringFromName(NS_LITERAL_STRING("EnableCapabilityQuery").get(),
                                           formatStrings,
-                                          NS_ARRAY_LENGTH(formatStrings),
+                                          ArrayLength(formatStrings),
                                           getter_Copies(message));
     if (NS_FAILED(rv))
         return PR_FALSE;
@@ -2893,7 +2896,7 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
         nsXPIDLString message;
         rv = sStrBundle->FormatStringFromName(NS_LITERAL_STRING("EnableCapabilityDenied").get(),
                                               formatStrings,
-                                              NS_ARRAY_LENGTH(formatStrings),
+                                              ArrayLength(formatStrings),
                                               getter_Copies(message));
         if (NS_FAILED(rv))
             return rv;
@@ -3059,7 +3062,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
             className.get(),
             originUnicode.get()
         };
-        PRUint32 length = NS_ARRAY_LENGTH(formatStrings);
+        PRUint32 length = ArrayLength(formatStrings);
         if (originUnicode.IsEmpty()) {
             --length;
         } else {
@@ -3853,7 +3856,7 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
     for (PRUint32 c = 0; c < aPrefCount; c++)
     {
         PRInt32 prefNameLen = PL_strlen(aPrefNames[c]) - 
-            (NS_ARRAY_LENGTH(idSuffix) - 1);
+            (ArrayLength(idSuffix) - 1);
         if (PL_strcasecmp(aPrefNames[c] + prefNameLen, idSuffix) != 0)
             continue;
 

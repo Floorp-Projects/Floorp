@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsMathMLElement.h"
 #include "nsDOMClassInfoID.h" // for eDOMClassInfo_MathElement_id.
 #include "nsGkAtoms.h"
@@ -51,6 +53,8 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "mozAutoDocUpdate.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // nsISupports methods:
@@ -177,11 +181,11 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
       tag == nsGkAtoms::mn_ || tag == nsGkAtoms::mo_ ||
       tag == nsGkAtoms::mtext_ || tag == nsGkAtoms::mspace_)
     return FindAttributeDependence(aAttribute, tokenMap,
-                                   NS_ARRAY_LENGTH(tokenMap));
+                                   ArrayLength(tokenMap));
   if (tag == nsGkAtoms::mstyle_ ||
       tag == nsGkAtoms::math)
     return FindAttributeDependence(aAttribute, mstyleMap,
-                                   NS_ARRAY_LENGTH(mstyleMap));
+                                   ArrayLength(mstyleMap));
 
   if (tag == nsGkAtoms::maction_ ||
       tag == nsGkAtoms::maligngroup_ ||
@@ -207,7 +211,7 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
       tag == nsGkAtoms::munderover_ ||
       tag == nsGkAtoms::none) {
     return FindAttributeDependence(aAttribute, commonPresMap,
-                                   NS_ARRAY_LENGTH(commonPresMap));
+                                   ArrayLength(commonPresMap));
   }
 
   return PR_FALSE;
@@ -405,7 +409,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
           NS_STYLE_FONT_SIZE_LARGE
         };
         str.CompressWhitespace();
-        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sizes); ++i) {
+        for (PRUint32 i = 0; i < ArrayLength(sizes); ++i) {
           if (str.EqualsASCII(sizes[i])) {
             fontSize->SetIntValue(values[i], eCSSUnit_Enumerated);
             break;

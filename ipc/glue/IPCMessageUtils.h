@@ -41,6 +41,8 @@
 
 #include "chrome/common/ipc_message_utils.h"
 
+#include "mozilla/Util.h"
+
 #include "prtypes.h"
 #include "nsID.h"
 #include "nsMemory.h"
@@ -736,7 +738,7 @@ struct ParamTraits<nsID>
     WriteParam(aMsg, aParam.m0);
     WriteParam(aMsg, aParam.m1);
     WriteParam(aMsg, aParam.m2);
-    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(aParam.m3); i++) {
+    for (unsigned int i = 0; i < mozilla::ArrayLength(aParam.m3); i++) {
       WriteParam(aMsg, aParam.m3[i]);
     }
   }
@@ -748,7 +750,7 @@ struct ParamTraits<nsID>
        !ReadParam(aMsg, aIter, &(aResult->m2)))
       return false;
 
-    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(aResult->m3); i++)
+    for (unsigned int i = 0; i < mozilla::ArrayLength(aResult->m3); i++)
       if (!ReadParam(aMsg, aIter, &(aResult->m3[i])))
         return false;
 
@@ -762,7 +764,7 @@ struct ParamTraits<nsID>
                               aParam.m0,
                               aParam.m1,
                               aParam.m2));
-    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(aParam.m3); i++)
+    for (unsigned int i = 0; i < mozilla::ArrayLength(aParam.m3); i++)
       aLog->append(StringPrintf(L"%2.2X", aParam.m3[i]));
     aLog->append(L"}");
   }

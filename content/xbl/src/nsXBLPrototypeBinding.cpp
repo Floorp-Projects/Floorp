@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIInputStream.h"
@@ -73,6 +75,8 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsXBLResourceLoader.h"
 #include "mozilla/dom/Element.h"
+
+using namespace mozilla;
 
 // Helper Classes =====================================================================
 
@@ -172,7 +176,7 @@ public:
           sizeof(nsXBLInsertionPointEntry)
         };
         kPool->Init("XBL Insertion Point Entries", kBucketSizes,
-                    NS_ARRAY_LENGTH(kBucketSizes), aInitialSize);
+                    ArrayLength(kBucketSizes), aInitialSize);
       }
     }
   }
