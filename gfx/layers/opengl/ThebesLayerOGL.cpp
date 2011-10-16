@@ -37,6 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/layers/PLayers.h"
+
+/* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
+#include "mozilla/Util.h"
+
 #include "mozilla/layers/ShadowLayers.h"
 
 #include "ThebesLayerBuffer.h"
@@ -633,7 +637,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
     FillSurface(onBlack, result.mRegionToDraw, nsIntPoint(0,0), gfxRGBA(0.0, 0.0, 0.0, 1.0));
     FillSurface(onWhite, result.mRegionToDraw, nsIntPoint(0,0), gfxRGBA(1.0, 1.0, 1.0, 1.0));
     gfxASurface* surfaces[2] = { onBlack, onWhite };
-    nsRefPtr<gfxTeeSurface> surf = new gfxTeeSurface(surfaces, NS_ARRAY_LENGTH(surfaces));
+    nsRefPtr<gfxTeeSurface> surf = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
 
     // XXX If the device offset is set on the individual surfaces instead of on
     // the tee surface, we render in the wrong place. Why?
@@ -834,7 +838,9 @@ ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
                         const nsIntRect& aRect, const nsIntPoint& aRotation)
 {
   gfxIntSize size = aUpdate->GetSize();
-  if (GetSize() != nsIntSize(size.width, size.height)) {
+  if (!mTexImage ||
+      GetSize() != nsIntSize(size.width, size.height) ||
+      mTexImage->GetContentType() != aUpdate->GetContentType()) {
     // XXX we should do something here to decide whether to use REPEAT or not,
     // but I'm not sure what
     mTexImage = CreateClampOrRepeatTextureImage(gl(),

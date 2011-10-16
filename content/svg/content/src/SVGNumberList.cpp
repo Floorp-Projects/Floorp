@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "SVGNumberList.h"
 #include "SVGAnimatedNumberList.h"
 #include "nsSVGElement.h"
@@ -68,7 +70,7 @@ SVGNumberList::GetValueAsString(nsAString& aValue) const
   for (PRUint32 i = 0; i < mNumbers.Length(); ++i) {
     // Would like to use aValue.AppendPrintf("%f", mNumbers[i]), but it's not
     // possible to always avoid trailing zeros.
-    nsTextFormatter::snprintf(buf, NS_ARRAY_LENGTH(buf),
+    nsTextFormatter::snprintf(buf, ArrayLength(buf),
                               NS_LITERAL_STRING("%g").get(),
                               double(mNumbers[i]));
     // We ignore OOM, since it's not useful for us to return an error.

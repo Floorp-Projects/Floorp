@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "gfxFontconfigUtils.h"
 #include "gfxFont.h"
 #include "gfxAtoms.h"
@@ -323,7 +325,7 @@ gfxFontconfigUtils::NewPattern(const nsTArray<nsString>& aFamilies,
             // families do not have a higher priority, they are given weak
             // bindings.
             for (PRUint32 g = 0;
-                 g < NS_ARRAY_LENGTH(sFontconfigGenerics);
+                 g < ArrayLength(sFontconfigGenerics);
                  ++g) {
                 if (0 == FcStrCmpIgnoreCase(ToFcChar8(sFontconfigGenerics[g]),
                                             ToFcChar8(family.get()))) {
@@ -470,7 +472,7 @@ gfxFontconfigUtils::GetSampleLangForGroup(nsIAtom *aLangGroup,
 
     const MozLangGroupData *langGroup = nsnull;
 
-    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(MozLangGroups); ++i) {
+    for (unsigned int i = 0; i < ArrayLength(MozLangGroups); ++i) {
         if (aLangGroup == MozLangGroups[i].mozLangGroup) {
             langGroup = &MozLangGroups[i];
             break;

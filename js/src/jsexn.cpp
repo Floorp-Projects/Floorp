@@ -43,6 +43,9 @@
  */
 #include <stdlib.h>
 #include <string.h>
+
+#include "mozilla/Util.h"
+
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -69,6 +72,7 @@
 
 #include "vm/Stack-inl.h"
 
+using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
@@ -859,7 +863,7 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
     vp->setString(name);
 
     {
-        AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroots), localroots);
+        AutoArrayRooter tvr(cx, ArrayLength(localroots), localroots);
 
 #ifdef __GNUC__
         message = filename = NULL;
@@ -1154,7 +1158,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
 
     /* Protect the newly-created strings below from nesting GCs. */
     PodArrayZero(tv);
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(tv), tv);
+    AutoArrayRooter tvr(cx, ArrayLength(tv), tv);
 
     /*
      * Try to get an appropriate prototype by looking up the corresponding
@@ -1219,7 +1223,7 @@ js_ReportUncaughtException(JSContext *cx)
         return false;
 
     PodArrayZero(roots);
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
+    AutoArrayRooter tvr(cx, ArrayLength(roots), roots);
 
     /*
      * Because js_ValueToString below could error and an exception object

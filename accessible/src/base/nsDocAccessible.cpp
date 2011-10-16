@@ -77,7 +77,7 @@
 #include "nsIXULDocument.h"
 #endif
 
-namespace dom = mozilla::dom;
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////

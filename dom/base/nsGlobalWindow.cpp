@@ -49,6 +49,9 @@
 
 #include "base/basictypes.h"
 
+/* This must occur *after* base/basictypes.h to avoid typedefs conflicts. */
+#include "mozilla/Util.h"
+
 // Local Includes
 #include "nsGlobalWindow.h"
 #include "nsScreen.h"
@@ -4660,7 +4663,7 @@ nsGlobalWindow::MakeScriptDialogTitle(nsAString &aOutTitle)
               nsXPIDLString tempString;
               nsContentUtils::FormatLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
                                                     "ScriptDlgHeading",
-                                                    formatStrings, NS_ARRAY_LENGTH(formatStrings),
+                                                    formatStrings, ArrayLength(formatStrings),
                                                     tempString);
               aOutTitle = tempString;
             }

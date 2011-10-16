@@ -46,6 +46,7 @@
 
 #include "nsIClipboard.h"
 #include "nsContentCID.h"
+#include "nsFocusManager.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
@@ -1595,11 +1596,20 @@ nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos)
     domSel->RemoveRange(range);
   }
 
-  // XXX I'm not sure this can do synchronous scrolling. If the last param is
-  // set to true, this calling might flush the pending reflow. See bug 418470.
-  return frameSelection->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                                 nsISelectionController::SELECTION_FOCUS_REGION,
-                                                 0);
+  // Now that selection is done, move the focus to the selection.
+  nsFocusManager* DOMFocusManager = nsFocusManager::GetFocusManager();
+  if (DOMFocusManager) {
+    nsCOMPtr<nsIPresShell> shell = GetPresShell();
+    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDocument> doc = shell->GetDocument();
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+    nsCOMPtr<nsPIDOMWindow> window = doc->GetWindow();
+    nsCOMPtr<nsIDOMElement> result;
+    DOMFocusManager->MoveFocus(window, nsnull, nsIFocusManager::MOVEFOCUS_CARET,
+                               nsIFocusManager::FLAG_BYMOVEFOCUS, getter_AddRefs(result));
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

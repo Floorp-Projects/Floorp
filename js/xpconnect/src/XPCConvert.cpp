@@ -43,6 +43,8 @@
 
 /* Data conversion between native and JavaScript types. */
 
+#include "mozilla/Util.h"
+
 #include "xpcprivate.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -55,6 +57,8 @@
 
 #include "dombindings.h"
 #include "nsWrapperCacheInlines.h"
+
+using namespace mozilla;
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
@@ -708,7 +712,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             if (JSVAL_IS_VOID(s)) {
                 if (isDOMString) {
                     chars  = VOID_STRING;
-                    length = NS_ARRAY_LENGTH(VOID_STRING) - 1;
+                    length = ArrayLength(VOID_STRING) - 1;
                 } else {
                     chars = EMPTY_STRING;
                     length = 0;
