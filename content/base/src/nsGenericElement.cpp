@@ -1348,7 +1348,12 @@ PRUint32
 nsIContent::GetDesiredIMEState()
 {
   if (!IsEditableInternal()) {
-    return IME_STATUS_DISABLE;
+    // Check for the special case where we're dealing with elements which don't
+    // have the editable flag set, but are readwrite (such as text controls).
+    if (!IsElement() ||
+        !AsElement()->State().HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
+      return IME_STATUS_DISABLE;
+    }
   }
   // NOTE: The content for independent editors (e.g., input[type=text],
   // textarea) must override this method, so, we don't need to worry about
