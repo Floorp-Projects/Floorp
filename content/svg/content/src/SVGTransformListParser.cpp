@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "SVGTransformListParser.h"
 #include "SVGTransform.h"
 #include "prdtoa.h"
@@ -235,7 +237,7 @@ SVGTransformListParser::MatchTranslate()
   float t[2];
   PRUint32 count;
 
-  ENSURE_MATCHED(MatchNumberArguments(t, NS_ARRAY_LENGTH(t), &count));
+  ENSURE_MATCHED(MatchNumberArguments(t, ArrayLength(t), &count));
 
   switch (count) {
     case 1:
@@ -264,7 +266,7 @@ SVGTransformListParser::MatchScale()
   float s[2];
   PRUint32 count;
 
-  ENSURE_MATCHED(MatchNumberArguments(s, NS_ARRAY_LENGTH(s), &count));
+  ENSURE_MATCHED(MatchNumberArguments(s, ArrayLength(s), &count));
 
   switch (count) {
     case 1:
@@ -293,7 +295,7 @@ SVGTransformListParser::MatchRotate()
   float r[3];
   PRUint32 count;
 
-  ENSURE_MATCHED(MatchNumberArguments(r, NS_ARRAY_LENGTH(r), &count));
+  ENSURE_MATCHED(MatchNumberArguments(r, ArrayLength(r), &count));
 
   switch (count) {
     case 1:
@@ -366,7 +368,7 @@ SVGTransformListParser::MatchMatrix()
   float m[6];
   PRUint32 count;
 
-  ENSURE_MATCHED(MatchNumberArguments(m, NS_ARRAY_LENGTH(m), &count));
+  ENSURE_MATCHED(MatchNumberArguments(m, ArrayLength(m), &count));
 
   if (count != 6) {
     return NS_ERROR_FAILURE;

@@ -39,6 +39,8 @@
 
 /* Utilities for animation of computed style values */
 
+#include "mozilla/Util.h"
+
 #include "nsStyleAnimation.h"
 #include "nsCOMArray.h"
 #include "nsIStyleRule.h"
@@ -55,8 +57,7 @@
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
 
-namespace css = mozilla::css;
-namespace dom = mozilla::dom;
+using namespace mozilla;
 
 // HELPER METHODS
 // --------------
@@ -485,7 +486,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       }
 
       double squareDistance = 0.0;
-      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(nsCSSRect::sides); ++i) {
+      for (PRUint32 i = 0; i < ArrayLength(nsCSSRect::sides); ++i) {
         nsCSSValue nsCSSRect::*member = nsCSSRect::sides[i];
         NS_ABORT_IF_FALSE((rect1->*member).GetUnit() ==
                             (rect2->*member).GetUnit(),
@@ -637,7 +638,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           &nsCSSValuePairList::mXValue,
           &nsCSSValuePairList::mYValue,
         };
-        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(pairListValues); ++i) {
+        for (PRUint32 i = 0; i < ArrayLength(pairListValues); ++i) {
           const nsCSSValue &v1 = list1->*(pairListValues[i]);
           const nsCSSValue &v2 = list2->*(pairListValues[i]);
           nsCSSUnit unit =
@@ -1820,7 +1821,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       }
 
       nsAutoPtr<nsCSSRect> result(new nsCSSRect);
-      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(nsCSSRect::sides); ++i) {
+      for (PRUint32 i = 0; i < ArrayLength(nsCSSRect::sides); ++i) {
         nsCSSValue nsCSSRect::*member = nsCSSRect::sides[i];
         NS_ABORT_IF_FALSE((rect1->*member).GetUnit() ==
                             (rect2->*member).GetUnit(),
@@ -2035,7 +2036,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           &nsCSSValuePairList::mYValue,
         };
         PRUint32 restrictions = nsCSSProps::ValueRestrictions(aProperty);
-        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(pairListValues); ++i) {
+        for (PRUint32 i = 0; i < ArrayLength(pairListValues); ++i) {
           const nsCSSValue &v1 = list1->*(pairListValues[i]);
           const nsCSSValue &v2 = list2->*(pairListValues[i]);
           nsCSSValue &vr = item->*(pairListValues[i]);

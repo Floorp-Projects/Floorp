@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "txStylesheetCompiler.h"
 #include "txStylesheetCompileHandlers.h"
 #include "nsGkAtoms.h"
@@ -52,6 +54,8 @@
 #include "nsICategoryManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
+
+using namespace mozilla;
 
 txStylesheetCompiler::txStylesheetCompiler(const nsAString& aStylesheetURI,
                                            txACompileObserver* aObserver)
@@ -1021,7 +1025,7 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
 {
     if (kExtensionFunctions[0].mNamespaceID == kNameSpaceID_Unknown) {
         PRUint32 i;
-        for (i = 0; i < NS_ARRAY_LENGTH(kExtensionFunctions); ++i) {
+        for (i = 0; i < ArrayLength(kExtensionFunctions); ++i) {
             txFunctionFactoryMapping& mapping = kExtensionFunctions[i];
             NS_ConvertASCIItoUTF16 namespaceURI(mapping.mNamespaceURI);
             mapping.mNamespaceID =
@@ -1030,7 +1034,7 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
     }
 
     PRUint32 i;
-    for (i = 0; i < NS_ARRAY_LENGTH(kExtensionFunctions); ++i) {
+    for (i = 0; i < ArrayLength(kExtensionFunctions); ++i) {
         const txFunctionFactoryMapping& mapping = kExtensionFunctions[i];
         if (mapping.mNamespaceID == aNamespaceID) {
             return mapping.mFactory(aName, aNamespaceID, aState, aResult);

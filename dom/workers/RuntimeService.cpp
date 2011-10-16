@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "RuntimeService.h"
 
 #include "nsIDOMChromeWindow.h"
@@ -66,6 +68,8 @@
 #include "EventTarget.h"
 #include "Worker.h"
 #include "WorkerPrivate.h"
+
+using namespace mozilla;
 
 USING_WORKERS_NAMESPACE
 
@@ -837,7 +841,7 @@ RuntimeService::Init()
 
   mObserved = true;
 
-  for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(gPrefsToWatch); index++) {
+  for (PRUint32 index = 0; index < ArrayLength(gPrefsToWatch); index++) {
     if (NS_FAILED(Preferences::RegisterCallback(PrefCallback,
                                                 gPrefsToWatch[index], this))) {
       NS_WARNING("Failed to register pref callback?!");
@@ -952,7 +956,7 @@ RuntimeService::Cleanup()
   }
 
   if (mObserved) {
-    for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(gPrefsToWatch); index++) {
+    for (PRUint32 index = 0; index < ArrayLength(gPrefsToWatch); index++) {
       Preferences::UnregisterCallback(PrefCallback, gPrefsToWatch[index], this);
     }
 
