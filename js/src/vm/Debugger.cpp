@@ -50,6 +50,7 @@
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 
+#include "frontend/BytecodeCompiler.h"
 #include "frontend/CodeGenerator.h"
 #include "methodjit/Retcon.h"
 

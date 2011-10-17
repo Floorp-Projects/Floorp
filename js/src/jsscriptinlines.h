@@ -55,13 +55,6 @@
 
 namespace js {
 
-inline
-Bindings::Bindings(JSContext *cx)
-  : lastBinding(NULL), nargs(0), nvars(0), nupvars(0),
-    hasExtensibleParents(false)
-{
-}
-
 inline void
 Bindings::transfer(JSContext *cx, Bindings *bindings)
 {
