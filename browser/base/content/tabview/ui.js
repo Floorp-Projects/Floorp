@@ -295,7 +295,6 @@ let UI = {
         TabItems.saveAll();
         TabItems.saveAllThumbnails({synchronously: true});
 
-        Storage.saveActiveGroupName(gWindow);
         self._save();
       }, false);
 
