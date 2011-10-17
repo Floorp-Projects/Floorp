@@ -4811,7 +4811,7 @@ NewFunctionInfo(JSContext* cx,
   for (JSUint32 i = 0; i < argLength; ++i) {
     bool isEllipsis;
     if (!IsEllipsis(cx, argTypes[i], &isEllipsis))
-      return false;
+      return NULL;
     if (isEllipsis) {
       fninfo->mIsVariadic = true;
       if (i < 1) {
