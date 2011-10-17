@@ -89,6 +89,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
           this._messageManager.addMessageListener("SPPrefService", this);
           this._messageManager.addMessageListener("SPProcessCrashService", this);
           this._messageManager.addMessageListener("SPPingService", this);
+          this._messageManager.addMessageListener("SpecialPowers.Quit", this);
 
           this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
           this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);
@@ -170,6 +171,10 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
                   .messageManager
                   .sendAsyncMessage("SPPingService", { op: "pong" });
         }
+        break;
+      case "SpecialPowers.Quit":
+        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+        appStartup.quit(Ci.nsIAppStartup.eForceQuit);
         break;
       default:
         return this._receiveMessage(aMessage);

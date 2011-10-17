@@ -50,7 +50,7 @@ static void DeleteDirThreadFunc(void *arg)
 {
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_DELETEDIR> timer;
   nsIFile *dir = static_cast<nsIFile *>(arg);
-  dir->Remove(PR_TRUE);
+  dir->Remove(true);
   NS_RELEASE(dir);
 }
 

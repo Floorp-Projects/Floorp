@@ -60,8 +60,8 @@ namespace net {
 
 HttpChannelChild::HttpChannelChild()
   : HttpAsyncAborter<HttpChannelChild>(this)
-  , mIsFromCache(PR_FALSE)
-  , mCacheEntryAvailable(PR_FALSE)
+  , mIsFromCache(false)
+  , mCacheEntryAvailable(false)
   , mCacheExpirationTime(nsICache::NO_EXPIRATION_TIME)
   , mSendResumeAt(false)
   , mIPCOpen(false)
@@ -186,7 +186,7 @@ HttpChannelChild::AssociateApplicationCache(const nsCString &groupID,
   if (NS_FAILED(rv))
     return;
 
-  mLoadedFromApplicationCache = PR_TRUE;
+  mLoadedFromApplicationCache = true;
   mApplicationCache->InitAsHandle(groupID, clientID);
 }
 
@@ -303,7 +303,7 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
 
   // notify "http-on-examine-response" observers
   gHttpHandler->OnExamineResponse(this);
-  mTracingEnabled = PR_FALSE;
+  mTracingEnabled = false;
 
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
   if (NS_FAILED(rv)) {
@@ -471,7 +471,7 @@ HttpChannelChild::OnStopRequest(const nsresult& statusCode)
   LOG(("HttpChannelChild::OnStopRequest [this=%x status=%u]\n", 
            this, statusCode));
 
-  mIsPending = PR_FALSE;
+  mIsPending = false;
 
   if (!mCanceled && NS_SUCCEEDED(mStatus))
     mStatus = statusCode;
@@ -485,7 +485,7 @@ HttpChannelChild::OnStopRequest(const nsresult& statusCode)
 
     mListener = 0;
     mListenerContext = 0;
-    mCacheEntryAvailable = PR_FALSE;
+    mCacheEntryAvailable = false;
     if (mLoadGroup)
       mLoadGroup->RemoveRequest(this, nsnull, mStatus);
   }
@@ -647,7 +647,7 @@ HttpChannelChild::FailedAsyncOpen(const nsresult& status)
   LOG(("HttpChannelChild::FailedAsyncOpen [this=%p status=%x]\n", this, status));
 
   mStatus = status;
-  mIsPending = PR_FALSE;
+  mIsPending = false;
   // We're already being called from IPDL, therefore already "async"
   HandleAsyncAbort();
 }
@@ -757,8 +757,10 @@ HttpChannelChild::Redirect1Begin(const PRUint32& newChannelId,
   mResponseHead = new nsHttpResponseHead(responseHead);
   SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
-  bool preserveMethod = (mResponseHead->Status() == 307);
-  rv = SetupReplacementChannel(uri, newChannel, preserveMethod);
+  bool rewriteToGET = ShouldRewriteRedirectToGET(mResponseHead->Status(), 
+                                                 mRequestHead.Method());
+  
+  rv = SetupReplacementChannel(uri, newChannel, !rewriteToGET);
   if (NS_FAILED(rv)) {
     // Veto redirect.  nsHttpChannel decides to cancel or continue.
     OnRedirectVerifyCallback(rv);
@@ -863,8 +865,8 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
    * channel reflect AsyncOpen'ed state.
    */
 
-  mIsPending = PR_TRUE;
-  mWasOpened = PR_TRUE;
+  mIsPending = true;
+  mWasOpened = true;
   mListener = listener;
   mListenerContext = aContext;
 
@@ -1018,8 +1020,8 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   // notify "http-on-modify-request" observers
   gHttpHandler->OnModifyRequest(this);
 
-  mIsPending = PR_TRUE;
-  mWasOpened = PR_TRUE;
+  mIsPending = true;
+  mWasOpened = true;
   mListener = listener;
   mListenerContext = aContext;
 

@@ -69,13 +69,13 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
     if (aDirtyRect) {
         // If we get passed a dirty rect from layout, we can minimize the
         // shadow size and make painting faster.
-        mHasDirtyRect = PR_TRUE;
+        mHasDirtyRect = true;
         mDirtyRect = *aDirtyRect;
         gfxRect requiredBlurArea = mDirtyRect.Intersect(rect);
         requiredBlurArea.Inflate(aBlurRadius + aSpreadRadius);
         rect = requiredBlurArea.Intersect(rect);
     } else {
-        mHasDirtyRect = PR_FALSE;
+        mHasDirtyRect = false;
     }
 
     // Check rect empty after accounting for aDirtyRect, since that may have

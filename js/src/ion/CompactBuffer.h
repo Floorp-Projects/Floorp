@@ -42,7 +42,7 @@
 #ifndef jsion_compact_buffer_h__
 #define jsion_compact_buffer_h__
 
-#include "jsvector.h"
+#include "js/Vector.h"
 
 namespace js {
 namespace ion {

@@ -287,7 +287,7 @@ public:
 protected:
   /**
    * Updates the selected text in a combobox and then calls FireOnChange().
-   * Returns PR_FALSE if calling it destroyed |this|.
+   * Returns false if calling it destroyed |this|.
    */
   bool       UpdateSelection();
 
@@ -359,7 +359,7 @@ protected:
   /** 
    * For a given piece of content, it determines whether the 
    * content (an option) is selected or not.
-   * @return PR_TRUE if it is, PR_FALSE if it is NOT.
+   * @return true if it is, false if it is NOT.
    */
   bool     IsContentSelected(nsIContent* aContent) const;
 
@@ -441,7 +441,7 @@ protected:
 
   /**
    * Set to aPresContext->HasPendingInterrupt() at the start of Reflow.
-   * Set to PR_FALSE at the end of DidReflow.
+   * Set to false at the end of DidReflow.
    */
   bool mHasPendingInterruptAtStartOfReflow:1;
 

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "txExpr.h"
 #include "nsAutoPtr.h"
 #include "txNodeSet.h"
@@ -46,6 +48,8 @@
 #include <math.h>
 #include "txStringUtils.h"
 #include "txXMLUtils.h"
+
+using namespace mozilla;
 
 struct txCoreFunctionDescriptor
 {
@@ -270,7 +274,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             NS_ENSURE_SUCCESS(rv, rv);
 
             if (arg2.IsEmpty()) {
-                aContext->recycler()->getBoolResult(PR_TRUE, aResult);
+                aContext->recycler()->getBoolResult(true, aResult);
             }
             else {
                 nsAutoString arg1;
@@ -331,7 +335,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
             bool result = false;
             if (arg2.IsEmpty()) {
-                result = PR_TRUE;
+                result = true;
             }
             else {
                 nsAutoString arg1;
@@ -625,7 +629,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
         case _FALSE:
         {
-            aContext->recycler()->getBoolResult(PR_FALSE, aResult);
+            aContext->recycler()->getBoolResult(false, aResult);
 
             return NS_OK;
         }
@@ -641,7 +645,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             } while (!found && walker.moveToParent());
 
             if (!found) {
-                aContext->recycler()->getBoolResult(PR_FALSE, aResult);
+                aContext->recycler()->getBoolResult(false, aResult);
 
                 return NS_OK;
             }
@@ -672,7 +676,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
         case _TRUE:
         {
-            aContext->recycler()->getBoolResult(PR_TRUE, aResult);
+            aContext->recycler()->getBoolResult(true, aResult);
 
             return NS_OK;
         }
@@ -746,7 +750,7 @@ txCoreFunctionCall::isSensitiveTo(ContextSensitivity aContext)
     }
 
     NS_NOTREACHED("how'd we get here?");
-    return PR_TRUE;
+    return true;
 }
 
 // static
@@ -754,15 +758,15 @@ bool
 txCoreFunctionCall::getTypeFromAtom(nsIAtom* aName, eType& aType)
 {
     PRUint32 i;
-    for (i = 0; i < NS_ARRAY_LENGTH(descriptTable); ++i) {
+    for (i = 0; i < ArrayLength(descriptTable); ++i) {
         if (aName == *descriptTable[i].mName) {
             aType = static_cast<eType>(i);
 
-            return PR_TRUE;
+            return true;
         }
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 #ifdef TX_TO_STRING

@@ -357,25 +357,25 @@ bool
 gfxFT2LockedFace::GetFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aBuffer)
 {
     if (!mFace || !FT_IS_SFNT(mFace))
-        return PR_FALSE;
+        return false;
 
     FT_ULong length = 0;
     // TRUETYPE_TAG is defined equivalent to FT_MAKE_TAG
     FT_Error error = FT_Load_Sfnt_Table(mFace, aTag, 0, NULL, &length);
     if (error != 0)
-        return PR_FALSE;
+        return false;
 
     if (NS_UNLIKELY(length > static_cast<FallibleTArray<PRUint8>::size_type>(-1))
         || NS_UNLIKELY(!aBuffer.SetLength(length)))
-        return PR_FALSE;
+        return false;
         
     error = FT_Load_Sfnt_Table(mFace, aTag, 0, aBuffer.Elements(), &length);
     if (NS_UNLIKELY(error != 0)) {
         aBuffer.Clear();
-        return PR_FALSE;
+        return false;
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 PRUint32

@@ -119,10 +119,10 @@ private:
 class nsMediaQuery {
 public:
   nsMediaQuery()
-    : mNegated(PR_FALSE)
-    , mHasOnly(PR_FALSE)
-    , mTypeOmitted(PR_FALSE)
-    , mHadUnknownExpression(PR_FALSE)
+    : mNegated(false)
+    , mHasOnly(false)
+    , mTypeOmitted(false)
+    , mHadUnknownExpression(false)
   {
   }
 
@@ -141,10 +141,10 @@ private:
 
 public:
 
-  void SetNegated()                     { mNegated = PR_TRUE; }
-  void SetHasOnly()                     { mHasOnly = PR_TRUE; }
-  void SetTypeOmitted()                 { mTypeOmitted = PR_TRUE; }
-  void SetHadUnknownExpression()        { mHadUnknownExpression = PR_TRUE; }
+  void SetNegated()                     { mNegated = true; }
+  void SetHasOnly()                     { mHasOnly = true; }
+  void SetTypeOmitted()                 { mTypeOmitted = true; }
+  void SetHadUnknownExpression()        { mHadUnknownExpression = true; }
   void SetType(nsIAtom* aMediaType)     { 
                                           NS_ASSERTION(aMediaType,
                                                        "expected non-null");
@@ -205,11 +205,11 @@ public:
 
   PRInt32 Count() { return mArray.Length(); }
   nsMediaQuery* MediumAt(PRInt32 aIndex) { return mArray[aIndex]; }
-  void Clear() { mArray.Clear(); mIsEmpty = PR_TRUE; }
+  void Clear() { mArray.Clear(); mIsEmpty = true; }
   // a media list with no items may not represent the lack of a media
   // list; it could represent the empty string or something with parser
   // errors, which means that the media list should never match
-  void SetNonEmpty() { mIsEmpty = PR_FALSE; }
+  void SetNonEmpty() { mIsEmpty = false; }
 
 protected:
   ~nsMediaList();

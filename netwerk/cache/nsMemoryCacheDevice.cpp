@@ -62,7 +62,7 @@
 const char *gMemoryDeviceID      = "memory";
 
 nsMemoryCacheDevice::nsMemoryCacheDevice()
-    : mInitialized(PR_FALSE),
+    : mInitialized(false),
       mEvictionThreshold(PR_INT32_MAX),
       mHardLimit(4 * 1024 * 1024),       // default, if no pref
       mSoftLimit((mHardLimit * 9) / 10), // default, if no pref
@@ -130,7 +130,7 @@ nsMemoryCacheDevice::Shutdown()
     NS_ASSERTION(mInactiveSize == 0, "### mem cache leaking entries?");
     NS_ASSERTION(mEntryCount == 0, "### mem cache leaking entries?");
     
-    mInitialized = PR_FALSE;
+    mInitialized = false;
 
     return NS_OK;
 }

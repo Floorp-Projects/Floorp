@@ -46,7 +46,7 @@
 #include "nsIFrame.h"
 #include "nsBoxLayoutState.h"
 
-nsGridRow::nsGridRow():mIsBogus(PR_FALSE),
+nsGridRow::nsGridRow():mIsBogus(false),
                        mBox(nsnull), 
                        mFlex(-1),
                        mPref(-1),

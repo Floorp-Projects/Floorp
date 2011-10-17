@@ -78,9 +78,9 @@
 
 // XXX Need to rework this so that logging is free when it's off
 #ifdef NS_DEBUG
-#define NS_FRAME_TRACE_IN(_method) Trace(_method, PR_TRUE)
+#define NS_FRAME_TRACE_IN(_method) Trace(_method, true)
 
-#define NS_FRAME_TRACE_OUT(_method) Trace(_method, PR_FALSE)
+#define NS_FRAME_TRACE_OUT(_method) Trace(_method, false)
 
 // XXX remove me
 #define NS_FRAME_TRACE_MSG(_bit,_args)                          \
@@ -97,10 +97,10 @@
     }                                                           \
   PR_END_MACRO
 
-#define NS_FRAME_TRACE_REFLOW_IN(_method) Trace(_method, PR_TRUE)
+#define NS_FRAME_TRACE_REFLOW_IN(_method) Trace(_method, true)
 
 #define NS_FRAME_TRACE_REFLOW_OUT(_method, _status) \
-  Trace(_method, PR_FALSE, _status)
+  Trace(_method, false, _status)
 
 #else
 #define NS_FRAME_TRACE(_bits,_args)
@@ -406,9 +406,9 @@ public:
 
   // Helper function that tests if the frame tree is too deep; if it is
   // it marks the frame as "unflowable", zeroes out the metrics, sets
-  // the reflow status, and returns PR_TRUE. Otherwise, the frame is
+  // the reflow status, and returns true. Otherwise, the frame is
   // unmarked "unflowable" and the metrics and reflow status are not
-  // touched and PR_FALSE is returned.
+  // touched and false is returned.
   bool IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
                             nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus);
@@ -676,7 +676,7 @@ public:
    * See if style tree verification is enabled. To enable style tree
    * verification add "styleverifytree:1" to your NSPR_LOG_MODULES
    * environment variable (any non-zero debug level will work). Or,
-   * call SetVerifyStyleTreeEnable with PR_TRUE.
+   * call SetVerifyStyleTreeEnable with true.
    */
   static bool GetVerifyStyleTreeEnable();
 

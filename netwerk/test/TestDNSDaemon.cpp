@@ -235,7 +235,7 @@ main(int argc, char* argv[])
 	if(!strcmp(line, "quit") || !strcmp(line, "exit"))
 	  {
 	    fprintf(stderr, "bye now.\n");
-	    notDone = PR_FALSE;
+	    notDone = false;
 	  }
 	else if (!strncmp(line, "abort ", 6))
 	  {

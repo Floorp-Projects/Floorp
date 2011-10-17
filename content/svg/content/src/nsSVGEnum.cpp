@@ -78,7 +78,7 @@ nsSVGEnum::SetBaseValueString(const nsAString& aValue,
 
   while (mapping && mapping->mKey) {
     if (valAtom == *(mapping->mKey)) {
-      mIsBaseSet = PR_TRUE;
+      mIsBaseSet = true;
       if (mBaseVal != mapping->mVal) {
         mBaseVal = mapping->mVal;
         if (!mIsAnimated) {
@@ -126,7 +126,7 @@ nsSVGEnum::SetBaseValue(PRUint16 aValue,
 
   while (mapping && mapping->mKey) {
     if (mapping->mVal == aValue) {
-      mIsBaseSet = PR_TRUE;
+      mIsBaseSet = true;
       if (mBaseVal != PRUint8(aValue)) {
         mBaseVal = PRUint8(aValue);
         if (!mIsAnimated) {
@@ -150,7 +150,7 @@ void
 nsSVGEnum::SetAnimValue(PRUint16 aValue, nsSVGElement *aSVGElement)
 {
   mAnimVal = aValue;
-  mIsAnimated = PR_TRUE;
+  mIsAnimated = true;
   aSVGElement->DidAnimateEnum(mAttrEnum);
 }
 
@@ -187,7 +187,7 @@ nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
       nsSMILValue val(&SMILEnumType::sSingleton);
       val.mU.mUint = mapping->mVal;
       aValue = val;
-      aPreventCachingOfSandwich = PR_FALSE;
+      aPreventCachingOfSandwich = false;
       return NS_OK;
     }
     mapping++;
@@ -211,7 +211,7 @@ nsSVGEnum::SMILEnum::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
     mVal->SetAnimValue(mVal->mBaseVal, mSVGElement);
-    mVal->mIsAnimated = PR_FALSE;
+    mVal->mIsAnimated = false;
   }
 }
 

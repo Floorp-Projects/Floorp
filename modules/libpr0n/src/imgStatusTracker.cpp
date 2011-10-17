@@ -62,7 +62,7 @@ imgStatusTracker::imgStatusTracker(Image* aImage)
   : mImage(aImage),
     mState(0),
     mImageStatus(imgIRequest::STATUS_NONE),
-    mHadLastPart(PR_FALSE)
+    mHadLastPart(false)
 {}
 
 imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
@@ -113,7 +113,7 @@ class imgRequestNotifyRunnable : public nsRunnable
       imgStatusTracker& statusTracker = mRequest->GetStatusTracker();
 
       for (PRUint32 i = 0; i < mProxies.Length(); ++i) {
-        mProxies[i]->SetNotificationsDeferred(PR_FALSE);
+        mProxies[i]->SetNotificationsDeferred(false);
         statusTracker.SyncNotify(mProxies[i]);
       }
 
@@ -144,7 +144,7 @@ imgStatusTracker::Notify(imgRequest* request, imgRequestProxy* proxy)
   LOG_FUNC_WITH_PARAM(gImgLog, "imgStatusTracker::Notify async", "uri", spec.get());
 #endif
 
-  proxy->SetNotificationsDeferred(PR_TRUE);
+  proxy->SetNotificationsDeferred(true);
 
   // If we have an existing runnable that we can use, we just append this proxy
   // to its list of proxies to be notified. This ensures we don't unnecessarily
@@ -173,7 +173,7 @@ class imgStatusNotifyRunnable : public nsRunnable
 
     NS_IMETHOD Run()
     {
-      mProxy->SetNotificationsDeferred(PR_FALSE);
+      mProxy->SetNotificationsDeferred(false);
 
       mStatus.SyncNotify(mProxy);
       return NS_OK;
@@ -198,7 +198,7 @@ imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
   LOG_FUNC_WITH_PARAM(gImgLog, "imgStatusTracker::NotifyCurrentState", "uri", spec.get());
 #endif
 
-  proxy->SetNotificationsDeferred(PR_TRUE);
+  proxy->SetNotificationsDeferred(true);
 
   // We don't keep track of 
   nsCOMPtr<nsIRunnable> ev = new imgStatusNotifyRunnable(*this, proxy);
@@ -288,7 +288,7 @@ imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy, nsresult aStat
   }
 
   if (!(mState & stateRequestStopped)) {
-    aProxy->OnStopRequest(PR_TRUE);
+    aProxy->OnStopRequest(true);
   }
 }
 
@@ -305,7 +305,7 @@ imgStatusTracker::RecordLoaded()
   NS_ABORT_IF_FALSE(mImage, "RecordLoaded called before we have an Image");
   mState |= stateRequestStarted | stateHasSize | stateRequestStopped;
   mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE | imgIRequest::STATUS_LOAD_COMPLETE;
-  mHadLastPart = PR_TRUE;
+  mHadLastPart = true;
 }
 
 void

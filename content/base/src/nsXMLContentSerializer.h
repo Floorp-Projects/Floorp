@@ -209,8 +209,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * @param aURI the namespace URI we want aPrefix to point to
    * @param aElement the element we're working with (needed for proper default
    *                 namespace handling)
-   * @param aIsAttribute PR_TRUE if we're confirming a prefix for an attribute.
-   * @return PR_TRUE if we need to push the (prefix, uri) pair on the namespace
+   * @param aIsAttribute true if we're confirming a prefix for an attribute.
+   * @return true if we need to push the (prefix, uri) pair on the namespace
    *                 stack (note that this can happen even if the prefix is
    *                 empty).
    */
@@ -252,8 +252,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * It is called when the serialization of the start tag is asked 
    * (AppendElementStart)
    * In this method you can also force the formating
-   * by setting aForceFormat to PR_TRUE.
-   * @return boolean  PR_TRUE if the element can be output
+   * by setting aForceFormat to true.
+   * @return boolean  true if the element can be output
    */
   virtual bool CheckElementStart(nsIContent * aContent,
                                    bool & aForceFormat,
@@ -282,8 +282,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * It is called when the serialization of the end tag is asked 
    * (AppendElementEnd)
    * In this method you can also force the formating
-   * by setting aForceFormat to PR_TRUE.
-   * @return boolean  PR_TRUE if the element can be output
+   * by setting aForceFormat to true.
+   * @return boolean  true if the element can be output
    */
   virtual bool CheckElementEnd(nsIContent * aContent,
                                  bool & aForceFormat,
@@ -298,22 +298,22 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                                nsAString& aStr) { };
 
   /**
-   * Returns PR_TRUE if a line break should be inserted before an element open tag
+   * Returns true if a line break should be inserted before an element open tag
    */
   virtual bool LineBreakBeforeOpen(PRInt32 aNamespaceID, nsIAtom* aName);
 
   /**
-   * Returns PR_TRUE if a line break should be inserted after an element open tag
+   * Returns true if a line break should be inserted after an element open tag
    */
   virtual bool LineBreakAfterOpen(PRInt32 aNamespaceID, nsIAtom* aName);
 
   /**
-   * Returns PR_TRUE if a line break should be inserted after an element close tag
+   * Returns true if a line break should be inserted after an element close tag
    */
   virtual bool LineBreakBeforeClose(PRInt32 aNamespaceID, nsIAtom* aName);
 
   /**
-   * Returns PR_TRUE if a line break should be inserted after an element close tag
+   * Returns true if a line break should be inserted after an element close tag
    */
   virtual bool LineBreakAfterClose(PRInt32 aNamespaceID, nsIAtom* aName);
 

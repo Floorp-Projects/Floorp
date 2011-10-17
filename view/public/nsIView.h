@@ -238,9 +238,9 @@ public:
    * Called to query the z-index of a view.
    * The z-index is relative to all siblings of the view.
    * @result mZIndex: explicit z-index value or 0 if none is set
-   *         mIsAuto: PR_TRUE if the view is zindex:auto
+   *         mIsAuto: true if the view is zindex:auto
    *         mIsTopMost: used when this view is zindex:auto
-   *                     PR_TRUE if the view is topmost when compared
+   *                     true if the view is topmost when compared
    *                     with another z-index:auto view
    */
   nsViewZIndex GetZIndex() const { return nsViewZIndex((mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0,
@@ -253,7 +253,7 @@ public:
    * the view hierarchy that would geometrically intersect with
    * this view. This is a hack, but it fixes some problems with
    * views that need to be drawn in front of all other views.
-   * @result PR_TRUE if the view floats, PR_FALSE otherwise.
+   * @result true if the view floats, false otherwise.
    */
   bool GetFloating() const { return (mVFlags & NS_VIEW_FLAG_FLOATING) != 0; }
 
@@ -376,7 +376,7 @@ public:
   nsIWidget* GetWidget() const { return mWindow; }
 
   /**
-   * Returns PR_TRUE if the view has a widget associated with it.
+   * Returns true if the view has a widget associated with it.
    */
   bool HasWidget() const { return mWindow != nsnull; }
 

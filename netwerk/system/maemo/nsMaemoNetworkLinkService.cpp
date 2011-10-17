@@ -100,7 +100,7 @@ nsMaemoNetworkLinkService::Init(void)
   if (!observerService)
     return NS_ERROR_FAILURE;
 
-  nsresult rv = observerService->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+  nsresult rv = observerService->AddObserver(this, "xpcom-shutdown", false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!nsMaemoNetworkManager::Startup())

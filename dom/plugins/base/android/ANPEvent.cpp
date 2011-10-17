@@ -73,7 +73,7 @@ anp_event_postEvent(NPP inst, const ANPEvent* event)
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(inst->ndata);
   NPPluginFuncs* pluginFunctions = pinst->GetPlugin()->PluginFuncs();
   mozilla::AndroidBridge::Bridge()->PostToJavaThread(
-    new PluginEventRunnable(inst, const_cast<ANPEvent*>(event), pluginFunctions), PR_TRUE);
+    new PluginEventRunnable(inst, const_cast<ANPEvent*>(event), pluginFunctions), true);
   LOG("returning from %s", __PRETTY_FUNCTION__);
 }
 

@@ -67,7 +67,7 @@ public:
    *        string)
    * @param aPostDataStream the POST data to send
    * @param aHeadersDataStream ???
-   * @param aIsTrusted PR_FALSE if the triggerer is an untrusted DOM event.
+   * @param aIsTrusted false if the triggerer is an untrusted DOM event.
    */
   NS_IMETHOD OnLinkClick(nsIContent* aContent, 
                          nsIURI* aURI,

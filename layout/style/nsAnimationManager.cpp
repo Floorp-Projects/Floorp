@@ -444,7 +444,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
     const nsStyleDisplay *disp = aStyleContext->GetStyleDisplay();
     ElementAnimations *ea =
-      GetElementAnimations(aElement, aStyleContext->GetPseudoType(), PR_FALSE);
+      GetElementAnimations(aElement, aStyleContext->GetPseudoType(), false);
     if (!ea &&
         disp->mAnimations.Length() == 1 &&
         disp->mAnimations[0].GetName().IsEmpty()) {
@@ -521,7 +521,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       }
     } else {
       ea = GetElementAnimations(aElement, aStyleContext->GetPseudoType(),
-                                PR_TRUE);
+                                true);
     }
     ea->mAnimations.SwapElements(newAnimations);
     ea->mNeedsRefreshes = true;
@@ -557,7 +557,7 @@ public:
     NS_ABORT_IF_FALSE(0.0f <= key && key <= 1.0f, "out of range");
     return PLDHashNumber(key * PR_UINT32_MAX);
   }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   const float mValue;
@@ -829,7 +829,7 @@ nsAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
     "forbidden pseudo type");
 
   ElementAnimations *ea =
-    GetElementAnimations(aElement, aPseudoType, PR_FALSE);
+    GetElementAnimations(aElement, aPseudoType, false);
   if (!ea) {
     return nsnull;
   }

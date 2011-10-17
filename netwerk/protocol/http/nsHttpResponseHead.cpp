@@ -96,7 +96,7 @@ nsHttpResponseHead::Flatten(nsACString &buf, bool pruneTransients)
                NS_LITERAL_CSTRING("\r\n"));
 
     if (!pruneTransients) {
-        mHeaders.Flatten(buf, PR_FALSE);
+        mHeaders.Flatten(buf, false);
         return;
     }
 
@@ -365,14 +365,14 @@ nsHttpResponseHead::MustValidate()
     case 416:
     default:  // revalidate unknown error pages
         LOG(("Must validate since response is an uncacheable error page\n"));
-        return PR_TRUE;
+        return true;
     }
     
     // The no-cache response header indicates that we must validate this
     // cached response before reusing.
     if (NoCache()) {
         LOG(("Must validate since response contains 'no-cache' header\n"));
-        return PR_TRUE;
+        return true;
     }
 
     // Likewise, if the response is no-store, then we must validate this
@@ -381,7 +381,7 @@ nsHttpResponseHead::MustValidate()
     // to support File->SaveAs, View->PageSource, and other browser features.
     if (NoStore()) {
         LOG(("Must validate since response contains 'no-store' header\n"));
-        return PR_TRUE;
+        return true;
     }
 
     // Compare the Expires header to the Date header.  If the server sent an
@@ -389,11 +389,11 @@ nsHttpResponseHead::MustValidate()
     // cached response before reusing.
     if (ExpiresInPast()) {
         LOG(("Must validate since Expires < Date\n"));
-        return PR_TRUE;
+        return true;
     }
 
     LOG(("no mandatory validation requirement\n"));
-    return PR_FALSE;
+    return false;
 }
 
 bool
@@ -426,7 +426,7 @@ nsHttpResponseHead::ExpiresInPast()
     
     // Bug #203271. Ensure max-age directive takes precedence over Expires
     if (NS_SUCCEEDED(GetMaxAgeValue(&maxAgeVal))) {
-        return PR_FALSE;
+        return false;
     }
     
     return NS_SUCCEEDED(GetExpiresValue(&expiresVal)) &&
@@ -493,9 +493,9 @@ nsHttpResponseHead::Reset()
     mVersion = NS_HTTP_VERSION_1_1;
     mStatus = 200;
     mContentLength = LL_MAXUINT;
-    mCacheControlNoStore = PR_FALSE;
-    mCacheControlNoCache = PR_FALSE;
-    mPragmaNoCache = PR_FALSE;
+    mCacheControlNoStore = false;
+    mCacheControlNoCache = false;
+    mPragmaNoCache = false;
     mStatusText.Truncate();
     mContentType.Truncate();
     mContentCharset.Truncate();
@@ -509,7 +509,7 @@ nsHttpResponseHead::ParseDateHeader(nsHttpAtom header, PRUint32 *result)
         return NS_ERROR_NOT_AVAILABLE;
 
     PRTime time;
-    PRStatus st = PR_ParseTimeString(val, PR_TRUE, &time);
+    PRStatus st = PR_ParseTimeString(val, true, &time);
     if (st != PR_SUCCESS)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -556,7 +556,7 @@ nsHttpResponseHead::GetExpiresValue(PRUint32 *result)
         return NS_ERROR_NOT_AVAILABLE;
 
     PRTime time;
-    PRStatus st = PR_ParseTimeString(val, PR_TRUE, &time);
+    PRStatus st = PR_ParseTimeString(val, true, &time);
     if (st != PR_SUCCESS) {
         // parsing failed... RFC 2616 section 14.21 says we should treat this
         // as an expiration time in the past.
@@ -645,19 +645,19 @@ nsHttpResponseHead::ParseCacheControl(const char *val)
 {
     if (!(val && *val)) {
         // clear flags
-        mCacheControlNoCache = PR_FALSE;
-        mCacheControlNoStore = PR_FALSE;
+        mCacheControlNoCache = false;
+        mCacheControlNoStore = false;
         return;
     }
 
     // search header value for occurrence(s) of "no-cache" but ignore
     // occurrence(s) of "no-cache=blah"
     if (nsHttp::FindToken(val, "no-cache", HTTP_HEADER_VALUE_SEPS))
-        mCacheControlNoCache = PR_TRUE;
+        mCacheControlNoCache = true;
 
     // search header value for occurrence of "no-store" 
     if (nsHttp::FindToken(val, "no-store", HTTP_HEADER_VALUE_SEPS))
-        mCacheControlNoStore = PR_TRUE;
+        mCacheControlNoStore = true;
 }
 
 void
@@ -667,7 +667,7 @@ nsHttpResponseHead::ParsePragma(const char *val)
 
     if (!(val && *val)) {
         // clear no-cache flag
-        mPragmaNoCache = PR_FALSE;
+        mPragmaNoCache = false;
         return;
     }
 
@@ -675,5 +675,5 @@ nsHttpResponseHead::ParsePragma(const char *val)
     // a request header), caching is inhibited when this header is present so
     // as to match existing Navigator behavior.
     if (nsHttp::FindToken(val, "no-cache", HTTP_HEADER_VALUE_SEPS))
-        mPragmaNoCache = PR_TRUE;
+        mPragmaNoCache = true;
 }

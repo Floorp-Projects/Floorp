@@ -277,7 +277,7 @@ nsCommandManager::DoCommand(const char *aCommandName,
 nsresult
 nsCommandManager::IsCallerChrome(bool *is_caller_chrome)
 {
-  *is_caller_chrome = PR_FALSE;
+  *is_caller_chrome = false;
   nsresult rv = NS_OK;
   nsCOMPtr<nsIScriptSecurityManager> secMan = 
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);

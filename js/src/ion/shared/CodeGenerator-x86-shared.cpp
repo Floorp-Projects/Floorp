@@ -418,7 +418,8 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
           default:
             if (!mul->canOverflow() && constant > 0) {
                 // Use shift if cannot overflow and constant is power of 2
-                int32 shift = JS_FloorLog2(constant);
+                int32 shift;
+                JS_FLOOR_LOG2(shift, constant);
                 if ((1 << shift) == constant) {
                     masm.shll(Imm32(shift), ToRegister(lhs));
                     return true;

@@ -154,11 +154,11 @@ public:
     *                      if >=0 and aNode is not text, this represents a child node offset
     * @param aResultOffset - the character offset into the current
     *                        nsHyperTextAccessible
-    * @param aIsEndOffset - if PR_TRUE, then then this offset is not inclusive. The character
+    * @param aIsEndOffset - if true, then then this offset is not inclusive. The character
     *                       indicated by the offset returned is at [offset - 1]. This means
     *                       if the passed-in offset is really in a descendant, then the offset returned
     *                       will come just after the relevant embedded object characer.
-    *                       If PR_FALSE, then the offset is inclusive. The character indicated
+    *                       If false, then the offset is inclusive. The character indicated
     *                       by the offset returned is at [offset]. If the passed-in offset in inside a
     *                       descendant, then the returned offset will be on the relevant embedded object char.
     *
@@ -351,22 +351,15 @@ protected:
 
   // Selection helpers
 
-    /**
-   * Get the relevant selection interfaces and ranges for the current hyper
-   * text.
-   *
-   * @param aType    [in] the selection type
-   * @param aSelCon  [out, optional] the selection controller for the current
-   *                 hyper text
-   * @param aDomSel  [out, optional] the selection interface for the current
-   *                 hyper text
-   * @param aRanges  [out, optional] the selected ranges within the current
-   *                 subtree
+  /**
+   * Return frame selection object for the accessible.
    */
-  nsresult GetSelections(PRInt16 aType,
-                         nsISelectionController **aSelCon,
-                         nsISelection **aDomSel = nsnull,
-                         nsCOMArray<nsIDOMRange>* aRanges = nsnull);
+  virtual already_AddRefed<nsFrameSelection> FrameSelection();
+
+  /**
+   * Return selection ranges within the accessible subtree.
+   */
+  void GetSelectionDOMRanges(PRInt16 aType, nsCOMArray<nsIDOMRange>* aRanges);
 
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
 

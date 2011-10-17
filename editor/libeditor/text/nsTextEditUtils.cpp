@@ -72,8 +72,8 @@ bool
 nsTextEditUtils::IsMozBR(nsIDOMNode *node)
 {
   NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsMozBR");
-  if (IsBreak(node) && HasMozAttr(node)) return PR_TRUE;
-  return PR_FALSE;
+  if (IsBreak(node) && HasMozAttr(node)) return true;
+  return false;
 }
 
 
@@ -92,9 +92,9 @@ nsTextEditUtils::HasMozAttr(nsIDOMNode *node)
     nsAutoString typeAttrVal;
     nsresult res = elem->GetAttribute(NS_LITERAL_STRING("type"), typeAttrVal);
     if (NS_SUCCEEDED(res) && (typeAttrVal.LowerCaseEqualsLiteral("_moz")))
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 

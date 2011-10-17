@@ -153,7 +153,7 @@ class nsCSSScanner {
 
   // Set whether or not we are processing SVG
   void SetSVGMode(bool aSVGMode) {
-    NS_ASSERTION(aSVGMode == PR_TRUE || aSVGMode == PR_FALSE,
+    NS_ASSERTION(aSVGMode == true || aSVGMode == false,
                  "bad bool value");
     mSVGMode = aSVGMode;
   }
@@ -187,7 +187,7 @@ class nsCSSScanner {
 
   PRUint32 GetLineNumber() { return mLineNumber; }
 
-  // Get the next token. Return PR_FALSE on EOF. aTokenResult
+  // Get the next token. Return false on EOF. aTokenResult
   // is filled in with the data for the token.
   bool Next(nsCSSToken& aTokenResult);
 

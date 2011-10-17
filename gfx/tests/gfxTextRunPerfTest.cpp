@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
@@ -55,6 +57,8 @@
 #ifdef MOZ_WIDGET_GTK2
 #include "gtk/gtk.h"
 #endif
+
+using namespace mozilla;
 
 struct TestEntry {
   const char* mFamilies;
@@ -93,7 +97,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
                                               16.0,
                                               NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                                               0.0,
-                                              PR_FALSE, PR_FALSE, PR_FALSE,
+                                              false, false, false,
                                               NS_LITERAL_STRING(""),
                                               NS_LITERAL_STRING(""));
 
@@ -105,7 +109,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     bool isASCII = true;
     for (i = 0; test->mString[i]; ++i) {
         if (test->mString[i] & 0x80) {
-            isASCII = PR_FALSE;
+            isASCII = false;
         }
     }
     gfxTextRunFactory::Parameters params = {
@@ -161,7 +165,7 @@ main (int argc, char **argv) {
 
     for (PRUint32 i = 0; i < iterations; ++i) {
         for (uint test = 0;
-             test < NS_ARRAY_LENGTH(testList) - 1;
+             test < ArrayLength(testList) - 1;
              test++)
         {
             RunTest(&testList[test], context);

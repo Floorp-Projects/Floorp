@@ -119,7 +119,7 @@ public:
 
   // a readonly dataTransfer cannot have new data added or existing data removed.
   // Only the dropEffect and effectAllowed may be modified.
-  void SetReadOnly() { mReadOnly = PR_TRUE; }
+  void SetReadOnly() { mReadOnly = true; }
 
   // converts the data into an array of nsITransferable objects to be used for
   // drag and drop or clipboard operations.

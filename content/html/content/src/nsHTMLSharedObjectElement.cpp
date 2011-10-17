@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsGenericHTMLElement.h"
 #include "nsObjectLoadingContent.h"
 #include "nsGkAtoms.h"
@@ -55,6 +57,7 @@
 #undef GetObject
 #endif
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 class nsHTMLSharedObjectElement : public nsGenericHTMLElement
@@ -128,7 +131,7 @@ public:
 
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
-  void StartObjectLoad() { StartObjectLoad(PR_TRUE); }
+  void StartObjectLoad() { StartObjectLoad(true); }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLSharedObjectElement,
                                                      nsGenericHTMLElement)
@@ -201,7 +204,7 @@ nsresult
 nsHTMLSharedObjectElement::DoneAddingChildren(bool aHaveNotified)
 {
   if (!mIsDoneAddingChildren) {
-    mIsDoneAddingChildren = PR_TRUE;
+    mIsDoneAddingChildren = true;
 
     // If we're already in a document, we need to trigger the load
     // Otherwise, BindToTree takes care of that.
@@ -310,7 +313,7 @@ nsHTMLSharedObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
       aNameSpaceID == kNameSpaceID_None && aName == URIAttrName()) {
     nsCAutoString type;
     GetTypeAttrValue(type);
-    LoadObject(aValue, aNotify, type, PR_TRUE);
+    LoadObject(aValue, aNotify, type, true);
   }
 
   return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
@@ -329,10 +332,10 @@ nsHTMLSharedObjectElement::IsHTMLFocusable(bool aWithMouse,
       GetTabIndex(aTabIndex);
     }
 
-    *aIsFocusable = PR_TRUE;
+    *aIsFocusable = true;
 
     // Let the plugin decide, so override.
-    return PR_TRUE;
+    return true;
   }
 
   return nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex);
@@ -394,7 +397,7 @@ nsHTMLSharedObjectElement::ParseAttribute(PRInt32 aNamespaceID,
       return ParseAlignValue(aValue, aResult);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
-      return PR_TRUE;
+      return true;
     }
   }
 
@@ -438,7 +441,7 @@ nsHTMLSharedObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
     sImageAlignAttributeMap,
   };
 
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
 }
 
 
@@ -468,7 +471,7 @@ nsHTMLSharedObjectElement::StartObjectLoad(bool aNotify)
   else {
     LoadObject(uri, aNotify, type);
   }
-  SetIsNetworkCreated(PR_FALSE);
+  SetIsNetworkCreated(false);
 }
 
 nsEventStates

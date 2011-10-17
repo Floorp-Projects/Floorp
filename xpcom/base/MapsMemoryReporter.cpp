@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "mozilla/MapsMemoryReporter.h"
 #include "nsIMemoryReporter.h"
 #include "nsString.h"
@@ -100,13 +102,24 @@ void GetDirname(const nsCString &aPath, nsACString &aOut)
 
 void GetBasename(const nsCString &aPath, nsACString &aOut)
 {
+  nsCString out;
   PRInt32 idx = aPath.RFind("/");
   if (idx == -1) {
-    aOut.Assign(aPath);
+    out.Assign(aPath);
   }
   else {
-    aOut.Assign(Substring(aPath, idx + 1));
+    out.Assign(Substring(aPath, idx + 1));
   }
+
+  // On Android, some entries in /dev/ashmem end with "(deleted)" (e.g.
+  // "/dev/ashmem/libxul.so(deleted)").  We don't care about this modifier, so
+  // cut it off when getting the entry's basename.
+  if (EndsWithLiteral(out, "(deleted)")) {
+    out.Assign(Substring(out, 0, out.RFind("(deleted)")));
+  }
+  out.StripChars(" ");
+
+  aOut.Assign(out);
 }
 
 // MapsReporter::CollectReports uses this stuct to keep track of whether it's
@@ -164,6 +177,7 @@ private:
                nsISupports *aClosure,
                CategoriesSeen *aCategoriesSeen);
 
+  bool mSearchedForLibxul;
   nsCString mLibxulDir;
   nsCStringHashSet mMozillaLibraries;
 };
@@ -171,8 +185,9 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS1(MapsReporter, nsIMemoryMultiReporter)
 
 MapsReporter::MapsReporter()
+  : mSearchedForLibxul(false)
 {
-  const PRUint32 len = NS_ARRAY_LENGTH(mozillaLibraries);
+  const PRUint32 len = ArrayLength(mozillaLibraries);
   mMozillaLibraries.Init(len);
   for (PRUint32 i = 0; i < len; i++) {
     nsCAutoString str;
@@ -222,12 +237,18 @@ MapsReporter::CollectReports(nsIMemoryMultiReporterCallback *aCallback,
 nsresult
 MapsReporter::FindLibxul()
 {
+  if (mSearchedForLibxul)
+    return NS_OK;
+
+  mSearchedForLibxul = true;
+
   mLibxulDir.Truncate();
 
   // Note that we're scanning /proc/self/*maps*, not smaps, here.
   FILE *f = fopen("/proc/self/maps", "r");
-  if (!f)
+  if (!f) {
     return NS_ERROR_FAILURE;
+  }
 
   while (true) {
     // Skip any number of non-slash characters, then capture starting with the
@@ -266,9 +287,9 @@ MapsReporter::ParseMapping(
   PR_STATIC_ASSERT(sizeof(long long) == sizeof(PRInt64));
   PR_STATIC_ASSERT(sizeof(int) == sizeof(PRInt32));
 
-  if (mLibxulDir.IsEmpty()) {
-    NS_ENSURE_SUCCESS(FindLibxul(), NS_ERROR_FAILURE);
-  }
+  // Don't bail if FindLibxul fails.  We can still gather meaningful stats
+  // here.
+  FindLibxul();
 
   // The first line of an entry in /proc/self/smaps looks just like an entry
   // in /proc/maps:
@@ -362,8 +383,6 @@ MapsReporter::GetReporterNameAndDescription(
                  "syscall.");
   }
   else if (!basename.IsEmpty()) {
-    NS_ASSERTION(!mLibxulDir.IsEmpty(), "mLibxulDir should not be empty.");
-
     nsCAutoString dirname;
     GetDirname(absPath, dirname);
 
@@ -372,7 +391,8 @@ MapsReporter::GetReporterNameAndDescription(
     if (EndsWithLiteral(basename, ".so") ||
         (basename.Find(".so") != -1 && dirname.Find("/lib") != -1)) {
       aName.Append("shared-libraries/");
-      if (dirname.Equals(mLibxulDir) || mMozillaLibraries.Contains(basename)) {
+      if ((!mLibxulDir.IsEmpty() && dirname.Equals(mLibxulDir)) ||
+          mMozillaLibraries.Contains(basename)) {
         aName.Append("shared-libraries-mozilla/");
       }
       else {
@@ -463,19 +483,19 @@ MapsReporter::ParseMapBody(
   const char* category;
   if (strcmp(desc, "Size") == 0) {
     category = "vsize";
-    aCategoriesSeen->mSeenVsize = PR_TRUE;
+    aCategoriesSeen->mSeenVsize = true;
   }
   else if (strcmp(desc, "Rss") == 0) {
     category = "resident";
-    aCategoriesSeen->mSeenResident = PR_TRUE;
+    aCategoriesSeen->mSeenResident = true;
   }
   else if (strcmp(desc, "Pss") == 0) {
     category = "pss";
-    aCategoriesSeen->mSeenPss = PR_TRUE;
+    aCategoriesSeen->mSeenPss = true;
   }
   else if (strcmp(desc, "Swap") == 0) {
     category = "swap";
-    aCategoriesSeen->mSeenSwap = PR_TRUE;
+    aCategoriesSeen->mSeenSwap = true;
   }
   else {
     // Don't report this category.

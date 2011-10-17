@@ -157,7 +157,7 @@ public:
    *
    * @param aDocument The document being observed
    * @param aStyleSheet the StyleSheet that has changed state
-   * @param aApplicable PR_TRUE if the sheet is applicable, PR_FALSE if
+   * @param aApplicable true if the sheet is applicable, false if
    *        it is not applicable
    */
   virtual void StyleSheetApplicableStateChanged(nsIDocument *aDocument,

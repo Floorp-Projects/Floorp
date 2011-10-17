@@ -45,7 +45,7 @@ Spinner::HandleResult(mozIStorageResultSet *aResultSet)
   do_check_eq(row->AsSharedBlob(0, &len), nsnull);
   do_check_eq(len, 0);
 
-  do_check_eq(row->IsNull(0), PR_TRUE);
+  do_check_eq(row->IsNull(0), true);
   return NS_OK;
 }
 
@@ -77,7 +77,7 @@ test_NULLFallback()
   len = 100;
   do_check_eq(stmt->AsSharedBlob(0, &len), nsnull);
   do_check_eq(len, 0);
-  do_check_eq(stmt->IsNull(0), PR_TRUE);
+  do_check_eq(stmt->IsNull(0), true);
 
   do_check_eq(valueArray->AsInt32(0), 0);
   do_check_eq(valueArray->AsInt64(0), 0);
@@ -91,7 +91,7 @@ test_NULLFallback()
   len = 100;
   do_check_eq(valueArray->AsSharedBlob(0, &len), nsnull);
   do_check_eq(len, 0);
-  do_check_eq(valueArray->IsNull(0), PR_TRUE);
+  do_check_eq(valueArray->IsNull(0), true);
 }
 
 void

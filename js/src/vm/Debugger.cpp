@@ -45,7 +45,6 @@
 #include "jsemit.h"
 #include "jsgcmark.h"
 #include "jsobj.h"
-#include "jstl.h"
 #include "jswrapper.h"
 #include "jsarrayinlines.h"
 #include "jsinterpinlines.h"
@@ -2806,10 +2805,7 @@ DebuggerFrameEval(JSContext *cx, uintN argc, Value *vp, EvalBindingsMode mode)
     if (!ac.enter())
         return false;
 
-    /* Get a scope object. */
-    if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj() && !CreateFunCallObject(cx, fp))
-        return false;
-    JSObject *scobj = GetScopeChain(cx, fp);
+    JSObject *scobj = JS_GetFrameScopeChain(cx, Jsvalify(fp));
     if (!scobj)
         return false;
 

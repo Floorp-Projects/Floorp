@@ -76,7 +76,7 @@ nsresult TestGetURL(const nsCString& aURL)
   rv = xhr->Init(systemPrincipal, nsnull, nsnull, nsnull);
   TEST_ENSURE_SUCCESS(rv, "Couldn't initialize the XHR!");
 
-  rv = xhr->Open(getString, aURL, PR_FALSE, empty, empty);
+  rv = xhr->Open(getString, aURL, false, empty, empty);
   TEST_ENSURE_SUCCESS(rv, "OpenRequest failed!");
 
   rv = xhr->Send(nsnull);

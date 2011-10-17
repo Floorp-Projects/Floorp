@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSVGAElement.h"
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGAElement.h"
@@ -45,10 +47,12 @@
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 
+using namespace mozilla;
+
 nsSVGElement::StringInfo nsSVGAElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE },
-  { &nsGkAtoms::target, kNameSpaceID_None, PR_TRUE }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, true },
+  { &nsGkAtoms::target, kNameSpaceID_None, true }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(A)
@@ -189,7 +193,7 @@ nsSVGAElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap
   };
 
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGAElementBase::IsAttributeMapped(name);
 }
 
@@ -201,14 +205,14 @@ nsSVGAElement::IsFocusable(PRInt32 *aTabIndex, bool aWithMouse)
     if (aTabIndex) {
       *aTabIndex = ((sTabFocusModel & eTabFocus_linksMask) == 0 ? -1 : 0);
     }
-    return PR_TRUE;
+    return true;
   }
 
   if (aTabIndex) {
     *aTabIndex = -1;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -222,7 +226,7 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
   //   xlink:actuate - must be unset or set to "" or "onRequest"
   //
   // For any other values, we're either not a *clickable* XLink, or the end
-  // result is poorly specified. Either way, we return PR_FALSE.
+  // result is poorly specified. Either way, we return false.
 
   static nsIContent::AttrValuesArray sTypeVals[] =
     { &nsGkAtoms::_empty, &nsGkAtoms::simple, nsnull };
@@ -257,7 +261,7 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
   }
 
   *aURI = nsnull;
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -335,5 +339,5 @@ nsSVGElement::StringAttributesInfo
 nsSVGAElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }

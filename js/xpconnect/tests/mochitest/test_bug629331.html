@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=629331
+-->
+<head>
+  <title>Test for Bug 629331</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=629331">Mozilla Bug 629331</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function handler(event) {
+    var obj = JSON.parse(event.data);
+    if (obj.fun == "finish") {
+        SimpleTest.finish();
+    } else {
+        is(obj.a, obj.b, obj.description);
+    }
+}
+
+window.addEventListener('message', handler, false);
+
+</script>
+<iframe src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/test1_bug629331.html">
+</iframe>
+</pre>
+</body>
+</html>

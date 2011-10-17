@@ -83,7 +83,7 @@ ChangeCSSInlineStyleTxn::ValueIncludes(const nsAString &aValueList, const nsAStr
     }
     end = start;
 
-    while ((kNullCh != *end) && (PR_FALSE == nsCRT::IsAsciiSpace(*end))) { // look for space or end
+    while ((kNullCh != *end) && (false == nsCRT::IsAsciiSpace(*end))) { // look for space or end
       end++;
     }
     *end = kNullCh; // end string here
@@ -91,14 +91,14 @@ ChangeCSSInlineStyleTxn::ValueIncludes(const nsAString &aValueList, const nsAStr
     if (start < end) {
       if (aCaseSensitive) {
         if (!nsCRT::strcmp(value, start)) {
-          result = PR_TRUE;
+          result = true;
           break;
         }
       }
       else {
         if (nsDependentString(value).Equals(nsDependentString(start),
                                             nsCaseInsensitiveStringComparator())) {
-          result = PR_TRUE;
+          result = true;
           break;
         }
       }
@@ -126,7 +126,7 @@ ChangeCSSInlineStyleTxn::RemoveValueFromListOfValues(nsAString & aValues, const 
     }
     end = start;
 
-    while ((kNullCh != *end) && (PR_FALSE == nsCRT::IsAsciiSpace(*end))) { // look for space or end
+    while ((kNullCh != *end) && (false == nsCRT::IsAsciiSpace(*end))) { // look for space or end
       end++;
     }
     *end = kNullCh; // end string here
@@ -163,8 +163,8 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::Init(nsIEditor      *aEditor,
   NS_ADDREF(mProperty);
   mValue.Assign(aValue);
   mRemoveProperty = aRemoveProperty;
-  mUndoAttributeWasSet = PR_FALSE;
-  mRedoAttributeWasSet = PR_FALSE;
+  mUndoAttributeWasSet = false;
+  mRedoAttributeWasSet = false;
   mUndoValue.Truncate();
   mRedoValue.Truncate();
   return NS_OK;
@@ -255,7 +255,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
     NS_ENSURE_SUCCESS(result, result);     
   }
   else
-    mRedoAttributeWasSet = PR_TRUE;
+    mRedoAttributeWasSet = true;
 
   return cssDecl->GetPropertyValue(propertyNameString, mRedoValue);
 }
@@ -338,7 +338,7 @@ ChangeCSSInlineStyleTxn::AddValueToMultivalueProperty(nsAString & aValues, const
     // the list of values is empty of the value is 'none'
     aValues.Assign(aNewValue);
   }
-  else if (!ValueIncludes(aValues, aNewValue, PR_FALSE)) {
+  else if (!ValueIncludes(aValues, aNewValue, false)) {
     // we already have another value but not this one; add it
     aValues.Append(PRUnichar(' '));
     aValues.Append(aNewValue);

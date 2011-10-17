@@ -198,7 +198,7 @@ SVGAnimatedPointList::
     list->SetInfo(mElement);
     aValue.Swap(val);
   }
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
   return rv;
 }
 

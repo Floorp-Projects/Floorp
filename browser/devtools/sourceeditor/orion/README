@@ -8,8 +8,8 @@ The Orion editor web site: http://www.eclipse.org/orion
 
 To upgrade Orion to a newer version see the UPGRADE file.
 
-Orion version: git clone from 2011-07-06 (after the 0.2 release)
-               commit hash b19bc0b0f4e2843823bb1b8c8b4a64395c59e617
+Orion version: git clone from 2011-10-07
+               commit hash eedba6403b6dff4536bc0469d31126c3485deb56
 
 # License
 

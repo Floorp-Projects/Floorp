@@ -454,7 +454,7 @@ Connection::Connection(Service *aService,
 , threadOpenedOn(do_GetCurrentThread())
 , mDBConn(nsnull)
 , mAsyncExecutionThreadShuttingDown(false)
-, mTransactionInProgress(PR_FALSE)
+, mTransactionInProgress(false)
 , mProgressHandler(nsnull)
 , mFlags(aFlags)
 , mStorageService(aService)
@@ -665,11 +665,11 @@ Connection::databaseElementExists(enum DatabaseElementType aElementType,
   (void)::sqlite3_finalize(stmt);
 
   if (srv == SQLITE_ROW) {
-    *_exists = PR_TRUE;
+    *_exists = true;
     return NS_OK;
   }
   if (srv == SQLITE_DONE) {
-    *_exists = PR_FALSE;
+    *_exists = false;
     return NS_OK;
   }
 
@@ -1095,7 +1095,7 @@ Connection::BeginTransactionAs(PRInt32 aTransactionType)
       return NS_ERROR_ILLEGAL_VALUE;
   }
   if (NS_SUCCEEDED(rv))
-    mTransactionInProgress = PR_TRUE;
+    mTransactionInProgress = true;
   return rv;
 }
 
@@ -1111,7 +1111,7 @@ Connection::CommitTransaction()
 
   nsresult rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("COMMIT TRANSACTION"));
   if (NS_SUCCEEDED(rv))
-    mTransactionInProgress = PR_FALSE;
+    mTransactionInProgress = false;
   return rv;
 }
 
@@ -1127,7 +1127,7 @@ Connection::RollbackTransaction()
 
   nsresult rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("ROLLBACK TRANSACTION"));
   if (NS_SUCCEEDED(rv))
-    mTransactionInProgress = PR_FALSE;
+    mTransactionInProgress = false;
   return rv;
 }
 

@@ -120,7 +120,7 @@ class Factory : public nsIFactory
 public:
   NS_DECL_ISUPPORTS
 
-  Factory() : mFirstComponentCreated(PR_FALSE) { }
+  Factory() : mFirstComponentCreated(false) { }
 
   NS_IMETHOD CreateInstance(nsISupports* aDelegate,
                             const nsIID& aIID,
@@ -187,7 +187,7 @@ Factory::CreateInstance(nsISupports* aDelegate,
   {
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
-    gCreateInstanceCalled = PR_TRUE;
+    gCreateInstanceCalled = true;
     mon.Notify();
 
     mon.Wait(PR_MillisecondsToInterval(3000));
@@ -217,7 +217,7 @@ class Runnable : public nsRunnable
 public:
   NS_DECL_NSIRUNNABLE
 
-  Runnable() : mFirstRunnableDone(PR_FALSE) { }
+  Runnable() : mFirstRunnableDone(false) { }
 
   bool mFirstRunnableDone;
 };
@@ -298,7 +298,7 @@ int main(int argc, char** argv)
   {
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
-    gMainThreadWaiting = PR_TRUE;
+    gMainThreadWaiting = true;
     mon.Notify();
 
     while (!gCreateInstanceCalled) {
@@ -310,8 +310,8 @@ int main(int argc, char** argv)
   NS_ENSURE_SUCCESS(rv, 1);
 
   // Reset for the contractID test
-  gMainThreadWaiting = gCreateInstanceCalled = PR_FALSE;
-  gFactory->mFirstComponentCreated = runnable->mFirstRunnableDone = PR_TRUE;
+  gMainThreadWaiting = gCreateInstanceCalled = false;
+  gFactory->mFirstComponentCreated = runnable->mFirstRunnableDone = true;
   component = nsnull;
 
   rv = newThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
@@ -320,7 +320,7 @@ int main(int argc, char** argv)
   {
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
-    gMainThreadWaiting = PR_TRUE;
+    gMainThreadWaiting = true;
     mon.Notify();
 
     while (!gCreateInstanceCalled) {

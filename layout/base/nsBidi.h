@@ -197,15 +197,15 @@ typedef enum nsBidiDirection nsBidiDirection;
 /* additional macros used by constructor - always allow allocation */
 #define GETINITIALDIRPROPSMEMORY(length) \
                                          GetMemory((void **)&mDirPropsMemory, &mDirPropsSize, \
-                                         PR_TRUE, (length))
+                                         true, (length))
 
 #define GETINITIALLEVELSMEMORY(length) \
                                        GetMemory((void **)&mLevelsMemory, &mLevelsSize, \
-                                       PR_TRUE, (length))
+                                       true, (length))
 
 #define GETINITIALRUNSMEMORY(length) \
                                      GetMemory((void **)&mRunsMemory, &mRunsSize, \
-                                     PR_TRUE, (length)*sizeof(Run))
+                                     true, (length)*sizeof(Run))
 
 /*
  * Sometimes, bit values are more appropriate
@@ -385,7 +385,7 @@ typedef PRUint8 DirProp;
 #define UTF_APPEND_CHAR_UNSAFE(s, i, c)              UTF16_APPEND_CHAR_UNSAFE(s, i, c)
 #define UTF_APPEND_CHAR_SAFE(s, i, length, c)        UTF16_APPEND_CHAR_SAFE(s, i, length, c)
 
-#define UTF_PREV_CHAR(s, start, i, c)                UTF_PREV_CHAR_SAFE(s, start, i, c, PR_FALSE)
+#define UTF_PREV_CHAR(s, start, i, c)                UTF_PREV_CHAR_SAFE(s, start, i, c, false)
 #define UTF_BACK_1(s, start, i)                      UTF_BACK_1_SAFE(s, start, i)
 #define UTF_BACK_N(s, start, i, n)                   UTF_BACK_N_SAFE(s, start, i, n)
 #define UTF_APPEND_CHAR(s, i, length, c)             UTF_APPEND_CHAR_SAFE(s, i, length, c)

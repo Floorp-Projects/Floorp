@@ -214,7 +214,7 @@ TestWriteObject() {
     return rv;
   }
   nsCOMPtr<nsISupports> objQI(do_QueryInterface(obj));
-  rv = objectOutput->WriteObject(objQI, PR_TRUE);
+  rv = objectOutput->WriteObject(objQI, true);
   if (NS_FAILED(rv)) {
     fail("failed to write object");
     return rv;
@@ -253,7 +253,7 @@ TestWriteObject() {
   buf2.forget();
 
   nsCOMPtr<nsISupports> deserialized;
-  rv = objectInput->ReadObject(PR_TRUE, getter_AddRefs(deserialized));
+  rv = objectInput->ReadObject(true, getter_AddRefs(deserialized));
   if (NS_FAILED(rv)) {
     fail("failed to read object");
     return rv;

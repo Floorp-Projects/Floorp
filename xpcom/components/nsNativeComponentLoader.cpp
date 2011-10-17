@@ -184,7 +184,7 @@ nsNativeModuleLoader::LoadModule(nsILocalFile* aFile)
     if (env && *env && (blist = strdup(env))) {
         char *nextTok = blist;
         while (char *token = NS_strtok(":", &nextTok)) {
-            if (leafName.Find(token, PR_TRUE) != kNotFound) {
+            if (leafName.Find(token, true) != kNotFound) {
                 NS_BREAK();
             }
         }
@@ -244,7 +244,7 @@ nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
     }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
+    nsTraceRefcntImpl::SetActivityIsLegal(false);
 #endif
 
 #if 0
@@ -255,7 +255,7 @@ nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
 #endif
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
+    nsTraceRefcntImpl::SetActivityIsLegal(true);
 #endif
 
     return PL_DHASH_REMOVE;

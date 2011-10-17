@@ -49,7 +49,7 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
 
-  memset(aBreakBefore, PR_FALSE, aLength * sizeof(PRUint8));
+  memset(aBreakBefore, false, aLength * sizeof(PRUint8));
 
   nsAutoTArray<PangoLogAttr, 2000> attrBuffer;
   if (!attrBuffer.AppendElements(aLength + 1))
@@ -72,7 +72,7 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
     {
       aBreakBefore[u16Offset] = attr->is_line_break;
       if (NS_IS_LOW_SURROGATE(aText[u16Offset]))
-        aBreakBefore[++u16Offset] = PR_FALSE; // Skip high surrogate
+        aBreakBefore[++u16Offset] = false; // Skip high surrogate
       ++u16Offset;
 
       bool err;

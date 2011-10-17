@@ -114,7 +114,7 @@ extern bool EnsureNSSInitialized(EnsureNSSOperator op);
 class PSMContentDownloader : public nsIStreamListener
 {
 public:
-  PSMContentDownloader() {NS_ASSERTION(PR_FALSE, "don't use this constructor."); }
+  PSMContentDownloader() {NS_ASSERTION(false, "don't use this constructor."); }
   PSMContentDownloader(PRUint32 type);
   virtual ~PSMContentDownloader();
   void setSilentDownload(bool flag);
@@ -403,7 +403,7 @@ class nsPSMInitPanic
 private:
   static bool isPanic;
 public:
-  static void SetPanic() {isPanic = PR_TRUE;}
+  static void SetPanic() {isPanic = true;}
   static bool GetPanic() {return isPanic;}
 };
 

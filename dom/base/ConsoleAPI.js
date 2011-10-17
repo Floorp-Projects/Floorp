@@ -207,7 +207,7 @@ ConsoleAPI.prototype = {
       switch (spec[spec.length-1]) {
         case "o":
         case "s":
-          return args.shift().toString();
+          return String(args.shift());
         case "d":
         case "i":
           return parseInt(args.shift());

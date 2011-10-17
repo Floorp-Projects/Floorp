@@ -1531,7 +1531,7 @@ public class GeckoAppShell
 
     static int kPreferedFps = 25;
     static byte[] sCameraBuffer = null;
- 
+
     static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
         Log.i("GeckoAppJava", "initCamera(" + aContentType + ", " + aWidth + "x" + aHeight + ") on thread " + Thread.currentThread().getId());
 
@@ -1585,13 +1585,22 @@ public class GeckoAppShell
                 }
             }
 
+            try {
+                sCamera.setPreviewDisplay(GeckoApp.cameraView.getHolder());
+            } catch(IOException e) {
+                Log.e("GeckoAppJava", "Error setPreviewDisplay:", e);
+            } catch(RuntimeException e) {
+                Log.e("GeckoAppJava", "Error setPreviewDisplay:", e);
+            }
+
             sCamera.setParameters(params);
             sCameraBuffer = new byte[(bufferSize * 12) / 8];
             sCamera.addCallbackBuffer(sCameraBuffer);
             sCamera.setPreviewCallbackWithBuffer(new android.hardware.Camera.PreviewCallback() {
                 public void onPreviewFrame(byte[] data, android.hardware.Camera camera) {
                     cameraCallbackBridge(data);
-                    sCamera.addCallbackBuffer(sCameraBuffer);
+                    if (sCamera != null)
+                        sCamera.addCallbackBuffer(sCameraBuffer);
                 }
             });
             sCamera.startPreview();

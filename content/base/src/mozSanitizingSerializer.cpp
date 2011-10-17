@@ -110,7 +110,7 @@ mozSanitizingHTMLSerializer::ReleaseProperties(nsHashKey* key, void* data,
 {
   nsIProperties* prop = (nsIProperties*)data;
   NS_IF_RELEASE(prop);
-  return PR_TRUE;
+  return true;
 }
 //</copy>
 
@@ -136,7 +136,7 @@ mozSanitizingHTMLSerializer::Initialize(nsAString* aOutString,
                                         PRUint32 aFlags,
                                         const nsAString& allowedTags)
 {
-  nsresult rv = Init(aFlags, 0, nsnull, PR_FALSE, PR_FALSE);
+  nsresult rv = Init(aFlags, 0, nsnull, false, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX This is wrong. It violates XPCOM string ownership rules.
@@ -178,7 +178,7 @@ mozSanitizingHTMLSerializer::Write(const nsAString& aString)
 NS_IMETHODIMP
 mozSanitizingHTMLSerializer::IsEnabled(PRInt32 aTag, bool* aReturn)
 {
-  *aReturn = PR_FALSE;
+  *aReturn = false;
   return NS_OK;
 }
 
@@ -557,7 +557,7 @@ mozSanitizingHTMLSerializer::IsAllowedAttribute(nsHTMLTag aTag,
 
   nsPRUint32Key tag_key(aTag);
   nsIProperties* attr_bag = (nsIProperties*)mAllowedTags.Get(&tag_key);
-  NS_ENSURE_TRUE(attr_bag, PR_FALSE);
+  NS_ENSURE_TRUE(attr_bag, false);
 
   bool allowed;
   nsAutoString attr(anAttributeName);
@@ -565,7 +565,7 @@ mozSanitizingHTMLSerializer::IsAllowedAttribute(nsHTMLTag aTag,
   rv = attr_bag->Has(NS_LossyConvertUTF16toASCII(attr).get(),
                      &allowed);
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 
 #ifdef DEBUG_BenB
   printf(" Allowed: %s\n", allowed?"yes":"no");

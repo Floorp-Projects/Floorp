@@ -298,7 +298,7 @@ txIdPattern::txIdPattern(const nsSubstring& aString)
 MBool txIdPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 {
     if (!txXPathNodeUtils::isElement(aNode)) {
-        return PR_FALSE;
+        return false;
     }
 
     // Get a ID attribute, if there is
@@ -355,12 +355,12 @@ MBool txKeyPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 {
     txExecutionState* es = (txExecutionState*)aContext->getPrivateContext();
     nsAutoPtr<txXPathNode> contextDoc(txXPathNodeUtils::getOwnerDocument(aNode));
-    NS_ENSURE_TRUE(contextDoc, PR_FALSE);
+    NS_ENSURE_TRUE(contextDoc, false);
 
     nsRefPtr<txNodeSet> nodes;
-    nsresult rv = es->getKeyNodes(mName, *contextDoc, mValue, PR_TRUE,
+    nsresult rv = es->getKeyNodes(mName, *contextDoc, mValue, true,
                                   getter_AddRefs(nodes));
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, false);
 
     return nodes->contains(aNode);
 }
@@ -468,7 +468,7 @@ MBool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext
             predContext.next();
             nsRefPtr<txAExprResult> exprResult;
             rv = predicate->evaluate(&predContext, getter_AddRefs(exprResult));
-            NS_ENSURE_SUCCESS(rv, PR_FALSE);
+            NS_ENSURE_SUCCESS(rv, false);
 
             switch(exprResult->getResultType()) {
                 case txAExprResult::NUMBER:
@@ -502,7 +502,7 @@ MBool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext
     txForwardContext evalContext(aContext, aNode, nodes);
     nsRefPtr<txAExprResult> exprResult;
     rv = predicate->evaluate(&evalContext, getter_AddRefs(exprResult));
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, false);
 
     if (exprResult->getResultType() == txAExprResult::NUMBER)
         // handle default, [position() == numberValue()]

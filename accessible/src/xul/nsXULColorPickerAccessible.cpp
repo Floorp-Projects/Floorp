@@ -176,7 +176,7 @@ nsXULColorPickerAccessible::AreItemsOperable() const
 void
 nsXULColorPickerAccessible::CacheChildren()
 {
-  nsAccTreeWalker walker(mWeakShell, mContent, PR_TRUE);
+  nsAccTreeWalker walker(mWeakShell, mContent, true);
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild())) {

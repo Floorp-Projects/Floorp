@@ -59,7 +59,7 @@ static bool pathBeginsWithVolName(const nsACString& path, nsACString& firstPathC
   if (!gVolumeList) {
     gVolumeList = new nsTArray<nsCString>;
     if (!gVolumeList) {
-      return PR_FALSE; // out of memory
+      return false; // out of memory
     }
   }
 
@@ -184,7 +184,7 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
   nsresult rv;
 
   nsCOMPtr<nsILocalFile> localFile;
-  rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(localFile));
+  rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(localFile));
   if (NS_FAILED(rv))
     return rv;
   
@@ -212,7 +212,7 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
       FSRef testRef;
       possibleVolName.Insert("/", 0);
       if (::FSPathMakeRef((UInt8*)possibleVolName.get(), &testRef, nsnull) != noErr)
-        bHFSPath = PR_TRUE;
+        bHFSPath = true;
     }
 
     if (bHFSPath) {

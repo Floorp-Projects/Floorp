@@ -221,7 +221,7 @@ nsXULButtonAccessible::CacheChildren()
                                        eCaseMatters);
 
   bool isMenuButton = isMenu ?
-    PR_FALSE :
+    false :
     mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                           nsGkAtoms::menuButton, eCaseMatters);
 
@@ -231,7 +231,7 @@ nsXULButtonAccessible::CacheChildren()
   nsAccessible* menupopup = nsnull;
   nsAccessible* button = nsnull;
 
-  nsAccTreeWalker walker(mWeakShell, mContent, PR_TRUE);
+  nsAccTreeWalker walker(mWeakShell, mContent, true);
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild())) {
@@ -322,7 +322,7 @@ bool nsXULDropmarkerAccessible::DropmarkerOpen(bool aToggleOpen)
 NS_IMETHODIMP nsXULDropmarkerAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {
-    if (DropmarkerOpen(PR_FALSE))
+    if (DropmarkerOpen(false))
       aName.AssignLiteral("close");
     else
       aName.AssignLiteral("open");
@@ -338,7 +338,7 @@ NS_IMETHODIMP nsXULDropmarkerAccessible::GetActionName(PRUint8 aIndex, nsAString
 NS_IMETHODIMP nsXULDropmarkerAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Click) {
-    DropmarkerOpen(PR_TRUE); // Reverse the open attribute
+    DropmarkerOpen(true); // Reverse the open attribute
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
@@ -353,7 +353,7 @@ nsXULDropmarkerAccessible::NativeRole()
 PRUint64
 nsXULDropmarkerAccessible::NativeState()
 {
-  return DropmarkerOpen(PR_FALSE) ? states::PRESSED : 0;
+  return DropmarkerOpen(false) ? states::PRESSED : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -666,7 +666,7 @@ nsXULToolbarButtonAccessible::IsSeparator(nsAccessible *aAccessible)
   nsCOMPtr<nsIContent> contentDomNode(do_QueryInterface(domNode));
 
   if (!contentDomNode)
-    return PR_FALSE;
+    return false;
 
   return (contentDomNode->Tag() == nsGkAtoms::toolbarseparator) ||
          (contentDomNode->Tag() == nsGkAtoms::toolbarspacer) ||
@@ -851,7 +851,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::DoAction(PRUint8 index)
 bool
 nsXULTextFieldAccessible::GetAllowsAnonChildAccessibles()
 {
-  return PR_FALSE;
+  return false;
 }
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetAssociatedEditor(nsIEditor **aEditor)
@@ -876,10 +876,21 @@ nsXULTextFieldAccessible::CacheChildren()
   if (!inputContent)
     return;
 
-  nsAccTreeWalker walker(mWeakShell, inputContent, PR_FALSE);
+  nsAccTreeWalker walker(mWeakShell, inputContent, false);
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild()) && AppendChild(child));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTextFieldAccessible: nsHyperTextAccessible protected
+
+already_AddRefed<nsFrameSelection>
+nsXULTextFieldAccessible::FrameSelection()
+{
+  nsCOMPtr<nsIContent> inputContent(GetInputField());
+  nsIFrame* frame = inputContent->GetPrimaryFrame();
+  return frame->GetFrameSelection();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

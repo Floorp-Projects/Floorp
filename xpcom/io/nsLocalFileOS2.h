@@ -100,7 +100,7 @@ private:
     nsLocalFile(const nsLocalFile& other);
     ~nsLocalFile() {}
 
-    // cached information can only be used when this is PR_FALSE
+    // cached information can only be used when this is false
     bool mDirty;
 
     // this string will always be in native format!
@@ -108,7 +108,7 @@ private:
 
     PRFileInfo64  mFileInfo64;
 
-    void MakeDirty() { mDirty = PR_TRUE; }
+    void MakeDirty() { mDirty = true; }
 
     nsresult Stat();
 

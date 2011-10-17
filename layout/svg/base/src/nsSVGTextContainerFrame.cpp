@@ -498,7 +498,7 @@ nsSVGTextContainerFrame::SetWhitespaceCompression()
                                            nsGkAtoms::space,
                                            strings, eCaseMatters);
     if (index == 0) {
-      compressWhitespace = PR_FALSE;
+      compressWhitespace = false;
       break;
     }
     if (index != nsIContent::ATTR_MISSING ||

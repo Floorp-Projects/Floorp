@@ -54,7 +54,7 @@ SVGMotionSMILPathUtils::PathGenerator::
 {
   NS_ABORT_IF_FALSE(!mHaveReceivedCommands,
                     "Not expecting requests for mid-path MoveTo commands");
-  mHaveReceivedCommands = PR_TRUE;
+  mHaveReceivedCommands = true;
   mGfxContext.MoveTo(gfxPoint(0, 0));
 }
 
@@ -65,14 +65,14 @@ SVGMotionSMILPathUtils::PathGenerator::
 {
   NS_ABORT_IF_FALSE(!mHaveReceivedCommands,
                     "Not expecting requests for mid-path MoveTo commands");
-  mHaveReceivedCommands = PR_TRUE;
+  mHaveReceivedCommands = true;
 
   float xVal, yVal;
   if (!ParseCoordinatePair(aCoordPairStr, xVal, yVal)) {
-    return PR_FALSE;
+    return false;
   }
   mGfxContext.MoveTo(gfxPoint(xVal, yVal));
-  return PR_TRUE;
+  return true;
 }
 
 // For 'to' and every entry in 'values' except the first.
@@ -80,17 +80,17 @@ bool
 SVGMotionSMILPathUtils::PathGenerator::
   LineToAbsolute(const nsAString& aCoordPairStr, double& aSegmentDistance)
 {
-  mHaveReceivedCommands = PR_TRUE;
+  mHaveReceivedCommands = true;
 
   float xVal, yVal;
   if (!ParseCoordinatePair(aCoordPairStr, xVal, yVal)) {
-    return PR_FALSE;
+    return false;
   }
   gfxPoint initialPoint = mGfxContext.CurrentPoint();
 
   mGfxContext.LineTo(gfxPoint(xVal, yVal));
   aSegmentDistance = NS_hypot(initialPoint.x - xVal, initialPoint.y -yVal);
-  return PR_TRUE;
+  return true;
 }
 
 // For 'by'.
@@ -98,15 +98,15 @@ bool
 SVGMotionSMILPathUtils::PathGenerator::
   LineToRelative(const nsAString& aCoordPairStr, double& aSegmentDistance)
 {
-  mHaveReceivedCommands = PR_TRUE;
+  mHaveReceivedCommands = true;
 
   float xVal, yVal;
   if (!ParseCoordinatePair(aCoordPairStr, xVal, yVal)) {
-    return PR_FALSE;
+    return false;
   }
   mGfxContext.LineTo(mGfxContext.CurrentPoint() + gfxPoint(xVal, yVal));
   aSegmentDistance = NS_hypot(xVal, yVal);
-  return PR_TRUE;
+  return true;
 }
 
 already_AddRefed<gfxFlattenedPath>
@@ -131,27 +131,27 @@ SVGMotionSMILPathUtils::PathGenerator::
 
   if (!tokenizer.hasMoreTokens() ||
       !x.SetValueFromString(tokenizer.nextToken())) {
-    return PR_FALSE;
+    return false;
   }
 
   if (!tokenizer.hasMoreTokens() ||
       !y.SetValueFromString(tokenizer.nextToken())) { 
-    return PR_FALSE;
+    return false;
   }
 
   if (tokenizer.lastTokenEndedWithSeparator() || // Trailing comma.
       tokenizer.hasMoreTokens()) {               // More text remains
-    return PR_FALSE;
+    return false;
   }
 
   float xRes = x.GetValueInUserUnits(mSVGElement, nsSVGUtils::X);
   float yRes = y.GetValueInUserUnits(mSVGElement, nsSVGUtils::Y);
 
-  NS_ENSURE_FINITE2(xRes, yRes, PR_FALSE);
+  NS_ENSURE_FINITE2(xRes, yRes, false);
 
   aXVal = xRes;
   aYVal = yRes;
-  return PR_TRUE;
+  return true;
 }
 
 //----------------------------------------------------------------------

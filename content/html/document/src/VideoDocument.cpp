@@ -122,8 +122,8 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
                                                             NOT_FROM_PARSER));
   if (!element)
     return NS_ERROR_OUT_OF_MEMORY;
-  element->SetAutoplay(PR_TRUE);
-  element->SetControls(PR_TRUE);
+  element->SetAutoplay(true);
+  element->SetControls(true);
   element->LoadWithChannel(aChannel, aListener);
   UpdateTitle(aChannel);
 
@@ -132,7 +132,7 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
     // not have margins
     element->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
         NS_LITERAL_STRING("position:absolute; top:0; left:0; width:100%; height:100%"),
-        PR_TRUE);
+        true);
   } else {
     Element* head = GetHeadElement();
     if (!head) {
@@ -151,10 +151,10 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
       NS_LITERAL_STRING("body { background: url(chrome://global/skin/icons/tabprompts-bgtexture.png) #333; height: 100%; width: 100%; margin: 0; padding: 0; } ") +
       NS_LITERAL_STRING("video { position: absolute; top: 0; right: 0; bottom: 0; left: 0; margin: auto; box-shadow: 0 0 15px #000; } ") +
       NS_LITERAL_STRING("video:focus { outline-width: 0; } "));
-    head->AppendChildTo(styleContent, PR_FALSE);
+    head->AppendChildTo(styleContent, false);
   }
 
-  return body->AppendChildTo(element, PR_FALSE);
+  return body->AppendChildTo(element, false);
 }
 
 void

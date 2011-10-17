@@ -107,7 +107,7 @@ bool nsDBusService::HandleMessage(DBusMessage* message) {
   if (dbus_message_is_signal(message, DBUS_INTERFACE_LOCAL,
                             "Disconnected")) {
     HandleDBusDisconnect();
-    return PR_FALSE;
+    return false;
   }
   
   return mSingleClient && mSingleClient->HandleMessage(message);
@@ -165,7 +165,7 @@ nsresult nsDBusService::CreateConnection() {
   if (!mConnection)
     return NS_ERROR_FAILURE;
 
-  dbus_connection_set_exit_on_disconnect(mConnection, PR_FALSE);
+  dbus_connection_set_exit_on_disconnect(mConnection, false);
   dbus_connection_setup_with_g_main(mConnection, NULL);
 
   if (!dbus_connection_add_filter(mConnection, dbus_filter, this, NULL))

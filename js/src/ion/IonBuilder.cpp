@@ -1929,7 +1929,7 @@ TestSingletonProperty(JSContext *cx, JSObject *obj, jsid id, bool *isKnownConsta
 
     JSObject *holder;
     JSProperty *prop = NULL;
-    if (!obj->lookupProperty(cx, id, &holder, &prop))
+    if (!obj->lookupGeneric(cx, id, &holder, &prop))
         return false;
     if (!prop)
         return true;

@@ -148,6 +148,59 @@ typedef NTSTATUS (NTAPI *LdrLoadDll_func) (PWCHAR filePath, PULONG flags, PUNICO
 
 static LdrLoadDll_func stub_LdrLoadDll = 0;
 
+namespace {
+
+template <class T>
+struct RVAMap {
+  RVAMap(HANDLE map, unsigned offset) {
+    mMappedView = reinterpret_cast<T*>
+      (::MapViewOfFile(map, FILE_MAP_READ, 0, offset, sizeof(T)));
+  }
+  ~RVAMap() {
+    if (mMappedView) {
+      ::UnmapViewOfFile(mMappedView);
+    }
+  }
+  operator const T*() const { return mMappedView; }
+  const T* operator->() const { return mMappedView; }
+private:
+  const T* mMappedView;
+};
+
+void
+ForceASLR(const wchar_t* path)
+{
+  HANDLE file = ::CreateFileW(path, GENERIC_READ, FILE_SHARE_READ,
+                              NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                              NULL);
+  if (file != INVALID_HANDLE_VALUE) {
+    HANDLE map = ::CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (map) {
+      RVAMap<IMAGE_DOS_HEADER> peHeader(map, 0);
+      if (peHeader) {
+        RVAMap<IMAGE_NT_HEADERS> ntHeader(map, peHeader->e_lfanew);
+        if (ntHeader) {
+          // If we're dealing with a DLL which has code inside it, but does not have the
+          // ASLR bit set, allocate a page at its base address.
+          if (((ntHeader->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE) == 0) &&
+              (ntHeader->OptionalHeader.SizeOfCode > 0)) {
+            void* page = ::VirtualAlloc((LPVOID)ntHeader->OptionalHeader.ImageBase, 1,
+                                        MEM_RESERVE, PAGE_NOACCESS);
+            // Note that we will leak this page, but it's ok since it's just one page in
+            // the virtual address space, with no physical page backing it.
+
+            // We're done at this point!
+          }
+        }
+      }
+      ::CloseHandle(map);
+    }
+    ::CloseHandle(file);
+  }
+}
+ 
+}
+
 static NTSTATUS NTAPI
 patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle)
 {
@@ -159,6 +212,23 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
 
   int len = moduleFileName->Length / 2;
   wchar_t *fname = moduleFileName->Buffer;
+
+  // figure out the length of the string that we need
+  DWORD pathlen = SearchPathW(filePath, fname, L".dll", 0, NULL, NULL);
+  if (pathlen == 0) {
+    // uh, we couldn't find the DLL at all, so...
+    printf_stderr("LdrLoadDll: Blocking load of '%s' (SearchPathW didn't find it?)\n", dllName);
+    return STATUS_DLL_NOT_FOUND;
+  }
+
+  nsAutoArrayPtr<wchar_t> full_fname(new wchar_t[pathlen+1]);
+  if (!full_fname) {
+    // couldn't allocate memory?
+    return STATUS_DLL_NOT_FOUND;
+  }
+
+  // now actually grab it
+  SearchPathW(filePath, fname, L".dll", pathlen+1, full_fname, NULL);
 
   // The filename isn't guaranteed to be null terminated, but in practice
   // it always will be; ensure that this is so, and bail if not.
@@ -235,23 +305,6 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
 #endif
 
     if (info->maxVersion != ALL_VERSIONS) {
-      // figure out the length of the string that we need
-      DWORD pathlen = SearchPathW(filePath, fname, L".dll", 0, NULL, NULL);
-      if (pathlen == 0) {
-        // uh, we couldn't find the DLL at all, so...
-        printf_stderr("LdrLoadDll: Blocking load of '%s' (SearchPathW didn't find it?)\n", dllName);
-        return STATUS_DLL_NOT_FOUND;
-      }
-
-      wchar_t *full_fname = (wchar_t*) malloc(sizeof(wchar_t)*(pathlen+1));
-      if (!full_fname) {
-        // couldn't allocate memory?
-        return STATUS_DLL_NOT_FOUND;
-      }
-
-      // now actually grab it
-      SearchPathW(filePath, fname, L".dll", pathlen+1, full_fname, NULL);
-
       DWORD zero;
       DWORD infoSize = GetFileVersionInfoSizeW(full_fname, &zero);
 
@@ -275,8 +328,6 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
             load_ok = true;
         }
       }
-
-      free(full_fname);
     }
 
     if (!load_ok) {
@@ -291,6 +342,8 @@ continue_loading:
 #endif
 
   NS_SetHasLoadedNewDLLs();
+
+  ForceASLR(full_fname);
 
   return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
 }

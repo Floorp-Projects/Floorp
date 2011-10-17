@@ -189,8 +189,8 @@ struct nsHttp
                                  const char *separators);
 
     // This function parses a string containing a decimal-valued, non-negative
-    // 64-bit integer.  If the value would exceed LL_MAXINT, then PR_FALSE is
-    // returned.  Otherwise, this function returns PR_TRUE and stores the
+    // 64-bit integer.  If the value would exceed LL_MAXINT, then false is
+    // returned.  Otherwise, this function returns true and stores the
     // parsed value in |result|.  The next unparsed character in |input| is
     // optionally returned via |next| if |next| is non-null.
     //

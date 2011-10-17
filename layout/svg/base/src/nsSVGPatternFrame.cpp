@@ -70,10 +70,10 @@ public:
     // Reference loops should normally be detected in advance and handled, so
     // we're not expecting to encounter them here
     NS_ABORT_IF_FALSE(!mFrame->mLoopFlag, "Undetected reference loop!");
-    mFrame->mLoopFlag = PR_TRUE;
+    mFrame->mLoopFlag = true;
   }
   ~AutoPatternReferencer() {
-    mFrame->mLoopFlag = PR_FALSE;
+    mFrame->mLoopFlag = false;
   }
 private:
   nsSVGPatternFrame *mFrame;
@@ -84,8 +84,8 @@ private:
 
 nsSVGPatternFrame::nsSVGPatternFrame(nsStyleContext* aContext) :
   nsSVGPatternFrameBase(aContext),
-  mLoopFlag(PR_FALSE),
-  mNoHRefURI(PR_FALSE)
+  mLoopFlag(false),
+  mNoHRefURI(false)
 {
 }
 
@@ -123,7 +123,7 @@ nsSVGPatternFrame::AttributeChanged(PRInt32         aNameSpaceID,
       aAttribute == nsGkAtoms::href) {
     // Blow away our reference, if any
     Properties().Delete(nsSVGEffects::HrefProperty());
-    mNoHRefURI = PR_FALSE;
+    mNoHRefURI = false;
     // And update whoever references us
     nsSVGEffects::InvalidateRenderingObservers(this);
   }
@@ -473,7 +473,7 @@ nsSVGPatternFrame::GetReferencedPattern()
     nsAutoString href;
     pattern->mStringAttributes[nsSVGPatternElement::HREF].GetAnimValue(href, pattern);
     if (href.IsEmpty()) {
-      mNoHRefURI = PR_TRUE;
+      mNoHRefURI = true;
       return nsnull; // no URL
     }
 

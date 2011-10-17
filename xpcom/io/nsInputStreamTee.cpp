@@ -100,7 +100,7 @@ public:
         mSink = aSink;
         bool isNonBlocking;
         mSink->IsNonBlocking(&isNonBlocking);
-        NS_ASSERTION(isNonBlocking == PR_FALSE, "mSink is nonblocking");
+        NS_ASSERTION(isNonBlocking == false, "mSink is nonblocking");
         mTee = aTee;
     }
 
@@ -222,7 +222,7 @@ nsInputStreamTee::WriteSegmentFun(nsIInputStream *in, void *closure, const char 
 
     nsresult rv = tee->mWriter(in, tee->mClosure, fromSegment, offset, count, writeCount);
     if (NS_FAILED(rv) || (*writeCount == 0)) {
-        NS_ASSERTION((NS_FAILED(rv) ? (*writeCount == 0) : PR_TRUE),
+        NS_ASSERTION((NS_FAILED(rv) ? (*writeCount == 0) : true),
                 "writer returned an error with non-zero writeCount");
         return rv;
     }

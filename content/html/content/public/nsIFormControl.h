@@ -174,8 +174,8 @@ public:
    * control will grab its state from there.
    *
    * @param aState the pres state to use to restore the control
-   * @return PR_TRUE if the form control was a checkbox and its
-   *         checked state was restored, PR_FALSE otherwise.
+   * @return true if the form control was a checkbox and its
+   *         checked state was restored, false otherwise.
    */
   virtual bool RestoreState(nsPresState* aState) = 0;
 

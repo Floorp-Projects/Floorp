@@ -191,18 +191,18 @@ NS_IMETHODIMP nsIconChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsIconChannel::Open(nsIInputStream **_retval)
 {
-  return MakeInputStream(_retval, PR_FALSE);
+  return MakeInputStream(_retval, false);
 }
 
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
   nsCOMPtr<nsIInputStream> inStream;
-  nsresult rv = MakeInputStream(getter_AddRefs(inStream), PR_TRUE);
+  nsresult rv = MakeInputStream(getter_AddRefs(inStream), true);
   if (NS_FAILED(rv))
     return rv;
 
   // Init our streampump
-  rv = mPump->Init(inStream, PRInt64(-1), PRInt64(-1), 0, 0, PR_FALSE);
+  rv = mPump->Init(inStream, PRInt64(-1), PRInt64(-1), 0, 0, false);
   if (NS_FAILED(rv))
     return rv;
 
@@ -448,7 +448,7 @@ static HPOINTER GetIcon(nsCString& file, bool fExists,
                         bool fMini, bool *fWpsIcon)
 {
   HPOINTER hRtn = 0;
-  *fWpsIcon = PR_FALSE;
+  *fWpsIcon = false;
 
   if (file.IsEmpty()) {
     // append something so that we get at least the generic icon
@@ -459,10 +459,10 @@ static HPOINTER GetIcon(nsCString& file, bool fExists,
   if (sUseRws) {
     nsCOMPtr<nsIRwsService> rwsSvc(do_GetService("@mozilla.org/rwsos2;1"));
     if (!rwsSvc)
-      sUseRws = PR_FALSE;
+      sUseRws = false;
     else {
       if (fExists) {
-        rwsSvc->IconFromPath(file.get(), PR_FALSE, fMini, (PRUint32*)&hRtn);
+        rwsSvc->IconFromPath(file.get(), false, fMini, (PRUint32*)&hRtn);
       } else {
         const char *ptr = file.get();
         if (*ptr == '.')
@@ -474,7 +474,7 @@ static HPOINTER GetIcon(nsCString& file, bool fExists,
 
   // if we got an icon from the WPS, set the flag & exit
   if (hRtn) {
-    *fWpsIcon = PR_TRUE;
+    *fWpsIcon = true;
     return hRtn;
   }
 

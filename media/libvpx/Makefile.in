@@ -130,12 +130,13 @@ CSRCS += \
   alloccommon.c \
   blockd.c \
   debugmodes.c \
+  defaultcoefcounts.c \
   dsystemdependent.c \
   entropy.c \
   entropymode.c \
   entropymv.c \
   extend.c \
-  filter_c.c \
+  filter.c \
   findnearmv.c \
   idctllm.c \
   invtrans.c \
@@ -145,7 +146,6 @@ CSRCS += \
   modecont.c \
   modecontext.c \
   postproc.c \
-  predictdc.c \
   quant_common.c \
   recon.c \
   reconinter.c \
@@ -173,10 +173,60 @@ CSRCS += \
   vpx_mem.c \
   gen_scalers.c \
   vpxscale.c \
-  scalesystemdependant.c \
+  scalesystemdependent.c \
   yv12config.c \
   yv12extend.c \
   $(NULL)
+
+ifdef MOZ_VP8_ERROR_CONCEALMENT
+CSRCS += \
+  error_concealment.c \
+  $(NULL)
+endif
+
+ifdef MOZ_VP8_ENCODER
+VPATH += \
+  $(srcdir)/vp8/encoder \
+  $(srcdir)/vp8/encoder/arm \
+  $(srcdir)/vp8/encoder/arm/armv5te \
+  $(srcdir)/vp8/encoder/arm/armv6 \
+  $(srcdir)/vp8/encoder/arm/neon \
+  $(srcdir)/vp8/encoder/generic \
+  $(srcdir)/vp8/encoder/x86 \
+  $(srcdir)/vpx_scale/arm \
+  $(srcdir)/vpx_scale/arm/neon \
+  $(NULL)
+
+CSRCS += \
+  vp8_cx_iface.c \
+  bitstream.c \
+  boolhuff.c \
+  dct.c \
+  encodeframe.c \
+  encodeintra.c \
+  encodemb.c \
+  encodemv.c \
+  ethreading.c \
+  firstpass.c \
+  lookahead.c \
+  mcomp.c \
+  modecosts.c \
+  onyx_if.c \
+  picklpf.c \
+  pickinter.c \
+  psnr.c \
+  quantize.c \
+  ratectrl.c \
+  rdopt.c \
+  sad_c.c \
+  segmentation.c \
+  temporal_filter.c \
+  tokenize.c \
+  treewriter.c \
+  variance_c.c \
+  csystemdependent.c \
+  $(NULL)
+endif
 
 ifdef VPX_X86_ASM
 # Building on an x86 platform with a supported assembler, include
@@ -186,6 +236,7 @@ CSRCS += \
   idct_blk_mmx.c \
   idct_blk_sse2.c \
   loopfilter_x86.c \
+  recon_wrapper_sse2.c \
   vp8_asm_stubs.c \
   x86_systemdependent.c \
   x86_dsystemdependent.c \
@@ -208,6 +259,46 @@ ASFILES += \
   dequantize_mmx.asm \
   emms.asm \
   $(NULL)
+
+ifdef MOZ_VP8_ENCODER
+
+CSRCS += \
+  variance_mmx.c \
+  variance_sse2.c \
+  variance_ssse3.c \
+  x86_csystemdependent.c \
+  $(NULL)
+
+ASFILES += \
+  dct_mmx.asm \
+  dct_sse2.asm \
+  encodeopt.asm \
+  fwalsh_sse2.asm \
+  quantize_mmx.asm \
+  quantize_sse2.asm \
+  quantize_ssse3.asm \
+  quantize_sse4.asm \
+  sad_mmx.asm \
+  sad_sse2.asm \
+  sad_sse3.asm \
+  sad_ssse3.asm \
+  sad_sse4.asm \
+  subtract_mmx.asm \
+  subtract_sse2.asm \
+  temporal_filter_apply_sse2.asm \
+  variance_impl_mmx.asm \
+  variance_impl_sse2.asm \
+  variance_impl_ssse3.asm \
+  $(NULL)
+
+# Files which depend on asm_enc_offsets.asm
+VPX_ASM_ENC_OFFSETS_SRCS = \
+  quantize_sse2.asm \
+  quantize_ssse3.asm \
+  quantize_sse4.asm \
+  $(NULL)
+
+endif
 
 endif
 
@@ -284,10 +375,63 @@ VPX_ASFILES = \
   dequantizeb_neon.asm \
   $(NULL)
 
-# The ARM asm needs to extract the offsets of various C struct members.
-# We need a program that runs on the host to pull them out of a .o file.
-HOST_CSRCS = obj_int_extract.c
-HOST_PROGRAM = host_obj_int_extract$(HOST_BIN_SUFFIX)
+ifdef MOZ_VP8_ENCODER
+CSRCS += \
+  arm_csystemdependent.c \
+  dct_arm.c \
+  picklpf_arm.c \
+  variance_arm.c \
+  $(NULL)
+
+VPX_ASFILES += \
+  vp8_packtokens_armv5.asm \
+  vp8_packtokens_mbrow_armv5.asm \
+  vp8_packtokens_partitions_armv5.asm \
+  vp8_fast_fdct4x4_armv6.asm \
+  vp8_fast_quantize_b_armv6.asm \
+  vp8_mse16x16_armv6.asm \
+  vp8_sad16x16_armv6.asm \
+  vp8_subtract_armv6.asm \
+  vp8_variance16x16_armv6.asm \
+  vp8_variance8x8_armv6.asm \
+  vp8_variance_halfpixvar16x16_h_armv6.asm \
+  vp8_variance_halfpixvar16x16_hv_armv6.asm \
+  vp8_variance_halfpixvar16x16_v_armv6.asm \
+  walsh_v6.asm \
+  fastfdct4x4_neon.asm \
+  fastfdct8x4_neon.asm \
+  fastquantizeb_neon.asm \
+  sad16_neon.asm \
+  sad8_neon.asm \
+  shortfdct_neon.asm \
+  subtract_neon.asm \
+  variance_neon.asm \
+  vp8_memcpy_neon.asm \
+  vp8_mse16x16_neon.asm \
+  vp8_shortwalsh4x4_neon.asm \
+  vp8_subpixelvariance8x8_neon.asm \
+  vp8_subpixelvariance16x16_neon.asm \
+  vp8_subpixelvariance16x16s_neon.asm \
+  vp8_vpxyv12_copyframeyonly_neon.asm \
+  $(NULL)
+
+# Files which depend on asm_com_offsets.asm
+VPX_ASM_COM_OFFSETS_SRCS = \
+  vp8_vpxyv12_copyframeyonly_neon.asm \
+  $(NULL)
+
+# Files which depend on asm_enc_offsets.asm
+VPX_ASM_ENC_OFFSETS_SRCS = \
+  vp8_packtokens_armv5.asm \
+  vp8_packtokens_mbrow_armv5.asm \
+  vp8_packtokens_partitions_armv5.asm \
+  vp8_fast_quantize_b_armv6.asm \
+  vp8_subtract_armv6.asm \
+  fastquantizeb_neon.asm \
+  subtract_neon.asm \
+  $(NULL)
+
+endif
 
 ifdef VPX_AS_CONVERSION
 # The ARM asm is written in ARM RVCT syntax, but we actually build it with
@@ -303,23 +447,89 @@ else
 ASFILES += $(VPX_ASFILES)
 endif
 
-GARBAGE += vpx_asm_offsets.$(OBJ_SUFFIX) vpx_asm_offsets.asm
+endif
 
+ifdef MOZ_VP8_ENCODER
+ifdef VPX_NEED_OBJ_INT_EXTRACT
+
+# We don't have a compiler that supports a compatible inline asm syntax, so we
+# have to resort to extracting asm offsets from a compiled object. This only
+# works if we have the appropriate system headers obj_int_extract needs to
+# parse that format, and so only has limited support for cross-compilation.
+
+ifdef VPX_ARM_ASM
+VPX_OIE_FORMAT := rvds
+else
+VPX_OIE_FORMAT := gas
+endif
+
+HOST_CSRCS = obj_int_extract.c
+HOST_PROGRAM = host_obj_int_extract$(HOST_BIN_SUFFIX)
+
+GARBAGE += \
+  asm_com_offsets.$(OBJ_SUFFIX) asm_com_offsets.asm \
+  asm_enc_offsets.$(OBJ_SUFFIX) asm_enc_offsets.asm \
+  $(NULL)
+
+else
+
+# We can extract the asm offsets directly from generated assembly using inline
+# asm. This is the preferred method.
+
+asm_com_offsets.s: CFLAGS += -DINLINE_ASM
+asm_enc_offsets.s: CFLAGS += -DINLINE_ASM
+
+asm_com_offsets.asm: asm_com_offsets.s
+	grep \\\<EQU\\\> $< | sed -e 's/[$$\#]//g' \
+	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
+
+asm_enc_offsets.asm: asm_enc_offsets.s
+	grep \\\<EQU\\\> $< | sed -e 's/[$$\#]//g' \
+	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
+
+GARBAGE += \
+  asm_com_offsets.s asm_com_offsets.asm \
+  asm_enc_offsets.s asm_enc_offsets.asm \
+  $(NULL)
+
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
 
+# This must be after rules.mk in order to use $(OBJ_SUFFIX) outside a
+# recursively-expanded variable.
+ifdef MOZ_VP8_ENCODER
+
+ifdef VPX_NEED_OBJ_INT_EXTRACT
+
+asm_com_offsets.asm: asm_com_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
+	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
+	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
+
+asm_enc_offsets.asm: asm_enc_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
+	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
+	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
+
+endif
+
+# These dependencies are not generated automatically, so do it manually.
+ifdef VPX_AS_CONVERSION
+$(addsuffix .$(OBJ_SUFFIX), $(VPX_ASM_COM_OFFSETS_SRCS)): asm_com_offsets.asm
+$(addsuffix .$(OBJ_SUFFIX), $(VPX_ASM_ENC_OFFSETS_SRCS)): asm_enc_offsets.asm
+else
+$(patsubst %.$(ASM_SUFFIX),%.$(OBJ_SUFFIX), $(VPX_ASM_COM_OFFSETS_SRCS)): asm_com_offsets.asm
+$(patsubst %.$(ASM_SUFFIX),%.$(OBJ_SUFFIX), $(VPX_ASM_ENC_OFFSETS_SRCS)): asm_enc_offsets.asm
+endif
+
+endif
+
 # Workaround a bug of Sun Studio (CR 6963410)
 ifdef SOLARIS_SUNPRO_CC
 ifeq (86,$(findstring 86,$(OS_TEST)))
-filter_c.o: filter_c.c Makefile.in
+filter.o: filter.c Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(CC) -o $@ -c $(patsubst -xO[45],-xO3,$(COMPILE_CFLAGS)) $<
 endif
-endif
-
-ifdef VPX_ARM_ASM
-vpx_asm_offsets.asm: vpx_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
-	./$(HOST_PROGRAM) rvds $< $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
 endif

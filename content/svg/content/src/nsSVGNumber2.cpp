@@ -128,7 +128,7 @@ nsSVGNumber2::SetBaseValueString(const nsAString &aValueAsString,
   }
 
   mBaseVal = val;
-  mIsBaseSet = PR_TRUE;
+  mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
@@ -156,7 +156,7 @@ nsSVGNumber2::SetBaseValue(float aValue,
                            nsSVGElement *aSVGElement)
 {
   mBaseVal = aValue;
-  mIsBaseSet = PR_TRUE;
+  mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
@@ -172,7 +172,7 @@ void
 nsSVGNumber2::SetAnimValue(float aValue, nsSVGElement *aSVGElement)
 {
   mAnimVal = aValue;
-  mIsAnimated = PR_TRUE;
+  mIsAnimated = true;
   aSVGElement->DidAnimateNumber(mAttrEnum);
 }
 
@@ -213,7 +213,7 @@ nsSVGNumber2::SMILNumber::ValueFromString(const nsAString& aStr,
   nsSMILValue val(&nsSMILFloatType::sSingleton);
   val.mU.mDouble = value;
   aValue = val;
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
 
   return NS_OK;
 }
@@ -231,7 +231,7 @@ nsSVGNumber2::SMILNumber::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
     mVal->SetAnimValue(mVal->mBaseVal, mSVGElement);
-    mVal->mIsAnimated = PR_FALSE;
+    mVal->mIsAnimated = false;
   }
 }
 
