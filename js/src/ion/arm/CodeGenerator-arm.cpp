@@ -353,13 +353,15 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
           default:
             if (!mul->canOverflow() && constant > 0) {
                 // Use shift if cannot overflow and constant is power of 2
-                int32 shift = JS_FloorLog2(constant);
+                int32 shift;
+                JS_FLOOR_LOG2(shift, constant);
                 if ((1 << shift) == constant) {
                     masm.ma_lsl(Imm32(shift), ToRegister(lhs), ToRegister(dest));
                     return true;
                 }
             } else if (!mul->canOverflow()) {
-                int32 shift = JS_FloorLog2(-constant);
+                int32 shift;
+                JS_FLOOR_LOG2(shift, -constant);
                 if ((1<<shift) == -constant) {
                     // since lsl is actually a modifier, and not an instruction,
                     // we can emit mvn dest, op1 lsl 3 for op1 * -8
