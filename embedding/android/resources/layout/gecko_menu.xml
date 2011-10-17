@@ -6,10 +6,11 @@
           android:title="@string/quit" />
 
     <item android:id="@+id/bookmarks"
-          android:title="@string/bookmarks" />
+          android:title="@string/bookmarks"
+          android:showAsAction="ifRoom"/>
  
     <item android:id="@+id/show_tabs"
-          android:icon="@drawable/quit"
-          android:title="@string/tabs" />
+          android:title="@string/tabs"
+          android:showAsAction="ifRoom"/>
 
 </menu>
