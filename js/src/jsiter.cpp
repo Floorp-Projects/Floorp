@@ -66,7 +66,6 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 
@@ -74,6 +73,7 @@
 #include "jsxml.h"
 #endif
 
+#include "frontend/TokenStream.h"
 #include "vm/GlobalObject.h"
 
 #include "jsinferinlines.h"

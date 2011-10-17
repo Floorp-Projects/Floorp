@@ -56,15 +56,18 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsparse.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsautooplen.h"        // generated headers last
+
+#include "ds/LifoAlloc.h"
+#include "frontend/CodeGenerator.h"
+#include "frontend/Parser.h"
+#include "frontend/TokenStream.h"
+#include "vm/RegExpObject.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -72,8 +75,6 @@
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
-#include "ds/LifoAlloc.h"
-#include "vm/RegExpObject.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK_LENGTH  1024    /* initial bytecode chunk length */

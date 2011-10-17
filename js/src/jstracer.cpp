@@ -64,7 +64,6 @@
 #include "jscompartment.h"
 #include "jsdate.h"
 #include "jsdbgapi.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -80,6 +79,7 @@
 #include "jstypedarray.h"
 
 #include "builtin/RegExp.h"
+#include "frontend/CodeGenerator.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"

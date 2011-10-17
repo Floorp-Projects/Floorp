@@ -41,7 +41,6 @@
  * JS reflection package.
  */
 #include <stdlib.h>
-#include <string.h>     /* for jsparse.h */
 
 #include "mozilla/Util.h"
 
@@ -49,12 +48,6 @@
 #include "jsatom.h"
 #include "jsobj.h"
 #include "jsreflect.h"
-#include "jscntxt.h"    /* for jsparse.h */
-#include "jsscript.h"   /* for jsparse.h */
-#include "jsinterp.h"   /* for jsparse.h */
-#include "jsparse.h"
-#include "jsemit.h"
-#include "jsscan.h"
 #include "jsprf.h"
 #include "jsiter.h"
 #include "jsbool.h"
@@ -65,6 +58,9 @@
 #include "jsarray.h"
 #include "jsnum.h"
 
+#include "frontend/CodeGenerator.h"
+#include "frontend/Parser.h"
+#include "frontend/TokenStream.h"
 #include "vm/RegExpObject.h"
 
 #include "jsscriptinlines.h"

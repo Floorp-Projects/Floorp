@@ -53,12 +53,13 @@
 #include "json.h"
 #include "jsonparser.h"
 #include "jsprf.h"
-#include "jsscan.h"
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
 #include "jsxml.h"
+
+#include "frontend/TokenStream.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
