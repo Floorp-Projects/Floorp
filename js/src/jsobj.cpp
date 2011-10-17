@@ -59,7 +59,6 @@
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -70,7 +69,6 @@
 #include "jsobj.h"
 #include "jsonparser.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jsprobes.h"
 #include "jsproxy.h"
 #include "jsscope.h"
@@ -82,6 +80,9 @@
 #include "json.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
+
+#include "frontend/CodeGenerator.h"
+#include "frontend/Parser.h"
 
 #include "jsarrayinlines.h"
 #include "jsinterpinlines.h"

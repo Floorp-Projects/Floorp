@@ -61,7 +61,6 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdate.h"
-#include "jsemit.h"
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -74,7 +73,6 @@
 #include "json.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jsprobes.h"
 #include "jsproxy.h"
 #include "jsscope.h"
@@ -88,6 +86,8 @@
 
 #include "ds/LifoAlloc.h"
 #include "builtin/RegExp.h"
+#include "frontend/CodeGenerator.h"
+#include "frontend/Parser.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"

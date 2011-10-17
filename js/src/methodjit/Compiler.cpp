@@ -42,7 +42,6 @@
 #include "MethodJIT.h"
 #include "jsnum.h"
 #include "jsbool.h"
-#include "jsemit.h"
 #include "jsiter.h"
 #include "Compiler.h"
 #include "StubCalls.h"
@@ -62,12 +61,12 @@
 #include "jshotloop.h"
 
 #include "builtin/RegExp.h"
+#include "frontend/CodeGenerator.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpObject.h"
 
 #include "jsautooplen.h"
 #include "jstypedarrayinlines.h"
-
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;

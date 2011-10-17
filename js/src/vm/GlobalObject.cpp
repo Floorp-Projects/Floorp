@@ -41,14 +41,14 @@
 #include "GlobalObject.h"
 
 #include "jscntxt.h"
-#include "jsemit.h"
 #include "jsexn.h"
 #include "jsmath.h"
 #include "json.h"
 
-#include "jsobjinlines.h"
-
 #include "builtin/RegExp.h"
+#include "frontend/CodeGenerator.h"
+
+#include "jsobjinlines.h"
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;
