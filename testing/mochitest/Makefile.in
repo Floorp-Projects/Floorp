@@ -98,6 +98,7 @@ _SERV_FILES = 	\
 		mozprefs.js \
 		pywebsocket_wrapper.py \
  	 	plain-loop.html \
+		android.json \
 		$(NULL)	
 
 _PYWEBSOCKET_FILES = \
