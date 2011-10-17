@@ -162,8 +162,11 @@ CPPSRCS		= \
 		GlobalObject.cpp \
 		Stack.cpp \
 		String.cpp \
+		BytecodeCompiler.cpp \
 		CodeGenerator.cpp \
+		FoldConstants.cpp \
 		ParseMaps.cpp \
+		ParseNode.cpp \
 		Parser.cpp \
 		TokenStream.cpp \
 		LifoAlloc.cpp \

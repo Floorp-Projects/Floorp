@@ -81,6 +81,7 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
+#include "frontend/BytecodeCompiler.h"
 #include "frontend/CodeGenerator.h"
 #include "frontend/Parser.h"
 
