@@ -37,12 +37,23 @@
 
 package org.mozilla.gecko;
 
-import android.content.*;
-import android.net.*;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 public class GeckoConnectivityReceiver
     extends BroadcastReceiver
 {
+    /*
+     * Keep the below constants in sync with
+     * http://mxr.mozilla.org/mozilla-central/source/netwerk/base/public/nsINetworkLinkService.idl
+     */
+    private static final String LINK_DATA_UP = "up";
+    private static final String LINK_DATA_DOWN = "down";
+    private static final String LINK_DATA_UNKNOWN = "unknown";
+
     @Override
     public void onReceive(Context context, Intent intent) {
         String status;
@@ -50,11 +61,11 @@ public class GeckoConnectivityReceiver
             context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = cm.getActiveNetworkInfo();
         if (info == null)
-            status = "unknown";
+            status = LINK_DATA_UNKNOWN;
         else if (!info.isConnected())
-            status = "down";
+            status = LINK_DATA_DOWN;
         else
-            status = "up";
+            status = LINK_DATA_UP;
 
         if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning))
             GeckoAppShell.onChangeNetworkLinkStatus(status);
