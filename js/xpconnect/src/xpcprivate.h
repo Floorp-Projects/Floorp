@@ -277,7 +277,7 @@ class PtrAndPrincipalHashKey : public PLDHashEntryHdr
         return aKey->mSavedHash;
     }
 
-    enum { ALLOW_MEMMOVE = PR_TRUE };
+    enum { ALLOW_MEMMOVE = true };
 
   protected:
     nsCOMPtr<nsISupports> mPtr;
@@ -977,7 +977,7 @@ public:
 
     XPCReadableJSStringWrapper() :
         nsDependentString(char_traits::sEmptyBuffer, char_traits::sEmptyBuffer)
-    { SetIsVoid(PR_TRUE); }
+    { SetIsVoid(true); }
 
     JSBool init(JSContext* aContext, JSString* str)
     {
@@ -1209,7 +1209,7 @@ private:
     // construction/destruction.
     struct StringWrapperEntry
     {
-        StringWrapperEntry() : mInUse(PR_FALSE) { }
+        StringWrapperEntry() : mInUse(false) { }
 
         js::AlignedStorage2<XPCReadableJSStringWrapper> mString;
         bool mInUse;
@@ -3118,7 +3118,7 @@ public:
     : mCanonical(nsnull),
       mObject(aObject),
       mCache(aCache),
-      mIsNode(PR_FALSE)
+      mIsNode(false)
     {
         if (!mCache) {
             if (aObject)
@@ -3256,7 +3256,7 @@ public:
      *        JSObject in an XPCNativeWrapper and return that, as needed.
      * @param isGlobal
      * @param pErr [out] relevant error code, if any.
-     * @param src_is_identity optional performance hint. Set to PR_TRUE only
+     * @param src_is_identity optional performance hint. Set to true only
      *                        if src is the identity pointer.
      */
     static JSBool NativeInterface2JSObject(XPCCallContext& ccx,
@@ -3972,8 +3972,8 @@ public:
      * @param cx The JSContext, this can be null, we don't do anything then
      */
     AutoScriptEvaluate(JSContext * cx MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
-         : mJSContext(cx), mState(0), mErrorReporterSet(PR_FALSE),
-           mEvaluated(PR_FALSE), mContextHasThread(0) {
+         : mJSContext(cx), mState(0), mErrorReporterSet(false),
+           mEvaluated(false), mContextHasThread(0) {
         MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
     }
 

@@ -214,7 +214,7 @@ NS_IMETHODIMP nsBasicUTF7Decoder::ConvertNoBuff(const char * aSrc,
       bcw = 1;
       res = NS_ERROR_UDEC_ILLEGALINPUT;
     } else {
-      mFreshBase64 = PR_FALSE;
+      mFreshBase64 = false;
       res = DecodeBase64(src, &bcr, dest, &bcw);
     }
     src += bcr;
@@ -225,7 +225,7 @@ NS_IMETHODIMP nsBasicUTF7Decoder::ConvertNoBuff(const char * aSrc,
       if (mEncoding == ENC_DIRECT) {
         if (*src == mEscChar) {
           mEncoding = ENC_BASE64;
-          mFreshBase64 = PR_TRUE;
+          mFreshBase64 = true;
           mEncBits = 0;
           mEncStep = 0;
           src++;

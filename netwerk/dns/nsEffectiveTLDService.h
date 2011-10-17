@@ -99,7 +99,7 @@ public:
     return PL_DHashStringKey(nsnull, aKey);
   }
 
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
   void SetData(const ETLDEntry* entry) { mData = entry; }
 

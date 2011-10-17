@@ -82,7 +82,7 @@ XULSortServiceImpl::SetSortHints(nsIContent *aNode, nsSortState* aSortState)
 {
   // set sort and sortDirection attributes when is sort is done
   aNode->SetAttr(kNameSpaceID_None, nsGkAtoms::sort,
-                 aSortState->sort, PR_TRUE);
+                 aSortState->sort, true);
 
   nsAutoString direction;
   if (aSortState->direction == nsSortState_descending)
@@ -90,7 +90,7 @@ XULSortServiceImpl::SetSortHints(nsIContent *aNode, nsSortState* aSortState)
   else if (aSortState->direction == nsSortState_ascending)
     direction.AssignLiteral("ascending");
   aNode->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
-                 direction, PR_TRUE);
+                 direction, true);
 
   // for trees, also set the sort info on the currently sorted column
   if (aNode->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
@@ -125,16 +125,16 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
           child->GetAttr(kNameSpaceID_None, nsGkAtoms::resource, value);
         if (value == sortResource) {
           child->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
-                         NS_LITERAL_STRING("true"), PR_TRUE);
+                         NS_LITERAL_STRING("true"), true);
           child->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
-                         sortDirection, PR_TRUE);
+                         sortDirection, true);
           // Note: don't break out of loop; want to set/unset
           // attribs on ALL sort columns
         } else if (!value.IsEmpty()) {
           child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
-                           PR_TRUE);
+                           true);
           child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
-                           PR_TRUE);
+                           true);
         }
       }
     }
@@ -326,7 +326,7 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
       // may generate results which get placed in different locations.
       items[i].parent = parent;
       PRInt32 index = parent->IndexOf(child);
-      parent->RemoveChildAt(index, PR_TRUE);
+      parent->RemoveChildAt(index, true);
     }
   }
 
@@ -336,7 +336,7 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
     nsIContent* child = items[i].content;
     nsIContent* parent = items[i].parent;
     if (parent) {
-      parent->AppendChildTo(child, PR_TRUE);
+      parent->AppendChildTo(child, true);
 
       // if it's a container in a tree or menu, find its children,
       // and sort those also
@@ -387,8 +387,8 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
   // used as an optimization for the content builder
   if (aContainer != aSortState->lastContainer.get()) {
     aSortState->lastContainer = aContainer;
-    aSortState->lastWasFirst = PR_FALSE;
-    aSortState->lastWasLast = PR_FALSE;
+    aSortState->lastWasFirst = false;
+    aSortState->lastWasLast = false;
   }
 
   // The attributes allowed are either:
@@ -440,7 +440,7 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
     else if (token.EqualsLiteral("ascending"))
       aSortState->direction = nsSortState_ascending;
     else if (token.EqualsLiteral("twostate"))
-      noNaturalState = PR_TRUE;
+      noNaturalState = true;
   }
 
   // if the twostate flag was set, the natural order is skipped and only
@@ -450,7 +450,7 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
   }
 
   // set up sort order info
-  aSortState->invertSort = PR_FALSE;
+  aSortState->invertSort = false;
 
   nsAutoString existingsort;
   aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, existingsort);
@@ -461,11 +461,11 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
   if (sort.Equals(existingsort)) {
     if (aSortState->direction == nsSortState_descending) {
       if (existingsortDirection.EqualsLiteral("ascending"))
-        aSortState->invertSort = PR_TRUE;
+        aSortState->invertSort = true;
     }
     else if (aSortState->direction == nsSortState_ascending &&
              existingsortDirection.EqualsLiteral("descending")) {
-      aSortState->invertSort = PR_TRUE;
+      aSortState->invertSort = true;
     }
   }
 
@@ -479,7 +479,7 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
                                   nsGkAtoms::sortStaticsLast,
                                   nsGkAtoms::_true, eCaseMatters);
 
-  aSortState->initialized = PR_TRUE;
+  aSortState->initialized = true;
 
   return NS_OK;
 }

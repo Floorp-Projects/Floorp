@@ -152,7 +152,7 @@ NS_IMETHODIMP nsDiskCacheEntryInfo::GetExpirationTime(PRUint32 *aExpirationTime)
 NS_IMETHODIMP nsDiskCacheEntryInfo::IsStreamBased(bool *aStreamBased)
 {
     NS_ENSURE_ARG_POINTER(aStreamBased);
-    *aStreamBased = PR_TRUE;
+    *aStreamBased = true;
     return NS_OK;
 }
 

@@ -118,7 +118,7 @@ static const char* gCurrentProfile;
  *                    attempt is made to name the profile data according
  *                    to this name, but check your platform's profiler
  *                    documentation for what this means.
- * @return PR_TRUE if profiling was available and successfully started.
+ * @return true if profiling was available and successfully started.
  * @see StopProfiling
  */
 inline bool
@@ -129,7 +129,7 @@ StartProfiling(const char* profileName)
 
     JSBool ok = JS_StartProfiling(profileName);
     gCurrentProfile = profileName;
-    return ok ? PR_TRUE : PR_FALSE;
+    return ok ? true : false;
 }
 
 /**
@@ -140,7 +140,7 @@ StartProfiling(const char* profileName)
  * This is NOT thread safe.
  *
  * @precondition Profiling was started
- * @return PR_TRUE if profiling was successfully stopped.
+ * @return true if profiling was successfully stopped.
  * @see StartProfiling
  */
 inline bool
@@ -150,7 +150,7 @@ StopProfiling()
 
     const char* profileName = gCurrentProfile;
     gCurrentProfile = 0;
-    return JS_StopProfiling(profileName) ? PR_TRUE : PR_FALSE;
+    return JS_StopProfiling(profileName) ? true : false;
 }
 
 //-----------------------------------------------------------------------------
@@ -194,7 +194,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
     {
       // If we created a profile directory, we need to remove it.
       if (mProfD) {
-        if (NS_FAILED(mProfD->Remove(PR_TRUE)))
+        if (NS_FAILED(mProfD->Remove(true)))
           NS_WARNING("Problem removing profile direrctory");
 
         mProfD = nsnull;
@@ -266,7 +266,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
         nsresult rv = profD->Clone(getter_AddRefs(clone));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        *_persistent = PR_TRUE;
+        *_persistent = true;
         clone.forget(_result);
         return NS_OK;
       }

@@ -80,9 +80,9 @@ LibrarySymbolLoader::OpenLibrary(const char *library)
 
     mLibrary = PR_LoadLibraryWithFlags(lspec, PR_LD_LAZY | PR_LD_LOCAL);
     if (!mLibrary)
-        return PR_FALSE;
+        return false;
 
-    return PR_TRUE;
+    return true;
 }
 
 bool
@@ -156,7 +156,7 @@ LibrarySymbolLoader::LoadSymbols(PRLibrary *lib,
         ss++;
     }
 
-    return failCount == 0 ? PR_TRUE : PR_FALSE;
+    return failCount == 0 ? true : false;
 }
 
 /*
@@ -171,7 +171,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
     if (mInitialized) {
         reporter.SetSuccessful();
-        return PR_TRUE;
+        return true;
     }
 
     SymLoadStruct symbols[] = {
@@ -499,7 +499,7 @@ GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
 {
     // fix bug 612572 - we were crashing as we were calling this function with extensions==null
     if (extensions == nsnull || extension == nsnull)
-        return PR_FALSE;
+        return false;
 
     const GLubyte *start;
     GLubyte *where, *terminator;
@@ -507,7 +507,7 @@ GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
     /* Extension names should not have spaces. */
     where = (GLubyte *) strchr(extension, ' ');
     if (where || *extension == '\0')
-        return PR_FALSE;
+        return false;
 
     /* 
      * It takes a bit of care to be fool-proof about parsing the
@@ -523,12 +523,12 @@ GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
         terminator = where + strlen(extension);
         if (where == start || *(where - 1) == ' ') {
             if (*terminator == ' ' || *terminator == '\0') {
-                return PR_TRUE;
+                return true;
             }
         }
         start = terminator;
     }
-    return PR_FALSE;
+    return false;
 }
 
 already_AddRefed<TextureImage>
@@ -703,7 +703,7 @@ BasicTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
                                            mTexture,
                                            mTextureState == Created,
                                            bounds.TopLeft() + aFrom,
-                                           PR_FALSE);
+                                           false);
     mTextureState = Valid;
     return true;
 }
@@ -735,7 +735,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
                                      bool aUseNearestFilter)
     : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aUseNearestFilter)
     , mCurrentImage(0)
-    , mInUpdate(PR_FALSE)
+    , mInUpdate(false)
     , mGL(aGL)
     , mUseNearestFilter(aUseNearestFilter)
     , mTextureState(Created)
@@ -821,7 +821,7 @@ gfxASurface*
 TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
 {
     NS_ASSERTION(!mInUpdate, "nested update");
-    mInUpdate = PR_TRUE;
+    mInUpdate = true;
 
     // Note, we don't call GetUpdateRegion here as if the updated region is
     // fully contained in a single tile, we get to avoid iterating through
@@ -884,7 +884,7 @@ TiledTextureImage::EndUpdate()
     NS_ASSERTION(mInUpdate, "EndUpdate not in update");
     if (!mUpdateSurface) { // update was to a single TextureImage
         mImages[mCurrentImage]->EndUpdate();
-        mInUpdate = PR_FALSE;
+        mInUpdate = false;
         mTextureState = Valid;
         mShaderType = mImages[mCurrentImage]->GetShaderProgramType();
         return;
@@ -912,7 +912,7 @@ TiledTextureImage::EndUpdate()
     }
 
     mUpdateSurface = nsnull;
-    mInUpdate = PR_FALSE;
+    mInUpdate = false;
     mShaderType = mImages[0]->GetShaderProgramType();
     mTextureState = Valid;
 }
@@ -926,9 +926,9 @@ bool TiledTextureImage::NextTile()
 {
     if (mCurrentImage + 1 < mImages.Length()) {
         mCurrentImage++;
-        return PR_TRUE;
+        return true;
     }
-    return PR_FALSE;
+    return false;
 }
 
 nsIntRect TiledTextureImage::GetTileRect()
@@ -989,7 +989,7 @@ bool
 GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 {
     if (!IsOffscreenSizeAllowed(aSize))
-        return PR_FALSE;
+        return false;
 
     MakeCurrent();
 
@@ -1161,7 +1161,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     GLenum status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         NS_WARNING("Error resizing offscreen framebuffer -- framebuffer not complete");
-        return PR_FALSE;
+        return false;
     }
 
     mOffscreenSize = aSize;
@@ -1199,7 +1199,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     if (!firstTime)
         fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
-    return PR_TRUE;
+    return true;
 }
 
 void
@@ -2314,7 +2314,7 @@ RemoveNamesFromArray(GLContext *aOrigin, GLsizei aCount, GLuint *aNames, nsTArra
         for (PRUint32 i = 0; i < aArray.Length(); ++i) {
             if (aArray[i].name == name) {
                 aArray.RemoveElementAt(i);
-                found = PR_TRUE;
+                found = true;
                 break;
             }
         }
@@ -2367,7 +2367,7 @@ MarkContextDestroyedInArray(GLContext *aContext, nsTArray<GLContext::NamedResour
 {
     for (PRUint32 i = 0; i < aArray.Length(); ++i) {
         if (aArray[i].origin == aContext)
-            aArray[i].originDeleted = PR_TRUE;
+            aArray[i].originDeleted = true;
     }
 }
 

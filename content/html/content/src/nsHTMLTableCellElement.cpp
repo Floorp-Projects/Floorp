@@ -196,7 +196,7 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 
     if (node.get() == static_cast<nsIDOMNode *>(this)) {
       *aCellIndex = i;
-      found = PR_TRUE;
+      found = true;
     }
   }
 
@@ -257,7 +257,7 @@ nsHTMLTableCellElement::GetAlign(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLTableCellElement::SetAlign(const nsAString& aValue)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::align, aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::align, aValue, true);
 }
 
 
@@ -320,7 +320,7 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseColor(aValue);
     }
     if (aAttribute == nsGkAtoms::scope) {
-      return aResult.ParseEnumValue(aValue, kCellScopeTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kCellScopeTable, false);
     }
     if (aAttribute == nsGkAtoms::valign) {
       return ParseTableVAlignValue(aValue, aResult);

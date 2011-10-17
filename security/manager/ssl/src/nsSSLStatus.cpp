@@ -125,7 +125,7 @@ NS_IMETHODIMP
 nsSSLStatus::Read(nsIObjectInputStream* stream)
 {
   nsCOMPtr<nsISupports> cert;
-  nsresult rv = stream->ReadObject(PR_TRUE, getter_AddRefs(cert));
+  nsresult rv = stream->ReadObject(true, getter_AddRefs(cert));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mServerCert = do_QueryInterface(cert);
@@ -159,7 +159,7 @@ nsSSLStatus::Write(nsIObjectOutputStream* stream)
 {
   nsresult rv = stream->WriteCompoundObject(mServerCert,
                                             NS_GET_IID(nsIX509Cert),
-                                            PR_TRUE);
+                                            true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stream->Write32(mKeyLength);
@@ -249,11 +249,11 @@ nsSSLStatus::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 
 nsSSLStatus::nsSSLStatus()
 : mKeyLength(0), mSecretKeyLength(0)
-, mIsDomainMismatch(PR_FALSE)
-, mIsNotValidAtThisTime(PR_FALSE)
-, mIsUntrusted(PR_FALSE)
-, mHaveKeyLengthAndCipher(PR_FALSE)
-, mHaveCertErrorBits(PR_FALSE)
+, mIsDomainMismatch(false)
+, mIsNotValidAtThisTime(false)
+, mIsUntrusted(false)
+, mHaveKeyLengthAndCipher(false)
+, mHaveCertErrorBits(false)
 {
   mCipherName = "";
 }

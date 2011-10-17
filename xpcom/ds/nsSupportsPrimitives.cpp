@@ -183,7 +183,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsPRBoolImpl, nsISupportsPRBool,
                               nsISupportsPrimitive)
 
 nsSupportsPRBoolImpl::nsSupportsPRBoolImpl()
-    : mData(PR_FALSE)
+    : mData(false)
 {
 }
 

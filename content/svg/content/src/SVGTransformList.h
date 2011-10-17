@@ -117,7 +117,7 @@ protected:
   }
 
   /**
-   * This may fail (return PR_FALSE) on OOM if the internal capacity is being
+   * This may fail (return false) on OOM if the internal capacity is being
    * increased, in which case the list will be left unmodified.
    */
   bool SetLength(PRUint32 aNumberOfItems) {

@@ -260,7 +260,7 @@ nsresult nsRootAccessible::AddEventListeners()
                    * const* e_end = ArrayEnd(docEvents);
          e < e_end; ++e) {
       nsresult rv = nstarget->AddEventListener(NS_ConvertASCIItoUTF16(*e),
-                                               this, PR_TRUE, PR_TRUE, 2);
+                                               this, true, true, 2);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -279,7 +279,7 @@ nsresult nsRootAccessible::RemoveEventListeners()
     for (const char* const* e = docEvents,
                    * const* e_end = ArrayEnd(docEvents);
          e < e_end; ++e) {
-      nsresult rv = target->RemoveEventListener(NS_ConvertASCIItoUTF16(*e), this, PR_TRUE);
+      nsresult rv = target->RemoveEventListener(NS_ConvertASCIItoUTF16(*e), this, true);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -678,7 +678,7 @@ nsRootAccessible::HandlePopupShownEvent(nsAccessible* aAccessible)
     if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
         comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
       nsRefPtr<AccEvent> event =
-        new AccStateChangeEvent(combobox, states::EXPANDED, PR_TRUE);
+        new AccStateChangeEvent(combobox, states::EXPANDED, true);
       if (event)
         nsEventShell::FireEvent(event);
     }
@@ -784,7 +784,7 @@ nsRootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
   // Fire expanded state change event.
   if (notifyOf & kNotifyOfState) {
     nsRefPtr<AccEvent> event =
-      new AccStateChangeEvent(widget, states::EXPANDED, PR_FALSE);
+      new AccStateChangeEvent(widget, states::EXPANDED, false);
     document->FireDelayedAccessibleEvent(event);
   }
 }

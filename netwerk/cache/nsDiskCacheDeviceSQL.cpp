@@ -104,14 +104,14 @@ DecomposeCacheEntryKey(const nsCString *fullKey,
   if (colon == kNotFound)
   {
     NS_ERROR("Invalid key");
-    return PR_FALSE;
+    return false;
   }
   buf.SetCharAt('\0', colon);
 
   *cid = buf.get();
   *key = buf.get() + colon + 1;
 
-  return PR_TRUE;
+  return true;
 }
 
 class AutoResetStatement
@@ -247,7 +247,7 @@ nsOfflineCacheEvictionFunction::Apply()
     LOG(("  removing %s\n", path.get()));
 #endif
 
-    mItems[i]->Remove(PR_FALSE);
+    mItems[i]->Remove(false);
   }
 
   Reset();
@@ -545,7 +545,7 @@ nsOfflineCacheEntryInfo::GetExpirationTime(PRUint32 *aExpirationTime)
 NS_IMETHODIMP
 nsOfflineCacheEntryInfo::IsStreamBased(bool *aStreamBased)
 {
-  *aStreamBased = PR_TRUE;
+  *aStreamBased = true;
   return NS_OK;
 }
 
@@ -605,7 +605,7 @@ NS_IMPL_ISUPPORTS2(nsApplicationCache,
 
 nsApplicationCache::nsApplicationCache()
   : mDevice(nsnull)
-  , mValid(PR_TRUE)
+  , mValid(true)
 {
 }
 
@@ -615,7 +615,7 @@ nsApplicationCache::nsApplicationCache(nsOfflineCacheDevice *device,
   : mDevice(device)
   , mGroup(group)
   , mClientID(clientID)
-  , mValid(PR_TRUE)
+  , mValid(true)
 {
 }
 
@@ -634,7 +634,7 @@ nsApplicationCache::~nsApplicationCache()
 void
 nsApplicationCache::MarkInvalid()
 {
-  mValid = PR_FALSE;
+  mValid = false;
 }
 
 NS_IMETHODIMP
@@ -688,7 +688,7 @@ nsApplicationCache::Discard()
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
-  mValid = PR_FALSE;
+  mValid = false;
 
   if (mDevice->IsActiveCache(mGroup, mClientID))
   {
@@ -749,7 +749,7 @@ nsApplicationCache::AddNamespaces(nsIArray *namespaces)
   if (!namespaces)
     return NS_OK;
 
-  mozStorageTransaction transaction(mDevice->mDB, PR_FALSE);
+  mozStorageTransaction transaction(mDevice->mDB, false);
 
   PRUint32 length;
   nsresult rv = namespaces->GetLength(&length);
@@ -845,7 +845,7 @@ nsOfflineCacheDevice::GetStrictFileOriginPolicy()
         return retval;
 
     // As default value use true (be more strict)
-    return PR_TRUE;
+    return true;
 }
 
 PRUint32
@@ -982,7 +982,7 @@ nsOfflineCacheDevice::DeleteData(nsCacheEntry *entry)
   nsOfflineCacheBinding *binding = (nsOfflineCacheBinding *) entry->Data();
   NS_ENSURE_STATE(binding);
 
-  return binding->mDataFile->Remove(PR_FALSE);
+  return binding->mDataFile->Remove(false);
 }
 
 /**
@@ -1393,7 +1393,7 @@ nsOfflineCacheDevice::FindEntry(nsCString *fullKey, bool *collision)
     rv = binding->mDataFile->IsFile(&isFile);
     if (NS_FAILED(rv) || !isFile)
     {
-      DeleteEntry(entry, PR_FALSE);
+      DeleteEntry(entry, false);
       delete entry;
       return nsnull;
     }
@@ -1536,7 +1536,7 @@ nsOfflineCacheDevice::DoomEntry(nsCacheEntry *entry)
   // We can go ahead and delete the corresponding row in our table,
   // but we must not delete the file on disk until we are deactivated.
   
-  DeleteEntry(entry, PR_FALSE);
+  DeleteEntry(entry, false);
 }
 
 nsresult
@@ -1895,7 +1895,7 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
       rv = statement->GetUTF8String(1, nsData);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      found = PR_TRUE;
+      found = true;
     }
 
     rv = statement->ExecuteStep(&hasRows);
@@ -2199,7 +2199,7 @@ nsOfflineCacheDevice::CanUseCache(nsIURI *keyURI, const nsCString &clientID)
   if (mActiveCaches.Contains(clientID)) {
     nsCAutoString groupID;
     nsresult rv = GetGroupForCache(clientID, groupID);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, false);
 
     nsCOMPtr<nsIURI> groupURI;
     rv = NS_NewURI(getter_AddRefs(groupURI), groupID);
@@ -2212,11 +2212,11 @@ nsOfflineCacheDevice::CanUseCache(nsIURI *keyURI, const nsCString &clientID)
       // manifest origin.
       if (NS_SecurityCompareURIs(keyURI, groupURI,
                                  GetStrictFileOriginPolicy()))
-        return PR_TRUE;
+        return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 

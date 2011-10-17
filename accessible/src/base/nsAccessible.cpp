@@ -272,7 +272,7 @@ nsAccessible::GetName(nsAString& aName)
   }
 
   if (rv != NS_OK_EMPTY_NAME)
-    aName.SetIsVoid(PR_TRUE);
+    aName.SetIsVoid(true);
 
   return NS_OK;
 }
@@ -542,7 +542,7 @@ nsAccessible::GetChildren(nsIArray **aOutChildren)
 
   for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsIAccessible* child = GetChildAt(childIdx);
-    children->AppendElement(child, PR_FALSE);
+    children->AppendElement(child, false);
   }
 
   NS_ADDREF(*aOutChildren = children);
@@ -552,7 +552,7 @@ nsAccessible::GetChildren(nsIArray **aOutChildren)
 bool
 nsAccessible::GetAllowsAnonChildAccessibles()
 {
-  return PR_TRUE;
+  return true;
 }
 
 /* readonly attribute long childCount; */
@@ -597,25 +597,25 @@ nsAccessible::IsVisible(bool* aIsOffscreen)
   // otherwise it will be marked states::OFFSCREEN. The states::INVISIBLE flag
   // is for elements which are programmatically hidden.
 
-  *aIsOffscreen = PR_TRUE;
+  *aIsOffscreen = true;
   if (IsDefunct())
-    return PR_FALSE;
+    return false;
 
   const PRUint16 kMinPixels  = 12;
    // Set up the variables we need, return false if we can't get at them all
   nsCOMPtr<nsIPresShell> shell(GetPresShell());
   if (!shell) 
-    return PR_FALSE;
+    return false;
 
   nsIFrame *frame = GetFrame();
   if (!frame) {
-    return PR_FALSE;
+    return false;
   }
 
   // If visibility:hidden or visibility:collapsed then mark with STATE_INVISIBLE
   if (!frame->GetStyleVisibility()->IsVisible())
   {
-      return PR_FALSE;
+      return false;
   }
 
   // We don't use the more accurate GetBoundsRect, because that is more expensive
@@ -649,14 +649,14 @@ nsAccessible::IsVisible(bool* aIsOffscreen)
     if (isEmpty && !(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
       // Consider zero area objects hidden unless they are absolutely positioned
       // or floating and may have descendants that have a non-zero size
-      return PR_FALSE;
+      return false;
     }
   }
 
   // The frame intersects the viewport, but we need to check the parent view chain :(
   bool isVisible = nsCoreUtils::CheckVisibilityInParentChain(frame);
   if (isVisible && rectVisibility == nsRectVisibility_kVisible) {
-    *aIsOffscreen = PR_FALSE;
+    *aIsOffscreen = false;
   }
   return isVisible;
 }
@@ -1036,10 +1036,10 @@ NS_IMETHODIMP nsAccessible::SetSelected(bool aSelect)
       if (aSelect) {
         return mContent->SetAttr(kNameSpaceID_None,
                                  nsGkAtoms::aria_selected,
-                                 NS_LITERAL_STRING("true"), PR_TRUE);
+                                 NS_LITERAL_STRING("true"), true);
       }
       return mContent->UnsetAttr(kNameSpaceID_None,
-                                 nsGkAtoms::aria_selected, PR_TRUE);
+                                 nsGkAtoms::aria_selected, true);
     }
   }
 
@@ -1060,7 +1060,7 @@ NS_IMETHODIMP nsAccessible::TakeSelection()
       nsCOMPtr<nsIAccessibleSelectable> selectable = do_QueryInterface(multiSelect);
       selectable->ClearSelection();
     }
-    return SetSelected(PR_TRUE);
+    return SetSelected(true);
   }
 
   return NS_ERROR_FAILURE;
@@ -1099,7 +1099,7 @@ nsAccessible::TakeFocus()
             focusContent = ancestorContent;
             focusContent->SetAttr(kNameSpaceID_None,
                                   nsGkAtoms::aria_activedescendant,
-                                  id, PR_TRUE);
+                                  id, true);
           }
         }
       }
@@ -1376,7 +1376,7 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   // However, nodes in outer documents override nodes in inner documents:
   //   Outer doc author may want to override properties on a widget they used in an iframe
   nsIContent *startContent = mContent;
-  while (PR_TRUE) {
+  while (true) {
     NS_ENSURE_STATE(startContent);
     nsIDocument *doc = startContent->GetDocument();
     nsIContent* rootContent = nsCoreUtils::GetRoleContent(doc);
@@ -1748,7 +1748,7 @@ nsAccessible::SetCurrentValue(double aValue)
   nsAutoString newValue;
   newValue.AppendFloat(aValue);
   return mContent->SetAttr(kNameSpaceID_None,
-                           nsGkAtoms::aria_valuenow, newValue, PR_TRUE);
+                           nsGkAtoms::aria_valuenow, newValue, true);
 }
 
 /* void setName (in DOMString name); */
@@ -2176,7 +2176,7 @@ nsAccessible::GetRelations(nsIArray **aRelations)
       PRUint32 targets = 0;
       relation->GetTargetsCount(&targets);
       if (targets)
-        relations->AppendElement(relation, PR_FALSE);
+        relations->AppendElement(relation, false);
     }
   }
 
@@ -2302,7 +2302,7 @@ NS_IMETHODIMP nsAccessible::RemoveChildFromSelection(PRInt32 aIndex)
 NS_IMETHODIMP nsAccessible::IsChildSelected(PRInt32 aIndex, bool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = PR_FALSE;
+  *aIsSelected = false;
 
   if (IsDefunct() || !IsSelect())
     return NS_ERROR_FAILURE;
@@ -2327,7 +2327,7 @@ NS_IMETHODIMP
 nsAccessible::SelectAllSelection(bool* aIsMultiSelect)
 {
   NS_ENSURE_ARG_POINTER(aIsMultiSelect);
-  *aIsMultiSelect = PR_FALSE;
+  *aIsMultiSelect = false;
 
   if (IsDefunct() || !IsSelect())
     return NS_ERROR_FAILURE;
@@ -2420,7 +2420,7 @@ NS_IMETHODIMP
 nsAccessible::GetValid(bool *aValid)
 {
   NS_ENSURE_ARG_POINTER(aValid);
-  *aValid = PR_FALSE;
+  *aValid = false;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -2434,7 +2434,7 @@ NS_IMETHODIMP
 nsAccessible::GetSelected(bool *aSelected)
 {
   NS_ENSURE_ARG_POINTER(aSelected);
-  *aSelected = PR_FALSE;
+  *aSelected = false;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -2569,26 +2569,26 @@ bool
 nsAccessible::AppendChild(nsAccessible* aChild)
 {
   if (!aChild)
-    return PR_FALSE;
+    return false;
 
   if (!mChildren.AppendElement(aChild))
-    return PR_FALSE;
+    return false;
 
   if (!nsAccUtils::IsEmbeddedObject(aChild))
     SetChildrenFlag(eMixedChildren);
 
   aChild->BindToParent(this, mChildren.Length() - 1);
-  return PR_TRUE;
+  return true;
 }
 
 bool
 nsAccessible::InsertChildAt(PRUint32 aIndex, nsAccessible* aChild)
 {
   if (!aChild)
-    return PR_FALSE;
+    return false;
 
   if (!mChildren.InsertElementAt(aIndex, aChild))
-    return PR_FALSE;
+    return false;
 
   for (PRUint32 idx = aIndex + 1; idx < mChildren.Length(); idx++) {
     NS_ASSERTION(mChildren[idx]->mIndexInParent == idx - 1, "Accessible child index doesn't match");
@@ -2601,23 +2601,23 @@ nsAccessible::InsertChildAt(PRUint32 aIndex, nsAccessible* aChild)
   mEmbeddedObjCollector = nsnull;
 
   aChild->BindToParent(this, aIndex);
-  return PR_TRUE;
+  return true;
 }
 
 bool
 nsAccessible::RemoveChild(nsAccessible* aChild)
 {
   if (!aChild)
-    return PR_FALSE;
+    return false;
 
   if (aChild->mParent != this || aChild->mIndexInParent == -1)
-    return PR_FALSE;
+    return false;
 
   PRUint32 index = static_cast<PRUint32>(aChild->mIndexInParent);
   if (index >= mChildren.Length() || mChildren[index] != aChild) {
     NS_ERROR("Child is bound to parent but parent hasn't this child at its index!");
     aChild->UnbindFromParent();
-    return PR_FALSE;
+    return false;
   }
 
   for (PRUint32 idx = index + 1; idx < mChildren.Length(); idx++) {
@@ -2629,7 +2629,7 @@ nsAccessible::RemoveChild(nsAccessible* aChild)
   mChildren.RemoveElementAt(index);
   mEmbeddedObjCollector = nsnull;
 
-  return PR_TRUE;
+  return true;
 }
 
 nsAccessible*
@@ -2808,7 +2808,7 @@ nsAccessible::SelectedItems()
   AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
   nsIAccessible* selected = nsnull;
   while ((selected = iter.Next()))
-    selectedItems->AppendElement(selected, PR_FALSE);
+    selectedItems->AppendElement(selected, false);
 
   nsIMutableArray* items = nsnull;
   selectedItems.forget(&items);
@@ -2863,7 +2863,7 @@ nsAccessible::AddItemToSelection(PRUint32 aIndex)
     index++;
 
   if (selected)
-    selected->SetSelected(PR_TRUE);
+    selected->SetSelected(true);
 
   return static_cast<bool>(selected);
 }
@@ -2878,7 +2878,7 @@ nsAccessible::RemoveItemFromSelection(PRUint32 aIndex)
     index++;
 
   if (selected)
-    selected->SetSelected(PR_FALSE);
+    selected->SetSelected(false);
 
   return static_cast<bool>(selected);
 }
@@ -2892,7 +2892,7 @@ nsAccessible::SelectAll()
   AccIterator iter(this, filters::GetSelectable, AccIterator::eTreeNav);
   while((selectable = iter.Next())) {
     success = true;
-    selectable->SetSelected(PR_TRUE);
+    selectable->SetSelected(true);
   }
   return success;
 }
@@ -2906,7 +2906,7 @@ nsAccessible::UnselectAll()
   AccIterator iter(this, filters::GetSelected, AccIterator::eTreeNav);
   while ((selected = iter.Next())) {
     success = true;
-    selected->SetSelected(PR_FALSE);
+    selected->SetSelected(false);
   }
   return success;
 }
@@ -3065,7 +3065,7 @@ nsAccessible::GetFirstAvailableAccessible(nsINode *aStartNode) const
   nsCOMPtr<nsIDOMTreeWalker> walker;
   domDoc->CreateTreeWalker(rootNode,
                            nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_TEXT,
-                           nsnull, PR_FALSE, getter_AddRefs(walker));
+                           nsnull, false, getter_AddRefs(walker));
   NS_ENSURE_TRUE(walker, nsnull);
 
   walker->SetCurrentNode(currentNode);

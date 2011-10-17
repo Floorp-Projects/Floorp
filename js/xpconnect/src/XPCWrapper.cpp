@@ -113,7 +113,7 @@ AttachNewConstructorObject(XPCCallContext &ccx, JSObject *aGlobalObject)
                       XrayWrapperConstructor, 1,
                       JSPROP_READONLY | JSPROP_PERMANENT | JSFUN_STUB_GSOPS | JSFUN_CONSTRUCTOR);
   if (!xpcnativewrapper) {
-    return PR_FALSE;
+    return false;
   }
   return JS_DefineFunction(ccx, JS_GetFunctionObject(xpcnativewrapper), "unwrap", UnwrapNW, 1,
                            JSPROP_READONLY | JSPROP_PERMANENT) != nsnull;

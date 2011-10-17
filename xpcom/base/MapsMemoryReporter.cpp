@@ -483,19 +483,19 @@ MapsReporter::ParseMapBody(
   const char* category;
   if (strcmp(desc, "Size") == 0) {
     category = "vsize";
-    aCategoriesSeen->mSeenVsize = PR_TRUE;
+    aCategoriesSeen->mSeenVsize = true;
   }
   else if (strcmp(desc, "Rss") == 0) {
     category = "resident";
-    aCategoriesSeen->mSeenResident = PR_TRUE;
+    aCategoriesSeen->mSeenResident = true;
   }
   else if (strcmp(desc, "Pss") == 0) {
     category = "pss";
-    aCategoriesSeen->mSeenPss = PR_TRUE;
+    aCategoriesSeen->mSeenPss = true;
   }
   else if (strcmp(desc, "Swap") == 0) {
     category = "swap";
-    aCategoriesSeen->mSeenSwap = PR_TRUE;
+    aCategoriesSeen->mSeenSwap = true;
   }
   else {
     // Don't report this category.

@@ -90,16 +90,16 @@ nsCharsetAlias2::Equals(const nsACString& aCharset1,
    nsresult res = NS_OK;
 
    if(aCharset1.Equals(aCharset2, nsCaseInsensitiveCStringComparator())) {
-      *oResult = PR_TRUE;
+      *oResult = true;
       return res;
    }
 
    if(aCharset1.IsEmpty() || aCharset2.IsEmpty()) {
-      *oResult = PR_FALSE;
+      *oResult = false;
       return res;
    }
 
-   *oResult = PR_FALSE;
+   *oResult = false;
    nsCAutoString name1;
    nsCAutoString name2;
    res = this->GetPreferred(aCharset1, name1);

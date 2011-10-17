@@ -884,24 +884,24 @@ static bool HasRelatedContent(nsIContent *aContent)
 {
   nsAutoString id;
   if (!aContent || !nsCoreUtils::GetID(aContent, id) || id.IsEmpty()) {
-    return PR_FALSE;
+    return false;
   }
 
   // If the given ID is referred by relation attribute then create an accessible
   // for it. Take care of HTML elements only for now.
   if (aContent->IsHTML() &&
       nsAccUtils::GetDocAccessibleFor(aContent)->IsDependentID(id))
-    return PR_TRUE;
+    return true;
 
   nsIContent *ancestorContent = aContent;
   while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
     if (ancestorContent->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant)) {
         // ancestor has activedescendant property, this content could be active
-      return PR_TRUE;
+      return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 nsAccessible*
@@ -1102,20 +1102,20 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
           }
 
           // otherwise create ARIA based accessible.
-          tryTagNameOrFrame = PR_FALSE;
+          tryTagNameOrFrame = false;
           break;
         }
 
         if (tableContent->Tag() == nsGkAtoms::table) {
           // Stop before we are fooled by any additional table ancestors
           // This table cell frameis part of a separate ancestor table.
-          tryTagNameOrFrame = PR_FALSE;
+          tryTagNameOrFrame = false;
           break;
         }
       }
 
       if (!tableContent)
-        tryTagNameOrFrame = PR_FALSE;
+        tryTagNameOrFrame = false;
     }
 
     if (roleMapEntry) {
@@ -1230,21 +1230,21 @@ nsAccessibilityService::Init()
 {
   // Initialize accessible document manager.
   if (!nsAccDocManager::Init())
-    return PR_FALSE;
+    return false;
 
   // Add observers.
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (!observerService)
-    return PR_FALSE;
+    return false;
 
-  observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
   // Initialize accessibility.
   nsAccessNodeWrap::InitAccessibility();
 
-  gIsShutdown = PR_FALSE;
-  return PR_TRUE;
+  gIsShutdown = false;
+  return true;
 }
 
 void
@@ -1266,7 +1266,7 @@ nsAccessibilityService::Shutdown()
 
   NS_ASSERTION(!gIsShutdown, "Accessibility was shutdown already");
 
-  gIsShutdown = PR_TRUE;
+  gIsShutdown = true;
 
   nsAccessNodeWrap::ShutdownAccessibility();
 }

@@ -51,7 +51,7 @@ nsIConstraintValidation::nsIConstraintValidation()
   : mValidityBitField(0)
   , mValidity(nsnull)
   // By default, all elements are subjects to constraint validation.
-  , mBarredFromConstraintValidation(PR_FALSE)
+  , mBarredFromConstraintValidation(false)
 {
 }
 
@@ -122,18 +122,18 @@ nsresult
 nsIConstraintValidation::CheckValidity(bool* aValidity)
 {
   if (!IsCandidateForConstraintValidation() || IsValid()) {
-    *aValidity = PR_TRUE;
+    *aValidity = true;
     return NS_OK;
   }
 
-  *aValidity = PR_FALSE;
+  *aValidity = false;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(this);
   NS_ASSERTION(content, "This class should be inherited by HTML elements only!");
 
   return nsContentUtils::DispatchTrustedEvent(content->GetOwnerDoc(), content,
                                               NS_LITERAL_STRING("invalid"),
-                                              PR_FALSE, PR_TRUE);
+                                              false, true);
 }
 
 void

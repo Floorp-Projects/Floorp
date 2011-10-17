@@ -101,7 +101,7 @@ XPCThrower::Throw(nsresult rv, XPCCallContext& ccx)
     sz = (char*) format;
 
     if (sz && sVerbose)
-        Verbosify(ccx, &sz, PR_FALSE);
+        Verbosify(ccx, &sz, false);
 
     BuildAndThrowException(ccx, rv, sz);
 
@@ -139,7 +139,7 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
         sz = JS_smprintf("%s 0x%x", format, result);
 
     if (sz && sVerbose)
-        Verbosify(ccx, &sz, PR_TRUE);
+        Verbosify(ccx, &sz, true);
 
     BuildAndThrowException(ccx, result, sz);
 
@@ -160,7 +160,7 @@ XPCThrower::ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx)
     sz = JS_smprintf("%s arg %d", format, paramNum);
 
     if (sz && sVerbose)
-        Verbosify(ccx, &sz, PR_TRUE);
+        Verbosify(ccx, &sz, true);
 
     BuildAndThrowException(ccx, rv, sz);
 
@@ -243,20 +243,20 @@ IsCallerChrome(JSContext* cx)
     } else {
         nsXPConnect* xpc = nsXPConnect::GetXPConnect();
         if (!xpc)
-            return PR_FALSE;
+            return false;
 
         nsCOMPtr<nsIXPCSecurityManager> xpcSecMan;
         PRUint16 flags = 0;
         rv = xpc->GetSecurityManagerForJSContext(cx, getter_AddRefs(xpcSecMan),
                                                  &flags);
         if (NS_FAILED(rv) || !xpcSecMan)
-            return PR_FALSE;
+            return false;
 
         secMan = do_QueryInterface(xpcSecMan);
     }
 
     if (!secMan)
-        return PR_FALSE;
+        return false;
 
     bool isChrome;
     rv = secMan->SubjectPrincipalIsSystem(&isChrome);

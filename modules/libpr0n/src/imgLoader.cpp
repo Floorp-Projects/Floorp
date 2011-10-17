@@ -413,13 +413,13 @@ static bool ShouldRevalidateEntry(imgCacheEntry *aEntry,
   bool bValidateEntry = false;
 
   if (aFlags & nsIRequest::LOAD_BYPASS_CACHE)
-    return PR_FALSE;
+    return false;
 
   if (aFlags & nsIRequest::VALIDATE_ALWAYS) {
-    bValidateEntry = PR_TRUE;
+    bValidateEntry = true;
   }
   else if (aEntry->GetMustValidate()) {
-    bValidateEntry = PR_TRUE;
+    bValidateEntry = true;
   }
   //
   // The cache entry has expired...  Determine whether the stale cache
@@ -434,14 +434,14 @@ static bool ShouldRevalidateEntry(imgCacheEntry *aEntry,
     if (aFlags & (nsIRequest::VALIDATE_NEVER | 
                   nsIRequest::VALIDATE_ONCE_PER_SESSION)) 
     {
-      bValidateEntry = PR_FALSE;
+      bValidateEntry = false;
     }
     //
     // LOAD_FROM_CACHE allows a stale cache entry to be used... Otherwise,
     // the entry must be revalidated.
     //
     else if (!(aFlags & nsIRequest::LOAD_FROM_CACHE)) {
-      bValidateEntry = PR_TRUE;
+      bValidateEntry = true;
     }
   }
 
@@ -538,7 +538,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   if (newHttpChannel) {
     newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                      aAcceptHeader,
-                                     PR_FALSE);
+                                     false);
 
     nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal = do_QueryInterface(newHttpChannel);
     NS_ENSURE_TRUE(httpChannelInternal, NS_ERROR_UNEXPECTED);
@@ -558,7 +558,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   }
 
   bool setOwner = nsContentUtils::SetUpChannelOwner(aLoadingPrincipal,
-                                                      *aResult, aURI, PR_FALSE);
+                                                      *aResult, aURI, false);
   *aForcePrincipalCheckForCacheEntry = setOwner;
 
   return NS_OK;
@@ -574,11 +574,11 @@ imgCacheEntry::imgCacheEntry(imgRequest *request, bool forcePrincipalCheck)
    mDataSize(0),
    mTouchedTime(SecondsFromPRTime(PR_Now())),
    mExpiryTime(0),
-   mMustValidate(PR_FALSE),
+   mMustValidate(false),
    // We start off as evicted so we don't try to update the cache. PutIntoCache
    // will set this to false.
-   mEvicted(PR_TRUE),
-   mHasNoProxies(PR_TRUE),
+   mEvicted(true),
+   mHasNoProxies(true),
    mForcePrincipalCheck(forcePrincipalCheck)
 {}
 
@@ -626,7 +626,7 @@ void imgCacheEntry::SetHasNoProxies(bool hasNoProxies)
 }
 
 imgCacheQueue::imgCacheQueue()
- : mDirty(PR_FALSE),
+ : mDirty(false),
    mSize(0)
 {}
 
@@ -682,12 +682,12 @@ already_AddRefed<imgCacheEntry> imgCacheQueue::Pop()
 void imgCacheQueue::Refresh()
 {
   std::make_heap(mQueue.begin(), mQueue.end(), imgLoader::CompareCacheEntries);
-  mDirty = PR_FALSE;
+  mDirty = false;
 }
 
 void imgCacheQueue::MarkDirty()
 {
-  mDirty = PR_TRUE;
+  mDirty = true;
 }
 
 bool imgCacheQueue::IsDirty()
@@ -897,9 +897,9 @@ nsresult imgLoader::InitCache()
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(gCacheObserver);
 
-  os->AddObserver(gCacheObserver, "memory-pressure", PR_FALSE);
-  os->AddObserver(gCacheObserver, "chrome-flush-skin-caches", PR_FALSE);
-  os->AddObserver(gCacheObserver, "chrome-flush-caches", PR_FALSE);
+  os->AddObserver(gCacheObserver, "memory-pressure", false);
+  os->AddObserver(gCacheObserver, "chrome-flush-skin-caches", false);
+  os->AddObserver(gCacheObserver, "chrome-flush-caches", false);
 
   gCacheTracker = new imgCacheExpirationTracker();
   if (!gCacheTracker)
@@ -949,7 +949,7 @@ nsresult imgLoader::Init()
   // Listen for when we leave private browsing mode
   nsCOMPtr<nsIObserverService> obService = mozilla::services::GetObserverService();
   if (obService)
-    obService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
+    obService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
 
   return NS_OK;
 }
@@ -1084,11 +1084,11 @@ bool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
   }
 
   if (!cache.Put(spec, entry))
-    return PR_FALSE;
+    return false;
 
   // We can be called to resurrect an evicted entry.
   if (entry->Evicted())
-    entry->SetEvicted(PR_FALSE);
+    entry->SetEvicted(false);
 
   // If we're resurrecting an entry with no proxies, put it back in the
   // tracker and queue.
@@ -1105,9 +1105,9 @@ bool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
   }
 
   nsRefPtr<imgRequest> request(getter_AddRefs(entry->GetRequest()));
-  request->SetIsInCache(PR_TRUE);
+  request->SetIsInCache(true);
 
-  return PR_TRUE;
+  return true;
 }
 
 bool imgLoader::SetHasNoProxies(nsIURI *key, imgCacheEntry *entry)
@@ -1120,7 +1120,7 @@ bool imgLoader::SetHasNoProxies(nsIURI *key, imgCacheEntry *entry)
 #endif
 
   if (entry->Evicted())
-    return PR_FALSE;
+    return false;
 
   imgCacheQueue &queue = GetCacheQueue(key);
 
@@ -1131,13 +1131,13 @@ bool imgLoader::SetHasNoProxies(nsIURI *key, imgCacheEntry *entry)
 
   if (NS_SUCCEEDED(addrv)) {
     queue.Push(entry);
-    entry->SetHasNoProxies(PR_TRUE);
+    entry->SetHasNoProxies(true);
   }
 
   imgCacheTable &cache = GetCache(key);
   CheckCacheLimits(cache, queue);
 
-  return PR_TRUE;
+  return true;
 }
 
 bool imgLoader::SetHasProxies(nsIURI *key)
@@ -1159,12 +1159,12 @@ bool imgLoader::SetHasProxies(nsIURI *key)
     if (gCacheTracker)
       gCacheTracker->RemoveObject(entry);
 
-    entry->SetHasNoProxies(PR_FALSE);
+    entry->SetHasNoProxies(false);
 
-    return PR_TRUE;
+    return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 void imgLoader::CacheEntriesChanged(nsIURI *uri, PRInt32 sizediff /* = 0 */)
@@ -1230,7 +1230,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                                   aLoadFlags, aExistingRequest, 
                                   reinterpret_cast<imgIRequest **>(aProxyRequest));
     if (NS_FAILED(rv)) {
-      return PR_FALSE;
+      return false;
     }
 
     if (*aProxyRequest) {
@@ -1240,7 +1240,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
       // In the mean time, we must defer notifications because we are added to
       // the imgRequest's proxy list, and we can get extra notifications
       // resulting from methods such as RequestDecode(). See bug 579122.
-      proxy->SetNotificationsDeferred(PR_TRUE);
+      proxy->SetNotificationsDeferred(true);
 
       // Attach the proxy without notifying
       request->mValidator->AddProxy(proxy);
@@ -1265,21 +1265,21 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                          aPolicy,
                          aLoadingPrincipal);
     if (NS_FAILED(rv)) {
-      return PR_FALSE;
+      return false;
     }
 
     nsCOMPtr<imgIRequest> req;
     rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                   aLoadFlags, aExistingRequest, getter_AddRefs(req));
     if (NS_FAILED(rv)) {
-      return PR_FALSE;
+      return false;
     }
 
     // Make sure that OnStatus/OnProgress calls have the right request set...
     nsRefPtr<nsProgressNotificationProxy> progressproxy =
         new nsProgressNotificationProxy(newChannel, req);
     if (!progressproxy)
-      return PR_FALSE;
+      return false;
 
     nsRefPtr<imgCacheValidator> hvc =
       new imgCacheValidator(progressproxy, request, aCX, forcePrincipalCheck);
@@ -1291,7 +1291,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
       nsCOMPtr<nsIStreamListener> corsproxy =
         new nsCORSListenerProxy(hvc, aLoadingPrincipal, newChannel, withCredentials, &rv);
       if (NS_FAILED(rv)) {
-        return PR_FALSE;
+        return false;
       }
 
       listener = corsproxy;
@@ -1308,7 +1308,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
     // In the mean time, we must defer notifications because we are added to
     // the imgRequest's proxy list, and we can get extra notifications
     // resulting from methods such as RequestDecode(). See bug 579122.
-    proxy->SetNotificationsDeferred(PR_TRUE);
+    proxy->SetNotificationsDeferred(true);
 
     // Add the proxy without notifying
     hvc->AddProxy(proxy);
@@ -1341,9 +1341,9 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
   bool hasExpired;
   PRUint32 expirationTime = aEntry->GetExpiryTime();
   if (expirationTime <= SecondsFromPRTime(PR_Now())) {
-    hasExpired = PR_TRUE;
+    hasExpired = true;
   } else {
-    hasExpired = PR_FALSE;
+    hasExpired = false;
   }
 
   nsresult rv;
@@ -1369,11 +1369,11 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
   nsRefPtr<imgRequest> request(aEntry->GetRequest());
 
   if (!request)
-    return PR_FALSE;
+    return false;
 
   if (!ValidateCORSAndPrincipal(request, aEntry->ForcePrincipalCheck(),
                                 aCORSMode, aLoadingPrincipal))
-    return PR_FALSE;
+    return false;
 
   bool validateRequest = false;
 
@@ -1388,7 +1388,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
     // If we would need to revalidate this entry, but we're being told to
     // bypass the cache, we don't allow this entry to be used.
     if (aLoadFlags & nsIRequest::LOAD_BYPASS_CACHE)
-      return PR_FALSE;
+      return false;
 
     // Determine whether the cache aEntry must be revalidated...
     validateRequest = ShouldRevalidateEntry(aEntry, aLoadFlags, hasExpired);
@@ -1423,7 +1423,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
            ("imgLoader::ValidateEntry - Unable to use cached imgRequest "
             "[request=%p] because of mismatched application caches\n",
             address_of(request)));
-    return PR_FALSE;
+    return false;
   }
 
   if (validateRequest && aCanMakeNewChannel) {
@@ -1442,7 +1442,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
 
 bool imgLoader::RemoveFromCache(nsIURI *aKey)
 {
-  if (!aKey) return PR_FALSE;
+  if (!aKey) return false;
 
   imgCacheTable &cache = GetCache(aKey);
   imgCacheQueue &queue = GetCacheQueue(aKey);
@@ -1465,15 +1465,15 @@ bool imgLoader::RemoveFromCache(nsIURI *aKey)
       queue.Remove(entry);
     }
 
-    entry->SetEvicted(PR_TRUE);
+    entry->SetEvicted(true);
 
     nsRefPtr<imgRequest> request(getter_AddRefs(entry->GetRequest()));
-    request->SetIsInCache(PR_FALSE);
+    request->SetIsInCache(false);
 
-    return PR_TRUE;
+    return true;
   }
   else
-    return PR_FALSE;
+    return false;
 }
 
 bool imgLoader::RemoveFromCache(imgCacheEntry *entry)
@@ -1500,14 +1500,14 @@ bool imgLoader::RemoveFromCache(imgCacheEntry *entry)
         queue.Remove(entry);
       }
 
-      entry->SetEvicted(PR_TRUE);
-      request->SetIsInCache(PR_FALSE);
+      entry->SetEvicted(true);
+      request->SetIsInCache(false);
 
-      return PR_TRUE;
+      return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 static PLDHashOperator EnumEvictEntries(const nsACString&, 
@@ -1639,7 +1639,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
   if (cache.Get(spec, getter_AddRefs(entry)) && entry) {
     if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI,
-                      aLoadGroup, aObserver, aCX, requestFlags, PR_TRUE,
+                      aLoadGroup, aObserver, aCX, requestFlags, true,
                       aRequest, _retval, aPolicy, aLoadingPrincipal, corsmode)) {
       request = getter_AddRefs(entry->GetRequest());
 
@@ -1837,7 +1837,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
       // XXX -- should this be changed? it's pretty much verbatim from the old
       // code, but seems nonsensical.
       if (ValidateEntry(entry, uri, nsnull, nsnull, nsnull, aObserver, aCX,
-                        requestFlags, PR_FALSE, nsnull, nsnull, nsnull,
+                        requestFlags, false, nsnull, nsnull, nsnull,
                         nsnull, imgIRequest::CORS_NONE)) {
         request = getter_AddRefs(entry->GetRequest());
       } else {
@@ -1847,7 +1847,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
         if (cacheChan)
           cacheChan->IsFromCache(&bUseCacheCopy);
         else
-          bUseCacheCopy = PR_FALSE;
+          bUseCacheCopy = false;
 
         if (!bUseCacheCopy)
           entry = nsnull;
@@ -1891,7 +1891,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     // Default to doing a principal check because we don't know who
     // started that load and whether their principal ended up being
     // inherited on the channel.
-    NewRequestAndEntry(PR_TRUE, getter_AddRefs(request), getter_AddRefs(entry));
+    NewRequestAndEntry(true, getter_AddRefs(request), getter_AddRefs(entry));
 
     // We use originalURI here to fulfil the imgIRequest contract on GetURI.
     nsCOMPtr<nsIURI> originalURI;
@@ -1928,11 +1928,11 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
 NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
   nsCAutoString mimeType(aMimeType);
   ToLowerCase(mimeType);
   *_retval = (Image::GetDecoderType(mimeType.get()) == Image::eDecoderType_unknown)
-    ? PR_FALSE : PR_TRUE;
+    ? false : true;
   return NS_OK;
 }
 
@@ -2162,7 +2162,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
         NS_ABORT_IF_FALSE(proxy->NotificationsDeferred(),
                           "Proxies waiting on cache validation should be "
                           "deferring notifications!");
-        proxy->SetNotificationsDeferred(PR_FALSE);
+        proxy->SetNotificationsDeferred(false);
 
         // Notify synchronously, because we're already in OnStartRequest, an
         // asynchronously-called function.
@@ -2228,7 +2228,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
     NS_ABORT_IF_FALSE(proxy->NotificationsDeferred(),
                       "Proxies waiting on cache validation should be "
                       "deferring notifications!");
-    proxy->SetNotificationsDeferred(PR_FALSE);
+    proxy->SetNotificationsDeferred(false);
 
     // Notify synchronously, because we're already in OnStartRequest, an
     // asynchronously-called function.

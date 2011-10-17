@@ -328,11 +328,11 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
   nsresult rv;
 
   if (NS_FAILED(ensure_libgnomeui()) || NS_FAILED(ensure_libgnome()) || NS_FAILED(ensure_libgnomevfs())) {
-    gTriedToLoadGnomeLibs = PR_TRUE;
+    gTriedToLoadGnomeLibs = true;
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  gTriedToLoadGnomeLibs = PR_TRUE;
+  gTriedToLoadGnomeLibs = true;
 
   if (!_gnome_program_get()) {
     // Get the brandShortName from the string bundle to pass to GNOME
@@ -618,7 +618,7 @@ nsIconChannel::Init(nsIURI* aURI)
         gtk_icon_theme_lookup_icon(icon_theme, stockIcon.get(),
                                    size, (GtkIconLookupFlags)0);
       if (icon) {
-        useIconName = PR_TRUE;
+        useIconName = true;
         gtk_icon_info_free(icon);
       }
     }
@@ -634,7 +634,7 @@ nsIconChannel::Init(nsIURI* aURI)
   if (!icon_set) {
     // Either we have choosen icon-name lookup for a bidi icon, or stockIcon is
     // not a stock id so we assume it is an icon name.
-    useIconName = PR_TRUE;
+    useIconName = true;
     // Creating a GtkIconSet is a convenient way to allow the style to
     // render the icon, possibly with variations suitable for insensitive
     // states.
@@ -679,7 +679,7 @@ nsIconChannel::Shutdown() {
     g_object_unref(G_OBJECT(gIconTheme));
     gIconTheme = nsnull;
   }
-  gTriedToLoadGnomeLibs = PR_FALSE;
+  gTriedToLoadGnomeLibs = false;
   if (gLibGnomeUI) {
     PR_UnloadLibrary(gLibGnomeUI);
     gLibGnomeUI = nsnull;

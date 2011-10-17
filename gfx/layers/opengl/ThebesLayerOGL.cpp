@@ -433,7 +433,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
   bool canReuseBuffer;
   nsIntRect destBufferRect;
 
-  while (PR_TRUE) {
+  while (true) {
     mode = mLayer->GetSurfaceMode();
     contentType = aContentType;
     neededRegion = mLayer->GetVisibleRegion();
@@ -661,7 +661,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
     // Using this surface as a source will likely go horribly wrong, since
     // only the onBlack surface will really be used, so alpha information will
     // be incorrect.
-    surf->SetAllowUseAsSource(PR_FALSE);
+    surf->SetAllowUseAsSource(false);
     result.mContext = new gfxContext(surf);
   } else {
     result.mContext = new gfxContext(mTexImage->BeginUpdate(result.mRegionToDraw));
@@ -711,7 +711,7 @@ ThebesLayerOGL::Destroy()
 {
   if (!mDestroyed) {
     mBuffer = nsnull;
-    mDestroyed = PR_TRUE;
+    mDestroyed = true;
   }
 }
 
@@ -721,7 +721,7 @@ ThebesLayerOGL::CreateSurface()
   NS_ASSERTION(!mBuffer, "buffer already created?");
 
   if (mVisibleRegion.IsEmpty()) {
-    return PR_FALSE;
+    return false;
   }
 
   if (gl()->TextureImageSupportsGetBackingSurface()) {
@@ -730,7 +730,7 @@ ThebesLayerOGL::CreateSurface()
   } else {
     mBuffer = new BasicBufferOGL(this);
   }
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -932,7 +932,7 @@ void
 ShadowThebesLayerOGL::Destroy()
 {
   if (!mDestroyed) {
-    mDestroyed = PR_TRUE;
+    mDestroyed = true;
     mBuffer = nsnull;
   }
 }

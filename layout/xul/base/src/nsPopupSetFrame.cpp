@@ -155,7 +155,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
   // lay out all of our currently open popups.
   for (nsFrameList::Enumerator e(mPopupList); !e.AtEnd(); e.Next()) {
     nsMenuPopupFrame* popupChild = static_cast<nsMenuPopupFrame*>(e.get());
-    popupChild->LayoutPopup(aState, nsnull, PR_FALSE);
+    popupChild->LayoutPopup(aState, nsnull, false);
   }
 
   return rv;
@@ -237,7 +237,7 @@ nsPopupSetFrame::List(FILE* out, PRInt32 aIndent) const
     if (outputOneList) {
       IndentBy(out, aIndent);
     }
-    outputOneList = PR_TRUE;
+    outputOneList = true;
     fprintf(out, "%s<\n", mozilla::layout::ChildListName(lists.CurrentID()));
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
@@ -273,7 +273,7 @@ nsPopupSetFrame::List(FILE* out, PRInt32 aIndent) const
     --aIndent;
     IndentBy(out, aIndent);
     fputs(">\n", out);
-    outputOneList = PR_TRUE;
+    outputOneList = true;
   }
 
   if (!outputOneList) {

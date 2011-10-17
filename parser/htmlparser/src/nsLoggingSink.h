@@ -80,7 +80,7 @@ public:
   NS_IMETHOD OpenHead();
   NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn) 
   /* Take the largest possible feature set. */
-  { NS_ENSURE_ARG_POINTER(aReturn); *aReturn = PR_TRUE; return NS_OK; }
+  { NS_ENSURE_ARG_POINTER(aReturn); *aReturn = true; return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
   NS_IMETHOD_(bool) IsFormOnStack() { return false; }
 

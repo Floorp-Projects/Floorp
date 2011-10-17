@@ -174,7 +174,7 @@ public:
           return res;
         }
 
-        return PR_FALSE;
+        return false;
       }
     };
 

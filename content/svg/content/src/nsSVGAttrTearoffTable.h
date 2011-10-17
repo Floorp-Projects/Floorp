@@ -98,7 +98,7 @@ nsSVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(SimpleType* aSimple,
   // We shouldn't be adding a tear-off if there already is one. If that happens,
   // something is wrong.
   if (mTable.Get(aSimple, nsnull)) {
-    NS_ABORT_IF_FALSE(PR_FALSE, "There is already a tear-off for this object.");
+    NS_ABORT_IF_FALSE(false, "There is already a tear-off for this object.");
     return;
   }
 

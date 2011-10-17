@@ -132,9 +132,9 @@ bool nsUnicodeToGB18030::EncodeSurrogate(
     idx %= (10*126);
     out[2] = (idx / (10)) + 0x81;
     out[3] = (idx % 10) + 0x30;
-    return PR_TRUE;
+    return true;
   } 
-  return PR_FALSE; 
+  return false; 
 } 
 
 //----------------------------------------------------------------------
@@ -166,7 +166,7 @@ bool nsUnicodeToGBK::TryExtensionEncoder(
       NS_IS_LOW_SURROGATE(aChar) )
   {
     // performance tune for surrogate characters
-    return PR_FALSE;
+    return false;
   }
   if(! mExtensionEncoder )
     CreateExtensionEncoder();
@@ -176,9 +176,9 @@ bool nsUnicodeToGBK::TryExtensionEncoder(
     nsresult res = NS_OK;
     res = mExtensionEncoder->Convert(&aChar, &len, aOut, aOutLen);
     if(NS_SUCCEEDED(res) && (*aOutLen > 0))
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 bool nsUnicodeToGBK::Try4BytesEncoder(
@@ -191,7 +191,7 @@ bool nsUnicodeToGBK::Try4BytesEncoder(
       NS_IS_LOW_SURROGATE(aChar) )
   {
     // performance tune for surrogate characters
-    return PR_FALSE;
+    return false;
   }
   if(! m4BytesEncoder )
     Create4BytesEncoder();
@@ -203,16 +203,16 @@ bool nsUnicodeToGBK::Try4BytesEncoder(
     NS_ASSERTION(NS_FAILED(res) || ((1 == len) && (4 == *aOutLen)),
       "unexpect conversion length");
     if(NS_SUCCEEDED(res) && (*aOutLen > 0))
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 bool nsUnicodeToGBK::EncodeSurrogate(
   PRUnichar aSurrogateHigh,
   PRUnichar aSurrogateLow,
   char* aOut)
 {
-  return PR_FALSE; // GBK cannot encode Surrogate, let the subclass encode it.
+  return false; // GBK cannot encode Surrogate, let the subclass encode it.
 } 
 
 NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
@@ -237,7 +237,7 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
       iDestLength +=1;
     } else {
       char byte1, byte2;
-      if(mUtil.UnicodeToGBKChar( unicode, PR_FALSE, &byte1, &byte2))
+      if(mUtil.UnicodeToGBKChar( unicode, false, &byte1, &byte2))
       {
         // make sure we still have 2 bytes for output first
         if(iDestLength+2 > *aDestLength)

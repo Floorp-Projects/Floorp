@@ -90,7 +90,7 @@ SVGLength::SetValueFromString(const nsAString &aValue)
       tmpUnit = GetUnitTypeForString(unitStr.get());
       if (tmpUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN) {
         // nsSVGUtils::ReportToConsole
-        return PR_FALSE;
+        return false;
       }
     } else {
       tmpUnit = nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER;
@@ -101,10 +101,10 @@ SVGLength::SetValueFromString(const nsAString &aValue)
     if (!*theRest) {
       mValue = tmpValue;
       mUnit = tmpUnit;
-      return PR_TRUE;
+      return true;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 inline static bool

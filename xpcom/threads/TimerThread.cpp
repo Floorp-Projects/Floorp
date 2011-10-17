@@ -57,11 +57,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(TimerThread, nsIRunnable, nsIObserver)
 
 TimerThread::TimerThread() :
   mInitInProgress(0),
-  mInitialized(PR_FALSE),
+  mInitialized(false),
   mMonitor("TimerThread.mMonitor"),
-  mShutdown(PR_FALSE),
-  mWaiting(PR_FALSE),
-  mSleeping(PR_FALSE),
+  mShutdown(false),
+  mWaiting(false),
+  mSleeping(false),
   mDelayLineCounter(0),
   mMinTimerPeriod(0)
 {
@@ -111,14 +111,14 @@ nsresult TimerThread::Init()
       }
       // We'll be released at xpcom shutdown
       if (observerService) {
-        observerService->AddObserver(this, "sleep_notification", PR_FALSE);
-        observerService->AddObserver(this, "wake_notification", PR_FALSE);
+        observerService->AddObserver(this, "sleep_notification", false);
+        observerService->AddObserver(this, "wake_notification", false);
       }
     }
 
     {
       MonitorAutoLock lock(mMonitor);
-      mInitialized = PR_TRUE;
+      mInitialized = true;
       mMonitor.NotifyAll();
     }
   }
@@ -146,7 +146,7 @@ nsresult TimerThread::Shutdown()
   {   // lock scope
     MonitorAutoLock lock(mMonitor);
 
-    mShutdown = PR_TRUE;
+    mShutdown = true;
 
     // notify the cond var so that Run() can return
     if (mWaiting)
@@ -358,9 +358,9 @@ NS_IMETHODIMP TimerThread::Run()
 #endif
     }
 
-    mWaiting = PR_TRUE;
+    mWaiting = true;
     mMonitor.Wait(waitFor);
-    mWaiting = PR_FALSE;
+    mWaiting = false;
   }
 
   return NS_OK;
@@ -451,7 +451,7 @@ PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
   if (!mTimers.InsertElementAt(i, aTimer))
     return -1;
 
-  aTimer->mArmed = PR_TRUE;
+  aTimer->mArmed = true;
   NS_ADDREF(aTimer);
   return i;
 }
@@ -459,27 +459,27 @@ PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
 bool TimerThread::RemoveTimerInternal(nsTimerImpl *aTimer)
 {
   if (!mTimers.RemoveElement(aTimer))
-    return PR_FALSE;
+    return false;
 
   ReleaseTimerInternal(aTimer);
-  return PR_TRUE;
+  return true;
 }
 
 void TimerThread::ReleaseTimerInternal(nsTimerImpl *aTimer)
 {
   // Order is crucial here -- see nsTimerImpl::Release.
-  aTimer->mArmed = PR_FALSE;
+  aTimer->mArmed = false;
   NS_RELEASE(aTimer);
 }
 
 void TimerThread::DoBeforeSleep()
 {
-  mSleeping = PR_TRUE;
+  mSleeping = true;
 }
 
 void TimerThread::DoAfterSleep()
 {
-  mSleeping = PR_TRUE; // wake may be notified without preceding sleep notification
+  mSleeping = true; // wake may be notified without preceding sleep notification
   for (PRUint32 i = 0; i < mTimers.Length(); i ++) {
     nsTimerImpl *timer = mTimers[i];
     // get and set the delay to cause its timeout to be recomputed
@@ -491,7 +491,7 @@ void TimerThread::DoAfterSleep()
   // nuke the stored adjustments, so they get recalibrated
   mTimeoutAdjustment = TimeDuration(0);
   mDelayLineCounter = 0;
-  mSleeping = PR_FALSE;
+  mSleeping = false;
 }
 
 

@@ -162,7 +162,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
         rv = GetHeaders(indexFormat, uri);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        mSentHeading = PR_TRUE;
+        mSentHeading = true;
     }
 
     char *line = buffer;
@@ -219,7 +219,7 @@ nsFTPDirListingConv::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 // nsFTPDirListingConv methods
 nsFTPDirListingConv::nsFTPDirListingConv() {
     mFinalListener      = nsnull;
-    mSentHeading        = PR_FALSE;
+    mSentHeading        = false;
 }
 
 nsFTPDirListingConv::~nsFTPDirListingConv() {
@@ -291,10 +291,10 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         if (eol > line && *(eol-1) == nsCRT::CR) {
             eol--;
             *eol = '\0';
-            cr = PR_TRUE;
+            cr = true;
         } else {
             *eol = '\0';
-            cr = PR_FALSE;
+            cr = false;
         }
 
         list_result result;

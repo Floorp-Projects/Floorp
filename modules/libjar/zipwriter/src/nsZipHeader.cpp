@@ -97,9 +97,9 @@ NS_IMETHODIMP nsZipHeader::GetIsDirectory(bool *aIsDirectory)
     NS_ASSERTION(mInited, "Not initalised");
 
     if (mName.Last() == '/')
-        *aIsDirectory = PR_TRUE;
+        *aIsDirectory = true;
     else
-        *aIsDirectory = PR_FALSE;
+        *aIsDirectory = false;
     return NS_OK;
 }
 
@@ -110,7 +110,7 @@ NS_IMETHODIMP nsZipHeader::GetLastModifiedTime(PRTime *aLastModifiedTime)
 
     // Try to read timestamp from extra field
     PRUint16 blocksize;
-    const PRUint8 *tsField = GetExtraField(ZIP_EXTENDED_TIMESTAMP_FIELD, PR_FALSE, &blocksize);
+    const PRUint8 *tsField = GetExtraField(ZIP_EXTENDED_TIMESTAMP_FIELD, false, &blocksize);
     if (tsField && blocksize >= 5) {
         PRUint32 pos = 4;
         PRUint8 flags;
@@ -155,7 +155,7 @@ NS_IMETHODIMP nsZipHeader::GetIsSynthetic(bool *aIsSynthetic)
 {
     NS_ASSERTION(mInited, "Not initalised");
 
-    *aIsSynthetic = PR_FALSE;
+    *aIsSynthetic = false;
     return NS_OK;
 }
 
@@ -198,7 +198,7 @@ void nsZipHeader::Init(const nsACString & aPath, PRTime aDate, PRUint32 aAttr,
     mComment = NS_LITERAL_CSTRING("");
     // Claim a UTF-8 path in case it needs it.
     mFlags |= FLAGS_IS_UTF8;
-    mInited = PR_TRUE;
+    mInited = true;
 }
 
 PRUint32 nsZipHeader::GetFileHeaderLength()
@@ -339,7 +339,7 @@ nsresult nsZipHeader::ReadCDSHeader(nsIInputStream *stream)
     else
         mComment = NS_LITERAL_CSTRING("");
 
-    mInited = PR_TRUE;
+    mInited = true;
     return NS_OK;
 }
 

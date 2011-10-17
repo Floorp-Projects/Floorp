@@ -113,7 +113,7 @@ public:
    */
   struct PaintState {
     PaintState()
-      : mDidSelfCopy(PR_FALSE)
+      : mDidSelfCopy(false)
     {}
 
     nsRefPtr<gfxContext> mContext;

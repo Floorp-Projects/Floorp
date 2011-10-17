@@ -271,7 +271,7 @@ nsAnnotationService::SetAnnotationStringInternal(nsIURI* aURI,
                                                  PRInt32 aFlags,
                                                  PRUint16 aExpiration)
 {
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozStorageTransaction transaction(mDBConn, false);
   mozIStorageStatement* statement;
   nsresult rv = StartSetAnnotation(aURI, aItemId, aName, aFlags, aExpiration,
                                    nsIAnnotationService::TYPE_STRING,
@@ -501,7 +501,7 @@ nsAnnotationService::SetAnnotationInt32Internal(nsIURI* aURI,
                                                 PRInt32 aFlags,
                                                 PRUint16 aExpiration)
 {
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozStorageTransaction transaction(mDBConn, false);
   mozIStorageStatement* statement;
   nsresult rv = StartSetAnnotation(aURI, aItemId, aName, aFlags, aExpiration,
                                    nsIAnnotationService::TYPE_INT32,
@@ -576,7 +576,7 @@ nsAnnotationService::SetAnnotationInt64Internal(nsIURI* aURI,
                                                 PRInt32 aFlags,
                                                 PRUint16 aExpiration)
 {
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozStorageTransaction transaction(mDBConn, false);
   mozIStorageStatement* statement;
   nsresult rv = StartSetAnnotation(aURI, aItemId, aName, aFlags, aExpiration,
                                    nsIAnnotationService::TYPE_INT64,
@@ -651,7 +651,7 @@ nsAnnotationService::SetAnnotationDoubleInternal(nsIURI* aURI,
                                                  PRInt32 aFlags,
                                                  PRUint16 aExpiration)
 {
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozStorageTransaction transaction(mDBConn, false);
   mozIStorageStatement* statement;
   nsresult rv = StartSetAnnotation(aURI, aItemId, aName, aFlags, aExpiration,
                                    nsIAnnotationService::TYPE_DOUBLE,
@@ -731,7 +731,7 @@ nsAnnotationService::SetAnnotationBinaryInternal(nsIURI* aURI,
   if (aMimeType.Length() == 0)
     return NS_ERROR_INVALID_ARG;
 
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozStorageTransaction transaction(mDBConn, false);
   mozIStorageStatement* statement;
   nsresult rv = StartSetAnnotation(aURI, aItemId, aName, aFlags, aExpiration,
                                    nsIAnnotationService::TYPE_BINARY,
@@ -1625,7 +1625,7 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
   if (InPrivateBrowsingMode())
     return NS_OK;
 
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozStorageTransaction transaction(mDBConn, false);
 
   nsCOMPtr<mozIStorageStatement> sourceStmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -1707,7 +1707,7 @@ nsAnnotationService::CopyItemAnnotations(PRInt64 aSourceItemId,
   NS_ENSURE_ARG_MIN(aSourceItemId, 1);
   NS_ENSURE_ARG_MIN(aDestItemId, 1);
 
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozStorageTransaction transaction(mDBConn, false);
 
   nsCOMPtr<mozIStorageStatement> sourceStmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -1858,7 +1858,7 @@ nsAnnotationService::HasAnnotationInternal(nsIURI* aURI,
     // annotation, ignoring the fact itemId is invalid.
     // Otherwise we should return NS_ERROR_INVALID_ARG, but this will somehow
     // break the API.  In future we could want to be pickier.
-    *_hasAnno = PR_FALSE;
+    *_hasAnno = false;
   }
   else {
     PRInt64 annotationId = stmt->AsInt64(2);

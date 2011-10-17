@@ -143,16 +143,16 @@ nsProxyObjectCallInfo::nsProxyObjectCallInfo(nsProxyEventObject* owner,
     NS_ASSERTION(owner, "No nsProxyObject!");
     NS_ASSERTION(methodInfo, "No nsXPTMethodInfo!");
 
-    RefCountInInterfacePointers(PR_TRUE);
+    RefCountInInterfacePointers(true);
     if (mOwner->GetProxyType() & NS_PROXY_ASYNC)
-        CopyStrings(PR_TRUE);
+        CopyStrings(true);
 }
 
 nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
 {
-    RefCountInInterfacePointers(PR_FALSE);
+    RefCountInInterfacePointers(false);
     if (mOwner->GetProxyType() & NS_PROXY_ASYNC)
-        CopyStrings(PR_FALSE);
+        CopyStrings(false);
 
     mOwner = nsnull;
     

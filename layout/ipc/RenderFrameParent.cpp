@@ -522,7 +522,7 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
     if (!observerService) {
       return;
     }
-    nsresult rv = observerService->AddObserver(new CheckerBoardPatternDeleter, "xpcom-shutdown", PR_FALSE);
+    nsresult rv = observerService->AddObserver(new CheckerBoardPatternDeleter, "xpcom-shutdown", false);
     if (NS_FAILED(rv)) {
       return;
     }

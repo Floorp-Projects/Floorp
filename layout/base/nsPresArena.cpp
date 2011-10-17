@@ -303,7 +303,7 @@ protected:
   static PLDHashNumber HashKey(KeyTypePointer aKey)
   { return NS_PTR_TO_INT32(aKey); }
 
-  enum { ALLOW_MEMMOVE = PR_FALSE };
+  enum { ALLOW_MEMMOVE = false };
   friend class nsTHashtable<FreeList>;
 };
 

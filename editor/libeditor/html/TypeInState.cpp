@@ -303,17 +303,17 @@ nsresult TypeInState::GetTypingState(bool &isSet,
 {
   if (IsPropSet(aProp, aAttr, aValue))
   {
-    isSet = PR_TRUE;
-    theSetting = PR_TRUE;
+    isSet = true;
+    theSetting = true;
   }
   else if (IsPropCleared(aProp, aAttr))
   {
-    isSet = PR_TRUE;
-    theSetting = PR_FALSE;
+    isSet = true;
+    theSetting = false;
   }
   else
   {
-    isSet = PR_FALSE;
+    isSet = false;
   }
   return NS_OK;
 }
@@ -383,10 +383,10 @@ bool TypeInState::IsPropSet(nsIAtom *aProp,
     {
       if (outValue) *outValue = item->value;
       outIndex = i;
-      return PR_TRUE;
+      return true;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 
@@ -403,14 +403,14 @@ bool TypeInState::IsPropCleared(nsIAtom *aProp,
                                   PRInt32 &outIndex)
 {
   if (FindPropInList(aProp, aAttr, nsnull, mClearedArray, outIndex))
-    return PR_TRUE;
+    return true;
   if (FindPropInList(0, EmptyString(), nsnull, mClearedArray, outIndex))
   {
     // special case for all props cleared
     outIndex = -1;
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 bool TypeInState::FindPropInList(nsIAtom *aProp, 
@@ -429,10 +429,10 @@ bool TypeInState::FindPropInList(nsIAtom *aProp,
     {
       if (outValue) *outValue = item->value;
       outIndex = i;
-      return PR_TRUE;
+      return true;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 

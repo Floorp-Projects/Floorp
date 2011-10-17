@@ -103,7 +103,7 @@ static bool IsArg(const char* arg, const char* s)
     return !strcasecmp(++arg, s);
 #endif
 
-  return PR_FALSE;
+  return false;
 }
 
 /**
@@ -143,10 +143,10 @@ static int do_main(const char *exePath, int argc, char* argv[])
 #ifdef XP_WIN
   // exePath comes from mozilla::BinaryPath::Get, which returns a UTF-8
   // encoded path, so it is safe to convert it
-  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(exePath), PR_FALSE,
+  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(exePath), false,
                                 getter_AddRefs(appini));
 #else
-  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_FALSE,
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(exePath), false,
                                       getter_AddRefs(appini));
 #endif
   if (NS_FAILED(rv)) {

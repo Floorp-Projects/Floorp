@@ -133,15 +133,15 @@ bool
 HasAttachmentDisposition(nsIHttpChannel* httpChannel)
 {
   if (!httpChannel)
-    return PR_FALSE;
+    return false;
 
   PRUint32 disp;
   nsresult rv = httpChannel->GetContentDisposition(&disp);
 
   if (NS_SUCCEEDED(rv) && disp == nsIChannel::DISPOSITION_ATTACHMENT)
-    return PR_TRUE;
+    return true;
 
-  return PR_FALSE;
+  return false;
 }
 
 /**
@@ -173,7 +173,7 @@ FindChar(char c, const char *begin, const char *end)
  * @param   end
  *          The end of the data being sniffed, right before the substring that
  *          was found.
- * @returns PR_TRUE if the found substring is the documentElement, PR_FALSE 
+ * @returns true if the found substring is the documentElement, false 
  *          otherwise.
  */
 static bool
@@ -184,24 +184,24 @@ IsDocumentElement(const char *start, const char* end)
   while ( (start = FindChar('<', start, end)) ) {
     ++start;
     if (start >= end)
-      return PR_FALSE;
+      return false;
 
     // Check to see if the character following the '<' is either '?' or '!'
     // (processing instruction or doctype or comment)... these are valid nodes
     // to have in the prologue. 
     if (*start != '?' && *start != '!')
-      return PR_FALSE;
+      return false;
     
     // Now advance the iterator until the '>' (We do this because we don't want
     // to sniff indicator substrings that are embedded within other nodes, e.g.
     // comments: <!-- <rdf:RDF .. > -->
     start = FindChar('>', start, end);
     if (!start)
-      return PR_FALSE;
+      return false;
 
     ++start;
   }
-  return PR_TRUE;
+  return true;
 }
 
 /**
@@ -211,7 +211,7 @@ IsDocumentElement(const char *start, const char* end)
  *          The data being sniffed
  * @param   substring
  *          The substring being tested for existence and root-ness.
- * @returns PR_TRUE if the substring exists and is the documentElement, PR_FALSE
+ * @returns true if the substring exists and is the documentElement, false
  *          otherwise.
  */
 static bool
@@ -219,7 +219,7 @@ ContainsTopLevelSubstring(nsACString& dataString, const char *substring)
 {
   PRInt32 offset = dataString.Find(substring);
   if (offset == -1)
-    return PR_FALSE;
+    return false;
 
   const char *begin = dataString.BeginReading();
 
@@ -292,7 +292,7 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
     // set the feed header as a response header, since we have good metadata
     // telling us that the feed is supposed to be RSS or Atom
     channel->SetResponseHeader(NS_LITERAL_CSTRING("X-Moz-Is-Feed"),
-                               NS_LITERAL_CSTRING("1"), PR_FALSE);
+                               NS_LITERAL_CSTRING("1"), false);
     sniffedType.AssignLiteral(TYPE_MAYBE_FEED);
     return NS_OK;
   }

@@ -203,7 +203,7 @@ nsCSSProps::BuildShorthandsContainingTable()
 
   gShorthandsContainingPool = new nsCSSProperty[poolEntries];
   if (!gShorthandsContainingPool)
-    return PR_FALSE;
+    return false;
 
   // Initialize all entries to point to their null-terminator.
   {
@@ -305,7 +305,7 @@ nsCSSProps::BuildShorthandsContainingTable()
   }
 #endif
 
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -442,7 +442,7 @@ nsCSSProps::OtherNameFor(nsCSSProperty aProperty)
     case eCSSProperty_padding_right_value:
       return eCSSProperty_padding_right;
     default:
-      NS_ABORT_IF_FALSE(PR_FALSE, "bad caller");
+      NS_ABORT_IF_FALSE(false, "bad caller");
   }
   return eCSSProperty_UNKNOWN;
 }
@@ -1477,11 +1477,11 @@ nsCSSProps::FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& 
   while (eCSSKeyword_UNKNOWN != nsCSSKeyword(aTable[index])) {
     if (aKeyword == nsCSSKeyword(aTable[index])) {
       aResult = aTable[index+1];
-      return PR_TRUE;
+      return true;
     }
     index += 2;
   }
-  return PR_FALSE;
+  return false;
 }
 
 nsCSSKeyword
@@ -1550,7 +1550,7 @@ bool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
     nsCSSKeywords::AddRefTable();
     aStr = nsCSSKeywords::GetStringValue(keyword);
     nsCSSKeywords::ReleaseTable();
-    rv = PR_TRUE;
+    rv = true;
   }
   return rv;
 }

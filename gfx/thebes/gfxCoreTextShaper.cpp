@@ -131,7 +131,7 @@ gfxCoreTextShaper::InitTextRun(gfxContext *aContext,
         PRUint32 i;
         for (i = aRunStart; i < aRunStart + aRunLength; ++i) {
             if (gfxFontUtils::PotentialRTLChar(aString[i])) {
-                bidiWrap = PR_TRUE;
+                bidiWrap = true;
                 break;
             }
         }
@@ -212,7 +212,7 @@ gfxCoreTextShaper::InitTextRun(gfxContext *aContext,
         CTRunRef aCTRun = (CTRunRef)::CFArrayGetValueAtIndex(glyphRuns, runIndex);
         if (SetGlyphsFromRun(aTextRun, aCTRun, startOffset,
                              aRunStart, aRunLength) != NS_OK) {
-            success = PR_FALSE;
+            success = false;
             break;
         }
     }
@@ -412,20 +412,20 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxTextRun *aTextRun,
                 PRInt32 glyphCharIndex = glyphToChar[i] - stringRange.location;
                 if (isLTR) {
                     if (glyphCharIndex < charStart || glyphCharIndex >= charEnd) {
-                        allGlyphsAreWithinCluster = PR_FALSE;
+                        allGlyphsAreWithinCluster = false;
                         break;
                     }
                     if (glyphCharIndex < prevGlyphCharIndex) {
-                        inOrder = PR_FALSE;
+                        inOrder = false;
                     }
                     prevGlyphCharIndex = glyphCharIndex;
                 } else {
                     if (glyphCharIndex > charStart || glyphCharIndex <= charEnd) {
-                        allGlyphsAreWithinCluster = PR_FALSE;
+                        allGlyphsAreWithinCluster = false;
                         break;
                     }
                     if (glyphCharIndex > prevGlyphCharIndex) {
-                        inOrder = PR_FALSE;
+                        inOrder = false;
                     }
                     prevGlyphCharIndex = glyphCharIndex;
                 }
@@ -510,7 +510,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxTextRun *aTextRun,
 
             gfxTextRun::CompressedGlyph g;
             g.SetComplex(aTextRun->IsClusterStart(baseCharIndex),
-                         PR_TRUE, detailedGlyphs.Length());
+                         true, detailedGlyphs.Length());
             aTextRun->SetGlyphs(baseCharIndex, g, detailedGlyphs.Elements());
 
             detailedGlyphs.Clear();
@@ -519,7 +519,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxTextRun *aTextRun,
         // the rest of the chars in the group are ligature continuations, no associated glyphs
         while (++baseCharIndex != endCharIndex && baseCharIndex < aRunStart + aRunLength) {
             g.SetComplex(inOrder && aTextRun->IsClusterStart(baseCharIndex),
-                         PR_FALSE, 0);
+                         false, 0);
             aTextRun->SetGlyphs(baseCharIndex, g, nsnull);
         }
 

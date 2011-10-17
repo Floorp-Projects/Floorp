@@ -58,8 +58,8 @@
 ////////////////////////////////////////////////////
 
 inDeepTreeWalker::inDeepTreeWalker() 
-  : mShowAnonymousContent(PR_FALSE),
-    mShowSubDocuments(PR_FALSE),
+  : mShowAnonymousContent(false),
+    mShowSubDocuments(false),
     mWhatToShow(nsIDOMNodeFilter::SHOW_ALL)
 {
 }

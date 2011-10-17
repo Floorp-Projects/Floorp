@@ -167,7 +167,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mHasPainted(false)
     , mSurfaceDifferenceRect(0,0,0,0)
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
-    , mMaemoImageRendering(PR_TRUE)
+    , mMaemoImageRendering(true)
 #endif
 {
     memset(&mWindow, 0, sizeof(mWindow));
@@ -1447,9 +1447,9 @@ PluginInstanceChild::SetWindowLongHookCheck(HWND hWnd,
       newLong == reinterpret_cast<LONG_PTR>(DefWindowProcW) ||
       // if the subclass is a WindowsMessageLoop subclass restore
       GetProp(hWnd, kOldWndProcProp))
-      return PR_TRUE;
+      return true;
   // prevent the subclass
-  return PR_FALSE;
+  return false;
 }
 
 #ifdef _WIN64
@@ -2338,7 +2338,7 @@ PluginInstanceChild::NPN_URLRedirectResponse(void* notifyData, NPBool allow)
             return;
         }
     }
-    NS_ASSERTION(PR_FALSE, "Couldn't find stream for redirect response!");
+    NS_ASSERTION(false, "Couldn't find stream for redirect response!");
 }
 
 bool
@@ -2599,7 +2599,7 @@ PluginInstanceChild::MaybeCreatePlatformHelperSurface(void)
             // No helper surface needed, when mMaemoImageRendering is TRUE.
             // we can rendering directly into image memory
             // with NPImageExpose Maemo5 NPAPI
-            return PR_TRUE;
+            return true;
         }
 #endif
         // For image layer surface we should always create helper surface

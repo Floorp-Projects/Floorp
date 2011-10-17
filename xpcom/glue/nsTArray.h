@@ -559,7 +559,7 @@ public:
   // to the given element.
   // @param item   The item to search for.
   // @param comp   The Comparator used to determine element equality.
-  // @return       PR_TRUE if the element was found.
+  // @return       true if the element was found.
   template<class Item, class Comparator>
   bool Contains(const Item& item, const Comparator& comp) const {
     return IndexOf(item, 0, comp) != NoIndex;
@@ -569,7 +569,7 @@ public:
   // to the given element.  This method assumes that 'operator==' is defined
   // for elem_type.
   // @param item   The item to search for.
-  // @return       PR_TRUE if the element was found.
+  // @return       true if the element was found.
   template<class Item>
   bool Contains(const Item& item) const {
     return IndexOf(item) != NoIndex;
@@ -775,7 +775,7 @@ public:
           --mid;
         } while (NoIndex != mid && comp.Equals(ElementAt(mid), item));
         *idx = ++mid;
-        return PR_TRUE;
+        return true;
       }
       if (comp.LessThan(ElementAt(mid), item))
         // invariant: low <= idx < high
@@ -788,7 +788,7 @@ public:
     // 1) to maintain invariant.
     // (or insert at low, since low==high; just a matter of taste here.)
     *idx = high;
-    return PR_FALSE;
+    return false;
   }
 
   // A variation on the GreatestIndexLtEq method defined above.
@@ -913,15 +913,15 @@ public:
   // and destroy" the first element that is equal to the given element.
   // @param item  The item to search for.
   // @param comp  The Comparator used to determine element equality.
-  // @return PR_TRUE if the element was found
+  // @return true if the element was found
   template<class Item, class Comparator>
   bool RemoveElement(const Item& item, const Comparator& comp) {
     index_type i = IndexOf(item, 0, comp);
     if (i == NoIndex)
-      return PR_FALSE;
+      return false;
 
     RemoveElementAt(i);
-    return PR_TRUE;
+    return true;
   }
 
   // A variation on the RemoveElement method defined above that assumes
@@ -936,7 +936,7 @@ public:
   // is equal to the given element.
   // @param item  The item to search for.
   // @param comp  The Comparator used to determine element equality.
-  // @return PR_TRUE if the element was found
+  // @return true if the element was found
   template<class Item, class Comparator>
   bool RemoveElementSorted(const Item& item, const Comparator& comp) {
     index_type index;
@@ -988,7 +988,7 @@ public:
     }
       
     TruncateLength(newLen);
-    return PR_TRUE;
+    return true;
   }
 
   // This method modifies the length of the array, but may only be
@@ -1015,7 +1015,7 @@ public:
     if (minLen > oldLen) {
       return InsertElementsAt(oldLen, minLen - oldLen) != nsnull;
     }
-    return PR_TRUE;
+    return true;
   }
 
   // This method inserts elements into the array, constructing

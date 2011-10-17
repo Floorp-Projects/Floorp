@@ -85,7 +85,7 @@ nsGfxButtonControlFrame::GetType() const
 
 // Special check for the browse button of a file input.
 //
-// We'll return PR_TRUE if type is NS_FORM_INPUT_BUTTON and our parent
+// We'll return true if type is NS_FORM_INPUT_BUTTON and our parent
 // is a file input.
 bool
 nsGfxButtonControlFrame::IsFileBrowseButton(PRInt32 type)
@@ -124,7 +124,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements
     return NS_ERROR_OUT_OF_MEMORY;
 
   // set the value of the text node and add it to the child list
-  mTextContent->SetText(label, PR_FALSE);
+  mTextContent->SetText(label, false);
   if (!aElements.AppendElement(mTextContent))
     return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
@@ -277,7 +277,7 @@ nsGfxButtonControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
       rv = GetLabel(label);
       NS_ENSURE_SUCCESS(rv, rv);
     
-      mTextContent->SetText(label, PR_TRUE);
+      mTextContent->SetText(label, true);
     } else {
       rv = NS_ERROR_UNEXPECTED;
     }
@@ -292,7 +292,7 @@ nsGfxButtonControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
 bool
 nsGfxButtonControlFrame::IsLeaf() const
 {
-  return PR_TRUE;
+  return true;
 }
 
 nsIFrame*

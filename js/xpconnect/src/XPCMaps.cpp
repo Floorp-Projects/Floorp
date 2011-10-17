@@ -725,7 +725,7 @@ WrappedNative2WrapperMap::AddLink(JSObject* wrappedObject, Link* oldLink)
     Entry* entry = (Entry*)
         JS_DHashTableOperate(mTable, wrappedObject, JS_DHASH_ADD);
     if (!entry)
-        return PR_FALSE;
+        return false;
     NS_ASSERTION(!entry->key, "Eh? What's happening?");
     entry->key = wrappedObject;
     Link* newLink = &entry->value;
@@ -734,7 +734,7 @@ WrappedNative2WrapperMap::AddLink(JSObject* wrappedObject, Link* oldLink)
     PR_REMOVE_AND_INIT_LINK(oldLink);
     newLink->obj = oldLink->obj;
 
-    return PR_TRUE;
+    return true;
 }
 
 /***************************************************************************/

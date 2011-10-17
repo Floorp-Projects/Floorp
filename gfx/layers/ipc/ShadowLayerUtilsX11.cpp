@@ -76,7 +76,7 @@ TakeAndDestroyXlibSurface(SurfaceDescriptor* aSurface)
   surf->TakePixmap();
   *aSurface = SurfaceDescriptor();
   // the Pixmap is destroyed when |surf| goes out of scope
-  return PR_TRUE;
+  return true;
 }
 
 SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf)
@@ -122,7 +122,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
     // If we're not using X compositing, we're probably compositing on
     // the client side, in which case X surfaces would just slow
     // things down.  Use Shmem instead.
-    return PR_FALSE;
+    return false;
   }
 
   gfxPlatform* platform = gfxPlatform::GetPlatform();
@@ -130,7 +130,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
   if (!buffer ||
       buffer->GetType() != gfxASurface::SurfaceTypeXlib) {
     NS_ERROR("creating Xlib front/back surfaces failed!");
-    return PR_FALSE;
+    return false;
   }
 
   gfxXlibSurface* bufferX = static_cast<gfxXlibSurface*>(buffer.get());
@@ -138,7 +138,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
   bufferX->ReleasePixmap();
 
   *aBuffer = SurfaceDescriptorX11(bufferX);
-  return PR_TRUE;
+  return true;
 }
 
 /*static*/ already_AddRefed<gfxASurface>
@@ -154,7 +154,7 @@ bool
 ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor* aSurface)
 {
   if (SurfaceDescriptor::TSurfaceDescriptorX11 != aSurface->type()) {
-    return PR_FALSE;
+    return false;
   }
   return TakeAndDestroyXlibSurface(aSurface);
 }
@@ -188,7 +188,7 @@ bool
 ShadowLayerManager::PlatformDestroySharedSurface(SurfaceDescriptor* aSurface)
 {
   if (SurfaceDescriptor::TSurfaceDescriptorX11 != aSurface->type()) {
-    return PR_FALSE;
+    return false;
   }
   return TakeAndDestroyXlibSurface(aSurface);
 }

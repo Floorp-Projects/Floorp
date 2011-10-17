@@ -131,7 +131,7 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
       ::CFRelease(handlerArray);
     ::CFRelease(schemeString);
   } else {
-    *aHandlerExists = PR_FALSE;
+    *aHandlerExists = false;
   }
   return NS_OK;
 }
@@ -203,7 +203,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAp
   if (::CFStringGetCharacterAtIndex(pathAsCFString, 0) == '/') {
     // we have a Posix path
     pathAsCFURL = ::CFURLCreateWithFileSystemPath(nsnull, pathAsCFString,
-                                                  kCFURLPOSIXPathStyle, PR_FALSE);
+                                                  kCFURLPOSIXPathStyle, false);
     if (!pathAsCFURL) {
       ::CFRelease(pathAsCFString);
       return NS_ERROR_OUT_OF_MEMORY;
@@ -223,7 +223,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAp
     }
 
     pathAsCFURL = ::CFURLCreateWithFileSystemPath(nsnull, pathAsCFString,
-                                                  kCFURLHFSPathStyle, PR_FALSE);
+                                                  kCFURLHFSPathStyle, false);
     if (!pathAsCFURL) {
       ::CFRelease(pathAsCFString);
       return NS_ERROR_OUT_OF_MEMORY;
@@ -249,7 +249,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromTypeAndExtension(const nsACString& aT
 }
 
 // aMIMEType and aFileExt might not match,  If they don't we set *aFound to
-// PR_FALSE and return a minimal nsIMIMEInfo structure.
+// false and return a minimal nsIMIMEInfo structure.
 already_AddRefed<nsIMIMEInfo>
 nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                         const nsACString& aFileExt,
@@ -257,7 +257,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
 
-  *aFound = PR_FALSE;
+  *aFound = false;
 
   const nsCString& flatType = PromiseFlatCString(aMIMEType);
   const nsCString& flatExt = PromiseFlatCString(aFileExt);
@@ -291,7 +291,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     if (CFType) {
       err = ::LSCopyApplicationForMIMEType(CFType, kLSRolesAll, &appURL);
       if ((err == noErr) && appURL && ::CFURLGetFSRef(appURL, &typeAppFSRef)) {
-        haveAppForType = PR_TRUE;
+        haveAppForType = true;
         PR_LOG(mLog, PR_LOG_DEBUG, ("LSCopyApplicationForMIMEType found a default application\n"));
       }
       if (appURL)
@@ -309,7 +309,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
       err = ::LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, CFExt,
                                       kLSRolesAll, &extAppFSRef, nsnull);
       if (err == noErr) {
-        haveAppForExt = PR_TRUE;
+        haveAppForExt = true;
         PR_LOG(mLog, PR_LOG_DEBUG, ("LSGetApplicationForInfo found a default application\n"));
       }
       ::CFRelease(CFExt);
@@ -319,20 +319,20 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   if (haveAppForType && haveAppForExt) {
     // Do aMIMEType and aFileExt match?
     if (::FSCompareFSRefs((const FSRef *) &typeAppFSRef, (const FSRef *) &extAppFSRef) == noErr) {
-      typeAppIsDefault = PR_TRUE;
-      *aFound = PR_TRUE;
+      typeAppIsDefault = true;
+      *aFound = true;
     }
   } else if (haveAppForType) {
     // If aFileExt isn't empty, it doesn't match aMIMEType.
     if (aFileExt.IsEmpty()) {
-      typeAppIsDefault = PR_TRUE;
-      *aFound = PR_TRUE;
+      typeAppIsDefault = true;
+      *aFound = true;
     }
   } else if (haveAppForExt) {
     // If aMIMEType isn't empty, it doesn't match aFileExt.
     if (aMIMEType.IsEmpty()) {
-      extAppIsDefault = PR_TRUE;
-      *aFound = PR_TRUE;
+      extAppIsDefault = true;
+      *aFound = true;
     }
   }
 
@@ -350,7 +350,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
         nsCAutoString mimeType;
         mimeType.Assign((char *)[typeStr cStringUsingEncoding:NSASCIIStringEncoding]);
         mimeInfoMac->SetMIMEType(mimeType);
-        haveAppForType = PR_TRUE;
+        haveAppForType = true;
       } else {
         // Sometimes the OS won't give us a MIME type for an extension that's
         // registered with Launch Services and has a default app:  For example
@@ -359,11 +359,11 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
         // MIMETypeForExtension returns nil for the "ogg" extension even on
         // systems where Real Player is installed.  This is probably an Apple
         // bug.  But bad things happen if we return an nsIMIMEInfo structure
-        // with an empty MIME type and set *aFound to PR_TRUE.  So in this
-        // case we need to set it to PR_FALSE here.
-        haveAppForExt = PR_FALSE;
-        extAppIsDefault = PR_FALSE;
-        *aFound = PR_FALSE;
+        // with an empty MIME type and set *aFound to true.  So in this
+        // case we need to set it to false here.
+        haveAppForExt = false;
+        extAppIsDefault = false;
+        *aFound = false;
       }
     } else {
       // Otherwise set the MIME type to a reasonable fallback.

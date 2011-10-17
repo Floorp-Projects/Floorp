@@ -97,8 +97,8 @@ public:
    * Shutdown
    *
    * This method must be called before shutting down XPCOM if this object
-   * was created with aNotifyObservers == PR_TRUE. If this object was
-   * created with aNotifyObservers == PR_FALSE, this method is a no-op.
+   * was created with aNotifyObservers == true. If this object was
+   * created with aNotifyObservers == false, this method is a no-op.
    */
 
   virtual nsresult         Shutdown();

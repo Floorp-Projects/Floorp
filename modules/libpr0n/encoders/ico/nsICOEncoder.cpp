@@ -50,7 +50,7 @@ using namespace mozilla::imagelib;
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsICOEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
-nsICOEncoder::nsICOEncoder() : mFinished(PR_FALSE),
+nsICOEncoder::nsICOEncoder() : mFinished(false),
                                mImageBufferStart(nsnull), 
                                mImageBufferCurr(0),
                                mImageBufferSize(0), 
@@ -58,7 +58,7 @@ nsICOEncoder::nsICOEncoder() : mFinished(PR_FALSE),
                                mCallback(nsnull),
                                mCallbackTarget(nsnull), 
                                mNotifyThreshold(0),
-                               mUsePNG(PR_TRUE)
+                               mUsePNG(true)
 {
 }
 
@@ -277,7 +277,7 @@ NS_IMETHODIMP nsICOEncoder::EndImageEncode()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mFinished = PR_TRUE;
+  mFinished = true;
   NotifyListener();
 
   // if output callback can't get enough memory, it will free our buffer
@@ -297,7 +297,7 @@ nsICOEncoder::ParseOptions(const nsAString& aOptions, PRUint32* bpp,
   // If no parsing options just use the default of 24BPP and PNG yes
   if (aOptions.Length() == 0) {
     if (usePNG) {
-      *usePNG = PR_TRUE;
+      *usePNG = true;
     }
     if (bpp) {
       *bpp = 24;
@@ -327,10 +327,10 @@ nsICOEncoder::ParseOptions(const nsAString& aOptions, PRUint32* bpp,
     // Parse the format portion of the string format=<png|bmp>;bpp=<bpp_value>
     if (nameValuePair[0].Equals("format", nsCaseInsensitiveCStringComparator())) {
       if (nameValuePair[1].Equals("png", nsCaseInsensitiveCStringComparator())) {
-        *usePNG = PR_TRUE;
+        *usePNG = true;
       }
       else if (nameValuePair[1].Equals("bmp", nsCaseInsensitiveCStringComparator())) {
-        *usePNG = PR_FALSE;
+        *usePNG = false;
       }
       else {
         return NS_ERROR_INVALID_ARG;
@@ -415,7 +415,7 @@ NS_IMETHODIMP nsICOEncoder::ReadSegments(nsWriteSegmentFun aWriter,
 NS_IMETHODIMP 
 nsICOEncoder::IsNonBlocking(bool *_retval)
 {
-  *_retval = PR_TRUE;
+  *_retval = true;
   return NS_OK;
 }
 

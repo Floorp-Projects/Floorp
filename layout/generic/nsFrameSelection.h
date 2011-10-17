@@ -159,7 +159,7 @@ struct NS_STACK_CLASS nsPeekOffsetStruct
   //                    Used with: eSelectWord.
   bool mIsKeyboardSelect;
 
-  // mVisual: Whether bidi caret behavior is visual (PR_TRUE) or logical (PR_FALSE).
+  // mVisual: Whether bidi caret behavior is visual (true) or logical (false).
   //          Used with: eSelectCharacter, eSelectWord, eSelectBeginLine, eSelectEndLine.
   bool mVisual;
 
@@ -177,8 +177,8 @@ struct NS_STACK_CLASS nsPeekOffsetStruct
 
   // mAttachForward: When the result position is between two frames,
   //                 indicates which of the two frames the caret should be painted in.
-  //                 PR_FALSE means "the end of the frame logically before the caret", 
-  //                 PR_TRUE means "the beginning of the frame logically after the caret".
+  //                 false means "the end of the frame logically before the caret", 
+  //                 true means "the beginning of the frame logically after the caret".
   //                 Used with: eSelectLine, eSelectBeginLine, eSelectEndLine.
   bool mAttachForward;
 };
@@ -424,8 +424,8 @@ public:
    * ScrollCaretIntoView if that called wants to be sure the caret is always
    * visible.
    *
-   * @param aForward if PR_TRUE, scroll forward if not scroll backward
-   * @param aExtend  if PR_TRUE, extend selection to the new point
+   * @param aForward if true, scroll forward if not scroll backward
+   * @param aExtend  if true, extend selection to the new point
    * @param aScrollableFrame the frame to scroll
    */
   /*unsafe*/
@@ -556,8 +556,8 @@ public:
    *   logically before and after a (collapsed) selection.
    *  @param aNode is the node containing the selection
    *  @param aContentOffset is the offset of the selection in the node
-   *  @param aJumpLines If PR_TRUE, look across line boundaries.
-   *                    If PR_FALSE, behave as if there were base-level frames at line edges.  
+   *  @param aJumpLines If true, look across line boundaries.
+   *                    If false, behave as if there were base-level frames at line edges.  
    *
    *  @return A struct holding the before/after frame and the before/after level.
    *

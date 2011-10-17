@@ -53,14 +53,14 @@ nsRadioSetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
   NS_ASSERTION(radio, "Visit() passed a null button!");
 
   radio->SetCheckedChangedInternal(mCheckedChanged);
-  return PR_TRUE;
+  return true;
 }
 
 bool
 nsRadioGetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
 {
   if (aRadio == mExcludeElement) {
-    return PR_TRUE;
+    return true;
   }
 
   nsRefPtr<nsHTMLInputElement> radio =
@@ -68,14 +68,14 @@ nsRadioGetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
   NS_ASSERTION(radio, "Visit() passed a null button!");
 
   *mCheckedChanged = radio->GetCheckedChanged();
-  return PR_FALSE;
+  return false;
 }
 
 bool
 nsRadioSetValueMissingState::Visit(nsIFormControl* aRadio)
 {
   if (aRadio == mExcludeElement) {
-    return PR_TRUE;
+    return true;
   }
 
   nsHTMLInputElement* input = static_cast<nsHTMLInputElement*>(aRadio);
@@ -85,6 +85,6 @@ nsRadioSetValueMissingState::Visit(nsIFormControl* aRadio)
 
   input->UpdateState(true);
 
-  return PR_TRUE;
+  return true;
 }
 

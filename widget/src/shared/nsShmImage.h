@@ -106,7 +106,7 @@ public:
 private:
     nsShmImage()
         : mImage(nsnull)
-        , mXAttached(PR_FALSE)
+        , mXAttached(false)
     { mInfo.shmid = SharedMemorySysV::NULLHandle(); }
 
     nsRefPtr<SharedMemorySysV>   mSegment;

@@ -198,7 +198,7 @@ nsHTMLTableRowElement::GetRowIndex(PRInt32* aValue)
 
       if (node.get() == static_cast<nsIDOMNode *>(this)) {
         *aValue = i;
-        found = PR_TRUE;
+        found = true;
       }
     }
   }
@@ -231,7 +231,7 @@ nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
 
       if (node.get() == static_cast<nsIDOMNode *>(this)) {
         *aValue = i;
-        found = PR_TRUE;
+        found = true;
       }
     } 
   }
@@ -257,10 +257,10 @@ nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
                                IsCell,
                                nsnull, // destroy func
                                nsnull, // closure data
-                               PR_FALSE,
+                               false,
                                nsnull,
                                kNameSpaceID_XHTML,
-                               PR_FALSE);
+                               false);
 
     NS_ENSURE_TRUE(mCells, NS_ERROR_OUT_OF_MEMORY);
   }

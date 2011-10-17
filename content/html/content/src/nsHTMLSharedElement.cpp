@@ -266,7 +266,7 @@ nsHTMLSharedElement::ParseAttribute(PRInt32 aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None &&
       mNodeInfo->Equals(nsGkAtoms::dir)) {
     if (aAttribute == nsGkAtoms::type) {
-      return aResult.ParseEnumValue(aValue, kListTypeTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kListTypeTable, false);
     }
     if (aAttribute == nsGkAtoms::start) {
       return aResult.ParseIntWithBounds(aValue, 1);

@@ -57,8 +57,8 @@ public:
 
     nsSyncStreamListener()
         : mStatus(NS_OK)
-        , mKeepWaiting(PR_FALSE)
-        , mDone(PR_FALSE) {}
+        , mKeepWaiting(false)
+        , mDone(false) {}
 
     nsresult Init();
 

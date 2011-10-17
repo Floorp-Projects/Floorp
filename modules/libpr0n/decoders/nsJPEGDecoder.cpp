@@ -113,7 +113,7 @@ nsJPEGDecoder::nsJPEGDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver
  : Decoder(aImage, aObserver)
 {
   mState = JPEG_HEADER;
-  mReading = PR_TRUE;
+  mReading = true;
   mImageData = nsnull;
 
   mBytesToSkip = 0;
@@ -287,23 +287,23 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         if (profileSpace == icSigRgbData)
           mInfo.out_color_space = JCS_RGB;
         else if (profileSpace != icSigGrayData)
-          mismatch = PR_TRUE;
+          mismatch = true;
         break;
       case JCS_RGB:
         if (profileSpace != icSigRgbData)
-          mismatch =  PR_TRUE;
+          mismatch =  true;
         break;
       case JCS_YCbCr:
         if (profileSpace == icSigRgbData)
           mInfo.out_color_space = JCS_RGB;
         else
 	  // qcms doesn't support ycbcr
-          mismatch = PR_TRUE;
+          mismatch = true;
         break;
       case JCS_CMYK:
       case JCS_YCCK:
 	  // qcms doesn't support cmyk
-          mismatch = PR_TRUE;
+          mismatch = true;
         break;
       default:
         mState = JPEG_ERROR;
@@ -576,7 +576,7 @@ nsJPEGDecoder::NotifyDone()
 void
 nsJPEGDecoder::OutputScanlines(bool* suspend)
 {
-  *suspend = PR_FALSE;
+  *suspend = false;
 
   const PRUint32 top = mInfo.output_scanline;
 
@@ -588,7 +588,7 @@ nsJPEGDecoder::OutputScanlines(bool* suspend)
       if (mInfo.cconvert->color_convert == ycc_rgb_convert_argb) {
         /* Special case: scanline will be directly converted into packed ARGB */
         if (jpeg_read_scanlines(&mInfo, (JSAMPARRAY)&imageRow, 1) != 1) {
-          *suspend = PR_TRUE; /* suspend */
+          *suspend = true; /* suspend */
           break;
         }
         continue; /* all done for this row! */
@@ -602,7 +602,7 @@ nsJPEGDecoder::OutputScanlines(bool* suspend)
 
       /* Request one scanline.  Returns 0 or 1 scanlines. */    
       if (jpeg_read_scanlines(&mInfo, &sampleRow, 1) != 1) {
-        *suspend = PR_TRUE; /* suspend */
+        *suspend = true; /* suspend */
         break;
       }
 
@@ -801,7 +801,7 @@ fill_input_buffer (j_decompress_ptr jd)
     PRUint32 new_buflen = decoder->mSegmentLen;
   
     if (!new_buffer || new_buflen == 0)
-      return PR_FALSE; /* suspend */
+      return false; /* suspend */
 
     decoder->mSegmentLen = 0;
 
@@ -814,7 +814,7 @@ fill_input_buffer (j_decompress_ptr jd)
       } else {
         /* Still need to skip some more data in the future */
         decoder->mBytesToSkip -= (size_t)new_buflen;
-        return PR_FALSE; /* suspend */
+        return false; /* suspend */
       }
     }
 
@@ -822,9 +822,9 @@ fill_input_buffer (j_decompress_ptr jd)
 
     src->next_input_byte = new_buffer;
     src->bytes_in_buffer = (size_t)new_buflen;
-    decoder->mReading = PR_FALSE;
+    decoder->mReading = false;
 
-    return PR_TRUE;
+    return true;
   }
 
   if (src->next_input_byte != decoder->mSegment) {
@@ -864,9 +864,9 @@ fill_input_buffer (j_decompress_ptr jd)
   src->next_input_byte = decoder->mBackBuffer + decoder->mBackBufferLen - decoder->mBackBufferUnreadLen;
   src->bytes_in_buffer += decoder->mBackBufferUnreadLen;
   decoder->mBackBufferLen = (size_t)new_backtrack_buflen;
-  decoder->mReading = PR_TRUE;
+  decoder->mReading = true;
 
-  return PR_FALSE;
+  return false;
 }
 
 /******************************************************************************/

@@ -398,7 +398,7 @@ bool NS_EscapeURL(const char *part,
 {
     if (!part) {
         NS_NOTREACHED("null pointer");
-        return PR_FALSE;
+        return false;
     }
 
     int i = 0;
@@ -451,7 +451,7 @@ bool NS_EscapeURL(const char *part,
         if (!writing)
         {
           result.Append(part, i);
-          writing = PR_TRUE;
+          writing = true;
         }
         tempBuffer[tempBufferPos++] = HEX_ESCAPE;
         tempBuffer[tempBufferPos++] = hexChars[c >> 4];	/* high nibble */
@@ -481,7 +481,7 @@ bool NS_UnescapeURL(const char *str, PRInt32 len, PRUint32 flags, nsACString &re
 {
     if (!str) {
         NS_NOTREACHED("null pointer");
-        return PR_FALSE;
+        return false;
     }
 
     if (len < 0)
@@ -507,7 +507,7 @@ bool NS_UnescapeURL(const char *str, PRInt32 len, PRUint32 flags, nsACString &re
                 !(skipControl && 
                   (*p1 < '2' || (*p1 == '7' && (*p2 == 'f' || *p2 == 'F'))))) {
                 //printf("- p1=%c p2=%c\n", *p1, *p2);
-                writing = PR_TRUE;
+                writing = true;
                 if (p > last) {
                     //printf("- p=%p, last=%p\n", p, last);
                     result.Append(last, p - last);

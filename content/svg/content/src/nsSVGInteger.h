@@ -48,8 +48,8 @@ public:
   void Init(PRUint8 aAttrEnum = 0xff, PRInt32 aValue = 0) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
-    mIsAnimated = PR_FALSE;
-    mIsBaseSet = PR_FALSE;
+    mIsAnimated = false;
+    mIsBaseSet = false;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
@@ -64,10 +64,10 @@ public:
   int GetAnimValue() const
     { return mAnimVal; }
 
-  // Returns PR_TRUE if the animated value of this integer has been explicitly
+  // Returns true if the animated value of this integer has been explicitly
   // set (either by animation, or by taking on the base value which has been
-  // explicitly set by markup or a DOM call), PR_FALSE otherwise.
-  // If this returns PR_FALSE, the animated value is still valid, that is,
+  // explicitly set by markup or a DOM call), false otherwise.
+  // If this returns false, the animated value is still valid, that is,
   // useable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }

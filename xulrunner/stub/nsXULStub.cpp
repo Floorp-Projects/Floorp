@@ -130,7 +130,7 @@ static bool IsArg(const char* arg, const char* s)
     return !strcasecmp(++arg, s);
 #endif
 
-  return PR_FALSE;
+  return false;
 }
 
 /**
@@ -282,7 +282,7 @@ main(int argc, char **argv)
     while (token) {
       sprintf(tmpPath, "%s/%s", token, argv[0]);
       if (stat(tmpPath, &fileStat) == 0) {
-        found = PR_TRUE;
+        found = true;
         lastSlash = strrchr(tmpPath, '/');
         *lastSlash = 0;
         realpath(tmpPath, iniPath);
@@ -334,7 +334,7 @@ main(int argc, char **argv)
   if (!appDataFile || !*appDataFile) 
     if (argc > 1 && IsArg(argv[1], "app")) {
       if (argc == 2) {
-        Output(PR_FALSE, "specify APP-FILE (optional)\n");
+        Output(false, "specify APP-FILE (optional)\n");
         return 1;
       }
       argv[1] = argv[0];
@@ -349,11 +349,11 @@ main(int argc, char **argv)
       char kAppEnv[MAXPATHLEN];
       snprintf(kAppEnv, MAXPATHLEN, "XUL_APP_FILE=%s", appDataFile);
       if (putenv(kAppEnv)) 
-        Output(PR_FALSE, "Couldn't set %s.\n", kAppEnv);
+        Output(false, "Couldn't set %s.\n", kAppEnv);
 
       char *result = (char*) calloc(sizeof(char), MAXPATHLEN);
       if (NS_FAILED(GetRealPath(appDataFile, &result))) {
-        Output(PR_TRUE, "Invalid application.ini path.\n");
+        Output(true, "Invalid application.ini path.\n");
         return 1;
       }
       
@@ -396,23 +396,23 @@ main(int argc, char **argv)
       CFURLRef xulurl =
         CFURLCreateCopyAppendingPathComponent(NULL, absfwurl,
                                               CFSTR("XUL.Framework"),
-                                              PR_TRUE);
+                                              true);
 
       if (xulurl) {
         CFURLRef xpcomurl =
           CFURLCreateCopyAppendingPathComponent(NULL, xulurl,
                                                 CFSTR("libxpcom.dylib"),
-                                                PR_FALSE);
+                                                false);
 
         if (xpcomurl) {
           char tbuffer[MAXPATHLEN];
 
-          if (CFURLGetFileSystemRepresentation(xpcomurl, PR_TRUE,
+          if (CFURLGetFileSystemRepresentation(xpcomurl, true,
                                                (UInt8*) tbuffer,
                                                sizeof(tbuffer)) &&
               access(tbuffer, R_OK | X_OK) == 0) {
             if (realpath(tbuffer, greDir)) {
-              greFound = PR_TRUE;
+              greFound = true;
             }
             else {
               greDir[0] = '\0';
@@ -429,7 +429,7 @@ main(int argc, char **argv)
     }
 #endif
     if (!greFound) {
-      Output(PR_FALSE, "Could not find the Mozilla runtime.\n");
+      Output(false, "Could not find the Mozilla runtime.\n");
       return 1;
     }
   }
@@ -449,10 +449,10 @@ main(int argc, char **argv)
     if (rv == NS_ERROR_OUT_OF_MEMORY) {
       char applicationName[2000] = "this application";
       parser.GetString("App", "Name", applicationName, sizeof(applicationName));
-      Output(PR_TRUE, "Not enough memory available to start %s.\n",
+      Output(true, "Not enough memory available to start %s.\n",
              applicationName);
     } else {
-      Output(PR_TRUE, "Couldn't load XPCOM.\n");
+      Output(true, "Couldn't load XPCOM.\n");
     }
     return 1;
   }
@@ -466,7 +466,7 @@ main(int argc, char **argv)
 
   rv = XPCOMGlueLoadXULFunctions(kXULFuncs);
   if (NS_FAILED(rv)) {
-    Output(PR_TRUE, "Couldn't load XRE functions.\n");
+    Output(true, "Couldn't load XRE functions.\n");
     return 1;
   }
 
@@ -478,20 +478,20 @@ main(int argc, char **argv)
     nsCOMPtr<nsILocalFile> iniFile;
 #ifdef XP_WIN
     // On Windows iniPath is UTF-8 encoded so we need to convert it.
-    rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(iniPath), PR_FALSE,
+    rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(iniPath), false,
                          getter_AddRefs(iniFile));
 #else
-    rv = NS_NewNativeLocalFile(nsDependentCString(iniPath), PR_FALSE,
+    rv = NS_NewNativeLocalFile(nsDependentCString(iniPath), false,
                                getter_AddRefs(iniFile));
 #endif
     if (NS_FAILED(rv)) {
-      Output(PR_TRUE, "Couldn't find application.ini file.\n");
+      Output(true, "Couldn't find application.ini file.\n");
       return 1;
     }
 
     AutoAppData appData(iniFile);
     if (!appData) {
-      Output(PR_TRUE, "Error: couldn't parse application.ini.\n");
+      Output(true, "Error: couldn't parse application.ini.\n");
       return 1;
     }
 
@@ -505,10 +505,10 @@ main(int argc, char **argv)
       }
 #ifdef XP_WIN
       // same as iniPath.
-      NS_NewLocalFile(NS_ConvertUTF8toUTF16(greDir), PR_FALSE,
+      NS_NewLocalFile(NS_ConvertUTF8toUTF16(greDir), false,
                       &appData->xreDirectory);
 #else
-      NS_NewNativeLocalFile(nsDependentCString(greDir), PR_FALSE,
+      NS_NewNativeLocalFile(nsDependentCString(greDir), false,
                             &appData->xreDirectory);
 #endif
     }

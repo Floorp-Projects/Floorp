@@ -97,10 +97,10 @@ inDOMViewNode::inDOMViewNode(nsIDOMNode* aNode) :
   next(nsnull),
   previous(nsnull),
   level(0),
-  isOpen(PR_FALSE),
-  isContainer(PR_FALSE),
-  hasAnonymous(PR_FALSE),
-  hasSubDocument(PR_FALSE)
+  isOpen(false),
+  isContainer(false),
+  hasAnonymous(false),
+  hasSubDocument(false)
 {
 
 }
@@ -112,10 +112,10 @@ inDOMViewNode::~inDOMViewNode()
 ////////////////////////////////////////////////////////////////////////
 
 inDOMView::inDOMView() :
-  mShowAnonymous(PR_FALSE),
-  mShowSubDocuments(PR_FALSE),
-  mShowWhitespaceNodes(PR_TRUE),
-  mShowAccessibleNodes(PR_FALSE),
+  mShowAnonymous(false),
+  mShowSubDocuments(false),
+  mShowWhitespaceNodes(true),
+  mShowAccessibleNodes(false),
   mWhatToShow(nsIDOMNodeFilter::SHOW_ALL)
 {
 }
@@ -492,7 +492,7 @@ inDOMView::IsContainerEmpty(PRInt32 index, bool *_retval)
   RowToNode(index, &node);
   if (!node) return NS_ERROR_FAILURE;
 
-  *_retval = node->isContainer ? PR_FALSE : PR_TRUE;
+  *_retval = node->isContainer ? false : true;
   return NS_OK;
 }
 
@@ -649,7 +649,7 @@ NS_IMETHODIMP
 inDOMView::CanDrop(PRInt32 index, PRInt32 orientation,
                    nsIDOMDataTransfer* aDataTransfer, bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
   return NS_OK;
 }
 
@@ -868,7 +868,7 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
     // Parent is not open, so don't bother creating tree rows for the
     // kids.  But do indicate that it's now a container, if needed.
     if (!parentNode->isContainer) {
-      parentNode->isContainer = PR_TRUE;
+      parentNode->isContainer = true;
       mTree->InvalidateRow(parentRow);
     }
     return;
@@ -954,8 +954,8 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
 
   if (isOnlyChild) {
     // Fix up the parent
-    parentNode->isContainer = PR_FALSE;
-    parentNode->isOpen = PR_FALSE;
+    parentNode->isContainer = false;
+    parentNode->isOpen = false;
     mTree->InvalidateRow(NodeToRow(parentNode));
   }
     
@@ -1102,7 +1102,7 @@ inDOMView::ExpandNode(PRInt32 aRow)
   InsertNodes(list, aRow+1);
 
   if (node)
-    node->isOpen = PR_TRUE;
+    node->isOpen = true;
 }
 
 void
@@ -1119,7 +1119,7 @@ inDOMView::CollapseNode(PRInt32 aRow)
 
   RemoveNodes(aRow+1, row-aRow);
 
-  node->isOpen = PR_FALSE;
+  node->isOpen = false;
 }
 
 //////// NODE AND ROW CONVERSION

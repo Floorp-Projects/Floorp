@@ -81,7 +81,7 @@ private:
   void ProcessDirEntry(IconDirEntry& aTarget);
   // Sets the hotspot property of if we have a cursor
   void SetHotSpotIfCursor();
-  // Creates a bitmap file header buffer, returns PR_TRUE if successful
+  // Creates a bitmap file header buffer, returns true if successful
   bool FillBitmapFileHeaderBuffer(PRInt8 *bfh);
   // Fixes the height of a BMP information header field
   void FillBitmapInformationBufferHeight(PRInt8 *bih);

@@ -103,7 +103,7 @@ nsScriptableUnescapeHTML::Unescape(const nsAString & aFromStr,
   parser->SetContentSink(sink);
 
   parser->Parse(aFromStr, 0, NS_LITERAL_CSTRING("text/html"),
-                PR_TRUE, eDTDMode_fragment);
+                true, eDTDMode_fragment);
   
   return NS_OK;
 }
@@ -141,7 +141,7 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
     scripts_enabled = loader->GetEnabled();
   }
   if (scripts_enabled) {
-    loader->SetEnabled(PR_FALSE);
+    loader->SetEnabled(false);
   }
 
   // Wrap things in a div or body for parsing, but it won't show up in
@@ -173,7 +173,7 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
       rv = nsContentUtils::ParseFragmentXML(aFragment,
                                             document,
                                             tagStack,
-                                            PR_TRUE,
+                                            true,
                                             aReturn);
       fragment = do_QueryInterface(*aReturn);
     } else {
@@ -184,8 +184,8 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
                                              fragment,
                                              nsGkAtoms::body,
                                              kNameSpaceID_XHTML,
-                                             PR_FALSE,
-                                             PR_TRUE);
+                                             false,
+                                             true);
       // Now, set the base URI on all subtree roots.
       if (aBaseURI) {
         aBaseURI->GetSpec(spec);
@@ -198,20 +198,20 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
                           nsGkAtoms::base,
                           nsGkAtoms::xml,
                           spec16,
-                          PR_FALSE);
+                          false);
           }
           node = node->GetNextSibling();
         }
       }
     }
     if (fragment) {
-      nsTreeSanitizer sanitizer(PR_FALSE, PR_FALSE);
+      nsTreeSanitizer sanitizer(false, false);
       sanitizer.Sanitize(fragment);
     }
   }
 
   if (scripts_enabled)
-      loader->SetEnabled(PR_TRUE);
+      loader->SetEnabled(true);
   
   return rv;
 }

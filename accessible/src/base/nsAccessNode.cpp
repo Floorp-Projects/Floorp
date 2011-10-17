@@ -106,7 +106,7 @@ nsAccessNode::
   mContent(aContent), mWeakShell(aShell)
 {
 #ifdef DEBUG_A11Y
-  mIsInitialized = PR_FALSE;
+  mIsInitialized = false;
 #endif
 }
 
@@ -138,7 +138,7 @@ nsAccessNode::IsDefunct() const
 bool
 nsAccessNode::Init()
 {
-  return PR_TRUE;
+  return true;
 }
 
 
@@ -201,7 +201,7 @@ void nsAccessNode::InitXPAccessibility()
     prefBranch->GetBoolPref("browser.formfill.enable", &gIsFormFillEnabled);
   }
 
-  NotifyA11yInitOrShutdown(PR_TRUE);
+  NotifyA11yInitOrShutdown(true);
 }
 
 // nsAccessNode protected static
@@ -235,7 +235,7 @@ void nsAccessNode::ShutdownXPAccessibility()
     NS_RELEASE(gApplicationAccessible);
   }
 
-  NotifyA11yInitOrShutdown(PR_FALSE);
+  NotifyA11yInitOrShutdown(false);
 }
 
 already_AddRefed<nsIPresShell>
@@ -437,7 +437,7 @@ nsAccessNode::GetCurrentFocus()
   nsCOMPtr<nsIDOMElement> focusedElement;
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   if (fm)
-    fm->GetFocusedElementForWindow(win, PR_TRUE, getter_AddRefs(focusedWindow),
+    fm->GetFocusedElementForWindow(win, true, getter_AddRefs(focusedWindow),
                                    getter_AddRefs(focusedElement));
 
   nsINode *focusedNode = nsnull;

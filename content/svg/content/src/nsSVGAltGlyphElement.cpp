@@ -90,7 +90,7 @@ protected:
 
 nsSVGElement::StringInfo nsSVGAltGlyphElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_FALSE }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, false }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(AltGlyph)
@@ -147,7 +147,7 @@ NS_IMETHODIMP nsSVGAltGlyphElement::GetGlyphRef(nsAString & aGlyphRef)
 
 NS_IMETHODIMP nsSVGAltGlyphElement::SetGlyphRef(const nsAString & aGlyphRef)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::glyphRef, aGlyphRef, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::glyphRef, aGlyphRef, true);
 }
 
 /* attribute DOMString format; */
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsSVGAltGlyphElement::GetFormat(nsAString & aFormat)
 
 NS_IMETHODIMP nsSVGAltGlyphElement::SetFormat(const nsAString & aFormat)
 {
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::format, aFormat, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::format, aFormat, true);
 }
 
 //----------------------------------------------------------------------

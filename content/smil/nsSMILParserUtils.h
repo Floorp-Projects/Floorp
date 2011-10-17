@@ -113,7 +113,7 @@ public:
    * @param aFlags   A combination of the kClockValue* bit flags OR'ed together
    *                 to define what additional syntax is allowed.
    * @param aIsMedia Optional out parameter which, if not null, will be set to
-   *                 PR_TRUE if the value is the string "media", PR_FALSE
+   *                 true if the value is the string "media", false
    *                 otherwise. If it is null, the string "media" is not
    *                 allowed.
    *

@@ -247,9 +247,9 @@ nsUTF16BEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
                                       mOddLowSurrogate,
                                       aSrc, aSrcLength, aDest, aDestLength,
 #ifdef IS_LITTLE_ENDIAN
-                                      PR_TRUE
+                                      true
 #else
-                                      PR_FALSE
+                                      false
 #endif
                                       );
   return rv;
@@ -287,9 +287,9 @@ nsUTF16LEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
                                       mOddLowSurrogate,
                                       aSrc, aSrcLength, aDest, aDestLength,
 #ifdef IS_BIG_ENDIAN
-                                      PR_TRUE
+                                      true
 #else
-                                      PR_FALSE
+                                      false
 #endif
                                       );
   return rv;
@@ -299,7 +299,7 @@ NS_IMETHODIMP
 nsUTF16ToUnicode::Reset()
 {
   mEndian = kUnknown;
-  mFoundBOM = PR_FALSE;
+  mFoundBOM = false;
   return nsUTF16ToUnicodeBase::Reset();
 }
 
@@ -322,12 +322,12 @@ nsUTF16ToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
       if(0xFF == PRUint8(aSrc[0]) && 0xFE == PRUint8(aSrc[1])) {
         mState = STATE_FOUND_BOM;
         mEndian = kLittleEndian;
-        mFoundBOM = PR_TRUE;
+        mFoundBOM = true;
       }
       else if(0xFE == PRUint8(aSrc[0]) && 0xFF == PRUint8(aSrc[1])) {
         mState = STATE_FOUND_BOM;
         mEndian = kBigEndian;
-        mFoundBOM = PR_TRUE;
+        mFoundBOM = true;
       }
       // BOM is not found, but we can use a simple heuristic to determine
       // the endianness. Assume the first character is [U+0001, U+00FF].

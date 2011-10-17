@@ -136,10 +136,10 @@ nsGSettingsCollection::KeyExists(const nsACString& aKey)
 
   for (PRUint32 i = 0; mKeys[i] != NULL; i++) {
     if (aKey.Equals(mKeys[i]))
-      return PR_TRUE;
+      return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -151,7 +151,7 @@ nsGSettingsCollection::SetValue(const nsACString& aKey,
                               PromiseFlatCString(aKey).get(),
                               aValue)) {
     g_variant_unref(aValue);
-    return PR_FALSE;
+    return false;
   }
 
   return g_settings_set_value(mSettings,
@@ -239,7 +239,7 @@ nsGSettingsCollection::GetBoolean(const nsACString& aKey,
   }
 
   gboolean res = g_variant_get_boolean(value);
-  *aResult = res ? PR_TRUE : PR_FALSE;
+  *aResult = res ? true : false;
   g_variant_unref(value);
 
   return NS_OK;

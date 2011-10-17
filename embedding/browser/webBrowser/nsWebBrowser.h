@@ -92,8 +92,8 @@ class nsWebBrowserListenerState
 {
 public:
     bool Equals(nsIWeakReference *aListener, const nsIID& aID) {
-        if (mWeakPtr.get() == aListener && mID.Equals(aID)) return PR_TRUE;
-        return PR_FALSE;
+        if (mWeakPtr.get() == aListener && mID.Equals(aID)) return true;
+        return false;
     }
 
     nsWeakPtr mWeakPtr;

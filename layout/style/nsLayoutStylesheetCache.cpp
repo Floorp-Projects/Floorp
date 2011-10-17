@@ -86,7 +86,7 @@ nsLayoutStylesheetCache::ScrollbarsSheet()
 
     // Scrollbars don't need access to unsafe rules
     if (sheetURI)
-      LoadSheet(sheetURI, gStyleCache->mScrollbarsSheet, PR_FALSE);
+      LoadSheet(sheetURI, gStyleCache->mScrollbarsSheet, false);
     NS_ASSERTION(gStyleCache->mScrollbarsSheet, "Could not load scrollbars.css.");
   }
 
@@ -107,7 +107,7 @@ nsLayoutStylesheetCache::FormsSheet()
 
     // forms.css needs access to unsafe rules
     if (sheetURI)
-      LoadSheet(sheetURI, gStyleCache->mFormsSheet, PR_TRUE);
+      LoadSheet(sheetURI, gStyleCache->mFormsSheet, true);
 
     NS_ASSERTION(gStyleCache->mFormsSheet, "Could not load forms.css.");
   }
@@ -169,10 +169,10 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
   NS_ASSERTION(obsSvc, "No global observer service?");
 
   if (obsSvc) {
-    obsSvc->AddObserver(this, "profile-before-change", PR_FALSE);
-    obsSvc->AddObserver(this, "profile-do-change", PR_FALSE);
-    obsSvc->AddObserver(this, "chrome-flush-skin-caches", PR_FALSE);
-    obsSvc->AddObserver(this, "chrome-flush-caches", PR_FALSE);
+    obsSvc->AddObserver(this, "profile-before-change", false);
+    obsSvc->AddObserver(this, "profile-do-change", false);
+    obsSvc->AddObserver(this, "chrome-flush-skin-caches", false);
+    obsSvc->AddObserver(this, "chrome-flush-caches", false);
   }
 
   InitFromProfile();
@@ -182,13 +182,13 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "resource://gre-resources/ua.css");
   if (uri) {
-    LoadSheet(uri, mUASheet, PR_TRUE);
+    LoadSheet(uri, mUASheet, true);
   }
   NS_ASSERTION(mUASheet, "Could not load ua.css");
 
   NS_NewURI(getter_AddRefs(uri), "resource://gre-resources/quirk.css");
   if (uri) {
-    LoadSheet(uri, mQuirkSheet, PR_TRUE);
+    LoadSheet(uri, mQuirkSheet, true);
   }
   NS_ASSERTION(mQuirkSheet, "Could not load quirk.css");
 }
@@ -245,7 +245,7 @@ nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsRefPtr<nsCSSStyleSheet>
   nsCOMPtr<nsIURI> uri;
   NS_NewFileURI(getter_AddRefs(uri), aFile);
 
-  LoadSheet(uri, aSheet, PR_FALSE);
+  LoadSheet(uri, aSheet, false);
 }
 
 void
@@ -264,7 +264,7 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
   }
 
   if (gCSSLoader) {
-    gCSSLoader->LoadSheetSync(aURI, aEnableUnsafeRules, PR_TRUE,
+    gCSSLoader->LoadSheetSync(aURI, aEnableUnsafeRules, true,
                               getter_AddRefs(aSheet));
   }
 }

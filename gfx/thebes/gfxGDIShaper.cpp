@@ -61,25 +61,25 @@ gfxGDIShaper::InitTextRun(gfxContext *aContext,
 
     nsAutoTArray<WORD,500> glyphArray;
     if (!glyphArray.SetLength(aRunLength)) {
-        return PR_FALSE;
+        return false;
     }
     WORD *glyphs = glyphArray.Elements();
 
     DWORD ret = ::GetGlyphIndicesW(dc, aString + aRunStart, aRunLength,
                                    glyphs, GGI_MARK_NONEXISTING_GLYPHS);
     if (ret == GDI_ERROR) {
-        return PR_FALSE;
+        return false;
     }
 
     for (int k = 0; k < aRunLength; k++) {
         if (glyphs[k] == 0xFFFF)
-            return PR_FALSE;
+            return false;
     }
  
     SIZE size;
     nsAutoTArray<int,500> partialWidthArray;
     if (!partialWidthArray.SetLength(aRunLength)) {
-        return PR_FALSE;
+        return false;
     }
 
     BOOL success = ::GetTextExtentExPointI(dc,
@@ -90,7 +90,7 @@ gfxGDIShaper::InitTextRun(gfxContext *aContext,
                                            partialWidthArray.Elements(),
                                            &size);
     if (!success) {
-        return PR_FALSE;
+        return false;
     }
 
     gfxTextRun::CompressedGlyph g;
@@ -120,10 +120,10 @@ gfxGDIShaper::InitTextRun(gfxContext *aContext,
             details.mXOffset = 0;
             details.mYOffset = 0;
             aTextRun->SetGlyphs(offset,
-                                g.SetComplex(atClusterStart, PR_TRUE, 1),
+                                g.SetComplex(atClusterStart, true, 1),
                                 &details);
         }
     }
 
-    return PR_TRUE;
+    return true;
 }

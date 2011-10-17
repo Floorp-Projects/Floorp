@@ -84,7 +84,7 @@ WebGLProgram::UpdateInfo(gl::GLContext *gl)
         }
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 /*
@@ -102,7 +102,7 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
     NS_ASSERTION(GLuint(currentProgram) == mCurrentProgram->GLName(),
                  "WebGL: current program doesn't agree with GL state");
     if (GLuint(currentProgram) != mCurrentProgram->GLName())
-        return PR_FALSE;
+        return false;
 #endif
 
     *maxAllowedCount = -1;
@@ -118,7 +118,7 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
 
         if (vd.buf == nsnull) {
             ErrorInvalidOperation("%s: no VBO bound to enabled vertex attrib index %d!", info, i);
-            return PR_FALSE;
+            return false;
         }
 
         // If the attrib is not in use, then we don't have to validate
@@ -136,7 +136,7 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
             !checked_sizeOfLastElement.valid())
         {
           ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
-          return PR_FALSE;
+          return false;
         }
 
         if (checked_byteLength.value() < checked_sizeOfLastElement.value()) {
@@ -147,7 +147,7 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
 
           if (!checked_maxAllowedCount.valid()) {
             ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
-            return PR_FALSE;
+            return false;
           }
 
           if (*maxAllowedCount == -1 || *maxAllowedCount > checked_maxAllowedCount.value())
@@ -155,7 +155,7 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
         }
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 bool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
@@ -170,10 +170,10 @@ bool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
         case LOCAL_GL_SAMPLE_COVERAGE:
         case LOCAL_GL_SCISSOR_TEST:
         case LOCAL_GL_STENCIL_TEST:
-            return PR_TRUE;
+            return true;
         default:
             ErrorInvalidEnumInfo(info, cap);
-            return PR_FALSE;
+            return false;
     }
 }
 
@@ -183,10 +183,10 @@ bool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode, const char *info)
         case LOCAL_GL_FUNC_ADD:
         case LOCAL_GL_FUNC_SUBTRACT:
         case LOCAL_GL_FUNC_REVERSE_SUBTRACT:
-            return PR_TRUE;
+            return true;
         default:
             ErrorInvalidEnumInfo(info, mode);
-            return PR_FALSE;
+            return false;
     }
 }
 
@@ -207,17 +207,17 @@ bool WebGLContext::ValidateBlendFuncDstEnum(WebGLenum factor, const char *info)
         case LOCAL_GL_ONE_MINUS_CONSTANT_COLOR:
         case LOCAL_GL_CONSTANT_ALPHA:
         case LOCAL_GL_ONE_MINUS_CONSTANT_ALPHA:
-            return PR_TRUE;
+            return true;
         default:
             ErrorInvalidEnumInfo(info, factor);
-            return PR_FALSE;
+            return false;
     }
 }
 
 bool WebGLContext::ValidateBlendFuncSrcEnum(WebGLenum factor, const char *info)
 {
     if (factor == LOCAL_GL_SRC_ALPHA_SATURATE)
-        return PR_TRUE;
+        return true;
     else
         return ValidateBlendFuncDstEnum(factor, info);
 }
@@ -235,9 +235,9 @@ bool WebGLContext::ValidateBlendFuncEnumsCompatibility(WebGLenum sfactor, WebGLe
     if ( (sfactorIsConstantColor && dfactorIsConstantAlpha) ||
          (dfactorIsConstantColor && sfactorIsConstantAlpha) ) {
         ErrorInvalidOperation("%s are mutually incompatible, see section 6.8 in the WebGL 1.0 spec", info);
-        return PR_FALSE;
+        return false;
     } else {
-        return PR_TRUE;
+        return true;
     }
 }
 
@@ -246,10 +246,10 @@ bool WebGLContext::ValidateTextureTargetEnum(WebGLenum target, const char *info)
     switch (target) {
         case LOCAL_GL_TEXTURE_2D:
         case LOCAL_GL_TEXTURE_CUBE_MAP:
-            return PR_TRUE;
+            return true;
         default:
             ErrorInvalidEnumInfo(info, target);
-            return PR_FALSE;
+            return false;
     }
 }
 
@@ -264,10 +264,10 @@ bool WebGLContext::ValidateComparisonEnum(WebGLenum target, const char *info)
         case LOCAL_GL_EQUAL:
         case LOCAL_GL_NOTEQUAL:
         case LOCAL_GL_ALWAYS:
-            return PR_TRUE;
+            return true;
         default:
             ErrorInvalidEnumInfo(info, target);
-            return PR_FALSE;
+            return false;
     }
 }
 
@@ -282,10 +282,10 @@ bool WebGLContext::ValidateStencilOpEnum(WebGLenum action, const char *info)
         case LOCAL_GL_DECR:
         case LOCAL_GL_DECR_WRAP:
         case LOCAL_GL_INVERT:
-            return PR_TRUE;
+            return true;
         default:
             ErrorInvalidEnumInfo(info, action);
-            return PR_FALSE;
+            return false;
     }
 }
 
@@ -295,10 +295,10 @@ bool WebGLContext::ValidateFaceEnum(WebGLenum face, const char *info)
         case LOCAL_GL_FRONT:
         case LOCAL_GL_BACK:
         case LOCAL_GL_FRONT_AND_BACK:
-            return PR_TRUE;
+            return true;
         default:
             ErrorInvalidEnumInfo(info, face);
-            return PR_FALSE;
+            return false;
     }
 }
 
@@ -308,10 +308,10 @@ bool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
         case LOCAL_GL_STREAM_DRAW:
         case LOCAL_GL_STATIC_DRAW:
         case LOCAL_GL_DYNAMIC_DRAW:
-            return PR_TRUE;
+            return true;
         default:
             ErrorInvalidEnumInfo(info, target);
-            return PR_FALSE;
+            return false;
     }
 }
 
@@ -325,10 +325,10 @@ bool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
         case LOCAL_GL_LINE_STRIP:
         case LOCAL_GL_LINE_LOOP:
         case LOCAL_GL_LINES:
-            return PR_TRUE;
+            return true;
         default:
             ErrorInvalidEnumInfo(info, mode);
-            return PR_FALSE;
+            return false;
     }
 }
 
@@ -399,7 +399,7 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
                 (type == LOCAL_GL_FLOAT && jsArrayType != js::TypedArray::TYPE_FLOAT32))
             {
                 ErrorInvalidOperation("%s: invalid typed array type for given format", info);
-                return PR_FALSE;
+                return false;
             }
         }
 
@@ -408,22 +408,22 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
             case LOCAL_GL_ALPHA:
             case LOCAL_GL_LUMINANCE:
                 *texelSize = 1 * texMultiplier;
-                return PR_TRUE;
+                return true;
             case LOCAL_GL_LUMINANCE_ALPHA:
                 *texelSize = 2 * texMultiplier;
-                return PR_TRUE;
+                return true;
             case LOCAL_GL_RGB:
                 *texelSize = 3 * texMultiplier;
-                return PR_TRUE;
+                return true;
             case LOCAL_GL_RGBA:
                 *texelSize = 4 * texMultiplier;
-                return PR_TRUE;
+                return true;
             default:
                 break;
         }
 
         ErrorInvalidEnum("%s: invalid format 0x%x", info, format);
-        return PR_FALSE;
+        return false;
     }
 
     switch (type) {
@@ -431,35 +431,35 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
         case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
             if (jsArrayType != -1 && jsArrayType != js::TypedArray::TYPE_UINT16) {
                 ErrorInvalidOperation("%s: invalid typed array type for given format", info);
-                return PR_FALSE;
+                return false;
             }
 
             if (format == LOCAL_GL_RGBA) {
                 *texelSize = 2;
-                return PR_TRUE;
+                return true;
             }
             ErrorInvalidOperation("%s: mutually incompatible format and type", info);
-            return PR_FALSE;
+            return false;
 
         case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
             if (jsArrayType != -1 && jsArrayType != js::TypedArray::TYPE_UINT16) {
                 ErrorInvalidOperation("%s: invalid typed array type for given format", info);
-                return PR_FALSE;
+                return false;
             }
 
             if (format == LOCAL_GL_RGB) {
                 *texelSize = 2;
-                return PR_TRUE;
+                return true;
             }
             ErrorInvalidOperation("%s: mutually incompatible format and type", info);
-            return PR_FALSE;
+            return false;
 
         default:
             break;
         }
 
     ErrorInvalidEnum("%s: invalid type 0x%x", info, type);
-    return PR_FALSE;
+    return false;
 }
 
 bool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
@@ -472,9 +472,9 @@ bool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
         } else {
              ErrorInvalidValue("%s: index %d is out of range", info, index);
         }
-        return PR_FALSE;
+        return false;
     } else {
-        return PR_TRUE;
+        return true;
     }
 }
 
@@ -483,28 +483,28 @@ bool WebGLContext::ValidateStencilParamsForDrawCall()
   const char *msg = "%s set different front and back stencil %s. Drawing in this configuration is not allowed.";
   if (mStencilRefFront != mStencilRefBack) {
       ErrorInvalidOperation(msg, "stencilFuncSeparate", "reference values");
-      return PR_FALSE;
+      return false;
   }
   if (mStencilValueMaskFront != mStencilValueMaskBack) {
       ErrorInvalidOperation(msg, "stencilFuncSeparate", "value masks");
-      return PR_FALSE;
+      return false;
   }
   if (mStencilWriteMaskFront != mStencilWriteMaskBack) {
       ErrorInvalidOperation(msg, "stencilMaskSeparate", "write masks");
-      return PR_FALSE;
+      return false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 bool
 WebGLContext::InitAndValidateGL()
 {
-    if (!gl) return PR_FALSE;
+    if (!gl) return false;
 
     GLenum error = gl->fGetError();
     if (error != LOCAL_GL_NO_ERROR) {
         LogMessage("GL error 0x%x occurred during OpenGL context initialization, before WebGL initialization!", error);
-        return PR_FALSE;
+        return false;
     }
 
     mMinCapability = Preferences::GetBool("webgl.min_capability_mode", false);
@@ -662,7 +662,7 @@ WebGLContext::InitAndValidateGL()
     }
 
     // Check the shader validator pref
-    NS_ENSURE_TRUE(Preferences::GetRootBranch(), PR_FALSE);
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), false);
 
     mShaderValidation =
         Preferences::GetBool("webgl.shader_validator", mShaderValidation);
@@ -672,7 +672,7 @@ WebGLContext::InitAndValidateGL()
     if (mShaderValidation) {
         if (!ShInitialize()) {
             LogMessage("GLSL translator initialization failed!");
-            return PR_FALSE;
+            return false;
         }
     }
 #endif
@@ -682,8 +682,8 @@ WebGLContext::InitAndValidateGL()
     error = gl->GetAndClearError();
     if (error != LOCAL_GL_NO_ERROR) {
         LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
-        return PR_FALSE;
+        return false;
     }
 
-    return PR_TRUE;
+    return true;
 }

@@ -87,8 +87,8 @@ nsPNGDecoder::nsPNGDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
    mCMSLine(nsnull), interlacebuf(nsnull),
    mInProfile(nsnull), mTransform(nsnull),
    mHeaderBuf(nsnull), mHeaderBytesRead(0),
-   mChannels(0), mFrameIsHidden(PR_FALSE),
-   mCMSMode(0), mDisablePremultipliedAlpha(PR_FALSE)
+   mChannels(0), mFrameIsHidden(false),
+   mCMSMode(0), mDisablePremultipliedAlpha(false)
 {
 }
 
@@ -142,7 +142,7 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
           width, height,
           mImage.get ()));
 
-  mFrameHasNoAlpha = PR_TRUE;
+  mFrameHasNoAlpha = true;
 }
 
 #ifdef PNG_APNG_SUPPORTED
@@ -413,12 +413,12 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
       bool mismatch = false;
       if (color_type & PNG_COLOR_MASK_COLOR) {
         if (profileSpace != icSigRgbData)
-          mismatch = PR_TRUE;
+          mismatch = true;
       } else {
         if (profileSpace == icSigRgbData)
           png_set_gray_to_rgb(png_ptr);
         else if (profileSpace != icSigGrayData)
-          mismatch = PR_TRUE;
+          mismatch = true;
       }
 
       if (mismatch) {
@@ -635,7 +635,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     png_set_progressive_frame_fn(png_ptr, nsPNGDecoder::frame_info_callback, NULL);
 
   if (png_get_first_frame_is_hidden(png_ptr, info_ptr)) {
-    decoder->mFrameIsHidden = PR_TRUE;
+    decoder->mFrameIsHidden = true;
   } else {
 #endif
     decoder->CreateFrame(0, 0, width, height, decoder->format);
@@ -776,14 +776,14 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
           for (PRUint32 x=width; x>0; --x) {
             *cptr32++ = GFX_PACKED_PIXEL(line[3], line[0], line[1], line[2]);
             if (line[3] != 0xff)
-              rowHasNoAlpha = PR_FALSE;
+              rowHasNoAlpha = false;
             line += 4;
           }
         } else {
           for (PRUint32 x=width; x>0; --x) {
             *cptr32++ = GFX_PACKED_PIXEL_NO_PREMULTIPLY(line[3], line[0], line[1], line[2]);
             if (line[3] != 0xff)
-              rowHasNoAlpha = PR_FALSE;
+              rowHasNoAlpha = false;
             line += 4;
           }
         }
@@ -794,7 +794,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     }
 
     if (!rowHasNoAlpha)
-      decoder->mFrameHasNoAlpha = PR_FALSE;
+      decoder->mFrameHasNoAlpha = false;
 
     PRUint32 numFrames = decoder->mImage->GetNumFrames();
     if (numFrames <= 1) {
@@ -821,7 +821,7 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
   decoder->EndImageFrame();
 
   // Only the first frame can be hidden, so unhide unconditionally here.
-  decoder->mFrameIsHidden = PR_FALSE;
+  decoder->mFrameIsHidden = false;
 
   x_offset = png_get_next_frame_x_offset(png_ptr, decoder->mInfo);
   y_offset = png_get_next_frame_y_offset(png_ptr, decoder->mInfo);

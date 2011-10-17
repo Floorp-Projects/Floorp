@@ -158,7 +158,7 @@ nsMozIconURI::GetSpecIgnoringRef(nsACString &result)
 NS_IMETHODIMP
 nsMozIconURI::GetHasRef(bool *result)
 {
-  *result = PR_FALSE;
+  *result = false;
   return NS_OK;
 }
 
@@ -426,9 +426,9 @@ nsMozIconURI::Equals(nsIURI *other, bool *result)
   other->GetSpec(spec2);
   GetSpec(spec1);
   if (!PL_strcasecmp(spec1.get(), spec2.get()))
-    *result = PR_TRUE;
+    *result = true;
   else
-    *result = PR_FALSE;
+    *result = false;
   return NS_OK;
 }
 
@@ -446,7 +446,7 @@ nsMozIconURI::SchemeIs(const char *i_Scheme, bool *o_Equals)
   NS_ENSURE_ARG_POINTER(o_Equals);
   if (!i_Scheme) return NS_ERROR_INVALID_ARG;
   
-  *o_Equals = PL_strcasecmp("moz-icon", i_Scheme) ? PR_FALSE : PR_TRUE;
+  *o_Equals = PL_strcasecmp("moz-icon", i_Scheme) ? false : true;
   return NS_OK;
 }
 

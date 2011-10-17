@@ -262,7 +262,7 @@ nsNSSASN1Tree::IsContainerOpen(PRInt32 index, bool *_retval)
 NS_IMETHODIMP 
 nsNSSASN1Tree::IsContainerEmpty(PRInt32 index, bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
   return NS_OK;
 }
 
@@ -270,7 +270,7 @@ nsNSSASN1Tree::IsContainerEmpty(PRInt32 index, bool *_retval)
 NS_IMETHODIMP 
 nsNSSASN1Tree::IsSeparator(PRInt32 index, bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
   return NS_OK; 
 }
 
@@ -363,9 +363,9 @@ nsNSSASN1Tree::ToggleOpenState(PRInt32 index)
   PRInt32 rowCountChange;
   if (IsExpanded) {
     rowCountChange = -CountVisibleNodes(n->child);
-    n->seq->SetIsExpanded(PR_FALSE);
+    n->seq->SetIsExpanded(false);
   } else {
-    n->seq->SetIsExpanded(PR_TRUE);
+    n->seq->SetIsExpanded(true);
     rowCountChange = CountVisibleNodes(n->child);
   }
   if (mTree)
@@ -399,7 +399,7 @@ NS_IMETHODIMP
 nsNSSASN1Tree::IsEditable(PRInt32 row, nsITreeColumn* col, 
                           bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
   return NS_OK;
 }
 
@@ -408,7 +408,7 @@ NS_IMETHODIMP
 nsNSSASN1Tree::IsSelectable(PRInt32 row, nsITreeColumn* col, 
                             bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
   return NS_OK;
 }
 
@@ -457,7 +457,7 @@ NS_IMETHODIMP nsNSSASN1Tree::CanDrop(PRInt32 index, PRInt32 orientation,
                                      nsIDOMDataTransfer* aDataTransfer, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PR_FALSE;
+  *_retval = false;
   
   return NS_OK;
 }
@@ -479,7 +479,7 @@ NS_IMETHODIMP nsNSSASN1Tree::Drop(PRInt32 row, PRInt32 orient, nsIDOMDataTransfe
 //
 NS_IMETHODIMP nsNSSASN1Tree::IsSorted(bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
   return NS_OK;
 }
 
@@ -508,7 +508,7 @@ nsNSSASN1Tree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex,
     return NS_ERROR_FAILURE;
 
   if (!n->next) {
-    *_retval = PR_FALSE;
+    *_retval = false;
   }
   else {
     PRInt32 nTotalSize = CountVisibleNodes(n);

@@ -90,10 +90,10 @@ public:
         NS_ASSERTION(mBlocks.DebugGetHeader(), "mHdr is null, this is bad");
         PRUint32 blockIndex = aIndex/BLOCK_SIZE_BITS;
         if (blockIndex >= mBlocks.Length())
-            return PR_FALSE;
+            return false;
         Block *block = mBlocks[blockIndex];
         if (!block)
-            return PR_FALSE;
+            return false;
         return ((block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)]) & (1 << (aIndex & 0x7))) != 0;
     }
 
@@ -103,7 +103,7 @@ public:
         // start point is beyond the end of the block array? return false immediately
         startBlock = aStart >> BLOCK_INDEX_SHIFT;
         blockLen = mBlocks.Length();
-        if (startBlock >= blockLen) return PR_FALSE;
+        if (startBlock >= blockLen) return false;
         
         // check for blocks in range, if none, return false
         PRUint32 blockIndex;
@@ -113,9 +113,9 @@ public:
         blockIndex = startBlock;
         for (blockIndex = startBlock; blockIndex <= endBlock; blockIndex++) {
             if (blockIndex < blockLen && mBlocks[blockIndex])
-                hasBlocksInRange = PR_TRUE;
+                hasBlocksInRange = true;
         }
-        if (!hasBlocksInRange) return PR_FALSE;
+        if (!hasBlocksInRange) return false;
 
         Block *block;
         PRUint32 i, start, end;
@@ -126,10 +126,10 @@ public:
             end = NS_MIN(aEnd, ((startBlock+1) << BLOCK_INDEX_SHIFT) - 1);
             for (i = start; i <= end; i++) {
                 if ((block->mBits[(i>>3) & (BLOCK_SIZE - 1)]) & (1 << (i & 0x7)))
-                    return PR_TRUE;
+                    return true;
             }
         }
-        if (endBlock == startBlock) return PR_FALSE;
+        if (endBlock == startBlock) return false;
 
         // [2..n-1] blocks check bytes
         for (blockIndex = startBlock + 1; blockIndex < endBlock; blockIndex++) {
@@ -138,7 +138,7 @@ public:
             if (blockIndex >= blockLen || !(block = mBlocks[blockIndex])) continue;
             for (index = 0; index < BLOCK_SIZE; index++) {
                 if (block->mBits[index]) 
-                    return PR_TRUE;
+                    return true;
             }
         }
         
@@ -148,11 +148,11 @@ public:
             end = aEnd;
             for (i = start; i <= end; i++) {
                 if ((block->mBits[(i>>3) & (BLOCK_SIZE - 1)]) & (1 << (i & 0x7)))
-                    return PR_TRUE;
+                    return true;
             }
         }
         
-        return PR_FALSE;
+        return false;
     }
     
     void set(PRUint32 aIndex) {
@@ -198,7 +198,7 @@ public:
             if (!block) {
                 bool fullBlock = false;
                 if (aStart <= blockFirstBit && aEnd >= blockLastBit)
-                    fullBlock = PR_TRUE;
+                    fullBlock = true;
 
                 block = new Block(fullBlock ? 0xFF : 0);
 
@@ -744,7 +744,7 @@ public:
                       nsString& aName);
       
     // convert a name from the raw name table data into an nsString,
-    // provided we know how; return PR_TRUE if successful, or PR_FALSE
+    // provided we know how; return true if successful, or false
     // if we can't handle the encoding
     static bool
     DecodeFontName(const PRUint8 *aBuf, PRInt32 aLength, 
@@ -792,24 +792,24 @@ public:
     static inline bool PotentialRTLChar(PRUnichar aCh) {
         if (aCh >= kUnicodeBidiScriptsStart && aCh <= kUnicodeBidiScriptsEnd)
             // bidi scripts Hebrew, Arabic, Syriac, Thaana, N'Ko are all encoded together
-            return PR_TRUE;
+            return true;
 
         if (aCh == kUnicodeRLM || aCh == kUnicodeRLE || aCh == kUnicodeRLO)
             // directional controls that trigger bidi layout
-            return PR_TRUE;
+            return true;
 
         if (aCh >= kUnicodeBidiPresentationStart &&
             aCh <= kUnicodeBidiPresentationEnd)
             // presentation forms of Arabic and Hebrew letters
-            return PR_TRUE;
+            return true;
 
         if ((aCh & 0xFF00) == kUnicodeFirstHighSurrogateBlock)
             // surrogate that could be part of a bidi supplementary char
             // (Cypriot, Aramaic, Phoenecian, etc)
-            return PR_TRUE;
+            return true;
 
         // otherwise we know this char cannot trigger bidi reordering
-        return PR_FALSE;
+        return false;
     }
 
     static PRUint8 CharRangeBit(PRUint32 ch);

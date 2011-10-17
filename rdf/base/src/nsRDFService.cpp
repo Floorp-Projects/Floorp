@@ -352,13 +352,13 @@ BlobImpl::EqualsNode(nsIRDFNode *aNode, bool *aEquals)
             blob->GetValue(&bytes);
 
             if (0 == memcmp(bytes, mData.mBytes, length)) {
-                *aEquals = PR_TRUE;
+                *aEquals = true;
                 return NS_OK;
             }
         }
     }
 
-    *aEquals = PR_FALSE;
+    *aEquals = false;
     return NS_OK;
 }
 
@@ -526,7 +526,7 @@ LiteralImpl::EqualsNode(nsIRDFNode* aNode, bool* aResult)
         return NS_OK;
     }
     else if (rv == NS_NOINTERFACE) {
-        *aResult = PR_FALSE;
+        *aResult = false;
         return NS_OK;
     }
     else {
@@ -626,7 +626,7 @@ DateImpl::EqualsNode(nsIRDFNode* node, bool* result)
         NS_RELEASE(date);
     }
     else {
-        *result = PR_FALSE;
+        *result = false;
         rv = NS_OK;
     }
     return rv;
@@ -732,7 +732,7 @@ IntImpl::EqualsNode(nsIRDFNode* node, bool* result)
         NS_RELEASE(intValue);
     }
     else {
-        *result = PR_FALSE;
+        *result = false;
         rv = NS_OK;
     }
     return rv;
@@ -1199,10 +1199,10 @@ RDFServiceImpl::IsAnonymousResource(nsIRDFResource* aResource, bool* _result)
         (uri[3] == ':') &&
         (uri[4] == '#') &&
         (uri[5] == '$')) {
-        *_result = PR_TRUE;
+        *_result = true;
     }
     else {
-        *_result = PR_FALSE;
+        *_result = false;
     }
 
     return NS_OK;
@@ -1384,14 +1384,14 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
     // Use the other GetDataSource and ask for a non-blocking Refresh.
     // If you wanted it loaded synchronously, then you should've tried to do it
     // yourself, or used GetDataSourceBlocking.
-    return GetDataSource( aURI, PR_FALSE, aDataSource );
+    return GetDataSource( aURI, false, aDataSource );
 }
 
 NS_IMETHODIMP
 RDFServiceImpl::GetDataSourceBlocking(const char* aURI, nsIRDFDataSource** aDataSource)
 {
     // Use GetDataSource and ask for a blocking Refresh.
-    return GetDataSource( aURI, PR_TRUE, aDataSource );
+    return GetDataSource( aURI, true, aDataSource );
 }
 
 nsresult

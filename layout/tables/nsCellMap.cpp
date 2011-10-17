@@ -317,7 +317,7 @@ nsTableCellMap::HasMoreThanOneCell(PRInt32 aRowIndex) const
     rowIndex -= map->GetRowCount();
     map = map->GetNextSibling();
   }
-  return PR_FALSE;
+  return false;
 }
 
 PRInt32
@@ -342,7 +342,7 @@ nsTableCellMap::GetEffectiveRowSpan(PRInt32 aRowIndex,
   nsCellMap* map = mFirstMap;
   while (map) {
     if (map->GetRowCount() > rowIndex) {
-      return map->GetRowSpan(rowIndex, aColIndex, PR_TRUE);
+      return map->GetRowSpan(rowIndex, aColIndex, true);
     }
     rowIndex -= map->GetRowCount();
     map = map->GetNextSibling();
@@ -668,7 +668,7 @@ nsTableCellMap::RebuildConsideringCells(nsCellMap*                   aCellMap,
 
     }
     else {
-      cellMap->RebuildConsideringCells(*this, numOrigCols, nsnull, -1, 0, PR_FALSE, aDamageArea);
+      cellMap->RebuildConsideringCells(*this, numOrigCols, nsnull, -1, 0, false, aDamageArea);
     }
     rowCount += cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
@@ -695,7 +695,7 @@ nsTableCellMap::RebuildConsideringRows(nsCellMap*                  aCellMap,
       cellMap->RebuildConsideringRows(*this, aStartRowIndex, aRowsToInsert, aNumRowsToRemove, aDamageArea);
     }
     else {
-      cellMap->RebuildConsideringCells(*this, numOrigCols, nsnull, -1, 0, PR_FALSE, aDamageArea);
+      cellMap->RebuildConsideringCells(*this, numOrigCols, nsnull, -1, 0, false, aDamageArea);
     }
     rowCount += cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
@@ -892,7 +892,7 @@ bool nsTableCellMap::RowIsSpannedInto(PRInt32 aRowIndex,
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
-  return PR_FALSE;
+  return false;
 }
 
 bool nsTableCellMap::RowHasSpanningCells(PRInt32 aRowIndex,
@@ -907,13 +907,13 @@ bool nsTableCellMap::RowHasSpanningCells(PRInt32 aRowIndex,
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
-  return PR_FALSE;
+  return false;
 }
 
 void nsTableCellMap::ExpandZeroColSpans()
 {
-  mTableFrame.SetNeedColSpanExpansion(PR_FALSE); // mark the work done
-  mTableFrame.SetHasZeroColSpans(PR_FALSE); // reset the bit, if there is a
+  mTableFrame.SetNeedColSpanExpansion(false); // mark the work done
+  mTableFrame.SetHasZeroColSpans(false); // reset the bit, if there is a
                                             // zerospan it will be set again.
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
@@ -973,7 +973,7 @@ nsTableCellMap::ResetTopStart(PRUint8    aSide,
     break;
   }
   if (bcData) {
-    bcData->SetTopStart(PR_FALSE);
+    bcData->SetTopStart(false);
   }
 }
 
@@ -1015,7 +1015,7 @@ nsTableCellMap::SetBCBorderEdge(mozilla::css::Side aSide,
         PRInt32 numRgRows = aCellMap.GetRowCount();
         if (yPos < numRgRows) { // add a dead cell data
           nsRect damageArea;
-          cellData = (BCCellData*)aCellMap.AppendCell(*this, nsnull, rgYPos, PR_FALSE, damageArea); if (!cellData) ABORT0();
+          cellData = (BCCellData*)aCellMap.AppendCell(*this, nsnull, rgYPos, false, damageArea); if (!cellData) ABORT0();
         }
         else {
           NS_ASSERTION(aSide == NS_SIDE_BOTTOM, "program error");
@@ -1028,7 +1028,7 @@ nsTableCellMap::SetBCBorderEdge(mozilla::css::Side aSide,
             cellData = (BCCellData*)cellMap->GetDataAt(0, xIndex);
             if (!cellData) { // add a dead cell
               nsRect damageArea;
-              cellData = (BCCellData*)cellMap->AppendCell(*this, nsnull, 0, PR_FALSE, damageArea);
+              cellData = (BCCellData*)cellMap->AppendCell(*this, nsnull, 0, false, damageArea);
             }
           }
           else { // must be at the end of the table
@@ -1121,7 +1121,7 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
       PRInt32 numRgRows = aCellMap.GetRowCount();
       if (yPos < numRgRows) { // add a dead cell data
         nsRect damageArea;
-        cellData = (BCCellData*)aCellMap.AppendCell(*this, nsnull, rgYPos, PR_FALSE, damageArea);
+        cellData = (BCCellData*)aCellMap.AppendCell(*this, nsnull, rgYPos, false, damageArea);
       }
       else {
         // try the next non empty row group
@@ -1133,7 +1133,7 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
           cellData = (BCCellData*)cellMap->GetDataAt(0, xPos);
           if (!cellData) { // add a dead cell
             nsRect damageArea;
-            cellData = (BCCellData*)cellMap->AppendCell(*this, nsnull, 0, PR_FALSE, damageArea);
+            cellData = (BCCellData*)cellMap->AppendCell(*this, nsnull, 0, false, damageArea);
           }
         }
         else { // must be at the bottom of the table
@@ -1473,8 +1473,8 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   PRInt32 colSpan = (aCellFrame) ?
                     GetColSpanForNewCell(*aCellFrame, zeroColSpan) : 1;
   if (zeroColSpan) {
-    aMap.mTableFrame.SetHasZeroColSpans(PR_TRUE);
-    aMap.mTableFrame.SetNeedColSpanExpansion(PR_TRUE);
+    aMap.mTableFrame.SetHasZeroColSpans(true);
+    aMap.mTableFrame.SetNeedColSpanExpansion(true);
   }
 
   // if the new cell could potentially span into other rows and collide with
@@ -1482,7 +1482,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   if (aRebuildIfNecessary && (aRowIndex < mContentRowCount - 1) && (rowSpan > 1)) {
     nsAutoTArray<nsTableCellFrame*, 1> newCellArray;
     newCellArray.AppendElement(aCellFrame);
-    aMap.RebuildConsideringCells(this, &newCellArray, aRowIndex, startColIndex, PR_TRUE, aDamageArea);
+    aMap.RebuildConsideringCells(this, &newCellArray, aRowIndex, startColIndex, true, aDamageArea);
     return origData;
   }
   mContentRowCount = NS_MAX(mContentRowCount, aRowIndex + 1);
@@ -1544,18 +1544,18 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
             else {
               cellData->SetRowSpanOffset(rowX - aRowIndex);
               if (zeroRowSpan) {
-                cellData->SetZeroRowSpan(PR_TRUE);
+                cellData->SetZeroRowSpan(true);
               }
             }
           }
           if (colX > startColIndex) { // col spanning into cell
             if (!cellData->IsColSpan()) {
               if (cellData->IsRowSpan()) {
-                cellData->SetOverlap(PR_TRUE);
+                cellData->SetOverlap(true);
               }
               cellData->SetColSpanOffset(colX - startColIndex);
               if (zeroColSpan) {
-                cellData->SetZeroColSpan(PR_TRUE);
+                cellData->SetZeroColSpan(true);
               }
 
               nsColInfo* colInfo = aMap.GetColInfoAt(colX);
@@ -1569,13 +1569,13 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
           if (rowX > aRowIndex) {
             cellData->SetRowSpanOffset(rowX - aRowIndex);
             if (zeroRowSpan) {
-              cellData->SetZeroRowSpan(PR_TRUE);
+              cellData->SetZeroRowSpan(true);
             }
           }
           if (colX > startColIndex) {
             cellData->SetColSpanOffset(colX - startColIndex);
             if (zeroColSpan) {
-              cellData->SetZeroColSpan(PR_TRUE);
+              cellData->SetZeroColSpan(true);
             }
           }
           SetDataAt(aMap, *cellData, rowX, colX);
@@ -1604,7 +1604,7 @@ void nsCellMap::CollapseZeroColSpan(nsTableCellMap& aMap,
   NS_ASSERTION(aOrigData && aOrigData->IsZeroColSpan(),
                "zero colspan should have been passed");
   // find the originating cellframe
-  nsTableCellFrame* cell = GetCellFrame(aRowIndex, aColIndex, *aOrigData, PR_TRUE);
+  nsTableCellFrame* cell = GetCellFrame(aRowIndex, aColIndex, *aOrigData, true);
   NS_ASSERTION(cell, "originating cell not found");
 
   // find the clearing region
@@ -1646,16 +1646,16 @@ bool nsCellMap::CellsSpanOut(nsTArray<nsTableRowFrame*>& aRows) const
         bool zeroSpan;
         PRInt32 rowSpan = GetRowSpanForNewCell(cellFrame, rowX, zeroSpan);
         if (zeroSpan || rowX + rowSpan > numNewRows) {
-          return PR_TRUE;
+          return true;
         }
       }
       childFrame = childFrame->GetNextSibling();
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
-// return PR_TRUE if any cells have rows spans into or out of the region
+// return true if any cells have rows spans into or out of the region
 // defined by the row and col indices or any cells have colspans into the region
 bool nsCellMap::CellsSpanInOrOut(PRInt32 aStartRowIndex,
                                    PRInt32 aEndRowIndex,
@@ -1682,25 +1682,25 @@ bool nsCellMap::CellsSpanInOrOut(PRInt32 aStartRowIndex,
     if (aStartRowIndex > 0) {
       cellData = GetDataAt(aStartRowIndex, colX);
       if (cellData && (cellData->IsRowSpan())) {
-        return PR_TRUE; // there is a row span into the region
+        return true; // there is a row span into the region
       }
       if ((aStartRowIndex >= mContentRowCount) &&  (mContentRowCount > 0)) {
         cellData = GetDataAt(mContentRowCount - 1, colX);
         if (cellData && cellData->IsZeroRowSpan()) {
-          return PR_TRUE;  // When we expand the zerospan it'll span into our row
+          return true;  // When we expand the zerospan it'll span into our row
         }
       }
     }
     if (aEndRowIndex < numRows - 1) { // is there anything below aEndRowIndex
       cellData = GetDataAt(aEndRowIndex + 1, colX);
       if ((cellData) && (cellData->IsRowSpan())) {
-        return PR_TRUE; // there is a row span out of the region
+        return true; // there is a row span out of the region
       }
     }
     else {
       cellData = GetDataAt(aEndRowIndex, colX);
       if ((cellData) && (cellData->IsRowSpan()) && (mContentRowCount < numRows)) {
-        return PR_TRUE; // this cell might be the cause of a dead row
+        return true; // this cell might be the cause of a dead row
       }
     }
   }
@@ -1708,15 +1708,15 @@ bool nsCellMap::CellsSpanInOrOut(PRInt32 aStartRowIndex,
     for (PRInt32 rowX = aStartRowIndex; rowX <= aEndRowIndex; rowX++) {
       CellData* cellData = GetDataAt(rowX, aStartColIndex);
       if (cellData && (cellData->IsColSpan())) {
-        return PR_TRUE; // there is a col span into the region
+        return true; // there is a col span into the region
       }
       cellData = GetDataAt(rowX, aEndColIndex + 1);
       if (cellData && (cellData->IsColSpan())) {
-        return PR_TRUE; // there is a col span out of the region
+        return true; // there is a col span out of the region
       }
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 void nsCellMap::InsertCells(nsTableCellMap&              aMap,
@@ -1763,7 +1763,7 @@ void nsCellMap::InsertCells(nsTableCellMap&              aMap,
       rowSpan = rowSpan2;
     }
     else if (rowSpan != rowSpan2) {
-      spansCauseRebuild = PR_TRUE;
+      spansCauseRebuild = true;
       break;
     }
   }
@@ -1771,7 +1771,7 @@ void nsCellMap::InsertCells(nsTableCellMap&              aMap,
   // check if the new cells will cause the table to add more rows
   if (!spansCauseRebuild) {
     if (mRows.Length() < PRUint32(aRowIndex + rowSpan)) {
-      spansCauseRebuild = PR_TRUE;
+      spansCauseRebuild = true;
     }
   }
 
@@ -1781,7 +1781,7 @@ void nsCellMap::InsertCells(nsTableCellMap&              aMap,
   }
 
   if (spansCauseRebuild) {
-    aMap.RebuildConsideringCells(this, &aCellFrames, aRowIndex, startColIndex, PR_TRUE, aDamageArea);
+    aMap.RebuildConsideringCells(this, &aCellFrames, aRowIndex, startColIndex, true, aDamageArea);
   }
   else {
     ExpandWithCells(aMap, aCellFrames, aRowIndex, startColIndex, rowSpan, zeroRowSpan, aDamageArea);
@@ -1818,7 +1818,7 @@ nsCellMap::ExpandWithRows(nsTableCellMap&             aMap,
     while (cFrame) {
       nsTableCellFrame *cellFrame = do_QueryFrame(cFrame);
       if (cellFrame) {
-        AppendCell(aMap, cellFrame, rowX, PR_FALSE, aDamageArea, &colIndex);
+        AppendCell(aMap, cellFrame, rowX, false, aDamageArea, &colIndex);
       }
       cFrame = cFrame->GetNextSibling();
     }
@@ -1853,8 +1853,8 @@ void nsCellMap::ExpandWithCells(nsTableCellMap&              aMap,
     bool zeroColSpan = false;
     PRInt32 colSpan = GetColSpanForNewCell(*cellFrame, zeroColSpan);
     if (zeroColSpan) {
-      aMap.mTableFrame.SetHasZeroColSpans(PR_TRUE);
-      aMap.mTableFrame.SetNeedColSpanExpansion(PR_TRUE);
+      aMap.mTableFrame.SetHasZeroColSpans(true);
+      aMap.mTableFrame.SetNeedColSpanExpansion(true);
     }
     totalColSpan += colSpan;
     if (cellX == 0) {
@@ -1893,13 +1893,13 @@ void nsCellMap::ExpandWithCells(nsTableCellMap&              aMap,
           if (rowX > aRowIndex) {
             data->SetRowSpanOffset(rowX - aRowIndex);
             if (aRowSpanIsZero) {
-              data->SetZeroRowSpan(PR_TRUE);
+              data->SetZeroRowSpan(true);
             }
           }
           if (colX > startColIndex) {
             data->SetColSpanOffset(colX - startColIndex);
             if (zeroColSpan) {
-              data->SetZeroColSpan(PR_TRUE);
+              data->SetZeroColSpan(true);
             }
           }
         }
@@ -1995,11 +1995,11 @@ void nsCellMap::ShrinkWithoutRows(nsTableCellMap& aMap,
 PRInt32 nsCellMap::GetColSpanForNewCell(nsTableCellFrame& aCellFrameToAdd,
                                         bool&           aIsZeroColSpan) const
 {
-  aIsZeroColSpan = PR_FALSE;
+  aIsZeroColSpan = false;
   PRInt32 colSpan = aCellFrameToAdd.GetColSpan();
   if (0 == colSpan) {
     colSpan = 1; // set the min colspan it will be expanded later
-    aIsZeroColSpan = PR_TRUE;
+    aIsZeroColSpan = true;
   }
   return colSpan;
 }
@@ -2010,7 +2010,7 @@ PRInt32 nsCellMap::GetEffectiveColSpan(const nsTableCellMap& aMap,
                                        bool&         aZeroColSpan) const
 {
   PRInt32 numColsInTable = aMap.GetColCount();
-  aZeroColSpan = PR_FALSE;
+  aZeroColSpan = false;
   PRInt32 colSpan = 1;
   if (PRUint32(aRowIndex) >= mRows.Length()) {
     return colSpan;
@@ -2042,7 +2042,7 @@ PRInt32 nsCellMap::GetEffectiveColSpan(const nsTableCellMap& aMap,
       if (data->IsColSpan()) {
         colSpan++;
         if (data->IsZeroColSpan()) {
-          aZeroColSpan = PR_TRUE;
+          aZeroColSpan = true;
         }
       }
       else {
@@ -2059,13 +2059,13 @@ nsCellMap::GetRowSpanForNewCell(nsTableCellFrame* aCellFrameToAdd,
                                 PRInt32           aRowIndex,
                                 bool&           aIsZeroRowSpan) const
 {
-  aIsZeroRowSpan = PR_FALSE;
+  aIsZeroRowSpan = false;
   PRInt32 rowSpan = aCellFrameToAdd->GetRowSpan();
   if (0 == rowSpan) {
     // Use a min value of 2 for a zero rowspan to make computations easier
     // elsewhere. Zero rowspans are only content dependent!
     rowSpan = NS_MAX(2, mContentRowCount - aRowIndex);
-    aIsZeroRowSpan = PR_TRUE;
+    aIsZeroRowSpan = true;
   }
   return rowSpan;
 }
@@ -2081,9 +2081,9 @@ bool nsCellMap::HasMoreThanOneCell(PRInt32 aRowIndex) const
     if (cellData && (cellData->GetCellFrame() || cellData->IsRowSpan()))
       count++;
     if (count > 1)
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 PRInt32
@@ -2135,7 +2135,7 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
   // get the rowspan and colspan from the cell map since the content may have changed
   bool zeroColSpan;
   PRUint32 numCols = aMap.GetColCount();
-  PRInt32 rowSpan = GetRowSpan(aRowIndex, aColIndex, PR_FALSE);
+  PRInt32 rowSpan = GetRowSpan(aRowIndex, aColIndex, false);
   PRUint32 colSpan = GetEffectiveColSpan(aMap, aRowIndex, aColIndex, zeroColSpan);
   PRUint32 endRowIndex = aRowIndex + rowSpan - 1;
   PRUint32 endColIndex = aColIndex + colSpan - 1;
@@ -2143,7 +2143,7 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
   SetDamageArea(aColIndex, aRowIndex, 1 + endColIndex - aColIndex, 1 + endRowIndex - aRowIndex, aDamageArea);
 
   if (aMap.mTableFrame.HasZeroColSpans()) {
-    aMap.mTableFrame.SetNeedColSpanExpansion(PR_TRUE);
+    aMap.mTableFrame.SetNeedColSpanExpansion(true);
   }
 
   // adjust the col counts due to the deleted cell before removing it
@@ -2263,7 +2263,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap&             aMap,
       // put in the original cell from the cell map
       const CellData* data = row.ElementAt(colX);
       if (data && data->IsOrig()) {
-        AppendCell(aMap, data->GetCellFrame(), rowX, PR_FALSE, aDamageArea);
+        AppendCell(aMap, data->GetCellFrame(), rowX, false, aDamageArea);
       }
     }
   }
@@ -2280,7 +2280,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap&             aMap,
       while (cFrame) {
         nsTableCellFrame *cellFrame = do_QueryFrame(cFrame);
         if (cellFrame) {
-          AppendCell(aMap, cellFrame, rowX, PR_FALSE, aDamageArea);
+          AppendCell(aMap, cellFrame, rowX, false, aDamageArea);
         }
         cFrame = cFrame->GetNextSibling();
       }
@@ -2303,7 +2303,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap&             aMap,
       // put in the original cell from the cell map
       CellData* data = row.ElementAt(colX);
       if (data && data->IsOrig()) {
-        AppendCell(aMap, data->GetCellFrame(), rowX, PR_FALSE, aDamageArea);
+        AppendCell(aMap, data->GetCellFrame(), rowX, false, aDamageArea);
       }
     }
     rowX++;
@@ -2353,7 +2353,7 @@ nsCellMap::RebuildConsideringCells(nsTableCellMap&              aMap,
           for (PRInt32 cellX = 0; cellX < numNewCells; cellX++) {
             nsTableCellFrame* cell = aCellFrames->ElementAt(cellX);
             if (cell) {
-              AppendCell(aMap, cell, rowX, PR_FALSE, aDamageArea);
+              AppendCell(aMap, cell, rowX, false, aDamageArea);
             }
           }
         }
@@ -2364,7 +2364,7 @@ nsCellMap::RebuildConsideringCells(nsTableCellMap&              aMap,
       // put in the original cell from the cell map
       CellData* data = row.SafeElementAt(colX);
       if (data && data->IsOrig()) {
-        AppendCell(aMap, data->GetCellFrame(), rowX, PR_FALSE, aDamageArea);
+        AppendCell(aMap, data->GetCellFrame(), rowX, false, aDamageArea);
       }
     }
   }
@@ -2373,7 +2373,7 @@ nsCellMap::RebuildConsideringCells(nsTableCellMap&              aMap,
     for (PRInt32 cellX = 0; cellX < numNewCells; cellX++) {
       nsTableCellFrame* cell = aCellFrames->ElementAt(cellX);
       if (cell) {
-        AppendCell(aMap, cell, aRowIndex, PR_FALSE, aDamageArea);
+        AppendCell(aMap, cell, aRowIndex, false, aDamageArea);
       }
     }
   }
@@ -2416,7 +2416,7 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
     }
   }
 
-  PRInt32 rowSpan = GetRowSpan(aRowIndex, startColIndex, PR_FALSE);
+  PRInt32 rowSpan = GetRowSpan(aRowIndex, startColIndex, false);
   // record whether removing the cells is going to cause complications due
   // to existing row spans, col spans or table sizing.
   bool spansCauseRebuild = CellsSpanInOrOut(aRowIndex,
@@ -2426,10 +2426,10 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
   // cells, we need to assume that this the only such cell, and rebuild so that there are
   // no extraneous cols at the end. The same is true for removing rows.
   if (!aCellFrame->GetRowSpan() || !aCellFrame->GetColSpan())
-    spansCauseRebuild = PR_TRUE;
+    spansCauseRebuild = true;
 
   if (spansCauseRebuild) {
-    aMap.RebuildConsideringCells(this, nsnull, aRowIndex, startColIndex, PR_FALSE, aDamageArea);
+    aMap.RebuildConsideringCells(this, nsnull, aRowIndex, startColIndex, false, aDamageArea);
   }
   else {
     ShrinkWithoutCell(aMap, *aCellFrame, aRowIndex, startColIndex, aDamageArea);
@@ -2455,7 +2455,7 @@ void nsCellMap::ExpandZeroColSpans(nsTableCellMap& aMap)
       bool rowZeroSpan = (0 == cell->GetRowSpan());
       bool colZeroSpan = (0 == cell->GetColSpan());
       if (colZeroSpan) {
-        aMap.mTableFrame.SetHasZeroColSpans(PR_TRUE);
+        aMap.mTableFrame.SetHasZeroColSpans(true);
         // do the expansion
         NS_ASSERTION(numRows > 0, "Bogus numRows");
         NS_ASSERTION(numCols > 0, "Bogus numCols");
@@ -2495,12 +2495,12 @@ void nsCellMap::ExpandZeroColSpans(nsTableCellMap& aMap)
             if (!newData) return;
 
             newData->SetColSpanOffset(colX - colIndex);
-            newData->SetZeroColSpan(PR_TRUE);
+            newData->SetZeroColSpan(true);
 
             if (rowX > rowIndex) {
               newData->SetRowSpanOffset(rowX - rowIndex);
               if (rowZeroSpan)
-                newData->SetZeroRowSpan(PR_TRUE);
+                newData->SetZeroRowSpan(true);
             }
             SetDataAt(aMap, *newData, rowX, colX);
           }
@@ -2546,11 +2546,11 @@ void nsCellMap::Dump(bool aIsBorderCollapse) const
         } else {
           nsTableCellFrame* cell = nsnull;
           if (cd->IsRowSpan()) {
-            cell = GetCellFrame(rowIndex, colIndex, *cd, PR_TRUE);
+            cell = GetCellFrame(rowIndex, colIndex, *cd, true);
             printf("R ");
           }
           if (cd->IsColSpan()) {
-            cell = GetCellFrame(rowIndex, colIndex, *cd, PR_FALSE);
+            cell = GetCellFrame(rowIndex, colIndex, *cd, false);
             printf("C ");
           }
           if (!(cd->IsRowSpan() && cd->IsColSpan())) {
@@ -2677,7 +2677,7 @@ nsCellMap::GetCellInfoAt(const nsTableCellMap& aMap,
                          PRInt32*              aColSpan) const
 {
   if (aOriginates) {
-    *aOriginates = PR_FALSE;
+    *aOriginates = false;
   }
   CellData* data = GetDataAt(aRowX, aColX);
   nsTableCellFrame* cellFrame = nsnull;
@@ -2685,10 +2685,10 @@ nsCellMap::GetCellInfoAt(const nsTableCellMap& aMap,
     if (data->IsOrig()) {
       cellFrame = data->GetCellFrame();
       if (aOriginates)
-        *aOriginates = PR_TRUE;
+        *aOriginates = true;
     }
     else {
-      cellFrame = GetCellFrame(aRowX, aColX, *data, PR_TRUE);
+      cellFrame = GetCellFrame(aRowX, aColX, *data, true);
     }
     if (cellFrame && aColSpan) {
       PRInt32 initialColIndex;
@@ -2705,26 +2705,26 @@ bool nsCellMap::RowIsSpannedInto(PRInt32         aRowIndex,
                                    PRInt32         aNumEffCols) const
 {
   if ((0 > aRowIndex) || (aRowIndex >= mContentRowCount)) {
-    return PR_FALSE;
+    return false;
   }
   for (PRInt32 colIndex = 0; colIndex < aNumEffCols; colIndex++) {
     CellData* cd = GetDataAt(aRowIndex, colIndex);
     if (cd) { // there's really a cell at (aRowIndex, colIndex)
       if (cd->IsSpan()) { // the cell at (aRowIndex, colIndex) is the result of a span
-        if (cd->IsRowSpan() && GetCellFrame(aRowIndex, colIndex, *cd, PR_TRUE)) { // XXX why the last check
-          return PR_TRUE;
+        if (cd->IsRowSpan() && GetCellFrame(aRowIndex, colIndex, *cd, true)) { // XXX why the last check
+          return true;
         }
       }
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 bool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex,
                                       PRInt32 aNumEffCols) const
 {
   if ((0 > aRowIndex) || (aRowIndex >= mContentRowCount)) {
-    return PR_FALSE;
+    return false;
   }
   if (aRowIndex != mContentRowCount - 1) {
     // aRowIndex is not the last row, so we check the next row after aRowIndex for spanners
@@ -2733,14 +2733,14 @@ bool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex,
       if (cd && (cd->IsOrig())) { // cell originates
         CellData* cd2 = GetDataAt(aRowIndex + 1, colIndex);
         if (cd2 && cd2->IsRowSpan()) { // cd2 is spanned by a row
-          if (cd->GetCellFrame() == GetCellFrame(aRowIndex + 1, colIndex, *cd2, PR_TRUE)) {
-            return PR_TRUE;
+          if (cd->GetCellFrame() == GetCellFrame(aRowIndex + 1, colIndex, *cd2, true)) {
+            return true;
           }
         }
       }
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 void nsCellMap::DestroyCellData(CellData* aData)
@@ -2851,7 +2851,7 @@ nsCellMapColumnIterator::GetNextFrame(PRInt32* aRow, PRInt32* aColSpan)
     if (cellData->IsColSpan()) {
       // Look up the originating data for this cell, advance by its relative rowspan.
       PRInt32 rowspanOffset = cellData->GetRowSpanOffset();
-      nsTableCellFrame* cellFrame = mCurMap->GetCellFrame(mCurMapRow, mCol, *cellData, PR_FALSE);
+      nsTableCellFrame* cellFrame = mCurMap->GetCellFrame(mCurMapRow, mCol, *cellData, false);
       NS_ASSERTION(cellFrame,"Must have usable originating data here");
       PRInt32 rowSpan = cellFrame->GetRowSpan();
       if (rowSpan == 0) {

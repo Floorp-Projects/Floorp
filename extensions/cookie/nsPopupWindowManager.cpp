@@ -79,11 +79,11 @@ nsPopupWindowManager::Init()
     bool permission;
     rv = prefBranch->GetBoolPref(kPopupDisablePref, &permission);
     if (NS_FAILED(rv)) {
-      permission = PR_TRUE;
+      permission = true;
     }
     mPolicy = permission ? (PRUint32) DENY_POPUP : (PRUint32) ALLOW_POPUP;
 
-    prefBranch->AddObserver(kPopupDisablePref, this, PR_TRUE);
+    prefBranch->AddObserver(kPopupDisablePref, this, true);
   } 
 
   return NS_OK;

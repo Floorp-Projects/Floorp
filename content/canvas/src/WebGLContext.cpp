@@ -223,18 +223,18 @@ WebGLContext::WebGLContext()
 {
     mWidth = mHeight = 0;
     mGeneration = 0;
-    mInvalidated = PR_FALSE;
-    mResetLayer = PR_TRUE;
-    mVerbose = PR_FALSE;
-    mOptionsFrozen = PR_FALSE;
+    mInvalidated = false;
+    mResetLayer = true;
+    mVerbose = false;
+    mOptionsFrozen = false;
 
     mActiveTexture = 0;
     mWebGLError = LOCAL_GL_NO_ERROR;
-    mPixelStoreFlipY = PR_FALSE;
-    mPixelStorePremultiplyAlpha = PR_FALSE;
+    mPixelStoreFlipY = false;
+    mPixelStorePremultiplyAlpha = false;
     mPixelStoreColorspaceConversion = BROWSER_DEFAULT_WEBGL;
 
-    mShaderValidation = PR_TRUE;
+    mShaderValidation = true;
 
     mMapBuffers.Init();
     mMapTextures.Init();
@@ -243,7 +243,7 @@ WebGLContext::WebGLContext()
     mMapFramebuffers.Init();
     mMapRenderbuffers.Init();
 
-    mBlackTexturesAreInitialized = PR_FALSE;
+    mBlackTexturesAreInitialized = false;
     mFakeBlackStatus = DoNotNeedFakeBlack;
 
     mVertexAttrib0Vector[0] = 0;
@@ -401,7 +401,7 @@ WebGLContext::DestroyResourcesAndContext()
     if (mBlackTexturesAreInitialized) {
         gl->fDeleteTextures(1, &mBlackTexture2D);
         gl->fDeleteTextures(1, &mBlackTextureCubeMap);
-        mBlackTexturesAreInitialized = PR_FALSE;
+        mBlackTexturesAreInitialized = false;
     }
 
     if (mFakeVertexAttrib0BufferObject) {
@@ -428,7 +428,7 @@ WebGLContext::Invalidate()
 
     nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 
-    mInvalidated = PR_TRUE;
+    mInvalidated = true;
     HTMLCanvasElement()->InvalidateCanvasContent(nsnull);
 }
 
@@ -535,7 +535,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         // everything's good, we're done here
         mWidth = width;
         mHeight = height;
-        mResetLayer = PR_TRUE;
+        mResetLayer = true;
         return NS_OK;
     }
 
@@ -602,7 +602,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     }
 
     if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
-        preferEGL = PR_TRUE;
+        preferEGL = true;
     }
 
     // Ask GfxInfo about what we should use
@@ -614,21 +614,21 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         PRInt32 status;
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL, &status))) {
             if (status != nsIGfxInfo::FEATURE_NO_INFO) {
-                useOpenGL = PR_FALSE;
+                useOpenGL = false;
             }
         }
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_ANGLE, &status))) {
             if (status != nsIGfxInfo::FEATURE_NO_INFO) {
-                useANGLE = PR_FALSE;
+                useANGLE = false;
             }
         }
     }
 
     // allow forcing GL and not EGL/ANGLE
     if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
-        preferEGL = PR_FALSE;
-        useANGLE = PR_FALSE;
-        useOpenGL = PR_TRUE;
+        preferEGL = false;
+        useANGLE = false;
+        useOpenGL = true;
     }
 
     // if we're forcing osmesa, do it first
@@ -688,8 +688,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
     mWidth = width;
     mHeight = height;
-    mResetLayer = PR_TRUE;
-    mOptionsFrozen = PR_TRUE;
+    mResetLayer = true;
+    mOptionsFrozen = true;
 
     // increment the generation number
     ++mGeneration;
@@ -863,14 +863,14 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     }
 
     data.mSize = nsIntSize(mWidth, mHeight);
-    data.mGLBufferIsPremultiplied = mOptions.premultipliedAlpha ? PR_TRUE : PR_FALSE;
+    data.mGLBufferIsPremultiplied = mOptions.premultipliedAlpha ? true : false;
 
     canvasLayer->Initialize(data);
     PRUint32 flags = gl->CreationFormat().alpha == 0 ? Layer::CONTENT_OPAQUE : 0;
     canvasLayer->SetContentFlags(flags);
     canvasLayer->Updated();
 
-    mResetLayer = PR_FALSE;
+    mResetLayer = false;
 
     mBackbufferClearingStatus = BackbufferClearingStatus::NotClearedSinceLastPresented;
 
@@ -918,7 +918,7 @@ WebGLContext::GetContextAttributes(jsval *aResult)
 NS_IMETHODIMP
 WebGLContext::MozGetUnderlyingParamString(PRUint32 pname, nsAString& retval)
 {
-    retval.SetIsVoid(PR_TRUE);
+    retval.SetIsVoid(true);
 
     MakeContextCurrent();
 
@@ -1338,7 +1338,7 @@ WebGLContext::GetSupportedExtensions(nsIVariant **retval)
 NS_IMETHODIMP
 WebGLContext::IsContextLost(WebGLboolean *retval)
 {
-    *retval = PR_FALSE;
+    *retval = false;
     return NS_OK;
 }
 

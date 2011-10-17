@@ -104,7 +104,7 @@ NS_IMPL_DOMTARGET_DEFAULTS(nsWindowRoot)
 NS_IMETHODIMP
 nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, bool aUseCapture)
 {
-  nsRefPtr<nsEventListenerManager> elm = GetListenerManager(PR_FALSE);
+  nsRefPtr<nsEventListenerManager> elm = GetListenerManager(false);
   if (elm) {
     elm->RemoveEventListener(aType, aListener, aUseCapture);
   }
@@ -140,10 +140,10 @@ nsWindowRoot::AddEventListener(const nsAString& aType,
 {
   NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
+               "aWantsUntrusted to false or make the aWantsUntrusted "
                "explicit by making optional_argc non-zero.");
 
-  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elm = GetListenerManager(true);
   NS_ENSURE_STATE(elm);
   elm->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
   return NS_OK;
@@ -170,8 +170,8 @@ nsWindowRoot::GetContextForEventHandlers(nsresult* aRv)
 nsresult
 nsWindowRoot::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  aVisitor.mCanHandle = PR_TRUE;
-  aVisitor.mForceContentDispatch = PR_TRUE; //FIXME! Bug 329119
+  aVisitor.mCanHandle = true;
+  aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119
   // To keep mWindow alive
   aVisitor.mItemData = static_cast<nsISupports *>(mWindow);
   aVisitor.mParentTarget = mParent;
@@ -201,7 +201,7 @@ nsWindowRoot::GetControllers(nsIControllers** aResult)
 
   nsCOMPtr<nsPIDOMWindow> focusedWindow;
   nsIContent* focusedContent =
-    nsFocusManager::GetFocusedDescendant(mWindow, PR_TRUE, getter_AddRefs(focusedWindow));
+    nsFocusManager::GetFocusedDescendant(mWindow, true, getter_AddRefs(focusedWindow));
   if (focusedContent) {
 #ifdef MOZ_XUL
     nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(focusedContent));
@@ -252,7 +252,7 @@ nsWindowRoot::GetControllerForCommand(const char * aCommand,
   }
 
   nsCOMPtr<nsPIDOMWindow> focusedWindow;
-  nsFocusManager::GetFocusedDescendant(mWindow, PR_TRUE, getter_AddRefs(focusedWindow));
+  nsFocusManager::GetFocusedDescendant(mWindow, true, getter_AddRefs(focusedWindow));
   while (focusedWindow) {
     nsCOMPtr<nsIControllers> controllers;
     focusedWindow->GetControllers(getter_AddRefs(controllers));

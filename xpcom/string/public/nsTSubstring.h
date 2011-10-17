@@ -466,8 +466,8 @@ class nsTSubstring_CharT
          * Attempts to set the capacity to the given size, without affecting
          * the length of the string. Also ensures that the buffer is mutable.
          *
-         * @returns PR_TRUE on success
-         *          PR_FALSE on out-of-memory, or if requesting a size bigger
+         * @returns true on success
+         *          false on out-of-memory, or if requesting a size bigger
          *                   than a string can hold (2^31 chars).
          */
       bool NS_FASTCALL SetCapacity( size_type newCapacity );
@@ -680,7 +680,7 @@ class nsTSubstring_CharT
           mFlags &= ~F_VOIDED;
           mData[newTotalLen] = char_type(0);
           mLength = newTotalLen;
-          return PR_TRUE;
+          return true;
         }
         return ReplacePrepInternal(cutStart, cutLength, newLength, newTotalLen);
       }

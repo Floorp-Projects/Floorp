@@ -101,8 +101,8 @@ public:
   nsIBox* GetBox() { return mBox; }
   nsIBox* GetRowsBox() { return mRowsBox; }
   nsIBox* GetColumnsBox() { return mColumnsBox; }
-  PRInt32 GetRowCount(PRInt32 aIsHorizontal = PR_TRUE);
-  PRInt32 GetColumnCount(PRInt32 aIsHorizontal = PR_TRUE);
+  PRInt32 GetRowCount(PRInt32 aIsHorizontal = true);
+  PRInt32 GetColumnCount(PRInt32 aIsHorizontal = true);
 
   static nsIBox* GetScrolledBox(nsIBox* aChild);
   static nsIBox* GetScrollBox(nsIBox* aChild);

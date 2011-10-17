@@ -152,10 +152,10 @@ nsAccTreeWalker::PushState(nsIContent* aContent)
 {
   WalkState* nextToLastState = new WalkState(aContent);
   if (!nextToLastState)
-    return PR_FALSE;
+    return false;
 
   nextToLastState->prevState = mState;
   mState = nextToLastState;
 
-  return PR_TRUE;
+  return true;
 }
