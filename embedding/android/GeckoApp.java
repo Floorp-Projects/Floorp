@@ -572,6 +572,9 @@ abstract public class GeckoApp
                                        .penaltyLog().build());
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().penaltyLog().build());
         }
+        if (Build.VERSION.SDK_INT >= 11) {
+            setTheme(R.style.HoneycombTheme);
+        }
 
         super.onCreate(savedInstanceState);
         

@@ -3,4 +3,8 @@
     <style name="GreyTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">@color/splash_background</item>
     </style>
+
+    <style name="HoneycombTheme" parent="@android:style/Theme.Holo">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
 </resources>
