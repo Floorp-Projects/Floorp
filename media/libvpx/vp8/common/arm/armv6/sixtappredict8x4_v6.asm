@@ -35,6 +35,9 @@
     adr         r12, filter8_coeff
     sub         r0, r0, r1, lsl #1
 
+    add         r3, r1, #10                 ; preload next low
+    pld         [r0, r3]
+
     add         r2, r12, r2, lsl #4         ;calculate filter location
     add         r0, r0, #3                  ;adjust src only for loading convinience
 
@@ -109,6 +112,9 @@
     sub         lr, lr, #158
 
     add         r0, r0, r1                  ; move to next input line
+
+    add         r11, r1, #18                ; preload next low. adding back block width(=8), which is subtracted earlier
+    pld         [r0, r11]
 
     bne         first_pass_hloop_v6
 
@@ -243,8 +249,6 @@ skip_secondpass_hloop
     ENDP
 
 ;-----------------
-    AREA    subpelfilters8_dat, DATA, READWRITE         ;read/write by default
-;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
 ;One word each is reserved. Label filter_coeff can be used to access the data.
 ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
 filter8_coeff

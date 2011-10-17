@@ -42,6 +42,9 @@
 
 #include "base/basictypes.h"
 
+/* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
+#include "mozilla/Util.h"
+
 #include "prtypes.h"
 #include "prmem.h"
 #include "prenv.h"
@@ -1622,7 +1625,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   // Root obj and the rval (below).
   jsval vec[] = { OBJECT_TO_JSVAL(obj), JSVAL_NULL };
-  js::AutoArrayRooter tvr(cx, NS_ARRAY_LENGTH(vec), vec);
+  js::AutoArrayRooter tvr(cx, ArrayLength(vec), vec);
   jsval *rval = &vec[1];
 
   if (result) {

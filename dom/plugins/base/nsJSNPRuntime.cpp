@@ -160,6 +160,9 @@ static JSBool
 NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                         JSObject **objp);
 
+static JSBool
+NPObjWrapper_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
+
 static void
 NPObjWrapper_Finalize(JSContext *cx, JSObject *obj);
 
@@ -180,7 +183,7 @@ static JSClass sNPObjectJSWrapperClass =
     NPObjWrapper_AddProperty, NPObjWrapper_DelProperty,
     NPObjWrapper_GetProperty, NPObjWrapper_SetProperty,
     (JSEnumerateOp)NPObjWrapper_newEnumerate,
-    (JSResolveOp)NPObjWrapper_NewResolve, JS_ConvertStub,
+    (JSResolveOp)NPObjWrapper_NewResolve, NPObjWrapper_Convert,
     NPObjWrapper_Finalize, nsnull, nsnull, NPObjWrapper_Call,
     NPObjWrapper_Construct, nsnull, nsnull
   };
@@ -1680,6 +1683,42 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
   return JS_TRUE;
 }
 
+static JSBool
+NPObjWrapper_Convert(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
+{
+  JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
+
+  // Plugins do not simply use JS_ConvertStub, and the default [[DefaultValue]]
+  // behavior, because that behavior involves calling toString or valueOf on
+  // objects which weren't designed to accommodate this.  Usually this wouldn't
+  // be a problem, because the absence of either property, or the presence of
+  // either property with a value that isn't callable, will cause that property
+  // to simply be ignored.  But there is a problem in one specific case: Java,
+  // specifically java.lang.Integer.  The Integer class has static valueOf
+  // methods, none of which are nullary, so the JS-reflected method will behave
+  // poorly when called with no arguments.  We work around this problem by
+  // giving plugins a [[DefaultValue]] which uses only toString and not valueOf.
+
+  jsval v = JSVAL_VOID;
+  if (!JS_GetProperty(cx, obj, "toString", &v))
+    return false;
+  if (!JSVAL_IS_PRIMITIVE(v) && JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(v))) {
+    if (!JS_CallFunctionValue(cx, obj, v, 0, NULL, vp))
+      return false;
+    if (JSVAL_IS_PRIMITIVE(*vp))
+      return true;
+  }
+
+  JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
+                       JS_GET_CLASS(cx, obj)->name,
+                       hint == JSTYPE_VOID
+                       ? "primitive type"
+                       : hint == JSTYPE_NUMBER
+                       ? "number"
+                       : "string");
+  return false;
+}
+
 static void
 NPObjWrapper_Finalize(JSContext *cx, JSObject *obj)
 {
@@ -2177,12 +2216,14 @@ NPObjectMember_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
   case JSTYPE_VOID:
   case JSTYPE_STRING:
   case JSTYPE_NUMBER:
+    *vp = memberPrivate->fieldValue;
+    if (!JSVAL_IS_PRIMITIVE(*vp)) {
+      return JS_DefaultValue(cx, JSVAL_TO_OBJECT(*vp), type, vp);
+    }
+    return JS_TRUE;
   case JSTYPE_BOOLEAN:
   case JSTYPE_OBJECT:
     *vp = memberPrivate->fieldValue;
-    if (!JSVAL_IS_PRIMITIVE(*vp)) {
-      return JS_ConvertStub(cx, JSVAL_TO_OBJECT(*vp), type, vp);
-    }
     return JS_TRUE;
   case JSTYPE_FUNCTION:
     // Leave this to NPObjectMember_Call.

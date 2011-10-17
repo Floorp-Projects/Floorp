@@ -701,6 +701,7 @@ nsPNGEncoder::WriteCallback(png_structp png, png_bytep data,
     if (! newBuf) {
       // can't resize, just zero (this will keep us from writing more)
       PR_Free(that->mImageBuffer);
+      that->mImageBuffer = nsnull;
       that->mImageBufferSize = 0;
       that->mImageBufferUsed = 0;
       return;

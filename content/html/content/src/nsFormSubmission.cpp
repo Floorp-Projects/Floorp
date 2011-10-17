@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsFormSubmission.h"
 
 #include "nsCOMPtr.h"
@@ -70,6 +72,8 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIFileStreams.h"
 #include "nsContentUtils.h"
+
+using namespace mozilla;
 
 static void
 SendJSWarning(nsIDocument* aDocument,
@@ -267,7 +271,7 @@ HandleMailtoSubject(nsCString& aPath) {
                                            nsContentUtils::eFORMS_PROPERTIES,
                                            "DefaultFormSubject",
                                            formatStrings,
-                                           NS_ARRAY_LENGTH(formatStrings),
+                                           ArrayLength(formatStrings),
                                            subjectStr);
     if (NS_FAILED(rv))
       return;

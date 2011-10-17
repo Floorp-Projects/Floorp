@@ -1,0 +1,104 @@
+<!--
+Copyright (c) 2011 The Chromium Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+ -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+  <title>GLSL atan-xy function test</title>
+  <link rel="stylesheet" href="../../../resources/js-test-style.css"/>
+  <link rel="stylesheet" href="../../resources/glsl-feature-tests.css"/>
+  <script src="../../../resources/js-test-pre.js"></script>
+  <script src="../../resources/webgl-test.js"> </script>
+  <script src="../../resources/webgl-test-utils.js"> </script>
+  <script src="../../resources/glsl-generator.js"> </script>
+</head>
+<body>
+<div id="description"></div>
+<div id="console"></div>
+<script>
+
+var piConstants = [
+  "const float kPI     = 3.14159265358979323846;",
+  "const float kHalfPI = (kPI * 0.5);",
+  "const float k2PI    = (kPI * 2.0);"
+].join("\n");
+
+var atanImplementation = [
+  "const float kEpsilon = 0.0001;",
+  "",
+  "float atan_impl(float y, float x) {",
+  "  float atan_value = 0.0;",
+  "  float scale = 1.0;",
+  "  float sign = 1.0;",
+  "",
+  "  if (x > kEpsilon || abs(y) > kEpsilon) {",
+  "    if (x < 0.0 ^^ y < 0.0) {",
+  "      sign = -1.0;",
+  "    }",
+  "",
+  "    bool y_gt_x = abs(y) < abs(x);",
+  "    float value = y_gt_x ? abs(y / x) : abs(x / y);",
+  "",
+  "    // Use Taylors series expansion for atan",
+  "    for(int ii = 1; ii < 8; ii += 2) {",
+  "      atan_value += scale * pow(value, float(ii)) / float(ii);",
+  "      scale = -scale;",
+  "    }",
+  "",
+  "    atan_value = (y_gt_x) ? sign * atan_value : sign * (kHalfPI - atan_value);",
+  "  }",
+  "",
+  "  if (x < 0.0) {",
+  "    if (y < 0.0) {",
+  "      atan_value -= kHalfPI;",
+  "    } else if (y > 0.0) {",
+  "      atan_value += kHalfPI;",
+  "    }",
+  "  }",
+  "",
+  "  return atan_value;",
+  "}"
+].join("\n");
+
+GLSLGenerator.runFeatureTest({
+  feature: "atan",
+  args: "$(type) y, $(type) x",
+  baseArgs: "y$(field), x$(field)",
+  testFunc: "$(func)($(type), $(type))",
+  emuFunc: [
+    atanImplementation,
+    "float $(func)_base(float y, float x) {",
+    "  return atan_impl(y, x);",
+    "}"
+  ].join("\n"),
+  gridRes: 8,
+  tolerance: 4,
+  extra: piConstants,
+  tests: [
+    ["$(output) = vec4(",
+     "    $(func)($(input).x + 0.1, $(input).y) / k2PI + 0.5,",
+     "    0,",
+     "    0,",
+     "    1);"].join("\n"),
+    ["$(output) = vec4(",
+     "    $(func)($(input).xy + vec2(0.1, 0.1), $(input).yx) / ",
+     "            k2PI + vec2(0.5, 0.5),",
+     "    0, 1);"].join("\n"),
+    ["$(output) = vec4(",
+     "    $(func)($(input).xyz + vec3(0.1, 0.1, 0.1), $(input).yzx) / ",
+     "            k2PI + vec3(0.5, 0.5, 0.5),",
+     "    1);"].join("\n"),
+    ["$(output) = ",
+     "    $(func)($(input) + vec4(0.1, 0.1, 0.1, 0.1), $(input).wzyx) / ",
+     "            k2PI + vec4(0.5, 0.5, 0.5, 0.5);",
+    ].join("\n")
+  ]
+});
+successfullyParsed = true;
+</script>
+</body>
+</html>
+

@@ -46,7 +46,6 @@
         width="1024">
   <script src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
-  <script src="chrome://mochikit/content/tests/SimpleTest/quit.js"/>
   <script src="chrome://mochikit/content/chrome-harness.js"/>
   <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
     #results {
@@ -266,7 +265,8 @@
       window.focus();
 
       if (gConfig.closeWhenDone) {
-        goQuitApplication();
+        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+        appStartup.quit(Ci.nsIAppStartup.eForceQuit);
         return;
       }
 

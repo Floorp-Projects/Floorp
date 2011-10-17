@@ -44,13 +44,12 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 #include "nsIObserver.h"
-#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 #include "nsWeakReference.h"
 
 class nsIAtom;
 class nsIPresShell;
 class nsIRequest;
-class nsIDocumentViewer;
 class nsILoadGroup;
 class nsIFrame;
 struct nsIntSize;
@@ -171,7 +170,7 @@ public:
 
 private:
   nsresult SetupViewer(nsIRequest *aRequest,
-                       nsIDocumentViewer** aViewer,
+                       nsIContentViewer** aViewer,
                        nsILoadGroup** aLoadGroup);
   void     DestroyViewer();
   void     RegisterForXPCOMShutdown();
@@ -179,7 +178,7 @@ private:
 
   void     FlushLayout();
 
-  nsCOMPtr<nsIDocumentViewer> mViewer;
+  nsCOMPtr<nsIContentViewer>  mViewer;
   nsCOMPtr<nsILoadGroup>      mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
   bool                        mIgnoreInvalidation;

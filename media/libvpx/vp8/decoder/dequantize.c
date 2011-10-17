@@ -11,8 +11,7 @@
 
 #include "vpx_ports/config.h"
 #include "dequantize.h"
-#include "predictdc.h"
-#include "idct.h"
+#include "vp8/common/idct.h"
 #include "vpx_mem/vpx_mem.h"
 
 extern void vp8_short_idct4x4llm_c(short *input, short *output, int pitch) ;

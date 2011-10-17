@@ -48,7 +48,7 @@ interface nsIAppShell;
 struct JSContext;
 %}
 
-[scriptable, uuid(361facd0-6e9a-4ff1-a0d4-450744cf0023)]
+[scriptable, uuid(EBCD34E2-2E43-45C0-AAC8-E6F1C692B371)]
 interface nsIAppShellService : nsISupports
 {
   /**
@@ -66,8 +66,6 @@ interface nsIAppShellService : nsISupports
    *                      tag in the XUL.  Set to NS_SIZETOCONTENT to force
    *                      the window to wrap to its contents.
    * @param aInitialHeight like aInitialWidth, but subtly different.
-   * @param aAppShell a widget "appshell" (event processor) to associate
-   *        with the new window
    * @param aResult the newly created window is returned here.
    */
   const long SIZE_TO_CONTENT = -1;
@@ -75,11 +73,10 @@ interface nsIAppShellService : nsISupports
                                     in nsIURI aUrl, 
                                     in PRUint32 aChromeMask,
                                     in long aInitialWidth,
-                                    in long aInitialHeight,
-                                    in nsIAppShell aAppShell);
+                                    in long aInitialHeight);
 
   [noscript]
-  void createHiddenWindow(in nsIAppShell aAppShell);
+  void createHiddenWindow();
 
   void destroyHiddenWindow();
 

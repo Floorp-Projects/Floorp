@@ -1494,6 +1494,41 @@ CopyProperties(const nsAString& aKey, nsIVariant *aData, void *aClosure)
   return PL_DHASH_NEXT;
 }
 
+// Return whether upon a redirect code of httpStatus for method, the
+// request method should be rewritten to GET.
+//
+bool
+HttpBaseChannel::ShouldRewriteRedirectToGET(PRUint32 httpStatus,
+                                            nsHttpAtom method)
+{
+  // always rewrite for 301 and 302, but see bug 598304
+  // and  RFC 2616, Section 8.3.
+  if (httpStatus == 301 || httpStatus == 302)
+    return true;
+
+  // always rewrite for 303
+  if (httpStatus == 303)
+    return true;
+
+  // otherwise, such as for 307, do not rewrite
+  return false;
+}   
+
+// Return whether the specified method is safe as per RFC 2616, Section 9.1.1.
+bool
+HttpBaseChannel::IsSafeMethod(nsHttpAtom method)
+{
+  // This code will need to be extended for new safe methods, otherwise
+  // they'll default to "not safe".
+  return method == nsHttp::Get ||
+         method == nsHttp::Head ||
+         method == nsHttp::Options ||
+         method == nsHttp::Propfind ||
+         method == nsHttp::Report ||
+         method == nsHttp::Search ||
+         method == nsHttp::Trace;
+}
+
 nsresult
 HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI, 
                                          nsIChannel   *newChannel,

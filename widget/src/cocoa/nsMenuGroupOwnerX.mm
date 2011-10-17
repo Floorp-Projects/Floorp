@@ -47,7 +47,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsWidgetAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsObjCExceptions.h"
 #include "nsHashtable.h"

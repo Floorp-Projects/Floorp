@@ -63,7 +63,7 @@ extern "C" {
 #include "nsCocoaUtils.h"
 #include "nsObjCExceptions.h"
 
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
 
@@ -107,8 +107,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit);
 NS_IMETHODIMP
 nsToolkit::Init(PRThread * aThread)
 {
-  nsWidgetAtoms::RegisterAtoms();
-  
   mInited = true;
   
   RegisterForSleepWakeNotifcations();
