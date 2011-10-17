@@ -201,6 +201,9 @@ PluginInstanceChild::~PluginInstanceChild()
     if (mCGLayer) {
         PluginUtilsOSX::ReleaseCGLayer(mCGLayer);
     }
+    if (mDrawingModel == NPDrawingModelCoreAnimation) {
+        UnscheduleTimer(mCARefreshTimer);
+    }
 #endif
 }
 
@@ -460,6 +463,22 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 
 }
 
+#ifdef MOZ_WIDGET_COCOA
+#define DEFAULT_REFRESH_MS 20 // CoreAnimation: 50 FPS
+
+void
+CAUpdate(NPP npp, uint32_t timerID) {
+    static_cast<PluginInstanceChild*>(npp->ndata)->Invalidate();
+}
+
+void
+PluginInstanceChild::Invalidate()
+{
+    NPRect windowRect = {0, 0, mWindow.height, mWindow.width};
+
+    InvalidateRect(&windowRect);
+}
+#endif
 
 NPError
 PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
@@ -506,6 +525,10 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
         if (!CallNPN_SetValue_NPPVpluginDrawingModel(drawingModel, &rv))
             return NPERR_GENERIC_ERROR;
         mDrawingModel = drawingModel;
+
+        if (drawingModel == NPDrawingModelCoreAnimation) {
+            mCARefreshTimer = ScheduleTimer(DEFAULT_REFRESH_MS, true, CAUpdate);
+        }
 
         PLUGIN_LOG_DEBUG(("  Plugin requested drawing model id  #%i\n",
             mDrawingModel));

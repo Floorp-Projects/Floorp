@@ -1163,6 +1163,10 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   // Use async reflow and painting for text widgets to improve
   // performance.
   editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
+  
+  // Spell check is diabled at creation time. It is enabled once
+  // the editor comes into focus.
+  editorFlags |= nsIPlaintextEditor::eEditorSkipSpellCheck;
 
   bool shouldInitializeEditor = false;
   nsCOMPtr<nsIEditor> newEditor; // the editor that we might create
