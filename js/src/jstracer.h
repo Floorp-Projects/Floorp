@@ -1568,27 +1568,6 @@ class TraceRecorder
     enum AbortResult { NORMAL_ABORT, JIT_RESET };
     JS_REQUIRES_STACK AbortResult finishAbort(const char* reason);
 
-#ifdef DEBUG
-    /* Debug printing functionality to emit printf() on trace. */
-    JS_REQUIRES_STACK void tprint(const char *format, int count, nanojit::LIns *insa[]);
-    JS_REQUIRES_STACK void tprint(const char *format);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
-                                  nanojit::LIns *ins2);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
-                                  nanojit::LIns *ins2, nanojit::LIns *ins3);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
-                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
-                                  nanojit::LIns *ins4);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
-                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
-                                  nanojit::LIns *ins4, nanojit::LIns *ins5);
-    JS_REQUIRES_STACK void tprint(const char *format, nanojit::LIns *ins1,
-                                  nanojit::LIns *ins2, nanojit::LIns *ins3,
-                                  nanojit::LIns *ins4, nanojit::LIns *ins5,
-                                  nanojit::LIns *ins6);
-#endif
-
     friend class ImportBoxedStackSlotVisitor;
     friend class AdjustCallerGlobalTypesVisitor;
     friend class AdjustCallerStackTypesVisitor;
