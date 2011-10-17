@@ -2756,18 +2756,39 @@ TryReuseArrayType(JSObject *obj, JSObject *nobj)
  * Returns true if this is a dense array whose |count| properties starting from
  * |startingIndex| may be accessed (get, set, delete) directly through its
  * contiguous vector of elements without fear of getters, setters, etc. along
- * the prototype chain.
+ * the prototype chain, or of enumerators requiring notification of
+ * modifications.
  */
 static inline bool
 CanOptimizeForDenseStorage(JSObject *arr, uint32 startingIndex, uint32 count, JSContext *cx)
 {
-    JS_ASSERT(UINT32_MAX - startingIndex >= count);
+    /* If the desired properties overflow dense storage, we can't optimize. */
+    if (UINT32_MAX - startingIndex < count)
+        return false;
 
-    uint32 length = startingIndex + count;
-    return arr->isDenseArray() &&
-           !arr->getType(cx)->hasAllFlags(OBJECT_FLAG_NON_PACKED_ARRAY) &&
-           !js_PrototypeHasIndexedProperties(cx, arr) &&
-           length <= arr->getDenseArrayInitializedLength();
+    /* There's no optimizing possible if it's not a dense array. */
+    if (!arr->isDenseArray())
+        return false;
+
+    /*
+     * Don't optimize if the array might be in the midst of iteration.  We
+     * rely on this to be able to safely move dense array elements around with
+     * just a memmove (see JSObject::moveDenseArrayElements), without worrying
+     * about updating any in-progress enumerators for properties implicitly
+     * deleted if a hole is moved from one location to another location not yet
+     * visited.  See bug 690622.
+     *
+     * Another potential wrinkle: what if the enumeration is happening on an
+     * object which merely has |arr| on its prototype chain?  It turns out this
+     * case can't happen, because any dense array used as the prototype of
+     * another object is first slowified, for type inference's sake.
+     */
+    if (JS_UNLIKELY(arr->getType(cx)->hasAllFlags(OBJECT_FLAG_ITERATED)))
+        return false;
+
+    /* Now just watch out for getters and setters along the prototype chain. */
+    return !js_PrototypeHasIndexedProperties(cx, arr) &&
+           startingIndex + count <= arr->getDenseArrayInitializedLength();
 }
 
 static inline bool
