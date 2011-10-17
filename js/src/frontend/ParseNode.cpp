@@ -45,6 +45,7 @@
 
 #include "jsscriptinlines.h"
 
+#include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
 
 using namespace js;
