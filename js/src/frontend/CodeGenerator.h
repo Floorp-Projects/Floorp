@@ -512,6 +512,16 @@ inline bool JSTreeContext::needStrictChecks() {
     return parser->context->hasStrictOption() || inStrictMode();
 }
 
+namespace js {
+
+bool
+SetStaticLevel(JSTreeContext *tc, uintN staticLevel);
+
+bool
+GenerateBlockId(JSTreeContext *tc, uint32& blockid);
+
+} /* namespace js */
+
 /*
  * Span-dependent instructions are jumps whose span (from the jump bytecode to
  * the jump target) may require 2 or 4 bytes of immediate operand.

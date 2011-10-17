@@ -71,8 +71,8 @@
 #include "jsexn.h"
 #include "jstracer.h"
 
+#include "frontend/BytecodeCompiler.h"
 #include "frontend/CodeGenerator.h"
-#include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "vm/CallObject.h"
 #include "vm/Debugger.h"

@@ -43,7 +43,7 @@
 
 #include "jscntxt.h"
 
-#include "frontend/Parser.h" /* Need sizeof(JSDefinition). */
+#include "frontend/ParseNode.h" /* Need sizeof(JSDefinition). */
 
 #include "ParseMaps.h"
 
