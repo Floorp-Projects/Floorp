@@ -963,7 +963,7 @@ abstract public class GeckoApp
     public boolean onSearchRequested() {
         Intent searchIntent = new Intent(getBaseContext(), AwesomeBar.class);
         searchIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-        searchIntent.putExtra(AwesomeBar.TYPE, AwesomeBar.Type.ADD.name());
+        searchIntent.putExtra(AwesomeBar.TYPE_KEY, AwesomeBar.Type.ADD.name());
         startActivityForResult(searchIntent, AWESOMEBAR_REQUEST);
         return true;
     }
@@ -971,7 +971,7 @@ abstract public class GeckoApp
     public boolean onEditRequested() {
         Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-        intent.putExtra(AwesomeBar.TYPE, AwesomeBar.Type.EDIT.name());
+        intent.putExtra(AwesomeBar.TYPE_KEY, AwesomeBar.Type.EDIT.name());
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (!tab.getHistory().empty()) {
             intent.putExtra(AwesomeBar.CURRENT_URL_KEY, tab.getHistory().peek().mUri);
@@ -1058,7 +1058,7 @@ abstract public class GeckoApp
         case AWESOMEBAR_REQUEST:
             if (data != null) {
                 String url = data.getStringExtra(AwesomeBar.URL_KEY);
-                AwesomeBar.Type type = AwesomeBar.Type.valueOf(data.getStringExtra(AwesomeBar.TYPE));
+                AwesomeBar.Type type = AwesomeBar.Type.valueOf(data.getStringExtra(AwesomeBar.TYPE_KEY));
                 if (url != null && url.length() > 0) {
                     mProgressBar.setVisibility(View.VISIBLE);
                     mProgressBar.setIndeterminate(true);
@@ -1081,7 +1081,7 @@ abstract public class GeckoApp
                 if (type == ShowTabs.Type.ADD) {
                     Intent intent = new Intent(this, AwesomeBar.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-                    intent.putExtra(AwesomeBar.TYPE, AwesomeBar.Type.ADD.name());
+                    intent.putExtra(AwesomeBar.TYPE_KEY, AwesomeBar.Type.ADD.name());
                     startActivityForResult(intent, AWESOMEBAR_REQUEST);
                 } else {
                     int id = Integer.parseInt(data.getStringExtra(ShowTabs.ID));

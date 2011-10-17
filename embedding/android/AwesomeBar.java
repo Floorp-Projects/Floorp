@@ -39,33 +39,41 @@
 
 package org.mozilla.gecko;
 
-import java.io.*;
+import java.io.File;
 
-import org.mozilla.gecko.*;
-
-import android.os.*;
-import android.content.*;
-import android.app.*;
-import android.text.*;
-import android.util.*;
-import android.widget.*;
-import android.database.sqlite.*;
-import android.database.*;
-import android.view.*;
-import android.view.View.*;
-import android.net.Uri;
-import android.graphics.*;
+import android.app.Activity;
+import android.app.ListActivity;
+import android.content.Context;
+import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.Cursor;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.Window;
+import android.widget.EditText;
+import android.widget.FilterQueryProvider;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 
 public class AwesomeBar extends ListActivity {
-    public static final String URL_KEY = "url";
-    public static final String TITLE_KEY = "title";
-    public static final String CURRENT_URL_KEY = "currenturl";
-    public static final String TYPE = "type";
-    public static enum Type { ADD, EDIT };
-    
-    private String mType;
+    static final String URL_KEY = "url";
+    static final String TITLE_KEY = "title";
+    static final String CURRENT_URL_KEY = "currenturl";
+    static final String TYPE_KEY = "type";
+    static enum Type { ADD, EDIT };
 
-    public class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
+    private static final String LOG_NAME = "AwesomeBar";
+
+    private String mType;
+    private Cursor mCursor;
+    private SQLiteDatabase mDb;
+    private AwesomeBarCursorAdapter mAdapter;
+
+    private class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
         private Cursor mAdapterCursor;
         private Context mContext;
 
@@ -86,10 +94,6 @@ public class AwesomeBar extends ListActivity {
             // imageView.setImageBitmap(bitmap);
         }
     }
-    
-    private Cursor mCursor;
-    private SQLiteDatabase mDb;
-    private AwesomeBarCursorAdapter adapter;
 
     private String getProfilePath() {
         File home = new File(getFilesDir(), "mozilla");
@@ -119,47 +123,45 @@ public class AwesomeBar extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.d("AwesomeBar", "creating awesomebar");
+        Log.d(LOG_NAME, "creating awesomebar");
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.awesomebar_search);
 
         // Load the list using a custom adapter so we can create the bitmaps
-        adapter = new AwesomeBarCursorAdapter(
+        mAdapter = new AwesomeBarCursorAdapter(
             this,
             R.layout.awesomebar_row,
             null,
             new String[] { TITLE_KEY, URL_KEY },
             new int[] { R.id.title, R.id.url }
         );
-        setListAdapter(adapter);
+        setListAdapter(mAdapter);
 
         final EditText text = (EditText)findViewById(R.id.awesomebar_text);
 
         Intent intent = getIntent();
         String currentUrl = intent.getStringExtra(CURRENT_URL_KEY);
-        mType = intent.getStringExtra(TYPE);
+        mType = intent.getStringExtra(TYPE_KEY);
         if (currentUrl != null) {
             text.setText(currentUrl);
             text.selectAll();
         }
 
         text.addTextChangedListener(new TextWatcher() {
-                
             public void afterTextChanged(Editable s) {
                 // do nothing
             }
-            
+
             public void beforeTextChanged(CharSequence s, int start, int count,
                                           int after) {
                 // do nothing
             }
-            
+
             public void onTextChanged(CharSequence s, int start, int before,
                                       int count) {
-                adapter.getFilter().filter(s.toString());
+                mAdapter.getFilter().filter(s.toString());
             }
-                
         });
 
         text.setOnKeyListener(new View.OnKeyListener() {
@@ -170,7 +172,7 @@ public class AwesomeBar extends ListActivity {
 
                     Intent resultIntent = new Intent();
                     resultIntent.putExtra(URL_KEY, text.getText().toString());
-                    resultIntent.putExtra(TYPE, mType);
+                    resultIntent.putExtra(TYPE_KEY, mType);
                     setResult(Activity.RESULT_OK, resultIntent);
                     finish();
                     return true;
@@ -183,9 +185,8 @@ public class AwesomeBar extends ListActivity {
         DatabaseHelper dbHelper = new DatabaseHelper(this);
         mDb = dbHelper.getReadableDatabase();
 
-        adapter.setFilterQueryProvider(new FilterQueryProvider() {
+        mAdapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
-
                 // _id column required for CursorAdapter; provide a dummy here
                 mCursor = mDb.rawQuery(
                         "SELECT 0 AS _id, title, url "
@@ -199,8 +200,7 @@ public class AwesomeBar extends ListActivity {
         });
 
         // show unfiltered results initially
-        adapter.getFilter().filter("");
-
+        mAdapter.getFilter().filter("");
     }
 
     @Override
@@ -216,7 +216,7 @@ public class AwesomeBar extends ListActivity {
         String url = cursor.getString(cursor.getColumnIndexOrThrow(URL_KEY));
         Intent resultIntent = new Intent();
         resultIntent.putExtra(URL_KEY, url);
-        resultIntent.putExtra(TYPE, mType);
+        resultIntent.putExtra(TYPE_KEY, mType);
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
     }
