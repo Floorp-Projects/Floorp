@@ -55,8 +55,6 @@
 #include "TextInputHandler.h"
 #include "nsCocoaUtils.h"
 
-#include "nsIAppShell.h"
-
 #include "nsString.h"
 #include "nsIDragService.h"
 
@@ -398,7 +396,6 @@ public:
                                  const nsIntRect &aRect,
                                  EVENT_CALLBACK aHandleEventFunction,
                                  nsDeviceContext *aContext,
-                                 nsIAppShell *aAppShell = nsnull,
                                  nsIToolkit *aToolkit = nsnull,
                                  nsWidgetInitData *aInitData = nsnull);
 

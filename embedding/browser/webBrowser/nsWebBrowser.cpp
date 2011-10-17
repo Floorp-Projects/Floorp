@@ -1156,7 +1156,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
       
       mInternalWidget->SetClientData(static_cast<nsWebBrowser *>(this));
       mInternalWidget->Create(nsnull, mParentNativeWindow, bounds, nsWebBrowser::HandleEvent,
-                              nsnull, nsnull, nsnull, &widgetInit);  
+                              nsnull, nsnull, &widgetInit);  
       }
 
     nsCOMPtr<nsIDocShell> docShell(do_CreateInstance("@mozilla.org/docshell;1", &rv));
@@ -1452,20 +1452,6 @@ NS_IMETHODIMP nsWebBrowser::SetEnabled(bool aEnabled)
   if (mInternalWidget)
     return mInternalWidget->Enable(aEnabled);
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::GetBlurSuppression(bool *aBlurSuppression)
-{
-  NS_ENSURE_ARG_POINTER(aBlurSuppression);
-  *aBlurSuppression = PR_FALSE;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::SetBlurSuppression(bool aBlurSuppression)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetMainWidget(nsIWidget** mainWidget)

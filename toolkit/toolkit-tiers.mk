@@ -95,7 +95,7 @@ tier_platform_dirs += ipc js/ipc js/jetpack
 
 tier_platform_dirs += \
 		hal \
-		js/src/xpconnect \
+		js/xpconnect \
 		intl/chardet \
 		$(NULL)
 
@@ -265,8 +265,7 @@ endif
 
 ifdef ENABLE_TESTS
 tier_platform_dirs += testing/mochitest
-tier_platform_dirs += testing/xpcshell 
-tier_platform_dirs += testing/mozmill
+tier_platform_dirs += testing/xpcshell
 tier_platform_dirs += testing/tools/screenshot
 endif
 

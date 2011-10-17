@@ -91,8 +91,6 @@ _SERV_FILES = 	\
 		browser-test-overlay.xul \
 		browser-test.js \
 		chrome-harness.js \
-		ipc-overlay.xul \
-		ipc.js \
 		browser-harness.xul \
 		redirect.html \
 		$(topsrcdir)/build/pgo/server-locations.txt \

@@ -62,6 +62,8 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 
+#include "mozilla/Util.h"
+
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
 
@@ -124,6 +126,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/unused.h"
 
+using namespace mozilla;
 using mozilla::unused;
 
 #ifdef XP_WIN
@@ -2357,7 +2360,7 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
 // need to save various environment variables, and then restore them
 // before re-launching the application.
 
-static struct {
+static struct SavedVar {
   const char *name;
   char *value;
 } gSavedVars[] = {
@@ -2366,7 +2369,7 @@ static struct {
 
 static void SaveStateForAppInitiatedRestart()
 {
-  for (size_t i = 0; i < NS_ARRAY_LENGTH(gSavedVars); ++i) {
+  for (size_t i = 0; i < ArrayLength(gSavedVars); ++i) {
     const char *s = PR_GetEnv(gSavedVars[i].name);
     if (s)
       gSavedVars[i].value = PR_smprintf("%s=%s", gSavedVars[i].name, s);
@@ -2375,7 +2378,7 @@ static void SaveStateForAppInitiatedRestart()
 
 static void RestoreStateForAppInitiatedRestart()
 {
-  for (size_t i = 0; i < NS_ARRAY_LENGTH(gSavedVars); ++i) {
+  for (size_t i = 0; i < ArrayLength(gSavedVars); ++i) {
     if (gSavedVars[i].value)
       PR_SetEnv(gSavedVars[i].value);
   }

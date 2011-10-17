@@ -45,6 +45,8 @@
  */
 #include <setjmp.h>
 
+#include "mozilla/Util.h"
+
 #include "jsalloc.h"
 #include "jstypes.h"
 #include "jsprvtd.h"
@@ -1111,7 +1113,7 @@ struct ArenaLists {
 
     void checkEmptyFreeLists() {
 #ifdef DEBUG
-        for (size_t i = 0; i != JS_ARRAY_LENGTH(freeLists); ++i)
+        for (size_t i = 0; i < mozilla::ArrayLength(freeLists); ++i)
             JS_ASSERT(freeLists[i].isEmpty());
 #endif
     }

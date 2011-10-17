@@ -181,7 +181,7 @@ typedef JSBool
 (* LookupGenericOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                     JSProperty **propp);
 typedef JSBool
-(* LookupPropOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+(* LookupPropOp)(JSContext *cx, JSObject *obj, PropertyName *name, JSObject **objp,
                  JSProperty **propp);
 typedef JSBool
 (* LookupElementOp)(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,

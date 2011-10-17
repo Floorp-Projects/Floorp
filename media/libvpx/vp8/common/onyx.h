@@ -18,6 +18,7 @@ extern "C"
 #endif
 
 #include "vpx/internal/vpx_codec_internal.h"
+#include "vpx/vp8cx.h"
 #include "vpx_scale/yv12config.h"
 #include "type_aliases.h"
 #include "ppflags.h"
@@ -45,7 +46,8 @@ extern "C"
     typedef enum
     {
         USAGE_STREAM_FROM_SERVER    = 0x0,
-        USAGE_LOCAL_FILE_PLAYBACK   = 0x1
+        USAGE_LOCAL_FILE_PLAYBACK   = 0x1,
+        USAGE_CONSTRAINED_QUALITY   = 0x2
     } END_USAGE;
 
 
@@ -107,6 +109,7 @@ extern "C"
         int noise_sensitivity;   // parameter used for applying pre processing blur: recommendation 0
         int Sharpness;          // parameter used for sharpening output: recommendation 0:
         int cpu_used;
+        unsigned int rc_max_intra_bitrate_pct;
 
         // mode ->
         //(0)=Realtime/Live Encoding. This mode is optimized for realtim encoding (for example, capturing
@@ -137,8 +140,9 @@ extern "C"
 
         int end_usage; // vbr or cbr
 
-        // shoot to keep buffer full at all times by undershooting a bit 95 recommended
+        // buffer targeting aggressiveness
         int under_shoot_pct;
+        int over_shoot_pct;
 
         // buffering parameters
         int starting_buffer_level;  // in seconds
@@ -149,6 +153,7 @@ extern "C"
         int fixed_q;
         int worst_allowed_q;
         int best_allowed_q;
+        int cq_level;
 
         // allow internal resizing ( currently disabled in the build !!!!!)
         int allow_spatial_resampling;
@@ -179,16 +184,20 @@ extern "C"
         int token_partitions; // how many token partitions to create for multi core decoding
         int encode_breakout;  // early breakout encode threshold : for video conf recommend 800
 
-        int error_resilient_mode;  // if running over udp networks provides decodable frames after a
-        // dropped packet
+        unsigned int error_resilient_mode; // Bitfield defining the error
+                                   // resiliency features to enable. Can provide
+                                   // decodable frames after losses in previous
+                                   // frames and decodable partitions after
+                                   // losses in the same frame.
 
         int arnr_max_frames;
         int arnr_strength ;
         int arnr_type     ;
 
-
         struct vpx_fixed_buf         two_pass_stats_in;
         struct vpx_codec_pkt_list  *output_pkt_list;
+
+        vp8e_tuning tuning;
     } VP8_CONFIG;
 
 
@@ -202,9 +211,9 @@ extern "C"
 
 // receive a frames worth of data caller can assume that a copy of this frame is made
 // and not just a copy of the pointer..
-    int vp8_receive_raw_frame(VP8_PTR comp, unsigned int frame_flags, YV12_BUFFER_CONFIG *sd, INT64 time_stamp, INT64 end_time_stamp);
-    int vp8_get_compressed_data(VP8_PTR comp, unsigned int *frame_flags, unsigned long *size, unsigned char *dest, INT64 *time_stamp, INT64 *time_end, int flush);
-    int vp8_get_preview_raw_frame(VP8_PTR comp, YV12_BUFFER_CONFIG *dest, int deblock_level, int noise_level, int flags);
+    int vp8_receive_raw_frame(VP8_PTR comp, unsigned int frame_flags, YV12_BUFFER_CONFIG *sd, int64_t time_stamp, int64_t end_time_stamp);
+    int vp8_get_compressed_data(VP8_PTR comp, unsigned int *frame_flags, unsigned long *size, unsigned char *dest, int64_t *time_stamp, int64_t *time_end, int flush);
+    int vp8_get_preview_raw_frame(VP8_PTR comp, YV12_BUFFER_CONFIG *dest, vp8_ppflags_t *flags);
 
     int vp8_use_as_reference(VP8_PTR comp, int ref_frame_flags);
     int vp8_update_reference(VP8_PTR comp, int ref_frame_flags);

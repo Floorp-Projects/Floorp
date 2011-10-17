@@ -55,7 +55,7 @@
 #include "nsEventStates.h"
 #include "nsINameSpaceManager.h"
 #include "nsPresContext.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsToolkit.h"
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
@@ -244,9 +244,9 @@ static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
   if (!content)
     return NO;
 
-  if (content->Tag() == nsWidgetAtoms::toolbar ||
-      content->Tag() == nsWidgetAtoms::toolbox ||
-      content->Tag() == nsWidgetAtoms::statusbar)
+  if (content->Tag() == nsGkAtoms::toolbar ||
+      content->Tag() == nsGkAtoms::toolbox ||
+      content->Tag() == nsGkAtoms::statusbar)
     return YES;
 
   switch (aFrame->GetStyleDisplay()->mAppearance) {
@@ -1541,10 +1541,10 @@ void
 nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, nsEventStates aButtonStates[])
 {
   static nsIContent::AttrValuesArray attributeValues[] = {
-    &nsWidgetAtoms::scrollbarUpTop,
-    &nsWidgetAtoms::scrollbarDownTop,
-    &nsWidgetAtoms::scrollbarUpBottom,
-    &nsWidgetAtoms::scrollbarDownBottom,
+    &nsGkAtoms::scrollbarUpTop,
+    &nsGkAtoms::scrollbarDownTop,
+    &nsGkAtoms::scrollbarUpBottom,
+    &nsGkAtoms::scrollbarDownBottom,
     nsnull
   };
 
@@ -1555,7 +1555,7 @@ nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, nsEventStates aBut
 
     nsIContent *childContent = childFrame->GetContent();
     if (!childContent) continue;
-    PRInt32 attrIndex = childContent->FindAttrValueIn(kNameSpaceID_None, nsWidgetAtoms::sbattr, 
+    PRInt32 attrIndex = childContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::sbattr, 
                                                       attributeValues, eCaseMatters);
     if (attrIndex < 0) continue;
 
@@ -1579,13 +1579,13 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos, 0);
-  PRInt32 minpos = CheckIntAttr(aFrame, nsWidgetAtoms::minpos, 0);
-  PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos, 100);
-  PRInt32 thumbSize = CheckIntAttr(aFrame, nsWidgetAtoms::pageincrement, 10);
+  PRInt32 curpos = CheckIntAttr(aFrame, nsGkAtoms::curpos, 0);
+  PRInt32 minpos = CheckIntAttr(aFrame, nsGkAtoms::minpos, 0);
+  PRInt32 maxpos = CheckIntAttr(aFrame, nsGkAtoms::maxpos, 100);
+  PRInt32 thumbSize = CheckIntAttr(aFrame, nsGkAtoms::pageincrement, 10);
 
-  bool isHorizontal = aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::orient, 
-                                                          nsWidgetAtoms::horizontal, eCaseMatters);
+  bool isHorizontal = aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::orient, 
+                                                          nsGkAtoms::horizontal, eCaseMatters);
   bool isSmall = aFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL;
 
   aTdi.version = 0;
@@ -1672,7 +1672,7 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
   // Walk our parents to find a scrollbar frame
   nsIFrame *scrollbarFrame = aFrame;
   do {
-    if (scrollbarFrame->GetType() == nsWidgetAtoms::scrollbarFrame) break;
+    if (scrollbarFrame->GetType() == nsGkAtoms::scrollbarFrame) break;
   } while ((scrollbarFrame = scrollbarFrame->GetParent()));
   
   // We return null if we can't find a parent scrollbar frame
@@ -1887,7 +1887,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         version: 0,
         itemType: kThemeMenuItemPlain,
         state: (IsDisabled(aFrame, eventState) ? static_cast<ThemeMenuState>(kThemeMenuDisabled) :
-                 CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive) ?
+                 CheckBooleanAttr(aFrame, nsGkAtoms::menuactive) ?
                     static_cast<ThemeMenuState>(kThemeMenuSelected) :
                     static_cast<ThemeMenuState>(kThemeMenuActive))
       };
@@ -1904,7 +1904,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         menuState = kThemeMenuDisabled;
       }
       else {
-        menuState = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive) ?
+        menuState = CheckBooleanAttr(aFrame, nsGkAtoms::menuactive) ?
                     kThemeMenuSelected : kThemeMenuActive;
       }
 
@@ -1949,11 +1949,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     case NS_THEME_SPINNER: {
       ThemeDrawState state = kThemeStateActive;
       nsIContent* content = aFrame->GetContent();
-      if (content->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::state,
+      if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
                                NS_LITERAL_STRING("up"), eCaseMatters)) {
         state = kThemeStatePressedUp;
       }
-      else if (content->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::state,
+      else if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
                                     NS_LITERAL_STRING("down"), eCaseMatters)) {
         state = kThemeStatePressedDown;
       }
@@ -2104,14 +2104,14 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL: {
-      PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos, 0);
-      PRInt32 minpos = CheckIntAttr(aFrame, nsWidgetAtoms::minpos, 0);
-      PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos, 100);
+      PRInt32 curpos = CheckIntAttr(aFrame, nsGkAtoms::curpos, 0);
+      PRInt32 minpos = CheckIntAttr(aFrame, nsGkAtoms::minpos, 0);
+      PRInt32 maxpos = CheckIntAttr(aFrame, nsGkAtoms::maxpos, 100);
       if (!maxpos)
         maxpos = 100;
 
       bool reverse = aFrame->GetContent()->
-        AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::dir,
+        AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
                     NS_LITERAL_STRING("reverse"), eCaseMatters);
       DrawScale(cgContext, macRect, eventState,
                 (aWidgetType == NS_THEME_SCALE_VERTICAL), reverse,
@@ -2655,14 +2655,14 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     // Check the attribute to see if it's relevant.  
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = false;
-    if (aAttribute == nsWidgetAtoms::disabled ||
-        aAttribute == nsWidgetAtoms::checked ||
-        aAttribute == nsWidgetAtoms::selected ||
-        aAttribute == nsWidgetAtoms::mozmenuactive ||
-        aAttribute == nsWidgetAtoms::sortdirection ||
-        aAttribute == nsWidgetAtoms::focused ||
-        aAttribute == nsWidgetAtoms::_default ||
-        aAttribute == nsWidgetAtoms::open)
+    if (aAttribute == nsGkAtoms::disabled ||
+        aAttribute == nsGkAtoms::checked ||
+        aAttribute == nsGkAtoms::selected ||
+        aAttribute == nsGkAtoms::menuactive ||
+        aAttribute == nsGkAtoms::sortDirection ||
+        aAttribute == nsGkAtoms::focused ||
+        aAttribute == nsGkAtoms::_default ||
+        aAttribute == nsGkAtoms::open)
       *aShouldRepaint = true;
   }
 
@@ -2690,7 +2690,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
   // if this is a dropdown button in a combobox the answer is always no
   if (aWidgetType == NS_THEME_DROPDOWN_BUTTON) {
     nsIFrame* parentFrame = aFrame->GetParent();
-    if (parentFrame && (parentFrame->GetType() == nsWidgetAtoms::comboboxControlFrame))
+    if (parentFrame && (parentFrame->GetType() == nsGkAtoms::comboboxControlFrame))
       return false;
   }
 
@@ -2765,7 +2765,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_RESIZER:
     {
       nsIFrame* parentFrame = aFrame->GetParent();
-      if (!parentFrame || parentFrame->GetType() != nsWidgetAtoms::scrollFrame)
+      if (!parentFrame || parentFrame->GetType() != nsGkAtoms::scrollFrame)
         return true;
 
       // Note that IsWidgetStyled is not called for resizers on Mac. This is
@@ -2851,7 +2851,7 @@ nsNativeThemeCocoa::GetProgressValue(nsIFrame* aFrame)
     }
   }
 
-  return (double)CheckIntAttr(aFrame, nsWidgetAtoms::value, 0);
+  return (double)CheckIntAttr(aFrame, nsGkAtoms::value, 0);
 }
 
 double
@@ -2869,5 +2869,5 @@ nsNativeThemeCocoa::GetProgressMaxValue(nsIFrame* aFrame)
     }
   }
 
-  return (double)NS_MAX(CheckIntAttr(aFrame, nsWidgetAtoms::max, 100), 1);
+  return (double)NS_MAX(CheckIntAttr(aFrame, nsGkAtoms::max, 100), 1);
 }

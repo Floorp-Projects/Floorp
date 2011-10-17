@@ -1305,10 +1305,15 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         storePtr(ImmPtr((void *) templateObject->capacity), Address(result, offsetof(JSObject, capacity)));
         storePtr(ImmPtr(templateObject->type()), Address(result, JSObject::offsetOfType()));
 
-        /* Fixed slots of non-array objects are required to be initialized. */
+        /*
+         * Fixed slots of non-array objects are required to be initialized;
+         * Use the values currently in the template object.
+         */
         if (!templateObject->isDenseArray()) {
-            for (unsigned i = 0; i < templateObject->numFixedSlots(); i++)
-                storeValue(UndefinedValue(), Address(result, JSObject::getFixedSlotOffset(i)));
+            for (unsigned i = 0; i < templateObject->numFixedSlots(); i++) {
+                storeValue(templateObject->getFixedSlot(i),
+                           Address(result, JSObject::getFixedSlotOffset(i)));
+            }
         }
 
         return jump;

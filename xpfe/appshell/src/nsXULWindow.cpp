@@ -54,7 +54,7 @@
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIServiceManager.h"
-#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMBarProp.h"
 #include "nsIDOMDocument.h"
@@ -146,7 +146,6 @@ nsXULWindow::nsXULWindow(PRUint32 aChromeFlags)
     mChromeFlagsFrozen(PR_FALSE),
     mIgnoreXULSizeMode(PR_FALSE),
     mContextFlags(0),
-    mBlurSuppressionLevel(0),
     mPersistentAttributesDirty(0),
     mPersistentAttributesMask(0),
     mChromeFlags(aChromeFlags),
@@ -852,30 +851,6 @@ NS_IMETHODIMP nsXULWindow::SetEnabled(bool aEnable)
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsXULWindow::GetBlurSuppression(bool *aBlurSuppression)
-{
-  NS_ENSURE_ARG_POINTER(aBlurSuppression);
-  *aBlurSuppression = mBlurSuppressionLevel > 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULWindow::SetBlurSuppression(bool aBlurSuppression)
-{
-  if (aBlurSuppression)
-    ++mBlurSuppressionLevel;
-  else {
-    NS_ASSERTION(mBlurSuppressionLevel > 0, "blur over-allowed");
-    if (mBlurSuppressionLevel > 0)
-      --mBlurSuppressionLevel;
-  }
-  return NS_OK;
-
-  /* XXX propagate this information to the widget? It has its own
-     independent concept of blur suppression. Each is used on
-     a different platform, so at time of writing it's not necessary
-     to keep them in sync. (And there's no interface for doing so.) */
 }
 
 NS_IMETHODIMP nsXULWindow::GetMainWidget(nsIWidget** aMainWidget)
@@ -1738,17 +1713,17 @@ NS_IMETHODIMP nsXULWindow::ExitModalLoop(nsresult aStatus)
 
 // top-level function to create a new window
 NS_IMETHODIMP nsXULWindow::CreateNewWindow(PRInt32 aChromeFlags,
-                             nsIAppShell* aAppShell, nsIXULWindow **_retval)
+                             nsIXULWindow **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
   if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
-    return CreateNewChromeWindow(aChromeFlags, aAppShell, _retval);
-  return CreateNewContentWindow(aChromeFlags, aAppShell, _retval);
+    return CreateNewChromeWindow(aChromeFlags, _retval);
+  return CreateNewContentWindow(aChromeFlags, _retval);
 }
 
 NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
-   nsIAppShell* aAppShell, nsIXULWindow **_retval)
+                                                 nsIXULWindow **_retval)
 {
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
@@ -1759,7 +1734,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
   appShell->CreateTopLevelWindow(this, nsnull, aChromeFlags,
                                  nsIAppShellService::SIZE_TO_CONTENT,
                                  nsIAppShellService::SIZE_TO_CONTENT,
-                                 aAppShell, getter_AddRefs(newWindow));
+                                 getter_AddRefs(newWindow));
 
   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
 
@@ -1770,7 +1745,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
 }
 
 NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
-   nsIAppShell* aAppShell, nsIXULWindow **_retval)
+                                                  nsIXULWindow **_retval)
 {
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
@@ -1795,7 +1770,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
 
   nsCOMPtr<nsIXULWindow> newWindow;
   appShell->CreateTopLevelWindow(this, uri,
-                                 aChromeFlags, 615, 480, aAppShell,
+                                 aChromeFlags, 615, 480,
                                  getter_AddRefs(newWindow));
 
   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);

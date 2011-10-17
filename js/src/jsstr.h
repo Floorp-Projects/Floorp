@@ -337,6 +337,15 @@ FileEscapedString(FILE *fp, JSLinearString *str, uint32 quote)
     return PutEscapedStringImpl(NULL, 0, fp, str, quote) != size_t(-1);
 }
 
+JSBool
+str_match(JSContext *cx, uintN argc, Value *vp);
+
+JSBool
+str_search(JSContext *cx, uintN argc, Value *vp);
+
+JSBool
+str_split(JSContext *cx, uintN argc, Value *vp);
+
 } /* namespace js */
 
 extern JSBool

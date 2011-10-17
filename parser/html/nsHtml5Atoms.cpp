@@ -42,8 +42,12 @@
  * unloaded.
  */
 
+#include "mozilla/Util.h"
+
 #include "nsHtml5Atoms.h"
 #include "nsStaticAtom.h"
+
+using namespace mozilla;
 
 // define storage for all atoms
 #define HTML5_ATOM(_name, _value) nsIAtom* nsHtml5Atoms::_name;
@@ -62,5 +66,5 @@ static const nsStaticAtom Html5Atoms_info[] = {
 
 void nsHtml5Atoms::AddRefAtoms()
 {
-  NS_RegisterStaticAtoms(Html5Atoms_info, NS_ARRAY_LENGTH(Html5Atoms_info));
+  NS_RegisterStaticAtoms(Html5Atoms_info, ArrayLength(Html5Atoms_info));
 }
