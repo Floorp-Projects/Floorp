@@ -38,11 +38,13 @@
 
 package org.mozilla.gecko;
 
-import android.content.*;
-import android.database.sqlite.*;
-import android.util.*;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 class DatabaseHelper extends SQLiteOpenHelper {
+    private static final String LOG_NAME = "DatabaseHelper";
 
     private static final String CREATE_MOZ_PLACES =
       "CREATE TABLE moz_places ( " +
@@ -67,48 +69,6 @@ class DatabaseHelper extends SQLiteOpenHelper {
         ", visit_date INTEGER" +
         ", visit_type INTEGER" +
         ", session INTEGER" +
-      ")";
-
-    private static final String CREATE_MOZ_INPUTHISTORY =
-      "CREATE TABLE moz_inputhistory (" +
-        "  place_id INTEGER NOT NULL" +
-        ", input LONGVARCHAR NOT NULL" +
-        ", use_count INTEGER" +
-        ", PRIMARY KEY (place_id, input)" +
-      ")";
-
-    private static final String CREATE_MOZ_ANNOS =
-      "CREATE TABLE moz_annos (" +
-        "  id INTEGER PRIMARY KEY" +
-        ", place_id INTEGER NOT NULL" +
-        ", anno_attribute_id INTEGER" +
-        ", mime_type VARCHAR(32) DEFAULT NULL" +
-        ", content LONGVARCHAR" +
-        ", flags INTEGER DEFAULT 0" +
-        ", expiration INTEGER DEFAULT 0" +
-        ", type INTEGER DEFAULT 0" +
-        ", dateAdded INTEGER DEFAULT 0" +
-        ", lastModified INTEGER DEFAULT 0" +
-      ")";
-
-    private static final String CREATE_MOZ_ANNO_ATTRIBUTES =
-      "CREATE TABLE moz_anno_attributes (" +
-        "  id INTEGER PRIMARY KEY" +
-        ", name VARCHAR(32) UNIQUE NOT NULL" +
-      ")";
-
-    private static final String CREATE_MOZ_ITEMS_ANNOS =
-      "CREATE TABLE moz_items_annos (" +
-        "  id INTEGER PRIMARY KEY" +
-        ", item_id INTEGER NOT NULL" +
-        ", anno_attribute_id INTEGER" +
-        ", mime_type VARCHAR(32) DEFAULT NULL" +
-        ", content LONGVARCHAR" +
-        ", flags INTEGER DEFAULT 0" +
-        ", expiration INTEGER DEFAULT 0" +
-        ", type INTEGER DEFAULT 0" +
-        ", dateAdded INTEGER DEFAULT 0" +
-        ", lastModified INTEGER DEFAULT 0" +
       ")";
 
     private static final String CREATE_MOZ_FAVICONS =
@@ -141,12 +101,6 @@ class DatabaseHelper extends SQLiteOpenHelper {
         ", folder_id INTEGER" +
       ")";
 
-    private static final String CREATE_MOZ_KEYWORDS =
-      "CREATE TABLE moz_keywords (" +
-        "  id INTEGER PRIMARY KEY AUTOINCREMENT" +
-        ", keyword TEXT UNIQUE" +
-      ")";
-
     private static final String DATABASE_NAME = "places";
     private static final int DATABASE_VERSION = 1;
 
@@ -165,10 +119,9 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.w("DatabaseHelper", "Upgrading database from version " + oldVersion + " to "
+        Log.w(LOG_NAME, "Upgrading database from version " + oldVersion + " to "
                 + newVersion + ", which will destroy all old data");
         db.execSQL("DROP TABLE IF EXISTS places");
         onCreate(db);
     }
-
 }
