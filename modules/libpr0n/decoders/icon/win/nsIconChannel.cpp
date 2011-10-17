@@ -213,7 +213,7 @@ NS_IMETHODIMP nsIconChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsIconChannel::Open(nsIInputStream **_retval)
 {
-  return MakeInputStream(_retval, PR_FALSE);
+  return MakeInputStream(_retval, false);
 }
 
 nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsCString &aContentType, nsCString &aFileExtension)
@@ -243,12 +243,12 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 *
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
   nsCOMPtr<nsIInputStream> inStream;
-  nsresult rv = MakeInputStream(getter_AddRefs(inStream), PR_TRUE);
+  nsresult rv = MakeInputStream(getter_AddRefs(inStream), true);
   if (NS_FAILED(rv))
     return rv;
 
   // Init our streampump
-  rv = mPump->Init(inStream, PRInt64(-1), PRInt64(-1), 0, 0, PR_FALSE);
+  rv = mPump->Init(inStream, PRInt64(-1), PRInt64(-1), 0, 0, false);
   if (NS_FAILED(rv))
     return rv;
 

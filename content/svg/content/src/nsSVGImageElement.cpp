@@ -59,7 +59,7 @@ nsSVGElement::LengthInfo nsSVGImageElement::sLengthInfo[4] =
 
 nsSVGElement::StringInfo nsSVGImageElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Image)
@@ -181,7 +181,7 @@ nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     }
 
     if (aValue) {
-      LoadSVGImage(PR_TRUE, aNotify);
+      LoadSVGImage(true, aNotify);
     } else {
       CancelImageRequests(aNotify);
     }
@@ -194,9 +194,9 @@ void
 nsSVGImageElement::MaybeLoadSVGImage()
 {
   if (mStringAttributes[HREF].IsExplicitlySet() &&
-      (NS_FAILED(LoadSVGImage(PR_FALSE, PR_TRUE)) ||
+      (NS_FAILED(LoadSVGImage(false, true)) ||
        !LoadingEnabled())) {
-    CancelImageRequests(PR_TRUE);
+    CancelImageRequests(true);
   }
 }
 
@@ -285,7 +285,7 @@ void
 nsSVGImageElement::DidAnimateString(PRUint8 aAttrEnum)
 {
   if (aAttrEnum == HREF) {
-    LoadSVGImage(PR_TRUE, PR_FALSE);
+    LoadSVGImage(true, false);
     return;
   }
 

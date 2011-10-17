@@ -251,7 +251,7 @@ nsDOMAttribute::SetValue(const nsAString& aValue)
                           nameAtom,
                           mNodeInfo->GetPrefixAtom(),
                           aValue,
-                          PR_TRUE);
+                          true);
   }
   else {
     mValue = aValue;
@@ -260,7 +260,7 @@ nsDOMAttribute::SetValue(const nsAString& aValue)
       if (mValue.IsEmpty()) {
         doRemoveChild(true);
       } else {
-        mChild->SetText(mValue, PR_FALSE);
+        mChild->SetText(mValue, false);
       }
     } else {
       EnsureChildState();
@@ -279,7 +279,7 @@ nsDOMAttribute::GetSpecified(bool* aSpecified)
   if (document) {
     document->WarnOnceAbout(nsIDocument::eSpecified);
   }
-  *aSpecified = PR_TRUE;
+  *aSpecified = true;
   return NS_OK;
 }
 
@@ -405,7 +405,7 @@ nsDOMAttribute::HasAttributes(bool* aHasAttributes)
     document->WarnOnceAbout(nsIDocument::eHasAttributes);
   }
 
-  *aHasAttributes = PR_FALSE;
+  *aHasAttributes = false;
 
   return NS_OK;
 }
@@ -487,7 +487,7 @@ nsDOMAttribute::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDO
     document->WarnOnceAbout(nsIDocument::eInsertBefore);
   }
 
-  return ReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, aReturn);
+  return ReplaceOrInsertBefore(false, aNewChild, aRefChild, aReturn);
 }
 
 NS_IMETHODIMP
@@ -498,7 +498,7 @@ nsDOMAttribute::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDO
     document->WarnOnceAbout(nsIDocument::eReplaceChild);
   }
 
-  return ReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, aReturn);
+  return ReplaceOrInsertBefore(true, aNewChild, aOldChild, aReturn);
 }
 
 NS_IMETHODIMP
@@ -548,7 +548,7 @@ nsDOMAttribute::CloneNode(bool aDeep, nsIDOMNode** aResult)
     document->WarnOnceAbout(nsIDocument::eCloneNode);
   }
 
-  return nsNodeUtils::CloneNodeImpl(this, aDeep, PR_TRUE, aResult);
+  return nsNodeUtils::CloneNodeImpl(this, aDeep, true, aResult);
 }
 
 NS_IMETHODIMP
@@ -720,14 +720,14 @@ nsDOMAttribute::GetIsId(bool* aReturn)
   nsIContent* content = GetContentInternal();
   if (!content)
   {
-    *aReturn = PR_FALSE;
+    *aReturn = false;
     return NS_OK;
   }
 
   nsIAtom* idAtom = content->GetIDAttributeName();
   if (!idAtom)
   {
-    *aReturn = PR_FALSE;
+    *aReturn = false;
     return NS_OK;
   }
 
@@ -807,7 +807,7 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 nsresult
 nsDOMAttribute::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  aVisitor.mCanHandle = PR_TRUE;
+  aVisitor.mCanHandle = true;
   return NS_OK;
 }
 
@@ -825,7 +825,7 @@ nsDOMAttribute::EnsureChildState()
     static_cast<nsTextNode*>(mChild)->BindToAttribute(this);
     mFirstChild = mChild;
 
-    mChild->SetText(value, PR_FALSE);
+    mChild->SetText(value, false);
   }
 }
 
@@ -862,13 +862,13 @@ nsDOMAttribute::AttributeChanged(nsIDocument* aDocument,
 void
 nsDOMAttribute::Initialize()
 {
-  sInitialized = PR_TRUE;
+  sInitialized = true;
 }
 
 void
 nsDOMAttribute::Shutdown()
 {
-  sInitialized = PR_FALSE;
+  sInitialized = false;
 }
 
 void

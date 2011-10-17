@@ -45,9 +45,9 @@ Image::Image(imgStatusTracker* aStatusTracker) :
   mInnerWindowId(0),
   mAnimationConsumers(0),
   mAnimationMode(kNormalAnimMode),
-  mInitialized(PR_FALSE),
-  mAnimating(PR_FALSE),
-  mError(PR_FALSE)
+  mInitialized(false),
+  mAnimating(false),
+  mError(false)
 {
   if (aStatusTracker) {
     mStatusTracker = aStatusTracker;
@@ -170,7 +170,7 @@ Image::EvaluateAnimation()
     mAnimating = NS_SUCCEEDED(rv);
   } else if (mAnimating && !ShouldAnimate()) {
     StopAnimation();
-    mAnimating = PR_FALSE;
+    mAnimating = false;
   }
 }
 

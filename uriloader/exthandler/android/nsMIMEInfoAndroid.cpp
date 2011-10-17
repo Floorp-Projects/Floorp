@@ -78,7 +78,7 @@ nsMIMEInfoAndroid::GetMimeInfoForMimeType(const nsACString& aMimeType,
   // the mime type for now and let the system deal with it
   if (!bridge){
     info.forget(aMimeInfo);
-    return PR_FALSE;
+    return false;
   }
 
   nsIHandlerApp* systemDefault = nsnull;
@@ -96,11 +96,11 @@ nsMIMEInfoAndroid::GetMimeInfoForMimeType(const nsACString& aMimeType,
   info->mHandlerApps->GetLength(&len);
   if (len == 1) {
     info.forget(aMimeInfo);
-    return PR_FALSE;
+    return false;
   }
   
   info.forget(aMimeInfo);
-  return PR_TRUE;
+  return true;
 }
   
 bool
@@ -131,7 +131,7 @@ nsMIMEInfoAndroid::GetMimeInfoForURL(const nsACString &aURL,
 {
   nsMIMEInfoAndroid *mimeinfo = new nsMIMEInfoAndroid(aURL);
   NS_ADDREF(*info = mimeinfo);
-  *found = PR_TRUE;
+  *found = true;
   
   mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
   if (!bridge) {
@@ -159,7 +159,7 @@ nsMIMEInfoAndroid::GetMimeInfoForURL(const nsACString &aURL,
   if (len == 1) {
     // Code that calls this requires an object regardless if the OS has
     // something for us, so we return the empty object.
-    *found = PR_FALSE;
+    *found = false;
     return NS_OK;
   }
   
@@ -220,7 +220,7 @@ NS_IMETHODIMP
 nsMIMEInfoAndroid::GetHasDefaultHandler(bool* aHasDefault)
 {
   PRUint32 len;
-  *aHasDefault = PR_FALSE;
+  *aHasDefault = false;
   if (!mHandlerApps)
     return NS_OK;
 
@@ -230,7 +230,7 @@ nsMIMEInfoAndroid::GetHasDefaultHandler(bool* aHasDefault)
   if (len == 0)
     return NS_OK;
 
-  *aHasDefault = PR_TRUE;
+  *aHasDefault = true;
   return NS_OK;
 }
 
@@ -309,7 +309,7 @@ nsMIMEInfoAndroid::ExtensionExists(const nsACString & aExtension, bool *aRetVal)
   for (PRUint8 i=0; i < extCount; i++) {
     const nsCString& ext = mExtensions[i];
     if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
-      found = PR_TRUE;
+      found = true;
       break;
     }
   }
@@ -345,7 +345,7 @@ nsMIMEInfoAndroid::SetPrimaryExtension(const nsACString & aExtension)
   for (i=0; i < extCount; i++) {
     const nsCString& ext = mExtensions[i];
     if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
-      found = PR_TRUE;
+      found = true;
       break;
     }
   }
@@ -395,13 +395,13 @@ nsMIMEInfoAndroid::LaunchWithFile(nsIFile *aFile)
 }
 
 nsMIMEInfoAndroid::nsMIMEInfoAndroid(const nsACString& aMIMEType) :
-  mType(aMIMEType), mAlwaysAsk(PR_TRUE),
+  mType(aMIMEType), mAlwaysAsk(true),
   mPrefAction(nsIMIMEInfo::useHelperApp)
 {
   mPrefApp = new nsMIMEInfoAndroid::SystemChooser(this);
   nsresult rv;
   mHandlerApps = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  mHandlerApps->AppendElement(mPrefApp, PR_FALSE);
+  mHandlerApps->AppendElement(mPrefApp, false);
 }
 
 NS_IMPL_ISUPPORTS1(nsMIMEInfoAndroid::SystemChooser, nsIHandlerApp)
@@ -433,7 +433,7 @@ nsMIMEInfoAndroid::SystemChooser::Equals(nsIHandlerApp *aHandlerApp, bool *aRetV
   nsCOMPtr<nsMIMEInfoAndroid::SystemChooser> info = do_QueryInterface(aHandlerApp);
   if (info)
     return mOuter->Equals(info->mOuter, aRetVal);
-  *aRetVal = PR_FALSE;
+  *aRetVal = false;
   return NS_OK;
 }
 

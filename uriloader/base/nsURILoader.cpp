@@ -141,7 +141,7 @@ public:
 
   /**
    * Function to attempt to use aListener to handle the load.  If
-   * PR_TRUE is returned, nothing else needs to be done; if PR_FALSE
+   * true is returned, nothing else needs to be done; if false
    * is returned, then a different way of handling the load should be
    * tried.
    */
@@ -388,7 +388,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   PRUint32 disposition;
   rv = aChannel->GetContentDisposition(&disposition);
   if (NS_SUCCEEDED(rv) && disposition == nsIChannel::DISPOSITION_ATTACHMENT)
-    forceExternalHandling = PR_TRUE;
+    forceExternalHandling = true;
 
   LOG(("  forceExternalHandling: %s", forceExternalHandling ? "yes" : "no"));
     
@@ -563,7 +563,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     rv = helperAppService->DoContent(mContentType,
                                      request,
                                      m_originalContext,
-                                     PR_FALSE,
+                                     false,
                                      getter_AddRefs(m_targetStreamListener));
     if (NS_FAILED(rv)) {
       request->SetLoadFlags(loadFlags);
@@ -656,13 +656,13 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
                            getter_Copies(typeToUse),
                            &listenerWantsContent);
   } else {
-    aListener->CanHandleContent(mContentType.get(), PR_FALSE,
+    aListener->CanHandleContent(mContentType.get(), false,
                                 getter_Copies(typeToUse),
                                 &listenerWantsContent);
   }
   if (!listenerWantsContent) {
     LOG(("  Listener is not interested"));
-    return PR_FALSE;
+    return false;
   }
 
   if (!typeToUse.IsEmpty() && typeToUse != mContentType) {
@@ -714,7 +714,7 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
     // Unset the RETARGETED_DOCUMENT_URI flag if we set it...
     aChannel->SetLoadFlags(loadFlags);
     m_targetStreamListener = nsnull;
-    return PR_FALSE;
+    return false;
   }
 
   if (abort) {
@@ -728,7 +728,7 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
   NS_ASSERTION(abort || m_targetStreamListener, "DoContent returned no listener?");
 
   // aListener is handling the load from this point on.  
-  return PR_TRUE;
+  return true;
 }
 
 
@@ -802,7 +802,7 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
   nsresult rv = OpenChannel(channel,
                             aIsContentPreferred ? IS_CONTENT_PREFERRED : 0,
                             aWindowContext,
-                            PR_FALSE,
+                            false,
                             getter_AddRefs(loader));
 
   if (NS_SUCCEEDED(rv)) {
@@ -930,7 +930,7 @@ NS_IMETHODIMP nsURILoader::OpenChannel(nsIChannel* channel,
 {
   bool pending;
   if (NS_FAILED(channel->IsPending(&pending))) {
-    pending = PR_FALSE;
+    pending = false;
   }
 
   return OpenChannel(channel, aFlags, aWindowContext, pending, aListener);

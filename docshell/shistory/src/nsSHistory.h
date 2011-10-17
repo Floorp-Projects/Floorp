@@ -116,7 +116,7 @@ protected:
   nsresult LoadNextPossibleEntry(PRInt32 aNewIndex, long aLoadType, PRUint32 aHistCmd);
 protected:
   // aIndex is the index of the transaction which may be removed.
-  // If aKeepNext is PR_TRUE, aIndex is compared to aIndex + 1,
+  // If aKeepNext is true, aIndex is compared to aIndex + 1,
   // otherwise comparison is done to aIndex - 1.
   bool RemoveDuplicate(PRInt32 aIndex, bool aKeepNext);
 

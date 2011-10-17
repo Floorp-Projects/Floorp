@@ -165,7 +165,7 @@ gfxPlatformMac::ResolveFontName(const nsAString& aFontName,
     nsAutoString resolvedName;
     if (!gfxPlatformFontList::PlatformFontList()->
              ResolveFontName(aFontName, resolvedName)) {
-        aAborted = PR_FALSE;
+        aAborted = false;
         return NS_OK;
     }
     aAborted = !(*aCallback)(resolvedName, aClosure);
@@ -220,16 +220,16 @@ gfxPlatformMac::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
                         gfxUserFontSet::FLAG_FORMAT_OPENTYPE | 
                         gfxUserFontSet::FLAG_FORMAT_TRUETYPE | 
                         gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT)) {
-        return PR_TRUE;
+        return true;
     }
 
     // reject all other formats, known and unknown
     if (aFormatFlags != 0) {
-        return PR_FALSE;
+        return false;
     }
 
     // no format hint set, need to look at data
-    return PR_TRUE;
+    return true;
 }
 
 // these will also move to gfxPlatform once all platforms support the fontlist

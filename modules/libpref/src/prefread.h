@@ -56,7 +56,7 @@ PR_BEGIN_EXTERN_C
  * @param type
  *        preference type (PREF_STRING, PREF_INT, or PREF_BOOL)
  * @param defPref
- *        preference type (PR_TRUE: default, PR_FALSE: user preference)
+ *        preference type (true: default, false: user preference)
  */
 typedef void (*PrefReader)(void       *closure,
                            const char *pref,
@@ -125,7 +125,7 @@ void PREF_FinalizeParseState(PrefParseState *ps);
  * @param bufLen
  *        Length of buffer.
  *
- * @return PR_FALSE if buffer contains malformed content.
+ * @return false if buffer contains malformed content.
  */
 bool PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen);
 

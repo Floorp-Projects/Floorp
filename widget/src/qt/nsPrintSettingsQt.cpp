@@ -164,9 +164,9 @@ nsPrintSettingsQt::GetPrintReversed(bool* aPrintReversed)
 {
     NS_ENSURE_ARG_POINTER(aPrintReversed);
     if (mQPrinter->pageOrder() == QPrinter::LastPageFirst) {
-        *aPrintReversed = PR_TRUE;
+        *aPrintReversed = true;
     } else {
-        *aPrintReversed = PR_FALSE;
+        *aPrintReversed = false;
     }
     return NS_OK;
 }
@@ -187,9 +187,9 @@ nsPrintSettingsQt::GetPrintInColor(bool* aPrintInColor)
 {
     NS_ENSURE_ARG_POINTER(aPrintInColor);
     if (mQPrinter->colorMode() == QPrinter::Color) {
-        *aPrintInColor = PR_TRUE;
+        *aPrintInColor = true;
     } else {
-        *aPrintInColor = PR_FALSE;
+        *aPrintInColor = false;
     }
     return NS_OK;
 }
@@ -243,7 +243,7 @@ NS_IMETHODIMP
 nsPrintSettingsQt::SetToFileName(const PRUnichar* aToFileName)
 {
     nsCOMPtr<nsILocalFile> file;
-    nsresult rv = NS_NewLocalFile(nsDependentString(aToFileName), PR_TRUE,
+    nsresult rv = NS_NewLocalFile(nsDependentString(aToFileName), true,
                                 getter_AddRefs(file));
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -751,7 +751,7 @@ public:
   {
     // Override bogus IsFrameOfType in nsBoxFrame.
     if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))
-      return PR_FALSE;
+      return false;
     return nsBoxFrame::IsFrameOfType(aFlags);
   }
 

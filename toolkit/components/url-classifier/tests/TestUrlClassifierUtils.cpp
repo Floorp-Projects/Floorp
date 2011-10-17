@@ -120,7 +120,7 @@ void TestEncodeHelper(const char* in, const char* expected)
   nsCString out, strIn(in), strExp(expected);
   nsUrlClassifierUtils utils;
 
-  utils.SpecialEncode(strIn, PR_TRUE, out);
+  utils.SpecialEncode(strIn, true, out);
   CheckEquals(strExp, out);
 }
 
@@ -138,7 +138,7 @@ void TestEnc()
   }
   nsUrlClassifierUtils utils;
   nsCString out;
-  utils.SpecialEncode(noenc, PR_FALSE, out);
+  utils.SpecialEncode(noenc, false, out);
   CheckEquals(noenc, out);
 
   // Test that all the chars that we should encode [0,32],37,[127,255] are
@@ -153,7 +153,7 @@ void TestEnc()
   }
   
   out.Truncate();
-  utils.SpecialEncode(yesAsString, PR_FALSE, out);
+  utils.SpecialEncode(yesAsString, false, out);
   CheckEquals(yesExpectedString, out);
 
   TestEncodeHelper("blah//blah", "blah/blah");

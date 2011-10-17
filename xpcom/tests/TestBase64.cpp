@@ -260,7 +260,7 @@ FakeInputStream::ReadSegments(nsWriteSegmentFun aWriter,
 NS_IMETHODIMP
 FakeInputStream::IsNonBlocking(bool* aIsBlocking)
 {
-  *aIsBlocking = PR_FALSE;
+  *aIsBlocking = false;
   return NS_OK;
 }
 

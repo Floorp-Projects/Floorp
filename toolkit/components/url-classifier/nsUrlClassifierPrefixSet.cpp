@@ -64,7 +64,7 @@ static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nsnull;
 #define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierPrefixSetLog, 4)
 #else
 #define LOG(args)
-#define LOG_ENABLED() (PR_FALSE)
+#define LOG_ENABLED() (false)
 #endif
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet)
@@ -72,7 +72,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSe
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
   : mPrefixSetLock("mPrefixSetLock"),
     mSetIsReady(mPrefixSetLock, "mSetIsReady"),
-    mHasPrefixes(PR_FALSE),
+    mHasPrefixes(false),
     mRandomKey(0)
 {
 #if defined(PR_LOGGING)
@@ -114,7 +114,7 @@ nsUrlClassifierPrefixSet::SetPrefixes(const PRUint32 * aArray, PRUint32 aLength)
       mDeltas.Clear();
       mIndexPrefixes.Clear();
       mIndexStarts.Clear();
-      mHasPrefixes = PR_FALSE;
+      mHasPrefixes = false;
     }
   }
   if (aLength > 0) {
@@ -172,7 +172,7 @@ nsUrlClassifierPrefixSet::AddPrefixes(const PRUint32 * prefixes, PRUint32 aLengt
   mIndexStarts.SwapElements(mNewIndexStarts);
   mDeltas.SwapElements(mNewDeltas);
 
-  mHasPrefixes = PR_TRUE;
+  mHasPrefixes = true;
   mSetIsReady.NotifyAll();
 
   return NS_OK;
@@ -199,7 +199,7 @@ PRUint32 nsUrlClassifierPrefixSet::BinSearch(PRUint32 start,
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, bool * aFound)
 {
-  *aFound = PR_FALSE;
+  *aFound = false;
 
   if (!mHasPrefixes) {
     return NS_OK;
@@ -237,7 +237,7 @@ nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, bool * aFound)
   }
 
   if (diff == 0) {
-    *aFound = PR_TRUE;
+    *aFound = true;
   }
 
   return NS_OK;
@@ -285,7 +285,7 @@ nsUrlClassifierPrefixSet::Probe(PRUint32 aPrefix, PRUint32 aKey,
   // Claim we are still busy loading instead.
   if (aKey != mRandomKey) {
     LOG(("Potential race condition detected, avoiding"));
-    *aReady = PR_FALSE;
+    *aReady = false;
     return NS_OK;
   }
 
@@ -299,7 +299,7 @@ nsUrlClassifierPrefixSet::Probe(PRUint32 aPrefix, PRUint32 aKey,
   } else {
     // opportunistic probe -> check if set is loaded
     if (mHasPrefixes) {
-      *aReady = PR_TRUE;
+      *aReady = true;
     } else {
       return NS_OK;
     }
@@ -359,7 +359,7 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose & fileFd)
     mIndexStarts.SwapElements(mNewIndexStarts);
     mDeltas.SwapElements(mNewDeltas);
 
-    mHasPrefixes = PR_TRUE;
+    mHasPrefixes = true;
     mSetIsReady.NotifyAll();
   } else {
     LOG(("Version magic mismatch, not loading"));

@@ -56,7 +56,7 @@ class CGLLibrary
 {
 public:
     CGLLibrary()
-      : mInitialized(PR_FALSE),
+      : mInitialized(false),
         mOGLLibrary(nsnull),
         mPixelFormat(nsnull)
     { }
@@ -64,21 +64,21 @@ public:
     bool EnsureInitialized()
     {
         if (mInitialized) {
-            return PR_TRUE;
+            return true;
         }
         if (!mOGLLibrary) {
             mOGLLibrary = PR_LoadLibrary("/System/Library/Frameworks/OpenGL.framework/OpenGL");
             if (!mOGLLibrary) {
                 NS_WARNING("Couldn't load OpenGL Framework.");
-                return PR_FALSE;
+                return false;
             }
         }
 
         const char* db = PR_GetEnv("MOZ_CGL_DB");
         gUseDoubleBufferedWindows = (!db || *db != '0');
 
-        mInitialized = PR_TRUE;
-        return PR_TRUE;
+        mInitialized = true;
+        return true;
     }
 
     NSOpenGLPixelFormat *PixelFormat()
@@ -127,7 +127,7 @@ public:
                  GLContext *aShareContext,
                  NSOpenGLContext *aContext,
                  NSOpenGLPixelBuffer *aPixelBuffer)
-        : GLContext(aFormat, PR_TRUE, aShareContext),
+        : GLContext(aFormat, true, aShareContext),
           mContext(aContext),
           mPBuffer(aPixelBuffer),
           mTempTextureName(0)
@@ -151,7 +151,7 @@ public:
     bool Init()
     {
         MakeCurrent();
-        return InitWithPrefix("gl", PR_TRUE);
+        return InitWithPrefix("gl", true);
     }
 
     void *GetNativeData(NativeDataType aType)
@@ -168,18 +168,18 @@ public:
     bool MakeCurrentImpl(bool aForce = false)
     {
         if (!aForce && [NSOpenGLContext currentContext] == mContext) {
-            return PR_TRUE;
+            return true;
         }
 
         if (mContext) {
             [mContext makeCurrentContext];
         }
-        return PR_TRUE;
+        return true;
     }
 
     bool SetupLookupFunction()
     {
-        return PR_FALSE;
+        return false;
     }
 
     bool IsDoubleBuffered() 
@@ -190,7 +190,7 @@ public:
     bool SwapBuffers()
     {
       [mContext flushBuffer];
-      return PR_TRUE;
+      return true;
     }
 
     bool BindTex2DOffscreen(GLContext *aOffscreen);
@@ -214,12 +214,12 @@ GLContextCGL::BindTex2DOffscreen(GLContext *aOffscreen)
 {
     if (aOffscreen->GetContextType() != ContextTypeCGL) {
         NS_WARNING("non-CGL context");
-        return PR_FALSE;
+        return false;
     }
 
     if (!aOffscreen->IsOffscreen()) {
         NS_WARNING("non-offscreen context");
-        return PR_FALSE;
+        return false;
     }
 
     GLContextCGL *offs = static_cast<GLContextCGL*>(aOffscreen);
@@ -235,16 +235,16 @@ GLContextCGL::BindTex2DOffscreen(GLContext *aOffscreen)
         if (offs->GetSharedContext() != GLContextProviderCGL::GetGlobalContext())
         {
             NS_WARNING("offscreen FBO context can only be bound with context sharing!");
-            return PR_FALSE;
+            return false;
         }
 
         fBindTexture(LOCAL_GL_TEXTURE_2D, offs->mOffscreenTexture);
     } else {
         NS_WARNING("don't know how to bind this!");
-        return PR_FALSE;
+        return false;
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 void
@@ -271,7 +271,7 @@ GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
                                    pixelsWide:aNewSize.width
                                    pixelsHigh:aNewSize.height];
         if (!pb) {
-            return PR_FALSE;
+            return false;
         }
 
         [mPBuffer release];
@@ -286,7 +286,7 @@ GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         MakeCurrent();
         ClearSafely();
 
-        return PR_TRUE;
+        return true;
     }
 
     return ResizeOffscreenFBO(aNewSize);
@@ -549,7 +549,7 @@ CreateOffscreenFBOContext(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    nsRefPtr<GLContextCGL> glContext = new GLContextCGL(aFormat, shareContext, context, PR_TRUE);
+    nsRefPtr<GLContextCGL> glContext = new GLContextCGL(aFormat, shareContext, context, true);
     return glContext.forget();
 }
 
@@ -604,14 +604,14 @@ GLContextProviderCGL::GetGlobalContext()
         // sharing is preferred since it has no associated target.
         gGlobalContext = CreateOffscreenFBOContext(gfxIntSize(16, 16),
                                                    ContextFormat(ContextFormat::BasicRGB24),
-                                                   PR_FALSE);
+                                                   false);
         if (!gGlobalContext || !static_cast<GLContextCGL*>(gGlobalContext.get())->Init()) {
             NS_WARNING("Couldn't init gGlobalContext.");
             gGlobalContext = nsnull;
             return nsnull; 
         }
 
-        gGlobalContext->SetIsGlobalSharedContext(PR_TRUE);
+        gGlobalContext->SetIsGlobalSharedContext(true);
     }
 
     return gGlobalContext;

@@ -115,7 +115,7 @@ public:
       return PR_ROTATE_LEFT32(static_cast<PRUint32>(aKey->mNamespaceID), 4) ^
              NS_PTR_TO_INT32(aKey->mLocalName);
     }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   nsAttrKey mKey;
@@ -209,8 +209,8 @@ private:
   AttrCache mAttributeCache;
 
   /**
-   * SetNamedItem() (aWithNS = PR_FALSE) and SetNamedItemNS() (aWithNS =
-   * PR_TRUE) implementation.
+   * SetNamedItem() (aWithNS = false) and SetNamedItemNS() (aWithNS =
+   * true) implementation.
    */
   nsresult SetNamedItemInternal(nsIDOMNode *aNode,
                                 nsIDOMNode **aReturn,

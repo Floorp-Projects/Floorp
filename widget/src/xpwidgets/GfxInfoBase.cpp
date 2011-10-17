@@ -173,7 +173,7 @@ GetPrefValueForFeature(PRInt32 aFeature, PRInt32& aValue)
   if (!prefname)
     return false;
 
-  aValue = PR_FALSE;
+  aValue = false;
   return NS_SUCCEEDED(Preferences::GetInt(prefname, &aValue));
 }
 
@@ -543,7 +543,7 @@ GfxInfoBase::Init()
 {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    os->AddObserver(this, "blocklist-data-gfxItems", PR_TRUE);
+    os->AddObserver(this, "blocklist-data-gfxItems", true);
   }
 
   return NS_OK;

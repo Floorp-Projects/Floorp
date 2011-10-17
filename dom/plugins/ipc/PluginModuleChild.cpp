@@ -137,7 +137,7 @@ PluginModuleChild::PluginModuleChild()
     memset(&mFunctions, 0, sizeof(mFunctions));
     memset(&mSavedData, 0, sizeof(mSavedData));
     gInstance = this;
-    mUserAgent.SetIsVoid(PR_TRUE);
+    mUserAgent.SetIsVoid(true);
 #ifdef XP_MACOSX
     mac_plugin_interposing::child::SetUpCocoaInterposing();
 #endif
@@ -198,7 +198,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     mPluginFilename = aPluginFilename.c_str();
     nsCOMPtr<nsILocalFile> localFile;
     NS_NewLocalFile(NS_ConvertUTF8toUTF16(mPluginFilename),
-                    PR_TRUE,
+                    true,
                     getter_AddRefs(localFile));
 
     bool exists;
@@ -2256,7 +2256,7 @@ PluginModuleChild::NPN_GetIntIdentifier(int32_t aIntId)
     PluginIdentifierChildInt* ident = self->mIntIdentifiers.Get(aIntId);
     if (!ident) {
         nsCString voidString;
-        voidString.SetIsVoid(PR_TRUE);
+        voidString.SetIsVoid(true);
 
         ident = new PluginIdentifierChildInt(aIntId);
         self->SendPPluginIdentifierConstructor(ident, voidString, aIntId, false);

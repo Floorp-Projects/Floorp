@@ -172,7 +172,7 @@ nsTemplateCondition::CheckMatchStrings(const nsAString& aLeftString,
 
     if (aRightString.IsEmpty()) {
         if ((mRelation == eEquals) && aLeftString.IsEmpty())
-            match = PR_TRUE;
+            match = true;
     }
     else {
         switch (mRelation) {
@@ -350,7 +350,7 @@ nsTemplateRule::CheckMatch(nsIXULTemplateResult* aResult) const
     nsTemplateCondition* condition = mConditions;
     while (condition) {
         if (!condition->CheckMatch(aResult))
-            return PR_FALSE;
+            return false;
 
         condition = condition->GetNext();
     }
@@ -363,7 +363,7 @@ nsTemplateRule::CheckMatch(nsIXULTemplateResult* aResult) const
         return NS_FAILED(rv) || match;
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 bool
@@ -375,10 +375,10 @@ nsTemplateRule::HasBinding(nsIAtom* aSourceVariable,
         if ((binding->mSourceVariable == aSourceVariable) &&
             (binding->mExpr.Equals(aExpr)) &&
             (binding->mTargetVariable == aTargetVariable))
-            return PR_TRUE;
+            return true;
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 nsresult

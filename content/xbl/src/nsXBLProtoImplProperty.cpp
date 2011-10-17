@@ -58,7 +58,7 @@ nsXBLProtoImplProperty::nsXBLProtoImplProperty(const PRUnichar* aName,
   mSetterText(nsnull),
   mJSAttributes(JSPROP_ENUMERATE)
 #ifdef DEBUG
-  , mIsCompiled(PR_FALSE)
+  , mIsCompiled(false)
 #endif
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplProperty);
@@ -241,13 +241,13 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
                                      functionUri.get(),
                                      mGetterText->GetLineNumber(),
                                      JSVERSION_LATEST,
-                                     PR_TRUE,
+                                     true,
                                      (void **) &getterObject);
 
       // Make sure we free mGetterText here before setting mJSGetterObject, since
       // that'll overwrite mGetterText
       delete mGetterText;
-      deletedGetter = PR_TRUE;
+      deletedGetter = true;
       mJSGetterObject = getterObject;
     
       if (mJSGetterObject && NS_SUCCEEDED(rv)) {
@@ -291,13 +291,13 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
                                      functionUri.get(),
                                      mSetterText->GetLineNumber(),
                                      JSVERSION_LATEST,
-                                     PR_TRUE,
+                                     true,
                                      (void **) &setterObject);
 
       // Make sure we free mSetterText here before setting mJSGetterObject, since
       // that'll overwrite mSetterText
       delete mSetterText;
-      deletedSetter = PR_TRUE;
+      deletedSetter = true;
       mJSSetterObject = setterObject;
 
       if (mJSSetterObject && NS_SUCCEEDED(rv)) {

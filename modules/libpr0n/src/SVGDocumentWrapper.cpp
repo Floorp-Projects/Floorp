@@ -77,8 +77,8 @@ NS_IMPL_ISUPPORTS4(SVGDocumentWrapper,
                    nsISupportsWeakReference)
 
 SVGDocumentWrapper::SVGDocumentWrapper()
-  : mIgnoreInvalidation(PR_FALSE),
-    mRegisteredForXPCOMShutdown(PR_FALSE)
+  : mIgnoreInvalidation(false),
+    mRegisteredForXPCOMShutdown(false)
 {
   // Lazy-initialize our "svg" atom.  (It'd be nicer to just use nsGkAtoms::svg
   // directly, but we can't access it from here in non-libxul builds.)
@@ -100,7 +100,7 @@ void
 SVGDocumentWrapper::DestroyViewer()
 {
   if (mViewer) {
-    mViewer->GetDocument()->OnPageHide(PR_FALSE, nsnull);
+    mViewer->GetDocument()->OnPageHide(false, nsnull);
     mViewer->Close(nsnull);
     mViewer->Destroy();
     mViewer = nsnull;
@@ -123,31 +123,31 @@ SVGDocumentWrapper::GetWidthOrHeight(Dimension aDimension,
     NS_ABORT_IF_FALSE(aDimension == eHeight, "invalid dimension");
     rv = rootElem->GetHeight(getter_AddRefs(domAnimLength));
   }
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  NS_ENSURE_TRUE(domAnimLength, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_TRUE(domAnimLength, false);
 
   // Get the animated value from the object
   nsRefPtr<nsIDOMSVGLength> domLength;
   rv = domAnimLength->GetAnimVal(getter_AddRefs(domLength));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  NS_ENSURE_TRUE(domLength, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_TRUE(domLength, false);
 
   // Check if it's a percent value (and fail if so)
   PRUint16 unitType;
   rv = domLength->GetUnitType(&unitType);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, false);
   if (unitType == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-    return PR_FALSE;
+    return false;
   }
 
   // Non-percent value - woot! Grab it & return it.
   float floatLength;
   rv = domLength->GetValue(&floatLength);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, false);
 
   aResult = nsSVGUtils::ClampToInt(floatLength);
 
-  return PR_TRUE;
+  return true;
 }
 
 nsIFrame*
@@ -161,10 +161,10 @@ void
 SVGDocumentWrapper::UpdateViewportBounds(const nsIntSize& aViewportSize)
 {
   NS_ABORT_IF_FALSE(!mIgnoreInvalidation, "shouldn't be reentrant");
-  mIgnoreInvalidation = PR_TRUE;
+  mIgnoreInvalidation = true;
   mViewer->SetBounds(nsIntRect(nsIntPoint(0, 0), aViewportSize));
   FlushLayout();
-  mIgnoreInvalidation = PR_FALSE;
+  mIgnoreInvalidation = false;
 }
 
 void
@@ -176,10 +176,10 @@ SVGDocumentWrapper::FlushImageTransformInvalidation()
   if (!svgElem)
     return;
 
-  mIgnoreInvalidation = PR_TRUE;
+  mIgnoreInvalidation = true;
   svgElem->FlushImageTransformInvalidation();
   FlushLayout();
-  mIgnoreInvalidation = PR_FALSE;
+  mIgnoreInvalidation = false;
 }
 
 bool
@@ -190,7 +190,7 @@ SVGDocumentWrapper::IsAnimated()
   return doc && doc->HasAnimationController() &&
     doc->GetAnimationController()->HasRegisteredAnimations();
 #else
-  return PR_FALSE;
+  return false;
 #endif // MOZ_SMIL
 }
 
@@ -210,7 +210,7 @@ SVGDocumentWrapper::StartAnimation()
       controller->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
     }
 #endif // MOZ_SMIL
-    doc->SetImagesNeedAnimating(PR_TRUE);
+    doc->SetImagesNeedAnimating(true);
   }
 }
 
@@ -230,7 +230,7 @@ SVGDocumentWrapper::StopAnimation()
       controller->Pause(nsSMILTimeContainer::PAUSE_IMAGE);
     }
 #endif // MOZ_SMIL
-    doc->SetImagesNeedAnimating(PR_FALSE);
+    doc->SetImagesNeedAnimating(false);
   }
 }
 
@@ -340,7 +340,7 @@ SVGDocumentWrapper::Observe(nsISupports* aSubject,
 
     // Turn off "registered" flag, or else we'll try to unregister when we die.
     // (No need for that now, and the try would fail anyway -- it's too late.)
-    mRegisteredForXPCOMShutdown = PR_FALSE;
+    mRegisteredForXPCOMShutdown = false;
   } else {
     NS_ERROR("Unexpected observer topic.");
   }
@@ -429,10 +429,10 @@ SVGDocumentWrapper::RegisterForXPCOMShutdown()
   nsCOMPtr<nsIObserverService> obsSvc = do_GetService(OBSERVER_SVC_CID, &rv);
   if (NS_FAILED(rv) ||
       NS_FAILED(obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                    PR_TRUE))) {
+                                    true))) {
     NS_WARNING("Failed to register as observer of XPCOM shutdown");
   } else {
-    mRegisteredForXPCOMShutdown = PR_TRUE;
+    mRegisteredForXPCOMShutdown = true;
   }
 }
 
@@ -448,7 +448,7 @@ SVGDocumentWrapper::UnregisterForXPCOMShutdown()
       NS_FAILED(obsSvc->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
     NS_WARNING("Failed to unregister as observer of XPCOM shutdown");
   } else {
-    mRegisteredForXPCOMShutdown = PR_FALSE;
+    mRegisteredForXPCOMShutdown = false;
   }
 }
 

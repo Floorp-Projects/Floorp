@@ -192,7 +192,7 @@ NS_ProcessPendingEvents(nsIThread *thread, PRIntervalTime timeout)
   PRIntervalTime start = PR_IntervalNow();
   for (;;) {
     bool processedEvent;
-    rv = thread->ProcessNextEvent(PR_FALSE, &processedEvent);
+    rv = thread->ProcessNextEvent(false, &processedEvent);
     if (NS_FAILED(rv) || !processedEvent)
       break;
     if (PR_IntervalNow() - start > timeout)
@@ -219,7 +219,7 @@ NS_HasPendingEvents(nsIThread *thread)
     return hasPendingEvents(current);
 #else
     thread = NS_GetCurrentThread();
-    NS_ENSURE_TRUE(thread, PR_FALSE);
+    NS_ENSURE_TRUE(thread, false);
 #endif
   }
   return hasPendingEvents(thread);
@@ -231,13 +231,13 @@ NS_ProcessNextEvent(nsIThread *thread, bool mayWait)
 #ifdef MOZILLA_INTERNAL_API
   if (!thread) {
     thread = NS_GetCurrentThread();
-    NS_ENSURE_TRUE(thread, PR_FALSE);
+    NS_ENSURE_TRUE(thread, false);
   }
 #else
   nsCOMPtr<nsIThread> current;
   if (!thread) {
     NS_GetCurrentThread(getter_AddRefs(current));
-    NS_ENSURE_TRUE(current, PR_FALSE);
+    NS_ENSURE_TRUE(current, false);
     thread = current.get();
   }
 #endif

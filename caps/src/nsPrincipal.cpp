@@ -116,16 +116,16 @@ nsPrincipal::Release()
 nsPrincipal::nsPrincipal()
   : mCapabilities(nsnull),
     mSecurityPolicy(nsnull),
-    mTrusted(PR_FALSE),
-    mInitialized(PR_FALSE),
-    mCodebaseImmutable(PR_FALSE),
-    mDomainImmutable(PR_FALSE)
+    mTrusted(false),
+    mInitialized(false),
+    mCodebaseImmutable(false),
+    mDomainImmutable(false)
 {
   if (!gIsObservingCodeBasePrincipalSupport) {
     nsresult rv =
       Preferences::AddBoolVarCache(&gCodeBasePrincipalSupport,
                                    "signed.applets.codebase_principal_support",
-                                   PR_FALSE);
+                                   false);
     gIsObservingCodeBasePrincipalSupport = NS_SUCCEEDED(rv);
     NS_WARN_IF_FALSE(gIsObservingCodeBasePrincipalSupport,
                      "Installing gCodeBasePrincipalSupport failed!");
@@ -142,7 +142,7 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
   NS_ENSURE_STATE(!mInitialized);
   NS_ENSURE_ARG(!aCertFingerprint.IsEmpty() || aCodebase); // better have one of these.
 
-  mInitialized = PR_TRUE;
+  mInitialized = true;
 
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
@@ -259,16 +259,16 @@ nsPrincipal::CertificateEquals(nsIPrincipal *aOther)
   aOther->GetHasCertificate(&otherHasCert);
   if (otherHasCert != (mCert != nsnull)) {
     // One has a cert while the other doesn't.  Not equal.
-    return PR_FALSE;
+    return false;
   }
 
   if (!mCert)
-    return PR_TRUE;
+    return true;
 
   nsCAutoString str;
   aOther->GetFingerprint(str);
   if (!str.Equals(mCert->fingerprint))
-    return PR_FALSE;
+    return false;
 
   // If either subject name is empty, just let the result stand (so that
   // nsScriptSecurityManager::SetCanEnableCapability works), but if they're
@@ -279,7 +279,7 @@ nsPrincipal::CertificateEquals(nsIPrincipal *aOther)
     return str.Equals(mCert->subjectName) || str.IsEmpty();
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 NS_IMETHODIMP
@@ -287,13 +287,13 @@ nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 {
   if (!aOther) {
     NS_WARNING("Need a principal to compare this to!");
-    *aResult = PR_FALSE;
+    *aResult = false;
     return NS_OK;
   }
 
   if (this != aOther) {
     if (!CertificateEquals(aOther)) {
-      *aResult = PR_FALSE;
+      *aResult = false;
       return NS_OK;
     }
 
@@ -304,12 +304,12 @@ nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
       nsCOMPtr<nsIURI> otherURI;
       nsresult rv = aOther->GetURI(getter_AddRefs(otherURI));
       if (NS_FAILED(rv)) {
-        *aResult = PR_FALSE;
+        *aResult = false;
         return rv;
       }
 
       if (!otherURI || !mCodebase) {
-        *aResult = PR_TRUE;
+        *aResult = true;
         return NS_OK;
       }
 
@@ -323,7 +323,7 @@ nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
     return NS_OK;
   }
 
-  *aResult = PR_TRUE;
+  *aResult = true;
   return NS_OK;
 }
 
@@ -331,11 +331,11 @@ NS_IMETHODIMP
 nsPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   if (this == aOther) {
-    *aResult = PR_TRUE;
+    *aResult = true;
     return NS_OK;
   }
 
-  *aResult = PR_FALSE;
+  *aResult = false;
   if (!CertificateEquals(aOther)) {
     return NS_OK;
   }
@@ -432,13 +432,13 @@ nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport)
       bool contained = false;
       nsresult rv = codebaseFile->IsDirectory(&codebaseIsDir);
       if (NS_SUCCEEDED(rv) && codebaseIsDir) {
-        rv = codebaseFile->Contains(targetFile, PR_TRUE, &contained);
+        rv = codebaseFile->Contains(targetFile, true, &contained);
       }
       else {
         nsCOMPtr<nsIFile> codebaseParent;
         rv = codebaseFile->GetParent(getter_AddRefs(codebaseParent));
         if (NS_SUCCEEDED(rv) && codebaseParent) {
-          rv = codebaseParent->Contains(targetFile, PR_TRUE, &contained);
+          rv = codebaseParent->Contains(targetFile, true, &contained);
         }
       }
 
@@ -564,7 +564,7 @@ NS_IMETHODIMP
 nsPrincipal::IsCapabilityEnabled(const char *capability, void *annotation,
                                  bool *result)
 {
-  *result = PR_FALSE;
+  *result = false;
   nsHashtable *ht = (nsHashtable *) annotation;
   if (!ht) {
     return NS_OK;
@@ -838,7 +838,7 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
                   "mAnnotations was already initialized?");
   NS_PRECONDITION(!mInitialized, "We were already initialized?");
 
-  mInitialized = PR_TRUE;
+  mInitialized = true;
 
   nsresult rv;
   if (aIsCert) {
@@ -927,7 +927,7 @@ AppendCapability(nsHashKey *aKey, void *aData, void *capListPtr)
     capList->denied->Append(' ');
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 NS_IMETHODIMP
@@ -1126,14 +1126,14 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
       return rv;
     }
 
-    rv = aStream->ReadObject(PR_TRUE, getter_AddRefs(cert));
+    rv = aStream->ReadObject(true, getter_AddRefs(cert));
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
 
   nsCOMPtr<nsIURI> codebase;
-  rv = NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(codebase));
+  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(codebase));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1142,7 +1142,7 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> domain;
-  rv = NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(domain));
+  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(domain));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1212,7 +1212,7 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
     }
 
     rv = aStream->WriteCompoundObject(mCert->cert, NS_GET_IID(nsISupports),
-                                      PR_TRUE);
+                                      true);
     if (NS_FAILED(rv)) {
       return rv;
     }    
@@ -1223,13 +1223,13 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
   // preferences change.
 
   rv = NS_WriteOptionalCompoundObject(aStream, mCodebase, NS_GET_IID(nsIURI),
-                                      PR_TRUE);
+                                      true);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   rv = NS_WriteOptionalCompoundObject(aStream, mDomain, NS_GET_IID(nsIURI),
-                                      PR_TRUE);
+                                      true);
   if (NS_FAILED(rv)) {
     return rv;
   }

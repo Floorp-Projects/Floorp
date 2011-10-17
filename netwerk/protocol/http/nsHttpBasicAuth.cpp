@@ -79,7 +79,7 @@ nsHttpBasicAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
 {
     // if challenged, then the username:password that was sent must
     // have been wrong.
-    *identityInvalid = PR_TRUE;
+    *identityInvalid = true;
     return NS_OK;
 }
 

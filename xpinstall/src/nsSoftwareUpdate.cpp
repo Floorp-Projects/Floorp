@@ -79,7 +79,7 @@ RegisterInstallTrigger( nsIComponentManager *aCompMgr,
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
                                 "InstallTrigger",
                                 NS_INSTALLTRIGGERCOMPONENT_CONTRACTID,
-                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+                                true, true, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

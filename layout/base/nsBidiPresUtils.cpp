@@ -114,7 +114,7 @@ struct BidiParagraphData {
            content = content->GetParent()) {
         if (content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) ||
             content->IsXUL()) {
-          mIsVisual = PR_FALSE;
+          mIsVisual = false;
           break;
         }
       }
@@ -247,9 +247,9 @@ struct BidiParagraphData {
     for (nsIFrame* frame = startFrame; frame && frame != endFrame;
          frame = frame->GetNextSibling()) {
       if (frame == aFrame)
-        return PR_TRUE;
+        return true;
     }
-    return PR_FALSE;
+    return false;
   }
 
   static void
@@ -305,7 +305,7 @@ struct BidiLineData {
       mLevels.AppendElement(level);
       mIndexMap.AppendElement(0);
       if (level & 1) {
-        hasRTLFrames = PR_TRUE;
+        hasRTLFrames = true;
       }
     }
 
@@ -316,7 +316,7 @@ struct BidiLineData {
     for (PRInt32 i = 0; i < FrameCount(); i++) {
       mVisualFrames.AppendElement(LogicalFrameAt(mIndexMap[i]));
       if (i != mIndexMap[i]) {
-        isReordered = PR_TRUE;
+        isReordered = true;
       }
     }
 
@@ -361,7 +361,7 @@ SplitInlineAncestors(nsIFrame*     aFrame)
     NS_ASSERTION(grandparent, "Couldn't get parent's parent in nsBidiPresUtils::SplitInlineAncestors");
     
     nsresult rv = presShell->FrameConstructor()->
-      CreateContinuingFrame(presContext, parent, grandparent, &newParent, PR_FALSE);
+      CreateContinuingFrame(presContext, parent, grandparent, &newParent, false);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -538,7 +538,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   for (nsBlockFrame* block = aBlockFrame; block;
        block = static_cast<nsBlockFrame*>(block->GetNextContinuation())) {
     block->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
-    nsBlockInFlowLineIterator lineIter(block, block->begin_lines(), PR_FALSE);
+    nsBlockInFlowLineIterator lineIter(block, block->begin_lines(), false);
     bpd.mPrevFrame = nsnull;
     TraverseFrames(aBlockFrame, &lineIter, block->GetFirstPrincipalChild(), &bpd);
   }
@@ -610,7 +610,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
          * Any non-text frame corresponds to a single character in the text buffer
          * (a bidi control character, LINE SEPARATOR, or OBJECT SUBSTITUTE)
          */
-        isTextFrame = PR_FALSE;
+        isTextFrame = false;
         fragmentLength = 1;
       }
       else {
@@ -637,7 +637,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
                      "Frame offsets don't fit in content");
         fragmentLength = NS_MIN(contentTextLength, end - start);
         contentOffset = start;
-        isTextFrame = PR_TRUE;
+        isTextFrame = true;
       }
     } // if (fragmentLength <= 0)
 
@@ -958,8 +958,8 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
 
                 if (!next) {
                   // If the frame has no next in flow, create one.
-                  CreateContinuation(frame, &next, PR_TRUE);
-                  createdContinuation = PR_TRUE;
+                  CreateContinuation(frame, &next, true);
+                  createdContinuation = true;
                 }
               }
               ResolveParagraphWithinBlock(aBlockFrame, aBpd);
@@ -1121,7 +1121,7 @@ nsBidiPresUtils::IsLeftOrRightMost(nsIFrame*              aFrame,
     firstFrameState = frameState;
   } else {
     // aFrame is not the first visual frame of its continuation chain
-    aIsLeftMost = PR_FALSE;
+    aIsLeftMost = false;
     firstFrameState = aContinuationStates->GetEntry(frameState->mFirstVisualFrame);
   }
 
@@ -1138,17 +1138,17 @@ nsBidiPresUtils::IsLeftOrRightMost(nsIFrame*              aFrame,
     if (nsLayoutUtils::FrameIsNonLastInIBSplit(firstContinuation)) {
       // We are not endmost
       if (isLTR) {
-        aIsRightMost = PR_FALSE;
+        aIsRightMost = false;
       } else {
-        aIsLeftMost = PR_FALSE;
+        aIsLeftMost = false;
       }
     }
     if (nsLayoutUtils::FrameIsNonFirstInIBSplit(firstContinuation)) {
       // We are not startmost
       if (isLTR) {
-        aIsLeftMost = PR_FALSE;
+        aIsLeftMost = false;
       } else {
-        aIsRightMost = PR_FALSE;
+        aIsRightMost = false;
       }
     }
   }
@@ -1376,7 +1376,7 @@ nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
   NS_PRECONDITION(aFrame, "aFrame is null");
 
   aFrame->AdjustOffsetsForBidi(aStart, aEnd);
-  return CreateContinuation(aFrame, aNewFrame, PR_FALSE);
+  return CreateContinuation(aFrame, aNewFrame, false);
 }
 
 void
@@ -1586,7 +1586,7 @@ nsBidiPresUtils::CalculateCharType(nsBidi* aBidiEngine,
       // (for correct numeric shaping)
       aPrevCharType = charType;
 
-      strongTypeFound = PR_TRUE;
+      strongTypeFound = true;
       aCharType = charType;
     }
   }
@@ -1810,7 +1810,7 @@ public:
 
   ~nsIRenderingContextBidiProcessor()
   {
-    mCtx->SetTextRunRTL(PR_FALSE);
+    mCtx->SetTextRunRTL(false);
   }
 
   virtual void SetText(const PRUnichar* aText,
@@ -1909,20 +1909,20 @@ bool nsBidiPresUtils::WriteLogicalToVisual(const PRUnichar* aSrc,
   const PRUnichar* src = aSrc;
   nsresult rv = aBidiEngine->SetPara(src, aSrcLength, aBaseDirection, nsnull);
   if (NS_FAILED(rv)) {
-    return PR_FALSE;
+    return false;
   }
 
   nsBidiDirection dir;
   rv = aBidiEngine->GetDirection(&dir);
   // NSBIDI_LTR returned from GetDirection means the whole text is LTR
   if (NS_FAILED(rv) || dir == NSBIDI_LTR) {
-    return PR_FALSE;
+    return false;
   }
 
   PRInt32 runCount;
   rv = aBidiEngine->CountRuns(&runCount);
   if (NS_FAILED(rv)) {
-    return PR_FALSE;
+    return false;
   }
 
   PRInt32 runIndex, start, length;
@@ -1931,7 +1931,7 @@ bool nsBidiPresUtils::WriteLogicalToVisual(const PRUnichar* aSrc,
   for (runIndex = 0; runIndex < runCount; ++runIndex) {
     rv = aBidiEngine->GetVisualRun(runIndex, &start, &length, &dir);
     if (NS_FAILED(rv)) {
-      return PR_FALSE;
+      return false;
     }
 
     src = aSrc + start;
@@ -1950,7 +1950,7 @@ bool nsBidiPresUtils::WriteLogicalToVisual(const PRUnichar* aSrc,
   }
 
   NS_ASSERTION(dest - aDest == aSrcLength, "whole string not copied");
-  return PR_TRUE;
+  return true;
 }
 
 void nsBidiPresUtils::CopyLogicalToVisual(const nsAString& aSource,

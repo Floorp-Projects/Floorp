@@ -55,7 +55,7 @@ public:
     mAnimVal = mBaseVal = aValue;
     mAnimValUnit = mBaseValUnit = aUnitType;
     mAttrEnum = aAttrEnum;
-    mIsAnimated = PR_FALSE;
+    mIsAnimated = false;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
@@ -130,7 +130,7 @@ public:
         return NS_OK; }
 
     NS_IMETHOD SetValueAsString(const nsAString& aValue)
-      { return mVal->SetBaseValueString(aValue, mSVGElement, PR_TRUE); }
+      { return mVal->SetBaseValueString(aValue, mSVGElement, true); }
     NS_IMETHOD GetValueAsString(nsAString& aValue)
       { mVal->GetBaseValueString(aValue); return NS_OK; }
 

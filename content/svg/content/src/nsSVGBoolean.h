@@ -48,7 +48,7 @@ public:
   void Init(PRUint8 aAttrEnum = 0xff, bool aValue = false) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
-    mIsAnimated = PR_FALSE;
+    mIsAnimated = false;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,

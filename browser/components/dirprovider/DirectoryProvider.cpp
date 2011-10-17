@@ -86,7 +86,7 @@ DirectoryProvider::GetFile(const char *aKey, bool *aPersist, nsIFile* *aResult)
       nsCString path;
       rv = prefs->GetCharPref("browser.bookmarks.file", getter_Copies(path));
       if (NS_SUCCEEDED(rv)) {
-        NS_NewNativeLocalFile(path, PR_TRUE, (nsILocalFile**)(nsIFile**) getter_AddRefs(file));
+        NS_NewNativeLocalFile(path, true, (nsILocalFile**)(nsIFile**) getter_AddRefs(file));
       }
     }
   }
@@ -123,7 +123,7 @@ DirectoryProvider::GetFile(const char *aKey, bool *aPersist, nsIFile* *aResult)
     file->AppendNative(leafstr);
   }
 
-  *aPersist = PR_TRUE;
+  *aPersist = true;
   NS_ADDREF(*aResult = file);
 
   return NS_OK;
@@ -290,7 +290,7 @@ NS_IMPL_ISUPPORTS1(DirectoryProvider::AppendingEnumerator, nsISimpleEnumerator)
 NS_IMETHODIMP
 DirectoryProvider::AppendingEnumerator::HasMoreElements(bool *aResult)
 {
-  *aResult = mNext ? PR_TRUE : PR_FALSE;
+  *aResult = mNext ? true : false;
   return NS_OK;
 }
 

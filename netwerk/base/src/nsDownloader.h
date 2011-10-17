@@ -51,7 +51,7 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
-    nsDownloader() : mLocationIsTemp(PR_FALSE) {}
+    nsDownloader() : mLocationIsTemp(false) {}
 
 protected:
     virtual ~nsDownloader();

@@ -77,9 +77,9 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         if (param.EqualsLiteral("new"))
             statType = nsTraceRefcntImpl::NEW_STATS;
         else if (param.EqualsLiteral("clear"))
-            clear = PR_TRUE;
+            clear = true;
         else if (param.EqualsLiteral("leaks"))
-            leaks = PR_TRUE;
+            leaks = true;
     }
 
     nsCOMPtr<nsIInputStream> inStr;

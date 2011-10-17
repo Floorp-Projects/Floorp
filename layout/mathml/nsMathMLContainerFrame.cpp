@@ -240,7 +240,7 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsRenderingContext& aRenderingCo
   else if (aOptions & STRETCH_CONSIDER_EMBELLISHMENTS) {
     // compute our up-to-date size using Place()
     nsHTMLReflowMetrics metrics;
-    Place(aRenderingContext, PR_FALSE, metrics);
+    Place(aRenderingContext, false, metrics);
     aPreferredStretchSize = metrics.mBoundingMetrics;
   }
   else {
@@ -282,7 +282,7 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsRenderingContext& aRenderingCo
       }
 
       if (firstTime) {
-        firstTime = PR_FALSE;
+        firstTime = false;
         bm = bmChild;
         if (!stretchAll) {
           // we may get here for cases such as <msup><mo>...</mo> ... </msup>,
@@ -424,7 +424,7 @@ nsMathMLContainerFrame::Stretch(nsRenderingContext& aRenderingContext,
         }
 
         // re-position all our children
-        nsresult rv = Place(aRenderingContext, PR_TRUE, aDesiredStretchSize);
+        nsresult rv = Place(aRenderingContext, true, aDesiredStretchSize);
         if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
           // Make sure the child frames get their DidReflow() calls.
           DidReflowChildren(mFrames.FirstChild());
@@ -532,7 +532,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsRenderingContext& aRenderingContext,
           (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags)
             && presentationData.baseFrame == this))
       {
-        parentWillFireStretch = PR_TRUE;
+        parentWillFireStretch = true;
       }
     }
     if (!parentWillFireStretch) {
@@ -1074,7 +1074,7 @@ nsMathMLContainerFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext)
 nsMathMLContainerFrame::MeasureForWidth(nsRenderingContext& aRenderingContext,
                                         nsHTMLReflowMetrics& aDesiredSize)
 {
-  return Place(aRenderingContext, PR_FALSE, aDesiredSize);
+  return Place(aRenderingContext, false, aDesiredSize);
 }
 
 
@@ -1325,7 +1325,7 @@ nsMathMLContainerFrame::PositionRowChildFrames(nscoord aOffsetX,
 class ForceReflow : public nsIReflowCallback {
 public:
   virtual bool ReflowFinished() {
-    return PR_TRUE;
+    return true;
   }
   virtual void ReflowCallbackCanceled() {}
 };
@@ -1350,7 +1350,7 @@ nsMathMLContainerFrame::SetIncrementScriptLevel(PRInt32 aChildIndex, bool aIncre
 
   // XXXroc this does a ContentStatesChanged, is it safe to call here? If
   // not we should do it in a post-reflow callback.
-  element->SetIncrementScriptLevel(aIncrement, PR_TRUE);
+  element->SetIncrementScriptLevel(aIncrement, true);
   PresContext()->PresShell()->PostReflowCallback(&gForceReflow);
 }
 
@@ -1485,7 +1485,7 @@ nsMathMLContainerFrame::TransmitAutomaticDataForMrowLikeElement()
       baseFrame = childFrame;
       GetEmbellishDataFrom(baseFrame, embellishData);
       if (!NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags)) break;
-      embellishedOpFound = PR_TRUE;
+      embellishedOpFound = true;
     }
   }
 

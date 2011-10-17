@@ -247,7 +247,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
      * a document--only when parsing to an actual DOM fragment
      */
     void EnableFragmentMode(bool aPreventScriptExecution) {
-      mFragmentMode = PR_TRUE;
+      mFragmentMode = true;
       mPreventScriptExecution = aPreventScriptExecution;
     }
     
@@ -294,7 +294,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
         sAppendBatchSlotsExamined++;
 #endif
         if (*iter == aParent) {
-          newParent = PR_FALSE;
+          newParent = false;
           break;
         }
       }
@@ -336,7 +336,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       for (;;) {
         nsIContent* parent = aNode->GetParent();
         if (!parent) {
-          return PR_TRUE;
+          return true;
         }
         for (nsHtml5PendingNotification* iter = (nsHtml5PendingNotification*)start; iter < end; ++iter) {
           if (iter->Contains(parent)) {
@@ -405,7 +405,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     }
     
     void StartReadingFromStage() {
-      mReadingFromStage = PR_TRUE;
+      mReadingFromStage = true;
     }
 
     void StreamEnded();

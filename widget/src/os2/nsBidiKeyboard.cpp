@@ -51,7 +51,7 @@ nsBidiKeyboard::~nsBidiKeyboard()
 
 NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(bool *aIsRTL)
 {
-  *aIsRTL = PR_FALSE;
+  *aIsRTL = false;
   // XXX Insert platform specific code to determine keyboard direction
   return NS_ERROR_NOT_IMPLEMENTED;
 }

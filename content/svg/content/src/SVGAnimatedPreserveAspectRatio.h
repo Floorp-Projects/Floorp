@@ -103,10 +103,10 @@ public:
   void Init() {
     mBaseVal.mAlign = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID;
     mBaseVal.mMeetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
-    mBaseVal.mDefer = PR_FALSE;
+    mBaseVal.mDefer = false;
     mAnimVal = mBaseVal;
-    mIsAnimated = PR_FALSE;
-    mIsBaseSet = PR_FALSE;
+    mIsAnimated = false;
+    mIsBaseSet = false;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,

@@ -356,7 +356,7 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
   PRUint32 selectorLen = aSelectorValue.Length();
   PRUint32 attributeLen = aAttributeValue.Length();
   if (selectorLen > attributeLen) {
-    result = PR_FALSE;
+    result = false;
   }
   else {
     nsAString::const_iterator iter;
@@ -366,7 +366,7 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
       // to match, the aAttributeValue must have a dash after the end of
       // the aSelectorValue's text (unless the aSelectorValue and the
       // aAttributeValue have the same text)
-      result = PR_FALSE;
+      result = false;
     }
     else {
       result = StringBeginsWith(aAttributeValue, aSelectorValue, aComparator);
@@ -435,7 +435,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsString& aIdent, nsAString& aReturn)
   }
 
   bool first = true;
-  for (; in != end; ++in, first = PR_FALSE)
+  for (; in != end; ++in, first = false)
   {
     if (*in < 0x20 || (first && '0' <= *in && *in <= '9'))
     {
@@ -515,7 +515,7 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
 
   if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
       !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
-    return PR_TRUE;
+    return true;
   }
 
   return aTextIsSignificant && isText && aChild->TextLength() != 0 &&

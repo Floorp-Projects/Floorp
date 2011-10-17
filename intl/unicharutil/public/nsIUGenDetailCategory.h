@@ -136,8 +136,8 @@ public:
     
    /**
     * Give a Unichar, and a nsUGenDetailCategory, 
-    * return PR_TRUE if the Unichar is in that category, 
-    * return PR_FALSE, otherwise
+    * return true if the Unichar is in that category, 
+    * return false, otherwise
     */
    NS_IMETHOD Is( PRUnichar aChar, nsUGDC aDetailCategory, bool* oResult) = 0;
 };

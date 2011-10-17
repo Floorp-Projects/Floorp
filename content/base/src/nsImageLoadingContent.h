@@ -171,7 +171,7 @@ protected:
    */
   void DestroyImageLoadingContent();
 
-  void ClearBrokenState() { mBroken = PR_FALSE; }
+  void ClearBrokenState() { mBroken = false; }
 
   bool LoadingEnabled() { return mLoadingEnabled; }
 

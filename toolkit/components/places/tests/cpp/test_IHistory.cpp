@@ -93,7 +93,7 @@ public:
     do_check_true(observerService);
     (void)observerService->AddObserver(this,
                                        "uri-visit-saved",
-                                       PR_FALSE);
+                                       false);
   }
 
   void WaitForNotification()
@@ -138,7 +138,7 @@ test_set_places_enabled()
     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   do_check_success(rv);
 
-  rv = prefBranch->SetBoolPref("places.history.enabled", PR_TRUE);
+  rv = prefBranch->SetBoolPref("places.history.enabled", true);
   do_check_success(rv);
 
   // Run the next test.
@@ -335,7 +335,7 @@ namespace test_observer_topic_dispatched_helpers {
       do_check_true(observerService);
       (void)observerService->AddObserver(this,
                                          URI_VISITED_RESOLUTION_TOPIC,
-                                         PR_FALSE);
+                                         false);
     }
 
     NS_IMETHOD Observe(nsISupports* aSubject,

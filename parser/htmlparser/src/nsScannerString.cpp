@@ -175,13 +175,13 @@ nsScannerSubstring::nsScannerSubstring()
   , mEnd(nsnull, nsnull)
   , mBufferList(nsnull)
   , mLength(0)
-  , mIsDirty(PR_TRUE)
+  , mIsDirty(true)
   {
   }
 
 nsScannerSubstring::nsScannerSubstring( const nsAString& s )
   : mBufferList(nsnull)
-  , mIsDirty(PR_TRUE)
+  , mIsDirty(true)
   {
     Rebind(s);
   }
@@ -229,7 +229,7 @@ nsScannerSubstring::Rebind( const nsScannerSubstring& aString,
     mEnd        = aEnd;
     mBufferList = aString.mBufferList;
     mLength     = Distance(aStart, aEnd);
-    mIsDirty    = PR_TRUE;
+    mIsDirty    = true;
   }
 
 void
@@ -238,7 +238,7 @@ nsScannerSubstring::Rebind( const nsAString& aString )
     release_ownership_of_buffer_list();
 
     mBufferList = new nsScannerBufferList(AllocBufferFromString(aString));
-    mIsDirty    = PR_TRUE;
+    mIsDirty    = true;
 
     init_range_from_buffer_list();
     acquire_ownership_of_buffer_list();
@@ -261,7 +261,7 @@ nsScannerSubstring::AsString() const
           CopyUnicodeTo(BeginReading(start), EndReading(end), mutable_this->mFlattenedRep);
         }
 
-        mutable_this->mIsDirty = PR_FALSE;
+        mutable_this->mIsDirty = false;
       }
 
     return mFlattenedRep;
@@ -306,7 +306,7 @@ nsScannerSubstring::GetNextFragment( nsScannerFragment& frag ) const
   {
     // check to see if we are at the end of the buffer list
     if (frag.mBuffer == mEnd.mBuffer)
-      return PR_FALSE;
+      return false;
 
     frag.mBuffer = static_cast<const Buffer*>(PR_NEXT_LINK(frag.mBuffer));
 
@@ -320,7 +320,7 @@ nsScannerSubstring::GetNextFragment( nsScannerFragment& frag ) const
     else
       frag.mFragmentEnd = frag.mBuffer->DataEnd();
 
-    return PR_TRUE;
+    return true;
   }
 
 bool
@@ -328,7 +328,7 @@ nsScannerSubstring::GetPrevFragment( nsScannerFragment& frag ) const
   {
     // check to see if we are at the beginning of the buffer list
     if (frag.mBuffer == mStart.mBuffer)
-      return PR_FALSE;
+      return false;
 
     frag.mBuffer = static_cast<const Buffer*>(PR_PREV_LINK(frag.mBuffer));
 
@@ -342,7 +342,7 @@ nsScannerSubstring::GetPrevFragment( nsScannerFragment& frag ) const
     else
       frag.mFragmentEnd = frag.mBuffer->DataEnd();
 
-    return PR_TRUE;
+    return true;
   }
 
 
@@ -367,7 +367,7 @@ nsScannerString::AppendBuffer( Buffer* aBuf )
     mEnd.mBuffer = aBuf;
     mEnd.mPosition = aBuf->DataEnd();
 
-    mIsDirty = PR_TRUE;
+    mIsDirty = true;
   }
 
 void
@@ -382,7 +382,7 @@ nsScannerString::DiscardPrefix( const nsScannerIterator& aIter )
 
     mBufferList->DiscardUnreferencedPrefix(old_start.mBuffer);
 
-    mIsDirty = PR_TRUE;
+    mIsDirty = true;
   }
 
 void
@@ -414,7 +414,7 @@ nsScannerString::UngetReadable( const nsAString& aReadable, const nsScannerItera
     mEnd.mBuffer = mBufferList->Tail();
     mEnd.mPosition = mEnd.mBuffer->DataEnd();
 
-    mIsDirty = PR_TRUE;
+    mIsDirty = true;
   }
 
 void
@@ -426,7 +426,7 @@ nsScannerString::ReplaceCharacter(nsScannerIterator& aPosition, PRUnichar aChar)
     PRUnichar* pos = const_cast<PRUnichar*>(aPosition.get());
     *pos = aChar;
 
-    mIsDirty = PR_TRUE;
+    mIsDirty = true;
   }
 
 
@@ -574,13 +574,13 @@ FindCharInReadable( PRUnichar aChar,
         const PRUnichar* charFoundAt = nsCharTraits<PRUnichar>::find(aSearchStart.get(), fragmentLength, aChar);
         if ( charFoundAt ) {
           aSearchStart.advance( charFoundAt - aSearchStart.get() );
-          return PR_TRUE;
+          return true;
         }
 
         aSearchStart.advance(fragmentLength);
       }
 
-    return PR_FALSE;
+    return false;
   }
 
 bool
@@ -625,7 +625,7 @@ FindInReadable( const nsAString& aPattern,
                   // if we verified all the way to the end of the pattern, then we found it!
                 if ( testPattern == aPatternEnd )
                   {
-                    found_it = PR_TRUE;
+                    found_it = true;
                     aSearchEnd = testSearch; // return the exact found range through the parameters
                     break;
                   }
@@ -672,7 +672,7 @@ RFindInReadable( const nsAString& aPattern,
       {
         if ( FindInReadable(aPattern, searchStart, searchEnd, aComparator) )
           {
-            found_it = PR_TRUE;
+            found_it = true;
 
               // this is the best match so far, so remember it
             aSearchStart = searchStart;

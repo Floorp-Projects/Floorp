@@ -73,10 +73,10 @@ PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 nsFloatManager::nsFloatManager(nsIPresShell* aPresShell)
   : mX(0), mY(0),
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
-    mPushedLeftFloatPastBreak(PR_FALSE),
-    mPushedRightFloatPastBreak(PR_FALSE),
-    mSplitLeftFloatAcrossBreak(PR_FALSE),
-    mSplitRightFloatAcrossBreak(PR_FALSE)
+    mPushedLeftFloatPastBreak(false),
+    mPushedRightFloatPastBreak(false),
+    mSplitLeftFloatAcrossBreak(false),
+    mSplitRightFloatAcrossBreak(false)
 {
   MOZ_COUNT_CTOR(nsFloatManager);
 }
@@ -173,7 +173,7 @@ nsFloatManager::GetFlowArea(nscoord aYOffset, BandInfoType aInfoType,
       (mFloats[floatCount-1].mLeftYMost <= top &&
        mFloats[floatCount-1].mRightYMost <= top)) {
     return nsFlowAreaRect(aContentArea.x, aYOffset, aContentArea.width,
-                          aHeight, PR_FALSE);
+                          aHeight, false);
   }
 
   nscoord bottom;
@@ -243,7 +243,7 @@ nsFloatManager::GetFlowArea(nscoord aYOffset, BandInfoType aInfoType,
           // containing block.  This matches the spec for what some
           // callers want and disagrees for other callers, so we should
           // probably provide better information at some point.
-          haveFloats = PR_TRUE;
+          haveFloats = true;
         }
       } else {
         // A right float.
@@ -251,7 +251,7 @@ nsFloatManager::GetFlowArea(nscoord aYOffset, BandInfoType aInfoType,
         if (leftEdge < right) {
           right = leftEdge;
           // See above.
-          haveFloats = PR_TRUE;
+          haveFloats = true;
         }
       }
     }

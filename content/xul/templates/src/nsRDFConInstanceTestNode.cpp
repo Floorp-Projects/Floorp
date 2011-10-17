@@ -113,7 +113,7 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
     nsresult rv;
 
     if (aCantHandleYet)
-        *aCantHandleYet = PR_FALSE;
+        *aCantHandleYet = false;
 
     nsCOMPtr<nsIRDFContainerUtils> rdfc
         = do_GetService("@mozilla.org/rdf/container-utils;1");
@@ -187,7 +187,7 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                      property != containmentProps.Last();
                      ++property) {
                     nsCOMPtr<nsIRDFNode> target;
-                    rv = ds->GetTarget(valueres, *property, PR_TRUE, getter_AddRefs(target));
+                    rv = ds->GetTarget(valueres, *property, true, getter_AddRefs(target));
                     if (NS_FAILED(rv)) return rv;
 
                     if (target != nsnull) {
@@ -274,11 +274,11 @@ nsRDFConInstanceTestNode::CanPropagate(nsIRDFResource* aSource,
         = do_GetService("@mozilla.org/rdf/container-utils;1");
 
     if (! rdfc)
-        return PR_FALSE;
+        return false;
 
     // We can certainly propagate ordinal properties
     rv = rdfc->IsOrdinalProperty(aProperty, &canpropagate);
-    if (NS_FAILED(rv)) return PR_FALSE;
+    if (NS_FAILED(rv)) return false;
 
     if (! canpropagate) {
         canpropagate = mProcessor->ContainmentProperties().Contains(aProperty);
@@ -304,10 +304,10 @@ nsRDFConInstanceTestNode::CanPropagate(nsIRDFResource* aSource,
 
     if (canpropagate) {
         aInitialBindings.AddAssignment(mContainerVariable, aSource);
-        return PR_TRUE;
+        return true;
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 void

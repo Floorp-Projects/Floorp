@@ -148,9 +148,9 @@ public:
         for (PRUint32 i = 0; i < numFonts; i++) {
             gfxFontEntry *fe = mAvailableFonts[i];
             if (fe->mIsProxy)
-                return PR_FALSE;
+                return false;
         }
-        return PR_TRUE;
+        return true;
     }
 };
 

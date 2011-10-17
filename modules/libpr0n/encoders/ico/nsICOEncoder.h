@@ -118,9 +118,9 @@ protected:
   PRUint32 mImageBufferSize;
   // Keeps track of the number of bytes in the image buffer which are read
   PRUint32 mImageBufferReadPoint;
-  // Stores PR_TRUE if the image is done being encoded  
+  // Stores true if the image is done being encoded  
   bool mFinished;
-  // Stores PR_TRUE if the contained image is a PNG
+  // Stores true if the contained image is a PNG
   bool mUsePNG;
 
   nsCOMPtr<nsIInputStreamCallback> mCallback;

@@ -106,7 +106,7 @@ TableRowsCollection::TableRowsCollection(nsHTMLTableElement *aParent)
                                   mParent->NodeInfo()->NamespaceID(),
                                   nsGkAtoms::tr,
                                   nsGkAtoms::tr,
-                                  PR_FALSE))
+                                  false))
 {
   // Mark ourselves as a proxy
   SetIsProxy();
@@ -539,7 +539,7 @@ nsHTMLTableElement::TBodies()
                                  mNodeInfo->NamespaceID(),
                                  nsGkAtoms::tbody,
                                  nsGkAtoms::tbody,
-                                 PR_FALSE);
+                                 false);
   }
 
   return mTBodies;
@@ -625,7 +625,7 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
     nsCOMPtr<nsIContent> newFoot = NS_NewHTMLTableSectionElement(nodeInfo.forget());
 
     if (newFoot) {
-      rv = AppendChildTo(newFoot, PR_TRUE);
+      rv = AppendChildTo(newFoot, true);
       CallQueryInterface(newFoot, aValue);
     }
   }
@@ -671,7 +671,7 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
     nsCOMPtr<nsIContent> newCaption = NS_NewHTMLTableCaptionElement(nodeInfo.forget());
 
     if (newCaption) {
-      rv = AppendChildTo(newCaption, PR_TRUE);
+      rv = AppendChildTo(newCaption, true);
       CallQueryInterface(newCaption, aValue);
     }
   }
@@ -797,7 +797,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
         NS_NewHTMLTableSectionElement(nodeInfo.forget());
 
       if (newRowGroup) {
-        rv = AppendChildTo(newRowGroup, PR_TRUE);
+        rv = AppendChildTo(newRowGroup, true);
 
         rowGroup = do_QueryInterface(newRowGroup);
       }
@@ -936,7 +936,7 @@ nsHTMLTableElement::ParseAttribute(PRInt32 aNamespaceID,
                  (type == nsAttrValue::ePercent &&
                   aResult.GetPercentValue() == 0.0f));
       }
-      return PR_FALSE;
+      return false;
     }
     
     if (aAttribute == nsGkAtoms::align) {
@@ -947,13 +947,13 @@ nsHTMLTableElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseColor(aValue);
     }
     if (aAttribute == nsGkAtoms::frame) {
-      return aResult.ParseEnumValue(aValue, kFrameTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kFrameTable, false);
     }
     if (aAttribute == nsGkAtoms::layout) {
-      return aResult.ParseEnumValue(aValue, kLayoutTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kLayoutTable, false);
     }
     if (aAttribute == nsGkAtoms::rules) {
-      return aResult.ParseEnumValue(aValue, kRulesTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kRulesTable, false);
     }
     if (aAttribute == nsGkAtoms::hspace ||
         aAttribute == nsGkAtoms::vspace) {

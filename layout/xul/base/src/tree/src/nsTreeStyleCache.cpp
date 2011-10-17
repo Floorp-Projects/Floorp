@@ -115,7 +115,7 @@ nsTreeStyleCache::DeleteDFAState(nsHashKey *aKey,
 {
   nsDFAState* entry = static_cast<nsDFAState*>(aData);
   delete entry;
-  return PR_TRUE;
+  return true;
 }
 
 bool
@@ -125,5 +125,5 @@ nsTreeStyleCache::ReleaseStyleContext(nsHashKey *aKey,
 {
   nsStyleContext* context = static_cast<nsStyleContext*>(aData);
   context->Release();
-  return PR_TRUE;
+  return true;
 }

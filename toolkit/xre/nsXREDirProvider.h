@@ -78,10 +78,10 @@ public:
   nsresult GetProfileDefaultsDir(nsIFile* *aResult);
 
   static nsresult GetUserAppDataDirectory(nsILocalFile* *aFile) {
-    return GetUserDataDirectory(aFile, PR_FALSE);
+    return GetUserDataDirectory(aFile, false);
   }
   static nsresult GetUserLocalDataDirectory(nsILocalFile* *aFile) {
-    return GetUserDataDirectory(aFile, PR_TRUE);
+    return GetUserDataDirectory(aFile, true);
   }
 
   /* make sure you clone it, if you need to do stuff to it */

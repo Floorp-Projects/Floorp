@@ -66,7 +66,7 @@ public:
   { }
 
   nsPLDOMEvent(nsINode *aEventNode, nsIDOMEvent *aEvent)
-    : mEventNode(aEventNode), mEvent(aEvent), mDispatchChromeOnly(PR_FALSE)
+    : mEventNode(aEventNode), mEvent(aEvent), mDispatchChromeOnly(false)
   { }
 
   nsPLDOMEvent(nsINode *aEventNode, nsEvent &aEvent);

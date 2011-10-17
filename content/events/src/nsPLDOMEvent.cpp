@@ -45,7 +45,7 @@
 #include "nsGUIEvent.h"
 
 nsPLDOMEvent::nsPLDOMEvent(nsINode *aEventNode, nsEvent &aEvent)
-  : mEventNode(aEventNode), mDispatchChromeOnly(PR_FALSE)
+  : mEventNode(aEventNode), mDispatchChromeOnly(false)
 {
   bool trusted = NS_IS_TRUSTED_EVENT(&aEvent);
   nsEventDispatcher::CreateEvent(nsnull, &aEvent, EmptyString(),
@@ -73,10 +73,10 @@ NS_IMETHODIMP nsPLDOMEvent::Run()
     if (doc) {
       if (mDispatchChromeOnly) {
         nsContentUtils::DispatchChromeEvent(doc, mEventNode, mEventType,
-                                            mBubbles, PR_FALSE);
+                                            mBubbles, false);
       } else {
         nsContentUtils::DispatchTrustedEvent(doc, mEventNode, mEventType,
-                                             mBubbles, PR_FALSE);
+                                             mBubbles, false);
       }
     }
   }
@@ -97,6 +97,6 @@ void nsPLDOMEvent::RunDOMEventWhenSafe()
 nsLoadBlockingPLDOMEvent::~nsLoadBlockingPLDOMEvent()
 {
   if (mBlockedDoc) {
-    mBlockedDoc->UnblockOnload(PR_TRUE);
+    mBlockedDoc->UnblockOnload(true);
   }
 }

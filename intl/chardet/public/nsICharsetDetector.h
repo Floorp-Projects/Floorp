@@ -64,8 +64,8 @@ public:
      the answer. 
      aBytesArray - array of bytes
      aLen        - length of aBytesArray
-     oDontFeedMe - return PR_TRUE if the detector do not need the following block
-                          PR_FALSE it need more bytes. 
+     oDontFeedMe - return true if the detector do not need the following block
+                          false it need more bytes. 
                    This is used to enhance performance
    */
   NS_IMETHOD DoIt(const char* aBytesArray, PRUint32 aLen, bool* oDontFeedMe) = 0;

@@ -201,19 +201,19 @@ ContentParent::Init()
 {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
-        obs->AddObserver(this, "xpcom-shutdown", PR_FALSE);
-        obs->AddObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE);
-        obs->AddObserver(this, "child-memory-reporter-request", PR_FALSE);
-        obs->AddObserver(this, "memory-pressure", PR_FALSE);
-        obs->AddObserver(this, "child-gc-request", PR_FALSE);
-        obs->AddObserver(this, "child-cc-request", PR_FALSE);
+        obs->AddObserver(this, "xpcom-shutdown", false);
+        obs->AddObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, false);
+        obs->AddObserver(this, "child-memory-reporter-request", false);
+        obs->AddObserver(this, "memory-pressure", false);
+        obs->AddObserver(this, "child-gc-request", false);
+        obs->AddObserver(this, "child-cc-request", false);
 #ifdef ACCESSIBILITY
-        obs->AddObserver(this, "a11y-init-or-shutdown", PR_FALSE);
+        obs->AddObserver(this, "a11y-init-or-shutdown", false);
 #endif
     }
     nsCOMPtr<nsIPrefBranch2> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (prefs) {
-        prefs->AddObserver("", this, PR_FALSE);
+        prefs->AddObserver("", this, false);
     }
     nsCOMPtr<nsIThreadInternal>
             threadInt(do_QueryInterface(NS_GetCurrentThread()));
@@ -356,7 +356,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         props->Init();
 
         if (AbnormalShutdown == why) {
-            props->SetPropertyAsBool(NS_LITERAL_STRING("abnormal"), PR_TRUE);
+            props->SetPropertyAsBool(NS_LITERAL_STRING("abnormal"), true);
 
 #ifdef MOZ_CRASHREPORTER
             MOZ_ASSERT(ManagedPCrashReporterParent().Length() > 0);
@@ -670,7 +670,7 @@ bool
 ContentParent::RecvGetShowPasswordSetting(bool* showPassword)
 {
     // default behavior is to show the last password character
-    *showPassword = PR_TRUE;
+    *showPassword = true;
 #ifdef ANDROID
     NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available");
     if (AndroidBridge::Bridge() != nsnull)
@@ -1186,7 +1186,7 @@ ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg,PR_TRUE, aJSON, nsnull, aRetvals);
+                        aMsg,true, aJSON, nsnull, aRetvals);
   }
   return true;
 }
@@ -1197,7 +1197,7 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, PR_FALSE, aJSON, nsnull, nsnull);
+                        aMsg, false, aJSON, nsnull, nsnull);
   }
   return true;
 }

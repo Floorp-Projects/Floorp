@@ -341,7 +341,7 @@ nsresult HttpAsyncAborter<T>::AsyncAbort(nsresult status)
   LOG(("HttpAsyncAborter::AsyncAbort [this=%p status=%x]\n", mThis, status));
 
   mThis->mStatus = status;
-  mThis->mIsPending = PR_FALSE;
+  mThis->mIsPending = false;
 
   // if this fails?  Callers ignore our return value anyway....
   return AsyncCall(&T::HandleAsyncAbort);

@@ -118,11 +118,11 @@ nsSegmentedBuffer::DeleteFirstSegment()
     PRInt32 last = ModSegArraySize(mLastSegmentIndex - 1);
     if (mFirstSegmentIndex == last) {
         mLastSegmentIndex = last;
-        return PR_TRUE;
+        return true;
     }
     else {
         mFirstSegmentIndex = ModSegArraySize(mFirstSegmentIndex + 1);
-        return PR_FALSE;
+        return false;
     }
 }
 
@@ -146,9 +146,9 @@ nsSegmentedBuffer::ReallocLastSegment(size_t newSize)
         (char*)mSegAllocator->Realloc(mSegmentArray[last], newSize);
     if (newSegment) {
         mSegmentArray[last] = newSegment;
-        return PR_TRUE;
+        return true;
     } else {
-        return PR_FALSE;
+        return false;
     }
 }
 

@@ -317,16 +317,16 @@ NS_INTERFACE_MAP_END
 
 nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   : mOwnerContent(aOwner)
-  , mDepthTooGreat(PR_FALSE)
-  , mIsTopLevelContent(PR_FALSE)
-  , mDestroyCalled(PR_FALSE)
-  , mNeedsAsyncDestroy(PR_FALSE)
-  , mInSwap(PR_FALSE)
-  , mInShow(PR_FALSE)
-  , mHideCalled(PR_FALSE)
+  , mDepthTooGreat(false)
+  , mIsTopLevelContent(false)
+  , mDestroyCalled(false)
+  , mNeedsAsyncDestroy(false)
+  , mInSwap(false)
+  , mInShow(false)
+  , mHideCalled(false)
   , mNetworkCreated(aNetworkCreated)
-  , mDelayRemoteDialogs(PR_FALSE)
-  , mRemoteBrowserShown(PR_FALSE)
+  , mDelayRemoteDialogs(false)
+  , mRemoteBrowserShown(false)
   , mRemoteFrame(false)
   , mCurrentRemoteFrame(nsnull)
   , mRemoteBrowser(nsnull)
@@ -399,7 +399,7 @@ nsFrameLoader::FireErrorEvent()
   if (mOwnerContent) {
     nsRefPtr<nsPLDOMEvent> event =
       new nsLoadBlockingPLDOMEvent(mOwnerContent, NS_LITERAL_STRING("error"),
-                                   PR_FALSE, PR_FALSE);
+                                   false, false);
     event->PostDOMEvent();
   }
 }
@@ -487,9 +487,9 @@ nsFrameLoader::ReallyStartLoadingInternal()
 
   // Kick off the load...
   bool tmpState = mNeedsAsyncDestroy;
-  mNeedsAsyncDestroy = PR_TRUE;
+  mNeedsAsyncDestroy = true;
   rv = mDocShell->LoadURI(mURIToLoad, loadInfo,
-                          nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
+                          nsIWebNavigation::LOAD_FLAGS_NONE, false);
   mNeedsAsyncDestroy = tmpState;
   mURIToLoad = nsnull;
   NS_ENSURE_SUCCESS(rv, rv);
@@ -582,7 +582,7 @@ FirePageHideEvent(nsIDocShellTreeItem* aItem,
   nsCOMPtr<nsIDOMDocument> doc = do_GetInterface(aItem);
   nsCOMPtr<nsIDocument> internalDoc = do_QueryInterface(doc);
   NS_ASSERTION(internalDoc, "What happened here?");
-  internalDoc->OnPageHide(PR_TRUE, aChromeEventHandler);
+  internalDoc->OnPageHide(true, aChromeEventHandler);
 
   PRInt32 childCount = 0;
   aItem->GetChildCount(&childCount);
@@ -626,7 +626,7 @@ FirePageShowEvent(nsIDocShellTreeItem* aItem,
   nsCOMPtr<nsIDocument> internalDoc = do_QueryInterface(doc);
   NS_ASSERTION(internalDoc, "What happened here?");
   if (internalDoc->IsShowing() == aFireIfShowing) {
-    internalDoc->OnPageShow(PR_TRUE, aChromeEventHandler);
+    internalDoc->OnPageShow(true, aChromeEventHandler);
   }
 }
 
@@ -702,7 +702,7 @@ AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
 
   bool retval = false;
   if (aParentType == nsIDocShellTreeItem::typeChrome && isContent) {
-    retval = PR_TRUE;
+    retval = true;
 
     bool is_primary = value.LowerCaseEqualsLiteral("content-primary");
 
@@ -729,11 +729,11 @@ AllDescendantsOfType(nsIDocShellTreeItem* aParentItem, PRInt32 aType)
     PRInt32 kidType;
     kid->GetItemType(&kidType);
     if (kidType != aType || !AllDescendantsOfType(kid, aType)) {
-      return PR_FALSE;
+      return false;
     }
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 /**
@@ -750,7 +750,7 @@ class NS_STACK_CLASS AutoResetInShow {
     {
       MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
     }
-    ~AutoResetInShow() { mFrameLoader->mInShow = PR_FALSE; }
+    ~AutoResetInShow() { mFrameLoader->mInShow = false; }
 };
 
 
@@ -760,24 +760,24 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
                     nsSubDocumentFrame* frame)
 {
   if (mInShow) {
-    return PR_FALSE;
+    return false;
   }
   // Reset mInShow if we exit early.
   AutoResetInShow resetInShow(this);
-  mInShow = PR_TRUE;
+  mInShow = true;
 
   nsresult rv = MaybeCreateDocShell();
   if (NS_FAILED(rv)) {
-    return PR_FALSE;
+    return false;
   }
 
   if (!mRemoteFrame) {
     if (!mDocShell)
-      return PR_FALSE;
+      return false;
     nsCOMPtr<nsIPresShell> presShell;
     mDocShell->GetPresShell(getter_AddRefs(presShell));
     if (presShell)
-      return PR_TRUE;
+      return true;
 
     mDocShell->SetMarginWidth(marginWidth);
     mDocShell->SetMarginHeight(marginHeight);
@@ -793,7 +793,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
 
   nsIView* view = frame->EnsureInnerView();
   if (!view)
-    return PR_FALSE;
+    return false;
 
   if (mRemoteFrame) {
     return ShowRemoteFrame(GetSubDocumentSize(frame));
@@ -817,7 +817,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
   // create anything, one starts to wonder why this was named
   // "Create"...
   baseWindow->Create();
-  baseWindow->SetVisibility(PR_TRUE);
+  baseWindow->SetVisibility(true);
 
   // Trigger editor re-initialization if midas is turned on in the
   // sub-document. This shouldn't be necessary, but given the way our
@@ -839,7 +839,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
         nsCOMPtr<nsIEditorDocShell> editorDocshell = do_QueryInterface(mDocShell);
         nsCOMPtr<nsIEditor> editor;
         nsresult rv = editorDocshell->GetEditor(getter_AddRefs(editor));
-        NS_ENSURE_SUCCESS(rv, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, false);
 
         doc->SetDesignMode(NS_LITERAL_STRING("off"));
         doc->SetDesignMode(NS_LITERAL_STRING("on"));
@@ -848,7 +848,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
         nsCOMPtr<nsIEditorDocShell> editorDocshell = do_QueryInterface(mDocShell);
         if (editorDocshell) {
           bool editable = false,
-                 hasEditingSession = PR_FALSE;
+                 hasEditingSession = false;
           editorDocshell->GetEditable(&editable);
           editorDocshell->GetHasEditingSession(&hasEditingSession);
           nsCOMPtr<nsIEditor> editor;
@@ -861,13 +861,13 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
     }
   }
 
-  mInShow = PR_FALSE;
+  mInShow = false;
   if (mHideCalled) {
-    mHideCalled = PR_FALSE;
+    mHideCalled = false;
     Hide();
-    return PR_FALSE;
+    return false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -914,7 +914,7 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
   // want here.  For now, hack.
   if (!mRemoteBrowserShown) {
     mRemoteBrowser->Show(size);
-    mRemoteBrowserShown = PR_TRUE;
+    mRemoteBrowserShown = true;
 
     EnsureMessageManager();
   } else {
@@ -933,7 +933,7 @@ nsFrameLoader::Hide()
     return;
   }
   if (mInShow) {
-    mHideCalled = PR_TRUE;
+    mHideCalled = true;
     return;
   }
 
@@ -943,12 +943,12 @@ nsFrameLoader::Hide()
   nsCOMPtr<nsIContentViewer> contentViewer;
   mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
   if (contentViewer)
-    contentViewer->SetSticky(PR_FALSE);
+    contentViewer->SetSticky(false);
 
   nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mDocShell);
   NS_ASSERTION(baseWin,
                "Found an nsIDocShell which doesn't implement nsIBaseWindow.");
-  baseWin->SetVisibility(PR_FALSE);
+  baseWin->SetVisibility(false);
   baseWin->SetParentWidget(nsnull);
 }
 
@@ -1110,39 +1110,39 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   if (mInSwap || aOther->mInSwap) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  mInSwap = aOther->mInSwap = PR_TRUE;
+  mInSwap = aOther->mInSwap = true;
 
   // Fire pageshow events on still-loading pages, and then fire pagehide
   // events.  Note that we do NOT fire these in the normal way, but just fire
   // them on the chrome event handlers.
-  FirePageShowEvent(ourTreeItem, ourChromeEventHandler, PR_FALSE);
-  FirePageShowEvent(otherTreeItem, otherChromeEventHandler, PR_FALSE);
+  FirePageShowEvent(ourTreeItem, ourChromeEventHandler, false);
+  FirePageShowEvent(otherTreeItem, otherChromeEventHandler, false);
   FirePageHideEvent(ourTreeItem, ourChromeEventHandler);
   FirePageHideEvent(otherTreeItem, otherChromeEventHandler);
   
   nsIFrame* ourFrame = ourContent->GetPrimaryFrame();
   nsIFrame* otherFrame = otherContent->GetPrimaryFrame();
   if (!ourFrame || !otherFrame) {
-    mInSwap = aOther->mInSwap = PR_FALSE;
-    FirePageShowEvent(ourTreeItem, ourChromeEventHandler, PR_TRUE);
-    FirePageShowEvent(otherTreeItem, otherChromeEventHandler, PR_TRUE);
+    mInSwap = aOther->mInSwap = false;
+    FirePageShowEvent(ourTreeItem, ourChromeEventHandler, true);
+    FirePageShowEvent(otherTreeItem, otherChromeEventHandler, true);
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   nsSubDocumentFrame* ourFrameFrame = do_QueryFrame(ourFrame);
   if (!ourFrameFrame) {
-    mInSwap = aOther->mInSwap = PR_FALSE;
-    FirePageShowEvent(ourTreeItem, ourChromeEventHandler, PR_TRUE);
-    FirePageShowEvent(otherTreeItem, otherChromeEventHandler, PR_TRUE);
+    mInSwap = aOther->mInSwap = false;
+    FirePageShowEvent(ourTreeItem, ourChromeEventHandler, true);
+    FirePageShowEvent(otherTreeItem, otherChromeEventHandler, true);
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   // OK.  First begin to swap the docshells in the two nsIFrames
   rv = ourFrameFrame->BeginSwapDocShells(otherFrame);
   if (NS_FAILED(rv)) {
-    mInSwap = aOther->mInSwap = PR_FALSE;
-    FirePageShowEvent(ourTreeItem, ourChromeEventHandler, PR_TRUE);
-    FirePageShowEvent(otherTreeItem, otherChromeEventHandler, PR_TRUE);
+    mInSwap = aOther->mInSwap = false;
+    FirePageShowEvent(ourTreeItem, ourChromeEventHandler, true);
+    FirePageShowEvent(otherTreeItem, otherChromeEventHandler, true);
     return rv;
   }
 
@@ -1207,12 +1207,12 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   if (mMessageManager) {
     mMessageManager->Disconnect();
     mMessageManager->SetParentManager(otherParentManager);
-    mMessageManager->SetCallbackData(aOther, PR_FALSE);
+    mMessageManager->SetCallbackData(aOther, false);
   }
   if (aOther->mMessageManager) {
     aOther->mMessageManager->Disconnect();
     aOther->mMessageManager->SetParentManager(ourParentManager);
-    aOther->mMessageManager->SetCallbackData(this, PR_FALSE);
+    aOther->mMessageManager->SetCallbackData(this, false);
   }
   mMessageManager.swap(aOther->mMessageManager);
 
@@ -1239,10 +1239,10 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   ourParentDocument->FlushPendingNotifications(Flush_Layout);
   otherParentDocument->FlushPendingNotifications(Flush_Layout);
 
-  FirePageShowEvent(ourTreeItem, otherChromeEventHandler, PR_TRUE);
-  FirePageShowEvent(otherTreeItem, ourChromeEventHandler, PR_TRUE);
+  FirePageShowEvent(ourTreeItem, otherChromeEventHandler, true);
+  FirePageShowEvent(otherTreeItem, ourChromeEventHandler, true);
 
-  mInSwap = aOther->mInSwap = PR_FALSE;
+  mInSwap = aOther->mInSwap = false;
   return NS_OK;
 }
 
@@ -1262,7 +1262,7 @@ nsFrameLoader::Destroy()
   if (mDestroyCalled) {
     return NS_OK;
   }
-  mDestroyCalled = PR_TRUE;
+  mDestroyCalled = true;
 
   if (mMessageManager) {
     mMessageManager->Disconnect();
@@ -1405,7 +1405,7 @@ nsFrameLoader::MaybeCreateDocShell()
   if (!mNetworkCreated) {
     nsCOMPtr<nsIDocShellHistory> history = do_QueryInterface(mDocShell);
     if (history) {
-      history->SetCreatedDynamically(PR_TRUE);
+      history->SetCreatedDynamically(true);
     }
   }
 
@@ -1523,7 +1523,7 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
 {
   nsresult rv;
 
-  mDepthTooGreat = PR_FALSE;
+  mDepthTooGreat = false;
   rv = MaybeCreateDocShell();
   if (NS_FAILED(rv)) {
     return rv;
@@ -1562,7 +1562,7 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
     ++depth;
     
     if (depth >= MAX_DEPTH_CONTENT_FRAMES) {
-      mDepthTooGreat = PR_TRUE;
+      mDepthTooGreat = true;
       NS_WARNING("Too many nested content frames so giving up");
 
       return NS_ERROR_UNEXPECTED; // Too deep, give up!  (silently?)
@@ -1678,7 +1678,7 @@ nsFrameLoader::UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame)
 
     nsIntSize size = GetSubDocumentSize(aIFrame);
 
-    baseWindow->SetPositionAndSize(x, y, size.width, size.height, PR_FALSE);
+    baseWindow->SetPositionAndSize(x, y, size.width, size.height, false);
   }
 
   return NS_OK;
@@ -1957,7 +1957,7 @@ public:
       nsFrameScriptCx cx(static_cast<nsIDOMEventTarget*>(tabChild), tabChild);
       nsRefPtr<nsFrameMessageManager> mm = tabChild->GetInnerManager();
       mm->ReceiveMessage(static_cast<nsIDOMEventTarget*>(tabChild), mMessage,
-                         PR_FALSE, mJSON, nsnull, nsnull);
+                         false, mJSON, nsnull, nsnull);
     }
     return NS_OK;
   }
@@ -2080,7 +2080,7 @@ nsFrameLoader::EnsureMessageManager()
   chromeWindow->GetMessageManager(getter_AddRefs(parentManager));
 
   if (ShouldUseRemoteProcess()) {
-    mMessageManager = new nsFrameMessageManager(PR_TRUE,
+    mMessageManager = new nsFrameMessageManager(true,
                                                 nsnull,
                                                 SendAsyncMessageToChild,
                                                 LoadScript,
@@ -2091,7 +2091,7 @@ nsFrameLoader::EnsureMessageManager()
   } else
   {
 
-    mMessageManager = new nsFrameMessageManager(PR_TRUE,
+    mMessageManager = new nsFrameMessageManager(true,
                                                 nsnull,
                                                 SendAsyncMessageToChild,
                                                 LoadScript,

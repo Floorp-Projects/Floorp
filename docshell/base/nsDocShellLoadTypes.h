@@ -125,9 +125,9 @@ static inline bool IsValidLoadType(PRUint32 aLoadType)
     case LOAD_STOP_CONTENT_AND_REPLACE:
     case LOAD_PUSHSTATE:
     case LOAD_ERROR_PAGE:
-        return PR_TRUE;
+        return true;
     }
-    return PR_FALSE;
+    return false;
 }
 
 #endif // MOZILLA_INTERNAL_API

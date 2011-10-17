@@ -209,7 +209,7 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
 
   if (mUnit == aOther.mUnit) {
     if (mUnit <= eCSSUnit_DummyInherit) {
-      return PR_TRUE;
+      return true;
     }
     else if (UnitHasStringValue()) {
       return (NS_strcmp(GetBufferValue(mValue.mString),
@@ -252,7 +252,7 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
       return mValue.mFloat == aOther.mValue.mFloat;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 double nsCSSValue::GetAngleValueInRadians() const
@@ -635,7 +635,7 @@ bool
 nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
 {
   if (mUnit != eCSSUnit_Function) {
-    return PR_FALSE;
+    return false;
   }
 
   nsCSSValue::Array* func = mValue.mArray;
@@ -790,7 +790,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         ? eCSSProperty_list_style_type : aProperty;
       if (array->Item(i).GetUnit() != eCSSUnit_Null) {
         array->Item(i).AppendToString(prop, aResult);
-        mark = PR_TRUE;
+        mark = true;
       }
     }
     if (eCSSUnit_Array == unit &&
@@ -1314,7 +1314,7 @@ nsCSSValue::URL::URL(nsIURI* aURI, nsStringBuffer* aString,
     mString(aString),
     mReferrer(aReferrer),
     mOriginPrincipal(aOriginPrincipal),
-    mURIResolved(PR_TRUE)
+    mURIResolved(true)
 {
   NS_ABORT_IF_FALSE(aOriginPrincipal, "Must have an origin principal");
   mString->AddRef();
@@ -1326,7 +1326,7 @@ nsCSSValue::URL::URL(nsStringBuffer* aString, nsIURI* aBaseURI,
     mString(aString),
     mReferrer(aReferrer),
     mOriginPrincipal(aOriginPrincipal),
-    mURIResolved(PR_FALSE)
+    mURIResolved(false)
 {
   NS_ABORT_IF_FALSE(aOriginPrincipal, "Must have an origin principal");
   mString->AddRef();
@@ -1373,7 +1373,7 @@ nsIURI*
 nsCSSValue::URL::GetURI() const
 {
   if (!mURIResolved) {
-    mURIResolved = PR_TRUE;
+    mURIResolved = true;
     // Be careful to not null out mURI before we've passed it as the base URI
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI),

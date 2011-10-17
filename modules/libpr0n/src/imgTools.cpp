@@ -151,7 +151,7 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
   // If no scaled size is specified, we'll just encode the image at its
   // original size (no scaling).
   if (aScaledWidth == 0 && aScaledHeight == 0) {
-    doScaling = PR_FALSE;
+    doScaling = false;
   } else {
     NS_ENSURE_ARG(aScaledWidth > 0);
     NS_ENSURE_ARG(aScaledHeight > 0);
@@ -167,7 +167,7 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
 
   // Use frame 0 from the image container.
   nsRefPtr<gfxImageSurface> frame;
-  rv = aContainer->CopyFrame(imgIContainer::FRAME_CURRENT, PR_TRUE,
+  rv = aContainer->CopyFrame(imgIContainer::FRAME_CURRENT, true,
                              getter_AddRefs(frame));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!frame)

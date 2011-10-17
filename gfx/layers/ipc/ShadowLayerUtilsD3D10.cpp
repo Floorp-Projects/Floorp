@@ -55,7 +55,7 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
                                                 SurfaceDescriptor*,
                                                 SurfaceDescriptor*)
 {
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -63,7 +63,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize&,
                                           gfxASurface::gfxContentType,
                                           SurfaceDescriptor*)
 {
-  return PR_FALSE;
+  return false;
 }
 
 /*static*/ already_AddRefed<gfxASurface>
@@ -75,7 +75,7 @@ ShadowLayerForwarder::PlatformOpenDescriptor(const SurfaceDescriptor&)
 bool
 ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor*)
 {
-  return PR_FALSE;
+  return false;
 }
 
 /*static*/ void
@@ -86,7 +86,7 @@ ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 bool
 ShadowLayerManager::PlatformDestroySharedSurface(SurfaceDescriptor*)
 {
-  return PR_FALSE;
+  return false;
 }
 
 /*static*/ void

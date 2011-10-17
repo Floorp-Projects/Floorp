@@ -69,7 +69,7 @@ class nsDisplayTableItem : public nsDisplayItem
 public:
   nsDisplayTableItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) : 
       nsDisplayItem(aBuilder, aFrame),
-      mPartHasFixedBackground(PR_FALSE) {}
+      mPartHasFixedBackground(false) {}
 
   virtual bool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                 nsIFrame* aFrame);
@@ -232,7 +232,7 @@ public:
                                       nsIAtom*        aChildType);
   bool IsAutoHeight();
   
-  /** @return PR_TRUE if aDisplayType represents a rowgroup of any sort
+  /** @return true if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
     */
   bool IsRowGroup(PRInt32 aDisplayType) const;
@@ -625,12 +625,12 @@ public:
   // Return the tfoot, if any
   nsTableRowGroupFrame* GetTFoot() const;
 
-  // Returns PR_TRUE if there are any cells above the row at
+  // Returns true if there are any cells above the row at
   // aRowIndex and spanning into the row at aRowIndex, the number of
   // effective columns limits the search up to that column
   bool RowIsSpannedInto(PRInt32 aRowIndex, PRInt32 aNumEffCols);
 
-  // Returns PR_TRUE if there is a cell originating in aRowIndex
+  // Returns true if there is a cell originating in aRowIndex
   // which spans into the next row,  the number of effective
   // columns limits the search up to that column
   bool RowHasSpanningCells(PRInt32 aRowIndex, PRInt32 aNumEffCols);
@@ -661,8 +661,8 @@ public:
     * dirty, but resizing optimizations should still apply to the
     * contents of the individual cells.
     */
-  void SetGeometryDirty() { mBits.mGeometryDirty = PR_TRUE; }
-  void ClearGeometryDirty() { mBits.mGeometryDirty = PR_FALSE; }
+  void SetGeometryDirty() { mBits.mGeometryDirty = true; }
+  void ClearGeometryDirty() { mBits.mGeometryDirty = false; }
   bool IsGeometryDirty() const { return mBits.mGeometryDirty; }
 
   /** Get the cell map for this table frame.  It is not always mCellMap.
@@ -726,7 +726,7 @@ public: /* ----- Cell Map public methods ----- */
   // return the last col index which isn't of type eColAnonymousCell
   PRInt32 GetIndexOfLastRealCol();
 
-  /** returns PR_TRUE if table-layout:auto  */
+  /** returns true if table-layout:auto  */
   virtual bool IsAutoLayout();
 
   /*---------------- nsITableLayout methods ------------------------*/
@@ -923,11 +923,11 @@ protected:
 };
 
 #define ABORT0() \
-{NS_ASSERTION(PR_FALSE, "CellIterator program error"); \
+{NS_ASSERTION(false, "CellIterator program error"); \
 return;}
 
 #define ABORT1(aReturn) \
-{NS_ASSERTION(PR_FALSE, "CellIterator program error"); \
+{NS_ASSERTION(false, "CellIterator program error"); \
 return aReturn;} 
 
 #endif

@@ -194,14 +194,14 @@ nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 NS_IMETHODIMP
 nsHTMLScriptElement::GetText(nsAString& aValue)
 {
-  nsContentUtils::GetNodeTextContent(this, PR_FALSE, aValue);
+  nsContentUtils::GetNodeTextContent(this, false, aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLScriptElement::SetText(const nsAString& aValue)
 {
-  return nsContentUtils::SetNodeTextContent(this, aValue, PR_TRUE);
+  return nsContentUtils::SetNodeTextContent(this, aValue, true);
 }
 
 
@@ -216,7 +216,7 @@ nsresult
 nsHTMLScriptElement::GetAsync(bool* aValue)
 {
   if (mForceAsync) {
-    *aValue = PR_TRUE;
+    *aValue = true;
     return NS_OK;
   }
   return GetBoolAttr(nsGkAtoms::async, aValue);
@@ -225,7 +225,7 @@ nsHTMLScriptElement::GetAsync(bool* aValue)
 nsresult
 nsHTMLScriptElement::SetAsync(bool aValue)
 {
-  mForceAsync = PR_FALSE;
+  mForceAsync = false;
   return SetBoolAttr(nsGkAtoms::async, aValue);
 }
 
@@ -234,7 +234,7 @@ nsHTMLScriptElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                   const nsAString* aValue, bool aNotify)
 {
   if (nsGkAtoms::async == aName && kNameSpaceID_None == aNamespaceID) {
-    mForceAsync = PR_FALSE;
+    mForceAsync = false;
   }
   return nsGenericHTMLElement::AfterSetAttr(aNamespaceID, aName, aValue,
                                             aNotify);
@@ -243,20 +243,20 @@ nsHTMLScriptElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 nsresult
 nsHTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  nsContentUtils::GetNodeTextContent(this, PR_FALSE, aInnerHTML);
+  nsContentUtils::GetNodeTextContent(this, false, aInnerHTML);
   return NS_OK;
 }
 
 nsresult
 nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
-  return nsContentUtils::SetNodeTextContent(this, aInnerHTML, PR_TRUE);
+  return nsContentUtils::SetNodeTextContent(this, aInnerHTML, true);
 }
 
 nsresult
 nsHTMLScriptElement::DoneAddingChildren(bool aHaveNotified)
 {
-  mDoneAddingChildren = PR_TRUE;
+  mDoneAddingChildren = true;
   nsresult rv = MaybeProcessScript();
   if (!mAlreadyStarted) {
     // Need to lose parser-insertedness here to allow another script to cause
@@ -307,7 +307,7 @@ nsHTMLScriptElement::FreezeUriAsyncDefer()
     GetSrc(src);
     NS_NewURI(getter_AddRefs(mUri), src);
     // At this point mUri will be null for invalid URLs.
-    mExternal = PR_TRUE;
+    mExternal = true;
 
     bool defer, async;
     GetAsync(&async);
@@ -317,7 +317,7 @@ nsHTMLScriptElement::FreezeUriAsyncDefer()
     mAsync = async;
   }
   
-  mFrozen = PR_TRUE;
+  mFrozen = true;
 }
 
 bool

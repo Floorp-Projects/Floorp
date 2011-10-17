@@ -225,7 +225,7 @@ bool
 nsHTMLImageAccessible::HasLongDesc()
 {
   if (IsDefunct())
-    return PR_FALSE;
+    return false;
 
   return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::longdesc);
 }
@@ -234,7 +234,7 @@ bool
 nsHTMLImageAccessible::IsValidLongDescIndex(PRUint8 aIndex)
 {
   if (!HasLongDesc())
-    return PR_FALSE;
+    return false;
 
   return aIndex == nsLinkableAccessible::ActionCount();
 }

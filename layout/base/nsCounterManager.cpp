@@ -57,17 +57,17 @@ nsCounterUseNode::InitTextFrame(nsGenConList* aList,
       Calc(counterList);
       nsAutoString contentString;
       GetText(contentString);
-      aTextFrame->GetContent()->SetText(contentString, PR_FALSE);
+      aTextFrame->GetContent()->SetText(contentString, false);
     } else {
       // In all other cases (list already dirty or node not at the end),
       // just start with an empty string for now and when we recalculate
       // the list we'll change the value to the right one.
       counterList->SetDirty();
-      return PR_TRUE;
+      return true;
     }
   }
   
-  return PR_FALSE;
+  return false;
 }
 
 // assign the correct |mValueAfter| value to a node that has been inserted
@@ -185,7 +185,7 @@ nsCounterList::SetScope(nsCounterNode *aNode)
 void
 nsCounterList::RecalcAll()
 {
-    mDirty = PR_FALSE;
+    mDirty = false;
 
     nsCounterNode *node = First();
     if (!node)
@@ -220,7 +220,7 @@ nsCounterManager::AddCounterResetsAndIncrements(nsIFrame *aFrame)
     const nsStyleContent *styleContent = aFrame->GetStyleContent();
     if (!styleContent->CounterIncrementCount() &&
         !styleContent->CounterResetCount())
-        return PR_FALSE;
+        return false;
 
     // Add in order, resets first, so all the comparisons will be optimized
     // for addition at the end of the list.
@@ -248,7 +248,7 @@ nsCounterManager::AddResetOrIncrement(nsIFrame *aFrame, PRInt32 aIndex,
     nsCounterList *counterList = CounterListFor(aCounterData->mCounter);
     if (!counterList) {
         NS_NOTREACHED("CounterListFor failed (should only happen on OOM)");
-        return PR_FALSE;
+        return false;
     }
 
     counterList->Insert(node);
@@ -256,7 +256,7 @@ nsCounterManager::AddResetOrIncrement(nsIFrame *aFrame, PRInt32 aIndex,
         // Tell the caller it's responsible for recalculating the entire
         // list.
         counterList->SetDirty();
-        return PR_TRUE;
+        return true;
     }
 
     // Don't call Calc() if the list is already dirty -- it'll be recalculated
@@ -264,7 +264,7 @@ nsCounterManager::AddResetOrIncrement(nsIFrame *aFrame, PRInt32 aIndex,
     if (NS_LIKELY(!counterList->IsDirty())) {
         node->Calc(counterList);
     }
-    return PR_FALSE;
+    return false;
 }
 
 nsCounterList*
@@ -300,7 +300,7 @@ nsCounterManager::RecalcAll()
 struct DestroyNodesData {
     DestroyNodesData(nsIFrame *aFrame)
         : mFrame(aFrame)
-        , mDestroyedAny(PR_FALSE)
+        , mDestroyedAny(false)
     {
     }
 
@@ -313,7 +313,7 @@ DestroyNodesInList(const nsAString& aKey, nsCounterList* aList, void* aClosure)
 {
     DestroyNodesData *data = static_cast<DestroyNodesData*>(aClosure);
     if (aList->DestroyNodesFor(data->mFrame)) {
-        data->mDestroyedAny = PR_TRUE;
+        data->mDestroyedAny = true;
         aList->SetDirty();
     }
     return PL_DHASH_NEXT;

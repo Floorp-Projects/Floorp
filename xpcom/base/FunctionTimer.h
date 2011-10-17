@@ -213,7 +213,7 @@ public:
     }
 
     FunctionTimer(double minms, const char *s, ...)
-        : mMinMs(minms), mHasMinMs(PR_TRUE),
+        : mMinMs(minms), mHasMinMs(true),
           mEnabled(sLog && s && *s), mDepth(++sDepth)
     {
         va_list ap;
@@ -225,7 +225,7 @@ public:
     }
 
     FunctionTimer(const char *s, ...)
-        : mMinMs(0.0), mHasMinMs(PR_FALSE),
+        : mMinMs(0.0), mHasMinMs(false),
           mEnabled(sLog && s && *s), mDepth(++sDepth)
     {
         va_list ap;

@@ -244,7 +244,7 @@ public:
      * corners.  The corners specify the radii of the two axes of an
      * ellipse (the horizontal and vertical directions given by the
      * width and height, respectively).  By default the ellipse is
-     * drawn in a clockwise direction; if draw_clockwise is PR_FALSE,
+     * drawn in a clockwise direction; if draw_clockwise is false,
      * then it's drawn counterclockwise.
      */
     void RoundedRectangle(const gfxRect& rect,
@@ -344,12 +344,12 @@ public:
 
     /**
      * Takes the given rect and tries to align it to device pixels.  If
-     * this succeeds, the method will return PR_TRUE, and the rect will
+     * this succeeds, the method will return true, and the rect will
      * be in device coordinates (already transformed by the CTM).  If it 
-     * fails, the method will return PR_FALSE, and the rect will not be
+     * fails, the method will return false, and the rect will not be
      * changed.
      *
-     * If ignoreScale is PR_TRUE, then snapping will take place even if
+     * If ignoreScale is true, then snapping will take place even if
      * the CTM has a scale applied.  Snapping never takes place if
      * there is a rotation in the CTM.
      */
@@ -357,12 +357,12 @@ public:
 
     /**
      * Takes the given point and tries to align it to device pixels.  If
-     * this succeeds, the method will return PR_TRUE, and the point will
+     * this succeeds, the method will return true, and the point will
      * be in device coordinates (already transformed by the CTM).  If it 
-     * fails, the method will return PR_FALSE, and the point will not be
+     * fails, the method will return false, and the point will not be
      * changed.
      *
-     * If ignoreScale is PR_TRUE, then snapping will take place even if
+     * If ignoreScale is true, then snapping will take place even if
      * the CTM has a scale applied.  Snapping never takes place if
      * there is a rotation in the CTM.
      */
@@ -389,7 +389,7 @@ public:
 
     /**
      * Gets the current color.  It's returned in the device color space.
-     * returns PR_FALSE if there is something other than a color
+     * returns false if there is something other than a color
      *         set as the current source (pattern, surface, etc)
      */
     bool GetDeviceColor(gfxRGBA& c);
@@ -824,7 +824,7 @@ public:
         if (aDisable) {
             mSurface = aContext->CurrentSurface();
             mSubpixelAntialiasingEnabled = mSurface->GetSubpixelAntialiasingEnabled();
-            mSurface->SetSubpixelAntialiasingEnabled(PR_FALSE);
+            mSurface->SetSubpixelAntialiasingEnabled(false);
         }
     }
     ~gfxContextAutoDisableSubpixelAntialiasing()

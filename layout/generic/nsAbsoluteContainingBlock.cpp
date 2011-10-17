@@ -122,7 +122,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
   nsIFrame* nif = aOldFrame->GetNextInFlow();
   if (nif) {
     static_cast<nsContainerFrame*>(nif->GetParent())
-      ->DeleteNextInFlowChild(aOldFrame->PresContext(), nif, PR_FALSE);
+      ->DeleteNextInFlowChild(aOldFrame->PresContext(), nif, false);
   }
 
   mAbsoluteFrames.DestroyFrame(aOldFrame);
@@ -145,7 +145,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
   bool reflowAll = aReflowState.ShouldReflowAllKids();
 
   nsIFrame* kidFrame;
-  nsOverflowContinuationTracker tracker(aPresContext, aDelegatingFrame, PR_TRUE);
+  nsOverflowContinuationTracker tracker(aPresContext, aDelegatingFrame, true);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
     bool kidNeedsReflow = reflowAll || NS_SUBTREE_DIRTY(kidFrame) ||
       FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged);
@@ -176,7 +176,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
         if (nextFrame) {
           tracker.Finish(kidFrame);
           static_cast<nsContainerFrame*>(nextFrame->GetParent())
-            ->DeleteNextInFlowChild(aPresContext, nextFrame, PR_TRUE);
+            ->DeleteNextInFlowChild(aPresContext, nextFrame, true);
         }
       }
     }
@@ -245,11 +245,11 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
        pos->mOffset.GetBottomUnit() == eStyleUnit_Auto) ||
       (pos->mOffset.GetLeftUnit() == eStyleUnit_Auto &&
        pos->mOffset.GetRightUnit() == eStyleUnit_Auto)) {
-    return PR_TRUE;
+    return true;
   }
   if (!aCBWidthChanged && !aCBHeightChanged) {
     // skip getting style data
-    return PR_FALSE;
+    return false;
   }
   const nsStylePadding* padding = f->GetStylePadding();
   const nsStyleMargin* margin = f->GetStyleMargin();
@@ -265,7 +265,7 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
         pos->MaxWidthDependsOnContainer() ||
         !IsFixedPaddingSize(padding->mPadding.GetLeft()) ||
         !IsFixedPaddingSize(padding->mPadding.GetRight())) {
-      return PR_TRUE;
+      return true;
     }
 
     // See if f's position might have changed. If we're RTL then the
@@ -273,7 +273,7 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // margins will always induce a dependency on the size
     if (!IsFixedMarginSize(margin->mMargin.GetLeft()) ||
         !IsFixedMarginSize(margin->mMargin.GetRight())) {
-      return PR_TRUE;
+      return true;
     }
     if (f->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
       // Note that even if 'left' is a length, our position can
@@ -284,11 +284,11 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
       // we can be sure of.
       if (!IsFixedOffset(pos->mOffset.GetLeft()) ||
           pos->mOffset.GetRightUnit() != eStyleUnit_Auto) {
-        return PR_TRUE;
+        return true;
       }
     } else {
       if (!IsFixedOffset(pos->mOffset.GetLeft())) {
-        return PR_TRUE;
+        return true;
       }
     }
   }
@@ -307,19 +307,19 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
         pos->MaxHeightDependsOnContainer() ||
         !IsFixedPaddingSize(padding->mPadding.GetTop()) ||
         !IsFixedPaddingSize(padding->mPadding.GetBottom())) { 
-      return PR_TRUE;
+      return true;
     }
       
     // See if f's position might have changed.
     if (!IsFixedMarginSize(margin->mMargin.GetTop()) ||
         !IsFixedMarginSize(margin->mMargin.GetBottom())) {
-      return PR_TRUE;
+      return true;
     }
     if (!IsFixedOffset(pos->mOffset.GetTop())) {
-      return PR_TRUE;
+      return true;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -332,13 +332,13 @@ nsAbsoluteContainingBlock::DestroyFrames(nsIFrame* aDelegatingFrame,
 void
 nsAbsoluteContainingBlock::MarkSizeDependentFramesDirty()
 {
-  DoMarkFramesDirty(PR_FALSE);
+  DoMarkFramesDirty(false);
 }
 
 void
 nsAbsoluteContainingBlock::MarkAllFramesDirty()
 {
-  DoMarkFramesDirty(PR_TRUE);
+  DoMarkFramesDirty(true);
 }
 
 void
@@ -349,7 +349,7 @@ nsAbsoluteContainingBlock::DoMarkFramesDirty(bool aMarkAllDirty)
        kidFrame = kidFrame->GetNextSibling()) {
     if (aMarkAllDirty) {
       kidFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-    } else if (FrameDependsOnContainer(kidFrame, PR_TRUE, PR_TRUE)) {
+    } else if (FrameDependsOnContainer(kidFrame, true, true)) {
       // Add the weakest flags that will make sure we reflow this frame later
       kidFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
     }

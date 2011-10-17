@@ -95,11 +95,11 @@ public:
   // Methods for resampling all animations
   // (A resample performs the same operations as a sample but doesn't advance
   // the current time and doesn't check if the container is paused)
-  void Resample() { DoSample(PR_FALSE); }
+  void Resample() { DoSample(false); }
   void SetResampleNeeded()
   {
     if (!mRunningSample) {
-      mResampleNeeded = PR_TRUE;
+      mResampleNeeded = true;
     }
   }
   void FlushResampleRequests()

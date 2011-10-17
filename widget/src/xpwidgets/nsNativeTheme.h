@@ -101,12 +101,12 @@ class nsNativeTheme : public nsITimerCallback
 
   // checkbox:
   bool IsChecked(nsIFrame* aFrame) {
-    return GetCheckedOrSelected(aFrame, PR_FALSE);
+    return GetCheckedOrSelected(aFrame, false);
   }
 
   // radiobutton:
   bool IsSelected(nsIFrame* aFrame) {
-    return GetCheckedOrSelected(aFrame, PR_TRUE);
+    return GetCheckedOrSelected(aFrame, true);
   }
   
   bool IsFocused(nsIFrame* aFrame) {

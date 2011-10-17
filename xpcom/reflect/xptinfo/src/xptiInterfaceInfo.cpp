@@ -114,9 +114,9 @@ xptiInterfaceEntry::ResolveLocked()
     int resolvedState = GetResolveState();
 
     if(resolvedState == FULLY_RESOLVED)
-        return PR_TRUE;
+        return true;
     if(resolvedState == RESOLVE_FAILED)
-        return PR_FALSE;
+        return false;
 
     NS_ASSERTION(GetResolveState() == PARTIALLY_RESOLVED, "bad state!");    
 
@@ -133,7 +133,7 @@ xptiInterfaceEntry::ResolveLocked()
         if(!parent || !parent->EnsureResolvedLocked())
         {
             SetResolvedState(RESOLVE_FAILED);
-            return PR_FALSE;
+            return false;
         }
 
         mParent = parent;
@@ -150,7 +150,7 @@ xptiInterfaceEntry::ResolveLocked()
     LOG_RESOLVE(("+ complete resolve of %s\n", mName));
 
     SetResolvedState(FULLY_RESOLVED);
-    return PR_TRUE;
+    return true;
 }        
 
 /**************************************************/
@@ -596,7 +596,7 @@ xptiInterfaceEntry::GetIIDShared(const nsIID * *iid)
 nsresult 
 xptiInterfaceEntry::HasAncestor(const nsIID * iid, bool *_retval)
 {
-    *_retval = PR_FALSE;
+    *_retval = false;
 
     for(xptiInterfaceEntry* current = this; 
         current;
@@ -604,7 +604,7 @@ xptiInterfaceEntry::HasAncestor(const nsIID * iid, bool *_retval)
     {
         if(current->mIID.Equals(*iid))
         {
-            *_retval = PR_TRUE;
+            *_retval = true;
             break;
         }
         if(!current->EnsureResolved())

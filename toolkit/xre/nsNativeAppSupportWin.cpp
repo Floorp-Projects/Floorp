@@ -611,7 +611,7 @@ struct MessageWindow {
 #endif
 
                 NS_NewLocalFile(NS_ConvertUTF8toUTF16(wdpath),
-                                PR_FALSE,
+                                false,
                                 getter_AddRefs(workingDir));
             }
             (void)nsNativeAppSupportWin::HandleCommandLine((char*)cds->lpData, workingDir, nsICommandLine::STATE_REMOTE_AUTO);
@@ -648,12 +648,12 @@ nsNativeAppSupportWin::Start( bool *aResult ) {
 
     if (getenv("MOZ_NO_REMOTE"))
     {
-        *aResult = PR_TRUE;
+        *aResult = true;
         return NS_OK;
     }
 
     nsresult rv = NS_ERROR_FAILURE;
-    *aResult = PR_FALSE;
+    *aResult = false;
 
     // Grab mutex first.
 
@@ -678,7 +678,7 @@ nsNativeAppSupportWin::Start( bool *aResult ) {
             // Start up DDE server.
             this->StartDDE();
             // Tell caller to spin message loop.
-            *aResult = PR_TRUE;
+            *aResult = true;
         }
     }
 
@@ -691,10 +691,10 @@ bool
 nsNativeAppSupportWin::InitTopicStrings() {
     for ( int i = 0; i < topicCount; i++ ) {
         if ( !( mTopics[ i ] = DdeCreateStringHandleA( mInstance, const_cast<char *>(topicNames[ i ]), CP_WINANSI ) ) ) {
-            return PR_FALSE;
+            return false;
         }
     }
-    return PR_TRUE;
+    return true;
 }
 
 int
@@ -750,7 +750,7 @@ nsNativeAppSupportWin::Stop( bool *aResult ) {
     NS_ENSURE_TRUE( mInstance, NS_ERROR_NOT_INITIALIZED );
 
     nsresult rv = NS_OK;
-    *aResult = PR_TRUE;
+    *aResult = true;
 
     Mutex ddeLock( mMutexName );
 
@@ -758,7 +758,7 @@ nsNativeAppSupportWin::Stop( bool *aResult ) {
         if ( mConversations == 0 ) {
             this->Quit();
         } else {
-            *aResult = PR_FALSE;
+            *aResult = false;
         }
 
         ddeLock.Unlock();
@@ -766,7 +766,7 @@ nsNativeAppSupportWin::Stop( bool *aResult ) {
     else {
         // No DDE application name specified, but that's OK.  Just
         // forge ahead.
-        *aResult = PR_TRUE;
+        *aResult = true;
     }
 
     return rv;
@@ -829,11 +829,11 @@ nsNativeAppSupportWin::Quit() {
 NS_IMETHODIMP
 nsNativeAppSupportWin::Enable()
 {
-    mCanHandleRequests = PR_TRUE;
+    mCanHandleRequests = true;
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
-        obs->AddObserver(this, "quit-application", PR_FALSE);
+        obs->AddObserver(this, "quit-application", false);
     } else {
         NS_ERROR("No observer service?");
     }
@@ -1072,7 +1072,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
 #if MOZ_DEBUG_DDE
                         printf( "WWW_GetWindowInfo->%s\n", outpt.get() );
 #endif
-                    } while ( PR_FALSE );
+                    } while ( false );
                     break;
                 }
                 case topicActivate: {
@@ -1098,12 +1098,12 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                 }
                 case topicRegisterViewer: {
                     // Register new viewer (not implemented).
-                    result = CreateDDEData( PR_FALSE );
+                    result = CreateDDEData( false );
                     break;
                 }
                 case topicUnRegisterViewer: {
                     // Unregister new viewer (not implemented).
-                    result = CreateDDEData( PR_FALSE );
+                    result = CreateDDEData( false );
                     break;
                 }
                 default:
@@ -1565,7 +1565,7 @@ nsNativeAppSupportWin::OpenBrowserWindow()
         }
 
         NS_ERROR("failed to hand off external URL to extant window");
-    } while ( PR_FALSE );
+    } while ( false );
 
     // open a new window if caller requested it or if anything above failed
 

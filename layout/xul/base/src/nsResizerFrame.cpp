@@ -123,14 +123,14 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           }
 
           mMouseDownRect = rect.ToNearestPixels(aPresContext->AppUnitsPerDevPixel());
-          doDefault = PR_FALSE;
+          doDefault = false;
         }
         else {
           // If there is no window, then resizing isn't allowed.
           if (!window)
             break;
 
-          doDefault = PR_FALSE;
+          doDefault = false;
             
           // ask the widget implementation to begin a resize drag if it can
           Direction direction = GetDirection();
@@ -147,7 +147,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         }
 
         // we're tracking
-        mTrackingMouseMove = PR_TRUE;
+        mTrackingMouseMove = true;
 
         // remember current mouse coordinates
         mMouseDownPoint = aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
@@ -163,11 +163,11 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton)
     {
       // we're done tracking.
-      mTrackingMouseMove = PR_FALSE;
+      mTrackingMouseMove = false;
 
       nsIPresShell::SetCapturingContent(nsnull, 0);
 
-      doDefault = PR_FALSE;
+      doDefault = false;
     }
   }
   break;
@@ -280,14 +280,14 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
             (oldRect.x != rect.x || oldRect.y != rect.y) &&
             (!menuPopupFrame->IsAnchored() ||
              menuPopupFrame->PopupLevel() != ePopupLevelParent)) {
-          menuPopupFrame->MoveTo(rect.x, rect.y, PR_TRUE);
+          menuPopupFrame->MoveTo(rect.x, rect.y, true);
         }
       }
       else {
-        window->SetPositionAndSize(rect.x, rect.y, rect.width, rect.height, PR_TRUE); // do the repaint.
+        window->SetPositionAndSize(rect.x, rect.y, rect.width, rect.height, true); // do the repaint.
       }
 
-      doDefault = PR_FALSE;
+      doDefault = false;
     }
   }
   break;
@@ -427,10 +427,10 @@ nsResizerFrame::ResizeContent(nsIContent* aContent, const Direction& aDirection,
     }
     // only set the property if the element could have changed in that direction
     if (aDirection.mHorizontal) {
-      aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::width, aSizeInfo.width, PR_TRUE);
+      aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::width, aSizeInfo.width, true);
     }
     if (aDirection.mVertical) {
-      aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::height, aSizeInfo.height, PR_TRUE);
+      aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::height, aSizeInfo.height, true);
     }
   }
   else {
@@ -551,5 +551,5 @@ nsResizerFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent *aEvent)
   // Execute the oncommand event handler.
   nsContentUtils::DispatchXULCommand(mContent,
                                      aEvent ?
-                                       NS_IS_TRUSTED_EVENT(aEvent) : PR_FALSE);
+                                       NS_IS_TRUSTED_EVENT(aEvent) : false);
 }

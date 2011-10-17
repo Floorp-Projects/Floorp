@@ -336,7 +336,7 @@ txCopyBase::copyNode(const txXPathNode& aNode, txExecutionState& aEs)
         {
             nsAutoString nodeValue;
             txXPathNodeUtils::appendNodeValue(aNode, nodeValue);
-            return aEs.mResultHandler->characters(nodeValue, PR_FALSE);
+            return aEs.mResultHandler->characters(nodeValue, false);
         }
     }
     
@@ -361,10 +361,10 @@ txCopy::execute(txExecutionState& aEs)
             const nsAFlatString& empty = EmptyString();
 
             // "close" current element to ensure that no attributes are added
-            rv = aEs.mResultHandler->characters(empty, PR_FALSE);
+            rv = aEs.mResultHandler->characters(empty, false);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            rv = aEs.pushBool(PR_FALSE);
+            rv = aEs.pushBool(false);
             NS_ENSURE_SUCCESS(rv, rv);
 
             break;
@@ -381,7 +381,7 @@ txCopy::execute(txExecutionState& aEs)
 
             // XXX copy namespace nodes once we have them
 
-            rv = aEs.pushBool(PR_TRUE);
+            rv = aEs.pushBool(true);
             NS_ENSURE_SUCCESS(rv, rv);
 
             break;
@@ -436,7 +436,7 @@ txCopyOf::execute(txExecutionState& aEs)
             nsAutoString value;
             exprRes->stringValue(value);
             if (!value.IsEmpty()) {
-                return aEs.mResultHandler->characters(value, PR_FALSE);
+                return aEs.mResultHandler->characters(value, false);
             }
             break;
         }
@@ -594,7 +594,7 @@ txNumber::execute(txExecutionState& aEs)
                                    aEs.getEvalContext(), res);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    return aEs.mResultHandler->characters(res, PR_FALSE);
+    return aEs.mResultHandler->characters(res, false);
 }
 
 nsresult
@@ -897,10 +897,10 @@ txStartElement::execute(txExecutionState& aEs)
     }
 
     if (rv == NS_ERROR_XSLT_BAD_NODE_NAME) {
-        success = PR_FALSE;
+        success = false;
         // we call characters with an empty string to "close" any element to
         // make sure that no attributes are added
-        rv = aEs.mResultHandler->characters(EmptyString(), PR_FALSE);
+        rv = aEs.mResultHandler->characters(EmptyString(), false);
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -931,7 +931,7 @@ txStartLREElement::execute(txExecutionState& aEs)
                                                    mNamespaceID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aEs.pushBool(PR_TRUE);
+    rv = aEs.pushBool(true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

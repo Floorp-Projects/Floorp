@@ -175,7 +175,7 @@ public:
     nsCOMPtr<nsIObserverService> os =
       mozilla::services::GetObserverService();
     NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
-    nsresult rv = os->AddObserver(mObserver, "xpcom-shutdown", PR_FALSE);
+    nsresult rv = os->AddObserver(mObserver, "xpcom-shutdown", false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We cache XPConnect for our language helpers.  XPConnect can only be
@@ -546,7 +546,7 @@ Service::BackupDatabaseFile(nsIFile *aDBFile,
   rv = backupDB->GetLeafName(fileName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = backupDB->Remove(PR_FALSE);
+  rv = backupDB->Remove(false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   backupDB.forget(backup);

@@ -83,7 +83,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
   if (!aHyphens.SetLength(aString.Length())) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  memset(aHyphens.Elements(), PR_FALSE, aHyphens.Length());
+  memset(aHyphens.Elements(), false, aHyphens.Length());
 
   bool inWord = false;
   PRUint32 wordStart = 0, wordLimit = 0;
@@ -104,7 +104,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
     nsIUGenCategory::nsUGenCategory cat = mCategories->Get(ch);
     if (cat == nsIUGenCategory::kLetter || cat == nsIUGenCategory::kMark) {
       if (!inWord) {
-        inWord = PR_TRUE;
+        inWord = true;
         wordStart = i;
       }
       wordLimit = i + chLen;
@@ -136,7 +136,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
         const PRUnichar *end = begin + wordLimit;
         while (cur < end) {
           if (*hyphPtr & 0x01) {
-            aHyphens[cur - begin] = PR_TRUE;
+            aHyphens[cur - begin] = true;
           }
           cur++;
           if (cur < end && NS_IS_LOW_SURROGATE(*cur) &&
@@ -149,7 +149,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
       }
     }
     
-    inWord = PR_FALSE;
+    inWord = false;
   }
 
   return NS_OK;
