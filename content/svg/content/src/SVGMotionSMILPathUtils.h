@@ -65,7 +65,7 @@ public:
     PathGenerator(const nsSVGElement* aSVGElement)
       : mSVGElement(aSVGElement),
         mGfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface()),
-        mHaveReceivedCommands(PR_FALSE)
+        mHaveReceivedCommands(false)
     {}
 
     // Methods for adding various path commands to output path.

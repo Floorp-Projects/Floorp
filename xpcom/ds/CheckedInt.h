@@ -403,7 +403,7 @@ public:
     /** \returns the actual value */
     T value() const { return mValue; }
 
-    /** \returns PR_TRUE if the checked integer is valid, i.e. is not the result
+    /** \returns true if the checked integer is valid, i.e. is not the result
       * of an invalid operation or of an operation involving an invalid checked integer
       */
     bool valid() const

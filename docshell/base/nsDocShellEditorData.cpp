@@ -53,9 +53,9 @@
 
 nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* inOwningDocShell)
 : mDocShell(inOwningDocShell)
-, mMakeEditable(PR_FALSE)
-, mIsDetached(PR_FALSE)
-, mDetachedMakeEditable(PR_FALSE)
+, mMakeEditable(false)
+, mIsDetached(false)
+, mDetachedMakeEditable(false)
 , mDetachedEditingState(nsIHTMLDocument::eOff)
 {
   NS_ASSERTION(mDocShell, "Where is my docShell?");
@@ -76,11 +76,11 @@ void
 nsDocShellEditorData::TearDownEditor()
 {
   if (mEditor) {
-    mEditor->PreDestroy(PR_FALSE);
+    mEditor->PreDestroy(false);
     mEditor = nsnull;
   }
   mEditingSession = nsnull;
-  mIsDetached = PR_FALSE;
+  mIsDetached = false;
 }
 
 
@@ -101,12 +101,12 @@ nsDocShellEditorData::MakeEditable(bool inWaitForUriLoad)
   {
     NS_WARNING("Destroying existing editor on frame");
     
-    mEditor->PreDestroy(PR_FALSE);
+    mEditor->PreDestroy(false);
     mEditor = nsnull;
   }
   
   if (inWaitForUriLoad)
-    mMakeEditable = PR_TRUE;
+    mMakeEditable = true;
   return NS_OK;
 }
 
@@ -188,13 +188,13 @@ nsDocShellEditorData::SetEditor(nsIEditor *inEditor)
   {
     if (mEditor)
     {
-      mEditor->PreDestroy(PR_FALSE);
+      mEditor->PreDestroy(false);
       mEditor = nsnull;
     }
       
     mEditor = inEditor;    // owning addref
     if (!mEditor)
-      mMakeEditable = PR_FALSE;
+      mMakeEditable = false;
   }   
   
   return NS_OK;
@@ -236,9 +236,9 @@ nsDocShellEditorData::DetachFromWindow()
   nsresult rv = mEditingSession->DetachFromWindow(domWindow);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mIsDetached = PR_TRUE;
+  mIsDetached = true;
   mDetachedMakeEditable = mMakeEditable;
-  mMakeEditable = PR_FALSE;
+  mMakeEditable = false;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   domWindow->GetDocument(getter_AddRefs(domDoc));
@@ -260,7 +260,7 @@ nsDocShellEditorData::ReattachToWindow(nsIDocShell* aDocShell)
   nsresult rv = mEditingSession->ReattachToWindow(domWindow);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mIsDetached = PR_FALSE;
+  mIsDetached = false;
   mMakeEditable = mDetachedMakeEditable;
 
   nsCOMPtr<nsIDOMDocument> domDoc;

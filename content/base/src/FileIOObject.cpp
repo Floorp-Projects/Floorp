@@ -82,8 +82,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileIOObject,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 FileIOObject::FileIOObject()
-  : mProgressEventWasDelayed(PR_FALSE),
-    mTimerIsActive(PR_FALSE),
+  : mProgressEventWasDelayed(false),
+    mTimerIsActive(false),
     mReadyState(0),
     mTotal(0), mTransferred(0)
 {}
@@ -101,8 +101,8 @@ FileIOObject::StartProgressEventTimer()
     mProgressNotifier = do_CreateInstance(NS_TIMER_CONTRACTID);
   }
   if (mProgressNotifier) {
-    mProgressEventWasDelayed = PR_FALSE;
-    mTimerIsActive = PR_TRUE;
+    mProgressEventWasDelayed = false;
+    mTimerIsActive = true;
     mProgressNotifier->Cancel();
     mProgressNotifier->InitWithCallback(this, NS_PROGRESS_EVENT_INTERVAL,
                                         nsITimer::TYPE_ONE_SHOT);
@@ -112,8 +112,8 @@ FileIOObject::StartProgressEventTimer()
 void
 FileIOObject::ClearProgressEventTimer()
 {
-  mProgressEventWasDelayed = PR_FALSE;
-  mTimerIsActive = PR_FALSE;
+  mProgressEventWasDelayed = false;
+  mTimerIsActive = false;
   if (mProgressNotifier) {
     mProgressNotifier->Cancel();
   }
@@ -152,20 +152,20 @@ FileIOObject::DispatchProgressEvent(const nsAString& aType)
   nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(event));
   NS_ENSURE_TRUE(privevent, NS_ERROR_UNEXPECTED);
 
-  privevent->SetTrusted(PR_TRUE);
+  privevent->SetTrusted(true);
   nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
   NS_ENSURE_TRUE(progress, NS_ERROR_UNEXPECTED);
 
   bool known;
   PRUint64 size;
   if (mTotal != kUnknownSize) {
-    known = PR_TRUE;
+    known = true;
     size = mTotal;
   } else {
-    known = PR_FALSE;
+    known = false;
     size = 0;
   }
-  rv = progress->InitProgressEvent(aType, PR_FALSE, PR_FALSE, known,
+  rv = progress->InitProgressEvent(aType, false, false, known,
                                    mTransferred, size);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -177,7 +177,7 @@ NS_IMETHODIMP
 FileIOObject::Notify(nsITimer* aTimer)
 {
   nsresult rv;
-  mTimerIsActive = PR_FALSE;
+  mTimerIsActive = false;
 
   if (mProgressEventWasDelayed) {
     rv = DispatchProgressEvent(NS_LITERAL_STRING("progress"));
@@ -217,7 +217,7 @@ FileIOObject::OnDataAvailable(nsIRequest *aRequest,
 
   //Notify the timer is the appropriate timeframe has passed
   if (mTimerIsActive) {
-    mProgressEventWasDelayed = PR_TRUE;
+    mProgressEventWasDelayed = true;
   } else {
     rv = DispatchProgressEvent(NS_LITERAL_STRING(PROGRESS_STR));
     NS_ENSURE_SUCCESS(rv, rv);

@@ -111,8 +111,8 @@ public:
 typedef txDouble Double;
 typedef bool MBool;
 
-#define MB_TRUE  PR_TRUE
-#define MB_FALSE PR_FALSE
+#define MB_TRUE  true
+#define MB_FALSE false
 // XXX
 
 #endif

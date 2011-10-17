@@ -315,7 +315,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
     // Always assume that we're done.  This will change if, for example, children don't stay
     // the same size after being flowed.
-    finished = PR_TRUE;
+    finished = true;
 
     // Handle box packing.
     HandleBoxPack(aBox, frameState, x, y, originalClientRect, clientRect);
@@ -462,11 +462,11 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       // Now we're trying to figure out if we have to lay out this child, i.e., to call
       // the child's Layout method.
       if (passes > 0) {
-        layout = PR_FALSE;
+        layout = false;
       } else {
         // Always perform layout if we are dirty or have dirty children
         if (!NS_SUBTREE_DIRTY(child))
-          layout = PR_FALSE;
+          layout = false;
       }
 
       nsRect oldRect(child->GetRect());
@@ -507,12 +507,12 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         child->SetBounds(aState, childRect);
 
         // Since the child changed size, we know a redraw is probably going to be required.
-        needsRedraw = PR_TRUE;
+        needsRedraw = true;
       }
 
       // if something moved then we might need to redraw
       if (oldRect.x != childRect.x || oldRect.y != childRect.y)
-          needsRedraw = PR_TRUE;
+          needsRedraw = true;
 
       // If we already determined that layout was required or if our size has changed, then
       // we make sure to call layout on the child, since its children may need to be shifted
@@ -548,7 +548,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
                      finished);
 
         // We note that a child changed size, which means that another pass will be required.
-        childResized = PR_TRUE;
+        childResized = true;
 
         // Now that a child resized, it's entirely possible that OUR rect is too small.  Now we
         // ensure that |originalClientRect| is grown to accommodate the size of |clientRect|.
@@ -584,7 +584,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
         // If we are the first box that changed size, then we don't need to do a second pass
         if (count == 0)
-          finished = PR_TRUE;
+          finished = true;
       }
 
       // Now update our x/y finally.
@@ -604,7 +604,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     NS_ASSERTION(passes < 10, "A Box's child is constantly growing!!!!!");
     if (passes > 10)
       break;
-  } while (PR_FALSE == finished);
+  } while (false == finished);
 
   // Get rid of our size lists.
   while(boxSizes)
@@ -699,9 +699,9 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
   bool isHorizontal;
 
   if (IsHorizontal(aBox))
-     isHorizontal = PR_TRUE;
+     isHorizontal = true;
   else
-     isHorizontal = PR_FALSE;
+     isHorizontal = false;
 
   // this is a nice little optimization
   // it turns out that if we only have 1 flexable child
@@ -1040,7 +1040,7 @@ nsSprocketLayout::AlignChildren(nsIBox* aBox,
     }
 
     if (childRect.TopLeft() != child->GetPosition()) {
-      *aNeedsRedraw = PR_TRUE;
+      *aNeedsRedraw = true;
       child->SetBounds(aState, childRect);
     }
 
@@ -1099,17 +1099,17 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
               // remember we do not need to clear the resized list because changing the height of a horizontal box
               // will not affect the width of any of its children because block flow left to right, top to bottom. Just trust me
               // on this one.
-              aFinished = PR_FALSE;
+              aFinished = false;
 
               // only recompute if there are flexes.
               if (aFlexes > 0) {
                 // relayout everything
-                recompute = PR_TRUE;
+                recompute = true;
                 InvalidateComputedSizes(aComputedBoxSizes);
                 nsComputedBoxSize* node = aComputedBoxSizes;
 
                 while(node) {
-                  node->resized = PR_FALSE;
+                  node->resized = false;
                   node = node->next;
                 }
 
@@ -1143,17 +1143,17 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
                 InvalidateComputedSizes(aComputedBoxSizes);
 
                 nsComputedBoxSize* node = aComputedBoxSizes;
-                aChildComputedSize->resized = PR_TRUE;
+                aChildComputedSize->resized = true;
 
                 while(node) {
                   if (node->resized)
-                      node->valid = PR_TRUE;
+                      node->valid = true;
                 
                   node = node->next;
                 }
 
-                recompute = PR_TRUE;
-                aFinished = PR_FALSE;
+                recompute = true;
+                aFinished = false;
               } else {
                 containingWidth += aChildComputedSize->size - childLayoutWidth;
               }              
@@ -1183,7 +1183,7 @@ void
 nsSprocketLayout::InvalidateComputedSizes(nsComputedBoxSize* aComputedBoxSizes)
 {
   while(aComputedBoxSizes) {
-      aComputedBoxSizes->valid = PR_FALSE;
+      aComputedBoxSizes->valid = false;
       aComputedBoxSizes = aComputedBoxSizes->next;
   }
 }
@@ -1220,7 +1220,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
      // ignore collapsed children
   //  if (boxSizes->collapsed) 
   //  {
-    //  computedBoxSizes->valid = PR_TRUE;
+    //  computedBoxSizes->valid = true;
     //  computedBoxSizes->size = boxSizes->pref;
      // validCount++;
   //      boxSizes->flex = 0;
@@ -1232,7 +1232,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
       } else {
           if (boxSizes->flex == 0)
           {
-            computedBoxSizes->valid = PR_TRUE;
+            computedBoxSizes->valid = true;
             computedBoxSizes->size = boxSizes->pref;
             validCount++;
           }
@@ -1260,9 +1260,9 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
     // ----- Ok we are give a size to fit into so stretch or squeeze to fit
     // ----- Make sure we look at our min and max size
     bool limit = true;
-    for (int pass=1; PR_TRUE == limit; pass++) 
+    for (int pass=1; true == limit; pass++) 
     {
-      limit = PR_FALSE;
+      limit = false;
       boxSizes = aBoxSizes;
       computedBoxSizes = aComputedBoxSizes;
 
@@ -1288,18 +1288,18 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
 
             if (newSize<=min) {
               computedBoxSizes->size = min;
-              computedBoxSizes->valid = PR_TRUE;
+              computedBoxSizes->valid = true;
               spacerConstantsRemaining -= flex;
               sizeRemaining += pref;
               sizeRemaining -= min;
-              limit = PR_TRUE;
+              limit = true;
             } else if (newSize>=max) {
               computedBoxSizes->size = max;
-              computedBoxSizes->valid = PR_TRUE;
+              computedBoxSizes->valid = true;
               spacerConstantsRemaining -= flex;
               sizeRemaining += pref;
               sizeRemaining -= max;
-              limit = PR_TRUE;
+              limit = true;
             }
           }
        // }
@@ -1327,7 +1327,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
 
       if (!computedBoxSizes->valid) {
         computedBoxSizes->size = pref + PRInt32(PRInt64(sizeRemaining) * flex / spacerConstantsRemaining);
-        computedBoxSizes->valid = PR_TRUE;
+        computedBoxSizes->valid = true;
       }
 
       aGivenSize += (boxSizes->left + boxSizes->right);
@@ -1640,13 +1640,13 @@ bool
 nsSprocketLayout::GetDefaultFlex(PRInt32& aFlex)
 {
     aFlex = 0;
-    return PR_TRUE;
+    return true;
 }
 
 nsComputedBoxSize::nsComputedBoxSize()
 {
-  resized = PR_FALSE;
-  valid = PR_FALSE;
+  resized = false;
+  valid = false;
   size = 0;
   next = nsnull;
 }
@@ -1656,12 +1656,12 @@ nsBoxSize::nsBoxSize()
   pref = 0;
   min = 0;
   max = NS_INTRINSICSIZE;
-  collapsed = PR_FALSE;
+  collapsed = false;
   left = 0;
   right = 0;
   flex = 0;
   next = nsnull;
-  bogus = PR_FALSE;
+  bogus = false;
 }
 
 

@@ -221,11 +221,11 @@ LookupFunction(const char *aContractID, nsIAtom* aName, nsIID &aIID,
     bool upperNext = false;
     while ((letter = *name)) {
         if (letter == '-') {
-            upperNext = PR_TRUE;
+            upperNext = true;
         }
         else {
             methodName.Append(upperNext ? nsCRT::ToUpper(letter) : letter);
-            upperNext = PR_FALSE;
+            upperNext = false;
         }
         ++name;
     }
@@ -370,12 +370,12 @@ txParamArrayHolder::Init(PRUint8 aCount)
     mCount = aCount;
     mArray = new nsXPTCVariant[mCount];
     if (!mArray) {
-        return PR_FALSE;
+        return false;
     }
 
     memset(mArray, 0, mCount * sizeof(nsXPTCVariant));
 
-    return PR_TRUE;
+    return true;
 }
 
 nsresult
@@ -623,7 +623,7 @@ txXPCOMExtensionFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     // It doesn't really matter what we return here, but it might
     // be a good idea to try to keep this as unoptimizable as possible
-    return PR_TRUE;
+    return true;
 }
 
 #ifdef TX_TO_STRING

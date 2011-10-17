@@ -214,12 +214,12 @@ nsresult nsSystemFontsOS2::GetSystemFont(nsSystemFontID aID, nsString* aFontName
     int pos = 0;
 
     // this is a system font in any case
-    aFontStyle->systemFont = PR_TRUE;
+    aFontStyle->systemFont = true;
 
     // bold fonts should have " Bold" in their names, at least we hope that they
     // do, otherwise it's bad luck
     NS_NAMED_LITERAL_CSTRING(spcBold, " Bold");
-    if ((pos = fontFace.Find(spcBold.get(), PR_FALSE, 0, -1)) > -1) {
+    if ((pos = fontFace.Find(spcBold.get(), false, 0, -1)) > -1) {
         aFontStyle->weight = FONT_WEIGHT_BOLD;
         // strip the attribute, now that we have set it in the gfxFontStyle
         fontFace.Cut(pos, spcBold.Length());
@@ -234,15 +234,15 @@ nsresult nsSystemFontsOS2::GetSystemFont(nsSystemFontID aID, nsString* aFontName
     NS_NAMED_LITERAL_CSTRING(spcItalic, " Italic");
     NS_NAMED_LITERAL_CSTRING(spcOblique, " Oblique");
     NS_NAMED_LITERAL_CSTRING(spcObli, " Obli");
-    if ((pos = fontFace.Find(spcItalic.get(), PR_FALSE, 0, -1)) > -1) {
+    if ((pos = fontFace.Find(spcItalic.get(), false, 0, -1)) > -1) {
         aFontStyle->style = FONT_STYLE_ITALIC;
         fontFace.Cut(pos, spcItalic.Length());
-    } else if ((pos = fontFace.Find(spcOblique.get(), PR_FALSE, 0, -1)) > -1) {
+    } else if ((pos = fontFace.Find(spcOblique.get(), false, 0, -1)) > -1) {
         // oblique fonts are rare on OS/2 and not specially supported by
         // the GPI system, but at least we are trying...
         aFontStyle->style = FONT_STYLE_OBLIQUE;
         fontFace.Cut(pos, spcOblique.Length());
-    } else if ((pos = fontFace.Find(spcObli.get(), PR_FALSE, 0, -1)) > -1) {
+    } else if ((pos = fontFace.Find(spcObli.get(), false, 0, -1)) > -1) {
         // especially oblique often gets cut by the 32 char limit to "Obli",
         // so search for that, too (anything shorter would be ambiguous)
         aFontStyle->style = FONT_STYLE_OBLIQUE;
@@ -257,7 +257,7 @@ nsresult nsSystemFontsOS2::GetSystemFont(nsSystemFontID aID, nsString* aFontName
     // just throw away any modifiers that are separated by dots (which are either
     // .Strikeout, .Underline, or .Outline, none of which have a corresponding
     // gfxFont property)
-    if ((pos = fontFace.Find(".", PR_FALSE, 0, -1)) > -1) {
+    if ((pos = fontFace.Find(".", false, 0, -1)) > -1) {
         fontFace.Cut(pos, fontFace.Length());
     }
 

@@ -79,7 +79,7 @@ gfxDirectFBSurface::gfxDirectFBSurface(cairo_surface_t *csurf)
     mDFB = nsnull;
     mDFBSurface = nsnull;
 
-    Init(csurf, PR_TRUE);
+    Init(csurf, true);
 }
 
 gfxDirectFBSurface::gfxDirectFBSurface(const gfxIntSize& size, gfxImageFormat format) :

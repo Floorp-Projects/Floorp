@@ -135,7 +135,7 @@ public:
                     && mProperty == element.mProperty
                     && mTarget == element.mTarget;
             }
-            return PR_FALSE; }
+            return false; }
 
     protected:
         nsCOMPtr<nsIRDFResource> mSource;

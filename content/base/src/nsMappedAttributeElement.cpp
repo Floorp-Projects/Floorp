@@ -82,7 +82,7 @@ nsMappedAttributeElement::SetMappedAttribute(nsIDocument* aDocument,
 
   *aRetval = mAttrsAndChildren.SetAndTakeMappedAttr(aName, aValue,
                                                     this, sheet);
-  return PR_TRUE;
+  return true;
 }
 
 nsMapRuleToAttributesFunc

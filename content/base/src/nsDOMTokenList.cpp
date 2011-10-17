@@ -141,7 +141,7 @@ nsDOMTokenList::Contains(const nsAString& aToken, bool* aResult)
 
   const nsAttrValue* attr = GetParsedAttr();
   if (!attr) {
-    *aResult = PR_FALSE;
+    *aResult = false;
     return NS_OK;
   }
 
@@ -171,7 +171,7 @@ nsDOMTokenList::AddInternal(const nsAttrValue* aAttr,
   } else {
     resultStr.Append(aToken);
   }
-  mElement->SetAttr(kNameSpaceID_None, mAttrAtom, resultStr, PR_TRUE);
+  mElement->SetAttr(kNameSpaceID_None, mAttrAtom, resultStr, true);
 }
 
 NS_IMETHODIMP
@@ -235,7 +235,7 @@ nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
         ++iter;
       }
       copyStart = iter;
-      lastTokenRemoved = PR_TRUE;
+      lastTokenRemoved = true;
 
     } else {
 
@@ -244,13 +244,13 @@ nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
           output.CharAt(output.Length() - 1)), "Invalid last output token");
         output.Append(PRUnichar(' '));
       }
-      lastTokenRemoved = PR_FALSE;
+      lastTokenRemoved = false;
       output.Append(Substring(copyStart, iter));
       copyStart = iter;
     }
   }
 
-  mElement->SetAttr(kNameSpaceID_None, mAttrAtom, output, PR_TRUE);
+  mElement->SetAttr(kNameSpaceID_None, mAttrAtom, output, true);
 }
 
 NS_IMETHODIMP
@@ -283,10 +283,10 @@ nsDOMTokenList::Toggle(const nsAString& aToken, bool* aResult)
 
   if (attr && ContainsInternal(attr, aToken)) {
     RemoveInternal(attr, aToken);
-    *aResult = PR_FALSE;
+    *aResult = false;
   } else {
     AddInternal(attr, aToken);
-    *aResult = PR_TRUE;
+    *aResult = true;
   }
 
   return NS_OK;

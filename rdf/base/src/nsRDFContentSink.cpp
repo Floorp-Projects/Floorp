@@ -517,7 +517,7 @@ RDFContentSinkImpl::HandleEndElement(const PRUnichar *aName)
 
     case eRDFContentSinkState_InPropertyElement: 
       {
-        mDataSource->Assert(GetContextElement(1), GetContextElement(0), resource, PR_TRUE);                                          
+        mDataSource->Assert(GetContextElement(1), GetContextElement(0), resource, true);                                          
       } break;
     default:
       break;
@@ -584,7 +584,7 @@ RDFContentSinkImpl::ReportError(const PRUnichar* aErrorText,
   NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
 
   // The expat driver should report the error.
-  *_retval = PR_TRUE;
+  *_retval = true;
   return NS_OK;
 }
 
@@ -696,9 +696,9 @@ rdf_IsDataInBuffer(PRUnichar* buffer, PRInt32 length)
             buffer[i] == '\r')
             continue;
 
-        return PR_TRUE;
+        return true;
     }
-    return PR_FALSE;
+    return false;
 }
 
 void
@@ -777,7 +777,7 @@ RDFContentSinkImpl::FlushText()
                 nsCOMPtr<nsIRDFNode> node;
                 ParseText(getter_AddRefs(node));
 
-                mDataSource->Assert(GetContextElement(1), GetContextElement(0), node, PR_TRUE);
+                mDataSource->Assert(GetContextElement(1), GetContextElement(0), node, true);
             } break;
 
             default:
@@ -862,7 +862,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
       
         if (localName == kAboutAtom) {
             if (aIsAnonymous)
-                *aIsAnonymous = PR_FALSE;
+                *aIsAnonymous = false;
 
             nsAutoString relURI(aAttributes[1]);
             if (rdf_RequiresAbsoluteURI(relURI)) {
@@ -878,7 +878,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
         }
         else if (localName == kIdAtom) {
             if (aIsAnonymous)
-                *aIsAnonymous = PR_FALSE;
+                *aIsAnonymous = false;
             // In the spirit of leniency, we do not bother trying to
             // enforce that this be a valid "XML Name" (see
             // http://www.w3.org/TR/REC-xml#NT-Nmtoken), as per
@@ -909,7 +909,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
 
     // Otherwise, we couldn't find anything, so just gensym one...
     if (aIsAnonymous)
-        *aIsAnonymous = PR_TRUE;
+        *aIsAnonymous = true;
 
     // If nodeID is present, check if we already know about it. If we've seen
     // the nodeID before, use the same resource, otherwise generate a new one.
@@ -1041,7 +1041,7 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
       gRDFService->GetLiteral(aAttributes[1], 
                               getter_AddRefs(target));
 
-      mDataSource->Assert(aSubject, property, target, PR_TRUE);
+      mDataSource->Assert(aSubject, property, target, true);
   }
   return NS_OK;
 }
@@ -1130,7 +1130,7 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
     bool isaTypedNode = true;
 
     if (nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI)) {
-        isaTypedNode = PR_FALSE;
+        isaTypedNode = false;
 
         if (localName == kDescriptionAtom) {
             // it's a description
@@ -1154,7 +1154,7 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
         else {
             // heh, that's not *in* the RDF namespace: just treat it
             // like a typed node
-            isaTypedNode = PR_TRUE;
+            isaTypedNode = true;
         }
     }
 
@@ -1166,7 +1166,7 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
         nsresult rv = gRDFService->GetResource(typeStr, getter_AddRefs(type));
         if (NS_FAILED(rv)) return rv;
 
-        rv = mDataSource->Assert(source, kRDF_type, type, PR_TRUE);
+        rv = mDataSource->Assert(source, kRDF_type, type, true);
         if (NS_FAILED(rv)) return rv;
 
         mState = eRDFContentSinkState_InDescriptionElement;
@@ -1231,7 +1231,7 @@ RDFContentSinkImpl::OpenProperty(const PRUnichar* aName, const PRUnichar** aAttr
             // only assert this property from the context element *if*
             // there were properties specified on the anonymous
             // resource.
-            rv = mDataSource->Assert(GetContextElement(0), property, target, PR_TRUE);
+            rv = mDataSource->Assert(GetContextElement(0), property, target, true);
             if (NS_FAILED(rv)) return rv;
         }
 
@@ -1437,14 +1437,14 @@ RDFContentSinkImpl::ReinitContainer(nsIRDFResource* aContainerType, nsIRDFResour
 
     // Re-initialize the 'nextval' property
     nsCOMPtr<nsIRDFNode> nextval;
-    rv = mDataSource->GetTarget(aContainer, kRDF_nextVal, PR_TRUE, getter_AddRefs(nextval));
+    rv = mDataSource->GetTarget(aContainer, kRDF_nextVal, true, getter_AddRefs(nextval));
     if (NS_FAILED(rv)) return rv;
 
     rv = mDataSource->Change(aContainer, kRDF_nextVal, nextval, one);
     if (NS_FAILED(rv)) return rv;
 
     // Re-mark as a container. XXX should be kRDF_type
-    rv = mDataSource->Assert(aContainer, kRDF_instanceOf, aContainerType, PR_TRUE);
+    rv = mDataSource->Assert(aContainer, kRDF_instanceOf, aContainerType, true);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to mark container as such");
     if (NS_FAILED(rv)) return rv;
 

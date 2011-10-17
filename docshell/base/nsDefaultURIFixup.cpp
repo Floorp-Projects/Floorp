@@ -323,7 +323,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
 
         // For ftp & http, we want to use system charset.
         if (!bAsciiURI)
-          bUseNonDefaultCharsetForURI = PR_TRUE;
+          bUseNonDefaultCharsetForURI = true;
     } // end if checkprotocol
 
     rv = NS_NewURI(aURI, uriString, bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
@@ -427,25 +427,25 @@ bool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
 {
     if (!Preferences::GetRootBranch())
     {
-        return PR_FALSE;
+        return false;
     }
     if (!Preferences::GetBool("browser.fixup.alternate.enabled", true))
     {
-        return PR_FALSE;
+        return false;
     }
 
     // Code only works for http. Not for any other protocol including https!
     bool isHttp = false;
     aURI->SchemeIs("http", &isHttp);
     if (!isHttp) {
-        return PR_FALSE;
+        return false;
     }
 
     // Security - URLs with user / password info should NOT be fixed up
     nsCAutoString userpass;
     aURI->GetUserPass(userpass);
     if (!userpass.IsEmpty()) {
-        return PR_FALSE;
+        return false;
     }
 
     nsCAutoString oldHost;
@@ -504,22 +504,22 @@ bool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
         else
         {
             // Do nothing
-            return PR_FALSE;
+            return false;
         }
     }
     else
     {
         // Do nothing
-        return PR_FALSE;
+        return false;
     }
 
     if (newHost.IsEmpty()) {
-        return PR_FALSE;
+        return false;
     }
 
     // Assign the new host string over the old one
     aURI->SetHost(newHost);
-    return PR_TRUE;
+    return true;
 }
 
 /**
@@ -544,7 +544,7 @@ bool nsDefaultURIFixup::IsLikelyFTP(const nsCString &aHostSpec)
                 while (iter != end)
                 {
                     if (*iter == '.') {
-                        likelyFTP = PR_TRUE;
+                        likelyFTP = true;
                         break;
                     }
                     ++iter;
@@ -585,13 +585,13 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
     if(kNotFound != aIn.FindChar('\\') ||
        (aIn.Length() == 2 && (aIn.Last() == ':' || aIn.Last() == '|')))
     {
-        attemptFixup = PR_TRUE;
+        attemptFixup = true;
     }
 #elif defined(XP_UNIX)
     // Check if it starts with / (UNIX)
     if(aIn.First() == '/')
     {
-        attemptFixup = PR_TRUE;
+        attemptFixup = true;
     }
 #else
     // Do nothing (All others for now) 
@@ -637,11 +637,11 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
         NS_ConvertUTF8toUTF16 in(aIn);
         if (PossiblyByteExpandedFileName(in)) {
           // removes high byte
-          rv = NS_NewNativeLocalFile(NS_LossyConvertUTF16toASCII(in), PR_FALSE, getter_AddRefs(filePath));
+          rv = NS_NewNativeLocalFile(NS_LossyConvertUTF16toASCII(in), false, getter_AddRefs(filePath));
         }
         else {
           // input is unicode
-          rv = NS_NewLocalFile(in, PR_FALSE, getter_AddRefs(filePath));
+          rv = NS_NewLocalFile(in, false, getter_AddRefs(filePath));
         }
 
         if (NS_SUCCEEDED(rv))
@@ -702,7 +702,7 @@ bool nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString &aUrl)
         }
         if (chunkSize == 0 || iter == iterEnd)
         {
-            return PR_FALSE;
+            return false;
         }
         if (*iter == ':')
         {
@@ -712,14 +712,14 @@ bool nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString &aUrl)
         if (*iter != '.')
         {
             // Whatever it is, it ain't a hostname!
-            return PR_FALSE;
+            return false;
         }
         ++iter;
     }
     if (iter == iterEnd)
     {
         // No point continuing since there is no colon
-        return PR_FALSE;
+        return false;
     }
     ++iter;
 
@@ -740,18 +740,18 @@ bool nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString &aUrl)
         else
         {
             // Whatever it is, it ain't a port!
-            return PR_FALSE;
+            return false;
         }
         ++iter;
     }
     if (digitCount == 0 || digitCount > 5)
     {
         // No digits or more digits than a port would have.
-        return PR_FALSE;
+        return false;
     }
 
     // Yes, it's possibly a host:port url
-    return PR_TRUE;
+    return true;
 }
 
 bool nsDefaultURIFixup::PossiblyByteExpandedFileName(const nsAString& aIn)
@@ -769,10 +769,10 @@ bool nsDefaultURIFixup::PossiblyByteExpandedFileName(const nsAString& aIn)
     while (iter != iterEnd)
     {
         if (*iter >= 0x0080 && *iter <= 0x00FF)
-            return PR_TRUE;
+            return true;
         ++iter;
     }
-    return PR_FALSE;
+    return false;
 }
 
 const char * nsDefaultURIFixup::GetFileSystemCharset()

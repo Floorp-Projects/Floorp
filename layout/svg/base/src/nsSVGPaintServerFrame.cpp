@@ -46,8 +46,8 @@ nsSVGPaintServerFrame::SetupPaintServer(gfxContext *aContext,
 {
   nsRefPtr<gfxPattern> pattern = GetPaintServerPattern(aSource, aOpacity);
   if (!pattern)
-    return PR_FALSE;
+    return false;
 
   aContext->SetPattern(pattern);
-  return PR_TRUE;
+  return true;
 }

@@ -83,7 +83,7 @@ public:
   friend class nsTreeBodyFrame;
 
 protected:
-  void UnsuppressInvalidation() { mInvalidationSuppressed = PR_FALSE; }
+  void UnsuppressInvalidation() { mInvalidationSuppressed = false; }
   void Invalidate();
 
 private:

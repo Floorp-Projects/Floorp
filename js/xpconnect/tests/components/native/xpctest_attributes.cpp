@@ -43,7 +43,7 @@
 NS_IMPL_ISUPPORTS1(xpcTestObjectReadOnly, nsIXPCTestObjectReadOnly)
 
 xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
-    boolProperty = PR_TRUE;
+    boolProperty = true;
     shortProperty = 32767;
     longProperty =  2147483647;
     floatProperty = 5.5f;
@@ -86,7 +86,7 @@ NS_IMPL_ISUPPORTS1(xpcTestObjectReadWrite, nsIXPCTestObjectReadWrite)
 xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
     const char s[] = "XPConnect Read-Writable String";
     stringProperty = (char*) nsMemory::Clone(s, sizeof(char)*(strlen(s)+1));
-    boolProperty = PR_TRUE;
+    boolProperty = true;
     shortProperty = 32767;
     longProperty =  2147483647;
     floatProperty = 5.5f;
@@ -118,7 +118,7 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: GetBooleanProperty(bool *aBooleanPropert
     return NS_OK;
 }
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetBooleanProperty(bool aBooleanProperty) {
-    NS_ENSURE_TRUE(aBooleanProperty == PR_TRUE || aBooleanProperty == PR_FALSE,
+    NS_ENSURE_TRUE(aBooleanProperty == true || aBooleanProperty == false,
                    NS_ERROR_INVALID_ARG);
     boolProperty = aBooleanProperty;
     return NS_OK;

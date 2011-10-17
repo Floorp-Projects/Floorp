@@ -83,7 +83,7 @@ NS_IMETHODIMP nsSmartCardEvent::Init(nsIDOMEvent * aInner)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return mPrivate->SetTrusted(PR_TRUE);
+  return mPrivate->SetTrusted(true);
 }
 
 // nsSmartCard Specific methods

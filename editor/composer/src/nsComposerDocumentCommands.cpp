@@ -96,7 +96,7 @@ nsSetDocumentOptionsCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -224,7 +224,7 @@ nsSetDocumentStateCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -461,7 +461,7 @@ nsDocumentStateCommand::IsCommandEnabled(const char* aCommandName,
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   // Always return false to discourage callers from using DoCommand()
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 

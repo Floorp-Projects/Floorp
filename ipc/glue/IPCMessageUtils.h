@@ -180,7 +180,7 @@ struct ParamTraits<nsACString>
       return false;
 
     if (isVoid) {
-      aResult->SetIsVoid(PR_TRUE);
+      aResult->SetIsVoid(true);
       return true;
     }
 
@@ -230,7 +230,7 @@ struct ParamTraits<nsAString>
       return false;
 
     if (isVoid) {
-      aResult->SetIsVoid(PR_TRUE);
+      aResult->SetIsVoid(true);
       return true;
     }
 

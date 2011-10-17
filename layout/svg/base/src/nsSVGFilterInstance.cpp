@@ -425,7 +425,7 @@ nsSVGFilterInstance::BuildSourceImages()
         dest[rowOffset + x] = src[rowOffset + x] & 0xFF000000U;
       }
     }
-    mSourceAlpha.mImage.mConstantColorChannels = PR_TRUE;
+    mSourceAlpha.mImage.mConstantColorChannels = true;
   }
   
   return NS_OK;

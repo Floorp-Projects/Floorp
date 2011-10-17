@@ -102,7 +102,7 @@ SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
       break;
 
     default:
-      NS_ABORT_IF_FALSE(PR_FALSE, "Unknown segment type");
+      NS_ABORT_IF_FALSE(false, "Unknown segment type");
       aValue = NS_LITERAL_STRING("<unknown-segment-type>").get();
       return;
     }

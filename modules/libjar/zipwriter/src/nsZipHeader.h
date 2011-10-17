@@ -77,8 +77,8 @@ public:
         mDate(0),
         mDisk(0),
         mIAttr(0),
-        mInited(PR_FALSE),
-        mWriteOnClose(PR_FALSE),
+        mInited(false),
+        mWriteOnClose(false),
         mExtraField(NULL),
         mLocalExtraField(NULL)
     {

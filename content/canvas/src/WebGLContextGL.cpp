@@ -220,7 +220,7 @@ WebGLContext::BindBuffer(WebGLenum target, nsIWebGLBuffer *bobj)
         if ((buf->Target() != LOCAL_GL_NONE) && (target != buf->Target()))
             return ErrorInvalidOperation("BindBuffer: buffer already bound to a different target");
         buf->SetTarget(target);
-        buf->SetHasEverBeenBound(PR_TRUE);
+        buf->SetHasEverBeenBound(true);
     }
 
     // we really want to do this AFTER all the validation is done, otherwise our bookkeeping could get confused.
@@ -262,7 +262,7 @@ WebGLContext::BindFramebuffer(WebGLenum target, nsIWebGLFramebuffer *fbobj)
         gl->fBindFramebuffer(target, gl->GetOffscreenFBO());
     } else {
         gl->fBindFramebuffer(target, framebuffername);
-        wfb->SetHasEverBeenBound(PR_TRUE);
+        wfb->SetHasEverBeenBound(true);
     }
 
     mBoundFramebuffer = wfb;
@@ -289,7 +289,7 @@ WebGLContext::BindRenderbuffer(WebGLenum target, nsIWebGLRenderbuffer *rbobj)
         return NS_OK;
 
     if (!isNull)
-        wrb->SetHasEverBeenBound(PR_TRUE);
+        wrb->SetHasEverBeenBound(true);
 
     MakeContextCurrent();
 
@@ -674,7 +674,7 @@ WebGLContext::Clear(PRUint32 mask)
         if (valuesAreDefault &&
             mBackbufferClearingStatus == BackbufferClearingStatus::ClearedToDefaultValues)
         {
-            needClearCallHere = PR_FALSE;
+            needClearCallHere = false;
         }
     }
 
@@ -1257,7 +1257,7 @@ WebGLContext::DisableVertexAttribArray(WebGLuint index)
     if (index || gl->IsGLES2())
         gl->fDisableVertexAttribArray(index);
 
-    mAttribBuffers[index].enabled = PR_FALSE;
+    mAttribBuffers[index].enabled = false;
 
     return NS_OK;
 }
@@ -1381,7 +1381,7 @@ WebGLContext::NeedFakeBlack()
 {
     // handle this case first, it's the generic case
     if (mFakeBlackStatus == DoNotNeedFakeBlack)
-        return PR_FALSE;
+        return false;
 
     if (mFakeBlackStatus == DontKnowIfNeedFakeBlack) {
         for (PRInt32 i = 0; i < mGLMaxTextureUnits; ++i) {
@@ -1428,7 +1428,7 @@ WebGLContext::BindFakeBlackTextures()
         gl->fBindTexture(LOCAL_GL_TEXTURE_2D, 0);
         gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, 0);
 
-        mBlackTexturesAreInitialized = PR_TRUE;
+        mBlackTexturesAreInitialized = true;
     }
 
     for (PRInt32 i = 0; i < mGLMaxTextureUnits; ++i) {
@@ -1675,7 +1675,7 @@ WebGLContext::EnableVertexAttribArray(WebGLuint index)
     MakeContextCurrent();
 
     gl->fEnableVertexAttribArray(index);
-    mAttribBuffers[index].enabled = PR_TRUE;
+    mAttribBuffers[index].enabled = true;
 
     return NS_OK;
 }
@@ -2523,7 +2523,7 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
                     tex->SetMinFilter(intParam);
                     break;
                 default:
-                    pnameAndParamAreIncompatible = PR_TRUE;
+                    pnameAndParamAreIncompatible = true;
             }
             break;
         case LOCAL_GL_TEXTURE_MAG_FILTER:
@@ -2533,7 +2533,7 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
                     tex->SetMagFilter(intParam);
                     break;
                 default:
-                    pnameAndParamAreIncompatible = PR_TRUE;
+                    pnameAndParamAreIncompatible = true;
             }
             break;
         case LOCAL_GL_TEXTURE_WRAP_S:
@@ -2544,7 +2544,7 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
                     tex->SetWrapS(intParam);
                     break;
                 default:
-                    pnameAndParamAreIncompatible = PR_TRUE;
+                    pnameAndParamAreIncompatible = true;
             }
             break;
         case LOCAL_GL_TEXTURE_WRAP_T:
@@ -2555,7 +2555,7 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
                     tex->SetWrapT(intParam);
                     break;
                 default:
-                    pnameAndParamAreIncompatible = PR_TRUE;
+                    pnameAndParamAreIncompatible = true;
             }
             break;
         default:
@@ -2734,11 +2734,11 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, n
         GLint iv[16] = { 0 };
         gl->fGetUniformiv(progname, location->Location(), iv);
         if (unitSize == 1) {
-            wrval->SetAsBool(iv[0] ? PR_TRUE : PR_FALSE);
+            wrval->SetAsBool(iv[0] ? true : false);
         } else {
             bool uv[16] = { 0 };
             for (int k = 0; k < unitSize; k++)
-                uv[k] = iv[k] ? PR_TRUE : PR_FALSE;
+                uv[k] = iv[k] ? true : false;
             wrval->SetAsArray(nsIDataType::VTYPE_BOOL, nsnull,
                               unitSize, static_cast<void*>(uv));
         }
@@ -2999,7 +2999,7 @@ WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
         return NS_ERROR_FAILURE;
 
     if (!program->HasBothShaderTypesAttached()) {
-        program->SetLinkStatus(PR_FALSE);
+        program->SetLinkStatus(false);
         return NS_OK;
     }
 
@@ -3010,10 +3010,10 @@ WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
     GLint ok;
     gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
     if (ok) {
-        program->SetLinkStatus(PR_TRUE);
+        program->SetLinkStatus(true);
         program->UpdateInfo(gl);
     } else {
-        program->SetLinkStatus(PR_FALSE);
+        program->SetLinkStatus(false);
     }
 
     return NS_OK;
@@ -3337,7 +3337,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
     mBoundRenderbuffer->SetInternalFormat(internalformat);
     mBoundRenderbuffer->SetInternalFormatForGL(internalformatForGL);
     mBoundRenderbuffer->setDimensions(width, height);
-    mBoundRenderbuffer->SetInitialized(PR_FALSE);
+    mBoundRenderbuffer->SetInitialized(false);
 
     return NS_OK;
 }
@@ -3590,7 +3590,7 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
                                   WebGLTexelConversions::packRGBA8ToA8>(); \
                     break; \
                 default: \
-                    NS_ASSERTION(PR_FALSE, "Coding error?! Should never reach this point."); \
+                    NS_ASSERTION(false, "Coding error?! Should never reach this point."); \
                     return; \
             } \
             break;
@@ -3604,7 +3604,7 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
                                   WebGLTexelConversions::packFunc##Premultiply>(); \
                 break; \
                 case WebGLTexelPremultiplicationOp::Unmultiply: \
-                    NS_ASSERTION(PR_FALSE, "Floating point can't be un-premultiplied -- we have no premultiplied source data!"); \
+                    NS_ASSERTION(false, "Floating point can't be un-premultiplied -- we have no premultiplied source data!"); \
                 break; \
                 default: \
                     converter.run<float, float, float,                \
@@ -3623,7 +3623,7 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
                 HANDLE_FLOAT_DSTFORMAT(R32F,   unpackFunc, packRGBA32FToR32F) \
                 HANDLE_FLOAT_DSTFORMAT(RA32F,  unpackFunc, packRGBA32FToRA32F) \
                 default: \
-                    NS_ASSERTION(PR_FALSE, "Coding error?! Should never reach this point."); \
+                    NS_ASSERTION(false, "Coding error?! Should never reach this point."); \
                     return; \
             } \
             break;
@@ -3646,7 +3646,7 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
         HANDLE_FLOAT_SRCFORMAT(R32F,     4, unpackR32FToRGBA32F)
         HANDLE_FLOAT_SRCFORMAT(A32F,     4, unpackA32FToRGBA32F)
         default:
-            NS_ASSERTION(PR_FALSE, "Coding error?! Should never reach this point.");
+            NS_ASSERTION(false, "Coding error?! Should never reach this point.");
             return;
     }
 }
@@ -3733,7 +3733,7 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
             *format = WebGLTexelFormat::RGB565;
             break;
         default:
-            NS_ASSERTION(PR_FALSE, "Unsupported image format. Unimplemented.");
+            NS_ASSERTION(false, "Unsupported image format. Unimplemented.");
             return NS_ERROR_NOT_IMPLEMENTED;
     }
 
@@ -4538,7 +4538,7 @@ WebGLContext::TexImage2D_buf(WebGLenum target, WebGLint level, WebGLenum interna
                            pixels ? JS_GetArrayBufferData(pixels) : 0,
                            pixels ? JS_GetArrayBufferByteLength(pixels) : 0,
                            -1,
-                           WebGLTexelFormat::Auto, PR_FALSE);
+                           WebGLTexelFormat::Auto, false);
 }
 
 NS_IMETHODIMP
@@ -4551,7 +4551,7 @@ WebGLContext::TexImage2D_array(WebGLenum target, WebGLint level, WebGLenum inter
                            pixels ? JS_GetTypedArrayData(pixels) : 0,
                            pixels ? JS_GetTypedArrayByteLength(pixels) : 0,
                            (int) JS_GetTypedArrayType(pixels),
-                           WebGLTexelFormat::Auto, PR_FALSE);
+                           WebGLTexelFormat::Auto, false);
 }
 
 NS_IMETHODIMP
@@ -4564,7 +4564,7 @@ WebGLContext::TexImage2D_imageData(WebGLenum target, WebGLint level, WebGLenum i
                            pixels ? JS_GetTypedArrayData(pixels) : 0,
                            pixels ? JS_GetTypedArrayByteLength(pixels) : 0,
                            -1,
-                           WebGLTexelFormat::RGBA8, PR_FALSE);
+                           WebGLTexelFormat::RGBA8, false);
 }
 
 NS_IMETHODIMP
@@ -4723,7 +4723,7 @@ WebGLContext::TexSubImage2D_buf(WebGLenum target, WebGLint level,
                               width, height, 0, format, type,
                               JS_GetArrayBufferData(pixels), JS_GetArrayBufferByteLength(pixels),
                               -1,
-                              WebGLTexelFormat::Auto, PR_FALSE);
+                              WebGLTexelFormat::Auto, false);
 }
 
 NS_IMETHODIMP
@@ -4740,7 +4740,7 @@ WebGLContext::TexSubImage2D_array(WebGLenum target, WebGLint level,
                               width, height, 0, format, type,
                               JS_GetTypedArrayData(pixels), JS_GetTypedArrayByteLength(pixels),
                               JS_GetTypedArrayType(pixels),
-                              WebGLTexelFormat::Auto, PR_FALSE);
+                              WebGLTexelFormat::Auto, false);
 }
 
 NS_IMETHODIMP
@@ -4757,7 +4757,7 @@ WebGLContext::TexSubImage2D_imageData(WebGLenum target, WebGLint level,
                               width, height, 4*width, format, type,
                               JS_GetTypedArrayData(pixels), JS_GetTypedArrayByteLength(pixels),
                               -1,
-                              WebGLTexelFormat::RGBA8, PR_FALSE);
+                              WebGLTexelFormat::RGBA8, false);
 }
 
 NS_IMETHODIMP
@@ -4781,7 +4781,7 @@ WebGLContext::TexSubImage2D_dom(WebGLenum target, WebGLint level,
                               format, type,
                               isurf->Data(), byteLength,
                               -1,
-                              srcFormat, PR_TRUE);
+                              srcFormat, true);
 }
 
 bool
@@ -4812,7 +4812,7 @@ BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *u
             *baseType = LOCAL_GL_BOOL; // pretend these are int
             break;
         default:
-            return PR_FALSE;
+            return false;
     }
 
     switch (uType) {
@@ -4848,10 +4848,10 @@ BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *u
             *unitSize = 16;
             break;
         default:
-            return PR_FALSE;
+            return false;
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 
@@ -4870,7 +4870,7 @@ int mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
             case LOCAL_GL_LUMINANCE_ALPHA:
                 return WebGLTexelFormat::RA8;
             default:
-                NS_ASSERTION(PR_FALSE, "Coding mistake?! Should never reach this point.");
+                NS_ASSERTION(false, "Coding mistake?! Should never reach this point.");
                 return WebGLTexelFormat::Generic;
         }
     } else if (type == LOCAL_GL_FLOAT) {
@@ -4887,7 +4887,7 @@ int mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
             case LOCAL_GL_LUMINANCE_ALPHA:
                 return WebGLTexelFormat::RA32F;
             default:
-                NS_ASSERTION(PR_FALSE, "Coding mistake?! Should never reach this point.");
+                NS_ASSERTION(false, "Coding mistake?! Should never reach this point.");
                 return WebGLTexelFormat::Generic;
         }
     } else {
@@ -4899,7 +4899,7 @@ int mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
             case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
                 return WebGLTexelFormat::RGB565;
             default:
-                NS_ASSERTION(PR_FALSE, "Coding mistake?! Should never reach this point.");
+                NS_ASSERTION(false, "Coding mistake?! Should never reach this point.");
                 return WebGLTexelFormat::Generic;
         }
     }
@@ -4940,7 +4940,7 @@ InternalFormatForFormatAndType(WebGLenum format, WebGLenum type, bool isGLES2)
         break;
     }
 
-    NS_ASSERTION(PR_FALSE, "Coding mistake -- bad format/type passed?");
+    NS_ASSERTION(false, "Coding mistake -- bad format/type passed?");
     return 0;
 }
 

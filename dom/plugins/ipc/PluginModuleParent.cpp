@@ -604,7 +604,7 @@ PluginModuleParent::GetIdentifierForNPIdentifier(NPP npp, NPIdentifier aIdentifi
     }
     else {
         intval = mozilla::plugins::parent::_intfromidentifier(aIdentifier);
-        string.SetIsVoid(PR_TRUE);
+        string.SetIsVoid(true);
     }
 
     ident = new PluginIdentifierParent(aIdentifier, temporary);
@@ -1153,7 +1153,7 @@ PluginModuleParent::RecvGetNativeCursorsSupported(bool* supported)
     if (prefs) {
       if (NS_FAILED(prefs->GetBoolPref("dom.ipc.plugins.nativeCursorSupport",
           &nativeCursorsSupported))) {
-        nativeCursorsSupported = PR_FALSE;
+        nativeCursorsSupported = false;
       }
     }
     *supported = nativeCursorsSupported;

@@ -415,7 +415,7 @@ private:
             mPinchEvent.prevDistance = distance;
         }
         if (mMoveEvent.needDispatch) {
-            nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
+            nsMouseEvent event(true, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
 
             event.refPoint.x = nscoord(mMoveEvent.pos.x());
             event.refPoint.y = nscoord(mMoveEvent.pos.y());
@@ -430,7 +430,7 @@ private:
             mMoveEvent.needDispatch = false;
         }
 
-        mTimerStarted = PR_FALSE;
+        mTimerStarted = false;
     }
 
     void DispatchMotionToMainThread() {
@@ -438,7 +438,7 @@ private:
             nsCOMPtr<nsIRunnable> event =
                 NS_NewRunnableMethod(this, &nsWindow::ProcessMotionEvent);
             NS_DispatchToMainThread(event);
-            mTimerStarted = PR_TRUE;
+            mTimerStarted = true;
         }
     }
 

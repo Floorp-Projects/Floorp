@@ -52,7 +52,7 @@ nsBMPEncoder::nsBMPEncoder() : mImageBufferStart(nsnull),
                                mImageBufferCurr(0),
                                mImageBufferSize(0), 
                                mImageBufferReadPoint(0), 
-                               mFinished(PR_FALSE),
+                               mFinished(false),
                                mCallback(nsnull), 
                                mCallbackTarget(nsnull), 
                                mNotifyThreshold(0)
@@ -266,7 +266,7 @@ NS_IMETHODIMP nsBMPEncoder::EndImageEncode()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mFinished = PR_TRUE;
+  mFinished = true;
   NotifyListener();
 
   // if output callback can't get enough memory, it will free our buffer
@@ -386,7 +386,7 @@ NS_IMETHODIMP nsBMPEncoder::ReadSegments(nsWriteSegmentFun aWriter,
 NS_IMETHODIMP 
 nsBMPEncoder::IsNonBlocking(bool *_retval)
 {
-  *_retval = PR_TRUE;
+  *_retval = true;
   return NS_OK;
 }
 

@@ -79,7 +79,7 @@ NS_IMPL_ISUPPORTS4(nsAlertsIconListener, imgIContainerObserver,
                    imgIDecoderObserver, nsIObserver, nsISupportsWeakReference)
 
 nsAlertsIconListener::nsAlertsIconListener()
-: mLoadedFrame(PR_FALSE),
+: mLoadedFrame(false),
   mNotification(NULL)
 {
 }
@@ -201,7 +201,7 @@ nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest,
 
   g_object_unref(imagePixbuf);
 
-  mLoadedFrame = PR_TRUE;
+  mLoadedFrame = true;
   return NS_OK;
 }
 
@@ -338,7 +338,7 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
     if (server_caps) {
       for (GList* cap = server_caps; cap != NULL; cap = cap->next) {
         if (!strcmp((char*) cap->data, "actions")) {
-          gHasActions = PR_TRUE;
+          gHasActions = true;
           break;
         }
       }
@@ -353,7 +353,7 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
   nsCOMPtr<nsIObserverService> obsServ =
       do_GetService("@mozilla.org/observer-service;1");
   if (obsServ)
-    obsServ->AddObserver(this, "quit-application", PR_TRUE);
+    obsServ->AddObserver(this, "quit-application", true);
 
   // Workaround for a libnotify bug - blank titles aren't dealt with
   // properly so we use a space

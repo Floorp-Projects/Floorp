@@ -522,7 +522,7 @@ typedef PRUint32 nsrefcnt;
 #define MOZ_SEH_TRY           __try
 #define MOZ_SEH_EXCEPT(expr)  __except(expr)
 #else
-#define MOZ_SEH_TRY           if(PR_TRUE)
+#define MOZ_SEH_TRY           if(true)
 #define MOZ_SEH_EXCEPT(expr)  else
 #endif
 

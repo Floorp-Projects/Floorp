@@ -103,7 +103,7 @@ nsICODecoder::nsICODecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
  : Decoder(aImage, aObserver)
 {
   mPos = mImageOffset = mCurrIcon = mNumIcons = mBPP = mRowBytes = 0;
-  mIsPNG = PR_FALSE;
+  mIsPNG = false;
   mRow = nsnull;
   mOldLine = mCurLine = 1; // Otherwise decoder will never start
 }
@@ -133,7 +133,7 @@ nsICODecoder::FinishInternal()
 // FileSize	 4 bytes File size in bytes
 // reserved	 4 bytes unused (=0)
 // DataOffset	 4 bytes File offset to Raster Data
-// Returns PR_TRUE if successful
+// Returns true if successful
 bool nsICODecoder::FillBitmapFileHeaderBuffer(PRInt8 *bfh) 
 {
   memset(bfh, 0, 14);
@@ -147,7 +147,7 @@ bool nsICODecoder::FillBitmapFileHeaderBuffer(PRInt8 *bfh)
   if (mDirEntry.mBitCount <= 8) {
     PRUint16 numColors = GetNumColors();
     if (numColors == (PRUint16)-1) {
-      return PR_FALSE;
+      return false;
     }
     dataOffset += 4 * numColors;
     fileSize = dataOffset + GetRealWidth() * GetRealHeight();
@@ -160,7 +160,7 @@ bool nsICODecoder::FillBitmapFileHeaderBuffer(PRInt8 *bfh)
   memcpy(bfh + 2, &fileSize, sizeof(fileSize));
   dataOffset = NATIVE32_TO_LITTLE(dataOffset);
   memcpy(bfh + 10, &dataOffset, sizeof(dataOffset));
-  return PR_TRUE;
+  return true;
 }
 
 // A BMP inside of an ICO has *2 height because of the AND mask
@@ -389,7 +389,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     // bmpDecoder is for local scope ease, it will be freed by mContainedDecoder
     nsBMPDecoder *bmpDecoder = new nsBMPDecoder(mImage, mObserver); 
     mContainedDecoder = bmpDecoder;
-    bmpDecoder->SetUseAlphaData(PR_TRUE);
+    bmpDecoder->SetUseAlphaData(true);
     mContainedDecoder->SetSizeDecode(IsSizeDecode());
     mContainedDecoder->InitSharedDecoder();
 

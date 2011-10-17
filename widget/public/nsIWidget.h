@@ -217,7 +217,7 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
 struct nsIMEUpdatePreference {
 
   nsIMEUpdatePreference()
-    : mWantUpdates(PR_FALSE), mWantHints(PR_FALSE)
+    : mWantUpdates(false), mWantHints(false)
   {
   }
   nsIMEUpdatePreference(bool aWantUpdates, bool aWantHints)
@@ -499,7 +499,7 @@ class nsIWidget : public nsISupports {
     /**
      * Show or hide this widget
      *
-     * @param aState PR_TRUE to show the Widget, PR_FALSE to hide it
+     * @param aState true to show the Widget, false to hide it
      *
      */
     NS_IMETHOD Show(bool aState) = 0;
@@ -630,23 +630,23 @@ class nsIWidget : public nsISupports {
     /**
      * Enable or disable this Widget
      *
-     * @param aState PR_TRUE to enable the Widget, PR_FALSE to disable it.
+     * @param aState true to enable the Widget, false to disable it.
      *
      */
     NS_IMETHOD Enable(bool aState) = 0;
 
     /**
      * Ask whether the widget is enabled
-     * @param aState returns PR_TRUE if the widget is enabled
+     * @param aState returns true if the widget is enabled
      */
     NS_IMETHOD IsEnabled(bool *aState) = 0;
 
     /**
      * Request activation of this window or give focus to this widget.
      *
-     * @param aRaise If PR_TRUE, this function requests activation of this
+     * @param aRaise If true, this function requests activation of this
      *               widget's toplevel window.
-     *               If PR_FALSE, the appropriate toplevel window (which in
+     *               If false, the appropriate toplevel window (which in
      *               the case of popups may not be this widget's toplevel
      *               window) is already active, and this function indicates
      *               that keyboard events should be reported through the
@@ -871,7 +871,7 @@ class nsIWidget : public nsISupports {
     /**
      * Invalidate a specified rect for a widget and repaints it.
      *
-     * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
+     * @param aIsSynchronouse true then repaint synchronously. If false repaint later.
      * @see #Update()
      */
 
@@ -1024,7 +1024,7 @@ class nsIWidget : public nsISupports {
    
     /**
      * Enables/Disables system mouse capture.
-     * @param aCapture PR_TRUE enables mouse capture, PR_FALSE disables mouse capture 
+     * @param aCapture true enables mouse capture, false disables mouse capture 
      *
      */
     NS_IMETHOD CaptureMouse(bool aCapture) = 0;
@@ -1038,8 +1038,8 @@ class nsIWidget : public nsISupports {
      * Enables/Disables system capture of any and all events that would cause a
      * dropdown to be rolled up, This method ignores the aConsumeRollupEvent 
      * parameter when aDoCapture is FALSE
-     * @param aDoCapture PR_TRUE enables capture, PR_FALSE disables capture 
-     * @param aConsumeRollupEvent PR_TRUE consumes the rollup event, PR_FALSE dispatches rollup event
+     * @param aDoCapture true enables capture, false disables capture 
+     * @param aConsumeRollupEvent true consumes the rollup event, false dispatches rollup event
      *
      */
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
@@ -1262,8 +1262,8 @@ class nsIWidget : public nsISupports {
 
     /*
      * Get IME is 'Opened' or 'Closed'.
-     * If IME is 'Opened', aState is set PR_TRUE.
-     * If IME is 'Closed', aState is set PR_FALSE.
+     * If IME is 'Opened', aState is set true.
+     * If IME is 'Closed', aState is set false.
      */
     NS_IMETHOD GetIMEOpenState(bool* aState) = 0;
 
@@ -1353,9 +1353,9 @@ class nsIWidget : public nsISupports {
      * aFocus is false if node is giving up focus (blur)
      *
      * If this returns NS_ERROR_*, OnIMETextChange and OnIMESelectionChange
-     * and OnIMEFocusChange(PR_FALSE) will be never called.
+     * and OnIMEFocusChange(false) will be never called.
      *
-     * If this returns NS_SUCCESS_IME_NO_UPDATES, OnIMEFocusChange(PR_FALSE)
+     * If this returns NS_SUCCESS_IME_NO_UPDATES, OnIMEFocusChange(false)
      * will be called but OnIMETextChange and OnIMESelectionChange will NOT.
      */
     NS_IMETHOD OnIMEFocusChange(bool aFocus) = 0;

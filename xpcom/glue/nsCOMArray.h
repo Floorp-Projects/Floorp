@@ -116,7 +116,7 @@ public:
     // This method never deletes any objects.
     bool SetCapacity(PRUint32 aCapacity) {
       return aCapacity > 0 ? mArray.SizeTo(static_cast<PRInt32>(aCapacity))
-                           : PR_TRUE;
+                           : true;
     }
 
 private:
@@ -221,7 +221,7 @@ class nsCOMArray : public nsCOMArray_base
         nsCOMArray_base::Clear();
     }
 
-    // Enumerator callback function. Return PR_FALSE to stop
+    // Enumerator callback function. Return false to stop
     // Here's a more readable form:
     // bool enumerate(T* aElement, void* aData)
     typedef bool (* nsCOMArrayEnumFunc)

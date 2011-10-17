@@ -64,7 +64,7 @@ nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsString *aFontName,
 
         aFontName->AssignLiteral("sans-serif");
         aFontStyle->size = 14;
-        aFontStyle->systemFont = PR_TRUE;
+        aFontStyle->systemFont = true;
 
         return NS_OK;
     }
@@ -161,7 +161,7 @@ nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsString *aFontName,
             NS_FONT_STRETCH_EXPANDED : (traits & NSFontCondensedTrait) ?
                 NS_FONT_STRETCH_CONDENSED : NS_FONT_STRETCH_NORMAL;
 
-    aFontStyle->systemFont = PR_TRUE;
+    aFontStyle->systemFont = true;
 
     return NS_OK;
 }

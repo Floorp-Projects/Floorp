@@ -116,8 +116,8 @@ nsGIFDecoder2::nsGIFDecoder2(RasterImage *aImage, imgIDecoderObserver* aObserver
   , mCurrentFrame(-1)
   , mCurrentPass(0)
   , mLastFlushedPass(0)
-  , mGIFOpen(PR_FALSE)
-  , mSawTransparency(PR_FALSE)
+  , mGIFOpen(false)
+  , mSawTransparency(false)
 {
   // Clear out the structure, excluding the arrays
   memset(&mGIFStruct, 0, sizeof(mGIFStruct));
@@ -147,7 +147,7 @@ nsGIFDecoder2::FinishInternal()
     if (mCurrentFrame == mGIFStruct.images_decoded)
       EndImageFrame();
     PostDecodeDone();
-    mGIFOpen = PR_FALSE;
+    mGIFOpen = false;
   }
 
   mImage->SetLoopCount(mGIFStruct.loop_count - 1);
@@ -192,7 +192,7 @@ void nsGIFDecoder2::BeginGIF()
   if (mGIFOpen)
     return;
 
-  mGIFOpen = PR_TRUE;
+  mGIFOpen = true;
 
   PostSize(mGIFStruct.screen_width, mGIFStruct.screen_height);
 
@@ -379,7 +379,7 @@ PRUint32 nsGIFDecoder2::OutputRow()
       const PRUint32 *rgb = (PRUint32*)rowp;
       for (PRUint32 i = mGIFStruct.width; i > 0; i--) {
         if (*rgb++ == 0) {
-          mSawTransparency = PR_TRUE;
+          mSawTransparency = true;
           break;
         }
       }
@@ -425,7 +425,7 @@ bool
 nsGIFDecoder2::DoLzw(const PRUint8 *q)
 {
   if (!mGIFStruct.rows_remaining)
-    return PR_TRUE;
+    return true;
 
   /* Copy all the decoder state variables into locals so the compiler
    * won't worry about them being aliased.  The locals will be homed
@@ -490,7 +490,7 @@ nsGIFDecoder2::DoLzw(const PRUint8 *q)
 
       if (oldcode == -1) {
         if (code >= MAX_BITS)
-          return PR_FALSE;
+          return false;
         *rowp++ = suffix[code];
         if (rowp == rowend)
           OUTPUT_ROW();
@@ -505,19 +505,19 @@ nsGIFDecoder2::DoLzw(const PRUint8 *q)
         code = oldcode;
 
         if (stackp >= stack + MAX_BITS)
-          return PR_FALSE;
+          return false;
       }
 
       while (code >= clear_code)
       {
         if ((code >= MAX_BITS) || (code == prefix[code]))
-          return PR_FALSE;
+          return false;
 
         *stackp++ = suffix[code];
         code = prefix[code];
 
         if (stackp == stack + MAX_BITS)
-          return PR_FALSE;
+          return false;
       }
 
       *stackp++ = firstchar = suffix[code];
@@ -562,7 +562,7 @@ nsGIFDecoder2::DoLzw(const PRUint8 *q)
   mGIFStruct.stackp = stackp;
   mGIFStruct.rowp = rowp;
 
-  return PR_TRUE;
+  return true;
 }
 
 /** 
@@ -961,10 +961,10 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
       }
 
       if (q[8] & 0x40) {
-        mGIFStruct.interlaced = PR_TRUE;
+        mGIFStruct.interlaced = true;
         mGIFStruct.ipass = 1;
       } else {
-        mGIFStruct.interlaced = PR_FALSE;
+        mGIFStruct.interlaced = false;
         mGIFStruct.ipass = 0;
       }
 
@@ -1056,7 +1056,7 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
     case gif_done:
       PostDecodeDone();
-      mGIFOpen = PR_FALSE;
+      mGIFOpen = false;
       goto done;
 
     case gif_error:

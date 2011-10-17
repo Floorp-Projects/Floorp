@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
         strcpy(lastslash, "\\xulrunner");
 
         nsCOMPtr<nsILocalFile> xuldir;
-        rv = NS_NewNativeLocalFile(nsCString(path), PR_FALSE,
+        rv = NS_NewNativeLocalFile(nsCString(path), false,
                                    getter_AddRefs(xuldir));
         if (NS_FAILED(rv))
             return 6;
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
         *lastslash = '\0';
 
         nsCOMPtr<nsILocalFile> appdir;
-        rv = NS_NewNativeLocalFile(nsCString(path), PR_FALSE,
+        rv = NS_NewNativeLocalFile(nsCString(path), false,
                                    getter_AddRefs(appdir));
         if (NS_FAILED(rv))
             return 8;
@@ -358,8 +358,8 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
                                    rect.top, 
                                    rect.right - rect.left, 
                                    rect.bottom - rect.top,
-                                   PR_TRUE);
-        webBrowserAsWin->SetVisibility(PR_TRUE);
+                                   true);
+        webBrowserAsWin->SetVisibility(true);
     }
 
     return NS_OK;
@@ -749,7 +749,7 @@ nsresult StartupProfile()
 	nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
 
 	nsCOMPtr<nsProfileDirServiceProvider> locProvider;
-    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
+    NS_NewProfileDirServiceProvider(true, getter_AddRefs(locProvider));
     if (!locProvider)
       return NS_ERROR_FAILURE;
     
@@ -1097,7 +1097,7 @@ nsresult AppCallbacks::CreateBrowserWindow(PRUint32 aChromeFlags,
   // if opened as chrome, it'll be made visible after the chrome has loaded.
   // otherwise, go ahead and show it now.
   if (!(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME))
-    WebBrowserChromeUI::ShowWindow(*aNewWindow, PR_TRUE);
+    WebBrowserChromeUI::ShowWindow(*aNewWindow, true);
 
   return NS_OK;
 }
@@ -1119,7 +1119,7 @@ PRUint32 AppCallbacks::RunEventLoop(bool &aRunCondition)
     while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
       if (!::GetMessage(&msg, NULL, 0, 0)) {
         // WM_QUIT
-        aRunCondition = PR_FALSE;
+        aRunCondition = false;
         break;
       }
 

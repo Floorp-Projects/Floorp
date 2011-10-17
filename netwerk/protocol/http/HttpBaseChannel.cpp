@@ -66,20 +66,20 @@ HttpBaseChannel::HttpBaseChannel()
   , mPriority(PRIORITY_NORMAL)
   , mCaps(0)
   , mRedirectionLimit(gHttpHandler->RedirectionLimit())
-  , mApplyConversion(PR_TRUE)
-  , mCanceled(PR_FALSE)
-  , mIsPending(PR_FALSE)
-  , mWasOpened(PR_FALSE)
-  , mResponseHeadersModified(PR_FALSE)
-  , mAllowPipelining(PR_TRUE)
-  , mForceAllowThirdPartyCookie(PR_FALSE)
-  , mUploadStreamHasHeaders(PR_FALSE)
-  , mInheritApplicationCache(PR_TRUE)
-  , mChooseApplicationCache(PR_FALSE)
-  , mLoadedFromApplicationCache(PR_FALSE)
-  , mChannelIsForDownload(PR_FALSE)
-  , mTracingEnabled(PR_TRUE)
-  , mTimingEnabled(PR_FALSE)
+  , mApplyConversion(true)
+  , mCanceled(false)
+  , mIsPending(false)
+  , mWasOpened(false)
+  , mResponseHeadersModified(false)
+  , mAllowPipelining(true)
+  , mForceAllowThirdPartyCookie(false)
+  , mUploadStreamHasHeaders(false)
+  , mInheritApplicationCache(true)
+  , mChooseApplicationCache(false)
+  , mLoadedFromApplicationCache(false)
+  , mChannelIsForDownload(false)
+  , mTracingEnabled(true)
+  , mTimingEnabled(false)
   , mSuspendCount(0)
   , mRedirectedCachekeys(nsnull)
 {
@@ -475,7 +475,7 @@ HttpBaseChannel::SetUploadStream(nsIInputStream *stream,
 
   if (stream) {
     if (contentType.IsEmpty()) {
-      mUploadStreamHasHeaders = PR_TRUE;
+      mUploadStreamHasHeaders = true;
       mRequestHead.SetMethod(nsHttp::Post); // POST request
     } else {
       if (contentLength < 0) {
@@ -491,14 +491,14 @@ HttpBaseChannel::SetUploadStream(nsIInputStream *stream,
       nsCAutoString contentLengthStr;
       contentLengthStr.AppendInt(PRInt64(contentLength));
       SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"), contentLengthStr, 
-                       PR_FALSE);
+                       false);
       SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), contentType, 
-                       PR_FALSE);
-      mUploadStreamHasHeaders = PR_FALSE;
+                       false);
+      mUploadStreamHasHeaders = false;
       mRequestHead.SetMethod(nsHttp::Put); // PUT request
     }
   } else {
-    mUploadStreamHasHeaders = PR_FALSE;
+    mUploadStreamHasHeaders = false;
     mRequestHead.SetMethod(nsHttp::Get); // revert to GET request
   }
   mUploadStream = stream;
@@ -537,9 +537,9 @@ HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
     nsCAutoString contentLengthStr;
     contentLengthStr.AppendInt(aContentLength);
     SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"), contentLengthStr, 
-                     PR_FALSE);
+                     false);
     SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), aContentType, 
-                     PR_FALSE);
+                     false);
   }
 
   mUploadStreamHasHeaders = aStreamHasHeaders;
@@ -642,7 +642,7 @@ HttpBaseChannel::nsContentEncodings::nsContentEncodings(nsIHttpChannel* aChannel
                                                         const char* aEncodingHeader)
   : mEncodingHeader(aEncodingHeader)
   , mChannel(aChannel)
-  , mReady(PR_FALSE)
+  , mReady(false)
 {
   mCurEnd = aEncodingHeader + strlen(aEncodingHeader);
   mCurStart = mCurEnd;
@@ -660,7 +660,7 @@ NS_IMETHODIMP
 HttpBaseChannel::nsContentEncodings::HasMore(bool* aMoreEncodings)
 {
   if (mReady) {
-    *aMoreEncodings = PR_TRUE;
+    *aMoreEncodings = true;
     return NS_OK;
   }
 
@@ -689,14 +689,14 @@ HttpBaseChannel::nsContentEncodings::GetNext(nsACString& aNextEncoding)
   bool haveType = false;
   if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("gzip"), start, end)) {
     aNextEncoding.AssignLiteral(APPLICATION_GZIP);
-    haveType = PR_TRUE;
+    haveType = true;
   }
 
   if (!haveType) {
     encoding.BeginReading(start);
     if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("compress"), start, end)) {
       aNextEncoding.AssignLiteral(APPLICATION_COMPRESS);
-      haveType = PR_TRUE;
+      haveType = true;
     }
   }
     
@@ -704,13 +704,13 @@ HttpBaseChannel::nsContentEncodings::GetNext(nsACString& aNextEncoding)
     encoding.BeginReading(start);
     if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("deflate"), start, end)) {
       aNextEncoding.AssignLiteral(APPLICATION_ZIP);
-      haveType = PR_TRUE;
+      haveType = true;
     }
   }
 
   // Prepare to fetch the next encoding
   mCurEnd = mCurStart;
-  mReady = PR_FALSE;
+  mReady = false;
   
   if (haveType)
     return NS_OK;
@@ -764,7 +764,7 @@ HttpBaseChannel::nsContentEncodings::PrepareForNext(void)
     return PrepareForNext();
   }
         
-  mReady = PR_TRUE;
+  mReady = true;
   return NS_OK;
 }
 
@@ -880,7 +880,7 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
     "gopher",
     nsnull
   };
-  match = PR_FALSE;
+  match = false;
   const char *const *scheme = referrerWhiteList;
   for (; *scheme && !match; ++scheme) {
     rv = referrer->SchemeIs(*scheme, &match);
@@ -1031,7 +1031,7 @@ HttpBaseChannel::SetResponseHeader(const nsACString& header,
       atom == nsHttp::Transfer_Encoding)
     return NS_ERROR_ILLEGAL_VALUE;
 
-  mResponseHeadersModified = PR_TRUE;
+  mResponseHeadersModified = true;
 
   return mResponseHead->SetHeader(atom, value, merge);
 }
@@ -1432,17 +1432,17 @@ HttpBaseChannel::SetNewListener(nsIStreamListener *aListener, nsIStreamListener 
 void
 HttpBaseChannel::DoNotifyListener()
 {
-  // Make sure mIsPending is set to PR_FALSE. At this moment we are done from
+  // Make sure mIsPending is set to false. At this moment we are done from
   // the point of view of our consumer and we have to report our self
   // as not-pending.
   if (mListener) {
     mListener->OnStartRequest(this, mListenerContext);
-    mIsPending = PR_FALSE;
+    mIsPending = false;
     mListener->OnStopRequest(this, mListenerContext, mStatus);
     mListener = 0;
     mListenerContext = 0;
   } else {
-    mIsPending = PR_FALSE;
+    mIsPending = false;
   }
   // We have to make sure to drop the reference to the callbacks too
   mCallbacks = nsnull;
@@ -1482,7 +1482,7 @@ HttpBaseChannel::AddCookiesToRequest()
 
   // If we are in the child process, we want the parent seeing any
   // cookie headers that might have been set by SetRequestHeader()
-  SetRequestHeader(nsDependentCString(nsHttp::Cookie), cookie, PR_FALSE);
+  SetRequestHeader(nsDependentCString(nsHttp::Cookie), cookie, false);
 }
 
 static PLDHashOperator

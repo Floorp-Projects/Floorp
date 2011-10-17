@@ -82,7 +82,7 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
 
 {
     if (aCantHandleYet)
-        *aCantHandleYet = PR_FALSE;
+        *aCantHandleYet = false;
     return NS_OK;
 }
 

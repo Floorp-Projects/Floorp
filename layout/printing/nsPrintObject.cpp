@@ -51,8 +51,8 @@
 //---------------------------------------------------
 nsPrintObject::nsPrintObject() :
   mContent(nsnull), mFrameType(eFrame), mParent(nsnull),
-  mHasBeenPrinted(PR_FALSE), mDontPrint(PR_TRUE), mPrintAsIs(PR_FALSE),
-  mSharedPresShell(PR_FALSE), mInvisible(PR_FALSE), mDidCreateDocShell(PR_FALSE),
+  mHasBeenPrinted(false), mDontPrint(true), mPrintAsIs(false),
+  mSharedPresShell(false), mInvisible(false), mDidCreateDocShell(false),
   mShrinkRatio(1.0), mZoomRatio(1.0)
 {
   MOZ_COUNT_CTOR(nsPrintObject);
@@ -95,7 +95,7 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
     // Create a container docshell for printing.
     mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_OUT_OF_MEMORY);
-    mDidCreateDocShell = PR_TRUE;
+    mDidCreateDocShell = true;
     nsCOMPtr<nsIDocShellTreeItem> newItem = do_QueryInterface(mDocShell);
     newItem->SetItemType(itemType);
     newItem->SetTreeOwner(mTreeOwner);

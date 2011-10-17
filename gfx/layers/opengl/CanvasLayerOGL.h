@@ -58,7 +58,7 @@ public:
     : CanvasLayer(aManager, NULL),
       LayerOGL(aManager),
       mTexture(0),
-      mDelayedUpdates(PR_FALSE)
+      mDelayedUpdates(false)
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
       ,mPixmap(0)
 #endif

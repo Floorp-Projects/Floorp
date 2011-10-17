@@ -172,7 +172,7 @@ DiscardTracker::Initialize()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Mark us as initialized
-  sInitialized = PR_TRUE;
+  sInitialized = true;
 
   return NS_OK;
 }
@@ -229,7 +229,7 @@ DiscardTracker::TimerOn()
   // Nothing to do if the timer's already on.
   if (sTimerOn)
     return NS_OK;
-  sTimerOn = PR_TRUE;
+  sTimerOn = true;
 
   // Activate
   return sTimer->InitWithFuncCallback(TimerCallback,
@@ -247,7 +247,7 @@ DiscardTracker::TimerOff()
   // Nothing to do if the timer's already off.
   if (!sTimerOn)
     return;
-  sTimerOn = PR_FALSE;
+  sTimerOn = false;
 
   // Deactivate
   sTimer->Cancel();

@@ -90,7 +90,7 @@ class nsNativeAppSupportCocoa : public nsNativeAppSupportBase
 {
 public:
   nsNativeAppSupportCocoa() :
-    mCanShowUI(PR_FALSE) { }
+    mCanShowUI(false) { }
 
   NS_IMETHOD Start(bool* aRetVal);
   NS_IMETHOD ReOpen();
@@ -104,7 +104,7 @@ private:
 NS_IMETHODIMP
 nsNativeAppSupportCocoa::Enable()
 {
-  mCanShowUI = PR_TRUE;
+  mCanShowUI = true;
   return NS_OK;
 }
 
@@ -116,7 +116,7 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval)
   OSErr err = ::Gestalt (gestaltSystemVersion, &response);
   response &= 0xFFFF; // The system version is in the low order word
 
-  // Check that the OS version is supported, if not return PR_FALSE,
+  // Check that the OS version is supported, if not return false,
   // which will make the browser quit.  In principle we could display an
   // alert here.  But the alert's message and buttons would require custom
   // localization.  So (for now at least) we just log an English message
@@ -128,10 +128,10 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval)
 #endif
   if ((err != noErr) || response < minimumOS) {
     NSLog(@"Minimum OS version requirement not met!");
-    return PR_FALSE;
+    return false;
   }
 
-  *_retval = PR_TRUE;
+  *_retval = true;
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -168,7 +168,7 @@ nsNativeAppSupportCocoa::ReOpen()
         continue;
       }
       else {
-        haveOpenWindows = PR_TRUE;
+        haveOpenWindows = true;
       }
 
       nsCOMPtr<nsIWidget> widget = nsnull;
@@ -179,7 +179,7 @@ nsNativeAppSupportCocoa::ReOpen()
       }
       NSWindow *cocoaWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
       if (![cocoaWindow isMiniaturized]) {
-        haveNonMiniaturized = PR_TRUE;
+        haveNonMiniaturized = true;
         break;  //have un-minimized windows, nothing to do
       } 
       windowList->HasMoreElements(&more);
@@ -195,7 +195,7 @@ nsNativeAppSupportCocoa::ReOpen()
         GetNativeWindowPointerFromDOMWindow(mru, &cocoaMru);
         if (cocoaMru) {
           [cocoaMru deminiaturize:nil];
-          done = PR_TRUE;
+          done = true;
         }
       }
       

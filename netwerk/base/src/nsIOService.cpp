@@ -173,15 +173,15 @@ PRUint32   nsIOService::gDefaultSegmentCount = 24;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
-    : mOffline(PR_TRUE)
-    , mOfflineForProfileChange(PR_FALSE)
-    , mManageOfflineStatus(PR_TRUE)
-    , mSettingOffline(PR_FALSE)
-    , mSetOfflineValue(PR_FALSE)
-    , mShutdown(PR_FALSE)
+    : mOffline(true)
+    , mOfflineForProfileChange(false)
+    , mManageOfflineStatus(true)
+    , mSettingOffline(false)
+    , mSetOfflineValue(false)
+    , mShutdown(false)
     , mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY)
     , mContentSniffers(NS_CONTENT_SNIFFER_CATEGORY)
-    , mAutoDialEnabled(PR_FALSE)
+    , mAutoDialEnabled(false)
 {
 }
 
@@ -222,9 +222,9 @@ nsIOService::Init()
     nsCOMPtr<nsIPrefBranch2> prefBranch;
     GetPrefBranch(getter_AddRefs(prefBranch));
     if (prefBranch) {
-        prefBranch->AddObserver(PORT_PREF_PREFIX, this, PR_TRUE);
-        prefBranch->AddObserver(AUTODIAL_PREF, this, PR_TRUE);
-        prefBranch->AddObserver(MANAGE_OFFLINE_STATUS_PREF, this, PR_TRUE);
+        prefBranch->AddObserver(PORT_PREF_PREFIX, this, true);
+        prefBranch->AddObserver(AUTODIAL_PREF, this, true);
+        prefBranch->AddObserver(MANAGE_OFFLINE_STATUS_PREF, this, true);
         PrefsChanged(prefBranch);
     }
     
@@ -232,10 +232,10 @@ nsIOService::Init()
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (observerService) {
-        observerService->AddObserver(this, kProfileChangeNetTeardownTopic, PR_TRUE);
-        observerService->AddObserver(this, kProfileChangeNetRestoreTopic, PR_TRUE);
-        observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
-        observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, PR_TRUE);
+        observerService->AddObserver(this, kProfileChangeNetTeardownTopic, true);
+        observerService->AddObserver(this, kProfileChangeNetRestoreTopic, true);
+        observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
+        observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
     }
     else
         NS_WARNING("failed to get observer service");
@@ -269,12 +269,12 @@ nsIOService::Init()
     if (!mNetworkLinkService)
         // We can't really determine if the machine has a usable network connection,
         // so let's cross our fingers!
-        mManageOfflineStatus = PR_FALSE;
+        mManageOfflineStatus = false;
 
     if (mManageOfflineStatus)
         TrackNetworkLinkStatusForOffline();
     else
-        SetOffline(PR_FALSE);
+        SetOffline(false);
     
     NS_TIME_FUNCTION_MARK("Set up network link service");
 
@@ -435,7 +435,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
         externalProtocolPref += scheme;
         rv = prefBranch->GetBoolPref(externalProtocolPref.get(), &externalProtocol);
         if (NS_FAILED(rv)) {
-            externalProtocol = PR_FALSE;
+            externalProtocol = false;
         }
     }
 
@@ -669,7 +669,7 @@ nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
                     "Http channel implementation doesn't support nsIUploadChannel2. An extension has supplied a non-functional http protocol handler. This will break behavior and in future releases not work at all."
                                                                    ).get());
             }
-            gHasWarnedUploadChannel2 = PR_TRUE;
+            gHasWarnedUploadChannel2 = true;
         }
     }
 
@@ -692,14 +692,14 @@ nsIOService::IsLinkUp()
 {
     if (!mNetworkLinkService) {
         // We cannot decide, assume the link is up
-        return PR_TRUE;
+        return true;
     }
 
     bool isLinkUp;
     nsresult rv;
     rv = mNetworkLinkService->GetIsLinkUp(&isLinkUp);
     if (NS_FAILED(rv)) {
-        return PR_TRUE;
+        return true;
     }
 
     return isLinkUp;
@@ -729,7 +729,7 @@ nsIOService::SetOffline(bool offline)
         return NS_OK;
     }
 
-    mSettingOffline = PR_TRUE;
+    mSettingOffline = true;
 
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
@@ -751,7 +751,7 @@ nsIOService::SetOffline(bool offline)
         nsresult rv;
         if (offline && !mOffline) {
             NS_NAMED_LITERAL_STRING(offlineString, NS_IOSERVICE_OFFLINE);
-            mOffline = PR_TRUE; // indicate we're trying to shutdown
+            mOffline = true; // indicate we're trying to shutdown
 
             // don't care if notification fails
             // this allows users to attempt a little cleanup before dns and socket transport are shut down.
@@ -784,7 +784,7 @@ nsIOService::SetOffline(bool offline)
                 NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service init failed");
             }
             InitializeSocketTransportService();
-            mOffline = PR_FALSE;    // indicate success only AFTER we've
+            mOffline = false;    // indicate success only AFTER we've
                                     // brought up the services
 
             // trigger a PAC reload when we come back online
@@ -799,7 +799,7 @@ nsIOService::SetOffline(bool offline)
         }
     }
 
-    mSettingOffline = PR_FALSE;
+    mSettingOffline = false;
 
     return NS_OK;
 }
@@ -810,7 +810,7 @@ nsIOService::AllowPort(PRInt32 inPort, const char *scheme, bool *_retval)
 {
     PRInt16 port = inPort;
     if (port == -1) {
-        *_retval = PR_TRUE;
+        *_retval = true;
         return NS_OK;
     }
         
@@ -820,7 +820,7 @@ nsIOService::AllowPort(PRInt32 inPort, const char *scheme, bool *_retval)
     {
         if (port == mRestrictedPortList[i])
         {
-            *_retval = PR_FALSE;
+            *_retval = false;
 
             // check to see if the protocol wants to override
             if (!scheme)
@@ -835,7 +835,7 @@ nsIOService::AllowPort(PRInt32 inPort, const char *scheme, bool *_retval)
         }
     }
 
-    *_retval = PR_TRUE;
+    *_retval = true;
     return NS_OK;
 }
 
@@ -848,11 +848,11 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     // Look for extra ports to block
     if (!pref || strcmp(pref, PORT_PREF("banned")) == 0)
-        ParsePortList(prefs, PORT_PREF("banned"), PR_FALSE);
+        ParsePortList(prefs, PORT_PREF("banned"), false);
 
     // ...as well as previous blocks to remove.
     if (!pref || strcmp(pref, PORT_PREF("banned.override")) == 0)
-        ParsePortList(prefs, PORT_PREF("banned.override"), PR_TRUE);
+        ParsePortList(prefs, PORT_PREF("banned.override"), true);
 
     if (!pref || strcmp(pref, AUTODIAL_PREF) == 0) {
         bool enableAutodial = false;
@@ -956,16 +956,16 @@ nsIOService::Observe(nsISupports *subject,
     }
     else if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
         if (!mOffline) {
-            SetOffline(PR_TRUE);
-            mOfflineForProfileChange = PR_TRUE;
+            SetOffline(true);
+            mOfflineForProfileChange = true;
         }
     }
     else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {
         if (mOfflineForProfileChange) {
-            mOfflineForProfileChange = PR_FALSE;
+            mOfflineForProfileChange = false;
             if (!mManageOfflineStatus ||
                 NS_FAILED(TrackNetworkLinkStatusForOffline())) {
-                SetOffline(PR_FALSE);
+                SetOffline(false);
             }
         } 
     }
@@ -973,9 +973,9 @@ nsIOService::Observe(nsISupports *subject,
         // Remember we passed XPCOM shutdown notification to prevent any
         // changes of the offline status from now. We must not allow going
         // online after this point.
-        mShutdown = PR_TRUE;
+        mShutdown = true;
 
-        SetOffline(PR_TRUE);
+        SetOffline(true);
 
         // Break circular reference.
         mProxyService = nsnull;
@@ -1007,7 +1007,7 @@ nsIOService::ProtocolHasFlags(nsIURI   *uri,
 {
     NS_ENSURE_ARG(uri);
 
-    *result = PR_FALSE;
+    *result = false;
     nsCAutoString scheme;
     nsresult rv = uri->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1121,9 +1121,9 @@ nsIOService::TrackNetworkLinkStatusForOffline()
             // to see if autodial is enabled.  If it is enabled then we are
             // allowed to manage the offline state.
             if(nsNativeConnectionHelper::IsAutodialEnabled()) 
-                return SetOffline(PR_FALSE);
+                return SetOffline(false);
 #else
-            return SetOffline(PR_FALSE);
+            return SetOffline(false);
 #endif
         }
     }
@@ -1183,7 +1183,7 @@ nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
     net_ParseContentType(aTypeHeader, ignored, aCharset, aHadCharset,
                          aCharsetStart, aCharsetEnd);
     if (*aHadCharset && *aCharsetStart == *aCharsetEnd) {
-        *aHadCharset = PR_FALSE;
+        *aHadCharset = false;
     }
     return NS_OK;
 }

@@ -114,7 +114,7 @@ nsDiskCacheBlockFile::Open(nsILocalFile * blockFile,
     return NS_OK;
 
 error_exit:
-    Close(PR_FALSE);
+    Close(false);
     return rv;
 }
 
@@ -174,7 +174,7 @@ nsDiskCacheBlockFile::AllocateBlocks(PRInt32 numBlocks)
                 // all bits selected by mask are 1, so free
                 if ((mask & mapWord) == mask) {
                     mBitMap[i] |= mask << bit; 
-                    mBitMapDirty = PR_TRUE;
+                    mBitMapDirty = true;
                     return (PRInt32)i * 32 + bit;
                 }
             }
@@ -208,7 +208,7 @@ nsDiskCacheBlockFile::DeallocateBlocks( PRInt32  startBlock, PRInt32  numBlocks)
     if ((mBitMap[startWord] & mask) != mask)    return NS_ERROR_ABORT;
 
     mBitMap[startWord] ^= mask;    // flips the bits off;
-    mBitMapDirty = PR_TRUE;
+    mBitMapDirty = true;
     // XXX rv = FlushBitMap();  // coherency vs. performance
     return NS_OK;
 }
@@ -299,7 +299,7 @@ nsDiskCacheBlockFile::FlushBitMap()
     PRStatus err = PR_Sync(mFD);
     if (err != PR_SUCCESS)  return NS_ERROR_UNEXPECTED;
 
-    mBitMapDirty = PR_FALSE;
+    mBitMapDirty = false;
     return NS_OK;
 }
 

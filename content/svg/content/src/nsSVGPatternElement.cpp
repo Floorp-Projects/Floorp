@@ -71,7 +71,7 @@ nsSVGElement::EnumInfo nsSVGPatternElement::sEnumInfo[2] =
 
 nsSVGElement::StringInfo nsSVGPatternElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Pattern)

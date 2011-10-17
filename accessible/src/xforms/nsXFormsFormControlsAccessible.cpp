@@ -591,7 +591,7 @@ nsXFormsSelectComboboxAccessible::NativeState()
 bool
 nsXFormsSelectComboboxAccessible::GetAllowsAnonChildAccessibles()
 {
-  return PR_TRUE;
+  return true;
 }
 
 

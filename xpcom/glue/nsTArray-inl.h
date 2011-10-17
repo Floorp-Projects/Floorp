@@ -83,7 +83,7 @@ const nsTArrayHeader* nsTArray_base<Alloc>::GetAutoArrayBufferUnsafe(size_t elem
 template<class Alloc>
 bool nsTArray_base<Alloc>::UsesAutoArrayBuffer() const {
   if (!mHdr->mIsAutoArray) {
-    return PR_FALSE;
+    return false;
   }
 
   // This is nuts.  If we were sane, we'd pass elemAlign as a parameter to
@@ -132,7 +132,7 @@ bool
 nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
   // This should be the most common case so test this first
   if (capacity <= mHdr->mCapacity)
-    return PR_TRUE;
+    return true;
 
   // If the requested memory allocation exceeds size_type(-1)/2, then
   // our doubling algorithm may not be able to allocate it.
@@ -141,7 +141,7 @@ nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
   // allocating 2 GB+ arrays anyway.
   if ((PRUint64)capacity * elemSize > size_type(-1)/2) {
     NS_ERROR("Attempting to allocate excessively large array");
-    return PR_FALSE;
+    return false;
   }
 
   if (mHdr == EmptyHdr()) {
@@ -149,13 +149,13 @@ nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
     Header *header = static_cast<Header*>
                      (Alloc::Malloc(sizeof(Header) + capacity * elemSize));
     if (!header)
-      return PR_FALSE;
+      return false;
     header->mLength = 0;
     header->mCapacity = capacity;
     header->mIsAutoArray = 0;
     mHdr = header;
 
-    return PR_TRUE;
+    return true;
   }
 
   // We increase our capacity so |capacity * elemSize + sizeof(Header)| is the
@@ -190,14 +190,14 @@ nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
     // Malloc() and copy
     header = static_cast<Header*>(Alloc::Malloc(bytesToAlloc));
     if (!header)
-      return PR_FALSE;
+      return false;
 
     memcpy(header, mHdr, sizeof(Header) + Length() * elemSize);
   } else {
     // Realloc() existing data
     header = static_cast<Header*>(Alloc::Realloc(mHdr, bytesToAlloc));
     if (!header)
-      return PR_FALSE;
+      return false;
   }
 
   // How many elements can we fit in bytesToAlloc?
@@ -207,7 +207,7 @@ nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
 
   mHdr = header;
 
-  return PR_TRUE;
+  return true;
 }
 
 template<class Alloc>
@@ -288,13 +288,13 @@ nsTArray_base<Alloc>::InsertSlotsAt(index_type index, size_type count,
 
   // Check for out of memory conditions
   if (Capacity() < newLen)
-    return PR_FALSE;
+    return false;
 
   // Move the existing elements as needed.  Note that this will
   // change our mLength, so no need to call IncrementLength.
   ShiftData(index, 0, count, elementSize, elemAlign);
       
-  return PR_TRUE;
+  return true;
 }
 
 // nsTArray_base::IsAutoArrayRestorer is an RAII class which takes
@@ -352,14 +352,14 @@ nsTArray_base<Alloc>::SwapArrayElements(nsTArray_base<Allocator>& other,
 
     if (!EnsureNotUsingAutoArrayBuffer(elemSize) ||
         !other.EnsureNotUsingAutoArrayBuffer(elemSize)) {
-      return PR_FALSE;
+      return false;
     }
 
     Header *temp = mHdr;
     mHdr = other.mHdr;
     other.mHdr = temp;
 
-    return PR_TRUE;
+    return true;
   }
 
   // Swap the two arrays using memcpy, since at least one is using an auto
@@ -375,7 +375,7 @@ nsTArray_base<Alloc>::SwapArrayElements(nsTArray_base<Allocator>& other,
 
   if (!EnsureCapacity(other.Length(), elemSize) ||
       !other.EnsureCapacity(Length(), elemSize)) {
-    return PR_FALSE;
+    return false;
   }
 
   // The EnsureCapacity calls above shouldn't have caused *both* arrays to
@@ -403,7 +403,7 @@ nsTArray_base<Alloc>::SwapArrayElements(nsTArray_base<Allocator>& other,
   // could, in theory, allocate a huge AutoTArray on the heap.)
   nsAutoTArray<PRUint8, 8192, Alloc> temp;
   if (!temp.SetCapacity(smallerLength * elemSize)) {
-    return PR_FALSE;
+    return false;
   }
 
   memcpy(temp.Elements(), smallerElements, smallerLength * elemSize);
@@ -418,7 +418,7 @@ nsTArray_base<Alloc>::SwapArrayElements(nsTArray_base<Allocator>& other,
   mHdr->mLength = other.Length();
   other.mHdr->mLength = tempLength;
 
-  return PR_TRUE;
+  return true;
 }
 
 template<class Alloc>
@@ -432,19 +432,19 @@ nsTArray_base<Alloc>::EnsureNotUsingAutoArrayBuffer(size_type elemSize) {
     // that it has an auto buffer.)
     if (Length() == 0) {
       mHdr = EmptyHdr();
-      return PR_TRUE;
+      return true;
     }
 
     size_type size = sizeof(Header) + Length() * elemSize;
 
     Header* header = static_cast<Header*>(Alloc::Malloc(size));
     if (!header)
-      return PR_FALSE;
+      return false;
 
     memcpy(header, mHdr, size);
     header->mCapacity = Length();
     mHdr = header;
   }
   
-  return PR_TRUE;
+  return true;
 }

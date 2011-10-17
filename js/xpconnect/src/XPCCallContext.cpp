@@ -389,7 +389,7 @@ XPCCallContext::NewStringWrapper(const PRUnichar *str, PRUint32 len)
         StringWrapperEntry& ent = mScratchStrings[i];
 
         if (!ent.mInUse) {
-            ent.mInUse = PR_TRUE;
+            ent.mInUse = true;
 
             // Construct the string using placement new.
 
@@ -411,7 +411,7 @@ XPCCallContext::DeleteString(nsAString *string)
             // One of our internal strings is no longer in use, mark
             // it as such and destroy the string.
 
-            ent.mInUse = PR_FALSE;
+            ent.mInUse = false;
             ent.mString.addr()->~XPCReadableJSStringWrapper();
 
             return;

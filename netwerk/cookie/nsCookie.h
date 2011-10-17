@@ -83,9 +83,9 @@ class nsCookie : public nsICookie2
      , mExpiry(aExpiry)
      , mLastAccessed(aLastAccessed)
      , mCreationTime(aCreationTime)
-     , mIsSession(aIsSession != PR_FALSE)
-     , mIsSecure(aIsSecure != PR_FALSE)
-     , mIsHttpOnly(aIsHttpOnly != PR_FALSE)
+     , mIsSession(aIsSession != false)
+     , mIsSecure(aIsSecure != false)
+     , mIsHttpOnly(aIsHttpOnly != false)
     {
     }
 

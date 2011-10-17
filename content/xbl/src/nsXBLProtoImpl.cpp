@@ -265,11 +265,11 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JSObject *obj) const
     if (!::JS_LookupUCProperty(cx, obj,
                                reinterpret_cast<const jschar*>(name.get()),
                                name.Length(), &dummy)) {
-      return PR_FALSE;
+      return false;
     }
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 void

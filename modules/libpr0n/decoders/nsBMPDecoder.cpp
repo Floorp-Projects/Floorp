@@ -74,7 +74,7 @@ nsBMPDecoder::nsBMPDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
   mState = eRLEStateInitial;
   mStateData = 0;
   mLOH = WIN_HEADER_LENGTH;
-  mUseAlphaData = mHaveAlphaData = PR_FALSE;
+  mUseAlphaData = mHaveAlphaData = false;
 }
 
 nsBMPDecoder::~nsBMPDecoder()
@@ -186,7 +186,7 @@ static void calcBitmask(PRUint32 aMask, PRUint8& aBegin, PRUint8& aLength)
     for (pos = 0; pos <= 31; pos++) {
         if (!started && (aMask & (1 << pos))) {
             aBegin = pos;
-            started = PR_TRUE;
+            started = true;
         }
         else if (started && !(aMask & (1 << pos))) {
             aLength = pos - aBegin;
@@ -509,7 +509,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                               memset(mImageData + (mCurLine - 1) * GetWidth(), 0, 
                                      (GetHeight() - mCurLine + 1) * 
                                      GetWidth() * sizeof(PRUint32));
-                              mHaveAlphaData = PR_TRUE;
+                              mHaveAlphaData = true;
                             }
                             SetPixel(d, p[2], p[1], p[0], mHaveAlphaData ? p[3] : 0xFF);
                           } else {

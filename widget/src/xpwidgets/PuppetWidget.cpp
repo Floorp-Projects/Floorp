@@ -56,7 +56,7 @@ InvalidateRegion(nsIWidget* aWidget, const nsIntRegion& aRegion)
 {
   nsIntRegionRectIterator it(aRegion);
   while(const nsIntRect* r = it.Next()) {
-    aWidget->Invalidate(*r, PR_FALSE/*async*/);
+    aWidget->Invalidate(*r, false/*async*/);
   }
 }
 
@@ -121,14 +121,14 @@ PuppetWidget::Create(nsIWidget        *aParent,
              aToolkit, aInitData);
 
   mBounds = aRect;
-  mEnabled = PR_TRUE;
-  mVisible = PR_TRUE;
+  mEnabled = true;
+  mVisible = true;
 
   mSurface = gfxPlatform::GetPlatform()
              ->CreateOffscreenSurface(gfxIntSize(1, 1),
                                       gfxASurface::ContentFromFormat(gfxASurface::ImageFormatARGB32));
 
-  mIMEComposing = PR_FALSE;
+  mIMEComposing = false;
   if (MightNeedIMEFocus(aInitData)) {
     PRUint32 chromeSeqno;
     mTabChild->SendNotifyIMEFocus(false, &mIMEPreference, &chromeSeqno);
@@ -141,7 +141,7 @@ PuppetWidget::Create(nsIWidget        *aParent,
     mLayerManager = parent->GetLayerManager();
   }
   else {
-    Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
+    Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, false);
   }
 
   return NS_OK;
@@ -190,7 +190,7 @@ PuppetWidget::Show(bool aState)
   mVisible = aState;
 
   if (!wasVisible && mVisible) {
-    Resize(mBounds.width, mBounds.height, PR_FALSE);
+    Resize(mBounds.width, mBounds.height, false);
   }
 
   return NS_OK;
@@ -302,7 +302,7 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
   NS_ABORT_IF_FALSE(mViewCallback, "No view callback!");
 
   if (event->message == NS_COMPOSITION_START) {
-    mIMEComposing = PR_TRUE;
+    mIMEComposing = true;
   }
   switch (event->eventStructType) {
   case NS_COMPOSITION_EVENT:
@@ -324,7 +324,7 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
   aStatus = (*mViewCallback)(event);
 
   if (event->message == NS_COMPOSITION_END) {
-    mIMEComposing = PR_FALSE;
+    mIMEComposing = false;
   }
 
   return NS_OK;
@@ -369,7 +369,7 @@ nsresult
 PuppetWidget::IMEEndComposition(bool aCancel)
 {
   nsEventStatus status;
-  nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
+  nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
   InitEvent(textEvent, nsnull);
   textEvent.seqno = mIMELastReceivedSeqno;
   // SendEndIMEComposition is always called since ResetInputState
@@ -384,7 +384,7 @@ PuppetWidget::IMEEndComposition(bool aCancel)
 
   DispatchEvent(&textEvent, status);
 
-  nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_END, this);
+  nsCompositionEvent compEvent(true, NS_COMPOSITION_END, this);
   InitEvent(compEvent, nsnull);
   compEvent.seqno = mIMELastReceivedSeqno;
   DispatchEvent(&compEvent, status);
@@ -394,13 +394,13 @@ PuppetWidget::IMEEndComposition(bool aCancel)
 NS_IMETHODIMP
 PuppetWidget::ResetInputState()
 {
-  return IMEEndComposition(PR_FALSE);
+  return IMEEndComposition(false);
 }
 
 NS_IMETHODIMP
 PuppetWidget::CancelComposition()
 {
-  return IMEEndComposition(PR_TRUE);
+  return IMEEndComposition(true);
 }
 
 NS_IMETHODIMP
@@ -448,7 +448,7 @@ PuppetWidget::OnIMEFocusChange(bool aFocus)
 
   if (aFocus) {
     nsEventStatus status;
-    nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
+    nsQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
     InitEvent(queryEvent, nsnull);
     // Query entire content
     queryEvent.InitForQueryTextContent(0, PR_UINT32_MAX);
@@ -463,8 +463,8 @@ PuppetWidget::OnIMEFocusChange(bool aFocus)
   }
 
   PRUint32 chromeSeqno;
-  mIMEPreference.mWantUpdates = PR_FALSE;
-  mIMEPreference.mWantHints = PR_FALSE;
+  mIMEPreference.mWantUpdates = false;
+  mIMEPreference.mWantHints = false;
   if (!mTabChild->SendNotifyIMEFocus(aFocus, &mIMEPreference, &chromeSeqno))
     return NS_ERROR_FAILURE;
 
@@ -487,7 +487,7 @@ PuppetWidget::OnIMETextChange(PRUint32 aStart, PRUint32 aEnd, PRUint32 aNewEnd)
 
   if (mIMEPreference.mWantHints) {
     nsEventStatus status;
-    nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
+    nsQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
     InitEvent(queryEvent, nsnull);
     queryEvent.InitForQueryTextContent(0, PR_UINT32_MAX);
     DispatchEvent(&queryEvent, status);
@@ -510,7 +510,7 @@ PuppetWidget::OnIMESelectionChange(void)
 
   if (mIMEPreference.mWantUpdates) {
     nsEventStatus status;
-    nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
+    nsQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, this);
     InitEvent(queryEvent, nsnull);
     DispatchEvent(&queryEvent, status);
 
@@ -539,11 +539,11 @@ PuppetWidget::DispatchPaintEvent()
   NS_ABORT_IF_FALSE(!mDirtyRegion.IsEmpty(), "paint event logic messed up");
 
   nsIntRect dirtyRect = mDirtyRegion.GetBounds();
-  nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+  nsPaintEvent event(true, NS_PAINT, this);
   event.refPoint.x = dirtyRect.x;
   event.refPoint.x = dirtyRect.y;
   event.region = mDirtyRegion;
-  event.willSendDidPaint = PR_TRUE;
+  event.willSendDidPaint = true;
 
   // reset repaint tracking
   mDirtyRegion.SetEmpty();
@@ -566,7 +566,7 @@ PuppetWidget::DispatchPaintEvent()
     }
   }
 
-  nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, this);
+  nsPaintEvent didPaintEvent(true, NS_DID_PAINT, this);
   DispatchEvent(&didPaintEvent, status);
 
   return NS_OK;
@@ -575,7 +575,7 @@ PuppetWidget::DispatchPaintEvent()
 nsresult
 PuppetWidget::DispatchResizeEvent()
 {
-  nsSizeEvent event(PR_TRUE, NS_SIZE, this);
+  nsSizeEvent event(true, NS_SIZE, this);
 
   nsIntRect rect = mBounds;     // copy in case something messes with it
   event.windowSize = &rect;

@@ -198,7 +198,7 @@ nsTreeRows::FindByResource(nsIRDFResource* aResource)
                 CopyUTF8toUTF16(uri, resourceid);
 
                 // set stringmode and fall through
-                stringmode = PR_TRUE;
+                stringmode = true;
             }
         }
 
@@ -403,10 +403,10 @@ bool
 nsTreeRows::iterator::operator==(const iterator& aIterator) const
 {
     if (GetDepth() != aIterator.GetDepth())
-        return PR_FALSE;
+        return false;
 
     if (GetDepth() == 0)
-        return PR_TRUE;
+        return true;
 
     return GetTop() == aIterator.GetTop();
 }

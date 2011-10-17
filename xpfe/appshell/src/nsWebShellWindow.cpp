@@ -344,7 +344,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;
         nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(docShell));
         shellAsWin->SetPositionAndSize(0, 0, sizeEvent->windowSize->width, 
-          sizeEvent->windowSize->height, PR_FALSE);  
+          sizeEvent->windowSize->height, false);  
         // persist size, but not immediately, in case this OS is firing
         // repeated size events as the user drags the sizing handle
         if (!eventWindow->IsLocked())
@@ -380,7 +380,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
           // Let the application know if it's in fullscreen mode so it
           // can update its UI.
           if (modeEvent->mSizeMode == nsSizeMode_Fullscreen) {
-            ourWindow->SetFullScreen(PR_TRUE);
+            ourWindow->SetFullScreen(true);
           }
 
           // And always fire a user-defined sizemodechange event on the window
@@ -573,8 +573,8 @@ nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
       return NS_OK;
   }
 
-  mChromeLoaded = PR_TRUE;
-  mLockedUntilChromeLoad = PR_FALSE;
+  mChromeLoaded = true;
+  mLockedUntilChromeLoad = false;
 
 #ifdef USE_NATIVE_MENUS
   ///////////////////////////////
@@ -701,7 +701,7 @@ void nsWebShellWindow::LoadContentAreas() {
 
 /**
  * ExecuteCloseHandler - Run the close handler, if any.
- * @return PR_TRUE iff we found a close handler to run.
+ * @return true iff we found a close handler to run.
  */
 bool nsWebShellWindow::ExecuteCloseHandler()
 {
@@ -723,18 +723,18 @@ bool nsWebShellWindow::ExecuteCloseHandler()
       contentViewer->GetPresContext(getter_AddRefs(presContext));
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsMouseEvent event(PR_TRUE, NS_XUL_CLOSE, nsnull,
+      nsMouseEvent event(true, NS_XUL_CLOSE, nsnull,
                          nsMouseEvent::eReal);
 
       nsresult rv =
         eventTarget->DispatchDOMEvent(&event, nsnull, presContext, &status);
       if (NS_SUCCEEDED(rv) && status == nsEventStatus_eConsumeNoDefault)
-        return PR_TRUE;
-      // else fall through and return PR_FALSE
+        return true;
+      // else fall through and return false
     }
   }
 
-  return PR_FALSE;
+  return false;
 } // ExecuteCloseHandler
 
 void nsWebShellWindow::ConstrainToOpenerScreen(PRInt32* aX, PRInt32* aY)

@@ -75,8 +75,8 @@ public:
 
     // nsViewSourceChannel methods:
     nsViewSourceChannel()
-        : mIsDocument(PR_FALSE)
-        , mOpened(PR_FALSE) {}
+        : mIsDocument(false)
+        , mOpened(false) {}
 
     NS_HIDDEN_(nsresult) Init(nsIURI* uri);
 

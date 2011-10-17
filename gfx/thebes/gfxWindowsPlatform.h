@@ -73,7 +73,7 @@ struct DCFromContext {
              aSurface->GetType() == gfxASurface::SurfaceTypeWin32Printing))
         {
             dc = static_cast<gfxWindowsSurface*>(aSurface.get())->GetDC();
-            needsRelease = PR_FALSE;
+            needsRelease = false;
             SaveDC(dc);
             cairo_scaled_font_t* scaled =
                 cairo_get_scaled_font(aContext->GetCairo());
@@ -82,7 +82,7 @@ struct DCFromContext {
         if (!dc) {
             dc = GetDC(NULL);
             SetGraphicsMode(dc, GM_ADVANCED);
-            needsRelease = PR_TRUE;
+            needsRelease = true;
         }
     }
 

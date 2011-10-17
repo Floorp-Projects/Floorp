@@ -192,7 +192,7 @@ protected:
   void NullOutListener();
 
   void DoRemoveFromLoadGroup() {
-    RemoveFromLoadGroup(PR_TRUE);
+    RemoveFromLoadGroup(true);
   }
 
   // Return the imgStatusTracker associated with mOwner and/or mImage. It may

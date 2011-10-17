@@ -193,7 +193,7 @@ nsPlaceholderFrame::GetType() const
 nsPlaceholderFrame::CanContinueTextRun() const
 {
   if (!mOutOfFlowFrame) {
-    return PR_FALSE;
+    return false;
   }
   // first-letter frames can continue text runs, and placeholders for floated
   // first-letter frames can too

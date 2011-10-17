@@ -82,11 +82,11 @@
 // static member functions from nsServiceManager.
 
 #define NS_WITH_PROXIED_SERVICE(T, var, cid, Q, rvAddr)     \
-    nsProxiedService _serv##var(cid, NS_GET_IID(T), Q, PR_FALSE, rvAddr);     \
+    nsProxiedService _serv##var(cid, NS_GET_IID(T), Q, false, rvAddr);     \
     T* var = (T*)(nsISupports*)_serv##var;
 
 #define NS_WITH_ALWAYS_PROXIED_SERVICE(T, var, cid, Q, rvAddr)     \
-    nsProxiedService _serv##var(cid, NS_GET_IID(T), Q, PR_TRUE, rvAddr);       \
+    nsProxiedService _serv##var(cid, NS_GET_IID(T), Q, true, rvAddr);       \
     T* var = (T*)(nsISupports*)_serv##var;
 
 ////////////////////////////////////////////////////////////////////////////////

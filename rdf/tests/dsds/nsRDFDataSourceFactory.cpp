@@ -82,7 +82,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
   rv = compMgr->RegisterComponent(kRDFDataSourceCID,
                                   "Generic DataSource DataSource",
                                   NS_RDF_DATASOURCE_CONTRACTID_PREFIX "datasource",
-                                  aPath, PR_TRUE, PR_TRUE);
+                                  aPath, true, true);
 
   return rv;
 

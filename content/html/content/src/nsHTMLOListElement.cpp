@@ -187,8 +187,8 @@ nsHTMLSharedListElement::ParseAttribute(PRInt32 aNamespaceID,
     if (mNodeInfo->Equals(nsGkAtoms::ol) ||
         mNodeInfo->Equals(nsGkAtoms::ul)) {
       if (aAttribute == nsGkAtoms::type) {
-        return aResult.ParseEnumValue(aValue, kListTypeTable, PR_FALSE) ||
-               aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE);
+        return aResult.ParseEnumValue(aValue, kListTypeTable, false) ||
+               aResult.ParseEnumValue(aValue, kOldListTypeTable, true);
       }
       if (aAttribute == nsGkAtoms::start) {
         return aResult.ParseIntValue(aValue);

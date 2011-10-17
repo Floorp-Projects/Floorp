@@ -54,13 +54,13 @@ txPredicatedNodeTest::matches(const txXPathNode& aNode,
                               txIMatchContext* aContext)
 {
     if (!mNodeTest->matches(aNode, aContext)) {
-        return PR_FALSE;
+        return false;
     }
 
     txSingleNodeContext context(aNode, aContext);
     nsRefPtr<txAExprResult> res;
     nsresult rv = mPredicate->evaluate(&context, getter_AddRefs(res));
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, false);
 
     return res->booleanValue();
 }

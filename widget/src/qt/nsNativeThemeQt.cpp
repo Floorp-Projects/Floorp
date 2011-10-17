@@ -376,10 +376,10 @@ nsNativeThemeQt::GetWidgetPadding(nsDeviceContext* ,
         aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
         aWidgetType == NS_THEME_DROPDOWN) {
         aResult->SizeTo(2, 2, 2, 2);
-        return PR_TRUE;
+        return true;
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 NS_IMETHODIMP
@@ -388,7 +388,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aF
                                       nsIntSize* aResult, bool* aIsOverridable)
 {
     (*aResult).width = (*aResult).height = 0;
-    *aIsOverridable = PR_TRUE;
+    *aIsOverridable = true;
 
     QStyle *s = qApp->style();
 
@@ -438,26 +438,26 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aF
     case NS_THEME_SCROLLBAR_BUTTON_DOWN: {
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).height = (*aResult).width;
-        //*aIsOverridable = PR_FALSE;
+        //*aIsOverridable = false;
         break;
     }
     case NS_THEME_SCROLLBAR_BUTTON_LEFT:
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
         (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).width = (*aResult).height;
-        //*aIsOverridable = PR_FALSE;
+        //*aIsOverridable = false;
         break;
         }
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL: {
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarSliderMin);
-        //*aIsOverridable = PR_FALSE;
+        //*aIsOverridable = false;
         break;
         }
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL: {
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarSliderMin);
         (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarExtent);
-        //*aIsOverridable = PR_FALSE;
+        //*aIsOverridable = false;
         break;
         }
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL: {
@@ -483,7 +483,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aF
   
         (*aResult).width = subRect.width();
         (*aResult).height = subRect.height();
-        //*aIsOverridable = PR_FALSE;
+        //*aIsOverridable = false;
         break;
     }
     case NS_THEME_DROPDOWN: {
@@ -502,7 +502,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aF
 
         (*aResult).width = subRect.width();
         (*aResult).height = subRect.height();
-        //*aIsOverridable = PR_FALSE;
+        //*aIsOverridable = false;
         break;
     }
     case NS_THEME_DROPDOWN_TEXT: {
@@ -518,7 +518,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aF
        
         (*aResult).width = subRect.width();
         (*aResult).height = subRect.height();
-        //*aIsOverridable = PR_FALSE;
+        //*aIsOverridable = false;
         break;
     }
     case NS_THEME_DROPDOWN_TEXTFIELD: {
@@ -535,7 +535,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aF
 
         (*aResult).width = subRect.width() + subRect2.width();
         (*aResult).height = std::max(subRect.height(), subRect2.height());
-        //*aIsOverridable = PR_FALSE;
+        //*aIsOverridable = false;
         break;
     }
     case NS_THEME_TEXTFIELD:
@@ -596,7 +596,7 @@ nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
     default:
         break;
     }
-    return PR_FALSE;
+    return false;
 }
 
 bool
@@ -605,10 +605,10 @@ nsNativeThemeQt::WidgetIsContainer(PRUint8 aWidgetType)
 //     if (aWidgetType == NS_THEME_DROPDOWN_BUTTON ||
 //         aWidgetType == NS_THEME_RADIO ||
 //         aWidgetType == NS_THEME_CHECKBOX) {
-//         return PR_FALSE;
+//         return false;
 //     }
 
-   return PR_TRUE;
+   return true;
 }
 
 bool
@@ -617,16 +617,16 @@ nsNativeThemeQt::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame*
     if (aWidgetType == NS_THEME_DROPDOWN ||
         aWidgetType == NS_THEME_BUTTON || 
         aWidgetType == NS_THEME_TREEVIEW_HEADER_CELL) { 
-        return PR_TRUE;
+        return true;
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 bool
 nsNativeThemeQt::ThemeNeedsComboboxDropmarker()
 {
-    return PR_TRUE;
+    return true;
 }
 
 void

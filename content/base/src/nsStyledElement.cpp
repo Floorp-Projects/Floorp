@@ -102,13 +102,13 @@ nsStyledElementNotElementCSSInlineStyle::ParseAttribute(PRInt32 aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::style) {
       SetMayHaveStyle();
-      ParseStyleAttribute(aValue, aResult, PR_FALSE);
-      return PR_TRUE;
+      ParseStyleAttribute(aValue, aResult, false);
+      return true;
     }
     if (aAttribute == nsGkAtoms::_class) {
       SetFlags(NODE_MAY_HAVE_CLASS);
       aResult.ParseAtomArray(aValue);
-      return PR_TRUE;
+      return true;
     }
     if (aAttribute == nsGkAtoms::id) {
       // Store id as an atom.  id="" means that the element has no id,
@@ -116,12 +116,12 @@ nsStyledElementNotElementCSSInlineStyle::ParseAttribute(PRInt32 aNamespaceID,
       RemoveFromIdTable();
       if (aValue.IsEmpty()) {
         ClearHasID();
-        return PR_FALSE;
+        return false;
       }
       aResult.ParseAtom(aValue);
       SetHasID();
       AddToIdTable(aResult.GetAtomValue());
-      return PR_TRUE;
+      return true;
     }
   }
 
@@ -234,7 +234,7 @@ nsStyledElementNotElementCSSInlineStyle::BindToTree(nsIDocument* aDocument,
   if (!IsXUL()) {
     // XXXbz if we already have a style attr parsed, this won't do
     // anything... need to fix that.
-    ReparseStyleAttribute(PR_FALSE);
+    ReparseStyleAttribute(false);
   }
 
   return NS_OK;
@@ -269,11 +269,11 @@ nsStyledElementNotElementCSSInlineStyle::GetStyle(nsresult* retval)
 
   if (!slots->mStyle) {
     // Just in case...
-    ReparseStyleAttribute(PR_TRUE);
+    ReparseStyleAttribute(true);
 
     slots->mStyle = new nsDOMCSSAttributeDeclaration(this
 #ifdef MOZ_SMIL
-                                                     , PR_FALSE
+                                                     , false
 #endif // MOZ_SMIL
                                                      );
     SetMayHaveStyle();

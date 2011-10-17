@@ -97,7 +97,7 @@ FramePropertyTable::Get(const nsIFrame* aFrame,
   NS_ASSERTION(aProperty, "Null property?");
 
   if (aFoundResult) {
-    *aFoundResult = PR_FALSE;
+    *aFoundResult = false;
   }
 
   if (mLastFrame != aFrame) {
@@ -110,7 +110,7 @@ FramePropertyTable::Get(const nsIFrame* aFrame,
 
   if (entry->mProp.mProperty == aProperty) {
     if (aFoundResult) {
-      *aFoundResult = PR_TRUE;
+      *aFoundResult = true;
     }
     return entry->mProp.mValue;
   }
@@ -126,7 +126,7 @@ FramePropertyTable::Get(const nsIFrame* aFrame,
     return nsnull;
 
   if (aFoundResult) {
-    *aFoundResult = PR_TRUE;
+    *aFoundResult = true;
   }
 
   return array->ElementAt(index).mValue;
@@ -140,7 +140,7 @@ FramePropertyTable::Remove(nsIFrame* aFrame, const FramePropertyDescriptor* aPro
   NS_ASSERTION(aProperty, "Null property?");
 
   if (aFoundResult) {
-    *aFoundResult = PR_FALSE;
+    *aFoundResult = false;
   }
 
   if (mLastFrame != aFrame) {
@@ -157,7 +157,7 @@ FramePropertyTable::Remove(nsIFrame* aFrame, const FramePropertyDescriptor* aPro
     mEntries.RawRemoveEntry(entry);
     mLastEntry = nsnull;
     if (aFoundResult) {
-      *aFoundResult = PR_TRUE;
+      *aFoundResult = true;
     }
     return value;
   }
@@ -175,7 +175,7 @@ FramePropertyTable::Remove(nsIFrame* aFrame, const FramePropertyDescriptor* aPro
   }
 
   if (aFoundResult) {
-    *aFoundResult = PR_TRUE;
+    *aFoundResult = true;
   }
 
   void* result = array->ElementAt(index).mValue;

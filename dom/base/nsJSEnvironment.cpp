@@ -207,11 +207,11 @@ public:
   bool SetCapacity(JSContext *cx, size_t capacity) {
     bool ok = vals.SetCapacity(capacity);
     if (!ok)
-      return PR_FALSE;
+      return false;
     // Values must be safe for the GC to inspect (they must not contain garbage).
     memset(vals.Elements(), 0, vals.Capacity() * sizeof(jsval));
     resetRooter(cx);
-    return PR_TRUE;
+    return true;
   }
 
   jsval *Elements() {
@@ -270,7 +270,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
       // (errorDepth) to work.
       nsEventDispatcher::Dispatch(win, presContext, aErrorEvent, nsnull,
                                   aStatus);
-      called = PR_TRUE;
+      called = true;
     }
     --errorDepth;
   }
@@ -303,13 +303,13 @@ public:
       if (docShell &&
           !JSREPORT_IS_WARNING(mFlags) &&
           !sHandlingScriptError) {
-        sHandlingScriptError = PR_TRUE; // Recursion prevention
+        sHandlingScriptError = true; // Recursion prevention
 
         nsRefPtr<nsPresContext> presContext;
         docShell->GetPresContext(getter_AddRefs(presContext));
 
         if (presContext) {
-          nsScriptErrorEvent errorevent(PR_TRUE, NS_LOAD_ERROR);
+          nsScriptErrorEvent errorevent(true, NS_LOAD_ERROR);
 
           errorevent.fileName = mFileName.get();
 
@@ -328,7 +328,7 @@ public:
               // error (principals) we should change this to do the
               // security check based on the principals and not
               // URIs. See bug 387476.
-              sameOrigin = NS_SUCCEEDED(p->CheckMayLoad(errorURI, PR_FALSE));
+              sameOrigin = NS_SUCCEEDED(p->CheckMayLoad(errorURI, false));
             }
           }
 
@@ -353,7 +353,7 @@ public:
                                       &status);
         }
 
-        sHandlingScriptError = PR_FALSE;
+        sHandlingScriptError = false;
       }
     }
 
@@ -468,7 +468,7 @@ NS_ScriptErrorReporter(JSContext *cx,
     if (globalObject) {
       nsAutoString fileName, msg;
       if (!report->filename) {
-        fileName.SetIsVoid(PR_TRUE);
+        fileName.SetIsVoid(true);
       } else {
         fileName.AssignWithConversion(report->filename);
       }
@@ -978,12 +978,12 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     bool safeMode = false;
     xr->GetInSafeMode(&safeMode);
     if (safeMode) {
-      useTraceJIT = PR_FALSE;
-      useMethodJIT = PR_FALSE;
-      useProfiling = PR_FALSE;
-      usePCCounts = PR_FALSE;
-      useTypeInference = PR_FALSE;
-      useMethodJITAlways = PR_TRUE;
+      useTraceJIT = false;
+      useMethodJIT = false;
+      useProfiling = false;
+      usePCCounts = false;
+      useTypeInference = false;
+      useMethodJITAlways = true;
     }
   }    
 
@@ -1058,7 +1058,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 }
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
-  : mGCOnDestruction(PR_TRUE),
+  : mGCOnDestruction(true),
     mExecuteDepth(0)
 {
 
@@ -1084,13 +1084,13 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 
     xpc_LocalizeContext(mContext);
   }
-  mIsInitialized = PR_FALSE;
+  mIsInitialized = false;
   mTerminations = nsnull;
-  mScriptsEnabled = PR_TRUE;
+  mScriptsEnabled = true;
   mOperationCallbackTime = 0;
   mModalStateTime = 0;
   mModalStateDepth = 0;
-  mProcessingScriptTag = PR_FALSE;
+  mProcessingScriptTag = false;
 }
 
 nsJSContext::~nsJSContext()
@@ -1154,8 +1154,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
   NS_ASSERTION(!tmp->mContext || tmp->mContext->outstandingRequests == 0,
                "Trying to unlink a context with outstanding requests.");
-  tmp->mIsInitialized = PR_FALSE;
-  tmp->mGCOnDestruction = PR_FALSE;
+  tmp->mIsInitialized = false;
+  tmp->mGCOnDestruction = false;
   tmp->DestroyJSContext();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalObjectRef)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -1203,7 +1203,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 
   if (!mScriptsEnabled) {
     if (aIsUndefined) {
-      *aIsUndefined = PR_TRUE;
+      *aIsUndefined = true;
     }
 
     return NS_OK;
@@ -1314,7 +1314,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   }
   else {
     if (aIsUndefined) {
-      *aIsUndefined = PR_TRUE;
+      *aIsUndefined = true;
     }
   }
 
@@ -1325,7 +1325,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     rv = NS_ERROR_FAILURE;
 
   // ScriptEvaluated needs to come after we pop the stack
-  ScriptEvaluated(PR_TRUE);
+  ScriptEvaluated(true);
 
   return rv;
 
@@ -1368,7 +1368,7 @@ error:
   result->Truncate();
 
   if (isUndefined) {
-    *isUndefined = PR_TRUE;
+    *isUndefined = true;
   }
 
   if (!::JS_IsExceptionPending(cx)) {
@@ -1405,7 +1405,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
   if (!mScriptsEnabled) {
     if (aIsUndefined) {
-      *aIsUndefined = PR_TRUE;
+      *aIsUndefined = true;
     }
 
     if (aRetValue) {
@@ -1517,7 +1517,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   }
   else {
     if (aIsUndefined) {
-      *aIsUndefined = PR_TRUE;
+      *aIsUndefined = true;
     }
 
     if (aRetValue) {
@@ -1534,7 +1534,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     rv = NS_ERROR_FAILURE;
 
   // ScriptEvaluated needs to come after we pop the stack
-  ScriptEvaluated(PR_TRUE);
+  ScriptEvaluated(true);
 
   return rv;
 }
@@ -1610,7 +1610,7 @@ nsJSContext::ExecuteScript(void *aScriptObject,
 
   if (!mScriptsEnabled) {
     if (aIsUndefined) {
-      *aIsUndefined = PR_TRUE;
+      *aIsUndefined = true;
     }
 
     if (aRetValue) {
@@ -1662,7 +1662,7 @@ nsJSContext::ExecuteScript(void *aScriptObject,
     ReportPendingException();
 
     if (aIsUndefined) {
-      *aIsUndefined = PR_TRUE;
+      *aIsUndefined = true;
     }
 
     if (aRetValue) {
@@ -1679,7 +1679,7 @@ nsJSContext::ExecuteScript(void *aScriptObject,
     rv = NS_ERROR_FAILURE;
 
   // ScriptEvaluated needs to come after we pop the stack
-  ScriptEvaluated(PR_TRUE);
+  ScriptEvaluated(true);
 
   return rv;
 }
@@ -1697,10 +1697,10 @@ AtomIsEventHandlerName(nsIAtom *aName)
   {
     c = *cp;
     if ((c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))
-      return PR_FALSE;
+      return false;
   }
 
-  return PR_TRUE;
+  return true;
 }
 #endif
 
@@ -1897,7 +1897,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
   // all now, and never were in some cases.
 
   nsCxPusher pusher;
-  if (!pusher.Push(mContext, PR_TRUE))
+  if (!pusher.Push(mContext, true))
     return NS_ERROR_FAILURE;
 
   // check if the event handler can be run on the object in question
@@ -1972,7 +1972,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
   pusher.Pop();
 
   // ScriptEvaluated needs to come after we pop the stack
-  ScriptEvaluated(PR_TRUE);
+  ScriptEvaluated(true);
 
   return rv;
 }
@@ -3062,13 +3062,13 @@ nsJSContext::ClearScope(void *aGlobalObj, bool aClearFromProtoChain)
 void
 nsJSContext::WillInitializeContext()
 {
-  mIsInitialized = PR_FALSE;
+  mIsInitialized = false;
 }
 
 void
 nsJSContext::DidInitializeContext()
 {
-  mIsInitialized = PR_TRUE;
+  mIsInitialized = true;
 }
 
 bool
@@ -3192,7 +3192,7 @@ nsJSContext::GarbageCollectNow()
   // ignore the fact that the currently loading documents are still
   // loading and move on as if they weren't.
   sPendingLoadCount = 0;
-  sLoadingInProgress = PR_FALSE;
+  sLoadingInProgress = false;
 
   if (nsContentUtils::XPConnect()) {
     nsContentUtils::XPConnect()->GarbageCollect();
@@ -3261,7 +3261,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
 void
 nsJSContext::LoadStart()
 {
-  sLoadingInProgress = PR_TRUE;
+  sLoadingInProgress = true;
   ++sPendingLoadCount;
 }
 
@@ -3280,7 +3280,7 @@ nsJSContext::LoadEnd()
   }
 
   // Its probably a good idea to GC soon since we have finished loading.
-  sLoadingInProgress = PR_FALSE;
+  sLoadingInProgress = false;
   PokeGC();
 }
 
@@ -3308,7 +3308,7 @@ nsJSContext::PokeGC()
                                  : NS_GC_DELAY,
                                  nsITimer::TYPE_ONE_SHOT);
 
-  first = PR_FALSE;
+  first = false;
 }
 
 // static
@@ -3528,15 +3528,15 @@ nsJSRuntime::Startup()
   sGCTimer = sCCTimer = nsnull;
   sGCHasRun = false;
   sPendingLoadCount = 0;
-  sLoadingInProgress = PR_FALSE;
+  sLoadingInProgress = false;
   sCCollectedWaitingForGC = 0;
-  sPostGCEventsToConsole = PR_FALSE;
+  sPostGCEventsToConsole = false;
   gNameSpaceManager = nsnull;
   sRuntimeService = nsnull;
   sRuntime = nsnull;
   gOldJSGCCallback = nsnull;
-  sIsInitialized = PR_FALSE;
-  sDidShutdown = PR_FALSE;
+  sIsInitialized = false;
+  sDidShutdown = false;
   sContextCount = 0;
   sSecurityManager = nsnull;
 }
@@ -3743,13 +3743,13 @@ nsJSRuntime::Init()
 
   Preferences::AddBoolVarCache(&sGCOnMemoryPressure,
                                "javascript.options.gc_on_memory_pressure",
-                               PR_TRUE);
+                               true);
 
   nsIObserver* memPressureObserver = new nsMemoryPressureObserver();
   NS_ENSURE_TRUE(memPressureObserver, NS_ERROR_OUT_OF_MEMORY);
-  obs->AddObserver(memPressureObserver, "memory-pressure", PR_FALSE);
+  obs->AddObserver(memPressureObserver, "memory-pressure", false);
 
-  sIsInitialized = PR_TRUE;
+  sIsInitialized = true;
 
   return NS_OK;
 }
@@ -3797,7 +3797,7 @@ nsJSRuntime::Shutdown()
     NS_IF_RELEASE(sSecurityManager);
   }
 
-  sDidShutdown = PR_TRUE;
+  sDidShutdown = true;
 }
 
 // Script object mananagement - note duplicate implementation

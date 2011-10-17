@@ -240,7 +240,7 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 
-    hasConverter = PR_TRUE;
+    hasConverter = true;
   }
   
   // Estimate out length and allocate the buffer based on a worst-case estimate, then do

@@ -312,7 +312,7 @@ struct WorkerStructuredCloneCallbacks
       nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aCx, aObj);
       if (blob) {
         nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
-        if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(PR_FALSE)) &&
+        if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(false)) &&
             JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_BLOB, 0) &&
             JS_WriteBytes(aWriter, &blob, sizeof(blob))) {
           clonedObjects->AppendElement(blob);
@@ -449,7 +449,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
       nsCOMPtr<nsIDOMFile> file = do_QueryInterface(wrappedObject);
       if (file) {
         nsCOMPtr<nsIMutable> mutableFile = do_QueryInterface(file);
-        if (mutableFile && NS_SUCCEEDED(mutableFile->SetMutable(PR_FALSE))) {
+        if (mutableFile && NS_SUCCEEDED(mutableFile->SetMutable(false))) {
           nsIDOMFile* filePtr = file;
           if (JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_FILE, 0) &&
               JS_WriteBytes(aWriter, &filePtr, sizeof(filePtr))) {
@@ -463,7 +463,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
       nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(wrappedObject);
       if (blob) {
         nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
-        if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(PR_FALSE))) {
+        if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(false))) {
           nsIDOMBlob* blobPtr = blob;
           if (JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_BLOB, 0) &&
               JS_WriteBytes(aWriter, &blobPtr, sizeof(blobPtr))) {
@@ -2251,7 +2251,7 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
     bool isChrome;
     if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &isChrome))) {
       NS_WARNING("IsCapabilityEnabled failed!");
-      isChrome = PR_FALSE;
+      isChrome = false;
     }
 
     // First check to make sure the caller has permission to make a

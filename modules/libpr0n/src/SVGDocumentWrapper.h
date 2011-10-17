@@ -84,13 +84,13 @@ public:
    * Looks up the value of the wrapped SVG document's |width| or |height|
    * attribute in CSS pixels, and returns it by reference.  If the document has
    * a percent value for the queried attribute, then this method fails
-   * (returns PR_FALSE).
+   * (returns false).
    *
    * @param aDimension    Indicates whether the width or height is desired.
    * @param[out] aResult  If this method succeeds, then this outparam will be
                           populated with the width or height in CSS pixels.
-   * @return PR_FALSE to indicate failure, if the queried attribute has a
-   *         percent value.  Otherwise, PR_TRUE.
+   * @return false to indicate failure, if the queried attribute has a
+   *         percent value.  Otherwise, true.
    *
    */
   bool      GetWidthOrHeight(Dimension aDimension, PRInt32& aResult);
@@ -123,8 +123,8 @@ public:
    * Returns a bool indicating whether the wrapped document has been parsed
    * successfully.
    *
-   * @return PR_TRUE if the document has been parsed successfully,
-   *         PR_FALSE otherwise (e.g. if there's a syntax error in the SVG).
+   * @return true if the document has been parsed successfully,
+   *         false otherwise (e.g. if there's a syntax error in the SVG).
    */
   inline bool      ParsedSuccessfully()  { return !!GetRootSVGElem(); }
 
@@ -149,7 +149,7 @@ public:
   /**
    * Returns a bool indicating whether the document has any SMIL animations.
    *
-   * @return PR_TRUE if the document has any SMIL animations. Else, PR_FALSE.
+   * @return true if the document has any SMIL animations. Else, false.
    */
   bool      IsAnimated();
 
@@ -157,7 +157,7 @@ public:
    * Indicates whether we should currently ignore rendering invalidations sent
    * from the wrapped SVG doc.
    *
-   * @return PR_TRUE if we should ignore invalidations sent from this SVG doc.
+   * @return true if we should ignore invalidations sent from this SVG doc.
    */
   bool ShouldIgnoreInvalidation() { return mIgnoreInvalidation; }
 

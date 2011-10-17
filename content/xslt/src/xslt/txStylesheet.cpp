@@ -99,7 +99,7 @@ txStylesheet::init()
 
     nt.forget();
 
-    mCharactersTemplate = new txValueOf(nodeExpr, PR_FALSE);
+    mCharactersTemplate = new txValueOf(nodeExpr, false);
     NS_ENSURE_TRUE(mCharactersTemplate, NS_ERROR_OUT_OF_MEMORY);
 
     mCharactersTemplate->mNext = new txReturn();
@@ -270,20 +270,20 @@ txStylesheet::isStripSpaceAllowed(const txXPathNode& aNode, txIMatchContext* aCo
 {
     PRInt32 frameCount = mStripSpaceTests.Length();
     if (frameCount == 0) {
-        return PR_FALSE;
+        return false;
     }
 
     txXPathTreeWalker walker(aNode);
 
     if (txXPathNodeUtils::isText(walker.getCurrentPosition()) &&
         (!txXPathNodeUtils::isWhitespace(aNode) || !walker.moveToParent())) {
-        return PR_FALSE;
+        return false;
     }
 
     const txXPathNode& node = walker.getCurrentPosition();
 
     if (!txXPathNodeUtils::isElement(node)) {
-        return PR_FALSE;
+        return false;
     }
 
     // check Whitespace stipping handling list against given Node
@@ -295,7 +295,7 @@ txStylesheet::isStripSpaceAllowed(const txXPathNode& aNode, txIMatchContext* aCo
         }
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 nsresult

@@ -41,14 +41,14 @@
 
 gfxTeeSurface::gfxTeeSurface(cairo_surface_t *csurf)
 {
-    Init(csurf, PR_TRUE);
+    Init(csurf, true);
 }
 
 gfxTeeSurface::gfxTeeSurface(gfxASurface **aSurfaces, PRInt32 aSurfaceCount)
 {
     NS_ASSERTION(aSurfaceCount > 0, "Must have a least one surface");
     cairo_surface_t *csurf = cairo_tee_surface_create(aSurfaces[0]->CairoSurface());
-    Init(csurf, PR_FALSE);
+    Init(csurf, false);
 
     for (PRInt32 i = 1; i < aSurfaceCount; ++i) {
         cairo_tee_surface_add(csurf, aSurfaces[i]->CairoSurface());

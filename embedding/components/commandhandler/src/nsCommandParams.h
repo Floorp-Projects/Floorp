@@ -127,7 +127,7 @@ protected:
       switch (mEntryType)
       {
         case eNoType:                                       break;
-        case eBooleanType:      mData.mBoolean = PR_FALSE;  break;
+        case eBooleanType:      mData.mBoolean = false;  break;
         case eLongType:         mData.mLong = 0;            break;
         case eDoubleType:       mData.mDouble = 0.0;        break;
         case eWStringType:      delete mData.mString; mData.mString = nsnull;     break;

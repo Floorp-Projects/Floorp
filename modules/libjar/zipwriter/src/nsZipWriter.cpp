@@ -80,7 +80,7 @@ NS_IMPL_ISUPPORTS2(nsZipWriter, nsIZipWriter,
 nsZipWriter::nsZipWriter()
 {
     mEntryHash.Init();
-    mInQueue = PR_FALSE;
+    mInQueue = false;
 }
 
 nsZipWriter::~nsZipWriter()
@@ -105,7 +105,7 @@ NS_IMETHODIMP nsZipWriter::SetComment(const nsACString & aComment)
         return NS_ERROR_NOT_INITIALIZED;
 
     mComment = aComment;
-    mCDSDirty = PR_TRUE;
+    mCDSDirty = true;
     return NS_OK;
 }
 
@@ -282,11 +282,11 @@ NS_IMETHODIMP nsZipWriter::Open(nsIFile *aFile, PRInt32 aIoFlags)
     if (exists && !(aIoFlags & (PR_TRUNCATE | PR_WRONLY))) {
         rv = ReadFile(mFile);
         NS_ENSURE_SUCCESS(rv, rv);
-        mCDSDirty = PR_FALSE;
+        mCDSDirty = false;
     }
     else {
         mCDSOffset = 0;
-        mCDSDirty = PR_TRUE;
+        mCDSDirty = true;
         mComment.Truncate();
     }
 
@@ -420,7 +420,7 @@ NS_IMETHODIMP nsZipWriter::AddEntryFile(const nsACString & aZipEntry,
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = AddEntryStream(aZipEntry, modtime, aCompression, inputStream,
-                        PR_FALSE, permissions);
+                        false, permissions);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return inputStream->Close();
@@ -462,7 +462,7 @@ NS_IMETHODIMP nsZipWriter::AddEntryChannel(const nsACString & aZipEntry,
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = AddEntryStream(aZipEntry, aModTime, aCompression, inputStream,
-                        PR_FALSE, PERMISSIONS_FILE);
+                        false, PERMISSIONS_FILE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return inputStream->Close();
@@ -633,7 +633,7 @@ NS_IMETHODIMP nsZipWriter::RemoveEntry(const nsACString & aZipEntry,
 
         mEntryHash.Remove(mHeaders[pos]->mName);
         mHeaders.RemoveObjectAt(pos);
-        mCDSDirty = PR_TRUE;
+        mCDSDirty = true;
 
         return NS_OK;
     }
@@ -653,7 +653,7 @@ NS_IMETHODIMP nsZipWriter::ProcessQueue(nsIRequestObserver *aObserver,
 
     mProcessObserver = aObserver;
     mProcessContext = aContext;
-    mInQueue = PR_TRUE;
+    mInQueue = true;
 
     if (mProcessObserver)
         mProcessObserver->OnStartRequest(nsnull, mProcessContext);
@@ -802,7 +802,7 @@ nsresult nsZipWriter::InternalAddEntryDirectory(const nsACString & aZipEntry,
         return rv;
     }
 
-    mCDSDirty = PR_TRUE;
+    mCDSDirty = true;
     mCDSOffset += header->GetFileHeaderLength();
     if (!mEntryHash.Put(header->mName, mHeaders.Count())) {
         Cleanup();
@@ -865,7 +865,7 @@ nsresult nsZipWriter::EntryCompleteCallback(nsZipHeader* aHeader,
             SeekCDS();
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        mCDSDirty = PR_TRUE;
+        mCDSDirty = true;
         mCDSOffset += aHeader->mCSize + aHeader->GetFileHeaderLength();
 
         if (mInQueue)
@@ -927,7 +927,7 @@ inline nsresult nsZipWriter::BeginProcessingAddition(nsZipQueueItem* aItem,
 
         nsCOMPtr<nsIInputStreamPump> pump;
         rv = NS_NewInputStreamPump(getter_AddRefs(pump), aItem->mStream, -1,
-                                   -1, 0, 0, PR_TRUE);
+                                   -1, 0, 0, true);
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = pump->AsyncRead(stream, nsnull);
@@ -954,7 +954,7 @@ inline nsresult nsZipWriter::BeginProcessingAddition(nsZipQueueItem* aItem,
     }
 
     // Must be plain directory addition
-    *complete = PR_TRUE;
+    *complete = true;
     return InternalAddEntryDirectory(aItem->mZipEntry, aItem->mModTime,
                                      aItem->mPermissions);
 }
@@ -968,7 +968,7 @@ inline nsresult nsZipWriter::BeginProcessingRemoval(PRInt32 aPos)
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIInputStreamPump> pump;
     rv = NS_NewInputStreamPump(getter_AddRefs(pump), inputStream, -1, -1, 0,
-                               0, PR_TRUE);
+                               0, true);
     if (NS_FAILED(rv)) {
         inputStream->Close();
         return rv;
@@ -1000,7 +1000,7 @@ inline nsresult nsZipWriter::BeginProcessingRemoval(PRInt32 aPos)
 
     mEntryHash.Remove(mHeaders[aPos]->mName);
     mHeaders.RemoveObjectAt(aPos);
-    mCDSDirty = PR_TRUE;
+    mCDSDirty = true;
 
     rv = pump->AsyncRead(listener, nsnull);
     if (NS_FAILED(rv)) {
@@ -1076,7 +1076,7 @@ void nsZipWriter::FinishQueue(nsresult aStatus)
     // things
     mProcessObserver = nsnull;
     mProcessContext = nsnull;
-    mInQueue = PR_FALSE;
+    mInQueue = false;
 
     if (observer)
         observer->OnStopRequest(nsnull, context, aStatus);

@@ -72,17 +72,17 @@ NS_IMETHODIMP nsMenuBoxObject::OpenMenu(bool aOpenFlag)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
-    nsIFrame* frame = GetFrame(PR_FALSE);
+    nsIFrame* frame = GetFrame(false);
     if (frame) {
       if (aOpenFlag) {
         nsCOMPtr<nsIContent> content = mContent;
-        pm->ShowMenu(content, PR_FALSE, PR_FALSE);
+        pm->ShowMenu(content, false, false);
       }
       else {
         if (frame->GetType() == nsGkAtoms::menuFrame) {
           nsMenuPopupFrame* popupFrame = (static_cast<nsMenuFrame *>(frame))->GetPopup();
           if (popupFrame)
-            pm->HidePopup(popupFrame->GetContent(), PR_FALSE, PR_TRUE, PR_FALSE);
+            pm->HidePopup(popupFrame->GetContent(), false, true, false);
         }
       }
     }
@@ -94,7 +94,7 @@ NS_IMETHODIMP nsMenuBoxObject::OpenMenu(bool aOpenFlag)
 NS_IMETHODIMP nsMenuBoxObject::GetActiveChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
-  nsIFrame* frame = GetFrame(PR_FALSE);
+  nsIFrame* frame = GetFrame(false);
   if (frame && frame->GetType() == nsGkAtoms::menuFrame)
     return static_cast<nsMenuFrame *>(frame)->GetActiveChild(aResult);
   return NS_OK;
@@ -102,7 +102,7 @@ NS_IMETHODIMP nsMenuBoxObject::GetActiveChild(nsIDOMElement** aResult)
 
 NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
 {
-  nsIFrame* frame = GetFrame(PR_FALSE);
+  nsIFrame* frame = GetFrame(false);
   if (frame && frame->GetType() == nsGkAtoms::menuFrame)
     return static_cast<nsMenuFrame *>(frame)->SetActiveChild(aResult);
   return NS_OK;
@@ -111,7 +111,7 @@ NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
 /* boolean handleKeyPress (in nsIDOMKeyEvent keyEvent); */
 NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, bool* aHandledFlag)
 {
-  *aHandledFlag = PR_FALSE;
+  *aHandledFlag = false;
   NS_ENSURE_ARG(aKeyEvent);
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -131,7 +131,7 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, bool* a
   if (nsMenuBarListener::IsAccessKeyPressed(aKeyEvent))
     return NS_OK;
 
-  nsIFrame* frame = GetFrame(PR_FALSE);
+  nsIFrame* frame = GetFrame(false);
   if (!frame || frame->GetType() != nsGkAtoms::menuFrame)
     return NS_OK;
 
@@ -162,9 +162,9 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, bool* a
 NS_IMETHODIMP
 nsMenuBoxObject::GetOpenedWithKey(bool* aOpenedWithKey)
 {
-  *aOpenedWithKey = PR_FALSE;
+  *aOpenedWithKey = false;
 
-  nsIFrame* frame = GetFrame(PR_FALSE);
+  nsIFrame* frame = GetFrame(false);
   if (!frame || frame->GetType() != nsGkAtoms::menuFrame)
     return NS_OK;
 
