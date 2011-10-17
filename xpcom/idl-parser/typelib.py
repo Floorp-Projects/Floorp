@@ -39,6 +39,8 @@
 
 """Generate an XPIDL typelib for the IDL files specified on the command line"""
 
+import os
+import sys
 import xpidl, xpt
 
 # A map of xpidl.py types to xpt.py types
