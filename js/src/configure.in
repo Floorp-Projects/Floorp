@@ -2574,6 +2574,8 @@ AC_SUBST(ENABLE_METHODJIT)
 
 if test "$ENABLE_METHODJIT"; then
     AC_DEFINE(JS_METHODJIT)
+else
+    ENABLE_ION=
 fi
 
 if test "$ENABLE_MONOIC"; then
