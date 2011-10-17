@@ -1045,18 +1045,17 @@ function assertThrowNoGLError(gl, name, f) {
   try { f(); } catch(e) { r=true; glErr = e.glError; exp = e;}
   if (!r) {
     testFailed(
-      "assertThrowNoGError: should have thrown exception", name, f);
+      "assertThrowNoGLError: should have thrown exception", name, f);
     return false;
   } else {
     if (glErr !== undefined) {
       testFailed(
-        "assertThrowNoGError: should be no GL error but generated: " +
+        "assertThrowNoGLError: should be no GL error but generated: " +
         getGLErrorAsString(gl, glErr), name, f);
       return false;
-    } else {
-      // console.log("threw:" + exp);
     }
   }
+  testPassed("assertThrowNoGLError", name, f);
   return true;
 }
 
