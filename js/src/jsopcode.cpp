@@ -60,17 +60,17 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 
+#include "frontend/CodeGenerator.h"
+#include "frontend/TokenStream.h"
 #include "vm/Debugger.h"
 
 #include "jscntxtinlines.h"
@@ -962,7 +962,7 @@ js_GetPrinterOutput(JSPrinter *jp)
 }
 
 /*
- * NB: Indexed by SRC_DECL_* defines from jsemit.h.
+ * NB: Indexed by SRC_DECL_* defines from frontend/CodeGenerator.h.
  */
 static const char * const var_prefix[] = {"var ", "const ", "let "};
 

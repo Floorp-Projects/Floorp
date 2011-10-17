@@ -60,14 +60,14 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsexn.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsparse.h"
-#include "jsscan.h"
 #include "jsscript.h"
 
+#include "frontend/CodeGenerator.h"
+#include "frontend/Parser.h"
+#include "frontend/TokenStream.h"
 #include "vm/RegExpObject.h"
 
 #include "jsscriptinlines.h"

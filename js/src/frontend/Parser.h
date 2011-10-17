@@ -38,8 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsparse_h___
-#define jsparse_h___
+#ifndef Parser_h__
+#define Parser_h__
+
 /*
  * JS parser definitions.
  */
@@ -47,10 +48,10 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsatom.h"
-#include "jsscan.h"
 #include "jsscript.h"
 #include "jswin.h"
 
+#include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
 
 JS_BEGIN_EXTERN_C
@@ -353,7 +354,7 @@ struct GlobalScope {
 
 struct JSParseNode {
   private:
-    uint32              pn_type   : 16, /* TOK_* type, see jsscan.h */
+    uint32              pn_type   : 16, /* TOK_* type, see frontend/TokenStream.h */
                         pn_op     : 8,  /* see JSOp enum and jsopcode.tbl */
                         pn_arity  : 5,  /* see JSParseNodeArity enum */
                         pn_parens : 1,  /* this expr was enclosed in parens */
@@ -864,7 +865,8 @@ struct LexicalScopeNode : public JSParseNode {
  *       }
  *   }
  *
- * See jsemit.h for JSTreeContext and its top*Stmt, decls, and lexdeps members.
+ * See frontend/CodeGenerator.h for JSTreeContext and its top*Stmt, decls, and
+ * lexdeps members.
  *
  * Notes:
  *
@@ -1345,4 +1347,4 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc,
 
 JS_END_EXTERN_C
 
-#endif /* jsparse_h___ */
+#endif /* Parser_h__ */

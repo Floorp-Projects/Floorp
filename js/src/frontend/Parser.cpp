@@ -62,7 +62,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -72,13 +71,15 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jsprobes.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jslibmath.h"
+
+#include "frontend/CodeGenerator.h"
+#include "frontend/Parser.h"
+#include "frontend/TokenStream.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
