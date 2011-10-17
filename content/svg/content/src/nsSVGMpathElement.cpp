@@ -35,12 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSVGMpathElement.h"
 #include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGAnimateMotionElement.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 nsSVGElement::StringInfo nsSVGMpathElement::sStringInfo[1] =
@@ -191,7 +194,7 @@ nsSVGElement::StringAttributesInfo
 nsSVGMpathElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 //----------------------------------------------------------------------

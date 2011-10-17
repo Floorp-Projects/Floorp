@@ -37,6 +37,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "mozilla/Util.h"
+
 #include "nsICharsetAlias.h"
 
 #include "nsCOMPtr.h"
@@ -111,7 +114,7 @@
 #include "nsICharsetResolver.h"
 #include "nsICachingChannel.h"
 #include "nsIJSContextStack.h"
-#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 #include "nsIWyciwygChannel.h"
 #include "nsIScriptElement.h"
 #include "nsIScriptError.h"
@@ -1771,9 +1774,8 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
 
   nsCOMPtr<nsIContentViewer> cv;
   shell->GetContentViewer(getter_AddRefs(cv));
-  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv);
-  if (docViewer) {
-    docViewer->LoadStart(static_cast<nsIHTMLDocument *>(this));
+  if (cv) {
+    cv->LoadStart(static_cast<nsIHTMLDocument *>(this));
   }
 
   // Add a wyciwyg channel request into the document load group
@@ -3189,7 +3191,7 @@ ConvertToMidasInternalCommandInner(const nsAString & inCommandID,
 
             NS_ConvertUTF16toUTF8 convertedParam(Substring(start, end));
             PRUint32 j;
-            for (j = 0; j < NS_ARRAY_LENGTH(gBlocks); ++j) {
+            for (j = 0; j < ArrayLength(gBlocks); ++j) {
               if (convertedParam.Equals(gBlocks[j],
                                         nsCaseInsensitiveCStringComparator())) {
                 outParam.Assign(gBlocks[j]);
@@ -3197,7 +3199,7 @@ ConvertToMidasInternalCommandInner(const nsAString & inCommandID,
               }
             }
 
-            return j != NS_ARRAY_LENGTH(gBlocks);
+            return j != ArrayLength(gBlocks);
           }
           else {
             CopyUTF16toUTF8(inParam, outParam);

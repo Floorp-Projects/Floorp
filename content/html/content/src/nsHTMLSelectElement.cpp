@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsHTMLSelectElement.h"
 
 #include "nsHTMLOptionElement.h"
@@ -71,6 +73,7 @@
 #include "mozAutoDocUpdate.h"
 #include "dombindings.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS1(nsSelectState, nsSelectState)
@@ -152,9 +155,6 @@ nsHTMLSelectElement::nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo
     mOptGroupCount(0),
     mSelectedIndex(-1)
 {
-  // FIXME: Bug 328908, set mOptions in an Init function and get rid of null
-  // checks.
-
   // DoneAddingChildren() will be called later if it's from the parser,
   // otherwise it is
 
@@ -166,9 +166,7 @@ nsHTMLSelectElement::nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo
 
 nsHTMLSelectElement::~nsHTMLSelectElement()
 {
-  if (mOptions) {
-    mOptions->DropReference();
-  }
+  mOptions->DropReference();
 }
 
 // ISupports
@@ -1528,7 +1526,7 @@ nsHTMLSelectElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sImageAlignAttributeMap
   };
 
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
 }
 
 nsMapRuleToAttributesFunc

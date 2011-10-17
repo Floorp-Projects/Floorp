@@ -28,11 +28,6 @@ void vpx_log(const char *format, ...);
 #define DCPREDSIMTHRESH 0
 #define DCPREDCNTTHRESH 3
 
-#define Y1CONTEXT 0
-#define UCONTEXT 1
-#define VCONTEXT 2
-#define Y2CONTEXT 3
-
 #define MB_FEATURE_TREE_PROBS   3
 #define MAX_MB_SEGMENTS         4
 
@@ -48,6 +43,11 @@ typedef struct
     int r, c;
 } POS;
 
+#define PLANE_TYPE_Y_NO_DC    0
+#define PLANE_TYPE_Y2         1
+#define PLANE_TYPE_UV         2
+#define PLANE_TYPE_Y_WITH_DC  3
+
 
 typedef char ENTROPY_CONTEXT;
 typedef struct
@@ -57,8 +57,6 @@ typedef struct
     ENTROPY_CONTEXT v[2];
     ENTROPY_CONTEXT y2;
 } ENTROPY_CONTEXT_PLANES;
-
-extern const int vp8_block2type[25];
 
 extern const unsigned char vp8_block2left[25];
 extern const unsigned char vp8_block2above[25];
@@ -139,16 +137,11 @@ typedef enum
    modes for the Y blocks to the left and above us; for interframes, there
    is a single probability table. */
 
-typedef struct
+union b_mode_info
 {
-    B_PREDICTION_MODE mode;
-    union
-    {
-        int as_int;
-        MV  as_mv;
-    } mv;
-} B_MODE_INFO;
-
+    B_PREDICTION_MODE as_mode;
+    int_mv mv;
+};
 
 typedef enum
 {
@@ -163,29 +156,19 @@ typedef struct
 {
     MB_PREDICTION_MODE mode, uv_mode;
     MV_REFERENCE_FRAME ref_frame;
-    union
-    {
-        int as_int;
-        MV  as_mv;
-    } mv;
+    int_mv mv;
 
     unsigned char partitioning;
     unsigned char mb_skip_coeff;                                /* does this mb has coefficients at all, 1=no coefficients, 0=need decode tokens */
-    unsigned char dc_diff;
     unsigned char need_to_clamp_mvs;
-
     unsigned char segment_id;                  /* Which set of segmentation parameters should be used for this MB */
-
-    unsigned char force_no_skip; /* encoder only */
 } MB_MODE_INFO;
-
 
 typedef struct
 {
     MB_MODE_INFO mbmi;
-    B_MODE_INFO bmi[16];
+    union b_mode_info bmi[16];
 } MODE_INFO;
-
 
 typedef struct
 {
@@ -193,8 +176,6 @@ typedef struct
     short *dqcoeff;
     unsigned char  *predictor;
     short *diff;
-    short *reference;
-
     short *dequant;
 
     /* 16 Y blocks, 4 U blocks, 4 V blocks each with 16 entries */
@@ -208,15 +189,13 @@ typedef struct
 
     int eob;
 
-    B_MODE_INFO bmi;
-
+    union b_mode_info bmi;
 } BLOCKD;
 
-typedef struct
+typedef struct MacroBlockD
 {
     DECLARE_ALIGNED(16, short, diff[400]);      /* from idct diff */
     DECLARE_ALIGNED(16, unsigned char,  predictor[384]);
-/* not used    DECLARE_ALIGNED(16, short, reference[384]); */
     DECLARE_ALIGNED(16, short, qcoeff[400]);
     DECLARE_ALIGNED(16, short, dqcoeff[400]);
     DECLARE_ALIGNED(16, char,  eobs[25]);
@@ -273,6 +252,9 @@ typedef struct
     int mb_to_top_edge;
     int mb_to_bottom_edge;
 
+    int ref_frame_cost[MAX_REF_FRAMES];
+
+
     unsigned int frames_since_golden;
     unsigned int frames_till_alt_ref_frame;
     vp8_subpix_fn_t  subpixel_predict;
@@ -282,6 +264,16 @@ typedef struct
 
     void *current_bc;
 
+    int corrupted;
+
+#if ARCH_X86 || ARCH_X86_64
+    /* This is an intermediate buffer currently used in sub-pixel motion search
+     * to keep a copy of the reference area. This buffer can be used for other
+     * purpose.
+     */
+    DECLARE_ALIGNED(32, unsigned char, y_buf[22*32]);
+#endif
+
 #if CONFIG_RUNTIME_CPU_DETECT
     struct VP8_COMMON_RTCD  *rtcd;
 #endif
@@ -290,5 +282,21 @@ typedef struct
 
 extern void vp8_build_block_doffsets(MACROBLOCKD *x);
 extern void vp8_setup_block_dptrs(MACROBLOCKD *x);
+
+static void update_blockd_bmi(MACROBLOCKD *xd)
+{
+    int i;
+    int is_4x4;
+    is_4x4 = (xd->mode_info_context->mbmi.mode == SPLITMV) ||
+              (xd->mode_info_context->mbmi.mode == B_PRED);
+
+    if (is_4x4)
+    {
+        for (i = 0; i < 16; i++)
+        {
+            xd->block[i].bmi = xd->mode_info_context->bmi[i];
+        }
+    }
+}
 
 #endif  /* __INC_BLOCKD_H */

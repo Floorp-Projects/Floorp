@@ -50,50 +50,51 @@ const TESTS = [
     matchString: "fooBarSVG",
   },
   { // #7
-    file: "test-bug-595934-workers.html",
-    category: "Web Worker",
-    matchString: "fooBarWorker",
-  },
-  { // #8
     file: "test-bug-595934-dom-html-external.html",
     category: "DOM:HTML",
     matchString: "document.all",
   },
-  { // #9
+  { // #8
     file: "test-bug-595934-dom-events-external2.html",
     category: "DOM Events",
     matchString: "preventBubble()",
   },
-  { // #10
+  { // #9
     file: "test-bug-595934-canvas.html",
     category: "Canvas",
     matchString: "strokeStyle",
   },
-  { // #11
+  { // #10
     file: "test-bug-595934-css-parser.html",
     category: "CSS Parser",
     matchString: "foobarCssParser",
   },
-  { // #12
+  { // #11
     file: "test-bug-595934-malformedxml-external.html",
     category: "malformed-xml",
     matchString: "</html>",
   },
-  { // #13
+  { // #12
     file: "test-bug-595934-empty-getelementbyid.html",
     category: "DOM",
     matchString: "getElementById",
   },
-  { // #14
+  { // #13
     file: "test-bug-595934-canvas-css.html",
     category: "CSS Parser",
     matchString: "foobarCanvasCssParser",
   },
-  { // #16
+  { // #14
     file: "test-bug-595934-image.html",
     category: "Image",
     matchString: "corrupt",
   },
+  /* Disabled until bug 675221 lands.
+  { // #7
+    file: "test-bug-595934-workers.html",
+    category: "Web Worker",
+    matchString: "fooBarWorker",
+  },*/
 ];
 
 let pos = -1;

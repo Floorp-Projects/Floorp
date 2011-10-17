@@ -694,18 +694,6 @@ NS_IMETHODIMP nsContentTreeOwner::SetEnabled(bool aEnable)
    return mXULWindow->SetEnabled(aEnable);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetBlurSuppression(bool *aBlurSuppression)
-{
-  NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->GetBlurSuppression(aBlurSuppression);
-}
-
-NS_IMETHODIMP nsContentTreeOwner::SetBlurSuppression(bool aBlurSuppression)
-{
-  NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->SetBlurSuppression(aBlurSuppression);
-}
-
 NS_IMETHODIMP nsContentTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);

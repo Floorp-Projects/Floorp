@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #ifdef MOZ_PLATFORM_MAEMO
 // needed to include hildon parts in gtk.h
 #define MAEMO_CHANGES
@@ -89,7 +91,7 @@
 #include "gtk2compat.h"
 #endif
 
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 
 #ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
 #define SN_API_NOT_YET_FROZEN
@@ -481,7 +483,7 @@ nsWindow::~nsWindow()
 /* static */ void
 nsWindow::ReleaseGlobals()
 {
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gCursorCache); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(gCursorCache); ++i) {
     if (gCursorCache[i]) {
       gdk_cursor_unref(gCursorCache[i]);
       gCursorCache[i] = nsnull;
@@ -1801,9 +1803,9 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     const char extensions[6][7] = { ".png", "16.png", "32.png", "48.png",
                                     ".xpm", "16.xpm" };
 
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(extensions); i++) {
+    for (PRUint32 i = 0; i < ArrayLength(extensions); i++) {
         // Don't bother looking for XPM versions if we found a PNG.
-        if (i == NS_ARRAY_LENGTH(extensions) - 2 && iconList.Length())
+        if (i == ArrayLength(extensions) - 2 && iconList.Length())
             break;
 
         nsAutoString extension;
@@ -2852,10 +2854,10 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
         }
     // Map buttons 8-9 to back/forward
     case 8:
-        DispatchCommandEvent(nsWidgetAtoms::Back);
+        DispatchCommandEvent(nsGkAtoms::Back);
         return;
     case 9:
-        DispatchCommandEvent(nsWidgetAtoms::Forward);
+        DispatchCommandEvent(nsGkAtoms::Forward);
         return;
     default:
         return;
@@ -3001,7 +3003,7 @@ bool
 nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 {
     nsEventStatus status;
-    nsCommandEvent event(true, nsWidgetAtoms::onAppCommand, aCommand, this);
+    nsCommandEvent event(true, nsGkAtoms::onAppCommand, aCommand, this);
     DispatchEvent(&event, status);
     return TRUE;
 }
@@ -3152,19 +3154,19 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     // Look for specialized app-command keys
     switch (aEvent->keyval) {
         case XF86XK_Back:
-            return DispatchCommandEvent(nsWidgetAtoms::Back);
+            return DispatchCommandEvent(nsGkAtoms::Back);
         case XF86XK_Forward:
-            return DispatchCommandEvent(nsWidgetAtoms::Forward);
+            return DispatchCommandEvent(nsGkAtoms::Forward);
         case XF86XK_Refresh:
-            return DispatchCommandEvent(nsWidgetAtoms::Reload);
+            return DispatchCommandEvent(nsGkAtoms::Reload);
         case XF86XK_Stop:
-            return DispatchCommandEvent(nsWidgetAtoms::Stop);
+            return DispatchCommandEvent(nsGkAtoms::Stop);
         case XF86XK_Search:
-            return DispatchCommandEvent(nsWidgetAtoms::Search);
+            return DispatchCommandEvent(nsGkAtoms::Search);
         case XF86XK_Favorites:
-            return DispatchCommandEvent(nsWidgetAtoms::Bookmarks);
+            return DispatchCommandEvent(nsGkAtoms::Bookmarks);
         case XF86XK_HomePage:
-            return DispatchCommandEvent(nsWidgetAtoms::Home);
+            return DispatchCommandEvent(nsGkAtoms::Home);
         case XF86XK_Copy:
         case GDK_F16:  // F16, F20, F18, F14 are old keysyms for Copy Cut Paste Undo
             return DispatchContentCommandEvent(NS_CONTENT_COMMAND_COPY);
@@ -3878,7 +3880,6 @@ nsWindow::Create(nsIWidget        *aParent,
                  const nsIntRect  &aRect,
                  EVENT_CALLBACK    aHandleEventFunction,
                  nsDeviceContext *aContext,
-                 nsIAppShell      *aAppShell,
                  nsIToolkit       *aToolkit,
                  nsWidgetInitData *aInitData)
 {
@@ -3894,7 +3895,7 @@ nsWindow::Create(nsIWidget        *aParent,
 
     // initialize all the common bits of this class
     BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
-               aAppShell, aToolkit, aInitData);
+               aToolkit, aInitData);
 
     // Do we need to listen for resizes?
     bool listenForResizes = false;;

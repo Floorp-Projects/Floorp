@@ -35,9 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsAppShellWindowEnumerator.h"
+
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
-#include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -47,7 +48,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIXULWindow.h"
 
-#include "nsAppShellWindowEnumerator.h"
 #include "nsWindowMediator.h"
 
 //
@@ -83,7 +83,7 @@ nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell)
       nsCOMPtr<nsIDOMElement> element;
       domdoc->GetDocumentElement(getter_AddRefs(element));
       if (element)
-        node = do_QueryInterface(element);
+        node = element;
     }
   }
 

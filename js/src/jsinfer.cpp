@@ -2033,14 +2033,14 @@ types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
     return false;
 }
 
-void
+bool
 TypeCompartment::growPendingArray(JSContext *cx)
 {
     unsigned newCapacity = js::Max(unsigned(100), pendingCapacity * 2);
     PendingWork *newArray = (PendingWork *) OffTheBooks::calloc_(newCapacity * sizeof(PendingWork));
     if (!newArray) {
         cx->compartment->types.setPendingNukeTypes(cx);
-        return;
+        return false;
     }
 
     memcpy(newArray, pendingArray, pendingCount * sizeof(PendingWork));
@@ -2048,6 +2048,8 @@ TypeCompartment::growPendingArray(JSContext *cx)
 
     pendingArray = newArray;
     pendingCapacity = newCapacity;
+
+    return true;
 }
 
 void

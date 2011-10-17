@@ -630,7 +630,7 @@ let AboutPermissions = {
     let filterValue = document.getElementById("sites-filter").value.toLowerCase();
     item.collapsed = aSite.host.toLowerCase().indexOf(filterValue) == -1;
 
-    this.sitesList.appendChild(item);
+    (this._listFragment || this.sitesList).appendChild(item);
   },
 
   startSitesListBatch: function () {

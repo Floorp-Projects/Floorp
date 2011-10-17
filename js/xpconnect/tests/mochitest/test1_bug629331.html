@@ -1,0 +1,19 @@
+<body>
+<iframe src="about:blank" id="ifr"></iframe>
+<script>
+/** Test for Bug 629331 **/
+function finish() {
+    parent.postMessage(JSON.stringify({fun: "finish"}), "*");
+}
+
+function is(a, b, description) {
+    parent.postMessage(JSON.stringify({ fun: "is", a: a, b: b, description: description }), "*");
+}
+
+document.domain = "example.org";
+var i = 0;
+is(i, 0, 'i meets starting conditions');
+document.getElementById('ifr').src = 'http://test2.example.org/tests/js/xpconnect/tests/mochitest/test2_bug629331.html';
+</script>
+
+

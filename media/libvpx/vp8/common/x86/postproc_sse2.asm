@@ -26,7 +26,7 @@ sym(vp8_post_proc_down_and_across_xmm):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 7
-    SAVE_XMM
+    SAVE_XMM 7
     GET_GOT     rbx
     push        rsi
     push        rdi
@@ -256,7 +256,7 @@ sym(vp8_mbpost_proc_down_xmm):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 5
-    SAVE_XMM
+    SAVE_XMM 7
     GET_GOT     rbx
     push        rsi
     push        rdi
@@ -456,7 +456,7 @@ sym(vp8_mbpost_proc_across_ip_xmm):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 5
-    SAVE_XMM
+    SAVE_XMM 7
     GET_GOT     rbx
     push        rsi
     push        rdi

@@ -38,7 +38,7 @@
 
 #include "base/basictypes.h"
 
-#include "xpcmodule.h"
+#include "XPCModule.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsLayoutStatics.h"
 #include "nsContentCID.h"
@@ -53,13 +53,13 @@
 #include "nsIComponentManager.h"
 #include "nsIContentIterator.h"
 #include "nsIContentSerializer.h"
+#include "nsIContentViewer.h"
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMRange.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIDocumentViewer.h"
 #include "nsIFactory.h"
 #include "nsIFrameUtil.h"
 #include "nsHTMLStyleSheet.h"
@@ -441,7 +441,7 @@ nsresult NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
 nsresult NS_NewDomSelection(nsISelection** aResult);
-nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
+nsresult NS_NewContentViewer(nsIContentViewer** aResult);
 nsresult NS_NewRange(nsIDOMRange** aResult);
 nsresult NS_NewRangeUtils(nsIRangeUtils** aResult);
 nsresult NS_NewContentIterator(nsIContentIterator** aResult);
@@ -505,7 +505,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
 
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
-MAKE_CTOR(CreateDocumentViewer,           nsIDocumentViewer,           NS_NewDocumentViewer)
+MAKE_CTOR(CreateContentViewer,            nsIContentViewer,            NS_NewContentViewer)
 MAKE_CTOR(CreateHTMLDocument,             nsIDocument,                 NS_NewHTMLDocument)
 MAKE_CTOR(CreateXMLDocument,              nsIDocument,                 NS_NewXMLDocument)
 MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVGDocument)
@@ -740,7 +740,7 @@ NS_DEFINE_NAMED_CID(IN_FLASHER_CID);
 NS_DEFINE_NAMED_CID(IN_CSSVALUESEARCH_CID);
 NS_DEFINE_NAMED_CID(IN_DOMUTILS_CID);
 NS_DEFINE_NAMED_CID(NS_NAMESPACEMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_DOCUMENT_VIEWER_CID);
+NS_DEFINE_NAMED_CID(NS_CONTENT_VIEWER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_XMLDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_SVGDOCUMENT_CID);
@@ -874,7 +874,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kIN_CSSVALUESEARCH_CID, false, NULL, inCSSValueSearchConstructor },
   { &kIN_DOMUTILS_CID, false, NULL, inDOMUtilsConstructor },
   { &kNS_NAMESPACEMANAGER_CID, false, NULL, CreateNameSpaceManager },
-  { &kNS_DOCUMENT_VIEWER_CID, false, NULL, CreateDocumentViewer },
+  { &kNS_CONTENT_VIEWER_CID, false, NULL, CreateContentViewer },
   { &kNS_HTMLDOCUMENT_CID, false, NULL, CreateHTMLDocument },
   { &kNS_XMLDOCUMENT_CID, false, NULL, CreateXMLDocument },
   { &kNS_SVGDOCUMENT_CID, false, NULL, CreateSVGDocument },

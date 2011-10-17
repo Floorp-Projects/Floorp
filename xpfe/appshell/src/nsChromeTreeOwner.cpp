@@ -480,18 +480,6 @@ NS_IMETHODIMP nsChromeTreeOwner::SetEnabled(bool aEnable)
    return mXULWindow->SetEnabled(aEnable);
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::GetBlurSuppression(bool *aBlurSuppression)
-{
-  NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->GetBlurSuppression(aBlurSuppression);
-}
-
-NS_IMETHODIMP nsChromeTreeOwner::SetBlurSuppression(bool aBlurSuppression)
-{
-  NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->SetBlurSuppression(aBlurSuppression);
-}
-
 NS_IMETHODIMP nsChromeTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);

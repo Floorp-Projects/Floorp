@@ -191,8 +191,8 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, bool aCheckSelected)
     }
   }
 
-  return CheckBooleanAttr(aFrame, aCheckSelected ? nsWidgetAtoms::selected
-                                                 : nsWidgetAtoms::checked);
+  return CheckBooleanAttr(aFrame, aCheckSelected ? nsGkAtoms::selected
+                                                 : nsGkAtoms::checked);
 }
 
 bool
@@ -202,7 +202,7 @@ nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame)
     return PR_FALSE;
 
   nsIContent* content = aFrame->GetContent();
-  return content->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::type,
+  return content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                               NS_LITERAL_STRING("menu"), eCaseMatters);
 }
 
@@ -229,7 +229,7 @@ nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
   if (content->IsXUL()) {
     // For a XUL checkbox or radio button, the state of the parent determines
     // the state
-    return CheckBooleanAttr(aFrame->GetParent(), nsWidgetAtoms::indeterminate);
+    return CheckBooleanAttr(aFrame->GetParent(), nsGkAtoms::indeterminate);
   }
 
   // Check for an HTML input element
@@ -258,7 +258,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
   // fall through and return false.
   if (aWidgetType == NS_THEME_RESIZER) {
     nsIFrame* parentFrame = aFrame->GetParent();
-    if (parentFrame && parentFrame->GetType() == nsWidgetAtoms::scrollFrame) {
+    if (parentFrame && parentFrame->GetType() == nsGkAtoms::scrollFrame) {
       // if the parent is a scrollframe, the resizer should be native themed
       // only if the scrollable area doesn't override the widget style.
       parentFrame = parentFrame->GetParent();
@@ -312,7 +312,7 @@ nsNativeTheme::IsDisabled(nsIFrame* aFrame, nsEventStates aEventStates)
   // For XML/XUL elements, an attribute must be equal to the literal
   // string "true" to be counted as true.  An empty string should _not_
   // be counted as true.
-  return content->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
+  return content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
                               NS_LITERAL_STRING("true"), eCaseMatters);
 }
 
@@ -330,12 +330,12 @@ nsNativeTheme::GetScrollbarButtonType(nsIFrame* aFrame)
     return 0;
 
   static nsIContent::AttrValuesArray strings[] =
-    {&nsWidgetAtoms::scrollbarDownBottom, &nsWidgetAtoms::scrollbarDownTop,
-     &nsWidgetAtoms::scrollbarUpBottom, &nsWidgetAtoms::scrollbarUpTop,
+    {&nsGkAtoms::scrollbarDownBottom, &nsGkAtoms::scrollbarDownTop,
+     &nsGkAtoms::scrollbarUpBottom, &nsGkAtoms::scrollbarUpTop,
      nsnull};
 
   switch (aFrame->GetContent()->FindAttrValueIn(kNameSpaceID_None,
-                                                nsWidgetAtoms::sbattr,
+                                                nsGkAtoms::sbattr,
                                                 strings, eCaseMatters)) {
     case 0: return eScrollbarButton_Down | eScrollbarButton_Bottom;
     case 1: return eScrollbarButton_Down;
@@ -354,9 +354,9 @@ nsNativeTheme::GetTreeSortDirection(nsIFrame* aFrame)
     return eTreeSortDirection_Natural;
 
   static nsIContent::AttrValuesArray strings[] =
-    {&nsWidgetAtoms::descending, &nsWidgetAtoms::ascending, nsnull};
+    {&nsGkAtoms::descending, &nsGkAtoms::ascending, nsnull};
   switch (aFrame->GetContent()->FindAttrValueIn(kNameSpaceID_None,
-                                                nsWidgetAtoms::sortdirection,
+                                                nsGkAtoms::sortDirection,
                                                 strings, eCaseMatters)) {
     case 0: return eTreeSortDirection_Descending;
     case 1: return eTreeSortDirection_Ascending;
@@ -372,17 +372,17 @@ nsNativeTheme::IsLastTreeHeaderCell(nsIFrame* aFrame)
     return PR_FALSE;
 
   // A tree column picker is always the last header cell.
-  if (aFrame->GetContent()->Tag() == nsWidgetAtoms::treecolpicker)
+  if (aFrame->GetContent()->Tag() == nsGkAtoms::treecolpicker)
     return PR_TRUE;
 
   // Find the parent tree.
   nsIContent* parent = aFrame->GetContent()->GetParent();
-  while (parent && parent->Tag() != nsWidgetAtoms::tree) {
+  while (parent && parent->Tag() != nsGkAtoms::tree) {
     parent = parent->GetParent();
   }
 
   // If the column picker is visible, this can't be the last column.
-  if (parent && !parent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidecolumnpicker,
+  if (parent && !parent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidecolumnpicker,
                                      NS_LITERAL_STRING("true"), eCaseMatters))
     return PR_FALSE;
 
@@ -401,7 +401,7 @@ nsNativeTheme::IsBottomTab(nsIFrame* aFrame)
     return PR_FALSE;
 
   nsAutoString classStr;
-  aFrame->GetContent()->GetAttr(kNameSpaceID_None, nsWidgetAtoms::_class, classStr);
+  aFrame->GetContent()->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, classStr);
   return !classStr.IsEmpty() && classStr.Find("tab-bottom") != kNotFound;
 }
 
@@ -413,7 +413,7 @@ nsNativeTheme::IsFirstTab(nsIFrame* aFrame)
 
   nsIFrame* first = aFrame->GetParent()->GetFirstPrincipalChild();
   while (first) {
-    if (first->GetRect().width > 0 && first->GetContent()->Tag() == nsWidgetAtoms::tab)
+    if (first->GetRect().width > 0 && first->GetContent()->Tag() == nsGkAtoms::tab)
       return (first == aFrame);
     first = first->GetNextSibling();
   }
@@ -426,8 +426,8 @@ nsNativeTheme::IsHorizontal(nsIFrame* aFrame)
   if (!aFrame)
     return PR_FALSE;
     
-  return !aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::orient,
-                                            nsWidgetAtoms::vertical, 
+  return !aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::orient,
+                                            nsGkAtoms::vertical, 
                                             eCaseMatters);
 }
 
@@ -467,11 +467,11 @@ nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
   if (!aFrame || !aFrame->GetContent())
     return PR_FALSE;
 
-  if (aFrame->GetContent()->IsHTML(nsWidgetAtoms::progress)) {
+  if (aFrame->GetContent()->IsHTML(nsGkAtoms::progress)) {
     return aEventStates.HasState(NS_EVENT_STATE_INDETERMINATE);
   }
 
-  return aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::mode,
+  return aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mode,
                                            NS_LITERAL_STRING("undetermined"),
                                            eCaseMatters);
 }
@@ -491,7 +491,7 @@ nsNativeTheme::IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent)
     return PR_FALSE;
 
   nsIContent* parentContent = aFrame->GetContent()->GetParent();
-  if (!parentContent || parentContent->Tag() != nsWidgetAtoms::menu)
+  if (!parentContent || parentContent->Tag() != nsGkAtoms::menu)
     return PR_FALSE;
 
   nsIFrame* parent = aFrame;

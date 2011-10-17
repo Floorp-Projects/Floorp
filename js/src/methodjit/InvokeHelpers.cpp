@@ -45,7 +45,6 @@
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsxml.h"
-#include "jsstaticcheck.h"
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/CodeLocation.h"

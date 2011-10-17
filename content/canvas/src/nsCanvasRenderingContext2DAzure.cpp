@@ -3066,6 +3066,8 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
     Point baselineOrigin =
       Point(point.x * devUnitsPerAppUnit, point.y * devUnitsPerAppUnit);
 
+    float advanceSum = 0;
+
     for (PRUint32 c = 0; c < numRuns; c++) {
       gfxFont *font = runs[c].mFont;
       PRUint32 endRun = 0;
@@ -3083,8 +3085,6 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
       GlyphBuffer buffer;
 
       std::vector<Glyph> glyphBuf;
-
-      float advanceSum = 0;
 
       for (PRUint32 i = runs[c].mCharacterOffset; i < endRun; i++) {
         Glyph newGlyph;

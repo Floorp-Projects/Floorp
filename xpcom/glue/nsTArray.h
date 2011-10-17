@@ -256,7 +256,7 @@ protected:
   bool EnsureNotUsingAutoArrayBuffer(size_type elemSize);
 
   // Returns true if this nsTArray is an nsAutoTArray with a built-in buffer.
-  bool IsAutoArray() {
+  bool IsAutoArray() const {
     return mHdr->mIsAutoArray;
   }
 
@@ -265,14 +265,22 @@ protected:
     NS_ASSERTION(IsAutoArray(), "Should be an auto array to call this");
     return GetAutoArrayBufferUnsafe(elemAlign);
   }
+  const Header* GetAutoArrayBuffer(size_t elemAlign) const {
+    NS_ASSERTION(IsAutoArray(), "Should be an auto array to call this");
+    return GetAutoArrayBufferUnsafe(elemAlign);
+  }
 
   // Returns a Header for the built-in buffer of this nsAutoTArray, but doesn't
   // assert that we are an nsAutoTArray.
-  Header* GetAutoArrayBufferUnsafe(size_t elemAlign);
+  Header* GetAutoArrayBufferUnsafe(size_t elemAlign) {
+    return const_cast<Header*>(static_cast<const nsTArray_base<Alloc>*>(this)->
+                               GetAutoArrayBufferUnsafe(elemAlign));
+  }
+  const Header* GetAutoArrayBufferUnsafe(size_t elemAlign) const;
 
   // Returns true if this is an nsAutoTArray and it currently uses the
   // built-in buffer to store its elements.
-  bool UsesAutoArrayBuffer();
+  bool UsesAutoArrayBuffer() const;
 
   // The array's elements (prefixed with a Header).  This pointer is never
   // null.  If the array is empty, then this will point to sEmptyHdr.
@@ -475,7 +483,8 @@ public:
   // @return The amount of memory taken used by this nsTArray, not including
   // sizeof(this)
   size_t SizeOf() const {
-    return this->Capacity() * sizeof(elem_type) + sizeof(*this->Hdr());
+    return this->UsesAutoArrayBuffer() ?
+      0 : this->Capacity() * sizeof(elem_type) + sizeof(*this->Hdr());
   }
 
   //

@@ -67,6 +67,15 @@ HistogramCount
 void Accumulate(ID id, PRUint32 sample);
 
 /**
+ * Adds time delta in milliseconds to a histogram defined in TelemetryHistograms.h
+ *
+ * @param id - histogram id
+ * @param start - start time
+ * @param end - end time
+ */
+void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
+
+/**
  * Return a raw Histogram for direct manipulation for users who can not use Accumulate().
  */
 base::Histogram* GetHistogramById(ID id);
@@ -81,7 +90,7 @@ public:
   }
 
   ~AutoTimer() {
-    Accumulate(id, static_cast<PRUint32>((TimeStamp::Now() - start).ToMilliseconds()));
+    AccumulateTimeDelta(id, start);
   }
 
 private:
