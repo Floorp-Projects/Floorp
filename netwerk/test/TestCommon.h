@@ -53,7 +53,7 @@ class nsQuitPumpingEvent : public nsIRunnable {
 public:
   NS_DECL_ISUPPORTS
   NS_IMETHOD Run() {
-    gKeepPumpingEvents = PR_FALSE;
+    gKeepPumpingEvents = false;
     return NS_OK;
   }
 };
@@ -63,7 +63,7 @@ static inline void PumpEvents()
 {
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
-  gKeepPumpingEvents = PR_TRUE;
+  gKeepPumpingEvents = true;
   while (gKeepPumpingEvents)
     NS_ProcessNextEvent(thread);
 

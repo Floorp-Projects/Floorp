@@ -136,10 +136,10 @@ nsSelectionState::RestoreSelection(nsISelection *aSel)
 bool
 nsSelectionState::IsCollapsed()
 {
-  if (1 != mArray.Length()) return PR_FALSE;
+  if (1 != mArray.Length()) return false;
   nsCOMPtr<nsIDOMRange> range;
   mArray[0].GetRange(address_of(range));
-  NS_ENSURE_TRUE(range, PR_FALSE);
+  NS_ENSURE_TRUE(range, false);
   bool bIsCollapsed = false;
   range->GetCollapsed(&bIsCollapsed);
   return bIsCollapsed;
@@ -148,27 +148,27 @@ nsSelectionState::IsCollapsed()
 bool
 nsSelectionState::IsEqual(nsSelectionState *aSelState)
 {
-  NS_ENSURE_TRUE(aSelState, PR_FALSE);
+  NS_ENSURE_TRUE(aSelState, false);
   PRUint32 i, myCount = mArray.Length(), itsCount = aSelState->mArray.Length();
-  if (myCount != itsCount) return PR_FALSE;
-  if (myCount < 1) return PR_FALSE;
+  if (myCount != itsCount) return false;
+  if (myCount < 1) return false;
 
   for (i=0; i<myCount; i++)
   {
     nsCOMPtr<nsIDOMRange> myRange, itsRange;
     mArray[i].GetRange(address_of(myRange));
     aSelState->mArray[i].GetRange(address_of(itsRange));
-    NS_ENSURE_TRUE(myRange && itsRange, PR_FALSE);
+    NS_ENSURE_TRUE(myRange && itsRange, false);
   
     PRInt16 compResult;
     nsresult rv;
     rv = myRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, itsRange, &compResult);
-    if (NS_FAILED(rv) || compResult) return PR_FALSE;
+    if (NS_FAILED(rv) || compResult) return false;
     rv = myRange->CompareBoundaryPoints(nsIDOMRange::END_TO_END, itsRange, &compResult);
-    if (NS_FAILED(rv) || compResult) return PR_FALSE;
+    if (NS_FAILED(rv) || compResult) return false;
   }
   // if we got here, they are equal
-  return PR_TRUE;
+  return true;
 }
 
 void     
@@ -188,7 +188,7 @@ nsSelectionState::IsEmpty()
  * nsRangeUpdater:  class for updating nsIDOMRanges in response to editor actions.
  */
 
-nsRangeUpdater::nsRangeUpdater() : mArray(), mLock(PR_FALSE) {}
+nsRangeUpdater::nsRangeUpdater() : mArray(), mLock(false) {}
 
 nsRangeUpdater::~nsRangeUpdater()
 {
@@ -531,7 +531,7 @@ nsresult
 nsRangeUpdater::WillReplaceContainer()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;  
-  mLock = PR_TRUE;
+  mLock = true;
   return NS_OK;
 }
 
@@ -540,7 +540,7 @@ nsresult
 nsRangeUpdater::DidReplaceContainer(nsIDOMNode *aOriginalNode, nsIDOMNode *aNewNode)
 {
   NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);  
-  mLock = PR_FALSE;
+  mLock = false;
 
   NS_ENSURE_TRUE(aOriginalNode && aNewNode, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();
@@ -568,7 +568,7 @@ nsresult
 nsRangeUpdater::WillRemoveContainer()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;  
-  mLock = PR_TRUE;
+  mLock = true;
   return NS_OK;
 }
 
@@ -577,7 +577,7 @@ nsresult
 nsRangeUpdater::DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset, PRUint32 aNodeOrigLen)
 {
   NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);  
-  mLock = PR_FALSE;
+  mLock = false;
 
   NS_ENSURE_TRUE(aNode && aParent, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();
@@ -616,7 +616,7 @@ nsresult
 nsRangeUpdater::WillInsertContainer()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;  
-  mLock = PR_TRUE;
+  mLock = true;
   return NS_OK;
 }
 
@@ -625,7 +625,7 @@ nsresult
 nsRangeUpdater::DidInsertContainer()
 {
   NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);  
-  mLock = PR_FALSE;
+  mLock = false;
   return NS_OK;
 }
 
@@ -634,7 +634,7 @@ nsresult
 nsRangeUpdater::WillMoveNode()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;  
-  mLock = PR_TRUE;
+  mLock = true;
   return NS_OK;
 }
 
@@ -643,7 +643,7 @@ nsresult
 nsRangeUpdater::DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOMNode *aNewParent, PRInt32 aNewOffset)
 {
   NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);  
-  mLock = PR_FALSE;
+  mLock = false;
 
   NS_ENSURE_TRUE(aOldParent && aNewParent, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();

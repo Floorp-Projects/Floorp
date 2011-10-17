@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsGSettingsService.h"
 #include "nsStringAPI.h"
 #include "nsCOMPtr.h"
@@ -45,6 +47,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
+
+using namespace mozilla;
 
 typedef struct _GSettings GSettings;
 typedef struct _GVariantType GVariantType;
@@ -132,10 +136,10 @@ nsGSettingsCollection::KeyExists(const nsACString& aKey)
 
   for (PRUint32 i = 0; mKeys[i] != NULL; i++) {
     if (aKey.Equals(mKeys[i]))
-      return PR_TRUE;
+      return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -147,7 +151,7 @@ nsGSettingsCollection::SetValue(const nsACString& aKey,
                               PromiseFlatCString(aKey).get(),
                               aValue)) {
     g_variant_unref(aValue);
-    return PR_FALSE;
+    return false;
   }
 
   return g_settings_set_value(mSettings,
@@ -235,7 +239,7 @@ nsGSettingsCollection::GetBoolean(const nsACString& aKey,
   }
 
   gboolean res = g_variant_get_boolean(value);
-  *aResult = res ? PR_TRUE : PR_FALSE;
+  *aResult = res ? true : false;
   g_variant_unref(value);
 
   return NS_OK;
@@ -282,7 +286,7 @@ nsGSettingsService::Init()
       return NS_ERROR_FAILURE;
   }
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kGSettingsSymbols); i++) {
+  for (PRUint32 i = 0; i < ArrayLength(kGSettingsSymbols); i++) {
     *kGSettingsSymbols[i].function =
       PR_FindFunctionSymbol(gioLib, kGSettingsSymbols[i].functionName);
     if (!*kGSettingsSymbols[i].function) {

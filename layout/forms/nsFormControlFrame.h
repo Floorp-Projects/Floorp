@@ -119,8 +119,8 @@ protected:
 //   
    /**
     * Get the state of the checked attribute.
-    * @param aState set to PR_TRUE if the checked attribute is set,
-    * PR_FALSE if the checked attribute has been removed
+    * @param aState set to true if the checked attribute is set,
+    * false if the checked attribute has been removed
     */
 
   void GetCurrentCheckState(bool* aState);

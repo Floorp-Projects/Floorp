@@ -47,12 +47,12 @@ nsDOMMediaQueryList::nsDOMMediaQueryList(nsPresContext *aPresContext,
                                          const nsAString &aMediaQueryList)
   : mPresContext(aPresContext),
     mMediaList(new nsMediaList),
-    mMatchesValid(PR_FALSE)
+    mMatchesValid(false)
 {
   PR_INIT_CLIST(this);
 
   nsCSSParser parser;
-  parser.ParseMediaList(aMediaQueryList, nsnull, 0, mMediaList, PR_FALSE);
+  parser.ParseMediaList(aMediaQueryList, nsnull, 0, mMediaList, false);
 }
 
 nsDOMMediaQueryList::~nsDOMMediaQueryList()
@@ -141,13 +141,13 @@ nsDOMMediaQueryList::RecomputeMatches()
   }
 
   mMatches = mMediaList->Matches(mPresContext, nsnull);
-  mMatchesValid = PR_TRUE;
+  mMatchesValid = true;
 }
 
 void
 nsDOMMediaQueryList::MediumFeaturesChanged(NotifyList &aListenersToNotify)
 {
-  mMatchesValid = PR_FALSE;
+  mMatchesValid = false;
 
   if (mListeners.Length()) {
     bool oldMatches = mMatches;

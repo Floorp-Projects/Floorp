@@ -55,7 +55,7 @@ struct encoder_error_mgr {
   jmp_buf setjmp_buffer;
 };
 
-nsJPEGEncoder::nsJPEGEncoder() : mFinished(PR_FALSE),
+nsJPEGEncoder::nsJPEGEncoder() : mFinished(false),
                                  mImageBuffer(nsnull), mImageBufferSize(0),
                                  mImageBufferUsed(0), mImageBufferReadPoint(0),
                                  mCallback(nsnull),
@@ -202,7 +202,7 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
   jpeg_finish_compress(&cinfo);
   jpeg_destroy_compress(&cinfo);
 
-  mFinished = PR_TRUE;
+  mFinished = true;
   NotifyListener();
 
   // if output callback can't get enough memory, it will free our buffer
@@ -313,7 +313,7 @@ NS_IMETHODIMP nsJPEGEncoder::ReadSegments(nsWriteSegmentFun aWriter, void *aClos
 /* boolean isNonBlocking (); */
 NS_IMETHODIMP nsJPEGEncoder::IsNonBlocking(bool *_retval)
 {
-  *_retval = PR_TRUE;
+  *_retval = true;
   return NS_OK;
 }
 

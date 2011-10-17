@@ -87,8 +87,8 @@ nsStringBundle::nsStringBundle(const char* aURLSpec,
   mPropertiesURL(aURLSpec),
   mOverrideStrings(aOverrideStrings),
   mReentrantMonitor("nsStringBundle.mReentrantMonitor"),
-  mAttemptedLoad(PR_FALSE),
-  mLoaded(PR_FALSE)
+  mAttemptedLoad(false),
+  mLoaded(false)
 {
 }
 
@@ -106,7 +106,7 @@ nsStringBundle::LoadProperties()
     return NS_ERROR_UNEXPECTED;
   }
   
-  mAttemptedLoad = PR_TRUE;
+  mAttemptedLoad = true;
 
   nsresult rv;
 
@@ -133,7 +133,7 @@ nsStringBundle::LoadProperties()
   mProps = do_CreateInstance(kPersistentPropertiesCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  mAttemptedLoad = mLoaded = PR_TRUE;
+  mAttemptedLoad = mLoaded = true;
   rv = mProps->Load(in);
 
   mLoaded = NS_SUCCEEDED(rv);
@@ -312,7 +312,7 @@ nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings
 
     rv = overrideEnumerator->GetNext(getter_AddRefs(supports));
     if (NS_SUCCEEDED(rv))
-      resultArray->AppendElement(supports, PR_FALSE);
+      resultArray->AppendElement(supports, false);
 
     rv = overrideEnumerator->HasMoreElements(&hasMore);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -341,7 +341,7 @@ nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings
 
       // if it isn't there, then it is safe to append
       if (NS_FAILED(rv))
-        resultArray->AppendElement(propElement, PR_FALSE);
+        resultArray->AppendElement(propElement, false);
     }
 
     rv = propEnumerator->HasMoreElements(&hasMore);
@@ -415,7 +415,7 @@ NS_IMPL_ISUPPORTS1(nsExtensibleStringBundle, nsIStringBundle)
 
 nsExtensibleStringBundle::nsExtensibleStringBundle()
 {
-  mLoaded = PR_FALSE;
+  mLoaded = false;
 }
 
 nsresult
@@ -542,7 +542,7 @@ struct bundleCacheEntry_t {
 
 
 nsStringBundleService::nsStringBundleService() :
-  mBundleMap(MAX_CACHED_BUNDLES, PR_TRUE)
+  mBundleMap(MAX_CACHED_BUNDLES, true)
 {
 #ifdef DEBUG_tao_
   printf("\n++ nsStringBundleService::nsStringBundleService ++\n");
@@ -574,10 +574,10 @@ nsStringBundleService::Init()
 {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    os->AddObserver(this, "memory-pressure", PR_TRUE);
-    os->AddObserver(this, "profile-do-change", PR_TRUE);
-    os->AddObserver(this, "chrome-flush-caches", PR_TRUE);
-    os->AddObserver(this, "xpcom-category-entry-added", PR_TRUE);
+    os->AddObserver(this, "memory-pressure", true);
+    os->AddObserver(this, "profile-do-change", true);
+    os->AddObserver(this, "chrome-flush-caches", true);
+    os->AddObserver(this, "xpcom-category-entry-added", true);
   }
 
   // instantiate the override service, if there is any.

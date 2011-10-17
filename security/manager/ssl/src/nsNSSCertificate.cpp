@@ -99,7 +99,7 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 NSSCleanupAutoPtrClass(CERTCertificateList, CERT_DestroyCertificateList)
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 NSSCleanupAutoPtrClass(NSSCMSMessage, NSS_CMSMessage_Destroy)
-NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, PR_FALSE)
+NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, false)
 NSSCleanupAutoPtrClass(NSSCMSSignedData, NSS_CMSSignedData_Destroy)
 NSSCleanupAutoPtrClass(PK11SlotList, PK11_FreeSlotList)
 
@@ -154,15 +154,15 @@ nsNSSCertificate::InitFromDER(char *certDER, int derLen)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
-    return PR_FALSE;
+    return false;
 
   if (!certDER || !derLen)
-    return PR_FALSE;
+    return false;
 
   CERTCertificate *aCert = CERT_DecodeCertFromPackage(certDER, derLen);
   
   if (!aCert)
-    return PR_FALSE;
+    return false;
 
   if(aCert->dbhandle == nsnull)
   {
@@ -170,12 +170,12 @@ nsNSSCertificate::InitFromDER(char *certDER, int derLen)
   }
 
   mCert = aCert;
-  return PR_TRUE;
+  return true;
 }
 
 nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) : 
                                            mCert(nsnull),
-                                           mPermDelete(PR_FALSE),
+                                           mPermDelete(false),
                                            mCertType(CERT_TYPE_NOT_YET_INITIALIZED),
                                            mCachedEVStatus(ev_status_unknown)
 {
@@ -194,7 +194,7 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) :
 
 nsNSSCertificate::nsNSSCertificate() : 
   mCert(nsnull),
-  mPermDelete(PR_FALSE),
+  mPermDelete(false),
   mCertType(CERT_TYPE_NOT_YET_INITIALIZED),
   mCachedEVStatus(ev_status_unknown)
 {
@@ -278,13 +278,13 @@ nsNSSCertificate::MarkForPermDeletion()
       && !PK11_NeedUserInit(mCert->slot)
       && !PK11_IsInternal(mCert->slot))
   {
-    if (SECSuccess != PK11_Authenticate(mCert->slot, PR_TRUE, ctx))
+    if (SECSuccess != PK11_Authenticate(mCert->slot, true, ctx))
     {
       return NS_ERROR_FAILURE;
     }
   }
 
-  mPermDelete = PR_TRUE;
+  mPermDelete = true;
   return NS_OK;
 }
 
@@ -466,7 +466,7 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
     }
 
     PRUint32 tempInt = 0;
-    if (NS_SUCCEEDED(x509Proxy->GetUsagesString(PR_FALSE, &tempInt, temp1)) && !temp1.IsEmpty()) {
+    if (NS_SUCCEEDED(x509Proxy->GetUsagesString(false, &tempInt, temp1)) && !temp1.IsEmpty()) {
       details.AppendLiteral("  ");
       if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoPurposes", info))) {
         details.Append(info);
@@ -714,7 +714,7 @@ nsNSSCertificate::ContainsEmailAddress(const nsAString &aEmailAddress, bool *res
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG(result);
-  *result = PR_FALSE;
+  *result = false;
 
   const char *aAddr = nsnull;
   for (aAddr = CERT_GetFirstEmailAddress(mCert)
@@ -731,7 +731,7 @@ nsNSSCertificate::ContainsEmailAddress(const nsAString &aEmailAddress, bool *res
     
     if (certAddr == testAddr)
     {
-      *result = PR_TRUE;
+      *result = true;
       break;
     }
 
@@ -909,7 +909,7 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
        node = CERT_LIST_NEXT(node)) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("adding %s to chain\n", node->cert->nickname));
     nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::Create(node->cert);
-    array->AppendElement(cert, PR_FALSE);
+    array->AppendElement(cert, false);
   }
   *_rvChain = array;
   NS_IF_ADDREF(*_rvChain);
@@ -1163,7 +1163,7 @@ nsNSSCertificate::ExportAsCMS(PRUint32 chainMode,
   /*
    * first, create SignedData with the certificate only (no chain)
    */
-  NSSCMSSignedData *sigd = NSS_CMSSignedData_CreateCertsOnly(cmsg, mCert, PR_FALSE);
+  NSSCMSSignedData *sigd = NSS_CMSSignedData_CreateCertsOnly(cmsg, mCert, false);
   NSSCMSSignedDataCleaner sigdCleaner(sigd);
   if (!sigd) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
@@ -1356,7 +1356,7 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
   SECStatus verify_result;
   if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
     CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
-    verify_result = CERT_VerifyCertificateNow(defaultcertdb, mCert, PR_TRUE, 
+    verify_result = CERT_VerifyCertificateNow(defaultcertdb, mCert, true, 
                                               nss_usage, NULL, NULL);
   }
   else {

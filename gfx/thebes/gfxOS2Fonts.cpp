@@ -280,7 +280,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     mMetrics->externalLeading = lineHeight
                               - mMetrics->internalLeading - mMetrics->emHeight;
 
-    SanitizeMetrics(mMetrics, PR_FALSE);
+    SanitizeMetrics(mMetrics, false);
 
 #ifdef DEBUG_thebes_1
     printf("gfxOS2Font[%#x]::GetMetrics():\n"
@@ -489,10 +489,10 @@ bool gfxOS2Font::SetupCairoFont(gfxContext *aContext)
     if (!scaledFont || cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to
         // the cairo_t, precluding any further drawing.
-        return PR_FALSE;
+        return false;
     }
     cairo_set_scaled_font(aContext->GetCairo(), scaledFont);
-    return PR_TRUE;
+    return true;
 }
 
 /**
@@ -535,7 +535,7 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
     // check for WarpSans and as we cannot display that (yet), replace
     // it with Workplace Sans
     int pos = 0;
-    if ((pos = mFamilies.Find("WarpSans", PR_FALSE, 0, -1)) > -1) {
+    if ((pos = mFamilies.Find("WarpSans", false, 0, -1)) > -1) {
         mFamilies.Replace(pos, 8, NS_LITERAL_STRING("Workplace Sans"));
     }
 
@@ -547,9 +547,9 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
     // are set up, and if the user was so clever to set up the User Defined fonts,
     // then these are probable candidates, too.
     nsString fontString;
-    gfxPlatform::GetPlatform()->GetPrefFonts(gfxAtoms::x_unicode, fontString, PR_FALSE);
+    gfxPlatform::GetPlatform()->GetPrefFonts(gfxAtoms::x_unicode, fontString, false);
     ForEachFont(fontString, gfxAtoms::x_unicode, FontCallback, &familyArray);
-    gfxPlatform::GetPlatform()->GetPrefFonts(gfxAtoms::x_user_def, fontString, PR_FALSE);
+    gfxPlatform::GetPlatform()->GetPrefFonts(gfxAtoms::x_user_def, fontString, false);
     ForEachFont(fontString, gfxAtoms::x_user_def, FontCallback, &familyArray);
 
     // Should append some default font if there are no available fonts.
@@ -711,7 +711,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     gfxOS2Platform *platform = gfxOS2Platform::GetPlatform();
 
-    aTextRun->AddGlyphRun(font0, gfxTextRange::kFontGroup, 0, PR_FALSE);
+    aTextRun->AddGlyphRun(font0, gfxTextRange::kFontGroup, 0, false);
     // a textRun likely has the same font for most of the characters, so we can
     // lock it before the loop for efficiency
     FT_Face face0 = cairo_ft_scaled_font_lock_face(font0->CairoScaledFont());
@@ -772,7 +772,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                 }
 
                 // select the current font into the text run
-                aTextRun->AddGlyphRun(font, gfxTextRange::kFontGroup, utf16Offset, PR_FALSE);
+                aTextRun->AddGlyphRun(font, gfxTextRange::kFontGroup, utf16Offset, false);
 
                 PRInt32 advance = 0;
                 if (gid == font->GetSpaceGlyph()) {
@@ -829,7 +829,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                 {
                     aTextRun->SetSimpleGlyph(utf16Offset,
                                              g.SetSimpleGlyph(advance, gid));
-                    glyphFound = PR_TRUE;
+                    glyphFound = true;
                 } else if (gid == 0) {
                     // gid = 0 only happens when the glyph is missing from the font
                     if (i == lastFont) {
@@ -837,7 +837,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                         // last font
                         aTextRun->SetMissingGlyph(utf16Offset, ch);
                     }
-                    glyphFound = PR_FALSE;
+                    glyphFound = false;
                 } else {
                     gfxTextRun::DetailedGlyph details;
                     details.mGlyphID = gid;
@@ -845,9 +845,9 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                     details.mAdvance = advance;
                     details.mXOffset = 0;
                     details.mYOffset = 0;
-                    g.SetComplex(aTextRun->IsClusterStart(utf16Offset), PR_TRUE, 1);
+                    g.SetComplex(aTextRun->IsClusterStart(utf16Offset), true, 1);
                     aTextRun->SetGlyphs(utf16Offset, g, &details);
-                    glyphFound = PR_TRUE;
+                    glyphFound = true;
                 }
 
                 if (i > 0) {
@@ -881,5 +881,5 @@ bool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
     if (!aFontName.IsEmpty() && !sa->Contains(aFontName)) {
         sa->AppendElement(aFontName);
     }
-    return PR_TRUE;
+    return true;
 }

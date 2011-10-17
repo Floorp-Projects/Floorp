@@ -461,12 +461,12 @@ public:
   nsINode*
   InsertBefore(nsINode *aNewChild, nsINode *aRefChild, nsresult *aReturn)
   {
-    return ReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, aReturn);
+    return ReplaceOrInsertBefore(false, aNewChild, aRefChild, aReturn);
   }
   nsINode*
   ReplaceChild(nsINode *aNewChild, nsINode *aOldChild, nsresult *aReturn)
   {
-    return ReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, aReturn);
+    return ReplaceOrInsertBefore(true, aNewChild, aOldChild, aReturn);
   }
   nsINode*
   AppendChild(nsINode *aNewChild, nsresult *aReturn)
@@ -578,8 +578,8 @@ public:
    * @param aValue         new value of property.
    * @param aDtor          destructor function to be used when this property
    *                       is destroyed.
-   * @param aTransfer      if PR_TRUE the property will not be deleted when the
-   *                       ownerDocument of the node changes, if PR_FALSE it
+   * @param aTransfer      if true the property will not be deleted when the
+   *                       ownerDocument of the node changes, if false it
    *                       will be deleted.
    *
    * @return NS_PROPTABLE_PROP_OVERWRITTEN (success value) if the property
@@ -604,8 +604,8 @@ public:
    * @param aValue          new value of property.
    * @param aDtor           destructor function to be used when this property
    *                        is destroyed.
-   * @param aTransfer       if PR_TRUE the property will not be deleted when the
-   *                        ownerDocument of the node changes, if PR_FALSE it
+   * @param aTransfer       if true the property will not be deleted when the
+   *                        ownerDocument of the node changes, if false it
    *                        will be deleted.
    * @param aOldValue [out] previous value of property.
    *
@@ -782,7 +782,7 @@ public:
   /**
    * Checks if a node has the same ownerDocument as this one. Note that this
    * actually compares nodeinfo managers because nodes always have one, even
-   * when they don't have an ownerDocument. If this function returns PR_TRUE
+   * when they don't have an ownerDocument. If this function returns true
    * it doesn't mean that the nodes actually have an ownerDocument.
    *
    * @param aOther Other node to check
@@ -897,16 +897,16 @@ public:
   }
 
   /**
-   * Returns PR_TRUE if |this| or any of its ancestors is native anonymous.
+   * Returns true if |this| or any of its ancestors is native anonymous.
    */
   bool IsInNativeAnonymousSubtree() const
   {
 #ifdef DEBUG
     if (HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE)) {
-      return PR_TRUE;
+      return true;
     }
     CheckNotNativeAnonymous();
-    return PR_FALSE;
+    return false;
 #else
     return HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE);
 #endif
@@ -1080,7 +1080,7 @@ public:
    */
   nsIContent* GetNextNode(const nsINode* aRoot = nsnull) const
   {
-    return GetNextNodeImpl(aRoot, PR_FALSE);
+    return GetNextNodeImpl(aRoot, false);
   }
 
   /**
@@ -1092,7 +1092,7 @@ public:
    */
   nsIContent* GetNextNonChildNode(const nsINode* aRoot = nsnull) const
   {
-    return GetNextNodeImpl(aRoot, PR_TRUE);
+    return GetNextNodeImpl(aRoot, true);
   }
 
   /**

@@ -87,7 +87,7 @@ nsSAXAttributes::GetLocalName(PRUint32 aIndex, nsAString &aResult)
 {
   PRUint32 len = mAttrs.Length();
   if (aIndex >= len) {
-    aResult.SetIsVoid(PR_TRUE);
+    aResult.SetIsVoid(true);
   } else {
     const SAXAttr &att = mAttrs[aIndex];
     aResult = att.localName;
@@ -101,7 +101,7 @@ nsSAXAttributes::GetQName(PRUint32 aIndex, nsAString &aResult)
 {
   PRUint32 len = mAttrs.Length();
   if (aIndex >= len) {
-    aResult.SetIsVoid(PR_TRUE);
+    aResult.SetIsVoid(true);
   } else {
     const SAXAttr &att = mAttrs[aIndex];
     aResult = att.qName;
@@ -115,7 +115,7 @@ nsSAXAttributes::GetType(PRUint32 aIndex, nsAString &aResult)
 {
   PRUint32 len = mAttrs.Length();
   if (aIndex >= len) {
-    aResult.SetIsVoid(PR_TRUE);
+    aResult.SetIsVoid(true);
   } else {
     const SAXAttr &att = mAttrs[aIndex];
     aResult = att.type;
@@ -134,7 +134,7 @@ nsSAXAttributes::GetTypeFromName(const nsAString &aURI,
   if (index >= 0) {
     aResult = mAttrs[index].type;
   } else {
-    aResult.SetIsVoid(PR_TRUE);
+    aResult.SetIsVoid(true);
   }
 
   return NS_OK;
@@ -148,7 +148,7 @@ nsSAXAttributes::GetTypeFromQName(const nsAString &aQName, nsAString &aResult)
   if (index >= 0) {
     aResult = mAttrs[index].type;
   } else {
-    aResult.SetIsVoid(PR_TRUE);
+    aResult.SetIsVoid(true);
   }
 
   return NS_OK;
@@ -159,7 +159,7 @@ nsSAXAttributes::GetURI(PRUint32 aIndex, nsAString &aResult)
 {
   PRUint32 len = mAttrs.Length();
   if (aIndex >= len) {
-    aResult.SetIsVoid(PR_TRUE);
+    aResult.SetIsVoid(true);
   } else {
     const SAXAttr &att = mAttrs[aIndex];
     aResult = att.uri;
@@ -173,7 +173,7 @@ nsSAXAttributes::GetValue(PRUint32 aIndex, nsAString &aResult)
 {
   PRUint32 len = mAttrs.Length();
   if (aIndex >= len) {
-    aResult.SetIsVoid(PR_TRUE);
+    aResult.SetIsVoid(true);
   } else {
     const SAXAttr &att = mAttrs[aIndex];
     aResult = att.value;
@@ -192,7 +192,7 @@ nsSAXAttributes::GetValueFromName(const nsAString &aURI,
   if (index >= 0) {
     aResult = mAttrs[index].value;
   } else {
-    aResult.SetIsVoid(PR_TRUE);
+    aResult.SetIsVoid(true);
   }
 
   return NS_OK;
@@ -207,7 +207,7 @@ nsSAXAttributes::GetValueFromQName(const nsAString &aQName,
   if (index >= 0) {
     aResult = mAttrs[index].value;
   } else {
-    aResult.SetIsVoid(PR_TRUE);
+    aResult.SetIsVoid(true);
   }
 
   return NS_OK;

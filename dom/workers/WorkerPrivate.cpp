@@ -39,11 +39,11 @@
 
 #include "WorkerPrivate.h"
 
+#include "mozIThirdPartyUtil.h"
 #include "nsIClassInfo.h"
 #include "nsIConsoleService.h"
 #include "nsIDOMFile.h"
 #include "nsIDocument.h"
-#include "nsIEffectiveTLDService.h"
 #include "nsIJSContextStack.h"
 #include "nsIMemoryReporter.h"
 #include "nsIScriptError.h"
@@ -312,7 +312,7 @@ struct WorkerStructuredCloneCallbacks
       nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aCx, aObj);
       if (blob) {
         nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
-        if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(PR_FALSE)) &&
+        if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(false)) &&
             JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_BLOB, 0) &&
             JS_WriteBytes(aWriter, &blob, sizeof(blob))) {
           clonedObjects->AppendElement(blob);
@@ -449,7 +449,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
       nsCOMPtr<nsIDOMFile> file = do_QueryInterface(wrappedObject);
       if (file) {
         nsCOMPtr<nsIMutable> mutableFile = do_QueryInterface(file);
-        if (mutableFile && NS_SUCCEEDED(mutableFile->SetMutable(PR_FALSE))) {
+        if (mutableFile && NS_SUCCEEDED(mutableFile->SetMutable(false))) {
           nsIDOMFile* filePtr = file;
           if (JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_FILE, 0) &&
               JS_WriteBytes(aWriter, &filePtr, sizeof(filePtr))) {
@@ -463,7 +463,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
       nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(wrappedObject);
       if (blob) {
         nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
-        if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(PR_FALSE))) {
+        if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(false))) {
           nsIDOMBlob* blobPtr = blob;
           if (JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_BLOB, 0) &&
               JS_WriteBytes(aWriter, &blobPtr, sizeof(blobPtr))) {
@@ -1054,7 +1054,10 @@ public:
       NS_ASSERTION(aTarget, "This should never be null!");
 
       bool preventDefaultCalled;
-      if (aWorkerPrivate) {
+      nsIScriptGlobalObject* sgo;
+
+      if (aWorkerPrivate ||
+          !(sgo = nsJSUtils::GetStaticScriptGlobal(aCx, aTarget))) {
         // Fire a normal ErrorEvent if we're running on a worker thread.
         JSObject* event = events::CreateErrorEvent(aCx, message, filename,
                                                    aLineNumber, false);
@@ -1069,10 +1072,6 @@ public:
       }
       else {
         // Icky, we have to fire an nsScriptErrorEvent...
-        nsIScriptGlobalObject* sgo =
-          nsJSUtils::GetStaticScriptGlobal(aCx, aTarget);
-        NS_ASSERTION(sgo, "This should never be null!");
-
         nsScriptErrorEvent event(true, NS_LOAD_ERROR);
         event.lineNr = aLineNumber;
         event.errorMsg = aMessage.get();
@@ -2044,7 +2043,7 @@ PRUint64
 WorkerPrivateParent<Derived>::GetInnerWindowId()
 {
   AssertIsOnMainThread();
-  return mDocument->InnerWindowID();
+  return mDocument ? mDocument->InnerWindowID() : 0;
 }
 
 template <class Derived>
@@ -2252,7 +2251,7 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
     bool isChrome;
     if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &isChrome))) {
       NS_WARNING("IsCapabilityEnabled failed!");
-      isChrome = PR_FALSE;
+      isChrome = false;
     }
 
     // First check to make sure the caller has permission to make a
@@ -2336,14 +2335,14 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
           domain = file;
         }
         else {
-          nsCOMPtr<nsIEffectiveTLDService> tldService =
-            do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-          if (!tldService) {
-            JS_ReportError(aCx, "Could not get TLD service!");
+          nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+            do_GetService(THIRDPARTYUTIL_CONTRACTID);
+          if (!thirdPartyUtil) {
+            JS_ReportError(aCx, "Could not get third party helper service!");
             return nsnull;
           }
 
-          if (NS_FAILED(tldService->GetBaseDomain(codebase, 0, domain))) {
+          if (NS_FAILED(thirdPartyUtil->GetBaseDomain(codebase, domain))) {
             JS_ReportError(aCx, "Could not get domain!");
             return nsnull;
           }

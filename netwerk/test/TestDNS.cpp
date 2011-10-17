@@ -95,10 +95,10 @@ static bool IsAscii(const char *s)
 {
   for (; *s; ++s) {
     if (*s & 0x80)
-      return PR_FALSE;
+      return false;
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 int main(int argc, char **argv)

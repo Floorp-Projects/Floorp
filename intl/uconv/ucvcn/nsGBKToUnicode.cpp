@@ -281,13 +281,13 @@ bool nsGB18030ToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
   NS_ASSERTION(LEGAL_GBK_4BYTE_THIRD_BYTE(aSrc[2]),    "illegal third byte");
   NS_ASSERTION(LEGAL_GBK_4BYTE_FORTH_BYTE(aSrc[3]),    "illegal forth byte");
   if(! FIRST_BYTE_IS_SURROGATE(aSrc[0]))
-    return PR_FALSE;
+    return false;
   if(! LEGAL_GBK_4BYTE_SECOND_BYTE(aSrc[1]))
-    return PR_FALSE;
+    return false;
   if(! LEGAL_GBK_4BYTE_THIRD_BYTE(aSrc[2]))
-    return PR_FALSE;
+    return false;
   if(! LEGAL_GBK_4BYTE_FORTH_BYTE(aSrc[3]))
-    return PR_FALSE;
+    return false;
 
   PRUint8 a1 = (PRUint8) aSrc[0];
   PRUint8 a2 = (PRUint8) aSrc[1];
@@ -302,7 +302,7 @@ bool nsGB18030ToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
   *aOut++ = 0xD800 | (0x000003FF & (idx >> 10));
   *aOut = 0xDC00 | (0x000003FF & idx);
 
-  return PR_TRUE;
+  return true;
 }
 bool nsGBKToUnicode::TryExtensionDecoder(const char* aSrc, PRUnichar* aOut)
 {
@@ -321,13 +321,13 @@ bool nsGBKToUnicode::TryExtensionDecoder(const char* aSrc, PRUnichar* aOut)
      // if we failed, we then just use the 0xfffd 
      // therefore, we ignore the res here. 
     if(NS_SUCCEEDED(res)) 
-      return PR_TRUE;
+      return true;
   }
-  return  PR_FALSE;
+  return  false;
 }
 bool nsGBKToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
 {
-  return PR_FALSE;
+  return false;
 }
 bool nsGBKToUnicode::Try4BytesDecoder(const char* aSrc, PRUnichar* aOut)
 {
@@ -345,7 +345,7 @@ bool nsGBKToUnicode::Try4BytesDecoder(const char* aSrc, PRUnichar* aOut)
      // if we failed, we then just use the 0xfffd 
      // therefore, we ignore the res here. 
     if(NS_SUCCEEDED(res)) 
-      return PR_TRUE;
+      return true;
   }
-  return  PR_FALSE;
+  return  false;
 }

@@ -111,7 +111,7 @@ gfxSkipCharsIterator::SetOffsets(PRUint32 aOffset, bool aInOriginalString)
   
     if (aInOriginalString && mSkipChars->mShortcuts &&
         abs(PRInt32(aOffset) - PRInt32(mListPrefixCharCount)) > SHORTCUT_FREQUENCY) {
-        // Take a shortcut. This makes SetOffsets(..., PR_TRUE) O(1) by bounding
+        // Take a shortcut. This makes SetOffsets(..., true) O(1) by bounding
         // the iterations in the loop below to at most SHORTCUT_FREQUENCY iterations
         PRUint32 shortcutIndex = aOffset/SHORTCUT_FREQUENCY;
         if (shortcutIndex == 0) {
@@ -213,7 +213,7 @@ gfxSkipCharsIterator::IsOriginalCharSkipped(PRInt32* aRunLength) const
         if (aRunLength) {
             *aRunLength = 0;
         }
-        return PR_TRUE;
+        return true;
     }
   
     bool isSkipped = !IsKeepEntry(listPrefixLength);
@@ -242,14 +242,14 @@ gfxSkipCharsBuilder::FlushRun()
     for (;;) {
         PRUint32 chars = NS_MIN<PRUint32>(255, charCount);
         if (!mBuffer.AppendElement(chars)) {
-            mInErrorState = PR_TRUE;
+            mInErrorState = true;
             return;
         }
         charCount -= chars;
         if (charCount == 0)
             break;
         if (!mBuffer.AppendElement(0)) {
-            mInErrorState = PR_TRUE;
+            mInErrorState = true;
             return;
         }
     }

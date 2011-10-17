@@ -120,13 +120,13 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
   nsCaptureParams captureParams;
   captureParams.camera = 0;
   if (kNotFound != spec.Find(NS_LITERAL_CSTRING("type=image/png"),
-                             PR_TRUE,
+                             true,
                              0,
                              -1)) {
     type.AssignLiteral("image/png");
     SetContentType(type);
-    captureParams.captureAudio = PR_FALSE;
-    captureParams.captureVideo = PR_TRUE;
+    captureParams.captureAudio = false;
+    captureParams.captureVideo = true;
     captureParams.timeLimit = 0;
     captureParams.frameLimit = 1;
     nsCAutoString buffer;
@@ -144,13 +144,13 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
     capture = GetAndroidCaptureProvider();
 #endif
   } else if (kNotFound != spec.Find(NS_LITERAL_CSTRING("type=video/x-raw-yuv"),
-                                    PR_TRUE,
+                                    true,
                                     0,
                                     -1)) {
     type.AssignLiteral("video/x-raw-yuv");
     SetContentType(type);
-    captureParams.captureAudio = PR_FALSE;
-    captureParams.captureVideo = PR_TRUE;
+    captureParams.captureAudio = false;
+    captureParams.captureVideo = true;
     nsCAutoString buffer;
     extractAttributeValue(spec.get(), "width=", buffer);
     nsresult err;

@@ -110,9 +110,9 @@ public:
                              nsIntMargin* aResult)=0;
 
   /**
-   * This method can return PR_FALSE to indicate that the CSS padding
+   * This method can return false to indicate that the CSS padding
    * value should be used.  Otherwise, it will fill in aResult with the
-   * computed padding, in pixels, and return PR_TRUE.
+   * computed padding, in pixels, and return true.
    *
    * XXXldb This ought to be required to return true for non-containers
    * so that we don't let specified padding that has no effect change
@@ -126,10 +126,10 @@ public:
   /**
    * On entry, *aResult is positioned at 0,0 and sized to the new size
    * of aFrame (aFrame->GetSize() may be stale and should not be used).
-   * This method can return PR_FALSE to indicate that no special
+   * This method can return false to indicate that no special
    * overflow area is required by the native widget. Otherwise it will
    * fill in aResult with the desired overflow area, in appunits, relative
-   * to the frame origin, and return PR_TRUE.
+   * to the frame origin, and return true.
    *
    * This overflow area is used to determine what area needs to be
    * repainted when the widget changes.  However, it does not affect the
@@ -141,7 +141,7 @@ public:
                                    nsIFrame* aFrame,
                                    PRUint8 aWidgetType,
                                    /*INOUT*/ nsRect* aOverflowRect)
-  { return PR_FALSE; }
+  { return false; }
 
   /**
    * Get the minimum border-box size of a widget, in *pixels* (in

@@ -326,7 +326,7 @@ public:
   {
     // Return a void string.
     _str.Truncate(0);
-    _str.SetIsVoid(PR_TRUE);
+    _str.SetIsVoid(true);
     return NS_OK;
   }
 
@@ -334,7 +334,7 @@ public:
   {
     // Return a void string.
     _str.Truncate(0);
-    _str.SetIsVoid(PR_TRUE);
+    _str.SetIsVoid(true);
     return NS_OK;
   }
 };

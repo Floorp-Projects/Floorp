@@ -109,7 +109,7 @@ public:
 
   nsIContent* GetPosterImage() { return mPosterImage; }
 
-  // Returns PR_TRUE if we should display the poster. Note that once we show
+  // Returns true if we should display the poster. Note that once we show
   // a video frame, the poster will never be displayed again.
   bool ShouldDisplayPoster();
 
@@ -123,11 +123,11 @@ public:
 
 protected:
 
-  // Returns PR_TRUE if we're rendering for a video element. We still create
+  // Returns true if we're rendering for a video element. We still create
   // nsVideoFrame to render controls for an audio element.
   bool HasVideoElement();
 
-  // Returns PR_TRUE if there is video data to render. Can return false
+  // Returns true if there is video data to render. Can return false
   // when we're the frame for an audio element, or we've created a video
   // element for a media which is audio-only.
   bool HasVideoData();

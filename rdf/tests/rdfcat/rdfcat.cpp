@@ -161,7 +161,7 @@ main(int argc, char** argv)
     RETURN_IF_FAILED(rv, "datasource initialization");
 
     // Okay, this should load the XML file...
-    rv = remote->Refresh(PR_FALSE);
+    rv = remote->Refresh(false);
     RETURN_IF_FAILED(rv, "datasource refresh");
 
     // Pump events until the load is finished

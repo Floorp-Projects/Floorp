@@ -123,7 +123,7 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
     // if necessary.
     
     nsCAutoString str1;
-    rv = DecodeParameter(med, charset.get(), nsnull, PR_FALSE, str1);
+    rv = DecodeParameter(med, charset.get(), nsnull, false, str1);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!aFallbackCharset.IsEmpty())
@@ -133,7 +133,7 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
           cvtUTF8(do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
         if (cvtUTF8 &&
             NS_SUCCEEDED(cvtUTF8->ConvertStringToUTF8(str1, 
-                PromiseFlatCString(aFallbackCharset).get(), PR_FALSE, str2))) {
+                PromiseFlatCString(aFallbackCharset).get(), false, str2))) {
           CopyUTF8toUTF16(str2, aResult);
           return NS_OK;
         }
@@ -278,7 +278,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
     while (nsCRT::IsAsciiSpace(*str)) ++str;
     if (*str == '=') {
       ++str;
-      seenEquals = PR_TRUE;
+      seenEquals = true;
     }
     while (nsCRT::IsAsciiSpace(*str)) ++str;
 
@@ -297,7 +297,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
     else
     {
       // The value is a quoted string.
-      needUnquote = PR_TRUE;
+      needUnquote = true;
       
       ++str;
       valueStart = str;
@@ -370,34 +370,34 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
         const char *sQuote2 = (char *) (sQuote1 ? PL_strchr(sQuote1 + 1, 0x27) : nsnull);
 
         // Two single quotation marks must be present even in
-        // absence of charset and lang. 
-        if (!sQuote1 || !sQuote2)
-          NS_WARNING("Mandatory two single quotes are missing in header parameter\n");
-        if (aCharset && sQuote1 > valueStart && sQuote1 < valueEnd)
-        {
+        // absence of charset and lang.
+        if (!sQuote1 || !sQuote2) {
+          // log the warning and skip to next parameter
+          NS_WARNING("Mandatory two single quotes are missing in header parameter, parameter ignored\n");
+          goto increment_str;
+        }
+
+        // charset part is required
+        if (! (sQuote1 > valueStart && sQuote1 < valueEnd)) {
+          // log the warning and skip to next parameter
+          NS_WARNING("Mandatory charset part missing in header parameter, parameter ignored\n");
+          goto increment_str;
+        }
+        
+        if (aCharset) {
           *aCharset = (char *) nsMemory::Clone(valueStart, sQuote1 - valueStart + 1);
           if (*aCharset) 
             *(*aCharset + (sQuote1 - valueStart)) = 0;
         }
-        if (aLang && sQuote1 && sQuote2 && sQuote2 > sQuote1 + 1 &&
-            sQuote2 < valueEnd)
+        
+        if (aLang && sQuote2 > sQuote1 + 1 && sQuote2 < valueEnd)
         {
           *aLang = (char *) nsMemory::Clone(sQuote1 + 1, sQuote2 - (sQuote1 + 1) + 1);
           if (*aLang) 
             *(*aLang + (sQuote2 - (sQuote1 + 1))) = 0;
         }
-
-        // Be generous and handle gracefully when required 
-        // single quotes are absent.
-        if (sQuote1)
-        {
-          if(!sQuote2)
-            sQuote2 = sQuote1;
-        }
-        else
-          sQuote2 = valueStart - 1;
-
-        if (sQuote2 && sQuote2 + 1 < valueEnd)
+  
+        if (sQuote2 + 1 < valueEnd)
         {
           if (*aResult)
           {
@@ -512,7 +512,7 @@ nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal,
              (PL_strchr(aHeaderVal, '\n') || PL_strchr(aHeaderVal, '\r'))) {
     aResult = aHeaderVal;
   } else {
-    aEatContinuations = PR_FALSE;
+    aEatContinuations = false;
     aResult = aHeaderVal;
   }
 
@@ -572,7 +572,7 @@ nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
 
   // Try RFC 2047 encoding, instead.
   nsresult rv = DecodeRFC2047Header(unQuoted.get(), aDefaultCharset, 
-                                    aOverrideCharset, PR_TRUE, decoded);
+                                    aOverrideCharset, true, decoded);
   
   if (NS_SUCCEEDED(rv) && !decoded.IsEmpty())
     aResult = decoded;
@@ -651,8 +651,8 @@ bool Is7bitNonAsciiString(const char *input, PRUint32 len)
   while (len) {
     c = PRUint8(*input++);
     len--;
-    if (c & 0x80) return PR_FALSE;
-    if (c == 0x1B) return PR_TRUE;
+    if (c & 0x80) return false;
+    if (c == 0x1B) return true;
     if (c == '~') {
       switch (hz_state) {
       case hz_initial:

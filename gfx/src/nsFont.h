@@ -46,7 +46,7 @@
 // XXX we need a method to enumerate all of the possible fonts on the
 // system across family, weight, style, size, etc. But not here!
 
-// Enumerator callback function. Return PR_FALSE to stop
+// Enumerator callback function. Return false to stop
 typedef bool (*nsFontFamilyEnumFunc)(const nsString& aFamily, bool aGeneric, void *aData);
 
 // IDs for generic fonts
@@ -138,7 +138,7 @@ struct NS_GFX nsFont {
 
   // Utility method to interpret name string
   // enumerates all families specified by this font only
-  // returns PR_TRUE if completed, PR_FALSE if stopped
+  // returns true if completed, false if stopped
   // enclosing quotes will be removed, and whitespace compressed (as needed)
   bool EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const;
   void GetFirstFamily(nsString& aFamily) const;

@@ -210,8 +210,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   if (!mDocument->HasLoadState(nsDocAccessible::eTreeConstructed)) {
     // If document is not bound to parent at this point then the document is not
     // ready yet (process notifications later).
-    if (!mDocument->IsBoundToParent())
+    if (!mDocument->IsBoundToParent()) {
+      mObservingState = eRefreshObserving;
       return;
+    }
 
 #ifdef DEBUG_NOTIFICATIONS
     printf("\ninitial tree created, document: %p, document node: %p\n",
@@ -316,6 +318,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   for (PRUint32 idx = 0; idx < eventCount; idx++) {
     AccEvent* accEvent = events[idx];
     if (accEvent->mEventRule != AccEvent::eDoNotEmit) {
+      nsAccessible* target = accEvent->GetAccessible();
+      if (!target || target->IsDefunct())
+        continue;
+
       // Dispatch the focus event if target is still focused.
       if (accEvent->mEventType == nsIAccessibleEvent::EVENT_FOCUS) {
         FocusMgr()->ProcessFocusEvent(accEvent);

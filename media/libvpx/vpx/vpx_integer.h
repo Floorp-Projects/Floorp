@@ -15,7 +15,7 @@
 /* get ptrdiff_t, size_t, wchar_t, NULL */
 #include <stddef.h>
 
-#if defined(_MSC_VER) || defined(VPX_EMULATE_INTTYPES)
+#if (defined(_MSC_VER) && (_MSC_VER < 1600)) || defined(VPX_EMULATE_INTTYPES)
 typedef signed char  int8_t;
 typedef signed short int16_t;
 typedef signed int   int32_t;
@@ -24,10 +24,9 @@ typedef unsigned char  uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int   uint32_t;
 
-#if defined(_MSC_VER)
+#if (defined(_MSC_VER) && (_MSC_VER < 1600))
 typedef signed __int64   int64_t;
 typedef unsigned __int64 uint64_t;
-#define PRId64 "I64d"
 #endif
 
 #ifdef HAVE_ARMV6
@@ -50,8 +49,14 @@ typedef unsigned int   uintptr_t;
 #define __STDC_FORMAT_MACROS
 #endif
 #include <stdint.h>
-#include <inttypes.h>
 
+#endif
+
+/* VS2010 defines stdint.h, but not inttypes.h */
+#if defined(_MSC_VER)
+#define PRId64 "I64d"
+#else
+#include <inttypes.h>
 #endif
 
 #endif

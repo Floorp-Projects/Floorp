@@ -82,7 +82,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_1(mozPersonalDictionary, mEncoder)
 
 mozPersonalDictionary::mozPersonalDictionary()
- : mDirty(PR_FALSE)
+ : mDirty(false)
 {
 }
 
@@ -100,7 +100,7 @@ nsresult mozPersonalDictionary::Init()
            do_GetService("@mozilla.org/observer-service;1", &rv);
    
   if (NS_SUCCEEDED(rv) && svc) 
-    rv = svc->AddObserver(this, "profile-do-change", PR_TRUE); // we want to reload the dictionary if the profile switches
+    rv = svc->AddObserver(this, "profile-do-change", true); // we want to reload the dictionary if the profile switches
 
   if (NS_FAILED(rv)) return rv;
 
@@ -147,18 +147,18 @@ NS_IMETHODIMP mozPersonalDictionary::Load()
   do{  // read each line of text into the string array.
     if( (NS_OK != convStream->Read(&c, 1, &nRead)) || (nRead != 1)) break;
     while(!done && ((c == '\n') || (c == '\r'))){
-      if( (NS_OK != convStream->Read(&c, 1, &nRead)) || (nRead != 1)) done = PR_TRUE;
+      if( (NS_OK != convStream->Read(&c, 1, &nRead)) || (nRead != 1)) done = true;
     }
     if (!done){ 
       nsAutoString word;
       while((c != '\n') && (c != '\r') && !done){
         word.Append(c);
-        if( (NS_OK != convStream->Read(&c, 1, &nRead)) || (nRead != 1)) done = PR_TRUE;
+        if( (NS_OK != convStream->Read(&c, 1, &nRead)) || (nRead != 1)) done = true;
       }
       mDictionaryTable.PutEntry(word.get());
     }
   } while(!done);
-  mDirty = PR_FALSE;
+  mDirty = false;
   
   return res;
 }
@@ -241,7 +241,7 @@ NS_IMETHODIMP mozPersonalDictionary::Check(const PRUnichar *aWord, const PRUnich
 NS_IMETHODIMP mozPersonalDictionary::AddWord(const PRUnichar *aWord, const PRUnichar *aLang)
 {
   mDictionaryTable.PutEntry(aWord);
-  mDirty = PR_TRUE;
+  mDirty = true;
   return NS_OK;
 }
 
@@ -249,7 +249,7 @@ NS_IMETHODIMP mozPersonalDictionary::AddWord(const PRUnichar *aWord, const PRUni
 NS_IMETHODIMP mozPersonalDictionary::RemoveWord(const PRUnichar *aWord, const PRUnichar *aLang)
 {
   mDictionaryTable.RemoveEntry(aWord);
-  mDirty = PR_TRUE;
+  mDirty = true;
   return NS_OK;
 }
 

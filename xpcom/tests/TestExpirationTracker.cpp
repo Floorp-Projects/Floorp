@@ -54,8 +54,8 @@
 namespace TestExpirationTracker {
 
 struct Object {
-  Object() : mExpired(PR_FALSE) { Touch(); }
-  void Touch() { mLastUsed = PR_IntervalNow(); mExpired = PR_FALSE; }
+  Object() : mExpired(false) { Touch(); }
+  void Touch() { mLastUsed = PR_IntervalNow(); mExpired = false; }
 
   nsExpirationState mExpiration;
   nsExpirationState* GetExpirationState() { return &mExpiration; }
@@ -74,7 +74,7 @@ static PRUint32 slackMS = 20; // allow this much error
 
 static void SignalError() {
   printf("ERROR!\n");
-  error = PR_TRUE;
+  error = true;
 }
 
 template <PRUint32 K> class Tracker : public nsExpirationTracker<Object,K> {
@@ -164,7 +164,7 @@ protected:
       }
     }
     aObj->Touch();
-    aObj->mExpired = PR_TRUE;
+    aObj->mExpired = true;
     DoRandomOperation();
     DoRandomOperation();
     DoRandomOperation();
@@ -173,7 +173,7 @@ protected:
 
 template <PRUint32 K> static bool test_random() {
   srand(K);
-  error = PR_FALSE;
+  error = false;
  
   for (PRUint32 j = 0; j < iterations; ++j) {
     Tracker<K> tracker;

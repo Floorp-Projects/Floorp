@@ -203,7 +203,7 @@ public:
         return NS_OK;
       }
       mManager =
-        static_cast<nsEventListenerManager*>(mTarget->GetListenerManager(PR_FALSE));
+        static_cast<nsEventListenerManager*>(mTarget->GetListenerManager(false));
     }
     if (mManager) {
       NS_ASSERTION(aVisitor.mEvent->currentTarget == nsnull,
@@ -500,7 +500,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
       aEvent->originalTarget = target;
       target = newTarget;
-      retargeted = PR_TRUE;
+      retargeted = true;
     }
   }
 
@@ -668,7 +668,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
                                              NS_EVENT_FLAG_BUBBLE |
                                              NS_EVENT_FLAG_CAPTURE,
                                              aCallback,
-                                             PR_FALSE,
+                                             false,
                                              &pusher);
   
         preVisitor.mEventStatus = postVisitor.mEventStatus;

@@ -44,7 +44,6 @@
 
 #include "IonCode.h"
 #include "jsval.h"
-#include "jsvector.h"
 #include "vm/Stack.h"
 #include "IonFrames.h"
 

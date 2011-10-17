@@ -264,8 +264,8 @@ nsXBLJSClass::Destroy()
 nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
   : mPrototypeBinding(aBinding),
     mInsertionPointTable(nsnull),
-    mIsStyleBinding(PR_TRUE),
-    mMarkedForDeath(PR_FALSE)
+    mIsStyleBinding(true),
+    mMarkedForDeath(false)
 {
   NS_ASSERTION(mPrototypeBinding, "Must have a prototype binding!");
   // Grab a ref to the document info so the prototype binding won't die
@@ -412,9 +412,9 @@ nsXBLBinding::HasStyleSheets() const
   // Find out if we need to re-resolve style.  We'll need to do this
   // if we have additional stylesheets in our binding document.
   if (mPrototypeBinding->HasStyleSheets())
-    return PR_TRUE;
+    return true;
 
-  return mNextBinding ? mNextBinding->HasStyleSheets() : PR_FALSE;
+  return mNextBinding ? mNextBinding->HasStyleSheets() : false;
 }
 
 struct EnumData {
@@ -561,7 +561,7 @@ RealizeDefaultContent(nsISupports* aKey,
 
         nsCOMPtr<nsIDOMNode> clonedNode;
         nsCOMArray<nsINode> nodesWithProperties;
-        nsNodeUtils::Clone(defContent, PR_TRUE, document->NodeInfoManager(),
+        nsNodeUtils::Clone(defContent, true, document->NodeInfoManager(),
                            nodesWithProperties, getter_AddRefs(clonedNode));
 
         // Now that we have the cloned content, install the default content as
@@ -670,7 +670,7 @@ nsXBLBinding::GenerateAnonymousContent()
         if (ni->NamespaceID() != kNameSpaceID_XUL ||
             (localName != nsGkAtoms::observes &&
              localName != nsGkAtoms::_template)) {
-          hasContent = PR_FALSE;
+          hasContent = false;
           break;
         }
       }
@@ -679,7 +679,7 @@ nsXBLBinding::GenerateAnonymousContent()
     if (hasContent || hasInsertionPoints) {
       nsCOMPtr<nsIDOMNode> clonedNode;
       nsCOMArray<nsINode> nodesWithProperties;
-      nsNodeUtils::Clone(content, PR_TRUE, doc->NodeInfoManager(),
+      nsNodeUtils::Clone(content, true, doc->NodeInfoManager(),
                          nodesWithProperties, getter_AddRefs(clonedNode));
 
       mContent = do_QueryInterface(clonedNode);
@@ -809,13 +809,13 @@ nsXBLBinding::GenerateAnonymousContent()
         nsAutoString value2;
         content->GetAttr(namespaceID, name, value2);
         mBoundElement->SetAttr(namespaceID, name, attrName->GetPrefix(),
-                               value2, PR_FALSE);
+                               value2, false);
       }
     }
 
     // Conserve space by wiping the attributes off the clone.
     if (mContent)
-      mContent->UnsetAttr(namespaceID, name, PR_FALSE);
+      mContent->UnsetAttr(namespaceID, name, false);
   }
 }
 
@@ -829,7 +829,7 @@ nsXBLBinding::InstallEventHandlers()
 
     if (handlerChain) {
       nsEventListenerManager* manager =
-        mBoundElement->GetListenerManager(PR_TRUE);
+        mBoundElement->GetListenerManager(true);
       if (!manager)
         return;
 
@@ -978,7 +978,7 @@ nsXBLBinding::UnhookEventHandlers()
 
   if (handlerChain) {
     nsEventListenerManager* manager =
-      mBoundElement->GetListenerManager(PR_FALSE);
+      mBoundElement->GetListenerManager(false);
     if (!manager) {
       return;
     }
@@ -1199,7 +1199,7 @@ nsXBLBinding::InheritsStyle() const
   if (mNextBinding)
     return mNextBinding->InheritsStyle();
 
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -1368,29 +1368,29 @@ bool
 nsXBLBinding::AllowScripts()
 {
   if (!mPrototypeBinding->GetAllowScripts())
-    return PR_FALSE;
+    return false;
 
   // Nasty hack.  Use the JSContext of the bound node, since the
   // security manager API expects to get the docshell type from
   // that.  But use the nsIPrincipal of our document.
   nsIScriptSecurityManager* mgr = nsContentUtils::GetSecurityManager();
   if (!mgr) {
-    return PR_FALSE;
+    return false;
   }
 
   nsIDocument* doc = mBoundElement ? mBoundElement->GetOwnerDoc() : nsnull;
   if (!doc) {
-    return PR_FALSE;
+    return false;
   }
 
   nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
   if (!global) {
-    return PR_FALSE;
+    return false;
   }
 
   nsCOMPtr<nsIScriptContext> context = global->GetContext();
   if (!context) {
-    return PR_FALSE;
+    return false;
   }
   
   JSContext* cx = context->GetNativeContext();
@@ -1401,7 +1401,7 @@ nsXBLBinding::AllowScripts()
   nsresult rv =
     mgr->CanExecuteScripts(cx, ourDocument->NodePrincipal(), &canExecute);
   if (NS_FAILED(rv) || !canExecute) {
-    return PR_FALSE;
+    return false;
   }
 
   // Now one last check: make sure that we're not allowing a privilege
@@ -1409,7 +1409,7 @@ nsXBLBinding::AllowScripts()
   bool haveCert;
   doc->NodePrincipal()->GetHasCertificate(&haveCert);
   if (!haveCert) {
-    return PR_TRUE;
+    return true;
   }
 
   bool subsumes;
@@ -1449,10 +1449,10 @@ nsXBLBinding::HasInsertionParent(nsIContent* aParent)
     nsInsertionPointList* list = nsnull;
     mInsertionPointTable->Get(aParent, &list);
     if (list) {
-      return PR_TRUE;
+      return true;
     }
   }
-  return mNextBinding ? mNextBinding->HasInsertionParent(aParent) : PR_FALSE;
+  return mNextBinding ? mNextBinding->HasInsertionParent(aParent) : false;
 }
 
 nsresult
@@ -1516,7 +1516,7 @@ nsIContent*
 nsXBLBinding::GetSingleInsertionPoint(PRUint32* aIndex,
                                       bool* aMultipleInsertionPoints)
 {
-  *aMultipleInsertionPoints = PR_FALSE;
+  *aMultipleInsertionPoints = false;
   if (mContent) {
     return mPrototypeBinding->GetSingleInsertionPoint(mBoundElement, mContent, 
                                                       aIndex, 
@@ -1552,20 +1552,20 @@ bool
 nsXBLBinding::ResolveAllFields(JSContext *cx, JSObject *obj) const
 {
   if (!mPrototypeBinding->ResolveAllFields(cx, obj)) {
-    return PR_FALSE;
+    return false;
   }
 
   if (mNextBinding) {
     return mNextBinding->ResolveAllFields(cx, obj);
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 void
 nsXBLBinding::MarkForDeath()
 {
-  mMarkedForDeath = PR_TRUE;
+  mMarkedForDeath = true;
   ExecuteDetachedHandler();
 }
 

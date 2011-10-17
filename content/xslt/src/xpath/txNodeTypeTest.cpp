@@ -66,7 +66,7 @@ bool txNodeTypeTest::matches(const txXPathNode& aNode,
                    !aContext->isStripSpaceAllowed(aNode);
         }
     }
-    return PR_TRUE;
+    return true;
 }
 
 txNodeTest::NodeTestType

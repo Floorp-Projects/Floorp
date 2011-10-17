@@ -77,7 +77,7 @@
 #include "nsIXULDocument.h"
 #endif
 
-namespace dom = mozilla::dom;
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -587,7 +587,7 @@ nsDocAccessible::Init()
   nsCOMPtr<nsIPresShell> shell(GetPresShell());
   mNotificationController = new NotificationController(this, shell);
   if (!mNotificationController)
-    return PR_FALSE;
+    return false;
 
   // Mark the document accessible as loaded if its DOM document was loaded at
   // this point (this can happen because a11y is started late or DOM document
@@ -596,7 +596,7 @@ nsDocAccessible::Init()
     mLoadState |= eDOMLoaded;
 
   AddEventListeners();
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -879,7 +879,7 @@ NS_IMETHODIMP nsDocAccessible::Observe(nsISupports *aSubject, const char *aTopic
     // accessible object. See the AccStateChangeEvent constructor for details
     // about this exceptional case.
     nsRefPtr<AccEvent> event =
-      new AccStateChangeEvent(this, states::EDITABLE, PR_TRUE);
+      new AccStateChangeEvent(this, states::EDITABLE, true);
     FireDelayedAccessibleEvent(event);
   }
 
@@ -1213,7 +1213,7 @@ void nsDocAccessible::ContentStateChanged(nsIDocument* aDocument,
 
   if (aStateMask.HasState(NS_EVENT_STATE_INVALID)) {
     nsRefPtr<AccEvent> event =
-      new AccStateChangeEvent(aContent, states::INVALID, PR_TRUE);
+      new AccStateChangeEvent(aContent, states::INVALID, true);
     FireDelayedAccessibleEvent(event);
    }
 }
@@ -1492,7 +1492,7 @@ nsDocAccessible::NotifyOfLoading(bool aIsReloading)
   // Fire state busy change event. Use delayed event since we don't care
   // actually if event isn't delivered when the document goes away like a shot.
   nsRefPtr<AccEvent> stateEvent =
-    new AccStateChangeEvent(mDocument, states::BUSY, PR_TRUE);
+    new AccStateChangeEvent(mDocument, states::BUSY, true);
   FireDelayedAccessibleEvent(stateEvent);
 }
 
@@ -1547,7 +1547,7 @@ nsDocAccessible::ProcessLoad()
 
   // Fire busy state change event.
   nsRefPtr<AccEvent> stateEvent =
-    new AccStateChangeEvent(this, states::BUSY, PR_FALSE);
+    new AccStateChangeEvent(this, states::BUSY, false);
   nsEventShell::FireEvent(stateEvent);
 }
 
@@ -1730,33 +1730,26 @@ nsDocAccessible::FireDelayedAccessibleEvent(AccEvent* aEvent)
 void
 nsDocAccessible::ProcessPendingEvent(AccEvent* aEvent)
 {
-  nsAccessible* accessible = aEvent->GetAccessible();
-  if (!accessible)
-    return;
-
   PRUint32 eventType = aEvent->GetEventType();
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED) {
-    nsCOMPtr<nsIAccessibleText> accessibleText = do_QueryObject(accessible);
+    nsHyperTextAccessible* hyperText = aEvent->GetAccessible()->AsHyperText();
     PRInt32 caretOffset;
-    if (accessibleText &&
-        NS_SUCCEEDED(accessibleText->GetCaretOffset(&caretOffset))) {
+    if (hyperText &&
+        NS_SUCCEEDED(hyperText->GetCaretOffset(&caretOffset))) {
 #ifdef DEBUG_A11Y
       PRUnichar chAtOffset;
-      accessibleText->GetCharacterAtOffset(caretOffset, &chAtOffset);
+      hyperText->GetCharacterAtOffset(caretOffset, &chAtOffset);
       printf("\nCaret moved to %d with char %c", caretOffset, chAtOffset);
 #endif
       nsRefPtr<AccEvent> caretMoveEvent =
-          new AccCaretMoveEvent(accessible, caretOffset);
-      if (!caretMoveEvent)
-        return;
-
+        new AccCaretMoveEvent(hyperText, caretOffset);
       nsEventShell::FireEvent(caretMoveEvent);
 
       PRInt32 selectionCount;
-      accessibleText->GetSelectionCount(&selectionCount);
+      hyperText->GetSelectionCount(&selectionCount);
       if (selectionCount) {  // There's a selection so fire selection change as well
         nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED,
-                                accessible);
+                                hyperText);
       }
     }
   }
@@ -1765,7 +1758,7 @@ nsDocAccessible::ProcessPendingEvent(AccEvent* aEvent)
 
     // Post event processing
     if (eventType == nsIAccessibleEvent::EVENT_HIDE)
-      ShutdownChildrenInSubtree(accessible);
+      ShutdownChildrenInSubtree(aEvent->GetAccessible());
   }
 }
 

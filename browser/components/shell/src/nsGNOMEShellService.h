@@ -43,7 +43,7 @@
 class nsGNOMEShellService : public nsIShellService
 {
 public:
-  nsGNOMEShellService() : mCheckedThisSession(PR_FALSE), mAppIsInPath(PR_FALSE) { }
+  nsGNOMEShellService() : mCheckedThisSession(false), mAppIsInPath(false) { }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHELLSERVICE

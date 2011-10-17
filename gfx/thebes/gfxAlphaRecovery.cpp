@@ -55,12 +55,12 @@ gfxAlphaRecovery::RecoverAlpha(gfxImageSurface* blackSurf,
          blackSurf->Format() != gfxASurface::ImageFormatRGB24) ||
         (whiteSurf->Format() != gfxASurface::ImageFormatARGB32 &&
          whiteSurf->Format() != gfxASurface::ImageFormatRGB24))
-        return PR_FALSE;
+        return false;
 
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
     if (!analysis && mozilla::supports_sse2() &&
         RecoverAlphaSSE2(blackSurf, whiteSurf)) {
-        return PR_TRUE;
+        return true;
     }
 #endif
 
@@ -76,7 +76,7 @@ gfxAlphaRecovery::RecoverAlpha(gfxImageSurface* blackSurf,
         first = 0;
     } else {
         if (!blackData || !whiteData)
-            return PR_FALSE;
+            return false;
 
         first = RecoverPixel(*reinterpret_cast<PRUint32*>(blackData),
                              *reinterpret_cast<PRUint32*>(whiteData));
@@ -99,7 +99,7 @@ gfxAlphaRecovery::RecoverAlpha(gfxImageSurface* blackSurf,
     
     if (analysis) {
         analysis->uniformAlpha = (deltas >> 24) == 0;
-        analysis->uniformColor = PR_FALSE;
+        analysis->uniformColor = false;
         if (analysis->uniformAlpha) {
             double d_first_alpha = first >> 24;
             analysis->alpha = d_first_alpha/255.0;
@@ -121,5 +121,5 @@ gfxAlphaRecovery::RecoverAlpha(gfxImageSurface* blackSurf,
         }
     }
 
-    return PR_TRUE;
+    return true;
 }

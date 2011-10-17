@@ -52,7 +52,7 @@ nsHtml5SVGLoadDispatcher::nsHtml5SVGLoadDispatcher(nsIContent* aElement)
 NS_IMETHODIMP
 nsHtml5SVGLoadDispatcher::Run()
 {
-  nsEvent event(PR_TRUE, NS_SVG_LOAD);
+  nsEvent event(true, NS_SVG_LOAD);
   event.eventStructType = NS_SVG_EVENT;
   event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
   // Do we care about forcing presshell creation if it hasn't happened yet?
@@ -67,6 +67,6 @@ nsHtml5SVGLoadDispatcher::Run()
   nsEventDispatcher::Dispatch(mElement, ctx, &event);
   // Unblocking onload on the same document that it was blocked even if
   // the element has moved between docs since blocking.
-  mDocument->UnblockOnload(PR_FALSE);
+  mDocument->UnblockOnload(false);
   return NS_OK;
 }

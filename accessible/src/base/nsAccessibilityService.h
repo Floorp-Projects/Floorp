@@ -273,7 +273,7 @@ private:
    * A universal ARIA property is one that can be defined on any element even if there is no role.
    *
    * @param aContent The content node to test
-   * @return PR_TRUE if there is a universal ARIA property set on the node
+   * @return true if there is a universal ARIA property set on the node
    */
   bool HasUniversalAriaProperty(nsIContent *aContent);
 

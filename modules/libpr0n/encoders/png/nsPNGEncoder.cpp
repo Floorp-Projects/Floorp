@@ -51,8 +51,8 @@ using namespace mozilla;
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsPNGEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
 nsPNGEncoder::nsPNGEncoder() : mPNG(nsnull), mPNGinfo(nsnull),
-                               mIsAnimation(PR_FALSE),
-                               mFinished(PR_FALSE),
+                               mIsAnimation(false),
+                               mFinished(false),
                                mImageBuffer(nsnull), mImageBufferSize(0),
                                mImageBufferUsed(0), mImageBufferReadPoint(0),
                                mCallback(nsnull),
@@ -139,7 +139,7 @@ NS_IMETHODIMP nsPNGEncoder::StartImageEncode(PRUint32 aWidth,
 
 #ifdef PNG_APNG_SUPPORTED
   if (numFrames > 1)
-    mIsAnimation = PR_TRUE;
+    mIsAnimation = true;
 
 #endif
 
@@ -357,7 +357,7 @@ NS_IMETHODIMP nsPNGEncoder::EndImageEncode()
   png_write_end(mPNG, mPNGinfo);
   png_destroy_write_struct(&mPNG, &mPNGinfo);
 
-  mFinished = PR_TRUE;
+  mFinished = true;
   NotifyListener();
 
   // if output callback can't get enough memory, it will free our buffer
@@ -405,9 +405,9 @@ nsPNGEncoder::ParseOptions(const nsAString& aOptions,
 
       if (nsCRT::strcmp(value, "none") == 0 ||
           nsCRT::strcmp(value, "no") == 0) {
-        *useTransparency = PR_FALSE;
+        *useTransparency = false;
       } else if (nsCRT::strcmp(value, "yes") == 0) {
-        *useTransparency = PR_TRUE;
+        *useTransparency = true;
       } else {
         return NS_ERROR_INVALID_ARG;
       }
@@ -419,9 +419,9 @@ nsPNGEncoder::ParseOptions(const nsAString& aOptions,
         return NS_ERROR_INVALID_ARG;
 
       if (nsCRT::strcmp(value, "no") == 0) {
-        *skipFirstFrame = PR_FALSE;
+        *skipFirstFrame = false;
       } else if (nsCRT::strcmp(value, "yes") == 0) {
-        *skipFirstFrame = PR_TRUE;
+        *skipFirstFrame = true;
       } else {
         return NS_ERROR_INVALID_ARG;
       }
@@ -579,7 +579,7 @@ NS_IMETHODIMP nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
 /* boolean isNonBlocking (); */
 NS_IMETHODIMP nsPNGEncoder::IsNonBlocking(bool *_retval)
 {
-  *_retval = PR_TRUE;
+  *_retval = true;
   return NS_OK;
 }
 
@@ -701,6 +701,7 @@ nsPNGEncoder::WriteCallback(png_structp png, png_bytep data,
     if (! newBuf) {
       // can't resize, just zero (this will keep us from writing more)
       PR_Free(that->mImageBuffer);
+      that->mImageBuffer = nsnull;
       that->mImageBufferSize = 0;
       that->mImageBufferUsed = 0;
       return;

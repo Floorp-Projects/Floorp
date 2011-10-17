@@ -166,12 +166,12 @@ public:
   void GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const;
 
   /**
-   * Returns PR_TRUE, except on OOM, in which case returns PR_FALSE.
+   * Returns true, except on OOM, in which case returns false.
    */
   bool GetSegmentLengths(nsTArray<double> *aLengths) const;
 
   /**
-   * Returns PR_TRUE, except on OOM, in which case returns PR_FALSE.
+   * Returns true, except on OOM, in which case returns false.
    */
   bool GetDistancesFromOriginToEndsOfVisibleSegments(nsTArray<double> *aArray) const;
 
@@ -204,7 +204,7 @@ protected:
   }
 
   /**
-   * This may fail (return PR_FALSE) on OOM if the internal capacity is being
+   * This may fail (return false) on OOM if the internal capacity is being
    * increased, in which case the list will be left unmodified.
    */
   bool SetLength(PRUint32 aLength) {
@@ -266,9 +266,9 @@ public:
   bool IsIdentity() const {
     if (!mElement) {
       NS_ABORT_IF_FALSE(IsEmpty(), "target element propagation failure");
-      return PR_TRUE;
+      return true;
     }
-    return PR_FALSE;
+    return false;
   }
 
   /**

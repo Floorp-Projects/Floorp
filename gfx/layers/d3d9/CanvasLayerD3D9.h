@@ -56,9 +56,9 @@ public:
   CanvasLayerD3D9(LayerManagerD3D9 *aManager)
     : CanvasLayer(aManager, NULL)
     , LayerD3D9(aManager)
-    , mDataIsPremultiplied(PR_FALSE)
-    , mNeedsYFlip(PR_FALSE)
-    , mHasAlpha(PR_TRUE)
+    , mDataIsPremultiplied(false)
+    , mNeedsYFlip(false)
+    , mHasAlpha(true)
   {
       mImplData = static_cast<LayerD3D9*>(this);
       aManager->deviceManager()->mLayersWithResources.AppendElement(this);

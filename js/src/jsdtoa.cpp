@@ -47,7 +47,6 @@
 #include "jsapi.h"
 #include "jsprvtd.h"
 #include "jsnum.h"
-#include "jsbit.h"
 #include "jslibmath.h"
 #include "jscntxt.h"
 

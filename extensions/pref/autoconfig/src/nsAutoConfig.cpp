@@ -77,7 +77,7 @@ nsresult nsAutoConfig::Init()
     // member initializers and constructor code
 
     nsresult rv;
-    mLoaded = PR_FALSE;
+    mLoaded = false;
     
     // Registering the object as an observer to the profile-after-change topic
     nsCOMPtr<nsIObserverService> observerService =
@@ -85,7 +85,7 @@ nsresult nsAutoConfig::Init()
     if (NS_FAILED(rv)) 
         return rv;
 
-    rv = observerService->AddObserver(this,"profile-after-change", PR_TRUE);
+    rv = observerService->AddObserver(this,"profile-after-change", true);
     
     return rv;
 }
@@ -175,7 +175,7 @@ nsAutoConfig::OnStopRequest(nsIRequest *request, nsISupports *context,
     // Send the autoconfig.jsc to javascript engine.
     
     rv = EvaluateAdminConfigScript(mBuf.get(), mBuf.Length(),
-                              nsnull, PR_FALSE,PR_TRUE, PR_FALSE);
+                              nsnull, false,true, false);
     if (NS_SUCCEEDED(rv)) {
 
         // Write the autoconfig.jsc to failover.jsc (cached copy) 
@@ -185,7 +185,7 @@ nsAutoConfig::OnStopRequest(nsIRequest *request, nsISupports *context,
             NS_WARNING("Error writing failover.jsc file");
 
         // Releasing the lock to allow the main thread to start execution
-        mLoaded = PR_TRUE;  
+        mLoaded = true;  
 
         return NS_OK;
     }
@@ -342,7 +342,7 @@ nsresult nsAutoConfig::downloadAutoConfig()
     // Also We are having the event queue processing only for the startup
     // It is not needed with the repeating timer.
     if (firstTime) {
-        firstTime = PR_FALSE;
+        firstTime = false;
     
         // Getting the current thread. If we start an AsyncOpen, the thread
         // needs to wait before the reading of autoconfig is done
@@ -390,7 +390,7 @@ nsresult nsAutoConfig::readOfflineFile()
        execution. At this point we do not need to stall 
        the thread since all network activities are done.
     */
-    mLoaded = PR_TRUE; 
+    mLoaded = true; 
 
     bool failCache;
     rv = mPrefBranch->GetBoolPref("autoadmin.failover_to_cached", &failCache);
@@ -408,14 +408,14 @@ nsresult nsAutoConfig::readOfflineFile()
             return rv;
 
         if (!offline) {
-            rv = ios->SetOffline(PR_TRUE);
+            rv = ios->SetOffline(true);
             if (NS_FAILED(rv)) 
                 return rv;
         }
         
         // lock the "network.online" prference so user cannot toggle back to
         // online mode.
-        rv = mPrefBranch->SetBoolPref("network.online", PR_FALSE);
+        rv = mPrefBranch->SetBoolPref("network.online", false);
         if (NS_FAILED(rv)) 
             return rv;
 
@@ -460,8 +460,8 @@ nsresult nsAutoConfig::evaluateLocalFile(nsIFile *file)
     
     rv = inStr->Read(buf, fs, &amt);
     if (NS_SUCCEEDED(rv)) {
-      EvaluateAdminConfigScript(buf, fs, nsnull, PR_FALSE, 
-                                PR_TRUE, PR_FALSE);
+      EvaluateAdminConfigScript(buf, fs, nsnull, false, 
+                                true, false);
     }
     inStr->Close();
     PR_Free(buf);

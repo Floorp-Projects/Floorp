@@ -351,15 +351,15 @@ void MozQWidget::sendPressReleaseKeyEvent(int key,
 
     if (letter) {
         // Handle as TextEvent
-        nsCompositionEvent start(PR_TRUE, NS_COMPOSITION_START, mReceiver);
+        nsCompositionEvent start(true, NS_COMPOSITION_START, mReceiver);
         mReceiver->DispatchEvent(&start);
 
-        nsTextEvent text(PR_TRUE, NS_TEXT_TEXT, mReceiver);
+        nsTextEvent text(true, NS_TEXT_TEXT, mReceiver);
         QString commitString = QString(*letter);
         text.theText.Assign(commitString.utf16());
         mReceiver->DispatchEvent(&text);
 
-        nsCompositionEvent end(PR_TRUE, NS_COMPOSITION_END, mReceiver);
+        nsCompositionEvent end(true, NS_COMPOSITION_END, mReceiver);
         mReceiver->DispatchEvent(&end);
         return;
     }

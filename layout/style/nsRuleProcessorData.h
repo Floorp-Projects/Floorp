@@ -73,17 +73,17 @@ struct NS_STACK_CLASS TreeMatchContext {
   // Reset this context for matching for the style-if-:visited.
   void ResetForVisitedMatching() {
     NS_PRECONDITION(mForStyling, "Why is this being called?");
-    mHaveRelevantLink = PR_FALSE;
+    mHaveRelevantLink = false;
     mVisitedHandling = nsRuleWalker::eRelevantLinkVisited;
   }
   
   void ResetForUnvisitedMatching() {
     NS_PRECONDITION(mForStyling, "Why is this being called?");
-    mHaveRelevantLink = PR_FALSE;
+    mHaveRelevantLink = false;
     mVisitedHandling = nsRuleWalker::eRelevantLinkUnvisited;
   }
 
-  void SetHaveRelevantLink() { mHaveRelevantLink = PR_TRUE; }
+  void SetHaveRelevantLink() { mHaveRelevantLink = true; }
   bool HaveRelevantLink() const { return mHaveRelevantLink; }
 
   nsRuleWalker::VisitedHandlingType VisitedHandling() const
@@ -133,7 +133,7 @@ struct NS_STACK_CLASS TreeMatchContext {
                    nsRuleWalker::VisitedHandlingType aVisitedHandling,
                    nsIDocument* aDocument)
     : mForStyling(aForStyling)
-    , mHaveRelevantLink(PR_FALSE)
+    , mHaveRelevantLink(false)
     , mVisitedHandling(aVisitedHandling)
     , mDocument(aDocument)
     , mScopedRoot(nsnull)

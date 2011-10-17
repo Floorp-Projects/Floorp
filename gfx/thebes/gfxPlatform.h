@@ -218,8 +218,8 @@ public:
     /**
      * Font name resolver, this returns actual font name(s) by the callback
      * function. If the font doesn't exist, the callback function is not called.
-     * If the callback function returns PR_FALSE, the aAborted value is set to
-     * PR_TRUE, otherwise, PR_FALSE.
+     * If the callback function returns false, the aAborted value is set to
+     * true, otherwise, false.
      */
     typedef bool (*FontResolverCallback) (const nsAString& aName,
                                             void *aClosure);
@@ -291,8 +291,8 @@ public:
     
     /**
      * Iterate over pref fonts given a list of lang groups.  For a single lang
-     * group, multiple pref fonts are possible.  If error occurs, returns PR_FALSE,
-     * PR_TRUE otherwise.  Callback returns PR_FALSE to abort process.
+     * group, multiple pref fonts are possible.  If error occurs, returns false,
+     * true otherwise.  Callback returns false to abort process.
      */
     typedef bool (*PrefFontCallback) (eFontPrefLang aLang, const nsAString& aName,
                                         void *aClosure);

@@ -41,7 +41,6 @@
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsIToolkit.h"
-#include "nsIAppShell.h"
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -159,14 +158,13 @@ public:
   NS_IMETHOD              OnIMEFocusChange(bool aFocus) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnIMESelectionChange(void) { return NS_ERROR_NOT_IMPLEMENTED; }
-  virtual nsIMEUpdatePreference GetIMEUpdatePreference() { return nsIMEUpdatePreference(PR_FALSE, PR_FALSE); }
+  virtual nsIMEUpdatePreference GetIMEUpdatePreference() { return nsIMEUpdatePreference(false, false); }
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, bool aIsHorizontal, PRInt32 &aOverriddenDelta);
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
               EVENT_CALLBACK   aHandleEventFunction,
               nsDeviceContext *aContext,
-              nsIAppShell      *aAppShell = nsnull,
               nsIToolkit       *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull,
               bool             aForceUseIWidgetParent = false);
@@ -236,7 +234,6 @@ protected:
                                      const nsIntRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsDeviceContext *aContext,
-                                     nsIAppShell *aAppShell,
                                      nsIToolkit *aToolkit,
                                      nsWidgetInitData *aInitData);
 

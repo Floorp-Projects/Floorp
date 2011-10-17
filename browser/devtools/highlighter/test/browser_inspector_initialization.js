@@ -77,6 +77,8 @@ function runInspectorTests()
   ok(InspectorUI.inspecting, "Inspector is inspecting");
   ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
   ok(InspectorUI.highlighter, "Highlighter is up");
+  InspectorUI.inspectNode(doc.body);
+  InspectorUI.stopInspecting();
 
   InspectorUI.treePanel.open();
 }
@@ -85,14 +87,29 @@ function treePanelTests()
 {
   Services.obs.removeObserver(treePanelTests,
     InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
-  Services.obs.addObserver(runContextMenuTest,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
+  Services.obs.addObserver(stylePanelTests,
+    "StyleInspector-opened", false);
 
   ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
 
   executeSoon(function() {
+    InspectorUI.stylePanel.showTool(doc.body);
+  });
+}
+
+function stylePanelTests()
+{
+  Services.obs.removeObserver(stylePanelTests, "StyleInspector-opened");
+  Services.obs.addObserver(runContextMenuTest,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
+
+  ok(InspectorUI.stylePanel.isOpen(), "Style Panel is Open");
+  ok(InspectorUI.stylePanel.cssHtmlTree, "Style Panel has a cssHtmlTree");
+
+  executeSoon(function() {
     InspectorUI.closeInspectorUI();
   });
+
 }
 
 function runContextMenuTest()
@@ -121,9 +138,8 @@ function inspectNodesFromContextTest()
   Services.obs.addObserver(openInspectorForContextTest, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
   ok(!InspectorUI.inspecting, "Inspector is not actively highlighting");
   is(InspectorUI.selection, salutation, "Inspector is highlighting salutation");
-  ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is closed");
-  // TODO: These tests depend on the style inspector patches.
-  todo(InspectorUI.isStylePanelOpen, "Inspector Style Panel is open");
+  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is closed");
+  ok(!InspectorUI.stylePanel.isOpen(), "Inspector Style Panel is closed");
   executeSoon(function() {
     InspectorUI.closeInspectorUI(true);
   });

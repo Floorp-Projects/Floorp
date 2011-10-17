@@ -177,26 +177,26 @@ nsChannelClassifier::HasBeenClassified(nsIChannel *aChannel)
     nsCOMPtr<nsICachingChannel> cachingChannel =
         do_QueryInterface(aChannel);
     if (!cachingChannel) {
-        return PR_FALSE;
+        return false;
     }
 
     // Only check the tag if we are loading from the cache without
     // validation.
     bool fromCache;
     if (NS_FAILED(cachingChannel->IsFromCache(&fromCache)) || !fromCache) {
-        return PR_FALSE;
+        return false;
     }
 
     nsCOMPtr<nsISupports> cacheToken;
     cachingChannel->GetCacheToken(getter_AddRefs(cacheToken));
     if (!cacheToken) {
-        return PR_FALSE;
+        return false;
     }
 
     nsCOMPtr<nsICacheEntryDescriptor> cacheEntry =
         do_QueryInterface(cacheToken);
     if (!cacheEntry) {
-        return PR_FALSE;
+        return false;
     }
 
     nsXPIDLCString tag;

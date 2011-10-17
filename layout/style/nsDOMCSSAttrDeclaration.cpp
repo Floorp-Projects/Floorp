@@ -95,16 +95,16 @@ nsDOMCSSAttributeDeclaration::SetCSSDeclaration(css::Declaration* aDecl)
   NS_ASSERTION(oldRule, "Element must have rule");
 
   nsRefPtr<css::StyleRule> newRule =
-    oldRule->DeclarationChanged(aDecl, PR_FALSE);
+    oldRule->DeclarationChanged(aDecl, false);
   if (!newRule) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return
 #ifdef MOZ_SMIL
-    mIsSMILOverride ? mElement->SetSMILOverrideStyleRule(newRule, PR_TRUE) :
+    mIsSMILOverride ? mElement->SetSMILOverrideStyleRule(newRule, true) :
 #endif // MOZ_SMIL
-    mElement->SetInlineStyleRule(newRule, PR_TRUE);
+    mElement->SetInlineStyleRule(newRule, true);
 }
 
 nsIDocument*
@@ -158,10 +158,10 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(bool aAllocate)
   nsresult rv;
 #ifdef MOZ_SMIL
   if (mIsSMILOverride)
-    rv = mElement->SetSMILOverrideStyleRule(newRule, PR_FALSE);
+    rv = mElement->SetSMILOverrideStyleRule(newRule, false);
   else
 #endif // MOZ_SMIL
-    rv = mElement->SetInlineStyleRule(newRule, PR_FALSE);
+    rv = mElement->SetInlineStyleRule(newRule, false);
 
   if (NS_FAILED(rv)) {
     return nsnull; // the decl will be destroyed along with the style rule

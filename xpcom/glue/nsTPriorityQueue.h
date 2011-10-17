@@ -92,9 +92,9 @@ public:
   /**
    * @return The topmost element in the queue without changing the queue. This
    * is the element 'a' such that there is no other element 'b' in the queue for
-   * which Compare(b, a) returns PR_TRUE. (Since this container does not check
+   * which Compare(b, a) returns true. (Since this container does not check
    * for duplicate entries there may exist 'b' for which Compare(a, b) returns
-   * PR_FALSE.)
+   * false.)
    */
   const T& Top() const
   {
@@ -105,13 +105,13 @@ public:
   /**
    * Adds an element to the queue
    * @param aElement The element to add
-   * @return PR_TRUE on success, PR_FALSE on out of memory.
+   * @return true on success, false on out of memory.
    */
   bool Push(const T& aElement)
   {
     T* elem = mElements.AppendElement(aElement);
     if (!elem)
-      return PR_FALSE; // Out of memory
+      return false; // Out of memory
 
     // Sift up
     size_type i = mElements.Length() - 1;
@@ -124,13 +124,13 @@ public:
       i = parent;
     }
 
-    return PR_TRUE;
+    return true;
   }
 
   /**
    * Removes and returns the top-most element from the queue.
    * @return The topmost element, that is, the element 'a' such that there is no
-   * other element 'b' in the queue for which Compare(b, a) returns PR_TRUE.
+   * other element 'b' in the queue for which Compare(b, a) returns true.
    * @see Top()
    */
   T Pop()

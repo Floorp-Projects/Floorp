@@ -104,11 +104,11 @@ private:
   // Indicates if the end points of the interval are fixed or not.
   //
   // Note that this is not the same as having an end point whose TIME is fixed
-  // (i.e. nsSMILInstanceTime::IsFixed() returns PR_TRUE). This is because it is
+  // (i.e. nsSMILInstanceTime::IsFixed() returns true). This is because it is
   // possible to have an end point with a fixed TIME and yet still update the
   // end point to refer to a different nsSMILInstanceTime object.
   //
-  // However, if mBegin/EndFixed is PR_TRUE, then BOTH the nsSMILInstanceTime
+  // However, if mBegin/EndFixed is true, then BOTH the nsSMILInstanceTime
   // OBJECT returned for that end point and its TIME value will not change.
   bool mBeginFixed;
   bool mEndFixed;

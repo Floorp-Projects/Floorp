@@ -97,7 +97,7 @@ typedef enum { PREF_INVALID = 0,
 // it is different from the default.  In other words, these are used
 // to set the _user_ preferences.
 //
-// If set_default is set to PR_TRUE however, it sets the default value.
+// If set_default is set to true however, it sets the default value.
 // This will only affect the program behavior if the user does not have a value
 // saved over it for the particular preference.  In addition, these will never
 // be saved out to disk.

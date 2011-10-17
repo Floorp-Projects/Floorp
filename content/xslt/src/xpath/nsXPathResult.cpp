@@ -54,8 +54,8 @@ using namespace mozilla::dom;
 nsXPathResult::nsXPathResult() : mDocument(nsnull),
                                  mCurrentPos(0),
                                  mResultType(ANY_TYPE),
-                                 mInvalidIteratorState(PR_TRUE),
-                                 mBooleanResult(PR_FALSE),
+                                 mInvalidIteratorState(true),
+                                 mBooleanResult(false),
                                  mNumberResult(0)
 {
 }
@@ -335,7 +335,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType,
         return NS_OK;
     }
 
-    mInvalidIteratorState = PR_FALSE;
+    mInvalidIteratorState = false;
 
     if (mResultNodes.Count() > 0) {
         // If we support the document() function in DOM-XPath we need to
@@ -384,7 +384,7 @@ nsXPathResult::Invalidate(const nsIContent* aChangeRoot)
         }
     }
 
-    mInvalidIteratorState = PR_TRUE;
+    mInvalidIteratorState = true;
     // Make sure nulling out mDocument is the last thing we do.
     if (mDocument) {
         mDocument->RemoveMutationObserver(this);

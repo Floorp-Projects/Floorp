@@ -225,7 +225,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
 nsTXTToHTMLConv::nsTXTToHTMLConv()
 {
     mToken = nsnull;
-    mPreFormatHTML = PR_FALSE;
+    mPreFormatHTML = false;
 }
 
 nsTXTToHTMLConv::~nsTXTToHTMLConv()
@@ -241,34 +241,34 @@ nsTXTToHTMLConv::Init()
     // build up the list of tokens to handle
     convToken *token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
-    token->prepend = PR_FALSE;
+    token->prepend = false;
     token->token.Assign(PRUnichar('<'));
     token->modText.AssignLiteral("&lt;");
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
-    token->prepend = PR_FALSE;
+    token->prepend = false;
     token->token.Assign(PRUnichar('>'));
     token->modText.AssignLiteral("&gt;");
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
-    token->prepend = PR_FALSE;
+    token->prepend = false;
     token->token.Assign(PRUnichar('&'));
     token->modText.AssignLiteral("&amp;");
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
-    token->prepend = PR_TRUE;
+    token->prepend = true;
     token->token.AssignLiteral("http://"); // XXX need to iterate through all protos
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
-    token->prepend = PR_TRUE;
+    token->prepend = true;
     token->token.Assign(PRUnichar('@'));
     token->modText.AssignLiteral("mailto:");
     mTokens.AppendElement(token);

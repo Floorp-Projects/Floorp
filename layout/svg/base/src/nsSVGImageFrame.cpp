@@ -250,13 +250,13 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext)
     if (NS_FAILED(mImageContainer->GetWidth(&nativeWidth)) ||
         NS_FAILED(mImageContainer->GetHeight(&nativeHeight)) ||
         nativeWidth == 0 || nativeHeight == 0) {
-      return PR_FALSE;
+      return false;
     }
     imageTransform = GetRasterImageTransform(nativeWidth, nativeHeight);
   }
 
   if (imageTransform.IsSingular()) {
-    return PR_FALSE;
+    return false;
   }
 
   // NOTE: We need to cancel out the effects of Full-Page-Zoom, or else
@@ -266,7 +266,7 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext)
     nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPx);
   aGfxContext->Multiply(imageTransform.Scale(pageZoomFactor, pageZoomFactor));
 
-  return PR_TRUE;
+  return true;
 }
 
 //----------------------------------------------------------------------
@@ -349,8 +349,8 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
         static_cast<nsSVGSVGElement*>(imgRootFrame->GetContent());
       if (!rootSVGElem || rootSVGElem->GetNameSpaceID() != kNameSpaceID_SVG ||
           rootSVGElem->Tag() != nsGkAtoms::svg) {
-        NS_ABORT_IF_FALSE(PR_FALSE, "missing or non-<svg> root node!!");
-        return PR_FALSE;
+        NS_ABORT_IF_FALSE(false, "missing or non-<svg> root node!!");
+        return false;
       }
 
       // Override preserveAspectRatio in our helper document

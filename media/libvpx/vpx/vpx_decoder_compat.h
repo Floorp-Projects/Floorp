@@ -16,7 +16,7 @@
  * @{
  */
 
-/*!\file vpx_decoder_compat.h
+/*!\file
  * \brief Provides a compatibility layer between version 1 and 2 of this API.
  *
  * This interface has been deprecated. Only existing code should make use
@@ -89,12 +89,12 @@ extern "C" {
      *  ::vpx_dec_iface_t interface structure. Capabilities are extra interfaces
      *  or functionality, and are not required to be supported by a decoder.
      *
-     *  The available flags are specifiedby VPX_DEC_CAP_* defines.
+     *  The available flags are specified by VPX_DEC_CAP_* defines.
      */
     typedef int vpx_dec_caps_t;
 #define VPX_DEC_CAP_PUT_SLICE  0x0001 /**< Will issue put_slice callbacks */
 #define VPX_DEC_CAP_PUT_FRAME  0x0002 /**< Will issue put_frame callbacks */
-#define VPX_DEC_CAP_XMA        0x0004 /**< Supports e_xternal Memory Allocation */
+#define VPX_DEC_CAP_XMA        0x0004 /**< Supports eXternal Memory Allocation */
 
     /*!\brief Stream properties
      *
@@ -222,7 +222,7 @@ extern "C" {
      * is properly initialized.
      *
      * \param[in]    ctx     Pointer to this instance's context.
-     * \param[in]    iface   Pointer to the alogrithm interface to use.
+     * \param[in]    iface   Pointer to the algorithm interface to use.
      * \param[in]    ver     ABI version number. Must be set to
      *                       VPX_DECODER_ABI_VERSION
      * \retval #VPX_DEC_OK
@@ -253,9 +253,9 @@ extern "C" {
 
     /*!\brief Get the capabilities of an algorithm.
      *
-     * Retrieves the capabliities bitfield from the algorithm's interface.
+     * Retrieves the capabilities bitfield from the algorithm's interface.
      *
-     * \param[in] iface   Pointer to the alogrithm interface
+     * \param[in] iface   Pointer to the algorithm interface
      *
      */
     vpx_dec_caps_t vpx_dec_get_caps(vpx_dec_iface_t *iface) DEPRECATED;
@@ -267,7 +267,7 @@ extern "C" {
      * context is not necessary. Can be used to determine if the bitstream is
      * of the proper format, and to extract information from the stream.
      *
-     * \param[in]      iface   Pointer to the alogrithm interface
+     * \param[in]      iface   Pointer to the algorithm interface
      * \param[in]      data    Pointer to a block of data to parse
      * \param[in]      data_sz Size of the data buffer
      * \param[in,out]  si      Pointer to stream info to update. The size member
@@ -309,7 +309,7 @@ extern "C" {
      *
      * This wrapper function dispatches the request to the helper function
      * associated with the given ctrl_id. It tries to call this function
-     * transparantly, but will return #VPX_DEC_ERROR if the request could not
+     * transparently, but will return #VPX_DEC_ERROR if the request could not
      * be dispatched.
      *
      * \param[in]     ctx              Pointer to this instance's context
@@ -507,7 +507,7 @@ extern "C" {
      * is properly initialized.
      *
      * \param[in]    ctx     Pointer to this instance's context.
-     * \param[in]    iface   Pointer to the alogrithm interface to use.
+     * \param[in]    iface   Pointer to the algorithm interface to use.
      * \param[in]    ver     ABI version number. Must be set to
      *                       VPX_DECODER_ABI_VERSION
      * \retval #VPX_DEC_OK
@@ -527,7 +527,7 @@ extern "C" {
      * Iterates over a list of the segments to allocate. The iterator storage
      * should be initialized to NULL to start the iteration. Iteration is complete
      * when this function returns VPX_DEC_LIST_END. The amount of memory needed to
-     * allocate is dependant upon the size of the encoded stream. This means that
+     * allocate is dependent upon the size of the encoded stream. This means that
      * the stream info structure must be known at allocation time. It can be
      * populated with the vpx_dec_peek_stream_info() function. In cases where the
      * stream to be decoded is not available at allocation time, a fixed size must
@@ -558,7 +558,7 @@ extern "C" {
      * passed in the order they are read from vpx_dec_get_mem_map(), but may be
      * passed in groups of any size. Segments \ref MUST be set only once. The
      * allocation function \ref MUST ensure that the vpx_dec_mmap_t::base member
-     * is non-NULL. If the segment requires cleanup handling (eg, calling free()
+     * is non-NULL. If the segment requires cleanup handling (e.g., calling free()
      * or close()) then the vpx_dec_mmap_t::dtor member \ref MUST be populated.
      *
      * \param[in]      ctx     Pointer to this instance's context.

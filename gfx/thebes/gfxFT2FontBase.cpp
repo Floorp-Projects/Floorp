@@ -50,7 +50,7 @@ gfxFT2FontBase::gfxFT2FontBase(cairo_scaled_font_t *aScaledFont,
     : gfxFont(aFontEntry, aFontStyle),
       mScaledFont(aScaledFont),
       mSpaceGlyph(0),
-      mHasMetrics(PR_FALSE)
+      mHasMetrics(false)
 {
     cairo_scaled_font_reference(mScaledFont);
 }
@@ -152,7 +152,7 @@ gfxFT2FontBase::GetMetrics()
         gfxFT2LockedFace(this).GetMetrics(&mMetrics, &mSpaceGlyph);
     }
 
-    SanitizeMetrics(&mMetrics, PR_FALSE);
+    SanitizeMetrics(&mMetrics, false);
 
 #if 0
     //    printf("font name: %s %f\n", NS_ConvertUTF16toUTF8(GetName()).get(), GetStyle()->size);
@@ -166,7 +166,7 @@ gfxFT2FontBase::GetMetrics()
     fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
 #endif
 
-    mHasMetrics = PR_TRUE;
+    mHasMetrics = true;
     return mMetrics;
 }
 
@@ -234,7 +234,7 @@ gfxFT2FontBase::SetupCairoFont(gfxContext *aContext)
     if (cairo_scaled_font_status(cairoFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to
         // the cairo_t, precluding any further drawing.
-        return PR_FALSE;
+        return false;
     }
     // Thoughts on which font_options to set on the context:
     //
@@ -256,5 +256,5 @@ gfxFT2FontBase::SetupCairoFont(gfxContext *aContext)
     // already taken place.  We should really be measuring with a different
     // font for pdf and ps surfaces (bug 403513).
     cairo_set_scaled_font(cr, cairoFont);
-    return PR_TRUE;
+    return true;
 }

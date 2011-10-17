@@ -100,7 +100,7 @@ public:
 };
 
 nsHTTPDownloadEvent::nsHTTPDownloadEvent()
-:mResponsibleForDoneSignal(PR_TRUE)
+:mResponsibleForDoneSignal(true)
 {
 }
 
@@ -138,7 +138,7 @@ nsHTTPDownloadEvent::Run()
   {
     nsCOMPtr<nsIInputStream> uploadStream;
     rv = NS_NewPostDataStream(getter_AddRefs(uploadStream),
-                              PR_FALSE,
+                              false,
                               mRequestSession->mPostData,
                               0, ios);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -158,8 +158,8 @@ nsHTTPDownloadEvent::Run()
   rv = hchan->SetRequestMethod(mRequestSession->mRequestMethod);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mResponsibleForDoneSignal = PR_FALSE;
-  mListener->mResponsibleForDoneSignal = PR_TRUE;
+  mResponsibleForDoneSignal = false;
+  mListener->mResponsibleForDoneSignal = true;
 
   mListener->mLoadGroup = lg.get();
   NS_ADDREF(mListener->mLoadGroup);
@@ -172,8 +172,8 @@ nsHTTPDownloadEvent::Run()
     rv = hchan->AsyncOpen(mListener->mLoader, nsnull);
 
   if (NS_FAILED(rv)) {
-    mListener->mResponsibleForDoneSignal = PR_FALSE;
-    mResponsibleForDoneSignal = PR_TRUE;
+    mListener->mResponsibleForDoneSignal = false;
+    mResponsibleForDoneSignal = true;
 
     NS_RELEASE(mListener->mLoadGroup);
     mListener->mLoadGroup = nsnull;
@@ -187,7 +187,7 @@ struct nsCancelHTTPDownloadEvent : nsRunnable {
   nsCOMPtr<nsHTTPListener> mListener;
 
   NS_IMETHOD Run() {
-    mListener->FreeLoadGroup(PR_TRUE);
+    mListener->FreeLoadGroup(true);
     mListener = nsnull;
     return NS_OK;
   }
@@ -256,7 +256,7 @@ SECStatus nsNSSHttpRequestSession::setPostDataFcn(const char *http_data,
                                                   const PRUint32 http_data_len,
                                                   const char *http_content_type)
 {
-  mHasPostData = PR_TRUE;
+  mHasPostData = true;
   mPostData.Assign(http_data, http_data_len);
   mPostContentType.Assign(http_content_type);
 
@@ -276,7 +276,7 @@ SECStatus nsNSSHttpRequestSession::addHeaderFcn(const char *http_header_name,
   // The header will need to be set using 
   //   mHttpChannel->SetRequestHeader(nsDependentCString(http_header_name), 
   //                                  nsDependentCString(http_header_value), 
-  //                                  PR_FALSE)));
+  //                                  false)));
 }
 
 SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
@@ -309,7 +309,7 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
     }
 
     ++retry_count;
-    retryable_error = PR_FALSE;
+    retryable_error = false;
 
     result_sec_status =
       internal_send_receive_attempt(retryable_error, pPollDesc, http_response_code,
@@ -379,7 +379,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
   Mutex& waitLock = mListener->mLock;
   CondVar& waitCondition = mListener->mCondition;
   volatile bool &waitFlag = mListener->mWaitFlag;
-  waitFlag = PR_TRUE;
+  waitFlag = true;
 
   nsRefPtr<nsHTTPDownloadEvent> event = new nsHTTPDownloadEvent;
   if (!event)
@@ -392,7 +392,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
   nsresult rv = NS_DispatchToMainThread(event);
   if (NS_FAILED(rv))
   {
-    event->mResponsibleForDoneSignal = PR_FALSE;
+    event->mResponsibleForDoneSignal = false;
     return SECFailure;
   }
 
@@ -444,7 +444,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
 
         if (wantExit || timeout)
         {
-          request_canceled = PR_TRUE;
+          request_canceled = true;
 
           nsRefPtr<nsCancelHTTPDownloadEvent> cancelevent = new nsCancelHTTPDownloadEvent;
           cancelevent->mListener = mListener;
@@ -467,7 +467,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
         ||
         mListener->mResultCode == NS_ERROR_NET_RESET)
     {
-      retryable_error = PR_TRUE;
+      retryable_error = true;
     }
     return SECFailure;
   }
@@ -517,7 +517,7 @@ SECStatus nsNSSHttpRequestSession::freeFcn()
 
 nsNSSHttpRequestSession::nsNSSHttpRequestSession()
 : mRefCount(1),
-  mHasPostData(PR_FALSE),
+  mHasPostData(false),
   mTimeoutInterval(0),
   mListener(new nsHTTPListener)
 {
@@ -559,8 +559,8 @@ nsHTTPListener::nsHTTPListener()
   mResultLen(0),
   mLock("nsHTTPListener.mLock"),
   mCondition(mLock, "nsHTTPListener.mCondition"),
-  mWaitFlag(PR_TRUE),
-  mResponsibleForDoneSignal(PR_FALSE),
+  mWaitFlag(true),
+  mResponsibleForDoneSignal(false),
   mLoadGroup(nsnull),
   mLoadGroupOwnerThread(nsnull)
 {
@@ -588,7 +588,7 @@ nsHTTPListener::FreeLoadGroup(bool aCancelLoad)
 
   if (mLoadGroup) {
     if (mLoadGroupOwnerThread != PR_GetCurrentThread()) {
-      NS_ASSERTION(PR_FALSE,
+      NS_ASSERTION(false,
                    "attempt to access nsHTTPDownloadEvent::mLoadGroup on multiple threads, leaking it!");
     }
     else {
@@ -614,7 +614,7 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
 {
   mResultCode = aStatus;
 
-  FreeLoadGroup(PR_FALSE);
+  FreeLoadGroup(false);
 
   nsCOMPtr<nsIRequest> req;
   nsCOMPtr<nsIHttpChannel> hchan;
@@ -636,7 +636,7 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
   {
     rv = hchan->GetRequestSucceeded(&mHttpRequestSucceeded);
     if (NS_FAILED(rv))
-      mHttpRequestSucceeded = PR_FALSE;
+      mHttpRequestSucceeded = false;
 
     mResultLen = stringLen;
     mResultData = string; // reference. Make sure loader lives as long as this
@@ -660,11 +660,11 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
 
 void nsHTTPListener::send_done_signal()
 {
-  mResponsibleForDoneSignal = PR_FALSE;
+  mResponsibleForDoneSignal = false;
 
   {
     MutexAutoLock locker(mLock);
-    mWaitFlag = PR_FALSE;
+    mWaitFlag = false;
     mCondition.NotifyAll();
   }
 }
@@ -773,7 +773,7 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
     // Get the desired interface
     nsCOMPtr<nsIPrompt> prompt(do_GetInterface(proxiedCallbacks));
     if (!prompt) {
-      NS_ASSERTION(PR_FALSE, "callbacks does not implement nsIPrompt");
+      NS_ASSERTION(false, "callbacks does not implement nsIPrompt");
       return nsnull;
     }
   
@@ -927,7 +927,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       if (prevcert && nssc) {
         nsresult rv = nssc->Equals(prevcert, &equals_previous);
         if (NS_FAILED(rv)) {
-          equals_previous = PR_FALSE;
+          equals_previous = false;
         }
       }
 
@@ -952,7 +952,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       }
     }
 
-    status->mHaveKeyLengthAndCipher = PR_TRUE;
+    status->mHaveKeyLengthAndCipher = true;
     status->mKeyLength = keyLength;
     status->mSecretKeyLength = encryptBits;
     status->mCipherName.Assign(cipherName);
@@ -1049,7 +1049,7 @@ PSM_SSL_DigiNotarTreatAsRevoked(CERTCertificate * serverCert,
   // then worsen the error to revoked.
   
   PRTime cutoff = 0;
-  PRStatus status = PR_ParseTimeString("01-JUL-2011 00:00", PR_TRUE, &cutoff);
+  PRStatus status = PR_ParseTimeString("01-JUL-2011 00:00", true, &cutoff);
   if (status != PR_SUCCESS) {
     NS_ASSERTION(status == PR_SUCCESS, "PR_ParseTimeString failed");
     // be safe, assume it's afterwards, keep going
@@ -1088,7 +1088,7 @@ PSM_SSL_BlacklistDigiNotar(CERTCertificate * serverCert,
       continue;
 
     if (strstr(node->cert->issuerName, "CN=DigiNotar")) {
-      isDigiNotarIssuedCert = PR_TRUE;
+      isDigiNotarIssuedCert = true;
     }
   }
 
@@ -1222,7 +1222,7 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
           PK11SlotInfo *slot = PK11_GetInternalKeySlot();
           if (slot) {
             PK11_ImportCert(slot, node->cert, CK_INVALID_HANDLE, 
-                            nickname, PR_FALSE);
+                            nickname, false);
             PK11_FreeSlot(slot);
           }
         }
@@ -1384,7 +1384,7 @@ void cleanUpMyDefaultOCSPResponders() {
       myDefaultOCSPResponders[i].issuerName = nsnull;
     }
     if (myDefaultOCSPResponders[i].issuerKeyID) {
-      SECITEM_FreeItem(myDefaultOCSPResponders[i].issuerKeyID, PR_TRUE);
+      SECITEM_FreeItem(myDefaultOCSPResponders[i].issuerKeyID, true);
       myDefaultOCSPResponders[i].issuerKeyID = nsnull;
     }
   }

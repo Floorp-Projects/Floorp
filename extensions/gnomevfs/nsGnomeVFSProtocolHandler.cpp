@@ -355,7 +355,7 @@ class nsGnomeVFSInputStream : public nsIInputStream
       , mDirList(nsnull)
       , mDirListPtr(nsnull)
       , mDirBufCursor(0)
-      , mDirOpen(PR_FALSE) {}
+      , mDirOpen(false) {}
 
    ~nsGnomeVFSInputStream() { Close(); }
 
@@ -470,7 +470,7 @@ nsGnomeVFSInputStream::DoOpen()
     }
     else
     {
-      mDirOpen = PR_TRUE;
+      mDirOpen = true;
 
       // Sort mDirList
       mDirList = g_list_sort(mDirList, FileInfoComparator);
@@ -758,7 +758,7 @@ nsGnomeVFSInputStream::ReadSegments(nsWriteSegmentFun aWriter,
 NS_IMETHODIMP
 nsGnomeVFSInputStream::IsNonBlocking(bool *aResult)
 {
-  *aResult = PR_FALSE;
+  *aResult = false;
   return NS_OK;
 }
 
@@ -803,7 +803,7 @@ nsGnomeVFSProtocolHandler::Init()
   if (prefs)
   {
     InitSupportedProtocolsPref(prefs);
-    prefs->AddObserver(MOZ_GNOMEVFS_SUPPORTED_PROTOCOLS, this, PR_FALSE);
+    prefs->AddObserver(MOZ_GNOMEVFS_SUPPORTED_PROTOCOLS, this, false);
   }
 
   return NS_OK;
@@ -831,7 +831,7 @@ nsGnomeVFSProtocolHandler::IsSupportedProtocol(const nsCString &aSpec)
   const char *specString = aSpec.get();
   const char *colon = strchr(specString, ':');
   if (!colon)
-    return PR_FALSE;
+    return false;
 
   PRUint32 length = colon - specString + 1;
 
@@ -840,12 +840,12 @@ nsGnomeVFSProtocolHandler::IsSupportedProtocol(const nsCString &aSpec)
 
   char *found = PL_strcasestr(mSupportedProtocols.get(), scheme.get());
   if (!found)
-    return PR_FALSE;
+    return false;
 
   if (found[length] != ',' && found[length] != '\0')
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 NS_IMETHODIMP
@@ -958,7 +958,7 @@ nsGnomeVFSProtocolHandler::AllowPort(PRInt32 aPort,
                                      bool *aResult)
 {
   // Don't override anything.
-  *aResult = PR_FALSE; 
+  *aResult = false; 
   return NS_OK;
 }
 

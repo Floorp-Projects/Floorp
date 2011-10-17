@@ -86,6 +86,6 @@ struct AccessibleWrapper {
 
     return (bool)[object accessibilityIsIgnored];
 
-    NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
+    NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
   }
 };

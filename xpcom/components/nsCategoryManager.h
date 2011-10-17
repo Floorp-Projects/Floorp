@@ -57,7 +57,7 @@
  *
  * we need to keep a "persistent value" (which will be written to the registry)
  * and a non-persistent value (for the current runtime): these are usually
- * the same, except when aPersist==PR_FALSE. The strings are permanently arena-
+ * the same, except when aPersist==false. The strings are permanently arena-
  * allocated, and will never go away.
  */
 class CategoryLeaf : public nsDepCharHashKey

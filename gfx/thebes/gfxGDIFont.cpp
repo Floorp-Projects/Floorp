@@ -150,7 +150,7 @@ gfxGDIFont::InitTextRun(gfxContext *aContext,
     }
     if (!mIsValid) {
         NS_WARNING("invalid font! expect incorrect text rendering");
-        return PR_FALSE;
+        return false;
     }
 
     bool ok = false;
@@ -184,7 +184,7 @@ gfxGDIFont::InitTextRun(gfxContext *aContext,
                                                aRunStart, aRunLength, 
                                                aRunScript);
             if (ok) {
-                return PR_TRUE;
+                return true;
             }
 
             // fallback to GDI shaping
@@ -206,7 +206,7 @@ gfxGDIFont::InitTextRun(gfxContext *aContext,
                                               aRunScript);
 
             if (ok) {
-                return PR_TRUE;
+                return true;
             }
 
             // try Uniscribe if GDI failed
@@ -265,10 +265,10 @@ gfxGDIFont::SetupCairoFont(gfxContext *aContext)
         cairo_scaled_font_status(mScaledFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to
         // the cairo_t, precluding any further drawing.
-        return PR_FALSE;
+        return false;
     }
     cairo_set_scaled_font(aContext->GetCairo(), mScaledFont);
-    return PR_TRUE;
+    return true;
 }
 
 gfxFont::RunMetrics
@@ -377,7 +377,7 @@ gfxGDIFont::Initialize()
         BOOL result = GetTextMetrics(dc.GetDC(), &metrics);
         if (!result) {
             NS_WARNING("Missing or corrupt font data, fasten your seatbelt");
-            mIsValid = PR_FALSE;
+            mIsValid = false;
             memset(mMetrics, 0, sizeof(*mMetrics));
             return;
         }
@@ -462,7 +462,7 @@ gfxGDIFont::Initialize()
 #endif
     }
 
-    mIsValid = PR_TRUE;
+    mIsValid = true;
 
 #if 0
     printf("Font: %p (%s) size: %f\n", this,
@@ -489,7 +489,7 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize)
     // this avoids unwanted synthetic italics/bold
     if (fe->mIsUserFont) {
         if (fe->IsItalic())
-            italic = PR_FALSE; // avoid synthetic italic
+            italic = false; // avoid synthetic italic
         if (fe->IsBold() || !mNeedsBold) {
             // avoid GDI synthetic bold which occurs when weight
             // specified is >= font data weight + 200
@@ -498,7 +498,7 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize)
     }
 
     fe->FillLogFont(&aLogFont, italic, weight, aSize, 
-                    (mAntialiasOption == kAntialiasSubpixel) ? PR_TRUE : PR_FALSE);
+                    (mAntialiasOption == kAntialiasSubpixel) ? true : false);
 }
 
 PRInt32

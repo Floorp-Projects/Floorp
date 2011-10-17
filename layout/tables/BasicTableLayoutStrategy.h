@@ -87,7 +87,7 @@ private:
     //              colspan's min & pref width.  BTLS_FINAL_WIDTH is intended
     //              to be used for distributing the table's final width across
     //              all its columns)
-    //  aSpanHasSpecifiedWidth: Should be PR_TRUE iff:
+    //  aSpanHasSpecifiedWidth: Should be true iff:
     //                           - We're distributing a colspanning cell's
     //                             pref or min width to its columns
     //                           - The colspanning cell has a specified width.

@@ -75,7 +75,7 @@ gfxQPainterSurface::gfxQPainterSurface(cairo_surface_t *csurf)
 {
     mPainter = cairo_qt_surface_get_qpainter (csurf);
 
-    Init(csurf, PR_TRUE);
+    Init(csurf, true);
 }
 
 gfxQPainterSurface::~gfxQPainterSurface()
