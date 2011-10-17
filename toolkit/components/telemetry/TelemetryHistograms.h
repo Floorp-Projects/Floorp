@@ -235,3 +235,5 @@ HISTOGRAM(THUNDERBIRD_INDEXING_RATE_MSG_PER_S, 1, 100, 20, LINEAR, "Gloda: index
 #endif
 
 HISTOGRAM(INNERWINDOWS_WITH_MUTATION_LISTENERS, 0, 1, 2, BOOLEAN, "Deleted or to-be-reused innerwindow which has had mutation event listeners.")
+HISTOGRAM(XUL_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "xul reflows")
+HISTOGRAM(XUL_INITIAL_FRAME_CONSTRUCTION, 1, 3000, 10, EXPONENTIAL, "initial xul frame construction")
