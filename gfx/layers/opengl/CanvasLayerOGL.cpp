@@ -261,6 +261,8 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   }
 #endif
 
+  gl()->ApplyFilterToBoundTexture(mFilter);
+
   program->Activate();
   program->SetLayerQuadRect(drawRect);
   program->SetLayerTransform(GetEffectiveTransform());
