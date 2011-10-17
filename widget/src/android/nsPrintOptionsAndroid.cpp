@@ -63,7 +63,7 @@ NS_IMETHODIMP nsPrintOptionsAndroid::CreatePrintSettings(nsIPrintSettings **_ret
   nsPrintSettings * printSettings = new nsPrintSettingsAndroid();
   NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*_retval = printSettings);
-  (void)InitPrintSettingsFromPrefs(*_retval, PR_FALSE,
+  (void)InitPrintSettingsFromPrefs(*_retval, false,
                                    nsIPrintSettings::kInitSaveAll);
   return NS_OK;
 }

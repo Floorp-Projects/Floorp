@@ -191,7 +191,7 @@ inline void nsCounterNode::Calc(nsCounterList* aList)
 class nsCounterList : public nsGenConList {
 public:
     nsCounterList() : nsGenConList(),
-                      mDirty(PR_FALSE)
+                      mDirty(false)
     {}
 
     void Insert(nsCounterNode* aNode) {
@@ -226,7 +226,7 @@ public:
     void RecalcAll();
 
     bool IsDirty() { return mDirty; }
-    void SetDirty() { mDirty = PR_TRUE; }
+    void SetDirty() { mDirty = true; }
 
 private:
     bool mDirty;

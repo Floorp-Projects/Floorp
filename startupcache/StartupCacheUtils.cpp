@@ -143,15 +143,15 @@ canonicalizeBase(nsCAutoString &spec,
     nsresult rv = mozilla::Omnijar::GetURIString(aType, base);
 
     if (NS_FAILED(rv) || !base.Length())
-        return PR_FALSE;
+        return false;
 
-    if (base.Compare(spec.get(), PR_FALSE, base.Length()))
-        return PR_FALSE;
+    if (base.Compare(spec.get(), false, base.Length()))
+        return false;
 
     out.Append("/resource/");
     out.Append(baseName[aType]);
     out.Append(Substring(spec, base.Length()));
-    return PR_TRUE;
+    return true;
 }
 
 /**

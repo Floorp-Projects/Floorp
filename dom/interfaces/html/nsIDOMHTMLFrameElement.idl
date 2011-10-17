@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(6e141f6c-c22e-4b3c-9835-b234913dfd38)]
+[scriptable, uuid(1c913d18-db4d-444e-860d-e7cd4b0aeaf2)]
 interface nsIDOMHTMLFrameElement : nsIDOMHTMLElement
 {
            attribute DOMString        frameBorder;
@@ -63,4 +63,5 @@ interface nsIDOMHTMLFrameElement : nsIDOMHTMLElement
            attribute DOMString        src;
   // Introduced in DOM Level 2:
   readonly attribute nsIDOMDocument   contentDocument;
+  readonly attribute nsIDOMWindow     contentWindow;
 };

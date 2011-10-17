@@ -69,7 +69,7 @@
 // nsTArray<nsCString> array;
 // array.AppendCString("abc");
 // array.AppendCString("def");
-// NS_NewStringEnumerator(&enumerator, &array, PR_TRUE);
+// NS_NewStringEnumerator(&enumerator, &array, true);
 //
 // // call some internal method which iterates the enumerator
 // InternalMethod(enumerator);

@@ -227,7 +227,7 @@ TabChild::ShowAsModal()
 NS_IMETHODIMP
 TabChild::IsWindowModal(bool* aRetVal)
 {
-  *aRetVal = PR_FALSE;
+  *aRetVal = false;
   return NS_OK;
 }
 
@@ -288,7 +288,7 @@ TabChild::SetFocus()
 NS_IMETHODIMP
 TabChild::GetVisibility(bool* aVisibility)
 {
-  *aVisibility = PR_TRUE;
+  *aVisibility = true;
   return NS_OK;
 }
 
@@ -333,14 +333,14 @@ TabChild::Blur()
 NS_IMETHODIMP
 TabChild::FocusNextElement()
 {
-  SendMoveFocus(PR_TRUE);
+  SendMoveFocus(true);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TabChild::FocusPrevElement()
 {
-  SendMoveFocus(PR_FALSE);
+  SendMoveFocus(false);
   return NS_OK;
 }
 
@@ -367,7 +367,7 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    *aWindowIsNew = PR_TRUE;
+    *aWindowIsNew = true;
     nsCOMPtr<nsIDOMWindow> win =
         do_GetInterface(static_cast<TabChild*>(newChild)->mWebNav);
     win.forget(aReturn);
@@ -491,7 +491,7 @@ TabChild::~TabChild()
     }
     
     if (mTabChildGlobal) {
-      nsEventListenerManager* elm = mTabChildGlobal->GetListenerManager(PR_FALSE);
+      nsEventListenerManager* elm = mTabChildGlobal->GetListenerManager(false);
       if (elm) {
         elm->Disconnect();
       }
@@ -536,14 +536,14 @@ TabChild::RecvShow(const nsIntSize& size)
     baseWindow->InitWindow(0, mWidget,
                            0, 0, size.width, size.height);
     baseWindow->Create();
-    baseWindow->SetVisibility(PR_TRUE);
+    baseWindow->SetVisibility(true);
 
     // IPC uses a WebBrowser object for which DNS prefetching is turned off
     // by default. But here we really want it, so enable it explicitly
     nsCOMPtr<nsIWebBrowserSetup> webBrowserSetup = do_QueryInterface(baseWindow);
     if (webBrowserSetup) {
       webBrowserSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_DNS_PREFETCH,
-                                   PR_TRUE);
+                                   true);
     } else {
         NS_WARNING("baseWindow doesn't QI to nsIWebBrowserSetup, skipping "
                    "DNS prefetching enable step.");
@@ -569,11 +569,11 @@ TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size)
     mOuterRect.height = rect.height;
 
     mWidget->Resize(0, 0, size.width, size.height,
-                    PR_TRUE);
+                    true);
 
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mWebNav);
     baseWin->SetPositionAndSize(0, 0, size.width, size.height,
-                                PR_TRUE);
+                                true);
 
     return true;
 }
@@ -823,7 +823,7 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
     mm->ReceiveMessage(static_cast<nsIDOMEventTarget*>(mTabChildGlobal),
-                       aMessage, PR_FALSE, aJSON, nsnull, nsnull);
+                       aMessage, false, aJSON, nsnull, nsnull);
   }
   return true;
 }
@@ -840,9 +840,9 @@ public:
     nsCOMPtr<nsIDOMEvent> event;
     NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
     if (event) {
-      event->InitEvent(NS_LITERAL_STRING("unload"), PR_FALSE, PR_FALSE);
+      event->InitEvent(NS_LITERAL_STRING("unload"), false, false);
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-      privateEvent->SetTrusted(PR_TRUE);
+      privateEvent->SetTrusted(true);
 
       bool dummy;
       mTabChildGlobal->DispatchEvent(event, &dummy);
@@ -1023,7 +1023,7 @@ SendAsyncMessageToParent(void* aCallbackData,
 TabChildGlobal::TabChildGlobal(TabChild* aTabChild)
 : mTabChild(aTabChild)
 {
-  mMessageManager = new nsFrameMessageManager(PR_FALSE,
+  mMessageManager = new nsFrameMessageManager(false,
                                               SendSyncMessageToParent,
                                               SendAsyncMessageToParent,
                                               nsnull,

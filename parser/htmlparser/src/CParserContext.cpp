@@ -61,7 +61,7 @@ CParserContext::CParserContext(CParserContext* aPrevContext,
     mContextType(eCTNone),
     mAutoDetectStatus(aStatus),
     mParserCommand(aCommand),
-    mMultipart(PR_TRUE),
+    mMultipart(true),
     mCopyUnused(aCopyUnused),
     mNumConsumed(0)
 { 

@@ -101,7 +101,7 @@ public:
   // Callers must call imgRequestProxy::Notify later.
   nsresult AddProxy(imgRequestProxy *proxy);
 
-  // aNotify==PR_FALSE still sends OnStopRequest.
+  // aNotify==false still sends OnStopRequest.
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool aNotify);
 
   void SniffMimeType(const char *buf, PRUint32 len);

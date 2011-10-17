@@ -474,7 +474,7 @@ public:
 
   /**
    * Determine if it is safe to flush all pending notifications
-   * @param aIsSafeToFlush PR_TRUE if it is safe, PR_FALSE otherwise.
+   * @param aIsSafeToFlush true if it is safe, false otherwise.
    * 
    */
   virtual NS_HIDDEN_(bool) IsSafeToFlush() const = 0;
@@ -664,8 +664,8 @@ public:
    * by the frames.  Visual effects may not effect layout, only display.
    * Takes effect on next repaint, does not force a repaint itself.
    *
-   * @param aInEnable  if PR_TRUE, visual selection effects are enabled
-   *                   if PR_FALSE visual selection effects are disabled
+   * @param aInEnable  if true, visual selection effects are enabled
+   *                   if false visual selection effects are disabled
    */
   NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable) = 0;
 
@@ -721,7 +721,7 @@ public:
 
   /**
    * Determine if reflow is currently locked
-   * returns PR_TRUE if reflow is locked, PR_FALSE otherwise
+   * returns true if reflow is locked, false otherwise
    */
   bool IsReflowLocked() const { return mIsReflowing; }
 
@@ -743,7 +743,7 @@ public:
   void DisableThemeSupport()
   {
     // Doesn't have to be dynamic.  Just set the bool.
-    mIsThemeSupportDisabled = PR_TRUE;
+    mIsThemeSupportDisabled = true;
   }
 
   /**
@@ -788,7 +788,7 @@ public:
    * See if reflow verification is enabled. To enable reflow verification add
    * "verifyreflow:1" to your NSPR_LOG_MODULES environment variable
    * (any non-zero debug level will work). Or, call SetVerifyReflowEnable
-   * with PR_TRUE.
+   * with true.
    */
   static bool GetVerifyReflowEnable();
 

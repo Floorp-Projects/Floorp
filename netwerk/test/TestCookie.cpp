@@ -105,7 +105,7 @@ SetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, const char
     return rv;
 }
 
-// returns PR_TRUE if cookie(s) for the given host were found; else PR_FALSE.
+// returns true if cookie(s) for the given host were found; else false.
 // the cookie string is returned via aCookie.
 bool
 GetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSpec2, char **aCookie)
@@ -128,7 +128,7 @@ GetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSp
     return *aCookie != nsnull;
 }
 
-// returns PR_TRUE if cookie(s) for the given host were found; else PR_FALSE.
+// returns true if cookie(s) for the given host were found; else false.
 // the cookie string is returned via aCookie.
 bool
 GetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, char **aCookie)
@@ -158,7 +158,7 @@ GetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, char **aCo
 
 // a simple helper function to improve readability:
 // takes one of the #defined rules above, and performs the appropriate test.
-// PR_TRUE means the test passed; PR_FALSE means the test failed.
+// true means the test passed; false means the test failed.
 static inline bool
 CheckResult(const char *aLhs, PRUint32 aRule, const char *aRhs = nsnull)
 {
@@ -179,12 +179,12 @@ CheckResult(const char *aLhs, PRUint32 aRule, const char *aRhs = nsnull)
             return PL_strstr(aLhs, aRhs) == nsnull;
 
         default:
-            return PR_FALSE; // failure
+            return false; // failure
     }
 }
 
 // helper function that ensures the first aSize elements of aResult are
-// PR_TRUE (i.e. all tests succeeded). prints the result of the tests (if any
+// true (i.e. all tests succeeded). prints the result of the tests (if any
 // tests failed, it prints the zero-based index of each failed test).
 bool
 PrintResult(const bool aResult[], PRUint32 aSize)
@@ -193,7 +193,7 @@ PrintResult(const bool aResult[], PRUint32 aSize)
     sBuffer = PR_sprintf_append(sBuffer, "*** tests ");
     for (PRUint32 i = 0; i < aSize; ++i) {
         if (!aResult[i]) {
-            failed = PR_TRUE;
+            failed = true;
             sBuffer = PR_sprintf_append(sBuffer, "%d ", i);
         }
     }
@@ -212,10 +212,10 @@ InitPrefs(nsIPrefBranch *aPrefBranch)
     // we use the most restrictive set of prefs we can;
     // however, we don't test third party blocking here.
     aPrefBranch->SetIntPref(kCookiesPermissions, 0); // accept all
-    aPrefBranch->SetBoolPref(kCookiesLifetimeEnabled, PR_TRUE);
+    aPrefBranch->SetBoolPref(kCookiesLifetimeEnabled, true);
     aPrefBranch->SetIntPref(kCookiesLifetimeCurrentSession, 0);
     aPrefBranch->SetIntPref(kCookiesLifetimeDays, 1);
-    aPrefBranch->SetBoolPref(kCookiesAskPermission, PR_FALSE);
+    aPrefBranch->SetBoolPref(kCookiesAskPermission, false);
     // Set the base domain limit to 50 so we have a known value.
     aPrefBranch->SetIntPref(kCookiesMaxPerHost, 50);
 }
@@ -674,25 +674,25 @@ main(PRInt32 argc, char *argv[])
                                            NS_LITERAL_CSTRING("/foo"),           // path
                                            NS_LITERAL_CSTRING("test1"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
-                                           PR_FALSE,                             // is secure
-                                           PR_FALSE,                             // is httponly
-                                           PR_TRUE,                              // is session
+                                           false,                             // is secure
+                                           false,                             // is httponly
+                                           true,                              // is session
                                            LL_MAXINT));                          // expiry time
       rv[2] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
                                            NS_LITERAL_CSTRING("/foo"),           // path
                                            NS_LITERAL_CSTRING("test2"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
-                                           PR_FALSE,                             // is secure
-                                           PR_TRUE,                              // is httponly
-                                           PR_TRUE,                              // is session
+                                           false,                             // is secure
+                                           true,                              // is httponly
+                                           true,                              // is session
                                            PR_Now() / PR_USEC_PER_SEC + 2));     // expiry time
       rv[3] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
                                            NS_LITERAL_CSTRING("/rabbit"),        // path
                                            NS_LITERAL_CSTRING("test3"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
-                                           PR_FALSE,                             // is secure
-                                           PR_FALSE,                             // is httponly
-                                           PR_TRUE,                              // is session
+                                           false,                             // is secure
+                                           false,                             // is httponly
+                                           true,                              // is session
                                            LL_MAXINT));                          // expiry time
       // confirm using enumerator
       nsCOMPtr<nsISimpleEnumerator> enumerator;
@@ -732,15 +732,15 @@ main(PRInt32 argc, char *argv[])
       rv[10] = NS_SUCCEEDED(cookieMgr->Remove(NS_LITERAL_CSTRING("new.domain"), // domain
                                               NS_LITERAL_CSTRING("test3"),      // name
                                               NS_LITERAL_CSTRING("/rabbit"),    // path
-                                              PR_TRUE));                        // is blocked
+                                              true));                        // is blocked
       rv[11] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
       rv[12] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
                                             NS_LITERAL_CSTRING("/rabbit"),        // path
                                             NS_LITERAL_CSTRING("test3"),          // name
                                             NS_LITERAL_CSTRING("yes"),            // value
-                                            PR_FALSE,                             // is secure
-                                            PR_FALSE,                             // is httponly
-                                            PR_TRUE,                              // is session
+                                            false,                             // is secure
+                                            false,                             // is httponly
+                                            true,                              // is session
                                             LL_MININT));                          // expiry time
       rv[13] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
       // sleep four seconds, to make sure the second cookie has expired

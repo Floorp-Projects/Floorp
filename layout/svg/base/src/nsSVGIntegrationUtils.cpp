@@ -56,7 +56,7 @@ bool
 nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
 {
   if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    return PR_FALSE;
+    return false;
   }
   const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
   return (style->mFilter || style->mClipPath || style->mMask);
@@ -296,7 +296,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
-    complexEffects = PR_TRUE;
+    complexEffects = true;
     gfx->Save();
     aCtx->IntersectClip(aEffectsFrame->GetVisualOverflowRect());
     gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
@@ -439,7 +439,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
                                const gfxMatrix& aTransform)
 {
   if (mFrame->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER)
-    return PR_FALSE;
+    return false;
 
   mFrame->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
 
@@ -485,7 +485,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
 
   mFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
 
-  return PR_TRUE;
+  return true;
 }
 
 static already_AddRefed<gfxDrawable>

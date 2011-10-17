@@ -104,7 +104,7 @@ public:
   nsTextFragment& operator=(const nsTextFragment& aOther);
 
   /**
-   * Return PR_TRUE if this fragment is represented by PRUnichar data
+   * Return true if this fragment is represented by PRUnichar data
    */
   bool Is2b() const
   {
@@ -112,7 +112,7 @@ public:
   }
 
   /**
-   * Return PR_TRUE if this fragment contains Bidi text
+   * Return true if this fragment contains Bidi text
    * For performance reasons this flag is only set if explicitely requested (by
    * setting the aUpdateBidi argument on SetTo or Append to true).
    */

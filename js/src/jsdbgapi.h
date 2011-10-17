@@ -264,10 +264,6 @@ JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(JSBool)
 JS_IsScriptFrame(JSContext *cx, JSStackFrame *fp);
 
-/* this is deprecated, use JS_GetFrameScopeChain instead */
-extern JS_PUBLIC_API(JSObject *)
-JS_GetFrameObject(JSContext *cx, JSStackFrame *fp);
-
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp);
 

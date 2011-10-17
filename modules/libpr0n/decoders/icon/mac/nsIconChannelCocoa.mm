@@ -179,7 +179,7 @@ NS_IMETHODIMP nsIconChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsIconChannel::Open(nsIInputStream **_retval)
 {
-  return MakeInputStream(_retval, PR_FALSE);
+  return MakeInputStream(_retval, false);
 }
 
 nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension)
@@ -215,11 +215,11 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 *
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
   nsCOMPtr<nsIInputStream> inStream;
-  nsresult rv = MakeInputStream(getter_AddRefs(inStream), PR_TRUE);
+  nsresult rv = MakeInputStream(getter_AddRefs(inStream), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Init our stream pump
-  rv = mPump->Init(inStream, PRInt64(-1), PRInt64(-1), 0, 0, PR_FALSE);
+  rv = mPump->Init(inStream, PRInt64(-1), PRInt64(-1), 0, 0, false);
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = mPump->AsyncRead(this, ctxt);
@@ -248,7 +248,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
   // ensure that we DO NOT resolve aliases, very important for file views
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(fileloc);
   if (localFile)
-    localFile->SetFollowLinks(PR_FALSE);
+    localFile->SetFollowLinks(false);
 
   bool fileExists = false;
   if (fileloc)

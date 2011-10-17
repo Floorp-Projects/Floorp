@@ -105,7 +105,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
      */
     nsExpirationTracker(PRUint32 aTimerPeriod)
       : mTimerPeriod(aTimerPeriod), mNewestGeneration(0),
-        mInAgeOneGeneration(PR_FALSE) {
+        mInAgeOneGeneration(false) {
       PR_STATIC_ASSERT(K >= 2 && K <= nsExpirationState::NOT_TRACKED);
     }
     ~nsExpirationTracker() {
@@ -187,7 +187,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
         return;
       }
       
-      mInAgeOneGeneration = PR_TRUE;
+      mInAgeOneGeneration = true;
       PRUint32 reapGeneration = 
         mNewestGeneration > 0 ? mNewestGeneration - 1 : K - 1;
       nsTArray<T*>& generation = mGenerations[reapGeneration];
@@ -218,7 +218,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
       // just removed most or all of its elements.
       generation.Compact();
       mNewestGeneration = reapGeneration;
-      mInAgeOneGeneration = PR_FALSE;
+      mInAgeOneGeneration = false;
     }
 
     /**
@@ -262,9 +262,9 @@ template <class T, PRUint32 K> class nsExpirationTracker {
     bool IsEmpty() {
       for (PRUint32 i = 0; i < K; ++i) {
         if (!mGenerations[i].IsEmpty())
-          return PR_FALSE;
+          return false;
       }
-      return PR_TRUE;
+      return true;
     }
 
   protected:

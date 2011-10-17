@@ -150,8 +150,8 @@ public:
    * This method is typically called by an nsSMILTimeValueSpec.
    *
    * @param aInstanceTime   The time to add, expressed in container time.
-   * @param aIsBegin        PR_TRUE if the time to be added represents a begin
-   *                        time or PR_FALSE if it represents an end time.
+   * @param aIsBegin        true if the time to be added represents a begin
+   *                        time or false if it represents an end time.
    */
   void AddInstanceTime(nsSMILInstanceTime* aInstanceTime, bool aIsBegin);
 
@@ -164,8 +164,8 @@ public:
    * @param aUpdatedTime    The time to update aInstanceTime with.
    * @param aDependentTime  The instance time upon which aInstanceTime should be
    *                        based.
-   * @param aIsBegin        PR_TRUE if the time to be updated represents a begin
-   *                        instance time or PR_FALSE if it represents an end
+   * @param aIsBegin        true if the time to be updated represents a begin
+   *                        instance time or false if it represents an end
    *                        instance time.
    */
   void UpdateInstanceTime(nsSMILInstanceTime* aInstanceTime,
@@ -178,8 +178,8 @@ public:
    * This method is typically called by a child nsSMILTimeValueSpec.
    *
    * @param aInstanceTime   The instance time to remove.
-   * @param aIsBegin        PR_TRUE if the time to be removed represents a begin
-   *                        time or PR_FALSE if it represents an end time.
+   * @param aIsBegin        true if the time to be removed represents a begin
+   *                        time or false if it represents an end time.
    */
   void RemoveInstanceTime(nsSMILInstanceTime* aInstanceTime, bool aIsBegin);
 
@@ -190,8 +190,8 @@ public:
    *
    * @param aSpec    The nsSMILTimeValueSpec object whose created
    *                 nsSMILInstanceTime's should be removed.
-   * @param aIsBegin PR_TRUE if the times to be removed represent begin
-   *                 times or PR_FALSE if they are end times.
+   * @param aIsBegin true if the times to be removed represent begin
+   *                 times or false if they are end times.
    */
   void RemoveInstanceTimesForCreator(const nsSMILTimeValueSpec* aSpec,
                                      bool aIsBegin);
@@ -267,7 +267,7 @@ public:
    * @param[out] aParseResult The result of parsing the attribute. Will be set
    *                          to NS_OK if parsing is successful.
    *
-   * @return PR_TRUE if the given attribute is a timing attribute, PR_FALSE
+   * @return true if the given attribute is a timing attribute, false
    * otherwise.
    */
   bool SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
@@ -281,7 +281,7 @@ public:
    *                    namespace of the attribute is not specified (see
    *                    SetAttr).
    *
-   * @return PR_TRUE if the given attribute is a timing attribute, PR_FALSE
+   * @return true if the given attribute is a timing attribute, false
    * otherwise.
    */
   bool UnsetAttr(nsIAtom* aAttribute);
@@ -313,8 +313,8 @@ public:
    * cases the element is not considered a time dependent of any other element.
    *
    * @param aOther    The potential syncbase element.
-   * @return PR_TRUE if this timed element's begin time for the currently
-   * effective interval is directly or indirectly derived from aOther, PR_FALSE
+   * @return true if this timed element's begin time for the currently
+   * effective interval is directly or indirectly derived from aOther, false
    * otherwise.
    */
   bool IsTimeDependent(const nsSMILTimedElement& aOther) const;
@@ -423,8 +423,8 @@ protected:
    *                    applied at the last possible moment (i.e. if they are at
    *                    or before the current sample time) and only if the
    *                    current interval is not already ending.
-   * @return PR_TRUE if the end time of the current interval was updated,
-   *         PR_FALSE otherwise.
+   * @return true if the end time of the current interval was updated,
+   *         false otherwise.
    */
   bool ApplyEarlyEnd(const nsSMILTimeValue& aSampleTime);
 
@@ -480,9 +480,9 @@ protected:
    *                        should be updated such as when the animation is in
    *                        the ACTIVE state. May be nsnull.
    * @param[out] aResult    The next interval. Will be unchanged if no suitable
-   *                        interval was found (in which case PR_FALSE will be
+   *                        interval was found (in which case false will be
    *                        returned).
-   * @return  PR_TRUE if a suitable interval was found, PR_FALSE otherwise.
+   * @return  true if a suitable interval was found, false otherwise.
    */
   bool              GetNextInterval(const nsSMILInterval* aPrevInterval,
                                     const nsSMILInterval* aReplacedInterval,

@@ -58,7 +58,7 @@ nsDecodeAppleFile::nsDecodeAppleFile()
   m_rfRefNum = -1;
   m_totalDataForkWritten = 0;
   m_totalResourceForkWritten = 0;
-  m_headerOk = PR_FALSE;
+  m_headerOk = false;
   
   m_comment[0] = 0;
   memset(&m_dates, 0, sizeof(m_dates));
@@ -267,7 +267,7 @@ NS_IMETHODIMP nsDecodeAppleFile::Write(const char *buffer, PRUint32 bufferSize, 
                 m_dataForkOffset = offset;
             }
           }
-          m_headerOk = PR_TRUE;          
+          m_headerOk = true;          
           m_state = parseLookupPart;
         }
         break;

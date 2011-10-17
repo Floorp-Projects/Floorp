@@ -214,7 +214,7 @@ nsXFormsAccessible::Description(nsString& aDescription)
 bool
 nsXFormsAccessible::GetAllowsAnonChildAccessibles()
 {
-  return PR_FALSE;
+  return false;
 }
 
 
@@ -237,7 +237,7 @@ nsXFormsContainerAccessible::NativeRole()
 bool
 nsXFormsContainerAccessible::GetAllowsAnonChildAccessibles()
 {
-  return PR_TRUE;
+  return true;
 }
 
 
@@ -331,7 +331,7 @@ nsXFormsSelectableAccessible::SelectedItems()
     nsIAccessible* item = GetAccService()->GetAccessibleInWeakShell(itemNode,
                                                                     mWeakShell);
     if (item)
-      selectedItems->AppendElement(item, PR_FALSE);
+      selectedItems->AppendElement(item, false);
 
     nsIMutableArray* items = nsnull;
     selectedItems.forget(&items);
@@ -356,7 +356,7 @@ nsXFormsSelectableAccessible::SelectedItems()
     nsIAccessible* item = GetAccService()->GetAccessibleInWeakShell(itemNode,
                                                                     mWeakShell);
     if (item)
-      selectedItems->AppendElement(item, PR_FALSE);
+      selectedItems->AppendElement(item, false);
   }
 
   nsIMutableArray* items = nsnull;
@@ -571,7 +571,7 @@ nsXFormsSelectableItemAccessible::IsSelected()
   while ((parent = parent->GetNodeParent())) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(parent));
     if (!content)
-      return PR_FALSE;
+      return false;
 
     nsCOMPtr<nsINodeInfo> nodeinfo = content->NodeInfo();
     if (!nodeinfo->NamespaceEquals(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS)))
@@ -596,6 +596,6 @@ nsXFormsSelectableItemAccessible::IsSelected()
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 

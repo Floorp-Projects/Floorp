@@ -85,7 +85,7 @@ public:
    * @param aDest       The value to add to.
    * @param aValueToAdd The value to add.
    * @param aCount      The number of times to add aValueToAdd.
-   * @return PR_TRUE on success, PR_FALSE on failure.
+   * @return true on success, false on failure.
    */
   static bool Add(nsCSSProperty aProperty, Value& aDest,
                     const Value& aValueToAdd, PRUint32 aCount) {
@@ -108,7 +108,7 @@ public:
    * @param aEndValue   The end of the interval for which the distance
    *                    should be calculated.
    * @param aDistance   The result of the calculation.
-   * @return PR_TRUE on success, PR_FALSE on failure.
+   * @return true on success, false on failure.
    */
   static bool ComputeDistance(nsCSSProperty aProperty,
                                 const Value& aStartValue,
@@ -129,7 +129,7 @@ public:
    * @param aPortion    A number in the range [0.0, 1.0] defining the
    *                    distance of the interpolated value in the interval.
    * @param [out] aResultValue The resulting interpolated value.
-   * @return PR_TRUE on success, PR_FALSE on failure.
+   * @return true on success, false on failure.
    */
   static bool Interpolate(nsCSSProperty aProperty,
                             const Value& aStartValue,
@@ -146,7 +146,7 @@ public:
    *
    * @param [out] aResultValue The resulting interpolated value.  May be
    *                           the same as aValue1 or aValue2.
-   * @return PR_TRUE on success, PR_FALSE on failure.
+   * @return true on success, false on failure.
    *
    * NOTE: Current callers always pass aCoeff1 and aCoeff2 >= 0.  They
    * are currently permitted to be negative; however, if, as we add
@@ -176,14 +176,14 @@ public:
    *                        |aSpecifiedValue| in SVG mode.
    * @param [out] aComputedValue The resulting computed value.
    * @param [out] aIsContextSensitive
-   *                        Set to PR_TRUE if |aSpecifiedValue| may produce
+   *                        Set to true if |aSpecifiedValue| may produce
    *                        a different |aComputedValue| depending on other CSS
    *                        properties on |aTargetElement| or its ancestors.
-   *                        PR_FALSE otherwise.
+   *                        false otherwise.
    *                        Note that the operation of this method is
    *                        significantly faster when |aIsContextSensitive| is
    *                        nsnull.
-   * @return PR_TRUE on success, PR_FALSE on failure.
+   * @return true on success, false on failure.
    */
   static bool ComputeValue(nsCSSProperty aProperty,
                              mozilla::dom::Element* aTargetElement,
@@ -205,7 +205,7 @@ public:
    *                       which we're working.
    * @param aComputedValue The computed value to be converted.
    * @param [out] aSpecifiedValue The resulting specified value.
-   * @return PR_TRUE on success, PR_FALSE on failure.
+   * @return true on success, false on failure.
    */
   static bool UncomputeValue(nsCSSProperty aProperty,
                                nsPresContext* aPresContext,
@@ -223,7 +223,7 @@ public:
    * @param aProperty     The property whose value we're looking up.
    * @param aStyleContext The style context to check for the computed value.
    * @param [out] aComputedValue The resulting computed value.
-   * @return PR_TRUE on success, PR_FALSE on failure.
+   * @return true on success, false on failure.
    */
   static bool ExtractComputedValue(nsCSSProperty aProperty,
                                      nsStyleContext* aStyleContext,

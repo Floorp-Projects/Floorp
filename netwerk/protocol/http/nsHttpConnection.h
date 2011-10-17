@@ -108,8 +108,8 @@ public:
     // Returns time in seconds for how long connection can be reused.
     PRUint32 TimeToLive();
 
-    void     DontReuse()   { mKeepAliveMask = PR_FALSE;
-                             mKeepAlive = PR_FALSE;
+    void     DontReuse()   { mKeepAliveMask = false;
+                             mKeepAlive = false;
                              mIdleTimeout = 0; }
     void     DropTransport() { DontReuse(); mSocketTransport = 0; }
 

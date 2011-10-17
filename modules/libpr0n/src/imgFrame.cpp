@@ -73,33 +73,33 @@ static bool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight)
   const PRInt32 k64KLimit = 0x0000FFFF;
   if (NS_UNLIKELY(aWidth > k64KLimit || aHeight > k64KLimit )) {
     NS_WARNING("image too big");
-    return PR_FALSE;
+    return false;
   }
 
   // protect against invalid sizes
   if (NS_UNLIKELY(aHeight <= 0 || aWidth <= 0)) {
-    return PR_FALSE;
+    return false;
   }
 
   // check to make sure we don't overflow a 32-bit
   PRInt32 tmp = aWidth * aHeight;
   if (NS_UNLIKELY(tmp / aHeight != aWidth)) {
     NS_WARNING("width or height too large");
-    return PR_FALSE;
+    return false;
   }
   tmp = tmp * 4;
   if (NS_UNLIKELY(tmp / 4 != aWidth * aHeight)) {
     NS_WARNING("width or height too large");
-    return PR_FALSE;
+    return false;
   }
 #if defined(XP_MACOSX)
   // CoreGraphics is limited to images < 32K in *height*, so clamp all surfaces on the Mac to that height
   if (NS_UNLIKELY(aHeight > SHRT_MAX)) {
     NS_WARNING("image too big");
-    return PR_FALSE;
+    return false;
   }
 #endif
-  return PR_TRUE;
+  return true;
 }
 
 // Returns whether we should, at this time, use image surfaces instead of
@@ -111,7 +111,7 @@ static bool ShouldUseImageSurfaces()
 
   if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
       gfxWindowsPlatform::RENDER_DIRECT2D) {
-    return PR_TRUE;
+    return true;
   }
 
   // at 7000 GDI objects, stop allocating normal images to make sure
@@ -124,11 +124,11 @@ static bool ShouldUseImageSurfaces()
     // either something's broken (count == 0),
     // or we hit our high water mark; disable
     // image allocations for a bit.
-    return PR_TRUE;
+    return true;
   }
 #endif
 
-  return PR_FALSE;
+  return false;
 }
 
 imgFrame::imgFrame() :
@@ -138,21 +138,21 @@ imgFrame::imgFrame() :
   mTimeout(100),
   mDisposalMethod(0), /* imgIContainer::kDisposeNotSpecified */
   mBlendMethod(1), /* imgIContainer::kBlendOver */
-  mSinglePixel(PR_FALSE),
-  mNeverUseDeviceSurface(PR_FALSE),
-  mFormatChanged(PR_FALSE),
-  mCompositingFailed(PR_FALSE)
+  mSinglePixel(false),
+  mNeverUseDeviceSurface(false),
+  mFormatChanged(false),
+  mCompositingFailed(false)
 #ifdef USE_WIN_SURFACE
-  , mIsDDBSurface(PR_FALSE)
+  , mIsDDBSurface(false)
 #endif
-  , mLocked(PR_FALSE)
+  , mLocked(false)
 {
   static bool hasCheckedOptimize = false;
   if (!hasCheckedOptimize) {
     if (PR_GetEnv("MOZ_DISABLE_IMAGE_OPTIMIZE")) {
-      gDisableOptimize = PR_TRUE;
+      gDisableOptimize = true;
     }
-    hasCheckedOptimize = PR_TRUE;
+    hasCheckedOptimize = true;
   }
 }
 
@@ -259,7 +259,7 @@ nsresult imgFrame::Optimize()
             gfxRGBA::PACKED_XRGB :
             gfxRGBA::PACKED_ARGB_PREMULTIPLIED));
 
-        mSinglePixel = PR_TRUE;
+        mSinglePixel = true;
 
         // blow away the older surfaces (if they exist), to release their memory
         mImageSurface = nsnull;
@@ -314,7 +314,7 @@ nsresult imgFrame::Optimize()
       if (wsurf) {
         gTotalDDBs++;
         gTotalDDBSize += ddbSize;
-        mIsDDBSurface = PR_TRUE;
+        mIsDDBSurface = true;
         mOptSurface = wsurf;
       }
     }
@@ -487,7 +487,7 @@ nsresult imgFrame::Extract(const nsIntRect& aRegion, imgFrame** aResult)
   // disable the use of anything other than a client-side image
   // surface for the sub-image; this ensures that the correct
   // (albeit slower) Cairo fallback scaler will be used.
-  subImage->mNeverUseDeviceSurface = PR_TRUE;
+  subImage->mNeverUseDeviceSurface = true;
 
   nsresult rv = subImage->Init(0, 0, aRegion.width, aRegion.height, 
                                mFormat, mPaletteDepth);
@@ -634,7 +634,7 @@ nsresult imgFrame::LockImageData()
   if (mLocked) {
     return NS_ERROR_FAILURE;
   }
-  mLocked = PR_TRUE;
+  mLocked = true;
 
   if ((mOptSurface || mSinglePixel) && !mImageSurface) {
     // Recover the pixels
@@ -683,7 +683,7 @@ nsresult imgFrame::UnlockImageData()
     return NS_ERROR_FAILURE;
   }
 
-  mLocked = PR_FALSE;
+  mLocked = false;
 
   // Assume we've been written to.
   if (mImageSurface)
@@ -764,7 +764,7 @@ void imgFrame::SetHasNoAlpha()
 {
   if (mFormat == gfxASurface::ImageFormatARGB32) {
       mFormat = gfxASurface::ImageFormatRGB24;
-      mFormatChanged = PR_TRUE;
+      mFormatChanged = true;
   }
 }
 

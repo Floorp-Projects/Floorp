@@ -57,7 +57,7 @@ bool nsSampleWordBreaker::BreakInBetween(
   NS_PRECONDITION( nsnull != aText2, "null ptr");
 
   if(!aText1 || !aText2 || (0 == aTextLen1) || (0 == aTextLen2))
-    return PR_FALSE;
+    return false;
 
   return (this->GetClass(aText1[aTextLen1-1]) != this->GetClass(aText2[0]));
 }

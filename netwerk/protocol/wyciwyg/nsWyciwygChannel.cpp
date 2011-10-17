@@ -116,9 +116,9 @@ private:
 // nsWyciwygChannel methods 
 nsWyciwygChannel::nsWyciwygChannel()
   : mStatus(NS_OK),
-    mIsPending(PR_FALSE),
-    mCharsetAndSourceSet(PR_FALSE),
-    mNeedToWriteCharset(PR_FALSE),
+    mIsPending(false),
+    mCharsetAndSourceSet(false),
+    mNeedToWriteCharset(false),
     mCharsetSource(kCharsetUninitialized),
     mContentLength(-1),
     mLoadFlags(LOAD_NORMAL)
@@ -407,7 +407,7 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
     return rv;
   }
 
-  mIsPending = PR_TRUE;
+  mIsPending = true;
   mListener = listener;
   mListenerContext = ctx;
 
@@ -452,7 +452,7 @@ nsWyciwygChannel::WriteToCacheEntryInternal(const nsAString &aData, const nsACSt
 
   if (mNeedToWriteCharset) {
     WriteCharsetAndSourceToCache(mCharsetSource, mCharset);
-    mNeedToWriteCharset = PR_FALSE;
+    mNeedToWriteCharset = false;
   }
   
   PRUint32 out;
@@ -512,7 +512,7 @@ nsWyciwygChannel::SetCharsetAndSource(PRInt32 aSource,
 {
   NS_ENSURE_ARG(!aCharset.IsEmpty());
 
-  mCharsetAndSourceSet = PR_TRUE;
+  mCharsetAndSourceSet = true;
   mCharset = aCharset;
   mCharsetSource = aSource;
 
@@ -528,7 +528,7 @@ nsWyciwygChannel::SetCharsetAndSourceInternal()
   if (mCacheEntry) {
     WriteCharsetAndSourceToCache(mCharsetSource, mCharset);
   } else {
-    mNeedToWriteCharset = PR_TRUE;
+    mNeedToWriteCharset = true;
   }
 }
 
@@ -663,7 +663,7 @@ nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult 
 
   CloseCacheEntry(mStatus);
   mPump = 0;
-  mIsPending = PR_FALSE;
+  mIsPending = false;
 
   // Drop notification callbacks to prevent cycles.
   mCallbacks = 0;
@@ -695,13 +695,13 @@ nsWyciwygChannel::OpenCacheEntry(const nsACString & aCacheKey,
 
   nsCOMPtr<nsICacheSession> cacheSession;
   // Open a stream based cache session.
-  rv = cacheService->CreateSession("wyciwyg", storagePolicy, PR_TRUE,
+  rv = cacheService->CreateSession("wyciwyg", storagePolicy, true,
                                    getter_AddRefs(cacheSession));
   if (!cacheSession) 
     return NS_ERROR_FAILURE;
 
   if (aAccessMode == nsICache::ACCESS_WRITE)
-    rv = cacheSession->OpenCacheEntry(aCacheKey, aAccessMode, PR_FALSE,
+    rv = cacheSession->OpenCacheEntry(aCacheKey, aAccessMode, false,
                                       getter_AddRefs(mCacheEntry));
   else
     rv = cacheSession->AsyncOpenCacheEntry(aCacheKey, aAccessMode, this);
@@ -757,7 +757,7 @@ nsWyciwygChannel::NotifyListener()
     mListenerContext = 0;
   }
 
-  mIsPending = PR_FALSE;
+  mIsPending = false;
 
   // Remove ourselves from the load group.
   if (mLoadGroup) {

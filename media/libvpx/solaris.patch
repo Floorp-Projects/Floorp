@@ -16,69 +16,6 @@ diff --git a/media/libvpx/vp8/common/loopfilter_filters.c b/media/libvpx/vp8/com
  static __inline signed char vp8_signed_char_clamp(int t)
  {
      t = (t < -128 ? -128 : t);
-diff --git a/media/libvpx/vpx/internal/vpx_codec_internal.h b/media/libvpx/vpx/internal/vpx_codec_internal.h
---- a/media/libvpx/vpx/internal/vpx_codec_internal.h
-+++ b/media/libvpx/vpx/internal/vpx_codec_internal.h
-@@ -316,17 +316,17 @@ struct vpx_codec_iface
- 
- /*!\brief Callback function pointer / user data pair storage */
- typedef struct vpx_codec_priv_cb_pair
- {
-     union
-     {
-         vpx_codec_put_frame_cb_fn_t    put_frame;
-         vpx_codec_put_slice_cb_fn_t    put_slice;
--    };
-+    } fn;
-     void                            *user_priv;
- } vpx_codec_priv_cb_pair_t;
- 
- 
- /*!\brief Instance private storage
-  *
-  * This structure is allocated by the algorithm's init function. It can be
-  * extended in one of two ways. First, a second, algorithm specific structure
-diff --git a/media/libvpx/vpx/src/vpx_decoder.c b/media/libvpx/vpx/src/vpx_decoder.c
---- a/media/libvpx/vpx/src/vpx_decoder.c
-+++ b/media/libvpx/vpx/src/vpx_decoder.c
-@@ -165,17 +165,17 @@ vpx_codec_err_t vpx_codec_register_put_f
- 
-     if (!ctx || !cb)
-         res = VPX_CODEC_INVALID_PARAM;
-     else if (!ctx->iface || !ctx->priv
-              || !(ctx->iface->caps & VPX_CODEC_CAP_PUT_FRAME))
-         res = VPX_CODEC_ERROR;
-     else
-     {
--        ctx->priv->dec.put_frame_cb.put_frame = cb;
-+        ctx->priv->dec.put_frame_cb.fn.put_frame = cb;
-         ctx->priv->dec.put_frame_cb.user_priv = user_priv;
-         res = VPX_CODEC_OK;
-     }
- 
-     return SAVE_STATUS(ctx, res);
- }
- 
- 
-@@ -187,17 +187,17 @@ vpx_codec_err_t vpx_codec_register_put_s
- 
-     if (!ctx || !cb)
-         res = VPX_CODEC_INVALID_PARAM;
-     else if (!ctx->iface || !ctx->priv
-              || !(ctx->iface->caps & VPX_CODEC_CAP_PUT_FRAME))
-         res = VPX_CODEC_ERROR;
-     else
-     {
--        ctx->priv->dec.put_slice_cb.put_slice = cb;
-+        ctx->priv->dec.put_slice_cb.fn.put_slice = cb;
-         ctx->priv->dec.put_slice_cb.user_priv = user_priv;
-         res = VPX_CODEC_OK;
-     }
- 
-     return SAVE_STATUS(ctx, res);
- }
- 
- 
 diff --git a/media/libvpx/vpx_ports/mem.h b/media/libvpx/vpx_ports/mem.h
 --- a/media/libvpx/vpx_ports/mem.h
 +++ b/media/libvpx/vpx_ports/mem.h
@@ -172,8 +109,8 @@ diff --git a/media/libvpx/vpx_ports/x86.h b/media/libvpx/vpx_ports/x86.h
 +    asm volatile ("pause \n\t")
  #else
  #if ARCH_X86_64
- /* No pause intrinsic for windows x64 */
- #define x86_pause_hint()
+ #define x86_pause_hint()\
+     _mm_pause();
  #else
  #define x86_pause_hint()\
      __asm pause

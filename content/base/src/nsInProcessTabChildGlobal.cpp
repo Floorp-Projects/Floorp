@@ -69,7 +69,7 @@ bool SendSyncMessageToParent(void* aCallbackData,
   }
   if (tabChild->mChromeMessageManager) {
     nsRefPtr<nsFrameMessageManager> mm = tabChild->mChromeMessageManager;
-    mm->ReceiveMessage(owner, aMessage, PR_TRUE, aJSON, nsnull, aJSONRetVal);
+    mm->ReceiveMessage(owner, aMessage, true, aJSON, nsnull, aJSONRetVal);
   }
   return true;
 }
@@ -86,7 +86,7 @@ public:
     mTabChild->mASyncMessages.RemoveElement(this);
     if (mTabChild->mChromeMessageManager) {
       nsRefPtr<nsFrameMessageManager> mm = mTabChild->mChromeMessageManager;
-      mm->ReceiveMessage(mTabChild->mOwner, mMessage, PR_FALSE,
+      mm->ReceiveMessage(mTabChild->mOwner, mMessage, false,
                          mJSON, nsnull, nsnull);
     }
     return NS_OK;
@@ -112,8 +112,8 @@ bool SendAsyncMessageToParent(void* aCallbackData,
 nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
                                                      nsIContent* aOwner,
                                                      nsFrameMessageManager* aChrome)
-: mDocShell(aShell), mInitialized(PR_FALSE), mLoadingScript(PR_FALSE),
-  mDelayedDisconnect(PR_FALSE), mOwner(aOwner), mChromeMessageManager(aChrome)
+: mDocShell(aShell), mInitialized(false), mLoadingScript(false),
+  mDelayedDisconnect(false), mOwner(aOwner), mChromeMessageManager(aChrome)
 {
 }
 
@@ -135,7 +135,7 @@ nsInProcessTabChildGlobal::Init()
   InitTabChildGlobal();
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                    "Couldn't initialize nsInProcessTabChildGlobal");
-  mMessageManager = new nsFrameMessageManager(PR_FALSE,
+  mMessageManager = new nsFrameMessageManager(false,
                                               SendSyncMessageToParent,
                                               SendAsyncMessageToParent,
                                               nsnull,
@@ -229,9 +229,9 @@ nsInProcessTabChildGlobal::DelayedDisconnect()
   nsCOMPtr<nsIDOMEvent> event;
   NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
   if (event) {
-    event->InitEvent(NS_LITERAL_STRING("unload"), PR_FALSE, PR_FALSE);
+    event->InitEvent(NS_LITERAL_STRING("unload"), false, false);
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-    privateEvent->SetTrusted(PR_TRUE);
+    privateEvent->SetTrusted(true);
 
     bool dummy;
     nsDOMEventTargetHelper::DispatchEvent(event, &dummy);
@@ -258,7 +258,7 @@ nsInProcessTabChildGlobal::DelayedDisconnect()
       DestroyCx();
     }
   } else {
-    mDelayedDisconnect = PR_TRUE;
+    mDelayedDisconnect = true;
   }
 }
 
@@ -271,7 +271,7 @@ nsInProcessTabChildGlobal::GetOwnerContent()
 nsresult
 nsInProcessTabChildGlobal::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  aVisitor.mCanHandle = PR_TRUE;
+  aVisitor.mCanHandle = true;
   aVisitor.mParentTarget = mOwner;
 
 #ifdef DEBUG
@@ -366,15 +366,15 @@ nsInProcessTabChildGlobal::LoadFrameScript(const nsAString& aURL)
     return;
   }
   if (!mInitialized) {
-    mInitialized = PR_TRUE;
+    mInitialized = true;
     Init();
   }
   bool tmp = mLoadingScript;
-  mLoadingScript = PR_TRUE;
+  mLoadingScript = true;
   LoadFrameScriptInternal(aURL);
   mLoadingScript = tmp;
   if (!mLoadingScript && mDelayedDisconnect) {
-    mDelayedDisconnect = PR_FALSE;
+    mDelayedDisconnect = false;
     Disconnect();
   }
 }

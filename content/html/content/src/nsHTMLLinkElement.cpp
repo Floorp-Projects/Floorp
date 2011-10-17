@@ -173,7 +173,7 @@ nsHTMLLinkElement::GetDisabled(bool* aDisabled)
   if (ss) {
     result = ss->GetDisabled(aDisabled);
   } else {
-    *aDisabled = PR_FALSE;
+    *aDisabled = false;
   }
 
   return result;
@@ -273,8 +273,8 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
                       strings, eIgnoreCase) != ATTR_VALUE_NO_MATCH)
     return;
 
-  nsRefPtr<nsPLDOMEvent> event = new nsPLDOMEvent(this, aEventName, PR_TRUE,
-                                                  PR_TRUE);
+  nsRefPtr<nsPLDOMEvent> event = new nsPLDOMEvent(this, aEventName, true,
+                                                  true);
   if (event) {
     // Always run async in order to avoid running script when the content
     // sink isn't expecting it.
@@ -394,7 +394,7 @@ nsHTMLLinkElement::GetHrefURI() const
 already_AddRefed<nsIURI>
 nsHTMLLinkElement::GetStyleSheetURL(bool* aIsInline)
 {
-  *aIsInline = PR_FALSE;
+  *aIsInline = false;
   nsAutoString href;
   GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
   if (href.IsEmpty()) {
@@ -412,7 +412,7 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
   aTitle.Truncate();
   aType.Truncate();
   aMedia.Truncate();
-  *aIsAlternate = PR_FALSE;
+  *aIsAlternate = false;
 
   nsAutoString rel;
   nsAutoTArray<nsString, 4> linkTypes;
@@ -433,7 +433,7 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
     if (aTitle.IsEmpty()) { // alternates must have title
       return;
     } else {
-      *aIsAlternate = PR_TRUE;
+      *aIsAlternate = true;
     }
   }
 

@@ -111,7 +111,7 @@ nsHTMLDNSPrefetch::Initialize()
   if (IsNeckoChild())
     NeckoChild::InitNeckoChild();
 
-  sInitialized = PR_TRUE;
+  sInitialized = true;
   return NS_OK;
 }
 
@@ -122,7 +122,7 @@ nsHTMLDNSPrefetch::Shutdown()
     NS_WARNING("Not Initialized");
     return NS_OK;
   }
-  sInitialized = PR_FALSE;
+  sInitialized = false;
   NS_IF_RELEASE(sDNSService);
   NS_IF_RELEASE(sPrefetches);
   NS_IF_RELEASE(sDNSListener);
@@ -233,7 +233,7 @@ nsHTMLDNSPrefetch::nsDeferrals::nsDeferrals()
   : mHead(0),
     mTail(0),
     mActiveLoaderCount(0),
-    mTimerArmed(PR_FALSE)
+    mTimerArmed(false)
 {
   mTimer = do_CreateInstance("@mozilla.org/timer;1");
 }
@@ -241,7 +241,7 @@ nsHTMLDNSPrefetch::nsDeferrals::nsDeferrals()
 nsHTMLDNSPrefetch::nsDeferrals::~nsDeferrals()
 {
   if (mTimerArmed) {
-    mTimerArmed = PR_FALSE;
+    mTimerArmed = false;
     mTimer->Cancel();
   }
 
@@ -276,7 +276,7 @@ nsHTMLDNSPrefetch::nsDeferrals::Add(PRUint16 flags, Link *aElement)
   mHead = (mHead + 1) & sMaxDeferredMask;
 
   if (!mActiveLoaderCount && !mTimerArmed && mTimer) {
-    mTimerArmed = PR_TRUE;
+    mTimerArmed = true;
     mTimer->InitWithFuncCallback(Tick, this, 2000, nsITimer::TYPE_ONE_SHOT);
   }
   
@@ -312,7 +312,7 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
   }
   
   if (mTimerArmed) {
-    mTimerArmed = PR_FALSE;
+    mTimerArmed = false;
     mTimer->Cancel();
   }
 }
@@ -330,7 +330,7 @@ nsHTMLDNSPrefetch::nsDeferrals::Activate()
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService)
-    observerService->AddObserver(this, "xpcom-shutdown", PR_TRUE);
+    observerService->AddObserver(this, "xpcom-shutdown", true);
 }
 
 // nsITimer related method
@@ -343,7 +343,7 @@ nsHTMLDNSPrefetch::nsDeferrals::Tick(nsITimer *aTimer, void *aClosure)
   NS_ASSERTION(NS_IsMainThread(), "nsDeferrals::Tick must be on main thread");
   NS_ASSERTION(self->mTimerArmed, "Timer is not armed");
   
-  self->mTimerArmed = PR_FALSE;
+  self->mTimerArmed = false;
 
   // If the queue is not submitted here because there are outstanding pages being loaded,
   // there is no need to rearm the timer as the queue will be submtited when those 

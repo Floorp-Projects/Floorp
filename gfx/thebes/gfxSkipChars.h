@@ -71,14 +71,14 @@
 class THEBES_API gfxSkipCharsBuilder {
 public:
     gfxSkipCharsBuilder() :
-        mCharCount(0), mRunCharCount(0), mRunSkipped(PR_FALSE), mInErrorState(PR_FALSE)
+        mCharCount(0), mRunCharCount(0), mRunSkipped(false), mInErrorState(false)
     {}
   
     void SkipChars(PRUint32 aChars) {
-        DoChars(aChars, PR_TRUE);
+        DoChars(aChars, true);
     }
     void KeepChars(PRUint32 aChars) {
-        DoChars(aChars, PR_FALSE);
+        DoChars(aChars, false);
     }
     void SkipChar() {
         SkipChars(1);
@@ -160,7 +160,7 @@ public:
         aSkipCharsBuilder->mBuffer.Clear();
         aSkipCharsBuilder->mCharCount = 0;
         aSkipCharsBuilder->mRunCharCount = 0;    
-        aSkipCharsBuilder->mRunSkipped = PR_FALSE;
+        aSkipCharsBuilder->mRunSkipped = false;
         BuildShortcuts();
     }
   
@@ -262,7 +262,7 @@ public:
      * aOriginalStringOffset is clamped to [0,originalStringLength].
      */
     void SetOriginalOffset(PRInt32 aOriginalStringOffset) {
-        SetOffsets(aOriginalStringOffset + mOriginalStringToSkipCharsOffset, PR_TRUE);
+        SetOffsets(aOriginalStringOffset + mOriginalStringToSkipCharsOffset, true);
     }
     
     /**
@@ -271,7 +271,7 @@ public:
      * aSkippedStringOffset is clamped to [0,skippedStringLength].
      */
     void SetSkippedOffset(PRUint32 aSkippedStringOffset) {
-        SetOffsets(aSkippedStringOffset, PR_FALSE);
+        SetOffsets(aSkippedStringOffset, false);
     }
     
     PRUint32 ConvertOriginalToSkipped(PRInt32 aOriginalStringOffset) {
@@ -288,15 +288,15 @@ public:
      * is skipped or not. If aRunLength is non-null, then *aRunLength is set
      * to a number of characters all of which are either skipped or not, starting
      * at this character. When the current position is at the end of the original
-     * string, we return PR_TRUE and *aRunLength is set to zero.
+     * string, we return true and *aRunLength is set to zero.
      */
     bool IsOriginalCharSkipped(PRInt32* aRunLength = nsnull) const;
     
     void AdvanceOriginal(PRInt32 aDelta) {
-        SetOffsets(mOriginalStringOffset + aDelta, PR_TRUE);
+        SetOffsets(mOriginalStringOffset + aDelta, true);
     }
     void AdvanceSkipped(PRInt32 aDelta) {
-        SetOffsets(mSkippedStringOffset + aDelta, PR_FALSE);
+        SetOffsets(mSkippedStringOffset + aDelta, false);
     }
   
     /**

@@ -61,7 +61,7 @@
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
 #include "nsContentPermissionHelper.h"
-#include "nsIDOMNSHTMLFrameElement.h"
+#include "nsIDOMHTMLFrameElement.h"
 #include "nsIDialogCreator.h"
 #include "nsThreadUtils.h"
 #include "nsSerializationHelper.h"
@@ -88,8 +88,8 @@ TabParent *TabParent::mIMETabParent = nsnull;
 NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
 
 TabParent::TabParent()
-  : mIMEComposing(PR_FALSE)
-  , mIMECompositionEnding(PR_FALSE)
+  : mIMEComposing(false)
+  , mIMECompositionEnding(false)
   , mIMESeqno(0)
   , mDPI(0)
 {
@@ -321,14 +321,14 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
                            const nsString& aJSON,
                            InfallibleTArray<nsString>* aJSONRetVal)
 {
-  return ReceiveMessage(aMessage, PR_TRUE, aJSON, aJSONRetVal);
+  return ReceiveMessage(aMessage, true, aJSON, aJSONRetVal);
 }
 
 bool
 TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const nsString& aJSON)
 {
-  return ReceiveMessage(aMessage, PR_FALSE, aJSON, nsnull);
+  return ReceiveMessage(aMessage, false, aJSON, nsnull);
 }
 
 bool
@@ -360,8 +360,8 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
     if (NS_SUCCEEDED(rv) && rv != NS_SUCCESS_IME_NO_UPDATES) {
       *aPreference = widget->GetIMEUpdatePreference();
     } else {
-      aPreference->mWantUpdates = PR_FALSE;
-      aPreference->mWantHints = PR_FALSE;
+      aPreference->mWantUpdates = false;
+      aPreference->mWantHints = false;
     }
   } else {
     mIMECacheText.Truncate(0);
@@ -424,8 +424,8 @@ TabParent::RecvNotifyIMETextHint(const nsString& aText)
 bool
 TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
 {
-  aEvent.mSucceeded = PR_FALSE;
-  aEvent.mWasAsync = PR_FALSE;
+  aEvent.mSucceeded = false;
+  aEvent.mWasAsync = false;
   aEvent.mReply.mFocusedWidget = nsCOMPtr<nsIWidget>(GetWidget()).get();
 
   switch (aEvent.message)
@@ -448,8 +448,8 @@ TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
                                           selLen);
       }
       aEvent.mReply.mReversed = mIMESelectionFocus < mIMESelectionAnchor;
-      aEvent.mReply.mHasSelection = PR_TRUE;
-      aEvent.mSucceeded = PR_TRUE;
+      aEvent.mReply.mHasSelection = true;
+      aEvent.mSucceeded = true;
     }
     break;
   case NS_QUERY_TEXT_CONTENT:
@@ -467,7 +467,7 @@ TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
       aEvent.mReply.mString = Substring(mIMECacheText,
                                         inputOffset,
                                         inputEnd - inputOffset);
-      aEvent.mSucceeded = PR_TRUE;
+      aEvent.mSucceeded = true;
     }
     break;
   }
@@ -529,7 +529,7 @@ TabParent::RecvEndIMEComposition(const bool& aCancel,
   if (!widget)
     return true;
 
-  mIMECompositionEnding = PR_TRUE;
+  mIMECompositionEnding = true;
 
   if (aCancel) {
     widget->CancelIMEComposition();
@@ -537,7 +537,7 @@ TabParent::RecvEndIMEComposition(const bool& aCancel,
     widget->ResetInputState();
   }
 
-  mIMECompositionEnding = PR_FALSE;
+  mIMECompositionEnding = false;
   *aComposition = mIMECompositionText;
   mIMECompositionText.Truncate(0);  
   return true;
@@ -760,7 +760,7 @@ TabParent::HandleDelayedDialogs()
   if (ShouldDelayDialogs() && mDelayedDialogs.Length()) {
     nsContentUtils::DispatchTrustedEvent(frame->GetOwnerDoc(), frame,
                                          NS_LITERAL_STRING("MozDelayedModalDialog"),
-                                         PR_TRUE, PR_TRUE);
+                                         true, true);
   }
 }
 
@@ -811,7 +811,7 @@ bool
 TabParent::ShouldDelayDialogs()
 {
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  NS_ENSURE_TRUE(frameLoader, PR_TRUE);
+  NS_ENSURE_TRUE(frameLoader, true);
   bool delay = false;
   frameLoader->GetDelayRemoteDialogs(&delay);
   return delay;
@@ -821,13 +821,13 @@ bool
 TabParent::AllowContentIME()
 {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  NS_ENSURE_TRUE(fm, PR_FALSE);
+  NS_ENSURE_TRUE(fm, false);
 
   nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
   if (focusedContent && focusedContent->IsEditable())
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 already_AddRefed<nsFrameLoader>

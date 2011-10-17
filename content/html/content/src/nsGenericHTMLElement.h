@@ -42,7 +42,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
-#include "nsIDOMNSHTMLFrameElement.h"
+#include "nsIDOMHTMLFrameElement.h"
 #include "nsFrameLoader.h"
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
@@ -188,7 +188,7 @@ public:
     return isFocusable;
   }
   /**
-   * Returns PR_TRUE if a subclass is not allowed to override the value returned
+   * Returns true if a subclass is not allowed to override the value returned
    * in aIsFocusable.
    */
   virtual bool IsHTMLFocusable(bool aWithMouse,
@@ -199,7 +199,7 @@ public:
 
   /**
    * Check if an event for an anchor can be handled
-   * @return PR_TRUE if the event can be handled, PR_FALSE otherwise
+   * @return true if the event can be handled, false otherwise
    */
   bool CheckHandleEventForAnchorsPreconditions(nsEventChainVisitor& aVisitor);
   nsresult PreHandleEventForAnchors(nsEventChainPreVisitor& aVisitor);
@@ -478,7 +478,7 @@ public:
    *
    * @param aContent an nsGenericHTMLElement* pointing to the form control
    * @param aControl an nsIFormControl* pointing to the form control
-   * @return PR_FALSE if RestoreState() was not called, the return
+   * @return false if RestoreState() was not called, the return
    *         value of RestoreState() otherwise.
    */
   static bool RestoreFormControlState(nsGenericHTMLElement* aContent,
@@ -569,14 +569,14 @@ protected:
   void RegAccessKey()
   {
     if (HasFlag(NODE_HAS_ACCESSKEY)) {
-      RegUnRegAccessKey(PR_TRUE);
+      RegUnRegAccessKey(true);
     }
   }
 
   void UnregAccessKey()
   {
     if (HasFlag(NODE_HAS_ACCESSKEY)) {
-      RegUnRegAccessKey(PR_FALSE);
+      RegUnRegAccessKey(false);
     }
   }
 
@@ -725,7 +725,7 @@ protected:
    * Helper for GetURIAttr and GetHrefURIForAnchors which returns an
    * nsIURI in the out param.
    *
-   * @return PR_TRUE if we had the attr, PR_FALSE otherwise.
+   * @return true if we had the attr, false otherwise.
    */
   NS_HIDDEN_(bool) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsIURI** aURI) const;
 
@@ -869,11 +869,11 @@ public:
   
   virtual bool RestoreState(nsPresState* aState)
   {
-    return PR_FALSE;
+    return false;
   }
   virtual bool AllowDrop()
   {
-    return PR_TRUE;
+    return true;
   }
 
   // nsIContent
@@ -1017,7 +1017,6 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
  */
 
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
-                                  public nsIDOMNSHTMLFrameElement,
                                   public nsIFrameLoaderOwner
 {
 public:
@@ -1033,9 +1032,6 @@ public:
 
   // nsISupports
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-
-  // nsIDOMNSHTMLFrameElement
-  NS_DECL_NSIDOMNSHTMLFRAMEELEMENT
 
   // nsIFrameLoaderOwner
   NS_DECL_NSIFRAMELOADEROWNER
@@ -1072,6 +1068,7 @@ protected:
   nsresult EnsureFrameLoader();
   nsresult LoadSrc();
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
+  nsresult GetContentWindow(nsIDOMWindow** aContentWindow);
 
   nsRefPtr<nsFrameLoader> mFrameLoader;
   // True when the element is created by the parser

@@ -100,7 +100,7 @@ nsresult GenerateBaselineFile(const char* aSourceFilename,const char* aBaselineF
   // Parse the document, having the sink write the data to fp
   parser->SetContentSink(sink);
 
-  rv = parser->Parse(inputURI, 0, PR_FALSE, eDTDMode_unknown);
+  rv = parser->Parse(inputURI, 0, false, eDTDMode_unknown);
 
   return rv;
 }
@@ -120,7 +120,7 @@ bool CompareFiles(const char* aFilename1, const char* aFilename2) {
     theFirstStream >> ch1;
     theSecondStream >> ch2;
     if(ch1!=ch2) {
-      result=PR_FALSE;
+      result=false;
       break;
     }
     done=bool((theFirstStream.ipfx(1)==0) || (theSecondStream.ipfx(1)==0));

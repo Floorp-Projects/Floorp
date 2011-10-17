@@ -78,7 +78,7 @@ Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
         }
 
         nsString voidStr;
-        voidStr.SetIsVoid(PR_TRUE);
+        voidStr.SetIsVoid(true);
 
         rv = (self->*setfunc)(voidStr, arg0);
     }

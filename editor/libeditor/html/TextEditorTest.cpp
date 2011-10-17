@@ -197,16 +197,16 @@ nsresult TextEditorTest::TestTextProperties()
 
   result = htmlEditor->GetInlineProperty(nsEditProperty::b, empty, empty, &first, &any, &all);
   TEST_RESULT(result);
-  NS_ASSERTION(PR_FALSE==first, "first should be false");
-  NS_ASSERTION(PR_FALSE==any, "any should be false");
-  NS_ASSERTION(PR_FALSE==all, "all should be false");
+  NS_ASSERTION(false==first, "first should be false");
+  NS_ASSERTION(false==any, "any should be false");
+  NS_ASSERTION(false==all, "all should be false");
   result = htmlEditor->SetInlineProperty(nsEditProperty::b, empty, empty);
   TEST_RESULT(result);
   result = htmlEditor->GetInlineProperty(nsEditProperty::b, empty, empty, &first, &any, &all);
   TEST_RESULT(result);
-  NS_ASSERTION(PR_TRUE==first, "first should be true");
-  NS_ASSERTION(PR_TRUE==any, "any should be true");
-  NS_ASSERTION(PR_TRUE==all, "all should be true");
+  NS_ASSERTION(true==first, "first should be true");
+  NS_ASSERTION(true==any, "any should be true");
+  NS_ASSERTION(true==all, "all should be true");
   mEditor->DebugDumpContent();
 
   // remove the bold we just set
@@ -215,9 +215,9 @@ nsresult TextEditorTest::TestTextProperties()
   TEST_RESULT(result);
   result = htmlEditor->GetInlineProperty(nsEditProperty::b, empty, empty, &first, &any, &all);
   TEST_RESULT(result);
-  NS_ASSERTION(PR_FALSE==first, "first should be false");
-  NS_ASSERTION(PR_FALSE==any, "any should be false");
-  NS_ASSERTION(PR_FALSE==all, "all should be false");
+  NS_ASSERTION(false==first, "first should be false");
+  NS_ASSERTION(false==any, "any should be false");
+  NS_ASSERTION(false==all, "all should be false");
   mEditor->DebugDumpContent();
 
   // set all but the first and last character to bold
@@ -228,23 +228,23 @@ nsresult TextEditorTest::TestTextProperties()
   TEST_RESULT(result);
   result = htmlEditor->GetInlineProperty(nsEditProperty::b, empty, empty, &first, &any, &all);
   TEST_RESULT(result);
-  NS_ASSERTION(PR_TRUE==first, "first should be true");
-  NS_ASSERTION(PR_TRUE==any, "any should be true");
-  NS_ASSERTION(PR_TRUE==all, "all should be true");
+  NS_ASSERTION(true==first, "first should be true");
+  NS_ASSERTION(true==any, "any should be true");
+  NS_ASSERTION(true==all, "all should be true");
   mEditor->DebugDumpContent();
   // make all that same text italic
   result = htmlEditor->SetInlineProperty(nsEditProperty::i, empty, empty);
   TEST_RESULT(result);
   result = htmlEditor->GetInlineProperty(nsEditProperty::i, empty, empty, &first, &any, &all);
   TEST_RESULT(result);
-  NS_ASSERTION(PR_TRUE==first, "first should be true");
-  NS_ASSERTION(PR_TRUE==any, "any should be true");
-  NS_ASSERTION(PR_TRUE==all, "all should be true");
+  NS_ASSERTION(true==first, "first should be true");
+  NS_ASSERTION(true==any, "any should be true");
+  NS_ASSERTION(true==all, "all should be true");
   result = htmlEditor->GetInlineProperty(nsEditProperty::b, empty, empty, &first, &any, &all);
   TEST_RESULT(result);
-  NS_ASSERTION(PR_TRUE==first, "first should be true");
-  NS_ASSERTION(PR_TRUE==any, "any should be true");
-  NS_ASSERTION(PR_TRUE==all, "all should be true");
+  NS_ASSERTION(true==first, "first should be true");
+  NS_ASSERTION(true==any, "any should be true");
+  NS_ASSERTION(true==all, "all should be true");
   mEditor->DebugDumpContent();
 
   // make all the text underlined, except for the first 2 and last 2 characters
@@ -265,9 +265,9 @@ nsresult TextEditorTest::TestTextProperties()
   TEST_RESULT(result);
   result = htmlEditor->GetInlineProperty(nsEditProperty::u, empty, empty, &first, &any, &all);
   TEST_RESULT(result);
-  NS_ASSERTION(PR_TRUE==first, "first should be true");
-  NS_ASSERTION(PR_TRUE==any, "any should be true");
-  NS_ASSERTION(PR_TRUE==all, "all should be true");
+  NS_ASSERTION(true==first, "first should be true");
+  NS_ASSERTION(true==any, "any should be true");
+  NS_ASSERTION(true==all, "all should be true");
   mEditor->DebugDumpContent();
 
   return result;

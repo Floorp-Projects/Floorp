@@ -170,8 +170,8 @@ public:
 
   // helper to check if a content has an attribute. If content is nsnull or if
   // the attribute is not there, check if the attribute is on the mstyle hierarchy
-  // @return PR_TRUE  --if attribute exists
-  //         PR_FALSE --if attribute doesn't exist
+  // @return true     --if attribute exists
+  //         false --if attribute doesn't exist
   static bool
   GetAttribute(nsIContent* aContent,
                nsIFrame*   aMathMLmstyleFrame,          

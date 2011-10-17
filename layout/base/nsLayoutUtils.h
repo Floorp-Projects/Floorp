@@ -161,7 +161,7 @@ public:
   static nsIFrame* GetStyleFrame(nsIFrame* aPrimaryFrame);
 
   /**
-   * IsGeneratedContentFor returns PR_TRUE if aFrame is the outermost
+   * IsGeneratedContentFor returns true if aFrame is the outermost
    * frame for generated content of type aPseudoElement for aContent.
    * aFrame *might not* have the aPseudoElement pseudo-style! For example
    * it might be a table outer frame and the inner table frame might
@@ -378,9 +378,9 @@ public:
   static nsIScrollableFrame* GetNearestScrollableFrame(nsIFrame* aFrame);
 
   /**
-   * HasPseudoStyle returns PR_TRUE if aContent (whose primary style
+   * HasPseudoStyle returns true if aContent (whose primary style
    * context is aStyleContext) has the aPseudoElement pseudo-style
-   * attached to it; returns PR_FALSE otherwise.
+   * attached to it; returns false otherwise.
    *
    * @param aContent the content node we're looking at
    * @param aStyleContext aContent's style context
@@ -1223,7 +1223,7 @@ public:
   /**
    * Determine if any corner radius is of nonzero size
    *   @param aCorners the |nsStyleCorners| object to check
-   *   @return PR_TRUE unless all the coordinates are 0%, 0 or null.
+   *   @return true unless all the coordinates are 0%, 0 or null.
    *
    * A corner radius with one dimension zero and one nonzero is
    * treated as a nonzero-radius corner, even though it will end up
@@ -1358,7 +1358,7 @@ public:
   struct SurfaceFromElementResult {
     SurfaceFromElementResult() :
       // Use safe default values here
-      mIsWriteOnly(PR_TRUE), mIsStillLoading(PR_FALSE), mCORSUsed(PR_FALSE) {}
+      mIsWriteOnly(true), mIsStillLoading(false), mCORSUsed(false) {}
 
     /* mSurface will contain the resulting surface, or will be NULL on error */
     nsRefPtr<gfxASurface> mSurface;
@@ -1432,6 +1432,20 @@ public:
                                       PRInt32 aEndOffset,
                                       bool aFollowContinuations,
                                       nsFontFaceList* aFontFaceList);
+
+  /**
+   * Walks the frame tree starting at aFrame looking for textRuns.
+   * If aTotal is NULL, just clears the TEXT_RUN_MEMORY_ACCOUNTED flag
+   * on each textRun found.
+   * If aTotal is non-NULL, adds the storage used for each textRun to the
+   * total, and sets the TEXT_RUN_MEMORY_ACCOUNTED flag to avoid double-
+   * accounting. (Runs with this flag already set will be skipped.)
+   * Expected usage pattern is therefore to call twice:
+   *    rv = GetTextRunMemoryForFrames(rootFrame, NULL);
+   *    rv = GetTextRunMemoryForFrames(rootFrame, &total);
+   */
+  static nsresult GetTextRunMemoryForFrames(nsIFrame* aFrame,
+                                            PRUint64* aTotal);
 
   /**
    * Checks if CSS 3D transforms are currently enabled.

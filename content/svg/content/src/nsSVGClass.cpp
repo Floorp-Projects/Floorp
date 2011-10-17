@@ -66,7 +66,7 @@ nsSVGClass::SetBaseValue(const nsAString& aValue,
 
   aSVGElement->SetFlags(NODE_MAY_HAVE_CLASS);
   if (aDoSetAttr) {
-    aSVGElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue, PR_TRUE);
+    aSVGElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue, true);
   }
 #ifdef MOZ_SMIL
   if (mAnimVal) {
@@ -123,7 +123,7 @@ nsSVGClass::SMILString::ValueFromString(const nsAString& aStr,
 
   *static_cast<nsAString*>(val.mU.mPtr) = aStr;
   aValue.Swap(val);
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
   return NS_OK;
 }
 

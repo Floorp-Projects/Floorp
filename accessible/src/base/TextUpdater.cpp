@@ -80,7 +80,7 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   }
 
   // Get the text leaf accessible offset and invalidate cached offsets after it.
-  mTextOffset = mHyperText->GetChildOffset(mTextLeaf, PR_TRUE);
+  mTextOffset = mHyperText->GetChildOffset(mTextLeaf, true);
   NS_ASSERTION(mTextOffset != -1,
                "Text leaf hasn't offset within hyper text!");
 
@@ -111,14 +111,14 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
     if (strLen1 > 0) {
       // Fire text change event for removal.
       nsRefPtr<AccEvent> textRemoveEvent =
-        new AccTextChangeEvent(mHyperText, mTextOffset, str1, PR_FALSE);
+        new AccTextChangeEvent(mHyperText, mTextOffset, str1, false);
       mDocument->FireDelayedAccessibleEvent(textRemoveEvent);
     }
 
     if (strLen2 > 0) {
       // Fire text change event for insertion.
       nsRefPtr<AccEvent> textInsertEvent =
-        new AccTextChangeEvent(mHyperText, mTextOffset, str2, PR_TRUE);
+        new AccTextChangeEvent(mHyperText, mTextOffset, str2, true);
       mDocument->FireDelayedAccessibleEvent(textInsertEvent);
     }
 

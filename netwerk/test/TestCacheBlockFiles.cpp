@@ -224,7 +224,7 @@ main(void)
         if (NS_FAILED(rv)) goto exit;
 
         // Delete existing file
-        rv = file->Delete(PR_FALSE);
+        rv = file->Delete(false);
         if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) goto exit;
 
         // Need nsILocalFile to open
@@ -289,7 +289,7 @@ main(void)
         //----------------------------------------------------------------
 
         // Delete existing file
-        rv = localFile->Delete(PR_FALSE);
+        rv = localFile->Delete(false);
         if (NS_FAILED(rv)) {
             printf("Test 3 failed (Delete returned: 0x%.8x)\n", rv);
             goto exit;
@@ -341,7 +341,7 @@ main(void)
         //----------------------------------------------------------------
 
         // Delete existing file
-        rv = localFile->Delete(PR_FALSE);
+        rv = localFile->Delete(false);
         if (NS_FAILED(rv)) {
             printf("Test 4 failed (Delete returned: 0x%.8x)\n", rv);
             goto exit;
@@ -660,7 +660,7 @@ main(void)
         }
 
         // Delete existing file
-        rv = localFile->Delete(PR_FALSE);
+        rv = localFile->Delete(false);
         if (NS_FAILED(rv)) {
             printf("Test 14 failed (Delete returned: 0x%.8x)\n", rv);
             goto exit;
@@ -672,7 +672,7 @@ main(void)
         //  Test 15: Allocate/Deallocate stress test
         //----------------------------------------------------------------
 
-        rv = StressTest(localFile, 15, PR_FALSE);
+        rv = StressTest(localFile, 15, false);
         if (NS_FAILED(rv))
             goto exit;
 
@@ -849,7 +849,7 @@ main(void)
         //  Test 19: WriteBlocks/ReadBlocks stress
         //----------------------------------------------------------------
 
-        rv = StressTest(localFile, 19, PR_FALSE);
+        rv = StressTest(localFile, 19, false);
         if (NS_FAILED(rv))
             goto exit;
 

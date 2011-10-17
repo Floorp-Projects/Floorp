@@ -93,17 +93,17 @@ PredicateList::isSensitiveTo(Expr::ContextSensitivity aContext)
     Expr::ContextSensitivity context =
         aContext & ~(Expr::NODE_CONTEXT | Expr::NODESET_CONTEXT);
     if (context == Expr::NO_CONTEXT) {
-        return PR_FALSE;
+        return false;
     }
 
     PRUint32 i, len = mPredicates.Length();
     for (i = 0; i < len; ++i) {
         if (mPredicates[i]->isSensitiveTo(context)) {
-            return PR_TRUE;
+            return true;
         }
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 #ifdef TX_TO_STRING

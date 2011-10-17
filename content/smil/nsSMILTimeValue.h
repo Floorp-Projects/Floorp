@@ -74,11 +74,11 @@
  *
  * State      | GetMillis       | IsDefinite | IsIndefinite | IsResolved
  * -----------+-----------------+------------+--------------+------------
- * Definite   | nsSMILTimeValue | PR_TRUE    | PR_FALSE     | PR_TRUE
+ * Definite   | nsSMILTimeValue | true       | false        | true
  * -----------+-----------------+------------+--------------+------------
- * Indefinite | --              | PR_FALSE   | PR_TRUE      | PR_TRUE
+ * Indefinite | --              | false      | true         | true
  * -----------+-----------------+------------+--------------+------------
- * Unresolved | --              | PR_FALSE   | PR_FALSE     | PR_FALSE
+ * Unresolved | --              | false      | false        | false
  *
  */
 

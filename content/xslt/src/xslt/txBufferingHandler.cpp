@@ -211,7 +211,7 @@ public:
     nsString mValue;
 };
 
-txBufferingHandler::txBufferingHandler() : mCanAddAttribute(PR_FALSE)
+txBufferingHandler::txBufferingHandler() : mCanAddAttribute(false)
 {
     MOZ_COUNT_CTOR(txBufferingHandler);
     mBuffer = new txResultBuffer();
@@ -266,7 +266,7 @@ txBufferingHandler::characters(const nsSubstring& aData, bool aDOE)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
-    mCanAddAttribute = PR_FALSE;
+    mCanAddAttribute = false;
 
     txOutputTransaction::txTransactionType type =
          aDOE ? txOutputTransaction::eCharacterNoOETransaction
@@ -292,7 +292,7 @@ txBufferingHandler::comment(const nsString& aData)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
-    mCanAddAttribute = PR_FALSE;
+    mCanAddAttribute = false;
 
     txOutputTransaction* transaction = new txCommentTransaction(aData);
     NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
@@ -317,7 +317,7 @@ txBufferingHandler::endElement()
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
-    mCanAddAttribute = PR_FALSE;
+    mCanAddAttribute = false;
 
     txOutputTransaction* transaction =
         new txOutputTransaction(txOutputTransaction::eEndElementTransaction);
@@ -332,7 +332,7 @@ txBufferingHandler::processingInstruction(const nsString& aTarget,
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
-    mCanAddAttribute = PR_FALSE;
+    mCanAddAttribute = false;
 
     txOutputTransaction* transaction =
         new txPITransaction(aTarget, aData);
@@ -360,7 +360,7 @@ txBufferingHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
-    mCanAddAttribute = PR_TRUE;
+    mCanAddAttribute = true;
 
     txOutputTransaction* transaction =
         new txStartElementAtomTransaction(aPrefix, aLocalName,
@@ -377,7 +377,7 @@ txBufferingHandler::startElement(nsIAtom* aPrefix,
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
-    mCanAddAttribute = PR_TRUE;
+    mCanAddAttribute = true;
 
     txOutputTransaction* transaction =
         new txStartElementTransaction(aPrefix, aLocalName, aNsID);

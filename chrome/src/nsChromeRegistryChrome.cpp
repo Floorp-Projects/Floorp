@@ -106,7 +106,7 @@ static bool
 LanguagesMatch(const nsACString& a, const nsACString& b)
 {
   if (a.Length() < 2 || b.Length() < 2)
-    return PR_FALSE;
+    return false;
 
   nsACString::const_iterator as, ae, bs, be;
   a.BeginReading(as);
@@ -116,13 +116,13 @@ LanguagesMatch(const nsACString& a, const nsACString& b)
 
   while (*as == *bs) {
     if (*as == '-')
-      return PR_TRUE;
+      return true;
  
     ++as; ++bs;
 
     // reached the end
     if (as == ae && bs == be)
-      return PR_TRUE;
+      return true;
 
     // "a" is short
     if (as == ae)
@@ -133,11 +133,11 @@ LanguagesMatch(const nsACString& a, const nsACString& b)
       return (*as == '-');
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 nsChromeRegistryChrome::nsChromeRegistryChrome()
-  : mProfileLoaded(PR_FALSE)
+  : mProfileLoaded(false)
 {
   mPackagesHash.ops = nsnull;
 }
@@ -192,16 +192,16 @@ nsChromeRegistryChrome::Init()
 
     nsCOMPtr<nsIPrefBranch2> prefs2 (do_QueryInterface(prefs));
     if (prefs2) {
-      rv = prefs2->AddObserver(MATCH_OS_LOCALE_PREF, this, PR_TRUE);
-      rv = prefs2->AddObserver(SELECTED_LOCALE_PREF, this, PR_TRUE);
-      rv = prefs2->AddObserver(SELECTED_SKIN_PREF, this, PR_TRUE);
+      rv = prefs2->AddObserver(MATCH_OS_LOCALE_PREF, this, true);
+      rv = prefs2->AddObserver(SELECTED_LOCALE_PREF, this, true);
+      rv = prefs2->AddObserver(SELECTED_SKIN_PREF, this, true);
     }
   }
 
   nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
   if (obsService) {
-    obsService->AddObserver(this, "command-line-startup", PR_TRUE);
-    obsService->AddObserver(this, "profile-initial-state", PR_TRUE);
+    obsService->AddObserver(this, "command-line-startup", true);
+    obsService->AddObserver(this, "profile-initial-state", true);
   }
 
   return NS_OK;
@@ -272,7 +272,7 @@ getUILangCountry(nsACString& aUILang)
 NS_IMETHODIMP
 nsChromeRegistryChrome::IsLocaleRTL(const nsACString& package, bool *aResult)
 {
-  *aResult = PR_FALSE;
+  *aResult = false;
 
   nsCAutoString locale;
   GetSelectedLocale(package, locale);
@@ -384,7 +384,7 @@ nsChromeRegistryChrome::Observe(nsISupports *aSubject, const char *aTopic,
     if (cmdLine) {
       nsAutoString uiLocale;
       rv = cmdLine->HandleFlagWithParam(NS_LITERAL_STRING(UILOCALE_CMD_LINE_ARG),
-                                        PR_FALSE, uiLocale);
+                                        false, uiLocale);
       if (NS_SUCCEEDED(rv) && !uiLocale.IsEmpty()) {
         CopyUTF16toUTF8(uiLocale, mSelectedLocale);
         nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -395,7 +395,7 @@ nsChromeRegistryChrome::Observe(nsISupports *aSubject, const char *aTopic,
     }
   }
   else if (!strcmp("profile-initial-state", aTopic)) {
-    mProfileLoaded = PR_TRUE;
+    mProfileLoaded = true;
   }
   else {
     NS_ERROR("Unexpected observer topic!");
@@ -619,7 +619,7 @@ nsChromeRegistryChrome::InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   const nsACString& str = *reinterpret_cast<const nsACString*>(key);
 
   new (entry) PackageEntry(str);
-  return PR_TRUE;
+  return true;
 }
 
 const PLDHashTableOps

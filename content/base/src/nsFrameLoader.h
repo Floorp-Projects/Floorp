@@ -174,7 +174,7 @@ protected:
 
 public:
   ~nsFrameLoader() {
-    mNeedsAsyncDestroy = PR_TRUE;
+    mNeedsAsyncDestroy = true;
     if (mMessageManager) {
       mMessageManager->Disconnect();
     }

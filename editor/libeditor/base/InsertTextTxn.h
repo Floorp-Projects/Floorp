@@ -82,7 +82,7 @@ public:
 
 protected:
 
-  /** return PR_TRUE if aOtherTxn immediately follows this txn */
+  /** return true if aOtherTxn immediately follows this txn */
   virtual bool IsSequentialInsert(InsertTextTxn *aOtherTxn);
   
   /** the text element to operate upon */

@@ -117,7 +117,7 @@ struct nsStatusInfo : public PRCList
 struct nsRequestInfo : public PLDHashEntryHdr
 {
   nsRequestInfo(const void *key)
-    : mKey(key), mCurrentProgress(0), mMaxProgress(0), mUploading(PR_FALSE)
+    : mKey(key), mCurrentProgress(0), mMaxProgress(0), mUploading(false)
     , mLastStatus(nsnull)
   {
     MOZ_COUNT_CTOR(nsRequestInfo);
@@ -147,7 +147,7 @@ RequestInfoHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
 {
   // Initialize the entry with placement new
   new (entry) nsRequestInfo(key);
-  return PR_TRUE;
+  return true;
 }
 
 static void
@@ -180,10 +180,10 @@ nsDocLoader::nsDocLoader()
     mCurrentTotalProgress(0),
     mMaxTotalProgress(0),
     mCompletedTotalProgress(0),
-    mIsLoadingDocument(PR_FALSE),
-    mIsRestoringDocument(PR_FALSE),
-    mDontFlushLayout(PR_FALSE),
-    mIsFlushingLayout(PR_FALSE)
+    mIsLoadingDocument(false),
+    mIsRestoringDocument(false),
+    mDontFlushLayout(false),
+    mIsFlushingLayout(false)
 {
 #if defined(PR_LOGGING)
   if (nsnull == gDocLoaderLog) {
@@ -361,7 +361,7 @@ nsDocLoader::Stop(void)
 
   // Don't report that we're flushing layout so IsBusy returns false after a
   // Stop call.
-  mIsFlushingLayout = PR_FALSE;
+  mIsFlushingLayout = false;
 
   // Clear out mChildrenInOnload.  We want to make sure to fire our
   // onload at this point, and there's no issue with mChildrenInOnload
@@ -380,7 +380,7 @@ nsDocLoader::Stop(void)
   // we wouldn't need the call here....
 
   NS_ASSERTION(!IsBusy(), "Shouldn't be busy here");
-  DocLoaderIsEmpty(PR_FALSE);
+  DocLoaderIsEmpty(false);
   
   return rv;
 }       
@@ -402,21 +402,21 @@ nsDocLoader::IsBusy()
   //
 
   if (mChildrenInOnload.Count() || mIsFlushingLayout) {
-    return PR_TRUE;
+    return true;
   }
 
   /* Is this document loader busy? */
   if (!mIsLoadingDocument) {
-    return PR_FALSE;
+    return false;
   }
   
   bool busy;
   rv = mLoadGroup->IsPending(&busy);
   if (NS_FAILED(rv)) {
-    return PR_FALSE;
+    return false;
   }
   if (busy) {
-    return PR_TRUE;
+    return true;
   }
 
   /* check its child document loaders... */
@@ -430,10 +430,10 @@ nsDocLoader::IsBusy()
     // This is a safe cast, because we only put nsDocLoader objects into the
     // array
     if (loader && static_cast<nsDocLoader*>(loader)->IsBusy())
-      return PR_TRUE;
+      return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 NS_IMETHODIMP
@@ -541,8 +541,8 @@ nsDocLoader::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
   request->GetLoadFlags(&loadFlags);
 
   if (!mIsLoadingDocument && (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
-      bJustStartedLoading = PR_TRUE;
-      mIsLoadingDocument = PR_TRUE;
+      bJustStartedLoading = true;
+      mIsLoadingDocument = true;
       ClearInternalProgress(); // only clear our progress if we are starting a new load....
   }
 
@@ -666,7 +666,7 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
       //
       if (channel) {
         if (NS_SUCCEEDED(aStatus)) {
-          bFireTransferring = PR_TRUE;
+          bFireTransferring = true;
         }
         //
         // If the request failed (for any reason other than being
@@ -691,7 +691,7 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
                 // established to the server... So, fire the notification
                 // even though a failure occurred later...
                 //
-                bFireTransferring = PR_TRUE;
+                bFireTransferring = true;
               }
             }
           }
@@ -733,7 +733,7 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
   // load.  This will handle removing the request from our hashtable as needed.
   //
   if (mIsLoadingDocument) {
-    DocLoaderIsEmpty(PR_TRUE);
+    DocLoaderIsEmpty(true);
   }
   
   return NS_OK;
@@ -802,9 +802,9 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout)
             flushType = Flush_Layout;
           }
         }
-        mDontFlushLayout = mIsFlushingLayout = PR_TRUE;
+        mDontFlushLayout = mIsFlushingLayout = true;
         doc->FlushPendingNotifications(flushType);
-        mDontFlushLayout = mIsFlushingLayout = PR_FALSE;
+        mDontFlushLayout = mIsFlushingLayout = false;
       }
     }
 
@@ -822,7 +822,7 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout)
 
       NS_ASSERTION(mDocumentRequest, "No Document Request!");
       mDocumentRequest = 0;
-      mIsLoadingDocument = PR_FALSE;
+      mIsLoadingDocument = false;
 
       // Update the progress status state - the document is done
       mProgressStateFlags = nsIWebProgressListener::STATE_STOP;

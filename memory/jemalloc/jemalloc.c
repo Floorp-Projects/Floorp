@@ -698,10 +698,10 @@ struct arena_stats_s {
 	uint64_t	ndecommit;
 	uint64_t	ncommit;
 	uint64_t	decommitted;
+#endif
 
 	/* Current number of committed pages. */
 	size_t		committed;
-#endif
 
 	/* Per-size-category statistics. */
 	size_t		allocated_small;
@@ -845,7 +845,7 @@ struct arena_chunk_map_s {
 	 *     -------- -------- -------- ------la
 	 */
 	size_t				bits;
-#ifdef MALLOC_DECOMMIT
+#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 #define	CHUNK_MAP_DECOMMITTED	((size_t)0x20U)
 #endif
 #define	CHUNK_MAP_KEY		((size_t)0x10U)
@@ -1083,7 +1083,7 @@ static char		pagefile_templ[PATH_MAX];
  */
 static void		*base_pages;
 static void		*base_next_addr;
-#ifdef MALLOC_DECOMMIT
+#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 static void		*base_next_decommitted;
 #endif
 static void		*base_past_addr; /* Addr immediately past base_pages. */
@@ -1091,9 +1091,7 @@ static extent_node_t	*base_nodes;
 static malloc_mutex_t	base_mtx;
 #ifdef MALLOC_STATS
 static size_t		base_mapped;
-#  ifdef MALLOC_DECOMMIT
 static size_t		base_committed;
-#  endif
 #endif
 
 /********/
@@ -1843,7 +1841,7 @@ base_pages_alloc_mmap(size_t minsize)
 {
 	bool ret;
 	size_t csize;
-#ifdef MALLOC_DECOMMIT
+#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 	size_t pminsize;
 #endif
 	int pfd;
@@ -1865,19 +1863,19 @@ base_pages_alloc_mmap(size_t minsize)
 	}
 	base_next_addr = base_pages;
 	base_past_addr = (void *)((uintptr_t)base_pages + csize);
-#ifdef MALLOC_DECOMMIT
+#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 	/*
 	 * Leave enough pages for minsize committed, since otherwise they would
 	 * have to be immediately recommitted.
 	 */
 	pminsize = PAGE_CEILING(minsize);
 	base_next_decommitted = (void *)((uintptr_t)base_pages + pminsize);
+#  if defined(MALLOC_DECOMMIT)
 	if (pminsize < csize)
 		pages_decommit(base_next_decommitted, csize - pminsize);
-#endif
-#ifdef MALLOC_STATS
+#  endif
+#  ifdef MALLOC_STATS
 	base_mapped += csize;
-#  ifdef MALLOC_DECOMMIT
 	base_committed += pminsize;
 #  endif
 #endif
@@ -1921,14 +1919,16 @@ base_alloc(size_t size)
 	/* Allocate. */
 	ret = base_next_addr;
 	base_next_addr = (void *)((uintptr_t)base_next_addr + csize);
-#ifdef MALLOC_DECOMMIT
+#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 	/* Make sure enough pages are committed for the new allocation. */
 	if ((uintptr_t)base_next_addr > (uintptr_t)base_next_decommitted) {
 		void *pbase_next_addr =
 		    (void *)(PAGE_CEILING((uintptr_t)base_next_addr));
 
+#  ifdef MALLOC_DECOMMIT
 		pages_commit(base_next_decommitted, (uintptr_t)pbase_next_addr -
 		    (uintptr_t)base_next_decommitted);
+#  endif
 		base_next_decommitted = pbase_next_addr;
 #  ifdef MALLOC_STATS
 		base_committed += (uintptr_t)pbase_next_addr -
@@ -3069,7 +3069,7 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 	}
 
 	for (i = 0; i < need_pages; i++) {
-#ifdef MALLOC_DECOMMIT
+#if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 		/*
 		 * Commit decommitted pages if necessary.  If a decommitted
 		 * page is encountered, commit all needed adjacent decommitted
@@ -3090,13 +3090,24 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 				    CHUNK_MAP_DECOMMITTED;
 			}
 
+#  ifdef MALLOC_DECOMMIT
 			pages_commit((void *)((uintptr_t)chunk + ((run_ind + i)
 			    << pagesize_2pow)), (j << pagesize_2pow));
-#  ifdef MALLOC_STATS
+#    ifdef MALLOC_STATS
 			arena->stats.ncommit++;
+#    endif
+#  endif
+
+#  ifdef MALLOC_STATS
 			arena->stats.committed += j;
 #  endif
+
+#  ifndef MALLOC_DECOMMIT
+                }
+#  else
 		} else /* No need to zero since commit zeros. */
+#  endif
+
 #endif
 
 		/* Zero if necessary. */
@@ -3169,23 +3180,11 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 	    pagesize_2pow));
 	for (i = 0; i < arena_chunk_header_npages; i++)
 		chunk->map[i].bits = 0;
-	chunk->map[i].bits = arena_maxclass
-#ifdef MALLOC_DECOMMIT
-	    | CHUNK_MAP_DECOMMITTED
-#endif
-	    | CHUNK_MAP_ZEROED;
+	chunk->map[i].bits = arena_maxclass | CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED;
 	for (i++; i < chunk_npages-1; i++) {
-		chunk->map[i].bits =
-#ifdef MALLOC_DECOMMIT
-		    CHUNK_MAP_DECOMMITTED |
-#endif
-		    CHUNK_MAP_ZEROED;
+		chunk->map[i].bits = CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED;
 	}
-	chunk->map[chunk_npages-1].bits = arena_maxclass
-#ifdef MALLOC_DECOMMIT
-	    | CHUNK_MAP_DECOMMITTED
-#endif
-	    | CHUNK_MAP_ZEROED;
+	chunk->map[chunk_npages-1].bits = arena_maxclass | CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED;
 
 #ifdef MALLOC_DECOMMIT
 	/*
@@ -3196,8 +3195,10 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 #  ifdef MALLOC_STATS
 	arena->stats.ndecommit++;
 	arena->stats.decommitted += (chunk_npages - arena_chunk_header_npages);
-	arena->stats.committed += arena_chunk_header_npages;
 #  endif
+#endif
+#ifdef MALLOC_STATS
+	arena->stats.committed += arena_chunk_header_npages;
 #endif
 
 	/* Insert the run into the runs_avail tree. */
@@ -3214,7 +3215,7 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 			arena_chunk_tree_dirty_remove(
 			    &chunk->arena->chunks_dirty, arena->spare);
 			arena->ndirty -= arena->spare->ndirty;
-#if (defined(MALLOC_STATS) && defined(MALLOC_DECOMMIT))
+#ifdef MALLOC_STATS
 			arena->stats.committed -= arena->spare->ndirty;
 #endif
 		}
@@ -3222,9 +3223,7 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 		chunk_dealloc((void *)arena->spare, chunksize);
 #ifdef MALLOC_STATS
 		arena->stats.mapped -= chunksize;
-#  ifdef MALLOC_DECOMMIT
 		arena->stats.committed -= arena_chunk_header_npages;
-#  endif
 #endif
 	}
 
@@ -3330,29 +3329,17 @@ arena_purge(arena_t *arena)
 			assert(i >= arena_chunk_header_npages);
 
 			if (chunk->map[i].bits & CHUNK_MAP_DIRTY) {
-#ifdef MALLOC_DECOMMIT
 				assert((chunk->map[i].bits &
 				    CHUNK_MAP_DECOMMITTED) == 0);
-#endif
-				chunk->map[i].bits ^=
-#ifdef MALLOC_DECOMMIT
-				    CHUNK_MAP_DECOMMITTED |
-#endif
-				    CHUNK_MAP_DIRTY;
+				chunk->map[i].bits ^= CHUNK_MAP_DECOMMITTED | CHUNK_MAP_DIRTY;
 				/* Find adjacent dirty run(s). */
 				for (npages = 1; i > arena_chunk_header_npages
 				    && (chunk->map[i - 1].bits &
 				    CHUNK_MAP_DIRTY); npages++) {
 					i--;
-#ifdef MALLOC_DECOMMIT
 					assert((chunk->map[i].bits &
 					    CHUNK_MAP_DECOMMITTED) == 0);
-#endif
-					chunk->map[i].bits ^=
-#ifdef MALLOC_DECOMMIT
-					    CHUNK_MAP_DECOMMITTED |
-#endif
-					    CHUNK_MAP_DIRTY;
+					chunk->map[i].bits ^= CHUNK_MAP_DECOMMITTED | CHUNK_MAP_DIRTY;
 				}
 				chunk->ndirty -= npages;
 				arena->ndirty -= npages;
@@ -3364,9 +3351,13 @@ arena_purge(arena_t *arena)
 #  ifdef MALLOC_STATS
 				arena->stats.ndecommit++;
 				arena->stats.decommitted += npages;
-				arena->stats.committed -= npages;
 #  endif
-#else
+#endif
+#ifdef MALLOC_STATS
+				arena->stats.committed -= npages;
+#endif
+
+#ifndef MALLOC_DECOMMIT
 				madvise((void *)((uintptr_t)chunk + (i <<
 				    pagesize_2pow)), (npages << pagesize_2pow),
 				    MADV_FREE);
@@ -4679,9 +4670,7 @@ huge_malloc(size_t size, bool zero)
 {
 	void *ret;
 	size_t csize;
-#ifdef MALLOC_DECOMMIT
 	size_t psize;
-#endif
 	extent_node_t *node;
 
 	/* Allocate one or more contiguous chunks for this request. */
@@ -4705,22 +4694,33 @@ huge_malloc(size_t size, bool zero)
 
 	/* Insert node into huge. */
 	node->addr = ret;
-#ifdef MALLOC_DECOMMIT
 	psize = PAGE_CEILING(size);
 	node->size = psize;
-#else
-	node->size = csize;
-#endif
 
 	malloc_mutex_lock(&huge_mtx);
 	extent_tree_ad_insert(&huge, node);
 #ifdef MALLOC_STATS
 	huge_nmalloc++;
-#  ifdef MALLOC_DECOMMIT
+
+        /* Although we allocated space for csize bytes, we indicate that we've
+         * allocated only psize bytes.
+         *
+         * If DECOMMIT is defined, this is a reasonable thing to do, since
+         * we'll explicitly decommit the bytes in excess of psize.
+         *
+         * If DECOMMIT is not defined, then we're relying on the OS to be lazy
+         * about how it allocates physical pages to mappings.  If we never
+         * touch the pages in excess of psize, the OS won't allocate a physical
+         * page, and we won't use more than psize bytes of physical memory.
+         *
+         * A correct program will only touch memory in excess of how much it
+         * requested if it first calls malloc_usable_size and finds out how
+         * much space it has to play with.  But because we set node->size =
+         * psize above, malloc_usable_size will return psize, not csize, and
+         * the program will (hopefully) never touch bytes in excess of psize.
+         * Thus those bytes won't take up space in physical memory, and we can
+         * reasonably claim we never "allocated" them in the first place. */
 	huge_allocated += psize;
-#  else
-	huge_allocated += csize;
-#  endif
 #endif
 	malloc_mutex_unlock(&huge_mtx);
 
@@ -4761,9 +4761,7 @@ huge_palloc(size_t alignment, size_t size)
 {
 	void *ret;
 	size_t alloc_size, chunk_size, offset;
-#ifdef MALLOC_DECOMMIT
 	size_t psize;
-#endif
 	extent_node_t *node;
 	int pfd;
 
@@ -4832,22 +4830,16 @@ huge_palloc(size_t alignment, size_t size)
 #endif
 	/* Insert node into huge. */
 	node->addr = ret;
-#ifdef MALLOC_DECOMMIT
 	psize = PAGE_CEILING(size);
 	node->size = psize;
-#else
-	node->size = chunk_size;
-#endif
 
 	malloc_mutex_lock(&huge_mtx);
 	extent_tree_ad_insert(&huge, node);
 #ifdef MALLOC_STATS
 	huge_nmalloc++;
-#  ifdef MALLOC_DECOMMIT
+        /* See note in huge_alloc() for why huge_allocated += psize is correct
+         * here even when DECOMMIT is not defined. */
 	huge_allocated += psize;
-#  else
-	huge_allocated += chunk_size;
-#  endif
 #endif
 	malloc_mutex_unlock(&huge_mtx);
 
@@ -4897,9 +4889,7 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
 
 	if (oldsize > arena_maxclass &&
 	    CHUNK_CEILING(size) == CHUNK_CEILING(oldsize)) {
-#ifdef MALLOC_DECOMMIT
 		size_t psize = PAGE_CEILING(size);
-#endif
 #ifdef MALLOC_FILL
 		if (opt_junk && size < oldsize) {
 			memset((void *)((uintptr_t)ptr + size), 0x5a, oldsize
@@ -4925,24 +4915,32 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
 			node->size = psize;
 			malloc_mutex_unlock(&huge_mtx);
 		} else if (psize > oldsize) {
-			extent_node_t *node, key;
-
 			pages_commit((void *)((uintptr_t)ptr + oldsize),
 			    psize - oldsize);
-
-			/* Update recorded size. */
-			malloc_mutex_lock(&huge_mtx);
-			key.addr = __DECONST(void *, ptr);
-			node = extent_tree_ad_search(&huge, &key);
-			assert(node != NULL);
-			assert(node->size == oldsize);
-#  ifdef MALLOC_STATS
-			huge_allocated += psize - oldsize;
-#  endif
-			node->size = psize;
-			malloc_mutex_unlock(&huge_mtx);
-		}
+                }
 #endif
+
+                /* Although we don't have to commit or decommit anything if
+                 * DECOMMIT is not defined and the size class didn't change, we
+                 * do need to update the recorded size if the size increased,
+                 * so malloc_usable_size doesn't return a value smaller than
+                 * what was requested via realloc(). */
+
+                if (psize > oldsize) {
+                        /* Update recorded size. */
+                        extent_node_t *node, key;
+                        malloc_mutex_lock(&huge_mtx);
+                        key.addr = __DECONST(void *, ptr);
+                        node = extent_tree_ad_search(&huge, &key);
+                        assert(node != NULL);
+                        assert(node->size == oldsize);
+#  ifdef MALLOC_STATS
+                        huge_allocated += psize - oldsize;
+#  endif
+                        node->size = psize;
+                        malloc_mutex_unlock(&huge_mtx);
+                }
+
 #ifdef MALLOC_FILL
 		if (opt_zero && size > oldsize) {
 			memset((void *)((uintptr_t)ptr + oldsize), 0, size
@@ -4998,11 +4996,7 @@ huge_dalloc(void *ptr)
 	if (opt_junk)
 		memset(node->addr, 0x5a, node->size);
 #endif
-#ifdef MALLOC_DECOMMIT
 	chunk_dealloc(node->addr, CHUNK_CEILING(node->size));
-#else
-	chunk_dealloc(node->addr, node->size);
-#endif
 	VALGRIND_FREELIKE_BLOCK(node->addr, 0);
 
 	base_node_dealloc(node);
@@ -5704,9 +5698,7 @@ MALLOC_OUT:
 	/* Initialize base allocation data structures. */
 #ifdef MALLOC_STATS
 	base_mapped = 0;
-#  ifdef MALLOC_DECOMMIT
 	base_committed = 0;
-#  endif
 #endif
 	base_nodes = NULL;
 	malloc_mutex_init(&base_mtx);
@@ -6360,19 +6352,15 @@ jemalloc_stats(jemalloc_stats_t *stats)
 	/* Get huge mapped/allocated. */
 	malloc_mutex_lock(&huge_mtx);
 	stats->mapped += stats_chunks.curchunks * chunksize;
-#ifdef MALLOC_DECOMMIT
 	stats->committed += huge_allocated;
-#endif
 	stats->allocated += huge_allocated;
 	malloc_mutex_unlock(&huge_mtx);
 
 	/* Get base mapped. */
 	malloc_mutex_lock(&base_mtx);
 	stats->mapped += base_mapped;
-#ifdef MALLOC_DECOMMIT
 	assert(base_committed <= base_mapped);
 	stats->committed += base_committed;
-#endif
 	malloc_mutex_unlock(&base_mtx);
 
 	/* Iterate over arenas and their chunks. */
@@ -6382,18 +6370,13 @@ jemalloc_stats(jemalloc_stats_t *stats)
 			malloc_spin_lock(&arena->lock);
 			stats->allocated += arena->stats.allocated_small;
 			stats->allocated += arena->stats.allocated_large;
-#ifdef MALLOC_DECOMMIT
 			stats->committed += (arena->stats.committed <<
 			    pagesize_2pow);
-#endif
 			stats->dirty += (arena->ndirty << pagesize_2pow);
 			malloc_spin_unlock(&arena->lock);
 		}
 	}
 
-#ifndef MALLOC_DECOMMIT
-	stats->committed = stats->mapped;
-#endif
 	assert(stats->mapped >= stats->committed);
 	assert(stats->committed >= stats->allocated);
 }

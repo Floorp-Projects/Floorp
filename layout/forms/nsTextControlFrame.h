@@ -227,7 +227,7 @@ public: //for methods who access nsTextControlFrame directly
       NS_ASSERTION(aFrame, "Should pass a valid frame");
     }
     void Cancel() {
-      mInited = PR_FALSE;
+      mInited = false;
     }
     void Init() {
       // Since this code does not handle user-generated changes to the text,
@@ -239,16 +239,16 @@ public: //for methods who access nsTextControlFrame directly
       // we must wait until we unwind to re-enable oninput events.
       mOuterTransaction = mFrame->mNotifyOnInput;
       if (mOuterTransaction)
-        mFrame->mNotifyOnInput = PR_FALSE;
+        mFrame->mNotifyOnInput = false;
 
-      mInited = PR_TRUE;
+      mInited = true;
     }
     ~ValueSetter() {
       if (!mInited)
         return;
 
       if (mOuterTransaction)
-        mFrame->mNotifyOnInput = PR_TRUE;
+        mFrame->mNotifyOnInput = true;
 
       if (mFocusValueInit) {
         // Reset mFocusedValue so the onchange event doesn't fire incorrectly.
@@ -306,7 +306,7 @@ protected:
         nsCOMPtr<nsIPresShell> shell =
           mFrame->PresContext()->GetPresShell();
         bool observes = shell->ObservesNativeAnonMutationsForPrint();
-        shell->ObserveNativeAnonMutationsForPrint(PR_TRUE);
+        shell->ObserveNativeAnonMutationsForPrint(true);
         // This can cause the frame to be destroyed (and call Revoke())
         mFrame->EnsureEditorInitialized();
         shell->ObserveNativeAnonMutationsForPrint(observes);
@@ -370,14 +370,14 @@ protected:
   /**
    * Get the maxlength attribute
    * @param aMaxLength the value of the max length attr
-   * @returns PR_FALSE if attr not defined
+   * @returns false if attr not defined
    */
   bool GetMaxLength(PRInt32* aMaxLength);
 
   /**
    * Find out whether an attribute exists on the content or not.
    * @param aAtt the attribute to determine the existence of
-   * @returns PR_FALSE if it does not exist
+   * @returns false if it does not exist
    */
   bool AttributeExists(nsIAtom *aAtt) const
   { return mContent && mContent->HasAttr(kNameSpaceID_None, aAtt); }

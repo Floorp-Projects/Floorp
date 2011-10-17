@@ -623,7 +623,7 @@ gfxPlatform::GetPrefFonts(nsIAtom *aLanguage, nsString& aFonts, bool aAppendUnic
 bool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArrayLen, PrefFontCallback aCallback,
                                     void *aClosure)
 {
-    NS_ENSURE_TRUE(Preferences::GetRootBranch(), PR_FALSE);
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), false);
 
     PRUint32    i;
     for (i = 0; i < aLangArrayLen; i++) {
@@ -645,7 +645,7 @@ bool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArra
         nsAdoptingCString nameValue = Preferences::GetCString(prefName.get());
         if (nameValue) {
             if (!aCallback(prefLang, NS_ConvertUTF8toUTF16(nameValue), aClosure))
-                return PR_FALSE;
+                return false;
         }
     
         // fetch font.name-list.xxx value                   
@@ -669,15 +669,15 @@ bool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArra
                 while (++p != p_end && *p != kComma)
                     /* nothing */ ;
                 nsCAutoString fontName(Substring(start, p));
-                fontName.CompressWhitespace(PR_FALSE, PR_TRUE);
+                fontName.CompressWhitespace(false, true);
                 if (!aCallback(prefLang, NS_ConvertUTF8toUTF16(fontName), aClosure))
-                    return PR_FALSE;
+                    return false;
                 p++;
             }
         }
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 eFontPrefLang
@@ -757,9 +757,9 @@ gfxPlatform::IsLangCJK(eFontPrefLang aLang)
         case eFontPrefLang_ChineseHK:
         case eFontPrefLang_Korean:
         case eFontPrefLang_CJKSet:
-            return PR_TRUE;
+            return true;
         default:
-            return PR_FALSE;
+            return false;
     }
 }
 
@@ -808,7 +808,7 @@ gfxPlatform::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, eFon
                 while (++p != p_end && *p != kComma)
                     /* nothing */ ;
                 nsCAutoString lang(Substring(start, p));
-                lang.CompressWhitespace(PR_FALSE, PR_TRUE);
+                lang.CompressWhitespace(false, true);
                 eFontPrefLang fpl = gfxPlatform::GetFontPrefLangFor(lang.get());
                 switch (fpl) {
                     case eFontPrefLang_Japanese:
@@ -903,8 +903,8 @@ gfxPlatform::AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPre
 eCMSMode
 gfxPlatform::GetCMSMode()
 {
-    if (gCMSInitialized == PR_FALSE) {
-        gCMSInitialized = PR_TRUE;
+    if (gCMSInitialized == false) {
+        gCMSInitialized = true;
         nsresult rv;
 
         PRInt32 mode;
@@ -1139,7 +1139,7 @@ static void ShutdownCMS()
     // Reset the state variables
     gCMSIntent = -2;
     gCMSMode = eCMSMode_Off;
-    gCMSInitialized = PR_FALSE;
+    gCMSInitialized = false;
 }
 
 static void MigratePrefs()
@@ -1170,7 +1170,7 @@ gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aStri
     }
 
     gfxTextRun::CompressedGlyph extendCluster;
-    extendCluster.SetComplex(PR_FALSE, PR_TRUE, 0);
+    extendCluster.SetComplex(false, true, 0);
 
     PRUint32 i, length = aTextRun->GetLength();
     gfxUnicodeProperties::HSType hangulState = gfxUnicodeProperties::HST_NONE;
@@ -1182,7 +1182,7 @@ gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aStri
             i < length - 1 && NS_IS_LOW_SURROGATE(aString[i+1]))
         {
             ch = SURROGATE_TO_UCS4(ch, aString[i+1]);
-            surrogatePair = PR_TRUE;
+            surrogatePair = true;
         }
 
         PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(ch);

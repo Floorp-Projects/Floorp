@@ -49,7 +49,7 @@
 #include "Lowering.h"
 #include "BitSet.h"
 
-#include "jsvector.h"
+#include "js/Vector.h"
 
 namespace js {
 namespace ion {

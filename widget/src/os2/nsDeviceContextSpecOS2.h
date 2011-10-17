@@ -76,7 +76,7 @@ public:
  * @update   dc 2/16/98
  * @param aWidget         Unused
  * @param aPS             Settings for this print job
- * @param aIsPrintPreview if PR_TRUE, creating Spec for PrintPreview
+ * @param aIsPrintPreview if true, creating Spec for PrintPreview
  * @return error status
  */
   NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview);

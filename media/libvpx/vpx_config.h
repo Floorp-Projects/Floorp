@@ -51,3 +51,17 @@
 #include "vpx_config_generic-gnu.h"
 #endif
 
+/* Control error-concealment support using our own #define rather than
+   hard-coding it. */
+#if defined(MOZ_VP8_ERROR_CONCEALMENT)
+#undef CONFIG_ERROR_CONCEALMENT
+#define CONFIG_ERROR_CONCEALMENT 1
+#endif
+
+/* Control encoder support using our own #define rather than hard-coding it. */
+#if defined(MOZ_VP8_ENCODER)
+#undef CONFIG_VP8_ENCODER
+#undef CONFIG_ENCODERS
+#define CONFIG_VP8_ENCODER 1
+#define CONFIG_ENCODERS 1
+#endif

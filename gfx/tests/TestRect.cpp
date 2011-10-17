@@ -53,7 +53,7 @@ TestConstructors()
   if ((rect1.x != 10) || (rect1.y != 20) ||
       (rect1.width != 30) || (rect1.height != 40)) {
     fail("[1] Make sure the rectangle was properly initialized with constructor");
-    return PR_FALSE;
+    return false;
   }
 
   // Create a second rect using the copy constructor
@@ -63,11 +63,11 @@ TestConstructors()
   if ((rect2.x != rect1.x) || (rect2.y != rect1.y) ||
       (rect2.width != rect1.width) || (rect2.height != rect1.height)) {
     fail("[2] Make sure the rectangle was properly initialized with copy constructor");
-    return PR_FALSE;
+    return false;
   }
 
   passed("TestConstructors");
-  return PR_TRUE;
+  return true;
 }
 
 template <class RectType>
@@ -80,13 +80,13 @@ TestEqualityOperator()
   // Test the equality operator
   if (!(rect1 == rect2)) {
     fail("[1] Test the equality operator");
-    return PR_FALSE;
+    return false;
   }
 
   // Test the inequality operator
   if (rect1 != rect2) {
     fail("[2] Test the inequality operator");
-    return PR_FALSE;
+    return false;
   }
 
   // Make sure that two empty rects are equal
@@ -94,11 +94,11 @@ TestEqualityOperator()
   rect2.Empty();
   if (!(rect1 == rect2)) {
     fail("[3] Make sure that two empty rects are equal");
-    return PR_FALSE;
+    return false;
   }
 
   passed("TestEqualityOperator");
-  return PR_TRUE;
+  return true;
 }
 
 template <class RectType>
@@ -113,19 +113,19 @@ TestContainment()
   // Basic test of a point in the middle of the rect
   if (!rect1.Contains(rect1.x + rect1.width/2, rect1.y + rect1.height/2)) {
     fail("[1] Basic test of a point in the middle of the rect");
-    return PR_FALSE;
+    return false;
   }
 
   // Test against a point at the left/top edges
   if (!rect1.Contains(rect1.x, rect1.y)) {
     fail("[2] Test against a point at the left/top edges");
-    return PR_FALSE;
+    return false;
   }
 
   // Test against a point at the right/bottom extents
   if (rect1.Contains(rect1.XMost(), rect1.YMost())) {
     fail("[3] Test against a point at the right/bottom extents");
-    return PR_FALSE;
+    return false;
   }
 
   // Test the rect containment methods
@@ -135,14 +135,14 @@ TestContainment()
   // Test against a rect that's the same as rect1
   if (!rect1.Contains(rect2)) {
     fail("[4] Test against a rect that's the same as rect1");
-    return PR_FALSE;
+    return false;
   }
 
   // Test against a rect whose left edge (only) is outside of rect1
   rect2.x--;
   if (rect1.Contains(rect2)) {
     fail("[5] Test against a rect whose left edge (only) is outside of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.x++;
 
@@ -150,7 +150,7 @@ TestContainment()
   rect2.y--;
   if (rect1.Contains(rect2)) {
     fail("[6] Test against a rect whose top edge (only) is outside of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.y++;
 
@@ -158,7 +158,7 @@ TestContainment()
   rect2.x++;
   if (rect1.Contains(rect2)) {
     fail("[7] Test against a rect whose right edge (only) is outside of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.x--;
 
@@ -166,12 +166,12 @@ TestContainment()
   rect2.y++;
   if (rect1.Contains(rect2)) {
     fail("[8] Test against a rect whose bottom edge (only) is outside of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.y--;
 
   passed("TestContainment");
-  return PR_TRUE;
+  return true;
 }
 
 // Test the method that returns a boolean result but doesn't return a
@@ -186,28 +186,28 @@ TestIntersects()
   // Test against a rect that's the same as rect1
   if (!rect1.Intersects(rect2)) {
     fail("[1] Test against a rect that's the same as rect1");
-    return PR_FALSE;
+    return false;
   }
 
   // Test against a rect that's enclosed by rect1
   rect2.Inflate(-1, -1);
   if (!rect1.Contains(rect2) || !rect1.Intersects(rect2)) {
     fail("[2] Test against a rect that's enclosed by rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.Inflate(1, 1);
 
   // Make sure inflate and deflate worked correctly
   if (rect1 != rect2) {
     fail("[3] Make sure inflate and deflate worked correctly");
-    return PR_FALSE;
+    return false;
   }
 
   // Test against a rect that overlaps the left edge of rect1
   rect2.x--;
   if (!rect1.Intersects(rect2)) {
     fail("[4] Test against a rect that overlaps the left edge of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.x++;
 
@@ -215,7 +215,7 @@ TestIntersects()
   rect2.x -= rect2.width;
   if (rect1.Intersects(rect2)) {
     fail("[5] Test against a rect that's outside of rect1 on the left");
-    return PR_FALSE;
+    return false;
   }
   rect2.x += rect2.width;
 
@@ -223,7 +223,7 @@ TestIntersects()
   rect2.y--;
   if (!rect1.Intersects(rect2)) {
     fail("[6] Test against a rect that overlaps the top edge of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.y++;
 
@@ -231,7 +231,7 @@ TestIntersects()
   rect2.y -= rect2.height;
   if (rect1.Intersects(rect2)) {
     fail("[7] Test against a rect that's outside of rect1 on the top");
-    return PR_FALSE;
+    return false;
   }
   rect2.y += rect2.height;
 
@@ -239,7 +239,7 @@ TestIntersects()
   rect2.x++;
   if (!rect1.Intersects(rect2)) {
     fail("[8] Test against a rect that overlaps the right edge of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.x--;
 
@@ -247,7 +247,7 @@ TestIntersects()
   rect2.x += rect2.width;
   if (rect1.Intersects(rect2)) {
     fail("[9] Test against a rect that's outside of rect1 on the right");
-    return PR_FALSE;
+    return false;
   }
   rect2.x -= rect2.width;
 
@@ -255,7 +255,7 @@ TestIntersects()
   rect2.y++;
   if (!rect1.Intersects(rect2)) {
     fail("[10] Test against a rect that overlaps the bottom edge of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.y--;
 
@@ -263,12 +263,12 @@ TestIntersects()
   rect2.y += rect2.height;
   if (rect1.Intersects(rect2)) {
     fail("[11] Test against a rect that's outside of rect1 on the bottom");
-    return PR_FALSE;
+    return false;
   }
   rect2.y -= rect2.height;
 
   passed("TestIntersects");
-  return PR_TRUE;
+  return true;
 }
 
 // Test the method that returns a boolean result and an intersection rect
@@ -283,14 +283,14 @@ TestIntersection()
   // Test against a rect that's the same as rect1
   if (!dest.IntersectRect(rect1, rect2) || (dest != rect1)) {
     fail("[1] Test against a rect that's the same as rect1");
-    return PR_FALSE;
+    return false;
   }
 
   // Test against a rect that's enclosed by rect1
   rect2.Inflate(-1, -1);
   if (!dest.IntersectRect(rect1, rect2) || (dest != rect2)) {
     fail("[2] Test against a rect that's enclosed by rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.Inflate(1, 1);
 
@@ -299,7 +299,7 @@ TestIntersection()
   if (!dest.IntersectRect(rect1, rect2) ||
      (dest != RectType(rect1.x, rect1.y, rect1.width - 1, rect1.height))) {
     fail("[3] Test against a rect that overlaps the left edge of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.x++;
 
@@ -307,12 +307,12 @@ TestIntersection()
   rect2.x -= rect2.width;
   if (dest.IntersectRect(rect1, rect2)) {
     fail("[4] Test against a rect that's outside of rect1 on the left");
-    return PR_FALSE;
+    return false;
   }
   // Make sure an empty rect is returned
   if (!dest.IsEmpty()) {
     fail("[4] Make sure an empty rect is returned");
-    return PR_FALSE;
+    return false;
   }
   rect2.x += rect2.width;
 
@@ -321,7 +321,7 @@ TestIntersection()
   if (!dest.IntersectRect(rect1, rect2) ||
      (dest != RectType(rect1.x, rect1.y, rect1.width, rect1.height - 1))) {
     fail("[5] Test against a rect that overlaps the top edge of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.y++;
 
@@ -329,12 +329,12 @@ TestIntersection()
   rect2.y -= rect2.height;
   if (dest.IntersectRect(rect1, rect2)) {
     fail("[6] Test against a rect that's outside of rect1 on the top");
-    return PR_FALSE;
+    return false;
   }
   // Make sure an empty rect is returned
   if (!dest.IsEmpty()) {
     fail("[6] Make sure an empty rect is returned");
-    return PR_FALSE;
+    return false;
   }
   rect2.y += rect2.height;
 
@@ -343,7 +343,7 @@ TestIntersection()
   if (!dest.IntersectRect(rect1, rect2) ||
      (dest != RectType(rect1.x + 1, rect1.y, rect1.width - 1, rect1.height))) {
     fail("[7] Test against a rect that overlaps the right edge of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.x--;
 
@@ -351,12 +351,12 @@ TestIntersection()
   rect2.x += rect2.width;
   if (dest.IntersectRect(rect1, rect2)) {
     fail("[8] Test against a rect that's outside of rect1 on the right");
-    return PR_FALSE;
+    return false;
   }
   // Make sure an empty rect is returned
   if (!dest.IsEmpty()) {
     fail("[8] Make sure an empty rect is returned");
-    return PR_FALSE;
+    return false;
   }
   rect2.x -= rect2.width;
 
@@ -365,7 +365,7 @@ TestIntersection()
   if (!dest.IntersectRect(rect1, rect2) ||
      (dest != RectType(rect1.x, rect1.y + 1, rect1.width, rect1.height - 1))) {
     fail("[9] Test against a rect that overlaps the bottom edge of rect1");
-    return PR_FALSE;
+    return false;
   }
   rect2.y--;
 
@@ -373,12 +373,12 @@ TestIntersection()
   rect2.y += rect2.height;
   if (dest.IntersectRect(rect1, rect2)) {
     fail("[10] Test against a rect that's outside of rect1 on the bottom");
-    return PR_FALSE;
+    return false;
   }
   // Make sure an empty rect is returned
   if (!dest.IsEmpty()) {
     fail("[10] Make sure an empty rect is returned");
-    return PR_FALSE;
+    return false;
   }
   rect2.y -= rect2.height;
 
@@ -387,7 +387,7 @@ TestIntersection()
   rect2.SetRect(150, 100, 0, 100);
   if (dest.IntersectRect(rect1, rect2) || !dest.IsEmpty()) {
     fail("[11] Intersection of rects with zero width or height should be empty");
-    return PR_FALSE;
+    return false;
   }
 
   // Tests against a rect with negative width or height
@@ -398,7 +398,7 @@ TestIntersection()
   rect2.SetRect(100, 100, -100, 100);
   if (dest.IntersectRect(rect1, rect2) || !dest.IsEmpty()) {
     fail("[12] Intersection of rects with negative width or height should be empty");
-    return PR_FALSE;
+    return false;
   }
 
   // Those two rects exactly overlap in some way...
@@ -407,7 +407,7 @@ TestIntersection()
   rect2.SetRect(200, 200, -100, -100);
   if (dest.IntersectRect(rect1, rect2) || !dest.IsEmpty()) {
     fail("[13] Intersection of rects with negative width or height should be empty");
-    return PR_FALSE;
+    return false;
   }
 
   // Test against two identical rects with negative height
@@ -415,11 +415,11 @@ TestIntersection()
   rect2.SetRect(100, 100, 100, -100);
   if (dest.IntersectRect(rect1, rect2) || !dest.IsEmpty()) {
     fail("[14] Intersection of rects with negative width or height should be empty");
-    return PR_FALSE;
+    return false;
   }
 
   passed("TestIntersection");
-  return PR_TRUE;
+  return true;
 }
 
 template <class RectType>
@@ -434,7 +434,7 @@ TestUnion()
   rect1.Empty();
   if (!dest.UnionRect(rect1, rect2) || (dest != rect2)) {
     fail("[1] Check the case where the receiver is an empty rect");
-    return PR_FALSE;
+    return false;
   }
 
   // Check the case where the source rect is an empty rect
@@ -442,7 +442,7 @@ TestUnion()
   rect2.Empty();
   if (!dest.UnionRect(rect1, rect2) || (dest != rect1)) {
     fail("[2] Check the case where the source rect is an empty rect");
-    return PR_FALSE;
+    return false;
   }
 
   // Test the case where both rects are empty
@@ -450,7 +450,7 @@ TestUnion()
   rect2.Empty();
   if (dest.UnionRect(rect1, rect2)) {
     fail("[3] Test the case where both rects are empty");
-    return PR_FALSE;
+    return false;
   }
 
   // Test union case where the two rects don't overlap at all
@@ -459,7 +459,7 @@ TestUnion()
   if (!dest.UnionRect(rect1, rect2) ||
      (dest != RectType(rect1.x, rect1.y, rect2.XMost() - rect1.x, rect2.YMost() - rect1.y))) {
     fail("[4] Test union case where the two rects don't overlap at all");
-    return PR_FALSE;
+    return false;
   }
 
   // Test union case where the two rects overlap
@@ -468,11 +468,11 @@ TestUnion()
   if (!dest.UnionRect(rect1, rect2) ||
       (dest != RectType(rect2.x, rect2.y, rect1.XMost() - rect2.x, rect1.YMost() - rect2.y))) {
     fail("[5] Test union case where the two rects overlap");
-    return PR_FALSE;
+    return false;
   }
 
   passed("TestUnion");
-  return PR_TRUE;
+  return true;
 }
 
 int main(int argc, char** argv)

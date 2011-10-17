@@ -160,7 +160,7 @@ nsSVGAnimationElement::GetTargetAttributeName(PRInt32 *aNamespaceID,
     = mAttrsAndChildren.GetAttr(nsGkAtoms::attributeName);
 
   if (!nameAttr)
-    return PR_FALSE;
+    return false;
 
   NS_ASSERTION(nameAttr->Type() == nsAttrValue::eAtom,
     "attributeName should have been parsed as an atom");
@@ -338,7 +338,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
         aAttribute == nsGkAtoms::attributeType) {
       aResult.ParseAtom(aValue);
       AnimationNeedsResample();
-      return PR_TRUE;
+      return true;
     }
 
     nsresult rv = NS_ERROR_FAILURE;
@@ -358,9 +358,9 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
       AnimationNeedsResample();
       if (NS_FAILED(rv)) {
         ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
-        return PR_FALSE;
+        return false;
       }
-      return PR_TRUE;
+      return true;
     }
   }
 

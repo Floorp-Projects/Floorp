@@ -135,7 +135,7 @@
 
 TableBackgroundPainter::TableBackgroundData::TableBackgroundData()
   : mFrame(nsnull),
-    mVisible(PR_FALSE),
+    mVisible(false),
     mBorder(nsnull),
     mSynthBorder(nsnull)
 {
@@ -164,7 +164,7 @@ TableBackgroundPainter::TableBackgroundData::Clear()
   mRect.SetEmpty();
   mFrame = nsnull;
   mBorder = nsnull;
-  mVisible = PR_FALSE;
+  mVisible = false;
 }
 
 void
@@ -180,7 +180,7 @@ TableBackgroundPainter::TableBackgroundData::SetData()
 {
   NS_PRECONDITION(mFrame, "null frame");
   if (mFrame->IsVisibleForPainting()) {
-    mVisible = PR_TRUE;
+    mVisible = true;
     mBorder = mFrame->GetStyleBorder();
   }
 }
@@ -198,15 +198,15 @@ TableBackgroundPainter::TableBackgroundData::ShouldSetBCBorder()
 {
   /* we only need accurate border data when positioning background images*/
   if (!mVisible) {
-    return PR_FALSE;
+    return false;
   }
 
   const nsStyleBackground *bg = mFrame->GetStyleBackground();
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
     if (!bg->mLayers[i].mImage.IsEmpty())
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 nsresult
@@ -430,7 +430,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame*   aTableFrame,
         mCols[colIndex].mCol.mRect.MoveBy(cgData->mRect.x, cgData->mRect.y);
         //link to parent colgroup's data
         mCols[colIndex].mColGroup = cgData;
-        cgDataOwnershipTaken = PR_TRUE;
+        cgDataOwnershipTaken = true;
         if (mIsBorderCollapse) {
           border.left = lastLeftBorder;
           lastLeftBorder = col->GetContinuousBCBorderWidth(border);

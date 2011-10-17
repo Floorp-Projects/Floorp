@@ -37,13 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "VectorImage.h"
+
 #include "imgIDecoderObserver.h"
 #include "SVGDocumentWrapper.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "nsPresContext.h"
 #include "nsRect.h"
-#include "nsIDocumentViewer.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
 #include "nsIStreamListener.h"
@@ -55,9 +55,10 @@
 #include "gfxUtils.h"
 #include "nsSVGSVGElement.h"
 
-using namespace mozilla::dom;
-
 namespace mozilla {
+
+using namespace dom;
+
 namespace imagelib {
 
 // Helper-class: SVGRootRenderingObserver
@@ -73,7 +74,7 @@ public:
     Element* elem = GetTarget();
     if (elem) {
       nsSVGEffects::AddRenderingObserver(elem, this);
-      mInObserverList = PR_TRUE;
+      mInObserverList = true;
     }
 #ifdef DEBUG
     else {
@@ -115,7 +116,7 @@ protected:
     // Add ourselves back!
     if (!mInObserverList) {
       nsSVGEffects::AddRenderingObserver(elem, this);
-      mInObserverList = PR_TRUE;
+      mInObserverList = true;
     }
   }
 
@@ -157,7 +158,7 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
   nsCOMPtr<nsIPresShell> presShell;
   if (NS_FAILED(mSVGDocumentWrapper->GetPresShell(getter_AddRefs(presShell)))) {
     NS_WARNING("Unable to draw -- presShell lookup failed");
-    return PR_FALSE;
+    return false;
   }
   NS_ABORT_IF_FALSE(presShell, "GetPresShell succeeded but returned null");
 
@@ -189,7 +190,7 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
                             NS_RGBA(0, 0, 0, 0), // transparent
                             aContext);
 
-  return PR_TRUE;
+  return true;
 }
 
 // Implement VectorImage's nsISupports-inherited methods
@@ -205,11 +206,11 @@ VectorImage::VectorImage(imgStatusTracker* aStatusTracker) :
   Image(aStatusTracker), // invoke superclass's constructor
   mRestrictedRegion(0, 0, 0, 0),
   mLastRenderedSize(0, 0),
-  mIsInitialized(PR_FALSE),
-  mIsFullyLoaded(PR_FALSE),
-  mIsDrawing(PR_FALSE),
-  mHaveAnimations(PR_FALSE),
-  mHaveRestrictedRegion(PR_FALSE)
+  mIsInitialized(false),
+  mIsFullyLoaded(false),
+  mIsDrawing(false),
+  mHaveAnimations(false),
+  mHaveRestrictedRegion(false)
 {
 }
 
@@ -237,7 +238,7 @@ VectorImage::Init(imgIDecoderObserver* aObserver,
   mObserver = do_GetWeakReference(aObserver);
   NS_ABORT_IF_FALSE(!strcmp(aMimeType, SVG_MIMETYPE), "Unexpected mimetype");
 
-  mIsInitialized = PR_TRUE;
+  mIsInitialized = true;
 
   return NS_OK;
 }
@@ -385,7 +386,7 @@ NS_IMETHODIMP
 VectorImage::GetCurrentFrameIsOpaque(bool* aIsOpaque)
 {
   NS_ENSURE_ARG_POINTER(aIsOpaque);
-  *aIsOpaque = PR_FALSE;   // In general, SVG content is not opaque.
+  *aIsOpaque = false;   // In general, SVG content is not opaque.
   return NS_OK;
 }
 
@@ -506,9 +507,9 @@ VectorImage::ExtractFrame(PRUint32 aWhichFrame,
   extractedImg->mRestrictedRegion.width  = NS_MAX(aRegion.width,  0);
   extractedImg->mRestrictedRegion.height = NS_MAX(aRegion.height, 0);
 
-  extractedImg->mIsInitialized = PR_TRUE;
-  extractedImg->mIsFullyLoaded = PR_TRUE;
-  extractedImg->mHaveRestrictedRegion = PR_TRUE;
+  extractedImg->mIsInitialized = true;
+  extractedImg->mIsFullyLoaded = true;
+  extractedImg->mHaveRestrictedRegion = true;
 
   *_retval = extractedImg.forget().get();
   return NS_OK;
@@ -540,7 +541,7 @@ VectorImage::Draw(gfxContext* aContext,
     NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
     return NS_ERROR_FAILURE;
   }
-  mIsDrawing = PR_TRUE;
+  mIsDrawing = true;
 
   if (aViewportSize != mLastRenderedSize) {
     mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
@@ -576,7 +577,7 @@ VectorImage::Draw(gfxContext* aContext,
                              subimage, sourceRect, imageRect, aFill,
                              gfxASurface::ImageFormatARGB32, aFilter);
 
-  mIsDrawing = PR_FALSE;
+  mIsDrawing = false;
   return NS_OK;
 }
 
@@ -650,7 +651,7 @@ VectorImage::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
   nsresult rv = mSVGDocumentWrapper->OnStartRequest(aRequest, aCtxt);
   if (NS_FAILED(rv)) {
     mSVGDocumentWrapper = nsnull;
-    mError = PR_TRUE;
+    mError = true;
   }
 
   return rv;
@@ -675,11 +676,11 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
     // XXXdholbert Need to do something more here -- right now, this just
     // makes us draw the "object" icon, rather than the (jagged) "broken image"
     // icon.  See bug 594505.
-    mError = PR_TRUE;
+    mError = true;
     return rv;
   }
 
-  mIsFullyLoaded = PR_TRUE;
+  mIsFullyLoaded = true;
   mHaveAnimations = mSVGDocumentWrapper->IsAnimated();
 
   // Start listening to our image for rendering updates

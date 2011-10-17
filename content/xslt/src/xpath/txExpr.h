@@ -920,7 +920,7 @@ public:
      */
     RootExpr()
 #ifdef TX_TO_STRING
-        : mSerialize(PR_TRUE)
+        : mSerialize(true)
 #endif
     {
     }

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsXBLContentSink.h"
 #include "nsIDocument.h"
 #include "nsBindingManager.h"
@@ -61,6 +63,7 @@
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 nsresult
@@ -85,8 +88,8 @@ nsXBLContentSink::nsXBLContentSink()
   : mState(eXBL_InDocument),
     mSecondaryState(eXBL_None),
     mDocInfo(nsnull),
-    mIsChromeOrResource(PR_FALSE),
-    mFoundFirstBinding(PR_FALSE),    
+    mIsChromeOrResource(false),
+    mFoundFirstBinding(false),    
     mBinding(nsnull),
     mHandler(nsnull),
     mImplementation(nsnull),
@@ -96,7 +99,7 @@ nsXBLContentSink::nsXBLContentSink()
     mMethod(nsnull),
     mField(nsnull)
 {
-  mPrettyPrintXML = PR_FALSE;
+  mPrettyPrintXML = false;
 }
 
 nsXBLContentSink::~nsXBLContentSink()
@@ -182,7 +185,7 @@ nsXBLContentSink::FlushText(bool aReleaseTextNode)
         while (cp < end) {
           PRUnichar ch = *cp++;
           if (!XP_IS_SPACE(ch)) {
-            isWS = PR_FALSE;
+            isWS = false;
             break;
           }
         }
@@ -246,7 +249,7 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
 
   return nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
                                          "UnexpectedElement",
-                                         params, NS_ARRAY_LENGTH(params),
+                                         params, ArrayLength(params),
                                          nsnull,
                                          EmptyString() /* source line */,
                                          aLineNumber, 0 /* column number */,
@@ -399,7 +402,7 @@ nsXBLContentSink::HandleCDataSection(const PRUnichar *aData,
 
 #define ENSURE_XBL_STATE(_cond)                                                       \
   PR_BEGIN_MACRO                                                                      \
-    if (!(_cond)) { ReportUnexpectedElement(aTagName, aLineNumber); return PR_TRUE; } \
+    if (!(_cond)) { ReportUnexpectedElement(aTagName, aLineNumber); return true; } \
   PR_END_MACRO
 
 bool 
@@ -410,12 +413,12 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
                                   PRUint32 aLineNumber)
 {
   if (mState == eXBL_Error) {
-    return PR_TRUE;
+    return true;
   }
   
   if (aNameSpaceID != kNameSpaceID_XBL) {
     // Construct non-XBL nodes
-    return PR_TRUE;
+    return true;
   }
 
   bool ret = true;
@@ -425,7 +428,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
     mDocInfo = NS_NewXBLDocumentInfo(mDocument);
     if (!mDocInfo) {
       mState = eXBL_Error;
-      return PR_TRUE;
+      return true;
     }
 
     mDocument->BindingManager()->PutXBLDocumentInfo(mDocInfo);
@@ -450,13 +453,13 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
   else if (aTagName == nsGkAtoms::handlers) {
     ENSURE_XBL_STATE(mState == eXBL_InBinding && mBinding);
     mState = eXBL_InHandlers;
-    ret = PR_FALSE;
+    ret = false;
   }
   else if (aTagName == nsGkAtoms::handler) {
     ENSURE_XBL_STATE(mState == eXBL_InHandlers);
     mSecondaryState = eXBL_InHandler;
     ConstructHandler(aAtts, aLineNumber);
-    ret = PR_FALSE;
+    ret = false;
   }
   else if (aTagName == nsGkAtoms::resources) {
     ENSURE_XBL_STATE(mState == eXBL_InBinding && mBinding);
@@ -573,10 +576,10 @@ nsXBLContentSink::ConstructBinding(PRUint32 aLineNumber)
     if (NS_SUCCEEDED(rv) &&
         NS_SUCCEEDED(mDocInfo->SetPrototypeBinding(cid, mBinding))) {
       if (!mFoundFirstBinding) {
-        mFoundFirstBinding = PR_TRUE;
+        mFoundFirstBinding = true;
         mDocInfo->SetFirstPrototypeBinding(mBinding);
       }
-      binding->UnsetAttr(kNameSpaceID_None, nsGkAtoms::id, PR_FALSE);
+      binding->UnsetAttr(kNameSpaceID_None, nsGkAtoms::id, false);
     } else {
       delete mBinding;
       mBinding = nsnull;
@@ -607,11 +610,11 @@ FindValue(const PRUnichar **aAtts, nsIAtom *aAtom, const PRUnichar **aResult)
     if (nameSpaceID == kNameSpaceID_None && localName == aAtom) {
       *aResult = aAtts[1];
 
-      return PR_TRUE;
+      return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -891,7 +894,7 @@ nsXBLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
 #ifdef MOZ_XUL
   }
 
-  *aAppendContent = PR_TRUE;
+  *aAppendContent = true;
   nsRefPtr<nsXULPrototypeElement> prototype = new nsXULPrototypeElement();
   if (!prototype)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -904,7 +907,7 @@ nsXBLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   AddAttributesToXULPrototype(aAtts, aAttsCount, prototype);
 
   Element* result;
-  nsresult rv = nsXULElement::Create(prototype, mDocument, PR_FALSE, &result);
+  nsresult rv = nsXULElement::Create(prototype, mDocument, false, &result);
   *aResult = result;
   return rv;
 #endif

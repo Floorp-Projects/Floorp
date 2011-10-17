@@ -49,6 +49,8 @@
  * Implementation of nsIFile for "unixy" systems.
  */
 
+#include "mozilla/Util.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -95,7 +97,7 @@
 #include "nsIGnomeVFSService.h"
 #endif
 
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 #include <Carbon/Carbon.h>
 #include "CocoaFileUtils.h"
 #include "prmem.h"
@@ -119,6 +121,8 @@ static nsresult MacErrorMapper(OSErr inErr);
 
 #include "nsNativeCharsetUtils.h"
 #include "nsTraceRefcntImpl.h"
+
+using namespace mozilla;
 
 #define ENSURE_STAT_CACHE()                     \
     PR_BEGIN_MACRO                              \
@@ -273,7 +277,7 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
 {
 }
 
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
                               nsILocalFileMac,
                               nsILocalFile,
@@ -307,10 +311,10 @@ nsLocalFile::FillStatCache() {
     if (STAT(mPath.get(), &mCachedStat) == -1) {
         // try lstat it may be a symlink
         if (LSTAT(mPath.get(), &mCachedStat) == -1) {
-            return PR_FALSE;
+            return false;
         }
     }
-    return PR_TRUE;
+    return true;
 }
 
 NS_IMETHODIMP
@@ -932,7 +936,7 @@ nsLocalFile::MoveToNative(nsIFile *newParent, const nsACString &newName)
 #endif
             rv = CopyToNative(newParent, newName);
             if (NS_SUCCEEDED(rv))
-                rv = Remove(PR_TRUE);
+                rv = Remove(true);
         } else {
             rv = NSRESULT_FOR_ERRNO();
         }
@@ -967,7 +971,7 @@ nsLocalFile::Remove(bool recursive)
 
         nsCOMPtr<nsISimpleEnumerator> dirRef(dir); // release on exit
 
-        rv = dir->Init(this, PR_FALSE);
+        rv = dir->Init(this, false);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1349,7 +1353,7 @@ nsLocalFile::GetParent(nsIFile **aParent)
     *slashp = '\0';
 
     nsCOMPtr<nsILocalFile> localFile;
-    nsresult rv = NS_NewNativeLocalFile(nsDependentCString(buffer), PR_TRUE,
+    nsresult rv = NS_NewNativeLocalFile(nsDependentCString(buffer), true,
                                         getter_AddRefs(localFile));
 
     // make buffer whole again
@@ -1435,17 +1439,17 @@ nsLocalFile::IsExecutable(bool *_retval)
             "air",         // Adobe AIR installer
             "jar"};        // java application bundle
         nsDependentSubstring ext = Substring(path, dotIdx + 1);
-        for (size_t i = 0; i < NS_ARRAY_LENGTH(executableExts); i++) {
+        for (size_t i = 0; i < ArrayLength(executableExts); i++) {
             if (ext.EqualsASCII(executableExts[i])) {
                 // Found a match.  Set result and quit.
-                *_retval = PR_TRUE;
+                *_retval = true;
                 return NS_OK;
             }
         }
     }
 
     // On OS X, then query Launch Services.
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
     // Certain Mac applications, such as Classic applications, which
     // run under Rosetta, might not have the +x mode bit but are still
     // considered to be executable by Launch Services (bug 646748).
@@ -1460,7 +1464,7 @@ nsLocalFile::IsExecutable(bool *_retval)
     ::CFRelease(url);
     if (result == noErr) {
         if ((theInfo.flags & kLSItemInfoIsApplication) != 0) {
-            *_retval = PR_TRUE;
+            *_retval = true;
             return NS_OK;
         }
     }
@@ -1494,7 +1498,7 @@ NS_IMETHODIMP
 nsLocalFile::IsDirectory(bool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = PR_FALSE;
+    *_retval = false;
     ENSURE_STAT_CACHE();
     *_retval = S_ISDIR(mCachedStat.st_mode);
     return NS_OK;
@@ -1504,7 +1508,7 @@ NS_IMETHODIMP
 nsLocalFile::IsFile(bool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = PR_FALSE;
+    *_retval = false;
     ENSURE_STAT_CACHE();
     *_retval = S_ISREG(mCachedStat.st_mode);
     return NS_OK;
@@ -1553,7 +1557,7 @@ nsLocalFile::Equals(nsIFile *inFile, bool *_retval)
 {
     NS_ENSURE_ARG(inFile);
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = PR_FALSE;
+    *_retval = false;
 
     nsCAutoString inPath;
     nsresult rv = inFile->GetNativePath(inPath);
@@ -1579,14 +1583,14 @@ nsLocalFile::Contains(nsIFile *inFile, bool recur, bool *_retval)
     if (NS_FAILED(rv = inFile->GetNativePath(inPath)))
         return rv;
 
-    *_retval = PR_FALSE;
+    *_retval = false;
 
     ssize_t len = mPath.Length();
     if (strncmp(mPath.get(), inPath.get(), len) == 0) {
         // Now make sure that the |inFile|'s path has a separator at len,
         // which implies that it has more components after len.
         if (inPath[len] == '/')
-            *_retval = PR_TRUE;
+            *_retval = true;
     }
 
     return NS_OK;
@@ -1619,7 +1623,7 @@ nsLocalFile::GetNativeTarget(nsACString &_retval)
     nsresult rv = NS_OK;
     nsCOMPtr<nsIFile> self(this);
     PRInt32 maxLinks = 40;
-    while (PR_TRUE) {
+    while (true) {
         if (maxLinks-- == 0) {
             rv = NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
             break;
@@ -1681,7 +1685,7 @@ nsLocalFile::GetNativeTarget(nsACString &_retval)
 NS_IMETHODIMP
 nsLocalFile::GetFollowLinks(bool *aFollowLinks)
 {
-    *aFollowLinks = PR_TRUE;
+    *aFollowLinks = true;
     return NS_OK;
 }
 
@@ -1699,7 +1703,7 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator **entries)
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(dir);
-    nsresult rv = dir->Init(this, PR_FALSE);
+    nsresult rv = dir->Init(this, false);
     if (NS_FAILED(rv)) {
         *entries = nsnull;
         NS_RELEASE(dir);
@@ -1717,13 +1721,13 @@ nsLocalFile::Load(PRLibrary **_retval)
     NS_ENSURE_ARG_POINTER(_retval);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
+    nsTraceRefcntImpl::SetActivityIsLegal(false);
 #endif
 
     *_retval = PR_LoadLibrary(mPath.get());
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
+    nsTraceRefcntImpl::SetActivityIsLegal(true);
 #endif
 
     if (!*_retval)
@@ -1740,7 +1744,7 @@ nsLocalFile::GetPersistentDescriptor(nsACString &aPersistentDescriptor)
 NS_IMETHODIMP
 nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 {
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
     if (aPersistentDescriptor.IsEmpty())
         return NS_ERROR_INVALID_ARG;
 
@@ -1824,7 +1828,7 @@ nsLocalFile::Reveal()
         else 
             return gnomevfs->ShowURIForInput(dirPath);        
     }
-#elif defined(XP_MACOSX)
+#elif defined(MOZ_WIDGET_COCOA)
     CFURLRef url;
     if (NS_SUCCEEDED(GetCFURL(&url))) {
       nsresult rv = CocoaFileUtils::RevealFileInFinder(url);
@@ -1893,7 +1897,7 @@ nsLocalFile::Launch()
     fileUri.Append(mPath);
     mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
     return bridge->OpenUriExternal(fileUri, type) ? NS_OK : NS_ERROR_FAILURE;
-#elif defined(XP_MACOSX)
+#elif defined(MOZ_WIDGET_COCOA)
     CFURLRef url;
     if (NS_SUCCEEDED(GetCFURL(&url))) {
         nsresult rv = CocoaFileUtils::OpenURL(url);
@@ -2016,7 +2020,7 @@ nsLocalFile::Equals(nsIHashable* aOther, bool *aResult)
 {
     nsCOMPtr<nsIFile> otherFile(do_QueryInterface(aOther));
     if (!otherFile) {
-        *aResult = PR_FALSE;
+        *aResult = false;
         return NS_OK;
     }
 
@@ -2056,7 +2060,7 @@ nsLocalFile::GlobalShutdown()
 
 // nsILocalFileMac
 
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 
 static nsresult MacErrorMapper(OSErr inErr)
 {
@@ -2115,7 +2119,7 @@ static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr)
   // first see if the conversion would succeed and find the length of the result
   CFIndex usedBufLen, inStrLen = ::CFStringGetLength(aInStrRef);
   CFIndex charsConverted = ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
-                                              kCFStringEncodingUTF8, 0, PR_FALSE,
+                                              kCFStringEncodingUTF8, 0, false,
                                               NULL, 0, &usedBufLen);
   if (charsConverted == inStrLen) {
     // all characters converted, do the actual conversion
@@ -2369,7 +2373,7 @@ NS_IMETHODIMP
 nsLocalFile::IsPackage(bool *_retval)
 {
   NS_ENSURE_ARG(_retval);
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   CFURLRef url;
   nsresult rv = GetCFURL(&url);

@@ -71,7 +71,7 @@
 #include "nsITextToSubURI.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
-#include "jsdbgapi.h"
+#include "jsfriendapi.h"
 
 static nsresult
 GetContextFromStack(nsIJSContextStack *aStack, JSContext **aContext)
@@ -179,7 +179,7 @@ GetFrameDocument(JSContext *cx, JSStackFrame *fp)
   if (!cx || !fp)
     return nsnull;
 
-  JSObject* scope = JS_GetFrameScopeChain(cx, fp);
+  JSObject* scope = JS_GetGlobalForFrame(fp);
   if (!scope)
     return nsnull;
 
@@ -361,7 +361,7 @@ nsLocation::SetURI(nsIURI* aURI, bool aReplace)
     }
 
     return docShell->LoadURI(aURI, loadInfo,
-                             nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
+                             nsIWebNavigation::LOAD_FLAGS_NONE, true);
   }
 
   return NS_OK;
@@ -447,7 +447,7 @@ nsLocation::GetHost(nsAString& aHost)
   nsCOMPtr<nsIURI> uri;
   nsresult result;
 
-  result = GetURI(getter_AddRefs(uri), PR_TRUE);
+  result = GetURI(getter_AddRefs(uri), true);
 
   if (uri) {
     nsCAutoString hostport;
@@ -486,7 +486,7 @@ nsLocation::GetHostname(nsAString& aHostname)
   nsCOMPtr<nsIURI> uri;
   nsresult result;
 
-  result = GetURI(getter_AddRefs(uri), PR_TRUE);
+  result = GetURI(getter_AddRefs(uri), true);
 
   if (uri) {
     nsCAutoString host;
@@ -559,7 +559,7 @@ nsLocation::SetHref(const nsAString& aHref)
     return NS_ERROR_FAILURE;
 
   if (cx) {
-    rv = SetHrefWithContext(cx, aHref, PR_FALSE);
+    rv = SetHrefWithContext(cx, aHref, false);
   } else {
     rv = GetHref(oldHref);
 
@@ -569,7 +569,7 @@ nsLocation::SetHref(const nsAString& aHref)
       rv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
 
       if (oldUri) {
-        rv = SetHrefWithBase(aHref, oldUri, PR_FALSE);
+        rv = SetHrefWithBase(aHref, oldUri, false);
       }
     }
   }
@@ -697,7 +697,7 @@ nsLocation::GetPort(nsAString& aPort)
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
 
-  result = GetURI(getter_AddRefs(uri), PR_TRUE);
+  result = GetURI(getter_AddRefs(uri), true);
 
   if (uri) {
     PRInt32 port;
@@ -892,7 +892,7 @@ nsLocation::Replace(const nsAString& aUrl)
     rv = GetContextFromStack(stack, &cx);
     NS_ENSURE_SUCCESS(rv, rv);
     if (cx) {
-      return SetHrefWithContext(cx, aUrl, PR_TRUE);
+      return SetHrefWithContext(cx, aUrl, true);
     }
   }
 
@@ -906,7 +906,7 @@ nsLocation::Replace(const nsAString& aUrl)
   rv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return SetHrefWithBase(aUrl, oldUri, PR_TRUE);
+  return SetHrefWithBase(aUrl, oldUri, true);
 }
 
 NS_IMETHODIMP
@@ -923,7 +923,7 @@ nsLocation::Assign(const nsAString& aUrl)
     result = NS_NewURI(getter_AddRefs(oldUri), oldHref);
 
     if (oldUri) {
-      result = SetHrefWithBase(aUrl, oldUri, PR_FALSE);
+      result = SetHrefWithBase(aUrl, oldUri, false);
     }
   }
 

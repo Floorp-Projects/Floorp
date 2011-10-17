@@ -55,9 +55,9 @@ static void PR_CALLBACK nsProtectedAuthThreadRunner(void *arg)
 
 nsProtectedAuthThread::nsProtectedAuthThread()
 : mMutex("nsProtectedAuthThread.mMutex")
-, mIAmRunning(PR_FALSE)
-, mStatusObserverNotified(PR_FALSE)
-, mLoginReady(PR_FALSE)
+, mIAmRunning(false)
+, mStatusObserverNotified(false)
+, mLoginReady(false)
 , mThreadHandle(nsnull)
 , mSlot(0)
 , mLoginResult(SECFailure)
@@ -93,7 +93,7 @@ NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver *aObserver)
     }
 
     observerProxy.swap(mStatusObserver);
-    mIAmRunning = PR_TRUE;
+    mIAmRunning = true;
     
     mThreadHandle = PR_CreateThread(PR_USER_THREAD, nsProtectedAuthThreadRunner, static_cast<void*>(this), 
         PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
@@ -150,8 +150,8 @@ void nsProtectedAuthThread::Run(void)
     {
         MutexAutoLock lock(mMutex);
 
-        mLoginReady = PR_TRUE;
-        mIAmRunning = PR_FALSE;
+        mLoginReady = true;
+        mIAmRunning = false;
 
         // Forget the slot
         if (mSlot)
@@ -166,7 +166,7 @@ void nsProtectedAuthThread::Run(void)
         }
 
         mStatusObserver = nsnull;
-        mStatusObserverNotified = PR_TRUE;
+        mStatusObserverNotified = true;
     }
     
     if (observer)

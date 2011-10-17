@@ -38,6 +38,7 @@
 #include "LayerSorter.h"
 #include "DirectedGraph.h"
 #include "limits.h"
+#include "gfxLineSegment.h"
 
 namespace mozilla {
 namespace layers {
@@ -78,11 +79,17 @@ static gfxFloat RecoverZDepth(const gfx3DMatrix& aTransform, const gfxPoint& aPo
  * are both preserve-3d children.
  *
  * We want to find the relative z depths of the 2 layers at points where they
- * intersect when projected onto the 2d screen plane.
+ * intersect when projected onto the 2d screen plane. Intersections are defined
+ * as corners that are positioned within the other quad, as well as intersections
+ * of the lines.
  *
- * If the ordering is consistent at all intersection points, then we have
- * a definitive order, otherwise the 2 layers must actually intersect in 3d
- * space, and we just order these arbitrarily.
+ * We then choose the intersection point with the greatest difference in Z
+ * depths and use this point to determine an ordering for the two layers.
+ * For layers that are intersecting in 3d space, this essentially guesses an 
+ * order. In a lot of cases we only intersect right at the edge point (3d cubes
+ * in particular) and this generates the 'correct' looking ordering. For planes
+ * that truely intersect, then there is no correct ordering and this remains
+ * unsolved without changing our rendering code.
  */
 static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
   gfxRect ourRect = aOne->GetEffectiveVisibleRegion().GetBounds();
@@ -95,14 +102,39 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
   gfxQuad ourTransformedRect = ourTransform.TransformRect(ourRect);
   gfxQuad otherTransformedRect = otherTransform.TransformRect(otherRect);
 
+  gfxRect ourBounds = ourTransformedRect.GetBounds();
+  gfxRect otherBounds = otherTransformedRect.GetBounds();
+
+  if (!ourBounds.Intersects(otherBounds)) {
+    return Undefined;
+  }
+
   // Make a list of all points that are within the other rect.
+  // Could we just check Contains() on the bounds rects. ie, is it possible
+  // for layers to overlap without intersections (in 2d space) and yet still
+  // have their bounds rects not completely enclose each other?
   nsTArray<gfxPoint> points;
-  for (PRUint32 i=0; i<4; i++) {
+  for (PRUint32 i = 0; i < 4; i++) {
     if (ourTransformedRect.Contains(otherTransformedRect.mPoints[i])) {
       points.AppendElement(otherTransformedRect.mPoints[i]);
     }
     if (otherTransformedRect.Contains(ourTransformedRect.mPoints[i])) {
       points.AppendElement(ourTransformedRect.mPoints[i]);
+    }
+  }
+  
+  // Look for intersections between lines (in 2d space) and use these as
+  // depth testing points.
+  for (PRUint32 i = 0; i < 4; i++) {
+    for (PRUint32 j = 0; j < 4; j++) {
+      gfxPoint intersection;
+      gfxLineSegment one(ourTransformedRect.mPoints[i],
+                         ourTransformedRect.mPoints[(i + 1) % 4]);
+      gfxLineSegment two(otherTransformedRect.mPoints[j],
+                         otherTransformedRect.mPoints[(j + 1) % 4]);
+      if (one.Intersects(two, intersection)) {
+        points.AppendElement(intersection);
+      }
     }
   }
 
@@ -112,21 +144,23 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
   }
 
   // Find the relative Z depths of each intersection point and check that the layers are in the same order.
-  bool drawBefore = false;
+  gfxFloat highest = 0;
   for (PRUint32 i = 0; i < points.Length(); i++) {
-    bool temp = RecoverZDepth(ourTransform, points.ElementAt(i)) <= RecoverZDepth(otherTransform, points.ElementAt(i));
-    if (i == 0) {
-      drawBefore = temp; 
-    } else if (drawBefore != temp) {
-      // Mixed ordering means an intersection in 3d space that we can't resolve without plane splitting
-      // or depth buffering. Store this as having no defined order for now.
-      return Undefined;
+    gfxFloat ourDepth = RecoverZDepth(ourTransform, points.ElementAt(i));
+    gfxFloat otherDepth = RecoverZDepth(otherTransform, points.ElementAt(i));
+
+    gfxFloat difference = otherDepth - ourDepth;
+
+    if (fabs(difference) > fabs(highest)) {
+      highest = difference;
     }
   }
-  if (drawBefore) {
+  // If layers have the same depth keep the original order
+  if (highest >= 0) {
     return ABeforeB;
+  } else {
+    return BBeforeA;
   }
-  return BBeforeA;
 }
 
 #ifdef DEBUG
@@ -204,22 +238,24 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
 
   // Move each item without incoming edges into the sorted list,
   // and remove edges from it.
-  while (!noIncoming.IsEmpty()) {
-    PRUint32 last = noIncoming.Length() - 1;
+  do {
+    if (!noIncoming.IsEmpty()) {
+      PRUint32 last = noIncoming.Length() - 1;
 
-    Layer* layer = noIncoming.ElementAt(last);
+      Layer* layer = noIncoming.ElementAt(last);
 
-    noIncoming.RemoveElementAt(last);
-    sortedList.AppendElement(layer);
+      noIncoming.RemoveElementAt(last);
+      sortedList.AppendElement(layer);
 
-    nsTArray<DirectedGraph<Layer*>::Edge> outgoing;
-    graph.GetEdgesFrom(layer, outgoing);
-    for (PRUint32 i = 0; i < outgoing.Length(); i++) {
-      DirectedGraph<Layer*>::Edge edge = outgoing.ElementAt(i);
-      graph.RemoveEdge(edge);
-      if (!graph.NumEdgesTo(edge.mTo)) {
-        // If this node also has no edges now, add it to the list
-        noIncoming.AppendElement(edge.mTo);
+      nsTArray<DirectedGraph<Layer*>::Edge> outgoing;
+      graph.GetEdgesFrom(layer, outgoing);
+      for (PRUint32 i = 0; i < outgoing.Length(); i++) {
+        DirectedGraph<Layer*>::Edge edge = outgoing.ElementAt(i);
+        graph.RemoveEdge(edge);
+        if (!graph.NumEdgesTo(edge.mTo)) {
+          // If this node also has no edges now, add it to the list
+          noIncoming.AppendElement(edge.mTo);
+        }
       }
     }
 
@@ -234,6 +270,9 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
         if (edgeCount && edgeCount < minEdges) {
           minEdges = edgeCount;
           minNode = aLayers.ElementAt(i);
+          if (minEdges == 1) {
+            break;
+          }
         }
       }
 
@@ -241,7 +280,7 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
       graph.RemoveEdgesTo(minNode);
       noIncoming.AppendElement(minNode);
     }
-  }
+  } while (!noIncoming.IsEmpty());
   NS_ASSERTION(!graph.GetEdgeCount(), "Cycles detected!");
 #ifdef DEBUG
   if (gDumpLayerSortList) {

@@ -69,7 +69,7 @@ dhwEnsureImageHlpInitialized()
   static bool gTried       = false;
 
   if (!gInitialized && !gTried) {
-    gTried = PR_TRUE;
+    gTried = true;
     HMODULE module = ::LoadLibrary("DBGHELP.DLL");
     if (!module) {
       DWORD dw = GetLastError();
@@ -77,12 +77,12 @@ dhwEnsureImageHlpInitialized()
              "                 This DLL is needed for succeessfully implementing trace-malloc.\n"
              "                 This dll ships by default on Win2k. Disabling trace-malloc functionality.\n"
              , dw);
-      return PR_FALSE;
+      return false;
     }
 
 #define INIT_PROC(typename_, name_) \
     dhw##name_ = (typename_) ::GetProcAddress(module, #name_); \
-    if(!dhw##name_) return PR_FALSE;
+    if(!dhw##name_) return false;
 
 #ifdef _WIN64
     INIT_PROC(ENUMERATELOADEDMODULES64, EnumerateLoadedModules64);
@@ -93,7 +93,7 @@ dhwEnsureImageHlpInitialized()
 
 #undef INIT_PROC
 
-    gInitialized = PR_TRUE;
+    gInitialized = true;
   }
 
   return gInitialized;
@@ -159,7 +159,7 @@ DHWImportHooker::DHWImportHooker(const char* aModuleName,
         mOriginal(nsnull),
         mHook(aHook),
         mIgnoreModule(aExcludeOurModule ? ThisModule() : nsnull),
-        mHooking(PR_TRUE)
+        mHooking(true)
 {
     //printf("DHWImportHooker hooking %s, function %s\n",aModuleName, aFunctionName);
 
@@ -187,7 +187,7 @@ DHWImportHooker::~DHWImportHooker()
 {
     PR_Lock(gLock);
 
-    mHooking = PR_FALSE;
+    mHooking = false;
     PatchAllModules();
 
     for (DHWImportHooker **cur = &gHooks;
@@ -251,7 +251,7 @@ DHWImportHooker::PatchOneModule(HMODULE aModule, const char* name)
 {
     if(aModule == mIgnoreModule)
     {
-        return PR_TRUE;
+        return true;
     }
 
     // do the fun stuff...
@@ -260,12 +260,12 @@ DHWImportHooker::PatchOneModule(HMODULE aModule, const char* name)
     uint32 size;
 
     desc = (PIMAGE_IMPORT_DESCRIPTOR) 
-        dhwImageDirectoryEntryToData(aModule, PR_TRUE, 
+        dhwImageDirectoryEntryToData(aModule, true, 
                                      IMAGE_DIRECTORY_ENTRY_IMPORT, &size);
 
     if(!desc)
     {
-        return PR_TRUE;
+        return true;
     }
 
     for(; desc->Name; desc++)
@@ -278,7 +278,7 @@ DHWImportHooker::PatchOneModule(HMODULE aModule, const char* name)
 
     if(!desc->Name)
     {
-        return PR_TRUE;
+        return true;
     }
 
     PIMAGE_THUNK_DATA thunk = (PIMAGE_THUNK_DATA)
@@ -311,7 +311,7 @@ DHWImportHooker::PatchOneModule(HMODULE aModule, const char* name)
             {
               printf("failure name %s  func %x\n",name,*ppfn);
               DWORD error = GetLastError();
-              return PR_TRUE;
+              return true;
             }
             else
             {
@@ -322,7 +322,7 @@ DHWImportHooker::PatchOneModule(HMODULE aModule, const char* name)
         }
 
     }
-    return PR_TRUE;
+    return true;
 }
 
 bool 
@@ -338,7 +338,7 @@ DHWImportHooker::ModuleLoaded(HMODULE aModule, DWORD flags)
             cur->PatchAllModules();
         PR_Unlock(gLock);
     }
-    return PR_TRUE;
+    return true;
 }
 
 // static 

@@ -153,8 +153,8 @@ public:
    * Inform the control that it got (or lost) focus.
    * If it lost focus, the dropdown menu will be rolled up if needed,
    * and FireOnChange() will be called.
-   * @param aOn PR_TRUE if got focus, PR_FALSE if lost focus.
-   * @param aRepaint if PR_TRUE then force repaint (NOTE: we always force repaint currently)
+   * @param aOn true if got focus, false if lost focus.
+   * @param aRepaint if true then force repaint (NOTE: we always force repaint currently)
    * @note This method might destroy |this|.
    */
   virtual void SetFocus(bool aOn, bool aRepaint);
@@ -198,14 +198,14 @@ public:
    * the popup area.
    */
   NS_IMETHOD ShouldRollupOnMouseWheelEvent(bool *aShouldRollup)
-    { *aShouldRollup = PR_TRUE; return NS_OK;}
+    { *aShouldRollup = true; return NS_OK;}
 
   /**
    * A combobox should not roll up if activated by a mouse activate message
    * (eg. X-mouse).
    */
   NS_IMETHOD ShouldRollupOnMouseActivate(bool *aShouldRollup)
-    { *aShouldRollup = PR_FALSE; return NS_OK;}
+    { *aShouldRollup = false; return NS_OK;}
 
   //nsIStatefulFrame
   NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState);
@@ -243,9 +243,9 @@ protected:
 
   /**
    * Show or hide the dropdown list.
-   * @param aShowList PR_TRUE to show, PR_FALSE to hide the dropdown.
+   * @param aShowList true to show, false to hide the dropdown.
    * @note This method might destroy |this|.
-   * @return PR_FALSE if this frame is destroyed, PR_TRUE if still alive.
+   * @return false if this frame is destroyed, true if still alive.
    */
   bool ShowList(bool aShowList);
   void CheckFireOnChange();

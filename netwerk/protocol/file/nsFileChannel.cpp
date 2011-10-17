@@ -170,7 +170,7 @@ nsFileCopyEvent::Dispatch(nsIRunnable *callback,
 
   // Build a coalescing proxy for progress events
   nsresult rv = net_NewTransportEventSinkProxy(getter_AddRefs(mSink), sink,
-                                               target, PR_TRUE);
+                                               target, true);
   if (NS_FAILED(rv))
     return rv;
 
@@ -371,7 +371,7 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
     if (NS_FAILED(rv))
       return rv;
 
-    EnableSynthesizedProgressEvents(PR_TRUE);
+    EnableSynthesizedProgressEvents(true);
 
     // fixup content length and type
     if (ContentLength64() < 0) {

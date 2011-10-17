@@ -26,6 +26,9 @@
 #define prototype_build_intra_predictors(sym) \
     void sym(MACROBLOCKD *x)
 
+#define prototype_intra4x4_predict(sym) \
+    void sym(BLOCKD *x, int b_mode, unsigned char *predictor)
+
 struct vp8_recon_rtcd_vtable;
 
 #if ARCH_X86 || ARCH_X86_64
@@ -88,11 +91,30 @@ extern prototype_build_intra_predictors\
 extern prototype_build_intra_predictors\
     (vp8_recon_build_intra_predictors_mby_s);
 
+#ifndef vp8_recon_build_intra_predictors_mbuv
+#define vp8_recon_build_intra_predictors_mbuv vp8_build_intra_predictors_mbuv
+#endif
+extern prototype_build_intra_predictors\
+    (vp8_recon_build_intra_predictors_mbuv);
+
+#ifndef vp8_recon_build_intra_predictors_mbuv_s
+#define vp8_recon_build_intra_predictors_mbuv_s vp8_build_intra_predictors_mbuv_s
+#endif
+extern prototype_build_intra_predictors\
+    (vp8_recon_build_intra_predictors_mbuv_s);
+
+#ifndef vp8_recon_intra4x4_predict
+#define vp8_recon_intra4x4_predict vp8_intra4x4_predict
+#endif
+extern prototype_intra4x4_predict\
+    (vp8_recon_intra4x4_predict);
+
 
 typedef prototype_copy_block((*vp8_copy_block_fn_t));
 typedef prototype_recon_block((*vp8_recon_fn_t));
 typedef prototype_recon_macroblock((*vp8_recon_mb_fn_t));
 typedef prototype_build_intra_predictors((*vp8_build_intra_pred_fn_t));
+typedef prototype_intra4x4_predict((*vp8_intra4x4_pred_fn_t));
 typedef struct vp8_recon_rtcd_vtable
 {
     vp8_copy_block_fn_t  copy16x16;
@@ -105,6 +127,9 @@ typedef struct vp8_recon_rtcd_vtable
     vp8_recon_mb_fn_t    recon_mby;
     vp8_build_intra_pred_fn_t  build_intra_predictors_mby_s;
     vp8_build_intra_pred_fn_t  build_intra_predictors_mby;
+    vp8_build_intra_pred_fn_t  build_intra_predictors_mbuv_s;
+    vp8_build_intra_pred_fn_t  build_intra_predictors_mbuv;
+    vp8_intra4x4_pred_fn_t intra4x4_predict;
 } vp8_recon_rtcd_vtable_t;
 
 #if CONFIG_RUNTIME_CPU_DETECT
@@ -113,6 +138,5 @@ typedef struct vp8_recon_rtcd_vtable
 #define RECON_INVOKE(ctx,fn) vp8_recon_##fn
 #endif
 
-void vp8_recon_intra4x4mb(const vp8_recon_rtcd_vtable_t *rtcd, MACROBLOCKD *x);
 void vp8_recon_intra_mbuv(const vp8_recon_rtcd_vtable_t *rtcd, MACROBLOCKD *x);
 #endif

@@ -42,6 +42,9 @@
 
 #highlighter-nodeinfobar-container {
   position: absolute;
+}
+
+#highlighter-nodeinfobar-container:not([locked]) {
   -moz-transition-property: top, left;
   -moz-transition-duration: 0.1s;
   -moz-transition-timing-function: linear;

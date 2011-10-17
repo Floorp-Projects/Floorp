@@ -153,7 +153,7 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
     }
 
     if (!destroying) {
-      nsContentSink::StartLayout(PR_FALSE);
+      nsContentSink::StartLayout(false);
     }
   }
 
@@ -207,7 +207,7 @@ nsHtml5TreeOpExecutor::FlushPendingNotifications(mozFlushType aType)
 {
   if (aType >= Flush_InterruptibleLayout) {
     // Bug 577508 / 253951
-    nsContentSink::StartLayout(PR_TRUE);
+    nsContentSink::StartLayout(true);
   }
 }
 
@@ -269,6 +269,27 @@ nsHtml5TreeOpExecutor::UpdateChildCounts()
   // No-op
 }
 
+void
+nsHtml5TreeOpExecutor::MarkAsBroken()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(!mFragmentMode, "Fragment parsers can't be broken!");
+  mBroken = true;
+  if (mStreamParser) {
+    mStreamParser->Terminate();
+  }
+  // We are under memory pressure, but let's hope the following allocation
+  // works out so that we get to terminate and clean up the parser from
+  // a safer point.
+  if (mParser) { // can mParser ever be null here?
+    nsCOMPtr<nsIRunnable> terminator =
+      NS_NewRunnableMethod(GetParser(), &nsHtml5Parser::Terminate);
+    if (NS_FAILED(NS_DispatchToMainThread(terminator))) {
+      NS_WARNING("failed to dispatch executor flush event");
+    }
+  }
+}
+
 nsresult
 nsHtml5TreeOpExecutor::FlushTags()
 {
@@ -307,7 +328,7 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
   nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aElement));
   NS_ASSERTION(ssle, "Node didn't QI to style.");
 
-  ssle->SetEnableUpdates(PR_TRUE);
+  ssle->SetEnableUpdates(true);
 
   bool willNotify;
   bool isAlternate;
@@ -352,9 +373,6 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
 void
 nsHtml5TreeOpExecutor::FlushSpeculativeLoads()
 {
-  if (NS_UNLIKELY(!mParser)) {
-    return;
-  }
   nsTArray<nsHtml5SpeculativeLoad> speculativeLoadQueue;
   mStage.MoveSpeculativeLoadsTo(speculativeLoadQueue);
   const nsHtml5SpeculativeLoad* start = speculativeLoadQueue.Elements();
@@ -362,6 +380,10 @@ nsHtml5TreeOpExecutor::FlushSpeculativeLoads()
   for (nsHtml5SpeculativeLoad* iter = const_cast<nsHtml5SpeculativeLoad*>(start);
        iter < end;
        ++iter) {
+    if (NS_UNLIKELY(!mParser)) {
+      // An extension terminated the parser from a HTTP observer.
+      return;
+    }
     iter->Perform(this);
   }
 }
@@ -380,7 +402,7 @@ class nsHtml5FlushLoopGuard
       , mStartTime(PR_IntervalToMilliseconds(PR_IntervalNow()))
     #endif
     {
-      mExecutor->mRunFlushLoopOnStack = PR_TRUE;
+      mExecutor->mRunFlushLoopOnStack = true;
     }
     ~nsHtml5FlushLoopGuard()
     {
@@ -396,7 +418,7 @@ class nsHtml5FlushLoopGuard
           nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop);
       #endif
 
-      mExecutor->mRunFlushLoopOnStack = PR_FALSE;
+      mExecutor->mRunFlushLoopOnStack = false;
     }
 };
 
@@ -422,6 +444,10 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
     if (!mParser) {
       // Parse has terminated.
       mOpQueue.Clear(); // clear in order to be able to assert in destructor
+      return;
+    }
+
+    if (IsBroken()) {
       return;
     }
 
@@ -453,11 +479,21 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
            iter < end;
            ++iter) {
         iter->Perform(this);
+        if (NS_UNLIKELY(!mParser)) {
+          // An extension terminated the parser from a HTTP observer.
+          mOpQueue.Clear(); // clear in order to be able to assert in destructor
+          return;
+        }
       }
     } else {
       FlushSpeculativeLoads(); // Make sure speculative loads never start after
                                // the corresponding normal loads for the same
                                // URLs.
+      if (NS_UNLIKELY(!mParser)) {
+        // An extension terminated the parser from a HTTP observer.
+        mOpQueue.Clear(); // clear in order to be able to assert in destructor
+        return;
+      }
       // Not sure if this grip is still needed, but previously, the code
       // gripped before calling ParseUntilBlocked();
       nsRefPtr<nsHtml5StreamParser> streamKungFuDeathGrip = 
@@ -547,15 +583,15 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
 void
 nsHtml5TreeOpExecutor::FlushDocumentWrite()
 {
-  if (!mParser) {
+  FlushSpeculativeLoads(); // Make sure speculative loads never start after the
+                // corresponding normal loads for the same URLs.
+
+  if (NS_UNLIKELY(!mParser)) {
     // The parse has ended.
     mOpQueue.Clear(); // clear in order to be able to assert in destructor
     return;
   }
   
-  FlushSpeculativeLoads(); // Make sure speculative loads never start after the 
-                // corresponding normal loads for the same URLs.
-
   if (mFlushState != eNotFlushing) {
     // XXX Can this happen? In case it can, let's avoid crashing.
     return;
@@ -618,20 +654,20 @@ bool
 nsHtml5TreeOpExecutor::IsScriptEnabled()
 {
   if (!mDocument || !mDocShell)
-    return PR_TRUE;
+    return true;
   nsCOMPtr<nsIScriptGlobalObject> globalObject = mDocument->GetScriptGlobalObject();
   // Getting context is tricky if the document hasn't had its
   // GlobalObject set yet
   if (!globalObject) {
     nsCOMPtr<nsIScriptGlobalObjectOwner> owner = do_GetInterface(mDocShell);
-    NS_ENSURE_TRUE(owner, PR_TRUE);
+    NS_ENSURE_TRUE(owner, true);
     globalObject = owner->GetScriptGlobalObject();
-    NS_ENSURE_TRUE(globalObject, PR_TRUE);
+    NS_ENSURE_TRUE(globalObject, true);
   }
   nsIScriptContext *scriptContext = globalObject->GetContext();
-  NS_ENSURE_TRUE(scriptContext, PR_TRUE);
+  NS_ENSURE_TRUE(scriptContext, true);
   JSContext* cx = scriptContext->GetNativeContext();
-  NS_ENSURE_TRUE(cx, PR_TRUE);
+  NS_ENSURE_TRUE(cx, true);
   bool enabled = true;
   nsContentUtils::GetSecurityManager()->
     CanExecuteScripts(cx, mDocument->NodePrincipal(), &enabled);
@@ -671,7 +707,7 @@ nsHtml5TreeOpExecutor::StartLayout() {
     return;
   }
 
-  nsContentSink::StartLayout(PR_FALSE);
+  nsContentSink::StartLayout(false);
 
   BeginDocUpdate();
 }
@@ -712,7 +748,7 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
     #ifdef DEBUG
     nsresult rv = 
     #endif
-    aScriptElement->DoneAddingChildren(PR_TRUE); // scripts ignore the argument
+    aScriptElement->DoneAddingChildren(true); // scripts ignore the argument
     NS_ASSERTION(rv != NS_ERROR_HTMLPARSER_BLOCK, 
                  "Defer or async script tried to block.");
     return;
@@ -720,7 +756,7 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
   
   NS_ASSERTION(mFlushState == eNotFlushing, "Tried to run script when flushing.");
 
-  mReadingFromStage = PR_FALSE;
+  mReadingFromStage = false;
   
   sele->SetCreatorParser(mParser);
 
@@ -733,7 +769,7 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
   // Now tell the script that it's ready to go. This may execute the script
   // or return NS_ERROR_HTMLPARSER_BLOCK. Or neither if the script doesn't
   // need executing.
-  nsresult rv = aScriptElement->DoneAddingChildren(PR_TRUE);
+  nsresult rv = aScriptElement->DoneAddingChildren(true);
 
   // If the act of insertion evaluated the script, we're fine.
   // Else, block the parser till the script has loaded.
@@ -768,7 +804,7 @@ void
 nsHtml5TreeOpExecutor::Start()
 {
   NS_PRECONDITION(!mStarted, "Tried to start when already started.");
-  mStarted = PR_TRUE;
+  mStarted = true;
 }
 
 void
@@ -820,11 +856,12 @@ void
 nsHtml5TreeOpExecutor::Reset()
 {
   DropHeldElements();
-  mReadingFromStage = PR_FALSE;
+  mReadingFromStage = false;
   mOpQueue.Clear();
-  mStarted = PR_FALSE;
+  mStarted = false;
   mFlushState = eNotFlushing;
-  mRunFlushLoopOnStack = PR_FALSE;
+  mRunFlushLoopOnStack = false;
+  NS_ASSERTION(!mBroken, "Fragment parser got broken.");
 }
 
 void

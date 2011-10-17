@@ -100,7 +100,7 @@ nsMathMLmrootFrame::Init(nsIContent*      aContent,
   // up-to-date if dynamic changes arise.
   nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
   mSqrChar.SetData(presContext, sqrChar);
-  ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mSqrChar, PR_TRUE);
+  ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mSqrChar, true);
 
   return rv;
 }

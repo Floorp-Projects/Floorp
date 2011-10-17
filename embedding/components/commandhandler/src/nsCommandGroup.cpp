@@ -79,7 +79,7 @@ nsGroupsEnumerator::nsGroupsEnumerator(nsHashtable& inHashTable)
 : mHashTable(inHashTable)
 , mIndex(-1)
 , mGroupNames(nsnull)
-, mInitted(PR_FALSE)
+, mInitted(false)
 {
   /* member initializers and constructor code */
 }
@@ -142,7 +142,7 @@ nsGroupsEnumerator::HashEnum(nsHashKey *aKey, void *aData, void* aClosure)
   
   groupsEnum->mGroupNames[groupsEnum->mIndex] = (char*)stringKey->GetString();
   groupsEnum->mIndex ++;
-  return PR_TRUE;
+  return true;
 }
 
 nsresult
@@ -157,7 +157,7 @@ nsGroupsEnumerator::Initialize()
   mHashTable.Enumerate(HashEnum, (void*)this);
 
   mIndex = -1;
-  mInitted = PR_TRUE;
+  mInitted = true;
   return NS_OK;
 }
 
@@ -308,7 +308,7 @@ NS_IMETHODIMP
 nsControllerCommandGroup::IsCommandInGroup(const char * aCommand, const char * aGroup, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PR_FALSE;
+  *_retval = false;
   
   nsCStringKey   groupKey(aGroup);
   nsTArray<char*>* commandList = (nsTArray<char*> *)mGroupsHash.Get(&groupKey);
@@ -320,7 +320,7 @@ nsControllerCommandGroup::IsCommandInGroup(const char * aCommand, const char * a
     char*  commandString = commandList->ElementAt(i);
     if (!nsCRT::strcmp(aCommand,commandString))
     {
-      *_retval = PR_TRUE;
+      *_retval = true;
       break;
     }
   }
@@ -369,5 +369,5 @@ bool nsControllerCommandGroup::ClearEnumerator(nsHashKey *aKey, void *aData, voi
     delete commandList;
   }
 
-  return PR_TRUE;
+  return true;
 }

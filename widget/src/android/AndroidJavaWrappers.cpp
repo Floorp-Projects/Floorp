@@ -342,7 +342,7 @@ AndroidGeckoEvent::ReadCharactersField(JNIEnv *jenv)
 {
     jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jCharactersField);
     if (!s) {
-        mCharacters.SetIsVoid(PR_TRUE);
+        mCharacters.SetIsVoid(true);
         return;
     }
 
@@ -569,7 +569,7 @@ AndroidRect::Init(JNIEnv *jenv, jobject jobj)
 nsJNIString::nsJNIString(jstring jstr, JNIEnv *jenv)
 {
     if (!jstr) {
-        SetIsVoid(PR_TRUE);
+        SetIsVoid(true);
         return;
     }
     JNIEnv *jni = jenv;
@@ -578,14 +578,14 @@ nsJNIString::nsJNIString(jstring jstr, JNIEnv *jenv)
     const jchar* jCharPtr = jni->GetStringChars(jstr, NULL);
 
     if (!jCharPtr) {
-        SetIsVoid(PR_TRUE);
+        SetIsVoid(true);
         return;
     }
 
     jsize len = jni->GetStringLength(jstr);
 
     if (len <= 0) {
-        SetIsVoid(PR_TRUE);
+        SetIsVoid(true);
     } else {
         Assign(jCharPtr, len);
     }

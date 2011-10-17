@@ -74,8 +74,8 @@ public:
 
   /**
    * Gets a weak reference to the hashtable entry.
-   * @param aFound If not nsnull, will be set to PR_TRUE if the entry is found,
-   *               to PR_FALSE otherwise.
+   * @param aFound If not nsnull, will be set to true if the entry is found,
+   *               to false otherwise.
    * @return The entry, or nsnull if not found. Do not release this pointer!
    */
   Interface* GetWeak(KeyType aKey, bool* aFound = nsnull) const;
@@ -130,7 +130,7 @@ nsInterfaceHashtable<KeyClass,Interface>::Get
       NS_IF_ADDREF(*pInterface);
     }
 
-    return PR_TRUE;
+    return true;
   }
 
   // if the key doesn't exist, set *pInterface to null
@@ -138,7 +138,7 @@ nsInterfaceHashtable<KeyClass,Interface>::Get
   if (pInterface)
     *pInterface = nsnull;
 
-  return PR_FALSE;
+  return false;
 }
 
 template<class KeyClass, class Interface>
@@ -163,14 +163,14 @@ nsInterfaceHashtable<KeyClass,Interface>::GetWeak
   if (ent)
   {
     if (aFound)
-      *aFound = PR_TRUE;
+      *aFound = true;
 
     return ent->mData;
   }
 
-  // Key does not exist, return nsnull and set aFound to PR_FALSE
+  // Key does not exist, return nsnull and set aFound to false
   if (aFound)
-    *aFound = PR_FALSE;
+    *aFound = false;
   return nsnull;
 }
 
@@ -198,7 +198,7 @@ nsInterfaceHashtableMT<KeyClass,Interface>::Get
 
     PR_Unlock(this->mLock);
 
-    return PR_TRUE;
+    return true;
   }
 
   // if the key doesn't exist, set *pInterface to null
@@ -208,7 +208,7 @@ nsInterfaceHashtableMT<KeyClass,Interface>::Get
 
   PR_Unlock(this->mLock);
 
-  return PR_FALSE;
+  return false;
 }
 
 #endif // nsInterfaceHashtable_h__
