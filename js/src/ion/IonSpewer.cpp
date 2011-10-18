@@ -64,7 +64,7 @@ void
 ion::IonSpewNewFunction(MIRGraph *graph, JSScript *function)
 {
     if (!ionspewer.init())
-        return false;
+        return;
     ionspewer.beginFunction(graph, function);
 }
 
