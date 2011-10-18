@@ -2690,18 +2690,13 @@ nsWindow::createQWidget(MozQWidget *parent,
     // create a QGraphicsView if this is a new toplevel window
 
     if (mIsTopLevel) {
-        QGraphicsView* newView = nsnull;
 #if defined MOZ_ENABLE_MEEGOTOUCH
-        newView = new MozMGraphicsView(widget, parentWidget);
+        MozMGraphicsView* newView = new MozMGraphicsView(parentWidget);
 #else
-        newView = new MozQGraphicsView(widget, parentWidget);
+        MozQGraphicsView* newView = new MozQGraphicsView(parentWidget);
 #endif
 
-        if (!newView) {
-            delete widget;
-            return nsnull;
-        }
-
+        newView->SetTopLevel(widget, parentWidget);
         newView->setWindowFlags(flags);
         if (mWindowType == eWindowType_dialog) {
             newView->setWindowModality(Qt::WindowModal);

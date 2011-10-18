@@ -35,23 +35,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <QtGui/QApplication>
-#include <QtGui/QCursor>
 #include <QtGui/QInputContext>
-#include <QtGui/QGraphicsSceneContextMenuEvent>
-#include <QtGui/QGraphicsSceneDragDropEvent>
-#include <QtGui/QGraphicsSceneMouseEvent>
 #include <QtGui/QGraphicsSceneHoverEvent>
-#include <QtGui/QGraphicsSceneWheelEvent>
-
-#include <QtCore/QEvent>
-#include <QtCore/QVariant>
+#include <QtGui/QGraphicsSceneMouseEvent>
 #include <QtCore/QTimer>
 
 #include "mozqwidget.h"
 #include "nsWindow.h"
 
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
+
+
 #ifdef MOZ_ENABLE_QTMOBILITY
+#include "mozqorientationsensorfilter.h"
 #ifdef MOZ_X11
 #include <QX11Info>
 #include <X11/Xlib.h>
@@ -91,9 +88,9 @@ static bool gPendingVKBOpen = false;
 static QString gLastPreeditString;
 
 MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
-    : QGraphicsWidget(aParent),
-      mReceiver(aReceiver)
+    : mReceiver(aReceiver)
 {
+     setParentItem(aParent);
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
      setFlag(QGraphicsItem::ItemAcceptsInputMethod);
      setAcceptTouchEvents(true);
@@ -579,8 +576,6 @@ void MozQWidget::requestVKB(int aTimeout, QObject* aWidget)
     }
 }
 
-
-
 void MozQWidget::showVKB()
 {
     // skip showing of keyboard if not pending
@@ -648,3 +643,34 @@ bool MozQWidget::isVKBOpen()
 {
     return gKeyboardOpen;
 }
+
+void
+MozQWidget::NotifyVKB(const QRect& rect)
+{
+    QRegion region(scene()->views()[0]->rect());
+    region -= rect;
+    QRectF bounds = mapRectFromScene(region.boundingRect());
+        nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    if (observerService) {
+        QString rect = QString("{\"left\": %1, \"top\": %2, \"right\": %3, \"bottom\": %4}")
+                               .arg(bounds.x()).arg(bounds.y()).arg(bounds.width()).arg(bounds.height());
+        observerService->NotifyObservers(nsnull, "softkb-change", rect.utf16());
+    }
+}
+
+void MozQWidget::SwitchToForeground()
+{
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (!os)
+        return;
+    os->NotifyObservers(nsnull, "application-foreground", nsnull);
+}
+
+void MozQWidget::SwitchToBackground()
+{
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (!os)
+        return;
+    os->NotifyObservers(nsnull, "application-background", nsnull);
+}
+
