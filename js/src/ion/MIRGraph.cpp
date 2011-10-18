@@ -52,16 +52,12 @@ using namespace js::ion;
 
 MIRGenerator::MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script, JSFunction *fun,
                            MIRGraph &graph)
-  : script(script),
-    cx(cx),
-    pc(NULL),
+  : cx(cx),
+    info_(script, fun),
     temp_(temp),
-    fun_(fun),
     graph_(graph),
     error_(false)
-{
-    nslots_ = script->nslots + CountArgSlots(fun);
-}
+{ }
 
 bool
 MIRGenerator::abort(const char *message, ...)
@@ -118,7 +114,7 @@ MBasicBlock::NewSplitEdge(MIRGenerator *gen, MBasicBlock *pred)
 MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc, Kind kind)
   : gen_(gen),
     slots_(NULL),
-    stackPosition_(gen->firstStackSlot()),
+    stackPosition_(gen->info().firstStackSlot()),
     lastIns_(NULL),
     pc_(pc),
     lir_(NULL),
@@ -135,7 +131,7 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc, Kind kind)
 bool
 MBasicBlock::init()
 {
-    slots_ = gen()->allocate<StackSlot>(gen()->nslots());
+    slots_ = gen()->allocate<StackSlot>(gen()->info().nslots());
     if (!slots_)
         return false;
     return true;
@@ -258,7 +254,7 @@ MBasicBlock::setSlot(uint32 slot, MDefinition *ins)
 void
 MBasicBlock::setVariable(uint32 index)
 {
-    JS_ASSERT(stackPosition_ > gen()->firstStackSlot());
+    JS_ASSERT(stackPosition_ > gen()->info().firstStackSlot());
     StackSlot &top = slots_[stackPosition_ - 1];
 
     MDefinition *def = top.def;
@@ -296,14 +292,14 @@ void
 MBasicBlock::setArg(uint32 arg)
 {
     // :TODO:  assert not closed
-    setVariable(gen()->argSlot(arg));
+    setVariable(gen()->info().argSlot(arg));
 }
 
 void
 MBasicBlock::setLocal(uint32 local)
 {
     // :TODO:  assert not closed
-    setVariable(gen()->localSlot(local));
+    setVariable(gen()->info().localSlot(local));
 }
 
 void
@@ -315,7 +311,7 @@ MBasicBlock::rewriteSlot(uint32 slot, MDefinition *ins)
 void
 MBasicBlock::push(MDefinition *ins)
 {
-    JS_ASSERT(stackPosition_ < gen()->nslots());
+    JS_ASSERT(stackPosition_ < gen()->info().nslots());
     slots_[stackPosition_].set(ins);
     stackPosition_++;
 }
@@ -326,7 +322,7 @@ MBasicBlock::pushVariable(uint32 slot)
     if (slots_[slot].isCopy())
         slot = slots_[slot].copyOf;
 
-    JS_ASSERT(stackPosition_ < gen()->nslots());
+    JS_ASSERT(stackPosition_ < gen()->info().nslots());
     StackSlot &to = slots_[stackPosition_];
     StackSlot &from = slots_[slot];
 
@@ -342,20 +338,20 @@ void
 MBasicBlock::pushArg(uint32 arg)
 {
     // :TODO:  assert not closed
-    pushVariable(gen()->argSlot(arg));
+    pushVariable(gen()->info().argSlot(arg));
 }
 
 void
 MBasicBlock::pushLocal(uint32 local)
 {
     // :TODO:  assert not closed
-    pushVariable(gen()->localSlot(local));
+    pushVariable(gen()->info().localSlot(local));
 }
 
 MDefinition *
 MBasicBlock::pop()
 {
-    JS_ASSERT(stackPosition_ > gen()->firstStackSlot());
+    JS_ASSERT(stackPosition_ > gen()->info().firstStackSlot());
 
     StackSlot &slot = slots_[--stackPosition_];
     if (slot.isCopy()) {
@@ -378,7 +374,7 @@ MDefinition *
 MBasicBlock::peek(int32 depth)
 {
     JS_ASSERT(depth < 0);
-    JS_ASSERT(stackPosition_ + depth >= gen()->firstStackSlot());
+    JS_ASSERT(stackPosition_ + depth >= gen()->info().firstStackSlot());
     return getSlot(stackPosition_ + depth);
 }
 

@@ -82,15 +82,15 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
         return true;
 
     uint32 nslots = snapshot->numEntries() / BOX_PIECES;
-    uint32 nfixed = gen->script->nfixed +
-                    (gen->fun() ? gen->fun()->nargs + 1 : 0);
+    uint32 nfixed = gen->info().ninvoke();
     JS_ASSERT(nslots >= nfixed);
     uint32 exprStack = nslots - nfixed;
 
     IonSpew(IonSpew_Snapshots, "Encoding snapshot %p (nfixed %d) (exprStack %d)",
             (void *)snapshot, nfixed, exprStack);
 
-    SnapshotOffset offset = snapshots_.start(gen->fun(), gen->script, snapshot->mir()->pc(),
+    SnapshotOffset offset = snapshots_.start(gen->info().fun(), gen->info().script(),
+                                             snapshot->mir()->pc(),
                                              masm.framePushed(), exprStack,
                                              snapshot->bailoutKind());
 

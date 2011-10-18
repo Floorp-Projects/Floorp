@@ -418,7 +418,7 @@ def main(argv):
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
                   help='Run all tests with valgrind, if valgrind is in $PATH.')
-    op.add_option('--jitflags', dest='jitflags', default='mjp',
+    op.add_option('--jitflags', dest='jitflags', default=None,
                   help='Example: --jitflags=j,mj,mjp to run each test with -j, -m -j, -m -j -p [default=%default]')
     op.add_option('--avoid-stdio', dest='avoid_stdio', action='store_true',
                   help='Use js-shell file indirection instead of piping stdio.')
@@ -491,7 +491,14 @@ def main(argv):
 
     # The full test list is ready. Now create copies for each JIT configuration.
     job_list = []
-    if OPTIONS.ion:
+    if OPTIONS.jitflags:
+        jitflags_list = parse_jitflags()
+        for test in test_list:
+            for jitflags in jitflags_list:
+                new_test = test.copy()
+                new_test.jitflags.extend(jitflags)
+                job_list.append(new_test)
+    else:
         ion_flags = [ '--ion-eager',
                       '--ion-regalloc=greedy',
                       '--ion-gvn=off',
@@ -505,14 +512,6 @@ def main(argv):
                 new_test = test.copy()
                 new_test.jitflags.extend(args)
                 job_list.append(new_test)
-    else:
-        jitflags_list = parse_jitflags()
-        for test in test_list:
-            for jitflags in jitflags_list:
-                new_test = test.copy()
-                new_test.jitflags.extend(jitflags)
-                job_list.append(new_test)
-    
 
     shell_args = shlex.split(OPTIONS.shell_args)
 
