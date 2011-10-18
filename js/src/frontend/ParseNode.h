@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -19,14 +19,14 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 1998-2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -38,22 +38,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsparse_h___
-#define jsparse_h___
-/*
- * JS parser definitions.
- */
-#include "jsversion.h"
-#include "jsprvtd.h"
-#include "jspubtd.h"
-#include "jsatom.h"
-#include "jsscan.h"
+#ifndef ParseNode_h__
+#define ParseNode_h__
+
 #include "jsscript.h"
-#include "jswin.h"
 
 #include "frontend/ParseMaps.h"
-
-JS_BEGIN_EXTERN_C
+#include "frontend/TokenStream.h"
 
 /*
  * Parsing builds a tree of nodes that directs code generation.  This tree is
@@ -312,48 +303,9 @@ typedef enum JSParseNodeArity {
 
 struct JSDefinition;
 
-namespace js {
-
-struct GlobalScope {
-    GlobalScope(JSContext *cx, JSObject *globalObj, JSCodeGenerator *cg)
-      : globalObj(globalObj), cg(cg), defs(cx), names(cx)
-    { }
-
-    struct GlobalDef {
-        JSAtom        *atom;        // If non-NULL, specifies the property name to add.
-        JSFunctionBox *funbox;      // If non-NULL, function value for the property.
-                                    // This value is only set/used if atom is non-NULL.
-        uint32        knownSlot;    // If atom is NULL, this is the known shape slot.
-
-        GlobalDef() { }
-        GlobalDef(uint32 knownSlot)
-          : atom(NULL), knownSlot(knownSlot)
-        { }
-        GlobalDef(JSAtom *atom, JSFunctionBox *box) :
-          atom(atom), funbox(box)
-        { }
-    };
-
-    JSObject        *globalObj;
-    JSCodeGenerator *cg;
-
-    /*
-     * This is the table of global names encountered during parsing. Each
-     * global name appears in the list only once, and the |names| table
-     * maps back into |defs| for fast lookup.
-     *
-     * A definition may either specify an existing global property, or a new
-     * one that must be added after compilation succeeds.
-     */
-    Vector<GlobalDef, 16> defs;
-    AtomIndexMap      names;
-};
-
-} /* namespace js */
-
 struct JSParseNode {
   private:
-    uint32              pn_type   : 16, /* TOK_* type, see jsscan.h */
+    uint32              pn_type   : 16, /* TOK_* type, see frontend/TokenStream.h */
                         pn_op     : 8,  /* see JSOp enum and jsopcode.tbl */
                         pn_arity  : 5,  /* see JSParseNodeArity enum */
                         pn_parens : 1,  /* this expr was enclosed in parens */
@@ -799,6 +751,21 @@ struct LexicalScopeNode : public JSParseNode {
     }
 };
 
+JSParseNode *
+NewOrRecycledNode(JSTreeContext *tc);
+
+void
+AddNodeToFreeList(JSParseNode *pn, Parser *parser);
+
+void
+PrepareNodeForMutation(JSParseNode *pn, JSTreeContext *tc);
+
+JSParseNode *
+RecycleTree(JSParseNode *pn, JSTreeContext *tc);
+
+JSParseNode *
+CloneLeftHandSide(JSParseNode *opn, JSTreeContext *tc);
+
 } /* namespace js */
 
 /*
@@ -864,7 +831,8 @@ struct LexicalScopeNode : public JSParseNode {
  *       }
  *   }
  *
- * See jsemit.h for JSTreeContext and its top*Stmt, decls, and lexdeps members.
+ * See frontend/CodeGenerator.h for JSTreeContext and its top*Stmt, decls, and
+ * lexdeps members.
  *
  * Notes:
  *
@@ -873,7 +841,7 @@ struct LexicalScopeNode : public JSParseNode {
  *
  *  1. Due to hoisting, a definition cannot be eliminated even if its "Variable
  *     statement" (ECMA-262 12.2) can be proven to be dead code. RecycleTree in
- *     jsparse.cpp will not recycle a node whose pn_defn bit is set.
+ *     ParseNode.cpp will not recycle a node whose pn_defn bit is set.
  *
  *  2. "lookup x in tc's lexical scope chain" gives up on def/use chaining if a
  *     with statement is found along the the scope chain, which includes tc,
@@ -1009,6 +977,23 @@ JSParseNode::setFunArg()
     pn_dflags |= PND_FUNARG;
 }
 
+namespace js {
+
+inline void
+LinkUseToDef(JSParseNode *pn, JSDefinition *dn, JSTreeContext *tc)
+{
+    JS_ASSERT(!pn->isUsed());
+    JS_ASSERT(!pn->isDefn());
+    JS_ASSERT(pn != dn->dn_uses);
+    pn->pn_link = dn->dn_uses;
+    dn->dn_uses = pn;
+    dn->pn_dflags |= pn->pn_dflags & PND_USE2DEF_FLAGS;
+    pn->setUsed(true);
+    pn->pn_lexdef = dn;
+}
+
+} /* namespace js */
+
 struct JSObjectBox {
     JSObjectBox         *traceLink;
     JSObjectBox         *emitLink;
@@ -1103,246 +1088,4 @@ struct JSFunctionBoxQueue {
     }
 };
 
-#define NUM_TEMP_FREELISTS      6U      /* 32 to 2048 byte size classes (32 bit) */
-
-typedef struct BindData BindData;
-
-namespace js {
-
-enum FunctionSyntaxKind { Expression, Statement };
-
-struct Parser : private js::AutoGCRooter
-{
-    JSContext           *const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
-    void                *tempFreeList[NUM_TEMP_FREELISTS];
-    TokenStream         tokenStream;
-    void                *tempPoolMark;  /* initial JSContext.tempPool mark */
-    JSPrincipals        *principals;    /* principals associated with source */
-    StackFrame          *const callerFrame;  /* scripted caller frame for eval and dbgapi */
-    JSObject            *const callerVarObj; /* callerFrame's varObj */
-    JSParseNode         *nodeList;      /* list of recyclable parse-node structs */
-    uint32              functionCount;  /* number of functions in current unit */
-    JSObjectBox         *traceListHead; /* list of parsed object for GC tracing */
-    JSTreeContext       *tc;            /* innermost tree context (stack-allocated) */
-
-    /* Root atoms and objects allocated for the parsed tree. */
-    js::AutoKeepAtoms   keepAtoms;
-
-    /* Perform constant-folding; must be true when interfacing with the emitter. */
-    bool                foldConstants;
-
-    Parser(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL, bool fold = true);
-    ~Parser();
-
-    friend void js::AutoGCRooter::trace(JSTracer *trc);
-    friend struct ::JSTreeContext;
-    friend struct Compiler;
-
-    /*
-     * Initialize a parser. Parameters are passed on to init tokenStream.
-     * The compiler owns the arena pool "tops-of-stack" space above the current
-     * JSContext.tempPool mark. This means you cannot allocate from tempPool
-     * and save the pointer beyond the next Parser destructor invocation.
-     */
-    bool init(const jschar *base, size_t length, const char *filename, uintN lineno,
-              JSVersion version);
-
-    void setPrincipals(JSPrincipals *prin);
-
-    const char *getFilename() const { return tokenStream.getFilename(); }
-    JSVersion versionWithFlags() const { return tokenStream.versionWithFlags(); }
-    JSVersion versionNumber() const { return tokenStream.versionNumber(); }
-    bool hasXML() const { return tokenStream.hasXML(); }
-
-    /*
-     * Parse a top-level JS script.
-     */
-    JSParseNode *parse(JSObject *chain);
-
-#if JS_HAS_XML_SUPPORT
-    JSParseNode *parseXMLText(JSObject *chain, bool allowList);
-#endif
-
-    /*
-     * Allocate a new parsed object or function container from cx->tempPool.
-     */
-    JSObjectBox *newObjectBox(JSObject *obj);
-
-    JSFunctionBox *newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc);
-
-    /*
-     * Create a new function object given tree context (tc) and a name (which
-     * is optional if this is a function expression).
-     */
-    JSFunction *newFunction(JSTreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind);
-
-    /*
-     * Analyze the tree of functions nested within a single compilation unit,
-     * starting at funbox, recursively walking its kids, then following its
-     * siblings, their kids, etc.
-     */
-    bool analyzeFunctions(JSTreeContext *tc);
-    void cleanFunctionList(JSFunctionBox **funbox);
-    bool markFunArgs(JSFunctionBox *funbox);
-    void markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent);
-    void setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags);
-
-    void trace(JSTracer *trc);
-
-    /*
-     * Report a parse (compile) error.
-     */
-    inline bool reportErrorNumber(JSParseNode *pn, uintN flags, uintN errorNumber, ...);
-
-private:
-    /*
-     * JS parsers, from lowest to highest precedence.
-     *
-     * Each parser must be called during the dynamic scope of a JSTreeContext
-     * object, pointed to by this->tc.
-     *
-     * Each returns a parse node tree or null on error.
-     *
-     * Parsers whose name has a '1' suffix leave the TokenStream state
-     * pointing to the token one past the end of the parsed fragment.  For a
-     * number of the parsers this is convenient and avoids a lot of
-     * unnecessary ungetting and regetting of tokens.
-     *
-     * Some parsers have two versions:  an always-inlined version (with an 'i'
-     * suffix) and a never-inlined version (with an 'n' suffix).
-     */
-    JSParseNode *functionStmt();
-    JSParseNode *functionExpr();
-    JSParseNode *statements();
-    JSParseNode *statement();
-    JSParseNode *switchStatement();
-    JSParseNode *forStatement();
-    JSParseNode *tryStatement();
-    JSParseNode *withStatement();
-#if JS_HAS_BLOCK_SCOPE
-    JSParseNode *letStatement();
-#endif
-    JSParseNode *expressionStatement();
-    JSParseNode *variables(bool inLetHead);
-    JSParseNode *expr();
-    JSParseNode *assignExpr();
-    JSParseNode *condExpr1();
-    JSParseNode *orExpr1();
-    JSParseNode *andExpr1i();
-    JSParseNode *andExpr1n();
-    JSParseNode *bitOrExpr1i();
-    JSParseNode *bitOrExpr1n();
-    JSParseNode *bitXorExpr1i();
-    JSParseNode *bitXorExpr1n();
-    JSParseNode *bitAndExpr1i();
-    JSParseNode *bitAndExpr1n();
-    JSParseNode *eqExpr1i();
-    JSParseNode *eqExpr1n();
-    JSParseNode *relExpr1i();
-    JSParseNode *relExpr1n();
-    JSParseNode *shiftExpr1i();
-    JSParseNode *shiftExpr1n();
-    JSParseNode *addExpr1i();
-    JSParseNode *addExpr1n();
-    JSParseNode *mulExpr1i();
-    JSParseNode *mulExpr1n();
-    JSParseNode *unaryExpr();
-    JSParseNode *memberExpr(JSBool allowCallSyntax);
-    JSParseNode *primaryExpr(js::TokenKind tt, JSBool afterDot);
-    JSParseNode *parenExpr(JSBool *genexp = NULL);
-
-    /*
-     * Additional JS parsers.
-     */
-    bool recognizeDirectivePrologue(JSParseNode *pn, bool *isDirectivePrologueMember);
-
-    enum FunctionType { Getter, Setter, Normal };
-    bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSParseNode **list);
-    JSParseNode *functionBody();
-    JSParseNode *functionDef(PropertyName *name, FunctionType type, FunctionSyntaxKind kind);
-
-    JSParseNode *condition();
-    JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
-                                   js::TokenKind type = js::TOK_SEMI, JSOp op = JSOP_NOP);
-    JSParseNode *generatorExpr(JSParseNode *kid);
-    JSBool argumentList(JSParseNode *listNode);
-    JSParseNode *bracketedExpr();
-    JSParseNode *letBlock(JSBool statement);
-    JSParseNode *returnOrYield(bool useAssignExpr);
-    JSParseNode *destructuringExpr(BindData *data, js::TokenKind tt);
-
-#if JS_HAS_XML_SUPPORT
-    JSParseNode *endBracketedExpr();
-
-    JSParseNode *propertySelector();
-    JSParseNode *qualifiedSuffix(JSParseNode *pn);
-    JSParseNode *qualifiedIdentifier();
-    JSParseNode *attributeIdentifier();
-    JSParseNode *xmlExpr(JSBool inTag);
-    JSParseNode *xmlAtomNode();
-    JSParseNode *xmlNameExpr();
-    JSParseNode *xmlTagContent(js::TokenKind tagtype, JSAtom **namep);
-    JSBool xmlElementContent(JSParseNode *pn);
-    JSParseNode *xmlElementOrList(JSBool allowList);
-    JSParseNode *xmlElementOrListRoot(JSBool allowList);
-#endif /* JS_HAS_XML_SUPPORT */
-
-    bool setAssignmentLhsOps(JSParseNode *pn, JSOp op);
-};
-
-inline bool
-Parser::reportErrorNumber(JSParseNode *pn, uintN flags, uintN errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-    bool result = tokenStream.reportCompileErrorNumberVA(pn, flags, errorNumber, args);
-    va_end(args);
-    return result;
-}
-
-struct Compiler
-{
-    Parser      parser;
-    GlobalScope *globalScope;
-
-    Compiler(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL);
-
-    JSContext *context() {
-        return parser.context;
-    }
-
-    bool init(const jschar *base, size_t length, const char *filename, uintN lineno,
-              JSVersion version) {
-        return parser.init(base, length, filename, lineno, version);
-    }
-
-    static bool
-    compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
-                        js::Bindings *bindings, const jschar *chars, size_t length,
-                        const char *filename, uintN lineno, JSVersion version);
-
-    static JSScript *
-    compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
-                  JSPrincipals *principals, uint32 tcflags,
-                  const jschar *chars, size_t length,
-                  const char *filename, uintN lineno, JSVersion version,
-                  JSString *source = NULL, uintN staticLevel = 0);
-
-  private:
-    static bool defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script);
-};
-
-} /* namespace js */
-
-/*
- * Convenience macro to access Parser.tokenStream as a pointer.
- */
-#define TS(p) (&(p)->tokenStream)
-
-extern JSBool
-js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc,
-                 bool inCond = false);
-
-JS_END_EXTERN_C
-
-#endif /* jsparse_h___ */
+#endif /* ParseNode_h__ */

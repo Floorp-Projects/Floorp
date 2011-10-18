@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -18,11 +19,10 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 1998-2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Rob Ginda rginda@netscape.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,28 +38,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef BytecodeCompiler_h__
+#define BytecodeCompiler_h__
 
-test();
+#include "frontend/Parser.h"
 
-function test()
+namespace js {
+
+struct Compiler
 {
-  enterFunc ("test");
+    Parser      parser;
+    GlobalScope *globalScope;
 
-  var \u0041 = 5;
-  var A\u03B2 = 15;
+    Compiler(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL);
 
-  printStatus ("Escapes in identifiers test.");
-  printBugNumber (23608);
-  printBugNumber (23607);
+    JSContext *context() {
+        return parser.context;
+    }
 
-  reportCompare (5, eval("\u0041"),
-		 "Escaped ASCII Identifier test.");
-  reportCompare (6, eval("++\u0041"),
-		 "Escaped ASCII Identifier test");
-  reportCompare (15, eval("A\u03B2"),
-		 "Escaped non-ASCII Identifier test");
-  reportCompare (16, eval("++A\u03B2"),
-		 "Escaped non-ASCII Identifier test");
-   
-  exitFunc ("test");
-}
+    bool init(const jschar *base, size_t length, const char *filename, uintN lineno,
+              JSVersion version) {
+        return parser.init(base, length, filename, lineno, version);
+    }
+
+    static bool
+    compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
+                        js::Bindings *bindings, const jschar *chars, size_t length,
+                        const char *filename, uintN lineno, JSVersion version);
+
+    static JSScript *
+    compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
+                  JSPrincipals *principals, uint32 tcflags,
+                  const jschar *chars, size_t length,
+                  const char *filename, uintN lineno, JSVersion version,
+                  JSString *source = NULL, uintN staticLevel = 0);
+
+  private:
+    static bool defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script);
+};
+
+} /* namespace js */
+
+#endif /* BytecodeCompiler_h__ */

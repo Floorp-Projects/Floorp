@@ -42,7 +42,6 @@
 #include "vm/Debugger.h"
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsemit.h"
 #include "jsgcmark.h"
 #include "jsobj.h"
 #include "jswrapper.h"
@@ -50,7 +49,11 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
+
+#include "frontend/BytecodeCompiler.h"
+#include "frontend/CodeGenerator.h"
 #include "methodjit/Retcon.h"
+
 #include "vm/Stack-inl.h"
 
 using namespace js;

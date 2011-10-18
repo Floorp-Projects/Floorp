@@ -56,15 +56,19 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsparse.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsautooplen.h"        // generated headers last
+
+#include "ds/LifoAlloc.h"
+#include "frontend/BytecodeCompiler.h"
+#include "frontend/CodeGenerator.h"
+#include "frontend/Parser.h"
+#include "frontend/TokenStream.h"
+#include "vm/RegExpObject.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -72,8 +76,6 @@
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
-#include "ds/LifoAlloc.h"
-#include "vm/RegExpObject.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK_LENGTH  1024    /* initial bytecode chunk length */
@@ -1345,6 +1347,38 @@ JSTreeContext::skipSpansGenerator(unsigned skip)
     }
     return false;
 }
+
+namespace js {
+
+bool
+SetStaticLevel(JSTreeContext *tc, uintN staticLevel)
+{
+    /*
+     * This is a lot simpler than error-checking every UpvarCookie::set, and
+     * practically speaking it leaves more than enough room for upvars.
+     */
+    if (UpvarCookie::isLevelReserved(staticLevel)) {
+        JS_ReportErrorNumber(tc->parser->context, js_GetErrorMessage, NULL,
+                             JSMSG_TOO_DEEP, js_function_str);
+        return false;
+    }
+    tc->staticLevel = staticLevel;
+    return true;
+}
+
+bool
+GenerateBlockId(JSTreeContext *tc, uint32& blockid)
+{
+    if (tc->blockidGen == JS_BIT(20)) {
+        JS_ReportErrorNumber(tc->parser->context, js_GetErrorMessage, NULL,
+                             JSMSG_NEED_DIET, "program");
+        return false;
+    }
+    blockid = tc->blockidGen++;
+    return true;
+}
+
+} /* namespace js */
 
 void
 js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,

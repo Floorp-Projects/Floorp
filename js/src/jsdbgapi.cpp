@@ -53,7 +53,6 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -61,13 +60,14 @@
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
+#include "frontend/CodeGenerator.h"
+#include "frontend/Parser.h"
 #include "vm/Debugger.h"
 
 #include "jsatominlines.h"
@@ -1036,8 +1036,6 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
         nbytes += GetAtomTotalSize(cx, fun->atom);
     return nbytes;
 }
-
-#include "jsemit.h"
 
 JS_PUBLIC_API(size_t)
 JS_GetScriptTotalSize(JSContext *cx, JSScript *script)

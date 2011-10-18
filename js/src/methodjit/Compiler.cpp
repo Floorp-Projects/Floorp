@@ -42,7 +42,6 @@
 #include "MethodJIT.h"
 #include "jsnum.h"
 #include "jsbool.h"
-#include "jsemit.h"
 #include "jsiter.h"
 #include "Compiler.h"
 #include "StubCalls.h"
@@ -62,12 +61,12 @@
 #include "jshotloop.h"
 
 #include "builtin/RegExp.h"
+#include "frontend/CodeGenerator.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpObject.h"
 
 #include "jsautooplen.h"
 #include "jstypedarrayinlines.h"
-
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;
@@ -6512,7 +6511,7 @@ mjit::Compiler::jsop_newinit()
     void *stub, *stubArg;
     if (isArray) {
         stub = JS_FUNC_TO_DATA_PTR(void *, stubs::NewInitArray);
-        stubArg = (void *) count;
+        stubArg = (void *) uintptr_t(count);
     } else {
         stub = JS_FUNC_TO_DATA_PTR(void *, stubs::NewInitObject);
         stubArg = (void *) baseobj;
@@ -7713,7 +7712,7 @@ mjit::Compiler::finishBarrier(const BarrierState &barrier, RejoinState rejoin, u
     stubcc.syncExit(Uses(0));
     stubcc.leave();
 
-    stubcc.masm.move(ImmPtr((void *) which), Registers::ArgReg1);
+    stubcc.masm.move(ImmIntPtr(intptr_t(which)), Registers::ArgReg1);
     OOL_STUBCALL(stubs::TypeBarrierHelper, rejoin);
     stubcc.rejoin(Changes(0));
 }

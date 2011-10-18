@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set sw=4 ts=8 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -60,14 +60,14 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsexn.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsparse.h"
-#include "jsscan.h"
 #include "jsscript.h"
 
+#include "frontend/CodeGenerator.h"
+#include "frontend/Parser.h"
+#include "frontend/TokenStream.h"
 #include "vm/RegExpObject.h"
 
 #include "jsscriptinlines.h"
@@ -1491,59 +1491,63 @@ TokenStream::getTokenInternal()
         }
         ungetCharIgnoreEOL(c);
 
-        /*
-         * Check for keywords unless we saw Unicode escape or parser asks
-         * to ignore keywords.
-         */
-        const KeywordInfo *kw;
-        if (!hadUnicodeEscape &&
-            !(flags & TSF_KEYWORD_IS_NAME) &&
-            (kw = FindKeyword(identStart, userbuf.addressOfNextRawChar() - identStart))) {
-            if (kw->tokentype == TOK_RESERVED) {
-                if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
-                                              JSMSG_RESERVED_ID, kw->chars)) {
-                    goto error;
-                }
-            } else if (kw->tokentype == TOK_STRICT_RESERVED) {
-                if (isStrictMode()
-                    ? !ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars)
-                    : !ReportCompileErrorNumber(cx, this, NULL,
-                                                JSREPORT_STRICT | JSREPORT_WARNING,
-                                                JSMSG_RESERVED_ID, kw->chars)) {
-                    goto error;
-                }
-            } else {
-                if (kw->version <= versionNumber()) {
-                    tt = kw->tokentype;
-                    tp->t_op = (JSOp) kw->op;
-                    goto out;
-                }
+        /* Convert the escapes by putting into tokenbuf. */
+        if (hadUnicodeEscape && !putIdentInTokenbuf(identStart))
+            goto error;
 
-                /*
-                 * let/yield are a Mozilla extension starting in JS1.7. If we
-                 * aren't parsing for a version supporting these extensions,
-                 * conform to ES5 and forbid these names in strict mode.
-                 */
-                if ((kw->tokentype == TOK_LET || kw->tokentype == TOK_YIELD) &&
-                    !ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars))
-                {
-                    goto error;
+        /* Check for keywords unless parser asks us to ignore keywords. */
+        if (!(flags & TSF_KEYWORD_IS_NAME)) {
+            const KeywordInfo *kw;
+            if (hadUnicodeEscape)
+                kw = FindKeyword(tokenbuf.begin(), tokenbuf.length());
+            else
+                kw = FindKeyword(identStart, userbuf.addressOfNextRawChar() - identStart);
+
+            if (kw) {
+                if (kw->tokentype == TOK_RESERVED) {
+                    if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
+                                                  JSMSG_RESERVED_ID, kw->chars)) {
+                        goto error;
+                    }
+                } else if (kw->tokentype == TOK_STRICT_RESERVED) {
+                    if (isStrictMode()
+                        ? !ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars)
+                        : !ReportCompileErrorNumber(cx, this, NULL,
+                                                    JSREPORT_STRICT | JSREPORT_WARNING,
+                                                    JSMSG_RESERVED_ID, kw->chars)) {
+                        goto error;
+                    }
+                } else {
+                    if (kw->version <= versionNumber()) {
+                        tt = kw->tokentype;
+                        tp->t_op = (JSOp) kw->op;
+                        goto out;
+                    }
+
+                    /*
+                     * let/yield are a Mozilla extension starting in JS1.7. If we
+                     * aren't parsing for a version supporting these extensions,
+                     * conform to ES5 and forbid these names in strict mode.
+                     */
+                    if ((kw->tokentype == TOK_LET || kw->tokentype == TOK_YIELD) &&
+                        !ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars))
+                    {
+                        goto error;
+                    }
                 }
             }
         }
 
         /*
          * Identifiers containing no Unicode escapes can be atomized directly
-         * from userbuf.  The rest must have the escapes converted via
+         * from userbuf.  The rest must use the escapes converted via
          * tokenbuf before atomizing.
          */
         JSAtom *atom;
         if (!hadUnicodeEscape)
             atom = js_AtomizeChars(cx, identStart, userbuf.addressOfNextRawChar() - identStart);
-        else if (putIdentInTokenbuf(identStart))
-            atom = atomize(cx, tokenbuf);
         else
-            atom = NULL;
+            atom = atomize(cx, tokenbuf);
         if (!atom)
             goto error;
         tp->setName(JSOP_NAME, atom->asPropertyName());
