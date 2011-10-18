@@ -74,7 +74,7 @@ endif
 #
 
 ifndef MOZ_NATIVE_JPEG
-tier_platform_dirs	+= jpeg
+tier_platform_dirs	+= media/libjpeg
 endif
 
 ifdef MOZ_UPDATER
