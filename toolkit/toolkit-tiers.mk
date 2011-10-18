@@ -166,7 +166,7 @@ tier_platform_dirs	+= \
 		caps \
 		parser \
 		gfx \
-		modules/libpr0n \
+		image \
 		dom \
 		view \
 		widget \

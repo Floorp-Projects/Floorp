@@ -1,5 +1,28 @@
 const BinaryOutputStream = Components.Constructor("@mozilla.org/binaryoutputstream;1", "nsIBinaryOutputStream", "setOutputStream");
-/* This data is picked from image/test/reftest/generic/check-header.sjs */
+
+function isCatchall(v)
+{
+  // "image/*" item exactly or with a quality factor
+  return /^image\/\*(?:|;q=(?:1(?:\.0{0,3})?|0(?:\.\d{0,3})?))$/.test(v);
+}
+
+/*
+# Python used to generate the following byte array
+def toHex(n):
+  if n < 16: return "0x" + hex(n)[2:].upper()
+  return "0x" + hex(n)[2:].upper()
+
+def hexFile(name):
+  f = open(name, "rb")
+  try:
+    while True:
+      print toHex(ord(f.read(1))) + ", ",
+  except:
+    pass
+
+hexFile("image/test/reftest/generic/green.png")
+*/
+
 const IMAGE_DATA =
   [
    0x89,  0x50,  0x4E,  0x47,  0x0D,  0x0A,  0x1A,  0x0A,  0x00,  0x00,  0x00,
@@ -25,41 +48,25 @@ const IMAGE_DATA =
    0x49,  0x45,  0x4E,  0x44,  0xAE,  0x42,  0x60,  0x82,
   ];
 
-/**
- * The timer is needed when a delay is set. We need it to be out of the method
- * so it is not eaten alive by the GC.
- */
-var timer;
+function handleRequest(request, response)
+{
+  response.setHeader("Content-Type", "text/plain", false);
+  response.setHeader("Cache-Control", "no-cache", false);
 
-function handleRequest(request, response) {
-  var query = {};
-  request.queryString.split('&').forEach(function (val) {
-    var [name, value] = val.split('=');
-    query[name] = unescape(value);
-  });
+  var accept = request.hasHeader("Accept")
+             ? request.getHeader("Accept")
+             : "";
 
-  response.setStatusLine(request.httpVersion, 200, "OK");
-  response.setHeader("Content-Type", "image/png", false);
+  if (accept.split(",").some(isCatchall))
+  {
+    response.setHeader("Content-Type", "image/png", false);
 
-  function imageWrite() {
     var stream = new BinaryOutputStream(response.bodyOutputStream);
     stream.writeByteArray(IMAGE_DATA, IMAGE_DATA.length);
   }
-
-  // If there is no delay, we write the image and leave.
-  if (!("delay" in query)) {
-    imageWrite();
-    return;
+  else
+  {
+    response.setStatusLine(request.httpVersion, 404, "Not found");
+    response.write("Accept header contained: " + accept);
   }
-
-  // If there is a delay, we create a timer which, when it fires, will write
-  // image and leave.
-  response.processAsync();
-  const nsITimer = Components.interfaces.nsITimer;
-
-  timer = Components.classes["@mozilla.org/timer;1"].createInstance(nsITimer);
-  timer.initWithCallback(function() {
-    imageWrite();
-    response.finish();
-  }, query["delay"], nsITimer.TYPE_ONE_SHOT);
 }
