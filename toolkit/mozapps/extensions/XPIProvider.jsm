@@ -3552,30 +3552,39 @@ var XPIProvider = {
     if (Services.appinfo.inSafeMode)
       return;
 
-    // Load the scope if it hasn't already been loaded
-    if (!(aId in this.bootstrapScopes))
-      this.loadBootstrapScope(aId, aFile, aVersion, aType);
+    if (aMethod == "startup")
+      Components.manager.addBootstrappedManifestLocation(aFile);
 
-    if (!(aMethod in this.bootstrapScopes[aId])) {
-      WARN("Add-on " + aId + " is missing bootstrap method " + aMethod);
-      return;
-    }
-
-    let params = {
-      id: aId,
-      version: aVersion,
-      installPath: aFile.clone(),
-      resourceURI: getURIForResourceInFile(aFile, "")
-    };
-
-    LOG("Calling bootstrap method " + aMethod + " on " + aId + " version " +
-        aVersion);
     try {
-      this.bootstrapScopes[aId][aMethod](params, aReason);
+      // Load the scope if it hasn't already been loaded
+      if (!(aId in this.bootstrapScopes))
+        this.loadBootstrapScope(aId, aFile, aVersion, aType);
+
+      if (!(aMethod in this.bootstrapScopes[aId])) {
+        WARN("Add-on " + aId + " is missing bootstrap method " + aMethod);
+        return;
+      }
+
+      let params = {
+        id: aId,
+        version: aVersion,
+        installPath: aFile.clone(),
+        resourceURI: getURIForResourceInFile(aFile, "")
+      };
+
+      LOG("Calling bootstrap method " + aMethod + " on " + aId + " version " +
+          aVersion);
+      try {
+        this.bootstrapScopes[aId][aMethod](params, aReason);
+      }
+      catch (e) {
+        WARN("Exception running bootstrap method " + aMethod + " on " +
+             aId, e);
+      }
     }
-    catch (e) {
-      WARN("Exception running bootstrap method " + aMethod + " on " +
-           aId, e);
+    finally {
+      if (aMethod == "shutdown")
+        Components.manager.removeBootstrappedManifestLocation(aFile);
     }
   },
 
