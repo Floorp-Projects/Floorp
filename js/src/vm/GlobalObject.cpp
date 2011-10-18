@@ -41,14 +41,14 @@
 #include "GlobalObject.h"
 
 #include "jscntxt.h"
-#include "jsemit.h"
 #include "jsexn.h"
 #include "jsmath.h"
 #include "json.h"
 
-#include "jsobjinlines.h"
-
 #include "builtin/RegExp.h"
+#include "frontend/CodeGenerator.h"
+
+#include "jsobjinlines.h"
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;
@@ -209,9 +209,9 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 
     /* Add the global Function and Object properties now. */
     if (!addDataProperty(cx, objectId, JSProto_Object + JSProto_LIMIT * 2, 0))
-        return false;
+        return NULL;
     if (!addDataProperty(cx, functionId, JSProto_Function + JSProto_LIMIT * 2, 0))
-        return false;
+        return NULL;
 
     /* Heavy lifting done, but lingering tasks remain. */
 

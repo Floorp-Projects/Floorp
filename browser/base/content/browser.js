@@ -5838,11 +5838,10 @@ function stylesheetFillPopup(menuPopup) {
     if (!currentStyleSheet.title)
       continue;
 
-    // Skip any stylesheets that don't match the screen media type.
+    // Skip any stylesheets whose media attribute doesn't match.
     if (currentStyleSheet.media.length > 0) {
-      let media = currentStyleSheet.media.mediaText.split(", ");
-      if (media.indexOf("screen") == -1 &&
-          media.indexOf("all") == -1)
+      let mediaQueryList = currentStyleSheet.media.mediaText;
+      if (!window.content.matchMedia(mediaQueryList).matches)
         continue;
     }
 

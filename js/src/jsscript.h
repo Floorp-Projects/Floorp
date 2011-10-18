@@ -175,7 +175,10 @@ class Bindings {
     bool hasExtensibleParents;
 
   public:
-    inline Bindings(JSContext *cx);
+    inline Bindings(JSContext *cx)
+        : lastBinding(NULL), nargs(0), nvars(0), nupvars(0), hasExtensibleParents(false)
+    {
+    }
 
     /*
      * Transfers ownership of bindings data from bindings into this fresh

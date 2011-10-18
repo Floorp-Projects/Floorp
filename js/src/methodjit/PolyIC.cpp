@@ -1888,14 +1888,8 @@ class BindNameCompiler : public PICStubCompiler
         RecompilationMonitor monitor(cx);
 
         JSObject *obj = js_FindIdentifierBase(cx, scopeChain, ATOM_TO_JSID(atom));
-
-        if (monitor.recompiled())
+        if (!obj || monitor.recompiled())
             return obj;
-
-        if (!obj) {
-            disable("error");
-            return obj;
-        }
 
         if (!pic.hit) {
             spew("first hit", "nop");
@@ -1904,10 +1898,8 @@ class BindNameCompiler : public PICStubCompiler
         }
 
         LookupStatus status = generateStub(obj);
-        if (status == Lookup_Error) {
-            disable("error");
+        if (status == Lookup_Error)
             return NULL;
-        }
 
         return obj;
     }
@@ -1988,10 +1980,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                            ? DisabledGetPropIC
                            : DisabledGetPropICNoCache;
         GetPropCompiler cc(f, script, obj, *pic, atom, stub);
-        if (!cc.update()) {
-            cc.disable("error");
+        if (!cc.update())
             THROW();
-        }
     }
 
     Value v;
@@ -2398,7 +2388,6 @@ GetElementIC::disable(JSContext *cx, const char *reason)
 LookupStatus
 GetElementIC::error(JSContext *cx)
 {
-    disable(cx, "error");
     return Lookup_Error;
 }
 
@@ -2993,7 +2982,6 @@ SetElementIC::disable(JSContext *cx, const char *reason)
 LookupStatus
 SetElementIC::error(JSContext *cx)
 {
-    disable(cx, "error");
     return Lookup_Error;
 }
 

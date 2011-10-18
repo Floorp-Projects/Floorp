@@ -51,11 +51,11 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jscntxt.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jsiter.h"
 
+#include "frontend/TokenStream.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
 

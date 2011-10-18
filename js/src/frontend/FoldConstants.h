@@ -1,5 +1,7 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=99:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,15 +14,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of the Original Code is the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2011
  * the Initial Developer. All Rights Reserved.
  *
+ * Contributor(s):
+ *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -32,16 +38,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef FoldConstants_h__
+#define FoldConstants_h__
 
-/**
- * This interface lets you evict a document from the back/forward cache.
- */
-[scriptable, uuid(a576060e-c7df-4d81-aa8c-5b52bd6ad25d)]
-interface nsIBFCacheEntry : nsISupports
-{
-  void RemoveFromBFCacheSync();
-  void RemoveFromBFCacheAsync();
+#include "jsprvtd.h"
 
-  readonly attribute unsigned long long ID;
-};
+JS_BEGIN_EXTERN_C
+
+extern JSBool
+js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc,
+                 bool inCond = false);
+
+JS_END_EXTERN_C
+
+#endif /* FoldConstants_h__ */

@@ -118,7 +118,6 @@ CPPSRCS		= \
 		jsdbgapi.cpp \
 		jsdhash.cpp \
 		jsdtoa.cpp \
-		jsemit.cpp \
 		jsexn.cpp \
 		jsfriendapi.cpp \
 		jsfun.cpp \
@@ -140,14 +139,12 @@ CPPSRCS		= \
 		json.cpp \
 		jsonparser.cpp \
 		jsopcode.cpp \
-		jsparse.cpp \
 		jsproxy.cpp \
 		jsprf.cpp \
 		jsprobes.cpp \
 		jspropertycache.cpp \
 		jspropertytree.cpp \
 		jsreflect.cpp \
-		jsscan.cpp \
 		jsscope.cpp \
 		jsscript.cpp \
 		jsstr.cpp \
@@ -165,7 +162,13 @@ CPPSRCS		= \
 		GlobalObject.cpp \
 		Stack.cpp \
 		String.cpp \
+		BytecodeCompiler.cpp \
+		CodeGenerator.cpp \
+		FoldConstants.cpp \
 		ParseMaps.cpp \
+		ParseNode.cpp \
+		Parser.cpp \
+		TokenStream.cpp \
 		LifoAlloc.cpp \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
@@ -194,7 +197,6 @@ INSTALLED_HEADERS = \
 		jsdate.h \
 		jsdbgapi.h \
 		jsdhash.h \
-		jsemit.h \
 		jsfriendapi.h \
 		jsgc.h \
 		jscell.h \
@@ -215,7 +217,6 @@ INSTALLED_HEADERS = \
 		jsprvtd.h \
 		jspubtd.h \
 		jsreflect.h \
-		jsscan.h \
 		jsstdint.h \
 		jsstr.h \
 		jstracer.h \
