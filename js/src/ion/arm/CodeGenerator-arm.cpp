@@ -845,11 +845,12 @@ CodeGeneratorARM::visitReturn(LReturn *ret)
 void
 CodeGeneratorARM::linkAbsoluteLabels()
 {
-    IonCode *method = gen->script->ion->method();
+    JSScript *script = gen->info().script();
+    IonCode *method = script->ion->method();
 
     for (size_t i = 0; i < deferredDoubles_.length(); i++) {
         DeferredDouble *d = deferredDoubles_[i];
-        const Value &v = gen->script->ion->getConstant(d->index());
+        const Value &v = script->ion->getConstant(d->index());
         MacroAssembler::Bind(method, d->label(), &v);
     }
 }
@@ -944,7 +945,7 @@ CodeGeneratorARM::visitStackArg(LStackArg *arg)
 bool
 CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
 {
-
+#if 0
     // Holds the function object.
     const LAllocation *obj = call->getFunction();
     Register objreg  = ToRegister(obj);
@@ -961,7 +962,6 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
     uint32 unused_stack = StackOffsetOfPassedArg(callargslot);
 
 
-#if 0
     // Guard that objreg is actually a function object.
     masm.ma_ldr(DTRAddr(objreg, DtrOffImm(JSObject::offsetOfClassPointer())), tokreg);
     masm.ma_ldr(DTRAddr(tokreg, DtrOffImm(0)), tokreg);

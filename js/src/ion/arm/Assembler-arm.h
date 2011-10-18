@@ -144,7 +144,7 @@ class VFPRegister
     VFPRegister()
         : _isInvalid(true), _isMissing(false) {}
     VFPRegister(bool b)
-        : _isMissing(b), _isInvalid(false) {}
+        : _isInvalid(false), _isMissing(b) {}
     VFPRegister(FloatRegister fr)
         : kind(Double), _code(fr.code()), _isInvalid(false), _isMissing(false)
     {
@@ -451,7 +451,7 @@ struct Imm8VFPImmData
             return -1;
         return imm4L | (imm4H << 16);
     };
-    Imm8VFPImmData() : imm4L(-1), imm4H(-1), isInvalid(-1) {}
+    Imm8VFPImmData() : imm4L(-1U & 0xf), imm4H(-1U & 0xf), isInvalid(-1) {}
     Imm8VFPImmData(uint32 imm) : imm4L(imm&0xf), imm4H(imm>>4), isInvalid(0) {
         JS_ASSERT(imm <= 0xff);
     }
@@ -721,7 +721,7 @@ class VFPImm {
   public:
     VFPImm(uint32 top);
     uint32 encode() { return data; }
-    bool isValid() { return data != -1; }
+    bool isValid() { return data != -1U; }
 };
 
 class BOffImm
@@ -1189,7 +1189,8 @@ public:
         if (dtmLastReg == -1) {
             vdtmFirstReg = rn;
         } else {
-            JS_ASSERT(rn.code() == dtmLastReg + 1);
+            JS_ASSERT(dtmLastReg > 0);
+            JS_ASSERT(rn.code() == unsigned(dtmLastReg) + 1);
         }
         dtmLastReg = rn.code();
     }
@@ -1239,7 +1240,7 @@ GetArgReg(uint32 arg, Register *out)
 class DoubleEncoder {
     uint32 rep(bool b, uint32 count) {
         uint ret = 0;
-        for (int i = 0; i < count; i++)
+        for (uint32 i = 0; i < count; i++)
             ret = (ret << 1) | b;
         return ret;
     }
