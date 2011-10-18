@@ -780,6 +780,8 @@ private:
                                        Assembler::Condition cond);                                       
     CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
     CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg);
+    CompileStatus compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *argTypes,
+                                     FrameEntry *thisValue, FrameEntry *argValue);
     CompileStatus compileArrayPopShift(FrameEntry *thisv, bool isPacked, bool isArrayPop);
     CompileStatus compileArrayWithLength(uint32 argc);
     CompileStatus compileArrayWithArgs(uint32 argc);
