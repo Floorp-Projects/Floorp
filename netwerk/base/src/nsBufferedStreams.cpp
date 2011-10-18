@@ -80,6 +80,7 @@ nsBufferedStream::nsBufferedStream()
       mFillPoint(0),
       mStream(nsnull),
       mBufferDisabled(false),
+      mEOF(false),
       mGetBufferCount(0)
 {
 }
@@ -186,8 +187,11 @@ nsBufferedStream::Seek(PRInt32 whence, PRInt64 offset)
     // between the current cursor and the mFillPoint "fencepost" -- the
     // client may never get around to a Read or Write after this Seek.
     // Read and Write worry about flushing and filling in that event.
+    // But if we're at EOF, make sure to pass the seek through to the
+    // underlying stream, because it may have auto-closed itself and
+    // needs to reopen.
     PRUint32 offsetInBuffer = PRUint32(absPos - mBufferStartOffset);
-    if (offsetInBuffer <= mFillPoint) {
+    if (offsetInBuffer <= mFillPoint && !mEOF) {
         METER(bufstats.mSeeksWithinBuffer++);
         mCursor = offsetInBuffer;
         return NS_OK;
@@ -201,6 +205,21 @@ nsBufferedStream::Seek(PRInt32 whence, PRInt64 offset)
 
     rv = ras->Seek(whence, offset);
     if (NS_FAILED(rv)) return rv;
+
+    mEOF = false;
+
+    // Recompute whether the offset we're seeking to is in our buffer.
+    // Note that we need to recompute because Flush() might have
+    // changed mBufferStartOffset.
+    offsetInBuffer = PRUint32(absPos - mBufferStartOffset);
+    if (offsetInBuffer <= mFillPoint) {
+        // It's safe to just set mCursor to offsetInBuffer.  In particular, we
+        // want to avoid calling Fill() here since we already have the data that
+        // was seeked to and calling Fill() might auto-close our underlying
+        // stream in some cases.
+        mCursor = offsetInBuffer;
+        return NS_OK;
+    }
 
     METER(if (bufstats.mBigSeekIndex < MAX_BIG_SEEKS)
               bufstats.mBigSeek[bufstats.mBigSeekIndex].mOldOffset =
@@ -246,7 +265,10 @@ nsBufferedStream::SetEOF()
     nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mStream, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    return ras->SetEOF();
+    rv = ras->SetEOF();
+    if (NS_SUCCEEDED(rv))
+        mEOF = true;
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -327,8 +349,12 @@ nsBufferedInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
             return NS_OK;
         }
         nsresult rv = Source()->Read(buf, count, result);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             mBufferStartOffset += *result;  // so nsBufferedStream::Tell works
+            if (*result == 0) {
+                mEOF = true;
+            }
+        }
         return rv;
     }
 
@@ -399,6 +425,9 @@ nsBufferedInputStream::Fill()
     rv = Source()->Read(mBuffer + mFillPoint, mBufferSize - mFillPoint, &amt);
     if (NS_FAILED(rv)) return rv;
 
+    if (amt == 0)
+        mEOF = true;
+    
     mFillPoint += amt;
     return NS_OK;
 }
