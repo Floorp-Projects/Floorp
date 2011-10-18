@@ -310,12 +310,9 @@ nsSVGAnimationElement::BindToTree(nsIDocument* aDocument,
 void
 nsSVGAnimationElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  nsIDocument *doc = OwnerDoc();
-  if (doc) {
-    nsSMILAnimationController *controller = doc->GetAnimationController();
-    if (controller) {
-      controller->UnregisterAnimationElement(this);
-    }
+  nsSMILAnimationController *controller = OwnerDoc()->GetAnimationController();
+  if (controller) {
+    controller->UnregisterAnimationElement(this);
   }
 
   mHrefTarget.Unlink();

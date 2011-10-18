@@ -612,10 +612,7 @@ nsMathMLElement::GetLinkTarget(nsAString& aTarget)
     case 1:
       return;
     }
-    nsIDocument* ownerDoc = OwnerDoc();
-    if (ownerDoc) {
-      ownerDoc->GetBaseTarget(aTarget);
-    }
+    OwnerDoc()->GetBaseTarget(aTarget);
   }
 }
 

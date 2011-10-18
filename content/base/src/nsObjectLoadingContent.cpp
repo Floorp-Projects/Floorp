@@ -604,10 +604,6 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->OwnerDoc();
-  if (!doc) {
-    Fallback(false);
-    return NS_BINDING_ABORTED;    
-  }
 
   PRInt16 shouldProcess = nsIContentPolicy::ACCEPT;
   rv =
@@ -946,7 +942,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
   nsIDocument* doc = thisContent->OwnerDoc();
-  if (!doc || doc->IsStaticDocument() || doc->IsBeingUsedAsImage()) {
+  if (doc->IsStaticDocument() || doc->IsBeingUsedAsImage()) {
     return NS_OK;
   }
 
@@ -1200,7 +1196,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->OwnerDoc();
-  if (!doc || doc->IsBeingUsedAsImage()) {
+  if (doc->IsBeingUsedAsImage()) {
     return NS_OK;
   }
 

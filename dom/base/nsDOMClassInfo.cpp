@@ -7257,16 +7257,6 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   // See http://bugzilla.mozilla.org/show_bug.cgi?id=227417
   nsIDocument* doc = node->OwnerDoc();
 
-  if (!doc) {
-    // No document reachable from nativeObj, use the global object
-    // that was passed to this method.
-
-    *parentObj = globalObj;
-
-    return node->IsInNativeAnonymousSubtree() ?
-      NS_SUCCESS_CHROME_ACCESS_ONLY : NS_OK;
-  }
-
   // If we have a document, make sure one of these is true
   // (1) it has a script handling object,
   // (2) has had one, or has been marked to have had one,
@@ -7619,10 +7609,6 @@ nsElementSH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
 
   nsIDocument* doc = content->OwnerDoc();
-  if (!doc) {
-    // Nothing else to do here
-    return NS_OK;
-  }
 
   nsRefPtr<nsXBLBinding> binding = doc->BindingManager()->GetBinding(content);
   if (!binding) {
@@ -8160,7 +8146,6 @@ nsDOMStringMapSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   nsDOMStringMap* dataset = static_cast<nsDOMStringMap*>(nativeObj);
 
   nsIDocument* document = dataset->GetElement()->OwnerDoc();
-  NS_ENSURE_TRUE(document, NS_OK);
 
   nsCOMPtr<nsIScriptGlobalObject> sgo =
       do_GetInterface(document->GetScopeObject());

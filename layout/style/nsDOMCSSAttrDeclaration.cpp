@@ -176,12 +176,6 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aC
   NS_ASSERTION(mElement, "Something is severely broken -- there should be an Element here!");
 
   nsIDocument* doc = mElement->OwnerDoc();
-  if (!doc) {
-    // document has been destroyed
-    aCSSParseEnv.mPrincipal = nsnull;
-    return;
-  }
-
   aCSSParseEnv.mSheetURI = doc->GetDocumentURI();
   aCSSParseEnv.mBaseURI = mElement->GetBaseURI();
   aCSSParseEnv.mPrincipal = mElement->NodePrincipal();

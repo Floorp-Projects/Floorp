@@ -179,9 +179,6 @@ XBLResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
   // This mirrors code in nsXBLProtoImpl::InstallImplementation
   nsIDocument* doc = content->OwnerDoc();
-  if (!doc) {
-    return JS_TRUE;
-  }
 
   nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
   if (!global) {
@@ -554,11 +551,6 @@ RealizeDefaultContent(nsISupports* aKey,
           return PL_DHASH_STOP;
         }
         nsIDocument *document = insParent->OwnerDoc();
-        if (!document) {
-          data->mRv = NS_ERROR_FAILURE;
-          return PL_DHASH_STOP;
-        }
-
         nsCOMPtr<nsIDOMNode> clonedNode;
         nsCOMArray<nsINode> nodesWithProperties;
         nsNodeUtils::Clone(defContent, true, document->NodeInfoManager(),
@@ -642,10 +634,6 @@ nsXBLBinding::GenerateAnonymousContent()
 
   if (hasContent || hasInsertionPoints) {
     nsIDocument* doc = mBoundElement->OwnerDoc();
-
-    // XXX doc will be null if we're in the midst of paint suppression.
-    if (! doc)
-      return;
     
     nsBindingManager *bindingManager = doc->BindingManager();
 

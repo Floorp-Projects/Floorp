@@ -118,13 +118,9 @@ nsSVGStylableElement::DidAnimateClass()
   }
   mClassAnimAttr->ParseAtomArray(src);
 
-  nsIDocument* doc = OwnerDoc();
-  NS_ASSERTION(doc, "If we're animating we should have an owner");
-  if (doc) {
-    nsIPresShell* shell = doc->GetShell();
-    if (shell) {
-      shell->RestyleForAnimation(this, eRestyle_Self);
-    }
+  nsIPresShell* shell = OwnerDoc()->GetShell();
+  if (shell) {
+    shell->RestyleForAnimation(this, eRestyle_Self);
   }
 
   nsSVGStylableElementBase::DidAnimateClass();

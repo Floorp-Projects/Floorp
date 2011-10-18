@@ -903,16 +903,10 @@ protected:
   }
 
   void RegisterFreezableElement() {
-    nsIDocument* doc = OwnerDoc();
-    if (doc) {
-      doc->RegisterFreezableElement(this);
-    }
+    OwnerDoc()->RegisterFreezableElement(this);
   }
   void UnregisterFreezableElement() {
-    nsIDocument* doc = OwnerDoc();
-    if (doc) {
-      doc->UnregisterFreezableElement(this);
-    }
+    OwnerDoc()->UnregisterFreezableElement(this);
   }
 
   /**

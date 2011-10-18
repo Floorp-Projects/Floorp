@@ -261,7 +261,7 @@ nsXULLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 
   nsIURI* anchorURI = nsnull;
   NS_NewURI(&anchorURI, href,
-            document ? document->GetDocumentCharacterSet().get() : nsnull,
+            document->GetDocumentCharacterSet().get(),
             baseURI);
 
   return anchorURI;

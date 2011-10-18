@@ -259,13 +259,11 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
   NS_ASSERTION(content, "elements must implement nsIContent");
 
   nsIDocument *ownerDoc = content->OwnerDoc();
-  if (ownerDoc) {
-    nsXBLBinding *binding = ownerDoc->BindingManager()->GetBinding(content);
+  nsXBLBinding *binding = ownerDoc->BindingManager()->GetBinding(content);
 
-    while (binding) {
-      urls->AppendElement(binding->PrototypeBinding()->BindingURI(), false);
-      binding = binding->GetBaseBinding();
-    }
+  while (binding) {
+    urls->AppendElement(binding->PrototypeBinding()->BindingURI(), false);
+    binding = binding->GetBaseBinding();
   }
 
   NS_ADDREF(*_retval = urls);

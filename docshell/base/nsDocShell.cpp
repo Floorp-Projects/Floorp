@@ -390,8 +390,6 @@ ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
     return;
 
   nsIDocument *doc = content->OwnerDoc();
-  if (!doc)
-    return;
 
   // value contains relative URIs split on spaces (U+0020)
   const PRUnichar *start = value.BeginReading();
@@ -551,8 +549,6 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
   }
 
   nsIDocument *doc = content->OwnerDoc();
-  if (!doc)
-    return;
 
   nsCOMPtr<nsIChannel> chan;
   ios->NewChannelFromURI(uri, getter_AddRefs(chan));

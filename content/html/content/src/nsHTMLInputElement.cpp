@@ -241,11 +241,9 @@ public:
   AsyncClickHandler(nsHTMLInputElement* aInput)
    : mInput(aInput) {
     
-    nsIDocument* doc = aInput->OwnerDoc();
-    if (doc) {
-      nsPIDOMWindow* win = doc->GetWindow();
-      if (win)
-        mPopupControlState = win->GetPopupControlState();
+    nsPIDOMWindow* win = aInput->OwnerDoc()->GetWindow();
+    if (win) {
+      mPopupControlState = win->GetPopupControlState();
     }
   };
 
@@ -263,8 +261,6 @@ AsyncClickHandler::Run()
 
   // Get parent nsPIDOMWindow object.
   nsCOMPtr<nsIDocument> doc = mInput->OwnerDoc();
-  if (!doc)
-    return NS_ERROR_FAILURE;
 
   nsPIDOMWindow* win = doc->GetWindow();
   if (!win) {
@@ -3738,9 +3734,6 @@ nsHTMLInputElement::HasPatternMismatch() const
   }
 
   nsIDocument* doc = OwnerDoc();
-  if (!doc) {
-    return false;
-  }
 
   return !nsContentUtils::IsPatternMatching(value, pattern, doc);
 }

@@ -1295,9 +1295,7 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
 
   nsresult rv;
 
-  nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(mStartParent->OwnerDoc());
-  if (!doc) return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIDocument> doc = mStartParent->OwnerDoc();
 
   nsCOMPtr<nsIDOMNode> commonAncestor;
   rv = GetCommonAncestorContainer(getter_AddRefs(commonAncestor));

@@ -70,14 +70,12 @@ NS_IMETHODIMP nsPLDOMEvent::Run()
     target->DispatchEvent(mEvent, &defaultActionEnabled);
   } else {
     nsIDocument* doc = mEventNode->OwnerDoc();
-    if (doc) {
-      if (mDispatchChromeOnly) {
-        nsContentUtils::DispatchChromeEvent(doc, mEventNode, mEventType,
-                                            mBubbles, false);
-      } else {
-        nsContentUtils::DispatchTrustedEvent(doc, mEventNode, mEventType,
-                                             mBubbles, false);
-      }
+    if (mDispatchChromeOnly) {
+      nsContentUtils::DispatchChromeEvent(doc, mEventNode, mEventType,
+                                          mBubbles, false);
+    } else {
+      nsContentUtils::DispatchTrustedEvent(doc, mEventNode, mEventType,
+                                           mBubbles, false);
     }
   }
 

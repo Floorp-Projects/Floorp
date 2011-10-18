@@ -400,8 +400,7 @@ nsIdentifierMapEntry::RemoveIdElement(Element* aElement)
   // This could fire in OOM situations
   // Only assert this in HTML documents for now as XUL does all sorts of weird
   // crap.
-  NS_ASSERTION(!aElement->OwnerDoc() ||
-               !aElement->OwnerDoc()->IsHTML() ||
+  NS_ASSERTION(!aElement->OwnerDoc()->IsHTML() ||
                mIdContentList.IndexOf(aElement) >= 0,
                "Removing id entry that doesn't exist");
 
@@ -1129,9 +1128,6 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
   }
 
   nsIDocument* doc = aRequestingNode->OwnerDoc();
-  if (!doc) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::GetSameOriginChecker();
   NS_ENSURE_TRUE(req, NS_ERROR_OUT_OF_MEMORY);
@@ -4816,12 +4812,10 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsIDocument *ownerDoc = imported->OwnerDoc();
-      if (ownerDoc) {
-        rv = nsNodeUtils::CallUserDataHandlers(nodesWithProperties, ownerDoc,
-                                               nsIDOMUserDataHandler::NODE_IMPORTED,
-                                               true);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      rv = nsNodeUtils::CallUserDataHandlers(nodesWithProperties, ownerDoc,
+                                             nsIDOMUserDataHandler::NODE_IMPORTED,
+                                             true);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       newNode.swap(*aResult);
 
