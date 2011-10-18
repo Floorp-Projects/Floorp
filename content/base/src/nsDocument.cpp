@@ -400,8 +400,8 @@ nsIdentifierMapEntry::RemoveIdElement(Element* aElement)
   // This could fire in OOM situations
   // Only assert this in HTML documents for now as XUL does all sorts of weird
   // crap.
-  NS_ASSERTION(!aElement->GetOwnerDoc() ||
-               !aElement->GetOwnerDoc()->IsHTML() ||
+  NS_ASSERTION(!aElement->OwnerDoc() ||
+               !aElement->OwnerDoc()->IsHTML() ||
                mIdContentList.IndexOf(aElement) >= 0,
                "Removing id entry that doesn't exist");
 
@@ -1128,7 +1128,7 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
     return NS_ERROR_CONTENT_BLOCKED;
   }
 
-  nsIDocument* doc = aRequestingNode->GetOwnerDoc();
+  nsIDocument* doc = aRequestingNode->OwnerDoc();
   if (!doc) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -2007,7 +2007,7 @@ nsDocument::Init()
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_NODE,
                     "Bad NodeType in aNodeInfo");
 
-  NS_ASSERTION(GetOwnerDoc() == this, "Our nodeinfo is busted!");
+  NS_ASSERTION(OwnerDoc() == this, "Our nodeinfo is busted!");
 
   mScriptLoader = new nsScriptLoader(this);
   NS_ENSURE_TRUE(mScriptLoader, NS_ERROR_OUT_OF_MEMORY);
@@ -2726,7 +2726,7 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
       nsFocusManager::GetFocusedDescendant(window, false,
                                            getter_AddRefs(focusedWindow));
     // be safe and make sure the element is from this document
-    if (focusedContent && focusedContent->GetOwnerDoc() == this) {
+    if (focusedContent && focusedContent->OwnerDoc() == this) {
       CallQueryInterface(focusedContent, aElement);
       return NS_OK;
     }
@@ -4815,7 +4815,7 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
                               nodesWithProperties, getter_AddRefs(newNode));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsIDocument *ownerDoc = imported->GetOwnerDoc();
+      nsIDocument *ownerDoc = imported->OwnerDoc();
       if (ownerDoc) {
         rv = nsNodeUtils::CallUserDataHandlers(nodesWithProperties, ownerDoc,
                                                nsIDOMUserDataHandler::NODE_IMPORTED,
@@ -5292,7 +5292,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
 
-  nsIDocument* doc = content->GetOwnerDoc();
+  nsIDocument* doc = content->OwnerDoc();
   NS_ENSURE_TRUE(doc == this, NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
 
   if (!mHasWarnedAboutBoxObjects && !content->IsXUL()) {
@@ -6020,7 +6020,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
     nsINode* parent = adoptedNode->GetNodeParent();
     if (parent) {
       nsContentUtils::MaybeFireNodeRemoved(adoptedNode, parent,
-                                           adoptedNode->GetOwnerDoc());
+                                           adoptedNode->OwnerDoc());
     }
   }
 
@@ -6102,7 +6102,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
     }
   }
 
-  nsIDocument *oldDocument = adoptedNode->GetOwnerDoc();
+  nsIDocument *oldDocument = adoptedNode->OwnerDoc();
   bool sameDocument = oldDocument == this;
 
   JSContext *cx = nsnull;
@@ -6162,7 +6162,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
                                                          this));
   }
 
-  NS_ASSERTION(adoptedNode->GetOwnerDoc() == this,
+  NS_ASSERTION(adoptedNode->OwnerDoc() == this,
                "Should still be in the document we just got adopted into");
 
   return CallQueryInterface(adoptedNode, aResult);

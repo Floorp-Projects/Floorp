@@ -103,7 +103,7 @@ AccEvent::GetDocAccessible()
 {
   nsINode *node = GetNode();
   if (node)
-    return GetAccService()->GetDocAccessible(node->GetOwnerDoc());
+    return GetAccService()->GetDocAccessible(node->OwnerDoc());
 
   return nsnull;
 }

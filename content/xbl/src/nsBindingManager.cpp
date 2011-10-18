@@ -932,7 +932,7 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
   // XXXbz should that be ownerdoc?  Wouldn't we need a ref to the
   // currentdoc too?  What's the one that should be passed to
   // ChangeDocument?
-  nsCOMPtr<nsIDocument> doc = aContent->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> doc = aContent->OwnerDoc();
   NS_ASSERTION(doc, "No owner document?");
   
   // Finally remove the binding...
@@ -1251,7 +1251,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       // We have never made a wrapper for this implementation.
       // Create an XPC wrapper for the script object and hand it back.
 
-      nsIDocument* doc = aContent->GetOwnerDoc();
+      nsIDocument* doc = aContent->OwnerDoc();
       if (!doc)
         return NS_NOINTERFACE;
 

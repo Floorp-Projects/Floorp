@@ -175,7 +175,7 @@ nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocument> doc;
-  doc = content->GetOwnerDoc();
+  doc = content->OwnerDoc();
   if (!doc)
     return NS_ERROR_FAILURE;
 

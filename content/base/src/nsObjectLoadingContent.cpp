@@ -603,7 +603,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
-  nsIDocument* doc = thisContent->GetOwnerDoc();
+  nsIDocument* doc = thisContent->OwnerDoc();
   if (!doc) {
     Fallback(false);
     return NS_BINDING_ABORTED;    
@@ -945,7 +945,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
-  nsIDocument* doc = thisContent->GetOwnerDoc();
+  nsIDocument* doc = thisContent->OwnerDoc();
   if (!doc || doc->IsStaticDocument() || doc->IsBeingUsedAsImage()) {
     return NS_OK;
   }
@@ -1124,7 +1124,7 @@ nsObjectLoadingContent::LoadObject(const nsAString& aURI,
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
-  nsIDocument* doc = thisContent->GetOwnerDoc();
+  nsIDocument* doc = thisContent->OwnerDoc();
   nsCOMPtr<nsIURI> baseURI;
   GetObjectBaseURI(thisContent, getter_AddRefs(baseURI));
 
@@ -1199,7 +1199,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
-  nsIDocument* doc = thisContent->GetOwnerDoc();
+  nsIDocument* doc = thisContent->OwnerDoc();
   if (!doc || doc->IsBeingUsedAsImage()) {
     return NS_OK;
   }
@@ -1769,7 +1769,7 @@ nsObjectLoadingContent::GetObjectBaseURI(nsIContent* thisContent, nsIURI** aURI)
                        codebase);
   if (!codebase.IsEmpty()) {
     nsContentUtils::NewURIWithDocumentCharset(aURI, codebase,
-                                              thisContent->GetOwnerDoc(),
+                                              thisContent->OwnerDoc(),
                                               baseURI);
   } else {
     baseURI.swap(*aURI);

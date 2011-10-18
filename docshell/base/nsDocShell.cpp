@@ -389,7 +389,7 @@ ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
   if (!ios)
     return;
 
-  nsIDocument *doc = content->GetOwnerDoc();
+  nsIDocument *doc = content->OwnerDoc();
   if (!doc)
     return;
 
@@ -550,7 +550,7 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
       return;
   }
 
-  nsIDocument *doc = content->GetOwnerDoc();
+  nsIDocument *doc = content->OwnerDoc();
   if (!doc)
     return;
 
@@ -11415,7 +11415,7 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
   // link was in. From that document, we'll get the URI to use as the
   // referer, since the current URI in this docshell may be a
   // new document that we're in the process of loading.
-  nsCOMPtr<nsIDocument> refererDoc = aContent->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> refererDoc = aContent->OwnerDoc();
   NS_ENSURE_TRUE(refererDoc, NS_ERROR_UNEXPECTED);
 
   // Now check that the refererDoc's inner window is the current inner

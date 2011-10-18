@@ -2052,7 +2052,7 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     return;
   }
 
-  nsIDocument* doc = content->GetOwnerDoc();
+  nsIDocument* doc = content->OwnerDoc();
   if (!doc) {
     return;
   }

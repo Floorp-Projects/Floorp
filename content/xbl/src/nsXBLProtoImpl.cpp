@@ -81,7 +81,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
 
   // If the way this gets the script context changes, fix
   // nsXBLProtoImplAnonymousMethod::Execute
-  nsIDocument* document = aBoundElement->GetOwnerDoc();
+  nsIDocument* document = aBoundElement->OwnerDoc();
   if (!document) return NS_OK;
 
   nsIScriptGlobalObject *global = document->GetScopeObject();
@@ -138,7 +138,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
       return NS_OK; // This can be ok, if all we've got are fields (and no methods/properties).
   }
 
-  nsIDocument *ownerDoc = aBoundElement->GetOwnerDoc();
+  nsIDocument *ownerDoc = aBoundElement->OwnerDoc();
   nsIScriptGlobalObject *sgo;
 
   if (!ownerDoc || !(sgo = ownerDoc->GetScopeObject())) {

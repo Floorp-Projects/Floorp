@@ -618,7 +618,7 @@ TabParent::RecvGetWidgetNativeData(WindowsHandle* aValue)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
   if (content) {
-    nsIDocument* document = content->GetOwnerDoc();
+    nsIDocument* document = content->OwnerDoc();
     if (document) {
       nsIPresShell* shell = document->GetShell();
       if (shell) {
@@ -682,7 +682,7 @@ TabParent::GetAuthPrompt(PRUint32 aPromptReason, const nsIID& iid,
   nsCOMPtr<nsIDOMWindow> window;
   nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
   if (frame)
-    window = do_QueryInterface(frame->GetOwnerDoc()->GetWindow());
+    window = do_QueryInterface(frame->OwnerDoc()->GetWindow());
 
   // Get an auth prompter for our window so that the parenting
   // of the dialogs works as it should when using tabs.
@@ -716,7 +716,7 @@ TabParent::HandleDelayedDialogs()
   nsCOMPtr<nsIDOMWindow> window;
   nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
   if (frame) {
-    window = do_QueryInterface(frame->GetOwnerDoc()->GetWindow());
+    window = do_QueryInterface(frame->OwnerDoc()->GetWindow());
   }
   nsCOMPtr<nsIDialogCreator> dialogCreator = do_QueryInterface(mBrowserDOMWindow);
   while (!ShouldDelayDialogs() && mDelayedDialogs.Length()) {
@@ -758,7 +758,7 @@ TabParent::HandleDelayedDialogs()
     }
   }
   if (ShouldDelayDialogs() && mDelayedDialogs.Length()) {
-    nsContentUtils::DispatchTrustedEvent(frame->GetOwnerDoc(), frame,
+    nsContentUtils::DispatchTrustedEvent(frame->OwnerDoc(), frame,
                                          NS_LITERAL_STRING("MozDelayedModalDialog"),
                                          true, true);
   }

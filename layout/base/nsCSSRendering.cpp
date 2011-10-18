@@ -974,7 +974,7 @@ nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame)
     return aForFrame;
   }
 
-  nsIDocument* document = content->GetOwnerDoc();
+  nsIDocument* document = content->OwnerDoc();
   if (!document) {
     return aForFrame;
   }
@@ -1058,7 +1058,7 @@ FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
     return true; // A pseudo-element frame.
 
   // We should only look at the <html> background if we're in an HTML document
-  nsIDocument* document = content->GetOwnerDoc();
+  nsIDocument* document = content->OwnerDoc();
   if (!document)
     return true;
 
