@@ -27,6 +27,13 @@
         <item name="android:background">#00000000</item>
     </style>
 
+    <!-- BrowserToolbar -->
+    <style name="BrowserToolbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
     <!-- Address bar -->
     <style name="AddressBar">
         <item name="android:layout_width">match_parent</item>
