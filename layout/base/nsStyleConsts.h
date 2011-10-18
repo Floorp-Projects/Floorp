@@ -717,9 +717,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT       0
 
 // See nsStyleText
-#define NS_STYLE_UNICODE_BIDI_NORMAL            0
-#define NS_STYLE_UNICODE_BIDI_EMBED             1
-#define NS_STYLE_UNICODE_BIDI_OVERRIDE          2
+#define NS_STYLE_UNICODE_BIDI_NORMAL            0x0
+#define NS_STYLE_UNICODE_BIDI_EMBED             0x1
+#define NS_STYLE_UNICODE_BIDI_ISOLATE           0x2
+#define NS_STYLE_UNICODE_BIDI_OVERRIDE          0x4
+#define NS_STYLE_UNICODE_BIDI_PLAINTEXT         0x8
 
 // See nsStyleTable (here for HTML 4.0 for now, should probably change to side flags)
 #define NS_STYLE_TABLE_FRAME_NONE               0
