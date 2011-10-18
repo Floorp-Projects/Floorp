@@ -91,9 +91,18 @@ struct BidiParagraphData {
     mContentToFrameIndex.Init();
     mBidiEngine = new nsBidi();
     mPrevContent = nsnull;
-    mParaLevel =
-     (NS_STYLE_DIRECTION_RTL == aBlockFrame->GetStyleVisibility()->mDirection) ?
-        NSBIDI_RTL : NSBIDI_LTR;
+
+    bool styleDirectionIsRTL =
+      (NS_STYLE_DIRECTION_RTL == aBlockFrame->GetStyleVisibility()->mDirection);
+    if (aBlockFrame->GetStyleTextReset()->mUnicodeBidi &
+        NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
+      // unicode-bidi: plaintext: the Bidi algorithm will determine the
+      // directionality of the paragraph according to the first strong
+      // directional character.
+      mParaLevel = styleDirectionIsRTL ? NSBIDI_DEFAULT_RTL : NSBIDI_DEFAULT_LTR;
+    } else {
+      mParaLevel = styleDirectionIsRTL ? NSBIDI_RTL : NSBIDI_LTR;
+    }
 
     mIsVisual = aBlockFrame->PresContext()->IsVisualMode();
     if (mIsVisual) {
@@ -140,6 +149,14 @@ struct BidiParagraphData {
     mPrevContent = nsnull;
     mIsVisual = aBpd->mIsVisual;
     mParaLevel = aBpd->mParaLevel;
+
+    // If the containing paragraph has a level of NSBIDI_DEFAULT_LTR/RTL, set
+    // the sub-paragraph to the corresponding non-default level (We can't use
+    // GetParaLevel, because the containing paragraph hasn't yet been through
+    // bidi resolution
+    if (IS_DEFAULT_LEVEL(mParaLevel)) {
+      mParaLevel = (mParaLevel == NSBIDI_DEFAULT_RTL) ? NSBIDI_RTL : NSBIDI_LTR;
+    }                    
   }
 
   void Reset(nsIFrame* aFrame, BidiParagraphData *aBpd)
@@ -189,6 +206,20 @@ struct BidiParagraphData {
                                 mParaLevel, nsnull);
   }
 
+  /**
+   * mParaLevel can be NSBIDI_DEFAULT_LTR or NSBIDI_DEFAULT_RTL.
+   * GetParaLevel() returns the actual (resolved) paragraph level which is
+   * always either NSBIDI_LTR or NSBIDI_RTL
+   */
+  nsBidiLevel GetParaLevel()
+  {
+    nsBidiLevel paraLevel = mParaLevel;
+    if (IS_DEFAULT_LEVEL(paraLevel)) {
+      mBidiEngine->GetParaLevel(&paraLevel);
+    }
+    return paraLevel;
+  }
+
   nsresult CountRuns(PRInt32 *runCount){ return mBidiEngine->CountRuns(runCount); }
 
   nsresult GetLogicalRun(PRInt32 aLogicalStart, 
@@ -198,7 +229,7 @@ struct BidiParagraphData {
     nsresult rv = mBidiEngine->GetLogicalRun(aLogicalStart,
                                              aLogicalLimit, aLevel);
     if (mIsVisual || NS_FAILED(rv))
-      *aLevel = mParaLevel;
+      *aLevel = GetParaLevel();
     return rv;
   }
 
@@ -634,10 +665,11 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
   aBpd->mBuffer.ReplaceChar("\t\r\n", kSpace);
 
   PRInt32 runCount;
-  PRUint8 embeddingLevel = aBpd->mParaLevel;
 
   nsresult rv = aBpd->SetPara();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint8 embeddingLevel = aBpd->GetParaLevel();
 
   rv = aBpd->CountRuns(&runCount);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -700,7 +732,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
           propTable->Set(frame, nsIFrame::EmbeddingLevelProperty(),
                          NS_INT32_TO_PTR(embeddingLevel));
           propTable->Set(frame, nsIFrame::BaseLevelProperty(),
-                         NS_INT32_TO_PTR(aBpd->mParaLevel));
+                         NS_INT32_TO_PTR(aBpd->GetParaLevel()));
           continue;
         }
         PRInt32 start, end;
@@ -734,7 +766,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
       propTable->Set(frame, nsIFrame::EmbeddingLevelProperty(),
                      NS_INT32_TO_PTR(embeddingLevel));
       propTable->Set(frame, nsIFrame::BaseLevelProperty(),
-                     NS_INT32_TO_PTR(aBpd->mParaLevel));
+                     NS_INT32_TO_PTR(aBpd->GetParaLevel()));
       if (isTextFrame) {
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
           /*
