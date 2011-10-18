@@ -227,6 +227,9 @@ array_push(JSContext *cx, uintN argc, js::Value *vp);
 extern JSBool
 array_pop(JSContext *cx, uintN argc, js::Value *vp);
 
+extern JSBool
+array_shift(JSContext *cx, uintN argc, js::Value *vp);
+
 } /* namespace js */
 
 #ifdef DEBUG
