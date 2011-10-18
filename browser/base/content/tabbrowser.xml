@@ -813,12 +813,6 @@
               }
             } catch (e) {}
 
-            if ("TabView" in window) {
-              let groupName = TabView.getActiveGroupName();
-              if (groupName)
-                newTitle = groupName + sep + newTitle;
-            }
-
             return newTitle;
           ]]>
         </body>
