@@ -63,7 +63,8 @@ static const char *ChannelNames[] =
 void
 ion::IonSpewNewFunction(MIRGraph *graph, JSScript *function)
 {
-    ionspewer.init();
+    if (!ionspewer.init())
+        return false;
     ionspewer.beginFunction(graph, function);
 }
 
@@ -86,9 +87,11 @@ ion::IonSpewEndFunction()
 }
 
 
-IonSpewer::~IonSpewer() {
+IonSpewer::~IonSpewer()
+{
     if (!inited_)
         return;
+
     c1Spewer.finish();
     jsonSpewer.finish();
 }
@@ -111,7 +114,8 @@ IonSpewer::init()
 void
 IonSpewer::beginFunction(MIRGraph *graph, JSScript *function)
 {
-    JS_ASSERT(inited_);
+    if (!inited_)
+        return;
 
     this->graph = graph;
     this->function = function;
@@ -123,7 +127,9 @@ IonSpewer::beginFunction(MIRGraph *graph, JSScript *function)
 void
 IonSpewer::spewPass(const char *pass)
 {
-    JS_ASSERT(inited_);
+    if (!inited_)
+        return;
+
     c1Spewer.spewPass(pass);
     jsonSpewer.beginPass(pass);
     jsonSpewer.spewMIR(graph);
@@ -134,7 +140,9 @@ IonSpewer::spewPass(const char *pass)
 void
 IonSpewer::spewPass(const char *pass, LinearScanAllocator *ra)
 {
-    JS_ASSERT(inited_);
+    if (!inited_)
+        return;
+
     c1Spewer.spewPass(pass);
     c1Spewer.spewIntervals(pass, ra);
     jsonSpewer.beginPass(pass);
@@ -147,7 +155,9 @@ IonSpewer::spewPass(const char *pass, LinearScanAllocator *ra)
 void
 IonSpewer::endFunction()
 {
-    JS_ASSERT(inited_);
+    if (!inited_)
+        return;
+
     c1Spewer.endFunction();
     jsonSpewer.endFunction();
 }
