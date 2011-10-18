@@ -48,12 +48,16 @@
   direction: ltr;
   unicode-bidi: embed;
 }
-bdi, bdi[dir], output, output[dir] { 
+bdi, bdi[dir], output, output[dir], [dir="auto"] { 
   unicode-bidi: -moz-isolate;
 }
 bdo, bdo[dir] {
   unicode-bidi: bidi-override;
 }
+bdo[dir="auto"] {
+  unicode-bidi: bidi-override -moz-isolate;
+}
+textarea[dir="auto"], pre[dir="auto"] { unicode-bidi: -moz-plaintext; }
 
 /* To ensure http://www.w3.org/TR/REC-html40/struct/dirlang.html#style-bidi:
  *
