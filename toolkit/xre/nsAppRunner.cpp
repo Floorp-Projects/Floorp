@@ -50,13 +50,9 @@
 
 #if defined(MOZ_WIDGET_QT)
 #include <QtGui/QApplication>
-#include <QtCore/QScopedPointer>
+#include "nsQAppInstance.h"
 #include <QtGui/QInputContextFactory>
 #include <QtGui/QInputContext>
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-#include <MComponentData>
-#include <MozMeegoAppService.h>
-#endif // MOZ_ENABLE_MEEGOTOUCH
 #endif // MOZ_WIDGET_QT
 
 #include "mozilla/dom/ContentParent.h"
@@ -3022,31 +3018,21 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #if defined(MOZ_WIDGET_QT)
-    const char* qgraphicssystemARG = NULL;
-    ar = CheckArg("graphicssystem", true, &qgraphicssystemARG, false);
-    if (ar == ARG_FOUND)
-      PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
-
-    QScopedPointer<QApplication> app(new QApplication(gArgc, gArgv));
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-    gArgv[gArgc] = strdup("-software");
-    gArgc++;
-    QScopedPointer<MComponentData> meegotouch(new MComponentData(gArgc, gArgv,"", new  MApplicationService("")));
-#endif
+    nsQAppInstance::AddRef(gArgc, gArgv, true);
 
 #if MOZ_PLATFORM_MAEMO > 5
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
       // try to get the MInputContext if possible to support the MeeGo VKB
-      QInputContext* inputContext = app->inputContext();
+      QInputContext* inputContext = qApp->inputContext();
       if (inputContext && inputContext->identifierName() != "MInputContext") {
           QInputContext* context = QInputContextFactory::create("MInputContext",
-                                                                app.data());
+                                                                qApp);
           if (context)
-              app->setInputContext(context);
+              qApp->setInputContext(context);
       }
     }
 #endif
-    QStringList nonQtArguments = app->arguments();
+    QStringList nonQtArguments = qApp->arguments();
     gQtOnlyArgc = 1;
     gQtOnlyArgv = (char**) malloc(sizeof(char*) 
                   * (gRestartArgc - nonQtArguments.size() + 2));
@@ -3617,6 +3603,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // unlock the profile after ScopedXPCOMStartup object (xpcom) 
     // has gone out of scope.  see bug #386739 for more details
     profileLock->Unlock();
+
+#if defined(MOZ_WIDGET_QT)
+    nsQAppInstance::Release();
+#endif
 
     // Restart the app after XPCOM has been shut down cleanly. 
     if (appInitiatedRestart) {
