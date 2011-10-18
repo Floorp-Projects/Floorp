@@ -79,7 +79,7 @@
 #include "jsxml.h"
 #include "jsperf.h"
 
-#include "frontend/CodeGenerator.h"
+#include "frontend/BytecodeGenerator.h"
 #include "frontend/Parser.h"
 #include "methodjit/MethodJIT.h"
 
