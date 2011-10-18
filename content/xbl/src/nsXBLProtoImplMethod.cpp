@@ -133,7 +133,7 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
   nsIDocument *ownerDoc = aBoundElement->OwnerDoc();
   nsIScriptGlobalObject *sgo;
 
-  if (!ownerDoc || !(sgo = ownerDoc->GetScopeObject())) {
+  if (!(sgo = ownerDoc->GetScopeObject())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -280,9 +280,6 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   // Get the script context the same way
   // nsXBLProtoImpl::InstallImplementation does.
   nsIDocument* document = aBoundElement->OwnerDoc();
-  if (!document) {
-    return NS_OK;
-  }
 
   nsIScriptGlobalObject* global = document->GetScriptGlobalObject();
   if (!global) {

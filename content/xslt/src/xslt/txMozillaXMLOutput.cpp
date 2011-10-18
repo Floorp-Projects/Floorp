@@ -118,12 +118,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
 
     mCurrentNode = do_QueryInterface(aFragment);
     mDocument = mCurrentNode->OwnerDoc();
-    if (mDocument) {
-      mNodeInfoManager = mDocument->NodeInfoManager();
-    }
-    else {
-      mCurrentNode = nsnull;
-    }
+    mNodeInfoManager = mDocument->NodeInfoManager();
 }
 
 txMozillaXMLOutput::~txMozillaXMLOutput()

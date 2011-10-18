@@ -180,14 +180,10 @@ nsXMLStylesheetPI::GetStyleSheetURL(bool* aIsInline)
   nsIURI *baseURL;
   nsCAutoString charset;
   nsIDocument *document = OwnerDoc();
-  if (document) {
-    baseURL = mOverriddenBaseURI ?
-              mOverriddenBaseURI.get() :
-              document->GetDocBaseURI();
-    charset = document->GetDocumentCharacterSet();
-  } else {
-    baseURL = mOverriddenBaseURI;
-  }
+  baseURL = mOverriddenBaseURI ?
+            mOverriddenBaseURI.get() :
+            document->GetDocBaseURI();
+  charset = document->GetDocumentCharacterSet();
 
   nsCOMPtr<nsIURI> aURI;
   NS_NewURI(getter_AddRefs(aURI), href, charset.get(), baseURL);

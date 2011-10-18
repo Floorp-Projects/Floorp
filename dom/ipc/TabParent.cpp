@@ -618,18 +618,15 @@ TabParent::RecvGetWidgetNativeData(WindowsHandle* aValue)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
   if (content) {
-    nsIDocument* document = content->OwnerDoc();
-    if (document) {
-      nsIPresShell* shell = document->GetShell();
-      if (shell) {
-        nsIViewManager* vm = shell->GetViewManager();
-        nsCOMPtr<nsIWidget> widget;
-        vm->GetRootWidget(getter_AddRefs(widget));
-        if (widget) {
-          *aValue = reinterpret_cast<WindowsHandle>(
-            widget->GetNativeData(NS_NATIVE_SHAREABLE_WINDOW));
-          return true;
-        }
+    nsIPresShell* shell = content->OwnerDoc()->GetShell();
+    if (shell) {
+      nsIViewManager* vm = shell->GetViewManager();
+      nsCOMPtr<nsIWidget> widget;
+      vm->GetRootWidget(getter_AddRefs(widget));
+      if (widget) {
+        *aValue = reinterpret_cast<WindowsHandle>(
+          widget->GetNativeData(NS_NATIVE_SHAREABLE_WINDOW));
+        return true;
       }
     }
   }

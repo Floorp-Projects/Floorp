@@ -1257,10 +1257,7 @@ nsCSSStyleSheet::FindOwningWindowInnerID() const
   if (windowID == 0 && mOwningNode) {
     nsCOMPtr<nsIContent> node = do_QueryInterface(mOwningNode);
     if (node) {
-      nsIDocument* doc = node->OwnerDoc();
-      if (doc) {
-        windowID = doc->InnerWindowID();
-      }
+      windowID = node->OwnerDoc()->InnerWindowID();
     }
   }
 

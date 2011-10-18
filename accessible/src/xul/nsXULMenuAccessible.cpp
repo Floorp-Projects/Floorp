@@ -463,11 +463,7 @@ nsXULMenuitemAccessible::KeyboardShortcut() const
   if (keyElmId.IsEmpty())
     return KeyBinding();
 
-  nsIDocument* document = mContent->OwnerDoc();
-  if (!document)
-    return KeyBinding();
-
-  nsIContent* keyElm = document->GetElementById(keyElmId);
+  nsIContent* keyElm = mContent->OwnerDoc()->GetElementById(keyElmId);
   if (!keyElm)
     return KeyBinding();
 

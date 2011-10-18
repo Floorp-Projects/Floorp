@@ -465,10 +465,8 @@ nsAccessNode::GetLanguage(nsAString& aLanguage)
   nsCoreUtils::GetLanguageFor(mContent, nsnull, aLanguage);
 
   if (aLanguage.IsEmpty()) { // Nothing found, so use document's language
-    nsIDocument *doc = mContent->OwnerDoc();
-    if (doc) {
-      doc->GetHeaderData(nsGkAtoms::headerContentLanguage, aLanguage);
-    }
+    mContent->OwnerDoc()->GetHeaderData(nsGkAtoms::headerContentLanguage,
+                                        aLanguage);
   }
  
   return NS_OK;

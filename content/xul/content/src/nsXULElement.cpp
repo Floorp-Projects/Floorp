@@ -515,8 +515,6 @@ nsXULElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer)
     // here, override BindToTree for those classes and munge event
     // listeners there?
     nsIDocument* doc = OwnerDoc();
-    if (!doc)
-        return nsnull; // XXX
 
     nsPIDOMWindow *window;
     Element *root = doc->GetRootElement();
@@ -1855,9 +1853,7 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
   *aResult = nsnull;
 
   // XXX sXBL/XBL2 issue! Owner or current document?
-  nsIDocument* nsDoc = OwnerDoc();
-
-  return nsDoc ? nsDoc->GetBoxObjectFor(this, aResult) : NS_ERROR_FAILURE;
+  return OwnerDoc()->GetBoxObjectFor(this, aResult);
 }
 
 // Methods for setting/getting attributes from nsIDOMXULElement

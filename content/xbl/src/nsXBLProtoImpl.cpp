@@ -82,8 +82,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   // If the way this gets the script context changes, fix
   // nsXBLProtoImplAnonymousMethod::Execute
   nsIDocument* document = aBoundElement->OwnerDoc();
-  if (!document) return NS_OK;
-
+                                              
   nsIScriptGlobalObject *global = document->GetScopeObject();
   if (!global) return NS_OK;
 
@@ -141,7 +140,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   nsIDocument *ownerDoc = aBoundElement->OwnerDoc();
   nsIScriptGlobalObject *sgo;
 
-  if (!ownerDoc || !(sgo = ownerDoc->GetScopeObject())) {
+  if (!(sgo = ownerDoc->GetScopeObject())) {
     return NS_ERROR_UNEXPECTED;
   }
 

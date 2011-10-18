@@ -1911,9 +1911,6 @@ nsresult nsHTMLMediaElement::NewURIFromString(const nsAutoString& aURISpec, nsIU
   *aURI = nsnull;
 
   nsCOMPtr<nsIDocument> doc = OwnerDoc();
-  if (!doc) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
 
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsresult rv = nsContentUtils::NewURIWithDocumentCharset(aURI,
@@ -2377,7 +2374,7 @@ void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
   // Don't pause if we have no ownerDoc. Something native must have created
   // us and be expecting us to work without a document.
   bool pauseForInactiveDocument =
-    ownerDoc && (!ownerDoc->IsActive() || !ownerDoc->IsVisible());
+    !ownerDoc->IsActive() || !ownerDoc->IsVisible();
 
   if (pauseForInactiveDocument != mPausedForInactiveDocument) {
     mPausedForInactiveDocument = pauseForInactiveDocument;
@@ -2410,7 +2407,7 @@ void nsHTMLMediaElement::AddRemoveSelfReference()
   // See the comment at the top of this file for the explanation of this
   // boolean expression.
   bool needSelfReference = !mShuttingDown &&
-    (!ownerDoc || ownerDoc->IsActive()) &&
+    ownerDoc->IsActive() &&
     (mDelayingLoadEvent ||
      (!mPaused && mDecoder && !mDecoder->IsEnded()) ||
      (mDecoder && mDecoder->IsSeeking()) ||
@@ -2565,8 +2562,7 @@ void nsHTMLMediaElement::ChangeDelayLoadStatus(bool aDelay) {
 
 already_AddRefed<nsILoadGroup> nsHTMLMediaElement::GetDocumentLoadGroup()
 {
-  nsIDocument* doc = OwnerDoc();
-  return doc ? doc->GetDocumentLoadGroup() : nsnull;
+  return OwnerDoc()->GetDocumentLoadGroup();
 }
 
 nsresult
@@ -2627,10 +2623,7 @@ void nsHTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel)
                              NS_LITERAL_CSTRING(""), false);
 
   // Set the Referer header
-  nsIDocument* doc = OwnerDoc();
-  if (doc) {
-    aChannel->SetReferrer(doc->GetDocumentURI());
-  }
+  aChannel->SetReferrer(OwnerDoc()->GetDocumentURI());
 }
 
 void nsHTMLMediaElement::FireTimeUpdate(bool aPeriodic)

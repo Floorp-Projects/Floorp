@@ -340,7 +340,7 @@ nsFrameLoader::Create(Element* aOwner, bool aNetworkCreated)
 {
   NS_ENSURE_TRUE(aOwner, nsnull);
   nsIDocument* doc = aOwner->OwnerDoc();
-  NS_ENSURE_TRUE(doc && !doc->GetDisplayDocument() &&
+  NS_ENSURE_TRUE(!doc->GetDisplayDocument() &&
                  ((!doc->IsLoadedAsData() && aOwner->GetCurrentDoc()) ||
                    doc->IsStaticDocument()),
                  nsnull);
@@ -363,7 +363,7 @@ nsFrameLoader::LoadFrame()
   }
 
   nsIDocument* doc = mOwnerContent->OwnerDoc();
-  if (!doc || doc->IsStaticDocument()) {
+  if (doc->IsStaticDocument()) {
     return NS_OK;
   }
 
@@ -412,9 +412,6 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
   NS_ENSURE_STATE(!mDestroyCalled && mOwnerContent);
 
   nsCOMPtr<nsIDocument> doc = mOwnerContent->OwnerDoc();
-  if (!doc) {
-    return NS_OK;
-  }
 
   nsresult rv = CheckURILoad(aURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1275,11 +1272,8 @@ nsFrameLoader::Destroy()
   bool dynamicSubframeRemoval = false;
   if (mOwnerContent) {
     doc = mOwnerContent->OwnerDoc();
-
-    if (doc) {
-      dynamicSubframeRemoval = !mIsTopLevelContent && !doc->InUnlinkOrDeletion();
-      doc->SetSubDocumentFor(mOwnerContent, nsnull);
-    }
+    dynamicSubframeRemoval = !mIsTopLevelContent && !doc->InUnlinkOrDeletion();
+    doc->SetSubDocumentFor(mOwnerContent, nsnull);
 
     SetOwnerContent(nsnull);
   }
@@ -1383,7 +1377,7 @@ nsFrameLoader::MaybeCreateDocShell()
   // XXXbz this is such a total hack.... We really need to have a
   // better setup for doing this.
   nsIDocument* doc = mOwnerContent->OwnerDoc();
-  if (!doc || !(doc->IsStaticDocument() || mOwnerContent->IsInDoc())) {
+  if (!(doc->IsStaticDocument() || mOwnerContent->IsInDoc())) {
     return NS_ERROR_UNEXPECTED;
   }
 
