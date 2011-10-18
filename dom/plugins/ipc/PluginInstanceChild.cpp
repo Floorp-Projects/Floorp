@@ -474,7 +474,8 @@ CAUpdate(NPP npp, uint32_t timerID) {
 void
 PluginInstanceChild::Invalidate()
 {
-    NPRect windowRect = {0, 0, mWindow.height, mWindow.width};
+    NPRect windowRect = {0, 0, uint16_t(mWindow.height),
+        uint16_t(mWindow.width)};
 
     InvalidateRect(&windowRect);
 }
