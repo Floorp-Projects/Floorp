@@ -59,6 +59,6 @@ include ../../widget/src/cocoa/crashtests/crashtests.list
 include ../../widget/src/gtk2/crashtests/crashtests.list
 include ../../widget/src/crashtests/crashtests.list
 
-include ../../modules/libimg/png/crashtests/crashtests.list
+include ../../media/libpng/crashtests/crashtests.list
 
 include ../../xpcom/string/crashtests/crashtests.list
