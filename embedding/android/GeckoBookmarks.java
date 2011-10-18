@@ -78,7 +78,7 @@ public class GeckoBookmarks extends ListActivity {
         mCursor.moveToPosition(position);
         String spec = mCursor.getString(mCursor.getColumnIndex(Browser.BookmarkColumns.URL));
         Log.i(LOG_NAME, "clicked: " + spec);
-        Intent intent = new Intent(this, GeckoApp.class);
+        Intent intent = new Intent(this, GeckoApp.mAppContext.getClass());
         intent.setAction(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(spec));
         startActivity(intent);
