@@ -331,14 +331,22 @@ class RemoteReftest(RefTest):
     def createReftestProfile(self, options, profileDir):
         RefTest.createReftestProfile(self, options, profileDir, server=options.remoteWebServer)
 
+        # Turn off the locale picker screen
+        fhandle = open(os.path.join(profileDir, "user.js"), 'a')
+        fhandle.write("""
+user_pref("browser.firstrun.show.localepicker", false);
+""")
+
         #workaround for jsreftests.
         if options.enablePrivilege:
-          fhandle = open(os.path.join(profileDir, "user.js"), 'a')
           fhandle.write("""
 user_pref("capability.principal.codebase.p2.granted", "UniversalPreferencesWrite UniversalXPConnect UniversalBrowserWrite UniversalPreferencesRead UniversalBrowserRead");
 user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
 """ % (options.remoteWebServer, options.httpPort))
-          fhandle.close()
+
+        # Close the file
+        fhandle.close()
+
 
         if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
             raise devicemanager.FileError("Failed to copy profiledir to device")
