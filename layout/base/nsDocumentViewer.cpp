@@ -1959,7 +1959,7 @@ DocumentViewerImpl::Show(void)
         printf("About to evict content viewers: prev=%d, loaded=%d\n",
                prevIndex, loadedIndex);
 #endif
-        historyInt->EvictOutOfRangeContentViewers(loadedIndex);
+        historyInt->EvictContentViewers(prevIndex, loadedIndex);
       }
     }
   }

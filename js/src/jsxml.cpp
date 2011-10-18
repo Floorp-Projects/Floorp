@@ -63,13 +63,13 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsparse.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsxml.h"
 
+#include "frontend/Parser.h"
+#include "frontend/TokenStream.h"
 #include "vm/GlobalObject.h"
 
 #include "jsatominlines.h"

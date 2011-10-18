@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+ * vim: set ts=8 sw=4 et tw=99:
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -18,11 +18,10 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 1998-2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Rob Ginda rginda@netscape.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,28 +37,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef ParseNode_inl_h__
+#define ParseNode_inl_h__
 
-test();
+#include "frontend/ParseNode.h"
+#include "frontend/CodeGenerator.h"
+#include "frontend/TokenStream.h"
 
-function test()
+inline bool
+JSParseNode::isConstant()
 {
-  enterFunc ("test");
+    using namespace js;
 
-  var \u0041 = 5;
-  var A\u03B2 = 15;
-
-  printStatus ("Escapes in identifiers test.");
-  printBugNumber (23608);
-  printBugNumber (23607);
-
-  reportCompare (5, eval("\u0041"),
-		 "Escaped ASCII Identifier test.");
-  reportCompare (6, eval("++\u0041"),
-		 "Escaped ASCII Identifier test");
-  reportCompare (15, eval("A\u03B2"),
-		 "Escaped non-ASCII Identifier test");
-  reportCompare (16, eval("++A\u03B2"),
-		 "Escaped non-ASCII Identifier test");
-   
-  exitFunc ("test");
+    switch (pn_type) {
+      case TOK_NUMBER:
+      case TOK_STRING:
+        return true;
+      case TOK_PRIMARY:
+        switch (pn_op) {
+          case JSOP_NULL:
+          case JSOP_FALSE:
+          case JSOP_TRUE:
+            return true;
+          default:
+            return false;
+        }
+      case TOK_RB:
+      case TOK_RC:
+        return isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST);
+      default:
+        return false;
+    }
 }
+
+namespace js {
+
+inline void
+NameNode::initCommon(JSTreeContext *tc)
+{
+    pn_expr = NULL;
+    pn_cookie.makeFree();
+    pn_dflags = (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
+                ? PND_BLOCKCHILD
+                : 0;
+    pn_blockid = tc->blockid();
+}
+
+} /* namespace js */
+
+#endif /* ParseNode_inl_h__ */

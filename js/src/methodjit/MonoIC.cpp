@@ -1028,7 +1028,7 @@ class CallCompiler : public BaseCompiler
         masm.setupABICall(Registers::NormalCall, 3);
         masm.storeArg(2, vpReg);
         if (ic.frameSize.isStatic())
-            masm.storeArg(1, ImmPtr((void *) ic.frameSize.staticArgc()));
+            masm.storeArg(1, ImmIntPtr(intptr_t(ic.frameSize.staticArgc())));
         else
             masm.storeArg(1, argcReg.reg());
         masm.storeArg(0, cxReg);

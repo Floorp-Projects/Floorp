@@ -38,19 +38,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsemit_h___
-#define jsemit_h___
+#ifndef CodeGenerator_h__
+#define CodeGenerator_h__
+
 /*
  * JS bytecode generation.
  */
 #include "jstypes.h"
 #include "jsatom.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jsscript.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
+#include "frontend/Parser.h"
 #include "frontend/ParseMaps.h"
 
 #include "jsatominlines.h"
@@ -510,6 +511,16 @@ struct JSTreeContext {              /* tree context for semantic checks */
 inline bool JSTreeContext::needStrictChecks() {
     return parser->context->hasStrictOption() || inStrictMode();
 }
+
+namespace js {
+
+bool
+SetStaticLevel(JSTreeContext *tc, uintN staticLevel);
+
+bool
+GenerateBlockId(JSTreeContext *tc, uint32& blockid);
+
+} /* namespace js */
 
 /*
  * Span-dependent instructions are jumps whose span (from the jump bytecode to
@@ -1127,4 +1138,4 @@ js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array);
 
 JS_END_EXTERN_C
 
-#endif /* jsemit_h___ */
+#endif /* CodeGenerator_h__ */

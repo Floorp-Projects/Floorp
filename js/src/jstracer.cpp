@@ -64,7 +64,6 @@
 #include "jscompartment.h"
 #include "jsdate.h"
 #include "jsdbgapi.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -80,6 +79,7 @@
 #include "jstypedarray.h"
 
 #include "builtin/RegExp.h"
+#include "frontend/CodeGenerator.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
@@ -922,189 +922,6 @@ FragProfiling_showResults(TraceMonitor* tm)
 #endif
 
 /* ----------------------------------------------------------------- */
-
-#ifdef DEBUG
-JSBool FASTCALL
-PrintOnTrace(char* format, uint32 argc, double *argv)
-{
-    union {
-        struct {
-            uint32 lo;
-            uint32 hi;
-        } i;
-        double   d;
-        char     *cstr;
-        JSObject *o;
-        JSString *s;
-    } u;
-
-#define GET_ARG() JS_BEGIN_MACRO          \
-        if (argi >= argc) { \
-        fprintf(out, "[too few args for format]"); \
-        break;       \
-} \
-    u.d = argv[argi++]; \
-    JS_END_MACRO
-
-    FILE *out = stderr;
-
-    uint32 argi = 0;
-    for (char *p = format; *p; ++p) {
-        if (*p != '%') {
-            putc(*p, out);
-            continue;
-        }
-        char ch = *++p;
-        if (!ch) {
-            fprintf(out, "[trailing %%]");
-            continue;
-        }
-
-        switch (ch) {
-        case 'a':
-            GET_ARG();
-            fprintf(out, "[%u:%u 0x%x:0x%x %f]", u.i.lo, u.i.hi, u.i.lo, u.i.hi, u.d);
-            break;
-        case 'd':
-            GET_ARG();
-            fprintf(out, "%d", u.i.lo);
-            break;
-        case 'u':
-            GET_ARG();
-            fprintf(out, "%u", u.i.lo);
-            break;
-        case 'x':
-            GET_ARG();
-            fprintf(out, "%x", u.i.lo);
-            break;
-        case 'f':
-            GET_ARG();
-            fprintf(out, "%f", u.d);
-            break;
-        case 'o':
-            GET_ARG();
-            js_DumpObject(u.o);
-            break;
-        case 's':
-            GET_ARG();
-            {
-                size_t length = u.s->length();
-                // protect against massive spew if u.s is a bad pointer.
-                if (length > 1 << 16)
-                    length = 1 << 16;
-                if (u.s->isRope()) {
-                    fprintf(out, "<rope>");
-                    break;
-                }
-                if (u.s->isRope()) {
-                    fprintf(out, "<rope: length %d>", (int)u.s->asRope().length());
-                } else {
-                    const jschar *chars = u.s->asLinear().chars();
-                    for (unsigned i = 0; i < length; ++i) {
-                        jschar co = chars[i];
-                        if (co < 128)
-                            putc(co, out);
-                        else if (co < 256)
-                            fprintf(out, "\\u%02x", co);
-                        else
-                            fprintf(out, "\\u%04x", co);
-                    }
-                }
-            }
-            break;
-        case 'S':
-            GET_ARG();
-            fprintf(out, "%s", u.cstr);
-            break;
-        case 'v': {
-            GET_ARG();
-            Value *v = (Value *) u.i.lo;
-            js_DumpValue(*v);
-            break;
-        }
-        default:
-            fprintf(out, "[invalid %%%c]", *p);
-        }
-    }
-
-#undef GET_ARG
-
-    return JS_TRUE;
-}
-
-JS_DEFINE_CALLINFO_3(extern, BOOL, PrintOnTrace, CHARPTR, UINT32, DOUBLEPTR, 0, ACCSET_STORE_ANY)
-
-// This version is not intended to be called directly: usually it is easier to
-// use one of the other overloads.
-void
-TraceRecorder::tprint(const char *format, int count, nanojit::LIns *insa[])
-{
-    size_t size = strlen(format) + 1;
-    char* data = (char*) traceMonitor->traceAlloc->alloc(size);
-    memcpy(data, format, size);
-
-    double *args = (double*) traceMonitor->traceAlloc->alloc(count * sizeof(double));
-    LIns* argsp_ins = w.nameImmpNonGC(args);
-    for (int i = 0; i < count; ++i)
-        w.stTprintArg(insa, argsp_ins, i);
-
-    LIns* args_ins[] = { w.nameImmpNonGC(args), w.nameImmi(count), w.nameImmpNonGC(data) };
-    LIns* call_ins = w.call(&PrintOnTrace_ci, args_ins);
-    guard(false, w.eqi0(call_ins), MISMATCH_EXIT);
-}
-
-// Generate a 'printf'-type call from trace for debugging.
-void
-TraceRecorder::tprint(const char *format)
-{
-    LIns* insa[] = { NULL };
-    tprint(format, 0, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins)
-{
-    LIns* insa[] = { ins };
-    tprint(format, 1, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2)
-{
-    LIns* insa[] = { ins1, ins2 };
-    tprint(format, 2, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3)
-{
-    LIns* insa[] = { ins1, ins2, ins3 };
-    tprint(format, 3, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4)
-{
-    LIns* insa[] = { ins1, ins2, ins3, ins4 };
-    tprint(format, 4, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4,
-                      LIns *ins5)
-{
-    LIns* insa[] = { ins1, ins2, ins3, ins4, ins5 };
-    tprint(format, 5, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4,
-                      LIns *ins5, LIns *ins6)
-{
-    LIns* insa[] = { ins1, ins2, ins3, ins4, ins5, ins6 };
-    tprint(format, 6, insa);
-}
-#endif
 
 Tracker::Tracker(JSContext *cx)
     : cx(cx)
@@ -13659,7 +13476,7 @@ TraceRecorder::createThis(JSObject& ctor, LIns* ctor_ins, LIns** thisobj_insp)
     // bake the slot into the trace, not the value, since .prototype is
     // writable.
     uintN protoSlot = shape->slot;
-    LIns* args[] = { w.nameImmw(protoSlot), ctor_ins, cx_ins };
+    LIns* args[] = { w.nameImmw(intptr_t(protoSlot)), ctor_ins, cx_ins };
     *thisobj_insp = w.call(&js_CreateThisFromTrace_ci, args);
     guard(false, w.eqp0(*thisobj_insp), OOM_EXIT);
     return RECORD_CONTINUE;
