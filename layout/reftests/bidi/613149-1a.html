@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+  <title>Bidi isolation - bdi element</title>
+  <!-- Examples from http://www.w3.org/International/docs/html-bidi-requirements/#bidi-isolation -->
+  <style type="text/css">body { font-family: monospace; }</style>
+ </head>
+ <body>
+  <p><bdi>פיצה זהב 24 קאראט</bdi> - 3 reviews</p>
+  <p>מסעדה ראשונה: <bdi dir="ltr">Joe's פלאפל Bar</bdi> - 5 תגובות</p>
+  <p>מסעדה ראשונה: <bdi dir="ltr"><bdo dir="rtl">raB פלאפל s'eoJ</bdo></bdi> - 5 תגובות</p>
+  <p dir="rtl" align="left">תשתמש ב-css (<bdi dir="ltr">position: relative</bdi>).</p>
+  <p>documents &gt; <bdi dir="rtl">הרומן הראשון שלי</bdi> &gt; <bdi dir="rtl">פרק 1</bdi></p>
+  <p><bdi>joe hacker&#x202e;</bdi>: overdrawn</p>
+ </body>
+</html>
