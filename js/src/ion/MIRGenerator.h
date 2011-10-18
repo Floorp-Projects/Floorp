@@ -49,6 +49,7 @@
 #include "jscompartment.h"
 #include "IonAllocPolicy.h"
 #include "IonCompartment.h"
+#include "CompileInfo.h"
 
 namespace js {
 namespace ion {
@@ -56,12 +57,6 @@ namespace ion {
 class MBasicBlock;
 class MIRGraph;
 class MStart;
-
-static inline uint32
-CountArgSlots(JSFunction *fun)
-{
-    return fun ? fun->nargs + 1 : 0;
-}
 
 class MIRGenerator
 {
@@ -72,41 +67,6 @@ class MIRGenerator
     TempAllocator &temp() {
         return temp_;
     }
-    JSFunction *fun() const {
-        return fun_;
-    }
-    uint32 nslots() const {
-        return nslots_;
-    }
-    uint32 nargs() const {
-        return fun()->nargs;
-    }
-    uint32 nlocals() const {
-        return script->nfixed;
-    }
-    uint32 thisSlot() const {
-        JS_ASSERT(fun());
-        return 0;
-    }
-    uint32 firstArgSlot() const {
-        JS_ASSERT(fun());
-        return 1;
-    }
-    uint32 argSlot(uint32 i) const {
-        return firstArgSlot() + i;
-    }
-    uint32 firstLocalSlot() const {
-        return CountArgSlots(fun());
-    }
-    uint32 localSlot(uint32 i) const {
-        return firstLocalSlot() + i;
-    }
-    uint32 firstStackSlot() const {
-        return firstLocalSlot() + nlocals();
-    }
-    uint32 stackSlot(uint32 i) const {
-        return firstStackSlot() + i;
-    }
     MIRGraph &graph() {
         return graph_;
     }
@@ -115,6 +75,9 @@ class MIRGenerator
     }
     IonCompartment *ionCompartment() const {
         return cx->compartment->ionCompartment();
+    }
+    const CompileInfo &info() const {
+        return info_;
     }
 
     template <typename T>
@@ -132,11 +95,10 @@ class MIRGenerator
     }
 
   public:
-    JSScript *script;
     JSContext *cx;
 
   protected:
-    jsbytecode *pc;
+    CompileInfo info_;
     TempAllocator &temp_;
     JSFunction *fun_;
     uint32 nslots_;

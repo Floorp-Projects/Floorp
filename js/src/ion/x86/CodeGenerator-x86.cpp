@@ -197,11 +197,12 @@ CodeGeneratorX86::visitReturn(LReturn *ret)
 void
 CodeGeneratorX86::linkAbsoluteLabels()
 {
-    IonCode *method = gen->script->ion->method();
+    JSScript *script = gen->info().script();
+    IonCode *method = script->ion->method();
 
     for (size_t i = 0; i < deferredDoubles_.length(); i++) {
         DeferredDouble *d = deferredDoubles_[i];
-        const Value &v = gen->script->ion->getConstant(d->index());
+        const Value &v = script->ion->getConstant(d->index());
         MacroAssembler::Bind(method, d->label(), &v);
     }
 }

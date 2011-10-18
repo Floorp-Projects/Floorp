@@ -280,7 +280,7 @@ CodeGenerator::generateArgumentsChecks()
     Register temp = GeneralRegisterSet(Registers::TempMask).getAny();
 
     Label mismatched;
-    for (uint32 i = 0; i < CountArgSlots(gen->fun()); i++) {
+    for (uint32 i = 0; i < CountArgSlots(gen->info().fun()); i++) {
         // All initial parameters are guaranteed to be MParameters.
         MParameter *param = rp->getOperand(i)->toParameter();
         types::TypeSet *types = param->typeSet();
@@ -351,21 +351,22 @@ CodeGenerator::generate()
     if (!code)
         return false;
 
-    JS_ASSERT(!gen->script->ion);
+    JSScript *script = gen->info().script();
+    JS_ASSERT(!script->ion);
 
-    gen->script->ion = IonScript::New(cx, snapshots_.length(), bailouts_.length(),
-                                      graph.numConstants());
-    if (!gen->script->ion)
+    script->ion = IonScript::New(cx, snapshots_.length(), bailouts_.length(),
+                                 graph.numConstants());
+    if (!script->ion)
         return false;
 
-    gen->script->ion->setMethod(code);
-    gen->script->ion->setDeoptTable(deoptTable_);
+    script->ion->setMethod(code);
+    script->ion->setDeoptTable(deoptTable_);
     if (snapshots_.length())
-        gen->script->ion->copySnapshots(&snapshots_);
+        script->ion->copySnapshots(&snapshots_);
     if (bailouts_.length())
-        gen->script->ion->copyBailoutTable(&bailouts_[0]);
+        script->ion->copyBailoutTable(&bailouts_[0]);
     if (graph.numConstants())
-        gen->script->ion->copyConstants(graph.constantPool());
+        script->ion->copyConstants(graph.constantPool());
 
     linkAbsoluteLabels();
 
