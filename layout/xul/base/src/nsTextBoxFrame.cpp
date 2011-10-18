@@ -379,7 +379,7 @@ nsDisplayXULTextBox::PaintTextToContext(nsRenderingContext* aCtx,
 
 nsRect
 nsDisplayXULTextBox::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+  return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
 }
 
 nsRect
