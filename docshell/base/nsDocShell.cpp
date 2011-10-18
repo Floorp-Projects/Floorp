@@ -4130,10 +4130,10 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     mFailedLoadType = mLoadType;
 
     if (mLSHE) {
-        // If we don't give mLSHE a new doc identifier here, when we go back or
-        // forward to another SHEntry with the same doc identifier, the error
-        // page will persist.
-        mLSHE->SetUniqueDocIdentifier();
+        // Abandon mLSHE's BFCache entry and create a new one.  This way, if
+        // we go back or forward to another SHEntry with the same doc
+        // identifier, the error page won't persist.
+        mLSHE->AbandonBFCacheEntry();
     }
 
     nsCAutoString url;
@@ -4406,10 +4406,10 @@ nsDocShell::LoadPage(nsISupports *aPageDescriptor, PRUint32 aDisplayType)
     nsresult rv = shEntryIn->Clone(getter_AddRefs(shEntry));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Give our cloned shEntry a new document identifier so this load is
-    // independent of all other loads.  (This is important, in particular,
-    // for bugs 582795 and 585298.)
-    rv = shEntry->SetUniqueDocIdentifier();
+    // Give our cloned shEntry a new bfcache entry so this load is independent
+    // of all other loads.  (This is important, in particular, for bugs 582795
+    // and 585298.)
+    rv = shEntry->AbandonBFCacheEntry();
     NS_ENSURE_SUCCESS(rv, rv);
 
     //
@@ -8284,17 +8284,15 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                                   NS_SUCCEEDED(splitRv2) &&
                                   curBeforeHash.Equals(newBeforeHash);
 
-        bool sameDocIdent = false;
+        // XXX rename
+        bool sameDocument = false;
         if (mOSHE && aSHEntry) {
             // We're doing a history load.
 
-            PRUint64 ourDocIdent, otherDocIdent;
-            mOSHE->GetDocIdentifier(&ourDocIdent);
-            aSHEntry->GetDocIdentifier(&otherDocIdent);
-            sameDocIdent = (ourDocIdent == otherDocIdent);
+            mOSHE->SharesDocumentWith(aSHEntry, &sameDocument);
 
 #ifdef DEBUG
-            if (sameDocIdent) {
+            if (sameDocument) {
                 nsCOMPtr<nsIInputStream> currentPostData;
                 mOSHE->GetPostData(getter_AddRefs(currentPostData));
                 NS_ASSERTION(currentPostData == aPostData,
@@ -8317,7 +8315,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // The restriction tha the SHEntries in (a) must be different ensures
         // that history.go(0) and the like trigger full refreshes, rather than
         // short-circuited loads.
-        bool doShortCircuitedLoad = (sameDocIdent && mOSHE != aSHEntry) ||
+        bool doShortCircuitedLoad = (sameDocument && mOSHE != aSHEntry) ||
                                       (!aSHEntry && aPostData == nsnull &&
                                        sameExceptHashes && !newHash.IsEmpty());
 
@@ -8368,7 +8366,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             OnNewURI(aURI, nsnull, owner, mLoadType, true, true, true);
 
             nsCOMPtr<nsIInputStream> postData;
-            PRUint64 docIdent = PRUint64(-1);
             nsCOMPtr<nsISupports> cacheKey;
 
             if (mOSHE) {
@@ -8382,8 +8379,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 // wouldn't want here.
                 if (aLoadType & LOAD_CMD_NORMAL) {
                     mOSHE->GetPostData(getter_AddRefs(postData));
-                    mOSHE->GetDocIdentifier(&docIdent);
                     mOSHE->GetCacheKey(getter_AddRefs(cacheKey));
+
+                    // Link our new SHEntry to the old SHEntry's back/forward
+                    // cache data, since the two SHEntries correspond to the
+                    // same document.
+                    mLSHE->AdoptBFCacheEntry(mOSHE);
                 }
             }
 
@@ -8403,11 +8404,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 // cache first
                 if (cacheKey)
                     mOSHE->SetCacheKey(cacheKey);
-
-                // Propagate our document identifier to the new mOSHE so that
-                // we'll know it's related by an anchor navigation or pushState.
-                if (docIdent != PRUint64(-1))
-                    mOSHE->SetDocIdentifier(docIdent);
             }
 
             /* restore previous position of scroller(s), if we're moving
@@ -8451,7 +8447,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 }
             }
 
-            if (sameDocIdent) {
+            if (sameDocument) {
                 // Set the doc's URI according to the new history entry's URI
                 nsCOMPtr<nsIURI> newURI;
                 mOSHE->GetURI(getter_AddRefs(newURI));
@@ -8468,10 +8464,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             // Dispatch the popstate and hashchange events, as appropriate.
             nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mScriptGlobal);
             if (window) {
-                // Need the doHashchange check here since sameDocIdent is
+                // Need the doHashchange check here since sameDocument is
                 // false if we're navigating to a new shentry (i.e. a aSHEntry
                 // is null), such as when clicking a <a href="#foo">.
-                if (sameDocIdent || doHashchange) {
+                if (sameDocument || doHashchange) {
                   window->DispatchSyncPopState();
                 }
 
@@ -9254,11 +9250,11 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
             }
 
             // If the response status indicates an error, unlink this session
-            // history entry from any entries sharing its doc ident.
+            // history entry from any entries sharing its document.
             PRUint32 responseStatus;
             nsresult rv = httpChannel->GetResponseStatus(&responseStatus);
             if (mLSHE && NS_SUCCEEDED(rv) && responseStatus >= 400) {
-                mLSHE->SetUniqueDocIdentifier();
+                mLSHE->AbandonBFCacheEntry();
             }
         }
     }
@@ -9487,9 +9483,9 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     // It's important that this function not run arbitrary scripts after step 1
     // and before completing step 5.  For example, if a script called
     // history.back() before we completed step 5, bfcache might destroy an
-    // active content viewer.  Since EvictContentViewers at the end of step 5
-    // might run script, we can't just put a script blocker around the critical
-    // section.
+    // active content viewer.  Since EvictOutOfRangeContentViewers at the end of
+    // step 5 might run script, we can't just put a script blocker around the
+    // critical section.
     //
     // Note that we completely ignore the aTitle parameter.
 
@@ -9669,11 +9665,9 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
 
         NS_ENSURE_TRUE(newSHEntry, NS_ERROR_FAILURE);
 
-        // Set the new SHEntry's document identifier, if we can.
-        PRUint64 ourDocIdent;
-        NS_ENSURE_SUCCESS(oldOSHE->GetDocIdentifier(&ourDocIdent),
-                          NS_ERROR_FAILURE);
-        NS_ENSURE_SUCCESS(newSHEntry->SetDocIdentifier(ourDocIdent),
+        // Link the new SHEntry to the old SHEntry's BFCache entry, since the
+        // two entries correspond to the same document.
+        NS_ENSURE_SUCCESS(newSHEntry->AdoptBFCacheEntry(oldOSHE),
                           NS_ERROR_FAILURE);
 
         // Set the new SHEntry's title (bug 655273).
@@ -9719,7 +9713,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         PRInt32 curIndex = -1;
         rv = rootSH->GetIndex(&curIndex);
         if (NS_SUCCEEDED(rv) && curIndex > -1) {
-            internalSH->EvictContentViewers(curIndex - 1, curIndex);
+            internalSH->EvictOutOfRangeContentViewers(curIndex);
         }
     }
 
