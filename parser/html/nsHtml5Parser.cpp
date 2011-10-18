@@ -502,7 +502,7 @@ nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
 {
   NS_ENSURE_TRUE(aSourceBuffer.Length() <= PR_INT32_MAX,
       NS_ERROR_OUT_OF_MEMORY);
-  nsIDocument* doc = aTargetNode->GetOwnerDoc();
+  nsIDocument* doc = aTargetNode->OwnerDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_AVAILABLE);
   
   nsIURI* uri = doc->GetDocumentURI();

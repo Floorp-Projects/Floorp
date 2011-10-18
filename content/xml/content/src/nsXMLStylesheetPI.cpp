@@ -179,7 +179,7 @@ nsXMLStylesheetPI::GetStyleSheetURL(bool* aIsInline)
 
   nsIURI *baseURL;
   nsCAutoString charset;
-  nsIDocument *document = GetOwnerDoc();
+  nsIDocument *document = OwnerDoc();
   if (document) {
     baseURL = mOverriddenBaseURI ?
               mOverriddenBaseURI.get() :

@@ -217,7 +217,7 @@ void*
 nsINode::GetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
                      nsresult *aStatus) const
 {
-  nsIDocument *doc = GetOwnerDoc();
+  nsIDocument *doc = OwnerDoc();
   if (!doc)
     return nsnull;
 
@@ -230,7 +230,7 @@ nsINode::SetProperty(PRUint16 aCategory, nsIAtom *aPropertyName, void *aValue,
                      NSPropertyDtorFunc aDtor, bool aTransfer,
                      void **aOldValue)
 {
-  nsIDocument *doc = GetOwnerDoc();
+  nsIDocument *doc = OwnerDoc();
   if (!doc)
     return NS_ERROR_FAILURE;
 
@@ -247,7 +247,7 @@ nsINode::SetProperty(PRUint16 aCategory, nsIAtom *aPropertyName, void *aValue,
 void
 nsINode::DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName)
 {
-  nsIDocument *doc = GetOwnerDoc();
+  nsIDocument *doc = OwnerDoc();
   if (doc)
     doc->PropertyTable(aCategory)->DeleteProperty(this, aPropertyName);
 }
@@ -256,7 +256,7 @@ void*
 nsINode::UnsetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
                        nsresult *aStatus)
 {
-  nsIDocument *doc = GetOwnerDoc();
+  nsIDocument *doc = OwnerDoc();
   if (!doc)
     return nsnull;
 
@@ -539,7 +539,7 @@ nsINode::RemoveChild(nsINode *aOldChild)
   }
 
   if (aOldChild && aOldChild->GetNodeParent() == this) {
-    nsContentUtils::MaybeFireNodeRemoved(aOldChild, this, GetOwnerDoc());
+    nsContentUtils::MaybeFireNodeRemoved(aOldChild, this, OwnerDoc());
   }
 
   PRInt32 index = IndexOf(aOldChild);
@@ -617,7 +617,7 @@ nsINode::Normalize()
   }
 
   // We're relying on mozAutoSubtreeModified to keep the doc alive here.
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
 
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(doc, nsnull);
@@ -1095,7 +1095,7 @@ nsINode::AddEventListener(const nsAString& aType,
 
   if (!aWantsUntrusted &&
       (aOptionalArgc < 2 &&
-       !nsContentUtils::IsChromeDoc(GetOwnerDoc()))) {
+       !nsContentUtils::IsChromeDoc(OwnerDoc()))) {
     aWantsUntrusted = true;
   }
 
@@ -1131,7 +1131,7 @@ nsINode::DispatchEvent(nsIDOMEvent *aEvent, bool* aRetVal)
 {
   // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
   // if that's the XBL document?  Would we want its presshell?  Or what?
-  nsCOMPtr<nsIDocument> document = GetOwnerDoc();
+  nsCOMPtr<nsIDocument> document = OwnerDoc();
 
   // Do nothing if the element does not belong to a document
   if (!document) {
@@ -1344,7 +1344,7 @@ nsIContent::GetFlattenedTreeParent() const
 {
   nsIContent *parent = GetParent();
   if (parent && parent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsIDocument *doc = parent->GetOwnerDoc();
+    nsIDocument *doc = parent->OwnerDoc();
     if (doc) {
       nsIContent* insertionElement =
         doc->BindingManager()->GetNestedInsertionPoint(parent, this);
@@ -1462,7 +1462,7 @@ nsIContent::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 already_AddRefed<nsIURI>
 nsIContent::GetBaseURI() const
 {
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   if (!doc) {
     // We won't be able to do security checks, etc.  So don't go any
     // further.  That said, this really shouldn't happen...
@@ -1486,7 +1486,7 @@ nsIContent::GetBaseURI() const
     if (elem->IsSVG()) {
       nsIContent* bindingParent = elem->GetBindingParent();
       if (bindingParent) {
-        nsIDocument* bindingDoc = bindingParent->GetOwnerDoc();
+        nsIDocument* bindingDoc = bindingParent->OwnerDoc();
         if (bindingDoc) {
           nsXBLBinding* binding =
             bindingDoc->BindingManager()->GetBinding(bindingParent);
@@ -1934,7 +1934,7 @@ nsGenericElement::GetScrollFrame(nsIFrame **aStyledFrame)
       return scrollFrame;
   }
 
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   bool quirksMode = doc->GetCompatibilityMode() == eCompatibility_NavQuirks;
   Element* elementWithRootScrollInfo =
     quirksMode ? doc->GetBodyElement() : doc->GetRootElement();
@@ -2612,7 +2612,7 @@ nsGenericElement::GetAttributeNode(const nsAString& aName,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsIDocument* document = GetOwnerDoc();
+  nsIDocument* document = OwnerDoc();
   if (document) {
     document->WarnOnceAbout(nsIDocument::eGetAttributeNode);
   }
@@ -2640,7 +2640,7 @@ nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute,
 
   *aReturn = nsnull;
 
-  nsIDocument* document = GetOwnerDoc();
+  nsIDocument* document = OwnerDoc();
   if (document) {
     document->WarnOnceAbout(nsIDocument::eSetAttributeNode);
   }
@@ -2669,7 +2669,7 @@ nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute,
 
   *aReturn = nsnull;
 
-  nsIDocument* document = GetOwnerDoc();
+  nsIDocument* document = OwnerDoc();
   if (document) {
     document->WarnOnceAbout(nsIDocument::eRemoveAttributeNode);
   }
@@ -2771,7 +2771,7 @@ nsGenericElement::GetAttributeNodeNS(const nsAString& aNamespaceURI,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsIDocument* document = GetOwnerDoc();
+  nsIDocument* document = OwnerDoc();
   if (document) {
     document->WarnOnceAbout(nsIDocument::eGetAttributeNodeNS);
   }
@@ -2798,7 +2798,7 @@ nsGenericElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
   NS_ENSURE_ARG_POINTER(aNewAttr);
   *aReturn = nsnull;
 
-  nsIDocument* document = GetOwnerDoc();
+  nsIDocument* document = OwnerDoc();
   if (document) {
     document->WarnOnceAbout(nsIDocument::eSetAttributeNodeNS);
   }
@@ -3034,7 +3034,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // that also need to be told that they are moving.
   nsresult rv;
   if (hadForceXBL) {
-    nsIDocument* ownerDoc = GetOwnerDoc();
+    nsIDocument* ownerDoc = OwnerDoc();
     if (ownerDoc) {
       nsBindingManager* bmgr = ownerDoc->BindingManager();
 
@@ -3100,7 +3100,7 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
                   "kids!");
   // Make sure to unbind this node before doing the kids
   nsIDocument *document =
-    HasFlag(NODE_FORCE_XBL_BINDINGS) ? GetOwnerDoc() : GetCurrentDoc();
+    HasFlag(NODE_FORCE_XBL_BINDINGS) ? OwnerDoc() : GetCurrentDoc();
 
   if (aNullParent) {
     if (GetParent()) {
@@ -3191,7 +3191,7 @@ nsGenericElement::GetChildren(PRUint32 aFilter)
   // insertion point if any.
   nsINodeList *childList = nsnull;
 
-  nsIDocument* document = GetOwnerDoc();
+  nsIDocument* document = OwnerDoc();
   if (document) {
     if (!(aFilter & eAllButXBL)) {
       childList = document->BindingManager()->GetXBLChildNodesFor(this);
@@ -3268,7 +3268,7 @@ nsIContent::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
        do_QueryInterface(static_cast<nsMouseEvent*>
                                     (aVisitor.mEvent)->relatedTarget);
     if (relatedTarget &&
-        relatedTarget->GetOwnerDoc() == GetOwnerDoc()) {
+        relatedTarget->OwnerDoc() == OwnerDoc()) {
 
       // If current target is anonymous for events or we know that related
       // target is descendant of an element which is anonymous for events,
@@ -3351,7 +3351,7 @@ nsIContent::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // check for an anonymous parent
   // XXX XBL2/sXBL issue
   if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsIDocument* ownerDoc = GetOwnerDoc();
+    nsIDocument* ownerDoc = OwnerDoc();
     if (ownerDoc) {
       nsIContent* insertionParent = ownerDoc->BindingManager()->
         GetInsertionParent(this);
@@ -3590,7 +3590,7 @@ AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
   NS_ASSERTION(!aNode->GetNodeParent(),
                "Should have removed from parent already");
 
-  nsIDocument *doc = aParent->GetOwnerDoc();
+  nsIDocument *doc = aParent->OwnerDoc();
 
   nsresult rv;
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc, &rv);
@@ -3603,7 +3603,7 @@ AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
   rv = domDoc->AdoptNode(node, getter_AddRefs(adoptedNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ASSERTION(aParent->GetOwnerDoc() == doc,
+  NS_ASSERTION(aParent->OwnerDoc() == doc,
                "ownerDoc chainged while adopting");
   NS_ASSERTION(adoptedNode == node, "Uh, adopt node changed nodes?");
   NS_ASSERTION(aParent->HasSameOwnerDoc(aNode),
@@ -3673,7 +3673,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
       nsMutationEvent mutation(true, NS_MUTATION_NODEINSERTED);
       mutation.mRelatedNode = do_QueryInterface(this);
 
-      mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+      mozAutoSubtreeModified subtree(OwnerDoc(), this);
       (new nsPLDOMEvent(aKid, mutation))->RunDOMEventWhenSafe();
     }
   }
@@ -3822,7 +3822,7 @@ nsGenericElement::GetPrimaryFrame(mozFlushType aType)
 void
 nsGenericElement::DestroyContent()
 {
-  nsIDocument *document = GetOwnerDoc();
+  nsIDocument *document = OwnerDoc();
   if (document) {
     document->BindingManager()->RemovedFromDocument(this, document);
     document->ClearBoxObjectFor(this);
@@ -4061,7 +4061,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     // If we're replacing, fire for node-to-be-replaced.
     // If aRefChild == aNewChild then we'll fire for it in check below
     if (aReplace && aRefChild != aNewChild) {
-      nsContentUtils::MaybeFireNodeRemoved(aRefChild, this, GetOwnerDoc());
+      nsContentUtils::MaybeFireNodeRemoved(aRefChild, this, OwnerDoc());
     }
 
     // If the new node already has a parent, fire for removing from old
@@ -4069,7 +4069,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     nsINode* oldParent = aNewChild->GetNodeParent();
     if (oldParent) {
       nsContentUtils::MaybeFireNodeRemoved(aNewChild, oldParent,
-                                           aNewChild->GetOwnerDoc());
+                                           aNewChild->OwnerDoc());
     }
 
     // If we're inserting a fragment, fire for all the children of the
@@ -4079,7 +4079,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     }
   }
 
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   nsIContent* newContent = static_cast<nsIContent*>(aNewChild);
   PRInt32 insPos;
 
@@ -4245,7 +4245,7 @@ nsINode::IsEqualNode(nsIDOMNode* aOther, bool* aReturn)
 nsresult
 nsINode::IsSameNode(nsIDOMNode* aOther, bool* aReturn)
 {
-  nsIDocument* owner = GetOwnerDoc();
+  nsIDocument* owner = OwnerDoc();
   if (owner) {
     owner->WarnOnceAbout(nsIDocument::eIsSameNode);
   }
@@ -4295,7 +4295,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
 
   {
     nsIDocument *doc;
-    if (!tmp->GetNodeParent() && (doc = tmp->GetOwnerDoc())) {
+    if (!tmp->GetNodeParent() && (doc = tmp->OwnerDoc())) {
       doc->BindingManager()->RemovedFromDocument(tmp, doc);
     }
   }
@@ -4347,7 +4347,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
-  nsIDocument* ownerDoc = tmp->GetOwnerDoc();
+  nsIDocument* ownerDoc = tmp->OwnerDoc();
   if (ownerDoc) {
     ownerDoc->BindingManager()->Traverse(tmp, cb);
   }
@@ -4423,7 +4423,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsGenericElement,
 nsresult
 nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  nsIDocument *document = GetOwnerDoc();
+  nsIDocument *document = OwnerDoc();
   if (document) {
     return document->BindingManager()->GetBindingImplementation(this, aIID,
                                                                 aInstancePtr);
@@ -4450,7 +4450,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
                                          const nsAString& aValue,
                                          bool aDefer)
 {
-  nsIDocument *ownerDoc = GetOwnerDoc();
+  nsIDocument *ownerDoc = OwnerDoc();
   if (!ownerDoc || ownerDoc->IsLoadedAsData()) {
     // Make this a no-op rather than throwing an error to avoid
     // the error causing problems setting the attribute.
@@ -4664,7 +4664,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (document || HasFlag(NODE_FORCE_XBL_BINDINGS)) {
-    nsIDocument* ownerDoc = GetOwnerDoc();
+    nsIDocument* ownerDoc = OwnerDoc();
     if (ownerDoc) {
       nsRefPtr<nsXBLBinding> binding =
         ownerDoc->BindingManager()->GetBinding(this);
@@ -4710,7 +4710,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     }
     mutation.mAttrChange = aModType;
 
-    mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+    mozAutoSubtreeModified subtree(OwnerDoc(), this);
     (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
   }
 
@@ -4894,7 +4894,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (document || HasFlag(NODE_FORCE_XBL_BINDINGS)) {
-    nsIDocument* ownerDoc = GetOwnerDoc();
+    nsIDocument* ownerDoc = OwnerDoc();
     if (ownerDoc) {
       nsRefPtr<nsXBLBinding> binding =
         ownerDoc->BindingManager()->GetBinding(this);
@@ -4927,7 +4927,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       mutation.mPrevAttrValue = do_GetAtom(value);
     mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
-    mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+    mozAutoSubtreeModified subtree(OwnerDoc(), this);
     (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
   }
 
@@ -5057,7 +5057,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
   nsGenericElement* nonConstThis = const_cast<nsGenericElement*>(this);
 
   // XXX sXBL/XBL2 issue! Owner or current document?
-  nsIDocument *document = GetOwnerDoc();
+  nsIDocument *document = OwnerDoc();
   if (document) {
     // Note: not listing nsIAnonymousContentCreator-created content...
 
@@ -5365,7 +5365,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 void
 nsGenericElement::FireNodeRemovedForChildren()
 {
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   // Optimize the common case
   if (!nsContentUtils::
         HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
@@ -5398,7 +5398,7 @@ ParseSelectorList(nsINode* aNode,
 {
   NS_ENSURE_ARG(aNode);
 
-  nsIDocument* doc = aNode->GetOwnerDoc();
+  nsIDocument* doc = aNode->OwnerDoc();
   NS_ENSURE_STATE(doc);
 
   nsCSSParser parser(doc->CSSLoader());
@@ -5441,7 +5441,7 @@ nsGenericElement::doQuerySelector(nsINode* aRoot, const nsAString& aSelector,
 
   TreeMatchContext matchingContext(false,
                                    nsRuleWalker::eRelevantLinkUnvisited,
-                                   aRoot->GetOwnerDoc());
+                                   aRoot->OwnerDoc());
   for (nsIContent* cur = aRoot->GetFirstChild();
        cur;
        cur = cur->GetNextNode(aRoot)) {
@@ -5475,7 +5475,7 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
 
   TreeMatchContext matchingContext(false,
                                    nsRuleWalker::eRelevantLinkUnvisited,
-                                   aRoot->GetOwnerDoc());
+                                   aRoot->OwnerDoc());
   for (nsIContent* cur = aRoot->GetFirstChild();
        cur;
        cur = cur->GetNextNode(aRoot)) {
@@ -5501,7 +5501,7 @@ nsGenericElement::MozMatchesSelector(const nsAString& aSelector, nsresult* aResu
   if (NS_SUCCEEDED(*aResult)) {
     TreeMatchContext matchingContext(false,
                                      nsRuleWalker::eRelevantLinkUnvisited,
-                                     GetOwnerDoc());
+                                     OwnerDoc());
     matches = nsCSSRuleProcessor::SelectorListMatches(this, matchingContext,
                                                       selectorList);
   }
@@ -5582,7 +5582,7 @@ nsINode::Contains(const nsINode* aOther) const
     return true;
   }
   if (!aOther ||
-      GetOwnerDoc() != aOther->GetOwnerDoc() ||
+      OwnerDoc() != aOther->OwnerDoc() ||
       IsInDoc() != aOther->IsInDoc() ||
       !(aOther->IsElement() ||
         aOther->IsNodeOfType(nsINode::eCONTENT)) ||
@@ -5591,7 +5591,7 @@ nsINode::Contains(const nsINode* aOther) const
   }
 
   const nsIContent* other = static_cast<const nsIContent*>(aOther);
-  if (this == GetOwnerDoc()) {
+  if (this == OwnerDoc()) {
     // document.contains(aOther) returns true if aOther is in the document,
     // but is not in any anonymous subtree.
     // IsInDoc() check is done already before this.

@@ -234,7 +234,7 @@ nsHTMLSharedElement::GetHref(nsAString& aValue)
   GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
   nsCOMPtr<nsIURI> uri;
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   if (doc) {
     nsContentUtils::NewURIWithDocumentCharset(
       getter_AddRefs(uri), href, doc, doc->GetDocumentURI());

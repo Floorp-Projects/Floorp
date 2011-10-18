@@ -118,7 +118,7 @@ nsSVGStylableElement::DidAnimateClass()
   }
   mClassAnimAttr->ParseAtomArray(src);
 
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   NS_ASSERTION(doc, "If we're animating we should have an owner");
   if (doc) {
     nsIPresShell* shell = doc->GetShell();

@@ -543,7 +543,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 
   if (foundMatch) {
     if (NS_FAILED(rv)) {
-      ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
+      ReportAttributeParseFailure(OwnerDoc(), aAttribute, aValue);
       return false;
     }
     aResult.SetTo(aValue);
@@ -812,7 +812,7 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   // whether this is a "no-animation restyle". (This should match the check
   // in nsHTMLCSSStyleSheet::RulesMatching(), where we determine whether to
   // apply the SMILOverrideStyle.)
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   NS_ASSERTION(doc, "SVG element without doc");
   if (doc) {
     nsIPresShell* shell = doc->GetShell();
@@ -1129,7 +1129,7 @@ nsSVGElement::UpdateContentStyleRule()
     return;
   }
 
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   if (!doc) {
     NS_ERROR("SVG element without owner document");
     return;
@@ -1193,7 +1193,7 @@ nsSVGElement::UpdateAnimatedContentStyleRule()
   NS_ABORT_IF_FALSE(!GetAnimatedContentStyleRule(),
                     "Animated content style rule already set");
 
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   if (!doc) {
     NS_ERROR("SVG element without owner document");
     return;

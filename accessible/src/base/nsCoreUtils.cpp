@@ -207,7 +207,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent *aContent)
   if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::accesskey))
     return 0;
 
-  nsCOMPtr<nsIDocument> doc = aContent->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> doc = aContent->OwnerDoc();
   if (!doc)
     return 0;
 
@@ -439,7 +439,7 @@ nsCoreUtils::GetDocShellTreeItemFor(nsINode *aNode)
   if (!aNode)
     return nsnull;
 
-  nsIDocument *doc = aNode->GetOwnerDoc();
+  nsIDocument *doc = aNode->OwnerDoc();
   NS_ASSERTION(doc, "No document for node passed in");
   NS_ENSURE_TRUE(doc, nsnull);
 
@@ -603,7 +603,7 @@ nsCoreUtils::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
     return nsnull;
 
   // Returns number of items in style declaration
-  nsIDocument* document = content->GetOwnerDoc();
+  nsIDocument* document = content->OwnerDoc();
   if (!document)
     return nsnull;
 

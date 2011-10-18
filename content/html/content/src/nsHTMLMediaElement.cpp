@@ -226,7 +226,7 @@ public:
     if (IsCancelled())
       return NS_OK;
     LOG_EVENT(PR_LOG_DEBUG, ("%p Dispatching simple event source error", mElement.get()));
-    return nsContentUtils::DispatchTrustedEvent(mElement->GetOwnerDoc(),
+    return nsContentUtils::DispatchTrustedEvent(mElement->OwnerDoc(),
                                                 mSource,
                                                 NS_LITERAL_STRING("error"),
                                                 false,
@@ -1910,7 +1910,7 @@ nsresult nsHTMLMediaElement::NewURIFromString(const nsAutoString& aURISpec, nsIU
 
   *aURI = nsnull;
 
-  nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
+  nsCOMPtr<nsIDocument> doc = OwnerDoc();
   if (!doc) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
@@ -2254,7 +2254,7 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
     return nsnull;
 
   nsRefPtr<LayerManager> manager =
-    nsContentUtils::PersistentLayerManagerForDocument(GetOwnerDoc());
+    nsContentUtils::PersistentLayerManagerForDocument(OwnerDoc());
   if (!manager)
     return nsnull;
 
@@ -2275,7 +2275,7 @@ nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
   // which frees the memory when it's destroyed.
   nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
 
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(GetOwnerDoc());
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryObject(this));
   NS_ENSURE_TRUE(domDoc && target, NS_ERROR_INVALID_ARG);
 
@@ -2306,7 +2306,7 @@ nsresult nsHTMLMediaElement::DispatchEvent(const nsAString& aName)
     return NS_OK;
   }
 
-  return nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
+  return nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                               static_cast<nsIContent*>(this),
                                               aName,
                                               false,
@@ -2373,7 +2373,7 @@ void nsHTMLMediaElement::UpdateMediaSize(nsIntSize size)
 
 void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 {
-  nsIDocument* ownerDoc = GetOwnerDoc();
+  nsIDocument* ownerDoc = OwnerDoc();
   // Don't pause if we have no ownerDoc. Something native must have created
   // us and be expecting us to work without a document.
   bool pauseForInactiveDocument =
@@ -2405,7 +2405,7 @@ void nsHTMLMediaElement::AddRemoveSelfReference()
   // potential listener for every event. We would also have to keep the
   // element alive if it was playing and producing audio output --- right now
   // that's covered by the !mPaused check.
-  nsIDocument* ownerDoc = GetOwnerDoc();
+  nsIDocument* ownerDoc = OwnerDoc();
 
   // See the comment at the top of this file for the explanation of this
   // boolean expression.
@@ -2544,7 +2544,7 @@ void nsHTMLMediaElement::ChangeDelayLoadStatus(bool aDelay) {
   mDelayingLoadEvent = aDelay;
 
   if (aDelay) {
-    mLoadBlockedDoc = GetOwnerDoc();
+    mLoadBlockedDoc = OwnerDoc();
     mLoadBlockedDoc->BlockOnload();
     LOG(PR_LOG_DEBUG, ("%p ChangeDelayLoadStatus(%d) doc=0x%p", this, aDelay, mLoadBlockedDoc.get()));
   } else {
@@ -2565,7 +2565,7 @@ void nsHTMLMediaElement::ChangeDelayLoadStatus(bool aDelay) {
 
 already_AddRefed<nsILoadGroup> nsHTMLMediaElement::GetDocumentLoadGroup()
 {
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   return doc ? doc->GetDocumentLoadGroup() : nsnull;
 }
 
@@ -2574,7 +2574,7 @@ nsHTMLMediaElement::CopyInnerTo(nsGenericElement* aDest) const
 {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+  if (aDest->OwnerDoc()->IsStaticDocument()) {
     nsHTMLMediaElement* dest = static_cast<nsHTMLMediaElement*>(aDest);
     if (mPrintSurface) {
       dest->mPrintSurface = mPrintSurface;
@@ -2627,7 +2627,7 @@ void nsHTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel)
                              NS_LITERAL_CSTRING(""), false);
 
   // Set the Referer header
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   if (doc) {
     aChannel->SetReferrer(doc->GetDocumentURI());
   }

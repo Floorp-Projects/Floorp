@@ -101,7 +101,7 @@ private:
 NS_IMETHODIMP
 nsImageBoxFrameEvent::Run()
 {
-  nsIDocument* doc = mContent->GetOwnerDoc();
+  nsIDocument* doc = mContent->OwnerDoc();
   if (!doc) {
     return NS_OK;
   }

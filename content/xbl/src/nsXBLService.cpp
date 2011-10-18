@@ -547,7 +547,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
 
   nsresult rv;
 
-  nsCOMPtr<nsIDocument> document = aContent->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> document = aContent->OwnerDoc();
 
   // XXX document may be null if we're in the midst of paint suppression
   if (!document)
@@ -657,7 +657,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
 nsresult
 nsXBLService::FlushStyleBindings(nsIContent* aContent)
 {
-  nsCOMPtr<nsIDocument> document = aContent->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> document = aContent->OwnerDoc();
 
   // XXX doc will be null if we're in the midst of paint suppression.
   if (! document)
@@ -686,7 +686,7 @@ NS_IMETHODIMP
 nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
                          nsIAtom** aResult)
 {
-  nsIDocument* document = aContent->GetOwnerDoc();
+  nsIDocument* document = aContent->OwnerDoc();
   if (document) {
     *aResult = document->BindingManager()->ResolveTag(aContent, aNameSpaceID);
     NS_IF_ADDREF(*aResult);
@@ -865,7 +865,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   nsCAutoString ref;
   aURI->GetRef(ref);
 
-  nsCOMPtr<nsIDocument> boundDocument = aBoundElement->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> boundDocument = aBoundElement->OwnerDoc();
 
   nsRefPtr<nsXBLDocumentInfo> docInfo;
   nsresult rv = LoadBindingDocumentInfo(aBoundElement, boundDocument, aURI,
