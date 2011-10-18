@@ -12,6 +12,7 @@
 
         <ImageButton android:id="@+id/favimage"
                      style="@style/AddressBar.ImageButton.Left"
+                     android:scaleType="fitXY"
                      android:src="@drawable/favicon"/>
 
         <Button android:id="@+id/awesome_bar"
