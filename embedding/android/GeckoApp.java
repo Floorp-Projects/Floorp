@@ -92,9 +92,7 @@ abstract public class GeckoApp
     public static DatabaseHelper mDbHelper;
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
-    private Button mAwesomeBar;
-    private ImageButton mFavicon;
-    private ProgressBar mProgressBar;
+    private BrowserToolbar mBrowserToolbar;
 
     enum LaunchState {Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -418,7 +416,7 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() { 
             public void run() {
-                mAwesomeBar.setText(uri);
+                mBrowserToolbar.setTitle(uri);
             }
         });
     }
@@ -432,8 +430,8 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() { 
             public void run() {
-                mProgressBar.setVisibility(View.VISIBLE);
-                mProgressBar.setIndeterminate(true);
+                mBrowserToolbar.setProgressVisibility(true);
+                mBrowserToolbar.updateProgress(-1, -1);
             }
         });
     }
@@ -447,7 +445,7 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() { 
             public void run() {
-                mProgressBar.setVisibility(View.GONE);
+                mBrowserToolbar.setProgressVisibility(false);
                 surfaceView.hideStartupBitmap();
             }
         });
@@ -460,15 +458,7 @@ abstract public class GeckoApp
         
         mMainHandler.post(new Runnable() { 
             public void run() {
-                if (total == -1) {
-                    mProgressBar.setIndeterminate(true);
-                } else if (current < total) {
-                    mProgressBar.setIndeterminate(false);
-                    mProgressBar.setMax(total);
-                    mProgressBar.setProgress(current);
-                } else {
-                    mProgressBar.setIndeterminate(false);
-                }
+                mBrowserToolbar.updateProgress(current, total);
             }
         });
     }
@@ -483,7 +473,7 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() {
             public void run() {
-                mAwesomeBar.setText(title);
+                mBrowserToolbar.setTitle(title);
             }
         });
     }
@@ -497,7 +487,7 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() { 
             public void run() {
-                mAwesomeBar.setText(title);
+                mBrowserToolbar.setTitle(title);
             }
         });
     }
@@ -510,7 +500,7 @@ abstract public class GeckoApp
                         URL url = new URL(href);
                         InputStream is = (InputStream) url.getContent();
                         Drawable image = Drawable.createFromStream(is, "src");
-                        mFavicon.setImageDrawable(image);
+                        mBrowserToolbar.setFavicon(image);
                     } catch (MalformedURLException e) {
                         Log.d("GeckoShell", "Error loading favicon: " + e);
                     } catch (IOException e) {
@@ -588,6 +578,7 @@ abstract public class GeckoApp
 
         // setup gecko layout
         mGeckoLayout = (RelativeLayout) findViewById(R.id.geckoLayout);
+        mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browserToolbar);
 
         if (surfaceView == null) {
             surfaceView = new GeckoSurfaceView(this);
@@ -626,24 +617,7 @@ abstract public class GeckoApp
         }
 
         mMainLayout = (LinearLayout) findViewById(R.id.mainLayout);
-        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-
-        // setup awesome bar
-        mAwesomeBar = (Button) findViewById(R.id.awesomeBar);
-        mAwesomeBar.setOnClickListener(new EditText.OnClickListener() {
-            public void onClick(View v) {
-                onEditRequested();
-            }
-        });
-
-        mFavicon = (ImageButton) findViewById(R.id.favimage);
-
-        ImageButton reload = (ImageButton) findViewById(R.id.reload);
-        reload.setOnClickListener(new ImageButton.OnClickListener() {
-            public void onClick(View v) {
-                doReload();
-            }
-        });
+        mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browserToolbar);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1063,8 +1037,8 @@ abstract public class GeckoApp
                 String url = data.getStringExtra(AwesomeBar.URL_KEY);
                 AwesomeBar.Type type = AwesomeBar.Type.valueOf(data.getStringExtra(AwesomeBar.TYPE_KEY));
                 if (url != null && url.length() > 0) {
-                    mProgressBar.setVisibility(View.VISIBLE);
-                    mProgressBar.setIndeterminate(true);
+                    mBrowserToolbar.setProgressVisibility(true);
+                    mBrowserToolbar.updateProgress(-1, -1);
                     loadUrl(url, type);
                 }
             }
@@ -1090,11 +1064,8 @@ abstract public class GeckoApp
                     int id = Integer.parseInt(data.getStringExtra(ShowTabs.ID));
                     Tab tab = Tabs.getInstance().selectTab(id);
                     if (tab != null) {
-                        mAwesomeBar.setText(tab.getTitle());
-                        if (tab.isLoading())
-                           mProgressBar.setVisibility(View.VISIBLE);
-                        else
-                           mProgressBar.setVisibility(View.GONE);
+                        mBrowserToolbar.setTitle(tab.getTitle());
+                        mBrowserToolbar.setProgressVisibility(tab.isLoading());
                     }
                     GeckoAppShell.sendEventToGecko(new GeckoEvent("tab-select", "" + id));
                 }
@@ -1112,7 +1083,7 @@ abstract public class GeckoApp
     }
 
     public void loadUrl(String url, AwesomeBar.Type type) {
-        mAwesomeBar.setText(url);
+        mBrowserToolbar.setTitle(url);
         Log.d(LOG_FILE_NAME, type.name());
         if (type == AwesomeBar.Type.ADD) {
             GeckoAppShell.sendEventToGecko(new GeckoEvent("tab-add", url));
@@ -1120,5 +1091,4 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(new GeckoEvent("tab-load", url));
         }
    }
-
 }

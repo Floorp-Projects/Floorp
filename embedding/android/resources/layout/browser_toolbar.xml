@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ProgressBar android:id="@+id/progress_bar"
+                 style="@android:style/Widget.ProgressBar.Horizontal"
+                 android:layout_width="fill_parent"
+                 android:layout_height="10dip"
+                 android:visibility="gone"/>
+
+    <LinearLayout android:id="@+id/address_bar"
+                  style="@style/AddressBar">
+
+        <ImageButton android:id="@+id/favimage"
+                     style="@style/AddressBar.ImageButton.Left"
+                     android:src="@drawable/favicon"/>
+
+        <Button android:id="@+id/awesome_bar"
+                style="@style/AddressBar.URL"
+                android:textColor="#666"/>
+
+        <ImageButton android:id="@+id/reload"
+                     style="@style/AddressBar.ImageButton.Right"
+                     android:src="@drawable/reload"/>
+
+    </LinearLayout>
+
+</merge>
