@@ -703,13 +703,8 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   { 
     nsIContent* content = childBox->GetContent();
     nsIDocument* doc = content->OwnerDoc();
-    nsIAtom* atom;
-    if (doc) {
-      PRInt32 dummy;
-      atom = doc->BindingManager()->ResolveTag(content, &dummy);
-    } else {
-      atom = content->Tag();
-    }
+    PRInt32 dummy;
+    nsIAtom* atom = doc->BindingManager()->ResolveTag(content, &dummy);
 
     // skip over any splitters
     if (atom != nsGkAtoms::splitter) { 

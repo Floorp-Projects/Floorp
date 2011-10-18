@@ -268,9 +268,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
       // Strong reference to the document so that deleting properties can't
       // delete the document.
       nsCOMPtr<nsIDocument> document = aNode->OwnerDoc();
-      if (document) {
-        document->DeleteAllPropertiesFor(aNode);
-      }
+      document->DeleteAllPropertiesFor(aNode);
     }
 
     // I wonder whether it's faster to do the HasFlag check first....
@@ -302,12 +300,9 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   if (aNode->IsElement()) {
     nsIDocument* ownerDoc = aNode->OwnerDoc();
     Element* elem = aNode->AsElement();
-    if (ownerDoc) {
-      ownerDoc->ClearBoxObjectFor(elem);
-    }
+    ownerDoc->ClearBoxObjectFor(elem);
     
     NS_ASSERTION(aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) ||
-                 !ownerDoc ||
                  !ownerDoc->BindingManager() ||
                  !ownerDoc->BindingManager()->GetBinding(elem),
                  "Non-forced node has binding on destruction");
@@ -315,7 +310,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     // if NODE_FORCE_XBL_BINDINGS is set, the node might still have a binding
     // attached
     if (aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) &&
-        ownerDoc && ownerDoc->BindingManager()) {
+        ownerDoc->BindingManager()) {
       ownerDoc->BindingManager()->RemovedFromDocument(elem, ownerDoc);
     }
   }
@@ -416,10 +411,6 @@ nsNodeUtils::TraverseUserData(nsINode* aNode,
                               nsCycleCollectionTraversalCallback &aCb)
 {
   nsIDocument* ownerDoc = aNode->OwnerDoc();
-  if (!ownerDoc) {
-    return;
-  }
-
   ownerDoc->PropertyTable(DOM_USER_DATA)->Enumerate(aNode, NoteUserData, &aCb);
   ownerDoc->PropertyTable(DOM_USER_DATA_HANDLER)->Enumerate(aNode, NoteUserData, &aCb);
 }
@@ -438,9 +429,8 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep,
                       getter_AddRefs(newNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocument *ownerDoc = aNode->OwnerDoc();
-  if (ownerDoc && aCallUserDataHandlers) {
-    rv = CallUserDataHandlers(nodesWithProperties, ownerDoc,
+  if (aCallUserDataHandlers) {
+    rv = CallUserDataHandlers(nodesWithProperties, aNode->OwnerDoc(),
                               nsIDOMUserDataHandler::NODE_CLONED, true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -493,8 +483,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     if (!newDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
         !hasHadScriptHandlingObject) {
       nsIDocument* currentDoc = aNode->OwnerDoc();
-      NS_ENSURE_STATE(currentDoc &&
-                      (nsContentUtils::IsChromeDoc(currentDoc) ||
+      NS_ENSURE_STATE((nsContentUtils::IsChromeDoc(currentDoc) ||
                        (!currentDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
                         !hasHadScriptHandlingObject)));
     }
@@ -535,7 +524,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
   else if (nodeInfoManager) {
     nsIDocument* oldDoc = aNode->OwnerDoc();
     bool wasRegistered = false;
-    if (oldDoc && aNode->IsElement()) {
+    if (aNode->IsElement()) {
       Element* element = aNode->AsElement();
       oldDoc->ClearBoxObjectFor(element);
       wasRegistered = oldDoc->UnregisterFreezableElement(element);
@@ -717,8 +706,6 @@ nsNodeUtils::UnlinkUserData(nsINode *aNode)
   // Strong reference to the document so that deleting properties can't
   // delete the document.
   nsCOMPtr<nsIDocument> document = aNode->OwnerDoc();
-  if (document) {
-    document->PropertyTable(DOM_USER_DATA)->DeleteAllPropertiesFor(aNode);
-    document->PropertyTable(DOM_USER_DATA_HANDLER)->DeleteAllPropertiesFor(aNode);
-  }
+  document->PropertyTable(DOM_USER_DATA)->DeleteAllPropertiesFor(aNode);
+  document->PropertyTable(DOM_USER_DATA_HANDLER)->DeleteAllPropertiesFor(aNode);
 }

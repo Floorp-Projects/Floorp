@@ -204,10 +204,6 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, bool *preventD
 
   // get owner document for content
   nsCOMPtr<nsIDocument> parentDoc = mContent->OwnerDoc();
-  if (!parentDoc) {
-    NS_WARNING("Failed to get owner nsIDocument for menu item content");
-    return NS_ERROR_FAILURE;
-  }
 
   // get interface for creating DOM events from content owner document
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(parentDoc);

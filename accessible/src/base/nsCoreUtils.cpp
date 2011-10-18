@@ -207,11 +207,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent *aContent)
   if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::accesskey))
     return 0;
 
-  nsCOMPtr<nsIDocument> doc = aContent->OwnerDoc();
-  if (!doc)
-    return 0;
-
-  nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+  nsCOMPtr<nsIPresShell> presShell = aContent->OwnerDoc()->GetShell();
   if (!presShell)
     return 0;
 
@@ -439,11 +435,7 @@ nsCoreUtils::GetDocShellTreeItemFor(nsINode *aNode)
   if (!aNode)
     return nsnull;
 
-  nsIDocument *doc = aNode->OwnerDoc();
-  NS_ASSERTION(doc, "No document for node passed in");
-  NS_ENSURE_TRUE(doc, nsnull);
-
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsISupports> container = aNode->OwnerDoc()->GetContainer();
   nsIDocShellTreeItem *docShellTreeItem = nsnull;
   if (container)
     CallQueryInterface(container, &docShellTreeItem);
@@ -603,11 +595,8 @@ nsCoreUtils::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
     return nsnull;
 
   // Returns number of items in style declaration
-  nsIDocument* document = content->OwnerDoc();
-  if (!document)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(document->GetWindow());
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(content->OwnerDoc()->GetWindow());
   if (!window)
     return nsnull;
 

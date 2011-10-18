@@ -293,8 +293,6 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
       if (!content)
         return NS_OK;
       boundDocument = content->OwnerDoc();
-      if (!boundDocument)
-        return NS_OK;
     }
 
     boundGlobal = boundDocument->GetScopeObject();

@@ -200,9 +200,6 @@ public:
     }
 
     nsIDocument* document = mElement->OwnerDoc();
-    if (!document) {
-      return NS_OK;
-    }
 
     nsPIDOMWindow* window = document->GetWindow();
     if (!window) {
@@ -678,9 +675,6 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
   aInnerHTML.Truncate();
 
   nsIDocument* doc = OwnerDoc();
-  if (!doc) {
-    return NS_OK; // We rely on the document for doing HTML conversion
-  }
 
   nsresult rv = NS_OK;
 
@@ -749,7 +743,6 @@ nsresult
 nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   nsIDocument* doc = OwnerDoc();
-  NS_ENSURE_STATE(doc);
 
   nsresult rv = NS_OK;
 
@@ -835,7 +828,6 @@ nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
   }
 
   nsIDocument* doc = OwnerDoc();
-  NS_ENSURE_STATE(doc);
 
   // Needed when insertAdjacentHTML is used in combination with contenteditable
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, true);
@@ -1272,8 +1264,7 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
     // bail if it does.  See similar code in nsHTMLBodyElement and
     // nsHTMLFramesetElement
     *aDefer = false;
-    if (document &&
-        (win = document->GetInnerWindow()) && win->IsInnerWindow()) {
+    if ((win = document->GetInnerWindow()) && win->IsInnerWindow()) {
       nsCOMPtr<nsIDOMEventTarget> piTarget(do_QueryInterface(win));
 
       return piTarget->GetListenerManager(true);
@@ -1378,12 +1369,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 void
 nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
-  nsIDocument* ownerDoc = OwnerDoc();
-  if (ownerDoc) {
-    ownerDoc->GetBaseTarget(aBaseTarget);
-  } else {
-    aBaseTarget.Truncate();
-  }
+  OwnerDoc()->GetBaseTarget(aBaseTarget);
 }
 
 //----------------------------------------------------------------------
@@ -3427,7 +3413,6 @@ nsresult nsGenericHTMLElement::MozRequestFullScreen()
   }
 
   nsIDocument* doc = OwnerDoc();
-  NS_ENSURE_STATE(doc);
   nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(doc));
   NS_ENSURE_STATE(domDocument);
   bool fullScreenEnabled;

@@ -610,8 +610,7 @@ protected:
   nsIPresShell *GetPresShell() {
     nsCOMPtr<nsIContent> content = do_QueryObject(mCanvasElement);
     if (content) {
-      nsIDocument* ownerDoc = content->OwnerDoc();
-      return ownerDoc ? ownerDoc->GetShell() : nsnull;
+      return content->OwnerDoc()->GetShell();
     }
     if (mDocShell) {
       nsCOMPtr<nsIPresShell> shell;

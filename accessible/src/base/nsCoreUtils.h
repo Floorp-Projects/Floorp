@@ -254,8 +254,7 @@ public:
    */
   static nsIPresShell *GetPresShellFor(nsINode *aNode)
   {
-    nsIDocument *document = aNode->OwnerDoc();
-    return document ? document->GetShell() : nsnull;
+    return aNode->OwnerDoc()->GetShell();
   }
   static already_AddRefed<nsIWeakReference> GetWeakShellFor(nsINode *aNode)
   {
