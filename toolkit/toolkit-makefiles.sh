@@ -672,18 +672,18 @@ MAKEFILES_jsductwork="
 "
 
 MAKEFILES_libpr0n="
-  modules/libpr0n/Makefile
-  modules/libpr0n/build/Makefile
-  modules/libpr0n/public/Makefile
-  modules/libpr0n/src/Makefile
-  modules/libpr0n/decoders/Makefile
-  modules/libpr0n/decoders/icon/Makefile
-  modules/libpr0n/decoders/icon/mac/Makefile
-  modules/libpr0n/decoders/icon/win/Makefile
-  modules/libpr0n/decoders/icon/gtk/Makefile
-  modules/libpr0n/encoders/Makefile
-  modules/libpr0n/encoders/png/Makefile
-  modules/libpr0n/encoders/jpeg/Makefile
+  image/Makefile
+  image/build/Makefile
+  image/public/Makefile
+  image/src/Makefile
+  image/decoders/Makefile
+  image/decoders/icon/Makefile
+  image/decoders/icon/mac/Makefile
+  image/decoders/icon/win/Makefile
+  image/decoders/icon/gtk/Makefile
+  image/encoders/Makefile
+  image/encoders/png/Makefile
+  image/encoders/jpeg/Makefile
 "
 
 MAKEFILES_accessible="
@@ -860,8 +860,8 @@ if [ "$ENABLE_TESTS" ]; then
     layout/xul/test/Makefile
     modules/libjar/test/chrome/Makefile
     modules/libjar/test/mochitest/Makefile
-    modules/libpr0n/test/Makefile
-    modules/libpr0n/test/mochitest/Makefile
+    image/test/Makefile
+    image/test/mochitest/Makefile
     modules/libpref/test/Makefile
     netwerk/test/httpserver/Makefile
     parser/htmlparser/tests/mochitest/Makefile
@@ -977,7 +977,7 @@ fi
 
 if [ ! "$SYSTEM_JPEG" ]; then
   add_makefiles "
-    jpeg/Makefile
+    media/libjpeg/Makefile
   "
 fi
 
@@ -1004,7 +1004,7 @@ fi
 
 if [ ! "$SYSTEM_PNG" ]; then
   add_makefiles "
-    modules/libimg/png/Makefile
+    media/libpng/Makefile
   "
 fi
 

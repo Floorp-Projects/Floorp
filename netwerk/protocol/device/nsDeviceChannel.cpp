@@ -45,7 +45,7 @@
 #include "AndroidCaptureProvider.h"
 #endif
 
-// Copied from modules/libpr0n/decoders/icon/nsIconURI.cpp
+// Copied from image/decoders/icon/nsIconURI.cpp
 // takes a string like ?size=32&contentType=text/html and returns a new string
 // containing just the attribute values. i.e you could pass in this string with
 // an attribute name of "size=", this will return 32
