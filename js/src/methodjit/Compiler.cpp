@@ -1524,13 +1524,13 @@ public:
 #define SPEW_OPCODE()                                                         \
     JS_BEGIN_MACRO                                                            \
         if (IsJaegerSpewChannelActive(JSpew_JSOps)) {                         \
-            JaegerSpew(JSpew_JSOps, "    %2d ", frame.stackDepth());          \
             LifoAllocScope las(&cx->tempLifoAlloc());                         \
             Sprinter sprinter;                                                \
             INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);            \
             js_Disassemble1(cx, script, PC, PC - script->code,                \
                             JS_TRUE, &sprinter);                              \
-            fprintf(stdout, "%s", sprinter.base);                             \
+            JaegerSpew(JSpew_JSOps, "    %2d %s",                             \
+                       frame.stackDepth(), sprinter.base);                    \
         }                                                                     \
     JS_END_MACRO;
 #else
