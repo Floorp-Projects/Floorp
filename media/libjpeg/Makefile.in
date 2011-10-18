@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -107,7 +107,7 @@ CSRCS		+= \
 
 AS=$(LIBJPEG_TURBO_AS)
 ASM_SUFFIX=asm
-ASFLAGS=$(LIBJPEG_TURBO_ASFLAGS) -I$(topsrcdir)/jpeg/simd/
+ASFLAGS=$(LIBJPEG_TURBO_ASFLAGS) -I$(topsrcdir)/media/libjpeg/simd/
 
 ifeq ($(AS),yasm)
   # yasm doesn't like -c

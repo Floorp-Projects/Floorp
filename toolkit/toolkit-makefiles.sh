@@ -977,7 +977,7 @@ fi
 
 if [ ! "$SYSTEM_JPEG" ]; then
   add_makefiles "
-    jpeg/Makefile
+    media/libjpeg/Makefile
   "
 fi
 
