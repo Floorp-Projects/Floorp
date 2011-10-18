@@ -158,7 +158,7 @@ tier_platform_dirs += \
 endif
 
 ifndef MOZ_NATIVE_PNG
-tier_platform_dirs += modules/libimg/png
+tier_platform_dirs += media/libpng
 endif
 
 tier_platform_dirs	+= \

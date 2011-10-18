@@ -1004,7 +1004,7 @@ fi
 
 if [ ! "$SYSTEM_PNG" ]; then
   add_makefiles "
-    modules/libimg/png/Makefile
+    media/libpng/Makefile
   "
 fi
 
