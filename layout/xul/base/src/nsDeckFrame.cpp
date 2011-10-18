@@ -177,8 +177,7 @@ nsDeckFrame::IndexChanged(nsPresContext* aPresContext)
     return;
 
   // redraw
-  nsBoxLayoutState state(aPresContext);
-  Redraw(state);
+  InvalidateOverflowRect();
 
   // hide the currently showing box
   nsIBox* currentBox = GetSelectedBox();
