@@ -523,7 +523,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   // TraverseFrames.
   const nsStyleTextReset* text = aBlockFrame->GetStyleTextReset();
   PRUnichar ch = 0;
-  if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
+  if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
     const nsStyleVisibility* vis = aBlockFrame->GetStyleVisibility();
     if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
       ch = kRLO;
@@ -833,25 +833,20 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
     if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
       const nsStyleVisibility* vis = frame->GetStyleVisibility();
       const nsStyleTextReset* text = frame->GetStyleTextReset();
-      switch (text->mUnicodeBidi) {
-        case NS_STYLE_UNICODE_BIDI_NORMAL:
-          break;
-        case NS_STYLE_UNICODE_BIDI_EMBED:
-          if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-            ch = kRLE;
-          }
-          else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-            ch = kLRE;
-          }
-          break;
-        case NS_STYLE_UNICODE_BIDI_OVERRIDE:
-          if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-            ch = kRLO;
-          }
-          else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-            ch = kLRO;
-          }
-          break;
+      if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
+        if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+          ch = kRLO;
+        }
+        else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
+          ch = kLRO;
+        }
+      } else if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_EMBED) {
+        if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+          ch = kRLE;
+        }
+        else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
+          ch = kLRE;
+        }
       }
 
       // Add a dummy frame pointer representing a bidi control code before the
