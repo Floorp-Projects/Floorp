@@ -58,10 +58,10 @@ using namespace js::ion;
 IonBuilder::IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
                        MIRGraph &graph, TypeOracle *oracle)
   : MIRGenerator(cx, temp, script, fun, graph),
+    script(script),
     oracle(oracle)
 {
-    pc = script->code;
-    atoms = script->atoms;
+    pc = info().startPC();
 }
 
 static inline int32
@@ -79,18 +79,6 @@ static inline jsbytecode *
 GetNextPc(jsbytecode *pc)
 {
     return pc + js_CodeSpec[JSOp(*pc)].length;
-}
-
-uint32
-IonBuilder::readIndex(jsbytecode *pc)
-{
-    return (atoms - script->atoms) + GET_INDEX(pc);
-}
-
-JSAtom *
-IonBuilder::readAtom(jsbytecode *pc)
-{
-    return script->getAtom(readIndex(pc));
 }
 
 IonBuilder::CFGState
@@ -161,15 +149,15 @@ IonBuilder::build()
     if (!current)
         return false;
 
-    IonSpew(IonSpew_MIR, "Analying script %s:%d", script->filename, script->lineno);
+    IonSpew(IonSpew_MIR, "Analying script %s:%d", info().filename(), info().lineno());
 
     initParameters();
 
     // Initialize local variables.
-    for (uint32 i = 0; i < nlocals(); i++) {
+    for (uint32 i = 0; i < info().nlocals(); i++) {
         MConstant *undef = MConstant::New(UndefinedValue());
         current->add(undef);
-        current->initSlot(localSlot(i), undef);
+        current->initSlot(info().localSlot(i), undef);
     }
 
     current->makeStart(MStart::New());
@@ -189,7 +177,7 @@ IonBuilder::build()
     // So we attach the initial resume point to each parameter, which the type
     // analysis explicitly checks (this is the same mechanism used for
     // effectful operations).
-    for (uint32 i = 0; i < CountArgSlots(fun()); i++) {
+    for (uint32 i = 0; i < CountArgSlots(info().fun()); i++) {
         MInstruction *ins = current->getEntrySlot(i)->toInstruction();
         if (ins->type() == MIRType_Value)
             ins->setResumePoint(current->entryResumePoint());
@@ -207,7 +195,7 @@ IonBuilder::build()
 void
 IonBuilder::rewriteParameters()
 {
-    for (uint32 i = 0; i < CountArgSlots(fun()); i++) {
+    for (uint32 i = 0; i < CountArgSlots(info().fun()); i++) {
         MParameter *param = current->getSlot(i)->toParameter();
         types::TypeSet *types = param->typeSet();
         if (!types)
@@ -248,17 +236,18 @@ IonBuilder::rewriteParameters()
 void
 IonBuilder::initParameters()
 {
-    if (!fun())
+    if (!info().fun())
         return;
 
-    MParameter *param = MParameter::New(MParameter::THIS_SLOT, oracle->thisTypeSet(script));
+    MParameter *param = MParameter::New(MParameter::THIS_SLOT,
+                                        oracle->thisTypeSet(script));
     current->add(param);
-    current->initSlot(thisSlot(), param);
+    current->initSlot(info().thisSlot(), param);
 
-    for (uint32 i = 0; i < nargs(); i++) {
+    for (uint32 i = 0; i < info().nargs(); i++) {
         param = MParameter::New(i, oracle->parameterTypeSet(script, i));
         current->add(param);
-        current->initSlot(argSlot(i), param);
+        current->initSlot(info().argSlot(i), param);
     }
 }
 
@@ -293,7 +282,7 @@ bool
 IonBuilder::traverseBytecode()
 {
     for (;;) {
-        JS_ASSERT(pc < script->code + script->length);
+        JS_ASSERT(pc < info().limitPC());
 
         for (;;) {
             if (!temp().ensureBallast())
@@ -352,10 +341,10 @@ IonBuilder::snoopControlFlow(JSOp op)
 {
     switch (op) {
       case JSOP_NOP:
-        return maybeLoop(op, js_GetSrcNote(script, pc));
+        return maybeLoop(op, info().getNote(cx, pc));
 
       case JSOP_POP:
-        return maybeLoop(op, js_GetSrcNote(script, pc));
+        return maybeLoop(op, info().getNote(cx, pc));
 
       case JSOP_RETURN:
       case JSOP_STOP:
@@ -364,7 +353,7 @@ IonBuilder::snoopControlFlow(JSOp op)
       case JSOP_GOTO:
       case JSOP_GOTOX:
       {
-        jssrcnote *sn = js_GetSrcNote(script, pc);
+        jssrcnote *sn = info().getNote(cx, pc);
         switch (sn ? SN_TYPE(sn) : SRC_NULL) {
           case SRC_BREAK:
           case SRC_BREAK2LABEL:
@@ -398,7 +387,7 @@ IonBuilder::snoopControlFlow(JSOp op)
       }
 
       case JSOP_TABLESWITCH:
-        return tableSwitch(op, js_GetSrcNote(script, pc));
+        return tableSwitch(op, info().getNote(cx, pc));
 
       case JSOP_IFNE:
       case JSOP_IFNEX:
@@ -465,10 +454,10 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_arginc(op);
 
       case JSOP_DOUBLE:
-        return pushConstant(script->getConst(readIndex(pc)));
+        return pushConstant(info().getConst(pc));
 
       case JSOP_STRING:
-        return pushConstant(StringValue(atoms[GET_INDEX(pc)]));
+        return pushConstant(StringValue(info().getAtom(pc)));
 
       case JSOP_ZERO:
         return pushConstant(Int32Value(0));
@@ -534,7 +523,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return pushConstant(Int32Value(GET_UINT16(pc)));
 
       case JSOP_GETGNAME:
-        return jsop_getgname(readAtom(pc));
+        return jsop_getgname(info().getAtom(pc));
 
       case JSOP_UINT24:
         return pushConstant(Int32Value(GET_UINT24(pc)));
@@ -548,10 +537,9 @@ IonBuilder::inspectOpcode(JSOp op)
 
       default:
 #ifdef DEBUG
-        return abort("Unsupported opcode: %s (line %d)", js_CodeName[op],
-                     js_PCToLineNumber(cx, script, pc));
+        return abort("Unsupported opcode: %s (line %d)", js_CodeName[op], info().lineno(cx, pc));
 #else
-        return abort("Unsupported opcode: %d (line %d)", op, js_PCToLineNumber(cx, script, pc));
+        return abort("Unsupported opcode: %d (line %d)", op, info().lineno(cx, pc));
 #endif
     }
 }
@@ -1212,7 +1200,7 @@ void
 IonBuilder::assertValidTraceOp(JSOp op)
 {
 #ifdef DEBUG
-    jssrcnote *sn = js_GetSrcNote(script, pc);
+    jssrcnote *sn = info().getNote(cx, pc);
     jsbytecode *ifne = pc + js_GetSrcNoteOffset(sn, 0);
     CFGState &state = cfgStack_.back();
 
@@ -1250,7 +1238,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     int condition_offset = js_GetSrcNoteOffset(sn, 0);
     jsbytecode *conditionpc = pc + condition_offset;
 
-    jssrcnote *sn2 = js_GetSrcNote(script, pc+1);
+    jssrcnote *sn2 = info().getNote(cx, pc+1);
     int offset = js_GetSrcNoteOffset(sn2, 0);
     jsbytecode *ifne = pc + offset + 1;
     JS_ASSERT(ifne > pc);
@@ -1508,7 +1496,7 @@ IonBuilder::jsop_ifeq(JSOp op)
     JS_ASSERT(falseStart > pc);
 
     // We only handle cases that emit source notes.
-    jssrcnote *sn = js_GetSrcNote(script, pc);
+    jssrcnote *sn = info().getNote(cx, pc);
     if (!sn) {
         // :FIXME: log this.
         return false;
@@ -1557,7 +1545,7 @@ IonBuilder::jsop_ifeq(JSOp op)
         JS_ASSERT(trueEnd > pc);
         JS_ASSERT(trueEnd < falseStart);
         JS_ASSERT(JSOp(*trueEnd) == JSOP_GOTO || JSOp(*trueEnd) == JSOP_GOTOX);
-        JS_ASSERT(!js_GetSrcNote(script, trueEnd));
+        JS_ASSERT(!info().getNote(cx, trueEnd));
 
         jsbytecode *falseEnd = trueEnd + GetJumpOffset(trueEnd);
         JS_ASSERT(falseEnd > trueEnd);
