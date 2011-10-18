@@ -890,7 +890,7 @@ nsXULTextFieldAccessible::FrameSelection()
 {
   nsCOMPtr<nsIContent> inputContent(GetInputField());
   nsIFrame* frame = inputContent->GetPrimaryFrame();
-  return frame->GetFrameSelection();
+  return frame ? frame->GetFrameSelection() : nsnull;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
