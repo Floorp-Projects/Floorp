@@ -1815,7 +1815,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     printf("  [frame]");
     nsFrame::ListTag(stdout, frame);
     printf(": verticalAlignUnit=%d (enum == %d)\n",
-           verticalAlignUnit,
+           verticalAlign.GetUnit(),
            ((eStyleUnit_Enumerated == verticalAlign.GetUnit())
             ? verticalAlign.GetIntValue()
             : -1));
@@ -2087,7 +2087,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         printf(" new values: %d,%d\n", minY, maxY);
 #endif
 #ifdef NOISY_VERTICAL_ALIGN
-        printf("            Used mMinLineHeight: %d, fontHeight: %d, fontAscent: %d\n", mMinLineHeight, fontHeight, fontAscent);
+        printf("            Used mMinLineHeight: %d, yTop: %d, yBottom: %d\n", mMinLineHeight, yTop, yBottom);
 #endif
       }
       else {
