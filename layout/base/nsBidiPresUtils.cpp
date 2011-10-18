@@ -272,22 +272,22 @@ struct BidiParagraphData {
 
   void AppendString(const nsDependentSubstring& aString){ mBuffer.Append(aString); }
 
-  void AppendUnicharFrame(nsIFrame* aFrame, PRUnichar aCh)
+  void AppendControlChar(PRUnichar aCh)
   {
-    mLogicalFrames.AppendElement(aFrame);
+    mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
     mLinePerFrame.AppendElement((nsLineBox*)nsnull);
     AppendUnichar(aCh);
   }
 
   void PushBidiControl(PRUnichar aCh)
   {
-    AppendUnicharFrame(NS_BIDI_CONTROL_FRAME, aCh);
+    AppendControlChar(aCh);
     mEmbeddingStack.AppendElement(aCh);
   }
 
   void PopBidiControl()
   {
-    AppendUnicharFrame(NS_BIDI_CONTROL_FRAME, kPDF);
+    AppendControlChar(kPDF);
     NS_ASSERTION(mEmbeddingStack.Length(), "embedding/override underflow");
     mEmbeddingStack.TruncateLength(mEmbeddingStack.Length() - 1);
   }
@@ -295,7 +295,7 @@ struct BidiParagraphData {
   void ClearBidiControls()
   {
     for (PRUint32 i = 0; i < mEmbeddingStack.Length(); ++i) {
-      AppendUnicharFrame(NS_BIDI_CONTROL_FRAME, kPDF);
+      AppendControlChar(kPDF);
     }
   }
 
@@ -1098,8 +1098,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
 
         // Treat an element with unicode-bidi: isolate as a neutral character
         // within its containing paragraph
-        aContainingParagraph->AppendUnicharFrame(NS_BIDI_CONTROL_FRAME,
-                                                kObjectSubstitute);
+        aContainingParagraph->AppendControlChar(kObjectSubstitute);
       }
     }
     childFrame = nextSibling;
