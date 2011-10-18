@@ -169,7 +169,8 @@ void
 nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
                               nscoord aWidth, nscoord aHeight,
                               bool aImpactedByFloats,
-                              bool aIsTopOfPage)
+                              bool aIsTopOfPage,
+                              PRUint8 aDirection)
 {
   NS_ASSERTION(nsnull == mRootSpan, "bad linelayout user");
   NS_WARN_IF_FALSE(aWidth != NS_UNCONSTRAINEDSIZE,
@@ -224,7 +225,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mTopEdge = aY;
 
   psd->mNoWrap = !mStyleText->WhiteSpaceCanWrap();
-  psd->mDirection = mBlockReflowState->mStyleVisibility->mDirection;
+  psd->mDirection = aDirection;
   psd->mChangedFrameDirection = false;
 
   // If this is the first line of a block then see if the text-indent
