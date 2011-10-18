@@ -2940,11 +2940,41 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+#ifdef JS_METHODJIT
+void JS_FASTCALL
+mjit::stubs::ArrayConcatTwoArrays(VMFrame &f)
+{
+    JSObject *result = &f.regs.sp[-3].toObject();
+    JSObject *obj1 = &f.regs.sp[-2].toObject();
+    JSObject *obj2 = &f.regs.sp[-1].toObject();
+
+    JS_ASSERT(result->isDenseArray() && obj1->isDenseArray() && obj2->isDenseArray());
+
+    uint32 initlen1 = obj1->getDenseArrayInitializedLength();
+    JS_ASSERT(initlen1 == obj1->getArrayLength());
+
+    uint32 initlen2 = obj2->getDenseArrayInitializedLength();
+    JS_ASSERT(initlen2 == obj2->getArrayLength());
+
+    /* No overflow here due to nslots limit. */
+    uint32 len = initlen1 + initlen2;
+
+    if (!result->ensureSlots(f.cx, len))
+        THROW();
+
+    result->copyDenseArrayElements(0, obj1->getDenseArrayElements(), initlen1);
+    result->copyDenseArrayElements(initlen1, obj2->getDenseArrayElements(), initlen2);
+
+    result->setDenseArrayInitializedLength(len);
+    result->setDenseArrayLength(len);
+}
+#endif /* JS_METHODJIT */
+
 /*
  * Python-esque sequence operations.
  */
-static JSBool
-array_concat(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::array_concat(JSContext *cx, uintN argc, Value *vp)
 {
     /* Treat our |this| object as the first argument; see ECMA 15.4.4.4. */
     Value *p = JS_ARGV(cx, vp) - 1;

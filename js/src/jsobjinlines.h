@@ -524,7 +524,8 @@ inline void
 JSObject::copyDenseArrayElements(uintN dstStart, const js::Value *src, uintN count)
 {
     JS_ASSERT(isDenseArray());
-    copySlotRange(dstStart, src, count);
+    JS_ASSERT(dstStart + count <= capacity);
+    memcpy(slots + dstStart, src, count * sizeof(js::Value));
 }
 
 inline void
