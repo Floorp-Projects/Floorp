@@ -245,6 +245,7 @@
 #endif
 
 #define WTF_ARM_ARCH_AT_LEAST(N) (CPU(ARM) && WTF_ARM_ARCH_VERSION >= N)
+#define WTF_ARM_ARCH_AT_LEAST_5 (WTF_CPU_ARM && WTF_ARM_ARCH_VERSION >= 5)
 
 /* Set WTF_ARM_ARCH_VERSION */
 #if   defined(__ARM_ARCH_4__) \

@@ -104,7 +104,7 @@ ARMWord ARMAssembler::getOp2RegScale(RegisterID reg, ARMWord scale)
     ARMWord lz;     // Leading zeroes.
 
     // Calculate shift=log2(scale).
-#if WTF_ARM_ARCH_AT_LEAST(5)
+#if WTF_ARM_ARCH_AT_LEAST_5
     asm (
     "   clz     %[lz], %[scale]\n"
     : [lz]      "=r"  (lz)
