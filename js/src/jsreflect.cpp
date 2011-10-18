@@ -1599,6 +1599,7 @@ NodeBuilder::xmlPI(Value target, Value contents, TokenPos *pos, Value *dst)
 class ASTSerializer
 {
     JSContext     *cx;
+    Parser        *parser;
     NodeBuilder   builder;
     uint32        lineno;
 
@@ -1686,6 +1687,10 @@ class ASTSerializer
 
     bool init(JSObject *userobj) {
         return builder.init(userobj);
+    }
+
+    void setParser(Parser *p) {
+        parser = p;
     }
 
     bool program(JSParseNode *pn, Value *dst);
@@ -2570,6 +2575,11 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
 
       case TOK_RC:
       {
+        /* The parser notes any uninitialized properties by setting the PNX_DESTRUCT flag. */
+        if (pn->pn_xflags & PNX_DESTRUCT) {
+            parser->reportErrorNumber(pn, JSREPORT_ERROR, JSMSG_BAD_OBJECT_INIT);
+            return false;
+        }
         NodeVector elts(cx);
         if (!elts.reserve(pn->pn_count))
             return false;
@@ -3208,6 +3218,8 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
 
     if (!parser.init(chars, length, filename, lineno, cx->findVersion()))
         return JS_FALSE;
+
+    serialize.setParser(&parser);
 
     JSParseNode *pn = parser.parse(NULL);
     if (!pn)
