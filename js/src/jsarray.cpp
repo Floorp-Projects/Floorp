@@ -2566,7 +2566,7 @@ js::array_pop(JSContext *cx, uintN argc, Value *vp)
 }
 
 #ifdef JS_METHODJIT
-void FASTCALL
+void JS_FASTCALL
 mjit::stubs::ArrayShift(VMFrame &f)
 {
     JSObject *obj = &f.regs.sp[-1].toObject();
