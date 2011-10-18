@@ -244,7 +244,7 @@ typedef enum JSOp {
                                  (pc)[3] = (jsbytecode)((uint32)(i) >> 8),    \
                                  (pc)[4] = (jsbytecode)(uint32)(i))
 
-/* Index limit is determined by SN_3BYTE_OFFSET_FLAG, see frontend/CodeGenerator.h. */
+/* Index limit is determined by SN_3BYTE_OFFSET_FLAG, see frontend/BytecodeGenerator.h. */
 #define INDEX_LIMIT_LOG2        23
 #define INDEX_LIMIT             ((uint32)1 << INDEX_LIMIT_LOG2)
 
