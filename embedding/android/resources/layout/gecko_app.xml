@@ -3,28 +3,8 @@
               android:id="@+android:id/mainLayout"
               style="@style/Screen">
 
-    <ProgressBar android:id="@+android:id/progressBar"
-                 style="@android:style/Widget.ProgressBar.Horizontal"
-                 android:layout_width="fill_parent"
-                 android:layout_height="10dip"
-                 android:visibility="gone"/>
-
-    <LinearLayout android:id="@+android:id/addressBar"
-                  style="@style/AddressBar">
-
-        <ImageButton android:id="@+android:id/favimage"
-                     style="@style/AddressBar.ImageButton.Left"
-                     android:src="@drawable/favicon"/>
-
-            <Button android:id="@+android:id/awesomeBar"
-                    style="@style/AddressBar.URL"
-                    android:textColor="#666"/>
-
-             <ImageButton android:id="@+android:id/reload"
-                          style="@style/AddressBar.ImageButton.Right"
-                          android:src="@drawable/reload"/>
-
-    </LinearLayout>
+    <org.mozilla.gecko.BrowserToolbar android:id="@+android:id/browserToolbar"
+                                      style="@style/BrowserToolbar"/>
 
     <RelativeLayout android:id="@+android:id/geckoLayout"
                     android:layout_width="fill_parent"

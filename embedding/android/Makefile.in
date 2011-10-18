@@ -46,6 +46,7 @@ include $(topsrcdir)/ipc/app/defs.mk
 DIRS = locales
 
 JAVAFILES = \
+  BrowserToolbar.java \
   GeckoApp.java \
   GeckoAppShell.java \
   GeckoConnectivityReceiver.java \
@@ -135,6 +136,7 @@ RES_LAYOUT = \
   res/layout/launch_app_listitem.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_row.xml \
+  res/layout/browser_toolbar.xml \
   res/layout/bookmarks.xml \
   res/layout/bookmark_list_row.xml \
   res/layout/show_tabs.xml \
