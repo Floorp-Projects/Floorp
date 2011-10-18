@@ -33,7 +33,7 @@ include svg-integration/reftest.list
 == clipPath-basic-05.svg pass.svg
 == clipPath-winding-01.svg pass.svg
 == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
-fails-if(Android&&layersOpenGL) == conditions-01.svg pass.svg # bug 652050
+fails-if(Android) == conditions-01.svg pass.svg # bug 652050
 == conditions-02.svg pass.svg
 == conditions-03.svg pass.svg
 == conditions-04.svg pass.svg
