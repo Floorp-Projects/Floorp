@@ -574,7 +574,7 @@ txXPathNodeUtils::getDocument(const txXPathNode& aNode)
 txXPathNode*
 txXPathNodeUtils::getOwnerDocument(const txXPathNode& aNode)
 {
-    nsIDocument* document = aNode.mNode->GetOwnerDoc();
+    nsIDocument* document = aNode.mNode->OwnerDoc();
     return document ? new txXPathNode(document) : nsnull;
 }
 

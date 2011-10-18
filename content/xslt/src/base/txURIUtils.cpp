@@ -87,7 +87,7 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
         return;
     }
 
-    nsCOMPtr<nsIDocument> sourceDoc = node->GetOwnerDoc();
+    nsCOMPtr<nsIDocument> sourceDoc = node->OwnerDoc();
     if (!sourceDoc) {
         NS_ERROR("no source document found");
         // XXXbz passing nsnull as the first arg to Reset is illegal

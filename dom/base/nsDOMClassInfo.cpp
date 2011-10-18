@@ -7255,7 +7255,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   // principal of globalObj (i.e. the principal of the document that's being
   // loaded) and not the principal of the document that's being unloaded.
   // See http://bugzilla.mozilla.org/show_bug.cgi?id=227417
-  nsIDocument* doc = node->GetOwnerDoc();
+  nsIDocument* doc = node->OwnerDoc();
 
   if (!doc) {
     // No document reachable from nativeObj, use the global object
@@ -7497,7 +7497,7 @@ nsElementSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 #endif
 
   nsIDocument *doc = element->HasFlag(NODE_FORCE_XBL_BINDINGS) ?
-                     element->GetOwnerDoc() :
+                     element->OwnerDoc() :
                      element->GetCurrentDoc();
 
   if (!doc) {
@@ -7543,7 +7543,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsIDocument* doc;
   if (element->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
-    doc = element->GetOwnerDoc();
+    doc = element->OwnerDoc();
   }
   else {
     doc = element->GetCurrentDoc();
@@ -7618,7 +7618,7 @@ nsElementSH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIContent> content(do_QueryWrappedNative(wrapper, obj));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
 
-  nsIDocument* doc = content->GetOwnerDoc();
+  nsIDocument* doc = content->OwnerDoc();
   if (!doc) {
     // Nothing else to do here
     return NS_OK;
@@ -8159,7 +8159,7 @@ nsDOMStringMapSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
   nsDOMStringMap* dataset = static_cast<nsDOMStringMap*>(nativeObj);
 
-  nsIDocument* document = dataset->GetElement()->GetOwnerDoc();
+  nsIDocument* document = dataset->GetElement()->OwnerDoc();
   NS_ENSURE_TRUE(document, NS_OK);
 
   nsCOMPtr<nsIScriptGlobalObject> sgo =

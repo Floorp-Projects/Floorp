@@ -702,7 +702,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   while (nsnull != childBox) 
   { 
     nsIContent* content = childBox->GetContent();
-    nsIDocument* doc = content->GetOwnerDoc();
+    nsIDocument* doc = content->OwnerDoc();
     nsIAtom* atom;
     if (doc) {
       PRInt32 dummy;

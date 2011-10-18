@@ -445,9 +445,9 @@ nsHTMLImageElement::IsHTMLFocusable(bool aWithMouse,
     nsAutoString usemap;
     GetUseMap(usemap);
     // XXXbz which document should this be using?  sXBL/XBL2 issue!  I
-    // think that GetOwnerDoc() is right, since we don't want to
+    // think that OwnerDoc() is right, since we don't want to
     // assume stuff about the document we're bound to.
-    if (GetOwnerDoc() && GetOwnerDoc()->FindImageMap(usemap)) {
+    if (OwnerDoc() && OwnerDoc()->FindImageMap(usemap)) {
       if (aTabIndex) {
         // Use tab index on individual map areas
         *aTabIndex = (sTabFocusModel & eTabFocus_linksMask)? 0 : -1;
@@ -650,7 +650,7 @@ nsHTMLImageElement::GetNaturalWidth(PRUint32* aNaturalWidth)
 nsresult
 nsHTMLImageElement::CopyInnerTo(nsGenericElement* aDest) const
 {
-  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+  if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticImageClone(static_cast<nsHTMLImageElement*>(aDest));
   }
   return nsGenericHTMLElement::CopyInnerTo(aDest);

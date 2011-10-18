@@ -339,7 +339,7 @@ nsFrameLoader*
 nsFrameLoader::Create(Element* aOwner, bool aNetworkCreated)
 {
   NS_ENSURE_TRUE(aOwner, nsnull);
-  nsIDocument* doc = aOwner->GetOwnerDoc();
+  nsIDocument* doc = aOwner->OwnerDoc();
   NS_ENSURE_TRUE(doc && !doc->GetDisplayDocument() &&
                  ((!doc->IsLoadedAsData() && aOwner->GetCurrentDoc()) ||
                    doc->IsStaticDocument()),
@@ -362,7 +362,7 @@ nsFrameLoader::LoadFrame()
     src.AssignLiteral("about:blank");
   }
 
-  nsIDocument* doc = mOwnerContent->GetOwnerDoc();
+  nsIDocument* doc = mOwnerContent->OwnerDoc();
   if (!doc || doc->IsStaticDocument()) {
     return NS_OK;
   }
@@ -411,7 +411,7 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
     return NS_ERROR_INVALID_POINTER;
   NS_ENSURE_STATE(!mDestroyCalled && mOwnerContent);
 
-  nsCOMPtr<nsIDocument> doc = mOwnerContent->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> doc = mOwnerContent->OwnerDoc();
   if (!doc) {
     return NS_OK;
   }
@@ -1274,7 +1274,7 @@ nsFrameLoader::Destroy()
   nsCOMPtr<nsIDocument> doc;
   bool dynamicSubframeRemoval = false;
   if (mOwnerContent) {
-    doc = mOwnerContent->GetOwnerDoc();
+    doc = mOwnerContent->OwnerDoc();
 
     if (doc) {
       dynamicSubframeRemoval = !mIsTopLevelContent && !doc->InUnlinkOrDeletion();
@@ -1382,7 +1382,7 @@ nsFrameLoader::MaybeCreateDocShell()
   // Get our parent docshell off the document of mOwnerContent
   // XXXbz this is such a total hack.... We really need to have a
   // better setup for doing this.
-  nsIDocument* doc = mOwnerContent->GetOwnerDoc();
+  nsIDocument* doc = mOwnerContent->OwnerDoc();
   if (!doc || !(doc->IsStaticDocument() || mOwnerContent->IsInDoc())) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -2074,7 +2074,7 @@ nsFrameLoader::EnsureMessageManager()
   NS_ENSURE_STATE(cx);
 
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow =
-    do_QueryInterface(mOwnerContent->GetOwnerDoc()->GetWindow());
+    do_QueryInterface(mOwnerContent->OwnerDoc()->GetWindow());
   NS_ENSURE_STATE(chromeWindow);
   nsCOMPtr<nsIChromeFrameMessageManager> parentManager;
   chromeWindow->GetMessageManager(getter_AddRefs(parentManager));

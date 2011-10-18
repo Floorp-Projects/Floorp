@@ -847,7 +847,7 @@ nsContentList::Match(Element *aElement)
   if (toReturn)
     return toReturn;
 
-  nsIDocument* doc = aElement->GetOwnerDoc();
+  nsIDocument* doc = aElement->OwnerDoc();
   bool matchHTML = aElement->GetNameSpaceID() == kNameSpaceID_XHTML &&
     doc && doc->IsHTML();
  

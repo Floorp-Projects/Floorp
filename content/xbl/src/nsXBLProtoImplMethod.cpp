@@ -130,7 +130,7 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
                   "Should not be installing an uncompiled method");
   JSContext* cx = aContext->GetNativeContext();
 
-  nsIDocument *ownerDoc = aBoundElement->GetOwnerDoc();
+  nsIDocument *ownerDoc = aBoundElement->OwnerDoc();
   nsIScriptGlobalObject *sgo;
 
   if (!ownerDoc || !(sgo = ownerDoc->GetScopeObject())) {
@@ -279,7 +279,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 
   // Get the script context the same way
   // nsXBLProtoImpl::InstallImplementation does.
-  nsIDocument* document = aBoundElement->GetOwnerDoc();
+  nsIDocument* document = aBoundElement->OwnerDoc();
   if (!document) {
     return NS_OK;
   }

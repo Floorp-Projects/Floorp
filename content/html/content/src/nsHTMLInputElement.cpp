@@ -241,7 +241,7 @@ public:
   AsyncClickHandler(nsHTMLInputElement* aInput)
    : mInput(aInput) {
     
-    nsIDocument* doc = aInput->GetOwnerDoc();
+    nsIDocument* doc = aInput->OwnerDoc();
     if (doc) {
       nsPIDOMWindow* win = doc->GetWindow();
       if (win)
@@ -262,7 +262,7 @@ AsyncClickHandler::Run()
   nsresult rv;
 
   // Get parent nsPIDOMWindow object.
-  nsCOMPtr<nsIDocument> doc = mInput->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> doc = mInput->OwnerDoc();
   if (!doc)
     return NS_ERROR_FAILURE;
 
@@ -432,7 +432,7 @@ AsyncClickHandler::Run()
     // event because it will think this is done by a script.
     // So, we can safely send one by ourself.
     mInput->SetFiles(newFiles, true);
-    nsContentUtils::DispatchTrustedEvent(mInput->GetOwnerDoc(),
+    nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
                                          static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
                                          NS_LITERAL_STRING("change"), true,
                                          false);
@@ -690,7 +690,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
       }
       break;
     case NS_FORM_INPUT_FILE:
-      if (it->GetOwnerDoc()->IsStaticDocument()) {
+      if (it->OwnerDoc()->IsStaticDocument()) {
         // We're going to be used in print preview.  Since the doc is static
         // we can just grab the pretty string and use it as wallpaper
         GetDisplayFileName(it->mStaticDocFileList);
@@ -708,7 +708,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
       }
       break;
     case NS_FORM_INPUT_IMAGE:
-      if (it->GetOwnerDoc()->IsStaticDocument()) {
+      if (it->OwnerDoc()->IsStaticDocument()) {
         CreateStaticImageClone(it);
       }
       break;
@@ -1124,7 +1124,7 @@ nsHTMLInputElement::SetUserInput(const nsAString& aValue)
     SetValueInternal(aValue, true, true);
   }
 
-  return nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
+  return nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                               static_cast<nsIDOMHTMLInputElement*>(this),
                                               NS_LITERAL_STRING("input"), true,
                                               true);
@@ -1241,7 +1241,7 @@ nsHTMLInputElement::SetPlaceholderClass(bool aVisible, bool aNotify)
 void
 nsHTMLInputElement::GetDisplayFileName(nsAString& aValue) const
 {
-  if (GetOwnerDoc()->IsStaticDocument()) {
+  if (OwnerDoc()->IsStaticDocument()) {
     aValue = mStaticDocFileList;
     return;
   }
@@ -2042,7 +2042,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         DoSetChecked(originalCheckedValue, true, true);
       }
     } else {
-      nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
+      nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                            static_cast<nsIDOMHTMLInputElement*>(this),
                                            NS_LITERAL_STRING("change"), true,
                                            false);
@@ -3737,7 +3737,7 @@ nsHTMLInputElement::HasPatternMismatch() const
     return false;
   }
 
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   if (!doc) {
     return false;
   }

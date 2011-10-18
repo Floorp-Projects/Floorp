@@ -386,7 +386,7 @@ nsCaretAccessible::GetSelectionControllerForNode(nsIContent *aContent)
   if (!aContent)
     return nsnull;
 
-  nsIDocument *document = aContent->GetOwnerDoc();
+  nsIDocument *document = aContent->OwnerDoc();
   if (!document)
     return nsnull;
 

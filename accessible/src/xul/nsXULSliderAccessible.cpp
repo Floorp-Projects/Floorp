@@ -204,7 +204,7 @@ nsXULSliderAccessible::GetSliderNode()
     return nsnull;
 
   if (!mSliderNode) {
-    nsIDocument* document = mContent->GetOwnerDoc();
+    nsIDocument* document = mContent->OwnerDoc();
     if (!document)
       return nsnull;
 

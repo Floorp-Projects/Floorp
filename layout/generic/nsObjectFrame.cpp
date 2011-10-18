@@ -711,7 +711,7 @@ nsObjectFrame::InstantiatePlugin(nsPluginHost* aPluginHost,
 
   NS_ASSERTION(mContent, "We should have a content node.");
 
-  nsIDocument* doc = mContent->GetOwnerDoc();
+  nsIDocument* doc = mContent->OwnerDoc();
   nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(doc));
   bool fullPageMode = false;
   if (pDoc) {
@@ -1483,7 +1483,7 @@ nsObjectFrame::GetImageContainer(LayerManager* aManager)
   bool retain = false;
 
   if (!manager) {
-    manager = nsContentUtils::LayerManagerForDocument(mContent->GetOwnerDoc(), &retain);
+    manager = nsContentUtils::LayerManagerForDocument(mContent->OwnerDoc(), &retain);
   }
   if (!manager) {
     return nsnull;

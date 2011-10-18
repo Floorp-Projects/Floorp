@@ -4440,7 +4440,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild,
     }
 
     if (!posStr.IsEmpty()) {
-        nsIDocument *document = aParent->GetOwnerDoc();
+        nsIDocument *document = aParent->OwnerDoc();
         if (!document) return NS_ERROR_FAILURE;
 
         nsIContent *content = nsnull;
