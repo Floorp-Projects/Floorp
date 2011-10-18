@@ -42,7 +42,7 @@
 
 #include "jsprobes.h"
 
-#include "frontend/CodeGenerator.h"
+#include "frontend/BytecodeGenerator.h"
 #include "frontend/FoldConstants.h"
 #include "vm/GlobalObject.h"
 

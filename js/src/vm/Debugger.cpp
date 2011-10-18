@@ -51,7 +51,7 @@
 #include "jsopcodeinlines.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/CodeGenerator.h"
+#include "frontend/BytecodeGenerator.h"
 #include "methodjit/Retcon.h"
 
 #include "vm/Stack-inl.h"
