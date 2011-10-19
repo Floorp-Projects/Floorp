@@ -44,6 +44,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.graphics.drawable.*;
 import android.util.Log;
+import android.provider.Browser;
 
 public class Tab {
 
@@ -162,18 +163,7 @@ public class Tab {
     private class HistoryEntryTask extends AsyncTask<HistoryEntry, Void, Void> {
         protected Void doInBackground(HistoryEntry... entries) {
             HistoryEntry entry = entries[0];
-            Log.d(LOG_FILE_NAME, "adding uri=" + entry.mUri + ", title=" + entry.mTitle + " to history");
-            ContentValues values = new ContentValues();
-            values.put("url", entry.mUri);
-            values.put("title", entry.mTitle);
-
-            DatabaseHelper dbHelper = GeckoApp.getDatabaseHelper();
-            SQLiteDatabase mDb = dbHelper.getWritableDatabase();
-            long id = mDb.insertWithOnConflict("moz_places", null, values, SQLiteDatabase.CONFLICT_REPLACE);
-            values = new ContentValues();
-            values.put("place_id", id);
-            mDb.insertWithOnConflict("moz_historyvisits", null, values, SQLiteDatabase.CONFLICT_REPLACE);
-            mDb.close();
+            Browser.updateVisitedHistory(GeckoApp.mAppContext.getContentResolver(), entry.mUri, true);
             return null;
         }
     }

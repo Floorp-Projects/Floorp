@@ -56,7 +56,6 @@ JAVAFILES = \
   AlertNotification.java \
   SurfaceLockInfo.java \
   AwesomeBar.java \
-  DatabaseHelper.java \
   GeckoBookmarks.java \
   Tab.java \
   Tabs.java \
