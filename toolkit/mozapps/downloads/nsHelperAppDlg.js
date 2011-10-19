@@ -311,13 +311,9 @@ nsUnknownContentTypeDialog.prototype = {
                             .getService(Components.interfaces.nsIDownloadManager);
     picker.displayDirectory = dnldMgr.userDownloadsDirectory;
 
-    var relatedURI = null;
-    if (aContext.document)
-      relatedURI = aContext.document.documentURIObject;
-
     // The last directory preference may not exist, which will throw.
     try {
-      var lastDir = gDownloadLastDir.getFile(relatedURI);
+      var lastDir = gDownloadLastDir.getFile(aLauncher.source);
       if (isUsableDirectory(lastDir))
         picker.displayDirectory = lastDir;
     }
@@ -346,7 +342,7 @@ nsUnknownContentTypeDialog.prototype = {
       var newDir = result.parent.QueryInterface(Components.interfaces.nsILocalFile);
 
       // Do not store the last save directory as a pref inside the private browsing mode
-      gDownloadLastDir.setFile(relatedURI, newDir);
+      gDownloadLastDir.setFile(aLauncher.source, newDir);
 
       result = this.validateLeafName(newDir, result.leafName, null);
     }
