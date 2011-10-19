@@ -992,7 +992,7 @@ public class GeckoAppShell
     }
 
     public static void alertsProgressListener_OnCancel(String aAlertName) {
-        Log.i("GeckoAppJava", "GeckoAppShell.alertsProgressListener_OnCancel('" + aAlertName + "'");
+        Log.i("GeckoAppJava", "GeckoAppShell.alertsProgressListener_OnCancel('" + aAlertName + "')");
 
         removeObserver(aAlertName);
 
