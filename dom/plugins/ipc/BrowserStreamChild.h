@@ -72,7 +72,7 @@ public:
   virtual bool RecvWrite(const int32_t& offset,
                          const Buffer& data,
                          const uint32_t& newsize);
-  virtual bool AnswerNPP_StreamAsFile(const nsCString& fname);
+  virtual bool RecvNPP_StreamAsFile(const nsCString& fname);
   virtual bool RecvNPP_DestroyStream(const NPReason& reason);
   virtual bool Recv__delete__();
 
@@ -166,6 +166,8 @@ private:
     DESTROYED // NPP_DestroyStream delivered, NPP_URLNotify may still be pending
   } mDestroyPending;
   bool mNotifyPending;
+  bool mStreamAsFilePending;
+  nsCString mStreamAsFileName;
 
   // When NPP_Destroy is called for our instance (manager), this flag is set
   // cancels the stream and avoids sending StreamDestroyed.
