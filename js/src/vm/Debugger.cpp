@@ -2742,11 +2742,12 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
      * we use a static level that will cause us not to attempt to optimize
      * variable references made by this frame.
      */
-    JSScript *script = Compiler::compileScript(cx, scobj, fp, fp->scopeChain().principals(cx),
-                                               TCF_COMPILE_N_GO | TCF_NEED_SCRIPT_OBJECT,
-                                               chars, length,
-                                               filename, lineno, cx->findVersion(),
-                                               NULL, UpvarCookie::UPVAR_LEVEL_LIMIT);
+    JSScript *script = BytecodeCompiler::compileScript(cx, scobj, fp,
+                                                       fp->scopeChain().principals(cx),
+                                                       TCF_COMPILE_N_GO | TCF_NEED_SCRIPT_OBJECT,
+                                                       chars, length, filename, lineno,
+                                                       cx->findVersion(), NULL,
+                                                       UpvarCookie::UPVAR_LEVEL_LIMIT);
 
     if (!script)
         return false;

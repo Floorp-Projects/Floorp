@@ -922,7 +922,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
  *
  * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
  *
- * The check for this is in jsparse.cpp, Compiler::compileScript.
+ * The check for this is in BytecodeCompiler::compileScript.
  */
 bool
 TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
