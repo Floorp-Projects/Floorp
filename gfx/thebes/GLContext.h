@@ -476,11 +476,11 @@ struct THEBES_API ContextFormat
     };
 
     ContextFormat() {
-        memset(this, 0, sizeof(*this));
+        memset(this, 0, sizeof(ContextFormat));
     }
 
     ContextFormat(const StandardContextFormat cf) {
-        memset(this, 0, sizeof(*this));
+        memset(this, 0, sizeof(ContextFormat));
         switch (cf) {
         case BasicRGBA32:
             red = green = blue = alpha = 8;
@@ -519,6 +519,7 @@ struct THEBES_API ContextFormat
     int green, minGreen;
     int blue, minBlue;
     int alpha, minAlpha;
+    int samples;
 
     int colorBits() const { return red + green + blue; }
 };
