@@ -405,7 +405,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
 // synchronously updates the window(s) right away before returning
 #define NS_VMREFRESH_IMMEDIATE          0x0002
 
-//animate scroll operation
-#define NS_VMREFRESH_SMOOTHSCROLL       0x0008
-
 #endif  // nsIViewManager_h___

@@ -360,16 +360,6 @@ void nsIView::SetInvalidationDimensions(const nsRect* aRect)
   return Impl()->SetInvalidationDimensions(aRect);
 }
 
-void nsView::SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY)
-{
-  mDimBounds.x += aX - mPosX;
-  mDimBounds.y += aY - mPosY;
-  mPosX = aX;
-  mPosY = aY;
-
-  ResetWidgetBounds(false, true, false);
-}
-
 void nsView::ResetWidgetBounds(bool aRecurse, bool aMoveOnly,
                                bool aInvalidateChangedSize) {
   if (mWindow) {
