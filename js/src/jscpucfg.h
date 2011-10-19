@@ -68,12 +68,32 @@
 #define JS_BITS_PER_WORD_LOG2   5
 #define JS_ALIGN_OF_POINTER 4L
 
-#else
+#elif defined(__APPLE__)
+#if __LITTLE_ENDIAN__
+#define IS_LITTLE_ENDIAN 1
+#undef  IS_BIG_ENDIAN
+#elif __BIG_ENDIAN__
+#undef  IS_LITTLE_ENDIAN
+#define IS_BIG_ENDIAN 1
+#endif
 
-#error "This file is supposed to be auto-generated on most platforms, but the"
-#error "static version for Windows and OS2 platforms is being used."
-#error "Something's probably wrong with paths/headers/dependencies/Makefiles."
+#elif defined(JS_HAVE_ENDIAN_H)
+#include <endian.h>
 
+#if defined(__BYTE_ORDER)
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+#define IS_LITTLE_ENDIAN 1
+#undef  IS_BIG_ENDIAN
+#elif __BYTE_ORDER == __BIG_ENDIAN
+#undef  IS_LITTLE_ENDIAN
+#define IS_BIG_ENDIAN 1
+#endif
+#else /* !defined(__BYTE_ORDER) */
+#error "endian.h does not define __BYTE_ORDER. Cannot determine endianness."
+#endif
+
+#else /* !defined(HAVE_ENDIAN_H) */
+#error "Cannot determine endianness of your platform. Please add support to jscpucfg.h."
 #endif
 
 #ifndef JS_STACK_GROWTH_DIRECTION
