@@ -132,7 +132,7 @@ inline bool
 StringObject::init(JSContext *cx, JSString *str)
 {
     JS_ASSERT(nativeEmpty());
-    JS_ASSERT(getAllocKind() == gc::FINALIZE_OBJECT2);
+    JS_ASSERT(gc::GetGCKindSlots(getAllocKind()) == 2);
 
     if (isDelegate()) {
         if (!assignInitialShape(cx))
