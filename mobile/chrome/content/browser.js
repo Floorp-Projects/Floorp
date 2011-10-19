@@ -603,18 +603,38 @@ var BrowserEventHandler = {
 
       case "MozMagnifyGestureStart":
         this._pinchDelta = 0;
+        this.zoomCallbackFired = true;
         break;
 
       case "MozMagnifyGestureUpdate":
         if (!aEvent.delta)
           break;
   
-        this._pinchDelta += (aEvent.delta / 100);
-  
-        if (Math.abs(this._pinchDelta) >= 1) {
-          let delta = Math.round(this._pinchDelta);
-          BrowserApp.selectedBrowser.markupDocumentViewer.fullZoom += delta;
+        this._pinchDelta += aEvent.delta;
+
+        if ((Math.abs(this._pinchDelta) >= 1) && this.zoomCallbackFired) {
+          // pinchDelta is the difference in pixels since the last call, so can
+          // be viewed as the number of extra/fewer pixels visible.
+          //
+          // We can work out the new zoom level by looking at the window width
+          // and height, and the existing zoom level.
+          let currentZoom = BrowserApp.selectedBrowser.markupDocumentViewer.fullZoom;
+          let currentSize = Math.sqrt(Math.pow(window.innerWidth, 2) + Math.pow(window.innerHeight, 2));
+          let newZoom = ((currentSize * currentZoom) + this._pinchDelta) / currentSize;
+
+          let self = this;
+          let callback = {
+            onBeforePaint: function zoomCallback(timeStamp) {
+              BrowserApp.selectedBrowser.markupDocumentViewer.fullZoom = newZoom;
+              self.zoomCallbackFired = true;
+            }
+          };
+
           this._pinchDelta = 0;
+
+          // Use mozRequestAnimationFrame to stop from flooding fullZoom
+          this.zoomCallbackFired = false;
+          window.mozRequestAnimationFrame(callback);
         }
         break;
     }
