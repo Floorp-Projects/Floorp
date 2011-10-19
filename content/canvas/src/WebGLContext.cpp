@@ -601,6 +601,11 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         format.minAlpha = 0;
     }
 
+    if (mOptions.antialias) {
+        PRUint32 msaaLevel = Preferences::GetUint("webgl.msaa-level", 2);
+        format.samples = msaaLevel*msaaLevel;
+    }
+
     if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
         preferEGL = true;
     }
@@ -898,7 +903,7 @@ WebGLContext::GetContextAttributes(jsval *aResult)
                            NULL, NULL, JSPROP_ENUMERATE) ||
         !JS_DefineProperty(cx, obj, "stencil", cf.stencil > 0 ? JSVAL_TRUE : JSVAL_FALSE,
                            NULL, NULL, JSPROP_ENUMERATE) ||
-        !JS_DefineProperty(cx, obj, "antialias", JSVAL_FALSE,
+        !JS_DefineProperty(cx, obj, "antialias", cf.samples > 0 ? JSVAL_TRUE : JSVAL_FALSE,
                            NULL, NULL, JSPROP_ENUMERATE) ||
         !JS_DefineProperty(cx, obj, "premultipliedAlpha",
                            mOptions.premultipliedAlpha ? JSVAL_TRUE : JSVAL_FALSE,
