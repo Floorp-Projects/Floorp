@@ -79,11 +79,11 @@ function SI_checkFilter()
   let propertyViews = stylePanel.cssHtmlTree.propertyViews;
 
   info("check that the correct properties are visible");
-  for each(let propView in propertyViews) {
+  propertyViews.forEach(function(propView) {
     let name = propView.name;
     is(propView.visible, name.indexOf("color") > -1,
       "span " + name + " property visibility check");
-  }
+  });
 
   Services.obs.addObserver(finishUp, "StyleInspector-closed", false);
   stylePanel.hidePopup();

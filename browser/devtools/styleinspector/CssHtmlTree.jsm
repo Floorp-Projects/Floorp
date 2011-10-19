@@ -67,7 +67,7 @@ function CssHtmlTree(aStyleWin, aCssLogic, aPanel)
   this.doc = aPanel.ownerDocument;
   this.win = this.doc.defaultView;
   this.getRTLAttr = CssHtmlTree.getRTLAttr;
-  this.propertyViews = {};
+  this.propertyViews = [];
 
   // The document in which we display the results (csshtmltree.xhtml).
   this.styleDocument = this.styleWin.contentWindow.document;
@@ -162,6 +162,9 @@ CssHtmlTree.prototype = {
   // Reference to the "Only user Styles" checkbox.
   onlyUserStylesCheckbox: null,
 
+  // Holds the ID of the panelRefresh timeout.
+  _panelRefreshTimeout: null,
+
   get showOnlyUserStyles()
   {
     return this.onlyUserStylesCheckbox.checked;
@@ -202,7 +205,7 @@ CssHtmlTree.prototype = {
               this.propertyContainer, propView, true);
             propView.refreshMatchedSelectors();
             propView.refreshUnmatchedSelectors();
-            this.propertyViews[name] = propView;
+            this.propertyViews.push(propView);
           }
           if (i < max) {
             // There are still some properties to display. We loop here to display
@@ -223,10 +226,27 @@ CssHtmlTree.prototype = {
    */
   refreshPanel: function CssHtmlTree_refreshPanel()
   {
-    for each(let propView in this.propertyViews) {
-      propView.refresh();
+    this.win.clearTimeout(this._panelRefreshTimeout);
+
+    // We use a setTimeout loop to display the properties in batches of 15 at a
+    // time. This results in a perceptibly more responsive UI.
+    let i = 0;
+    let batchSize = 15;
+    let max = this.propertyViews.length - 1;
+    function refreshView() {
+      // Refresh the next 15 property views
+      for (let step = i + batchSize; i < step && i <= max; i++) {
+        this.propertyViews[i].refresh();
+      }
+      if (i < max) {
+        // There are still some property views to refresh. We loop here to
+        // display the next batch of 15.
+        this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 0);
+      } else {
+        Services.obs.notifyObservers(null, "StyleInspector-populated", null);
+      }
     }
-    Services.obs.notifyObservers(null, "StyleInspector-populated", null);
+    this._panelRefreshTimeout = this.win.setTimeout(refreshView.bind(this), 0);
   },
 
   /**
