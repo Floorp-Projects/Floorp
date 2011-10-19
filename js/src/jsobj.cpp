@@ -4067,7 +4067,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 
     if (xdr->mode == JSXDR_ENCODE) {
         obj = *objp;
-        parent = obj->scopeChain();
+        parent = obj->getStaticBlockScopeChain();
         parentId = JSScript::isValidOffset(xdr->script->objectsOffset)
                    ? FindObjectIndex(xdr->script->objects(), parent)
                    : NO_PARENT_INDEX;
@@ -4094,11 +4094,10 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
          * object array. We know that we XDR block object in outer-to-inner
          * order, which means that getting the parent now will work.
          */
-        if (parentId == NO_PARENT_INDEX)
-            parent = NULL;
-        else
+        if (parentId != NO_PARENT_INDEX) {
             parent = xdr->script->getObject(parentId);
-        obj->setScopeChain(parent);
+            obj->setScopeChain(parent);
+        }
     }
 
     AutoObjectRooter tvr(cx, obj);

@@ -237,6 +237,16 @@ IsBuiltinFunctionConstructor(JSFunction *fun);
 const Shape *
 LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj);
 
+static inline JSObject *
+SkipScopeParent(JSObject *parent)
+{
+    if (!parent)
+        return NULL;
+    while (parent->isScope())
+        parent = parent->getParentMaybeScope();
+    return parent;
+}
+
 inline JSFunction *
 CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
                     bool ignoreSingletonClone = false)
@@ -255,6 +265,8 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
      */
     if (ignoreSingletonClone && fun->hasSingletonType()) {
         JS_ASSERT(fun->getProto() == proto);
+        if (!fun->setParent(cx, SkipScopeParent(parent)))
+            return NULL;
         fun->setCallScope(parent);
         return fun;
     }
