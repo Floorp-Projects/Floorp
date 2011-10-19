@@ -409,7 +409,7 @@ protected:
 
   // Create a popup view for this frame. The view is added a child of the root
   // view, and is initially hidden.
-  nsresult CreatePopupViewForFrame();
+  nsresult CreatePopupView();
 
   nsString     mIncrementalString;  // for incremental typing navigation
 
