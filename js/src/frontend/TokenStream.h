@@ -152,20 +152,20 @@ enum TokenKind {
     TOK_LIMIT                           /* domain size */
 };
 
-static inline bool
+inline bool
 TokenKindIsXML(TokenKind tt)
 {
     return tt == TOK_AT || tt == TOK_DBLCOLON || tt == TOK_ANYNAME;
 }
 
-static inline bool
+inline bool
 TreeTypeIsXML(TokenKind tt)
 {
     return tt == TOK_XMLCOMMENT || tt == TOK_XMLCDATA || tt == TOK_XMLPI ||
            tt == TOK_XMLELEM || tt == TOK_XMLLIST;
 }
 
-static inline bool
+inline bool
 TokenKindIsDecl(TokenKind tt)
 {
 #if JS_HAS_BLOCK_SCOPE
@@ -704,16 +704,6 @@ class TokenStream
     bool                xml;            /* see JSOPTION_XML */
 };
 
-} /* namespace js */
-
-extern void
-js_CloseTokenStream(JSContext *cx, js::TokenStream *ts);
-
-extern JS_FRIEND_API(int)
-js_fgets(char *buf, int size, FILE *file);
-
-namespace js {
-
 struct KeywordInfo {
     const char  *chars;         /* C string with keyword text */
     TokenKind   tokentype;
@@ -725,31 +715,21 @@ struct KeywordInfo {
  * Returns a KeywordInfo for the specified characters, or NULL if the string is
  * not a keyword.
  */
-extern const KeywordInfo *
+const KeywordInfo *
 FindKeyword(const jschar *s, size_t length);
-
-} // namespace js
-
-/*
- * Friend-exported API entry point to call a mapping function on each reserved
- * identifier in the scanner's keyword table.
- */
-typedef void (*JSMapKeywordFun)(const char *);
 
 /*
  * Check that str forms a valid JS identifier name. The function does not
  * check if str is a JS keyword.
  */
-extern JSBool
-js_IsIdentifier(JSLinearString *str);
+JSBool
+IsIdentifier(JSLinearString *str);
 
 /*
  * Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error
  * message have const jschar* type, not const char*.
  */
 #define JSREPORT_UC 0x100
-
-namespace js {
 
 /*
  * Report a compile-time error by its number. Return true for a warning, false
@@ -782,5 +762,8 @@ ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode
                       uintN errorNumber, ...);
 
 } /* namespace js */
+
+extern JS_FRIEND_API(int)
+js_fgets(char *buf, int size, FILE *file);
 
 #endif /* TokenStream_h__ */

@@ -3155,7 +3155,7 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
             }
             right = &rtmp;
             right->setKind(TOK_STRING);
-            right->setOp(js_IsIdentifier(pn->pn_atom) ? JSOP_QNAMEPART : JSOP_STRING);
+            right->setOp(IsIdentifier(pn->pn_atom) ? JSOP_QNAMEPART : JSOP_STRING);
             right->setArity(PN_NULLARY);
             right->pn_pos = pn->pn_pos;
             right->pn_atom = pn->pn_atom;
