@@ -2354,7 +2354,7 @@ ASTSerializer::comprehension(ParseNode *pn, Value *dst)
             return false;
         next = next->pn_kid2;
     } else if (next->isKind(TOK_LC) && next->pn_count == 0) {
-        /* js_FoldConstants optimized away the push. */
+        /* FoldConstants optimized away the push. */
         NodeVector empty(cx);
         return builder.arrayExpression(empty, &pn->pn_pos, dst);
     }

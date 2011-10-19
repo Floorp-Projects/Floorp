@@ -586,8 +586,6 @@ ReportBadParameter(JSContext *cx, TreeContext *tc, JSAtom *name, uintN errorNumb
            ReportStrictModeError(cx, TS(tc->parser), tc, dn, errorNumber, bytes.ptr());
 }
 
-namespace js {
-
 /*
  * In strict mode code, all parameter names must be distinct, must not be
  * strict mode reserved keywords, and must not be 'eval' or 'arguments'.  We
@@ -595,7 +593,7 @@ namespace js {
  * function's body may turn on strict mode for the function head.
  */
 bool
-CheckStrictParameters(JSContext *cx, TreeContext *tc)
+js::CheckStrictParameters(JSContext *cx, TreeContext *tc)
 {
     JS_ASSERT(tc->inFunction());
 
@@ -648,8 +646,6 @@ CheckStrictParameters(JSContext *cx, TreeContext *tc)
 
     return true;
 }
-
-} /* namespace js */
 
 ParseNode *
 Parser::functionBody()
@@ -865,10 +861,8 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, TreeContext *tc)
     return dn;
 }
 
-namespace js {
-
 bool
-DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc)
+js::DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc)
 {
     ParseNode *argpn, *argsbody;
 
@@ -908,8 +902,6 @@ DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc)
     argpn->pn_dflags |= PND_BOUND;
     return true;
 }
-
-} /* namespace js */
 
 /*
  * Parameter block types for the several Binder functions.  We use a common

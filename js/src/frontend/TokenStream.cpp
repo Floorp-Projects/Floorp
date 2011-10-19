@@ -91,10 +91,8 @@ static const KeywordInfo keywords[] = {
 #undef JS_KEYWORD
 };
 
-namespace js {
-
 const KeywordInfo *
-FindKeyword(const jschar *s, size_t length)
+js::FindKeyword(const jschar *s, size_t length)
 {
     JS_ASSERT(length != 0);
 
@@ -131,7 +129,7 @@ FindKeyword(const jschar *s, size_t length)
 }
 
 JSBool
-IsIdentifier(JSLinearString *str)
+js::IsIdentifier(JSLinearString *str)
 {
     const jschar *chars = str->chars();
     size_t length = str->length();
@@ -548,8 +546,8 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorN
 }
 
 bool
-ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn,
-                      uintN errorNumber, ...)
+js::ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn,
+                          uintN errorNumber, ...)
 {
     JS_ASSERT(ts || tc);
     JS_ASSERT(cx == ts->getContext());
@@ -573,8 +571,8 @@ ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode
 }
 
 bool
-ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, uintN flags,
-                         uintN errorNumber, ...)
+js::ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, uintN flags,
+                             uintN errorNumber, ...)
 {
     va_list ap;
 
@@ -2127,8 +2125,6 @@ TokenStream::getTokenInternal()
 #endif
     return TOK_ERROR;
 }
-
-} /* namespace js */
 
 JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file)
