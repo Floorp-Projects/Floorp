@@ -369,18 +369,28 @@ abstract public class GeckoApp
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Tab tab = null;
+        Tab.HistoryEntry he = null;
         switch (item.getItemId()) {
            case R.id.quit:
                quit();
                return true;
            case R.id.bookmarks:
                Intent intent = new Intent(this, GeckoBookmarks.class);
-               Tab tab = Tabs.getInstance().getSelectedTab();
-               Tab.HistoryEntry he = tab.getLastHistoryEntry();
+               tab = Tabs.getInstance().getSelectedTab();
+               he = tab.getLastHistoryEntry();
                if (he != null) {
                    intent.setData(android.net.Uri.parse(he.mUri));
                    intent.putExtra("title", he.mTitle);
                    startActivity(intent);
+               }
+               return true;
+           case R.id.share:
+               tab = Tabs.getInstance().getSelectedTab();
+               he = tab.getLastHistoryEntry();
+               if (he != null) {
+                   GeckoAppShell.openUriExternal(he.mUri, "text/plain", "", "",
+                                                 Intent.ACTION_SEND, he.mTitle);
                }
                return true;
            case R.id.show_tabs:

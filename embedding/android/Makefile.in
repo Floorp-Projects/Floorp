@@ -172,6 +172,7 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/desktop_notificati
                          embedding/android/resources/drawable/address_bar_button_right.9.png  \
                          embedding/android/resources/drawable/address_bar_button_middle.9.png \
                          embedding/android/resources/drawable/address_bar_bg.9.png            \
+                         embedding/android/resources/drawable/share.png                       \
                          $(NULL)
 
 
