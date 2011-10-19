@@ -560,7 +560,9 @@ abstract public class GeckoApp
     private void quit() {
         Log.i(LOG_NAME, "pleaseKillMe");
         rememberLastScreen(true);
-        System.exit(0);
+        GeckoAppShell.nativeQuit();
+        finish();
+        System.exit();
     }
 
     void handleLocationChange(final int tabId, final String uri) {
