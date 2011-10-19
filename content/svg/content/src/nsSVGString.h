@@ -54,7 +54,7 @@ public:
   void SetBaseValue(const nsAString& aValue,
                     nsSVGElement *aSVGElement,
                     bool aDoSetAttr);
-  void GetBaseValue(nsAString& aValue, nsSVGElement *aSVGElement) const
+  void GetBaseValue(nsAString& aValue, const nsSVGElement *aSVGElement) const
     { aSVGElement->GetStringBaseValue(mAttrEnum, aValue); }
 
   void SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement);

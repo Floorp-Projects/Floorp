@@ -119,7 +119,7 @@ let LocaleUI = {
       if (document.querySelector('[locale="' + targetLocale + '"]'))
         continue;
 
-      let item = this._createItem(targetLocale, locale.addon.name, locale);
+      let item = this._createItem(targetLocale, "\u202A" + locale.addon.name + "\u202C", locale);
       let match = localesMatch(targetLocale, this.locale);
       if (match > bestMatch) {
         bestMatch = match;

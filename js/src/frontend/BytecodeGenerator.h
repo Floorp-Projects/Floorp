@@ -38,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef CodeGenerator_h__
-#define CodeGenerator_h__
+#ifndef BytecodeGenerator_h__
+#define BytecodeGenerator_h__
 
 /*
  * JS bytecode generation.
@@ -1138,4 +1138,4 @@ js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array);
 
 JS_END_EXTERN_C
 
-#endif /* CodeGenerator_h__ */
+#endif /* BytecodeGenerator_h__ */
