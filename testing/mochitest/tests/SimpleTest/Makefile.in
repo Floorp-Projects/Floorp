@@ -51,7 +51,6 @@ _SIMPLETEST_FILES =	MozillaLogger.js \
 			EventUtils.js \
 			ChromeUtils.js \
 			WindowSnapshot.js \
-			PluginUtils.js \
 			specialpowersAPI.js \
 			SpecialPowersObserverAPI.js \
 			$(DEPTH)/toolkit/content/tests/browser/common/mockObjects.js \
