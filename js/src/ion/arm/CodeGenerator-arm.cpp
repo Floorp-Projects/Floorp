@@ -217,8 +217,7 @@ CodeGeneratorARM::generateOutOfLineCode()
         masm.bind(deoptLabel_);
 
         // Push the frame size, so the handler can recover the IonScript.
-        masm.ma_mov(Imm32(frameSize()), ScratchRegister);
-        masm.ma_push(ScratchRegister);
+        masm.ma_mov(Imm32(frameSize()), lr);
 
         IonCompartment *ion = gen->cx->compartment->ionCompartment();
         IonCode *handler = ion->getGenericBailoutHandler(gen->cx);
@@ -263,10 +262,40 @@ CodeGeneratorARM::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
 bool
 CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
 {
-    JS_NOT_REACHED("Feature NYI");
     JS_ASSERT(label->used() && !label->bound());
-    //return bailout(BailoutLabel(label), snapshot);
-    return false;
+    if (!encode(snapshot))
+        return false;
+
+    // Though the assembler doesn't track all frame pushes, at least make sure
+    // the known value makes sense. We can't use bailout tables if the stack
+    // isn't properly aligned to the static frame size.
+    JS_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
+                 frameClass_.frameSize() == masm.framePushed());
+    // This involves retargeting a label, which I've declared is always going
+    // to be a pc-relative branch to an absolute address!
+    // With no assurance that this is going to be a local branch, I am wary to
+    // implement this.  Moreover, If it isn't a local branch, it will be large
+    // and possibly slow.  I believe that the correct way to handle this is to
+    // subclass label into a fatlabel, where we generate enough room for a load
+    // before the branch
+#if 0
+    if (assignBailoutId(snapshot)) {
+        uint8 *code = deoptTable_->raw() + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE;
+        masm.retarget(label, code, Relocation::EXTERNAL);
+        return true;
+    }
+#endif
+    // We could not use a jump table, either because all bailout IDs were
+    // reserved, or a jump table is not optimal for this frame size or
+    // platform. Whatever, we will generate a lazy bailout.
+    OutOfLineBailout *ool = new OutOfLineBailout(snapshot, masm.framePushed());
+    if (!addOutOfLineCode(ool)) {
+        return false;
+    }
+
+    masm.retarget(label, ool->entry());
+
+    return true;
 }
 
 bool
@@ -277,6 +306,7 @@ CodeGeneratorARM::visitOutOfLineBailout(OutOfLineBailout *ool)
     if (!deoptLabel_)
         deoptLabel_ = new HeapLabel();
     masm.ma_mov(Imm32(ool->snapshot()->snapshotOffset()), ScratchRegister);
+    masm.ma_push(ScratchRegister);
     masm.ma_push(ScratchRegister);
     masm.ma_b(deoptLabel_);
     return true;
@@ -290,9 +320,9 @@ CodeGeneratorARM::visitAddI(LAddI *ins)
     const LDefinition *dest = ins->getDef(0);
 
     if (rhs->isConstant()) {
-        masm.ma_add(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest));
+        masm.ma_add(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCond);
     } else {
-        masm.ma_add(ToRegister(lhs), ToOperand(rhs), ToRegister(dest));
+        masm.ma_add(ToRegister(lhs), ToOperand(rhs), ToRegister(dest), SetCond);
     }
 
     if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
@@ -309,9 +339,9 @@ CodeGeneratorARM::visitSubI(LSubI *ins)
     const LDefinition *dest = ins->getDef(0);
 
     if (rhs->isConstant()) {
-        masm.ma_sub(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest));
+        masm.ma_sub(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCond);
     } else {
-        masm.ma_sub(ToRegister(lhs), ToOperand(rhs), ToRegister(dest));
+        masm.ma_sub(ToRegister(lhs), ToOperand(rhs), ToRegister(dest), SetCond);
     }
 
     if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
@@ -541,6 +571,7 @@ CodeGeneratorARM::visitShiftOp(LShiftOp *ins)
         }
         default:
             JS_NOT_REACHED("unexpected shift opcode");
+            return false;
     }
 
     return true;
@@ -607,22 +638,21 @@ CodeGeneratorARM::visitMoveGroup(LMoveGroup *group)
 bool
 CodeGeneratorARM::visitTableSwitch(LTableSwitch *ins)
 {
-#if 0
     MTableSwitch *mir = ins->mir();
     const LAllocation *input = ins->getOperand(0);
 
     // Put input in temp. register
     LDefinition *index = ins->getTemp(0);
-    masm.mov(ToOperand(input), ToRegister(index));
 
     // Lower value with low value
-    if (mir->low() != 0)
-        masm.subl(Imm32(mir->low()), ToOperand(index));
+    if (mir->low() != 0) {
+        masm.ma_sub(ToRegister(input), Imm32(mir->low()), ToRegister(index));
+    }
 
     // Jump to default case if input is out of range
     LBlock *defaultcase = mir->getDefault()->lir();
     int32 cases = mir->numCases();
-    masm.cmpl(Imm32(cases), ToRegister(index));
+    masm.ma_cmp(Imm32(cases), ToRegister(index));
     masm.ma_b(defaultcase->label(), Assembler::AboveOrEqual);
 
     // Create a label pointing to the jumptable
@@ -633,7 +663,13 @@ CodeGeneratorARM::visitTableSwitch(LTableSwitch *ins)
 
     // Compute the pointer to the right case in the second temp. register
     LDefinition *base = ins->getTemp(1);
-    masm.mov(label->dest(), ToRegister(base));
+
+#if 0
+    // I don't have CodeLabels implemented in any way shape or form, particularly
+    // not for the purposes of moving.  This will have to wait.
+    masm.ma_mov(label->dest(), ToRegister(base));
+    masm.ma_add(ToRegister(base), Operand(lsl(ToRegister(index), 3)),ToRegister(base));
+
     Operand pointer = Operand(ToRegister(base), ToRegister(index), TimesEight);
     masm.lea(pointer, ToRegister(base));
 
@@ -691,7 +727,7 @@ CodeGeneratorARM::emitDoubleToInt32(const FloatRegister &src, const Register &de
     //        different value, which we can test.
     masm.ma_vcvt_F64_I32(src, ScratchFloatReg);
     // move the value into the dest register.
-    masm.ma_vmov(ScratchFloatReg, dest);
+    masm.ma_vxfer(ScratchFloatReg, dest);
     masm.ma_vcvt_I32_F64(ScratchFloatReg, ScratchFloatReg);
     masm.ma_vcmp_F64(ScratchFloatReg, src);
     // bail out if they aren't equal.
@@ -865,8 +901,15 @@ CodeGeneratorARM::visitDouble(LDouble *ins)
 
     jsdpun dpun;
     dpun.d = v.toDouble();
-    if ((dpun.u64 & 0xffffffff) == 0) {
-        VFPImm dblEnc(dpun.u64 >> 32);
+    if ((dpun.s.lo) == 0) {
+        if (dpun.s.hi == 0) {
+            // to zero a register, load 1.0, then execute dN <- dN - dN
+            VFPImm dblEnc(0x3FF00000);
+            masm.as_vimm(ToFloatRegister(out), dblEnc);
+            masm.as_vsub(ToFloatRegister(out), ToFloatRegister(out), ToFloatRegister(out));
+            return true;
+        }
+        VFPImm dblEnc(dpun.s.hi);
         if (dblEnc.isValid()) {
             masm.as_vimm(ToFloatRegister(out), dblEnc);
             return true;
@@ -945,7 +988,7 @@ CodeGeneratorARM::visitStackArg(LStackArg *arg)
 bool
 CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
 {
-#if 0
+
     // Holds the function object.
     const LAllocation *obj = call->getFunction();
     Register objreg  = ToRegister(obj);
@@ -962,80 +1005,101 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
     uint32 unused_stack = StackOffsetOfPassedArg(callargslot);
 
 
+
     // Guard that objreg is actually a function object.
     masm.ma_ldr(DTRAddr(objreg, DtrOffImm(JSObject::offsetOfClassPointer())), tokreg);
     masm.ma_ldr(DTRAddr(tokreg, DtrOffImm(0)), tokreg);
 
-    masm.cmpPtr(tokreg, ImmWord(&js::FunctionClass));
+    masm.ma_cmp(Imm32((uint32)&js::FunctionClass), tokreg);
     if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
         return false;
 
     // Extract the function object.
-    masm.movePtr(Operand(objreg, offsetof(JSObject, privateData)), objreg);
+    masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(JSObject, privateData))),
+                objreg);
 
     // Guard that objreg is a non-native function:
     // Non-native iff (obj->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
-    masm.movl(Operand(objreg, offsetof(JSFunction, flags)), tokreg);
-    masm.andl(Imm32(JSFUN_KINDMASK), tokreg);
-    masm.cmpl(tokreg, Imm32(JSFUN_INTERPRETED));
-    if (!bailoutIf(Assembler::Below, call->snapshot()))
+    masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(JSFunction, flags))),
+                tokreg);
+
+    // theoreticaly the test is tokreg & JSFUN_KINDMASK >= JSFUN_INTERPRETED
+    // however, JSFUN_KINDMASK is two bits, and JSFUN_INTERPRETED is the smallest
+    // non-zero value that those two bits can take on (0b01).  In this case, the
+    // comparison is equivalent to seeing if either of the bits is non-zero.
+    masm.ma_tst(Imm32(JSFUN_KINDMASK), tokreg);
+
+    if (!bailoutIf(Assembler::Zero, call->snapshot())) {
         return false;
+    }
 
     // Save the calleeToken, which equals the function object.
-    masm.mov(objreg, tokreg);
+    masm.ma_mov(objreg, tokreg);
 
     // Knowing that objreg is a non-native function, load the JSScript.
-    masm.movePtr(Operand(objreg, offsetof(JSFunction, u.i.script)), objreg);
-    masm.movePtr(Operand(objreg, offsetof(JSScript, ion)), objreg);
+    masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(JSFunction, u.i.script_))),
+                objreg);
+    masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(JSScript, ion))),
+                objreg);
 
+    masm.ma_cmp(Imm32(0), objreg);
     // Bail if the callee has not yet been JITted.
-    masm.testPtr(objreg, objreg);
     if (!bailoutIf(Assembler::Zero, call->snapshot()))
         return false;
+
 
     // Remember the size of the frame above this point, in case of bailout.
     JS_STATIC_ASSERT(IonFramePrefix::JSFrame == 0x0);
     uint32 stack_size = masm.framePushed() - unused_stack;
     uint32 size_descriptor = stack_size << IonFramePrefix::FrameTypeBits;
 
-    // Nestle %esp up to the argument vector.
-    if (unused_stack)
-        masm.addPtr(Imm32(unused_stack), StackPointer);
 
+
+    // Nestle sp up to the argument vector.
+    if (unused_stack) {
+        masm.ma_add(StackPointer, Imm32(unused_stack), StackPointer);
+    }
     // Construct the IonFramePrefix.
-    masm.push(tokreg);
+    masm.ma_push(tokreg);
     masm.push(Imm32(size_descriptor));
 
     // Call the function, padding with |undefined| in case of insufficient args.
     {
         Label thunk, rejoin;
 
+
         // Get the address of the argumentsRectifier code.
         IonCompartment *ion = gen->ionCompartment();
+
         IonCode *argumentsRectifier = ion->getArgumentsRectifier(gen->cx);
         if (!argumentsRectifier)
             return false;
 
         // Check whether the provided arguments satisfy target argc.
-        masm.load16(Operand(tokreg, offsetof(JSFunction, nargs)), nargsreg);
-        masm.cmpl(nargsreg, Imm32(call->nargs()));
-        masm.j(Assembler::Above, &thunk);
+        masm.ma_ldrh(EDtrAddr(tokreg, EDtrOffImm(offsetof(JSFunction, nargs))),
+                     nargsreg);
+
+        masm.ma_cmp(Imm32(call->nargs()), nargsreg);
+        masm.ma_b(&thunk, Assembler::Above);
 
         // No argument fixup needed. Call the function normally.
-        masm.movePtr(Operand(objreg, offsetof(IonScript, method_)), objreg);
-        masm.movePtr(Operand(objreg, IonCode::OffsetOfCode()), objreg);
-        masm.call(objreg);
-        masm.jump(&rejoin);
+        masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(IonScript, method_))), objreg);
+        masm.ma_ldr(DTRAddr(objreg, DtrOffImm(IonCode::OffsetOfCode())), objreg);
+        masm.ma_callIon(objreg);
+        masm.ma_b(&rejoin);
 
         // Argument fixup needed. Create a frame with correct |nargs| and then call.
         masm.bind(&thunk);
-        masm.mov(Imm32(call->nargs()), ArgumentsRectifierReg);
-        masm.movePtr(ImmWord(argumentsRectifier->raw()), ecx); // safe to take: return reg.
-        masm.call(ecx);
+        // r0 should be safe, since everything has been saved by the register
+        // allocator
+        masm.ma_mov(Imm32(call->nargs()), r0);
+        masm.ma_mov(Imm32((int)argumentsRectifier->raw()), ScratchRegister);
+        masm.ma_callIon(ScratchRegister);
 
         masm.bind(&rejoin);
-    }
 
+    }
+#if 0
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     int prefix_garbage = 2 * sizeof(void *);
     int restore_diff = prefix_garbage - unused_stack;
