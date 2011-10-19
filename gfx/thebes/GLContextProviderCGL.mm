@@ -264,6 +264,9 @@ GLContextCGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
 bool
 GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
+    if (!IsOffscreenSizeAllowed(aNewSize))
+        return false;
+
     if (mPBuffer) {
         NSOpenGLPixelBuffer *pb = [[NSOpenGLPixelBuffer alloc]
                                    initWithTextureTarget:LOCAL_GL_TEXTURE_2D
