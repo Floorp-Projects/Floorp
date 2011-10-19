@@ -574,7 +574,7 @@ nsMouseWheelTransaction::OnFailToScrollTarget()
   if (Preferences::GetBool("test.mousescroll", false)) {
     // This event is used for automated tests, see bug 442774.
     nsContentUtils::DispatchTrustedEvent(
-                      sTargetFrame->GetContent()->GetOwnerDoc(),
+                      sTargetFrame->GetContent()->OwnerDoc(),
                       sTargetFrame->GetContent(),
                       NS_LITERAL_STRING("MozMouseScrollFailed"),
                       true, true);
@@ -602,7 +602,7 @@ nsMouseWheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure)
   if (Preferences::GetBool("test.mousescroll", false)) {
     // This event is used for automated tests, see bug 442774.
     nsContentUtils::DispatchTrustedEvent(
-                      frame->GetContent()->GetOwnerDoc(),
+                      frame->GetContent()->OwnerDoc(),
                       frame->GetContent(),
                       NS_LITERAL_STRING("MozMouseScrollTransactionTimeout"),
                       true, true);
@@ -891,7 +891,7 @@ nsEventStateManager::~nsEventStateManager()
     }
   }
 
-  if (sDragOverContent && sDragOverContent->GetOwnerDoc() == mDocument) {
+  if (sDragOverContent && sDragOverContent->OwnerDoc() == mDocument) {
     sDragOverContent = nsnull;
   }
 
@@ -1431,7 +1431,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
     return false;
 
   nsCOMPtr<nsIDOMXULDocument> xulDoc =
-    do_QueryInterface(aContent->GetOwnerDoc());
+    do_QueryInterface(aContent->OwnerDoc());
   if (!xulDoc && !aContent->IsXUL())
     return true;
 
@@ -3856,7 +3856,7 @@ public:
   : mESM(aESM), mEvent(aEvent), mType(aType)
   {
     nsPIDOMWindow* win =
-      aTarget ? aTarget->GetOwnerDoc()->GetInnerWindow() : nsnull;
+      aTarget ? aTarget->OwnerDoc()->GetInnerWindow() : nsnull;
     if (win && win->HasMouseEnterLeaveEventListeners()) {
       mRelatedTarget = aRelatedTarget ?
         aRelatedTarget->FindFirstNonNativeAnonymous() : nsnull;
@@ -4647,7 +4647,7 @@ nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent
   }
 
   if (sDragOverContent &&
-      sDragOverContent->GetOwnerDoc() == aContent->GetOwnerDoc() &&
+      sDragOverContent->OwnerDoc() == aContent->OwnerDoc() &&
       nsContentUtils::ContentIsDescendantOf(sDragOverContent, aContent)) {
     sDragOverContent = nsnull;
   }

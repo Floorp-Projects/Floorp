@@ -1295,9 +1295,7 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
 
   nsresult rv;
 
-  nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(mStartParent->GetOwnerDoc());
-  if (!doc) return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIDocument> doc = mStartParent->OwnerDoc();
 
   nsCOMPtr<nsIDOMNode> commonAncestor;
   rv = GetCommonAncestorContainer(getter_AddRefs(commonAncestor));
@@ -1313,7 +1311,7 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
   nsCOMPtr<nsIDOMNode> commonCloneAncestor(do_QueryInterface(retval));
 
   // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(mRoot ? mRoot->GetOwnerDoc(): nsnull, nsnull);
+  mozAutoSubtreeModified subtree(mRoot ? mRoot->OwnerDoc(): nsnull, nsnull);
 
   // Save the range end points locally to avoid interference
   // of Range gravity during our edits!
@@ -1662,7 +1660,7 @@ nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   if (NS_FAILED(res)) return res;
 
   nsCOMPtr<nsIDOMDocument> document =
-    do_QueryInterface(mStartParent->GetOwnerDoc());
+    do_QueryInterface(mStartParent->OwnerDoc());
   NS_ASSERTION(document, "CloneContents needs a document to continue.");
   if (!document) return NS_ERROR_FAILURE;
 
@@ -2323,7 +2321,7 @@ nsRange::GetUsedFontFaces(nsIDOMFontFaceList** aResult)
   nsCOMPtr<nsIDOMNode> endContainer = do_QueryInterface(mEndParent);
 
   // Flush out layout so our frames are up to date.
-  nsIDocument* doc = mStartParent->GetOwnerDoc();
+  nsIDocument* doc = mStartParent->OwnerDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
   doc->FlushPendingNotifications(Flush_Frames);
 

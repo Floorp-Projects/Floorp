@@ -324,7 +324,7 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aDOMEvent)
     return NS_OK;
 
   nsDocAccessible* document =
-    GetAccService()->GetDocAccessible(origTargetNode->GetOwnerDoc());
+    GetAccService()->GetDocAccessible(origTargetNode->OwnerDoc());
 
   if (document) {
 #ifdef DEBUG_NOTIFICATIONS

@@ -514,9 +514,7 @@ nsXULElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer)
     // XXXbz sXBL/XBL2 issue: should we instead use GetCurrentDoc()
     // here, override BindToTree for those classes and munge event
     // listeners there?
-    nsIDocument* doc = GetOwnerDoc();
-    if (!doc)
-        return nsnull; // XXX
+    nsIDocument* doc = OwnerDoc();
 
     nsPIDOMWindow *window;
     Element *root = doc->GetRootElement();
@@ -756,7 +754,7 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheSets);
 
     // XXX sXBL/XBL2 issue! Owner or current document?
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mElement->GetOwnerDoc());
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mElement->OwnerDoc());
 
     nsIScriptContext* context = NULL;
     nsXULPrototypeElement* elem = mElement->mPrototype;
@@ -1466,7 +1464,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, bool aNotify)
           mutation.mPrevAttrValue = do_GetAtom(oldValue);
         mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
-        mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+        mozAutoSubtreeModified subtree(OwnerDoc(), this);
         (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
     }
 
@@ -1476,7 +1474,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, bool aNotify)
 void
 nsXULElement::RemoveBroadcaster(const nsAString & broadcasterId)
 {
-    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(GetOwnerDoc());
+    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(OwnerDoc());
     if (xuldoc) {
         nsCOMPtr<nsIDOMElement> broadcaster;
         nsCOMPtr<nsIDOMDocument> domDoc (do_QueryInterface(xuldoc));
@@ -1855,9 +1853,7 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
   *aResult = nsnull;
 
   // XXX sXBL/XBL2 issue! Owner or current document?
-  nsIDocument* nsDoc = GetOwnerDoc();
-
-  return nsDoc ? nsDoc->GetBoxObjectFor(this, aResult) : NS_ERROR_FAILURE;
+  return OwnerDoc()->GetBoxObjectFor(this, aResult);
 }
 
 // Methods for setting/getting attributes from nsIDOMXULElement
@@ -1967,8 +1963,8 @@ nsXULElement::LoadSrc()
         return NS_OK;
     }
     if (!IsInDoc() ||
-        !GetOwnerDoc()->GetRootElement() ||
-        GetOwnerDoc()->GetRootElement()->
+        !OwnerDoc()->GetRootElement() ||
+        OwnerDoc()->GetRootElement()->
             NodeInfo()->Equals(nsGkAtoms::overlay, kNameSpaceID_XUL)) {
         return NS_OK;
     }

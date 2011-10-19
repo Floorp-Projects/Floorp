@@ -5437,15 +5437,13 @@ nsSVGFEImageElement::LoadSVGImage(bool aForce, bool aNotify)
     NS_MakeAbsoluteURI(href, href, baseURI);
 
   // Make sure we don't get in a recursive death-spiral
-  nsIDocument* doc = GetOwnerDoc();
-  if (doc) {
-    nsCOMPtr<nsIURI> hrefAsURI;
-    if (NS_SUCCEEDED(StringToURI(href, doc, getter_AddRefs(hrefAsURI)))) {
-      bool isEqual;
-      if (NS_SUCCEEDED(hrefAsURI->Equals(baseURI, &isEqual)) && isEqual) {
-        // Image URI matches our URI exactly! Bail out.
-        return NS_OK;
-      }
+  nsIDocument* doc = OwnerDoc();
+  nsCOMPtr<nsIURI> hrefAsURI;
+  if (NS_SUCCEEDED(StringToURI(href, doc, getter_AddRefs(hrefAsURI)))) {
+    bool isEqual;
+    if (NS_SUCCEEDED(hrefAsURI->Equals(baseURI, &isEqual)) && isEqual) {
+      // Image URI matches our URI exactly! Bail out.
+      return NS_OK;
     }
   }
 

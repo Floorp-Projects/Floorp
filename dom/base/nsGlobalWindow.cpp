@@ -2211,8 +2211,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     mContext->ConnectToInner(newInnerWindow, mJSObject);
 
     nsCOMPtr<nsIContent> frame = do_QueryInterface(GetFrameElementInternal());
-    if (frame && frame->GetOwnerDoc()) {
-      nsPIDOMWindow* parentWindow = frame->GetOwnerDoc()->GetWindow();
+    if (frame && frame->OwnerDoc()) {
+      nsPIDOMWindow* parentWindow = frame->OwnerDoc()->GetWindow();
       if (parentWindow && parentWindow->TimeoutSuspendCount()) {
         SuspendTimeouts(parentWindow->TimeoutSuspendCount());
       }
@@ -10063,7 +10063,7 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
         // This is a bit hackish. Only freeze/suspend windows which are truly our
         // subwindows.
         nsCOMPtr<nsIContent> frame = do_QueryInterface(pWin->GetFrameElementInternal());
-        if (!mDoc || !frame || mDoc != frame->GetOwnerDoc() || !inner) {
+        if (!mDoc || !frame || mDoc != frame->OwnerDoc() || !inner) {
           continue;
         }
 
@@ -10166,7 +10166,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
         // This is a bit hackish. Only thaw/resume windows which are truly our
         // subwindows.
         nsCOMPtr<nsIContent> frame = do_QueryInterface(pWin->GetFrameElementInternal());
-        if (!mDoc || !frame || mDoc != frame->GetOwnerDoc() || !inner) {
+        if (!mDoc || !frame || mDoc != frame->OwnerDoc() || !inner) {
           continue;
         }
 

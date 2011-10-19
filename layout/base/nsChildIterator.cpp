@@ -58,10 +58,7 @@ ChildIterator::Init(nsIContent*    aContent,
   if (! aContent)
     return NS_ERROR_NULL_POINTER;
 
-  nsIDocument* doc = aContent->GetOwnerDoc();
-  NS_ASSERTION(doc, "element not in the document");
-  if (! doc)
-    return NS_ERROR_FAILURE;
+  nsIDocument* doc = aContent->OwnerDoc();
 
   // If this node has XBL children, then use them. Otherwise, just use
   // the vanilla content APIs.

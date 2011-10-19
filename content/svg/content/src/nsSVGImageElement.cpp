@@ -295,7 +295,7 @@ nsSVGImageElement::DidAnimateString(PRUint8 aAttrEnum)
 nsresult
 nsSVGImageElement::CopyInnerTo(nsGenericElement* aDest) const
 {
-  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+  if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticImageClone(static_cast<nsSVGImageElement*>(aDest));
   }
   return nsSVGImageElementBase::CopyInnerTo(aDest);
