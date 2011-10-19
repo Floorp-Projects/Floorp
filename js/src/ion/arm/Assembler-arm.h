@@ -164,7 +164,8 @@ class VFPRegister
     bool equiv(VFPRegister other) { return other.kind == kind; }
     VFPRegister doubleOverlay();
     VFPRegister singleOverlay();
-    VFPRegister intOverlay();
+    VFPRegister sintOverlay();
+    VFPRegister uintOverlay();
     bool isInvalid();
     bool isMissing();
     struct VFPRegIndexSplit;
@@ -318,7 +319,8 @@ enum VFPOp {
     opv_abs  = 0xB << 20 | 0x3 << 6,
     opv_neg  = 0xB << 20 | 0x1 << 6 | 0x1 << 16,
     opv_sqrt = 0xB << 20 | 0x3 << 6 | 0x1 << 16,
-    opv_cmp  = 0xB << 20 | 0x1 << 6 | 0x4 << 16
+    opv_cmp  = 0xB << 20 | 0x1 << 6 | 0x4 << 16,
+    opv_cmpz  = 0xB << 20 | 0x1 << 6 | 0x5 << 16
 };
 // Negate the operation, AND negate the immediate that we were passed in.
 ALUOp ALUNeg(ALUOp op, Imm32 *imm);
@@ -1015,15 +1017,18 @@ public:
     void as_bl(BOffImm off, Condition c, BufferOffset inst);
 
     // VFP instructions!
+  private:
     enum vfp_size {
         isDouble = 1 << 8,
         isSingle = 0 << 8
     };
+    void writeVFPInst(vfp_size sz, uint32 blob);
     // Unityped variants: all registers hold the same (ieee754 single/double)
     // notably not included are vcvt; vmov vd, #imm; vmov rt, vn.
     void as_vfp_float(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                       VFPOp op, Condition c = Always);
 
+  public:
     void as_vadd(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                  Condition c = Always);
 
@@ -1053,6 +1058,7 @@ public:
 
     void as_vcmp(VFPRegister vd, VFPRegister vm,
                  Condition c = Always);
+    void as_vcmpz(VFPRegister vd,  Condition c = Always);
 
     // specifically, a move between two same sized-registers
     void as_vmov(VFPRegister vd, VFPRegister vsrc, Condition c = Always);
@@ -1061,12 +1067,12 @@ public:
         FloatToCore = 1 << 20,
         CoreToFloat = 0 << 20
     };
-
+  private:
     enum VFPXferSize {
-        WordTransfer   = 0x0E000A10,
-        DoubleTransfer = 0x0C400A10
+        WordTransfer   = 0x02000010,
+        DoubleTransfer = 0x00400010
     };
-
+  public:
     // Unlike the next function, moving between the core registers and vfp
     // registers can't be *that* properly typed.  Namely, since I don't want to
     // munge the type VFPRegister to also include core registers.  Thus, the core
@@ -1092,11 +1098,14 @@ public:
 
     void as_vimm(VFPRegister vd, VFPImm imm, Condition c = Always);
 
+    void as_vmrs(Register r, Condition c = Always);
+    // label operations
     bool nextLink(BufferOffset b, BufferOffset *next);
-
-    void bind(Label *label);
-
+    void bind(Label *label, BufferOffset boff = BufferOffset());
     static void Bind(IonCode *code, AbsoluteLabel *label, const void *address);
+    void retarget(Label *label, Label *target);
+    // I'm going to pretend this doesn't exist for now.
+    void retarget(Label *label, void *target, Relocation::Kind reloc);
 
     void call(Label *label);
 

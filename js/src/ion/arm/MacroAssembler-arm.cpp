@@ -213,7 +213,7 @@ void
 MacroAssemblerARM::ma_mov(const ImmGCPtr &ptr, Register dest)
 {
     ma_mov(Imm32(ptr.value), dest);
-    JS_NOT_REACHED("todo:make gc more sane.");
+    //JS_NOT_REACHED("todo:make gc more sane.");
 }
 
     // Shifts (just a move with a shifting op2)
@@ -376,129 +376,129 @@ MacroAssemblerARM::ma_orr(Imm32 imm, Register src1, Register dest,
     // arithmetic based ops
     // add with carry
 void
-MacroAssemblerARM::ma_adc(Imm32 imm, Register dest)
+MacroAssemblerARM::ma_adc(Imm32 imm, Register dest, SetCond_ sc)
 {
-    ma_alu(dest, imm, dest, op_adc);
+    ma_alu(dest, imm, dest, op_adc, sc);
 }
 void
-MacroAssemblerARM::ma_adc(Register src, Register dest)
+MacroAssemblerARM::ma_adc(Register src, Register dest, SetCond_ sc)
 {
-    as_alu(dest, dest, O2Reg(src), op_adc);
+    as_alu(dest, dest, O2Reg(src), op_adc, sc);
 }
 void
-MacroAssemblerARM::ma_adc(Register src1, Register src2, Register dest)
+MacroAssemblerARM::ma_adc(Register src1, Register src2, Register dest, SetCond_ sc)
 {
-    as_alu(dest, src1, O2Reg(src2), op_adc);
+    as_alu(dest, src1, O2Reg(src2), op_adc, sc);
 }
 
     // add
 void
-MacroAssemblerARM::ma_add(Imm32 imm, Register dest)
+MacroAssemblerARM::ma_add(Imm32 imm, Register dest, SetCond_ sc)
 {
-    ma_alu(dest, imm, dest, op_add);
+    ma_alu(dest, imm, dest, op_add, sc);
 }
 void
-MacroAssemblerARM::ma_add(Register src1, Register dest)
+MacroAssemblerARM::ma_add(Register src1, Register dest, SetCond_ sc)
 {
-    as_alu(dest, dest, O2Reg(src1), op_add);
+    as_alu(dest, dest, O2Reg(src1), op_add, sc);
 }
 void
-MacroAssemblerARM::ma_add(Register src1, Register src2, Register dest)
+MacroAssemblerARM::ma_add(Register src1, Register src2, Register dest, SetCond_ sc)
 {
-    as_alu(dest, src1, O2Reg(dest), op_add);
+    as_alu(dest, src1, O2Reg(dest), op_add, sc);
 }
 void
-MacroAssemblerARM::ma_add(Register src1, Operand op, Register dest)
+MacroAssemblerARM::ma_add(Register src1, Operand op, Register dest, SetCond_ sc)
 {
-    ma_alu(src1, op, dest, op_add);
+    ma_alu(src1, op, dest, op_add, sc);
 }
 void
-MacroAssemblerARM::ma_add(Register src1, Imm32 op, Register dest)
+MacroAssemblerARM::ma_add(Register src1, Imm32 op, Register dest, SetCond_ sc)
 {
-    ma_alu(src1, op, dest, op_add);
+    ma_alu(src1, op, dest, op_add, sc);
 }
 
     // subtract with carry
 void
-MacroAssemblerARM::ma_sbc(Imm32 imm, Register dest)
+MacroAssemblerARM::ma_sbc(Imm32 imm, Register dest, SetCond_ sc)
 {
-    ma_alu(dest, imm, dest, op_sbc);
+    ma_alu(dest, imm, dest, op_sbc, sc);
 }
 void
-MacroAssemblerARM::ma_sbc(Register src1, Register dest)
+MacroAssemblerARM::ma_sbc(Register src1, Register dest, SetCond_ sc)
 {
-    as_alu(dest, dest, O2Reg(src1), op_sbc);
+    as_alu(dest, dest, O2Reg(src1), op_sbc, sc);
 }
 void
-MacroAssemblerARM::ma_sbc(Register src1, Register src2, Register dest)
+MacroAssemblerARM::ma_sbc(Register src1, Register src2, Register dest, SetCond_ sc)
 {
-    as_alu(dest, src1, O2Reg(dest), op_sbc);
+    as_alu(dest, src1, O2Reg(dest), op_sbc, sc);
 }
 
     // subtract
 void
-MacroAssemblerARM::ma_sub(Imm32 imm, Register dest)
+MacroAssemblerARM::ma_sub(Imm32 imm, Register dest, SetCond_ sc)
 {
-    ma_alu(dest, imm, dest, op_sub);
+    ma_alu(dest, imm, dest, op_sub, sc);
 }
 void
-MacroAssemblerARM::ma_sub(Register src1, Register dest)
+MacroAssemblerARM::ma_sub(Register src1, Register dest, SetCond_ sc)
 {
-    ma_alu(dest, Operand(O2Reg(src1)), dest, op_sub);
+    ma_alu(dest, Operand(O2Reg(src1)), dest, op_sub, sc);
 }
 void
-MacroAssemblerARM::ma_sub(Register src1, Register src2, Register dest)
+MacroAssemblerARM::ma_sub(Register src1, Register src2, Register dest, SetCond_ sc)
 {
-    ma_alu(src1, Operand(O2Reg(src2)), dest, op_sub);
+    ma_alu(src1, Operand(O2Reg(src2)), dest, op_sub, sc);
 }
 void
-MacroAssemblerARM::ma_sub(Register src1, Operand op, Register dest)
+MacroAssemblerARM::ma_sub(Register src1, Operand op, Register dest, SetCond_ sc)
 {
-    ma_alu(src1, op, dest, op_sub);
+    ma_alu(src1, op, dest, op_sub, sc);
 }
 void
-MacroAssemblerARM::ma_sub(Register src1, Imm32 op, Register dest)
+MacroAssemblerARM::ma_sub(Register src1, Imm32 op, Register dest, SetCond_ sc)
 {
-    ma_alu(src1, op, dest, op_sub);
+    ma_alu(src1, op, dest, op_sub, sc);
 }
 
     // reverse subtract
 void
-MacroAssemblerARM::ma_rsb(Imm32 imm, Register dest)
+MacroAssemblerARM::ma_rsb(Imm32 imm, Register dest, SetCond_ sc)
 {
-    ma_alu(dest, imm, dest, op_rsb);
+    ma_alu(dest, imm, dest, op_rsb, sc);
 }
 void
-MacroAssemblerARM::ma_rsb(Register src1, Register dest)
+MacroAssemblerARM::ma_rsb(Register src1, Register dest, SetCond_ sc)
 {
-    as_alu(dest, dest, O2Reg(src1), op_add);
+    as_alu(dest, dest, O2Reg(src1), op_add, sc);
 }
 void
-MacroAssemblerARM::ma_rsb(Register src1, Register src2, Register dest)
+MacroAssemblerARM::ma_rsb(Register src1, Register src2, Register dest, SetCond_ sc)
 {
-    as_alu(dest, src1, O2Reg(dest), op_rsc);
+    as_alu(dest, src1, O2Reg(dest), op_rsc, sc);
 }
 void
-MacroAssemblerARM::ma_rsb(Register src1, Imm32 op2, Register dest)
+MacroAssemblerARM::ma_rsb(Register src1, Imm32 op2, Register dest, SetCond_ sc)
 {
-    ma_alu(src1, op2, dest, op_rsb);
+    ma_alu(src1, op2, dest, op_rsb, sc);
 }
 
     // reverse subtract with carry
 void
-MacroAssemblerARM::ma_rsc(Imm32 imm, Register dest)
+MacroAssemblerARM::ma_rsc(Imm32 imm, Register dest, SetCond_ sc)
 {
-    ma_alu(dest, imm, dest, op_rsc);
+    ma_alu(dest, imm, dest, op_rsc, sc);
 }
 void
-MacroAssemblerARM::ma_rsc(Register src1, Register dest)
+MacroAssemblerARM::ma_rsc(Register src1, Register dest, SetCond_ sc)
 {
-    as_alu(dest, dest, O2Reg(src1), op_rsc);
+    as_alu(dest, dest, O2Reg(src1), op_rsc, sc);
 }
 void
-MacroAssemblerARM::ma_rsc(Register src1, Register src2, Register dest)
+MacroAssemblerARM::ma_rsc(Register src1, Register src2, Register dest, SetCond_ sc)
 {
-    as_alu(dest, src1, O2Reg(dest), op_rsc);
+    as_alu(dest, src1, O2Reg(dest), op_rsc, sc);
 }
 
     // compares/tests
@@ -519,7 +519,7 @@ MacroAssemblerARM::ma_cmn(Register src1, Operand op)
     JS_NOT_REACHED("Feature NYI");
 }
 
-    // compare (src - src2)
+// compare (src - src2)
 void
 MacroAssemblerARM::ma_cmp(Imm32 imm, Register src1)
 {
@@ -603,16 +603,40 @@ MacroAssemblerARM::ma_dtr(LoadStore ls, Register rn, Register rm, Register rt,
 }
 
 void
-MacroAssemblerARM::ma_str(Register rt, DTRAddr addr, Index mode, Assembler::Condition cc)
+MacroAssemblerARM::ma_str(Register rt, DTRAddr addr, Index mode, Condition cc)
 {
     as_dtr(IsStore, 32, mode, rt, addr, cc);
 }
 void
-MacroAssemblerARM::ma_ldr(DTRAddr addr, Register rt, Index mode, Assembler::Condition cc)
+MacroAssemblerARM::ma_ldr(DTRAddr addr, Register rt, Index mode, Condition cc)
 {
     as_dtr(IsLoad, 32, mode, rt, addr, cc);
 }
-    // specialty for moving N bits of data, where n == 8,16,32,64
+
+void
+MacroAssemblerARM::ma_ldrb(DTRAddr addr, Register rt, Index mode, Condition cc)
+{
+    as_dtr(IsLoad, 8, mode, rt, addr, cc);
+}
+
+void
+MacroAssemblerARM::ma_ldrsh(EDtrAddr addr, Register rt, Index mode, Condition cc)
+{
+    as_extdtr(IsLoad, 16, true, mode, rt, addr, cc);
+}
+
+void
+MacroAssemblerARM::ma_ldrh(EDtrAddr addr, Register rt, Index mode, Condition cc)
+{
+    as_extdtr(IsLoad, 16, false, mode, rt, addr, cc);
+}
+void
+MacroAssemblerARM::ma_ldrsb(EDtrAddr addr, Register rt, Index mode, Condition cc)
+{
+    as_extdtr(IsLoad, 8, true, mode, rt, addr, cc);
+}
+
+// specialty for moving N bits of data, where n == 8,16,32,64
 void
 MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size,
                           Register rn, Register rm, Register rt,
@@ -636,7 +660,7 @@ MacroAssemblerARM::ma_pop(Register r)
 void
 MacroAssemblerARM::ma_push(Register r)
 {
-    ma_dtr(IsStore, sp,Imm32(4), r, PreIndex);
+    ma_dtr(IsStore, sp,Imm32(-4), r, PreIndex);
 }
 
 // branches when done from within arm-specific code
@@ -648,7 +672,8 @@ MacroAssemblerARM::ma_b(Label *dest, Assembler::Condition c)
 void
 MacroAssemblerARM::ma_b(void *target, Relocation::Kind reloc)
 {
-    JS_NOT_REACHED("Feature NYI");
+    // TODO: do the right thing with the reloc.
+    ma_b(target, Always, reloc);
 }
 void
 MacroAssemblerARM::ma_b(void *target, Assembler::Condition c, Relocation::Kind reloc)
@@ -691,18 +716,17 @@ MacroAssemblerARM::ma_vcmp_F64(FloatRegister src1, FloatRegister src2)
 void
 MacroAssemblerARM::ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest)
 {
-    JS_NOT_REACHED("Feature NYI");
+    as_vcvt(VFPRegister(src), VFPRegister(dest).sintOverlay());
 }
 void
 MacroAssemblerARM::ma_vcvt_I32_F64(FloatRegister src, FloatRegister dest)
 {
-    JS_NOT_REACHED("Feature NYI");
+    as_vcvt(VFPRegister(src).sintOverlay(), VFPRegister(dest));
 }
 void
-MacroAssemblerARM::ma_vmov(FloatRegister src, Register dest)
+MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest)
 {
-    JS_NOT_REACHED("Feature NYI");
-    //as_vmov(VFPRegister(dest), VFPRegister(src));
+    as_vxfer(dest, InvalidReg, VFPRegister(src).singleOverlay(), FloatToCore);
 }
 void
 MacroAssemblerARM::ma_vldr(VFPAddr addr, FloatRegister dest)
@@ -777,7 +801,7 @@ MacroAssemblerARM::movePtr(ImmGCPtr imm, const Register dest)
 void
 MacroAssemblerARM::loadPtr(const Address &address, Register dest)
 {
-    JS_NOT_REACHED("NYI");
+    ma_ldr(DTRAddr(address.base, DtrOffImm(address.offset)), dest);
 }
 void
 MacroAssemblerARM::setStackArg(const Register &reg, uint32 arg)
@@ -799,7 +823,7 @@ MacroAssemblerARM::checkCallAlignment()
 
     // higher level tag testing code
 Assembler::Condition
-MacroAssemblerARM::testInt32(Assembler::Condition cond, const ValueOperand &value)
+MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const ValueOperand &value)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     ma_cmp(ImmType(JSVAL_TYPE_INT32), value.typeReg());
@@ -807,14 +831,14 @@ MacroAssemblerARM::testInt32(Assembler::Condition cond, const ValueOperand &valu
 }
 
 Assembler::Condition
-MacroAssemblerARM::testBoolean(Assembler::Condition cond, const ValueOperand &value)
+MacroAssemblerARMCompat::testBoolean(Assembler::Condition cond, const ValueOperand &value)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     ma_cmp(ImmType(JSVAL_TYPE_BOOLEAN), value.typeReg());
     return cond;
 }
 Assembler::Condition
-MacroAssemblerARM::testDouble(Assembler::Condition cond, const ValueOperand &value)
+MacroAssemblerARMCompat::testDouble(Assembler::Condition cond, const ValueOperand &value)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     Assembler::Condition actual = (cond == Equal)
@@ -824,67 +848,67 @@ MacroAssemblerARM::testDouble(Assembler::Condition cond, const ValueOperand &val
     return actual;
 }
 Assembler::Condition
-MacroAssemblerARM::testNull(Assembler::Condition cond, const ValueOperand &value)
+MacroAssemblerARMCompat::testNull(Assembler::Condition cond, const ValueOperand &value)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     ma_cmp(ImmType(JSVAL_TYPE_NULL), value.typeReg());
     return cond;
 }
 Assembler::Condition
-MacroAssemblerARM::testUndefined(Assembler::Condition cond, const ValueOperand &value)
+MacroAssemblerARMCompat::testUndefined(Assembler::Condition cond, const ValueOperand &value)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
     ma_cmp(ImmType(JSVAL_TYPE_UNDEFINED), value.typeReg());
     return cond;
 }
 Assembler::Condition
-MacroAssemblerARM::testString(Assembler::Condition cond, const ValueOperand &value)
+MacroAssemblerARMCompat::testString(Assembler::Condition cond, const ValueOperand &value)
 {
     return testString(cond, value.typeReg());
 }
 Assembler::Condition
-MacroAssemblerARM::testObject(Assembler::Condition cond, const ValueOperand &value)
+MacroAssemblerARMCompat::testObject(Assembler::Condition cond, const ValueOperand &value)
 {
     return testObject(cond, value.typeReg());
 }
 
     // register-based tests
 Assembler::Condition
-MacroAssemblerARM::testInt32(Assembler::Condition cond, const Register &tag)
+MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Equal || cond == NotEqual);
     ma_cmp(ImmTag(JSVAL_TAG_INT32), tag);
     return cond;
 }
 Assembler::Condition
-MacroAssemblerARM::testBoolean(Assembler::Condition cond, const Register &tag)
+MacroAssemblerARMCompat::testBoolean(Assembler::Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Equal || cond == NotEqual);
     ma_cmp(ImmTag(JSVAL_TAG_BOOLEAN), tag);
     return cond;
 }
 Assembler::Condition
-MacroAssemblerARM::testNull(Assembler::Condition cond, const Register &tag) {
+MacroAssemblerARMCompat::testNull(Assembler::Condition cond, const Register &tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         ma_cmp(ImmTag(JSVAL_TAG_NULL), tag);
         return cond;
     }
 
 Assembler::Condition
-MacroAssemblerARM::testUndefined(Assembler::Condition cond, const Register &tag) {
+MacroAssemblerARMCompat::testUndefined(Assembler::Condition cond, const Register &tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         ma_cmp(ImmTag(JSVAL_TAG_UNDEFINED), tag);
         return cond;
     }
 Assembler::Condition
-MacroAssemblerARM::testString(Assembler::Condition cond, const Register &tag) {
+MacroAssemblerARMCompat::testString(Assembler::Condition cond, const Register &tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         ma_cmp(ImmTag(JSVAL_TAG_STRING), tag);
         return cond;
     }
 
 Assembler::Condition
-MacroAssemblerARM::testObject(Assembler::Condition cond, const Register &tag)
+MacroAssemblerARMCompat::testObject(Assembler::Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Equal || cond == NotEqual);
     ma_cmp(ImmTag(JSVAL_TAG_OBJECT), tag);
@@ -893,19 +917,19 @@ MacroAssemblerARM::testObject(Assembler::Condition cond, const Register &tag)
 
     // unboxing code
 void
-MacroAssemblerARM::unboxInt32(const ValueOperand &operand, const Register &dest)
+MacroAssemblerARMCompat::unboxInt32(const ValueOperand &operand, const Register &dest)
 {
     ma_mov(operand.payloadReg(), dest);
 }
 
 void
-MacroAssemblerARM::unboxBoolean(const ValueOperand &operand, const Register &dest)
+MacroAssemblerARMCompat::unboxBoolean(const ValueOperand &operand, const Register &dest)
 {
     ma_mov(operand.payloadReg(), dest);
 }
 
 void
-MacroAssemblerARM::unboxDouble(const ValueOperand &operand, const FloatRegister &dest)
+MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, const FloatRegister &dest)
 {
     JS_ASSERT(dest != ScratchFloatReg);
     as_vxfer(operand.payloadReg(), operand.typeReg(),
@@ -913,7 +937,7 @@ MacroAssemblerARM::unboxDouble(const ValueOperand &operand, const FloatRegister 
 }
 
 void
-MacroAssemblerARM::boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest)
+MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest)
 {
     JS_NOT_REACHED("Codegen for boolValueToDouble NYI");
 #if 0
@@ -922,19 +946,18 @@ MacroAssemblerARM::boolValueToDouble(const ValueOperand &operand, const FloatReg
 }
 
 void
-MacroAssemblerARM::int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest)
+MacroAssemblerARMCompat::int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest)
 {
-    JS_NOT_REACHED("Codegen for int32ValueToDouble NYI");
     // transfer the integral value to a floating point register
     VFPRegister vfpdest = VFPRegister(dest);
     as_vxfer(operand.payloadReg(), InvalidReg,
-             vfpdest.intOverlay(), CoreToFloat);
+             vfpdest.sintOverlay(), CoreToFloat);
     // convert the value to a double.
-    as_vcvt(dest, dest);
+    as_vcvt(vfpdest, vfpdest.sintOverlay());
 }
 
 void
-MacroAssemblerARM::loadStaticDouble(const double *dp, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadStaticDouble(const double *dp, const FloatRegister &dest)
 {
     JS_NOT_REACHED("Codegen for loadStaticDouble NYI");
 #if 0
@@ -945,29 +968,56 @@ MacroAssemblerARM::loadStaticDouble(const double *dp, const FloatRegister &dest)
     // treat the value as a boolean, and set condition codes accordingly
 
 Assembler::Condition
-MacroAssemblerARM::testInt32Truthy(bool truthy, const ValueOperand &operand)
+MacroAssemblerARMCompat::testInt32Truthy(bool truthy, const ValueOperand &operand)
 {
     ma_tst(operand.payloadReg(), operand.payloadReg());
     return truthy ? NonZero : Zero;
 }
 
 Assembler::Condition
-MacroAssemblerARM::testBooleanTruthy(bool truthy, const ValueOperand &operand)
+MacroAssemblerARMCompat::testBooleanTruthy(bool truthy, const ValueOperand &operand)
 {
     ma_tst(operand.payloadReg(), operand.payloadReg());
     return truthy ? NonZero : Zero;
 }
 
 Assembler::Condition
-MacroAssemblerARM::testDoubleTruthy(bool truthy, const FloatRegister &reg)
+MacroAssemblerARMCompat::testDoubleTruthy(bool truthy, const FloatRegister &reg)
 {
-    JS_NOT_REACHED("codegen for testDoubleTruthy NYI");
-    // need to do vfp code here.
-#if 0
-    xorpd(ScratchFloatReg, ScratchFloatReg);
-    ucomisd(ScratchFloatReg, reg);
-#endif
+    as_vcmpz(VFPRegister(reg));
+    as_vmrs(pc);
     return truthy ? NonZero : Zero;
+}
+
+// ARM says that all reads of pc will return 8 higher than the
+// address of the currently executing instruction.  This means we are
+// correctly storing the address of the instruction after the call
+// in the register.
+// Also ION is breaking the ARM EABI here (sort of). The ARM EABI
+// says that a function call should move the pc into the link register,
+// then branch to the function, and *sp is data that is owned by the caller,
+// not the callee.  The ION ABI says *sp should be the address that
+// we will return to when leaving this function
+void
+MacroAssemblerARM::ma_callIon(const Register r)
+{
+    // The stack is presently 8 byte aligned
+    // We want to decrement sp by 8, and write pc+8 into the new sp
+
+    as_dtr(IsStore, 32, PreIndex, pc, DTRAddr(sp, DtrOffImm(-8)));
+    as_blx(r);
+}
+void
+MacroAssemblerARM::ma_callIonNoPush(const Register r)
+{
+    as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
+    as_blx(r);
+}
+void
+MacroAssemblerARM::ma_callIonHalfPush(const Register r)
+{
+    ma_push(pc);
+    as_blx(r);
 }
 
 void
