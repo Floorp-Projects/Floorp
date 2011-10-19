@@ -62,7 +62,7 @@ ion::SplitCriticalEdges(MIRGenerator *gen, MIRGraph &graph)
                 continue;
 
             // Create a new block inheriting from the predecessor.
-            MBasicBlock *split = MBasicBlock::NewSplitEdge(gen, *block);
+            MBasicBlock *split = MBasicBlock::NewSplitEdge(graph, gen->info(), *block);
             graph.addBlock(split);
             split->end(MGoto::New(target));
 

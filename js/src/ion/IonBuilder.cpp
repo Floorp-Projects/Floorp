@@ -55,13 +55,13 @@
 using namespace js;
 using namespace js::ion;
 
-IonBuilder::IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
-                       MIRGraph &graph, TypeOracle *oracle)
-  : MIRGenerator(cx, temp, script, fun, graph),
-    script(script),
+IonBuilder::IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, TypeOracle *oracle,
+                       CompileInfo &info)
+  : MIRGenerator(cx, temp, graph, info),
+    script(info.script()),
     oracle(oracle)
 {
-    pc = info().startPC();
+    pc = info.startPC();
 }
 
 static inline int32
@@ -1835,7 +1835,7 @@ IonBuilder::jsop_compare(JSOp op)
 MBasicBlock *
 IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 {
-    MBasicBlock *block = MBasicBlock::New(this, predecessor, pc, MBasicBlock::NORMAL);
+    MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
     graph().addBlock(block);
     return block;
 }
@@ -1843,7 +1843,7 @@ IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 MBasicBlock *
 IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 {
-    MBasicBlock *block = MBasicBlock::NewPendingLoopHeader(this, predecessor, pc);
+    MBasicBlock *block = MBasicBlock::NewPendingLoopHeader(graph(), info(), predecessor, pc);
     graph().addBlock(block);
     return block;
 }

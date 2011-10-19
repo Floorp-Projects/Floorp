@@ -691,7 +691,7 @@ MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc)
 bool
 MResumePoint::init(MBasicBlock *block)
 {
-    operands_ = block->gen()->allocate<MDefinition *>(stackDepth());
+    operands_ = block->graph().allocate<MDefinition *>(stackDepth());
     if (!operands_)
         return false;
     return true;
