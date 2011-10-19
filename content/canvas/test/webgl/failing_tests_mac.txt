@@ -1,4 +1,6 @@
 conformance/canvas/buffer-preserve-test.html
+conformance/canvas/drawingbuffer-static-canvas-test.html
+conformance/canvas/drawingbuffer-test.html
 conformance/context/context-attributes-alpha-depth-stencil-antialias.html
 conformance/context/premultiplyalpha-test.html
 conformance/glsl/misc/glsl-function-nodes.html

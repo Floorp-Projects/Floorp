@@ -1054,9 +1054,6 @@ GLContextEGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
 bool
 GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
-    if (!IsOffscreenSizeAllowed(aNewSize))
-        return false;
-
     if (mIsPBuffer) {
         gfxIntSize pbsize(aNewSize);
 
@@ -1070,11 +1067,8 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
                                                  pbsize);
         if (!surface) {
             NS_WARNING("Failed to resize pbuffer");
-            return false;
+            return nsnull;
         }
-
-        if (!ResizeOffscreenFBO(pbsize, false))
-            return false;
 
         SetOffscreenSize(aNewSize, pbsize);
 
@@ -1120,9 +1114,6 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         if (!config) {
             return false;
         }
-        if (!ResizeOffscreenFBO(aNewSize, true))
-            return false;
-
         mThebesSurface = xsurface;
 
         return true;
@@ -1130,13 +1121,10 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 #endif
 
 #if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-    if (ResizeOffscreenPixmapSurface(aNewSize)) {
-        if (ResizeOffscreenFBO(aNewSize, true))
-            return true;
-    }
+    return ResizeOffscreenPixmapSurface(aNewSize);
 #endif
 
-    return ResizeOffscreenFBO(aNewSize, true);
+    return ResizeOffscreenFBO(aNewSize);
 }
 
 
@@ -2011,15 +1999,13 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
     nsTArray<EGLint> attribs(32);
     int attribAttempt = 0;
 
-    int tryDepthSize = (aFormat.depth > 0) ? 24 : 0;
-
 TRY_ATTRIBS_AGAIN:
     switch (attribAttempt) {
     case 0:
-        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, 8, tryDepthSize);
+        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, 8, 24);
         break;
     case 1:
-        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, tryDepthSize);
+        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, 24);
         break;
     case 2:
         FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, -1);
@@ -2251,38 +2237,14 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
     if (!sEGLLibrary.EnsureInitialized()) {
         return nsnull;
     }
-    
-    ContextFormat actualFormat(aFormat);
-    // actualFormat.samples = 0;
 
 #if defined(ANDROID) || defined(XP_WIN)
-    nsRefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateEGLPBufferOffscreenContext(aSize, actualFormat);
-
-    if (!glContext)
-        return nsnull;
-
-    if (!glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), false))
-        return nsnull;
- 
-     printf("GL Offscreen: EGL+PBuffer\n");
-     return glContext.forget();
-
+    return GLContextEGL::CreateEGLPBufferOffscreenContext(aSize, aFormat);
 #elif defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-    nsRefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateBasicEGLPixmapOffscreenContext(aSize, actualFormat);
-
-    if (!glContext)
-        return nsnull;
-
-    if (!glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true))
-        return nsnull;
-    
-    printf("GL Offscreen: EGL+Pixmap\n");
-    return glContext.forget();
+  return GLContextEGL::CreateBasicEGLPixmapOffscreenContext(aSize, aFormat);
 #elif defined(MOZ_X11)
     nsRefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateEGLPixmapOffscreenContext(aSize, actualFormat, true);
+        GLContextEGL::CreateEGLPixmapOffscreenContext(aSize, aFormat, true);
 
     if (!glContext) {
         return nsnull;
@@ -2292,7 +2254,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         // render from this
         return nsnull;
     }
-    if (!gUseBackingSurface && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true)) {
+    if (!gUseBackingSurface && !glContext->ResizeOffscreenFBO(aSize)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
         return nsnull;
