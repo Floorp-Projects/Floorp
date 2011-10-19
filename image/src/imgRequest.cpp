@@ -309,7 +309,10 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool 
   // have animation consumers.
   proxy->ClearAnimationConsumers();
 
-  mObservers.RemoveElement(proxy);
+  if (!mObservers.RemoveElement(proxy)) {
+    // Not one of our proxies; we're done
+    return NS_OK;
+  }
 
   // Let the status tracker do its thing before we potentially call Cancel()
   // below, because Cancel() may result in OnStopRequest being called back

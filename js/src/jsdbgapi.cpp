@@ -66,7 +66,7 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
-#include "frontend/CodeGenerator.h"
+#include "frontend/BytecodeGenerator.h"
 #include "frontend/Parser.h"
 #include "vm/Debugger.h"
 

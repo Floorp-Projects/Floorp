@@ -115,6 +115,7 @@
 #include "nsITransferable.h"
 #include "nsComputedDOMStyle.h"
 #include "nsTextEditUtils.h"
+#include "nsComputedDOMStyle.h"
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
@@ -3614,6 +3615,18 @@ nsEditor::IsTextInDirtyFrameVisible(nsIDOMNode *aNode)
   return true;
 }
 
+static bool
+IsElementVisible(nsIContent* aContent) {
+  mozilla::dom::Element* element = aContent->AsElement();
+  nsRefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContextForElementNoFlush(element,
+                                                         nsnull, nsnull);
+  if (styleContext) {
+    return styleContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_NONE;
+  }
+  return false;
+}
+
 bool 
 nsEditor::IsEditable(nsIDOMNode *aNode)
 {
@@ -3626,31 +3639,13 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content)
   {
-    nsIFrame *resultFrame = content->GetPrimaryFrame();
-    if (!resultFrame)   // if it has no frame, it is not editable
+    if (content->IsElement() &&
+        !IsElementVisible(content)) // If the element is invisible, it's not editable
       return false;
-    NS_ASSERTION(content->IsNodeOfType(nsINode::eTEXT) ||
-                 content->IsElement(),
-                 "frame for non element-or-text?");
     if (!content->IsNodeOfType(nsINode::eTEXT))
-      return true;  // not a text node; has a frame
+      return true;  // not a text node; not invisible
 
-    // test the textframe and all its non-fluid continuations
-    while (resultFrame) {
-      if (resultFrame->GetStateBits() & NS_FRAME_IS_DIRTY) // we can only trust width data for undirty frames
-      {
-        // In the past a comment said:
-        //   "assume all text nodes with dirty frames are editable"
-        // Nowadays we use a virtual function, that assumes TRUE
-        // in the simple editor world,
-        // and uses enhanced logic to find out in the HTML world.
-        return IsTextInDirtyFrameVisible(aNode);
-      }
-      if (resultFrame->HasAnyNoncollapsedCharacters()) {
-        return true;
-      }
-      resultFrame = resultFrame->GetNextContinuation();
-    }
+    return IsTextInDirtyFrameVisible(aNode);
   }
   return false;  // didn't pass any editability test
 }

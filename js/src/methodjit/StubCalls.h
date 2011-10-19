@@ -235,6 +235,9 @@ void JS_FASTCALL AnyFrameEpilogue(VMFrame &f);
 JSObject * JS_FASTCALL
 NewDenseUnallocatedArray(VMFrame &f, uint32 length);
 
+void JS_FASTCALL ArrayConcatTwoArrays(VMFrame &f);
+void JS_FASTCALL ArrayShift(VMFrame &f);
+
 } /* namespace stubs */
 
 /* 

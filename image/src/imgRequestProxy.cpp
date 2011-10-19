@@ -299,7 +299,13 @@ imgRequestProxy::DoCancel(nsresult status)
 /* void cancelAndForgetObserver (in nsresult aStatus); */
 NS_IMETHODIMP imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
 {
-  if (mCanceled)
+  // If mCanceled is true but mListener is non-null, that means
+  // someone called Cancel() on us but the imgCancelRunnable is still
+  // pending.  We still need to null out mListener before returning
+  // from this function in this case.  That means we want to do the
+  // RemoveProxy call right now, because we need to deliver the
+  // onStopRequest.
+  if (mCanceled && !mListener)
     return NS_ERROR_FAILURE;
 
   LOG_SCOPE(gImgLog, "imgRequestProxy::CancelAndForgetObserver");

@@ -1905,8 +1905,9 @@ nsGenericElement::GetScrollFrame(nsIFrame **aStyledFrame)
   }
 
   // menu frames implement GetScrollTargetFrame but we don't want
-  // to use it here.
-  if (frame->GetType() != nsGkAtoms::menuFrame) {
+  // to use it here.  Similar for comboboxes.
+  if (frame->GetType() != nsGkAtoms::menuFrame &&
+      frame->GetType() != nsGkAtoms::comboboxControlFrame) {
     nsIScrollableFrame *scrollFrame = frame->GetScrollTargetFrame();
     if (scrollFrame)
       return scrollFrame;

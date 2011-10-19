@@ -831,7 +831,7 @@ CloneLeftHandSide(JSParseNode *opn, JSTreeContext *tc);
  *       }
  *   }
  *
- * See frontend/CodeGenerator.h for JSTreeContext and its top*Stmt, decls, and
+ * See frontend/BytecodeGenerator.h for JSTreeContext and its top*Stmt, decls, and
  * lexdeps members.
  *
  * Notes:
