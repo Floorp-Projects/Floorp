@@ -131,7 +131,7 @@ nsIConstraintValidation::CheckValidity(bool* aValidity)
   nsCOMPtr<nsIContent> content = do_QueryInterface(this);
   NS_ASSERTION(content, "This class should be inherited by HTML elements only!");
 
-  return nsContentUtils::DispatchTrustedEvent(content->GetOwnerDoc(), content,
+  return nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
                                               NS_LITERAL_STRING("invalid"),
                                               false, true);
 }

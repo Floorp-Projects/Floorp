@@ -166,16 +166,14 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
   viewManager->SetViewFloating(ourView, true);
 
   mPopupType = ePopupTypePanel;
-  nsIDocument* doc = aContent->GetOwnerDoc();
-  if (doc) {
-    PRInt32 namespaceID;
-    nsCOMPtr<nsIAtom> tag = doc->BindingManager()->ResolveTag(aContent, &namespaceID);
-    if (namespaceID == kNameSpaceID_XUL) {
-      if (tag == nsGkAtoms::menupopup || tag == nsGkAtoms::popup)
-        mPopupType = ePopupTypeMenu;
-      else if (tag == nsGkAtoms::tooltip)
-        mPopupType = ePopupTypeTooltip;
-    }
+  nsIDocument* doc = aContent->OwnerDoc();
+  PRInt32 namespaceID;
+  nsCOMPtr<nsIAtom> tag = doc->BindingManager()->ResolveTag(aContent, &namespaceID);
+  if (namespaceID == kNameSpaceID_XUL) {
+    if (tag == nsGkAtoms::menupopup || tag == nsGkAtoms::popup)
+      mPopupType = ePopupTypeMenu;
+    else if (tag == nsGkAtoms::tooltip)
+      mPopupType = ePopupTypeTooltip;
   }
 
   if (mPopupType == ePopupTypePanel &&

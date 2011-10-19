@@ -318,8 +318,8 @@ nsSVGUseElement::CreateAnonymousContent()
   nsCOMPtr<nsIDOMNode> newnode;
   nsCOMArray<nsINode> unused;
   nsNodeInfoManager* nodeInfoManager =
-    targetContent->GetOwnerDoc() == GetOwnerDoc() ?
-      nsnull : GetOwnerDoc()->NodeInfoManager();
+    targetContent->OwnerDoc() == OwnerDoc() ?
+      nsnull : OwnerDoc()->NodeInfoManager();
   nsNodeUtils::Clone(targetContent, true, nodeInfoManager, unused,
                      getter_AddRefs(newnode));
 

@@ -443,7 +443,7 @@ void nsMenuX::MenuConstruct()
     nsCOMPtr<nsIXPConnect> xpconnect =
       do_GetService(nsIXPConnect::GetCID(), &rv);
     if (NS_SUCCEEDED(rv)) {
-      nsIDocument* ownerDoc = menuPopup->GetOwnerDoc();
+      nsIDocument* ownerDoc = menuPopup->OwnerDoc();
       nsIScriptGlobalObject* sgo;
       if (ownerDoc && (sgo = ownerDoc->GetScriptGlobalObject())) {
         nsCOMPtr<nsIScriptContext> scriptContext = sgo->GetContext();

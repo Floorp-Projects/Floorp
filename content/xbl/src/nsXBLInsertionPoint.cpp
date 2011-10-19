@@ -52,7 +52,7 @@ nsXBLInsertionPoint::nsXBLInsertionPoint(nsIContent* aParentElement,
 nsXBLInsertionPoint::~nsXBLInsertionPoint()
 {
   if (mDefaultContent) {
-    nsXBLBinding::UninstallAnonymousContent(mDefaultContent->GetOwnerDoc(),
+    nsXBLBinding::UninstallAnonymousContent(mDefaultContent->OwnerDoc(),
                                             mDefaultContent);
   }
 }
@@ -62,7 +62,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLInsertionPoint)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mElements)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDefaultContentTemplate)
   if (tmp->mDefaultContent) {
-    nsXBLBinding::UninstallAnonymousContent(tmp->mDefaultContent->GetOwnerDoc(),
+    nsXBLBinding::UninstallAnonymousContent(tmp->mDefaultContent->OwnerDoc(),
                                             tmp->mDefaultContent);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDefaultContent)
@@ -113,6 +113,6 @@ nsXBLInsertionPoint::UnbindDefaultContent()
   }
 
   // Undo InstallAnonymousContent.
-  nsXBLBinding::UninstallAnonymousContent(mDefaultContent->GetOwnerDoc(),
+  nsXBLBinding::UninstallAnonymousContent(mDefaultContent->OwnerDoc(),
                                           mDefaultContent);
 }

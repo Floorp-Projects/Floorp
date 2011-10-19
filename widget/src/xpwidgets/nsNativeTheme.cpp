@@ -123,12 +123,10 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
     return flags;
 #endif    
 #if defined(XP_MACOSX) || defined(XP_WIN)
-  nsIDocument* doc = aFrame->GetContent()->GetOwnerDoc();
-  if (doc) {
-    nsPIDOMWindow* window = doc->GetWindow();
-    if (window && !window->ShouldShowFocusRing())
-      flags &= ~NS_EVENT_STATE_FOCUS;
-  }
+  nsIDocument* doc = aFrame->GetContent()->OwnerDoc();
+  nsPIDOMWindow* window = doc->GetWindow();
+  if (window && !window->ShouldShowFocusRing())
+    flags &= ~NS_EVENT_STATE_FOCUS;
 #endif
   
   return flags;

@@ -201,7 +201,7 @@ nsHTMLRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
   if (form) {
     form->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(inputs));
   } else {
-    nsIDocument* doc = mContent->GetOwnerDoc();
+    nsIDocument* doc = mContent->OwnerDoc();
     nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(doc));
     if (document)
       document->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(inputs));
