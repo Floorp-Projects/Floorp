@@ -259,7 +259,10 @@ GLContextProviderOSMesa::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    nsRefPtr<GLContextOSMesa> glContext = new GLContextOSMesa(aFormat);
+    ContextFormat actualFormat(aFormat);
+    actualFormat.samples = 0;
+
+    nsRefPtr<GLContextOSMesa> glContext = new GLContextOSMesa(actualFormat);
 
     if (!glContext->Init(aSize))
     {

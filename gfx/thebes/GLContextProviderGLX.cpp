@@ -1237,9 +1237,11 @@ already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
                                       const ContextFormat& aFormat)
 {
+    ContextFormat actualFormat(aFormat);
+    actualFormat.samples = 0;
 
     nsRefPtr<GLContextGLX> glContext =
-        CreateOffscreenPixmapContext(aSize, aFormat, true);
+        CreateOffscreenPixmapContext(aSize, actualFormat, true);
 
     if (!glContext) {
         return nsnull;
