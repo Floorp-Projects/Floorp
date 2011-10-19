@@ -2240,14 +2240,17 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
     if (!sEGLLibrary.EnsureInitialized()) {
         return nsnull;
     }
+    
+    ContextFormat actualFormat(aFormat);
+    actualFormat.samples = 0;
 
 #if defined(ANDROID) || defined(XP_WIN)
-    return GLContextEGL::CreateEGLPBufferOffscreenContext(aSize, aFormat);
+    return GLContextEGL::CreateEGLPBufferOffscreenContext(aSize, actualFormat);
 #elif defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-  return GLContextEGL::CreateBasicEGLPixmapOffscreenContext(aSize, aFormat);
+    return GLContextEGL::CreateBasicEGLPixmapOffscreenContext(aSize, actualFormat);
 #elif defined(MOZ_X11)
     nsRefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateEGLPixmapOffscreenContext(aSize, aFormat, true);
+        GLContextEGL::CreateEGLPixmapOffscreenContext(aSize, actualFormat, true);
 
     if (!glContext) {
         return nsnull;
