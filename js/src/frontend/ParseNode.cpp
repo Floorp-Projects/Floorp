@@ -59,6 +59,8 @@ JS_STATIC_ASSERT(pn_offsetof(pn_link) == pn_offsetof(dn_uses));
 
 #undef pn_offsetof
 
+namespace js {
+
 void
 ParseNode::become(ParseNode *pn2)
 {
@@ -111,7 +113,6 @@ ParseNode::clear()
     pn_parens = false;
 }
 
-
 bool
 FunctionBox::joinable() const
 {
@@ -150,8 +151,6 @@ FunctionBox::shouldUnbrand(uintN methods, uintN slowMethods) const
     }
     return false;
 }
-
-namespace js {
 
 /* Add |node| to |parser|'s free node list. */
 void
@@ -214,8 +213,6 @@ class NodeStack {
   private:
     ParseNode *top;
 };
-
-} /* namespace js */
 
 /*
  * Push the children of |pn| on |stack|. Return true if |pn| itself could be
@@ -299,8 +296,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
     return true;
 }
 
-namespace js {
-
 /*
  * Prepare |pn| to be mutated in place into a new kind of node. Recycle all
  * |pn|'s recyclable children (but not |pn| itself!), and disconnect it from
@@ -374,32 +369,23 @@ RecycleTree(ParseNode *pn, TreeContext *tc)
 }
 
 /*
- * Allocate a ParseNode from tc's node freelist or, failing that, from
+ * Allocate a ParseNode from parser's node freelist or, failing that, from
  * cx's temporary arena.
  */
-ParseNode *
-NewOrRecycledNode(TreeContext *tc)
+void *
+AllocNodeUninitialized(Parser *parser)
 {
-    ParseNode *pn = tc->parser->nodeList;
-    if (!pn) {
-        JSContext *cx = tc->parser->context;
-        pn = (ParseNode *) cx->tempLifoAlloc().alloc(sizeof (ParseNode));
-        if (!pn)
-            js_ReportOutOfMemory(cx);
-    } else {
-        tc->parser->nodeList = pn->pn_next;
+    if (ParseNode *pn = parser->nodeList) {
+        parser->nodeList = pn->pn_next;
+        return pn;
     }
 
-    if (pn) {
-        pn->setUsed(false);
-        pn->setDefn(false);
-        memset(&pn->pn_u, 0, sizeof pn->pn_u);
-        pn->pn_next = NULL;
-    }
-    return pn;
+    JSContext *cx = parser->context;
+    void *p = cx->tempLifoAlloc().alloc(sizeof (ParseNode));
+    if (!p)
+        js_ReportOutOfMemory(cx);
+    return p;
 }
-
-} /* namespace js */
 
 /* used only by static create methods of subclasses */
 
@@ -414,12 +400,10 @@ ParseNode *
 ParseNode::create(ParseNodeArity arity, TokenKind type, JSOp op, const TokenPos &pos,
                   TreeContext *tc)
 {
-    ParseNode *pn = NewOrRecycledNode(tc);
-    if (!pn)
+    void *p = AllocNodeUninitialized(tc->parser);
+    if (!p)
         return NULL;
-    pn->init(type, op, arity);
-    pn->pn_pos = pos;
-    return pn;
+    return new(p) ParseNode(type, op, arity, pos);
 }
 
 ParseNode *
@@ -481,18 +465,8 @@ ParseNode::newBinaryOrAppend(TokenKind tt, JSOp op, ParseNode *left, ParseNode *
         return left;
     }
 
-    ParseNode *pn = NewOrRecycledNode(tc);
-    if (!pn)
-        return NULL;
-    pn->init(tt, op, PN_BINARY);
-    pn->pn_pos.begin = left->pn_pos.begin;
-    pn->pn_pos.end = right->pn_pos.end;
-    pn->pn_left = left;
-    pn->pn_right = right;
-    return pn;
+    return tc->parser->new_<BinaryNode>(tt, op, left, right);
 }
-
-namespace js {
 
 NameNode *
 NameNode::create(JSAtom *atom, TreeContext *tc)
@@ -510,6 +484,8 @@ NameNode::create(JSAtom *atom, TreeContext *tc)
 const char js_argument_str[] = "argument";
 const char js_variable_str[] = "variable";
 const char js_unknown_str[]  = "unknown";
+
+namespace js {
 
 const char *
 Definition::kindString(Kind kind)
@@ -534,16 +510,13 @@ CloneParseTree(ParseNode *opn, TreeContext *tc)
 {
     JS_CHECK_RECURSION(tc->parser->context, return NULL);
 
-    ParseNode *pn = NewOrRecycledNode(tc);
+    ParseNode *pn = tc->parser->new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
+                                                opn->pn_pos);
     if (!pn)
         return NULL;
-    pn->setKind(opn->getKind());
-    pn->setOp(opn->getOp());
-    pn->setUsed(opn->isUsed());
-    pn->setDefn(opn->isDefn());
-    pn->setArity(opn->getArity());
     pn->setInParens(opn->isInParens());
-    pn->pn_pos = opn->pn_pos;
+    pn->setDefn(opn->isDefn());
+    pn->setUsed(opn->isUsed());
 
     switch (pn->getArity()) {
 #define NULLCHECK(e)    JS_BEGIN_MACRO if (!(e)) return NULL; JS_END_MACRO
@@ -632,8 +605,6 @@ CloneParseTree(ParseNode *opn, TreeContext *tc)
 
 #endif /* JS_HAS_DESTRUCTURING */
 
-namespace js {
-
 /*
  * Used by Parser::forStatement and comprehensionTail to clone the TARGET in
  *   for (var/const/let TARGET in EXPR)
@@ -647,16 +618,13 @@ namespace js {
 ParseNode *
 CloneLeftHandSide(ParseNode *opn, TreeContext *tc)
 {
-    ParseNode *pn = NewOrRecycledNode(tc);
+    ParseNode *pn = tc->parser->new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
+                                                opn->pn_pos);
     if (!pn)
         return NULL;
-    pn->setKind(opn->getKind());
-    pn->setOp(opn->getOp());
-    pn->setUsed(opn->isUsed());
-    pn->setDefn(opn->isDefn());
-    pn->setArity(opn->getArity());
     pn->setInParens(opn->isInParens());
-    pn->pn_pos = opn->pn_pos;
+    pn->setDefn(opn->isDefn());
+    pn->setUsed(opn->isUsed());
 
 #if JS_HAS_DESTRUCTURING
     if (opn->isArity(PN_LIST)) {
@@ -674,7 +642,8 @@ CloneLeftHandSide(ParseNode *opn, TreeContext *tc)
                 ParseNode *target = CloneLeftHandSide(opn2->pn_right, tc);
                 if (!target)
                     return NULL;
-                pn2 = BinaryNode::create(TOK_COLON, JSOP_INITPROP, opn2->pn_pos, tag, target, tc);
+
+                pn2 = tc->parser->new_<BinaryNode>(TOK_COLON, JSOP_INITPROP, opn2->pn_pos, tag, target);
             } else if (opn2->isArity(PN_NULLARY)) {
                 JS_ASSERT(opn2->isKind(TOK_COMMA));
                 pn2 = CloneParseTree(opn2, tc);

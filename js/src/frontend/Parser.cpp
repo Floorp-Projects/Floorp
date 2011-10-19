@@ -788,10 +788,9 @@ ForgetUse(ParseNode *pn)
 static ParseNode *
 MakeAssignment(ParseNode *pn, ParseNode *rhs, TreeContext *tc)
 {
-    ParseNode *lhs = NewOrRecycledNode(tc);
+    ParseNode *lhs = tc->parser->new_<ParseNode>(*pn);
     if (!lhs)
         return NULL;
-    *lhs = *pn;
 
     if (pn->isUsed()) {
         Definition *dn = pn->pn_lexdef;
@@ -5977,7 +5976,7 @@ Parser::comprehensionTail(ParseNode *kid, uintN blockid, bool isGenexp,
         if (!pn3)
             return NULL;
 
-        pn2->pn_left = TernaryNode::create(TOK_IN, JSOP_NOP, vars, pn3, pn4, tc);
+        pn2->pn_left = new_<TernaryNode>(TOK_IN, JSOP_NOP, vars, pn3, pn4);
         if (!pn2->pn_left)
             return NULL;
         *pnp = pn2;
@@ -6218,16 +6217,9 @@ Parser::memberExpr(JSBool allowCallSyntax)
             return NULL;
 
         if (pn->isKind(TOK_ANYNAME) || pn->isKind(TOK_AT) || pn->isKind(TOK_DBLCOLON)) {
-            pn2 = NewOrRecycledNode(tc);
-            if (!pn2)
+            pn = new_<UnaryNode>(TOK_UNARYOP, JSOP_XMLNAME, pn->pn_pos, pn);
+            if (!pn)
                 return NULL;
-            pn2->setKind(TOK_UNARYOP);
-            pn2->pn_pos = pn->pn_pos;
-            pn2->setOp(JSOP_XMLNAME);
-            pn2->setArity(PN_UNARY);
-            pn2->setInParens(false);
-            pn2->pn_kid = pn;
-            pn = pn2;
         }
     }
 
