@@ -1077,9 +1077,6 @@ NewSrcNote3(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset
 jssrcnote *
 AddToSrcNoteDelta(JSContext *cx, CodeGenerator *cg, jssrcnote *sn, ptrdiff_t delta);
 
-JSBool
-SetSrcNoteOffset(JSContext *cx, CodeGenerator *cg, uintN index, uintN which, ptrdiff_t offset);
-
 /*
  * Finish taking source notes in cx's notePool, copying final notes to the new
  * stable store allocated by the caller and passed in via notes. Return false
