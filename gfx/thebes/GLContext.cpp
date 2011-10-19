@@ -993,11 +993,11 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 
     MakeCurrent();
 
-    bool alpha = mCreationFormat.alpha > 0;
-    int depth = mCreationFormat.depth;
-    int stencil = mCreationFormat.stencil;
+    const bool alpha = mCreationFormat.alpha > 0;
+    const int depth = mCreationFormat.depth;
+    const int stencil = mCreationFormat.stencil;
 
-    bool firstTime = (mOffscreenFBO == 0);
+    const bool firstTime = (mOffscreenFBO == 0);
 
     GLuint curBoundTexture = 0;
     GLuint curBoundRenderbuffer = 0;
@@ -1005,44 +1005,44 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 
     GLint viewport[4];
 
-    bool useDepthStencil =
-        !mIsGLES2 || IsExtensionSupported(OES_packed_depth_stencil);
+    const bool useDepthStencil =
+            !mIsGLES2 || IsExtensionSupported(OES_packed_depth_stencil);
 
     // save a few things for later restoring
-    fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*) &curBoundTexture);
     fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*) &curBoundFramebuffer);
+    fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*) &curBoundTexture);
     fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, (GLint*) &curBoundRenderbuffer);
     fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
 
-    // the context format of what we're defining;
-    // for some reason, UpdateActualFormat isn't working with a bound FBO.
+    // the context format of what we're defining
+    // This becomes mActualFormat on success
     ContextFormat cf;
 
-    // If this is the first time we're going through this, we need
-    // to create the objects we'll use.  Otherwise, just bind them.
-    if (firstTime) {
-        fGenTextures(1, &mOffscreenTexture);
-        fBindTexture(LOCAL_GL_TEXTURE_2D, mOffscreenTexture);
-        fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-        fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+    // Create everything we need for the resize, so if it fails, we haven't broken anything
+    // If successful, these new resized objects will replace their associated member vars in GLContext
+    GLuint newOffscreenFBO = 0;
+    GLuint newOffscreenTexture = 0;
+    GLuint newOffscreenDepthRB = 0;
+    GLuint newOffscreenStencilRB = 0;
 
-        fGenFramebuffers(1, &mOffscreenFBO);
-        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mOffscreenFBO);
+    fGenFramebuffers(1, &newOffscreenFBO);
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, newOffscreenFBO);
 
-        if (depth && stencil && useDepthStencil) {
-            fGenRenderbuffers(1, &mOffscreenDepthRB);
-        } else {
-            if (depth) {
-                fGenRenderbuffers(1, &mOffscreenDepthRB);
-            }
+    fGenTextures(1, &newOffscreenTexture);
+    fBindTexture(LOCAL_GL_TEXTURE_2D, newOffscreenTexture);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
 
-            if (stencil) {
-                fGenRenderbuffers(1, &mOffscreenStencilRB);
-            }
-        }
+    if (depth && stencil && useDepthStencil) {
+        fGenRenderbuffers(1, &newOffscreenDepthRB);
     } else {
-        fBindTexture(LOCAL_GL_TEXTURE_2D, mOffscreenTexture);
-        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mOffscreenFBO);
+        if (depth) {
+            fGenRenderbuffers(1, &newOffscreenDepthRB);
+        }
+
+        if (stencil) {
+            fGenRenderbuffers(1, &newOffscreenStencilRB);
+        }
     }
 
     // resize the FBO components
@@ -1083,7 +1083,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     }
 
     if (depth && stencil && useDepthStencil) {
-        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenDepthRB);
+        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, newOffscreenDepthRB);
         fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
                              LOCAL_GL_DEPTH24_STENCIL8,
                              aSize.width, aSize.height);
@@ -1108,13 +1108,13 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
                 cf.depth = 24;
             }
 
-            fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenDepthRB);
+            fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, newOffscreenDepthRB);
             fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, depthType,
                                  aSize.width, aSize.height);
         }
 
         if (stencil) {
-            fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenStencilRB);
+            fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, newOffscreenStencilRB);
             fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
                                  LOCAL_GL_STENCIL_INDEX8,
                                  aSize.width, aSize.height);
@@ -1122,38 +1122,35 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
         }
     }
 
-    // Now assemble the FBO, if we're creating one
-    // for the first time.
-    if (firstTime) {
-        fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
-                              LOCAL_GL_COLOR_ATTACHMENT0,
-                              LOCAL_GL_TEXTURE_2D,
-                              mOffscreenTexture,
-                              0);
+    // Now assemble the FBO
+    fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                          LOCAL_GL_COLOR_ATTACHMENT0,
+                          LOCAL_GL_TEXTURE_2D,
+                          newOffscreenTexture,
+                          0);
 
-        if (depth && stencil && useDepthStencil) {
+    if (depth && stencil && useDepthStencil) {
+        fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                 LOCAL_GL_DEPTH_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER,
+                                 newOffscreenDepthRB);
+        fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                 LOCAL_GL_STENCIL_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER,
+                                 newOffscreenDepthRB);
+    } else {
+        if (depth) {
             fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                      LOCAL_GL_DEPTH_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER,
-                                     mOffscreenDepthRB);
+                                     newOffscreenDepthRB);
+        }
+
+        if (stencil) {
             fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                      LOCAL_GL_STENCIL_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER,
-                                     mOffscreenDepthRB);
-        } else {
-            if (depth) {
-                fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
-                                         LOCAL_GL_DEPTH_ATTACHMENT,
-                                         LOCAL_GL_RENDERBUFFER,
-                                         mOffscreenDepthRB);
-            }
-
-            if (stencil) {
-                fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
-                                         LOCAL_GL_STENCIL_ATTACHMENT,
-                                         LOCAL_GL_RENDERBUFFER,
-                                         mOffscreenStencilRB);
-            }
+                                     newOffscreenStencilRB);
         }
     }
 
@@ -1161,24 +1158,56 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     GLenum status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         NS_WARNING("Error resizing offscreen framebuffer -- framebuffer not complete");
+
+        // Clean up the mess
+        fDeleteFramebuffers(1, &newOffscreenFBO);
+        fDeleteTextures(1, &newOffscreenTexture);
+        fDeleteRenderbuffers(1, &newOffscreenDepthRB);
+        fDeleteRenderbuffers(1, &newOffscreenStencilRB);
+
+        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, curBoundFramebuffer);
+        fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
+        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, curBoundRenderbuffer);
+        fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
         return false;
     }
+
+    // Success, so delete the old and busted
+    fDeleteFramebuffers(1, &mOffscreenFBO);
+    fDeleteTextures(1, &mOffscreenTexture);
+    fDeleteRenderbuffers(1, &mOffscreenDepthRB);
+    fDeleteRenderbuffers(1, &mOffscreenStencilRB);
+
+    // Update currently bound references if we're changing what they were point to
+    // This way we don't rebind to old buffers when we're done here
+    if (curBoundFramebuffer == mOffscreenFBO)
+        curBoundFramebuffer = newOffscreenFBO;
+    if (curBoundTexture == mOffscreenTexture)
+        curBoundTexture = newOffscreenTexture;
+    if (curBoundRenderbuffer == mOffscreenDepthRB)
+        curBoundRenderbuffer = newOffscreenDepthRB;
+    else if (curBoundRenderbuffer == mOffscreenStencilRB)
+        curBoundRenderbuffer = newOffscreenStencilRB;
+
+    // Replace with the new hotness
+    mOffscreenFBO = newOffscreenFBO;
+    mOffscreenTexture = newOffscreenTexture;
+    mOffscreenDepthRB = newOffscreenDepthRB;
+    mOffscreenStencilRB = newOffscreenStencilRB;
 
     mOffscreenSize = aSize;
     mOffscreenActualSize = aSize;
 
-    if (firstTime) {
-        // UpdateActualFormat() doesn't work for some reason, with a
-        // FBO bound, even though it should.
-        //UpdateActualFormat();
-        mActualFormat = cf;
+    mActualFormat = cf;
 
 #ifdef DEBUG
+    if (mDebugMode) {
         printf_stderr("Created offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d\n",
                       mActualFormat.red, mActualFormat.green, mActualFormat.blue, mActualFormat.alpha,
                       mActualFormat.depth, mActualFormat.stencil);
-#endif
     }
+#endif
 
     // We're good, and the framebuffer is already attached, so let's
     // clear out our new framebuffer; otherwise we'll end up displaying
@@ -1187,12 +1216,13 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     fViewport(0, 0, aSize.width, aSize.height);
 
     // Clear the new framebuffer with the full viewport
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mOffscreenFBO);
     ClearSafely();
 
     // Ok, now restore the GL state back to what it was before the resize took place.
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, curBoundFramebuffer);
     fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
     fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, curBoundRenderbuffer);
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, curBoundFramebuffer);
 
     // -don't- restore the viewport the first time through this, since
     // the previous one isn't valid.
