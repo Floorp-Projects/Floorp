@@ -48,6 +48,8 @@
 
 #include "prenv.h"
 
+#include "mozilla/Preferences.h"
+
 namespace mozilla {
 namespace gl {
 
@@ -616,7 +618,10 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
 
     // Always try to create a pbuffer context first, because we
     // want the context isolation.
-    if (sWGLLibrary.fCreatePbuffer &&
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), nsnull);
+    const bool preferFBOs = Preferences::GetBool("wgl.prefer-fbo", false);
+    if (!preferFBOs &&
+        sWGLLibrary.fCreatePbuffer &&
         sWGLLibrary.fChoosePixelFormat)
     {
         glContext = CreatePBufferOffscreenContext(aSize, aFormat);
