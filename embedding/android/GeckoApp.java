@@ -406,7 +406,8 @@ abstract public class GeckoApp
         Log.i(LOG_FILE_NAME, "pleaseKillMe");
         if (surfaceView != null)
             surfaceView.saveLast(true);
-        System.exit(0);
+        GeckoAppShell.nativeQuit();
+        finish();
     }
 
     void handleLocationChange(final int tabId, final String uri) {
