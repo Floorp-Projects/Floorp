@@ -65,6 +65,6 @@ class nsIFile;
 NS_HIDDEN_(nsresult) ProcessUpdates(nsIFile *greDir, nsIFile *appDir,
                                     nsIFile *updRootDir,
                                     int argc, char **argv,
-                                    const char *&appVersion);
+                                    const char *appVersion);
 
 #endif  // nsUpdateDriver_h__
