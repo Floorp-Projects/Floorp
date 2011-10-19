@@ -80,8 +80,13 @@ function SI_checkDefaultStyles()
 
 function propertyVisible(aName)
 {
+  info("Checking property visibility for " + aName);
   let propertyViews = stylePanel.cssHtmlTree.propertyViews;
-  return propertyViews[aName].className == "property-view";
+  for each (let propView in propertyViews) {
+    if (propView.name == aName) {
+      return propView.className == "property-view";
+    }
+  }
 }
 
 function finishUp()
