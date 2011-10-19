@@ -8,7 +8,11 @@
     <item android:id="@+id/bookmarks"
           android:title="@string/bookmarks"
           android:showAsAction="ifRoom"/>
- 
+
+    <item android:id="@+id/share"
+          android:icon="@drawable/share"
+          android:title="@string/share" /> 
+
     <item android:id="@+id/show_tabs"
           android:title="@string/tabs"
           android:showAsAction="ifRoom"/>
