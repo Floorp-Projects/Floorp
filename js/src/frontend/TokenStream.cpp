@@ -451,8 +451,7 @@ TokenStream::TokenBuf::findEOL()
 }
 
 bool
-TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber,
-                                        va_list ap)
+TokenStream::reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorNumber, va_list ap)
 {
     JSErrorReport report;
     char *message;
@@ -579,7 +578,7 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
 }
 
 bool
-js::ReportStrictModeError(JSContext *cx, TokenStream *ts, JSTreeContext *tc, JSParseNode *pn,
+js::ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn,
                           uintN errorNumber, ...)
 {
     JS_ASSERT(ts || tc);
@@ -604,13 +603,13 @@ js::ReportStrictModeError(JSContext *cx, TokenStream *ts, JSTreeContext *tc, JSP
 }
 
 bool
-js::ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, JSParseNode *pn,
-                             uintN flags, uintN errorNumber, ...)
+js::ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, uintN flags,
+                             uintN errorNumber, ...)
 {
     va_list ap;
 
     /*
-     * We don't accept a JSTreeContext argument, so we can't implement
+     * We don't accept a TreeContext argument, so we can't implement
      * JSREPORT_STRICT_MODE_ERROR here.  Use ReportStrictModeError instead,
      * or do the checks in the caller and pass plain old JSREPORT_ERROR.
      */

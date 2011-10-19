@@ -1498,7 +1498,7 @@ public:
         ptrdiff_t nextOffset;
         while ((nextOffset = offset + SN_DELTA(sn)) <= relpc && !SN_IS_TERMINATOR(sn)) {
             offset = nextOffset;
-            JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+            SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
             if (type == SRC_SETLINE || type == SRC_NEWLINE) {
                 if (type == SRC_SETLINE)
                     lineno = js_GetSrcNoteOffset(sn, 0);
