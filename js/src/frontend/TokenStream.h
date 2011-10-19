@@ -417,7 +417,7 @@ class TokenStream
     bool hasOctalCharacterEscape() const { return flags & TSF_OCTAL_CHAR; }
 
     /* Mutators. */
-    bool reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
+    bool reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
     void mungeCurrentToken(TokenKind newKind) { tokens[cursor].type = newKind; }
     void mungeCurrentToken(JSOp newOp) { tokens[cursor].t_op = newOp; }
     void mungeCurrentToken(TokenKind newKind, JSOp newOp) {
@@ -757,7 +757,7 @@ namespace js {
  * Otherwise use ts, which must not be null.
  */
 bool
-ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, JSParseNode *pn, uintN flags,
+ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, uintN flags,
                          uintN errorNumber, ...);
 
 /*
@@ -770,7 +770,7 @@ ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, JSParseNode *pn, uintN 
  * One could have ReportCompileErrorNumber recognize the
  * JSREPORT_STRICT_MODE_ERROR flag instead of having a separate function
  * like this one.  However, the strict mode code flag we need to test is
- * in the JSTreeContext structure for that code; we would have to change
+ * in the TreeContext structure for that code; we would have to change
  * the ~120 ReportCompileErrorNumber calls to pass the additional
  * argument, even though many of those sites would never use it.  Using
  * ts's TSF_STRICT_MODE_CODE flag instead of tc's would be brittle: at some
@@ -778,7 +778,7 @@ ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, JSParseNode *pn, uintN 
  * error.
  */
 bool
-ReportStrictModeError(JSContext *cx, TokenStream *ts, JSTreeContext *tc, JSParseNode *pn,
+ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn,
                       uintN errorNumber, ...);
 
 } /* namespace js */

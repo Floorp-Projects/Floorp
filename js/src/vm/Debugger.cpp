@@ -2027,7 +2027,7 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
          * and including the current offset.
          */
         while (!SN_IS_TERMINATOR(sn) && snpc <= frontPC()) {
-            JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+            SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
             if (type == SRC_SETLINE)
                 lineno = size_t(js_GetSrcNoteOffset(sn, 0));
             else if (type == SRC_NEWLINE)

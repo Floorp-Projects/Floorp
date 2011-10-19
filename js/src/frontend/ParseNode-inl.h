@@ -44,11 +44,11 @@
 #include "frontend/BytecodeGenerator.h"
 #include "frontend/TokenStream.h"
 
-inline bool
-JSParseNode::isConstant()
-{
-    using namespace js;
+namespace js {
 
+inline bool
+ParseNode::isConstant()
+{
     switch (pn_type) {
       case TOK_NUMBER:
       case TOK_STRING:
@@ -70,10 +70,8 @@ JSParseNode::isConstant()
     }
 }
 
-namespace js {
-
 inline void
-NameNode::initCommon(JSTreeContext *tc)
+NameNode::initCommon(TreeContext *tc)
 {
     pn_expr = NULL;
     pn_cookie.makeFree();
