@@ -59,8 +59,10 @@ struct AudioTrack {
   jclass    class;
   jmethodID constructor;
   jmethodID flush;
+  jmethodID getminbufsz;
   jmethodID pause;
   jmethodID play;
+  jmethodID release;
   jmethodID setvol;
   jmethodID stop;
   jmethodID write;
@@ -105,6 +107,7 @@ struct sa_stream {
   int64_t timePlaying;
   int64_t amountWritten;
   unsigned int bufferSize;
+  unsigned int minBufferSize;
 
   jclass at_class;
 };
@@ -120,8 +123,10 @@ init_jni_bindings(JNIEnv *jenv) {
                                              "android/media/AudioTrack"));
   at.constructor = (*jenv)->GetMethodID(jenv, class, "<init>", "(IIIIII)V");
   at.flush       = (*jenv)->GetMethodID(jenv, class, "flush", "()V");
+  at.getminbufsz = (*jenv)->GetStaticMethodID(jenv, class, "getMinBufferSize", "(III)I");
   at.pause       = (*jenv)->GetMethodID(jenv, class, "pause", "()V");
   at.play        = (*jenv)->GetMethodID(jenv, class, "play",  "()V");
+  at.release     = (*jenv)->GetMethodID(jenv, class, "release",  "()V");
   at.setvol      = (*jenv)->GetMethodID(jenv, class, "setStereoVolume",  "(FF)I");
   at.stop        = (*jenv)->GetMethodID(jenv, class, "stop",  "()V");
   at.write       = (*jenv)->GetMethodID(jenv, class, "write", "([BII)I");
@@ -181,7 +186,8 @@ sa_stream_create_pcm(
   s->timePlaying = 0;
   s->amountWritten = 0;
 
-  s->bufferSize = rate * channels;
+  s->bufferSize = 0;
+  s->minBufferSize = 0;
 
   *_s = s;
   return SA_SUCCESS;
@@ -199,8 +205,9 @@ sa_stream_open(sa_stream_t *s) {
   }
 
   JNIEnv *jenv = GetJNIForThread();
-  if (!jenv)
+  if (!jenv) {
     return SA_ERROR_NO_DEVICE;
+  }
 
   if ((*jenv)->PushLocalFrame(jenv, 4)) {
     return SA_ERROR_OOM;
@@ -210,6 +217,21 @@ sa_stream_open(sa_stream_t *s) {
 
   int32_t chanConfig = s->channels == 1 ?
     CHANNEL_OUT_MONO : CHANNEL_OUT_STEREO;
+
+  jint minsz = (*jenv)->CallStaticIntMethod(jenv, s->at_class, at.getminbufsz,
+                                            s->rate, chanConfig, ENCODING_PCM_16BIT);
+  if (minsz <= 0) {
+    (*jenv)->DeleteGlobalRef(jenv, s->at_class);
+    (*jenv)->PopLocalFrame(jenv, NULL);
+    return SA_ERROR_INVALID;
+  }
+
+  s->minBufferSize = minsz;
+
+  s->bufferSize = s->rate * s->channels * sizeof(int16_t);
+  if (s->bufferSize < s->minBufferSize) {
+    s->bufferSize = s->minBufferSize;
+  }
 
   jobject obj =
     (*jenv)->NewObject(jenv, s->at_class, at.constructor,
@@ -238,7 +260,7 @@ sa_stream_open(sa_stream_t *s) {
   s->output_unit = (*jenv)->NewGlobalRef(jenv, obj);
   (*jenv)->PopLocalFrame(jenv, NULL);
 
-  ALOG("%x - New stream %d %d", s,  s->rate, s->channels);
+  ALOG("%p - New stream %u %u bsz=%u min=%u", s,  s->rate, s->channels, s->bufferSize, s->minBufferSize);
   return SA_SUCCESS;
 }
 
@@ -251,14 +273,18 @@ sa_stream_destroy(sa_stream_t *s) {
   }
 
   JNIEnv *jenv = GetJNIForThread();
-  if (!jenv)
+  if (!jenv) {
     return SA_SUCCESS;
+  }
 
+  (*jenv)->CallVoidMethod(jenv, s->output_unit, at.stop);
+  (*jenv)->CallVoidMethod(jenv, s->output_unit, at.flush);
+  (*jenv)->CallVoidMethod(jenv, s->output_unit, at.release);
   (*jenv)->DeleteGlobalRef(jenv, s->output_unit);
   (*jenv)->DeleteGlobalRef(jenv, s->at_class);
   free(s);
 
-  ALOG("%x - Stream destroyed", s);
+  ALOG("%p - Stream destroyed", s);
   return SA_SUCCESS;
 }
 
@@ -290,16 +316,11 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
     return SA_ERROR_OOM;
   }
 
-  jbyte *byte = (*jenv)->GetByteArrayElements(jenv, bytearray, NULL);
-  if (!byte) {
-    (*jenv)->PopLocalFrame(jenv, NULL);
-    return SA_ERROR_OOM;
-  }
-
-  memcpy(byte, data, nbytes);
+  (*jenv)->SetByteArrayRegion(jenv, bytearray, 0, nbytes, data);
 
   size_t wroteSoFar = 0;
   jint retval;
+  int first = 1;
 
   do {
     retval = (*jenv)->CallIntMethod(jenv,
@@ -309,26 +330,26 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
                                     wroteSoFar,
                                     nbytes - wroteSoFar);
     if (retval < 0) {
-      ALOG("%x - Write failed %d", s, retval);
+      ALOG("%p - Write failed %d", s, retval);
       break;
     }
 
     wroteSoFar += retval;
 
+    /* android doesn't start playing until we explictly call play. */
+    if (first && !s->isPaused) {
+      sa_stream_resume(s);
+      first = 0;
+    }
+
     if (wroteSoFar != nbytes) {
-
-      /* android doesn't start playing until we explictly call play. */
-      if (!s->isPaused)
-	sa_stream_resume(s);
-
       struct timespec ts = {0, 100000000}; /* .10s */
       nanosleep(&ts, NULL);
     }
   } while(wroteSoFar < nbytes);
 
+  ALOG("%p - Wrote %u", s,  nbytes);
   s->amountWritten += nbytes;
-
-  (*jenv)->ReleaseByteArrayElements(jenv, bytearray, byte, 0);
 
   (*jenv)->PopLocalFrame(jenv, NULL);
 
@@ -352,9 +373,9 @@ sa_stream_get_write_size(sa_stream_t *s, size_t *size) {
   /* No android API for this, so estimate based on how much we have played and
    * how much we have written.
    */
-  *size = s->bufferSize - ((s->timePlaying * s->channels * s->rate /
-			    MILLISECONDS_PER_SECOND) - s->amountWritten);
-  ALOG("%x - Write Size %d", s, *size);
+  *size = s->bufferSize - ((s->timePlaying * s->channels * s->rate * sizeof(int16_t) /
+                            MILLISECONDS_PER_SECOND) - s->amountWritten);
+  ALOG("%p - Write Size tp=%lld aw=%u sz=%zu", s, s->timePlaying, s->amountWritten, *size);
 
   return SA_SUCCESS;
 }
@@ -367,7 +388,7 @@ sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos) {
     return SA_ERROR_NO_INIT;
   }
 
-  ALOG("%x - get position", s);
+  ALOG("%p - get position", s);
 
   JNIEnv *jenv = GetJNIForThread();
   *pos  = (*jenv)->CallIntMethod(jenv, s->output_unit, at.getpos);
@@ -398,7 +419,7 @@ sa_stream_pause(sa_stream_t *s) {
     int64_t ticker = current_time.tv_sec * 1000 + current_time.tv_nsec / 1000000;
     s->timePlaying += ticker - s->lastStartTime;
   }
-  ALOG("%x - Pause total time playing: %lld total written: %lld", s,  s->timePlaying, s->amountWritten);
+  ALOG("%p - Pause total time playing: %lld total written: %lld", s,  s->timePlaying, s->amountWritten);
 
   (*jenv)->CallVoidMethod(jenv, s->output_unit, at.pause);
   return SA_SUCCESS;
@@ -412,7 +433,7 @@ sa_stream_resume(sa_stream_t *s) {
     return SA_ERROR_NO_INIT;
   }
 
-  ALOG("%x - resume", s);
+  ALOG("%p - resume", s);
 
   JNIEnv *jenv = GetJNIForThread();
   s->isPaused = 0;
@@ -435,15 +456,25 @@ sa_stream_drain(sa_stream_t *s)
     return SA_ERROR_NO_INIT;
   }
 
-  /* There is no way with the Android SDK to determine exactly how
-     long to playback.  So estimate and sleep for the long.
-  */
-
+/* This is somewhat of a hack (see bug 693131).  The AudioTrack documentation
+   doesn't make it clear how much data must be written before a chunk of data is
+   played, and experimentation with short streams required filling the entire
+   allocated buffer.  To guarantee that short streams (and the end of longer
+   streams) are audible, fill the remaining space in the AudioTrack with silence
+   before sleeping.  Note that the sleep duration is calculated from the
+   duration of audio written before filling the buffer with silence. */
   size_t available;
   sa_stream_get_write_size(s, &available);
 
-  long x = (s->bufferSize - available) * 1000 / s->channels / s->rate / sizeof(int16_t) * NANOSECONDS_IN_MILLISECOND;
-  ALOG("%x - Drain - sleep for %f ns", s, x);
+  void *p = calloc(1, available);
+  sa_stream_write(s, p, available);
+  free(p);
+
+  /* There is no way with the Android SDK to determine exactly how
+     long to playback.  So estimate and sleep for the long. */
+  long x = (s->bufferSize - available) * 1000 / s->channels / s->rate /
+           sizeof(int16_t) * NANOSECONDS_IN_MILLISECOND;
+  ALOG("%p - Drain - flush %u, sleep for %ld ns", s, available, x);
 
   struct timespec ts = {0, x};
   nanosleep(&ts, NULL);
