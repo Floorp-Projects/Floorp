@@ -1018,7 +1018,7 @@ PRUint32 TiledTextureImage::GetTileCount()
 }
 
 bool
-GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO)
+GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, const bool aDisableAA)
 {
     if (!IsOffscreenSizeAllowed(aSize))
         return false;
@@ -1035,7 +1035,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO)
     if (!useDrawMSFBO && !aUseReadFBO)
         return true;
 
-    if (!useDrawMSFBO)
+    if (!useDrawMSFBO || aDisableAA)
         samples = 0;
 
     const bool firstTime = (mOffscreenDrawFBO == 0 && mOffscreenReadFBO == 0);
