@@ -163,7 +163,7 @@ CPPSRCS		= \
 		Stack.cpp \
 		String.cpp \
 		BytecodeCompiler.cpp \
-		CodeGenerator.cpp \
+		BytecodeGenerator.cpp \
 		FoldConstants.cpp \
 		ParseMaps.cpp \
 		ParseNode.cpp \

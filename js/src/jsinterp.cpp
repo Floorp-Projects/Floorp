@@ -72,7 +72,7 @@
 #include "jstracer.h"
 #include "jslibmath.h"
 
-#include "frontend/CodeGenerator.h"
+#include "frontend/BytecodeGenerator.h"
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MethodJIT-inl.h"
@@ -1069,6 +1069,14 @@ js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
     JS_ASSERT(!FunctionClass.construct);
     CallArgs args = argsRef;
 
+    /*
+     * Callers are not required to initialize 'this' when constructing, but
+     * make sure the value is initialized in case we are about to call a native
+     * or if something (e.g. type inference) tries to inspect the frame before
+     * its 'this' value is constructed.
+     */
+    args.thisv().setMagicWithObjectOrNullPayload(NULL);
+
     if (args.calleev().isObject()) {
         JSObject *callee = &args.callee();
         Class *clasp = callee->getClass();
@@ -1076,7 +1084,6 @@ js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
             JSFunction *fun = callee->getFunctionPrivate();
 
             if (fun->isConstructor()) {
-                args.thisv().setMagicWithObjectOrNullPayload(NULL);
                 Probes::calloutBegin(cx, fun);
                 bool ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
                 Probes::calloutEnd(cx, fun);
@@ -1092,10 +1099,8 @@ js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
             JS_ASSERT(args.rval().isObject());
             return true;
         }
-        if (clasp->construct) {
-            args.thisv().setMagicWithObjectOrNullPayload(NULL);
+        if (clasp->construct)
             return CallJSNativeConstructor(cx, clasp->construct, args);
-        }
     }
 
 error:

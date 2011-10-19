@@ -521,6 +521,15 @@ public:
    */
   nsresult GetDirection(nsBidiDirection* aDirection);
 
+  /**
+   * Get the paragraph level of the text.
+   *
+   * @param aParaLevel receives a <code>NSBIDI_XXX</code> value indicating the paragraph level
+   *
+   * @see nsBidiLevel
+   */
+  nsresult GetParaLevel(nsBidiLevel* aParaLevel);
+
 #ifdef FULL_BIDI_ENGINE
   /**
    * <code>SetLine</code> sets an <code>nsBidi</code> to
@@ -563,15 +572,6 @@ public:
    * @param aLength receives the length of the text that the nsBidi object was created for.
    */
   nsresult GetLength(PRInt32* aLength);
-
-  /**
-   * Get the paragraph level of the text.
-   *
-   * @param aParaLevel receives a <code>NSBIDI_XXX</code> value indicating the paragraph level
-   *
-   * @see nsBidiLevel
-   */
-  nsresult GetParaLevel(nsBidiLevel* aParaLevel);
 
   /**
    * Get the level for one character.

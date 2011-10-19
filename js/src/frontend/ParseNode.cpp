@@ -40,7 +40,7 @@
 
 #include "frontend/ParseNode.h"
 
-#include "frontend/CodeGenerator.h"
+#include "frontend/BytecodeGenerator.h"
 #include "frontend/Parser.h"
 
 #include "jsscriptinlines.h"

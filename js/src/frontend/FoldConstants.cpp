@@ -42,7 +42,7 @@
 
 #include "jslibmath.h"
 
-#include "frontend/CodeGenerator.h"
+#include "frontend/BytecodeGenerator.h"
 #include "frontend/ParseNode.h"
 
 #if JS_HAS_XML_SUPPORT
