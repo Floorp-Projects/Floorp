@@ -551,6 +551,7 @@ public:
         mOffscreenDrawFBO(0),
         mOffscreenReadFBO(0),
         mOffscreenFBOsDirty(false),
+        mOffscreenColorRB(0),
         mOffscreenDepthRB(0),
         mOffscreenStencilRB(0)
 #ifdef DEBUG
@@ -753,7 +754,7 @@ public:
      */
     virtual bool ResizeOffscreen(const gfxIntSize& aNewSize) {
         if (mOffscreenDrawFBO || mOffscreenReadFBO)
-            return ResizeOffscreenFBO(aNewSize);
+            return ResizeOffscreenFBO(aNewSize, mOffscreenReadFBO != 0);
         return false;
     }
 
@@ -1240,6 +1241,7 @@ public:
         ANGLE_framebuffer_blit,
         EXT_framebuffer_multisample,
         ANGLE_framebuffer_multisample,
+        OES_rgb8_rgba8,
         Extensions_Max
     };
 
@@ -1319,10 +1321,11 @@ protected:
 
     // helper to create/resize an offscreen FBO,
     // for offscreen implementations that use FBOs.
-    bool ResizeOffscreenFBO(const gfxIntSize& aSize);
+    bool ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO);
     void DeleteOffscreenFBO();
     GLuint mOffscreenDrawFBO;
     GLuint mOffscreenReadFBO;
+    GLuint mOffscreenColorRB;
     GLuint mOffscreenDepthRB;
     GLuint mOffscreenStencilRB;
 
