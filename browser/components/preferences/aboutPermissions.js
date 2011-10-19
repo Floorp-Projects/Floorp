@@ -366,12 +366,24 @@ let AboutPermissions = {
   PLACES_SITES_LIMIT: 50,
 
   /**
+   * When adding sites to the dom sites-list, divide workload into intervals.
+   */
+  LIST_BUILD_CHUNK: 5, // interval size
+  LIST_BUILD_DELAY: 100, // delay between intervals
+
+  /**
    * Stores a mapping of host strings to Site objects.
    */
   _sites: {},
 
   sitesList: null,
   _selectedSite: null,
+
+  /**
+   * For testing, track initializations so we can send notifications
+   */
+  _initPlacesDone: false,
+  _initServicesDone: false,
 
   /**
    * This reflects the permissions that we expose in the UI. These correspond
@@ -397,7 +409,9 @@ let AboutPermissions = {
     this.sitesList = document.getElementById("sites-list");
 
     this.getSitesFromPlaces();
-    this.enumerateServices();
+
+    this.enumerateServicesGenerator = this.getEnumerateServicesGenerator();
+    setTimeout(this.enumerateServicesDriver.bind(this), this.LIST_BUILD_DELAY);
 
     // Attach observers in case data changes while the page is open.
     Services.prefs.addObserver("signon.rememberSignons", this, false);
@@ -412,6 +426,7 @@ let AboutPermissions = {
     Services.obs.addObserver(this, "browser:purge-domain-data", false);
     
     this._observersInitialized = true;
+    Services.obs.notifyObservers(null, "browser-permissions-preinit", null);
   },
 
   /**
@@ -501,20 +516,43 @@ let AboutPermissions = {
       },
       handleCompletion: function(aReason) {
         // Notify oberservers for testing purposes.
-        Services.obs.notifyObservers(null, "browser-permissions-initialized", null);
+        AboutPermissions._initPlacesDone = true;
+        if (AboutPermissions._initServicesDone) {
+          Services.obs.notifyObservers(null, "browser-permissions-initialized", null);
+        }
       }
     });
+  },
+
+  /**
+   * Drives getEnumerateServicesGenerator to work in intervals.
+   */
+  enumerateServicesDriver: function() {
+    if (this.enumerateServicesGenerator.next()) {
+      // Build top sitesList items faster so that the list never seems sparse
+      let delay = Math.min(this.sitesList.itemCount * 5, this.LIST_BUILD_DELAY);
+      setTimeout(this.enumerateServicesDriver.bind(this), delay);
+    } else {
+      this.enumerateServicesGenerator.close();
+      this._initServicesDone = true;
+      if (this._initPlacesDone) {
+        Services.obs.notifyObservers(null, "browser-permissions-initialized", null);
+      }
+    }
   },
 
   /**
    * Finds sites that have non-default permissions and creates Site objects for
    * them if they are not already stored in _sites.
    */
-  enumerateServices: function() {
-    this.startSitesListBatch();
+  getEnumerateServicesGenerator: function() {
+    let itemCnt = 1;
 
     let logins = Services.logins.getAllLogins();
     logins.forEach(function(aLogin) {
+      if (itemCnt % this.LIST_BUILD_CHUNK == 0) {
+        yield true;
+      }
       try {
         // aLogin.hostname is a string in origin URL format (e.g. "http://foo.com")
         let uri = NetUtil.newURI(aLogin.hostname);
@@ -522,10 +560,14 @@ let AboutPermissions = {
       } catch (e) {
         // newURI will throw for add-ons logins stored in chrome:// URIs 
       }
+      itemCnt++;
     }, this);
 
     let disabledHosts = Services.logins.getAllDisabledHosts();
     disabledHosts.forEach(function(aHostname) {
+      if (itemCnt % this.LIST_BUILD_CHUNK == 0) {
+        yield true;
+      }
       try {
         // aHostname is a string in origin URL format (e.g. "http://foo.com")
         let uri = NetUtil.newURI(aHostname);
@@ -533,19 +575,24 @@ let AboutPermissions = {
       } catch (e) {
         // newURI will throw for add-ons logins stored in chrome:// URIs 
       }
+      itemCnt++;
     }, this);
 
     let (enumerator = Services.perms.enumerator) {
       while (enumerator.hasMoreElements()) {
+        if (itemCnt % this.LIST_BUILD_CHUNK == 0) {
+          yield true;
+        }
         let permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
         // Only include sites with exceptions set for supported permission types.
         if (this._supportedPermissions.indexOf(permission.type) != -1) {
           this.addHost(permission.host);
         }
+        itemCnt++;
       }
     }
 
-    this.endSitesListBatch();
+    yield false;
   },
 
   /**
@@ -578,6 +625,10 @@ let AboutPermissions = {
       item.setAttribute("favicon", aURL);
     });
     aSite.listitem = item;
+
+    // Make sure to only display relevant items when list is filtered
+    let filterValue = document.getElementById("sites-filter").value.toLowerCase();
+    item.collapsed = aSite.host.toLowerCase().indexOf(filterValue) == -1;
 
     (this._listFragment || this.sitesList).appendChild(item);
   },
@@ -640,7 +691,7 @@ let AboutPermissions = {
         this.sitesList.removeChild(site.listitem);
         delete this._sites[site.host];
       }
-    }    
+    }
   },
 
   /**

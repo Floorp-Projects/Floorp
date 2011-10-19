@@ -55,7 +55,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsLDAPSyncQuery, nsILDAPSyncQuery, nsILDAPMessageL
 // Constructor
 //
 nsLDAPSyncQuery::nsLDAPSyncQuery() :
-    mFinished(PR_FALSE), // This is a control variable for event loop
+    mFinished(false), // This is a control variable for event loop
     mAttrCount(0), mAttrs(0), mProtocolVersion(nsILDAPConnection::VERSION3)
 {
 }
@@ -410,7 +410,7 @@ nsLDAPSyncQuery::FinishLDAPQuery()
     // We are done with the LDAP operation. 
     // Release the Control variable for the eventloop
     //
-    mFinished = PR_TRUE;
+    mFinished = true;
     
     // Release member variables
     //

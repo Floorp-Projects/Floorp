@@ -57,7 +57,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMWindow.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
@@ -241,8 +241,8 @@ nsGeolocationRequest::nsGeolocationRequest(nsGeolocation* aLocator,
                                            nsIDOMGeoPositionErrorCallback* aErrorCallback,
                                            nsIDOMGeoPositionOptions* aOptions,
                                            bool aWatchPositionRequest)
-  : mAllowed(PR_FALSE),
-    mCleared(PR_FALSE),
+  : mAllowed(false),
+    mCleared(false),
     mIsWatchPositionRequest(aWatchPositionRequest),
     mCallback(aCallback),
     mErrorCallback(aErrorCallback),
@@ -387,7 +387,7 @@ nsGeolocationRequest::Allow()
       ( PRTime(PR_Now() / PR_USEC_PER_MSEC) - maximumAge <=
         PRTime(cachedPositionTime) )) {
     // okay, we can return a cached position
-    mAllowed = PR_TRUE;
+    mAllowed = true;
     
      nsCOMPtr<nsIRunnable> ev =
          new RequestSendLocationEvent(lastPosition, this,
@@ -397,7 +397,7 @@ nsGeolocationRequest::Allow()
 
   SetTimeoutTimer();
 
-  mAllowed = PR_TRUE;
+  mAllowed = true;
   return NS_OK;
 }
 
@@ -426,7 +426,7 @@ nsGeolocationRequest::MarkCleared()
     mTimeoutTimer->Cancel();
     mTimeoutTimer = nsnull;
   }
-  mCleared = PR_TRUE;
+  mCleared = true;
 }
 
 void
@@ -480,7 +480,7 @@ nsGeolocationRequest::Shutdown()
     mTimeoutTimer->Cancel();
     mTimeoutTimer = nsnull;
   }
-  mCleared = PR_TRUE;
+  mCleared = true;
   mCallback = nsnull;
   mErrorCallback = nsnull;
 }
@@ -879,9 +879,9 @@ nsGeolocation::HasActiveCallbacks()
 {
   for (PRUint32 i = 0; i < mWatchingCallbacks.Length(); i++)
     if (mWatchingCallbacks[i]->IsActive())
-      return PR_TRUE;
+      return true;
 
-  return PR_FALSE;
+  return false;
 }
 
 void
@@ -932,7 +932,7 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
 								    callback,
 								    errorCallback,
 								    options,
-								    PR_FALSE);
+								    false);
   if (!request)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -977,7 +977,7 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
 								    callback,
 								    errorCallback,
 								    options,
-								    PR_TRUE);
+								    true);
   if (!request)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1025,7 +1025,7 @@ nsGeolocation::WindowOwnerStillExists()
   // was created, which means that this object
   // is being used without a window.
   if (mOwner == nsnull)
-    return PR_TRUE;
+    return true;
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mOwner);
 
@@ -1034,14 +1034,14 @@ nsGeolocation::WindowOwnerStillExists()
     bool closed = false;
     window->GetClosed(&closed);
     if (closed)
-      return PR_FALSE;
+      return false;
 
     nsPIDOMWindow* outer = window->GetOuterWindow();
     if (!outer || outer->GetCurrentInnerWindow() != window)
-      return PR_FALSE;
+      return false;
   }
 
-  return PR_TRUE;
+  return true;
 }
 
 bool

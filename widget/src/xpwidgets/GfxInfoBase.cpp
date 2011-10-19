@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "GfxInfoBase.h"
 
 #include "GfxInfoWebGL.h"
@@ -57,6 +59,8 @@
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
 #endif
+
+using namespace mozilla;
 
 extern "C" {
   void StoreSpline(int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy);
@@ -169,7 +173,7 @@ GetPrefValueForFeature(PRInt32 aFeature, PRInt32& aValue)
   if (!prefname)
     return false;
 
-  aValue = PR_FALSE;
+  aValue = false;
   return NS_SUCCEEDED(Preferences::GetInt(prefname, &aValue));
 }
 
@@ -539,7 +543,7 @@ GfxInfoBase::Init()
 {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    os->AddObserver(this, "blocklist-data-gfxItems", PR_TRUE);
+    os->AddObserver(this, "blocklist-data-gfxItems", true);
   }
 
   return NS_OK;
@@ -636,7 +640,7 @@ NS_IMETHODIMP_(void)
 GfxInfoBase::LogFailure(const nsACString &failure)
 {
   /* We only keep the first 9 failures */
-  if (mFailureCount < NS_ARRAY_LENGTH(mFailures)) {
+  if (mFailureCount < ArrayLength(mFailures)) {
     mFailures[mFailureCount++] = failure;
 
     /* record it in the crash notes too */

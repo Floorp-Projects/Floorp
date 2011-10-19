@@ -276,7 +276,7 @@ public:
   }
 
   void
-  FinalizeInstance(JSContext* aCx);
+  FinalizeInstance(JSContext* aCx, bool aFromJSFinalizer);
 
   bool
   Terminate(JSContext* aCx)

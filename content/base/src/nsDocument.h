@@ -88,7 +88,7 @@
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
 #include "nsThreadUtils.h"
-#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
@@ -192,7 +192,7 @@ public:
   void RemoveIdElement(Element* aElement);
   /**
    * Set the image element override for this ID. This will be returned by
-   * GetIdElement(PR_TRUE) if non-null.
+   * GetIdElement(true) if non-null.
    */
   void SetImageElement(Element* aElement);
 
@@ -235,7 +235,7 @@ public:
       return (NS_PTR_TO_INT32(aKey->mCallback) >> 2) ^
              (NS_PTR_TO_INT32(aKey->mData));
     }
-    enum { ALLOW_MEMMOVE = PR_TRUE };
+    enum { ALLOW_MEMMOVE = true };
     
     ChangeCallback mKey;
   };
@@ -358,7 +358,7 @@ public:
   {
     mPendingLoads.Clear();
     mMap.Clear();
-    mHaveShutDown = PR_TRUE;
+    mHaveShutDown = true;
   }
 
   bool HaveShutDown() const
@@ -401,10 +401,10 @@ protected:
     nsresult StartLoad(nsIURI* aURI, nsINode* aRequestingNode);
 
     /**
-     * Set up an nsIDocumentViewer based on aRequest.  This is guaranteed to
+     * Set up an nsIContentViewer based on aRequest.  This is guaranteed to
      * put null in *aViewer and *aLoadGroup on all failures.
      */
-    nsresult SetupViewer(nsIRequest* aRequest, nsIDocumentViewer** aViewer,
+    nsresult SetupViewer(nsIRequest* aRequest, nsIContentViewer** aViewer,
                          nsILoadGroup** aLoadGroup);
 
   private:
@@ -467,7 +467,7 @@ protected:
    * function makes sure to remove the pending load for aURI, if any, from our
    * hashtable, and to notify its observers, if any.
    */
-  nsresult AddExternalResource(nsIURI* aURI, nsIDocumentViewer* aViewer,
+  nsresult AddExternalResource(nsIURI* aURI, nsIContentViewer* aViewer,
                                nsILoadGroup* aLoadGroup,
                                nsIDocument* aDisplayDocument);
   
@@ -948,21 +948,27 @@ public:
   virtual void UpdateFullScreenStatus(bool aIsFullScreen);
   virtual bool IsFullScreenDoc();
 
+  // This method may fire a DOM event; if it does so it will happen
+  // synchronously.
+  void UpdateVisibilityState();
+  // Posts an event to call UpdateVisibilityState
+  virtual void PostVisibilityUpdateEvent();
+
 protected:
   friend class nsNodeUtils;
 
   /**
    * Check that aId is not empty and log a message to the console
    * service if it is.
-   * @returns PR_TRUE if aId looks correct, PR_FALSE otherwise.
+   * @returns true if aId looks correct, false otherwise.
    */
   inline bool CheckGetElementByIdArg(const nsAString& aId)
   {
     if (aId.IsEmpty()) {
       ReportEmptyGetElementByIdArg();
-      return PR_FALSE;
+      return false;
     }
-    return PR_TRUE;
+    return true;
   }
 
   void ReportEmptyGetElementByIdArg();
@@ -1150,6 +1156,14 @@ protected:
   nsRefPtr<nsDOMNavigationTiming> mTiming;
 private:
   friend class nsUnblockOnloadEvent;
+  // This needs to stay in sync with the list in GetMozVisibilityState.
+  enum VisibilityState {
+    eHidden = 0,
+    eVisible,
+    eVisibilityStateCount
+  };
+  // Recomputes the visibility state but doesn't set the new value.
+  VisibilityState GetVisibilityState() const;
 
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();
@@ -1229,6 +1243,8 @@ private:
 
   // Tracking for images in the document.
   nsDataHashtable< nsPtrHashKey<imgIRequest>, PRUint32> mImageTracker;
+
+  VisibilityState mVisibilityState;
 
 #ifdef DEBUG
 protected:

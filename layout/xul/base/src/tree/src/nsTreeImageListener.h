@@ -44,21 +44,33 @@
 #include "nsCOMPtr.h"
 #include "nsITreeColumns.h"
 #include "nsStubImageDecoderObserver.h"
-#include "nsTreeBodyFrame.h"
-#include "nsITreeImageListener.h"
+
+class nsITreeBoxObject;
+
+// The interface for our image listener.
+// {90586540-2D50-403e-8DCE-981CAA778444}
+#define NS_ITREEIMAGELISTENER_IID \
+{ 0x90586540, 0x2d50, 0x403e, { 0x8d, 0xce, 0x98, 0x1c, 0xaa, 0x77, 0x84, 0x44 } }
+
+class nsITreeImageListener : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITREEIMAGELISTENER_IID)
+
+  NS_IMETHOD AddCell(PRInt32 aIndex, nsITreeColumn* aCol) = 0;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITreeImageListener, NS_ITREEIMAGELISTENER_IID)
 
 // This class handles image load observation.
 class nsTreeImageListener : public nsStubImageDecoderObserver, public nsITreeImageListener
 {
 public:
-  nsTreeImageListener(nsTreeBodyFrame *aTreeFrame);
+  nsTreeImageListener(nsITreeBoxObject* aTree);
   ~nsTreeImageListener();
 
   NS_DECL_ISUPPORTS
   // imgIDecoderObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD OnStartDecode(imgIRequest *aRequest);
-  NS_IMETHOD OnStopDecode(imgIRequest *aRequest,
-                          nsresult aStatus, const PRUnichar *aStatusArg);
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
   NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
                              const nsIntRect *aRect);
@@ -67,17 +79,15 @@ public:
                           const nsIntRect *aDirtyRect);
 
   NS_IMETHOD AddCell(PRInt32 aIndex, nsITreeColumn* aCol);
-
-  NS_IMETHOD ClearFrame();
  
   friend class nsTreeBodyFrame;
 
 protected:
-  void UnsuppressInvalidation() { mInvalidationSuppressed = PR_FALSE; }
+  void UnsuppressInvalidation() { mInvalidationSuppressed = false; }
   void Invalidate();
 
 private:
-  nsTreeBodyFrame* mTreeFrame;
+  nsITreeBoxObject* mTree;
 
   // A guard that prevents us from recursive painting.
   bool mInvalidationSuppressed;

@@ -143,7 +143,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray
   if(!mSpellCheckingEngine)
     return NS_ERROR_NULL_POINTER;
 
-  *aIsMisspelled = PR_FALSE;
+  *aIsMisspelled = false;
   result = mSpellCheckingEngine->Check(PromiseFlatString(aWord).get(), &correct);
   NS_ENSURE_SUCCESS(result, result);
   if(!correct){
@@ -160,7 +160,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray
       if (count)
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
     }
-    *aIsMisspelled = PR_TRUE;
+    *aIsMisspelled = true;
   }
   return NS_OK;
 }
@@ -474,7 +474,7 @@ mozSpellChecker::SetupDoc(PRInt32 *outBlockOffset)
   else // we want the first block
   {
     rv = mTsDoc->FirstBlock();
-    mFromStart = PR_FALSE;
+    mFromStart = false;
   }
   return rv;
 }

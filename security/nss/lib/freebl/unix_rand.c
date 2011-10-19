@@ -843,7 +843,10 @@ safe_pclose(FILE *fp)
 }
 
 #ifdef DARWIN
+#include <TargetConditionals.h>
+#if !TARGET_OS_IPHONE
 #include <crt_externs.h>
+#endif
 #endif
 
 /* Fork netstat to collect its output by default. Do not unset this unless
@@ -859,7 +862,12 @@ void RNG_SystemInfoForRNG(void)
     const char * const *cp;
     char *randfile;
 #ifdef DARWIN
+#if TARGET_OS_IPHONE
+    /* iOS does not expose a way to access environ. */
+    char **environ = NULL;
+#else
     char **environ = *_NSGetEnviron();
+#endif
 #else
     extern char **environ;
 #endif

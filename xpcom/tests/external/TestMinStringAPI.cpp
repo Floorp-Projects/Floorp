@@ -61,7 +61,7 @@ static bool test_basic_1()
     if (ptr == nsnull || *ptr != '\0')
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
 
     NS_CStringSetData(s, kAsciiData, PR_UINT32_MAX);
@@ -69,19 +69,19 @@ static bool test_basic_1()
     if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
     if (len != sizeof(kAsciiData)-1)
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
 
     clone = NS_CStringCloneData(s);
     if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
     NS_Free(clone);
 
@@ -93,18 +93,18 @@ static bool test_basic_1()
     if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
     if (len != sizeof(kAsciiData)-1)
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
 
     NS_CStringContainerFinish(temp);
 
     NS_CStringContainerFinish(s);
-    return PR_TRUE;
+    return true;
   }
 
 static bool test_basic_2()
@@ -120,7 +120,7 @@ static bool test_basic_2()
     if (ptr == nsnull || *ptr != '\0')
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
 
     NS_StringSetData(s, kUnicodeData, PR_UINT32_MAX);
@@ -128,19 +128,19 @@ static bool test_basic_2()
     if (len != sizeof(kUnicodeData)/2 - 1)
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
     if (ptr == nsnull || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
 
     clone = NS_StringCloneData(s);
     if (ptr == nsnull || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
     NS_Free(clone);
 
@@ -152,19 +152,19 @@ static bool test_basic_2()
     if (len != sizeof(kUnicodeData)/2 - 1)
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
     if (ptr == nsnull || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
       {
         NS_ERROR("unexpected result");
-        return PR_FALSE;
+        return false;
       }
 
     NS_StringContainerFinish(temp);
 
     NS_StringContainerFinish(s);
 
-    return PR_TRUE;
+    return true;
   }
 
 static bool test_convert()
@@ -181,17 +181,17 @@ static bool test_convert()
     NS_UTF16ToCString(s, NS_CSTRING_ENCODING_ASCII, temp);
     NS_CStringGetData(temp, &data);
     if (strcmp(data, kAsciiData) != 0)
-      return PR_FALSE;
+      return false;
 
     NS_UTF16ToCString(s, NS_CSTRING_ENCODING_UTF8, temp);
     NS_CStringGetData(temp, &data);
     if (strcmp(data, kAsciiData) != 0)
-      return PR_FALSE;
+      return false;
 
     NS_CStringContainerFinish(temp);
 
     NS_StringContainerFinish(s);
-    return PR_TRUE;
+    return true;
   }
 
 static bool test_append()
@@ -203,7 +203,7 @@ static bool test_append()
     NS_CStringAppendData(s, "bar");
 
     NS_CStringContainerFinish(s);
-    return PR_TRUE;
+    return true;
   }
 
 // Replace all occurrences of |matchVal| with |newVal|
@@ -255,12 +255,12 @@ static bool test_replace_driver(const char *strVal,
     const char *data;
     NS_CStringGetData(a, &data);
     if (strcmp(data, finalVal) != 0)
-      return PR_FALSE;
+      return false;
 
     NS_CStringContainerFinish(c);
     NS_CStringContainerFinish(b);
     NS_CStringContainerFinish(a);
-    return PR_TRUE;
+    return true;
   }
 
 static bool test_replace()
@@ -295,7 +295,7 @@ static bool test_replace()
     if (!rv)
       return rv;
 
-    return PR_TRUE;
+    return true;
   }
 
 static const char* kWhitespace="\b\t\r\n ";
@@ -355,7 +355,7 @@ static bool test_depend()
     NS_ENSURE_SUCCESS(
         NS_CStringContainerInit2(s, kData, sizeof(kData)-1,
                                  NS_CSTRING_CONTAINER_INIT_DEPEND),
-        PR_FALSE);
+        false);
 
     const char *sd;
     NS_CStringGetData(s, &sd);
@@ -374,7 +374,7 @@ static bool test_depend_sub()
         NS_CStringContainerInit2(s, kData, sizeof(kData)-1,
                                  NS_CSTRING_CONTAINER_INIT_DEPEND |
                                  NS_CSTRING_CONTAINER_INIT_SUBSTRING),
-        PR_FALSE);
+        false);
 
     bool terminated;
     const char *sd;
@@ -391,13 +391,13 @@ static bool test_adopt()
 
     char *data = (char *) nsMemory::Clone(kData, sizeof(kData));
     if (!data)
-      return PR_FALSE;
+      return false;
 
     nsCStringContainer s;
     NS_ENSURE_SUCCESS(
         NS_CStringContainerInit2(s, data, PR_UINT32_MAX,
                                  NS_CSTRING_CONTAINER_INIT_ADOPT),
-        PR_FALSE); // leaks data on failure *shrug*
+        false); // leaks data on failure *shrug*
 
     const char *sd;
     NS_CStringGetData(s, &sd);
@@ -413,14 +413,14 @@ static bool test_adopt_sub()
 
     char *data = (char *) nsMemory::Clone(kData, sizeof(kData)-1);
     if (!data)
-      return PR_FALSE;
+      return false;
 
     nsCStringContainer s;
     NS_ENSURE_SUCCESS(
         NS_CStringContainerInit2(s, data, sizeof(kData)-1,
                                  NS_CSTRING_CONTAINER_INIT_ADOPT |
                                  NS_CSTRING_CONTAINER_INIT_SUBSTRING),
-        PR_FALSE); // leaks data on failure *shrug*
+        false); // leaks data on failure *shrug*
 
     bool terminated;
     const char *sd;
@@ -441,27 +441,27 @@ static bool test_mutation()
     char *buf;
     PRUint32 len = NS_CStringGetMutableData(s, sizeof(kText) - 1, &buf);
     if (!buf || len != sizeof(kText) - 1)
-      return PR_FALSE;
+      return false;
     memcpy(buf, kText, sizeof(kText));
 
     const char *data;
     NS_CStringGetData(s, &data);
     if (strcmp(data, kText) != 0)
-      return PR_FALSE;
+      return false;
 
     PRUint32 newLen = len + 1;
     len = NS_CStringGetMutableData(s, newLen, &buf);
     if (!buf || len != newLen)
-      return PR_FALSE;
+      return false;
 
     buf[len - 1] = '.';
 
     NS_CStringGetData(s, &data);
     if (strncmp(data, kText, len - 1) != 0 || data[len - 1] != '.')
-      return PR_FALSE;
+      return false;
 
     NS_CStringContainerFinish(s);
-    return PR_TRUE;
+    return true;
   }
 
 static bool test_ascii()
@@ -469,45 +469,45 @@ static bool test_ascii()
   nsCString testCString;
   testCString.AppendASCII(kAsciiData);
   if (!testCString.EqualsLiteral(kAsciiData))
-    return PR_FALSE;
+    return false;
 
   testCString.AssignASCII(kAsciiData);
   if (!testCString.LowerCaseEqualsLiteral("hello world"))
-    return PR_FALSE;
+    return false;
 
   nsString testString;
   testString.AppendASCII(kAsciiData);
   if (!testString.EqualsLiteral(kAsciiData))
-    return PR_FALSE;
+    return false;
 
   testString.AssignASCII(kAsciiData);
   if (!testString.LowerCaseEqualsLiteral("hello world"))
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 static bool test_chars()
 {
   nsCString testCString(kAsciiData);
   if (testCString.First() != 'H')
-    return PR_FALSE;
+    return false;
   if (testCString.Last() != 'd')
-    return PR_FALSE;
+    return false;
   testCString.SetCharAt('u', 8);
   if (!testCString.EqualsASCII("Hello Would"))
-    return PR_FALSE;
+    return false;
 
   nsString testString(kUnicodeData);
   if (testString.First() != 'H')
-    return PR_FALSE;
+    return false;
   if (testString.Last() != 'd')
-    return PR_FALSE;
+    return false;
   testString.SetCharAt('u', 8);
   if (!testString.EqualsASCII("Hello Would"))
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 static bool test_stripchars()
@@ -515,14 +515,14 @@ static bool test_stripchars()
   nsCString test(kAsciiData);
   test.StripChars("ld");
   if (!test.Equals("Heo Wor"))
-    return PR_FALSE;
+    return false;
 
   test.Assign(kAsciiData);
   test.StripWhitespace();
   if (!test.Equals("HelloWorld"))
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 static bool test_trim()
@@ -535,19 +535,19 @@ static bool test_trim()
   nsCString test3(kTestString);
 
   test1.Trim(kWS);
-  test2.Trim(kWS, PR_TRUE, PR_FALSE);
-  test3.Trim(kWS, PR_FALSE, PR_TRUE);
+  test2.Trim(kWS, true, false);
+  test3.Trim(kWS, false, true);
 
   if (!test1.Equals("Testing..."))
-    return PR_FALSE;
+    return false;
 
   if (!test2.Equals("Testing...\n\r"))
-    return PR_FALSE;
+    return false;
 
   if (!test3.Equals(" \n\tTesting..."))
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 static bool test_find()
@@ -562,29 +562,29 @@ static bool test_find()
 
   found = uni.Find(kHello);
   if (found != 0)
-    return PR_FALSE;
+    return false;
 
   found = uni.Find(khello, false);
   if (found != -1)
-    return PR_FALSE;
+    return false;
  
   found = uni.Find(khello, true);
   if (found != 0)
-    return PR_FALSE;
+    return false;
 
   found = uni.Find(kBye);
   if (found != -1)
-    return PR_FALSE;
+    return false;
 
   found = uni.Find(NS_LITERAL_STRING("World"));
   if (found != 6)
-    return PR_FALSE;
+    return false;
 
   found = uni.Find(uni);
   if (found != 0)
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 static bool test_compressws()
@@ -610,165 +610,165 @@ static bool test_comparisons()
 
   result = (shortString1 == shortString2);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString2 == shortString3);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString3 == shortString4);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString1 == longString);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (longString == shortString1);
   if (result)
-    return PR_FALSE;
+    return false;
 
   // !=
 
   result = (shortString1 != shortString2);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString2 != shortString3);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString3 != shortString4);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString1 != longString);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (longString != shortString1);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   // <
 
   result = (shortString1 < shortString2);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString2 < shortString1);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString1 < longString);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (longString < shortString1);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString2 < shortString3);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString3 < shortString4);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString4 < shortString3);
   if (result)
-    return PR_FALSE;
+    return false;
 
   // <=
 
   result = (shortString1 <= shortString2);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString2 <= shortString1);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString1 <= longString);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (longString <= shortString1);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString2 <= shortString3);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString3 <= shortString4);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString4 <= shortString3);
   if (result)
-    return PR_FALSE;
+    return false;
 
   // >
 
   result = (shortString1 > shortString2);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString2 > shortString1);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString1 > longString);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (longString > shortString1);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString2 > shortString3);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString3 > shortString4);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString4 > shortString3);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   // >=
 
   result = (shortString1 >= shortString2);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString2 >= shortString1);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString1 >= longString);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (longString >= shortString1);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString2 >= shortString3);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString3 >= shortString4);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortString4 >= shortString3);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   // nsCString
 
@@ -782,167 +782,167 @@ static bool test_comparisons()
 
   result = (shortCString1 == shortCString2);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString2 == shortCString3);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString3 == shortCString4);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString1 == longCString);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (longCString == shortCString1);
   if (result)
-    return PR_FALSE;
+    return false;
 
   // !=
 
   result = (shortCString1 != shortCString2);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString2 != shortCString3);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString3 != shortCString4);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString1 != longCString);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (longCString != shortCString1);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   // <
 
   result = (shortCString1 < shortCString2);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString2 < shortCString1);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString1 < longCString);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (longCString < shortCString1);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString2 < shortCString3);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString3 < shortCString4);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString4 < shortCString3);
   if (result)
-    return PR_FALSE;
+    return false;
 
   // <=
 
   result = (shortCString1 <= shortCString2);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString2 <= shortCString1);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString1 <= longCString);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (longCString <= shortCString1);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString2 <= shortCString3);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString3 <= shortCString4);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString4 <= shortCString3);
   if (result)
-    return PR_FALSE;
+    return false;
 
   // >
 
   result = (shortCString1 > shortCString2);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString2 > shortCString1);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString1 > longCString);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (longCString > shortCString1);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString2 > shortCString3);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString3 > shortCString4);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString4 > shortCString3);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   // >=
 
   result = (shortCString1 >= shortCString2);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString2 >= shortCString1);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString1 >= longCString);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (longCString >= shortCString1);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString2 >= shortCString3);
   if (!result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString3 >= shortCString4);
   if (result)
-    return PR_FALSE;
+    return false;
 
   result = (shortCString4 >= shortCString3);
   if (!result)
-    return PR_FALSE;
+    return false;
 
-  return PR_TRUE;
+  return true;
 }
 
 static bool test_parse_string_helper(const char* str, char separator, int len,
@@ -951,15 +951,15 @@ static bool test_parse_string_helper(const char* str, char separator, int len,
   nsCString data(str);
   nsTArray<nsCString> results;
   if (!ParseString(data, separator, results))
-    return PR_FALSE;
+    return false;
   if (int(results.Length()) != len)
-    return PR_FALSE;
+    return false;
   const char* strings[] = { s1, s2 };
   for (int i = 0; i < len; ++i) {
     if (!results[i].Equals(strings[i]))
-      return PR_FALSE;
+      return false;
   }
-  return PR_TRUE;
+  return true;
 }
 
 static bool test_parse_string_helper0(const char* str, char separator)

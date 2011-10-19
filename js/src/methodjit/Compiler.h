@@ -42,7 +42,6 @@
 
 #include "jsanalyze.h"
 #include "jscntxt.h"
-#include "jstl.h"
 #include "MethodJIT.h"
 #include "CodeGenIncludes.h"
 #include "BaseCompiler.h"
@@ -369,6 +368,7 @@ class Compiler : public BaseCompiler
      * the outermost script.
      */
 
+public:
     struct ActiveFrame {
         ActiveFrame *parent;
         jsbytecode *parentPC;
@@ -383,6 +383,11 @@ class Compiler : public BaseCompiler
 
         /* Current types for non-escaping vars in the script. */
         VarType *varTypes;
+
+        /* JIT code generation tracking state */
+        size_t mainCodeStart;
+        size_t stubCodeStart;
+        size_t inlinePCOffset;
 
         /* State for managing return from inlined frames. */
         bool needReturnValue;          /* Return value will be used. */
@@ -402,6 +407,8 @@ class Compiler : public BaseCompiler
         ActiveFrame(JSContext *cx);
         ~ActiveFrame();
     };
+
+private:
     ActiveFrame *a;
     ActiveFrame *outer;
 
@@ -681,6 +688,7 @@ class Compiler : public BaseCompiler
     bool jsop_arginc(JSOp op, uint32 slot);
     bool jsop_localinc(JSOp op, uint32 slot);
     bool jsop_newinit();
+    bool jsop_regexp();
     void jsop_initmethod();
     void jsop_initprop();
     void jsop_initelem();
@@ -700,6 +708,7 @@ class Compiler : public BaseCompiler
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
     void jsop_stricteq(JSOp op);
     bool jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    CompileStatus jsop_equality_obj_obj(JSOp op, jsbytecode *target, JSOp fused);
     bool jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_pos();
 
@@ -716,8 +725,10 @@ class Compiler : public BaseCompiler
             return ifeq ? Assembler::GreaterThanOrEqual : Assembler::LessThan;
           case JSOP_LE:
             return ifeq ? Assembler::GreaterThan : Assembler::LessThanOrEqual;
+          case JSOP_STRICTEQ:
           case JSOP_EQ:
             return ifeq ? Assembler::NotEqual : Assembler::Equal;
+          case JSOP_STRICTNE:
           case JSOP_NE:
             return ifeq ? Assembler::Equal : Assembler::NotEqual;
           default:
@@ -746,7 +757,9 @@ class Compiler : public BaseCompiler
                                        Assembler::Condition cond);                                       
     CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
     CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg);
-    CompileStatus compileArrayPop(FrameEntry *thisv, bool isPacked);
+    CompileStatus compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *argTypes,
+                                     FrameEntry *thisValue, FrameEntry *argValue);
+    CompileStatus compileArrayPopShift(FrameEntry *thisv, bool isPacked, bool isArrayPop);
     CompileStatus compileArrayWithLength(uint32 argc);
     CompileStatus compileArrayWithArgs(uint32 argc);
 

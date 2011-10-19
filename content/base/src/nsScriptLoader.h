@@ -208,7 +208,7 @@ public:
    */
   void BeginDeferringScripts()
   {
-    mDeferEnabled = PR_TRUE;
+    mDeferEnabled = true;
     if (mDocument) {
       mDocument->BlockOnload();
     }
@@ -344,14 +344,14 @@ public:
     mLoader = aDoc->ScriptLoader();
     mWasEnabled = mLoader->GetEnabled();
     if (mWasEnabled) {
-      mLoader->SetEnabled(PR_FALSE);
+      mLoader->SetEnabled(false);
     }
   }
   
   ~nsAutoScriptLoaderDisabler()
   {
     if (mWasEnabled) {
-      mLoader->SetEnabled(PR_TRUE);
+      mLoader->SetEnabled(true);
     }
   }
   

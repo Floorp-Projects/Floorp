@@ -138,7 +138,7 @@ gboolean save_yourself_cb(GnomeClient *client, gint phase,
     return TRUE; // OOM
 
   // Notify observers to save the session state
-  didSaveSession->SetData(PR_FALSE);
+  didSaveSession->SetData(false);
   obsServ->NotifyObservers(didSaveSession, "session-save", nsnull);
 
   bool status;
@@ -150,7 +150,7 @@ gboolean save_yourself_cb(GnomeClient *client, gint phase,
     nsCOMPtr<nsISupportsPRBool> cancelQuit =
       do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
 
-    cancelQuit->SetData(PR_FALSE);
+    cancelQuit->SetData(false);
     obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
 
     bool abortQuit;
@@ -268,7 +268,7 @@ static bool OssoIsScreenOn(osso_context_t* ctx)
                            "get_display_status", &ret, DBUS_TYPE_INVALID);
   if (rv == OSSO_OK) {
       if (strcmp(ret.value.s, "on") == 0)
-          result = PR_TRUE;
+          result = true;
 
       osso_rpc_free_val(&ret);
   }
@@ -305,10 +305,10 @@ static void OssoDisplayCallback(osso_display_state_t state, gpointer data)
 
   if (state == OSSO_DISPLAY_ON) {
       os->NotifyObservers(nsnull, "system-display-on", nsnull);
-      OssoRequestAccelerometer(context, PR_TRUE);
+      OssoRequestAccelerometer(context, true);
   } else {
       os->NotifyObservers(nsnull, "system-display-dimmed-or-off", nsnull);
-      OssoRequestAccelerometer(context, PR_FALSE);
+      OssoRequestAccelerometer(context, false);
   }
 }
 
@@ -473,7 +473,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
 
   m_osso_context = osso_initialize(applicationName.get(), 
                                    gAppData->version ? gAppData->version : "1.0",
-                                   PR_TRUE,
+                                   true,
                                    nsnull);
 
   /* Check that initilialization was ok */
@@ -491,7 +491,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
   dbus_connection_add_filter(connnection, OssoModeControlCallback, nsnull, nsnull);
 #endif
 
-  *aRetVal = PR_TRUE;
+  *aRetVal = true;
 
 #ifdef MOZ_X11
 
@@ -597,12 +597,12 @@ NS_IMETHODIMP
 nsNativeAppSupportUnix::Stop(bool *aResult)
 {
   NS_ENSURE_ARG(aResult);
-  *aResult = PR_TRUE;
+  *aResult = true;
 
 #if (MOZ_PLATFORM_MAEMO == 5)
   if (m_osso_context) {
     // Disable the accelerometer when closing
-    OssoRequestAccelerometer(m_osso_context, PR_FALSE);
+    OssoRequestAccelerometer(m_osso_context, false);
 
     // Remove the MCE callback filter
     DBusConnection *connnection = (DBusConnection*)osso_get_sys_dbus_connection(m_osso_context);
@@ -623,7 +623,7 @@ nsNativeAppSupportUnix::Enable()
 #if (MOZ_PLATFORM_MAEMO == 5)
   // Enable the accelerometer for orientation support
   if (OssoIsScreenOn(m_osso_context))
-      OssoRequestAccelerometer(m_osso_context, PR_TRUE);
+      OssoRequestAccelerometer(m_osso_context, true);
 #endif
   return NS_OK;
 }

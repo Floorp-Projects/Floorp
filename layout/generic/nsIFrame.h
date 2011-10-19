@@ -480,8 +480,8 @@ void NS_MergeReflowStatusInto(nsReflowStatus* aPrimary,
  */
 typedef bool nsDidReflowStatus;
 
-#define NS_FRAME_REFLOW_NOT_FINISHED PR_FALSE
-#define NS_FRAME_REFLOW_FINISHED     PR_TRUE
+#define NS_FRAME_REFLOW_NOT_FINISHED false
+#define NS_FRAME_REFLOW_FINISHED     true
 
 /**
  * When there is no scrollable overflow rect, the visual overflow rect
@@ -576,10 +576,6 @@ protected:
   /**
    * Implements Destroy(). Do not call this directly except from within a
    * DestroyFrom() implementation.
-   *
-   * @note This will always be called, so it is not necessary to override
-   *       Destroy() in subclasses of nsFrame, just DestroyFrom().
-   *
    * @param  aDestructRoot is the root of the subtree being destroyed
    */
   virtual void DestroyFrom(nsIFrame* aDestructRoot) = 0;
@@ -792,7 +788,7 @@ public:
                                          nsStyleContext* aStyleContext) = 0;
 
   /**
-   * @return PR_FALSE if this frame definitely has no borders at all
+   * @return false if this frame definitely has no borders at all
    */                 
   bool HasBorder() const;
 
@@ -901,6 +897,11 @@ public:
   NS_DECLARE_FRAME_PROPERTY(OutlineInnerRectProperty, DestroyRect)
   NS_DECLARE_FRAME_PROPERTY(PreEffectsBBoxProperty, DestroyRect)
   NS_DECLARE_FRAME_PROPERTY(PreTransformBBoxProperty, DestroyRect)
+
+  // The initial overflow area passed to FinishAndStoreOverflow. This is only set
+  // on frames that Preserve3D(), and when at least one of the overflow areas
+  // differs from the frame bound rect.
+  NS_DECLARE_FRAME_PROPERTY(InitialOverflowProperty, DestroyOverflowAreas);
 
   NS_DECLARE_FRAME_PROPERTY(UsedMarginProperty, DestroyMargin)
   NS_DECLARE_FRAME_PROPERTY(UsedPaddingProperty, DestroyMargin)
@@ -1132,17 +1133,17 @@ public:
                   nsITheme::Transparency* aTransparencyState = nsnull) const {
     nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
     if (!aDisp->mAppearance)
-      return PR_FALSE;
+      return false;
     nsPresContext* pc = PresContext();
     nsITheme *theme = pc->GetTheme();
     if(!theme ||
        !theme->ThemeSupportsWidget(pc, mutable_this, aDisp->mAppearance))
-      return PR_FALSE;
+      return false;
     if (aTransparencyState) {
       *aTransparencyState =
         theme->GetWidgetTransparency(mutable_this, aDisp->mAppearance);
     }
-    return PR_TRUE;
+    return true;
   }
   
   /**
@@ -1161,7 +1162,7 @@ public:
    * are clipped. In other words, descendant elements whose CSS boxes do not
    * have this frame as a container are not clipped. Also,
    * border/background/outline items for this frame are not clipped,
-   * unless aClipBorderBackground is set to PR_TRUE. (We need this because
+   * unless aClipBorderBackground is set to true. (We need this because
    * a scrollframe must overflow-clip its scrolled child's background/borders.)
    *
    * Indices into aClipRadii are the NS_CORNER_* constants in nsStyleConsts.h
@@ -1472,7 +1473,7 @@ public:
       , lineContainer(nsnull)
       , prevLines(0)
       , currentLine(0)
-      , skipWhitespace(PR_TRUE)
+      , skipWhitespace(true)
       , trailingWhitespace(0)
     {}
 
@@ -1507,7 +1508,7 @@ public:
   struct InlineMinWidthData : public InlineIntrinsicWidthData {
     InlineMinWidthData()
       : trailingTextFrame(nsnull)
-      , atStartOfLine(PR_TRUE)
+      , atStartOfLine(true)
     {}
 
     // We need to distinguish forced and optional breaks for cases where the
@@ -1772,7 +1773,7 @@ public:
    * that proper word-breaking can be done.
    *
    * @return 
-   *    PR_TRUE if we can continue a "text run" through the frame. A
+   *    true if we can continue a "text run" through the frame. A
    *    text run is text that should be treated contiguously for line
    *    and word breaking.
    */
@@ -1806,7 +1807,7 @@ public:
    * for all other frame types.
    */
   virtual bool HasAnyNoncollapsedCharacters()
-  { return PR_FALSE; }
+  { return false; }
 
   /**
    * Accessor functions to get/set the associated view object
@@ -2200,7 +2201,7 @@ public:
    * frame's outline, and descentant frames' outline, but does not include
    * areas clipped out by the CSS "overflow" and "clip" properties.
    *
-   * HasOverflowRects() (below) will return PR_TRUE when this overflow
+   * HasOverflowRects() (below) will return true when this overflow
    * rect has been explicitly set, even if it matches mRect.
    * XXX Note: because of a space optimization using the formula above,
    * during reflow this function does not give accurate data if
@@ -2228,7 +2229,7 @@ public:
    * It does not include areas clipped out by the CSS "overflow" and
    * "clip" properties.
    *
-   * HasOverflowRects() (below) will return PR_TRUE when this overflow
+   * HasOverflowRects() (below) will return true when this overflow
    * rect has been explicitly set, even if it matches mRect.
    * XXX Note: because of a space optimization using the formula above,
    * during reflow this function does not give accurate data if
@@ -2362,7 +2363,7 @@ public:
   /**
    *  called to find the previous/next selectable leaf frame.
    *  @param aDirection [in] the direction to move in (eDirPrevious or eDirNext)
-   *  @param aVisual [in] whether bidi caret behavior is visual (PR_TRUE) or logical (PR_FALSE)
+   *  @param aVisual [in] whether bidi caret behavior is visual (true) or logical (false)
    *  @param aJumpLines [in] whether to allow jumping across line boundaries
    *  @param aScrollViewStop [in] whether to stop when reaching a scroll frame boundary
    *  @param aOutFrame [out] the previous/next selectable leaf frame
@@ -2376,9 +2377,9 @@ public:
 
   /**
    *  called to see if the children of the frame are visible from indexstart to index end.
-   *  this does not change any state. returns PR_TRUE only if the indexes are valid and any of
+   *  this does not change any state. returns true only if the indexes are valid and any of
    *  the children are visible.  for textframes this index is the character index.
-   *  if aStart = aEnd result will be PR_FALSE
+   *  if aStart = aEnd result will be false
    *  @param aStart start index of first child from 0-N (number of children)
    *  @param aEnd   end index of last child from 0-N
    *  @param aRecurse should this frame talk to siblings to get to the contents other children?
@@ -2436,7 +2437,7 @@ public:
   bool IsVisibleForPainting();
   /**
    * Check whether this frame is visible in the current selection. Returns
-   * PR_TRUE if there is no current selection.
+   * true if there is no current selection.
    */
   bool IsVisibleInSelection(nsDisplayListBuilder* aBuilder);
 
@@ -2515,14 +2516,14 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::BaseLevelProperty()))
 NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
 
   /**
-   * Return PR_TRUE if and only if this frame obeys visibility:hidden.
+   * Return true if and only if this frame obeys visibility:hidden.
    * if it does not, then nsContainerFrame will hide its view even though
    * this means children can't be made visible again.
    */
   virtual bool SupportsVisibilityHidden() { return true; }
 
   /**
-   * Returns PR_TRUE if the frame is absolutely positioned and has a clip
+   * Returns true if the frame is absolutely positioned and has a clip
    * rect set via the 'clip' property. If true, then we also set aRect
    * to the computed clip rect coordinates relative to this frame's origin.
    * aRect must not be null!
@@ -2609,7 +2610,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
   // This does not alter the overflow area. If the caller is changing
   // the box size, the caller is responsible for updating the overflow
   // area. It's enough to just call Layout or SyncLayout on the
-  // box. You can pass PR_TRUE to aRemoveOverflowArea as a
+  // box. You can pass true to aRemoveOverflowArea as a
   // convenience.
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                          bool aRemoveOverflowAreas = false) = 0;
@@ -2658,8 +2659,8 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
 #endif
 
   /**
-   * @return PR_TRUE if this text frame ends with a newline character.  It
-   * should return PR_FALSE if this is not a text frame.
+   * @return true if this text frame ends with a newline character.  It
+   * should return false if this is not a text frame.
    */
   virtual bool HasTerminalNewline() const;
 
@@ -2822,9 +2823,9 @@ protected:
    * @param  aForward [in] Are we moving forward (or backward) in content order.
    * @param  aOffset [in/out] At what offset into the frame to start looking.
    *         on output - what offset was reached (whether or not we found a place to stop).
-   * @return PR_TRUE: An appropriate offset was found within this frame,
+   * @return true: An appropriate offset was found within this frame,
    *         and is given by aOffset.
-   *         PR_FALSE: Not found within this frame, need to try the next frame.
+   *         false: Not found within this frame, need to try the next frame.
    */
   virtual bool PeekOffsetNoAmount(bool aForward, PRInt32* aOffset) = 0;
   
@@ -2836,9 +2837,9 @@ protected:
    * @param  aRespectClusters [in] Whether to restrict result to valid cursor locations
    *         (between grapheme clusters) - default TRUE maintains "normal" behavior,
    *         FALSE is used for selection by "code unit" (instead of "character")
-   * @return PR_TRUE: An appropriate offset was found within this frame,
+   * @return true: An appropriate offset was found within this frame,
    *         and is given by aOffset.
-   *         PR_FALSE: Not found within this frame, need to try the next frame.
+   *         false: Not found within this frame, need to try the next frame.
    */
   virtual bool PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
                                      bool aRespectClusters = true) = 0;
@@ -2846,20 +2847,20 @@ protected:
   /**
    * Search the frame for the next word boundary
    * @param  aForward [in] Are we moving forward (or backward) in content order.
-   * @param  aWordSelectEatSpace [in] PR_TRUE: look for non-whitespace following
+   * @param  aWordSelectEatSpace [in] true: look for non-whitespace following
    *         whitespace (in the direction of movement).
-   *         PR_FALSE: look for whitespace following non-whitespace (in the
+   *         false: look for whitespace following non-whitespace (in the
    *         direction  of movement).
    * @param  aIsKeyboardSelect [in] Was the action initiated by a keyboard operation?
-   *         If PR_TRUE, punctuation immediately following a word is considered part
+   *         If true, punctuation immediately following a word is considered part
    *         of that word. Otherwise, a sequence of punctuation is always considered
    *         as a word on its own.
    * @param  aOffset [in/out] At what offset into the frame to start looking.
    *         on output - what offset was reached (whether or not we found a place to stop).
    * @param  aState [in/out] the state that is carried from frame to frame
-   * @return PR_TRUE: An appropriate offset was found within this frame,
+   * @return true: An appropriate offset was found within this frame,
    *         and is given by aOffset.
-   *         PR_FALSE: Not found within this frame, need to try the next frame.
+   *         false: Not found within this frame, need to try the next frame.
    */
   struct PeekWordState {
     // true when we're still at the start of the search, i.e., we can't return
@@ -2879,19 +2880,19 @@ protected:
     // on the current line.
     nsAutoString mContext;
 
-    PeekWordState() : mAtStart(PR_TRUE), mSawBeforeType(PR_FALSE),
-        mLastCharWasPunctuation(PR_FALSE), mLastCharWasWhitespace(PR_FALSE),
-        mSeenNonPunctuationSinceWhitespace(PR_FALSE) {}
-    void SetSawBeforeType() { mSawBeforeType = PR_TRUE; }
+    PeekWordState() : mAtStart(true), mSawBeforeType(false),
+        mLastCharWasPunctuation(false), mLastCharWasWhitespace(false),
+        mSeenNonPunctuationSinceWhitespace(false) {}
+    void SetSawBeforeType() { mSawBeforeType = true; }
     void Update(bool aAfterPunctuation, bool aAfterWhitespace) {
       mLastCharWasPunctuation = aAfterPunctuation;
       mLastCharWasWhitespace = aAfterWhitespace;
       if (aAfterWhitespace) {
-        mSeenNonPunctuationSinceWhitespace = PR_FALSE;
+        mSeenNonPunctuationSinceWhitespace = false;
       } else if (!aAfterPunctuation) {
-        mSeenNonPunctuationSinceWhitespace = PR_TRUE;
+        mSeenNonPunctuationSinceWhitespace = true;
       }
-      mAtStart = PR_FALSE;
+      mAtStart = false;
     }
   };
   virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,

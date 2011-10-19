@@ -38,7 +38,6 @@
 
 DOMCI_CLASS(Window)
 DOMCI_CLASS(Location)
-DOMCI_CLASS(CaretPosition)
 DOMCI_CLASS(Navigator)
 DOMCI_CLASS(Plugin)
 DOMCI_CLASS(PluginArray)
@@ -509,8 +508,6 @@ DOMCI_CLASS(IDBIndex)
 DOMCI_CLASS(IDBVersionChangeEvent)
 DOMCI_CLASS(IDBVersionChangeRequest)
 DOMCI_CLASS(IDBDatabaseException)
-
-DOMCI_CLASS(EventException)
 
 DOMCI_CLASS(Touch)
 DOMCI_CLASS(TouchList)

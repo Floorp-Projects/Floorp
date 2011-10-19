@@ -35,12 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsHTMLTags.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStaticAtom.h"
 #include "nsUnicharUtils.h"
+
+using namespace mozilla;
 
 // C++ sucks! There's no way to do this with a macro, at least not
 // that I know, if you know how to do this with a macro then please do
@@ -370,7 +374,7 @@ nsHTMLTags::AddRefTable(void)
 
   if (gTableRefCount++ == 0) {
     // Fill in our static atom pointers
-    NS_RegisterStaticAtoms(sTagAtoms_info, NS_ARRAY_LENGTH(sTagAtoms_info));
+    NS_RegisterStaticAtoms(sTagAtoms_info, ArrayLength(sTagAtoms_info));
 
 
     NS_ASSERTION(!gTagTable && !gTagAtomTable, "pre existing hash!");

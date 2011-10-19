@@ -56,6 +56,7 @@ _BROWSER_FILES = \
   remote_formsZoom.js \
   remote_vkb.js \
   browser_addons.js \
+  browser_addons_locales.js \
   browser_appmenu.js \
   browser_autocompletesearch.js\
   browser_awesomescreen.js \
@@ -74,7 +75,8 @@ _BROWSER_FILES = \
   browser_formsZoom.html \
   $(warning browser_formsZoom.js disabled due to failures) \
   browser_history.js \
-  browser_localepicker.js \
+  $(info browser_localepicker.js is disabled because the localepicker is disabled (bug 694047)) \
+  browser_localepicker_escape.js \
   browser_mainui.js \
   browser_preferences_text.js \
   browser_preferences_fulltoggle.js \

@@ -52,7 +52,6 @@
 #include "jspropertytree.h"
 #include "jsproxy.h"
 #include "jsscope.h"
-#include "jsstaticcheck.h"
 #include "jstypedarray.h"
 #include "jsxml.h"
 #include "jswrapper.h"
@@ -71,7 +70,6 @@
 #include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
-#include "jsprobes.h"
 #include "jsscopeinlines.h"
 
 inline bool
@@ -1080,7 +1078,7 @@ JSObject::hasProperty(JSContext *cx, jsid id, bool *foundp, uintN flags)
     JSObject *pobj;
     JSProperty *prop;
     JSAutoResolveFlags rf(cx, flags);
-    if (!lookupProperty(cx, id, &pobj, &prop))
+    if (!lookupGeneric(cx, id, &pobj, &prop))
         return false;
     *foundp = !!prop;
     return true;
@@ -1237,10 +1235,16 @@ JSObject::slotsAndStructSize() const
 }
 
 inline JSBool
-JSObject::lookupProperty(JSContext *cx, jsid id, JSObject **objp, JSProperty **propp)
+JSObject::lookupGeneric(JSContext *cx, jsid id, JSObject **objp, JSProperty **propp)
 {
-    js::LookupPropOp op = getOps()->lookupProperty;
+    js::LookupGenericOp op = getOps()->lookupGeneric;
     return (op ? op : js_LookupProperty)(cx, this, id, objp, propp);
+}
+
+inline JSBool
+JSObject::lookupProperty(JSContext *cx, js::PropertyName *name, JSObject **objp, JSProperty **propp)
+{
+    return lookupGeneric(cx, ATOM_TO_JSID(name), objp, propp);
 }
 
 inline JSBool
@@ -1248,6 +1252,12 @@ JSObject::lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty
 {
     js::LookupElementOp op = getOps()->lookupElement;
     return (op ? op : js_LookupElement)(cx, this, index, objp, propp);
+}
+
+inline JSBool
+JSObject::lookupSpecial(JSContext *cx, js::SpecialId sid, JSObject **objp, JSProperty **propp)
+{
+    return lookupGeneric(cx, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 inline JSBool
@@ -1919,7 +1929,7 @@ class PrimitiveBehavior<double> {
 } /* namespace detail */
 
 inline JSObject *
-NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok)
+NonGenericMethodGuard(JSContext *cx, CallArgs args, Native native, Class *clasp, bool *ok)
 {
     const Value &thisv = args.thisv();
     if (thisv.isObject()) {
@@ -1930,13 +1940,13 @@ NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok)
         }
     }
 
-    *ok = HandleNonGenericMethodClassMismatch(cx, args, clasp);
+    *ok = HandleNonGenericMethodClassMismatch(cx, args, native, clasp);
     return NULL;
 }
 
 template <typename T>
 inline bool
-BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, T *v, bool *ok)
+BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, Native native, T *v, bool *ok)
 {
     typedef detail::PrimitiveBehavior<T> Behavior;
 
@@ -1946,7 +1956,7 @@ BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, T *v, bool *ok)
         return true;
     }
 
-    if (!NonGenericMethodGuard(cx, args, Behavior::getClass(), ok))
+    if (!NonGenericMethodGuard(cx, args, native, Behavior::getClass(), ok))
         return false;
 
     *v = Behavior::extract(thisv.toObject().getPrimitiveThis());
@@ -1966,6 +1976,29 @@ ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx)
       case ESClass_Boolean: return obj.isBoolean();
     }
     JS_NOT_REACHED("bad classValue");
+    return false;
+}
+
+static JS_ALWAYS_INLINE bool
+ValueIsSpecial(JSObject *obj, Value *propval, SpecialId *sidp, JSContext *cx)
+{
+    if (!propval->isObject())
+        return false;
+
+#if JS_HAS_XML_SUPPORT
+    if (obj->isXML()) {
+        *sidp = SpecialId(propval->toObject());
+        return true;
+    }
+
+    JSObject &propobj = propval->toObject();
+    JSAtom *name;
+    if (propobj.isQName() && GetLocalNameFromFunctionQName(&propobj, &name, cx)) {
+        propval->setString(name);
+        return false;
+    }
+#endif
+
     return false;
 }
 

@@ -95,9 +95,9 @@ private:
 nsHttpPipeline::nsHttpPipeline()
     : mConnection(nsnull)
     , mStatus(NS_OK)
-    , mRequestIsPartial(PR_FALSE)
-    , mResponseIsPartial(PR_FALSE)
-    , mClosed(PR_FALSE)
+    , mRequestIsPartial(false)
+    , mResponseIsPartial(false)
+    , mClosed(false)
     , mPushBackBuf(nsnull)
     , mPushBackLen(0)
     , mPushBackMax(0)
@@ -197,7 +197,7 @@ nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
         if (index == 0 && mRequestIsPartial) {
             // the transaction is in the request queue.  check to see if any of
             // its data has been written out yet.
-            killPipeline = PR_TRUE;
+            killPipeline = true;
         }
         mRequestQ.RemoveElementAt(index);
     }
@@ -209,7 +209,7 @@ nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
         // last transaction in the pipeline, there doesn't seem to be that much
         // value in doing so.  most likely if this transaction is going away,
         // the others will be shortly as well.
-        killPipeline = PR_TRUE;
+        killPipeline = true;
     }
 
     trans->Close(reason);
@@ -248,13 +248,13 @@ nsHttpPipeline::GetSecurityInfo(nsISupports **result)
 bool
 nsHttpPipeline::IsPersistent()
 {
-    return PR_TRUE; // pipelining requires this
+    return true; // pipelining requires this
 }
 
 bool
 nsHttpPipeline::IsReused()
 {
-    return PR_TRUE; // pipelining requires this
+    return true; // pipelining requires this
 }
 
 nsresult
@@ -523,14 +523,14 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
             trans->Close(NS_OK);
             NS_RELEASE(trans);
             mResponseQ.RemoveElementAt(0);
-            mResponseIsPartial = PR_FALSE;
+            mResponseIsPartial = false;
 
             // ask the connection manager to add additional transactions
             // to our pipeline.
             gHttpHandler->ConnMgr()->AddTransactionToPipeline(this);
         }
         else
-            mResponseIsPartial = PR_TRUE;
+            mResponseIsPartial = true;
     }
 
     if (mPushBackLen) {
@@ -558,7 +558,7 @@ nsHttpPipeline::Close(nsresult reason)
 
     // the connection is going away!
     mStatus = reason;
-    mClosed = PR_TRUE;
+    mClosed = true;
 
     PRUint32 i, count;
     nsAHttpTransaction *trans;
@@ -620,7 +620,7 @@ nsHttpPipeline::FillSendBuf()
                         getter_AddRefs(mSendBufOut),
                         nsIOService::gDefaultSegmentSize,  /* segment size */
                         nsIOService::gDefaultSegmentSize,  /* max size */
-                        PR_TRUE, PR_TRUE,
+                        true, true,
                         nsIOService::gBufferCache);
         if (NS_FAILED(rv)) return rv;
     }
@@ -643,10 +643,10 @@ nsHttpPipeline::FillSendBuf()
             // move transaction from request queue to response queue
             mRequestQ.RemoveElementAt(0);
             mResponseQ.AppendElement(trans);
-            mRequestIsPartial = PR_FALSE;
+            mRequestIsPartial = false;
         }
         else
-            mRequestIsPartial = PR_TRUE;
+            mRequestIsPartial = true;
     }
     return NS_OK;
 }

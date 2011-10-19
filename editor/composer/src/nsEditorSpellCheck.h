@@ -94,8 +94,8 @@ protected:
   bool mUpdateDictionaryRunning;
 
 public:
-  void BeginUpdateDictionary() { mUpdateDictionaryRunning = PR_TRUE ;}
-  void EndUpdateDictionary() { mUpdateDictionaryRunning = PR_FALSE ;}
+  void BeginUpdateDictionary() { mUpdateDictionaryRunning = true ;}
+  void EndUpdateDictionary() { mUpdateDictionaryRunning = false ;}
 };
 
 #endif // nsEditorSpellCheck_h___

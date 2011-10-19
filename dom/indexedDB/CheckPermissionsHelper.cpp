@@ -196,7 +196,7 @@ CheckPermissionsHelper::Observe(nsISupports* aSubject,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!strcmp(aTopic, TOPIC_PERMISSIONS_RESPONSE), "Bad topic!");
 
-  mHasPrompted = PR_TRUE;
+  mHasPrompted = true;
 
   nsresult rv;
   mPromptResult = nsDependentString(aData).ToInteger(&rv);

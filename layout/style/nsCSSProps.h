@@ -206,7 +206,7 @@ public:
   static bool GetColorName(PRInt32 aPropID, nsCString &aStr);
 
   // Find |aKeyword| in |aTable|, if found set |aValue| to its corresponding value.
-  // If not found, return PR_FALSE and do not set |aValue|.
+  // If not found, return false and do not set |aValue|.
   static bool FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& aValue);
   // Return the first keyword in |aTable| that has the corresponding value |aValue|.
   // Return |eCSSKeyword_UNKNOWN| if not found.

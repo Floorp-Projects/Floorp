@@ -43,6 +43,7 @@
 #include <gfxPoint3D.h>
 #include <gfxPointH3D.h>
 #include <gfxMatrix.h>
+#include <gfxQuad.h>
 
 /**
  * This class represents a 3D transformation. The matrix is laid
@@ -119,6 +120,12 @@ public:
    * can be reduced by dropping the z row and column.
    */
   bool CanDraw2D(gfxMatrix* aMatrix = nsnull) const;
+
+  /**
+   * Converts the matrix to one that doesn't modify the z coordinate of points,
+   * but leaves the rest of the transformation unchanged.
+   */
+  gfx3DMatrix& ProjectTo2D();
 
   /**
    * Returns true if the matrix is the identity matrix. The most important
@@ -247,6 +254,9 @@ public:
    */
   gfxRect TransformBounds(const gfxRect& rect) const;
 
+
+  gfxQuad TransformRect(const gfxRect& aRect) const;
+
   /** 
    * Transforms a 3D vector according to this matrix.
    */
@@ -295,6 +305,12 @@ public:
    * by transform the screen plane (z=0) by this matrix.
    */
   gfxPoint3D GetNormalVector() const;
+
+  /**
+   * Returns true if a plane transformed by this matrix will
+   * have it's back face visible.
+   */
+  bool IsBackfaceVisible() const;
 
   /**
    * Check if matrix is singular (no inverse exists).

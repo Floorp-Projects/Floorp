@@ -45,12 +45,11 @@
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jsinterp.h"
-#include "jsstaticcheck.h"
 #include "jsxml.h"
-#include "jsregexp.h"
 #include "jsgc.h"
 
 #include "frontend/ParseMaps.h"
+#include "vm/RegExpObject.h"
 
 namespace js {
 
@@ -499,12 +498,6 @@ JSContext::ensureGeneratorStackSpace()
     if (!ok)
         js_ReportOutOfMemory(this);
     return ok;
-}
-
-inline js::RegExpStatics *
-JSContext::regExpStatics()
-{
-    return js::RegExpStatics::extractFrom(js::GetGlobalForScopeChain(this));
 }
 
 inline void

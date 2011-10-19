@@ -400,6 +400,7 @@ var Browser = {
     messageManager.addMessageListener("Browser:CertException", this);
     messageManager.addMessageListener("Browser:BlockedSite", this);
     messageManager.addMessageListener("Browser:ErrorPage", this);
+    messageManager.addMessageListener("Browser:PluginClickToPlayClicked", this);
 
     // Broadcast a UIReady message so add-ons know we are finished with startup
     let event = document.createEvent("Events");
@@ -498,6 +499,7 @@ var Browser = {
     messageManager.removeMessageListener("Browser:CertException", this);
     messageManager.removeMessageListener("Browser:BlockedSite", this);
     messageManager.removeMessageListener("Browser:ErrorPage", this);
+    messageManager.removeMessageListener("Browser:PluginClickToPlayClicked", this);
 
     var os = Services.obs;
     os.removeObserver(XPInstallObserver, "addon-install-blocked");
@@ -1236,7 +1238,7 @@ var Browser = {
       }
 
       case "Browser:KeyPress": {
-        let keyset = document.getElementById("mainKeyset");
+        let keyset = Elements.mainKeyset;
         keyset.setAttribute("disabled", "false");
         if (json.preventDefault)
           break;
@@ -1275,6 +1277,31 @@ var Browser = {
       case "Browser:ErrorPage":
         this._handleErrorPage(aMessage);
         break;
+      case "Browser:PluginClickToPlayClicked": {
+        // Save off session history
+        let parent = browser.parentNode;
+        let data = browser.__SS_data;
+        if (data.entries.length == 0)
+          return;
+
+        // Remove the browser from the DOM, effectively killing it's content
+        parent.removeChild(browser);
+
+        // Re-create the browser as non-remote, so plugins work
+        browser.setAttribute("remote", "false");
+        parent.appendChild(browser);
+
+        // Reload the content using session history
+        browser.__SS_data = data;
+        let json = {
+          uri: data.entries[data.index - 1].url,
+          flags: null,
+          entries: data.entries,
+          index: data.index
+        };
+        browser.messageManager.sendAsyncMessage("WebNavigation:LoadURI", json);
+        break;
+      }
     }
   }
 };
@@ -1338,10 +1365,12 @@ Browser.MainDragger.prototype = {
   },
 
   dragMove: function dragMove(dx, dy, scroller, aIsKinetic) {
-    if (this._canGrabSidebar && !this._grabSidebar && dx) {
-      this._grabSidebar = true;
-      TabletSidebar.grab();
+    if (this._canGrabSidebar) {
+      this._grabSidebar = TabletSidebar.tryGrab(dx);
+      // After trying once, don't keep checking every move.
+      this._canGrabSidebar = false;
     }
+
     if (this._grabSidebar) {
       TabletSidebar.slideBy(dx);
       return;
@@ -1950,8 +1979,7 @@ const ContentTouchHandler = {
     // Check if the user touched near to one of the edges of the browser area
     // or if the urlbar is showing
     this.canCancelPan = (aX >= rect.left + kSafetyX) && (aX <= rect.right - kSafetyX) &&
-                        (aY >= rect.top  + kSafetyY) &&
-                        (bcr.top == 0 || Util.isTablet());
+                        (aY >= rect.top  + kSafetyY);
   },
 
   tapDown: function tapDown(aX, aY) {
@@ -1977,7 +2005,8 @@ const ContentTouchHandler = {
   },
 
   tapOver: function tapOver(aX, aY) {
-    this._dispatchMouseEvent("Browser:MouseOver", aX, aY);
+    if (!this.clickPrevented)
+      this._dispatchMouseEvent("Browser:MouseOver", aX, aY);
   },
 
   tapUp: function tapUp(aX, aY) {
@@ -3180,9 +3209,11 @@ function rendererFactory(aBrowser, aCanvas) {
  * window but floats over it.
  */
 var ViewableAreaObserver = {
+  _ignoreTabletSidebar: false, // Don't leave room for the tablet tabs sidebar
+
   get width() {
     let width = this._width || window.innerWidth;
-    if (!TabletSidebar._grabbed && Util.isTablet())
+    if (!this._ignoreTabletSidebar && Util.isTablet())
       width -= this.sidebarWidth;
     return width;
   },
@@ -3249,7 +3280,11 @@ var ViewableAreaObserver = {
 #endif
   },
 
-  update: function va_update() {
+  update: function va_update(aParams) {
+    aParams = aParams || {};
+    if ("setIgnoreTabletSidebar" in aParams)
+      this._ignoreTabletSidebar = aParams.setIgnoreTabletSidebar;
+
     this._sidebarWidth = null;
 
     let oldHeight = parseInt(Browser.styles["viewable-height"].height);

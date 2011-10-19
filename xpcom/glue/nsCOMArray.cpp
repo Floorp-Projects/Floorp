@@ -137,7 +137,7 @@ nsCOMArray_base::RemoveObjectAt(PRInt32 aIndex)
         return result;
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 bool
@@ -156,7 +156,7 @@ nsCOMArray_base::RemoveObjectsAt(PRInt32 aIndex, PRInt32 aCount)
         return result;
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 // useful for destructors
@@ -165,7 +165,7 @@ ReleaseObjects(void* aElement, void*)
 {
     nsISupports* element = static_cast<nsISupports*>(aElement);
     NS_IF_RELEASE(element);
-    return PR_TRUE;
+    return true;
 }
 
 void
@@ -182,7 +182,7 @@ nsCOMArray_base::SetCount(PRInt32 aNewCount)
 {
     NS_ASSERTION(aNewCount >= 0,"SetCount(negative index)");
     if (aNewCount < 0)
-      return PR_FALSE;
+      return false;
 
     PRInt32 count = Count(), i;
     nsAutoVoidArray objects;

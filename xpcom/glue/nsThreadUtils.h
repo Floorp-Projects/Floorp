@@ -118,7 +118,7 @@ inline bool NS_IsMainThread()
 /**
  * Test to see if the current thread is the main thread.
  *
- * @returns PR_TRUE if the current thread is the main thread, and PR_FALSE
+ * @returns true if the current thread is the main thread, and false
  * otherwise.
  */
 extern NS_COM_GLUE bool NS_IsMainThread();
@@ -176,7 +176,7 @@ NS_ProcessPendingEvents(nsIThread *thread,
  * Shortcut for nsIThread::HasPendingEvents.
  *
  * It is an error to call this function when the given thread is not the
- * current thread.  This function will return PR_FALSE if called from some
+ * current thread.  This function will return false if called from some
  * other thread.
  *
  * @param thread
@@ -193,7 +193,7 @@ NS_HasPendingEvents(nsIThread *thread = nsnull);
  * Shortcut for nsIThread::ProcessNextEvent.
  *   
  * It is an error to call this function when the given thread is not the
- * current thread.  This function will simply return PR_FALSE if called
+ * current thread.  This function will simply return false if called
  * from some other thread.
  *
  * @param thread

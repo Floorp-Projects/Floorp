@@ -61,8 +61,8 @@ public:
 
   /**
    * See if the given aX,aY <b>pixel</b> coordinates are in the image
-   * map. If they are then PR_TRUE is returned and aContent points to the
-   * found area. If the coordinates are not in the map then PR_FALSE
+   * map. If they are then true is returned and aContent points to the
+   * found area. If the coordinates are not in the map then false
    * is returned.
    */
   bool IsInside(nscoord aX, nscoord aY,

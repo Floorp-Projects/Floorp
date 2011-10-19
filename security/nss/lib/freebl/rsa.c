@@ -37,7 +37,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.42 2011/03/30 01:20:12 rrelyea%redhat.com Exp $
+ * $Id: rsa.c,v 1.43 2011/09/21 01:09:48 wtc%google.com Exp $
  */
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -1096,8 +1096,6 @@ init_blinding_params(RSABlindingParams *rsabp, RSAPrivateKey *key,
                      mp_int *n, unsigned int modLen)
 {
     blindingParams * bp = rsabp->array;
-    SECStatus rv = SECSuccess;
-    mp_err err = MP_OKAY;
     int i = 0;
 
     /* Initialize the list pointer for the element */
@@ -1217,7 +1215,7 @@ get_blinding_params(RSAPrivateKey *key, mp_int *n, unsigned int modLen,
 	    PZ_Unlock(blindingParamsList.lock); 
 	    return SECSuccess;
 	}
-	/* We did not find a usable set of blinding params.  Can we make one?
+	/* We did not find a usable set of blinding params.  Can we make one? */
 	/* Find a free bp struct. */
 	prevbp = NULL;
 	if ((bp = rsabp->free) != NULL) {

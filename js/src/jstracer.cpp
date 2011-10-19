@@ -39,8 +39,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "jsstdint.h"
-#include "jsbit.h"              // low-level (NSPR-based) headers next
 #include "jsprf.h"
 #include <math.h>               // standard headers next
 
@@ -63,7 +64,6 @@
 #include "jscompartment.h"
 #include "jsdate.h"
 #include "jsdbgapi.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -72,14 +72,14 @@
 #include "jsmath.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsregexp.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jsstaticcheck.h"
-#include "jstl.h"
 #include "jstracer.h"
 #include "jsxml.h"
 #include "jstypedarray.h"
+
+#include "builtin/RegExp.h"
+#include "frontend/BytecodeGenerator.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
@@ -91,10 +91,10 @@
 #include "jsscriptinlines.h"
 #include "jscntxtinlines.h"
 #include "jsopcodeinlines.h"
-#include "jsregexpinlines.h"
 #include "jstypedarrayinlines.h"
 
 #include "vm/CallObject-inl.h"
+#include "vm/RegExpObject-inl.h"
 #include "vm/Stack-inl.h"
 
 #ifdef JS_METHODJIT
@@ -116,6 +116,8 @@
 #include <string.h>
 #include <elf.h>
 #endif
+
+using namespace mozilla;
 
 #ifdef DEBUG
 namespace js {
@@ -920,189 +922,6 @@ FragProfiling_showResults(TraceMonitor* tm)
 #endif
 
 /* ----------------------------------------------------------------- */
-
-#ifdef DEBUG
-JSBool FASTCALL
-PrintOnTrace(char* format, uint32 argc, double *argv)
-{
-    union {
-        struct {
-            uint32 lo;
-            uint32 hi;
-        } i;
-        double   d;
-        char     *cstr;
-        JSObject *o;
-        JSString *s;
-    } u;
-
-#define GET_ARG() JS_BEGIN_MACRO          \
-        if (argi >= argc) { \
-        fprintf(out, "[too few args for format]"); \
-        break;       \
-} \
-    u.d = argv[argi++]; \
-    JS_END_MACRO
-
-    FILE *out = stderr;
-
-    uint32 argi = 0;
-    for (char *p = format; *p; ++p) {
-        if (*p != '%') {
-            putc(*p, out);
-            continue;
-        }
-        char ch = *++p;
-        if (!ch) {
-            fprintf(out, "[trailing %%]");
-            continue;
-        }
-
-        switch (ch) {
-        case 'a':
-            GET_ARG();
-            fprintf(out, "[%u:%u 0x%x:0x%x %f]", u.i.lo, u.i.hi, u.i.lo, u.i.hi, u.d);
-            break;
-        case 'd':
-            GET_ARG();
-            fprintf(out, "%d", u.i.lo);
-            break;
-        case 'u':
-            GET_ARG();
-            fprintf(out, "%u", u.i.lo);
-            break;
-        case 'x':
-            GET_ARG();
-            fprintf(out, "%x", u.i.lo);
-            break;
-        case 'f':
-            GET_ARG();
-            fprintf(out, "%f", u.d);
-            break;
-        case 'o':
-            GET_ARG();
-            js_DumpObject(u.o);
-            break;
-        case 's':
-            GET_ARG();
-            {
-                size_t length = u.s->length();
-                // protect against massive spew if u.s is a bad pointer.
-                if (length > 1 << 16)
-                    length = 1 << 16;
-                if (u.s->isRope()) {
-                    fprintf(out, "<rope>");
-                    break;
-                }
-                if (u.s->isRope()) {
-                    fprintf(out, "<rope: length %d>", (int)u.s->asRope().length());
-                } else {
-                    const jschar *chars = u.s->asLinear().chars();
-                    for (unsigned i = 0; i < length; ++i) {
-                        jschar co = chars[i];
-                        if (co < 128)
-                            putc(co, out);
-                        else if (co < 256)
-                            fprintf(out, "\\u%02x", co);
-                        else
-                            fprintf(out, "\\u%04x", co);
-                    }
-                }
-            }
-            break;
-        case 'S':
-            GET_ARG();
-            fprintf(out, "%s", u.cstr);
-            break;
-        case 'v': {
-            GET_ARG();
-            Value *v = (Value *) u.i.lo;
-            js_DumpValue(*v);
-            break;
-        }
-        default:
-            fprintf(out, "[invalid %%%c]", *p);
-        }
-    }
-
-#undef GET_ARG
-
-    return JS_TRUE;
-}
-
-JS_DEFINE_CALLINFO_3(extern, BOOL, PrintOnTrace, CHARPTR, UINT32, DOUBLEPTR, 0, ACCSET_STORE_ANY)
-
-// This version is not intended to be called directly: usually it is easier to
-// use one of the other overloads.
-void
-TraceRecorder::tprint(const char *format, int count, nanojit::LIns *insa[])
-{
-    size_t size = strlen(format) + 1;
-    char* data = (char*) traceMonitor->traceAlloc->alloc(size);
-    memcpy(data, format, size);
-
-    double *args = (double*) traceMonitor->traceAlloc->alloc(count * sizeof(double));
-    LIns* argsp_ins = w.nameImmpNonGC(args);
-    for (int i = 0; i < count; ++i)
-        w.stTprintArg(insa, argsp_ins, i);
-
-    LIns* args_ins[] = { w.nameImmpNonGC(args), w.nameImmi(count), w.nameImmpNonGC(data) };
-    LIns* call_ins = w.call(&PrintOnTrace_ci, args_ins);
-    guard(false, w.eqi0(call_ins), MISMATCH_EXIT);
-}
-
-// Generate a 'printf'-type call from trace for debugging.
-void
-TraceRecorder::tprint(const char *format)
-{
-    LIns* insa[] = { NULL };
-    tprint(format, 0, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins)
-{
-    LIns* insa[] = { ins };
-    tprint(format, 1, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2)
-{
-    LIns* insa[] = { ins1, ins2 };
-    tprint(format, 2, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3)
-{
-    LIns* insa[] = { ins1, ins2, ins3 };
-    tprint(format, 3, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4)
-{
-    LIns* insa[] = { ins1, ins2, ins3, ins4 };
-    tprint(format, 4, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4,
-                      LIns *ins5)
-{
-    LIns* insa[] = { ins1, ins2, ins3, ins4, ins5 };
-    tprint(format, 5, insa);
-}
-
-void
-TraceRecorder::tprint(const char *format, LIns *ins1, LIns *ins2, LIns *ins3, LIns *ins4,
-                      LIns *ins5, LIns *ins6)
-{
-    LIns* insa[] = { ins1, ins2, ins3, ins4, ins5, ins6 };
-    tprint(format, 6, insa);
-}
-#endif
 
 Tracker::Tracker(JSContext *cx)
     : cx(cx)
@@ -7966,10 +7785,10 @@ PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
 
     /* A recorder script is being evaluated and can not be destroyed or GC-ed. */
     JS_ASSERT_IF(tm->recorder,
-                 JS_UPTRDIFF(tm->recorder->getTree()->ip, script->code) >= script->length);
+                 UnsignedPtrDiff(tm->recorder->getTree()->ip, script->code) >= script->length);
 
     for (LoopProfileMap::Enum e(*tm->loopProfiles); !e.empty(); e.popFront()) {
-        if (JS_UPTRDIFF(e.front().key, script->code) < script->length)
+        if (UnsignedPtrDiff(e.front().key, script->code) < script->length)
             e.removeFront();
     }
 
@@ -7981,7 +7800,7 @@ PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         TreeFragment** fragp = &tm->vmfragments[i];
         while (TreeFragment* frag = *fragp) {
-            if (JS_UPTRDIFF(frag->ip, script->code) < script->length) {
+            if (UnsignedPtrDiff(frag->ip, script->code) < script->length) {
                 /* This fragment is associated with the script. */
                 debug_only_printf(LC_TMTracer,
                                   "Disconnecting TreeFragment %p "
@@ -8003,7 +7822,7 @@ PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
 
     RecordAttemptMap &table = *tm->recordAttempts;
     for (RecordAttemptMap::Enum e(table); !e.empty(); e.popFront()) {
-        if (JS_UPTRDIFF(e.front().key, script->code) < script->length)
+        if (UnsignedPtrDiff(e.front().key, script->code) < script->length)
             e.removeFront();
     }
 }
@@ -11446,7 +11265,7 @@ TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
                 if (!arg.isString())
                     goto next_specialization;
             } else if (argtype == 'r') {
-                if (!VALUE_IS_REGEXP(cx, arg))
+                if (!ValueIsRegExp(arg))
                     goto next_specialization;
             } else if (argtype == 'f') {
                 if (!IsFunctionObject(arg))
@@ -11587,7 +11406,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                 }
             }
         } else if (vp[2].isString() && mode == JSOP_CALL) {
-            if (native == js_regexp_exec) {
+            if (native == regexp_exec) {
                 /*
                  * If the result of the call will be unused or only tested against
                  * nullness, we replace the call to RegExp.exec() on the
@@ -11603,12 +11422,12 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                         Value pval;
                         jsid id = ATOM_TO_JSID(cx->runtime->atomState.testAtom);
                         if (HasDataProperty(cx, proto, id, &pval) &&
-                            IsNativeFunction(pval, js_regexp_test))
+                            IsNativeFunction(pval, regexp_test))
                         {
                             vp[0] = pval;
                             funobj = &pval.toObject();
                             fun = funobj->toFunction();
-                            native = js_regexp_test;
+                            native = regexp_test;
                         }
                     }
                 }
@@ -12108,8 +11927,8 @@ static bool
 SafeLookup(JSContext *cx, JSObject* obj, jsid id, JSObject** pobjp, const Shape** shapep)
 {
     do {
-        // Avoid non-native lookupProperty hooks.
-        if (obj->getOps()->lookupProperty)
+        // Avoid non-native lookupGeneric hooks.
+        if (obj->getOps()->lookupGeneric)
             return false;
 
         if (const Shape *shape = obj->nativeLookup(cx, id)) {
@@ -12838,7 +12657,7 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* v
 #ifdef DEBUG
     JSProperty* prop;
     JSObject* pobj;
-    JS_ASSERT(obj->lookupProperty(cx, shape->propid(), &pobj, &prop));
+    JS_ASSERT(obj->lookupGeneric(cx, shape->propid(), &pobj, &prop));
     JS_ASSERT(prop == (JSProperty*) shape);
 #endif
 
@@ -13732,7 +13551,7 @@ TraceRecorder::createThis(JSObject& ctor, LIns* ctor_ins, LIns** thisobj_insp)
     // bake the slot into the trace, not the value, since .prototype is
     // writable.
     uintN protoSlot = shape->slot();
-    LIns* args[] = { w.nameImmw(protoSlot), ctor_ins, cx_ins };
+    LIns* args[] = { w.nameImmw(intptr_t(protoSlot)), ctor_ins, cx_ins };
     *thisobj_insp = w.call(&js_CreateThisFromTrace_ci, args);
     guard(false, w.eqp0(*thisobj_insp), OOM_EXIT);
     return RECORD_CONTINUE;
@@ -13919,13 +13738,13 @@ TraceRecorder::record_JSOP_FUNAPPLY()
             RETURN_STOP_A("arguments parameter of apply is not a dense array or argments object");
         }
 
-        if (length >= JS_ARRAY_LENGTH(funapply_imacro_table))
+        if (length >= ArrayLength(funapply_imacro_table))
             RETURN_STOP_A("too many arguments to apply");
 
         return InjectStatus(callImacro(funapply_imacro_table[length]));
     }
 
-    if (argc >= JS_ARRAY_LENGTH(funcall_imacro_table))
+    if (argc >= ArrayLength(funcall_imacro_table))
         RETURN_STOP_A("too many arguments to call");
 
     return InjectStatus(callImacro(funcall_imacro_table[argc]));
@@ -15276,12 +15095,12 @@ TraceRecorder::record_JSOP_IN()
 
     JSObject* obj2;
     JSProperty* prop;
-    JSBool ok = obj->lookupProperty(cx, id, &obj2, &prop);
+    JSBool ok = obj->lookupGeneric(cx, id, &obj2, &prop);
 
     if (!ok)
-        RETURN_ERROR_A("obj->lookupProperty failed in JSOP_IN");
+        RETURN_ERROR_A("obj->lookupGeneric failed in JSOP_IN");
 
-    /* lookupProperty can reenter the interpreter and kill |this|. */
+    /* lookupGeneric can reenter the interpreter and kill |this|. */
     if (!localtm.recorder)
         return ARECORD_ABORTED;
 

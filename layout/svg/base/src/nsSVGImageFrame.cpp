@@ -100,7 +100,6 @@ public:
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   /**
    * Get the "type" of the frame
@@ -177,10 +176,6 @@ nsSVGImageFrame::Init(nsIContent* aContent,
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
 
-  // We should have a PresContext now, so let's notify our image loader that
-  // we need to register any image animations with the refresh driver.
-  imageLoader->FrameCreated(this);
-
   // Push a null JSContext on the stack so that code that runs within
   // the below code doesn't think it's being called by JS. See bug
   // 604262.
@@ -190,19 +185,6 @@ nsSVGImageFrame::Init(nsIContent* aContent,
   imageLoader->AddObserver(mListener);
 
   return NS_OK; 
-}
-
-/* virtual */ void
-nsSVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
-{
-  nsCOMPtr<nsIImageLoadingContent> imageLoader =
-    do_QueryInterface(nsFrame::mContent);
-
-  if (imageLoader) {
-    imageLoader->FrameDestroyed(this);
-  }
-
-  nsFrame::DestroyFrom(aDestructRoot);
 }
 
 //----------------------------------------------------------------------
@@ -268,13 +250,13 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext)
     if (NS_FAILED(mImageContainer->GetWidth(&nativeWidth)) ||
         NS_FAILED(mImageContainer->GetHeight(&nativeHeight)) ||
         nativeWidth == 0 || nativeHeight == 0) {
-      return PR_FALSE;
+      return false;
     }
     imageTransform = GetRasterImageTransform(nativeWidth, nativeHeight);
   }
 
   if (imageTransform.IsSingular()) {
-    return PR_FALSE;
+    return false;
   }
 
   // NOTE: We need to cancel out the effects of Full-Page-Zoom, or else
@@ -284,7 +266,7 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext)
     nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPx);
   aGfxContext->Multiply(imageTransform.Scale(pageZoomFactor, pageZoomFactor));
 
-  return PR_TRUE;
+  return true;
 }
 
 //----------------------------------------------------------------------
@@ -367,8 +349,8 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
         static_cast<nsSVGSVGElement*>(imgRootFrame->GetContent());
       if (!rootSVGElem || rootSVGElem->GetNameSpaceID() != kNameSpaceID_SVG ||
           rootSVGElem->Tag() != nsGkAtoms::svg) {
-        NS_ABORT_IF_FALSE(PR_FALSE, "missing or non-<svg> root node!!");
-        return PR_FALSE;
+        NS_ABORT_IF_FALSE(false, "missing or non-<svg> root node!!");
+        return false;
       }
 
       // Override preserveAspectRatio in our helper document

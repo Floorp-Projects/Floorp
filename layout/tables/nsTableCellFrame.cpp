@@ -76,8 +76,8 @@ nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext) :
   mColIndex = 0;
   mPriorAvailWidth = 0;
 
-  SetContentEmpty(PR_FALSE);
-  SetHasPctOverHeight(PR_FALSE);
+  SetContentEmpty(false);
+  SetHasPctOverHeight(false);
 }
 
 nsTableCellFrame::~nsTableCellFrame()
@@ -167,23 +167,23 @@ nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
 {
   const nsHTMLReflowState *rs = aReflowState.parentReflowState;
   if (!rs)
-    return PR_FALSE;
+    return false;
   if (rs->frame == this) {
     // We always observe the child block.  It will never send any
     // notifications, but we need this so that the observer gets
     // propagated to its kids.
-    return PR_TRUE;
+    return true;
   }
   rs = rs->parentReflowState;
   if (!rs) {
-    return PR_FALSE;
+    return false;
   }
 
   // We always need to let the percent height observer be propagated
   // from an outer table frame to an inner table frame.
   nsIAtom *fType = aReflowState.frame->GetType();
   if (fType == nsGkAtoms::tableFrame) {
-    return PR_TRUE;
+    return true;
   }
 
   // We need the observer to be propagated to all children of the cell
@@ -265,7 +265,7 @@ NS_IMETHODIMP
 nsTableCellFrame::AppendFrames(ChildListID     aListID,
                                nsFrameList&    aFrameList)
 {
-  NS_PRECONDITION(PR_FALSE, "unsupported operation");
+  NS_PRECONDITION(false, "unsupported operation");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -274,7 +274,7 @@ nsTableCellFrame::InsertFrames(ChildListID     aListID,
                                nsIFrame*       aPrevFrame,
                                nsFrameList&    aFrameList)
 {
-  NS_PRECONDITION(PR_FALSE, "unsupported operation");
+  NS_PRECONDITION(false, "unsupported operation");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -282,7 +282,7 @@ NS_IMETHODIMP
 nsTableCellFrame::RemoveFrame(ChildListID     aListID,
                               nsIFrame*       aOldFrame)
 {
-  NS_PRECONDITION(PR_FALSE, "unsupported operation");
+  NS_PRECONDITION(false, "unsupported operation");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -646,28 +646,28 @@ nsTableCellFrame::CellHasVisibleContent(nscoord       height,
 {
   // see  http://www.w3.org/TR/CSS21/tables.html#empty-cells
   if (height > 0)
-    return PR_TRUE;
+    return true;
   if (tableFrame->IsBorderCollapse())
-    return PR_TRUE;
+    return true;
   nsIFrame* innerFrame = kidFrame->GetFirstPrincipalChild();
   while(innerFrame) {
     nsIAtom* frameType = innerFrame->GetType();
     if (nsGkAtoms::textFrame == frameType) {
        nsTextFrame* textFrame = static_cast<nsTextFrame*>(innerFrame);
        if (textFrame->HasNoncollapsedCharacters())
-         return PR_TRUE;
+         return true;
     }
     else if (nsGkAtoms::placeholderFrame != frameType) {
-      return PR_TRUE;
+      return true;
     }
     else {
       nsIFrame *floatFrame = nsLayoutUtils::GetFloatFromPlaceholder(innerFrame);
       if (floatFrame)
-        return PR_TRUE;
+        return true;
     }
     innerFrame = innerFrame->GetNextSibling();
   }	
-  return PR_FALSE;
+  return false;
 }
 
 nscoord
@@ -869,7 +869,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
   else {
-    SetHasPctOverHeight(PR_FALSE);
+    SetHasPctOverHeight(false);
   }
 
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
@@ -885,14 +885,14 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     kidReflowState.mPercentHeightObserver = this;
   }
   // Don't propagate special height reflow state to our kids
-  kidReflowState.mFlags.mSpecialHeightReflow = PR_FALSE;
+  kidReflowState.mFlags.mSpecialHeightReflow = false;
 
   if (aReflowState.mFlags.mSpecialHeightReflow ||
       (GetFirstInFlow()->GetStateBits() & NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) {
     // We need to force the kid to have mVResize set if we've had a
     // special reflow in the past, since the non-special reflow needs to
     // resize back to what it was without the special height reflow.
-    kidReflowState.mFlags.mVResize = PR_TRUE;
+    kidReflowState.mFlags.mVResize = true;
   }
 
   nsPoint kidOrigin(leftInset, topInset);
@@ -961,7 +961,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     if (aDesiredSize.height > mRect.height) {
       // set a bit indicating that the pct height contents exceeded
       // the height that they could honor in the pass 2 reflow
-      SetHasPctOverHeight(PR_TRUE);
+      SetHasPctOverHeight(true);
     }
     if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
       aDesiredSize.height = mRect.height;
@@ -1083,7 +1083,7 @@ nsBCTableCellFrame::GetBorderRadii(nscoord aRadii[8]) const
   NS_FOR_CSS_HALF_CORNERS(corner) {
     aRadii[corner] = 0;
   }
-  return PR_FALSE;
+  return false;
 }
 
 #ifdef DEBUG

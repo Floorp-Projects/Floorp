@@ -16,15 +16,10 @@ function ApplyToFrameScript(code, skip, f) {
     g.eval(code);
 }
 
-var savedScript;
-
 ApplyToFrameScript('(function () { debugger; })();', 0,
                    function (script) {
                        assertEq(script instanceof Debugger.Script, true);
-                       assertEq(script.live, true);
-                       savedScript = script;
                    });
-assertEq(savedScript.live, true);
 
 // This would be nice, once we can get host call frames:
 // ApplyToFrameScript("(function () { debugger; }).call(null);", 1,

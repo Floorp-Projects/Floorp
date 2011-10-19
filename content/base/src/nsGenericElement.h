@@ -100,15 +100,20 @@ public:
   nsChildContentList(nsINode* aNode)
     : mNode(aNode)
   {
+    SetIsProxy();
   }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsChildContentList)
+
+  // nsWrapperCache
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap);
 
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
 
   // nsINodeList interface
-  virtual nsIContent* GetNodeAt(PRUint32 aIndex);
   virtual PRInt32 IndexOf(nsIContent* aContent);
 
   void DropReference()
@@ -286,7 +291,7 @@ public:
    * attribute is currently set, and the new value that is about to be set is
    * different to the current value. As a perf optimization the new and old
    * values will not actually be compared if we aren't notifying and we don't
-   * have mutation listeners (in which case it's cheap to just return PR_FALSE
+   * have mutation listeners (in which case it's cheap to just return false
    * and let the caller go ahead and set the value).
    * @param aOldValue Set to the old value of the attribute, but only if there
    *   are event listeners
@@ -407,12 +412,12 @@ public:
   nsresult InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                         nsIDOMNode** aReturn)
   {
-    return ReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, aReturn);
+    return ReplaceOrInsertBefore(false, aNewChild, aRefChild, aReturn);
   }
   nsresult ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                         nsIDOMNode** aReturn)
   {
-    return ReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, aReturn);
+    return ReplaceOrInsertBefore(true, aNewChild, aOldChild, aReturn);
   }
   nsresult RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   {
@@ -457,7 +462,7 @@ public:
                             bool* aReturn);
   nsresult CloneNode(bool aDeep, nsIDOMNode **aResult)
   {
-    return nsNodeUtils::CloneNodeImpl(this, aDeep, PR_TRUE, aResult);
+    return nsNodeUtils::CloneNodeImpl(this, aDeep, true, aResult);
   }
 
   //----------------------------------------
@@ -626,7 +631,7 @@ public:
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    *aResult = list->Length(PR_TRUE);
+    *aResult = list->Length(true);
 
     return NS_OK;
   }
@@ -709,7 +714,7 @@ protected:
    * @param aAttribute the attribute to convert
    * @param aValue the string value to convert
    * @param aResult the nsAttrValue [OUT]
-   * @return PR_TRUE if the parsing was successful, PR_FALSE otherwise
+   * @return true if the parsing was successful, false otherwise
    */
   virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -721,13 +726,13 @@ protected:
    * only be called for attributes that are in the null namespace and only on
    * attributes that returned true when passed to IsAttributeMapped.  The
    * caller will not try to set the attr in any other way if this method
-   * returns PR_TRUE (the value of aRetval does not matter for that purpose).
+   * returns true (the value of aRetval does not matter for that purpose).
    *
    * @param aDocument the current document of this node (an optimization)
    * @param aName the name of the attribute
    * @param aValue the nsAttrValue to set
    * @param [out] aRetval the nsresult status of the operation, if any.
-   * @return PR_TRUE if the setting was attempted, PR_FALSE otherwise.
+   * @return true if the setting was attempted, false otherwise.
    */
   virtual bool SetMappedAttribute(nsIDocument* aDocument,
                                     nsIAtom* aName,
@@ -898,16 +903,10 @@ protected:
   }
 
   void RegisterFreezableElement() {
-    nsIDocument* doc = GetOwnerDoc();
-    if (doc) {
-      doc->RegisterFreezableElement(this);
-    }
+    OwnerDoc()->RegisterFreezableElement(this);
   }
   void UnregisterFreezableElement() {
-    nsIDocument* doc = GetOwnerDoc();
-    if (doc) {
-      doc->UnregisterFreezableElement(this);
-    }
+    OwnerDoc()->UnregisterFreezableElement(this);
   }
 
   /**
@@ -945,8 +944,8 @@ protected:
    * and that we are actually on a link.
    *
    * @param aVisitor event visitor
-   * @param aURI the uri of the link, set only if the return value is PR_TRUE [OUT]
-   * @return PR_TRUE if we can handle the link event, PR_FALSE otherwise
+   * @param aURI the uri of the link, set only if the return value is true [OUT]
+   * @return true if we can handle the link event, false otherwise
    */
   bool CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,
                                               nsIURI** aURI) const;

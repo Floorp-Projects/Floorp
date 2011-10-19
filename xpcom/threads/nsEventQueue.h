@@ -53,8 +53,8 @@ public:
   ~nsEventQueue();
 
   // This method adds a new event to the pending event queue.  The event object
-  // is AddRef'd if this method succeeds.  This method returns PR_TRUE if the
-  // event was stored in the event queue, and it returns PR_FALSE if it could
+  // is AddRef'd if this method succeeds.  This method returns true if the
+  // event was stored in the event queue, and it returns false if it could
   // not allocate sufficient memory.
   bool PutEvent(nsIRunnable *event);
 
@@ -68,17 +68,17 @@ public:
 
   // This method returns true if there is a pending event.
   bool HasPendingEvent() {
-    return GetEvent(PR_FALSE, nsnull);
+    return GetEvent(false, nsnull);
   }
 
   // This method returns the next pending event or null.
   bool GetPendingEvent(nsIRunnable **runnable) {
-    return GetEvent(PR_FALSE, runnable);
+    return GetEvent(false, runnable);
   }
 
   // This method waits for and returns the next pending event.
   bool WaitPendingEvent(nsIRunnable **runnable) {
-    return GetEvent(PR_TRUE, runnable);
+    return GetEvent(true, runnable);
   }
 
   // Expose the event queue's monitor for "power users"

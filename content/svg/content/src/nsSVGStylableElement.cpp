@@ -70,6 +70,31 @@ nsSVGStylableElement::DoGetClasses() const
   return nsSVGStylableElementBase::DoGetClasses();
 }
 
+bool
+nsSVGStylableElement::ParseAttribute(PRInt32 aNamespaceID,
+                                     nsIAtom* aAttribute,
+                                     const nsAString& aValue,
+                                     nsAttrValue& aResult)
+{
+  if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::_class) {
+    mClassAttribute.SetBaseValue(aValue, this, false);
+    aResult.ParseAtomArray(aValue);
+    return true;
+  }
+  return nsSVGStylableElementBase::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                                  aResult);
+}
+
+nsresult
+nsSVGStylableElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                bool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::_class) {
+    mClassAttribute.Init();
+  }
+  return nsSVGStylableElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+}
+
 //----------------------------------------------------------------------
 // nsIDOMSVGStylable methods
 
@@ -118,14 +143,18 @@ nsSVGStylableElement::DidAnimateClass()
   }
   mClassAnimAttr->ParseAtomArray(src);
 
-  nsIDocument* doc = GetOwnerDoc();
-  NS_ASSERTION(doc, "If we're animating we should have an owner");
-  if (doc) {
-    nsIPresShell* shell = doc->GetShell();
-    if (shell) {
-      shell->RestyleForAnimation(this, eRestyle_Self);
-    }
+  nsIPresShell* shell = OwnerDoc()->GetShell();
+  if (shell) {
+    shell->RestyleForAnimation(this, eRestyle_Self);
   }
+}
 
-  nsSVGStylableElementBase::DidAnimateClass();
+nsISMILAttr*
+nsSVGStylableElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
+{
+  if (aNamespaceID == kNameSpaceID_None && 
+      aName == nsGkAtoms::_class) {
+    return mClassAttribute.ToSMILAttr(this);
+  }
+  return nsSVGStylableElementBase::GetAnimatedAttr(aNamespaceID, aName);
 }

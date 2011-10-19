@@ -791,6 +791,15 @@
       <method name="_init">
         <body>
           <![CDATA[
+            // We'll default to YYYY/MM/DD to start.
+            var yfield = "input-one";
+            var mfield = "input-two";
+            var dfield = "input-three";
+            var twoDigitYear = false;
+            this.yearLeadingZero = true;
+            this.monthLeadingZero = true;
+            this.dateLeadingZero = true;
+
             var numberOrder = /^(\D*)\s*(\d+)(\D*)(\d+)(\D*)(\d+)\s*(\D*)$/;
 
             var dt = new Date(2002,9,4).toLocaleFormat("%x");
@@ -799,11 +808,8 @@
               this._separatorFirst.value = numberFields[3];
               this._separatorSecond.value = numberFields[5];
 
-              var twoDigitYear = false;
-              var yfield = "input-one";
-              var mfield = "input-two";
-              var dfield = "input-three";
               var yi = 2, mi = 4, di = 6;
+
               for (var i = 1; i < numberFields.length; i++) {
                 switch (Number(numberFields[i])) {
                   case 2:
@@ -825,6 +831,10 @@
                     break;
                 }
               }
+
+              this.yearLeadingZero = (numberFields[yi].length > 1);
+              this.monthLeadingZero = (numberFields[mi].length > 1);
+              this.dateLeadingZero = (numberFields[di].length > 1);
             }
 
             this.yearField = document.getAnonymousElementByAttribute(this, "anonid", yfield);
@@ -833,10 +843,6 @@
                 "datetimepicker-input-subbox datetimepicker-year";
             this.monthField = document.getAnonymousElementByAttribute(this, "anonid", mfield);
             this.dateField = document.getAnonymousElementByAttribute(this, "anonid", dfield);
-
-            this.yearLeadingZero = (numberFields[yi].length > 1);
-            this.monthLeadingZero = (numberFields[mi].length > 1);
-            this.dateLeadingZero = (numberFields[di].length > 1);
 
             this._fieldAMPM.parentNode.collapsed = true;
             this.yearField.size = twoDigitYear ? 2 : 4;

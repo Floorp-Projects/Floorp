@@ -51,7 +51,7 @@ extern const PRUint8 jp2CharContext[83][83];
 class JapaneseContextAnalysis
 {
 public:
-  JapaneseContextAnalysis() {Reset(PR_FALSE);}
+  JapaneseContextAnalysis() {Reset(false);}
 
   void HandleData(const char* aBuf, PRUint32 aLen);
 
@@ -60,7 +60,7 @@ public:
     PRInt32 order;
 
     //if we received enough data, stop here   
-    if (mTotalRel > MAX_REL_THRESHOLD)   mDone = PR_TRUE;
+    if (mTotalRel > MAX_REL_THRESHOLD)   mDone = true;
     if (mDone)       return;
      
     //Only 2-bytes characters are of our interest
@@ -99,7 +99,7 @@ protected:
   //need to know how many byte to skip in next buffer.
   PRUint32 mNeedToSkipCharNum;
 
-  //If this flag is set to PR_TRUE, detection is done and conclusion has been made
+  //If this flag is set to true, detection is done and conclusion has been made
   bool     mDone;
 };
 

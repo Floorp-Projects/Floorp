@@ -41,7 +41,6 @@
 #include "MaemoLocationProvider.h"
 #include "nsIClassInfo.h"
 #include "nsDOMClassInfoID.h"
-#include "nsIDOMClassInfo.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
@@ -54,16 +53,16 @@ MaemoLocationProvider::MaemoLocationProvider() :
   mControlError(0),
   mDeviceDisconnected(0),
   mControlStopped(0),
-  mHasSeenLocation(PR_FALSE),
-  mHasGPS(PR_TRUE),
+  mHasSeenLocation(false),
+  mHasGPS(true),
   mGPSControl(nsnull),
   mGPSDevice(nsnull),
-  mIgnoreMinorChanges(PR_FALSE),
+  mIgnoreMinorChanges(false),
   mPrevLat(0.0),
   mPrevLong(0.0),
-  mIgnoreBigHErr(PR_TRUE),
+  mIgnoreBigHErr(true),
   mMaxHErr(1000),
-  mIgnoreBigVErr(PR_TRUE),
+  mIgnoreBigVErr(true),
   mMaxVErr(100)
 {
 }
@@ -253,7 +252,7 @@ NS_IMETHODIMP MaemoLocationProvider::Shutdown()
   g_signal_handler_disconnect(mGPSDevice, mControlError);
   g_signal_handler_disconnect(mGPSDevice, mControlStopped);
 
-  mHasSeenLocation = PR_FALSE;
+  mHasSeenLocation = false;
   mCallback = nsnull;
 
   if (mGPSControl) {
@@ -271,7 +270,7 @@ NS_IMETHODIMP MaemoLocationProvider::Shutdown()
 
 void MaemoLocationProvider::Update(nsIDOMGeoPosition* aPosition)
 {
-  mHasSeenLocation = PR_TRUE;
+  mHasSeenLocation = true;
   if (mCallback)
     mCallback->Update(aPosition);
 }

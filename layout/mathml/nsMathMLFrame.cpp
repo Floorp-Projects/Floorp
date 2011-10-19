@@ -240,12 +240,12 @@ nsMathMLFrame::GetAttribute(nsIContent* aContent,
   // see if we can get the attribute from the content
   if (aContent && aContent->GetAttr(kNameSpaceID_None, aAttributeAtom,
                                     aValue)) {
-    return PR_TRUE;
+    return true;
   }
 
   // see if we can get the attribute from the mstyle frame
   if (!aMathMLmstyleFrame) {
-    return PR_FALSE;
+    return false;
   }
 
   nsIFrame* mstyleParent = aMathMLmstyleFrame->GetParent();
@@ -347,7 +347,7 @@ nsMathMLFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
 {
   aCSSValue.Reset();
   aString.CompressWhitespace(); //  aString is not a const in this code...
-  if (!aString.Length()) return PR_FALSE;
+  if (!aString.Length()) return false;
 
   // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
   PRInt32 i = 0;
@@ -418,17 +418,17 @@ nsMathMLFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
       if (!value.IsEmpty()) {
         if (ParseNumericValue(value, aCSSValue) &&
             aCSSValue.IsLengthUnit()) {
-          return PR_TRUE;
+          return true;
         }
       }
     }
 
     // fall back to the default value
     aCSSValue.SetFloatValue(float(i)/float(18), eCSSUnit_EM);
-    return PR_TRUE;
+    return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 // ================

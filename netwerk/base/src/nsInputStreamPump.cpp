@@ -69,8 +69,8 @@ nsInputStreamPump::nsInputStreamPump()
     , mStatus(NS_OK)
     , mSuspendCount(0)
     , mLoadFlags(LOAD_NORMAL)
-    , mWaiting(PR_FALSE)
-    , mCloseWhenDone(PR_FALSE)
+    , mWaiting(false)
+    , mCloseWhenDone(false)
 {
 #if defined(PR_LOGGING)
     if (!gStreamPumpLog)
@@ -156,7 +156,7 @@ nsInputStreamPump::EnsureWaiting()
             NS_ERROR("AsyncWait failed");
             return rv;
         }
-        mWaiting = PR_TRUE;
+        mWaiting = true;
     }
     return NS_OK;
 }
@@ -387,7 +387,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
 
     for (;;) {
         if (mSuspendCount || mState == STATE_IDLE) {
-            mWaiting = PR_FALSE;
+            mWaiting = false;
             break;
         }
 
@@ -408,7 +408,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
             NS_ASSERTION(mState == STATE_TRANSFER, "unexpected state");
             NS_ASSERTION(NS_SUCCEEDED(mStatus), "unexpected status");
 
-            mWaiting = PR_FALSE;
+            mWaiting = false;
             mStatus = EnsureWaiting();
             if (NS_SUCCEEDED(mStatus))
                 break;
@@ -573,7 +573,7 @@ nsInputStreamPump::OnStateStop()
 
     mAsyncStream = 0;
     mTargetThread = 0;
-    mIsPending = PR_FALSE;
+    mIsPending = false;
 
     mListener->OnStopRequest(this, mListenerContext, mStatus);
     mListener = 0;

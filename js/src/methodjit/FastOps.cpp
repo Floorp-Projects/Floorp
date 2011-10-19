@@ -37,9 +37,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsemit.h"
 #include "jslibmath.h"
 #include "jsnum.h"
 #include "jsscope.h"
@@ -47,6 +47,7 @@
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
 
+#include "frontend/BytecodeGenerator.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -403,6 +404,58 @@ CheckNullOrUndefined(FrameEntry *fe)
     return type == JSVAL_TYPE_NULL || type == JSVAL_TYPE_UNDEFINED;
 }
 
+CompileStatus
+mjit::Compiler::jsop_equality_obj_obj(JSOp op, jsbytecode *target, JSOp fused)
+{
+    FrameEntry *rhs = frame.peek(-1);
+    FrameEntry *lhs = frame.peek(-2);
+
+    JS_ASSERT(cx->typeInferenceEnabled() &&
+              lhs->isType(JSVAL_TYPE_OBJECT) && rhs->isType(JSVAL_TYPE_OBJECT));
+
+    /*
+     * Handle equality between two objects. We have to ensure there is no
+     * special equality operator on either object, if that passes then
+     * this is a pointer comparison.
+     */
+    types::TypeSet *lhsTypes = analysis->poppedTypes(PC, 1);
+    types::TypeSet *rhsTypes = analysis->poppedTypes(PC, 0);
+    if (!lhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) &&
+        !rhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY)) {
+        /* :TODO: Merge with jsop_relational_int? */
+        JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
+        frame.forgetMismatchedObject(lhs);
+        frame.forgetMismatchedObject(rhs);
+        Assembler::Condition cond = GetCompareCondition(op, fused);
+        if (target) {
+            Jump sj = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
+                                               Registers::ReturnReg, Registers::ReturnReg);
+            if (!frame.syncForBranch(target, Uses(2)))
+                return Compile_Error;
+            RegisterID lreg = frame.tempRegForData(lhs);
+            frame.pinReg(lreg);
+            RegisterID rreg = frame.tempRegForData(rhs);
+            frame.unpinReg(lreg);
+            Jump fast = masm.branchPtr(cond, lreg, rreg);
+            frame.popn(2);
+            return jumpAndTrace(fast, target, &sj) ? Compile_Okay : Compile_Error;
+        } else {
+            RegisterID result = frame.allocReg();
+            RegisterID lreg = frame.tempRegForData(lhs);
+            frame.pinReg(lreg);
+            RegisterID rreg = frame.tempRegForData(rhs);
+            frame.unpinReg(lreg);
+            masm.branchValue(cond, lreg, rreg, result);
+
+            frame.popn(2);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
+            return Compile_Okay;
+        }
+    }
+
+    return Compile_Skipped;
+}
+
 bool
 mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
 {
@@ -487,46 +540,11 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
     }
 
     if (cx->typeInferenceEnabled() &&
-        lhs->isType(JSVAL_TYPE_OBJECT) && rhs->isType(JSVAL_TYPE_OBJECT)) {
-        /*
-         * Handle equality between two objects. We have to ensure there is no
-         * special equality operator on either object, if that passes then
-         * this is a pointer comparison.
-         */
-        types::TypeSet *lhsTypes = analysis->poppedTypes(PC, 1);
-        types::TypeSet *rhsTypes = analysis->poppedTypes(PC, 0);
-        if (!lhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) &&
-            !rhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY)) {
-            /* :TODO: Merge with jsop_relational_int? */
-            JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
-            frame.forgetMismatchedObject(lhs);
-            frame.forgetMismatchedObject(rhs);
-            Assembler::Condition cond = GetCompareCondition(op, fused);
-            if (target) {
-                Jump sj = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
-                                                   Registers::ReturnReg, Registers::ReturnReg);
-                if (!frame.syncForBranch(target, Uses(2)))
-                    return false;
-                RegisterID lreg = frame.tempRegForData(lhs);
-                frame.pinReg(lreg);
-                RegisterID rreg = frame.tempRegForData(rhs);
-                frame.unpinReg(lreg);
-                Jump fast = masm.branchPtr(cond, lreg, rreg);
-                frame.popn(2);
-                return jumpAndTrace(fast, target, &sj);
-            } else {
-                RegisterID result = frame.allocReg();
-                RegisterID lreg = frame.tempRegForData(lhs);
-                frame.pinReg(lreg);
-                RegisterID rreg = frame.tempRegForData(rhs);
-                frame.unpinReg(lreg);
-                masm.branchValue(cond, lreg, rreg, result);
-
-                frame.popn(2);
-                frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
-                return true;
-            }
-        }
+        lhs->isType(JSVAL_TYPE_OBJECT) && rhs->isType(JSVAL_TYPE_OBJECT))
+    {
+        CompileStatus status = jsop_equality_obj_obj(op, target, fused);
+        if (status == Compile_Okay) return true;
+        else if (status == Compile_Error) return false;
     }
 
     return emitStubCmpOp(stub, target, fused);
@@ -2346,6 +2364,92 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         frame.popn(2);
         frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
         return;
+    }
+
+    if (lhs->isType(JSVAL_TYPE_STRING) || rhs->isType(JSVAL_TYPE_STRING)) {
+        FrameEntry *maybeNotStr = lhs->isType(JSVAL_TYPE_STRING) ? rhs : lhs;
+
+        if (maybeNotStr->isNotType(JSVAL_TYPE_STRING)) {
+            frame.popn(2);
+            frame.push(BooleanValue(op == JSOP_STRICTNE));
+            return;
+        }
+
+        if (!maybeNotStr->isTypeKnown()) {
+            JS_ASSERT(!maybeNotStr->isConstant());
+            Jump j = frame.testString(Assembler::NotEqual, maybeNotStr);
+            stubcc.linkExit(j, Uses(2));
+        }
+
+        FrameEntry *op1 = lhs->isConstant() ? rhs : lhs;
+        FrameEntry *op2 = lhs->isConstant() ? lhs : rhs;
+        JS_ASSERT(!op1->isConstant());
+
+        /* ReturnReg is safely usable with set32, since %ah can be accessed. */
+        RegisterID resultReg = Registers::ReturnReg;
+        frame.takeReg(resultReg);
+        RegisterID tmpReg = frame.allocReg();
+        RegisterID reg1 = frame.tempRegForData(op1);
+        frame.pinReg(reg1);
+
+        RegisterID reg2;
+        if (op2->isConstant()) {
+            reg2 = frame.allocReg();
+            JSString *str = op2->getValue().toString();
+            JS_ASSERT(str->isAtom());
+            masm.move(ImmPtr(str), reg2);
+        } else {
+            reg2 = frame.tempRegForData(op2);
+            frame.pinReg(reg2);
+        }
+
+        JS_ASSERT(reg1 != resultReg);
+        JS_ASSERT(reg1 != tmpReg);
+        JS_ASSERT(reg2 != resultReg);
+        JS_ASSERT(reg2 != tmpReg);
+
+        /* JSString::isAtom === (lengthAndFlags & ATOM_MASK == 0) */
+        JS_STATIC_ASSERT(JSString::ATOM_FLAGS == 0);
+        Imm32 atomMask(JSString::ATOM_MASK);
+
+        masm.load32(Address(reg1, JSString::offsetOfLengthAndFlags()), tmpReg);
+        Jump op1NotAtomized = masm.branchTest32(Assembler::NonZero, tmpReg, atomMask);
+        stubcc.linkExit(op1NotAtomized, Uses(2));
+
+        if (!op2->isConstant()) {
+            masm.load32(Address(reg2, JSString::offsetOfLengthAndFlags()), tmpReg);
+            Jump op2NotAtomized = masm.branchTest32(Assembler::NonZero, tmpReg, atomMask);
+            stubcc.linkExit(op2NotAtomized, Uses(2));
+        }
+
+        masm.set32(cond, reg1, reg2, resultReg);
+
+        frame.unpinReg(reg1);
+        if (op2->isConstant())
+            frame.freeReg(reg2);
+        else
+            frame.unpinReg(reg2);
+        frame.freeReg(tmpReg);
+
+        stubcc.leave();
+        if (op == JSOP_STRICTEQ)
+            OOL_STUBCALL_USES(stubs::StrictEq, REJOIN_NONE, Uses(2));
+        else
+            OOL_STUBCALL_USES(stubs::StrictNe, REJOIN_NONE, Uses(2));
+
+        frame.popn(2);
+        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, resultReg);
+
+        stubcc.rejoin(Changes(1));
+        return;
+    }
+
+    if (cx->typeInferenceEnabled() &&
+        lhs->isType(JSVAL_TYPE_OBJECT) && rhs->isType(JSVAL_TYPE_OBJECT))
+    {
+        CompileStatus status = jsop_equality_obj_obj(op, NULL, JSOP_NOP);
+        if (status == Compile_Okay) return;
+        JS_ASSERT(status == Compile_Skipped);
     }
 
     /* Is it impossible that both Values are ints? */

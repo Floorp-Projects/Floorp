@@ -82,9 +82,9 @@ public:
 private:
   // The following methods parse the fragment as per the media
   // fragments specification. 'aString' contains the remaining
-  // fragment data to be parsed. The method returns PR_TRUE
+  // fragment data to be parsed. The method returns true
   // if the parse was successful and leaves the remaining unparsed
-  // data in 'aString'. If the parse fails then PR_FALSE is returned
+  // data in 'aString'. If the parse fails then false is returned
   // and 'aString' is left as it was when called.
   bool ParseNPT(nsDependentSubstring& aString, double& aStart, double& aEnd);
   bool ParseNPTTime(nsDependentSubstring& aString, double& aTime);

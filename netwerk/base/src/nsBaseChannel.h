@@ -123,7 +123,7 @@ private:
   // suppressed.  The status parameter passed to this method is the status value
   // from the OnTransportStatus method.
   virtual bool GetStatusArg(nsresult status, nsString &statusArg) {
-    return PR_FALSE;
+    return false;
   }
 
   // Called when the callbacks available to this channel may have changed.
@@ -242,7 +242,7 @@ private:
   // Called when the callbacks available to this channel may have changed.
   void CallbacksChanged() {
     mProgressSink = nsnull;
-    mQueriedProgressSink = PR_FALSE;
+    mQueriedProgressSink = false;
     OnCallbacksChanged();
   }
 

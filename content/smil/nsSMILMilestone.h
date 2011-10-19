@@ -71,7 +71,7 @@ public:
   { }
 
   nsSMILMilestone()
-    : mTime(0), mIsEnd(PR_FALSE)
+    : mTime(0), mIsEnd(false)
   { }
 
   bool operator==(const nsSMILMilestone& aOther) const
@@ -104,7 +104,7 @@ public:
   nsSMILTime   mTime;  // The milestone time. This may be in container time or
                        // parent container time depending on where it is used.
   bool mIsEnd; // true if this milestone corresponds to an interval
-                       // end, PR_FALSE otherwise.
+                       // end, false otherwise.
 };
 
 #endif // NS_SMILMILESTONE_H_

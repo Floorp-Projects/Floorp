@@ -36,6 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/layers/PLayers.h"
+
+/* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
+#include "mozilla/Util.h"
+
 #include "ThebesLayerD3D10.h"
 #include "gfxPlatform.h"
 
@@ -364,11 +368,11 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
     FillSurface(mD2DSurface, aRegion, visibleRect.TopLeft(), gfxRGBA(0.0, 0.0, 0.0, 1.0));
     FillSurface(mD2DSurfaceOnWhite, aRegion, visibleRect.TopLeft(), gfxRGBA(1.0, 1.0, 1.0, 1.0));
     gfxASurface* surfaces[2] = { mD2DSurface.get(), mD2DSurfaceOnWhite.get() };
-    destinationSurface = new gfxTeeSurface(surfaces, NS_ARRAY_LENGTH(surfaces));
+    destinationSurface = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
     // Using this surface as a source will likely go horribly wrong, since
     // only the onBlack surface will really be used, so alpha information will
     // be incorrect.
-    destinationSurface->SetAllowUseAsSource(PR_FALSE);
+    destinationSurface->SetAllowUseAsSource(false);
   } else {
     destinationSurface = mD2DSurface;
   }
@@ -470,17 +474,9 @@ ShadowThebesLayerD3D10::~ShadowThebesLayerD3D10()
 }
 
 void
-ShadowThebesLayerD3D10::SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
-                                       const nsIntRegion& aValidRegion)
-{
-  NS_ABORT_IF_FALSE(OptionalThebesBuffer::Tnull_t == aNewFront.type(),
-                    "Expected dummy front buffer initially");
-}
-
-void
 ShadowThebesLayerD3D10::Swap(
   const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
-  ThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
+  OptionalThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
   OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion)
 {
   nsRefPtr<ID3D10Texture2D> newBackBuffer = mTexture;
@@ -490,7 +486,7 @@ ShadowThebesLayerD3D10::Swap(
 
   // The content process tracks back/front buffers on its own, so
   // the newBack is in essence unused.
-  aNewBack->buffer() = aNewFront.buffer();
+  aNewBack->get_ThebesBuffer().buffer() = aNewFront.buffer();
 
   // The content process doesn't need to read back from the front
   // buffer (yet).

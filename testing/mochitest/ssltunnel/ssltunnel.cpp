@@ -416,17 +416,17 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, string &cer
     return false;
   }
 
-  SSL_OptionSet(ssl_socket, SSL_SECURITY, PR_TRUE);
-  SSL_OptionSet(ssl_socket, SSL_HANDSHAKE_AS_CLIENT, PR_FALSE);
-  SSL_OptionSet(ssl_socket, SSL_HANDSHAKE_AS_SERVER, PR_TRUE);
+  SSL_OptionSet(ssl_socket, SSL_SECURITY, true);
+  SSL_OptionSet(ssl_socket, SSL_HANDSHAKE_AS_CLIENT, false);
+  SSL_OptionSet(ssl_socket, SSL_HANDSHAKE_AS_SERVER, true);
 
   if (clientAuth != caNone)
   {
-    SSL_OptionSet(ssl_socket, SSL_REQUEST_CERTIFICATE, PR_TRUE);
+    SSL_OptionSet(ssl_socket, SSL_REQUEST_CERTIFICATE, true);
     SSL_OptionSet(ssl_socket, SSL_REQUIRE_CERTIFICATE, clientAuth == caRequire);
   }
 
-  SSL_ResetHandshake(ssl_socket, PR_TRUE);
+  SSL_ResetHandshake(ssl_socket, true);
 
   return true;
 }
@@ -588,7 +588,7 @@ bool ConnectSocket(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout
 
   PRSocketOptionData option;
   option.option = PR_SockOpt_Nonblocking;
-  option.value.non_blocking = PR_TRUE;
+  option.value.non_blocking = true;
   PR_SetSocketOption(fd, &option);
 
   return true;
@@ -690,7 +690,7 @@ void HandleConnection(void* data)
         {
           LOG_DEBUG((" :exception\n"));
           client_error = true;
-          socketErrorState[s] = PR_TRUE;
+          socketErrorState[s] = true;
           // We got a fatal error state on the socket. Clear the output buffer
           // for this socket to break the main loop, we will never more be able
           // to send those data anyway.
@@ -724,7 +724,7 @@ void HandleConnection(void* data)
               // We are in error state, indicate that the connection was 
               // not closed gracefully
               client_error = true;
-              socketErrorState[s] = PR_TRUE;
+              socketErrorState[s] = true;
               // Wipe out our send buffer, we cannot send it anyway.
               buffers[s2].bufferhead = buffers[s2].buffertail = buffers[s2].buffer;
             }
@@ -852,7 +852,7 @@ void HandleConnection(void* data)
             if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
               LOG_DEBUG((" error=%d", PR_GetError()));
               client_error = true;
-              socketErrorState[s] = PR_TRUE;
+              socketErrorState[s] = true;
               // We got a fatal error while writting the buffer. Clear it to break
               // the main loop, we will never more be able to send it.
               buffers[s2].bufferhead = buffers[s2].buffertail = buffers[s2].buffer;
@@ -937,7 +937,7 @@ void StartServer(void* data)
   // instance of ssltunnel we ask to reuse the port.
   PRSocketOptionData socket_option;
   socket_option.option = PR_SockOpt_Reuseaddr;
-  socket_option.value.reuse_addr = PR_TRUE;
+  socket_option.value.reuse_addr = true;
   PR_SetSocketOption(listen_socket, &socket_option);
 
   PRNetAddr server_addr;
@@ -966,13 +966,13 @@ void StartServer(void* data)
     
     PRSocketOptionData option;
     option.option = PR_SockOpt_Nonblocking;
-    option.value.non_blocking = PR_TRUE;
+    option.value.non_blocking = true;
     PR_SetSocketOption(ci->client_sock, &option);
 
     if (ci->client_sock)
       // Not actually using this PRJob*...
       //PRJob* job =
-      PR_QueueJob(threads, HandleConnection, ci, PR_TRUE);
+      PR_QueueJob(threads, HandleConnection, ci, true);
     else
       delete ci;
   }
@@ -1348,7 +1348,7 @@ int main(int argc, char** argv)
        it != servers.end(); it++) {
     // Not actually using this PRJob*...
     // PRJob* server_job =
-    PR_QueueJob(threads, StartServer, &(*it), PR_TRUE);
+    PR_QueueJob(threads, StartServer, &(*it), true);
   }
   // now wait for someone to tell us to quit
   PR_Lock(shutdown_lock);

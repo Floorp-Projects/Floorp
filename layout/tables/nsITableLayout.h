@@ -67,7 +67,7 @@ public:
    *  @param aColSpan        [OUT] the value of the COLSPAN attribute (may be 0 or actual number)
    *  @param aActualRowSpan  [OUT] the actual number of rows aCell spans
    *  @param aActualColSpan  [OUT] the acutal number of cols aCell spans
-   *  @param aIsSelected     [OUT] PR_TRUE if the frame that maps aCell is selected
+   *  @param aIsSelected     [OUT] true if the frame that maps aCell is selected
    *                               in the presentation shell that owns this.
    */
   NS_IMETHOD GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,

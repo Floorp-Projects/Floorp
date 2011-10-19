@@ -302,7 +302,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
         JSString * str = JS_ValueToString( cx, v );
         if (!str)
         {
-          abortLoad = PR_TRUE;
+          abortLoad = true;
           break;
         }
 
@@ -317,7 +317,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
           if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "URL", &v2 ) && !JSVAL_IS_VOID(v2)) {
             JSString *str = JS_ValueToString(cx, v2);
             if (!str) {
-              abortLoad = PR_TRUE;
+              abortLoad = true;
               break;
             }
             URL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
@@ -326,7 +326,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
           if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "IconURL", &v2 ) && !JSVAL_IS_VOID(v2)) {
             JSString *str = JS_ValueToString(cx, v2);
             if (!str) {
-              abortLoad = PR_TRUE;
+              abortLoad = true;
               break;
             }
             iconURL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
@@ -335,7 +335,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
           if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "Hash", &v2) && !JSVAL_IS_VOID(v2)) {
             JSString *str = JS_ValueToString(cx, v2);
             if (!str || !hash.encode(cx, str)) {
-              abortLoad = PR_TRUE;
+              abortLoad = true;
               break;
             }
           }
@@ -344,7 +344,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
         {
           JSString *str = JS_ValueToString(cx, v);
           if (!str) {
-            abortLoad = PR_TRUE;
+            abortLoad = true;
             break;
           }
           URL = reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
@@ -372,13 +372,13 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
             // Make sure we're allowed to load this URL and the icon URL
             rv = InstallTriggerCheckLoadURIFromScript(cx, xpiURL);
             if (NS_FAILED(rv))
-                abortLoad = PR_TRUE;
+                abortLoad = true;
 
             if (!abortLoad && iconURL)
             {
                 rv = InstallTriggerCheckLoadURIFromScript(cx, icon);
                 if (NS_FAILED(rv))
-                    abortLoad = PR_TRUE;
+                    abortLoad = true;
             }
 
             if (!abortLoad)
@@ -391,11 +391,11 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
                     trigger->Add( item );
                 }
                 else
-                    abortLoad = PR_TRUE;
+                    abortLoad = true;
             }
         }
         else
-            abortLoad = PR_TRUE;
+            abortLoad = true;
       }
       JS_DestroyIdArray( cx, ida );
     }
@@ -728,7 +728,7 @@ nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, v
 
     if (nsnull == proto) return NS_ERROR_FAILURE;
 
-    if ( PR_FALSE == JS_DefineConstDoubles(jscontext, proto, diff_constants) )
+    if ( false == JS_DefineConstDoubles(jscontext, proto, diff_constants) )
             return NS_ERROR_FAILURE;
 
     if (prototype != nsnull)
@@ -750,10 +750,10 @@ nsresult NS_InitInstallTriggerGlobalClass(nsIScriptContext *aContext, void **aPr
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "InstallTriggerGlobal", &vp)) ||
+  if ((true != JS_LookupProperty(jscontext, global, "InstallTriggerGlobal", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
-      (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) ||
+      (true != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) ||
       !JSVAL_IS_OBJECT(vp))
   {
     nsresult rv = InitInstallTriggerGlobalClass(jscontext, global, (void**)&proto);

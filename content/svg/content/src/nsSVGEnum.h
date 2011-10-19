@@ -54,19 +54,17 @@ public:
   void Init(PRUint8 aAttrEnum, PRUint16 aValue) {
     mAnimVal = mBaseVal = PRUint8(aValue);
     mAttrEnum = aAttrEnum;
-    mIsAnimated = PR_FALSE;
-    mIsBaseSet = PR_FALSE;
+    mIsAnimated = false;
+    mIsBaseSet = false;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue,
                           nsSVGElement *aSVGElement);
 
   nsresult SetBaseValue(PRUint16 aValue,
-                        nsSVGElement *aSVGElement,
-                        bool aDoSetAttr);
+                        nsSVGElement *aSVGElement);
   PRUint16 GetBaseValue() const
     { return mBaseVal; }
 
@@ -107,7 +105,7 @@ public:
     NS_IMETHOD GetBaseVal(PRUint16* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
     NS_IMETHOD SetBaseVal(PRUint16 aValue)
-      { return mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); }
+      { return mVal->SetBaseValue(aValue, mSVGElement); }
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.

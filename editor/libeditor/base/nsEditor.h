@@ -348,9 +348,9 @@ protected:
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
 
   /** helper method for scrolling the selection into view after
-   *  an edit operation. aScrollToAnchor should be PR_TRUE if you
+   *  an edit operation. aScrollToAnchor should be true if you
    *  want to scroll to the point where the selection was started.
-   *  If PR_FALSE, it attempts to scroll the end of the selection into view.
+   *  If false, it attempts to scroll the end of the selection into view.
    *
    *  Editor methods *should* call this method instead of the versions
    *  in the various selection interfaces, since this version makes sure
@@ -396,8 +396,8 @@ protected:
   bool CanEnableSpellCheck()
   {
     // Check for password/readonly/disabled, which are not spellchecked
-    // regardless of DOM
-    return !IsPasswordEditor() && !IsReadonly() && !IsDisabled();
+    // regardless of DOM. Also, check to see if spell check should be skipped or not.
+    return !IsPasswordEditor() && !IsReadonly() && !IsDisabled() && !ShouldSkipSpellCheck();
   }
 
 public:
@@ -435,7 +435,7 @@ public:
    * @param aNodeToJoin   The node that will be joined with aNodeToKeep.
    *                      There is no requirement that the two nodes be of the same type.
    * @param aParent       The parent of aNodeToKeep
-   * @param aNodeToKeepIsFirst  if PR_TRUE, the contents|children of aNodeToKeep come before the
+   * @param aNodeToKeepIsFirst  if true, the contents|children of aNodeToKeep come before the
    *                            contents|children of aNodeToJoin, otherwise their positions are switched.
    */
   nsresult JoinNodesImpl(nsIDOMNode *aNodeToKeep,
@@ -469,9 +469,9 @@ public:
 
   /** get the node immediately prior to aCurrentNode
     * @param aCurrentNode   the node from which we start the search
-    * @param aEditableNode  if PR_TRUE, only return an editable node
+    * @param aEditableNode  if true, only return an editable node
     * @param aResultNode    [OUT] the node that occurs before aCurrentNode in the tree,
-    *                       skipping non-editable nodes if aEditableNode is PR_TRUE.
+    *                       skipping non-editable nodes if aEditableNode is true.
     *                       If there is no prior node, aResultNode will be nsnull.
     */
   nsresult GetPriorNode(nsIDOMNode  *aCurrentNode, 
@@ -488,9 +488,9 @@ public:
                        
   /** get the node immediately after to aCurrentNode
     * @param aCurrentNode   the node from which we start the search
-    * @param aEditableNode  if PR_TRUE, only return an editable node
+    * @param aEditableNode  if true, only return an editable node
     * @param aResultNode    [OUT] the node that occurs after aCurrentNode in the tree,
-    *                       skipping non-editable nodes if aEditableNode is PR_TRUE.
+    *                       skipping non-editable nodes if aEditableNode is true.
     *                       If there is no prior node, aResultNode will be nsnull.
     */
   nsresult GetNextNode(nsIDOMNode  *aCurrentNode, 
@@ -519,7 +519,7 @@ public:
   already_AddRefed<nsIDOMNode> GetLeftmostChild(nsIDOMNode  *aCurrentNode, 
                                                 bool        bNoBlockCrossing = false);
 
-  /** returns PR_TRUE if aNode is of the type implied by aTag */
+  /** returns true if aNode is of the type implied by aTag */
   static inline bool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
   {
     return GetTag(aNode) == aTag;
@@ -533,26 +533,26 @@ public:
   }
 
 
-  /** returns PR_TRUE if aParent can contain a child of type aTag */
+  /** returns true if aParent can contain a child of type aTag */
   bool CanContainTag(nsIDOMNode* aParent, const nsAString &aTag);
   bool TagCanContain(const nsAString &aParentTag, nsIDOMNode* aChild);
   virtual bool TagCanContainTag(const nsAString &aParentTag, const nsAString &aChildTag);
 
-  /** returns PR_TRUE if aNode is our root node */
+  /** returns true if aNode is our root node */
   bool IsRootNode(nsIDOMNode *inNode);
 
-  /** returns PR_TRUE if aNode is a descendant of our root node */
+  /** returns true if aNode is a descendant of our root node */
   bool IsDescendantOfBody(nsIDOMNode *inNode);
 
-  /** returns PR_TRUE if aNode is a container */
+  /** returns true if aNode is a container */
   virtual bool IsContainer(nsIDOMNode *aNode);
 
-  /** returns PR_TRUE if aNode is an editable node */
+  /** returns true if aNode is an editable node */
   bool IsEditable(nsIDOMNode *aNode);
 
   virtual bool IsTextInDirtyFrameVisible(nsIDOMNode *aNode);
 
-  /** returns PR_TRUE if aNode is a MozEditorBogus node */
+  /** returns true if aNode is a MozEditorBogus node */
   bool IsMozEditorBogusNode(nsIDOMNode *aNode);
 
   /** counts number of editable child nodes */
@@ -694,6 +694,11 @@ public:
   bool DontEchoPassword() const
   {
     return (mFlags & nsIPlaintextEditor::eEditorDontEchoPassword) != 0;
+  }
+  
+  PRBool ShouldSkipSpellCheck() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorSkipSpellCheck) != 0;
   }
 
   bool IsTabbable() const

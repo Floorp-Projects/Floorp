@@ -70,7 +70,7 @@ public:
     mWindow(aWindow),
     mName(aName),
     mASCIIOrigin(aASCIIOrigin),
-    mHasPrompted(PR_FALSE),
+    mHasPrompted(false),
     mPromptResult(0)
   {
     NS_ASSERTION(aHelper, "Null pointer!");

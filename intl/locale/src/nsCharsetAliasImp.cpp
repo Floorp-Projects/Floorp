@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
 
 #include "nsICharsetAlias.h"
 #include "pratom.h"
@@ -46,6 +47,8 @@
 #include "nsUnicharUtils.h"
 #include "nsUConvPropertySearch.h"
 #include "nsCharsetAlias.h"
+
+using namespace mozilla;
 
 //--------------------------------------------------------------
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCharsetAlias2, nsICharsetAlias)
@@ -74,7 +77,7 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
    ToLowerCase(key);
 
    nsresult rv = nsUConvPropertySearch::SearchPropertyValue(kAliases,
-      NS_ARRAY_LENGTH(kAliases), key, oResult);
+      ArrayLength(kAliases), key, oResult);
 
   return rv;
 }
@@ -87,16 +90,16 @@ nsCharsetAlias2::Equals(const nsACString& aCharset1,
    nsresult res = NS_OK;
 
    if(aCharset1.Equals(aCharset2, nsCaseInsensitiveCStringComparator())) {
-      *oResult = PR_TRUE;
+      *oResult = true;
       return res;
    }
 
    if(aCharset1.IsEmpty() || aCharset2.IsEmpty()) {
-      *oResult = PR_FALSE;
+      *oResult = false;
       return res;
    }
 
-   *oResult = PR_FALSE;
+   *oResult = false;
    nsCAutoString name1;
    nsCAutoString name2;
    res = this->GetPreferred(aCharset1, name1);

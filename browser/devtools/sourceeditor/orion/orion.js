@@ -108,7 +108,7 @@ if (typeof window !== "undefined" && typeof window.define !== "undefined") {
  * Contributors: IBM Corporation - initial API and implementation
  ******************************************************************************/
 
-/*global window define */
+/*global window define setTimeout clearTimeout setInterval clearInterval */
 
 /**
  * @namespace The global container for Orion APIs.
@@ -120,12 +120,13 @@ var orion = orion || {};
 orion.textview = orion.textview || {};
 
 /**
- * Contructs a new ruler. 
+ * Constructs a new ruler. 
  * <p>
  * The default implementation does not implement all the methods in the interface
  * and is useful only for objects implementing rulers.
  * <p/>
  * 
+ * @param {orion.textview.AnnotationModel} [annotationModel] the annotation model for the ruler.
  * @param {String} [rulerLocation="left"] the location for the ruler.
  * @param {String} [rulerOverview="page"] the overview for the ruler.
  * @param {orion.textview.Style} [rulerStyle] the style for the ruler. 
@@ -150,26 +151,95 @@ orion.textview = orion.textview || {};
  */
 orion.textview.Ruler = (function() {
 	/** @private */
-	function Ruler (rulerLocation, rulerOverview, rulerStyle) {
+	function Ruler (annotationModel, rulerLocation, rulerOverview, rulerStyle) {
 		this._location = rulerLocation || "left";
 		this._overview = rulerOverview || "page";
 		this._rulerStyle = rulerStyle;
+		this._types = [];
 		this._view = null;
+		var self = this;
+		this._annotationModelListener = {
+			onChanged: function(e) {
+				self._onAnnotationModelChanged(e);
+			}
+		};
+		this.setAnnotationModel(annotationModel);
 	}
 	Ruler.prototype = /** @lends orion.textview.Ruler.prototype */ {
 		/**
-		 * Sets the view for the ruler.
+		 * Adds an annotation type to the ruler.
+		 * <p>
+		 * Only annotations of the specified types will be shown by
+		 * this ruler.
+		 * </p>
 		 *
-		 * @param {orion.textview.TextView} view the text view.
+		 * @param type {Object} the annotation type to be shown
 		 */
-		setView: function (view) {
-			if (this._onModelChanged && this._view) {
-				this._view.removeEventListener("ModelChanged", this, this._onModelChanged); 
+		addAnnotationType: function(type) {
+			this._types.push(type);
+		},
+		/**
+		 * Returns the annotations for a given line range.
+		 * <p>
+		 * This method is called the the text view when the ruler is redrawn.
+		 * </p>
+		 *
+		 * @param {Number} startLine the line index
+		 * @param {Number} endLine the line index
+		 * @return {orion.textview.LineAnnotation} the annotations for the line range.
+		 */
+		getAnnotations: function(startLine, endLine) {
+			var annotationModel = this._annotationModel;
+			if (!annotationModel) { return []; }
+			var model = this._view.getModel();
+			var start = model.getLineStart(startLine);
+			var end = model.getLineEnd(endLine - 1);
+			var baseModel = model;
+			if (model.getBaseModel) {
+				baseModel = model.getBaseModel();
+				start = model.mapOffset(start);
+				end = model.mapOffset(end);
 			}
-			this._view = view;
-			if (this._onModelChanged && this._view) {
-				this._view.addEventListener("ModelChanged", this, this._onModelChanged);
+			var annotations = annotationModel.getAnnotations(start, end);
+			var result = [];
+			while (annotations.hasNext()) {
+				var annotation = annotations.next();
+				if (!this.isAnnotationTypeVisible(annotation.type)) { continue; }
+				var annotationLineStart = baseModel.getLineAtOffset(annotation.start);
+				var annotationLineEnd = baseModel.getLineAtOffset(annotation.end - 1);
+				for (var lineIndex = annotationLineStart; lineIndex<=annotationLineEnd; lineIndex++) {
+					var visualLineIndex = lineIndex;
+					if (model !== baseModel) {
+						var ls = baseModel.getLineStart(lineIndex);
+						ls = model.mapOffset(ls, true);
+						if (ls === -1) { continue; }
+						visualLineIndex = model.getLineAtOffset(ls);
+					}
+					if (!(startLine <= visualLineIndex && visualLineIndex < endLine)) { continue; }
+					var rulerAnnotation = this._mergeAnnotation(result[visualLineIndex], annotation, lineIndex - annotationLineStart, annotationLineEnd - annotationLineStart + 1);
+					if (rulerAnnotation) {
+						result[visualLineIndex] = rulerAnnotation;
+					}
+				}
 			}
+			if (!this._multiAnnotation && this._multiAnnotationOverlay) {
+				for (var k in result) {
+					if (result[k]._multiple) {
+						result[k].html = result[k].html + this._multiAnnotationOverlay.rulerHTML;
+					}
+				}
+			}
+			return result;
+		},
+		/**
+		 * Returns the ruler annotation model.
+		 *
+		 * @returns {orion.textview.AnnotationModel} the ruler annotation model.
+		 *
+		 * @see #getOverview
+		 */
+		getAnnotationModel: function() {
+			return this._annotationModel;
 		},
 		/**
 		 * Returns the ruler location.
@@ -192,43 +262,105 @@ orion.textview.Ruler = (function() {
 			return this._overview;
 		},
 		/**
-		 * Returns the CSS styling information for the decoration of a given line.
-		 * <p>
-		 * If the line index is <code>-1</code>, the CSS styling information for the decoration
-		 * that determines the width of the ruler should be returned. If the line is
-		 * <code>undefined</code>, the ruler styling information should be returned.
-		 * </p>
+		 * Returns the CSS styling information for the ruler.
 		 *
-		 * @param {Number} lineIndex the line index
-		 * @returns {orion.textview.Style} the CSS styling for ruler, given line, or generic line.
-		 *
-		 * @see #getHTML
+		 * @returns {orion.textview.Style} the CSS styling for ruler.
 		 */
-		getStyle: function(lineIndex) {
+		getRulerStyle: function() {
+			return this._rulerStyle;
 		},
 		/**
-		 * Returns the HTML content for the decoration of a given line.
+		 * Returns the widest annotation which determines the width of the ruler.
 		 * <p>
-		 * If the line index is <code>-1</code>, the HTML content for the decoration
-		 * that determines the width of the ruler should be returned.
+		 * If the ruler does not have a fixed width it should provide the widest
+		 * annotation to avoid the ruler from changing size as the view scrolls.
+		 * </p>
+		 * <p>
+		 * This method is called the the text view when the ruler is redrawn.
 		 * </p>
 		 *
-		 * @param {Number} lineIndex the line index
-		 * @returns {String} the HTML content for a given line, or generic line.
+		 * @returns {orion.textview.Annotation} the annotation for the generic line.
 		 *
-		 * @see #getStyle
+		 * @see #getAnnotations
 		 */
-		getHTML: function(lineIndex) {
+		getWidestAnnotation: function() {
+			return null;
 		},
 		/**
-		 * Returns the indices of the lines that have decoration.
-		 * <p>
-		 * This function is only called for rulers with "document" overview type.
-		 * </p>
-		 * 
-		 * @returns {Number[]} an array of line indices.
+		 * Returns whether the ruler shows annotations of the specified type.
+		 *
+		 * @param {Object} the annotation type 
+		 * @returns {Boolean} whether the specified is shown
 		 */
-		getAnnotations: function() {
+		isAnnotationTypeVisible: function(type) {
+			for (var i = 0; i < this._types.length; i++) {
+				if (this._types[i] === type) {
+					return true;
+				}
+			}
+			return false;
+		},
+		/**
+		 * Removes an annotation type from the ruler.
+		 *
+		 * @param type {Object} the annotation type to be shown
+		 */
+		removeAnnotationType: function(type) {
+			for (var i = 0; i < this._types.length; i++) {
+				if (this._types[i] === type) {
+					this._types.splice(i, 1);
+					break;
+				}
+			}
+		},
+		/**
+		 * Sets the annotation model for the ruler.
+		 *
+		 * @param {orion.textview.AnnotationModel} annotationModel the annotation model.
+		 */
+		setAnnotationModel: function (annotationModel) {
+			if (this._annotationModel) {
+				this._annotationModel.removeListener(this._annotationModelListener); 
+			}
+			this._annotationModel = annotationModel;
+			if (this._annotationModel) {
+				this._annotationModel.addListener(this._annotationModelListener); 
+			}
+		},
+		/**
+		 * Sets the annotation that is displayed when a given line contains multiple
+		 * annotations.
+		 *
+		 * @param {orion.textview.Annotation} the annotation for lines with multiple annotations.
+		 */
+		setMultiAnnotation: function(annotation) {
+			this._multiAnnotation = annotation;
+		},
+		/**
+		 * Sets the annotation that overlays a line with multiple  annotations.
+		 *
+		 * @param {orion.textview.Annotation} the annotation overlay for lines with multiple annotations.
+		 */
+		setMultiAnnotationOverlay: function(annotation) {
+			this._multiAnnotationOverlay = annotation;
+		},
+		/**
+		 * Sets the view for the ruler.
+		 * <p>
+		 * This method is called the the text view when the ruler
+		 * is added to the view.
+		 * </p>
+		 *
+		 * @param {orion.textview.TextView} view the text view.
+		 */
+		setView: function (view) {
+			if (this._onTextModelChanged && this._view) {
+				this._view.removeEventListener("ModelChanged", this, this._onTextModelChanged); 
+			}
+			this._view = view;
+			if (this._onTextModelChanged && this._view) {
+				this._view.addEventListener("ModelChanged", this, this._onTextModelChanged);
+			}
 		},
 		/**
 		 * This event is sent when the user clicks a line decoration.
@@ -247,17 +379,249 @@ orion.textview.Ruler = (function() {
 		 * @param {DOMEvent} e the double click event.
 		 */
 		onDblClick: function(lineIndex, e) {
+		},
+		onMouseMove: function(lineIndex, e) {
+			if (this._tooltip && this._tooltipLineIndex === lineIndex) { return; }
+			var self = this;
+			self._hideTooltip();
+			self._tooltipLineIndex = lineIndex;
+			self._tooltipClientY = e.clientY;
+			self._tooltipShowTimeout = setTimeout(function() {
+				self._showTooltip();
+				if (self._tooltip) {
+					self._tooltipHideTimeout = setTimeout(function() {
+						var opacity = parseFloat(self._getNodeStyle(self._tooltip, "opacity", "1"));
+						self._tooltipFadeTimeout = setInterval(function() {
+							if (self._tooltip && opacity > 0) {
+								opacity -= 0.1;
+								self._tooltip.style.opacity = opacity;
+								return;
+							}
+							self._hideTooltip();
+						}, 50);
+					}, 5000);
+				}
+			}, 1000);
+		},
+		onMouseOver: this._onMouseMove,
+		onMouseOut: function(lineIndex, e) {
+			this._hideTooltip();
+		},
+		_getNodeStyle: function(node, prop, defaultValue) {
+			var value;
+			if (node) {
+				value = node.style[prop];
+				if (!value) {
+					if (node.currentStyle) {
+						var index = 0, p = prop;
+						while ((index = p.indexOf("-", index)) !== -1) {
+							p = p.substring(0, index) + p.substring(index + 1, index + 2).toUpperCase() + p.substring(index + 2);
+						}
+						value = node.currentStyle[p];
+					} else {
+						var css = node.ownerDocument.defaultView.getComputedStyle(node, null);
+						value = css ? css.getPropertyValue(prop) : null;
+					}
+				}
+			}
+			return value || defaultValue;
+		},
+		_getTooltip: function(document, lineIndex, annotations) {
+			if (annotations.length === 0) { return null; }
+			var model = this._view.getModel(), annotation;
+			function getText(start, end) {
+				var m = model.getBaseModel ? model.getBaseModel() : model;
+				var textStart = m.getLineStart(m.getLineAtOffset(start));
+				var textEnd = m.getLineEnd(m.getLineAtOffset(end), true);
+				return m.getText(textStart, textEnd);
+			}
+			var title;
+			if (annotations.length === 1) {
+				annotation = annotations[0];
+				if (annotation.rulerTitle) {
+					title = annotation.rulerTitle.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+					return annotation.rulerHTML + "&nbsp;" + title;
+				} else {
+					//TODO show a projection textview to get coloring 
+					return document.createTextNode(getText(annotation.start, annotation.end));
+				}
+			} else {
+				var tooltipHTML = "<em>Multiple annotations:</em><br>";
+				for (var i = 0; i < annotations.length; i++) {
+					annotation = annotations[i];
+					title = annotation.rulerTitle;
+					if (!title) {
+						title = getText(annotation.start, annotation.end);
+					}
+					title = title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+					tooltipHTML += annotation.rulerHTML + "&nbsp;" + title + "<br>";
+				}
+				return tooltipHTML;
+			}
+		},	
+		_hideTooltip: function() {
+			this._tooltipLineIndex = this._tooltipEvent = undefined;
+			if (this._tooltip) {
+				var parent = this._tooltip.parentNode;
+				if (parent) { parent.removeChild(this._tooltip); }
+				this._tooltip = null;
+			}
+			if (this._tooltipShowTimeout) {
+				clearTimeout(this._tooltipShowTimeout);
+				this._tooltipShowTimeout = null;
+			}
+			if (this._tooltipHideTimeout) {
+				clearTimeout(this._tooltipHideTimeout);
+				this._tooltipHideTimeout = null;
+			}
+			if (this._tooltipFadeTimeout) {
+				clearInterval(this._tooltipFadeTimeout);
+				this._tooltipFadeTimeout = null;
+			}
+		},
+		_onAnnotationModelChanged: function(e) {
+			var view = this._view;
+			if (!view) { return; }
+			var model = view.getModel(), self = this;
+			var lineCount = model.getLineCount();
+			if (e.textModelChangedEvent) {
+				var start = e.textModelChangedEvent.start;
+				if (model.getBaseModel) { start = model.mapOffset(start, true); }
+				var startLine = model.getLineAtOffset(start);
+				view.redrawLines(startLine, lineCount, self);
+				return;
+			}
+			function redraw(changes) {
+				for (var i = 0; i < changes.length; i++) {
+					if (!self.isAnnotationTypeVisible(changes[i].type)) { continue; }
+					var start = changes[i].start;
+					var end = changes[i].end;
+					if (model.getBaseModel) {
+						start = model.mapOffset(start, true);
+						end = model.mapOffset(end, true);
+					}
+					if (start !== -1 && end !== -1) {
+						view.redrawLines(model.getLineAtOffset(start), model.getLineAtOffset(Math.max(start, end - 1)) + 1, self);
+					}
+				}
+			}
+			redraw(e.added);
+			redraw(e.removed);
+			redraw(e.changed);
+		},
+		_mergeAnnotation: function(result, annotation, annotationLineIndex, annotationLineCount) {
+			if (!result) { result = {}; }
+			if (annotationLineIndex === 0) {
+				if (result.html && annotation.rulerHTML) {
+					if (annotation.rulerHTML !== result.html) {
+						if (!result._multiple && this._multiAnnotation) {
+							result.html = this._multiAnnotation.rulerHTML;
+						}
+					} 
+					result._multiple = true;
+				} else {
+					result.html = annotation.rulerHTML;
+				}
+			}
+			result.style = this._mergeStyle(result.style, annotation.rulerStyle);
+			return result;
+		},
+		_mergeStyle: function(result, style) {
+			if (style) {
+				if (!result) { result = {}; }
+				if (result.styleClass && style.styleClass && result.styleClass !== style.styleClass) {
+					result.styleClass += " " + style.styleClass;
+				} else {
+					result.styleClass = style.styleClass;
+				}
+				var prop;
+				if (style.style) {
+					if (!result.style) { result.style  = {}; }
+					for (prop in style.style) {
+						if (!result.style[prop]) {
+							result.style[prop] = style.style[prop];
+						}
+					}
+				}
+				if (style.attributes) {
+					if (!result.attributes) { result.attributes  = {}; }
+					for (prop in style.attributes) {
+						if (!result.attributes[prop]) {
+							result.attributes[prop] = style.attributes[prop];
+						}
+					}
+				}
+			}
+			return result;
+		},
+		_showTooltip: function() {
+			var lineIndex = this._tooltipLineIndex;
+			if (lineIndex === undefined) { return; }
+			var view = this._view;
+			var model = view.getModel();
+			var annotationModel = this._annotationModel;
+			var annotations = [];
+			if (annotationModel) {
+				var start = model.getLineStart(lineIndex);
+				var end = model.getLineEnd(lineIndex);
+				if (model.getBaseModel) {
+					start = model.mapOffset(start);
+					end = model.mapOffset(end);
+				}
+				var iter = annotationModel.getAnnotations(start, end);
+				var annotation;
+				while (iter.hasNext()) {
+					annotation = iter.next();
+					if (!this.isAnnotationTypeVisible(annotation.type)) { continue; }
+					annotations.push(annotation);
+				}
+			}
+			var document = this._view._parentDocument;//TODO bad not API
+			var tooltipContent = this._getTooltip(document, lineIndex, annotations);
+			if (!tooltipContent) { return; }
+			var tooltip = this._tooltip = document.createElement("DIV");
+			tooltip.className = "rulerTooltip";
+			if (typeof tooltipContent === "string") {
+				tooltip.innerHTML = tooltipContent;
+			} else {
+				tooltip.appendChild(tooltipContent);
+			}
+			var rect = view.getClientArea();
+			if (this.getOverview() === "document") {
+				rect.y = view.convert({y: this._tooltipClientY}, "view", "document").y;
+			} else {
+				rect.y = view.getLocationAtOffset(model.getLineStart(lineIndex)).y;
+			}
+			view.convert(rect, "document", "page");
+			tooltip.style.visibility = "hidden";
+			document.body.appendChild(tooltip);
+			var left = parseInt(this._getNodeStyle(tooltip, "padding-left", "0"), 10);
+			left += parseInt(this._getNodeStyle(tooltip, "border-left-width", "0"), 10);
+			var top = parseInt(this._getNodeStyle(tooltip, "padding-top", "0"), 10);
+			top += parseInt(this._getNodeStyle(tooltip, "border-top-width", "0"), 10);
+			rect.y -= top;
+			if (this.getLocation() === "right") {
+				var right = parseInt(this._getNodeStyle(tooltip, "padding-right", "0"), 10);
+				right += parseInt(this._getNodeStyle(tooltip, "border-right-width", "0"), 10);
+				tooltip.style.right = (document.body.getBoundingClientRect().right - (rect.x + rect.width) + left + right) + "px";
+			} else {
+				tooltip.style.left = (rect.x - left) + "px";
+			}
+			tooltip.style.top = rect.y + "px";
+			tooltip.style.maxWidth = rect.width + "px";
+			tooltip.style.maxHeight = (rect.height - (rect.y - view._parent.getBoundingClientRect().top)) + "px";
+			tooltip.style.visibility = "visible";
 		}
 	};
 	return Ruler;
 }());
 
 /**
- * Contructs a new line numbering ruler. 
+ * Constructs a new line numbering ruler. 
  *
  * @param {String} [rulerLocation="left"] the location for the ruler.
  * @param {orion.textview.Style} [rulerStyle=undefined] the style for the ruler.
- * @param {orion.textview.Style} [oddStyle={backgroundColor: "white"}] the style for lines with odd line index.
+ * @param {orion.textview.Style} [oddStyle={style: {backgroundColor: "white"}] the style for lines with odd line index.
  * @param {orion.textview.Style} [evenStyle={backgroundColor: "white"}] the style for lines with even line index.
  *
  * @augments orion.textview.Ruler
@@ -270,40 +634,45 @@ orion.textview.Ruler = (function() {
  */
 orion.textview.LineNumberRuler = (function() {
 	/** @private */
-	function LineNumberRuler (rulerLocation, rulerStyle, oddStyle, evenStyle) {
-		orion.textview.Ruler.call(this, rulerLocation, "page", rulerStyle);
+	function LineNumberRuler (annotationModel, rulerLocation, rulerStyle, oddStyle, evenStyle) {
+		orion.textview.Ruler.call(this, annotationModel, rulerLocation, "page", rulerStyle);
 		this._oddStyle = oddStyle || {style: {backgroundColor: "white"}};
 		this._evenStyle = evenStyle || {style: {backgroundColor: "white"}};
 		this._numOfDigits = 0;
 	}
 	LineNumberRuler.prototype = new orion.textview.Ruler(); 
 	/** @ignore */
-	LineNumberRuler.prototype.getStyle = function(lineIndex) {
-		if (lineIndex === undefined) {
-			return this._rulerStyle;
-		} else {
-			return lineIndex & 1 ? this._oddStyle : this._evenStyle;
+	LineNumberRuler.prototype.getAnnotations = function(startLine, endLine) {
+		var result = orion.textview.Ruler.prototype.getAnnotations.call(this, startLine, endLine);
+		var model = this._view.getModel();
+		for (var lineIndex = startLine; lineIndex < endLine; lineIndex++) {
+			var style = lineIndex & 1 ? this._oddStyle : this._evenStyle;
+			var mapLine = lineIndex;
+			if (model.getBaseModel) {
+				var lineStart = model.getLineStart(mapLine);
+				mapLine = model.getBaseModel().getLineAtOffset(model.mapOffset(lineStart));
+			}
+			if (!result[lineIndex]) { result[lineIndex] = {}; }
+			result[lineIndex].html = (mapLine + 1) + "";
+			if (!result[lineIndex].style) { result[lineIndex].style = style; }
 		}
+		return result;
 	};
 	/** @ignore */
-	LineNumberRuler.prototype.getHTML = function(lineIndex) {
-		if (lineIndex === -1) {
-			var model = this._view.getModel();
-			return model.getLineCount();
-		} else {
-			return lineIndex + 1;
-		}
+	LineNumberRuler.prototype.getWidestAnnotation = function() {
+		var lineCount = this._view.getModel().getLineCount();
+		return this.getAnnotations(lineCount - 1, lineCount)[lineCount - 1];
 	};
 	/** @ignore */
-	LineNumberRuler.prototype._onModelChanged = function(e) {
+	LineNumberRuler.prototype._onTextModelChanged = function(e) {
 		var start = e.start;
 		var model = this._view.getModel();
-		var lineCount = model.getLineCount();
+		var lineCount = model.getBaseModel ? model.getBaseModel().getLineCount() : model.getLineCount();
 		var numOfDigits = (lineCount+"").length;
 		if (this._numOfDigits !== numOfDigits) {
 			this._numOfDigits = numOfDigits;
 			var startLine = model.getLineAtOffset(start);
-			this._view.redrawLines(startLine, lineCount, this);
+			this._view.redrawLines(startLine,  model.getLineCount(), this);
 		}
 	};
 	return LineNumberRuler;
@@ -339,124 +708,11 @@ orion.textview.LineNumberRuler = (function() {
  */
 orion.textview.AnnotationRuler = (function() {
 	/** @private */
-	function AnnotationRuler (rulerLocation, rulerStyle, defaultAnnotation) {
-		orion.textview.Ruler.call(this, rulerLocation, "page", rulerStyle);
-		this._defaultAnnotation = defaultAnnotation;
-		this._annotations = [];
+	function AnnotationRuler (annotationModel, rulerLocation, rulerStyle) {
+		orion.textview.Ruler.call(this, annotationModel, rulerLocation, "page", rulerStyle);
 	}
 	AnnotationRuler.prototype = new orion.textview.Ruler();
-	/**
-	 * Removes all annotations in the ruler.
-	 *
-	 * @name clearAnnotations
-	 * @methodOf orion.textview.AnnotationRuler.prototype
-	 */
-	AnnotationRuler.prototype.clearAnnotations = function() {
-		this._annotations = [];
-		var lineCount = this._view.getModel().getLineCount();
-		this._view.redrawLines(0, lineCount, this);
-		if (this._overviewRuler) {
-			this._view.redrawLines(0, lineCount, this._overviewRuler);
-		}
-	};
-	/**
-	 * Returns the annotation for the given line index.
-	 *
-	 * @param {Number} lineIndex the line index
-	 *
-	 * @returns {orion.textview.Annotation} the annotation for the given line, or undefined
-	 *
-	 * @name getAnnotation
-	 * @methodOf orion.textview.AnnotationRuler.prototype
-	 * @see #setAnnotation
-	 */
-	AnnotationRuler.prototype.getAnnotation = function(lineIndex) {
-		return this._annotations[lineIndex];
-	};
-	/** @ignore */
-	AnnotationRuler.prototype.getAnnotations = function() {
-		var lines = [];
-		for (var prop in this._annotations) {
-			var i = prop >>> 0;
-			if (this._annotations[i] !== undefined) {
-				lines.push(i);
-			}
-		}
-		return lines;
-	};
-	/** @ignore */
-	AnnotationRuler.prototype.getStyle = function(lineIndex) {
-		switch (lineIndex) {
-			case undefined:
-				return this._rulerStyle;
-			case -1:
-				return this._defaultAnnotation ? this._defaultAnnotation.style : null;
-			default:
-				return this._annotations[lineIndex] && this._annotations[lineIndex].style ? this._annotations[lineIndex].style : null;
-		}
-	};
-	/** @ignore */	
-	AnnotationRuler.prototype.getHTML = function(lineIndex) {
-		if (lineIndex === -1) {
-			return this._defaultAnnotation ? this._defaultAnnotation.html : "";
-		} else {
-			return this._annotations[lineIndex] && this._annotations[lineIndex].html ? this._annotations[lineIndex].html : "";
-		}
-	};
-	/**
-	 * Sets the annotation in the given line index.
-	 *
-	 * @param {Number} lineIndex the line index
-	 * @param {orion.textview.Annotation} annotation the annotation
-	 *
-	 * @name setAnnotation
-	 * @methodOf orion.textview.AnnotationRuler.prototype
-	 * @see #getAnnotation
-	 * @see #clearAnnotations
-	 */
-	AnnotationRuler.prototype.setAnnotation = function(lineIndex, annotation) {
-		if (lineIndex === undefined) { return; }
-		this._annotations[lineIndex] = annotation;
-		this._view.redrawLines(lineIndex, lineIndex + 1, this);
-		if (this._overviewRuler) {
-			this._view.redrawLines(lineIndex, lineIndex + 1, this._overviewRuler);
-		}
-	};
-	/** @ignore */
-	AnnotationRuler.prototype._onModelChanged = function(e) {
-		var start = e.start;
-		var removedLineCount = e.removedLineCount;
-		var addedLineCount = e.addedLineCount;
-		var linesChanged = addedLineCount - removedLineCount;
-		if (linesChanged) {
-			var model = this._view.getModel();
-			var startLine = model.getLineAtOffset(start);
-			var newLines = [], lines = this._annotations;
-			var changed = false;
-			for (var prop in lines) {
-				var i = prop >>> 0;
-				if (!(startLine < i && i < startLine + removedLineCount)) {
-					var newIndex = i;
-					if (i > startLine) {
-						newIndex += linesChanged;
-						changed = true;
-					}
-					newLines[newIndex] = lines[i];
-				} else {
-					changed = true;
-				}
-			}
-			this._annotations = newLines;
-			if (changed) {
-				var lineCount = model.getLineCount();
-				this._view.redrawLines(startLine, lineCount, this);
-				//TODO redraw overview (batch it for performance)
-				if (this._overviewRuler) {
-					this._view.redrawLines(0, lineCount, this._overviewRuler);
-				}
-			}
-		}
-	};
+	
 	return AnnotationRuler;
 }());
 
@@ -483,52 +739,127 @@ orion.textview.AnnotationRuler = (function() {
  */
 orion.textview.OverviewRuler = (function() {
 	/** @private */
-	function OverviewRuler (rulerLocation, rulerStyle, annotationRuler) {
-		orion.textview.Ruler.call(this, rulerLocation, "document", rulerStyle);
-		this._annotationRuler = annotationRuler;
-		if (annotationRuler) {
-			annotationRuler._overviewRuler = this;
-		}
+	function OverviewRuler (annotationModel, rulerLocation, rulerStyle) {
+		orion.textview.Ruler.call(this, annotationModel, rulerLocation, "document", rulerStyle);
 	}
 	OverviewRuler.prototype = new orion.textview.Ruler();
+	
 	/** @ignore */
-	OverviewRuler.prototype.getAnnotations = function() {
-		return this._annotationRuler.getAnnotations();
-	};
-	/** @ignore */	
-	OverviewRuler.prototype.getStyle = function(lineIndex) {
-		var result, style;
-		if (lineIndex === undefined) {
-			result = this._rulerStyle || {};
-			style = result.style || (result.style = {});
-			style.lineHeight = "1px";
-			style.fontSize = "1px";
-			style.width = "14px";
-		} else {
-			if (lineIndex !== -1) {
-				var annotation = this._annotationRuler.getAnnotation(lineIndex);
-				result = annotation.overviewStyle || {};
-			} else {
-				result = {};
-			}
-			style = result.style || (result.style = {});
-			style.cursor = "pointer";
-			style.width = "8px";
-			style.height = "3px";
-			style.left = "2px";
-		}
+	OverviewRuler.prototype.getRulerStyle = function() {
+		var result = {style: {lineHeight: "1px", fontSize: "1px"}};
+		result = this._mergeStyle(result, this._rulerStyle);
 		return result;
-	};
-	/** @ignore */
-	OverviewRuler.prototype.getHTML = function(lineIndex) {
-		return "&nbsp;";
 	};
 	/** @ignore */	
 	OverviewRuler.prototype.onClick = function(lineIndex, e) {
 		if (lineIndex === undefined) { return; }
 		this._view.setTopIndex(lineIndex);
 	};
+	/** @ignore */
+	OverviewRuler.prototype._getTooltip = function(document, lineIndex, annotations) {
+		if (annotations.length === 0) {
+			var model = this._view.getModel();
+			var mapLine = lineIndex;
+			if (model.getBaseModel) {
+				var lineStart = model.getLineStart(mapLine);
+				mapLine = model.getBaseModel().getLineAtOffset(model.mapOffset(lineStart));
+			}
+			return "Line: " + (mapLine + 1);
+		}
+		return orion.textview.Ruler.prototype._getTooltip.call(this, document, lineIndex, annotations);
+	};
+	/** @ignore */
+	OverviewRuler.prototype._mergeAnnotation = function(previousAnnotation, annotation, annotationLineIndex, annotationLineCount) {
+		if (annotationLineIndex !== 0) { return undefined; }
+		var result = previousAnnotation;
+		if (!result) {
+			//TODO annotationLineCount does not work when there are folded lines
+			var height = 3 * annotationLineCount;
+			result = {html: "&nbsp;", style: { style: {height: height + "px"}}};
+			result.style = this._mergeStyle(result.style, annotation.overviewStyle);
+		}
+		return result;
+	};
 	return OverviewRuler;
+}());
+
+orion.textview.FoldingRuler = (function() {
+	/** @private */
+	function FoldingRuler (annotationModel, rulerLocation, rulerStyle) {
+		orion.textview.AnnotationRuler.call(this, annotationModel, rulerLocation, rulerStyle);
+	}
+	FoldingRuler.prototype = new orion.textview.AnnotationRuler();
+	
+	/** @ignore */
+	FoldingRuler.prototype.onClick =  function(lineIndex, e) {
+		if (lineIndex === undefined) { return; }
+		var annotationModel = this._annotationModel;
+		if (!annotationModel) { return; }
+		var view = this._view;
+		var model = view.getModel();
+		var start = model.getLineStart(lineIndex);
+		var end = model.getLineEnd(lineIndex, true);
+		if (model.getBaseModel) {
+			start = model.mapOffset(start);
+			end = model.mapOffset(end);
+		}
+		var annotation, iter = annotationModel.getAnnotations(start, end);
+		while (!annotation && iter.hasNext()) {
+			var a = iter.next();
+			if (!this.isAnnotationTypeVisible(a.type)) { continue; }
+			annotation = a;
+		}
+		if (annotation) {
+			this._hideTooltip();
+			if (annotation.expanded) {
+				annotation.collapse();
+			} else {
+				annotation.expand();
+			}
+			this._annotationModel.modifyAnnotation(annotation);
+		}
+	};
+	/** @ignore */
+	FoldingRuler.prototype._getTooltip = function(document, lineIndex, annotations) {
+		if (annotations.length === 1) {
+			if (annotations[0].expanded) {
+				return null;
+			}
+		}
+		return orion.textview.AnnotationRuler.prototype._getTooltip.call(this, document, lineIndex, annotations);
+	};
+	/** @ignore */
+	FoldingRuler.prototype._onAnnotationModelChanged = function(e) {
+		if (e.textModelChangedEvent) {
+			orion.textview.AnnotationRuler.prototype._onAnnotationModelChanged.call(this, e);
+			return;
+		}
+		var view = this._view;
+		if (!view) { return; }
+		var model = view.getModel(), self = this, i;
+		var lineCount = model.getLineCount(), lineIndex = lineCount;
+		function redraw(changes) {
+			for (i = 0; i < changes.length; i++) {
+				if (!self.isAnnotationTypeVisible(changes[i].type)) { continue; }
+				var start = changes[i].start;
+				if (model.getBaseModel) {
+					start = model.mapOffset(start, true);
+				}
+				if (start !== -1) {
+					lineIndex = Math.min(lineIndex, model.getLineAtOffset(start));
+				}
+			}
+		}
+		redraw(e.added);
+		redraw(e.removed);
+		redraw(e.changed);
+		var rulers = view.getRulers();
+		for (i = 0; i < rulers.length; i++) {
+			view.redrawLines(lineIndex, lineCount, rulers[i]);
+		}
+	};
+	
+	return FoldingRuler;
 }());
 
 if (typeof window !== "undefined" && typeof window.define !== "undefined") {
@@ -596,6 +927,29 @@ orion.textview.UndoStack = (function() {
 				this._doUndoRedo(this.offset, this.text, this.previousText, view, select);
 			},
 			_doUndoRedo: function(offset, text, previousText, view, select) {
+				var model = view.getModel();
+				/* 
+				* TODO UndoStack should be changing the text in the base model.
+				* This is code needs to change when modifications in the base
+				* model are supported properly by the projection model.
+				*/
+				if (model.mapOffset && view.annotationModel) {
+					var mapOffset = model.mapOffset(offset, true);
+					if (mapOffset < 0) {
+						var annotationModel = view.annotationModel;
+						var iter = annotationModel.getAnnotations(offset, offset + 1);
+						while (iter.hasNext()) {
+							var annotation = iter.next();
+							if (annotation.type === "orion.annotation.folding") {
+								annotation.expand();
+								mapOffset = model.mapOffset(offset, true);
+								break;
+							}
+						}
+					}
+					if (mapOffset < 0) { return; }
+					offset = mapOffset;
+				}
 				view.setText(text, offset, offset + previousText.length);
 				if (select) {
 					view.setSelection(offset, offset + text.length);
@@ -654,7 +1008,26 @@ orion.textview.UndoStack = (function() {
 		this.view = view;
 		this.size = size !== undefined ? size : 100;
 		this.reset();
-		view.addEventListener("ModelChanging", this, this._onModelChanging);
+		var model = view.getModel();
+		if (model.getBaseModel) {
+			model = model.getBaseModel();
+		}
+		this.model = model;
+		var self = this;
+		this._modelListener = {
+			onChanging: function(text, start, removedCharCount, addedCharCount, removedLineCount, addedLineCount) {
+				var e = {
+					text: text,
+					start: start, 
+					removedCharCount: removedCharCount,
+					addedCharCount: addedCharCount,
+					removedLineCount: removedLineCount,
+					addedLineCount: addedLineCount
+				};
+				self._onModelChanging(e);
+			}
+		};
+		model.addListener(this._modelListener);
 		view.addEventListener("Destroy", this, this._onDestroy);
 	}
 	UndoStack.prototype = /** @lends orion.textview.UndoStack.prototype */ {
@@ -838,7 +1211,7 @@ orion.textview.UndoStack = (function() {
 			}
 		},
 		_onDestroy: function() {
-			this.view.removeEventListener("ModelChanging", this, this._onModelChanging);
+			this.model.removeListener(this._modelListener);
 			this.view.removeEventListener("Destroy", this, this._onDestroy);
 		},
 		_onModelChanging: function(e) {
@@ -866,14 +1239,14 @@ orion.textview.UndoStack = (function() {
 					var deleting = this._undoText.length > 0 && -this._undoStart === start;
 					this._undoStart = -start;
 					if (deleting) {
-						this._undoText = this._undoText + this.view.getText(start, start + removedCharCount);
+						this._undoText = this._undoText + this.model.getText(start, start + removedCharCount);
 					} else {
-						this._undoText = this.view.getText(start, start + removedCharCount) + this._undoText;
+						this._undoText = this.model.getText(start, start + removedCharCount) + this._undoText;
 					}
 					return;
 				}
 			}
-			this.add(new Change(start, newText, this.view.getText(start, start + removedCharCount)));
+			this.add(new Change(start, newText, this.model.getText(start, start + removedCharCount)));
 		}
 	};
 	return UndoStack;
@@ -930,11 +1303,11 @@ orion.textview.TextModel = (function() {
 	/** @private */
 	function TextModel(text, lineDelimiter) {
 		this._listeners = [];
-		this._lineDelimiter = lineDelimiter ? lineDelimiter : (isWindows ? "\r\n" : "\n"); 
 		this._lastLineIndex = -1;
 		this._text = [""];
 		this._lineOffsets = [0];
 		this.setText(text);
+		this.setLineDelimiter(lineDelimiter);
 	}
 
 	TextModel.prototype = /** @lends orion.textview.TextModel.prototype */ {
@@ -1022,11 +1395,11 @@ orion.textview.TextModel = (function() {
 		 * @returns {Number} the zero based line index or <code>-1</code> if out of range.
 		 */
 		getLineAtOffset: function(offset) {
-			if (!(0 <= offset && offset <= this.getCharCount())) {
+			var charCount = this.getCharCount();
+			if (!(0 <= offset && offset <= charCount)) {
 				return -1;
 			}
 			var lineCount = this.getLineCount();
-			var charCount = this.getCharCount();
 			if (offset === charCount) {
 				return lineCount - 1; 
 			}
@@ -1149,6 +1522,7 @@ orion.textview.TextModel = (function() {
 		getText: function(start, end) {
 			if (start === undefined) { start = 0; }
 			if (end === undefined) { end = this.getCharCount(); }
+			if (start === end) { return ""; }
 			var offset = 0, chunk = 0, length;
 			while (chunk<this._text.length) {
 				length = this._text[chunk].length; 
@@ -1225,6 +1599,28 @@ orion.textview.TextModel = (function() {
 					l.onChanged(start, removedCharCount, addedCharCount, removedLineCount, addedLineCount);
 				}
 			}
+		},
+		/**
+		 * Sets the line delimiter that is used by the view
+		 * when new lines are inserted in the model due to key
+		 * strokes  and paste operations.
+		 * <p>
+		 * If lineDelimiter is "auto", the delimiter is computed to be
+		 * the first delimiter found the in the current text. If lineDelimiter
+		 * is undefined or if there are no delimiters in the current text, the
+		 * platform delimiter is used.
+		 * </p>
+		 *
+		 * @param {String} lineDelimiter the line delimiter that is used by the view when inserting new lines.
+		 */
+		setLineDelimiter: function(lineDelimiter) {
+			if (lineDelimiter === "auto") {
+				lineDelimiter = undefined;
+				if (this.getLineCount() > 1) {
+					lineDelimiter = this.getText(this.getLineEnd(0), this.getLineEnd(0, true));
+				}
+			}
+			this._lineDelimiter = lineDelimiter ? lineDelimiter : (isWindows ? "\r\n" : "\n"); 
 		},
 		/**
 		 * Replaces the text in the given range with the given text.
@@ -1355,7 +1751,7 @@ if (typeof window !== "undefined" && typeof window.define !== "undefined") {
  * Contributors: 
  *		Felipe Heidrich (IBM Corporation) - initial API and implementation
  *		Silenio Quarti (IBM Corporation) - initial API and implementation
- *		Mihai Sucan (Mozilla Foundation) - fix for Bugs 334583, 348471, 349485, 350595.
+ *		Mihai Sucan (Mozilla Foundation) - fix for Bug#334583 Bug#348471 Bug#349485 Bug#350595
  ******************************************************************************/
 
 /*global window document navigator setTimeout clearTimeout XMLHttpRequest define */
@@ -1502,41 +1898,65 @@ orion.textview.TextView = (function() {
 	var EventTable = (function() {
 		/** @private */
 		function EventTable(){
-		    this._listeners = {};
+		    this._types = {};
 		}
 		EventTable.prototype = /** @lends EventTable.prototype */ {
 			/** @private */
 			addEventListener: function(type, context, func, data) {
-				if (!this._listeners[type]) {
-					this._listeners[type] = [];
+				var state = this._types[type];
+				if (!state) {
+					state = this._types[type] = {level: 0, listeners: []};
 				}
 				var listener = {
-						context: context,
-						func: func,
-						data: data
+					context: context,
+					func: func,
+					data: data
 				};
-				this._listeners[type].push(listener);
+				var listeners = state.listeners;
+				listeners.push(listener);
 			},
 			/** @private */
 			sendEvent: function(type, event) {
-				var listeners = this._listeners[type];
-				if (listeners) {
-					for (var i=0, len=listeners.length; i < len; i++){
-						var l = listeners[i];
-						if (l && l.context && l.func) {
-							l.func.call(l.context, event, l.data);
+				var state = this._types[type];
+				if (state) {
+					var listeners = state.listeners;
+					try {
+						state.level++;
+						if (listeners) {
+							for (var i=0, len=listeners.length; i < len; i++) {
+								var l = listeners[i];
+								if (l && l.context && l.func) {
+									l.func.call(l.context, event, l.data);
+								}
+							}
+						}
+					} finally {
+						state.level--;
+						if (state.compact && state.level === 0) {
+							for (var j=listeners.length - 1; j >= 0; j--) {
+								if (!listeners[j]) {
+									listeners.splice(j, 1);
+								}
+							}
+							state.compact = false;
 						}
 					}
 				}
 			},
 			/** @private */
 			removeEventListener: function(type, context, func, data){
-				var listeners = this._listeners[type];
-				if (listeners) {
-					for (var i=0, len=listeners.length; i < len; i++){
+				var state = this._types[type];
+				if (state) {
+					var listeners = state.listeners;
+					for (var i=0, len=listeners.length; i < len; i++) {
 						var l = listeners[i];
-						if (l.context === context && l.func === func && l.data === data) {
-							listeners.splice(i, 1);
+						if (l && l.context === context && l.func === func && l.data === data) {
+							if (state.level !== 0) {
+								listeners[i] = null;
+								state.compact = true;
+							} else {
+								listeners.splice(i, 1);
+							}
 							break;
 						}
 					}
@@ -1582,49 +2002,9 @@ orion.textview.TextView = (function() {
 		 * @param {orion.textview.Ruler} ruler the ruler.
 		 */
 		addRuler: function (ruler) {
-			var document = this._frameDocument;
-			var body = document.body;
-			var side = ruler.getLocation();
-			var rulerParent = side === "left" ? this._leftDiv : this._rightDiv;
-			if (!rulerParent) {
-				rulerParent = document.createElement("DIV");
-				rulerParent.style.overflow = "hidden";
-				rulerParent.style.MozUserSelect = "none";
-				rulerParent.style.WebkitUserSelect = "none";
-				if (isIE) {
-					rulerParent.attachEvent("onselectstart", function() {return false;});
-				}
-				rulerParent.style.position = "absolute";
-				rulerParent.style.top = "0px";
-				rulerParent.style.cursor = "default";
-				body.appendChild(rulerParent);
-				if (side === "left") {
-					this._leftDiv = rulerParent;
-					rulerParent.className = "viewLeftRuler";
-				} else {
-					this._rightDiv = rulerParent;
-					rulerParent.className = "viewRightRuler";
-				}
-				var table = document.createElement("TABLE");
-				rulerParent.appendChild(table);
-				table.cellPadding = "0px";
-				table.cellSpacing = "0px";
-				table.border = "0px";
-				table.insertRow(0);
-				var self = this;
-				addHandler(rulerParent, "click", function(e) { self._handleRulerEvent(e); });
-				addHandler(rulerParent, "dblclick", function(e) { self._handleRulerEvent(e); });
-			}
-			var div = document.createElement("DIV");
-			div._ruler = ruler;
-			div.rulerChanged = true;
-			div.style.position = "relative";
-			var row = rulerParent.firstChild.rows[0];
-			var index = row.cells.length;
-			var cell = row.insertCell(index);
-			cell.vAlign = "top";
-			cell.appendChild(div);
+			this._rulers.push(ruler);
 			ruler.setView(this);
+			this._createRuler(ruler);
 			this._updatePage();
 		},
 		/**
@@ -1693,6 +2073,7 @@ orion.textview.TextView = (function() {
 					}
 					break;
 			}
+			return rect;
 		},
 		/**
 		 * Destroys the text view. 
@@ -1705,63 +2086,28 @@ orion.textview.TextView = (function() {
 		 * @see #onDestroy
 		 */
 		destroy: function() {
-			this._setGrab(null);
-			this._unhookEvents();
-			
 			/* Destroy rulers*/
-			var destroyRulers = function(rulerDiv) {
-				if (!rulerDiv) {
-					return;
-				}
-				var cells = rulerDiv.firstChild.rows[0].cells;
-				for (var i = 0; i < cells.length; i++) {
-					var div = cells[i].firstChild;
-					div._ruler.setView(null);
-				}
-			};
-			destroyRulers (this._leftDiv);
-			destroyRulers (this._rightDiv);
+			for (var i=0; i< this._rulers.length; i++) {
+				this._rulers[i].setView(null);
+			}
+			this.rulers = null;
+			
+			/*
+			* Note that when the frame is removed, the unload event is trigged
+			* and the view contents and handlers is released properly by
+			* destroyView().
+			*/
+			this._destroyFrame();
 
-			/* Destroy timers */
-			if (this._autoScrollTimerID) {
-				clearTimeout(this._autoScrollTimerID);
-				this._autoScrollTimerID = null;
-			}
-			if (this._updateTimer) {
-				clearTimeout(this._updateTimer);
-				this._updateTimer = null;
-			}
-			
-			/* Destroy DOM */
-			var parent = this._parent;
-			var frame = this._frame;
-			parent.removeChild(frame);
-			
-			if (isPad) {
-				parent.removeChild(this._touchDiv);
-				this._touchDiv = null;
-				this._selDiv1 = null;
-				this._selDiv2 = null;
-				this._selDiv3 = null;
-				this._textArea = null;
-			}
-			
 			var e = {};
 			this.onDestroy(e);
-			
+
 			this._parent = null;
 			this._parentDocument = null;
 			this._model = null;
 			this._selection = null;
 			this._doubleClickSelection = null;
 			this._eventTable = null;
-			this._frame = null;
-			this._frameDocument = null;
-			this._frameWindow = null;
-			this._scrollDiv = null;
-			this._viewDiv = null;
-			this._clientDiv = null;
-			this._overlayDiv = null;
 			this._keyBindings = null;
 			this._actions = null;
 		},
@@ -1769,6 +2115,7 @@ orion.textview.TextView = (function() {
 		 * Gives focus to the text view.
 		 */
 		focus: function() {
+			if (!this._clientDiv) { return; }
 			/*
 			* Feature in Chrome. When focus is called in the clientDiv without
 			* setting selection the browser will set the selection to the first dom 
@@ -2039,7 +2386,6 @@ orion.textview.TextView = (function() {
 		 * @see #getLocationAtOffset
 		 */
 		getOffsetAtLocation: function(x, y) {
-			var model = this._model;
 			var scroll = this._getScroll();
 			var viewRect = this._viewDiv.getBoundingClientRect();
 			var viewPad = this._getViewPadding();
@@ -2047,6 +2393,16 @@ orion.textview.TextView = (function() {
 			x += -scroll.x + viewRect.left + viewPad.left;
 			var offset = this._getXToOffset(lineIndex, x);
 			return offset;
+		},
+		/**
+		 * Get the view rulers.
+		 *
+		 * @returns the view rulers
+		 *
+		 * @see #addRuler
+		 */
+		getRulers: function() {
+			return this._rulers.slice(0);
 		},
 		/**
 		 * Returns the text view selection.
@@ -2200,6 +2556,8 @@ orion.textview.TextView = (function() {
 		 * 
 		 * @property {String} styleClass A CSS class name.
 		 * @property {Object} style An object with CSS properties.
+		 * @property {String} tagName A DOM tag name.
+		 * @property {Object} attributes An object with DOM attributes.
 		 */
 		/**
 		 * @class This object is used to style range.
@@ -2393,10 +2751,12 @@ orion.textview.TextView = (function() {
 		 * @param {Number} [endLine=line count] the end line
 		 */
 		redrawLines: function(startLine, endLine, ruler) {
+			if (this._redrawCount > 0) { return; }
 			if (startLine === undefined) { startLine = 0; }
 			if (endLine === undefined) { endLine = this._model.getLineCount(); }
 			if (startLine === endLine) { return; }
 			var div = this._clientDiv;
+			if (!div) { return; }
 			if (ruler) {
 				var location = ruler.getLocation();//"left" or "right"
 				var divRuler = location === "left" ? this._leftDiv : this._rightDiv;
@@ -2469,19 +2829,16 @@ orion.textview.TextView = (function() {
 		 * @param {orion.textview.Ruler} ruler the ruler.
 		 */
 		removeRuler: function (ruler) {
-			ruler.setView(null);
-			var side = ruler.getLocation();
-			var rulerParent = side === "left" ? this._leftDiv : this._rightDiv;
-			var row = rulerParent.firstChild.rows[0];
-			var cells = row.cells;
-			for (var index = 0; index < cells.length; index++) {
-				var cell = cells[index];
-				if (cell.firstChild._ruler === ruler) { break; }
+			var rulers = this._rulers;
+			for (var i=0; i<rulers.length; i++) {
+				if (rulers[i] === ruler) {
+					rulers.splice(i, 1);
+					ruler.setView(null);
+					this._destroyRuler(ruler);
+					this._updatePage();
+					break;
+				}
 			}
-			if (index === cells.length) { return; }
-			row.cells[index]._ruler = undefined;
-			row.deleteCell(index);
-			this._updatePage();
 		},
 		/**
 		 * Associates an application defined handler to an action name.
@@ -2592,6 +2949,21 @@ orion.textview.TextView = (function() {
 			pixel = Math.max(0, pixel);
 			this._scrollView(pixel - this._getScroll().x, 0);
 		},
+		setRedraw: function(redraw) {
+			if (redraw) {
+				if (--this._redrawCount === 0) {
+					var lineCount = this._model.getLineCount();
+					var rulers = this.getRulers();
+					for (var i = 0; i < rulers.length; i++) {
+						this.redrawLines(0, lineCount, rulers[i]);
+					}
+					this.redrawLines(0, lineCount); 
+					this._queueUpdatePage();
+				}
+			} else {
+				this._redrawCount++;
+			}
+		},
 		/**
 		 * Sets the text model of the text view.
 		 *
@@ -2693,12 +3065,14 @@ orion.textview.TextView = (function() {
 				* force the clientDiv to loose and receive focus if the it is focused.
 				*/
 				if (isFirefox) {
-					var hasFocus = this._hasFocus;
 					var clientDiv = this._clientDiv;
-					if (hasFocus) { clientDiv.blur(); }
-					clientDiv.contentEditable = false;
-					clientDiv.contentEditable = true;
-					if (hasFocus) { clientDiv.focus(); }
+					if (clientDiv) {
+						var hasFocus = this._hasFocus;
+						if (hasFocus) { clientDiv.blur(); }
+						clientDiv.contentEditable = false;
+						clientDiv.contentEditable = true;
+						if (hasFocus) { clientDiv.focus(); }
+					}
 				}
 			}
 		},
@@ -2754,11 +3128,13 @@ orion.textview.TextView = (function() {
 		/**
 		 * Scrolls the selection into view if needed.
 		 *
+		 * @returns true if the view was scrolled. 
+		 *
 		 * @see #getSelection
 		 * @see #setSelection
 		 */
 		showSelection: function() {
-			return this._showCaret();
+			return this._showCaret(true);
 		},
 		
 		/**************************************** Event handlers *********************************/
@@ -2843,6 +3219,25 @@ orion.textview.TextView = (function() {
 				return false;
 			}
 		},
+		_handleDOMAttrModified: function (e) {
+			if (!e) { e = window.event; }
+			var ancestor = false;
+			var parent = this._parent;
+			while (parent) {
+				if (parent === e.target) {
+					ancestor = true;
+					break;
+				}
+				parent = parent.parentNode;
+			}
+			if (!ancestor) { return; }
+			var state = this._getVisible();
+			if (state === "visible") {
+				this._createView();
+			} else if (state === "hidden") {
+				this._destroyView();
+			}
+		},
 		_handleDataModified: function(e) {
 			this._startIME();
 		},
@@ -2905,6 +3300,15 @@ orion.textview.TextView = (function() {
 				}
 				return;
 			}
+			switch (e.keyCode) {
+				case 16: /* Shift */
+				case 17: /* Control */
+				case 18: /* Alt */
+				case 91: /* Command */
+					break;
+				default:
+					this._setLinksVisible(false);
+			}
 			if (e.keyCode === 229) {
 				if (this.readonly) {
 					if (e.preventDefault) { e.preventDefault(); }
@@ -2913,6 +3317,21 @@ orion.textview.TextView = (function() {
 				this._startIME();
 			} else {
 				this._commitIME();
+			}
+			/*
+			* Bug in Firefox.  The paste operation on Firefox is done by switching
+			* focus into a textarea, let the user agent paste the text into the
+			* textarea and retrieve the text pasted from it. This works as expected
+			* in Firefox 3.x, but fails in Firefox 4 and greater.  The fix is to
+			* switch focus to the textarea during the key down event that triggers
+			* the paste operation.
+			*/
+			if (isFirefox) {
+				var ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+				if (ctrlKey && e.keyCode === 86 /*Ctrl+v*/) {
+					this._textArea.value = "";
+					this._textArea.focus();
+				}
 			}
 			/*
 			* Feature in Firefox. When a key is held down the browser sends 
@@ -2999,10 +3418,27 @@ orion.textview.TextView = (function() {
 		},
 		_handleKeyUp: function (e) {
 			if (!e) { e = window.event; }
-			
+			var ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+			if (!ctrlKey) {
+				this._setLinksVisible(false);
+			}
 			// don't commit for space (it happens during JP composition)  
 			if (e.keyCode === 13) {
 				this._commitIME();
+			}
+		},
+		_handleLinkClick: function (e) {
+			if (!e) { e = window.event; }
+			var ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+			if (!ctrlKey) {
+				if (e.preventDefault) { e.preventDefault(); }
+				return false;
+			}
+		},
+		_handleLoad: function (e) {
+			var state = this._getVisible();
+			if (state === "visible" || (state === "hidden" && isWebkit)) {
+				this._createView(!e);
 			}
 		},
 		_handleMouse: function (e) {
@@ -3040,6 +3476,14 @@ orion.textview.TextView = (function() {
 		},
 		_handleMouseDown: function (e) {
 			if (!e) { e = window.event; }
+			if (this._linksVisible) {
+				var target = e.target || e.srcElement;
+				if (target.tagName !== "A") {
+					this._setLinksVisible(false);
+				} else {
+					return;
+				}
+			}
 			var left = e.which ? e.button === 0 : e.button === 1;
 			this._commitIME();
 			if (left) {
@@ -3056,16 +3500,20 @@ orion.textview.TextView = (function() {
 				this._lastMouseY = e.clientY;
 				this._lastMouseTime = time;
 				this._handleMouse(e);
-				if (isOpera) {
-						if (!this._hasFocus) {
-							this.focus();
-						}
-						e.preventDefault();
+				if (isOpera || isChrome) {
+					if (!this._hasFocus) {
+						this.focus();
+					}
+					e.preventDefault();
 				}
 			}
 		},
 		_handleMouseMove: function (e) {
 			if (!e) { e = window.event; }
+			this._setLinksVisible(!this._isMouseDown && (isMac ? e.metaKey : e.ctrlKey));
+			if (!this._isMouseDown) {
+				return;
+			}
 			/*
 			* Feature in IE8 and older, the sequence of events in the IE8 event model
 			* for a doule-click is:
@@ -3096,6 +3544,13 @@ orion.textview.TextView = (function() {
 			
 			var x = e.clientX;
 			var y = e.clientY;
+			if (isChrome) {
+				if (e.currentTarget !== this._frameWindow) {
+					var rect = this._frame.getBoundingClientRect();
+					x -= rect.left;
+					y -= rect.top;
+				}
+			}
 			var viewPad = this._getViewPadding();
 			var viewRect = this._viewDiv.getBoundingClientRect();
 			var width = this._getClientWidth (), height = this._getClientHeight();
@@ -3131,10 +3586,13 @@ orion.textview.TextView = (function() {
 		},
 		_handleMouseUp: function (e) {
 			if (!e) { e = window.event; }
-			this._endAutoScroll();
+			if (this._linksVisible) {
+				return;
+			}
 			var left = e.which ? e.button === 0 : e.button === 1;
 			if (left) {
-				this._isMouseDown=false;
+				this._isMouseDown = false;
+				this._endAutoScroll();
 				
 				/*
 				* Feature in IE8 and older, the sequence of events in the IE8 event model
@@ -3178,19 +3636,17 @@ orion.textview.TextView = (function() {
 					* convert delta to pixel values, it is necessary to divide delta
 					* by 40.
 					*
-					* In Chrome, the wheel delta depends on the type of the mouse. In
-					* general, it is the pixel value for Mac mice and track pads, but
-					* it is a multiple of 120 for other mice. There is no presise
+					* In Chrome and Safari 5, the wheel delta depends on the type of the
+					* mouse. In general, it is the pixel value for Mac mice and track pads,
+					* but it is a multiple of 120 for other mice. There is no presise
 					* way to determine if it is pixel value or a multiple of 120.
 					* 
 					* Note that the current approach does not calculate the correct
 					* pixel value for Mac mice when the delta is a multiple of 120.
 					*/
 					var denominatorX = 40, denominatorY = 40;
-					if (isChrome) {
-						if (e.wheelDeltaX % 120 !== 0) { denominatorX = 1; }
-						if (e.wheelDeltaY % 120 !== 0) { denominatorY = 1; }
-					}
+					if (e.wheelDeltaX % 120 !== 0) { denominatorX = 1; }
+					if (e.wheelDeltaY % 120 !== 0) { denominatorY = 1; }
 					pixelX = -e.wheelDeltaX / denominatorX;
 					if (-1 < pixelX && pixelX < 0) { pixelX = -1; }
 					if (0 < pixelX && pixelX < 1) { pixelX = 1; }
@@ -3265,14 +3721,16 @@ orion.textview.TextView = (function() {
 				element = element.parentNode;
 			}
 			var ruler = element ? element._ruler : null;
-			if (isPad && lineIndex === undefined && ruler && ruler.getOverview() === "document") {
-				var buttonHeight = 17;
+			if (lineIndex === undefined && ruler && ruler.getOverview() === "document") {
+				var buttonHeight = isPad ? 0 : 17;
 				var clientHeight = this._getClientHeight ();
-				var lineHeight = this._getLineHeight ();
+				var lineCount = this._model.getLineCount ();
 				var viewPad = this._getViewPadding();
 				var trackHeight = clientHeight + viewPad.top + viewPad.bottom - 2 * buttonHeight;
-				var pixels = this._model.getLineCount () * lineHeight;
-				this.setTopPixel(Math.floor((e.clientY - buttonHeight - lineHeight) * pixels / trackHeight));
+				lineIndex = Math.floor((e.clientY - buttonHeight) * lineCount / trackHeight);
+				if (!(0 <= lineIndex && lineIndex < lineCount)) {
+					lineIndex = undefined;
+				}
 			}
 			if (ruler) {
 				switch (e.type) {
@@ -3282,11 +3740,33 @@ orion.textview.TextView = (function() {
 					case "dblclick": 
 						if (ruler.onDblClick) { ruler.onDblClick(lineIndex, e); }
 						break;
+					case "mousemove": 
+						if (ruler.onMouseMove) { ruler.onMouseMove(lineIndex, e); }
+						break;
+					case "mouseover": 
+						if (ruler.onMouseOver) { ruler.onMouseOver(lineIndex, e); }
+						break;
+					case "mouseout": 
+						if (ruler.onMouseOut) { ruler.onMouseOut(lineIndex, e); }
+						break;
 				}
 			}
 		},
 		_handleScroll: function () {
-			this._doScroll(this._getScroll());
+			var scroll = this._getScroll();
+			var oldX = this._hScroll;
+			var oldY = this._vScroll;
+			if (oldX !== scroll.x || oldY !== scroll.y) {
+				this._hScroll = scroll.x;
+				this._vScroll = scroll.y;
+				this._commitIME();
+				this._updatePage();
+				var e = {
+					oldValue: {x: oldX, y: oldY},
+					newValue: scroll
+				};
+				this.onScroll(e);
+			}
 		},
 		_handleSelectStart: function (e) {
 			if (!e) { e = window.event; }
@@ -3294,6 +3774,10 @@ orion.textview.TextView = (function() {
 				if (e && e.preventDefault) { e.preventDefault(); }
 				return false;
 			}
+		},
+		_handleUnload: function (e) {
+			if (!e) { e = window.event; }
+			this._destroyView();
 		},
 		_handleInput: function (e) {
 			var textArea = this._textArea;
@@ -3310,6 +3794,14 @@ orion.textview.TextView = (function() {
 			var rect = this._frame.getBoundingClientRect();
 			var body = this._parentDocument.body;
 			return {left: touch.clientX - rect.left - body.scrollLeft, top: touch.clientY - rect.top - body.scrollTop};
+		},
+		_handleTextAreaClick: function (e) {
+			var pt = this._touchConvert(e);	
+			this._clickCount = 1;
+			this._ignoreDOMSelection = false;
+			this._setSelectionTo(pt.left, pt.top, false);
+			var textArea = this._textArea;
+			textArea.focus();
 		},
 		_handleTouchStart: function (e) {
 			var touches = e.touches, touch, pt, sel;
@@ -3340,14 +3832,6 @@ orion.textview.TextView = (function() {
 					textArea.style.top = "-1000px";
 					textArea.style.width = "3000px";
 					textArea.style.height = "3000px";
-					var self = this;
-					/** @ignore */
-					var f = function() {
-						self._touchTimeout = null;
-						self._clickCount = 1;
-						self._setSelectionTo(pt.left, pt.top, false);
-					};
-					this._touchTimeout = setTimeout(f, 200);
 				}
 			} else if (touches.length === 2) {
 				this._touchGesture = "select";
@@ -3364,7 +3848,7 @@ orion.textview.TextView = (function() {
 				sel.extend(offset2);
 				this._setSelection(sel, true, true);
 			}
-			//Cannot prevent to show maginifier
+			//Cannot prevent to show magnifier
 //			e.preventDefault();
 		},
 		_handleTouchMove: function (e) {
@@ -3378,10 +3862,6 @@ orion.textview.TextView = (function() {
 				var deltaY = this._touchStartY - pageY;
 				pt = this._touchConvert(touch);
 				sel = this._getSelection();
-				if (this._touchTimeout) {
-					clearTimeout(this._touchTimeout);
-					this._touchTimeout = null;
-				}
 				if (this._touchGesture === "none") {
 					if ((e.timeStamp - this._touchStartTime) < 200 && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
 						this._touchGesture = "scroll";
@@ -3436,18 +3916,25 @@ orion.textview.TextView = (function() {
 			e.preventDefault();
 		},
 		_handleTouchEnd: function (e) {
+			var self = this;
 			if (!this._touchMoved) {
-				if (e.touches.length === 0 && e.changedTouches.length === 1 && this._touchTimeout) {
-					clearTimeout(this._touchTimeout);
-					this._touchTimeout = null;
+				if (e.touches.length === 0 && e.changedTouches.length === 1) {
 					var touch = e.changedTouches[0];
-					this._clickCount = 1;
 					var pt = this._touchConvert(touch);
-					this._setSelectionTo(pt.left, pt.top, false);
+					var textArea = this._textArea;
+					textArea.value = "";
+					textArea.style.left = "-1000px";
+					textArea.style.top = "-1000px";
+					textArea.style.width = "3000px";
+					textArea.style.height = "3000px";
+					setTimeout(function() {
+						self._clickCount = 1;
+						self._ignoreDOMSelection = false;
+						self._setSelectionTo(pt.left, pt.top, false);
+					}, 300);
 				}
 			}
 			if (e.touches.length === 0) {
-				var self = this;
 				setTimeout(function() {
 					var selection = self._getSelection();
 					var text = self._model.getText(selection.start, selection.end);
@@ -3463,7 +3950,7 @@ orion.textview.TextView = (function() {
 					}
 				}, 0);
 			}
-			e.preventDefault();
+//			e.preventDefault();
 		},
 
 		/************************************ Actions ******************************************/
@@ -3503,14 +3990,12 @@ orion.textview.TextView = (function() {
 				var model = this._model;
 				var caret = selection.getCaret();
 				var lineIndex = model.getLineAtOffset(caret);
-				var lineStart = model.getLineStart(lineIndex);
-				if (caret === lineStart) {
+				if (caret === model.getLineStart(lineIndex)) {
 					if (lineIndex > 0) {
 						selection.extend(model.getLineEnd(lineIndex - 1));
 					}
 				} else {
-					var newOffset = args.toLineStart ? lineStart : this._getOffset(caret, args.unit, -1);
-					selection.extend(newOffset);
+					selection.extend(this._getOffset(caret, args.unit, -1));
 				}
 			}
 			this._modifyContent({text: "", start: selection.start, end: selection.end}, true);
@@ -3523,7 +4008,7 @@ orion.textview.TextView = (function() {
 		_doCopy: function (e) {
 			var selection = this._getSelection();
 			if (!selection.isEmpty()) {
-				var text = this._model.getText(selection.start, selection.end);
+				var text = this._getBaseText(selection.start, selection.end);
 				return this._setClipboardText(text, e);
 			}
 			return true;
@@ -3569,7 +4054,7 @@ orion.textview.TextView = (function() {
 		_doCut: function (e) {
 			var selection = this._getSelection();
 			if (!selection.isEmpty()) {
-				var text = this._model.getText(selection.start, selection.end);
+				var text = this._getBaseText(selection.start, selection.end);
 				this._doContent("");
 				return this._setClipboardText(text, e);
 			}
@@ -3581,14 +4066,12 @@ orion.textview.TextView = (function() {
 				var model = this._model;
 				var caret = selection.getCaret();
 				var lineIndex = model.getLineAtOffset(caret);
-				var lineEnd = model.getLineEnd(lineIndex);
-				if (caret === lineEnd) {
+				if (caret === model.getLineEnd (lineIndex)) {
 					if (lineIndex + 1 < model.getLineCount()) {
 						selection.extend(model.getLineStart(lineIndex + 1));
 					}
 				} else {
-					var newOffset = args.toLineEnd ? lineEnd : this._getOffset(caret, args.unit, 1);
-					selection.extend(newOffset);
+					selection.extend(this._getOffset(caret, args.unit, 1));
 				}
 			}
 			this._modifyContent({text: "", start: selection.start, end: selection.end}, true);
@@ -3597,20 +4080,6 @@ orion.textview.TextView = (function() {
 		_doEnd: function (args) {
 			var selection = this._getSelection();
 			var model = this._model;
-
-			if (args.scrollOnly) {
-				var lineCount = model.getLineCount();
-				var clientHeight = this._getClientHeight();
-				var lineHeight = this._getLineHeight();
-				var verticalMaximum = lineCount * lineHeight;
-				var currentScrollOffset = this._getScroll().y;
-				var scrollOffset = verticalMaximum - clientHeight;
-				if (scrollOffset > currentScrollOffset) {
-					this._scrollView(0, scrollOffset - currentScrollOffset);
-				}
-				return true;
-			}
-
 			if (args.ctrl) {
 				selection.extend(model.getCharCount());
 			} else {
@@ -3623,18 +4092,15 @@ orion.textview.TextView = (function() {
 		},
 		_doEnter: function (args) {
 			var model = this._model;
+			var selection = this._getSelection();
 			this._doContent(model.getLineDelimiter()); 
+			if (args && args.noCursor) {
+				selection.end = selection.start;
+				this._setSelection(selection);
+			}
 			return true;
 		},
 		_doHome: function (args) {
-			if (args.scrollOnly) {
-				var currentScrollOffset = this._getScroll().y;
-				if (currentScrollOffset > 0) {
-					this._scrollView(0, -currentScrollOffset);
-				}
-				return true;
-			}
-
 			var selection = this._getSelection();
 			var model = this._model;
 			if (args.ctrl) {
@@ -3683,14 +4149,9 @@ orion.textview.TextView = (function() {
 		},
 		_doPageDown: function (args) {
 			var model = this._model;
-			var selection, caret, caretLine;
-			if (args.scrollOnly) {
-				caretLine = this.getBottomIndex(true);
-			} else {
-				selection = this._getSelection();
-				caret = selection.getCaret();
-				caretLine = model.getLineAtOffset(caret);
-			}
+			var selection = this._getSelection();
+			var caret = selection.getCaret();
+			var caretLine = model.getLineAtOffset(caret);
 			var lineCount = model.getLineCount();
 			if (caretLine < lineCount - 1) {
 				var clientHeight = this._getClientHeight();
@@ -3699,15 +4160,13 @@ orion.textview.TextView = (function() {
 				var scrollLines = Math.min(lineCount - caretLine - 1, lines);
 				scrollLines = Math.max(1, scrollLines);
 				var x = this._columnX;
-				if (!args.scrollOnly) {
-					if (x === -1 || args.select) {
-						x = this._getOffsetToX(caret);
-					}
-					selection.extend(this._getXToOffset(caretLine + scrollLines, x));
-					if (!args.select) { selection.collapse(); }
-					this._setSelection(selection, false, false);
+				if (x === -1 || args.select) {
+					x = this._getOffsetToX(caret);
 				}
-
+				selection.extend(this._getXToOffset(caretLine + scrollLines, x));
+				if (!args.select) { selection.collapse(); }
+				this._setSelection(selection, false, false);
+				
 				var verticalMaximum = lineCount * lineHeight;
 				var verticalScrollOffset = this._getScroll().y;
 				var scrollOffset = verticalScrollOffset + scrollLines * lineHeight;
@@ -3716,7 +4175,7 @@ orion.textview.TextView = (function() {
 				} 
 				if (scrollOffset > verticalScrollOffset) {
 					this._scrollView(0, scrollOffset - verticalScrollOffset);
-				} else if (!args.scrollOnly) {
+				} else {
 					this._updateDOMSelection();
 				}
 				this._columnX = x;//fix x by scrolling
@@ -3725,35 +4184,27 @@ orion.textview.TextView = (function() {
 		},
 		_doPageUp: function (args) {
 			var model = this._model;
-			var selection, caret, caretLine;
-			if (args.scrollOnly) {
-				caretLine = this.getTopIndex(true);
-			} else {
-				selection = this._getSelection();
-				caret = selection.getCaret();
-				caretLine = model.getLineAtOffset(caret);
-			}
-
+			var selection = this._getSelection();
+			var caret = selection.getCaret();
+			var caretLine = model.getLineAtOffset(caret);
 			if (caretLine > 0) {
 				var clientHeight = this._getClientHeight();
 				var lineHeight = this._getLineHeight();
 				var lines = Math.floor(clientHeight / lineHeight);
 				var scrollLines = Math.max(1, Math.min(caretLine, lines));
 				var x = this._columnX;
-				if (!args.scrollOnly) {
-					if (x === -1 || args.select) {
-						x = this._getOffsetToX(caret);
-					}
-					selection.extend(this._getXToOffset(caretLine - scrollLines, x));
-					if (!args.select) { selection.collapse(); }
-					this._setSelection(selection, false, false);
+				if (x === -1 || args.select) {
+					x = this._getOffsetToX(caret);
 				}
-
+				selection.extend(this._getXToOffset(caretLine - scrollLines, x));
+				if (!args.select) { selection.collapse(); }
+				this._setSelection(selection, false, false);
+				
 				var verticalScrollOffset = this._getScroll().y;
 				var scrollOffset = Math.max(0, verticalScrollOffset - scrollLines * lineHeight);
 				if (scrollOffset < verticalScrollOffset) {
 					this._scrollView(0, scrollOffset - verticalScrollOffset);
-				} else if (!args.scrollOnly) {
+				} else {
 					this._updateDOMSelection();
 				}
 				this._columnX = x;//fix x by scrolling
@@ -3767,19 +4218,31 @@ orion.textview.TextView = (function() {
 			}
 			return text !== null;
 		},
-		_doScroll: function (scroll) {
-			var oldX = this._hScroll;
-			var oldY = this._vScroll;
-			if (oldX !== scroll.x || oldY !== scroll.y) {
-				this._hScroll = scroll.x;
-				this._vScroll = scroll.y;
-				this._commitIME();
-				this._updatePage();
-				var e = {
-					oldValue: {x: oldX, y: oldY},
-					newValue: scroll
-				};
-				this.onScroll(e);
+		_doScroll: function (args) {
+			var type = args.type;
+			var model = this._model;
+			var lineCount = model.getLineCount();
+			var clientHeight = this._getClientHeight();
+			var lineHeight = this._getLineHeight();
+			var verticalMaximum = lineCount * lineHeight;
+			var verticalScrollOffset = this._getScroll().y;
+			var pixel;
+			switch (type) {
+				case "textStart": pixel = 0; break;
+				case "textEnd": pixel = verticalMaximum - clientHeight; break;
+				case "pageDown": pixel = verticalScrollOffset + clientHeight; break;
+				case "pageUp": pixel = verticalScrollOffset - clientHeight; break;
+				case "centerLine":
+					var selection = this._getSelection();
+					var lineStart = model.getLineAtOffset(selection.start);
+					var lineEnd = model.getLineAtOffset(selection.end);
+					var selectionHeight = (lineEnd - lineStart + 1) * lineHeight;
+					pixel = (lineStart * lineHeight) - (clientHeight / 2) + (selectionHeight / 2);
+					break;
+			}
+			if (pixel !== undefined) {
+				pixel = Math.min(Math.max(0, pixel), verticalMaximum - clientHeight);
+				this._scrollView(0, pixel - verticalScrollOffset);
 			}
 		},
 		_doSelectAll: function (args) {
@@ -3808,6 +4271,14 @@ orion.textview.TextView = (function() {
 				for (var s in properties) {
 					if (properties.hasOwnProperty(s)) {
 						node.style[s] = properties[s];
+					}
+				}
+			}
+			var attributes = style.attributes;
+			if (attributes) {
+				for (var a in attributes) {
+					if (attributes.hasOwnProperty(a)) {
+						node.setAttribute(a, attributes[a]);
 					}
 				}
 			}
@@ -4084,7 +4555,9 @@ orion.textview.TextView = (function() {
 					bindings.push({name: "deleteWordPrevious", keyBinding: new KeyBinding("w", false, false, false, true), predefined: true});
 				} else {
 					bindings.push({name: "pageDown", keyBinding: new KeyBinding("v", false, false, false, true), predefined: true});
-					//TODO implement: y (yank), l (center current line), o (insert line break without moving caret), t (transpose)
+					bindings.push({name: "centerLine", keyBinding: new KeyBinding("l", false, false, false, true), predefined: true});
+					bindings.push({name: "enterNoCursor", keyBinding: new KeyBinding("o", false, false, false, true), predefined: true});
+					//TODO implement: y (yank), t (transpose)
 				}
 			}
 
@@ -4099,14 +4572,15 @@ orion.textview.TextView = (function() {
 				{name: "charNext",		defaultHandler: function() {return self._doCursorNext({select: false, unit:"character"});}},
 				{name: "pageUp",		defaultHandler: function() {return self._doPageUp({select: false});}},
 				{name: "pageDown",		defaultHandler: function() {return self._doPageDown({select: false});}},
-				{name: "scrollPageUp",		defaultHandler: function() {return self._doPageUp({scrollOnly: true});}},
-				{name: "scrollPageDown",		defaultHandler: function() {return self._doPageDown({scrollOnly: true});}},
+				{name: "scrollPageUp",		defaultHandler: function() {return self._doScroll({type: "pageUp"});}},
+				{name: "scrollPageDown",		defaultHandler: function() {return self._doScroll({type: "pageDown"});}},
 				{name: "wordPrevious",		defaultHandler: function() {return self._doCursorPrevious({select: false, unit:"word"});}},
 				{name: "wordNext",		defaultHandler: function() {return self._doCursorNext({select: false, unit:"word"});}},
 				{name: "textStart",		defaultHandler: function() {return self._doHome({select: false, ctrl:true});}},
 				{name: "textEnd",		defaultHandler: function() {return self._doEnd({select: false, ctrl:true});}},
-				{name: "scrollTextStart",	defaultHandler: function() {return self._doHome({scrollOnly: true});}},
-				{name: "scrollTextEnd",		defaultHandler: function() {return self._doEnd({scrollOnly: true});}},
+				{name: "scrollTextStart",	defaultHandler: function() {return self._doScroll({type: "textStart"});}},
+				{name: "scrollTextEnd",		defaultHandler: function() {return self._doScroll({type: "textEnd"});}},
+				{name: "centerLine",		defaultHandler: function() {return self._doScroll({type: "centerLine"});}},
 				
 				{name: "selectLineUp",		defaultHandler: function() {return self._doLineUp({select: true});}},
 				{name: "selectLineDown",	defaultHandler: function() {return self._doLineDown({select: true});}},
@@ -4125,10 +4599,11 @@ orion.textview.TextView = (function() {
 				{name: "deleteNext",		defaultHandler: function() {return self._doDelete({unit:"character"});}},
 				{name: "deleteWordPrevious",	defaultHandler: function() {return self._doBackspace({unit:"word"});}},
 				{name: "deleteWordNext",	defaultHandler: function() {return self._doDelete({unit:"word"});}},
-				{name: "deleteLineStart",	defaultHandler: function() {return self._doBackspace({toLineStart: true});}},
-				{name: "deleteLineEnd",	defaultHandler: function() {return self._doDelete({toLineEnd: true});}},
+				{name: "deleteLineStart",	defaultHandler: function() {return self._doBackspace({unit: "line"});}},
+				{name: "deleteLineEnd",	defaultHandler: function() {return self._doDelete({unit: "line"});}},
 				{name: "tab",			defaultHandler: function() {return self._doTab();}},
 				{name: "enter",			defaultHandler: function() {return self._doEnter();}},
+				{name: "enterNoCursor",	defaultHandler: function() {return self._doEnter({noCursor:true});}},
 				{name: "selectAll",		defaultHandler: function() {return self._doSelectAll();}},
 				{name: "copy",			defaultHandler: function() {return self._doCopy();}},
 				{name: "cut",			defaultHandler: function() {return self._doCut();}},
@@ -4145,11 +4620,11 @@ orion.textview.TextView = (function() {
 			this._applyStyle(e.style, child);
 			if (lineText.length !== 0) {
 				var start = 0;
-				var tabSize = this._tabSize;
+				var tabSize = this._customTabSize;
 				if (tabSize && tabSize !== 8) {
 					var tabIndex = lineText.indexOf("\t"), ignoreChars = 0;
 					while (tabIndex !== -1) {
-						this._createRange(child, document, e.ranges, start, tabIndex, lineText, lineStart);
+						this._createRanges(child, document, e.ranges, start, tabIndex, lineText, lineStart);
 						var spacesCount = tabSize - ((tabIndex + ignoreChars) % tabSize);
 						var spaces = "\u00A0";
 						for (var i = 1; i < spacesCount; i++) {
@@ -4176,7 +4651,7 @@ orion.textview.TextView = (function() {
 						tabIndex = lineText.indexOf("\t", start);
 					}
 				}
-				this._createRange(child, document, e.ranges, start, lineText.length, lineText, lineStart);
+				this._createRanges(child, document, e.ranges, start, lineText.length, lineText, lineStart);
 			}
 			
 			/*
@@ -4220,9 +4695,8 @@ orion.textview.TextView = (function() {
 			parent.insertBefore(child, sibling);
 			return child;
 		},
-		_createRange: function(parent, document, ranges, start, end, text, lineStart) {
+		_createRanges: function(parent, document, ranges, start, end, text, lineStart) {
 			if (start >= end) { return; }
-			var span;
 			if (ranges) {
 				for (var i = 0; i < ranges.length; i++) {
 					var range = ranges[i];
@@ -4234,23 +4708,443 @@ orion.textview.TextView = (function() {
 						styleStart = Math.max(start, styleStart);
 						styleEnd = Math.min(end, styleEnd);
 						if (start < styleStart) {
-							span = document.createElement("SPAN");
-							span.appendChild(document.createTextNode(text.substring(start, styleStart)));
-							parent.appendChild(span);
+							parent.appendChild(this._createRange(parent, document, text.substring(start, styleStart), null));
 						}
-						span = document.createElement("SPAN");
-						span.appendChild(document.createTextNode(text.substring(styleStart, styleEnd)));
-						this._applyStyle(range.style, span);
-						parent.appendChild(span);
+						parent.appendChild(this._createRange(parent, document, text.substring(styleStart, styleEnd), range.style));
 						start = styleEnd;
 					}
 				}
 			}
 			if (start < end) {
-				span = document.createElement("SPAN");
-				span.appendChild(document.createTextNode(text.substring(start, end)));
-				parent.appendChild(span);
+				parent.appendChild(this._createRange(parent, document, text.substring(start, end), null));
 			}
+		},
+		_createRange: function(parent, document, text, style) {
+			var isLink = style && style.tagName === "A";
+			if (isLink) { parent.hasLink = true; }
+			var tagName = isLink && this._linksVisible ? "A" : "SPAN";
+			var child = document.createElement(tagName);
+			child.appendChild(document.createTextNode(text));
+			this._applyStyle(style, child);
+			if (tagName === "A") {
+				var self = this;
+				addHandler(child, "click", function(e) { return self._handleLinkClick(e); }, false);
+			}
+			child.viewStyle = style;
+			return child;
+		},
+		_createRuler: function(ruler) {
+			if (!this._clientDiv) { return; }
+			var document = this._frameDocument;
+			var body = document.body;
+			var side = ruler.getLocation();
+			var rulerParent = side === "left" ? this._leftDiv : this._rightDiv;
+			if (!rulerParent) {
+				rulerParent = document.createElement("DIV");
+				rulerParent.style.overflow = "hidden";
+				rulerParent.style.MozUserSelect = "none";
+				rulerParent.style.WebkitUserSelect = "none";
+				if (isIE) {
+					rulerParent.attachEvent("onselectstart", function() {return false;});
+				}
+				rulerParent.style.position = "absolute";
+				rulerParent.style.top = "0px";
+				rulerParent.style.cursor = "default";
+				body.appendChild(rulerParent);
+				if (side === "left") {
+					this._leftDiv = rulerParent;
+					rulerParent.className = "viewLeftRuler";
+				} else {
+					this._rightDiv = rulerParent;
+					rulerParent.className = "viewRightRuler";
+				}
+				var table = document.createElement("TABLE");
+				rulerParent.appendChild(table);
+				table.cellPadding = "0px";
+				table.cellSpacing = "0px";
+				table.border = "0px";
+				table.insertRow(0);
+				var self = this;
+				addHandler(rulerParent, "click", function(e) { self._handleRulerEvent(e); });
+				addHandler(rulerParent, "dblclick", function(e) { self._handleRulerEvent(e); });
+				addHandler(rulerParent, "mousemove", function(e) { self._handleRulerEvent(e); });
+				addHandler(rulerParent, "mouseover", function(e) { self._handleRulerEvent(e); });
+				addHandler(rulerParent, "mouseout", function(e) { self._handleRulerEvent(e); });
+			}
+			var div = document.createElement("DIV");
+			div._ruler = ruler;
+			div.rulerChanged = true;
+			div.style.position = "relative";
+			var row = rulerParent.firstChild.rows[0];
+			var index = row.cells.length;
+			var cell = row.insertCell(index);
+			cell.vAlign = "top";
+			cell.appendChild(div);
+		},
+		_createFrame: function() {
+			if (this.frame) { return; }
+			var parent = this._parent;
+			while (parent.hasChildNodes()) { parent.removeChild(parent.lastChild); }
+			var parentDocument = parent.ownerDocument;
+			this._parentDocument = parentDocument;
+			var frame = parentDocument.createElement("IFRAME");
+			this._frame = frame;
+			frame.frameBorder = "0px";//for IE, needs to be set before the frame is added to the parent
+			frame.style.border = "0px";
+			frame.style.width = "100%";
+			frame.style.height = "100%";
+			frame.scrolling = "no";
+			var self = this;
+			/*
+			* Note that it is not possible to create the contents of the frame if the
+			* parent is not connected to the document.  Only create it when the load
+			* event is trigged.
+			*/
+			addHandler(frame, "load", this._loadHandler = function(e) { self._handleLoad(e); });
+			if (!isWebkit) {
+				/*
+				* Feature in IE and Firefox.  It is not possible to get the style of an
+				* element if it is not layed out because one of the ancestor has
+				* style.display = none.  This means that the view cannot be created in this
+				* situations, since no measuring can be performed.  The fix is to listen
+				* for DOMAttrModified and create or destroy the view when the style.display
+				* attribute changes.
+				*/
+				addHandler(parentDocument, "DOMAttrModified", this._attrModifiedHandler = function(e) {
+					self._handleDOMAttrModified(e);
+				});
+			}
+			parent.appendChild(frame);
+			/* create synchronously if possible */
+			this._handleLoad();
+		},
+		_getFrameHTML: function(sync) {
+			var html = [];
+			html.push("<!DOCTYPE html>");
+			html.push("<html>");
+			html.push("<head>");
+			if (isIE < 9) {
+				html.push("<meta http-equiv='X-UA-Compatible' content='IE=EmulateIE7'/>");
+			}
+			html.push("<style>");
+			html.push(".viewContainer {font-family: monospace; font-size: 10pt;}");
+			html.push(".view {padding: 1px 2px;}");
+			html.push(".viewContent {}");
+			html.push("</style>");
+			if (this._stylesheet) {
+				var stylesheet = typeof(this._stylesheet) === "string" ? [this._stylesheet] : this._stylesheet;
+				for (var i = 0; i < stylesheet.length; i++) {
+					if (sync) {
+						try {
+							//Force CSS to be loaded synchronously so lineHeight can be calculated
+							var objXml = new XMLHttpRequest();
+							if (objXml.overrideMimeType) {
+								objXml.overrideMimeType("text/css");
+							}
+							objXml.open("GET", stylesheet[i], false);
+							objXml.send(null);
+							html.push("<style>");
+							html.push(objXml.responseText);
+							html.push("</style>");
+							continue;
+						} catch (e) {}
+					}
+					html.push("<link rel='stylesheet' type='text/css' href='");
+					html.push(stylesheet[i]);
+					html.push("'></link>");
+				}
+			}
+			html.push("</head>");
+			html.push("<body spellcheck='false'></body>");
+			html.push("</html>");
+			return html.join("");
+		},
+		_createView: function(sync) {
+			if (this._clientDiv) { return; }
+			if (this._ignoreCreate) { return; }
+			this._ignoreCreate = true;
+
+			var frame = this._frame;
+			var parent = this._parent;
+			var parentDocument = this._parentDocument;
+			var frameWindow = frame.contentWindow;
+			this._frameWindow = frameWindow;
+			var frameDocument = frameWindow.document;
+			this._frameDocument = frameDocument;
+			frameDocument.open();
+			frameDocument.write(this._getFrameHTML(true));
+			frameDocument.close();
+			
+			var body = frameDocument.body;
+			body.className = "viewContainer";
+			body.style.margin = "0px";
+			body.style.borderWidth = "0px";
+			body.style.padding = "0px";
+			
+			var textArea;
+			if (isPad) {
+				var touchDiv = parentDocument.createElement("DIV");
+				this._touchDiv = touchDiv;
+				touchDiv.style.position = "absolute";
+				touchDiv.style.border = "0px";
+				touchDiv.style.padding = "0px";
+				touchDiv.style.margin = "0px";
+				touchDiv.style.zIndex = "2";
+				touchDiv.style.overflow = "hidden";
+				touchDiv.style.background="transparent";
+				touchDiv.style.WebkitUserSelect = "none";
+				parent.appendChild(touchDiv);
+
+				textArea = parentDocument.createElement("TEXTAREA");
+				this._textArea = textArea;
+				textArea.style.position = "absolute";
+				textArea.style.whiteSpace = "pre";
+				textArea.style.left = "-1000px";
+				textArea.tabIndex = 1;
+				textArea.autocapitalize = false;
+				textArea.autocorrect = false;
+				textArea.className = "viewContainer";
+				textArea.style.background = "transparent";
+				textArea.style.color = "transparent";
+				textArea.style.border = "0px";
+				textArea.style.padding = "0px";
+				textArea.style.margin = "0px";
+				textArea.style.borderRadius = "0px";
+				textArea.style.WebkitAppearance = "none";
+				textArea.style.WebkitTapHighlightColor = "transparent";
+				touchDiv.appendChild(textArea);
+			}
+			if (isFirefox) {
+				textArea = frameDocument.createElement("TEXTAREA");
+				this._textArea = textArea;
+				textArea.id = "textArea";
+				textArea.style.position = "fixed";
+				textArea.style.whiteSpace = "pre";
+				textArea.style.left = "-1000px";
+				textArea.tabIndex = -1;
+				body.appendChild(textArea);
+			}
+
+			var viewDiv = frameDocument.createElement("DIV");
+			viewDiv.className = "view";
+			this._viewDiv = viewDiv;
+			viewDiv.id = "viewDiv";
+			viewDiv.tabIndex = -1;
+			viewDiv.style.overflow = "auto";
+			viewDiv.style.position = "absolute";
+			viewDiv.style.top = "0px";
+			viewDiv.style.borderWidth = "0px";
+			viewDiv.style.margin = "0px";
+			viewDiv.style.MozOutline = "none";
+			viewDiv.style.outline = "none";
+			body.appendChild(viewDiv);
+				
+			var scrollDiv = frameDocument.createElement("DIV");
+			this._scrollDiv = scrollDiv;
+			scrollDiv.id = "scrollDiv";
+			scrollDiv.style.margin = "0px";
+			scrollDiv.style.borderWidth = "0px";
+			scrollDiv.style.padding = "0px";
+			viewDiv.appendChild(scrollDiv);
+
+			if (isPad || (this._fullSelection && !isWebkit)) {
+				this._hightlightRGB = "Highlight";
+				var selDiv1 = frameDocument.createElement("DIV");
+				this._selDiv1 = selDiv1;
+				selDiv1.id = "selDiv1";
+				selDiv1.style.position = "fixed";
+				selDiv1.style.borderWidth = "0px";
+				selDiv1.style.margin = "0px";
+				selDiv1.style.padding = "0px";
+				selDiv1.style.MozOutline = "none";
+				selDiv1.style.outline = "none";
+				selDiv1.style.background = this._hightlightRGB;
+				selDiv1.style.width="0px";
+				selDiv1.style.height="0px";
+				scrollDiv.appendChild(selDiv1);
+				var selDiv2 = frameDocument.createElement("DIV");
+				this._selDiv2 = selDiv2;
+				selDiv2.id = "selDiv2";
+				selDiv2.style.position = "fixed";
+				selDiv2.style.borderWidth = "0px";
+				selDiv2.style.margin = "0px";
+				selDiv2.style.padding = "0px";
+				selDiv2.style.MozOutline = "none";
+				selDiv2.style.outline = "none";
+				selDiv2.style.background = this._hightlightRGB;
+				selDiv2.style.width="0px";
+				selDiv2.style.height="0px";
+				scrollDiv.appendChild(selDiv2);
+				var selDiv3 = frameDocument.createElement("DIV");
+				this._selDiv3 = selDiv3;
+				selDiv3.id = "selDiv3";
+				selDiv3.style.position = "fixed";
+				selDiv3.style.borderWidth = "0px";
+				selDiv3.style.margin = "0px";
+				selDiv3.style.padding = "0px";
+				selDiv3.style.MozOutline = "none";
+				selDiv3.style.outline = "none";
+				selDiv3.style.background = this._hightlightRGB;
+				selDiv3.style.width="0px";
+				selDiv3.style.height="0px";
+				scrollDiv.appendChild(selDiv3);
+				
+				/*
+				* Bug in Firefox. The Highlight color is mapped to list selection
+				* background instead of the text selection background.  The fix
+				* is to map known colors using a table or fallback to light blue.
+				*/
+				if (isFirefox && isMac) {
+					var style = this._frameWindow.getComputedStyle(selDiv3, null);
+					var rgb = style.getPropertyValue("background-color");
+					switch (rgb) {
+						case "rgb(119, 141, 168)": rgb = "rgb(199, 208, 218)"; break;
+						case "rgb(127, 127, 127)": rgb = "rgb(198, 198, 198)"; break;
+						case "rgb(255, 193, 31)": rgb = "rgb(250, 236, 115)"; break;
+						case "rgb(243, 70, 72)": rgb = "rgb(255, 176, 139)"; break;
+						case "rgb(255, 138, 34)": rgb = "rgb(255, 209, 129)"; break;
+						case "rgb(102, 197, 71)": rgb = "rgb(194, 249, 144)"; break;
+						case "rgb(140, 78, 184)": rgb = "rgb(232, 184, 255)"; break;
+						default: rgb = "rgb(180, 213, 255)"; break;
+					}
+					this._hightlightRGB = rgb;
+					selDiv1.style.background = rgb;
+					selDiv2.style.background = rgb;
+					selDiv3.style.background = rgb;
+					var styleSheet = frameDocument.styleSheets[0];
+					styleSheet.insertRule("::-moz-selection {background: " + rgb + "; }", 0);
+				}
+			}
+
+			var clientDiv = frameDocument.createElement("DIV");
+			clientDiv.className = "viewContent";
+			this._clientDiv = clientDiv;
+			clientDiv.id = "clientDiv";
+			clientDiv.style.whiteSpace = "pre";
+			clientDiv.style.position = "fixed";
+			clientDiv.style.borderWidth = "0px";
+			clientDiv.style.margin = "0px";
+			clientDiv.style.padding = "0px";
+			clientDiv.style.MozOutline = "none";
+			clientDiv.style.outline = "none";
+			if (isPad) {
+				clientDiv.style.WebkitTapHighlightColor = "transparent";
+			}
+			scrollDiv.appendChild(clientDiv);
+
+			if (isFirefox) {
+				var overlayDiv = frameDocument.createElement("DIV");
+				this._overlayDiv = overlayDiv;
+				overlayDiv.id = "overlayDiv";
+				overlayDiv.style.position = clientDiv.style.position;
+				overlayDiv.style.borderWidth = clientDiv.style.borderWidth;
+				overlayDiv.style.margin = clientDiv.style.margin;
+				overlayDiv.style.padding = clientDiv.style.padding;
+				overlayDiv.style.cursor = "text";
+				overlayDiv.style.zIndex = "1";
+				scrollDiv.appendChild(overlayDiv);
+			}
+			if (!isPad) {
+				clientDiv.contentEditable = "true";
+			}
+			this._lineHeight = this._calculateLineHeight();
+			this._viewPadding = this._calculatePadding();
+			if (isIE) {
+				body.style.lineHeight = this._lineHeight + "px";
+			}
+			if (this._tabSize) {
+				if (isOpera) {
+					clientDiv.style.OTabSize = this._tabSize+"";
+				} else if (isFirefox >= 4) {
+					clientDiv.style.MozTabSize = this._tabSize+"";
+				} else if (this._tabSize !== 8) {
+					this._customTabSize = this._tabSize;
+				}
+			}
+			this._hookEvents();
+			var rulers = this._rulers;
+			for (var i=0; i<rulers.length; i++) {
+				this._createRuler(rulers[i]);
+			}
+			if (sync) {
+				this._updatePage();
+			} else {
+				this._queueUpdatePage();
+				var h = this._hScroll, v = this._vScroll;
+				this._vScroll = this._hScroll = 0;
+				if (h > 0 || v > 0) {
+					var self = this;
+					setTimeout(function() {
+						self._scrollView(h, v);
+					}, 0);
+				}
+			}
+			this._ignoreCreate = false;
+		},
+		_destroyFrame: function() {
+			var frame = this._frame;
+			if (!frame) { return; }
+			if (this._loadHandler) {
+				removeHandler(frame, "load", this._loadHandler);
+				this._loadHandler = null;
+			}
+			if (this._attrModifiedHandler) {
+				removeHandler(this._parentDocument, "DOMAttrModified", this._attrModifiedHandler);
+				this._attrModifiedHandler = null;
+			}
+			frame.parentNode.removeChild(frame);
+			this._frame = null;
+			this._frameDocument = null;
+			this._frameWindow = null;
+		},
+		_destroyRuler: function(ruler) {
+			var side = ruler.getLocation();
+			var rulerParent = side === "left" ? this._leftDiv : this._rightDiv;
+			if (rulerParent) {
+				var row = rulerParent.firstChild.rows[0];
+				var cells = row.cells;
+				for (var index = 0; index < cells.length; index++) {
+					var cell = cells[index];
+					if (cell.firstChild._ruler === ruler) { break; }
+				}
+				if (index === cells.length) { return; }
+				row.cells[index]._ruler = undefined;
+				row.deleteCell(index);
+			}
+		},
+		_destroyView: function() {
+			var clientDiv = this._clientDiv;
+			if (!clientDiv) { return; }
+			this._setGrab(null);
+			this._unhookEvents();
+
+			/* Destroy timers */
+			if (this._autoScrollTimerID) {
+				clearTimeout(this._autoScrollTimerID);
+				this._autoScrollTimerID = null;
+			}
+			if (this._updateTimer) {
+				clearTimeout(this._updateTimer);
+				this._updateTimer = null;
+			}
+
+			/* Destroy DOM */
+			var parent = this._frameDocument.body;
+			while (parent.hasChildNodes()) { parent.removeChild(parent.lastChild); }
+			if (this._touchDiv) {
+				this._parent.removeChild(this._touchDiv);
+				this._touchDiv = null;
+			}
+			this._selDiv1 = null;
+			this._selDiv2 = null;
+			this._selDiv3 = null;
+			this._textArea = null;
+			this._scrollDiv = null;
+			this._viewDiv = null;
+			this._clientDiv = null;
+			this._overlayDiv = null;
+			this._leftDiv = null;
+			this._rightDiv = null;
 		},
 		_doAutoScroll: function (direction, x, y) {
 			this._autoScrollDir = direction;
@@ -4264,6 +5158,16 @@ orion.textview.TextView = (function() {
 			if (this._autoScrollTimerID) { clearTimeout(this._autoScrollTimerID); }
 			this._autoScrollDir = undefined;
 			this._autoScrollTimerID = undefined;
+		},
+		_getBaseText: function(start, end) {
+			var model = this._model;
+			/* This is the only case the view access the base model, alternatively the view could use a event to application to customize the text */
+			if (model.getBaseModel) {
+				start = model.mapOffset(start);
+				end = model.mapOffset(end);
+				model = model.getBaseModel();
+			}
+			return model.getText(start, end);
 		},
 		_getBoundsAtOffset: function (offset) {
 			var model = this._model;
@@ -4378,58 +5282,30 @@ orion.textview.TextView = (function() {
 				return clipboadText.join("");
 			}
 			if (isFirefox) {
-				var window = this._frameWindow;
 				var document = this._frameDocument;
-				var child = document.createElement("PRE");
-				child.style.position = "fixed";
-				child.style.left = "-1000px";
-				child.appendChild(document.createTextNode(" "));
-				this._clientDiv.appendChild(child);
-				var range = document.createRange();
-				range.selectNodeContents(child);
-				var sel = window.getSelection();
-				if (sel.rangeCount > 0) { sel.removeAllRanges(); }
-				sel.addRange(range);
+				var textArea = this._textArea;
+				textArea.innerHTML = "";
+				textArea.focus();
 				var self = this;
-				/** @ignore */
-				var cleanup = function() {
-					self._updateDOMSelection();
-					/* 
-					* It is possible that child has already been removed from the clientDiv during updatePage.
-					* This happens, for example, on the Mac when command+p is held down and a second paste
-					* event happens before the timeout of the first event is called. 
-					*/
-					if (child.parent === self._clientDiv) {
-						self._clientDiv.removeChild(child);
-					}
-				};
 				var _getText = function() {
-					/*
-					* Use the selection anchor to determine the end of the pasted text as it is possible that
-					* some browsers (like Firefox) add extra elements (<BR>) after the pasted text.
-					*/
-					var endNode = null;
-					if (sel.anchorNode.nodeType !== child.TEXT_NODE) {
-						endNode = sel.anchorNode.childNodes[sel.anchorOffset];
-					}
-					var text = [];
-					/** @ignore */
-					var getNodeText = function(node) {
-						var nodeChild = node.firstChild;
-						while (nodeChild && nodeChild !== endNode) {
-							if (nodeChild.nodeType === child.TEXT_NODE) {
-								text.push(nodeChild !== sel.anchorNode ? nodeChild.data : nodeChild.data.substring(0, sel.anchorOffset));
-							} else if (nodeChild.tagName === "BR") {
-								text.push(delimiter); 
-							} else {
-								getNodeText(nodeChild);
-							}
-							nodeChild = nodeChild.nextSibling;
+					var text;
+					if (textArea.firstChild) {
+						text = "";
+						var child = textArea.firstChild;
+						while (child) {
+							if (child.nodeType === child.TEXT_NODE) {
+								text += child.data;
+							} else if (child.tagName === "BR") {
+								text += delimiter; 
+							} 
+							child = child.nextSibling;
 						}
-					};
-					getNodeText(child);
-					cleanup();
-					return text.join("");
+					} else {
+						text = textArea.value;
+					}
+					clipboadText = [];
+					self._convertDelimiter(text, function(t) {clipboadText.push(t);}, function() {clipboadText.push(delimiter);});
+					return clipboadText.join("");
 				};
 				
 				/* Try execCommand first. Works on firefox with clipboard permission. */
@@ -4445,16 +5321,18 @@ orion.textview.TextView = (function() {
 					*/
 					if (event) {
 						setTimeout(function() {
+							self.focus();
 							var text = _getText();
 							if (text) { self._doContent(text); }
 						}, 0);
 						return null;
 					} else {
 						/* no event and no clipboard permission, paste can't be performed */
-						cleanup();
+						this.focus();
 						return "";
 					}
 				}
+				this.focus();
 				return _getText();
 			}
 			//webkit
@@ -4540,6 +5418,14 @@ orion.textview.TextView = (function() {
 			return node;
 		},
 		_getOffset: function (offset, unit, direction) {
+			if (unit === "line") {
+				var model = this._model;
+				var lineIndex = model.getLineAtOffset(offset);
+				if (direction > 0) {
+					return model.getLineEnd(lineIndex);
+				}
+				return model.getLineStart(lineIndex);
+			}
 			if (unit === "wordend") {
 				return this._getOffset_W3C(offset, unit, direction);
 			}
@@ -4894,6 +5780,23 @@ orion.textview.TextView = (function() {
 			var bottom = top + lineHeight;
 			return {left: left, top: top, right: right, bottom: bottom};
 		},
+		_getVisible: function() {
+			var temp = this._parent;
+			var parentDocument = temp.ownerDocument;
+			while (temp !== parentDocument) {
+				var hidden;
+				if (isIE < 9) {
+					hidden = temp.currentStyle && temp.currentStyle.display === "none";
+				} else {
+					var tempStyle = parentDocument.defaultView.getComputedStyle(temp, null);
+					hidden = tempStyle && tempStyle.getPropertyValue("display") === "none";
+				}
+				if (hidden) { return "hidden"; }
+				temp =  temp.parentNode;
+				if (!temp) { return "disconnected"; }
+			}
+			return "visible";
+		},
 		_hitOffset: function (offset, x, y) {
 			var bounds = this._getOffsetBounds(offset);
 			var left = bounds.left;
@@ -4921,15 +5824,13 @@ orion.textview.TextView = (function() {
 			};
 			this._model.addListener(this._modelListener);
 			
-			this._mouseMoveClosure = function(e) { return self._handleMouseMove(e);};
-			this._mouseUpClosure = function(e) { return self._handleMouseUp(e);};
-			
 			var clientDiv = this._clientDiv;
 			var viewDiv = this._viewDiv;
 			var body = this._frameDocument.body; 
 			var handlers = this._handlers = [];
 			var resizeNode = isIE < 9 ? this._frame : this._frameWindow;
 			var focusNode = isPad ? this._textArea : (isIE ||  isFirefox ? this._clientDiv: this._frameWindow);
+			handlers.push({target: this._frameWindow, type: "unload", handler: function(e) { return self._handleUnload(e);}});
 			handlers.push({target: resizeNode, type: "resize", handler: function(e) { return self._handleResize(e);}});
 			handlers.push({target: focusNode, type: "blur", handler: function(e) { return self._handleBlur(e);}});
 			handlers.push({target: focusNode, type: "focus", handler: function(e) { return self._handleFocus(e);}});
@@ -4940,11 +5841,13 @@ orion.textview.TextView = (function() {
 				handlers.push({target: textArea, type: "keydown", handler: function(e) { return self._handleKeyDown(e);}});
 				handlers.push({target: textArea, type: "input", handler: function(e) { return self._handleInput(e); }});
 				handlers.push({target: textArea, type: "textInput", handler: function(e) { return self._handleTextInput(e); }});
+				handlers.push({target: textArea, type: "click", handler: function(e) { return self._handleTextAreaClick(e); }});
 				handlers.push({target: touchDiv, type: "touchstart", handler: function(e) { return self._handleTouchStart(e); }});
 				handlers.push({target: touchDiv, type: "touchmove", handler: function(e) { return self._handleTouchMove(e); }});
 				handlers.push({target: touchDiv, type: "touchend", handler: function(e) { return self._handleTouchEnd(e); }});
 			} else {
 				var topNode = this._overlayDiv || this._clientDiv;
+				var grabNode = isIE ? clientDiv : this._frameWindow;
 				handlers.push({target: clientDiv, type: "keydown", handler: function(e) { return self._handleKeyDown(e);}});
 				handlers.push({target: clientDiv, type: "keypress", handler: function(e) { return self._handleKeyPress(e);}});
 				handlers.push({target: clientDiv, type: "keyup", handler: function(e) { return self._handleKeyUp(e);}});
@@ -4952,17 +5855,26 @@ orion.textview.TextView = (function() {
 				handlers.push({target: clientDiv, type: "contextmenu", handler: function(e) { return self._handleContextMenu(e);}});
 				handlers.push({target: clientDiv, type: "copy", handler: function(e) { return self._handleCopy(e);}});
 				handlers.push({target: clientDiv, type: "cut", handler: function(e) { return self._handleCut(e);}});
-				handlers.push({target: clientDiv, type: "paste", handler: function(e) { return self._handlePaste(e);}});
-				handlers.push({target: topNode, type: "mousedown", handler: function(e) { return self._handleMouseDown(e);}});
+				if (!isFirefox) {
+					handlers.push({target: clientDiv, type: "paste", handler: function(e) { return self._handlePaste(e);}});
+				}
+				handlers.push({target: clientDiv, type: "mousedown", handler: function(e) { return self._handleMouseDown(e);}});
+				handlers.push({target: grabNode, type: "mouseup", handler: function(e) { return self._handleMouseUp(e);}});
+				handlers.push({target: grabNode, type: "mousemove", handler: function(e) { return self._handleMouseMove(e);}});
 				handlers.push({target: body, type: "mousedown", handler: function(e) { return self._handleBodyMouseDown(e);}});
 				handlers.push({target: topNode, type: "dragstart", handler: function(e) { return self._handleDragStart(e);}});
 				handlers.push({target: topNode, type: "dragover", handler: function(e) { return self._handleDragOver(e);}});
 				handlers.push({target: topNode, type: "drop", handler: function(e) { return self._handleDrop(e);}});
+				if (isChrome) {
+					handlers.push({target: this._parentDocument, type: "mousemove", handler: function(e) { return self._handleMouseMove(e);}});
+					handlers.push({target: this._parentDocument, type: "mouseup", handler: function(e) { return self._handleMouseUp(e);}});
+				}
 				if (isIE) {
 					handlers.push({target: this._frameDocument, type: "activate", handler: function(e) { return self._handleDocFocus(e); }});
 				}
 				if (isFirefox) {
 					handlers.push({target: this._frameDocument, type: "focus", handler: function(e) { return self._handleDocFocus(e); }});
+					handlers.push({target: this._textArea, type: "paste", handler: function(e) { return self._handlePaste(e);}});
 				}
 				if (!isIE && !isOpera) {
 					var wheelEvent = isFirefox ? "DOMMouseScroll" : "mousewheel";
@@ -4972,6 +5884,7 @@ orion.textview.TextView = (function() {
 					handlers.push({target: this._clientDiv, type: "DOMCharacterDataModified", handler: function (e) { return self._handleDataModified(e); }});
 				}
 				if (this._overlayDiv) {
+					handlers.push({target: this._overlayDiv, type: "mousedown", handler: function(e) { return self._handleMouseDown(e);}});
 					handlers.push({target: this._overlayDiv, type: "contextmenu", handler: function(e) { return self._handleContextMenu(e); }});
 				}
 				if (!isW3CEvents) {
@@ -4992,8 +5905,22 @@ orion.textview.TextView = (function() {
 			this._parent = parent;
 			this._model = options.model ? options.model : new orion.textview.TextModel();
 			this.readonly = options.readonly === true;
+			this._fullSelection = options.fullSelection === undefined || options.fullSelection;
+			/* 
+			* Bug in IE 8. For some reason, during scrolling IE does not reflow the elements
+			* that are used to compute the location for the selection divs. This causes the
+			* divs to be placed at the wrong location. The fix is to disabled full selection for IE8.
+			*/
+			if (isIE < 9) {
+				this._fullSelection = false;
+			}
+			this._stylesheet = options.stylesheet;
+			this._tabSize = options.tabSize;
+			this._rulers = [];
 			this._selection = new Selection (0, 0, false);
+			this._linksVisible = false;
 			this._eventTable = new EventTable();
+			this._redrawCount = 0;
 			this._maxLineWidth = 0;
 			this._maxLineIndex = -1;
 			this._ignoreSelect = true;
@@ -5026,250 +5953,8 @@ orion.textview.TextView = (function() {
 			this._imeOffset = -1;
 			
 			/* Create elements */
-			while (parent.hasChildNodes()) { parent.removeChild(parent.lastChild); }
-			var parentDocument = parent.document || parent.ownerDocument;
-			this._parentDocument = parentDocument;
-			var frame = parentDocument.createElement("IFRAME");
-			this._frame = frame;
-			frame.frameBorder = "0px";//for IE, needs to be set before the frame is added to the parent
-			frame.style.width = "100%";
-			frame.style.height = "100%";
-			frame.scrolling = "no";
-			frame.style.border = "0px";
-			parent.appendChild(frame);
-
-			var html = [];
-			html.push("<!DOCTYPE html>");
-			html.push("<html>");
-			html.push("<head>");
-			if (isIE < 9) {
-				html.push("<meta http-equiv='X-UA-Compatible' content='IE=EmulateIE7'/>");
-			}
-			html.push("<style>");
-			html.push(".viewContainer {font-family: monospace; font-size: 10pt;}");
-			html.push(".view {padding: 1px 2px;}");
-			html.push(".viewContent {}");
-			html.push("</style>");
-			if (options.stylesheet) {
-				var stylesheet = typeof(options.stylesheet) === "string" ? [options.stylesheet] : options.stylesheet;
-				for (var i = 0; i < stylesheet.length; i++) {
-					try {
-						//Force CSS to be loaded synchronously so lineHeight can be calculated
-						var objXml = new XMLHttpRequest();
-						if (objXml.overrideMimeType) {
-							objXml.overrideMimeType("text/css");
-						}
-						objXml.open("GET", stylesheet[i], false);
-						objXml.send(null);
-						html.push("<style>");
-						html.push(objXml.responseText);
-						html.push("</style>");
-					} catch (e) {
-						html.push("<link rel='stylesheet' type='text/css' href='");
-						html.push(stylesheet[i]);
-						html.push("'></link>");
-					}
-				}
-			}
-			html.push("</head>");
-			html.push("<body spellcheck='false'></body>");
-			html.push("</html>");
-
-			var frameWindow = frame.contentWindow;
-			this._frameWindow = frameWindow;
-			var document = frameWindow.document;
-			this._frameDocument = document;
-			document.open();
-			document.write(html.join(""));
-			document.close();
-			
-			var body = document.body;
-			body.className = "viewContainer";
-			body.style.margin = "0px";
-			body.style.borderWidth = "0px";
-			body.style.padding = "0px";
-			
-			if (isPad) {
-				var touchDiv = parentDocument.createElement("DIV");
-				this._touchDiv = touchDiv;
-				touchDiv.style.position = "absolute";
-				touchDiv.style.border = "0px";
-				touchDiv.style.padding = "0px";
-				touchDiv.style.margin = "0px";
-				touchDiv.style.zIndex = "2";
-				touchDiv.style.overflow = "hidden";
-				touchDiv.style.background="transparent";
-				touchDiv.style.WebkitUserSelect = "none";
-				parent.appendChild(touchDiv);
-
-				var textArea = parentDocument.createElement("TEXTAREA");
-				this._textArea = textArea;
-				textArea.style.position = "absolute";
-				textArea.style.whiteSpace = "pre";
-				textArea.style.left = "-1000px";
-				textArea.tabIndex = 1;
-				textArea.autocapitalize = false;
-				textArea.autocorrect = false;
-				textArea.className = "viewContainer";
-				textArea.style.background = "transparent";
-				textArea.style.color = "transparent";
-				textArea.style.border = "0px";
-				textArea.style.padding = "0px";
-				textArea.style.margin = "0px";
-				textArea.style.borderRadius = "0px";
-				textArea.style.WebkitAppearance = "none";
-				textArea.style.WebkitTapHighlightColor = "transparent";
-				touchDiv.appendChild(textArea);
-			}
-
-			var viewDiv = document.createElement("DIV");
-			viewDiv.className = "view";
-			this._viewDiv = viewDiv;
-			viewDiv.id = "viewDiv";
-			viewDiv.tabIndex = -1;
-			viewDiv.style.overflow = "auto";
-			viewDiv.style.position = "absolute";
-			viewDiv.style.top = "0px";
-			viewDiv.style.borderWidth = "0px";
-			viewDiv.style.margin = "0px";
-			viewDiv.style.MozOutline = "none";
-			viewDiv.style.outline = "none";
-			body.appendChild(viewDiv);
-				
-			var scrollDiv = document.createElement("DIV");
-			this._scrollDiv = scrollDiv;
-			scrollDiv.id = "scrollDiv";
-			scrollDiv.style.margin = "0px";
-			scrollDiv.style.borderWidth = "0px";
-			scrollDiv.style.padding = "0px";
-			viewDiv.appendChild(scrollDiv);
-
-			this._fullSelection = options.fullSelection === undefined || options.fullSelection;
-			/* 
-			* Bug in IE 8. For some reason, during scrolling IE does not reflow the elements
-			* that are used to compute the location for the selection divs. This causes the
-			* divs to be placed at the wrong location. The fix is to disabled full selection for IE8.
-			*/
-			if (isIE < 9) {
-				this._fullSelection = false;
-			}
-			if (isPad || (this._fullSelection && !isWebkit)) {
-				this._hightlightRGB = "Highlight";
-				var selDiv1 = document.createElement("DIV");
-				this._selDiv1 = selDiv1;
-				selDiv1.id = "selDiv1";
-				selDiv1.style.position = "fixed";
-				selDiv1.style.borderWidth = "0px";
-				selDiv1.style.margin = "0px";
-				selDiv1.style.padding = "0px";
-				selDiv1.style.MozOutline = "none";
-				selDiv1.style.outline = "none";
-				selDiv1.style.background = this._hightlightRGB;
-				selDiv1.style.width="0px";
-				selDiv1.style.height="0px";
-				scrollDiv.appendChild(selDiv1);
-				var selDiv2 = document.createElement("DIV");
-				this._selDiv2 = selDiv2;
-				selDiv2.id = "selDiv2";
-				selDiv2.style.position = "fixed";
-				selDiv2.style.borderWidth = "0px";
-				selDiv2.style.margin = "0px";
-				selDiv2.style.padding = "0px";
-				selDiv2.style.MozOutline = "none";
-				selDiv2.style.outline = "none";
-				selDiv2.style.background = this._hightlightRGB;
-				selDiv2.style.width="0px";
-				selDiv2.style.height="0px";
-				scrollDiv.appendChild(selDiv2);
-				var selDiv3 = document.createElement("DIV");
-				this._selDiv3 = selDiv3;
-				selDiv3.id = "selDiv3";
-				selDiv3.style.position = "fixed";
-				selDiv3.style.borderWidth = "0px";
-				selDiv3.style.margin = "0px";
-				selDiv3.style.padding = "0px";
-				selDiv3.style.MozOutline = "none";
-				selDiv3.style.outline = "none";
-				selDiv3.style.background = this._hightlightRGB;
-				selDiv3.style.width="0px";
-				selDiv3.style.height="0px";
-				scrollDiv.appendChild(selDiv3);
-				
-				/*
-				* Bug in Firefox. The Highlight color is mapped to list selection
-				* background instead of the text selection background.  The fix
-				* is to map known colors using a table or fallback to light blue.
-				*/
-				if (isFirefox && isMac) {
-					var style = frameWindow.getComputedStyle(selDiv3, null);
-					var rgb = style.getPropertyValue("background-color");
-					switch (rgb) {
-						case "rgb(119, 141, 168)": rgb = "rgb(199, 208, 218)"; break;
-						case "rgb(127, 127, 127)": rgb = "rgb(198, 198, 198)"; break;
-						case "rgb(255, 193, 31)": rgb = "rgb(250, 236, 115)"; break;
-						case "rgb(243, 70, 72)": rgb = "rgb(255, 176, 139)"; break;
-						case "rgb(255, 138, 34)": rgb = "rgb(255, 209, 129)"; break;
-						case "rgb(102, 197, 71)": rgb = "rgb(194, 249, 144)"; break;
-						case "rgb(140, 78, 184)": rgb = "rgb(232, 184, 255)"; break;
-						default: rgb = "rgb(180, 213, 255)"; break;
-					}
-					this._hightlightRGB = rgb;
-					selDiv1.style.background = rgb;
-					selDiv2.style.background = rgb;
-					selDiv3.style.background = rgb;
-					var styleSheet = document.styleSheets[0];
-					styleSheet.insertRule("::-moz-selection {background: " + rgb + "; }", 0);
-				}
-			}
-
-			var clientDiv = document.createElement("DIV");
-			clientDiv.className = "viewContent";
-			this._clientDiv = clientDiv;
-			clientDiv.id = "clientDiv";
-			clientDiv.style.whiteSpace = "pre";
-			clientDiv.style.position = "fixed";
-			clientDiv.style.borderWidth = "0px";
-			clientDiv.style.margin = "0px";
-			clientDiv.style.padding = "0px";
-			clientDiv.style.MozOutline = "none";
-			clientDiv.style.outline = "none";
-			if (isPad) {
-				clientDiv.style.WebkitTapHighlightColor = "transparent";
-			}
-			scrollDiv.appendChild(clientDiv);
-
-			if (isFirefox) {
-				var overlayDiv = document.createElement("DIV");
-				this._overlayDiv = overlayDiv;
-				overlayDiv.id = "overlayDiv";
-				overlayDiv.style.position = clientDiv.style.position;
-				overlayDiv.style.borderWidth = clientDiv.style.borderWidth;
-				overlayDiv.style.margin = clientDiv.style.margin;
-				overlayDiv.style.padding = clientDiv.style.padding;
-				overlayDiv.style.cursor = "text";
-				overlayDiv.style.zIndex = "1";
-				scrollDiv.appendChild(overlayDiv);
-			}
-			if (!isPad) {
-				clientDiv.contentEditable = "true";
-			}
-			this._lineHeight = this._calculateLineHeight();
-			this._viewPadding = this._calculatePadding();
-			if (isIE) {
-				body.style.lineHeight = this._lineHeight + "px";
-			}
-			if (options.tabSize) {
-				if (isOpera) {
-					clientDiv.style.OTabSize = options.tabSize+"";
-				} else if (isFirefox >= 4) {
-					clientDiv.style.MozTabSize = options.tabSize+"";
-				} else if (options.tabSize !== 8) {
-					this._tabSize = options.tabSize;
-				}
-			}
 			this._createActions();
-			this._hookEvents();
-			this._updatePage();
+			this._createFrame();
 		},
 		_modifyContent: function(e, updateCaret) {
 			if (this.readonly && !e._code) {
@@ -5281,9 +5966,12 @@ orion.textview.TextView = (function() {
 			if (e.text === null || e.text === undefined) { return; }
 			
 			var model = this._model;
-			if (e._ignoreDOMSelection) { this._ignoreDOMSelection = true; }
-			model.setText (e.text, e.start, e.end);
-			if (e._ignoreDOMSelection) { this._ignoreDOMSelection = false; }
+			try {
+				if (e._ignoreDOMSelection) { this._ignoreDOMSelection = true; }
+				model.setText (e.text, e.start, e.end);
+			} finally {
+				if (e._ignoreDOMSelection) { this._ignoreDOMSelection = false; }
+			}
 			
 			if (updateCaret) {
 				var selection = this._getSelection ();
@@ -5395,8 +6083,8 @@ orion.textview.TextView = (function() {
 			* Scrolling is done only by setting the scrollLeft and scrollTop fields in the
 			* view div. This causes an updatePage from the scroll event. In some browsers 
 			* this event is asynchromous and forcing update page to run synchronously
-			* (by calling doScroll) leads to redraw problems. On Chrome 11, the view 
-			* stops redrawing at times when holding PageDown/PageUp key.
+			* leads to redraw problems. 
+			* On Chrome 11, the view redrawing at times when holding PageDown/PageUp key.
 			* On Firefox 4 for Linux, the view redraws the first page when holding 
 			* PageDown/PageUp key, but it will not redraw again until the key is released.
 			*/
@@ -5570,7 +6258,7 @@ orion.textview.TextView = (function() {
 					}
 				}
 				var textArea = this._textArea;
-				if (textArea) {
+				if (textArea && isPad) {
 					textArea.selectionStart = textArea.selectionEnd = 0;
 					var rect = this._frame.getBoundingClientRect();
 					var touchRect = this._touchDiv.getBoundingClientRect();
@@ -5666,15 +6354,48 @@ orion.textview.TextView = (function() {
 		_setGrab: function (target) {
 			if (target === this._grabControl) { return; }
 			if (target) {
-				addHandler(target, "mousemove", this._mouseMoveClosure);
-				addHandler(target, "mouseup", this._mouseUpClosure);
 				if (target.setCapture) { target.setCapture(); }
 				this._grabControl = target;
 			} else {
-				removeHandler(this._grabControl, "mousemove", this._mouseMoveClosure);
-				removeHandler(this._grabControl, "mouseup", this._mouseUpClosure);
 				if (this._grabControl.releaseCapture) { this._grabControl.releaseCapture(); }
 				this._grabControl = null;
+			}
+		},
+		_setLinksVisible: function(visible) {
+			if (this._linksVisible === visible) { return; }
+			this._linksVisible = visible;
+			/*
+			* Feature in IE.  The client div looses focus and does not regain it back
+			* when the content editable flag is reset. The fix is to remember that it
+			* had focus when the flag is cleared and give focus back to the div when
+			* the flag is set.
+			*/
+			if (isIE && visible) {
+				this._hadFocus = this._hasFocus;
+			}
+			var clientDiv = this._clientDiv;
+			clientDiv.contentEditable = !visible;
+			if (this._hadFocus && !visible) {
+				clientDiv.focus();
+			}
+			if (this._overlayDiv) {
+				this._overlayDiv.style.zIndex = visible ? "-1" : "1";
+			}
+			var document = this._frameDocument;
+			var line = this._getLineNext();
+			while (line) {
+				if (line.hasLink) {
+					var lineChild = line.firstChild;
+					while (lineChild) {
+						var next = lineChild.nextSibling;
+						var style = lineChild.viewStyle;
+						if (style && style.tagName === "A") {
+							line.replaceChild(this._createRange(line, document, lineChild.firstChild.data, style), lineChild);
+						}
+						lineChild = next;
+					}
+				}
+				line = this._getLineNext(line);
 			}
 		},
 		_setSelection: function (selection, scroll, update) {
@@ -5752,7 +6473,8 @@ orion.textview.TextView = (function() {
 			} 
 			this._setSelection(selection, true, true);
 		},
-		_showCaret: function () {
+		_showCaret: function (allSelection) {
+			if (!this._clientDiv) { return; }
 			var model = this._model;
 			var selection = this._getSelection();
 			var scroll = this._getScroll();
@@ -5771,7 +6493,7 @@ orion.textview.TextView = (function() {
 			var left = bounds.left;
 			var right = bounds.right;
 			var minScroll = clientWidth / 4;
-			if (!selection.isEmpty() && startLine === endLine) {
+			if (allSelection && !selection.isEmpty() && startLine === endLine) {
 				bounds = this._getBoundsAtOffset(caret === end ? start : endInclusive);
 				var selectionWidth = caret === start ? bounds.right - left : right - bounds.left;
 				if ((clientWidth - minScroll) > selectionWidth) {
@@ -5798,7 +6520,7 @@ orion.textview.TextView = (function() {
 			var clientHeight = this._getClientHeight();
 			if (!(topIndex <= caretLine && caretLine <= bottomIndex)) {
 				var lineHeight = this._getLineHeight();
-				var selectionHeight = (endLine - startLine) * lineHeight;
+				var selectionHeight = allSelection ? (endLine - startLine) * lineHeight : 0;
 				pixelY = caretLine * lineHeight;
 				pixelY -= scroll.y;
 				if (pixelY + lineHeight > clientHeight) {
@@ -5841,10 +6563,6 @@ orion.textview.TextView = (function() {
 		_unhookEvents: function() {
 			this._model.removeListener(this._modelListener);
 			this._modelListener = null;
-
-			this._mouseMoveClosure = null;
-			this._mouseUpClosure = null;
-
 			for (var i=0; i<this._handlers.length; i++) {
 				var h = this._handlers[i];
 				removeHandler(h.target, h.type, h.handler);
@@ -5853,6 +6571,7 @@ orion.textview.TextView = (function() {
 		},
 		_updateDOMSelection: function () {
 			if (this._ignoreDOMSelection) { return; }
+			if (!this._clientDiv) { return; }
 			var selection = this._getSelection();
 			var model = this._model;
 			var startLine = model.getLineAtOffset(selection.start);
@@ -5890,18 +6609,19 @@ orion.textview.TextView = (function() {
 			this._setDOMSelection(topNode, topOffset, bottomNode, bottomOffset);
 		},
 		_updatePage: function() {
+			if (this._redrawCount > 0) { return; }
 			if (this._updateTimer) { 
 				clearTimeout(this._updateTimer);
 				this._updateTimer = null;
 			}
 			var document = this._frameDocument;
+			var viewDiv = this._viewDiv;
+			var clientDiv = this._clientDiv;
+			if (!clientDiv) { return; }
 			var frameWidth = this._getFrameWidth();
 			var frameHeight = this._getFrameHeight();
 			document.body.style.width = frameWidth + "px";
 			document.body.style.height = frameHeight + "px";
-			
-			var viewDiv = this._viewDiv;
-			var clientDiv = this._clientDiv;
 			var viewPad = this._getViewPadding();
 			
 			/* Update view height in order to have client height computed */
@@ -6077,9 +6797,9 @@ orion.textview.TextView = (function() {
 			var viewPad = this._getViewPadding();
 			for (var i = 0; i < cells.length; i++) {
 				var div = cells[i].firstChild;
-				var ruler = div._ruler, style;
+				var ruler = div._ruler;
 				if (div.rulerChanged) {
-					this._applyStyle(ruler.getStyle(), div);
+					this._applyStyle(ruler.getRulerStyle(), div);
 				}
 				
 				var widthDiv;
@@ -6092,19 +6812,25 @@ orion.textview.TextView = (function() {
 					widthDiv.style.visibility = "hidden";
 					div.appendChild(widthDiv);
 				}
-				var lineIndex;
+				var lineIndex, annotation;
 				if (div.rulerChanged) {
 					if (widthDiv) {
 						lineIndex = -1;
-						this._applyStyle(ruler.getStyle(lineIndex), widthDiv);
-						widthDiv.innerHTML = ruler.getHTML(lineIndex);
+						annotation = ruler.getWidestAnnotation();
+						if (annotation) {
+							this._applyStyle(annotation.style, widthDiv);
+							if (annotation.html) {
+								widthDiv.innerHTML = annotation.html;
+							}
+						}
 						widthDiv.lineIndex = lineIndex;
 						widthDiv.style.height = (lineHeight + viewPad.top) + "px";
 					}
 				}
 
-				var overview = ruler.getOverview(), lineDiv, frag;
+				var overview = ruler.getOverview(), lineDiv, frag, annotations;
 				if (overview === "page") {
+					annotations = ruler.getAnnotations(topIndex, bottomIndex + 1);
 					while (child) {
 						lineIndex = child.lineIndex;
 						var nextChild = child.nextSibling;
@@ -6114,19 +6840,25 @@ orion.textview.TextView = (function() {
 						child = nextChild;
 					}
 					child = div.firstChild.nextSibling;
-					frag = document.createDocumentFragment();
+					frag = parentDocument.createDocumentFragment();
 					for (lineIndex=topIndex; lineIndex<=bottomIndex; lineIndex++) {
 						if (!child || child.lineIndex > lineIndex) {
 							lineDiv = parentDocument.createElement("DIV");
-							this._applyStyle(ruler.getStyle(lineIndex), lineDiv);
-							lineDiv.innerHTML = ruler.getHTML(lineIndex);
+							annotation = annotations[lineIndex];
+							if (annotation) {
+								this._applyStyle(annotation.style, lineDiv);
+								if (annotation.html) {
+									lineDiv.innerHTML = annotation.html;
+								}
+								lineDiv.annotation = annotation;
+							}
 							lineDiv.lineIndex = lineIndex;
 							lineDiv.style.height = lineHeight + "px";
 							frag.appendChild(lineDiv);
 						} else {
 							if (frag.firstChild) {
 								div.insertBefore(frag, child);
-								frag = document.createDocumentFragment();
+								frag = parentDocument.createDocumentFragment();
 							}
 							if (child) {
 								child = child.nextSibling;
@@ -6135,26 +6867,37 @@ orion.textview.TextView = (function() {
 					}
 					if (frag.firstChild) { div.insertBefore(frag, child); }
 				} else {
-					var buttonHeight = 17;
+					var buttonHeight = isPad ? 0 : 17;
 					var clientHeight = this._getClientHeight ();
-					var trackHeight = clientHeight + viewPad.top + viewPad.bottom - 2 * buttonHeight;
 					var lineCount = this._model.getLineCount ();
-					var divHeight = trackHeight / lineCount;
+					var contentHeight = lineHeight * lineCount;
+					var trackHeight = clientHeight + viewPad.top + viewPad.bottom - 2 * buttonHeight;
+					var divHeight;
+					if (contentHeight < trackHeight) {
+						divHeight = lineHeight;
+					} else {
+						divHeight = trackHeight / lineCount;
+					}
 					if (div.rulerChanged) {
 						var count = div.childNodes.length;
 						while (count > 1) {
 							div.removeChild(div.lastChild);
 							count--;
 						}
-						var lines = ruler.getAnnotations();
-						frag = document.createDocumentFragment();
-						for (var j = 0; j < lines.length; j++) {
-							lineIndex = lines[j];
+						annotations = ruler.getAnnotations(0, lineCount);
+						frag = parentDocument.createDocumentFragment();
+						for (var prop in annotations) {
+							lineIndex = prop >>> 0;
+							if (lineIndex < 0) { continue; }
 							lineDiv = parentDocument.createElement("DIV");
-							this._applyStyle(ruler.getStyle(lineIndex), lineDiv);
+							annotation = annotations[prop];
+							this._applyStyle(annotation.style, lineDiv);
 							lineDiv.style.position = "absolute";
 							lineDiv.style.top = buttonHeight + lineHeight + Math.floor(lineIndex * divHeight) + "px";
-							lineDiv.innerHTML = ruler.getHTML(lineIndex);
+							if (annotation.html) {
+								lineDiv.innerHTML = annotation.html;
+							}
+							lineDiv.annotation = annotation;
 							lineDiv.lineIndex = lineIndex;
 							frag.appendChild(lineDiv);
 						}
@@ -6193,23 +6936,22 @@ if (typeof window !== "undefined" && typeof window.define !== "undefined") {
  ******************************************************************************/
 
 /*jslint */
-/*global orion:true*/
+/*global define orion:true window */
 
 var orion = orion || {};
 
 orion.editor = orion.editor || {};
 
 /**
- * Uses a grammar to provide some very rough syntax highlighting for HTML.
+ * Provides a grammar that can do some very rough syntax highlighting for HTML.
  * @class orion.syntax.HtmlGrammar
  */
 orion.editor.HtmlGrammar = (function() {
-	var _fileTypes = [ "html", "htm" ];
 	return {
 		/**
 		 * What kind of highlight provider we are.
 		 * @public
-		 * @type "grammar"|"parser"
+		 * @type String
 		 */
 		type: "grammar",
 		
@@ -6218,17 +6960,15 @@ orion.editor.HtmlGrammar = (function() {
 		 * @public
 		 * @type String[]
 		 */
-		fileTypes: _fileTypes,
+		fileTypes: [ "html", "htm" ],
 		
 		/**
 		 * Object containing the grammar rules.
 		 * @public
-		 * @type JSONObject
+		 * @type Object
 		 */
 		grammar: {
-			"comment": "HTML syntax rules",
 			"name": "HTML",
-			"fileTypes": _fileTypes,
 			"scopeName": "source.html",
 			"uuid": "3B5C76FB-EBB5-D930-F40C-047D082CE99B",
 			"patterns": [
@@ -6248,7 +6988,6 @@ orion.editor.HtmlGrammar = (function() {
 					},
 					"patterns": [
 						{
-							// For testing nested subpatterns
 							"match": "--",
 							"name": "invalid.illegal.badcomment.html"
 						}
@@ -6401,29 +7140,7 @@ orion.editor.RegexUtil = {
 			throw new Error("Unsupported regex feature \"" + feature + "\": \"" + match[0] + "\" at index: "
 					+ match.index + " in " + match.input);
 		}
-		function getMatchingCloseParen(str, start) {
-			var depth = 0,
-			    len = str.length,
-			    xStop = -1;
-			for (var i=start; i < len && xStop === -1; i++) {
-				switch (str[i]) {
-					case "\\":
-						i += 1; // skip next char
-						break;
-					case "(":
-						depth++;
-						break;
-					case ")":
-						depth--;
-						if (depth === 0) {
-							xStop = i;
-						}
-						break;
-				}
-			}
-			return xStop;
-		}
-		// Turns an extended regex into a normal one
+		// Turns an extended regex pattern into a normal one
 		function normalize(/**String*/ str) {
 			var result = "";
 			var insideCharacterClass = false;
@@ -6466,28 +7183,67 @@ orion.editor.RegexUtil = {
 		var flags = "";
 		var i;
 		
-		// Check for unsupported syntax
+		// Handle global "x" flag (whitespace/comments)
+		str = orion.editor.RegexUtil.processGlobalFlag("x", str, function(subexp) {
+				return normalize(subexp);
+			});
+		
+		// Handle global "i" flag (case-insensitive)
+		str = orion.editor.RegexUtil.processGlobalFlag("i", str, function(subexp) {
+				flags += "i";
+				return subexp;
+			});
+		
+		// Check for remaining unsupported syntax
 		for (i=0; i < this.unsupported.length; i++) {
 			var match;
 			if ((match = this.unsupported[i].regex.exec(str))) {
-				fail(this.unsupported[i].func(match));
+				fail(this.unsupported[i].func(match), match);
 			}
 		}
 		
-		// Deal with "x" flag (whitespace/comments)
-		if (str.substring(0, 4) === "(?x)") {
-			// Leading (?x) term (means "x" flag applies to entire regex)
-			str = normalize(str.substring(4));
-		} else if (str.substring(0, 4) === "(?x:") {
-			// Regex wrapped in a (?x: ...) -- again "x" applies to entire regex
-			var xStop = getMatchingCloseParen(str, 0);
-			if (xStop < str.length-1) {
-				throw new Error("Only a (?x:) group that encloses the entire regex is supported: " + str);
-			}
-			str = normalize(str.substring(4, xStop));
-		}
-		// TODO: tolerate /(?iSubExp)/ -- eg. in PHP grammar (trickier)
 		return new RegExp(str, flags);
+	},
+	
+	/**
+	 * Checks if flag applies to entire pattern. If so, obtains replacement string by calling processor
+	 * on the unwrapped pattern. Handles 2 possible syntaxes: (?f)pat and (?f:pat)
+	 */
+	processGlobalFlag: function(/**String*/ flag, /**String*/ str, /**Function*/ processor) {
+		function getMatchingCloseParen(/*String*/pat, /*Number*/start) {
+			var depth = 0,
+			    len = pat.length,
+			    flagStop = -1;
+			for (var i=start; i < len && flagStop === -1; i++) {
+				switch (pat[i]) {
+					case "\\":
+						i++; // escape: skip next char
+						break;
+					case "(":
+						depth++;
+						break;
+					case ")":
+						depth--;
+						if (depth === 0) {
+							flagStop = i;
+						}
+						break;
+				}
+			}
+			return flagStop;
+		}
+		var flag1 = "(?" + flag + ")",
+		    flag2 = "(?" + flag + ":";
+		if (str.substring(0, flag1.length) === flag1) {
+			return processor(str.substring(flag1.length));
+		} else if (str.substring(0, flag2.length) === flag2) {
+			var flagStop = getMatchingCloseParen(str, 0);
+			if (flagStop < str.length-1) {
+				throw new Error("Only a " + flag2 + ") group that encloses the entire regex is supported in: " + str);
+			}
+			return processor(str.substring(flag2.length, flagStop));
+		}
+		return str;
 	},
 	
 	hasBackReference: function(/**RegExp*/ regex) {
@@ -6753,20 +7509,23 @@ orion.editor.RegexUtil = {
  * 
  * @description Creates a new TextMateStyler.
  * @extends orion.editor.AbstractStyler
- * @param {orion.textview.TextView} textView The TextView to provide styling for.
- * @param {Object} grammar The TextMate grammar as a JavaScript object. You can produce this object by running a 
- * PList-to-JavaScript conversion tool on a <code>.tmLanguage</code> file.
+ * @param {orion.textview.TextView} textView The <code>TextView</code> to provide styling for.
+ * @param {Object} grammar The TextMate grammar to use for styling the <code>TextView</code>, as a JavaScript object. You can
+ * produce this object by running a PList-to-JavaScript conversion tool on a TextMate <code>.tmLanguage</code> file.
+ * @param {Object[]} [externalGrammars] Additional grammar objects that will be used to resolve named rule references.
  */
 orion.editor.TextMateStyler = (function() {
 	/** @inner */
-	function TextMateStyler(textView, grammar) {
+	function TextMateStyler(textView, grammar, externalGrammars) {
 		this.initialize(textView);
-		// Copy the grammar since we'll mutate it
+		// Copy grammar object(s) since we will mutate them
 		this.grammar = this.copy(grammar);
+		this.externalGrammars = externalGrammars ? this.copy(externalGrammars) : [];
+		
 		this._styles = {}; /* key: {String} scopeName, value: {String[]} cssClassNames */
 		this._tree = null;
-		
-		this.preprocess();
+		this._allGrammars = {}; /* key: {String} scopeName of grammar, value: {Object} grammar */
+		this.preprocess(this.grammar);
 	}
 	orion.editor.AbstractStyler.extend(TextMateStyler, /** @lends orion.editor.TextMateStyler.prototype */ {
 		/** @private */
@@ -6774,8 +7533,8 @@ orion.editor.TextMateStyler = (function() {
 			return JSON.parse(JSON.stringify(obj));
 		},
 		/** @private */
-		preprocess: function() {
-			var stack = [this.grammar];
+		preprocess: function(grammar) {
+			var stack = [grammar];
 			for (; stack.length !== 0; ) {
 				var rule = stack.pop();
 				if (rule._resolvedRule && rule._typedRule) {
@@ -6921,7 +7680,7 @@ orion.editor.TextMateStyler = (function() {
 					throw new Error("Unexpected regex pattern in \"include\" rule " + rule.include);
 				}
 				var name = rule.include;
-				if (name.charAt(0) === "#") {
+				if (name[0] === "#") {
 					resolved = this.grammar.repository && this.grammar.repository[name.substring(1)];
 					if (!resolved) { throw new Error("Couldn't find included rule " + name + " in grammar repository"); }
 				} else if (name === "$self") {
@@ -6930,7 +7689,18 @@ orion.editor.TextMateStyler = (function() {
 					// $base is only relevant when including rules from foreign grammars
 					throw new Error("Include \"$base\" is not supported"); 
 				} else {
-					throw new Error("Include external rule \"" + name + "\" is not supported");
+					resolved = this._allGrammars[name];
+					if (!resolved) {
+						for (var i=0; i < this.externalGrammars.length; i++) {
+							var grammar = this.externalGrammars[i];
+							if (grammar.scopeName === name) {
+								this.preprocess(grammar);
+								this._allGrammars[name] = grammar;
+								resolved = grammar;
+								break;
+							}
+						}
+					}
 				}
 			}
 			return resolved;
@@ -7685,7 +8455,7 @@ if (typeof window !== "undefined" && typeof window.define !== "undefined") {
  * Contributors: IBM Corporation - initial API and implementation
  ******************************************************************************/
 
-/*global document window navigator */
+/*global document window navigator define orion */
 
 var examples = examples || {};
 examples.textview = examples.textview || {};
@@ -7693,15 +8463,22 @@ examples.textview = examples.textview || {};
 examples.textview.TextStyler = (function() {
 
 	var JS_KEYWORDS =
-		["break", "continue", "do", "for", /*"import",*/ "new", "this", /*"void",*/ 
-		 "case", "default", "else", "function", "in", "return", "typeof", "while",
-		 "comment", "delete", "export", "if", /*"label",*/ "switch", "var", "with",
-		 "abstract", "implements", "protected", /*"boolean",*/ "instanceof", "public",
-		 /*"byte", "int", "short", "char",*/ "interface", "static", 
-		 /*"double", "long",*/ "synchronized", "false", /*"native",*/ "throws", 
-		 "final", "null", "transient", /*"float",*/ "package", "true", 
-		 "goto", "private", "catch", "enum", "throw", "class", "extends", "try", 
-		 "const", "finally", "debugger", "super", "undefined"];
+		["break",
+		 "case", "class", "catch", "continue", "const", 
+		 "debugger", "default", "delete", "do",
+		 "else", "enum", "export", "extends",  
+		 "false", "finally", "for", "function",
+		 "if", "implements", "import", "in", "instanceof", "interface", 
+		 "let",
+		 "new", "null",
+		 "package", "private", "protected", "public",
+		 "return", 
+		 "static", "super", "switch",
+		 "this", "throw", "true", "try", "typeof",
+		 "undefined",
+		 "var", "void",
+		 "while", "with",
+		 "yield"];
 
 	var JAVA_KEYWORDS =
 		["abstract",
@@ -7745,15 +8522,24 @@ examples.textview.TextStyler = (function() {
 	var UNKOWN = 1;
 	var KEYWORD = 2;
 	var STRING = 3;
-	var COMMENT = 4;
-	var WHITE = 5;
-	var WHITE_TAB = 6;
-	var WHITE_SPACE = 7;
+	var SINGLELINE_COMMENT = 4;
+	var MULTILINE_COMMENT = 5;
+	var DOC_COMMENT = 6;
+	var WHITE = 7;
+	var WHITE_TAB = 8;
+	var WHITE_SPACE = 9;
+	var HTML_MARKUP = 10;
+	var DOC_TAG = 11;
+	var TASK_TAG = 12;
 
 	// Styles 
 	var isIE = document.selection && window.ActiveXObject && /MSIE/.test(navigator.userAgent) ? document.documentMode : undefined;
-	var commentStyle = {styleClass: "token_comment"};
-	var javadocStyle = {styleClass: "token_javadoc"};
+	var singleCommentStyle = {styleClass: "token_singleline_comment"};
+	var multiCommentStyle = {styleClass: "token_multiline_comment"};
+	var docCommentStyle = {styleClass: "token_doc_comment"};
+	var htmlMarkupStyle = {styleClass: "token_doc_html_markup"};
+	var tasktagStyle = {styleClass: "token_task_tag"};
+	var doctagStyle = {styleClass: "token_doc_tag"};
 	var stringStyle = {styleClass: "token_string"};
 	var keywordStyle = {styleClass: "token_keyword"};
 	var spaceStyle = {styleClass: "token_space"};
@@ -7781,6 +8567,48 @@ examples.textview.TextStyler = (function() {
 			getDataLength: function() {
 				return this.offset - this.startOffset;
 			},
+			_default: function(c) {
+				var keywords = this.keywords;
+				switch (c) {
+					case 32: // SPACE
+					case 9: // TAB
+						if (this.whitespacesVisible) {
+							return c === 32 ? WHITE_SPACE : WHITE_TAB;
+						}
+						do {
+							c = this._read();
+						} while(c === 32 || c === 9);
+						this._unread(c);
+						return WHITE;
+					case 123: // {
+					case 125: // }
+					case 40: // (
+					case 41: // )
+					case 91: // [
+					case 93: // ]
+					case 60: // <
+					case 62: // >
+						// BRACKETS
+						return c;
+					default:
+						var isCSS = this.isCSS;
+						if ((97 <= c && c <= 122) || (65 <= c && c <= 90) || c === 95 || (48 <= c && c <= 57) || (0x2d === c && isCSS)) { //LETTER OR UNDERSCORE OR NUMBER
+							var off = this.offset - 1;
+							do {
+								c = this._read();
+							} while((97 <= c && c <= 122) || (65 <= c && c <= 90) || c === 95 || (48 <= c && c <= 57) || (0x2d === c && isCSS));  //LETTER OR UNDERSCORE OR NUMBER
+							this._unread(c);
+							if (keywords.length > 0) {
+								var word = this.text.substring(off, this.offset);
+								//TODO slow
+								for (var i=0; i<keywords.length; i++) {
+									if (this.keywords[i] === word) { return KEYWORD; }
+								}
+							}
+						}
+						return UNKOWN;
+				}
+			},
 			_read: function() {
 				if (this.offset < this.text.length) {
 					return this.text.charCodeAt(this.offset++);
@@ -7798,13 +8626,33 @@ examples.textview.TextStyler = (function() {
 						case -1: return null;
 						case 47:	// SLASH -> comment
 							c = this._read();
-							if (c === 47) {
+							if (c === 47) { // SLASH -> single line
 								while (true) {
 									c = this._read();
-									if ((c === -1) || (c === 10)) {
+									if ((c === -1) || (c === 10) || (c === 13)) {
 										this._unread(c);
-										return COMMENT;
+										return SINGLELINE_COMMENT;
 									}
+								}
+							}
+							if (c === 42) { // STAR -> multi line 
+								c = this._read();
+								var token = MULTILINE_COMMENT;
+								if (c === 42) {
+									token = DOC_COMMENT;
+								}
+								while (true) {
+									while (c === 42) {
+										c = this._read();
+										if (c === 47) {
+											return token;
+										}
+									}
+									if (c === -1) {
+										this._unread(c);
+										return token;
+									}
+									c = this._read();
 								}
 							}
 							this._unread(c);
@@ -7815,6 +8663,8 @@ examples.textview.TextStyler = (function() {
 								switch (c) {
 									case 39:
 										return STRING;
+									case 13:
+									case 10:
 									case -1:
 										this._unread(c);
 										return STRING;
@@ -7830,6 +8680,8 @@ examples.textview.TextStyler = (function() {
 								switch (c) {
 									case 34: // DOUBLE QUOTE
 										return STRING;
+									case 13:
+									case 10:
 									case -1:
 										this._unread(c);
 										return STRING;
@@ -7839,31 +8691,8 @@ examples.textview.TextStyler = (function() {
 								}
 							}
 							break;
-						case 32: // SPACE
-						case 9: // TAB
-							if (this.whitespacesVisible) {
-								return c === 32 ? WHITE_SPACE : WHITE_TAB;
-							}
-							do {
-								c = this._read();
-							} while(c === 32 || c === 9);
-							this._unread(c);
-							return WHITE;
 						default:
-							var isCSS = this.isCSS;
-							if ((97 <= c && c <= 122) || (65 <= c && c <= 90) || c === 95 || (48 <= c && c <= 57) || (0x2d === c && isCSS)) { //LETTER OR UNDERSCORE OR NUMBER
-								var off = this.offset - 1;
-								do {
-									c = this._read();
-								} while((97 <= c && c <= 122) || (65 <= c && c <= 90) || c === 95 || (48 <= c && c <= 57) || (0x2d === c && isCSS));  //LETTER OR UNDERSCORE OR NUMBER
-								this._unread(c);
-								var word = this.text.substring(off, this.offset);
-								//TODO slow
-								for (var i=0; i<this.keywords.length; i++) {
-									if (this.keywords[i] === word) { return KEYWORD; }
-								}
-							}
-							return UNKOWN;
+							return this._default(c);
 					}
 				}
 			},
@@ -7904,7 +8733,105 @@ examples.textview.TextStyler = (function() {
 		return WhitespaceScanner;
 	}());
 	
-	function TextStyler (view, lang) {
+	var CommentScanner = (function() {
+		function CommentScanner (whitespacesVisible) {
+			Scanner.call(this, null, whitespacesVisible);
+		}
+		CommentScanner.prototype = new Scanner(null);
+		CommentScanner.prototype.setType = function(type) {
+			this._type = type;
+		};
+		CommentScanner.prototype.nextToken = function() {
+			this.startOffset = this.offset;
+			while (true) {
+				var c = this._read();
+				switch (c) {
+					case -1: return null;
+					case 32: // SPACE
+					case 9: // TAB
+						if (this.whitespacesVisible) {
+							return c === 32 ? WHITE_SPACE : WHITE_TAB;
+						}
+						do {
+							c = this._read();
+						} while(c === 32 || c === 9);
+						this._unread(c);
+						return WHITE;
+					case 60: // <
+						if (this._type === DOC_COMMENT) {
+							do {
+								c = this._read();
+							} while(!(c === 62 || c === -1)); // >
+							if (c === 62) {
+								return HTML_MARKUP;
+							}
+						}
+						return UNKOWN;
+					case 64: // @
+						if (this._type === DOC_COMMENT) {
+							do {
+								c = this._read();
+							} while((97 <= c && c <= 122) || (65 <= c && c <= 90) || c === 95 || (48 <= c && c <= 57));  //LETTER OR UNDERSCORE OR NUMBER
+							this._unread(c);
+							return DOC_TAG;
+						}
+						return UNKOWN;
+					case 84: // T
+						if ((c = this._read()) === 79) { // O
+							if ((c = this._read()) === 68) { // D
+								if ((c = this._read()) === 79) { // O
+									c = this._read();
+									if (!((97 <= c && c <= 122) || (65 <= c && c <= 90) || c === 95 || (48 <= c && c <= 57))) {
+										this._unread(c);
+										return TASK_TAG;
+									}
+									this._unread(c);
+								} else {
+									this._unread(c);
+								}
+							} else {
+								this._unread(c);
+							}
+						} else {
+							this._unread(c);
+						}
+						//FALL THROUGH
+					default:
+						do {
+							c = this._read();
+						} while(!(c === 32 || c === 9 || c === -1 || c === 60 || c === 64 || c === 84));
+						this._unread(c);
+						return UNKOWN;
+				}
+			}
+		};
+		
+		return CommentScanner;
+	}());
+	
+	var FirstScanner = (function() {
+		function FirstScanner () {
+			Scanner.call(this, null, false);
+		}
+		FirstScanner.prototype = new Scanner(null);
+		FirstScanner.prototype._default = function(c) {
+			while(true) {
+				c = this._read();
+				switch (c) {
+					case 47: // SLASH
+					case 34: // DOUBLE QUOTE
+					case 39: // SINGLE QUOTE
+					case -1:
+						this._unread(c);
+						return UNKOWN;
+				}
+			}
+		};
+		
+		return FirstScanner;
+	}());
+	
+	function TextStyler (view, lang, annotationModel) {
 		this.commentStart = "/*";
 		this.commentEnd = "*/";
 		var keywords = [];
@@ -7914,23 +8841,49 @@ examples.textview.TextStyler = (function() {
 			case "css": keywords = CSS_KEYWORDS; break;
 		}
 		this.whitespacesVisible = false;
+		this.detectHyperlinks = true;
 		this.highlightCaretLine = true;
+		this.foldingEnabled = true;
+		this.detectTasks = true;
 		this._scanner = new Scanner(keywords, this.whitespacesVisible);
 		//TODO this scanner is not the best/correct way to parse CSS
 		if (lang === "css") {
 			this._scanner.isCSS = true;
 		}
+		this._firstScanner = new FirstScanner();
+		this._commentScanner = new CommentScanner(this.whitespacesVisible);
 		this._whitespaceScanner = new WhitespaceScanner();
 		this.view = view;
-		this.commentOffset = 0;
-		this.commentOffsets = [];
+		this.annotationModel = annotationModel;
 		this._currentBracket = undefined; 
 		this._matchingBracket = undefined;
 		
 		view.addEventListener("Selection", this, this._onSelection);
-		view.addEventListener("ModelChanged", this, this._onModelChanged);
+		var model = view.getModel();
+		if (model.getBaseModel) {
+			//TODO normalize all events to use event objects
+			var self = this;
+			this._baseModelListener = {
+				onChanged: function(start, removedCharCount, addedCharCount, removedLineCount, addedLineCount) {
+					var e = {
+						start: start, 
+						removedCharCount: removedCharCount,
+						addedCharCount: addedCharCount,
+						removedLineCount: removedLineCount,
+						addedLineCount: addedLineCount
+					};
+					self._onModelChanged(e);
+				}
+			};
+			model.getBaseModel().addListener(this._baseModelListener);
+		} else {
+			//TODO still needed to keep the event order correct (styler before view)
+			view.addEventListener("ModelChanged", this, this._onModelChanged);
+		}
 		view.addEventListener("Destroy", this, this._onDestroy);
 		view.addEventListener("LineStyle", this, this._onLineStyle);
+		this._computeComments ();
+		this._computeFolding();
 		view.redrawLines();
 	}
 	
@@ -7938,8 +8891,13 @@ examples.textview.TextStyler = (function() {
 		destroy: function() {
 			var view = this.view;
 			if (view) {
+				var model = view.getModel();
+				if (model.getBaseModel) {
+					model.getBaseModel().removeListener(this._baseModelListener);
+				} else {
+					view.removeEventListener("ModelChanged", this, this._onModelChanged);
+				}
 				view.removeEventListener("Selection", this, this._onSelection);
-				view.removeEventListener("ModelChanged", this, this._onModelChanged);
 				view.removeEventListener("Destroy", this, this._onDestroy);
 				view.removeEventListener("LineStyle", this, this._onLineStyle);
 				this.view = null;
@@ -7951,55 +8909,104 @@ examples.textview.TextStyler = (function() {
 		setWhitespacesVisible: function(visible) {
 			this.whitespacesVisible = visible;
 			this._scanner.whitespacesVisible = visible;
+			this._commentScanner.whitespacesVisible = visible;
 		},
-		_binarySearch: function(offsets, offset, low, high) {
-			while (high - low > 2) {
-				var index = (((high + low) >> 1) >> 1) << 1;
-				var end = offsets[index + 1];
-				if (end > offset) {
+		setDetectHyperlinks: function(enabled) {
+			this.detectHyperlinks = enabled;
+		},
+		setFoldingEnabled: function(enabled) {
+			this.foldingEnabled = enabled;
+		},
+		setDetectTasks: function(enabled) {
+			this.detectTasks = enabled;
+		},
+		_binarySearch: function (array, offset, inclusive, low, high) {
+			var index;
+			if (low === undefined) { low = -1; }
+			if (high === undefined) { high = array.length; }
+			while (high - low > 1) {
+				index = Math.floor((high + low) / 2);
+				if (offset <= array[index].start) {
 					high = index;
+				} else if (inclusive && offset < array[index].end) {
+					high = index;
+					break;
 				} else {
 					low = index;
 				}
 			}
 			return high;
 		},
-		_computeComments: function(end) {
-			// compute comments between commentOffset and end
-			if (end <= this.commentOffset) { return; }
+		_computeComments: function() {
 			var model = this.view.getModel();
-			var charCount = model.getCharCount();
-			var e = end;
-			// Uncomment to compute all comments
-//			e = charCount;
-			var t = /*start == this.commentOffset && e == end ? text : */model.getText(this.commentOffset, e);
-			if (this.commentOffsets.length > 1 && this.commentOffsets[this.commentOffsets.length - 1] === charCount) {
-				this.commentOffsets.length--;
-			}
-			var offset = 0;
-			while (offset < t.length) {
-				var begin = (this.commentOffsets.length & 1) === 0;
-				var search = begin ? this.commentStart : this.commentEnd;
-				var index = t.indexOf(search, offset);
-				if (index !== -1) {
-					this.commentOffsets.push(this.commentOffset + (begin ? index : index + search.length));
-				} else {
-					break;
-				}
-				offset = index + search.length;
-			}
-			if ((this.commentOffsets.length & 1) === 1) { this.commentOffsets.push(charCount); }
-			this.commentOffset = e;
+			if (model.getBaseModel) { model = model.getBaseModel(); }
+			this.comments = this._findComments(model.getText());
 		},
-		_getCommentRanges: function(start, end) {
-			this._computeComments (end);
-			var commentCount = this.commentOffsets.length;
-			var commentStart = this._binarySearch(this.commentOffsets, start, -1, commentCount);
-			if (commentStart >= commentCount) { return []; }
-			if (this.commentOffsets[commentStart] > end) { return []; }
-			var commentEnd = Math.min(commentCount - 2, this._binarySearch(this.commentOffsets, end, commentStart - 1, commentCount));
-			if (this.commentOffsets[commentEnd] > end) { commentEnd = Math.max(commentStart, commentEnd - 2); }
-			return this.commentOffsets.slice(commentStart, commentEnd + 2);
+		_computeFolding: function() {
+			if (!this.foldingEnabled) { return; }
+			var view = this.view;
+			var viewModel = view.getModel();
+			if (!viewModel.getBaseModel) { return; }
+			var annotationModel = this.annotationModel;
+			if (!annotationModel) { return; }
+			annotationModel.removeAnnotations("orion.annotation.folding");
+			var add = [];
+			var baseModel = viewModel.getBaseModel();
+			var comments = this.comments;
+			for (var i=0; i<comments.length; i++) {
+				var comment = comments[i];
+				var annotation = this._createFoldingAnnotation(viewModel, baseModel, comment.start, comment.end);
+				if (annotation) { 
+					add.push(annotation);
+				}
+			}
+			annotationModel.replaceAnnotations(null, add);
+		},
+		_createFoldingAnnotation: function(viewModel, baseModel, start, end) {
+			var startLine = baseModel.getLineAtOffset(start);
+			var endLine = baseModel.getLineAtOffset(end);
+			if (startLine === endLine) {
+				return null;
+			}
+			return new orion.textview.FoldingAnnotation(viewModel, "orion.annotation.folding", start, end,
+				"<div class='annotationHTML expanded'></div>", {styleClass: "annotation expanded"}, 
+				"<div class='annotationHTML collapsed'></div>", {styleClass: "annotation collapsed"});
+		},
+		_computeTasks: function(type, commentStart, commentEnd) {
+			if (!this.detectTasks) { return; }
+			var annotationModel = this.annotationModel;
+			if (!annotationModel) { return; }
+			var view = this.view;
+			var viewModel = view.getModel(), baseModel = viewModel;
+			if (viewModel.getBaseModel) { baseModel = viewModel.getBaseModel(); }
+			var annotations = annotationModel.getAnnotations(commentStart, commentEnd);
+			var remove = [];
+			while (annotations.hasNext()) {
+				remove.push(annotations.next());
+			}
+			var add = [];
+			var scanner = this._commentScanner;
+			scanner.setText(baseModel.getText(commentStart, commentEnd));
+			var token;
+			while ((token = scanner.nextToken())) {
+				var tokenStart = scanner.getStartOffset() + commentStart;
+				if (token === TASK_TAG) {
+					var end = baseModel.getLineEnd(baseModel.getLineAtOffset(tokenStart));
+					if (type !== SINGLELINE_COMMENT) {
+						end = Math.min(end, commentEnd - this.commentEnd.length);
+					}
+					add.push({
+						start: tokenStart,
+						end: end,
+						type: "orion.annotation.task",
+						rulerTitle: baseModel.getText(tokenStart, end),
+						rulerStyle: {styleClass: "annotation task"},
+						rulerHTML: "<div class='annotationHTML task'></div>",
+						overviewStyle: {styleClass: "annotationOverview task"}
+					});
+				}
+			}
+			annotationModel.replaceAnnotations(remove, add);
 		},
 		_getLineStyle: function(lineIndex) {
 			if (this.highlightCaretLine) {
@@ -8013,36 +9020,43 @@ examples.textview.TextStyler = (function() {
 			return null;
 		},
 		_getStyles: function(text, start) {
-			var end = start + text.length;
 			var model = this.view.getModel();
+			if (model.getBaseModel) {
+				start = model.mapOffset(start);
+			}
+			var end = start + text.length;
 			
-			// get comment ranges that intersect with range
-			var commentRanges = this._getCommentRanges (start, end);
 			var styles = [];
 			
 			// for any sub range that is not a comment, parse code generating tokens (keywords, numbers, brackets, line comments, etc)
-			var offset = start;
-			for (var i = 0; i < commentRanges.length; i+= 2) {
-				var commentStart = commentRanges[i];
+			var offset = start, comments = this.comments;
+			var startIndex = this._binarySearch(comments, start, true);
+			for (var i = startIndex; i < comments.length; i++) {
+				if (comments[i].start >= end) { break; }
+				var commentStart = comments[i].start;
+				var commentEnd = comments[i].end;
 				if (offset < commentStart) {
 					this._parse(text.substring(offset - start, commentStart - start), offset, styles);
 				}
-				var style = commentStyle;
-				if ((commentRanges[i+1] - commentStart) > (this.commentStart.length + this.commentEnd.length)) {
-					var o = commentStart + this.commentStart.length;
-					if (model.getText(o, o + 1) === "*") { style = javadocStyle; }
-				}
-				if (this.whitespacesVisible) {
+				var style = comments[i].type === DOC_COMMENT ? docCommentStyle : multiCommentStyle;
+				if (this.whitespacesVisible || this.detectHyperlinks) {
 					var s = Math.max(offset, commentStart);
-					var e = Math.min(end, commentRanges[i+1]);
-					this._parseWhitespace(text.substring(s - start, e - start), s, styles, style);
+					var e = Math.min(end, commentEnd);
+					this._parseComment(text.substring(s - start, e - start), s, styles, style, comments[i].type);
 				} else {
-					styles.push({start: commentRanges[i], end: commentRanges[i+1], style: style});
+					styles.push({start: commentStart, end: commentEnd, style: style});
 				}
-				offset = commentRanges[i+1];
+				offset = commentEnd;
 			}
 			if (offset < end) {
 				this._parse(text.substring(offset - start, end - start), offset, styles);
+			}
+			if (model.getBaseModel) {
+				for (var j = 0; j < styles.length; j++) {
+					var length = styles[j].end - styles[j].start;
+					styles[j].start = model.mapOffset(styles[j].start, true);
+					styles[j].end = styles[j].start + length;
+				}
 			}
 			return styles;
 		},
@@ -8060,20 +9074,21 @@ examples.textview.TextStyler = (function() {
 						case KEYWORD: style = keywordStyle; break;
 						case STRING:
 							if (this.whitespacesVisible) {
-								this._parseWhitespace(scanner.getData(), tokenStart, styles, stringStyle);
+								this._parseString(scanner.getData(), tokenStart, styles, stringStyle);
 								continue;
 							} else {
 								style = stringStyle;
 							}
 							break;
-						case COMMENT: 
-							if (this.whitespacesVisible) {
-								this._parseWhitespace(scanner.getData(), tokenStart, styles, commentStyle);
-								continue;
-							} else {
-								style = commentStyle;
-							}
-							break;
+						case DOC_COMMENT: 
+							this._parseComment(scanner.getData(), tokenStart, styles, docCommentStyle, token);
+							continue;
+						case SINGLELINE_COMMENT:
+							this._parseComment(scanner.getData(), tokenStart, styles, singleCommentStyle, token);
+							continue;
+						case MULTILINE_COMMENT: 
+							this._parseComment(scanner.getData(), tokenStart, styles, multiCommentStyle, token);
+							continue;
 						case WHITE_TAB:
 							if (this.whitespacesVisible) {
 								style = tabStyle;
@@ -8089,7 +9104,45 @@ examples.textview.TextStyler = (function() {
 				styles.push({start: tokenStart, end: scanner.getOffset() + offset, style: style});
 			}
 		},
-		_parseWhitespace: function(text, offset, styles, s) {
+		_parseComment: function(text, offset, styles, s, type) {
+			var scanner = this._commentScanner;
+			scanner.setText(text);
+			scanner.setType(type);
+			var token;
+			while ((token = scanner.nextToken())) {
+				var tokenStart = scanner.getStartOffset() + offset;
+				var style = s;
+				switch (token) {
+					case WHITE_TAB:
+						if (this.whitespacesVisible) {
+							style = tabStyle;
+						}
+						break;
+					case WHITE_SPACE:
+						if (this.whitespacesVisible) {
+							style = spaceStyle;
+						}
+						break;
+					case HTML_MARKUP:
+						style = htmlMarkupStyle;
+						break;
+					case DOC_TAG:
+						style = doctagStyle;
+						break;
+					case TASK_TAG:
+						style = tasktagStyle;
+						break;
+					default:
+						if (this.detectHyperlinks) {
+							style = this._detectHyperlinks(scanner.getData(), tokenStart, styles, style);
+						}
+				}
+				if (style) {
+					styles.push({start: tokenStart, end: scanner.getOffset() + offset, style: style});
+				}
+			}
+		},
+		_parseString: function(text, offset, styles, s) {
 			var scanner = this._whitespaceScanner;
 			scanner.setText(text);
 			var token;
@@ -8098,49 +9151,197 @@ examples.textview.TextStyler = (function() {
 				var style = s;
 				switch (token) {
 					case WHITE_TAB:
-						style = tabStyle;
+						if (this.whitespacesVisible) {
+							style = tabStyle;
+						}
 						break;
 					case WHITE_SPACE:
-						style = spaceStyle;
+						if (this.whitespacesVisible) {
+							style = spaceStyle;
+						}
 						break;
 				}
-				styles.push({start: tokenStart, end: scanner.getOffset() + offset, style: style});
+				if (style) {
+					styles.push({start: tokenStart, end: scanner.getOffset() + offset, style: style});
+				}
 			}
+		},
+		_detectHyperlinks: function(text, offset, styles, s) {
+			var href = null, index, linkStyle;
+			if ((index = text.indexOf("://")) > 0) {
+				href = text;
+				var start = index;
+				while (start > 0) {
+					var c = href.charCodeAt(start - 1);
+					if (!((97 <= c && c <= 122) || (65 <= c && c <= 90) || 0x2d === c || (48 <= c && c <= 57))) { //LETTER OR DASH OR NUMBER
+						break;
+					}
+					start--;
+				}
+				if (start > 0) {
+					var brackets = "\"\"''(){}[]<>";
+					index = brackets.indexOf(href.substring(start - 1, start));
+					if (index !== -1 && (index & 1) === 0 && (index = href.lastIndexOf(brackets.substring(index + 1, index + 2))) !== -1) {
+						var end = index;
+						linkStyle = this._clone(s);
+						linkStyle.tagName = "A";
+						linkStyle.attributes = {href: href.substring(start, end)};
+						styles.push({start: offset, end: offset + start, style: s});
+						styles.push({start: offset + start, end: offset + end, style: linkStyle});
+						styles.push({start: offset + end, end: offset + text.length, style: s});
+						return null;
+					}
+				}
+			} else if (text.toLowerCase().indexOf("bug#") === 0) {
+				href = "https://bugs.eclipse.org/bugs/show_bug.cgi?id=" + parseInt(text.substring(4), 10);
+			}
+			if (href) {
+				linkStyle = this._clone(s);
+				linkStyle.tagName = "A";
+				linkStyle.attributes = {href: href};
+				return linkStyle;
+			}
+			return s;
+		},
+		_clone: function(obj) {
+			if (!obj) { return obj; }
+			var newObj = {};
+			for (var p in obj) {
+				if (obj.hasOwnProperty(p)) {
+					var value = obj[p];
+					newObj[p] = value;
+				}
+			}
+			return newObj;
+		},
+		_findComments: function(text, offset) {
+			offset = offset || 0;
+			var scanner = this._firstScanner, token;
+			scanner.setText(text);
+			var result = [];
+			while ((token = scanner.nextToken())) {
+				if (token === MULTILINE_COMMENT || token === DOC_COMMENT) {
+					var comment = {
+						start: scanner.getStartOffset() + offset,
+						end: scanner.getOffset() + offset,
+						type: token
+					};
+					result.push(comment);
+					//TODO can we avoid this work if edition does not overlap comment?
+					this._computeTasks(token, scanner.getStartOffset() + offset, scanner.getOffset() + offset);
+				}
+				if (token === SINGLELINE_COMMENT) {
+					//TODO can we avoid this work if edition does not overlap comment?
+					this._computeTasks(token, scanner.getStartOffset() + offset, scanner.getOffset() + offset);
+				}
+			}
+			return result;
+		}, 
+		_findMatchingBracket: function(model, offset) {
+			if (model.getBaseModel) { model = model.getBaseModel(); }
+			var brackets = "{}()[]<>";
+			var bracket = model.getText(offset, offset + 1);
+			var bracketIndex = brackets.indexOf(bracket, 0);
+			if (bracketIndex === -1) { return -1; }
+			var closingBracket;
+			if (bracketIndex & 1) {
+				closingBracket = brackets.substring(bracketIndex - 1, bracketIndex);
+			} else {
+				closingBracket = brackets.substring(bracketIndex + 1, bracketIndex + 2);
+			}
+			var lineIndex = model.getLineAtOffset(offset);
+			var lineText = model.getLine(lineIndex);
+			var lineStart = model.getLineStart(lineIndex);
+			var lineEnd = model.getLineEnd(lineIndex);
+			brackets = this._findBrackets(bracket, closingBracket, lineText, lineStart, lineStart, lineEnd);
+			for (var i=0; i<brackets.length; i++) {
+				var sign = brackets[i] >= 0 ? 1 : -1;
+				if (brackets[i] * sign === offset) {
+					var level = 1;
+					if (bracketIndex & 1) {
+						i--;
+						for (; i>=0; i--) {
+							sign = brackets[i] >= 0 ? 1 : -1;
+							level += sign;
+							if (level === 0) {
+								return brackets[i] * sign;
+							}
+						}
+						lineIndex -= 1;
+						while (lineIndex >= 0) {
+							lineText = model.getLine(lineIndex);
+							lineStart = model.getLineStart(lineIndex);
+							lineEnd = model.getLineEnd(lineIndex);
+							brackets = this._findBrackets(bracket, closingBracket, lineText, lineStart, lineStart, lineEnd);
+							for (var j=brackets.length - 1; j>=0; j--) {
+								sign = brackets[j] >= 0 ? 1 : -1;
+								level += sign;
+								if (level === 0) {
+									return brackets[j] * sign;
+								}
+							}
+							lineIndex--;
+						}
+					} else {
+						i++;
+						for (; i<brackets.length; i++) {
+							sign = brackets[i] >= 0 ? 1 : -1;
+							level += sign;
+							if (level === 0) {
+								return brackets[i] * sign;
+							}
+						}
+						lineIndex += 1;
+						var lineCount = model.getLineCount ();
+						while (lineIndex < lineCount) {
+							lineText = model.getLine(lineIndex);
+							lineStart = model.getLineStart(lineIndex);
+							lineEnd = model.getLineEnd(lineIndex);
+							brackets = this._findBrackets(bracket, closingBracket, lineText, lineStart, lineStart, lineEnd);
+							for (var k=0; k<brackets.length; k++) {
+								sign = brackets[k] >= 0 ? 1 : -1;
+								level += sign;
+								if (level === 0) {
+									return brackets[k] * sign;
+								}
+							}
+							lineIndex++;
+						}
+					}
+					break;
+				}
+			}
+			return -1;
 		},
 		_findBrackets: function(bracket, closingBracket, text, textOffset, start, end) {
 			var result = [];
-			
-			// get comment ranges that intersect with range
-			var commentRanges = this._getCommentRanges (start, end);
-			
+			var bracketToken = bracket.charCodeAt(0);
+			var closingBracketToken = closingBracket.charCodeAt(0);
 			// for any sub range that is not a comment, parse code generating tokens (keywords, numbers, brackets, line comments, etc)
-			var offset = start, scanner = this._scanner, token, tokenData;
-			for (var i = 0; i < commentRanges.length; i+= 2) {
-				var commentStart = commentRanges[i];
+			var offset = start, scanner = this._scanner, token, comments = this.comments;
+			var startIndex = this._binarySearch(comments, start, true);
+			for (var i = startIndex; i < comments.length; i++) {
+				if (comments[i].start >= end) { break; }
+				var commentStart = comments[i].start;
+				var commentEnd = comments[i].end;
 				if (offset < commentStart) {
 					scanner.setText(text.substring(offset - start, commentStart - start));
 					while ((token = scanner.nextToken())) {
-						if (scanner.getDataLength() !== 1) { continue; }
-						tokenData = scanner.getData();
-						if (tokenData === bracket) {
+						if (token === bracketToken) {
 							result.push(scanner.getStartOffset() + offset - start + textOffset);
-						}
-						if (tokenData === closingBracket) {
+						} else if (token === closingBracketToken) {
 							result.push(-(scanner.getStartOffset() + offset - start + textOffset));
 						}
 					}
 				}
-				offset = commentRanges[i+1];
+				offset = commentEnd;
 			}
 			if (offset < end) {
 				scanner.setText(text.substring(offset - start, end - start));
 				while ((token = scanner.nextToken())) {
-					if (scanner.getDataLength() !== 1) { continue; }
-					tokenData = scanner.getData();
-					if (tokenData === bracket) {
+					if (token === bracketToken) {
 						result.push(scanner.getStartOffset() + offset - start + textOffset);
-					}
-					if (tokenData === closingBracket) {
+					} else if (token === closingBracketToken) {
 						result.push(-(scanner.getStartOffset() + offset - start + textOffset));
 					}
 				}
@@ -8160,8 +9361,10 @@ examples.textview.TextStyler = (function() {
 			var view = this.view;
 			var model = view.getModel();
 			var lineIndex;
-			if (this._matchingBracket !== undefined) {
-				lineIndex = model.getLineAtOffset(this._matchingBracket);
+			var bracket = this._matchingBracket;
+			if (bracket !== undefined) {
+				if (model.getBaseModel) { bracket = model.mapOffset(bracket, true); }
+				lineIndex = model.getLineAtOffset(bracket);
 				view.redrawLines(lineIndex, lineIndex + 1);
 				this._matchingBracket = this._currentBracket = undefined;
 			}
@@ -8182,202 +9385,142 @@ examples.textview.TextStyler = (function() {
 			if (newSelection.start !== newSelection.end || newSelection.start === 0) {
 				return;
 			}
-			var caret = view.getCaretOffset();
-			if (caret === 0) { return; }
-			var brackets = "{}()[]<>";
-			var bracket = model.getText(caret - 1, caret);
-			var bracketIndex = brackets.indexOf(bracket, 0);
-			if (bracketIndex === -1) { return; }
-			var closingBracket;
-			if (bracketIndex & 1) {
-				closingBracket = brackets.substring(bracketIndex - 1, bracketIndex);
-			} else {
-				closingBracket = brackets.substring(bracketIndex + 1, bracketIndex + 2);
+			var caret = view.getCaretOffset() - 1;
+			if (caret < 0) { return; }
+			var mapCaret = caret;
+			if (model.getBaseModel) {
+				mapCaret = model.mapOffset(caret);
 			}
-			lineIndex = model.getLineAtOffset(caret);
-			var lineText = model.getLine(lineIndex);
-			var lineStart = model.getLineStart(lineIndex);
-			var lineEnd = model.getLineEnd(lineIndex);
-			brackets = this._findBrackets(bracket, closingBracket, lineText, lineStart, lineStart, lineEnd);
-			for (var i=0; i<brackets.length; i++) {
-				var sign = brackets[i] >= 0 ? 1 : -1;
-				if (brackets[i] * sign === caret - 1) {
-					var level = 1;
-					this._currentBracket = brackets[i] * sign;
-					if (bracketIndex & 1) {
-						i--;
-						for (; i>=0; i--) {
-							sign = brackets[i] >= 0 ? 1 : -1;
-							level += sign;
-							if (level === 0) {
-								this._matchingBracket = brackets[i] * sign;
-								view.redrawLines(lineIndex, lineIndex + 1);
-								return;
-							}
-						}
-						lineIndex -= 1;
-						while (lineIndex >= 0) {
-							lineText = model.getLine(lineIndex);
-							lineStart = model.getLineStart(lineIndex);
-							lineEnd = model.getLineEnd(lineIndex);
-							brackets = this._findBrackets(bracket, closingBracket, lineText, lineStart, lineStart, lineEnd);
-							for (var j=brackets.length - 1; j>=0; j--) {
-								sign = brackets[j] >= 0 ? 1 : -1;
-								level += sign;
-								if (level === 0) {
-									this._matchingBracket = brackets[j] * sign;
-									view.redrawLines(lineIndex, lineIndex + 1);
-									return;
-								}
-							}
-							lineIndex--;
-						}
-					} else {
-						i++;
-						for (; i<brackets.length; i++) {
-							sign = brackets[i] >= 0 ? 1 : -1;
-							level += sign;
-							if (level === 0) {
-								this._matchingBracket = brackets[i] * sign;
-								view.redrawLines(lineIndex, lineIndex + 1);
-								return;
-							}
-						}
-						lineIndex += 1;
-						var lineCount = model.getLineCount ();
-						while (lineIndex < lineCount) {
-							lineText = model.getLine(lineIndex);
-							lineStart = model.getLineStart(lineIndex);
-							lineEnd = model.getLineEnd(lineIndex);
-							brackets = this._findBrackets(bracket, closingBracket, lineText, lineStart, lineStart, lineEnd);
-							for (var k=0; k<brackets.length; k++) {
-								sign = brackets[k] >= 0 ? 1 : -1;
-								level += sign;
-								if (level === 0) {
-									this._matchingBracket = brackets[k] * sign;
-									view.redrawLines(lineIndex, lineIndex + 1);
-									return;
-								}
-							}
-							lineIndex++;
-						}
-					}
-					break;
-				}
+			bracket = this._findMatchingBracket(model, mapCaret);
+			if (bracket !== -1) {
+				this._currentBracket = mapCaret;
+				this._matchingBracket = bracket;
+				if (model.getBaseModel) { bracket = model.mapOffset(bracket, true); }
+				lineIndex = model.getLineAtOffset(bracket);
+				view.redrawLines(lineIndex, lineIndex + 1);
 			}
 		},
 		_onModelChanged: function(e) {
 			var start = e.start;
 			var removedCharCount = e.removedCharCount;
 			var addedCharCount = e.addedCharCount;
-			if (this._matchingBracket && start < this._matchingBracket) { this._matchingBracket += addedCharCount + removedCharCount; }
-			if (this._currentBracket && start < this._currentBracket) { this._currentBracket += addedCharCount + removedCharCount; }
-			if (start >= this.commentOffset) { return; }
-			var model = this.view.getModel();
-			
-//			window.console.log("start=" + start + " added=" + addedCharCount + " removed=" + removedCharCount)
-//			for (var i=0; i< this.commentOffsets.length; i++) {
-//				window.console.log(i +"="+ this.commentOffsets[i]);
-//			}
-
-			var commentCount = this.commentOffsets.length;
-			var extra = Math.max(this.commentStart.length - 1, this.commentEnd.length - 1);
-			if (commentCount === 0) {
-				this.commentOffset = Math.max(0, start - extra);
-				return;
-			}
-			var charCount = model.getCharCount();
-			var oldCharCount = charCount - addedCharCount + removedCharCount;
-			var commentStart = this._binarySearch(this.commentOffsets, start, -1, commentCount);
+			var changeCount = addedCharCount - removedCharCount;
+			if (this._matchingBracket && start < this._matchingBracket) { this._matchingBracket += changeCount; }
+			if (this._currentBracket && start < this._currentBracket) { this._currentBracket += changeCount; }
+			var view = this.view;
+			var viewModel = view.getModel();
+			var baseModel = viewModel.getBaseModel ? viewModel.getBaseModel() : viewModel;
 			var end = start + removedCharCount;
-			var commentEnd = this._binarySearch(this.commentOffsets, end, commentStart - 1, commentCount);
-//			window.console.log("s=" + commentStart + " e=" + commentEnd);
+			var charCount = baseModel.getCharCount();
+			var commentCount = this.comments.length;
+			var lineStart = baseModel.getLineStart(baseModel.getLineAtOffset(start));
+			var commentStart = this._binarySearch(this.comments, lineStart, true);
+			var commentEnd = this._binarySearch(this.comments, end, false, commentStart - 1, commentCount);
+			
 			var ts;
-			if (commentStart > 0) {
-				ts = this.commentOffsets[--commentStart];
+			if (commentStart < commentCount && this.comments[commentStart].start <= lineStart && lineStart < this.comments[commentStart].end) {
+				ts = this.comments[commentStart].start;
+				if (ts > start) { ts += changeCount; }
 			} else {
-				ts = Math.max(0, Math.min(this.commentOffsets[commentStart], start) - extra);
-				--commentStart;
+				ts = lineStart;
 			}
 			var te;
-			var redrawEnd = charCount;
-			if (commentEnd + 1 < this.commentOffsets.length) {
-				te = this.commentOffsets[++commentEnd];
-				if (end > (te - this.commentEnd.length)) {
-					if (commentEnd + 2 < this.commentOffsets.length) { 
-						commentEnd += 2;
-						te = this.commentOffsets[commentEnd];
-						redrawEnd = te + 1;
-						if (redrawEnd > start) { redrawEnd += addedCharCount - removedCharCount; }
-					} else {
-						te = Math.min(oldCharCount, end + extra);
-						this.commentOffset = te;
-					}
-				}
+			if (commentEnd < commentCount) {
+				te = this.comments[commentEnd].end;
+				if (te > start) { te += changeCount; }
+				commentEnd += 1;
 			} else {
-				te = Math.min(oldCharCount, end + extra);
-				this.commentOffset = te;
-				if (commentEnd > 0 && commentEnd === this.commentOffsets.length) {
-					commentEnd = this.commentOffsets.length - 1;
-				}
+				commentEnd = commentCount;
+				te = charCount;//TODO could it be smaller?
 			}
-			if (ts > start) { ts += addedCharCount - removedCharCount; }
-			if (te > start) { te += addedCharCount - removedCharCount; }
-			
-//			window.console.log("commentStart="+ commentStart + " commentEnd=" + commentEnd + " ts=" + ts + " te=" + te)
-
-			if (this.commentOffsets.length > 1 && this.commentOffsets[this.commentOffsets.length - 1] === oldCharCount) {
-				this.commentOffsets.length--;
+			var text = baseModel.getText(ts, te), comment;
+			var newComments = this._findComments(text, ts), i;
+			for (i = commentStart; i < this.comments.length; i++) {
+				comment = this.comments[i];
+				if (comment.start > start) { comment.start += changeCount; }
+				if (comment.start > start) { comment.end += changeCount; }
 			}
-			
-			var offset = 0;
-			var newComments = [];
-			var t = model.getText(ts, te);
-			if (this.commentOffset < te) { this.commentOffset = te; }
-			while (offset < t.length) {
-				var begin = ((commentStart + 1 + newComments.length) & 1) === 0;
-				var search = begin ? this.commentStart : this.commentEnd;
-				var index = t.indexOf(search, offset);
-				if (index !== -1) {
-					newComments.push(ts + (begin ? index : index + search.length));
-				} else {
-					break;
-				}
-				offset = index + search.length;
-			}
-//			window.console.log("lengths=" + newComments.length + " " + (commentEnd - commentStart) + " t=<" + t + ">")
-//			for (var i=0; i< newComments.length; i++) {
-//				window.console.log(i +"=>"+ newComments[i]);
-//			}
 			var redraw = (commentEnd - commentStart) !== newComments.length;
 			if (!redraw) {
-				for (var i=0; i<newComments.length; i++) {
-					offset = this.commentOffsets[commentStart + 1 + i];
-					if (offset > start) { offset += addedCharCount - removedCharCount; }
-					if (offset !== newComments[i]) {
+				for (i=0; i<newComments.length; i++) {
+					comment = this.comments[commentStart + i];
+					var newComment = newComments[i];
+					if (comment.start !== newComment.start || comment.end !== newComment.end || comment.type !== newComment.type) {
 						redraw = true;
 						break;
 					} 
 				}
 			}
-			
-			var args = [commentStart + 1, (commentEnd - commentStart)].concat(newComments);
-			Array.prototype.splice.apply(this.commentOffsets, args);
-			for (var k=commentStart + 1 + newComments.length; k< this.commentOffsets.length; k++) {
-				this.commentOffsets[k] += addedCharCount - removedCharCount;
-			}
-			
-			if ((this.commentOffsets.length & 1) === 1) { this.commentOffsets.push(charCount); }
-			
+			var args = [commentStart, commentEnd - commentStart].concat(newComments);
+			Array.prototype.splice.apply(this.comments, args);
 			if (redraw) {
-//				window.console.log ("redraw " + (start + addedCharCount) + " " + redrawEnd);
-				this.view.redrawRange(start + addedCharCount, redrawEnd);
+				var redrawStart = ts;
+				var redrawEnd = te;
+				if (viewModel !== baseModel) {
+					redrawStart = viewModel.mapOffset(redrawStart, true);
+					redrawEnd = viewModel.mapOffset(redrawEnd, true);
+				}
+				view.redrawRange(redrawStart, redrawEnd);
 			}
 
-//			for (var i=0; i< this.commentOffsets.length; i++) {
-//				window.console.log(i +"="+ this.commentOffsets[i]);
-//			}
-
+			if (this.foldingEnabled && baseModel !== viewModel && this.annotationModel) {
+				var annotationModel = this.annotationModel;
+				var iter = annotationModel.getAnnotations(ts, te);
+				var remove = [], all = [];
+				var annotation;
+				while (iter.hasNext()) {
+					annotation = iter.next();
+					if (annotation.type === "orion.annotation.folding") {
+						all.push(annotation);
+						for (i = 0; i < newComments.length; i++) {
+							if (annotation.start === newComments[i].start && annotation.end === newComments[i].end) {
+								break;
+							}
+						}
+						if (i === newComments.length) {
+							remove.push(annotation);
+							annotation.expand();
+						} else {
+							var annotationStart = annotation.start;
+							var annotationEnd = annotation.end;
+							if (annotationStart > start) {
+								annotationStart -= changeCount;
+							}
+							if (annotationEnd > start) {
+								annotationEnd -= changeCount;
+							}
+							if (annotationStart <= start && start < annotationEnd && annotationStart <= end && end < annotationEnd) {
+								var startLine = baseModel.getLineAtOffset(annotation.start);
+								var endLine = baseModel.getLineAtOffset(annotation.end);
+								if (startLine !== endLine) {
+									if (!annotation.expanded) {
+										annotation.expand();
+										annotationModel.modifyAnnotation(annotation);
+									}
+								} else {
+									annotationModel.removeAnnotation(annotation);
+								}
+							}
+						}
+					}
+				}
+				var add = [];
+				for (i = 0; i < newComments.length; i++) {
+					comment = newComments[i];
+					for (var j = 0; j < all.length; j++) {
+						if (all[j].start === comment.start && all[j].end === comment.end) {
+							break;
+						}
+					}
+					if (j === all.length) {
+						annotation = this._createFoldingAnnotation(viewModel, baseModel, comment.start, comment.end);
+						if (annotation) {
+							add.push(annotation);
+						}
+					}
+				}
+				annotationModel.replaceAnnotations(remove, add);
+			}
 		}
 	};
 	return TextStyler;

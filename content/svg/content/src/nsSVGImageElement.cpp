@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSVGImageElement.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
@@ -57,7 +59,7 @@ nsSVGElement::LengthInfo nsSVGImageElement::sLengthInfo[4] =
 
 nsSVGElement::StringInfo nsSVGImageElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Image)
@@ -179,7 +181,7 @@ nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     }
 
     if (aValue) {
-      LoadSVGImage(PR_TRUE, aNotify);
+      LoadSVGImage(true, aNotify);
     } else {
       CancelImageRequests(aNotify);
     }
@@ -192,9 +194,9 @@ void
 nsSVGImageElement::MaybeLoadSVGImage()
 {
   if (mStringAttributes[HREF].IsExplicitlySet() &&
-      (NS_FAILED(LoadSVGImage(PR_FALSE, PR_TRUE)) ||
+      (NS_FAILED(LoadSVGImage(false, true)) ||
        !LoadingEnabled())) {
-    CancelImageRequests(PR_TRUE);
+    CancelImageRequests(true);
   }
 }
 
@@ -234,7 +236,7 @@ nsSVGImageElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap,
   };
   
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGImageElementBase::IsAttributeMapped(name);
 }
 
@@ -263,7 +265,7 @@ nsSVGElement::LengthAttributesInfo
 nsSVGImageElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              NS_ARRAY_LENGTH(sLengthInfo));
+                              ArrayLength(sLengthInfo));
 }
 
 SVGAnimatedPreserveAspectRatio *
@@ -276,14 +278,14 @@ nsSVGElement::StringAttributesInfo
 nsSVGImageElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }
 
 void
 nsSVGImageElement::DidAnimateString(PRUint8 aAttrEnum)
 {
   if (aAttrEnum == HREF) {
-    LoadSVGImage(PR_TRUE, PR_FALSE);
+    LoadSVGImage(true, false);
     return;
   }
 
@@ -293,7 +295,7 @@ nsSVGImageElement::DidAnimateString(PRUint8 aAttrEnum)
 nsresult
 nsSVGImageElement::CopyInnerTo(nsGenericElement* aDest) const
 {
-  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+  if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticImageClone(static_cast<nsSVGImageElement*>(aDest));
   }
   return nsSVGImageElementBase::CopyInnerTo(aDest);

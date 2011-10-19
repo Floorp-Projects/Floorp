@@ -159,8 +159,8 @@ const uint32 JSSLOT_PROXY_HANDLER = 0;
 const uint32 JSSLOT_PROXY_PRIVATE = 1;
 const uint32 JSSLOT_PROXY_EXTRA   = 2;
 /* Function proxies only. */
-const uint32 JSSLOT_PROXY_CALL = 3;
-const uint32 JSSLOT_PROXY_CONSTRUCT = 4;
+const uint32 JSSLOT_PROXY_CALL = 4;
+const uint32 JSSLOT_PROXY_CONSTRUCT = 5;
 
 inline ProxyHandler *
 GetProxyHandler(const JSObject *obj)
@@ -184,17 +184,18 @@ SetProxyPrivate(JSObject *obj, const Value &priv)
 }
 
 inline const Value &
-GetProxyExtra(const JSObject *obj)
+GetProxyExtra(const JSObject *obj, size_t n)
 {
     JS_ASSERT(IsProxy(obj));
-    return GetReservedSlot(obj, JSSLOT_PROXY_EXTRA);
+    return GetReservedSlot(obj, JSSLOT_PROXY_EXTRA + n);
 }
 
 inline void
-SetProxyExtra(JSObject *obj, const Value &extra)
+SetProxyExtra(JSObject *obj, size_t n, const Value &extra)
 {
     JS_ASSERT(IsProxy(obj));
-    SetReservedSlot(obj, JSSLOT_PROXY_EXTRA, extra);
+    JS_ASSERT(n <= 1);
+    SetReservedSlot(obj, JSSLOT_PROXY_EXTRA + n, extra);
 }
 
 JS_FRIEND_API(JSObject *)

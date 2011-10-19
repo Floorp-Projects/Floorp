@@ -64,6 +64,7 @@
 #include "assembler/jit/ExecutableAllocator.h"
 #endif
 
+using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
@@ -115,7 +116,7 @@ JSCompartment::~JSCompartment()
     Foreground::delete_(watchpointMap);
 
 #ifdef DEBUG
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(evalCache); ++i)
+    for (size_t i = 0; i < ArrayLength(evalCache); ++i)
         JS_ASSERT(!evalCache[i]);
 #endif
 }
@@ -650,7 +651,7 @@ JSCompartment::purge(JSContext *cx)
      * not null when we have script owned by an object and not from the eval
      * cache.
      */
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(evalCache); ++i) {
+    for (size_t i = 0; i < ArrayLength(evalCache); ++i) {
         for (JSScript **listHeadp = &evalCache[i]; *listHeadp; ) {
             JSScript *script = *listHeadp;
             JS_ASSERT(GetGCThingTraceKind(script) == JSTRACE_SCRIPT);
@@ -888,11 +889,8 @@ JSCompartment::markTrapClosuresIteratively(JSTracer *trc)
     for (BreakpointSiteMap::Range r = breakpointSites.all(); !r.empty(); r.popFront()) {
         BreakpointSite *site = r.front().value;
 
-        // Mark jsdbgapi state if any. But if we know the scriptObject, put off
-        // marking trap state until we know the scriptObject is live.
-        if (site->trapHandler &&
-            (!site->scriptObject || !IsAboutToBeFinalized(cx, site->scriptObject)))
-        {
+        // Put off marking trap state until we know the script is live.
+        if (site->trapHandler && !IsAboutToBeFinalized(cx, site->script)) {
             if (site->trapClosure.isMarkable() &&
                 IsAboutToBeFinalized(cx, site->trapClosure.toGCThing()))
             {
@@ -909,21 +907,19 @@ JSCompartment::sweepBreakpoints(JSContext *cx)
 {
     for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
         BreakpointSite *site = e.front().value;
-        if (site->scriptObject) {
-            // clearTrap and nextbp are necessary here to avoid possibly
-            // reading *site or *bp after destroying it.
-            bool scriptGone = IsAboutToBeFinalized(cx, site->scriptObject);
-            bool clearTrap = scriptGone && site->hasTrap();
-
-            Breakpoint *nextbp;
-            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
-                nextbp = bp->nextInSite();
-                if (scriptGone || IsAboutToBeFinalized(cx, bp->debugger->toJSObject()))
-                    bp->destroy(cx, &e);
-            }
-
-            if (clearTrap)
-                site->clearTrap(cx, &e);
+        // clearTrap and nextbp are necessary here to avoid possibly
+        // reading *site or *bp after destroying it.
+        bool scriptGone = IsAboutToBeFinalized(cx, site->script);
+        bool clearTrap = scriptGone && site->hasTrap();
+        
+        Breakpoint *nextbp;
+        for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
+            nextbp = bp->nextInSite();
+            if (scriptGone || IsAboutToBeFinalized(cx, bp->debugger->toJSObject()))
+                bp->destroy(cx, &e);
         }
+        
+        if (clearTrap)
+            site->clearTrap(cx, &e);
     }
 }

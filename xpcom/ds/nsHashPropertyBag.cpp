@@ -187,7 +187,7 @@ PropertyHashToArrayFunc (const nsAString &aKey,
     nsIMutableArray *propertyArray =
         static_cast<nsIMutableArray *>(userArg);
     nsSimpleProperty *sprop = new nsSimpleProperty(aKey, aData);
-    propertyArray->AppendElement(sprop, PR_FALSE);
+    propertyArray->AppendElement(sprop, false);
     return PL_DHASH_NEXT;
 }
 

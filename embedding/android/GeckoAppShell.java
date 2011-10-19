@@ -697,11 +697,11 @@ public class GeckoAppShell
 
     // "Installs" an application by creating a shortcut
     static void createShortcut(String aTitle, String aURI, String aIconData, String aType) {
-        Log.w("GeckoAppJava", "createShortcut for " + aURI + " [" + aTitle + "]");
+        Log.w("GeckoAppJava", "createShortcut for " + aURI + " [" + aTitle + "] > " + aType);
 
         // the intent to be launched by the shortcut
         Intent shortcutIntent = new Intent();
-        if (aType == "webapp") {
+        if (aType.equalsIgnoreCase("webapp")) {
             shortcutIntent.setAction("org.mozilla.gecko.WEBAPP");
             shortcutIntent.putExtra("args", "--webapp=" + aURI);
         } else {
@@ -1334,11 +1334,11 @@ public class GeckoAppShell
         try {
             int showPassword =
                 Settings.System.getInt(GeckoApp.mAppContext.getContentResolver(),
-                                       Settings.System.TEXT_SHOW_PASSWORD);
+                                       Settings.System.TEXT_SHOW_PASSWORD, 1);
             return (showPassword > 0);
         }
         catch (Exception e) {
-            return false;
+            return true;
         }
     }
     public static void addPluginView(final View view,
@@ -1531,7 +1531,7 @@ public class GeckoAppShell
 
     static int kPreferedFps = 25;
     static byte[] sCameraBuffer = null;
- 
+
     static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
         Log.i("GeckoAppJava", "initCamera(" + aContentType + ", " + aWidth + "x" + aHeight + ") on thread " + Thread.currentThread().getId());
 
@@ -1548,7 +1548,12 @@ public class GeckoAppShell
         }
 
         try {
-            sCamera = android.hardware.Camera.open(aCamera);
+            // no front/back camera before API level 9
+            if (Build.VERSION.SDK_INT >= 9)
+                sCamera = android.hardware.Camera.open(aCamera);
+            else
+                sCamera = android.hardware.Camera.open();
+
             android.hardware.Camera.Parameters params = sCamera.getParameters();
             params.setPreviewFormat(ImageFormat.NV21);
 
@@ -1579,14 +1584,23 @@ public class GeckoAppShell
                     bufferSize = size.width * size.height;
                 }
             }
-            
+
+            try {
+                sCamera.setPreviewDisplay(GeckoApp.cameraView.getHolder());
+            } catch(IOException e) {
+                Log.e("GeckoAppJava", "Error setPreviewDisplay:", e);
+            } catch(RuntimeException e) {
+                Log.e("GeckoAppJava", "Error setPreviewDisplay:", e);
+            }
+
             sCamera.setParameters(params);
             sCameraBuffer = new byte[(bufferSize * 12) / 8];
             sCamera.addCallbackBuffer(sCameraBuffer);
             sCamera.setPreviewCallbackWithBuffer(new android.hardware.Camera.PreviewCallback() {
                 public void onPreviewFrame(byte[] data, android.hardware.Camera camera) {
                     cameraCallbackBridge(data);
-                    sCamera.addCallbackBuffer(sCameraBuffer);
+                    if (sCamera != null)
+                        sCamera.addCallbackBuffer(sCameraBuffer);
                 }
             });
             sCamera.startPreview();

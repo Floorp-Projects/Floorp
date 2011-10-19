@@ -148,7 +148,7 @@ public:
                                const PRUnichar** aColon)
     {
         nsIParserService* ps = nsContentUtils::GetParserService();
-        return ps && NS_SUCCEEDED(ps->CheckQName(aQName, PR_TRUE, aColon));
+        return ps && NS_SUCCEEDED(ps->CheckQName(aQName, true, aColon));
     }
 
     /**

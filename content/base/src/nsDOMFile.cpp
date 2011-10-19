@@ -41,7 +41,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsDOMError.h"
 #include "nsICharsetAlias.h"
 #include "nsICharsetDetector.h"
@@ -148,7 +148,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMFileBase)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(Blob, !mIsFile)
 NS_INTERFACE_MAP_END
 
-// Threadsafe when GetMutable() == PR_FALSE
+// Threadsafe when GetMutable() == false
 NS_IMPL_THREADSAFE_ADDREF(nsDOMFileBase)
 NS_IMPL_THREADSAFE_RELEASE(nsDOMFileBase)
 
@@ -419,7 +419,7 @@ nsDOMFileFile::GetType(nsAString &aType)
     }
 
     AppendUTF8toUTF16(mimeType, mContentType);
-    mContentType.SetIsVoid(PR_FALSE);
+    mContentType.SetIsVoid(false);
   }
 
   aType = mContentType;
@@ -488,7 +488,7 @@ nsDOMFileFile::Initialize(nsISupports* aOwner,
     }
 
     nsCOMPtr<nsILocalFile> localFile;
-    rv = NS_NewLocalFile(xpcomStr, PR_FALSE, getter_AddRefs(localFile));
+    rv = NS_NewLocalFile(xpcomStr, false, getter_AddRefs(localFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
     file = do_QueryInterface(localFile);

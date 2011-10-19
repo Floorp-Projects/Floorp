@@ -104,6 +104,9 @@
 
 #include "mozilla/ipc/RPCChannel.h"
 
+/* This must occur *after* ipc/RPCChannel.h to avoid typedefs conflicts. */
+#include "mozilla/Util.h"
+
 #include "nsWindow.h"
 
 #include <windows.h>
@@ -138,7 +141,7 @@
 #include "nsRect.h"
 #include "nsThreadUtils.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -503,7 +506,6 @@ nsWindow::Create(nsIWidget *aParent,
                  const nsIntRect &aRect,
                  EVENT_CALLBACK aHandleEventFunction,
                  nsDeviceContext *aContext,
-                 nsIAppShell *aAppShell,
                  nsIToolkit *aToolkit,
                  nsWidgetInitData *aInitData)
 {
@@ -521,8 +523,7 @@ nsWindow::Create(nsIWidget *aParent,
   mIsTopWidgetWindow = (nsnull == baseParent);
   mBounds = aRect;
 
-  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
-             aAppShell, aToolkit, aInitData);
+  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
 
   HWND parent;
   if (aParent) { // has a nsIWidget parent
@@ -2651,32 +2652,46 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(bool aShouldHide)
 
 /**************************************************************
  *
- * SECTION: nsIWidget::Invalidate
+ * SECTION: nsWindow::Invalidate
  *
  * Invalidate an area of the client for painting.
  *
  **************************************************************/
 
 // Invalidate this component visible area
-NS_METHOD nsWindow::Invalidate(bool aIsSynchronous)
+NS_METHOD nsWindow::Invalidate(bool aIsSynchronous, 
+                               bool aEraseBackground, 
+                               bool aUpdateNCArea,
+                               bool aIncludeChildren)
 {
-  if (mWnd)
-  {
+  if (!mWnd) {
+    return NS_OK;
+  }
+
 #ifdef WIDGET_DEBUG_OUTPUT
-    debug_DumpInvalidate(stdout,
-                         this,
-                         nsnull,
-                         aIsSynchronous,
-                         nsCAutoString("noname"),
-                         (PRInt32) mWnd);
+  debug_DumpInvalidate(stdout,
+                       this,
+                       nsnull,
+                       aIsSynchronous,
+                       nsCAutoString("noname"),
+                       (PRInt32) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
 
-    VERIFY(::InvalidateRect(mWnd, NULL, FALSE));
-
-    if (aIsSynchronous) {
-      VERIFY(::UpdateWindow(mWnd));
-    }
+  DWORD flags = RDW_INVALIDATE;
+  if (aEraseBackground) {
+    flags |= RDW_ERASE;
   }
+  if (aIsSynchronous) {
+    flags |= RDW_UPDATENOW;
+  }
+  if (aUpdateNCArea) {
+    flags |= RDW_FRAME;
+  }
+  if (aIncludeChildren) {
+    flags |= RDW_ALLCHILDREN;
+  }
+
+  VERIFY(::RedrawWindow(mWnd, NULL, NULL, flags));
   return NS_OK;
 }
 
@@ -3102,20 +3117,15 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
   if (!mWnd)
     return NS_ERROR_NOT_INITIALIZED;
 
-  // Don't flash if the flash count is 0 or if the
-  // top level window is already active.
+  HWND flashWnd = GetTopLevelHWND(mWnd, false, false);
   HWND fgWnd = ::GetForegroundWindow();
-  if (aCycleCount == 0 || fgWnd == GetTopLevelHWND(mWnd))
+  // Don't flash if the flash count is 0 or if the foreground window is our
+  // window handle or that of our owned-most window.
+  if (aCycleCount == 0 || 
+      flashWnd == fgWnd ||
+      flashWnd == GetTopLevelHWND(fgWnd, false, false)) {
     return NS_OK;
-
-  HWND flashWnd = mWnd;
-  while (HWND ownerWnd = ::GetWindow(flashWnd, GW_OWNER)) {
-    flashWnd = ownerWnd;
   }
-
-  // Don't flash if the owner window is active either.
-  if (fgWnd == flashWnd)
-    return NS_OK;
 
   DWORD defaultCycleCount = 0;
   ::SystemParametersInfo(SPI_GETFOREGROUNDFLASHCOUNT, 0, &defaultCycleCount, 0);
@@ -3694,30 +3704,30 @@ bool nsWindow::DispatchCommandEvent(PRUint32 aEventCommand)
   nsCOMPtr<nsIAtom> command;
   switch (aEventCommand) {
     case APPCOMMAND_BROWSER_BACKWARD:
-      command = nsWidgetAtoms::Back;
+      command = nsGkAtoms::Back;
       break;
     case APPCOMMAND_BROWSER_FORWARD:
-      command = nsWidgetAtoms::Forward;
+      command = nsGkAtoms::Forward;
       break;
     case APPCOMMAND_BROWSER_REFRESH:
-      command = nsWidgetAtoms::Reload;
+      command = nsGkAtoms::Reload;
       break;
     case APPCOMMAND_BROWSER_STOP:
-      command = nsWidgetAtoms::Stop;
+      command = nsGkAtoms::Stop;
       break;
     case APPCOMMAND_BROWSER_SEARCH:
-      command = nsWidgetAtoms::Search;
+      command = nsGkAtoms::Search;
       break;
     case APPCOMMAND_BROWSER_FAVORITES:
-      command = nsWidgetAtoms::Bookmarks;
+      command = nsGkAtoms::Bookmarks;
       break;
     case APPCOMMAND_BROWSER_HOME:
-      command = nsWidgetAtoms::Home;
+      command = nsGkAtoms::Home;
       break;
     default:
       return false;
   }
-  nsCommandEvent event(true, nsWidgetAtoms::onAppCommand, command, this);
+  nsCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
 
   InitEvent(event);
   DispatchWindowEvent(&event);
@@ -4687,7 +4697,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
       // Invalidate the window so that the repaint will
       // pick up the new theme.
-      Invalidate(false);
+      Invalidate(true, true, true, true);
     }
     break;
 
@@ -5366,7 +5376,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
     DispatchStandardEvent(NS_THEMECHANGED);
     UpdateGlass();
-    Invalidate(false);
+    Invalidate(true, true, true, true);
     break;
 #endif
 
@@ -6948,18 +6958,18 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       if (KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
         numOfUniChars = numOfShiftStates =
           gKbdLayout.GetUniChars(uniChars, shiftStates,
-                                 NS_ARRAY_LENGTH(uniChars));
+                                 ArrayLength(uniChars));
       }
 
       if (aModKeyState.mIsControlDown ^ aModKeyState.mIsAltDown) {
         PRUint8 capsLockState = (::GetKeyState(VK_CAPITAL) & 1) ? eCapsLock : 0;
         numOfUnshiftedChars =
           gKbdLayout.GetUniCharsWithShiftState(virtualKeyCode, capsLockState,
-                       unshiftedChars, NS_ARRAY_LENGTH(unshiftedChars));
+                       unshiftedChars, ArrayLength(unshiftedChars));
         numOfShiftedChars =
           gKbdLayout.GetUniCharsWithShiftState(virtualKeyCode,
                        capsLockState | eShift,
-                       shiftedChars, NS_ARRAY_LENGTH(shiftedChars));
+                       shiftedChars, ArrayLength(shiftedChars));
 
         // The current keyboard cannot input alphabets or numerics,
         // we should append them for Shortcut/Access keys.
@@ -7215,7 +7225,7 @@ LRESULT nsWindow::OnCharRaw(UINT charCode, UINT aScanCode,
 void
 nsWindow::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifiers)
 {
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sModifierKeyMap); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(sModifierKeyMap); ++i) {
     const PRUint32* map = sModifierKeyMap[i];
     if (aModifiers & map[0]) {
       aArray->AppendElement(KeyPair(map[1], map[2]));
@@ -7638,7 +7648,7 @@ static bool IsElantechHelperWindow(HWND aHWND)
   HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
   if (hProcess) {
     PRUnichar path[256] = {L'\0'};
-    if (pGetProcessImageFileName(hProcess, path, NS_ARRAY_LENGTH(path))) {
+    if (pGetProcessImageFileName(hProcess, path, ArrayLength(path))) {
       int pathLength = lstrlenW(path);
       if (pathLength >= filenameSuffixLength) {
         if (lstrcmpiW(path + pathLength - filenameSuffixLength, filenameSuffix) == 0) {
@@ -8881,7 +8891,9 @@ nsWindow* nsWindow::GetTopLevelWindow(bool aStopOnDialogOrPopup)
 // of GetTopLevelWindow method.  Because this is checking whether the window
 // is top level only in Win32 window system.  Therefore, the result window
 // may not be managed by us.
-HWND nsWindow::GetTopLevelHWND(HWND aWnd, bool aStopOnDialogOrPopup)
+HWND nsWindow::GetTopLevelHWND(HWND aWnd, 
+                               bool aStopIfNotChild, 
+                               bool aStopIfNotPopup)
 {
   HWND curWnd = aWnd;
   HWND topWnd = NULL;
@@ -8890,7 +8902,7 @@ HWND nsWindow::GetTopLevelHWND(HWND aWnd, bool aStopOnDialogOrPopup)
   while (curWnd) {
     topWnd = curWnd;
 
-    if (aStopOnDialogOrPopup) {
+    if (aStopIfNotChild) {
       DWORD_PTR style = ::GetWindowLongPtrW(curWnd, GWL_STYLE);
 
       VERIFY_WINDOW_STYLE(style);
@@ -8900,6 +8912,12 @@ HWND nsWindow::GetTopLevelHWND(HWND aWnd, bool aStopOnDialogOrPopup)
     }
 
     upWnd = ::GetParent(curWnd); // Parent or owner (if has no parent)
+
+    // GetParent will only return the owner if the passed in window 
+    // has the WS_POPUP style.
+    if (!upWnd && !aStopIfNotPopup) {
+      upWnd = ::GetWindow(curWnd, GW_OWNER);
+    }
     curWnd = upWnd;
   }
 

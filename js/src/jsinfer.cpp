@@ -39,7 +39,6 @@
 
 #include "jsapi.h"
 #include "jsautooplen.h"
-#include "jsbit.h"
 #include "jsbool.h"
 #include "jsdate.h"
 #include "jsexn.h"
@@ -52,12 +51,11 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jscntxt.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsstr.h"
-#include "jstl.h"
 #include "jsiter.h"
 
+#include "frontend/TokenStream.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
 
@@ -254,6 +252,15 @@ types::TypeObjectString(TypeObject *type)
     return TypeString(Type::ObjectType(type));
 }
 
+unsigned JSScript::id() {
+    if (!id_) {
+        id_ = ++compartment()->types.scriptCount;
+        InferSpew(ISpewOps, "script #%u: %p %s:%d",
+                  id_, this, filename ? filename : "<null>", lineno);
+    }
+    return id_;
+}
+
 void
 types::InferSpew(SpewChannel channel, const char *fmt, ...)
 {
@@ -388,30 +395,31 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
     if (!callExisting)
         return;
 
+    /* If any type is possible, there's no need to worry about specifics. */
     if (flags & TYPE_FLAG_UNKNOWN) {
         cx->compartment->types.addPending(cx, constraint, this, Type::UnknownType());
-        cx->compartment->types.resolvePending(cx);
-        return;
-    }
-
-    for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
-        if (flags & flag) {
-            Type type = Type::PrimitiveType(TypeFlagPrimitive(flag));
-            cx->compartment->types.addPending(cx, constraint, this, type);
+    } else {
+        /* Enqueue type set members stored as bits. */ 
+        for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
+            if (flags & flag) {
+                Type type = Type::PrimitiveType(TypeFlagPrimitive(flag));
+                cx->compartment->types.addPending(cx, constraint, this, type);
+            }
         }
-    }
 
-    if (flags & TYPE_FLAG_ANYOBJECT) {
-        cx->compartment->types.addPending(cx, constraint, this, Type::AnyObjectType());
-        cx->compartment->types.resolvePending(cx);
-        return;
-    }
-
-    unsigned count = getObjectCount();
-    for (unsigned i = 0; i < count; i++) {
-        TypeObjectKey *object = getObject(i);
-        if (object)
-            cx->compartment->types.addPending(cx, constraint, this, Type::ObjectType(object));
+        /* If any object is possible, skip specifics. */
+        if (flags & TYPE_FLAG_ANYOBJECT) {
+            cx->compartment->types.addPending(cx, constraint, this, Type::AnyObjectType());
+        } else {
+            /* Enqueue specific object types. */
+            unsigned count = getObjectCount();
+            for (unsigned i = 0; i < count; i++) {
+                TypeObjectKey *object = getObject(i);
+                if (object)
+                    cx->compartment->types.addPending(cx, constraint, this,
+                                                      Type::ObjectType(object));
+            }
+        }
     }
 
     cx->compartment->types.resolvePending(cx);
@@ -808,6 +816,10 @@ void ScriptAnalysis::breakTypeBarriers(JSContext *cx, uint32 offset, bool all)
 {
     pruneTypeBarriers(cx, offset);
 
+    bool resetResolving = !cx->compartment->types.resolving;
+    if (resetResolving)
+        cx->compartment->types.resolving = true;
+
     TypeBarrier **pbarrier = &getCode(offset).typeBarriers;
     while (*pbarrier) {
         TypeBarrier *barrier = *pbarrier;
@@ -832,6 +844,11 @@ void ScriptAnalysis::breakTypeBarriers(JSContext *cx, uint32 offset, bool all)
         } else {
             pbarrier = &barrier->next;
         }
+    }
+
+    if (resetResolving) {
+        cx->compartment->types.resolving = false;
+        cx->compartment->types.resolvePending(cx);
     }
 }
 
@@ -864,12 +881,8 @@ public:
 
     void newType(JSContext *cx, TypeSet *source, Type type)
     {
-        if (!target->hasType(type)) {
+        if (!target->hasType(type))
             script->analysis()->addTypeBarrier(cx, pc, target, type);
-            return;
-        }
-
-        target->addType(cx, type);
     }
 };
 
@@ -1149,7 +1162,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
                 }
             }
 
-            if (native == js::array_pop)
+            if (native == js::array_pop || native == js::array_shift)
                 callsite->thisTypes->addGetProperty(cx, script, pc, callsite->returnTypes, JSID_VOID);
 
             if (native == js_Array) {
@@ -1758,10 +1771,32 @@ TypeSet::knownNonEmpty(JSContext *cx)
     if (baseFlags() != 0 || baseObjectCount() != 0)
         return true;
 
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreeze>(
-                cx->compartment->types.compiledScript), false);
+    addFreeze(cx);
 
     return false;
+}
+
+bool
+TypeSet::knownSubset(JSContext *cx, TypeSet *other)
+{
+    if ((baseFlags() & other->baseFlags()) != baseFlags())
+        return false;
+
+    if (unknownObject()) {
+        JS_ASSERT(other->unknownObject());
+    } else {
+        for (unsigned i = 0; i < getObjectCount(); i++) {
+            TypeObjectKey *obj = getObject(i);
+            if (!obj)
+                continue;
+            if (!other->hasType(Type::ObjectType(obj)))
+                return false;
+        }
+    }
+
+    addFreeze(cx);
+
+    return true;
 }
 
 int
@@ -2018,14 +2053,14 @@ types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
     return false;
 }
 
-void
+bool
 TypeCompartment::growPendingArray(JSContext *cx)
 {
     unsigned newCapacity = js::Max(unsigned(100), pendingCapacity * 2);
     PendingWork *newArray = (PendingWork *) OffTheBooks::calloc_(newCapacity * sizeof(PendingWork));
     if (!newArray) {
         cx->compartment->types.setPendingNukeTypes(cx);
-        return;
+        return false;
     }
 
     memcpy(newArray, pendingArray, pendingCount * sizeof(PendingWork));
@@ -2033,6 +2068,8 @@ TypeCompartment::growPendingArray(JSContext *cx)
 
     pendingArray = newArray;
     pendingCapacity = newCapacity;
+
+    return true;
 }
 
 void
@@ -2339,6 +2376,7 @@ void
 TypeCompartment::print(JSContext *cx, bool force)
 {
     JSCompartment *compartment = this->compartment();
+    AutoEnterAnalysis enter(compartment);
 
     if (!force && !InferSpewActive(ISpewResult))
         return;
@@ -2720,6 +2758,14 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
             if (shape)
                 UpdatePropertyType(cx, &base->types, singleton, shape, false);
         }
+
+        if (singleton->watched()) {
+            /*
+             * Mark the property as configured, to inhibit optimizations on it
+             * and avoid bypassing the watchpoint handler.
+             */
+            base->types.setOwnProperty(cx, true);
+        }
     }
 
     *pprop = base;
@@ -2886,7 +2932,7 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
 
     this->flags |= flags;
 
-    InferSpew(ISpewOps, "%s: setFlags %u", TypeObjectString(this), flags);
+    InferSpew(ISpewOps, "%s: setFlags 0x%x", TypeObjectString(this), flags);
 
     ObjectStateChange(cx, this, false, false);
 }
@@ -4693,7 +4739,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
 void
 ScriptAnalysis::printTypes(JSContext *cx)
 {
-    AutoEnterAnalysis enter(cx);
+    AutoEnterAnalysis enter(script->compartment());
     TypeCompartment *compartment = &script->compartment()->types;
 
     /*
@@ -4925,14 +4971,6 @@ IsAboutToBeFinalized(JSContext *cx, TypeObjectKey *key)
 {
     /* Mask out the low bit indicating whether this is a type or JS object. */
     return !reinterpret_cast<const gc::Cell *>((jsuword) key & ~1)->isMarked();
-}
-
-inline bool
-ScriptIsAboutToBeFinalized(JSContext *cx, JSScript *script, JSFunction *fun)
-{
-    return script->isCachedEval ||
-        (script->u.object && IsAboutToBeFinalized(cx, script->u.object)) ||
-        (fun && IsAboutToBeFinalized(cx, fun));
 }
 
 void

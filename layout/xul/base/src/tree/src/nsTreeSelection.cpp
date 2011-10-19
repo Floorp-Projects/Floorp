@@ -45,7 +45,7 @@
 #include "nsITreeView.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
@@ -197,12 +197,12 @@ struct nsTreeRange
 
   bool Contains(PRInt32 aIndex) {
     if (aIndex >= mMin && aIndex <= mMax)
-      return PR_TRUE;
+      return true;
 
     if (mNext)
       return mNext->Contains(aIndex);
 
-    return PR_FALSE;
+    return false;
   }
 
   PRInt32 Count() {
@@ -279,7 +279,7 @@ struct nsTreeRange
 
 nsTreeSelection::nsTreeSelection(nsITreeBoxObject* aTree)
   : mTree(aTree),
-    mSuppressed(PR_FALSE),
+    mSuppressed(false),
     mCurrentIndex(-1),
     mShiftSelectPivot(-1),
     mFirstRange(nsnull)
@@ -355,7 +355,7 @@ NS_IMETHODIMP nsTreeSelection::IsSelected(PRInt32 aIndex, bool* aResult)
   if (mFirstRange)
     *aResult = mFirstRange->Contains(aIndex);
   else
-    *aResult = PR_FALSE;
+    *aResult = false;
   return NS_OK;
 }
 
@@ -364,7 +364,7 @@ NS_IMETHODIMP nsTreeSelection::TimedSelect(PRInt32 aIndex, PRInt32 aMsec)
   bool suppressSelect = mSuppressed;
 
   if (aMsec != -1)
-    mSuppressed = PR_TRUE;
+    mSuppressed = true;
 
   nsresult rv = Select(aIndex);
   if (NS_FAILED(rv))
@@ -689,7 +689,7 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
   nsRefPtr<nsPLDOMEvent> event =
     new nsPLDOMEvent(treeDOMNode,
                      (aIndex != -1 ? DOMMenuItemActive : DOMMenuItemInactive),
-                     PR_TRUE, PR_FALSE);
+                     true, false);
   return event->PostDOMEvent();
 }
 
@@ -786,14 +786,14 @@ nsTreeSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
       else if (aIndex <= curr->mMin) {  
         // adjustment happens before the start of the range, so shift down
         ADD_NEW_RANGE(mFirstRange, this, curr->mMin + aCount, curr->mMax + aCount);
-        selChanged = PR_TRUE;
+        selChanged = true;
       }
       else {
         // adjustment happen inside the range.
         // break apart the range and create two ranges
         ADD_NEW_RANGE(mFirstRange, this, curr->mMin, aIndex - 1);
         ADD_NEW_RANGE(mFirstRange, this, aIndex + aCount, curr->mMax + aCount);
-        selChanged = PR_TRUE;
+        selChanged = true;
       }
     }
     else {
@@ -804,7 +804,7 @@ nsTreeSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
       }
       else {
         // remember, aCount is negative
-        selChanged = PR_TRUE;
+        selChanged = true;
         PRInt32 lastIndexOfAdjustment = aIndex - aCount - 1;
         if (aIndex <= curr->mMin) {
           if (lastIndexOfAdjustment < curr->mMin) {
@@ -875,7 +875,7 @@ nsTreeSelection::FireOnSelectHandler()
   NS_ENSURE_STATE(node);
 
   nsRefPtr<nsPLDOMEvent> event =
-    new nsPLDOMEvent(node, NS_LITERAL_STRING("select"), PR_TRUE, PR_FALSE);
+    new nsPLDOMEvent(node, NS_LITERAL_STRING("select"), true, false);
   event->RunDOMEventWhenSafe();
   return NS_OK;
 }

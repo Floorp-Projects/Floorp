@@ -66,14 +66,13 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jspropertycache.h"
-#include "jsemit.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jsstaticcheck.h"
 #include "jstracer.h"
 #include "jslibmath.h"
-#include "jsvector.h"
+
+#include "frontend/BytecodeGenerator.h"
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MethodJIT-inl.h"
@@ -833,7 +832,7 @@ js::CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs)
     bool isFunction;
     const char *type, *name;
 
-    if (!obj->lookupProperty(cx, id, &obj2, &prop))
+    if (!obj->lookupGeneric(cx, id, &obj2, &prop))
         return false;
     if (!prop)
         return true;
@@ -1070,6 +1069,14 @@ js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
     JS_ASSERT(!FunctionClass.construct);
     CallArgs args = argsRef;
 
+    /*
+     * Callers are not required to initialize 'this' when constructing, but
+     * make sure the value is initialized in case we are about to call a native
+     * or if something (e.g. type inference) tries to inspect the frame before
+     * its 'this' value is constructed.
+     */
+    args.thisv().setMagicWithObjectOrNullPayload(NULL);
+
     if (args.calleev().isObject()) {
         JSObject *callee = &args.callee();
         Class *clasp = callee->getClass();
@@ -1077,7 +1084,6 @@ js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
             JSFunction *fun = callee->toFunction();
 
             if (fun->isConstructor()) {
-                args.thisv().setMagicWithObjectOrNullPayload(NULL);
                 Probes::calloutBegin(cx, fun);
                 bool ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
                 Probes::calloutEnd(cx, fun);
@@ -1093,10 +1099,8 @@ js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
             JS_ASSERT(args.rval().isObject());
             return true;
         }
-        if (clasp->construct) {
-            args.thisv().setMagicWithObjectOrNullPayload(NULL);
+        if (clasp->construct)
             return CallJSNativeConstructor(cx, clasp->construct, args);
-        }
     }
 
 error:
@@ -2475,7 +2479,7 @@ BEGIN_CASE(JSOP_IN)
     FETCH_ELEMENT_ID(obj, -2, id);
     JSObject *obj2;
     JSProperty *prop;
-    if (!obj->lookupProperty(cx, id, &obj2, &prop))
+    if (!obj->lookupGeneric(cx, id, &obj2, &prop))
         goto error;
     bool cond = prop != NULL;
     TRY_BRANCH_AFTER_COND(cond, 2);
@@ -2706,7 +2710,7 @@ BEGIN_CASE(JSOP_BINDNAME)
 END_CASE(JSOP_BINDNAME)
 
 BEGIN_CASE(JSOP_IMACOP)
-    JS_ASSERT(JS_UPTRDIFF(regs.fp()->imacropc(), script->code) < script->length);
+    JS_ASSERT(UnsignedPtrDiff(regs.fp()->imacropc(), script->code) < script->length);
     op = JSOp(*regs.fp()->imacropc());
     DO_OP();
 
@@ -3537,6 +3541,7 @@ BEGIN_CASE(JSOP_GETELEM)
 {
     Value &lref = regs.sp[-2];
     Value &rref = regs.sp[-1];
+    Value &rval = regs.sp[-2];
     if (lref.isString() && rref.isInt32()) {
         JSString *str = lref.toString();
         int32_t i = rref.toInt32();
@@ -3544,9 +3549,9 @@ BEGIN_CASE(JSOP_GETELEM)
             str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, size_t(i));
             if (!str)
                 goto error;
+            rval.setString(str);
+            TypeScript::Monitor(cx, script, regs.pc, rval);
             regs.sp--;
-            regs.sp[-1].setString(str);
-            TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
             len = JSOP_GETELEM_LENGTH;
             DO_NEXT_OP(len);
         }
@@ -3554,9 +3559,9 @@ BEGIN_CASE(JSOP_GETELEM)
 
     if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
         if (rref.isInt32() && size_t(rref.toInt32()) < regs.fp()->numActualArgs()) {
+            rval = regs.fp()->canonicalActualArg(rref.toInt32());
+            TypeScript::Monitor(cx, script, regs.pc, rval);
             regs.sp--;
-            regs.sp[-1] = regs.fp()->canonicalActualArg(rref.toInt32());
-            TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
             len = JSOP_GETELEM_LENGTH;
             DO_NEXT_OP(len);
         }
@@ -3567,58 +3572,48 @@ BEGIN_CASE(JSOP_GETELEM)
     JSObject *obj;
     VALUE_TO_OBJECT(cx, &lref, obj);
 
-    const Value *copyFrom;
-    Value rval;
-    jsid id;
-    if (rref.isInt32()) {
-        int32_t i = rref.toInt32();
+    uint32 index;
+    if (IsDefinitelyIndex(rref, &index)) {
         if (obj->isDenseArray()) {
-            jsuint idx = jsuint(i);
-            if (idx < obj->getDenseArrayInitializedLength()) {
-                copyFrom = &obj->getDenseArrayElement(idx);
-                if (!copyFrom->isMagic())
+            if (index < obj->getDenseArrayInitializedLength()) {
+                rval = obj->getDenseArrayElement(index);
+                if (!rval.isMagic())
                     goto end_getelem;
             }
         } else if (obj->isArguments()) {
-            uint32 arg = uint32(i);
-            ArgumentsObject *argsobj = obj->asArguments();
-
-            if (arg < argsobj->initialLength()) {
-                copyFrom = &argsobj->element(arg);
-                if (!copyFrom->isMagic(JS_ARGS_HOLE)) {
-                    if (StackFrame *afp = argsobj->maybeStackFrame())
-                        copyFrom = &afp->canonicalActualArg(arg);
-                    goto end_getelem;
-                }
-            }
+            if (obj->asArguments()->getElement(index, &rval))
+                goto end_getelem;
         }
-        if (JS_LIKELY(INT_FITS_IN_JSID(i)))
-            id = INT_TO_JSID(i);
-        else
-            goto intern_big_int;
+
+        if (!obj->getElement(cx, index, &rval))
+            goto error;
     } else {
-        int32_t i;
-        if (ValueFitsInInt32(rref, &i) && INT_FITS_IN_JSID(i)) {
-            id = INT_TO_JSID(i);
-        } else {
-          intern_big_int:
-            if (!js_InternNonIntElementId(cx, obj, rref, &id))
+        if (script->hasAnalysis() && !regs.fp()->hasImacropc())
+            script->analysis()->getCode(regs.pc).getStringElement = true;
+
+        SpecialId special;
+        if (ValueIsSpecial(obj, &rref, &special, cx)) {
+            if (!obj->getSpecial(cx, special, &rval))
                 goto error;
+        } else {
+            JSAtom *name;
+            if (!js_ValueToAtom(cx, rref, &name))
+                goto error;
+
+            if (name->isIndex(&index)) {
+                if (!obj->getElement(cx, index, &rval))
+                    goto error;
+            } else {
+                if (!obj->getProperty(cx, name->asPropertyName(), &rval))
+                    goto error;
+            }
         }
     }
 
-    if (JSID_IS_STRING(id) && script->hasAnalysis() && !regs.fp()->hasImacropc())
-        script->analysis()->getCode(regs.pc).getStringElement = true;
-
-    if (!obj->getGeneric(cx, id, &rval))
-        goto error;
-    copyFrom = &rval;
-
   end_getelem:
+    assertSameCompartment(cx, rval);
+    TypeScript::Monitor(cx, script, regs.pc, rval);
     regs.sp--;
-    regs.sp[-1] = *copyFrom;
-    assertSameCompartment(cx, regs.sp[-1]);
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_GETELEM)
 
@@ -4281,7 +4276,7 @@ BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
 {
     uint32 index = GET_INDEX(regs.pc);
-    JSAtom *atom = atoms[index];
+    PropertyName *name = atoms[index]->asPropertyName();
 
     JSObject *obj = &regs.fp()->varObj();
     JS_ASSERT(!obj->getOps()->defineProperty);
@@ -4290,7 +4285,7 @@ BEGIN_CASE(JSOP_DEFVAR)
         attrs |= JSPROP_PERMANENT;
 
     /* Lookup id in order to check for redeclaration problems. */
-    jsid id = ATOM_TO_JSID(atom);
+    jsid id = ATOM_TO_JSID(name);
     bool shouldDefine;
     if (op == JSOP_DEFVAR) {
         /*
@@ -4299,7 +4294,7 @@ BEGIN_CASE(JSOP_DEFVAR)
          */
         JSProperty *prop;
         JSObject *obj2;
-        if (!obj->lookupProperty(cx, id, &obj2, &prop))
+        if (!obj->lookupProperty(cx, name, &obj2, &prop))
             goto error;
         shouldDefine = (!prop || obj2 != obj);
     } else {
@@ -4384,10 +4379,11 @@ BEGIN_CASE(JSOP_DEFFUN)
     JSObject *parent = &regs.fp()->varObj();
 
     /* ES5 10.5 (NB: with subsequent errata). */
-    jsid id = ATOM_TO_JSID(fun->atom);
+    PropertyName *name = fun->atom->asPropertyName();
+    jsid id = ATOM_TO_JSID(name);
     JSProperty *prop = NULL;
     JSObject *pobj;
-    if (!parent->lookupProperty(cx, id, &pobj, &prop))
+    if (!parent->lookupProperty(cx, name, &pobj, &prop))
         goto error;
 
     Value rval = ObjectValue(*obj);

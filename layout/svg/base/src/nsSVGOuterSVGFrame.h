@@ -146,7 +146,7 @@ public:
 
   /* Methods to allow descendant nsSVGForeignObjectFrame frames to register and
    * unregister themselves with their nearest nsSVGOuterSVGFrame ancestor so
-   * they can be reflowed. The methods return PR_TRUE on success or PR_FALSE on
+   * they can be reflowed. The methods return true on success or false on
    * failure.
    */
   void RegisterForeignObject(nsSVGForeignObjectFrame* aFrame);

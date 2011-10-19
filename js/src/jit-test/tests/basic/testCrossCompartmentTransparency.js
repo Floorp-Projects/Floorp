@@ -2,16 +2,18 @@
 
 var g1 = newGlobal('same-compartment');
 var g2 = newGlobal('new-compartment');
-var scriptedProxy = Proxy.create(
-  { getOwnPropertyDescriptor: function() assertEq(true,false),
-    getPropertyDescriptor: function() assertEq(true,false),
-    getOwnPropertyNames: function() assertEq(true,false),
-    getPropertyNames: function() assertEq(true,false),
-    defineProperty: function() assertEq(true,false),
-    delete: function() assertEq(true,false),
-    fix: function() assertEq(true,false), },
-  Object.prototype
-);
+var proxyStr = "Proxy.create(                                    "+
+"  { getOwnPropertyDescriptor: function() assertEq(true,false),  "+
+"    getPropertyDescriptor: function() assertEq(true,false),     "+
+"    getOwnPropertyNames: function() assertEq(true,false),       "+
+"    getPropertyNames: function() assertEq(true,false),          "+
+"    defineProperty: function() assertEq(true,false),            "+
+"    delete: function() assertEq(true,false),                    "+
+"    fix: function() assertEq(true,false), },                    "+
+"  Object.prototype                                              "+
+");                                                              ";
+var proxy1 = g1.eval(proxyStr);
+var proxy2 = g2.eval(proxyStr);
 
 function test(str, f) {
     "use strict";
@@ -40,7 +42,16 @@ function test(str, f) {
     assertEq(threw, true);
     threw = false;
     try {
-        f(scriptedProxy);
+        f(proxy1);
+    } catch (e) {
+        assertEq(Object.prototype.toString.call(e), "[object Error]");
+        assertEq(e.name, "TypeError");
+        threw = true;
+    }
+    assertEq(threw, true);
+    threw = false;
+    try {
+        f(proxy2);
     } catch (e) {
         assertEq(Object.prototype.toString.call(e), "[object Error]");
         assertEq(e.name, "TypeError");
@@ -81,6 +92,16 @@ test("new Uint32Array(1)", function(a) Uint32Array.prototype.subarray.call(a).to
 test("new Float32Array(1)", function(a) Float32Array.prototype.subarray.call(a).toString());
 test("new Float64Array(1)", function(a) Float64Array.prototype.subarray.call(a).toString());
 test("new Uint8ClampedArray(1)", function(a) Uint8ClampedArray.prototype.subarray.call(a).toString());
+
+test("new Int8Array(1)", function(a) Int8Array.subarray(a).toString());
+test("new Uint8Array(1)", function(a) Uint8Array.subarray(a).toString());
+test("new Int16Array(1)", function(a) Int16Array.subarray(a).toString());
+test("new Uint16Array(1)", function(a) Uint16Array.subarray(a).toString());
+test("new Int32Array(1)", function(a) Int32Array.subarray(a).toString());
+test("new Uint32Array(1)", function(a) Uint32Array.subarray(a).toString());
+test("new Float32Array(1)", function(a) Float32Array.subarray(a).toString());
+test("new Float64Array(1)", function(a) Float64Array.subarray(a).toString());
+test("new Uint8ClampedArray(1)", function(a) Uint8ClampedArray.subarray(a).toString());
 
 test("new Int8Array(1)", function(a) Int8Array.prototype.set.call(a, []));
 test("new Uint8Array(1)", function(a) Uint8Array.prototype.set.call(a, []));
@@ -136,5 +157,6 @@ test("new Date()", function(d) justDontThrow(Date.prototype.toTimeString.call(d)
 test("new Date()", function(d) justDontThrow(Date.prototype.toDateString.call(d)));
 test("new Date()", function(d) justDontThrow(Date.prototype.toSource.call(d)));
 test("new Date()", function(d) justDontThrow(Date.prototype.toString.call(d)));
+test("new Date()", function(d) justDontThrow(Date.prototype.valueOf.call(d)));
 
 throw "done";

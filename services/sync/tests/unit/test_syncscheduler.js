@@ -204,27 +204,8 @@ add_test(function test_calculateBackoff() {
   run_next_test();
 });
 
-add_test(function test_scheduleNextSync() {
-  let server = sync_httpd_setup();
-  setUp();
-
-  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
-    // Ensure this gets called after SyncScheduler's observer so we
-    // can cancel the timer set by SyncScheduler.scheduleNextSync().
-    Utils.nextTick(function () {
-      SyncScheduler.setDefaults();
-      Svc.Prefs.resetBranch("");
-      SyncScheduler.syncTimer.clear();
-      Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
-      Service.startOver();
-      server.stop(run_next_test);
-    }, this);
-  });
-  
-  // Make sync happen faster
-  SyncScheduler.singleDeviceInterval = 100;
-  SyncScheduler.syncInterval = SyncScheduler.singleDeviceInterval;
-
+add_test(function test_scheduleNextSync_noBackoff() {
+  _("scheduleNextSync() uses the current syncInterval if no interval is provided.");
   // Test backoffInterval is 0 as expected.
   do_check_eq(Status.backoffInterval, 0);
 
@@ -232,24 +213,97 @@ add_test(function test_scheduleNextSync() {
   SyncScheduler.nextSync = 0;
   SyncScheduler.scheduleNextSync();
 
-  // Test nextSync value was changed.
-  do_check_true(SyncScheduler.nextSync > 0);
-
   // nextSync - Date.now() might be smaller than expectedInterval
   // since some time has passed since we called scheduleNextSync().
-  let expectedInterval = SyncScheduler.singleDeviceInterval;
-  do_check_true(SyncScheduler.nextSync - Date.now() <= expectedInterval);
-  do_check_eq(SyncScheduler.syncTimer.delay, expectedInterval);
+  do_check_true(SyncScheduler.nextSync - Date.now()
+                <= SyncScheduler.syncInterval);
+  do_check_eq(SyncScheduler.syncTimer.delay, SyncScheduler.syncInterval);
 
   _("Test setting sync interval when nextSync != 0");
-  // Schedule next sync for 100ms in the future.
   SyncScheduler.nextSync = Date.now() + SyncScheduler.singleDeviceInterval;
   SyncScheduler.scheduleNextSync();
 
   // nextSync - Date.now() might be smaller than expectedInterval
   // since some time has passed since we called scheduleNextSync().
-  do_check_true(SyncScheduler.nextSync - Date.now() <= expectedInterval);
-  do_check_true(SyncScheduler.syncTimer.delay <= expectedInterval);
+  do_check_true(SyncScheduler.nextSync - Date.now()
+                <= SyncScheduler.syncInterval);
+  do_check_true(SyncScheduler.syncTimer.delay <= SyncScheduler.syncInterval);
+
+  _("Scheduling requests for intervals larger than the current one will be ignored.");
+  // Request a sync at a longer interval. The sync that's already scheduled
+  // for sooner takes precedence.
+  let nextSync = SyncScheduler.nextSync;
+  let timerDelay = SyncScheduler.syncTimer.delay;
+  let requestedInterval = SyncScheduler.syncInterval * 10;
+  SyncScheduler.scheduleNextSync(requestedInterval);
+  do_check_eq(SyncScheduler.nextSync, nextSync);
+  do_check_eq(SyncScheduler.syncTimer.delay, timerDelay);
+
+  // We can schedule anything we want if there isn't a sync scheduled.
+  SyncScheduler.nextSync = 0;
+  SyncScheduler.scheduleNextSync(requestedInterval);
+  do_check_true(SyncScheduler.nextSync <= Date.now() + requestedInterval);
+  do_check_eq(SyncScheduler.syncTimer.delay, requestedInterval);
+
+  // Request a sync at the smallest possible interval (0 triggers now).
+  SyncScheduler.scheduleNextSync(1);
+  do_check_true(SyncScheduler.nextSync <= Date.now() + 1);
+  do_check_eq(SyncScheduler.syncTimer.delay, 1);
+
+  SyncScheduler.syncTimer.clear();
+  Service.startOver();
+  run_next_test();
+});
+
+add_test(function test_scheduleNextSync_backoff() {
+ _("scheduleNextSync() will honour backoff in all scheduling requests.");
+  Status.backoffInterval = 7337000;
+  do_check_true(Status.backoffInterval > SyncScheduler.syncInterval);
+
+  _("Test setting sync interval when nextSync == 0");
+  SyncScheduler.nextSync = 0;
+  SyncScheduler.scheduleNextSync();
+
+  // nextSync - Date.now() might be smaller than expectedInterval
+  // since some time has passed since we called scheduleNextSync().
+  do_check_true(SyncScheduler.nextSync - Date.now()
+                <= Status.backoffInterval);
+  do_check_eq(SyncScheduler.syncTimer.delay, Status.backoffInterval);
+
+  _("Test setting sync interval when nextSync != 0");
+  SyncScheduler.nextSync = Date.now() + SyncScheduler.singleDeviceInterval;
+  SyncScheduler.scheduleNextSync();
+
+  // nextSync - Date.now() might be smaller than expectedInterval
+  // since some time has passed since we called scheduleNextSync().
+  do_check_true(SyncScheduler.nextSync - Date.now()
+                <= Status.backoffInterval);
+  do_check_true(SyncScheduler.syncTimer.delay <= Status.backoffInterval);
+
+  // Request a sync at a longer interval. The sync that's already scheduled
+  // for sooner takes precedence.
+  let nextSync = SyncScheduler.nextSync;
+  let timerDelay = SyncScheduler.syncTimer.delay;
+  let requestedInterval = SyncScheduler.syncInterval * 10;
+  do_check_true(requestedInterval > Status.backoffInterval);
+  SyncScheduler.scheduleNextSync(requestedInterval);
+  do_check_eq(SyncScheduler.nextSync, nextSync);
+  do_check_eq(SyncScheduler.syncTimer.delay, timerDelay);
+
+  // We can schedule anything we want if there isn't a sync scheduled.
+  SyncScheduler.nextSync = 0;
+  SyncScheduler.scheduleNextSync(requestedInterval);
+  do_check_true(SyncScheduler.nextSync <= Date.now() + requestedInterval);
+  do_check_eq(SyncScheduler.syncTimer.delay, requestedInterval);
+
+  // Request a sync at the smallest possible number.
+  SyncScheduler.scheduleNextSync(1);
+  do_check_true(SyncScheduler.nextSync <= Date.now() + Status.backoffInterval);
+  do_check_eq(SyncScheduler.syncTimer.delay, Status.backoffInterval);
+
+  SyncScheduler.syncTimer.clear();
+  Service.startOver();
+  run_next_test();
 });
 
 add_test(function test_handleSyncError() {
@@ -498,6 +552,86 @@ add_test(function test_idle_adjustSyncInterval() {
 
   SyncScheduler.setDefaults();
   run_next_test();
+});
+
+add_test(function test_back_triggersSync() {
+  // Confirm defaults.
+  do_check_false(SyncScheduler.idle);
+  do_check_eq(Status.backoffInterval, 0);
+
+  // Set up: Define 2 clients and put the system in idle.
+  SyncScheduler.numClients = 2;
+  SyncScheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  do_check_true(SyncScheduler.idle);
+
+  // We don't actually expect the sync (or the login, for that matter) to
+  // succeed. We just want to ensure that it was attempted.
+  Svc.Obs.add("weave:service:login:error", function onLoginError() {
+    Svc.Obs.remove("weave:service:login:error", onLoginError);
+    SyncScheduler.syncTimer.clear();
+    SyncScheduler.setDefaults();    
+    run_next_test();
+  });
+
+  // Send a 'back' event to trigger sync soonish.
+  SyncScheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
+});
+
+add_test(function test_back_triggersSync_observesBackoff() {
+  // Confirm defaults.
+  do_check_false(SyncScheduler.idle);
+
+  // Set up: Set backoff, define 2 clients and put the system in idle.
+  Status.backoffInterval = 7337000;
+  SyncScheduler.numClients = 2;
+  SyncScheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  do_check_eq(SyncScheduler.idle, true);
+
+  function onLoginStart() {
+    do_throw("Shouldn't have kicked off a sync!");
+  }
+  Svc.Obs.add("weave:service:login:start", onLoginStart);
+
+  timer = Utils.namedTimer(function () {
+    Svc.Obs.remove("weave:service:login:start", onLoginStart);
+
+    do_check_true(SyncScheduler.nextSync <= Date.now() + Status.backoffInterval);
+    do_check_eq(SyncScheduler.syncTimer.delay, Status.backoffInterval);
+
+    SyncScheduler.syncTimer.clear();
+    SyncScheduler.setDefaults();
+    run_next_test();
+  }, IDLE_OBSERVER_BACK_DELAY * 1.5, {}, "timer");
+
+  // Send a 'back' event to try to trigger sync soonish.
+  SyncScheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
+});
+
+add_test(function test_back_debouncing() {
+  _("Ensure spurious back-then-idle events, as observed on OS X, don't trigger a sync.");
+
+  // Confirm defaults.
+  do_check_eq(SyncScheduler.idle, false);
+
+  // Set up: Define 2 clients and put the system in idle.
+  SyncScheduler.numClients = 2;
+  SyncScheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  do_check_eq(SyncScheduler.idle, true);
+
+  function onLoginStart() {
+    do_throw("Shouldn't have kicked off a sync!");
+  }
+  Svc.Obs.add("weave:service:login:start", onLoginStart);
+
+  // Create spurious back-then-idle events as observed on OS X:
+  SyncScheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
+  SyncScheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+
+  timer = Utils.namedTimer(function () {
+    Svc.Obs.remove("weave:service:login:start", onLoginStart);
+    SyncScheduler.setDefaults();
+    run_next_test();
+  }, IDLE_OBSERVER_BACK_DELAY * 1.5, {}, "timer");
 });
 
 add_test(function test_no_sync_node() {

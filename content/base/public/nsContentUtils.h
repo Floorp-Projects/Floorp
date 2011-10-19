@@ -189,6 +189,7 @@ struct nsShortcutCandidate {
 class nsContentUtils
 {
   friend class nsAutoScriptBlockerSuppressNodeRemoved;
+  friend class mozilla::AutoRestore<bool>;
   typedef mozilla::dom::Element Element;
   typedef mozilla::TimeDuration TimeDuration;
 
@@ -248,8 +249,8 @@ public:
    *         aPossibleAncestor
    * @param  aPossibleAncestor node to test for being an ancestor of
    *         aPossibleDescendant
-   * @return PR_TRUE if aPossibleDescendant is a descendant of
-   *         aPossibleAncestor (or is aPossibleAncestor).  PR_FALSE
+   * @return true if aPossibleDescendant is a descendant of
+   *         aPossibleAncestor (or is aPossibleAncestor).  false
    *         otherwise.
    */
   static bool ContentIsDescendantOf(const nsINode* aPossibleDescendant,
@@ -318,7 +319,7 @@ public:
    *  0 if error or if point1 == point2.
    *  NOTE! If the two nodes aren't in the same connected subtree,
    *  the result is 1, and the optional aDisconnected parameter
-   *  is set to PR_TRUE.
+   *  is set to true.
    */
   static PRInt32 ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
                                nsINode* aParent2, PRInt32 aOffset2,
@@ -556,8 +557,8 @@ public:
                              nsIAtom **aTagName, PRInt32 *aNameSpaceID);
 
   // Get a permission-manager setting for the given uri and type.
-  // If the pref doesn't exist or if it isn't ALLOW_ACTION, PR_FALSE is
-  // returned, otherwise PR_TRUE is returned.
+  // If the pref doesn't exist or if it isn't ALLOW_ACTION, false is
+  // returned, otherwise true is returned.
   static bool IsSitePermAllow(nsIURI* aURI, const char* aType);
 
   static nsILineBreaker* LineBreaker()
@@ -583,7 +584,7 @@ public:
   static void UnregisterShutdownObserver(nsIObserver* aObserver);
 
   /**
-   * @return PR_TRUE if aContent has an attribute aName in namespace aNameSpaceID,
+   * @return true if aContent has an attribute aName in namespace aNameSpaceID,
    * and the attribute value is non-empty.
    */
   static bool HasNonEmptyAttr(const nsIContent* aContent, PRInt32 aNameSpaceID,
@@ -609,10 +610,10 @@ public:
    *        image.  This will be set even if a security check fails for the
    *        image, to some reasonable REJECT_* value.  This out param will only
    *        be set if it's non-null.
-   * @return PR_TRUE if the load can proceed, or PR_FALSE if it is blocked.
+   * @return true if the load can proceed, or false if it is blocked.
    *         Note that aImageBlockingStatus, if set will always be an ACCEPT
-   *         status if PR_TRUE is returned and always be a REJECT_* status if
-   *         PR_FALSE is returned.
+   *         status if true is returned and always be a REJECT_* status if
+   *         false is returned.
    */
   static bool CanLoadImage(nsIURI* aURI,
                              nsISupports* aContext,
@@ -717,7 +718,7 @@ public:
    *
    * This method is particularly useful for callers who are trying to ensure
    * that they are working with a non-anonymous descendant of a given node.  If
-   * aContent is a descendant of aNode, a return value of PR_FALSE from this
+   * aContent is a descendant of aNode, a return value of false from this
    * method means that it's an anonymous descendant from aNode's point of view.
    *
    * Both arguments to this method must be non-null.
@@ -833,8 +834,8 @@ public:
    * referenced by aURI. In cases where there's no need for any extra
    * security wrapper automation the script file name that's returned
    * will be the spec in aURI, else it will be the spec in aDocument's
-   * URI followed by aURI's spec, separated by " -> ". Returns PR_TRUE
-   * if the script file name was modified, PR_FALSE if it's aURI's
+   * URI followed by aURI's spec, separated by " -> ". Returns true
+   * if the script file name was modified, false if it's aURI's
    * spec.
    */
   static bool GetWrapperSafeScriptFilename(nsIDocument *aDocument,
@@ -875,7 +876,7 @@ public:
    * Quick helper to determine whether there are any mutation listeners
    * of a given type that apply to any content in this document. It is valid
    * to pass null for aDocument here, in which case this function always
-   * returns PR_TRUE.
+   * returns true.
    *
    * @param aDocument The document to search for listeners
    * @param aType     The type of listener (NS_EVENT_BITS_MUTATION_*)
@@ -998,10 +999,10 @@ public:
 
   /**
    * Get the eventlistener manager for aNode. If a new eventlistener manager
-   * was created, aCreated is set to PR_TRUE.
+   * was created, aCreated is set to true.
    *
    * @param aNode The node for which to get the eventlistener manager.
-   * @param aCreateIfNotFound If PR_FALSE, returns a listener manager only if
+   * @param aCreateIfNotFound If false, returns a listener manager only if
    *                          one already exists.
    */
   static nsEventListenerManager* GetListenerManager(nsINode* aNode,
@@ -1061,13 +1062,15 @@ public:
    * @param aPreventScriptExecution true to prevent scripts from executing;
    *        don't set to false when parsing into a target node that has been
    *        bound to tree.
+   * @return NS_ERROR_DOM_INVALID_STATE_ERR if a re-entrant attempt to parse
+   *         fragments is made and NS_OK otherwise.
    */
-  static void ParseFragmentHTML(const nsAString& aSourceBuffer,
-                                nsIContent* aTargetNode,
-                                nsIAtom* aContextLocalName,
-                                PRInt32 aContextNamespace,
-                                bool aQuirks,
-                                bool aPreventScriptExecution);
+  static nsresult ParseFragmentHTML(const nsAString& aSourceBuffer,
+                                    nsIContent* aTargetNode,
+                                    nsIAtom* aContextLocalName,
+                                    PRInt32 aContextNamespace,
+                                    bool aQuirks,
+                                    bool aPreventScriptExecution);
 
   /**
    * Invoke the fragment parsing algorithm (innerHTML) using the XML parser.
@@ -1077,6 +1080,8 @@ public:
    * @param aTagStack the namespace mapping context
    * @param aPreventExecution whether to mark scripts as already started
    * @param aReturn the result fragment
+   * @return NS_ERROR_DOM_INVALID_STATE_ERR if a re-entrant attempt to parse
+   *         fragments is made, a return code from the XML parser.
    */
   static nsresult ParseFragmentXML(const nsAString& aSourceBuffer,
                                    nsIDocument* aDocument,
@@ -1099,6 +1104,7 @@ public:
    * @param aPrincipal Prinicpal of the document. Must not be null.
    * @param aScriptObject The object from which the context for event handling
    *                      can be got.
+   * @param aSVGDocument Force SVG Document creation.
    * @param aResult [out] The document that was created.
    */
   static nsresult CreateDocument(const nsAString& aNamespaceURI, 
@@ -1108,6 +1114,7 @@ public:
                                  nsIURI* aBaseURI,
                                  nsIPrincipal* aPrincipal,
                                  nsIScriptGlobalObject* aScriptObject,
+                                 bool aSVGDocument,
                                  nsIDOMDocument** aResult);
 
   /**
@@ -1265,7 +1272,7 @@ public:
       nsXPCOMCycleCollectionParticipant* participant;
       CallQueryInterface(aScriptObjectHolder, &participant);
       HoldJSObjects(aScriptObjectHolder, participant);
-      aCache->SetPreservingWrapper(PR_TRUE);
+      aCache->SetPreservingWrapper(true);
 #ifdef DEBUG
       // Make sure the cycle collector will be able to traverse to the wrapper.
       CheckCCWrapperTraversal(aScriptObjectHolder, aCache);
@@ -1273,22 +1280,9 @@ public:
     }
   }
   static void ReleaseWrapper(nsISupports* aScriptObjectHolder,
-                             nsWrapperCache* aCache)
-  {
-    if (aCache->PreservingWrapper()) {
-      DropJSObjects(aScriptObjectHolder);
-      aCache->SetPreservingWrapper(PR_FALSE);
-    }
-  }
+                             nsWrapperCache* aCache);
   static void TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
-                           void *aClosure)
-  {
-    if (aCache->PreservingWrapper()) {
-      aCallback(nsIProgrammingLanguage::JAVASCRIPT,
-                aCache->GetWrapperPreserveColor(),
-                "Preserved wrapper", aClosure);
-    }
-  }
+                           void *aClosure);
 
   /**
    * Convert nsIContent::IME_STATUS_* to nsIWidget::IME_STATUS_*
@@ -1353,7 +1347,7 @@ public:
    * @param aIsUserTriggered whether the user triggered the link. This would be
    *                         false for loads from auto XLinks or from the
    *                         click() method if we ever implement it.
-   * @param aIsTrusted If PR_FALSE, JS Context will be pushed to stack
+   * @param aIsTrusted If false, JS Context will be pushed to stack
    *                   when the link is triggered.
    */
   static void TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
@@ -1594,7 +1588,7 @@ public:
   /**
    * The method checks whether the caller can access native anonymous content.
    * If there is no JS in the stack or privileged JS is running, this
-   * method returns PR_TRUE, otherwise PR_FALSE.
+   * method returns true, otherwise false.
    */
   static bool CanAccessNativeAnon();
 
@@ -1703,12 +1697,12 @@ public:
   static bool IsFocusedContent(const nsIContent *aContent);
 
   /**
-   * Returns PR_TRUE if the DOM full-screen API is enabled.
+   * Returns true if the DOM full-screen API is enabled.
    */
   static bool IsFullScreenApiEnabled();
 
   /**
-   * Returns PR_TRUE if requests for full-screen are allowed in the current
+   * Returns true if requests for full-screen are allowed in the current
    * context. Requests are only allowed if the user initiated them (like with
    * a mouse-click or key press), unless this check has been disabled by
    * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
@@ -1716,7 +1710,7 @@ public:
   static bool IsRequestFullScreenAllowed();
 
   /**
-   * Returns PR_TRUE if key input is restricted in DOM full-screen mode
+   * Returns true if key input is restricted in DOM full-screen mode
    * to non-alpha-numeric key codes only. This mirrors the
    * "full-screen-api.key-input-restricted" pref.
    */
@@ -1724,7 +1718,7 @@ public:
 
   /**
    * Returns the time limit on handling user input before
-   * nsEventStateManager::IsHandlingUserInput() stops returning PR_TRUE.
+   * nsEventStateManager::IsHandlingUserInput() stops returning true.
    * This enables us to detect long running user-generated event handlers.
    */
   static TimeDuration HandlingUserInputTimeout();
@@ -1922,6 +1916,11 @@ private:
   static nsIParser* sXMLFragmentParser;
   static nsIFragmentContentSink* sXMLFragmentSink;
 
+  /**
+   * True if there's a fragment parser activation on the stack.
+   */
+  static bool sFragmentParsingActive;
+
   static nsString* sShiftText;
   static nsString* sControlText;
   static nsString* sMetaText;
@@ -1943,7 +1942,7 @@ public:
   nsCxPusher();
   ~nsCxPusher(); // Calls Pop();
 
-  // Returns PR_FALSE if something erroneous happened.
+  // Returns false if something erroneous happened.
   bool Push(nsIDOMEventTarget *aCurrentTarget);
   // If nothing has been pushed to stack, this works like Push.
   // Otherwise if context will change, Pop and Push will be called.

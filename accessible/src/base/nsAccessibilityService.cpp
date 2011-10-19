@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 // NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
@@ -70,6 +72,7 @@
 #include "nsImageFrame.h"
 #include "nsILink.h"
 #include "nsIObserverService.h"
+#include "nsLayoutUtils.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsISupportsUtils.h"
 #include "nsObjectFrame.h"
@@ -110,6 +113,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/dom/Element.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +165,7 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent* aTargetNode)
   if (documentNode) {
     nsDocAccessible* document = GetDocAccessible(documentNode);
     if (document)
-      document->HandleAnchorJump(aTargetNode);
+      document->SetAnchorJump(aTargetNode);
   }
 }
 
@@ -653,7 +657,7 @@ nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
 NS_IMETHODIMP
 nsAccessibilityService::GetStringRole(PRUint32 aRole, nsAString& aString)
 {
-  if ( aRole >= NS_ARRAY_LENGTH(kRoleNames)) {
+  if ( aRole >= ArrayLength(kRoleNames)) {
     aString.AssignLiteral("unknown");
     return NS_OK;
   }
@@ -784,10 +788,10 @@ NS_IMETHODIMP
 nsAccessibilityService::GetStringEventType(PRUint32 aEventType,
                                            nsAString& aString)
 {
-  NS_ASSERTION(nsIAccessibleEvent::EVENT_LAST_ENTRY == NS_ARRAY_LENGTH(kEventTypeNames),
+  NS_ASSERTION(nsIAccessibleEvent::EVENT_LAST_ENTRY == ArrayLength(kEventTypeNames),
                "nsIAccessibleEvent constants are out of sync to kEventTypeNames");
 
-  if (aEventType >= NS_ARRAY_LENGTH(kEventTypeNames)) {
+  if (aEventType >= ArrayLength(kEventTypeNames)) {
     aString.AssignLiteral("unknown");
     return NS_OK;
   }
@@ -801,7 +805,7 @@ NS_IMETHODIMP
 nsAccessibilityService::GetStringRelationType(PRUint32 aRelationType,
                                               nsAString& aString)
 {
-  if (aRelationType >= NS_ARRAY_LENGTH(kRelationTypeNames)) {
+  if (aRelationType >= ArrayLength(kRelationTypeNames)) {
     aString.AssignLiteral("unknown");
     return NS_OK;
   }
@@ -860,7 +864,7 @@ nsAccessibilityService::GetAccessible(nsINode* aNode)
 {
   NS_PRECONDITION(aNode, "Getting an accessible for null node! Crash.");
 
-  nsDocAccessible* document = GetDocAccessible(aNode->GetOwnerDoc());
+  nsDocAccessible* document = GetDocAccessible(aNode->OwnerDoc());
   return document ? document->GetAccessible(aNode) : nsnull;
 }
 
@@ -872,7 +876,7 @@ nsAccessibilityService::GetAccessibleOrContainer(nsINode* aNode,
     return nsnull;
 
   // XXX: weak shell is ignored until multiple shell documents are supported.
-  nsDocAccessible* document = GetDocAccessible(aNode->GetOwnerDoc());
+  nsDocAccessible* document = GetDocAccessible(aNode->OwnerDoc());
   return document ? document->GetAccessibleOrContainer(aNode) : nsnull;
 }
 
@@ -880,24 +884,24 @@ static bool HasRelatedContent(nsIContent *aContent)
 {
   nsAutoString id;
   if (!aContent || !nsCoreUtils::GetID(aContent, id) || id.IsEmpty()) {
-    return PR_FALSE;
+    return false;
   }
 
   // If the given ID is referred by relation attribute then create an accessible
   // for it. Take care of HTML elements only for now.
   if (aContent->IsHTML() &&
       nsAccUtils::GetDocAccessibleFor(aContent)->IsDependentID(id))
-    return PR_TRUE;
+    return true;
 
   nsIContent *ancestorContent = aContent;
   while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
     if (ancestorContent->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant)) {
         // ancestor has activedescendant property, this content could be active
-      return PR_TRUE;
+      return true;
     }
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 nsAccessible*
@@ -932,7 +936,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     return nsnull;
   }
 
-  if (aNode->GetOwnerDoc() != aPresShell->GetDocument()) {
+  if (aNode->OwnerDoc() != aPresShell->GetDocument()) {
     NS_ERROR("Creating accessible for wrong pres shell");
     return nsnull;
   }
@@ -979,7 +983,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 #endif
 
   nsDocAccessible* docAcc =
-    GetAccService()->GetDocAccessible(aNode->GetOwnerDoc());
+    GetAccService()->GetDocAccessible(aNode->OwnerDoc());
   if (!docAcc) {
     NS_NOTREACHED("Node has no host document accessible!");
     return nsnull;
@@ -1012,15 +1016,14 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   if (isHTML && content->Tag() == nsGkAtoms::map) {
     // Create hyper text accessible for HTML map if it is used to group links
     // (see http://www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass). If the HTML
-    // map doesn't have 'name' attribute (or has empty name attribute) then we
-    // suppose it is used for links grouping. Otherwise we think it is used in
-    // conjuction with HTML image element and in this case we don't create any
-    // accessible for it and don't walk into it. The accessibles for HTML area
-    // (nsHTMLAreaAccessible) the map contains are attached as children of the
-    // appropriate accessible for HTML image (nsHTMLImageAccessible).
-    nsAutoString name;
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-    if (!name.IsEmpty()) {
+    // map rect is empty then it is used for links grouping. Otherwise it should
+    // be used in conjunction with HTML image element and in this case we don't
+    // create any accessible for it and don't walk into it. The accessibles for
+    // HTML area (nsHTMLAreaAccessible) the map contains are attached as
+    // children of the appropriate accessible for HTML image
+    // (nsHTMLImageAccessible).
+    if (nsLayoutUtils::GetAllInFlowRectsUnion(weakFrame,
+                                              weakFrame->GetParent()).IsEmpty()) {
       if (aIsSubtreeHidden)
         *aIsSubtreeHidden = true;
 
@@ -1099,20 +1102,20 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
           }
 
           // otherwise create ARIA based accessible.
-          tryTagNameOrFrame = PR_FALSE;
+          tryTagNameOrFrame = false;
           break;
         }
 
         if (tableContent->Tag() == nsGkAtoms::table) {
           // Stop before we are fooled by any additional table ancestors
           // This table cell frameis part of a separate ancestor table.
-          tryTagNameOrFrame = PR_FALSE;
+          tryTagNameOrFrame = false;
           break;
         }
       }
 
       if (!tableContent)
-        tryTagNameOrFrame = PR_FALSE;
+        tryTagNameOrFrame = false;
     }
 
     if (roleMapEntry) {
@@ -1227,21 +1230,21 @@ nsAccessibilityService::Init()
 {
   // Initialize accessible document manager.
   if (!nsAccDocManager::Init())
-    return PR_FALSE;
+    return false;
 
   // Add observers.
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (!observerService)
-    return PR_FALSE;
+    return false;
 
-  observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
   // Initialize accessibility.
   nsAccessNodeWrap::InitAccessibility();
 
-  gIsShutdown = PR_FALSE;
-  return PR_TRUE;
+  gIsShutdown = false;
+  return true;
 }
 
 void
@@ -1263,7 +1266,7 @@ nsAccessibilityService::Shutdown()
 
   NS_ASSERTION(!gIsShutdown, "Accessibility was shutdown already");
 
-  gIsShutdown = PR_TRUE;
+  gIsShutdown = true;
 
   nsAccessNodeWrap::ShutdownAccessibility();
 }

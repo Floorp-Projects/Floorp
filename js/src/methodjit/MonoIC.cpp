@@ -52,6 +52,8 @@
 #include "InlineFrameAssembler.h"
 #include "jsobj.h"
 
+#include "builtin/RegExp.h"
+
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
@@ -378,7 +380,7 @@ class EqualityCompiler : public BaseCompiler
         buffer.link(trueJump, ic.target);
         buffer.link(falseJump, ic.fallThrough);
 
-        CodeLocationLabel cs = buffer.finalize();
+        CodeLocationLabel cs = buffer.finalize(f);
 
         /* Jump to the newly generated code instead of to the IC. */
         repatcher.relink(ic.jumpToStub, cs);
@@ -679,7 +681,7 @@ class CallCompiler : public BaseCompiler
         }
 
         linker.link(notCompiled, ic.slowPathStart.labelAtOffset(ic.slowJoinOffset));
-        JSC::CodeLocationLabel cs = linker.finalize();
+        JSC::CodeLocationLabel cs = linker.finalize(f);
 
         JaegerSpew(JSpew_PICs, "generated CALL stub %p (%lu bytes)\n", cs.executableAddress(),
                    (unsigned long) masm.size());
@@ -765,7 +767,7 @@ class CallCompiler : public BaseCompiler
         linker.link(claspGuard, ic.slowPathStart);
         linker.link(funGuard, ic.slowPathStart);
         linker.link(done, ic.funGuard.labelAtOffset(ic.hotPathOffset));
-        JSC::CodeLocationLabel cs = linker.finalize();
+        JSC::CodeLocationLabel cs = linker.finalize(f);
 
         JaegerSpew(JSpew_PICs, "generated CALL closure stub %p (%lu bytes)\n",
                    cs.executableAddress(), (unsigned long) masm.size());
@@ -903,7 +905,7 @@ class CallCompiler : public BaseCompiler
         masm.setupABICall(Registers::NormalCall, 3);
         masm.storeArg(2, vpReg);
         if (ic.frameSize.isStatic())
-            masm.storeArg(1, ImmPtr((void *) ic.frameSize.staticArgc()));
+            masm.storeArg(1, ImmIntPtr(intptr_t(ic.frameSize.staticArgc())));
         else
             masm.storeArg(1, argcReg.reg());
         masm.storeArg(0, cxReg);
@@ -916,8 +918,8 @@ class CallCompiler : public BaseCompiler
          * break inferred types for the call's result and any subsequent test,
          * as RegExp.exec has a type handler with unknown result.
          */
-        if (native == js_regexp_exec && !CallResultEscapes(f.pc()))
-            native = js_regexp_test;
+        if (native == regexp_exec && !CallResultEscapes(f.pc()))
+            native = regexp_test;
 
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, native), false);
 
@@ -938,7 +940,7 @@ class CallCompiler : public BaseCompiler
         ic.fastGuardedNative = fun;
 
         linker.link(funGuard, ic.slowPathStart);
-        JSC::CodeLocationLabel start = linker.finalize();
+        JSC::CodeLocationLabel start = linker.finalize(f);
 
         JaegerSpew(JSpew_PICs, "generated native CALL stub %p (%lu bytes)\n",
                    start.executableAddress(), (unsigned long) masm.size());
@@ -1231,7 +1233,7 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
         linker.link(mismatches[i], jit->argsCheckStub);
     linker.link(done, jit->argsCheckFallthrough);
 
-    JSC::CodeLocationLabel cs = linker.finalize();
+    JSC::CodeLocationLabel cs = linker.finalize(f);
 
     JaegerSpew(JSpew_PICs, "generated ARGS CHECK stub %p (%lu bytes)\n",
                cs.executableAddress(), (unsigned long)masm.size());

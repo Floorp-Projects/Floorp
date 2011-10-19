@@ -91,16 +91,14 @@ _SERV_FILES = 	\
 		browser-test-overlay.xul \
 		browser-test.js \
 		chrome-harness.js \
-		ipc-overlay.xul \
-		ipc.js \
 		browser-harness.xul \
 		redirect.html \
-		redirect.js \
 		$(topsrcdir)/build/pgo/server-locations.txt \
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		mozprefs.js \
 		pywebsocket_wrapper.py \
  	 	plain-loop.html \
+		android.json \
 		$(NULL)	
 
 _PYWEBSOCKET_FILES = \

@@ -135,8 +135,8 @@ nsGridLayout2::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState)
       PRInt32 rows = mGrid.GetRowCount();
       for (PRInt32 i=0; i < rows; i++)
       {
-        nscoord height = mGrid.GetMinRowHeight(aState, i, PR_TRUE); 
-        AddWidth(total, height, PR_FALSE); // AddHeight
+        nscoord height = mGrid.GetMinRowHeight(aState, i, true); 
+        AddWidth(total, height, false); // AddHeight
       }
     }
 
@@ -145,8 +145,8 @@ nsGridLayout2::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState)
       PRInt32 columns = mGrid.GetColumnCount();
       for (PRInt32 i=0; i < columns; i++)
       {
-        nscoord width = mGrid.GetMinRowHeight(aState, i, PR_FALSE); 
-        AddWidth(total, width, PR_TRUE); // AddWidth
+        nscoord width = mGrid.GetMinRowHeight(aState, i, false); 
+        AddWidth(total, width, true); // AddWidth
       }
     }
 
@@ -174,8 +174,8 @@ nsGridLayout2::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState)
       PRInt32 rows = mGrid.GetRowCount();
       for (PRInt32 i=0; i < rows; i++)
       {
-        nscoord height = mGrid.GetPrefRowHeight(aState, i, PR_TRUE); 
-        AddWidth(total, height, PR_FALSE); // AddHeight
+        nscoord height = mGrid.GetPrefRowHeight(aState, i, true); 
+        AddWidth(total, height, false); // AddHeight
       }
     }
 
@@ -184,8 +184,8 @@ nsGridLayout2::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState)
       PRInt32 columns = mGrid.GetColumnCount();
       for (PRInt32 i=0; i < columns; i++)
       {
-        nscoord width = mGrid.GetPrefRowHeight(aState, i, PR_FALSE);
-        AddWidth(total, width, PR_TRUE); // AddWidth
+        nscoord width = mGrid.GetPrefRowHeight(aState, i, false);
+        AddWidth(total, width, true); // AddWidth
       }
     }
 
@@ -214,8 +214,8 @@ nsGridLayout2::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState)
       PRInt32 rows = mGrid.GetRowCount();
       for (PRInt32 i=0; i < rows; i++)
       {
-        nscoord height = mGrid.GetMaxRowHeight(aState, i, PR_TRUE); 
-        AddWidth(total, height, PR_FALSE); // AddHeight
+        nscoord height = mGrid.GetMaxRowHeight(aState, i, true); 
+        AddWidth(total, height, false); // AddHeight
       }
     }
 
@@ -225,8 +225,8 @@ nsGridLayout2::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState)
       PRInt32 columns = mGrid.GetColumnCount();
       for (PRInt32 i=0; i < columns; i++)
       {
-        nscoord width = mGrid.GetMaxRowHeight(aState, i, PR_FALSE);
-        AddWidth(total, width, PR_TRUE); // AddWidth
+        nscoord width = mGrid.GetMaxRowHeight(aState, i, false);
+        AddWidth(total, width, true); // AddWidth
       }
     }
 
@@ -242,7 +242,7 @@ PRInt32
 nsGridLayout2::BuildRows(nsIBox* aBox, nsGridRow* aRows)
 {
   if (aBox) {
-    aRows[0].Init(aBox, PR_TRUE);
+    aRows[0].Init(aBox, true);
     return 1;
   }
   return 0;

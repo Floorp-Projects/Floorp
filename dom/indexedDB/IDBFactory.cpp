@@ -48,9 +48,11 @@
 #include "mozilla/dom/ContentChild.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
+#include "nsIPrincipal.h"
 #include "nsEscape.h"
 #include "nsHashKeys.h"
 #include "nsPIDOMWindow.h"
@@ -66,6 +68,7 @@
 #include "IDBKeyRange.h"
 #include "IndexedDatabaseManager.h"
 #include "LazyIdleThread.h"
+#include "nsIScriptSecurityManager.h"
 
 using namespace mozilla;
 
@@ -386,10 +389,10 @@ CreateDatabaseConnection(const nsAString& aName,
                                getter_AddRefs(connection));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     // Nuke the database file.  The web services can recreate their data.
-    rv = aDBFile->Remove(PR_FALSE);
+    rv = aDBFile->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    exists = PR_FALSE;
+    exists = false;
 
     rv = ss->OpenDatabaseWithVFS(aDBFile, quotaVFSName,
                                  getter_AddRefs(connection));
@@ -404,7 +407,7 @@ CreateDatabaseConnection(const nsAString& aName,
   if (schemaVersion != DB_SCHEMA_VERSION) {
     if (exists) {
       // If the connection is not at the right schema version, nuke it.
-      rv = aDBFile->Remove(PR_FALSE);
+      rv = aDBFile->Remove(false);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = ss->OpenDatabaseWithVFS(aDBFile, quotaVFSName,
@@ -412,7 +415,7 @@ CreateDatabaseConnection(const nsAString& aName,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    mozStorageTransaction transaction(connection, PR_FALSE,
+    mozStorageTransaction transaction(connection, false,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     rv = CreateTables(connection);
@@ -674,7 +677,7 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (version.IsVoid()) {
-    version.SetIsVoid(PR_FALSE);
+    version.SetIsVoid(false);
   }
   aVersion = version;
   return NS_OK;

@@ -106,6 +106,7 @@ _TEST_FILES = \
 		test_bug493187.html \
 		test_bug495145.html \
 		test_bug495300.html \
+		test_bug686942.html \
 		test_can_play_type.html \
 		test_closing_connections.html \
 		test_constants.html \

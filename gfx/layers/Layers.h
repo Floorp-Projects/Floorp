@@ -48,6 +48,7 @@
 #include "gfx3DMatrix.h"
 #include "gfxColor.h"
 #include "gfxPattern.h"
+#include "nsTArray.h"
 
 #include "mozilla/gfx/2D.h"
 
@@ -274,7 +275,7 @@ public:
     LAYERS_LAST
   };
 
-  LayerManager() : mDestroyed(PR_FALSE), mSnapEffectiveTransforms(PR_TRUE)
+  LayerManager() : mDestroyed(false), mSnapEffectiveTransforms(true)
   {
     InitLog();
   }
@@ -286,7 +287,7 @@ public:
    * for its widget going away.  After this call, only user data calls
    * are valid on the layer manager.
    */
-  virtual void Destroy() { mDestroyed = PR_TRUE; mUserData.Clear(); }
+  virtual void Destroy() { mDestroyed = true; mUserData.Clear(); }
   bool IsDestroyed() { return mDestroyed; }
 
   virtual ShadowLayerForwarder* AsShadowForwarder()
@@ -453,7 +454,7 @@ public:
     CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
                      mozilla::gfx::SurfaceFormat aFormat);
 
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) { return PR_TRUE; }
+  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) { return true; }
 
   /**
    * Return the name of the layer manager's backend.
@@ -577,7 +578,13 @@ public:
      * paint time.
      * This should never be set at the same time as CONTENT_OPAQUE.
      */
-    CONTENT_COMPONENT_ALPHA = 0x02
+    CONTENT_COMPONENT_ALPHA = 0x02,
+
+    /**
+     * If this is set then this layer is part of a preserve-3d group, and should
+     * be sorted with sibling layers that are also part of the same group.
+     */
+    CONTENT_PRESERVE_3D = 0x04
   };
   /**
    * CONSTRUCTION PHASE ONLY
@@ -657,7 +664,7 @@ public:
     if (mUseClipRect) {
       mClipRect.IntersectRect(mClipRect, aRect);
     } else {
-      mUseClipRect = PR_TRUE;
+      mUseClipRect = true;
       mClipRect = aRect;
     }
     Mutated();
@@ -902,9 +909,9 @@ protected:
     mImplData(aImplData),
     mOpacity(1.0),
     mContentFlags(0),
-    mUseClipRect(PR_FALSE),
-    mUseTileSourceRect(PR_FALSE),
-    mIsFixedPosition(PR_FALSE)
+    mUseClipRect(false),
+    mUseTileSourceRect(false),
+    mIsFixedPosition(false)
     {}
 
   void Mutated() { mManager->Mutated(this); }
@@ -1095,6 +1102,8 @@ public:
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs);
 
+  void SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray);
+
   // These getters can be used anytime.
 
   virtual ContainerLayer* AsContainerLayer() { return this; }
@@ -1152,9 +1161,9 @@ protected:
     : Layer(aManager, aImplData),
       mFirstChild(nsnull),
       mLastChild(nsnull),
-      mUseIntermediateSurface(PR_FALSE),
-      mSupportsComponentAlphaChildren(PR_FALSE),
-      mMayHaveReadbackChild(PR_FALSE)
+      mUseIntermediateSurface(false),
+      mSupportsComponentAlphaChildren(false),
+      mMayHaveReadbackChild(false)
   {
     mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
   }
@@ -1234,7 +1243,7 @@ public:
   struct Data {
     Data()
       : mSurface(nsnull), mGLContext(nsnull)
-      , mDrawTarget(nsnull), mGLBufferIsPremultiplied(PR_FALSE)
+      , mDrawTarget(nsnull), mGLBufferIsPremultiplied(false)
     { }
 
     /* One of these two must be specified, but never both */
@@ -1265,7 +1274,7 @@ public:
    * Notify this CanvasLayer that the canvas surface contents have
    * changed (or will change) before the next transaction.
    */
-  void Updated() { mDirty = PR_TRUE; }
+  void Updated() { mDirty = true; }
 
   /**
    * Register a callback to be called at the end of each transaction.
@@ -1302,7 +1311,7 @@ protected:
   CanvasLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData),
       mCallback(nsnull), mCallbackData(nsnull), mFilter(gfxPattern::FILTER_GOOD),
-      mDirty(PR_FALSE) {}
+      mDirty(false) {}
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 

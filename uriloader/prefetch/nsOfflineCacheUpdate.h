@@ -164,7 +164,7 @@ private:
      */
     nsresult GetOldManifestContentHash(nsIRequest *aRequest);
     /**
-     * This method setups the mNeedsUpdate to PR_FALSE when hash value
+     * This method setups the mNeedsUpdate to false when hash value
      * of the just downloaded manifest file is the same as stored in cache's 
      * "offline-manifest-hash" meta data. Otherwise stores the new value
      * to this meta data.

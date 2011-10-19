@@ -221,7 +221,7 @@ main(int argc, char* argv[])
 #endif
 
         nsCOMPtr<nsILocalFile> file;
-        rv = NS_NewNativeLocalFile(nsDependentCString(fileName), PR_FALSE, getter_AddRefs(file));
+        rv = NS_NewNativeLocalFile(nsDependentCString(fileName), false, getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
 
         rv = RunTest(file);

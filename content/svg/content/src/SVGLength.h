@@ -94,8 +94,8 @@ public:
   void GetValueAsString(nsAString& aValue) const;
 
   /**
-   * This method returns PR_TRUE, unless there was a parse failure, in which
-   * case it returns PR_FALSE (and the length is left unchanged).
+   * This method returns true, unless there was a parse failure, in which
+   * case it returns false (and the length is left unchanged).
    */
   bool SetValueFromString(const nsAString& aValue);
 
@@ -143,8 +143,8 @@ public:
    * Sets this length's value, converting the supplied user unit value to this
    * lengths *current* unit (i.e. leaving the length's unit unchanged).
    *
-   * This method returns PR_TRUE, unless the user unit value couldn't be
-   * converted to this length's current unit, in which case it returns PR_FALSE
+   * This method returns true, unless the user unit value couldn't be
+   * converted to this length's current unit, in which case it returns false
    * (and the length is left unchanged).
    */
   bool SetFromUserUnitValue(float aUserUnitValue,
@@ -155,9 +155,9 @@ public:
     if (uuPerUnit > 0 && NS_finite(value)) {
       mValue = value;
       NS_ASSERTION(IsValid(), "Set invalid SVGLength");
-      return PR_TRUE;
+      return true;
     }
-    return PR_FALSE;
+    return false;
   }
 
   /**
@@ -173,9 +173,9 @@ public:
   /**
    * Convert this length's value to the unit specified.
    *
-   * This method returns PR_TRUE, unless it isn't possible to convert the
+   * This method returns true, unless it isn't possible to convert the
    * length to the specified unit. In that case the length is left unchanged
-   * and this method returns PR_FALSE.
+   * and this method returns false.
    */
   bool ConvertToUnit(PRUint32 aUnit, nsSVGElement *aElement, PRUint8 aAxis) {
     float val = GetValueInSpecifiedUnit(aUnit, aElement, aAxis);
@@ -183,9 +183,9 @@ public:
       mValue = val;
       mUnit = aUnit;
       NS_ASSERTION(IsValid(), "Set invalid SVGLength");
-      return PR_TRUE;
+      return true;
     }
-    return PR_FALSE;
+    return false;
   }
 
   bool IsPercentage() const {

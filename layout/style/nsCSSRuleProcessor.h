@@ -91,7 +91,7 @@ public:
    * selectors in aSelectorList.  Note that this method will assume
    * the given aElement is not a relevant link.  aSelectorList must not
    * include any pseudo-element selectors.  aSelectorList is allowed
-   * to be null; in this case PR_FALSE will be returned.
+   * to be null; in this case false will be returned.
    */
   static bool SelectorListMatches(mozilla::dom::Element* aElement,
                                     TreeMatchContext& aTreeMatchContext,

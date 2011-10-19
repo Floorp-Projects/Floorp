@@ -2568,8 +2568,8 @@ var gCSSProperties = {
 		domProp: "textOverflow",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "clip", "clip clip" ],
-		other_values: [ "ellipsis", '""', "''", '"hello"', 'clip ellipsis', 'clip ""', '"hello" ""', '"" ellipsis' ],
+		initial_values: [ "clip" ],
+		other_values: [ "ellipsis", '""', "''", '"hello"', 'clip clip', 'ellipsis ellipsis', 'clip ellipsis', 'clip ""', '"hello" ""', '"" ellipsis' ],
 		invalid_values: [ "none", "auto", '"hello" inherit', 'inherit "hello"', 'clip initial', 'initial clip', 'initial inherit', 'inherit initial', 'inherit none']
 	},
 	"text-shadow": {
@@ -2667,8 +2667,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
-		other_values: [ "embed", "bidi-override" ],
-		invalid_values: [ "auto", "none" ]
+		other_values: [ "embed", "bidi-override", "-moz-isolate", "-moz-plaintext", "-moz-isolate bidi-override", "bidi-override -moz-isolate" ],
+		invalid_values: [ "auto", "none", "normal embed", "normal bidi-override", "normal -moz-isolate", "normal -moz-plaintext", "embed normal", "embed -moz-isolate", "embed bidi-override", "embed -moz-plaintext", "bidi-override normal", "bidi-override embed", "bidi-override -moz-plaintext", "-moz-isolate normal", "-moz-isolate embed", "-moz-isolate -moz-plaintext", "-moz-plaintext normal", "-moz-plaintext embed", "-moz-plaintext bidi-override", "-moz-plaintext -moz-isolate" ]
 	},
 	"vertical-align": {
 		domProp: "verticalAlign",

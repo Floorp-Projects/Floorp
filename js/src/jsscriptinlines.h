@@ -45,21 +45,16 @@
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsopcode.h"
-#include "jsregexp.h"
 #include "jsscript.h"
 #include "jsscope.h"
+
 #include "vm/CallObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/RegExpObject.h"
 
 #include "jsscopeinlines.h"
 
 namespace js {
-
-inline
-Bindings::Bindings(JSContext *cx)
-  : lastBinding(NULL), nargs(0), nvars(0), nupvars(0)
-{
-}
 
 inline void
 Bindings::transfer(JSContext *cx, Bindings *bindings)

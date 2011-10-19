@@ -111,7 +111,7 @@ public:
     mParent = aParent;
     mUnscaledAscent = 0;
     mScaleX = mScaleY = 1.0;
-    mDrawNormal = PR_TRUE;
+    mDrawNormal = true;
   }
 
   ~nsMathMLChar() { // not a virtual destructor: this class is not intended to be subclassed
@@ -200,7 +200,7 @@ public:
   // It is used to determine whether the operator is stretchy or a largeop.
   // @param aMaxSize is the value of the "maxsize" attribute.
   // @param aMaxSizeIsAbsolute indicates whether the aMaxSize is an absolute
-  // value in app units (PR_TRUE) or a multiplier of the base size (PR_FALSE).
+  // value in app units (true) or a multiplier of the base size (false).
   nscoord
   GetMaxWidth(nsPresContext* aPresContext,
               nsRenderingContext& aRenderingContext,

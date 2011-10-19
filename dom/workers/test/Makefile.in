@@ -45,6 +45,10 @@ relativesrcdir   = dom/workers/test
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS = \
+  extensions \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
@@ -120,6 +124,8 @@ _SUBDIR_TEST_FILES = \
 _CHROME_TEST_FILES = \
   test_chromeWorker.xul \
   test_chromeWorkerJSM.xul \
+  test_extension.xul \
+  test_extensionBootstrap.xul \
   test_file.xul \
   test_fileMozSlice.xul \
   test_fileBlobPosting.xul \

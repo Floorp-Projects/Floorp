@@ -332,7 +332,7 @@ protected:
         };
 
         HostInfo()
-            : is_ipaddr(PR_FALSE)
+            : is_ipaddr(false)
             { /* other members intentionally uninitialized */ }
        ~HostInfo() {
             if (!is_ipaddr && name.host)

@@ -71,7 +71,7 @@ public:
                 nsIStreamListener* aListener);
 
   void InitializeByteRange(PRInt64 aStart, PRInt64 aEnd);
-  void SetIsLastPart() { mIsLastPart = PR_TRUE; }
+  void SetIsLastPart() { mIsLastPart = true; }
   nsresult SendOnStartRequest(nsISupports* aContext);
   nsresult SendOnDataAvailable(nsISupports* aContext, nsIInputStream* aStream,
                                PRUint32 aOffset, PRUint32 aLen);

@@ -74,50 +74,50 @@ struct TypedArray;
 // OpenGL object wrappers
 //
 
-[scriptable, uuid(0df9f4ed-f5ff-4e51-a6ff-2bd9785a7639)]
+[scriptable, builtinclass, uuid(0df9f4ed-f5ff-4e51-a6ff-2bd9785a7639)]
 interface nsIWebGLTexture : nsISupports
 {
   [noscript] attribute WebGLuint name;
 };
 
-[scriptable, uuid(9eca9c32-8305-11de-b89b-000c29206271)]
+[scriptable, builtinclass, uuid(9eca9c32-8305-11de-b89b-000c29206271)]
 interface nsIWebGLBuffer : nsISupports
 {
   [noscript] attribute WebGLuint name;
 };
 
-[scriptable, uuid(a6a19e74-8305-11de-9ce9-000c29206271)]
+[scriptable, builtinclass, uuid(a6a19e74-8305-11de-9ce9-000c29206271)]
 interface nsIWebGLProgram : nsISupports
 {
   [noscript] attribute WebGLuint name;
 };
 
-[scriptable, uuid(ac7440a4-8305-11de-807b-000c29206271)]
+[scriptable, builtinclass, uuid(ac7440a4-8305-11de-807b-000c29206271)]
 interface nsIWebGLShader : nsISupports
 {
   [noscript] attribute WebGLuint name;
 };
 
-[scriptable, uuid(beea4b38-3094-4e8d-b6e6-8b21d07e8994)]
+[scriptable, builtinclass, uuid(beea4b38-3094-4e8d-b6e6-8b21d07e8994)]
 interface nsIWebGLShaderArray : nsISupports
 {
     readonly attribute unsigned long length;
     nsIWebGLShader item(in unsigned long index);
 };
 
-[scriptable, uuid(bce8be60-8305-11de-9f3c-000c29206271)]
+[scriptable, builtinclass, uuid(bce8be60-8305-11de-9f3c-000c29206271)]
 interface nsIWebGLFramebuffer : nsISupports
 {
   [noscript] attribute WebGLuint name;
 };
 
-[scriptable, uuid(c82eacd0-8305-11de-9de9-000c29206271)]
+[scriptable, builtinclass, uuid(c82eacd0-8305-11de-9de9-000c29206271)]
 interface nsIWebGLRenderbuffer : nsISupports
 {
   [noscript] attribute WebGLuint name;
 };
 
-[scriptable, uuid(a85d4fd0-5b9f-4cb8-aeee-5a2c5c5bad76)]
+[scriptable, builtinclass, uuid(a85d4fd0-5b9f-4cb8-aeee-5a2c5c5bad76)]
 interface nsIWebGLActiveInfo : nsISupports
 {
     readonly attribute WebGLint size;
@@ -125,7 +125,7 @@ interface nsIWebGLActiveInfo : nsISupports
     readonly attribute DOMString name;
 };
 
-[scriptable, uuid(d38b0467-623e-4c82-9140-5f14a3bd1bad)]
+[scriptable, builtinclass, uuid(d38b0467-623e-4c82-9140-5f14a3bd1bad)]
 interface nsIWebGLUniformLocation : nsISupports
 {
     [noscript] attribute WebGLint location;
@@ -134,7 +134,7 @@ interface nsIWebGLUniformLocation : nsISupports
 /* Base class for all WebGL extensions, and for those without
  * any additional tokens/methods.
  */
-[scriptable, uuid(70814f32-a5c5-4b95-83d5-ac653bac3316)]
+[scriptable, builtinclass, uuid(70814f32-a5c5-4b95-83d5-ac653bac3316)]
 interface nsIWebGLExtension : nsISupports
 {
 };
@@ -142,7 +142,7 @@ interface nsIWebGLExtension : nsISupports
 /* Classes that extend on nsIWebGLExtension and provide
  * extra tokens, functions, etc.
  */
-[scriptable, uuid(3de3dfd9-864a-4e4c-989b-2977eaa80b7b)]
+[scriptable, builtinclass, uuid(3de3dfd9-864a-4e4c-989b-2977eaa80b7b)]
 interface nsIWebGLExtensionStandardDerivatives : nsIWebGLExtension
 {
   //
@@ -154,7 +154,7 @@ interface nsIWebGLExtensionStandardDerivatives : nsIWebGLExtension
 };
 
 
-[scriptable, uuid(ef15ae85-4670-4dc4-848d-51ca81e8397a)]
+[scriptable, builtinclass, uuid(ef15ae85-4670-4dc4-848d-51ca81e8397a)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //

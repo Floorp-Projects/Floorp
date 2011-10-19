@@ -113,7 +113,7 @@ private:
          nsInputStreamWrapper(nsCacheEntryDescriptor * desc, PRUint32 off)
              : mDescriptor(desc)
              , mStartOffset(off)
-             , mInitialized(PR_FALSE)
+             , mInitialized(false)
          {
              NS_ADDREF(mDescriptor);
          }
@@ -148,7 +148,7 @@ private:
          nsOutputStreamWrapper(nsCacheEntryDescriptor * desc, PRUint32 off)
              : mDescriptor(desc)
              , mStartOffset(off)
-             , mInitialized(PR_FALSE)
+             , mInitialized(false)
          {
              NS_ADDREF(mDescriptor); // owning ref
          }

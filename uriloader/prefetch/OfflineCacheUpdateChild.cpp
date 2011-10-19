@@ -108,8 +108,8 @@ OfflineCacheUpdateChild::RefcountHitZero()
 
 OfflineCacheUpdateChild::OfflineCacheUpdateChild(nsIDOMWindow* aWindow)
     : mState(STATE_UNINITIALIZED)
-    , mIsUpgrade(PR_FALSE)
-    , mIPCActivated(PR_FALSE)
+    , mIsUpgrade(false)
+    , mIPCActivated(false)
     , mWindow(aWindow)
 {
 }
@@ -290,7 +290,7 @@ OfflineCacheUpdateChild::GetStatus(PRUint16 *aStatus)
 NS_IMETHODIMP
 OfflineCacheUpdateChild::GetPartial(bool *aPartial)
 {
-    *aPartial = PR_FALSE;
+    *aPartial = false;
     return NS_OK;
 }
 
@@ -432,7 +432,7 @@ OfflineCacheUpdateChild::Schedule()
                                               mClientID,
                                               stickDocument);
 
-    mIPCActivated = PR_TRUE;
+    mIPCActivated = true;
     this->AddRef();
 
     return NS_OK;

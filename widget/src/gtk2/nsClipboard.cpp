@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsClipboard.h"
 #include "nsSupportsPrimitives.h"
 #include "nsString.h"
@@ -59,6 +61,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+using namespace mozilla;
 
 // Callback when someone asks us for the data
 void
@@ -595,7 +599,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         nsCOMPtr<nsISupports> item;
         PRUint32 len;
         nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive;
-        for (PRUint32 i = 0; !ptrPrimitive && i < NS_ARRAY_LENGTH(imageMimeTypes); i++) {
+        for (PRUint32 i = 0; !ptrPrimitive && i < ArrayLength(imageMimeTypes); i++) {
             rv = trans->GetTransferData(imageMimeTypes[i], getter_AddRefs(item), &len);
             ptrPrimitive = do_QueryInterface(item);
         }
@@ -953,7 +957,6 @@ clipboard_contents_received(GtkClipboard     *clipboard,
 {
     retrieval_context *context = static_cast<retrieval_context *>(data);
     if (context->timed_out) {
-        delete context;
         return;
     }
 
@@ -967,20 +970,16 @@ clipboard_contents_received(GtkClipboard     *clipboard,
 static GtkSelectionData *
 wait_for_contents(GtkClipboard *clipboard, GdkAtom target)
 {
-    retrieval_context *context = new retrieval_context();
+    retrieval_context context;
     gtk_clipboard_request_contents(clipboard, target,
                                    clipboard_contents_received,
-                                   context);
+                                   &context);
 
-    if (!wait_for_retrieval(clipboard, context)) {
-        // Don't delete |context|; the callback will when it eventually
-        // comes back.
+    if (!wait_for_retrieval(clipboard, &context)) {
         return nsnull;
     }
 
-    GtkSelectionData *result = static_cast<GtkSelectionData *>(context->data);
-    delete context;
-    return result;
+    return static_cast<GtkSelectionData *>(context.data);
 }
 
 static void
@@ -990,7 +989,6 @@ clipboard_text_received(GtkClipboard *clipboard,
 {
     retrieval_context *context = static_cast<retrieval_context *>(data);
     if (context->timed_out) {
-        delete context;
         return;
     }
 
@@ -1001,16 +999,12 @@ clipboard_text_received(GtkClipboard *clipboard,
 static gchar *
 wait_for_text(GtkClipboard *clipboard)
 {
-    retrieval_context *context = new retrieval_context();
-    gtk_clipboard_request_text(clipboard, clipboard_text_received, context);
+    retrieval_context context;
+    gtk_clipboard_request_text(clipboard, clipboard_text_received, &context);
 
-    if (!wait_for_retrieval(clipboard, context)) {
-        // Don't delete |context|; the callback will when it eventually
-        // comes back.
+    if (!wait_for_retrieval(clipboard, &context)) {
         return nsnull;
     }
 
-    gchar *result = static_cast<gchar *>(context->data);
-    delete context;
-    return result;
+    return static_cast<gchar *>(context.data);
 }

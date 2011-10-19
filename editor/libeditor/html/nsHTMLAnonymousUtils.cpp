@@ -186,7 +186,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
 
     // establish parenthood of the element
     newContent->SetNativeAnonymous();
-    res = newContent->BindToTree(doc, parentContent, parentContent, PR_TRUE);
+    res = newContent->BindToTree(doc, parentContent, parentContent, true);
     if (NS_FAILED(res)) {
       newContent->UnbindFromTree();
       return res;
@@ -374,7 +374,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   if (mIsObjectResizingEnabled && focusElement &&
       IsModifiableNode(focusElement) && focusElement != hostNode) {
     if (nsEditProperty::img == focusTagAtom)
-      mResizedObjectIsAnImage = PR_TRUE;
+      mResizedObjectIsAnImage = true;
     if (mResizedObject)
       res = RefreshResizers();
     else
@@ -429,7 +429,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
 
   if (isPositioned) {
     // Yes, it is absolutely positioned
-    mResizedObjectIsAbsolutelyPositioned = PR_TRUE;
+    mResizedObjectIsAbsolutelyPositioned = true;
 
     nsCOMPtr<nsIDOMWindow> window;
     res = mHTMLCSSUtils->GetDefaultViewCSS(aElement, getter_AddRefs(window));
@@ -453,7 +453,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
     aH = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("height"));
   }
   else {
-    mResizedObjectIsAbsolutelyPositioned = PR_FALSE;
+    mResizedObjectIsAbsolutelyPositioned = false;
     nsCOMPtr<nsIDOMNSHTMLElement> nsElement = do_QueryInterface(aElement);
     if (!nsElement) {return NS_ERROR_NULL_POINTER; }
 

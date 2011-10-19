@@ -205,15 +205,15 @@ public:
 
     gfxFontEntry(const nsAString& aName, gfxFontFamily *aFamily = nsnull,
                  bool aIsStandardFace = false) : 
-        mName(aName), mItalic(PR_FALSE), mFixedPitch(PR_FALSE),
-        mIsProxy(PR_FALSE), mIsValid(PR_TRUE), 
-        mIsBadUnderlineFont(PR_FALSE), mIsUserFont(PR_FALSE),
-        mIsLocalUserFont(PR_FALSE), mStandardFace(aIsStandardFace),
-        mSymbolFont(PR_FALSE),
-        mIgnoreGDEF(PR_FALSE),
+        mName(aName), mItalic(false), mFixedPitch(false),
+        mIsProxy(false), mIsValid(true), 
+        mIsBadUnderlineFont(false), mIsUserFont(false),
+        mIsLocalUserFont(false), mStandardFace(aIsStandardFace),
+        mSymbolFont(false),
+        mIgnoreGDEF(false),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
-        mHasCmapTable(PR_FALSE),
-        mCmapInitialized(PR_FALSE),
+        mHasCmapTable(false),
+        mCmapInitialized(false),
         mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
         mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
@@ -253,7 +253,7 @@ public:
 
     inline bool HasCharacter(PRUint32 ch) {
         if (mCharacterMap.test(ch))
-            return PR_TRUE;
+            return true;
 
         return TestCharacterMap(ch);
     }
@@ -265,10 +265,10 @@ public:
     virtual nsresult ReadCMAP();
 
     virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
-        return PR_TRUE;
+        return true;
     }
     virtual bool SupportsLangGroup(nsIAtom *aLangGroup) const {
-        return PR_TRUE;
+        return true;
     }
 
     virtual nsresult GetFontTable(PRUint32 aTableTag, FallibleTArray<PRUint8>& aBuffer) {
@@ -285,8 +285,8 @@ public:
                                              bool aNeedsBold);
 
     // Get an existing font table cache entry in aBlob if it has been
-    // registered, or return PR_FALSE if not.  Callers must call
-    // hb_blob_destroy on aBlob if PR_TRUE is returned.
+    // registered, or return false if not.  Callers must call
+    // hb_blob_destroy on aBlob if true is returned.
     //
     // Note that some gfxFont implementations may not call this at all,
     // if it is more efficient to get the table from the OS at that level.
@@ -336,17 +336,17 @@ protected:
     friend class gfxSingleFaceMacFontFamily;
 
     gfxFontEntry() :
-        mItalic(PR_FALSE), mFixedPitch(PR_FALSE),
-        mIsProxy(PR_FALSE), mIsValid(PR_TRUE), 
-        mIsBadUnderlineFont(PR_FALSE),
-        mIsUserFont(PR_FALSE),
-        mIsLocalUserFont(PR_FALSE),
-        mStandardFace(PR_FALSE),
-        mSymbolFont(PR_FALSE),
-        mIgnoreGDEF(PR_FALSE),
+        mItalic(false), mFixedPitch(false),
+        mIsProxy(false), mIsValid(true), 
+        mIsBadUnderlineFont(false),
+        mIsUserFont(false),
+        mIsLocalUserFont(false),
+        mStandardFace(false),
+        mSymbolFont(false),
+        mIgnoreGDEF(false),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
-        mHasCmapTable(PR_FALSE),
-        mCmapInitialized(PR_FALSE),
+        mHasCmapTable(false),
+        mCmapInitialized(false),
         mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
         mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
@@ -477,12 +477,12 @@ public:
 
     gfxFontFamily(const nsAString& aName) :
         mName(aName),
-        mOtherFamilyNamesInitialized(PR_FALSE),
-        mHasOtherFamilyNames(PR_FALSE),
-        mFaceNamesInitialized(PR_FALSE),
-        mHasStyles(PR_FALSE),
-        mIsSimpleFamily(PR_FALSE),
-        mIsBadUnderlineFamily(PR_FALSE)
+        mOtherFamilyNamesInitialized(false),
+        mHasOtherFamilyNames(false),
+        mFaceNamesInitialized(false),
+        mHasStyles(false),
+        mIsSimpleFamily(false),
+        mIsBadUnderlineFamily(false)
         { }
 
     virtual ~gfxFontFamily() { }
@@ -500,7 +500,7 @@ public:
         if (aFontEntry->IsItalic() && !aFontEntry->IsUserFont() &&
             Name().EqualsLiteral("Times New Roman"))
         {
-            aFontEntry->mIgnoreGDEF = PR_TRUE;
+            aFontEntry->mIgnoreGDEF = true;
         }
         mAvailableFonts.AppendElement(aFontEntry);
         aFontEntry->SetFamily(this);
@@ -526,7 +526,7 @@ public:
 
     // set when other family names have been read in
     void SetOtherFamilyNamesInitialized() {
-        mOtherFamilyNamesInitialized = PR_TRUE;
+        mOtherFamilyNamesInitialized = true;
     }
 
     // read in other localized family names, fullnames and Postscript names
@@ -552,7 +552,7 @@ public:
 
     // mark this family as being in the "bad" underline offset blacklist
     void SetBadUnderlineFamily() {
-        mIsBadUnderlineFamily = PR_TRUE;
+        mIsBadUnderlineFamily = true;
         if (mHasStyles) {
             SetBadUnderlineFonts();
         }
@@ -583,7 +583,7 @@ protected:
         PRUint32 i, numFonts = mAvailableFonts.Length();
         for (i = 0; i < numFonts; i++) {
             if (mAvailableFonts[i]) {
-                mAvailableFonts[i]->mIsBadUnderlineFont = PR_TRUE;
+                mAvailableFonts[i]->mIsBadUnderlineFont = true;
             }
         }
     }
@@ -728,7 +728,7 @@ protected:
         static PLDHashNumber HashKey(const KeyTypePointer aKey) {
             return NS_PTR_TO_INT32(aKey->mFontEntry) ^ aKey->mStyle->Hash();
         }
-        enum { ALLOW_MEMMOVE = PR_TRUE };
+        enum { ALLOW_MEMMOVE = true };
 
         gfxFont* mFont;
     };
@@ -1023,10 +1023,10 @@ public:
     // If they do not override this, gfxHarfBuzzShaper will fetch the cmap
     // table and use that.
     virtual bool ProvidesGetGlyph() const {
-        return PR_FALSE;
+        return false;
     }
     // Map unicode character to glyph ID.
-    // Only used if ProvidesGetGlyph() returns PR_TRUE.
+    // Only used if ProvidesGetGlyph() returns true.
     virtual PRUint32 GetGlyph(PRUint32 unicode, PRUint32 variation_selector) {
         return 0;
     }
@@ -1035,7 +1035,7 @@ public:
     // if they do not override this, harfbuzz will use unhinted widths
     // derived from the font tables
     virtual bool ProvidesGlyphWidths() {
-        return PR_FALSE;
+        return false;
     }
 
     // The return value is interpreted as a horizontal advance in 16.16 fixed
@@ -1176,7 +1176,7 @@ public:
      */
     bool NotifyLineBreaksChanged(gfxTextRun *aTextRun,
                                    PRUint32 aStart, PRUint32 aLength)
-    { return PR_FALSE; }
+    { return false; }
 
     // Expiration tracking
     nsExpirationState *GetExpirationState() { return &mExpirationState; }
@@ -1203,7 +1203,7 @@ public:
     gfxFontEntry *GetFontEntry() { return mFontEntry.get(); }
     bool HasCharacter(PRUint32 ch) {
         if (!mIsValid)
-            return PR_FALSE;
+            return false;
         return mFontEntry->HasCharacter(ch); 
     }
 
@@ -1279,7 +1279,7 @@ protected:
     // Default simply calls m[Platform|HarfBuzz]Shaper->InitTextRun().
     // Override if the font class wants to give special handling
     // to shaper failure.
-    // Returns PR_FALSE if shaping failed (though currently we
+    // Returns false if shaping failed (though currently we
     // don't have any good way to handle that situation).
     virtual bool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
@@ -1353,7 +1353,15 @@ public:
          * quality. This may involve disabling ligatures and/or kerning or
          * other effects.
          */
-        TEXT_OPTIMIZE_SPEED          = 0x0100
+        TEXT_OPTIMIZE_SPEED          = 0x0100,
+        /**
+         * For internal use by the memory reporter when accounting for
+         * storage used by textruns.
+         * Because the reporter may visit each textrun multiple times while
+         * walking the frame trees and textrun cache, it needs to mark
+         * textruns that have been seen so as to avoid multiple-accounting.
+         */
+        TEXT_RUN_SIZE_ACCOUNTED      = 0x0200
     };
 
     /**
@@ -2038,6 +2046,21 @@ public:
     // user font set generation when text run was created
     PRUint64 GetUserFontSetGeneration() { return mUserFontSetGeneration; }
 
+    // return storage used by this run, for memory reporter;
+    // nsTransformedTextRun needs to override this as it holds additional data
+    virtual PRUint64 ComputeSize();
+
+    void AccountForSize(PRUint64* aTotal)  {
+        if (mFlags & gfxTextRunFactory::TEXT_RUN_SIZE_ACCOUNTED) {
+            return;
+        }
+        mFlags |= gfxTextRunFactory::TEXT_RUN_SIZE_ACCOUNTED;
+        *aTotal += ComputeSize();
+    }
+    void ClearSizeAccounted() {
+        mFlags &= ~gfxTextRunFactory::TEXT_RUN_SIZE_ACCOUNTED;
+    }
+
 #ifdef DEBUG
     // number of entries referencing this textrun in the gfxTextRunWordCache
     PRUint32 mCachedWords;
@@ -2206,6 +2229,11 @@ private:
                 }
             }
             return details;
+        }
+
+        PRUint32 SizeOf() {
+            return sizeof(DetailedGlyphStore) +
+                mDetails.SizeOf() + mOffsetToIndex.SizeOf();
         }
 
     private:

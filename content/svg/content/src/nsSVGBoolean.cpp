@@ -62,11 +62,11 @@ GetValueFromString(const nsAString &aValueAsString,
                    bool *aValue)
 {
   if (aValueAsString.EqualsLiteral("true")) {
-    *aValue = PR_TRUE;
+    *aValue = true;
     return NS_OK;
   }
   if (aValueAsString.EqualsLiteral("false")) {
-    *aValue = PR_FALSE;
+    *aValue = false;
     return NS_OK;
   }
   return NS_ERROR_DOM_SYNTAX_ERR;
@@ -74,8 +74,7 @@ GetValueFromString(const nsAString &aValueAsString,
 
 nsresult
 nsSVGBoolean::SetBaseValueString(const nsAString &aValueAsString,
-                                 nsSVGElement *aSVGElement,
-                                 bool aDoSetAttr)
+                                 nsSVGElement *aSVGElement)
 {
   bool val;
 
@@ -112,7 +111,7 @@ void
 nsSVGBoolean::SetBaseValue(bool aValue,
                            nsSVGElement *aSVGElement)
 {
-  NS_PRECONDITION(aValue == PR_TRUE || aValue == PR_FALSE, "Boolean out of range");
+  NS_PRECONDITION(aValue == true || aValue == false, "Boolean out of range");
 
   if (aValue != mBaseVal) {
     mBaseVal = aValue;
@@ -124,7 +123,7 @@ nsSVGBoolean::SetBaseValue(bool aValue,
       aSVGElement->AnimationNeedsResample();
     }
 #endif
-    aSVGElement->DidChangeBoolean(mAttrEnum, PR_TRUE);
+    aSVGElement->DidChangeBoolean(mAttrEnum, true);
   }
 }
 
@@ -132,7 +131,7 @@ void
 nsSVGBoolean::SetAnimValue(bool aValue, nsSVGElement *aSVGElement)
 {
   mAnimVal = aValue;
-  mIsAnimated = PR_TRUE;
+  mIsAnimated = true;
   aSVGElement->DidAnimateBoolean(mAttrEnum);
 }
 
@@ -170,7 +169,7 @@ nsSVGBoolean::SMILBool::ValueFromString(const nsAString& aStr,
   nsSMILValue val(&SMILBoolType::sSingleton);
   val.mU.mBool = value;
   aValue = val;
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
 
   return NS_OK;
 }
@@ -188,7 +187,7 @@ nsSVGBoolean::SMILBool::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
     mVal->SetAnimValue(mVal->mBaseVal, mSVGElement);
-    mVal->mIsAnimated = PR_FALSE;
+    mVal->mIsAnimated = false;
   }
 }
 

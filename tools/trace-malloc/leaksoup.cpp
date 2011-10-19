@@ -164,7 +164,7 @@ int main(int argc, char **argv)
         for (ADLog::const_iterator entry = log.begin(), entry_end = log.end();
              entry != entry_end; ++entry, ++cur_node) {
             const ADLog::Entry *e = cur_node->entry = *entry;
-            cur_node->reached = PR_FALSE;
+            cur_node->reached = false;
 
             for (ADLog::Pointer p = e->address,
                             p_end = e->address + e->datasize;
@@ -214,7 +214,7 @@ int main(int argc, char **argv)
                     n->index = dfs_index++;
                     stack.RemoveElementAt(pos);
                 } else {
-                    n->reached = PR_TRUE;
+                    n->reached = true;
 
                     // When doing post-order processing, we have to be
                     // careful not to put reached nodes into the stack.
@@ -249,7 +249,7 @@ int main(int argc, char **argv)
     PRUint32 num_sccs = 0;
     {
         for (size_t i = 0; i < count; ++i) {
-            nodes[i].reached = PR_FALSE;
+            nodes[i].reached = false;
         }
         nsVoidArray stack;
         for (AllocationNode **sn = sorted_nodes,
@@ -267,7 +267,7 @@ int main(int argc, char **argv)
                 stack.RemoveElementAt(pos);
 
                 if (!n->reached) {
-                    n->reached = PR_TRUE;
+                    n->reached = true;
                     n->index = num_sccs;
                     stack.AppendElements(n->pointers_from);
                 }
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
     PRUint32 num_root_nodes = count;
     {
         for (size_t i = 0; i < count; ++i) {
-            nodes[i].is_root = PR_TRUE;
+            nodes[i].is_root = true;
         }
 
         nsVoidArray stack;
@@ -307,7 +307,7 @@ int main(int argc, char **argv)
                 stack.RemoveElementAt(pos);
 
                 if (n->is_root) {
-                    n->is_root = PR_FALSE;
+                    n->is_root = false;
                     --num_root_nodes;
                     stack.AppendElements(n->pointers_to);
                 }
@@ -335,13 +335,13 @@ int main(int argc, char **argv)
                count, num_root_nodes, num_sccs);
 
         for (size_t i = 0; i < count; ++i) {
-            nodes[i].reached = PR_FALSE;
+            nodes[i].reached = false;
         }
 
         // Loop over the sorted nodes twice, first printing the roots
         // and then the non-roots.
-        for (PRInt32 root_type = PR_TRUE;
-             root_type == PR_TRUE || root_type == PR_FALSE; --root_type) {
+        for (PRInt32 root_type = true;
+             root_type == true || root_type == false; --root_type) {
             if (root_type) {
                 printf("\n\n"
                        "<div class=\"root\">\n"

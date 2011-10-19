@@ -49,12 +49,10 @@
 #include "jsstdint.h"
 #include "jsutil.h"
 #include "jsclist.h"
-#include "jshashtable.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -62,13 +60,14 @@
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
+
+#include "frontend/BytecodeGenerator.h"
+#include "frontend/Parser.h"
 #include "vm/Debugger.h"
 
 #include "jsatominlines.h"
@@ -176,34 +175,6 @@ JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
         return JS_FALSE;
 
     return script->setStepModeFlag(cx, singleStep);
-}
-
-jsbytecode *
-js_UntrapScriptCode(JSContext *cx, JSScript *script)
-{
-    jsbytecode *code = script->code;
-    BreakpointSiteMap &sites = script->compartment()->breakpointSites;
-    for (BreakpointSiteMap::Range r = sites.all(); !r.empty(); r.popFront()) {
-        BreakpointSite *site = r.front().value;
-        if (site->script == script && size_t(site->pc - script->code) < script->length) {
-            if (code == script->code) {
-                size_t nbytes = script->length * sizeof(jsbytecode);
-                jssrcnote *notes = script->notes();
-                jssrcnote *sn;
-                for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
-                    continue;
-                nbytes += (sn - notes + 1) * sizeof *sn;
-
-                code = (jsbytecode *) cx->malloc_(nbytes);
-                if (!code)
-                    break;
-                memcpy(code, script->code, nbytes);
-                GetGSNCache(cx)->purge();
-            }
-            code[site->pc - script->code] = site->realOpcode;
-        }
-    }
-    return code;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -604,13 +575,6 @@ JS_PUBLIC_API(JSBool)
 JS_IsScriptFrame(JSContext *cx, JSStackFrame *fp)
 {
     return !Valueify(fp)->isDummyFrame();
-}
-
-/* this is deprecated, use JS_GetFrameScopeChain instead */
-JS_PUBLIC_API(JSObject *)
-JS_GetFrameObject(JSContext *cx, JSStackFrame *fp)
-{
-    return &Valueify(fp)->scopeChain();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1071,8 +1035,6 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
         nbytes += GetAtomTotalSize(cx, fun->atom);
     return nbytes;
 }
-
-#include "jsemit.h"
 
 JS_PUBLIC_API(size_t)
 JS_GetScriptTotalSize(JSContext *cx, JSScript *script)

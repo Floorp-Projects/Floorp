@@ -58,10 +58,10 @@ inCSSValueSearch::inCSSValueSearch()
     mProperties(nsnull),
     mResultCount(0),
     mPropertyCount(0),
-    mIsActive(PR_FALSE),
-    mHoldResults(PR_TRUE),
-    mReturnRelativeURLs(PR_TRUE),
-    mNormalizeChromeURLs(PR_FALSE)
+    mIsActive(false),
+    mHoldResults(true),
+    mReturnRelativeURLs(true),
+    mNormalizeChromeURLs(false)
 {
   nsCSSProps::AddRefTable();
   mProperties = new nsCSSProperty[100];
@@ -296,7 +296,7 @@ inCSSValueSearch::InitSearch()
 nsresult
 inCSSValueSearch::KillSearch(PRInt16 aResult)
 {
-  mIsActive = PR_TRUE;
+  mIsActive = true;
   mObserver->OnSearchEnd(this, aResult);
 
   return NS_OK;
@@ -403,7 +403,7 @@ nsresult
 inCSSValueSearch::EqualizeURL(nsAutoString* aURL)
 {
   if (mNormalizeChromeURLs) {
-    if (aURL->Find("chrome://", PR_FALSE, 0, 1) >= 0) {
+    if (aURL->Find("chrome://", false, 0, 1) >= 0) {
       PRUint32 len = aURL->Length();
       PRUnichar* result = new PRUnichar[len-8];
       const PRUnichar* src = aURL->get();

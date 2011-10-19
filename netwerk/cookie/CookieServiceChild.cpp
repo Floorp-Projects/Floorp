@@ -90,8 +90,8 @@ CookieServiceChild::CookieServiceChild()
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_WARN_IF_FALSE(prefBranch, "no prefservice");
   if (prefBranch) {
-    prefBranch->AddObserver(kPrefCookieBehavior, this, PR_TRUE);
-    prefBranch->AddObserver(kPrefThirdPartySession, this, PR_TRUE);
+    prefBranch->AddObserver(kPrefCookieBehavior, this, true);
+    prefBranch->AddObserver(kPrefThirdPartySession, this, true);
     PrefChanged(prefBranch);
   }
 }
