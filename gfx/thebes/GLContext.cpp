@@ -389,6 +389,18 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 mInitialized = false;
             }
         }
+
+        if (IsExtensionSupported(GLContext::ANGLE_framebuffer_multisample) ||
+            IsExtensionSupported(GLContext::EXT_framebuffer_multisample)) {
+            SymLoadStruct auxSymbols[] = {
+                    { (PRFuncPtr*) &mSymbols.fRenderbufferStorageMultisample, { "RenderbufferStorageMultisample", "RenderbufferStorageMultisampleEXT", "RenderbufferStorageMultisampleANGLE", NULL } },
+                    { NULL, { NULL } },
+            };
+            if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
+                NS_RUNTIMEABORT("GL supports framebuffer_multisample without supplying glRenderbufferStorageMultisample");
+                mInitialized = false;
+            }
+        }
     }
 
     if (mInitialized) {
@@ -455,6 +467,8 @@ static const char *sExtensionNames[] = {
     "GL_OES_standard_derivatives",
     "GL_EXT_framebuffer_blit",
     "GL_ANGLE_framebuffer_blit",
+    "GL_EXT_framebuffer_multisample",
+    "GL_ANGLE_framebuffer_multisample",
     NULL
 };
 
