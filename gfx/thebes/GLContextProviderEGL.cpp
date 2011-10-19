@@ -1073,7 +1073,7 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
             return false;
         }
 
-        if (!ResizeOffscreenFBO(aNewSize, false))
+        if (!ResizeOffscreenFBO(pbsize, false))
             return false;
 
         SetOffscreenSize(aNewSize, pbsize);
@@ -1120,7 +1120,7 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         if (!config) {
             return false;
         }
-        if (!ResizeOffscreenFBO(aNewSize, false))
+        if (!ResizeOffscreenFBO(aNewSize, true))
             return false;
 
         mThebesSurface = xsurface;
@@ -1130,7 +1130,10 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 #endif
 
 #if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-    return ResizeOffscreenPixmapSurface(aNewSize);
+    if (ResizeOffscreenPixmapSurface(aNewSize)) {
+        if (ResizeOffscreenFBO(aNewSize, true))
+            return true;
+    }
 #endif
 
     return ResizeOffscreenFBO(aNewSize, true);
