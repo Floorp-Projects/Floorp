@@ -1150,6 +1150,9 @@ JSObject::setParent(JSContext *cx, JSObject *parent)
 /* static */ bool
 Shape::setObjectParent(JSContext *cx, JSObject *parent, Shape **listp)
 {
+    if ((*listp)->getObjectParent() == parent)
+        return true;
+
     BaseShape base(*(*listp)->base()->unowned());
     base.setParent(parent);
     BaseShape *nbase = BaseShape::lookup(cx, base);
@@ -1190,6 +1193,9 @@ JSObject::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32 flag_, GenerateShape
 {
     BaseShape::Flag flag = (BaseShape::Flag) flag_;
 
+    if (lastProperty()->getObjectFlags() & flag)
+        return true;
+
     if (inDictionaryMode()) {
         if (generateShape == GENERATE_SHAPE && !generateOwnShape(cx))
             return false;
@@ -1203,6 +1209,9 @@ JSObject::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32 flag_, GenerateShape
 /* static */ bool
 Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, Shape **listp)
 {
+    if ((*listp)->getObjectFlags() & flag)
+        return true;
+
     BaseShape base(*(*listp)->base()->unowned());
     base.flags |= flag;
     BaseShape *nbase = BaseShape::lookup(cx, base);

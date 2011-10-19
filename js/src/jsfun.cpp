@@ -2335,7 +2335,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         JS_ASSERT(funobj->isFunction());
         JS_ASSERT(funobj->getParent() == parent);
     } else {
-        funobj = NewFunction(cx, parent ? parent->getGlobal() : NULL);
+        funobj = NewFunction(cx, SkipScopeParent(parent));
         if (!funobj)
             return NULL;
         if (native && !funobj->setSingletonType(cx))
@@ -2381,7 +2381,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
     JS_ASSERT(parent);
     JS_ASSERT(proto);
 
-    JSFunction *clone = NewFunction(cx, parent->getGlobal());
+    JSFunction *clone = NewFunction(cx, SkipScopeParent(parent));
     if (!clone)
         return NULL;
 

@@ -1950,6 +1950,7 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
             return NULL;
         if (!fun->clearType(context))
             return NULL;
+        fun->setCallScope(NULL);
     }
     return fun;
 }
