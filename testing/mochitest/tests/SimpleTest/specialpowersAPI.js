@@ -723,5 +723,15 @@ SpecialPowersAPI.prototype = {
                                        registerFactory);
     return {'cid':cid, 'originalFactory':oldFactory};
   },
+  
+  _getElement: function(aWindow, id) {
+    return ((typeof(id) == "string") ?
+        aWindow.document.getElementById(id) : id); 
+  },
+  
+  dispatchEvent: function(aWindow, target, event) {
+    var el = this._getElement(aWindow, target);
+    return el.dispatchEvent(event);
+  },
 };
 

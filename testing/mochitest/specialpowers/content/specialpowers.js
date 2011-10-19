@@ -127,8 +127,9 @@ function attachSpecialPowersToWindow(aWindow) {
         (aWindow.parent !== null) &&
         (aWindow.parent !== undefined) &&
         (aWindow.parent.wrappedJSObject.SpecialPowers) &&
-        !(aWindow.wrappedJSObject.SpecialPowers)) {
-      aWindow.wrappedJSObject.SpecialPowers = aWindow.parent.SpecialPowers;
+        !(aWindow.wrappedJSObject.SpecialPowers) &&
+        aWindow.location.hostname == aWindow.parent.location.hostname) {
+      aWindow.wrappedJSObject.SpecialPowers = aWindow.parent.wrappedJSObject.SpecialPowers;
     }
     else if ((aWindow !== null) &&
              (aWindow !== undefined) &&
