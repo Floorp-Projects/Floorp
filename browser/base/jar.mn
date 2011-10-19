@@ -71,6 +71,8 @@ browser.jar:
 *       content/browser/syncQuota.xul                 (content/syncQuota.xul)
         content/browser/syncQuota.js                  (content/syncQuota.js)
         content/browser/syncUtils.js                  (content/syncUtils.js)
+        content/browser/syncProgress.js               (content/syncProgress.js)
+*       content/browser/syncProgress.xhtml            (content/syncProgress.xhtml)
 #endif
 # XXX: We should exclude this one as well (bug 71895)
 *       content/browser/hiddenWindow.xul              (content/hiddenWindow.xul)
