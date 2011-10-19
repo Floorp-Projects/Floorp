@@ -106,7 +106,7 @@ struct Parser : private AutoGCRooter
     JSPrincipals        *principals;    /* principals associated with source */
     StackFrame          *const callerFrame;  /* scripted caller frame for eval and dbgapi */
     JSObject            *const callerVarObj; /* callerFrame's varObj */
-    ParseNode           *nodeList;      /* list of recyclable parse-node structs */
+    ParseNodeAllocator  allocator;
     uint32              functionCount;  /* number of functions in current unit */
     ObjectBox           *traceListHead; /* list of parsed object for GC tracing */
     TreeContext         *tc;            /* innermost tree context (stack-allocated) */
@@ -183,10 +183,14 @@ struct Parser : private AutoGCRooter
   private:
     void *allocParseNode(size_t size) {
         JS_ASSERT(size == sizeof(ParseNode));
-        return AllocNodeUninitialized(this);
+        return allocator.allocNode();
     }
 
   public:
+    ParseNode *freeTree(ParseNode *pn) { return allocator.freeTree(pn); }
+    void prepareNodeForMutation(ParseNode *pn) { return allocator.prepareNodeForMutation(pn); }
+
+    /* new_ methods for creating parse nodes. These report OOM on context. */
     JS_DECLARE_NEW_METHODS(allocParseNode,);
 
   private:

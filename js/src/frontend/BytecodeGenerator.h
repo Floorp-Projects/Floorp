@@ -503,6 +503,8 @@ struct TreeContext {                /* tree context for semantic checks */
     bool hasExtensibleScope() const {
         return flags & TCF_FUN_EXTENSIBLE_SCOPE;
     }
+
+    ParseNode *freeTree(ParseNode *pn) { return parser->freeTree(pn); }
 };
 
 /*

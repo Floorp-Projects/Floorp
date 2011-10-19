@@ -206,7 +206,7 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
         if (!pn->isKind(TOK_SEMI) || !pn->pn_kid || !TreeTypeIsXML(pn->pn_kid->getKind()))
             onlyXML = false;
 #endif
-        RecycleTree(pn, &cg);
+        cg.freeTree(pn);
     }
 
 #if JS_HAS_XML_SUPPORT

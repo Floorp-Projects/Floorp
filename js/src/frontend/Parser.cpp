@@ -123,7 +123,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp, bool foldCons
     principals(NULL),
     callerFrame(cfp),
     callerVarObj(cfp ? &cfp->varObj() : NULL),
-    nodeList(NULL),
+    allocator(cx),
     functionCount(0),
     traceListHead(NULL),
     tc(NULL),
@@ -279,9 +279,9 @@ Parser::trace(JSTracer *trc)
  *   function box tree; it could later be recycled, reallocated, and turned
  *   into anything at all. (Fortunately, method list members never get
  *   mutated, so we don't have to worry about that case.)
- *   PrepareNodeForMutation clears the node's function box's node pointer,
- *   disconnecting it entirely from the function box tree, and marking the
- *   function box to be trimmed out.
+ *   ParseNodeAllocator::prepareNodeForMutation clears the node's function
+ *   box's node pointer, disconnecting it entirely from the function box tree,
+ *   and marking the function box to be trimmed out.
  */
 void
 Parser::cleanFunctionList(FunctionBox **funboxHead)
@@ -300,7 +300,7 @@ Parser::cleanFunctionList(FunctionBox **funboxHead)
              * the node, and stay at the same link.
              */
             *link = box->siblings;
-            AddNodeToFreeList(box->node, this);
+            allocator.freeNode(box->node);
         } else {
             /* The function is still live. */
 
@@ -835,7 +835,7 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, TreeContext *tc)
         dn->setOp((js_CodeSpec[dn->getOp()].format & JOF_SET) ? JSOP_SETNAME : JSOP_NAME);
     } else if (dn->kind() == Definition::FUNCTION) {
         JS_ASSERT(dn->isOp(JSOP_NOP));
-        PrepareNodeForMutation(dn, tc);
+        tc->parser->prepareNodeForMutation(dn);
         dn->setKind(TOK_NAME);
         dn->setArity(PN_NAME);
         dn->pn_atom = atom;
@@ -2075,7 +2075,7 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
                 fn->pn_cookie.makeFree();
 
                 tc->lexdeps->remove(funName);
-                RecycleTree(pn, tc);
+                freeTree(pn);
                 pn = fn;
             }
 
@@ -6253,7 +6253,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 pn2->setOp(JSOP_GETPROP);
                 pn2->pn_expr = pn;
                 pn2->pn_atom = pn3->pn_atom;
-                RecycleTree(pn3, tc);
+                freeTree(pn3);
             } else {
                 if (tt == TOK_LP) {
                     pn2->setKind(TOK_FILTER);
@@ -6879,7 +6879,7 @@ Parser::xmlElementOrList(JSBool allowList)
             /* Point tag (/>): recycle pn if pn2 is a list of tag contents. */
             if (pn2->isKind(TOK_XMLSTAGO)) {
                 pn->makeEmpty();
-                RecycleTree(pn, tc);
+                freeTree(pn);
                 pn = pn2;
             } else {
                 JS_ASSERT(pn2->isKind(TOK_XMLNAME) ||
