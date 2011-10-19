@@ -3075,7 +3075,7 @@ static JSBool
 EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
 {
     ptrdiff_t top;
-    ParseNode *left, *right, *next, ltmp, rtmp;
+    ParseNode *left, *right, *next;
     int32_t slot;
 
     top = CG_OFFSET(cg);
@@ -3095,7 +3095,7 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
          */
         if (left->isKind(TOK_NAME) && next->isKind(TOK_NUMBER)) {
             if (!BindNameToSlot(cx, cg, left))
-                return JS_FALSE;
+                return false;
             if (left->isOp(JSOP_ARGUMENTS) &&
                 JSDOUBLE_IS_INT32(next->pn_dval, &slot) &&
                 jsuint(slot) < JS_BIT(16) &&
@@ -3124,15 +3124,15 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
         JS_ASSERT(next != right || pn->pn_count == 3);
         if (left == pn->pn_head) {
             if (!EmitTree(cx, cg, left))
-                return JS_FALSE;
+                return false;
         }
         while (next != right) {
             if (!EmitTree(cx, cg, next))
-                return JS_FALSE;
+                return false;
             if (NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
-                return JS_FALSE;
+                return false;
             if (!EmitElemOpBase(cx, cg, JSOP_GETELEM))
-                return JS_FALSE;
+                return false;
             next = next->pn_next;
         }
     } else {
@@ -3146,17 +3146,19 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
              */
             left = pn->maybeExpr();
             if (!left) {
-                left = &ltmp;
+                left = NullaryNode::create(cg);
+                if (!left)
+                    return false;
                 left->setKind(TOK_STRING);
                 left->setOp(JSOP_BINDNAME);
-                left->setArity(PN_NULLARY);
                 left->pn_pos = pn->pn_pos;
                 left->pn_atom = pn->pn_atom;
             }
-            right = &rtmp;
+            right = NullaryNode::create(cg);
+            if (!right)
+                return false;
             right->setKind(TOK_STRING);
             right->setOp(IsIdentifier(pn->pn_atom) ? JSOP_QNAMEPART : JSOP_STRING);
-            right->setArity(PN_NULLARY);
             right->pn_pos = pn->pn_pos;
             right->pn_atom = pn->pn_atom;
         } else {
@@ -3173,7 +3175,7 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
             left->isKind(TOK_NAME) &&
             right->isKind(TOK_NUMBER)) {
             if (!BindNameToSlot(cx, cg, left))
-                return JS_FALSE;
+                return false;
             if (left->isOp(JSOP_ARGUMENTS) &&
                 JSDOUBLE_IS_INT32(right->pn_dval, &slot) &&
                 jsuint(slot) < JS_BIT(16) &&
@@ -3182,21 +3184,21 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
                  (!cg->mutatesParameter() && !cg->callsEval()))) {
                 left->pn_offset = right->pn_offset = top;
                 EMIT_UINT16_IMM_OP(JSOP_ARGSUB, (jsatomid)slot);
-                return JS_TRUE;
+                return true;
             }
         }
 
         if (!EmitTree(cx, cg, left))
-            return JS_FALSE;
+            return false;
     }
 
     /* The right side of the descendant operator is implicitly quoted. */
     JS_ASSERT(op != JSOP_DESCENDANTS || !right->isKind(TOK_STRING) ||
               right->isOp(JSOP_QNAMEPART));
     if (!EmitTree(cx, cg, right))
-        return JS_FALSE;
+        return false;
     if (NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
-        return JS_FALSE;
+        return false;
     return EmitElemOpBase(cx, cg, op);
 }
 

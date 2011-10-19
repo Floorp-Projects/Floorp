@@ -54,8 +54,6 @@
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
 
-JS_BEGIN_EXTERN_C
-
 namespace js {
 
 struct GlobalScope {
@@ -182,7 +180,7 @@ struct Parser : private AutoGCRooter
      */
     inline bool reportErrorNumber(ParseNode *pn, uintN flags, uintN errorNumber, ...);
 
-private:
+  private:
     /*
      * JS parsers, from lowest to highest precedence.
      *
@@ -300,7 +298,5 @@ DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc);
  * Convenience macro to access Parser.tokenStream as a pointer.
  */
 #define TS(p) (&(p)->tokenStream)
-
-JS_END_EXTERN_C
 
 #endif /* Parser_h__ */

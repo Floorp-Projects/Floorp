@@ -383,7 +383,7 @@ NewOrRecycledNode(TreeContext *tc)
     ParseNode *pn = tc->parser->nodeList;
     if (!pn) {
         JSContext *cx = tc->parser->context;
-        pn = cx->tempLifoAlloc().new_<ParseNode>();
+        pn = (ParseNode *) cx->tempLifoAlloc().alloc(sizeof (ParseNode));
         if (!pn)
             js_ReportOutOfMemory(cx);
     } else {

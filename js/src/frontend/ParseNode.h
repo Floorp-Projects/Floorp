@@ -315,6 +315,24 @@ struct ParseNode {
                         pn_defn   : 1;  /* this node is a Definition */
 
   public:
+    ParseNode(TokenKind type, JSOp op, ParseNodeArity arity)
+      : pn_type(type), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
+        pn_offset(0), pn_next(NULL), pn_link(NULL)
+    {
+        pn_pos.begin.index = 0;
+        pn_pos.begin.lineno = 0;
+        pn_pos.end.index = 0;
+        pn_pos.end.lineno = 0;
+        memset(&pn_u, 0, sizeof pn_u);
+    }
+
+    ParseNode(TokenKind type, JSOp op, ParseNodeArity arity, const TokenPos &pos)
+      : pn_type(type), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
+        pn_pos(pos), pn_offset(0), pn_next(NULL), pn_link(NULL)
+    {
+        memset(&pn_u, 0, sizeof pn_u);
+    }
+
     JSOp getOp() const                     { return JSOp(pn_op); }
     void setOp(JSOp op)                    { pn_op = op; }
     bool isOp(JSOp op) const               { return getOp() == op; }
@@ -324,6 +342,7 @@ struct ParseNode {
     ParseNodeArity getArity() const        { return ParseNodeArity(pn_arity); }
     bool isArity(ParseNodeArity a) const   { return getArity() == a; }
     void setArity(ParseNodeArity a)        { pn_arity = a; }
+
     /* Boolean attributes. */
     bool isInParens() const                { return pn_parens; }
     void setInParens(bool enabled)         { pn_parens = enabled; }
@@ -338,6 +357,7 @@ struct ParseNode {
     ParseNode           *pn_link;       /* def/use link (alignment freebie);
                                            also links FunctionBox::methods
                                            lists of would-be |this| methods */
+
     union {
         struct {                        /* list of next-linked nodes */
             ParseNode   *head;          /* first node in list */
@@ -424,7 +444,7 @@ struct ParseNode {
 #define pn_pitarget     pn_u.xmlpi.target
 #define pn_pidata       pn_u.xmlpi.data
 
-protected:
+  protected:
     void init(TokenKind type, JSOp op, ParseNodeArity arity) {
         pn_type = type;
         pn_op = op;
@@ -440,7 +460,7 @@ protected:
     static ParseNode *create(ParseNodeArity arity, TokenKind type, JSOp op,
                              const TokenPos &pos, TreeContext *tc);
 
-public:
+  public:
     static ParseNode *newBinaryOrAppend(TokenKind tt, JSOp op, ParseNode *left, ParseNode *right,
                                         TreeContext *tc);
 
