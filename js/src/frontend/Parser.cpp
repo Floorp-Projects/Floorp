@@ -101,6 +101,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::frontend;
 
 /*
  * Insist that the next token be of type tt, or report errno and return null.
@@ -654,7 +655,7 @@ Parser::functionBody()
     JS_ASSERT(tc->inFunction());
 
     StmtInfo stmtInfo;
-    js_PushStatement(tc, &stmtInfo, STMT_BLOCK, -1);
+    PushStatement(tc, &stmtInfo, STMT_BLOCK, -1);
     stmtInfo.flags = SIF_BODY_BLOCK;
 
     uintN oldflags = tc->flags;
@@ -690,7 +691,7 @@ Parser::functionBody()
 
     if (pn) {
         JS_ASSERT(!(tc->topStmt->flags & SIF_SCOPE));
-        js_PopStatement(tc);
+        PopStatementTC(tc);
 
         /* Check for falling off the end of a function that returns a value. */
         if (context->hasStrictOption() && (tc->flags & TCF_RETURN_EXPR) &&
@@ -2640,14 +2641,14 @@ PopStatement(TreeContext *tc)
             tc->decls.remove(atom);
         }
     }
-    js_PopStatement(tc);
+    PopStatementTC(tc);
 }
 
 static inline bool
 OuterLet(TreeContext *tc, StmtInfo *stmt, JSAtom *atom)
 {
     while (stmt->downScope) {
-        stmt = js_LexicalLookup(tc, atom, NULL, stmt->downScope);
+        stmt = LexicalLookup(tc, atom, NULL, stmt->downScope);
         if (!stmt)
             return false;
         if (stmt->type == STMT_BLOCK)
@@ -2859,7 +2860,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
     if (!CheckStrictBinding(cx, tc, atom->asPropertyName(), pn))
         return false;
 
-    StmtInfo *stmt = js_LexicalLookup(tc, atom, NULL);
+    StmtInfo *stmt = LexicalLookup(tc, atom, NULL);
 
     if (stmt && stmt->type == STMT_WITH) {
         data->fresh = false;
@@ -3441,7 +3442,7 @@ PushLexicalScope(JSContext *cx, TokenStream *ts, TreeContext *tc, StmtInfo *stmt
     if (!blockbox)
         return NULL;
 
-    js_PushBlockScope(tc, stmt, blockbox, -1);
+    PushBlockScope(tc, stmt, blockbox, -1);
     pn->setKind(TOK_LEXICALSCOPE);
     pn->setOp(JSOP_LEAVEBLOCK);
     pn->pn_objbox = blockbox;
@@ -3538,7 +3539,7 @@ Parser::letBlock(JSBool statement)
 static bool
 PushBlocklikeStatement(StmtInfo *stmt, StmtType type, TreeContext *tc)
 {
-    js_PushStatement(tc, stmt, type, -1);
+    PushStatement(tc, stmt, type, -1);
     return GenerateBlockId(tc, stmt->blockid);
 }
 
@@ -3612,7 +3613,7 @@ Parser::switchStatement()
      * because that function states tc->topStmt->blockid.
      */
     StmtInfo stmtInfo;
-    js_PushStatement(tc, &stmtInfo, STMT_SWITCH, -1);
+    PushStatement(tc, &stmtInfo, STMT_SWITCH, -1);
 
     /* pn2 is a list of case nodes. The default case has pn_left == NULL */
     ParseNode *pn2 = ListNode::create(tc);
@@ -3717,7 +3718,7 @@ Parser::forStatement()
     if (!pn)
         return NULL;
     StmtInfo stmtInfo;
-    js_PushStatement(tc, &stmtInfo, STMT_FOR_LOOP, -1);
+    PushStatement(tc, &stmtInfo, STMT_FOR_LOOP, -1);
 
     pn->setOp(JSOP_ITER);
     pn->pn_iflags = 0;
@@ -4226,7 +4227,7 @@ Parser::withStatement()
     tc->innermostWith = pn;
 
     StmtInfo stmtInfo;
-    js_PushStatement(tc, &stmtInfo, STMT_WITH, -1);
+    PushStatement(tc, &stmtInfo, STMT_WITH, -1);
     pn2 = statement();
     if (!pn2)
         return NULL;
@@ -4395,7 +4396,7 @@ Parser::expressionStatement()
 
         /* Push a label struct and parse the statement. */
         StmtInfo stmtInfo;
-        js_PushStatement(tc, &stmtInfo, STMT_LABEL, -1);
+        PushStatement(tc, &stmtInfo, STMT_LABEL, -1);
         stmtInfo.label = label;
         ParseNode *pn = statement();
         if (!pn)
@@ -4486,7 +4487,7 @@ Parser::statement()
         if (!pn1)
             return NULL;
         StmtInfo stmtInfo;
-        js_PushStatement(tc, &stmtInfo, STMT_IF, -1);
+        PushStatement(tc, &stmtInfo, STMT_IF, -1);
         ParseNode *pn2 = statement();
         if (!pn2)
             return NULL;
@@ -4517,7 +4518,7 @@ Parser::statement()
         if (!pn)
             return NULL;
         StmtInfo stmtInfo;
-        js_PushStatement(tc, &stmtInfo, STMT_WHILE_LOOP, -1);
+        PushStatement(tc, &stmtInfo, STMT_WHILE_LOOP, -1);
         ParseNode *pn2 = condition();
         if (!pn2)
             return NULL;
@@ -4537,7 +4538,7 @@ Parser::statement()
         if (!pn)
             return NULL;
         StmtInfo stmtInfo;
-        js_PushStatement(tc, &stmtInfo, STMT_DO_LOOP, -1);
+        PushStatement(tc, &stmtInfo, STMT_DO_LOOP, -1);
         ParseNode *pn2 = statement();
         if (!pn2)
             return NULL;
@@ -5718,7 +5719,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
 
             JSAtom *atom = pn->pn_atom;
 #ifdef DEBUG
-            StmtInfo *stmt = js_LexicalLookup(tc, atom, NULL);
+            StmtInfo *stmt = LexicalLookup(tc, atom, NULL);
             JS_ASSERT(!stmt || stmt != tc->topStmt);
 #endif
             if (genexp && !dn->isOp(JSOP_CALLEE)) {
@@ -5822,7 +5823,7 @@ Parser::comprehensionTail(ParseNode *kid, uintN blockid, bool isGenexp,
          * this array comprehension. Our caller in primaryExpr, the TOK_LB case
          * aka the array initialiser case, has passed the blockid to claim for
          * the comprehension's block scope. We allocate that id or one above it
-         * here, by calling js_PushLexicalScope.
+         * here, by calling PushLexicalScope.
          *
          * In the case of a comprehension expression that has nested blocks
          * (e.g., let expressions), we will allocate a higher blockid but then
@@ -6243,7 +6244,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
             StmtInfo stmtInfo;
             if (tt == TOK_LP) {
                 tc->innermostWith = pn;
-                js_PushStatement(tc, &stmtInfo, STMT_WITH, -1);
+                PushStatement(tc, &stmtInfo, STMT_WITH, -1);
             }
 
             pn3 = primaryExpr(tt, JS_TRUE);
@@ -7546,7 +7547,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 tc->countArgumentsUse(pn);
             }
 
-            StmtInfo *stmt = js_LexicalLookup(tc, pn->pn_atom, NULL);
+            StmtInfo *stmt = LexicalLookup(tc, pn->pn_atom, NULL);
 
             MultiDeclRange mdl = tc->decls.lookupMulti(pn->pn_atom);
             Definition *dn;
