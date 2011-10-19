@@ -428,6 +428,9 @@ def main():
     automation.setRemoteLog(options.remoteLogFile)
     reftest = RemoteReftest(automation, dm, options, SCRIPT_DIRECTORY)
 
+    # Hack in a symbolic link for jsreftest
+    os.system("ln -s ../jsreftest " + str(os.path.join(SCRIPT_DIRECTORY, "jsreftest")))
+
     # Dynamically build the reftest URL if possible, beware that args[0] should exist 'inside' the webroot
     manifest = args[0]
     if os.path.exists(os.path.join(SCRIPT_DIRECTORY, args[0])):
@@ -438,9 +441,6 @@ def main():
     else:
         print "ERROR: Could not find test manifest '%s'" % manifest
         sys.exit(1)
-
-    # Hack in a symbolic link for jsreftest
-    os.system("ln -s ../jsreftest " + str(os.path.join(SCRIPT_DIRECTORY, "jsreftest")))
 
     # Start the webserver
     reftest.startWebServer(options)
