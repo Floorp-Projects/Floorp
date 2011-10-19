@@ -434,7 +434,7 @@ struct TreeContext {                /* tree context for semantic checks */
     int sharpSlotBase;
     bool ensureSharpSlots();
 
-    Compiler *compiler() { return (js::Compiler *)parser; }
+    Compiler *compiler() { return (Compiler *) parser; }
 
     // Return true there is a generator function within |skip| lexical scopes
     // (going upward) from this context's lexical scope. Always return true if
