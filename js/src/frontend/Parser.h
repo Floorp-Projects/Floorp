@@ -181,6 +181,15 @@ struct Parser : private AutoGCRooter
     inline bool reportErrorNumber(ParseNode *pn, uintN flags, uintN errorNumber, ...);
 
   private:
+    void *allocParseNode(size_t size) {
+        JS_ASSERT(size == sizeof(ParseNode));
+        return AllocNodeUninitialized(this);
+    }
+
+  public:
+    JS_DECLARE_NEW_METHODS(allocParseNode,);
+
+  private:
     /*
      * JS parsers, from lowest to highest precedence.
      *
