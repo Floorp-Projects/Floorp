@@ -40,22 +40,22 @@
 #include "nsUTF8Utils.h"
 #include "nsIUGenCategory.h"
 #include "nsUnicharUtilCIID.h"
-#include "nsNetUtil.h"
+#include "nsIURI.h"
 
 #include "hyphen.h"
 
-nsHyphenator::nsHyphenator(nsIFile *aFile)
+nsHyphenator::nsHyphenator(nsIURI *aURI)
   : mDict(nsnull)
 {
-  nsCString urlSpec;
-  nsresult rv = NS_GetURLSpecFromFile(aFile, urlSpec);
+  nsCString uriSpec;
+  nsresult rv = aURI->GetSpec(uriSpec);
   if (NS_FAILED(rv)) {
     return;
   }
-  mDict = hnj_hyphen_load(urlSpec.get());
+  mDict = hnj_hyphen_load(uriSpec.get());
 #ifdef DEBUG
   if (mDict) {
-    printf("loaded hyphenation patterns from %s\n", urlSpec.get());
+    printf("loaded hyphenation patterns from %s\n", uriSpec.get());
   }
 #endif
   mCategories = do_GetService(NS_UNICHARCATEGORY_CONTRACTID, &rv);
@@ -83,7 +83,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
   if (!aHyphens.SetLength(aString.Length())) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  memset(aHyphens.Elements(), PR_FALSE, aHyphens.Length());
+  memset(aHyphens.Elements(), false, aHyphens.Length());
 
   bool inWord = false;
   PRUint32 wordStart = 0, wordLimit = 0;
@@ -104,7 +104,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
     nsIUGenCategory::nsUGenCategory cat = mCategories->Get(ch);
     if (cat == nsIUGenCategory::kLetter || cat == nsIUGenCategory::kMark) {
       if (!inWord) {
-        inWord = PR_TRUE;
+        inWord = true;
         wordStart = i;
       }
       wordLimit = i + chLen;
@@ -136,7 +136,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
         const PRUnichar *end = begin + wordLimit;
         while (cur < end) {
           if (*hyphPtr & 0x01) {
-            aHyphens[cur - begin] = PR_TRUE;
+            aHyphens[cur - begin] = true;
           }
           cur++;
           if (cur < end && NS_IS_LOW_SURROGATE(*cur) &&
@@ -149,7 +149,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
       }
     }
     
-    inWord = PR_FALSE;
+    inWord = false;
   }
 
   return NS_OK;

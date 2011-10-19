@@ -903,7 +903,7 @@ nsString::Find( const nsAFlatString& aString, PRInt32 aOffset, PRInt32 aCount ) 
     // this method changes the meaning of aOffset and aCount:
     Find_ComputeSearchRange(mLength, aString.Length(), aOffset, aCount);
 
-    PRInt32 result = FindSubstring(mData + aOffset, aCount, aString.get(), aString.Length(), PR_FALSE);
+    PRInt32 result = FindSubstring(mData + aOffset, aCount, aString.get(), aString.Length(), false);
     if (result != kNotFound)
       result += aOffset;
     return result;
@@ -921,7 +921,7 @@ nsString::RFind( const nsAFlatString& aString, PRInt32 aOffset, PRInt32 aCount )
     // this method changes the meaning of aOffset and aCount:
     RFind_ComputeSearchRange(mLength, aString.Length(), aOffset, aCount);
 
-    PRInt32 result = RFindSubstring(mData + aOffset, aCount, aString.get(), aString.Length(), PR_FALSE);
+    PRInt32 result = RFindSubstring(mData + aOffset, aCount, aString.get(), aString.Length(), false);
     if (result != kNotFound)
       result += aOffset;
     return result;
@@ -995,7 +995,7 @@ nsString::EqualsIgnoreCase( const char* aString, PRInt32 aCount ) const
       compareCount = aCount;
 
     PRInt32 result =
-        nsBufferRoutines<PRUnichar>::compare(mData, aString, compareCount, PR_TRUE);
+        nsBufferRoutines<PRUnichar>::compare(mData, aString, compareCount, true);
 
     if (result == 0 &&
           (aCount < 0 || strLen < PRUint32(aCount) || mLength < PRUint32(aCount)))

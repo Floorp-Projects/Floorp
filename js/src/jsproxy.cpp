@@ -877,7 +877,6 @@ Proxy::typeOf(JSContext *cx, JSObject *proxy)
 bool
 Proxy::objectClassIs(JSObject *proxy, ESClassValue classValue, JSContext *cx)
 {
-    JS_CHECK_RECURSION(cx, JS_NOT_REACHED("cannot reenter"));
     AutoPendingProxyOperation pending(cx, proxy);
     return GetProxyHandler(proxy)->objectClassIs(proxy, classValue, cx);
 }
@@ -913,8 +912,8 @@ proxy_innerObject(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-proxy_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
-                     JSProperty **propp)
+proxy_LookupGeneric(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                    JSProperty **propp)
 {
     id = js_CheckForStringIndex(id);
 
@@ -933,19 +932,26 @@ proxy_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 }
 
 static JSBool
+proxy_LookupProperty(JSContext *cx, JSObject *obj, PropertyName *name, JSObject **objp,
+                     JSProperty **propp)
+{
+    return proxy_LookupGeneric(cx, obj, ATOM_TO_JSID(name), objp, propp);
+}
+
+static JSBool
 proxy_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
                     JSProperty **propp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return proxy_LookupProperty(cx, obj, id, objp, propp);
+    return proxy_LookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
 proxy_LookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp, JSProperty **propp)
 {
-    return proxy_LookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
+    return proxy_LookupGeneric(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 static JSBool
@@ -1121,7 +1127,8 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 {
     GetProxyHandler(obj)->trace(trc, obj);
     MarkCrossCompartmentValue(trc, GetProxyPrivate(obj), "private");
-    MarkCrossCompartmentValue(trc, GetProxyExtra(obj), "extra");
+    MarkCrossCompartmentValue(trc, GetProxyExtra(obj, 0), "extra0");
+    MarkCrossCompartmentValue(trc, GetProxyExtra(obj, 1), "extra1");
     if (IsFunctionProxy(obj)) {
         MarkCrossCompartmentValue(trc, GetCall(obj), "call");
         MarkCrossCompartmentValue(trc, GetConstruct(obj), "construct");
@@ -1184,7 +1191,7 @@ proxy_TypeOf(JSContext *cx, JSObject *proxy)
 
 JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(3),
+    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(4),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -1202,7 +1209,7 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
     proxy_TraceObject,       /* trace       */
     JS_NULL_CLASS_EXT,
     {
-        proxy_LookupProperty,
+        proxy_LookupGeneric,
         proxy_LookupProperty,
         proxy_LookupElement,
         proxy_LookupSpecial,
@@ -1240,7 +1247,7 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
 
 JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(3),
+    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(4),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -1263,7 +1270,7 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
         NULL                 /* unused */
     },
     {
-        proxy_LookupProperty,
+        proxy_LookupGeneric,
         proxy_LookupProperty,
         proxy_LookupElement,
         proxy_LookupSpecial,
@@ -1318,7 +1325,7 @@ proxy_Construct(JSContext *cx, uintN argc, Value *vp)
 
 JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(5),
+    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(6),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -1336,7 +1343,7 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
     proxy_TraceFunction,     /* trace       */
     JS_NULL_CLASS_EXT,
     {
-        proxy_LookupProperty,
+        proxy_LookupGeneric,
         proxy_LookupProperty,
         proxy_LookupElement,
         proxy_LookupSpecial,

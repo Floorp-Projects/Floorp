@@ -73,7 +73,7 @@ public:
 
     nsRDFQuery(nsXULTemplateQueryProcessorRDF* aProcessor)
       : mProcessor(aProcessor),
-        mSimple(PR_FALSE),
+        mSimple(false),
         mRoot(nsnull),
         mCachedResults(nsnull)
     { }
@@ -127,7 +127,7 @@ public:
 
     bool IsSimple() { return mSimple; }
 
-    void SetSimple() { mSimple = PR_TRUE; }
+    void SetSimple() { mSimple = true; }
 
     // the reference and member variables for the query
     nsCOMPtr<nsIAtom> mRefVariable;

@@ -142,7 +142,7 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
                                (PRInt32) ceil(mNativeRect.Height() + 1));
             } else {
                 // figure out the scale factors
-                mScale = m.ScaleFactors(PR_TRUE);
+                mScale = m.ScaleFactors(true);
 
                 mWorldTransform.eM11 = (FLOAT) mScale.width;
                 mWorldTransform.eM12 = 0.0f;
@@ -213,13 +213,13 @@ gfxWindowsNativeDrawing::IsDoublePass()
         return false;
     if (surf->GetType() != gfxASurface::SurfaceTypeWin32 &&
 	surf->GetType() != gfxASurface::SurfaceTypeWin32Printing) {
-	return PR_TRUE;
+	return true;
     }
     if ((surf->GetContentType() != gfxASurface::CONTENT_COLOR ||
          (surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA &&
           !(mNativeDrawFlags & CAN_DRAW_TO_COLOR_ALPHA))))
-        return PR_TRUE;
-    return PR_FALSE;
+        return true;
+    return false;
 }
 
 bool
@@ -227,21 +227,21 @@ gfxWindowsNativeDrawing::ShouldRenderAgain()
 {
     switch (mRenderState) {
         case RENDER_STATE_NATIVE_DRAWING_DONE:
-            return PR_FALSE;
+            return false;
 
         case RENDER_STATE_ALPHA_RECOVERY_BLACK_DONE:
             mRenderState = RENDER_STATE_ALPHA_RECOVERY_WHITE;
-            return PR_TRUE;
+            return true;
 
         case RENDER_STATE_ALPHA_RECOVERY_WHITE_DONE:
-            return PR_FALSE;
+            return false;
 
         default:
             NS_ERROR("Invalid RenderState in gfxWindowsNativeDrawing::ShouldRenderAgain");
             break;
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 void

@@ -50,7 +50,7 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPromiseFlatString.h"
-#include "nsProxiedService.h"
+#include "nsThreadUtils.h"
 #include "nsStringBuffer.h"
 #include "nsAutoPtr.h"
 #include "nspr.h"
@@ -131,6 +131,11 @@ nsCertOverrideService::~nsCertOverrideService()
 nsresult
 nsCertOverrideService::Init()
 {
+  if (!NS_IsMainThread()) {
+    NS_NOTREACHED("nsCertOverrideService initialized off main thread");
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
   if (!mSettingsTable.Init())
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -147,30 +152,24 @@ nsCertOverrideService::Init()
   mDottedOidForStoringNewHashes = dotted_oid;
   PR_smprintf_free(dotted_oid);
 
-  // cache mSettingsFile
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mSettingsFile));
-  if (mSettingsFile) {
-    mSettingsFile->AppendNative(NS_LITERAL_CSTRING(kCertOverrideFileName));
-  }
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
 
-  Read();
-
-  nsresult rv;
-  NS_WITH_ALWAYS_PROXIED_SERVICE(nsIObserverService, mObserverService,
-                                 "@mozilla.org/observer-service;1",
-                                 NS_PROXY_TO_MAIN_THREAD, &rv);
-
-  if (mObserverService) {
-    mObserverService->AddObserver(this, "profile-before-change", PR_TRUE);
-    mObserverService->AddObserver(this, "profile-do-change", PR_TRUE);
-    mObserverService->AddObserver(this, "shutdown-cleanse", PR_TRUE);
+  // If we cannot add ourselves as a profile change observer, then we will not
+  // attempt to read/write any settings file. Otherwise, we would end up
+  // reading/writing the wrong settings file after a profile change.
+  if (observerService) {
+    observerService->AddObserver(this, "profile-before-change", true);
+    observerService->AddObserver(this, "profile-do-change", true);
+    // simulate a profile change so we read the current profile's settings file
+    Observe(nsnull, "profile-do-change", nsnull);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCertOverrideService::Observe(nsISupports     *aSubject,
+nsCertOverrideService::Observe(nsISupports     *,
                                const char      *aTopic,
                                const PRUnichar *aData)
 {
@@ -185,7 +184,7 @@ nsCertOverrideService::Observe(nsISupports     *aSubject,
       RemoveAllFromMemory();
       // delete the storage file
       if (mSettingsFile) {
-        mSettingsFile->Remove(PR_FALSE);
+        mSettingsFile->Remove(false);
       }
     } else {
       RemoveAllFromMemory();
@@ -201,6 +200,8 @@ nsCertOverrideService::Observe(nsISupports     *aSubject,
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mSettingsFile));
     if (NS_SUCCEEDED(rv)) {
       mSettingsFile->AppendNative(NS_LITERAL_CSTRING(kCertOverrideFileName));
+    } else {
+      mSettingsFile = nsnull;
     }
     Read();
 
@@ -242,6 +243,10 @@ nsresult
 nsCertOverrideService::Read()
 {
   ReentrantMonitorAutoEnter lock(monitor);
+
+  // If we don't have a profile, then we won't try to read any settings file.
+  if (!mSettingsFile)
+    return NS_OK;
 
   nsresult rv;
   nsCOMPtr<nsIInputStream> fileInputStream;
@@ -312,7 +317,7 @@ nsCertOverrideService::Read()
     
     AddEntryToList(host, port, 
                    nsnull, // don't have the cert
-                   PR_FALSE, // not temporary
+                   false, // not temporary
                    algo_string, fingerprint, bits, db_key);
   }
 
@@ -362,8 +367,9 @@ nsCertOverrideService::Write()
 {
   ReentrantMonitorAutoEnter lock(monitor);
 
+  // If we don't have any profile, then we won't try to write any file
   if (!mSettingsFile) {
-    return NS_ERROR_NULL_POINTER;
+    return NS_OK;
   }
 
   nsresult rv;
@@ -465,7 +471,7 @@ GetCertFingerprintByDottedOidString(CERTCertificate* nsscert,
     return NS_ERROR_FAILURE;
 
   SECOidTag oid_tag = SECOID_FindOIDTag(&oid);
-  SECITEM_FreeItem(&oid, PR_FALSE);
+  SECITEM_FreeItem(&oid, false);
 
   if (oid_tag == SEC_OID_UNKNOWN)
     return NS_ERROR_FAILURE;
@@ -522,7 +528,7 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, PR
     }
   
     SECStatus srv = PK11_ImportCert(slot, nsscert, CK_INVALID_HANDLE, 
-                                    nickname, PR_FALSE);
+                                    nickname, false);
     PK11_FreeSlot(slot);
   
     if (srv != SECSuccess) {
@@ -585,7 +591,7 @@ nsCertOverrideService::HasMatchingOverride(const nsACString & aHostName, PRInt32
   NS_ENSURE_ARG_POINTER(aOverrideBits);
   NS_ENSURE_ARG_POINTER(aIsTemporary);
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PR_FALSE;
+  *_retval = false;
   *aOverrideBits = nsCertOverride::ob_None;
 
   nsCAutoString hostPort;
@@ -632,7 +638,7 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, PRInt32
   NS_ENSURE_ARG_POINTER(_found);
   NS_ENSURE_ARG_POINTER(aIsTemporary);
   NS_ENSURE_ARG_POINTER(aOverrideBits);
-  *_found = PR_FALSE;
+  *_found = false;
   *aOverrideBits = nsCertOverride::ob_None;
 
   nsCAutoString hostPort;
@@ -644,7 +650,7 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, PRInt32
     nsCertOverrideEntry *entry = mSettingsTable.GetEntry(hostPort.get());
   
     if (entry) {
-      *_found = PR_TRUE;
+      *_found = true;
       settings = entry->mSettings; // copy
     }
   }
@@ -728,7 +734,7 @@ matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
   char *dbkey = NULL;
   nsresult rv = cert->GetDbKey(&dbkey);
   if (NS_FAILED(rv) || !dbkey)
-    return PR_FALSE;
+    return false;
 
   bool found_mismatch = false;
   const char *key1 = dbkey;
@@ -758,7 +764,7 @@ matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
     }
 
     if (c1 != c2) {
-      found_mismatch = PR_TRUE;
+      found_mismatch = true;
       break;
     }
 
@@ -795,7 +801,7 @@ FindMatchingCertCallback(nsCertOverrideEntry *aEntry,
     if ((settings.mIsTemporary && !cai->aCheckTemporaries)
         ||
         (!settings.mIsTemporary && !cai->aCheckPermanents)) {
-      still_ok = PR_FALSE;
+      still_ok = false;
     }
 
     if (still_ok && matchesDBKey(cai->cert, settings.mDBKey.get())) {

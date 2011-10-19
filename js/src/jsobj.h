@@ -57,7 +57,6 @@
 #include "jspubtd.h"
 #include "jsprvtd.h"
 #include "jslock.h"
-#include "jsvector.h"
 #include "jscell.h"
 
 #include "vm/String.h"
@@ -68,7 +67,6 @@ namespace js {
 
 class AutoPropDescArrayRooter;
 class ProxyHandler;
-class RegExp;
 class CallObject;
 struct GCMarker;
 struct NativeIterator;
@@ -350,6 +348,7 @@ class NormalArgumentsObject;
 class NumberObject;
 class StrictArgumentsObject;
 class StringObject;
+class RegExpObject;
 
 /*
  * Header structure for object element arrays. This structure is immediately
@@ -920,6 +919,7 @@ struct JSObject : js::gc::Cell
   public:
     inline js::NumberObject *asNumber();
     inline js::StringObject *asString();
+    inline js::RegExpObject *asRegExp();
 
     /* Accessors for elements. */
 
@@ -1092,41 +1092,7 @@ struct JSObject : js::gc::Cell
     inline const js::Value &getBoundFunctionArgument(uintN which) const;
     inline size_t getBoundFunctionArgumentCount() const;
 
-    /*
-     * RegExp-specific getters and setters.
-     */
-
-  private:
-    static const uint32 JSSLOT_REGEXP_LAST_INDEX = 0;
-    static const uint32 JSSLOT_REGEXP_SOURCE = 1;
-    static const uint32 JSSLOT_REGEXP_GLOBAL = 2;
-    static const uint32 JSSLOT_REGEXP_IGNORE_CASE = 3;
-    static const uint32 JSSLOT_REGEXP_MULTILINE = 4;
-    static const uint32 JSSLOT_REGEXP_STICKY = 5;
-
-    /*
-     * Compute the initial shape to associate with fresh regular expression
-     * objects, encoding their initial properties. Return the shape after
-     * changing this regular expression object's last property to it.
-     */
-    const js::Shape *assignInitialRegExpShape(JSContext *cx);
-
   public:
-    static const uint32 REGEXP_CLASS_RESERVED_SLOTS = 6;
-
-    inline const js::Value &getRegExpLastIndex() const;
-    inline void setRegExpLastIndex(const js::Value &v);
-    inline void setRegExpLastIndex(jsdouble d);
-    inline void zeroRegExpLastIndex();
-
-    inline void setRegExpSource(JSString *source);
-    inline void setRegExpGlobal(bool global);
-    inline void setRegExpIgnoreCase(bool ignoreCase);
-    inline void setRegExpMultiline(bool multiline);
-    inline void setRegExpSticky(bool sticky);
-
-    inline bool initRegExp(JSContext *cx, js::RegExp *re);
-
     /*
      * Iterator-specific getters and setters.
      */
@@ -1305,8 +1271,10 @@ struct JSObject : js::gc::Cell
     /* Clear the scope, making it empty. */
     void clear(JSContext *cx);
 
-    inline JSBool lookupProperty(JSContext *cx, jsid id, JSObject **objp, JSProperty **propp);
+    inline JSBool lookupGeneric(JSContext *cx, jsid id, JSObject **objp, JSProperty **propp);
+    inline JSBool lookupProperty(JSContext *cx, js::PropertyName *name, JSObject **objp, JSProperty **propp);
     inline JSBool lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty **propp);
+    inline JSBool lookupSpecial(JSContext *cx, js::SpecialId sid, JSObject **objp, JSProperty **propp);
 
     inline JSBool defineProperty(JSContext *cx, jsid id, const js::Value &value,
                                  JSPropertyOp getter = JS_PropertyStub,
@@ -1571,11 +1539,11 @@ extern void
 js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map);
 
 extern JSBool
-js_HasOwnPropertyHelper(JSContext *cx, js::LookupPropOp lookup, uintN argc,
+js_HasOwnPropertyHelper(JSContext *cx, js::LookupGenericOp lookup, uintN argc,
                         js::Value *vp);
 
 extern JSBool
-js_HasOwnProperty(JSContext *cx, js::LookupPropOp lookup, JSObject *obj, jsid id,
+js_HasOwnProperty(JSContext *cx, js::LookupGenericOp lookup, JSObject *obj, jsid id,
                   JSObject **objp, JSProperty **propp);
 
 extern JSBool
@@ -2003,7 +1971,7 @@ ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp);
  * any effectful operations are performed.
  */
 inline JSObject *
-NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok);
+NonGenericMethodGuard(JSContext *cx, CallArgs args, Native native, Class *clasp, bool *ok);
 
 /*
  * NonGenericMethodGuard tests args.thisv's class using 'clasp'. If more than
@@ -2013,7 +1981,7 @@ NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok);
  * for error reporting (clasp->name).
  */
 extern bool
-HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Class *clasp);
+HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Native native, Class *clasp);
 
 /*
  * Implement the extraction of a primitive from a value as needed for the
@@ -2024,7 +1992,7 @@ HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Class *clasp);
  */
 template <typename T>
 inline bool
-BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, T *v, bool *ok);
+BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, Native native, T *v, bool *ok);
 
 }  /* namespace js */
 

@@ -38,7 +38,7 @@
 
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 
 NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
@@ -47,17 +47,18 @@ static PRUintn gToolkitTLSIndex = 0;
 
 nsToolkit::nsToolkit()
 {
+    MOZ_COUNT_CTOR(nsToolkit);
 }
 
 nsToolkit::~nsToolkit()
 {
+    MOZ_COUNT_DTOR(nsToolkit);
     PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
 
 NS_IMETHODIMP
 nsToolkit::Init(PRThread *aThread)
 {
-    nsWidgetAtoms::RegisterAtoms();
     return NS_OK;
 }
 

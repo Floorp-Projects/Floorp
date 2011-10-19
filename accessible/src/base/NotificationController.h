@@ -203,6 +203,11 @@ public:
       ScheduleProcessing();
   }
 
+#ifdef DEBUG
+  bool IsUpdating() const
+    { return mObservingState == eRefreshProcessingForUpdate; }
+#endif
+
 protected:
   nsAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
@@ -350,7 +355,7 @@ private:
     static PLDHashNumber HashKey(KeyTypePointer aKey)
       { return NS_PTR_TO_INT32(aKey) >> 2; }
 
-    enum { ALLOW_MEMMOVE = PR_TRUE };
+    enum { ALLOW_MEMMOVE = true };
 
    protected:
      nsCOMPtr<T> mKey;

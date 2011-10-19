@@ -38,23 +38,22 @@
 
 #include "jsclone.h"
 #include "jsdate.h"
-#include "jsregexp.h"
 #include "jstypedarray.h"
 
-#include "jsregexpinlines.h"
 #include "jstypedarrayinlines.h"
+
+#include "vm/RegExpObject-inl.h"
 
 using namespace js;
 
 JS_FRIEND_API(uint64_t)
 js_GetSCOffset(JSStructuredCloneWriter* writer)
 {
-  JS_ASSERT(writer);
-  return writer->output().count() * sizeof(uint64_t);
+    JS_ASSERT(writer);
+    return writer->output().count() * sizeof(uint64_t);
 }
 
-namespace js
-{
+namespace js {
 
 bool
 WriteStructuredClone(JSContext *cx, const Value &v, uint64 **bufp, size_t *nbytesp,
@@ -74,7 +73,7 @@ ReadStructuredClone(JSContext *cx, const uint64_t *data, size_t nbytes, Value *v
     return r.read(vp);
 }
 
-}
+} /* namespace js */
 
 enum StructuredDataType {
     /* Structured data types provided by the engine */
@@ -524,9 +523,9 @@ JSStructuredCloneWriter::startWrite(const js::Value &v)
     } else if (v.isObject()) {
         JSObject *obj = &v.toObject();
         if (obj->isRegExp()) {
-            RegExp *re = RegExp::extractFrom(obj);
-            return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags()) &&
-                   writeString(SCTAG_STRING, re->getSource());
+            RegExpObject *reobj = obj->asRegExp();
+            return out.writePair(SCTAG_REGEXP_OBJECT, reobj->getFlags()) &&
+                   writeString(SCTAG_STRING, reobj->getSource());
         } else if (obj->isDate()) {
             jsdouble d = js_DateGetMsecSinceEpoch(context(), obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
@@ -575,7 +574,7 @@ JSStructuredCloneWriter::write(const Value &v)
                  */
                 JSObject *obj2;
                 JSProperty *prop;
-                if (!js_HasOwnProperty(context(), obj->getOps()->lookupProperty, obj, id,
+                if (!js_HasOwnProperty(context(), obj->getOps()->lookupGeneric, obj, id,
                                        &obj2, &prop)) {
                     return false;
                 }
@@ -756,6 +755,7 @@ JSStructuredCloneReader::startRead(Value *vp)
       }
 
       case SCTAG_REGEXP_OBJECT: {
+        RegExpFlag flags = RegExpFlag(data);
         uint32_t tag2, nchars;
         if (!in.readPair(&tag2, &nchars))
             return false;
@@ -771,10 +771,11 @@ JSStructuredCloneReader::startRead(Value *vp)
         const jschar *chars = str->getChars(context());
         if (!chars)
             return false;
-        JSObject *obj = RegExp::createObjectNoStatics(context(), chars, length, data, NULL);
-        if (!obj)
+
+        RegExpObject *reobj = RegExpObject::createNoStatics(context(), chars, length, flags, NULL);
+        if (!reobj)
             return false;
-        vp->setObject(*obj);
+        vp->setObject(*reobj);
         break;
       }
 

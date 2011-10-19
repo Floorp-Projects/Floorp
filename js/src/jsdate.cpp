@@ -56,6 +56,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "mozilla/Util.h"
+
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsprf.h"
@@ -79,6 +82,7 @@
 
 #include "vm/Stack-inl.h"
 
+using namespace mozilla;
 using namespace js;
 using namespace js::types;
 
@@ -847,7 +851,12 @@ date_parseISOString(JSLinearString *str, jsdouble *result, JSContext *cx)
             tzMul = -1;
         ++i;
         NEED_NDIGITS(2, tzHour);
-        NEED(':');
+        /*
+         * Non-standard extension to the ISO date format (permitted by ES5):
+         * allow "-0700" as a time zone offset, not just "-07:00".
+         */
+        if (PEEK(':'))
+          ++i;
         NEED_NDIGITS(2, tzMin);
     } else {
         isLocalTime = JS_TRUE;
@@ -1033,7 +1042,7 @@ date_parseString(JSLinearString *str, jsdouble *result, JSContext *cx)
             }
             if (i <= st + 1)
                 goto syntax;
-            for (k = JS_ARRAY_LENGTH(wtb); --k >= 0;)
+            for (k = ArrayLength(wtb); --k >= 0;)
                 if (date_regionMatches(wtb[k], 0, s, st, i-st, 1)) {
                     int action = ttb[k];
                     if (action != 0) {
@@ -1416,7 +1425,7 @@ date_getTime(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getTime, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1430,7 +1439,7 @@ date_getYear(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getYear, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1455,7 +1464,7 @@ date_getFullYear(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getFullYear, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1472,7 +1481,7 @@ date_getUTCFullYear(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getUTCFullYear, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1490,7 +1499,7 @@ date_getMonth(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getMonth, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1507,7 +1516,7 @@ date_getUTCMonth(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getUTCMonth, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1525,7 +1534,7 @@ date_getDate(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getDate, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1542,7 +1551,7 @@ date_getUTCDate(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getUTCDate, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1560,7 +1569,7 @@ date_getDay(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getDay, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1577,7 +1586,7 @@ date_getUTCDay(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getUTCDay, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1595,7 +1604,7 @@ date_getHours(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getHours, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1612,7 +1621,7 @@ date_getUTCHours(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getUTCHours, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1630,7 +1639,7 @@ date_getMinutes(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getMinutes, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1647,7 +1656,7 @@ date_getUTCMinutes(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getUTCMinutes, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1667,7 +1676,7 @@ date_getUTCSeconds(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getUTCSeconds, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1686,7 +1695,7 @@ date_getUTCMilliseconds(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getUTCMilliseconds, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1704,7 +1713,7 @@ date_getTimezoneOffset(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_getTimezoneOffset, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1730,7 +1739,7 @@ date_setTime(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_setTime, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1747,12 +1756,12 @@ date_setTime(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
+date_makeTime(JSContext *cx, Native native, uintN maxargs, JSBool local, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, native, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1835,58 +1844,58 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
 static JSBool
 date_setMilliseconds(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeTime(cx, 1, JS_TRUE, argc, vp);
+    return date_makeTime(cx, date_setMilliseconds, 1, JS_TRUE, argc, vp);
 }
 
 static JSBool
 date_setUTCMilliseconds(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeTime(cx, 1, JS_FALSE, argc, vp);
+    return date_makeTime(cx, date_setUTCMilliseconds, 1, JS_FALSE, argc, vp);
 }
 
 static JSBool
 date_setSeconds(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeTime(cx, 2, JS_TRUE, argc, vp);
+    return date_makeTime(cx, date_setSeconds, 2, JS_TRUE, argc, vp);
 }
 
 static JSBool
 date_setUTCSeconds(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeTime(cx, 2, JS_FALSE, argc, vp);
+    return date_makeTime(cx, date_setUTCSeconds, 2, JS_FALSE, argc, vp);
 }
 
 static JSBool
 date_setMinutes(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeTime(cx, 3, JS_TRUE, argc, vp);
+    return date_makeTime(cx, date_setMinutes, 3, JS_TRUE, argc, vp);
 }
 
 static JSBool
 date_setUTCMinutes(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeTime(cx, 3, JS_FALSE, argc, vp);
+    return date_makeTime(cx, date_setUTCMinutes, 3, JS_FALSE, argc, vp);
 }
 
 static JSBool
 date_setHours(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeTime(cx, 4, JS_TRUE, argc, vp);
+    return date_makeTime(cx, date_setHours, 4, JS_TRUE, argc, vp);
 }
 
 static JSBool
 date_setUTCHours(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeTime(cx, 4, JS_FALSE, argc, vp);
+    return date_makeTime(cx, date_setUTCHours, 4, JS_FALSE, argc, vp);
 }
 
 static JSBool
-date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
+date_makeDate(JSContext *cx, Native native, uintN maxargs, JSBool local, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, native, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -1958,37 +1967,37 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
 static JSBool
 date_setDate(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeDate(cx, 1, JS_TRUE, argc, vp);
+    return date_makeDate(cx, date_setDate, 1, JS_TRUE, argc, vp);
 }
 
 static JSBool
 date_setUTCDate(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeDate(cx, 1, JS_FALSE, argc, vp);
+    return date_makeDate(cx, date_setUTCDate, 1, JS_FALSE, argc, vp);
 }
 
 static JSBool
 date_setMonth(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeDate(cx, 2, JS_TRUE, argc, vp);
+    return date_makeDate(cx, date_setMonth, 2, JS_TRUE, argc, vp);
 }
 
 static JSBool
 date_setUTCMonth(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeDate(cx, 2, JS_FALSE, argc, vp);
+    return date_makeDate(cx, date_setUTCMonth, 2, JS_FALSE, argc, vp);
 }
 
 static JSBool
 date_setFullYear(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeDate(cx, 3, JS_TRUE, argc, vp);
+    return date_makeDate(cx, date_setFullYear, 3, JS_TRUE, argc, vp);
 }
 
 static JSBool
 date_setUTCFullYear(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_makeDate(cx, 3, JS_FALSE, argc, vp);
+    return date_makeDate(cx, date_setUTCFullYear, 3, JS_FALSE, argc, vp);
 }
 
 static JSBool
@@ -1997,7 +2006,7 @@ date_setYear(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_setYear, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -2069,11 +2078,11 @@ print_iso_string(char* buf, size_t size, jsdouble utctime)
 }
 
 static JSBool
-date_utc_format(JSContext *cx, CallArgs args,
+date_utc_format(JSContext *cx, Native native, CallArgs args,
                 void (*printFunc)(char*, size_t, jsdouble))
 {
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, native, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -2101,13 +2110,13 @@ date_utc_format(JSContext *cx, CallArgs args,
 static JSBool
 date_toGMTString(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_utc_format(cx, CallArgsFromVp(argc, vp), print_gmt_string);
+    return date_utc_format(cx, date_toGMTString, CallArgsFromVp(argc, vp), print_gmt_string);
 }
 
 static JSBool
 date_toISOString(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_utc_format(cx, CallArgsFromVp(argc, vp), print_iso_string);
+    return date_utc_format(cx, date_toISOString, CallArgsFromVp(argc, vp), print_iso_string);
 }
 
 /* ES5 15.9.5.44. */
@@ -2348,12 +2357,12 @@ ToLocaleHelper(JSContext *cx, CallReceiver call, JSObject *obj, const char *form
  * after calling date_toLocaleHelper, even if it returns 'true'.
  */
 static JSBool
-date_toLocaleHelper(JSContext *cx, uintN argc, Value *vp, const char *format)
+date_toLocaleHelper(JSContext *cx, uintN argc, Value *vp, Native native, const char *format)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, native, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -2361,13 +2370,13 @@ date_toLocaleHelper(JSContext *cx, uintN argc, Value *vp, const char *format)
 }
 
 static JSBool
-date_toLocaleString(JSContext *cx, uintN argc, Value *vp)
+date_toLocaleStringHelper(JSContext *cx, Native native, uintN argc, Value *vp)
 {
     /*
      * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
      * with msvc; '%#c' requests that a full year be used in the result string.
      */
-    return date_toLocaleHelper(cx, argc, vp,
+    return date_toLocaleHelper(cx, argc, vp, native,
 #if defined(_WIN32) && !defined(__MWERKS__)
                                    "%#c"
 #else
@@ -2377,13 +2386,19 @@ date_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
+date_toLocaleString(JSContext *cx, uintN argc, Value *vp)
+{
+    return date_toLocaleStringHelper(cx, date_toLocaleString, argc, vp);
+}
+
+static JSBool
 date_toLocaleDateString(JSContext *cx, uintN argc, Value *vp)
 {
     /*
      * Use '%#x' for windows, because '%x' is backward-compatible and non-y2k
      * with msvc; '%#x' requests that a full year be used in the result string.
      */
-    return date_toLocaleHelper(cx, argc, vp,
+    return date_toLocaleHelper(cx, argc, vp, date_toLocaleDateString,
 #if defined(_WIN32) && !defined(__MWERKS__)
                                    "%#x"
 #else
@@ -2395,19 +2410,19 @@ date_toLocaleDateString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_toLocaleTimeString(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_toLocaleHelper(cx, argc, vp, "%X");
+    return date_toLocaleHelper(cx, argc, vp, date_toLocaleTimeString, "%X");
 }
 
 static JSBool
 date_toLocaleFormat(JSContext *cx, uintN argc, Value *vp)
 {
     if (argc == 0)
-        return date_toLocaleString(cx, argc, vp);
+        return date_toLocaleStringHelper(cx, date_toLocaleFormat, argc, vp);
 
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_toLocaleFormat, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -2429,7 +2444,7 @@ date_toTimeString(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_toTimeString, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -2442,7 +2457,7 @@ date_toDateString(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_toDateString, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -2459,7 +2474,7 @@ date_toSource(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_toSource, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -2493,7 +2508,7 @@ date_toString(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &DateClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_toString, &DateClass, &ok);
     if (!obj)
         return ok;
 
@@ -2503,32 +2518,32 @@ date_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
-    /*
-     * It is an error to call date_valueOf on a non-date object, but we don't
-     * need to check for that explicitly here because every path calls
-     * GetUTCTime, which does the check.
-     */
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, date_valueOf, &DateClass, &ok);
+    if (!obj)
+        return ok;
 
     /* If called directly with no arguments, convert to a time number. */
-    if (argc == 0)
-        return date_getTime(cx, argc, vp);
-
-    /* Verify this before extracting a string from the first argument. */
-    JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj)
-        return false;
+    if (argc == 0) {
+        args.rval() = obj->getDateUTCTime();
+        return true;
+    }
 
     /* Convert to number only if the hint was given, otherwise favor string. */
-    JSString *str = js_ValueToString(cx, vp[2]);
+    JSString *str = js_ValueToString(cx, args[0]);
     if (!str)
         return false;
     JSLinearString *linear_str = str->ensureLinear(cx);
     if (!linear_str)
         return false;
     JSAtom *number_str = cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER];
-    if (EqualStrings(linear_str, number_str))
-        return date_getTime(cx, argc, vp);
-    return date_toString(cx, argc, vp);
+    if (EqualStrings(linear_str, number_str)) {
+        args.rval() = obj->getDateUTCTime();
+        return true;
+    }
+    return date_format(cx, obj->getDateUTCTime().toNumber(), FORMATSPEC_FULL, args);
 }
 
 // Don't really need an argument here, but we don't support arg-less builtins

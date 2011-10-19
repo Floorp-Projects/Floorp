@@ -51,7 +51,7 @@
 class nsIReflowCallback {
 public:
   /**
-   * The presshell calls this when reflow has finished. Return PR_TRUE if
+   * The presshell calls this when reflow has finished. Return true if
    * you need a Flush_Layout to happen after this.
    */
   virtual bool ReflowFinished() = 0;

@@ -11,6 +11,8 @@
 
 #include "vm/String-inl.h"
 
+using namespace mozilla;
+
 template<size_t N> JSFlatString *
 NewString(JSContext *cx, const jschar (&chars)[N])
 {
@@ -51,7 +53,7 @@ static const struct TestPair {
 
 BEGIN_TEST(testIndexToString)
 {
-    for (size_t i = 0, sz = JS_ARRAY_LENGTH(tests); i < sz; i++) {
+    for (size_t i = 0, sz = ArrayLength(tests); i < sz; i++) {
         uint32 u = tests[i].num;
         JSString *str = js::IndexToString(cx, u);
         CHECK(str);
@@ -70,7 +72,7 @@ END_TEST(testIndexToString)
 
 BEGIN_TEST(testStringIsIndex)
 {
-    for (size_t i = 0, sz = JS_ARRAY_LENGTH(tests); i < sz; i++) {
+    for (size_t i = 0, sz = ArrayLength(tests); i < sz; i++) {
         uint32 u = tests[i].num;
         JSFlatString *str = js::IndexToString(cx, u);
         CHECK(str);

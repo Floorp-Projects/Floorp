@@ -2281,18 +2281,17 @@ function BrowserTryToCloseWindow()
     window.close();     // WindowIsClosing does all the necessary checks
 }
 
-function loadURI(uri, referrer, postData, allowThirdPartyFixup)
-{
+function loadURI(uri, referrer, postData, allowThirdPartyFixup) {
+  if (postData === undefined)
+    postData = null;
+
+  var flags = nsIWebNavigation.LOAD_FLAGS_NONE;
+  if (allowThirdPartyFixup)
+    flags |= nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+
   try {
-    if (postData === undefined)
-      postData = null;
-    var flags = nsIWebNavigation.LOAD_FLAGS_NONE;
-    if (allowThirdPartyFixup) {
-      flags = nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    }
     gBrowser.loadURIWithFlags(uri, flags, referrer, null, postData);
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 function getShortcutOrURI(aURL, aPostDataRef, aMayInheritPrincipal) {
@@ -4925,8 +4924,13 @@ nsBrowserAccess.prototype = {
       return null;
     }
 
-    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW)
-      aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
+    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
+      if (isExternal &&
+          gPrefService.prefHasUserValue("browser.link.open_newwindow.override.external"))
+        aWhere = gPrefService.getIntPref("browser.link.open_newwindow.override.external");
+      else
+        aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
+    }
     switch (aWhere) {
       case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
         // FIXME: Bug 408379. So how come this doesn't send the
@@ -5642,7 +5646,8 @@ function middleMousePaste(event) {
   // bar's behavior (stripsurroundingwhitespace)
   clipboard = clipboard.replace(/\s*\n\s*/g, "");
 
-  let url = getShortcutOrURI(clipboard);
+  let mayInheritPrincipal = { value: false };
+  let url = getShortcutOrURI(clipboard, mayInheritPrincipal);
   try {
     makeURI(url);
   } catch (ex) {
@@ -5658,9 +5663,10 @@ function middleMousePaste(event) {
     Cu.reportError(ex);
   }
 
-  openUILink(url,
-             event,
-             true /* ignore the fact this is a middle click */);
+  // FIXME: Bug 631500, use openUILink directly
+  let where = whereToOpenLink(event, true);
+  openUILinkIn(url, where,
+               { disallowInheritPrincipal: !mayInheritPrincipal.value });
 
   event.stopPropagation();
 }
@@ -5833,11 +5839,10 @@ function stylesheetFillPopup(menuPopup) {
     if (!currentStyleSheet.title)
       continue;
 
-    // Skip any stylesheets that don't match the screen media type.
+    // Skip any stylesheets whose media attribute doesn't match.
     if (currentStyleSheet.media.length > 0) {
-      let media = currentStyleSheet.media.mediaText.split(", ");
-      if (media.indexOf("screen") == -1 &&
-          media.indexOf("all") == -1)
+      let mediaQueryList = currentStyleSheet.media.mediaText;
+      if (!window.content.matchMedia(mediaQueryList).matches)
         continue;
     }
 
@@ -8524,7 +8529,7 @@ function switchToTabHavingURI(aURI, aOpenNew) {
     if (isBrowserWindow && isTabEmpty(gBrowser.selectedTab))
       gBrowser.selectedBrowser.loadURI(aURI.spec);
     else
-      openUILinkIn(aURI.spec, "tab");
+      openUILinkIn(aURI.spec, "tab", { inBackground: false });
   }
 
   return false;

@@ -96,7 +96,7 @@ nsSetDocumentOptionsCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -127,7 +127,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   if (NS_SUCCEEDED(rv))
   {
     // for possible values of animation mode, see:
-    // http://lxr.mozilla.org/seamonkey/source/modules/libpr0n/public/imgIContainer.idl
+    // http://lxr.mozilla.org/seamonkey/source/image/public/imgIContainer.idl
     presContext->SetImageAnimationMode(animationMode);
   }
 
@@ -178,7 +178,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   if (NS_SUCCEEDED(rv))
   {
     // for possible values of animation mode, see
-    // http://lxr.mozilla.org/seamonkey/source/modules/libpr0n/public/imgIContainer.idl
+    // http://lxr.mozilla.org/seamonkey/source/image/public/imgIContainer.idl
     rv = aParams->SetLongValue("imageAnimation",
                                presContext->ImageAnimationMode());
     NS_ENSURE_SUCCESS(rv, rv);
@@ -224,7 +224,7 @@ nsSetDocumentStateCommand::IsCommandEnabled(const char * aCommandName,
   if (editor)
     return editor->GetIsSelectionEditable(outCmdEnabled);
 
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 
@@ -461,7 +461,7 @@ nsDocumentStateCommand::IsCommandEnabled(const char* aCommandName,
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   // Always return false to discourage callers from using DoCommand()
-  *outCmdEnabled = PR_FALSE;
+  *outCmdEnabled = false;
   return NS_OK;
 }
 

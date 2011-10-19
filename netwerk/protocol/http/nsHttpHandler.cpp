@@ -170,7 +170,7 @@ nsHttpHandler::nsHttpHandler()
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mProxyCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mReferrerLevel(0xff) // by default we always send a referrer
-    , mFastFallbackToIPv4(PR_FALSE)
+    , mFastFallbackToIPv4(false)
     , mIdleTimeout(10)
     , mMaxRequestAttempts(10)
     , mMaxRequestDelay(10)
@@ -183,19 +183,19 @@ nsHttpHandler::nsHttpHandler()
     , mRedirectionLimit(10)
     , mPhishyUserPassLength(1)
     , mQoSBits(0x00)
-    , mPipeliningOverSSL(PR_FALSE)
+    , mPipeliningOverSSL(false)
     , mInPrivateBrowsingMode(PRIVATE_BROWSING_UNKNOWN)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
     , mLegacyAppName("Mozilla")
     , mLegacyAppVersion("5.0")
     , mProduct("Gecko")
-    , mUserAgentIsDirty(PR_TRUE)
-    , mUseCache(PR_TRUE)
-    , mPromptTempRedirect(PR_TRUE)
-    , mSendSecureXSiteReferrer(PR_TRUE)
-    , mEnablePersistentHttpsCaching(PR_FALSE)
-    , mDoNotTrackEnabled(PR_FALSE)
+    , mUserAgentIsDirty(true)
+    , mUseCache(true)
+    , mPromptTempRedirect(true)
+    , mSendSecureXSiteReferrer(true)
+    , mEnablePersistentHttpsCaching(false)
+    , mDoNotTrackEnabled(false)
 {
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
@@ -252,12 +252,12 @@ nsHttpHandler::Init()
     // monitor some preference changes
     nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefBranch) {
-        prefBranch->AddObserver(HTTP_PREF_PREFIX, this, PR_TRUE);
-        prefBranch->AddObserver(UA_PREF_PREFIX, this, PR_TRUE);
-        prefBranch->AddObserver(INTL_ACCEPT_LANGUAGES, this, PR_TRUE); 
-        prefBranch->AddObserver(NETWORK_ENABLEIDN, this, PR_TRUE);
-        prefBranch->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, PR_TRUE);
-        prefBranch->AddObserver(DONOTTRACK_HEADER_ENABLED, this, PR_TRUE);
+        prefBranch->AddObserver(HTTP_PREF_PREFIX, this, true);
+        prefBranch->AddObserver(UA_PREF_PREFIX, this, true);
+        prefBranch->AddObserver(INTL_ACCEPT_LANGUAGES, this, true); 
+        prefBranch->AddObserver(NETWORK_ENABLEIDN, this, true);
+        prefBranch->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, true);
+        prefBranch->AddObserver(DONOTTRACK_HEADER_ENABLED, this, true);
 
         PrefsChanged(prefBranch, nsnull);
     }
@@ -313,12 +313,12 @@ nsHttpHandler::Init()
     
     mObserverService = mozilla::services::GetObserverService();
     if (mObserverService) {
-        mObserverService->AddObserver(this, "profile-change-net-teardown", PR_TRUE);
-        mObserverService->AddObserver(this, "profile-change-net-restore", PR_TRUE);
-        mObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
-        mObserverService->AddObserver(this, "net:clear-active-logins", PR_TRUE);
-        mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
-        mObserverService->AddObserver(this, "net:prune-dead-connections", PR_TRUE);
+        mObserverService->AddObserver(this, "profile-change-net-teardown", true);
+        mObserverService->AddObserver(this, "profile-change-net-restore", true);
+        mObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
+        mObserverService->AddObserver(this, "net:clear-active-logins", true);
+        mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
+        mObserverService->AddObserver(this, "net:prune-dead-connections", true);
     }
  
     return NS_OK;
@@ -412,7 +412,7 @@ bool
 nsHttpHandler::IsAcceptableEncoding(const char *enc)
 {
     if (!enc)
-        return PR_FALSE;
+        return false;
 
     // HTTP 1.1 allows servers to send x-gzip and x-compress instead
     // of gzip and compress, for example.  So, we'll always strip off
@@ -461,7 +461,7 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
                              getter_AddRefs(cacheSession));
     if (NS_FAILED(rv)) return rv;
 
-    rv = cacheSession->SetDoomEntriesIfExpired(PR_FALSE);
+    rv = cacheSession->SetDoomEntriesIfExpired(false);
     if (NS_FAILED(rv)) return rv;
 
     NS_ADDREF(*result = cacheSession);
@@ -582,7 +582,7 @@ nsHttpHandler::UserAgent()
 
     if (mUserAgentIsDirty) {
         BuildUserAgent();
-        mUserAgentIsDirty = PR_FALSE;
+        mUserAgentIsDirty = false;
     }
 
     return mUserAgent;
@@ -770,7 +770,7 @@ nsHttpHandler::InitUserAgentComponents()
     }
 #endif
 
-    mUserAgentIsDirty = PR_TRUE;
+    mUserAgentIsDirty = true;
 }
 
 void
@@ -798,14 +798,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         } else {
             mCompatFirefox.Truncate();
         }
-        mUserAgentIsDirty = PR_TRUE;
+        mUserAgentIsDirty = true;
     }
 
     // general.useragent.override
     if (PREF_CHANGED(UA_PREF("override"))) {
         prefs->GetCharPref(UA_PREF("override"),
                             getter_Copies(mUserAgentOverride));
-        mUserAgentIsDirty = PR_TRUE;
+        mUserAgentIsDirty = true;
     }
 
     //
@@ -1053,7 +1053,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     // enable Persistent caching for HTTPS - bug#205921    
     if (PREF_CHANGED(BROWSER_PREF("disk_cache_ssl"))) {
-        cVar = PR_FALSE;
+        cVar = false;
         rv = prefs->GetBoolPref(BROWSER_PREF("disk_cache_ssl"), &cVar);
         if (NS_SUCCEEDED(rv))
             mEnablePersistentHttpsCaching = cVar;
@@ -1105,7 +1105,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     //
 
     if (PREF_CHANGED(DONOTTRACK_HEADER_ENABLED)) {
-        cVar = PR_FALSE;
+        cVar = false;
         rv = prefs->GetBoolPref(DONOTTRACK_HEADER_ENABLED, &cVar);
         if (NS_SUCCEEDED(rv)) {
             mDoNotTrackEnabled = cVar;
@@ -1290,7 +1290,7 @@ NS_IMETHODIMP
 nsHttpHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_OK;
 }
 
@@ -1528,6 +1528,6 @@ NS_IMETHODIMP
 nsHttpsHandler::AllowPort(PRInt32 aPort, const char *aScheme, bool *_retval)
 {
     // don't override anything.  
-    *_retval = PR_FALSE;
+    *_retval = false;
     return NS_OK;
 }

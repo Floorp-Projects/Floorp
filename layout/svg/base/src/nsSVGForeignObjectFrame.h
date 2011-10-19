@@ -85,7 +85,7 @@ public:
    */
   virtual bool IsTransformed() const
   {
-    return PR_TRUE;
+    return true;
   }
 
   /**

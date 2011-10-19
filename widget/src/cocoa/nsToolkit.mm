@@ -63,7 +63,7 @@ extern "C" {
 #include "nsCocoaUtils.h"
 #include "nsObjCExceptions.h"
 
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
 
@@ -90,10 +90,12 @@ nsToolkit::nsToolkit()
 , mEventTapPort(nsnull)
 , mEventTapRLS(nsnull)
 {
+  MOZ_COUNT_CTOR(nsToolkit);
 }
 
 nsToolkit::~nsToolkit()
 {
+  MOZ_COUNT_DTOR(nsToolkit);
   RemoveSleepWakeNotifcations();
   UnregisterAllProcessMouseEventHandlers();
   // Remove the TLS reference to the toolkit...
@@ -105,8 +107,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit);
 NS_IMETHODIMP
 nsToolkit::Init(PRThread * aThread)
 {
-  nsWidgetAtoms::RegisterAtoms();
-  
   mInited = true;
   
   RegisterForSleepWakeNotifcations();

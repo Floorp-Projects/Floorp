@@ -47,7 +47,7 @@
 #include "nsIScrollable.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMWindow.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 
 //
 //  Basic (virtual) BarProp class implementation
@@ -80,7 +80,7 @@ NS_IMPL_RELEASE(nsBarProp)
 NS_IMETHODIMP
 nsBarProp::GetVisibleByFlag(bool *aVisible, PRUint32 aChromeFlag)
 {
-  *aVisible = PR_FALSE;
+  *aVisible = false;
 
   nsCOMPtr<nsIWebBrowserChrome> browserChrome = GetBrowserChrome();
   NS_ENSURE_TRUE(browserChrome, NS_OK);
@@ -90,7 +90,7 @@ nsBarProp::GetVisibleByFlag(bool *aVisible, PRUint32 aChromeFlag)
   NS_ENSURE_SUCCESS(browserChrome->GetChromeFlags(&chromeFlags),
                     NS_ERROR_FAILURE);
   if (chromeFlags & aChromeFlag)
-    *aVisible = PR_TRUE;
+    *aVisible = true;
 
   return NS_OK;
 }
@@ -292,7 +292,7 @@ nsScrollbarsProp::~nsScrollbarsProp()
 NS_IMETHODIMP
 nsScrollbarsProp::GetVisible(bool *aVisible)
 {
-  *aVisible = PR_TRUE; // one assumes
+  *aVisible = true; // one assumes
 
   nsCOMPtr<nsIDOMWindow> domwin(do_QueryReferent(mDOMWindowWeakref));
   if (domwin) { // dom window not deleted
@@ -308,7 +308,7 @@ nsScrollbarsProp::GetVisible(bool *aVisible)
                     nsIScrollable::ScrollOrientation_X, &prefValue);
 
       if (prefValue == nsIScrollable::Scrollbar_Never)
-        *aVisible = PR_FALSE;
+        *aVisible = false;
     }
   }
 

@@ -63,7 +63,7 @@ public:
      * to allow the rule network to start a constrain and propagate
      * search from this node in the network.
      *
-     * @return PR_TRUE if the node can propagate the specified
+     * @return true if the node can propagate the specified
      * assertion.
      */
     virtual bool CanPropagate(nsIRDFResource* aSource,

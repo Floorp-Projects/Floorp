@@ -164,7 +164,7 @@ public:
   NS_IMETHOD NextBlock() = 0;
 
   /**
-   * IsDone() will always set aIsDone == PR_FALSE unless
+   * IsDone() will always set aIsDone == false unless
    * the document contains no text, PrevBlock() was called
    * while the document was already pointing to the first
    * text block in the document, or NextBlock() was called

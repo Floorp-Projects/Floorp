@@ -133,9 +133,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsNotifyAddrListener,
                               nsIObserver)
 
 nsNotifyAddrListener::nsNotifyAddrListener()
-    : mLinkUp(PR_TRUE)  // assume true by default
-    , mStatusKnown(PR_FALSE)
-    , mCheckAttempted(PR_FALSE)
+    : mLinkUp(true)  // assume true by default
+    , mStatusKnown(false)
+    , mCheckAttempted(false)
     , mShutdownEvent(nsnull)
 {
     mOSVerInfo.dwOSVersionInfoSize = sizeof(mOSVerInfo);
@@ -152,7 +152,7 @@ NS_IMETHODIMP
 nsNotifyAddrListener::GetIsLinkUp(bool *aIsUp)
 {
     if (!mCheckAttempted && !mStatusKnown) {
-        mCheckAttempted = PR_TRUE;
+        mCheckAttempted = true;
         CheckLinkStatus();
     }
 
@@ -204,10 +204,10 @@ nsNotifyAddrListener::Run()
             if (ret == WAIT_OBJECT_0) {
                 CheckLinkStatus();
             } else {
-                shuttingDown = PR_TRUE;
+                shuttingDown = true;
             }
         } else {
-            shuttingDown = PR_TRUE;
+            shuttingDown = true;
         }
     }
     CloseHandle(ev);
@@ -247,7 +247,7 @@ nsNotifyAddrListener::Init(void)
         return NS_ERROR_FAILURE;
 
     nsresult rv = observerService->AddObserver(this, "xpcom-shutdown-threads",
-                                               PR_FALSE);
+                                               false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mShutdownEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -364,7 +364,7 @@ nsNotifyAddrListener::CheckIPAddrTable(void)
                         table->table[i].dwAddr != 0 &&
                         // Nor a loopback
                         table->table[i].dwAddr != 0x0100007F)
-                    linkUp = PR_TRUE;
+                    linkUp = true;
             }
             mLinkUp = linkUp;
         }
@@ -411,7 +411,7 @@ nsNotifyAddrListener::CheckAdaptersInfo(void)
                                       "255.255.255.255")) {
                             // it has a DHCP server, therefore it must have
                             // a usable address
-                            linkUp = PR_TRUE;
+                            linkUp = true;
                         }
                     }
                     else {
@@ -419,14 +419,14 @@ nsNotifyAddrListener::CheckAdaptersInfo(void)
                         for (ipAddr = &ptr->IpAddressList; ipAddr && !linkUp;
                              ipAddr = ipAddr->Next) {
                             if (PL_strcmp(ipAddr->IpAddress.String, "0.0.0.0")) {
-                                linkUp = PR_TRUE;
+                                linkUp = true;
                             }
                         }
                     }
                 }
             }
             mLinkUp = linkUp;
-            mStatusKnown = PR_TRUE;
+            mStatusKnown = true;
             free(adapters);
         }
     }
@@ -600,7 +600,7 @@ nsNotifyAddrListener::CheckLinkStatus(void)
     if (ret == ERROR_NOT_SUPPORTED)
         ret = CheckIPAddrTable();
     if (ret != ERROR_SUCCESS)
-        mLinkUp = PR_TRUE; // I can't tell, so assume there's a link
+        mLinkUp = true; // I can't tell, so assume there's a link
 
     if (mStatusKnown)
         event = mLinkUp ? NS_NETWORK_LINK_DATA_UP : NS_NETWORK_LINK_DATA_DOWN;

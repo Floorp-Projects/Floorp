@@ -170,9 +170,8 @@ pref("app.update.url", "https://aus3.mozilla.org/update/3/%PRODUCT%/%VERSION%/%B
 //pref("app.update.url.override", "");
 
 // app.update.interval is in branding section
+// app.update.promptWaitTime is in branding section
 
-// Give the user x seconds to react before showing the big UI. default=12 hours
-pref("app.update.promptWaitTime", 43200);
 // Show the Update Checking/Ready UI when the user was idle for x seconds
 pref("app.update.idletime", 60);
 
@@ -357,8 +356,13 @@ pref("browser.search.suggest.enabled", true);
 pref("browser.sessionhistory.max_entries", 50);
 
 // handle links targeting new windows
-// 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
+// 1=current window/tab, 2=new window, 3=new tab in most recent window
 pref("browser.link.open_newwindow", 3);
+
+// handle external links (i.e. links opened from a different application)
+// default: use browser.link.open_newwindow
+// 1-3: see browser.link.open_newwindow for interpretation
+pref("browser.link.open_newwindow.override.external", -1);
 
 // 0: no restrictions - divert everything
 // 1: don't divert window.open at all
@@ -1005,6 +1009,9 @@ pref("devtools.scratchpad.enabled", true);
 
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);
+
+// Disable the GCLI enhanced command line.
+pref("devtools.gcli.enable", false);
 
 // The last Web Console height. This is initially 0 which means that the Web
 // Console will use the default height next time it shows.

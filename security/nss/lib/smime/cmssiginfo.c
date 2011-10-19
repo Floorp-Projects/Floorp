@@ -38,7 +38,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.34 2011/02/07 18:32:19 nelson%bolyard.com Exp $
+ * $Id: cmssiginfo.c,v 1.36 2011/09/30 19:42:09 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -214,11 +214,6 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest,
     if (signerinfo->signerIdentifier.identifierType == NSSCMSSignerID_SubjectKeyID) {
       SECOID_DestroyAlgorithmID(&freeAlgID, PR_FALSE);
     }
-
-    /* Fortezza MISSI have weird signature formats.  
-     * Map them to standard DSA formats 
-     */
-    pubkAlgTag = PK11_FortezzaMapSig(pubkAlgTag);
 
     if (signerinfo->authAttr != NULL) {
 	SECOidTag signAlgTag;
@@ -535,7 +530,28 @@ NSS_CMSSignerInfo_GetVerificationStatus(NSSCMSSignerInfo *signerinfo)
 SECOidData *
 NSS_CMSSignerInfo_GetDigestAlg(NSSCMSSignerInfo *signerinfo)
 {
-    return SECOID_FindOID (&(signerinfo->digestAlg.algorithm));
+    SECOidData *algdata;
+    SECOidTag   algtag;
+
+    algdata = SECOID_FindOID (&(signerinfo->digestAlg.algorithm));
+    if (algdata == NULL) {
+	return algdata;
+    }
+    /* Windows may have given us a signer algorithm oid instead of a digest 
+     * algorithm oid. This call will map to a signer oid to a digest one, 
+     * otherwise it leaves the oid alone and let the chips fall as they may
+     * if it's not a digest oid.
+     */
+    algtag = NSS_CMSUtil_MapSignAlgs(algdata->offset);
+    if (algtag != algdata->offset) {
+	/* if the tags don't match, then we must have received a signer 
+	 * algorithID. Now we need to get the oid data for the digest
+	 * oid, which the rest of the code is expecting */
+	algdata = SECOID_FindOIDByTag(algtag);
+    }
+
+    return algdata;
+
 }
 
 SECOidTag
@@ -548,7 +564,7 @@ NSS_CMSSignerInfo_GetDigestAlgTag(NSSCMSSignerInfo *signerinfo)
         return SEC_OID_UNKNOWN;
     }
 
-    algdata = SECOID_FindOID (&(signerinfo->digestAlg.algorithm));
+    algdata = NSS_CMSSignerInfo_GetDigestAlg(signerinfo);
     if (algdata != NULL)
 	return algdata->offset;
     else
@@ -784,8 +800,7 @@ NSS_CMSSignerInfo_AddSMIMECaps(NSSCMSSignerInfo *signerinfo)
 	goto loser;
 
     /* create new signing time attribute */
-    if (NSS_SMIMEUtil_CreateSMIMECapabilities(poolp, smimecaps,
-			    PK11_FortezzaHasKEA(signerinfo->cert)) != SECSuccess)
+    if (NSS_SMIMEUtil_CreateSMIMECapabilities(poolp, smimecaps) != SECSuccess)
 	goto loser;
 
     if ((attr = NSS_CMSAttribute_Create(poolp, SEC_OID_PKCS9_SMIME_CAPABILITIES, smimecaps, PR_TRUE)) == NULL)

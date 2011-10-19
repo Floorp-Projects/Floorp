@@ -51,8 +51,8 @@ ThrowException(VMFrame &f)
     *f.returnAddressLocation() = ptr;
 }
 
-#define THROW()   do { ThrowException(f); return; } while (0)
-#define THROWV(v) do { ThrowException(f); return v; } while (0)
+#define THROW()   do { mjit::ThrowException(f); return; } while (0)
+#define THROWV(v) do { mjit::ThrowException(f); return v; } while (0)
 
 static inline JSObject *
 ValueToObject(JSContext *cx, Value *vp)

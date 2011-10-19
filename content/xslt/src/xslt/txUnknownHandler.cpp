@@ -44,7 +44,7 @@
 
 txUnknownHandler::txUnknownHandler(txExecutionState* aEs)
     : mEs(aEs),
-      mFlushed(PR_FALSE)
+      mFlushed(false)
 {
     MOZ_COUNT_CTOR_INHERITED(txUnknownHandler, txBufferingHandler);
 }
@@ -108,7 +108,7 @@ txUnknownHandler::endDocument(nsresult aResult)
         NS_ASSERTION(mEs->mResultHandler == this,
                      "We're leaking mEs->mResultHandler.");
 
-        nsresult rv = createHandlerAndFlush(PR_FALSE, EmptyString(),
+        nsresult rv = createHandlerAndFlush(false, EmptyString(),
                                             kNameSpaceID_None);
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -220,7 +220,7 @@ nsresult txUnknownHandler::createHandlerAndFlush(bool aHTMLRoot,
     // flushing a buffer to mEs->mResultHandler.
     mEs->mObsoleteHandler = this;
 
-    mFlushed = PR_TRUE;
+    mFlushed = true;
 
     // Let go of out buffer as soon as we're done flushing it, we're not going
     // to need it anymore from this point on (all hooks get forwarded to

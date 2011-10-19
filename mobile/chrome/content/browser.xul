@@ -68,9 +68,12 @@
         title="&brandShortName;"
 #ifdef MOZ_PLATFORM_MAEMO
         sizemode="fullscreen"
-#endif
+#else
+#ifndef ANDROID
         width="480"
         height="800"
+#endif
+#endif
         onkeypress="onDebugKeyPress(event);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:svg="http://www.w3.org/2000/svg"
@@ -203,6 +206,7 @@
         <!-- Left toolbar -->
         <vbox id="tabs-container" class="panel-dark" flex="1" observes="bcast_urlbarState">
           <vbox id="tabs" flex="1" observes="bcast_urlbarState"
+                ondoubletap="BrowserUI.newTab();"
                 onselect="BrowserUI.selectTab(this);"
                 onreloadtab="BrowserUI.undoCloseTab()"
                 onclosetab="BrowserUI.closeTab(this)"
@@ -462,7 +466,11 @@
 #endif
                   </setting>
                   <setting id="prefs-uilanguage" title="&language.title;" type="control">
-                    <button id="prefs-uilanguage-button" label="&language.title;" onclick="PreferencesView.showLocalePicker();"/>
+                    <menulist id="prefs-languages" oncommand="PreferencesView.updateLocale();">
+                      <menupopup>
+                        <menuitem id="prefs-languages-auto" label="&language.auto;" value="auto"/>
+                      </menupopup>
+                    </menulist>
                   </setting>
                   <setting id="prefs-homepage" title="&homepage.title;" type="menulist">
                     <menulist id="prefs-homepage-options" oncommand="PreferencesView.updateHomePage();">

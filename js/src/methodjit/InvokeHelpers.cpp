@@ -45,7 +45,6 @@
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsxml.h"
-#include "jsstaticcheck.h"
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/CodeLocation.h"
@@ -1431,7 +1430,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
              * state after the call.
              */
             f.regs.restorePartialFrame(oldsp); /* f.regs.sp stored the new frame */
-            f.scratch = (void *) argc;         /* The interpoline will load f.scratch into argc */
+            f.scratch = (void *) uintptr_t(argc); /* The interpoline will load f.scratch into argc */
             f.fp()->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void *, JaegerInterpolineScripted));
             fp->setRejoin(REJOIN_SCRIPTED | ((pc - script->code) << 1));
             return returnReg;
@@ -1557,7 +1556,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             JS_NOT_REACHED("Bad branch op");
         }
         if (takeBranch)
-            f.regs.pc = nextpc + GET_JUMP_OFFSET(nextpc);
+            f.regs.pc = nextpc + analyze::GetJumpOffset(nextpc, nextpc);
         else
             f.regs.pc = nextpc + analyze::GetBytecodeLength(nextpc);
         break;

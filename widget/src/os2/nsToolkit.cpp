@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsToolkit.h"
-#include "nsWidgetAtoms.h"
 
 NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
@@ -55,6 +54,7 @@ static PRUintn gToolkitTLSIndex = 0;
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()  
 {
+    MOZ_COUNT_CTOR(nsToolkit);
 }
 
 
@@ -65,6 +65,7 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
+    MOZ_COUNT_DTOR(nsToolkit);
     // Remove the TLS reference to the toolkit...
     PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
@@ -76,9 +77,6 @@ nsToolkit::~nsToolkit()
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
     NS_ASSERTION(aThread, "Can only initialize toolkit on the current thread");
-
-    nsWidgetAtoms::RegisterAtoms();
-
     return NS_OK;
 }
 

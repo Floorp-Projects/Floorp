@@ -49,6 +49,7 @@ EXTRA_JS_MODULES = \
 		NetworkHelper.jsm \
 		AutocompletePopup.jsm \
 		gcli.jsm \
+		GcliCommands.jsm \
 		$(NULL)
 
 EXTRA_PP_JS_MODULES = \
@@ -57,7 +58,7 @@ EXTRA_PP_JS_MODULES = \
 
 ifdef ENABLE_TESTS
 ifneq (mobile,$(MOZ_BUILD_APP))
-	DIRS += test
+DIRS += test/browser
 endif
 endif
 

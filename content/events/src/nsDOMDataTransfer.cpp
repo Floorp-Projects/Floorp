@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsDOMDataTransfer.h"
 
 #include "prlog.h"
@@ -42,7 +44,8 @@
 #include "nsIServiceManager.h"
 #include "nsIVariant.h"
 #include "nsISupportsPrimitives.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsDOMLists.h"
 #include "nsGUIEvent.h"
 #include "nsDOMError.h"
@@ -52,6 +55,8 @@
 #include "nsIContent.h"
 #include "nsCRT.h"
 #include "nsIScriptObjectPrincipal.h"
+
+using namespace mozilla;
 
 NS_IMPL_CYCLE_COLLECTION_2(nsDOMDataTransfer, mDragTarget, mDragImage)
 
@@ -76,10 +81,10 @@ nsDOMDataTransfer::nsDOMDataTransfer()
   : mEventType(NS_DRAGDROP_START),
     mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
     mEffectAllowed(nsIDragService::DRAGDROP_ACTION_UNINITIALIZED),
-    mCursorState(PR_FALSE),
-    mReadOnly(PR_FALSE),
-    mIsExternal(PR_FALSE),
-    mUserCancelled(PR_FALSE),
+    mCursorState(false),
+    mReadOnly(false),
+    mIsExternal(false),
+    mUserCancelled(false),
     mDragImageX(0),
     mDragImageY(0)
 {
@@ -89,10 +94,10 @@ nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType)
   : mEventType(aEventType),
     mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
     mEffectAllowed(nsIDragService::DRAGDROP_ACTION_UNINITIALIZED),
-    mCursorState(PR_FALSE),
-    mReadOnly(PR_TRUE),
-    mIsExternal(PR_TRUE),
-    mUserCancelled(PR_FALSE),
+    mCursorState(false),
+    mReadOnly(true),
+    mIsExternal(true),
+    mUserCancelled(false),
     mDragImageX(0),
     mDragImageY(0)
 {
@@ -112,7 +117,7 @@ nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType,
     mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
     mEffectAllowed(aEffectAllowed),
     mCursorState(aCursorState),
-    mReadOnly(PR_TRUE),
+    mReadOnly(true),
     mIsExternal(aIsExternal),
     mUserCancelled(aUserCancelled),
     mItems(aItems),
@@ -177,7 +182,7 @@ nsDOMDataTransfer::SetEffectAllowed(const nsAString& aEffectAllowed)
   PR_STATIC_ASSERT(nsIDragService::DRAGDROP_ACTION_MOVE == 2);
   PR_STATIC_ASSERT(nsIDragService::DRAGDROP_ACTION_LINK == 4);
 
-  for (PRUint32 e = 0; e < NS_ARRAY_LENGTH(sEffects); e++) {
+  for (PRUint32 e = 0; e < ArrayLength(sEffects); e++) {
     if (aEffectAllowed.EqualsASCII(sEffects[e])) {
       mEffectAllowed = e;
       break;
@@ -327,7 +332,7 @@ nsDOMDataTransfer::GetData(const nsAString& aFormat, nsAString& aData)
             aData.Assign(Substring(stringdata, lastidx));
           else
             aData.Assign(Substring(stringdata, lastidx, idx - lastidx));
-          aData = nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(aData, PR_TRUE);
+          aData = nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(aData, true);
           return NS_OK;
         }
         lastidx = idx + 1;
@@ -673,7 +678,7 @@ nsDOMDataTransfer::GetTransferables(nsISupportsArray** aArray)
       if (NS_FAILED(rv))
         return;
 
-      added = PR_TRUE;
+      added = true;
     }
 
     // only append the transferable if data was successfully added to it
@@ -698,7 +703,7 @@ nsDOMDataTransfer::ConvertFromVariant(nsIVariant* aVariant,
       type == nsIDataType::VTYPE_INTERFACE_IS) {
     nsCOMPtr<nsISupports> data;
     if (NS_FAILED(aVariant->GetAsISupports(getter_AddRefs(data))))
-       return PR_FALSE;
+       return false;
  
     nsCOMPtr<nsIFlavorDataProvider> fdp = do_QueryInterface(data);
     if (fdp) {
@@ -712,7 +717,7 @@ nsDOMDataTransfer::ConvertFromVariant(nsIVariant* aVariant,
       nsCOMPtr<nsISupportsInterfacePointer> ptrSupports =
         do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
       if (!ptrSupports)
-        return PR_FALSE;
+        return false;
 
       ptrSupports->SetData(data);
       NS_ADDREF(*aSupports = ptrSupports);
@@ -720,14 +725,14 @@ nsDOMDataTransfer::ConvertFromVariant(nsIVariant* aVariant,
       *aLength = sizeof(nsISupportsInterfacePointer *);
     }
 
-    return PR_TRUE;
+    return true;
   }
 
   PRUnichar* chrs;
   PRUint32 len = 0;
   nsresult rv = aVariant->GetAsWStringWithSize(&len, &chrs);
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return false;
 
   nsAutoString str;
   str.Adopt(chrs, len);
@@ -735,7 +740,7 @@ nsDOMDataTransfer::ConvertFromVariant(nsIVariant* aVariant,
   nsCOMPtr<nsISupportsString>
     strSupports(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   if (!strSupports)
-    return PR_FALSE;
+    return false;
 
   strSupports->SetData(str);
 
@@ -745,7 +750,7 @@ nsDOMDataTransfer::ConvertFromVariant(nsIVariant* aVariant,
   // each character is two bytes
   *aLength = str.Length() << 1;
 
-  return PR_TRUE;
+  return true;
 }
 
 void
@@ -859,7 +864,7 @@ nsDOMDataTransfer::CacheExternalFormats()
   PRUint32 count;
   dragSession->GetNumDropItems(&count);
   for (PRUint32 c = 0; c < count; c++) {
-    for (PRUint32 f = 0; f < NS_ARRAY_LENGTH(formats); f++) {
+    for (PRUint32 f = 0; f < ArrayLength(formats); f++) {
       // IsDataFlavorSupported doesn't take an index as an argument and just
       // checks if any of the items support a particular flavor, even though
       // the GetData method does take an index. Here, we just assume that

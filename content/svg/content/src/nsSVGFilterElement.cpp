@@ -34,10 +34,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsSVGFilterElement.h"
 #include "nsSVGEffects.h"
+
+using namespace mozilla;
 
 nsSVGElement::LengthInfo nsSVGFilterElement::sLengthInfo[4] =
 {
@@ -66,7 +70,7 @@ nsSVGElement::EnumInfo nsSVGFilterElement::sEnumInfo[2] =
 
 nsSVGElement::StringInfo nsSVGFilterElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Filter)
@@ -161,7 +165,7 @@ NS_IMETHODIMP nsSVGFilterElement::GetFilterResY(nsIDOMSVGAnimatedInteger * *aFil
 NS_IMETHODIMP
 nsSVGFilterElement::SetFilterRes(PRUint32 filterResX, PRUint32 filterResY)
 {
-  mIntegerPairAttributes[FILTERRES].SetBaseValues(filterResX, filterResY, this, PR_FALSE);
+  mIntegerPairAttributes[FILTERRES].SetBaseValues(filterResX, filterResY, this);
   return NS_OK;
 }
 
@@ -191,7 +195,7 @@ nsSVGFilterElement::IsAttributeMapped(const nsIAtom* name) const
     sTextContentElementsMap,
     sViewportsMap
   };
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGGraphicElementBase::IsAttributeMapped(name);
 }
 
@@ -218,59 +222,26 @@ nsSVGElement::LengthAttributesInfo
 nsSVGFilterElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              NS_ARRAY_LENGTH(sLengthInfo));
+                              ArrayLength(sLengthInfo));
 }
 
 nsSVGElement::IntegerPairAttributesInfo
 nsSVGFilterElement::GetIntegerPairInfo()
 {
   return IntegerPairAttributesInfo(mIntegerPairAttributes, sIntegerPairInfo,
-                                   NS_ARRAY_LENGTH(sIntegerPairInfo));
+                                   ArrayLength(sIntegerPairInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGFilterElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFilterElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
-}
-
-inline static void DidAnimateAttr(nsSVGFilterElement *aFilterElement)
-{
-  // nsSVGFilterFrame doesn't implement a useful AttributeChanged
-  nsIFrame* frame = aFilterElement->GetPrimaryFrame();
-  if (frame) {
-    nsSVGEffects::InvalidateRenderingObservers(frame);
-  }
-}
-
-void
-nsSVGFilterElement::DidAnimateLength(PRUint8 aAttrEnum)
-{
-  DidAnimateAttr(this);
-}
-
-void
-nsSVGFilterElement::DidAnimateIntegerPair(PRUint8 aAttrEnum)
-{
-  DidAnimateAttr(this);
-}
-
-void
-nsSVGFilterElement::DidAnimateEnum(PRUint8 aAttrEnum)
-{
-  DidAnimateAttr(this);
-}
-
-void
-nsSVGFilterElement::DidAnimateString(PRUint8 aAttrEnum)
-{
-  DidAnimateAttr(this);
+                              ArrayLength(sStringInfo));
 }

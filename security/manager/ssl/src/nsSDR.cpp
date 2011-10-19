@@ -159,7 +159,7 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
     goto loser;
 
   /* Force authentication */
-  s = PK11_Authenticate(slot, PR_TRUE, ctx);
+  s = PK11_Authenticate(slot, true, ctx);
   if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto loser; }
 
   /* Use default key id */
@@ -201,7 +201,7 @@ Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   if (!slot) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
 
   /* Force authentication */
-  if (PK11_Authenticate(slot, PR_TRUE, ctx) != SECSuccess)
+  if (PK11_Authenticate(slot, true, ctx) != SECSuccess)
   {
     rv = NS_ERROR_NOT_AVAILABLE;
     goto loser;

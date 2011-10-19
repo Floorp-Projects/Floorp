@@ -71,10 +71,12 @@
 #include "nsIScriptError.h"
 #include "nsConsoleMessage.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsAppRunner.h"
 #include "IDBFactory.h"
 #if defined(MOZ_SYDNEYAUDIO)
 #include "AudioParent.h"
 #endif
+#include "SandboxHal.h"
 
 #if defined(ANDROID) || defined(LINUX)
 #include <sys/time.h>
@@ -93,6 +95,7 @@
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/StorageParent.h"
+#include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "nsDeviceMotion.h"
@@ -115,6 +118,7 @@ static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
 using mozilla::Preferences;
 using namespace mozilla::ipc;
+using namespace mozilla::hal_sandbox;
 using namespace mozilla::net;
 using namespace mozilla::places;
 using mozilla::unused; // heh
@@ -197,19 +201,19 @@ ContentParent::Init()
 {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
-        obs->AddObserver(this, "xpcom-shutdown", PR_FALSE);
-        obs->AddObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE);
-        obs->AddObserver(this, "child-memory-reporter-request", PR_FALSE);
-        obs->AddObserver(this, "memory-pressure", PR_FALSE);
-        obs->AddObserver(this, "child-gc-request", PR_FALSE);
-        obs->AddObserver(this, "child-cc-request", PR_FALSE);
+        obs->AddObserver(this, "xpcom-shutdown", false);
+        obs->AddObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, false);
+        obs->AddObserver(this, "child-memory-reporter-request", false);
+        obs->AddObserver(this, "memory-pressure", false);
+        obs->AddObserver(this, "child-gc-request", false);
+        obs->AddObserver(this, "child-cc-request", false);
 #ifdef ACCESSIBILITY
-        obs->AddObserver(this, "a11y-init-or-shutdown", PR_FALSE);
+        obs->AddObserver(this, "a11y-init-or-shutdown", false);
 #endif
     }
     nsCOMPtr<nsIPrefBranch2> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (prefs) {
-        prefs->AddObserver("", this, PR_FALSE);
+        prefs->AddObserver("", this, false);
     }
     nsCOMPtr<nsIThreadInternal>
             threadInt(do_QueryInterface(NS_GetCurrentThread()));
@@ -352,7 +356,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         props->Init();
 
         if (AbnormalShutdown == why) {
-            props->SetPropertyAsBool(NS_LITERAL_STRING("abnormal"), PR_TRUE);
+            props->SetPropertyAsBool(NS_LITERAL_STRING("abnormal"), true);
 
 #ifdef MOZ_CRASHREPORTER
             MOZ_ASSERT(ManagedPCrashReporterParent().Length() > 0);
@@ -427,6 +431,14 @@ ContentParent::ContentParent()
         static_cast<nsChromeRegistryChrome*>(registrySvc.get());
     chromeRegistry->SendRegisteredChrome(this);
     mMessageManager = nsFrameMessageManager::NewProcessMessageManager(this);
+
+    if (gAppData) {
+        nsCString version(gAppData->version);
+        nsCString buildID(gAppData->buildID);
+
+        //Sending all information to content process
+        SendAppInfo(version, buildID);
+    }
 }
 
 ContentParent::~ContentParent()
@@ -658,7 +670,7 @@ bool
 ContentParent::RecvGetShowPasswordSetting(bool* showPassword)
 {
     // default behavior is to show the last password character
-    *showPassword = PR_TRUE;
+    *showPassword = true;
 #ifdef ANDROID
     NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available");
     if (AndroidBridge::Bridge() != nsnull)
@@ -809,6 +821,19 @@ ContentParent::DeallocPCrashReporter(PCrashReporterParent* crashreporter)
 {
   delete crashreporter;
   return true;
+}
+
+PHalParent*
+ContentParent::AllocPHal()
+{
+    return CreateHalParent();
+}
+
+bool
+ContentParent::DeallocPHal(PHalParent* aHal)
+{
+    delete aHal;
+    return true;
 }
 
 PMemoryReportRequestParent*
@@ -1161,7 +1186,7 @@ ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg,PR_TRUE, aJSON, nsnull, aRetvals);
+                        aMsg,true, aJSON, nsnull, aRetvals);
   }
   return true;
 }
@@ -1172,7 +1197,7 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, PR_FALSE, aJSON, nsnull, nsnull);
+                        aMsg, false, aJSON, nsnull, nsnull);
   }
   return true;
 }

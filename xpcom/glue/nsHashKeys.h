@@ -103,7 +103,7 @@ public:
   {
     return HashString(*aKey);
   }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   const nsString mStr;
@@ -133,7 +133,7 @@ public:
   {
     return HashString(*aKey);
   }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   const nsCString mStr;
@@ -159,7 +159,7 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) { return *aKey; }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   const PRUint32 mValue;
@@ -185,7 +185,7 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) { return PLDHashNumber(*aKey); }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   const PRUint64 mValue;
@@ -217,7 +217,7 @@ public:
   {
     return NS_PTR_TO_INT32(aKey) >>2;
   }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   nsCOMPtr<nsISupports> mSupports;
@@ -248,7 +248,7 @@ class nsPtrHashKey : public PLDHashEntryHdr
   {
     return NS_PTR_TO_INT32(key) >> 2;
   }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
  protected:
   T *mKey;
@@ -296,7 +296,7 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey);
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   const nsID mID;
@@ -330,7 +330,7 @@ public:
 
   static const char* KeyToPointer(const char* aKey) { return aKey; }
   static PLDHashNumber HashKey(const char* aKey) { return HashString(aKey); }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   const char* mKey;
@@ -360,7 +360,7 @@ public:
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) { return HashString(aKey); }
 
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   const char* mKey;
@@ -390,7 +390,7 @@ public:
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) { return HashString(aKey); }
 
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  enum { ALLOW_MEMMOVE = true };
 
 private:
   const PRUnichar* mKey;
@@ -418,7 +418,7 @@ public:
         if (NS_SUCCEEDED(mKey->Equals(const_cast<nsIHashable*>(aKey), &eq))) {
             return eq;
         }
-        return PR_FALSE;
+        return false;
     }
 
     static const nsIHashable* KeyToPointer(nsIHashable* aKey) { return aKey; }
@@ -432,7 +432,7 @@ public:
         return code;
     }
     
-    enum { ALLOW_MEMMOVE = PR_TRUE };
+    enum { ALLOW_MEMMOVE = true };
 
 private:
     nsCOMPtr<nsIHashable> mKey;

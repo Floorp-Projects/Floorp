@@ -41,20 +41,13 @@
  * JS reflection package.
  */
 #include <stdlib.h>
-#include <string.h>     /* for jsparse.h */
+
+#include "mozilla/Util.h"
+
 #include "jspubtd.h"
 #include "jsatom.h"
 #include "jsobj.h"
 #include "jsreflect.h"
-#include "jscntxt.h"    /* for jsparse.h */
-#include "jsbit.h"      /* for jsparse.h */
-#include "jsscript.h"   /* for jsparse.h */
-#include "jsinterp.h"   /* for jsparse.h */
-#include "jsparse.h"
-#include "jsregexp.h"
-#include "jsvector.h"
-#include "jsemit.h"
-#include "jsscan.h"
 #include "jsprf.h"
 #include "jsiter.h"
 #include "jsbool.h"
@@ -65,8 +58,14 @@
 #include "jsarray.h"
 #include "jsnum.h"
 
+#include "frontend/BytecodeGenerator.h"
+#include "frontend/Parser.h"
+#include "frontend/TokenStream.h"
+#include "vm/RegExpObject.h"
+
 #include "jsscriptinlines.h"
 
+using namespace mozilla;
 using namespace js;
 
 namespace js {
@@ -231,7 +230,7 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { loc };
-            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
         }
 
         Value argv[] = { NullValue() }; /* no zero-length arrays allowed! */
@@ -244,11 +243,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, loc };
-            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
         }
 
         Value argv[] = { v1 };
-        return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
     }
 
     bool callback(Value fun, Value v1, Value v2, TokenPos *pos, Value *dst) {
@@ -257,11 +256,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, v2, loc };
-            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
         }
 
         Value argv[] = { v1, v2 };
-        return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
     }
 
     bool callback(Value fun, Value v1, Value v2, Value v3, TokenPos *pos, Value *dst) {
@@ -270,11 +269,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, v2, v3, loc };
-            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
         }
 
         Value argv[] = { v1, v2, v3 };
-        return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
     }
 
     bool callback(Value fun, Value v1, Value v2, Value v3, Value v4, TokenPos *pos, Value *dst) {
@@ -283,11 +282,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, v2, v3, v4, loc };
-            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
         }
 
         Value argv[] = { v1, v2, v3, v4 };
-        return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
     }
 
     bool callback(Value fun, Value v1, Value v2, Value v3, Value v4, Value v5,
@@ -297,11 +296,11 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             Value argv[] = { v1, v2, v3, v4, v5, loc };
-            return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
         }
 
         Value argv[] = { v1, v2, v3, v4, v5 };
-        return Invoke(cx, userv, fun, JS_ARRAY_LENGTH(argv), argv, dst);
+        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
     }
 
     Value opt(Value v) {
@@ -1600,6 +1599,7 @@ NodeBuilder::xmlPI(Value target, Value contents, TokenPos *pos, Value *dst)
 class ASTSerializer
 {
     JSContext     *cx;
+    Parser        *parser;
     NodeBuilder   builder;
     uint32        lineno;
 
@@ -1687,6 +1687,10 @@ class ASTSerializer
 
     bool init(JSObject *userobj) {
         return builder.init(userobj);
+    }
+
+    void setParser(Parser *p) {
+        parser = p;
     }
 
     bool program(JSParseNode *pn, Value *dst);
@@ -2571,6 +2575,11 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
 
       case TOK_RC:
       {
+        /* The parser notes any uninitialized properties by setting the PNX_DESTRUCT flag. */
+        if (pn->pn_xflags & PNX_DESTRUCT) {
+            parser->reportErrorNumber(pn, JSREPORT_ERROR, JSMSG_BAD_OBJECT_INIT);
+            return false;
+        }
         NodeVector elts(cx);
         if (!elts.reserve(pn->pn_count))
             return false;
@@ -2772,11 +2781,11 @@ ASTSerializer::xml(JSParseNode *pn, Value *dst)
         return builder.xmlComment(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
       case TOK_XMLPI:
-        if (!pn->pn_atom2)
-            return builder.xmlPI(atomContents(pn->pn_atom), &pn->pn_pos, dst);
+        if (!pn->pn_pidata)
+            return builder.xmlPI(atomContents(pn->pn_pitarget), &pn->pn_pos, dst);
         else
-            return builder.xmlPI(atomContents(pn->pn_atom),
-                                 atomContents(pn->pn_atom2),
+            return builder.xmlPI(atomContents(pn->pn_pitarget),
+                                 atomContents(pn->pn_pidata),
                                  &pn->pn_pos,
                                  dst);
 #endif
@@ -3209,6 +3218,8 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
 
     if (!parser.init(chars, length, filename, lineno, cx->findVersion()))
         return JS_FALSE;
+
+    serialize.setParser(&parser);
 
     JSParseNode *pn = parser.parse(NULL);
     if (!pn)

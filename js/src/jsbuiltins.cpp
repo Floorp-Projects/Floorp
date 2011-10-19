@@ -58,7 +58,6 @@
 #include "jsstr.h"
 #include "jsbuiltins.h"
 #include "jstracer.h"
-#include "jsvector.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"

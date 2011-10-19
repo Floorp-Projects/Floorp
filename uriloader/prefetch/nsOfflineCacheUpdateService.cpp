@@ -245,8 +245,8 @@ NS_IMPL_ISUPPORTS3(nsOfflineCacheUpdateService,
 //-----------------------------------------------------------------------------
 
 nsOfflineCacheUpdateService::nsOfflineCacheUpdateService()
-    : mDisabled(PR_FALSE)
-    , mUpdateRunning(PR_FALSE)
+    : mDisabled(false)
+    , mUpdateRunning(false)
 {
 }
 
@@ -271,7 +271,7 @@ nsOfflineCacheUpdateService::Init()
 
     nsresult rv = observerService->AddObserver(this,
                                                NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                               PR_TRUE);
+                                               true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     gOfflineCacheUpdateService = this;
@@ -369,7 +369,7 @@ nsOfflineCacheUpdateService::UpdateFinished(nsOfflineCacheUpdate *aUpdate)
     // keep this item alive until we're done notifying observers
     nsRefPtr<nsOfflineCacheUpdate> update = mUpdates[0];
     mUpdates.RemoveElementAt(0);
-    mUpdateRunning = PR_FALSE;
+    mUpdateRunning = false;
 
     ProcessNextUpdate();
 
@@ -393,7 +393,7 @@ nsOfflineCacheUpdateService::ProcessNextUpdate()
         return NS_OK;
 
     if (mUpdates.Length() > 0) {
-        mUpdateRunning = PR_TRUE;
+        mUpdateRunning = true;
         return mUpdates[0]->Begin();
     }
 
@@ -512,7 +512,7 @@ nsOfflineCacheUpdateService::Observe(nsISupports     *aSubject,
     if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
         if (mUpdates.Length() > 0)
             mUpdates[0]->Cancel();
-        mDisabled = PR_TRUE;
+        mDisabled = true;
     }
 
     return NS_OK;
@@ -539,7 +539,7 @@ nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
                                                      nsIPrefBranch *aPrefBranch,
                                                      bool *aAllowed)
 {
-    *aAllowed = PR_FALSE;
+    *aAllowed = false;
     if (!aURI)
         return NS_OK;
 
@@ -584,7 +584,7 @@ nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
         return NS_OK;
     }
 
-    *aAllowed = PR_TRUE;
+    *aAllowed = true;
 
     return NS_OK;
 }

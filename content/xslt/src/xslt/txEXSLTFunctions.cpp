@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsIAtom.h"
 #include "nsGkAtoms.h"
 #include "txExecutionState.h"
@@ -53,6 +55,8 @@
 #include "nsIContent.h"
 #include "nsIDOMDocumentFragment.h"
 #include "txMozillaXMLOutput.h"
+
+using namespace mozilla;
 
 class txStylesheetCompilerState;
 
@@ -80,17 +84,17 @@ convertRtfToNode(txIEvalContext *aContext, txResultTreeFragment *aRtf)
     NS_ENSURE_SUCCESS(rv, rv);
 
     txOutputFormat format;
-    txMozillaXMLOutput mozHandler(&format, domFragment, PR_TRUE);
+    txMozillaXMLOutput mozHandler(&format, domFragment, true);
 
     rv = aRtf->flushToHandler(&mozHandler);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mozHandler.closePrevious(PR_TRUE);
+    rv = mozHandler.closePrevious(true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // The txResultTreeFragment will own this.
     const txXPathNode* node = txXPathNativeNode::createXPathNode(domFragment,
-                                                                 PR_TRUE);
+                                                                 true);
     NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
 
     aRtf->setNode(node);
@@ -117,10 +121,10 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
     nsresult rv = NS_NewTextNode(getter_AddRefs(text), doc->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = text->SetText(aValue, PR_FALSE);
+    rv = text->SetText(aValue, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    *aResult = txXPathNativeNode::createXPathNode(text, PR_TRUE);
+    *aResult = txXPathNativeNode::createXPathNode(text, true);
     NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_OK;
@@ -152,13 +156,13 @@ createAndAddToResult(nsIAtom* aName, const nsSubstring& aValue,
                      txNodeSet* aResultSet, nsIContent* aResultHolder)
 {
     NS_ASSERTION(aResultHolder->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) &&
-                 aResultHolder->GetOwnerDoc(),
+                 aResultHolder->OwnerDoc(),
                  "invalid result-holder");
 
-    nsIDocument* doc = aResultHolder->GetOwnerDoc();
+    nsIDocument* doc = aResultHolder->OwnerDoc();
     nsCOMPtr<nsIContent> elem;
     nsresult rv = doc->CreateElem(nsDependentAtomString(aName),
-                                  nsnull, kNameSpaceID_None, PR_FALSE,
+                                  nsnull, kNameSpaceID_None, false,
                                   getter_AddRefs(elem));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -166,17 +170,17 @@ createAndAddToResult(nsIAtom* aName, const nsSubstring& aValue,
     rv = NS_NewTextNode(getter_AddRefs(text), doc->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = text->SetText(aValue, PR_FALSE);
+    rv = text->SetText(aValue, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = elem->AppendChildTo(text, PR_FALSE);
+    rv = elem->AppendChildTo(text, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aResultHolder->AppendChildTo(elem, PR_FALSE);
+    rv = aResultHolder->AppendChildTo(elem, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoPtr<txXPathNode> xpathNode(
-          txXPathNativeNode::createXPathNode(elem, PR_TRUE));
+          txXPathNativeNode::createXPathNode(elem, true));
     NS_ENSURE_TRUE(xpathNode, NS_ERROR_OUT_OF_MEMORY);
 
     aResultSet->append(*xpathNode);
@@ -440,7 +444,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             PRInt32 i, len = nodes1->size();
             for (i = 0; i < len; ++i) {
                 if (nodes2->contains(nodes1->get(i))) {
-                    found = PR_TRUE;
+                    found = true;
                     break;
                 }
             }
@@ -745,7 +749,7 @@ TX_ConstructEXSLTFunction(nsIAtom *aName,
                           FunctionCall **aResult)
 {
     PRUint32 i;
-    for (i = 0; i < NS_ARRAY_LENGTH(descriptTable); ++i) {
+    for (i = 0; i < ArrayLength(descriptTable); ++i) {
         txEXSLTFunctionDescriptor& desc = descriptTable[i];
         if (aName == *desc.mName && aNamespaceID == desc.mNamespaceID) {
             *aResult = new txEXSLTFunctionCall(
@@ -762,16 +766,16 @@ extern bool
 TX_InitEXSLTFunction()
 {
     PRUint32 i;
-    for (i = 0; i < NS_ARRAY_LENGTH(descriptTable); ++i) {
+    for (i = 0; i < ArrayLength(descriptTable); ++i) {
         txEXSLTFunctionDescriptor& desc = descriptTable[i];
         NS_ConvertASCIItoUTF16 namespaceURI(desc.mNamespaceURI);
         desc.mNamespaceID =
             txNamespaceManager::getNamespaceID(namespaceURI);
 
         if (desc.mNamespaceID == kNameSpaceID_Unknown) {
-            return PR_FALSE;
+            return false;
         }
     }
 
-    return PR_TRUE;
+    return true;
 }

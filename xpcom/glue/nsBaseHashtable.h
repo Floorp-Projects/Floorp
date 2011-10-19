@@ -93,7 +93,7 @@ public:
    * @param initSize the initial number of buckets in the hashtable,
    *        default 16
    * locking on all class methods
-   * @return    PR_TRUE if the object was initialized properly.
+   * @return    true if the object was initialized properly.
    */
   bool Init(PRUint32 initSize = PL_DHASH_MIN_SIZE)
   { return nsTHashtable<EntryType>::Init(initSize); }
@@ -101,7 +101,7 @@ public:
   /**
    * Check whether the table has been initialized.
    * This function is especially useful for static hashtables.
-   * @return PR_TRUE if the table has been initialized.
+   * @return true if the table has been initialized.
    */
   bool IsInitialized() const { return !!this->mTable.entrySize; }
 
@@ -118,7 +118,7 @@ public:
    * @param pData data associated with this key will be placed at this
    *   pointer.  If you only need to check if the key exists, pData
    *   may be null.
-   * @return PR_TRUE if the key exists. If key does not exist, pData is not
+   * @return true if the key exists. If key does not exist, pData is not
    *   modified.
    */
   bool Get(KeyType aKey, UserDataType* pData NS_OUTPARAM) const
@@ -126,12 +126,12 @@ public:
     EntryType* ent = this->GetEntry(aKey);
 
     if (!ent)
-      return PR_FALSE;
+      return false;
 
     if (pData)
       *pData = ent->mData;
 
-    return PR_TRUE;
+    return true;
   }
 
   /**
@@ -156,18 +156,18 @@ public:
    * put a new value for the associated key
    * @param aKey the key to put
    * @param aData the new data
-   * @return always PR_TRUE, unless memory allocation failed
+   * @return always true, unless memory allocation failed
    */
   bool Put(KeyType aKey, UserDataType aData)
   {
     EntryType* ent = this->PutEntry(aKey);
 
     if (!ent)
-      return PR_FALSE;
+      return false;
 
     ent->mData = aData;
 
-    return PR_TRUE;
+    return true;
   }
 
   /**
@@ -381,7 +381,7 @@ bool
 nsBaseHashtableMT<KeyClass,DataType,UserDataType>::Init(PRUint32 initSize)
 {
   if (!nsTHashtable<EntryType>::IsInitialized() && !nsTHashtable<EntryType>::Init(initSize))
-    return PR_FALSE;
+    return false;
 
   this->mLock = PR_NewLock();
   NS_ASSERTION(this->mLock, "Error creating lock during nsBaseHashtableL::Init()");

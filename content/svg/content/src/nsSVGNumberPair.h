@@ -62,27 +62,26 @@ public:
     mAnimVal[0] = mBaseVal[0] = aValue1;
     mAnimVal[1] = mBaseVal[1] = aValue2;
     mAttrEnum = aAttrEnum;
-    mIsAnimated = PR_FALSE;
-    mIsBaseSet = PR_FALSE;
+    mIsAnimated = false;
+    mIsBaseSet = false;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(float aValue, PairIndex aIndex, nsSVGElement *aSVGElement, bool aDoSetAttr);
-  void SetBaseValues(float aValue1, float aValue2, nsSVGElement *aSVGElement, bool aDoSetAttr);
+  void SetBaseValue(float aValue, PairIndex aIndex, nsSVGElement *aSVGElement);
+  void SetBaseValues(float aValue1, float aValue2, nsSVGElement *aSVGElement);
   float GetBaseValue(PairIndex aIndex) const
     { return mBaseVal[aIndex == eFirst ? 0 : 1]; }
   void SetAnimValue(const float aValue[2], nsSVGElement *aSVGElement);
   float GetAnimValue(PairIndex aIndex) const
     { return mAnimVal[aIndex == eFirst ? 0 : 1]; }
 
-  // Returns PR_TRUE if the animated value of this number has been explicitly
+  // Returns true if the animated value of this number has been explicitly
   // set (either by animation, or by taking on the base value which has been
-  // explicitly set by markup or a DOM call), PR_FALSE otherwise.
-  // If this returns PR_FALSE, the animated value is still valid, that is,
+  // explicitly set by markup or a DOM call), false otherwise.
+  // If this returns false, the animated value is still valid, that is,
   // useable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
@@ -123,7 +122,7 @@ public:
         if (!NS_finite(aValue)) {
           return NS_ERROR_ILLEGAL_VALUE;
         }
-        mVal->SetBaseValue(aValue, mIndex, mSVGElement, PR_TRUE);
+        mVal->SetBaseValue(aValue, mIndex, mSVGElement);
         return NS_OK;
       }
 

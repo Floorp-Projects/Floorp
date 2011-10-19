@@ -414,7 +414,7 @@ class SetPropCompiler : public PICStubCompiler
         buffer.link(done, pic.fastPathRejoin);
         if (skipOver.isSet())
             buffer.link(skipOver.get(), pic.fastPathRejoin);
-        CodeLocationLabel cs = buffer.finalize();
+        CodeLocationLabel cs = buffer.finalize(f);
         JaegerSpew(JSpew_PICs, "generate setprop stub %p %p %d at %p\n",
                    (void*)&pic,
                    (void*)initialShape,
@@ -480,7 +480,7 @@ class SetPropCompiler : public PICStubCompiler
 
         /* lookupProperty can trigger recompilations. */
         RecompilationMonitor monitor(cx);
-        if (!obj->lookupProperty(cx, id, &holder, &prop))
+        if (!obj->lookupGeneric(cx, id, &holder, &prop))
             return error();
         if (monitor.recompiled())
             return Lookup_Uncacheable;
@@ -714,7 +714,7 @@ struct GetPropertyHelper {
             return ic.disable(cx, "non-native");
 
         RecompilationMonitor monitor(cx);
-        if (!aobj->lookupProperty(cx, ATOM_TO_JSID(atom), &holder, &prop))
+        if (!aobj->lookupGeneric(cx, ATOM_TO_JSID(atom), &holder, &prop))
             return ic.error(cx);
         if (monitor.recompiled())
             return Lookup_Uncacheable;
@@ -836,7 +836,7 @@ class GetPropCompiler : public PICStubCompiler
         buffer.link(overridden, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
 
-        CodeLocationLabel start = buffer.finalize();
+        CodeLocationLabel start = buffer.finalize(f);
         JaegerSpew(JSpew_PICs, "generate args length stub at %p\n",
                    start.executableAddress());
 
@@ -877,7 +877,7 @@ class GetPropCompiler : public PICStubCompiler
         buffer.link(oob, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
 
-        CodeLocationLabel start = buffer.finalize();
+        CodeLocationLabel start = buffer.finalize(f);
         JaegerSpew(JSpew_PICs, "generate array length stub at %p\n",
                    start.executableAddress());
 
@@ -914,7 +914,7 @@ class GetPropCompiler : public PICStubCompiler
         buffer.link(notStringObj, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
 
-        CodeLocationLabel start = buffer.finalize();
+        CodeLocationLabel start = buffer.finalize(f);
         JaegerSpew(JSpew_PICs, "generate string object length stub at %p\n",
                    start.executableAddress());
 
@@ -991,7 +991,7 @@ class GetPropCompiler : public PICStubCompiler
         buffer.link(shapeMismatch, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
 
-        CodeLocationLabel cs = buffer.finalize();
+        CodeLocationLabel cs = buffer.finalize(f);
         JaegerSpew(JSpew_PICs, "generate string call stub at %p\n",
                    cs.executableAddress());
 
@@ -1034,7 +1034,7 @@ class GetPropCompiler : public PICStubCompiler
         buffer.link(notString, pic.getSlowTypeCheck());
         buffer.link(done, pic.fastPathRejoin);
 
-        CodeLocationLabel start = buffer.finalize();
+        CodeLocationLabel start = buffer.finalize(f);
         JaegerSpew(JSpew_PICs, "generate string length stub at %p\n",
                    start.executableAddress());
 
@@ -1262,7 +1262,7 @@ class GetPropCompiler : public PICStubCompiler
         for (Jump *pj = shapeMismatches.begin(); pj != shapeMismatches.end(); ++pj)
             buffer.link(*pj, pic.slowPathStart);
 
-        CodeLocationLabel cs = buffer.finalize();
+        CodeLocationLabel cs = buffer.finalize(f);
         JaegerSpew(JSpew_PICs, "generated %s stub at %p\n", type, cs.executableAddress());
 
         patchPreviousToHere(cs);
@@ -1478,7 +1478,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
         buffer.link(failJump, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
-        CodeLocationLabel cs = buffer.finalize();
+        CodeLocationLabel cs = buffer.finalize(f);
         JaegerSpew(JSpew_PICs, "generated %s global stub at %p\n", type, cs.executableAddress());
         spew("NAME stub", "global");
 
@@ -1602,7 +1602,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
         buffer.link(failJump, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
-        CodeLocationLabel cs = buffer.finalize();
+        CodeLocationLabel cs = buffer.finalize(f);
         JaegerSpew(JSpew_PICs, "generated %s call stub at %p\n", type, cs.executableAddress());
 
         patchPreviousToHere(cs);
@@ -1787,7 +1787,7 @@ class BindNameCompiler : public PICStubCompiler
 
         buffer.link(failJump, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
-        CodeLocationLabel cs = buffer.finalize();
+        CodeLocationLabel cs = buffer.finalize(f);
         JaegerSpew(JSpew_PICs, "generated %s stub at %p\n", type, cs.executableAddress());
 
         patchPreviousToHere(cs);
@@ -1807,14 +1807,8 @@ class BindNameCompiler : public PICStubCompiler
         RecompilationMonitor monitor(cx);
 
         JSObject *obj = js_FindIdentifierBase(cx, scopeChain, ATOM_TO_JSID(atom));
-
-        if (monitor.recompiled())
+        if (!obj || monitor.recompiled())
             return obj;
-
-        if (!obj) {
-            disable("error");
-            return obj;
-        }
 
         if (!pic.hit) {
             spew("first hit", "nop");
@@ -1823,10 +1817,8 @@ class BindNameCompiler : public PICStubCompiler
         }
 
         LookupStatus status = generateStub(obj);
-        if (status == Lookup_Error) {
-            disable("error");
+        if (status == Lookup_Error)
             return NULL;
-        }
 
         return obj;
     }
@@ -1907,10 +1899,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                            ? DisabledGetPropIC
                            : DisabledGetPropICNoCache;
         GetPropCompiler cc(f, script, obj, *pic, atom, stub);
-        if (!cc.update()) {
-            cc.disable("error");
+        if (!cc.update())
             THROW();
-        }
     }
 
     Value v;
@@ -2308,7 +2298,6 @@ GetElementIC::disable(JSContext *cx, const char *reason)
 LookupStatus
 GetElementIC::error(JSContext *cx)
 {
-    disable(cx, "error");
     return Lookup_Error;
 }
 
@@ -2335,9 +2324,10 @@ GetElementIC::purge(Repatcher &repatcher)
 }
 
 LookupStatus
-GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
+GetElementIC::attachGetProp(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *vp)
 {
     JS_ASSERT(v.isString());
+    JSContext *cx = f.cx;
 
     GetPropertyHelper<GetElementIC> getprop(cx, obj, JSID_TO_ATOM(id), *this, f);
     LookupStatus status = getprop.lookupAndTest();
@@ -2427,7 +2417,7 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
     buffer.maybeLink(protoGuard, slowPathStart);
     buffer.link(done, fastPathRejoin);
 
-    CodeLocationLabel cs = buffer.finalize();
+    CodeLocationLabel cs = buffer.finalize(f);
 #if DEBUG
     char *chars = DeflateString(cx, v.toString()->getChars(cx), v.toString()->length());
     JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom %p (\"%s\") shape %p (%s: %d)\n",
@@ -2506,8 +2496,10 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
 }
 
 LookupStatus
-GetElementIC::attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
+GetElementIC::attachArguments(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *vp)
 {
+    JSContext *cx = f.cx;
+
     if (!v.isInt32())
         return disable(cx, "arguments object with non-integer key");
 
@@ -2657,8 +2649,10 @@ GetElementIC::attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid
 
 #if defined JS_METHODJIT_TYPED_ARRAY
 LookupStatus
-GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
+GetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *vp)
 {
+    JSContext *cx = f.cx;
+
     if (!v.isInt32())
         return disable(cx, "typed array with string key");
 
@@ -2740,7 +2734,7 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
 #endif /* JS_METHODJIT_TYPED_ARRAY */
 
 LookupStatus
-GetElementIC::update(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
+GetElementIC::update(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *vp)
 {
     /*
      * Only treat this as a GETPROP for non-numeric string identifiers. The
@@ -2749,7 +2743,7 @@ GetElementIC::update(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, j
      * use when looking up non-integer identifiers.
      */
     if (v.isString() && js_CheckForStringIndex(id) == id)
-        return attachGetProp(f, cx, obj, v, id, vp);
+        return attachGetProp(f, obj, v, id, vp);
 
 #if defined JS_METHODJIT_TYPED_ARRAY
     /*
@@ -2762,11 +2756,11 @@ GetElementIC::update(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, j
      * Since we can use type information to generate inline paths for typed
      * arrays, just don't generate these ICs with inference enabled.
      */
-    if (!cx->typeInferenceEnabled() && js_IsTypedArray(obj))
-        return attachTypedArray(cx, obj, v, id, vp);
+    if (!f.cx->typeInferenceEnabled() && js_IsTypedArray(obj))
+        return attachTypedArray(f, obj, v, id, vp);
 #endif
 
-    return disable(cx, "unhandled object and key type");
+    return disable(f.cx, "unhandled object and key type");
 }
 
 void JS_FASTCALL
@@ -2781,6 +2775,8 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
         return;
     }
 
+    RecompilationMonitor monitor(cx);
+
     Value thisv = f.regs.sp[-2];
     JSObject *thisObj = ValuePropertyBearer(cx, thisv, -2);
     if (!thisObj)
@@ -2793,11 +2789,11 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
     else if (!js_InternNonIntElementId(cx, thisObj, idval, &id))
         THROW();
 
-    if (ic->shouldUpdate(cx)) {
+    if (!monitor.recompiled() && ic->shouldUpdate(cx)) {
 #ifdef DEBUG
         f.regs.sp[-2] = MagicValue(JS_GENERIC_MAGIC);
 #endif
-        LookupStatus status = ic->update(f, cx, thisObj, idval, id, &f.regs.sp[-2]);
+        LookupStatus status = ic->update(f, thisObj, idval, id, &f.regs.sp[-2]);
         if (status != Lookup_Uncacheable) {
             if (status == Lookup_Error)
                 THROW();
@@ -2858,7 +2854,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 #ifdef DEBUG
         f.regs.sp[-2] = MagicValue(JS_GENERIC_MAGIC);
 #endif
-        LookupStatus status = ic->update(f, cx, obj, idval, id, &f.regs.sp[-2]);
+        LookupStatus status = ic->update(f, obj, idval, id, &f.regs.sp[-2]);
         if (status != Lookup_Uncacheable) {
             if (status == Lookup_Error)
                 THROW();
@@ -2888,7 +2884,6 @@ SetElementIC::disable(JSContext *cx, const char *reason)
 LookupStatus
 SetElementIC::error(JSContext *cx)
 {
-    disable(cx, "error");
     return Lookup_Error;
 }
 
@@ -2910,8 +2905,10 @@ SetElementIC::purge(Repatcher &repatcher)
 }
 
 LookupStatus
-SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
+SetElementIC::attachHoleStub(VMFrame &f, JSObject *obj, int32 keyval)
 {
+    JSContext *cx = f.cx;
+
     if (keyval < 0)
         return disable(cx, "negative key index");
 
@@ -2998,7 +2995,7 @@ SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
         buffer.link(fails[i], slowPathStart);
     buffer.link(done, fastPathRejoin);
 
-    CodeLocationLabel cs = buffer.finalize();
+    CodeLocationLabel cs = buffer.finalize(f);
     JaegerSpew(JSpew_PICs, "generated dense array hole stub at %p\n", cs.executableAddress());
 
     Repatcher repatcher(cx->fp()->jit());
@@ -3012,12 +3009,13 @@ SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
 
 #if defined JS_METHODJIT_TYPED_ARRAY
 LookupStatus
-SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
+SetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, int32 key)
 {
     // Right now, only one shape guard extension is supported.
     JS_ASSERT(!inlineShapeGuardPatched);
 
     Assembler masm;
+    JSContext *cx = f.cx;
 
     // Restore |obj|.
     masm.rematPayload(StateRemat::FromInt32(objRemat), objReg);
@@ -3101,26 +3099,26 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
 #endif /* JS_METHODJIT_TYPED_ARRAY */
 
 LookupStatus
-SetElementIC::update(JSContext *cx, const Value &objval, const Value &idval)
+SetElementIC::update(VMFrame &f, const Value &objval, const Value &idval)
 {
     if (!objval.isObject())
-        return disable(cx, "primitive lval");
+        return disable(f.cx, "primitive lval");
     if (!idval.isInt32())
-        return disable(cx, "non-int32 key");
+        return disable(f.cx, "non-int32 key");
 
     JSObject *obj = &objval.toObject();
     int32 key = idval.toInt32();
 
     if (obj->isDenseArray())
-        return attachHoleStub(cx, obj, key);
+        return attachHoleStub(f, obj, key);
 
 #if defined JS_METHODJIT_TYPED_ARRAY
     /* Not attaching typed array stubs with linear scan allocator, see GetElementIC. */
-    if (!cx->typeInferenceEnabled() && js_IsTypedArray(obj))
-        return attachTypedArray(cx, obj, key);
+    if (!f.cx->typeInferenceEnabled() && js_IsTypedArray(obj))
+        return attachTypedArray(f, obj, key);
 #endif
 
-    return disable(cx, "unsupported object type");
+    return disable(f.cx, "unsupported object type");
 }
 
 template<JSBool strict>
@@ -3130,7 +3128,7 @@ ic::SetElement(VMFrame &f, ic::SetElementIC *ic)
     JSContext *cx = f.cx;
 
     if (ic->shouldUpdate(cx)) {
-        LookupStatus status = ic->update(cx, f.regs.sp[-3], f.regs.sp[-2]);
+        LookupStatus status = ic->update(f, f.regs.sp[-3], f.regs.sp[-2]);
         if (status == Lookup_Error)
             THROW();
     }

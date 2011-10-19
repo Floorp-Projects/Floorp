@@ -225,7 +225,7 @@ ENTRY_CLASS##InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,           \
                        const void *key)                                       \
 {                                                                             \
   new (entry) ENTRY_CLASS(key);                                               \
-  return PR_TRUE;                                                             \
+  return true;                                                             \
 }
 
 //

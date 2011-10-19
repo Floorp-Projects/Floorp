@@ -117,9 +117,9 @@ ByteBufferImpl::Grow(PRUint32 aNewSize)
     }
     delete[] mBuffer;
     mBuffer = newbuf;
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 NS_IMETHODIMP_(PRInt32)

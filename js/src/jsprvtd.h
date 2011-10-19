@@ -55,7 +55,6 @@
  */
 
 #include "jsapi.h"
-#include "jsstaticcheck.h"
 #include "jsutil.h"
 
 JS_BEGIN_EXTERN_C
@@ -129,8 +128,25 @@ namespace js {
 struct ArgumentsData;
 struct Class;
 
-class RegExp;
+class RegExpObject;
+class RegExpPrivate;
 class RegExpStatics;
+class MatchPairs;
+
+enum RegExpFlag
+{
+    IgnoreCaseFlag  = JS_BIT(0),
+    GlobalFlag      = JS_BIT(1),
+    MultilineFlag   = JS_BIT(2),
+    StickyFlag      = JS_BIT(3)
+};
+
+enum RegExpExecType
+{
+    RegExpExec,
+    RegExpTest
+};
+
 class AutoStringRooter;
 class ExecuteArgsGuard;
 class InvokeFrameGuard;

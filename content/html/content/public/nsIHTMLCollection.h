@@ -40,17 +40,17 @@
 
 #include "nsIDOMHTMLCollection.h"
 
+class nsINode;
 class nsIContent;
 class nsWrapperCache;
 
 // IID for the nsIHTMLCollection interface
 #define NS_IHTMLCOLLECTION_IID \
-{ 0x84a68396, 0x518d, 0x4fa8, \
- { 0x8f, 0x7f, 0xa0, 0x60, 0x55, 0xff, 0xef, 0xba } }
+{ 0xdea91ad6, 0x57d1, 0x4e7a, \
+ { 0xb5, 0x5a, 0xdb, 0xfc, 0x36, 0x7b, 0xc8, 0x22 } }
 
 /**
- * An internal interface that allows QI-less getting of nodes from HTML
- * collections
+ * An internal interface
  */
 class nsIHTMLCollection : public nsIDOMHTMLCollection
 {
@@ -58,15 +58,9 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLCOLLECTION_IID)
 
   /**
-   * Get the node at the index.  Returns null if the index is out of bounds.
+   * Get the root node for this HTML collection.
    */
-  virtual nsIContent* GetNodeAt(PRUint32 aIndex) = 0;
-
-  /**
-   * Get the node for the name.  Returns null if no node exists for the name.
-   */
-  virtual nsISupports* GetNamedItem(const nsAString& aName,
-                                    nsWrapperCache** aCache) = 0;
+  virtual nsINode* GetParentObject() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLCollection, NS_IHTMLCOLLECTION_IID)

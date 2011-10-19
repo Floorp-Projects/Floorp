@@ -42,7 +42,7 @@
 #include "nsIXPConnect.h"
 
 #include "jscntxt.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
@@ -114,7 +114,7 @@ ReturnKeyRange(JSContext* aCx,
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ASSERTION(xpc, "This should never be null!");
 
-  JSObject* global = JS_GetGlobalForObject(aCx, JS_GetScopeChain(aCx));
+  JSObject* global = JS_GetGlobalForScopeChain(aCx);
   NS_ENSURE_TRUE(global, JS_FALSE);
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
@@ -149,7 +149,7 @@ MakeOnlyKeyRange(JSContext* aCx,
   NS_ASSERTION(keys.Length() == 1, "Didn't set all keys!");
 
   nsRefPtr<IDBKeyRange> range =
-    IDBKeyRange::Create(keys[0], keys[0], PR_FALSE, PR_FALSE);
+    IDBKeyRange::Create(keys[0], keys[0], false, false);
   NS_ASSERTION(range, "Out of memory?");
 
   if (!ReturnKeyRange(aCx, aVp, range)) {
@@ -179,7 +179,7 @@ MakeLowerBoundKeyRange(JSContext* aCx,
   }
 
   nsRefPtr<IDBKeyRange> range =
-    IDBKeyRange::Create(keys[0], nsnull, !!open, PR_TRUE);
+    IDBKeyRange::Create(keys[0], nsnull, !!open, true);
   NS_ASSERTION(range, "Out of memory?");
 
   if (!ReturnKeyRange(aCx, aVp, range)) {
@@ -209,7 +209,7 @@ MakeUpperBoundKeyRange(JSContext* aCx,
   }
 
   nsRefPtr<IDBKeyRange> range =
-    IDBKeyRange::Create(nsnull, keys[0], PR_TRUE, !!open);
+    IDBKeyRange::Create(nsnull, keys[0], true, !!open);
   NS_ASSERTION(range, "Out of memory?");
 
   if (!ReturnKeyRange(aCx, aVp, range)) {
@@ -336,7 +336,7 @@ IDBKeyRange::GetLowerOpen(bool* aLowerOpen)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  *aLowerOpen = mLowerOpen ? PR_TRUE : PR_FALSE;
+  *aLowerOpen = mLowerOpen ? true : false;
   return NS_OK;
 }
 
@@ -346,6 +346,6 @@ IDBKeyRange::GetUpperOpen(bool* aUpperOpen)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  *aUpperOpen = mUpperOpen ? PR_TRUE : PR_FALSE;
+  *aUpperOpen = mUpperOpen ? true : false;
   return NS_OK;
 }

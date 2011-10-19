@@ -245,6 +245,7 @@ public:
     return true;
   }
   JSString *obj_toString(JSContext *cx, JSObject *wrapper);
+  void finalize(JSContext *cx, JSObject *proxy);
 
   static nsOuterWindowProxy singleton;
 };
@@ -298,6 +299,16 @@ public:
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  // nsWrapperCache
+  JSObject *WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                       bool *triedToWrap)
+  {
+    NS_ASSERTION(IsOuterWindow(),
+                 "Inner window supports nsWrapperCache, fix WrapObject!");
+    *triedToWrap = true;
+    return EnsureInnerWindow() ? GetWrapper() : nsnull;
+  }
 
   // nsIScriptGlobalObject
   virtual nsIScriptContext *GetContext();
@@ -384,6 +395,7 @@ public:
   virtual NS_HIDDEN_(nsresult) ForceClose();
 
   virtual NS_HIDDEN_(void) SetHasOrientationEventListener();
+  virtual NS_HIDDEN_(void) RemoveOrientationEventListener();
   virtual NS_HIDDEN_(void) MaybeUpdateTouchState();
   virtual NS_HIDDEN_(void) UpdateTouchState();
   virtual NS_HIDDEN_(bool) DispatchCustomEvent(const char *aEventName);
@@ -597,7 +609,7 @@ protected:
   bool IsPopupSpamWindow()
   {
     if (IsInnerWindow() && !mOuterWindow) {
-      return PR_FALSE;
+      return false;
     }
 
     return GetOuterWindowInternal()->mIsPopupSpam;
@@ -750,13 +762,13 @@ protected:
   void Freeze()
   {
     NS_ASSERTION(!IsFrozen(), "Double-freezing?");
-    mIsFrozen = PR_TRUE;
+    mIsFrozen = true;
     NotifyDOMWindowFrozen(this);
   }
 
   void Thaw()
   {
-    mIsFrozen = PR_FALSE;
+    mIsFrozen = false;
     NotifyDOMWindowThawed(this);
   }
 
@@ -1011,8 +1023,8 @@ public:
   nsGlobalChromeWindow(nsGlobalWindow *aOuterWindow)
     : nsGlobalWindow(aOuterWindow)
   {
-    mIsChrome = PR_TRUE;
-    mCleanMessageManager = PR_TRUE;
+    mIsChrome = true;
+    mCleanMessageManager = true;
   }
 
   ~nsGlobalChromeWindow()
@@ -1024,7 +1036,7 @@ public:
         mMessageManager.get())->Disconnect();
     }
 
-    mCleanMessageManager = PR_FALSE;
+    mCleanMessageManager = false;
   }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGlobalChromeWindow,
@@ -1046,7 +1058,7 @@ public:
   nsGlobalModalWindow(nsGlobalWindow *aOuterWindow)
     : nsGlobalWindow(aOuterWindow)
   {
-    mIsModalContentWindow = PR_TRUE;
+    mIsModalContentWindow = true;
   }
 
   NS_DECL_ISUPPORTS_INHERITED

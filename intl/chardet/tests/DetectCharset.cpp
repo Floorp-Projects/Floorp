@@ -84,7 +84,7 @@ private:
 nsBaseStatis::nsBaseStatis(unsigned char aL, unsigned char aH, float aR)
 {
     mNumOf2Bytes = mNumOfLWord = mLWordLength = mNumOfLChar= 0;
-    mTailByte = mLastLChar = PR_FALSE;
+    mTailByte = mLastLChar = false;
     for(PRUint32 i =0;i < 20; i++)
        mLWordLen[i] = 0;
     mLWordHi = aH;
@@ -96,7 +96,7 @@ bool nsBaseStatis::HandleData(const char* aBuf, PRUint32 aLen)
     for(PRUint32 i=0; i < aLen; i++)
     {
        if(mTailByte)
-          mTailByte = PR_FALSE;
+          mTailByte = false;
        else 
        {
           mTailByte = (0x80 == ( aBuf[i] & 0x80));
@@ -122,12 +122,12 @@ bool nsBaseStatis::HandleData(const char* aBuf, PRUint32 aLen)
                 mNumOfLWord++;
                 mLWordLen[ (mLWordLength > 10) ? 9 : (mLWordLength-1)]++;
                 mLWordLength =0 ;
-                mLastLChar = PR_FALSE;
+                mLastLChar = false;
              }
           }
        }
     }
-    return PR_TRUE;
+    return true;
 }
 void nsBaseStatis::DataEnd()
 {
@@ -197,7 +197,7 @@ private:
 nsSimpleStatis::nsSimpleStatis(unsigned char aL, unsigned char aH, float aR, const char* aCharset)
 {
     mNumOf2Bytes =  mNumOfLChar= 0;
-    mTailByte =  PR_FALSE;
+    mTailByte =  false;
     mLWordHi = aH;
     mLWordLo = aL;
     mR = aR;
@@ -208,7 +208,7 @@ bool nsSimpleStatis::HandleData(const char* aBuf, PRUint32 aLen)
     for(PRUint32 i=0; i < aLen; i++)
     {
        if(mTailByte)
-          mTailByte = PR_FALSE;
+          mTailByte = false;
        else 
        {
           mTailByte = (0x80 == ( aBuf[i] & 0x80));
@@ -222,7 +222,7 @@ bool nsSimpleStatis::HandleData(const char* aBuf, PRUint32 aLen)
           }
        }
     }
-    return PR_TRUE;
+    return true;
 }
 void nsSimpleStatis::DataEnd()
 {

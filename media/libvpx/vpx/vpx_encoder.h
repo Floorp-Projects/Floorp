@@ -17,7 +17,7 @@
  * @{
  */
 
-/*!\file vpx_encoder.h
+/*!\file
  * \brief Describes the encoder algorithm interface to applications.
  *
  * This file describes the interface between an application and a
@@ -51,9 +51,16 @@ extern "C" {
      *  interfaces or functionality, and are not required to be supported
      *  by an encoder.
      *
-     *  The available flags are specifiedby VPX_CODEC_CAP_* defines.
+     *  The available flags are specified by VPX_CODEC_CAP_* defines.
      */
 #define VPX_CODEC_CAP_PSNR  0x10000 /**< Can issue PSNR packets */
+
+    /*! Can output one partition at a time. Each partition is returned in its
+     *  own VPX_CODEC_CX_FRAME_PKT, with the FRAME_IS_FRAGMENT flag set for
+     *  every partition but the last. In this mode all frames are always
+     *  returned partition by partition.
+     */
+#define VPX_CODEC_CAP_OUTPUT_PARTITION  0x20000
 
 
     /*! \brief Initialization-time Feature Enabling
@@ -64,6 +71,8 @@ extern "C" {
      *  The available flags are specified by VPX_CODEC_USE_* defines.
      */
 #define VPX_CODEC_USE_PSNR  0x10000 /**< Calculate PSNR on each frame */
+#define VPX_CODEC_USE_OUTPUT_PARTITION  0x20000 /**< Make the encoder output one
+                                                     partition at a time. */
 
 
     /*!\brief Generic fixed size buffer structure
@@ -99,7 +108,26 @@ extern "C" {
                 this one) */
 #define VPX_FRAME_IS_INVISIBLE 0x4 /**< frame should be decoded but will not
     be shown */
+#define VPX_FRAME_IS_FRAGMENT  0x8 /**< this is a fragment of the encoded
+    frame */
 
+    /*!\brief Error Resilient flags
+     *
+     * These flags define which error resilient features to enable in the
+     * encoder. The flags are specified through the
+     * vpx_codec_enc_cfg::g_error_resilient variable.
+     */
+    typedef uint32_t vpx_codec_er_flags_t;
+#define VPX_ERROR_RESILIENT_DEFAULT     0x1 /**< Improve resiliency against
+                                                 losses of whole frames */
+#define VPX_ERROR_RESILIENT_PARTITIONS  0x2 /**< The frame partitions are
+                                                 independently decodable by the
+                                                 bool decoder, meaning that
+                                                 partitions can be decoded even
+                                                 though earlier partitions have
+                                                 been lost. Note that intra
+                                                 predicition is still done over
+                                                 the partition boundary. */
 
     /*!\brief Encoder output packet variants
      *
@@ -135,6 +163,13 @@ extern "C" {
                 unsigned long            duration; /**< duration to show frame
                                                     (in timebase units) */
                 vpx_codec_frame_flags_t  flags;    /**< flags for this frame */
+                int                      partition_id; /**< the partition id
+                                              defines the decoding order
+                                              of the partitions. Only
+                                              applicable when "output partition"
+                                              mode is enabled. First partition
+                                              has id 0.*/
+
             } frame;  /**< data for compressed frame packet */
             struct vpx_fixed_buf twopass_stats;  /**< data for two-pass packet */
             struct vpx_psnr_pkt
@@ -147,7 +182,7 @@ extern "C" {
 
             /* This packet size is fixed to allow codecs to extend this
              * interface without having to manage storage for raw packets,
-             * ie if it's smaller than 128 bytes, you can store in the
+             * i.e., if it's smaller than 128 bytes, you can store in the
              * packet list directly.
              */
             char pad[128 - sizeof(enum vpx_codec_cx_pkt_kind)]; /**< fixed sz */
@@ -179,7 +214,8 @@ extern "C" {
     enum vpx_rc_mode
     {
         VPX_VBR, /**< Variable Bit Rate (VBR) mode */
-        VPX_CBR  /**< Constant Bit Rate (CBR) mode */
+        VPX_CBR,  /**< Constant Bit Rate (CBR) mode */
+        VPX_CQ   /**< Constant Quality  (CQ)  mode */
     };
 
 
@@ -288,13 +324,13 @@ extern "C" {
         struct vpx_rational    g_timebase;
 
 
-        /*!\brief Enable error resilient mode.
+        /*!\brief Enable error resilient modes.
          *
-         * Error resilient mode indicates to the encoder that it should take
-         * measures appropriate for streaming over lossy or noisy links, if
-         * possible. Set to 1 to enable this feature, 0 to disable it.
+         * The error resilient bitfield indicates to the encoder which features
+         * it should enable to take measures for streaming over lossy or noisy
+         * links.
          */
-        unsigned int           g_error_resilient;
+        vpx_codec_er_flags_t   g_error_resilient;
 
 
         /*!\brief Multi-pass Encoding Mode
@@ -429,20 +465,28 @@ extern "C" {
          */
 
 
-        /*!\brief Rate control undershoot tolerance
+        /*!\brief Rate control adaptation undershoot control
          *
-         * This value, expressed as a percentage of the target bitrate, describes
-         * the target bitrate for easier frames, allowing bits to be saved for
-         * harder frames. Set to zero to use the codec default.
+         * This value, expressed as a percentage of the target bitrate,
+         * controls the maximum allowed adaptation speed of the codec.
+         * This factor controls the maximum amount of bits that can
+         * be subtracted from the target bitrate in order to compensate
+         * for prior overshoot.
+         *
+         * Valid values in the range 0-1000.
          */
         unsigned int           rc_undershoot_pct;
 
 
-        /*!\brief Rate control overshoot tolerance
+        /*!\brief Rate control adaptation overshoot control
          *
-         * This value, expressed as a percentage of the target bitrate, describes
-         * the maximum allowed bitrate for a given frame.  Set to zero to use the
-         * codec default.
+         * This value, expressed as a percentage of the target bitrate,
+         * controls the maximum allowed adaptation speed of the codec.
+         * This factor controls the maximum amount of bits that can
+         * be added to the target bitrate in order to compensate for
+         * prior undershoot.
+         *
+         * Valid values in the range 0-1000.
          */
         unsigned int           rc_overshoot_pct;
 

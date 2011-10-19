@@ -85,7 +85,7 @@ NS_IMETHODIMP
 nsMemoryImpl::IsLowMemory(bool *result)
 {
     NS_ERROR("IsLowMemory is deprecated.  See bug 592308.");
-    *result = PR_FALSE;
+    *result = false;
     return NS_OK;
 }
 
@@ -198,7 +198,7 @@ NS_Alloc(PRSize size)
     void* result = moz_malloc(size);
     if (! result) {
         // Request an asynchronous flush
-        sGlobalMemory.FlushMemory(NS_LITERAL_STRING("alloc-failure").get(), PR_FALSE);
+        sGlobalMemory.FlushMemory(NS_LITERAL_STRING("alloc-failure").get(), false);
     }
     return result;
 }
@@ -212,7 +212,7 @@ NS_Realloc(void* ptr, PRSize size)
     void* result = moz_realloc(ptr, size);
     if (! result && size != 0) {
         // Request an asynchronous flush
-        sGlobalMemory.FlushMemory(NS_LITERAL_STRING("alloc-failure").get(), PR_FALSE);
+        sGlobalMemory.FlushMemory(NS_LITERAL_STRING("alloc-failure").get(), false);
     }
     return result;
 }

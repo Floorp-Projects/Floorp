@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nscore.h"
 
 #include "nsXPLookAndFeel.h"
@@ -56,86 +58,86 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
 {
   { "ui.caretBlinkTime",
     eIntID_CaretBlinkTime,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.caretWidth",
     eIntID_CaretWidth,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.caretVisibleWithSelection",
     eIntID_ShowCaretDuringSelection,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.submenuDelay",
     eIntID_SubmenuDelay,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.dragThresholdX",
     eIntID_DragThresholdX,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.dragThresholdY",
     eIntID_DragThresholdY,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.useAccessibilityTheme",
     eIntID_UseAccessibilityTheme,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.scrollbarsCanOverlapContent",
     eIntID_ScrollbarsCanOverlapContent,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.menusCanOverlapOSBar",
     eIntID_MenusCanOverlapOSBar,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.skipNavigatingDisabledMenuItem",
     eIntID_SkipNavigatingDisabledMenuItem,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.treeOpenDelay",
     eIntID_TreeOpenDelay,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.treeCloseDelay",
     eIntID_TreeCloseDelay,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.treeLazyScrollDelay",
     eIntID_TreeLazyScrollDelay,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.treeScrollDelay",
     eIntID_TreeScrollDelay,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.treeScrollLinesMax",
     eIntID_TreeScrollLinesMax,
-    PR_FALSE, 0 },
+    false, 0 },
   { "accessibility.tabfocus",
     eIntID_TabFocusModel,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.alertNotificationOrigin",
     eIntID_AlertNotificationOrigin,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.scrollToClick",
     eIntID_ScrollToClick,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.IMERawInputUnderlineStyle",
     eIntID_IMERawInputUnderlineStyle,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.IMESelectedRawTextUnderlineStyle",
     eIntID_IMESelectedRawTextUnderlineStyle,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.IMEConvertedTextUnderlineStyle",
     eIntID_IMEConvertedTextUnderlineStyle,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.IMESelectedConvertedTextUnderlineStyle",
     eIntID_IMESelectedConvertedTextUnderline,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.SpellCheckerUnderlineStyle",
     eIntID_SpellCheckerUnderlineStyle,
-    PR_FALSE, 0 },
+    false, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
 {
   { "ui.IMEUnderlineRelativeSize",
     eFloatID_IMEUnderlineRelativeSize,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.SpellCheckerUnderlineRelativeSize",
     eFloatID_SpellCheckerUnderlineRelativeSize,
-    PR_FALSE, 0 },
+    false, 0 },
   { "ui.caretAspectRatio",
     eFloatID_CaretAspectRatio,
-    PR_FALSE, 0 },
+    false, 0 },
 };
 
 
@@ -269,7 +271,7 @@ nsXPLookAndFeel::Shutdown()
   if (sShutdown) {
     return;
   }
-  sShutdown = PR_TRUE;
+  sShutdown = true;
   delete sInstance;
   sInstance = nsnull;
 }
@@ -292,7 +294,7 @@ nsXPLookAndFeel::IntPrefChanged(nsLookAndFeelIntPref *data)
     return;
   }
   data->intVar = intpref;
-  data->isSet = PR_TRUE;
+  data->isSet = true;
 #ifdef DEBUG_akkana
   printf("====== Changed int pref %s to %d\n", data->name, data->intVar);
 #endif
@@ -312,7 +314,7 @@ nsXPLookAndFeel::FloatPrefChanged(nsLookAndFeelFloatPref *data)
     return;
   }
   data->floatVar = (float)intpref / 100.0f;
-  data->isSet = PR_TRUE;
+  data->isSet = true;
 #ifdef DEBUG_akkana
   printf("====== Changed float pref %s to %f\n", data->name, data->floatVar);
 #endif
@@ -356,7 +358,7 @@ nsXPLookAndFeel::InitFromPref(nsLookAndFeelIntPref* aPref)
   PRInt32 intpref;
   nsresult rv = Preferences::GetInt(aPref->name, &intpref);
   if (NS_SUCCEEDED(rv)) {
-    aPref->isSet = PR_TRUE;
+    aPref->isSet = true;
     aPref->intVar = intpref;
   }
 }
@@ -367,7 +369,7 @@ nsXPLookAndFeel::InitFromPref(nsLookAndFeelFloatPref* aPref)
   PRInt32 intpref;
   nsresult rv = Preferences::GetInt(aPref->name, &intpref);
   if (NS_SUCCEEDED(rv)) {
-    aPref->isSet = PR_TRUE;
+    aPref->isSet = true;
     aPref->floatVar = (float)intpref / 100.0f;
   }
 }
@@ -401,21 +403,21 @@ nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure)
 
   nsDependentCString prefName(aPref);
   unsigned int i;
-  for (i = 0; i < NS_ARRAY_LENGTH(sIntPrefs); ++i) {
+  for (i = 0; i < ArrayLength(sIntPrefs); ++i) {
     if (prefName.Equals(sIntPrefs[i].name)) {
       IntPrefChanged(&sIntPrefs[i]);
       return 0;
     }
   }
 
-  for (i = 0; i < NS_ARRAY_LENGTH(sFloatPrefs); ++i) {
+  for (i = 0; i < ArrayLength(sFloatPrefs); ++i) {
     if (prefName.Equals(sFloatPrefs[i].name)) {
       FloatPrefChanged(&sFloatPrefs[i]);
       return 0;
     }
   }
 
-  for (i = 0; i < NS_ARRAY_LENGTH(sColorPrefs); ++i) {
+  for (i = 0; i < ArrayLength(sColorPrefs); ++i) {
     if (prefName.Equals(sColorPrefs[i])) {
       ColorPrefChanged(i, sColorPrefs[i]);
       return 0;
@@ -436,7 +438,7 @@ nsXPLookAndFeel::Init()
 {
   // Say we're already initialized, and take the chance that it might fail;
   // protects against some other process writing to our static variables.
-  sInitialized = PR_TRUE;
+  sInitialized = true;
 
   // XXX If we could reorganize the pref names, we should separate the branch
   //     for each types.  Then, we could reduce the unnecessary loop from
@@ -445,15 +447,15 @@ nsXPLookAndFeel::Init()
   Preferences::RegisterCallback(OnPrefChanged, "accessibility.tabfocus");
 
   unsigned int i;
-  for (i = 0; i < NS_ARRAY_LENGTH(sIntPrefs); ++i) {
+  for (i = 0; i < ArrayLength(sIntPrefs); ++i) {
     InitFromPref(&sIntPrefs[i]);
   }
 
-  for (i = 0; i < NS_ARRAY_LENGTH(sFloatPrefs); ++i) {
+  for (i = 0; i < ArrayLength(sFloatPrefs); ++i) {
     InitFromPref(&sFloatPrefs[i]);
   }
 
-  for (i = 0; i < NS_ARRAY_LENGTH(sColorPrefs); ++i) {
+  for (i = 0; i < ArrayLength(sColorPrefs); ++i) {
     InitColorFromPref(i);
   }
 
@@ -493,11 +495,11 @@ nsXPLookAndFeel::IsSpecialColor(ColorID aID, nscolor &aColor)
     default:
       /*
        * In GetColor(), every color that is not a special color is color
-       * corrected. Use PR_FALSE to make other colors color corrected.
+       * corrected. Use false to make other colors color corrected.
        */
-      return PR_FALSE;
+      return false;
   }
-  return PR_FALSE;
+  return false;
 }
 
 //
@@ -674,7 +676,7 @@ nsXPLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
     break;
   }
 
-  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(sIntPrefs); ++i) {
+  for (unsigned int i = 0; i < ArrayLength(sIntPrefs); ++i) {
     if (sIntPrefs[i].isSet && (sIntPrefs[i].id == aID)) {
       aResult = sIntPrefs[i].intVar;
       return NS_OK;
@@ -690,7 +692,7 @@ nsXPLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
   if (!sInitialized)
     Init();
 
-  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(sFloatPrefs); ++i) {
+  for (unsigned int i = 0; i < ArrayLength(sFloatPrefs); ++i) {
     if (sFloatPrefs[i].isSet && sFloatPrefs[i].id == aID) {
       aResult = sFloatPrefs[i].floatVar;
       return NS_OK;

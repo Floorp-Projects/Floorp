@@ -140,6 +140,7 @@ pref("browser.display.remotetabs.timeout", 10);
 /* session history */
 pref("browser.sessionhistory.max_total_viewers", 1);
 pref("browser.sessionhistory.max_entries", 50);
+pref("browser.sessionhistory.optimize_eviction", true);
 
 /* session store */
 pref("browser.sessionstore.resume_session_once", false);
@@ -437,10 +438,14 @@ pref("browser.ui.touch.weight.visited", 120); // percentage
 // plugins
 #if MOZ_PLATFORM_MAEMO == 6
 pref("plugin.disable", false);
+pref("dom.ipc.plugins.enabled", true);
+#elifdef ANDROID
+pref("plugin.disable", false);
+pref("dom.ipc.plugins.enabled", false);
 #else
 pref("plugin.disable", true);
-#endif
 pref("dom.ipc.plugins.enabled", true);
+#endif
 
 // process priority
 // higher values give content process less CPU time
@@ -608,8 +613,8 @@ pref("image.mem.min_discard_timeout_ms", 10000);
 
 // enable touch events interfaces
 pref("dom.w3c_touch_events.enabled", true);
-pref("dom.w3c_touch_events.safetyX", 0); // escape borders in units of 1/240"
-pref("dom.w3c_touch_events.safetyY", 120); // escape borders in units of 1/240"
+pref("dom.w3c_touch_events.safetyX", 5); // escape borders in units of 1/240"
+pref("dom.w3c_touch_events.safetyY", 20); // escape borders in units of 1/240"
 
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless this pref is set
@@ -664,7 +669,7 @@ pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.goog
 
 // True if this is the first time we are showing about:firstrun
 pref("browser.firstrun.show.uidiscovery", true);
-pref("browser.firstrun.show.localepicker", true);
+pref("browser.firstrun.show.localepicker", false);
 
 // True if you always want dump() to work
 //

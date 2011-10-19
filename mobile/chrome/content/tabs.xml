@@ -11,7 +11,7 @@
       <xul:vbox anonid="container" class="documenttab-container" left="0" top="0" observes="bcast_urlbarState">
         <xul:stack anonid="page" flex="1">
           <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" moz-opaque="true" empty="true"
-            onclick="document.getBindingParent(this)._onClick()" observes="bcast_urlbarState"/>
+            observes="bcast_urlbarState"/>
           <xul:hbox anonid="reload" class="documenttab-reload" left="0" top="0" onclick="document.getBindingParent(this)._onUndo();" observes="bcast_urlbarState"/>
           <xul:hbox anonid="close-container" class="documenttab-close-container" top="0" align="center" onclick="document.getBindingParent(this)._onClose()" observes="bcast_urlbarState">
             <xul:image anonid="close" class="documenttab-close" mousethrough="always" observes="bcast_urlbarState"/>
@@ -20,6 +20,10 @@
         <xul:label anonid="title" crop="end" class="documenttab-title" observes="bcast_urlbarState"/>
       </xul:vbox>
     </content>
+
+    <handlers>
+      <handler event="click" clickcount="1" action="this._onClick()"/>
+    </handlers>
 
     <implementation>
       <field name="ignoreUndo">false</field>
@@ -175,6 +179,11 @@
       </xul:scrollbox>
       <xul:box class="tabs-list" anonid="tabs-undo"/>
     </content>
+
+    <handlers>
+      <handler event="TapDouble" action="this._onDoubleTap();"/>
+    </handlers>
+
     <implementation>
       <field name="children">document.getAnonymousElementByAttribute(this, "anonid", "tabs-children");</field>
       <field name="_scrollbox">document.getAnonymousElementByAttribute(this, "anonid", "tabs-scrollbox");</field>
@@ -195,6 +204,7 @@
             },
 
             dragStart: function dragStart(cx, cy, target) {
+              this._canGrabSidebar = true;
               this._grabSidebar = false;
               dragger.dragStart(cx, cy, target, scroller);
             },
@@ -206,12 +216,10 @@
             },
 
             dragMove: function dragMove(dx, dy) {
-              let ltr = (Util.localeDir == Util.LOCALE_DIR_LTR);
-              let hiddingPan = ltr ? (dx > 0) : (dx < 0);
-              if (!this._grabSidebar && hiddingPan) {
-                this._grabSidebar = dx && Util.isTablet() && !Util.isPortrait();
-                if (this._grabSidebar)
-                  TabletSidebar.grab();
+              if (this._canGrabSidebar) {
+                this._grabSidebar = TabletSidebar.tryGrab(dx);
+                // After trying once, don't keep checking every move.
+                this._canGrabSidebar = false;
               }
               if (this._grabSidebar)
                 TabletSidebar.slideBy(dx);
@@ -345,6 +353,14 @@
               this._scrollbox.style.width = width + "px";
               this._columnsCount = columnsCount;
             }
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onDoubleTap">
+        <body>
+          <![CDATA[
+            new Function("event", this.getAttribute("ondoubletap")).call();
           ]]>
         </body>
       </method>

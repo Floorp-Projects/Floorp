@@ -629,10 +629,6 @@ nsBrowserContentHandler.prototype = {
       var choice = prefb.getIntPref("browser.startup.page");
       if (choice == 1 || choice == 3)
         startPage = this.startPage;
-
-      if (choice == 2)
-        startPage = Components.classes["@mozilla.org/browser/global-history;2"]
-                              .getService(nsIBrowserHistory).lastPageVisited;
     } catch (e) {
       Components.utils.reportError(e);
     }

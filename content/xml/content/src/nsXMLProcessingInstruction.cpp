@@ -88,7 +88,7 @@ nsXMLProcessingInstruction::nsXMLProcessingInstruction(already_AddRefed<nsINodeI
 
   SetTextInternal(0, mText.GetLength(),
                   aData.BeginReading(), aData.Length(),
-                  PR_FALSE);  // Don't notify (bug 420429).
+                  false);  // Don't notify (bug 420429).
 }
 
 nsXMLProcessingInstruction::~nsXMLProcessingInstruction()

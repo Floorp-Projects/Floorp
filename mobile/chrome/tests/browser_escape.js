@@ -101,6 +101,20 @@ function testReturnToOwner() {
   EventUtils.sendKey("ESCAPE", window);
   is(Browser.selectedTab, tab1, "tab1 is selected");
   closeTabs();
+  testContextMenu();
+}
+
+function testContextMenu() {
+  ContextHelper.showPopup({
+    json: {
+      types: ['link']
+    },
+    target: Browser.selectedBrowser
+  });
+  ok(ContextHelper.popupState, "Context menu is shown");
+  Browser.selectedBrowser.focus();
+  EventUtils.synthesizeKey("VK_ESCAPE", {type: "keypress"}, window);
+  ok(!ContextHelper.popupState, "Context menu is dismissed");
   finish();
 }
 

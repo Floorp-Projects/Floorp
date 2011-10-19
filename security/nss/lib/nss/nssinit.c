@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.108 2011/08/17 14:40:49 emaldona%redhat.com Exp $ */
+/* $Id: nssinit.c,v 1.112 2011/10/04 02:35:58 emaldona%redhat.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -53,7 +53,6 @@
 #include "nss.h"
 #include "pk11func.h"
 #include "secerr.h"
-#include "errstrs.h"
 #include "nssbase.h"
 #include "nssutil.h"
 #include "pkixt.h"
@@ -381,7 +380,6 @@ nss_InitModules(const char *configdir, const char *certPrefix,
 		PRBool isContextInit)
 {
     SECStatus rv = SECFailure;
-    PRStatus status = PR_SUCCESS;
     char *moduleSpec = NULL;
     char *flags = NULL;
     char *lconfigdir = NULL;
@@ -394,10 +392,9 @@ nss_InitModules(const char *configdir, const char *certPrefix,
     char *lupdateID = NULL;
     char *lupdateName = NULL;
 
-    status = NSS_InitializePRErrorTable();
-    if (status != PR_SUCCESS) {
-	PORT_SetError(status);
-	return SECFailure;
+    if (NSS_InitializePRErrorTable() != SECSuccess) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return rv;
     }
 
     flags = nss_makeFlags(readOnly,noCertDB,noModDB,forceOpen,
@@ -532,6 +529,27 @@ static SECStatus nss_InitShutdownList(void);
 static CERTCertificate dummyCert;
 #endif
 
+/* All initialized to zero in BSS */
+static PRCallOnceType nssInitOnce;
+static PZLock *nssInitLock;
+static PZCondVar *nssInitCondition;
+static int nssIsInInit;
+
+static PRStatus
+nss_doLockInit(void)
+{
+    nssInitLock = PZ_NewLock(nssILockOther);
+    if (nssInitLock == NULL) {
+	return (PRStatus) SECFailure;
+    }
+    nssInitCondition = PZ_NewCondVar(nssInitLock);
+    if (nssInitCondition == NULL) {
+	return (PRStatus) SECFailure;
+    }
+    return (PRStatus) SECSuccess;
+}
+
+
 static SECStatus
 nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 		 const char *secmodName, const char *updateDir, 
@@ -558,26 +576,49 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     if (!initContextPtr && nssIsInitted) {
 	return SECSuccess;
     }
+  
+    /* make sure our locks are initialized one and only one time */ 
+    rv = PR_CallOnce(&nssInitOnce, nss_doLockInit);
+    if (rv != SECSuccess) {
+	return rv;
+    }
+
+    /*
+     * if we haven't done basic initialization, single thread the 
+     * initializations.
+     */
+    PZ_Lock(nssInitLock);
+    isReallyInitted = NSS_IsInitialized();
+    if (!isReallyInitted) {
+	while (!isReallyInitted && nssIsInInit) {
+	    PZ_WaitCondVar(nssInitCondition,PR_INTERVAL_NO_TIMEOUT);
+	    isReallyInitted = NSS_IsInitialized();
+ 	}
+	/* once we've completed basic initialization, we can allow more than 
+	 * one process initialize NSS at a time. */
+    }
+    /* get the current value */
+    nssIsInInit++;
+    PZ_Unlock(nssInitLock);
 
     /* this tells us whether or not some library has already initialized us.
      * if so, we don't want to double call some of the basic initialization
      * functions */
-    isReallyInitted = NSS_IsInitialized();
 
     if (!isReallyInitted) {
 	/* New option bits must not change the size of CERTCertificate. */
 	PORT_Assert(sizeof(dummyCert.options) == sizeof(void *));
 
 	if (SECSuccess != cert_InitLocks()) {
-            return SECFailure;
+	    goto loser;
 	}
 
 	if (SECSuccess != InitCRLCache()) {
-            return SECFailure;
+	    goto loser;
 	}
     
 	if (SECSuccess != OCSP_InitGlobal()) {
-            return SECFailure;
+	    goto loser;
 	}
     }
 
@@ -697,6 +738,7 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
      * in, then return the new context pointer and add it to the
      * nssInitContextList. Otherwise set the global nss_isInitted flag
      */
+    PZ_Lock(nssInitLock);
     if (!initContextPtr) {
 	nssIsInitted = PR_TRUE;
     } else {
@@ -704,6 +746,10 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 	(*initContextPtr)->next = nssInitContextList;
 	nssInitContextList = (*initContextPtr);
     }
+    nssIsInInit--;
+    /* now that we are inited, all waiters can move forward */
+    PZ_NotifyAllCondVar(nssInitCondition);
+    PZ_Unlock(nssInitLock);
 
     return SECSuccess;
 
@@ -894,10 +940,13 @@ NSS_RegisterShutdown(NSS_ShutdownFunc sFunc, void *appData)
 {
     int i;
 
+    PZ_Lock(nssInitLock);
     if (!NSS_IsInitialized()) {
+	PZ_Unlock(nssInitLock);
 	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
 	return SECFailure;
     }
+    PZ_Unlock(nssInitLock);
     if (sFunc == NULL) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
@@ -948,10 +997,14 @@ SECStatus
 NSS_UnregisterShutdown(NSS_ShutdownFunc sFunc, void *appData)
 {
     int i;
+
+    PZ_Lock(nssInitLock);
     if (!NSS_IsInitialized()) {
+	PZ_Unlock(nssInitLock);
 	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
 	return SECFailure;
     }
+    PZ_Unlock(nssInitLock);
 
     PORT_Assert(nssShutdownList.lock);
     PZ_Lock(nssShutdownList.lock);
@@ -1082,12 +1135,23 @@ nss_Shutdown(void)
 SECStatus
 NSS_Shutdown(void)
 {
+    SECStatus rv;
+    PZ_Lock(nssInitLock);
+
     if (!nssIsInitted) {
+	PZ_Unlock(nssInitLock);
 	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
 	return SECFailure;
     }
 
-    return nss_Shutdown();
+    /* If one or more threads are in the middle of init, wait for them
+     * to complete */
+    while (nssIsInInit) {
+	PZ_WaitCondVar(nssInitCondition,PR_INTERVAL_NO_TIMEOUT);
+    }
+    rv = nss_Shutdown();
+    PZ_Unlock(nssInitLock);
+    return rv;
 }
 
 /*
@@ -1122,32 +1186,49 @@ nss_RemoveList(NSSInitContext *context) {
 SECStatus
 NSS_ShutdownContext(NSSInitContext *context)
 {
-   if (!context) {
+    SECStatus rv = SECSuccess;
+
+    PZ_Lock(nssInitLock);
+    /* If one or more threads are in the middle of init, wait for them
+     * to complete */
+    while (nssIsInInit) {
+	PZ_WaitCondVar(nssInitCondition,PR_INTERVAL_NO_TIMEOUT);
+    }
+
+    /* OK, we are the only thread now either initializing or shutting down */
+    
+    if (!context) {
 	if (!nssIsInitted) {
+	    PZ_Unlock(nssInitLock);
 	    PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
 	    return SECFailure;
 	}
 	nssIsInitted = 0;
     } else if (! nss_RemoveList(context)) {
+	PZ_Unlock(nssInitLock);
 	/* context was already freed or wasn't valid */
 	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
 	return SECFailure;
     }
     if ((nssIsInitted == 0) && (nssInitContextList == NULL)) {
-	return nss_Shutdown();
+	rv = nss_Shutdown();
     }
-    return SECSuccess;
-}
-	
-	
 
+    /* NOTE: we don't try to free the nssInitLocks to prevent races against
+     * the locks. There may be a thread, right now, waiting in NSS_Init for us
+     * to free the lock below. If we delete the locks, bad things would happen
+     * to that thread */
+    PZ_Unlock(nssInitLock);
+
+    return rv;
+}
 
 PRBool
 NSS_IsInitialized(void)
 {
     return (nssIsInitted) || (nssInitContextList != NULL);
 }
-
+	
 
 extern const char __nss_base_rcsid[];
 extern const char __nss_base_sccsid[];

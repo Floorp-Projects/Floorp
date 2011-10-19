@@ -145,6 +145,15 @@ nsPlaceholderFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
 
+  // Cache our line box.
+  mCachedLineBox = nsnull;
+  if (aReflowState.mLineLayout) {
+    nsLineList::iterator* line = aReflowState.mLineLayout->GetLine();
+    if (line) {
+      mCachedLineBox = line->get();
+    }
+  }
+
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -184,7 +193,7 @@ nsPlaceholderFrame::GetType() const
 nsPlaceholderFrame::CanContinueTextRun() const
 {
   if (!mOutOfFlowFrame) {
-    return PR_FALSE;
+    return false;
   }
   // first-letter frames can continue text runs, and placeholders for floated
   // first-letter frames can too

@@ -169,9 +169,9 @@ static bool statefulCharset(const char *charset)
   if (!nsCRT::strncasecmp(charset, "ISO-2022-", sizeof("ISO-2022-")-1) ||
       !nsCRT::strcasecmp(charset, "UTF-7") ||
       !nsCRT::strcasecmp(charset, "HZ-GB-2312"))
-    return PR_TRUE;
+    return true;
 
-  return PR_FALSE;
+  return false;
 }
 
 nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
@@ -240,7 +240,7 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
   // Test for != NS_OK rather than NS_FAILED, because incomplete multi-byte
   // sequences are also considered failure in this context
   if (convertURItoUnicode(
-                PromiseFlatCString(aCharset), unescapedSpec, PR_TRUE, _retval)
+                PromiseFlatCString(aCharset), unescapedSpec, true, _retval)
       != NS_OK)
     // assume UTF-8 instead of ASCII  because hostname (IDN) may be in UTF-8
     CopyUTF8toUTF16(aURIFragment, _retval); 
@@ -255,7 +255,7 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeNonAsciiURI(const nsACString & aCharset,
   NS_UnescapeURL(PromiseFlatCString(aURIFragment),
                  esc_AlwaysCopy | esc_OnlyNonASCII, unescapedSpec);
 
-  return convertURItoUnicode(PromiseFlatCString(aCharset), unescapedSpec, PR_TRUE, _retval);
+  return convertURItoUnicode(PromiseFlatCString(aCharset), unescapedSpec, true, _retval);
 }
 
 //----------------------------------------------------------------------

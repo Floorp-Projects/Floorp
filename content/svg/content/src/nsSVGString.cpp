@@ -64,8 +64,8 @@ nsSVGString::SetBaseValue(const nsAString& aValue,
 {
   NS_ASSERTION(aSVGElement, "Null element passed to SetBaseValue");
 
+  mIsBaseSet = true;
   if (aDoSetAttr) {
-    mIsBaseSet = PR_TRUE;
     aSVGElement->SetStringBaseValue(mAttrEnum, aValue);
   }
 #ifdef MOZ_SMIL
@@ -129,7 +129,7 @@ nsSVGString::SMILString::ValueFromString(const nsAString& aStr,
 
   *static_cast<nsAString*>(val.mU.mPtr) = aStr;
   aValue.Swap(val);
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
   return NS_OK;
 }
 

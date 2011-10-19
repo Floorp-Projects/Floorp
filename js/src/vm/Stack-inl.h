@@ -377,10 +377,10 @@ StackFrame::setScopeChainNoCallObj(JSObject &obj)
         if (hasCallObj()) {
             JSObject *pobj = &obj;
             while (pobj && pobj->getPrivate() != this)
-                pobj = pobj->scopeChain();
+                pobj = pobj->getParentOrScopeChain();
             JS_ASSERT(pobj);
         } else {
-            for (JSObject *pobj = &obj; pobj->isScope(); pobj = pobj->scopeChain())
+            for (JSObject *pobj = &obj; pobj->isScope(); pobj = pobj->getParentOrScopeChain())
                 JS_ASSERT_IF(pobj->isCall(), pobj->getPrivate() != this);
         }
     }
@@ -404,10 +404,8 @@ StackFrame::callObj() const
     JS_ASSERT_IF(isNonEvalFunctionFrame() || isStrictEvalFrame(), hasCallObj());
 
     JSObject *pobj = &scopeChain();
-    while (JS_UNLIKELY(!pobj->isCall())) {
-        JS_ASSERT(IsCacheableNonGlobalScope(pobj) || pobj->isWith());
-        pobj = pobj->scopeChain();
-    }
+    while (JS_UNLIKELY(!pobj->isCall()))
+        pobj = pobj->getParentOrScopeChain();
     return pobj->asCall();
 }
 
@@ -474,7 +472,7 @@ StackFrame::markFunctionEpilogueDone()
              * For function frames, the call object may or may not have have an
              * enclosing DeclEnv object, so we use the callee's parent, since
              * it was the initial scope chain. For global (strict) eval frames,
-             * there is no calle, but the call object's parent is the initial
+             * there is no callee, but the call object's parent is the initial
              * scope chain.
              */
             scopeChain_ = isFunctionFrame()

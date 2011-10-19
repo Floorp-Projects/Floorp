@@ -215,15 +215,6 @@ let Storage = {
   },
 
   // ----------
-  // Function: saveActiveGroupName
-  // Saves the active group's name for the given window.
-  saveActiveGroupName: function Storage_saveActiveGroupName(win) {
-    let groupName = win.TabView.getActiveGroupName();
-    this._sessionStore.setWindowValue(
-      win, win.TabView.LAST_SESSION_GROUP_NAME_IDENTIFIER, groupName);
-  },
-
-  // ----------
   // Function: saveData
   // Generic routine for saving data to a window.
   saveData: function Storage_saveData(win, id, data) {

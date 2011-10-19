@@ -41,6 +41,8 @@
  * refresh rate.  (Perhaps temporary, until replaced by compositor.)
  */
 
+#include "mozilla/Util.h"
+
 #include "nsRefreshDriver.h"
 #include "nsPresContext.h"
 #include "nsComponentManagerUtils.h"
@@ -69,7 +71,7 @@ nsRefreshDriver::InitializeStatics()
 {
   Preferences::AddBoolVarCache(&sPrecisePref,
                                "layout.frame_rate.precise",
-                               PR_FALSE);
+                               false);
 }
 // Compute the interval to use for the refresh driver timer, in
 // milliseconds
@@ -112,7 +114,6 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext *aPresContext)
     mTimerIsPrecise(false),
     mLastTimerInterval(0)
 {
-  mRequests.Init();
 }
 
 nsRefreshDriver::~nsRefreshDriver()
@@ -184,29 +185,6 @@ nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver *aObserver,
   return array.RemoveElement(aObserver);
 }
 
-bool
-nsRefreshDriver::AddImageRequest(imgIRequest* aRequest)
-{
-  if (!mRequests.PutEntry(aRequest)) {
-    return false;
-  }
-
-  EnsureTimerStarted(false);
-
-  return true;
-}
-
-void
-nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest)
-{
-  mRequests.RemoveEntry(aRequest);
-}
-
-void nsRefreshDriver::ClearAllImageRequests()
-{
-  mRequests.Clear();
-}
-
 void
 nsRefreshDriver::EnsureTimerStarted(bool aAdjustingTimer)
 {
@@ -257,10 +235,9 @@ PRUint32
 nsRefreshDriver::ObserverCount() const
 {
   PRUint32 sum = 0;
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mObservers); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(mObservers); ++i) {
     sum += mObservers[i].Length();
   }
-
   // Even while throttled, we need to process layout and style changes.  Style
   // changes can trigger transitions which fire events when they complete, and
   // layout changes can affect media queries on child documents, triggering
@@ -270,12 +247,6 @@ nsRefreshDriver::ObserverCount() const
   sum += mBeforePaintTargets.Length();
   sum += mAnimationFrameListenerDocs.Length();
   return sum;
-}
-
-PRUint32
-nsRefreshDriver::ImageRequestCount() const
-{
-  return mRequests.Count();
 }
 
 void
@@ -301,7 +272,7 @@ nsRefreshDriver::ArrayFor(mozFlushType aFlushType)
     case Flush_Display:
       return mObservers[2];
     default:
-      NS_ABORT_IF_FALSE(PR_FALSE, "bad flush type");
+      NS_ABORT_IF_FALSE(false, "bad flush type");
       return *static_cast<ObserverArray*>(nsnull);
   }
 }
@@ -332,7 +303,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
   UpdateMostRecentRefresh();
 
   nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
-  if (!presShell || (ObserverCount() == 0 && ImageRequestCount() == 0)) {
+  if (!presShell || ObserverCount() == 0) {
     // Things are being destroyed, or we no longer have any observers.
     // We don't want to stop the timer when observers are initially
     // removed, because sometimes observers can be added and removed
@@ -350,7 +321,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
    * the pres context, which will cause our |mPresContext| to become
    * null.  If this happens, we must stop notifying observers.
    */
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mObservers); ++i) {
+  for (PRUint32 i = 0; i < ArrayLength(mObservers); ++i) {
     ObserverArray::EndLimitedIterator etor(mObservers[i]);
     while (etor.HasMore()) {
       nsRefPtr<nsARefreshObserver> obs = etor.GetNext();
@@ -361,7 +332,6 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
         return NS_OK;
       }
     }
-
     if (i == 0) {
       // Don't just loop while we have things in mBeforePaintTargets,
       // the whole point is that event handlers should readd the
@@ -384,7 +354,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
 
       PRInt64 eventTime = mMostRecentRefreshEpochTime / PR_USEC_PER_MSEC;
       for (PRUint32 i = 0; i < targets.Length(); ++i) {
-        nsEvent ev(PR_TRUE, NS_BEFOREPAINT);
+        nsEvent ev(true, NS_BEFOREPAINT);
         ev.time = eventTime;
         nsEventDispatcher::Dispatch(targets[i], nsnull, &ev);
       }
@@ -406,7 +376,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
             continue;
           NS_ADDREF(shell);
           mStyleFlushObservers.RemoveElement(shell);
-          shell->FrameConstructor()->mObservingRefreshDriver = PR_FALSE;
+          shell->FrameConstructor()->mObservingRefreshDriver = false;
           shell->FlushPendingNotifications(Flush_Style);
           NS_RELEASE(shell);
         }
@@ -425,24 +395,13 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
             continue;
           NS_ADDREF(shell);
           mLayoutFlushObservers.RemoveElement(shell);
-          shell->mReflowScheduled = PR_FALSE;
-          shell->mSuppressInterruptibleReflows = PR_FALSE;
+          shell->mReflowScheduled = false;
+          shell->mSuppressInterruptibleReflows = false;
           shell->FlushPendingNotifications(Flush_InterruptibleLayout);
           NS_RELEASE(shell);
         }
       }
     }
-  }
-
-  /*
-   * Perform notification to imgIRequests subscribed to listen
-   * for refresh events.
-   */
-
-  ImageRequestParameters parms = {mMostRecentRefresh};
-  if (mRequests.Count()) {
-    mRequests.EnumerateEntries(nsRefreshDriver::ImageRequestEnumerator, &parms);
-    EnsureTimerStarted(false);
   }
 
   if (mThrottled ||
@@ -465,24 +424,6 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
   return NS_OK;
 }
 
-PLDHashOperator
-nsRefreshDriver::ImageRequestEnumerator(nsISupportsHashKey* aEntry,
-                                        void* aUserArg)
-{
-  ImageRequestParameters* parms =
-    static_cast<ImageRequestParameters*> (aUserArg);
-  mozilla::TimeStamp mostRecentRefresh = parms->ts;
-  imgIRequest* req = static_cast<imgIRequest*>(aEntry->GetKey());
-  NS_ABORT_IF_FALSE(req, "Unable to retrieve the image request");
-  nsCOMPtr<imgIContainer> image;
-  req->GetImage(getter_AddRefs(image));
-  if (image) {
-    image->RequestRefresh(mostRecentRefresh);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 void
 nsRefreshDriver::Freeze()
 {
@@ -496,7 +437,7 @@ nsRefreshDriver::Thaw()
 {
   NS_ASSERTION(mFrozen, "Thaw called on an unfrozen refresh driver");
   mFrozen = false;
-  if (ObserverCount() || ImageRequestCount()) {
+  if (ObserverCount()) {
     // FIXME: This isn't quite right, since our EnsureTimerStarted call
     // updates our mMostRecentRefresh, but the DoRefresh call won't run
     // and notify our observers until we get back to the event loop.

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsWhitespaceTokenizer.h"
 #ifdef MOZ_SMIL
@@ -102,7 +104,7 @@ static const char *sMeetOrSliceStrings[] = { "meet", "slice" };
 static PRUint16
 GetAlignForString(const nsAString &aAlignString)
 {
-  for (PRUint32 i = 0 ; i < NS_ARRAY_LENGTH(sAlignStrings) ; i++) {
+  for (PRUint32 i = 0 ; i < ArrayLength(sAlignStrings) ; i++) {
     if (aAlignString.EqualsASCII(sAlignStrings[i])) {
       return (i + nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE);
     }
@@ -127,7 +129,7 @@ GetAlignString(nsAString& aAlignString, PRUint16 aAlign)
 static PRUint16
 GetMeetOrSliceForString(const nsAString &aMeetOrSlice)
 {
-  for (PRUint32 i = 0 ; i < NS_ARRAY_LENGTH(sMeetOrSliceStrings) ; i++) {
+  for (PRUint32 i = 0 ; i < ArrayLength(sMeetOrSliceStrings) ; i++) {
     if (aMeetOrSlice.EqualsASCII(sMeetOrSliceStrings[i])) {
       return (i + nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET);
     }
@@ -226,9 +228,7 @@ ToPreserveAspectRatio(const nsAString &aString,
 
 nsresult
 SVGAnimatedPreserveAspectRatio::SetBaseValueString(
-  const nsAString &aValueAsString,
-  nsSVGElement *aSVGElement,
-  bool aDoSetAttr)
+  const nsAString &aValueAsString, nsSVGElement *aSVGElement)
 {
   SVGPreserveAspectRatio val;
   nsresult res = ToPreserveAspectRatio(aValueAsString, &val);
@@ -237,7 +237,7 @@ SVGAnimatedPreserveAspectRatio::SetBaseValueString(
   }
 
   mBaseVal = val;
-  mIsBaseSet = PR_TRUE;
+  mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
@@ -247,7 +247,9 @@ SVGAnimatedPreserveAspectRatio::SetBaseValueString(
   }
 #endif
 
-  aSVGElement->DidChangePreserveAspectRatio(aDoSetAttr);
+  // We don't need to call DidChange* here - we're only called by
+  // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
+  // which takes care of notifying.
   return NS_OK;
 }
 
@@ -280,10 +282,10 @@ SVGAnimatedPreserveAspectRatio::SetBaseAlign(PRUint16 aAlign,
 {
   nsresult rv = mBaseVal.SetAlign(aAlign);
   NS_ENSURE_SUCCESS(rv, rv);
-  mIsBaseSet = PR_TRUE;
+  mIsBaseSet = true;
 
   mAnimVal.mAlign = mBaseVal.mAlign;
-  aSVGElement->DidChangePreserveAspectRatio(PR_TRUE);
+  aSVGElement->DidChangePreserveAspectRatio(true);
 #ifdef MOZ_SMIL
   if (mIsAnimated) {
     aSVGElement->AnimationNeedsResample();
@@ -299,10 +301,10 @@ SVGAnimatedPreserveAspectRatio::SetBaseMeetOrSlice(PRUint16 aMeetOrSlice,
 {
   nsresult rv = mBaseVal.SetMeetOrSlice(aMeetOrSlice);
   NS_ENSURE_SUCCESS(rv, rv);
-  mIsBaseSet = PR_TRUE;
+  mIsBaseSet = true;
 
   mAnimVal.mMeetOrSlice = mBaseVal.mMeetOrSlice;
-  aSVGElement->DidChangePreserveAspectRatio(PR_TRUE);
+  aSVGElement->DidChangePreserveAspectRatio(true);
 #ifdef MOZ_SMIL
   if (mIsAnimated) {
     aSVGElement->AnimationNeedsResample();
@@ -316,10 +318,10 @@ void
 SVGAnimatedPreserveAspectRatio::SetAnimValue(PRUint64 aPackedValue,
                                              nsSVGElement *aSVGElement)
 {
-  mAnimVal.SetDefer(((aPackedValue & 0xff0000) >> 16) ? PR_TRUE : PR_FALSE);
+  mAnimVal.SetDefer(((aPackedValue & 0xff0000) >> 16) ? true : false);
   mAnimVal.SetAlign(PRUint16((aPackedValue & 0xff00) >> 8));
   mAnimVal.SetMeetOrSlice(PRUint16(aPackedValue & 0xff));
-  mIsAnimated = PR_TRUE;
+  mIsAnimated = true;
   aSVGElement->DidAnimatePreserveAspectRatio();
 }
 
@@ -372,7 +374,7 @@ SMILPreserveAspectRatio::ValueFromString(const nsAString& aStr,
   nsSMILValue val(&SMILEnumType::sSingleton);
   val.mU.mUint = PackPreserveAspectRatio(par);
   aValue = val;
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
   return NS_OK;
 }
 
@@ -390,7 +392,7 @@ SMILPreserveAspectRatio::ClearAnimValue()
   if (mVal->mIsAnimated) {
     mVal->SetAnimValue(PackPreserveAspectRatio(mVal->GetBaseValue()),
                        mSVGElement);
-    mVal->mIsAnimated = PR_FALSE;
+    mVal->mIsAnimated = false;
   }
 }
 

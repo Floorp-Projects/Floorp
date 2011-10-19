@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSVGAngle.h"
 #include "prdtoa.h"
 #include "nsTextFormatter.h"
@@ -86,7 +88,7 @@ public:
     }
 
   NS_IMETHOD SetValueAsString(const nsAString& aValue)
-    { return mVal.SetBaseValueString(aValue, nsnull, PR_FALSE); }
+    { return mVal.SetBaseValueString(aValue, nsnull, false); }
   NS_IMETHOD GetValueAsString(nsAString& aValue)
     { mVal.GetBaseValueString(aValue); return NS_OK; }
 
@@ -164,9 +166,9 @@ IsValidUnitType(PRUint16 unit)
 {
   if (unit > nsIDOMSVGAngle::SVG_ANGLETYPE_UNKNOWN &&
       unit <= nsIDOMSVGAngle::SVG_ANGLETYPE_GRAD)
-    return PR_TRUE;
+    return true;
 
-  return PR_FALSE;
+  return false;
 }
 
 static void 
@@ -191,7 +193,7 @@ GetUnitTypeForString(const char* unitStr)
                    
   nsCOMPtr<nsIAtom> unitAtom = do_GetAtom(unitStr);
 
-  for (PRUint32 i = 0 ; i < NS_ARRAY_LENGTH(unitMap) ; i++) {
+  for (PRUint32 i = 0 ; i < ArrayLength(unitMap) ; i++) {
     if (unitMap[i] && *unitMap[i] == unitAtom) {
       return i;
     }
@@ -267,7 +269,7 @@ nsSVGAngle::SetBaseValueInSpecifiedUnits(float aValue,
     aSVGElement->AnimationNeedsResample();
   }
 #endif
-  aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
+  aSVGElement->DidChangeAngle(mAttrEnum, true);
 }
 
 nsresult
@@ -305,7 +307,7 @@ nsSVGAngle::NewValueSpecifiedUnits(PRUint16 unitType,
   }
 #endif
   if (aSVGElement) {
-    aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
+    aSVGElement->DidChangeAngle(mAttrEnum, true);
   }
   return NS_OK;
 }
@@ -390,7 +392,7 @@ nsSVGAngle::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
   }
 #endif
   if (aSVGElement) {
-    aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
+    aSVGElement->DidChangeAngle(mAttrEnum, true);
   }
 }
 
@@ -399,7 +401,7 @@ nsSVGAngle::SetAnimValue(float aValue, PRUint8 aUnit, nsSVGElement *aSVGElement)
 {
   mAnimVal = aValue;
   mAnimValUnit = aUnit;
-  mIsAnimated = PR_TRUE;
+  mIsAnimated = true;
   aSVGElement->DidAnimateAngle(mAttrEnum);
 }
 
@@ -461,7 +463,7 @@ nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
     val.mU.mOrient.mOrientType = nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE;
   }
   aValue.Swap(val);
-  aPreventCachingOfSandwich = PR_FALSE;
+  aPreventCachingOfSandwich = false;
 
   return NS_OK;
 }
@@ -482,7 +484,7 @@ nsSVGAngle::SMILOrient::ClearAnimValue()
   if (mAngle->mIsAnimated) {
     mOrientType->SetAnimValue(mOrientType->GetBaseValue());
     mAngle->SetAnimValue(mAngle->mBaseVal, mAngle->mBaseValUnit, mSVGElement);
-    mAngle->mIsAnimated = PR_FALSE;
+    mAngle->mIsAnimated = false;
   }
 }
 

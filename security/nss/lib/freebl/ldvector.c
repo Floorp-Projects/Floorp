@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.28 2010/12/06 17:22:49 kaie%kuix.de Exp $ */
+/* $Id: ldvector.c,v 1.29 2011/10/04 22:05:53 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 extern int FREEBL_InitStubs(void);
@@ -273,7 +273,6 @@ static const struct FREEBLVectorStr vector =
 
     /* End of Version 3.012 */
 
-    MGF1,
     TLS_P_hash,
     SHA224_NewContext,
     SHA224_DestroyContext,

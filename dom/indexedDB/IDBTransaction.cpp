@@ -42,7 +42,7 @@
 #include "nsIScriptContext.h"
 
 #include "mozilla/storage.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"
@@ -851,7 +851,7 @@ IDBTransaction::SetOntimeout(nsIDOMEventListener* aOntimeout)
 nsresult
 IDBTransaction::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  aVisitor.mCanHandle = PR_TRUE;
+  aVisitor.mCanHandle = true;
   aVisitor.mParentTarget = mDatabase;
   return NS_OK;
 }

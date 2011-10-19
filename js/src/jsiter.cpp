@@ -42,6 +42,9 @@
  * JavaScript iterators.
  */
 #include <string.h>     /* for memcpy */
+
+#include "mozilla/Util.h"
+
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -56,7 +59,6 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
-#include "jshashtable.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -64,16 +66,14 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jsstaticcheck.h"
-#include "jsvector.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
 
+#include "frontend/TokenStream.h"
 #include "vm/GlobalObject.h"
 
 #include "jsinferinlines.h"
@@ -82,6 +82,7 @@
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
+using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
@@ -162,7 +163,7 @@ static inline bool
 NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)
 {
     Value vec[2] = { IdToValue(id), val };
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vec), vec);
+    AutoArrayRooter tvr(cx, ArrayLength(vec), vec);
 
     JSObject *aobj = NewDenseCopiedArray(cx, 2, vec);
     if (!aobj)
@@ -176,6 +177,17 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
           bool enumerable, uintN flags, IdSet& ht, AutoIdVector *props)
 {
     JS_ASSERT_IF(flags & JSITER_OWNONLY, obj == pobj);
+
+    /*
+     * We implement __proto__ using a property on |Object.prototype|, but
+     * because __proto__ is highly deserving of removal, we don't want it to
+     * show up in property enumeration, even if only for |Object.prototype|
+     * (think introspection by Prototype-like frameworks that add methods to
+     * the built-in prototypes).  So exclude __proto__ if the object where the
+     * property was found has no [[Prototype]] and might be |Object.prototype|.
+     */
+    if (JS_UNLIKELY(!pobj->getProto() && JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)))
+        return true;
 
     if (!(flags & JSITER_OWNONLY) || pobj->isProxy() || pobj->getOps()->enumerate) {
         /* If we've already seen this, we definitely won't add it. */
@@ -574,8 +586,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 
     if (obj) {
         /* Enumerate Iterator.prototype directly. */
-        JSIteratorOp op = obj->getClass()->ext.iteratorObject;
-        if (op && (obj->getClass() != &IteratorClass || obj->getNativeIterator())) {
+        if (JSIteratorOp op = obj->getClass()->ext.iteratorObject) {
             JSObject *iterobj = op(cx, obj, !(flags & JSITER_FOREACH));
             if (!iterobj)
                 return false;
@@ -722,7 +733,7 @@ iterator_next(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &IteratorClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, iterator_next, &IteratorClass, &ok);
     if (!obj)
         return ok;
 
@@ -863,7 +874,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                         AutoObjectRooter proto(cx, obj->getProto());
                         AutoObjectRooter obj2(cx);
                         JSProperty *prop;
-                        if (!proto.object()->lookupProperty(cx, *idp, obj2.addr(), &prop))
+                        if (!proto.object()->lookupGeneric(cx, *idp, obj2.addr(), &prop))
                             return false;
                         if (prop) {
                             uintN attrs;
@@ -936,18 +947,31 @@ js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32 index)
 }
 
 class IndexRangePredicate {
-    jsint begin, end;
-public:
-    IndexRangePredicate(jsint begin, jsint end) : begin(begin), end(end) {}
+    uint32 begin, end;
+
+  public:
+    IndexRangePredicate(uint32 begin, uint32 end) : begin(begin), end(end) {}
 
     bool operator()(jsid id) {
-        return JSID_IS_INT(id) && begin <= JSID_TO_INT(id) && JSID_TO_INT(id) < end;
+        if (JSID_IS_INT(id)) {
+            jsint i = JSID_TO_INT(id);
+            return i > 0 && begin <= uint32(i) && uint32(i) < end;
+        }
+
+        if (JS_LIKELY(JSID_IS_ATOM(id))) {
+            JSAtom *atom = JSID_TO_ATOM(id);
+            uint32 index;
+            return atom->isIndex(&index) && begin <= index && index < end;
+        }
+
+        return false;
     }
+
     bool matchesAtMostOne() { return false; }
 };
 
 bool
-js_SuppressDeletedIndexProperties(JSContext *cx, JSObject *obj, jsint begin, jsint end)
+js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32 begin, uint32 end)
 {
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }
@@ -960,12 +984,10 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->isIterator()) {
         /* Key iterators are handled by fast-paths. */
         ni = iterobj->getNativeIterator();
-        if (ni) {
-            bool more = ni->props_cursor < ni->props_end;
-            if (ni->isKeyIter() || !more) {
-                rval->setBoolean(more);
-                return true;
-            }
+        bool more = ni->props_cursor < ni->props_end;
+        if (ni->isKeyIter() || !more) {
+            rval->setBoolean(more);
+            return true;
         }
     }
 
@@ -1020,7 +1042,7 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
          * read-only and permanent.
          */
         NativeIterator *ni = iterobj->getNativeIterator();
-        if (ni && ni->isKeyIter()) {
+        if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
             *rval = IdToValue(*ni->current());
             ni->incCursor();
@@ -1344,14 +1366,14 @@ CloseGenerator(JSContext *cx, JSObject *obj)
  * Common subroutine of generator_(next|send|throw|close) methods.
  */
 static JSBool
-generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
+generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, uintN argc)
 {
     LeaveTrace(cx);
 
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, &GeneratorClass, &ok);
+    JSObject *obj = NonGenericMethodGuard(cx, args, native, &GeneratorClass, &ok);
     if (!obj)
         return ok;
 
@@ -1408,25 +1430,25 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
 static JSBool
 generator_send(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_SEND, vp, argc);
+    return generator_op(cx, generator_send, JSGENOP_SEND, vp, argc);
 }
 
 static JSBool
 generator_next(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_NEXT, vp, argc);
+    return generator_op(cx, generator_next, JSGENOP_NEXT, vp, argc);
 }
 
 static JSBool
 generator_throw(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_THROW, vp, argc);
+    return generator_op(cx, generator_throw, JSGENOP_THROW, vp, argc);
 }
 
 static JSBool
 generator_close(JSContext *cx, uintN argc, Value *vp)
 {
-    return generator_op(cx, JSGENOP_CLOSE, vp, argc);
+    return generator_op(cx, generator_close, JSGENOP_CLOSE, vp, argc);
 }
 
 static JSFunctionSpec generator_methods[] = {
@@ -1445,6 +1467,14 @@ InitIteratorClass(JSContext *cx, GlobalObject *global)
     JSObject *iteratorProto = global->createBlankPrototype(cx, &IteratorClass);
     if (!iteratorProto)
         return false;
+
+    AutoIdVector blank(cx);
+    NativeIterator *ni = NativeIterator::allocateIterator(cx, 0, blank);
+    if (!ni)
+        return false;
+    ni->init(NULL, 0 /* flags */, 0, 0);
+
+    iteratorProto->setNativeIterator(ni);
 
     JSFunction *ctor = global->createConstructor(cx, Iterator, &IteratorClass,
                                                  CLASS_ATOM(cx, Iterator), 2);

@@ -103,6 +103,6 @@ nsDeviceProtocolHandler::AllowPort(PRInt32 port,
                                    bool *aResult)
 {
   // don't override anything.  
-  *aResult = PR_FALSE;
+  *aResult = false;
   return NS_OK;
 }

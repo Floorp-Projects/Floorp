@@ -108,7 +108,7 @@ GetCertByPrefID(const char *certID, char **_retval)
 
   /* Find a good cert in the user's database */
   cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), const_cast<char*>(nickname.get()), 
-           certUsageEmailRecipient, PR_TRUE, ctx);
+           certUsageEmailRecipient, true, ctx);
 
   if (!cert) { 
     /* Success, but no value */
@@ -220,7 +220,7 @@ SendMessage(const char *msg, const char *base64Cert, char ** _retval)
   cinfo = NSS_CMSEnvelopedData_GetContentInfo(env);
   item.data = (unsigned char *)msg;
   item.len = strlen(msg);  /* XPCOM equiv?? */
-  s = NSS_CMSContentInfo_SetContent_Data(cmsMsg, cinfo, 0, PR_FALSE);
+  s = NSS_CMSContentInfo_SetContent_Data(cmsMsg, cinfo, 0, false);
   if (s != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't set content data\n"));
     rv = NS_ERROR_FAILURE;
@@ -283,7 +283,7 @@ done:
   if (certDER) nsCRT::free((char *)certDER);
   if (cert) CERT_DestroyCertificate(cert);
   if (cmsMsg) NSS_CMSMessage_Destroy(cmsMsg);
-  if (arena) PORT_FreeArena(arena, PR_FALSE);  /* PR_FALSE? */
+  if (arena) PORT_FreeArena(arena, false);  /* false? */
 
   return rv;
 }

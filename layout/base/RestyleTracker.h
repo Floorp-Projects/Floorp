@@ -60,7 +60,7 @@ public:
   RestyleTracker(PRUint32 aRestyleBits,
                  nsCSSFrameConstructor* aFrameConstructor) :
     mRestyleBits(aRestyleBits), mFrameConstructor(aFrameConstructor),
-    mHaveLaterSiblingRestyles(PR_FALSE)
+    mHaveLaterSiblingRestyles(false)
   {
     NS_PRECONDITION((mRestyleBits & ~ELEMENT_ALL_RESTYLE_FLAGS) == 0,
                     "Why do we have these bits set?");

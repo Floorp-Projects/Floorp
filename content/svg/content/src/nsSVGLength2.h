@@ -64,8 +64,8 @@ public:
     mSpecifiedUnitType = aUnitType;
     mAttrEnum = aAttrEnum;
     mCtxType = aCtxType;
-    mIsAnimated = PR_FALSE;
-    mIsBaseSet = PR_FALSE;
+    mIsAnimated = false;
+    mIsBaseSet = false;
   }
 
   nsSVGLength2& operator=(const nsSVGLength2& aLength) {
@@ -102,10 +102,10 @@ public:
   float GetAnimValue(nsSVGSVGElement* aCtx) const
     { return mAnimVal / GetUnitScaleFactor(aCtx, mSpecifiedUnitType); }
 
-  // Returns PR_TRUE if the animated value of this length has been explicitly
+  // Returns true if the animated value of this length has been explicitly
   // set (either by animation, or by taking on the base value which has been
-  // explicitly set by markup or a DOM call), PR_FALSE otherwise.
-  // If this returns PR_FALSE, the animated value is still valid, that is,
+  // explicitly set by markup or a DOM call), false otherwise.
+  // If this returns false, the animated value is still valid, that is,
   // useable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
@@ -193,7 +193,7 @@ private:
       }
 
     NS_IMETHOD SetValueAsString(const nsAString& aValue)
-      { return mVal->SetBaseValueString(aValue, mSVGElement, PR_TRUE); }
+      { return mVal->SetBaseValueString(aValue, mSVGElement, true); }
     NS_IMETHOD GetValueAsString(nsAString& aValue)
       { mVal->GetBaseValueString(aValue); return NS_OK; }
 

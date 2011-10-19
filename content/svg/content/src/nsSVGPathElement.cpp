@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGPathSeg.h"
 #include "DOMSVGPathSeg.h"
@@ -52,7 +54,7 @@
 using namespace mozilla;
 
 nsSVGElement::NumberInfo nsSVGPathElement::sNumberInfo = 
-{ &nsGkAtoms::pathLength, 0, PR_FALSE };
+{ &nsGkAtoms::pathLength, 0, false };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
 
@@ -351,7 +353,7 @@ nsSVGPathElement::GetNumberInfo()
 NS_IMETHODIMP nsSVGPathElement::GetPathSegList(nsIDOMSVGPathSegList * *aPathSegList)
 {
   void *key = mD.GetBaseValKey();
-  *aPathSegList = DOMSVGPathSegList::GetDOMWrapper(key, this, PR_FALSE).get();
+  *aPathSegList = DOMSVGPathSegList::GetDOMWrapper(key, this, false).get();
   return *aPathSegList ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -366,7 +368,7 @@ NS_IMETHODIMP nsSVGPathElement::GetAnimatedPathSegList(nsIDOMSVGPathSegList * *a
 {
   void *key = mD.GetAnimValKey();
   *aAnimatedPathSegList =
-    DOMSVGPathSegList::GetDOMWrapper(key, this, PR_TRUE).get();
+    DOMSVGPathSegList::GetDOMWrapper(key, this, true).get();
   return *aAnimatedPathSegList ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -386,7 +388,7 @@ nsSVGPathElement::IsAttributeMapped(const nsIAtom* name) const
     sMarkersMap
   };
 
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGPathElementBase::IsAttributeMapped(name);
 }
 
@@ -409,7 +411,7 @@ nsSVGPathElement::AttributeDefinesGeometry(const nsIAtom *aName)
 bool
 nsSVGPathElement::IsMarkable()
 {
-  return PR_TRUE;
+  return true;
 }
 
 void

@@ -102,13 +102,13 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
 {
   nsISupports* supports;
   JSClass* clazz;
-  JSObject* parent;
   JSObject* glob = aObj; // starting point for search
 
   if (!glob)
     return nsnull;
 
-  glob = js::GetGlobalForObject(glob);
+  glob = js::GetObjectGlobal(glob);
+  NS_ABORT_IF_FALSE(glob, "Infallible returns null");
 
   clazz = JS_GET_CLASS(aContext, glob);
 

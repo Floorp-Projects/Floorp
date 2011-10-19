@@ -99,7 +99,7 @@ public:
    * does not test if aType is the exclusive pause source.
    *
    * @param @aType The pause source to test for.
-   * @return PR_TRUE if this container is paused by aType.
+   * @return true if this container is paused by aType.
    */
   bool IsPausedByType(PRUint32 aType) const { return mPauseState & aType; }
 
@@ -108,7 +108,7 @@ public:
    * Generally you should test for a specific type of pausing using
    * IsPausedByType.
    *
-   * @return PR_TRUE if this container is paused, PR_FALSE otherwise.
+   * @return true if this container is paused, false otherwise.
    */
   bool IsPaused() const { return mPauseState != 0; }
 
@@ -176,7 +176,7 @@ public:
    * This occurs during a backwards seek.
    */
   bool NeedsRewind() const { return mNeedsRewind; }
-  void ClearNeedsRewind() { mNeedsRewind = PR_FALSE; }
+  void ClearNeedsRewind() { mNeedsRewind = false; }
 
   /*
    * Indicates the time container is currently processing a SetCurrentTime
@@ -184,7 +184,7 @@ public:
    * (e.g. not firing time events).
    */
   bool IsSeeking() const { return mIsSeeking; }
-  void MarkSeekFinished() { mIsSeeking = PR_FALSE; }
+  void MarkSeekFinished() { mIsSeeking = false; }
 
   /*
    * Sets the parent time container.
@@ -199,7 +199,7 @@ public:
    * @param   aMilestone  The milestone to register in container time.
    * @param   aElement    The timebase element that needs a sample at
    *                      aMilestone.
-   * @return  PR_TRUE if the element was successfully added, PR_FALSE otherwise.
+   * @return  true if the element was successfully added, false otherwise.
    */
   bool AddMilestone(const nsSMILMilestone& aMilestone,
                       nsISMILAnimationElement& aElement);
@@ -215,7 +215,7 @@ public:
    *
    * @param[out] aNextMilestone The next milestone with time in parent time.
    *
-   * @return PR_TRUE if there exists another milestone, PR_FALSE otherwise in
+   * @return true if there exists another milestone, false otherwise in
    * which case aNextMilestone will be unmodified.
    */
   bool GetNextMilestoneInParentTime(nsSMILMilestone& aNextMilestone) const;
@@ -230,7 +230,7 @@ public:
    *                         must be <= GetNextMilestoneInParentTime.
    * @param[out] aMatchedElements The array to which matching elements will be
    *                              appended.
-   * @return PR_TRUE if one or more elements match, PR_FALSE otherwise.
+   * @return true if one or more elements match, false otherwise.
    */
   bool PopMilestoneElementsAtMilestone(const nsSMILMilestone& aMilestone,
                                          AnimElemArray& aMatchedElements);

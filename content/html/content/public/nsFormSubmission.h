@@ -91,7 +91,7 @@ public:
    */
   virtual bool SupportsIsindexSubmission()
   {
-    return PR_FALSE;
+    return false;
   }
 
   /**

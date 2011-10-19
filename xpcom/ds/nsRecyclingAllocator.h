@@ -134,7 +134,7 @@ class nsRecyclingAllocator {
 
     void* Calloc(PRUint32 items, PRSize size)
     {
-        return Malloc(items * size, PR_TRUE);
+        return Malloc(items * size, true);
     }
 
     // ClearFreeList - Frees all blocks kept by mFreelist, and stops the timer

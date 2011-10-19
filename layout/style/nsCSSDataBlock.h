@@ -102,10 +102,10 @@ public:
     /**
      * Attempt to replace the value for |aProperty| stored in this block
      * with the matching value stored in |aFromBlock|.
-     * This method will fail (returning PR_FALSE) if |aProperty| is not
+     * This method will fail (returning false) if |aProperty| is not
      * already in this block.  It will set |aChanged| to true if it
      * actually made a change to the block, but regardless, if it
-     * returns PR_TRUE, the value in |aFromBlock| was erased.
+     * returns true, the value in |aFromBlock| was erased.
      */
     bool TryReplaceValue(nsCSSProperty aProperty,
                            nsCSSExpandedDataBlock& aFromBlock,

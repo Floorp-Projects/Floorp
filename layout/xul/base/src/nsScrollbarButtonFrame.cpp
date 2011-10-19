@@ -113,16 +113,16 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
     } else if (button == nsMouseEvent::eRightButton) {
       tmpAction = LookAndFeel::eIntID_ScrollButtonRightMouseButtonAction;
     } else {
-      return PR_FALSE;
+      return false;
     }
   } else {
-    return PR_FALSE;
+    return false;
   }
 
   // Get the button action metric from the pres. shell.
   PRInt32 pressedButtonAction;
   if (NS_FAILED(LookAndFeel::GetInt(tmpAction, &pressedButtonAction))) {
-    return PR_FALSE;
+    return false;
   }
 
   // get the scrollbar control
@@ -130,7 +130,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);
 
   if (scrollbar == nsnull)
-    return PR_FALSE;
+    return false;
 
   // get the scrollbars content node
   nsIContent* content = scrollbar->GetContent();
@@ -147,7 +147,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   else if (index == 1)
     direction = -1;
   else
-    return PR_FALSE;
+    return false;
 
   // Whether or not to repeat the click action.
   bool repeat = true;
@@ -168,24 +168,24 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
                      nsSliderFrame::GetCurrentPosition(content);
       // Don't repeat or use smooth scrolling if scrolling to beginning or end
       // of a page.
-      repeat = smoothScroll = PR_FALSE;
+      repeat = smoothScroll = false;
       break;
     case 3:
     default:
       // We were told to ignore this click, or someone assigned a non-standard
       // value to the button's action.
-      return PR_FALSE;
+      return false;
   }
   // set this attribute so we can style it later
   nsWeakFrame weakFrame(this);
-  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::active, NS_LITERAL_STRING("true"), PR_TRUE);
+  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::active, NS_LITERAL_STRING("true"), true);
 
   if (weakFrame.IsAlive()) {
     DoButtonAction(smoothScroll);
   }
   if (repeat)
     StartRepeat();
-  return PR_TRUE;
+  return true;
 }
 
 NS_IMETHODIMP 
@@ -194,7 +194,7 @@ nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
                                       nsEventStatus*  aEventStatus)
 {
   // we're not active anymore
-  mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, PR_TRUE);
+  mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
   StopRepeat();
   return NS_OK;
 }
@@ -203,7 +203,7 @@ void nsScrollbarButtonFrame::Notify()
 {
   // Since this is only going to get called if we're scrolling a page length
   // or a line increment, we will always use smooth scrolling.
-  DoButtonAction(PR_TRUE);
+  DoButtonAction(true);
 }
 
 void
@@ -257,10 +257,10 @@ nsScrollbarButtonFrame::DoButtonAction(bool aSmoothScroll)
   curposStr.AppendInt(curpos);
 
   if (aSmoothScroll)
-    content->SetAttr(kNameSpaceID_None, nsGkAtoms::smooth, NS_LITERAL_STRING("true"), PR_FALSE);
-  content->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curposStr, PR_TRUE);
+    content->SetAttr(kNameSpaceID_None, nsGkAtoms::smooth, NS_LITERAL_STRING("true"), false);
+  content->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curposStr, true);
   if (aSmoothScroll)
-    content->UnsetAttr(kNameSpaceID_None, nsGkAtoms::smooth, PR_FALSE);
+    content->UnsetAttr(kNameSpaceID_None, nsGkAtoms::smooth, false);
 }
 
 nsresult

@@ -156,7 +156,7 @@ public:
 
   nsresult SetSecurityState(PRUint32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
-  nsresult SetErrorMessage(const PRUnichar *aText);
+  void SetErrorMessage(const PRUnichar *aText);
 
   nsresult SetForSTARTTLS(bool aForSTARTTLS);
   nsresult GetForSTARTTLS(bool *aForSTARTTLS);
@@ -190,8 +190,7 @@ public:
 
   void SetAllowTLSIntoleranceTimeout(bool aAllow);
 
-  nsresult GetExternalErrorReporting(bool* state);
-  nsresult SetExternalErrorReporting(bool aState);
+  bool GetExternalErrorReporting();
 
   nsresult RememberCAChain(CERTCertList *aCertList);
 
@@ -206,7 +205,7 @@ public:
     return mIsCertIssuerBlacklisted;
   }
   void SetCertIssuerBlacklisted() {
-    mIsCertIssuerBlacklisted = PR_TRUE;
+    mIsCertIssuerBlacklisted = true;
   }
 protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;

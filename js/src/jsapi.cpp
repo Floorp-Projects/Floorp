@@ -61,7 +61,6 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdate.h"
-#include "jsemit.h"
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -74,32 +73,31 @@
 #include "json.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jsprobes.h"
 #include "jsproxy.h"
-#include "jsregexp.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jstracer.h"
 #include "prmjtime.h"
-#include "jsstaticcheck.h"
-#include "jsvector.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
 #include "jstypedarray.h"
+
+#include "ds/LifoAlloc.h"
+#include "builtin/RegExp.h"
+#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeGenerator.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
-#include "jsregexpinlines.h"
 #include "jsscriptinlines.h"
-#include "assembler/wtf/Platform.h"
 
+#include "vm/RegExpObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
-#include "ds/LifoAlloc.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
@@ -647,8 +645,6 @@ JSRuntime::JSRuntime()
     activityCallbackArg(NULL),
     gcSystemAvailableChunkListHead(NULL),
     gcUserAvailableChunkListHead(NULL),
-    gcEmptyChunkListHead(NULL),
-    gcEmptyChunkCount(0),
     gcKeepAtoms(0),
     gcBytes(0),
     gcTriggerBytes(0),
@@ -664,6 +660,7 @@ JSRuntime::JSRuntime()
     gcMode(JSGC_MODE_GLOBAL),
     gcIsNeeded(0),
     gcWeakMapList(NULL),
+    gcStats(thisFromCtor()),
     gcTriggerCompartment(NULL),
     gcCurrentCompartment(NULL),
     gcCheckCompartment(NULL),
@@ -678,8 +675,10 @@ JSRuntime::JSRuntime()
 #endif
     gcCallback(NULL),
     gcMallocBytes(0),
-    gcExtraRootsTraceOp(NULL),
-    gcExtraRootsData(NULL),
+    gcBlackRootsTraceOp(NULL),
+    gcBlackRootsData(NULL),
+    gcGrayRootsTraceOp(NULL),
+    gcGrayRootsData(NULL),
     NaNValue(UndefinedValue()),
     negativeInfinityValue(UndefinedValue()),
     positiveInfinityValue(UndefinedValue()),
@@ -693,6 +692,7 @@ JSRuntime::JSRuntime()
     requestDone(NULL),
     requestCount(0),
     gcThread(NULL),
+    gcHelperThread(thisFromCtor()),
     rtLock(NULL),
 # ifdef DEBUG
     rtLockOwner(0),
@@ -702,6 +702,7 @@ JSRuntime::JSRuntime()
     debuggerMutations(0),
     securityCallbacks(NULL),
     structuredCloneCallbacks(NULL),
+    telemetryCallback(NULL),
     propertyRemovals(0),
     scriptFilenameTable(NULL),
 #ifdef JS_THREADSAFE
@@ -1320,19 +1321,35 @@ JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
 bool
 JSAutoEnterCompartment::enter(JSContext *cx, JSObject *target)
 {
-    JS_ASSERT(!call);
+    JS_ASSERT(state == STATE_UNENTERED);
     if (cx->compartment == target->compartment()) {
-        call = reinterpret_cast<JSCrossCompartmentCall*>(1);
+        state = STATE_SAME_COMPARTMENT;
         return true;
     }
-    call = JS_EnterCrossCompartmentCall(cx, target);
-    return call != NULL;
+
+    JS_STATIC_ASSERT(sizeof(bytes) == sizeof(AutoCompartment));
+    CHECK_REQUEST(cx);
+    AutoCompartment *call = new (bytes) AutoCompartment(cx, target);
+    if (call->enter()) {
+        state = STATE_OTHER_COMPARTMENT;
+        return true;
+    }
+    return false;
 }
 
 void
 JSAutoEnterCompartment::enterAndIgnoreErrors(JSContext *cx, JSObject *target)
 {
     (void) enter(cx, target);
+}
+
+JSAutoEnterCompartment::~JSAutoEnterCompartment()
+{
+    if (state == STATE_OTHER_COMPARTMENT) {
+        AutoCompartment* ac = reinterpret_cast<AutoCompartment*>(bytes);
+        CHECK_REQUEST(ac->context);
+        ac->~AutoCompartment();
+    }
 }
 
 namespace JS {
@@ -1376,7 +1393,7 @@ JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment)
 {
     CHECK_REQUEST(cx);
-    return compartment->data;
+    return js_GetCompartmentPrivate(compartment);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2039,13 +2056,6 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetScopeChain(JSContext *cx)
-{
-    CHECK_REQUEST(cx);
-    return GetScopeChain(cx);
-}
-
-JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
@@ -2271,10 +2281,10 @@ JS_UnlockGCThingRT(JSRuntime *rt, void *thing)
 }
 
 JS_PUBLIC_API(void)
-JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
+JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
-    rt->gcExtraRootsTraceOp = traceOp;
-    rt->gcExtraRootsData = data;
+    rt->gcBlackRootsTraceOp = traceOp;
+    rt->gcBlackRootsData = data;
 }
 
 JS_PUBLIC_API(void)
@@ -2697,14 +2707,12 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 
     LeaveTrace(cx);
 
-    GCREASON(PUBLIC_API);
-    js_GC(cx, comp, GC_NORMAL);
+    js_GC(cx, comp, GC_NORMAL, gcstats::PUBLIC_API);
 }
 
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
-    GCREASON(PUBLIC_API);
     JS_CompartmentGC(cx, NULL);
 }
 
@@ -2778,9 +2786,9 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
       case JSGC_MODE:
         return uint32(rt->gcMode);
       case JSGC_UNUSED_CHUNKS:
-        return uint32(rt->gcEmptyChunkCount);
+        return uint32(rt->gcChunkPool.getEmptyCount());
       case JSGC_TOTAL_CHUNKS:
-        return uint32(rt->gcChunkSet.count() + rt->gcEmptyChunkCount);
+        return uint32(rt->gcChunkSet.count() + rt->gcChunkPool.getEmptyCount());
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return rt->gcNumber;
@@ -2918,6 +2926,15 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
     *vp = IdToJsval(id);
     assertSameCompartment(cx, *vp);
     return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
+{
+    CHECK_REQUEST(cx);
+    JS_ASSERT(obj != NULL);
+    JS_ASSERT(hint == JSTYPE_VOID || hint == JSTYPE_STRING || hint == JSTYPE_NUMBER);
+    return obj->defaultValue(cx, hint, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3277,7 +3294,7 @@ LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     JSAutoResolveFlags rf(cx, flags);
     id = js_CheckForStringIndex(id);
-    return obj->lookupProperty(cx, id, objp, propp);
+    return obj->lookupGeneric(cx, id, objp, propp);
 }
 
 #define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
@@ -3368,7 +3385,7 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id, uintN flag
     assertSameCompartment(cx, obj, id);
     ok = obj->isNative()
          ? LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop)
-         : obj->lookupProperty(cx, id, objp, &prop);
+         : obj->lookupGeneric(cx, id, objp, &prop);
     return ok && LookupResult(cx, obj, *objp, id, prop, vp);
 }
 
@@ -4283,7 +4300,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     assertSameCompartment(cx, parent);  // XXX no funobj for now
     if (!parent) {
         if (cx->hasfp())
-            parent = GetScopeChain(cx, cx->fp());
+            parent = &cx->fp()->scopeChain();
         if (!parent)
             parent = cx->globalObject;
         JS_ASSERT(parent);
@@ -4389,7 +4406,16 @@ JS_ObjectIsCallable(JSContext *cx, JSObject *obj)
     return obj->isCallable();
 }
 
-static JSBool
+JS_PUBLIC_API(JSBool)
+JS_IsNativeFunction(JSObject *funobj, JSNative call)
+{
+    if (!funobj->isFunction())
+        return false;
+    JSFunction *fun = funobj->toFunction();
+    return fun->isNative() && fun->native() == call;
+}
+
+JSBool
 js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
     JSFunctionSpec *fs = (JSFunctionSpec *) vp->toObject().getReservedSlot(0).toPrivate();
@@ -4830,7 +4856,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
                                        chars, length, filename, lineno, version)) {
         return NULL;
     }
-    
+
     if (obj && funAtom &&
         !obj->defineProperty(cx, ATOM_TO_JSID(funAtom), ObjectValue(*fun),
                              NULL, NULL, JSPROP_ENUMERATE)) {
@@ -5901,8 +5927,9 @@ JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uin
     jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
-    JSObject *reobj = RegExp::createObject(cx, res, chars, length, flags, NULL);
+
+    RegExpStatics *res = obj->asGlobal()->getRegExpStatics();
+    RegExpObject *reobj = RegExpObject::create(cx, res, chars, length, RegExpFlag(flags), NULL);
     cx->free_(chars);
     return reobj;
 }
@@ -5911,8 +5938,8 @@ JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
-    return RegExp::createObject(cx, res, chars, length, flags, NULL);
+    RegExpStatics *res = obj->asGlobal()->getRegExpStatics();
+    return RegExpObject::create(cx, res, chars, length, RegExpFlag(flags), NULL);
 }
 
 JS_PUBLIC_API(void)
@@ -5921,7 +5948,7 @@ JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, JSBool multilin
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
 
-    RegExpStatics::extractFrom(obj->asGlobal())->reset(input, !!multiline);
+    obj->asGlobal()->getRegExpStatics()->reset(cx, input, !!multiline);
 }
 
 JS_PUBLIC_API(void)
@@ -5930,7 +5957,7 @@ JS_ClearRegExpStatics(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
     JS_ASSERT(obj);
 
-    RegExpStatics::extractFrom(obj->asGlobal())->clear();
+    obj->asGlobal()->getRegExpStatics()->clear();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5939,15 +5966,9 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, s
 {
     CHECK_REQUEST(cx);
 
-    RegExp *re = RegExp::extractFrom(reobj);
-    if (!re)
-        return false;
-
-    JSString *str = js_NewStringCopyN(cx, chars, length);
-    if (!str)
-        return false;
-
-    return re->execute(cx, RegExpStatics::extractFrom(obj->asGlobal()), str, indexp, test, rval);
+    RegExpStatics *res = obj->asGlobal()->getRegExpStatics();
+    return ExecuteRegExp(cx, res, reobj->asRegExp(), NULL, chars, length,
+                         indexp, test ? RegExpTest : RegExpExec, rval);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -5957,16 +5978,16 @@ JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, uintN fla
     jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    JSObject *obj = RegExp::createObjectNoStatics(cx, chars, length, flags, NULL);
+    RegExpObject *reobj = RegExpObject::createNoStatics(cx, chars, length, RegExpFlag(flags), NULL);
     cx->free_(chars);
-    return obj;
+    return reobj;
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    return RegExp::createObjectNoStatics(cx, chars, length, flags, NULL);
+    return RegExpObject::createNoStatics(cx, chars, length, RegExpFlag(flags), NULL);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5975,15 +5996,8 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *obj, jschar *chars, size_t le
 {
     CHECK_REQUEST(cx);
 
-    RegExp *re = RegExp::extractFrom(obj);
-    if (!re)
-        return false;
-
-    JSString *str = js_NewStringCopyN(cx, chars, length);
-    if (!str)
-        return false;
-
-    return re->executeNoStatics(cx, str, indexp, test, rval);
+    return ExecuteRegExp(cx, NULL, obj->asRegExp(), NULL, chars, length, indexp,
+                         test ? RegExpTest : RegExpExec, rval);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5998,8 +6012,7 @@ JS_GetRegExpFlags(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);
 
-    RegExp *re = RegExp::extractFrom(obj);
-    return re->getFlags();
+    return obj->asRegExp()->getFlags();
 }
 
 JS_PUBLIC_API(JSString *)
@@ -6007,8 +6020,7 @@ JS_GetRegExpSource(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);
 
-    RegExp *re = RegExp::extractFrom(obj);
-    return re->getSource();
+    return obj->asRegExp()->getSource();
 }
 
 /************************************************************************/
@@ -6237,6 +6249,12 @@ JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment)
     cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 #endif
+
+JS_FRIEND_API(void *)
+js_GetCompartmentPrivate(JSCompartment *compartment)
+{
+    return compartment->data;
+}
 
 /************************************************************************/
 

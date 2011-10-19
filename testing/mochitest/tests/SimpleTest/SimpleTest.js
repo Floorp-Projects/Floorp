@@ -22,14 +22,16 @@ if (parent) {
     if (!parentRunner && parent.wrappedJSObject) {
         parentRunner = parent.wrappedJSObject.TestRunner;
     }
+
+    // This is the case where we have ChromePowers in harness.xul and we need it in the iframe
+    if (window.SpecialPowers == undefined && parent.SpecialPowers !== undefined) {
+        window.SpecialPowers = parent.SpecialPowers;
+    }
 }
 
-// running in e10s build and need to use IPC?
-var ipcMode = false;
-if (parentRunner) {
-    ipcMode = parentRunner.ipcMode;
-} else if (typeof SpecialPowers != 'undefined') {
-    ipcMode = SpecialPowers.hasContentProcesses();
+// Workaround test_focus.xul where we open a window which opens another window which includes SimpleTest.js
+if (window.SpecialPowers == undefined && window.opener && window.opener.SpecialPowers !== undefined) {
+    window.SpecialPowers = window.opener.SpecialPowers;
 }
 
 /* Helper functions pulled out of various MochiKit modules */
@@ -472,46 +474,28 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     if (!targetWindow)
       targetWindow = window;
 
-    if (ipcMode) {
-      var domutils = targetWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                     getInterface(Components.interfaces.nsIDOMWindowUtils);
-
-      //TODO: make this support scenarios where we run test standalone and not inside of TestRunner only
-      if (parent && parent.ipcWaitForFocus) {
-          parent.contentAsyncEvent("waitForFocus", {"callback":callback, "targetWindow":domutils.outerWindowID});
-      }
-      return;
-    }
-
     SimpleTest.waitForFocus_started = false;
     expectBlankPage = !!expectBlankPage;
 
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var fm = Components.classes["@mozilla.org/focus-manager;1"].
-                        getService(Components.interfaces.nsIFocusManager);
-
-    var childTargetWindow = { };
-    fm.getFocusedElementForWindow(targetWindow, true, childTargetWindow);
+    var childTargetWindow = {};
+    SpecialPowers.getFocusedElementForWindow(targetWindow, true, childTargetWindow);
     childTargetWindow = childTargetWindow.value;
 
     function info(msg) {
         SimpleTest.info(msg);
     }
+    function getHref(aWindow) {
+      return SpecialPowers.getPrivilegedProps(aWindow, 'location.href');
+    }
 
     function debugFocusLog(prefix) {
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-        var baseWindow = targetWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                     .getInterface(Components.interfaces.nsIWebNavigation)
-                                     .QueryInterface(Components.interfaces.nsIBaseWindow);
         info(prefix + " -- loaded: " + targetWindow.document.readyState +
-           " active window: " +
-               (fm.activeWindow ? "(" + fm.activeWindow + ") " + fm.activeWindow.location : "<no window active>") +
-           " focused window: " +
-               (fm.focusedWindow ? "(" + fm.focusedWindow + ") " + fm.focusedWindow.location : "<no window focused>") +
-           " desired window: (" + targetWindow + ") " + targetWindow.location +
-           " child window: (" + childTargetWindow + ") " + childTargetWindow.location +
-           " docshell visible: " + baseWindow.visibility);
+            " active window: " +
+                (SpecialPowers.activeWindow() ? "(" + SpecialPowers.activeWindow() + ") " + getHref(SpecialPowers.activeWindow()) : "<no window active>") +
+            " focused window: " +
+                (SpecialPowers.focusedWindow() ? "(" + SpecialPowers.focusedWindow() + ") " + getHref(SpecialPowers.focusedWindow()) : "<no window focused>") +
+            " desired window: (" + targetWindow + ") " + getHref(targetWindow) +
+            " child window: (" + childTargetWindow + ") " + getHref(childTargetWindow));
     }
 
     debugFocusLog("before wait for focus");
@@ -552,7 +536,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     // to load its content, and we want to skip over any intermediate blank
     // pages that load. This issue is described in bug 554873.
     SimpleTest.waitForFocus_loaded =
-        (expectBlankPage == (targetWindow.location == "about:blank")) &&
+        (expectBlankPage == (getHref(targetWindow) == "about:blank")) &&
         targetWindow.document.readyState == "complete";
     if (!SimpleTest.waitForFocus_loaded) {
         info("must wait for load");
@@ -561,8 +545,8 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
 
     // Check if the desired window is already focused.
     var focusedChildWindow = { };
-    if (fm.activeWindow) {
-        fm.getFocusedElementForWindow(fm.activeWindow, true, focusedChildWindow);
+    if (SpecialPowers.activeWindow()) {
+        SpecialPowers.getFocusedElementForWindow(SpecialPowers.activeWindow(), true, focusedChildWindow);
         focusedChildWindow = focusedChildWindow.value;
     }
 
@@ -576,7 +560,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     else {
         info("must wait for focus");
         childTargetWindow.addEventListener("focus", waitForEvent, true);
-        childTargetWindow.focus();
+        SpecialPowers.focus(childTargetWindow);
     }
 };
 
@@ -608,25 +592,11 @@ SimpleTest.__defineGetter__("_waitForClipboardMonotonicCounter", function () {
 });
 SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
                                        aSuccessFn, aFailureFn, aFlavor) {
-    if (ipcMode) {
-      //TODO: support waitForClipboard via events to chrome
-      dump("E10S_TODO: bug 573735 addresses adding support for this");
-      return;
-    }
-
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-    var cbSvc = Components.classes["@mozilla.org/widget/clipboard;1"].
-                getService(Components.interfaces.nsIClipboard);
-
     var requestedFlavor = aFlavor || "text/unicode";
-
-    function dataToString(aData)
-      aData.QueryInterface(Components.interfaces.nsISupportsString).data;
 
     // Build a default validator function for common string input.
     var inputValidatorFn = typeof(aExpectedStringOrValidatorFn) == "string"
-        ? function(aData) aData && dataToString(aData) == aExpectedStringOrValidatorFn
+        ? function(aData) aData == aExpectedStringOrValidatorFn
         : aExpectedStringOrValidatorFn;
 
     // reset for the next use
@@ -635,8 +605,6 @@ SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
     }
 
     function wait(validatorFn, successFn, failureFn, flavor) {
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
         if (++SimpleTest.waitForClipboard_polls > 50) {
             // Log the failure.
             SimpleTest.ok(false, "Timed out while polling clipboard for pasted data.");
@@ -645,15 +613,7 @@ SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
             return;
         }
 
-        var xferable = Components.classes["@mozilla.org/widget/transferable;1"].
-                       createInstance(Components.interfaces.nsITransferable);
-        xferable.addDataFlavor(flavor);
-        cbSvc.getData(xferable, cbSvc.kGlobalClipboard);
-        var data = {};
-        try {
-            xferable.getTransferData(flavor, data, {});
-        } catch (e) {}
-        data = data.value || null;
+        data = SpecialPowers.getClipboardData(flavor);
 
         if (validatorFn(data)) {
             // Don't show the success message when waiting for preExpectedVal
@@ -671,10 +631,8 @@ SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
     // First we wait for a known value different from the expected one.
     var preExpectedVal = SimpleTest._waitForClipboardMonotonicCounter +
                          "-waitForClipboard-known-value";
-    var cbHelperSvc = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
-                      getService(Components.interfaces.nsIClipboardHelper);
-    cbHelperSvc.copyString(preExpectedVal);
-    wait(function(aData) aData && dataToString(aData) == preExpectedVal,
+    SpecialPowers.clipboardCopyString(preExpectedVal);
+    wait(function(aData) aData  == preExpectedVal,
          function() {
            // Call the original setup fn
            aSetupFn();
@@ -971,7 +929,8 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
     // not in a plain mochitest, just dump it so that the error is visible but
     // doesn't cause a test failure.  See bug 652494.
     var message = "An error occurred: " + errorMsg + " at " + url + ":" + lineNumber;
-    var isPlainMochitest = window.location.protocol != "chrome:";
+    var href = SpecialPowers.getPrivilegedProps(window, 'location.href');
+    var isPlainMochitest = href.substring(0,7) != "chrome:";
     var isExpected = !!SimpleTest._expectingUncaughtException;
     if (isPlainMochitest) {
         SimpleTest.ok(isExpected, funcIdentifier, message);

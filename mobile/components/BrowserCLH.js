@@ -246,8 +246,8 @@ BrowserCLH.prototype = {
         }
 
         // Show the locale selector if we have a new profile, or if the selected locale is no longer compatible
-        let showLocalePicker = Services.prefs.getBoolPref("browser.firstrun.show.localepicker")
-        if ((needHomepageOverride() == "new profile" && showLocalePicker && !haveSystemLocale()) || !checkCurrentLocale()) {
+        let showLocalePicker = Services.prefs.getBoolPref("browser.firstrun.show.localepicker");
+        if ((needHomepageOverride() == "new profile" && showLocalePicker && !haveSystemLocale())) { // || !checkCurrentLocale()) {
           browserWin = openWindow(null, "chrome://browser/content/localePicker.xul", "_blank", "chrome,dialog=no,all", defaultURL);
           aCmdLine.preventDefault = true;
           return;

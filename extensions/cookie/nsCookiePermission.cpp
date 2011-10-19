@@ -91,7 +91,7 @@ static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
 static const char kPermissionType[] = "cookie";
 
 #ifdef MOZ_MAIL_NEWS
-// returns PR_TRUE if URI appears to be the URI of a mailnews protocol
+// returns true if URI appears to be the URI of a mailnews protocol
 // XXXbz this should be a protocol flag, not a scheme list, dammit!
 static bool
 IsFromMailNews(nsIURI *aURI)
@@ -101,9 +101,9 @@ IsFromMailNews(nsIURI *aURI)
   bool result;
   for (const char **p = kMailNewsProtocols; *p; ++p) {
     if (NS_SUCCEEDED(aURI->SchemeIs(*p, &result)) && result)
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 #endif
 
@@ -125,9 +125,9 @@ nsCookiePermission::Init()
   nsCOMPtr<nsIPrefBranch2> prefBranch =
       do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
-    prefBranch->AddObserver(kCookiesLifetimePolicy, this, PR_FALSE);
-    prefBranch->AddObserver(kCookiesLifetimeDays, this, PR_FALSE);
-    prefBranch->AddObserver(kCookiesAlwaysAcceptSession, this, PR_FALSE);
+    prefBranch->AddObserver(kCookiesLifetimePolicy, this, false);
+    prefBranch->AddObserver(kCookiesLifetimeDays, this, false);
+    prefBranch->AddObserver(kCookiesAlwaysAcceptSession, this, false);
     PrefChanged(prefBranch, nsnull);
 
     // migration code for original cookie prefs
@@ -154,7 +154,7 @@ nsCookiePermission::Init()
         else
           prefBranch->SetIntPref(kCookiesLifetimePolicy, ACCEPT_SESSION);
       }
-      prefBranch->SetBoolPref(kCookiesPrefsMigrated, PR_TRUE);
+      prefBranch->SetBoolPref(kCookiesPrefsMigrated, true);
     }
   }
 
@@ -264,14 +264,14 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
   mPermMgr->TestPermission(aURI, kPermissionType, &perm);
   switch (perm) {
   case nsICookiePermission::ACCESS_SESSION:
-    *aIsSession = PR_TRUE;
+    *aIsSession = true;
 
   case nsIPermissionManager::ALLOW_ACTION: // ACCESS_ALLOW
-    *aResult = PR_TRUE;
+    *aResult = true;
     break;
 
   case nsIPermissionManager::DENY_ACTION:  // ACCESS_DENY
-    *aResult = PR_FALSE;
+    *aResult = false;
     break;
 
   default:
@@ -282,7 +282,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
     // now we need to figure out what type of accept policy we're dealing with
     // if we accept cookies normally, just bail and return
     if (mCookiesLifetimePolicy == ACCEPT_NORMALLY) {
-      *aResult = PR_TRUE;
+      *aResult = true;
       return NS_OK;
     }
     
@@ -297,12 +297,12 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
       // accept the cookie and return
       if ((*aIsSession && mCookiesAlwaysAcceptSession) ||
           InPrivateBrowsing()) {
-        *aResult = PR_TRUE;
+        *aResult = true;
         return NS_OK;
       }
       
       // default to rejecting, in case the prompting process fails
-      *aResult = PR_FALSE;
+      *aResult = false;
 
       nsCAutoString hostPort;
       aURI->GetHostPort(hostPort);
@@ -362,7 +362,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
       if (!foundCookie && !*aIsSession && delta <= 0) {
         // the cookie has already expired. accept it, and let the backend figure
         // out it's expired, so that we get correct logging & notifications.
-        *aResult = PR_TRUE;
+        *aResult = true;
         return rv;
       }
 
@@ -375,7 +375,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
 
       *aResult = !!dialogRes;
       if (dialogRes == nsICookiePromptService::ACCEPT_SESSION_COOKIE)
-        *aIsSession = PR_TRUE;
+        *aIsSession = true;
 
       if (rememberDecision) {
         switch (dialogRes) {
@@ -401,7 +401,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
       if (!*aIsSession && delta > 0) {
         if (mCookiesLifetimePolicy == ACCEPT_SESSION) {
           // limit lifetime to session
-          *aIsSession = PR_TRUE;
+          *aIsSession = true;
         } else if (delta > mCookiesLifetimeSec) {
           // limit lifetime to specified time
           *aExpiry = currentTime + mCookiesLifetimeSec;

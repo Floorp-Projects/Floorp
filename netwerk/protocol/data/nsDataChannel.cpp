@@ -84,7 +84,7 @@ nsDataChannel::OpenContentStream(bool async, nsIInputStream **result,
                     getter_AddRefs(bufOutStream),
                     nsIOService::gDefaultSegmentSize,
                     PR_UINT32_MAX,
-                    async, PR_TRUE);
+                    async, true);
     if (NS_FAILED(rv))
         return rv;
 

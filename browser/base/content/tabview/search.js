@@ -406,7 +406,7 @@ let TabHandlers = {
 // A object that handles the search feature.
 let Search = {
   _initiatedBy: "",
-
+  _blockClick: false,
   _currentHandler: null,
 
   // ----------
@@ -422,21 +422,31 @@ let Search = {
   // and to have everything have the appropriate event handlers.
   init: function Search_init() {
     let self = this;
+
     iQ("#search").hide();
-    iQ("#searchshade").hide().click(function(event) {
-      if (event.target.id != "searchbox")
+    iQ("#searchshade").hide().mousedown(function Search_init_shade_mousedown(event) {
+      if (event.target.id != "searchbox" && !self._blockClick)
         self.hide();
     });
 
-    iQ("#searchbox").keyup(function() {
+    iQ("#searchbox").keyup(function Search_init_box_keyup() {
       self.perform();
     });
 
-    iQ("#searchbutton").mousedown(function() {
+    iQ("#searchbutton").mousedown(function Search_init_button_mousedown() {
       self._initiatedBy = "buttonclick";
       self.ensureShown();
       self.switchToInMode();
     });
+
+    window.addEventListener("focus", function Search_init_window_focus() {
+      if (self.isEnabled()) {
+        self._blockClick = true;
+        setTimeout(function() {
+          self._blockClick = false;
+        }, 0);
+      }
+    }, false);
 
     this.switchToBeforeMode();
   },

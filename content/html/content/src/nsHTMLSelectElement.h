@@ -47,7 +47,6 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
-#include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsISelectControlFrame.h"
 #include "nsIHTMLCollection.h"
 #include "nsIConstraintValidation.h"
@@ -68,8 +67,8 @@ class nsHTMLSelectElement;
  * select.options in DOM)
  */
 class nsHTMLOptionCollection: public nsIDOMHTMLOptionsCollection,
-                              public nsIDOMNSHTMLOptionCollection,
-                              public nsIHTMLCollection
+                              public nsIHTMLCollection,
+                              public nsWrapperCache
 {
 public:
   nsHTMLOptionCollection(nsHTMLSelectElement* aSelect);
@@ -77,21 +76,20 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap);
+
   // nsIDOMHTMLOptionsCollection interface
   NS_DECL_NSIDOMHTMLOPTIONSCOLLECTION
-
-  // nsIDOMNSHTMLOptionCollection interface
-  NS_DECL_NSIDOMNSHTMLOPTIONCOLLECTION
 
   // nsIDOMHTMLCollection interface, all its methods are defined in
   // nsIDOMHTMLOptionsCollection
 
   virtual nsIContent* GetNodeAt(PRUint32 aIndex);
-  virtual nsISupports* GetNamedItem(const nsAString& aName,
-                                    nsWrapperCache** aCache);
+  virtual nsINode* GetParentObject();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHTMLOptionCollection,
-                                           nsIHTMLCollection)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsHTMLOptionCollection,
+                                                         nsIHTMLCollection)
 
   // Helpers for nsHTMLSelectElement
   /**
@@ -220,15 +218,15 @@ public:
   nsSafeOptionListMutation(nsIContent* aSelect, nsIContent* aParent,
                            nsIContent* aKid, PRUint32 aIndex, bool aNotify);
   ~nsSafeOptionListMutation();
-  void MutationFailed() { mNeedsRebuild = PR_TRUE; }
+  void MutationFailed() { mNeedsRebuild = true; }
 private:
   static void* operator new(size_t) CPP_THROW_NEW { return 0; }
   static void operator delete(void*, size_t) {}
   /** The select element which option list is being mutated. */
   nsRefPtr<nsHTMLSelectElement> mSelect;
-  /** PR_TRUE if the current mutation is the first one in the stack. */
+  /** true if the current mutation is the first one in the stack. */
   bool                       mTopLevelMutation;
-  /** PR_TRUE if it is known that the option list must be recreated. */
+  /** true if it is known that the option list must be recreated. */
   bool                       mNeedsRebuild;
   /** Option list must be recreated if more than one mutation is detected. */
   nsMutationGuard            mGuard;
@@ -564,7 +562,7 @@ protected:
    */
   bool IsCombobox() {
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
-      return PR_FALSE;
+      return false;
     }
 
     PRInt32 size = 1;

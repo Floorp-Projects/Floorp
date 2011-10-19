@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1311891123000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1318359094000">
   <emItems>
       <emItem  blockID="i41" id="{99079a25-328f-4bd4-be04-00955acaa0a7}">
                         <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
@@ -9,6 +9,8 @@
                         <versionRange  minVersion=" " severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i43" id="supportaccessplugin@gmail.com">
+                        </emItem>
       <emItem  blockID="i38" id="{B7082FAA-CB62-4872-9106-E42DD88EDE45}">
                         <versionRange  minVersion="0.1" maxVersion="3.3.0.*">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
@@ -31,6 +33,10 @@
                   </emItem>
       <emItem  blockID="i39" id="{c2d64ff7-0ab8-4263-89c9-ea3b0f8f050c}">
                         <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i42" id="{D19CA586-DD6C-4a0a-96F8-14644F340D60}">
+                        <versionRange  minVersion="0.1" maxVersion="14.4.0" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i10" id="{8CE11043-9A15-4207-A565-0C94C42D590D}">
@@ -82,6 +88,8 @@
                           </targetApplication>
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i44" id="sigma@labs.mozilla">
+                        </emItem>
       <emItem  blockID="i5" id="support@daemon-tools.cc">
                         <versionRange  minVersion=" " maxVersion="1.0.0.5">
                     </versionRange>

@@ -1,0 +1,278 @@
+/** -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Stuart Parmenter <pavlov@netscape.com>
+ *   Federico Mena-Quintero <federico@novell.com>
+ *   Joe Drew <joe@drew.ca>
+ *   Bobby Holley <bobbyholley@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface imgIDecoderObserver;
+
+%{C++
+#include "gfxImageSurface.h"
+#include "gfxContext.h"
+#include "gfxMatrix.h"
+#include "gfxRect.h"
+#include "gfxPattern.h"
+#include "gfxASurface.h"
+#include "nsRect.h"
+#include "nsSize.h"
+#include "limits.h"
+
+class nsIFrame;
+%}
+
+[ptr] native gfxImageSurface(gfxImageSurface);
+[ptr] native gfxASurface(gfxASurface);
+native gfxImageFormat(gfxASurface::gfxImageFormat);
+[ptr] native gfxContext(gfxContext);
+[ref] native gfxMatrix(gfxMatrix);
+[ref] native gfxRect(gfxRect);
+native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
+[ref] native nsIntRect(nsIntRect);
+[ref] native nsIntSize(nsIntSize);
+[ptr] native nsIFrame(nsIFrame);
+
+/**
+ * imgIContainer is the interface that represents an image. It allows
+ * access to frames as Thebes surfaces, and permits users to extract subregions
+ * as other imgIContainers. It also allows drawing of images on to Thebes
+ * contexts.
+ *
+ * Internally, imgIContainer also manages animation of images.
+ */
+[scriptable, uuid(239dfa70-2285-4d63-99cd-e9b7ff9555c7)]
+interface imgIContainer : nsISupports
+{
+  /**
+   * The width of the container rectangle.  In the case of any error,
+   * zero is returned, and an exception will be thrown.
+   */
+  readonly attribute PRInt32 width;
+
+  /**
+   * The height of the container rectangle.  In the case of any error,
+   * zero is returned, and an exception will be thrown.
+   */
+  readonly attribute PRInt32 height;
+
+  /**
+    * Enumerated values for the 'type' attribute (below).
+    */
+  const unsigned short TYPE_RASTER = 0;
+  const unsigned short TYPE_VECTOR = 1;
+
+  /**
+   * The type of this image (one of the TYPE_* values above).
+   */
+  readonly attribute unsigned short type;
+
+  /**
+   * Direct C++ accessor for 'type' attribute, for convenience.
+   */
+  [noscript, notxpcom] PRUint16 GetType();
+
+  /**
+   * Whether this image is animated. You can only be guaranteed that querying
+   * this will not throw if STATUS_DECODE_COMPLETE is set on the imgIRequest.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if the animated state cannot be determined.
+   */
+  readonly attribute boolean animated;
+
+  /**
+   * Whether the current frame is opaque; that is, needs the background painted
+   * behind it.
+   */
+  readonly attribute boolean currentFrameIsOpaque;
+
+  /**
+   * Flags for imgIContainer operations.
+   *
+   * Meanings:
+   *
+   * FLAG_NONE: Lack of flags
+   *
+   * FLAG_SYNC_DECODE: Forces synchronous/non-progressive decode of all
+   * available data before the call returns. It is an error to pass this flag
+   * from a call stack that originates in a decoder (ie, from a decoder
+   * observer event).
+   *
+   * FLAG_DECODE_NO_PREMULTIPLY_ALPHA: Do not premultiply alpha if
+   * it's not already premultiplied in the image data.
+   *
+   * FLAG_DECODE_NO_COLORSPACE_CONVERSION: Do not do any colorspace conversion;
+   * ignore any embedded profiles, and don't convert to any particular destination
+   * space.
+   */
+
+  const long FLAG_NONE            = 0x0;
+  const long FLAG_SYNC_DECODE     = 0x1;
+  const long FLAG_DECODE_NO_PREMULTIPLY_ALPHA = 0x2;
+  const long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x4;
+
+  /**
+    * Constants for specifying various "special" frames.
+    *
+    * FRAME_FIRST: The first frame
+    * FRAME_CURRENT: The current frame
+    *
+    * FRAME_MAX_VALUE should be set to the value of the maximum constant above,
+    * as it is used for ensuring that a valid value was passed in.
+    */
+  const unsigned long FRAME_FIRST = 0;
+  const unsigned long FRAME_CURRENT = 1;
+  const unsigned long FRAME_MAX_VALUE = 1;
+
+  /**
+   * Get a surface for the given frame. This may be a platform-native,
+   * optimized surface, so you cannot inspect its pixel data.
+   *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aFlags Flags of the FLAG_* variety
+   */
+  [noscript] gfxASurface getFrame(in PRUint32 aWhichFrame,
+                                  in PRUint32 aFlags);
+
+  /**
+   * Create and return a new copy of the given frame that you can write to
+   * and otherwise inspect the pixels of.
+   *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aFlags Flags of the FLAG_* variety
+   */
+  [noscript] gfxImageSurface copyFrame(in PRUint32 aWhichFrame,
+                                       in PRUint32 aFlags);
+
+  /**
+   * Create a new imgContainer that contains only a single frame, which itself
+   * contains a subregion of the given frame.
+   *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aRect the area of the current frame to be duplicated in the
+   *              returned imgContainer's frame.
+   * @param aFlags Flags of the FLAG_* variety
+   */
+  [noscript] imgIContainer extractFrame(in PRUint32 aWhichFrame,
+                                        [const] in nsIntRect aRect,
+                                        in PRUint32 aFlags);
+
+  /**
+   * Draw the current frame on to the context specified.
+   *
+   * @param aContext The Thebes context to draw the image to.
+   * @param aFilter The filter to be used if we're scaling the image.
+   * @param aUserSpaceToImageSpace The transformation from user space (e.g.,
+   *                               appunits) to image space.
+   * @param aFill The area in the context to draw pixels to. Image will be
+   *              automatically tiled as necessary.
+   * @param aSubimage The area of the image, in pixels, that we are allowed to
+   *                  sample from.
+   * @param aViewportSize
+   *          The size (in CSS pixels) of the viewport that would be available
+   *          for the full image to occupy, if we were drawing the full image.
+   *          (Note that we might not actually be drawing the full image -- we
+   *          might be restricted by aSubimage -- but we still need the full
+   *          image's viewport-size in order for SVG images with the "viewBox"
+   *          attribute to position their content correctly.)
+   * @param aFlags Flags of the FLAG_* variety
+   */
+  [noscript] void draw(in gfxContext aContext,
+                       in gfxGraphicsFilter aFilter,
+                       [const] in gfxMatrix aUserSpaceToImageSpace,
+                       [const] in gfxRect aFill,
+                       [const] in nsIntRect aSubimage,
+                       [const] in nsIntSize aViewportSize,
+                       in PRUint32 aFlags);
+
+  /**
+   * If this image is TYPE_VECTOR, i.e. is really an embedded SVG document,
+   * this method returns a pointer to the root nsIFrame of that document. If
+   * not (or if the root nsIFrame isn't available for some reason), this method
+   * returns nsnull.
+   *
+   * "notxpcom" for convenience, since we have no need for nsresult return-val.
+   */
+  [notxpcom] nsIFrame GetRootLayoutFrame();
+
+  /*
+   * Ensures that an image is decoding. Calling this function guarantees that
+   * the image will at some point fire off decode notifications. Calling draw(),
+   * getFrame(), copyFrame(), or extractCurrentFrame() triggers the same
+   * mechanism internally. Thus, if you want to be sure that the image will be
+   * decoded but don't want to access it until then, you must call
+   * requestDecode().
+   */
+  void requestDecode();
+
+  /**
+    * Increments the lock count on the image. An image will not be discarded
+    * as long as the lock count is nonzero. Note that it is still possible for
+    * the image to be undecoded if decode-on-draw is enabled and the image
+    * was never drawn.
+    *
+    * Upon instantiation images have a lock count of zero.
+    */
+  void lockImage();
+
+  /**
+    * Decreases the lock count on the image. If the lock count drops to zero,
+    * the image is allowed to discard its frame data to save memory.
+    *
+    * Upon instantiation images have a lock count of zero. It is an error to
+    * call this method without first having made a matching lockImage() call.
+    * In other words, the lock count is not allowed to be negative.
+    */
+  void unlockImage();
+
+  /**
+   * Animation mode Constants
+   *   0 = normal
+   *   1 = don't animate
+   *   2 = loop once
+   */
+  const short kNormalAnimMode   = 0;
+  const short kDontAnimMode     = 1;
+  const short kLoopOnceAnimMode = 2;
+
+  attribute unsigned short animationMode;
+
+  /* Methods to control animation */
+  void resetAnimation();
+};

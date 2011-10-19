@@ -208,8 +208,8 @@ CViewSourceHTML::CViewSourceHTML()
   mLineNumber = 1;
   mTokenizer = 0;
   mDocType=eHTML_Quirks;
-  mHasOpenRoot=PR_FALSE;
-  mHasOpenBody=PR_FALSE;
+  mHasOpenRoot=false;
+  mHasOpenBody=false;
 
   mTokenCount=0;
 
@@ -376,7 +376,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsITokenizer* aTokenizer,
 
       result = mSink->CloseContainer(eHTMLTag_head);
       if(NS_SUCCEEDED(result)) {
-        mHasOpenRoot = PR_TRUE;
+        mHasOpenRoot = true;
       }
     }
     if (NS_SUCCEEDED(result) && !mHasOpenBody) {
@@ -406,7 +406,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsITokenizer* aTokenizer,
                           styleValue);
           }
           result = mSink->OpenContainer(bodyNode);
-          if(NS_SUCCEEDED(result)) mHasOpenBody=PR_TRUE;
+          if(NS_SUCCEEDED(result)) mHasOpenBody=true;
         }
         IF_FREE(bodyToken, theAllocator);
 
@@ -610,7 +610,7 @@ void CViewSourceHTML::SetVerification(bool aEnabled)
  *  @update  gess 3/25/98
  *  @param   aParent -- int tag of parent container
  *  @param   aChild -- int tag of child container
- *  @return  PR_TRUE if parent can contain child
+ *  @return  true if parent can contain child
  */
 NS_IMETHODIMP_(bool)
 CViewSourceHTML::CanContain(PRInt32 aParent, PRInt32 aChild) const
@@ -625,7 +625,7 @@ CViewSourceHTML::CanContain(PRInt32 aParent, PRInt32 aChild) const
  *  
  *  @update  gess 3/25/98
  *  @param   aTag -- tag to test for containership
- *  @return  PR_TRUE if given tag can contain other tags
+ *  @return  true if given tag can contain other tags
  */
 NS_IMETHODIMP_(bool)
 CViewSourceHTML::IsContainer(PRInt32 aTag) const
@@ -888,7 +888,7 @@ CViewSourceHTML::HandleToken(CToken* aToken)
     case eToken_newline:
       {
         const nsSubstring& newlineValue = aToken->GetStringValue();
-        result=WriteTag(kText,newlineValue,0,PR_FALSE);
+        result=WriteTag(kText,newlineValue,0,false);
         ++mTokenCount;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
             mTokenCount > NS_VIEWSOURCE_TOKENS_PER_BLOCK) {
@@ -900,7 +900,7 @@ CViewSourceHTML::HandleToken(CToken* aToken)
     case eToken_whitespace:
       {
         const nsSubstring& wsValue = aToken->GetStringValue();
-        result=WriteTag(kText,wsValue,0,PR_FALSE);
+        result=WriteTag(kText,wsValue,0,false);
         ++mTokenCount;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
             mTokenCount > NS_VIEWSOURCE_TOKENS_PER_BLOCK &&
@@ -1158,13 +1158,13 @@ void CViewSourceHTML::TrimTokenValue(nsAString::const_iterator& start,
 }
 
 bool CViewSourceHTML::IsTokenValueTrimmableCharacter(PRUnichar ch) {
-  if (ch == ' ') return PR_TRUE;
-  if (ch == '\t') return PR_TRUE;
-  if (ch == '\r') return PR_TRUE;
-  if (ch == '\n') return PR_TRUE;
-  if (ch == '\'') return PR_TRUE;
-  if (ch == '"') return PR_TRUE;
-  return PR_FALSE;
+  if (ch == ' ') return true;
+  if (ch == '\t') return true;
+  if (ch == '\r') return true;
+  if (ch == '\n') return true;
+  if (ch == '\'') return true;
+  if (ch == '"') return true;
+  return false;
 }
 
 nsresult CViewSourceHTML::GetBaseURI(nsIURI **result) {
@@ -1262,13 +1262,13 @@ static bool ConsumeChar(nsAString::const_iterator& start,
                           bool (*testFun)(PRUnichar ch))
 {
   if (start == end) {
-    return PR_FALSE;
+    return false;
   }
   if (!testFun(*start)) {
-    return PR_FALSE;
+    return false;
   }
   ++start;
-  return PR_TRUE;
+  return true;
 }
 
 void CViewSourceHTML::CopyPossibleEntity(nsAString::const_iterator& iter,

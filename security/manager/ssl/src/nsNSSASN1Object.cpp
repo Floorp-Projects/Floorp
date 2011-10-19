@@ -93,7 +93,7 @@ getDERItemLength(unsigned char *data, unsigned char *end,
   unsigned char lbyte = *data++;
   PRInt32 length = -1;
   
-  *indefinite = PR_FALSE;
+  *indefinite = false;
   if (lbyte >= 0x80) {
     // Multibyte length
     unsigned nb = (unsigned) (lbyte & 0x7f);
@@ -109,7 +109,7 @@ getDERItemLength(unsigned char *data, unsigned char *end,
       if (length < 0)
         return -1;
     } else {
-      *indefinite = PR_TRUE;
+      *indefinite = true;
       length = 0;
     }
     *bytesUsed = nb+1;
@@ -202,7 +202,7 @@ buildASN1ObjectFromDER(unsigned char *data,
       printableItem->SetData((char*)data, len);
     }
     data += len;
-    parentObjects->AppendElement(asn1Obj, PR_FALSE);
+    parentObjects->AppendElement(asn1Obj, false);
   }
 
   return NS_OK;
@@ -237,8 +237,8 @@ CreateFromDER(unsigned char *data,
 
 nsNSSASN1Sequence::nsNSSASN1Sequence() : mType(0),
                                          mTag(0),
-                                         mIsValidContainer(PR_TRUE),
-                                         mIsExpanded(PR_TRUE)
+                                         mIsValidContainer(true),
+                                         mIsExpanded(true)
 {
   /* member initializers and constructor code */
 }

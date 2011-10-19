@@ -165,7 +165,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     // is not valid for the real gecko main thread, which is set
     // at SetMainThread time.
 
-    return PR_TRUE;
+    return true;
 }
 
 JNIEnv *
@@ -213,9 +213,9 @@ AndroidBridge::SetMainThread(void *thr)
 {
     ALOG_BRIDGE("AndroidBridge::SetMainThread");
     if (thr) {
-        mJNIEnv = AttachThread(PR_FALSE);
+        mJNIEnv = AttachThread(false);
         if (!mJNIEnv)
-            return PR_FALSE;
+            return false;
 
         mThread = thr;
     } else {
@@ -223,7 +223,7 @@ AndroidBridge::SetMainThread(void *thr)
         mThread = nsnull;
     }
 
-    return PR_TRUE;
+    return true;
 }
 
 void
@@ -387,7 +387,7 @@ getHandlersFromStringArray(JNIEnv *aJNIEnv, jobjectArray jArr, jsize aLen,
             CreateAndroidHandlerApp(name, className, packageName,
                                     className, aMimeType, aAction);
         
-        aHandlersArray->AppendElement(app, PR_FALSE);
+        aHandlersArray->AppendElement(app, false);
         if (aDefaultApp && isDefault.Length() > 0)
             *aDefaultApp = app;
     }
@@ -414,7 +414,7 @@ AndroidBridge::GetHandlersForMimeType(const char *aMimeType,
                                                   jstrMimeType, jstrAction);
     jobjectArray arr = static_cast<jobjectArray>(obj);
     if (!arr)
-        return PR_FALSE;
+        return false;
 
     jsize len = mJNIEnv->GetArrayLength(arr);
 
@@ -424,7 +424,7 @@ AndroidBridge::GetHandlersForMimeType(const char *aMimeType,
     getHandlersFromStringArray(mJNIEnv, arr, len, aHandlersArray, 
                                aDefaultApp, aAction,
                                nsDependentCString(aMimeType));
-    return PR_TRUE;
+    return true;
 }
 
 bool
@@ -446,7 +446,7 @@ AndroidBridge::GetHandlersForURL(const char *aURL,
                                                   jstrScheme, jstrAction);
     jobjectArray arr = static_cast<jobjectArray>(obj);
     if (!arr)
-        return PR_FALSE;
+        return false;
 
     jsize len = mJNIEnv->GetArrayLength(arr);
 
@@ -455,7 +455,7 @@ AndroidBridge::GetHandlersForURL(const char *aURL,
 
     getHandlersFromStringArray(mJNIEnv, arr, len, aHandlersArray, 
                                aDefaultApp, aAction);
-    return PR_TRUE;
+    return true;
 }
 
 bool
@@ -536,10 +536,10 @@ AndroidBridge::GetClipboardText(nsAString& aText)
                              CallStaticObjectMethod(mGeckoAppShellClass,
                                                     jGetClipboardText));
     if (!jstrType)
-        return PR_FALSE;
+        return false;
     nsJNIString jniStr(jstrType);
     aText.Assign(jniStr);
-    return PR_TRUE;
+    return true;
 }
 
 void
@@ -562,8 +562,8 @@ AndroidBridge::ClipboardHasText()
                              CallStaticObjectMethod(mGeckoAppShellClass,
                                                     jGetClipboardText));
     if (!jstrType)
-        return PR_FALSE;
-    return PR_TRUE;
+        return false;
+    return true;
 }
 
 void

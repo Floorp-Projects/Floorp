@@ -12,6 +12,10 @@
 fails == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
 == preserve3d-clipped.html about:blank 
+== preserve3d-2a.html preserve3d-2-ref.html
+== preserve3d-2b.html preserve3d-2-ref.html
+== preserve3d-2c.html preserve3d-2-ref.html
+== preserve3d-2d.html preserve3d-2-ref.html
 == scale3d-z.html scalez-1-ref.html
 == scale3d-all.html scale3d-1-ref.html
 == scale3d-xz.html scale3d-2-ref.html
@@ -26,3 +30,8 @@ fails == preserve3d-1a.html preserve3d-1-ref.html
 == backface-visibility-1b.html about:blank
 != perspective-origin-1a.html rotatex-perspective-1a.html
 == perspective-origin-1b.html perspective-origin-1a.html
+!= sorting-1a.html sorting-1-ref.html
+# Parallel planes, different z depth
+== sorting-2a.html sorting-2-ref.html
+# Parallel planes, same z depth (shouldn't be sorted!)
+== sorting-2b.html sorting-2-ref.html

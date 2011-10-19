@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsWebSocket.h"
 
 #include "nsIScriptGlobalObject.h"
@@ -49,8 +51,7 @@
 #include "nsEventDispatcher.h"
 #include "nsDOMError.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsIDOMClassInfo.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "jsapi.h"
 #include "nsIURL.h"
 #include "nsIPrivateDOMEvent.h"
@@ -179,7 +180,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsWebSocketEstablishedConnection,
 nsWebSocketEstablishedConnection::nsWebSocketEstablishedConnection() :
   mOutgoingBufferedAmount(0),
   mOwner(nsnull),
-  mClosedCleanly(PR_FALSE),
+  mClosedCleanly(false),
   mStatus(CONN_NOT_CONNECTED)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
@@ -419,11 +420,11 @@ nsWebSocketEstablishedConnection::ConsoleError()
     if (mStatus < CONN_CONNECTED_AND_READY) {
       PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
                           NS_LITERAL_STRING("connectionFailure").get(),
-                          formatStrings, NS_ARRAY_LENGTH(formatStrings));
+                          formatStrings, ArrayLength(formatStrings));
     } else {
       PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
                           NS_LITERAL_STRING("netInterrupt").get(),
-                          formatStrings, NS_ARRAY_LENGTH(formatStrings));
+                          formatStrings, ArrayLength(formatStrings));
     }
   }
   /// todo some specific errors - like for message too large
@@ -624,9 +625,9 @@ nsWebSocketEstablishedConnection::GetInterface(const nsIID &aIID,
 // nsWebSocket
 ////////////////////////////////////////////////////////////////////////////////
 
-nsWebSocket::nsWebSocket() : mKeepingAlive(PR_FALSE),
-                             mCheckMustKeepAlive(PR_TRUE),
-                             mTriggeredCloseEvent(PR_FALSE),
+nsWebSocket::nsWebSocket() : mKeepingAlive(false),
+                             mCheckMustKeepAlive(true),
+                             mTriggeredCloseEvent(false),
                              mClientReasonCode(0),
                              mServerReasonCode(nsIWebSocketChannel::CLOSE_ABNORMAL),
                              mReadyState(nsIMozWebSocket::CONNECTING),
@@ -874,11 +875,11 @@ nsWebSocket::CreateAndDispatchSimpleEvent(const nsString& aName)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // it doesn't bubble, and it isn't cancelable
-  rv = event->InitEvent(aName, PR_FALSE, PR_FALSE);
+  rv = event->InitEvent(aName, false, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-  rv = privateEvent->SetTrusted(PR_TRUE);
+  rv = privateEvent->SetTrusted(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
@@ -929,14 +930,14 @@ nsWebSocket::CreateAndDispatchMessageEvent(const nsACString& aData)
 
   nsCOMPtr<nsIDOMMessageEvent> messageEvent = do_QueryInterface(event);
   rv = messageEvent->InitMessageEvent(NS_LITERAL_STRING("message"),
-                                      PR_FALSE, PR_FALSE,
+                                      false, false,
                                       jsData,
                                       mUTF16Origin,
                                       EmptyString(), nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-  rv = privateEvent->SetTrusted(PR_TRUE);
+  rv = privateEvent->SetTrusted(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
@@ -950,7 +951,7 @@ nsWebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   nsresult rv;
 
-  mTriggeredCloseEvent = PR_TRUE;
+  mTriggeredCloseEvent = true;
 
   rv = CheckInnerWindowCorrectness();
   if (NS_FAILED(rv)) {
@@ -966,12 +967,12 @@ nsWebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
 
   nsCOMPtr<nsIDOMCloseEvent> closeEvent = do_QueryInterface(event);
   rv = closeEvent->InitCloseEvent(NS_LITERAL_STRING("close"),
-                                  PR_FALSE, PR_FALSE,
+                                  false, false,
                                   aWasClean, aCode, aReason);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-  rv = privateEvent->SetTrusted(PR_TRUE);
+  rv = privateEvent->SetTrusted(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
@@ -1035,7 +1036,7 @@ nsWebSocket::SetReadyState(PRUint16 aNewReadyState)
       rv = NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
       if (NS_FAILED(rv)) {
         NS_WARNING("Failed to dispatch the close event");
-        mTriggeredCloseEvent = PR_TRUE;
+        mTriggeredCloseEvent = true;
         UpdateMustKeepAlive();
       }
     }
@@ -1089,10 +1090,10 @@ nsWebSocket::ParseURL(const nsString& aURL)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
   if (scheme.LowerCaseEqualsLiteral("ws")) {
-     mSecure = PR_FALSE;
+     mSecure = false;
      mPort = (port == -1) ? DEFAULT_WS_SCHEME_PORT : port;
   } else if (scheme.LowerCaseEqualsLiteral("wss")) {
-    mSecure = PR_TRUE;
+    mSecure = true;
     mPort = (port == -1) ? DEFAULT_WSS_SCHEME_PORT : port;
   } else {
     return NS_ERROR_DOM_SYNTAX_ERR;
@@ -1148,7 +1149,7 @@ nsWebSocket::UpdateMustKeepAlive()
         if (mListenerManager->HasListenersFor(NS_LITERAL_STRING("open")) ||
             mListenerManager->HasListenersFor(NS_LITERAL_STRING("message")) ||
             mListenerManager->HasListenersFor(NS_LITERAL_STRING("close"))) {
-          shouldKeepAlive = PR_TRUE;
+          shouldKeepAlive = true;
         }
       }
       break;
@@ -1159,7 +1160,7 @@ nsWebSocket::UpdateMustKeepAlive()
         if (mListenerManager->HasListenersFor(NS_LITERAL_STRING("message")) ||
             mListenerManager->HasListenersFor(NS_LITERAL_STRING("close")) ||
             mConnection->HasOutgoingMessages()) {
-          shouldKeepAlive = PR_TRUE;
+          shouldKeepAlive = true;
         }
       }
       break;
@@ -1174,10 +1175,10 @@ nsWebSocket::UpdateMustKeepAlive()
   }
 
   if (mKeepingAlive && !shouldKeepAlive) {
-    mKeepingAlive = PR_FALSE;
+    mKeepingAlive = false;
     static_cast<nsIDOMEventTarget*>(this)->Release();
   } else if (!mKeepingAlive && shouldKeepAlive) {
-    mKeepingAlive = PR_TRUE;
+    mKeepingAlive = true;
     static_cast<nsIDOMEventTarget*>(this)->AddRef();
   }
 }
@@ -1187,10 +1188,10 @@ nsWebSocket::DontKeepAliveAnyMore()
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   if (mKeepingAlive) {
-    mKeepingAlive = PR_FALSE;
+    mKeepingAlive = false;
     static_cast<nsIDOMEventTarget*>(this)->Release();
   }
-  mCheckMustKeepAlive = PR_FALSE;
+  mCheckMustKeepAlive = false;
 }
 
 NS_IMETHODIMP
@@ -1296,17 +1297,17 @@ ContainsUnpairedSurrogates(const nsAString& aData)
   PRUint32 i, length = aData.Length();
   for (i = 0; i < length; ++i) {
     if (NS_IS_LOW_SURROGATE(aData[i])) {
-      return PR_TRUE;
+      return true;
     }
     if (NS_IS_HIGH_SURROGATE(aData[i])) {
       ++i;
       if (i == length || !NS_IS_LOW_SURROGATE(aData[i])) {
-        return PR_TRUE;
+        return true;
       }
       continue;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 NS_IMETHODIMP

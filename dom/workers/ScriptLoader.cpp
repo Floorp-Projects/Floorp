@@ -330,7 +330,7 @@ public:
       // to do a same-origin check. Otherwise we need to clear the load with the
       // security manager.
       rv = mIsWorkerScript ?
-           principal->CheckMayLoad(uri, PR_FALSE):
+           principal->CheckMayLoad(uri, false):
            secMan->CheckLoadURIWithPrincipal(principal, uri, 0);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -506,7 +506,7 @@ public:
           return NS_ERROR_DOM_BAD_URI;
         }
       }
-      else if (NS_FAILED(loadPrincipal->CheckMayLoad(finalURI, PR_FALSE))) {
+      else if (NS_FAILED(loadPrincipal->CheckMayLoad(finalURI, false))) {
         return NS_ERROR_DOM_BAD_URI;
       }
 
