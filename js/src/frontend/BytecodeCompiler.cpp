@@ -48,6 +48,9 @@
 
 #include "jsinferinlines.h"
 
+using namespace js;
+using namespace js::frontend;
+
 namespace js {
 
 /*
@@ -196,7 +199,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
             goto out;
         cg.functionList = NULL;
 
-        if (!js_EmitTree(cx, &cg, pn))
+        if (!EmitTree(cx, &cg, pn))
             goto out;
 
 #if JS_HAS_XML_SUPPORT
@@ -257,7 +260,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
      * Nowadays the threaded interpreter needs a stop instruction, so we
      * do have to emit that here.
      */
-    if (js_Emit1(cx, &cg, JSOP_STOP) < 0)
+    if (Emit1(cx, &cg, JSOP_STOP) < 0)
         goto out;
 
     JS_ASSERT(cg.version() == version);
@@ -439,8 +442,8 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
     }
 
     /*
-     * Farble the body so that it looks like a block statement to js_EmitTree,
-     * which is called from js_EmitFunctionBody (see jsemit.cpp).  After we're
+     * Farble the body so that it looks like a block statement to EmitTree,
+     * which is called from EmitFunctionBody (see jsemit.cpp).  After we're
      * done parsing, we must fold constants, analyze any nested functions, and
      * generate code for this function, including a stop opcode at the end.
      */
@@ -465,7 +468,7 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
                 pn = fn->pn_body;
             }
 
-            if (!js_EmitFunctionScript(cx, &funcg, pn))
+            if (!EmitFunctionScript(cx, &funcg, pn))
                 pn = NULL;
         }
     }
