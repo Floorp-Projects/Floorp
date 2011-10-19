@@ -41,9 +41,10 @@
 
 #include "jscntxt.h"
 #include "jsapi.h"
-#include "jshashtable.h"
 #include "prlink.h"
 #include "ffi.h"
+
+#include "js/HashTable.h"
 
 namespace js {
 namespace ctypes {
@@ -322,14 +323,32 @@ struct FunctionInfo
 struct ClosureInfo
 {
   JSContext* cx;         // JSContext to use
+  JSRuntime* rt;         // Used in the destructor, where cx might have already
+                         // been GCed.
   JSObject* closureObj;  // CClosure object
   JSObject* typeObj;     // FunctionType describing the C function
   JSObject* thisObj;     // 'this' object to use for the JS function call
   JSObject* jsfnObj;     // JS function
+  void* errResult;       // Result that will be returned if the closure throws
   ffi_closure* closure;  // The C closure itself
 #ifdef DEBUG
   jsword cxThread;       // The thread on which the context may be used
 #endif
+
+  // Anything conditionally freed in the destructor should be initialized to
+  // NULL here.
+  ClosureInfo(JSRuntime* runtime)
+    : rt(runtime)
+    , errResult(NULL)
+    , closure(NULL)
+  {}
+
+  ~ClosureInfo() {
+    if (closure)
+      ffi_closure_free(closure);
+    if (errResult)
+      rt->free_(errResult);
+  };
 };
 
 bool IsCTypesGlobal(JSContext* cx, JSObject* obj);
@@ -491,7 +510,7 @@ namespace FunctionType {
 
 namespace CClosure {
   JSObject* Create(JSContext* cx, JSObject* typeObj, JSObject* fnObj,
-    JSObject* thisObj, PRFuncPtr* fnptr);
+    JSObject* thisObj, jsval errVal, PRFuncPtr* fnptr);
 }
 
 namespace CData {

@@ -190,7 +190,7 @@ TimeStamp::Startup()
          || 10*sResolutionSigDigs > sResolution);
        sResolutionSigDigs *= 10);
 
-  gInitialized = PR_TRUE;
+  gInitialized = true;
   return NS_OK;
 }
 

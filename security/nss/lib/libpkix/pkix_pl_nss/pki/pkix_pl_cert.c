@@ -3242,6 +3242,82 @@ cleanup:
 }
 
 /*
+ * Find out the state of the NSS trust bits for the requested usage.
+ * Returns SECFailure if the cert is explicitly distrusted.
+ * Returns SECSuccess if the cert can be used to form a chain (normal case),
+ *   or it is explicitly trusted. The trusted bool is set to true if it is
+ *   explicitly trusted.
+ */
+static SECStatus
+pkix_pl_Cert_GetTrusted(void *plContext,
+                        PKIX_PL_Cert *cert,
+                        PKIX_Boolean *trusted,
+                        PKIX_Boolean isCA)
+{
+        SECStatus rv;
+        CERTCertificate *nssCert = NULL;
+        SECCertUsage certUsage = 0;
+        SECCertificateUsage certificateUsage;
+        SECTrustType trustType;
+        unsigned int trustFlags;
+        unsigned int requiredFlags;
+        CERTCertTrust trust;
+
+        *trusted = PKIX_FALSE;
+
+        /* no key usage information  */
+        if (plContext == NULL) {
+                return SECSuccess;
+        }
+
+        certificateUsage = ((PKIX_PL_NssContext*)plContext)->certificateUsage;
+
+        /* ensure we obtained a single usage bit only */
+        PORT_Assert(!(certificateUsage & (certificateUsage - 1)));
+
+        /* convert SECertificateUsage (bit mask) to SECCertUsage (enum) */
+        while (0 != (certificateUsage = certificateUsage >> 1)) { certUsage++; }
+
+        nssCert = cert->nssCert;
+
+        if (!isCA) {
+                PRBool prTrusted;
+                unsigned int failedFlags;
+                rv = cert_CheckLeafTrust(nssCert, certUsage,
+                                         &failedFlags, &prTrusted);
+                *trusted = (PKIX_Boolean) prTrusted;
+                return rv;
+        }
+        rv = CERT_TrustFlagsForCACertUsage(certUsage, &requiredFlags,
+                                           &trustType);
+        if (rv != SECSuccess) {
+                return SECSuccess;
+        }
+
+        rv = CERT_GetCertTrust(nssCert, &trust);
+        if (rv != SECSuccess) {
+                return SECSuccess;
+        }
+        trustFlags = SEC_GET_TRUST_FLAGS(&trust, trustType);
+        /* normally trustTypeNone usages accept any of the given trust bits
+         * being on as acceptable. If any are distrusted (and none are trusted),
+         * then we will also distrust the cert */
+        if ((trustFlags == 0) && (trustType == trustTypeNone)) {
+                trustFlags = trust.sslFlags | trust.emailFlags |
+                             trust.objectSigningFlags;
+        }
+        if ((trustFlags & requiredFlags) == requiredFlags) {
+                *trusted = PKIX_TRUE;
+                return SECSuccess;
+        }
+        if ((trustFlags & CERTDB_TERMINAL_RECORD) &&
+            ((trustFlags & (CERTDB_VALID_CA|CERTDB_TRUSTED)) == 0)) {
+                return SECFailure;
+        }
+        return SECSuccess;
+}
+
+/*
  * FUNCTION: PKIX_PL_Cert_IsCertTrusted
  * (see comments in pkix_pl_pki.h)
  */
@@ -3253,72 +3329,79 @@ PKIX_PL_Cert_IsCertTrusted(
         void *plContext)
 {
         PKIX_CertStore_CheckTrustCallback trustCallback = NULL;
-        SECCertUsage certUsage = 0;
         PKIX_Boolean trusted = PKIX_FALSE;
         SECStatus rv = SECFailure;
-        unsigned int requiredFlags;
-        SECTrustType trustType;
-        CERTCertTrust trust;
-        CERTCertificate *nssCert = NULL;
-        SECCertificateUsage certificateUsage;
 
-        PKIX_ENTER(CERT, "pkix_pl_Cert_IsCertTrusted");
+        PKIX_ENTER(CERT, "PKIX_PL_Cert_IsCertTrusted");
         PKIX_NULLCHECK_TWO(cert, pTrusted);
 
+        /* Call GetTrusted first to see if we are going to distrust the
+         * certificate */
+        rv = pkix_pl_Cert_GetTrusted(plContext, cert, &trusted, PKIX_TRUE);
+        if (rv != SECSuccess) {
+                /* Failure means the cert is explicitly distrusted,
+                 * let the next level know not to use it. */
+                *pTrusted = PKIX_FALSE;
+                PKIX_ERROR(PKIX_CERTISCERTTRUSTEDFAILED);
+        }
+
         if (trustOnlyUserAnchors) {
+            /* discard our |trusted| value since we are using the anchors */
             *pTrusted = cert->isUserTrustAnchor;
             goto cleanup;
         }
 
-        /* no key usage information and store is not trusted */
+        /* no key usage information or store is not trusted */
         if (plContext == NULL || cert->store == NULL) {
                 *pTrusted = PKIX_FALSE;
                 goto cleanup;
         }
 
-        if (cert->store) {
-                PKIX_CHECK(PKIX_CertStore_GetTrustCallback
-                        (cert->store, &trustCallback, plContext),
-                        PKIX_CERTSTOREGETTRUSTCALLBACKFAILED);
+        PKIX_CHECK(PKIX_CertStore_GetTrustCallback
+                (cert->store, &trustCallback, plContext),
+                PKIX_CERTSTOREGETTRUSTCALLBACKFAILED);
 
-                PKIX_CHECK_ONLY_FATAL(trustCallback
-                        (cert->store, cert, &trusted, plContext),
-                        PKIX_CHECKTRUSTCALLBACKFAILED);
+        PKIX_CHECK_ONLY_FATAL(trustCallback
+                (cert->store, cert, &trusted, plContext),
+                PKIX_CHECKTRUSTCALLBACKFAILED);
 
-                if (PKIX_ERROR_RECEIVED || (trusted == PKIX_FALSE)) {
-
-                        *pTrusted = PKIX_FALSE;
-                        goto cleanup;
-                }
-
-        }
-
-        certificateUsage = ((PKIX_PL_NssContext*)plContext)->certificateUsage;
-
-        /* ensure we obtained a single usage bit only */
-        PORT_Assert(!(certificateUsage & (certificateUsage - 1)));
-
-        /* convert SECertificateUsage (bit mask) to SECCertUsage (enum) */
-        while (0 != (certificateUsage = certificateUsage >> 1)) { certUsage++; }
-
-        rv = CERT_TrustFlagsForCACertUsage(certUsage, &requiredFlags, &trustType);
-        if (rv != SECSuccess) {
+        /* allow trust store to override if we can trust the trust
+         * bits */
+        if (PKIX_ERROR_RECEIVED || (trusted == PKIX_FALSE)) {
                 *pTrusted = PKIX_FALSE;
                 goto cleanup;
         }
 
-        nssCert = cert->nssCert;
-
-        rv = CERT_GetCertTrust(nssCert, &trust);
-        if (rv == SECSuccess) {
-                unsigned int certFlags;
-                certFlags = SEC_GET_TRUST_FLAGS((&trust), trustType);
-                if ((certFlags & requiredFlags) == requiredFlags) {
-                        trusted = PKIX_TRUE;
-                }
-        }
-
         *pTrusted = trusted;
+
+cleanup:
+        PKIX_RETURN(CERT);
+}
+
+/*
+ * FUNCTION: PKIX_PL_Cert_IsLeafCertTrusted
+ * (see comments in pkix_pl_pki.h)
+ */
+PKIX_Error *
+PKIX_PL_Cert_IsLeafCertTrusted(
+        PKIX_PL_Cert *cert,
+        PKIX_Boolean *pTrusted,
+        void *plContext)
+{
+        SECStatus rv;
+
+        PKIX_ENTER(CERT, "PKIX_PL_Cert_IsLeafCertTrusted");
+        PKIX_NULLCHECK_TWO(cert, pTrusted);
+
+        *pTrusted = PKIX_FALSE;
+
+        rv = pkix_pl_Cert_GetTrusted(plContext, cert, pTrusted, PKIX_FALSE);
+        if (rv != SECSuccess) {
+                /* Failure means the cert is explicitly distrusted,
+                 * let the next level know not to use it. */
+                *pTrusted = PKIX_FALSE;
+                PKIX_ERROR(PKIX_CERTISCERTTRUSTEDFAILED);
+        }
 
 cleanup:
         PKIX_RETURN(CERT);

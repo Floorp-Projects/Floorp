@@ -516,7 +516,7 @@ class LayerOGL
 {
 public:
   LayerOGL(LayerManagerOGL *aManager)
-    : mOGLManager(aManager), mDestroyed(PR_FALSE)
+    : mOGLManager(aManager), mDestroyed(false)
   { }
 
   virtual ~LayerOGL() { }
@@ -540,7 +540,6 @@ public:
   LayerManagerOGL* OGLManager() const { return mOGLManager; }
   GLContext *gl() const { return mOGLManager->gl(); }
 
-  void ApplyFilter(gfxPattern::GraphicsFilter aFilter);
 protected:
   LayerManagerOGL *mOGLManager;
   bool mDestroyed;

@@ -102,7 +102,7 @@ struct txIndexedKeyHashEntry : public PLDHashEntryHdr
 {
     txIndexedKeyHashEntry(const void* aKey)
         : mKey(*static_cast<const txIndexedKeyHashKey*>(aKey)),
-          mIndexed(PR_FALSE)
+          mIndexed(false)
     {
     }
 
@@ -132,7 +132,7 @@ public:
      * Adds a match/use pair.
      * @param aMatch  match-pattern
      * @param aUse    use-expression
-     * @return PR_FALSE if an error occurred, PR_TRUE otherwise
+     * @return false if an error occurred, true otherwise
      */
     bool addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse);
 

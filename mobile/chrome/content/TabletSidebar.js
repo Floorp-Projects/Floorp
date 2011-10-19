@@ -63,12 +63,32 @@ var TabletSidebar = {
   },
 
   /**
+   * If scrolling by aDx pixels should grab the sidebar, grab and return true.
+   * Otherwise return false.
+   */
+  tryGrab: function tryGrab(aDx) {
+    if (aDx == 0)
+      return false;
+
+    let ltr = (Util.localeDir == Util.LOCALE_DIR_LTR);
+    let willShow = ltr ? (aDx < 0) : (aDx > 0);
+
+    if (willShow != this.visible) {
+      this.grab();
+      return true;
+    }
+    return false;
+  },
+
+  /**
    * Call this function in landscape tablet mode to begin dragging the tab sidebar.
    * Hiding the sidebar makes the viewable area grow; showing the sidebar makes it shrink.
    */
   grab: function grab() {
     this._grabbed = true;
-    ViewableAreaObserver.update();
+    // While sliding the sidebar, tell ViewableAreaObserver to size the browser
+    // as if the sidebar weren't there.  This avoids resizing the browser while dragging.
+    ViewableAreaObserver.update({ setIgnoreTabletSidebar: true });
 
     let ltr = (Util.localeDir == Util.LOCALE_DIR_LTR);
 
@@ -102,7 +122,7 @@ var TabletSidebar = {
       this.hide();
     else
       // we already called show() in grab; just need to update the width again.
-      ViewableAreaObserver.update();
+      ViewableAreaObserver.update({ setIgnoreTabletSidebar: false });
   },
 
   /** Move the tablet sidebar. */

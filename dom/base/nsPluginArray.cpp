@@ -45,7 +45,7 @@
 #include "nsIPluginHost.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsPluginError.h"
 #include "nsContentUtils.h"
 #include "nsPluginHost.h"
@@ -100,7 +100,7 @@ nsPluginArray::AllowPlugins()
   bool allowPlugins = false;
   if (mDocShell)
     if (NS_FAILED(mDocShell->GetAllowPlugins(&allowPlugins)))
-      allowPlugins = PR_FALSE;
+      allowPlugins = false;
 
   return allowPlugins;
 }

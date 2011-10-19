@@ -27,8 +27,8 @@
 
 #define XPI_PERMISSION      "install"
 
-#define XPI_WHITELIST       PR_TRUE
-#define XPI_GLOBAL          PR_FALSE
+#define XPI_WHITELIST       true
+#define XPI_GLOBAL          false
 
 #define XPINSTALL_ENABLE_PREF            "xpinstall.enabled"
 #define XPINSTALL_WHITELIST_ADD          "xpinstall.whitelist.add"

@@ -401,7 +401,7 @@ public:
   bool InPrivateBrowsingMode()
   {
     if (mInPrivateBrowsing == PRIVATEBROWSING_NOTINITED) {
-      mInPrivateBrowsing = PR_FALSE;
+      mInPrivateBrowsing = false;
       nsCOMPtr<nsIPrivateBrowsingService> pbs =
         do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
       if (pbs) {

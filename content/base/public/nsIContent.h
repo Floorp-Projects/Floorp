@@ -77,8 +77,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x4aad2c06, 0xd6c3, 0x4f44, \
- { 0x94, 0xf9, 0xd5, 0xac, 0xe5, 0x04, 0x67, 0xec } }
+{ 0xdec4b381, 0xa3fc, 0x402b, \
+ { 0x83, 0x96, 0x0a, 0x7b, 0x37, 0x52, 0xcf, 0x70 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -139,7 +139,7 @@ public:
    * parent's child list and after the nsIDocumentObserver notifications for
    * the removal have been dispatched.   
    * @param aDeep Whether to recursively unbind the entire subtree rooted at
-   *        this node.  The only time PR_FALSE should be passed is when the
+   *        this node.  The only time false should be passed is when the
    *        parent node of the content is being destroyed.
    * @param aNullParent Whether to null out the parent pointer as well.  This
    *        is usually desirable.  This argument should only be false while
@@ -278,9 +278,7 @@ public:
    */
   inline bool IsInHTMLDocument() const
   {
-    nsIDocument* doc = GetOwnerDoc();
-    return doc && // XXX clean up after bug 335998 lands
-           doc->IsHTML();
+    return OwnerDoc()->IsHTML();
   }
 
   /**
@@ -398,8 +396,8 @@ public:
    * @param aNameSpaceID the namespace of the attr
    * @param aName the name of the attr
    * @param aResult the value (may legitimately be the empty string) [OUT]
-   * @returns PR_TRUE if the attribute was set (even when set to empty string)
-   *          PR_FALSE when not set.
+   * @returns true if the attribute was set (even when set to empty string)
+   *          false when not set.
    */
   virtual bool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                          nsAString& aResult) const = 0;
@@ -428,7 +426,7 @@ public:
                              const nsAString& aValue,
                              nsCaseTreatment aCaseSensitive) const
   {
-    return PR_FALSE;
+    return false;
   }
   
   /**
@@ -446,7 +444,7 @@ public:
                              nsIAtom* aValue,
                              nsCaseTreatment aCaseSensitive) const
   {
-    return PR_FALSE;
+    return false;
   }
   
   enum {
@@ -525,7 +523,7 @@ public:
   virtual PRUint32 TextLength() = 0;
 
   /**
-   * Set the text to the given value. If aNotify is PR_TRUE then
+   * Set the text to the given value. If aNotify is true then
    * the document is notified of the content change.
    * NOTE: For elements this always ASSERTS and returns NS_ERROR_FAILURE
    */
@@ -533,7 +531,7 @@ public:
                            bool aNotify) = 0;
 
   /**
-   * Append the given value to the current text. If aNotify is PR_TRUE then
+   * Append the given value to the current text. If aNotify is true then
    * the document is notified of the content change.
    * NOTE: For elements this always ASSERTS and returns NS_ERROR_FAILURE
    */
@@ -541,7 +539,7 @@ public:
                               bool aNotify) = 0;
 
   /**
-   * Set the text to the given value. If aNotify is PR_TRUE then
+   * Set the text to the given value. If aNotify is true then
    * the document is notified of the content change.
    * NOTE: For elements this always asserts and returns NS_ERROR_FAILURE
    */
@@ -552,7 +550,7 @@ public:
 
   /**
    * Query method to see if the frame is nothing but whitespace
-   * NOTE: Always returns PR_FALSE for elements
+   * NOTE: Always returns false for elements
    */
   virtual bool TextIsOnlyWhitespace() = 0;
 
@@ -588,7 +586,7 @@ public:
   {
     if (aTabIndex) 
       *aTabIndex = -1; // Default, not tabbable
-    return PR_FALSE;
+    return false;
   }
 
   /**
@@ -672,7 +670,7 @@ public:
    *             set to this link's URI will be passed out.
    *
    * @note The out param, aURI, is guaranteed to be set to a non-null pointer
-   *   when the return value is PR_TRUE.
+   *   when the return value is true.
    *
    * XXXjwatt: IMO IsInteractiveLink would be a better name.
    */
@@ -777,16 +775,16 @@ public:
 
   /**
    * For HTML textarea, select, applet, and object elements, returns
-   * PR_TRUE if all children have been added OR if the element was not
-   * created by the parser. Returns PR_TRUE for all other elements.
-   * @returns PR_FALSE if the element was created by the parser and
+   * true if all children have been added OR if the element was not
+   * created by the parser. Returns true for all other elements.
+   * @returns false if the element was created by the parser and
    *                   it is an HTML textarea, select, applet, or object
    *                   element and not all children have been added.
-   * @returns PR_TRUE otherwise.
+   * @returns true otherwise.
    */
   virtual bool IsDoneAddingChildren()
   {
-    return PR_TRUE;
+    return true;
   }
 
   /**

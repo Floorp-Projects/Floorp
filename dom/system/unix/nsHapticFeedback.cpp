@@ -75,7 +75,7 @@ nsHapticFeedback::PerformSimpleAction(PRInt32 aType)
         return NS_ERROR_FAILURE;
     }
 
-    dbus_message_set_no_reply(msg, PR_TRUE);
+    dbus_message_set_no_reply(msg, true);
 
     DBusMessageIter iter;
     dbus_message_iter_init_append(msg, &iter);

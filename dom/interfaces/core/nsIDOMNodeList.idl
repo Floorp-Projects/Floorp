@@ -39,6 +39,8 @@
 
 #include "domstubs.idl"
 
+interface nsIContent;
+
 /**
  * The nsIDOMNodeList interface provides the abstraction of an ordered 
  * collection of nodes, without defining or constraining how this collection 
@@ -49,9 +51,14 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(a6cf907d-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(496852ba-e48d-4fa5-982e-e0dc1b475bf1)]
 interface nsIDOMNodeList : nsISupports
 {
-  nsIDOMNode                      item(in unsigned long index);
-  readonly attribute unsigned long        length;
+  [getter,forward(getNodeAt)] nsIDOMNode    item(in unsigned long index);
+  readonly attribute unsigned long          length;
+
+  /**
+   * Get the node at the index.  Returns null if the index is out of bounds
+   */
+  [noscript,notxpcom,nostdcall] nsIContent  getNodeAt(in unsigned long index);
 };

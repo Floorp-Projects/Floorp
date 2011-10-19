@@ -82,10 +82,6 @@ public:
 
   // imgIDecoderObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
-  NS_IMETHOD OnStartDecode(imgIRequest *aRequest);
-  NS_IMETHOD OnStopDecode(imgIRequest *aRequest,
-                          nsresult status,
-                          const PRUnichar *statusArg);
   NS_IMETHOD OnStopFrame(imgIRequest *aRequest, PRUint32 aFrame);
   NS_IMETHOD OnStopRequest(imgIRequest *aRequest, bool aLastPart);
   // Do not override OnDataAvailable since background images are not
@@ -113,8 +109,4 @@ private:
   nsCOMPtr<imgIRequest> mRequest;
   PRUint32 mActions;
   nsRefPtr<nsImageLoader> mNextLoader;
-
-  // This is a boolean flag indicating whether or not the current image request
-  // has been registered with the refresh driver.
-  bool mRequestRegistered;
 };

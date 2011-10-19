@@ -83,6 +83,7 @@
 #include "nsIConstraintValidation.h"
 
 #include "nsIDOMHTMLButtonElement.h"
+#include "dombindings.h"
 
 using namespace mozilla::dom;
 
@@ -106,7 +107,8 @@ bool nsHTMLFormElement::gPasswordManagerInitialized = false;
 
 
 // nsFormControlList
-class nsFormControlList : public nsIHTMLCollection
+class nsFormControlList : public nsIHTMLCollection,
+                          public nsWrapperCache
 {
 public:
   nsFormControlList(nsHTMLFormElement* aForm);
@@ -121,18 +123,9 @@ public:
   // nsIDOMHTMLCollection interface
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual nsIContent* GetNodeAt(PRUint32 aIndex)
+  virtual nsINode* GetParentObject()
   {
-    FlushPendingNotifications();
-
-    return mElements.SafeElementAt(aIndex, nsnull);
-  }
-  virtual nsISupports* GetNamedItem(const nsAString& aName,
-                                    nsWrapperCache **aCache)
-  {
-    nsISupports *item = NamedItemInternal(aName, PR_TRUE);
-    *aCache = nsnull;
-    return item;
+    return mForm;
   }
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
@@ -155,6 +148,14 @@ public:
    */
   nsresult GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aControls) const;
 
+  // nsWrapperCache
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap)
+  {
+    return mozilla::dom::binding::HTMLCollection::create(cx, scope, this,
+                                                         triedToWrap);
+  }
+
   nsHTMLFormElement* mForm;  // WEAK - the form owns me
 
   nsTArray<nsGenericHTMLFormElement*> mElements;  // Holds WEAK references - bug 36639
@@ -166,7 +167,7 @@ public:
 
   nsTArray<nsGenericHTMLFormElement*> mNotInElements; // Holds WEAK references
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFormControlList, nsIHTMLCollection)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsFormControlList)
 
 protected:
   // Drop all our references to the form elements
@@ -213,7 +214,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   case NS_FORM_FIELDSET :
   case NS_FORM_OBJECT :
   case NS_FORM_OUTPUT :
-    return PR_TRUE;
+    return true;
   }
 
   // These form control types are not supposed to end up in the
@@ -223,7 +224,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   // NS_FORM_LABEL
   // NS_FORM_PROGRESS
 
-  return PR_FALSE;
+  return false;
 }
 
 // nsHTMLFormElement implementation
@@ -247,14 +248,14 @@ NS_NewHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 
 nsHTMLFormElement::nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
-    mGeneratingSubmit(PR_FALSE),
-    mGeneratingReset(PR_FALSE),
-    mIsSubmitting(PR_FALSE),
-    mDeferSubmission(PR_FALSE),
-    mNotifiedObservers(PR_FALSE),
-    mNotifiedObserversResult(PR_FALSE),
+    mGeneratingSubmit(false),
+    mGeneratingReset(false),
+    mIsSubmitting(false),
+    mDeferSubmission(false),
+    mNotifiedObservers(false),
+    mNotifiedObserversResult(false),
     mSubmitPopupState(openAbused),
-    mSubmitInitiatedFromUserInput(PR_FALSE),
+    mSubmitInitiatedFromUserInput(false),
     mPendingSubmission(nsnull),
     mSubmittingRequest(nsnull),
     mDefaultSubmitElement(nsnull),
@@ -428,7 +429,7 @@ nsHTMLFormElement::Submit()
 NS_IMETHODIMP
 nsHTMLFormElement::Reset()
 {
-  nsFormEvent event(PR_TRUE, NS_FORM_RESET);
+  nsFormEvent event(true, NS_FORM_RESET);
   nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), nsnull,
                               &event);
   return NS_OK;
@@ -449,13 +450,13 @@ nsHTMLFormElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::method) {
-      return aResult.ParseEnumValue(aValue, kFormMethodTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kFormMethodTable, false);
     }
     if (aAttribute == nsGkAtoms::enctype) {
-      return aResult.ParseEnumValue(aValue, kFormEnctypeTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kFormEnctypeTable, false);
     }
     if (aAttribute == nsGkAtoms::autocomplete) {
-      return aResult.ParseEnumValue(aValue, kFormAutocompleteTable, PR_FALSE);
+      return aResult.ParseEnumValue(aValue, kFormAutocompleteTable, false);
     }
   }
 
@@ -516,12 +517,12 @@ CollectOrphans(nsINode* aRemovalRoot, nsTArray<nsGenericHTMLFormElement*> aArray
     if (node->HasFlag(MAYBE_ORPHAN_FORM_ELEMENT)) {
       node->UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       if (!nsContentUtils::ContentIsDescendantOf(node, aRemovalRoot)) {
-        node->ClearForm(PR_TRUE);
+        node->ClearForm(true);
 
         // When a form control loses its form owner, its state can change.
         node->UpdateState(true);
 #ifdef DEBUG
-        removed = PR_TRUE;
+        removed = true;
 #endif
       }
     }
@@ -577,27 +578,27 @@ nsHTMLFormElement::UnbindFromTree(bool aDeep, bool aNullParent)
 nsresult
 nsHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  aVisitor.mWantsWillHandleEvent = PR_TRUE;
+  aVisitor.mWantsWillHandleEvent = true;
   if (aVisitor.mEvent->originalTarget == static_cast<nsIContent*>(this)) {
     PRUint32 msg = aVisitor.mEvent->message;
     if (msg == NS_FORM_SUBMIT) {
       if (mGeneratingSubmit) {
-        aVisitor.mCanHandle = PR_FALSE;
+        aVisitor.mCanHandle = false;
         return NS_OK;
       }
-      mGeneratingSubmit = PR_TRUE;
+      mGeneratingSubmit = true;
 
       // let the form know that it needs to defer the submission,
       // that means that if there are scripted submissions, the
       // latest one will be deferred until after the exit point of the handler.
-      mDeferSubmission = PR_TRUE;
+      mDeferSubmission = true;
     }
     else if (msg == NS_FORM_RESET) {
       if (mGeneratingReset) {
-        aVisitor.mCanHandle = PR_FALSE;
+        aVisitor.mCanHandle = false;
         return NS_OK;
       }
-      mGeneratingReset = PR_TRUE;
+      mGeneratingReset = true;
     }
   }
   return nsGenericHTMLElement::PreHandleEvent(aVisitor);
@@ -625,7 +626,7 @@ nsHTMLFormElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     PRUint32 msg = aVisitor.mEvent->message;
     if (msg == NS_FORM_SUBMIT) {
       // let the form know not to defer subsequent submissions
-      mDeferSubmission = PR_FALSE;
+      mDeferSubmission = false;
     }
 
     if (aVisitor.mEventStatus == nsEventStatus_eIgnore) {
@@ -656,10 +657,10 @@ nsHTMLFormElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     }
 
     if (msg == NS_FORM_SUBMIT) {
-      mGeneratingSubmit = PR_FALSE;
+      mGeneratingSubmit = false;
     }
     else if (msg == NS_FORM_RESET) {
-      mGeneratingReset = PR_FALSE;
+      mGeneratingReset = false;
     }
   }
   return NS_OK;
@@ -725,7 +726,7 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
   }
 
   // Mark us as submitting so that we don't try to submit again
-  mIsSubmitting = PR_TRUE;
+  mIsSubmitting = true;
   NS_ASSERTION(!mWebProgress && !mSubmittingRequest, "Web progress / submitting request should not exist here!");
 
   nsAutoPtr<nsFormSubmission> submission;
@@ -735,13 +736,13 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
   //
   nsresult rv = BuildSubmission(getter_Transfers(submission), aEvent);
   if (NS_FAILED(rv)) {
-    mIsSubmitting = PR_FALSE;
+    mIsSubmitting = false;
     return rv;
   }
 
   // XXXbz if the script global is that for an sXBL/XBL2 doc, it won't
   // be a window...
-  nsPIDOMWindow *window = GetOwnerDoc()->GetWindow();
+  nsPIDOMWindow *window = OwnerDoc()->GetWindow();
 
   if (window) {
     mSubmitPopupState = window->GetPopupControlState();
@@ -757,7 +758,7 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
     // without submitting
     mPendingSubmission = submission;
     // ensure reentrancy
-    mIsSubmitting = PR_FALSE;
+    mIsSubmitting = false;
     return NS_OK; 
   } 
   
@@ -819,7 +820,7 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   if (!actionURI) {
-    mIsSubmitting = PR_FALSE;
+    mIsSubmitting = false;
     return NS_OK;
   }
 
@@ -828,7 +829,7 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
   nsCOMPtr<nsISupports> container = doc ? doc->GetContainer() : nsnull;
   nsCOMPtr<nsILinkHandler> linkHandler(do_QueryInterface(container));
   if (!linkHandler || IsEditable()) {
-    mIsSubmitting = PR_FALSE;
+    mIsSubmitting = false;
     return NS_OK;
   }
 
@@ -846,7 +847,7 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
   bool schemeIsJavaScript = false;
   if (NS_SUCCEEDED(actionURI->SchemeIs("javascript", &schemeIsJavaScript)) &&
       schemeIsJavaScript) {
-    mIsSubmitting = PR_FALSE;
+    mIsSubmitting = false;
   }
 
   // The target is the originating element formtarget attribute if the element
@@ -871,21 +872,21 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
   if (mNotifiedObservers) {
     cancelSubmit = mNotifiedObserversResult;
   } else {
-    rv = NotifySubmitObservers(actionURI, &cancelSubmit, PR_TRUE);
+    rv = NotifySubmitObservers(actionURI, &cancelSubmit, true);
     NS_ENSURE_SUBMIT_SUCCESS(rv);
   }
 
   if (cancelSubmit) {
-    mIsSubmitting = PR_FALSE;
+    mIsSubmitting = false;
     return NS_OK;
   }
 
-  cancelSubmit = PR_FALSE;
-  rv = NotifySubmitObservers(actionURI, &cancelSubmit, PR_FALSE);
+  cancelSubmit = false;
+  rv = NotifySubmitObservers(actionURI, &cancelSubmit, false);
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   if (cancelSubmit) {
-    mIsSubmitting = PR_FALSE;
+    mIsSubmitting = false;
     return NS_OK;
   }
 
@@ -946,7 +947,7 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
   // If this is the first form, bring alive the first form submit
   // category observers
   if (!gFirstFormSubmitted) {
-    gFirstFormSubmitted = PR_TRUE;
+    gFirstFormSubmitted = true;
     NS_CreateServicesFromCategory(NS_FIRST_FORMSUBMIT_CATEGORY,
                                   nsnull,
                                   NS_FIRST_FORMSUBMIT_CATEGORY);
@@ -967,12 +968,12 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
 
   if (theEnum) {
     nsCOMPtr<nsISupports> inst;
-    *aCancelSubmit = PR_FALSE;
+    *aCancelSubmit = false;
 
     // XXXbz what do the submit observers actually want?  The window
     // of the document this is shown in?  Or something else?
     // sXBL/XBL2 issue
-    nsCOMPtr<nsPIDOMWindow> window = GetOwnerDoc()->GetWindow();
+    nsCOMPtr<nsPIDOMWindow> window = OwnerDoc()->GetWindow();
 
     bool loop = true;
     while (NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {
@@ -1127,7 +1128,7 @@ nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   if (position >= 0 || count == 0) {
     // WEAK - don't addref
     controlList.AppendElement(aChild);
-    lastElement = PR_TRUE;
+    lastElement = true;
   }
   else {
     PRInt32 low = 0, mid, high;
@@ -1160,7 +1161,7 @@ nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   //
   if (!gPasswordManagerInitialized && type == NS_FORM_INPUT_PASSWORD) {
     // Initialize the password manager category
-    gPasswordManagerInitialized = PR_TRUE;
+    gPasswordManagerInitialized = true;
     NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY,
                                   nsnull,
                                   NS_PASSWORDMANAGER_CATEGORY);
@@ -1217,7 +1218,7 @@ nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
     nsCOMPtr<nsIConstraintValidation> cvElmt = do_QueryObject(aChild);
     if (cvElmt &&
         cvElmt->IsCandidateForConstraintValidation() && !cvElmt->IsValid()) {
-      UpdateValidity(PR_FALSE);
+      UpdateValidity(false);
     }
   }
 
@@ -1303,7 +1304,7 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
     nsCOMPtr<nsIConstraintValidation> cvElmt = do_QueryObject(aChild);
     if (cvElmt &&
         cvElmt->IsCandidateForConstraintValidation() && !cvElmt->IsValid()) {
-      UpdateValidity(PR_TRUE);
+      UpdateValidity(true);
     }
   }
 
@@ -1352,7 +1353,7 @@ nsHTMLFormElement::RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
 NS_IMETHODIMP_(already_AddRefed<nsISupports>)
 nsHTMLFormElement::ResolveName(const nsAString& aName)
 {
-  return DoResolveName(aName, PR_TRUE);
+  return DoResolveName(aName, true);
 }
 
 already_AddRefed<nsISupports>
@@ -1367,7 +1368,7 @@ nsHTMLFormElement::DoResolveName(const nsAString& aName,
 void
 nsHTMLFormElement::OnSubmitClickBegin(nsIContent* aOriginatingElement)
 {
-  mDeferSubmission = PR_TRUE;
+  mDeferSubmission = true;
 
   // Prepare to run NotifySubmitObservers early before the
   // scripts on the page get to modify the form data, possibly
@@ -1384,9 +1385,9 @@ nsHTMLFormElement::OnSubmitClickBegin(nsIContent* aOriginatingElement)
   // removed with bug 610402.
   if (mInvalidElementsCount == 0) {
     bool cancelSubmit = false;
-    rv = NotifySubmitObservers(actionURI, &cancelSubmit, PR_TRUE);
+    rv = NotifySubmitObservers(actionURI, &cancelSubmit, true);
     if (NS_SUCCEEDED(rv)) {
-      mNotifiedObservers = PR_TRUE;
+      mNotifiedObservers = true;
       mNotifiedObserversResult = cancelSubmit;
     }
   }
@@ -1395,7 +1396,7 @@ nsHTMLFormElement::OnSubmitClickBegin(nsIContent* aOriginatingElement)
 void
 nsHTMLFormElement::OnSubmitClickEnd()
 {
-  mDeferSubmission = PR_FALSE;
+  mDeferSubmission = false;
 }
 
 void
@@ -1463,7 +1464,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL,
   }
 
   // Get base URL
-  nsIDocument *document = GetOwnerDoc();
+  nsIDocument *document = OwnerDoc();
   nsIURI *docURI = document->GetDocumentURI();
   NS_ENSURE_TRUE(docURI, NS_ERROR_UNEXPECTED);
 
@@ -1533,14 +1534,14 @@ nsHTMLFormElement::IsDefaultSubmitElement(const nsIFormControl* aControl) const
 
   if (aControl == mDefaultSubmitElement) {
     // Yes, it is
-    return PR_TRUE;
+    return true;
   }
 
   if (mDefaultSubmitElement ||
       (aControl != mFirstSubmitInElements &&
        aControl != mFirstSubmitNotInElements)) {
     // It isn't
-    return PR_FALSE;
+    return false;
   }
 
   // mDefaultSubmitElement is null, but we have a non-null submit around
@@ -1550,7 +1551,7 @@ nsHTMLFormElement::IsDefaultSubmitElement(const nsIFormControl* aControl) const
   // correctly and we don't know whether that's safe right here.
   if (!mFirstSubmitInElements || !mFirstSubmitNotInElements) {
     // We only have one first submit; aControl has to be it
-    return PR_TRUE;
+    return true;
   }
 
   // We have both kinds of submits.  Check which comes first.
@@ -1568,7 +1569,7 @@ nsHTMLFormElement::HasSingleTextControl() const
   PRUint32 numTextControlsFound = 0;
   PRUint32 length = mControls->mElements.Length();
   for (PRUint32 i = 0; i < length && numTextControlsFound < 2; ++i) {
-    if (mControls->mElements[i]->IsSingleLineTextControl(PR_FALSE)) {
+    if (mControls->mElements[i]->IsSingleLineTextControl(false)) {
       numTextControlsFound++;
     }
   }
@@ -1599,8 +1600,8 @@ nsHTMLFormElement::GetLength(PRInt32* aLength)
 void
 nsHTMLFormElement::ForgetCurrentSubmission()
 {
-  mNotifiedObservers = PR_FALSE;
-  mIsSubmitting = PR_FALSE;
+  mNotifiedObservers = false;
+  mIsSubmitting = false;
   mSubmittingRequest = nsnull;
   nsCOMPtr<nsIWebProgress> webProgress = do_QueryReferent(mWebProgress);
   if (webProgress) {
@@ -1616,7 +1617,7 @@ nsHTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
 
   nsTArray<nsGenericHTMLFormElement*> sortedControls;
   if (NS_FAILED(mControls->GetSortedControls(sortedControls))) {
-    return PR_FALSE;
+    return false;
   }
 
   PRUint32 len = sortedControls.Length();
@@ -1632,18 +1633,18 @@ nsHTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
       do_QueryInterface((nsGenericHTMLElement*)sortedControls[i]);
     if (cvElmt && cvElmt->IsCandidateForConstraintValidation() &&
         !cvElmt->IsValid()) {
-      ret = PR_FALSE;
+      ret = false;
       bool defaultAction = true;
-      nsContentUtils::DispatchTrustedEvent(sortedControls[i]->GetOwnerDoc(),
+      nsContentUtils::DispatchTrustedEvent(sortedControls[i]->OwnerDoc(),
                                            static_cast<nsIContent*>(sortedControls[i]),
                                            NS_LITERAL_STRING("invalid"),
-                                           PR_FALSE, PR_TRUE, &defaultAction);
+                                           false, true, &defaultAction);
 
       // Add all unhandled invalid controls to aInvalidElements if the caller
       // requested them.
       if (defaultAction && aInvalidElements) {
         aInvalidElements->AppendElement((nsGenericHTMLElement*)sortedControls[i],
-                                        PR_FALSE);
+                                        false);
       }
     }
   }
@@ -2149,6 +2150,8 @@ nsFormControlList::nsFormControlList(nsHTMLFormElement* aForm) :
   // of 8 to reduce allocations on small forms.
   mElements(8)
 {
+  // Mark ourselves as a proxy
+  SetIsProxy();
 }
 
 nsFormControlList::~nsFormControlList()
@@ -2179,12 +2182,12 @@ nsFormControlList::Clear()
   // Null out childrens' pointer to me.  No refcounting here
   PRInt32 i;
   for (i = mElements.Length()-1; i >= 0; i--) {
-    mElements[i]->ClearForm(PR_FALSE);
+    mElements[i]->ClearForm(false);
   }
   mElements.Clear();
 
   for (i = mNotInElements.Length()-1; i >= 0; i--) {
-    mNotInElements[i]->ClearForm(PR_FALSE);
+    mNotInElements[i]->ClearForm(false);
   }
   mNotInElements.Clear();
 
@@ -2215,15 +2218,21 @@ ControlTraverser(const nsAString& key, nsISupports* control, void* userArg)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsFormControlList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFormControlList)
   tmp->Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormControlList)
   tmp->mNameLookupTable.EnumerateRead(ControlTraverser, &cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsFormControlList)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMCI_DATA(HTMLCollection, nsFormControlList)
 
 // XPConnect interface list for nsFormControlList
 NS_INTERFACE_TABLE_HEAD(nsFormControlList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_TABLE2(nsFormControlList,
                       nsIHTMLCollection,
                       nsIDOMHTMLCollection)
@@ -2544,4 +2553,20 @@ nsFormControlList::GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aContr
 #endif
 
   return NS_OK;
+}
+
+nsIContent*
+nsFormControlList::GetNodeAt(PRUint32 aIndex)
+{
+  FlushPendingNotifications();
+
+  return mElements.SafeElementAt(aIndex, nsnull);
+}
+
+nsISupports*
+nsFormControlList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache)
+{
+  nsISupports *item = NamedItemInternal(aName, true);
+  *aCache = nsnull;
+  return item;
 }

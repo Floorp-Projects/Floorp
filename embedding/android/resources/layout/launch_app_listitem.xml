@@ -2,16 +2,24 @@
  <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="?android:attr/listPreferredItemHeight"
-    android:padding="6dip"
-    android:orientation="horizontal">
+    android:paddingLeft="16dip"
+    android:paddingRight="16dip"
+    android:orientation="horizontal"
+    android:gravity="left">
     <ImageView
         android:id="@+id/favicon"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_marginRight="6dip"/>
+        android:layout_width="48dip"
+        android:layout_height="48dip"
+        android:layout_marginRight="12dip"
+        android:layout_gravity="center_vertical"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"/>
     <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center_vertical"/>
+        android:gravity="center_vertical"
+        android:textAppearance="?android:attr/textAppearanceLargeInverse"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"/>
  </LinearLayout>

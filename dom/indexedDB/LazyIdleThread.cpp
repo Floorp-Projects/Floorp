@@ -74,9 +74,9 @@ LazyIdleThread::LazyIdleThread(PRUint32 aIdleTimeoutMS,
   mPendingEventCount(0),
   mIdleNotificationCount(0),
   mShutdownMethod(aShutdownMethod),
-  mShutdown(PR_FALSE),
-  mThreadIsShuttingDown(PR_FALSE),
-  mIdleTimeoutEnabled(PR_TRUE)
+  mShutdown(false),
+  mThreadIsShuttingDown(false),
+  mIdleTimeoutEnabled(true)
 {
   NS_ASSERTION(mOwningThread, "This should never fail!");
 }
@@ -109,7 +109,7 @@ LazyIdleThread::DisableIdleTimeout()
   if (!mIdleTimeoutEnabled) {
     return;
   }
-  mIdleTimeoutEnabled = PR_FALSE;
+  mIdleTimeoutEnabled = false;
 
   if (mIdleTimer && NS_FAILED(mIdleTimer->Cancel())) {
     NS_WARNING("Failed to cancel timer!");
@@ -129,7 +129,7 @@ LazyIdleThread::EnableIdleTimeout()
   if (mIdleTimeoutEnabled) {
     return;
   }
-  mIdleTimeoutEnabled = PR_TRUE;
+  mIdleTimeoutEnabled = true;
 
   {
     MutexAutoLock lock(mMutex);
@@ -180,7 +180,7 @@ LazyIdleThread::EnsureThread()
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = obs->AddObserver(this, "xpcom-shutdown-threads", PR_FALSE);
+    rv = obs->AddObserver(this, "xpcom-shutdown-threads", false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -223,7 +223,7 @@ LazyIdleThread::CleanupThread()
   MutexAutoLock lock(mMutex);
 
   NS_ASSERTION(!mThreadIsShuttingDown, "Shouldn't be true ever!");
-  mThreadIsShuttingDown = PR_TRUE;
+  mThreadIsShuttingDown = true;
 }
 
 void
@@ -315,7 +315,7 @@ LazyIdleThread::ShutdownThread()
       NS_ASSERTION(!mPendingEventCount, "Huh?!");
       NS_ASSERTION(!mIdleNotificationCount, "Huh?!");
       NS_ASSERTION(mThreadIsShuttingDown, "Huh?!");
-      mThreadIsShuttingDown = PR_FALSE;
+      mThreadIsShuttingDown = false;
     }
   }
 
@@ -422,7 +422,7 @@ LazyIdleThread::IsOnCurrentThread(bool* aIsOnCurrentThread)
     return mThread->IsOnCurrentThread(aIsOnCurrentThread);
   }
 
-  *aIsOnCurrentThread = PR_FALSE;
+  *aIsOnCurrentThread = false;
   return NS_OK;
 }
 
@@ -442,7 +442,7 @@ LazyIdleThread::Shutdown()
 {
   ASSERT_OWNING_THREAD();
 
-  mShutdown = PR_TRUE;
+  mShutdown = true;
 
   nsresult rv = ShutdownThread();
   NS_ASSERTION(!mThread, "Should have destroyed this by now!");

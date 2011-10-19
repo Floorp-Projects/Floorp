@@ -53,31 +53,31 @@ nsPrintSettings::nsPrintSettings() :
   mStartPageNum(1),
   mEndPageNum(1),
   mScaling(1.0),
-  mPrintBGColors(PR_FALSE),
-  mPrintBGImages(PR_FALSE),
+  mPrintBGColors(false),
+  mPrintBGImages(false),
   mPrintFrameTypeUsage(kUseInternalDefault),
   mPrintFrameType(kFramesAsIs),
   mHowToEnableFrameUI(kFrameEnableNone),
-  mIsCancelled(PR_FALSE),
-  mPrintSilent(PR_FALSE),
-  mPrintPreview(PR_FALSE),
-  mShrinkToFit(PR_TRUE),
-  mShowPrintProgress(PR_TRUE),
+  mIsCancelled(false),
+  mPrintSilent(false),
+  mPrintPreview(false),
+  mShrinkToFit(true),
+  mShowPrintProgress(true),
   mPrintPageDelay(50),
   mPaperData(0),
   mPaperSizeType(kPaperSizeDefined),
   mPaperWidth(8.5),
   mPaperHeight(11.0),
   mPaperSizeUnit(kPaperSizeInches),
-  mPrintReversed(PR_FALSE),
-  mPrintInColor(PR_TRUE),
+  mPrintReversed(false),
+  mPrintInColor(true),
   mOrientation(kPortraitOrientation),
-  mDownloadFonts(PR_FALSE),
+  mDownloadFonts(false),
   mNumCopies(1),
-  mPrintToFile(PR_FALSE),
+  mPrintToFile(false),
   mOutputFormat(kOutputFormatNative),
-  mIsInitedFromPrinter(PR_FALSE),
-  mIsInitedFromPrefs(PR_FALSE)
+  mIsInitedFromPrinter(false),
+  mIsInitedFromPrefs(false)
 {
 
   /* member initializers and constructor code */
@@ -276,8 +276,8 @@ NS_IMETHODIMP nsPrintSettings::GetPrinterName(PRUnichar * *aPrinter)
 NS_IMETHODIMP nsPrintSettings::SetPrinterName(const PRUnichar * aPrinter)
 {
   if (!aPrinter || !mPrinter.Equals(aPrinter)) {
-    mIsInitedFromPrinter = PR_FALSE;
-    mIsInitedFromPrefs   = PR_FALSE;
+    mIsInitedFromPrinter = false;
+    mIsInitedFromPrefs   = false;
   }
 
   mPrinter.Assign(aPrinter);
@@ -662,7 +662,7 @@ NS_IMETHODIMP
 nsPrintSettings::GetPrintOptions(PRInt32 aType, bool *aTurnOnOff)
 {
   NS_ENSURE_ARG_POINTER(aTurnOnOff);
-  *aTurnOnOff = mPrintOptions & aType ? PR_TRUE : PR_FALSE;
+  *aTurnOnOff = mPrintOptions & aType ? true : false;
   return NS_OK;
 }
 /** ---------------------------------------------------

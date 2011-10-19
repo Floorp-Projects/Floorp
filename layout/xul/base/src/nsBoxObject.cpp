@@ -46,7 +46,7 @@
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
 #include "nsReadableUtils.h"
-#include "nsIDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsIView.h"
 #ifdef MOZ_XUL
 #include "nsIDOMXULElement.h"
@@ -194,7 +194,7 @@ nsBoxObject::GetOffsetRect(nsIntRect& aRect)
     return NS_ERROR_NOT_INITIALIZED;
 
   // Get the Frame for our content
-  nsIFrame* frame = GetFrame(PR_TRUE);
+  nsIFrame* frame = GetFrame(true);
   if (frame) {
     // Get its origin
     nsPoint origin = frame->GetPositionIgnoringScrolling();
@@ -254,7 +254,7 @@ nsBoxObject::GetScreenPosition(nsIntPoint& aPoint)
   if (!mContent)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsIFrame* frame = GetFrame(PR_TRUE);
+  nsIFrame* frame = GetFrame(true);
   if (frame) {
     nsIntRect rect = frame->GetScreenRect();
     aPoint.x = rect.x;
@@ -386,7 +386,7 @@ nsBoxObject::SetProperty(const PRUnichar* aPropertyName, const PRUnichar* aPrope
   if (aPropertyValue) {
     propertyValue.Rebind(aPropertyValue);
   } else {
-    propertyValue.SetIsVoid(PR_TRUE);
+    propertyValue.SetIsVoid(true);
   }
   
   nsCOMPtr<nsISupportsString> supportsStr(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
@@ -412,7 +412,7 @@ NS_IMETHODIMP
 nsBoxObject::GetParentBox(nsIDOMElement * *aParentBox)
 {
   *aParentBox = nsnull;
-  nsIFrame* frame = GetFrame(PR_FALSE);
+  nsIFrame* frame = GetFrame(false);
   if (!frame) return NS_OK;
   nsIFrame* parent = frame->GetParent();
   if (!parent) return NS_OK;
@@ -427,7 +427,7 @@ NS_IMETHODIMP
 nsBoxObject::GetFirstChild(nsIDOMElement * *aFirstVisibleChild)
 {
   *aFirstVisibleChild = nsnull;
-  nsIFrame* frame = GetFrame(PR_FALSE);
+  nsIFrame* frame = GetFrame(false);
   if (!frame) return NS_OK;
   nsIFrame* firstFrame = frame->GetFirstPrincipalChild();
   if (!firstFrame) return NS_OK;
@@ -441,7 +441,7 @@ NS_IMETHODIMP
 nsBoxObject::GetLastChild(nsIDOMElement * *aLastVisibleChild)
 {
   *aLastVisibleChild = nsnull;
-  nsIFrame* frame = GetFrame(PR_FALSE);
+  nsIFrame* frame = GetFrame(false);
   if (!frame) return NS_OK;
   return GetPreviousSibling(frame, nsnull, aLastVisibleChild);
 }
@@ -450,7 +450,7 @@ NS_IMETHODIMP
 nsBoxObject::GetNextSibling(nsIDOMElement **aNextOrdinalSibling)
 {
   *aNextOrdinalSibling = nsnull;
-  nsIFrame* frame = GetFrame(PR_FALSE);
+  nsIFrame* frame = GetFrame(false);
   if (!frame) return NS_OK;
   nsIFrame* nextFrame = frame->GetNextSibling();
   if (!nextFrame) return NS_OK;
@@ -464,7 +464,7 @@ NS_IMETHODIMP
 nsBoxObject::GetPreviousSibling(nsIDOMElement **aPreviousOrdinalSibling)
 {
   *aPreviousOrdinalSibling = nsnull;
-  nsIFrame* frame = GetFrame(PR_FALSE);
+  nsIFrame* frame = GetFrame(false);
   if (!frame) return NS_OK;
   nsIFrame* parentFrame = frame->GetParent();
   if (!parentFrame) return NS_OK;

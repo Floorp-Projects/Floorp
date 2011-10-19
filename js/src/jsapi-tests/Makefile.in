@@ -87,9 +87,13 @@ CPPSRCS = \
   testThreads.cpp \
   testTrap.cpp \
   testUTF8.cpp \
+  testValueABI.cpp \
   testVersion.cpp \
   testXDR.cpp \
   $(NULL)
+
+CSRCS = \
+  valueABI.c
 
 # Disabled: an entirely unrelated test seems to cause this to fail.  Moreover,
 # given the test's dependence on interactions between the compiler, the GC, and

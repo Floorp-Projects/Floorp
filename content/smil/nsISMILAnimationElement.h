@@ -91,8 +91,8 @@ public:
    * that derive from nsGenericElement)
    *
    * @param aName the name of the attr
-   * @returns PR_TRUE if the attribute was set (even when set to empty string)
-   *          PR_FALSE when not set.
+   * @returns true if the attribute was set (even when set to empty string)
+   *          false when not set.
    */
   virtual const nsAttrValue* GetAnimAttr(nsIAtom* aName) const = 0;
 
@@ -102,8 +102,8 @@ public:
    *
    * @param aName the name of the attr
    * @param aResult the value (may legitimately be the empty string) [OUT]
-   * @returns PR_TRUE if the attribute was set (even when set to empty string)
-   *          PR_FALSE when not set.
+   * @returns true if the attribute was set (even when set to empty string)
+   *          false when not set.
    */
   virtual bool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const = 0;
 

@@ -41,13 +41,15 @@
 #include "GlobalObject.h"
 
 #include "jscntxt.h"
-#include "jsemit.h"
 #include "jsexn.h"
 #include "jsmath.h"
 #include "json.h"
 
+#include "builtin/RegExp.h"
+#include "frontend/BytecodeGenerator.h"
+
 #include "jsobjinlines.h"
-#include "jsregexpinlines.h"
+#include "vm/RegExpObject-inl.h"
 
 using namespace js;
 
@@ -118,10 +120,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     JSFunction *functionProto;
     {
         JSObject *proto = NewObject<WithProto::Given>(cx, &FunctionClass, objectProto, this);
-        if (!proto || !proto->setSingletonType(cx))
-            return NULL;
-        types::TypeObject *functionType = proto->getNewType(cx, NULL, /* markUnknown = */ true);
-        if (!functionType || !functionType->getEmptyShape(cx, &FunctionClass, gc::FINALIZE_OBJECT0))
+        if (!proto)
             return NULL;
 
         /*
@@ -141,10 +140,16 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         script->noScriptRval = true;
         script->code[0] = JSOP_STOP;
         script->code[1] = SRC_NULL;
-        functionProto->u.i.script = script;
+        functionProto->setScript(script);
         functionProto->getType(cx)->interpretedFunction = functionProto;
         script->hasFunction = true;
-        script->setOwnerObject(functionProto);
+
+        if (!proto->setSingletonType(cx))
+            return NULL;
+
+        types::TypeObject *functionType = proto->getNewType(cx, NULL, /* markUnknown = */ true);
+        if (!functionType || !functionType->getEmptyShape(cx, &FunctionClass, gc::FINALIZE_OBJECT0))
+            return NULL;
     }
 
     /* Create the Object function now that we have a [[Prototype]] for it. */
@@ -208,9 +213,9 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 
     /* Add the global Function and Object properties now. */
     if (!addDataProperty(cx, objectId, JSProto_Object + JSProto_LIMIT * 2, 0))
-        return false;
+        return NULL;
     if (!addDataProperty(cx, functionId, JSProto_Function + JSProto_LIMIT * 2, 0))
-        return false;
+        return NULL;
 
     /* Heavy lifting done, but lingering tasks remain. */
 
@@ -263,7 +268,7 @@ GlobalObject::create(JSContext *cx, Class *clasp)
         return NULL;
 
     /* Construct a regexp statics object for this global object. */
-    JSObject *res = regexp_statics_construct(cx, globalObj);
+    JSObject *res = RegExpStatics::create(cx, globalObj);
     if (!res)
         return NULL;
     globalObj->setSlot(REGEXP_STATICS, ObjectValue(*res));
@@ -314,7 +319,7 @@ GlobalObject::clear(JSContext *cx)
         setSlot(key, UndefinedValue());
 
     /* Clear regexp statics. */
-    RegExpStatics::extractFrom(this)->clear();
+    getRegExpStatics()->clear();
 
     /* Clear the runtime-codegen-enabled cache. */
     setSlot(RUNTIME_CODEGEN_ENABLED, UndefinedValue());

@@ -9,7 +9,7 @@
  */
 
 
-/*!\file vpx_image.h
+/*!\file
  * \brief Describes the vpx image descriptor and associated operations
  *
  */
@@ -33,7 +33,7 @@ extern "C" {
 
 #define VPX_IMG_FMT_PLANAR     0x100  /**< Image is a planar format */
 #define VPX_IMG_FMT_UV_FLIP    0x200  /**< V plane precedes U plane in memory */
-#define VPX_IMG_FMT_HAS_ALPHA  0x400  /**< Image has an alpha channel componnent */
+#define VPX_IMG_FMT_HAS_ALPHA  0x400  /**< Image has an alpha channel component */
 
 
     /*!\brief List of supported image formats */
@@ -115,7 +115,7 @@ extern "C" {
 #define VPX_PLANE_Y      0   /**< Y (Luminance) plane */
 #define VPX_PLANE_U      1   /**< U (Chroma) plane */
 #define VPX_PLANE_V      2   /**< V (Chroma) plane */
-#define VPX_PLANE_ALPHA  3   /**< A (Transparancy) plane */
+#define VPX_PLANE_ALPHA  3   /**< A (Transparency) plane */
 #if !defined(VPX_CODEC_DISABLE_COMPAT) || !VPX_CODEC_DISABLE_COMPAT
 #define PLANE_PACKED     VPX_PLANE_PACKED
 #define PLANE_Y          VPX_PLANE_Y

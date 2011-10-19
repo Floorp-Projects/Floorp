@@ -244,10 +244,10 @@ public:
         : nsXULPrototypeNode(eType_Element),
           mNumAttributes(0),
           mAttributes(nsnull),
-          mHasIdAttribute(PR_FALSE),
-          mHasClassAttribute(PR_FALSE),
-          mHasStyleAttribute(PR_FALSE),
-          mHoldsScriptObject(PR_FALSE),
+          mHasIdAttribute(false),
+          mHasClassAttribute(false),
+          mHasStyleAttribute(false),
+          mHoldsScriptObject(false),
           mScriptTypeID(nsIProgrammingLanguage::UNKNOWN)
     {
     }

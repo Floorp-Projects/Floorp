@@ -176,7 +176,7 @@ public:
                 nsCRT::free(str);
             }
         }
-        gDone = PR_TRUE;
+        gDone = true;
         return NS_OK;
     }
 

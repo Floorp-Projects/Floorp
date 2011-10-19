@@ -59,7 +59,7 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
   HRESULT result;
   nsAutoTArray<SCRIPT_ITEM, 64> items;
 
-  memset(aBreakBefore, PR_FALSE, aLength);
+  memset(aBreakBefore, false, aLength);
 
   if (!items.AppendElements(64))
     return;

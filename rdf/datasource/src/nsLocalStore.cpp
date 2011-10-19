@@ -346,15 +346,15 @@ LocalStoreImpl::Init()
     mRDFService = do_GetService(NS_RDF_CONTRACTID "/rdf-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
-    mRDFService->RegisterDataSource(this, PR_FALSE);
+    mRDFService->RegisterDataSource(this, false);
 
     // Register as an observer of profile changes
     nsCOMPtr<nsIObserverService> obs =
         do_GetService("@mozilla.org/observer-service;1");
 
     if (obs) {
-        obs->AddObserver(this, "profile-before-change", PR_TRUE);
-        obs->AddObserver(this, "profile-do-change", PR_TRUE);
+        obs->AddObserver(this, "profile-before-change", true);
+        obs->AddObserver(this, "profile-do-change", true);
     }
 
     return NS_OK;
@@ -435,15 +435,15 @@ LocalStoreImpl::LoadData()
     if (NS_FAILED(rv)) return rv;
 
     // Read the datasource synchronously.
-    rv = remote->Refresh(PR_TRUE);
+    rv = remote->Refresh(true);
     
     if (NS_FAILED(rv)) {
         // Load failed, delete and recreate a fresh localstore
-        aFile->Remove(PR_TRUE);
+        aFile->Remove(true);
         rv = CreateLocalStore(aFile);
         if (NS_FAILED(rv)) return rv;
         
-        rv = remote->Refresh(PR_TRUE);
+        rv = remote->Refresh(true);
     }
 
     return rv;
@@ -478,7 +478,7 @@ LocalStoreImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                  nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                  bool* aResult)
 {
-    *aResult = PR_TRUE;
+    *aResult = true;
     return NS_OK;
 }
 
@@ -512,7 +512,7 @@ LocalStoreImpl::Observe(nsISupports *aSubject, const char *aTopic, const PRUnich
             nsCOMPtr<nsIFile> aFile;
             rv = NS_GetSpecialDirectory(NS_APP_LOCALSTORE_50_FILE, getter_AddRefs(aFile));
             if (NS_SUCCEEDED(rv))
-                rv = aFile->Remove(PR_FALSE);
+                rv = aFile->Remove(false);
         }
     }
     else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {

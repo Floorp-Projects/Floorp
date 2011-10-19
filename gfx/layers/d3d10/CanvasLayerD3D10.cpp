@@ -61,14 +61,14 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     mSurface = aData.mSurface;
     NS_ASSERTION(aData.mGLContext == nsnull && !aData.mDrawTarget,
                  "CanvasLayer can't have both surface and GLContext/DrawTarget");
-    mNeedsYFlip = PR_FALSE;
-    mDataIsPremultiplied = PR_TRUE;
+    mNeedsYFlip = false;
+    mDataIsPremultiplied = true;
   } else if (aData.mGLContext) {
     NS_ASSERTION(aData.mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
     mGLContext = aData.mGLContext;
     mCanvasFramebuffer = mGLContext->GetOffscreenFBO();
     mDataIsPremultiplied = aData.mGLBufferIsPremultiplied;
-    mNeedsYFlip = PR_TRUE;
+    mNeedsYFlip = true;
   } else if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
     void *texture = mDrawTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE);
@@ -84,8 +84,8 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     NS_ASSERTION(aData.mGLContext == nsnull && aData.mSurface == nsnull,
                  "CanvasLayer can't have both surface and GLContext/Surface");
 
-    mNeedsYFlip = PR_FALSE;
-    mDataIsPremultiplied = PR_TRUE;
+    mNeedsYFlip = false;
+    mDataIsPremultiplied = true;
 
     mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
     device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
@@ -100,7 +100,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     void *data = mSurface->GetData(&gKeyD3D10Texture);
     if (data) {
       mTexture = static_cast<ID3D10Texture2D*>(data);
-      mIsD2DTexture = PR_TRUE;
+      mIsD2DTexture = true;
       device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
       mHasAlpha =
         mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
@@ -108,18 +108,18 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     }
   }
 
-  mIsD2DTexture = PR_FALSE;
-  mUsingSharedTexture = PR_FALSE;
+  mIsD2DTexture = false;
+  mUsingSharedTexture = false;
 
   HANDLE shareHandle = mGLContext ? mGLContext->GetD3DShareHandle() : nsnull;
   if (shareHandle) {
     HRESULT hr = device()->OpenSharedResource(shareHandle, __uuidof(ID3D10Texture2D), getter_AddRefs(mTexture));
     if (SUCCEEDED(hr))
-      mUsingSharedTexture = PR_TRUE;
+      mUsingSharedTexture = true;
   }
 
   if (mUsingSharedTexture) {
-    mNeedsYFlip = PR_FALSE;
+    mNeedsYFlip = false;
   } else {
     CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, mBounds.width, mBounds.height, 1, 1);
     desc.Usage = D3D10_USAGE_DYNAMIC;
@@ -140,7 +140,7 @@ CanvasLayerD3D10::UpdateSurface()
 {
   if (!mDirty)
     return;
-  mDirty = PR_FALSE;
+  mDirty = false;
 
   if (mDrawTarget) {
     mDrawTarget->Flush();
@@ -178,6 +178,8 @@ CanvasLayerD3D10::UpdateSurface()
     } else {
       destination = (PRUint8*)map.pData;
     }
+
+    mGLContext->MakeCurrent();
 
     // We have to flush to ensure that any buffered GL operations are
     // in the framebuffer before we read.

@@ -181,7 +181,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
 
     aStatus = NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
       NS_INLINE_MAKE_BREAK_TYPE(breakType);
-    ll->SetLineEndsInBR(PR_TRUE);
+    ll->SetLineEndsInBR(true);
   }
   else {
     aStatus = NS_FRAME_COMPLETE;
@@ -253,7 +253,7 @@ nsIFrame::ContentOffsets BRFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoin
   if (offsets.content) {
     offsets.offset = offsets.content->IndexOf(mContent);
     offsets.secondaryOffset = offsets.offset;
-    offsets.associateWithNext = PR_TRUE;
+    offsets.associateWithNext = true;
   }
   return offsets;
 }
@@ -266,7 +266,7 @@ BRFrame::PeekOffsetNoAmount(bool aForward, PRInt32* aOffset)
   // If we hit the end of a BR going backwards, go to its beginning and stay there.
   if (!aForward && startOffset != 0) {
     *aOffset = 0;
-    return PR_TRUE;
+    return true;
   }
   // Otherwise, stop if we hit the beginning, continue (forward) if we hit the end.
   return (startOffset == 0);
@@ -278,7 +278,7 @@ BRFrame::PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   // Keep going. The actual line jumping will stop us.
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -287,7 +287,7 @@ BRFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboar
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   // Keep going. The actual line jumping will stop us.
-  return PR_FALSE;
+  return false;
 }
 
 #ifdef ACCESSIBILITY

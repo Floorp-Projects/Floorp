@@ -41,7 +41,7 @@
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsLayoutUtils.h"
 

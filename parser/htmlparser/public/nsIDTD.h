@@ -129,7 +129,7 @@ public:
      * @update  gess 3/25/98
      * @param   aParent -- int tag of parent container
      * @param   aChild -- int tag of child container
-     * @return PR_TRUE if parent can contain child
+     * @return true if parent can contain child
      */
     NS_IMETHOD_(bool) CanContain(PRInt32 aParent,PRInt32 aChild) const = 0;
 
@@ -139,7 +139,7 @@ public:
      *
      * @update  gess 3/25/98
      * @param   aTag -- tag to test for containership
-     * @return  PR_TRUE if given tag can contain other tags
+     * @return  true if given tag can contain other tags
      */
     NS_IMETHOD_(bool) IsContainer(PRInt32 aTag) const = 0;
 

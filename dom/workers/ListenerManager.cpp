@@ -40,7 +40,7 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsvector.h"
+#include "js/Vector.h"
 
 #include "Events.h"
 

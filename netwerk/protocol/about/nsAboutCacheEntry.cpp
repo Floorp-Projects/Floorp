@@ -212,10 +212,10 @@ nsAboutCacheEntry::OpenCacheEntry(nsIURI *uri, nsICacheEntryDescriptor **result)
                              getter_AddRefs(session));
     if (NS_FAILED(rv)) return rv;
 
-    rv = session->SetDoomEntriesIfExpired(PR_FALSE);
+    rv = session->SetDoomEntriesIfExpired(false);
     if (NS_FAILED(rv)) return rv;
 
-    rv = session->OpenCacheEntry(key, nsICache::ACCESS_READ, PR_FALSE, result);
+    rv = session->OpenCacheEntry(key, nsICache::ACCESS_READ, false, result);
     return rv;
 }
 
@@ -495,6 +495,6 @@ nsAboutCacheEntry::VisitMetaDataElement(const char * key,
     mBuffer->AppendLiteral("</td>\n"
                            "  </tr>\n");
 
-    *keepGoing = PR_TRUE;
+    *keepGoing = true;
     return NS_OK;
 }

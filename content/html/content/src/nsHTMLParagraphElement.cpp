@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "mozilla/Util.h"
+
 #include "nsIDOMHTMLParagraphElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
@@ -42,8 +45,9 @@
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
 
-// XXX missing nav attributes
+using namespace mozilla;
 
+// XXX missing nav attributes
 
 class nsHTMLParagraphElement : public nsGenericHTMLElement,
                                public nsIDOMHTMLParagraphElement
@@ -142,7 +146,7 @@ nsHTMLParagraphElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sCommonAttributeMap,
   };
 
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
 }
 
 

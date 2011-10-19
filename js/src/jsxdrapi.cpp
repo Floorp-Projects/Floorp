@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "jsversion.h"
 
 #if JS_HAS_XDR
@@ -58,6 +60,7 @@
 
 #include "jsobjinlines.h"
 
+using namespace mozilla;
 using namespace js;
 
 #ifdef DEBUG
@@ -641,7 +644,7 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
         return JS_FALSE;
     atom = NULL;
     cx = xdr->cx;
-    if (nchars <= JS_ARRAY_LENGTH(stackChars)) {
+    if (nchars <= ArrayLength(stackChars)) {
         chars = stackChars;
     } else {
         /*
@@ -718,10 +721,11 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
+        JS_ASSERT(!script->compileAndGo);
         if (!js_NewScriptObject(xdr->cx, script))
             return false;
         js_CallNewScriptHook(xdr->cx, script, NULL);
-        Debugger::onNewScript(xdr->cx, script, script->u.object, Debugger::NewHeldScript);
+        Debugger::onNewScript(xdr->cx, script, script->u.object, NULL);
         *scriptp = script;
     }
 

@@ -428,8 +428,8 @@ NS_NewRDFXMLDataSource(nsIRDFDataSource** aResult)
 
 
 RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
-    : mIsWritable(PR_TRUE),
-      mIsDirty(PR_FALSE),
+    : mIsWritable(true),
+      mIsDirty(false),
       mLoadState(eLoadState_Unloaded)
 {
 #ifdef PR_LOGGING
@@ -618,10 +618,10 @@ RDFXMLDataSourceImpl::Init(const char* uri)
     // others are considered read-only.
     if ((PL_strncmp(uri, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0) &&
         (PL_strncmp(uri, kResourceURIPrefix, sizeof(kResourceURIPrefix) - 1) != 0)) {
-        mIsWritable = PR_FALSE;
+        mIsWritable = false;
     }
 
-    rv = gRDFService->RegisterDataSource(this, PR_FALSE);
+    rv = gRDFService->RegisterDataSource(this, false);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -687,7 +687,7 @@ RDFXMLDataSourceImpl::Assert(nsIRDFResource* aSource,
         rv = mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
 
         if (rv == NS_RDF_ASSERTION_ACCEPTED)
-            mIsDirty = PR_TRUE;
+            mIsDirty = true;
 
         return rv;
     }
@@ -709,7 +709,7 @@ RDFXMLDataSourceImpl::Unassert(nsIRDFResource* source,
     if (IsLoading() || mIsWritable) {
         rv = mInner->Unassert(source, property, target);
         if (!IsLoading() && rv == NS_RDF_ASSERTION_ACCEPTED)
-            mIsDirty = PR_TRUE;
+            mIsDirty = true;
     }
     else {
         rv = NS_RDF_ASSERTION_REJECTED;
@@ -730,7 +730,7 @@ RDFXMLDataSourceImpl::Change(nsIRDFResource* aSource,
         rv = mInner->Change(aSource, aProperty, aOldTarget, aNewTarget);
 
         if (!IsLoading() && rv == NS_RDF_ASSERTION_ACCEPTED)
-            mIsDirty = PR_TRUE;
+            mIsDirty = true;
     }
     else {
         rv = NS_RDF_ASSERTION_REJECTED;
@@ -750,7 +750,7 @@ RDFXMLDataSourceImpl::Move(nsIRDFResource* aOldSource,
     if (IsLoading() || mIsWritable) {
         rv = mInner->Move(aOldSource, aNewSource, aProperty, aTarget);
         if (!IsLoading() && rv == NS_RDF_ASSERTION_ACCEPTED)
-            mIsDirty = PR_TRUE;
+            mIsDirty = true;
     }
     else {
         rv = NS_RDF_ASSERTION_REJECTED;
@@ -865,7 +865,7 @@ RDFXMLDataSourceImpl::Flush(void)
     nsresult rv;
     if (NS_SUCCEEDED(rv = rdfXMLFlush(mURL)))
     {
-      mIsDirty = PR_FALSE;
+      mIsDirty = false;
     }
     return rv;
 }
@@ -888,7 +888,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::SetReadOnly(bool aIsReadOnly)
 {
     if (mIsWritable && aIsReadOnly)
-        mIsWritable = PR_FALSE;
+        mIsWritable = false;
 
     return NS_OK;
 }
@@ -920,9 +920,9 @@ RDFXMLDataSourceImpl::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 
     NS_ENSURE_STATE(oldPrincipal && newURI && newOriginalURI);
 
-    rv = oldPrincipal->CheckMayLoad(newURI, PR_FALSE);
+    rv = oldPrincipal->CheckMayLoad(newURI, false);
     if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
-        rv = oldPrincipal->CheckMayLoad(newOriginalURI, PR_FALSE);
+        rv = oldPrincipal->CheckMayLoad(newOriginalURI, false);
     }
 
     if (NS_FAILED(rv))

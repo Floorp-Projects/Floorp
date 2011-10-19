@@ -96,7 +96,7 @@ nsMathMLTokenFrame::GetMathMLFrameType()
   }
   else if(style.EqualsLiteral("invariant")) {
     nsAutoString data;
-    nsContentUtils::GetNodeTextContent(mContent, PR_FALSE, data);
+    nsContentUtils::GetNodeTextContent(mContent, false, data);
     eMATHVARIANT variant = nsMathMLOperators::LookupInvariantChar(data);
 
     switch (variant) {
@@ -124,7 +124,7 @@ CompressWhitespace(nsIContent* aContent)
       nsAutoString text;
       cont->AppendTextTo(text);
       text.CompressWhitespace();
-      cont->SetText(text, PR_FALSE); // not meant to be used if notify is needed
+      cont->SetText(text, false); // not meant to be used if notify is needed
     }
   }
 }
@@ -152,7 +152,7 @@ nsMathMLTokenFrame::SetInitialChildList(ChildListID     aListID,
   if (NS_FAILED(rv))
     return rv;
 
-  SetQuotes(PR_FALSE);
+  SetQuotes(false);
   ProcessTextData();
   return rv;
 }
@@ -268,7 +268,7 @@ nsMathMLTokenFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (nsGkAtoms::lquote_ == aAttribute ||
       nsGkAtoms::rquote_ == aAttribute) {
-    SetQuotes(PR_TRUE);
+    SetQuotes(true);
   }
 
   return nsMathMLContainerFrame::
@@ -290,7 +290,7 @@ nsMathMLTokenFrame::ProcessTextData()
 ///////////////////////////////////////////////////////////////////////////
 // For <mi>, if the content is not a single character, turn the font to
 // normal (this function will also query attributes from the mstyle hierarchy)
-// Returns PR_TRUE if there is a style change.
+// Returns true if there is a style change.
 //
 // http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.commatt
 //
@@ -318,17 +318,17 @@ bool
 nsMathMLTokenFrame::SetTextStyle()
 {
   if (mContent->Tag() != nsGkAtoms::mi_)
-    return PR_FALSE;
+    return false;
 
   if (!mFrames.FirstChild())
-    return PR_FALSE;
+    return false;
 
   // Get the text content that we enclose and its length
   nsAutoString data;
-  nsContentUtils::GetNodeTextContent(mContent, PR_FALSE, data);
+  nsContentUtils::GetNodeTextContent(mContent, false, data);
   PRInt32 length = data.Length();
   if (!length)
-    return PR_FALSE;
+    return false;
 
   nsAutoString fontstyle;
   bool isSingleCharacter =
@@ -367,19 +367,19 @@ nsMathMLTokenFrame::SetTextStyle()
   if (fontstyle.IsEmpty()) {
     if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::_moz_math_fontstyle_)) {
       mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_moz_math_fontstyle_,
-                          PR_FALSE);
-      return PR_TRUE;
+                          false);
+      return true;
     }
   }
   else if (!mContent->AttrValueIs(kNameSpaceID_None,
                                   nsGkAtoms::_moz_math_fontstyle_,
                                   fontstyle, eCaseMatters)) {
     mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_math_fontstyle_,
-                      fontstyle, PR_FALSE);
-    return PR_TRUE;
+                      fontstyle, false);
+    return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////

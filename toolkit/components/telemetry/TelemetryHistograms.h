@@ -56,10 +56,24 @@ HISTOGRAM(A11Y_INSTANTIATED, 0, 1, 2, BOOLEAN, "has accessibility support been i
 HISTOGRAM(ISIMPLE_DOM_USAGE, 0, 1, 2, BOOLEAN, "have the ISimpleDOM* accessibility interfaces been used")
 HISTOGRAM(IACCESSIBLE_TABLE_USAGE, 0, 1, 2, BOOLEAN, "has the IAccessibleTable accessibility interface been used")
 
+/**
+ * Cycle collector telemetry
+ */
 HISTOGRAM(CYCLE_COLLECTOR, 1, 10000, 50, EXPONENTIAL, "Time spent on one cycle collection (ms)")
 HISTOGRAM(CYCLE_COLLECTOR_VISITED_REF_COUNTED, 1, 300000, 50, EXPONENTIAL, "Number of ref counted objects visited by the cycle collector")
 HISTOGRAM(CYCLE_COLLECTOR_VISITED_GCED, 1, 300000, 50, EXPONENTIAL, "Number of JS objects visited by the cycle collector")
 HISTOGRAM(CYCLE_COLLECTOR_COLLECTED, 1, 100000, 50, EXPONENTIAL, "Number of objects collected by the cycle collector")
+
+/**
+ * GC telemetry
+ */
+HISTOGRAM(GC_REASON, 0, 20, 20, LINEAR, "Reason (enum value) for initiating a GC")
+HISTOGRAM(GC_IS_COMPARTMENTAL, 0, 1, 2, BOOLEAN, "Is it a compartmental GC?")
+HISTOGRAM(GC_IS_SHAPE_REGEN, 0, 1, 2, BOOLEAN, "Is it a shape regenerating GC?")
+HISTOGRAM(GC_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running JS GC (ms)")
+HISTOGRAM(GC_MARK_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running JS GC mark phase (ms)")
+HISTOGRAM(GC_SWEEP_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running JS GC sweep phase (ms)")
+
 HISTOGRAM(TELEMETRY_PING, 1, 3000, 10, EXPONENTIAL, "Time taken to submit telemetry info (ms)")
 HISTOGRAM(TELEMETRY_SUCCESS, 0, 1, 2, BOOLEAN,  "Successful telemetry submission")
 HISTOGRAM(MEMORY_JS_COMPARTMENTS_SYSTEM, 1, 1000, 50, EXPONENTIAL, "Total JavaScript compartments used for add-ons and internals.")
@@ -142,6 +156,9 @@ HTTP_HISTOGRAMS(SUB, "subitem: ")
 #undef HTTP_HISTOGRAMS
 
 HISTOGRAM(HTTP_CACHE_DISPOSITION, 1, 5, 5, LINEAR, "HTTP Cache Hit, Reval, Failed-Reval, Miss")
+HISTOGRAM(HTTP_DISK_CACHE_DISPOSITION, 1, 5, 5, LINEAR, "HTTP Disk Cache Hit, Reval, Failed-Reval, Miss")
+HISTOGRAM(HTTP_MEMORY_CACHE_DISPOSITION, 1, 5, 5, LINEAR, "HTTP Memory Cache Hit, Reval, Failed-Reval, Miss")
+HISTOGRAM(HTTP_OFFLINE_CACHE_DISPOSITION, 1, 5, 5, LINEAR, "HTTP Offline Cache Hit, Reval, Failed-Reval, Miss")
 
 HISTOGRAM(FIND_PLUGINS, 1, 3000, 10, EXPONENTIAL, "Time spent scanning filesystem for plugins (ms)")
 HISTOGRAM(CHECK_JAVA_ENABLED, 1, 3000, 10, EXPONENTIAL, "Time spent checking if Java is enabled (ms)")
@@ -216,3 +233,5 @@ HISTOGRAM(THUNDERBIRD_GLODA_SIZE_MB, 1, 1000, 40, LINEAR, "Gloda: size of global
 HISTOGRAM(THUNDERBIRD_CONVERSATIONS_TIME_TO_2ND_GLODA_QUERY_MS, 1, 10000, 30, EXPONENTIAL, "Conversations: time between the moment we click and the second gloda query returns (ms)")
 HISTOGRAM(THUNDERBIRD_INDEXING_RATE_MSG_PER_S, 1, 100, 20, LINEAR, "Gloda: indexing rate (message/s)")
 #endif
+
+HISTOGRAM(INNERWINDOWS_WITH_MUTATION_LISTENERS, 0, 1, 2, BOOLEAN, "Deleted or to-be-reused innerwindow which has had mutation event listeners.")

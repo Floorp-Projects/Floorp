@@ -42,9 +42,11 @@
  * JS function support.
  */
 #include <string.h>
+
+#include "mozilla/Util.h"
+
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsbit.h"
 #include "jsutil.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -53,7 +55,6 @@
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
@@ -62,16 +63,17 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jspropertytree.h"
 #include "jsproxy.h"
-#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsexn.h"
-#include "jsstaticcheck.h"
 #include "jstracer.h"
+
+#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeGenerator.h"
+#include "frontend/TokenStream.h"
 #include "vm/CallObject.h"
 #include "vm/Debugger.h"
 
@@ -96,6 +98,7 @@
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/Stack-inl.h"
 
+using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
@@ -1311,7 +1314,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     if (!fp)
         return true;
 
-    while (!fp->isFunctionFrame() || fp->fun() != fun) {
+    while (!fp->isFunctionFrame() || fp->fun() != fun || fp->isEvalFrame()) {
         fp = fp->prev();
         if (!fp)
             return true;
@@ -1379,7 +1382,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
 
 
-/* NB: no sentinels at ends -- use JS_ARRAY_LENGTH to bound loops.
+/* NB: no sentinels at ends -- use ArrayLength to bound loops.
  * Properties censored into [[ThrowTypeError]] in strict mode. */
 static const uint16 poisonPillProps[] = {
     ATOM_OFFSET(arguments),
@@ -1408,7 +1411,7 @@ fun_enumerate(JSContext *cx, JSObject *obj)
     if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
         return false;
 
-    for (uintN i = 0; i < JS_ARRAY_LENGTH(poisonPillProps); i++) {
+    for (uintN i = 0; i < ArrayLength(poisonPillProps); i++) {
         const uint16 offset = poisonPillProps[i];
         id = ATOM_TO_JSID(OFFSET_TO_ATOM(cx->runtime, offset));
         if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
@@ -1513,7 +1516,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         return true;
     }
 
-    for (uintN i = 0; i < JS_ARRAY_LENGTH(poisonPillProps); i++) {
+    for (uintN i = 0; i < ArrayLength(poisonPillProps); i++) {
         const uint16 offset = poisonPillProps[i];
 
         if (JSID_IS_ATOM(id, OFFSET_TO_ATOM(cx->runtime, offset))) {
@@ -1601,15 +1604,14 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
      * Don't directly store into fun->u.i.script because we want this to happen
      * at the same time as we set the script's owner.
      */
-    JSScript *script = fun->u.i.script;
+    JSScript *script = fun->script();
     if (!js_XDRScript(xdr, &script))
         return false;
-    fun->u.i.script = script;
 
     if (xdr->mode == JSXDR_DECODE) {
         *objp = fun;
-        fun->u.i.script->setOwnerObject(fun);
-        if (!fun->u.i.script->typeSetFunction(cx, fun))
+        fun->setScript(script);
+        if (!fun->script()->typeSetFunction(cx, fun))
             return false;
         JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
@@ -2221,27 +2223,22 @@ Function(JSContext *cx, uintN argc, Value *vp)
                 if (tt != TOK_NAME)
                     return OnBadFormal(cx, tt);
 
-                /*
-                 * Get the atom corresponding to the name from the token
-                 * stream; we're assured at this point that it's a valid
-                 * identifier.
-                 */
-                JSAtom *atom = ts.currentToken().t_atom;
-
                 /* Check for a duplicate parameter name. */
-                if (bindings.hasBinding(cx, atom)) {
-                    JSAutoByteString name;
-                    if (!js_AtomToPrintableString(cx, atom, &name))
+                PropertyName *name = ts.currentToken().name();
+                if (bindings.hasBinding(cx, name)) {
+                    JSAutoByteString bytes;
+                    if (!js_AtomToPrintableString(cx, name, &bytes))
                         return false;
                     if (!ReportCompileErrorNumber(cx, &ts, NULL,
                                                   JSREPORT_WARNING | JSREPORT_STRICT,
-                                                  JSMSG_DUPLICATE_FORMAL, name.ptr())) {
+                                                  JSMSG_DUPLICATE_FORMAL, bytes.ptr()))
+                    {
                         return false;
                     }
                 }
 
                 uint16 dummy;
-                if (!bindings.addArgument(cx, atom, &dummy))
+                if (!bindings.addArgument(cx, name, &dummy))
                     return false;
 
                 /*
@@ -2350,7 +2347,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
         fun->u.i.skipmin = 0;
-        fun->u.i.script = NULL;
+        fun->u.i.script_ = NULL;
         fun->setCallScope(parent);
     } else {
         fun->u.n.clasp = NULL;
@@ -2415,18 +2412,17 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JS_ASSERT(script->compartment() != cx->compartment);
             JS_OPT_ASSERT(script->ownerObject == fun);
 
-            clone->u.i.script = NULL;
+            clone->u.i.script_ = NULL;
             JSScript *cscript = js_CloneScript(cx, script);
             if (!cscript)
                 return NULL;
 
-            clone->u.i.script = cscript;
-            if (!clone->u.i.script->typeSetFunction(cx, clone))
+            clone->setScript(cscript);
+            if (!clone->script()->typeSetFunction(cx, clone))
                 return NULL;
 
-            clone->script()->setOwnerObject(clone);
             js_CallNewScriptHook(cx, clone->script(), clone);
-            Debugger::onNewScript(cx, clone->script(), clone, Debugger::NewHeldScript);
+            Debugger::onNewScript(cx, clone->script(), clone, NULL);
         }
     }
     return clone;

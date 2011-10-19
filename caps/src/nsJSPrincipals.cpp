@@ -124,7 +124,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
                 nsJSPrincipals *nsjsprin =
                     static_cast<nsJSPrincipals*>(*jsprinp);
 
-                rv = stream->WriteObject(nsjsprin->nsIPrincipalPtr, PR_TRUE);
+                rv = stream->WriteObject(nsjsprin->nsIPrincipalPtr, true);
             }
         }
     } else {
@@ -133,7 +133,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
             reinterpret_cast<nsIObjectInputStream*>(xdr->userdata);
 
         nsCOMPtr<nsIPrincipal> prin;
-        rv = stream->ReadObject(PR_TRUE, getter_AddRefs(prin));
+        rv = stream->ReadObject(true, getter_AddRefs(prin));
         if (NS_SUCCEEDED(rv)) {
             PRUint32 size;
             rv = stream->Read32(&size);

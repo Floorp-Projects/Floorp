@@ -172,8 +172,8 @@ PendingPACQuery::OnLookupComplete(nsICancelable *request,
 //-----------------------------------------------------------------------------
 
 nsPACMan::nsPACMan()
-  : mLoadPending(PR_FALSE)
-  , mShutdown(PR_FALSE)
+  : mLoadPending(false)
+  , mShutdown(false)
   , mScheduledReload(LL_MAXINT)
   , mLoadFailureCount(0)
 {
@@ -194,7 +194,7 @@ nsPACMan::Shutdown()
   ProcessPendingQ(NS_ERROR_ABORT);
 
   mPAC = nsnull;
-  mShutdown = PR_TRUE;
+  mShutdown = true;
 }
 
 nsresult
@@ -279,7 +279,7 @@ nsPACMan::LoadPACFromURI(nsIURI *pacURI)
     nsresult rv;
     if (NS_FAILED(rv = NS_DispatchToCurrentThread(event)))
       return rv;
-    mLoadPending = PR_TRUE;
+    mLoadPending = true;
   }
 
   CancelExistingLoad();
@@ -297,7 +297,7 @@ nsPACMan::LoadPACFromURI(nsIURI *pacURI)
 void
 nsPACMan::StartLoading()
 {
-  mLoadPending = PR_FALSE;
+  mLoadPending = false;
 
   // CancelExistingLoad was called...
   if (!mLoader) {

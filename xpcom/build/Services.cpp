@@ -84,7 +84,7 @@ using namespace mozilla::services;
 void 
 mozilla::services::Shutdown()
 {
-  gXPCOMShuttingDown = PR_TRUE;
+  gXPCOMShuttingDown = true;
 #define MOZ_SERVICE(NAME, TYPE, CONTRACT_ID) NS_IF_RELEASE(g##NAME);
 #include "ServiceList.h"
 #undef MOZ_SERVICE

@@ -201,7 +201,7 @@ nsHTMLRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
   if (form) {
     form->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(inputs));
   } else {
-    nsIDocument* doc = mContent->GetOwnerDoc();
+    nsIDocument* doc = mContent->OwnerDoc();
     nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(doc));
     if (document)
       document->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(inputs));
@@ -510,6 +510,10 @@ nsHTMLTextFieldAccessible::NativeState()
     state |= states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION;
     return state;
   }
+
+  // Expose autocomplete state if it has associated autocomplete list.
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::list))
+    return state | states::SUPPORTS_AUTOCOMPLETION;
 
   // No parent can mean a fake widget created for XUL textbox. If accessible
   // is unattached from tree then we don't care.

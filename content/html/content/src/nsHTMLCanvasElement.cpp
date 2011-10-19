@@ -75,7 +75,7 @@ NS_NewHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 }
 
 nsHTMLCanvasElement::nsHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo), mWriteOnly(PR_FALSE)
+  : nsGenericHTMLElement(aNodeInfo), mWriteOnly(false)
 {
 }
 
@@ -156,7 +156,7 @@ nsHTMLCanvasElement::CopyInnerTo(nsGenericElement* aDest) const
 {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+  if (aDest->OwnerDoc()->IsStaticDocument()) {
     nsHTMLCanvasElement* dest = static_cast<nsHTMLCanvasElement*>(aDest);
     nsCOMPtr<nsISupports> cxt;
     dest->GetContext(NS_LITERAL_STRING("2d"), JSVAL_VOID, getter_AddRefs(cxt));
@@ -331,7 +331,7 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
                                                     paramString.Length() - 
                                                     mozParseOptions.Length());
       params.Append(parseOptions);
-      usingCustomParseOptions = PR_TRUE;
+      usingCustomParseOptions = true;
     }
   }
 
@@ -518,7 +518,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
           }
 
           if (JSVAL_IS_BOOLEAN(propval)) {
-            contextProps->SetPropertyAsBool(pstr, propval == JSVAL_TRUE ? PR_TRUE : PR_FALSE);
+            contextProps->SetPropertyAsBool(pstr, propval == JSVAL_TRUE ? true : false);
           } else if (JSVAL_IS_INT(propval)) {
             contextProps->SetPropertyAsInt32(pstr, JSVAL_TO_INT(propval));
           } else if (JSVAL_IS_DOUBLE(propval)) {
@@ -541,7 +541,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
     if (NS_FAILED(rv)) {
       if (!forceThebes) {
         // Try again with a Thebes context
-        forceThebes = PR_TRUE;
+        forceThebes = true;
         continue;
       }
       return rv;
@@ -575,13 +575,13 @@ nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
   nsresult rv;
 
   if (mCurrentContextId.IsEmpty()) {
-    rv = GetContextHelper(aContextId, PR_FALSE, getter_AddRefs(mCurrentContext));
+    rv = GetContextHelper(aContextId, false, getter_AddRefs(mCurrentContext));
     NS_ENSURE_SUCCESS(rv, rv);
     if (!mCurrentContext) {
       return NS_OK;
     }
 
-    mCurrentContext->SetIsIPC(PR_TRUE);
+    mCurrentContext->SetIsIPC(true);
 
     rv = UpdateContext();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -650,7 +650,7 @@ nsHTMLCanvasElement::IsWriteOnly()
 void
 nsHTMLCanvasElement::SetWriteOnly()
 {
-  mWriteOnly = PR_TRUE;
+  mWriteOnly = true;
 }
 
 void

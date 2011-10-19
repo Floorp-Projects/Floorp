@@ -42,7 +42,6 @@
 #include "MethodJIT.h"
 #include "jsnum.h"
 #include "jsbool.h"
-#include "jsemit.h"
 #include "jsiter.h"
 #include "Compiler.h"
 #include "StubCalls.h"
@@ -61,8 +60,14 @@
 #include "jsopcodeinlines.h"
 #include "jshotloop.h"
 
+#include "builtin/RegExp.h"
+#include "frontend/BytecodeGenerator.h"
+#include "vm/RegExpStatics.h"
+#include "vm/RegExpObject.h"
+
 #include "jsautooplen.h"
 #include "jstypedarrayinlines.h"
+#include "vm/RegExpObject-inl.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -420,6 +425,8 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
     if (a)
         newa->parentPC = PC;
     newa->script = script;
+    newa->mainCodeStart = masm.size();
+    newa->stubCodeStart = stubcc.size();
 
     if (outer) {
         newa->inlineIndex = uint32(inlineFrames.length());
@@ -429,6 +436,8 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
         outer = newa;
     }
     JS_ASSERT(ssa.getFrame(newa->inlineIndex).script == script);
+
+    newa->inlinePCOffset = ssa.frameLength(newa->inlineIndex);
 
     ScriptAnalysis *newAnalysis = script->analysis();
 
@@ -862,7 +871,7 @@ mjit::Compiler::generatePrologue()
 
     recompileCheckHelper();
 
-    if (outerScript->pcCounters) {
+    if (outerScript->pcCounters || Probes::wantNativeAddressInfo(cx)) {
         size_t length = ssa.frameLength(ssa.numFrames() - 1);
         pcLengths = (PCLengthEntry *) cx->calloc_(sizeof(pcLengths[0]) * length);
         if (!pcLengths)
@@ -1427,48 +1436,102 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     JSC::ExecutableAllocator::makeExecutable(result, masm.size() + stubcc.size());
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
 
+    Probes::registerMJITCode(cx, jit, script, script->hasFunction ? script->function() : NULL,
+                             (mjit::Compiler_ActiveFrame**) inlineFrames.begin(),
+                             result, masm.size(),
+                             result + masm.size(), stubcc.size());
+
     *jitp = jit;
 
     return Compile_Okay;
 }
 
 class SrcNoteLineScanner {
+    /* offset of the current JSOp in the bytecode */
     ptrdiff_t offset;
+
+    /* next src note to process */
     jssrcnote *sn;
 
+    /* line number of the current JSOp */
+    uint32 lineno;
+
+    /*
+     * Is the current op the first one after a line change directive? Note that
+     * multiple ops may be "first" if a line directive is used to return to a
+     * previous line (eg, with a for loop increment expression.)
+     */
+    bool lineHeader;
+
 public:
-    SrcNoteLineScanner(jssrcnote *sn) : offset(SN_DELTA(sn)), sn(sn) {}
-
-    bool firstOpInLine(ptrdiff_t relpc) {
-        while ((offset < relpc) && !SN_IS_TERMINATOR(sn)) {
-            sn = SN_NEXT(sn);
-            offset += SN_DELTA(sn);
-        }
-
-        while ((offset == relpc) && !SN_IS_TERMINATOR(sn)) {
-            JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
-            if (type == SRC_SETLINE || type == SRC_NEWLINE)
-                return true;
-
-            sn = SN_NEXT(sn);
-            offset += SN_DELTA(sn);
-        }
-
-        return false;
+    SrcNoteLineScanner(jssrcnote *sn, uint32 lineno)
+        : offset(0), sn(sn), lineno(lineno)
+    {
     }
+
+    /*
+     * This is called repeatedly with always-advancing relpc values. The src
+     * notes are tuples of <PC offset from prev src note, type, args>. Scan
+     * through, updating the lineno, until the next src note is for a later
+     * bytecode.
+     *
+     * When looking at the desired PC offset ('relpc'), the op is first in that
+     * line iff there is a SRC_SETLINE or SRC_NEWLINE src note for that exact
+     * bytecode.
+     *
+     * Note that a single bytecode may have multiple line-modifying notes (even
+     * though only one should ever be needed.)
+     */
+    void advanceTo(ptrdiff_t relpc) {
+        // Must always advance! If the same or an earlier PC is erroneously
+        // passed in, we will already be past the relevant src notes
+        JS_ASSERT_IF(offset > 0, relpc > offset);
+
+        // Next src note should be for after the current offset
+        JS_ASSERT_IF(offset > 0, SN_IS_TERMINATOR(sn) || SN_DELTA(sn) > 0);
+
+        // The first PC requested is always considered to be a line header
+        lineHeader = (offset == 0);
+
+        if (SN_IS_TERMINATOR(sn))
+            return;
+
+        ptrdiff_t nextOffset;
+        while ((nextOffset = offset + SN_DELTA(sn)) <= relpc && !SN_IS_TERMINATOR(sn)) {
+            offset = nextOffset;
+            JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+            if (type == SRC_SETLINE || type == SRC_NEWLINE) {
+                if (type == SRC_SETLINE)
+                    lineno = js_GetSrcNoteOffset(sn, 0);
+                else
+                    lineno++;
+
+                if (offset == relpc)
+                    lineHeader = true;
+            }
+
+            sn = SN_NEXT(sn);
+        }
+    }
+
+    bool isLineHeader() const {
+        return lineHeader;
+    }
+
+    uint32 getLine() const { return lineno; }
 };
 
 #ifdef DEBUG
 #define SPEW_OPCODE()                                                         \
     JS_BEGIN_MACRO                                                            \
         if (IsJaegerSpewChannelActive(JSpew_JSOps)) {                         \
-            JaegerSpew(JSpew_JSOps, "    %2d ", frame.stackDepth());          \
             LifoAllocScope las(&cx->tempLifoAlloc());                         \
             Sprinter sprinter;                                                \
             INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);            \
             js_Disassemble1(cx, script, PC, PC - script->code,                \
                             JS_TRUE, &sprinter);                              \
-            fprintf(stdout, "%s", sprinter.base);                             \
+            JaegerSpew(JSpew_JSOps, "    %2d %s",                             \
+                       frame.stackDepth(), sprinter.base);                    \
         }                                                                     \
     JS_END_MACRO;
 #else
@@ -1493,7 +1556,7 @@ CompileStatus
 mjit::Compiler::generateMethod()
 {
     mjit::AutoScriptRetrapper trapper(cx, script);
-    SrcNoteLineScanner scanner(script->notes());
+    SrcNoteLineScanner scanner(script->notes(), script->lineno);
 
     /* For join points, whether there was fallthrough from the previous opcode. */
     bool fallthrough = true;
@@ -1510,8 +1573,6 @@ mjit::Compiler::generateMethod()
             op = JSOp(*PC);
             trap |= stubs::JSTRAP_TRAP;
         }
-        if (script->stepModeEnabled() && scanner.firstOpInLine(PC - script->code))
-            trap |= stubs::JSTRAP_SINGLESTEP;
 
         Bytecode *opinfo = analysis->maybeCode(PC);
 
@@ -1523,6 +1584,13 @@ mjit::Compiler::generateMethod()
             else
                 PC += js_GetVariableBytecodeLength(PC);
             continue;
+        }
+
+        scanner.advanceTo(PC - script->code);
+        if (script->stepModeEnabled() &&
+            (scanner.isLineHeader() || opinfo->jumpTarget))
+        {
+            trap |= stubs::JSTRAP_SINGLESTEP;
         }
 
         frame.setPC(PC);
@@ -1569,7 +1637,7 @@ mjit::Compiler::generateMethod()
                     Label start = masm.label();
                     if (!frame.syncForBranch(PC, Uses(0)))
                         return Compile_Error;
-                    if (script->pcCounters) {
+                    if (pcLengths) {
                         /* Track this sync code for the previous op. */
                         size_t length = masm.size() - masm.distanceOf(start);
                         uint32 offset = ssa.frameLength(a->inlineIndex) + lastPC - script->code;
@@ -1588,6 +1656,8 @@ mjit::Compiler::generateMethod()
                 /* All join points have synced state if we aren't doing cross-branch regalloc. */
                 opinfo->safePoint = true;
             }
+        } else if (opinfo->safePoint && !cx->typeInferenceEnabled()) {
+            frame.syncAndForgetEverything();
         }
         frame.assertValidRegisterState();
         a->jumpMap[uint32(PC - script->code)] = masm.label();
@@ -2655,14 +2725,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_SETGNAME)
 
           BEGIN_CASE(JSOP_REGEXP)
-          {
-            JSObject *regex = script->getRegExp(fullAtomIndex(PC));
-            prepareStubCall(Uses(0));
-            masm.move(ImmPtr(regex), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::RegExp, REJOIN_PUSH_OBJECT);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-          }
+            if (!jsop_regexp())
+                return Compile_Error;
           END_CASE(JSOP_REGEXP)
 
           BEGIN_CASE(JSOP_OBJECT)
@@ -2790,15 +2854,17 @@ mjit::Compiler::generateMethod()
             }
         }
 
-        if (script->pcCounters) {
+        if (script->pcCounters || pcLengths) {
             size_t length = masm.size() - masm.distanceOf(codeStart);
             if (countersUpdated || length != 0) {
-                if (!countersUpdated)
+                if (!countersUpdated && script->pcCounters)
                     updatePCCounters(lastPC, &codeStart, &countersUpdated);
 
-                /* Fill in the amount of inline code generated for the op. */
-                uint32 offset = ssa.frameLength(a->inlineIndex) + lastPC - script->code;
-                pcLengths[offset].codeLength += length;
+                if (pcLengths) {
+                    /* Fill in the amount of inline code generated for the op. */
+                    uint32 offset = ssa.frameLength(a->inlineIndex) + lastPC - script->code;
+                    pcLengths[offset].codeLength += length;
+                }
             }
         }
 
@@ -4317,8 +4383,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
             }
             RegisterID reg = frame.copyDataIntoReg(top);
             frame.pop();
-            frame.pushWord(Address(reg, TypedArray::lengthOffset()), JSVAL_TYPE_INT32);
-            frame.freeReg(reg);
+            masm.loadPayload(Address(reg, TypedArray::lengthOffset()), reg);
+            frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
             if (!isObject)
                 stubcc.rejoin(Changes(1));
             return true;
@@ -4804,14 +4870,14 @@ mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
     while (nobj) {
         if (!nobj->isNative())
             return false;
-        if (nobj->getClass()->ops.lookupProperty)
+        if (nobj->getClass()->ops.lookupGeneric)
             return false;
         nobj = nobj->getProto();
     }
 
     JSObject *holder;
     JSProperty *prop = NULL;
-    if (!obj->lookupProperty(cx, id, &holder, &prop))
+    if (!obj->lookupGeneric(cx, id, &holder, &prop))
         return false;
     if (!prop)
         return false;
@@ -6433,7 +6499,7 @@ mjit::Compiler::jsop_newinit()
     void *stub, *stubArg;
     if (isArray) {
         stub = JS_FUNC_TO_DATA_PTR(void *, stubs::NewInitArray);
-        stubArg = (void *) count;
+        stubArg = (void *) uintptr_t(count);
     } else {
         stub = JS_FUNC_TO_DATA_PTR(void *, stubs::NewInitObject);
         stubArg = (void *) baseobj;
@@ -6496,6 +6562,96 @@ mjit::Compiler::jsop_newinit()
     frame.extra(frame.peek(-1)).initArray = (*PC == JSOP_NEWARRAY);
     frame.extra(frame.peek(-1)).initObject = baseobj;
 
+    return true;
+}
+
+bool
+mjit::Compiler::jsop_regexp()
+{
+    JSObject *obj = script->getRegExp(fullAtomIndex(PC));
+    RegExpStatics *res = globalObj ? globalObj->getRegExpStatics() : NULL;
+
+    if (!globalObj ||
+        !cx->typeInferenceEnabled() ||
+        analysis->localsAliasStack() ||
+        types::TypeSet::HasObjectFlags(cx, globalObj->getType(cx),
+                                       types::OBJECT_FLAG_REGEXP_FLAGS_SET)) {
+        prepareStubCall(Uses(0));
+        masm.move(ImmPtr(obj), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::RegExp, REJOIN_FALLTHROUGH);
+        frame.pushSynced(JSVAL_TYPE_OBJECT);
+        return true;
+    }
+
+    RegExpObject *reobj = obj->asRegExp();
+
+    DebugOnly<uint32> origFlags = reobj->getFlags();
+    DebugOnly<uint32> staticsFlags = res->getFlags();
+    JS_ASSERT((origFlags & staticsFlags) == staticsFlags);
+
+    /*
+     * JS semantics require regular expression literals to create different
+     * objects every time they execute. We only need to do this cloning if the
+     * script could actually observe the effect of such cloning, by getting
+     * or setting properties on it. Particular RegExp and String natives take
+     * regular expressions as 'this' or an argument, and do not let that
+     * expression escape and be accessed by the script, so avoid cloning in
+     * these cases.
+     */
+    analyze::SSAUseChain *uses =
+        analysis->useChain(analyze::SSAValue::PushedValue(PC - script->code, 0));
+    if (uses && uses->popped && !uses->next) {
+        jsbytecode *use = script->code + uses->offset;
+        uint32 which = uses->u.which;
+        if (JSOp(*use) == JSOP_CALLPROP) {
+            JSObject *callee = analysis->pushedTypes(use, 0)->getSingleton(cx);
+            if (callee && callee->isFunction()) {
+                Native native = callee->toFunction()->maybeNative();
+                if (native == js::regexp_exec || native == js::regexp_test) {
+                    frame.push(ObjectValue(*obj));
+                    return true;
+                }
+            }
+        } else if (JSOp(*use) == JSOP_CALL && which == 0) {
+            uint32 argc = GET_ARGC(use);
+            JSObject *callee = analysis->poppedTypes(use, argc + 1)->getSingleton(cx);
+            if (callee && callee->isFunction() && argc >= 1 && which == argc - 1) {
+                Native native = callee->toFunction()->maybeNative();
+                if (native == js::str_match ||
+                    native == js::str_search ||
+                    native == js::str_replace ||
+                    native == js::str_split) {
+                    frame.push(ObjectValue(*obj));
+                    return true;
+                }
+            }
+        }
+    }
+
+    /*
+     * Force creation of the RegExpPrivate in the script's RegExpObject so we take it in the
+     * getNewObject template copy.
+     */
+    RegExpPrivate *rep = reobj->getOrCreatePrivate(cx);
+    if (!rep)
+        return false;
+
+    RegisterID result = frame.allocReg();
+    Jump emptyFreeList = masm.getNewObject(cx, result, obj);
+
+    stubcc.linkExit(emptyFreeList, Uses(0));
+    stubcc.leave();
+
+    stubcc.masm.move(ImmPtr(obj), Registers::ArgReg1);
+    OOL_STUBCALL(stubs::RegExp, REJOIN_FALLTHROUGH);
+
+    /* Bump the refcount on the wrapped RegExp. */
+    size_t *refcount = rep->addressOfRefCount();
+    masm.add32(Imm32(1), AbsoluteAddress(refcount));
+
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, result);
+
+    stubcc.rejoin(Changes(1));
     return true;
 }
 
@@ -6709,7 +6865,7 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
                     return false;
                 if (trampoline)
                     *trampoline = true;
-                if (script->pcCounters) {
+                if (pcLengths) {
                     /*
                      * This is OOL code but will usually be executed, so track
                      * it in the CODE_LENGTH for the opcode.
@@ -7532,7 +7688,7 @@ mjit::Compiler::finishBarrier(const BarrierState &barrier, RejoinState rejoin, u
     stubcc.syncExit(Uses(0));
     stubcc.leave();
 
-    stubcc.masm.move(ImmPtr((void *) which), Registers::ArgReg1);
+    stubcc.masm.move(ImmIntPtr(intptr_t(which)), Registers::ArgReg1);
     OOL_STUBCALL(stubs::TypeBarrierHelper, rejoin);
     stubcc.rejoin(Changes(0));
 }

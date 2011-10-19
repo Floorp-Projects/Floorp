@@ -48,12 +48,11 @@ public:
   void Init(PRUint8 aAttrEnum = 0xff, bool aValue = false) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
-    mIsAnimated = PR_FALSE;
+    mIsAnimated = false;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue);
 
   void SetBaseValue(bool aValue, nsSVGElement *aSVGElement);

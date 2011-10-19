@@ -76,9 +76,9 @@ bool NS_IsNativeUTF8();
 inline bool NS_IsNativeUTF8()
 {
 #if defined(XP_MACOSX) || defined(ANDROID)
-    return PR_TRUE;
+    return true;
 #else
-    return PR_FALSE;
+    return false;
 #endif
 }
 #endif

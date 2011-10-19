@@ -327,7 +327,7 @@ public:
 
     // It is possible this has already been canceled
     if (!aChannel->mOpenRunning)
-      return PR_FALSE;
+      return false;
 
     PRInt32 index = IndexOf(aChannel);
     NS_ABORT_IF_FALSE(index >= 0, "completed connection not in open list");
@@ -360,7 +360,7 @@ public:
     if (wasRunning)
       return ConnectNext(aChannel->mAddress);
 
-    return PR_FALSE;
+    return false;
   }
 
   bool ConnectNext(nsCString &hostName)
@@ -376,10 +376,10 @@ public:
       chan->mOpenBlocked = 0;
       chan->mOpenRunning = 1;
       chan->BeginOpen();
-      return PR_TRUE;
+      return true;
     }
 
-    return PR_FALSE;
+    return false;
   }
 
   void IncrementConnectedCount()
@@ -431,7 +431,7 @@ class nsWSCompression
 public:
   nsWSCompression(nsIStreamListener *aListener,
                   nsISupports *aContext)
-    : mActive(PR_FALSE),
+    : mActive(false),
       mContext(aContext),
       mListener(aListener)
   {
@@ -452,7 +452,7 @@ public:
     if (NS_SUCCEEDED(rv) && aContext && aListener &&
       deflateInit2(&mZlib, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -15, 8,
                    Z_DEFAULT_STRATEGY) == Z_OK) {
-      mActive = PR_TRUE;
+      mActive = true;
     }
   }
 
@@ -620,30 +620,30 @@ WebSocketChannel::~WebSocketChannel()
 
   if (mURI) {
     mURI.forget(&forgettable);
-    NS_ProxyRelease(mainThread, forgettable, PR_FALSE);
+    NS_ProxyRelease(mainThread, forgettable, false);
   }
 
   if (mOriginalURI) {
     mOriginalURI.forget(&forgettable);
-    NS_ProxyRelease(mainThread, forgettable, PR_FALSE);
+    NS_ProxyRelease(mainThread, forgettable, false);
   }
 
   if (mListener) {
     nsIWebSocketListener *forgettableListener;
     mListener.forget(&forgettableListener);
-    NS_ProxyRelease(mainThread, forgettableListener, PR_FALSE);
+    NS_ProxyRelease(mainThread, forgettableListener, false);
   }
 
   if (mContext) {
     nsISupports *forgettableContext;
     mContext.forget(&forgettableContext);
-    NS_ProxyRelease(mainThread, forgettableContext, PR_FALSE);
+    NS_ProxyRelease(mainThread, forgettableContext, false);
   }
 
   if (mLoadGroup) {
     nsILoadGroup *forgettableGroup;
     mLoadGroup.forget(&forgettableGroup);
-    NS_ProxyRelease(mainThread, forgettableGroup, PR_FALSE);
+    NS_ProxyRelease(mainThread, forgettableGroup, false);
   }
 }
 
@@ -929,7 +929,7 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
         // (which are non-conformant to send) with u+fffd,
         // but secteam feels that silently rewriting messages is
         // inappropriate - so we will fail the connection instead.
-        if (!IsUTF8(utf8Data, PR_FALSE)) {
+        if (!IsUTF8(utf8Data, false)) {
           LOG(("WebSocketChannel:: text frame invalid utf-8\n"));
           AbortSession(NS_ERROR_ILLEGAL_VALUE);
           return NS_ERROR_ILLEGAL_VALUE;
@@ -966,7 +966,7 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
             // (which are non-conformant to send) with u+fffd,
             // but secteam feels that silently rewriting messages is
             // inappropriate - so we will fail the connection instead.
-            if (!IsUTF8(mServerCloseReason, PR_FALSE)) {
+            if (!IsUTF8(mServerCloseReason, false)) {
               LOG(("WebSocketChannel:: close frame invalid utf-8\n"));
               AbortSession(NS_ERROR_ILLEGAL_VALUE);
               return NS_ERROR_ILLEGAL_VALUE;
@@ -1174,11 +1174,11 @@ WebSocketChannel::PrimeNewOutgoingMessage()
 
   mCurrentOut = (OutboundMessage *)mOutgoingPongMessages.PopFront();
   if (mCurrentOut) {
-    isPong = PR_TRUE;
+    isPong = true;
   } else {
     mCurrentOut = (OutboundMessage *)mOutgoingPingMessages.PopFront();
     if (mCurrentOut)
-      isPing = PR_TRUE;
+      isPing = true;
     else
       mCurrentOut = (OutboundMessage *)mOutgoingMessages.PopFront();
   }
@@ -1444,7 +1444,7 @@ WebSocketChannel::StopSession(nsresult reason)
       rv = mSocketIn->Read(buffer, 512, &count);
       if (rv != NS_BASE_STREAM_WOULD_BLOCK &&
         (NS_FAILED(rv) || count == 0))
-        mTCPClosed = PR_TRUE;
+        mTCPClosed = true;
     } while (NS_SUCCEEDED(rv) && count > 0 && total < 32000);
   }
 
@@ -1506,7 +1506,7 @@ WebSocketChannel::AbortSession(nsresult reason)
 
   // When we are failing we need to close the TCP connection immediately
   // as per 7.1.1
-  mTCPClosed = PR_TRUE;
+  mTCPClosed = true;
 
   if (mLingeringCloseTimer) {
     NS_ABORT_IF_FALSE(mStopped, "Lingering without Stop");
@@ -1637,20 +1637,20 @@ WebSocketChannel::SetupRequest()
 
   mHttpChannel->SetRequestHeader(
     NS_LITERAL_CSTRING("Sec-WebSocket-Version"),
-    NS_LITERAL_CSTRING(SEC_WEBSOCKET_VERSION), PR_FALSE);
+    NS_LITERAL_CSTRING(SEC_WEBSOCKET_VERSION), false);
 
   if (!mOrigin.IsEmpty())
     mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Origin"),
-                                   mOrigin, PR_FALSE);
+                                   mOrigin, false);
 
   if (!mProtocol.IsEmpty())
     mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Protocol"),
-                                   mProtocol, PR_TRUE);
+                                   mProtocol, true);
 
   if (mAllowCompression)
     mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"),
                                    NS_LITERAL_CSTRING("deflate-stream"),
-                                   PR_FALSE);
+                                   false);
 
   PRUint8      *secKey;
   nsCAutoString secKeyString;
@@ -1664,7 +1664,7 @@ WebSocketChannel::SetupRequest()
   secKeyString.Assign(b64);
   PR_Free(b64);
   mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Key"),
-                                 secKeyString, PR_FALSE);
+                                 secKeyString, false);
   LOG(("WebSocketChannel::SetupRequest: client key %s\n", secKeyString.get()));
 
   // prepare the value we expect to see in
@@ -1678,7 +1678,7 @@ WebSocketChannel::SetupRequest()
   rv = hasher->Update((const PRUint8 *) secKeyString.BeginWriting(),
                       secKeyString.Length());
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = hasher->Finish(PR_TRUE, mHashedSecret);
+  rv = hasher->Finish(true, mHashedSecret);
   NS_ENSURE_SUCCESS(rv, rv);
   LOG(("WebSocketChannel::SetupRequest: expected server key %s\n",
        mHashedSecret.get()));
@@ -2425,13 +2425,13 @@ WebSocketChannel::OnInputStreamReady(nsIAsyncInputStream *aStream)
     }
 
     if (NS_FAILED(rv)) {
-      mTCPClosed = PR_TRUE;
+      mTCPClosed = true;
       AbortSession(rv);
       return rv;
     }
 
     if (count == 0) {
-      mTCPClosed = PR_TRUE;
+      mTCPClosed = true;
       AbortSession(NS_BASE_STREAM_CLOSED);
       return NS_OK;
     }

@@ -6,7 +6,7 @@ function run_test() {
   var root = Components.classes["@mozilla.org/file/local;1"].
               createInstance(nsILocalFile);
 
-  // copied from http://mxr.mozilla.org/mozilla-central/source/modules/libpr0n/test/unit/test_imgtools.js#135
+  // copied from http://mxr.mozilla.org/mozilla-central/source/image/test/unit/test_imgtools.js#135
   // nsIXULRuntime.OS doesn't seem to be available in xpcshell, so we'll use
   // this as a kludgy way to figure out if we're running on Windows.
   var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);

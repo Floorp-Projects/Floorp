@@ -213,7 +213,7 @@ const SequenceModel Win1255Model =
   win1255_CharToOrderMap,
   HebrewLangModel,
   (float)0.984004,
-  PR_FALSE,
+  false,
   "windows-1255"
 };
 

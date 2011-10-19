@@ -195,6 +195,8 @@ function openLinkIn(url, where, params) {
   var aCharset              = params.charset;
   var aReferrerURI          = params.referrerURI;
   var aRelatedToCurrent     = params.relatedToCurrent;
+  var aInBackground         = params.inBackground;
+  var aDisallowInheritPrincipal = params.disallowInheritPrincipal;
 
   if (where == "save") {
     saveURL(url, null, null, true, null, aReferrerURI);
@@ -240,9 +242,12 @@ function openLinkIn(url, where, params) {
     return;
   }
 
-  var loadInBackground = aFromChrome ?
+  let loadInBackground = aInBackground;
+  if (loadInBackground == null) {
+    loadInBackground = aFromChrome ?
                          getBoolPref("browser.tabs.loadBookmarksInBackground") :
                          getBoolPref("browser.tabs.loadInBackground");
+  }
 
   if (where == "current" && w.gBrowser.selectedTab.pinned) {
     try {
@@ -260,7 +265,12 @@ function openLinkIn(url, where, params) {
 
   switch (where) {
   case "current":
-    w.loadURI(url, aReferrerURI, aPostData, aAllowThirdPartyFixup);
+    let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    if (aAllowThirdPartyFixup)
+      flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    if (aDisallowInheritPrincipal)
+      flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+    w.gBrowser.loadURIWithFlags(url, flags, aReferrerURI, null, aPostData);
     break;
   case "tabshifted":
     loadInBackground = !loadInBackground;

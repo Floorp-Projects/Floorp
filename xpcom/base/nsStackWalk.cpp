@@ -40,6 +40,8 @@
 
 /* API for getting a stack trace of the C/C++ stack on the current thread */
 
+#include "mozilla/Util.h"
+
 #include "nsStackWalk.h"
 
 #if defined(_WIN32) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_IA64)) // WIN32 x86 stack walking code
@@ -49,7 +51,6 @@
 #include <process.h>
 #include <stdio.h>
 #include "plstr.h"
-#include "nsMemory.h" // for NS_ARRAY_LENGTH
 #include "mozilla/FunctionTimer.h"
 
 #include "nspr.h"
@@ -62,6 +63,8 @@
 #define USING_WXP_VERSION 1
 #endif
 #endif
+
+using namespace mozilla;
 
 // Define these as static pointers so that we can load the DLL on the
 // fly (and not introduce a link-time dependency on it). Tip o' the
@@ -321,7 +324,7 @@ EnsureImageHlpInitialized()
     gStackWalkThread = threadID;
     if (hStackWalkThread == NULL) {
         PrintError("CreateThread");
-        return PR_FALSE;
+        return false;
     }
     ::CloseHandle(hStackWalkThread);
 
@@ -334,70 +337,70 @@ EnsureImageHlpInitialized()
     HMODULE module = ::LoadLibraryW(L"DBGHELP.DLL");
     if (!module) {
         module = ::LoadLibraryW(L"IMAGEHLP.DLL");
-        if (!module) return PR_FALSE;
+        if (!module) return false;
     }
 
     _SymSetOptions = (SYMSETOPTIONSPROC) ::GetProcAddress(module, "SymSetOptions");
-    if (!_SymSetOptions) return PR_FALSE;
+    if (!_SymSetOptions) return false;
 
     _SymInitialize = (SYMINITIALIZEPROC) ::GetProcAddress(module, "SymInitialize");
-    if (!_SymInitialize) return PR_FALSE;
+    if (!_SymInitialize) return false;
 
     _SymCleanup = (SYMCLEANUPPROC)GetProcAddress(module, "SymCleanup");
-    if (!_SymCleanup) return PR_FALSE;
+    if (!_SymCleanup) return false;
 
 #ifdef USING_WXP_VERSION
     _StackWalk64 = (STACKWALKPROC64)GetProcAddress(module, "StackWalk64");
 #endif
     _StackWalk = (STACKWALKPROC)GetProcAddress(module, "StackWalk");
-    if (!_StackWalk64  && !_StackWalk) return PR_FALSE;
+    if (!_StackWalk64  && !_StackWalk) return false;
 
 #ifdef USING_WXP_VERSION
     _SymFunctionTableAccess64 = (SYMFUNCTIONTABLEACCESSPROC64) GetProcAddress(module, "SymFunctionTableAccess64");
 #endif
     _SymFunctionTableAccess = (SYMFUNCTIONTABLEACCESSPROC) GetProcAddress(module, "SymFunctionTableAccess");
-    if (!_SymFunctionTableAccess64 && !_SymFunctionTableAccess) return PR_FALSE;
+    if (!_SymFunctionTableAccess64 && !_SymFunctionTableAccess) return false;
 
 #ifdef USING_WXP_VERSION
     _SymGetModuleBase64 = (SYMGETMODULEBASEPROC64)GetProcAddress(module, "SymGetModuleBase64");
 #endif
     _SymGetModuleBase = (SYMGETMODULEBASEPROC)GetProcAddress(module, "SymGetModuleBase");
-    if (!_SymGetModuleBase64 && !_SymGetModuleBase) return PR_FALSE;
+    if (!_SymGetModuleBase64 && !_SymGetModuleBase) return false;
 
     _SymGetSymFromAddr = (SYMGETSYMFROMADDRPROC)GetProcAddress(module, "SymGetSymFromAddr");
 #ifdef USING_WXP_VERSION
     _SymFromAddr = (SYMFROMADDRPROC)GetProcAddress(module, "SymFromAddr");
 #endif
-    if (!_SymFromAddr && !_SymGetSymFromAddr) return PR_FALSE;
+    if (!_SymFromAddr && !_SymGetSymFromAddr) return false;
 
 #ifdef USING_WXP_VERSION
     _SymLoadModule64 = (SYMLOADMODULE64)GetProcAddress(module, "SymLoadModule64");
 #endif
     _SymLoadModule = (SYMLOADMODULE)GetProcAddress(module, "SymLoadModule");
-    if (!_SymLoadModule64 && !_SymLoadModule) return PR_FALSE;
+    if (!_SymLoadModule64 && !_SymLoadModule) return false;
 
     _SymUnDName = (SYMUNDNAME)GetProcAddress(module, "SymUnDName");
-    if (!_SymUnDName) return PR_FALSE;
+    if (!_SymUnDName) return false;
 
 #ifdef USING_WXP_VERSION
     _SymGetModuleInfo64 = (SYMGETMODULEINFO64)GetProcAddress(module, "SymGetModuleInfo64");
 #endif
     _SymGetModuleInfo = (SYMGETMODULEINFO)GetProcAddress(module, "SymGetModuleInfo");
-    if (!_SymGetModuleInfo64 && !_SymGetModuleInfo) return PR_FALSE;
+    if (!_SymGetModuleInfo64 && !_SymGetModuleInfo) return false;
 
 #ifdef USING_WXP_VERSION
     _EnumerateLoadedModules64 = (ENUMLOADEDMODULES64)GetProcAddress(module, "EnumerateLoadedModules64");
 #endif
     _EnumerateLoadedModules = (ENUMLOADEDMODULES)GetProcAddress(module, "EnumerateLoadedModules");
-    if (!_EnumerateLoadedModules64 && !_EnumerateLoadedModules) return PR_FALSE;
+    if (!_EnumerateLoadedModules64 && !_EnumerateLoadedModules) return false;
 
 #ifdef USING_WXP_VERSION
     _SymGetLineFromAddr64 = (SYMGETLINEFROMADDRPROC64)GetProcAddress(module, "SymGetLineFromAddr64");
 #endif
     _SymGetLineFromAddr = (SYMGETLINEFROMADDRPROC)GetProcAddress(module, "SymGetLineFromAddr");
-    if (!_SymGetLineFromAddr64 && !_SymGetLineFromAddr) return PR_FALSE;
+    if (!_SymGetLineFromAddr64 && !_SymGetLineFromAddr) return false;
 
-    return gInitialized = PR_TRUE;
+    return gInitialized = true;
 }
 
 void
@@ -657,7 +660,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     struct WalkStackData data;
 
     if (!EnsureImageHlpInitialized())
-        return PR_FALSE;
+        return false;
 
     // Have to duplicate handle to get a real handle.
     if (!::DuplicateHandle(::GetCurrentProcess(),
@@ -688,7 +691,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     void *local_pcs[1024];
     data.pcs = local_pcs;
     data.pc_count = 0;
-    data.pc_size = NS_ARRAY_LENGTH(local_pcs);
+    data.pc_size = ArrayLength(local_pcs);
 
     ::PostThreadMessage(gStackWalkThread, WM_USER, 0, (LPARAM)&data);
 
@@ -715,7 +718,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     for (PRUint32 i = 0; i < data.pc_count; ++i)
         (*aCallback)(data.pcs[i], aClosure);
 
-    if (data.pc_size > NS_ARRAY_LENGTH(local_pcs))
+    if (data.pc_size > ArrayLength(local_pcs))
         free(data.pcs);
 
     return NS_OK;
@@ -951,7 +954,7 @@ EnsureSymInitialized()
     NS_TIME_FUNCTION;
 
     if (!EnsureImageHlpInitialized())
-        return PR_FALSE;
+        return false;
 
     _SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
     retStat = _SymInitialize(GetCurrentPIDorHandle(), NULL, TRUE);
@@ -1433,7 +1436,7 @@ static void FindFunctionAddresses(const char* aName, AddressRange* aRange)
   if (!aRange->mStart)
     return;
   aRange->mEnd = aRange->mStart;
-  while (PR_TRUE) {
+  while (true) {
     Dl_info info;
     if (!dladdr(aRange->mEnd, &info))
       break;

@@ -72,12 +72,12 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CI
 nsIExceptionProvider* gExceptionProvider = nsnull;
 
 nsDOMScriptObjectFactory::nsDOMScriptObjectFactory() :
-  mLoadedAllLanguages(PR_FALSE)
+  mLoadedAllLanguages(false)
 {
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   }
 
   nsCOMPtr<nsIExceptionProvider> provider(new nsDOMExceptionProvider());
@@ -398,8 +398,6 @@ nsDOMExceptionProvider::GetException(nsresult result,
       return NS_NewFileException(result, aDefaultException, _retval);
     case NS_ERROR_MODULE_DOM_INDEXEDDB:
       return NS_NewIDBDatabaseException(result, aDefaultException, _retval);
-    case NS_ERROR_MODULE_DOM_EVENTS:
-      return NS_NewEventException(result, aDefaultException, _retval);
     default:
       return NS_NewDOMException(result, aDefaultException, _retval);
   }

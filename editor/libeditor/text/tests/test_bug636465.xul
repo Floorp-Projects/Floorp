@@ -30,16 +30,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=636465
   SimpleTest.waitForExplicitFinish();
 
   function runTest() {
+    var x = document.getElementById("x");
+    x.focus();
     setTimeout(function(){
+      x.blur();
       setTimeout(function(){
-        var x = document.getElementById("x");
         var spellCheckTrue = snapshotWindow(window);
         x.setAttribute("spellcheck", "false");
         setTimeout(function(){
           setTimeout(function(){
             var spellCheckFalse = snapshotWindow(window);
             x.setAttribute("spellcheck", "true");
+            x.focus();
             setTimeout(function(){
+              x.blur();
               setTimeout(function(){
                 var spellCheckTrueAgain = snapshotWindow(window);
                 x.removeAttribute("spellcheck");

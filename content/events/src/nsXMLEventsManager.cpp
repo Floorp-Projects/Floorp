@@ -58,7 +58,7 @@ bool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   nsresult rv;
   PRInt32 nameSpaceID;
   if (aContent->GetDocument() != aDocument)
-    return PR_FALSE;
+    return false;
   if (aContent->NodeInfo()->Equals(nsGkAtoms::listener,
                                    kNameSpaceID_XMLEvents))
     nameSpaceID = kNameSpaceID_None;
@@ -67,7 +67,7 @@ bool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   nsAutoString eventType;
   aContent->GetAttr(nameSpaceID, nsGkAtoms::event, eventType);
   if (eventType.IsEmpty())
-    return PR_FALSE;
+    return false;
   nsAutoString handlerURIStr;
   bool hasHandlerURI = false;
   nsIContent *handler = nsnull;
@@ -75,7 +75,7 @@ bool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   nsAutoString targetIdref;
   
   if (aContent->GetAttr(nameSpaceID, nsGkAtoms::handler, handlerURIStr)) {
-    hasHandlerURI = PR_TRUE;
+    hasHandlerURI = true;
     nsCAutoString handlerRef;
     nsCOMPtr<nsIURI> handlerURI;
     bool equals = false;
@@ -94,7 +94,7 @@ bool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   else
     handler = aContent;
   if (!handler)
-    return PR_FALSE;
+    return false;
 
   aContent->GetAttr(nameSpaceID, nsGkAtoms::target, targetIdref);
 
@@ -140,13 +140,13 @@ bool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
         aManager->RemoveXMLEventsContent(aContent);
         aManager->RemoveListener(aContent);
         aManager->AddListener(aContent, eli);
-        return PR_TRUE;
+        return true;
       }
       else
         delete eli;
     }
   }
-  return PR_FALSE;
+  return false;
 }
 
 nsXMLEventsListener::nsXMLEventsListener(nsXMLEventsManager * aManager,
@@ -211,12 +211,12 @@ nsXMLEventsListener::HandleEvent(nsIDOMEvent* aEvent)
   bool targetMatched = true;
   nsCOMPtr<nsIDOMEvent> event(aEvent);
   if (mTarget) {
-    targetMatched = PR_FALSE;
+    targetMatched = false;
     nsCOMPtr<nsIDOMEventTarget> target;
     aEvent->GetTarget(getter_AddRefs(target));
     nsCOMPtr<nsIContent> targetEl(do_QueryInterface(target));
     if (targetEl && targetEl->GetID() == mTarget) 
-        targetMatched = PR_TRUE;
+        targetMatched = true;
   }
   if (!targetMatched)
     return NS_OK;
@@ -296,9 +296,9 @@ bool nsXMLEventsManager::RemoveListener(nsIContent * aContent)
   if (listener) {
     listener->Unregister();
     mListeners.Remove(aContent);
-    return PR_TRUE;
+    return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 void nsXMLEventsManager::AddListeners(nsIDocument* aDocument)

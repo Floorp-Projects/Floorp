@@ -60,27 +60,26 @@ public:
     mAnimVal[0] = mBaseVal[0] = aValue1;
     mAnimVal[1] = mBaseVal[1] = aValue2;
     mAttrEnum = aAttrEnum;
-    mIsAnimated = PR_FALSE;
-    mIsBaseSet = PR_FALSE;
+    mIsAnimated = false;
+    mIsBaseSet = false;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(PRInt32 aValue, PairIndex aIndex, nsSVGElement *aSVGElement, bool aDoSetAttr);
-  void SetBaseValues(PRInt32 aValue1, PRInt32 aValue2, nsSVGElement *aSVGElement, bool aDoSetAttr);
+  void SetBaseValue(PRInt32 aValue, PairIndex aIndex, nsSVGElement *aSVGElement);
+  void SetBaseValues(PRInt32 aValue1, PRInt32 aValue2, nsSVGElement *aSVGElement);
   PRInt32 GetBaseValue(PairIndex aIndex) const
     { return mBaseVal[aIndex == eFirst ? 0 : 1]; }
   void SetAnimValue(const PRInt32 aValue[2], nsSVGElement *aSVGElement);
   PRInt32 GetAnimValue(PairIndex aIndex) const
     { return mAnimVal[aIndex == eFirst ? 0 : 1]; }
 
-  // Returns PR_TRUE if the animated value of this integer has been explicitly
+  // Returns true if the animated value of this integer has been explicitly
   // set (either by animation, or by taking on the base value which has been
-  // explicitly set by markup or a DOM call), PR_FALSE otherwise.
-  // If this returns PR_FALSE, the animated value is still valid, that is,
+  // explicitly set by markup or a DOM call), false otherwise.
+  // If this returns false, the animated value is still valid, that is,
   // useable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
@@ -118,7 +117,7 @@ public:
       { *aResult = mVal->GetBaseValue(mIndex); return NS_OK; }
     NS_IMETHOD SetBaseVal(PRInt32 aValue)
       {
-        mVal->SetBaseValue(aValue, mIndex, mSVGElement, PR_TRUE);
+        mVal->SetBaseValue(aValue, mIndex, mSVGElement);
         return NS_OK;
       }
 

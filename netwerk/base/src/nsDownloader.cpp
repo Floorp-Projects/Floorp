@@ -80,7 +80,7 @@ nsDownloader::~nsDownloader()
             mSink = nsnull;
         }
 
-        nsresult rv = mLocation->Remove(PR_FALSE);
+        nsresult rv = mLocation->Remove(false);
         if (NS_FAILED(rv))
             NS_ERROR("unable to remove temp file");
     }
@@ -106,7 +106,7 @@ nsDownloader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     if (!mLocation) {
         nsCOMPtr<nsICachingChannel> caching = do_QueryInterface(request, &rv);
         if (NS_SUCCEEDED(rv))
-            rv = caching->SetCacheAsFile(PR_TRUE);
+            rv = caching->SetCacheAsFile(true);
     }
     if (NS_FAILED(rv)) {
         // OK, we will need to stream the data to disk ourselves.  Make
@@ -124,7 +124,7 @@ nsDownloader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
             rv = mLocation->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
             if (NS_FAILED(rv)) return rv;
 
-            mLocationIsTemp = PR_TRUE;
+            mLocationIsTemp = true;
         }
         
         rv = NS_NewLocalFileOutputStream(getter_AddRefs(mSink), mLocation);

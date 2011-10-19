@@ -37,7 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDOMOfflineResourceList.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsDOMError.h"
 #include "nsDOMLists.h"
 #include "nsIPrefetchService.h"
@@ -139,7 +140,7 @@ nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
                                                    nsIURI *aDocumentURI,
                                                    nsPIDOMWindow *aWindow,
                                                    nsIScriptContext* aScriptContext)
-  : mInitialized(PR_FALSE)
+  : mInitialized(false)
   , mManifestURI(aManifestURI)
   , mDocumentURI(aDocumentURI)
   , mExposeCacheUpdateStatus(true)
@@ -170,7 +171,7 @@ nsDOMOfflineResourceList::Init()
   mManifestURI->GetAsciiSpec(mManifestSpec);
 
   nsresult rv = nsContentUtils::GetSecurityManager()->
-                   CheckSameOriginURI(mManifestURI, mDocumentURI, PR_TRUE);
+                   CheckSameOriginURI(mManifestURI, mDocumentURI, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Dynamically-managed resources are stored as a separate ownership list
@@ -210,12 +211,12 @@ nsDOMOfflineResourceList::Init()
   if (!observerService)
     return NS_ERROR_FAILURE;
 
-  rv = observerService->AddObserver(this, "offline-cache-update-added", PR_TRUE);
+  rv = observerService->AddObserver(this, "offline-cache-update-added", true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = observerService->AddObserver(this, "offline-cache-update-completed", PR_TRUE);
+  rv = observerService->AddObserver(this, "offline-cache-update-completed", true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mInitialized = PR_TRUE;
+  mInitialized = true;
 
   return NS_OK;
 }
@@ -303,7 +304,7 @@ nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, bool* aExists)
   PRUint32 types;
   rv = appCache->GetTypes(key, &types);
   if (rv == NS_ERROR_CACHE_KEY_NOT_FOUND) {
-    *aExists = PR_FALSE;
+    *aExists = false;
     return NS_OK;
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -708,10 +709,10 @@ nsDOMOfflineResourceList::SendEvent(const nsAString &aEventName)
     return NS_ERROR_FAILURE;
   }
 
-  event->InitEvent(aEventName, PR_FALSE, PR_TRUE);
+  event->InitEvent(aEventName, false, true);
 
   // We assume anyone that managed to call SendEvent is trusted
-  privevent->SetTrusted(PR_TRUE);
+  privevent->SetTrusted(true);
 
   // If the window is frozen or we're still catching up on events that were
   // queued while frozen, save the event for later.
@@ -844,7 +845,7 @@ nsDOMOfflineResourceList::UpdateAdded(nsIOfflineCacheUpdate *aUpdate)
   // are no listeners to accept signals anyway.
 
   mCacheUpdate = aUpdate;
-  mCacheUpdate->AddObserver(this, PR_TRUE);
+  mCacheUpdate->AddObserver(this, true);
 
   return NS_OK;
 }

@@ -94,7 +94,7 @@ ScopedGfxFeatureReporter::WriteAppNote(char statusChar)
     if (!observerService)
       return;
     nsRefPtr<ObserverToDestroyFeaturesAlreadyReported> observer = new ObserverToDestroyFeaturesAlreadyReported;
-    nsresult rv = observerService->AddObserver(observer, "xpcom-shutdown", PR_FALSE);
+    nsresult rv = observerService->AddObserver(observer, "xpcom-shutdown", false);
     if (NS_FAILED(rv)) {
       observer = nsnull;
       return;

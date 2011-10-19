@@ -8,6 +8,7 @@
 
 #include "sqlite3.h"
 
+using namespace mozilla;
 using namespace mozilla::storage;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +105,7 @@ test_MultipleAsyncReadStatements()
     stmt2,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), false);
+  check_transaction(db, stmts, ArrayLength(stmts), false);
 }
 
 /**
@@ -132,7 +133,7 @@ test_MultipleReadStatements()
     stmt2,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), false);
+  check_transaction(db, stmts, ArrayLength(stmts), false);
 }
 
 /**
@@ -160,7 +161,7 @@ test_MultipleAsyncReadWriteStatements()
     stmt2,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), true);
+  check_transaction(db, stmts, ArrayLength(stmts), true);
 }
 
 /**
@@ -187,7 +188,7 @@ test_MultipleReadWriteStatements()
     stmt2,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), true);
+  check_transaction(db, stmts, ArrayLength(stmts), true);
 }
 
 /**
@@ -215,7 +216,7 @@ test_MultipleAsyncWriteStatements()
     stmt2,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), true);
+  check_transaction(db, stmts, ArrayLength(stmts), true);
 }
 
 /**
@@ -243,7 +244,7 @@ test_MultipleWriteStatements()
     stmt2,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), true);
+  check_transaction(db, stmts, ArrayLength(stmts), true);
 }
 
 /**
@@ -265,7 +266,7 @@ test_SingleAsyncReadStatement()
     stmt,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), false);
+  check_transaction(db, stmts, ArrayLength(stmts), false);
 }
 
 /**
@@ -287,7 +288,7 @@ test_SingleReadStatement()
     stmt,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), false);
+  check_transaction(db, stmts, ArrayLength(stmts), false);
 }
 
 /**
@@ -309,7 +310,7 @@ test_SingleAsyncWriteStatement()
     stmt,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), true);
+  check_transaction(db, stmts, ArrayLength(stmts), true);
 }
 
 /**
@@ -330,7 +331,7 @@ test_SingleWriteStatement()
     stmt,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), true);
+  check_transaction(db, stmts, ArrayLength(stmts), true);
 }
 
 /**
@@ -364,7 +365,7 @@ test_MultipleParamsAsyncReadStatement()
     stmt,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), false);
+  check_transaction(db, stmts, ArrayLength(stmts), false);
 }
 
 /**
@@ -398,7 +399,7 @@ test_MultipleParamsReadStatement()
     stmt,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), false);
+  check_transaction(db, stmts, ArrayLength(stmts), false);
 }
 
 /**
@@ -440,7 +441,7 @@ test_MultipleParamsAsyncWriteStatement()
     stmt,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), true);
+  check_transaction(db, stmts, ArrayLength(stmts), true);
 }
 
 /**
@@ -482,7 +483,7 @@ test_MultipleParamsWriteStatement()
     stmt,
   };
 
-  check_transaction(db, stmts, NS_ARRAY_LENGTH(stmts), true);
+  check_transaction(db, stmts, ArrayLength(stmts), true);
 }
 
 void (*gTests[])(void) = {

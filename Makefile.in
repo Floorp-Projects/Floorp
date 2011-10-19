@@ -172,6 +172,7 @@ endif
 	$(RM) -r $(DIST)/crashreporter-symbols
 	$(RM) "$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip"
 	$(NSINSTALL) -D $(DIST)/crashreporter-symbols
+	OBJCOPY="$(OBJCOPY)" \
 	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
 	  $(MAKE_SYM_STORE_ARGS)                                          \
 	  $(foreach dir,$(SYM_STORE_SOURCE_DIRS),-s $(dir))               \

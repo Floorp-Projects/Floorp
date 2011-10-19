@@ -238,14 +238,14 @@ bool
 PathExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     if (mItems[0].expr->isSensitiveTo(aContext)) {
-        return PR_TRUE;
+        return true;
     }
 
     // We're creating a new node/nodeset so we can ignore those bits.
     Expr::ContextSensitivity context =
         aContext & ~(Expr::NODE_CONTEXT | Expr::NODESET_CONTEXT);
     if (context == NO_CONTEXT) {
-        return PR_FALSE;
+        return false;
     }
 
     PRUint32 i, len = mItems.Length();
@@ -253,11 +253,11 @@ PathExpr::isSensitiveTo(ContextSensitivity aContext)
         NS_ASSERTION(!mItems[i].expr->isSensitiveTo(Expr::NODESET_CONTEXT),
                      "Step cannot depend on nodeset-context");
         if (mItems[i].expr->isSensitiveTo(context)) {
-            return PR_TRUE;
+            return true;
         }
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 #ifdef TX_TO_STRING

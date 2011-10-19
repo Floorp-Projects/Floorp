@@ -147,7 +147,7 @@ struct nsCSSRendering {
   static nsIFrame* FindBackgroundStyleFrame(nsIFrame* aForFrame);
 
   /**
-   * @return PR_TRUE if |aFrame| is a canvas frame, in the CSS sense.
+   * @return true if |aFrame| is a canvas frame, in the CSS sense.
    */
   static bool IsCanvasFrame(nsIFrame* aFrame);
 
@@ -155,7 +155,7 @@ struct nsCSSRendering {
    * Fill in an aBackgroundSC to be used to paint the background
    * for an element.  This applies the rules for propagating
    * backgrounds between BODY, the root element, and the canvas.
-   * @return PR_TRUE if there is some meaningful background.
+   * @return true if there is some meaningful background.
    */
   static bool FindBackground(nsPresContext* aPresContext,
                                nsIFrame* aForFrame,

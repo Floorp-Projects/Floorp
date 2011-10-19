@@ -62,7 +62,7 @@ class nsCycleCollectionCallback;
  * By default this is a single-shot tracker --- i.e., when ElementChanged
  * fires, we will automatically stop tracking. get() will continue to return
  * the changed-to element.
- * Override IsPersistent to return PR_TRUE if you want to keep tracking after
+ * Override IsPersistent to return true if you want to keep tracking after
  * the first change.
  */
 class nsReferencedElement {

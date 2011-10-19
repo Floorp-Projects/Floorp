@@ -1,0 +1,12 @@
+<?xml version="1.0" standalone="yes"?>
+<svg version="1.1"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <script>
+    <![CDATA[
+      var doc = new DOMParser().parseFromString('<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><image width="10" height="10" xlink:href="blueRect10x10.png"/></svg>', 'text/xml');
+      document.documentElement.appendChild(doc.documentElement.firstChild);
+    ]]>
+  </script>
+  
+</svg>

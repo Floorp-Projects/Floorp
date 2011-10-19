@@ -41,6 +41,8 @@
 #ifndef String_h_
 #define String_h_
 
+#include "mozilla/Util.h"
+
 #include "jsapi.h"
 #include "jscell.h"
 
@@ -260,6 +262,13 @@ class JSString : public js::gc::Cell
     size_t buildLengthAndFlags(size_t length, size_t flags) {
         return (length << LENGTH_SHIFT) | flags;
     }
+
+    /*
+     * Helper function to validate that a string of a given length is
+     * representable by a JSString. An allocation overflow is reported if false
+     * is returned.
+     */
+    static inline bool validateLength(JSContext *cx, size_t length);
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
@@ -626,7 +635,7 @@ class JSExternalString : public JSFixedString
 
     static intN changeFinalizer(JSStringFinalizeOp oldop,
                                 JSStringFinalizeOp newop) {
-        for (uintN i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
+        for (uintN i = 0; i < mozilla::ArrayLength(str_finalizers); i++) {
             if (str_finalizers[i] == oldop) {
                 str_finalizers[i] = newop;
                 return intN(i);

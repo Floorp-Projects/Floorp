@@ -712,9 +712,15 @@ SyncServer.prototype = {
   user: function user(username) {
     let collection       = this.getCollection.bind(this, username);
     let createCollection = this.createCollection.bind(this, username);
+    let createContents   = this.createContents.bind(this, username);
+    let modified         = function (collectionName) {
+      return collection(collectionName).timestamp;
+    }
     return {
       collection:       collection,
-      createCollection: createCollection
+      createCollection: createCollection,
+      createContents:   createContents,
+      modified:         modified
     };
   },
 

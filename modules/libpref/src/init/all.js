@@ -109,6 +109,8 @@ pref("dom.enable_performance", true);
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
 
+pref("browser.sessionhistory.optimize_eviction", true);
+
 pref("ui.use_native_colors", true);
 pref("ui.click_hold_context_menus", false);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
@@ -205,8 +207,12 @@ pref("gfx.downloadable_fonts.sanitize", true);
 // use harfbuzz for default (0x01) + arabic (0x02) + hebrew (0x04) + thai (0x40)
 pref("gfx.font_rendering.harfbuzz.scripts", 71);
 #else
+#ifdef ANDROID
+pref("gfx.font_rendering.harfbuzz.scripts", 71);
+#else
 // use harfbuzz for default (0x01) + arabic (0x02)
 pref("gfx.font_rendering.harfbuzz.scripts", 3);
+#endif
 #endif
 
 #ifdef XP_WIN
@@ -595,6 +601,10 @@ pref("dom.min_timeout_value", 4);
 // And for background windows
 pref("dom.min_background_timeout_value", 1000);
 
+// Use the new DOM bindings (only affects any scopes created after the pref is
+// changed)
+pref("dom.new_bindings", true);
+
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
 pref("content.sink.pending_event_mode", 0);
@@ -617,8 +627,8 @@ pref("javascript.options.strict",           false);
 pref("javascript.options.strict.debug",     true);
 #endif
 pref("javascript.options.relimit",          true);
-pref("javascript.options.tracejit.content",  true);
-pref("javascript.options.tracejit.chrome",   true);
+pref("javascript.options.tracejit.content",  false);
+pref("javascript.options.tracejit.chrome",   false);
 pref("javascript.options.methodjit.content", true);
 pref("javascript.options.methodjit.chrome",  true);
 pref("javascript.options.jitprofiling.content", true);
@@ -3279,6 +3289,8 @@ pref("webgl.force_osmesa", false);
 pref("webgl.osmesalib", "");
 pref("webgl.verbose", false);
 pref("webgl.prefer-native-gl", false);
+pref("webgl.min_capability_mode", false);
+pref("webgl.disable-extensions", false);
 
 #ifdef XP_WIN
 // The default TCP send window on Windows is too small, and autotuning only occurs on receive

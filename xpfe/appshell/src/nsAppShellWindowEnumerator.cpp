@@ -35,9 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsAppShellWindowEnumerator.h"
+
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
-#include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -47,7 +48,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIXULWindow.h"
 
-#include "nsAppShellWindowEnumerator.h"
 #include "nsWindowMediator.h"
 
 //
@@ -83,7 +83,7 @@ nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell)
       nsCOMPtr<nsIDOMElement> element;
       domdoc->GetDocumentElement(getter_AddRefs(element));
       if (element)
-        node = do_QueryInterface(element);
+        node = element;
     }
   }
 
@@ -119,7 +119,7 @@ void GetWindowType(nsIXULWindow* aWindow, nsString &outType)
 nsWindowInfo::nsWindowInfo(nsIXULWindow* inWindow, PRInt32 inTimeStamp) :
   mWindow(inWindow),mTimeStamp(inTimeStamp),mZLevel(nsIXULWindow::normalZ)
 {
-  ReferenceSelf(PR_TRUE, PR_TRUE);
+  ReferenceSelf(true, true);
 }
 
 nsWindowInfo::~nsWindowInfo()
@@ -222,7 +222,7 @@ NS_IMETHODIMP nsAppShellWindowEnumerator::HasMoreElements(bool *retval)
   if (!retval)
     return NS_ERROR_INVALID_ARG;
 
-  *retval = mCurrentPosition ? PR_TRUE : PR_FALSE;
+  *retval = mCurrentPosition ? true : false;
   return NS_OK;
 }
 

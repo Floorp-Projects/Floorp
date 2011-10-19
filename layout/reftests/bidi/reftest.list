@@ -4,11 +4,11 @@
 == bidi-001-v.html bidi-001-ref.html
 == bidi-002.html bidi-002-ref.html
 == bidi-003.html bidi-003-ref.html
-fails-if(Android) == bidi-004.html bidi-004-ref.html
-fails-if(Android) == bidi-004-j.html bidi-004-ref.html
+== bidi-004.html bidi-004-ref.html
+== bidi-004-j.html bidi-004-ref.html
 == bidi-005.html bidi-005-ref.html
-fails-if(Android) == bidi-006.html bidi-006-ref.html
-fails-if(Android) == bidi-006-j.html bidi-006-ref.html
+== bidi-006.html bidi-006-ref.html
+== bidi-006-j.html bidi-006-ref.html
 == bidiSVG-01.svg bidiSVG-01-ref.svg
 == bidiSVG-02.svg bidiSVG-02-ref.svg
 == bidiSVG-03.svg bidiSVG-03-ref.svg
@@ -21,6 +21,7 @@ random-if(layersGPUAccelerated) == logicalmarquee.html marquee-ref.html
 == mirroring-01.html mirroring-01-ref.html
 # quote marks are not supposed to mirror, but Unicode 5.0 said they should, so some systems do it
 random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
+== mirroring-03.html mirroring-03-ref.html
 == mixedChartype-00.html mixedChartype-00-ref.html
 == mixedChartype-00-j.html mixedChartype-00-ref.html
 == mixedChartype-01.html mixedChartype-01-ref.html
@@ -60,7 +61,7 @@ random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows ver
 == 332655-1.html 332655-1-ref.html
 == 332655-2.html 332655-2-ref.html
 == 381279-1.html 381279-1-ref.html
-fails-if(Android) == 386339.html 386339-ref.html
+== 386339.html 386339-ref.html
 == 409375.html 409375-ref.html
 == 413542-1.html 413542-1-ref.html
 == 413542-2.html 413542-2-ref.html
@@ -80,6 +81,11 @@ fails-if(Android) == 386339.html 386339-ref.html
 == 588739-2.html 588739-ref.html
 == 588739-3.html 588739-ref.html
 == 612843-1.html 612843-1-ref.html
+== 613149-1a.html 613149-1-ref.html
+== 613149-1b.html 613149-1-ref.html
+== 613149-2a.html 613149-2-ref.html
+== 613149-2b.html 613149-2-ref.html
 == 613157-1.html 613157-1-ref.html
 == 613157-2.html 613157-2-ref.html
+== 662288-1.html 662288-1-ref.html
 == 670226-1.html 670226-1-ref.html

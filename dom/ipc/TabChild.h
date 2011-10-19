@@ -65,7 +65,7 @@
 #include "nsNetUtil.h"
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
-#include "nsDOMEventTargetHelper.h"
+#include "nsDOMEventTargetWrapperCache.h"
 #include "nsIDialogCreator.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIPresShell.h"
@@ -87,7 +87,7 @@ namespace dom {
 class TabChild;
 class PContentDialogChild;
 
-class TabChildGlobal : public nsDOMEventTargetHelper,
+class TabChildGlobal : public nsDOMEventTargetWrapperCache,
                        public nsIContentFrameMessageManager,
                        public nsIScriptObjectPrincipal,
                        public nsIScriptContextPrincipal
@@ -96,7 +96,7 @@ public:
   TabChildGlobal(TabChild* aTabChild);
   ~TabChildGlobal();
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, nsDOMEventTargetWrapperCache)
   NS_FORWARD_SAFE_NSIFRAMEMESSAGEMANAGER(mMessageManager)
   NS_IMETHOD SendSyncMessage(const nsAString& aMessageName,
                              const jsval& aObject,
@@ -126,7 +126,7 @@ public:
   {
     // By default add listeners only for trusted events!
     return nsDOMEventTargetHelper::AddEventListener(aType, aListener,
-                                                    aUseCapture, PR_FALSE, 2);
+                                                    aUseCapture, false, 2);
   }
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,

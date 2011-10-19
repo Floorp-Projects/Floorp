@@ -97,7 +97,7 @@ class nsCyrillicDetector
       mCharsets = aCharsets;
       for(PRUintn i=0;i<mItems;i++)
         mProb[i] = mLastCls[i] =0;
-      mDone = PR_FALSE;
+      mDone = false;
     }
     virtual ~nsCyrillicDetector() {}
     virtual void HandleData(const char* aBuf, PRUint32 aLen);

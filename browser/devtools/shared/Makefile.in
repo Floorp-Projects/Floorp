@@ -12,15 +12,17 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is  HUDService code.
+# The Original Code is the Style Inspector.
 #
-# The Initial Developer of the Original Code is Mozilla Corporation.
-# 
-# Portions created by the Initial Developer are Copyright (C) 2010
+# The Initial Developer of the Original Code is
+# The Mozilla Foundation.
+#
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#     Mike Ratcliffe <mratcliffe@mozilla.com>  (Original author)
+#   Mike Ratcliffe <mratcliffe@mozilla.com> (Original author)
+#   Joe Walker <jwalker@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,12 +46,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef ENABLE_TESTS
-ifneq (mobile,$(MOZ_BUILD_APP))
-	# DIRS += test # no tests yet
-endif
+	DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk
 
 libs::
 	$(NSINSTALL) $(srcdir)/Templater.jsm $(FINAL_TARGET)/modules/devtools
+	$(NSINSTALL) $(srcdir)/Promise.jsm $(FINAL_TARGET)/modules/devtools

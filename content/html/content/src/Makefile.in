@@ -148,6 +148,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../../editor/libeditor/text \
 		-I$(srcdir) \
 		-I$(topsrcdir)/xpcom/ds \
+		-I$(srcdir)/../../../../js/xpconnect/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

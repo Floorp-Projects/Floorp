@@ -109,7 +109,7 @@ nsIOThreadPool::Init()
 
     mNumThreads = 0;
     mNumIdleThreads = 0;
-    mShutdown = PR_FALSE;
+    mShutdown = false;
 
     mLock = nsAutoLock::NewLock("nsIOThreadPool::mLock");
     if (!mLock)
@@ -128,7 +128,7 @@ nsIOThreadPool::Init()
     // We want to shutdown the i/o thread pool at xpcom-shutdown-threads time.
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os)
-        os->AddObserver(this, "xpcom-shutdown-threads", PR_FALSE);
+        os->AddObserver(this, "xpcom-shutdown-threads", false);
     return NS_OK;
 }
 
@@ -157,7 +157,7 @@ nsIOThreadPool::Shutdown()
     // synchronize with background threads...
     {
         nsAutoLock lock(mLock);
-        mShutdown = PR_TRUE;
+        mShutdown = true;
 
         PR_NotifyAllCondVar(mIdleThreadCV);
 
@@ -217,7 +217,7 @@ nsIOThreadPool::IsOnCurrentThread(bool *result)
     NS_NOTREACHED("nsIOThreadPool::IsOnCurrentThread");
 
     // fudging this a bit since we actually cover several threads...
-    *result = PR_FALSE;
+    *result = false;
     return NS_OK;
 }
 

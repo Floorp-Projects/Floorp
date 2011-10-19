@@ -68,7 +68,7 @@ NS_IMPL_ISUPPORTS3(nsMacShellService, nsIMacShellService, nsIShellService, nsIWe
 NS_IMETHODIMP
 nsMacShellService::IsDefaultBrowser(bool aStartupCheck, bool* aIsDefaultBrowser)
 {
-  *aIsDefaultBrowser = PR_FALSE;
+  *aIsDefaultBrowser = false;
 
   CFStringRef firefoxID = ::CFBundleGetIdentifier(::CFBundleGetMainBundle());
   if (!firefoxID) {
@@ -89,7 +89,7 @@ nsMacShellService::IsDefaultBrowser(bool aStartupCheck, bool* aIsDefaultBrowser)
   // checked this session (so that subsequent window opens don't show the 
   // default browser dialog).
   if (aStartupCheck)
-    mCheckedThisSession = PR_TRUE;
+    mCheckedThisSession = true;
 
   return NS_OK;
 }
@@ -129,7 +129,7 @@ nsMacShellService::GetShouldCheckDefaultBrowser(bool* aResult)
   // If we've already checked, the browser has been started and this is a 
   // new window open, and we don't want to check again.
   if (mCheckedThisSession) {
-    *aResult = PR_FALSE;
+    *aResult = false;
     return NS_OK;
   }
 
@@ -174,12 +174,8 @@ nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
   // We need the referer URI for nsIWebBrowserPersist::saveURI
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDocument> doc;
-  doc = content->GetOwnerDoc();
-  if (!doc)
-    return NS_ERROR_FAILURE;
 
-  nsIURI *docURI = doc->GetDocumentURI();
+  nsIURI *docURI = content->OwnerDoc()->GetDocumentURI();
   if (!docURI)
     return NS_ERROR_FAILURE;
 
@@ -360,7 +356,7 @@ nsMacShellService::OpenApplication(PRInt32 aApplication)
   case nsIMacShellService::APPLICATION_NETWORK:
     {
       nsCOMPtr<nsILocalFile> lf;
-      rv = NS_NewNativeLocalFile(NETWORK_PREFPANE, PR_TRUE, getter_AddRefs(lf));
+      rv = NS_NewNativeLocalFile(NETWORK_PREFPANE, true, getter_AddRefs(lf));
       NS_ENSURE_SUCCESS(rv, rv);
       bool exists;
       lf->Exists(&exists);
@@ -372,7 +368,7 @@ nsMacShellService::OpenApplication(PRInt32 aApplication)
   case nsIMacShellService::APPLICATION_DESKTOP:
     {
       nsCOMPtr<nsILocalFile> lf;
-      rv = NS_NewNativeLocalFile(DESKTOP_PREFPANE, PR_TRUE, getter_AddRefs(lf));
+      rv = NS_NewNativeLocalFile(DESKTOP_PREFPANE, true, getter_AddRefs(lf));
       NS_ENSURE_SUCCESS(rv, rv);
       bool exists;
       lf->Exists(&exists);

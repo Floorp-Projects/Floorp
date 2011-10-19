@@ -53,7 +53,7 @@ nsDOMNotifyAudioAvailableEvent::nsDOMNotifyAudioAvailableEvent(nsPresContext* aP
     mFrameBufferLength(aFrameBufferLength),
     mTime(aTime),
     mCachedArray(nsnull),
-    mAllowAudioData(PR_FALSE)
+    mAllowAudioData(false)
 {
   MOZ_COUNT_CTOR(nsDOMNotifyAudioAvailableEvent);
   if (mEvent) {

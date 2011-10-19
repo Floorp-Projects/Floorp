@@ -45,7 +45,7 @@
 #include "mozilla/storage.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsDOMClassInfo.h"
+#include "nsDOMClassInfoID.h"
 #include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
@@ -404,7 +404,7 @@ IDBCursor::GetKey(nsIVariant** aKey)
     }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = variant->SetWritable(PR_FALSE);
+    rv = variant->SetWritable(false);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     nsIWritableVariant* result;

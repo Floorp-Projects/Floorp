@@ -119,7 +119,7 @@ let LocaleUI = {
       if (document.querySelector('[locale="' + targetLocale + '"]'))
         continue;
 
-      let item = this._createItem(targetLocale, locale.addon.name, locale);
+      let item = this._createItem(targetLocale, "\u202A" + locale.addon.name + "\u202C", locale);
       let match = localesMatch(targetLocale, this.locale);
       if (match > bestMatch) {
         bestMatch = match;
@@ -201,6 +201,21 @@ let LocaleUI = {
       locale.install.install();
     } else {
       this.closeWindow();
+    }
+  },
+
+  goBack: function goBack() {
+    switch (this.selectedPanel) {
+      case this.mainPage:
+        // Do nothing on the "Loading..." screen.
+        break;
+      case this.pickerpage:
+        this.cancelPicker();
+        break;
+      case this.installerPage:
+        this.cancelInstall();
+        this.showPicker();
+        break;
     }
   },
 

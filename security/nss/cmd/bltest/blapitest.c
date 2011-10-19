@@ -50,7 +50,7 @@
 #include "plgetopt.h"
 #include "softoken.h"
 #include "nspr.h"
-#include "nssutil.h"
+#include "secport.h"
 #include "secoid.h"
 
 #ifdef NSS_ENABLE_ECC
@@ -78,7 +78,7 @@ char *testdir = NULL;
     if (rv) { \
 	PRErrorCode prerror = PR_GetError(); \
 	PR_fprintf(PR_STDERR, "%s: ERR %d (%s) at line %d.\n", progName, \
-	prerror, NSS_Strerror(prerror,formatSimple), ln); \
+	prerror, PORT_ErrorToString(prerror), ln); \
 	exit(-1); \
     }
 
@@ -271,7 +271,7 @@ atob(SECItem *ascii, SECItem *binary, PRArenaPool *arena)
     binary->len = 0;
     it.item = binary;
     it.arena = arena;
-    len = (strncmp(&ascii->data[ascii->len-2],"\r\n",2)) ? 
+    len = (strncmp((const char *)&ascii->data[ascii->len-2],"\r\n",2)) ?
            ascii->len : ascii->len-2;
     cx = NSSBase64Decoder_Create(get_binary, &it);
     status = NSSBase64Decoder_Update(cx, (const char *)ascii->data, len);
@@ -296,9 +296,6 @@ btoa_file(SECItem *binary, PRFileDesc *outfile)
 {
     SECStatus status;
     NSSBase64Encoder *cx;
-    SECItem ascii;
-    ascii.data = NULL;
-    ascii.len = 0;
     if (binary->len == 0)
 	return SECSuccess;
     cx = NSSBase64Encoder_Create(output_ascii, outfile);
@@ -354,9 +351,6 @@ serialize_key(SECItem *it, int ni, PRFileDesc *file)
     int i;
     SECStatus status;
     NSSBase64Encoder *cx;
-    SECItem ascii;
-    ascii.data = NULL;
-    ascii.len = 0;
     cx = NSSBase64Encoder_Create(output_ascii, file);
     for (i=0; i<ni; i++, it++) {
 	len[0] = (it->len >> 24) & 0xff;

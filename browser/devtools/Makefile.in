@@ -49,14 +49,13 @@ include $(topsrcdir)/config/config.mk
 DIRS = \
   highlighter \
   webconsole \
-  scratchpad \
   sourceeditor \
   styleinspector \
   shared \
   $(NULL)
 
 ifdef ENABLE_TESTS
-# DIRS += test # no tests yet
+DIRS += scratchpad/test
 endif
 
 include $(topsrcdir)/config/rules.mk

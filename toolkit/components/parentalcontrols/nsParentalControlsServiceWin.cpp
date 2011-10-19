@@ -75,7 +75,7 @@ MyEventUnregister gEventUnregister = NULL;
 
 nsParentalControlsServiceWin::nsParentalControlsServiceWin() :
   mPC(nsnull)
-, mEnabled(PR_FALSE)
+, mEnabled(false)
 , mProvider(nsnull)
 {
   HRESULT hr;
@@ -104,7 +104,7 @@ nsParentalControlsServiceWin::nsParentalControlsServiceWin() :
       gEventRegister = (MyEventRegister) GetProcAddress(gAdvAPIDLLInst, "EventRegister");
       gEventUnregister = (MyEventUnregister) GetProcAddress(gAdvAPIDLLInst, "EventUnregister");
     }
-    mEnabled = PR_TRUE;
+    mEnabled = true;
   }
 }
 
@@ -125,10 +125,10 @@ nsParentalControlsServiceWin::~nsParentalControlsServiceWin()
 NS_IMETHODIMP
 nsParentalControlsServiceWin::GetParentalControlsEnabled(bool *aResult)
 {
-  *aResult = PR_FALSE;
+  *aResult = false;
 
   if (mEnabled)
-    *aResult = PR_TRUE;
+    *aResult = true;
 
   return NS_OK;
 }
@@ -136,7 +136,7 @@ nsParentalControlsServiceWin::GetParentalControlsEnabled(bool *aResult)
 NS_IMETHODIMP
 nsParentalControlsServiceWin::GetBlockFileDownloadsEnabled(bool *aResult)
 {
-  *aResult = PR_FALSE;
+  *aResult = false;
 
   if (!mEnabled)
     return NS_ERROR_NOT_AVAILABLE;
@@ -146,7 +146,7 @@ nsParentalControlsServiceWin::GetBlockFileDownloadsEnabled(bool *aResult)
     DWORD settings = 0;
     wpcws->GetSettings(&settings);
     if (settings == WPCFLAG_WEB_SETTING_DOWNLOADSBLOCKED)
-      *aResult = PR_TRUE;
+      *aResult = true;
   }
 
   return NS_OK;
@@ -155,7 +155,7 @@ nsParentalControlsServiceWin::GetBlockFileDownloadsEnabled(bool *aResult)
 NS_IMETHODIMP
 nsParentalControlsServiceWin::GetLoggingEnabled(bool *aResult)
 {
-  *aResult = PR_FALSE;
+  *aResult = false;
 
   if (!mEnabled)
     return NS_ERROR_NOT_AVAILABLE;
@@ -166,7 +166,7 @@ nsParentalControlsServiceWin::GetLoggingEnabled(bool *aResult)
     BOOL enabled = FALSE;
     wpcs->IsLoggingRequired(&enabled);
     if (enabled)
-      *aResult = PR_TRUE;
+      *aResult = true;
   }
 
   return NS_OK;
@@ -213,7 +213,7 @@ nsParentalControlsServiceWin::Log(PRInt16 aEntryType, bool blocked, nsIURI *aSou
 NS_IMETHODIMP
 nsParentalControlsServiceWin::RequestURIOverride(nsIURI *aTarget, nsIInterfaceRequestor *aWindowContext, bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   if (!mEnabled)
     return NS_ERROR_NOT_AVAILABLE;
@@ -249,7 +249,7 @@ nsParentalControlsServiceWin::RequestURIOverride(nsIURI *aTarget, nsIInterfaceRe
 NS_IMETHODIMP
 nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfaceRequestor *aWindowContext, bool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = false;
 
   if (!mEnabled)
     return NS_ERROR_NOT_AVAILABLE;

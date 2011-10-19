@@ -86,7 +86,7 @@ NS_IMPL_ISUPPORTS1(mozHunspellDirProvider::AppendingEnumerator,
 NS_IMETHODIMP
 mozHunspellDirProvider::AppendingEnumerator::HasMoreElements(bool *aResult)
 {
-  *aResult = mNext ? PR_TRUE : PR_FALSE;
+  *aResult = mNext ? true : false;
   return NS_OK;
 }
 

@@ -2320,7 +2320,6 @@ CK_RV NSC_SignFinal(CK_SESSION_HANDLE hSession,CK_BYTE_PTR pSignature,
 	    PORT_Memcpy(pSignature, context->macBuf, outlen );
     }
 
-terminate:
     sftk_TerminateOp( session, SFTK_SIGN, context );
 finish:
     *pulSignatureLen = outlen;
@@ -2751,7 +2750,6 @@ CK_RV NSC_VerifyFinal(CK_SESSION_HANDLE hSession,
 	    crv = CKR_SIGNATURE_INVALID;
     }
 
-terminate:
     sftk_TerminateOp( session, SFTK_VERIFY, context );
     sftk_FreeSession(session);
     return crv;

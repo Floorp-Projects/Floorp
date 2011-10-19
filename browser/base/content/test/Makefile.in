@@ -181,6 +181,7 @@ _BROWSER_FILES = \
                  browser_getshortcutoruri.js \
                  browser_hide_removing.js \
                  browser_overflowScroll.js \
+                 browser_locationBarCommand.js \
                  browser_locationBarExternalLoad.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
@@ -248,6 +249,7 @@ _BROWSER_FILES = \
                  test_wyciwyg_copying.html \
                  authenticate.sjs \
                  browser_minimize.js \
+                 browser_middleMouse_inherit.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

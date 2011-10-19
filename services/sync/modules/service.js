@@ -759,10 +759,9 @@ WeaveSvc.prototype = {
             // Go ahead and do remote setup, so that we can determine
             // conclusively that our passphrase is correct.
             if (this._remoteSetup()) {
-
               // Username/password verified.
-            Status.login = LOGIN_SUCCEEDED;
-            return true;
+              Status.login = LOGIN_SUCCEEDED;
+              return true;
             }
 
             this._log.warn("Remote setup failed.");
@@ -917,6 +916,7 @@ WeaveSvc.prototype = {
 
   startOver: function() {
     Svc.Obs.notify("weave:engine:stop-tracking");
+    Status.resetSync();
 
     // We want let UI consumers of the following notification know as soon as
     // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
@@ -944,6 +944,7 @@ WeaveSvc.prototype = {
     // Reset all engines and clear keys.
     this.resetClient();
     CollectionKeys.clear();
+    Status.resetBackoff();
 
     // Reset Weave prefs.
     this._ignorePrefObserver = true;
@@ -953,7 +954,6 @@ WeaveSvc.prototype = {
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
     this.password = "";
-    this.passphrase = "";
     Services.logins.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
       Services.logins.removeLogin(login);
     });

@@ -72,7 +72,7 @@ EXPORTS_mozilla/dom = \
   Link.h \
   $(NULL)
 
-LOCAL_INCLUDES = -I$(srcdir)/js/src/xpconnect/src
+LOCAL_INCLUDES = -I$(srcdir)/js/xpconnect/src
 
 CPPSRCS		= \
 		mozSanitizingSerializer.cpp \
@@ -95,7 +95,6 @@ CPPSRCS		= \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMBlobBuilder.cpp \
-		nsDOMCaretPosition.cpp \
 		nsDOMDocumentType.cpp \
 		nsDOMEventTargetWrapperCache.cpp \
 		nsDOMFile.cpp \
@@ -203,7 +202,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../xml/document/src \
 		-I$(topsrcdir)/xpcom/io \
 		-I$(topsrcdir)/dom/ipc \
-		-I$(topsrcdir)/js/src/xpconnect/src \
+		-I$(topsrcdir)/js/xpconnect/src \
 		-I$(topsrcdir)/caps/include \
 		-I$(topsrcdir)/netwerk/base/src \
 		$(NULL)

@@ -45,7 +45,6 @@
 #include "nsGUIEvent.h"
 #include "nsIServiceManager.h"
 #include "nsComponentManagerUtils.h"
-#include "nsWidgetAtoms.h"
 #include <objbase.h>
 #include <initguid.h>
 
@@ -117,6 +116,7 @@ void RunPump(void* arg)
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()  
 {
+    MOZ_COUNT_CTOR(nsToolkit);
     mGuiThread  = NULL;
     mDispatchWnd = 0;
 
@@ -135,6 +135,7 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
+    MOZ_COUNT_DTOR(nsToolkit);
     NS_PRECONDITION(::IsWindow(mDispatchWnd), "Invalid window handle");
 
     // Destroy the Dispatch Window
@@ -193,9 +194,9 @@ nsToolkit::Shutdown()
 void
 nsToolkit::StartAllowingD3D9()
 {
-  nsIToolkit *toolkit;
-  NS_GetCurrentToolkit(&toolkit);
-  static_cast<nsToolkit*>(toolkit)->mD3D9Timer->Cancel();
+  nsRefPtr<nsIToolkit> toolkit;
+  NS_GetCurrentToolkit(getter_AddRefs(toolkit));
+  static_cast<nsToolkit*>(toolkit.get())->mD3D9Timer->Cancel();
   nsWindow::StartAllowingD3D9(false);
 }
 
@@ -283,8 +284,6 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
                                      NULL,
                                      kD3DUsageDelay,
                                      nsITimer::TYPE_ONE_SHOT);
-
-    nsWidgetAtoms::RegisterAtoms();
 
     return NS_OK;
 }

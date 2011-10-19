@@ -114,7 +114,7 @@ static void
 CreateViewsForFrames(const nsFrameList& aFrames)
 {
   for (nsFrameList::Enumerator f(aFrames); !f.AtEnd(); f.Next()) {
-    nsContainerFrame::CreateViewForFrame(f.get(), PR_TRUE);
+    nsContainerFrame::CreateViewForFrame(f.get(), true);
   }
 }
 
@@ -177,8 +177,7 @@ nsDeckFrame::IndexChanged(nsPresContext* aPresContext)
     return;
 
   // redraw
-  nsBoxLayoutState state(aPresContext);
-  Redraw(state);
+  InvalidateOverflowRect();
 
   // hide the currently showing box
   nsIBox* currentBox = GetSelectedBox();

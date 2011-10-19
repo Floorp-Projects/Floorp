@@ -177,15 +177,12 @@ struct DebugOnly
 
     T& operator->() { return value; }
 
-    bool operator<(const T& other) { return value < other; }
-
 #else
     DebugOnly() {}
     DebugOnly(const T&) {}
     DebugOnly& operator=(const T&) { return *this; }
     void operator++(int) {}
     void operator--(int) {}
-    bool operator<(const T&) { return false; }
 #endif
 
     /*
@@ -196,6 +193,93 @@ struct DebugOnly
     ~DebugOnly() {}
 };
 
+/*
+ * This class, and the corresponding macro MOZ_ALIGNOF, figure out how many 
+ * bytes of alignment a given type needs.
+ */
+template<class T>
+struct AlignmentFinder
+{
+private:
+  struct Aligner
+  {
+    char c;
+    T t;
+  };
+
+public:
+  static const int alignment = sizeof(Aligner) - sizeof(T);
+};
+
+#define MOZ_ALIGNOF(T) mozilla::AlignmentFinder<T>::alignment
+
+/*
+ * Declare the MOZ_ALIGNED_DECL macro for declaring aligned types.
+ *
+ * For instance,
+ *
+ *   MOZ_ALIGNED_DECL(char arr[2], 8);
+ *
+ * will declare a two-character array |arr| aligned to 8 bytes.
+ */
+
+#if defined(__GNUC__)
+#define MOZ_ALIGNED_DECL(_type, _align) \
+  _type __attribute__((aligned(_align)))
+
+#elif defined(_MSC_VER)
+#define MOZ_ALIGNED_DECL(_type, _align) \
+  __declspec(align(_align)) _type
+
+#else
+
+#warning "We don't know how to align variables on this compiler."
+#define MOZ_ALIGNED_DECL(_type, _align) _type
+
+#endif
+
+/*
+ * AlignedElem<N> is a structure whose alignment is guaranteed to be at least N bytes.
+ *
+ * We support 1, 2, 4, 8, and 16-bit alignment.
+ */
+template<size_t align>
+struct AlignedElem;
+
+/*
+ * We have to specialize this template because GCC doesn't like __attribute__((aligned(foo))) where
+ * foo is a template parameter.
+ */
+
+template<>
+struct AlignedElem<1>
+{
+  MOZ_ALIGNED_DECL(uint8 elem, 1);
+};
+
+template<>
+struct AlignedElem<2>
+{
+  MOZ_ALIGNED_DECL(uint8 elem, 2);
+};
+
+template<>
+struct AlignedElem<4>
+{
+  MOZ_ALIGNED_DECL(uint8 elem, 4);
+};
+
+template<>
+struct AlignedElem<8>
+{
+  MOZ_ALIGNED_DECL(uint8 elem, 8);
+};
+
+template<>
+struct AlignedElem<16>
+{
+  MOZ_ALIGNED_DECL(uint8 elem, 16);
+};
 
 /*
  * This utility pales in comparison to Boost's aligned_storage. The utility
@@ -331,6 +415,31 @@ PointerRangeSize(T* begin, T* end)
 {
     MOZ_ASSERT(end >= begin);
     return (size_t(end) - size_t(begin)) / sizeof(T);
+}
+
+/*
+ * Compute the length of an array with constant length.  (Use of this method
+ * with a non-array pointer will not compile.)
+ *
+ * Beware of the implicit trailing '\0' when using this with string constants.
+ */
+template<typename T, size_t N>
+size_t
+ArrayLength(T (&arr)[N])
+{
+    return N;
+}
+
+/*
+ * Compute the address one past the last element of a constant-length array.
+ *
+ * Beware of the implicit trailing '\0' when using this with string constants.
+ */
+template<typename T, size_t N>
+T*
+ArrayEnd(T (&arr)[N])
+{
+    return arr + ArrayLength(arr);
 }
 
 } /* namespace mozilla */

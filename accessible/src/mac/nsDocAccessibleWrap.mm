@@ -54,7 +54,7 @@ bool
 nsDocAccessibleWrap::Init () 
 {
   if (!nsDocAccessible::Init())
-    return PR_FALSE;
+    return false;
 
   NS_ASSERTION(!mNativeWrapper, "nsDocAccessibleWrap::Init() called more than once!");
 
@@ -62,8 +62,8 @@ nsDocAccessibleWrap::Init ()
     // Create our native object using the class type specified in GetNativeType().
     mNativeWrapper = new AccessibleWrapper (this, GetNativeType());
     if (!mNativeWrapper)
-      return PR_FALSE;
+      return false;
   }
 
-  return PR_TRUE;
+  return true;
 }

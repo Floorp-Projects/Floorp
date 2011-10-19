@@ -92,9 +92,9 @@ matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
     const PrefHashEntry *prefEntry =
         static_cast<const PrefHashEntry*>(entry);
 
-    if (prefEntry->key == key) return PR_TRUE;
+    if (prefEntry->key == key) return true;
 
-    if (!prefEntry->key || !key) return PR_FALSE;
+    if (!prefEntry->key || !key) return false;
 
     const char *otherKey = reinterpret_cast<const char*>(key);
     return (strcmp(prefEntry->key, otherKey) == 0);
@@ -197,7 +197,7 @@ nsresult PREF_Init()
 void PREF_Cleanup()
 {
     NS_ASSERTION(!gCallbacksInProgress,
-        "PREF_Cleanup was called while gCallbacksInProgress is PR_TRUE!");
+        "PREF_Cleanup was called while gCallbacksInProgress is true!");
     struct CallbackNode* node = gCallbacks;
     struct CallbackNode* next_node;
 
@@ -441,10 +441,10 @@ pref_CompareStrings(const void *v1, const void *v2, void *unused)
 bool PREF_HasUserPref(const char *pref_name)
 {
     if (!gHashTable.ops)
-        return PR_FALSE;
+        return false;
 
     PrefHashEntry *pref = pref_HashTableLookup(pref_name);
-    if (!pref) return PR_FALSE;
+    if (!pref) return false;
 
     /* convert PREF_HAS_USER_VALUE to bool */
     return (PREF_HAS_USER_VALUE(pref) != 0);
@@ -596,7 +596,7 @@ PREF_DeleteBranch(const char *branch_name)
 
     PL_DHashTableEnumerate(&gHashTable, pref_DeleteItem,
                            (void*) branch_dot.get());
-    gDirty = PR_TRUE;
+    gDirty = true;
     return NS_OK;
 }
 
@@ -617,7 +617,7 @@ PREF_ClearUserPref(const char *pref_name)
         }
 
         pref_DoCallback(pref_name);
-        gDirty = PR_TRUE;
+        gDirty = true;
     }
     return NS_OK;
 }
@@ -651,7 +651,7 @@ PREF_ClearAllUserPrefs()
 
     PL_DHashTableEnumerate(&gHashTable, pref_ClearUserPref, nsnull);
 
-    gDirty = PR_TRUE;
+    gDirty = true;
     return NS_OK;
 }
 
@@ -668,7 +668,7 @@ nsresult PREF_LockPref(const char *key, bool lockit)
         if (!PREF_IS_LOCKED(pref))
         {
             pref->flags |= PREF_LOCKED;
-            gIsAnyPrefLocked = PR_TRUE;
+            gIsAnyPrefLocked = true;
             pref_DoCallback(key);
         }
     }
@@ -715,7 +715,7 @@ static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type
         default:
             *oldValue = newValue;
     }
-    gDirty = PR_TRUE;
+    gDirty = true;
 }
 
 PrefHashEntry* pref_HashTableLookup(const void *key)
@@ -766,7 +766,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, bool set
                 pref_SetValue(&pref->defaultPref, value, type);
                 pref->flags |= PREF_HAS_DEFAULT;
                 if (!PREF_HAS_USER_VALUE(pref))
-                    valueChanged = PR_TRUE;
+                    valueChanged = true;
             }
         }
     }
@@ -781,7 +781,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, bool set
             {
                 pref->flags &= ~PREF_USERSET;
                 if (!PREF_IS_LOCKED(pref))
-                    valueChanged = PR_TRUE;
+                    valueChanged = true;
             }
         }
         else if ( !PREF_HAS_USER_VALUE(pref) ||
@@ -790,13 +790,13 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, bool set
             pref_SetValue(&pref->userPref, value, type);
             pref->flags |= PREF_USERSET;
             if (!PREF_IS_LOCKED(pref))
-                valueChanged = PR_TRUE;
+                valueChanged = true;
         }
     }
 
     nsresult rv = NS_OK;
     if (valueChanged) {
-        gDirty = PR_TRUE;
+        gDirty = true;
 
         nsresult rv2 = pref_DoCallback(key);
         if (NS_FAILED(rv2))
@@ -833,7 +833,7 @@ PREF_PrefIsLocked(const char *pref_name)
     if (gIsAnyPrefLocked && gHashTable.ops) {
         PrefHashEntry* pref = pref_HashTableLookup(pref_name);
         if (pref && PREF_IS_LOCKED(pref))
-            result = PR_TRUE;
+            result = true;
     }
 
     return result;
@@ -870,7 +870,7 @@ pref_RemoveCallbackNode(struct CallbackNode* node,
     NS_PRECONDITION(prev_node || gCallbacks == node, "invalid params");
 
     NS_ASSERTION(!gCallbacksInProgress,
-        "modifying the callback list while gCallbacksInProgress is PR_TRUE");
+        "modifying the callback list while gCallbacksInProgress is true");
 
     struct CallbackNode* next_node = node->next;
     if (prev_node)
@@ -903,7 +903,7 @@ PREF_UnregisterCallback(const char *pref_node,
                 // postpone the node removal until after
                 // gCallbacks enumeration is finished.
                 node->func = nsnull;
-                gShouldCleanupDeadNodes = PR_TRUE;
+                gShouldCleanupDeadNodes = true;
                 prev_node = node;
                 node = node->next;
             }
@@ -928,8 +928,8 @@ static nsresult pref_DoCallback(const char* changed_pref)
     struct CallbackNode* node;
 
     bool reentered = gCallbacksInProgress;
-    gCallbacksInProgress = PR_TRUE;
-    // Nodes must not be deleted while gCallbacksInProgress is PR_TRUE.
+    gCallbacksInProgress = true;
+    // Nodes must not be deleted while gCallbacksInProgress is true.
     // Nodes that need to be deleted are marked for deletion by nulling
     // out the |func| pointer. We release them at the end of this function
     // if we haven't reentered.
@@ -966,7 +966,7 @@ static nsresult pref_DoCallback(const char* changed_pref)
                 node = node->next;
             }
         }
-        gShouldCleanupDeadNodes = PR_FALSE;
+        gShouldCleanupDeadNodes = false;
     }
 
     return rv;

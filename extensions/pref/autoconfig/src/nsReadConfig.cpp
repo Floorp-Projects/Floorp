@@ -109,7 +109,7 @@ static void DisplayError(void)
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsReadConfig, nsIReadConfig, nsIObserver)
 
 nsReadConfig::nsReadConfig() :
-    mRead(PR_FALSE)
+    mRead(false)
 {
     if (!MCD)
       MCD = PR_NewLogModule("MCD");
@@ -123,7 +123,7 @@ nsresult nsReadConfig::Init()
         do_GetService("@mozilla.org/observer-service;1", &rv);
 
     if (observerService) {
-        rv = observerService->AddObserver(this, NS_PREFSERVICE_READ_TOPIC_ID, PR_FALSE);
+        rv = observerService->AddObserver(this, NS_PREFSERVICE_READ_TOPIC_ID, false);
     }
     return(rv);
 }
@@ -190,16 +190,16 @@ nsresult nsReadConfig::readConfigFile()
             return rv;
         
         // Open and evaluate function calls to set/lock/unlock prefs
-        rv = openAndEvaluateJSFile("prefcalls.js", 0, PR_FALSE, PR_FALSE);
+        rv = openAndEvaluateJSFile("prefcalls.js", 0, false, false);
         if (NS_FAILED(rv)) 
             return rv;
 
         // Evaluate platform specific directives
-        rv = openAndEvaluateJSFile("platform.js", 0, PR_FALSE, PR_FALSE);
+        rv = openAndEvaluateJSFile("platform.js", 0, false, false);
         if (NS_FAILED(rv)) 
             return rv;
 
-        mRead = PR_TRUE;
+        mRead = true;
     }
     // If the lockFileName is NULL return ok, because no lockFile will be used
   
@@ -216,7 +216,7 @@ nsresult nsReadConfig::readConfigFile()
     PRInt32 obscureValue = 0;
     (void) defaultPrefBranch->GetIntPref("general.config.obscure_value", &obscureValue);
     PR_LOG(MCD, PR_LOG_DEBUG, ("evaluating .cfg file %s with obscureValue %d\n", lockFileName.get(), obscureValue));
-    rv = openAndEvaluateJSFile(lockFileName.get(), obscureValue, PR_TRUE, PR_TRUE);
+    rv = openAndEvaluateJSFile(lockFileName.get(), obscureValue, true, true);
     if (NS_FAILED(rv))
     {
       PR_LOG(MCD, PR_LOG_DEBUG, ("error evaluating .cfg file %s %x\n", lockFileName.get(), rv));
@@ -329,8 +329,8 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRInt32 obsc
                 buf[i] -= obscureValue;
         }
         rv = EvaluateAdminConfigScript(buf, amt, aFileName,
-                                       PR_FALSE, PR_TRUE,
-                                       isEncoded ? PR_TRUE:PR_FALSE);
+                                       false, true,
+                                       isEncoded ? true:false);
     }
     inStr->Close();
     PR_Free(buf);

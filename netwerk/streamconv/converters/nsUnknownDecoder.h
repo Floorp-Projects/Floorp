@@ -90,8 +90,8 @@ protected:
   // pref?
   bool AllowSniffing(nsIRequest* aRequest);
   
-  // Various sniffer functions.  Returning PR_TRUE means that a type
-  // was determined; PR_FALSE means no luck.
+  // Various sniffer functions.  Returning true means that a type
+  // was determined; false means no luck.
   bool TryContentSniffers(nsIRequest* aRequest);
   bool SniffForHTML(nsIRequest* aRequest);
   bool SniffForXML(nsIRequest* aRequest);
@@ -112,7 +112,7 @@ protected:
    * or a function to be executed (set these with the
    * SNIFFER_ENTRY_WITH_FUNC macro).  The function should take a single
    * nsIRequest* and returns bool -- true if it sets mContentType,
-   * PR_FALSE otherwise
+   * false otherwise
    */
   struct nsSnifferEntry {
     typedef bool (nsUnknownDecoder::*TypeSniffFunc)(nsIRequest* aRequest);

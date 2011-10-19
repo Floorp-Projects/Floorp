@@ -218,9 +218,12 @@ public:
 
       // First check if the document the IDBDatabase is part of is bfcached
       nsCOMPtr<nsIDocument> ownerDoc = database->GetOwnerDocument();
-      nsIBFCacheEntry* bfCacheEntry;
-      if (ownerDoc && (bfCacheEntry = ownerDoc->GetBFCacheEntry())) {
-        bfCacheEntry->RemoveFromBFCacheSync();
+      nsISHEntry* shEntry;
+      if (ownerDoc && (shEntry = ownerDoc->GetBFCacheEntry())) {
+        nsCOMPtr<nsISHEntryInternal> sheInternal = do_QueryInterface(shEntry);
+        if (sheInternal) {
+          sheInternal->RemoveFromBFCacheSync();
+        }
         NS_ASSERTION(database->IsClosed(),
                      "Kicking doc out of bfcache should have closed database");
         continue;
@@ -322,14 +325,14 @@ IndexedDatabaseManager::GetOrCreate()
 
     // We need this callback to know when to shut down all our threads.
     nsresult rv = obs->AddObserver(instance, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                   PR_FALSE);
+                                   false);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     // We don't really need this callback but we want the observer service to
     // hold us alive until XPCOM shutdown. That way other consumers can continue
     // to use this service until shutdown.
     rv = obs->AddObserver(instance, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
-                          PR_FALSE);
+                          false);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     // Make a lazy thread for any IO we need (like clearing or enumerating the
@@ -1093,7 +1096,7 @@ IndexedDatabaseManager::OriginClearRunnable::Run()
     bool exists;
     rv = directory->Exists(&exists);
     if (NS_SUCCEEDED(rv) && exists) {
-      rv = directory->Remove(PR_TRUE);
+      rv = directory->Remove(true);
     }
   }
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to remove directory!");

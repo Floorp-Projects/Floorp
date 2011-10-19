@@ -74,7 +74,7 @@ endif
 #
 
 ifndef MOZ_NATIVE_JPEG
-tier_platform_dirs	+= jpeg
+tier_platform_dirs	+= media/libjpeg
 endif
 
 ifdef MOZ_UPDATER
@@ -94,7 +94,8 @@ tier_platform_dirs	+= gfx/qcms
 tier_platform_dirs += ipc js/ipc js/jetpack
 
 tier_platform_dirs += \
-		js/src/xpconnect \
+		hal \
+		js/xpconnect \
 		intl/chardet \
 		$(NULL)
 
@@ -157,7 +158,7 @@ tier_platform_dirs += \
 endif
 
 ifndef MOZ_NATIVE_PNG
-tier_platform_dirs += modules/libimg/png
+tier_platform_dirs += media/libpng
 endif
 
 tier_platform_dirs	+= \
@@ -165,7 +166,7 @@ tier_platform_dirs	+= \
 		caps \
 		parser \
 		gfx \
-		modules/libpr0n \
+		image \
 		dom \
 		view \
 		widget \
@@ -222,7 +223,7 @@ tier_platform_dirs += services/crypto/component
 
 tier_platform_dirs += startupcache
 
-tier_platform_dirs += js/ductwork
+tier_platform_dirs += js/ductwork/debugger
 
 ifdef APP_LIBXUL_STATICDIRS
 # Applications can cheat and ask for code to be
@@ -264,8 +265,7 @@ endif
 
 ifdef ENABLE_TESTS
 tier_platform_dirs += testing/mochitest
-tier_platform_dirs += testing/xpcshell 
-tier_platform_dirs += testing/mozmill
+tier_platform_dirs += testing/xpcshell
 tier_platform_dirs += testing/tools/screenshot
 endif
 

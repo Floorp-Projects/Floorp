@@ -118,20 +118,20 @@ protected:
   /**
    * Test two nsSMILValue objects (of this nsISMILType) for equality.
    *
-   * A return value of PR_TRUE represents a guarantee that aLeft and aRight are
+   * A return value of true represents a guarantee that aLeft and aRight are
    * equal. (That is, they would behave identically if passed to the methods
    * Add, SandwichAdd, ComputeDistance, and Interpolate).
    *
-   * A return value of PR_FALSE simply indicates that we make no guarantee
+   * A return value of false simply indicates that we make no guarantee
    * about equality.
    *
    * NOTE: It's perfectly legal for implementations of this method to return
-   * PR_FALSE in all cases.  However, smarter implementations will make this
+   * false in all cases.  However, smarter implementations will make this
    * method more useful for optimization.
    *
    * @param   aLeft       The left-hand side of the equality check.
    * @param   aRight      The right-hand side of the equality check.
-   * @return  PR_TRUE if we're sure the values are equal, PR_FALSE otherwise.
+   * @return  true if we're sure the values are equal, false otherwise.
    *
    * @pre aDest.mType == aSrc.mType == this
    */

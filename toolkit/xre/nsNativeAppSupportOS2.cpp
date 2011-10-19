@@ -741,7 +741,7 @@ struct MessageWindow {
         if (cds->dwData >= 1) {
             char* wdpath = strchr( (char*)cds->lpData, 0) + 1;
             NS_NewNativeLocalFile(nsDependentCString(wdpath),
-                                  PR_FALSE, getter_AddRefs(workingDir));
+                                  false, getter_AddRefs(workingDir));
         }
 
         nsNativeAppSupportOS2::HandleCommandLine((char*)cds->lpData,
@@ -775,7 +775,7 @@ nsNativeAppSupportOS2::Start( bool *aResult ) {
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
 
     nsresult rv = NS_ERROR_FAILURE;
-    *aResult = PR_FALSE;
+    *aResult = false;
 
     // see if DDE should be enabled AND remove OS/2-specific
     // options the app's commandline handler won't recognize
@@ -783,7 +783,7 @@ nsNativeAppSupportOS2::Start( bool *aResult ) {
     for (int i = 1; i < gArgc; i++) {
         if (stricmp("-dde", gArgv[i]) == 0 ||
             stricmp("/dde", gArgv[i]) == 0)
-            mUseDDE = PR_TRUE;
+            mUseDDE = true;
         else
             if (stricmp("-console", gArgv[i]) != 0 &&
                 stricmp("/console", gArgv[i]) != 0)
@@ -798,8 +798,8 @@ nsNativeAppSupportOS2::Start( bool *aResult ) {
     // if this is a standalone instance, turn off DDE regardless of the
     // commandline, then skip out before we look for another instance
     if (getenv("MOZ_NO_REMOTE")) {
-        mUseDDE = PR_FALSE;
-        *aResult = PR_TRUE;
+        mUseDDE = false;
+        *aResult = true;
         return NS_OK;
     }
 
@@ -839,13 +839,13 @@ nsNativeAppSupportOS2::Start( bool *aResult ) {
             if (mUseDDE)
                 this->StartDDE();
             // Tell caller to spin message loop.
-            *aResult = PR_TRUE;
+            *aResult = true;
         }
     }
 
     startupLock.Unlock();
 
-    if( *aResult == PR_FALSE )
+    if( *aResult == false )
     {
         /* This process isn't going to continue much longer.  Make sure that we
          * clean up the message queue
@@ -863,10 +863,10 @@ bool
 nsNativeAppSupportOS2::InitTopicStrings() {
     for ( int i = 0; i < topicCount; i++ ) {
         if ( !( mTopics[ i ] = WinDdeCreateStringHandle( (PSZ)topicNames[ i ], CP_WINANSI ) ) ) {
-            return PR_FALSE;
+            return false;
         }
     }
-    return PR_TRUE;
+    return true;
 }
 
 int
@@ -896,10 +896,10 @@ nsNativeAppSupportOS2::StartDDE() {
     /* Get entrypoints for PMDDEML */
     BOOL bDDEML = SetupOS2ddeml();
 
-    /* If we couldn't initialize DDEML, set mUSEDDE to PR_FALSE */
+    /* If we couldn't initialize DDEML, set mUSEDDE to false */
     /* so we don't do anything else DDE related */
     if (!bDDEML) {
-       mUseDDE = PR_FALSE;
+       mUseDDE = false;
        return NS_OK;
     }
 
@@ -931,7 +931,7 @@ nsNativeAppSupportOS2::Stop( bool *aResult ) {
     NS_ENSURE_TRUE( mInstance, NS_ERROR_NOT_INITIALIZED );
 
     nsresult rv = NS_OK;
-    *aResult = PR_TRUE;
+    *aResult = true;
 
     if (!mUseDDE) {
        return rv;
@@ -943,7 +943,7 @@ nsNativeAppSupportOS2::Stop( bool *aResult ) {
         if ( mConversations == 0 ) {
             this->Quit();
         } else {
-            *aResult = PR_FALSE;
+            *aResult = false;
         }
 
         ddeLock.Unlock();
@@ -951,7 +951,7 @@ nsNativeAppSupportOS2::Stop( bool *aResult ) {
     else {
         // No DDE application name specified, but that's OK.  Just
         // forge ahead.
-        *aResult = PR_TRUE;
+        *aResult = true;
     }
 
     return rv;
@@ -1011,10 +1011,10 @@ nsNativeAppSupportOS2::Quit() {
 NS_IMETHODIMP
 nsNativeAppSupportOS2::Enable()
 {
-    mCanHandleRequests = PR_TRUE;
+    mCanHandleRequests = true;
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
-        obs->AddObserver(this, "quit-application", PR_FALSE);
+        obs->AddObserver(this, "quit-application", false);
     } else {
         NS_ERROR("No observer service?");
     }
@@ -1238,7 +1238,7 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
 #if MOZ_DEBUG_DDE
                         printf( "WWW_GetWindowInfo->%s\n", outpt.get() );
 #endif
-                    } while ( PR_FALSE );
+                    } while ( false );
                     break;
                 }
                 case topicActivate: {
@@ -1264,12 +1264,12 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                 }
                 case topicRegisterViewer: {
                     // Register new viewer (not implemented).
-                    result = CreateDDEData( PR_FALSE );
+                    result = CreateDDEData( false );
                     break;
                 }
                 case topicUnRegisterViewer: {
                     // Unregister new viewer (not implemented).
-                    result = CreateDDEData( PR_FALSE );
+                    result = CreateDDEData( false );
                     break;
                 }
                 default:
@@ -1587,8 +1587,8 @@ nsNativeAppSupportOS2::HandleCommandLine(const char* aCmdLineString,
     // if these OS/2-specific flags aren't removed,
     // any URL following them will be ignored
     bool found;
-    cmdLine->HandleFlag(NS_LITERAL_STRING("console"), PR_FALSE, &found);
-    cmdLine->HandleFlag(NS_LITERAL_STRING("dde"), PR_FALSE, &found);
+    cmdLine->HandleFlag(NS_LITERAL_STRING("console"), false, &found);
+    cmdLine->HandleFlag(NS_LITERAL_STRING("dde"), false, &found);
 
     // Cleanup.
     while ( argc ) {
@@ -1749,7 +1749,7 @@ nsNativeAppSupportOS2::OpenBrowserWindow()
         }
 
         NS_ERROR("failed to hand off external URL to extant window");
-    } while ( PR_FALSE );
+    } while ( false );
 
     // open a new window if caller requested it or if anything above failed
 
@@ -1796,7 +1796,7 @@ bool       StartOS2App(int aArgc, char **aArgv)
         stricmp("help", arg) == 0 ||
         stricmp("version", arg) == 0 ||
         stricmp("console", arg) == 0) {
-        rv = PR_FALSE;
+        rv = false;
         break;
       }
     }
@@ -1844,7 +1844,7 @@ bool       StartOS2App(int aArgc, char **aArgv)
   PID   pid;
   ULONG rc = DosStartSession(&x, &ulSession, &pid);
   if (rc && rc != ERROR_SMG_START_IN_BACKGROUND)
-    rv = PR_TRUE;
+    rv = true;
 
   return rv;
 }

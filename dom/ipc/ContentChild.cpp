@@ -52,13 +52,14 @@
 #include "AudioChild.h"
 #endif
 
+#include "mozilla/dom/ExternalHelperAppChild.h"
+#include "mozilla/dom/PCrashReporterChild.h"
+#include "mozilla/dom/StorageChild.h"
+#include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/ipc/TestShellChild.h"
-#include "mozilla/net/NeckoChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
-#include "mozilla/dom/ExternalHelperAppChild.h"
-#include "mozilla/dom/StorageChild.h"
-#include "mozilla/dom/PCrashReporterChild.h"
+#include "mozilla/net/NeckoChild.h"
 
 #if defined(MOZ_SYDNEYAUDIO)
 #include "nsAudioStream.h"
@@ -74,6 +75,7 @@
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
 #include "nsJSEnvironment.h"
+#include "SandboxHal.h"
 
 #include "History.h"
 #include "nsDocShellCID.h"
@@ -109,6 +111,7 @@
 #include "nsIAccessibilityService.h"
 #endif
 
+using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -440,6 +443,19 @@ ContentChild::DeallocPCrashReporter(PCrashReporterChild* crashreporter)
     return true;
 }
 
+PHalChild*
+ContentChild::AllocPHal()
+{
+    return CreateHalChild();
+}
+
+bool
+ContentChild::DeallocPHal(PHalChild* aHal)
+{
+    delete aHal;
+    return true;
+}
+
 PTestShellChild*
 ContentChild::AllocPTestShell()
 {
@@ -677,7 +693,7 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
   nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::sChildProcessManager;
   if (cpm) {
     cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()),
-                        aMsg, PR_FALSE, aJSON, nsnull, nsnull);
+                        aMsg, false, aJSON, nsnull, nsnull);
   }
   return true;
 }
@@ -786,6 +802,14 @@ ContentChild::RecvCycleCollect()
 {
     nsJSContext::GarbageCollectNow();
     nsJSContext::CycleCollectNow();
+    return true;
+}
+
+bool
+ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID)
+{
+    mAppInfo.version.Assign(version);
+    mAppInfo.buildID.Assign(buildID);
     return true;
 }
 

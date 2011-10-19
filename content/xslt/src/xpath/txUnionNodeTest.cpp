@@ -47,11 +47,11 @@ txUnionNodeTest::matches(const txXPathNode& aNode,
     PRUint32 i, len = mNodeTests.Length();
     for (i = 0; i < len; ++i) {
         if (mNodeTests[i]->matches(aNode, aContext)) {
-            return PR_TRUE;
+            return true;
         }
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 double
@@ -67,11 +67,11 @@ txUnionNodeTest::isSensitiveTo(Expr::ContextSensitivity aContext)
     PRUint32 i, len = mNodeTests.Length();
     for (i = 0; i < len; ++i) {
         if (mNodeTests[i]->isSensitiveTo(aContext)) {
-            return PR_TRUE;
+            return true;
         }
     }
 
-    return PR_FALSE;
+    return false;
 }
 
 #ifdef TX_TO_STRING

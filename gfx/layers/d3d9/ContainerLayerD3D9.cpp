@@ -137,9 +137,9 @@ HasOpaqueAncestorLayer(Layer* aLayer)
 {
   for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
     if (l->GetContentFlags() & Layer::CONTENT_OPAQUE)
-      return PR_TRUE;
+      return true;
   }
-  return PR_FALSE;
+  return false;
 }
 
 static inline LayerD3D9*
@@ -177,7 +177,7 @@ ContainerRender(Container* aContainer,
   nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
   bool useIntermediate = aContainer->UseIntermediateSurface();
 
-  aContainer->mSupportsComponentAlphaChildren = PR_FALSE;
+  aContainer->mSupportsComponentAlphaChildren = false;
   if (useIntermediate) {
     aManager->device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
     aManager->device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
@@ -191,7 +191,7 @@ ContainerRender(Container* aContainer,
     if (aContainer->mVisibleRegion.GetNumRects() == 1 && 
         (aContainer->GetContentFlags() & aContainer->CONTENT_OPAQUE)) {
       // don't need a background, we're going to paint all opaque stuff
-      aContainer->mSupportsComponentAlphaChildren = PR_TRUE;
+      aContainer->mSupportsComponentAlphaChildren = true;
     } else {
       const gfx3DMatrix& transform3D = aContainer->GetEffectiveTransform();
       gfxMatrix transform;
@@ -212,7 +212,7 @@ ContainerRender(Container* aContainer,
           StretchRect(previousRenderTarget, &src, renderSurface, &dest, D3DTEXF_NONE);
       }
       if (hr == S_OK) {
-        aContainer->mSupportsComponentAlphaChildren = PR_TRUE;
+        aContainer->mSupportsComponentAlphaChildren = true;
       } else {
         aManager->device()->
           Clear(0, 0, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 0, 0);
@@ -247,12 +247,14 @@ ContainerRender(Container* aContainer,
          aContainer->mParent->SupportsComponentAlphaChildren());
   }
 
+  nsAutoTArray<Layer*, 12> children;
+  aContainer->SortChildrenBy3DZOrder(children);
+
   /*
    * Render this container's contents.
    */
-  for (LayerD3D9* layerToRender = aContainer->GetFirstChildD3D9();
-       layerToRender != nsnull;
-       layerToRender = GetNextSiblingD3D9(layerToRender)) {
+  for (PRUint32 i = 0; i < children.Length(); i++) {
+    LayerD3D9* layerToRender = static_cast<LayerD3D9*>(children.ElementAt(i)->ImplData());
 
     if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
       continue;

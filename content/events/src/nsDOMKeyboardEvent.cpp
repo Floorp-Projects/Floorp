@@ -43,15 +43,15 @@
 nsDOMKeyboardEvent::nsDOMKeyboardEvent(nsPresContext* aPresContext,
                                        nsKeyEvent* aEvent)
   : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
-                 new nsKeyEvent(PR_FALSE, 0, nsnull))
+                 new nsKeyEvent(false, 0, nsnull))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_KEY_EVENT, "event type mismatch");
 
   if (aEvent) {
-    mEventIsInternal = PR_FALSE;
+    mEventIsInternal = false;
   }
   else {
-    mEventIsInternal = PR_TRUE;
+    mEventIsInternal = true;
     mEvent->time = PR_Now();
   }
 }

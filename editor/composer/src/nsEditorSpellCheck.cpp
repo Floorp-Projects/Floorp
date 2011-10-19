@@ -229,7 +229,7 @@ nsEditorSpellCheck::nsEditorSpellCheck()
   : mSuggestedWordIndex(0)
   , mDictionaryIndex(0)
   , mEditor(nsnull)
-  , mUpdateDictionaryRunning(PR_FALSE)
+  , mUpdateDictionaryRunning(false)
 {
 }
 
@@ -343,7 +343,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
 
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NULL_POINTER);
 
-  rv = mSpellChecker->SetDocument(tsDoc, PR_TRUE);
+  rv = mSpellChecker->SetDocument(tsDoc, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // do not fail if UpdateCurrentDictionary fails because this method may

@@ -174,7 +174,10 @@ class Bindings {
     uint16 nupvars;
 
   public:
-    inline Bindings(JSContext *cx);
+    inline Bindings(JSContext *cx)
+        : lastBinding(NULL), nargs(0), nvars(0), nupvars(0)
+    {
+    }
 
     /*
      * Transfers ownership of bindings data from bindings into this fresh
@@ -551,7 +554,7 @@ struct JSScript : public js::gc::Cell {
      */
     uint32 id_;
     uint32 idpad;
-    unsigned id() { return id_; }
+    unsigned id();
 #else
     unsigned id() { return 0; }
 #endif

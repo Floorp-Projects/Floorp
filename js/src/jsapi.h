@@ -47,8 +47,9 @@
 #include <stdio.h>
 #include "js-config.h"
 #include "jspubtd.h"
-#include "jsutil.h"
 #include "jsval.h"
+
+#include "js/Utility.h"
 
 /************************************************************************/
 
@@ -662,6 +663,16 @@ class Value
 #endif
     }
 
+#ifndef _MSC_VER
+  /* To make jsval binary compatible when linking across C and C++ with MSVC,
+   * JS::Value needs to be POD. Otherwise, jsval will be passed in memory
+   * in C++ but by value in C (bug 645111).
+   */
+  private:
+#endif
+
+    jsval_layout data;
+
   private:
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
@@ -670,8 +681,6 @@ class Value
         JS_STATIC_ASSERT(sizeof(JSWhyMagic) <= 4);
         JS_STATIC_ASSERT(sizeof(Value) == 8);
     }
-
-    jsval_layout data;
 
     friend jsval_layout (::JSVAL_TO_IMPL)(Value);
     friend Value (::IMPL_TO_JSVAL)(jsval_layout l);
@@ -1697,6 +1706,17 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 #define JSFUN_GENERIC_NATIVE    JSFUN_LAMBDA
 
 /*
+ * The first call to JS_CallOnce by any thread in a process will call 'func'.
+ * Later calls to JS_CallOnce with the same JSCallOnceType object will be
+ * suppressed.
+ *
+ * Equivalently: each distinct JSCallOnceType object will allow one JS_CallOnce
+ * to invoke its JSInitCallback.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_CallOnce(JSCallOnceType *once, JSInitCallback func);
+
+/*
  * Microseconds since the epoch, midnight, January 1, 1970 UTC.  See the
  * comment in jstypes.h regarding safe int64 usage.
  */
@@ -2209,32 +2229,48 @@ js_TransplantObjectWithWrapper(JSContext *cx,
                                JSObject *targetobj,
                                JSObject *targetwrapper);
 
+extern JS_FRIEND_API(void *)
+js_GetCompartmentPrivate(JSCompartment *compartment);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
 class JS_PUBLIC_API(JSAutoEnterCompartment)
 {
-    JSCrossCompartmentCall *call;
+    /*
+     * This is a poor man's Maybe<AutoCompartment>, because we don't have
+     * access to the AutoCompartment definition here.  We statically assert in
+     * jsapi.cpp that we have the right size here.
+     *
+     * In practice, 32-bit Windows and Android get 16-word |bytes|, while
+     * other platforms get 13-word |bytes|.
+     */
+    void* bytes[sizeof(void*) == 4 && MOZ_ALIGNOF(JSUint64) == 8 ? 16 : 13];
+
+    /*
+     * This object may be in one of three states.  If enter() or
+     * enterAndIgnoreErrors() hasn't been called, it's in STATE_UNENTERED.
+     * Otherwise, if we were asked to enter into the current compartment, our
+     * state is STATE_SAME_COMPARTMENT.  If we actually created an
+     * AutoCompartment and entered another compartment, our state is
+     * STATE_OTHER_COMPARTMENT.
+     */
+    enum State {
+        STATE_UNENTERED,
+        STATE_SAME_COMPARTMENT,
+        STATE_OTHER_COMPARTMENT
+    } state;
 
   public:
-    JSAutoEnterCompartment() : call(NULL) {}
+    JSAutoEnterCompartment() : state(STATE_UNENTERED) {}
 
     bool enter(JSContext *cx, JSObject *target);
 
     void enterAndIgnoreErrors(JSContext *cx, JSObject *target);
 
-    bool entered() const { return call != NULL; }
+    bool entered() const { return state != STATE_UNENTERED; }
 
-    ~JSAutoEnterCompartment() {
-        if (call && call != reinterpret_cast<JSCrossCompartmentCall*>(1))
-            JS_LeaveCrossCompartmentCall(call);
-    }
-
-    void swap(JSAutoEnterCompartment &other) {
-        JSCrossCompartmentCall *tmp = call;
-        call = other.call;
-        other.call = tmp;
-    }
+    ~JSAutoEnterCompartment();
 };
 
 JS_BEGIN_EXTERN_C
@@ -2288,9 +2324,6 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);
-
-extern JS_PUBLIC_API(JSObject *)
-JS_GetScopeChain(JSContext *cx);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
@@ -2600,7 +2633,7 @@ JS_UnlockGCThingRT(JSRuntime *rt, void *thing);
  * data:    the data argument to pass to each invocation of traceOp.
  */
 extern JS_PUBLIC_API(void)
-JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
+JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 
 /*
  * JS_CallTracer API and related macros for implementors of JSTraceOp, to
@@ -2841,7 +2874,7 @@ typedef enum JSGCParamKey {
     /* Select GC mode. */
     JSGC_MODE = 6,
 
-    /* Number of GC chunks waiting to expire. */
+    /* Number of cached empty GC chunks. */
     JSGC_UNUSED_CHUNKS = 7,
 
     /* Total number of allocated GC chunks. */
@@ -3028,6 +3061,8 @@ struct JSClass {
 #define JSCLASS_FREEZE_PROTO            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
 #define JSCLASS_FREEZE_CTOR             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
 
+#define JSCLASS_XPCONNECT_GLOBAL        (1<<(JSCLASS_HIGH_FLAGS_SHIFT+7))
+
 /* Global flags. */
 #define JSGLOBAL_FLAGS_CLEARED          0x1
 
@@ -3043,8 +3078,13 @@ struct JSClass {
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
 #define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 8)
+#define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n)                                    \
+    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))
 #define JSCLASS_GLOBAL_FLAGS                                                  \
-    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT))
+    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0)
+#define JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(clasp)                              \
+  (((clasp)->flags & JSCLASS_IS_GLOBAL)                                       \
+   && JSCLASS_RESERVED_SLOTS(clasp) >= JSCLASS_GLOBAL_SLOT_COUNT)
 
 /* Fast access to the original value of each standard class's prototype. */
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
@@ -3083,6 +3123,15 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 #define JSRESOLVE_DECLARING     0x08    /* var, const, or function prolog op */
 #define JSRESOLVE_CLASSNAME     0x10    /* class name used when constructing */
 #define JSRESOLVE_WITH          0x20    /* resolve inside a with statement */
+
+/*
+ * Invoke the [[DefaultValue]] hook (see ES5 8.6.2) with the provided hint on
+ * the specified object, computing a primitive default value for the object.
+ * The hint must be JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID (no hint).  On
+ * success the resulting value is stored in *vp.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
@@ -3675,6 +3724,9 @@ JS_ObjectIsFunction(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
 JS_ObjectIsCallable(JSContext *cx, JSObject *obj);
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsNativeFunction(JSObject *funobj, JSNative call);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);
@@ -4621,8 +4673,6 @@ JS_ObjectIsDate(JSContext *cx, JSObject *obj);
 #define JSREG_GLOB      0x02    /* global exec, creates array of matches */
 #define JSREG_MULTILINE 0x04    /* treat ^ and $ as begin and end of line */
 #define JSREG_STICKY    0x08    /* only match starting at lastIndex */
-#define JSREG_FLAT      0x10    /* parse as a flat regexp */
-#define JSREG_NOCOMPILE 0x20    /* do not try to compile to native code */
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uintN flags);

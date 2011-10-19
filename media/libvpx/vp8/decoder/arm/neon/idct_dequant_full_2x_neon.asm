@@ -40,7 +40,7 @@
     vld1.32         {d31[0]}, [r2]
     vld1.32         {d31[1]}, [r12]
 
-    adr             r2, _CONSTANTS_
+    adr             r2, cospi8sqrt2minus1   ; pointer to the first constant
 
     ; dequant: q[i] = q[i] * dq[i]
     vmul.i16        q2, q2, q0
@@ -190,7 +190,6 @@
     ENDP           ; |idct_dequant_full_2x_neon|
 
 ; Constant Pool
-_CONSTANTS_       EQU cospi8sqrt2minus1
 cospi8sqrt2minus1 DCD 0x4e7b
 ; because the lowest bit in 0x8a8c is 0, we can pre-shift this
 sinpi8sqrt2       DCD 0x4546

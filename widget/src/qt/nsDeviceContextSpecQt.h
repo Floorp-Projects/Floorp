@@ -76,7 +76,7 @@ protected:
     nsCOMPtr<nsIPrintSettings> mPrintSettings;
     bool mToPrinter : 1;      /* If true, print to printer */
     bool mIsPPreview : 1;     /* If true, is print preview */
-    char   mPath[PATH_MAX];     /* If toPrinter = PR_FALSE, dest file */
+    char   mPath[PATH_MAX];     /* If toPrinter = false, dest file */
     char   mPrinter[256];       /* Printer name */
     nsCString              mSpoolName;
     nsCOMPtr<nsILocalFile> mSpoolFile;

@@ -36,10 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSystemInfo.h"
 #include "prsystem.h"
 #include "nsString.h"
 #include "prprf.h"
+#include "mozilla/SSE.h"
+#include "mozilla/arm.h"
 
 #ifdef MOZ_WIDGET_GTK2
 #include <gtk/gtk.h>
@@ -49,6 +53,8 @@
 #include "AndroidBridge.h"
 #endif
 
+using namespace mozilla;
+
 nsSystemInfo::nsSystemInfo()
 {
 }
@@ -56,6 +62,26 @@ nsSystemInfo::nsSystemInfo()
 nsSystemInfo::~nsSystemInfo()
 {
 }
+
+// CPU-specific information.
+static const struct PropItems {
+    const char *name;
+    bool (*propfun)(void);
+} cpuPropItems[] = {
+    // x86-specific bits.
+    { "hasMMX", mozilla::supports_mmx },
+    { "hasSSE", mozilla::supports_sse },
+    { "hasSSE2", mozilla::supports_sse2 },
+    { "hasSSE3", mozilla::supports_sse3 },
+    { "hasSSSE3", mozilla::supports_ssse3 },
+    { "hasSSE4A", mozilla::supports_sse4a },
+    { "hasSSE4_1", mozilla::supports_sse4_1 },
+    { "hasSSE4_2", mozilla::supports_sse4_2 },
+    // ARM-specific bits.
+    { "hasEDSP", mozilla::supports_edsp },
+    { "hasARMv6", mozilla::supports_armv6 },
+    { "hasNEON", mozilla::supports_neon }
+};
 
 nsresult
 nsSystemInfo::Init()
@@ -91,6 +117,12 @@ nsSystemInfo::Init()
     SetInt32Property(NS_LITERAL_STRING("memmapalign"), PR_GetMemMapAlignment());
     SetInt32Property(NS_LITERAL_STRING("cpucount"), PR_GetNumberOfProcessors());
     SetUint64Property(NS_LITERAL_STRING("memsize"), PR_GetPhysicalMemorySize());
+
+    for (PRUint32 i = 0; i < ArrayLength(cpuPropItems); i++) {
+        rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16(cpuPropItems[i].name),
+                               cpuPropItems[i].propfun());
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
 #ifdef MOZ_WIDGET_GTK2
     // This must be done here because NSPR can only separate OS's when compiled, not libraries.

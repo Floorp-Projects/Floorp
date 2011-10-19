@@ -39,7 +39,6 @@
 
 #include "nscore.h"  // needed for 'nsnull'
 #include "nsGTKToolkit.h"
-#include "nsWidgetAtoms.h"
 
 //
 // Static thread local storage index of the Toolkit 
@@ -105,9 +104,6 @@ GdkGC *nsGTKToolkit::GetSharedGC(void)
 NS_IMETHODIMP nsGTKToolkit::Init(PRThread *aThread)
 {
     CreateSharedGC();
-
-    nsWidgetAtoms::RegisterAtoms();
-
     return NS_OK;
 }
 

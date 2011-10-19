@@ -85,7 +85,7 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
 
   NS_ENSURE_ARG_POINTER(aDataNode);
 
-  *aReturn = PR_FALSE;
+  *aReturn = false;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aDataNode);
   NS_ASSERTION(content, "Does not implement nsIContent!");
@@ -111,7 +111,7 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
   }
   else {
     // empty inter-tag text node without frame, e.g., in between <table>\n<tr>
-    *aReturn = PR_TRUE;
+    *aReturn = true;
   }
 
   return NS_OK;
@@ -258,14 +258,12 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   NS_ASSERTION(content, "elements must implement nsIContent");
 
-  nsIDocument *ownerDoc = content->GetOwnerDoc();
-  if (ownerDoc) {
-    nsXBLBinding *binding = ownerDoc->BindingManager()->GetBinding(content);
+  nsIDocument *ownerDoc = content->OwnerDoc();
+  nsXBLBinding *binding = ownerDoc->BindingManager()->GetBinding(content);
 
-    while (binding) {
-      urls->AppendElement(binding->PrototypeBinding()->BindingURI(), PR_FALSE);
-      binding = binding->GetBaseBinding();
-    }
+  while (binding) {
+    urls->AppendElement(binding->PrototypeBinding()->BindingURI(), false);
+    binding = binding->GetBaseBinding();
   }
 
   NS_ADDREF(*_retval = urls);
