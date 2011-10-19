@@ -567,16 +567,18 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
     const bool preferFBOs = Preferences::GetBool("cgl.prefer-fbo", false);
     if (!preferFBOs)
     {
-	    glContext = CreateOffscreenPBufferContext(aSize, aFormat);
-	    if (glContext &&
-	        glContext->Init())
-	    {
-	        glContext->mOffscreenSize = aSize;
-	        glContext->mOffscreenActualSize = aSize;
+        glContext = CreateOffscreenPBufferContext(aSize, aFormat);
+        if (glContext &&
+            glContext->Init())
+        {
+            glContext->mOffscreenSize = aSize;
+            glContext->mOffscreenActualSize = aSize;
 
-	        return glContext.forget();
-	    }
-	}
+            printf("GL Offscreen: CGL+PBuffer\n");
+
+            return glContext.forget();
+        }
+    }
 
     // try a FBO as second choice
     glContext = CreateOffscreenFBOContext(aSize, aFormat);
