@@ -89,7 +89,6 @@ abstract public class GeckoApp
     public static boolean mFullscreen = false;
     public static File sGREDir = null;
     public Handler mMainHandler;
-    public static DatabaseHelper mDbHelper;
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
     private BrowserToolbar mBrowserToolbar;
@@ -408,12 +407,6 @@ abstract public class GeckoApp
         if (surfaceView != null)
             surfaceView.saveLast(true);
         System.exit(0);
-    }
-
-    public static DatabaseHelper getDatabaseHelper() {
-        if (mDbHelper == null)
-            mDbHelper = new DatabaseHelper(GeckoApp.mAppContext);
-        return mDbHelper;
     }
 
     void handleLocationChange(final int tabId, final String uri) {
