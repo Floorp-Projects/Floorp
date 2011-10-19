@@ -1070,8 +1070,11 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
                                                  pbsize);
         if (!surface) {
             NS_WARNING("Failed to resize pbuffer");
-            return nsnull;
+            return false;
         }
+
+        if (!ResizeOffscreenFBO(aNewSize, false))
+            return false;
 
         SetOffscreenSize(aNewSize, pbsize);
 
@@ -1117,6 +1120,9 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         if (!config) {
             return false;
         }
+        if (!ResizeOffscreenFBO(aNewSize, false))
+            return false;
+
         mThebesSurface = xsurface;
 
         return true;
@@ -1127,7 +1133,7 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
     return ResizeOffscreenPixmapSurface(aNewSize);
 #endif
 
-    return ResizeOffscreenFBO(aNewSize);
+    return ResizeOffscreenFBO(aNewSize, true);
 }
 
 
@@ -2002,13 +2008,15 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
     nsTArray<EGLint> attribs(32);
     int attribAttempt = 0;
 
+    int tryDepthSize = (aFormat.depth > 0) ? 24 : 0;
+
 TRY_ATTRIBS_AGAIN:
     switch (attribAttempt) {
     case 0:
-        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, 8, 24);
+        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, 8, tryDepthSize);
         break;
     case 1:
-        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, 24);
+        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, tryDepthSize);
         break;
     case 2:
         FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, -1);
@@ -2242,12 +2250,33 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
     }
     
     ContextFormat actualFormat(aFormat);
-    actualFormat.samples = 0;
+    // actualFormat.samples = 0;
 
 #if defined(ANDROID) || defined(XP_WIN)
-    return GLContextEGL::CreateEGLPBufferOffscreenContext(aSize, actualFormat);
+    nsRefPtr<GLContextEGL> glContext =
+        GLContextEGL::CreateEGLPBufferOffscreenContext(aSize, actualFormat);
+
+    if (!glContext)
+        return nsnull;
+
+    if (!glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), false))
+        return nsnull;
+ 
+     printf("GL Offscreen: EGL+PBuffer\n");
+     return glContext.forget();
+
 #elif defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
-    return GLContextEGL::CreateBasicEGLPixmapOffscreenContext(aSize, actualFormat);
+    nsRefPtr<GLContextEGL> glContext =
+        GLContextEGL::CreateBasicEGLPixmapOffscreenContext(aSize, actualFormat);
+
+    if (!glContext)
+        return nsnull;
+
+    if (!glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true))
+        return nsnull;
+    
+    printf("GL Offscreen: EGL+Pixmap\n");
+    return glContext.forget();
 #elif defined(MOZ_X11)
     nsRefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateEGLPixmapOffscreenContext(aSize, actualFormat, true);
@@ -2260,7 +2289,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         // render from this
         return nsnull;
     }
-    if (!gUseBackingSurface && !glContext->ResizeOffscreenFBO(aSize)) {
+    if (!gUseBackingSurface && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
         return nsnull;
