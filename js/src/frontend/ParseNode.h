@@ -457,15 +457,10 @@ struct ParseNode {
     }
 
     static ParseNode *create(ParseNodeArity arity, TreeContext *tc);
-    static ParseNode *create(ParseNodeArity arity, TokenKind type, JSOp op,
-                             const TokenPos &pos, TreeContext *tc);
 
   public:
     static ParseNode *newBinaryOrAppend(TokenKind tt, JSOp op, ParseNode *left, ParseNode *right,
                                         TreeContext *tc);
-
-    static ParseNode *newTernary(TokenKind tt, JSOp op, ParseNode *kid1, ParseNode *kid2,
-                                 ParseNode *kid3, TreeContext *tc);
 
     /*
      * The pn_expr and lexdef members are arms of an unsafe union. Unless you
@@ -760,7 +755,7 @@ struct FunctionNode : public ParseNode {
 struct NameNode : public ParseNode {
     static NameNode *create(JSAtom *atom, TreeContext *tc);
 
-    void inline initCommon(TreeContext *tc);
+    inline void initCommon(TreeContext *tc);
 };
 
 struct NameSetNode : public ParseNode {
@@ -774,18 +769,6 @@ struct LexicalScopeNode : public ParseNode {
         return (LexicalScopeNode *)ParseNode::create(PN_NAME, tc);
     }
 };
-
-void *
-AllocNodeUninitialized(Parser *parser);
-
-void
-AddNodeToFreeList(ParseNode *pn, Parser *parser);
-
-void
-PrepareNodeForMutation(ParseNode *pn, TreeContext *tc);
-
-ParseNode *
-RecycleTree(ParseNode *pn, TreeContext *tc);
 
 ParseNode *
 CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
@@ -963,6 +946,20 @@ struct Definition : public ParseNode
             return LET;
         return VAR;
     }
+};
+
+class ParseNodeAllocator {
+  public:
+    explicit ParseNodeAllocator(JSContext *cx) : cx(cx), freelist(NULL) {}
+
+    void *allocNode();
+    void freeNode(ParseNode *pn);
+    ParseNode *freeTree(ParseNode *pn);
+    void prepareNodeForMutation(ParseNode *pn);
+
+  private:
+    JSContext *cx;
+    ParseNode *freelist;
 };
 
 inline bool
