@@ -61,8 +61,7 @@ class MStart;
 class MIRGenerator
 {
   public:
-    MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script, JSFunction *fun,
-                 MIRGraph &graph);
+    MIRGenerator(JSContext *cx, TempAllocator &temp, MIRGraph &graph, CompileInfo &info);
 
     TempAllocator &temp() {
         return temp_;
@@ -76,13 +75,12 @@ class MIRGenerator
     IonCompartment *ionCompartment() const {
         return cx->compartment->ionCompartment();
     }
-    const CompileInfo &info() const {
+    CompileInfo &info() {
         return info_;
     }
 
     template <typename T>
-    T * allocate(size_t count = 1)
-    {
+    T * allocate(size_t count = 1) {
         return reinterpret_cast<T *>(temp().allocate(sizeof(T) * count));
     }
 
@@ -98,7 +96,7 @@ class MIRGenerator
     JSContext *cx;
 
   protected:
-    CompileInfo info_;
+    CompileInfo &info_;
     TempAllocator &temp_;
     JSFunction *fun_;
     uint32 nslots_;

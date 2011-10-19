@@ -482,8 +482,11 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
     if (!cx->compartment->ensureIonCompartmentExists(cx))
         return false;
 
-    MIRGraph graph;
+    MIRGraph graph(temp);
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
+    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(script, fun);
+    if (!info)
+        return false;
 
     if (cx->typeInferenceEnabled()) {
         types::AutoEnterTypeInference enter(cx, true);
@@ -494,12 +497,12 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
 
         types::AutoEnterCompilation enterCompiler(cx, script);
 
-        IonBuilder builder(cx, script, fun, temp, graph, &oracle);
+        IonBuilder builder(cx, temp, graph, &oracle, *info);
         if (!TestCompiler(builder, graph))
             return false;
     } else {
         DummyOracle oracle;
-        IonBuilder builder(cx, script, fun, temp, graph, &oracle);
+        IonBuilder builder(cx, temp, graph, &oracle, *info);
         if (!TestCompiler(builder, graph))
             return false;
     }

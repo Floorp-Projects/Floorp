@@ -99,7 +99,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     };
 
   private:
-    MBasicBlock(MIRGenerator *gen, jsbytecode *pc, Kind kind);
+    MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind);
     bool init();
     void copySlots(MBasicBlock *from);
     bool inherit(MBasicBlock *pred);
@@ -125,9 +125,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Creates a new basic block for a MIR generator. If |pred| is not NULL,
     // its slots and stack depth are initialized from |pred|.
-    static MBasicBlock *New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc, Kind kind);
-    static MBasicBlock *NewPendingLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc);
-    static MBasicBlock *NewSplitEdge(MIRGenerator *gen, MBasicBlock *pred);
+    static MBasicBlock *New(MIRGraph &graph, CompileInfo &info,
+                            MBasicBlock *pred, jsbytecode *entryPc, Kind kind);
+    static MBasicBlock *NewPendingLoopHeader(MIRGraph &graph, CompileInfo &info,
+                                             MBasicBlock *pred, jsbytecode *entryPc);
+    static MBasicBlock *NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred);
 
     void setId(uint32 id) {
         id_ = id;
@@ -199,6 +201,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     /////////// END GRAPH BUILDING INSTRUCTIONS ///////////
     ///////////////////////////////////////////////////////
 
+    MIRGraph &graph() {
+        return graph_;
+    }
     jsbytecode *pc() const {
         return pc_;
     }
@@ -253,9 +258,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return kind_ == SPLIT_EDGE;
     }
 
-    MIRGenerator *gen() {
-        return gen_;
-    }
     uint32 stackDepth() const {
         return stackPosition_;
     }
@@ -340,7 +342,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock *getSuccessor(size_t index) const;
 
   private:
-    MIRGenerator *gen_;
+    MIRGraph &graph_;
+    CompileInfo &info; // Each block originates from a particular script.
     InlineList<MInstruction> instructions_;
     Vector<MBasicBlock *, 1, IonAllocPolicy> predecessors_;
     InlineForwardList<MPhi> phis_;
@@ -371,6 +374,7 @@ typedef InlineListReverseIterator<MBasicBlock> PostorderIterator;
 class MIRGraph
 {
     InlineList<MBasicBlock> blocks_;
+    TempAllocator &alloc_;
     uint32 blockIdGen_;
     uint32 idGen_;
 #ifdef DEBUG
@@ -378,10 +382,16 @@ class MIRGraph
 #endif
 
   public:
-    MIRGraph()
-      : blockIdGen_(0),
+    MIRGraph(TempAllocator &alloc)
+      : alloc_(alloc),
+        blockIdGen_(0),
         idGen_(0)
     {  }
+
+    template <typename T>
+    T * allocate(size_t count = 1) {
+        return reinterpret_cast<T *>(alloc_.allocate(sizeof(T) * count));
+    }
 
     void addBlock(MBasicBlock *block);
     void unmarkBlocks();

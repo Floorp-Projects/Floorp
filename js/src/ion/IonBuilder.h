@@ -172,8 +172,8 @@ class IonBuilder : public MIRGenerator
     static int CmpSuccessors(const void *a, const void *b);
 
   public:
-    IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
-               MIRGraph &graph, TypeOracle *oracle);
+    IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, TypeOracle *oracle,
+               CompileInfo &info);
 
   public:
     bool build();
