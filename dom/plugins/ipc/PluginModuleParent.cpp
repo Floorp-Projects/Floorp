@@ -116,7 +116,11 @@ PluginModuleParent::LoadModule(const char* aFilePath)
     TimeoutChanged(kChildTimeoutPref, parent);
 
 #ifdef MOZ_CRASHREPORTER
-    CrashReporterParent::CreateCrashReporter(parent.get());
+    // If this fails, we're having IPC troubles, and we're doomed anyways.
+    if (!CrashReporterParent::CreateCrashReporter(parent.get())) {
+        parent->mShutdown = true;
+        return nsnull;
+    }
 #endif
 
     return parent.forget();
