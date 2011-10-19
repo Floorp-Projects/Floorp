@@ -82,6 +82,8 @@ var BrowserApp = {
     Services.io.offline = false;
     let newTab = this.addTab(uri);
     newTab.active = true;
+
+    Downloads.init();
   },
 
   shutdown: function shutdown() {
