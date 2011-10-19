@@ -1321,7 +1321,16 @@ protected:
 
     // helper to create/resize an offscreen FBO,
     // for offscreen implementations that use FBOs.
-    bool ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO);
+    bool ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, const bool aDisableAA);
+    bool ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO) {
+        if (ResizeOffscreenFBO(aSize, aUseReadFBO, false))
+            return true;
+
+        if (!mCreationFormat.samples)
+            return false;
+        printf("ResizeOffscreenFBO failed with AA, retrying without...\n");
+        return ResizeOffscreenFBO(aSize, aUseReadFBO, true);
+    }
     void DeleteOffscreenFBO();
     GLuint mOffscreenDrawFBO;
     GLuint mOffscreenReadFBO;
