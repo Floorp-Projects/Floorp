@@ -2291,16 +2291,13 @@ RasterImage::WriteToDecoder(const char *aBuffer, PRUint32 aCount)
     curframe->UnlockImageData();
   }
 
-  if (!mDecoder)
-    return NS_ERROR_FAILURE;
-    
-  CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
-
-  // Keep track of the total number of bytes written over the lifetime of the
-  // decoder
-  mBytesDecoded += aCount;
-
-  return NS_OK;
+  nsresult status = mDecoder->GetDecoderError();
+  if (NS_SUCCEEDED(status)) {
+    // Keep track of the total number of bytes written over the lifetime of the
+    // decoder
+    mBytesDecoded += aCount;
+  }
+  return status;
 }
 
 // This function is called in situations where it's clear that we want the
