@@ -7,19 +7,28 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
 
+// TODO: Take into account ppi in these units?
+
 // The ratio of velocity that is retained every ms.
 const kPanDeceleration = 0.999;
 
 // The number of ms to consider events over for a swipe gesture.
-const kSwipeLength = 1000;
+const kSwipeLength = 500;
+
+// The number of pixels to move before we consider a drag to be more than
+// just a click with jitter.
+const kDragThreshold = 10;
+
+// The number of pixels to move to break out of axis-lock
+const kLockBreakThreshold = 100;
 
 // Minimum speed to move during kinetic panning. 0.015 pixels/ms is roughly
 // equivalent to a pixel every 4 frames at 60fps.
 const kMinKineticSpeed = 0.015;
 
-// Maximum kinetic panning speed. 3 pixels/ms is equivalent to 50 pixels per
+// Maximum kinetic panning speed. 9 pixels/ms is equivalent to 150 pixels per
 // frame at 60fps.
-const kMaxKineticSpeed = 3;
+const kMaxKineticSpeed = 9;
 
 // The maximum magnitude of disparity allowed between axes acceleration. If
 // it's larger than this, lock the slow-moving axis.
@@ -328,7 +337,7 @@ Tab.prototype = {
     sendMessageToJava(message);
   },
   onStatusChange: function(aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
-    dump("progressListener.onStatusChange");
+    //dump("progressListener.onStatusChange");
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference])
@@ -418,9 +427,12 @@ var BrowserEventHandler = {
         this.startX = aEvent.clientX;
         this.startY = aEvent.clientY;
         this.blockClick = false;
+
         this.firstMovement = true;
-        this.firstXMovement = 0;
-        this.firstYMovement = 0;
+        this.edx = 0;
+        this.edy = 0;
+        this.lockXaxis = false;
+        this.lockYaxis = false;
 
         this.motionBuffer = [];
         this._updateLastPosition(aEvent.clientX, aEvent.clientY, 0, 0);
@@ -440,32 +452,32 @@ var BrowserEventHandler = {
         if (!this.panning)
           break;
 
-        let dx = aEvent.clientX - this.lastX;
-        let dy = aEvent.clientY - this.lastY;
+        this.edx += aEvent.clientX - this.lastX;
+        this.edy += aEvent.clientY - this.lastY;
 
         // If this is the first panning motion, check if we can
         // move in the given direction. If we can't, find an
         // ancestor that can.
         // We do this per-axis, as often the very first movement doesn't
         // reflect the direction of movement for both axes.
-        if (this.firstXMovement == 0) {
-          this.firstXMovement = dx;
-        }
-        if (this.firstYMovement == 0) {
-          this.firstYMovement = dy;
-        }
         if (this.firstMovement &&
-            this.firstXMovement != 0 &&
-            this.firstYMovement != 0) {
+            (Math.abs(this.edx) > kDragThreshold ||
+             Math.abs(this.edy) > kDragThreshold)) {
           this.firstMovement = false;
           let originalElement = this.panElement;
+
+          // Decide if we want to lock an axis while scrolling
+          if (Math.abs(this.edx) > Math.abs(this.edy) * kAxisLockRatio)
+            this.lockYaxis = true;
+          else if (Math.abs(this.edy) > Math.abs(this.edx) * kAxisLockRatio)
+            this.lockXaxis = true;
 
           // See if we've reached the extents of this element and if so,
           // find an element above it that can be scrolled.
           while (this.panElement &&
                  !this._elementCanScroll(this.panElement,
-                                         -this.firstXMovement,
-                                         -this.firstYMovement)) {
+                                         -this.edx,
+                                         -this.edy)) {
             this.panElement =
               this._findScrollableElement(this.panElement, false);
           }
@@ -476,12 +488,34 @@ var BrowserEventHandler = {
             this.panElement = originalElement;
         }
 
-        this._scrollElementBy(this.panElement, -dx, -dy);
+        // Only scroll once we've moved past the drag threshold
+        if (!this.firstMovement) {
+          this._scrollElementBy(this.panElement,
+                                this.lockXaxis ? 0 : -this.edx,
+                                this.lockYaxis ? 0 : -this.edy);
 
-        // Note, it's important that this happens after the scrollElementBy,
-        // as this will modify the clientX/clientY to be relative to the
-        // correct element.
-        this._updateLastPosition(aEvent.clientX, aEvent.clientY, dx, dy);
+          // Note, it's important that this happens after the scrollElementBy,
+          // as this will modify the clientX/clientY to be relative to the
+          // correct element.
+          this._updateLastPosition(aEvent.clientX, aEvent.clientY,
+                                   this.lockXaxis ? 0 : this.edx,
+                                   this.lockYaxis ? 0 : this.edy);
+
+          // Allow breaking out of axis lock if we move past a certain threshold
+          if (this.lockXaxis) {
+            if (Math.abs(this.edx) > kLockBreakThreshold)
+              this.lockXaxis = false;
+          } else {
+            this.edx = 0;
+          }
+
+          if (this.lockYaxis) {
+            if (Math.abs(this.edy) > kLockBreakThreshold)
+              this.lockYaxis = false;
+          } else {
+            this.edy = 0;
+          }
+        }
 
         aEvent.stopPropagation();
         aEvent.preventDefault();
@@ -492,37 +526,102 @@ var BrowserEventHandler = {
           break;
 
         this.panning = false;
-        let isDrag = (Math.abs(aEvent.clientX - this.startX) > 10 ||
-                      Math.abs(aEvent.clientY - this.startY) > 10);
 
-        if (isDrag) {
+        if (Math.abs(aEvent.clientX - this.startX) > kDragThreshold ||
+            Math.abs(aEvent.clientY - this.startY) > kDragThreshold) {
           this.blockClick = true;
           aEvent.stopPropagation();
           aEvent.preventDefault();
 
-          // Find the average velocity over the last few motion events
-          this.panLastTime = window.mozAnimationStartTime;
-          this.panX = 0;
-          this.panY = 0;
-          let nEvents = 0;
-          for (let i = 0; i < this.motionBuffer.length - 1; i++) {
-              if (this.motionBuffer[i].time < this.panLastTime - kSwipeLength)
-                break;
+          // Calculate a regression line for the last few motion events in
+          // the same direction to estimate the velocity. This ought to do a
+          // reasonable job of accounting for jitter/bad events.
+          this.panLastTime = Date.now();
 
-              let timeDelta = this.motionBuffer[i].time -
-                this.motionBuffer[i + 1].time;
-              if (timeDelta <= 0)
-                continue;
+          // Variables required for calculating regression on each axis
+          // 'p' will be sum of positions
+          // 't' will be sum of times
+          // 'tp' will be sum of times * positions
+          // 'tt' will be sum of time^2's
+          // 'n' is the number of data-points
+          let xSums = { p: 0, t: 0, tp: 0, tt: 0, n: 0 };
+          let ySums = { p: 0, t: 0, tp: 0, tt: 0, n: 0 };
+          let lastDx = 0;
+          let lastDy = 0;
 
-              this.panX += this.motionBuffer[i].dx / timeDelta;
-              this.panY += this.motionBuffer[i].dy / timeDelta;
-              nEvents ++;
+          // Variables to find the absolute x,y (relative to the first event)
+          let edx = 0; // Sum of x changes
+          let edy = 0; // Sum of y changes
+
+          // For convenience
+          let mb = this.motionBuffer;
+
+          // First collect the variables necessary to calculate the line
+          for (let i = 0; i < mb.length; i++) {
+
+            // Sum up total movement so far
+            let dx = edx + mb[i].dx;
+            let dy = edy + mb[i].dy;
+            edx += mb[i].dx;
+            edy += mb[i].dy;
+
+            // Don't consider events before direction changes
+            if ((xSums.n > 0) &&
+                ((mb[i].dx < 0 && lastDx > 0) ||
+                 (mb[i].dx > 0 && lastDx < 0))) {
+              xSums = { p: 0, t: 0, tp: 0, tt: 0, n: 0 };
+            }
+            if ((ySums.n > 0) &&
+                ((mb[i].dy < 0 && lastDy > 0) ||
+                 (mb[i].dy > 0 && lastDy < 0))) {
+              ySums = { p: 0, t: 0, tp: 0, tt: 0, n: 0 };
+            }
+
+            if (mb[i].dx != 0)
+              lastDx = mb[i].dx;
+            if (mb[i].dy != 0)
+              lastDy = mb[i].dy;
+
+            // Only consider events that happened in the last kSwipeLength ms
+            let timeDelta = this.panLastTime - mb[i].time;
+            if (timeDelta > kSwipeLength)
+              continue;
+
+            xSums.p += dx;
+            xSums.t += timeDelta;
+            xSums.tp += timeDelta * dx;
+            xSums.tt += timeDelta * timeDelta;
+            xSums.n ++;
+
+            ySums.p += dy;
+            ySums.t += timeDelta;
+            ySums.tp += timeDelta * dy;
+            ySums.tt += timeDelta * timeDelta;
+            ySums.n ++;
           }
-          if (nEvents == 0)
+
+          // If we don't have enough usable motion events, bail out
+          if (xSums.n < 2 && ySums.n < 2)
             break;
 
-          this.panX /= nEvents;
-          this.panY /= nEvents;
+          // Calculate the slope of the regression line.
+          // The intercept of the regression line is commented for reference.
+          let sx = 0;
+          if (xSums.n > 1)
+            sx = ((xSums.n * xSums.tp) - (xSums.t * xSums.p)) /
+                 ((xSums.n * xSums.tt) - (xSums.t * xSums.t));
+          //let ix = (xSums.p - (sx * xSums.t)) / xSums.n;
+
+          let sy = 0;
+          if (ySums.n > 1)
+            sy = ((ySums.n * ySums.tp) - (ySums.t * ySums.p)) /
+                 ((ySums.n * ySums.tt) - (ySums.t * ySums.t));
+          //let iy = (ySums.p - (sy * ySums.t)) / ySums.n;
+
+          // The slope of the regression line is the projected acceleration
+          this.panX = -sx;
+          this.panY = -sy;
+
           if (Math.abs(this.panX) > kMaxKineticSpeed)
             this.panX = (this.panX > 0) ? kMaxKineticSpeed : -kMaxKineticSpeed;
           if (Math.abs(this.panY) > kMaxKineticSpeed)
@@ -645,7 +744,7 @@ var BrowserEventHandler = {
     this.lastY = y;
     this.lastTime = Date.now();
 
-    this.motionBuffer.unshift({ dx: dx, dy: dy, time: this.lastTime });
+    this.motionBuffer.push({ dx: dx, dy: dy, time: this.lastTime });
   },
 
   _findScrollableElement: function(elem, checkElem) {
