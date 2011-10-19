@@ -75,9 +75,12 @@ function getLocale() {
          getSelectedLocale('global');
 }
 
-XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
-  return Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-});
+XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
+                                   "@mozilla.org/base/telemetry;1",
+                                   "nsITelemetry");
+XPCOMUtils.defineLazyServiceGetter(this, "idleService",
+                                   "@mozilla.org/widget/idleservice;1",
+                                   "nsIIdleService");
 
 /**
  * Returns a set of histograms that can be converted into JSON
@@ -346,7 +349,7 @@ TelemetryPing.prototype = {
     Services.obs.removeObserver(this, "idle-daily");
     Services.obs.removeObserver(this, "cycle-collector-begin");
     if (this._isIdleObserver) {
-      idle.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+      idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
       this._isIdleObserver = false;
     }
   },
@@ -431,7 +434,7 @@ TelemetryPing.prototype = {
         // Notify that data should be gathered now, since ping will happen soon.
         Services.obs.notifyObservers(null, "gather-telemetry", null);
         // The ping happens at the first idle of length IDLE_TIMEOUT_SECONDS.
-        idle.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+        idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
         this._isIdleObserver = true;
       }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       break;
@@ -440,7 +443,7 @@ TelemetryPing.prototype = {
       // fall through
     case "idle":
       if (this._isIdleObserver) {
-        idle.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+        idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
         this._isIdleObserver = false;
       }
       this.send(aTopic == "idle" ? "idle-daily" : aTopic, server);
