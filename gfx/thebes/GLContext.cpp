@@ -377,6 +377,21 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                      (mSymbols.fMapBuffer && mSymbols.fUnmapBuffer),
                      "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer being available!");
 
+        // Check for aux symbols based on extensions
+        if (IsExtensionSupported(GLContext::ANGLE_framebuffer_blit) ||
+            IsExtensionSupported(GLContext::EXT_framebuffer_blit)) {
+            SymLoadStruct auxSymbols[] = {
+                    { (PRFuncPtr*) &mSymbols.fBlitFramebuffer, { "BlitFramebuffer", "BlitFramebufferEXT", "BlitFramebufferANGLE", NULL } },
+                    { NULL, { NULL } },
+            };
+            if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
+                NS_RUNTIMEABORT("GL supports framebuffer_blit without supplying glBlitFramebuffer");
+                mInitialized = false;
+            }
+        }
+    }
+
+    if (mInitialized) {
         GLint v[4];
 
         fGetIntegerv(LOCAL_GL_SCISSOR_BOX, v);
@@ -438,6 +453,8 @@ static const char *sExtensionNames[] = {
     "GL_ARB_texture_float",
     "GL_EXT_unpack_subimage",
     "GL_OES_standard_derivatives",
+    "GL_EXT_framebuffer_blit",
+    "GL_ANGLE_framebuffer_blit",
     NULL
 };
 
@@ -997,11 +1014,12 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     const int depth = mCreationFormat.depth;
     const int stencil = mCreationFormat.stencil;
 
-    const bool firstTime = (mOffscreenFBO == 0);
+    const bool firstTime = (mOffscreenDrawFBO == 0 && mOffscreenReadFBO == 0);
 
-    GLuint curBoundTexture = 0;
+    GLuint curBoundFramebufferDraw = 0;
+    GLuint curBoundFramebufferRead = 0;
     GLuint curBoundRenderbuffer = 0;
-    GLuint curBoundFramebuffer = 0;
+    GLuint curBoundTexture = 0;
 
     GLint viewport[4];
 
@@ -1009,9 +1027,10 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
             !mIsGLES2 || IsExtensionSupported(OES_packed_depth_stencil);
 
     // save a few things for later restoring
-    fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*) &curBoundFramebuffer);
-    fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*) &curBoundTexture);
+    curBoundFramebufferDraw = GetBoundDrawFBO();
+    curBoundFramebufferRead = GetBoundReadFBO();
     fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, (GLint*) &curBoundRenderbuffer);
+    fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*) &curBoundTexture);
     fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
 
     // the context format of what we're defining
@@ -1020,13 +1039,15 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 
     // Create everything we need for the resize, so if it fails, we haven't broken anything
     // If successful, these new resized objects will replace their associated member vars in GLContext
-    GLuint newOffscreenFBO = 0;
+    GLuint newOffscreenDrawFBO = 0;
+    GLuint newOffscreenReadFBO = 0;
     GLuint newOffscreenTexture = 0;
     GLuint newOffscreenDepthRB = 0;
     GLuint newOffscreenStencilRB = 0;
 
-    fGenFramebuffers(1, &newOffscreenFBO);
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, newOffscreenFBO);
+    fGenFramebuffers(1, &newOffscreenReadFBO);
+    newOffscreenDrawFBO = newOffscreenReadFBO;
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, newOffscreenReadFBO);
 
     fGenTextures(1, &newOffscreenTexture);
     fBindTexture(LOCAL_GL_TEXTURE_2D, newOffscreenTexture);
@@ -1155,17 +1176,41 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     }
 
     // We should be all resized.  Check for framebuffer completeness.
-    GLenum status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    GLenum status;
+    bool framebuffersComplete = true;
+
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, newOffscreenDrawFBO);
+    status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-        NS_WARNING("Error resizing offscreen framebuffer -- framebuffer not complete");
+        NS_WARNING("DrawFBO: Incomplete");
+#ifdef DEBUG
+        printf_stderr("Framebuffer status: %X\n", status);
+#endif
+        framebuffersComplete = false;
+    }
+
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, newOffscreenReadFBO);
+    status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+        NS_WARNING("ReadFBO: Incomplete");
+#ifdef DEBUG
+        printf_stderr("Framebuffer status: %X\n", status);
+#endif
+        framebuffersComplete = false;
+    }
+
+    if (!framebuffersComplete) {
+        NS_WARNING("Error resizing offscreen framebuffer -- framebuffer(s) not complete");
 
         // Clean up the mess
-        fDeleteFramebuffers(1, &newOffscreenFBO);
+        fDeleteFramebuffers(1, &newOffscreenDrawFBO);
+        fDeleteFramebuffers(1, &newOffscreenReadFBO);
         fDeleteTextures(1, &newOffscreenTexture);
         fDeleteRenderbuffers(1, &newOffscreenDepthRB);
         fDeleteRenderbuffers(1, &newOffscreenStencilRB);
 
-        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, curBoundFramebuffer);
+        BindReadFBO(curBoundFramebufferRead);
+        BindDrawFBO(curBoundFramebufferDraw);
         fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
         fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, curBoundRenderbuffer);
         fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -1174,15 +1219,18 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     }
 
     // Success, so delete the old and busted
-    fDeleteFramebuffers(1, &mOffscreenFBO);
+    fDeleteFramebuffers(1, &mOffscreenDrawFBO);
+    fDeleteFramebuffers(1, &mOffscreenReadFBO);
     fDeleteTextures(1, &mOffscreenTexture);
     fDeleteRenderbuffers(1, &mOffscreenDepthRB);
     fDeleteRenderbuffers(1, &mOffscreenStencilRB);
 
     // Update currently bound references if we're changing what they were point to
     // This way we don't rebind to old buffers when we're done here
-    if (curBoundFramebuffer == mOffscreenFBO)
-        curBoundFramebuffer = newOffscreenFBO;
+    if (curBoundFramebufferDraw == mOffscreenDrawFBO)
+        curBoundFramebufferDraw = newOffscreenDrawFBO;
+    if (curBoundFramebufferRead == mOffscreenReadFBO)
+        curBoundFramebufferRead = newOffscreenReadFBO;
     if (curBoundTexture == mOffscreenTexture)
         curBoundTexture = newOffscreenTexture;
     if (curBoundRenderbuffer == mOffscreenDepthRB)
@@ -1191,7 +1239,8 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
         curBoundRenderbuffer = newOffscreenStencilRB;
 
     // Replace with the new hotness
-    mOffscreenFBO = newOffscreenFBO;
+    mOffscreenDrawFBO = newOffscreenDrawFBO;
+    mOffscreenReadFBO = newOffscreenReadFBO;
     mOffscreenTexture = newOffscreenTexture;
     mOffscreenDepthRB = newOffscreenDepthRB;
     mOffscreenStencilRB = newOffscreenStencilRB;
@@ -1203,7 +1252,9 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 
 #ifdef DEBUG
     if (mDebugMode) {
-        printf_stderr("Created offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d\n",
+        printf_stderr("%s %dx%d offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d\n",
+                      firstTime ? "Created" : "Resized",
+                      mOffscreenActualSize.width, mOffscreenActualSize.height,
                       mActualFormat.red, mActualFormat.green, mActualFormat.blue, mActualFormat.alpha,
                       mActualFormat.depth, mActualFormat.stencil);
     }
@@ -1215,12 +1266,16 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     // can restore them.
     fViewport(0, 0, aSize.width, aSize.height);
 
+    // Make sure we know that the buffers are new and thus dirty:
+    ForceDirtyFBOs();
+
     // Clear the new framebuffer with the full viewport
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mOffscreenFBO);
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, GetOffscreenFBO());
     ClearSafely();
 
     // Ok, now restore the GL state back to what it was before the resize took place.
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, curBoundFramebuffer);
+    BindDrawFBO(curBoundFramebufferDraw);
+    BindReadFBO(curBoundFramebufferRead);
     fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
     fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, curBoundRenderbuffer);
 
@@ -1235,12 +1290,14 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 void
 GLContext::DeleteOffscreenFBO()
 {
-    fDeleteFramebuffers(1, &mOffscreenFBO);
+    fDeleteFramebuffers(1, &mOffscreenDrawFBO);
+    fDeleteFramebuffers(1, &mOffscreenReadFBO);
     fDeleteTextures(1, &mOffscreenTexture);
     fDeleteRenderbuffers(1, &mOffscreenDepthRB);
     fDeleteRenderbuffers(1, &mOffscreenStencilRB);
 
-    mOffscreenFBO = 0;
+    mOffscreenDrawFBO = 0;
+    mOffscreenReadFBO = 0;
     mOffscreenTexture = 0;
     mOffscreenDepthRB = 0;
     mOffscreenStencilRB = 0;
