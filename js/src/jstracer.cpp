@@ -14380,7 +14380,7 @@ TraceRecorder::record_JSOP_NEWINIT()
     JSProtoKey key = JSProtoKey(cx->regs().pc[1]);
     JS_ASSERT(key == JSProto_Array || key == JSProto_Object);
 
-    LIns* proto_ins;
+    LIns* proto_ins = NULL;
     LIns *v_ins;
     if (key == JSProto_Array) {
         CHECK_STATUS_A(getArrayPrototype(proto_ins));
@@ -14401,7 +14401,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
 {
     initDepth++;
 
-    LIns* proto_ins;
+    LIns* proto_ins = NULL;
     CHECK_STATUS_A(getArrayPrototype(proto_ins));
 
     unsigned count = GET_UINT24(cx->regs().pc);
@@ -14418,7 +14418,7 @@ TraceRecorder::record_JSOP_NEWOBJECT()
 {
     initDepth++;
 
-    LIns* proto_ins;
+    LIns* proto_ins = NULL;
     CHECK_STATUS_A(getObjectPrototype(proto_ins));
 
     JSObject* baseobj = cx->fp()->script()->getObject(getFullIndex(0));
@@ -15324,7 +15324,7 @@ TraceRecorder::record_JSOP_LAMBDA()
             }
         }
 
-        LIns *proto_ins;
+        LIns *proto_ins = NULL;
         CHECK_STATUS_A(getFunctionPrototype(proto_ins));
 
         LIns* args[] = { w.immpObjGC(globalObj), proto_ins, w.immpFunGC(fun), cx_ins };
@@ -15339,7 +15339,7 @@ TraceRecorder::record_JSOP_LAMBDA()
     if (GetBlockChainFast(cx, cx->fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH))
         RETURN_STOP_A("Unable to trace creating lambda in let");
 
-    LIns *proto_ins;
+    LIns *proto_ins = NULL;
     CHECK_STATUS_A(getFunctionPrototype(proto_ins));
     LIns* scopeChain_ins = scopeChain();
     JS_ASSERT(scopeChain_ins);
@@ -15510,7 +15510,7 @@ TraceRecorder::record_DefLocalFunSetSlot(uint32 slot, JSObject* obj)
     JSFunction* fun = obj->getFunctionPrivate();
 
     if (fun->isNullClosure() && fun->getParent() == globalObj) {
-        LIns *proto_ins;
+        LIns *proto_ins = NULL;
         CHECK_STATUS_A(getFunctionPrototype(proto_ins));
 
         LIns* args[] = { w.immpObjGC(globalObj), proto_ins, w.immpFunGC(fun), cx_ins };
@@ -15633,7 +15633,7 @@ TraceRecorder::record_JSOP_REGEXP()
     JSScript* script = fp->script();
     unsigned index = atoms - script->atoms + GET_INDEX(cx->regs().pc);
 
-    LIns* proto_ins;
+    LIns* proto_ins = NULL;
     CHECK_STATUS_A(getRegExpPrototype(proto_ins));
 
     LIns* args[] = {
