@@ -547,7 +547,9 @@ public:
         mFlipped(false),
         mBlitProgram(0),
         mBlitFramebuffer(0),
-        mOffscreenFBO(0),
+        mOffscreenDrawFBO(0),
+        mOffscreenReadFBO(0),
+        mOffscreenFBOsDirty(false),
         mOffscreenDepthRB(0),
         mOffscreenStencilRB(0)
 #ifdef DEBUG
@@ -719,7 +721,7 @@ public:
           return false;
         }
 
-        if (!aOffscreen->mOffscreenFBO) {
+        if (!aOffscreen->mOffscreenDrawFBO && !aOffscreen->mOffscreenReadFBO) {
             return false;
         }
 
@@ -749,7 +751,7 @@ public:
      * Only valid if IsOffscreen() returns true.
      */
     virtual bool ResizeOffscreen(const gfxIntSize& aNewSize) {
-        if (mOffscreenFBO)
+        if (mOffscreenDrawFBO || mOffscreenReadFBO)
             return ResizeOffscreenFBO(aNewSize);
         return false;
     }
@@ -781,10 +783,226 @@ public:
      * Only valid if IsOffscreen() returns true.
      */
     GLuint GetOffscreenFBO() {
-        return mOffscreenFBO;
+        // 0 is interpreted as (off)screen, whether for read or draw operations
+        return 0;
     }
+
     GLuint GetOffscreenTexture() {
         return mOffscreenTexture;
+    }
+
+    virtual bool SupportsOffscreenSplit() {
+        return IsExtensionSupported(EXT_framebuffer_blit) || IsExtensionSupported(ANGLE_framebuffer_blit);
+    }
+
+    GLuint GetBoundDrawFBO() {
+        GLint ret = 0;
+        if (SupportsOffscreenSplit())
+            fGetIntegerv(LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT, &ret);
+        else
+            fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &ret);
+        return ret;
+    }
+
+    GLuint GetBoundReadFBO() {
+        GLint ret = 0;
+        if (SupportsOffscreenSplit())
+            fGetIntegerv(LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT, &ret);
+        else
+            fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &ret);
+        return ret;
+    }
+
+    void BindDrawFBO(GLuint name) {
+        if (SupportsOffscreenSplit())
+            fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER_EXT, name);
+        else
+            fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, name);
+    }
+
+    void BindReadFBO(GLuint name) {
+        if (SupportsOffscreenSplit())
+            fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, name);
+        else
+            fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, name);
+    }
+
+    GLuint SwapBoundDrawFBO(GLuint name) {
+        GLuint prev = GetBoundDrawFBO();
+        BindDrawFBO(name);
+        return prev;
+    }
+
+    GLuint SwapBoundReadFBO(GLuint name) {
+        GLuint prev = GetBoundReadFBO();
+        BindReadFBO(name);
+        return prev;
+    }
+
+    void BindOffscreenDrawBuffer() {
+        BindDrawFBO(mOffscreenDrawFBO);
+    }
+
+    void BindOffscreenReadBuffer() {
+        BindReadFBO(mOffscreenReadFBO);
+    }
+
+    void BindOffscreenBuffers() {
+        BindOffscreenDrawBuffer();
+        BindOffscreenReadBuffer();
+    }
+
+private:
+    GLuint mPrevDrawFBOBinding;
+    GLuint mPrevReadFBOBinding;
+    bool mOffscreenFBOsDirty;
+
+    void BeforeGLDrawCall() {
+        // Record and rebind if necessary
+        mPrevDrawFBOBinding = GetBoundDrawFBO();
+        if (mPrevDrawFBOBinding == 0) {
+            BindDrawFBO(mOffscreenDrawFBO);
+        } else if (mPrevDrawFBOBinding != mOffscreenDrawFBO)
+            return;
+
+        // Must be after binding the proper FBO
+        if (mOffscreenDrawFBO == mOffscreenReadFBO)
+            return;
+
+        // If we're already dirty, no need to set it again
+        if (mOffscreenFBOsDirty)
+            return;
+
+        mOffscreenFBOsDirty = true;
+    }
+
+    void AfterGLDrawCall() {
+        if (mPrevDrawFBOBinding == 0) {
+            BindDrawFBO(0);
+        }
+    }
+
+    void BeforeGLReadCall() {
+        // Record and rebind if necessary
+        mPrevReadFBOBinding = GetBoundReadFBO();
+        if (mPrevReadFBOBinding == 0) {
+            BindReadFBO(mOffscreenReadFBO);
+        } else if (mPrevReadFBOBinding != mOffscreenReadFBO)
+            return;
+
+        // Must be after binding the proper FBO
+        if (mOffscreenDrawFBO == mOffscreenReadFBO)
+            return;
+
+        // If we're not dirty, there's no need to blit
+        if (!mOffscreenFBOsDirty)
+            return;
+
+        const bool scissor = fIsEnabled(LOCAL_GL_SCISSOR_TEST);
+        if (scissor)
+            fDisable(LOCAL_GL_SCISSOR_TEST);
+
+        // flip read/draw for blitting
+        GLuint prevDraw = SwapBoundDrawFBO(mOffscreenReadFBO);
+        BindReadFBO(mOffscreenDrawFBO); // We know that Read must already be mOffscreenRead, so no need to write that down
+
+        GLint width = mOffscreenActualSize.width;
+        GLint height = mOffscreenActualSize.height;
+        raw_fBlitFramebuffer(0, 0, width, height,
+                             0, 0, width, height,
+                             LOCAL_GL_COLOR_BUFFER_BIT,
+                             LOCAL_GL_NEAREST);
+
+        BindDrawFBO(prevDraw);
+        BindReadFBO(mOffscreenReadFBO);
+
+        if (scissor)
+            fEnable(LOCAL_GL_SCISSOR_TEST);
+
+        mOffscreenFBOsDirty = false;
+    }
+
+    void AfterGLReadCall() {
+        if (mPrevReadFBOBinding == 0) {
+            BindReadFBO(0);
+        }
+    }
+
+public:
+    // Draw call hooks:
+    void fClear(GLbitfield mask) {
+        BeforeGLDrawCall();
+        raw_fClear(mask);
+        AfterGLDrawCall();
+    }
+
+    void fDrawArrays(GLenum mode, GLint first, GLsizei count) {
+        BeforeGLDrawCall();
+        raw_fDrawArrays(mode, first, count);
+        AfterGLDrawCall();
+    }
+
+    void fDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) {
+        BeforeGLDrawCall();
+        raw_fDrawElements(mode, count, type, indices);
+        AfterGLDrawCall();
+    }
+
+    // Read call hooks:
+    void fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) {
+        BeforeGLReadCall();
+        raw_fReadPixels(x, y, width, height, format, type, pixels);
+        AfterGLReadCall();
+    }
+
+    void fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
+        BeforeGLReadCall();
+        raw_fCopyTexImage2D(target, level, internalformat,
+                            x, y, width, height, border);
+        AfterGLReadCall();
+    }
+
+    void fCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) {
+        BeforeGLReadCall();
+        raw_fCopyTexSubImage2D(target, level, xoffset, yoffset,
+                               x, y, width, height);
+        AfterGLReadCall();
+    }
+
+    void ForceDirtyFBOs() {
+        GLuint draw = SwapBoundReadFBO(mOffscreenDrawFBO);
+
+        BeforeGLDrawCall();
+        // no-op; just pretend we did something
+        AfterGLDrawCall();
+
+        BindDrawFBO(draw);
+    }
+
+    void BlitDirtyFBOs() {
+        GLuint read = SwapBoundReadFBO(mOffscreenReadFBO);
+
+        BeforeGLReadCall();
+        // no-op; we just want to make sure the Read FBO is updated if it needs to be
+        AfterGLReadCall();
+
+        BindReadFBO(read);
+    }
+
+    // Before reads from offscreen texture
+    void fFinish() {
+        BeforeGLReadCall();
+        raw_fFinish();
+        AfterGLReadCall();
+    }
+
+    // Draw/Read
+    void fBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) {
+        BeforeGLDrawCall();
+        BeforeGLReadCall();
+        raw_fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+        AfterGLReadCall();
+        AfterGLDrawCall();
     }
 
 #if defined(MOZ_X11) && defined(MOZ_EGL_XRENDER_COMPOSITE)
@@ -1013,6 +1231,8 @@ public:
         ARB_texture_float,
         EXT_unpack_subimage,
         OES_standard_derivatives,
+        EXT_framebuffer_blit,
+        ANGLE_framebuffer_blit,
         Extensions_Max
     };
 
@@ -1094,7 +1314,8 @@ protected:
     // for offscreen implementations that use FBOs.
     bool ResizeOffscreenFBO(const gfxIntSize& aSize);
     void DeleteOffscreenFBO();
-    GLuint mOffscreenFBO;
+    GLuint mOffscreenDrawFBO;
+    GLuint mOffscreenReadFBO;
     GLuint mOffscreenDepthRB;
     GLuint mOffscreenStencilRB;
 
@@ -1454,7 +1675,7 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fClear(GLbitfield mask) {
+    void raw_fClear(GLbitfield mask) {
         BEFORE_GL_CALL;
         mSymbols.fClear(mask);
         AFTER_GL_CALL;
@@ -1514,13 +1735,13 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fDrawArrays(GLenum mode, GLint first, GLsizei count) {
+    void raw_fDrawArrays(GLenum mode, GLint first, GLsizei count) {
         BEFORE_GL_CALL;
         mSymbols.fDrawArrays(mode, first, count);
         AFTER_GL_CALL;
     }
 
-    void fDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) {
+    void raw_fDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) {
         BEFORE_GL_CALL;
         mSymbols.fDrawElements(mode, count, type, indices);
         AFTER_GL_CALL;
@@ -1538,7 +1759,7 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fFinish() {
+    void raw_fFinish() {
         BEFORE_GL_CALL;
         mSymbols.fFinish();
         AFTER_GL_CALL;
@@ -1756,7 +1977,7 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) {
+    void raw_fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) {
         BEFORE_GL_CALL;
         mSymbols.fReadPixels(x, y, width, height, format, type, pixels);
         AFTER_GL_CALL;
@@ -2002,7 +2223,7 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
+    void raw_fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
         BEFORE_GL_CALL;
         mSymbols.fCopyTexImage2D(target, level, internalformat, 
                                  x, FixYValue(y, height),
@@ -2010,7 +2231,7 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) {
+    void raw_fCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
         mSymbols.fCopyTexSubImage2D(target, level, xoffset, yoffset, 
                                     x, FixYValue(y, height),
@@ -2090,6 +2311,12 @@ public:
         realGLboolean retval = mSymbols.fIsFramebuffer(framebuffer);
         AFTER_GL_CALL;
         return retval;
+    }
+
+    void raw_fBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter) {
+        BEFORE_GL_CALL;
+        mSymbols.fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+        AFTER_GL_CALL;
     }
 
     realGLboolean fIsRenderbuffer (GLuint renderbuffer) {
