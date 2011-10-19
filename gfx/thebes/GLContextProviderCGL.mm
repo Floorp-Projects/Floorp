@@ -46,6 +46,7 @@
 #include "gfxPlatform.h"
 #include "gfxFailure.h"
 #include "prenv.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace gl {
@@ -558,16 +559,21 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
                                       const ContextFormat& aFormat)
 {
     nsRefPtr<GLContextCGL> glContext;
-
-    glContext = CreateOffscreenPBufferContext(aSize, aFormat);
-    if (glContext &&
-        glContext->Init())
+    
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), nsnull);
+    const bool preferFBOs = Preferences::GetBool("cgl.prefer-fbo", false);
+    if (!preferFBOs)
     {
-        glContext->mOffscreenSize = aSize;
-        glContext->mOffscreenActualSize = aSize;
+	    glContext = CreateOffscreenPBufferContext(aSize, aFormat);
+	    if (glContext &&
+	        glContext->Init())
+	    {
+	        glContext->mOffscreenSize = aSize;
+	        glContext->mOffscreenActualSize = aSize;
 
-        return glContext.forget();
-    }
+	        return glContext.forget();
+	    }
+	}
 
     // try a FBO as second choice
     glContext = CreateOffscreenFBOContext(aSize, aFormat);
