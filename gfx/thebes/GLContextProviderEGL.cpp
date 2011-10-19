@@ -1054,6 +1054,9 @@ GLContextEGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
 bool
 GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
+    if (!IsOffscreenSizeAllowed(aNewSize))
+        return false;
+
     if (mIsPBuffer) {
         gfxIntSize pbsize(aNewSize);
 

@@ -1,5 +1,3 @@
-conformance/canvas/drawingbuffer-static-canvas-test.html
-conformance/canvas/drawingbuffer-test.html
 conformance/context/premultiplyalpha-test.html
 conformance/glsl/misc/glsl-long-variable-names.html
 conformance/glsl/misc/shader-with-256-character-identifier.frag.html
