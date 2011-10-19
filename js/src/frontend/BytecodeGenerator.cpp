@@ -89,24 +89,23 @@ using namespace js;
 using namespace js::gc;
 
 static JSBool
-NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
-           uintN stackDepth, size_t start, size_t end);
+NewTryNote(JSContext *cx, CodeGenerator *cg, JSTryNoteKind kind, uintN stackDepth,
+           size_t start, size_t end);
 
 static bool
-EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg,
-            JSOp *psuffix = NULL);
+EmitIndexOp(JSContext *cx, JSOp op, uintN index, CodeGenerator *cg, JSOp *psuffix = NULL);
 
 static JSBool
-EmitLeaveBlock(JSContext *cx, JSCodeGenerator *cg, JSOp op, JSObjectBox *box);
+EmitLeaveBlock(JSContext *cx, CodeGenerator *cg, JSOp op, ObjectBox *box);
 
 void
-JSTreeContext::trace(JSTracer *trc)
+TreeContext::trace(JSTracer *trc)
 {
     bindings.trace(trc);
 }
 
-JSCodeGenerator::JSCodeGenerator(Parser *parser, uintN lineno)
-  : JSTreeContext(parser),
+CodeGenerator::CodeGenerator(Parser *parser, uintN lineno)
+  : TreeContext(parser),
     atomIndices(parser->context),
     stackDepth(0), maxStackDepth(0),
     ntrynotes(0), lastTryNode(NULL),
@@ -133,13 +132,13 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser, uintN lineno)
 }
 
 bool
-JSCodeGenerator::init(JSContext *cx, JSTreeContext::InitBehavior ib)
+CodeGenerator::init(JSContext *cx, TreeContext::InitBehavior ib)
 {
     roLexdeps.init();
-    return JSTreeContext::init(cx, ib) && constMap.init() && atomIndices.ensureMap(cx);
+    return TreeContext::init(cx, ib) && constMap.init() && atomIndices.ensureMap(cx);
 }
 
-JSCodeGenerator::~JSCodeGenerator()
+CodeGenerator::~CodeGenerator()
 {
     JSContext *cx = parser->context;
 
@@ -154,7 +153,7 @@ JSCodeGenerator::~JSCodeGenerator()
 }
 
 static ptrdiff_t
-EmitCheck(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t delta)
+EmitCheck(JSContext *cx, CodeGenerator *cg, ptrdiff_t delta)
 {
     jsbytecode *base = CG_BASE(cg);
     jsbytecode *newbase;
@@ -191,7 +190,7 @@ EmitCheck(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t delta)
 }
 
 static void
-UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
+UpdateDepth(JSContext *cx, CodeGenerator *cg, ptrdiff_t target)
 {
     jsbytecode *pc;
     JSOp op;
@@ -251,7 +250,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
 }
 
 static inline void
-UpdateDecomposeLength(JSCodeGenerator *cg, uintN start)
+UpdateDecomposeLength(CodeGenerator *cg, uintN start)
 {
     uintN end = CG_OFFSET(cg);
     JS_ASSERT(uintN(end - start) < 256);
@@ -259,7 +258,7 @@ UpdateDecomposeLength(JSCodeGenerator *cg, uintN start)
 }
 
 ptrdiff_t
-js_Emit1(JSContext *cx, JSCodeGenerator *cg, JSOp op)
+js_Emit1(JSContext *cx, CodeGenerator *cg, JSOp op)
 {
     ptrdiff_t offset = EmitCheck(cx, cg, 1);
 
@@ -271,7 +270,7 @@ js_Emit1(JSContext *cx, JSCodeGenerator *cg, JSOp op)
 }
 
 ptrdiff_t
-js_Emit2(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1)
+js_Emit2(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1)
 {
     ptrdiff_t offset = EmitCheck(cx, cg, 2);
 
@@ -286,7 +285,7 @@ js_Emit2(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1)
 }
 
 ptrdiff_t
-js_Emit3(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1,
+js_Emit3(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1,
          jsbytecode op2)
 {
     ptrdiff_t offset = EmitCheck(cx, cg, 3);
@@ -303,7 +302,7 @@ js_Emit3(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1,
 }
 
 ptrdiff_t
-js_Emit5(JSContext *cx, JSCodeGenerator *cg, JSOp op, uint16 op1, uint16 op2)
+js_Emit5(JSContext *cx, CodeGenerator *cg, JSOp op, uint16 op1, uint16 op2)
 {
     ptrdiff_t offset = EmitCheck(cx, cg, 5);
 
@@ -321,7 +320,7 @@ js_Emit5(JSContext *cx, JSCodeGenerator *cg, JSOp op, uint16 op1, uint16 op2)
 }
 
 ptrdiff_t
-js_EmitN(JSContext *cx, JSCodeGenerator *cg, JSOp op, size_t extra)
+js_EmitN(JSContext *cx, CodeGenerator *cg, JSOp op, size_t extra)
 {
     ptrdiff_t length = 1 + (ptrdiff_t)extra;
     ptrdiff_t offset = EmitCheck(cx, cg, length);
@@ -368,7 +367,7 @@ static const char *statementName[] = {
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(statementName) == STMT_LIMIT);
 
 static const char *
-StatementName(JSCodeGenerator *cg)
+StatementName(CodeGenerator *cg)
 {
     if (!cg->topStmt)
         return js_script_str;
@@ -376,7 +375,7 @@ StatementName(JSCodeGenerator *cg)
 }
 
 static void
-ReportStatementTooLarge(JSContext *cx, JSCodeGenerator *cg)
+ReportStatementTooLarge(JSContext *cx, CodeGenerator *cg)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEED_DIET,
                          StatementName(cg));
@@ -405,7 +404,7 @@ ReportStatementTooLarge(JSContext *cx, JSCodeGenerator *cg)
   case by generating short jumps until we know a long jump is needed.  After
   that point, we keep generating short jumps, but each jump's 16-bit immediate
   offset operand is actually an unsigned index into cg->spanDeps, an array of
-  JSSpanDep structs.  Each struct tells the top offset in the script of the
+  js::SpanDep structs.  Each struct tells the top offset in the script of the
   opcode, the "before" offset of the jump (which will be the same as top for
   simplex jumps, but which will index further into the bytecode array for a
   non-initial jump offset in a lookup or table switch), the after "offset"
@@ -416,8 +415,8 @@ ReportStatementTooLarge(JSContext *cx, JSCodeGenerator *cg)
   ensure that all bytecode generated so far can be inspected to discover where
   the jump offset immediate operands lie within CG_CODE(cg).  But the bonus is
   that we generate span-dependency records sorted by their offsets, so we can
-  binary-search when trying to find a JSSpanDep for a given bytecode offset,
-  or the nearest JSSpanDep at or above a given pc.
+  binary-search when trying to find a SpanDep for a given bytecode offset, or
+  the nearest SpanDep at or above a given pc.
 
   To avoid limiting scripts to 64K jumps, if the cg->spanDeps index overflows
   65534, we store SPANDEP_INDEX_HUGE in the jump's immediate operand.  This
@@ -436,8 +435,8 @@ ReportStatementTooLarge(JSContext *cx, JSCodeGenerator *cg)
   positive sign, even though they link "backward" (i.e., toward lower bytecode
   address).  We don't want to waste space and search time in the AVL tree for
   such temporary backpatch deltas, so we use a single-bit wildcard scheme to
-  tag true JSJumpTarget pointers and encode untagged, signed (positive) deltas
-  in JSSpanDep.target pointers, depending on whether the JSSpanDep has a known
+  tag true JumpTarget pointers and encode untagged, signed (positive) deltas in
+  SpanDep::target pointers, depending on whether the SpanDep has a known
   target, or is still awaiting backpatching.
 
   Note that backpatch chains would present a problem for BuildSpanDepTable,
@@ -449,15 +448,13 @@ ReportStatementTooLarge(JSContext *cx, JSCodeGenerator *cg)
   offset.
  */
 static int
-BalanceJumpTargets(JSJumpTarget **jtp)
+BalanceJumpTargets(JumpTarget **jtp)
 {
-    JSJumpTarget *jt, *jt2, *root;
-    int dir, otherDir, heightChanged;
-    JSBool doubleRotate;
-
-    jt = *jtp;
+    JumpTarget *jt = *jtp;
     JS_ASSERT(jt->balance != 0);
 
+    int dir;
+    JSBool doubleRotate;
     if (jt->balance < -1) {
         dir = JT_RIGHT;
         doubleRotate = (jt->kids[JT_LEFT]->balance > 0);
@@ -468,9 +465,11 @@ BalanceJumpTargets(JSJumpTarget **jtp)
         return 0;
     }
 
-    otherDir = JT_OTHER_DIR(dir);
+    int otherDir = JT_OTHER_DIR(dir);
+    JumpTarget *root;
+    int heightChanged;
     if (doubleRotate) {
-        jt2 = jt->kids[otherDir];
+        JumpTarget *jt2 = jt->kids[otherDir];
         *jtp = root = jt2->kids[dir];
 
         jt->kids[otherDir] = root->kids[dir];
@@ -495,28 +494,25 @@ BalanceJumpTargets(JSJumpTarget **jtp)
     return heightChanged;
 }
 
-typedef struct AddJumpTargetArgs {
+struct AddJumpTargetArgs {
     JSContext           *cx;
-    JSCodeGenerator     *cg;
+    CodeGenerator       *cg;
     ptrdiff_t           offset;
-    JSJumpTarget        *node;
-} AddJumpTargetArgs;
+    JumpTarget          *node;
+};
 
 static int
-AddJumpTarget(AddJumpTargetArgs *args, JSJumpTarget **jtp)
+AddJumpTarget(AddJumpTargetArgs *args, JumpTarget **jtp)
 {
-    JSJumpTarget *jt;
-    int balanceDelta;
-
-    jt = *jtp;
+    JumpTarget *jt = *jtp;
     if (!jt) {
-        JSCodeGenerator *cg = args->cg;
+        CodeGenerator *cg = args->cg;
 
         jt = cg->jtFreeList;
         if (jt) {
             cg->jtFreeList = jt->kids[JT_LEFT];
         } else {
-            jt = args->cx->tempLifoAlloc().new_<JSJumpTarget>();
+            jt = args->cx->tempLifoAlloc().new_<JumpTarget>();
             if (!jt) {
                 js_ReportOutOfMemory(args->cx);
                 return 0;
@@ -536,6 +532,7 @@ AddJumpTarget(AddJumpTargetArgs *args, JSJumpTarget **jtp)
         return 0;
     }
 
+    int balanceDelta;
     if (args->offset < jt->offset)
         balanceDelta = -AddJumpTarget(args, &jt->kids[JT_LEFT]);
     else
@@ -550,7 +547,7 @@ AddJumpTarget(AddJumpTargetArgs *args, JSJumpTarget **jtp)
 }
 
 #ifdef DEBUG_brendan
-static int AVLCheck(JSJumpTarget *jt)
+static int AVLCheck(JumpTarget *jt)
 {
     int lh, rh;
 
@@ -564,8 +561,7 @@ static int AVLCheck(JSJumpTarget *jt)
 #endif
 
 static JSBool
-SetSpanDepTarget(JSContext *cx, JSCodeGenerator *cg, JSSpanDep *sd,
-                 ptrdiff_t off)
+SetSpanDepTarget(JSContext *cx, CodeGenerator *cg, SpanDep *sd, ptrdiff_t off)
 {
     AddJumpTargetArgs args;
 
@@ -591,34 +587,31 @@ SetSpanDepTarget(JSContext *cx, JSCodeGenerator *cg, JSSpanDep *sd,
 }
 
 #define SPANDEPS_MIN            256
-#define SPANDEPS_SIZE(n)        ((n) * sizeof(JSSpanDep))
+#define SPANDEPS_SIZE(n)        ((n) * sizeof(js::SpanDep))
 #define SPANDEPS_SIZE_MIN       SPANDEPS_SIZE(SPANDEPS_MIN)
 
 static JSBool
-AddSpanDep(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc, jsbytecode *pc2,
-           ptrdiff_t off)
+AddSpanDep(JSContext *cx, CodeGenerator *cg, jsbytecode *pc, jsbytecode *pc2, ptrdiff_t off)
 {
-    uintN index;
-    JSSpanDep *sdbase, *sd;
-    size_t size;
-
-    index = cg->numSpanDeps;
+    uintN index = cg->numSpanDeps;
     if (index + 1 == 0) {
         ReportStatementTooLarge(cx, cg);
         return JS_FALSE;
     }
 
+    SpanDep *sdbase;
     if ((index & (index - 1)) == 0 &&
-        (!(sdbase = cg->spanDeps) || index >= SPANDEPS_MIN)) {
-        size = sdbase ? SPANDEPS_SIZE(index) : SPANDEPS_SIZE_MIN / 2;
-        sdbase = (JSSpanDep *) cx->realloc_(sdbase, size + size);
+        (!(sdbase = cg->spanDeps) || index >= SPANDEPS_MIN))
+    {
+        size_t size = sdbase ? SPANDEPS_SIZE(index) : SPANDEPS_SIZE_MIN / 2;
+        sdbase = (SpanDep *) cx->realloc_(sdbase, size + size);
         if (!sdbase)
             return JS_FALSE;
         cg->spanDeps = sdbase;
     }
 
     cg->numSpanDeps = index + 1;
-    sd = cg->spanDeps + index;
+    SpanDep *sd = cg->spanDeps + index;
     sd->top = pc - CG_BASE(cg);
     sd->offset = sd->before = pc2 - CG_BASE(cg);
 
@@ -648,7 +641,7 @@ AddSpanDep(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc, jsbytecode *pc2,
 }
 
 static jsbytecode *
-AddSwitchSpanDeps(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc)
+AddSwitchSpanDeps(JSContext *cx, CodeGenerator *cg, jsbytecode *pc)
 {
     JSOp op;
     jsbytecode *pc2;
@@ -687,7 +680,7 @@ AddSwitchSpanDeps(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc)
 }
 
 static JSBool
-BuildSpanDepTable(JSContext *cx, JSCodeGenerator *cg)
+BuildSpanDepTable(JSContext *cx, CodeGenerator *cg)
 {
     jsbytecode *pc, *end;
     JSOp op;
@@ -723,13 +716,13 @@ BuildSpanDepTable(JSContext *cx, JSCodeGenerator *cg)
     return JS_TRUE;
 }
 
-static JSSpanDep *
-GetSpanDep(JSCodeGenerator *cg, jsbytecode *pc)
+static SpanDep *
+GetSpanDep(CodeGenerator *cg, jsbytecode *pc)
 {
     uintN index;
     ptrdiff_t offset;
     int lo, hi, mid;
-    JSSpanDep *sd;
+    SpanDep *sd;
 
     index = GET_SPANDEP_INDEX(pc);
     if (index != SPANDEP_INDEX_HUGE)
@@ -754,10 +747,9 @@ GetSpanDep(JSCodeGenerator *cg, jsbytecode *pc)
 }
 
 static JSBool
-SetBackPatchDelta(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc,
-                  ptrdiff_t delta)
+SetBackPatchDelta(JSContext *cx, CodeGenerator *cg, jsbytecode *pc, ptrdiff_t delta)
 {
-    JSSpanDep *sd;
+    SpanDep *sd;
 
     JS_ASSERT(delta >= 1 + JUMP_OFFSET_LEN);
     if (!cg->spanDeps && delta < JUMP_OFFSET_MAX) {
@@ -780,7 +772,7 @@ SetBackPatchDelta(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc,
 }
 
 static void
-UpdateJumpTargets(JSJumpTarget *jt, ptrdiff_t pivot, ptrdiff_t delta)
+UpdateJumpTargets(JumpTarget *jt, ptrdiff_t pivot, ptrdiff_t delta)
 {
     if (jt->offset > pivot) {
         jt->offset += delta;
@@ -791,20 +783,16 @@ UpdateJumpTargets(JSJumpTarget *jt, ptrdiff_t pivot, ptrdiff_t delta)
         UpdateJumpTargets(jt->kids[JT_RIGHT], pivot, delta);
 }
 
-static JSSpanDep *
-FindNearestSpanDep(JSCodeGenerator *cg, ptrdiff_t offset, int lo,
-                   JSSpanDep *guard)
+static SpanDep *
+FindNearestSpanDep(CodeGenerator *cg, ptrdiff_t offset, int lo, SpanDep *guard)
 {
-    int num, hi, mid;
-    JSSpanDep *sdbase, *sd;
-
-    num = cg->numSpanDeps;
+    int num = cg->numSpanDeps;
     JS_ASSERT(num > 0);
-    hi = num - 1;
-    sdbase = cg->spanDeps;
+    int hi = num - 1;
+    SpanDep *sdbase = cg->spanDeps;
     while (lo <= hi) {
-        mid = (lo + hi) / 2;
-        sd = sdbase + mid;
+        int mid = (lo + hi) / 2;
+        SpanDep *sd = sdbase + mid;
         if (sd->before == offset)
             return sd;
         if (sd->before < offset)
@@ -814,13 +802,13 @@ FindNearestSpanDep(JSCodeGenerator *cg, ptrdiff_t offset, int lo,
     }
     if (lo == num)
         return guard;
-    sd = sdbase + lo;
+    SpanDep *sd = sdbase + lo;
     JS_ASSERT(sd->before >= offset && (lo == 0 || sd[-1].before < offset));
     return sd;
 }
 
 static void
-FreeJumpTargets(JSCodeGenerator *cg, JSJumpTarget *jt)
+FreeJumpTargets(CodeGenerator *cg, JumpTarget *jt)
 {
     if (jt->kids[JT_LEFT])
         FreeJumpTargets(cg, jt->kids[JT_LEFT]);
@@ -831,10 +819,10 @@ FreeJumpTargets(JSCodeGenerator *cg, JSJumpTarget *jt)
 }
 
 static JSBool
-OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
+OptimizeSpanDeps(JSContext *cx, CodeGenerator *cg)
 {
     jsbytecode *pc, *oldpc, *base, *limit, *next;
-    JSSpanDep *sd, *sd2, *sdbase, *sdlimit, *sdtop, guard;
+    SpanDep *sd, *sd2, *sdbase, *sdlimit, *sdtop, guard;
     ptrdiff_t offset, growth, delta, top, pivot, span, length, target;
     JSBool done;
     JSOp op;
@@ -842,7 +830,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
     jssrcnote *sn, *snlimit;
     JSSrcNoteSpec *spec;
     uintN i, n, noteIndex;
-    JSTryNode *tryNode;
+    TryNode *tryNode;
     DebugOnly<int> passes = 0;
 
     base = CG_BASE(cg);
@@ -1230,7 +1218,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
 }
 
 static ptrdiff_t
-EmitJump(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t off)
+EmitJump(JSContext *cx, CodeGenerator *cg, JSOp op, ptrdiff_t off)
 {
     JSBool extend;
     ptrdiff_t jmp;
@@ -1250,21 +1238,17 @@ EmitJump(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t off)
 }
 
 static ptrdiff_t
-GetJumpOffset(JSCodeGenerator *cg, jsbytecode *pc)
+GetJumpOffset(CodeGenerator *cg, jsbytecode *pc)
 {
-    JSSpanDep *sd;
-    JSJumpTarget *jt;
-    ptrdiff_t top;
-
     if (!cg->spanDeps)
         return GET_JUMP_OFFSET(pc);
 
-    sd = GetSpanDep(cg, pc);
-    jt = sd->target;
+    SpanDep *sd = GetSpanDep(cg, pc);
+    JumpTarget *jt = sd->target;
     if (!JT_HAS_TAG(jt))
         return JT_TO_BPDELTA(jt);
 
-    top = sd->top;
+    ptrdiff_t top = sd->top;
     while (--sd >= cg->spanDeps && sd->top == top)
         continue;
     sd++;
@@ -1272,8 +1256,7 @@ GetJumpOffset(JSCodeGenerator *cg, jsbytecode *pc)
 }
 
 JSBool
-js_SetJumpOffset(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc,
-                 ptrdiff_t off)
+js_SetJumpOffset(JSContext *cx, CodeGenerator *cg, jsbytecode *pc, ptrdiff_t off)
 {
     if (!cg->spanDeps) {
         if (JUMP_OFFSET_MIN <= off && off <= JUMP_OFFSET_MAX) {
@@ -1289,9 +1272,9 @@ js_SetJumpOffset(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc,
 }
 
 bool
-JSTreeContext::inStatement(JSStmtType type)
+TreeContext::inStatement(StmtType type)
 {
-    for (JSStmtInfo *stmt = topStmt; stmt; stmt = stmt->down) {
+    for (StmtInfo *stmt = topStmt; stmt; stmt = stmt->down) {
         if (stmt->type == type)
             return true;
     }
@@ -1299,7 +1282,7 @@ JSTreeContext::inStatement(JSStmtType type)
 }
 
 bool
-JSTreeContext::ensureSharpSlots()
+TreeContext::ensureSharpSlots()
 {
 #if JS_HAS_SHARP_VARS
     JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
@@ -1336,9 +1319,9 @@ JSTreeContext::ensureSharpSlots()
 }
 
 bool
-JSTreeContext::skipSpansGenerator(unsigned skip)
+TreeContext::skipSpansGenerator(unsigned skip)
 {
-    JSTreeContext *tc = this;
+    TreeContext *tc = this;
     for (unsigned i = 0; i < skip; ++i, tc = tc->parent) {
         if (!tc)
             return false;
@@ -1351,7 +1334,7 @@ JSTreeContext::skipSpansGenerator(unsigned skip)
 namespace js {
 
 bool
-SetStaticLevel(JSTreeContext *tc, uintN staticLevel)
+SetStaticLevel(TreeContext *tc, uintN staticLevel)
 {
     /*
      * This is a lot simpler than error-checking every UpvarCookie::set, and
@@ -1367,7 +1350,7 @@ SetStaticLevel(JSTreeContext *tc, uintN staticLevel)
 }
 
 bool
-GenerateBlockId(JSTreeContext *tc, uint32& blockid)
+GenerateBlockId(TreeContext *tc, uint32& blockid)
 {
     if (tc->blockidGen == JS_BIT(20)) {
         JS_ReportErrorNumber(tc->parser->context, js_GetErrorMessage, NULL,
@@ -1381,8 +1364,7 @@ GenerateBlockId(JSTreeContext *tc, uint32& blockid)
 } /* namespace js */
 
 void
-js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
-                 ptrdiff_t top)
+js_PushStatement(TreeContext *tc, StmtInfo *stmt, StmtType type, ptrdiff_t top)
 {
     stmt->type = type;
     stmt->flags = 0;
@@ -1401,8 +1383,7 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
 }
 
 void
-js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObjectBox *blockBox,
-                  ptrdiff_t top)
+js_PushBlockScope(TreeContext *tc, StmtInfo *stmt, ObjectBox *blockBox, ptrdiff_t top)
 {
     js_PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
@@ -1419,7 +1400,7 @@ js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObjectBox *blockBox,
  * so that we can walk back up the chain fixing up the op and jump offset.
  */
 static ptrdiff_t
-EmitBackPatchOp(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t *lastp)
+EmitBackPatchOp(JSContext *cx, CodeGenerator *cg, JSOp op, ptrdiff_t *lastp)
 {
     ptrdiff_t offset, delta;
 
@@ -1462,14 +1443,14 @@ EmitBackPatchOp(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t *lastp)
 
 /* A function, so that we avoid macro-bloating all the other callsites. */
 static JSBool
-UpdateLineNumberNotes(JSContext *cx, JSCodeGenerator *cg, uintN line)
+UpdateLineNumberNotes(JSContext *cx, CodeGenerator *cg, uintN line)
 {
     UPDATE_LINE_NUMBER_NOTES(cx, cg, line);
     return JS_TRUE;
 }
 
 static ptrdiff_t
-EmitTraceOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *nextpn)
+EmitTraceOp(JSContext *cx, CodeGenerator *cg, ParseNode *nextpn)
 {
     if (nextpn) {
         /*
@@ -1494,7 +1475,7 @@ EmitTraceOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *nextpn)
  * a type set to store its result.
  */
 static inline void
-CheckTypeSet(JSContext *cx, JSCodeGenerator *cg, JSOp op)
+CheckTypeSet(JSContext *cx, CodeGenerator *cg, JSOp op)
 {
     if (js_CodeSpec[op].format & JOF_TYPESET) {
         if (cg->typesetCount < UINT16_MAX)
@@ -1534,7 +1515,7 @@ CheckTypeSet(JSContext *cx, JSCodeGenerator *cg, JSOp op)
     JS_END_MACRO
 
 static JSBool
-FlushPops(JSContext *cx, JSCodeGenerator *cg, intN *npops)
+FlushPops(JSContext *cx, CodeGenerator *cg, intN *npops)
 {
     JS_ASSERT(*npops != 0);
     if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
@@ -1548,23 +1529,20 @@ FlushPops(JSContext *cx, JSCodeGenerator *cg, intN *npops)
  * Emit additional bytecode(s) for non-local jumps.
  */
 static JSBool
-EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt)
+EmitNonLocalJumpFixup(JSContext *cx, CodeGenerator *cg, StmtInfo *toStmt)
 {
-    intN depth, npops;
-    JSStmtInfo *stmt;
-
     /*
      * The non-local jump fixup we emit will unbalance cg->stackDepth, because
      * the fixup replicates balanced code such as JSOP_LEAVEWITH emitted at the
      * end of a with statement, so we save cg->stackDepth here and restore it
      * just before a successful return.
      */
-    depth = cg->stackDepth;
-    npops = 0;
+    intN depth = cg->stackDepth;
+    intN npops = 0;
 
 #define FLUSH_POPS() if (npops && !FlushPops(cx, cg, &npops)) return JS_FALSE
 
-    for (stmt = cg->topStmt; stmt != toStmt; stmt = stmt->down) {
+    for (StmtInfo *stmt = cg->topStmt; stmt != toStmt; stmt = stmt->down) {
         switch (stmt->type) {
           case STMT_FINALLY:
             FLUSH_POPS();
@@ -1623,7 +1601,7 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt)
 }
 
 static JSBool
-EmitKnownBlockChain(JSContext *cx, JSCodeGenerator *cg, JSObjectBox *box)
+EmitKnownBlockChain(JSContext *cx, CodeGenerator *cg, ObjectBox *box)
 {
     if (box)
         return EmitIndexOp(cx, JSOP_BLOCKCHAIN, box->index, cg);
@@ -1631,7 +1609,7 @@ EmitKnownBlockChain(JSContext *cx, JSCodeGenerator *cg, JSObjectBox *box)
 }
 
 static JSBool
-EmitBlockChain(JSContext *cx, JSCodeGenerator *cg)
+EmitBlockChain(JSContext *cx, CodeGenerator *cg)
 {
     return EmitKnownBlockChain(cx, cg, cg->blockChainBox);
 }
@@ -1639,8 +1617,8 @@ EmitBlockChain(JSContext *cx, JSCodeGenerator *cg)
 static const jsatomid INVALID_ATOMID = -1;
 
 static ptrdiff_t
-EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
-         ptrdiff_t *lastp, jsatomid labelIndex = INVALID_ATOMID, JSSrcNoteType noteType = SRC_NULL)
+EmitGoto(JSContext *cx, CodeGenerator *cg, StmtInfo *toStmt, ptrdiff_t *lastp,
+         jsatomid labelIndex = INVALID_ATOMID, SrcNoteType noteType = SRC_NULL)
 {
     intN index;
 
@@ -1667,8 +1645,7 @@ EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
 }
 
 static JSBool
-BackPatch(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t last,
-          jsbytecode *target, jsbytecode op)
+BackPatch(JSContext *cx, CodeGenerator *cg, ptrdiff_t last, jsbytecode *target, jsbytecode op)
 {
     jsbytecode *pc, *stop;
     ptrdiff_t delta, span;
@@ -1692,11 +1669,9 @@ BackPatch(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t last,
 }
 
 void
-js_PopStatement(JSTreeContext *tc)
+js_PopStatement(TreeContext *tc)
 {
-    JSStmtInfo *stmt;
-
-    stmt = tc->topStmt;
+    StmtInfo *stmt = tc->topStmt;
     tc->topStmt = stmt->down;
     if (STMT_LINKS_SCOPE(stmt)) {
         tc->topScopeStmt = stmt->downScope;
@@ -1707,11 +1682,9 @@ js_PopStatement(JSTreeContext *tc)
 }
 
 JSBool
-js_PopStatementCG(JSContext *cx, JSCodeGenerator *cg)
+js_PopStatementCG(JSContext *cx, CodeGenerator *cg)
 {
-    JSStmtInfo *stmt;
-
-    stmt = cg->topStmt;
+    StmtInfo *stmt = cg->topStmt;
     if (!STMT_IS_TRYING(stmt) &&
         (!BackPatch(cx, cg, stmt->breaks, CG_NEXT(cg), JSOP_GOTO) ||
          !BackPatch(cx, cg, stmt->continues, CG_CODE(cg, stmt->update),
@@ -1723,8 +1696,7 @@ js_PopStatementCG(JSContext *cx, JSCodeGenerator *cg)
 }
 
 JSBool
-js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
-                             JSParseNode *pn)
+js_DefineCompileTimeConstant(JSContext *cx, CodeGenerator *cg, JSAtom *atom, ParseNode *pn)
 {
     /* XXX just do numbers for now */
     if (pn->isKind(TOK_NUMBER)) {
@@ -1734,8 +1706,8 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
     return JS_TRUE;
 }
 
-JSStmtInfo *
-js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt)
+StmtInfo *
+js_LexicalLookup(TreeContext *tc, JSAtom *atom, jsint *slotp, StmtInfo *stmt)
 {
     if (!stmt)
         stmt = tc->topScopeStmt;
@@ -1772,12 +1744,8 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
  * name defining a constant.
  */
 static JSBool
-LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
-                          Value *constp)
+LookupCompileTimeConstant(JSContext *cx, CodeGenerator *cg, JSAtom *atom, Value *constp)
 {
-    JSStmtInfo *stmt;
-    JSObject *obj;
-
     /*
      * Chase down the cg stack, but only until we reach the outermost cg.
      * This enables propagating consts from top-level into switch cases in a
@@ -1787,11 +1755,11 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
     do {
         if (cg->inFunction() || cg->compileAndGo()) {
             /* XXX this will need revising if 'const' becomes block-scoped. */
-            stmt = js_LexicalLookup(cg, atom, NULL);
+            StmtInfo *stmt = js_LexicalLookup(cg, atom, NULL);
             if (stmt)
                 return JS_TRUE;
 
-            if (JSCodeGenerator::ConstMap::Ptr p = cg->constMap.lookup(atom)) {
+            if (CodeGenerator::ConstMap::Ptr p = cg->constMap.lookup(atom)) {
                 JS_ASSERT(!p->value.isMagic(JS_NO_CONSTANT));
                 *constp = p->value;
                 return JS_TRUE;
@@ -1809,7 +1777,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                     break;
             } else {
                 JS_ASSERT(cg->compileAndGo());
-                obj = cg->scopeChain();
+                JSObject *obj = cg->scopeChain();
 
                 const Shape *shape = obj->nativeLookup(cx, ATOM_TO_JSID(atom));
                 if (shape) {
@@ -1846,7 +1814,7 @@ FitsWithoutBigIndex(uintN index)
  * after the main bytecode sequence.
  */
 static JSOp
-EmitBigIndexPrefix(JSContext *cx, JSCodeGenerator *cg, uintN index)
+EmitBigIndexPrefix(JSContext *cx, CodeGenerator *cg, uintN index)
 {
     uintN indexBase;
 
@@ -1889,7 +1857,7 @@ EmitBigIndexPrefix(JSContext *cx, JSCodeGenerator *cg, uintN index)
  * register setting, but this could be optimized further.
  */
 static bool
-EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg, JSOp *psuffix)
+EmitIndexOp(JSContext *cx, JSOp op, uintN index, CodeGenerator *cg, JSOp *psuffix)
 {
     JSOp bigSuffix;
 
@@ -1923,8 +1891,7 @@ EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg, JSOp *psuf
     JS_END_MACRO
 
 static bool
-EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
-           JSOp *psuffix = NULL)
+EmitAtomOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg, JSOp *psuffix = NULL)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
@@ -1942,8 +1909,7 @@ EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
 }
 
 static JSBool
-EmitObjectOp(JSContext *cx, JSObjectBox *objbox, JSOp op,
-             JSCodeGenerator *cg)
+EmitObjectOp(JSContext *cx, ObjectBox *objbox, JSOp op, CodeGenerator *cg)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
     return EmitIndexOp(cx, op, cg->objectList.index(objbox), cg);
@@ -1960,8 +1926,7 @@ JS_STATIC_ASSERT(ARGNO_LEN == 2);
 JS_STATIC_ASSERT(SLOTNO_LEN == 2);
 
 static JSBool
-EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index,
-                JSCodeGenerator *cg)
+EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index, CodeGenerator *cg)
 {
     JSOp bigSuffix;
     ptrdiff_t off;
@@ -1985,7 +1950,7 @@ EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index,
 }
 
 bool
-JSCodeGenerator::shouldNoteClosedName(JSParseNode *pn)
+CodeGenerator::shouldNoteClosedName(ParseNode *pn)
 {
     return !callsEval() && pn->isDefn() && pn->isClosed();
 }
@@ -1999,7 +1964,7 @@ JSCodeGenerator::shouldNoteClosedName(JSParseNode *pn)
  * The function returns -1 on failures.
  */
 static jsint
-AdjustBlockSlot(JSContext *cx, JSCodeGenerator *cg, jsint slot)
+AdjustBlockSlot(JSContext *cx, CodeGenerator *cg, jsint slot)
 {
     JS_ASSERT((jsuint) slot < cg->maxStackDepth);
     if (cg->inFunction()) {
@@ -2013,7 +1978,7 @@ AdjustBlockSlot(JSContext *cx, JSCodeGenerator *cg, jsint slot)
 }
 
 static bool
-EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
+EmitEnterBlock(JSContext *cx, ParseNode *pn, CodeGenerator *cg)
 {
     JS_ASSERT(pn->isKind(TOK_LEXICALSCOPE));
     if (!EmitObjectOp(cx, pn->pn_objbox, JSOP_ENTERBLOCK, cg))
@@ -2034,12 +1999,12 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
             continue;
         }
 
-        JSDefinition *dn = (JSDefinition *) v.toPrivate();
+        Definition *dn = (Definition *) v.toPrivate();
         JS_ASSERT(dn->isDefn());
         JS_ASSERT(uintN(dn->frameSlot() + depth) < JS_BIT(16));
         dn->pn_cookie.set(dn->pn_cookie.level(), uint16(dn->frameSlot() + depth));
 #ifdef DEBUG
-        for (JSParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
+        for (ParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
             JS_ASSERT(pnu->pn_lexdef == dn);
             JS_ASSERT(!(pnu->pn_dflags & PND_BOUND));
             JS_ASSERT(pnu->pn_cookie.isFree());
@@ -2056,9 +2021,9 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
     }
 
     /*
-     * If clones of this block will have any extensible parents, then the clones
-     * must get unique shapes; see the comments for js::Bindings::
-     * extensibleParents.
+     * If clones of this block will have any extensible parents, then the
+     * clones must get unique shapes; see the comments for
+     * js::Bindings::extensibleParents.
      */
     if ((cg->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
         cg->bindings.extensibleParents())
@@ -2068,8 +2033,7 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
 }
 
 static JSBool
-EmitLeaveBlock(JSContext *cx, JSCodeGenerator *cg, JSOp op,
-               JSObjectBox *box)
+EmitLeaveBlock(JSContext *cx, CodeGenerator *cg, JSOp op, ObjectBox *box)
 {
     JSOp bigSuffix;
     uintN count = OBJ_BLOCK_COUNT(cx, box->object);
@@ -2104,7 +2068,7 @@ EmitLeaveBlock(JSContext *cx, JSCodeGenerator *cg, JSOp op,
  *   foo();
  */
 static bool
-TryConvertToGname(JSCodeGenerator *cg, JSParseNode *pn, JSOp *op)
+TryConvertToGname(CodeGenerator *cg, ParseNode *pn, JSOp *op)
 {
     if (cg->compileAndGo() && 
         cg->compiler()->globalScope->globalObj &&
@@ -2133,7 +2097,7 @@ TryConvertToGname(JSCodeGenerator *cg, JSParseNode *pn, JSOp *op)
 // that is |dn| or whose definition is |dn|. |pn->pn_cookie| is an outparam
 // that will be free (meaning no binding), or a slot number.
 static bool
-BindKnownGlobal(JSContext *cx, JSCodeGenerator *cg, JSParseNode *dn, JSParseNode *pn, JSAtom *atom)
+BindKnownGlobal(JSContext *cx, CodeGenerator *cg, ParseNode *dn, ParseNode *pn, JSAtom *atom)
 {
     // Cookie is an outparam; make sure caller knew to clear it.
     JS_ASSERT(pn->pn_cookie.isFree());
@@ -2151,7 +2115,7 @@ BindKnownGlobal(JSContext *cx, JSCodeGenerator *cg, JSParseNode *dn, JSParseNode
         JS_ASSERT(!!p);
         index = p.value();
     } else {
-        JSCodeGenerator *globalcg = globalScope->cg;
+        CodeGenerator *globalcg = globalScope->cg;
 
         // If the definition is bound, and we're in the same cg, we can re-use
         // its cookie.
@@ -2177,17 +2141,17 @@ BindKnownGlobal(JSContext *cx, JSCodeGenerator *cg, JSParseNode *dn, JSParseNode
 
 // See BindKnownGlobal()'s comment.
 static bool
-BindGlobal(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn, JSAtom *atom)
+BindGlobal(JSContext *cx, CodeGenerator *cg, ParseNode *pn, JSAtom *atom)
 {
     pn->pn_cookie.makeFree();
 
-    JSDefinition *dn;
+    Definition *dn;
     if (pn->isUsed()) {
         dn = pn->pn_lexdef;
     } else {
         if (!pn->isDefn())
             return true;
-        dn = (JSDefinition *)pn;
+        dn = (Definition *)pn;
     }
 
     // Only optimize for defined globals.
@@ -2215,12 +2179,12 @@ BindGlobal(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn, JSAtom *atom)
  * in js_EmitTree.
  */
 static JSBool
-BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+BindNameToSlot(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
-    JSDefinition *dn;
+    Definition *dn;
     JSOp op;
     JSAtom *atom;
-    JSDefinition::Kind dn_kind;
+    Definition::Kind dn_kind;
 
     JS_ASSERT(pn->isKind(TOK_NAME));
 
@@ -2245,7 +2209,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     } else {
         if (!pn->isDefn())
             return JS_TRUE;
-        dn = (JSDefinition *) pn;
+        dn = (Definition *) pn;
     }
 
     op = pn->getOp();
@@ -2271,7 +2235,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case JSOP_SETCONST:
         break;
       case JSOP_DELNAME:
-        if (dn_kind != JSDefinition::UNKNOWN) {
+        if (dn_kind != Definition::UNKNOWN) {
             if (cg->parser->callerFrame && dn->isTopLevel())
                 JS_ASSERT(cg->compileAndGo());
             else
@@ -2424,8 +2388,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
 
             uintN slot = cookie.slot();
-            if (slot != UpvarCookie::CALLEE_SLOT && dn_kind != JSDefinition::ARG) {
-                JSTreeContext *tc = cg;
+            if (slot != UpvarCookie::CALLEE_SLOT && dn_kind != Definition::ARG) {
+                TreeContext *tc = cg;
                 do {
                     tc = tc->parent;
                 } while (tc->staticLevel != level);
@@ -2450,10 +2414,10 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
      * rewrite pn_op and update pn accordingly.
      */
     switch (dn_kind) {
-      case JSDefinition::UNKNOWN:
+      case Definition::UNKNOWN:
         return JS_TRUE;
 
-      case JSDefinition::LET:
+      case Definition::LET:
         switch (op) {
           case JSOP_NAME:     op = JSOP_GETLOCAL; break;
           case JSOP_SETNAME:  op = JSOP_SETLOCAL; break;
@@ -2465,7 +2429,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
         break;
 
-      case JSDefinition::ARG:
+      case Definition::ARG:
         switch (op) {
           case JSOP_NAME:     op = JSOP_GETARG; break;
           case JSOP_SETNAME:  op = JSOP_SETARG; break;
@@ -2478,7 +2442,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(!pn->isConst());
         break;
 
-      case JSDefinition::VAR:
+      case Definition::VAR:
         if (dn->isOp(JSOP_CALLEE)) {
             JS_ASSERT(op != JSOP_CALLEE);
             JS_ASSERT((cg->fun()->flags & JSFUN_LAMBDA) && atom == cg->fun()->atom);
@@ -2520,9 +2484,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /* FALL THROUGH */
 
       default:
-        JS_ASSERT_IF(dn_kind != JSDefinition::FUNCTION,
-                     dn_kind == JSDefinition::VAR ||
-                     dn_kind == JSDefinition::CONST);
+        JS_ASSERT_IF(dn_kind != Definition::FUNCTION,
+                     dn_kind == Definition::VAR ||
+                     dn_kind == Definition::CONST);
         switch (op) {
           case JSOP_NAME:     op = JSOP_GETLOCAL; break;
           case JSOP_SETNAME:  op = JSOP_SETLOCAL; break;
@@ -2533,7 +2497,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case JSOP_NAMEDEC:  op = JSOP_LOCALDEC; break;
           default: JS_NOT_REACHED("local");
         }
-        JS_ASSERT_IF(dn_kind == JSDefinition::CONST, pn->pn_dflags & PND_CONST);
+        JS_ASSERT_IF(dn_kind == Definition::CONST, pn->pn_dflags & PND_CONST);
         break;
     }
 
@@ -2545,7 +2509,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 }
 
 bool
-JSCodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie *cookie)
+CodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie *cookie)
 {
     if (!globalMap.ensureMap(context()))
         return false;
@@ -2591,11 +2555,10 @@ JSCodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie *cookie)
  * pop bytecode.
  */
 static JSBool
-CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
-                 JSBool *answer)
+CheckSideEffects(JSContext *cx, CodeGenerator *cg, ParseNode *pn, JSBool *answer)
 {
     JSBool ok;
-    JSParseNode *pn2;
+    ParseNode *pn2;
 
     ok = JS_TRUE;
     if (!pn || *answer)
@@ -2786,8 +2749,7 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 }
 
 static JSBool
-EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
-           JSBool callContext)
+EmitNameOp(JSContext *cx, CodeGenerator *cg, ParseNode *pn, JSBool callContext)
 {
     JSOp op;
 
@@ -2837,9 +2799,9 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
 #if JS_HAS_XML_SUPPORT
 static JSBool
-EmitXMLName(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
+EmitXMLName(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
 {
-    JSParseNode *pn2;
+    ParseNode *pn2;
     uintN oldflags;
 
     JS_ASSERT(pn->isKind(TOK_UNARYOP));
@@ -2862,7 +2824,7 @@ EmitXMLName(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 #endif
 
 static inline bool
-EmitElemOpBase(JSContext *cx, JSCodeGenerator *cg, JSOp op)
+EmitElemOpBase(JSContext *cx, CodeGenerator *cg, JSOp op)
 {
     if (js_Emit1(cx, cg, op) < 0)
         return false;
@@ -2871,7 +2833,7 @@ EmitElemOpBase(JSContext *cx, JSCodeGenerator *cg, JSOp op)
 }
 
 static bool
-EmitSpecialPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
+EmitSpecialPropOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
 {
     /*
      * Special case for obj.__proto__ to deoptimize away from fast paths in the
@@ -2887,10 +2849,10 @@ EmitSpecialPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 }
 
 static JSBool
-EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
+EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg,
            JSBool callContext, JSOp *psuffix = NULL)
 {
-    JSParseNode *pn2, *pndot, *pnup, *pndown;
+    ParseNode *pn2, *pndot, *pnup, *pndown;
     ptrdiff_t top;
 
     JS_ASSERT(pn->isArity(PN_NAME));
@@ -2983,7 +2945,7 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
 }
 
 static bool
-EmitPropIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
+EmitPropIncDec(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
 {
     JSOp suffix = JSOP_NOP;
     if (!EmitPropOp(cx, pn, op, cg, false, &suffix))
@@ -3042,7 +3004,7 @@ EmitPropIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 }
 
 static bool
-EmitNameIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
+EmitNameIncDec(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
 {
     JSOp suffix = JSOP_NOP;
     if (!EmitAtomOp(cx, pn, op, cg, &suffix))
@@ -3100,10 +3062,10 @@ EmitNameIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 }
 
 static JSBool
-EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
+EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
 {
     ptrdiff_t top;
-    JSParseNode *left, *right, *next, ltmp, rtmp;
+    ParseNode *left, *right, *next, ltmp, rtmp;
     int32_t slot;
 
     top = CG_OFFSET(cg);
@@ -3229,7 +3191,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 }
 
 static bool
-EmitElemIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
+EmitElemIncDec(JSContext *cx, ParseNode *pn, JSOp op, CodeGenerator *cg)
 {
     if (pn) {
         if (!EmitElemOp(cx, pn, op, cg))
@@ -3293,7 +3255,7 @@ EmitElemIncDec(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 }
 
 static JSBool
-EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
+EmitNumberOp(JSContext *cx, jsdouble dval, CodeGenerator *cg)
 {
     int32_t ival;
     uint32 u;
@@ -3355,19 +3317,19 @@ AllocateSwitchConstant(JSContext *cx)
  * though EXPR is evaluated in the enclosing scope; it does not see x.
  *
  * In those cases we use TempPopScope around the code to emit EXPR. It
- * temporarily removes the let-scope from the JSCodeGenerator's scope stack and
+ * temporarily removes the let-scope from the CodeGenerator's scope stack and
  * emits extra bytecode to ensure that js::GetBlockChain also finds the correct
  * scope at run time.
  */
 class TempPopScope {
-    JSStmtInfo *savedStmt;
-    JSStmtInfo *savedScopeStmt;
-    JSObjectBox *savedBlockBox;
+    StmtInfo *savedStmt;
+    StmtInfo *savedScopeStmt;
+    ObjectBox *savedBlockBox;
 
   public:
     TempPopScope() : savedStmt(NULL), savedScopeStmt(NULL), savedBlockBox(NULL) {}
 
-    bool popBlock(JSContext *cx, JSCodeGenerator *cg) {
+    bool popBlock(JSContext *cx, CodeGenerator *cg) {
         savedStmt = cg->topStmt;
         savedScopeStmt = cg->topScopeStmt;
         savedBlockBox = cg->blockChainBox;
@@ -3388,7 +3350,7 @@ class TempPopScope {
         return js_Emit1(cx, cg, JSOP_NOP) >= 0 && EmitBlockChain(cx, cg);
     }
 
-    bool repushBlock(JSContext *cx, JSCodeGenerator *cg) {
+    bool repushBlock(JSContext *cx, CodeGenerator *cg) {
         JS_ASSERT(savedStmt);
         cg->topStmt = savedStmt;
         cg->topScopeStmt = savedScopeStmt;
@@ -3398,22 +3360,22 @@ class TempPopScope {
 };
 
 static JSBool
-EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+EmitSwitch(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
     JSOp switchOp;
     JSBool ok, hasDefault, constPropagated;
     ptrdiff_t top, off, defaultOffset;
-    JSParseNode *pn2, *pn3, *pn4;
+    ParseNode *pn2, *pn3, *pn4;
     uint32 caseCount, tableLength;
-    JSParseNode **table;
+    ParseNode **table;
     int32_t i, low, high;
     intN noteIndex;
     size_t switchSize, tableSize;
     jsbytecode *pc, *savepc;
 #if JS_HAS_BLOCK_SCOPE
-    JSObjectBox *box;
+    ObjectBox *box;
 #endif
-    JSStmtInfo stmtInfo;
+    StmtInfo stmtInfo;
 
     /* Try for most optimal, fall back if not dense ints, and per ECMAv2. */
     switchOp = JSOP_TABLESWITCH;
@@ -3771,7 +3733,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              */
             if (tableLength != 0) {
                 tableSize = (size_t)tableLength * sizeof *table;
-                table = (JSParseNode **) cx->malloc_(tableSize);
+                table = (ParseNode **) cx->malloc_(tableSize);
                 if (!table)
                     return JS_FALSE;
                 memset(table, 0, tableSize);
@@ -3949,7 +3911,7 @@ bad:
 }
 
 JSBool
-js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
+js_EmitFunctionScript(JSContext *cx, CodeGenerator *cg, ParseNode *body)
 {
     /*
      * The decompiler has assumptions about what may occur immediately after
@@ -3994,8 +3956,8 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 }
 
 static bool
-MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
-                 JSParseNode *pn, jsatomid *result)
+MaybeEmitVarDecl(JSContext *cx, CodeGenerator *cg, JSOp prologOp,
+                 ParseNode *pn, jsatomid *result)
 {
     jsatomid atomIndex;
 
@@ -4034,12 +3996,10 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
 #if JS_HAS_DESTRUCTURING
 
 typedef JSBool
-(*DestructuringDeclEmitter)(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
-                            JSParseNode *pn);
+(*DestructuringDeclEmitter)(JSContext *cx, CodeGenerator *cg, JSOp prologOp, ParseNode *pn);
 
 static JSBool
-EmitDestructuringDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
-                      JSParseNode *pn)
+EmitDestructuringDecl(JSContext *cx, CodeGenerator *cg, JSOp prologOp, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(TOK_NAME));
     if (!BindNameToSlot(cx, cg, pn))
@@ -4050,10 +4010,9 @@ EmitDestructuringDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
 }
 
 static JSBool
-EmitDestructuringDecls(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
-                       JSParseNode *pn)
+EmitDestructuringDecls(JSContext *cx, CodeGenerator *cg, JSOp prologOp, ParseNode *pn)
 {
-    JSParseNode *pn2, *pn3;
+    ParseNode *pn2, *pn3;
     DestructuringDeclEmitter emitter;
 
     if (pn->isKind(TOK_RB)) {
@@ -4079,10 +4038,10 @@ EmitDestructuringDecls(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
 }
 
 static JSBool
-EmitDestructuringOpsHelper(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn);
+EmitDestructuringOpsHelper(JSContext *cx, CodeGenerator *cg, ParseNode *pn);
 
 static JSBool
-EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+EmitDestructuringLHS(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
     /*
      * Now emit the lvalue opcode sequence.  If the lvalue is a nested
@@ -4166,10 +4125,10 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
  * them in the lvalues identified by the matched property names.
  */
 static JSBool
-EmitDestructuringOpsHelper(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+EmitDestructuringOpsHelper(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
     jsuint index;
-    JSParseNode *pn2, *pn3;
+    ParseNode *pn2, *pn3;
     JSBool doElemOp;
 
 #ifdef DEBUG
@@ -4275,8 +4234,7 @@ OpToDeclType(JSOp op)
 }
 
 static JSBool
-EmitDestructuringOps(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
-                     JSParseNode *pn)
+EmitDestructuringOps(JSContext *cx, CodeGenerator *cg, JSOp prologOp, ParseNode *pn)
 {
     /*
      * If we're called from a variable declaration, help the decompiler by
@@ -4295,11 +4253,11 @@ EmitDestructuringOps(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
 }
 
 static JSBool
-EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
-                    JSParseNode *lhs, JSParseNode *rhs)
+EmitGroupAssignment(JSContext *cx, CodeGenerator *cg, JSOp prologOp,
+                    ParseNode *lhs, ParseNode *rhs)
 {
     jsuint depth, limit, i, nslots;
-    JSParseNode *pn;
+    ParseNode *pn;
 
     depth = limit = (uintN) cg->stackDepth;
     for (pn = rhs->pn_head; pn; pn = pn->pn_next) {
@@ -4348,10 +4306,9 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
  * we set *pop to JSOP_NOP so callers can veto emitting pn followed by a pop.
  */
 static JSBool
-MaybeEmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
-                         JSParseNode *pn, JSOp *pop)
+MaybeEmitGroupAssignment(JSContext *cx, CodeGenerator *cg, JSOp prologOp, ParseNode *pn, JSOp *pop)
 {
-    JSParseNode *lhs, *rhs;
+    ParseNode *lhs, *rhs;
 
     JS_ASSERT(pn->isKind(TOK_ASSIGN));
     JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_POPV);
@@ -4370,12 +4327,12 @@ MaybeEmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
 #endif /* JS_HAS_DESTRUCTURING */
 
 static JSBool
-EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
-              JSBool inLetHead, ptrdiff_t *headNoteIndex)
+EmitVariables(JSContext *cx, CodeGenerator *cg, ParseNode *pn, JSBool inLetHead,
+              ptrdiff_t *headNoteIndex)
 {
     bool forInVar, first;
     ptrdiff_t off, noteIndex, tmp;
-    JSParseNode *pn2, *pn3, *next;
+    ParseNode *pn2, *pn3, *next;
     JSOp op;
     jsatomid atomIndex;
     uintN oldflags;
@@ -4600,7 +4557,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 }
 
 static bool
-EmitAssignment(JSContext *cx, JSCodeGenerator *cg, JSParseNode *lhs, JSOp op, JSParseNode *rhs)
+EmitAssignment(JSContext *cx, CodeGenerator *cg, ParseNode *lhs, JSOp op, ParseNode *rhs)
 {
     ptrdiff_t top = CG_OFFSET(cg);
 
@@ -4793,7 +4750,7 @@ EmitAssignment(JSContext *cx, JSCodeGenerator *cg, JSParseNode *lhs, JSOp op, JS
 
 #if defined DEBUG_brendan || defined DEBUG_mrbkap
 static JSBool
-GettableNoteForNextOp(JSCodeGenerator *cg)
+GettableNoteForNextOp(CodeGenerator *cg)
 {
     ptrdiff_t offset, target;
     jssrcnote *sn, *end;
@@ -4812,14 +4769,14 @@ GettableNoteForNextOp(JSCodeGenerator *cg)
 
 /* Top-level named functions need a nop for decompilation. */
 static JSBool
-EmitFunctionDefNop(JSContext *cx, JSCodeGenerator *cg, uintN index)
+EmitFunctionDefNop(JSContext *cx, CodeGenerator *cg, uintN index)
 {
     return js_NewSrcNote2(cx, cg, SRC_FUNCDEF, (ptrdiff_t)index) >= 0 &&
            js_Emit1(cx, cg, JSOP_NOP) >= 0;
 }
 
 static bool
-EmitNewInit(JSContext *cx, JSCodeGenerator *cg, JSProtoKey key, JSParseNode *pn, int sharpnum)
+EmitNewInit(JSContext *cx, CodeGenerator *cg, JSProtoKey key, ParseNode *pn, int sharpnum)
 {
     if (js_Emit3(cx, cg, JSOP_NEWINIT, (jsbytecode) key, 0) < 0)
         return false;
@@ -4837,7 +4794,7 @@ EmitNewInit(JSContext *cx, JSCodeGenerator *cg, JSProtoKey key, JSParseNode *pn,
 }
 
 static bool
-EmitEndInit(JSContext *cx, JSCodeGenerator *cg, uint32 count)
+EmitEndInit(JSContext *cx, CodeGenerator *cg, uint32 count)
 {
 #if JS_HAS_SHARP_VARS
     /* Emit an op for sharp array cleanup and decompilation. */
@@ -4848,7 +4805,7 @@ EmitEndInit(JSContext *cx, JSCodeGenerator *cg, uint32 count)
 }
 
 bool
-JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
+ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
 {
     switch (getKind()) {
       case TOK_NUMBER:
@@ -4880,7 +4837,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             return false;
 
         unsigned idx = 0;
-        for (JSParseNode *pn = pn_head; pn; idx++, pn = pn->pn_next) {
+        for (ParseNode *pn = pn_head; pn; idx++, pn = pn->pn_next) {
             Value value;
             if (!pn->getConstantValue(cx, strictChecks, &value))
                 return false;
@@ -4901,12 +4858,12 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         if (!obj)
             return false;
 
-        for (JSParseNode *pn = pn_head; pn; pn = pn->pn_next) {
+        for (ParseNode *pn = pn_head; pn; pn = pn->pn_next) {
             Value value;
             if (!pn->pn_right->getConstantValue(cx, strictChecks, &value))
                 return false;
 
-            JSParseNode *pnid = pn->pn_left;
+            ParseNode *pnid = pn->pn_left;
             if (pnid->isKind(TOK_NUMBER)) {
                 Value idvalue = NumberValue(pnid->pn_dval);
                 jsid id;
@@ -4939,14 +4896,14 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
 }
 
 static bool
-EmitSingletonInitialiser(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+EmitSingletonInitialiser(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
     Value value;
     if (!pn->getConstantValue(cx, cg->needStrictChecks(), &value))
         return false;
 
     JS_ASSERT(value.isObject());
-    JSObjectBox *objbox = cg->parser->newObjectBox(&value.toObject());
+    ObjectBox *objbox = cg->parser->newObjectBox(&value.toObject());
     if (!objbox)
         return false;
 
@@ -4959,17 +4916,14 @@ JS_STATIC_ASSERT(JSOP_POP_LENGTH == 1);
 
 class EmitLevelManager
 {
-private:
-    JSCodeGenerator *cg;
-    
-public:
-    EmitLevelManager(JSCodeGenerator *cg) : cg(cg) { cg->emitLevel++; }
-
+    CodeGenerator *cg;
+  public:
+    EmitLevelManager(CodeGenerator *cg) : cg(cg) { cg->emitLevel++; }
     ~EmitLevelManager() { cg->emitLevel--; }
 };
 
 static bool
-EmitCatch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+EmitCatch(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
     ptrdiff_t catchStart, guardJump;
 
@@ -4977,7 +4931,7 @@ EmitCatch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
      * Morph STMT_BLOCK to STMT_CATCH, note the block entry code offset,
      * and save the block object atom.
      */
-    JSStmtInfo *stmt = cg->topStmt;
+    StmtInfo *stmt = cg->topStmt;
     JS_ASSERT(stmt->type == STMT_BLOCK && (stmt->flags & SIF_SCOPE));
     stmt->type = STMT_CATCH;
     catchStart = stmt->update;
@@ -4997,7 +4951,7 @@ EmitCatch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     if (pn->pn_kid2 && js_Emit1(cx, cg, JSOP_DUP) < 0)
         return false;
 
-    JSParseNode *pn2 = pn->pn_kid1;
+    ParseNode *pn2 = pn->pn_kid1;
     switch (pn2->getKind()) {
 #if JS_HAS_DESTRUCTURING
       case TOK_RB:
@@ -5053,9 +5007,9 @@ EmitCatch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 }
 
 static bool
-EmitTry(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+EmitTry(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
-    JSStmtInfo stmtInfo;
+    StmtInfo stmtInfo;
     ptrdiff_t catchJump = -1;
 
     /*
@@ -5104,10 +5058,10 @@ EmitTry(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
     ptrdiff_t tryEnd = CG_OFFSET(cg);
 
-    JSObjectBox *prevBox = NULL;
+    ObjectBox *prevBox = NULL;
     /* If this try has a catch block, emit it. */
-    JSParseNode *lastCatch = NULL;
-    if (JSParseNode *pn2 = pn->pn_kid2) {
+    ParseNode *lastCatch = NULL;
+    if (ParseNode *pn2 = pn->pn_kid2) {
         uintN count = 0;    /* previous catch block's population */
         
         /*
@@ -5133,7 +5087,7 @@ EmitTry(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * also used for the catch-all trynote for capturing exceptions
          * thrown from catch{} blocks.
          */
-        for (JSParseNode *pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+        for (ParseNode *pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
             ptrdiff_t guardJump, catchNote;
 
             JS_ASSERT(cg->stackDepth == depth);
@@ -5299,9 +5253,9 @@ EmitTry(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 }
 
 static bool
-EmitIf(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+EmitIf(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
-    JSStmtInfo stmtInfo;
+    StmtInfo stmtInfo;
 
     /* Initialize so we can detect else-if chains and avoid recursion. */
     stmtInfo.type = STMT_IF;
@@ -5336,7 +5290,7 @@ EmitIf(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     }
 
     /* Emit an annotated branch-if-false around the then part. */
-    JSParseNode *pn3 = pn->pn_kid3;
+    ParseNode *pn3 = pn->pn_kid3;
     noteIndex = js_NewSrcNote(cx, cg, pn3 ? SRC_IF_ELSE : SRC_IF);
     if (noteIndex < 0)
         return JS_FALSE;
@@ -5389,7 +5343,7 @@ EmitIf(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_BLOCK_SCOPE
 static bool
-EmitLet(JSContext *cx, JSCodeGenerator *cg, JSParseNode *&pn)
+EmitLet(JSContext *cx, CodeGenerator *cg, ParseNode *&pn)
 {
     /*
      * pn represents one of these syntactic constructs:
@@ -5402,7 +5356,7 @@ EmitLet(JSContext *cx, JSCodeGenerator *cg, JSParseNode *&pn)
      * with their variable declarations on the left and the body on the
      * right.
      */
-    JSParseNode *pn2;
+    ParseNode *pn2;
     if (pn->isArity(PN_BINARY)) {
         pn2 = pn->pn_right;
         pn = pn->pn_left;
@@ -5444,7 +5398,7 @@ EmitLet(JSContext *cx, JSCodeGenerator *cg, JSParseNode *&pn)
 
 #if JS_HAS_XML_SUPPORT
 static bool
-EmitXMLTag(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+EmitXMLTag(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
     if (js_Emit1(cx, cg, JSOP_STARTXML) < 0)
         return false;
@@ -5459,7 +5413,7 @@ EmitXMLTag(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     }
 
     JS_ASSERT(pn->pn_count != 0);
-    JSParseNode *pn2 = pn->pn_head;
+    ParseNode *pn2 = pn->pn_head;
     if (pn2->isKind(TOK_LC) && js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0)
         return false;
     if (!js_EmitTree(cx, cg, pn2))
@@ -5503,7 +5457,7 @@ EmitXMLTag(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 }
 
 static bool
-EmitXMLProcessingInstruction(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+EmitXMLProcessingInstruction(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
     jsatomid index;
     if (!cg->makeAtomIndex(pn->pn_pidata, &index))
@@ -5517,11 +5471,11 @@ EmitXMLProcessingInstruction(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn
 #endif
 
 static bool
-EmitLexicalScope(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn, JSBool &ok)
+EmitLexicalScope(JSContext *cx, CodeGenerator *cg, ParseNode *pn, JSBool &ok)
 {
-    JSStmtInfo stmtInfo;
-    JSStmtInfo *stmt;
-    JSObjectBox *objbox = pn->pn_objbox;
+    StmtInfo stmtInfo;
+    StmtInfo *stmt;
+    ObjectBox *objbox = pn->pn_objbox;
     js_PushBlockScope(cg, &stmtInfo, objbox, CG_OFFSET(cg));
 
     /*
@@ -5577,9 +5531,9 @@ EmitLexicalScope(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn, JSBool &ok
 }
 
 static bool
-EmitWith(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn, JSBool &ok)
+EmitWith(JSContext *cx, CodeGenerator *cg, ParseNode *pn, JSBool &ok)
 {
-    JSStmtInfo stmtInfo;
+    StmtInfo stmtInfo;
     if (!js_EmitTree(cx, cg, pn->pn_left))
         return false;
     js_PushStatement(cg, &stmtInfo, STMT_WITH, CG_OFFSET(cg));
@@ -5598,18 +5552,18 @@ EmitWith(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn, JSBool &ok)
 }
 
 JSBool
-js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+js_EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
 {
     JSBool useful, wantval;
-    JSStmtInfo stmtInfo;
-    JSStmtInfo *stmt;
+    StmtInfo stmtInfo;
+    StmtInfo *stmt;
     ptrdiff_t top, off, tmp, beq, jmp, tmp2, tmp3;
-    JSParseNode *pn2, *pn3;
+    ParseNode *pn2, *pn3;
     JSAtom *atom;
     jsatomid atomIndex;
     uintN index;
     ptrdiff_t noteIndex, noteIndex2;
-    JSSrcNoteType noteType;
+    SrcNoteType noteType;
     jsbytecode *pc;
     JSOp op;
     uint32 argc;
@@ -5659,7 +5613,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                      fun->kind() == JSFUN_INTERPRETED);
 
         /* Generate code for the function's body. */
-        JSCodeGenerator *cg2 = cx->new_<JSCodeGenerator>(cg->parser, pn->pn_pos.begin.lineno);
+        CodeGenerator *cg2 = cx->new_<CodeGenerator>(cg->parser, pn->pn_pos.begin.lineno);
         if (!cg2) {
             js_ReportOutOfMemory(cx);
             return JS_FALSE;
@@ -5766,8 +5720,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
       case TOK_ARGSBODY:
       {
-        JSParseNode *pnlast = pn->last();
-        for (JSParseNode *pn2 = pn->pn_head; pn2 != pnlast; pn2 = pn2->pn_next) {
+        ParseNode *pnlast = pn->last();
+        for (ParseNode *pn2 = pn->pn_head; pn2 != pnlast; pn2 = pn2->pn_next) {
             if (!pn2->isDefn())
                 continue;
             if (!BindNameToSlot(cx, cg, pn2))
@@ -5812,7 +5766,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          *  N    N*(ifeq-fail; goto); ifeq-pass  goto; N*ifne-pass; ifne-fail
          *
          * SpiderMonkey, pre-mozilla.org, emitted while parsing and so used
-         * test at the top. When JSParseNode trees were added during the ES3
+         * test at the top. When ParseNode trees were added during the ES3
          * work (1998-9), the code generation scheme was not optimized, and
          * the decompiler continued to take advantage of the branch and jump
          * that bracketed the body. But given the SRC_WHILE note, it is easy
@@ -5916,7 +5870,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * banned.
              */
             bool forLet = false;
-            if (JSParseNode *decl = pn2->pn_kid1) {
+            if (ParseNode *decl = pn2->pn_kid1) {
                 JS_ASSERT(TokenKindIsDecl(decl->getKind()));
                 forLet = decl->isKind(TOK_LET);
                 cg->flags |= TCF_IN_FOR_INIT;
@@ -6213,7 +6167,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         jsatomid labelIndex;
         if (atom) {
             /* Find the loop statement enclosed by the matching label. */
-            JSStmtInfo *loop = NULL;
+            StmtInfo *loop = NULL;
             if (!cg->makeAtomIndex(atom, &labelIndex))
                 return JS_FALSE;
             while (stmt->type != STMT_LABEL || stmt->label != atom) {
@@ -6332,7 +6286,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         js_PushStatement(cg, &stmtInfo, STMT_BLOCK, top);
 
-        JSParseNode *pnchild = pn->pn_head;
+        ParseNode *pnchild = pn->pn_head;
         if (pn->pn_xflags & PNX_FUNCDEFS) {
             /*
              * This block contains top-level function definitions. To ensure
@@ -7222,7 +7176,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
 
                 /* Check whether we can optimize to JSOP_INITMETHOD. */
-                JSParseNode *init = pn2->pn_right;
+                ParseNode *init = pn2->pn_right;
                 bool lambda = init->isOp(JSOP_LAMBDA);
                 if (lambda)
                     ++methodInits;
@@ -7270,7 +7224,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * The object survived and has a predictable shape.  Update the original bytecode,
              * as long as we can do so without using a big index prefix/suffix.
              */
-            JSObjectBox *objbox = cg->parser->newObjectBox(obj);
+            ObjectBox *objbox = cg->parser->newObjectBox(obj);
             if (!objbox)
                 return JS_FALSE;
             unsigned index = cg->objectList.index(objbox);
@@ -7478,7 +7432,7 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
 };
 
 static intN
-AllocSrcNote(JSContext *cx, JSCodeGenerator *cg)
+AllocSrcNote(JSContext *cx, CodeGenerator *cg)
 {
     jssrcnote *notes = CG_NOTES(cg);
     jssrcnote *newnotes;
@@ -7509,7 +7463,7 @@ AllocSrcNote(JSContext *cx, JSCodeGenerator *cg)
 }
 
 intN
-js_NewSrcNote(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type)
+js_NewSrcNote(JSContext *cx, CodeGenerator *cg, SrcNoteType type)
 {
     intN index, n;
     jssrcnote *sn;
@@ -7557,8 +7511,7 @@ js_NewSrcNote(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type)
 }
 
 intN
-js_NewSrcNote2(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type,
-               ptrdiff_t offset)
+js_NewSrcNote2(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset)
 {
     intN index;
 
@@ -7571,8 +7524,8 @@ js_NewSrcNote2(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type,
 }
 
 intN
-js_NewSrcNote3(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type,
-               ptrdiff_t offset1, ptrdiff_t offset2)
+js_NewSrcNote3(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset1,
+               ptrdiff_t offset2)
 {
     intN index;
 
@@ -7587,7 +7540,7 @@ js_NewSrcNote3(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type,
 }
 
 static JSBool
-GrowSrcNotes(JSContext *cx, JSCodeGenerator *cg)
+GrowSrcNotes(JSContext *cx, CodeGenerator *cg)
 {
     size_t newlength = CG_NOTE_LIMIT(cg) * 2;
     jssrcnote *newnotes = (jssrcnote *) cx->realloc_(CG_NOTES(cg), newlength);
@@ -7601,8 +7554,7 @@ GrowSrcNotes(JSContext *cx, JSCodeGenerator *cg)
 }
 
 jssrcnote *
-js_AddToSrcNoteDelta(JSContext *cx, JSCodeGenerator *cg, jssrcnote *sn,
-                     ptrdiff_t delta)
+js_AddToSrcNoteDelta(JSContext *cx, CodeGenerator *cg, jssrcnote *sn, ptrdiff_t delta)
 {
     ptrdiff_t base, limit, newdelta, diff;
     intN index;
@@ -7668,8 +7620,7 @@ js_GetSrcNoteOffset(jssrcnote *sn, uintN which)
 }
 
 JSBool
-js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
-                    uintN which, ptrdiff_t offset)
+js_SetSrcNoteOffset(JSContext *cx, CodeGenerator *cg, uintN index, uintN which, ptrdiff_t offset)
 {
     jssrcnote *sn;
     ptrdiff_t diff;
@@ -7756,7 +7707,7 @@ void DumpSrcNoteSizeHist()
  * CG_COUNT_FINAL_SRCNOTES MACRO NEEDS CORRESPONDING CHANGES!
  */
 JSBool
-js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes)
+js_FinishTakingSrcNotes(JSContext *cx, CodeGenerator *cg, jssrcnote *notes)
 {
     uintN prologCount, mainCount, totalCount;
     ptrdiff_t offset, delta;
@@ -7812,15 +7763,15 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes)
 }
 
 static JSBool
-NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
-           uintN stackDepth, size_t start, size_t end)
+NewTryNote(JSContext *cx, CodeGenerator *cg, JSTryNoteKind kind, uintN stackDepth, size_t start,
+           size_t end)
 {
     JS_ASSERT((uintN)(uint16)stackDepth == stackDepth);
     JS_ASSERT(start <= end);
     JS_ASSERT((size_t)(uint32)start == start);
     JS_ASSERT((size_t)(uint32)end == end);
 
-    JSTryNode *tryNode = cx->tempLifoAlloc().new_<JSTryNode>();
+    TryNode *tryNode = cx->tempLifoAlloc().new_<TryNode>();
     if (!tryNode) {
         js_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -7837,9 +7788,9 @@ NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
 }
 
 void
-js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array)
+js_FinishTakingTryNotes(CodeGenerator *cg, JSTryNoteArray *array)
 {
-    JSTryNode *tryNode;
+    TryNode *tryNode;
     JSTryNote *tn;
 
     JS_ASSERT(array->length > 0 && array->length == cg->ntrynotes);
@@ -7857,15 +7808,15 @@ js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array)
  * Since the emitter refers to each parsed object only once, for the index we
  * use the number of already indexes objects. We also add the object to a list
  * to convert the list to a fixed-size array when we complete code generation,
- * see JSCGObjectList::finish below.
+ * see js::CGObjectList::finish below.
  *
- * Most of the objects go to JSCodeGenerator.objectList but for regexp we use a
- * separated JSCodeGenerator.regexpList. In this way the emitted index can be
+ * Most of the objects go to CodeGenerator::objectList but for regexp we use a
+ * separated CodeGenerator::regexpList. In this way the emitted index can be
  * directly used to store and fetch a reference to a cloned RegExp object that
  * shares the same JSRegExp private data created for the object literal in
- * objbox. We need a cloned object to hold lastIndex and other direct properties
- * that should not be shared among threads sharing a precompiled function or
- * script.
+ * objbox. We need a cloned object to hold lastIndex and other direct
+ * properties that should not be shared among threads sharing a precompiled
+ * function or script.
  *
  * If the code being compiled is function code, allocate a reserved slot in
  * the cloned function object that shares its precompiled script with other
@@ -7894,7 +7845,7 @@ js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array)
  * the pre-compilation prototype, a pigeon-hole problem for instanceof tests.
  */
 uintN
-JSCGObjectList::index(JSObjectBox *objbox)
+CGObjectList::index(ObjectBox *objbox)
 {
     JS_ASSERT(!objbox->emitLink);
     objbox->emitLink = lastbox;
@@ -7904,16 +7855,13 @@ JSCGObjectList::index(JSObjectBox *objbox)
 }
 
 void
-JSCGObjectList::finish(JSObjectArray *array)
+CGObjectList::finish(JSObjectArray *array)
 {
-    JSObject **cursor;
-    JSObjectBox *objbox;
-
     JS_ASSERT(length <= INDEX_LIMIT);
     JS_ASSERT(length == array->length);
 
-    cursor = array->vector + array->length;
-    objbox = lastbox;
+    JSObject **cursor = array->vector + array->length;
+    ObjectBox *objbox = lastbox;
     do {
         --cursor;
         JS_ASSERT(!*cursor);
@@ -7923,7 +7871,7 @@ JSCGObjectList::finish(JSObjectArray *array)
 }
 
 void
-JSGCConstList::finish(JSConstArray *array)
+GCConstList::finish(JSConstArray *array)
 {
     JS_ASSERT(array->length == list.length());
     Value *src = list.begin(), *srcend = list.end();

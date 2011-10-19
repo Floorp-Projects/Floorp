@@ -63,7 +63,7 @@ struct Compiler
 
     static bool
     compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
-                        js::Bindings *bindings, const jschar *chars, size_t length,
+                        Bindings *bindings, const jschar *chars, size_t length,
                         const char *filename, uintN lineno, JSVersion version);
 
     static JSScript *

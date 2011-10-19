@@ -66,7 +66,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
                         uintN staticLevel /* = 0 */)
 {
     TokenKind tt;
-    JSParseNode *pn;
+    ParseNode *pn;
     JSScript *script;
     bool inDirectivePrologue;
 
@@ -87,8 +87,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
 
-    JSCodeGenerator cg(&parser, tokenStream.getLineno());
-    if (!cg.init(cx, JSTreeContext::USED_AS_TREE_CONTEXT))
+    CodeGenerator cg(&parser, tokenStream.getLineno());
+    if (!cg.init(cx, TreeContext::USED_AS_TREE_CONTEXT))
         return NULL;
 
     Probes::compileScriptBegin(cx, filename, lineno);
@@ -143,7 +143,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
              * function captured in case it refers to an upvar, and someone
              * wishes to decompile it while it's running.
              */
-            JSObjectBox *funbox = parser.newObjectBox(callerFrame->fun());
+            ObjectBox *funbox = parser.newObjectBox(callerFrame->fun());
             if (!funbox)
                 goto out;
             funbox->emitLink = cg.objectList.lastbox;
@@ -189,7 +189,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         if (inDirectivePrologue && !parser.recognizeDirectivePrologue(pn, &inDirectivePrologue))
             goto out;
 
-        if (!js_FoldConstants(cx, pn, &cg))
+        if (!FoldConstants(cx, pn, &cg))
             goto out;
 
         if (!parser.analyzeFunctions(&cg))
@@ -325,7 +325,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         def.knownSlot = shape->slot;
     }
 
-    js::Vector<JSScript *, 16> worklist(cx);
+    Vector<JSScript *, 16> worklist(cx);
     if (!worklist.append(script))
         return false;
 
@@ -400,8 +400,8 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
 
-    JSCodeGenerator funcg(&parser, tokenStream.getLineno());
-    if (!funcg.init(cx, JSTreeContext::USED_AS_TREE_CONTEXT))
+    CodeGenerator funcg(&parser, tokenStream.getLineno());
+    if (!funcg.init(cx, TreeContext::USED_AS_TREE_CONTEXT))
         return false;
 
     funcg.flags |= TCF_IN_FUNCTION;
@@ -413,7 +413,7 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 
     /* FIXME: make Function format the source for a function definition. */
     tokenStream.mungeCurrentToken(TOK_NAME);
-    JSParseNode *fn = FunctionNode::create(&funcg);
+    ParseNode *fn = FunctionNode::create(&funcg);
     if (fn) {
         fn->pn_body = NULL;
         fn->pn_cookie.makeFree();
@@ -445,15 +445,15 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
      * generate code for this function, including a stop opcode at the end.
      */
     tokenStream.mungeCurrentToken(TOK_LC);
-    JSParseNode *pn = fn ? parser.functionBody() : NULL;
+    ParseNode *pn = fn ? parser.functionBody() : NULL;
     if (pn) {
         if (!CheckStrictParameters(cx, &funcg)) {
             pn = NULL;
         } else if (!tokenStream.matchToken(TOK_EOF)) {
             parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
-        } else if (!js_FoldConstants(cx, pn, &funcg)) {
-            /* js_FoldConstants reported the error already. */
+        } else if (!FoldConstants(cx, pn, &funcg)) {
+            /* FoldConstants reported the error already. */
             pn = NULL;
         } else if (!parser.analyzeFunctions(&funcg)) {
             pn = NULL;

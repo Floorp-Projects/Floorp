@@ -1156,8 +1156,7 @@ static const char xml_namespace_str[] = "http://www.w3.org/XML/1998/namespace";
 static const char xmlns_namespace_str[] = "http://www.w3.org/2000/xmlns/";
 
 static JSObject *
-ParseNodeToQName(Parser *parser, JSParseNode *pn,
-                 JSXMLArray *inScopeNSes, JSBool isAttributeName)
+ParseNodeToQName(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, JSBool isAttributeName)
 {
     JSContext *cx = parser->context;
     JSLinearString *uri, *prefix;
@@ -1285,14 +1284,13 @@ ChompXMLWhitespace(JSContext *cx, JSString *str)
 }
 
 static JSXML *
-ParseNodeToXML(Parser *parser, JSParseNode *pn,
-               JSXMLArray *inScopeNSes, uintN flags)
+ParseNodeToXML(Parser *parser, ParseNode *pn, JSXMLArray *inScopeNSes, uintN flags)
 {
     JSContext *cx = parser->context;
     JSXML *xml, *kid, *attr, *attrj;
     JSLinearString *str;
     uint32 length, n, i, j;
-    JSParseNode *pn2, *pn3, *head, **pnp;
+    ParseNode *pn2, *pn3, *head, **pnp;
     JSObject *ns;
     JSObject *qn, *attrjqn;
     JSXMLClass xml_class;
@@ -1771,7 +1769,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
                 return false;
             }
 
-            JSParseNode *pn = parser.parseXMLText(scopeChain, false);
+            ParseNode *pn = parser.parseXMLText(scopeChain, false);
             uintN flags;
             if (pn && GetXMLSettingFlags(cx, &flags)) {
                 AutoNamespaceArray namespaces(cx);
