@@ -195,9 +195,9 @@ struct StmtInfo {
 
 /*
  * A request flag passed to Compiler::compileScript and then down via
- * CodeGenerator to js_NewScriptFromCG, from script_compile_sub and any
- * kindred functions that need to make mutable scripts (even empty ones;
- * i.e., they can't share the const JSScript::emptyScript() singleton).
+ * CodeGenerator to JSScript::NewScriptFromCG, from script_compile_sub and any
+ * kindred functions that need to make mutable scripts (even empty ones; i.e.,
+ * they can't share the const JSScript::emptyScript() singleton).
  */
 #define TCF_NEED_MUTABLE_SCRIPT 0x20000
 
@@ -512,11 +512,15 @@ inline bool TreeContext::needStrictChecks() {
     return parser->context->hasStrictOption() || inStrictMode();
 }
 
+namespace frontend {
+
 bool
 SetStaticLevel(TreeContext *tc, uintN staticLevel);
 
 bool
 GenerateBlockId(TreeContext *tc, uint32& blockid);
+
+} /* namespace frontend */
 
 struct JumpTarget;
 
@@ -617,7 +621,7 @@ struct CodeGenerator : public TreeContext
 
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
     AtomDefnMapPtr  roLexdeps;
-    uintN           firstLine;      /* first line, for js_NewScriptFromCG */
+    uintN           firstLine;      /* first line, for JSScript::NewScriptFromCG */
 
     intN            stackDepth;     /* current stack depth in script frame */
     uintN           maxStackDepth;  /* maximum stack depth so far */
@@ -635,7 +639,7 @@ struct CodeGenerator : public TreeContext
 
     uintN           arrayCompDepth; /* stack depth of array in comprehension */
 
-    uintN           emitLevel;      /* js_EmitTree recursion level */
+    uintN           emitLevel;      /* js::frontend::EmitTree recursion level */
 
     typedef HashMap<JSAtom *, Value> ConstMap;
     ConstMap        constMap;       /* compile time constants */
@@ -770,46 +774,46 @@ TreeContext::asCodeGenerator()
     return static_cast<CodeGenerator *>(this);
 }
 
-} /* namespace js */
+namespace frontend {
 
 /*
  * Emit one bytecode.
  */
 ptrdiff_t
-js_Emit1(JSContext *cx, js::CodeGenerator *cg, JSOp op);
+Emit1(JSContext *cx, CodeGenerator *cg, JSOp op);
 
 /*
  * Emit two bytecodes, an opcode (op) with a byte of immediate operand (op1).
  */
 ptrdiff_t
-js_Emit2(JSContext *cx, js::CodeGenerator *cg, JSOp op, jsbytecode op1);
+Emit2(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1);
 
 /*
  * Emit three bytecodes, an opcode with two bytes of immediate operands.
  */
 ptrdiff_t
-js_Emit3(JSContext *cx, js::CodeGenerator *cg, JSOp op, jsbytecode op1,
+Emit3(JSContext *cx, CodeGenerator *cg, JSOp op, jsbytecode op1,
          jsbytecode op2);
 
 /*
  * Emit five bytecodes, an opcode with two 16-bit immediates.
  */
 ptrdiff_t
-js_Emit5(JSContext *cx, js::CodeGenerator *cg, JSOp op, uint16 op1,
+Emit5(JSContext *cx, CodeGenerator *cg, JSOp op, uint16 op1,
          uint16 op2);
 
 /*
  * Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
  */
 ptrdiff_t
-js_EmitN(JSContext *cx, js::CodeGenerator *cg, JSOp op, size_t extra);
+EmitN(JSContext *cx, CodeGenerator *cg, JSOp op, size_t extra);
 
 /*
- * Unsafe macro to call js_SetJumpOffset and return false if it does.
+ * Unsafe macro to call SetJumpOffset and return false if it does.
  */
 #define CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx,cg,pc,off,BAD_EXIT)               \
     JS_BEGIN_MACRO                                                            \
-        if (!js_SetJumpOffset(cx, cg, pc, off)) {                             \
+        if (!SetJumpOffset(cx, cg, pc, off)) {                             \
             BAD_EXIT;                                                         \
         }                                                                     \
     JS_END_MACRO
@@ -825,52 +829,51 @@ js_EmitN(JSContext *cx, js::CodeGenerator *cg, JSOp op, size_t extra);
     CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx, cg, off, return JS_FALSE)
 
 JSBool
-js_SetJumpOffset(JSContext *cx, js::CodeGenerator *cg, jsbytecode *pc, ptrdiff_t off);
+SetJumpOffset(JSContext *cx, CodeGenerator *cg, jsbytecode *pc, ptrdiff_t off);
 
 /*
  * Push the C-stack-allocated struct at stmt onto the stmtInfo stack.
  */
 void
-js_PushStatement(js::TreeContext *tc, js::StmtInfo *stmt, js::StmtType type, ptrdiff_t top);
+PushStatement(TreeContext *tc, StmtInfo *stmt, StmtType type, ptrdiff_t top);
 
 /*
  * Push a block scope statement and link blockObj into tc->blockChain. To pop
- * this statement info record, use js_PopStatement as usual, or if appropriate
- * (if generating code), js_PopStatementCG.
+ * this statement info record, use PopStatementTC as usual, or if appropriate
+ * (if generating code), PopStatementCG.
  */
 void
-js_PushBlockScope(js::TreeContext *tc, js::StmtInfo *stmt, js::ObjectBox *blockBox, ptrdiff_t top);
+PushBlockScope(TreeContext *tc, StmtInfo *stmt, ObjectBox *blockBox, ptrdiff_t top);
 
 /*
  * Pop tc->topStmt. If the top StmtInfo struct is not stack-allocated, it
  * is up to the caller to free it.
  */
 void
-js_PopStatement(js::TreeContext *tc);
+PopStatementTC(TreeContext *tc);
 
 /*
- * Like js_PopStatement(cg), also patch breaks and continues unless the top
+ * Like PopStatementTC(cg), also patch breaks and continues unless the top
  * statement info record represents a try-catch-finally suite. May fail if a
  * jump offset overflows.
  */
 JSBool
-js_PopStatementCG(JSContext *cx, js::CodeGenerator *cg);
+PopStatementCG(JSContext *cx, CodeGenerator *cg);
 
 /*
  * Define and lookup a primitive jsval associated with the const named by atom.
- * js_DefineCompileTimeConstant analyzes the constant-folded initializer at pn
+ * DefineCompileTimeConstant analyzes the constant-folded initializer at pn
  * and saves the const's value in cg->constList, if it can be used at compile
  * time. It returns true unless an error occurred.
  *
- * If the initializer's value could not be saved, js_DefineCompileTimeConstant
- * calls will return the undefined value. js_DefineCompileTimeConstant tries
+ * If the initializer's value could not be saved, DefineCompileTimeConstant
+ * calls will return the undefined value. DefineCompileTimeConstant tries
  * to find a const value memorized for atom, returning true with *vp set to a
  * value other than undefined if the constant was found, true with *vp set to
  * JSVAL_VOID if not found, and false on error.
  */
 JSBool
-js_DefineCompileTimeConstant(JSContext *cx, js::CodeGenerator *cg, JSAtom *atom,
-                             js::ParseNode *pn);
+DefineCompileTimeConstant(JSContext *cx, CodeGenerator *cg, JSAtom *atom, ParseNode *pn);
 
 /*
  * Find a lexically scoped variable (one declared by let, catch, or an array
@@ -881,27 +884,27 @@ js_DefineCompileTimeConstant(JSContext *cx, js::CodeGenerator *cg, JSAtom *atom,
  * null, then if atom is found, set *slotp to its stack slot, otherwise to -1.
  * This means that if slotp is not null, all the block objects on the lexical
  * scope chain must have had their depth slots computed by the code generator,
- * so the caller must be under js_EmitTree.
+ * so the caller must be under EmitTree.
  *
  * In any event, directly return the statement info record in which atom was
  * found. Otherwise return null.
  */
-js::StmtInfo *
-js_LexicalLookup(js::TreeContext *tc, JSAtom *atom, jsint *slotp, js::StmtInfo *stmt = NULL);
+StmtInfo *
+LexicalLookup(TreeContext *tc, JSAtom *atom, jsint *slotp, StmtInfo *stmt = NULL);
 
 /*
  * Emit code into cg for the tree rooted at pn.
  */
 JSBool
-js_EmitTree(JSContext *cx, js::CodeGenerator *cg, js::ParseNode *pn);
+EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn);
 
 /*
  * Emit function code using cg for the tree rooted at body.
  */
 JSBool
-js_EmitFunctionScript(JSContext *cx, js::CodeGenerator *cg, js::ParseNode *body);
+EmitFunctionScript(JSContext *cx, CodeGenerator *cg, ParseNode *body);
 
-namespace js {
+} /* namespace frontend */
 
 /*
  * Source notes generated along with bytecode for decompiling and debugging.
@@ -919,13 +922,13 @@ namespace js {
  * At most one "gettable" note (i.e., a note of type other than SRC_NEWLINE,
  * SRC_SETLINE, and SRC_XDELTA) applies to a given bytecode.
  *
- * NB: the js_SrcNoteSpec array in jsemit.c is indexed by this enum, so its
- * initializers need to match the order here.
+ * NB: the js_SrcNoteSpec array in BytecodeGenerator.cpp is indexed by this
+ * enum, so its initializers need to match the order here.
  *
  * Note on adding new source notes: every pair of bytecodes (A, B) where A and
  * B have disjoint sets of source notes that could apply to each bytecode may
  * reuse the same note type value for two notes (snA, snB) that have the same
- * arity, offsetBias, and isSpanDep initializers in js_SrcNoteSpec. This is
+ * arity, offsetBias, and isSpanDep initializers in JSSrcNoteSpec. This is
  * why SRC_IF and SRC_INITPROP have the same value below. For bad historical
  * reasons, some bytecodes below that could be overlayed have not been, but
  * before using SRC_EXTENDED, consider compressing the existing note types.
@@ -984,8 +987,6 @@ enum SrcNoteType {
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
 };
 
-} /* namespace js */
-
 /*
  * Constants for the SRC_DECL source note. Note that span-dependent bytecode
  * selection means that any SRC_DECL offset greater than SRC_DECL_LET may need
@@ -1040,17 +1041,6 @@ enum SrcNoteType {
 #define SN_3BYTE_OFFSET_FLAG    0x80
 #define SN_3BYTE_OFFSET_MASK    0x7f
 
-typedef struct JSSrcNoteSpec {
-    const char      *name;      /* name for disassembly/debugging output */
-    int8            arity;      /* number of offset operands */
-    uint8           offsetBias; /* bias of offset(s) from annotated pc */
-    int8            isSpanDep;  /* 1 or -1 if offsets could span extended ops,
-                                   0 otherwise; sign tells span direction */
-} JSSrcNoteSpec;
-
-extern JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[];
-extern JS_FRIEND_API(uintN)          js_SrcNoteLength(jssrcnote *sn);
-
 #define SN_LENGTH(sn)           ((js_SrcNoteSpec[SN_TYPE(sn)].arity == 0) ? 1 \
                                  : js_SrcNoteLength(sn))
 #define SN_NEXT(sn)             ((sn) + SN_LENGTH(sn))
@@ -1059,6 +1049,8 @@ extern JS_FRIEND_API(uintN)          js_SrcNoteLength(jssrcnote *sn);
 #define SN_MAKE_TERMINATOR(sn)  (*(sn) = SRC_NULL)
 #define SN_IS_TERMINATOR(sn)    (*(sn) == SRC_NULL)
 
+namespace frontend {
+
 /*
  * Append a new source note of the given type (and therefore size) to cg's
  * notes dynamic array, updating cg->noteCount. Return the new note's index
@@ -1066,30 +1058,23 @@ extern JS_FRIEND_API(uintN)          js_SrcNoteLength(jssrcnote *sn);
  * memory.
  */
 intN
-js_NewSrcNote(JSContext *cx, js::CodeGenerator *cg, js::SrcNoteType type);
+NewSrcNote(JSContext *cx, CodeGenerator *cg, SrcNoteType type);
 
 intN
-js_NewSrcNote2(JSContext *cx, js::CodeGenerator *cg, js::SrcNoteType type, ptrdiff_t offset);
+NewSrcNote2(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset);
 
 intN
-js_NewSrcNote3(JSContext *cx, js::CodeGenerator *cg, js::SrcNoteType type, ptrdiff_t offset1,
+NewSrcNote3(JSContext *cx, CodeGenerator *cg, SrcNoteType type, ptrdiff_t offset1,
                ptrdiff_t offset2);
 
 /*
  * NB: this function can add at most one extra extended delta note.
  */
 jssrcnote *
-js_AddToSrcNoteDelta(JSContext *cx, js::CodeGenerator *cg, jssrcnote *sn, ptrdiff_t delta);
-
-/*
- * Get and set the offset operand identified by which (0 for the first, etc.).
- */
-extern JS_FRIEND_API(ptrdiff_t)
-js_GetSrcNoteOffset(jssrcnote *sn, uintN which);
+AddToSrcNoteDelta(JSContext *cx, CodeGenerator *cg, jssrcnote *sn, ptrdiff_t delta);
 
 JSBool
-js_SetSrcNoteOffset(JSContext *cx, js::CodeGenerator *cg, uintN index, uintN which,
-                    ptrdiff_t offset);
+SetSrcNoteOffset(JSContext *cx, CodeGenerator *cg, uintN index, uintN which, ptrdiff_t offset);
 
 /*
  * Finish taking source notes in cx's notePool, copying final notes to the new
@@ -1098,8 +1083,8 @@ js_SetSrcNoteOffset(JSContext *cx, js::CodeGenerator *cg, uintN index, uintN whi
  *
  * To compute the number of jssrcnotes to allocate and pass in via notes, use
  * the CG_COUNT_FINAL_SRCNOTES macro. This macro knows a lot about details of
- * js_FinishTakingSrcNotes, SO DON'T CHANGE jsemit.c's js_FinishTakingSrcNotes
- * FUNCTION WITHOUT CHECKING WHETHER THIS MACRO NEEDS CORRESPONDING CHANGES!
+ * FinishTakingSrcNotes, so DON'T CHANGE js::frontend::FinishTakingSrcNotes
+ * WITHOUT CHECKING WHETHER THIS MACRO NEEDS CORRESPONDING CHANGES!
  */
 #define CG_COUNT_FINAL_SRCNOTES(cg, cnt)                                      \
     JS_BEGIN_MACRO                                                            \
@@ -1123,9 +1108,29 @@ js_SetSrcNoteOffset(JSContext *cx, js::CodeGenerator *cg, uintN index, uintN whi
     JS_END_MACRO
 
 JSBool
-js_FinishTakingSrcNotes(JSContext *cx, js::CodeGenerator *cg, jssrcnote *notes);
+FinishTakingSrcNotes(JSContext *cx, CodeGenerator *cg, jssrcnote *notes);
 
 void
-js_FinishTakingTryNotes(js::CodeGenerator *cg, JSTryNoteArray *array);
+FinishTakingTryNotes(CodeGenerator *cg, JSTryNoteArray *array);
+
+} /* namespace frontend */
+} /* namespace js */
+
+struct JSSrcNoteSpec {
+    const char      *name;      /* name for disassembly/debugging output */
+    int8            arity;      /* number of offset operands */
+    uint8           offsetBias; /* bias of offset(s) from annotated pc */
+    int8            isSpanDep;  /* 1 or -1 if offsets could span extended ops,
+                                   0 otherwise; sign tells span direction */
+};
+
+extern JS_FRIEND_DATA(JSSrcNoteSpec)  js_SrcNoteSpec[];
+extern JS_FRIEND_API(uintN)         js_SrcNoteLength(jssrcnote *sn);
+
+/*
+ * Get and set the offset operand identified by which (0 for the first, etc.).
+ */
+extern JS_FRIEND_API(ptrdiff_t)
+js_GetSrcNoteOffset(jssrcnote *sn, uintN which);
 
 #endif /* BytecodeGenerator_h__ */

@@ -80,6 +80,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::frontend;
 
 namespace js {
 
@@ -1162,10 +1163,10 @@ JSScript::NewScriptFromCG(JSContext *cx, CodeGenerator *cg)
 
     script->sourceMap = (jschar *) cg->parser->tokenStream.releaseSourceMap();
 
-    if (!js_FinishTakingSrcNotes(cx, cg, script->notes()))
+    if (!FinishTakingSrcNotes(cx, cg, script->notes()))
         return NULL;
     if (cg->ntrynotes != 0)
-        js_FinishTakingTryNotes(cg, script->trynotes());
+        FinishTakingTryNotes(cg, script->trynotes());
     if (cg->objectList.length != 0)
         cg->objectList.finish(script->objects());
     if (cg->regexpList.length != 0)
