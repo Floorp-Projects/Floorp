@@ -185,6 +185,92 @@ IonCompartment::generateReturnError(JSContext *cx)
     Linker linker(masm);
     return linker.newCode(cx);
 }
+
+IonCode *
+IonCompartment::generateArgumentsRectifier(JSContext *cx)
+{
+    MacroAssembler masm(cx);
+#if 0
+    // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
+    // Including |this|, there are (|nargs| + 1) arguments to copy.
+    JS_ASSERT(ArgumentsRectifierReg == r8);
+
+    // Load the number of |undefined|s to push into %rcx.
+    masm.movq(Operand(rsp, offsetof(IonFrameData, calleeToken_)), rax);
+    masm.load16(Operand(rax, offsetof(JSFunction, nargs)), rcx);
+    masm.subq(r8, rcx);
+
+    masm.moveValue(UndefinedValue(), r10);
+
+    masm.movq(rsp, rbp); // Save %rsp.
+
+    // Push undefined.
+    {
+        Label undefLoopTop;
+        masm.bind(&undefLoopTop);
+
+        masm.push(r10);
+        masm.subl(Imm32(1), rcx);
+
+        masm.testl(rcx, rcx);
+        masm.j(Assembler::NonZero, &undefLoopTop);
+    }
+
+    // Get the topmost argument.
+    masm.movq(r8, r9);
+    masm.shlq(Imm32(3), r9); // r9 <- (nargs) * sizeof(Value)
+
+    masm.movq(rbp, rcx);
+    masm.addq(Imm32(sizeof(IonFrameData)), rcx);
+    masm.addq(r9, rcx);
+
+    // Push arguments, |nargs| + 1 times (to include |this|).
+    {
+        Label copyLoopTop, initialSkip;
+
+        masm.jump(&initialSkip);
+
+        masm.bind(&copyLoopTop);
+        masm.subq(Imm32(sizeof(Value)), rcx);
+        masm.subl(Imm32(1), r8);
+        masm.bind(&initialSkip);
+
+        masm.mov(Operand(rcx, 0x0), rdx);
+        masm.push(rdx);
+
+        masm.testl(r8, r8);
+        masm.j(Assembler::NonZero, &copyLoopTop);
+    }
+
+    // Construct sizeDescriptor.
+    masm.subq(rsp, rbp);
+    masm.shll(Imm32(IonFramePrefix::FrameTypeBits), rbp);
+    masm.orl(Imm32(IonFramePrefix::RectifierFrame), rbp);
+
+    // Construct IonFrameData.
+    masm.push(rax); // calleeToken.
+    masm.push(rbp); // sizeDescriptor.
+
+    // Call the target function.
+    // Note that this code assumes the function is JITted.
+    masm.movq(Operand(rax, offsetof(JSFunction, u.i.script)), rax);
+    masm.movq(Operand(rax, offsetof(JSScript, ion)), rax);
+    masm.movq(Operand(rax, offsetof(IonScript, method_)), rax);
+    masm.movq(Operand(rax, IonCode::OffsetOfCode()), rax);
+    masm.call(rax);
+
+    // Remove the rectifier frame.
+    masm.pop(rbp);            // rbp <- sizeDescriptor with FrameType.
+    masm.shrl(Imm32(IonFramePrefix::FrameTypeBits), rbp); // rbp <- size of pushed arguments.
+    masm.pop(r11);            // Discard calleeToken.
+    masm.addq(rbp, rsp);      // Discard pushed arguments.
+
+    masm.ret();
+#endif
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+
 static void
 GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
 {
@@ -193,10 +279,12 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     // sp % 8 == 0
     masm.startDataTransferM(IsStore, sp, DB, WriteBack);
     // We don't have to push everything, but this is likely easier.
+    // setting regs_
     for (uint32 i = 0; i < Registers::Total; i++)
         masm.transferReg(Register::FromCode(i));
     masm.finishDataTransfer();
     // Float transfer hasn't been implemented yet.  this is a NOP.
+    // setting fpregs_
     masm.startFloatTransferM(IsStore, sp, DB, WriteBack);
     for (uint32 i = 0; i < FloatRegisters::Total; i++)
         masm.transferFloatReg(FloatRegister::FromCode(i));
@@ -216,7 +304,10 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     // to always point to the lowest place that has been written.  the OS is
     // free to do whatever it wants below sp.
     masm.startDataTransferM(IsStore, sp, DB, WriteBack);
+    // set frameClassId_
     masm.transferReg(r4);
+    // Set tableOffset_; higher registers are stored at higher locations on
+    // the stack.
     masm.transferReg(lr);
     masm.finishDataTransfer();
 
@@ -245,9 +336,13 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
 
     if (frameClass == NO_FRAME_SIZE_CLASS_ID) {
         // Make sure the bailout frame size fits into the offset for a load
-        masm.as_dtr(IsLoad, 32, PreIndex,
-                    r4, DTRAddr(sp, DtrOffImm(bailoutFrameSize)));
-        // And now the stack is all fixed up.
+        masm.as_dtr(IsLoad, 32, Offset,
+                    r4, DTRAddr(sp, DtrOffImm(offsetof(BailoutStack, frameSize_))));
+        // We add 12 to the bailoutFrameSize because:
+        // sizeof(uint32) for the tableOffset that was pushed onto the stack
+        // sizeof(uintptr_t) for the snapshotOffset;
+        // alignment to round the uintptr_t up to a multiple of 8 bytes.
+        masm.ma_add(sp, Imm32(bailoutFrameSize+12), sp);
         masm.as_add(sp, sp, O2Reg(r4));
     } else {
         uint32 frameSize = FrameSizeClass::FromClass(frameClass).frameSize();
