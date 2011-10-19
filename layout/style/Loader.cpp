@@ -494,7 +494,7 @@ SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread)
   nsCOMPtr<nsINode> node = do_QueryInterface(mOwningElement);
   NS_ASSERTION(node, "How did that happen???");
 
-  nsContentUtils::DispatchTrustedEvent(node->GetOwnerDoc(),
+  nsContentUtils::DispatchTrustedEvent(node->OwnerDoc(),
                                        node,
                                        NS_SUCCEEDED(mStatus) ?
                                          NS_LITERAL_STRING("load") :

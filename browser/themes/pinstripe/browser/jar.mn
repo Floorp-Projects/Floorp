@@ -125,6 +125,7 @@ browser.jar:
   skin/classic/browser/devtools/arrows.png                  (devtools/arrows.png)
   skin/classic/browser/devtools/search.png                  (devtools/search.png)
   skin/classic/browser/devtools/csshtmltree.css             (devtools/csshtmltree.css)
+  skin/classic/browser/devtools/gcli.css                    (devtools/gcli.css)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png
   skin/classic/browser/sync-16.png

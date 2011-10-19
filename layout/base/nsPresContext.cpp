@@ -2036,7 +2036,7 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
     node = do_QueryInterface(parentTarget);
   }
   if (node)
-    return MayHavePaintEventListener(node->GetOwnerDoc()->GetInnerWindow());
+    return MayHavePaintEventListener(node->OwnerDoc()->GetInnerWindow());
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(parentTarget);
   if (window)

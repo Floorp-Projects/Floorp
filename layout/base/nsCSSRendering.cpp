@@ -969,15 +969,12 @@ nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame)
   nsIContent* content = aForFrame->GetContent();
   // The root element content can't be null. We wouldn't know what
   // frame to create for aFrame.
-  // Use |GetOwnerDoc| so it works during destruction.
+  // Use |OwnerDoc| so it works during destruction.
   if (!content) {
     return aForFrame;
   }
 
-  nsIDocument* document = content->GetOwnerDoc();
-  if (!document) {
-    return aForFrame;
-  }
+  nsIDocument* document = content->OwnerDoc();
 
   dom::Element* bodyContent = document->GetBodyElement();
   // We need to null check the body node (bug 118829) since
@@ -1058,9 +1055,7 @@ FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
     return true; // A pseudo-element frame.
 
   // We should only look at the <html> background if we're in an HTML document
-  nsIDocument* document = content->GetOwnerDoc();
-  if (!document)
-    return true;
+  nsIDocument* document = content->OwnerDoc();
 
   dom::Element* bodyContent = document->GetBodyElement();
   if (bodyContent != content)

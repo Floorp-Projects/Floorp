@@ -13,3 +13,13 @@
   -  quickly jump to the documentation from the Mozilla Developer Network site.
   -  This is the link title shown in the hover tooltip. -->
 <!ENTITY helpLinkTitle         "Read the documentation for this property">
+
+<!-- LOCALIZATION NOTE (matchedSelectors): For each style property the
+  -  panel shows whether there are any selectors that match the currently
+  -  selected element. -->
+<!ENTITY matchedSelectors      "Matched selectors">
+
+<!-- LOCALIZATION NOTE (unmatchedSelectors): For each style property
+  -  the panel shows whether there are any selectors that do not match the
+  -  currently selected element. -->
+<!ENTITY unmatchedSelectors    "Unmatched selectors">

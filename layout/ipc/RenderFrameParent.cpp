@@ -784,7 +784,7 @@ RenderFrameParent::BuildViewMap()
 LayerManager*
 RenderFrameParent::GetLayerManager() const
 {
-  nsIDocument* doc = mFrameLoader->GetOwnerDoc();
+  nsIDocument* doc = mFrameLoader->OwnerDoc();
   return doc->GetShell()->GetLayerManager();
 }
 

@@ -130,9 +130,7 @@ To visually debug the templates without running firefox, alter the display:none
       <div save="${matchedSelectorsContainer}" class="rulelink" dir="${getRTLAttr}">
         <div onclick="${matchedSelectorsClick}" class="rule-matched">
           <div save="${matchedExpander}" class="expander"></div>
-          <div save="${matchedSelectorsTitleNode}">
-            ${matchedSelectorTitle(__element)}
-          </div>
+          <div save="${matchedSelectorsTitleNode}">&matchedSelectors;</div>
         </div>
         <table save="${matchedSelectorTable}" dir="${getRTLAttr}"></table>
       </div>
@@ -140,9 +138,7 @@ To visually debug the templates without running firefox, alter the display:none
       <div save="${unmatchedSelectorsContainer}" class="rulelink" dir="${getRTLAttr}">
         <div onclick="${unmatchedSelectorsClick}" class="rule-unmatched">
           <div save="${unmatchedExpander}" class="expander"></div>
-          <div save="${unmatchedSelectorsTitleNode}">
-            ${unmatchedSelectorTitle(__element)}
-          </div>
+          <div save="${unmatchedSelectorsTitleNode}">&unmatchedSelectors;</div>
         </div>
         <table save="${unmatchedSelectorTable}" dir="${getRTLAttr}"></table>
       </div>

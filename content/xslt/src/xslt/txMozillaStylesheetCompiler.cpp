@@ -720,8 +720,7 @@ TX_CompileStylesheet(nsINode* aNode, txMozillaXSLTProcessor* aProcessor,
                      txStylesheet** aStylesheet)
 {
     // If we move GetBaseURI to nsINode this can be simplified.
-    nsCOMPtr<nsIDocument> doc = aNode->GetOwnerDoc();
-    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDocument> doc = aNode->OwnerDoc();
 
     nsCOMPtr<nsIURI> uri;
     if (aNode->IsNodeOfType(nsINode::eCONTENT)) {

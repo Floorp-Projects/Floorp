@@ -1182,7 +1182,7 @@ nsDocAccessible::ARIAActiveDescendantChanged(nsIContent* aElm)
   if (FocusMgr()->HasDOMFocus(aElm)) {
     nsAutoString id;
     if (aElm->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant, id)) {
-      nsIDocument* DOMDoc = aElm->GetOwnerDoc();
+      nsIDocument* DOMDoc = aElm->OwnerDoc();
       dom::Element* activeDescendantElm = DOMDoc->GetElementById(id);
       if (activeDescendantElm) {
         nsAccessible* activeDescendant = GetAccessible(activeDescendantElm);

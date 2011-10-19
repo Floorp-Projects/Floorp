@@ -380,7 +380,7 @@ NotificationController::CoalesceEvents()
         // is supported. Ignore events from different documents since we don't
         // coalesce them.
         if (!thisEvent->mNode ||
-            thisEvent->mNode->GetOwnerDoc() != tailEvent->mNode->GetOwnerDoc())
+            thisEvent->mNode->OwnerDoc() != tailEvent->mNode->OwnerDoc())
           continue;
 
         // Coalesce earlier event for the same target.

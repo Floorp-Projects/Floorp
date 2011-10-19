@@ -106,10 +106,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
-  nsIDocument* ownerDoc = tmp->GetOwnerDoc();
-  if (ownerDoc) {
-    ownerDoc->BindingManager()->Traverse(tmp, cb);
-  }
+  tmp->OwnerDoc()->BindingManager()->Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericDOMDataNode)
@@ -389,7 +386,7 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
         mutation.mNewAttrValue = do_GetAtom(val);
       }
 
-      mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+      mozAutoSubtreeModified subtree(OwnerDoc(), this);
       (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
     }
   }

@@ -89,7 +89,7 @@ nsresult nsMenuGroupOwnerX::Create(nsIContent* aContent)
 
   mContent = aContent;
 
-  nsIDocument* doc = aContent->GetOwnerDoc();
+  nsIDocument* doc = aContent->OwnerDoc();
   if (!doc)
     return NS_ERROR_FAILURE;
   doc->AddMutationObserver(this);

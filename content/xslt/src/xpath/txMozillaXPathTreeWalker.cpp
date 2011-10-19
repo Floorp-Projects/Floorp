@@ -574,8 +574,7 @@ txXPathNodeUtils::getDocument(const txXPathNode& aNode)
 txXPathNode*
 txXPathNodeUtils::getOwnerDocument(const txXPathNode& aNode)
 {
-    nsIDocument* document = aNode.mNode->GetOwnerDoc();
-    return document ? new txXPathNode(document) : nsnull;
+    return new txXPathNode(aNode.mNode->OwnerDoc());
 }
 
 #ifndef HAVE_64BIT_OS

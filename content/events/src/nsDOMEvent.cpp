@@ -425,7 +425,7 @@ static nsIDocument* GetDocumentForReport(nsEvent* aEvent)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aEvent->currentTarget);
   if (node)
-    return node->GetOwnerDoc();
+    return node->OwnerDoc();
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aEvent->currentTarget);
   if (!window)
@@ -491,7 +491,7 @@ nsDOMEvent::PreventDefault()
           node = do_QueryInterface(win->GetExtantDocument());
         }
       }
-      if (node && !nsContentUtils::IsChromeDoc(node->GetOwnerDoc())) {
+      if (node && !nsContentUtils::IsChromeDoc(node->OwnerDoc())) {
         mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT_CALLED_IN_CONTENT;
       }
     }
