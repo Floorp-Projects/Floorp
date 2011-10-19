@@ -30,5 +30,7 @@
   <string name="bookmarks">&bookmarks;</string>
   <string name="bookmark_add">&bookmark_add;</string>
 
+  <string name="share">&share;</string>
+
   <string name="tabs">&tabs;</string>
 </resources>
