@@ -59,7 +59,7 @@ rpc protocol PBrowserStream
 child:
   async Write(int32_t offset, Buffer data,
               uint32_t newlength);
-  rpc NPP_StreamAsFile(nsCString fname);
+  async NPP_StreamAsFile(nsCString fname);
 
   /**
    * NPP_DestroyStream may race with other messages: the child acknowledges
