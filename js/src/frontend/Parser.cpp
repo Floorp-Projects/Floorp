@@ -44,10 +44,10 @@
  * This is a recursive-descent parser for the JavaScript language specified by
  * "The JavaScript 1.5 Language Specification".  It uses lexical and semantic
  * feedback to disambiguate non-LL(1) structures.  It generates trees of nodes
- * induced by the recursive parsing (not precise syntax trees, see jsparse.h).
+ * induced by the recursive parsing (not precise syntax trees, see Parser.h).
  * After tree construction, it rewrites trees to fold constants and evaluate
- * compile-time expressions.  Finally, it calls js_EmitTree (see jsemit.h) to
- * generate bytecode.
+ * compile-time expressions.  Finally, it calls js::frontend::EmitTree (see
+ * CodeGenerator.h) to generate bytecode.
  *
  * This parser attempts no error recovery.
  */
@@ -1382,7 +1382,7 @@ CanFlattenUpvar(Definition *dn, FunctionBox *funbox, uint32 tcflags)
          * definition or expression, afunbox->parent will be null. The body
          * source might use |arguments| outside of any nested functions it may
          * contain, so we have to check the tcflags parameter that was passed
-         * in from Compiler::compileFunctionBody.
+         * in from BytecodeCompiler::compileFunctionBody.
          */
         if (dnKind == Definition::ARG &&
             ((afunbox->parent ? afunbox->parent->tcflags : tcflags) & TCF_FUN_USES_ARGUMENTS)) {
@@ -2089,8 +2089,8 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
          * variable to bind its name to its value, and not an activation object
          * property (it might also need the activation property, if the outer
          * function contains with statements, e.g., but the stack slot wins
-         * when jsemit.cpp's BindNameToSlot can optimize a JSOP_NAME into a
-         * JSOP_GETLOCAL bytecode).
+         * when BytecodeGenerator.cpp's BindNameToSlot can optimize a JSOP_NAME
+         * into a JSOP_GETLOCAL bytecode).
          */
         if (bodyLevel && tc->inFunction()) {
             /*
@@ -2597,8 +2597,8 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
      * Assign block-local index to pn->pn_cookie right away, encoding it as an
      * upvar cookie whose skip tells the current static level. The emitter will
      * adjust the node's slot based on its stack depth model -- and, for global
-     * and eval code, Compiler::compileScript will adjust the slot again to
-     * include script->nfixed.
+     * and eval code, BytecodeCompiler::compileScript will adjust the slot
+     * again to include script->nfixed.
      */
     pn->setOp(JSOP_GETLOCAL);
     pn->pn_cookie.set(tc->staticLevel, uint16(n));
@@ -2616,8 +2616,8 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
      * Store pn temporarily in what would be shape-mapped slots in a cloned
      * block object (once the prototype's final population is known, after all
      * 'let' bindings for this block have been parsed). We free these slots in
-     * jsemit.cpp:EmitEnterBlock so they don't tie up unused space in the so-
-     * called "static" prototype Block.
+     * BytecodeGenerator.cpp:EmitEnterBlock so they don't tie up unused space
+     * in the so-called "static" prototype Block.
      */
     blockObj->setSlot(shape->slot, PrivateValue(pn));
     return true;

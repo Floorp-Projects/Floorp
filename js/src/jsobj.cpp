@@ -1027,14 +1027,14 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
               script->principals->subsume(script->principals, principals)))) {
             /*
              * Get the prior (cache-filling) eval's saved caller function.
-             * See Compiler::compileScript in jsparse.cpp.
+             * See BytecodeCompiler::compileScript.
              */
             JSFunction *fun = script->getCallerFunction();
 
             if (fun == caller->fun()) {
                 /*
-                 * Get the source string passed for safekeeping in the
-                 * atom map by the prior eval to Compiler::compileScript.
+                 * Get the source string passed for safekeeping in the atom map
+                 * by the prior eval to BytecodeCompiler::compileScript.
                  */
                 JSAtom *src = script->atoms[0];
 
@@ -1273,9 +1273,10 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
                                                         ? CALLED_FROM_JSOP_EVAL
                                                         : NOT_CALLED_FROM_JSOP_EVAL);
         uint32 tcflags = TCF_COMPILE_N_GO | TCF_NEED_MUTABLE_SCRIPT | TCF_COMPILE_FOR_EVAL;
-        JSScript *compiled = Compiler::compileScript(cx, &scopeobj, caller, principals, tcflags,
-                                                     chars, length, filename, lineno,
-                                                     cx->findVersion(), linearStr, staticLevel);
+        JSScript *compiled = BytecodeCompiler::compileScript(cx, &scopeobj, caller, principals,
+                                                             tcflags, chars, length, filename,
+                                                             lineno, cx->findVersion(), linearStr,
+                                                             staticLevel);
         if (!compiled)
             return false;
 
@@ -3583,7 +3584,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     JS_ASSERT(depth <= size_t(cx->regs().sp - fp->base()));
     JS_ASSERT(count <= size_t(cx->regs().sp - fp->base() - depth));
 
-    /* See comments in CheckDestructuring from jsparse.cpp. */
+    /* See comments in CheckDestructuring in frontend/Parser.cpp. */
     JS_ASSERT(count >= 1);
 
     if (normalUnwind) {

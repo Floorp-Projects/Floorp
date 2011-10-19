@@ -4578,8 +4578,8 @@ CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj, JSPrincipals *p
     AutoLastFrameCheck lfc(cx);
 
     uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT | TCF_NEED_SCRIPT_OBJECT;
-    return Compiler::compileScript(cx, obj, NULL, principals, tcflags,
-                                   chars, length, filename, lineno, version);
+    return BytecodeCompiler::compileScript(cx, obj, NULL, principals, tcflags, chars, length,
+                                           filename, lineno, version);
 }
 
 extern JS_PUBLIC_API(JSScript *)
@@ -4755,8 +4755,8 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     JS_ASSERT(i <= len);
     len = i;
     uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT | TCF_NEED_SCRIPT_OBJECT;
-    script = Compiler::compileScript(cx, obj, NULL, principals, tcflags, buf, len, filename, 1,
-                                     cx->findVersion());
+    script = BytecodeCompiler::compileScript(cx, obj, NULL, principals, tcflags, buf, len,
+                                             filename, 1, cx->findVersion());
     cx->free_(buf);
     return script;
 }
@@ -4855,14 +4855,16 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
     if (!fun)
         return NULL;
 
-    if (!Compiler::compileFunctionBody(cx, fun, principals, &bindings,
-                                       chars, length, filename, lineno, version)) {
+    if (!BytecodeCompiler::compileFunctionBody(cx, fun, principals, &bindings,
+                                               chars, length, filename, lineno, version))
+    {
         return NULL;
     }
 
     if (obj && funAtom &&
-        !obj->defineGeneric(cx, ATOM_TO_JSID(funAtom), ObjectValue(*fun),
-                            NULL, NULL, JSPROP_ENUMERATE)) {
+        !obj->defineGeneric(cx, ATOM_TO_JSID(funAtom), ObjectValue(*fun), NULL, NULL,
+                            JSPROP_ENUMERATE))
+    {
         return NULL;
     }
 
@@ -5017,8 +5019,8 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
 
     CHECK_REQUEST(cx);
     AutoLastFrameCheck lfc(cx);
-    JSScript *script = Compiler::compileScript(cx, obj, NULL, principals, flags,
-                                               chars, length, filename, lineno, compileVersion);
+    JSScript *script = BytecodeCompiler::compileScript(cx, obj, NULL, principals, flags, chars,
+                                                       length, filename, lineno, compileVersion);
     if (!script)
         return false;
 

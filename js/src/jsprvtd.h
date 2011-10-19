@@ -158,12 +158,18 @@ class FrameRegsIter;
 class CallReceiver;
 class CallArgs;
 
-struct Compiler;
+struct BytecodeCompiler;
+struct CodeGenerator;
+struct Definition;
+struct FunctionBox;
+struct ObjectBox;
+struct ParseNode;
 struct Parser;
 class TokenStream;
 struct Token;
 struct TokenPos;
 struct TokenPtr;
+struct TreeContext;
 class UpvarCookie;
 
 class Proxy;
@@ -208,13 +214,6 @@ struct PropertyCacheEntry;
 struct Shape;
 struct EmptyShape;
 class Bindings;
-
-struct CodeGenerator;
-struct Definition;
-struct FunctionBox;
-struct ObjectBox;
-struct ParseNode;
-struct TreeContext;
 
 class MultiDeclRange;
 class ParseMapPool;

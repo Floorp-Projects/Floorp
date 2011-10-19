@@ -56,17 +56,17 @@ namespace js {
 /*
  * Compile a top-level script.
  */
-Compiler::Compiler(JSContext *cx, JSPrincipals *prin, StackFrame *cfp)
+BytecodeCompiler::BytecodeCompiler(JSContext *cx, JSPrincipals *prin, StackFrame *cfp)
   : parser(cx, prin, cfp), globalScope(NULL)
 {}
 
 JSScript *
-Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
-                        JSPrincipals *principals, uint32 tcflags,
-                        const jschar *chars, size_t length,
-                        const char *filename, uintN lineno, JSVersion version,
-                        JSString *source /* = NULL */,
-                        uintN staticLevel /* = 0 */)
+BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
+                                JSPrincipals *principals, uint32 tcflags,
+                                const jschar *chars, size_t length,
+                                const char *filename, uintN lineno, JSVersion version,
+                                JSString *source /* = NULL */,
+                                uintN staticLevel /* = 0 */)
 {
     TokenKind tt;
     ParseNode *pn;
@@ -83,7 +83,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(callerFrame, tcflags & TCF_COMPILE_N_GO);
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
-    Compiler compiler(cx, principals, callerFrame);
+    BytecodeCompiler compiler(cx, principals, callerFrame);
     if (!compiler.init(chars, length, filename, lineno, version))
         return NULL;
 
@@ -285,7 +285,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 }
 
 bool
-Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
+BytecodeCompiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
 {
     JSObject *globalObj = globalScope.globalObj;
 
@@ -391,11 +391,11 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
  * handler attribute in an HTML <INPUT> tag.
  */
 bool
-Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
-                              Bindings *bindings, const jschar *chars, size_t length,
-                              const char *filename, uintN lineno, JSVersion version)
+BytecodeCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
+                                      Bindings *bindings, const jschar *chars, size_t length,
+                                      const char *filename, uintN lineno, JSVersion version)
 {
-    Compiler compiler(cx, principals);
+    BytecodeCompiler compiler(cx, principals);
 
     if (!compiler.init(chars, length, filename, lineno, version))
         return false;
@@ -443,9 +443,10 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 
     /*
      * Farble the body so that it looks like a block statement to EmitTree,
-     * which is called from EmitFunctionBody (see jsemit.cpp).  After we're
-     * done parsing, we must fold constants, analyze any nested functions, and
-     * generate code for this function, including a stop opcode at the end.
+     * which is called from EmitFunctionBody (see BytecodeGenerator.cpp).
+     * After we're done parsing, we must fold constants, analyze any nested
+     * functions, and generate code for this function, including a stop opcode
+     * at the end.
      */
     tokenStream.mungeCurrentToken(TOK_LC);
     ParseNode *pn = fn ? parser.functionBody() : NULL;

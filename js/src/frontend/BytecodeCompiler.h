@@ -45,12 +45,12 @@
 
 namespace js {
 
-struct Compiler
+struct BytecodeCompiler
 {
     Parser      parser;
     GlobalScope *globalScope;
 
-    Compiler(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL);
+    BytecodeCompiler(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL);
 
     JSContext *context() {
         return parser.context;
