@@ -124,7 +124,7 @@ struct Parser : private AutoGCRooter
 
     friend void AutoGCRooter::trace(JSTracer *trc);
     friend struct TreeContext;
-    friend struct Compiler;
+    friend struct BytecodeCompiler;
 
     /*
      * Initialize a parser. Parameters are passed on to init tokenStream.

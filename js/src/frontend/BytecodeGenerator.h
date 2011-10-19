@@ -64,7 +64,8 @@ namespace js {
  * non-looping statement enumerators, add them before STMT_DO_LOOP or you will
  * break the STMT_TYPE_IS_LOOP macro.
  *
- * Also remember to keep the statementName array in jsemit.c in sync.
+ * Also remember to keep the statementName array in BytecodeGenerator.cpp in
+ * sync.
  */
 enum StmtType {
     STMT_LABEL,                 /* labeled statement:  L: s */
@@ -194,7 +195,7 @@ struct StmtInfo {
 #define TCF_DECL_DESTRUCTURING  0x10000
 
 /*
- * A request flag passed to Compiler::compileScript and then down via
+ * A request flag passed to BytecodeCompiler::compileScript and then down via
  * CodeGenerator to JSScript::NewScriptFromCG, from script_compile_sub and any
  * kindred functions that need to make mutable scripts (even empty ones; i.e.,
  * they can't share the const JSScript::emptyScript() singleton).
@@ -356,7 +357,7 @@ struct TreeContext {                /* tree context for semantic checks */
 
     FunctionBox     *funbox;        /* null or box for function we're compiling
                                        if (flags & TCF_IN_FUNCTION) and not in
-                                       Compiler::compileFunctionBody */
+                                       BytecodeCompiler::compileFunctionBody */
     FunctionBox     *functionList;
 
     ParseNode       *innermostWith; /* innermost WITH parse node */
@@ -434,7 +435,7 @@ struct TreeContext {                /* tree context for semantic checks */
     int sharpSlotBase;
     bool ensureSharpSlots();
 
-    Compiler *compiler() { return (Compiler *) parser; }
+    BytecodeCompiler *compiler() { return (BytecodeCompiler *) parser; }
 
     // Return true there is a generator function within |skip| lexical scopes
     // (going upward) from this context's lexical scope. Always return true if

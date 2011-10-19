@@ -1320,9 +1320,9 @@ TreeContext::ensureSharpSlots()
             return false;
     } else {
         /*
-         * Compiler::compileScript will rebase immediate operands indexing
-         * the sharp slots to come at the end of the global script's |nfixed|
-         * slots storage, after gvars and regexps.
+         * BytecodeCompiler::compileScript will rebase immediate operands
+         * indexing the sharp slots to come at the end of the global script's
+         * |nfixed| slots storage, after gvars and regexps.
          */
         sharpSlotBase = 0;
     }
@@ -1974,7 +1974,7 @@ namespace frontend {
  * Adjust the slot for a block local to account for the number of variables
  * that share the same index space with locals. Due to the incremental code
  * generation for top-level script, we do the adjustment via code patching in
- * Compiler::compileScript; see comments there.
+ * BytecodeCompiler::compileScript; see comments there.
  *
  * The function returns -1 on failures.
  */
@@ -4370,12 +4370,12 @@ EmitVariables(JSContext *cx, CodeGenerator *cg, ParseNode *pn, JSBool inLetHead,
 #if JS_HAS_DESTRUCTURING
             if (pn2->isKind(TOK_RB) || pn2->isKind(TOK_RC)) {
                 /*
-                 * Emit variable binding ops, but not destructuring ops.
-                 * The parser (see Variables, jsparse.c) has ensured that
-                 * our caller will be the TOK_FOR/TOK_IN case in EmitTree,
-                 * and that case will emit the destructuring code only after
-                 * emitting an enumerating opcode and a branch that tests
-                 * whether the enumeration ended.
+                 * Emit variable binding ops, but not destructuring ops.  The
+                 * parser (see Parser::variables) has ensured that our caller
+                 * will be the TOK_FOR/TOK_IN case in EmitTree, and that case
+                 * will emit the destructuring code only after emitting an
+                 * enumerating opcode and a branch that tests whether the
+                 * enumeration ended.
                  */
                 JS_ASSERT(forInVar);
                 JS_ASSERT(pn->pn_count == 1);
@@ -5639,9 +5639,10 @@ EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
         cg2->parent = cg;
 
         /*
-         * jsparse.cpp:SetStaticLevel limited static nesting depth to fit in 16
-         * bits and to reserve the all-ones value, thereby reserving the magic
-         * FREE_UPVAR_COOKIE value. Note the cg2->staticLevel assignment below.
+         * js::frontend::SetStaticLevel limited static nesting depth to fit in
+         * 16 bits and to reserve the all-ones value, thereby reserving the
+         * magic FREE_UPVAR_COOKIE value. Note the cg2->staticLevel assignment
+         * below.
          */
         JS_ASSERT(cg->staticLevel < JS_BITMASK(16) - 1);
         cg2->staticLevel = cg->staticLevel + 1;
@@ -7254,7 +7255,7 @@ EmitTree(JSContext *cx, CodeGenerator *cg, ParseNode *pn)
         /*
          * Cope with a left-over function definition that was replaced by a use
          * of a later function definition of the same name. See FunctionDef and
-         * MakeDefIntoUse in jsparse.cpp.
+         * MakeDefIntoUse in Parser.cpp.
          */
         if (pn->isOp(JSOP_NOP))
             break;
@@ -7628,9 +7629,10 @@ static void DumpSrcNoteSizeHist()
 
 /*
  * Fill in the storage at notes with prolog and main srcnotes; the space at
- * notes was allocated using the CG_COUNT_FINAL_SRCNOTES macro from jsemit.h.
- * SO DON'T CHANGE THIS FUNCTION WITHOUT AT LEAST CHECKING WHETHER jsemit.h's
- * CG_COUNT_FINAL_SRCNOTES MACRO NEEDS CORRESPONDING CHANGES!
+ * notes was allocated using the CG_COUNT_FINAL_SRCNOTES macro from
+ * BytecodeGenerator.h.  SO DON'T CHANGE THIS FUNCTION WITHOUT AT LEAST
+ * CHECKING WHETHER BytecodeGenerator.h's CG_COUNT_FINAL_SRCNOTES MACRO NEEDS
+ * CORRESPONDING CHANGES!
  */
 JSBool
 FinishTakingSrcNotes(JSContext *cx, CodeGenerator *cg, jssrcnote *notes)
