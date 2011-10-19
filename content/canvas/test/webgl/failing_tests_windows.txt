@@ -1,6 +1,4 @@
 conformance/canvas/buffer-preserve-test.html
-conformance/canvas/drawingbuffer-static-canvas-test.html
-conformance/canvas/drawingbuffer-test.html
 conformance/context/premultiplyalpha-test.html
 conformance/glsl/functions/glsl-function-atan.html
 conformance/glsl/functions/glsl-function-atan-xy.html
