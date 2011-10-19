@@ -792,6 +792,10 @@ public:
         return mOffscreenTexture;
     }
 
+    virtual bool SupportsFramebufferMultisample() {
+        return IsExtensionSupported(EXT_framebuffer_multisample) || IsExtensionSupported(ANGLE_framebuffer_multisample);
+    }
+
     virtual bool SupportsOffscreenSplit() {
         return IsExtensionSupported(EXT_framebuffer_blit) || IsExtensionSupported(ANGLE_framebuffer_blit);
     }
@@ -1234,6 +1238,8 @@ public:
         OES_standard_derivatives,
         EXT_framebuffer_blit,
         ANGLE_framebuffer_blit,
+        EXT_framebuffer_multisample,
+        ANGLE_framebuffer_multisample,
         Extensions_Max
     };
 
@@ -2330,6 +2336,12 @@ public:
     void fRenderbufferStorage(GLenum target, GLenum internalFormat, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
         mSymbols.fRenderbufferStorage(target, internalFormat, width, height);
+        AFTER_GL_CALL;
+    }
+
+    void fRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalFormat, GLsizei width, GLsizei height) {
+        BEFORE_GL_CALL;
+        mSymbols.fRenderbufferStorageMultisample(target, samples, internalFormat, width, height);
         AFTER_GL_CALL;
     }
 
