@@ -52,6 +52,7 @@ import android.widget.SimpleCursorAdapter;
 public class GeckoBookmarks extends ListActivity {
     private static final String LOG_NAME = "GeckoBookmarks";
     private static final String TITLE_KEY = "title";
+    private static final String kBookmarksWhereClause = Browser.BookmarkColumns.BOOKMARK + " = 1";
 
     private Cursor mCursor;
     private Uri mUri;
@@ -61,7 +62,7 @@ public class GeckoBookmarks extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.bookmarks);
         mCursor = managedQuery(Browser.BOOKMARKS_URI,
-            		null, null, null, null);
+                               null, kBookmarksWhereClause, null, null);
         startManagingCursor(mCursor);
 
         ListAdapter adapter =

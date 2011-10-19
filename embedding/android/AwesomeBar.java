@@ -45,7 +45,6 @@ import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
@@ -58,6 +57,8 @@ import android.widget.EditText;
 import android.widget.FilterQueryProvider;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.provider.Browser;
+import java.util.*;
 
 public class AwesomeBar extends ListActivity {
     static final String URL_KEY = "url";
@@ -70,30 +71,7 @@ public class AwesomeBar extends ListActivity {
 
     private String mType;
     private Cursor mCursor;
-    private SQLiteDatabase mDb;
-    private AwesomeBarCursorAdapter mAdapter;
-
-    private class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
-        private Cursor mAdapterCursor;
-        private Context mContext;
-
-        public AwesomeBarCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
-            // Using the older, deprecated constructor so we can work on API < 11
-            super(context, layout, c, from, to);
-            mAdapterCursor = c;
-            mContext = context;
-        }
-
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            super.bindView(view, context, cursor);
-
-            // ImageView imageView = (ImageView) view.findViewById(R.id.favicon);
-            // byte[] raw = cursor.getBlob(cursor.getColumnIndexOrThrow("favicon"));
-            // Bitmap bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(raw, 0, raw.length), 48, 48, true);
-            // imageView.setImageBitmap(bitmap);
-        }
-    }
+    private SimpleCursorAdapter mAdapter;
 
     private String getProfilePath() {
         File home = new File(getFilesDir(), "mozilla");
@@ -129,7 +107,7 @@ public class AwesomeBar extends ListActivity {
         setContentView(R.layout.awesomebar_search);
 
         // Load the list using a custom adapter so we can create the bitmaps
-        mAdapter = new AwesomeBarCursorAdapter(
+        mAdapter = new SimpleCursorAdapter(
             this,
             R.layout.awesomebar_row,
             null,
@@ -182,18 +160,22 @@ public class AwesomeBar extends ListActivity {
             }
         });
 
-        DatabaseHelper dbHelper = new DatabaseHelper(this);
-        mDb = dbHelper.getReadableDatabase();
-
+        final Activity activity = this;
         mAdapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
-                // _id column required for CursorAdapter; provide a dummy here
-                mCursor = mDb.rawQuery(
-                        "SELECT 0 AS _id, title, url "
-                          + "FROM moz_places "
-                          + "WHERE (url LIKE ? OR title LIKE ?) "
-                          + "LIMIT 12",
-                        new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%",});
+                mCursor = 
+                    activity.managedQuery(Browser.BOOKMARKS_URI,
+                                          null, Browser.BookmarkColumns.URL + " LIKE ? OR title LIKE ?", 
+                                          new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%",},
+                                          // ORDER BY is number of visits times a multiplier from 1 - 120 of how recently the site 
+                                          // was accessed with a site accessed today getting 120 and a site accessed 119 or more 
+                                          // days ago getting 1
+                                          Browser.BookmarkColumns.VISITS + " * MAX(1, (" + 
+                                          Browser.BookmarkColumns.DATE + " - " + new Date().getTime() + ") / 86400000 + 120) DESC");
+                
+
+                activity.startManagingCursor(mCursor);
+
 
                 return mCursor;
             }
@@ -207,7 +189,6 @@ public class AwesomeBar extends ListActivity {
     public void onDestroy() {
         super.onDestroy();
         if (mCursor != null) mCursor.close();
-        if (mDb != null) mDb.close();
     }
 
     @Override
