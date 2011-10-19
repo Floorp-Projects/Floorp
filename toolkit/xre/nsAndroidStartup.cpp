@@ -54,6 +54,8 @@
 #include "AndroidBridge.h"
 #include "APKOpen.h"
 #include "nsExceptionHandler.h"
+#include "nsIAppStartup.h"
+#include "nsToolkitCompsCID.h"
 
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, MOZ_APP_NAME, args)
 
@@ -168,3 +170,11 @@ Java_org_mozilla_gecko_GeckoAppShell_nativeRun(JNIEnv *jenv, jclass jc, jstring 
     GeckoStart(args);
 }
 
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_nativeQuit(JNIEnv*, jclass)
+{
+    nsCOMPtr<nsIAppStartup> appStartup =
+        do_GetService(NS_APPSTARTUP_CONTRACTID);
+    if (appStartup)
+        appStartup->Quit(nsIAppStartup::eAttemptQuit);
+}
