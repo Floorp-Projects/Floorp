@@ -49,8 +49,6 @@ const reassignBody = "\"server request: node reassignment\"";
 
 // API-compatible with SyncServer handler. Bind `handler` to something to use
 // as a ServerCollection handler.
-// We keep this format because in a patch or two we're going to switch to using
-// SyncServer.
 function handleReassign(handler, req, resp) {
   resp.setStatusLine(req.httpVersion, 401, "Node reassignment");
   resp.setHeader("Content-Type", "application/json");
@@ -70,27 +68,8 @@ function installNodeHandler(server, next) {
     Utils.nextTick(next);
   }
   let nodePath = "/user/1.0/johndoe/node/weave";
-  server.registerPathHandler(nodePath, handleNodeRequest);
+  server.server.registerPathHandler(nodePath, handleNodeRequest);
   _("Registered node handler at " + nodePath);
-}
-
-/**
- * Optionally return a 401 for the provided handler, if the value of `name` in
- * the `reassignments` object is true.
- */
-let reassignments = {
-  "crypto": false,
-  "info": false,
-  "meta": false,
-  "rotary": false
-};
-function maybeReassign(handler, name) {
-  return function (request, response) {
-    if (reassignments[name]) {
-      return handleReassign(null, request, response);
-    }
-    return handler(request, response);
-  };
 }
 
 function prepareServer() {
@@ -101,33 +80,10 @@ function prepareServer() {
   Service.clusterURL = "http://localhost:8080/";
 
   do_check_eq(Service.userAPI, "http://localhost:8080/user/1.0/");
-
-  let collectionsHelper = track_collections_helper();
-  let upd = collectionsHelper.with_updated_collection;
-  let collections = collectionsHelper.collections;
-
-  let engine  = Engines.get("rotary");
-  let engines = {rotary: {version: engine.version,
-                          syncID:  engine.syncID}};
-  let global  = new ServerWBO("global", {engines: engines});
-  let rotary  = new ServerCollection({}, true);
-  let clients = new ServerCollection({}, true);
-  let keys    = new ServerWBO("keys");
-
-  let rotaryHandler = maybeReassign(upd("rotary", rotary.handler()), "rotary");
-  let cryptoHandler = maybeReassign(upd("crypto", keys.handler()), "crypto");
-  let metaHandler   = maybeReassign(upd("meta", global.handler()), "meta");
-  let infoHandler   = maybeReassign(collectionsHelper.handler, "info");
-
-  let server = httpd_setup({
-    "/1.1/johndoe/storage/clients":     upd("clients", clients.handler()),
-    "/1.1/johndoe/storage/crypto/keys": cryptoHandler,
-    "/1.1/johndoe/storage/meta/global": metaHandler,
-    "/1.1/johndoe/storage/rotary":      rotaryHandler,
-    "/1.1/johndoe/info/collections":    infoHandler
-  });
-
-  return [server, global, rotary, collectionsHelper];
+  let server = new SyncServer();
+  server.registerUser("johndoe");
+  server.start();
+  return server;
 }
 
 /**
@@ -190,7 +146,8 @@ function syncAndExpectNodeReassignment(server, firstNotification, undo,
 
 add_test(function test_momentary_401_engine() {
   _("Test a failure for engine URLs that's resolved by reassignment.");
-  let [server, global, rotary, collectionsHelper] = prepareServer();
+  let server = prepareServer();
+  let john   = server.user("johndoe");
 
   _("Enabling the Rotary engine.");
   let engine = Engines.get("rotary");
@@ -198,28 +155,26 @@ add_test(function test_momentary_401_engine() {
 
   // We need the server to be correctly set up prior to experimenting. Do this
   // through a sync.
-  let g = {syncID: Service.syncID,
-           storageVersion: STORAGE_VERSION,
-           rotary: {version: engine.version,
-                    syncID:  engine.syncID}}
-
-  global.payload = JSON.stringify(g);
-  global.modified = new_timestamp();
-  collectionsHelper.update_collection("meta", global.modified);
+  let global = {syncID: Service.syncID,
+                storageVersion: STORAGE_VERSION,
+                rotary: {version: engine.version,
+                         syncID:  engine.syncID}}
+  john.createCollection("meta").insert("global", global);
 
   _("First sync to prepare server contents.");
   Service.sync();
 
   _("Setting up Rotary collection to 401.");
-  reassignments["rotary"] = true;
+  let rotary = john.createCollection("rotary");
+  let oldHandler = rotary.collectionHandler;
+  rotary.collectionHandler = handleReassign.bind(this, undefined);
 
   // We want to verify that the clusterURL pref has been cleared after a 401
   // inside a sync. Flag the Rotary engine to need syncing.
-  rotary.modified = new_timestamp() + 10;
-  collectionsHelper.update_collection("rotary", rotary.modified);
+  john.collection("rotary").timestamp += 1000;
 
   function undo() {
-    reassignments["rotary"] = false;
+    rotary.collectionHandler = oldHandler;
   }
 
   syncAndExpectNodeReassignment(server,
@@ -232,16 +187,17 @@ add_test(function test_momentary_401_engine() {
 // This test ends up being a failing fetch *after we're already logged in*.
 add_test(function test_momentary_401_info_collections() {
   _("Test a failure for info/collections that's resolved by reassignment.");
-  let [server, global, rotary] = prepareServer();
+  let server = prepareServer();
 
   _("First sync to prepare server contents.");
   Service.sync();
 
-  // Return a 401 for info/collections requests.
-  reassignments["info"] = true;
+  // Return a 401 for info requests, particularly info/collections.
+  let oldHandler = server.toplevelHandlers.info;
+  server.toplevelHandlers.info = handleReassign;
 
   function undo() {
-    reassignments["info"] = false;
+    server.toplevelHandlers.info = oldHandler;
   }
 
   syncAndExpectNodeReassignment(server,
@@ -254,17 +210,14 @@ add_test(function test_momentary_401_info_collections() {
 add_test(function test_momentary_401_storage() {
   _("Test a failure for any storage URL, not just engine parts. " +
     "Resolved by reassignment.");
-  let [server, global, rotary] = prepareServer();
+  let server = prepareServer();
 
   // Return a 401 for all storage requests.
-  reassignments["crypto"] = true;
-  reassignments["meta"]   = true;
-  reassignments["rotary"] = true;
+  let oldHandler = server.toplevelHandlers.storage;
+  server.toplevelHandlers.storage = handleReassign;
 
   function undo() {
-    reassignments["crypto"] = false;
-    reassignments["meta"]   = false;
-    reassignments["rotary"] = false;
+    server.toplevelHandlers.storage = oldHandler;
   }
 
   syncAndExpectNodeReassignment(server,
@@ -278,12 +231,11 @@ add_test(function test_loop_avoidance() {
   _("Test that a repeated failure doesn't result in a sync loop " +
     "if node reassignment cannot resolve the failure.");
 
-  let [server, global, rotary] = prepareServer();
+  let server = prepareServer();
 
   // Return a 401 for all storage requests.
-  reassignments["crypto"] = true;
-  reassignments["meta"]   = true;
-  reassignments["rotary"] = true;
+  let oldHandler = server.toplevelHandlers.storage;
+  server.toplevelHandlers.storage = handleReassign;
 
   let firstNotification  = "weave:service:login:error";
   let secondNotification = "weave:service:login:error";
@@ -348,9 +300,7 @@ add_test(function test_loop_avoidance() {
     do_check_true(!!SyncScheduler.syncTimer);
 
     // Undo our evil scheme.
-    reassignments["crypto"] = false;
-    reassignments["meta"]   = false;
-    reassignments["rotary"] = false;
+    server.toplevelHandlers.storage = oldHandler;
 
     // Bring the timer forward to kick off a successful sync, so we can watch
     // the pref get cleared.
