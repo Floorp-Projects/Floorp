@@ -335,6 +335,12 @@ GetArgReg(uint32 arg, Register *out)
     return false;
 }
 
+static inline uint32
+GetArgStackDisp(uint32 arg)
+{
+    return arg * STACK_SLOT_SIZE;
+}
+
 } // namespace ion
 } // namespace js
 

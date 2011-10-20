@@ -234,7 +234,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movq(Operand(address), dest);
     }
     void setStackArg(const Register &reg, uint32 arg) {
-        movq(reg, Operand(rsp, (arg - NumArgRegs) * STACK_SLOT_SIZE + ShadowStackSpace));
+        uint32 disp = GetArgStackDisp(arg);
+        movq(reg, Operand(rsp, disp));
     }
     void checkCallAlignment() {
 #ifdef DEBUG

@@ -83,16 +83,20 @@ MacroAssembler::setupUnalignedABICall(uint32 args, const Register &scratch)
 }
 
 void
-MacroAssembler::setABIArg(uint32 arg, const Register &reg)
+MacroAssembler::setABIArg(uint32 arg, const MoveOperand &from)
 {
+    MoveOperand to;
     Register dest;
-    if (!GetArgReg(arg, &dest)) {
+    if (GetArgReg(arg, &dest))
+        to = MoveOperand(dest);
+    else
+    {
         // There is no register for this argument, so just move it to its
         // stack slot immediately.
-        setStackArg(reg, arg);
-        return;
+        uint32 disp = GetArgStackDisp(arg);
+        to = MoveOperand(StackPointer, disp);
     }
-    enoughMemory_ &= moveResolver_.addMove(MoveOperand(reg), MoveOperand(dest), Move::GENERAL);
+    enoughMemory_ &= moveResolver_.addMove(from, to, Move::GENERAL);
 }
 
 void
