@@ -118,29 +118,26 @@ class CallOnMessageAvailable : public nsIRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  CallOnMessageAvailable(nsIWebSocketListener *aListener,
-                         nsISupports          *aContext,
-                         nsCString            &aData,
-                         PRInt32               aLen)
-    : mListener(aListener),
-      mContext(aContext),
+  CallOnMessageAvailable(WebSocketChannel *aChannel,
+                         nsCString        &aData,
+                         PRInt32           aLen)
+    : mChannel(aChannel),
       mData(aData),
       mLen(aLen) {}
 
   NS_SCRIPTABLE NS_IMETHOD Run()
   {
     if (mLen < 0)
-      mListener->OnMessageAvailable(mContext, mData);
+      mChannel->mListener->OnMessageAvailable(mChannel->mContext, mData);
     else
-      mListener->OnBinaryMessageAvailable(mContext, mData);
+      mChannel->mListener->OnBinaryMessageAvailable(mChannel->mContext, mData);
     return NS_OK;
   }
 
 private:
   ~CallOnMessageAvailable() {}
 
-  nsCOMPtr<nsIWebSocketListener>    mListener;
-  nsCOMPtr<nsISupports>             mContext;
+  nsRefPtr<WebSocketChannel>        mChannel;
   nsCString                         mData;
   PRInt32                           mLen;
 };
@@ -151,24 +148,21 @@ class CallOnStop : public nsIRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  CallOnStop(nsIWebSocketListener *aListener,
-             nsISupports          *aContext,
-             nsresult              aData)
-    : mListener(aListener),
-      mContext(aContext),
+  CallOnStop(WebSocketChannel *aChannel,
+             nsresult          aData)
+    : mChannel(aChannel),
       mData(aData) {}
 
   NS_SCRIPTABLE NS_IMETHOD Run()
   {
-    mListener->OnStop(mContext, mData);
+    mChannel->mListener->OnStop(mChannel->mContext, mData);
     return NS_OK;
   }
 
 private:
   ~CallOnStop() {}
 
-  nsCOMPtr<nsIWebSocketListener>    mListener;
-  nsCOMPtr<nsISupports>             mContext;
+  nsRefPtr<WebSocketChannel>        mChannel;
   nsresult                          mData;
 };
 NS_IMPL_THREADSAFE_ISUPPORTS1(CallOnStop, nsIRunnable)
@@ -178,26 +172,23 @@ class CallOnServerClose : public nsIRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  CallOnServerClose(nsIWebSocketListener *aListener,
-                    nsISupports          *aContext,
-                    PRUint16              aCode,
-                    nsCString            &aReason)
-    : mListener(aListener),
-      mContext(aContext),
+  CallOnServerClose(WebSocketChannel *aChannel,
+                    PRUint16          aCode,
+                    nsCString        &aReason)
+    : mChannel(aChannel),
       mCode(aCode),
       mReason(aReason) {}
 
   NS_SCRIPTABLE NS_IMETHOD Run()
   {
-    mListener->OnServerClose(mContext, mCode, mReason);
+    mChannel->mListener->OnServerClose(mChannel->mContext, mCode, mReason);
     return NS_OK;
   }
 
 private:
   ~CallOnServerClose() {}
 
-  nsCOMPtr<nsIWebSocketListener>    mListener;
-  nsCOMPtr<nsISupports>             mContext;
+  nsRefPtr<WebSocketChannel>        mChannel;
   PRUint16                          mCode;
   nsCString                         mReason;
 };
@@ -208,25 +199,22 @@ class CallAcknowledge : public nsIRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  CallAcknowledge(nsIWebSocketListener *aListener,
-                  nsISupports          *aContext,
-                  PRUint32              aSize)
-    : mListener(aListener),
-      mContext(aContext),
+  CallAcknowledge(WebSocketChannel *aChannel,
+                  PRUint32          aSize)
+    : mChannel(aChannel),
       mSize(aSize) {}
 
   NS_SCRIPTABLE NS_IMETHOD Run()
   {
     LOG(("WebSocketChannel::CallAcknowledge: Size %u\n", mSize));
-    mListener->OnAcknowledge(mContext, mSize);
+    mChannel->mListener->OnAcknowledge(mChannel->mContext, mSize);
     return NS_OK;
   }
 
 private:
   ~CallAcknowledge() {}
 
-  nsCOMPtr<nsIWebSocketListener>    mListener;
-  nsCOMPtr<nsISupports>             mContext;
+  nsRefPtr<WebSocketChannel>        mChannel;
   PRUint32                          mSize;
 };
 NS_IMPL_THREADSAFE_ISUPPORTS1(CallAcknowledge, nsIRunnable)
@@ -236,10 +224,10 @@ class nsPostMessage : public nsIRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  nsPostMessage(WebSocketChannel *channel,
+  nsPostMessage(WebSocketChannel *aChannel,
                 nsCString        *aData,
                 PRInt32           aDataLen)
-    : mChannel(channel),
+    : mChannel(aChannel),
       mData(aData),
       mDataLen(aDataLen) {}
 
@@ -935,8 +923,7 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
           return NS_ERROR_ILLEGAL_VALUE;
         }
 
-        NS_DispatchToMainThread(new CallOnMessageAvailable(mListener, mContext,
-                                                           utf8Data, -1));
+        NS_DispatchToMainThread(new CallOnMessageAvailable(this, utf8Data, -1));
       }
     } else if (opcode & kControlFrameMask) {
       // control frames
@@ -981,10 +968,10 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
           mCloseTimer->Cancel();
           mCloseTimer = nsnull;
         }
-        if (mListener)
-          NS_DispatchToMainThread(
-            new CallOnServerClose(mListener, mContext,
-                                  mServerCloseCode, mServerCloseReason));
+        if (mListener) {
+          NS_DispatchToMainThread(new CallOnServerClose(this, mServerCloseCode,
+                                                        mServerCloseReason));
+        }
 
         if (mClientClosed)
           ReleaseSession();
@@ -1019,8 +1006,7 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
       LOG(("WebSocketChannel:: binary frame received\n"));
       if (mListener) {
         nsCString binaryData((const char *)payload, payloadLength);
-        NS_DispatchToMainThread(new CallOnMessageAvailable(mListener, mContext,
-                                                           binaryData,
+        NS_DispatchToMainThread(new CallOnMessageAvailable(this, binaryData,
                                                            payloadLength));
       }
     } else if (opcode != kContinuation) {
@@ -1489,7 +1475,7 @@ WebSocketChannel::StopSession(nsresult reason)
   if (!mCalledOnStop) {
     mCalledOnStop = 1;
     if (mListener)
-      NS_DispatchToMainThread(new CallOnStop(mListener, mContext, reason));
+      NS_DispatchToMainThread(new CallOnStop(this, reason));
   }
 
   return;
@@ -2202,7 +2188,7 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,
   nsresult rv;
   rv = mTransport->SetEventSink(nsnull, nsnull);
   if (NS_FAILED(rv)) return rv;
-  rv = mTransport->SetSecurityCallbacks(mCallbacks);
+  rv = mTransport->SetSecurityCallbacks(this);
   if (NS_FAILED(rv)) return rv;
 
   mRecvdHttpUpgradeTransport = 1;
@@ -2520,7 +2506,7 @@ WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream *aStream)
     } else {
       if (amtSent == toSend) {
         if (!mStopped) {
-          NS_DispatchToMainThread(new CallAcknowledge(mListener, mContext,
+          NS_DispatchToMainThread(new CallAcknowledge(this,
                                                       mCurrentOut->Length()));
         }
         delete mCurrentOut;
