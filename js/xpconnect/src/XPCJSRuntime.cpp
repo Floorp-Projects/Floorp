@@ -534,7 +534,7 @@ static PLDHashOperator
 SuspectDOMExpandos(nsPtrHashKey<JSObject> *expando, void *arg)
 {
     Closure *closure = static_cast<Closure*>(arg);
-    closure->cb->NoteXPCOMRoot(static_cast<nsISupports*>(expando->GetKey()->getPrivate()));
+    closure->cb->NoteXPCOMRoot(static_cast<nsISupports*>(js::GetObjectPrivate(expando->GetKey())));
     return PL_DHASH_NEXT;
 }
 
