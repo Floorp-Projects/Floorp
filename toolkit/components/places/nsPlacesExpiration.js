@@ -155,6 +155,10 @@ const SHUTDOWN_WITH_RECENT_CLEARHISTORY_TIMEOUT_SECONDS = 10;
 // should be analyzed again.
 const ANALYZE_PAGES_THRESHOLD = 100;
 
+// If the number of pages over history limit is greater than this threshold,
+// expiration will be more aggressive, to bring back history to a saner size.
+const OVERLIMIT_PAGES_THRESHOLD = 1000;
+
 const USECS_PER_DAY = 86400000000;
 const ANNOS_EXPIRE_POLICIES = [
   { bind: "expire_days",
@@ -631,16 +635,21 @@ nsPlacesExpiration.prototype = {
   {
     // Check if we are over history capacity, if so visits must be expired.
     this._getPagesStats((function onPagesCount(aPagesCount, aStatsCount) {
-      this._overLimit = aPagesCount > this._urisLimit;
-      let action = this._overLimit ? ACTION.TIMED_OVERLIMIT : ACTION.TIMED;
+      let overLimitPages = aPagesCount - this._urisLimit;
+      this._overLimit = overLimitPages > 0;
 
+      let action = this._overLimit ? ACTION.TIMED_OVERLIMIT : ACTION.TIMED;
       // If the number of pages changed significantly from the last ANALYZE
       // update SQLite statistics.
       if (Math.abs(aPagesCount - aStatsCount) >= ANALYZE_PAGES_THRESHOLD) {
         action = action | ACTION.TIMED_ANALYZE;
       }
 
-      this._expireWithActionAndLimit(action, LIMIT.SMALL);
+      // Adapt expiration aggressivity to the number of pages over the limit.
+      let limit = overLimitPages > OVERLIMIT_PAGES_THRESHOLD ? LIMIT.LARGE
+                                                             : LIMIT.SMALL;
+
+      this._expireWithActionAndLimit(action, limit);
     }).bind(this));
   },
 
