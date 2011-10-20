@@ -88,3 +88,6 @@ skip-if(Android) == 462758-grabbers-resizers.html 462758-grabbers-resizers-ref.h
 == readonly-non-editable.html readonly-non-editable-ref.html
 == readonly-editable.html readonly-editable-ref.html
 == dynamic-overflow-change.html dynamic-overflow-change-ref.html
+== 694880-1.html 694880-ref.html
+== 694880-2.html 694880-ref.html
+== 694880-3.html 694880-ref.html
