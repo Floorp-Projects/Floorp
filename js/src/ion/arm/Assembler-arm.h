@@ -1246,6 +1246,13 @@ GetArgReg(uint32 arg, Register *out)
     }
 }
 
+static inline uint32
+GetArgStackDisp(uint32 arg)
+{
+    JS_ASSERT(arg >= NumArgRegs);
+    return (arg - NumArgRegs) * STACK_SLOT_SIZE;
+}
+
 class DoubleEncoder {
     uint32 rep(bool b, uint32 count) {
         uint ret = 0;
