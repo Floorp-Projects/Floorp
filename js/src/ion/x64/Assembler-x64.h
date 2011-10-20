@@ -474,6 +474,13 @@ GetArgReg(uint32 arg, Register *out)
     return true;
 }
 
+static inline uint32
+GetArgStackDisp(uint32 arg)
+{
+    JS_ASSERT(arg >= NumArgRegs);
+    return (arg - NumArgRegs) * STACK_SLOT_SIZE + ShadowStackSpace;
+}
+
 } // namespace js
 } // namespace ion
 

@@ -138,7 +138,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     // temporarily use more stack, in which case esp-relative addresses will be
     // automatically adjusted. It is extremely important that esp-relative
     // addresses are computed *after* setupABICall().
-    void setABIArg(uint32 arg, const Register &reg);
+    void setABIArg(uint32 arg, const MoveOperand &from);
+
+    void setABIArg(uint32 arg, const Register &reg){
+        setABIArg(arg, MoveOperand(reg));
+    }
+
 
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABI(void *fun);
