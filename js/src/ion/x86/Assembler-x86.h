@@ -197,6 +197,8 @@ class ValueOperand
     }
 };
 
+static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
+
 class Assembler : public AssemblerX86Shared
 {
     void writeRelocation(JmpSrc src) {
