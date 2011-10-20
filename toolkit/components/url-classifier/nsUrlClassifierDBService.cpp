@@ -1430,7 +1430,7 @@ nsUrlClassifierDBService::CheckClean(const nsACString &spec,
     rv = KeyedHash(fragkey, hostprefix, prefixkey, &codedkey);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool found;
+    bool found = false;
     bool ready = false;  /* opportunistic probe */
     rv = mPrefixSet->Probe(codedkey, prefixkey, &ready, &found);
     NS_ENSURE_SUCCESS(rv, rv);
