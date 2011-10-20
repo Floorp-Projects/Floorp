@@ -46,6 +46,8 @@
 #include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
 
+namespace js {
+
 /*
  * Parsing builds a tree of nodes that directs code generation.  This tree is
  * not a concrete syntax tree in all respects (for example, || and && are left
@@ -57,7 +59,7 @@
  * Label        Variant     Members
  * -----        -------     -------
  * <Definitions>
- * TOK_FUNCTION name        pn_funbox: ptr to JSFunctionBox holding function
+ * TOK_FUNCTION name        pn_funbox: ptr to js::FunctionBox holding function
  *                            object containing arg and var properties.  We
  *                            create the function object at parse (not emit)
  *                            time to specialize arg and var bytecodes early.
@@ -74,7 +76,7 @@
  * TOK_ARGSBODY list        list of formal parameters followed by TOK_LC node
  *                            for function body statements as final element
  *                          pn_count: 1 + number of formal parameters
- * TOK_UPVARS   nameset     pn_names: lexical dependencies (JSDefinitions)
+ * TOK_UPVARS   nameset     pn_names: lexical dependencies (js::Definitions)
  *                            defined in enclosing scopes, or ultimately not
  *                            defined (free variables, either global property
  *                            references or reference errors).
@@ -281,7 +283,7 @@
  * Label              Variant   Members
  * -----              -------   -------
  * TOK_LEXICALSCOPE   name      pn_op: JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR
- *                              pn_objbox: block object in JSObjectBox holder
+ *                              pn_objbox: block object in ObjectBox holder
  *                              pn_expr: block body
  * TOK_ARRAYCOMP      list      pn_count: 1
  *                              pn_head: list of 1 element, which is block
@@ -290,7 +292,7 @@
  * TOK_ARRAYPUSH      unary     pn_op: JSOP_ARRAYCOMP
  *                              pn_kid: array comprehension expression
  */
-typedef enum JSParseNodeArity {
+enum ParseNodeArity {
     PN_NULLARY,                         /* 0 kids, only pn_atom/pn_dval/etc. */
     PN_UNARY,                           /* one kid, plus a couple of scalars */
     PN_BINARY,                          /* two kids, plus a couple of scalars */
@@ -298,65 +300,85 @@ typedef enum JSParseNodeArity {
     PN_FUNC,                            /* function definition node */
     PN_LIST,                            /* generic singly linked list */
     PN_NAME,                            /* name use or definition node */
-    PN_NAMESET                          /* JSAtomDefnMapPtr + JSParseNode ptr */
-} JSParseNodeArity;
+    PN_NAMESET                          /* AtomDefnMapPtr + ParseNode ptr */
+};
 
-struct JSDefinition;
+struct Definition;
 
-struct JSParseNode {
+struct ParseNode {
   private:
     uint32              pn_type   : 16, /* TOK_* type, see frontend/TokenStream.h */
                         pn_op     : 8,  /* see JSOp enum and jsopcode.tbl */
-                        pn_arity  : 5,  /* see JSParseNodeArity enum */
+                        pn_arity  : 5,  /* see ParseNodeArity enum */
                         pn_parens : 1,  /* this expr was enclosed in parens */
                         pn_used   : 1,  /* name node is on a use-chain */
-                        pn_defn   : 1;  /* this node is a JSDefinition */
+                        pn_defn   : 1;  /* this node is a Definition */
 
   public:
+    ParseNode(TokenKind type, JSOp op, ParseNodeArity arity)
+      : pn_type(type), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
+        pn_offset(0), pn_next(NULL), pn_link(NULL)
+    {
+        pn_pos.begin.index = 0;
+        pn_pos.begin.lineno = 0;
+        pn_pos.end.index = 0;
+        pn_pos.end.lineno = 0;
+        memset(&pn_u, 0, sizeof pn_u);
+    }
+
+    ParseNode(TokenKind type, JSOp op, ParseNodeArity arity, const TokenPos &pos)
+      : pn_type(type), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
+        pn_pos(pos), pn_offset(0), pn_next(NULL), pn_link(NULL)
+    {
+        memset(&pn_u, 0, sizeof pn_u);
+    }
+
     JSOp getOp() const                     { return JSOp(pn_op); }
     void setOp(JSOp op)                    { pn_op = op; }
     bool isOp(JSOp op) const               { return getOp() == op; }
-    js::TokenKind getKind() const          { return js::TokenKind(pn_type); }
-    void setKind(js::TokenKind kind)       { pn_type = kind; }
-    bool isKind(js::TokenKind kind) const  { return getKind() == kind; }
-    JSParseNodeArity getArity() const      { return JSParseNodeArity(pn_arity); }
-    bool isArity(JSParseNodeArity a) const { return getArity() == a; }
-    void setArity(JSParseNodeArity a)      { pn_arity = a; }
+    TokenKind getKind() const              { return TokenKind(pn_type); }
+    void setKind(TokenKind kind)           { pn_type = kind; }
+    bool isKind(TokenKind kind) const      { return getKind() == kind; }
+    ParseNodeArity getArity() const        { return ParseNodeArity(pn_arity); }
+    bool isArity(ParseNodeArity a) const   { return getArity() == a; }
+    void setArity(ParseNodeArity a)        { pn_arity = a; }
+
     /* Boolean attributes. */
     bool isInParens() const                { return pn_parens; }
     void setInParens(bool enabled)         { pn_parens = enabled; }
-    bool isDefn() const                    { return pn_defn; }
-    void setDefn(bool enabled)             { pn_defn = enabled; }
     bool isUsed() const                    { return pn_used; }
     void setUsed(bool enabled)             { pn_used = enabled; }
+    bool isDefn() const                    { return pn_defn; }
+    void setDefn(bool enabled)             { pn_defn = enabled; }
 
-    js::TokenPos        pn_pos;         /* two 16-bit pairs here, for 64 bits */
+    TokenPos            pn_pos;         /* two 16-bit pairs here, for 64 bits */
     int32               pn_offset;      /* first generated bytecode offset */
-    JSParseNode         *pn_next;       /* intrinsic link in parent PN_LIST */
-    JSParseNode         *pn_link;       /* def/use link (alignment freebie);
-                                           also links JSFunctionBox::methods
+    ParseNode           *pn_next;       /* intrinsic link in parent PN_LIST */
+    ParseNode           *pn_link;       /* def/use link (alignment freebie);
+                                           also links FunctionBox::methods
                                            lists of would-be |this| methods */
+
     union {
         struct {                        /* list of next-linked nodes */
-            JSParseNode *head;          /* first node in list */
-            JSParseNode **tail;         /* ptr to ptr to last node in list */
+            ParseNode   *head;          /* first node in list */
+            ParseNode   **tail;         /* ptr to ptr to last node in list */
             uint32      count;          /* number of nodes in list */
             uint32      xflags:12,      /* extra flags, see below */
                         blockid:20;     /* see name variant below */
         } list;
         struct {                        /* ternary: if, for(;;), ?: */
-            JSParseNode *kid1;          /* condition, discriminant, etc. */
-            JSParseNode *kid2;          /* then-part, case list, etc. */
-            JSParseNode *kid3;          /* else-part, default case, etc. */
+            ParseNode   *kid1;          /* condition, discriminant, etc. */
+            ParseNode   *kid2;          /* then-part, case list, etc. */
+            ParseNode   *kid3;          /* else-part, default case, etc. */
         } ternary;
         struct {                        /* two kids if binary */
-            JSParseNode *left;
-            JSParseNode *right;
-            js::Value   *pval;          /* switch case value */
+            ParseNode   *left;
+            ParseNode   *right;
+            Value       *pval;          /* switch case value */
             uintN       iflags;         /* JSITER_* flags for TOK_FOR node */
         } binary;
         struct {                        /* one kid if unary */
-            JSParseNode *kid;
+            ParseNode   *kid;
             jsint       num;            /* -1 or sharp variable number */
             JSBool      hidden;         /* hidden genexp-induced JSOP_YIELD
                                            or directive prologue member (as
@@ -365,15 +387,15 @@ struct JSParseNode {
         struct {                        /* name, labeled statement, etc. */
             union {
                 JSAtom        *atom;    /* lexical name or label atom */
-                JSFunctionBox *funbox;  /* function object */
-                JSObjectBox   *objbox;  /* block or regexp object */
+                FunctionBox   *funbox;  /* function object */
+                ObjectBox     *objbox;  /* block or regexp object */
             };
             union {
-                JSParseNode  *expr;     /* function body, var initializer, or
+                ParseNode    *expr;     /* function body, var initializer, or
                                            base object of TOK_DOT */
-                JSDefinition *lexdef;   /* lexical definition for this use */
+                Definition   *lexdef;   /* lexical definition for this use */
             };
-            js::UpvarCookie cookie;     /* upvar cookie with absolute frame
+            UpvarCookie cookie;         /* upvar cookie with absolute frame
                                            level (not relative skip), possibly
                                            in current frame */
             uint32      dflags:12,      /* definition/use flags, see below */
@@ -381,11 +403,11 @@ struct JSParseNode {
                                            computation */
         } name;
         struct {                        /* lexical dependencies + sub-tree */
-            js::AtomDefnMapPtr  defnMap;
-            JSParseNode         *tree;  /* sub-tree containing name uses */
+            AtomDefnMapPtr   defnMap;
+            ParseNode        *tree;     /* sub-tree containing name uses */
         } nameset;
         struct {                        /* PN_NULLARY variant for E4X XML PI */
-            js::PropertyName *target;   /* target in <?target data?> */
+            PropertyName     *target;   /* target in <?target data?> */
             JSAtom           *data;     /* data (or null) in <?target data?> */
         } xmlpi;
         jsdouble        dval;           /* aligned numeric literal value */
@@ -422,8 +444,8 @@ struct JSParseNode {
 #define pn_pitarget     pn_u.xmlpi.target
 #define pn_pidata       pn_u.xmlpi.data
 
-protected:
-    void init(js::TokenKind type, JSOp op, JSParseNodeArity arity) {
+  protected:
+    void init(TokenKind type, JSOp op, ParseNodeArity arity) {
         pn_type = type;
         pn_op = op;
         pn_arity = arity;
@@ -434,16 +456,11 @@ protected:
         pn_next = pn_link = NULL;
     }
 
-    static JSParseNode *create(JSParseNodeArity arity, JSTreeContext *tc);
-    static JSParseNode *create(JSParseNodeArity arity, js::TokenKind type, JSOp op,
-                               const js::TokenPos &pos, JSTreeContext *tc);
+    static ParseNode *create(ParseNodeArity arity, TreeContext *tc);
 
-public:
-    static JSParseNode *newBinaryOrAppend(js::TokenKind tt, JSOp op, JSParseNode *left,
-                                          JSParseNode *right, JSTreeContext *tc);
-
-    static JSParseNode *newTernary(js::TokenKind tt, JSOp op, JSParseNode *kid1, JSParseNode *kid2,
-                                   JSParseNode *kid3, JSTreeContext *tc);
+  public:
+    static ParseNode *newBinaryOrAppend(TokenKind tt, JSOp op, ParseNode *left, ParseNode *right,
+                                        TreeContext *tc);
 
     /*
      * The pn_expr and lexdef members are arms of an unsafe union. Unless you
@@ -451,20 +468,20 @@ public:
      * them. For less overhead and assertions for protection, use pn->expr()
      * and pn->lexdef(). Otherwise, use pn->maybeExpr() and pn->maybeLexDef().
      */
-    JSParseNode  *expr() const {
+    ParseNode *expr() const {
         JS_ASSERT(!pn_used);
         JS_ASSERT(pn_arity == PN_NAME || pn_arity == PN_FUNC);
         return pn_expr;
     }
 
-    JSDefinition *lexdef() const {
+    Definition *lexdef() const {
         JS_ASSERT(pn_used || isDeoptimized());
         JS_ASSERT(pn_arity == PN_NAME);
         return pn_lexdef;
     }
 
-    JSParseNode  *maybeExpr()   { return pn_used ? NULL : expr(); }
-    JSDefinition *maybeLexDef() { return pn_used ? lexdef() : NULL; }
+    ParseNode  *maybeExpr()   { return pn_used ? NULL : expr(); }
+    Definition *maybeLexDef() { return pn_used ? lexdef() : NULL; }
 
 /* PN_FUNC and PN_NAME pn_dflags bits. */
 #define PND_LET         0x01            /* let (block-scoped) binding */
@@ -543,17 +560,17 @@ public:
      */
     bool isTopLevel() const     { return test(PND_TOPLEVEL); }
 
-    /* Defined below, see after struct JSDefinition. */
+    /* Defined below, see after struct Definition. */
     void setFunArg();
 
-    void become(JSParseNode *pn2);
+    void become(ParseNode *pn2);
     void clear();
 
     /* True if pn is a parsenode representing a literal constant. */
     bool isLiteral() const {
-        return isKind(js::TOK_NUMBER) ||
-               isKind(js::TOK_STRING) ||
-               (isKind(js::TOK_PRIMARY) && !isOp(JSOP_THIS));
+        return isKind(TOK_NUMBER) ||
+               isKind(TOK_STRING) ||
+               (isKind(TOK_PRIMARY) && !isOp(JSOP_THIS));
     }
 
     /*
@@ -572,10 +589,10 @@ public:
      * a directive.
      */
     bool isStringExprStatement() const {
-        if (getKind() == js::TOK_SEMI) {
+        if (getKind() == TOK_SEMI) {
             JS_ASSERT(pn_arity == PN_UNARY);
-            JSParseNode *kid = pn_kid;
-            return kid && kid->getKind() == js::TOK_STRING && !kid->pn_parens;
+            ParseNode *kid = pn_kid;
+            return kid && kid->getKind() == TOK_STRING && !kid->pn_parens;
         }
         return false;
     }
@@ -586,7 +603,7 @@ public:
      * contain escape sequences or line continuations.
      */
     bool isEscapeFreeStringLiteral() const {
-        JS_ASSERT(pn_type == js::TOK_STRING && !pn_parens);
+        JS_ASSERT(pn_type == TOK_STRING && !pn_parens);
         JSString *str = pn_atom;
 
         /*
@@ -606,26 +623,26 @@ public:
      * True if this node is a desugared generator expression.
      */
     bool isGeneratorExpr() const {
-        if (getKind() == js::TOK_LP) {
-            JSParseNode *callee = this->pn_head;
-            if (callee->getKind() == js::TOK_FUNCTION) {
-                JSParseNode *body = (callee->pn_body->getKind() == js::TOK_UPVARS)
-                                    ? callee->pn_body->pn_tree
-                                    : callee->pn_body;
-                if (body->getKind() == js::TOK_LEXICALSCOPE)
+        if (getKind() == TOK_LP) {
+            ParseNode *callee = this->pn_head;
+            if (callee->getKind() == TOK_FUNCTION) {
+                ParseNode *body = (callee->pn_body->getKind() == TOK_UPVARS)
+                                  ? callee->pn_body->pn_tree
+                                  : callee->pn_body;
+                if (body->getKind() == TOK_LEXICALSCOPE)
                     return true;
             }
         }
         return false;
     }
 
-    JSParseNode *generatorExpr() const {
+    ParseNode *generatorExpr() const {
         JS_ASSERT(isGeneratorExpr());
-        JSParseNode *callee = this->pn_head;
-        JSParseNode *body = callee->pn_body->getKind() == js::TOK_UPVARS
-            ? callee->pn_body->pn_tree
-            : callee->pn_body;
-        JS_ASSERT(body->getKind() == js::TOK_LEXICALSCOPE);
+        ParseNode *callee = this->pn_head;
+        ParseNode *body = callee->pn_body->getKind() == TOK_UPVARS
+                          ? callee->pn_body->pn_tree
+                          : callee->pn_body;
+        JS_ASSERT(body->getKind() == TOK_LEXICALSCOPE);
         return body->pn_expr;
     }
 #endif
@@ -634,10 +651,10 @@ public:
      * Compute a pointer to the last element in a singly-linked list. NB: list
      * must be non-empty for correct PN_LAST usage -- this is asserted!
      */
-    JSParseNode *last() const {
+    ParseNode *last() const {
         JS_ASSERT(pn_arity == PN_LIST);
         JS_ASSERT(pn_count != 0);
-        return (JSParseNode *)(uintptr_t(pn_tail) - offsetof(JSParseNode, pn_next));
+        return (ParseNode *)(uintptr_t(pn_tail) - offsetof(ParseNode, pn_next));
     }
 
     void makeEmpty() {
@@ -649,7 +666,7 @@ public:
         pn_blockid = 0;
     }
 
-    void initList(JSParseNode *pn) {
+    void initList(ParseNode *pn) {
         JS_ASSERT(pn_arity == PN_LIST);
         pn_head = pn;
         pn_tail = &pn->pn_next;
@@ -658,122 +675,110 @@ public:
         pn_blockid = 0;
     }
 
-    void append(JSParseNode *pn) {
+    void append(ParseNode *pn) {
         JS_ASSERT(pn_arity == PN_LIST);
         *pn_tail = pn;
         pn_tail = &pn->pn_next;
         pn_count++;
     }
 
-    bool getConstantValue(JSContext *cx, bool strictChecks, js::Value *vp);
+    bool getConstantValue(JSContext *cx, bool strictChecks, Value *vp);
     inline bool isConstant();
 };
 
-namespace js {
-
-struct NullaryNode : public JSParseNode {
-    static inline NullaryNode *create(JSTreeContext *tc) {
-        return (NullaryNode *)JSParseNode::create(PN_NULLARY, tc);
+struct NullaryNode : public ParseNode {
+    static inline NullaryNode *create(TreeContext *tc) {
+        return (NullaryNode *)ParseNode::create(PN_NULLARY, tc);
     }
 };
 
-struct UnaryNode : public JSParseNode {
-    static inline UnaryNode *create(JSTreeContext *tc) {
-        return (UnaryNode *)JSParseNode::create(PN_UNARY, tc);
+struct UnaryNode : public ParseNode {
+    UnaryNode(TokenKind type, JSOp op, const TokenPos &pos, ParseNode *kid)
+      : ParseNode(type, op, PN_UNARY, pos)
+    {
+        pn_kid = kid;
+    }
+
+    static inline UnaryNode *create(TreeContext *tc) {
+        return (UnaryNode *)ParseNode::create(PN_UNARY, tc);
     }
 };
 
-struct BinaryNode : public JSParseNode {
-    static inline BinaryNode *create(TokenKind type, JSOp op, const TokenPos &pos,
-                                     JSParseNode *left, JSParseNode *right,
-                                     JSTreeContext *tc) {
-        BinaryNode *pn = (BinaryNode *) JSParseNode::create(PN_BINARY, type, op, pos, tc);
-        if (pn) {
-            pn->pn_left = left;
-            pn->pn_right = right;
-        }
-        return pn;
+struct BinaryNode : public ParseNode {
+    BinaryNode(TokenKind type, JSOp op, const TokenPos &pos, ParseNode *left, ParseNode *right)
+      : ParseNode(type, op, PN_BINARY, pos)
+    {
+        pn_left = left;
+        pn_right = right;
     }
 
-    static inline BinaryNode *create(JSTreeContext *tc) {
-        return (BinaryNode *)JSParseNode::create(PN_BINARY, tc);
-    }
-};
-
-struct TernaryNode : public JSParseNode {
-    static inline TernaryNode *create(TokenKind type, JSOp op,
-                                      JSParseNode *kid1, JSParseNode *kid2, JSParseNode *kid3,
-                                      JSTreeContext *tc) {
-        TokenPos pos;
-        pos.begin = (kid1 ? kid1 : kid2)->pn_pos.begin;
-        pos.end = kid3->pn_pos.end;
-        TernaryNode *pn = (TernaryNode *) JSParseNode::create(PN_TERNARY, type, op, pos, tc);
-        if (pn) {
-            pn->pn_kid1 = kid1;
-            pn->pn_kid2 = kid2;
-            pn->pn_kid3 = kid3;
-        }
-        return pn;
+    BinaryNode(TokenKind type, JSOp op, ParseNode *left, ParseNode *right)
+      : ParseNode(type, op, PN_BINARY, TokenPos::box(left->pn_pos, right->pn_pos))
+    {
+        pn_left = left;
+        pn_right = right;
     }
 
-    static inline TernaryNode *create(JSTreeContext *tc) {
-        return (TernaryNode *)JSParseNode::create(PN_TERNARY, tc);
+    static inline BinaryNode *create(TreeContext *tc) {
+        return (BinaryNode *)ParseNode::create(PN_BINARY, tc);
     }
 };
 
-struct ListNode : public JSParseNode {
-    static inline ListNode *create(JSTreeContext *tc) {
-        return (ListNode *)JSParseNode::create(PN_LIST, tc);
+struct TernaryNode : public ParseNode {
+    TernaryNode(TokenKind type, JSOp op, ParseNode *kid1, ParseNode *kid2, ParseNode *kid3)
+      : ParseNode(type, op, PN_TERNARY,
+                  TokenPos((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
+                           (kid3 ? kid3 : kid2 ? kid2 : kid1)->pn_pos.end))
+    {
+        pn_kid1 = kid1;
+        pn_kid2 = kid2;
+        pn_kid3 = kid3;
+    }
+
+    static inline TernaryNode *create(TreeContext *tc) {
+        return (TernaryNode *)ParseNode::create(PN_TERNARY, tc);
     }
 };
 
-struct FunctionNode : public JSParseNode {
-    static inline FunctionNode *create(JSTreeContext *tc) {
-        return (FunctionNode *)JSParseNode::create(PN_FUNC, tc);
+struct ListNode : public ParseNode {
+    static inline ListNode *create(TreeContext *tc) {
+        return (ListNode *)ParseNode::create(PN_LIST, tc);
     }
 };
 
-struct NameNode : public JSParseNode {
-    static NameNode *create(JSAtom *atom, JSTreeContext *tc);
-
-    void inline initCommon(JSTreeContext *tc);
-};
-
-struct NameSetNode : public JSParseNode {
-    static inline NameSetNode *create(JSTreeContext *tc) {
-        return (NameSetNode *)JSParseNode::create(PN_NAMESET, tc);
+struct FunctionNode : public ParseNode {
+    static inline FunctionNode *create(TreeContext *tc) {
+        return (FunctionNode *)ParseNode::create(PN_FUNC, tc);
     }
 };
 
-struct LexicalScopeNode : public JSParseNode {
-    static inline LexicalScopeNode *create(JSTreeContext *tc) {
-        return (LexicalScopeNode *)JSParseNode::create(PN_NAME, tc);
+struct NameNode : public ParseNode {
+    static NameNode *create(JSAtom *atom, TreeContext *tc);
+
+    inline void initCommon(TreeContext *tc);
+};
+
+struct NameSetNode : public ParseNode {
+    static inline NameSetNode *create(TreeContext *tc) {
+        return (NameSetNode *)ParseNode::create(PN_NAMESET, tc);
     }
 };
 
-JSParseNode *
-NewOrRecycledNode(JSTreeContext *tc);
+struct LexicalScopeNode : public ParseNode {
+    static inline LexicalScopeNode *create(TreeContext *tc) {
+        return (LexicalScopeNode *)ParseNode::create(PN_NAME, tc);
+    }
+};
 
-void
-AddNodeToFreeList(JSParseNode *pn, Parser *parser);
-
-void
-PrepareNodeForMutation(JSParseNode *pn, JSTreeContext *tc);
-
-JSParseNode *
-RecycleTree(JSParseNode *pn, JSTreeContext *tc);
-
-JSParseNode *
-CloneLeftHandSide(JSParseNode *opn, JSTreeContext *tc);
-
-} /* namespace js */
+ParseNode *
+CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
 
 /*
- * JSDefinition is a degenerate subtype of the PN_FUNC and PN_NAME variants of
- * JSParseNode, allocated only for function, var, const, and let declarations
- * that define truly lexical bindings. This means that a child of a TOK_VAR
- * list may be a JSDefinition instead of a JSParseNode. The pn_defn bit is set
- * for all JSDefinitions, clear otherwise.
+ * js::Definition is a degenerate subtype of the PN_FUNC and PN_NAME variants
+ * of js::ParseNode, allocated only for function, var, const, and let
+ * declarations that define truly lexical bindings. This means that a child of
+ * a TOK_VAR list may be a Definition instead of a ParseNode. The pn_defn
+ * bit is set for all Definitions, clear otherwise.
  *
  * In an upvars list, defn->resolve() is the outermost definition the
  * name may reference. If a with block or a function that calls eval encloses
@@ -806,24 +811,24 @@ CloneLeftHandSide(JSParseNode *opn, JSTreeContext *tc);
  *   for (each use of unqualified name x in parse order) {
  *       if (this use of x is a declaration) {
  *           if (x in tc->decls) {                          // redeclaring
- *               pn = allocate a PN_NAME JSParseNode;
+ *               pn = allocate a PN_NAME ParseNode;
  *           } else {                                       // defining
  *               dn = lookup x in tc->lexdeps;
  *               if (dn)                                    // use before def
  *                   remove x from tc->lexdeps;
  *               else                                       // def before use
- *                   dn = allocate a PN_NAME JSDefinition;
+ *                   dn = allocate a PN_NAME Definition;
  *               map x to dn via tc->decls;
  *               pn = dn;
  *           }
  *           insert pn into its parent TOK_VAR list;
  *       } else {
- *           pn = allocate a JSParseNode for this reference to x;
+ *           pn = allocate a ParseNode for this reference to x;
  *           dn = lookup x in tc's lexical scope chain;
  *           if (!dn) {
  *               dn = lookup x in tc->lexdeps;
  *               if (!dn) {
- *                   dn = pre-allocate a JSDefinition for x;
+ *                   dn = pre-allocate a Definition for x;
  *                   map x to dn in tc->lexdeps;
  *               }
  *           }
@@ -831,13 +836,13 @@ CloneLeftHandSide(JSParseNode *opn, JSTreeContext *tc);
  *       }
  *   }
  *
- * See frontend/BytecodeGenerator.h for JSTreeContext and its top*Stmt, decls, and
- * lexdeps members.
+ * See frontend/BytecodeGenerator.h for js::TreeContext and its top*Stmt,
+ * decls, and lexdeps members.
  *
  * Notes:
  *
- *  0. To avoid bloating JSParseNode, we steal a bit from pn_arity for pn_defn
- *     and set it on a JSParseNode instead of allocating a JSDefinition.
+ *  0. To avoid bloating ParseNode, we steal a bit from pn_arity for pn_defn
+ *     and set it on a ParseNode instead of allocating a Definition.
  *
  *  1. Due to hoisting, a definition cannot be eliminated even if its "Variable
  *     statement" (ECMA-262 12.2) can be proven to be dead code. RecycleTree in
@@ -888,10 +893,10 @@ CloneLeftHandSide(JSParseNode *opn, JSTreeContext *tc);
  */
 #define dn_uses         pn_link
 
-struct JSDefinition : public JSParseNode
+struct Definition : public ParseNode
 {
     /*
-     * We store definition pointers in PN_NAMESET JSAtomDefnMapPtrs in the AST,
+     * We store definition pointers in PN_NAMESET AtomDefnMapPtrs in the AST,
      * but due to redefinition these nodes may become uses of other
      * definitions.  This is unusual, so we simply chase the pn_lexdef link to
      * find the final definition node. See methods called from
@@ -899,16 +904,16 @@ struct JSDefinition : public JSParseNode
      *
      * FIXME: MakeAssignment mutates for want of a parent link...
      */
-    JSDefinition *resolve() {
-        JSParseNode *pn = this;
+    Definition *resolve() {
+        ParseNode *pn = this;
         while (!pn->isDefn()) {
-            if (pn->getKind() == js::TOK_ASSIGN) {
+            if (pn->getKind() == TOK_ASSIGN) {
                 pn = pn->pn_left;
                 continue;
             }
             pn = pn->lexdef();
         }
-        return (JSDefinition *) pn;
+        return (Definition *) pn;
     }
 
     bool isFreeVar() const {
@@ -928,9 +933,9 @@ struct JSDefinition : public JSParseNode
     static const char *kindString(Kind kind);
 
     Kind kind() {
-        if (getKind() == js::TOK_FUNCTION)
+        if (getKind() == TOK_FUNCTION)
             return FUNCTION;
-        JS_ASSERT(getKind() == js::TOK_NAME);
+        JS_ASSERT(getKind() == TOK_NAME);
         if (isOp(JSOP_NOP))
             return UNKNOWN;
         if (isOp(JSOP_GETARG))
@@ -943,13 +948,27 @@ struct JSDefinition : public JSParseNode
     }
 };
 
+class ParseNodeAllocator {
+  public:
+    explicit ParseNodeAllocator(JSContext *cx) : cx(cx), freelist(NULL) {}
+
+    void *allocNode();
+    void freeNode(ParseNode *pn);
+    ParseNode *freeTree(ParseNode *pn);
+    void prepareNodeForMutation(ParseNode *pn);
+
+  private:
+    JSContext *cx;
+    ParseNode *freelist;
+};
+
 inline bool
-JSParseNode::test(uintN flag) const
+ParseNode::test(uintN flag) const
 {
     JS_ASSERT(pn_defn || pn_arity == PN_FUNC || pn_arity == PN_NAME);
 #ifdef DEBUG
     if ((flag & (PND_ASSIGNED | PND_FUNARG)) && pn_defn && !(pn_dflags & flag)) {
-        for (JSParseNode *pn = ((JSDefinition *) this)->dn_uses; pn; pn = pn->pn_link) {
+        for (ParseNode *pn = ((Definition *) this)->dn_uses; pn; pn = pn->pn_link) {
             JS_ASSERT(!pn->pn_defn);
             JS_ASSERT(!(pn->pn_dflags & flag));
         }
@@ -959,7 +978,7 @@ JSParseNode::test(uintN flag) const
 }
 
 inline void
-JSParseNode::setFunArg()
+ParseNode::setFunArg()
 {
     /*
      * pn_defn NAND pn_used must be true, per this chart:
@@ -977,10 +996,8 @@ JSParseNode::setFunArg()
     pn_dflags |= PND_FUNARG;
 }
 
-namespace js {
-
 inline void
-LinkUseToDef(JSParseNode *pn, JSDefinition *dn, JSTreeContext *tc)
+LinkUseToDef(ParseNode *pn, Definition *dn, TreeContext *tc)
 {
     JS_ASSERT(!pn->isUsed());
     JS_ASSERT(!pn->isDefn());
@@ -992,31 +1009,29 @@ LinkUseToDef(JSParseNode *pn, JSDefinition *dn, JSTreeContext *tc)
     pn->pn_lexdef = dn;
 }
 
-} /* namespace js */
-
-struct JSObjectBox {
-    JSObjectBox         *traceLink;
-    JSObjectBox         *emitLink;
+struct ObjectBox {
+    ObjectBox           *traceLink;
+    ObjectBox           *emitLink;
     JSObject            *object;
-    JSObjectBox         *parent;
+    ObjectBox           *parent;
     uintN               index;
     bool                isFunctionBox;
 };
 
 #define JSFB_LEVEL_BITS 14
 
-struct JSFunctionBox : public JSObjectBox
+struct FunctionBox : public ObjectBox
 {
-    JSParseNode         *node;
-    JSFunctionBox       *siblings;
-    JSFunctionBox       *kids;
-    JSFunctionBox       *parent;
-    JSParseNode         *methods;               /* would-be methods set on this;
+    ParseNode           *node;
+    FunctionBox         *siblings;
+    FunctionBox         *kids;
+    FunctionBox         *parent;
+    ParseNode           *methods;               /* would-be methods set on this;
                                                    these nodes are linked via
                                                    pn_link, since lambdas are
                                                    neither definitions nor uses
                                                    of a binding */
-    js::Bindings        bindings;               /* bindings for this function */
+    Bindings            bindings;               /* bindings for this function */
     uint32              queued:1,
                         inLoop:1,               /* in a loop in parent function */
                         level:JSFB_LEVEL_BITS;
@@ -1051,26 +1066,26 @@ struct JSFunctionBox : public JSObjectBox
     bool shouldUnbrand(uintN methods, uintN slowMethods) const;
 };
 
-struct JSFunctionBoxQueue {
-    JSFunctionBox       **vector;
+struct FunctionBoxQueue {
+    FunctionBox         **vector;
     size_t              head, tail;
     size_t              lengthMask;
 
     size_t count()  { return head - tail; }
     size_t length() { return lengthMask + 1; }
 
-    JSFunctionBoxQueue()
+    FunctionBoxQueue()
       : vector(NULL), head(0), tail(0), lengthMask(0) { }
 
     bool init(uint32 count) {
         lengthMask = JS_BITMASK(JS_CEILING_LOG2W(count));
-        vector = (JSFunctionBox **) js::OffTheBooks::malloc_(sizeof(JSFunctionBox) * length());
+        vector = (FunctionBox **) OffTheBooks::malloc_(sizeof(FunctionBox) * length());
         return !!vector;
     }
 
-    ~JSFunctionBoxQueue() { js::UnwantedForeground::free_(vector); }
+    ~FunctionBoxQueue() { UnwantedForeground::free_(vector); }
 
-    void push(JSFunctionBox *funbox) {
+    void push(FunctionBox *funbox) {
         if (!funbox->queued) {
             JS_ASSERT(count() < length());
             vector[head++ & lengthMask] = funbox;
@@ -1078,14 +1093,16 @@ struct JSFunctionBoxQueue {
         }
     }
 
-    JSFunctionBox *pull() {
+    FunctionBox *pull() {
         if (tail == head)
             return NULL;
         JS_ASSERT(tail < head);
-        JSFunctionBox *funbox = vector[tail++ & lengthMask];
+        FunctionBox *funbox = vector[tail++ & lengthMask];
         funbox->queued = false;
         return funbox;
     }
 };
+
+} /* namespace js */
 
 #endif /* ParseNode_h__ */

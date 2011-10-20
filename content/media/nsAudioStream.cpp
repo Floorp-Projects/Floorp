@@ -66,12 +66,6 @@ using namespace mozilla;
 #define SA_PER_STREAM_VOLUME 1
 #endif
 
-// Android's audio backend is not available in content processes, so audio must
-// be remoted to the parent chrome process.
-#if defined(ANDROID)
-#define REMOTE_AUDIO 1
-#endif
-
 using mozilla::TimeStamp;
 
 #ifdef PR_LOGGING
@@ -79,6 +73,9 @@ PRLogModuleInfo* gAudioStreamLog = nsnull;
 #endif
 
 static const PRUint32 FAKE_BUFFER_SIZE = 176400;
+
+// Number of milliseconds per second.
+static const PRInt64 MS_PER_S = 1000;
 
 class nsNativeAudioStream : public nsAudioStream
 {
@@ -752,9 +749,9 @@ nsRemotedAudioStream::GetPositionInFrames()
     return 0;
 
   PRInt64 time = mAudioChild->GetLastKnownPositionTimestamp();
-  PRInt64 result = position + (mRate * (PR_IntervalNow() - time) / USECS_PER_S);
+  PRInt64 dt = PR_IntervalToMilliseconds(PR_IntervalNow() - time);
 
-  return result;
+  return position + (mRate * dt / MS_PER_S);
 }
 
 bool

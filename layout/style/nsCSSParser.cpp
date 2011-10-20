@@ -264,7 +264,7 @@ public:
   bool ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
                                    nsIURI* aURL, // for error reporting
                                    PRUint32 aLineNumber, // for error reporting
-                                   nsTArray<float>& aSelectorList);
+                                   InfallibleTArray<float>& aSelectorList);
 
 protected:
   class nsAutoParseCompoundProperty;
@@ -331,7 +331,7 @@ protected:
   bool SkipAtRule(bool aInsideBlock);
   bool SkipDeclaration(bool aCheckForBraces);
 
-  bool PushGroup(css::GroupRule* aRule);
+  void PushGroup(css::GroupRule* aRule);
   void PopGroup();
 
   bool ParseRuleSet(RuleAppendFunc aAppendFunc, void* aProcessData,
@@ -366,7 +366,7 @@ protected:
   bool ParsePageRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   bool ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   already_AddRefed<nsCSSKeyframeRule> ParseKeyframeRule();
-  bool ParseKeyframeSelectorList(nsTArray<float>& aSelectorList);
+  bool ParseKeyframeSelectorList(InfallibleTArray<float>& aSelectorList);
 
   enum nsSelectorParsingStatus {
     // we have parsed a selector and we saw a token that cannot be
@@ -505,7 +505,7 @@ protected:
   bool ParseOneFamily(nsAString& aValue);
   bool ParseFamily(nsCSSValue& aValue);
   bool ParseFontSrc(nsCSSValue& aValue);
-  bool ParseFontSrcFormat(nsTArray<nsCSSValue>& values);
+  bool ParseFontSrcFormat(InfallibleTArray<nsCSSValue>& values);
   bool ParseFontRanges(nsCSSValue& aValue);
   bool ParseListStyle();
   bool ParseMargin();
@@ -601,7 +601,7 @@ protected:
   bool ParseFunctionInternals(const PRInt32 aVariantMask[],
                                 PRUint16 aMinElems,
                                 PRUint16 aMaxElems,
-                                nsTArray<nsCSSValue>& aOutput);
+                                InfallibleTArray<nsCSSValue>& aOutput);
 
   /* Functions for -moz-transform-origin/-moz-perspective-origin Parsing */
   bool ParseMozTransformOrigin(bool aPerspective);
@@ -677,7 +677,7 @@ protected:
 #endif
 
   // Stack of rule groups; used for @media and such.
-  nsTArray<nsRefPtr<css::GroupRule> > mGroupStack;
+  InfallibleTArray<nsRefPtr<css::GroupRule> > mGroupStack;
 
   // During the parsing of a property (which may be a shorthand), the data
   // are stored in |mTempData|.  (It is needed to ensure that parser
@@ -831,8 +831,7 @@ CSSParserImpl::InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
   // the stream until we're done parsing.
   NS_ASSERTION(! mScannerInited, "already have scanner");
 
-  mScanner.Init(nsnull, aString.BeginReading(), aString.Length(), aSheetURI,
-                aLineNumber, mSheet, mChildLoader);
+  mScanner.Init(aString, aSheetURI, aLineNumber, mSheet, mChildLoader);
 
 #ifdef DEBUG
   mScannerInited = true;
@@ -1017,17 +1016,11 @@ CSSParserImpl::ParseDeclarations(const nsAString&  aBuffer,
   // We could check if it was already empty, but...
   *aChanged = true;
 
-  nsresult rv = NS_OK;
   for (;;) {
     // If we cleared the old decl, then we want to be calling
     // ValueAppended as we parse.
     if (!ParseDeclaration(aDeclaration, false, true, aChanged)) {
-      rv = mScanner.GetLowLevelError();
-      if (NS_FAILED(rv))
-        break;
-
       if (!SkipDeclaration(false)) {
-        rv = mScanner.GetLowLevelError();
         break;
       }
     }
@@ -1035,7 +1028,7 @@ CSSParserImpl::ParseDeclarations(const nsAString&  aBuffer,
 
   aDeclaration->CompressFrom(&mData);
   ReleaseScanner();
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -1144,9 +1137,8 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
 
   mTempData.AssertInitialState();
 
-  nsresult result = mScanner.GetLowLevelError();
   ReleaseScanner();
-  return result;
+  return NS_OK;
 }
 
 nsresult
@@ -1180,14 +1172,13 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
   // to a media query.  (The main substative difference is the relative
   // precedence of commas and paretheses.)
 
-  GatherMedia(aMediaList, false); // can only fail on low-level error (OOM)
+  GatherMedia(aMediaList, false);
 
-  nsresult rv = mScanner.GetLowLevelError();
   CLEAR_ERROR();
   ReleaseScanner();
   mHTMLMediaMode = false;
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -1202,40 +1193,46 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
   nsCSSValue value;
   // Parse a color, and check that there's nothing else after it.
   bool colorParsed = ParseColor(value) && !GetToken(true);
-  nsresult rv = mScanner.GetLowLevelError();
   OUTPUT_ERROR();
   ReleaseScanner();
 
   if (!colorParsed) {
-    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
 
-  if (value.GetUnit() == eCSSUnit_Ident) {
+  switch (value.GetUnit()) {
+  case eCSSUnit_Color:
+    *aColor = value.GetColorValue();
+    return NS_OK;
+
+  case eCSSUnit_Ident: {
+    nsDependentString id(value.GetStringBufferValue());
+    if (!NS_ColorNameToRGB(id, aColor)) {
+      return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+  }
+
+  case eCSSUnit_EnumColor: {
+    PRInt32 val = value.GetIntValue();
+    if (val < 0) {
+      // XXX - negative numbers are NS_COLOR_CURRENTCOLOR,
+      // NS_COLOR_MOZ_HYPERLINKTEXT, etc. which we don't handle.
+      // Should remove this limitation at some point.
+      return NS_ERROR_FAILURE;
+    }
     nscolor rgba;
-    if (NS_ColorNameToRGB(nsDependentString(value.GetStringBufferValue()), &rgba)) {
-      (*aColor) = rgba;
-      rv = NS_OK;
+    nsresult rv = LookAndFeel::GetColor(LookAndFeel::ColorID(val), &rgba);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-  } else if (value.GetUnit() == eCSSUnit_Color) {
-    (*aColor) = value.GetColorValue();
-    rv = NS_OK;
-  } else if (value.GetUnit() == eCSSUnit_EnumColor) {
-    PRInt32 intValue = value.GetIntValue();
-    if (intValue >= 0) {
-      nscolor rgba;
-      rv = LookAndFeel::GetColor((LookAndFeel::ColorID) value.GetIntValue(),
-                                 &rgba);
-      if (NS_SUCCEEDED(rv))
-        (*aColor) = rgba;
-    } else {
-      // XXX - this is NS_COLOR_CURRENTCOLOR, NS_COLOR_MOZ_HYPERLINKTEXT, etc.
-      // which we don't handle as per the ParseColorString definition.  Should
-      // remove this limitation at some point.
-      rv = NS_ERROR_FAILURE;
-    }
+    *aColor = rgba;
+    return NS_OK;
   }
 
-  return rv;
+  default:
+    return NS_ERROR_FAILURE;
+  }
 }
 
 nsresult
@@ -1304,7 +1301,7 @@ bool
 CSSParserImpl::ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
                                            nsIURI* aURI, // for error reporting
                                            PRUint32 aLineNumber, // for error reporting
-                                           nsTArray<float>& aSelectorList)
+                                           InfallibleTArray<float>& aSelectorList)
 {
   NS_ABORT_IF_FALSE(aSelectorList.IsEmpty(), "given list should start empty");
 
@@ -1654,10 +1651,6 @@ CSSParserImpl::ParseMediaQuery(bool aInAtRule,
 
   nsMediaQuery* query = new nsMediaQuery;
   *aQuery = query;
-  if (!query) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
 
   if (ExpectSymbol('(', true)) {
     // we got an expression without a media type
@@ -1685,6 +1678,9 @@ CSSParserImpl::ParseMediaQuery(bool aInAtRule,
       // case insensitive from CSS - must be lower cased
       nsContentUtils::ASCIIToLower(mToken.mIdent);
       mediaType = do_GetAtom(mToken.mIdent);
+      if (!mediaType) {
+        NS_RUNTIMEABORT("do_GetAtom failed - out of memory?");
+      }
       if (gotNotOrOnly ||
           (mediaType != nsGkAtoms::_not && mediaType != nsGkAtoms::only))
         break;
@@ -1746,9 +1742,6 @@ CSSParserImpl::GatherMedia(nsMediaList* aMedia,
                          &hitStop)) {
       NS_ASSERTION(!hitStop, "should return true when hit stop");
       OUTPUT_ERROR();
-      if (NS_FAILED(mScanner.GetLowLevelError())) {
-        return false;
-      }
       if (query) {
         query->SetHadUnknownExpression();
       }
@@ -1767,11 +1760,7 @@ CSSParserImpl::GatherMedia(nsMediaList* aMedia,
       }
     }
     if (query) {
-      nsresult rv = aMedia->AppendQuery(query);
-      if (NS_FAILED(rv)) {
-        mScanner.SetLowLevelError(rv);
-        return false;
-      }
+      aMedia->AppendQuery(query);
     }
     if (hitStop) {
       break;
@@ -1799,11 +1788,6 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   }
 
   nsMediaExpression *expr = aQuery->NewExpression();
-  if (!expr) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    SkipUntil(')');
-    return false;
-  }
 
   // case insensitive from CSS - must be lower cased
   nsContentUtils::ASCIIToLower(mToken.mIdent);
@@ -1820,6 +1804,9 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   }
 
   nsCOMPtr<nsIAtom> mediaFeatureAtom = do_GetAtom(featureString);
+  if (!mediaFeatureAtom) {
+    NS_RUNTIMEABORT("do_GetAtom failed - out of memory?");
+  }
   const nsMediaFeature *feature = nsMediaFeatures::features;
   for (; feature->mName; ++feature) {
     if (*(feature->mName) == mediaFeatureAtom) {
@@ -1928,10 +1915,6 @@ bool
 CSSParserImpl::ParseImportRule(RuleAppendFunc aAppendFunc, void* aData)
 {
   nsRefPtr<nsMediaList> media = new nsMediaList();
-  if (!media) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
 
   nsAutoString url;
   if (!ParseURLOrString(url)) {
@@ -2000,10 +1983,7 @@ CSSParserImpl::ParseGroupRule(css::GroupRule* aRule,
   }
 
   // push rule on stack, loop over children
-  if (!PushGroup(aRule)) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
+  PushGroup(aRule);
   nsCSSSection holdSection = mSection;
   mSection = eCSSSection_General;
 
@@ -2164,6 +2144,9 @@ CSSParserImpl::ProcessNameSpace(const nsString& aPrefix,
 
   if (!aPrefix.IsEmpty()) {
     prefix = do_GetAtom(aPrefix);
+    if (!prefix) {
+      NS_RUNTIMEABORT("do_GetAtom failed - out of memory?");
+    }
   }
 
   nsRefPtr<css::NameSpaceRule> rule = new css::NameSpaceRule(prefix, aURLSpec);
@@ -2187,10 +2170,6 @@ CSSParserImpl::ParseFontFaceRule(RuleAppendFunc aAppendFunc, void* aData)
   }
 
   nsRefPtr<nsCSSFontFaceRule> rule(new nsCSSFontFaceRule());
-  if (!rule) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
 
   for (;;) {
     if (!GetToken(true)) {
@@ -2327,7 +2306,7 @@ CSSParserImpl::ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aData)
 already_AddRefed<nsCSSKeyframeRule>
 CSSParserImpl::ParseKeyframeRule()
 {
-  nsTArray<float> selectorList;
+  InfallibleTArray<float> selectorList;
   if (!ParseKeyframeSelectorList(selectorList)) {
     REPORT_UNEXPECTED(PEBadSelectorKeyframeRuleIgnored);
     return nsnull;
@@ -2347,7 +2326,7 @@ CSSParserImpl::ParseKeyframeRule()
 }
 
 bool
-CSSParserImpl::ParseKeyframeSelectorList(nsTArray<float>& aSelectorList)
+CSSParserImpl::ParseKeyframeSelectorList(InfallibleTArray<float>& aSelectorList)
 {
   for (;;) {
     if (!GetToken(true)) {
@@ -2510,16 +2489,13 @@ CSSParserImpl::SkipRuleSet(bool aInsideBraces)
                eCSSToken_Bad_URL == tk->mType) {
       SkipUntil(')');
     }
-  } 
+  }
 }
 
-bool
+void
 CSSParserImpl::PushGroup(css::GroupRule* aRule)
 {
-  if (mGroupStack.AppendElement(aRule))
-    return true;
-
-  return false;
+  mGroupStack.AppendElement(aRule);
 }
 
 void
@@ -3124,8 +3100,7 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
   nsContentUtils::ASCIIToLower(buffer);
   nsCOMPtr<nsIAtom> pseudo = do_GetAtom(buffer);
   if (!pseudo) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return eSelectorParsingStatus_Error;
+    NS_RUNTIMEABORT("do_GetAtom failed - out of memory?");
   }
 
   // stash away some info about this pseudo so we only have to get it once.
@@ -3335,10 +3310,6 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
   // thing we need to change to support that is this parsing code and the
   // serialization code for nsCSSSelector.
   nsCSSSelector *newSel = new nsCSSSelector();
-  if (!newSel) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return eSelectorParsingStatus_Error;
-  }
   nsCSSSelector* negations = &aSelector;
   while (negations->mNegations) {
     negations = negations->mNegations;
@@ -4828,19 +4799,10 @@ CSSParserImpl::SetValueToURL(nsCSSValue& aValue, const nsString& aURL)
   }
 
   nsRefPtr<nsStringBuffer> buffer(nsCSSValue::BufferFromString(aURL));
-  if (NS_UNLIKELY(!buffer)) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
 
   // Note: urlVal retains its own reference to |buffer|.
   nsCSSValue::URL *urlVal =
     new nsCSSValue::URL(buffer, mBaseURI, mSheetURI, mSheetPrincipal);
-
-  if (NS_UNLIKELY(!urlVal)) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
   aValue.SetURLValue(urlVal);
   return true;
 }
@@ -4858,10 +4820,6 @@ CSSParserImpl::ParseImageRect(nsCSSValue& aImage)
     static const PRUint32 kNumArgs = 5;
     nsCSSValue::Array* func =
       newFunction.InitFunction(eCSSKeyword__moz_image_rect, kNumArgs);
-    if (!func) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      break;
-    }
 
     // func->Item(0) is reserved for the function name.
     nsCSSValue& url    = func->Item(1);
@@ -4929,11 +4887,6 @@ bool
 CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
 {
   nsCSSValueGradientStop* stop = aGradient->mStops.AppendElement();
-  if (!stop) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
-
   if (!ParseVariant(stop->mColor, VARIANT_COLOR, nsnull)) {
     return false;
   }
@@ -7212,18 +7165,15 @@ bool
 CSSParserImpl::ParseFunctionInternals(const PRInt32 aVariantMask[],
                                       PRUint16 aMinElems,
                                       PRUint16 aMaxElems,
-                                      nsTArray<nsCSSValue> &aOutput)
+                                      InfallibleTArray<nsCSSValue> &aOutput)
 {
   for (PRUint16 index = 0; index < aMaxElems; ++index) {
     nsCSSValue newValue;
     if (!ParseVariant(newValue, aVariantMask[index], nsnull))
       return false;
 
-    if (!aOutput.AppendElement(newValue)) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      return false;
-    }
-    
+    aOutput.AppendElement(newValue);
+
     // See whether to continue or whether to look for end of function.
     if (!ExpectSymbol(',', true)) {
       // We need to read the closing parenthesis, and also must take care
@@ -7261,7 +7211,7 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
                              PRUint16 aMinElems, PRUint16 aMaxElems,
                              nsCSSValue &aValue)
 {
-  typedef nsTArray<nsCSSValue>::size_type arrlen_t;
+  typedef InfallibleTArray<nsCSSValue>::size_type arrlen_t;
 
   /* 2^16 - 2, so that if we have 2^16 - 2 transforms, we have 2^16 - 1
    * elements stored in the the nsCSSValue::Array.
@@ -7274,15 +7224,15 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
    */
   nsString functionName(aFunction);
 
-  /* Read in a list of values as an nsTArray, failing if we can't or if
+  /* Read in a list of values as an array, failing if we can't or if
    * it's out of bounds.
    */
-  nsTArray<nsCSSValue> foundValues;
+  InfallibleTArray<nsCSSValue> foundValues;
   if (!ParseFunctionInternals(aAllowedTypes, aMinElems, aMaxElems,
                               foundValues))
     return false;
-  
-  /* Now, convert this nsTArray into an nsCSSValue::Array object.
+
+  /* Now, convert this array into an nsCSSValue::Array object.
    * We'll need N + 1 spots, one for the function name and the rest for the
    * arguments.  In case the user has given us more than 2^16 - 2 arguments,
    * we'll truncate them at 2^16 - 2 arguments.
@@ -7296,10 +7246,10 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
   convertedArray->Item(0).SetStringValue(functionName, eCSSUnit_Ident);
   for (PRUint16 index = 0; index + 1 < numElements; ++index)
     convertedArray->Item(index + 1) = foundValues[static_cast<arrlen_t>(index)];
-  
+
   /* Fill in the outparam value with the array. */
   aValue.SetArrayValue(convertedArray, eCSSUnit_Function);
-  
+
   /* Return it! */
   return true;
 }
@@ -7641,8 +7591,8 @@ CSSParserImpl::ParseFamily(nsCSSValue& aValue)
 bool
 CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
 {
-  // could we maybe turn nsCSSValue::Array into nsTArray<nsCSSValue>?
-  nsTArray<nsCSSValue> values;
+  // could we maybe turn nsCSSValue::Array into InfallibleTArray<nsCSSValue>?
+  InfallibleTArray<nsCSSValue> values;
   nsCSSValue cur;
   for (;;) {
     if (!GetToken(true))
@@ -7695,11 +7645,7 @@ CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
     return false;
 
   nsRefPtr<nsCSSValue::Array> srcVals
-    = nsCSSValue::Array::Create(mozilla::fallible_t(), values.Length());
-  if (!srcVals) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
+    = nsCSSValue::Array::Create(values.Length());
 
   PRUint32 i;
   for (i = 0; i < values.Length(); i++)
@@ -7709,7 +7655,7 @@ CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
 }
 
 bool
-CSSParserImpl::ParseFontSrcFormat(nsTArray<nsCSSValue> & values)
+CSSParserImpl::ParseFontSrcFormat(InfallibleTArray<nsCSSValue> & values)
 {
   if (!GetToken(true))
     return true; // EOF harmless here
@@ -7745,7 +7691,7 @@ CSSParserImpl::ParseFontSrcFormat(nsTArray<nsCSSValue> & values)
 bool
 CSSParserImpl::ParseFontRanges(nsCSSValue& aValue)
 {
-  nsTArray<PRUint32> ranges;
+  InfallibleTArray<PRUint32> ranges;
   for (;;) {
     if (!GetToken(true))
       break;
@@ -7782,11 +7728,7 @@ CSSParserImpl::ParseFontRanges(nsCSSValue& aValue)
     return false;
 
   nsRefPtr<nsCSSValue::Array> srcVals
-    = nsCSSValue::Array::Create(mozilla::fallible_t(), ranges.Length());
-  if (!srcVals) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
+    = nsCSSValue::Array::Create(ranges.Length());
 
   for (PRUint32 i = 0; i < ranges.Length(); i++)
     srcVals->Item(i).SetIntValue(ranges[i], eCSSUnit_Integer);
@@ -8711,6 +8653,9 @@ CSSParserImpl::GetNamespaceIdForPrefix(const nsString& aPrefix)
   if (mNameSpaceMap) {
     // user-specified identifiers are case-sensitive (bug 416106)
     nsCOMPtr<nsIAtom> prefix = do_GetAtom(aPrefix);
+    if (!prefix) {
+      NS_RUNTIMEABORT("do_GetAtom failed - out of memory?");
+    }
     nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
   }
   // else no declared namespaces
@@ -8991,7 +8936,7 @@ bool
 nsCSSParser::ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
                                          nsIURI*            aURI,
                                          PRUint32           aLineNumber,
-                                         nsTArray<float>&   aSelectorList)
+                                         InfallibleTArray<float>& aSelectorList)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     ParseKeyframeSelectorString(aSelectorString, aURI, aLineNumber,

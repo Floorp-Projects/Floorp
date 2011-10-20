@@ -192,8 +192,8 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, callee.getGlobal(), JSProto_Object, &proto))
+    JSObject *proto = callee.getGlobal()->getOrCreateObjectPrototype(cx);
+    if (!proto)
         return NULL;
 
     TypeObject *type = proto->getNewType(cx);
@@ -1451,10 +1451,10 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
      * the prototype's .constructor property is configurable, non-enumerable,
      * and writable.
      */
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+    if (!obj->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
                              ObjectValue(*proto), JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_PERMANENT) ||
-        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
+        !proto->defineProperty(cx, cx->runtime->atomState.constructorAtom,
                                ObjectValue(*obj), JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
        return NULL;
@@ -2284,9 +2284,8 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
-    bool ok = Compiler::compileFunctionBody(cx, fun, principals, &bindings,
-                                            chars, length, filename, lineno,
-                                            cx->findVersion());
+    bool ok = BytecodeCompiler::compileFunctionBody(cx, fun, principals, &bindings, chars, length,
+                                                    filename, lineno, cx->findVersion());
     args.rval().setObject(*fun);
     return ok;
 }
@@ -2582,7 +2581,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     if (!wasDelegate && obj->isDelegate())
         obj->clearDelegate();
 
-    if (!obj->defineProperty(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
+    if (!obj->defineGeneric(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
 
     return fun;

@@ -46,6 +46,7 @@
 #include "gfxPlatform.h"
 #include "gfxFailure.h"
 #include "prenv.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace gl {
@@ -263,6 +264,9 @@ GLContextCGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
 bool
 GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
+    if (!IsOffscreenSizeAllowed(aNewSize))
+        return false;
+
     if (mPBuffer) {
         NSOpenGLPixelBuffer *pb = [[NSOpenGLPixelBuffer alloc]
                                    initWithTextureTarget:LOCAL_GL_TEXTURE_2D
@@ -271,6 +275,10 @@ GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
                                    pixelsWide:aNewSize.width
                                    pixelsHigh:aNewSize.height];
         if (!pb) {
+            return false;
+        }
+
+        if (!ResizeOffscreenFBO(aNewSize, false)) {
             return false;
         }
 
@@ -289,7 +297,7 @@ GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         return true;
     }
 
-    return ResizeOffscreenFBO(aNewSize);
+    return ResizeOffscreenFBO(aNewSize, true);
 }
 
 class TextureImageCGL : public BasicTextureImage
@@ -528,8 +536,7 @@ CreateOffscreenPBufferContext(const gfxIntSize& aSize,
 }
 
 static already_AddRefed<GLContextCGL>
-CreateOffscreenFBOContext(const gfxIntSize& aSize,
-                          const ContextFormat& aFormat,
+CreateOffscreenFBOContext(const ContextFormat& aFormat,
                           bool aShare = true)
 {
     if (!sCGLLibrary.EnsureInitialized()) {
@@ -557,23 +564,34 @@ already_AddRefed<GLContext>
 GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
                                       const ContextFormat& aFormat)
 {
+    ContextFormat actualFormat(aFormat);
+    actualFormat.samples = 0;
+
     nsRefPtr<GLContextCGL> glContext;
-
-    glContext = CreateOffscreenPBufferContext(aSize, aFormat);
-    if (glContext &&
-        glContext->Init())
+    
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), nsnull);
+    const bool preferFBOs = Preferences::GetBool("cgl.prefer-fbo", false);
+    if (!preferFBOs)
     {
-        glContext->mOffscreenSize = aSize;
-        glContext->mOffscreenActualSize = aSize;
+        glContext = CreateOffscreenPBufferContext(aSize, actualFormat);
+        if (glContext &&
+            glContext->Init() &&
+            glContext->ResizeOffscreenFBO(aSize, false))
+        {
+            glContext->mOffscreenSize = aSize;
+            glContext->mOffscreenActualSize = aSize;
 
-        return glContext.forget();
+            printf("GL Offscreen: CGL+PBuffer\n");
+
+            return glContext.forget();
+        }
     }
 
     // try a FBO as second choice
-    glContext = CreateOffscreenFBOContext(aSize, aFormat);
+    glContext = CreateOffscreenFBOContext(actualFormat);
     if (glContext &&
         glContext->Init() &&
-        glContext->ResizeOffscreenFBO(aSize))
+        glContext->ResizeOffscreenFBO(aSize, true))
     {
         return glContext.forget();
     }
@@ -602,8 +620,7 @@ GLContextProviderCGL::GetGlobalContext()
         // than 16x16 in size; also 16x16 is POT so that we can do
         // a FBO with it on older video cards.  A FBO context for
         // sharing is preferred since it has no associated target.
-        gGlobalContext = CreateOffscreenFBOContext(gfxIntSize(16, 16),
-                                                   ContextFormat(ContextFormat::BasicRGB24),
+        gGlobalContext = CreateOffscreenFBOContext(ContextFormat(ContextFormat::BasicRGB24),
                                                    false);
         if (!gGlobalContext || !static_cast<GLContextCGL*>(gGlobalContext.get())->Init()) {
             NS_WARNING("Couldn't init gGlobalContext.");

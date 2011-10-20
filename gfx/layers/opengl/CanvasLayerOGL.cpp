@@ -172,6 +172,10 @@ CanvasLayerOGL::UpdateSurface()
   }
 #endif
 
+  if (mCanvasGLContext) {
+    mCanvasGLContext->MakeCurrent();
+    mCanvasGLContext->fFinish();
+  }
   mOGLManager->MakeCurrent();
 
   if (mCanvasGLContext &&

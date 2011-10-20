@@ -1237,9 +1237,11 @@ already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
                                       const ContextFormat& aFormat)
 {
+    ContextFormat actualFormat(aFormat);
+    // actualFormat.samples = 0;
 
     nsRefPtr<GLContextGLX> glContext =
-        CreateOffscreenPixmapContext(aSize, aFormat, true);
+        CreateOffscreenPixmapContext(aSize, actualFormat, true);
 
     if (!glContext) {
         return nsnull;
@@ -1251,7 +1253,7 @@ GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    if (!glContext->ResizeOffscreenFBO(aSize)) {
+    if (!glContext->ResizeOffscreenFBO(aSize, true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
         return nsnull;

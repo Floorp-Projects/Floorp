@@ -1524,10 +1524,8 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const FlatMatch &fm, Value
     vp->setObject(*obj);
 
     return obj->defineElement(cx, 0, StringValue(fm.pattern())) &&
-           obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.indexAtom),
-                               Int32Value(fm.match())) &&
-           obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.inputAtom),
-                               StringValue(textstr));
+           obj->defineProperty(cx, cx->runtime->atomState.indexAtom, Int32Value(fm.match())) &&
+           obj->defineProperty(cx, cx->runtime->atomState.inputAtom, StringValue(textstr));
 }
 
 typedef JSObject **MatchArgType;
