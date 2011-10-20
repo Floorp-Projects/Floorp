@@ -339,7 +339,6 @@ RasterImage::ExtractFrame(PRUint32 aWhichFrame,
 
   // Make a new container. This should switch to another class with bug 505959.
   nsRefPtr<RasterImage> img(new RasterImage());
-  NS_ENSURE_TRUE(img, NS_ERROR_OUT_OF_MEMORY);
 
   // We don't actually have a mimetype in this case. The empty string tells the
   // init routine not to try to instantiate a decoder. This should be fixed in
@@ -849,7 +848,6 @@ RasterImage::InternalAddFrame(PRUint32 framenum,
     return NS_ERROR_INVALID_ARG;
 
   nsAutoPtr<imgFrame> frame(new imgFrame());
-  NS_ENSURE_TRUE(frame, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = frame->Init(aX, aY, aWidth, aHeight, aFormat, aPaletteDepth);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1650,10 +1648,6 @@ RasterImage::DoComposite(nsIntRect* aDirtyRect,
   // Create the Compositing Frame
   if (!mAnim->compositingFrame) {
     mAnim->compositingFrame = new imgFrame();
-    if (!mAnim->compositingFrame) {
-      NS_WARNING("Failed to init compositingFrame!\n");
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     nsresult rv = mAnim->compositingFrame->Init(0, 0, mSize.width, mSize.height,
                                                 gfxASurface::ImageFormatARGB32);
     if (NS_FAILED(rv)) {
@@ -1765,10 +1759,6 @@ RasterImage::DoComposite(nsIntRect* aDirtyRect,
     // overwrite.
     if (!mAnim->compositingPrevFrame) {
       mAnim->compositingPrevFrame = new imgFrame();
-      if (!mAnim->compositingPrevFrame) {
-        NS_WARNING("Failed to init compositingPrevFrame!\n");
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
       nsresult rv = mAnim->compositingPrevFrame->Init(0, 0, mSize.width, mSize.height,
                                                       gfxASurface::ImageFormatARGB32);
       if (NS_FAILED(rv)) {
@@ -2353,8 +2343,6 @@ RasterImage::RequestDecode()
   // a little slower).
   if (mInDecoder) {
     nsRefPtr<imgDecodeRequestor> requestor = new imgDecodeRequestor(this);
-    if (!requestor)
-      return NS_ERROR_OUT_OF_MEMORY;
     return NS_DispatchToCurrentThread(requestor);
   }
 
