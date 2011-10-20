@@ -523,8 +523,10 @@ WeaveSvc.prototype = {
           return this.serverURL;
         case 0:
         case 200:
-          if (node == "null")
+          if (node == "null") {
             node = null;
+          }
+          this._log.trace("_findCluster successfully returning " + node);
           return node;
         default:
           ErrorHandler.checkServerError(node);
@@ -734,9 +736,9 @@ WeaveSvc.prototype = {
       }
 
       try {
-        // Make sure we have a cluster to verify against
-        // this is a little weird, if we don't get a node we pretend
-        // to succeed, since that probably means we just don't have storage
+        // Make sure we have a cluster to verify against.
+        // This is a little weird, if we don't get a node we pretend
+        // to succeed, since that probably means we just don't have storage.
         if (this.clusterURL == "" && !this._setCluster()) {
           Status.sync = NO_SYNC_NODE_FOUND;
           Svc.Obs.notify("weave:service:sync:delayed");
