@@ -229,6 +229,7 @@ nsSVGMpathElement::GetReferencedPath()
 
   nsIContent* genericTarget = mHrefTarget.get();
   if (genericTarget &&
+      genericTarget->GetNameSpaceID() == kNameSpaceID_SVG &&
       genericTarget->Tag() == nsGkAtoms::path) {
     return static_cast<nsSVGPathElement*>(genericTarget);
   }
