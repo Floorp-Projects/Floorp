@@ -80,6 +80,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::frontend;
 
 namespace js {
 
@@ -1097,7 +1098,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
 }
 
 JSScript *
-JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
+JSScript::NewScriptFromCG(JSContext *cx, CodeGenerator *cg)
 {
     uint32 mainLength, prologLength, nsrcnotes, nfixed;
     JSScript *script;
@@ -1162,10 +1163,10 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 
     script->sourceMap = (jschar *) cg->parser->tokenStream.releaseSourceMap();
 
-    if (!js_FinishTakingSrcNotes(cx, cg, script->notes()))
+    if (!FinishTakingSrcNotes(cx, cg, script->notes()))
         return NULL;
     if (cg->ntrynotes != 0)
-        js_FinishTakingTryNotes(cg, script->trynotes());
+        FinishTakingTryNotes(cg, script->trynotes());
     if (cg->objectList.length != 0)
         cg->objectList.finish(script->objects());
     if (cg->regexpList.length != 0)
@@ -1470,13 +1471,6 @@ js_FramePCToLineNumber(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 uintN
 js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    JSOp op;
-    JSFunction *fun;
-    uintN lineno;
-    ptrdiff_t offset, target;
-    jssrcnote *sn;
-    JSSrcNoteType type;
-
     /* Cope with StackFrame.pc value prior to entering js_Interpret. */
     if (!pc)
         return 0;
@@ -1485,10 +1479,11 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
      * Special case: function definition needs no line number note because
      * the function's script contains its starting line number.
      */
-    op = js_GetOpcode(cx, script, pc);
+    JSOp op = js_GetOpcode(cx, script, pc);
     if (js_CodeSpec[op].format & JOF_INDEXBASE)
         pc += js_CodeSpec[op].length;
     if (*pc == JSOP_DEFFUN) {
+        JSFunction *fun;
         GET_FUNCTION_FROM_BYTECODE(script, pc, 0, fun);
         return fun->script()->lineno;
     }
@@ -1498,12 +1493,12 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
      * keeping track of line-number notes, until we pass the note for pc's
      * offset within script->code.
      */
-    lineno = script->lineno;
-    offset = 0;
-    target = pc - script->code;
-    for (sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+    uintN lineno = script->lineno;
+    ptrdiff_t offset = 0;
+    ptrdiff_t target = pc - script->code;
+    for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         offset += SN_DELTA(sn);
-        type = (JSSrcNoteType) SN_TYPE(sn);
+        SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
         if (type == SRC_SETLINE) {
             if (offset <= target)
                 lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
@@ -1523,16 +1518,11 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 jsbytecode *
 js_LineNumberToPC(JSScript *script, uintN target)
 {
-    ptrdiff_t offset, best;
-    uintN lineno, bestdiff, diff;
-    jssrcnote *sn;
-    JSSrcNoteType type;
-
-    offset = 0;
-    best = -1;
-    lineno = script->lineno;
-    bestdiff = SN_LINE_LIMIT;
-    for (sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+    ptrdiff_t offset = 0;
+    ptrdiff_t best = -1;
+    uintN lineno = script->lineno;
+    uintN bestdiff = SN_LINE_LIMIT;
+    for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         /*
          * Exact-match only if offset is not in the prolog; otherwise use
          * nearest greater-or-equal line number match.
@@ -1540,14 +1530,14 @@ js_LineNumberToPC(JSScript *script, uintN target)
         if (lineno == target && offset >= ptrdiff_t(script->mainOffset))
             goto out;
         if (lineno >= target) {
-            diff = lineno - target;
+            uintN diff = lineno - target;
             if (diff < bestdiff) {
                 bestdiff = diff;
                 best = offset;
             }
         }
         offset += SN_DELTA(sn);
-        type = (JSSrcNoteType) SN_TYPE(sn);
+        SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
         if (type == SRC_SETLINE) {
             lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
         } else if (type == SRC_NEWLINE) {
@@ -1563,18 +1553,11 @@ out:
 JS_FRIEND_API(uintN)
 js_GetScriptLineExtent(JSScript *script)
 {
-
-    bool counting;
-    uintN lineno;
-    uintN maxLineNo;
-    jssrcnote *sn;
-    JSSrcNoteType type;
-
-    lineno = script->lineno;
-    maxLineNo = 0;
-    counting = true;
-    for (sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        type = (JSSrcNoteType) SN_TYPE(sn);
+    uintN lineno = script->lineno;
+    uintN maxLineNo = 0;
+    bool counting = true;
+    for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+        SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
         if (type == SRC_SETLINE) {
             if (maxLineNo < lineno)
                 maxLineNo = lineno;
