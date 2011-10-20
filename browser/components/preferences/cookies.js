@@ -89,6 +89,8 @@ var gCookiesWindow = {
         this.filter();
     }
 
+    document.getElementById("removeAllCookies").disabled = this._view._rowCount == 0;
+
     this._saveState();
   },
 
@@ -117,6 +119,7 @@ var gCookiesWindow = {
       this._view._rowCount = 0;
       this._tree.treeBoxObject.rowCountChanged(0, -oldRowCount);
       this._view.selection.clearSelection();
+      document.getElementById("removeAllCookies").disabled = true;
     }
     else if (aData == "reload") {
       // first, clear any existing entries
@@ -207,7 +210,10 @@ var gCookiesWindow = {
     this._view._rowCount += rowCountImpact;
     this._tree.treeBoxObject.rowCountChanged(oldRowCount - 1, rowCountImpact);
 
-    document.getElementById("removeAllCookies").disabled = this._view._filtered;
+    if (this._view._rowCount > 0 && !this._view._filtered)
+      document.getElementById("removeAllCookies").disabled = false;
+    else
+      document.getElementById("removeAllCookies").disabled = true;
   },
 
   _view: {
