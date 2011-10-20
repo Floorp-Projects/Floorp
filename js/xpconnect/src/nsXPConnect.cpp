@@ -401,14 +401,8 @@ nsXPConnect::Collect()
     // cycle collection. So to compensate for JS_BeginRequest in
     // XPCCallContext::Init we disable the conservative scanner if that call
     // has started the request on this thread.
-    js::ThreadData &threadData = cx->thread()->data;
-    JS_ASSERT(threadData.requestDepth >= 1);
-    JS_ASSERT(!threadData.conservativeGC.requestThreshold);
-    if (threadData.requestDepth == 1)
-        threadData.conservativeGC.requestThreshold = 1;
+    js::AutoSkipConservativeScan ascs(cx);
     JS_GC(cx);
-    if (threadData.requestDepth == 1)
-        threadData.conservativeGC.requestThreshold = 0;
 }
 
 NS_IMETHODIMP
@@ -610,7 +604,7 @@ static void
 UnmarkGrayChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     int stackDummy;
-    if (!JS_CHECK_STACK_SIZE(trc->context->stackLimit, &stackDummy)) {
+    if (!JS_CHECK_STACK_SIZE(js::GetContextStackLimit(trc->context), &stackDummy)) {
         /*
          * If we run out of stack, we take a more drastic measure: require that
          * we GC again before the next CC.
@@ -877,7 +871,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 unsigned
 nsXPConnect::GetOutstandingRequests(JSContext* cx)
 {
-    unsigned n = cx->outstandingRequests;
+    unsigned n = js::GetContextOutstandingRequests(cx);
     XPCCallContext* context = mCycleCollectionContext;
     // Ignore the contribution from the XPCCallContext we created for cycle
     // collection.
@@ -898,8 +892,8 @@ public:
     NS_IMETHOD Unlink(void *n)
     {
         JSContext *cx = static_cast<JSContext*>(n);
-        NS_ASSERTION(cx->globalObject, "global object NULL before unlinking");
-        cx->globalObject = nsnull;
+        NS_ASSERTION(js::GetContextGlobalObject(cx), "global object NULL before unlinking");
+        js::SetContextGlobalObject(cx, nsnull);
         return NS_OK;
     }
     NS_IMETHOD Unroot(void *n)
@@ -915,12 +909,10 @@ public:
         // edges will ensure that any cycles this context is in won't be
         // collected.
         unsigned refCount = nsXPConnect::GetXPConnect()->GetOutstandingRequests(cx) + 1;
-        NS_IMPL_CYCLE_COLLECTION_DESCRIBE(JSContext, refCount)
+        cb.DescribeRefCountedNode(refCount, 0, "JSContext");
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
-        if (cx->globalObject) {
-            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                               cx->globalObject);
-        }
+        if (JSObject *global = js::GetContextGlobalObject(cx))
+            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, global);
 
         return NS_OK;
     }
@@ -2528,7 +2520,7 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
         } adc(cx);
         JSAutoRequest ar(cx);
 
-        js::CompartmentVector &vector = rt->compartments;
+        js::CompartmentVector &vector = js::GetRuntimeCompartments(rt);
         for (JSCompartment **p = vector.begin(); p != vector.end(); ++p) {
             JSCompartment *comp = *p;
             if (!JS_GetCompartmentPrincipals(comp)) {
@@ -2598,7 +2590,7 @@ nsXPConnect::Push(JSContext * cx)
              bool runningJS = false;
              for (PRUint32 i = 0; i < stack->Length(); ++i) {
                  JSContext *cx = (*stack)[i].cx;
-                 if (cx && !cx->stack.empty()) {
+                 if (cx && JS_IsContextRunningJS(cx)) {
                      runningJS = true;
                      break;
                  }

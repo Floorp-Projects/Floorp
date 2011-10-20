@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -1324,7 +1324,7 @@ class AutoPropDescArrayRooter : private AutoGCRooter
 {
   public:
     AutoPropDescArrayRooter(JSContext *cx)
-      : AutoGCRooter(cx, DESCRIPTORS), descriptors(cx)
+      : AutoGCRooter(cx), descriptors(cx)
     { }
 
     PropDesc *append() {
@@ -1338,16 +1338,16 @@ class AutoPropDescArrayRooter : private AutoGCRooter
         return descriptors[i];
     }
 
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
   private:
+    virtual void trace(JSTracer *trc);
+
     PropDescArray descriptors;
 };
 
 class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescriptor
 {
   public:
-    AutoPropertyDescriptorRooter(JSContext *cx) : AutoGCRooter(cx, DESCRIPTOR) {
+    AutoPropertyDescriptorRooter(JSContext *cx) : AutoGCRooter(cx) {
         obj = NULL;
         attrs = 0;
         getter = (PropertyOp) NULL;
@@ -1356,7 +1356,7 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     }
 
     AutoPropertyDescriptorRooter(JSContext *cx, PropertyDescriptor *desc)
-      : AutoGCRooter(cx, DESCRIPTOR)
+      : AutoGCRooter(cx)
     {
         obj = desc->obj;
         attrs = desc->attrs;
@@ -1365,7 +1365,8 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
         value = desc->value;
     }
 
-    friend void AutoGCRooter::trace(JSTracer *trc);
+  private:
+    virtual void trace(JSTracer *trc);
 };
 
 static inline bool

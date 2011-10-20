@@ -44,6 +44,11 @@
 #include "jspubtd.h"
 #include "jsprvtd.h"
 
+#ifdef __cplusplus
+#include "jsatom.h"
+#include "js/Vector.h"
+#endif
+
 JS_BEGIN_EXTERN_C
 
 extern JS_FRIEND_API(void)
@@ -132,6 +137,9 @@ JS_CloneObject(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent);
 extern JS_FRIEND_API(JSBool)
 js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
+JS_FRIEND_API(void)
+js_ReportOverRecursed(JSContext *maybecx);
+
 #ifdef __cplusplus
 
 extern JS_FRIEND_API(bool)
@@ -197,6 +205,8 @@ JS_FRIEND_API(JSBool) obj_defineSetter(JSContext *cx, uintN argc, js::Value *vp)
 extern JS_FRIEND_API(bool)
 CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname);
 
+typedef js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> CompartmentVector;
+
 /*
  * Shadow declarations of JS internal structures, for access by inline access
  * functions below. Do not use these structures in any other way. When adding
@@ -229,6 +239,34 @@ struct Object {
             return ((Value *)((jsuword) this + sizeof(shadow::Object)))[slot];
         return slots[slot - nfixed];
     }
+};
+
+struct Context {
+    JS::AutoGCRooter *autoGCRooters;
+    void *data;
+    void *data2;
+#ifdef JS_THREADSAFE
+    JSThread *thread_;
+#endif
+    JSCompartment *compartment;
+    JSObject *globalObject;
+    JSRuntime *runtime;
+    jsuword stackLimit;
+#ifdef JS_THREADSAFE
+    unsigned outstandingRequests;
+#endif
+    JSDebugHooks *debugHooks;
+};
+
+struct Thread {
+    void *id;
+};
+
+struct Runtime {
+    JSAtomState atomState;
+    JSCompartment *atomsCompartment;
+    js::CompartmentVector compartments;
+    JSStructuredCloneCallbacks *structuredCloneCallbacks;
 };
 
 } /* namespace shadow */
@@ -361,7 +399,312 @@ StringIsArrayIndex(JSLinearString *str, jsuint *indexp);
 /* When defining functions, JSFunctionSpec::call points to a JSNativeTraceInfo. */
 #define JSFUN_TRCINFO     0x2000
 
+static inline void *
+GetContextPrivate(JSContext *cx)
+{
+    return reinterpret_cast<js::shadow::Context *>(cx)->data;
+}
+
+static inline void *
+GetContextPrivate2(JSContext *cx)
+{
+    return reinterpret_cast<js::shadow::Context *>(cx)->data2;
+}
+
+static inline void
+SetContextPrivate2(JSContext *cx, void *data)
+{
+    reinterpret_cast<js::shadow::Context *>(cx)->data2 = data;
+}
+
+#ifdef JS_THREADSAFE
+static inline JSThread *
+GetContextThread(JSContext *cx)
+{
+    return reinterpret_cast<js::shadow::Context *>(cx)->thread_;
+}
+
+static inline void *
+GetContextThreadId(JSContext *cx)
+{
+    JSThread *th = GetContextThread(cx);
+    return reinterpret_cast<js::shadow::Thread *>(th)->id;
+}
+#endif
+
+static inline JSCompartment *
+GetContextCompartment(JSContext *cx)
+{
+    return reinterpret_cast<js::shadow::Context *>(cx)->compartment;
+}
+
+static inline JSObject *
+GetContextGlobalObject(JSContext *cx)
+{
+    return reinterpret_cast<js::shadow::Context *>(cx)->globalObject;
+}
+
+static inline void
+SetContextGlobalObject(JSContext *cx, JSObject *obj)
+{
+    reinterpret_cast<js::shadow::Context *>(cx)->globalObject = obj;
+}
+
+static inline JSRuntime *
+GetContextRuntime(JSContext *cx)
+{
+    return reinterpret_cast<js::shadow::Context *>(cx)->runtime;
+}
+
+static inline jsuword
+GetContextStackLimit(JSContext *cx)
+{
+    return reinterpret_cast<js::shadow::Context *>(cx)->stackLimit;
+}
+
+#ifdef JS_THREADSAFE
+static inline unsigned
+GetContextOutstandingRequests(JSContext *cx)
+{
+    return reinterpret_cast<js::shadow::Context *>(cx)->outstandingRequests;
+}
+#endif
+
+static inline JSDebugHooks *
+GetContextDebugHooks(JSContext *cx)
+{
+    return reinterpret_cast<js::shadow::Context *>(cx)->debugHooks;
+}
+
+static inline JSString *
+GetEmptyAtom(JSContext *cx)
+{
+    JSRuntime *rt = js::GetContextRuntime(cx);
+    return (JSString *)reinterpret_cast<js::shadow::Runtime *>(rt)->atomState.emptyAtom;
+}
+
+static inline CompartmentVector &
+GetRuntimeCompartments(JSRuntime *rt)
+{
+    return reinterpret_cast<js::shadow::Runtime *>(rt)->compartments;
+}
+
+static inline JSStructuredCloneCallbacks *
+GetRuntimeStructuredCloneCallbacks(JSRuntime *rt)
+{
+    return reinterpret_cast<js::shadow::Runtime *>(rt)->structuredCloneCallbacks;
+}
+
+#define JS_CHECK_RECURSION(cx, onerror)                                       \
+    JS_BEGIN_MACRO                                                            \
+        int stackDummy_;                                                      \
+                                                                              \
+        if (!JS_CHECK_STACK_SIZE(js::GetContextStackLimit(cx), &stackDummy_)) { \
+            js_ReportOverRecursed(cx);                                        \
+            onerror;                                                          \
+        }                                                                     \
+    JS_END_MACRO
+
+static JS_ALWAYS_INLINE void
+MakeRangeGCSafe(Value *vec, size_t len)
+{
+    JS_ASSERT(vec <= vec + len);
+    PodZero(vec, len);
+}
+
+static JS_ALWAYS_INLINE void
+MakeRangeGCSafe(Value *beg, Value *end)
+{
+    JS_ASSERT(beg <= end);
+    PodZero(beg, end - beg);
+}
+
+static JS_ALWAYS_INLINE void
+MakeRangeGCSafe(jsid *beg, jsid *end)
+{
+    JS_ASSERT(beg <= end);
+    for (jsid *id = beg; id < end; ++id)
+        *id = INT_TO_JSID(0);
+}
+
+static JS_ALWAYS_INLINE void
+MakeRangeGCSafe(jsid *vec, size_t len)
+{
+    MakeRangeGCSafe(vec, vec + len);
+}
+
+template<class T>
+class AutoVectorRooter : protected AutoGCRooter
+{
+  public:
+    explicit AutoVectorRooter(JSContext *cx
+                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoGCRooter(cx), vector(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    size_t length() const { return vector.length(); }
+
+    bool append(const T &v) { return vector.append(v); }
+
+    /* For use when space has already been reserved. */
+    void infallibleAppend(const T &v) { vector.infallibleAppend(v); }
+
+    void popBack() { vector.popBack(); }
+    T popCopy() { return vector.popCopy(); }
+
+    bool growBy(size_t inc) {
+        size_t oldLength = vector.length();
+        if (!vector.growByUninitialized(inc))
+            return false;
+        MakeRangeGCSafe(vector.begin() + oldLength, vector.end());
+        return true;
+    }
+
+    bool resize(size_t newLength) {
+        size_t oldLength = vector.length();
+        if (newLength <= oldLength) {
+            vector.shrinkBy(oldLength - newLength);
+            return true;
+        }
+        if (!vector.growByUninitialized(newLength - oldLength))
+            return false;
+        MakeRangeGCSafe(vector.begin() + oldLength, vector.end());
+        return true;
+    }
+
+    void clear() { vector.clear(); }
+
+    bool reserve(size_t newLength) {
+        return vector.reserve(newLength);
+    }
+
+    T &operator[](size_t i) { return vector[i]; }
+    const T &operator[](size_t i) const { return vector[i]; }
+
+    const T *begin() const { return vector.begin(); }
+    T *begin() { return vector.begin(); }
+
+    const T *end() const { return vector.end(); }
+    T *end() { return vector.end(); }
+
+    const T &back() const { return vector.back(); }
+
+  protected:
+    typedef Vector<T, 8> VectorImpl;
+    VectorImpl vector;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoValueVector : public AutoVectorRooter<Value>
+{
+  public:
+    explicit AutoValueVector(JSContext *cx
+                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<Value>(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    const jsval *jsval_begin() const { return begin(); }
+    jsval *jsval_begin() { return begin(); }
+
+    const jsval *jsval_end() const { return end(); }
+    jsval *jsval_end() { return end(); }
+
+  protected:
+    virtual JS_FRIEND_API(void) trace(JSTracer *trc);
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoObjectVector : public AutoVectorRooter<JSObject *>
+{
+  public:
+    explicit AutoObjectVector(JSContext *cx
+                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<JSObject *>(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+  protected:
+    virtual JS_FRIEND_API(void) trace(JSTracer *trc);
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoIdVector : public AutoVectorRooter<jsid>
+{
+  public:
+    explicit AutoIdVector(JSContext *cx
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<jsid>(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+  protected:
+    virtual JS_FRIEND_API(void) trace(JSTracer *trc);
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+#ifdef JS_THREADSAFE
+class JS_FRIEND_API(AutoSkipConservativeScan)
+{
+  public:
+    AutoSkipConservativeScan(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoSkipConservativeScan();
+
+  private:
+    JSContext *context;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+#endif
+
+extern JS_FORCES_STACK JS_FRIEND_API(void)
+LeaveTrace(JSContext *cx);
+
 } /* namespace js */
 #endif
+
+/*
+ * Report an exception, which is currently realized as a printf-style format
+ * string and its arguments.
+ */
+typedef enum JSErrNum {
+#define MSG_DEF(name, number, count, exception, format) \
+    name = number,
+#include "js.msg"
+#undef MSG_DEF
+    JSErr_Limit
+} JSErrNum;
+
+extern JS_FRIEND_API(const JSErrorFormatString *)
+js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
+
+/*
+ * Detect whether the internal date value is NaN.  (Because failure is
+ * out-of-band for js_DateGet*)
+ */
+extern JS_FRIEND_API(JSBool)
+JS_DateIsValid(JSContext *cx, JSObject* obj);
+
+extern JS_FRIEND_API(jsdouble)
+JS_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj);
+
+extern JS_FRIEND_API(JSBool)
+JS_WasLastGCCompartmental(JSContext *cx);
+
+extern JS_FRIEND_API(JSUint64)
+JS_GetSCOffset(JSStructuredCloneWriter* writer);
+
+extern JS_FRIEND_API(JSVersion)
+JS_VersionSetXML(JSVersion version, JSBool enable);
+
+extern JS_FRIEND_API(JSBool)
+JS_IsContextRunningJS(JSContext *cx);
 
 #endif /* jsfriendapi_h___ */

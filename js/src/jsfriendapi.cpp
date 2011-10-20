@@ -319,3 +319,56 @@ js::DumpHeapComplete(JSContext *cx, FILE *fp)
 }
 
 #endif
+
+JS_FRIEND_API(JSBool)
+JS_DateIsValid(JSContext *cx, JSObject* obj)
+{
+    return js_DateIsValid(cx, obj);
+}
+
+JS_FRIEND_API(jsdouble)
+JS_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj)
+{
+    return js_DateGetMsecSinceEpoch(cx, obj);
+}
+
+JS_FRIEND_API(JSBool)
+JS_WasLastGCCompartmental(JSContext *cx)
+{
+    return cx->runtime->wasCompartmentGC;
+}
+
+JS_FRIEND_API(JSVersion)
+JS_VersionSetXML(JSVersion version, JSBool enable)
+{
+    js::VersionSetXML(&version, enable);
+    return version;
+}
+
+JS_FRIEND_API(JSBool)
+JS_IsContextRunningJS(JSContext *cx)
+{
+    return !cx->stack.empty();
+}
+
+#ifdef JS_THREADSAFE
+AutoSkipConservativeScan::AutoSkipConservativeScan(JSContext *cx
+                                                   JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT)
+  : context(cx)
+{
+    JS_GUARD_OBJECT_NOTIFIER_INIT;
+
+    js::ThreadData &threadData = context->thread()->data;
+    JS_ASSERT(threadData.requestDepth >= 1);
+    JS_ASSERT(!threadData.conservativeGC.requestThreshold);
+    if(threadData.requestDepth == 1)
+        threadData.conservativeGC.requestThreshold = 1;
+}
+
+AutoSkipConservativeScan::~AutoSkipConservativeScan()
+{
+    js::ThreadData &threadData = context->thread()->data;
+    if(threadData.requestDepth == 1)
+        threadData.conservativeGC.requestThreshold = 0;
+}
+#endif

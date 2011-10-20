@@ -50,7 +50,6 @@
 #include "mozilla/Util.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
@@ -545,12 +544,9 @@ DumpXPC(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GC(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSRuntime *rt;
-
-    rt = cx->runtime;
     JS_GC(cx);
 #ifdef JS_GCMETER
-    js_DumpGCStats(rt, stdout);
+    js_DumpGCStats(JS_GetRuntime(cx), stdout);
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
@@ -1005,9 +1001,9 @@ static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 {
     if ((errorNumber > 0) && (errorNumber < JSShellErr_Limit))
-            return &jsShell_ErrorFormatString[errorNumber];
-        else
-            return NULL;
+        return &jsShell_ErrorFormatString[errorNumber];
+    JS_NOT_REACHED("invalid error number");
+    return NULL;
 }
 
 static void

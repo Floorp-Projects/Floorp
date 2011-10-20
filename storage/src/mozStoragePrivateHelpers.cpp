@@ -41,7 +41,7 @@
 #include "sqlite3.h"
 
 #include "jsapi.h"
-#include "jsdate.h"
+#include "jsfriendapi.h"
 
 #include "nsPrintfCString.h"
 #include "nsString.h"
@@ -172,10 +172,10 @@ convertJSValToVariant(
   if (JSVAL_IS_OBJECT(aValue)) {
     JSObject *obj = JSVAL_TO_OBJECT(aValue);
     // We only support Date instances, all others fail.
-    if (!::js_DateIsValid(aCtx, obj))
+    if (!::JS_DateIsValid(aCtx, obj))
       return nsnull;
 
-    double msecd = ::js_DateGetMsecSinceEpoch(aCtx, obj);
+    double msecd = ::JS_DateGetMsecSinceEpoch(aCtx, obj);
     msecd *= 1000.0;
     PRInt64 msec;
     LL_D2L(msec, msecd);

@@ -46,7 +46,6 @@
 
 #include "jsapi.h"
 #include "jsclass.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 
 #include "mozilla/unused.h"
@@ -126,7 +125,7 @@ public:
       JSObject* obj = JS_NewObject(cx, clasp, NULL, NULL);
       if (!obj)
         return NULL;
-      js::AutoObjectRooter root(cx, obj);
+      JS::AutoObjectRooter root(cx, obj);
 
       JSPropertySpec* ps = const_cast<JSPropertySpec*>(sHandle_Properties);
       JSFunctionSpec* fs = const_cast<JSFunctionSpec*>(sHandle_Functions);
@@ -160,7 +159,7 @@ private:
       if (mObj) {
         JS_SetPrivate(mCx, mObj, NULL);
 
-        js::AutoObjectRooter obj(mCx, mObj);
+        JS::AutoObjectRooter obj(mCx, mObj);
         mObj = NULL;
 
         // If we can't enter the compartment, we won't run onInvalidate().
@@ -169,7 +168,7 @@ private:
           JSBool hasOnInvalidate;
           if (JS_HasProperty(mCx, obj.object(), "onInvalidate",
                              &hasOnInvalidate) && hasOnInvalidate) {
-            js::AutoValueRooter r(mCx);
+            JS::AutoValueRooter r(mCx);
             JSBool ok = JS_CallFunctionName(mCx, obj.object(), "onInvalidate", 0,
                                             NULL, r.jsval_addr());
             if (!ok)

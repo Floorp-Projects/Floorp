@@ -42,8 +42,8 @@
 #include "nsIJSContextStack.h"
 #include "nsIVariant.h"
 
-#include "jscntxt.h"
-#include "jsclone.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
 #include "mozilla/storage.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
@@ -449,7 +449,7 @@ StructuredCloneWriteDummyProp(JSContext* aCx,
     PRUint64* closure = reinterpret_cast<PRUint64*>(aClosure);
 
     NS_ASSERTION(*closure == 0, "We should not have been here before!");
-    *closure = js_GetSCOffset(aWriter);
+    *closure = JS_GetSCOffset(aWriter);
 
     PRUint64 value = 0;
     return JS_WriteBytes(aWriter, &value, sizeof(value));
@@ -457,7 +457,7 @@ StructuredCloneWriteDummyProp(JSContext* aCx,
 
   // try using the runtime callbacks
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    aCx->runtime->structuredCloneCallbacks;
+    js::GetRuntimeStructuredCloneCallbacks(js::GetContextRuntime(aCx));
   if (runtimeCallbacks) {
     return runtimeCallbacks->write(aCx, aWriter, aObj, nsnull);
   }

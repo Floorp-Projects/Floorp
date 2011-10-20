@@ -41,10 +41,11 @@
 #include "ListenerManager.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
-#include "js/Vector.h"
+#include "jsfriendapi.h"
 
 #include "Events.h"
+
+#include "nsTArray.h"
 
 using namespace mozilla;
 using dom::workers::events::ListenerManager;
@@ -367,8 +368,7 @@ ListenerManager::DispatchEvent(JSContext* aCx, JSObject* aTarget,
     return true;
   }
 
-  js::ContextAllocPolicy ap(aCx);
-  js::Vector<jsval, 10, js::ContextAllocPolicy> listeners(ap);
+  InfallibleTArray<jsval> listeners;
 
   for (PRCList* elem = PR_NEXT_LINK(&collection->mListenerHead);
        elem != &collection->mListenerHead;
@@ -377,13 +377,12 @@ ListenerManager::DispatchEvent(JSContext* aCx, JSObject* aTarget,
 
     // Listeners that don't want untrusted events will be skipped if this is an
     // untrusted event.
-    if ((eventIsTrusted || listener->mWantsUntrusted) &&
-        !listeners.append(listener->mListenerVal)) {
-      return false;
+    if (eventIsTrusted || listener->mWantsUntrusted) {
+      listeners.AppendElement(listener->mListenerVal);
     }
   }
 
-  if (listeners.empty()) {
+  if (listeners.IsEmpty()) {
     return true;
   }
 
@@ -391,7 +390,7 @@ ListenerManager::DispatchEvent(JSContext* aCx, JSObject* aTarget,
     return false;
   }
 
-  for (size_t index = 0; index < listeners.length(); index++) {
+  for (size_t index = 0; index < listeners.Length(); index++) {
     // If anything fails in here we want to report the exception and continue on
     // to the next listener rather than bailing out. If something fails and
     // does not set an exception then we bail out entirely as we've either run
