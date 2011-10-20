@@ -94,10 +94,13 @@ function setupHighlighterTests()
   InspectorUI.toggleInspectorUI();
 }
 
-function runSelectionTests()
+function runSelectionTests(subject)
 {
   Services.obs.removeObserver(runSelectionTests,
     InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+
+  is(subject.wrappedJSObject, InspectorUI,
+     "InspectorUI accessible in the observer");
 
   executeSoon(function() {
     Services.obs.addObserver(performTestComparisons,
