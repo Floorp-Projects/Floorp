@@ -137,34 +137,16 @@ add_test(function test_401_logout() {
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
-  Svc.Obs.add("weave:service:sync:error", onSyncError);
-  function onSyncError() {
-    _("Got weave:service:sync:error in first sync.");
-    Svc.Obs.remove("weave:service:sync:error", onSyncError);
-
-    // Wait for the automatic next sync.
-    function onLoginError() {
-      _("Got weave:service:login:error in second sync.");
-      Svc.Obs.remove("weave:service:login:error", onLoginError);
-
-      do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
-      do_check_false(Service.isLoggedIn);
-
-      // Clean up.
-      Utils.nextTick(function () {
-        Service.startOver();
-        server.stop(run_next_test);
-      });
-    }
-    Svc.Obs.add("weave:service:login:error", onLoginError);
-  }
-
   // Make sync fail due to login rejected.
   Service.username = "janedoe";
-
-  _("Starting first sync.");
   Service.sync();
-  _("First sync done.");
+
+  do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+  do_check_false(Service.isLoggedIn);
+
+  // Clean up.
+  Service.startOver();
+  server.stop(run_next_test);
 });
 
 add_test(function test_credentials_changed_logout() {
@@ -206,10 +188,6 @@ add_test(function test_no_lastSync_pref() {
 add_test(function test_shouldReportError() {
   Status.login = MASTER_PASSWORD_LOCKED;
   do_check_false(ErrorHandler.shouldReportError());
-
-  // Give ourselves a clusterURL so that the temporary 401 no-error situation
-  // doesn't come into play.
-  Service.clusterURL = "http://localhost:8080/";
 
   // Test dontIgnoreErrors, non-network, non-prolonged, login error reported
   Status.resetSync();

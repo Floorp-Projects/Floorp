@@ -523,10 +523,8 @@ WeaveSvc.prototype = {
           return this.serverURL;
         case 0:
         case 200:
-          if (node == "null") {
+          if (node == "null")
             node = null;
-          }
-          this._log.trace("_findCluster successfully returning " + node);
           return node;
         default:
           ErrorHandler.checkServerError(node);
@@ -736,9 +734,9 @@ WeaveSvc.prototype = {
       }
 
       try {
-        // Make sure we have a cluster to verify against.
-        // This is a little weird, if we don't get a node we pretend
-        // to succeed, since that probably means we just don't have storage.
+        // Make sure we have a cluster to verify against
+        // this is a little weird, if we don't get a node we pretend
+        // to succeed, since that probably means we just don't have storage
         if (this.clusterURL == "" && !this._setCluster()) {
           Status.sync = NO_SYNC_NODE_FOUND;
           Svc.Obs.notify("weave:service:sync:delayed");
@@ -921,7 +919,6 @@ WeaveSvc.prototype = {
     }))(),
 
   startOver: function() {
-    this._log.trace("Invoking Service.startOver.");
     Svc.Obs.notify("weave:engine:stop-tracking");
     Status.resetSync();
 
@@ -1494,18 +1491,22 @@ WeaveSvc.prototype = {
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     try {
       engine.sync();
+      return true;
     }
     catch(e) {
+      // Maybe a 401, cluster update perhaps needed?
       if (e.status == 401) {
-        // Maybe a 401, cluster update perhaps needed?
-        // We rely on ErrorHandler observing the sync failure notification to
-        // schedule another sync and clear node assignment values.
-        // Here we simply want to muffle the exception and return an
-        // appropriate value.
+        // Log out and clear the cluster URL pref. That will make us perform
+        // cluster detection and password check on next sync, which handles
+        // both causes of 401s; in either case, we won't proceed with this
+        // sync so return false, but kick off a sync for next time.
+        this.logout();
+        Svc.Prefs.reset("clusterURL");
+        Utils.nextTick(this.sync, this);
         return false;
       }
+      return true;
     }
-    return true;
   },
 
   /**
