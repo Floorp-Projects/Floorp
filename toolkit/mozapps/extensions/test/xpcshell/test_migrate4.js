@@ -2,7 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Checks that we migrate data from future versions of the database
+// Checks that we migrate data from a previous version of the sqlite database
+
+// The test extension uses an insecure update url.
+Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 var addon1 = {
   id: "addon1@tests.mozilla.org",
@@ -11,7 +14,7 @@ var addon1 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
+    maxVersion: "2"
   }]
 };
 
@@ -22,7 +25,7 @@ var addon2 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
+    maxVersion: "2"
   }]
 };
 
@@ -33,7 +36,7 @@ var addon3 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
+    maxVersion: "2"
   }]
 };
 
@@ -44,7 +47,7 @@ var addon4 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
+    maxVersion: "2"
   }]
 };
 
@@ -52,30 +55,40 @@ var addon5 = {
   id: "addon5@tests.mozilla.org",
   version: "2.0",
   name: "Test 5",
+  updateURL: "http://localhost:4444/data/test_migrate4.rdf",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "0",
-    maxVersion: "0"
+    maxVersion: "1"
   }]
 };
 
 var addon6 = {
   id: "addon6@tests.mozilla.org",
-  version: "2.0",
+  version: "1.0",
   name: "Test 6",
+  updateURL: "http://localhost:4444/data/test_migrate4.rdf",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "0",
-    maxVersion: "0"
+    maxVersion: "1"
   }]
 };
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function run_test() {
-  do_test_pending();
+do_load_httpd_js();
+var testserver;
+
+function prepare_profile() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+
+  // Create and configure the HTTP server.
+  testserver = new nsHttpServer();
+  testserver.registerDirectory("/data/", do_get_file("data"));
+  testserver.registerDirectory("/addons/", do_get_file("addons"));
+  testserver.start(4444);
 
   writeInstallRDFForExtension(addon1, profileDir);
   writeInstallRDFForExtension(addon2, profileDir);
@@ -84,61 +97,64 @@ function run_test() {
   writeInstallRDFForExtension(addon5, profileDir);
   writeInstallRDFForExtension(addon6, profileDir);
 
-  // Write out a minimal database
+  startupManager();
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org",
+                               "addon6@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5, a6]) {
+    a2.userDisabled = true;
+    a2.applyBackgroundUpdates = false;
+    a4.userDisabled = true;
+    a6.userDisabled = true;
+
+    a6.findUpdates({
+      onUpdateAvailable: function(aAddon, aInstall) {
+        completeAllInstalls([aInstall], function() {
+          restartManager();
+
+          AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                                       "addon2@tests.mozilla.org",
+                                       "addon3@tests.mozilla.org",
+                                       "addon4@tests.mozilla.org",
+                                       "addon5@tests.mozilla.org",
+                                       "addon6@tests.mozilla.org"],
+                                       function([a1, a2, a3, a4, a5, a6]) {
+            a3.userDisabled = true;
+            a4.userDisabled = false;
+
+            a5.findUpdates({
+              onUpdateFinished: function() {
+                shutdownManager();
+
+                perform_migration();
+              }
+            }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+          });
+        });
+      }
+    }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+  });
+}
+
+function perform_migration() {
   let dbfile = gProfD.clone();
   dbfile.append("extensions.sqlite");
   let db = AM_Cc["@mozilla.org/storage/service;1"].
            getService(AM_Ci.mozIStorageService).
            openDatabase(dbfile);
-  db.createTable("addon", "internal_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                          "id TEXT, location TEXT, version TEXT, active INTEGER, " +
-                          "userDisabled INTEGER, installDate INTEGER");
-  db.createTable("targetApplication", "addon_internal_id INTEGER, " +
-                                      "id TEXT, minVersion TEXT, maxVersion TEXT");
-  let stmt = db.createStatement("INSERT INTO addon VALUES (NULL, :id, :location, " +
-                                ":version, :active, :userDisabled, :installDate)");
-
-  let internal_ids = {};
-
-  [["addon1@tests.mozilla.org", "app-profile", "1.0", "1", "0", "0"],
-   ["addon2@tests.mozilla.org", "app-profile", "2.0", "0", "1", "0"],
-   ["addon3@tests.mozilla.org", "app-profile", "2.0", "1", "1", "0"],
-   ["addon4@tests.mozilla.org", "app-profile", "2.0", "0", "0", "0"],
-   ["addon5@tests.mozilla.org", "app-profile", "2.0", "1", "0", "0"],
-   ["addon6@tests.mozilla.org", "app-profile", "1.0", "0", "1", "0"]].forEach(function(a) {
-    stmt.params.id = a[0];
-    stmt.params.location = a[1];
-    stmt.params.version = a[2];
-    stmt.params.active = a[3];
-    stmt.params.userDisabled = a[4];
-    stmt.params.installDate = a[5];
-    stmt.execute();
-    internal_ids[a[0]] = db.lastInsertRowID;
-  });
-  stmt.finalize();
-
-  // Add updated target application into for addon5
-  stmt = db.createStatement("INSERT INTO targetApplication VALUES " +
-                            "(:internal_id, :id, :minVersion, :maxVersion)");
-  stmt.params.internal_id = internal_ids["addon5@tests.mozilla.org"];
-  stmt.params.id = "xpcshell@tests.mozilla.org";
-  stmt.params.minVersion = "0";
-  stmt.params.maxVersion = "1";
-  stmt.execute();
-
-  // Add updated target application into for addon6
-  stmt.params.internal_id = internal_ids["addon6@tests.mozilla.org"];
-  stmt.params.id = "xpcshell@tests.mozilla.org";
-  stmt.params.minVersion = "0";
-  stmt.params.maxVersion = "1";
-  stmt.execute();
-  stmt.finalize();
-
-  db.schemaVersion = 100;
-  Services.prefs.setIntPref("extensions.databaseSchema", 100);
+  db.schemaVersion = 1;
+  Services.prefs.setIntPref("extensions.databaseSchema", 1);
   db.close();
 
-  startupManager();
+  gAppInfo.version = "2"
+  startupManager(true);
+  test_results();
+}
+
+function test_results() {
   check_startup_changes("installed", []);
   check_startup_changes("updated", []);
   check_startup_changes("uninstalled", []);
@@ -152,37 +168,56 @@ function run_test() {
                                "addon5@tests.mozilla.org",
                                "addon6@tests.mozilla.org"],
                                function([a1, a2, a3, a4, a5, a6]) {
-    // addon1 was enabled in the database
+    // addon1 was enabled
     do_check_neq(a1, null);
     do_check_false(a1.userDisabled);
     do_check_false(a1.appDisabled);
     do_check_true(a1.isActive);
-    // addon2 was disabled in the database
+    do_check_true(a1.applyBackgroundUpdates);
+
+    // addon2 was disabled
     do_check_neq(a2, null);
     do_check_true(a2.userDisabled);
     do_check_false(a2.appDisabled);
     do_check_false(a2.isActive);
+    do_check_false(a2.applyBackgroundUpdates);
+
     // addon3 was pending-disable in the database
     do_check_neq(a3, null);
     do_check_true(a3.userDisabled);
     do_check_false(a3.appDisabled);
     do_check_false(a3.isActive);
+    do_check_true(a3.applyBackgroundUpdates);
+
     // addon4 was pending-enable in the database
     do_check_neq(a4, null);
     do_check_false(a4.userDisabled);
     do_check_false(a4.appDisabled);
     do_check_true(a4.isActive);
+    do_check_true(a4.applyBackgroundUpdates);
+
     // addon5 was enabled in the database but needed a compatibiltiy update
     do_check_neq(a5, null);
     do_check_false(a5.userDisabled);
     do_check_false(a5.appDisabled);
     do_check_true(a5.isActive);
+    do_check_true(a5.applyBackgroundUpdates);
+
     // addon6 was disabled and compatible but a new version has been installed
-    // since, it should still be disabled but should be incompatible
     do_check_neq(a6, null);
+    do_check_eq(a6.version, "2.0");
     do_check_true(a6.userDisabled);
-    do_check_true(a6.appDisabled);
+    do_check_false(a6.appDisabled);
     do_check_false(a6.isActive);
-    do_test_finished();
+    do_check_true(a6.applyBackgroundUpdates);
+    do_check_eq(a6.sourceURI.spec, "http://localhost:4444/addons/test_migrate4_6.xpi");
+    do_check_eq(a6.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
+    testserver.stop(do_test_finished);
   });
+}
+
+function run_test() {
+  do_test_pending();
+
+  prepare_profile();
 }

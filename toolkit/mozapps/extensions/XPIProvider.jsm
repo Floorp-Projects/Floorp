@@ -2599,14 +2599,20 @@ var XPIProvider = {
           newAddon.installDate = aMigrateData.installDate;
         if ("softDisabled" in aMigrateData)
           newAddon.softDisabled = aMigrateData.softDisabled;
+        if ("applyBackgroundUpdates" in aMigrateData)
+          newAddon.applyBackgroundUpdates = aMigrateData.applyBackgroundUpdates;
+        if ("sourceURI" in aMigrateData)
+          newAddon.sourceURI = aMigrateData.sourceURI;
+        if ("releaseNotesURI" in aMigrateData)
+          newAddon.releaseNotesURI = aMigrateData.releaseNotesURI;
 
         // Some properties should only be migrated if the add-on hasn't changed.
         // The version property isn't a perfect check for this but covers the
         // vast majority of cases.
-        if (aMigrateData.version == newAddon.version) {
+        if (aMigrateData.version == newAddon.version &&
+            "targetApplications" in aMigrateData) {
           LOG("Migrating compatibility info");
-          if ("targetApplications" in aMigrateData)
-            newAddon.applyCompatibilityUpdate(aMigrateData, true);
+          newAddon.applyCompatibilityUpdate(aMigrateData, true);
         }
 
         // Since the DB schema has changed make sure softDisabled is correct
@@ -4366,7 +4372,11 @@ var XPIDatabase = {
       // and future versions of the schema
       var sql = [];
       sql.push("SELECT internal_id, id, location, userDisabled, " +
-               "softDisabled, installDate, version FROM addon");
+               "softDisabled, installDate, version, applyBackgroundUpdates, " +
+               "sourceURI, releaseNotesURI FROM addon");
+      sql.push("SELECT internal_id, id, location, userDisabled, " +
+               "installDate, version, applyBackgroundUpdates, " +
+               "sourceURI, releaseNotesURI FROM addon");
       sql.push("SELECT internal_id, id, location, userDisabled, installDate, " +
                "version FROM addon");
 
@@ -4397,6 +4407,12 @@ var XPIDatabase = {
 
         if ("softDisabled" in row)
           migrateData[row.location][row.id].softDisabled = row.softDisabled == 1;
+        if ("applyBackgroundUpdates" in row)
+          migrateData[row.location][row.id].applyBackgroundUpdates = row.applyBackgroundUpdates == 1;
+        if ("sourceURI" in row)
+          migrateData[row.location][row.id].sourceURI = row.sourceURI;
+        if ("releaseNotesURI" in row)
+          migrateData[row.location][row.id].releaseNotesURI = row.releaseNotesURI;
       }
 
       var taStmt = this.connection.createStatement("SELECT id, minVersion, " +
