@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=396851
+-->
+<head>
+  <title>Test for Bug 396851</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript">
+  function go() {
+    var iframe = $("ifr");
+    var win = iframe.contentWindow;
+    try {
+      var doc = win.document;
+      fail("Allowed cross-origin access to the document");
+    } catch (e) {
+      ok(e.toString().match("Permission denied") != null, "Weird exception thrown");
+    }
+
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    doc = win.document;
+    ok(doc != null, "Able to access the cross-origin document");
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=396851">Mozilla Bug 396851</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<script type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+</script>
+<iframe id="ifr"
+        src="http://example.org/tests/js/xpconnect/tests/mochitest/inner.html"
+        onload="go()">
+</iframe>
+</body>
+</html>

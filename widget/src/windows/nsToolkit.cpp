@@ -45,7 +45,6 @@
 #include "nsGUIEvent.h"
 #include "nsIServiceManager.h"
 #include "nsComponentManagerUtils.h"
-#include "nsWidgetAtoms.h"
 #include <objbase.h>
 #include <initguid.h>
 
@@ -285,8 +284,6 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
                                      NULL,
                                      kD3DUsageDelay,
                                      nsITimer::TYPE_ONE_SHOT);
-
-    nsWidgetAtoms::RegisterAtoms();
 
     return NS_OK;
 }

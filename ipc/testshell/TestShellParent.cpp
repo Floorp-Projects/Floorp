@@ -35,11 +35,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "TestShellParent.h"
+
+/* This must occur *after* TestShellParent.h to avoid typedefs conflicts. */
+#include "mozilla/Util.h"
+
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/jsipc/ContextWrapperParent.h"
 
 #include "nsAutoPtr.h"
 
+using namespace mozilla;
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::PTestShellCommandParent;
@@ -132,7 +137,7 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
   NS_ENSURE_TRUE(str, JS_FALSE);
 
   jsval argv[] = { STRING_TO_JSVAL(str) };
-  int argc = NS_ARRAY_LENGTH(argv);
+  uintN argc = ArrayLength(argv);
 
   jsval rval;
   JSBool ok = JS_CallFunctionValue(mCx, global, mCallback, argc, argv, &rval);

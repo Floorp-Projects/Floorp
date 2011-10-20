@@ -400,6 +400,7 @@ var Browser = {
     messageManager.addMessageListener("Browser:CertException", this);
     messageManager.addMessageListener("Browser:BlockedSite", this);
     messageManager.addMessageListener("Browser:ErrorPage", this);
+    messageManager.addMessageListener("Browser:PluginClickToPlayClicked", this);
 
     // Broadcast a UIReady message so add-ons know we are finished with startup
     let event = document.createEvent("Events");
@@ -498,6 +499,7 @@ var Browser = {
     messageManager.removeMessageListener("Browser:CertException", this);
     messageManager.removeMessageListener("Browser:BlockedSite", this);
     messageManager.removeMessageListener("Browser:ErrorPage", this);
+    messageManager.removeMessageListener("Browser:PluginClickToPlayClicked", this);
 
     var os = Services.obs;
     os.removeObserver(XPInstallObserver, "addon-install-blocked");
@@ -1275,6 +1277,31 @@ var Browser = {
       case "Browser:ErrorPage":
         this._handleErrorPage(aMessage);
         break;
+      case "Browser:PluginClickToPlayClicked": {
+        // Save off session history
+        let parent = browser.parentNode;
+        let data = browser.__SS_data;
+        if (data.entries.length == 0)
+          return;
+
+        // Remove the browser from the DOM, effectively killing it's content
+        parent.removeChild(browser);
+
+        // Re-create the browser as non-remote, so plugins work
+        browser.setAttribute("remote", "false");
+        parent.appendChild(browser);
+
+        // Reload the content using session history
+        browser.__SS_data = data;
+        let json = {
+          uri: data.entries[data.index - 1].url,
+          flags: null,
+          entries: data.entries,
+          index: data.index
+        };
+        browser.messageManager.sendAsyncMessage("WebNavigation:LoadURI", json);
+        break;
+      }
     }
   }
 };

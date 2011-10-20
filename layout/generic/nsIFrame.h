@@ -898,6 +898,11 @@ public:
   NS_DECLARE_FRAME_PROPERTY(PreEffectsBBoxProperty, DestroyRect)
   NS_DECLARE_FRAME_PROPERTY(PreTransformBBoxProperty, DestroyRect)
 
+  // The initial overflow area passed to FinishAndStoreOverflow. This is only set
+  // on frames that Preserve3D(), and when at least one of the overflow areas
+  // differs from the frame bound rect.
+  NS_DECLARE_FRAME_PROPERTY(InitialOverflowProperty, DestroyOverflowAreas);
+
   NS_DECLARE_FRAME_PROPERTY(UsedMarginProperty, DestroyMargin)
   NS_DECLARE_FRAME_PROPERTY(UsedPaddingProperty, DestroyMargin)
   NS_DECLARE_FRAME_PROPERTY(UsedBorderProperty, DestroyMargin)

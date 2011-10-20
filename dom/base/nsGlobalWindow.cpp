@@ -49,6 +49,9 @@
 
 #include "base/basictypes.h"
 
+/* This must occur *after* base/basictypes.h to avoid typedefs conflicts. */
+#include "mozilla/Util.h"
+
 // Local Includes
 #include "nsGlobalWindow.h"
 #include "nsScreen.h"
@@ -782,6 +785,18 @@ nsOuterWindowProxy::obj_toString(JSContext *cx, JSObject *proxy)
     return JS_NewStringCopyZ(cx, "[object Window]");
 }
 
+void
+nsOuterWindowProxy::finalize(JSContext *cx, JSObject *proxy)
+{
+  nsISupports *global =
+    static_cast<nsISupports*>(js::GetProxyExtra(proxy, 0).toPrivate());
+  if (global) {
+    nsWrapperCache *cache;
+    CallQueryInterface(global, &cache);
+    cache->ClearWrapperIfProxy();
+  }
+}
+
 nsOuterWindowProxy
 nsOuterWindowProxy::singleton;
 
@@ -999,6 +1014,11 @@ nsGlobalWindow::~nsGlobalWindow()
 #endif
 
   if (IsOuterWindow()) {
+    JSObject *proxy = GetWrapperPreserveColor();
+    if (proxy) {
+      js::SetProxyExtra(proxy, 0, js::PrivateValue(NULL));
+    }
+
     // An outer window is destroyed with inner windows still possibly
     // alive, iterate through the inner windows and null out their
     // back pointer to this outer, and pull them out of the list of
@@ -1009,6 +1029,9 @@ nsGlobalWindow::~nsGlobalWindow()
       PR_REMOVE_AND_INIT_LINK(w);
     }
   } else {
+    Telemetry::Accumulate(Telemetry::INNERWINDOWS_WITH_MUTATION_LISTENERS,
+                          mMutationBits ? 1 : 0);
+
     if (mListenerManager) {
       mListenerManager->Disconnect();
       mListenerManager = nsnull;
@@ -2116,11 +2139,16 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         return NS_ERROR_FAILURE;
       }
 
+      js::SetProxyExtra(mJSObject, 0, js::PrivateValue(NULL));
+
       outerObject = JS_TransplantObject(cx, mJSObject, outerObject);
       if (!outerObject) {
         NS_ERROR("unable to transplant wrappers, probably OOM");
         return NS_ERROR_FAILURE;
       }
+
+      nsIScriptGlobalObject *global = static_cast<nsIScriptGlobalObject*>(this);
+      js::SetProxyExtra(outerObject, 0, js::PrivateValue(global));
 
       mJSObject = outerObject;
       SetWrapper(mJSObject);
@@ -2364,6 +2392,9 @@ nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 #ifdef DEBUG
   mLastOpenedURI = aDocument->GetDocumentURI();
 #endif
+
+  Telemetry::Accumulate(Telemetry::INNERWINDOWS_WITH_MUTATION_LISTENERS,
+                        mMutationBits ? 1 : 0);
 
   // Clear our mutation bitfield.
   mMutationBits = 0;
@@ -4632,7 +4663,7 @@ nsGlobalWindow::MakeScriptDialogTitle(nsAString &aOutTitle)
               nsXPIDLString tempString;
               nsContentUtils::FormatLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
                                                     "ScriptDlgHeading",
-                                                    formatStrings, NS_ARRAY_LENGTH(formatStrings),
+                                                    formatStrings, ArrayLength(formatStrings),
                                                     tempString);
               aOutTitle = tempString;
             }
@@ -7196,17 +7227,6 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction)
   }
 
   return NS_OK;
-}
-
-bool
-nsGlobalWindow::GetBlurSuppression()
-{
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  bool suppress = false;
-  if (treeOwnerAsWin)
-    treeOwnerAsWin->GetBlurSuppression(&suppress);
-  return suppress;
 }
 
 NS_IMETHODIMP

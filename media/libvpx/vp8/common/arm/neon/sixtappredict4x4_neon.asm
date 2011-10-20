@@ -15,6 +15,17 @@
     PRESERVE8
 
     AREA ||.text||, CODE, READONLY, ALIGN=2
+
+filter4_coeff
+    DCD     0,  0,  128,    0,   0,  0,   0,  0
+    DCD     0, -6,  123,   12,  -1,  0,   0,  0
+    DCD     2, -11, 108,   36,  -8,  1,   0,  0
+    DCD     0, -9,   93,   50,  -6,  0,   0,  0
+    DCD     3, -16,  77,   77, -16,  3,   0,  0
+    DCD     0, -6,   50,   93,  -9,  0,   0,  0
+    DCD     1, -8,   36,  108, -11,  2,   0,  0
+    DCD     0, -1,   12,  123,  -6,   0,  0,  0
+
 ; r0    unsigned char  *src_ptr,
 ; r1    int  src_pixels_per_line,
 ; r2    int  xoffset,
@@ -25,7 +36,7 @@
 |vp8_sixtap_predict_neon| PROC
     push            {r4, lr}
 
-    adrl            r12, filter4_coeff
+    adr             r12, filter4_coeff
     ldr             r4, [sp, #8]            ;load parameters from stack
     ldr             lr, [sp, #12]           ;load parameters from stack
 
@@ -407,18 +418,5 @@ secondpass_filter4x4_only
     ENDP
 
 ;-----------------
-    AREA    subpelfilters4_dat, DATA, READWRITE         ;read/write by default
-;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
-;One word each is reserved. Label filter_coeff can be used to access the data.
-;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
-filter4_coeff
-    DCD     0,  0,  128,    0,   0,  0,   0,  0
-    DCD     0, -6,  123,   12,  -1,  0,   0,  0
-    DCD     2, -11, 108,   36,  -8,  1,   0,  0
-    DCD     0, -9,   93,   50,  -6,  0,   0,  0
-    DCD     3, -16,  77,   77, -16,  3,   0,  0
-    DCD     0, -6,   50,   93,  -9,  0,   0,  0
-    DCD     1, -8,   36,  108, -11,  2,   0,  0
-    DCD     0, -1,   12,  123,  -6,   0,  0,  0
 
     END

@@ -3287,6 +3287,8 @@ pref("webgl.force_osmesa", false);
 pref("webgl.osmesalib", "");
 pref("webgl.verbose", false);
 pref("webgl.prefer-native-gl", false);
+pref("webgl.min_capability_mode", false);
+pref("webgl.disable-extensions", false);
 
 #ifdef XP_WIN
 // The default TCP send window on Windows is too small, and autotuning only occurs on receive

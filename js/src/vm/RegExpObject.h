@@ -49,13 +49,19 @@
 #include "yarr/Yarr.h"
 #if ENABLE_YARR_JIT
 #include "yarr/YarrJIT.h"
+#include "yarr/YarrSyntaxChecker.h"
 #else
 #include "yarr/pcre/pcre.h"
 #endif
 
 namespace js {
 
-class RegExpPrivate;
+enum RegExpRunStatus
+{
+    RegExpRunStatus_Error,
+    RegExpRunStatus_Success,
+    RegExpRunStatus_Success_NotFound
+};
 
 class RegExpObject : public ::JSObject
 {
@@ -87,6 +93,20 @@ class RegExpObject : public ::JSObject
     /* Note: fallible. */
     JSFlatString *toString(JSContext *cx) const;
 
+    /*
+     * Run the regular expression over the input text.
+     *
+     * Results are placed in |output| as integer pairs. For eaxmple,
+     * |output[0]| and |output[1]| represent the text indices that make
+     * up the "0" (whole match) pair. Capturing parens will result in
+     * more output.
+     *
+     * N.B. it's the responsibility of the caller to hook the |output|
+     * into the |RegExpStatics| appropriately, if necessary.
+     */
+    RegExpRunStatus execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
+                            LifoAllocScope &allocScope, MatchPairs **output);
+
     /* Accessors. */
 
     const Value &getLastIndex() const {
@@ -102,21 +122,20 @@ class RegExpObject : public ::JSObject
         setSlot(LAST_INDEX_SLOT, Int32Value(0));
     }
 
-    JSString *getSource() const {
-        return getSlot(SOURCE_SLOT).toString();
+    JSLinearString *getSource() const {
+        return &getSlot(SOURCE_SLOT).toString()->asLinear();
     }
-    void setSource(JSString *source) {
+    void setSource(JSLinearString *source) {
         setSlot(SOURCE_SLOT, StringValue(source));
     }
     RegExpFlag getFlags() const {
         uintN flags = 0;
-        flags |= getSlot(GLOBAL_FLAG_SLOT).toBoolean() ? GlobalFlag : 0;
-        flags |= getSlot(IGNORE_CASE_FLAG_SLOT).toBoolean() ? IgnoreCaseFlag : 0;
-        flags |= getSlot(MULTILINE_FLAG_SLOT).toBoolean() ? MultilineFlag : 0;
-        flags |= getSlot(STICKY_FLAG_SLOT).toBoolean() ? StickyFlag : 0;
+        flags |= global() ? GlobalFlag : 0;
+        flags |= ignoreCase() ? IgnoreCaseFlag : 0;
+        flags |= multiline() ? MultilineFlag : 0;
+        flags |= sticky() ? StickyFlag : 0;
         return RegExpFlag(flags);
     }
-    inline RegExpPrivate *getPrivate() const;
 
     /* Flags. */
 
@@ -124,12 +143,34 @@ class RegExpObject : public ::JSObject
     void setGlobal(bool enabled)        { setSlot(GLOBAL_FLAG_SLOT, BooleanValue(enabled)); }
     void setMultiline(bool enabled)     { setSlot(MULTILINE_FLAG_SLOT, BooleanValue(enabled)); }
     void setSticky(bool enabled)        { setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled)); }
+    bool ignoreCase() const { return getSlot(IGNORE_CASE_FLAG_SLOT).toBoolean(); }
+    bool global() const     { return getSlot(GLOBAL_FLAG_SLOT).toBoolean(); }
+    bool multiline() const  { return getSlot(MULTILINE_FLAG_SLOT).toBoolean(); }
+    bool sticky() const     { return getSlot(STICKY_FLAG_SLOT).toBoolean(); }
+
+    /*
+     * N.B. |RegExpObject|s can be mutated in place because of |RegExp.prototype.compile|, hence
+     * |reset| for re-initialization.
+     */
+
+    inline bool reset(JSContext *cx, RegExpObject *other);
+    inline bool reset(JSContext *cx, AlreadyIncRefed<RegExpPrivate> rep);
+    inline bool reset(JSContext *cx, JSLinearString *source, RegExpFlag flags);
+
+    inline RegExpPrivate *getOrCreatePrivate(JSContext *cx);
+    inline void finalize(JSContext *cx);
 
   private:
-    /* N.B. |RegExpObject|s can be mutated in place because of |RegExp.prototype.compile|. */
-    inline bool reset(JSContext *cx, AlreadyIncRefed<RegExpPrivate> rep);
+    /* The |RegExpPrivate| is lazily created at the time of use. */
+    inline RegExpPrivate *getPrivate() const;
 
-    friend bool ResetRegExpObject(JSContext *, RegExpObject *, JSString *, RegExpFlag);
+    /*
+     * Precondition: the syntax for |source| has already been validated.
+     * Side effect: sets the private field.
+     */
+    bool makePrivate(JSContext *cx);
+
+    friend bool ResetRegExpObject(JSContext *, RegExpObject *, JSLinearString *, RegExpFlag);
     friend bool ResetRegExpObject(JSContext *, RegExpObject *, AlreadyIncRefed<RegExpPrivate>);
 
     /*
@@ -142,13 +183,6 @@ class RegExpObject : public ::JSObject
     RegExpObject();
     RegExpObject &operator=(const RegExpObject &reo);
 }; /* class RegExpObject */
-
-inline bool
-ResetRegExpObject(JSContext *cx, RegExpObject *reobj, JSString *str, RegExpFlag flags);
-
-/* N.B. On failure, caller must decref |rep|. */
-inline bool
-ResetRegExpObject(JSContext *cx, AlreadyIncRefed<RegExpPrivate> rep);
 
 /* Abstracts away the gross |RegExpPrivate| backend details. */
 class RegExpPrivateCode
@@ -189,20 +223,31 @@ class RegExpPrivateCode
 #endif
     }
 
+    static bool checkSyntax(JSContext *cx, TokenStream *tokenStream, JSLinearString *source) {
+#if ENABLE_YARR_JIT
+        ErrorCode error = JSC::Yarr::checkSyntax(*source);
+        if (error == JSC::Yarr::NoError)
+            return true;
+
+        reportYarrError(cx, tokenStream, error);
+        return false;
+#else
+# error "Syntax checking not implemented for !ENABLE_YARR_JIT"
+#endif
+    }
+
 #if ENABLE_YARR_JIT
     static inline bool isJITRuntimeEnabled(JSContext *cx);
-    void reportYarrError(JSContext *cx, TokenStream *ts, JSC::Yarr::ErrorCode error);
+    static void reportYarrError(JSContext *cx, TokenStream *ts, JSC::Yarr::ErrorCode error);
 #else
-    void reportPCREError(JSContext *cx, int error);
+    static void reportPCREError(JSContext *cx, int error);
 #endif
 
     inline bool compile(JSContext *cx, JSLinearString &pattern, TokenStream *ts, uintN *parenCount,
                         RegExpFlag flags);
 
-    enum ExecuteResult { Error, Success, Success_NotFound };
-
-    inline ExecuteResult execute(JSContext *cx, const jschar *chars, size_t start, size_t length,
-                                 int *output, size_t outputCount);
+    inline RegExpRunStatus execute(JSContext *cx, const jschar *chars, size_t length, size_t start,
+                                   int *output, size_t outputCount);
 
     static size_t getOutputSize(size_t pairCount) {
 #if ENABLE_YARR_JIT
@@ -247,53 +292,39 @@ class RegExpPrivate
 
     bool compile(JSContext *cx, TokenStream *ts);
     static inline void checkMatchPairs(JSString *input, int *buf, size_t matchItemCount);
-    static JSObject *createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount);
-    bool executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
-                         size_t *lastIndex, bool test, Value *rval);
 
   public:
-    /*
-     * Execute regexp on |input| at |*lastIndex|.
-     *
-     * On match:    Update |*lastIndex| and RegExp class statics.
-     *              Return true if test is true. Place an array in |*rval| if test is false.
-     * On mismatch: Make |*rval| null.
-     */
-    bool execute(JSContext *cx, RegExpStatics *res, JSString *input, size_t *lastIndex, bool test,
-                 Value *rval) {
-        JS_ASSERT(res);
-        return executeInternal(cx, res, input, lastIndex, test, rval);
-    }
+    static AlreadyIncRefed<RegExpPrivate>
+    create(JSContext *cx, JSLinearString *source, RegExpFlag flags, TokenStream *ts);
 
-    bool executeNoStatics(JSContext *cx, JSString *input, size_t *lastIndex, bool test,
-                          Value *rval) {
-        return executeInternal(cx, NULL, input, lastIndex, test, rval);
-    }
+    static AlreadyIncRefed<RegExpPrivate>
+    create(JSContext *cx, JSLinearString *source, JSString *flags, TokenStream *ts);
 
-    /* Factories */
-
-    static AlreadyIncRefed<RegExpPrivate> create(JSContext *cx, JSString *source, RegExpFlag flags,
-                                                 TokenStream *ts);
-
-    /* Would overload |create|, but |0| resolves ambiguously against pointer and uint. */
-    static AlreadyIncRefed<RegExpPrivate> createFlagged(JSContext *cx, JSString *source,
-                                                        JSString *flags, TokenStream *ts);
+    RegExpRunStatus execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
+                            LifoAllocScope &allocScope, MatchPairs **output);
 
     /* Mutators */
 
     void incref(JSContext *cx);
     void decref(JSContext *cx);
 
+    /* For JIT access. */
+    size_t *addressOfRefCount() { return &refCount; }
+
     /* Accessors */
 
-    JSLinearString *getSource() const { return source; }
-    size_t getParenCount() const { return parenCount; }
-    RegExpFlag getFlags() const { return flags; }
+    JSLinearString *getSource() const   { return source; }
+    size_t getParenCount() const        { return parenCount; }
+
+    /* Accounts for the "0" (whole match) pair. */
+    size_t pairCount() const            { return parenCount + 1; }
+
+    RegExpFlag getFlags() const         { return flags; }
     bool ignoreCase() const { return flags & IgnoreCaseFlag; }
     bool global() const     { return flags & GlobalFlag; }
     bool multiline() const  { return flags & MultilineFlag; }
     bool sticky() const     { return flags & StickyFlag; }
-}; /* class RegExpPrivate */
+};
 
 /*
  * Parse regexp flags. Report an error and return false if an invalid

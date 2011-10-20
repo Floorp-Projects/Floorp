@@ -51,6 +51,8 @@
 
 /* rendering object for textual content of elements */
 
+#include "mozilla/Util.h"
+
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
@@ -3213,7 +3215,7 @@ nsTextPaintStyle::nsTextPaintStyle(nsTextFrame* aFrame)
     mInitCommonColors(PR_FALSE),
     mInitSelectionColors(PR_FALSE)
 {
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mSelectionStyle); i++)
+  for (PRUint32 i = 0; i < ArrayLength(mSelectionStyle); i++)
     mSelectionStyle[i].mInit = PR_FALSE;
 }
 
@@ -7605,6 +7607,11 @@ nsresult nsTextFrame::GetRenderedText(nsAString* aAppendToString,
   for (textFrame = this; textFrame;
        textFrame = static_cast<nsTextFrame*>(textFrame->GetNextContinuation())) {
     // For each text frame continuation in this block ...
+
+    if (textFrame->GetStateBits() & NS_FRAME_IS_DIRTY) {
+      // We don't trust dirty frames, expecially when computing rendered text.
+      break;
+    }
 
     // Ensure the text run and grab the gfxSkipCharsIterator for it
     gfxSkipCharsIterator iter = textFrame->EnsureTextRun();

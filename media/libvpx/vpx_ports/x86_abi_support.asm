@@ -147,6 +147,7 @@
 %if ABI_IS_32BIT
   %if CONFIG_PIC=1
   %ifidn __OUTPUT_FORMAT__,elf32
+    %define GET_GOT_SAVE_ARG 1
     %define WRT_PLT wrt ..plt
     %macro GET_GOT 1
       extern _GLOBAL_OFFSET_TABLE_
@@ -165,6 +166,7 @@
       %define RESTORE_GOT pop %1
     %endmacro
   %elifidn __OUTPUT_FORMAT__,macho32
+    %define GET_GOT_SAVE_ARG 1
     %macro GET_GOT 1
       push %1
       call %%get_got
@@ -255,21 +257,48 @@
   %define UNSHADOW_ARGS mov rsp, rbp
 %endif
 
-; must keep XMM6:XMM15 (libvpx uses XMM6 and XMM7) on Win64 ABI
-; rsp register has to be aligned
+; Win64 ABI requires that XMM6:XMM15 are callee saved
+; SAVE_XMM n, [u]
+; store registers 6-n on the stack
+; if u is specified, use unaligned movs.
+; Win64 ABI requires 16 byte stack alignment, but then pushes an 8 byte return
+; value. Typically we follow this up with 'push rbp' - re-aligning the stack -
+; but in some cases this is not done and unaligned movs must be used.
 %ifidn __OUTPUT_FORMAT__,x64
-%macro SAVE_XMM 0
-  sub rsp, 32
-  movdqa XMMWORD PTR [rsp], xmm6
-  movdqa XMMWORD PTR [rsp+16], xmm7
+%macro SAVE_XMM 1-2 a
+  %if %1 < 6
+    %error Only xmm registers 6-15 must be preserved
+  %else
+    %assign last_xmm %1
+    %define movxmm movdq %+ %2
+    %assign xmm_stack_space ((last_xmm - 5) * 16)
+    sub rsp, xmm_stack_space
+    %assign i 6
+    %rep (last_xmm - 5)
+      movxmm [rsp + ((i - 6) * 16)], xmm %+ i
+      %assign i i+1
+    %endrep
+  %endif
 %endmacro
 %macro RESTORE_XMM 0
-  movdqa xmm6, XMMWORD PTR [rsp]
-  movdqa xmm7, XMMWORD PTR [rsp+16]
-  add rsp, 32
+  %ifndef last_xmm
+    %error RESTORE_XMM must be paired with SAVE_XMM n
+  %else
+    %assign i last_xmm
+    %rep (last_xmm - 5)
+      movxmm xmm %+ i, [rsp +((i - 6) * 16)]
+      %assign i i-1
+    %endrep
+    add rsp, xmm_stack_space
+    ; there are a couple functions which return from multiple places.
+    ; otherwise, we could uncomment these:
+    ; %undef last_xmm
+    ; %undef xmm_stack_space
+    ; %undef movxmm
+  %endif
 %endmacro
 %else
-%macro SAVE_XMM 0
+%macro SAVE_XMM 1-2
 %endmacro
 %macro RESTORE_XMM 0
 %endmacro

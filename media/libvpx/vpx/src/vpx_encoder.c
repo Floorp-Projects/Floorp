@@ -9,13 +9,14 @@
  */
 
 
-/*!\file vpx_encoder.c
+/*!\file
  * \brief Provides the high level interface to wrap encoder algorithms.
  *
  */
 #include <limits.h>
 #include <string.h>
 #include "vpx/internal/vpx_codec_internal.h"
+#include "vpx_config.h"
 
 #define SAVE_STATUS(ctx,var) (ctx?(ctx->err = var):var)
 
@@ -39,6 +40,9 @@ vpx_codec_err_t vpx_codec_enc_init_ver(vpx_codec_ctx_t      *ctx,
         res = VPX_CODEC_INCAPABLE;
     else if ((flags & VPX_CODEC_USE_PSNR)
              && !(iface->caps & VPX_CODEC_CAP_PSNR))
+        res = VPX_CODEC_INCAPABLE;
+    else if ((flags & VPX_CODEC_USE_OUTPUT_PARTITION)
+             && !(iface->caps & VPX_CODEC_CAP_OUTPUT_PARTITION))
         res = VPX_CODEC_INCAPABLE;
     else
     {

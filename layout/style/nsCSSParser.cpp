@@ -89,6 +89,8 @@
 #include "nsMediaFeatures.h"
 #include "nsLayoutUtils.h"
 
+#include "mozilla/Util.h"
+
 using namespace mozilla;
 
 // Flags for ParseVariant method
@@ -708,7 +710,7 @@ static void AppendRuleToSheet(css::Rule* aRule, void* aParser)
   mScanner.ReportUnexpected(#msg_)
 
 #define REPORT_UNEXPECTED_P(msg_, params_) \
-  mScanner.ReportUnexpectedParams(#msg_, params_, NS_ARRAY_LENGTH(params_))
+  mScanner.ReportUnexpectedParams(#msg_, params_, ArrayLength(params_))
 
 #define REPORT_UNEXPECTED_EOF(lf_) \
   mScanner.ReportUnexpectedEOF(#lf_)
@@ -721,7 +723,7 @@ static void AppendRuleToSheet(css::Rule* aRule, void* aParser)
 
 #define REPORT_UNEXPECTED_TOKEN_P(msg_, params_) \
   mScanner.ReportUnexpectedTokenParams(mToken, #msg_, \
-                                       params_, NS_ARRAY_LENGTH(params_))
+                                       params_, ArrayLength(params_))
 
 
 #define OUTPUT_ERROR() \
@@ -4317,7 +4319,7 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
   PRInt32   type = 0;
   if (!aUnit.IsEmpty()) {
     PRUint32 i;
-    for (i = 0; i < NS_ARRAY_LENGTH(UnitData); ++i) {
+    for (i = 0; i < ArrayLength(UnitData); ++i) {
       if (aUnit.LowerCaseEqualsASCII(UnitData[i].name,
                                      UnitData[i].length)) {
         units = UnitData[i].unit;
@@ -4326,7 +4328,7 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
       }
     }
 
-    if (i == NS_ARRAY_LENGTH(UnitData)) {
+    if (i == ArrayLength(UnitData)) {
       // Unknown unit
       return PR_FALSE;
     }
@@ -6917,12 +6919,12 @@ CSSParserImpl::ParseContent()
   // Verify that these two lists add up to the size of
   // nsCSSProps::kContentKTable.
   NS_ABORT_IF_FALSE(nsCSSProps::kContentKTable[
-                      NS_ARRAY_LENGTH(kContentListKWs) +
-                      NS_ARRAY_LENGTH(kContentSolitaryKWs) - 4] ==
+                      ArrayLength(kContentListKWs) +
+                      ArrayLength(kContentSolitaryKWs) - 4] ==
                     eCSSKeyword_UNKNOWN &&
                     nsCSSProps::kContentKTable[
-                      NS_ARRAY_LENGTH(kContentListKWs) +
-                      NS_ARRAY_LENGTH(kContentSolitaryKWs) - 3] == -1,
+                      ArrayLength(kContentListKWs) +
+                      ArrayLength(kContentSolitaryKWs) - 3] == -1,
                     "content keyword tables out of sync");
 
   nsCSSValue value;
@@ -7814,7 +7816,7 @@ CSSParserImpl::ParseListStyle()
 
   nsCSSValue values[NS_ARRAY_LENGTH(listStyleIDs)];
   PRInt32 found =
-    ParseChoice(values, listStyleIDs, NS_ARRAY_LENGTH(listStyleIDs));
+    ParseChoice(values, listStyleIDs, ArrayLength(listStyleIDs));
   if (found < 1 || !ExpectEndProperty()) {
     return PR_FALSE;
   }
@@ -7849,7 +7851,7 @@ CSSParserImpl::ParseListStyle()
   }
 
   // Start at 1 to avoid appending fake value.
-  for (PRUint32 index = 1; index < NS_ARRAY_LENGTH(listStyleIDs); ++index) {
+  for (PRUint32 index = 1; index < ArrayLength(listStyleIDs); ++index) {
     AppendValue(listStyleIDs[index], values[index]);
   }
   return PR_TRUE;
@@ -8186,8 +8188,9 @@ CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
   if (ParseVariant(right, VARIANT_KEYWORD | VARIANT_STRING,
                     nsCSSProps::kTextOverflowKTable))
     aValue.SetPairValue(left, right);
-  else
-    aValue.SetPairValue(left, left);
+  else {
+    aValue = left;
+  }
   return PR_TRUE;
 }
 

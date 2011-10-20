@@ -16,21 +16,23 @@
  */
 #include "vp8.h"
 
-/*!\file vp8cx.h
+/*!\file
  * \brief Provides definitions for using the VP8 encoder algorithm within the
  *        vpx Codec Interface.
  */
 #ifndef VP8CX_H
 #define VP8CX_H
-#include "vpx/vpx_codec_impl_top.h"
+#include "vpx_codec_impl_top.h"
 
-/*!\brief Algorithm interface for VP8
+/*!\name Algorithm interface for VP8
  *
  * This interface provides the capability to encode raw VP8 streams, as would
  * be found in AVI files.
+ * @{
  */
 extern vpx_codec_iface_t  vpx_codec_vp8_cx_algo;
 extern vpx_codec_iface_t* vpx_codec_vp8_cx(void);
+/*!@} - end algorithm interface member group*/
 
 
 /*
@@ -114,7 +116,10 @@ extern vpx_codec_iface_t* vpx_codec_vp8_cx(void);
 
 /*!\brief VP8 encoder control functions
  *
- * The set of macros define the control functions of VP8 encoder interface
+ * This set of macros define the control functions available for the VP8
+ * encoder interface.
+ *
+ * \sa #vpx_codec_control
  */
 enum vp8e_enc_control_id
 {
@@ -124,7 +129,18 @@ enum vp8e_enc_control_id
     VP8E_SET_ROI_MAP,                /**< control function to pass an ROI map to encoder */
     VP8E_SET_ACTIVEMAP,              /**< control function to pass an Active map to encoder */
     VP8E_SET_SCALEMODE         = 11, /**< control function to set encoder scaling mode */
-    VP8E_SET_CPUUSED           = 13, /**< control function to set vp8 encoder cpuused  */
+    /*!\brief control function to set vp8 encoder cpuused
+     *
+     * Changes in this value influences, among others, the encoder's selection
+     * of motion estimation methods. Values greater than 0 will increase encoder
+     * speed at the expense of quality.
+     * The full set of adjustments can be found in
+     * onyx_if.c:vp8_set_speed_features().
+     * \todo List highlights of the changes at various levels.
+     *
+     * \note Valid range: -16..16
+     */
+    VP8E_SET_CPUUSED           = 13,
     VP8E_SET_ENABLEAUTOALTREF,       /**< control function to enable vp8 to automatic set and use altref frame */
     VP8E_SET_NOISE_SENSITIVITY,      /**< control function to set noise sensitivity */
     VP8E_SET_SHARPNESS,              /**< control function to set sharpness */
@@ -140,7 +156,29 @@ enum vp8e_enc_control_id
     VP8E_SET_ARNR_MAXFRAMES,         /**< control function to set the max number of frames blurred creating arf*/
     VP8E_SET_ARNR_STRENGTH ,         /**< control function to set the filter strength for the arf */
     VP8E_SET_ARNR_TYPE     ,         /**< control function to set the type of filter to use for the arf*/
-} ;
+    VP8E_SET_TUNING,                 /**< control function to set visual tuning */
+    /*!\brief control function to set constrained quality level
+     *
+     * \attention For this value to be used vpx_codec_enc_cfg_t::g_usage must be
+     *            set to #VPX_CQ.
+     * \note Valid range: 0..63
+     */
+    VP8E_SET_CQ_LEVEL,
+
+    /*!\brief Max data rate for Intra frames
+     *
+     * This value controls additional clamping on the maximum size of a
+     * keyframe. It is expressed as a percentage of the average
+     * per-frame bitrate, with the special (and default) value 0 meaning
+     * unlimited, or no additional clamping beyond the codec's built-in
+     * algorithm.
+     *
+     * For example, to allocate no more than 4.5 frames worth of bitrate
+     * to a keyframe, set this to 450.
+     *
+     */
+    VP8E_SET_MAX_INTRA_BITRATE_PCT,
+};
 
 /*!\brief vpx 1-D scaling mode
  *
@@ -224,6 +262,18 @@ typedef enum
 } vp8e_token_partitions;
 
 
+/*!\brief VP8 model tuning parameters
+ *
+ * Changes the encoder to tune for certain types of input material.
+ *
+ */
+typedef enum
+{
+    VP8_TUNE_PSNR,
+    VP8_TUNE_SSIM
+} vp8e_tuning;
+
+
 /*!\brief VP8 encoder control function parameter type
  *
  * Defines the data types that VP8E control functions take. Note that
@@ -253,11 +303,15 @@ VPX_CTRL_USE_TYPE(VP8E_SET_TOKEN_PARTITIONS,   vp8e_token_partitions)
 VPX_CTRL_USE_TYPE(VP8E_SET_ARNR_MAXFRAMES,     unsigned int)
 VPX_CTRL_USE_TYPE(VP8E_SET_ARNR_STRENGTH ,     unsigned int)
 VPX_CTRL_USE_TYPE(VP8E_SET_ARNR_TYPE     ,     unsigned int)
-
+VPX_CTRL_USE_TYPE(VP8E_SET_TUNING,             vp8e_tuning)
+VPX_CTRL_USE_TYPE(VP8E_SET_CQ_LEVEL     ,      unsigned int)
 
 VPX_CTRL_USE_TYPE(VP8E_GET_LAST_QUANTIZER,     int *)
 VPX_CTRL_USE_TYPE(VP8E_GET_LAST_QUANTIZER_64,  int *)
 
+VPX_CTRL_USE_TYPE(VP8E_SET_MAX_INTRA_BITRATE_PCT, unsigned int)
+
+
 /*! @} - end defgroup vp8_encoder */
-#include "vpx/vpx_codec_impl_bottom.h"
+#include "vpx_codec_impl_bottom.h"
 #endif

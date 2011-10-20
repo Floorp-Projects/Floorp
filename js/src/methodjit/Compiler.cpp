@@ -61,8 +61,14 @@
 #include "jsopcodeinlines.h"
 #include "jshotloop.h"
 
+#include "builtin/RegExp.h"
+#include "vm/RegExpStatics.h"
+#include "vm/RegExpObject.h"
+
 #include "jsautooplen.h"
 #include "jstypedarrayinlines.h"
+
+#include "vm/RegExpObject-inl.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -2719,14 +2725,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_SETGNAME)
 
           BEGIN_CASE(JSOP_REGEXP)
-          {
-            JSObject *regex = script->getRegExp(fullAtomIndex(PC));
-            prepareStubCall(Uses(0));
-            masm.move(ImmPtr(regex), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::RegExp, REJOIN_PUSH_OBJECT);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-          }
+            if (!jsop_regexp())
+                return Compile_Error;
           END_CASE(JSOP_REGEXP)
 
           BEGIN_CASE(JSOP_OBJECT)
@@ -4884,14 +4884,14 @@ mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
     while (nobj) {
         if (!nobj->isNative())
             return false;
-        if (nobj->getClass()->ops.lookupProperty)
+        if (nobj->getClass()->ops.lookupGeneric)
             return false;
         nobj = nobj->getProto();
     }
 
     JSObject *holder;
     JSProperty *prop = NULL;
-    if (!obj->lookupProperty(cx, id, &holder, &prop))
+    if (!obj->lookupGeneric(cx, id, &holder, &prop))
         return false;
     if (!prop)
         return false;
@@ -6573,6 +6573,96 @@ mjit::Compiler::jsop_newinit()
     frame.extra(frame.peek(-1)).initArray = (*PC == JSOP_NEWARRAY);
     frame.extra(frame.peek(-1)).initObject = baseobj;
 
+    return true;
+}
+
+bool
+mjit::Compiler::jsop_regexp()
+{
+    JSObject *obj = script->getRegExp(fullAtomIndex(PC));
+    RegExpStatics *res = globalObj ? globalObj->getRegExpStatics() : NULL;
+
+    if (!globalObj ||
+        !cx->typeInferenceEnabled() ||
+        analysis->localsAliasStack() ||
+        types::TypeSet::HasObjectFlags(cx, globalObj->getType(cx),
+                                       types::OBJECT_FLAG_REGEXP_FLAGS_SET)) {
+        prepareStubCall(Uses(0));
+        masm.move(ImmPtr(obj), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::RegExp, REJOIN_FALLTHROUGH);
+        frame.pushSynced(JSVAL_TYPE_OBJECT);
+        return true;
+    }
+
+    RegExpObject *reobj = obj->asRegExp();
+
+    DebugOnly<uint32> origFlags = reobj->getFlags();
+    DebugOnly<uint32> staticsFlags = res->getFlags();
+    JS_ASSERT((origFlags & staticsFlags) == staticsFlags);
+
+    /*
+     * JS semantics require regular expression literals to create different
+     * objects every time they execute. We only need to do this cloning if the
+     * script could actually observe the effect of such cloning, by getting
+     * or setting properties on it. Particular RegExp and String natives take
+     * regular expressions as 'this' or an argument, and do not let that
+     * expression escape and be accessed by the script, so avoid cloning in
+     * these cases.
+     */
+    analyze::SSAUseChain *uses =
+        analysis->useChain(analyze::SSAValue::PushedValue(PC - script->code, 0));
+    if (uses && uses->popped && !uses->next) {
+        jsbytecode *use = script->code + uses->offset;
+        uint32 which = uses->u.which;
+        if (JSOp(*use) == JSOP_CALLPROP) {
+            JSObject *callee = analysis->pushedTypes(use, 0)->getSingleton(cx);
+            if (callee && callee->isFunction()) {
+                Native native = callee->getFunctionPrivate()->maybeNative();
+                if (native == js::regexp_exec || native == js::regexp_test) {
+                    frame.push(ObjectValue(*obj));
+                    return true;
+                }
+            }
+        } else if (JSOp(*use) == JSOP_CALL && which == 0) {
+            uint32 argc = GET_ARGC(use);
+            JSObject *callee = analysis->poppedTypes(use, argc + 1)->getSingleton(cx);
+            if (callee && callee->isFunction() && argc >= 1 && which == argc - 1) {
+                Native native = callee->getFunctionPrivate()->maybeNative();
+                if (native == js::str_match ||
+                    native == js::str_search ||
+                    native == js::str_replace ||
+                    native == js::str_split) {
+                    frame.push(ObjectValue(*obj));
+                    return true;
+                }
+            }
+        }
+    }
+
+    /*
+     * Force creation of the RegExpPrivate in the script's RegExpObject so we take it in the
+     * getNewObject template copy.
+     */
+    RegExpPrivate *rep = reobj->getOrCreatePrivate(cx);
+    if (!rep)
+        return false;
+
+    RegisterID result = frame.allocReg();
+    Jump emptyFreeList = masm.getNewObject(cx, result, obj);
+
+    stubcc.linkExit(emptyFreeList, Uses(0));
+    stubcc.leave();
+
+    stubcc.masm.move(ImmPtr(obj), Registers::ArgReg1);
+    OOL_STUBCALL(stubs::RegExp, REJOIN_FALLTHROUGH);
+
+    /* Bump the refcount on the wrapped RegExp. */
+    size_t *refcount = rep->addressOfRefCount();
+    masm.add32(Imm32(1), AbsoluteAddress(refcount));
+
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, result);
+
+    stubcc.rejoin(Changes(1));
     return true;
 }
 

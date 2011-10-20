@@ -367,9 +367,19 @@ function finishTest() {
       window.nonKhronosFrameworkNotifyDone();
     }
   };
-  // TODO(gman): find the correct path by searching
-  // for the script with src="js-test-pre.js"
-  epilogue.src = "../resources/js-test-post.js";
+
+  var basePath = "";
+  var expectedBase = "js-test-pre.js";
+  var scripts = document.getElementsByTagName('script');
+  for (var script, i = 0; script = scripts[i]; i++) {
+    var src = script.src;
+    var l = src.length;
+    if (src.substr(l - expectedBase.length) == expectedBase) {
+      basePath = src.substr(0, l - expectedBase.length);
+      break;
+    }
+  }
+  epilogue.src = basePath + "js-test-post.js";
   document.body.appendChild(epilogue);
 }
 

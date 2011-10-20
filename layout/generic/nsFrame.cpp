@@ -42,6 +42,8 @@
 
 /* base class of all rendering objects */
 
+#include "mozilla/Util.h"
+
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsFrameList.h"
@@ -6493,6 +6495,19 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                                  nsSize aNewSize)
 {
   nsRect bounds(nsPoint(0, 0), aNewSize);
+  // Store the passed in overflow area if we are a preserve-3d frame,
+  // and it's not just the frame bounds.
+  if (Preserves3D() && (!aOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
+                        !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds))) {
+    nsOverflowAreas* initial =
+      static_cast<nsOverflowAreas*>(Properties().Get(nsIFrame::InitialOverflowProperty()));
+    if (!initial) {
+      Properties().Set(nsIFrame::InitialOverflowProperty(),
+                       new nsOverflowAreas(aOverflowAreas));
+    } else if (initial != &aOverflowAreas) {
+      *initial = aOverflowAreas;
+    }
+  }
 
   // This is now called FinishAndStoreOverflow() instead of 
   // StoreOverflow() because frame-generic ways of adding overflow
@@ -6636,12 +6651,75 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 }
 
+/* The overflow rects for leaf nodes in a preserve-3d hierarchy depends on
+ * the mRect value for their parents (since we use their transform, and transform
+ * depends on this for transform-origin etc). These weren't necessarily correct
+ * when we reflowed initially, so walk over all preserve-3d children and repeat the
+ * overflow calculation.
+ */
+static void
+RecomputePreserve3DChildrenOverflow(nsIFrame* aFrame, const nsRect* aBounds)
+{
+  // Children may check our size when getting our transform, make sure it's valid.
+  nsSize oldSize = aFrame->GetSize();
+  if (aBounds) {
+    aFrame->SetSize(aBounds->Size());
+  }
+  nsIFrame::ChildListIterator lists(aFrame);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* child = childFrames.get();
+      if (child->Preserves3DChildren()) {
+        RecomputePreserve3DChildrenOverflow(child, NULL);
+      } else if (child->Preserves3D()) {
+        nsOverflowAreas* overflow = 
+          static_cast<nsOverflowAreas*>(child->Properties().Get(nsIFrame::InitialOverflowProperty()));
+        nsRect bounds(nsPoint(0, 0), child->GetSize());
+        if (overflow) {
+          child->FinishAndStoreOverflow(*overflow, bounds.Size());
+        } else {
+          nsOverflowAreas boundsOverflow;
+          boundsOverflow.SetAllTo(bounds);
+          child->FinishAndStoreOverflow(boundsOverflow, bounds.Size());
+        }
+      }
+    }
+  }
+  // Restore our old size just in case something depends on this elesewhere.
+  aFrame->SetSize(oldSize);
+ 
+  // Only repeat computing our overflow in recursive calls since the initial caller is still
+  // in the middle of doing this and we don't want an infinite loop.
+  if (!aBounds) {
+    nsOverflowAreas* overflow = 
+      static_cast<nsOverflowAreas*>(aFrame->Properties().Get(nsIFrame::InitialOverflowProperty()));
+    nsRect bounds(nsPoint(0, 0), aFrame->GetSize());
+    if (overflow) {
+      overflow->UnionAllWith(bounds); 
+      aFrame->FinishAndStoreOverflow(*overflow, bounds.Size());
+    } else {
+      nsOverflowAreas boundsOverflow;
+      boundsOverflow.SetAllTo(bounds);
+      aFrame->FinishAndStoreOverflow(boundsOverflow, bounds.Size());
+    }
+  }
+}
+
 void
 nsIFrame::ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas, const nsRect& aBounds)
 {
   // When we are preserving 3d we need to iterate over all children separately.
   // If the child also preserves 3d then their overflow will already been in our
   // coordinate space, otherwise we need to transform.
+
+  // If we're the top frame in a preserve 3d chain then we need to recalculate the overflow
+  // areas of all our children since they will have used our size/offset which was invalid at
+  // the time.
+  if (!Preserves3D()) {
+    RecomputePreserve3DChildrenOverflow(this, &aBounds);
+  }
+
   nsRect childVisual;
   nsRect childScrollable;
   nsIFrame::ChildListIterator lists(this);
@@ -6649,15 +6727,20 @@ nsIFrame::ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas, con
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
       nsIFrame* child = childFrames.get();
+      nsPoint offset = child->GetPosition();
+      nsRect visual = child->GetVisualOverflowRect();
+      nsRect scrollable = child->GetScrollableOverflowRect();
+      visual.MoveBy(offset);
+      scrollable.MoveBy(offset);
       if (child->Preserves3D()) {
-        childVisual = childVisual.Union(child->GetVisualOverflowRect());
-        childScrollable = childScrollable.Union(child->GetScrollableOverflowRect());
+        childVisual = childVisual.Union(visual);
+        childScrollable = childScrollable.Union(scrollable);
       } else {
         childVisual = 
-          childVisual.Union(nsDisplayTransform::TransformRect(child->GetVisualOverflowRect(), 
+          childVisual.Union(nsDisplayTransform::TransformRect(visual, 
                             this, nsPoint(0,0), &aBounds));
         childScrollable = 
-          childScrollable.Union(nsDisplayTransform::TransformRect(child->GetScrollableOverflowRect(), 
+          childScrollable.Union(nsDisplayTransform::TransformRect(scrollable,
                                 this, nsPoint(0,0), &aBounds));
       }
     }
@@ -8847,7 +8930,7 @@ nsHTMLReflowState::DisplayInitFrameTypeExit(nsIFrame* aFrame,
       "inline-stack", "deck", "popup", "groupbox",
 #endif
     };
-    if (disp->mDisplay >= NS_ARRAY_LENGTH(displayTypes))
+    if (disp->mDisplay >= ArrayLength(displayTypes))
       printf(" display=%u", disp->mDisplay);
     else
       printf(" display=%s", displayTypes[disp->mDisplay]);
@@ -8860,7 +8943,7 @@ nsHTMLReflowState::DisplayInitFrameTypeExit(nsIFrame* aFrame,
     bool repNoBlock = NS_FRAME_IS_REPLACED_NOBLOCK(aState->mFrameType);
     bool repBlock = NS_FRAME_IS_REPLACED_CONTAINS_BLOCK(aState->mFrameType);
 
-    if (bareType >= NS_ARRAY_LENGTH(cssFrameTypes)) {
+    if (bareType >= ArrayLength(cssFrameTypes)) {
       printf(" result=type %u", bareType);
     } else {
       printf(" result=%s", cssFrameTypes[bareType]);

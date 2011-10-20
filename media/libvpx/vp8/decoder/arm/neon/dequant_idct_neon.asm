@@ -35,7 +35,7 @@
 
     ldr             r1, [sp, #4]            ; stride
 
-    adr             r12, _CONSTANTS_
+    adr             r12, cospi8sqrt2minus1  ; pointer to the first constant
 
     vmul.i16        q1, q3, q5              ;input for short_idct4x4llm_neon
     vmul.i16        q2, q4, q6
@@ -123,7 +123,6 @@
     ENDP           ; |vp8_dequant_idct_add_neon|
 
 ; Constant Pool
-_CONSTANTS_       EQU cospi8sqrt2minus1
 cospi8sqrt2minus1 DCD 0x4e7b4e7b
 sinpi8sqrt2       DCD 0x8a8c8a8c
 

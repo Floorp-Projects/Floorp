@@ -396,8 +396,8 @@ protected:
   bool CanEnableSpellCheck()
   {
     // Check for password/readonly/disabled, which are not spellchecked
-    // regardless of DOM
-    return !IsPasswordEditor() && !IsReadonly() && !IsDisabled();
+    // regardless of DOM. Also, check to see if spell check should be skipped or not.
+    return !IsPasswordEditor() && !IsReadonly() && !IsDisabled() && !ShouldSkipSpellCheck();
   }
 
 public:
@@ -694,6 +694,11 @@ public:
   bool DontEchoPassword() const
   {
     return (mFlags & nsIPlaintextEditor::eEditorDontEchoPassword) != 0;
+  }
+  
+  PRBool ShouldSkipSpellCheck() const
+  {
+    return (mFlags & nsIPlaintextEditor::eEditorSkipSpellCheck) != 0;
   }
 
   bool IsTabbable() const
