@@ -1675,7 +1675,8 @@ nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent, nsIFrameLoader* 
 bool
 nsEventStateManager::IsRemoteTarget(nsIContent* target) {
   return target &&
-         target->Tag() == nsGkAtoms::browser &&
+         (target->Tag() == nsGkAtoms::browser ||
+          target->Tag() == nsGkAtoms::iframe) &&
          target->IsXUL() &&
          target->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
                              nsGkAtoms::_true, eIgnoreCase);
