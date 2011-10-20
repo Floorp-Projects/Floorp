@@ -299,7 +299,6 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.setupUnalignedABICall(1, rax);
     masm.setABIArg(0, r8);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
-    masm.finalizeABICall();
 
     // Stack is:
     //     [frame]
@@ -351,7 +350,6 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.setupUnalignedABICall(1, rcx);
     masm.setABIArg(0, rax);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, HandleException));
-    masm.finalizeABICall();
 
     // The return value is how much stack to adjust before returning.
     masm.addq(rax, rsp);
