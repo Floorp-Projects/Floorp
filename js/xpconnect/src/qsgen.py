@@ -663,7 +663,7 @@ resultConvTemplates = {
         "    return xpc_qsInt32ToJsval(cx, result, ${jsvalPtr});\n",
 
     'long long':
-        "    return xpc_qsInt64ToJsval(cx, result, ${jsvalPtr};\n",
+        "    return xpc_qsInt64ToJsval(cx, result, ${jsvalPtr});\n",
 
     'unsigned short':
         "    ${jsvalRef} = INT_TO_JSVAL((int32) result);\n"

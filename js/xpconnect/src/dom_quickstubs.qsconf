@@ -452,8 +452,8 @@ members = [
     'nsIIDBRequest.*',
     'nsIIDBTransaction.*',
     'nsIIDBFactory.*',
+    'nsIIDBOpenDBRequest.*',
     'nsIIDBVersionChangeEvent.*',
-    'nsIIDBVersionChangeRequest.*',
     'nsIIndexedDatabaseUsageCallback.*',
     'nsIIndexedDatabaseManager.*',
     ]
