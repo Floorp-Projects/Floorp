@@ -123,6 +123,7 @@ TabChild::TabChild(PRUint32 aChromeFlags)
   , mTabChildGlobal(nsnull)
   , mChromeFlags(aChromeFlags)
   , mOuterRect(0, 0, 0, 0)
+  , mLastBackgroundColor(NS_RGB(255, 255, 255))
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -1000,6 +1001,15 @@ TabChild::InitWidget(const nsIntSize& size)
     return true;
 }
 
+void
+TabChild::SetBackgroundColor(const nscolor& aColor)
+{
+  if (mLastBackgroundColor != aColor) {
+    mLastBackgroundColor = aColor;
+    SendSetBackgroundColor(mLastBackgroundColor);
+  }
+}
+
 static bool
 SendSyncMessageToParent(void* aCallbackData,
                         const nsAString& aMessage,
@@ -1121,4 +1131,3 @@ TabChildGlobal::GetPrincipal()
     return nsnull;
   return mTabChild->GetPrincipal();
 }
-

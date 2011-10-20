@@ -108,6 +108,7 @@ public:
     virtual bool RecvGetIMEOpenState(bool* aValue);
     virtual bool RecvSetIMEOpenState(const bool& aValue);
     virtual bool RecvSetCursor(const PRUint32& aValue);
+    virtual bool RecvSetBackgroundColor(const nscolor& aValue);
     virtual bool RecvGetDPI(float* aValue);
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
