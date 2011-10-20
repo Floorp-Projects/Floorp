@@ -172,8 +172,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     //  +4  esi
     //  +0  edi
     masm.movl(Operand(esp, 32), eax);
-    masm.movl(JSReturnReg_Type, Operand(eax, 4));
-    masm.movl(JSReturnReg_Data, Operand(eax, 0));
+    masm.storeValue(JSReturnOperand, Operand(eax, 0));
 
     /**************************************************************
         Return stack and registers to correct state
@@ -356,9 +355,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
 
     // Load the value the interpreter returned.
-    masm.movl(Operand(esp, 4), JSReturnReg_Type);
-    masm.movl(Operand(esp, 0), JSReturnReg_Data);
-    masm.addl(Imm32(sizeof(Value)), esp);
+    masm.popValue(JSReturnOperand);
 
     // We're back, aligned to the frame prefix. Check for an exception.
     masm.testl(eax, eax);

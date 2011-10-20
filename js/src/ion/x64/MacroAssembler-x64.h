@@ -100,6 +100,16 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void storeValue(ValueOperand val, Operand dest) {
         movq(val.valueReg(), dest);
     }
+    void loadValue(Operand src, ValueOperand val) {
+        movq(src, val.valueReg());
+    }
+    void pushValue(ValueOperand val) {
+        push(val.valueReg());
+    }
+    void popValue(ValueOperand val) {
+        pop(val.valueReg());
+    }
+
     void movePtr(Operand op, const Register &dest) {
         movq(op, dest);
     }

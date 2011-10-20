@@ -208,6 +208,8 @@ class ValueOperand
     }
 };
 
+static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg);
+
 class Assembler : public AssemblerX86Shared
 {
     // x64 jumps may need extra bits of relocation, because a jump may extend

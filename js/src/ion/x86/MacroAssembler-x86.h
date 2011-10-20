@@ -105,6 +105,29 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(val.payloadReg(), ToPayload(dest));
         movl(val.typeReg(), ToType(dest));
     }
+    void loadValue(Operand src, ValueOperand val) {
+        Operand payload = ToPayload(src);
+        Operand type = ToType(src);
+
+        // Ensure that loading the payload does not erase the pointer to the
+        // Value in memory.
+        if (Register::FromCode(type.base()) != val.payloadReg()) {
+            movl(payload, val.payloadReg());
+            movl(type, val.typeReg());
+        } else {
+            movl(type, val.typeReg());
+            movl(payload, val.payloadReg());
+        }
+    }
+    void pushValue(ValueOperand val) {
+        push(val.typeReg());
+        push(val.payloadReg());
+    }
+    void popValue(ValueOperand val) {
+        pop(val.payloadReg());
+        pop(val.typeReg());
+    }
+
     void movePtr(Operand op, const Register &dest) {
         movl(op, dest);
     }
