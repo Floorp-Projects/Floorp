@@ -72,24 +72,6 @@ mozilla::Mutex* gPromptHelpersMutex = nsnull;
 // Protected by gPromptHelpersMutex.
 nsTArray<nsRefPtr<CheckQuotaHelper> >* gPromptHelpers = nsnull;
 
-class SetVersionHelper : public AsyncConnectionHelper
-{
-public:
-  SetVersionHelper(IDBTransaction* aTransaction,
-                   IDBRequest* aRequest,
-                   const nsAString& aVersion)
-  : AsyncConnectionHelper(aTransaction, aRequest), mVersion(aVersion)
-  { }
-
-  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult GetSuccessResult(JSContext* aCx,
-                            jsval* aVal);
-
-private:
-  // In-params
-  nsString mVersion;
-};
-
 class CreateObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
@@ -502,14 +484,14 @@ IDBDatabase::GetName(nsAString& aName)
 }
 
 NS_IMETHODIMP
-IDBDatabase::GetVersion(nsAString& aVersion)
+IDBDatabase::GetVersion(PRUint64* aVersion)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   DatabaseInfo* info;
   if (!DatabaseInfo::Get(mDatabaseId, &info)) {
     NS_ERROR("This should never fail!");
   }
-  aVersion.Assign(info->version);
+  *aVersion = info->version;
   return NS_OK;
 }
 
@@ -684,48 +666,6 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   ObjectStoreInfo::Remove(mDatabaseId, aName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBDatabase::SetVersion(const nsAString& aVersion,
-                        JSContext* aCx,
-                        nsIIDBRequest** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (mClosed) {
-    // XXX Update spec for a real error code here.
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
-  }
-
-  DatabaseInfo* info;
-  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
-    NS_ERROR("This should never fail!");
-  }
-
-  // Lock the whole database.
-  nsTArray<nsString> storesToOpen;
-  nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(this, storesToOpen, IDBTransaction::VERSION_CHANGE,
-                           kDefaultDatabaseTimeoutSeconds, true);
-  NS_ENSURE_TRUE(transaction, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  nsRefPtr<IDBVersionChangeRequest> request =
-    IDBVersionChangeRequest::Create(static_cast<nsIDOMEventTarget*>(this),
-                                    ScriptContext(), Owner(), transaction);
-  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  nsRefPtr<SetVersionHelper> helper =
-    new SetVersionHelper(transaction, request, aVersion);
-
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-  NS_ASSERTION(mgr, "This should never be null!");
-
-  nsresult rv = mgr->SetDatabaseVersion(this, request, aVersion, helper);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  request.forget(_retval);
   return NS_OK;
 }
 
@@ -929,47 +869,6 @@ IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-
-  return NS_OK;
-}
-
-nsresult
-SetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
-{
-  NS_PRECONDITION(aConnection, "Passing a null connection!");
-
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "UPDATE database "
-    "SET version = :version"
-  ), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("version"), mVersion);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  if (NS_FAILED(stmt->Execute())) {
-    return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-SetVersionHelper::GetSuccessResult(JSContext* aCx,
-                                   jsval* aVal)
-{
-  DatabaseInfo* info;
-  if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
-    NS_ERROR("This should never fail!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-  info->version = mVersion;
-
-  nsresult rv = WrapNative(aCx, NS_ISUPPORTS_CAST(nsIDOMEventTarget*,
-                                                  mTransaction),
-                           aVal);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

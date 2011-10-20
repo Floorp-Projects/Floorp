@@ -43,12 +43,13 @@
 interface nsIDOMEventListener;
 
 /**
- * IDBReqeust interface.  See
- * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
- * information.
+ * IDBOpenDBRequest interface.  See
+ * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBOpenDBRequest
+ * for more information.
  */
-[scriptable, uuid(aeaabb0d-594a-4c58-ac5e-68ef3bff927d)]
-interface nsIIDBVersionChangeRequest : nsISupports
+[scriptable, uuid(91010fbe-1dfb-435d-852e-288d2804c0a7)]
+interface nsIIDBOpenDBRequest : nsISupports
 {
   attribute nsIDOMEventListener onblocked;
+  attribute nsIDOMEventListener onupgradeneeded;
 };

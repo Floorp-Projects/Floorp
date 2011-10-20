@@ -85,12 +85,12 @@ public:
   static nsresult
   LoadDatabaseInformation(mozIStorageConnection* aConnection,
                           PRUint32 aDatabaseId,
-                          nsAString& aVersion,
+                          PRUint64* aVersion,
                           ObjectStoreInfoArray& aObjectStores);
 
   static nsresult
   UpdateDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
-                         const nsAString& aVersion,
+                         PRUint64 aVersion,
                          ObjectStoreInfoArray& aObjectStores);
 
 private:
