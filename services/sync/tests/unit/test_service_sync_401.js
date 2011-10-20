@@ -51,7 +51,7 @@ function run_test() {
     do_check_true(Weave.Service.isLoggedIn);
     do_check_eq(Weave.Status.login, Weave.LOGIN_SUCCEEDED);
 
-    _("Simulate having changed the password somewhere else.");
+    _("Simulate having changed the password somehwere else.");
     Weave.Service.password = "ilovejosephine";
 
     _("Let's try to sync.");
@@ -63,17 +63,11 @@ function run_test() {
     _("We're no longer logged in.");
     do_check_false(Weave.Service.isLoggedIn);
 
-    _("Sync status won't have changed yet, because we haven't tried again.");
+    _("Sync status.");
+    do_check_eq(Weave.Status.login, Weave.LOGIN_FAILED_LOGIN_REJECTED);
 
     _("globalScore is reset upon starting a sync.");
     do_check_eq(SyncScheduler.globalScore, 0);
-
-    _("Our next sync will fail appropriately.");
-    try {
-      Weave.Service.sync();
-    } catch (ex) {
-    }
-    do_check_eq(Weave.Status.login, Weave.LOGIN_FAILED_LOGIN_REJECTED);
 
   } finally {
     Weave.Svc.Prefs.resetBranch("");
