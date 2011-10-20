@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "SVGLength.h"
 #include "nsSVGElement.h"
 #include "nsSVGSVGElement.h"
@@ -271,7 +273,7 @@ GetUnitTypeForString(const char* unitStr)
 
   nsCOMPtr<nsIAtom> unitAtom = do_GetAtom(unitStr);
 
-  for (PRUint32 i = 1 ; i < NS_ARRAY_LENGTH(unitMap) ; i++) {
+  for (PRUint32 i = 1 ; i < ArrayLength(unitMap) ; i++) {
     if (unitMap[i] && *unitMap[i] == unitAtom) {
       return i;
     }

@@ -57,7 +57,7 @@
 #include "prlink.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsRenderingContext.h"
-#include "nsWidgetAtoms.h"
+#include "nsGkAtoms.h"
 #include "mozilla/Services.h"
 
 #include <gdk/gdkprivate.h>
@@ -224,8 +224,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           if (aWidgetFlags) {
             if (!atom) {
               atom = (aWidgetType == NS_THEME_CHECKBOX ||
-                      aWidgetType == NS_THEME_CHECKBOX_LABEL) ? nsWidgetAtoms::checked
-                                                              : nsWidgetAtoms::selected;
+                      aWidgetType == NS_THEME_CHECKBOX_LABEL) ? nsGkAtoms::checked
+                                                              : nsGkAtoms::selected;
             }
             *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
           }
@@ -287,8 +287,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           // the slider to the actual scrollbar object
           nsIFrame *tmpFrame = aFrame->GetParent()->GetParent();
 
-          aState->curpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::curpos, 0);
-          aState->maxpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::maxpos, 100);
+          aState->curpos = CheckIntAttr(tmpFrame, nsGkAtoms::curpos, 0);
+          aState->maxpos = CheckIntAttr(tmpFrame, nsGkAtoms::maxpos, 100);
         }
 
         if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
@@ -297,8 +297,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) {
           // set the state to disabled when the scrollbar is scrolled to
           // the beginning or the end, depending on the button type.
-          PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos, 0);
-          PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos, 100);
+          PRInt32 curpos = CheckIntAttr(aFrame, nsGkAtoms::curpos, 0);
+          PRInt32 maxpos = CheckIntAttr(aFrame, nsGkAtoms::maxpos, 100);
           if ((curpos == 0 && (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
                 aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT)) ||
               (curpos == maxpos &&
@@ -310,7 +310,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           // we set the active attribute on the element to true if it's
           // pressed with any mouse button.
           // This allows us to show that it's active without setting :active
-          else if (CheckBooleanAttr(aFrame, nsWidgetAtoms::active))
+          else if (CheckBooleanAttr(aFrame, nsGkAtoms::active))
             aState->active = true;
 
           if (aWidgetFlags) {
@@ -340,7 +340,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aState->inHover = menuFrame->IsOpen();
             *aWidgetFlags |= MOZ_TOPLEVEL_MENU_ITEM;
           } else {
-            aState->inHover = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
+            aState->inHover = CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
             *aWidgetFlags &= ~MOZ_TOPLEVEL_MENU_ITEM;
           }
 
@@ -351,8 +351,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             *aWidgetFlags = 0;
             if (aFrame && aFrame->GetContent()) {
               *aWidgetFlags = aFrame->GetContent()->
-                AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
-                            nsWidgetAtoms::_true, eIgnoreCase);
+                AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
+                            nsGkAtoms::_true, eIgnoreCase);
             }
           }
         }
@@ -374,7 +374,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         // When the input field of the drop down button has focus, some themes
         // should draw focus for the drop down button as well.
         if (aWidgetType == NS_THEME_DROPDOWN_BUTTON && aWidgetFlags) {
-          *aWidgetFlags = CheckBooleanAttr(aFrame, nsWidgetAtoms::parentfocused);
+          *aWidgetFlags = CheckBooleanAttr(aFrame, nsGkAtoms::parentfocused);
         }
       }
     }
@@ -1282,8 +1282,8 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
        aWidgetType == NS_THEME_SCROLLBAR_BUTTON_DOWN ||
        aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT ||
        aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) &&
-      (aAttribute == nsWidgetAtoms::curpos ||
-       aAttribute == nsWidgetAtoms::maxpos)) {
+      (aAttribute == nsGkAtoms::curpos ||
+       aAttribute == nsGkAtoms::maxpos)) {
     *aShouldRepaint = true;
     return NS_OK;
   }
@@ -1299,15 +1299,15 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     // Check the attribute to see if it's relevant.  
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = false;
-    if (aAttribute == nsWidgetAtoms::disabled ||
-        aAttribute == nsWidgetAtoms::checked ||
-        aAttribute == nsWidgetAtoms::selected ||
-        aAttribute == nsWidgetAtoms::focused ||
-        aAttribute == nsWidgetAtoms::readonly ||
-        aAttribute == nsWidgetAtoms::_default ||
-        aAttribute == nsWidgetAtoms::mozmenuactive ||
-        aAttribute == nsWidgetAtoms::open ||
-        aAttribute == nsWidgetAtoms::parentfocused)
+    if (aAttribute == nsGkAtoms::disabled ||
+        aAttribute == nsGkAtoms::checked ||
+        aAttribute == nsGkAtoms::selected ||
+        aAttribute == nsGkAtoms::focused ||
+        aAttribute == nsGkAtoms::readonly ||
+        aAttribute == nsGkAtoms::_default ||
+        aAttribute == nsGkAtoms::menuactive ||
+        aAttribute == nsGkAtoms::open ||
+        aAttribute == nsGkAtoms::parentfocused)
       *aShouldRepaint = true;
   }
 

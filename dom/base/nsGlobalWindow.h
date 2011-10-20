@@ -245,6 +245,7 @@ public:
     return true;
   }
   JSString *obj_toString(JSContext *cx, JSObject *wrapper);
+  void finalize(JSContext *cx, JSObject *proxy);
 
   static nsOuterWindowProxy singleton;
 };
@@ -298,6 +299,16 @@ public:
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  // nsWrapperCache
+  JSObject *WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                       bool *triedToWrap)
+  {
+    NS_ASSERTION(IsOuterWindow(),
+                 "Inner window supports nsWrapperCache, fix WrapObject!");
+    *triedToWrap = true;
+    return EnsureInnerWindow() ? GetWrapper() : nsnull;
+  }
 
   // nsIScriptGlobalObject
   virtual nsIScriptContext *GetContext();

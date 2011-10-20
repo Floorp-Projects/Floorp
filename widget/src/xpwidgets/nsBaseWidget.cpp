@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsBaseWidget.h"
 #include "nsDeviceContext.h"
 #include "nsCOMPtr.h"
@@ -163,7 +165,6 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
                               const nsIntRect &aRect,
                               EVENT_CALLBACK aHandleEventFunction,
                               nsDeviceContext *aContext,
-                              nsIAppShell *aAppShell,
                               nsIToolkit *aToolkit,
                               nsWidgetInitData *aInitData)
 {
@@ -252,7 +253,6 @@ already_AddRefed<nsIWidget>
 nsBaseWidget::CreateChild(const nsIntRect  &aRect,
                           EVENT_CALLBACK   aHandleEventFunction,
                           nsDeviceContext *aContext,
-                          nsIAppShell      *aAppShell,
                           nsIToolkit       *aToolkit,
                           nsWidgetInitData *aInitData,
                           bool             aForceUseIWidgetParent)
@@ -280,7 +280,7 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
   if (widget &&
       NS_SUCCEEDED(widget->Create(parent, nativeParent, aRect,
                                   aHandleEventFunction,
-                                  aContext, aAppShell, aToolkit,
+                                  aContext, aToolkit,
                                   aInitData))) {
     return widget.forget();
   }
@@ -1346,7 +1346,7 @@ nsBaseWidget::debug_GetCachedBoolPref(const char * aPrefName)
 {
   NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(debug_PrefValues); i++)
+  for (PRUint32 i = 0; i < ArrayLength(debug_PrefValues); i++)
   {
     if (strcmp(debug_PrefValues[i].name, aPrefName) == 0)
     {
@@ -1361,7 +1361,7 @@ static void debug_SetCachedBoolPref(const char * aPrefName,bool aValue)
 {
   NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(debug_PrefValues); i++)
+  for (PRUint32 i = 0; i < ArrayLength(debug_PrefValues); i++)
   {
     if (strcmp(debug_PrefValues[i].name, aPrefName) == 0)
     {
@@ -1407,7 +1407,7 @@ debug_RegisterPrefCallbacks()
   once = PR_FALSE;
 
   nsCOMPtr<nsIObserver> obs(new Debug_PrefObserver());
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(debug_PrefValues); i++) {
+  for (PRUint32 i = 0; i < ArrayLength(debug_PrefValues); i++) {
     // Initialize the pref values
     debug_PrefValues[i].value =
       Preferences::GetBool(debug_PrefValues[i].name, false);

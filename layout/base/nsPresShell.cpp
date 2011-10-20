@@ -56,6 +56,8 @@
 
 /* a presentation of a document, part 2 */
 
+#include "mozilla/Util.h"
+
 #include "nsPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -219,6 +221,8 @@ static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
 /* for NS_MEMORY_REPORTER_IMPLEMENT */
 #include "nsIMemoryReporter.h"
+
+#include "gfxTextRunWordCache.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -641,9 +645,11 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
 
   NS_NAMED_LITERAL_CSTRING(kArenaDesc, "Memory used by layout PresShell, PresContext, and other related areas.");
   NS_NAMED_LITERAL_CSTRING(kStyleDesc, "Memory used by the style system.");
+  NS_NAMED_LITERAL_CSTRING(kTextRunsDesc, "Memory used for text-runs (glyph layout) in the PresShell's frame tree.");
 
   nsCAutoString arenaPath = str + NS_LITERAL_CSTRING("/arenas");
   nsCAutoString stylePath = str + NS_LITERAL_CSTRING("/styledata");
+  nsCAutoString textRunsPath = str + NS_LITERAL_CSTRING("/textruns");
 
   PRUint32 arenasSize;
   arenasSize = aShell->EstimateMemoryUsed();
@@ -651,6 +657,9 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
 
   PRUint32 styleSize;
   styleSize = aShell->StyleSet()->SizeOf();
+
+  PRUint64 textRunsSize;
+  textRunsSize = aShell->ComputeTextRunMemoryUsed();
 
   data->callback->
     Callback(EmptyCString(), arenaPath, nsIMemoryReporter::KIND_HEAP,
@@ -661,6 +670,13 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
     Callback(EmptyCString(), stylePath, nsIMemoryReporter::KIND_HEAP,
              nsIMemoryReporter::UNITS_BYTES, styleSize, kStyleDesc,
              data->closure);
+
+  if (textRunsSize) {
+    data->callback->
+      Callback(EmptyCString(), textRunsPath, nsIMemoryReporter::KIND_HEAP,
+               nsIMemoryReporter::UNITS_BYTES, textRunsSize, kTextRunsDesc,
+               data->closure);
+  }
 
   return PL_DHASH_NEXT;
 }
@@ -673,7 +689,24 @@ PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   data.callback = aCb;
   data.closure = aClosure;
 
+  // clear TEXT_RUN_SIZE_ACCOUNTED flag on cached runs
+  gfxTextRunWordCache::ComputeStorage(nsnull);
+
   sLiveShells->EnumerateEntries(SizeEnumerator, &data);
+
+  NS_NAMED_LITERAL_CSTRING(kTextRunWordCachePath,
+                           "explicit/gfx/textrun-word-cache");
+  NS_NAMED_LITERAL_CSTRING(kTextRunWordCacheDesc,
+                           "Memory used by cached text-runs that are "
+                           "not owned by a PresShell's frame tree.");
+
+  // now total up cached runs that aren't otherwise accounted for
+  PRUint64 textRunWordCacheSize = 0;
+  gfxTextRunWordCache::ComputeStorage(&textRunWordCacheSize);
+
+  aCb->Callback(EmptyCString(), kTextRunWordCachePath,
+                nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
+                textRunWordCacheSize, kTextRunWordCacheDesc, aClosure);
 
   return NS_OK;
 }
@@ -8448,7 +8481,7 @@ void ReflowCountMgr::DoGrandHTMLTotals()
 
     static const char * title[] = {"Class", "Reflows"};
     fprintf(mFD, "<tr>");
-    for (PRUint32 i=0; i < NS_ARRAY_LENGTH(title); i++) {
+    for (PRUint32 i=0; i < ArrayLength(title); i++) {
       fprintf(mFD, "<td><center><b>%s<b></center></td>", title[i]);
     }
     fprintf(mFD, "</tr>\n");
@@ -8710,3 +8743,22 @@ PresShell::GetRootPresShell()
   }
   return nsnull;
 }
+
+PRUint64
+PresShell::ComputeTextRunMemoryUsed()
+{
+  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
+  if (!rootFrame) {
+    return 0;
+  }
+
+  // clear the TEXT_RUN_MEMORY_ACCOUNTED flags
+  nsLayoutUtils::GetTextRunMemoryForFrames(rootFrame, nsnull);
+
+  // collect the total memory in use for textruns
+  PRUint64 total = 0;
+  nsLayoutUtils::GetTextRunMemoryForFrames(rootFrame, &total);
+
+  return total;
+}
+

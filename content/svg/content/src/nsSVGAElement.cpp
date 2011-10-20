@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsSVGAElement.h"
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGAElement.h"
@@ -44,6 +46,8 @@
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
+
+using namespace mozilla;
 
 nsSVGElement::StringInfo nsSVGAElement::sStringInfo[2] =
 {
@@ -189,7 +193,7 @@ nsSVGAElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap
   };
 
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGAElementBase::IsAttributeMapped(name);
 }
 
@@ -335,5 +339,5 @@ nsSVGElement::StringAttributesInfo
 nsSVGAElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }

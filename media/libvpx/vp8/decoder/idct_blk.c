@@ -9,7 +9,7 @@
  */
 
 #include "vpx_ports/config.h"
-#include "idct.h"
+#include "vp8/common/idct.h"
 #include "dequantize.h"
 
 void vp8_dequant_dc_idct_add_c(short *input, short *dq, unsigned char *pred,

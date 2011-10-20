@@ -46,6 +46,7 @@
 #endif
 #include <new>
 #include <string.h>
+
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -64,7 +65,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsautooplen.h"        // generated headers last
-#include "jsstaticcheck.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -5472,7 +5472,7 @@ static bool
 EmitXMLProcessingInstruction(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
     jsatomid index;
-    if (!cg->makeAtomIndex(pn->pn_atom2, &index))
+    if (!cg->makeAtomIndex(pn->pn_pidata, &index))
         return false;
     if (!EmitIndexOp(cx, JSOP_QNAMEPART, index, cg))
         return false;

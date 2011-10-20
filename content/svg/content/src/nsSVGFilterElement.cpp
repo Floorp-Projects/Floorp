@@ -34,10 +34,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsSVGFilterElement.h"
 #include "nsSVGEffects.h"
+
+using namespace mozilla;
 
 nsSVGElement::LengthInfo nsSVGFilterElement::sLengthInfo[4] =
 {
@@ -191,7 +195,7 @@ nsSVGFilterElement::IsAttributeMapped(const nsIAtom* name) const
     sTextContentElementsMap,
     sViewportsMap
   };
-  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+  return FindAttributeDependence(name, map, ArrayLength(map)) ||
     nsSVGGraphicElementBase::IsAttributeMapped(name);
 }
 
@@ -218,26 +222,26 @@ nsSVGElement::LengthAttributesInfo
 nsSVGFilterElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
-                              NS_ARRAY_LENGTH(sLengthInfo));
+                              ArrayLength(sLengthInfo));
 }
 
 nsSVGElement::IntegerPairAttributesInfo
 nsSVGFilterElement::GetIntegerPairInfo()
 {
   return IntegerPairAttributesInfo(mIntegerPairAttributes, sIntegerPairInfo,
-                                   NS_ARRAY_LENGTH(sIntegerPairInfo));
+                                   ArrayLength(sIntegerPairInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
 nsSVGFilterElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
+                            ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
 nsSVGFilterElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              NS_ARRAY_LENGTH(sStringInfo));
+                              ArrayLength(sStringInfo));
 }

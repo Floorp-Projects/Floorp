@@ -166,6 +166,7 @@
               }
 
               this.anchorNode = aAnchorNode;
+              this.position = aPosition;
 
               let anchorRect = aAnchorNode.getBoundingClientRect();
               let popupRect = new Rect(0,0,0,0);
@@ -299,7 +300,7 @@
                 let arrowbox = document.getAnonymousElementByAttribute(self, "anonid", "arrowbox");
                 arrowbox.style.marginLeft = "0px";
                 arrowbox.style.marginTop = "0px";
-                self.anchorTo(self.anchorNode);
+                self.anchorTo(self.anchorNode, self.position);
                 break;
             }
           }

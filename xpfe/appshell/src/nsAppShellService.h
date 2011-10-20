@@ -67,7 +67,7 @@ protected:
                                nsIURI *aUrl, 
                                PRUint32 aChromeMask,
                                PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                               bool aIsHiddenWindow, nsIAppShell* aAppShell,
+                               bool aIsHiddenWindow,
                                nsWebShellWindow **aResult);
   PRUint32 CalculateWindowZLevel(nsIXULWindow *aParent, PRUint32 aChromeMask);
 

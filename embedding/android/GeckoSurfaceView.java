@@ -223,13 +223,15 @@ class GeckoSurfaceView
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
-        // Force exactly one frame to render
-        // because the surface change is only seen after we
-        // have swapped the back buffer.
-        // The buffer size only changes after the next swap buffer.
-        // We need to make sure the Gecko's view resize when Android's 
-        // buffer resizes.
-        if (mDrawMode == DRAW_GLES_2) {
+        // On pre-Honeycomb, force exactly one frame of the previous size
+        // to render because the surface change is only seen by GLES after we
+        // have swapped the back buffer (i.e. the buffer size only changes 
+        // after the next swap buffer). We need to make sure Gecko's view 
+        // resizes when Android's buffer resizes.
+        // In Honeycomb, the buffer size changes immediately, so rendering a
+        // frame of the previous size is unnecessary (and wrong).
+        if (mDrawMode == DRAW_GLES_2 && 
+            (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB)) {
             // When we get a surfaceChange event, we have 0 to n paint events 
             // waiting in the Gecko event queue. We will make the first
             // succeed and the abort the others.

@@ -41,10 +41,10 @@
 #include "nsGkAtoms.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
+#include "nsIContentViewer.h"
 #include "nsICategoryManager.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDocument.h"
-#include "nsIDocumentViewer.h"
 #include "nsIURL.h"
 #include "nsNodeInfo.h"
 #include "nsNodeInfoManager.h"
@@ -84,7 +84,7 @@ static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
 
 nsresult
-NS_NewDocumentViewer(nsIDocumentViewer** aResult);
+NS_NewContentViewer(nsIContentViewer** aResult);
 
 // XXXbz if you change the MIME types here, be sure to update
 // nsIParser.h and DetermineParseMode in nsParser.cpp accordingly.
@@ -325,24 +325,17 @@ NS_IMETHODIMP
 nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
                                         nsIDocument* aDocument,
                                         const char *aCommand,
-                                        nsIContentViewer** aDocViewerResult)
+                                        nsIContentViewer** aContentViewer)
 {
   NS_TIME_FUNCTION;
 
-  nsresult rv = NS_ERROR_FAILURE;  
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  nsresult rv = NS_NewContentViewer(getter_AddRefs(contentViewer));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  do {
-    nsCOMPtr<nsIDocumentViewer> docv;
-    rv = NS_NewDocumentViewer(getter_AddRefs(docv));
-    if (NS_FAILED(rv))
-      break;
-
-    // Bind the document to the Content Viewer
-    nsIContentViewer* cv = static_cast<nsIContentViewer*>(docv.get());
-    rv = cv->LoadStart(aDocument);
-    NS_ADDREF(*aDocViewerResult = cv);
-  } while (PR_FALSE);
-
+  // Bind the document to the Content Viewer
+  rv = contentViewer->LoadStart(aDocument);
+  contentViewer.forget(aContentViewer);
   return rv;
 }
 
@@ -431,7 +424,7 @@ nsContentDLF::CreateDocument(const char* aCommand,
                              nsISupports* aContainer,
                              const nsCID& aDocumentCID,
                              nsIStreamListener** aDocListener,
-                             nsIContentViewer** aDocViewer)
+                             nsIContentViewer** aContentViewer)
 {
   NS_TIME_FUNCTION;
 
@@ -450,34 +443,26 @@ nsContentDLF::CreateDocument(const char* aCommand,
   }
 #endif
 
-  nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsIDocumentViewer> docv;
-  do {
-    // Create the document
-    doc = do_CreateInstance(aDocumentCID, &rv);
-    if (NS_FAILED(rv))
-      break;
+  // Create the document
+  nsCOMPtr<nsIDocument> doc = do_CreateInstance(aDocumentCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // Create the document viewer  XXX: could reuse document viewer here!
-    rv = NS_NewDocumentViewer(getter_AddRefs(docv));
-    if (NS_FAILED(rv))
-      break;
+  // Create the content viewer  XXX: could reuse content viewer here!
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  rv = NS_NewContentViewer(getter_AddRefs(contentViewer));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    doc->SetContainer(aContainer);
+  doc->SetContainer(aContainer);
 
-    // Initialize the document to begin loading the data.  An
-    // nsIStreamListener connected to the parser is returned in
-    // aDocListener.
-    rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener, PR_TRUE);
-    if (NS_FAILED(rv))
-      break;
+  // Initialize the document to begin loading the data.  An
+  // nsIStreamListener connected to the parser is returned in
+  // aDocListener.
+  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener, true);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // Bind the document to the Content Viewer
-    rv = docv->LoadStart(doc);
-    *aDocViewer = docv;
-    NS_IF_ADDREF(*aDocViewer);
-  } while (PR_FALSE);
-
+  // Bind the document to the Content Viewer
+  rv = contentViewer->LoadStart(doc);
+  contentViewer.forget(aContentViewer);
   return rv;
 }
 
@@ -489,7 +474,7 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
                                 nsISupports* aContainer,
                                 nsISupports* aExtraInfo,
                                 nsIStreamListener** aDocListener,
-                                nsIContentViewer** aDocViewer)
+                                nsIContentViewer** aContentViewer)
 {
   NS_TIME_FUNCTION;
 
@@ -497,8 +482,8 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
   nsCOMPtr<nsIDocument> doc = do_CreateInstance(kXULDocumentCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIDocumentViewer> docv;
-  rv = NS_NewDocumentViewer(getter_AddRefs(docv));
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  rv = NS_NewContentViewer(getter_AddRefs(contentViewer));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIURI> aURL;
@@ -515,15 +500,13 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
   doc->SetContainer(aContainer);
 
   rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener, PR_TRUE);
-  if (NS_SUCCEEDED(rv)) {
-    /*
-     * Bind the document to the Content Viewer...
-     */
-    rv = docv->LoadStart(doc);
-    *aDocViewer = docv;
-    NS_IF_ADDREF(*aDocViewer);
-  }
-   
+  if (NS_FAILED(rv)) return rv;
+
+  /*
+   * Bind the document to the Content Viewer...
+   */
+  rv = contentViewer->LoadStart(doc);
+  contentViewer.forget(aContentViewer);
   return rv;
 }
 

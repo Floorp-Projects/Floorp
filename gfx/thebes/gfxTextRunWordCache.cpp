@@ -135,6 +135,8 @@ public:
 #endif
     }
 
+    void ComputeStorage(PRUint64 *aTotal);
+
 #ifdef DEBUG
     PRUint32 mGeneration;
     void Dump();
@@ -216,6 +218,11 @@ protected:
     void RemoveWord(gfxTextRun *aTextRun, PRUint32 aStart,
                     PRUint32 aEnd, PRUint32 aHash);
     void Uninit();
+
+    static PLDHashOperator AccountForStorage(CacheHashEntry *aEntry,
+                                             void *aUserData);
+    static PLDHashOperator ClearSizeAccounted(CacheHashEntry *aEntry,
+                                              void *aUserData);
 
     nsTHashtable<CacheHashEntry> mCache;
 
@@ -907,6 +914,38 @@ TextRunWordCache::RemoveTextRun(gfxTextRun *aTextRun)
 #endif
 }
 
+/*static*/ PLDHashOperator
+TextRunWordCache::AccountForStorage(CacheHashEntry *aEntry, void *aUserData)
+{
+    gfxTextRun *run = aEntry->mTextRun;
+    if (run) {
+        PRUint64 *total = static_cast<PRUint64*>(aUserData);
+        run->AccountForSize(total);
+    }
+    return PL_DHASH_NEXT;
+}
+
+/*static*/ PLDHashOperator
+TextRunWordCache::ClearSizeAccounted(CacheHashEntry *aEntry, void *)
+{
+    gfxTextRun *run = aEntry->mTextRun;
+    if (run) {
+        run->ClearSizeAccounted();
+    }
+    return PL_DHASH_NEXT;
+}
+
+void
+TextRunWordCache::ComputeStorage(PRUint64 *aTotal)
+{
+    if (aTotal) {
+        *aTotal += mCache.SizeOf();
+        mCache.EnumerateEntries(AccountForStorage, aTotal);
+    } else {
+        mCache.EnumerateEntries(ClearSizeAccounted, nsnull);
+    }
+}
+
 static bool
 CompareDifferentWidthStrings(const PRUint8 *aStr1, const PRUnichar *aStr2,
                              PRUint32 aLength)
@@ -1061,3 +1100,13 @@ gfxTextRunWordCache::Flush()
         return;
     gTextRunWordCache->Flush();
 }
+
+void
+gfxTextRunWordCache::ComputeStorage(PRUint64 *aTotal)
+{
+    if (!gTextRunWordCache) {
+        return;
+    }
+    gTextRunWordCache->ComputeStorage(aTotal);
+}
+

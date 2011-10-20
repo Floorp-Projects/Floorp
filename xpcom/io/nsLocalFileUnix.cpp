@@ -49,6 +49,8 @@
  * Implementation of nsIFile for "unixy" systems.
  */
 
+#include "mozilla/Util.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -95,7 +97,7 @@
 #include "nsIGnomeVFSService.h"
 #endif
 
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 #include <Carbon/Carbon.h>
 #include "CocoaFileUtils.h"
 #include "prmem.h"
@@ -119,6 +121,8 @@ static nsresult MacErrorMapper(OSErr inErr);
 
 #include "nsNativeCharsetUtils.h"
 #include "nsTraceRefcntImpl.h"
+
+using namespace mozilla;
 
 #define ENSURE_STAT_CACHE()                     \
     PR_BEGIN_MACRO                              \
@@ -273,7 +277,7 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
 {
 }
 
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
                               nsILocalFileMac,
                               nsILocalFile,
@@ -1435,7 +1439,7 @@ nsLocalFile::IsExecutable(bool *_retval)
             "air",         // Adobe AIR installer
             "jar"};        // java application bundle
         nsDependentSubstring ext = Substring(path, dotIdx + 1);
-        for (size_t i = 0; i < NS_ARRAY_LENGTH(executableExts); i++) {
+        for (size_t i = 0; i < ArrayLength(executableExts); i++) {
             if (ext.EqualsASCII(executableExts[i])) {
                 // Found a match.  Set result and quit.
                 *_retval = PR_TRUE;
@@ -1445,7 +1449,7 @@ nsLocalFile::IsExecutable(bool *_retval)
     }
 
     // On OS X, then query Launch Services.
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
     // Certain Mac applications, such as Classic applications, which
     // run under Rosetta, might not have the +x mode bit but are still
     // considered to be executable by Launch Services (bug 646748).
@@ -1740,7 +1744,7 @@ nsLocalFile::GetPersistentDescriptor(nsACString &aPersistentDescriptor)
 NS_IMETHODIMP
 nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 {
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
     if (aPersistentDescriptor.IsEmpty())
         return NS_ERROR_INVALID_ARG;
 
@@ -1824,7 +1828,7 @@ nsLocalFile::Reveal()
         else 
             return gnomevfs->ShowURIForInput(dirPath);        
     }
-#elif defined(XP_MACOSX)
+#elif defined(MOZ_WIDGET_COCOA)
     CFURLRef url;
     if (NS_SUCCEEDED(GetCFURL(&url))) {
       nsresult rv = CocoaFileUtils::RevealFileInFinder(url);
@@ -1893,7 +1897,7 @@ nsLocalFile::Launch()
     fileUri.Append(mPath);
     mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
     return bridge->OpenUriExternal(fileUri, type) ? NS_OK : NS_ERROR_FAILURE;
-#elif defined(XP_MACOSX)
+#elif defined(MOZ_WIDGET_COCOA)
     CFURLRef url;
     if (NS_SUCCEEDED(GetCFURL(&url))) {
         nsresult rv = CocoaFileUtils::OpenURL(url);
@@ -2056,7 +2060,7 @@ nsLocalFile::GlobalShutdown()
 
 // nsILocalFileMac
 
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 
 static nsresult MacErrorMapper(OSErr inErr)
 {
