@@ -144,7 +144,6 @@ var BrowserApp = {
     let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
     let charset = "charset" in aParams ? aParams.charset : null;
     browser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
-    browser.focus();
   },
 
   addTab: function addTab(aURI) {
@@ -269,6 +268,7 @@ Tab.prototype = {
 
     if (aActive) {
       this.browser.setAttribute("type", "content-primary");
+      this.browser.focus();
       BrowserApp.selectedTab = this;
     } else {
       this.browser.setAttribute("type", "content");
@@ -363,6 +363,8 @@ var BrowserEventHandler = {
     switch (aEvent.type) {
       case "DOMContentLoaded": {
         let browser = BrowserApp.getBrowserForDocument(aEvent.target);
+        browser.focus();
+
         let tabID = BrowserApp.getTabForBrowser(browser).id;
         let uri = browser.currentURI.spec;
 
@@ -441,14 +443,12 @@ var BrowserEventHandler = {
 
         if (this.panElement)
           this.panning = true;
-
-        // We always block the event to stop text selection happening when
-        // there's nothing scrollable on the page
-        aEvent.stopPropagation();
-        aEvent.preventDefault();
         break;
 
       case "mousemove":
+        aEvent.stopPropagation();
+        aEvent.preventDefault();
+
         if (!this.panning)
           break;
 
@@ -516,9 +516,6 @@ var BrowserEventHandler = {
             this.edy = 0;
           }
         }
-
-        aEvent.stopPropagation();
-        aEvent.preventDefault();
         break;
 
       case "mouseup":
@@ -698,12 +695,6 @@ var BrowserEventHandler = {
           // Start the panning animation
           window.mozRequestAnimationFrame(callback);
         }
-        else
-        {
-            if (this._isElementClickable(aEvent.target)) {
-                aEvent.target.click();
-            }
-        }
         break;
 
       case "MozMagnifyGestureStart":
@@ -743,29 +734,6 @@ var BrowserEventHandler = {
         }
         break;
     }
-  },
-
-  _isElementClickable: function _isElementClickable(aElement) {
-    const selector = "a,:link,:visited,[role=button],button,input,select,textarea,label";
-    for (let elem = aElement; elem; elem = elem.parentNode) {
-      if (this._hasMouseListener(elem))
-        return true;
-      if (elem.mozMatchesSelector && elem.mozMatchesSelector(selector))
-        return true;
-    }
-    return false;
-  },
-
-  _els: Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService),
-  _clickableEvents: ["mousedown", "mouseup", "click"],
-  _hasMouseListener: function _hasMouseListener(aElement) {
-    let els = this._els;
-    let listeners = els.getListenerInfoFor(aElement, {});
-    for (let i = 0; i < listeners.length; i++) {
-      if (this._clickableEvents.indexOf(listeners[i].type) != -1)
-        return true;
-    }
-    return false;
   },
 
   _updateLastPosition: function(x, y, dx, dy) {
