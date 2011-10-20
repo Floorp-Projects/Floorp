@@ -39,7 +39,7 @@
 #include "Worker.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
+#include "jsfriendapi.h"
 
 #include "EventTarget.h"
 #include "RuntimeService.h"

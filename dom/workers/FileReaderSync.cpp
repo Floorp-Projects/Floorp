@@ -43,7 +43,6 @@
 
 #include "jsapi.h"
 #include "jsatom.h"
-#include "jscntxt.h"
 #include "jstypedarray.h"
 #include "nsJSUtils.h"
 #include "xpcprivate.h"

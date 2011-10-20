@@ -39,7 +39,6 @@
 #include "XMLHttpRequest.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 
 #include "WorkerPrivate.h"

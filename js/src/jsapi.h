@@ -4646,6 +4646,8 @@ struct JSErrorReport {
 #define JSREPORT_IS_STRICT(flags)       (((flags) & JSREPORT_STRICT) != 0)
 #define JSREPORT_IS_STRICT_MODE_ERROR(flags) (((flags) &                      \
                                               JSREPORT_STRICT_MODE_ERROR) != 0)
+extern JS_PUBLIC_API(JSErrorReporter)
+JS_GetErrorReporter(JSContext *cx);
 
 extern JS_PUBLIC_API(JSErrorReporter)
 JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);
@@ -4888,5 +4890,225 @@ JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment);
 #endif
 
 JS_END_EXTERN_C
+
+/************************************************************************/
+
+#ifdef __cplusplus
+
+namespace JS {
+
+class AutoGCRooter;
+
+namespace shadow {
+
+struct Context {
+    JS::AutoGCRooter *autoGCRooters;
+};
+
+} /* namespace shadow */
+
+class AutoGCRooter {
+  public:
+    AutoGCRooter(JSContext *cx)
+      : down(reinterpret_cast<shadow::Context *>(cx)->autoGCRooters), context(cx)
+    {
+        JS_ASSERT(this != reinterpret_cast<shadow::Context *>(cx)->autoGCRooters);
+        reinterpret_cast<shadow::Context *>(cx)->autoGCRooters = this;
+    }
+
+    virtual ~AutoGCRooter() {
+        JS_ASSERT(this == reinterpret_cast<shadow::Context *>(context)->autoGCRooters);
+        reinterpret_cast<shadow::Context *>(context)->autoGCRooters = down;
+    }
+
+    /* Implemented in jsgc.cpp. */
+    void traceAll(JSTracer *trc);
+
+  protected:
+    virtual void trace(JSTracer *trc) = 0;
+
+    AutoGCRooter * const down;
+    JSContext * const context;
+
+  private:
+    /* No copy or assignment semantics. */
+    AutoGCRooter(AutoGCRooter &ida);
+    void operator=(AutoGCRooter &ida);
+};
+
+class AutoValueRooter : private AutoGCRooter
+{
+  public:
+    explicit AutoValueRooter(JSContext *cx
+                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx), val(js::NullValue())
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    AutoValueRooter(JSContext *cx, const Value &v
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx), val(v)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    /*
+     * If you are looking for Object* overloads, use AutoObjectRooter instead;
+     * rooting Object*s as a js::Value requires discerning whether or not it is
+     * a function object. Also, AutoObjectRooter is smaller.
+     */
+
+    void set(Value v) {
+        val = v;
+    }
+
+    const Value &value() const {
+        return val;
+    }
+
+    Value *addr() {
+        return &val;
+    }
+
+    const jsval &jsval_value() const {
+        return val;
+    }
+
+    jsval *jsval_addr() {
+        return &val;
+    }
+
+  private:
+    virtual JS_PUBLIC_API(void) trace(JSTracer *trc);
+
+    Value val;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoObjectRooter : private AutoGCRooter {
+  public:
+    AutoObjectRooter(JSContext *cx, JSObject *obj = NULL
+                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx), obj(obj)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    void setObject(JSObject *obj) {
+        this->obj = obj;
+    }
+
+    JSObject * object() const {
+        return obj;
+    }
+
+    JSObject ** addr() {
+        return &obj;
+    }
+
+  private:
+    virtual JS_PUBLIC_API(void) trace(JSTracer *trc);
+
+    JSObject *obj;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoArrayRooter : private AutoGCRooter {
+  public:
+    AutoArrayRooter(JSContext *cx, size_t len, Value *vec
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx), array(vec), length(len)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    void changeLength(size_t newLength) {
+        length = newLength;
+    }
+
+    void changeArray(Value *newArray, size_t newLength) {
+        changeLength(newLength);
+        array = newArray;
+    }
+
+    Value *array;
+    size_t length;
+
+  private:
+    virtual JS_PUBLIC_API(void) trace(JSTracer *trc);
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoIdRooter : private AutoGCRooter
+{
+  public:
+    explicit AutoIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0)
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx), id_(id)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    jsid id() {
+        return id_;
+    }
+
+    jsid * addr() {
+        return &id_;
+    }
+
+  private:
+    virtual JS_PUBLIC_API(void) trace(JSTracer *trc);
+
+    jsid id_;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoIdArray : private AutoGCRooter {
+  public:
+    AutoIdArray(JSContext *cx, JSIdArray *ida
+                JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx), idArray(ida)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoIdArray() {
+        if (idArray)
+            JS_DestroyIdArray(context, idArray);
+    }
+    bool operator!() {
+        return idArray == NULL;
+    }
+    jsid operator[](size_t i) const {
+        JS_ASSERT(idArray);
+        JS_ASSERT(i < size_t(idArray->length));
+        return idArray->vector[i];
+    }
+    size_t length() const {
+         return idArray->length;
+    }
+
+    JSIdArray *steal() {
+        JSIdArray *copy = idArray;
+        idArray = NULL;
+        return copy;
+    }
+
+  private:
+    virtual JS_PUBLIC_API(void) trace(JSTracer *trc);
+
+    JSIdArray * idArray;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+    /* No copy or assignment semantics. */
+    AutoIdArray(AutoIdArray &ida);
+    void operator=(AutoIdArray &ida);
+};
+
+} /* namespace JS */
+
+#endif
 
 #endif /* jsapi_h___ */

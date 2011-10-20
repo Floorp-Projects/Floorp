@@ -42,7 +42,8 @@
 #include "nsIIDBDatabaseException.h"
 #include "nsIPrivateDOMEvent.h"
 
-#include "jscntxt.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsDOMException.h"

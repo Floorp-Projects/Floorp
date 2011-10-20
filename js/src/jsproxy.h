@@ -43,7 +43,6 @@
 #define jsproxy_h___
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 
 namespace js {

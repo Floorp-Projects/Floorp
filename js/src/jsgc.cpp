@@ -1791,7 +1791,6 @@ js_TraceStackFrame(JSTracer *trc, StackFrame *fp)
 void
 AutoIdArray::trace(JSTracer *trc)
 {
-    JS_ASSERT(tag == IDARRAY);
     gc::MarkIdRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
 }
 
@@ -1801,112 +1800,112 @@ AutoEnumStateRooter::trace(JSTracer *trc)
     gc::MarkObject(trc, *obj, "js::AutoEnumStateRooter.obj");
 }
 
-inline void
-AutoGCRooter::trace(JSTracer *trc)
+void
+AutoValueRooter::trace(JSTracer *trc)
 {
-    switch (tag) {
-      case JSVAL:
-        MarkValue(trc, static_cast<AutoValueRooter *>(this)->val, "js::AutoValueRooter.val");
-        return;
+    MarkValue(trc, val, "js::AutoValueRooter.val");
+}
 
-      case PARSER:
-        static_cast<Parser *>(this)->trace(trc);
-        return;
-
-      case ENUMERATOR:
-        static_cast<AutoEnumStateRooter *>(this)->trace(trc);
-        return;
-
-      case IDARRAY: {
-        JSIdArray *ida = static_cast<AutoIdArray *>(this)->idArray;
-        MarkIdRange(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
-        return;
-      }
-
-      case DESCRIPTORS: {
-        PropDescArray &descriptors =
-            static_cast<AutoPropDescArrayRooter *>(this)->descriptors;
-        for (size_t i = 0, len = descriptors.length(); i < len; i++) {
-            PropDesc &desc = descriptors[i];
-            MarkValue(trc, desc.pd, "PropDesc::pd");
-            MarkValue(trc, desc.value, "PropDesc::value");
-            MarkValue(trc, desc.get, "PropDesc::get");
-            MarkValue(trc, desc.set, "PropDesc::set");
-        }
-        return;
-      }
-
-      case DESCRIPTOR : {
-        PropertyDescriptor &desc = *static_cast<AutoPropertyDescriptorRooter *>(this);
-        if (desc.obj)
-            MarkObject(trc, *desc.obj, "Descriptor::obj");
-        MarkValue(trc, desc.value, "Descriptor::value");
-        if ((desc.attrs & JSPROP_GETTER) && desc.getter)
-            MarkObject(trc, *CastAsObject(desc.getter), "Descriptor::get");
-        if (desc.attrs & JSPROP_SETTER && desc.setter)
-            MarkObject(trc, *CastAsObject(desc.setter), "Descriptor::set");
-        return;
-      }
-
-      case NAMESPACES: {
-        JSXMLArray &array = static_cast<AutoNamespaceArray *>(this)->array;
-        MarkObjectRange(trc, array.length, reinterpret_cast<JSObject **>(array.vector),
-                        "JSXMLArray.vector");
-        array.cursors->trace(trc);
-        return;
-      }
-
-      case XML:
-        js_TraceXML(trc, static_cast<AutoXMLRooter *>(this)->xml);
-        return;
-
-      case OBJECT:
-        if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj)
-            MarkObject(trc, *obj, "js::AutoObjectRooter.obj");
-        return;
-
-      case ID:
-        MarkId(trc, static_cast<AutoIdRooter *>(this)->id_, "js::AutoIdRooter.val");
-        return;
-
-      case VALVECTOR: {
-        AutoValueVector::VectorImpl &vector = static_cast<AutoValueVector *>(this)->vector;
-        MarkValueRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
-        return;
-      }
-
-      case STRING:
-        if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
-            MarkString(trc, str, "js::AutoStringRooter.str");
-        return;
-
-      case IDVECTOR: {
-        AutoIdVector::VectorImpl &vector = static_cast<AutoIdVector *>(this)->vector;
-        MarkIdRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
-        return;
-      }
-
-      case SHAPEVECTOR: {
-        AutoShapeVector::VectorImpl &vector = static_cast<js::AutoShapeVector *>(this)->vector;
-        MarkShapeRange(trc, vector.length(), vector.begin(), "js::AutoShapeVector.vector");
-        return;
-      }
-
-      case OBJVECTOR: {
-        AutoObjectVector::VectorImpl &vector = static_cast<AutoObjectVector *>(this)->vector;
-        MarkObjectRange(trc, vector.length(), vector.begin(), "js::AutoObjectVector.vector");
-        return;
-      }
-
-      case VALARRAY: {
-        AutoValueArray *array = static_cast<AutoValueArray *>(this);
-        MarkValueRange(trc, array->length(), array->start(), "js::AutoValueArray");
-        return;
-      }
+void
+AutoPropDescArrayRooter::trace(JSTracer *trc)
+{
+    for (size_t i = 0, len = descriptors.length(); i < len; i++) {
+        PropDesc &desc = descriptors[i];
+        MarkValue(trc, desc.pd, "PropDesc::pd");
+        MarkValue(trc, desc.value, "PropDesc::value");
+        MarkValue(trc, desc.get, "PropDesc::get");
+        MarkValue(trc, desc.set, "PropDesc::set");
     }
+}
 
-    JS_ASSERT(tag >= 0);
-    MarkValueRange(trc, tag, static_cast<AutoArrayRooter *>(this)->array, "js::AutoArrayRooter.array");
+void
+AutoPropertyDescriptorRooter::trace(JSTracer *trc)
+{
+    if (obj)
+        MarkObject(trc, *obj, "Descriptor::obj");
+    MarkValue(trc, value, "Descriptor::value");
+    if ((attrs & JSPROP_GETTER) && getter)
+        MarkObject(trc, *CastAsObject(getter), "Descriptor::get");
+    if (attrs & JSPROP_SETTER && setter)
+        MarkObject(trc, *CastAsObject(setter), "Descriptor::set");
+}
+
+void
+AutoNamespaceArray::trace(JSTracer *trc)
+{
+    MarkObjectRange(trc, array.length, reinterpret_cast<JSObject **>(array.vector),
+                    "JSXMLArray.vector");
+    array.cursors->trace(trc);
+}
+
+void
+AutoXMLRooter::trace(JSTracer *trc)
+{
+    js_TraceXML(trc, xml);
+}
+
+void
+AutoObjectRooter::trace(JSTracer *trc)
+{
+    if (obj)
+        MarkObject(trc, *obj, "js::AutoObjectRooter.obj");
+}
+
+void
+AutoIdRooter::trace(JSTracer *trc)
+{
+    MarkId(trc, id_, "js::AutoIdRooter.val");
+}
+
+void
+AutoValueVector::trace(JSTracer *trc)
+{
+    MarkValueRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
+}
+
+void
+AutoStringRooter::trace(JSTracer *trc)
+{
+    if (str)
+        MarkString(trc, str, "js::AutoStringRooter.str");
+}
+
+void
+AutoIdVector::trace(JSTracer *trc)
+{
+    MarkIdRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
+}
+
+void
+AutoShapeVector::trace(JSTracer *trc)
+{
+    MarkShapeRange(trc, vector.length(), vector.begin(), "js::AutoShapeVector.vector");
+}
+
+void
+AutoObjectVector::trace(JSTracer *trc)
+{
+    MarkObjectRange(trc, vector.length(), vector.begin(), "js::AutoObjectVector.vector");
+}
+
+void
+AutoValueArray::trace(JSTracer *trc)
+{
+    MarkValueRange(trc, length(), start(), "js::AutoValueArray");
+}
+
+void
+AutoArrayRooter::trace(JSTracer *trc)
+{
+    MarkValueRange(trc, length, array, "js::AutoArrayRooter.array");
+}
+
+void
+AutoGCRooter::traceAll(JSTracer *trc)
+{
+    trace(trc);
+    if (down)
+        down->traceAll(trc);
 }
 
 namespace js {
@@ -1922,8 +1921,8 @@ MarkContext(JSTracer *trc, JSContext *acx)
     if (acx->isExceptionPending())
         MarkValue(trc, acx->getPendingException(), "exception");
 
-    for (js::AutoGCRooter *gcr = acx->autoGCRooters; gcr; gcr = gcr->down)
-        gcr->trace(trc);
+    if (acx->autoGCRooters)
+        acx->autoGCRooters->traceAll(trc);
 
     if (acx->sharpObjectMap.depth > 0)
         js_TraceSharpMap(trc, &acx->sharpObjectMap);
@@ -2778,6 +2777,7 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 
     JS_ASSERT(!rt->gcCurrentCompartment);
     rt->gcCurrentCompartment = comp;
+    rt->wasCompartmentGC = !!comp;
 
     rt->gcMarkAndSweep = true;
 

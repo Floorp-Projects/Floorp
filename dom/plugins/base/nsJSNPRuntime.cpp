@@ -38,8 +38,8 @@
 
 #include "base/basictypes.h"
 
-// FIXME(bug 332648): Give me a real API please!
-#include "jscntxt.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsJSNPRuntime.h"
