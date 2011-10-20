@@ -385,7 +385,7 @@ private:
 };
 
 // Encapsulates the decoding and reading of media data. Reading can only be
-// done on the decode thread thread. Never hold the decoder monitor when
+// done on the decode thread. Never hold the decoder monitor when
 // calling into this class. Unless otherwise specified, methods and fields of
 // this class can only be accessed on the decode thread.
 class nsBuiltinDecoderReader : public nsRunnable {
