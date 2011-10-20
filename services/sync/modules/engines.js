@@ -724,7 +724,7 @@ SyncEngine.prototype = {
     // Delete any existing data and reupload on bad version or missing meta.
     // No crypto component here...? We could regenerate per-collection keys...
     if (needsWipe) {
-      this.wipeServer();
+      this.wipeServer(true);
     }
 
     // Save objects that need to be uploaded in this._modified. We also save
@@ -1248,10 +1248,7 @@ SyncEngine.prototype = {
   },
 
   wipeServer: function wipeServer() {
-    let response = new Resource(this.engineURL).delete();
-    if (response.status != 200 && response.status != 404) {
-      throw response;
-    }
+    new Resource(this.engineURL).delete();
     this._resetClient();
   },
 
