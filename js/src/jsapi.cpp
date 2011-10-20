@@ -2433,6 +2433,22 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
     buf[bufsize - 1] = '\0';
 }
 
+extern JS_PUBLIC_API(const char *)
+JS_GetTraceEdgeName(JSTracer *trc, char *buffer, int bufferSize)
+{
+    if (trc->debugPrinter) {
+        trc->debugPrinter(trc, buffer, bufferSize);
+        return buffer;
+    }
+    if (trc->debugPrintIndex != (size_t) - 1) {
+        JS_snprintf(buffer, bufferSize, "%s[%lu]",
+                    (const char *)trc->debugPrintArg,
+                    trc->debugPrintIndex);
+        return buffer;
+    }
+    return (const char*)trc->debugPrintArg;
+}
+
 typedef struct JSHeapDumpNode JSHeapDumpNode;
 
 struct JSHeapDumpNode {
@@ -2504,18 +2520,7 @@ DumpNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
         entry->key = thing;
     }
 
-    if (dtrc->base.debugPrinter) {
-        dtrc->base.debugPrinter(trc, dtrc->buffer, sizeof(dtrc->buffer));
-        edgeName = dtrc->buffer;
-    } else if (dtrc->base.debugPrintIndex != (size_t)-1) {
-        JS_snprintf(dtrc->buffer, sizeof(dtrc->buffer), "%s[%lu]",
-                    (const char *)dtrc->base.debugPrintArg,
-                    dtrc->base.debugPrintIndex);
-        edgeName = dtrc->buffer;
-    } else {
-        edgeName = (const char*)dtrc->base.debugPrintArg;
-    }
-
+    edgeName = JS_GetTraceEdgeName(&dtrc->base, dtrc->buffer, sizeof(dtrc->buffer));
     edgeNameSize = strlen(edgeName) + 1;
     size_t bytes = offsetof(JSHeapDumpNode, edgeName) + edgeNameSize;
     node = (JSHeapDumpNode *) OffTheBooks::malloc_(bytes);
