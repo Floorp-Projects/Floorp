@@ -1459,14 +1459,14 @@ void nsPluginInstanceOwner::SetupCARefresh()
 }
 }
 
-void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext, 
+void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
                                                 int aWidth, int aHeight)
 {
   if (aWidth == 0 || aHeight == 0)
     return;
 
-  if (!mIOSurface || 
-      (mIOSurface->GetWidth() != (size_t)aWidth || 
+  if (!mIOSurface ||
+      (mIOSurface->GetWidth() != (size_t)aWidth ||
        mIOSurface->GetHeight() != (size_t)aHeight)) {
     mIOSurface = nsnull;
 
@@ -1495,7 +1495,9 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
       return;
     }
 
-    mCARenderer.SetupRenderer(caLayer, aWidth, aHeight);
+    // We don't run Flash in-process so we can unconditionally disallow
+    // the offliner renderer.
+    mCARenderer.SetupRenderer(caLayer, aWidth, aHeight, DISALLOW_OFFLINE_RENDERER);
 
     // Setting up the CALayer requires resetting the painting otherwise we
     // get garbage for the first few frames.
