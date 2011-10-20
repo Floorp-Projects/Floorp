@@ -122,6 +122,7 @@ let SyncScheduler = {
   },
 
   observe: function observe(subject, topic, data) {
+    this._log.trace("Handling " + topic);
     switch(topic) {
       case "weave:engine:score:updated":
         if (Status.login == LOGIN_SUCCEEDED) {
@@ -169,7 +170,7 @@ let SyncScheduler = {
         }
         break;
       case "weave:engine:sync:error":
-        // subject is the exception thrown by an engine's sync() method
+        // `subject` is the exception thrown by an engine's sync() method.
         let exception = subject;
         if (exception.status >= 500 && exception.status <= 504) {
           this.requiresBackoff = true;
@@ -459,6 +460,7 @@ let SyncScheduler = {
    * Deal with sync errors appropriately
    */
   handleSyncError: function handleSyncError() {
+    this._log.trace("In handleSyncError. Error count: " + this._syncErrors);
     this._syncErrors++;
 
     // Do nothing on the first couple of failures, if we're not in
@@ -468,6 +470,8 @@ let SyncScheduler = {
         this.scheduleNextSync();
         return;
       }
+      this._log.debug("Sync error count has exceeded " +
+                      MAX_ERROR_COUNT_BEFORE_BACKOFF + "; enforcing backoff.");
       Status.enforceBackoff = true;
     }
 
@@ -531,6 +535,7 @@ let ErrorHandler = {
   },
 
   observe: function observe(subject, topic, data) {
+    this._log.trace("Handling " + topic);
     switch(topic) {
       case "weave:engine:sync:applied":
         if (subject.newFailed) {
@@ -579,6 +584,7 @@ let ErrorHandler = {
         this.dontIgnoreErrors = false;
         break;
       case "weave:service:sync:finish":
+        this._log.trace("Status.service is " + Status.service);
         if (Status.service == SYNC_FAILED_PARTIAL) {
           this._log.debug("Some engines did not sync correctly.");
           this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
@@ -725,6 +731,7 @@ let ErrorHandler = {
 
   shouldReportError: function shouldReportError() {
     if (Status.login == MASTER_PASSWORD_LOCKED) {
+      this._log.trace("shouldReportError: false (master password locked).");
       return false;
     }
 
@@ -736,6 +743,7 @@ let ErrorHandler = {
     if (lastSync && ((Date.now() - Date.parse(lastSync)) >
         Svc.Prefs.get("errorhandler.networkFailureReportTimeout") * 1000)) {
       Status.sync = PROLONGED_SYNC_FAILURE;
+      this._log.trace("shouldReportError: true (prolonged sync failure).");
       return true;
     }
 
