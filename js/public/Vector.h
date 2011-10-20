@@ -560,7 +560,6 @@ Vector<T,N,AP>::calculateNewCapacity(size_t curLength, size_t lengthInc,
                                      size_t &newCap)
 {
     size_t newMinCap = curLength + lengthInc;
-    size_t newMinSize = newMinCap * sizeof(T);
 
     /*
      * Check for overflow in the above addition, below CEILING_LOG2, and later
@@ -572,14 +571,8 @@ Vector<T,N,AP>::calculateNewCapacity(size_t curLength, size_t lengthInc,
         return false;
     }
 
-    /*
-     * It's best to request 2^N sized chunks because they are unlikely to be
-     * rounded up by the allocator.  (Asking for a 2^N number of elements isn't
-     * as good, because if sizeof(T) is not a power-of-two that would result in
-     * a non-2^N request size, which can cause waste.)
-     */
-    size_t newSize = RoundUpPow2(newMinSize);
-    newCap = newSize / sizeof(T);
+    /* Round up to next power of 2. */
+    newCap = RoundUpPow2(newMinCap);
 
     /*
      * Do not allow a buffer large enough that the expression ((char *)end() -
