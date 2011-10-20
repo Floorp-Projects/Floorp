@@ -6230,7 +6230,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         /* We should never add properties to lexical blocks.  */
         JS_ASSERT(!obj->isBlock());
 
-        if (!obj->getParent() &&
+        if (obj->isGlobal() &&
             (defineHow & DNP_UNQUALIFIED) &&
             !js::CheckUndeclaredVarAssignment(cx, JSID_TO_STRING(id))) {
             return JS_FALSE;
