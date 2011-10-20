@@ -6545,7 +6545,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
         if (IsFunctionObject(v, &fun) && fun->isClonedMethod()) {
             for (StackFrame *fp = cx->maybefp(); fp; fp = fp->prev()) {
                 if (fp->isFunctionFrame() &&
-                    fp->fun() == fun &&
+                    fp->fun()->script() == fun->script() &&
                     fp->thisValue().isObject())
                 {
                     JSObject *tmp = &fp->thisValue().toObject();

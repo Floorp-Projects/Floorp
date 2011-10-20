@@ -1193,7 +1193,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
         return true;
     }
 
-    JSFunction *fun = this->fun();
+    JSFunction *fun = this->callee().toFunction();
     vp->setObject(*fun);
 
     /*
